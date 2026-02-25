@@ -6,7 +6,6 @@ import {
   getCoreRowModel,
   getSortedRowModel,
   useReactTable,
-  type PaginationState,
 } from "@tanstack/react-table";
 import {
   Table,
@@ -47,6 +46,7 @@ export interface DataTableProps<TData, TValue> {
   emptyMessage?: string;
   pageSizeOptions?: number[];
   additionalElement?: React.ReactNode;
+  onRowClick?: (row: TData) => void;
 }
 
 export function DataTable<TData, TValue>({
@@ -61,6 +61,7 @@ export function DataTable<TData, TValue>({
   emptyMessage = "No results found.",
   pageSizeOptions = [10, 20, 50, 100],
   additionalElement,
+  onRowClick,
 }: DataTableProps<TData, TValue>) {
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [internalSearchValue, setInternalSearchValue] = React.useState("");
@@ -85,7 +86,6 @@ export function DataTable<TData, TValue>({
     } else {
       setInternalSearchValue(value);
     }
-    // Reset to first page when search changes
     if (pagination && onPaginationChange) {
       onPaginationChange(1, pagination.limit);
     }
@@ -110,7 +110,6 @@ export function DataTable<TData, TValue>({
 
   return (
     <div className="space-y-4">
-      {/* Search and Controls */}
       <div className="flex items-center justify-between gap-4">
         {additionalElement && <div>{additionalElement}</div>}
         <div className="relative flex-1 max-w-sm">
@@ -132,7 +131,6 @@ export function DataTable<TData, TValue>({
         </div>
       </div>
 
-      {/* Table */}
       <div className="rounded-md border">
         <Table>
           <TableHeader>
@@ -154,17 +152,6 @@ export function DataTable<TData, TValue>({
                             header.getContext()
                           )}
                         </div>
-                        {/* {header.column.getCanSort() && (
-                          <div className="flex flex-col">
-                            {header.column.getIsSorted() === "asc" ? (
-                              <ArrowUp className="h-3 w-3" />
-                            ) : header.column.getIsSorted() === "desc" ? (
-                              <ArrowDown className="h-3 w-3" />
-                            ) : (
-                              <ArrowUpDown className="h-3 w-3 opacity-50" />
-                            )}
-                          </div>
-                        )} */}
                       </div>
                     )}
                   </TableHead>
@@ -187,6 +174,22 @@ export function DataTable<TData, TValue>({
                 <TableRow
                   key={row.id}
                   data-state={row.getIsSelected() && "selected"}
+                  className={onRowClick ? "cursor-pointer hover:bg-muted/50" : undefined}
+                  onClick={
+                    onRowClick
+                      ? (e) => {
+                          const target = e.target as HTMLElement;
+                          if (
+                            target.closest("button") ||
+                            target.closest("[role='combobox']") ||
+                            target.closest("select")
+                          ) {
+                            return;
+                          }
+                          onRowClick(row.original);
+                        }
+                      : undefined
+                  }
                 >
                   {row.getVisibleCells().map((cell) => (
                     <TableCell key={cell.id}>
@@ -212,7 +215,6 @@ export function DataTable<TData, TValue>({
         </Table>
       </div>
 
-      {/* Pagination */}
       {pagination && (
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
