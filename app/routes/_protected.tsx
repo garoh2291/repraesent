@@ -8,6 +8,7 @@ export default function ProtectedLayout() {
   const { isAuthenticated, isLoading, user, workspaces } = useAuthContext();
   const navigate = useNavigate();
   const location = useLocation();
+  const isOnNoWorkspace = location.pathname === "/no-workspace";
 
   useEffect(() => {
     if (isLoading) return;
@@ -27,8 +28,9 @@ export default function ProtectedLayout() {
     }
 
     if (!workspaces?.length) {
-      clearStoredAuth();
-      navigate("/login", { replace: true });
+      if (!isOnNoWorkspace) {
+        navigate("/no-workspace", { replace: true });
+      }
       return;
     }
 
@@ -41,7 +43,7 @@ export default function ProtectedLayout() {
       navigate("/auth/workspace-picker", { replace: true });
       return;
     }
-  }, [isAuthenticated, isLoading, user, workspaces, navigate, location]);
+  }, [isAuthenticated, isLoading, user, workspaces, navigate, location, isOnNoWorkspace]);
 
   if (isLoading) {
     return (
@@ -54,8 +56,12 @@ export default function ProtectedLayout() {
     );
   }
 
-  if (!isAuthenticated || user?.user_type !== "user" || !workspaces?.length) {
+  if (!isAuthenticated || user?.user_type !== "user") {
     return null;
+  }
+
+  if (!workspaces?.length) {
+    return isOnNoWorkspace ? <Outlet /> : null;
   }
 
   const isOnWorkspacePicker = location.pathname === "/auth/workspace-picker";

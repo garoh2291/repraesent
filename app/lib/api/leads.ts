@@ -89,3 +89,13 @@ export async function getLeadHistory(id: string): Promise<LeadHistoryItem[]> {
   const res = await apiClient.get<LeadHistoryItem[]>(`/leads/${id}/history`);
   return res.data;
 }
+
+export interface LeadStats {
+  total: number;
+  new_this_week: number;
+}
+
+export async function getLeadStats(): Promise<LeadStats> {
+  const res = await apiClient.get<LeadStats>("/leads/stats");
+  return res.data;
+}

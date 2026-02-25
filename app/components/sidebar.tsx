@@ -1,5 +1,5 @@
 import { Link, useLocation, useNavigate } from "react-router";
-import { Building2, ChevronDown, LogOut } from "lucide-react";
+import { Building2, ChevronDown, LogOut, Settings } from "lucide-react";
 import { useAuthContext } from "~/providers/auth-provider";
 import { Button } from "~/components/ui/button";
 import {
@@ -29,8 +29,8 @@ export function Sidebar() {
   };
 
   return (
-    <aside className="flex w-56 shrink-0 flex-col border-r bg-card">
-      <div className="flex h-14 items-center gap-2 border-b px-4">
+    <aside className="flex h-screen w-56 shrink-0 flex-col overflow-hidden border-r bg-card">
+      <div className="flex h-14 shrink-0 items-center gap-2 border-b px-4">
         <Link to="/" className="flex items-center">
           <img
             src={logoUrl}
@@ -39,7 +39,7 @@ export function Sidebar() {
           />
         </Link>
       </div>
-      <div className="border-b px-3 py-3">
+      <div className="shrink-0 border-b px-3 py-3">
         {currentWorkspace && (
           hasMultipleWorkspaces ? (
             <DropdownMenu>
@@ -75,7 +75,17 @@ export function Sidebar() {
           )
         )}
       </div>
-      <nav className="flex flex-1 flex-col gap-1 p-3">
+      <nav className="min-h-0 flex-1 overflow-y-auto flex flex-col gap-1 p-3">
+        <Link
+          to="/"
+          className={`rounded-md px-3 py-2 text-sm font-medium transition-colors ${
+            location.pathname === "/"
+              ? "bg-accent text-accent-foreground"
+              : "text-muted-foreground hover:bg-accent/50 hover:text-foreground"
+          }`}
+        >
+          Home
+        </Link>
         {currentWorkspace?.products?.map((product) => {
           const href = product.product_slug ? `/${product.product_slug}` : "#";
           const isActive =
@@ -102,8 +112,19 @@ export function Sidebar() {
             </Link>
           );
         })}
+        <Link
+          to="/settings"
+          className={`rounded-md px-3 py-2 text-sm font-medium transition-colors flex items-center gap-2 ${
+            location.pathname === "/settings"
+              ? "bg-accent text-accent-foreground"
+              : "text-muted-foreground hover:bg-accent/50 hover:text-foreground"
+          }`}
+        >
+          <Settings className="h-4 w-4" />
+          Settings
+        </Link>
       </nav>
-      <div className="border-t p-3">
+      <div className="shrink-0 border-t p-3">
         <Button
           variant="ghost"
           size="sm"

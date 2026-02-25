@@ -77,6 +77,7 @@ export function useAuth() {
 
         if (context.workspaces.length === 1) {
           currentWorkspace = context.workspaces[0];
+          setStoredWorkspaceId(context.workspaces[0].id);
         } else if (storedWorkspaceId) {
           currentWorkspace =
             context.workspaces.find((w) => w.id === storedWorkspaceId) ?? null;
@@ -136,15 +137,17 @@ export function useAuth() {
     const workspace = workspaces.find((w) => w.id === workspaceId);
     if (!workspace) return;
 
-    if (workspaces.length > 1) {
-      setStoredWorkspaceId(workspaceId);
-    }
+    setStoredWorkspaceId(workspaceId);
 
     queryClient.setQueryData<AuthState>(["auth"], (prev) =>
       prev
         ? { ...prev, currentWorkspace: workspace }
         : prev
     );
+
+    queryClient.invalidateQueries({
+      predicate: (query) => query.queryKey[0] !== "auth",
+    });
   };
 
   const currentToken = getStoredToken();
