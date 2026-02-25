@@ -1,5 +1,5 @@
-import { useEffect, useState } from "react";
-import { Link, useNavigate } from "react-router";
+import { useMemo, useEffect, useState } from "react";
+import { Link, useNavigate, useSearchParams } from "react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import type { ColumnDef } from "@tanstack/react-table";
 import { useAuthContext } from "~/providers/auth-provider";
@@ -25,7 +25,7 @@ import {
 } from "~/lib/leads/constants";
 import { shortLeadId } from "~/lib/leads/utils";
 import { useDebounce } from "~/lib/hooks/useDebounce";
-import { useLeadFormQueryParams } from "~/lib/hooks/useQueryParams";
+import { useSearchParamsSelect } from "~/lib/hooks/useQueryParams";
 import { useLeadsViewMode } from "~/lib/hooks/useLocalStorage";
 import { useUpdateLeadStatus } from "~/lib/hooks/useUpdateLeadStatus";
 import { format } from "date-fns";
@@ -39,23 +39,31 @@ export function meta() {
   ];
 }
 
+function parsePage(v: string | null): number {
+  const n = parseInt(v ?? "1", 10);
+  return isNaN(n) || n < 1 ? 1 : n;
+}
+
+function parseLimit(v: string | null): number {
+  const n = parseInt(v ?? "10", 10);
+  return isNaN(n) || n < 1 ? 10 : Math.min(100, n);
+}
+
 export default function LeadForm() {
   const { currentWorkspace } = useAuthContext();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const [searchParams] = useSearchParams();
+  const [onSelect, clearParams] = useSearchParamsSelect();
 
-  const {
-    page,
-    limit,
-    search,
-    statusFilter,
-    sourceFilter,
-    setPage,
-    setLimit,
-    setSearch,
-    setStatusFilter,
-    setSourceFilter,
-  } = useLeadFormQueryParams();
+  const page = useMemo(() => parsePage(searchParams.get("page")), [searchParams]);
+  const limit = useMemo(
+    () => parseLimit(searchParams.get("limit")),
+    [searchParams]
+  );
+  const search = searchParams.get("search") ?? "";
+  const statusFilter = searchParams.get("status") ?? "";
+  const sourceFilter = (searchParams.get("source") ?? "") as "" | "website";
 
   const [viewMode, setViewMode] = useLeadsViewMode();
   const [selectedLeadId, setSelectedLeadId] = useState<string | null>(null);
@@ -95,9 +103,10 @@ export default function LeadForm() {
       return { prev } as { prev: unknown };
     },
     onError: (_err, _vars, ctx) => {
-      const prev = ctx && typeof ctx === "object" && "prev" in ctx
-        ? (ctx as { prev: unknown }).prev
-        : undefined;
+      const prev =
+        ctx && typeof ctx === "object" && "prev" in ctx
+          ? (ctx as { prev: unknown }).prev
+          : undefined;
       if (prev !== undefined) {
         queryClient.setQueryData(
           [
@@ -293,7 +302,10 @@ export default function LeadForm() {
           <Button
             variant={viewMode === "table" ? "default" : "outline"}
             size="sm"
-            onClick={() => setViewMode("table")}
+            onClick={() => {
+              setViewMode("table");
+              clearParams();
+            }}
           >
             <Table2 className="h-4 w-4 mr-1" />
             Table
@@ -301,7 +313,10 @@ export default function LeadForm() {
           <Button
             variant={viewMode === "kanban" ? "default" : "outline"}
             size="sm"
-            onClick={() => setViewMode("kanban")}
+            onClick={() => {
+              setViewMode("kanban");
+              clearParams();
+            }}
           >
             <LayoutGrid className="h-4 w-4 mr-1" />
             Kanban
@@ -312,10 +327,15 @@ export default function LeadForm() {
       <div className="flex flex-wrap gap-4 items-center">
         <Select
           value={statusFilter || "all"}
-          onValueChange={(v) => {
-            setStatusFilter((v === "all" ? "" : v) as LeadStatus | "");
-            setPage(1);
-          }}
+          onValueChange={(v) =>
+            onSelect(
+              {
+                status: v === "all" ? "" : v,
+                page: "1",
+              },
+              true
+            )
+          }
         >
           <SelectTrigger className="w-[160px]">
             <SelectValue placeholder="All statuses" />
@@ -331,10 +351,15 @@ export default function LeadForm() {
         </Select>
         <Select
           value={sourceFilter || "all"}
-          onValueChange={(v) => {
-            setSourceFilter((v === "all" ? "" : v) as "website" | "");
-            setPage(1);
-          }}
+          onValueChange={(v) =>
+            onSelect(
+              {
+                source: v === "all" ? "" : v,
+                page: "1",
+              },
+              true
+            )
+          }
         >
           <SelectTrigger className="w-[140px]">
             <SelectValue placeholder="All sources" />
@@ -368,10 +393,13 @@ export default function LeadForm() {
               : undefined
           }
           onPaginationChange={(p, l) => {
-            setPage(p);
-            setLimit(l);
+            const updates: Record<string, string> = { page: String(p) };
+            if (Number(l) !== 10) updates.limit = String(l);
+            onSelect(updates, true);
           }}
-          onSearchChange={setSearch}
+          onSearchChange={(value) => {
+            onSelect({ search: value, page: "1" }, true);
+          }}
           searchValue={search}
           searchPlaceholder="Search by email, name, phone..."
           onRowClick={(row) => setSelectedLeadId(row.id)}
