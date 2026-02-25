@@ -1,0 +1,107 @@
+import { useEffect } from "react";
+import { useParams, useNavigate } from "react-router";
+import { useQuery } from "@tanstack/react-query";
+import { useAuthContext } from "~/providers/auth-provider";
+import {
+  LeadInfoSection,
+  LeadHistorySection,
+} from "~/components/organism/lead-detail-sheet";
+import { getLead, getLeadHistory } from "~/lib/api/leads";
+import { useUpdateLeadStatus } from "~/lib/hooks/useUpdateLeadStatus";
+import { Loader2 } from "lucide-react";
+
+export function meta() {
+  return [
+    { title: "Lead - Repraesent" },
+    { name: "description", content: "Lead details" },
+  ];
+}
+
+export default function LeadFormLeadId() {
+  const { leadId } = useParams<{ leadId: string }>();
+  const navigate = useNavigate();
+  const { currentWorkspace } = useAuthContext();
+
+  const updateStatusMutation = useUpdateLeadStatus();
+
+  const { data: lead, isLoading: leadLoading } = useQuery({
+    queryKey: ["lead", leadId],
+    queryFn: () => getLead(leadId!),
+    enabled: !!leadId,
+  });
+
+  const { data: history = [], isLoading: historyLoading } = useQuery({
+    queryKey: ["lead-history", leadId],
+    queryFn: () => getLeadHistory(leadId!),
+    enabled: !!leadId,
+  });
+
+  useEffect(() => {
+    if (!currentWorkspace) {
+      navigate("/", { replace: true });
+      return;
+    }
+    const hasLeadFormProduct = currentWorkspace.products?.some(
+      (p) => p.product_slug === "lead-form"
+    );
+    if (!hasLeadFormProduct) {
+      navigate("/", { replace: true });
+    }
+  }, [currentWorkspace, navigate]);
+
+  useEffect(() => {
+    if (lead) {
+      const name =
+        lead.full_name ||
+        [lead.first_name, lead.last_name].filter(Boolean).join(" ").trim() ||
+        "Lead";
+      document.title = `${name} - Repraesent`;
+    }
+  }, [lead]);
+
+  const hasAccess =
+    currentWorkspace?.products?.some((p) => p.product_slug === "lead-form") ??
+    false;
+
+  if (!hasAccess) {
+    return null;
+  }
+
+  if (!leadId) {
+    navigate("/lead-form", { replace: true });
+    return null;
+  }
+
+  if (leadLoading || !lead) {
+    return (
+      <div className="flex items-center justify-center min-h-[50vh]">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
+
+  const handleStatusChange = (
+    id: string,
+    status: import("~/lib/api/leads").LeadStatus
+  ) => {
+    updateStatusMutation.mutate({ id, status });
+  };
+
+  return (
+    <div className="p-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 py-10">
+        <div className="space-y-6">
+          <LeadInfoSection
+            lead={lead}
+            onStatusChange={handleStatusChange}
+            isStatusUpdating={updateStatusMutation.isPending}
+            withoutLink={true}
+          />
+        </div>
+        <div className="space-y-6">
+          <LeadHistorySection history={history} isLoading={historyLoading} />
+        </div>
+      </div>
+    </div>
+  );
+}

@@ -14,6 +14,7 @@ export default [
     layout("routes/_dashboard-layout.tsx", [
       index("routes/home.tsx"),
       route("lead-form", "routes/lead-form.tsx"),
+      route("lead-form/:leadId", "routes/lead-form.$leadId.tsx"),
     ]),
   ]),
 ] satisfies RouteConfig;

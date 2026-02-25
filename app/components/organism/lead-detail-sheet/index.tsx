@@ -1,15 +1,35 @@
 import { useQuery } from "@tanstack/react-query";
+import { Link } from "react-router";
 import {
   Sheet,
   SheetContent,
   SheetHeader,
   SheetTitle,
 } from "~/components/ui/sheet";
-import { getLead, getLeadHistory, type Lead, type LeadHistoryItem } from "~/lib/api/leads";
-import { LEAD_STATUS_LABELS } from "~/lib/leads/constants";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "~/components/ui/select";
+import {
+  getLead,
+  getLeadHistory,
+  type Lead,
+  type LeadHistoryItem,
+  type LeadStatus,
+} from "~/lib/api/leads";
+import {
+  LEAD_STATUS_LABELS,
+  LEAD_STATUSES,
+  LEAD_STATUS_COLORS,
+  type LeadStatus as LeadStatusType,
+} from "~/lib/leads/constants";
 import TooltipContainer from "~/components/tooltip-container";
 import { format } from "date-fns";
-import { Loader2 } from "lucide-react";
+import { ExternalLink, Loader2 } from "lucide-react";
+import { cn } from "~/lib/utils";
 
 function formatUserName(item: LeadHistoryItem): string {
   const first = item.user_first_name?.trim() ?? "";
@@ -24,26 +44,24 @@ function formatHistoryAction(item: LeadHistoryItem): string {
   const userName = formatUserName(item);
 
   if (item.action === "lead_created") {
-    return userName
-      ? `User ${userName} created the lead`
-      : "Lead created";
+    return userName ? `User ${userName} created the lead` : "Lead created";
   }
   if (item.action === "lead_status_updated") {
     const oldStatus = item.details?.old_status as string | undefined;
     const newStatus = item.details?.new_status as string | undefined;
     const oldLabel = oldStatus
-      ? (LEAD_STATUS_LABELS[oldStatus as keyof typeof LEAD_STATUS_LABELS] ?? oldStatus)
+      ? (LEAD_STATUS_LABELS[oldStatus as keyof typeof LEAD_STATUS_LABELS] ??
+        oldStatus)
       : "";
     const newLabel = newStatus
-      ? (LEAD_STATUS_LABELS[newStatus as keyof typeof LEAD_STATUS_LABELS] ?? newStatus)
+      ? (LEAD_STATUS_LABELS[newStatus as keyof typeof LEAD_STATUS_LABELS] ??
+        newStatus)
       : "";
     const statusPart =
       oldLabel && newLabel
         ? `changed status from ${oldLabel} to ${newLabel}`
         : "updated the status";
-    return userName
-      ? `User ${userName} ${statusPart}`
-      : statusPart;
+    return userName ? `User ${userName} ${statusPart}` : statusPart;
   }
   return item.action.replace(/_/g, " ");
 }
@@ -52,9 +70,17 @@ interface LeadDetailSheetProps {
   leadId: string | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  onStatusChange?: (id: string, status: LeadStatus) => void;
+  isStatusUpdating?: boolean;
 }
 
-export function LeadDetailSheet({ leadId, open, onOpenChange }: LeadDetailSheetProps) {
+export function LeadDetailSheet({
+  leadId,
+  open,
+  onOpenChange,
+  onStatusChange,
+  isStatusUpdating,
+}: LeadDetailSheetProps) {
   const { data: lead, isLoading: leadLoading } = useQuery({
     queryKey: ["lead", leadId],
     queryFn: () => getLead(leadId!),
@@ -83,8 +109,15 @@ export function LeadDetailSheet({ leadId, open, onOpenChange }: LeadDetailSheetP
             </div>
           ) : (
             <>
-              <LeadInfoSection lead={lead} />
-              <HistorySection history={history} isLoading={historyLoading} />
+              <LeadInfoSection
+                lead={lead}
+                onStatusChange={onStatusChange}
+                isStatusUpdating={isStatusUpdating}
+              />
+              <LeadHistorySection
+                history={history}
+                isLoading={historyLoading}
+              />
             </>
           )}
         </div>
@@ -93,62 +126,133 @@ export function LeadDetailSheet({ leadId, open, onOpenChange }: LeadDetailSheetP
   );
 }
 
-function LeadInfoSection({ lead }: { lead: Lead }) {
+const fieldValueClass = "bg-muted/50 rounded-md px-2 py-1.5 text-sm";
+
+export function LeadInfoSection({
+  lead,
+  onStatusChange,
+  isStatusUpdating,
+  withoutLink = false,
+}: {
+  lead: Lead;
+  onStatusChange?: (id: string, status: LeadStatus) => void;
+  isStatusUpdating?: boolean;
+  withoutLink?: boolean;
+}) {
+  const currentStatus = lead.status as LeadStatusType;
+  const metadata = lead.metadata as Record<string, unknown> | null | undefined;
+  const metadataEntries =
+    metadata && typeof metadata === "object" ? Object.entries(metadata) : [];
+
   return (
     <div className="space-y-4">
-      <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wide">
-        Lead Information
-      </h3>
+      <div className="flex items-center justify-between gap-2">
+        <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wide">
+          Lead Information
+        </h3>
+        {!withoutLink && (
+          <Link
+            to={`/lead-form/${lead.id}`}
+            className="text-xs text-primary hover:underline inline-flex items-center gap-1"
+          >
+            View full page <ExternalLink className="h-3 w-3" />
+          </Link>
+        )}
+      </div>
       <dl className="space-y-2 text-sm">
         <div>
-          <dt className="text-muted-foreground">Full Name</dt>
-          <dd className="font-medium">{lead.full_name || "—"}</dd>
+          <dt className="text-muted-foreground mb-1">Status</dt>
+          <dd>
+            {onStatusChange ? (
+              <Select
+                value={lead.status}
+                onValueChange={(value) =>
+                  onStatusChange(lead.id, value as LeadStatus)
+                }
+                disabled={isStatusUpdating}
+              >
+                <SelectTrigger
+                  className={cn("w-full border-l-4 border-l-transparent", {
+                    "border-l-blue-500": currentStatus === "new_lead",
+                    "border-l-amber-500": currentStatus === "pending",
+                    "border-l-violet-500": currentStatus === "in_progress",
+                    "border-l-red-500": currentStatus === "rejected",
+                    "border-l-orange-500": currentStatus === "on_hold",
+                    "border-l-gray-500": currentStatus === "stale",
+                    "border-l-emerald-500": currentStatus === "success",
+                    "border-l-muted": currentStatus === "hidden",
+                  })}
+                >
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {LEAD_STATUSES.map((s) => (
+                    <SelectItem key={s} value={s}>
+                      <span className="flex items-center gap-2">
+                        <span
+                          className={cn(
+                            "w-2 h-2 rounded-full",
+                            LEAD_STATUS_COLORS[s]
+                          )}
+                        />
+                        {LEAD_STATUS_LABELS[s]}
+                      </span>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            ) : (
+              <span className={cn(fieldValueClass, "inline-block")}>
+                {LEAD_STATUS_LABELS[currentStatus] ?? lead.status}
+              </span>
+            )}
+          </dd>
         </div>
         <div>
-          <dt className="text-muted-foreground">Email</dt>
-          <dd className="font-medium break-all">{lead.email || "—"}</dd>
+          <dt className="text-muted-foreground mb-1">Full Name</dt>
+          <dd className={fieldValueClass}>{lead.full_name || "—"}</dd>
         </div>
         <div>
-          <dt className="text-muted-foreground">Phone</dt>
-          <dd className="font-medium">{lead.phone || "—"}</dd>
+          <dt className="text-muted-foreground mb-1">Email</dt>
+          <dd className={cn(fieldValueClass, "break-all whitespace-pre-wrap")}>
+            {lead.email || "—"}
+          </dd>
         </div>
         <div>
-          <dt className="text-muted-foreground">Source</dt>
-          <dd className="font-medium">
+          <dt className="text-muted-foreground mb-1">Phone</dt>
+          <dd className={fieldValueClass}>{lead.phone || "—"}</dd>
+        </div>
+        <div>
+          <dt className="text-muted-foreground mb-1">Source</dt>
+          <dd className={fieldValueClass}>
             {lead.source_label || lead.source_table || "—"}
           </dd>
         </div>
         <div>
-          <dt className="text-muted-foreground">Status</dt>
-          <dd className="font-medium">
-            {LEAD_STATUS_LABELS[lead.status as keyof typeof LEAD_STATUS_LABELS] ??
-              lead.status}
+          <dt className="text-muted-foreground mb-1">Created</dt>
+          <dd className={fieldValueClass}>
+            {lead.created_at ? format(new Date(lead.created_at), "PPp") : "—"}
           </dd>
         </div>
-        <div>
-          <dt className="text-muted-foreground">Created</dt>
-          <dd className="font-medium">
-            {lead.created_at
-              ? format(new Date(lead.created_at), "PPp")
-              : "—"}
-          </dd>
-        </div>
-        {Object.keys(lead.metadata || {}).length > 0 && (
-          <div>
-            <dt className="text-muted-foreground mb-1">Metadata</dt>
-            <dd>
-              <pre className="text-xs bg-muted rounded p-2 overflow-x-auto max-h-32 overflow-y-auto">
-                {JSON.stringify(lead.metadata, null, 2)}
-              </pre>
-            </dd>
-          </div>
-        )}
+        {metadataEntries.length > 0 &&
+          metadataEntries.map(([key, value]) => (
+            <div key={key}>
+              <dt className="text-muted-foreground mb-1">{key}</dt>
+              <dd className={cn(fieldValueClass, "whitespace-pre-wrap")}>
+                {value == null
+                  ? "—"
+                  : typeof value === "object"
+                    ? JSON.stringify(value)
+                    : String(value)}
+              </dd>
+            </div>
+          ))}
       </dl>
     </div>
   );
 }
 
-function HistorySection({
+export function LeadHistorySection({
   history,
   isLoading,
 }: {
@@ -165,31 +269,33 @@ function HistorySection({
       ) : history.length === 0 ? (
         <p className="text-sm text-muted-foreground">No history yet.</p>
       ) : (
-        <div className="space-y-3">
-          {history.map((item, idx) => {
-            const actionText = formatHistoryAction(item);
-            return (
-              <div
-                key={idx}
-                className="flex gap-3 text-sm border-l-2 pl-3 py-1 border-muted"
-              >
-                <div className="flex-1 min-w-0">
-                  <TooltipContainer
-                    tooltipContent={actionText}
-                    disableTooltip={actionText.length < 60}
-                    showCopyButton={false}
-                  >
-                    <p className="font-medium truncate">{actionText}</p>
-                  </TooltipContainer>
-                  <p className="text-xs text-muted-foreground mt-0.5">
-                    {item.created_at
-                      ? format(new Date(item.created_at), "PPp")
-                      : ""}
-                  </p>
+        <div className="overflow-y-auto max-h-[calc(100vh-16rem)] pr-2">
+          <div className="space-y-3">
+            {history.map((item, idx) => {
+              const actionText = formatHistoryAction(item);
+              return (
+                <div
+                  key={idx}
+                  className="flex gap-3 text-sm border-l-2 pl-3 py-1 border-muted"
+                >
+                  <div className="flex-1 min-w-0">
+                    <TooltipContainer
+                      tooltipContent={actionText}
+                      disableTooltip={actionText.length < 60}
+                      showCopyButton={false}
+                    >
+                      <p className="font-medium truncate">{actionText}</p>
+                    </TooltipContainer>
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      {item.created_at
+                        ? format(new Date(item.created_at), "PPp")
+                        : ""}
+                    </p>
+                  </div>
                 </div>
-              </div>
-            );
-          })}
+              );
+            })}
+          </div>
         </div>
       )}
     </div>

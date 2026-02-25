@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { Link, useNavigate } from "react-router";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import type { ColumnDef } from "@tanstack/react-table";
 import { useAuthContext } from "~/providers/auth-provider";
 import { DataTable } from "~/components/organism/data-table";
@@ -15,12 +15,7 @@ import {
   SelectValue,
 } from "~/components/ui/select";
 import TooltipContainer from "~/components/tooltip-container";
-import {
-  getLeads,
-  updateLeadStatus,
-  type Lead,
-  type LeadStatus,
-} from "~/lib/api/leads";
+import { getLeads, type Lead, type LeadStatus } from "~/lib/api/leads";
 import {
   LEAD_STATUSES,
   LEAD_SOURCES,
@@ -30,8 +25,11 @@ import {
 } from "~/lib/leads/constants";
 import { shortLeadId } from "~/lib/leads/utils";
 import { useDebounce } from "~/lib/hooks/useDebounce";
+import { useLeadFormQueryParams } from "~/lib/hooks/useQueryParams";
+import { useLeadsViewMode } from "~/lib/hooks/useLocalStorage";
+import { useUpdateLeadStatus } from "~/lib/hooks/useUpdateLeadStatus";
 import { format } from "date-fns";
-import { LayoutGrid, Table2 } from "lucide-react";
+import { ArrowRight, LayoutGrid, Table2 } from "lucide-react";
 import { cn } from "~/lib/utils";
 
 export function meta() {
@@ -46,15 +44,76 @@ export default function LeadForm() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
 
-  const [page, setPage] = useState(1);
-  const [limit, setLimit] = useState(10);
-  const [search, setSearch] = useState("");
-  const [statusFilter, setStatusFilter] = useState<LeadStatus | "">("");
-  const [sourceFilter, setSourceFilter] = useState<"website" | "">("");
+  const {
+    page,
+    limit,
+    search,
+    statusFilter,
+    sourceFilter,
+    setPage,
+    setLimit,
+    setSearch,
+    setStatusFilter,
+    setSourceFilter,
+  } = useLeadFormQueryParams();
+
+  const [viewMode, setViewMode] = useLeadsViewMode();
   const [selectedLeadId, setSelectedLeadId] = useState<string | null>(null);
-  const [viewMode, setViewMode] = useState<"table" | "kanban">("table");
 
   const debouncedSearch = useDebounce(search, 300);
+
+  const updateStatusMutation = useUpdateLeadStatus({
+    onMutate: async ({ id, status }) => {
+      await queryClient.cancelQueries({ queryKey: ["leads"] });
+      const prev = queryClient.getQueryData([
+        "leads",
+        page,
+        limit,
+        debouncedSearch,
+        statusFilter || undefined,
+        sourceFilter || undefined,
+        viewMode,
+      ]);
+      queryClient.setQueryData(
+        [
+          "leads",
+          page,
+          limit,
+          debouncedSearch,
+          statusFilter || undefined,
+          sourceFilter || undefined,
+          viewMode,
+        ],
+        (old: Awaited<ReturnType<typeof getLeads>> | undefined) => {
+          if (!old) return old;
+          return {
+            ...old,
+            data: old.data.map((l) => (l.id === id ? { ...l, status } : l)),
+          };
+        }
+      );
+      return { prev } as { prev: unknown };
+    },
+    onError: (_err, _vars, ctx) => {
+      const prev = ctx && typeof ctx === "object" && "prev" in ctx
+        ? (ctx as { prev: unknown }).prev
+        : undefined;
+      if (prev !== undefined) {
+        queryClient.setQueryData(
+          [
+            "leads",
+            page,
+            limit,
+            debouncedSearch,
+            statusFilter || undefined,
+            sourceFilter || undefined,
+            viewMode,
+          ],
+          prev
+        );
+      }
+    },
+  });
 
   useEffect(() => {
     if (!currentWorkspace) {
@@ -86,68 +145,10 @@ export default function LeadForm() {
         page,
         limit: viewMode === "kanban" ? 100 : limit,
         search: debouncedSearch || undefined,
-        status: statusFilter || undefined,
+        status: (statusFilter || undefined) as LeadStatus | undefined,
         source: sourceFilter || undefined,
       }),
     enabled: !!currentWorkspace,
-  });
-
-  const updateStatusMutation = useMutation({
-    mutationFn: ({ id, status }: { id: string; status: LeadStatus }) =>
-      updateLeadStatus(id, status),
-    onMutate: async ({ id, status }) => {
-      await queryClient.cancelQueries({ queryKey: ["leads"] });
-      const prev = queryClient.getQueryData([
-        "leads",
-        page,
-        limit,
-        debouncedSearch,
-        statusFilter || undefined,
-        sourceFilter || undefined,
-        viewMode,
-      ]);
-      queryClient.setQueryData(
-        [
-          "leads",
-          page,
-          limit,
-          debouncedSearch,
-          statusFilter || undefined,
-          sourceFilter || undefined,
-          viewMode,
-        ],
-        (old: typeof leadsQuery.data) => {
-          if (!old) return old;
-          return {
-            ...old,
-            data: old.data.map((l) => (l.id === id ? { ...l, status } : l)),
-          };
-        }
-      );
-      return { prev };
-    },
-    onSuccess: (_data, variables) => {
-      if (selectedLeadId && selectedLeadId === variables.id) {
-        queryClient.invalidateQueries({ queryKey: ["lead", selectedLeadId] });
-      }
-    },
-    onError: (_err, _vars, ctx) => {
-      if (ctx?.prev) {
-        queryClient.setQueryData(
-          [
-            "leads",
-            page,
-            limit,
-            debouncedSearch,
-            statusFilter || undefined,
-            sourceFilter || undefined,
-            viewMode,
-          ],
-          ctx.prev
-        );
-      }
-      queryClient.invalidateQueries({ queryKey: ["leads"] });
-    },
   });
 
   const hasAccess =
@@ -165,7 +166,6 @@ export default function LeadForm() {
       cell: ({ row }) => {
         const id = row.original.id;
         const short = shortLeadId(id);
-        console.log(id, short);
         return (
           <TooltipContainer tooltipContent={id} copyText={id}>
             <span className="font-mono text-xs text-muted-foreground">
@@ -270,6 +270,18 @@ export default function LeadForm() {
         row.original.created_at
           ? format(new Date(row.original.created_at), "PP")
           : "—",
+    },
+    {
+      id: "go-to",
+      header: "",
+      cell: ({ row }) => (
+        <Link
+          to={`/lead-form/${row.original.id}`}
+          className="text-primary hover:underline inline-flex items-center gap-1 text-sm"
+        >
+          Go to lead <ArrowRight className="h-4 w-4" />
+        </Link>
+      ),
     },
   ];
 
@@ -380,6 +392,10 @@ export default function LeadForm() {
         leadId={selectedLeadId}
         open={!!selectedLeadId}
         onOpenChange={(open) => !open && setSelectedLeadId(null)}
+        onStatusChange={(id, status) =>
+          updateStatusMutation.mutate({ id, status })
+        }
+        isStatusUpdating={updateStatusMutation.isPending}
       />
     </div>
   );
