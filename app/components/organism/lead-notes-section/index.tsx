@@ -254,7 +254,7 @@ export function LeadNotesSection({ leadId, canEdit = true }: LeadNotesSectionPro
           Notes
         </h3>
         <Button
-          variant="default"
+          variant="secondary"
           size="sm"
           onClick={() => setIsAddingNew(true)}
           disabled={!canEdit || isAddingNew}

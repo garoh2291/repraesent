@@ -41,6 +41,7 @@ export interface WorkspaceProduct {
   product_name: string;
   product_image: string | null;
   product_slug: string | null;
+  product_icon: string | null;
 }
 
 /**

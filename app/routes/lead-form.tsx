@@ -263,7 +263,7 @@ export default function LeadForm() {
         <h1 className="text-2xl font-bold tracking-tight">Leads</h1>
         <div className="flex items-center gap-2">
           <Button
-            variant={viewMode === "table" ? "default" : "outline"}
+            variant={viewMode === "table" ? "secondary" : "outline"}
             size="sm"
             onClick={() => {
               setViewMode("table");
@@ -274,7 +274,7 @@ export default function LeadForm() {
             Table
           </Button>
           <Button
-            variant={viewMode === "kanban" ? "default" : "outline"}
+            variant={viewMode === "kanban" ? "secondary" : "outline"}
             size="sm"
             onClick={() => {
               setViewMode("kanban");

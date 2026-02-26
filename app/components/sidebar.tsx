@@ -1,5 +1,13 @@
 import { Link, useLocation, useNavigate } from "react-router";
-import { Building2, ChevronDown, LogOut, Settings } from "lucide-react";
+import {
+  Building2,
+  ChevronDown,
+  HomeIcon,
+  LogOut,
+  Settings,
+} from "lucide-react";
+
+import { DynamicIcon, iconNames, type IconName } from "lucide-react/dynamic";
 import { useAuthContext } from "~/providers/auth-provider";
 import { Button } from "~/components/ui/button";
 import {
@@ -28,9 +36,12 @@ export function Sidebar() {
     navigate("/", { replace: true });
   };
 
+  const isValidIconName = (name: string) =>
+    (iconNames as string[]).includes(name);
+
   return (
-    <aside className="flex h-screen w-56 shrink-0 flex-col overflow-hidden border-r bg-card">
-      <div className="flex h-14 shrink-0 items-center gap-2 border-b px-4">
+    <aside className="flex h-screen w-64 shrink-0 flex-col overflow-hidden border-r border-sidebar-border bg-sidebar">
+      <div className="flex h-14 shrink-0 items-center gap-2 border-b border-sidebar-border px-4">
         <Link to="/" className="flex items-center">
           <img
             src={logoUrl}
@@ -39,9 +50,9 @@ export function Sidebar() {
           />
         </Link>
       </div>
-      <div className="shrink-0 border-b px-3 py-3">
-        {currentWorkspace && (
-          hasMultipleWorkspaces ? (
+      <div className="shrink-0 border-b border-sidebar-border px-2 py-2">
+        {currentWorkspace &&
+          (hasMultipleWorkspaces ? (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button
@@ -72,18 +83,18 @@ export function Sidebar() {
               <Building2 className="h-4 w-4 shrink-0" />
               <span className="truncate">{currentWorkspace.name}</span>
             </div>
-          )
-        )}
+          ))}
       </div>
-      <nav className="min-h-0 flex-1 overflow-y-auto flex flex-col gap-1 p-3">
+      <nav className="min-h-0 flex-1 overflow-y-auto flex flex-col gap-2 p-2">
         <Link
           to="/"
-          className={`rounded-md px-3 py-2 text-sm font-medium transition-colors ${
+          className={`rounded-md px-2 py-2 text-sm font-medium transition-colors flex items-center gap-2 ${
             location.pathname === "/"
-              ? "bg-accent text-accent-foreground"
-              : "text-muted-foreground hover:bg-accent/50 hover:text-foreground"
+              ? "bg-sidebar-accent text-sidebar-accent-foreground shadow-[var(--shadow-gedk)]"
+              : "text-sidebar-foreground hover:bg-sidebar-accent/50"
           }`}
         >
+          <HomeIcon className="h-4 w-4" />
           Home
         </Link>
         {currentWorkspace?.products?.map((product) => {
@@ -98,33 +109,39 @@ export function Sidebar() {
             <Link
               key={product.product_id}
               to={href}
-              className={`rounded-md px-3 py-2 text-sm font-medium transition-colors ${
+              className={`rounded-md px-2 py-2 text-sm font-medium transition-colors flex items-center gap-2 ${
                 !hasSlug
                   ? "cursor-not-allowed text-muted-foreground opacity-60"
                   : isActive
-                    ? "bg-accent text-accent-foreground"
-                    : "text-muted-foreground hover:bg-accent/50 hover:text-foreground"
+                    ? "bg-sidebar-accent text-sidebar-accent-foreground shadow-[var(--shadow-gedk)]"
+                    : "text-sidebar-foreground hover:bg-sidebar-accent/50"
               }`}
               onClick={(e) => !hasSlug && e.preventDefault()}
               aria-disabled={!hasSlug}
             >
+              {product.product_icon && isValidIconName(product.product_icon) ? (
+                <DynamicIcon
+                  name={product.product_icon as IconName}
+                  className="h-4 w-4 shrink-0"
+                />
+              ) : null}
               {product.product_name}
             </Link>
           );
         })}
         <Link
           to="/settings"
-          className={`rounded-md px-3 py-2 text-sm font-medium transition-colors flex items-center gap-2 ${
+          className={`rounded-md px-2 py-2 text-sm font-medium transition-colors flex items-center gap-2 ${
             location.pathname === "/settings"
-              ? "bg-accent text-accent-foreground"
-              : "text-muted-foreground hover:bg-accent/50 hover:text-foreground"
+              ? "bg-sidebar-accent text-sidebar-accent-foreground shadow-[var(--shadow-gedk)]"
+              : "text-sidebar-foreground hover:bg-sidebar-accent/50"
           }`}
         >
           <Settings className="h-4 w-4" />
           Settings
         </Link>
       </nav>
-      <div className="shrink-0 border-t p-3">
+      <div className="shrink-0 border-t border-sidebar-border p-2">
         <Button
           variant="ghost"
           size="sm"

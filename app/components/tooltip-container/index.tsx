@@ -5,6 +5,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "~/components/ui/tooltip";
+import { Button } from "~/components/ui/button";
 import { cn } from "~/lib/utils";
 import { TooltipPortal } from "@radix-ui/react-tooltip";
 import { Copy, Check } from "lucide-react";
@@ -123,15 +124,6 @@ const TooltipContainer = React.memo<TooltipContainerProps>(
       [copied]
     );
 
-    const buttonClassNames = useMemo(
-      () =>
-        cn(
-          "flex-shrink-0 p-1 rounded hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors duration-150 self-start focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1",
-          copyButtonClassName
-        ),
-      [copyButtonClassName]
-    );
-
     const tooltipContentClassName = useMemo(
       () => cn("max-w-[600px] whitespace-pre-line relative", classname),
       [classname]
@@ -148,11 +140,13 @@ const TooltipContainer = React.memo<TooltipContainerProps>(
                   <div className="flex-1 min-w-0">{tooltipContent}</div>
 
                   {showCopyButton && (
-                    <button
-                      onClick={handleCopy}
-                      className={buttonClassNames}
-                      title={buttonTitle}
+                    <Button
                       type="button"
+                      variant="ghost"
+                      size="icon-xs"
+                      onClick={handleCopy}
+                      className={cn("h-6 w-6 shrink-0", copyButtonClassName)}
+                      title={buttonTitle}
                       aria-label={buttonTitle}
                       disabled={!textToCopy.trim()}
                     >
@@ -165,11 +159,11 @@ const TooltipContainer = React.memo<TooltipContainerProps>(
                       ) : (
                         <Copy
                           size={10}
-                          className="text-white dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100"
+                          className="text-muted-foreground hover:text-foreground"
                           aria-hidden="true"
                         />
                       )}
-                    </button>
+                    </Button>
                   )}
                 </div>
               </TooltipContent>

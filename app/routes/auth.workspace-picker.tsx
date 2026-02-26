@@ -1,5 +1,6 @@
 import { useNavigate } from "react-router";
 import { Building } from "lucide-react";
+import { Button } from "~/components/ui/button";
 import { useAuthContext } from "~/providers/auth-provider";
 import { setStoredWorkspaceId } from "~/lib/api/axios-instance";
 
@@ -45,15 +46,16 @@ export default function WorkspacePicker() {
 
         <div className="grid gap-4 sm:grid-cols-2">
           {workspaces.map((workspace) => (
-            <button
+            <Button
               key={workspace.id}
               type="button"
+              variant="outline"
               onClick={() => handleSelect(workspace.id)}
-              className="flex flex-col items-center justify-center gap-3 rounded-lg border bg-card p-6 hover:bg-accent/50 transition-colors text-left w-full"
+              className="h-auto flex flex-col items-center justify-center gap-3 rounded-lg border bg-card p-6 hover:bg-accent/50 transition-colors text-left w-full"
             >
               <Building className="h-12 w-12 text-muted-foreground" />
               <span className="font-medium">{workspace.name}</span>
-            </button>
+            </Button>
           ))}
         </div>
       </div>

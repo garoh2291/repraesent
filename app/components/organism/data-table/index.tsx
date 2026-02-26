@@ -121,12 +121,16 @@ export function DataTable<TData, TValue>({
             className="pl-9 pr-9"
           />
           {searchValue && (
-            <button
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon-xs"
               onClick={() => handleSearchChange("")}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground h-6 w-6"
+              aria-label="Clear search"
             >
               <X className="h-4 w-4" />
-            </button>
+            </Button>
           )}
         </div>
       </div>
@@ -263,7 +267,7 @@ export function DataTable<TData, TValue>({
                   return (
                     <Button
                       key={pageNum}
-                      variant={currentPage === pageNum ? "default" : "outline"}
+                      variant={currentPage === pageNum ? "secondary" : "outline"}
                       size="sm"
                       onClick={() => handlePageChange(pageNum)}
                     >

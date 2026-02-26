@@ -93,18 +93,20 @@ export default function Login() {
 
         {success ? (
           <div className="space-y-4 text-center">
-            <div className="rounded-md bg-green-500/10 border border-green-500/20 p-4 text-sm text-green-700 dark:text-green-400">
-              Check your email. We've sent you a sign-in link. The link expires in 30 minutes.
+            <div className="rounded-md bg-secondary border border-secondary/20 p-4 text-sm text-secondary-foreground">
+              Check your email. We've sent you a sign-in link. The link expires
+              in 30 minutes.
             </div>
             <p className="text-sm text-muted-foreground">
               Didn't receive the email? Check your spam folder or{" "}
-              <button
+              <Button
+                variant="link"
                 type="button"
-                className="text-primary underline"
+                className="p-0 h-auto"
                 onClick={() => setSuccess(false)}
               >
                 try again
-              </button>
+              </Button>
             </p>
           </div>
         ) : (
@@ -138,6 +140,7 @@ export default function Login() {
             <Button
               type="submit"
               className="w-full"
+              variant="secondary"
               disabled={isRequestingMagicLink}
             >
               {isRequestingMagicLink ? (
