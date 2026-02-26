@@ -26,6 +26,7 @@ export function useUpdateLeadStatus(opts?: UseUpdateLeadStatusOptions) {
     onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({ queryKey: ["leads"] });
       queryClient.invalidateQueries({ queryKey: ["lead", variables.id] });
+      queryClient.invalidateQueries({ queryKey: ["lead-history", variables.id] });
     },
     onError: opts?.onError,
   });

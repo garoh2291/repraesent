@@ -20,6 +20,7 @@ import {
   type LeadHistoryItem,
   type LeadStatus,
 } from "~/lib/api/leads";
+import { LeadNotesSection } from "~/components/organism/lead-notes-section";
 import {
   LEAD_STATUS_LABELS,
   LEAD_STATUSES,
@@ -27,24 +28,24 @@ import {
   type LeadStatus as LeadStatusType,
 } from "~/lib/leads/constants";
 import TooltipContainer from "~/components/tooltip-container";
-import { format } from "date-fns";
+import { format, formatDistanceToNow } from "date-fns";
 import { ExternalLink, Loader2 } from "lucide-react";
 import { cn } from "~/lib/utils";
 
-function formatUserName(item: LeadHistoryItem): string {
+function getHistoryItemInitials(item: LeadHistoryItem): string {
   const first = item.user_first_name?.trim() ?? "";
   const last = item.user_last_name?.trim() ?? "";
-  if (first || last) {
-    return [first, last].filter(Boolean).join(" ").trim();
+  if (first && last) {
+    return `${first[0]}${last[0]}`.toUpperCase();
   }
-  return "";
+  if (first) return first.slice(0, 2).toUpperCase();
+  if (last) return last.slice(0, 2).toUpperCase();
+  return "S";
 }
 
 function formatHistoryAction(item: LeadHistoryItem): string {
-  const userName = formatUserName(item);
-
   if (item.action === "lead_created") {
-    return userName ? `User ${userName} created the lead` : "Lead created";
+    return "Lead created";
   }
   if (item.action === "lead_status_updated") {
     const oldStatus = item.details?.old_status as string | undefined;
@@ -57,11 +58,22 @@ function formatHistoryAction(item: LeadHistoryItem): string {
       ? (LEAD_STATUS_LABELS[newStatus as keyof typeof LEAD_STATUS_LABELS] ??
         newStatus)
       : "";
-    const statusPart =
-      oldLabel && newLabel
-        ? `changed status from ${oldLabel} to ${newLabel}`
-        : "updated the status";
-    return userName ? `User ${userName} ${statusPart}` : statusPart;
+    if (oldLabel && newLabel) {
+      return `Status changed from ${oldLabel} to ${newLabel}`;
+    }
+    if (newLabel) {
+      return `Status changed to ${newLabel}`;
+    }
+    return "Status updated";
+  }
+  if (item.action === "note_created") {
+    return "Note added";
+  }
+  if (item.action === "note_updated") {
+    return "Note edited";
+  }
+  if (item.action === "note_deleted") {
+    return "Note deleted";
   }
   return item.action.replace(/_/g, " ");
 }
@@ -114,6 +126,7 @@ export function LeadDetailSheet({
                 onStatusChange={onStatusChange}
                 isStatusUpdating={isStatusUpdating}
               />
+              <LeadNotesSection leadId={lead.id} />
               <LeadHistorySection
                 history={history}
                 isLoading={historyLoading}
@@ -273,23 +286,36 @@ export function LeadHistorySection({
           <div className="space-y-3">
             {history.map((item, idx) => {
               const actionText = formatHistoryAction(item);
+              const relativeTime = item.created_at
+                ? formatDistanceToNow(new Date(item.created_at), {
+                    addSuffix: true,
+                  })
+                : "";
               return (
                 <div
                   key={idx}
-                  className="flex gap-3 text-sm border-l-2 pl-3 py-1 border-muted"
+                  className="rounded-lg border bg-muted/30 p-3 transition-colors"
                 >
-                  <div className="flex-1 min-w-0">
+                  <TooltipContainer
+                    tooltipContent={actionText}
+                    showCopyButton={false}
+                  >
+                    <p className="text-sm font-medium truncate">{actionText}</p>
+                  </TooltipContainer>
+                  <div className="flex items-center gap-2 text-xs text-muted-foreground mt-2 flex-wrap">
                     <TooltipContainer
-                      tooltipContent={actionText}
+                      tooltipContent={
+                        item.user_first_name && item.user_last_name
+                          ? item.user_first_name + " " + item.user_last_name
+                          : "System"
+                      }
                       showCopyButton={false}
                     >
-                      <p className="font-medium truncate">{actionText}</p>
+                      <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-muted text-[10px] font-medium">
+                        {getHistoryItemInitials(item)}
+                      </span>
                     </TooltipContainer>
-                    <p className="text-xs text-muted-foreground mt-0.5">
-                      {item.created_at
-                        ? format(new Date(item.created_at), "PPp")
-                        : ""}
-                    </p>
+                    <span>{relativeTime}</span>
                   </div>
                 </div>
               );

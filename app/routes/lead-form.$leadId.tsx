@@ -6,6 +6,8 @@ import {
   LeadInfoSection,
   LeadHistorySection,
 } from "~/components/organism/lead-detail-sheet";
+import { LeadNotesSection } from "~/components/organism/lead-notes-section";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "~/components/ui/tabs";
 import { getLead, getLeadHistory } from "~/lib/api/leads";
 import { useUpdateLeadStatus } from "~/lib/hooks/useUpdateLeadStatus";
 import { Loader2 } from "lucide-react";
@@ -99,7 +101,18 @@ export default function LeadFormLeadId() {
           />
         </div>
         <div className="space-y-6">
-          <LeadHistorySection history={history} isLoading={historyLoading} />
+          <Tabs defaultValue="notes" className="w-full">
+            <TabsList variant="line" className="w-full">
+              <TabsTrigger value="notes">Notes</TabsTrigger>
+              <TabsTrigger value="history">History</TabsTrigger>
+            </TabsList>
+            <TabsContent value="notes" className="mt-4">
+              <LeadNotesSection leadId={lead.id} />
+            </TabsContent>
+            <TabsContent value="history" className="mt-4">
+              <LeadHistorySection history={history} isLoading={historyLoading} />
+            </TabsContent>
+          </Tabs>
         </div>
       </div>
     </div>
