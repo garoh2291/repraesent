@@ -76,6 +76,7 @@ interface LeadDetailSheetProps {
   onOpenChange: (open: boolean) => void;
   onStatusChange?: (id: string, status: LeadStatus) => void;
   isStatusUpdating?: boolean;
+  canEdit?: boolean;
 }
 
 export function LeadDetailSheet({
@@ -84,6 +85,7 @@ export function LeadDetailSheet({
   onOpenChange,
   onStatusChange,
   isStatusUpdating,
+  canEdit = true,
 }: LeadDetailSheetProps) {
   const { data: lead, isLoading: leadLoading } = useQuery({
     queryKey: ["lead", leadId],
@@ -118,7 +120,7 @@ export function LeadDetailSheet({
                 onStatusChange={onStatusChange}
                 isStatusUpdating={isStatusUpdating}
               />
-              <LeadNotesSection leadId={lead.id} />
+              <LeadNotesSection leadId={lead.id} canEdit={canEdit} />
               <LeadHistorySection
                 history={history}
                 isLoading={historyLoading}
@@ -176,9 +178,9 @@ export function LeadInfoSection({
                 className="w-full"
               />
             ) : (
-              <span className={cn(fieldValueClass, "inline-block")}>
+              <p className={cn(fieldValueClass, "w-full")}>
                 {LEAD_STATUS_LABELS[currentStatus] ?? lead.status}
-              </span>
+              </p>
             )}
           </dd>
         </div>

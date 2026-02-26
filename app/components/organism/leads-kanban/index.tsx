@@ -26,6 +26,7 @@ interface LeadsKanbanProps {
   onStatusChange: (leadId: string, status: LeadStatus) => void;
   onLeadSelect: (leadId: string) => void;
   isUpdating: boolean;
+  canEdit?: boolean;
 }
 
 export function LeadsKanban({
@@ -34,6 +35,7 @@ export function LeadsKanban({
   onStatusChange,
   onLeadSelect,
   isUpdating,
+  canEdit = true,
 }: LeadsKanbanProps) {
   const [activeId, setActiveId] = useState<string | null>(null);
   const undoStackRef = useRef<Array<{ leadId: string; previousStatus: LeadStatus }>>([]);
@@ -117,6 +119,7 @@ export function LeadsKanban({
             leads={leadsByStatus[status] ?? []}
             onLeadSelect={onLeadSelect}
             isUpdating={isUpdating}
+            canEdit={canEdit}
           />
         ))}
       </div>
@@ -138,11 +141,13 @@ function KanbanColumn({
   leads,
   onLeadSelect,
   isUpdating,
+  canEdit,
 }: {
   status: LeadStatus;
   leads: Lead[];
   onLeadSelect: (id: string) => void;
   isUpdating: boolean;
+  canEdit: boolean;
 }) {
   const { setNodeRef, isOver } = useDroppable({ id: status });
   const color = LEAD_STATUS_COLORS[status];
@@ -169,6 +174,7 @@ function KanbanColumn({
             lead={lead}
             onSelect={() => onLeadSelect(lead.id)}
             disabled={isUpdating}
+            canEdit={canEdit}
           />
         ))}
       </div>
@@ -181,11 +187,13 @@ function KanbanCard({
   onSelect,
   disabled,
   isDragging,
+  canEdit = true,
 }: {
   lead: Lead;
   onSelect?: () => void;
   disabled?: boolean;
   isDragging?: boolean;
+  canEdit?: boolean;
 }) {
   const status = lead.status as LeadStatus;
   const color = LEAD_STATUS_COLORS[status] ?? "bg-muted";
@@ -196,7 +204,10 @@ function KanbanCard({
     setNodeRef,
     transform,
     isDragging: isDraggingState,
-  } = useDraggable({ id: `lead-${lead.id}` });
+  } = useDraggable({
+    id: `lead-${lead.id}`,
+    disabled: !canEdit || disabled,
+  });
 
   const style = transform
     ? {
@@ -211,7 +222,8 @@ function KanbanCard({
       {...attributes}
       {...listeners}
       className={cn(
-        "rounded-md border bg-background overflow-hidden cursor-grab active:cursor-grabbing",
+        "rounded-md border bg-background overflow-hidden",
+        canEdit && !disabled && "cursor-grab active:cursor-grabbing",
         "hover:shadow-md transition-shadow",
         (isDragging || isDraggingState) && "opacity-90 shadow-lg",
         disabled && "pointer-events-none opacity-60"

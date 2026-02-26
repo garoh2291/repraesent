@@ -63,9 +63,10 @@ function getRelativeTime(note: Note): string {
 
 interface LeadNotesSectionProps {
   leadId: string;
+  canEdit?: boolean;
 }
 
-export function LeadNotesSection({ leadId }: LeadNotesSectionProps) {
+export function LeadNotesSection({ leadId, canEdit = true }: LeadNotesSectionProps) {
   const queryClient = useQueryClient();
   const { user } = useAuthContext();
   const [isAddingNew, setIsAddingNew] = useState(false);
@@ -256,7 +257,7 @@ export function LeadNotesSection({ leadId }: LeadNotesSectionProps) {
           variant="default"
           size="sm"
           onClick={() => setIsAddingNew(true)}
-          disabled={isAddingNew}
+          disabled={!canEdit || isAddingNew}
         >
           + Add note
         </Button>
@@ -288,7 +289,7 @@ export function LeadNotesSection({ leadId }: LeadNotesSectionProps) {
           </p>
         ) : (
           notes.map((note) =>
-            editingNoteId === note.id ? (
+            editingNoteId === note.id && canEdit ? (
               <div
                 key={note.id}
                 className="rounded-lg border bg-muted/30 p-3 space-y-2"
@@ -314,7 +315,14 @@ export function LeadNotesSection({ leadId }: LeadNotesSectionProps) {
                   "group rounded-lg border bg-muted/30 p-3 transition-colors hover:bg-muted/50 relative"
                 )}
               >
-                <p className="text-sm whitespace-pre-wrap pr-8">{note.content}</p>
+                <p
+                  className={cn(
+                    "text-sm whitespace-pre-wrap",
+                    canEdit && "pr-8"
+                  )}
+                >
+                  {note.content}
+                </p>
                 <div className="flex items-center justify-between gap-2 mt-2">
                   <div className="flex items-center gap-2 text-xs text-muted-foreground flex-wrap">
                     <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-muted text-[10px] font-medium">
@@ -327,18 +335,19 @@ export function LeadNotesSection({ leadId }: LeadNotesSectionProps) {
                       </span>
                     )}
                   </div>
-                  <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <Button
-                      variant="ghost"
-                      size="icon-xs"
-                      className="h-6 w-6"
-                      onClick={() => handleStartEdit(note)}
-                      aria-label="Edit note"
-                    >
-                      <Pencil className="h-3 w-3" />
-                    </Button>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
+                  {canEdit && (
+                    <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <Button
+                        variant="ghost"
+                        size="icon-xs"
+                        className="h-6 w-6"
+                        onClick={() => handleStartEdit(note)}
+                        aria-label="Edit note"
+                      >
+                        <Pencil className="h-3 w-3" />
+                      </Button>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
                         <Button
                           variant="ghost"
                           size="icon-xs"
@@ -347,8 +356,8 @@ export function LeadNotesSection({ leadId }: LeadNotesSectionProps) {
                         >
                           <MoreHorizontal className="h-3 w-3" />
                         </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
                         <DropdownMenuItem
                           variant="destructive"
                           onSelect={() => setNoteIdToDelete(note.id)}
@@ -356,8 +365,8 @@ export function LeadNotesSection({ leadId }: LeadNotesSectionProps) {
                           <Trash2 className="h-4 w-4" />
                           Delete
                         </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
                     <AlertDialog
                       open={noteIdToDelete === note.id}
                       onOpenChange={(open) =>
@@ -385,7 +394,8 @@ export function LeadNotesSection({ leadId }: LeadNotesSectionProps) {
                         </AlertDialogFooter>
                       </AlertDialogContent>
                     </AlertDialog>
-                  </div>
+                    </div>
+                  )}
                 </div>
               </div>
             )

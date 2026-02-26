@@ -22,6 +22,7 @@ import { shortLeadId } from "~/lib/leads/utils";
 import { useDebounce } from "~/lib/hooks/useDebounce";
 import { useSearchParamsSelect } from "~/lib/hooks/useQueryParams";
 import { useLeadsViewMode } from "~/lib/hooks/useLocalStorage";
+import { useCanEditLeads } from "~/lib/hooks/useCanEditLeads";
 import { useUpdateLeadStatus } from "~/lib/hooks/useUpdateLeadStatus";
 import { format } from "date-fns";
 import { ArrowRight, LayoutGrid, Table2 } from "lucide-react";
@@ -64,6 +65,7 @@ export default function LeadForm() {
   const [selectedLeadId, setSelectedLeadId] = useState<string | null>(null);
 
   const debouncedSearch = useDebounce(search, 300);
+  const canEdit = useCanEditLeads();
 
   const updateStatusMutation = useUpdateLeadStatus({
     onMutate: async ({ id, status }) => {
@@ -227,7 +229,7 @@ export default function LeadForm() {
             onValueChange={(status) =>
               updateStatusMutation.mutate({ id: lead.id, status })
             }
-            disabled={updateStatusMutation.isPending}
+            disabled={!canEdit || updateStatusMutation.isPending}
             className="w-[140px]"
           />
         );
@@ -374,6 +376,7 @@ export default function LeadForm() {
           }
           onLeadSelect={setSelectedLeadId}
           isUpdating={updateStatusMutation.isPending}
+          canEdit={canEdit}
         />
       )}
 
@@ -381,10 +384,11 @@ export default function LeadForm() {
         leadId={selectedLeadId}
         open={!!selectedLeadId}
         onOpenChange={(open) => !open && setSelectedLeadId(null)}
-        onStatusChange={(id, status) =>
-          updateStatusMutation.mutate({ id, status })
+        onStatusChange={
+          canEdit ? (id, status) => updateStatusMutation.mutate({ id, status }) : undefined
         }
         isStatusUpdating={updateStatusMutation.isPending}
+        canEdit={canEdit}
       />
     </div>
   );

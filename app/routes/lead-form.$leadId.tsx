@@ -9,6 +9,7 @@ import {
 import { LeadNotesSection } from "~/components/organism/lead-notes-section";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "~/components/ui/tabs";
 import { getLead, getLeadHistory } from "~/lib/api/leads";
+import { useCanEditLeads } from "~/lib/hooks/useCanEditLeads";
 import { useUpdateLeadStatus } from "~/lib/hooks/useUpdateLeadStatus";
 import { Loader2 } from "lucide-react";
 
@@ -25,6 +26,7 @@ export default function LeadFormLeadId() {
   const { currentWorkspace } = useAuthContext();
 
   const updateStatusMutation = useUpdateLeadStatus();
+  const canEdit = useCanEditLeads();
 
   const { data: lead, isLoading: leadLoading } = useQuery({
     queryKey: ["lead", leadId],
@@ -95,7 +97,7 @@ export default function LeadFormLeadId() {
         <div className="space-y-6">
           <LeadInfoSection
             lead={lead}
-            onStatusChange={handleStatusChange}
+            onStatusChange={canEdit ? handleStatusChange : undefined}
             isStatusUpdating={updateStatusMutation.isPending}
             withoutLink
           />
@@ -107,7 +109,7 @@ export default function LeadFormLeadId() {
               <TabsTrigger value="history">History</TabsTrigger>
             </TabsList>
             <TabsContent value="notes" className="mt-4">
-              <LeadNotesSection leadId={lead.id} />
+              <LeadNotesSection leadId={lead.id} canEdit={canEdit} />
             </TabsContent>
             <TabsContent value="history" className="mt-4">
               <LeadHistorySection
