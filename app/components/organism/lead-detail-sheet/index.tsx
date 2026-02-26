@@ -281,7 +281,6 @@ export function LeadHistorySection({
                   <div className="flex-1 min-w-0">
                     <TooltipContainer
                       tooltipContent={actionText}
-                      disableTooltip={actionText.length < 60}
                       showCopyButton={false}
                     >
                       <p className="font-medium truncate">{actionText}</p>
