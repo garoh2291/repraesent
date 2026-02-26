@@ -97,7 +97,7 @@ export default function LeadFormLeadId() {
             lead={lead}
             onStatusChange={handleStatusChange}
             isStatusUpdating={updateStatusMutation.isPending}
-            withoutLink={true}
+            withoutLink
           />
         </div>
         <div className="space-y-6">
@@ -110,7 +110,11 @@ export default function LeadFormLeadId() {
               <LeadNotesSection leadId={lead.id} />
             </TabsContent>
             <TabsContent value="history" className="mt-4">
-              <LeadHistorySection history={history} isLoading={historyLoading} />
+              <LeadHistorySection
+                history={history}
+                isLoading={historyLoading}
+                withoutLink
+              />
             </TabsContent>
           </Tabs>
         </div>

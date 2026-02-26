@@ -6,6 +6,7 @@ import { useAuthContext } from "~/providers/auth-provider";
 import { DataTable } from "~/components/organism/data-table";
 import { LeadDetailSheet } from "~/components/organism/lead-detail-sheet";
 import { LeadsKanban } from "~/components/organism/leads-kanban";
+import { LeadStatusSelect } from "~/components/molecule/lead-status-select";
 import { Button } from "~/components/ui/button";
 import {
   Select,
@@ -16,13 +17,7 @@ import {
 } from "~/components/ui/select";
 import TooltipContainer from "~/components/tooltip-container";
 import { getLeads, type Lead, type LeadStatus } from "~/lib/api/leads";
-import {
-  LEAD_STATUSES,
-  LEAD_SOURCES,
-  LEAD_STATUS_COLORS,
-  LEAD_STATUS_LABELS,
-  type LeadStatus as LeadStatusType,
-} from "~/lib/leads/constants";
+import { LEAD_STATUSES, LEAD_SOURCES, LEAD_STATUS_LABELS } from "~/lib/leads/constants";
 import { shortLeadId } from "~/lib/leads/utils";
 import { useDebounce } from "~/lib/hooks/useDebounce";
 import { useSearchParamsSelect } from "~/lib/hooks/useQueryParams";
@@ -226,49 +221,15 @@ export default function LeadForm() {
       header: "Status",
       cell: ({ row }) => {
         const lead = row.original;
-        const currentStatus = lead.status as LeadStatusType;
-
         return (
-          <Select
+          <LeadStatusSelect
             value={lead.status}
-            onValueChange={(value) =>
-              updateStatusMutation.mutate({
-                id: lead.id,
-                status: value as LeadStatus,
-              })
+            onValueChange={(status) =>
+              updateStatusMutation.mutate({ id: lead.id, status })
             }
             disabled={updateStatusMutation.isPending}
-          >
-            <SelectTrigger
-              className={cn("w-[140px] border-l-4 border-l-transparent", {
-                "border-l-blue-500": currentStatus === "new_lead",
-                "border-l-amber-500": currentStatus === "pending",
-                "border-l-violet-500": currentStatus === "in_progress",
-                "border-l-red-500": currentStatus === "rejected",
-                "border-l-orange-500": currentStatus === "on_hold",
-                "border-l-gray-500": currentStatus === "stale",
-                "border-l-emerald-500": currentStatus === "success",
-                "border-l-muted": currentStatus === "hidden",
-              })}
-            >
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {LEAD_STATUSES.map((s) => (
-                <SelectItem key={s} value={s}>
-                  <span className="flex items-center gap-2">
-                    <span
-                      className={cn(
-                        "w-2 h-2 rounded-full",
-                        LEAD_STATUS_COLORS[s]
-                      )}
-                    />
-                    {LEAD_STATUS_LABELS[s]}
-                  </span>
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+            className="w-[140px]"
+          />
         );
       },
     },

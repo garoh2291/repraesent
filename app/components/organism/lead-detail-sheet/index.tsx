@@ -7,13 +7,6 @@ import {
   SheetTitle,
 } from "~/components/ui/sheet";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "~/components/ui/select";
-import {
   getLead,
   getLeadHistory,
   type Lead,
@@ -21,10 +14,9 @@ import {
   type LeadStatus,
 } from "~/lib/api/leads";
 import { LeadNotesSection } from "~/components/organism/lead-notes-section";
+import { LeadStatusSelect } from "~/components/molecule/lead-status-select";
 import {
   LEAD_STATUS_LABELS,
-  LEAD_STATUSES,
-  LEAD_STATUS_COLORS,
   type LeadStatus as LeadStatusType,
 } from "~/lib/leads/constants";
 import TooltipContainer from "~/components/tooltip-container";
@@ -177,43 +169,12 @@ export function LeadInfoSection({
           <dt className="text-muted-foreground mb-1">Status</dt>
           <dd>
             {onStatusChange ? (
-              <Select
+              <LeadStatusSelect
                 value={lead.status}
-                onValueChange={(value) =>
-                  onStatusChange(lead.id, value as LeadStatus)
-                }
+                onValueChange={(status) => onStatusChange(lead.id, status)}
                 disabled={isStatusUpdating}
-              >
-                <SelectTrigger
-                  className={cn("w-full border-l-4 border-l-transparent", {
-                    "border-l-blue-500": currentStatus === "new_lead",
-                    "border-l-amber-500": currentStatus === "pending",
-                    "border-l-violet-500": currentStatus === "in_progress",
-                    "border-l-red-500": currentStatus === "rejected",
-                    "border-l-orange-500": currentStatus === "on_hold",
-                    "border-l-gray-500": currentStatus === "stale",
-                    "border-l-emerald-500": currentStatus === "success",
-                    "border-l-muted": currentStatus === "hidden",
-                  })}
-                >
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {LEAD_STATUSES.map((s) => (
-                    <SelectItem key={s} value={s}>
-                      <span className="flex items-center gap-2">
-                        <span
-                          className={cn(
-                            "w-2 h-2 rounded-full",
-                            LEAD_STATUS_COLORS[s]
-                          )}
-                        />
-                        {LEAD_STATUS_LABELS[s]}
-                      </span>
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+                className="w-full"
+              />
             ) : (
               <span className={cn(fieldValueClass, "inline-block")}>
                 {LEAD_STATUS_LABELS[currentStatus] ?? lead.status}
@@ -268,9 +229,11 @@ export function LeadInfoSection({
 export function LeadHistorySection({
   history,
   isLoading,
+  withoutLink = false,
 }: {
   history: LeadHistoryItem[];
   isLoading: boolean;
+  withoutLink?: boolean;
 }) {
   return (
     <div className="space-y-4">
@@ -282,7 +245,14 @@ export function LeadHistorySection({
       ) : history.length === 0 ? (
         <p className="text-sm text-muted-foreground">No history yet.</p>
       ) : (
-        <div className="overflow-y-auto max-h-[calc(100vh-16rem)] pr-2">
+        <div
+          className={cn(
+            "pr-2",
+            !withoutLink
+              ? "overflow-y-hidden"
+              : "overflow-y-auto max-h-[calc(100vh-16rem)]"
+          )}
+        >
           <div className="space-y-3">
             {history.map((item, idx) => {
               const actionText = formatHistoryAction(item);
