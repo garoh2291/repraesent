@@ -5,9 +5,4 @@ import tsconfigPaths from "vite-tsconfig-paths";
 
 export default defineConfig({
   plugins: [tailwindcss(), reactRouter(), tsconfigPaths()],
-  resolve: {
-    alias: {
-      "lucide-react/dynamic": "lucide-react/dynamic.mjs",
-    },
-  },
 });

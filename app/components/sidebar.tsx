@@ -6,8 +6,8 @@ import {
   LogOut,
   Settings,
 } from "lucide-react";
+import * as LucideIcons from "lucide-react";
 
-import { DynamicIcon, iconNames, type IconName } from "lucide-react/dynamic";
 import { useAuthContext } from "~/providers/auth-provider";
 import { Button } from "~/components/ui/button";
 import {
@@ -18,6 +18,31 @@ import {
 } from "~/components/ui/dropdown-menu";
 
 import logoUrl from "~/components/icons/re_praesent-mark-brand-hor.svg?url";
+
+const lucideIconNames = new Set(
+  Object.keys(LucideIcons).filter((key) => /^[A-Z]/.test(key))
+);
+
+function kebabToPascal(name: string) {
+  return name
+    .split("-")
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join("");
+}
+
+function DynamicIcon({
+  name,
+  className,
+}: {
+  name: string;
+  className?: string;
+}) {
+  const Icon = (LucideIcons as Record<string, unknown>)[name] as
+    | React.ComponentType<{ className?: string }>
+    | undefined;
+  if (!Icon) return null;
+  return <Icon className={className} />;
+}
 
 export function Sidebar() {
   const {
@@ -35,9 +60,6 @@ export function Sidebar() {
     setCurrentWorkspace(workspaceId);
     navigate("/", { replace: true });
   };
-
-  const isValidIconName = (name: string) =>
-    (iconNames as string[]).includes(name);
 
   return (
     <aside className="flex h-screen w-64 shrink-0 flex-col overflow-hidden border-r border-sidebar-border bg-sidebar">
@@ -104,6 +126,11 @@ export function Sidebar() {
             (location.pathname === `/${product.product_slug}` ||
               location.pathname.startsWith(`/${product.product_slug}/`));
           const hasSlug = !!product.product_slug;
+          const iconName = product.product_icon
+            ? kebabToPascal(product.product_icon)
+            : null;
+
+          const hasIcon = !!iconName && lucideIconNames.has(iconName);
 
           return (
             <Link
@@ -119,12 +146,9 @@ export function Sidebar() {
               onClick={(e) => !hasSlug && e.preventDefault()}
               aria-disabled={!hasSlug}
             >
-              {product.product_icon && isValidIconName(product.product_icon) ? (
-                <DynamicIcon
-                  name={product.product_icon as IconName}
-                  className="h-4 w-4 shrink-0"
-                />
-              ) : null}
+              {hasIcon && (
+                <DynamicIcon name={iconName!} className="h-4 w-4 shrink-0" />
+              )}
               {product.product_name}
             </Link>
           );
