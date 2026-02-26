@@ -213,7 +213,7 @@ export function LeadInfoSection({
         {metadataEntries.length > 0 &&
           metadataEntries.map(([key, value]) => (
             <div key={key}>
-              <dt className="text-muted-foreground mb-1">{key}</dt>
+              <dt className="text-muted-foreground mb-1 capitalize">{key}</dt>
               <dd className={cn(fieldValueClass, "whitespace-pre-wrap")}>
                 {value == null
                   ? "—"
