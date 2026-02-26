@@ -1,11 +1,20 @@
 import { useAuthContext } from "~/providers/auth-provider";
 import { Button } from "~/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "~/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "~/components/ui/card";
 
 export function meta() {
   return [
     { title: "No Workspace - Repraesent" },
-    { name: "description", content: "Your account is not connected to any workspace" },
+    {
+      name: "description",
+      content: "Your account is not connected to any workspace",
+    },
   ];
 }
 
@@ -26,10 +35,10 @@ export default function NoWorkspace() {
           <p className="text-sm text-muted-foreground">
             For assistance, contact:{" "}
             <a
-              href="mailto:support@gagadomains.com"
+              href="mailto:support@dendritecorp.com"
               className="text-primary underline hover:no-underline"
             >
-              support@gagadomains.com
+              support@dendritecorp.com
             </a>
           </p>
           <Button

@@ -217,10 +217,10 @@ export default function Settings() {
           <p className="text-muted-foreground py-4">
             No products. Contact support to attach products:{" "}
             <a
-              href="mailto:support@gagadomains.com"
+              href="mailto:support@dendritecorp.com"
               className="text-primary underline hover:no-underline"
             >
-              support@gagadomains.com
+              support@dendritecorp.com
             </a>
           </p>
         )}
@@ -245,8 +245,8 @@ export default function Settings() {
               </TooltipTrigger>
               <TooltipContent side="right" className="max-w-xs">
                 To change the URL, contact support:{" "}
-                <a href="mailto:support@gagadomains.com" className="underline">
-                  support@gagadomains.com
+                <a href="mailto:support@dendritecorp.com" className="underline">
+                  support@dendritecorp.com
                 </a>
               </TooltipContent>
             </Tooltip>
@@ -260,10 +260,10 @@ export default function Settings() {
         <p className="text-sm text-muted-foreground mb-4">
           To add members, contact support:{" "}
           <a
-            href="mailto:support@gagadomains.com"
+            href="mailto:support@dendritecorp.com"
             className="text-primary underline hover:no-underline"
           >
-            support@gagadomains.com
+            support@dendritecorp.com
           </a>
         </p>
         {members.length > 0 ? (

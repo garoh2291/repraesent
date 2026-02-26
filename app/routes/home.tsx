@@ -104,10 +104,10 @@ export default function Home() {
             <p className="text-sm text-muted-foreground">
               Contact support to attach a product:{" "}
               <a
-                href="mailto:support@gagadomains.com"
+                href="mailto:support@dendritecorp.com"
                 className="text-primary underline hover:no-underline"
               >
-                support@gagadomains.com
+                support@dendritecorp.com
               </a>
             </p>
           ) : (
