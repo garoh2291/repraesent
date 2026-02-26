@@ -7,17 +7,10 @@ import { DataTable } from "~/components/organism/data-table";
 import { LeadDetailSheet } from "~/components/organism/lead-detail-sheet";
 import { LeadsKanban } from "~/components/organism/leads-kanban";
 import { LeadStatusSelect } from "~/components/molecule/lead-status-select";
+import FilterComponent from "~/components/molecule/filter-component";
 import { Button } from "~/components/ui/button";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "~/components/ui/select";
 import TooltipContainer from "~/components/tooltip-container";
 import { getLeads, type Lead, type LeadStatus } from "~/lib/api/leads";
-import { LEAD_STATUSES, LEAD_SOURCES, LEAD_STATUS_LABELS } from "~/lib/leads/constants";
 import { shortLeadId } from "~/lib/leads/utils";
 import { useDebounce } from "~/lib/hooks/useDebounce";
 import { useSearchParamsSelect } from "~/lib/hooks/useQueryParams";
@@ -25,8 +18,7 @@ import { useLeadsViewMode } from "~/lib/hooks/useLocalStorage";
 import { useCanEditLeads } from "~/lib/hooks/useCanEditLeads";
 import { useUpdateLeadStatus } from "~/lib/hooks/useUpdateLeadStatus";
 import { format } from "date-fns";
-import { ArrowRight, LayoutGrid, Table2 } from "lucide-react";
-import { cn } from "~/lib/utils";
+import { ArrowRight, LayoutGrid, Table2, X } from "lucide-react";
 
 export function meta() {
   return [
@@ -52,7 +44,10 @@ export default function LeadForm() {
   const [searchParams] = useSearchParams();
   const [onSelect, clearParams] = useSearchParamsSelect();
 
-  const page = useMemo(() => parsePage(searchParams.get("page")), [searchParams]);
+  const page = useMemo(
+    () => parsePage(searchParams.get("page")),
+    [searchParams]
+  );
   const limit = useMemo(
     () => parseLimit(searchParams.get("limit")),
     [searchParams]
@@ -287,60 +282,26 @@ export default function LeadForm() {
         </div>
       </div>
 
-      <div className="flex flex-wrap gap-4 items-center">
-        <Select
-          value={statusFilter || "all"}
-          onValueChange={(v) =>
-            onSelect(
-              {
-                status: v === "all" ? "" : v,
-                page: "1",
-              },
-              true
-            )
-          }
-        >
-          <SelectTrigger className="w-[160px]">
-            <SelectValue placeholder="All statuses" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All statuses</SelectItem>
-            {LEAD_STATUSES.map((s) => (
-              <SelectItem key={s} value={s}>
-                {LEAD_STATUS_LABELS[s]}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        <Select
-          value={sourceFilter || "all"}
-          onValueChange={(v) =>
-            onSelect(
-              {
-                source: v === "all" ? "" : v,
-                page: "1",
-              },
-              true
-            )
-          }
-        >
-          <SelectTrigger className="w-[140px]">
-            <SelectValue placeholder="All sources" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All sources</SelectItem>
-            {Object.values(LEAD_SOURCES).map((src) => (
-              <SelectItem key={src.value} value={src.value}>
-                {src.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
-
       {viewMode === "table" ? (
         <DataTable<Lead, unknown>
           columns={columns}
+          additionalElement={
+            <div className="flex flex-wrap gap-4 items-center">
+              <FilterComponent optionKey="leads" />
+              {(statusFilter || sourceFilter) && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="gap-1 py-1 px-2 rounded-[12px] border-dashed text-muted-foreground"
+                  onClick={() =>
+                    onSelect({ status: "", source: "", page: "1" }, true)
+                  }
+                >
+                  Clear <X size={14} />
+                </Button>
+              )}
+            </div>
+          }
           data={leadsQuery.data?.data ?? []}
           isLoading={leadsQuery.isLoading}
           pagination={
@@ -385,7 +346,9 @@ export default function LeadForm() {
         open={!!selectedLeadId}
         onOpenChange={(open) => !open && setSelectedLeadId(null)}
         onStatusChange={
-          canEdit ? (id, status) => updateStatusMutation.mutate({ id, status }) : undefined
+          canEdit
+            ? (id, status) => updateStatusMutation.mutate({ id, status })
+            : undefined
         }
         isStatusUpdating={updateStatusMutation.isPending}
         canEdit={canEdit}

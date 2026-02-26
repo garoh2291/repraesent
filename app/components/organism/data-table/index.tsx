@@ -111,7 +111,6 @@ export function DataTable<TData, TValue>({
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between gap-4">
-        {additionalElement && <div>{additionalElement}</div>}
         <div className="relative flex-1 max-w-sm">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
@@ -133,13 +132,17 @@ export function DataTable<TData, TValue>({
             </Button>
           )}
         </div>
+        {additionalElement && <div>{additionalElement}</div>}
       </div>
 
       <div className="rounded-md border">
         <Table>
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
-              <TableRow key={headerGroup.id}>
+              <TableRow
+                key={headerGroup.id}
+                className="bg-secondary hover:bg-secondary/80"
+              >
                 {headerGroup.headers.map((header) => (
                   <TableHead key={header.id}>
                     {header.isPlaceholder ? null : (
@@ -178,7 +181,9 @@ export function DataTable<TData, TValue>({
                 <TableRow
                   key={row.id}
                   data-state={row.getIsSelected() && "selected"}
-                  className={onRowClick ? "cursor-pointer hover:bg-muted/50" : undefined}
+                  className={
+                    onRowClick ? "cursor-pointer hover:bg-muted/50" : undefined
+                  }
                   onClick={
                     onRowClick
                       ? (e) => {
@@ -267,7 +272,9 @@ export function DataTable<TData, TValue>({
                   return (
                     <Button
                       key={pageNum}
-                      variant={currentPage === pageNum ? "secondary" : "outline"}
+                      variant={
+                        currentPage === pageNum ? "secondary" : "outline"
+                      }
                       size="sm"
                       onClick={() => handlePageChange(pageNum)}
                     >

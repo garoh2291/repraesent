@@ -113,7 +113,7 @@ export default function Home() {
           ) : (
             <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
               {products.map((p) => (
-                <Card key={p.product_id} className="overflow-hidden">
+                <Card key={p.product_id} className="overflow-hidden py-0">
                   <div className="flex h-24 items-center justify-center bg-muted">
                     {p.product_image ? (
                       <img
