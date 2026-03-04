@@ -18,7 +18,8 @@ import { useLeadsViewMode } from "~/lib/hooks/useLocalStorage";
 import { useCanEditLeads } from "~/lib/hooks/useCanEditLeads";
 import { useUpdateLeadStatus } from "~/lib/hooks/useUpdateLeadStatus";
 import { format } from "date-fns";
-import { ArrowRight, LayoutGrid, Table2, X } from "lucide-react";
+import { ArrowRight, LayoutGrid, Table2, Upload, X } from "lucide-react";
+import { LeadImportModal } from "~/components/organism/lead-import-modal";
 
 export function meta() {
   return [
@@ -58,6 +59,7 @@ export default function LeadForm() {
 
   const [viewMode, setViewMode] = useLeadsViewMode();
   const [selectedLeadId, setSelectedLeadId] = useState<string | null>(null);
+  const [importModalOpen, setImportModalOpen] = useState(false);
 
   const debouncedSearch = useDebounce(search, 300);
   const canEdit = useCanEditLeads();
@@ -257,6 +259,16 @@ export default function LeadForm() {
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold tracking-tight">Leads</h1>
         <div className="flex items-center gap-2">
+          {canEdit && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setImportModalOpen(true)}
+            >
+              <Upload className="h-4 w-4 mr-1" />
+              Import CSV
+            </Button>
+          )}
           <Button
             variant={viewMode === "table" ? "secondary" : "outline"}
             size="sm"
@@ -352,6 +364,11 @@ export default function LeadForm() {
         }
         isStatusUpdating={updateStatusMutation.isPending}
         canEdit={canEdit}
+      />
+
+      <LeadImportModal
+        open={importModalOpen}
+        onOpenChange={setImportModalOpen}
       />
     </div>
   );
