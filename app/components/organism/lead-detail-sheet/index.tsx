@@ -255,43 +255,59 @@ export function LeadHistorySection({
               : "overflow-y-auto max-h-[calc(100vh-16rem)]"
           )}
         >
-          <div className="space-y-3">
-            {history.map((item, idx) => {
-              const actionText = formatHistoryAction(item);
-              const relativeTime = item.created_at
-                ? formatDistanceToNow(new Date(item.created_at), {
-                    addSuffix: true,
-                  })
-                : "";
-              return (
-                <div
-                  key={idx}
-                  className="rounded-lg border bg-muted/30 p-3 transition-colors"
-                >
-                  <TooltipContainer
-                    tooltipContent={actionText}
-                    showCopyButton={false}
-                  >
-                    <p className="text-sm font-medium truncate">{actionText}</p>
-                  </TooltipContainer>
-                  <div className="flex items-center gap-2 text-xs text-muted-foreground mt-2 flex-wrap">
-                    <TooltipContainer
-                      tooltipContent={
-                        item.user_first_name && item.user_last_name
-                          ? item.user_first_name + " " + item.user_last_name
-                          : "System"
-                      }
-                      showCopyButton={false}
-                    >
-                      <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-muted text-[10px] font-medium">
-                        {getHistoryItemInitials(item)}
-                      </span>
-                    </TooltipContainer>
-                    <span>{relativeTime}</span>
+          <div className="relative">
+            {/* Vertical line */}
+            <div
+              className="absolute left-[7px] top-2 bottom-2 w-px bg-secondary/50"
+              aria-hidden
+            />
+            <div className="space-y-0">
+              {history.map((item, idx) => {
+                const actionText = formatHistoryAction(item);
+                const relativeTime = item.created_at
+                  ? formatDistanceToNow(new Date(item.created_at), {
+                      addSuffix: true,
+                    })
+                  : "";
+                return (
+                  <div key={idx} className="relative flex gap-3 pb-4 last:pb-0">
+                    {/* Dot */}
+                    <div className="relative z-10 mt-1.5 shrink-0">
+                      <span
+                        className="flex h-4 w-4 items-center justify-center rounded-full bg-secondary ring-4 ring-background"
+                        aria-hidden
+                      />
+                    </div>
+                    {/* Content */}
+                    <div className="min-w-0 flex-1 py-0.5">
+                      <TooltipContainer
+                        tooltipContent={actionText}
+                        showCopyButton={false}
+                      >
+                        <p className="text-sm font-medium truncate">
+                          {actionText}
+                        </p>
+                      </TooltipContainer>
+                      <div className="flex items-center gap-2 text-xs text-muted-foreground mt-2 flex-wrap">
+                        <TooltipContainer
+                          tooltipContent={
+                            item.user_first_name && item.user_last_name
+                              ? item.user_first_name + " " + item.user_last_name
+                              : "System"
+                          }
+                          showCopyButton={false}
+                        >
+                          <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-muted text-[10px] font-medium">
+                            {getHistoryItemInitials(item)}
+                          </span>
+                        </TooltipContainer>
+                        <span>{relativeTime}</span>
+                      </div>
+                    </div>
                   </div>
-                </div>
-              );
-            })}
+                );
+              })}
+            </div>
           </div>
         </div>
       )}

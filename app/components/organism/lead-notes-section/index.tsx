@@ -27,8 +27,15 @@ import {
   AlertDialogTitle,
 } from "~/components/ui/alert-dialog";
 import { formatDistanceToNow } from "date-fns";
-import { Loader2, MoreHorizontal, Pencil, FileText, Trash2 } from "lucide-react";
+import {
+  Loader2,
+  MoreHorizontal,
+  Pencil,
+  FileText,
+  Trash2,
+} from "lucide-react";
 import { cn } from "~/lib/utils";
+import TooltipContainer from "~/components/tooltip-container";
 
 function getInitials(note: Note): string {
   const first = note.user_first_name?.trim() ?? "";
@@ -55,9 +62,7 @@ function getCurrentUserInitials(
 
 function getRelativeTime(note: Note): string {
   const date =
-    note.version > 1
-      ? new Date(note.updated_at)
-      : new Date(note.created_at);
+    note.version > 1 ? new Date(note.updated_at) : new Date(note.created_at);
   return formatDistanceToNow(date, { addSuffix: true });
 }
 
@@ -66,7 +71,10 @@ interface LeadNotesSectionProps {
   canEdit?: boolean;
 }
 
-export function LeadNotesSection({ leadId, canEdit = true }: LeadNotesSectionProps) {
+export function LeadNotesSection({
+  leadId,
+  canEdit = true,
+}: LeadNotesSectionProps) {
   const queryClient = useQueryClient();
   const { user } = useAuthContext();
   const [isAddingNew, setIsAddingNew] = useState(false);
@@ -110,10 +118,7 @@ export function LeadNotesSection({ leadId, canEdit = true }: LeadNotesSectionPro
     },
     onError: (_err, _content, context) => {
       if (context?.previousNotes != null) {
-        queryClient.setQueryData(
-          ["lead-notes", leadId],
-          context.previousNotes
-        );
+        queryClient.setQueryData(["lead-notes", leadId], context.previousNotes);
       }
       setIsAddingNew(true);
       setNewNoteContent(_content);
@@ -164,10 +169,7 @@ export function LeadNotesSection({ leadId, canEdit = true }: LeadNotesSectionPro
     },
     onError: (_err, { noteId, content }, context) => {
       if (context?.previousNotes != null) {
-        queryClient.setQueryData(
-          ["lead-notes", leadId],
-          context.previousNotes
-        );
+        queryClient.setQueryData(["lead-notes", leadId], context.previousNotes);
       }
       setEditingNoteId(noteId);
       setEditingContent(content);
@@ -194,10 +196,7 @@ export function LeadNotesSection({ leadId, canEdit = true }: LeadNotesSectionPro
     },
     onError: (_err, _noteId, context) => {
       if (context?.previousNotes != null) {
-        queryClient.setQueryData(
-          ["lead-notes", leadId],
-          context.previousNotes
-        );
+        queryClient.setQueryData(["lead-notes", leadId], context.previousNotes);
       }
       setNoteIdToDelete(null);
     },
@@ -284,9 +283,7 @@ export function LeadNotesSection({ leadId, canEdit = true }: LeadNotesSectionPro
         )}
 
         {notes.length === 0 && !isAddingNew ? (
-          <p className="text-sm text-muted-foreground py-4">
-            No notes yet.
-          </p>
+          <p className="text-sm text-muted-foreground py-4">No notes yet.</p>
         ) : (
           notes.map((note) =>
             editingNoteId === note.id && canEdit ? (
@@ -302,9 +299,18 @@ export function LeadNotesSection({ leadId, canEdit = true }: LeadNotesSectionPro
                   className="min-h-[80px] resize-none"
                 />
                 <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                  <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-muted text-[10px] font-medium">
-                    {getInitials(note)}
-                  </span>
+                  <TooltipContainer
+                    tooltipContent={
+                      note.user_first_name && note.user_last_name
+                        ? note.user_first_name + " " + note.user_last_name
+                        : "System"
+                    }
+                    showCopyButton={false}
+                  >
+                    <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-muted text-[10px] font-medium">
+                      {getInitials(note)}
+                    </span>
+                  </TooltipContainer>
                   <span>{getRelativeTime(note)}</span>
                 </div>
               </div>
@@ -325,9 +331,18 @@ export function LeadNotesSection({ leadId, canEdit = true }: LeadNotesSectionPro
                 </p>
                 <div className="flex items-center justify-between gap-2 mt-2">
                   <div className="flex items-center gap-2 text-xs text-muted-foreground flex-wrap">
-                    <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-muted text-[10px] font-medium">
-                      {getInitials(note)}
-                    </span>
+                    <TooltipContainer
+                      tooltipContent={
+                        note.user_first_name && note.user_last_name
+                          ? note.user_first_name + " " + note.user_last_name
+                          : "System"
+                      }
+                      showCopyButton={false}
+                    >
+                      <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-muted text-[10px] font-medium">
+                        {getInitials(note)}
+                      </span>
+                    </TooltipContainer>
                     <span>{getRelativeTime(note)}</span>
                     {note.version > 1 && (
                       <span className="text-muted-foreground/80 italic">
@@ -348,52 +363,52 @@ export function LeadNotesSection({ leadId, canEdit = true }: LeadNotesSectionPro
                       </Button>
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
-                        <Button
-                          variant="ghost"
-                          size="icon-xs"
-                          className="h-6 w-6"
-                          aria-label="More options"
-                        >
-                          <MoreHorizontal className="h-3 w-3" />
-                        </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon-xs"
+                            className="h-6 w-6"
+                            aria-label="More options"
+                          >
+                            <MoreHorizontal className="h-3 w-3" />
+                          </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
-                        <DropdownMenuItem
-                          variant="destructive"
-                          onSelect={() => setNoteIdToDelete(note.id)}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                          Delete
-                        </DropdownMenuItem>
+                          <DropdownMenuItem
+                            variant="destructive"
+                            onSelect={() => setNoteIdToDelete(note.id)}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                            Delete
+                          </DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
-                    <AlertDialog
-                      open={noteIdToDelete === note.id}
-                      onOpenChange={(open) =>
-                        !open && setNoteIdToDelete(null)
-                      }
-                    >
-                      <AlertDialogContent>
-                        <AlertDialogHeader>
-                          <AlertDialogTitle>Delete note?</AlertDialogTitle>
-                          <AlertDialogDescription>
-                            This action cannot be undone.
-                          </AlertDialogDescription>
-                        </AlertDialogHeader>
-                        <AlertDialogFooter>
-                          <AlertDialogCancel>Cancel</AlertDialogCancel>
-                          <AlertDialogAction
-                            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                            onClick={() => {
-                              deleteMutation.mutate(note.id);
-                              setNoteIdToDelete(null);
-                            }}
-                          >
-                            Delete
-                          </AlertDialogAction>
-                        </AlertDialogFooter>
-                      </AlertDialogContent>
-                    </AlertDialog>
+                      <AlertDialog
+                        open={noteIdToDelete === note.id}
+                        onOpenChange={(open) =>
+                          !open && setNoteIdToDelete(null)
+                        }
+                      >
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>Delete note?</AlertDialogTitle>
+                            <AlertDialogDescription>
+                              This action cannot be undone.
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                            <AlertDialogAction
+                              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                              onClick={() => {
+                                deleteMutation.mutate(note.id);
+                                setNoteIdToDelete(null);
+                              }}
+                            >
+                              Delete
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
                     </div>
                   )}
                 </div>

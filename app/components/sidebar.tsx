@@ -62,7 +62,7 @@ export function Sidebar() {
   };
 
   return (
-    <aside className="flex h-screen w-64 shrink-0 flex-col overflow-hidden border-r border-sidebar-border bg-sidebar">
+    <aside className="flex h-screen w-64 shrink-0 flex-col overflow-hidden  border-sidebar-border bg-sidebar">
       <div className="flex h-14 shrink-0 items-center gap-2 border-b border-sidebar-border px-4">
         <Link to="/" className="flex items-center">
           <img
