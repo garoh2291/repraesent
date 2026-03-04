@@ -152,6 +152,7 @@ export default function LeadForm() {
         source: sourceFilter || undefined,
       }),
     enabled: !!currentWorkspace,
+    refetchOnMount: "always",
   });
 
   const hasAccess =

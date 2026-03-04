@@ -1,10 +1,7 @@
 "use client";
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import {
-  updateLeadStatus,
-  type LeadStatus,
-} from "~/lib/api/leads";
+import { updateLeadStatus, type LeadStatus } from "~/lib/api/leads";
 
 export interface UpdateLeadStatusVariables {
   id: string;
@@ -13,7 +10,11 @@ export interface UpdateLeadStatusVariables {
 
 export interface UseUpdateLeadStatusOptions {
   onMutate?: (variables: UpdateLeadStatusVariables) => Promise<unknown>;
-  onError?: (err: Error, variables: UpdateLeadStatusVariables, context: unknown) => void;
+  onError?: (
+    err: Error,
+    variables: UpdateLeadStatusVariables,
+    context: unknown
+  ) => void;
 }
 
 export function useUpdateLeadStatus(opts?: UseUpdateLeadStatusOptions) {
@@ -26,7 +27,9 @@ export function useUpdateLeadStatus(opts?: UseUpdateLeadStatusOptions) {
     onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({ queryKey: ["leads"] });
       queryClient.invalidateQueries({ queryKey: ["lead", variables.id] });
-      queryClient.invalidateQueries({ queryKey: ["lead-history", variables.id] });
+      queryClient.invalidateQueries({
+        queryKey: ["lead-history", variables.id],
+      });
     },
     onError: opts?.onError,
   });
