@@ -8,6 +8,7 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
+  CardValue,
 } from "~/components/ui/card";
 
 export function meta() {
@@ -36,6 +37,8 @@ export default function Home() {
         <p className="text-muted-foreground">Overview of your workspace</p>
       </div>
 
+      <hr className="border-border" />
+
       <div className="grid gap-4 md:grid-cols-2">
         <Card>
           <CardHeader>
@@ -46,7 +49,7 @@ export default function Home() {
             {statsLoading ? (
               <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent" />
             ) : (
-              <p className="text-3xl font-bold">{leadStats?.total ?? 0}</p>
+              <CardValue>{leadStats?.total ?? 0}</CardValue>
             )}
           </CardContent>
         </Card>
@@ -59,13 +62,13 @@ export default function Home() {
             {statsLoading ? (
               <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent" />
             ) : (
-              <p className="text-3xl font-bold">
-                {leadStats?.new_this_week ?? 0}
-              </p>
+              <CardValue>{leadStats?.new_this_week ?? 0}</CardValue>
             )}
           </CardContent>
         </Card>
       </div>
+
+      <hr className="border-border" />
 
       <div className="grid gap-4 md:grid-cols-2">
         <Card>
@@ -74,9 +77,9 @@ export default function Home() {
             <CardDescription>Your account details</CardDescription>
           </CardHeader>
           <CardContent className="space-y-1">
-            <p className="font-medium">
+            <CardValue className="text-2xl">
               {user?.first_name} {user?.last_name}
-            </p>
+            </CardValue>
             <p className="text-sm text-muted-foreground">{user?.email}</p>
           </CardContent>
         </Card>
@@ -86,7 +89,9 @@ export default function Home() {
             <CardDescription>Current workspace and your role</CardDescription>
           </CardHeader>
           <CardContent>
-            <p className="font-medium">{currentWorkspace?.name ?? "—"}</p>
+            <CardValue className="text-2xl">
+              {currentWorkspace?.name ?? "—"}
+            </CardValue>
             <p className="text-sm text-muted-foreground capitalize">
               Role: {role}
             </p>
@@ -94,9 +99,13 @@ export default function Home() {
         </Card>
       </div>
 
+      <hr className="border-border" />
+
       <Card>
         <CardHeader>
-          <CardTitle>Products</CardTitle>
+          <CardTitle className="text-base font-semibold text-foreground">
+            Products
+          </CardTitle>
           <CardDescription>Products attached to this workspace</CardDescription>
         </CardHeader>
         <CardContent>

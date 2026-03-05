@@ -135,7 +135,7 @@ export function DataTable<TData, TValue>({
         {additionalElement && <div>{additionalElement}</div>}
       </div>
 
-      <div className="rounded-md border">
+      <div className="rounded-md border border-border bg-card shadow-[var(--shadow)] overflow-hidden">
         <Table>
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (

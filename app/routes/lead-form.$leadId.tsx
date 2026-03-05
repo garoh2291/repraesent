@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { useParams, useNavigate } from "react-router";
+import { Link, useParams, useNavigate } from "react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useAuthContext } from "~/providers/auth-provider";
 import {
@@ -7,11 +7,12 @@ import {
   LeadHistorySection,
 } from "~/components/organism/lead-detail-sheet";
 import { LeadNotesSection } from "~/components/organism/lead-notes-section";
+import { Card, CardContent } from "~/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "~/components/ui/tabs";
 import { getLead, getLeadHistory } from "~/lib/api/leads";
 import { useCanEditLeads } from "~/lib/hooks/useCanEditLeads";
 import { useUpdateLeadStatus } from "~/lib/hooks/useUpdateLeadStatus";
-import { Loader2 } from "lucide-react";
+import { ArrowLeft, Loader2 } from "lucide-react";
 
 export function meta() {
   return [
@@ -91,35 +92,57 @@ export default function LeadFormLeadId() {
     updateStatusMutation.mutate({ id, status });
   };
 
+  const displayName =
+    lead.full_name ||
+    [lead.first_name, lead.last_name].filter(Boolean).join(" ").trim() ||
+    "Lead";
+
   return (
-    <div className="p-6">
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 py-10">
-        <div className="space-y-6">
-          <LeadInfoSection
-            lead={lead}
-            onStatusChange={canEdit ? handleStatusChange : undefined}
-            isStatusUpdating={updateStatusMutation.isPending}
-            withoutLink
-          />
-        </div>
-        <div className="space-y-6">
-          <Tabs defaultValue="notes" className="w-full">
-            <TabsList variant="line" className="w-full">
-              <TabsTrigger value="notes">Notes</TabsTrigger>
-              <TabsTrigger value="history">History</TabsTrigger>
-            </TabsList>
-            <TabsContent value="notes" className="mt-4">
-              <LeadNotesSection leadId={lead.id} canEdit={canEdit} />
-            </TabsContent>
-            <TabsContent value="history" className="mt-4">
-              <LeadHistorySection
-                history={history}
-                isLoading={historyLoading}
-                withoutLink
-              />
-            </TabsContent>
-          </Tabs>
-        </div>
+    <div className="p-6 space-y-6">
+      <div>
+        <Link
+          to="/lead-form"
+          className="text-sm text-muted-foreground hover:text-foreground inline-flex items-center gap-1 mb-2"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          Back to leads
+        </Link>
+        <h1 className="text-2xl font-bold tracking-tight">{displayName}</h1>
+      </div>
+
+      <hr className="border-border" />
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <Card>
+          <CardContent className="pt-6">
+            <LeadInfoSection
+              lead={lead}
+              onStatusChange={canEdit ? handleStatusChange : undefined}
+              isStatusUpdating={updateStatusMutation.isPending}
+              withoutLink
+            />
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="pt-6">
+            <Tabs defaultValue="notes" className="w-full">
+              <TabsList variant="line" className="w-full mb-4">
+                <TabsTrigger value="notes">Notes</TabsTrigger>
+                <TabsTrigger value="history">History</TabsTrigger>
+              </TabsList>
+              <TabsContent value="notes" className="mt-0">
+                <LeadNotesSection leadId={lead.id} canEdit={canEdit} />
+              </TabsContent>
+              <TabsContent value="history" className="mt-0">
+                <LeadHistorySection
+                  history={history}
+                  isLoading={historyLoading}
+                  withoutLink
+                />
+              </TabsContent>
+            </Tabs>
+          </CardContent>
+        </Card>
       </div>
     </div>
   );

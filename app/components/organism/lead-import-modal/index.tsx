@@ -292,11 +292,11 @@ export function LeadImportModal({ open, onOpenChange }: LeadImportModalProps) {
                   {file?.name} — {rows.length} rows. Select fields and rows to
                   import.
                 </p>
-                <div className="flex-1 border rounded-md overflow-auto max-h-[300px] max-w-full">
+                <div className="flex-1 rounded-md border border-border bg-card shadow-[var(--shadow)] overflow-auto max-h-[300px] max-w-full">
                   <Table>
                     <TableHeader>
                       <TableRow>
-                        <TableHead className="w-10 sticky left-0 bg-background z-10">
+                        <TableHead className="w-10 sticky left-0 bg-card z-10">
                           <Checkbox
                             checked={
                               selectedRows.size === rows.length &&

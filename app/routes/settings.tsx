@@ -181,11 +181,13 @@ export default function Settings() {
         <p className="text-muted-foreground">Manage your workspace</p>
       </div>
 
+      <hr className="border-border" />
+
       {/* Products Section - Read-only */}
       <section>
         <h2 className="text-xl font-semibold mb-4">Products</h2>
         {products.length > 0 ? (
-          <div className="border rounded-md">
+          <div className="rounded-md border border-border bg-card shadow-[var(--shadow)] overflow-hidden">
             <Table>
               <TableHeader>
                 <TableRow className="bg-muted/50">
@@ -226,6 +228,8 @@ export default function Settings() {
         )}
       </section>
 
+      <hr className="border-border" />
+
       {/* URL Section - Disabled with tooltip */}
       <section>
         <h2 className="text-xl font-semibold mb-4">URL</h2>
@@ -254,6 +258,8 @@ export default function Settings() {
         </TooltipProvider>
       </section>
 
+      <hr className="border-border" />
+
       {/* Members Section */}
       <section>
         <h2 className="text-xl font-semibold mb-2">Members</h2>
@@ -267,7 +273,7 @@ export default function Settings() {
           </a>
         </p>
         {members.length > 0 ? (
-          <div className="border rounded-md">
+          <div className="rounded-md border border-border bg-card shadow-[var(--shadow)] overflow-hidden">
             <Table>
               <TableHeader>
                 <TableRow className="bg-muted/50">

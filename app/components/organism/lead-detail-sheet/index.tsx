@@ -258,7 +258,7 @@ export function LeadHistorySection({
           <div className="relative">
             {/* Vertical line */}
             <div
-              className="absolute left-[7px] top-2 bottom-2 w-px bg-secondary/50"
+              className="absolute left-[4px] top-2 bottom-2 w-px bg-muted"
               aria-hidden
             />
             <div className="space-y-0">
@@ -274,7 +274,7 @@ export function LeadHistorySection({
                     {/* Dot */}
                     <div className="relative z-10 mt-1.5 shrink-0">
                       <span
-                        className="flex h-4 w-4 items-center justify-center rounded-full bg-secondary ring-4 ring-background"
+                        className="flex h-2 w-2 items-center justify-center rounded-full bg-muted-foreground/60 ring-2 ring-background"
                         aria-hidden
                       />
                     </div>

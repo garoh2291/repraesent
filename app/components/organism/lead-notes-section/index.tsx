@@ -264,7 +264,7 @@ export function LeadNotesSection({
 
       <div className="space-y-3">
         {isAddingNew && (
-          <div className="rounded-lg border bg-muted/30 p-3 space-y-2">
+          <div className="rounded-lg border border-border bg-card shadow-[var(--shadow)] p-3 space-y-2">
             <Textarea
               autoFocus
               placeholder="Write a note..."
@@ -289,7 +289,7 @@ export function LeadNotesSection({
             editingNoteId === note.id && canEdit ? (
               <div
                 key={note.id}
-                className="rounded-lg border bg-muted/30 p-3 space-y-2"
+                className="rounded-lg border border-border bg-card shadow-[var(--shadow)] p-3 space-y-2"
               >
                 <Textarea
                   autoFocus
@@ -318,7 +318,7 @@ export function LeadNotesSection({
               <div
                 key={note.id}
                 className={cn(
-                  "group rounded-lg border bg-muted/30 p-3 transition-colors hover:bg-muted/50 relative"
+                  "group rounded-lg border border-border bg-card shadow-[var(--shadow)] p-3 transition-colors hover:shadow-md relative"
                 )}
               >
                 <p

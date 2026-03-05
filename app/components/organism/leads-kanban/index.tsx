@@ -156,7 +156,7 @@ function KanbanColumn({
     <div
       ref={setNodeRef}
       className={cn(
-        "shrink-0 w-[280px] rounded-lg border bg-muted/30 transition-colors overflow-hidden",
+        "shrink-0 w-[280px] rounded-lg border border-border bg-card shadow-[var(--shadow)] transition-colors overflow-hidden",
         isOver && "ring-2 ring-primary/50"
       )}
     >
@@ -222,7 +222,7 @@ function KanbanCard({
       {...attributes}
       {...listeners}
       className={cn(
-        "rounded-md border bg-background overflow-hidden",
+        "rounded-md border border-border bg-card shadow-[var(--shadow)] overflow-hidden",
         canEdit && !disabled && "cursor-grab active:cursor-grabbing",
         "hover:shadow-md transition-shadow",
         (isDragging || isDraggingState) && "opacity-90 shadow-lg",

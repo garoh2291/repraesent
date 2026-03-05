@@ -25,7 +25,9 @@ export default function NoWorkspace() {
     <div className="flex min-h-screen items-center justify-center p-4">
       <Card className="w-full max-w-md">
         <CardHeader>
-          <CardTitle>No Workspace</CardTitle>
+          <CardTitle className="text-lg font-semibold text-foreground">
+            No Workspace
+          </CardTitle>
           <CardDescription>
             Your user is not connected to any workspace. Contact support or your
             workspace owner to connect you.

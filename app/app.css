@@ -5,9 +5,7 @@
 @custom-variant dark (&:is(.dark *));
 
 @theme {
-  --font-sans:
-    "Geist Sans", sans-serif, "Geist", "Inter", ui-sans-serif, system-ui,
-    "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+  --font-sans:"Noto Sans JP", sans-serif;
 }
 
 html,
@@ -135,7 +133,7 @@ body {
   --chart-4: #D19F68;
   --chart-5: #E25F77;
 
-  --sidebar: #F6F6F6;
+  --sidebar: #FFFFFF;
   --sidebar-foreground: #131515;
 
   --sidebar-primary: #5265F3;

@@ -295,6 +295,8 @@ export default function LeadForm() {
         </div>
       </div>
 
+      <hr className="border-border" />
+
       {viewMode === "table" ? (
         <DataTable<Lead, unknown>
           columns={columns}
