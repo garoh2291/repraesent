@@ -112,7 +112,7 @@ export function Sidebar() {
           to="/"
           className={`rounded-md px-2 py-2 text-sm font-medium transition-colors flex items-center gap-2 ${
             location.pathname === "/"
-              ? "bg-sidebar-accent text-sidebar-accent-foreground shadow-[var(--shadow-gedk)]"
+              ? "bg-sidebar-accent text-sidebar-accent-foreground shadow-[var(--shadow)]"
               : "text-sidebar-foreground hover:bg-sidebar-accent/50"
           }`}
         >
@@ -140,7 +140,7 @@ export function Sidebar() {
                 !hasSlug
                   ? "cursor-not-allowed text-muted-foreground opacity-60"
                   : isActive
-                    ? "bg-sidebar-accent text-sidebar-accent-foreground shadow-[var(--shadow-gedk)]"
+                    ? "bg-sidebar-accent text-sidebar-accent-foreground shadow-[var(--shadow)]"
                     : "text-sidebar-foreground hover:bg-sidebar-accent/50"
               }`}
               onClick={(e) => !hasSlug && e.preventDefault()}
@@ -157,7 +157,7 @@ export function Sidebar() {
           to="/settings"
           className={`rounded-md px-2 py-2 text-sm font-medium transition-colors flex items-center gap-2 ${
             location.pathname === "/settings"
-              ? "bg-sidebar-accent text-sidebar-accent-foreground shadow-[var(--shadow-gedk)]"
+              ? "bg-sidebar-accent text-sidebar-accent-foreground shadow-[var(--shadow)]"
               : "text-sidebar-foreground hover:bg-sidebar-accent/50"
           }`}
         >
