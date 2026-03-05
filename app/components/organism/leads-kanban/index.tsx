@@ -99,7 +99,7 @@ export function LeadsKanban({
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center py-24">
+      <div className="flex flex-1 min-h-0 items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
       </div>
     );
@@ -111,7 +111,11 @@ export function LeadsKanban({
       onDragStart={handleDragStart}
       onDragEnd={handleDragEnd}
     >
-      <div className="flex gap-4 overflow-x-auto pb-4">
+      <div
+        className={cn(
+          "flex flex-1 min-h-0 h-full gap-4 overflow-x-auto overflow-y-hidden rounded-lg py-4 pl-0 pr-4 pt-5 scrollbar-hide"
+        )}
+      >
         {LEAD_STATUSES.map((status) => (
           <KanbanColumn
             key={status}
@@ -152,22 +156,28 @@ function KanbanColumn({
   const { setNodeRef, isOver } = useDroppable({ id: status });
   const color = LEAD_STATUS_COLORS[status];
 
+  const isEmpty = leads.length === 0;
+
   return (
     <div
       ref={setNodeRef}
       className={cn(
-        "shrink-0 w-[280px] rounded-lg border border-border bg-card shadow-[var(--shadow)] transition-colors overflow-hidden",
+        "flex h-full shrink-0 flex-col rounded-lg border border-border bg-muted shadow-[var(--shadow)] transition-colors overflow-hidden",
+        isEmpty ? "min-w-[140px] w-[140px]" : "w-[280px] min-h-[calc(100vh-10rem)]",
         isOver && "ring-2 ring-primary/50"
       )}
     >
-      <div className={cn("h-1", color)} />
-      <div className="p-3">
-        <h3 className="font-medium text-sm flex items-center justify-between">
-          <span>{LEAD_STATUS_LABELS[status]}</span>
-          <span className="text-muted-foreground text-xs">{leads.length}</span>
+      <div className={cn("h-1 shrink-0", color)} />
+      <div className="shrink-0 p-3">
+        <h3 className="font-medium text-sm flex items-center gap-2">
+          <span className={cn("inline-block h-2 w-2 rounded-full shrink-0", color)} />
+          <span className="truncate">{LEAD_STATUS_LABELS[status]}</span>
+          <span className="inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-background px-1.5 text-xs font-medium text-muted-foreground">
+            {leads.length}
+          </span>
         </h3>
       </div>
-      <div className="p-2 space-y-2 min-h-[100px]">
+      <div className="flex-1 min-h-0 overflow-y-auto p-2 space-y-2">
         {leads.map((lead) => (
           <KanbanCard
             key={lead.id}
@@ -222,7 +232,7 @@ function KanbanCard({
       {...attributes}
       {...listeners}
       className={cn(
-        "rounded-md border border-border bg-card shadow-[var(--shadow)] overflow-hidden",
+        "rounded-lg border border-border bg-card shadow-[var(--shadow)] overflow-hidden",
         canEdit && !disabled && "cursor-grab active:cursor-grabbing",
         "hover:shadow-md transition-shadow",
         (isDragging || isDraggingState) && "opacity-90 shadow-lg",
@@ -230,12 +240,23 @@ function KanbanCard({
       )}
       onClick={() => onSelect?.()}
     >
-      <div className={cn("h-[4px]", color)} />
-      <div className="p-3">
-        <p className="font-medium text-sm truncate">
+      <div className="p-3 space-y-2">
+        <div className="flex items-start justify-between gap-2">
+          <span
+            className={cn(
+              "inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium shrink-0",
+              color,
+              color === "bg-muted" ? "text-foreground" : "text-white"
+            )}
+          >
+            <span className={cn("h-1 w-1 rounded-full", color === "bg-muted" ? "bg-foreground/60" : "bg-white/80")} />
+            {LEAD_STATUS_LABELS[status]}
+          </span>
+        </div>
+        <p className="font-semibold text-sm truncate leading-tight">
           {lead.full_name || lead.email || "—"}
         </p>
-        <p className="text-xs text-muted-foreground truncate">
+        <p className="text-xs text-muted-foreground truncate line-clamp-2">
           {lead.email || lead.phone || "—"}
         </p>
       </div>

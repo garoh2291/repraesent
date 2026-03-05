@@ -19,6 +19,7 @@ import { useCanEditLeads } from "~/lib/hooks/useCanEditLeads";
 import { useUpdateLeadStatus } from "~/lib/hooks/useUpdateLeadStatus";
 import { format } from "date-fns";
 import { ArrowRight, LayoutGrid, Table2, Upload, X } from "lucide-react";
+import { cn } from "~/lib/utils";
 import { LeadImportModal } from "~/components/organism/lead-import-modal";
 
 export function meta() {
@@ -256,8 +257,13 @@ export default function LeadForm() {
   ];
 
   return (
-    <div className="p-6 space-y-6">
-      <div className="flex items-center justify-between">
+    <div
+      className={cn(
+        "p-6",
+        viewMode === "kanban" ? "flex flex-col min-h-[calc(100vh-8rem)]" : "space-y-6"
+      )}
+    >
+      <div className="flex items-center justify-between shrink-0">
         <h1 className="text-2xl font-bold tracking-tight">Leads</h1>
         <div className="flex items-center gap-2">
           {canEdit && (
@@ -295,7 +301,7 @@ export default function LeadForm() {
         </div>
       </div>
 
-      <hr className="border-border" />
+      <hr className="border-border shrink-0" />
 
       {viewMode === "table" ? (
         <DataTable<Lead, unknown>
@@ -344,7 +350,8 @@ export default function LeadForm() {
           onRowClick={(row) => setSelectedLeadId(row.id)}
         />
       ) : (
-        <LeadsKanban
+        <div className="flex-1 min-h-0 flex flex-col">
+          <LeadsKanban
           leads={leadsQuery.data?.data ?? []}
           isLoading={leadsQuery.isLoading}
           onStatusChange={(id, status) =>
@@ -354,6 +361,7 @@ export default function LeadForm() {
           isUpdating={updateStatusMutation.isPending}
           canEdit={canEdit}
         />
+        </div>
       )}
 
       <LeadDetailSheet

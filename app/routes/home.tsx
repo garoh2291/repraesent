@@ -1,6 +1,8 @@
 import { useQuery } from "@tanstack/react-query";
-import { Package } from "lucide-react";
+import { Link } from "react-router";
+import { ChevronRight, Package } from "lucide-react";
 import { useAuthContext } from "~/providers/auth-provider";
+import { cn } from "~/lib/utils";
 import { getLeadStats } from "~/lib/api/leads";
 import {
   Card,
@@ -31,7 +33,7 @@ export default function Home() {
   const role = currentWorkspace?.member_role ?? "—";
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="mx-auto max-w-[1300px] p-6 space-y-6">
       <div>
         <h1 className="text-2xl font-semibold">Home</h1>
         <p className="text-muted-foreground">Overview of your workspace</p>
@@ -40,7 +42,7 @@ export default function Home() {
       <hr className="border-border" />
 
       <div className="grid gap-4 md:grid-cols-2">
-        <Card>
+        <Card className="max-w-[400px]">
           <CardHeader>
             <CardTitle>Total Leads</CardTitle>
             <CardDescription>All leads in this workspace</CardDescription>
@@ -53,7 +55,7 @@ export default function Home() {
             )}
           </CardContent>
         </Card>
-        <Card>
+        <Card className="max-w-[400px]">
           <CardHeader>
             <CardTitle>New This Week</CardTitle>
             <CardDescription>Leads created in the last 7 days</CardDescription>
@@ -71,7 +73,7 @@ export default function Home() {
       <hr className="border-border" />
 
       <div className="grid gap-4 md:grid-cols-2">
-        <Card>
+        <Card className="max-w-[400px]">
           <CardHeader>
             <CardTitle>User</CardTitle>
             <CardDescription>Your account details</CardDescription>
@@ -83,7 +85,7 @@ export default function Home() {
             <p className="text-sm text-muted-foreground">{user?.email}</p>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="max-w-[400px]">
           <CardHeader>
             <CardTitle>Workspace</CardTitle>
             <CardDescription>Current workspace and your role</CardDescription>
@@ -120,27 +122,62 @@ export default function Home() {
               </a>
             </p>
           ) : (
-            <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
-              {products.map((p) => (
-                <Card key={p.product_id} className="overflow-hidden py-0">
-                  <div className="flex h-24 items-center justify-center bg-muted">
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-1">
+              {products.map((p) => {
+                const hasSlug = !!p.product_slug;
+                const cardContent = (
+                  <Card
+                    className={cn(
+                      "max-w-[400px] overflow-hidden py-0 flex flex-row h-[88px] transition-shadow",
+                      hasSlug && "hover:shadow-md cursor-pointer"
+                    )}
+                  >
                     {p.product_image ? (
                       <img
                         src={p.product_image}
                         alt={p.product_name}
-                        className="h-full w-full object-contain"
+                        className="h-full w-24 shrink-0 object-cover"
                       />
                     ) : (
-                      <Package className="h-12 w-12 text-muted-foreground" />
+                      <div className="flex h-full w-24 shrink-0 items-center justify-center bg-muted">
+                        <Package className="h-10 w-10 text-primary" />
+                      </div>
                     )}
+                    <CardContent className="flex flex-1 flex-col justify-center p-4 min-w-0">
+                      <p className="font-medium truncate" title={p.product_name}>
+                        {p.product_name}
+                      </p>
+                      <p className="text-sm text-muted-foreground truncate flex items-center gap-1">
+                        {hasSlug ? (
+                          <>
+                            View section
+                            <ChevronRight className="h-4 w-4 shrink-0 text-primary" />
+                          </>
+                        ) : (
+                          "No section available"
+                        )}
+                      </p>
+                    </CardContent>
+                  </Card>
+                );
+
+                return hasSlug ? (
+                  <Link
+                    key={p.product_id}
+                    to={`/${p.product_slug}`}
+                    className="block no-underline text-inherit"
+                  >
+                    {cardContent}
+                  </Link>
+                ) : (
+                  <div
+                    key={p.product_id}
+                    className="block opacity-60 cursor-not-allowed"
+                  >
+                    {cardContent}
                   </div>
-                  <CardContent className="p-3">
-                    <p className="font-medium truncate" title={p.product_name}>
-                      {p.product_name}
-                    </p>
-                  </CardContent>
-                </Card>
-              ))}
+                );
+              })}
             </div>
           )}
         </CardContent>
