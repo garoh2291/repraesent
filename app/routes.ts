@@ -8,6 +8,7 @@ import {
 export default [
   route("login", "routes/login.tsx"),
   route("auth/callback", "routes/auth.callback.tsx"),
+  route("book/:configId", "routes/book.$configId.tsx"),
 
   layout("routes/_protected.tsx", [
     route("no-workspace", "routes/no-workspace.tsx"),
@@ -16,6 +17,7 @@ export default [
       index("routes/home.tsx"),
       route("lead-form", "routes/lead-form.tsx"),
       route("lead-form/:leadId", "routes/lead-form.$leadId.tsx"),
+      route("appointments", "routes/appointments.tsx"),
       route("settings", "routes/settings.tsx"),
     ]),
   ]),

@@ -9,6 +9,7 @@ import {
 import * as LucideIcons from "lucide-react";
 
 import { useAuthContext } from "~/providers/auth-provider";
+import { useAppointmentConfig } from "~/lib/hooks/useAppointmentConfig";
 import { Button } from "~/components/ui/button";
 import {
   DropdownMenu,
@@ -55,6 +56,15 @@ export function Sidebar() {
   const location = useLocation();
   const navigate = useNavigate();
   const hasMultipleWorkspaces = (workspaces?.length ?? 0) > 1;
+  const hasAppointmentsProduct =
+    currentWorkspace?.products?.some(
+      (p) => p.product_slug === "appointments"
+    ) ?? false;
+  const { data: appointmentConfig } = useAppointmentConfig(
+    hasAppointmentsProduct && !!currentWorkspace?.id
+  );
+  const showAppointmentsInSidebar =
+    hasAppointmentsProduct && !!appointmentConfig;
 
   const handleWorkspaceChange = (workspaceId: string) => {
     setCurrentWorkspace(workspaceId);
@@ -119,7 +129,13 @@ export function Sidebar() {
           <HomeIcon className="h-4 w-4" />
           Home
         </Link>
-        {currentWorkspace?.products?.map((product) => {
+        {currentWorkspace?.products
+          ?.filter(
+            (product) =>
+              product.product_slug !== "appointments" ||
+              showAppointmentsInSidebar
+          )
+          ?.map((product) => {
           const href = product.product_slug ? `/${product.product_slug}` : "#";
           const isActive =
             product.product_slug &&
