@@ -1,10 +1,8 @@
-import { useState, useCallback, useMemo } from "react";
+import { useState, useCallback, useEffect, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Calendar, dateFnsLocalizer } from "react-big-calendar";
-import { parse, startOfWeek, getDay } from "date-fns";
+import { Calendar, momentLocalizer } from "react-big-calendar";
+import moment from "moment-timezone";
 import { formatInTimeZone } from "date-fns-tz";
-import { enUS } from "date-fns/locale";
-import type { Locale } from "date-fns";
 import { getAppointments } from "~/lib/api/appointments";
 import type { AppointmentConfig } from "~/lib/api/appointments";
 import type { Event, View } from "react-big-calendar";
@@ -15,7 +13,7 @@ import {
 } from "~/components/ui/hover-card";
 import "react-big-calendar/lib/css/react-big-calendar.css";
 
-const locales = { "en-US": enUS };
+const localizer = momentLocalizer(moment);
 
 function formatInTimezone(
   date: Date,
@@ -89,9 +87,7 @@ function AppointmentEventWrapper({
             <div className="space-y-1.5 border-t pt-3 text-sm">
               {Object.entries(parsed).map(([key, value]) => (
                 <div key={key} className="flex gap-2">
-                  <span className="text-muted-foreground shrink-0">
-                    {key}:
-                  </span>
+                  <span className="text-muted-foreground shrink-0">{key}:</span>
                   {key.toLowerCase() === "email" ? (
                     <a
                       href={`mailto:${value}`}
@@ -130,22 +126,23 @@ export function CalendarTab({ config }: CalendarTabProps) {
   const timezone = config.timezone ?? "UTC";
   const timeFormat = config.time_format ?? "24h";
 
-  const formatWithTz = useCallback(
-    (date: Date, formatStr: string, options?: { locale?: Locale }) =>
-      formatInTimeZone(date, timezone, formatStr, options),
-    [timezone]
-  );
+  // Use config timezone for calendar display so appointments show on correct days
+  useEffect(() => {
+    if (!moment.tz) return;
+    moment.tz.setDefault(timezone);
+    return () => {
+      moment.tz.setDefault();
+    };
+  }, [timezone]);
 
-  const localizer = useMemo(
-    () =>
-      dateFnsLocalizer({
-        format: formatWithTz,
-        parse,
-        startOfWeek,
-        getDay,
-        locales,
-      }),
-    [formatWithTz]
+  const formats = useMemo(
+    () => ({
+      timeGutterFormat: timeFormat === "12h" ? "h:mm A" : "HH:mm",
+      agendaTimeFormat: timeFormat === "12h" ? "h:mm A" : "HH:mm",
+      agendaTimeRangeFormat: ({ start, end }: { start: Date; end: Date }) =>
+        `${moment(start).format(timeFormat === "12h" ? "h:mm A" : "HH:mm")} – ${moment(end).format(timeFormat === "12h" ? "h:mm A" : "HH:mm")}`,
+    }),
+    [timeFormat]
   );
 
   const { data: appointments = [], isLoading } = useQuery({
@@ -180,9 +177,10 @@ export function CalendarTab({ config }: CalendarTabProps) {
   }
 
   return (
-    <div className="h-[600px] rounded-md border">
+    <div className="appointments-calendar h-[520px] rounded-md border">
       <Calendar
         localizer={localizer}
+        formats={formats}
         events={events}
         startAccessor="start"
         endAccessor="end"
