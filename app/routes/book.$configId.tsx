@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useParams } from "react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -73,6 +73,20 @@ function getDefaultTimezone(): string {
   }
 }
 
+function getNextWorkingDay(
+  from: Date,
+  disabledDayOfWeek: number[],
+  maxDays = 14
+): Date {
+  const d = new Date(from);
+  d.setDate(d.getDate() + 1);
+  for (let i = 0; i < maxDays; i++) {
+    if (!disabledDayOfWeek.includes(d.getDay())) return d;
+    d.setDate(d.getDate() + 1);
+  }
+  return d;
+}
+
 export default function BookAppointment() {
   const { configId } = useParams<{ configId: string }>();
   const queryClient = useQueryClient();
@@ -119,7 +133,15 @@ export default function BookAppointment() {
     return d;
   }, []);
 
-  const WEEKDAY_KEYS = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"] as const;
+  const WEEKDAY_KEYS = [
+    "sun",
+    "mon",
+    "tue",
+    "wed",
+    "thu",
+    "fri",
+    "sat",
+  ] as const;
   const disabledDayOfWeek = useMemo(() => {
     const wh = config?.working_hours;
     if (!wh) return [];
@@ -145,6 +167,43 @@ export default function BookAppointment() {
     (f) => bookingFields[f.key]?.display !== false
   );
 
+  useEffect(() => {
+    if (config && selectedDate === undefined) {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      setSelectedDate(today);
+    }
+  }, [config, selectedDate]);
+
+  useEffect(() => {
+    if (
+      config &&
+      !slotsLoading &&
+      selectedDateStr &&
+      slots.length === 0 &&
+      selectedDate
+    ) {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const sel = new Date(selectedDate);
+      sel.setHours(0, 0, 0, 0);
+      const isToday = sel.getTime() === today.getTime();
+      if (isToday) {
+        const next = getNextWorkingDay(selectedDate, disabledDayOfWeek);
+        if (next.getTime() !== selectedDate.getTime()) {
+          setSelectedDate(next);
+        }
+      }
+    }
+  }, [
+    config,
+    slotsLoading,
+    selectedDateStr,
+    slots.length,
+    selectedDate,
+    disabledDayOfWeek,
+  ]);
+
   function handleDateSelect(date: Date | undefined) {
     setSelectedDate(date);
     setSelectedSlot(null);
@@ -161,7 +220,9 @@ export default function BookAppointment() {
       ...formFields,
       customerName:
         formFields.first_name || formFields.last_name
-          ? [formFields.first_name, formFields.last_name].filter(Boolean).join(" ")
+          ? [formFields.first_name, formFields.last_name]
+              .filter(Boolean)
+              .join(" ")
           : undefined,
       customerEmail: formFields.email || undefined,
     };
@@ -233,12 +294,24 @@ export default function BookAppointment() {
           </div>
         </header>
         <main className="flex-1 flex items-center justify-center p-8 bg-background">
-          <div className="text-center max-w-md space-y-4">
+          <div className="text-center max-w-md space-y-6">
             <h2 className="text-2xl font-bold">Appointment Confirmed</h2>
             <p className="text-muted-foreground">
               Your appointment has been successfully booked. You will receive a
               confirmation email shortly.
             </p>
+            <Button
+              onClick={() => {
+                setBooked(false);
+                setStep(1);
+                setSelectedDate(undefined);
+                setSelectedSlot(null);
+                setFormFields({});
+              }}
+              style={{ backgroundColor: bgColor, color: textColor }}
+            >
+              Make another Appointment
+            </Button>
           </div>
         </main>
       </div>
@@ -300,6 +373,7 @@ export default function BookAppointment() {
               disabledDayOfWeek={disabledDayOfWeek}
               firstWeekday={firstWeekday}
               bgColor={bgColor}
+              textColor={textColor}
             />
           )}
           {step === 2 && (
@@ -369,6 +443,7 @@ function Step1DateAndTime({
   disabledDayOfWeek,
   firstWeekday,
   bgColor,
+  textColor,
 }: {
   config: PublicConfig;
   selectedDate: Date | undefined;
@@ -384,15 +459,24 @@ function Step1DateAndTime({
   disabledDayOfWeek: number[];
   firstWeekday: number;
   bgColor: string;
+  textColor: string;
 }) {
   return (
     <div className="space-y-6">
-      <h2 className="text-xl font-medium text-muted-foreground uppercase tracking-wide">
+      <h2 className="text-xl font-medium text-muted-foreground uppercase tracking-wide text-center">
         Appointment Date & Time
       </h2>
 
       <div className="grid md:grid-cols-2 gap-8">
-        <div>
+        <div
+          className="rounded-md border overflow-hidden w-fit"
+          style={
+            {
+              "--cal-header-bg": bgColor,
+              "--cal-header-text": textColor,
+            } as React.CSSProperties
+          }
+        >
           <Calendar
             mode="single"
             selected={selectedDate}
@@ -405,11 +489,12 @@ function Step1DateAndTime({
             }}
             defaultMonth={selectedDate ?? new Date()}
             weekStartsOn={firstWeekday as 0 | 1}
-            className="rounded-md border"
+            className="border-0"
             classNames={{
-              nav: "[&_button]:rounded",
-              month_caption: "justify-center",
-              caption_label: "text-sm font-medium",
+              nav: "!bg-[var(--cal-header-bg)] !text-[var(--cal-header-text)] rounded-t-md [&_button]:!text-[var(--cal-header-text)] [&_button]:hover:!bg-white/10",
+              month_caption: "!text-[var(--cal-header-text)]",
+              caption_label:
+                "!text-[var(--cal-header-text)] text-sm font-medium",
             }}
           />
         </div>
@@ -488,7 +573,7 @@ function Step2CustomerInfo({
 
   return (
     <div className="space-y-6">
-      <h2 className="text-xl font-medium text-muted-foreground uppercase tracking-wide">
+      <h2 className="text-xl font-medium text-muted-foreground uppercase tracking-wide text-center">
         Customer Information
       </h2>
 
@@ -496,9 +581,7 @@ function Step2CustomerInfo({
         <div className="space-y-4">
           {required.map(({ key, label }) => (
             <div key={key} className="space-y-2">
-              <Label htmlFor={key}>
-                {label} *
-              </Label>
+              <Label htmlFor={key}>{label} *</Label>
               {key === "notes" ? (
                 <Textarea
                   id={key}
@@ -566,11 +649,7 @@ function Step3Confirmation({
   isPending: boolean;
 }) {
   const [start] = selectedSlot.split("--");
-  const timeStr = formatSlotInTimezone(
-    selectedSlot,
-    userTimezone,
-    timeFormat
-  );
+  const timeStr = formatSlotInTimezone(selectedSlot, userTimezone, timeFormat);
   const dateStr = selectedDate.toLocaleDateString("en-US", {
     weekday: "long",
     year: "numeric",
@@ -579,30 +658,30 @@ function Step3Confirmation({
   });
 
   return (
-    <div className="space-y-6">
+    <div className="flex flex-col items-center text-center space-y-6">
       <h2 className="text-xl font-medium text-muted-foreground uppercase tracking-wide">
         Appointment Confirmation
       </h2>
 
-      <div className="rounded-lg border p-6 space-y-4">
-        <div>
+      <div className="rounded-xl border bg-card p-6 w-full max-w-md space-y-6 shadow-sm">
+        <div className="space-y-1">
           <p className="text-sm text-muted-foreground">Date & Time</p>
-          <p className="font-medium">
+          <p className="text-lg font-semibold">
             {dateStr} at {timeStr}
           </p>
         </div>
-        <div>
+        <div className="border-t pt-4 space-y-2">
           <p className="text-sm text-muted-foreground">Customer Details</p>
-          <div className="mt-2 space-y-1">
+          <dl className="space-y-2 text-left">
             {displayedFields
               .filter((f) => formFields[f.key])
               .map(({ key, label }) => (
-                <p key={key}>
-                  <span className="text-muted-foreground">{label}:</span>{" "}
-                  {formFields[key]}
-                </p>
+                <div key={key} className="flex justify-between gap-4">
+                  <dt className="text-muted-foreground">{label}</dt>
+                  <dd className="font-medium text-right">{formFields[key]}</dd>
+                </div>
               ))}
-          </div>
+          </dl>
         </div>
       </div>
 
