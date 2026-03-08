@@ -469,7 +469,7 @@ function Step1DateAndTime({
 
       <div className="grid md:grid-cols-2 gap-8">
         <div
-          className="rounded-md border overflow-hidden w-fit"
+          className="rounded-md border overflow-hidden w-full"
           style={
             {
               "--cal-header-bg": bgColor,
@@ -489,13 +489,13 @@ function Step1DateAndTime({
             }}
             defaultMonth={selectedDate ?? new Date()}
             weekStartsOn={firstWeekday as 0 | 1}
-            className="border-0"
-            classNames={{
-              nav: "!bg-[var(--cal-header-bg)] !text-[var(--cal-header-text)] rounded-t-md [&_button]:!text-[var(--cal-header-text)] [&_button]:hover:!bg-white/10",
-              month_caption: "!text-[var(--cal-header-text)]",
-              caption_label:
-                "!text-[var(--cal-header-text)] text-sm font-medium",
-            }}
+            className="border-0 w-full"
+            // classNames={{
+            //   nav: "!bg-[var(--cal-header-bg)] !text-[var(--cal-header-text)] rounded-t-md [&_button]:!text-[var(--cal-header-text)] [&_button]:hover:!bg-white/10",
+            //   month_caption: "!text-[var(--cal-header-text)]",
+            //   caption_label:
+            //     "!text-[var(--cal-header-text)] text-sm font-medium",
+            // }}
           />
         </div>
 
