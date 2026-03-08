@@ -17,6 +17,7 @@ import { Input } from "~/components/ui/input";
 import { Label } from "~/components/ui/label";
 import { Textarea } from "~/components/ui/textarea";
 import { Calendar } from "~/components/ui/calendar";
+import { ScrollArea } from "~/components/ui/scroll-area";
 import TimezoneSelect from "react-timezone-select";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
@@ -468,34 +469,24 @@ function Step1DateAndTime({
       </h2>
 
       <div className="grid md:grid-cols-2 gap-8">
-        <div
-          className="rounded-md border overflow-hidden w-full"
-          style={
-            {
-              "--cal-header-bg": bgColor,
-              "--cal-header-text": textColor,
-            } as React.CSSProperties
-          }
-        >
+        <div className="rounded-md border overflow-hidden w-full">
           <Calendar
             mode="single"
             selected={selectedDate}
             onSelect={onDateSelect}
-            disabled={{
-              before: disabledBefore,
-              ...(disabledDayOfWeek.length > 0 && {
-                dayOfWeek: disabledDayOfWeek,
-              }),
+            disabled={(date) => {
+              const d = new Date(date);
+              d.setHours(0, 0, 0, 0);
+              const today = new Date();
+              today.setHours(0, 0, 0, 0);
+              if (d.getTime() < today.getTime()) return true;
+              if (disabledDayOfWeek.includes(d.getDay())) return true;
+              return false;
             }}
+            startMonth={disabledBefore}
             defaultMonth={selectedDate ?? new Date()}
             weekStartsOn={firstWeekday as 0 | 1}
             className="border-0 w-full"
-            // classNames={{
-            //   nav: "!bg-[var(--cal-header-bg)] !text-[var(--cal-header-text)] rounded-t-md [&_button]:!text-[var(--cal-header-text)] [&_button]:hover:!bg-white/10",
-            //   month_caption: "!text-[var(--cal-header-text)]",
-            //   caption_label:
-            //     "!text-[var(--cal-header-text)] text-sm font-medium",
-            // }}
           />
         </div>
 
@@ -530,24 +521,26 @@ function Step1DateAndTime({
                   No slots available for this date.
                 </p>
               ) : (
-                <div className="flex flex-col gap-2">
-                  {slots.map((slot) => (
-                    <Button
-                      key={slot}
-                      type="button"
-                      variant={selectedSlot === slot ? "default" : "outline"}
-                      className="justify-start"
-                      onClick={() => onSlotSelect(slot)}
-                      style={
-                        selectedSlot === slot
-                          ? { backgroundColor: bgColor, color: "#fff" }
-                          : undefined
-                      }
-                    >
-                      {formatSlotInTimezone(slot, userTimezone, timeFormat)}
-                    </Button>
-                  ))}
-                </div>
+                <ScrollArea className="h-64 rounded-md border">
+                  <div className="flex flex-col gap-2 p-2">
+                    {slots.map((slot) => (
+                      <Button
+                        key={slot}
+                        type="button"
+                        variant={selectedSlot === slot ? "default" : "outline"}
+                        className="justify-start"
+                        onClick={() => onSlotSelect(slot)}
+                        style={
+                          selectedSlot === slot
+                            ? { backgroundColor: bgColor, color: "#fff" }
+                            : undefined
+                        }
+                      >
+                        {formatSlotInTimezone(slot, userTimezone, timeFormat)}
+                      </Button>
+                    ))}
+                  </div>
+                </ScrollArea>
               )}
             </div>
           )}
