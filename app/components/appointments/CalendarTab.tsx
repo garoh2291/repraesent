@@ -112,6 +112,11 @@ function AppointmentEventWrapper({
   );
 }
 
+/** Event content: show only duration (label), no title - avoids cropping. Full details in HoverCard. */
+function AppointmentEvent() {
+  return null;
+}
+
 const CALENDAR_MIN = new Date(2000, 0, 1, 7, 0, 0);
 const CALENDAR_MAX = new Date(2000, 0, 1, 22, 0, 0);
 const CALENDAR_SCROLL_TO = new Date(2000, 0, 1, 7, 0, 0);
@@ -125,6 +130,13 @@ export function CalendarTab({ config }: CalendarTabProps) {
   const [date, setDate] = useState(new Date());
   const timezone = config.timezone ?? "UTC";
   const timeFormat = config.time_format ?? "24h";
+  const firstWeekday = config.first_weekday ?? "monday";
+
+  // Monday (1) or Sunday (0) as start of week
+  useEffect(() => {
+    const dow = firstWeekday === "sunday" ? 0 : 1;
+    moment.updateLocale("en", { week: { dow } });
+  }, [firstWeekday]);
 
   // Use config timezone for calendar display so appointments show on correct days
   useEffect(() => {
@@ -195,6 +207,7 @@ export function CalendarTab({ config }: CalendarTabProps) {
         scrollToTime={CALENDAR_SCROLL_TO}
         popup
         components={{
+          event: AppointmentEvent,
           eventWrapper: (props) => (
             <AppointmentEventWrapper
               {...props}
