@@ -34,6 +34,10 @@ const DAYS = [
 
 const SLOT_OPTIONS = [15, 30, 45, 60];
 
+function ensureBreaksArray(v: unknown): BreakConfig[] {
+  return Array.isArray(v) ? v : [];
+}
+
 const DEFAULT_WORKING_HOURS: Record<string, WorkingHoursDay> = {
   mon: { enabled: true, start: "09:00", end: "17:00" },
   tue: { enabled: true, start: "09:00", end: "17:00" },
@@ -62,14 +66,14 @@ export function BusinessLogicTab({ config }: BusinessLogicTabProps) {
     providerSettings?.slot_duration_minutes ?? config.slot_duration_minutes ?? 30
   );
   const [breaks, setBreaks] = useState<BreakConfig[]>(
-    () => providerSettings?.breaks ?? config.breaks ?? []
+    () => ensureBreaksArray(providerSettings?.breaks ?? config.breaks)
   );
 
   useEffect(() => {
     const wh = providerSettings?.working_hours ?? config.working_hours ?? DEFAULT_WORKING_HOURS;
     setWorkingHours(wh);
     setSlotDuration(providerSettings?.slot_duration_minutes ?? config.slot_duration_minutes ?? 30);
-    setBreaks(providerSettings?.breaks ?? config.breaks ?? []);
+    setBreaks(ensureBreaksArray(providerSettings?.breaks ?? config.breaks));
   }, [providerSettings, config]);
 
   const updateMutation = useMutation({
@@ -102,21 +106,21 @@ export function BusinessLogicTab({ config }: BusinessLogicTabProps) {
 
   function handleAddBreak() {
     setBreaks((prev) => [
-      ...prev,
+      ...ensureBreaksArray(prev),
       { day: "mon", start: "13:00", end: "14:00" },
     ]);
   }
 
   function handleBreakChange(index: number, field: keyof BreakConfig, value: string) {
     setBreaks((prev) => {
-      const next = [...prev];
+      const next = [...ensureBreaksArray(prev)];
       next[index] = { ...next[index], [field]: value };
       return next;
     });
   }
 
   function handleRemoveBreak(index: number) {
-    setBreaks((prev) => prev.filter((_, i) => i !== index));
+    setBreaks((prev) => ensureBreaksArray(prev).filter((_, i) => i !== index));
   }
 
   function handleSave() {
