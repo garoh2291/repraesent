@@ -413,6 +413,7 @@ export default function BookAppointment() {
               <Button
                 type="button"
                 onClick={() => setStep((s) => s + 1)}
+                style={{ backgroundColor: bgColor, color: textColor }}
                 disabled={
                   (step === 1 && !canProceedStep1) ||
                   (step === 2 && !canProceedStep2)
@@ -486,7 +487,7 @@ function Step1DateAndTime({
             startMonth={disabledBefore}
             defaultMonth={selectedDate ?? new Date()}
             weekStartsOn={firstWeekday as 0 | 1}
-            className="border-0 w-full"
+            className="border-0 w-full "
           />
         </div>
 
@@ -521,7 +522,7 @@ function Step1DateAndTime({
                   No slots available for this date.
                 </p>
               ) : (
-                <ScrollArea className="h-64 rounded-md border">
+                <ScrollArea className="h-100 rounded-md border">
                   <div className="flex flex-col gap-2 p-2">
                     {slots.map((slot) => (
                       <Button
