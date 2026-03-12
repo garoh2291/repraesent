@@ -170,7 +170,7 @@ export default function Settings() {
     );
   }
 
-  const products = workspace.products ?? [];
+  const services = workspace.services ?? [];
   const members = workspace.members ?? [];
   const workspaceUrl = workspace.url?.url ?? "—";
 
@@ -183,26 +183,26 @@ export default function Settings() {
 
       <hr className="border-border" />
 
-      {/* Products Section - Read-only */}
+      {/* Services Section - Read-only */}
       <section>
-        <h2 className="text-xl font-semibold mb-4">Products</h2>
-        {products.length > 0 ? (
+        <h2 className="text-xl font-semibold mb-4">Services</h2>
+        {services.length > 0 ? (
           <div className="rounded-md border border-border bg-card shadow-[var(--shadow)] overflow-hidden">
             <Table>
               <TableHeader>
                 <TableRow className="bg-muted/50">
-                  <TableHead className="p-3">Product</TableHead>
+                  <TableHead className="p-3">Service</TableHead>
                   <TableHead className="p-3 w-16"></TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {products.map((p) => (
-                  <TableRow key={p.product_id}>
-                    <TableCell className="p-3">{p.product_name}</TableCell>
+                {services.map((s) => (
+                  <TableRow key={s.service_id}>
+                    <TableCell className="p-3">{s.service_name}</TableCell>
                     <TableCell className="p-3">
-                      {p.product_image ? (
+                      {s.service_image ? (
                         <img
-                          src={p.product_image}
+                          src={s.service_image}
                           alt=""
                           className="h-8 w-8 rounded object-cover"
                         />
@@ -217,7 +217,7 @@ export default function Settings() {
           </div>
         ) : (
           <p className="text-muted-foreground py-4">
-            No products. Contact support to attach products:{" "}
+            No services. Contact support to attach services:{" "}
             <a
               href="mailto:support@dendritecorp.com"
               className="text-primary underline hover:no-underline"

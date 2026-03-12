@@ -56,15 +56,15 @@ export function Sidebar() {
   const location = useLocation();
   const navigate = useNavigate();
   const hasMultipleWorkspaces = (workspaces?.length ?? 0) > 1;
-  const hasAppointmentsProduct =
-    currentWorkspace?.products?.some(
-      (p) => p.product_slug === "appointments"
+  const hasAppointmentsService =
+    currentWorkspace?.services?.some(
+      (s) => s.service_type === "appointments"
     ) ?? false;
   const { data: appointmentConfig } = useAppointmentConfig(
-    hasAppointmentsProduct && !!currentWorkspace?.id
+    hasAppointmentsService && !!currentWorkspace?.id
   );
   const showAppointmentsInSidebar =
-    hasAppointmentsProduct && !!appointmentConfig;
+    hasAppointmentsService && !!appointmentConfig;
 
   const handleWorkspaceChange = (workspaceId: string) => {
     setCurrentWorkspace(workspaceId);
@@ -129,28 +129,28 @@ export function Sidebar() {
           <HomeIcon className="h-4 w-4" />
           Home
         </Link>
-        {currentWorkspace?.products
+        {currentWorkspace?.services
           ?.filter(
-            (product) =>
-              product.product_slug !== "appointments" ||
+            (service) =>
+              service.service_type !== "appointments" ||
               showAppointmentsInSidebar
           )
-          ?.map((product) => {
-          const href = product.product_slug ? `/${product.product_slug}` : "#";
+          ?.map((service) => {
+          const href = service.service_slug ? `/${service.service_slug}` : "#";
           const isActive =
-            product.product_slug &&
-            (location.pathname === `/${product.product_slug}` ||
-              location.pathname.startsWith(`/${product.product_slug}/`));
-          const hasSlug = !!product.product_slug;
-          const iconName = product.product_icon
-            ? kebabToPascal(product.product_icon)
+            service.service_slug &&
+            (location.pathname === `/${service.service_slug}` ||
+              location.pathname.startsWith(`/${service.service_slug}/`));
+          const hasSlug = !!service.service_slug;
+          const iconName = service.service_icon
+            ? kebabToPascal(service.service_icon)
             : null;
 
           const hasIcon = !!iconName && lucideIconNames.has(iconName);
 
           return (
             <Link
-              key={product.product_id}
+              key={service.service_id}
               to={href}
               className={`rounded-md px-2 py-2 text-sm font-medium transition-colors flex items-center gap-2 ${
                 !hasSlug
@@ -165,7 +165,7 @@ export function Sidebar() {
               {hasIcon && (
                 <DynamicIcon name={iconName!} className="h-4 w-4 shrink-0" />
               )}
-              {product.product_name}
+              {service.service_name}
             </Link>
           );
         })}

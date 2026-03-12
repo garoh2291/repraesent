@@ -34,25 +34,26 @@ export interface AuthResponse {
 }
 
 /**
- * Workspace product item
+ * Workspace service item
  */
-export interface WorkspaceProduct {
-  product_id: string;
-  product_name: string;
-  product_image: string | null;
-  product_slug: string | null;
-  product_icon: string | null;
+export interface WorkspaceService {
+  service_id: string;
+  service_name: string;
+  service_image: string | null;
+  service_slug: string | null;
+  service_type: string | null;
+  service_icon: string | null;
 }
 
 /**
- * Workspace with products and member role
+ * Workspace with services and member role
  */
 export interface WorkspaceContext {
   id: string;
   name: string;
   created_at: string;
   updated_at: string;
-  products: WorkspaceProduct[];
+  services: WorkspaceService[];
   member_role: "admin" | "editor" | "viewer";
 }
 
@@ -100,7 +101,7 @@ export const verifyMagicLink = async (
 };
 
 /**
- * Get user dashboard context (user + workspaces with products and role)
+ * Get user dashboard context (user + workspaces with services and role)
  */
 export const getUserContext = async (): Promise<UserContextResponse> => {
   try {

@@ -1,11 +1,12 @@
 import { apiClient } from "./axios-instance";
 import { createApiError } from "./axios-instance";
 
-export interface WorkspaceProductItem {
-  product_id: string;
-  product_name: string;
-  product_image: string | null;
-  product_slug: string | null;
+export interface WorkspaceServiceItem {
+  service_id: string;
+  service_name: string;
+  service_image: string | null;
+  service_slug: string | null;
+  service_type?: string | null;
 }
 
 export interface WorkspaceMemberItem {
@@ -28,7 +29,7 @@ export interface WorkspaceDetail {
   created_at: string;
   updated_at: string;
   url?: WorkspaceUrlItem | null;
-  products?: WorkspaceProductItem[];
+  services?: WorkspaceServiceItem[];
   members?: WorkspaceMemberItem[];
 }
 

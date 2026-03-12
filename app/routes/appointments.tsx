@@ -21,8 +21,8 @@ export default function Appointments() {
   const { currentWorkspace } = useAuthContext();
   const navigate = useNavigate();
   const hasAccess =
-    currentWorkspace?.products?.some(
-      (p) => p.product_slug === "appointments"
+    currentWorkspace?.services?.some(
+      (s) => s.service_type === "appointments"
     ) ?? false;
 
   const { data: config, isLoading: configLoading } = useAppointmentConfig(

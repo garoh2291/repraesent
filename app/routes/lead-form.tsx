@@ -125,11 +125,11 @@ export default function LeadForm() {
       return;
     }
 
-    const hasLeadFormProduct = currentWorkspace.products?.some(
-      (p) => p.product_slug === "lead-form"
+    const hasLeadFormService = currentWorkspace.services?.some(
+      (s) => s.service_type === "lead-form"
     );
 
-    if (!hasLeadFormProduct) {
+    if (!hasLeadFormService) {
       navigate("/", { replace: true });
     }
   }, [currentWorkspace, navigate]);
@@ -157,7 +157,7 @@ export default function LeadForm() {
   });
 
   const hasAccess =
-    currentWorkspace?.products?.some((p) => p.product_slug === "lead-form") ??
+    currentWorkspace?.services?.some((s) => s.service_type === "lead-form") ??
     false;
 
   if (!hasAccess) {

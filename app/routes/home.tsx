@@ -29,7 +29,7 @@ export default function Home() {
     enabled: !!currentWorkspace?.id,
   });
 
-  const products = currentWorkspace?.products ?? [];
+  const services = currentWorkspace?.services ?? [];
   const role = currentWorkspace?.member_role ?? "—";
 
   return (
@@ -106,14 +106,14 @@ export default function Home() {
       <Card>
         <CardHeader>
           <CardTitle className="text-base font-semibold text-foreground">
-            Products
+            Services
           </CardTitle>
-          <CardDescription>Products attached to this workspace</CardDescription>
+          <CardDescription>Services attached to this workspace</CardDescription>
         </CardHeader>
         <CardContent>
-          {products.length === 0 ? (
+          {services.length === 0 ? (
             <p className="text-sm text-muted-foreground">
-              Contact support to attach a product:{" "}
+              Contact support to attach a service:{" "}
               <a
                 href="mailto:support@dendritecorp.com"
                 className="text-primary underline hover:no-underline"
@@ -123,8 +123,8 @@ export default function Home() {
             </p>
           ) : (
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-1">
-              {products.map((p) => {
-                const hasSlug = !!p.product_slug;
+              {services.map((s) => {
+                const hasSlug = !!s.service_slug;
                 const cardContent = (
                   <Card
                     className={cn(
@@ -132,10 +132,10 @@ export default function Home() {
                       hasSlug && "hover:shadow-md cursor-pointer"
                     )}
                   >
-                    {p.product_image ? (
+                    {s.service_image ? (
                       <img
-                        src={p.product_image}
-                        alt={p.product_name}
+                        src={s.service_image}
+                        alt={s.service_name}
                         className="h-full w-24 shrink-0 object-cover"
                       />
                     ) : (
@@ -144,8 +144,8 @@ export default function Home() {
                       </div>
                     )}
                     <CardContent className="flex flex-1 flex-col justify-center p-4 min-w-0">
-                      <p className="font-medium truncate" title={p.product_name}>
-                        {p.product_name}
+                      <p className="font-medium truncate" title={s.service_name}>
+                        {s.service_name}
                       </p>
                       <p className="text-sm text-muted-foreground truncate flex items-center gap-1">
                         {hasSlug ? (
@@ -163,15 +163,15 @@ export default function Home() {
 
                 return hasSlug ? (
                   <Link
-                    key={p.product_id}
-                    to={`/${p.product_slug}`}
+                    key={s.service_id}
+                    to={`/${s.service_slug}`}
                     className="block no-underline text-inherit"
                   >
                     {cardContent}
                   </Link>
                 ) : (
                   <div
-                    key={p.product_id}
+                    key={s.service_id}
                     className="block opacity-60 cursor-not-allowed"
                   >
                     {cardContent}
