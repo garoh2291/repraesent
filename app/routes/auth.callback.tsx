@@ -8,6 +8,7 @@ import {
 } from "~/lib/api/auth";
 import {
   setStoredToken,
+  setStoredWorkspaceId,
   clearStoredToken,
   clearStoredWorkspaceId,
   getStoredWorkspaceId,
@@ -43,13 +44,25 @@ export default function AuthCallback() {
         const context: UserContextResponse = await getUserContext();
 
         if (!context.workspaces?.length) {
-          clearStoredToken();
-          clearStoredWorkspaceId();
-          navigate("/login?error=no_workspace", { replace: true });
+          navigate("/onboarding/profile", { replace: true });
           return;
         }
 
         if (context.workspaces.length === 1) {
+          const ws = context.workspaces[0];
+          setStoredWorkspaceId(ws.id);
+          const status = ws.status ?? "active";
+          const hasStripeCustomer = !!(ws as { stripe_customer_id?: string | null })
+            ?.stripe_customer_id;
+          const hasProducts = (ws.products?.length ?? 0) > 0;
+          if (status === "pending" && !hasStripeCustomer) {
+            navigate("/onboarding/billing", { replace: true });
+            return;
+          }
+          if (status === "pending" && hasStripeCustomer && !hasProducts) {
+            navigate("/onboarding/products", { replace: true });
+            return;
+          }
           navigate("/", { replace: true });
           return;
         }

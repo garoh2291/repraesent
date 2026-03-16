@@ -4,6 +4,7 @@ import {
   ChevronDown,
   HomeIcon,
   LogOut,
+  Package,
   Settings,
 } from "lucide-react";
 import * as LucideIcons from "lucide-react";
@@ -128,6 +129,17 @@ export function Sidebar() {
         >
           <HomeIcon className="h-4 w-4" />
           Home
+        </Link>
+        <Link
+          to="/products"
+          className={`rounded-md px-2 py-2 text-sm font-medium transition-colors flex items-center gap-2 ${
+            location.pathname === "/products"
+              ? "bg-sidebar-accent text-sidebar-accent-foreground shadow-[var(--shadow)]"
+              : "text-sidebar-foreground hover:bg-sidebar-accent/50"
+          }`}
+        >
+          <Package className="h-4 w-4" />
+          Products
         </Link>
         {currentWorkspace?.services
           ?.filter(

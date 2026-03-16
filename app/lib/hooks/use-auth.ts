@@ -61,13 +61,12 @@ export function useAuth() {
         const context = await getUserContext();
 
         if (!context.workspaces?.length) {
-          clearStoredAuth();
           return {
-            user: null,
+            user: context.user,
             workspaces: [],
             currentWorkspace: null,
-            token: null,
-            isAuthenticated: false,
+            token,
+            isAuthenticated: true,
             isLoading: false,
           };
         }

@@ -1,13 +1,22 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Package, Trash2, HelpCircle } from "lucide-react";
+import {
+  Package,
+  Trash2,
+  HelpCircle,
+  FileText,
+  Download,
+  ExternalLink,
+} from "lucide-react";
 import { useAuthContext } from "~/providers/auth-provider";
 import {
   getWorkspaceDetail,
+  getCurrentWorkspaceInvoices,
   updateWorkspaceMember,
   removeWorkspaceMember,
   type WorkspaceDetail,
+  type WorkspaceInvoice,
 } from "~/lib/api/workspaces";
 import { extractErrorMessage } from "~/lib/api/axios-instance";
 import { Button } from "~/components/ui/button";
@@ -36,7 +45,6 @@ import {
 } from "~/components/ui/tooltip";
 import {
   AlertDialog,
-  AlertDialogAction,
   AlertDialogCancel,
   AlertDialogContent,
   AlertDialogDescription,
@@ -44,12 +52,162 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "~/components/ui/alert-dialog";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "~/components/ui/tabs";
 
 export function meta() {
   return [
     { title: "Settings - Repraesent" },
     { name: "description", content: "Workspace settings" },
   ];
+}
+
+function formatAmount(cents: string | null, currency: string | null): string {
+  if (cents == null) return "—";
+  const amount = Number(cents) / 100;
+  const curr = (currency || "eur").toUpperCase();
+  return new Intl.NumberFormat("en-EU", {
+    style: "currency",
+    currency: curr,
+  }).format(amount);
+}
+
+function formatDate(unixStr: string | null): string {
+  if (!unixStr) return "—";
+  const sec = parseInt(unixStr, 10);
+  if (Number.isNaN(sec)) return unixStr;
+  return new Date(sec * 1000).toLocaleDateString();
+}
+
+function getInvoiceStatusLabel(status: string, dueDate: string | null): string {
+  if (status === "paid") return "Paid";
+  if (status === "open") {
+    if (dueDate) {
+      const sec = parseInt(dueDate, 10);
+      if (!Number.isNaN(sec) && sec * 1000 < Date.now()) return "Overdue";
+    }
+    return "Unpaid";
+  }
+  return status || "—";
+}
+
+function SettingsInvoicesTab() {
+  const { currentWorkspace } = useAuthContext();
+  const { data, isLoading } = useQuery({
+    queryKey: ["workspaceInvoices", currentWorkspace?.id],
+    queryFn: getCurrentWorkspaceInvoices,
+    enabled: !!currentWorkspace?.id,
+    refetchOnMount: "always",
+  });
+
+  const invoices = data?.invoices ?? [];
+
+  if (isLoading) {
+    return (
+      <div className="flex min-h-[200px] items-center justify-center">
+        <div className="h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+      </div>
+    );
+  }
+
+  if (invoices.length === 0) {
+    return (
+      <div className="rounded-md border border-border bg-card p-8 text-center">
+        <FileText className="mx-auto h-12 w-12 text-muted-foreground" />
+        <p className="mt-4 text-muted-foreground">No invoices yet</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="rounded-md border border-border bg-card shadow-(--shadow) overflow-hidden">
+      <Table>
+        <TableHeader>
+          <TableRow className="bg-muted/50">
+            <TableHead className="p-3">Invoice #</TableHead>
+            <TableHead className="p-3">Amount</TableHead>
+            <TableHead className="p-3">Status</TableHead>
+            <TableHead className="p-3 w-32">Actions</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {invoices.map((inv: WorkspaceInvoice) => {
+            const statusLabel = getInvoiceStatusLabel(
+              inv.status,
+              inv.due_date ?? null
+            );
+            const isPaid = inv.status === "paid";
+            return (
+              <TableRow key={inv.id}>
+                <TableCell className="p-3">
+                  {inv.number ?? inv.id.slice(-8)}
+                </TableCell>
+                <TableCell className="p-3">
+                  {formatAmount(
+                    (isPaid ? inv.amount_paid : inv.amount_due) ?? null,
+                    inv.currency ?? null
+                  )}
+                </TableCell>
+                <TableCell className="p-3">
+                  <span
+                    className={
+                      statusLabel === "Overdue"
+                        ? "text-destructive font-medium"
+                        : statusLabel === "Paid"
+                          ? "text-green-600"
+                          : ""
+                    }
+                  >
+                    {statusLabel === "draft" ? "Upcoming" : statusLabel}
+                  </span>
+                </TableCell>
+                <TableCell className="p-3">
+                  {inv.status === "draft" ? (
+                    inv.due_date ? (
+                      <span className="text-sm text-muted-foreground">
+                        Upcoming: {formatDate(inv.due_date ?? null)}
+                      </span>
+                    ) : (
+                      <span className="text-sm text-muted-foreground">
+                        Upcoming
+                      </span>
+                    )
+                  ) : isPaid ? (
+                    (inv.invoice_pdf || inv.hosted_invoice_url) && (
+                      <Button variant="outline" size="sm" asChild>
+                        <a
+                          href={
+                            inv.invoice_pdf ?? inv.hosted_invoice_url ?? "#"
+                          }
+                          target="_blank"
+                          rel="noopener noreferrer"
+                        >
+                          <Download className="h-4 w-4 mr-1" />
+                          Download receipt
+                        </a>
+                      </Button>
+                    )
+                  ) : (
+                    inv.hosted_invoice_url && (
+                      <Button variant="outline" size="sm" asChild>
+                        <a
+                          href={inv.hosted_invoice_url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                        >
+                          <ExternalLink className="h-4 w-4 mr-1" />
+                          View invoice
+                        </a>
+                      </Button>
+                    )
+                  )}
+                </TableCell>
+              </TableRow>
+            );
+          })}
+        </TableBody>
+      </Table>
+    </div>
+  );
 }
 
 export default function Settings() {
@@ -181,187 +339,203 @@ export default function Settings() {
         <p className="text-muted-foreground">Manage your workspace</p>
       </div>
 
-      <hr className="border-border" />
+      <Tabs defaultValue="general" className="w-full">
+        <TabsList className="mb-6">
+          <TabsTrigger value="general">General</TabsTrigger>
+          <TabsTrigger value="invoices">Invoices</TabsTrigger>
+        </TabsList>
 
-      {/* Services Section - Read-only */}
-      <section>
-        <h2 className="text-xl font-semibold mb-4">Services</h2>
-        {services.length > 0 ? (
-          <div className="rounded-md border border-border bg-card shadow-[var(--shadow)] overflow-hidden">
-            <Table>
-              <TableHeader>
-                <TableRow className="bg-muted/50">
-                  <TableHead className="p-3">Service</TableHead>
-                  <TableHead className="p-3 w-16"></TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {services.map((s) => (
-                  <TableRow key={s.service_id}>
-                    <TableCell className="p-3">{s.service_name}</TableCell>
-                    <TableCell className="p-3">
-                      {s.service_image ? (
-                        <img
-                          src={s.service_image}
-                          alt=""
-                          className="h-8 w-8 rounded object-cover"
-                        />
-                      ) : (
-                        <Package className="h-8 w-8 text-muted-foreground" />
-                      )}
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
-        ) : (
-          <p className="text-muted-foreground py-4">
-            No services. Contact support to attach services:{" "}
-            <a
-              href="mailto:support@dendritecorp.com"
-              className="text-primary underline hover:no-underline"
-            >
-              support@dendritecorp.com
-            </a>
-          </p>
-        )}
-      </section>
+        <TabsContent value="general" className="space-y-8">
+          <hr className="border-border" />
 
-      <hr className="border-border" />
-
-      {/* URL Section - Disabled with tooltip */}
-      <section>
-        <h2 className="text-xl font-semibold mb-4">URL</h2>
-        <TooltipProvider>
-          <div className="flex items-center gap-2">
-            <Input
-              value={workspaceUrl}
-              disabled
-              className="max-w-md"
-              readOnly
-            />
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button variant="ghost" size="icon" className="shrink-0">
-                  <HelpCircle className="h-4 w-4 text-muted-foreground" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent side="right" className="max-w-xs">
-                To change the URL, contact support:{" "}
-                <a href="mailto:support@dendritecorp.com" className="underline">
+          {/* Services Section - Read-only */}
+          <section>
+            <h2 className="text-xl font-semibold mb-4">Services</h2>
+            {services.length > 0 ? (
+              <div className="rounded-md border border-border bg-card shadow-(--shadow) overflow-hidden">
+                <Table>
+                  <TableHeader>
+                    <TableRow className="bg-muted/50">
+                      <TableHead className="p-3">Service</TableHead>
+                      <TableHead className="p-3 w-16"></TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {services.map((s) => (
+                      <TableRow key={s.service_id}>
+                        <TableCell className="p-3">{s.service_name}</TableCell>
+                        <TableCell className="p-3">
+                          {s.service_image ? (
+                            <img
+                              src={s.service_image}
+                              alt=""
+                              className="h-8 w-8 rounded object-cover"
+                            />
+                          ) : (
+                            <Package className="h-8 w-8 text-muted-foreground" />
+                          )}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            ) : (
+              <p className="text-muted-foreground py-4">
+                No services. Contact support to attach services:{" "}
+                <a
+                  href="mailto:support@dendritecorp.com"
+                  className="text-primary underline hover:no-underline"
+                >
                   support@dendritecorp.com
                 </a>
-              </TooltipContent>
-            </Tooltip>
-          </div>
-        </TooltipProvider>
-      </section>
+              </p>
+            )}
+          </section>
 
-      <hr className="border-border" />
+          <hr className="border-border" />
 
-      {/* Members Section */}
-      <section>
-        <h2 className="text-xl font-semibold mb-2">Members</h2>
-        <p className="text-sm text-muted-foreground mb-4">
-          To add members, contact support:{" "}
-          <a
-            href="mailto:support@dendritecorp.com"
-            className="text-primary underline hover:no-underline"
-          >
-            support@dendritecorp.com
-          </a>
-        </p>
-        {members.length > 0 ? (
-          <div className="rounded-md border border-border bg-card shadow-[var(--shadow)] overflow-hidden">
-            <Table>
-              <TableHeader>
-                <TableRow className="bg-muted/50">
-                  <TableHead className="p-3">User</TableHead>
-                  <TableHead className="p-3">Email</TableHead>
-                  <TableHead className="p-3">Role</TableHead>
-                  <TableHead className="p-3">Lead Notifications</TableHead>
-                  <TableHead className="p-3 w-24"></TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {members.map((m) => {
-                  const isSelf = m.user_id === currentUserId;
-                  const canChangeRole = isAdmin && !isSelf;
-                  const canDelete = isAdmin && !isSelf;
-                  const displayName =
-                    `${m.user_first_name} ${m.user_last_name}`.trim() ||
-                    m.user_email;
+          {/* URL Section - Disabled with tooltip */}
+          <section>
+            <h2 className="text-xl font-semibold mb-4">URL</h2>
+            <TooltipProvider>
+              <div className="flex items-center gap-2">
+                <Input
+                  value={workspaceUrl}
+                  disabled
+                  className="max-w-md"
+                  readOnly
+                />
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button variant="ghost" size="icon" className="shrink-0">
+                      <HelpCircle className="h-4 w-4 text-muted-foreground" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent side="right" className="max-w-xs">
+                    To change the URL, contact support:{" "}
+                    <a
+                      href="mailto:support@dendritecorp.com"
+                      className="underline"
+                    >
+                      support@dendritecorp.com
+                    </a>
+                  </TooltipContent>
+                </Tooltip>
+              </div>
+            </TooltipProvider>
+          </section>
 
-                  return (
-                    <TableRow key={m.user_id}>
-                      <TableCell className="p-3">{displayName}</TableCell>
-                      <TableCell className="p-3">{m.user_email}</TableCell>
-                      <TableCell className="p-3">
-                        <Select
-                          value={m.role}
-                          onValueChange={(v) =>
-                            updateMemberMutation.mutate({
-                              userId: m.user_id,
-                              data: {
-                                role: v as "admin" | "editor" | "viewer",
-                              },
-                            })
-                          }
-                          disabled={!canChangeRole}
-                        >
-                          <SelectTrigger className="w-32">
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="admin">Admin</SelectItem>
-                            <SelectItem value="editor">Editor</SelectItem>
-                            <SelectItem value="viewer">Viewer</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </TableCell>
-                      <TableCell className="p-3">
-                        <Switch
-                          checked={m.lead_notification ?? false}
-                          onCheckedChange={(checked) =>
-                            updateMemberMutation.mutate({
-                              userId: m.user_id,
-                              data: { lead_notification: checked },
-                            })
-                          }
-                          disabled={
-                            !canChangeLeadNotification(m.role, m.user_id)
-                          }
-                        />
-                      </TableCell>
-                      <TableCell className="p-3">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() =>
-                            setMemberToRemove({
-                              userId: m.user_id,
-                              name: displayName,
-                            })
-                          }
-                          disabled={!canDelete}
-                          aria-label={`Remove ${displayName}`}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </TableCell>
+          <hr className="border-border" />
+
+          {/* Members Section */}
+          <section>
+            <h2 className="text-xl font-semibold mb-2">Members</h2>
+            <p className="text-sm text-muted-foreground mb-4">
+              To add members, contact support:{" "}
+              <a
+                href="mailto:support@dendritecorp.com"
+                className="text-primary underline hover:no-underline"
+              >
+                support@dendritecorp.com
+              </a>
+            </p>
+            {members.length > 0 ? (
+              <div className="rounded-md border border-border bg-card shadow-(--shadow) overflow-hidden">
+                <Table>
+                  <TableHeader>
+                    <TableRow className="bg-muted/50">
+                      <TableHead className="p-3">User</TableHead>
+                      <TableHead className="p-3">Email</TableHead>
+                      <TableHead className="p-3">Role</TableHead>
+                      <TableHead className="p-3">Lead Notifications</TableHead>
+                      <TableHead className="p-3 w-24"></TableHead>
                     </TableRow>
-                  );
-                })}
-              </TableBody>
-            </Table>
-          </div>
-        ) : (
-          <p className="text-muted-foreground py-4">
-            No members in this workspace.
-          </p>
-        )}
-      </section>
+                  </TableHeader>
+                  <TableBody>
+                    {members.map((m) => {
+                      const isSelf = m.user_id === currentUserId;
+                      const canChangeRole = isAdmin && !isSelf;
+                      const canDelete = isAdmin && !isSelf;
+                      const displayName =
+                        `${m.user_first_name} ${m.user_last_name}`.trim() ||
+                        m.user_email;
+
+                      return (
+                        <TableRow key={m.user_id}>
+                          <TableCell className="p-3">{displayName}</TableCell>
+                          <TableCell className="p-3">{m.user_email}</TableCell>
+                          <TableCell className="p-3">
+                            <Select
+                              value={m.role}
+                              onValueChange={(v) =>
+                                updateMemberMutation.mutate({
+                                  userId: m.user_id,
+                                  data: {
+                                    role: v as "admin" | "editor" | "viewer",
+                                  },
+                                })
+                              }
+                              disabled={!canChangeRole}
+                            >
+                              <SelectTrigger className="w-32">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="admin">Admin</SelectItem>
+                                <SelectItem value="editor">Editor</SelectItem>
+                                <SelectItem value="viewer">Viewer</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </TableCell>
+                          <TableCell className="p-3">
+                            <Switch
+                              checked={m.lead_notification ?? false}
+                              onCheckedChange={(checked) =>
+                                updateMemberMutation.mutate({
+                                  userId: m.user_id,
+                                  data: { lead_notification: checked },
+                                })
+                              }
+                              disabled={
+                                !canChangeLeadNotification(m.role, m.user_id)
+                              }
+                            />
+                          </TableCell>
+                          <TableCell className="p-3">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() =>
+                                setMemberToRemove({
+                                  userId: m.user_id,
+                                  name: displayName,
+                                })
+                              }
+                              disabled={!canDelete}
+                              aria-label={`Remove ${displayName}`}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
+                  </TableBody>
+                </Table>
+              </div>
+            ) : (
+              <p className="text-muted-foreground py-4">
+                No members in this workspace.
+              </p>
+            )}
+          </section>
+        </TabsContent>
+
+        <TabsContent value="invoices">
+          <SettingsInvoicesTab />
+        </TabsContent>
+      </Tabs>
 
       {/* Remove member confirmation */}
       <AlertDialog
