@@ -5,6 +5,7 @@ export interface VisibleStripePrice {
   unit_amount: string | null;
   currency: string | null;
   recurring_interval: string | null;
+  type?: string | null;
 }
 
 export interface VisibleStripeProduct {

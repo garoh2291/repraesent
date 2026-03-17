@@ -2,6 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useAuthContext } from "~/providers/auth-provider";
 import { getStoredWorkspaceId } from "~/lib/api/axios-instance";
 import { getWorkspaceInvoices } from "~/lib/api/workspaces";
+import { formatBillingInterval } from "~/lib/utils/stripe";
 import { Card, CardContent, CardHeader, CardTitle } from "~/components/ui/card";
 import { Badge } from "~/components/ui/badge";
 import { Package, FileText, AlertTriangle } from "lucide-react";
@@ -84,25 +85,70 @@ export default function Products() {
         <CardContent>
           {products.length > 0 ? (
             <div className="space-y-3">
-              {products.map((p) => (
-                <div
-                  key={p.id}
-                  className="flex items-center justify-between rounded-lg border p-4"
-                >
-                  <span className="font-medium">{p.stripe_product_name}</span>
-                  <Badge
-                    variant={
-                      p.status === "active"
-                        ? "default"
-                        : p.status === "past_due"
-                          ? "destructive"
-                          : "secondary"
-                    }
+              {products.map((p) => {
+                const product = p as {
+                  stripe_product_name: string;
+                  status: string;
+                  current_period_end?: number | null;
+                  recurring_interval?: string | null;
+                  type?: string | null;
+                };
+                const periodEnd = product.current_period_end;
+                const showDate =
+                  periodEnd != null &&
+                  !["invoice_sent", "pending"].includes(product.status);
+                const now = Math.floor(Date.now() / 1000);
+                const dateLabel =
+                  product.status === "canceled"
+                    ? periodEnd != null && periodEnd < now
+                      ? "Ended on"
+                      : "Ends on"
+                    : product.status === "trialing"
+                      ? "Trial ends on"
+                      : product.status === "past_due"
+                        ? "Due since"
+                        : "Renews on";
+                return (
+                  <div
+                    key={p.id}
+                    className="flex items-center justify-between rounded-lg border p-4"
                   >
-                    {p.status}
-                  </Badge>
-                </div>
-              ))}
+                    <div className="space-y-1">
+                      <div className="flex items-center gap-2">
+                        <span className="font-medium">
+                          {product.stripe_product_name}
+                        </span>
+                        {(product.recurring_interval || product.type) && (
+                          <span className="text-sm text-muted-foreground">
+                            (
+                            {formatBillingInterval(
+                              product.recurring_interval,
+                              product.type
+                            )}
+                            )
+                          </span>
+                        )}
+                      </div>
+                      {showDate && periodEnd != null && (
+                        <p className="text-sm text-muted-foreground">
+                          {dateLabel} {formatDate(periodEnd)}
+                        </p>
+                      )}
+                    </div>
+                    <Badge
+                      variant={
+                        p.status === "active"
+                          ? "default"
+                          : p.status === "past_due"
+                            ? "destructive"
+                            : "secondary"
+                      }
+                    >
+                      {p.status}
+                    </Badge>
+                  </div>
+                );
+              })}
             </div>
           ) : (
             <p className="text-muted-foreground py-4">
@@ -129,7 +175,7 @@ export default function Products() {
                 <thead>
                   <tr className="border-b bg-muted/50">
                     <th className="text-left p-3 font-medium">Status</th>
-                    <th className="text-left p-3 font-medium">Due date</th>
+                    <th className="text-left p-3 font-medium">Date</th>
                     <th className="text-right p-3 font-medium">Amount</th>
                     <th className="w-24 p-3"></th>
                   </tr>
@@ -141,7 +187,11 @@ export default function Products() {
                         <Badge variant="secondary">{inv.status ?? "—"}</Badge>
                       </td>
                       <td className="p-3 text-muted-foreground">
-                        {formatDate(inv.due_date)}
+                        {inv.status === "paid" && inv.paid_at
+                          ? `Paid on ${formatDate(inv.paid_at)}`
+                          : inv.due_date
+                            ? `Due by ${formatDate(inv.due_date)}`
+                            : "—"}
                       </td>
                       <td className="p-3 text-right">
                         {inv.amount_due != null

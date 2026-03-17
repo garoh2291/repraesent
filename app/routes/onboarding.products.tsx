@@ -15,6 +15,7 @@ import {
   type VisibleStripeProduct,
   type VisibleStripePrice,
 } from "~/lib/api/onboarding";
+import { formatBillingInterval } from "~/lib/utils/stripe";
 import { getStoredWorkspaceId } from "~/lib/api/axios-instance";
 import { useAuthContext } from "~/providers/auth-provider";
 import { useQueryClient } from "@tanstack/react-query";
@@ -72,20 +73,21 @@ export default function OnboardingProducts() {
     product: VisibleStripeProduct,
     price: VisibleStripePrice
   ) => {
-    const key = `${product.id}::${price.id}`;
     setSelections((prev) => {
-      const next = { ...prev };
-      if (next[key]) {
-        delete next[key];
-      } else {
-        next[key] = { productId: product.id, priceId: price.id, price };
+      if (prev[product.id]?.priceId === price.id) {
+        const next = { ...prev };
+        delete next[product.id];
+        return next;
       }
-      return next;
+      return {
+        ...prev,
+        [product.id]: { productId: product.id, priceId: price.id, price },
+      };
     });
   };
 
   const isSelected = (productId: string, priceId: string) =>
-    !!selections[`${productId}::${priceId}`];
+    selections[productId]?.priceId === priceId;
 
   useEffect(() => {
     if (!user) return;
@@ -214,6 +216,10 @@ export default function OnboardingProducts() {
                         const amount = price.unit_amount
                           ? Number(price.unit_amount) / 100
                           : 0;
+                        const intervalLabel = formatBillingInterval(
+                          price.recurring_interval,
+                          price.type
+                        );
                         const interval = price.recurring_interval ?? "one-time";
                         const monthlyPrice = product.prices.find(
                           (p) => p.recurring_interval === "month"
@@ -227,6 +233,16 @@ export default function OnboardingProducts() {
                         const yearlyPrice =
                           interval === "year" ? amount : amount * 12;
                         const selected = isSelected(product.id, price.id);
+                        const suffix =
+                          interval === "month"
+                            ? "mo"
+                            : interval === "year"
+                              ? "yr"
+                              : interval === "day"
+                                ? "day"
+                                : interval === "week"
+                                  ? "wk"
+                                  : "";
                         return (
                           <div
                             key={price.id}
@@ -243,12 +259,8 @@ export default function OnboardingProducts() {
                               ) : (
                                 <div className="h-5 w-5 rounded-full border-2 border-muted-foreground shrink-0" />
                               )}
-                              <span className="font-medium capitalize">
-                                {interval === "month"
-                                  ? "Monthly"
-                                  : interval === "year"
-                                    ? "Yearly"
-                                    : "One-time"}
+                              <span className="font-medium">
+                                {intervalLabel}
                               </span>
                             </div>
                             <div className="text-right">
@@ -256,7 +268,7 @@ export default function OnboardingProducts() {
                                 {formatPrice(price.unit_amount, price.currency)}
                               </span>
                               <span className="text-muted-foreground">
-                                /{interval === "month" ? "mo" : interval === "year" ? "yr" : ""}
+                                /{suffix}
                               </span>
                               {interval === "year" &&
                                 monthlyPrice > 0 &&

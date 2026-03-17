@@ -48,8 +48,8 @@ export interface WorkspaceInvoice {
   amount_due?: string | null;
   amount_paid?: string | null;
   currency?: string | null;
-  created?: string | null;
   due_date?: string | null;
+  paid_at?: number | null;
 }
 
 export async function getWorkspaceInvoices(
