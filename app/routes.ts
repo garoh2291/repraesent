@@ -15,7 +15,7 @@ export default [
     route("no-workspace", "routes/no-workspace.tsx"),
     route("auth/workspace-picker", "routes/auth.workspace-picker.tsx"),
     route("pending", "routes/pending.tsx"),
-    route("canceled", "routes/canceled.tsx"),
+    route("closed", "routes/closed.tsx"),
     layout("routes/_onboarding-layout.tsx", [
       route("onboarding/profile", "routes/onboarding.profile.tsx"),
       route("onboarding/workspace", "routes/onboarding.workspace.tsx"),

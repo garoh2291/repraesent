@@ -6,7 +6,7 @@ import { clearStoredAuth } from "~/lib/hooks/use-auth";
 
 const ONBOARDING_PREFIX = "/onboarding";
 const PENDING_PATH = "/pending";
-const CANCELED_PATH = "/canceled";
+const CLOSED_PATH = "/closed";
 
 export default function ProtectedLayout() {
   const { isAuthenticated, isLoading, user, workspaces, currentWorkspace } =
@@ -16,7 +16,7 @@ export default function ProtectedLayout() {
   const path = location.pathname;
   const isOnOnboarding = path.startsWith(ONBOARDING_PREFIX);
   const isOnPending = path === PENDING_PATH;
-  const isOnCanceled = path === CANCELED_PATH;
+  const isOnClosed = path === CLOSED_PATH;
   const isOnNoWorkspace = path === "/no-workspace";
   const isOnWorkspacePicker = path === "/auth/workspace-picker";
 
@@ -55,8 +55,13 @@ export default function ProtectedLayout() {
     const ws = currentWorkspace ?? workspaces[0];
     const status = ws?.status ?? "active";
 
-    if (status === "canceled" && !isOnCanceled) {
-      navigate(CANCELED_PATH, { replace: true });
+    if (status === "canceled" && !isOnClosed) {
+      navigate(CLOSED_PATH, { replace: true });
+      return;
+    }
+
+    if (status !== "canceled" && isOnClosed) {
+      navigate("/", { replace: true });
       return;
     }
 
@@ -98,7 +103,7 @@ export default function ProtectedLayout() {
     path,
     isOnOnboarding,
     isOnPending,
-    isOnCanceled,
+    isOnClosed,
     isOnNoWorkspace,
     isOnWorkspacePicker,
   ]);
@@ -132,7 +137,7 @@ export default function ProtectedLayout() {
   if (status === "pending" && !isOnPending && !isOnOnboarding) {
     return null;
   }
-  if (status === "canceled" && !isOnCanceled) {
+  if (status === "canceled" && !isOnClosed) {
     return null;
   }
 
