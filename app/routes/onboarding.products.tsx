@@ -481,7 +481,7 @@ export default function OnboardingProducts() {
         <Button
           onClick={handleSubmit}
           disabled={selectedCount === 0 || isSubmitting}
-          className="h-11 px-8 font-medium text-sm transition-all duration-150 hover:opacity-90"
+          className="h-11 px-8 font-medium text-sm bg-foreground text-background hover:opacity-90 transition-opacity"
         >
           {isSubmitting ? "Saving…" : "Continue →"}
         </Button>
