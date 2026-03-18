@@ -99,3 +99,24 @@ export async function getLeadStats(): Promise<LeadStats> {
   const res = await apiClient.get<LeadStats>("/leads/stats");
   return res.data;
 }
+
+export type LeadAnalyticsPeriod =
+  | "today"
+  | "this_week"
+  | "this_month"
+  | "all_time";
+
+export interface LeadAnalytics {
+  series: { date: string; count: number }[];
+  sources: { source: string; label: string; count: number }[];
+  total: number;
+}
+
+export async function getLeadAnalytics(
+  period: LeadAnalyticsPeriod
+): Promise<LeadAnalytics> {
+  const res = await apiClient.get<LeadAnalytics>(
+    `/leads/analytics?period=${period}`
+  );
+  return res.data;
+}
