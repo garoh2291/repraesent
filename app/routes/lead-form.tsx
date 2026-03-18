@@ -261,7 +261,7 @@ export default function LeadForm() {
             event.stopPropagation();
           }}
           to={`/lead-form/${row.original.id}`}
-          className="inline-flex items-center gap-1 text-xs font-medium text-primary hover:underline"
+          className="inline-flex items-center gap-1 text-xs font-medium text-foreground hover:underline"
         >
           Open <ArrowRight className="h-3.5 w-3.5" />
         </Link>
