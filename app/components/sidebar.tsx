@@ -1,13 +1,16 @@
 import { Link, useLocation, useNavigate } from "react-router";
+import { useState } from "react";
 import {
   Building2,
   ChevronDown,
   HomeIcon,
+  Info,
   LogOut,
   Package,
   Settings,
 } from "lucide-react";
 import * as LucideIcons from "lucide-react";
+import { InstructionsModal } from "~/components/instructions-modal";
 
 import { useAuthContext } from "~/providers/auth-provider";
 import { useAppointmentConfig } from "~/lib/hooks/useAppointmentConfig";
@@ -51,12 +54,14 @@ function NavLink({
   children,
   disabled,
   onClick,
+  className,
 }: {
   to: string;
   isActive: boolean;
   children: React.ReactNode;
   disabled?: boolean;
   onClick?: (e: React.MouseEvent) => void;
+  className?: string;
 }) {
   return (
     <Link
@@ -71,6 +76,7 @@ function NavLink({
           : isActive
           ? "border-amber-400 bg-amber-400/10 text-amber-300"
           : "border-transparent text-white/45 hover:bg-white/5 hover:text-white/75",
+        className ?? "",
       ].join(" ")}
     >
       {children}
@@ -89,6 +95,7 @@ export function Sidebar() {
   const location = useLocation();
   const navigate = useNavigate();
   const hasMultipleWorkspaces = (workspaces?.length ?? 0) > 1;
+  const [instructionsMarkdown, setInstructionsMarkdown] = useState<string | null>(null);
   const hasAppointmentsService =
     currentWorkspace?.services?.some(
       (s) => s.service_type === "appointments"
@@ -192,19 +199,41 @@ export function Sidebar() {
               : null;
             const hasIcon = !!iconName && lucideIconNames.has(iconName);
 
+            const instructions =
+              (service.service_config as Record<string, unknown> | null)
+                ?.instructions as string | undefined;
+            const hasInstructions = !!instructions;
+
             return (
-              <NavLink
-                key={service.service_id}
-                to={href}
-                isActive={isActive}
-                disabled={!hasSlug}
-                onClick={(e) => !hasSlug && e.preventDefault()}
-              >
-                {hasIcon && (
-                  <DynamicIcon name={iconName!} className="h-4 w-4 shrink-0" />
+              <div key={service.service_id} className="flex items-center group/svc">
+                <NavLink
+                  to={href}
+                  isActive={isActive}
+                  disabled={!hasSlug}
+                  onClick={(e) => !hasSlug && e.preventDefault()}
+                  className="flex-1 min-w-0"
+                >
+                  {hasIcon && (
+                    <DynamicIcon name={iconName!} className="h-4 w-4 shrink-0" />
+                  )}
+                  <span className="truncate">{service.service_name}</span>
+                </NavLink>
+                {hasInstructions && (
+                  <button
+                    type="button"
+                    title="View instructions"
+                    onClick={() => setInstructionsMarkdown(instructions!)}
+                    className="
+                      ml-0.5 mr-1 flex h-5 w-5 shrink-0 items-center justify-center
+                      rounded opacity-0 group-hover/svc:opacity-100
+                      text-white/25 hover:text-amber-400 hover:bg-amber-400/8
+                      transition-all duration-150
+                    "
+                  >
+                    <Info className="h-3 w-3" />
+                  </button>
                 )}
-                {service.service_name}
-              </NavLink>
+              </div>
             );
           })}
 
@@ -228,6 +257,15 @@ export function Sidebar() {
           {isLoggingOut ? "Signing out…" : "Sign out"}
         </button>
       </div>
+
+      {/* Instructions modal */}
+      {instructionsMarkdown !== null && (
+        <InstructionsModal
+          open
+          onClose={() => setInstructionsMarkdown(null)}
+          markdown={instructionsMarkdown}
+        />
+      )}
     </aside>
   );
 }
