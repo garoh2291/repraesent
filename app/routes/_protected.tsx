@@ -52,7 +52,23 @@ export default function ProtectedLayout() {
       return;
     }
 
-    const ws = currentWorkspace ?? workspaces[0];
+    // STEP 3: Multiple workspaces, none selected yet → show picker first
+    // Must come before status checks so we don't evaluate status on the wrong workspace
+    if (
+      workspaces.length > 1 &&
+      !getStoredWorkspaceId() &&
+      !isOnWorkspacePicker
+    ) {
+      navigate("/auth/workspace-picker", { replace: true });
+      return;
+    }
+
+    // STEP 4: Status checks — only run once a workspace is actually selected.
+    // If currentWorkspace is null (multi-workspace, none chosen yet) skip entirely;
+    // the workspace picker will handle routing after the user makes a selection.
+    if (!currentWorkspace) return;
+
+    const ws = currentWorkspace;
     const status = ws?.status ?? "active";
 
     if (status === "canceled" && !isOnClosed) {
@@ -65,31 +81,13 @@ export default function ProtectedLayout() {
       return;
     }
 
-    if (status === "pending" && !isOnPending && !isOnOnboarding) {
-      const hasStripeCustomer = !!(ws as { stripe_customer_id?: string | null })
-        ?.stripe_customer_id;
-      const hasProducts = (ws?.products?.length ?? 0) > 0;
-      if (!hasStripeCustomer) {
-        navigate("/onboarding/billing", { replace: true });
-      } else if (!hasProducts) {
-        navigate("/onboarding/products", { replace: true });
-      } else {
-        navigate(PENDING_PATH, { replace: true });
-      }
+    if (status === "pending" && !isOnPending) {
+      navigate(PENDING_PATH, { replace: true });
       return;
     }
 
     if (status === "active" && isOnPending) {
       navigate("/", { replace: true });
-      return;
-    }
-
-    if (
-      workspaces.length > 1 &&
-      !getStoredWorkspaceId() &&
-      !isOnWorkspacePicker
-    ) {
-      navigate("/auth/workspace-picker", { replace: true });
       return;
     }
   }, [
@@ -132,15 +130,6 @@ export default function ProtectedLayout() {
     return isOnOnboarding || isOnNoWorkspace ? <Outlet /> : null;
   }
 
-  const ws = currentWorkspace ?? workspaces[0];
-  const status = ws?.status ?? "active";
-  if (status === "pending" && !isOnPending && !isOnOnboarding) {
-    return null;
-  }
-  if (status === "canceled" && !isOnClosed) {
-    return null;
-  }
-
   if (
     workspaces.length > 1 &&
     !getStoredWorkspaceId() &&
@@ -149,12 +138,26 @@ export default function ProtectedLayout() {
     return null;
   }
 
-  const wsStatus = ws?.status ?? "active";
+  // Only gate on workspace status once a workspace is actually selected.
+  // If currentWorkspace is null (picker hasn't been used yet), let the Outlet render
+  // so the workspace picker page itself is visible.
+  if (currentWorkspace) {
+    const ws = currentWorkspace;
+    const status = ws?.status ?? "active";
+    if (status === "pending" && !isOnPending) {
+      return null;
+    }
+    if (status === "canceled" && !isOnClosed) {
+      return null;
+    }
+  }
+
+  const wsStatus = currentWorkspace?.status ?? "active";
   const hasPastDueProduct =
-    ws?.products?.some((p: { status?: string }) => p.status === "past_due");
+    currentWorkspace?.products?.some((p: { status?: string }) => p.status === "past_due");
   const showPastDueBanner =
     wsStatus === "past_due" || (wsStatus === "active" && hasPastDueProduct);
-  const invoiceUrl = (ws as { unpaid_invoice_url?: string })?.unpaid_invoice_url;
+  const invoiceUrl = (currentWorkspace as { unpaid_invoice_url?: string } | null)?.unpaid_invoice_url;
 
   return (
     <div className="flex flex-col min-h-screen">
