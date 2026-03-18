@@ -12,6 +12,7 @@ export interface WorkspaceDetail {
     service_slug: string | null;
     service_type: string | null;
     service_icon: string | null;
+    service_config: Record<string, unknown> | null;
   }>;
   members: Array<{
     user_id: string;

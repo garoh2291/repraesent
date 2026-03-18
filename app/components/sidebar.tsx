@@ -148,39 +148,41 @@ export function Sidebar() {
               showAppointmentsInSidebar
           )
           ?.map((service) => {
-          const href = service.service_slug ? `/${service.service_slug}` : "#";
-          const isActive =
-            service.service_slug &&
-            (location.pathname === `/${service.service_slug}` ||
-              location.pathname.startsWith(`/${service.service_slug}/`));
-          const hasSlug = !!service.service_slug;
-          const iconName = service.service_icon
-            ? kebabToPascal(service.service_icon)
-            : null;
+            const href = service.service_slug
+              ? `/${service.service_slug}`
+              : "#";
+            const isActive =
+              service.service_slug &&
+              (location.pathname === `/${service.service_slug}` ||
+                location.pathname.startsWith(`/${service.service_slug}/`));
+            const hasSlug = !!service.service_slug;
+            const iconName = service.service_icon
+              ? kebabToPascal(service.service_icon)
+              : null;
 
-          const hasIcon = !!iconName && lucideIconNames.has(iconName);
+            const hasIcon = !!iconName && lucideIconNames.has(iconName);
 
-          return (
-            <Link
-              key={service.service_id}
-              to={href}
-              className={`rounded-md px-2 py-2 text-sm font-medium transition-colors flex items-center gap-2 ${
-                !hasSlug
-                  ? "cursor-not-allowed text-muted-foreground opacity-60"
-                  : isActive
-                    ? "bg-sidebar-accent text-sidebar-accent-foreground shadow-[var(--shadow)]"
-                    : "text-sidebar-foreground hover:bg-sidebar-accent/50"
-              }`}
-              onClick={(e) => !hasSlug && e.preventDefault()}
-              aria-disabled={!hasSlug}
-            >
-              {hasIcon && (
-                <DynamicIcon name={iconName!} className="h-4 w-4 shrink-0" />
-              )}
-              {service.service_name}
-            </Link>
-          );
-        })}
+            return (
+              <Link
+                key={service.service_id}
+                to={href}
+                className={`rounded-md px-2 py-2 text-sm font-medium transition-colors flex items-center gap-2 ${
+                  !hasSlug
+                    ? "cursor-not-allowed text-muted-foreground opacity-60"
+                    : isActive
+                      ? "bg-sidebar-accent text-sidebar-accent-foreground shadow-[var(--shadow)]"
+                      : "text-sidebar-foreground hover:bg-sidebar-accent/50"
+                }`}
+                onClick={(e) => !hasSlug && e.preventDefault()}
+                aria-disabled={!hasSlug}
+              >
+                {hasIcon && (
+                  <DynamicIcon name={iconName!} className="h-4 w-4 shrink-0" />
+                )}
+                {service.service_name}
+              </Link>
+            );
+          })}
         <Link
           to="/settings"
           className={`rounded-md px-2 py-2 text-sm font-medium transition-colors flex items-center gap-2 ${

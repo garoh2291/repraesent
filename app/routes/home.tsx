@@ -144,7 +144,10 @@ export default function Home() {
                       </div>
                     )}
                     <CardContent className="flex flex-1 flex-col justify-center p-4 min-w-0">
-                      <p className="font-medium truncate" title={s.service_name}>
+                      <p
+                        className="font-medium truncate"
+                        title={s.service_name}
+                      >
                         {s.service_name}
                       </p>
                       <p className="text-sm text-muted-foreground truncate flex items-center gap-1">
