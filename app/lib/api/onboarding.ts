@@ -75,3 +75,44 @@ export const addProductsToWorkspace = async (
     await apiClient.post(`/workspaces/${workspaceId}/products`, p);
   }
 };
+
+export const updateOnboardingWorkspace = async (
+  workspaceId: string,
+  data: { name: string; url: string; members?: { email: string }[] }
+) => {
+  await apiClient.patch(`/workspaces/onboarding/${workspaceId}`, data);
+};
+
+export interface BillingInfo {
+  id: string;
+  name: string | null;
+  email: string | null;
+  address: string | null;
+  city: string | null;
+  country: string | null;
+  postal_code: string | null;
+  vat_number: string | null;
+}
+
+export const getBillingForWorkspace = async (
+  workspaceId: string
+): Promise<BillingInfo> => {
+  const response = await apiClient.get<BillingInfo>(
+    `/workspaces/${workspaceId}/billing`
+  );
+  return response.data;
+};
+
+export const updateBillingForWorkspace = async (
+  workspaceId: string,
+  data: {
+    name: string;
+    email: string;
+    address?: string;
+    city?: string;
+    country?: string;
+    postal_code?: string;
+  }
+) => {
+  await apiClient.patch(`/workspaces/${workspaceId}/billing`, data);
+};

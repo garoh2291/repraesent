@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAuthContext } from "~/providers/auth-provider";
 import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
@@ -10,8 +11,11 @@ import {
   CardHeader,
   CardTitle,
 } from "~/components/ui/card";
-import { createOnboardingWorkspace } from "~/lib/api/onboarding";
-import { useQueryClient } from "@tanstack/react-query";
+import {
+  createOnboardingWorkspace,
+  updateOnboardingWorkspace,
+} from "~/lib/api/onboarding";
+import { getWorkspaceDetail } from "~/lib/api/workspaces";
 import { setStoredWorkspaceId } from "~/lib/api/axios-instance";
 
 export function meta() {
@@ -22,26 +26,60 @@ export function meta() {
 }
 
 export default function OnboardingWorkspace() {
-  const { user } = useAuthContext();
+  const { user, currentWorkspace, workspaces } = useAuthContext();
   const navigate = useNavigate();
-  const [name, setName] = useState("");
+  const queryClient = useQueryClient();
+
+  const existingWorkspace = currentWorkspace ?? workspaces[0] ?? null;
+
+  const [name, setName] = useState(existingWorkspace?.name ?? "");
   const [url, setUrl] = useState("");
   const [members, setMembers] = useState<string[]>([]);
   const [memberInput, setMemberInput] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const queryClient = useQueryClient();
+  const [urlPrefilled, setUrlPrefilled] = useState(false);
 
+  // Auth guard
   useEffect(() => {
-    const hasProfile = !!(user?.first_name?.trim() && user?.last_name?.trim());
-    if (user && !hasProfile) {
+    if (!user) return;
+    if (!user.first_name?.trim() || !user.last_name?.trim()) {
       navigate("/onboarding/profile", { replace: true });
     }
   }, [user, navigate]);
 
+  // Fetch workspace detail to get the URL
+  const { data: workspaceDetail } = useQuery({
+    queryKey: ["workspace-detail-onboarding", existingWorkspace?.id],
+    queryFn: getWorkspaceDetail,
+    enabled: !!existingWorkspace?.id,
+  });
+
+  // Pre-fill URL once workspace detail loads
+  useEffect(() => {
+    if (urlPrefilled) return;
+    const existingUrl =
+      workspaceDetail?.url?.url ?? workspaceDetail?.urls?.[0]?.url ?? "";
+    if (existingUrl) {
+      setUrl(existingUrl);
+      setUrlPrefilled(true);
+    }
+  }, [workspaceDetail, urlPrefilled]);
+
+  // Pre-fill name when workspace loads (initial render may not have it)
+  useEffect(() => {
+    if (existingWorkspace?.name && !name) {
+      setName(existingWorkspace.name);
+    }
+  }, [existingWorkspace?.name, name]);
+
   const addMember = () => {
     const email = memberInput.trim().toLowerCase();
-    if (email && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) && !members.includes(email)) {
+    if (
+      email &&
+      /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) &&
+      !members.includes(email)
+    ) {
       setMembers([...members, email]);
       setMemberInput("");
     }
@@ -68,15 +106,25 @@ export default function OnboardingWorkspace() {
       setError("Please enter a valid URL");
       return;
     }
+
     setIsSubmitting(true);
     try {
-      const result = await createOnboardingWorkspace({
-        name: name.trim(),
-        url: url.trim(),
-        members: members.map((email) => ({ email })),
-      });
-      setStoredWorkspaceId(result.id);
-      queryClient.invalidateQueries({ queryKey: ["auth"] });
+      if (existingWorkspace?.id) {
+        await updateOnboardingWorkspace(existingWorkspace.id, {
+          name: name.trim(),
+          url: url.trim(),
+          members: members.map((email) => ({ email })),
+        });
+        queryClient.invalidateQueries({ queryKey: ["auth"] });
+      } else {
+        const result = await createOnboardingWorkspace({
+          name: name.trim(),
+          url: url.trim(),
+          members: members.map((email) => ({ email })),
+        });
+        setStoredWorkspaceId(result.id);
+        queryClient.invalidateQueries({ queryKey: ["auth"] });
+      }
       navigate("/onboarding/billing", { replace: true });
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong");
@@ -88,9 +136,13 @@ export default function OnboardingWorkspace() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Create your workspace</CardTitle>
+        <CardTitle>
+          {existingWorkspace ? "Your workspace" : "Create your workspace"}
+        </CardTitle>
         <CardDescription>
-          Set up your workspace and invite team members
+          {existingWorkspace
+            ? "Update your workspace details"
+            : "Set up your workspace and invite team members"}
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -128,17 +180,26 @@ export default function OnboardingWorkspace() {
             />
           </div>
           <div className="space-y-2">
-            <label className="text-sm font-medium">Invite members (optional)</label>
+            <label className="text-sm font-medium">
+              Invite members (optional)
+            </label>
             <div className="flex gap-2">
               <Input
                 type="email"
                 value={memberInput}
                 onChange={(e) => setMemberInput(e.target.value)}
-                onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), addMember())}
+                onKeyDown={(e) =>
+                  e.key === "Enter" && (e.preventDefault(), addMember())
+                }
                 placeholder="member@example.com"
                 disabled={isSubmitting}
               />
-              <Button type="button" variant="outline" onClick={addMember} disabled={isSubmitting}>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={addMember}
+                disabled={isSubmitting}
+              >
                 Add
               </Button>
             </div>
@@ -172,7 +233,7 @@ export default function OnboardingWorkspace() {
               Back
             </Button>
             <Button type="submit" disabled={isSubmitting}>
-              {isSubmitting ? "Creating..." : "Continue"}
+              {isSubmitting ? "Saving..." : "Continue"}
             </Button>
           </div>
         </form>
