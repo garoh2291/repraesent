@@ -10,33 +10,33 @@ export function StatusPageHeader() {
   const hasMultipleWorkspaces = (workspaces?.length ?? 0) > 1;
 
   return (
-    <header className="flex h-14 shrink-0 items-center justify-between border-b border-border px-6">
+    <header className="flex h-14 shrink-0 items-center justify-between border-b border-stone-200 dark:border-zinc-800 bg-white/80 dark:bg-zinc-900/80 backdrop-blur-sm px-6">
       <img
         src={logoUrl}
         alt="Repraesent"
-        className="h-8 w-auto max-w-[140px]"
+        className="h-7 w-auto max-w-[130px]"
       />
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-1.5">
         {hasMultipleWorkspaces && (
           <Button
             variant="outline"
             size="sm"
-            className="gap-2"
+            className="h-8 gap-1.5 text-xs border-stone-200 dark:border-zinc-700 hover:bg-stone-50 dark:hover:bg-zinc-800 transition-colors"
             onClick={() => openModal({ modalName: "SwitchWorkspaceModal" })}
           >
-            <ArrowLeftRight className="h-4 w-4" />
+            <ArrowLeftRight className="h-3.5 w-3.5" />
             Switch workspace
           </Button>
         )}
         <Button
           variant="ghost"
           size="sm"
-          className="gap-2"
+          className="h-8 gap-1.5 text-xs text-muted-foreground hover:text-foreground hover:bg-stone-100 dark:hover:bg-zinc-800 transition-colors"
           onClick={() => logout()}
           disabled={isLoggingOut}
         >
-          <LogOut className="h-4 w-4" />
-          {isLoggingOut ? "Signing out..." : "Sign out"}
+          <LogOut className="h-3.5 w-3.5" />
+          {isLoggingOut ? "Signing out…" : "Sign out"}
         </Button>
       </div>
     </header>

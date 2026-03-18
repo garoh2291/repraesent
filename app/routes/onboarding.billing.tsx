@@ -4,13 +4,6 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "~/components/ui/card";
-import {
   createStripeCustomerForWorkspace,
   updateBillingForWorkspace,
   getBillingForWorkspace,
@@ -34,6 +27,15 @@ const COUNTRIES = [
   { code: "AT", label: "Austria" },
 ];
 
+const inputCls =
+  "h-11 border-stone-200 dark:border-zinc-700 bg-stone-50 dark:bg-zinc-950 focus-visible:ring-1 focus-visible:ring-foreground/25 transition-shadow";
+
+const labelCls =
+  "block text-[11px] font-semibold uppercase tracking-widest text-muted-foreground";
+
+const selectCls =
+  "flex h-11 w-full rounded-md border border-stone-200 dark:border-zinc-700 bg-stone-50 dark:bg-zinc-950 px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-foreground/25 disabled:cursor-not-allowed disabled:opacity-50";
+
 export default function OnboardingBilling() {
   const { user, currentWorkspace, workspaces } = useAuthContext();
   const workspaceId =
@@ -56,7 +58,6 @@ export default function OnboardingBilling() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
 
-  // Guards
   useEffect(() => {
     if (!user) return;
     if (!user.first_name?.trim() || !user.last_name?.trim()) {
@@ -68,14 +69,12 @@ export default function OnboardingBilling() {
     }
   }, [user, workspaces, navigate]);
 
-  // Fetch existing billing data if stripe customer exists
   const { data: billingData } = useQuery({
     queryKey: ["billing-onboarding", workspaceId],
     queryFn: () => getBillingForWorkspace(workspaceId!),
     enabled: !!workspaceId && hasStripeCustomer,
   });
 
-  // Pre-fill from existing billing data or user profile
   useEffect(() => {
     if (prefilled) return;
     if (billingData) {
@@ -108,42 +107,17 @@ export default function OnboardingBilling() {
     e.preventDefault();
     setError(null);
 
-    if (!name.trim()) {
-      setError("Name is required");
-      return;
-    }
-    if (!email.trim()) {
-      setError("Email is required");
-      return;
-    }
+    if (!name.trim()) { setError("Name is required"); return; }
+    if (!email.trim()) { setError("Email is required"); return; }
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
-      setError("Please enter a valid email address");
-      return;
+      setError("Please enter a valid email address"); return;
     }
-    if (!hasStripeCustomer && !company.trim()) {
-      setError("Company is required");
-      return;
-    }
-    if (!address.trim()) {
-      setError("Address is required");
-      return;
-    }
-    if (!city.trim()) {
-      setError("City is required");
-      return;
-    }
-    if (!country) {
-      setError("Country is required");
-      return;
-    }
-    if (!postalCode.trim()) {
-      setError("Postal code is required");
-      return;
-    }
-    if (!workspaceId) {
-      setError("No workspace selected");
-      return;
-    }
+    if (!hasStripeCustomer && !company.trim()) { setError("Company is required"); return; }
+    if (!address.trim()) { setError("Address is required"); return; }
+    if (!city.trim()) { setError("City is required"); return; }
+    if (!country) { setError("Country is required"); return; }
+    if (!postalCode.trim()) { setError("Postal code is required"); return; }
+    if (!workspaceId) { setError("No workspace selected"); return; }
 
     setIsSubmitting(true);
     try {
@@ -184,24 +158,33 @@ export default function OnboardingBilling() {
   }
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Billing information</CardTitle>
-        <CardDescription>
-          Add your billing details so we can create your Stripe customer and
-          send invoices.
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          {error && (
-            <div className="rounded-md bg-destructive/10 border border-destructive/20 p-3 text-sm text-destructive">
-              {error}
-            </div>
-          )}
-          <div className="space-y-2">
-            <label htmlFor="name" className="text-sm font-medium">
-              Full name <span className="text-destructive">*</span>
+    <div className="ob-fade-up ob-fade-up-d1">
+      {/* Section heading */}
+      <div className="mb-8 space-y-1.5">
+        <h1 className="ob-heading text-[26px] font-semibold tracking-tight text-foreground leading-snug">
+          Billing information
+        </h1>
+        <p className="text-sm text-muted-foreground">
+          Add your billing details so we can create your Stripe customer and send invoices.
+        </p>
+      </div>
+
+      <form onSubmit={handleSubmit} className="space-y-5">
+        {error && (
+          <div className="ob-fade-up rounded-lg border border-destructive/20 bg-destructive/6 px-4 py-3 text-sm text-destructive">
+            {error}
+          </div>
+        )}
+
+        {/* Contact section */}
+        <div className="rounded-xl border border-stone-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-6 shadow-sm space-y-5 ob-fade-up ob-fade-up-d2">
+          <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground/60">
+            Contact
+          </p>
+
+          <div className="space-y-1.5">
+            <label htmlFor="name" className={labelCls}>
+              Full name <span className="text-destructive normal-case tracking-normal">*</span>
             </label>
             <Input
               id="name"
@@ -210,11 +193,13 @@ export default function OnboardingBilling() {
               placeholder="John Doe"
               required
               disabled={isSubmitting}
+              className={inputCls}
             />
           </div>
-          <div className="space-y-2">
-            <label htmlFor="email" className="text-sm font-medium">
-              Email <span className="text-destructive">*</span>
+
+          <div className="space-y-1.5">
+            <label htmlFor="email" className={labelCls}>
+              Email <span className="text-destructive normal-case tracking-normal">*</span>
             </label>
             <Input
               id="email"
@@ -224,15 +209,17 @@ export default function OnboardingBilling() {
               placeholder="billing@company.com"
               required
               disabled={isSubmitting}
+              className={inputCls}
             />
           </div>
-          <div className="space-y-2">
-            <label htmlFor="company" className="text-sm font-medium">
+
+          <div className="space-y-1.5">
+            <label htmlFor="company" className={labelCls}>
               Company{" "}
               {!hasStripeCustomer ? (
-                <span className="text-destructive">*</span>
+                <span className="text-destructive normal-case tracking-normal">*</span>
               ) : (
-                <span className="text-muted-foreground font-normal">
+                <span className="normal-case tracking-normal font-normal text-muted-foreground/60">
                   (optional)
                 </span>
               )}
@@ -244,11 +231,20 @@ export default function OnboardingBilling() {
               placeholder="Acme Inc."
               required
               disabled={isSubmitting}
+              className={inputCls}
             />
           </div>
-          <div className="space-y-2">
-            <label htmlFor="address" className="text-sm font-medium">
-              Address <span className="text-destructive">*</span>
+        </div>
+
+        {/* Address section */}
+        <div className="rounded-xl border border-stone-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-6 shadow-sm space-y-5 ob-fade-up ob-fade-up-d3">
+          <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground/60">
+            Address
+          </p>
+
+          <div className="space-y-1.5">
+            <label htmlFor="address" className={labelCls}>
+              Street address <span className="text-destructive normal-case tracking-normal">*</span>
             </label>
             <Input
               id="address"
@@ -257,12 +253,14 @@ export default function OnboardingBilling() {
               placeholder="123 Main St"
               required
               disabled={isSubmitting}
+              className={inputCls}
             />
           </div>
+
           <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <label htmlFor="city" className="text-sm font-medium">
-                City <span className="text-destructive">*</span>
+            <div className="space-y-1.5">
+              <label htmlFor="city" className={labelCls}>
+                City <span className="text-destructive normal-case tracking-normal">*</span>
               </label>
               <Input
                 id="city"
@@ -271,11 +269,12 @@ export default function OnboardingBilling() {
                 placeholder="Berlin"
                 required
                 disabled={isSubmitting}
+                className={inputCls}
               />
             </div>
-            <div className="space-y-2">
-              <label htmlFor="postalCode" className="text-sm font-medium">
-                Postal / ZIP code <span className="text-destructive">*</span>
+            <div className="space-y-1.5">
+              <label htmlFor="postalCode" className={labelCls}>
+                Postal / ZIP <span className="text-destructive normal-case tracking-normal">*</span>
               </label>
               <Input
                 id="postalCode"
@@ -284,12 +283,14 @@ export default function OnboardingBilling() {
                 placeholder="10115"
                 required
                 disabled={isSubmitting}
+                className={inputCls}
               />
             </div>
           </div>
-          <div className="space-y-2">
-            <label htmlFor="country" className="text-sm font-medium">
-              Country <span className="text-destructive">*</span>
+
+          <div className="space-y-1.5">
+            <label htmlFor="country" className={labelCls}>
+              Country <span className="text-destructive normal-case tracking-normal">*</span>
             </label>
             <select
               id="country"
@@ -297,7 +298,7 @@ export default function OnboardingBilling() {
               onChange={(e) => setCountry(e.target.value)}
               required
               disabled={isSubmitting}
-              className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+              className={selectCls}
             >
               <option value="">Select country</option>
               {COUNTRIES.map((c) => (
@@ -307,10 +308,18 @@ export default function OnboardingBilling() {
               ))}
             </select>
           </div>
-          <div className="space-y-2">
-            <label htmlFor="vatNumber" className="text-sm font-medium">
+        </div>
+
+        {/* Tax section */}
+        <div className="rounded-xl border border-stone-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-6 shadow-sm space-y-5 ob-fade-up ob-fade-up-d4">
+          <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground/60">
+            Tax
+          </p>
+
+          <div className="space-y-1.5">
+            <label htmlFor="vatNumber" className={labelCls}>
               VAT number{" "}
-              <span className="text-muted-foreground font-normal">
+              <span className="normal-case tracking-normal font-normal text-muted-foreground/60">
                 (optional)
               </span>
             </label>
@@ -320,23 +329,31 @@ export default function OnboardingBilling() {
               onChange={(e) => setVatNumber(e.target.value)}
               placeholder="DE123456789"
               disabled={isSubmitting}
+              className={inputCls}
             />
           </div>
-          <div className="flex justify-between pt-4">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => navigate("/onboarding/workspace")}
-              disabled={isSubmitting}
-            >
-              Back
-            </Button>
-            <Button type="submit" disabled={isSubmitting}>
-              {isSubmitting ? "Saving..." : "Continue"}
-            </Button>
-          </div>
-        </form>
-      </CardContent>
-    </Card>
+        </div>
+
+        {/* Actions */}
+        <div className="flex justify-between pt-1 ob-fade-up ob-fade-up-d5">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => navigate("/onboarding/workspace")}
+            disabled={isSubmitting}
+            className="h-11 px-6 border-stone-200 dark:border-zinc-700 hover:bg-stone-50 dark:hover:bg-zinc-800 transition-colors"
+          >
+            ← Back
+          </Button>
+          <Button
+            type="submit"
+            disabled={isSubmitting}
+            className="h-11 px-8 font-medium text-sm transition-all duration-150 hover:opacity-90"
+          >
+            {isSubmitting ? "Saving…" : "Continue →"}
+          </Button>
+        </div>
+      </form>
+    </div>
   );
 }

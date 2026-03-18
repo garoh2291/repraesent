@@ -3,13 +3,6 @@ import { useNavigate } from "react-router";
 import { useAuthContext } from "~/providers/auth-provider";
 import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "~/components/ui/card";
 import { updateOnboardingProfile } from "~/lib/api/onboarding";
 import { useQueryClient } from "@tanstack/react-query";
 
@@ -58,52 +51,76 @@ export default function OnboardingProfile() {
   };
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Personal information</CardTitle>
-        <CardDescription>Tell us a bit about yourself</CardDescription>
-      </CardHeader>
-      <CardContent>
-        <form onSubmit={handleSubmit} className="space-y-4">
+    <div className="ob-fade-up ob-fade-up-d1">
+      {/* Section heading */}
+      <div className="mb-8 space-y-1.5">
+        <h1 className="ob-heading text-[26px] font-semibold tracking-tight text-foreground leading-snug">
+          Personal information
+        </h1>
+        <p className="text-sm text-muted-foreground">
+          Tell us a bit about yourself to get started.
+        </p>
+      </div>
+
+      {/* Form panel */}
+      <div className="rounded-xl border border-stone-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-6 shadow-sm">
+        <form onSubmit={handleSubmit} className="space-y-5">
           {error && (
-            <div className="rounded-md bg-destructive/10 border border-destructive/20 p-3 text-sm text-destructive">
+            <div className="ob-fade-up rounded-lg border border-destructive/20 bg-destructive/6 px-4 py-3 text-sm text-destructive">
               {error}
             </div>
           )}
-          <div className="space-y-2">
-            <label htmlFor="firstName" className="text-sm font-medium">
-              First name
-            </label>
-            <Input
-              id="firstName"
-              value={firstName}
-              onChange={(e) => setFirstName(e.target.value)}
-              placeholder="John"
-              required
-              disabled={isSubmitting}
-              autoFocus
-            />
+
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-1.5 ob-fade-up ob-fade-up-d2">
+              <label
+                htmlFor="firstName"
+                className="block text-[11px] font-semibold uppercase tracking-widest text-muted-foreground"
+              >
+                First name
+              </label>
+              <Input
+                id="firstName"
+                value={firstName}
+                onChange={(e) => setFirstName(e.target.value)}
+                placeholder="John"
+                required
+                disabled={isSubmitting}
+                autoFocus
+                className="h-11 border-stone-200 dark:border-zinc-700 bg-stone-50 dark:bg-zinc-950 focus-visible:ring-1 focus-visible:ring-foreground/25 transition-shadow"
+              />
+            </div>
+
+            <div className="space-y-1.5 ob-fade-up ob-fade-up-d3">
+              <label
+                htmlFor="lastName"
+                className="block text-[11px] font-semibold uppercase tracking-widest text-muted-foreground"
+              >
+                Last name
+              </label>
+              <Input
+                id="lastName"
+                value={lastName}
+                onChange={(e) => setLastName(e.target.value)}
+                placeholder="Doe"
+                required
+                disabled={isSubmitting}
+                className="h-11 border-stone-200 dark:border-zinc-700 bg-stone-50 dark:bg-zinc-950 focus-visible:ring-1 focus-visible:ring-foreground/25 transition-shadow"
+              />
+            </div>
           </div>
-          <div className="space-y-2">
-            <label htmlFor="lastName" className="text-sm font-medium">
-              Last name
-            </label>
-            <Input
-              id="lastName"
-              value={lastName}
-              onChange={(e) => setLastName(e.target.value)}
-              placeholder="Doe"
-              required
+
+          <div className="flex justify-end pt-1 ob-fade-up ob-fade-up-d4">
+            <Button
+              type="submit"
               disabled={isSubmitting}
-            />
-          </div>
-          <div className="flex justify-end pt-4">
-            <Button type="submit" disabled={isSubmitting}>
-              {isSubmitting ? "Saving..." : "Continue"}
+              className="h-11 px-8 font-medium text-sm transition-all duration-150 hover:opacity-90"
+            >
+              {isSubmitting ? "Saving…" : "Continue →"}
             </Button>
           </div>
         </form>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 }

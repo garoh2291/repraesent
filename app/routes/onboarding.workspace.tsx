@@ -5,18 +5,12 @@ import { useAuthContext } from "~/providers/auth-provider";
 import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "~/components/ui/card";
-import {
   createOnboardingWorkspace,
   updateOnboardingWorkspace,
 } from "~/lib/api/onboarding";
 import { getWorkspaceDetail } from "~/lib/api/workspaces";
 import { setStoredWorkspaceId } from "~/lib/api/axios-instance";
+import { X } from "lucide-react";
 
 export function meta() {
   return [
@@ -40,7 +34,6 @@ export default function OnboardingWorkspace() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [urlPrefilled, setUrlPrefilled] = useState(false);
 
-  // Auth guard
   useEffect(() => {
     if (!user) return;
     if (!user.first_name?.trim() || !user.last_name?.trim()) {
@@ -48,14 +41,12 @@ export default function OnboardingWorkspace() {
     }
   }, [user, navigate]);
 
-  // Fetch workspace detail to get the URL
   const { data: workspaceDetail } = useQuery({
     queryKey: ["workspace-detail-onboarding", existingWorkspace?.id],
     queryFn: getWorkspaceDetail,
     enabled: !!existingWorkspace?.id,
   });
 
-  // Pre-fill URL once workspace detail loads
   useEffect(() => {
     if (urlPrefilled) return;
     const existingUrl =
@@ -66,7 +57,6 @@ export default function OnboardingWorkspace() {
     }
   }, [workspaceDetail, urlPrefilled]);
 
-  // Pre-fill name when workspace loads (initial render may not have it)
   useEffect(() => {
     if (existingWorkspace?.name && !name) {
       setName(existingWorkspace.name);
@@ -134,26 +124,34 @@ export default function OnboardingWorkspace() {
   };
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>
+    <div className="ob-fade-up ob-fade-up-d1">
+      {/* Section heading */}
+      <div className="mb-8 space-y-1.5">
+        <h1 className="ob-heading text-[26px] font-semibold tracking-tight text-foreground leading-snug">
           {existingWorkspace ? "Your workspace" : "Create your workspace"}
-        </CardTitle>
-        <CardDescription>
+        </h1>
+        <p className="text-sm text-muted-foreground">
           {existingWorkspace
-            ? "Update your workspace details"
-            : "Set up your workspace and invite team members"}
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        <form onSubmit={handleSubmit} className="space-y-4">
+            ? "Update your workspace details below."
+            : "Set up your workspace and optionally invite team members."}
+        </p>
+      </div>
+
+      {/* Form panel */}
+      <div className="rounded-xl border border-stone-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-6 shadow-sm">
+        <form onSubmit={handleSubmit} className="space-y-5">
           {error && (
-            <div className="rounded-md bg-destructive/10 border border-destructive/20 p-3 text-sm text-destructive">
+            <div className="ob-fade-up rounded-lg border border-destructive/20 bg-destructive/6 px-4 py-3 text-sm text-destructive">
               {error}
             </div>
           )}
-          <div className="space-y-2">
-            <label htmlFor="name" className="text-sm font-medium">
+
+          {/* Workspace name */}
+          <div className="space-y-1.5 ob-fade-up ob-fade-up-d2">
+            <label
+              htmlFor="name"
+              className="block text-[11px] font-semibold uppercase tracking-widest text-muted-foreground"
+            >
               Workspace name
             </label>
             <Input
@@ -163,10 +161,16 @@ export default function OnboardingWorkspace() {
               placeholder="Acme Corp"
               required
               disabled={isSubmitting}
+              className="h-11 border-stone-200 dark:border-zinc-700 bg-stone-50 dark:bg-zinc-950 focus-visible:ring-1 focus-visible:ring-foreground/25 transition-shadow"
             />
           </div>
-          <div className="space-y-2">
-            <label htmlFor="url" className="text-sm font-medium">
+
+          {/* Website URL */}
+          <div className="space-y-1.5 ob-fade-up ob-fade-up-d3">
+            <label
+              htmlFor="url"
+              className="block text-[11px] font-semibold uppercase tracking-widest text-muted-foreground"
+            >
               Website URL
             </label>
             <Input
@@ -177,11 +181,17 @@ export default function OnboardingWorkspace() {
               placeholder="https://acme.com"
               required
               disabled={isSubmitting}
+              className="h-11 border-stone-200 dark:border-zinc-700 bg-stone-50 dark:bg-zinc-950 focus-visible:ring-1 focus-visible:ring-foreground/25 transition-shadow"
             />
           </div>
-          <div className="space-y-2">
-            <label className="text-sm font-medium">
-              Invite members (optional)
+
+          {/* Invite members */}
+          <div className="space-y-1.5 ob-fade-up ob-fade-up-d4">
+            <label className="block text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
+              Invite members{" "}
+              <span className="normal-case tracking-normal font-normal text-muted-foreground/70">
+                (optional)
+              </span>
             </label>
             <div className="flex gap-2">
               <Input
@@ -193,51 +203,61 @@ export default function OnboardingWorkspace() {
                 }
                 placeholder="member@example.com"
                 disabled={isSubmitting}
+                className="h-11 border-stone-200 dark:border-zinc-700 bg-stone-50 dark:bg-zinc-950 focus-visible:ring-1 focus-visible:ring-foreground/25 transition-shadow"
               />
               <Button
                 type="button"
                 variant="outline"
                 onClick={addMember}
                 disabled={isSubmitting}
+                className="h-11 px-5 shrink-0 border-stone-200 dark:border-zinc-700 hover:bg-stone-50 dark:hover:bg-zinc-800 transition-colors"
               >
                 Add
               </Button>
             </div>
+
             {members.length > 0 && (
-              <div className="flex flex-wrap gap-2 mt-2">
+              <div className="flex flex-wrap gap-1.5 pt-1">
                 {members.map((email) => (
                   <span
                     key={email}
-                    className="inline-flex items-center gap-1 rounded-full bg-secondary px-3 py-1 text-sm"
+                    className="ob-fade-up inline-flex items-center gap-1.5 rounded-full border border-stone-200 dark:border-zinc-700 bg-stone-100 dark:bg-zinc-800 px-3 py-1 text-xs font-medium text-foreground"
                   >
                     {email}
                     <button
                       type="button"
                       onClick={() => removeMember(email)}
-                      className="text-muted-foreground hover:text-foreground"
+                      className="text-muted-foreground hover:text-foreground transition-colors"
                     >
-                      ×
+                      <X className="h-3 w-3" />
                     </button>
                   </span>
                 ))}
               </div>
             )}
           </div>
-          <div className="flex justify-between pt-4">
+
+          {/* Actions */}
+          <div className="flex justify-between pt-1 ob-fade-up ob-fade-up-d5">
             <Button
               type="button"
               variant="outline"
               onClick={() => navigate("/onboarding/profile")}
               disabled={isSubmitting}
+              className="h-11 px-6 border-stone-200 dark:border-zinc-700 hover:bg-stone-50 dark:hover:bg-zinc-800 transition-colors"
             >
-              Back
+              ← Back
             </Button>
-            <Button type="submit" disabled={isSubmitting}>
-              {isSubmitting ? "Saving..." : "Continue"}
+            <Button
+              type="submit"
+              disabled={isSubmitting}
+              className="h-11 px-8 font-medium text-sm transition-all duration-150 hover:opacity-90"
+            >
+              {isSubmitting ? "Saving…" : "Continue →"}
             </Button>
           </div>
         </form>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 }
