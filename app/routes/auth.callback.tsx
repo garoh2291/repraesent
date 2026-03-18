@@ -91,13 +91,25 @@ export default function AuthCallback() {
 
   if (status === "error") {
     return (
-      <div className="flex min-h-screen items-center justify-center p-4">
-        <div className="text-center space-y-4">
-          <h1 className="text-xl font-semibold">Invalid or expired link</h1>
-          <p className="text-muted-foreground">
-            This magic link is invalid or has expired. Please request a new one.
-          </p>
-          <a href="/login" className="text-primary underline">
+      <div className="flex min-h-screen items-center justify-center bg-[#0f0f11] p-8">
+        <div className="w-full max-w-sm text-center space-y-6 app-fade-up">
+          <div className="inline-flex h-14 w-14 items-center justify-center rounded-full bg-white/5 border border-white/10 mx-auto">
+            <svg className="h-6 w-6 text-white/40" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
+            </svg>
+          </div>
+          <div className="space-y-2">
+            <h1 className="text-xl font-semibold text-white">
+              Link expired
+            </h1>
+            <p className="text-sm text-white/45 leading-relaxed">
+              This magic link is invalid or has expired. Please request a new one to sign in.
+            </p>
+          </div>
+          <a
+            href="/login"
+            className="inline-flex h-10 items-center justify-center rounded-lg border border-white/15 bg-white/8 px-6 text-sm font-medium text-white/80 hover:bg-white/12 hover:text-white transition-all duration-150"
+          >
             Back to sign in
           </a>
         </div>
@@ -106,10 +118,15 @@ export default function AuthCallback() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center">
-      <div className="flex flex-col items-center gap-4">
-        <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
-        <p className="text-sm text-muted-foreground">Signing you in...</p>
+    <div className="flex min-h-screen items-center justify-center bg-[#0f0f11]">
+      <div className="flex flex-col items-center gap-5 app-fade-up">
+        <div className="relative">
+          <div className="h-10 w-10 app-spin rounded-full border-2 border-white/10 border-t-white/50" />
+        </div>
+        <div className="text-center space-y-1">
+          <p className="text-sm font-medium text-white/70">Signing you in</p>
+          <p className="text-xs text-white/30">Just a moment…</p>
+        </div>
       </div>
     </div>
   );

@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams, Link } from "react-router";
-import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
 import { useAuthContext } from "~/providers/auth-provider";
 
@@ -12,6 +11,12 @@ export function meta() {
     { name: "description", content: "Sign in to your account" },
   ];
 }
+
+const FEATURES = [
+  "Smart lead management",
+  "Appointment booking",
+  "Team collaboration",
+];
 
 export default function Login() {
   const [email, setEmail] = useState("");
@@ -44,9 +49,7 @@ export default function Login() {
       setError("Please enter your email address");
       return;
     }
-
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       setError("Please enter a valid email address");
       return;
     }
@@ -65,102 +68,154 @@ export default function Login() {
 
   if (isAuthLoading) {
     return (
-      <div className="flex min-h-screen items-center justify-center">
-        <div className="flex flex-col items-center gap-4">
-          <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
-          <p className="text-sm text-muted-foreground">Loading...</p>
-        </div>
+      <div className="flex min-h-screen items-center justify-center bg-[#0f0f11]">
+        <div className="h-5 w-5 app-spin rounded-full border-2 border-white/20 border-t-white/60" />
       </div>
     );
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background p-4">
-      <div className="w-full max-w-md space-y-8 rounded-lg border bg-card p-8 shadow-lg">
-        <div className="space-y-4 text-center">
-          <img
-            src={logoUrl}
-            alt="Repraesent"
-            className="mx-auto h-10 w-auto max-w-[200px]"
-          />
-          <div className="space-y-2">
-            <h1 className="text-3xl font-bold tracking-tight">Sign in</h1>
-            <p className="text-muted-foreground">
-              Enter your email to receive a magic link to sign in
+    <div className="flex min-h-screen">
+      {/* Left brand panel */}
+      <div className="hidden lg:flex lg:w-[400px] shrink-0 flex-col bg-[#111113] p-10 border-r border-white/5">
+        <img
+          src={logoUrl}
+          alt="Repraesent"
+          className="h-7 w-auto max-w-[120px] brightness-0 invert opacity-85"
+        />
+
+        <div className="flex-1 flex flex-col justify-center space-y-8">
+          <div className="space-y-3">
+            <h2
+              className="text-[28px] font-semibold text-white leading-tight"
+              style={{ fontFamily: "Georgia, 'Times New Roman', serif" }}
+            >
+              Represent your
+              <br />
+              best work.
+            </h2>
+            <p className="text-sm text-white/45 leading-relaxed max-w-[260px]">
+              The platform for modern sales teams. Manage leads, schedule
+              appointments, and close deals.
             </p>
+          </div>
+
+          <div className="space-y-2.5">
+            {FEATURES.map((f) => (
+              <div key={f} className="flex items-center gap-3">
+                <div className="h-1.5 w-1.5 rounded-full bg-amber-400 shrink-0" />
+                <span className="text-sm text-white/50">{f}</span>
+              </div>
+            ))}
           </div>
         </div>
 
-        {success ? (
-          <div className="space-y-4 text-center">
-            <div className="rounded-md bg-secondary border border-secondary/20 p-4 text-sm text-secondary-foreground">
-              Check your email. We've sent you a sign-in link. The link expires
-              in 30 minutes.
-            </div>
+        <p className="text-[11px] text-white/15">
+          © {new Date().getFullYear()} Repraesent
+        </p>
+      </div>
+
+      {/* Right form panel */}
+      <div className="flex-1 flex items-center justify-center bg-stone-50 p-8">
+        <div className="w-full max-w-sm space-y-8 app-fade-up">
+          {/* Mobile logo */}
+          <div className="lg:hidden">
+            <img
+              src={logoUrl}
+              alt="Repraesent"
+              className="h-7 w-auto max-w-[120px]"
+            />
+          </div>
+
+          <div className="space-y-1">
+            <h1 className="text-2xl font-semibold text-foreground tracking-tight">
+              Sign in
+            </h1>
             <p className="text-sm text-muted-foreground">
-              Didn't receive the email? Check your spam folder or{" "}
-              <Button
-                variant="link"
-                type="button"
-                className="p-0 h-auto"
-                onClick={() => setSuccess(false)}
-              >
-                try again
-              </Button>
+              Enter your email to receive a sign-in link
             </p>
           </div>
-        ) : (
-          <form onSubmit={handleSubmit} className="space-y-6">
-            {error && (
-              <div className="rounded-md bg-destructive/10 border border-destructive/20 p-3 text-sm text-destructive">
-                {error}
+
+          {success ? (
+            <div className="space-y-5 app-fade-up">
+              <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-4 text-sm text-emerald-800 leading-relaxed">
+                <p className="font-medium">Check your inbox</p>
+                <p className="text-emerald-700/80 mt-0.5">
+                  We sent a sign-in link to{" "}
+                  <span className="font-medium">{email}</span>. It expires in 30
+                  minutes.
+                </p>
               </div>
-            )}
-
-            <div className="space-y-2">
-              <label
-                htmlFor="email"
-                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-              >
-                Email
-              </label>
-              <Input
-                id="email"
-                type="email"
-                placeholder="you@example.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                disabled={isRequestingMagicLink}
-                required
-                autoComplete="email"
-                className="w-full"
-              />
+              <p className="text-sm text-muted-foreground text-center">
+                Didn't receive it?{" "}
+                <button
+                  type="button"
+                  className="text-primary font-medium hover:underline"
+                  onClick={() => setSuccess(false)}
+                >
+                  Try again
+                </button>
+              </p>
             </div>
-
-            <Button
-              type="submit"
-              className="w-full"
-              variant="secondary"
-              disabled={isRequestingMagicLink}
+          ) : (
+            <form
+              onSubmit={handleSubmit}
+              className="space-y-5 app-fade-up app-fade-up-d1"
             >
-              {isRequestingMagicLink ? (
-                <>
-                  <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
-                  Sending...
-                </>
-              ) : (
-                "Send magic link"
+              {error && (
+                <div className="rounded-lg border border-destructive/20 bg-destructive/6 px-4 py-3 text-sm text-destructive">
+                  {error}
+                </div>
               )}
-            </Button>
 
-            <p className="text-center text-sm text-muted-foreground">
-              Don't have an account?{" "}
-              <Link to="/register" className="text-primary underline hover:no-underline">
-                Create account
-              </Link>
-            </p>
-          </form>
-        )}
+              <div className="space-y-1.5">
+                <label
+                  htmlFor="email"
+                  className="block text-[11px] font-semibold uppercase tracking-widest text-muted-foreground"
+                >
+                  Email address
+                </label>
+                <Input
+                  id="email"
+                  type="email"
+                  placeholder="you@example.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  disabled={isRequestingMagicLink}
+                  required
+                  autoComplete="email"
+                  autoFocus
+                  className="h-11 border-stone-200 bg-white focus-visible:ring-1 focus-visible:ring-foreground/25 transition-shadow"
+                />
+              </div>
+
+              <button
+                type="submit"
+                disabled={isRequestingMagicLink}
+                className="w-full h-11 rounded-lg bg-foreground text-background text-sm font-medium transition-all duration-150 hover:opacity-90 disabled:opacity-50 flex items-center justify-center gap-2"
+              >
+                {isRequestingMagicLink ? (
+                  <>
+                    <div className="h-4 w-4 app-spin rounded-full border-2 border-background/30 border-t-background" />
+                    Sending…
+                  </>
+                ) : (
+                  "Send magic link →"
+                )}
+              </button>
+
+              <p className="text-center text-sm text-muted-foreground">
+                No account?{" "}
+                <Link
+                  to="/register"
+                  className="text-primary font-medium hover:underline"
+                >
+                  Create one
+                </Link>
+              </p>
+            </form>
+          )}
+        </div>
       </div>
     </div>
   );

@@ -1,15 +1,14 @@
 import { useState, useEffect } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Label } from "~/components/ui/label";
 import { Switch } from "~/components/ui/switch";
-import { Button } from "~/components/ui/button";
 import {
   updateAppointmentConfig,
   type AppointmentConfig,
   type BookingFieldConfig,
 } from "~/lib/api/appointments";
 import { extractErrorMessage } from "~/lib/api/axios-instance";
+import { cn } from "~/lib/utils";
 
 const BOOKING_FIELDS: { key: string; label: string }[] = [
   { key: "first_name", label: "First Name" },
@@ -54,17 +53,11 @@ export function BookingSettingsTab({ config }: BookingSettingsTabProps) {
       queryClient.invalidateQueries({ queryKey: ["appointment-config"] });
     },
     onError: (error) => {
-      toast.error("Failed to save", {
-        description: extractErrorMessage(error),
-      });
+      toast.error("Failed to save", { description: extractErrorMessage(error) });
     },
   });
 
-  function handleFieldChange(
-    key: string,
-    prop: "display" | "require",
-    value: boolean
-  ) {
+  function handleFieldChange(key: string, prop: "display" | "require", value: boolean) {
     setFields((prev) => ({
       ...prev,
       [key]: {
@@ -79,48 +72,58 @@ export function BookingSettingsTab({ config }: BookingSettingsTabProps) {
   }
 
   return (
-    <div className="space-y-6 max-w-2xl">
-      <p className="text-sm text-muted-foreground">
-        Configure which fields appear on the booking form and which are
-        required.
-      </p>
-      <div className="space-y-4">
-        <div className="flex items-center gap-4 text-sm font-medium text-muted-foreground">
-          <span className="w-48">Field</span>
-          <span className="w-24">Display</span>
-          <span className="w-24">Require</span>
+    <div className="space-y-5 max-w-2xl">
+      <div className="rounded-2xl border border-border bg-card overflow-hidden">
+        {/* Header row */}
+        <div className="grid grid-cols-[1fr_100px_100px] gap-4 px-5 py-3 bg-muted/40 border-b border-border">
+          <span className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">Field</span>
+          <span className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground text-center">Display</span>
+          <span className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground text-center">Required</span>
         </div>
-        {BOOKING_FIELDS.map(({ key, label }) => {
-          const field = fields[key] ?? { display: false, require: false };
-          return (
-            <div
-              key={key}
-              className="flex items-center gap-4 rounded-lg border p-4"
-            >
-              <Label className="w-48 font-normal">
-                {label}
-                {field.require && " *"}
-              </Label>
-              <Switch
-                checked={field.display}
-                onCheckedChange={(v) =>
-                  handleFieldChange(key, "display", v)
-                }
-              />
-              <Switch
-                checked={field.require}
-                onCheckedChange={(v) =>
-                  handleFieldChange(key, "require", v)
-                }
-                disabled={!field.display}
-              />
-            </div>
-          );
-        })}
+        <div className="divide-y divide-border">
+          {BOOKING_FIELDS.map(({ key, label }) => {
+            const field = fields[key] ?? { display: false, require: false };
+            return (
+              <div
+                key={key}
+                className={cn(
+                  "grid grid-cols-[1fr_100px_100px] gap-4 px-5 py-3.5 items-center transition-colors",
+                  !field.display && "opacity-50"
+                )}
+              >
+                <span className="text-sm font-medium text-foreground">
+                  {label}
+                  {field.require && (
+                    <span className="ml-1 text-xs text-muted-foreground font-normal">*</span>
+                  )}
+                </span>
+                <div className="flex justify-center">
+                  <Switch
+                    checked={field.display}
+                    onCheckedChange={(v) => handleFieldChange(key, "display", v)}
+                  />
+                </div>
+                <div className="flex justify-center">
+                  <Switch
+                    checked={field.require}
+                    onCheckedChange={(v) => handleFieldChange(key, "require", v)}
+                    disabled={!field.display}
+                  />
+                </div>
+              </div>
+            );
+          })}
+        </div>
       </div>
-      <Button onClick={handleSave} disabled={updateMutation.isPending}>
-        {updateMutation.isPending ? "Saving..." : "Save"}
-      </Button>
+
+      <button
+        type="button"
+        onClick={handleSave}
+        disabled={updateMutation.isPending}
+        className="inline-flex h-10 items-center justify-center rounded-lg bg-foreground text-background text-sm font-medium px-6 hover:opacity-90 transition-opacity disabled:opacity-50"
+      >
+        {updateMutation.isPending ? "Saving…" : "Save changes"}
+      </button>
     </div>
   );
 }

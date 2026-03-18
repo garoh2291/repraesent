@@ -1,12 +1,4 @@
 import { useAuthContext } from "~/providers/auth-provider";
-import { Button } from "~/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "~/components/ui/card";
 
 export function meta() {
   return [
@@ -22,36 +14,57 @@ export default function NoWorkspace() {
   const { logout, isLoggingOut } = useAuthContext();
 
   return (
-    <div className="flex min-h-screen items-center justify-center p-4">
-      <Card className="w-full max-w-md">
-        <CardHeader>
-          <CardTitle className="text-lg font-semibold text-foreground">
-            No Workspace
-          </CardTitle>
-          <CardDescription>
-            Your user is not connected to any workspace. Contact support or your
-            workspace owner to connect you.
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="flex flex-col gap-4">
-          <p className="text-sm text-muted-foreground">
-            For assistance, contact:{" "}
-            <a
-              href="mailto:support@dendritecorp.com"
-              className="text-primary underline hover:no-underline"
-            >
-              support@dendritecorp.com
-            </a>
-          </p>
-          <Button
-            variant="outline"
-            onClick={() => logout()}
-            disabled={isLoggingOut}
+    <div className="flex min-h-screen items-center justify-center bg-[#0f0f11] p-8">
+      <div className="w-full max-w-sm text-center space-y-8 app-fade-up">
+        {/* Icon */}
+        <div className="inline-flex h-16 w-16 items-center justify-center rounded-2xl bg-white/5 border border-white/8 mx-auto">
+          <svg
+            className="h-7 w-7 text-white/30"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            strokeWidth={1.5}
           >
-            {isLoggingOut ? "Signing out..." : "Sign out"}
-          </Button>
-        </CardContent>
-      </Card>
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="M3.75 21h16.5M4.5 3h15M5.25 3v18m13.5-18v18M9 6.75h1.5m-1.5 3h1.5m-1.5 3h1.5m3-6H15m-1.5 3H15m-1.5 3H15M9 21v-3.375c0-.621.504-1.125 1.125-1.125h3.75c.621 0 1.125.504 1.125 1.125V21"
+            />
+          </svg>
+        </div>
+
+        {/* Text */}
+        <div className="space-y-3">
+          <h1 className="text-xl font-semibold text-white">
+            No workspace found
+          </h1>
+          <p className="text-sm text-white/40 leading-relaxed">
+            Your account isn't connected to any workspace yet. Reach out to your workspace owner or our support team for access.
+          </p>
+        </div>
+
+        {/* Contact */}
+        <div className="rounded-xl border border-white/8 bg-white/4 px-5 py-4">
+          <p className="text-[11px] font-semibold uppercase tracking-widest text-white/25 mb-2">
+            Need help?
+          </p>
+          <a
+            href="mailto:support@dendritecorp.com"
+            className="text-sm text-amber-400/80 hover:text-amber-400 transition-colors"
+          >
+            support@dendritecorp.com
+          </a>
+        </div>
+
+        {/* Sign out */}
+        <button
+          onClick={() => logout()}
+          disabled={isLoggingOut}
+          className="inline-flex h-10 items-center justify-center rounded-lg border border-white/10 bg-white/6 px-6 text-sm font-medium text-white/50 hover:bg-white/10 hover:text-white/70 transition-all duration-150 disabled:opacity-40"
+        >
+          {isLoggingOut ? "Signing out…" : "Sign out"}
+        </button>
+      </div>
     </div>
   );
 }

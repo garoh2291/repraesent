@@ -185,11 +185,11 @@ export function CalendarTab({ config }: CalendarTabProps) {
   }, []);
 
   if (isLoading) {
-    return <div className="h-[500px] animate-pulse rounded-md bg-muted" />;
+    return <div className="h-[520px] animate-pulse rounded-2xl bg-muted" />;
   }
 
   return (
-    <div className="appointments-calendar h-[520px] rounded-md border">
+    <div className="appointments-calendar h-[520px] rounded-2xl border border-border overflow-hidden">
       <Calendar
         localizer={localizer}
         formats={formats}

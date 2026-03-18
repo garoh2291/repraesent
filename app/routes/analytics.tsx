@@ -63,7 +63,7 @@ export default function Analytics() {
     );
   }
 
-  const embedSrc = `${sharedLink}&embed=true&theme=light`;
+  const embedSrc = `${sharedLink}&embed=true&theme=light&background=%23f5f4f1`;
 
   return (
     <div className="w-full h-full overflow-auto relative">
