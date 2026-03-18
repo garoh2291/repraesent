@@ -609,7 +609,8 @@ function Step1DateAndTime({
             weekStartsOn={firstWeekday as 0 | 1}
             className="border-0 w-full"
             classNames={{
-              today: "rounded-md bg-[#f5f4f1] text-foreground data-[selected=true]:rounded-none",
+              today:
+                "rounded-md bg-[#f5f4f1] text-foreground data-[selected=true]:rounded-none",
             }}
           />
         </div>
@@ -651,7 +652,7 @@ function Step1DateAndTime({
                   </p>
                 </div>
               ) : (
-                <ScrollArea className="h-[280px] rounded-xl border border-border bg-white">
+                <ScrollArea className="h-[380px] rounded-xl border border-border bg-white">
                   <div className="flex flex-col gap-1.5 p-2">
                     {slots.map((slot) => {
                       const isSelected = selectedSlot === slot;

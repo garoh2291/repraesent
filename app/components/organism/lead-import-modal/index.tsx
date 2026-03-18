@@ -243,8 +243,10 @@ export function LeadImportModal({ open, onOpenChange }: LeadImportModalProps) {
         showCloseButton={true}
       >
         <DialogHeader>
-          <DialogTitle>Import Leads from CSV</DialogTitle>
-          <DialogDescription>
+          <DialogTitle className="text-base font-semibold text-foreground">
+            Import leads from CSV
+          </DialogTitle>
+          <DialogDescription className="text-sm text-muted-foreground">
             {step === 1
               ? "Upload a CSV file. We'll map columns to lead fields automatically."
               : "Review and confirm your import."}
@@ -255,7 +257,7 @@ export function LeadImportModal({ open, onOpenChange }: LeadImportModalProps) {
           <div className="flex flex-col gap-4 flex-1 min-h-0">
             {!parseMutation.data ? (
               <div
-                className="border-2 border-dashed rounded-lg p-12 text-center cursor-pointer hover:bg-muted/50 transition-colors"
+                className="border-2 border-dashed border-border rounded-xl p-12 text-center cursor-pointer hover:bg-muted/40 hover:border-border/80 transition-colors"
                 onDrop={handleDrop}
                 onDragOver={handleDragOver}
                 onClick={() => fileInputRef.current?.click()}
@@ -398,15 +400,18 @@ export function LeadImportModal({ open, onOpenChange }: LeadImportModalProps) {
         )}
 
         {step === 2 && (
-          <div className="flex flex-col gap-4">
-            <p className="text-sm">
-              <strong>{filteredRows.length}</strong> new lead(s) will be
-              imported.
-            </p>
-            <div className="flex flex-col gap-2">
-              <label className="text-sm font-medium">Source</label>
+          <div className="flex flex-col gap-5">
+            <div className="rounded-xl border border-border bg-muted/40 px-4 py-3">
+              <p className="text-sm text-foreground">
+                <span className="font-semibold">{filteredRows.length}</span> lead{filteredRows.length !== 1 ? "s" : ""} will be imported.
+              </p>
+            </div>
+            <div className="flex flex-col gap-1.5">
+              <label className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
+                Source
+              </label>
               <select
-                className="w-full border rounded-md px-3 py-2 text-sm bg-background"
+                className="w-full border border-border rounded-lg px-3 py-2.5 text-sm bg-background text-foreground focus:outline-none focus:ring-1 focus:ring-foreground/25 transition-shadow"
                 value={source}
                 onChange={(e) => setSource(e.target.value as "website")}
               >
@@ -422,7 +427,11 @@ export function LeadImportModal({ open, onOpenChange }: LeadImportModalProps) {
               <Button variant="outline" onClick={handleClose}>
                 Cancel
               </Button>
-              <Button onClick={handleNext} disabled={!canProceed}>
+              <Button
+                className="bg-foreground text-background hover:opacity-90 transition-opacity"
+                onClick={handleNext}
+                disabled={!canProceed}
+              >
                 Next <ChevronRight className="h-4 w-4 ml-1" />
               </Button>
             </>
@@ -432,6 +441,7 @@ export function LeadImportModal({ open, onOpenChange }: LeadImportModalProps) {
                 Back
               </Button>
               <Button
+                className="bg-foreground text-background hover:opacity-90 transition-opacity"
                 onClick={handleUpload}
                 disabled={uploadMutation.isPending}
               >

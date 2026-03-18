@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router";
-import { Building2 } from "lucide-react";
+import { Building2, Check } from "lucide-react";
 import { useAuthContext } from "~/providers/auth-provider";
 import {
   DialogContent,
@@ -7,7 +7,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "~/components/ui/dialog";
-import { Button } from "~/components/ui/button";
+import { cn } from "~/lib/utils";
 
 export default function SwitchWorkspaceModal({
   setIsOpen,
@@ -25,27 +25,40 @@ export default function SwitchWorkspaceModal({
   };
 
   return (
-    <DialogContent className="flex min-w-[400px] flex-col gap-0 font-sans">
+    <DialogContent className="flex w-[400px] flex-col gap-0">
       <DialogHeader>
-        <DialogTitle className="text-[25px] font-bold leading-8 text-[#333]">
+        <DialogTitle className="text-base font-semibold text-foreground">
           Switch workspace
         </DialogTitle>
-        <DialogDescription>
+        <DialogDescription className="text-sm text-muted-foreground">
           Choose a workspace to switch to.
         </DialogDescription>
       </DialogHeader>
-      <div className="mt-4 flex flex-col gap-2">
-        {workspaces.map((ws) => (
-          <Button
-            key={ws.id}
-            variant={ws.id === currentWorkspace?.id ? "secondary" : "outline"}
-            className="w-full justify-start gap-2"
-            onClick={() => handleSelect(ws.id)}
-          >
-            <Building2 className="h-4 w-4 shrink-0" />
-            <span className="truncate">{ws.name}</span>
-          </Button>
-        ))}
+      <div className="mt-5 flex flex-col gap-1.5">
+        {workspaces.map((ws) => {
+          const isActive = ws.id === currentWorkspace?.id;
+          return (
+            <button
+              key={ws.id}
+              onClick={() => handleSelect(ws.id)}
+              className={cn(
+                "flex items-center gap-3 w-full rounded-xl border px-4 py-3 text-sm font-medium transition-all duration-150",
+                isActive
+                  ? "border-foreground/20 bg-foreground/5 text-foreground"
+                  : "border-border bg-transparent text-foreground hover:bg-muted/60 hover:border-border/80"
+              )}
+            >
+              <div className={cn(
+                "h-7 w-7 rounded-lg flex items-center justify-center shrink-0 text-xs font-bold",
+                isActive ? "bg-foreground text-background" : "bg-muted text-muted-foreground"
+              )}>
+                {ws.name?.[0]?.toUpperCase() ?? <Building2 className="h-3.5 w-3.5" />}
+              </div>
+              <span className="truncate flex-1 text-left">{ws.name}</span>
+              {isActive && <Check className="h-3.5 w-3.5 text-muted-foreground shrink-0" />}
+            </button>
+          );
+        })}
       </div>
     </DialogContent>
   );

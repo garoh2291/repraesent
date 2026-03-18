@@ -394,7 +394,7 @@ export function LeadNotesSection({
                         <AlertDialogFooter>
                           <AlertDialogCancel>Cancel</AlertDialogCancel>
                           <AlertDialogAction
-                            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                            className="bg-foreground text-background hover:opacity-90 transition-opacity"
                             onClick={() => {
                               deleteMutation.mutate(note.id);
                               setNoteIdToDelete(null);

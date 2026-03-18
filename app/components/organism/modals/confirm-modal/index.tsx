@@ -32,26 +32,22 @@ export default function ConfirmationModal({
   }
 
   return (
-    <DialogContent className="flex min-w-[528px] flex-col gap-0 font-sans">
+    <DialogContent className="flex min-w-[528px] flex-col gap-0">
       <DialogHeader>
-        <DialogTitle className="text-[25px] font-bold leading-8 text-[#333]">
+        <DialogTitle className="text-lg font-semibold text-foreground">
           {title}
         </DialogTitle>
       </DialogHeader>
-      <DialogDescription className="mb-6 mt-4 text-base font-normal leading-[25px] text-black">
-        <span>{description}</span>
+      <DialogDescription className="mb-6 mt-2 text-sm text-muted-foreground leading-relaxed">
+        {description}
       </DialogDescription>
 
       <DialogFooter className="gap-2">
-        <Button
-          variant="outline"
-          onClick={handleCancel}
-          className="text-[11px] font-bold leading-5"
-        >
+        <Button variant="outline" onClick={handleCancel}>
           {cancelText}
         </Button>
         <Button
-          className="bg-black text-white text-[11px] font-bold leading-5 hover:bg-black/90"
+          className="bg-foreground text-background hover:opacity-90 transition-opacity"
           onClick={handleConfirm}
         >
           {confirmText}

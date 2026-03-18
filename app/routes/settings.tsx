@@ -122,7 +122,12 @@ function StatusPill({ label }: { label: string }) {
   };
   const cls = map[label] ?? "bg-stone-100 text-stone-500 border-stone-200";
   return (
-    <span className={cn("inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-medium", cls)}>
+    <span
+      className={cn(
+        "inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-medium",
+        cls
+      )}
+    >
       {label}
     </span>
   );
@@ -163,16 +168,23 @@ function SettingsInvoicesTab() {
       {/* Table header */}
       <div className="grid grid-cols-[1fr_120px_100px_160px] gap-4 px-5 py-3 bg-muted/40 border-b border-border">
         {["Invoice #", "Amount", "Status", ""].map((h) => (
-          <span key={h} className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
+          <span
+            key={h}
+            className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground"
+          >
             {h}
           </span>
         ))}
       </div>
       <div className="divide-y divide-border">
         {invoices.map((inv: WorkspaceInvoice) => {
-          const statusLabel = getInvoiceStatusLabel(inv.status, inv.due_date ?? null);
+          const statusLabel = getInvoiceStatusLabel(
+            inv.status,
+            inv.due_date ?? null
+          );
           const isPaid = inv.status === "paid";
-          const displayStatus = statusLabel === "draft" ? "Upcoming" : statusLabel;
+          const displayStatus =
+            statusLabel === "draft" ? "Upcoming" : statusLabel;
           return (
             <div
               key={inv.id}
@@ -191,7 +203,9 @@ function SettingsInvoicesTab() {
               <div>
                 {inv.status === "draft" ? (
                   <span className="text-xs text-muted-foreground">
-                    {inv.due_date ? `Due ${formatDate(inv.due_date ?? null)}` : "Upcoming"}
+                    {inv.due_date
+                      ? `Due ${formatDate(inv.due_date ?? null)}`
+                      : "Upcoming"}
                   </span>
                 ) : isPaid ? (
                   (inv.invoice_pdf || inv.hosted_invoice_url) && (
@@ -363,7 +377,10 @@ export default function Settings() {
 
       <div className="border-t border-border" />
 
-      <Tabs defaultValue="general" className="w-full app-fade-up app-fade-up-d1">
+      <Tabs
+        defaultValue="general"
+        className="w-full app-fade-up app-fade-up-d1"
+      >
         <TabsList variant="line" className="w-full mb-6">
           <TabsTrigger value="general">General</TabsTrigger>
           <TabsTrigger value="invoices">Invoices</TabsTrigger>
@@ -434,7 +451,10 @@ export default function Settings() {
                   </TooltipTrigger>
                   <TooltipContent side="right" className="max-w-xs text-xs">
                     To change the URL, contact{" "}
-                    <a href="mailto:support@dendritecorp.com" className="underline">
+                    <a
+                      href="mailto:support@dendritecorp.com"
+                      className="underline"
+                    >
                       support@dendritecorp.com
                     </a>
                   </TooltipContent>
@@ -455,7 +475,10 @@ export default function Settings() {
                 {/* Header row */}
                 <div className="hidden md:grid grid-cols-[1fr_180px_140px_100px_48px] gap-4 px-5 py-3 bg-muted/40 border-b border-border">
                   {["Member", "Email", "Role", "Lead alerts", ""].map((h) => (
-                    <span key={h} className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
+                    <span
+                      key={h}
+                      className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground"
+                    >
                       {h}
                     </span>
                   ))}
@@ -582,13 +605,14 @@ export default function Settings() {
           <AlertDialogHeader>
             <AlertDialogTitle>Remove member?</AlertDialogTitle>
             <AlertDialogDescription>
-              This will remove <strong>{memberToRemove?.name}</strong> from the workspace. This action cannot be undone.
+              This will remove <strong>{memberToRemove?.name}</strong> from the
+              workspace. This action cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <Button
-              variant="destructive"
+              className="bg-foreground text-background hover:bg-foreground/90 hover:text-background transition-colors"
               onClick={handleRemoveMember}
               disabled={removeMemberMutation.isPending}
             >
