@@ -7,12 +7,11 @@ import {
   LeadHistorySection,
 } from "~/components/organism/lead-detail-sheet";
 import { LeadNotesSection } from "~/components/organism/lead-notes-section";
-import { Card, CardContent } from "~/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "~/components/ui/tabs";
 import { getLead, getLeadHistory } from "~/lib/api/leads";
 import { useCanEditLeads } from "~/lib/hooks/useCanEditLeads";
 import { useUpdateLeadStatus } from "~/lib/hooks/useUpdateLeadStatus";
-import { ArrowLeft, Loader2 } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 
 export function meta() {
   return [
@@ -68,9 +67,7 @@ export default function LeadFormLeadId() {
     currentWorkspace?.services?.some((s) => s.service_type === "lead-form") ??
     false;
 
-  if (!hasAccess) {
-    return null;
-  }
+  if (!hasAccess) return null;
 
   if (!leadId) {
     navigate("/lead-form", { replace: true });
@@ -80,7 +77,10 @@ export default function LeadFormLeadId() {
   if (leadLoading || !lead) {
     return (
       <div className="flex items-center justify-center min-h-[50vh]">
-        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+        <div className="flex flex-col items-center gap-3">
+          <div className="h-6 w-6 app-spin rounded-full border-2 border-primary/20 border-t-primary" />
+          <p className="text-sm text-muted-foreground">Loading lead…</p>
+        </div>
       </div>
     );
   }
@@ -98,51 +98,54 @@ export default function LeadFormLeadId() {
     "Lead";
 
   return (
-    <div className="p-6 space-y-6">
-      <div>
+    <div className="p-6 space-y-6 app-fade-in">
+      {/* Header */}
+      <div className="app-fade-up space-y-2">
         <Link
           to="/lead-form"
-          className="text-sm text-muted-foreground hover:text-foreground inline-flex items-center gap-1 mb-2"
+          className="inline-flex items-center gap-1.5 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors"
         >
-          <ArrowLeft className="h-4 w-4" />
+          <ArrowLeft className="h-3.5 w-3.5" />
           Back to leads
         </Link>
-        <h1 className="text-2xl font-bold tracking-tight">{displayName}</h1>
+        <h1 className="text-2xl font-semibold text-foreground tracking-tight">
+          {displayName}
+        </h1>
       </div>
 
-      <hr className="border-border" />
+      <div className="border-t border-border" />
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        <Card>
-          <CardContent className="pt-6">
-            <LeadInfoSection
-              lead={lead}
-              onStatusChange={canEdit ? handleStatusChange : undefined}
-              isStatusUpdating={updateStatusMutation.isPending}
-              withoutLink
-            />
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="pt-6">
-            <Tabs defaultValue="notes" className="w-full">
-              <TabsList variant="line" className="w-full mb-4">
-                <TabsTrigger value="notes">Notes</TabsTrigger>
-                <TabsTrigger value="history">History</TabsTrigger>
-              </TabsList>
-              <TabsContent value="notes" className="mt-0">
-                <LeadNotesSection leadId={lead.id} canEdit={canEdit} />
-              </TabsContent>
-              <TabsContent value="history" className="mt-0">
-                <LeadHistorySection
-                  history={history}
-                  isLoading={historyLoading}
-                  withoutLink
-                />
-              </TabsContent>
-            </Tabs>
-          </CardContent>
-        </Card>
+      {/* Content grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 app-fade-up app-fade-up-d1">
+        {/* Lead info panel */}
+        <div className="rounded-2xl border border-border bg-card p-6">
+          <LeadInfoSection
+            lead={lead}
+            onStatusChange={canEdit ? handleStatusChange : undefined}
+            isStatusUpdating={updateStatusMutation.isPending}
+            withoutLink
+          />
+        </div>
+
+        {/* Notes + history panel */}
+        <div className="rounded-2xl border border-border bg-card p-6">
+          <Tabs defaultValue="notes" className="w-full">
+            <TabsList variant="line" className="w-full mb-5">
+              <TabsTrigger value="notes">Notes</TabsTrigger>
+              <TabsTrigger value="history">History</TabsTrigger>
+            </TabsList>
+            <TabsContent value="notes" className="mt-0">
+              <LeadNotesSection leadId={lead.id} canEdit={canEdit} />
+            </TabsContent>
+            <TabsContent value="history" className="mt-0">
+              <LeadHistorySection
+                history={history}
+                isLoading={historyLoading}
+                withoutLink
+              />
+            </TabsContent>
+          </Tabs>
+        </div>
       </div>
     </div>
   );

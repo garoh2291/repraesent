@@ -173,7 +173,7 @@ export default function LeadForm() {
         const short = shortLeadId(id);
         return (
           <TooltipContainer tooltipContent={id} copyText={id}>
-            <span className="font-mono text-xs text-muted-foreground">
+            <span className="font-mono text-xs text-muted-foreground bg-muted px-1.5 py-0.5 rounded">
               {short}
             </span>
           </TooltipContainer>
@@ -187,7 +187,9 @@ export default function LeadForm() {
         const name = row.original.full_name ?? "—";
         return (
           <TooltipContainer tooltipContent={name}>
-            <span className="truncate max-w-[180px] block">{name}</span>
+            <span className="truncate max-w-[180px] block font-medium text-foreground">
+              {name}
+            </span>
           </TooltipContainer>
         );
       },
@@ -199,7 +201,9 @@ export default function LeadForm() {
         const email = row.original.email ?? "—";
         return (
           <TooltipContainer tooltipContent={email}>
-            <span className="truncate max-w-[180px] block">{email}</span>
+            <span className="truncate max-w-[180px] block text-muted-foreground">
+              {email}
+            </span>
           </TooltipContainer>
         );
       },
@@ -212,7 +216,9 @@ export default function LeadForm() {
           row.original.source_label ?? row.original.source_table ?? "—";
         return (
           <TooltipContainer tooltipContent={label}>
-            <span className="truncate max-w-[140px] block">{label}</span>
+            <span className="truncate max-w-[140px] block text-muted-foreground">
+              {label}
+            </span>
           </TooltipContainer>
         );
       },
@@ -238,19 +244,26 @@ export default function LeadForm() {
       accessorKey: "created_at",
       header: "Created",
       cell: ({ row }) =>
-        row.original.created_at
-          ? format(new Date(row.original.created_at), "PP")
-          : "—",
+        row.original.created_at ? (
+          <span className="text-muted-foreground text-sm">
+            {format(new Date(row.original.created_at), "PP")}
+          </span>
+        ) : (
+          "—"
+        ),
     },
     {
       id: "go-to",
       header: "",
       cell: ({ row }) => (
         <Link
+          onClick={(event) => {
+            event.stopPropagation();
+          }}
           to={`/lead-form/${row.original.id}`}
-          className="text-primary hover:underline inline-flex items-center gap-1 text-sm"
+          className="inline-flex items-center gap-1 text-xs font-medium text-primary hover:underline"
         >
-          Go to lead <ArrowRight className="h-4 w-4" />
+          Open <ArrowRight className="h-3.5 w-3.5" />
         </Link>
       ),
     },
@@ -259,67 +272,86 @@ export default function LeadForm() {
   return (
     <div
       className={cn(
-        "p-6",
-        viewMode === "kanban" ? "flex flex-col min-h-[calc(100vh-8rem)]" : "space-y-6"
+        "app-fade-in",
+        viewMode === "kanban"
+          ? "flex flex-col min-h-[calc(100vh-8rem)] p-6"
+          : "p-6 space-y-6"
       )}
     >
-      <div className="flex items-center justify-between shrink-0">
-        <h1 className="text-2xl font-bold tracking-tight">Leads</h1>
+      {/* Header */}
+      <div className="flex items-center justify-between shrink-0 app-fade-up">
+        <div>
+          <h1 className="text-2xl font-semibold text-foreground tracking-tight">
+            Leads
+          </h1>
+          <p className="text-sm text-muted-foreground mt-0.5">
+            Manage and track your incoming leads
+          </p>
+        </div>
         <div className="flex items-center gap-2">
           {canEdit && (
             <Button
               variant="outline"
               size="sm"
               onClick={() => setImportModalOpen(true)}
+              className="h-9 gap-1.5 text-xs"
             >
-              <Upload className="h-4 w-4 mr-1" />
+              <Upload className="h-3.5 w-3.5" />
               Import CSV
             </Button>
           )}
-          <Button
-            variant={viewMode === "table" ? "secondary" : "outline"}
-            size="sm"
-            onClick={() => {
-              setViewMode("table");
-              clearParams();
-            }}
-          >
-            <Table2 className="h-4 w-4 mr-1" />
-            Table
-          </Button>
-          <Button
-            variant={viewMode === "kanban" ? "secondary" : "outline"}
-            size="sm"
-            onClick={() => {
-              setViewMode("kanban");
-              clearParams();
-            }}
-          >
-            <LayoutGrid className="h-4 w-4 mr-1" />
-            Kanban
-          </Button>
+          <div className="flex items-center rounded-lg border border-border bg-muted/50 p-0.5">
+            <button
+              onClick={() => {
+                setViewMode("table");
+                clearParams();
+              }}
+              className={cn(
+                "flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition-all duration-150",
+                viewMode === "table"
+                  ? "bg-white shadow-sm text-foreground"
+                  : "text-muted-foreground hover:text-foreground"
+              )}
+            >
+              <Table2 className="h-3.5 w-3.5" />
+              Table
+            </button>
+            <button
+              onClick={() => {
+                setViewMode("kanban");
+                clearParams();
+              }}
+              className={cn(
+                "flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition-all duration-150",
+                viewMode === "kanban"
+                  ? "bg-white shadow-sm text-foreground"
+                  : "text-muted-foreground hover:text-foreground"
+              )}
+            >
+              <LayoutGrid className="h-3.5 w-3.5" />
+              Kanban
+            </button>
+          </div>
         </div>
       </div>
 
-      <hr className="border-border shrink-0" />
+      <div className="border-t border-border shrink-0" />
 
       {viewMode === "table" ? (
         <DataTable<Lead, unknown>
           columns={columns}
           additionalElement={
-            <div className="flex flex-wrap gap-4 items-center">
+            <div className="flex flex-wrap gap-3 items-center">
               <FilterComponent optionKey="leads" />
               {(statusFilter || sourceFilter) && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="gap-1 py-1 px-2 rounded-[12px] border-dashed text-muted-foreground"
+                <button
+                  className="inline-flex items-center gap-1 rounded-full border border-dashed border-border px-3 py-1 text-xs font-medium text-muted-foreground hover:text-foreground hover:border-border/80 transition-colors"
                   onClick={() =>
                     onSelect({ status: "", source: "", page: "1" }, true)
                   }
                 >
-                  Clear <X size={14} />
-                </Button>
+                  Clear filters <X size={12} />
+                </button>
               )}
             </div>
           }
@@ -352,15 +384,15 @@ export default function LeadForm() {
       ) : (
         <div className="flex-1 min-h-0 flex flex-col">
           <LeadsKanban
-          leads={leadsQuery.data?.data ?? []}
-          isLoading={leadsQuery.isLoading}
-          onStatusChange={(id, status) =>
-            updateStatusMutation.mutate({ id, status })
-          }
-          onLeadSelect={setSelectedLeadId}
-          isUpdating={updateStatusMutation.isPending}
-          canEdit={canEdit}
-        />
+            leads={leadsQuery.data?.data ?? []}
+            isLoading={leadsQuery.isLoading}
+            onStatusChange={(id, status) =>
+              updateStatusMutation.mutate({ id, status })
+            }
+            onLeadSelect={setSelectedLeadId}
+            isUpdating={updateStatusMutation.isPending}
+            canEdit={canEdit}
+          />
         </div>
       )}
 

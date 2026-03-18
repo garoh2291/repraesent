@@ -11,7 +11,6 @@ import * as LucideIcons from "lucide-react";
 
 import { useAuthContext } from "~/providers/auth-provider";
 import { useAppointmentConfig } from "~/lib/hooks/useAppointmentConfig";
-import { Button } from "~/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -46,6 +45,39 @@ function DynamicIcon({
   return <Icon className={className} />;
 }
 
+function NavLink({
+  to,
+  isActive,
+  children,
+  disabled,
+  onClick,
+}: {
+  to: string;
+  isActive: boolean;
+  children: React.ReactNode;
+  disabled?: boolean;
+  onClick?: (e: React.MouseEvent) => void;
+}) {
+  return (
+    <Link
+      to={to}
+      onClick={onClick}
+      aria-disabled={disabled}
+      className={[
+        "flex items-center gap-2.5 rounded-lg px-3 py-2 text-[13px] font-medium",
+        "border-l-2 transition-all duration-150",
+        disabled
+          ? "cursor-not-allowed border-transparent text-white/25"
+          : isActive
+          ? "border-amber-400 bg-amber-400/10 text-amber-300"
+          : "border-transparent text-white/45 hover:bg-white/5 hover:text-white/75",
+      ].join(" ")}
+    >
+      {children}
+    </Link>
+  );
+}
+
 export function Sidebar() {
   const {
     currentWorkspace,
@@ -73,33 +105,35 @@ export function Sidebar() {
   };
 
   return (
-    <aside className="flex h-screen w-64 shrink-0 flex-col overflow-hidden  border-sidebar-border bg-sidebar">
-      <div className="flex h-14 shrink-0 items-center gap-2 border-b border-sidebar-border px-4">
+    <aside className="flex h-screen w-[220px] shrink-0 flex-col bg-[#111113] border-r border-white/5">
+      {/* Logo */}
+      <div className="flex h-14 shrink-0 items-center px-4 border-b border-white/5">
         <Link to="/" className="flex items-center">
           <img
             src={logoUrl}
             alt="Repraesent"
-            className="h-8 w-auto max-w-[140px]"
+            className="h-7 w-auto max-w-[120px] brightness-0 invert opacity-90"
           />
         </Link>
       </div>
-      <div className="shrink-0 border-b border-sidebar-border px-2 py-2">
+
+      {/* Workspace selector */}
+      <div className="shrink-0 px-3 py-3 border-b border-white/5">
         {currentWorkspace &&
           (hasMultipleWorkspaces ? (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button
-                  variant="ghost"
-                  className="w-full justify-between gap-2 px-2 h-9 font-normal"
-                >
-                  <span className="flex min-w-0 items-center gap-2 truncate">
-                    <Building2 className="h-4 w-4 shrink-0 text-muted-foreground" />
-                    <span className="truncate">{currentWorkspace.name}</span>
+                <button className="flex w-full items-center gap-2 rounded-lg px-2.5 py-2 text-left text-[13px] text-white/55 hover:bg-white/5 hover:text-white/80 transition-colors duration-150">
+                  <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-white/10 text-white text-[10px] font-bold">
+                    {currentWorkspace.name.charAt(0).toUpperCase()}
+                  </div>
+                  <span className="flex-1 truncate font-medium text-white/70">
+                    {currentWorkspace.name}
                   </span>
-                  <ChevronDown className="h-4 w-4 shrink-0 text-muted-foreground" />
-                </Button>
+                  <ChevronDown className="h-3.5 w-3.5 shrink-0 text-white/30" />
+                </button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="start" className="min-w-44">
+              <DropdownMenuContent align="start" className="min-w-48">
                 {workspaces.map((ws) => (
                   <DropdownMenuItem
                     key={ws.id}
@@ -112,35 +146,32 @@ export function Sidebar() {
               </DropdownMenuContent>
             </DropdownMenu>
           ) : (
-            <div className="flex items-center gap-2 rounded-md px-2 py-2 text-sm text-muted-foreground">
-              <Building2 className="h-4 w-4 shrink-0" />
-              <span className="truncate">{currentWorkspace.name}</span>
+            <div className="flex items-center gap-2 px-2.5 py-2">
+              <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-white/10 text-white text-[10px] font-bold">
+                {currentWorkspace.name.charAt(0).toUpperCase()}
+              </div>
+              <span className="truncate text-[13px] font-medium text-white/70">
+                {currentWorkspace.name}
+              </span>
             </div>
           ))}
       </div>
-      <nav className="min-h-0 flex-1 overflow-y-auto flex flex-col gap-2 p-2">
-        <Link
-          to="/"
-          className={`rounded-md px-2 py-2 text-sm font-medium transition-colors flex items-center gap-2 ${
-            location.pathname === "/"
-              ? "bg-sidebar-accent text-sidebar-accent-foreground shadow-[var(--shadow)]"
-              : "text-sidebar-foreground hover:bg-sidebar-accent/50"
-          }`}
-        >
-          <HomeIcon className="h-4 w-4" />
+
+      {/* Navigation */}
+      <nav className="min-h-0 flex-1 overflow-y-auto p-3 space-y-0.5">
+        <NavLink to="/" isActive={location.pathname === "/"}>
+          <HomeIcon className="h-4 w-4 shrink-0" />
           Home
-        </Link>
-        <Link
+        </NavLink>
+
+        <NavLink
           to="/products"
-          className={`rounded-md px-2 py-2 text-sm font-medium transition-colors flex items-center gap-2 ${
-            location.pathname === "/products"
-              ? "bg-sidebar-accent text-sidebar-accent-foreground shadow-[var(--shadow)]"
-              : "text-sidebar-foreground hover:bg-sidebar-accent/50"
-          }`}
+          isActive={location.pathname === "/products"}
         >
-          <Package className="h-4 w-4" />
+          <Package className="h-4 w-4 shrink-0" />
           Products
-        </Link>
+        </NavLink>
+
         {currentWorkspace?.services
           ?.filter(
             (service) =>
@@ -152,60 +183,50 @@ export function Sidebar() {
               ? `/${service.service_slug}`
               : "#";
             const isActive =
-              service.service_slug &&
+              !!service.service_slug &&
               (location.pathname === `/${service.service_slug}` ||
                 location.pathname.startsWith(`/${service.service_slug}/`));
             const hasSlug = !!service.service_slug;
             const iconName = service.service_icon
               ? kebabToPascal(service.service_icon)
               : null;
-
             const hasIcon = !!iconName && lucideIconNames.has(iconName);
 
             return (
-              <Link
+              <NavLink
                 key={service.service_id}
                 to={href}
-                className={`rounded-md px-2 py-2 text-sm font-medium transition-colors flex items-center gap-2 ${
-                  !hasSlug
-                    ? "cursor-not-allowed text-muted-foreground opacity-60"
-                    : isActive
-                      ? "bg-sidebar-accent text-sidebar-accent-foreground shadow-[var(--shadow)]"
-                      : "text-sidebar-foreground hover:bg-sidebar-accent/50"
-                }`}
+                isActive={isActive}
+                disabled={!hasSlug}
                 onClick={(e) => !hasSlug && e.preventDefault()}
-                aria-disabled={!hasSlug}
               >
                 {hasIcon && (
                   <DynamicIcon name={iconName!} className="h-4 w-4 shrink-0" />
                 )}
                 {service.service_name}
-              </Link>
+              </NavLink>
             );
           })}
-        <Link
+
+        <NavLink
           to="/settings"
-          className={`rounded-md px-2 py-2 text-sm font-medium transition-colors flex items-center gap-2 ${
-            location.pathname === "/settings"
-              ? "bg-sidebar-accent text-sidebar-accent-foreground shadow-[var(--shadow)]"
-              : "text-sidebar-foreground hover:bg-sidebar-accent/50"
-          }`}
+          isActive={location.pathname === "/settings"}
         >
-          <Settings className="h-4 w-4" />
+          <Settings className="h-4 w-4 shrink-0" />
           Settings
-        </Link>
+        </NavLink>
       </nav>
-      <div className="shrink-0 border-t border-sidebar-border p-2">
-        <Button
-          variant="ghost"
-          size="sm"
-          className="w-full justify-start gap-2"
+
+      {/* Bottom: logout */}
+      <div className="shrink-0 border-t border-white/5 p-3">
+        <button
           onClick={() => logout()}
           disabled={isLoggingOut}
+          className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-[13px] font-medium text-white/35 hover:bg-white/5 hover:text-white/60 transition-all duration-150 disabled:opacity-50"
         >
-          <LogOut className="h-4 w-4" />
-          {isLoggingOut ? "Logging out..." : "Log out"}
-        </Button>
+          <LogOut className="h-4 w-4 shrink-0" />
+          {isLoggingOut ? "Signing out…" : "Sign out"}
+        </button>
       </div>
     </aside>
   );
