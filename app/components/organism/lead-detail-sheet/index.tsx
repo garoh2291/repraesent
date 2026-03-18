@@ -39,10 +39,12 @@ function formatHistoryAction(item: LeadHistoryItem): string {
     const oldStatus = item.details?.old_status as string | undefined;
     const newStatus = item.details?.new_status as string | undefined;
     const oldLabel = oldStatus
-      ? (LEAD_STATUS_LABELS[oldStatus as keyof typeof LEAD_STATUS_LABELS] ?? oldStatus)
+      ? (LEAD_STATUS_LABELS[oldStatus as keyof typeof LEAD_STATUS_LABELS] ??
+        oldStatus)
       : "";
     const newLabel = newStatus
-      ? (LEAD_STATUS_LABELS[newStatus as keyof typeof LEAD_STATUS_LABELS] ?? newStatus)
+      ? (LEAD_STATUS_LABELS[newStatus as keyof typeof LEAD_STATUS_LABELS] ??
+        newStatus)
       : "";
     if (oldLabel && newLabel) return `Status: ${oldLabel} → ${newLabel}`;
     if (newLabel) return `Status changed to ${newLabel}`;
@@ -155,7 +157,13 @@ function FieldRow({
   );
 }
 
-function FieldValue({ children, className }: { children: React.ReactNode; className?: string }) {
+function FieldValue({
+  children,
+  className,
+}: {
+  children: React.ReactNode;
+  className?: string;
+}) {
   return (
     <div
       className={cn(
@@ -195,7 +203,7 @@ export function LeadInfoSection({
         {!withoutLink && (
           <Link
             to={`/lead-form/${lead.id}`}
-            className="inline-flex items-center gap-1 text-xs font-medium text-primary hover:underline"
+            className="inline-flex items-center gap-1 text-xs font-medium text-foreground hover:underline"
           >
             Full page <ExternalLink className="h-3 w-3" />
           </Link>
@@ -231,7 +239,9 @@ export function LeadInfoSection({
         </FieldRow>
 
         <FieldRow label="Source">
-          <FieldValue>{lead.source_label || lead.source_table || "—"}</FieldValue>
+          <FieldValue>
+            {lead.source_label || lead.source_table || "—"}
+          </FieldValue>
         </FieldRow>
 
         <FieldRow label="Created">
@@ -246,8 +256,8 @@ export function LeadInfoSection({
               {value == null
                 ? "—"
                 : typeof value === "object"
-                ? JSON.stringify(value)
-                : String(value)}
+                  ? JSON.stringify(value)
+                  : String(value)}
             </FieldValue>
           </FieldRow>
         ))}

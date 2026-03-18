@@ -13,10 +13,7 @@ import {
 } from "recharts";
 import { useAuthContext } from "~/providers/auth-provider";
 import { cn } from "~/lib/utils";
-import {
-  getLeadAnalytics,
-  type LeadAnalyticsPeriod,
-} from "~/lib/api/leads";
+import { getLeadAnalytics, type LeadAnalyticsPeriod } from "~/lib/api/leads";
 
 export function meta() {
   return [
@@ -142,7 +139,8 @@ function LeadAnalyticsChart() {
 
   // Show every Nth tick so labels don't overlap
   const tickCount = chartData.length;
-  const tickStep = tickCount <= 10 ? 1 : tickCount <= 20 ? 2 : Math.ceil(tickCount / 10);
+  const tickStep =
+    tickCount <= 10 ? 1 : tickCount <= 20 ? 2 : Math.ceil(tickCount / 10);
   const xTicks = chartData
     .filter((_, i) => i % tickStep === 0 || i === chartData.length - 1)
     .map((p) => p.date);
@@ -190,22 +188,20 @@ function LeadAnalyticsChart() {
       {!isLoading && data && data.sources.length > 0 && (
         <div className="flex flex-wrap gap-2">
           {data.sources.map((s) => (
-            <div
+            <Link
               key={s.source}
-              className="flex items-center gap-1.5 rounded-full border border-border bg-muted/50 px-3 py-1 text-[12px]"
+              to={`/lead-form?source=${s.source}`}
+              className="flex items-center gap-1.5 rounded-full border border-border bg-muted/50 px-3 py-1 text-[12px] no-underline transition-colors hover:border-primary/40 hover:bg-muted"
             >
               <span
                 className="h-2 w-2 rounded-full shrink-0"
                 style={{
-                  backgroundColor:
-                    SOURCE_COLORS[s.source] ?? "#9aa3b2",
+                  backgroundColor: SOURCE_COLORS[s.source] ?? "#9aa3b2",
                 }}
               />
               <span className="text-muted-foreground">{s.label}</span>
-              <span className="font-semibold text-foreground">
-                {s.count}
-              </span>
-            </div>
+              <span className="font-semibold text-foreground">{s.count}</span>
+            </Link>
           ))}
         </div>
       )}
@@ -251,9 +247,7 @@ function LeadAnalyticsChart() {
                 width={32}
               />
               <Tooltip
-                content={
-                  <CustomTooltip period={period} />
-                }
+                content={<CustomTooltip period={period} />}
                 cursor={{ stroke: "var(--border)", strokeWidth: 1 }}
               />
               <Line
