@@ -111,7 +111,9 @@ export default function Home() {
             <p className="text-lg font-semibold text-foreground">
               {displayName || "—"}
             </p>
-            <p className="text-sm text-muted-foreground mt-0.5">{user?.email}</p>
+            <p className="text-sm text-muted-foreground mt-0.5">
+              {user?.email}
+            </p>
           </div>
         </div>
         <div className="rounded-2xl border border-border bg-card p-5 space-y-3">
@@ -170,7 +172,7 @@ export default function Home() {
                     <img
                       src={s.service_image}
                       alt={s.service_name}
-                      className="h-full w-20 shrink-0 object-cover"
+                      className="h-full w-20 shrink-0 object-cover p-2"
                     />
                   ) : (
                     <div className="flex h-full w-20 shrink-0 items-center justify-center bg-primary/6">
