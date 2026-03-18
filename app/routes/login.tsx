@@ -81,28 +81,36 @@ export default function Login() {
         <img
           src={logoUrl}
           alt="Repraesent"
-          className="h-7 w-auto max-w-[120px] brightness-0 invert opacity-85"
+          className="app-fade-down h-7 w-auto max-w-[120px] brightness-0 invert opacity-85"
+          style={{ animationDelay: "0s" }}
         />
 
         <div className="flex-1 flex flex-col justify-center space-y-8">
           <div className="space-y-3">
             <h2
-              className="text-[28px] font-semibold text-white leading-tight"
-              style={{ fontFamily: "Georgia, 'Times New Roman', serif" }}
+              className="app-fade-up text-[28px] font-semibold text-white leading-tight"
+              style={{ fontFamily: "Georgia, 'Times New Roman', serif", animationDelay: "0.15s" }}
             >
               Represent your
               <br />
               best work.
             </h2>
-            <p className="text-sm text-white/45 leading-relaxed max-w-[260px]">
+            <p
+              className="app-fade-up text-sm text-white/45 leading-relaxed max-w-[260px]"
+              style={{ animationDelay: "0.25s" }}
+            >
               The platform for modern sales teams. Manage leads, schedule
               appointments, and close deals.
             </p>
           </div>
 
           <div className="space-y-2.5">
-            {FEATURES.map((f) => (
-              <div key={f} className="flex items-center gap-3">
+            {FEATURES.map((f, i) => (
+              <div
+                key={f}
+                className="app-fade-up flex items-center gap-3"
+                style={{ animationDelay: `${0.35 + i * 0.1}s` }}
+              >
                 <div className="h-1.5 w-1.5 rounded-full bg-amber-400 shrink-0" />
                 <span className="text-sm text-white/50">{f}</span>
               </div>
@@ -110,7 +118,10 @@ export default function Login() {
           </div>
         </div>
 
-        <p className="text-[11px] text-white/15">
+        <p
+          className="app-fade-in text-[11px] text-white/15"
+          style={{ animationDelay: "0.7s" }}
+        >
           © {new Date().getFullYear()} Repraesent
         </p>
       </div>

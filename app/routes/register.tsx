@@ -29,9 +29,13 @@ export default function Register() {
     setError(null);
     setSuccess(false);
 
-    if (!email) { setError("Please enter your email address"); return; }
+    if (!email) {
+      setError("Please enter your email address");
+      return;
+    }
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      setError("Please enter a valid email address"); return;
+      setError("Please enter a valid email address");
+      return;
     }
 
     setIsSubmitting(true);
@@ -39,7 +43,11 @@ export default function Register() {
       await register(email);
       setSuccess(true);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Something went wrong. Please try again.");
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Something went wrong. Please try again."
+      );
     } finally {
       setIsSubmitting(false);
     }
@@ -52,25 +60,36 @@ export default function Register() {
         <img
           src={logoUrl}
           alt="Repraesent"
-          className="h-7 w-auto max-w-[120px] brightness-0 invert opacity-85"
+          className="app-fade-down h-7 w-auto max-w-[120px] brightness-0 invert opacity-85"
+          style={{ animationDelay: "0s" }}
         />
 
         <div className="flex-1 flex flex-col justify-center space-y-8">
           <div className="space-y-3">
             <h2
-              className="text-[28px] font-semibold text-white leading-tight"
-              style={{ fontFamily: "Georgia, 'Times New Roman', serif" }}
+              className="app-fade-up text-[28px] font-semibold text-white leading-tight"
+              style={{ fontFamily: "Georgia, 'Times New Roman', serif", animationDelay: "0.15s" }}
             >
-              Start strong.<br />Grow faster.
+              Start strong.
+              <br />
+              Grow faster.
             </h2>
-            <p className="text-sm text-white/45 leading-relaxed max-w-[260px]">
-              Join sales teams who use Repraesent to close more deals and delight their clients.
+            <p
+              className="app-fade-up text-sm text-white/45 leading-relaxed max-w-[260px]"
+              style={{ animationDelay: "0.25s" }}
+            >
+              Join sales teams who use Repraesent to close more deals and
+              delight their clients.
             </p>
           </div>
 
           <div className="space-y-2.5">
-            {BENEFITS.map((b) => (
-              <div key={b} className="flex items-center gap-3">
+            {BENEFITS.map((b, i) => (
+              <div
+                key={b}
+                className="app-fade-up flex items-center gap-3"
+                style={{ animationDelay: `${0.35 + i * 0.1}s` }}
+              >
                 <div className="h-1.5 w-1.5 rounded-full bg-amber-400 shrink-0" />
                 <span className="text-sm text-white/50">{b}</span>
               </div>
@@ -78,7 +97,12 @@ export default function Register() {
           </div>
         </div>
 
-        <p className="text-[11px] text-white/15">© 2024 Repraesent</p>
+        <p
+          className="app-fade-in text-[11px] text-white/15"
+          style={{ animationDelay: "0.7s" }}
+        >
+          © {new Date().getFullYear()} Repraesent
+        </p>
       </div>
 
       {/* Right form panel */}
@@ -86,7 +110,11 @@ export default function Register() {
         <div className="w-full max-w-sm space-y-8 app-fade-up">
           {/* Mobile logo */}
           <div className="lg:hidden">
-            <img src={logoUrl} alt="Repraesent" className="h-7 w-auto max-w-[120px]" />
+            <img
+              src={logoUrl}
+              alt="Repraesent"
+              className="h-7 w-auto max-w-[120px]"
+            />
           </div>
 
           <div className="space-y-1">
@@ -103,7 +131,9 @@ export default function Register() {
               <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-4 text-sm text-emerald-800 leading-relaxed">
                 <p className="font-medium">Check your inbox</p>
                 <p className="text-emerald-700/80 mt-0.5">
-                  We sent a sign-up link to <span className="font-medium">{email}</span>. It expires in 6 hours.
+                  We sent a sign-up link to{" "}
+                  <span className="font-medium">{email}</span>. It expires in 6
+                  hours.
                 </p>
               </div>
               <p className="text-sm text-muted-foreground text-center">
@@ -118,7 +148,10 @@ export default function Register() {
               </p>
             </div>
           ) : (
-            <form onSubmit={handleSubmit} className="space-y-5 app-fade-up app-fade-up-d1">
+            <form
+              onSubmit={handleSubmit}
+              className="space-y-5 app-fade-up app-fade-up-d1"
+            >
               {error && (
                 <div className="rounded-lg border border-destructive/20 bg-destructive/6 px-4 py-3 text-sm text-destructive">
                   {error}
@@ -126,7 +159,10 @@ export default function Register() {
               )}
 
               <div className="space-y-1.5">
-                <label htmlFor="email" className="block text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
+                <label
+                  htmlFor="email"
+                  className="block text-[11px] font-semibold uppercase tracking-widest text-muted-foreground"
+                >
                   Email address
                 </label>
                 <Input
@@ -160,7 +196,10 @@ export default function Register() {
 
               <p className="text-center text-sm text-muted-foreground">
                 Already have an account?{" "}
-                <Link to="/login" className="text-primary font-medium hover:underline">
+                <Link
+                  to="/login"
+                  className="text-primary font-medium hover:underline"
+                >
                   Sign in
                 </Link>
               </p>

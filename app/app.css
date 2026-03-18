@@ -173,6 +173,16 @@ body {
     transform: translateY(0);
   }
 }
+@keyframes app-fade-down {
+  from {
+    opacity: 0;
+    transform: translateY(-12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
 @keyframes app-fade-in {
   from {
     opacity: 0;
@@ -202,6 +212,9 @@ body {
 
 .app-fade-up {
   animation: app-fade-up 0.45s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+.app-fade-down {
+  animation: app-fade-down 0.45s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 .app-fade-up-d1 {
   animation-delay: 0.06s;
