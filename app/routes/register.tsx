@@ -56,53 +56,85 @@ export default function Register() {
   return (
     <div className="flex min-h-screen">
       {/* Left brand panel */}
-      <div className="hidden lg:flex lg:w-[400px] shrink-0 flex-col bg-[#111113] p-10 border-r border-white/5">
-        <img
-          src={logoUrl}
-          alt="Repraesent"
-          className="app-fade-down h-7 w-auto max-w-[120px] brightness-0 invert opacity-85"
-          style={{ animationDelay: "0s" }}
+      <div className="hidden lg:flex lg:w-[400px] shrink-0 flex-col bg-[#111113] p-10 border-r border-white/5 relative overflow-hidden">
+        {/* Background image — fades up from the bottom, grayscale to keep black theme */}
+        <div
+          className="absolute inset-0 z-0 pointer-events-none"
+          style={{
+            backgroundImage: "url(/register-bg.png)",
+            backgroundSize: "cover",
+            backgroundPosition: "center 30%",
+            filter: "grayscale(100%) brightness(0.35) contrast(1.1)",
+            maskImage:
+              "linear-gradient(to top, black 0%, black 35%, transparent 72%)",
+            WebkitMaskImage:
+              "linear-gradient(to top, black 0%, black 35%, transparent 72%)",
+          }}
         />
 
-        <div className="flex-1 flex flex-col justify-center space-y-8">
-          <div className="space-y-3">
-            <h2
-              className="app-fade-up text-[28px] font-semibold text-white leading-tight"
-              style={{ fontFamily: "Georgia, 'Times New Roman', serif", animationDelay: "0.15s" }}
-            >
-              Start strong.
-              <br />
-              Grow faster.
-            </h2>
-            <p
-              className="app-fade-up text-sm text-white/45 leading-relaxed max-w-[260px]"
-              style={{ animationDelay: "0.25s" }}
-            >
-              Join sales teams who use Repraesent to close more deals and
-              delight their clients.
-            </p>
-          </div>
+        {/* Subtle noise grain overlay for texture */}
+        <div
+          className="absolute inset-0 z-0 pointer-events-none opacity-[0.03]"
+          style={{
+            backgroundImage:
+              "url(\"data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='1'/%3E%3C/svg%3E\")",
+            backgroundRepeat: "repeat",
+            backgroundSize: "128px 128px",
+          }}
+        />
 
-          <div className="space-y-2.5">
-            {BENEFITS.map((b, i) => (
-              <div
-                key={b}
-                className="app-fade-up flex items-center gap-3"
-                style={{ animationDelay: `${0.35 + i * 0.1}s` }}
+        {/* Content */}
+        <div className="relative z-10 flex flex-col h-full">
+          <img
+            src={logoUrl}
+            alt="Repraesent"
+            className="app-fade-down h-7 w-auto max-w-[120px] brightness-0 invert opacity-85"
+            style={{ animationDelay: "0s" }}
+          />
+
+          <div className="flex-1 flex flex-col justify-center space-y-8">
+            <div className="space-y-3">
+              <h2
+                className="app-fade-up text-[28px] font-semibold text-white leading-tight"
+                style={{
+                  fontFamily: "Georgia, 'Times New Roman', serif",
+                  animationDelay: "0.15s",
+                }}
               >
-                <div className="h-1.5 w-1.5 rounded-full bg-amber-400 shrink-0" />
-                <span className="text-sm text-white/50">{b}</span>
-              </div>
-            ))}
-          </div>
-        </div>
+                Start strong.
+                <br />
+                Grow faster.
+              </h2>
+              <p
+                className="app-fade-up text-sm text-white/45 leading-relaxed max-w-[260px]"
+                style={{ animationDelay: "0.25s" }}
+              >
+                Join sales teams who use Repraesent to close more deals and
+                delight their clients.
+              </p>
+            </div>
 
-        <p
-          className="app-fade-in text-[11px] text-white/15"
-          style={{ animationDelay: "0.7s" }}
-        >
-          © {new Date().getFullYear()} Repraesent
-        </p>
+            <div className="space-y-2.5">
+              {BENEFITS.map((b, i) => (
+                <div
+                  key={b}
+                  className="app-fade-up flex items-center gap-3"
+                  style={{ animationDelay: `${0.35 + i * 0.1}s` }}
+                >
+                  <div className="h-1.5 w-1.5 rounded-full bg-amber-400 shrink-0" />
+                  <span className="text-sm text-white/50">{b}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <p
+            className="app-fade-in text-[11px] text-white/15"
+            style={{ animationDelay: "0.7s" }}
+          >
+            © {new Date().getFullYear()} Repraesent
+          </p>
+        </div>
       </div>
 
       {/* Right form panel */}
