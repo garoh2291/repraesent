@@ -1,7 +1,6 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
-@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,opsz,wght@0,6..18,300;0,6..18,400;0,6..18,500;0,6..18,600;0,6..18,700;1,6..18,300;1,6..18,400&display=swap');
 
 @custom-variant dark (&:is(.dark *));
 
@@ -165,30 +164,66 @@ body {
 
 /* ── App-wide animation utilities ─────────────────────────── */
 @keyframes app-fade-up {
-  from { opacity: 0; transform: translateY(12px); }
-  to   { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 @keyframes app-fade-in {
-  from { opacity: 0; }
-  to   { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 @keyframes app-scale-in {
-  from { opacity: 0; transform: scale(0.97); }
-  to   { opacity: 1; transform: scale(1); }
+  from {
+    opacity: 0;
+    transform: scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
 }
 @keyframes app-spin {
-  from { transform: rotate(0deg); }
-  to   { transform: rotate(360deg); }
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
-.app-fade-up    { animation: app-fade-up 0.45s cubic-bezier(0.16, 1, 0.3, 1) both; }
-.app-fade-up-d1 { animation-delay: 0.06s; }
-.app-fade-up-d2 { animation-delay: 0.12s; }
-.app-fade-up-d3 { animation-delay: 0.18s; }
-.app-fade-up-d4 { animation-delay: 0.24s; }
-.app-fade-in    { animation: app-fade-in 0.4s ease both; }
-.app-scale-in   { animation: app-scale-in 0.35s cubic-bezier(0.16, 1, 0.3, 1) both; }
-.app-spin       { animation: app-spin 1.4s linear infinite; }
+.app-fade-up {
+  animation: app-fade-up 0.45s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+.app-fade-up-d1 {
+  animation-delay: 0.06s;
+}
+.app-fade-up-d2 {
+  animation-delay: 0.12s;
+}
+.app-fade-up-d3 {
+  animation-delay: 0.18s;
+}
+.app-fade-up-d4 {
+  animation-delay: 0.24s;
+}
+.app-fade-in {
+  animation: app-fade-in 0.4s ease both;
+}
+.app-scale-in {
+  animation: app-scale-in 0.35s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+.app-spin {
+  animation: app-spin 1.4s linear infinite;
+}
 
 /* ── Appointment calendar (react-big-calendar) overrides ──── */
 .appointments-calendar {
@@ -218,7 +253,9 @@ body {
   font-weight: 500;
   padding: 0.25rem 0.75rem;
   height: 2rem;
-  transition: background 0.1s, color 0.1s;
+  transition:
+    background 0.1s,
+    color 0.1s;
 }
 .appointments-calendar .rbc-btn-group button:hover {
   background: var(--muted);

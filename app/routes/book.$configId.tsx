@@ -18,7 +18,14 @@ import { Textarea } from "~/components/ui/textarea";
 import { Calendar } from "~/components/ui/calendar";
 import { ScrollArea } from "~/components/ui/scroll-area";
 import TimezoneSelect from "react-timezone-select";
-import { ChevronLeft, ChevronRight, Check, CalendarDays, User, ClipboardCheck } from "lucide-react";
+import {
+  ChevronLeft,
+  ChevronRight,
+  Check,
+  CalendarDays,
+  User,
+  ClipboardCheck,
+} from "lucide-react";
 import { cn } from "~/lib/utils";
 
 export function meta() {
@@ -141,7 +148,13 @@ export default function BookAppointment() {
   }, []);
 
   const WEEKDAY_KEYS = [
-    "sun", "mon", "tue", "wed", "thu", "fri", "sat",
+    "sun",
+    "mon",
+    "tue",
+    "wed",
+    "thu",
+    "fri",
+    "sat",
   ] as const;
   const disabledDayOfWeek = useMemo(() => {
     const wh = config?.working_hours;
@@ -244,8 +257,12 @@ export default function BookAppointment() {
     return (
       <div className="min-h-screen flex items-center justify-center p-6 bg-stone-50">
         <div className="text-center space-y-2">
-          <p className="text-sm font-medium text-foreground">Invalid booking link</p>
-          <p className="text-sm text-muted-foreground">Please check the URL and try again.</p>
+          <p className="text-sm font-medium text-foreground">
+            Invalid booking link
+          </p>
+          <p className="text-sm text-muted-foreground">
+            Please check the URL and try again.
+          </p>
         </div>
       </div>
     );
@@ -266,8 +283,12 @@ export default function BookAppointment() {
     return (
       <div className="min-h-screen flex items-center justify-center p-6 bg-stone-50">
         <div className="text-center space-y-2">
-          <p className="text-sm font-medium text-foreground">Booking not found</p>
-          <p className="text-sm text-muted-foreground">This appointment page doesn't exist.</p>
+          <p className="text-sm font-medium text-foreground">
+            Booking not found
+          </p>
+          <p className="text-sm text-muted-foreground">
+            This appointment page doesn't exist.
+          </p>
         </div>
       </div>
     );
@@ -290,7 +311,10 @@ export default function BookAppointment() {
           <div className="text-center max-w-md space-y-6 app-fade-up">
             <div
               className="inline-flex h-16 w-16 items-center justify-center rounded-full mx-auto"
-              style={{ backgroundColor: `${bgColor}15`, border: `1.5px solid ${bgColor}30` }}
+              style={{
+                backgroundColor: `${bgColor}15`,
+                border: `1.5px solid ${bgColor}30`,
+              }}
             >
               <Check className="h-7 w-7" style={{ color: bgColor }} />
             </div>
@@ -299,7 +323,8 @@ export default function BookAppointment() {
                 Appointment confirmed
               </h2>
               <p className="text-sm text-muted-foreground leading-relaxed">
-                Your appointment has been booked. You'll receive a confirmation email shortly.
+                Your appointment has been booked. You'll receive a confirmation
+                email shortly.
               </p>
             </div>
             <button
@@ -445,11 +470,17 @@ function BookingHeader({
           className="h-9 object-contain"
         />
         <div>
-          <p className="font-semibold text-base leading-tight" style={{ color: textColor }}>
+          <p
+            className="font-semibold text-base leading-tight"
+            style={{ color: textColor }}
+          >
             {config.company_name || "Booking"}
           </p>
           {config.company_headline && (
-            <p className="text-xs leading-tight" style={{ color: `${textColor}99` }}>
+            <p
+              className="text-xs leading-tight"
+              style={{ color: `${textColor}99` }}
+            >
               {config.company_headline}
             </p>
           )}
@@ -470,8 +501,8 @@ function BookingHeader({
                     done
                       ? "bg-white/20"
                       : active
-                      ? "bg-white/25 ring-2 ring-white/40"
-                      : "bg-white/8"
+                        ? "bg-white/25 ring-2 ring-white/40"
+                        : "bg-white/8"
                   )}
                   style={{ color: textColor }}
                 >
@@ -544,9 +575,17 @@ function Step1DateAndTime({
               background-color: ${bgColor} !important;
               color: ${textColor} !important;
             }
+            .booking-cal td.rdp-day_today,
+            .booking-cal [data-today="true"] {
+              background-color: #f5f4f1 !important;
+            }
             .booking-cal [data-today="true"] button:not([data-selected-single="true"]) {
               font-weight: 700;
-              color: ${bgColor};
+              color: ${bgColor} !important;
+              background-color: #f5f4f1 !important;
+            }
+            .booking-cal [data-today="true"] button:not([data-selected-single="true"]):hover {
+              background-color: #ece9e5 !important;
             }
             .booking-cal button:not([data-selected-single="true"]):not([disabled]):hover {
               background-color: rgba(0,0,0,0.06) !important;
@@ -569,6 +608,9 @@ function Step1DateAndTime({
             defaultMonth={selectedDate ?? new Date()}
             weekStartsOn={firstWeekday as 0 | 1}
             className="border-0 w-full"
+            classNames={{
+              today: "rounded-md bg-[#f5f4f1] text-foreground data-[selected=true]:rounded-none",
+            }}
           />
         </div>
 
@@ -596,7 +638,10 @@ function Step1DateAndTime({
               {slotsLoading ? (
                 <div className="space-y-2">
                   {[1, 2, 3, 4, 5].map((i) => (
-                    <div key={i} className="h-10 bg-muted rounded-lg animate-pulse" />
+                    <div
+                      key={i}
+                      className="h-10 bg-muted rounded-lg animate-pulse"
+                    />
                   ))}
                 </div>
               ) : slots.length === 0 ? (
@@ -677,7 +722,10 @@ function Step2CustomerInfo({
           </p>
           {required.map(({ key, label }) => (
             <div key={key} className="space-y-1.5">
-              <Label htmlFor={key} className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
+              <Label
+                htmlFor={key}
+                className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground"
+              >
                 {label}
               </Label>
               {key === "notes" ? (
@@ -712,7 +760,10 @@ function Step2CustomerInfo({
             </p>
             {optional.map(({ key, label }) => (
               <div key={key} className="space-y-1.5">
-                <Label htmlFor={key} className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
+                <Label
+                  htmlFor={key}
+                  className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground"
+                >
                   {label}
                 </Label>
                 {key === "notes" ? (
@@ -802,8 +853,12 @@ function Step3Confirmation({
                 <CalendarDays className="h-4 w-4" style={{ color: bgColor }} />
               </div>
               <div>
-                <p className="text-sm font-semibold text-foreground">{dateStr}</p>
-                <p className="text-sm text-muted-foreground">{timeStr} · {userTimezone}</p>
+                <p className="text-sm font-semibold text-foreground">
+                  {dateStr}
+                </p>
+                <p className="text-sm text-muted-foreground">
+                  {timeStr} · {userTimezone}
+                </p>
               </div>
             </div>
             {config.company_name && (
@@ -830,8 +885,12 @@ function Step3Confirmation({
               .filter((f) => formFields[f.key])
               .map(({ key, label }) => (
                 <div key={key} className="grid grid-cols-[100px_1fr] gap-2">
-                  <dt className="text-xs text-muted-foreground pt-0.5">{label}</dt>
-                  <dd className="text-sm font-medium text-foreground">{formFields[key]}</dd>
+                  <dt className="text-xs text-muted-foreground pt-0.5">
+                    {label}
+                  </dt>
+                  <dd className="text-sm font-medium text-foreground">
+                    {formFields[key]}
+                  </dd>
                 </div>
               ))}
           </dl>
