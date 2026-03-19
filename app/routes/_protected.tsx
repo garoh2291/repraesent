@@ -37,10 +37,12 @@ export default function ProtectedLayout() {
       return;
     }
 
-    // STEP 1: Profile check — highest priority
+    // STEP 1: Profile — must have first + last name
     const hasProfile = !!(user?.first_name?.trim() && user?.last_name?.trim());
-    if (!hasProfile && !isOnOnboarding && path !== "/onboarding/profile") {
-      navigate("/onboarding/profile", { replace: true });
+    if (!hasProfile) {
+      if (path !== "/onboarding/profile") {
+        navigate("/onboarding/profile", { replace: true });
+      }
       return;
     }
 
@@ -52,8 +54,7 @@ export default function ProtectedLayout() {
       return;
     }
 
-    // STEP 3: Multiple workspaces, none selected yet → show picker first
-    // Must come before status checks so we don't evaluate status on the wrong workspace
+    // STEP 3: Multiple workspaces, none selected yet → picker
     if (
       workspaces.length > 1 &&
       !getStoredWorkspaceId() &&
@@ -63,30 +64,61 @@ export default function ProtectedLayout() {
       return;
     }
 
-    // STEP 4: Status checks — only run once a workspace is actually selected.
-    // If currentWorkspace is null (multi-workspace, none chosen yet) skip entirely;
-    // the workspace picker will handle routing after the user makes a selection.
+    // STEP 4: Workspace selected — sequential onboarding then status
     if (!currentWorkspace) return;
 
     const ws = currentWorkspace;
     const status = ws?.status ?? "active";
 
+    // Canceled → /closed
     if (status === "canceled" && !isOnClosed) {
       navigate(CLOSED_PATH, { replace: true });
       return;
     }
-
     if (status !== "canceled" && isOnClosed) {
       navigate("/", { replace: true });
       return;
     }
 
-    if (status === "pending" && !isOnPending) {
-      navigate(PENDING_PATH, { replace: true });
+    const hasBilling = !!(ws as { stripe_customer_id?: string | null }).stripe_customer_id;
+    const hasProducts = !!((ws as { products?: unknown[] }).products?.length);
+
+    // Billing not done → block products/pending, send to billing if outside onboarding
+    if (!hasBilling) {
+      if (path === "/onboarding/products" || isOnPending) {
+        navigate("/onboarding/billing", { replace: true });
+        return;
+      }
+      if (!isOnOnboarding) {
+        navigate("/onboarding/billing", { replace: true });
+        return;
+      }
       return;
     }
 
-    if (status === "active" && isOnPending) {
+    // Billing done, products not done → block pending, send to products if outside onboarding
+    if (!hasProducts) {
+      if (isOnPending) {
+        navigate("/onboarding/products", { replace: true });
+        return;
+      }
+      if (!isOnOnboarding) {
+        navigate("/onboarding/products", { replace: true });
+        return;
+      }
+      return;
+    }
+
+    // All onboarding complete — now status decides
+    if (status === "pending") {
+      if (!isOnPending) {
+        navigate(PENDING_PATH, { replace: true });
+      }
+      return;
+    }
+
+    // Active (or any other non-pending/canceled status)
+    if (isOnPending || isOnOnboarding) {
       navigate("/", { replace: true });
       return;
     }
@@ -138,17 +170,26 @@ export default function ProtectedLayout() {
     return null;
   }
 
-  // Only gate on workspace status once a workspace is actually selected.
-  // If currentWorkspace is null (picker hasn't been used yet), let the Outlet render
-  // so the workspace picker page itself is visible.
   if (currentWorkspace) {
     const ws = currentWorkspace;
     const status = ws?.status ?? "active";
-    if (status === "pending" && !isOnPending) {
-      return null;
-    }
-    if (status === "canceled" && !isOnClosed) {
-      return null;
+
+    if (status === "canceled" && !isOnClosed) return null;
+    if (status !== "canceled" && isOnClosed) return null;
+
+    const hasBilling = !!(ws as { stripe_customer_id?: string | null }).stripe_customer_id;
+    const hasProducts = !!((ws as { products?: unknown[] }).products?.length);
+
+    if (!hasBilling) {
+      if (path === "/onboarding/products" || isOnPending) return null;
+      if (!isOnOnboarding) return null;
+    } else if (!hasProducts) {
+      if (isOnPending) return null;
+      if (!isOnOnboarding) return null;
+    } else {
+      // All complete
+      if (status === "pending" && !isOnPending) return null;
+      if (status !== "pending" && status !== "canceled" && (isOnPending || isOnOnboarding)) return null;
     }
   }
 
