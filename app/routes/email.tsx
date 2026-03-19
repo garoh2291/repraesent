@@ -1,9 +1,22 @@
 import { useState } from "react";
 import { Navigate } from "react-router";
 import { useQuery } from "@tanstack/react-query";
-import { Mail, Copy, Check, Server, Shield, Smartphone, Eye, EyeOff, Loader2 } from "lucide-react";
+import {
+  Mail,
+  Copy,
+  Check,
+  Server,
+  Shield,
+  Smartphone,
+  Eye,
+  EyeOff,
+  Loader2,
+} from "lucide-react";
 import { useAuthContext } from "~/providers/auth-provider";
-import { getServiceConfig, decryptEmailConfigPassword } from "~/lib/api/workspaces";
+import {
+  getServiceConfig,
+  decryptEmailConfigPassword,
+} from "~/lib/api/workspaces";
 
 export function meta() {
   return [
@@ -19,15 +32,18 @@ const labels = {
     pageTitle: "Email Setup",
     pageSubtitle: "Step-by-step guide for configuring your email account",
     notConfigured: "Email not configured yet",
-    notConfiguredDesc: "Contact your administrator to set up the email configuration.",
+    notConfiguredDesc:
+      "Contact your administrator to set up the email configuration.",
     credentialsTitle: "Account Credentials",
-    credentialsDesc: "Use these credentials for all email services. The password is the same for all.",
+    credentialsDesc:
+      "Use these credentials for all email services. The password is the same for all.",
     credentialNote: "The username is always",
     credentialNoteSuffix: "— use it for both incoming and outgoing mail.",
     emailLabel: "Email",
     passwordLabel: "Password",
     serverTitle: "Server Settings",
-    serverDesc: "Use these settings in any email client — Thunderbird, Apple Mail, mobile apps, etc.",
+    serverDesc:
+      "Use these settings in any email client — Thunderbird, Apple Mail, mobile apps, etc.",
     incomingLabel: "Incoming Mail (IMAP)",
     outgoingLabel: "Outgoing Mail (SMTP)",
     serverLabel: "Server",
@@ -38,17 +54,81 @@ const labels = {
     authRequired: "Required",
     authNotRequired: "Not required",
     outlookTitle: "Microsoft Outlook",
-    outlookDesc: "Setup instructions for new and existing Outlook users — follow the screenshots below",
+    outlookDesc:
+      "Setup instructions for new and existing Outlook users — follow the screenshots below",
     otherTitle: "Other Email Clients",
-    otherDesc: "Thunderbird, Apple Mail, Android, iPhone — use the manual server settings above",
+    otherDesc:
+      "Thunderbird, Apple Mail, Android, iPhone — use the manual server settings above",
     steps: {
       outlook: [
-        { text: <>Open Microsoft Outlook. On the welcome screen, enter your email address and click <strong className="text-foreground font-medium">Continue</strong>.</>, alt: "Outlook welcome screen — enter email address" },
-        { text: <><strong className="text-foreground font-medium">Existing Outlook users:</strong> Go to <strong className="text-foreground font-medium">Settings → Account → Add Account</strong>.</>, alt: "Outlook Settings — Account — Add Account" },
-        { text: <>Confirm by clicking <strong className="text-foreground font-medium">Add Account</strong> to proceed.</>, alt: "Outlook — confirm Add Account" },
-        { text: <>When asked how to connect, select <strong className="text-foreground font-medium">"Synchronize directly with IMAP"</strong>.</>, alt: "Outlook account type selection — choose IMAP" },
-        { text: <>Enter your password. Outlook will automatically populate the IMAP and SMTP server settings.</>, alt: "Outlook IMAP settings auto-filled" },
-        { text: <>Click <strong className="text-foreground font-medium">Done</strong> to complete the setup.</>, alt: "Outlook setup complete — click Done" },
+        {
+          text: (
+            <>
+              Open Microsoft Outlook. On the welcome screen, enter your email
+              address and click{" "}
+              <strong className="text-foreground font-medium">Continue</strong>.
+            </>
+          ),
+          alt: "Outlook welcome screen — enter email address",
+        },
+        {
+          text: (
+            <>
+              <strong className="text-foreground font-medium">
+                Existing Outlook users:
+              </strong>{" "}
+              Go to{" "}
+              <strong className="text-foreground font-medium">
+                Settings → Account → Add Account
+              </strong>
+              .
+            </>
+          ),
+          alt: "Outlook Settings — Account — Add Account",
+        },
+        {
+          text: (
+            <>
+              Confirm by clicking{" "}
+              <strong className="text-foreground font-medium">
+                Add Account
+              </strong>{" "}
+              to proceed.
+            </>
+          ),
+          alt: "Outlook — confirm Add Account",
+        },
+        {
+          text: (
+            <>
+              When asked how to connect, select{" "}
+              <strong className="text-foreground font-medium">
+                "Synchronize directly with IMAP"
+              </strong>
+              .
+            </>
+          ),
+          alt: "Outlook account type selection — choose IMAP",
+        },
+        {
+          text: (
+            <>
+              Enter your password. Outlook will automatically populate the IMAP
+              and SMTP server settings.
+            </>
+          ),
+          alt: "Outlook IMAP settings auto-filled",
+        },
+        {
+          text: (
+            <>
+              Click{" "}
+              <strong className="text-foreground font-medium">Done</strong> to
+              complete the setup.
+            </>
+          ),
+          alt: "Outlook setup complete — click Done",
+        },
       ],
       other: [
         "Open your email client and go to account settings.",
@@ -62,17 +142,22 @@ const labels = {
   },
   de: {
     pageTitle: "E-Mail Einrichtung",
-    pageSubtitle: "Schritt-für-Schritt-Anleitung zur Konfiguration Ihres E-Mail-Kontos",
+    pageSubtitle:
+      "Schritt-für-Schritt-Anleitung zur Konfiguration Ihres E-Mail-Kontos",
     notConfigured: "E-Mail noch nicht konfiguriert",
-    notConfiguredDesc: "Bitte wenden Sie sich an Ihren Administrator, um die E-Mail-Konfiguration einzurichten.",
+    notConfiguredDesc:
+      "Bitte wenden Sie sich an Ihren Administrator, um die E-Mail-Konfiguration einzurichten.",
     credentialsTitle: "Ihre E-Mail-Zugangsdaten",
-    credentialsDesc: "Verwenden Sie diese Zugangsdaten für alle E-Mail-Dienste. Das Passwort ist für alle identisch.",
+    credentialsDesc:
+      "Verwenden Sie diese Zugangsdaten für alle E-Mail-Dienste. Das Passwort ist für alle identisch.",
     credentialNote: "Der Benutzername ist immer",
-    credentialNoteSuffix: "— verwenden Sie ihn für ein- und ausgehende E-Mails.",
+    credentialNoteSuffix:
+      "— verwenden Sie ihn für ein- und ausgehende E-Mails.",
     emailLabel: "E-Mail-Adresse",
     passwordLabel: "Passwort",
     serverTitle: "Servereinstellungen",
-    serverDesc: "Verwenden Sie diese Einstellungen in jedem E-Mail-Programm — Thunderbird, Apple Mail, mobile Apps usw.",
+    serverDesc:
+      "Verwenden Sie diese Einstellungen in jedem E-Mail-Programm — Thunderbird, Apple Mail, mobile Apps usw.",
     incomingLabel: "Eingangsserver (IMAP)",
     outgoingLabel: "Ausgangsserver (SMTP)",
     serverLabel: "Server",
@@ -83,17 +168,81 @@ const labels = {
     authRequired: "Erforderlich",
     authNotRequired: "Nicht erforderlich",
     outlookTitle: "Microsoft Outlook",
-    outlookDesc: "Einrichtungsanleitung für neue und bestehende Outlook-Nutzer — folgen Sie den Screenshots unten",
+    outlookDesc:
+      "Einrichtungsanleitung für neue und bestehende Outlook-Nutzer — folgen Sie den Screenshots unten",
     otherTitle: "Andere E-Mail-Clients",
-    otherDesc: "Thunderbird, Apple Mail, Android, iPhone — verwenden Sie die obigen Servereinstellungen",
+    otherDesc:
+      "Thunderbird, Apple Mail, Android, iPhone — verwenden Sie die obigen Servereinstellungen",
     steps: {
       outlook: [
-        { text: <>Öffnen Sie Microsoft Outlook. Geben Sie Ihre E-Mail-Adresse ein und klicken Sie auf <strong className="text-foreground font-medium">Weiter</strong>.</>, alt: "Outlook Willkommensbildschirm" },
-        { text: <><strong className="text-foreground font-medium">Bestehende Nutzer:</strong> Öffnen Sie <strong className="text-foreground font-medium">Einstellungen → Konto → Konto hinzufügen</strong>.</>, alt: "Outlook Einstellungen — Konto hinzufügen" },
-        { text: <>Bestätigen Sie durch Klicken auf <strong className="text-foreground font-medium">Konto hinzufügen</strong>.</>, alt: "Outlook — Konto hinzufügen bestätigen" },
-        { text: <>Wählen Sie <strong className="text-foreground font-medium">„Direkt mit IMAP synchronisieren"</strong>.</>, alt: "Outlook Kontotyp — IMAP wählen" },
-        { text: <>Geben Sie Ihr Passwort ein. Outlook füllt die Servereinstellungen automatisch aus.</>, alt: "Outlook IMAP-Einstellungen automatisch ausgefüllt" },
-        { text: <>Klicken Sie auf <strong className="text-foreground font-medium">Fertig</strong>. Ihr Konto ist jetzt aktiv.</>, alt: "Outlook-Einrichtung abgeschlossen" },
+        {
+          text: (
+            <>
+              Öffnen Sie Microsoft Outlook. Geben Sie Ihre E-Mail-Adresse ein
+              und klicken Sie auf{" "}
+              <strong className="text-foreground font-medium">Weiter</strong>.
+            </>
+          ),
+          alt: "Outlook Willkommensbildschirm",
+        },
+        {
+          text: (
+            <>
+              <strong className="text-foreground font-medium">
+                Bestehende Nutzer:
+              </strong>{" "}
+              Öffnen Sie{" "}
+              <strong className="text-foreground font-medium">
+                Einstellungen → Konto → Konto hinzufügen
+              </strong>
+              .
+            </>
+          ),
+          alt: "Outlook Einstellungen — Konto hinzufügen",
+        },
+        {
+          text: (
+            <>
+              Bestätigen Sie durch Klicken auf{" "}
+              <strong className="text-foreground font-medium">
+                Konto hinzufügen
+              </strong>
+              .
+            </>
+          ),
+          alt: "Outlook — Konto hinzufügen bestätigen",
+        },
+        {
+          text: (
+            <>
+              Wählen Sie{" "}
+              <strong className="text-foreground font-medium">
+                „Direkt mit IMAP synchronisieren"
+              </strong>
+              .
+            </>
+          ),
+          alt: "Outlook Kontotyp — IMAP wählen",
+        },
+        {
+          text: (
+            <>
+              Geben Sie Ihr Passwort ein. Outlook füllt die Servereinstellungen
+              automatisch aus.
+            </>
+          ),
+          alt: "Outlook IMAP-Einstellungen automatisch ausgefüllt",
+        },
+        {
+          text: (
+            <>
+              Klicken Sie auf{" "}
+              <strong className="text-foreground font-medium">Fertig</strong>.
+              Ihr Konto ist jetzt aktiv.
+            </>
+          ),
+          alt: "Outlook-Einrichtung abgeschlossen",
+        },
       ],
       other: [
         "Öffnen Sie Ihr E-Mail-Programm und gehen Sie zu den Kontoeinstellungen.",
@@ -119,7 +268,11 @@ function CopyButton({ value }: { value: string }) {
       onClick={handleCopy}
       className="flex items-center gap-1.5 rounded-md border border-border bg-muted/40 px-2.5 py-1 text-xs font-medium text-muted-foreground hover:bg-muted hover:text-foreground transition-colors shrink-0"
     >
-      {copied ? <Check className="h-3 w-3 text-emerald-500" /> : <Copy className="h-3 w-3" />}
+      {copied ? (
+        <Check className="h-3 w-3 text-emerald-500" />
+      ) : (
+        <Copy className="h-3 w-3" />
+      )}
       {copied ? "Copied" : "Copy"}
     </button>
   );
@@ -131,7 +284,9 @@ function CredentialRow({ label, value }: { label: string; value: string }) {
       <span className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground w-32 shrink-0">
         {label}
       </span>
-      <span className="flex-1 font-mono text-sm text-foreground break-all">{value}</span>
+      <span className="flex-1 font-mono text-sm text-foreground break-all">
+        {value}
+      </span>
       <CopyButton value={value} />
     </div>
   );
@@ -140,7 +295,9 @@ function CredentialRow({ label, value }: { label: string; value: string }) {
 function ServerRow({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex items-center justify-between gap-4 py-3 border-b border-border last:border-0">
-      <span className="text-sm text-muted-foreground w-40 shrink-0">{label}</span>
+      <span className="text-sm text-muted-foreground w-40 shrink-0">
+        {label}
+      </span>
       <span className="flex-1 font-mono text-sm text-foreground">{value}</span>
       <CopyButton value={value} />
     </div>
@@ -167,7 +324,9 @@ function SectionCard({
         <div>
           <h2 className="text-sm font-semibold text-foreground">{title}</h2>
           {description && (
-            <p className="text-xs text-muted-foreground mt-0.5">{description}</p>
+            <p className="text-xs text-muted-foreground mt-0.5">
+              {description}
+            </p>
           )}
         </div>
       </div>
@@ -235,7 +394,11 @@ function PasswordRow({
             onClick={handleCopy}
             className="flex items-center gap-1.5 rounded-md border border-border bg-muted/40 px-2.5 py-1 text-xs font-medium text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
           >
-            {copied ? <Check className="h-3 w-3 text-emerald-500" /> : <Copy className="h-3 w-3" />}
+            {copied ? (
+              <Check className="h-3 w-3 text-emerald-500" />
+            ) : (
+              <Copy className="h-3 w-3" />
+            )}
             {copied ? "Copied" : "Copy"}
           </button>
         )}
@@ -264,10 +427,10 @@ export default function Emails() {
   const tx = labels[lang];
 
   const emailService = currentWorkspace?.services?.find(
-    (s) => s.service_type === "email-config",
+    (s) => s.service_type === "email-config"
   );
 
-  const { data: cfg = {} } = useQuery({
+  const { data: cfg = {}, isPending } = useQuery({
     queryKey: ["service-config", emailService?.service_id],
     queryFn: () => getServiceConfig(emailService!.service_id),
     enabled: !!emailService?.service_id,
@@ -292,7 +455,9 @@ export default function Emails() {
               <h1 className="text-2xl font-semibold text-foreground tracking-tight">
                 {tx.pageTitle}
               </h1>
-              <p className="text-sm text-muted-foreground mt-0.5">{tx.pageSubtitle}</p>
+              <p className="text-sm text-muted-foreground mt-0.5">
+                {tx.pageSubtitle}
+              </p>
             </div>
           </div>
 
@@ -326,21 +491,35 @@ export default function Emails() {
         <div className="border-t border-border" />
 
         {/* Not configured */}
-        {!isConfigured ? (
+        {!isConfigured && !isPending ? (
           <div className="rounded-2xl border border-border bg-card px-6 py-10 text-center space-y-2">
             <div className="inline-flex h-12 w-12 items-center justify-center rounded-xl bg-muted mx-auto">
               <Mail className="h-5 w-5 text-muted-foreground" />
             </div>
-            <p className="text-sm font-medium text-foreground">{tx.notConfigured}</p>
-            <p className="text-sm text-muted-foreground">{tx.notConfiguredDesc}</p>
+            <p className="text-sm font-medium text-foreground">
+              {tx.notConfigured}
+            </p>
+            <p className="text-sm text-muted-foreground">
+              {tx.notConfiguredDesc}
+            </p>
           </div>
         ) : (
           <>
             {/* Account Credentials */}
             <div className="app-fade-up app-fade-up-d1">
-              <SectionCard icon={Shield} title={tx.credentialsTitle} description={tx.credentialsDesc}>
-                <CredentialRow label={tx.emailLabel} value={String(cfg.email ?? "")} />
-                <PasswordRow label={tx.passwordLabel} serviceId={emailService.service_id} />
+              <SectionCard
+                icon={Shield}
+                title={tx.credentialsTitle}
+                description={tx.credentialsDesc}
+              >
+                <CredentialRow
+                  label={tx.emailLabel}
+                  value={String(cfg.email ?? "")}
+                />
+                <PasswordRow
+                  label={tx.passwordLabel}
+                  serviceId={emailService.service_id}
+                />
                 <div className="py-3">
                   <p className="text-xs text-muted-foreground">
                     {tx.credentialNote}{" "}
@@ -355,29 +534,58 @@ export default function Emails() {
 
             {/* Server Settings */}
             <div className="app-fade-up app-fade-up-d2">
-              <SectionCard icon={Server} title={tx.serverTitle} description={tx.serverDesc}>
+              <SectionCard
+                icon={Server}
+                title={tx.serverTitle}
+                description={tx.serverDesc}
+              >
                 <div className="pt-4 pb-2">
                   <span className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
                     {tx.incomingLabel}
                   </span>
                 </div>
-                <ServerRow label={tx.serverLabel} value={String(cfg.imap_server ?? "")} />
-                <ServerRow label={tx.portSslLabel} value={String(cfg.imap_port_ssl ?? 993)} />
-                <ServerRow label={tx.portStartLabel} value={String(cfg.imap_port_starttls ?? 143)} />
-                <ServerRow label={tx.usernameLabel} value={String(cfg.imap_username ?? cfg.email ?? "")} />
+                <ServerRow
+                  label={tx.serverLabel}
+                  value={String(cfg.imap_server ?? "")}
+                />
+                <ServerRow
+                  label={tx.portSslLabel}
+                  value={String(cfg.imap_port_ssl ?? 993)}
+                />
+                <ServerRow
+                  label={tx.portStartLabel}
+                  value={String(cfg.imap_port_starttls ?? 143)}
+                />
+                <ServerRow
+                  label={tx.usernameLabel}
+                  value={String(cfg.imap_username ?? cfg.email ?? "")}
+                />
 
                 <div className="pt-5 pb-2">
                   <span className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
                     {tx.outgoingLabel}
                   </span>
                 </div>
-                <ServerRow label={tx.serverLabel} value={String(cfg.smtp_server ?? "")} />
-                <ServerRow label={tx.portStartLabel} value={String(cfg.smtp_port_starttls ?? 587)} />
-                <ServerRow label={tx.portSslLabel} value={String(cfg.smtp_port_ssl ?? 465)} />
+                <ServerRow
+                  label={tx.serverLabel}
+                  value={String(cfg.smtp_server ?? "")}
+                />
+                <ServerRow
+                  label={tx.portStartLabel}
+                  value={String(cfg.smtp_port_starttls ?? 587)}
+                />
+                <ServerRow
+                  label={tx.portSslLabel}
+                  value={String(cfg.smtp_port_ssl ?? 465)}
+                />
                 <div className="flex items-center justify-between gap-4 py-3">
-                  <span className="text-sm text-muted-foreground w-40 shrink-0">{tx.authLabel}</span>
+                  <span className="text-sm text-muted-foreground w-40 shrink-0">
+                    {tx.authLabel}
+                  </span>
                   <span className="flex-1 font-mono text-sm text-foreground">
-                    {cfg.smtp_auth_required !== false ? tx.authRequired : tx.authNotRequired}
+                    {cfg.smtp_auth_required !== false
+                      ? tx.authRequired
+                      : tx.authNotRequired}
                   </span>
                 </div>
               </SectionCard>
@@ -387,7 +595,11 @@ export default function Emails() {
 
         {/* Outlook Setup */}
         <div className="app-fade-up app-fade-up-d3">
-          <SectionCard icon={Mail} title={tx.outlookTitle} description={tx.outlookDesc}>
+          <SectionCard
+            icon={Mail}
+            title={tx.outlookTitle}
+            description={tx.outlookDesc}
+          >
             <div className="py-4 space-y-6">
               {tx.steps.outlook.map((step, i) => (
                 <div key={i}>
@@ -415,12 +627,18 @@ export default function Emails() {
 
         {/* Other Clients */}
         <div className="app-fade-up app-fade-up-d3">
-          <SectionCard icon={Smartphone} title={tx.otherTitle} description={tx.otherDesc}>
+          <SectionCard
+            icon={Smartphone}
+            title={tx.otherTitle}
+            description={tx.otherDesc}
+          >
             <div className="py-4 space-y-3">
               {tx.steps.other.map((step, i) => (
                 <div key={i} className="flex items-start gap-2.5">
                   <StepBadge number={i + 1} />
-                  <p className="text-sm text-muted-foreground leading-relaxed">{step}</p>
+                  <p className="text-sm text-muted-foreground leading-relaxed">
+                    {step}
+                  </p>
                 </div>
               ))}
             </div>
