@@ -1,13 +1,20 @@
-import { useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router";
 import { useAuthContext } from "~/providers/auth-provider";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "~/components/ui/tabs";
 import { type AppointmentConfig } from "~/lib/api/appointments";
-import { useAppointmentConfig } from "~/lib/hooks/useAppointmentConfig";
+import { useAppointmentConfigs } from "~/lib/hooks/useAppointmentConfigs";
 import { CalendarTab } from "~/components/appointments/CalendarTab";
 import { GeneralSettingsTab } from "~/components/appointments/GeneralSettingsTab";
 import { BookingSettingsTab } from "~/components/appointments/BookingSettingsTab";
 import { BusinessLogicTab } from "~/components/appointments/BusinessLogicTab";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "~/components/ui/select";
 
 export function meta() {
   return [
@@ -24,12 +31,20 @@ export default function Appointments() {
       (s) => s.service_type === "appointments"
     ) ?? false;
 
-  const { data: config, isLoading: configLoading } = useAppointmentConfig(
+  const { data: configs, isLoading: configsLoading } = useAppointmentConfigs(
     hasAccess && !!currentWorkspace?.id
   );
 
+  const [selectedConfigId, setSelectedConfigId] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (configs && configs.length > 0 && !selectedConfigId) {
+      setSelectedConfigId(configs[0].id);
+    }
+  }, [configs, selectedConfigId]);
+
   const shouldRedirect =
-    !hasAccess || (hasAccess && !configLoading && !config);
+    !hasAccess || (!configsLoading && (!configs || configs.length === 0));
 
   useEffect(() => {
     if (shouldRedirect) {
@@ -41,7 +56,7 @@ export default function Appointments() {
     return null;
   }
 
-  if (configLoading) {
+  if (configsLoading || !configs) {
     return (
       <div className="p-6 space-y-6">
         <div className="space-y-1.5">
@@ -54,24 +69,67 @@ export default function Appointments() {
     );
   }
 
-  if (!config) {
+  const selectedConfig =
+    configs.find((c) => c.id === selectedConfigId) ?? configs[0];
+
+  if (!selectedConfig) {
     return null;
   }
 
-  return <AppointmentsDashboard config={config} />;
+  return (
+    <AppointmentsDashboard
+      key={selectedConfig.id}
+      config={selectedConfig}
+      configs={configs}
+      selectedConfigId={selectedConfig.id}
+      onConfigChange={setSelectedConfigId}
+    />
+  );
 }
 
-function AppointmentsDashboard({ config }: { config: AppointmentConfig }) {
+function AppointmentsDashboard({
+  config,
+  configs,
+  selectedConfigId,
+  onConfigChange,
+}: {
+  config: AppointmentConfig;
+  configs: AppointmentConfig[];
+  selectedConfigId: string;
+  onConfigChange: (id: string) => void;
+}) {
   return (
     <div className="p-6 space-y-6 app-fade-in">
       {/* Header */}
-      <div className="app-fade-up">
-        <h1 className="text-2xl font-semibold text-foreground tracking-tight">
-          Appointments
-        </h1>
-        <p className="text-sm text-muted-foreground mt-0.5">
-          Manage your calendar, booking page, and scheduling rules
-        </p>
+      <div className="flex items-start justify-between gap-4 app-fade-up">
+        <div>
+          <h1 className="text-2xl font-semibold text-foreground tracking-tight">
+            Appointments
+          </h1>
+          <p className="text-sm text-muted-foreground mt-0.5">
+            Manage your calendar, booking page, and scheduling rules
+          </p>
+        </div>
+
+        {configs.length > 1 && (
+          <div className="flex items-center gap-2 shrink-0">
+            <span className="text-xs text-muted-foreground font-medium">
+              Config
+            </span>
+            <Select value={selectedConfigId} onValueChange={onConfigChange}>
+              <SelectTrigger className="h-9 text-sm w-52">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {configs.map((c) => (
+                  <SelectItem key={c.id} value={c.id}>
+                    {c.company_name || c.id.slice(0, 8)}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        )}
       </div>
 
       <div className="border-t border-border" />

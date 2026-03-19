@@ -37,7 +37,7 @@ const SOURCE_COLORS: Record<string, string> = {
 /** Fill in zero-count data points for the full range so the chart has no gaps. */
 function fillSeriesGaps(
   series: { date: string; count: number }[],
-  period: LeadAnalyticsPeriod
+  period: LeadAnalyticsPeriod,
 ): { date: string; count: number }[] {
   const now = new Date();
   const map = new Map(series.map((p) => [p.date, p.count]));
@@ -56,7 +56,7 @@ function fillSeriesGaps(
       const d = new Date(now);
       d.setDate(d.getDate() - i);
       slots.push(
-        `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`
+        `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`,
       );
     }
   } else if (period === "this_month") {
@@ -64,7 +64,7 @@ function fillSeriesGaps(
     for (let i = 1; i <= days; i++) {
       const d = new Date(now.getFullYear(), now.getMonth(), i);
       slots.push(
-        `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`
+        `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`,
       );
     }
   } else {
@@ -74,7 +74,7 @@ function fillSeriesGaps(
     const end = new Date(now.getFullYear(), now.getMonth(), now.getDate());
     for (const d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
       slots.push(
-        `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`
+        `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`,
       );
     }
   }
@@ -131,7 +131,7 @@ function LeadAnalyticsChart() {
 
   const chartData = useMemo(
     () => fillSeriesGaps(data?.series ?? [], period),
-    [data?.series, period]
+    [data?.series, period],
   );
 
   const maxY = Math.max(...chartData.map((p) => p.count), 1);
@@ -175,7 +175,7 @@ function LeadAnalyticsChart() {
                 "rounded-lg px-3 py-1.5 text-[12px] font-medium transition-all duration-150",
                 period === p.value
                   ? "bg-card text-foreground shadow-sm"
-                  : "text-muted-foreground hover:text-foreground"
+                  : "text-muted-foreground hover:text-foreground",
               )}
             >
               {p.label}
@@ -341,10 +341,10 @@ export default function Home() {
             <p className="text-sm text-muted-foreground">
               No services attached yet. Contact{" "}
               <a
-                href="mailto:support@dendritecorp.com"
+                href="mailto:support@repraesent.com"
                 className="text-primary hover:underline font-medium"
               >
-                support@dendritecorp.com
+                support@repraesent.com
               </a>{" "}
               to get started.
             </p>
@@ -359,7 +359,7 @@ export default function Home() {
                     "flex items-center gap-4 rounded-2xl border border-border bg-card overflow-hidden h-[76px] transition-all duration-200",
                     hasSlug
                       ? "hover:border-primary/30 hover:shadow-md hover:shadow-primary/5 cursor-pointer"
-                      : "opacity-55 cursor-not-allowed"
+                      : "opacity-55 cursor-not-allowed",
                   )}
                 >
                   {s.service_image ? (

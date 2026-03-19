@@ -125,7 +125,7 @@ function StatusPill({ label }: { label: string }) {
     <span
       className={cn(
         "inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-medium",
-        cls
+        cls,
       )}
     >
       {label}
@@ -180,7 +180,7 @@ function SettingsInvoicesTab() {
         {invoices.map((inv: WorkspaceInvoice) => {
           const statusLabel = getInvoiceStatusLabel(
             inv.status,
-            inv.due_date ?? null
+            inv.due_date ?? null,
           );
           const isPaid = inv.status === "paid";
           const displayStatus =
@@ -196,7 +196,7 @@ function SettingsInvoicesTab() {
               <span className="text-sm font-medium text-foreground">
                 {formatAmount(
                   (isPaid ? inv.amount_paid : inv.amount_due) ?? null,
-                  inv.currency ?? null
+                  inv.currency ?? null,
                 )}
               </span>
               <StatusPill label={displayStatus} />
@@ -262,7 +262,7 @@ export default function Settings() {
 
   const canChangeLeadNotification = (
     memberRole: string,
-    memberUserId: string
+    memberUserId: string,
   ): boolean => {
     if (currentUserRole === "admin") return true;
     if (currentUserRole === "editor")
@@ -302,7 +302,7 @@ export default function Settings() {
                     lead_notification: variables.data.lead_notification,
                   }),
                 }
-              : m
+              : m,
           ),
         };
       });
@@ -318,7 +318,7 @@ export default function Settings() {
       toast.success(
         variables.data.lead_notification !== undefined
           ? "Lead notifications updated"
-          : "Member role updated"
+          : "Member role updated",
       );
     },
     onSettled: (_, __, ___, context) => {
@@ -420,7 +420,7 @@ export default function Settings() {
                 <p className="text-sm text-muted-foreground">
                   No services active.{" "}
                   <a
-                    href="mailto:support@dendritecorp.com"
+                    href="mailto:support@repraesent.com"
                     className="text-primary hover:underline"
                   >
                     Contact support
@@ -452,10 +452,10 @@ export default function Settings() {
                   <TooltipContent side="right" className="max-w-xs text-xs">
                     To change the URL, contact{" "}
                     <a
-                      href="mailto:support@dendritecorp.com"
+                      href="mailto:support@repraesent.com"
                       className="underline"
                     >
-                      support@dendritecorp.com
+                      support@repraesent.com
                     </a>
                   </TooltipContent>
                 </Tooltip>
@@ -468,7 +468,7 @@ export default function Settings() {
           {/* Members */}
           <SettingsSection
             label="Team members"
-            description={`To add members, contact support@dendritecorp.com`}
+            description={`To add members, contact support@repraesent.com`}
           >
             {members.length > 0 ? (
               <div className="rounded-2xl border border-border bg-card overflow-hidden">

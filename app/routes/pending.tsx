@@ -1,6 +1,13 @@
 import { useAuthContext } from "~/providers/auth-provider";
 import { getStoredWorkspaceId } from "~/lib/api/axios-instance";
-import { FileText, Clock, Users, Building2, Sparkles, Mail } from "lucide-react";
+import {
+  FileText,
+  Clock,
+  Users,
+  Building2,
+  Sparkles,
+  Mail,
+} from "lucide-react";
 import { Button } from "~/components/ui/button";
 import { StatusPageHeader } from "~/components/status-page-header";
 
@@ -85,11 +92,18 @@ export default function Pending() {
   const workspaceId =
     getStoredWorkspaceId() ?? currentWorkspace?.id ?? workspaces[0]?.id;
   const ws = currentWorkspace ?? workspaces[0];
-  const products = (ws as { products?: Array<{ status?: string; hosted_invoice_url?: string | null }> })?.products ?? [];
+  const products =
+    (
+      ws as {
+        products?: Array<{
+          status?: string;
+          hosted_invoice_url?: string | null;
+        }>;
+      }
+    )?.products ?? [];
   const status = ws?.status ?? "pending";
   const hasPastDue =
-    status === "past_due" ||
-    products.some((p) => p.status === "past_due");
+    status === "past_due" || products.some((p) => p.status === "past_due");
   const hasInvoiceSent = products.some((p) => p.status === "invoice_sent");
   const invoiceUrl =
     products.find((p) => p.status === "invoice_sent")?.hosted_invoice_url ??
@@ -134,7 +148,11 @@ export default function Pending() {
                   asChild
                   className="h-11 px-8 font-medium text-sm transition-all duration-150 hover:opacity-90"
                 >
-                  <a href={invoiceUrl} target="_blank" rel="noopener noreferrer">
+                  <a
+                    href={invoiceUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
                     View invoice →
                   </a>
                 </Button>
@@ -144,11 +162,11 @@ export default function Pending() {
             <div className="sp-fade-up sp-fade-up-d3 pt-2 border-t border-stone-200 dark:border-zinc-800">
               <p className="text-xs text-muted-foreground">Need help?</p>
               <a
-                href="mailto:support@dendritecorp.com"
+                href="mailto:support@repraesent.com"
                 className="mt-1 inline-flex items-center gap-1.5 text-xs font-medium text-foreground hover:opacity-70 transition-opacity"
               >
                 <Mail className="h-3.5 w-3.5" />
-                support@dendritecorp.com
+                support@repraesent.com
               </a>
             </div>
           </div>
@@ -188,7 +206,11 @@ export default function Pending() {
                   asChild
                   className="h-11 px-8 font-medium text-sm transition-all duration-150 hover:opacity-90"
                 >
-                  <a href={invoiceUrl} target="_blank" rel="noopener noreferrer">
+                  <a
+                    href={invoiceUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
                     Pay invoice now →
                   </a>
                 </Button>
@@ -198,11 +220,11 @@ export default function Pending() {
             <div className="sp-fade-up sp-fade-up-d3 pt-2 border-t border-stone-200 dark:border-zinc-800">
               <p className="text-xs text-muted-foreground">Need help?</p>
               <a
-                href="mailto:support@dendritecorp.com"
+                href="mailto:support@repraesent.com"
                 className="mt-1 inline-flex items-center gap-1.5 text-xs font-medium text-foreground hover:opacity-70 transition-opacity"
               >
                 <Mail className="h-3.5 w-3.5" />
-                support@dendritecorp.com
+                support@repraesent.com
               </a>
             </div>
           </div>
@@ -217,7 +239,6 @@ export default function Pending() {
       <StatusPageHeader />
       <div className="flex flex-1 flex-col items-center justify-center p-8">
         <div className="mx-auto max-w-sm space-y-8 text-center">
-
           {/* ── Animated illustration ── */}
           <div className="sp-fade-up flex flex-col items-center gap-4">
             {/* Three floating icon chips */}
@@ -227,7 +248,9 @@ export default function Pending() {
                 <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white dark:bg-zinc-900 border border-stone-200 dark:border-zinc-700 shadow-sm">
                   <Users className="h-5 w-5 text-foreground/50" />
                 </div>
-                <span className="text-[9px] font-semibold uppercase tracking-widest text-muted-foreground/50">Team</span>
+                <span className="text-[9px] font-semibold uppercase tracking-widest text-muted-foreground/50">
+                  Team
+                </span>
               </div>
 
               {/* Connector dots */}
@@ -244,7 +267,9 @@ export default function Pending() {
                   {/* amber dot */}
                   <span className="absolute -top-1 -right-1 h-3 w-3 rounded-full bg-amber-400 border-2 border-stone-50 dark:border-zinc-950 sp-breathe" />
                 </div>
-                <span className="text-[9px] font-semibold uppercase tracking-widest text-muted-foreground/50">Workspace</span>
+                <span className="text-[9px] font-semibold uppercase tracking-widest text-muted-foreground/50">
+                  Workspace
+                </span>
               </div>
 
               {/* Connector dots */}
@@ -259,7 +284,9 @@ export default function Pending() {
                 <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white dark:bg-zinc-900 border border-stone-200 dark:border-zinc-700 shadow-sm">
                   <Sparkles className="h-5 w-5 text-amber-500" />
                 </div>
-                <span className="text-[9px] font-semibold uppercase tracking-widest text-muted-foreground/50">Features</span>
+                <span className="text-[9px] font-semibold uppercase tracking-widest text-muted-foreground/50">
+                  Features
+                </span>
               </div>
             </div>
           </div>
@@ -290,14 +317,13 @@ export default function Pending() {
               Questions? Reach out to our support team
             </p>
             <a
-              href="mailto:support@dendritecorp.com"
+              href="mailto:support@repraesent.com"
               className="mt-1.5 inline-flex items-center gap-1.5 text-xs font-medium text-foreground hover:opacity-70 transition-opacity"
             >
               <Mail className="h-3.5 w-3.5" />
-              support@dendritecorp.com
+              support@repraesent.com
             </a>
           </div>
-
         </div>
       </div>
     </div>

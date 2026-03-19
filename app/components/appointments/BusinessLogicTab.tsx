@@ -11,8 +11,8 @@ import {
   SelectValue,
 } from "~/components/ui/select";
 import {
-  getAppointmentProviderSettings,
-  updateAppointmentProviderSettings,
+  getProviderSettingsByConfigId,
+  updateProviderSettingsByConfigId,
   type AppointmentConfig,
   type WorkingHoursDay,
   type BreakConfig,
@@ -78,8 +78,8 @@ function SectionPanel({
 export function BusinessLogicTab({ config }: BusinessLogicTabProps) {
   const queryClient = useQueryClient();
   const { data: providerSettings } = useQuery({
-    queryKey: ["appointment-provider-settings"],
-    queryFn: getAppointmentProviderSettings,
+    queryKey: ["appointment-provider-settings", config.id],
+    queryFn: () => getProviderSettingsByConfigId(config.id),
   });
 
   const [workingHours, setWorkingHours] = useState<Record<string, WorkingHoursDay>>(
@@ -100,11 +100,12 @@ export function BusinessLogicTab({ config }: BusinessLogicTabProps) {
   }, [providerSettings, config]);
 
   const updateMutation = useMutation({
-    mutationFn: updateAppointmentProviderSettings,
+    mutationFn: (data: Parameters<typeof updateProviderSettingsByConfigId>[1]) =>
+      updateProviderSettingsByConfigId(config.id, data),
     onSuccess: () => {
       toast.success("Business logic saved");
-      queryClient.invalidateQueries({ queryKey: ["appointment-config"] });
-      queryClient.invalidateQueries({ queryKey: ["appointment-provider-settings"] });
+      queryClient.invalidateQueries({ queryKey: ["appointment-configs"] });
+      queryClient.invalidateQueries({ queryKey: ["appointment-provider-settings", config.id] });
     },
     onError: (error) => {
       toast.error("Failed to save", { description: extractErrorMessage(error) });

@@ -3,7 +3,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Switch } from "~/components/ui/switch";
 import {
-  updateAppointmentConfig,
+  updateAppointmentConfigById,
   type AppointmentConfig,
   type BookingFieldConfig,
 } from "~/lib/api/appointments";
@@ -47,10 +47,11 @@ export function BookingSettingsTab({ config }: BookingSettingsTabProps) {
   }, [config.booking_fields]);
 
   const updateMutation = useMutation({
-    mutationFn: updateAppointmentConfig,
+    mutationFn: (dto: Parameters<typeof updateAppointmentConfigById>[1]) =>
+      updateAppointmentConfigById(config.id, dto),
     onSuccess: () => {
       toast.success("Booking settings saved");
-      queryClient.invalidateQueries({ queryKey: ["appointment-config"] });
+      queryClient.invalidateQueries({ queryKey: ["appointment-configs"] });
     },
     onError: (error) => {
       toast.error("Failed to save", { description: extractErrorMessage(error) });

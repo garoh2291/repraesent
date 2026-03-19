@@ -181,6 +181,81 @@ export async function uploadAppointmentLogo(
   return response.data;
 }
 
+export async function getAppointmentConfigs(): Promise<AppointmentConfig[]> {
+  const response = await apiClient.get<AppointmentConfig[]>(
+    "/appointments/workspace-configs"
+  );
+  return response.data ?? [];
+}
+
+export async function updateAppointmentConfigById(
+  configId: string,
+  dto: UpdateAppointmentConfigDto
+): Promise<AppointmentConfig> {
+  const response = await apiClient.patch<AppointmentConfig>(
+    `/appointments/config/${configId}`,
+    dto
+  );
+  return response.data;
+}
+
+export async function getProviderSettingsByConfigId(
+  configId: string
+): Promise<{
+  slot_duration_minutes: number;
+  working_hours: Record<string, WorkingHoursDay>;
+  breaks: BreakConfig[];
+} | null> {
+  const response = await apiClient.get<{
+    slot_duration_minutes: number;
+    working_hours: Record<string, WorkingHoursDay>;
+    breaks: BreakConfig[];
+  } | null>(`/appointments/provider-settings/${configId}`);
+  return response.data ?? null;
+}
+
+export async function updateProviderSettingsByConfigId(
+  configId: string,
+  data: {
+    slot_duration_minutes?: number;
+    working_hours?: Record<string, WorkingHoursDay>;
+    breaks?: BreakConfig[];
+  }
+): Promise<unknown> {
+  const response = await apiClient.patch<unknown>(
+    `/appointments/provider-settings/${configId}`,
+    data
+  );
+  return response.data;
+}
+
+export async function getAppointmentsByConfigId(
+  configId: string
+): Promise<unknown[]> {
+  const response = await apiClient.get<unknown[]>(
+    `/appointments/list/${configId}`
+  );
+  return response.data ?? [];
+}
+
+export async function uploadAppointmentLogoByConfigId(
+  configId: string,
+  file: File
+): Promise<{ company_logo_url: string }> {
+  const formData = new FormData();
+  formData.append("file", file);
+  const response = await apiClient.post<{ company_logo_url: string }>(
+    `/appointments/config/${configId}/logo`,
+    formData,
+    {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    }
+  );
+  return response.data;
+}
+
 // Public API (no auth required)
 
 export async function getPublicConfig(

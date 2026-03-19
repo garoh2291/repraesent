@@ -13,8 +13,8 @@ import {
 } from "~/components/ui/select";
 import TimezoneSelect from "react-timezone-select";
 import {
-  updateAppointmentConfig,
-  uploadAppointmentLogo,
+  updateAppointmentConfigById,
+  uploadAppointmentLogoByConfigId,
   type AppointmentConfig,
 } from "~/lib/api/appointments";
 import { buildPublicBookingUrl, getLogoFullUrl } from "~/lib/config";
@@ -86,10 +86,11 @@ export function GeneralSettingsTab({ config }: GeneralSettingsTabProps) {
   const [firstWeekday, setFirstWeekday] = useState(config.first_weekday ?? "monday");
 
   const updateMutation = useMutation({
-    mutationFn: updateAppointmentConfig,
+    mutationFn: (dto: Parameters<typeof updateAppointmentConfigById>[1]) =>
+      updateAppointmentConfigById(config.id, dto),
     onSuccess: () => {
       toast.success("Settings saved");
-      queryClient.invalidateQueries({ queryKey: ["appointment-config"] });
+      queryClient.invalidateQueries({ queryKey: ["appointment-configs"] });
     },
     onError: (error) => {
       toast.error("Failed to save", { description: extractErrorMessage(error) });
@@ -97,10 +98,11 @@ export function GeneralSettingsTab({ config }: GeneralSettingsTabProps) {
   });
 
   const uploadMutation = useMutation({
-    mutationFn: uploadAppointmentLogo,
+    mutationFn: (file: File) =>
+      uploadAppointmentLogoByConfigId(config.id, file),
     onSuccess: (data) => {
       toast.success("Logo uploaded");
-      queryClient.invalidateQueries({ queryKey: ["appointment-config"] });
+      queryClient.invalidateQueries({ queryKey: ["appointment-configs"] });
       updateMutation.mutate({ company_logo_url: data.company_logo_url });
     },
     onError: (error) => {

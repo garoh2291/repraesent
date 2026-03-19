@@ -39,7 +39,8 @@ export default function NoWorkspace() {
             No workspace found
           </h1>
           <p className="text-sm text-white/40 leading-relaxed">
-            Your account isn't connected to any workspace yet. Reach out to your workspace owner or our support team for access.
+            Your account isn't connected to any workspace yet. Reach out to your
+            workspace owner or our support team for access.
           </p>
         </div>
 
@@ -49,10 +50,10 @@ export default function NoWorkspace() {
             Need help?
           </p>
           <a
-            href="mailto:support@dendritecorp.com"
+            href="mailto:support@repraesent.com"
             className="text-sm text-amber-400/80 hover:text-amber-400 transition-colors"
           >
-            support@dendritecorp.com
+            support@repraesent.com
           </a>
         </div>
 

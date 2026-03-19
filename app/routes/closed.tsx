@@ -91,13 +91,13 @@ export default function Closed() {
           {/* Support CTA */}
           <div className="cl-fade-up cl-fade-up-d2">
             <a
-              href="mailto:support@dendritecorp.com"
+              href="mailto:support@repraesent.com"
               className="inline-flex h-11 items-center justify-center rounded-lg border border-stone-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 px-8 text-sm font-medium text-foreground shadow-sm transition-all duration-150 hover:bg-stone-50 dark:hover:bg-zinc-800 hover:border-stone-300 dark:hover:border-zinc-600"
             >
               Contact support →
             </a>
             <p className="mt-3 text-xs text-muted-foreground/60">
-              support@dendritecorp.com
+              support@repraesent.com
             </p>
           </div>
         </div>
