@@ -30,10 +30,11 @@ export default function Closed() {
   const status = ws?.status;
 
   useEffect(() => {
+    console.log("Workspace status:", status);
     if (status && status !== "canceled") {
       navigate("/", { replace: true });
     }
-  }, [status, navigate]);
+  }, [status]);
 
   return (
     <div className="flex min-h-screen flex-col bg-stone-50 dark:bg-zinc-950">
@@ -67,7 +68,10 @@ export default function Closed() {
                   stroke="currentColor"
                   strokeWidth="1.5"
                   strokeLinecap="round"
-                  style={{ transform: "rotate(45deg)", transformOrigin: "12px 12px" }}
+                  style={{
+                    transform: "rotate(45deg)",
+                    transformOrigin: "12px 12px",
+                  }}
                 />
               </svg>
             </div>

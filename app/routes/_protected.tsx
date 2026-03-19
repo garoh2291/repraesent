@@ -70,12 +70,14 @@ export default function ProtectedLayout() {
     const ws = currentWorkspace;
     const status = ws?.status ?? "active";
 
-    // Canceled → /closed
-    if (status === "canceled" && !isOnClosed) {
-      navigate(CLOSED_PATH, { replace: true });
+    // Canceled → only /closed, nothing else
+    if (status === "canceled") {
+      if (!isOnClosed) {
+        navigate(CLOSED_PATH, { replace: true });
+      }
       return;
     }
-    if (status !== "canceled" && isOnClosed) {
+    if (isOnClosed) {
       navigate("/", { replace: true });
       return;
     }
@@ -89,8 +91,9 @@ export default function ProtectedLayout() {
     }
 
     // Pending workspace — sequential onboarding gates
-    const hasBilling = !!(ws as { stripe_customer_id?: string | null }).stripe_customer_id;
-    const hasProducts = !!((ws as { products?: unknown[] }).products?.length);
+    const hasBilling = !!(ws as { stripe_customer_id?: string | null })
+      .stripe_customer_id;
+    const hasProducts = !!(ws as { products?: unknown[] }).products?.length;
 
     // Billing not done → block products/pending, send to billing if outside onboarding
     if (!hasBilling) {
@@ -149,7 +152,10 @@ export default function ProtectedLayout() {
     );
   }
 
-  if (!isAuthenticated || (user && user.user_type && user.user_type !== "user")) {
+  if (
+    !isAuthenticated ||
+    (user && user.user_type && user.user_type !== "user")
+  ) {
     return null;
   }
 
@@ -174,15 +180,18 @@ export default function ProtectedLayout() {
     const ws = currentWorkspace;
     const status = ws?.status ?? "active";
 
-    if (status === "canceled" && !isOnClosed) return null;
-    if (status !== "canceled" && isOnClosed) return null;
-
-    if (status === "active") {
+    if (status === "canceled") {
+      if (!isOnClosed) return null;
+      // canceled + on /closed → render, skip all other guards
+    } else if (isOnClosed) {
+      return null;
+    } else if (status === "active") {
       if (isOnPending || isOnOnboarding) return null;
     } else {
       // Pending workspace — sequential onboarding gates
-      const hasBilling = !!(ws as { stripe_customer_id?: string | null }).stripe_customer_id;
-      const hasProducts = !!((ws as { products?: unknown[] }).products?.length);
+      const hasBilling = !!(ws as { stripe_customer_id?: string | null })
+        .stripe_customer_id;
+      const hasProducts = !!(ws as { products?: unknown[] }).products?.length;
 
       if (!hasBilling) {
         if (path === "/onboarding/products" || isOnPending) return null;
@@ -197,11 +206,14 @@ export default function ProtectedLayout() {
   }
 
   const wsStatus = currentWorkspace?.status ?? "active";
-  const hasPastDueProduct =
-    currentWorkspace?.products?.some((p: { status?: string }) => p.status === "past_due");
+  const hasPastDueProduct = currentWorkspace?.products?.some(
+    (p: { status?: string }) => p.status === "past_due",
+  );
   const showPastDueBanner =
     wsStatus === "past_due" || (wsStatus === "active" && hasPastDueProduct);
-  const invoiceUrl = (currentWorkspace as { unpaid_invoice_url?: string } | null)?.unpaid_invoice_url;
+  const invoiceUrl = (
+    currentWorkspace as { unpaid_invoice_url?: string } | null
+  )?.unpaid_invoice_url;
 
   return (
     <div className="flex flex-col min-h-screen">
