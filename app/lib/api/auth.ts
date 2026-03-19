@@ -43,19 +43,53 @@ export interface WorkspaceService {
   service_slug: string | null;
   service_type: string | null;
   service_icon: string | null;
+  service_config: Record<string, unknown> | null;
 }
 
 /**
  * Workspace with services and member role
  */
+export interface WorkspaceProduct {
+  id: string;
+  stripe_product_id: string;
+  stripe_product_name: string;
+  stripe_price_id: string;
+  status: string;
+  stripe_subscription_id?: string | null;
+  hosted_invoice_url?: string | null;
+}
+
 export interface WorkspaceContext {
   id: string;
   name: string;
   created_at: string;
   updated_at: string;
+  status?: "active" | "pending" | "past_due" | "canceled";
+  stripe_customer_id?: string | null;
+  unpaid_invoice_due_date?: string | null;
+  unpaid_invoice_url?: string | null;
+  products?: WorkspaceProduct[];
   services: WorkspaceService[];
   member_role: "admin" | "editor" | "viewer";
 }
+
+/**
+ * Register for self-service (sends magic link)
+ */
+export const register = async (email: string): Promise<{ status: string }> => {
+  try {
+    const response = await apiClient.post<{ status: string }>("/auth/register", {
+      email,
+    });
+    return response.data;
+  } catch (error) {
+    const apiError = createApiError(error);
+    if (apiError.status === 409) {
+      throw new Error("This email is managed by an admin account. Use the login page.");
+    }
+    throw new Error(apiError.message || "Failed to register");
+  }
+};
 
 /**
  * User context response (user + workspaces)

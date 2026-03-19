@@ -1,63 +1,95 @@
 import { apiClient } from "./axios-instance";
-import { createApiError } from "./axios-instance";
-
-export interface WorkspaceServiceItem {
-  service_id: string;
-  service_name: string;
-  service_image: string | null;
-  service_slug: string | null;
-  service_type?: string | null;
-}
-
-export interface WorkspaceMemberItem {
-  user_id: string;
-  user_email: string;
-  user_first_name: string;
-  user_last_name: string;
-  role: "admin" | "editor" | "viewer";
-  lead_notification: boolean;
-}
-
-export interface WorkspaceUrlItem {
-  id: string;
-  url: string;
-}
 
 export interface WorkspaceDetail {
   id: string;
   name: string;
-  created_at: string;
-  updated_at: string;
-  url?: WorkspaceUrlItem | null;
-  services?: WorkspaceServiceItem[];
-  members?: WorkspaceMemberItem[];
+  url?: { id: string; url: string; type?: string } | null;
+  urls?: Array<{ id: string; url: string; type?: string }>;
+  services: Array<{
+    service_id: string;
+    service_name: string;
+    service_image: string | null;
+    service_slug: string | null;
+    service_type: string | null;
+    service_icon: string | null;
+    service_config: Record<string, unknown> | null;
+  }>;
+  members: Array<{
+    user_id: string;
+    user_email: string;
+    user_first_name: string;
+    user_last_name: string;
+    role: string;
+    lead_notification: boolean;
+  }>;
 }
 
 export async function getWorkspaceDetail(): Promise<WorkspaceDetail> {
-  try {
-    const res = await apiClient.get<WorkspaceDetail>("/users/me/workspace");
-    return res.data;
-  } catch (error) {
-    const apiError = createApiError(error);
-    if (apiError.status === 401 || apiError.status === 403) {
-      throw error;
-    }
-    throw new Error(apiError.message || "Failed to fetch workspace details");
-  }
+  const response = await apiClient.get<WorkspaceDetail>("/users/me/workspace");
+  return response.data;
 }
 
-export interface UpdateWorkspaceMemberData {
-  role?: "admin" | "editor" | "viewer";
-  lead_notification?: boolean;
+export async function getServiceConfig(
+  serviceId: string,
+): Promise<Record<string, unknown>> {
+  const response = await apiClient.get<Record<string, unknown>>(
+    `/users/me/workspace/service-config/${serviceId}`,
+  );
+  return response.data;
+}
+
+export async function decryptEmailConfigPassword(
+  serviceId: string,
+): Promise<{ password: string }> {
+  const response = await apiClient.get<{ password: string }>(
+    "/users/me/workspace/email-config-password",
+    { params: { serviceId } },
+  );
+  return response.data;
 }
 
 export async function updateWorkspaceMember(
   userId: string,
-  data: UpdateWorkspaceMemberData
+  data: { role?: "admin" | "editor" | "viewer"; lead_notification?: boolean }
 ): Promise<void> {
   await apiClient.patch(`/users/me/workspace/members/${userId}`, data);
 }
 
 export async function removeWorkspaceMember(userId: string): Promise<void> {
   await apiClient.delete(`/users/me/workspace/members/${userId}`);
+}
+
+export interface WorkspaceInvoice {
+  id: string;
+  number?: string | null;
+  status: string;
+  hosted_invoice_url?: string | null;
+  invoice_pdf?: string | null;
+  amount_due?: string | null;
+  amount_paid?: string | null;
+  currency?: string | null;
+  due_date?: string | null;
+  paid_at?: number | null;
+}
+
+export async function getWorkspaceInvoices(
+  workspaceId: string
+): Promise<WorkspaceInvoice[]> {
+  const response = await apiClient.get<{ invoices: WorkspaceInvoice[] }>(
+    `/workspaces/${workspaceId}/invoices`
+  );
+  return response.data.invoices ?? [];
+}
+
+/**
+ * Get invoices for current workspace (uses X-Workspace-Id header)
+ * Used by settings page
+ */
+export async function getCurrentWorkspaceInvoices(): Promise<{
+  invoices: WorkspaceInvoice[];
+}> {
+  const response = await apiClient.get<{ invoices: WorkspaceInvoice[] }>(
+    "/users/me/workspace/invoices"
+  );
+  return { invoices: response.data.invoices ?? [] };
 }

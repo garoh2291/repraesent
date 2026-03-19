@@ -1,6 +1,4 @@
 import { useNavigate } from "react-router";
-import { Building } from "lucide-react";
-import { Button } from "~/components/ui/button";
 import { useAuthContext } from "~/providers/auth-provider";
 import { setStoredWorkspaceId } from "~/lib/api/axios-instance";
 
@@ -26,36 +24,72 @@ export default function WorkspacePicker() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background p-4">
-      <div className="w-full max-w-2xl space-y-8">
-        <div className="space-y-4 text-center">
+    <div className="flex min-h-screen items-center justify-center bg-stone-50 p-6">
+      <div className="w-full max-w-lg space-y-10 app-fade-up">
+        {/* Logo */}
+        <div className="flex justify-center">
           <img
             src={logoUrl}
             alt="Repraesent"
-            className="mx-auto h-10 w-auto"
+            className="h-8 w-auto max-w-[140px] app-fade-in"
           />
-          <div className="space-y-2">
-            <h1 className="text-2xl font-bold tracking-tight">
-              Choose workspace
-            </h1>
-            <p className="text-muted-foreground">
-              You have access to multiple workspaces. Select one to continue.
-            </p>
-          </div>
         </div>
 
-        <div className="grid gap-4 sm:grid-cols-2">
-          {workspaces.map((workspace) => (
-            <Button
+        {/* Heading */}
+        <div className="text-center space-y-2 app-fade-up app-fade-up-d1">
+          <h1
+            className="text-[28px] font-semibold tracking-tight text-foreground"
+            style={{ fontFamily: "'Lora', Georgia, serif" }}
+          >
+            Choose your workspace
+          </h1>
+          <p className="text-sm text-muted-foreground">
+            You have access to {workspaces.length} workspaces. Select one to continue.
+          </p>
+        </div>
+
+        {/* Workspace cards */}
+        <div className="grid gap-3 app-fade-up app-fade-up-d2">
+          {workspaces.map((workspace, i) => (
+            <button
               key={workspace.id}
               type="button"
-              variant="outline"
               onClick={() => handleSelect(workspace.id)}
-              className="h-auto flex flex-col items-center justify-center gap-3 rounded-lg border bg-card p-6 hover:bg-accent/50 transition-colors text-left w-full"
+              className="group flex items-center gap-4 w-full rounded-xl border border-stone-200 bg-white p-4 text-left shadow-sm transition-all duration-200 hover:border-stone-300 hover:shadow-md active:scale-[0.99]"
+              style={{ animationDelay: `${0.18 + i * 0.06}s` }}
             >
-              <Building className="h-12 w-12 text-muted-foreground" />
-              <span className="font-medium">{workspace.name}</span>
-            </Button>
+              {/* Workspace initial */}
+              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-[#111113] text-white text-lg font-bold">
+                {workspace.name.charAt(0).toUpperCase()}
+              </div>
+
+              {/* Name */}
+              <div className="flex-1 min-w-0">
+                <p className="font-semibold text-foreground truncate">
+                  {workspace.name}
+                </p>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  Click to enter workspace
+                </p>
+              </div>
+
+              {/* Arrow */}
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 16 16"
+                fill="none"
+                className="shrink-0 text-stone-400 transition-transform duration-150 group-hover:translate-x-0.5 group-hover:text-stone-600"
+              >
+                <path
+                  d="M3 8h10M9 4l4 4-4 4"
+                  stroke="currentColor"
+                  strokeWidth="1.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+            </button>
           ))}
         </div>
       </div>

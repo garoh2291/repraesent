@@ -353,7 +353,7 @@ export function FilterComponent({
           variant="outline"
           role="combobox"
           aria-expanded={open}
-          className="min-w-[150px] w-max h-8 py-0 justify-between text-muted-foreground capitalize"
+          className="min-w-[150px] w-max h-8 py-0 justify-between capitalize"
         >
           <Filter className="mr-2 h-4 w-4" />
           {getSelectedFilterDisplay()}

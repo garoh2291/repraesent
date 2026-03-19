@@ -12,7 +12,12 @@ export const LEAD_STATUSES = [
 export type LeadStatus = (typeof LEAD_STATUSES)[number];
 
 export const LEAD_SOURCES = {
-  website: { value: "website" as const, label: "Website", sourceTable: "urls" },
+  website: { value: "urls" as const, label: "Website", sourceTable: "urls" },
+  appointment: {
+    value: "appointment_booking" as const,
+    label: "Appointment",
+    sourceTable: "appointment_booking",
+  },
 } as const;
 
 export const LEAD_STATUS_COLORS: Record<LeadStatus, string> = {

@@ -3,7 +3,10 @@ import { useQuery } from "@tanstack/react-query";
 import { Calendar, momentLocalizer } from "react-big-calendar";
 import moment from "moment-timezone";
 import { formatInTimeZone } from "date-fns-tz";
-import { getAppointments } from "~/lib/api/appointments";
+import {
+  getAppointments,
+  getAppointmentsByConfigId,
+} from "~/lib/api/appointments";
 import type { AppointmentConfig } from "~/lib/api/appointments";
 import type { Event, View } from "react-big-calendar";
 import {
@@ -18,7 +21,7 @@ const localizer = momentLocalizer(moment);
 function formatInTimezone(
   date: Date,
   timezone: string,
-  timeFormat: string
+  timeFormat: string,
 ): string {
   return date.toLocaleString(undefined, {
     timeZone: timezone,
@@ -154,7 +157,7 @@ export function CalendarTab({ config }: CalendarTabProps) {
       agendaTimeRangeFormat: ({ start, end }: { start: Date; end: Date }) =>
         `${moment(start).format(timeFormat === "12h" ? "h:mm A" : "HH:mm")} – ${moment(end).format(timeFormat === "12h" ? "h:mm A" : "HH:mm")}`,
     }),
-    [timeFormat]
+    [timeFormat],
   );
 
   const { data: appointments = [], isLoading } = useQuery({
@@ -185,11 +188,11 @@ export function CalendarTab({ config }: CalendarTabProps) {
   }, []);
 
   if (isLoading) {
-    return <div className="h-[500px] animate-pulse rounded-md bg-muted" />;
+    return <div className="h-[520px] animate-pulse rounded-2xl bg-muted" />;
   }
 
   return (
-    <div className="appointments-calendar h-[520px] rounded-md border">
+    <div className="appointments-calendar h-[520px] rounded-2xl border border-border overflow-hidden">
       <Calendar
         localizer={localizer}
         formats={formats}

@@ -220,20 +220,9 @@ apiClient.interceptors.response.use(
       }
     }
 
-    // Handle 403 Forbidden - Access denied (clear tokens and redirect to login)
+    // 403 Forbidden - Access denied (insufficient permissions). Do NOT clear auth.
+    // Only 401 (invalid/expired token) should trigger logout.
     if (error.response?.status === 403) {
-      clearStoredToken();
-      clearStoredWorkspaceId();
-
-      // Redirect to login if not already on login page
-      if (
-        typeof window !== "undefined" &&
-        !window.location.pathname.includes("/login") &&
-        !window.location.pathname.includes("/auth/callback")
-      ) {
-        window.location.href = "/login";
-      }
-
       return Promise.reject(error);
     }
 

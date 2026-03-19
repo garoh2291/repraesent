@@ -21,24 +21,20 @@ import {
 } from "~/lib/leads/constants";
 import TooltipContainer from "~/components/tooltip-container";
 import { format, formatDistanceToNow } from "date-fns";
-import { ExternalLink, Loader2 } from "lucide-react";
+import { ExternalLink } from "lucide-react";
 import { cn } from "~/lib/utils";
 
 function getHistoryItemInitials(item: LeadHistoryItem): string {
   const first = item.user_first_name?.trim() ?? "";
   const last = item.user_last_name?.trim() ?? "";
-  if (first && last) {
-    return `${first[0]}${last[0]}`.toUpperCase();
-  }
+  if (first && last) return `${first[0]}${last[0]}`.toUpperCase();
   if (first) return first.slice(0, 2).toUpperCase();
   if (last) return last.slice(0, 2).toUpperCase();
   return "S";
 }
 
 function formatHistoryAction(item: LeadHistoryItem): string {
-  if (item.action === "lead_created") {
-    return "Lead created";
-  }
+  if (item.action === "lead_created") return "Lead created";
   if (item.action === "lead_status_updated") {
     const oldStatus = item.details?.old_status as string | undefined;
     const newStatus = item.details?.new_status as string | undefined;
@@ -50,23 +46,13 @@ function formatHistoryAction(item: LeadHistoryItem): string {
       ? (LEAD_STATUS_LABELS[newStatus as keyof typeof LEAD_STATUS_LABELS] ??
         newStatus)
       : "";
-    if (oldLabel && newLabel) {
-      return `Status changed from ${oldLabel} to ${newLabel}`;
-    }
-    if (newLabel) {
-      return `Status changed to ${newLabel}`;
-    }
+    if (oldLabel && newLabel) return `Status: ${oldLabel} → ${newLabel}`;
+    if (newLabel) return `Status changed to ${newLabel}`;
     return "Status updated";
   }
-  if (item.action === "note_created") {
-    return "Note added";
-  }
-  if (item.action === "note_updated") {
-    return "Note edited";
-  }
-  if (item.action === "note_deleted") {
-    return "Note deleted";
-  }
+  if (item.action === "note_created") return "Note added";
+  if (item.action === "note_updated") return "Note edited";
+  if (item.action === "note_deleted") return "Note deleted";
   return item.action.replace(/_/g, " ");
 }
 
@@ -99,33 +85,52 @@ export function LeadDetailSheet({
     enabled: !!leadId && open,
   });
 
+  const displayName = lead
+    ? lead.full_name ||
+      [lead.first_name, lead.last_name].filter(Boolean).join(" ").trim() ||
+      "Lead"
+    : "Lead Details";
+
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent
         side="right"
-        className="sm:max-w-md flex flex-col overflow-hidden"
+        className="sm:max-w-[480px] flex flex-col overflow-hidden p-0 gap-0"
       >
-        <SheetHeader>
-          <SheetTitle>Lead Details</SheetTitle>
+        <SheetHeader className="px-5 py-4 border-b border-border shrink-0">
+          <SheetTitle className="text-base font-semibold text-foreground">
+            {displayName}
+          </SheetTitle>
         </SheetHeader>
-        <div className="flex-1 overflow-y-auto space-y-6 p-4">
+
+        <div className="flex-1 overflow-y-auto">
           {leadLoading || !lead ? (
-            <div className="flex items-center justify-center py-12">
-              <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+            <div className="flex flex-col items-center justify-center py-16 gap-3">
+              <div className="h-5 w-5 app-spin rounded-full border-2 border-primary/20 border-t-primary" />
+              <p className="text-sm text-muted-foreground">Loading…</p>
             </div>
           ) : (
-            <>
-              <LeadInfoSection
-                lead={lead}
-                onStatusChange={onStatusChange}
-                isStatusUpdating={isStatusUpdating}
-              />
-              <LeadNotesSection leadId={lead.id} canEdit={canEdit} />
-              <LeadHistorySection
-                history={history}
-                isLoading={historyLoading}
-              />
-            </>
+            <div className="divide-y divide-border">
+              {/* Lead info */}
+              <div className="px-5 py-5">
+                <LeadInfoSection
+                  lead={lead}
+                  onStatusChange={onStatusChange}
+                  isStatusUpdating={isStatusUpdating}
+                />
+              </div>
+              {/* Notes */}
+              <div className="px-5 py-5">
+                <LeadNotesSection leadId={lead.id} canEdit={canEdit} />
+              </div>
+              {/* History */}
+              <div className="px-5 py-5">
+                <LeadHistorySection
+                  history={history}
+                  isLoading={historyLoading}
+                />
+              </div>
+            </div>
           )}
         </div>
       </SheetContent>
@@ -133,7 +138,45 @@ export function LeadDetailSheet({
   );
 }
 
-const fieldValueClass = "bg-muted/50 rounded-md px-2 py-1.5 text-sm";
+/* ── Field helpers ─────────────────────────────────────────── */
+
+function FieldRow({
+  label,
+  children,
+}: {
+  label: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="grid grid-cols-[100px_1fr] gap-2 items-start">
+      <span className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground pt-1.5">
+        {label}
+      </span>
+      <div className="min-w-0">{children}</div>
+    </div>
+  );
+}
+
+function FieldValue({
+  children,
+  className,
+}: {
+  children: React.ReactNode;
+  className?: string;
+}) {
+  return (
+    <div
+      className={cn(
+        "rounded-lg bg-muted/60 px-3 py-2 text-sm text-foreground min-h-[34px] flex items-center",
+        className
+      )}
+    >
+      {children}
+    </div>
+  );
+}
+
+/* ── Lead Info Section ─────────────────────────────────────── */
 
 export function LeadInfoSection({
   lead,
@@ -153,80 +196,77 @@ export function LeadInfoSection({
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between gap-2">
-        <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wide">
+      <div className="flex items-center justify-between gap-2 mb-4">
+        <h3 className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
           Lead Information
         </h3>
         {!withoutLink && (
           <Link
             to={`/lead-form/${lead.id}`}
-            className="text-xs text-primary hover:underline inline-flex items-center gap-1"
+            className="inline-flex items-center gap-1 text-xs font-medium text-foreground hover:underline"
           >
-            View full page <ExternalLink className="h-3 w-3" />
+            Full page <ExternalLink className="h-3 w-3" />
           </Link>
         )}
       </div>
-      <dl className="space-y-2 text-sm">
-        <div>
-          <dt className="text-muted-foreground mb-1">Status</dt>
-          <dd>
-            {onStatusChange ? (
-              <LeadStatusSelect
-                value={lead.status}
-                onValueChange={(status) => onStatusChange(lead.id, status)}
-                disabled={isStatusUpdating}
-                className="w-full"
-              />
-            ) : (
-              <p className={cn(fieldValueClass, "w-full")}>
-                {LEAD_STATUS_LABELS[currentStatus] ?? lead.status}
-              </p>
-            )}
-          </dd>
-        </div>
-        <div>
-          <dt className="text-muted-foreground mb-1">Full Name</dt>
-          <dd className={fieldValueClass}>{lead.full_name || "—"}</dd>
-        </div>
-        <div>
-          <dt className="text-muted-foreground mb-1">Email</dt>
-          <dd className={cn(fieldValueClass, "break-all whitespace-pre-wrap")}>
-            {lead.email || "—"}
-          </dd>
-        </div>
-        <div>
-          <dt className="text-muted-foreground mb-1">Phone</dt>
-          <dd className={fieldValueClass}>{lead.phone || "—"}</dd>
-        </div>
-        <div>
-          <dt className="text-muted-foreground mb-1">Source</dt>
-          <dd className={fieldValueClass}>
+
+      <div className="space-y-2.5">
+        <FieldRow label="Status">
+          {onStatusChange ? (
+            <LeadStatusSelect
+              value={lead.status}
+              onValueChange={(status) => onStatusChange(lead.id, status)}
+              disabled={isStatusUpdating}
+              className="w-full"
+            />
+          ) : (
+            <FieldValue>
+              {LEAD_STATUS_LABELS[currentStatus] ?? lead.status}
+            </FieldValue>
+          )}
+        </FieldRow>
+
+        <FieldRow label="Name">
+          <FieldValue>{lead.full_name || "—"}</FieldValue>
+        </FieldRow>
+
+        <FieldRow label="Email">
+          <FieldValue className="break-all">{lead.email || "—"}</FieldValue>
+        </FieldRow>
+
+        <FieldRow label="Phone">
+          <FieldValue>{lead.phone || "—"}</FieldValue>
+        </FieldRow>
+
+        <FieldRow label="Source">
+          <FieldValue>
             {lead.source_label || lead.source_table || "—"}
-          </dd>
-        </div>
-        <div>
-          <dt className="text-muted-foreground mb-1">Created</dt>
-          <dd className={fieldValueClass}>
+          </FieldValue>
+        </FieldRow>
+
+        <FieldRow label="Created">
+          <FieldValue>
             {lead.created_at ? format(new Date(lead.created_at), "PPp") : "—"}
-          </dd>
-        </div>
-        {metadataEntries.length > 0 &&
-          metadataEntries.map(([key, value]) => (
-            <div key={key}>
-              <dt className="text-muted-foreground mb-1 capitalize">{key}</dt>
-              <dd className={cn(fieldValueClass, "whitespace-pre-wrap")}>
-                {value == null
-                  ? "—"
-                  : typeof value === "object"
-                    ? JSON.stringify(value)
-                    : String(value)}
-              </dd>
-            </div>
-          ))}
-      </dl>
+          </FieldValue>
+        </FieldRow>
+
+        {metadataEntries.map(([key, value]) => (
+          <FieldRow key={key} label={key}>
+            <FieldValue className="whitespace-pre-wrap">
+              {value == null
+                ? "—"
+                : typeof value === "object"
+                  ? JSON.stringify(value)
+                  : String(value)}
+            </FieldValue>
+          </FieldRow>
+        ))}
+      </div>
     </div>
   );
 }
+
+/* ── History Section ───────────────────────────────────────── */
 
 export function LeadHistorySection({
   history,
@@ -239,26 +279,30 @@ export function LeadHistorySection({
 }) {
   return (
     <div className="space-y-4">
-      <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wide">
+      <h3 className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
         History
       </h3>
+
       {isLoading ? (
-        <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+        <div className="flex items-center gap-2">
+          <div className="h-4 w-4 app-spin rounded-full border-2 border-muted-foreground/20 border-t-muted-foreground/60" />
+          <span className="text-sm text-muted-foreground">Loading…</span>
+        </div>
       ) : history.length === 0 ? (
         <p className="text-sm text-muted-foreground">No history yet.</p>
       ) : (
         <div
           className={cn(
-            "pr-2",
+            "pr-1",
             !withoutLink
               ? "overflow-y-hidden"
               : "overflow-y-auto max-h-[calc(100vh-16rem)]"
           )}
         >
-          <div className="relative">
-            {/* Vertical line */}
+          <div className="relative pl-4">
+            {/* Vertical timeline line */}
             <div
-              className="absolute left-[4px] top-2 bottom-2 w-px bg-muted"
+              className="absolute left-[7px] top-2 bottom-2 w-px bg-border"
               aria-hidden
             />
             <div className="space-y-0">
@@ -272,32 +316,29 @@ export function LeadHistorySection({
                 return (
                   <div key={idx} className="relative flex gap-3 pb-4 last:pb-0">
                     {/* Dot */}
-                    <div className="relative z-10 mt-1.5 shrink-0">
-                      <span
-                        className="flex h-2 w-2 items-center justify-center rounded-full bg-muted-foreground/60 ring-2 ring-background"
-                        aria-hidden
-                      />
+                    <div className="absolute -left-[9px] top-1.5 z-10">
+                      <span className="flex h-2.5 w-2.5 items-center justify-center rounded-full bg-border ring-2 ring-background" />
                     </div>
                     {/* Content */}
-                    <div className="min-w-0 flex-1 py-0.5">
+                    <div className="min-w-0 flex-1 py-0.5 pl-2">
                       <TooltipContainer
                         tooltipContent={actionText}
                         showCopyButton={false}
                       >
-                        <p className="text-sm font-medium truncate">
+                        <p className="text-sm font-medium text-foreground truncate">
                           {actionText}
                         </p>
                       </TooltipContainer>
-                      <div className="flex items-center gap-2 text-xs text-muted-foreground mt-2 flex-wrap">
+                      <div className="flex items-center gap-2 text-xs text-muted-foreground mt-1">
                         <TooltipContainer
                           tooltipContent={
                             item.user_first_name && item.user_last_name
-                              ? item.user_first_name + " " + item.user_last_name
+                              ? `${item.user_first_name} ${item.user_last_name}`
                               : "System"
                           }
                           showCopyButton={false}
                         >
-                          <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-muted text-[10px] font-medium">
+                          <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-muted text-[9px] font-bold">
                             {getHistoryItemInitials(item)}
                           </span>
                         </TooltipContainer>

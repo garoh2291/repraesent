@@ -269,9 +269,7 @@ export function DataTable<TData, TValue>({
                   return (
                     <Button
                       key={pageNum}
-                      variant={
-                        currentPage === pageNum ? "secondary" : "outline"
-                      }
+                      variant={currentPage === pageNum ? "default" : "outline"}
                       size="sm"
                       onClick={() => handlePageChange(pageNum)}
                     >

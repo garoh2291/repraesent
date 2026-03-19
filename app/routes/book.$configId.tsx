@@ -12,14 +12,21 @@ import {
 } from "~/lib/api/appointments";
 import { extractErrorMessage } from "~/lib/api/axios-instance";
 import { getLogoFullUrl } from "~/lib/config";
-import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
 import { Label } from "~/components/ui/label";
 import { Textarea } from "~/components/ui/textarea";
 import { Calendar } from "~/components/ui/calendar";
 import { ScrollArea } from "~/components/ui/scroll-area";
 import TimezoneSelect from "react-timezone-select";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import {
+  ChevronLeft,
+  ChevronRight,
+  Check,
+  CalendarDays,
+  User,
+  ClipboardCheck,
+} from "lucide-react";
+import { cn } from "~/lib/utils";
 
 export function meta() {
   return [
@@ -87,6 +94,12 @@ function getNextWorkingDay(
   }
   return d;
 }
+
+const STEPS = [
+  { n: 1, label: "Date & Time", icon: CalendarDays },
+  { n: 2, label: "Your Info", icon: User },
+  { n: 3, label: "Confirm", icon: ClipboardCheck },
+];
 
 export default function BookAppointment() {
   const { configId } = useParams<{ configId: string }>();
@@ -242,9 +255,14 @@ export default function BookAppointment() {
 
   if (!configId) {
     return (
-      <div className="min-h-screen flex items-center justify-center p-6">
-        <div className="text-center text-muted-foreground">
-          Invalid booking link.
+      <div className="min-h-screen flex items-center justify-center p-6 bg-stone-50">
+        <div className="text-center space-y-2">
+          <p className="text-sm font-medium text-foreground">
+            Invalid booking link
+          </p>
+          <p className="text-sm text-muted-foreground">
+            Please check the URL and try again.
+          </p>
         </div>
       </div>
     );
@@ -252,10 +270,10 @@ export default function BookAppointment() {
 
   if (configLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center p-6">
-        <div className="animate-pulse space-y-4 w-full max-w-md">
-          <div className="h-8 w-48 bg-muted rounded mx-auto" />
-          <div className="h-64 bg-muted rounded" />
+      <div className="min-h-screen flex items-center justify-center p-6 bg-stone-50">
+        <div className="flex flex-col items-center gap-4">
+          <div className="h-8 w-8 rounded-full border-2 border-stone-200 border-t-stone-500 animate-spin" />
+          <p className="text-sm text-muted-foreground">Loading…</p>
         </div>
       </div>
     );
@@ -263,45 +281,53 @@ export default function BookAppointment() {
 
   if (!config) {
     return (
-      <div className="min-h-screen flex items-center justify-center p-6">
-        <div className="text-center text-muted-foreground">
-          Appointment config not found.
+      <div className="min-h-screen flex items-center justify-center p-6 bg-stone-50">
+        <div className="text-center space-y-2">
+          <p className="text-sm font-medium text-foreground">
+            Booking not found
+          </p>
+          <p className="text-sm text-muted-foreground">
+            This appointment page doesn't exist.
+          </p>
         </div>
       </div>
     );
   }
 
+  /* ── Confirmed state ─────────────────────────────────────── */
   if (booked) {
     return (
-      <div className="min-h-screen flex flex-col">
-        <header
-          className="px-6 py-4 flex items-center justify-between"
-          style={{ backgroundColor: bgColor, color: textColor }}
-        >
-          <div className="flex items-center gap-4">
-            <img
-              src={logoUrl || defaultLogoUrl}
-              alt="Logo"
-              className="h-10 object-contain"
-            />
-            <div>
-              <h1 className="font-semibold text-lg">
-                {config.company_name || "Booking"}
-              </h1>
-              {config.company_headline && (
-                <p className="text-sm opacity-90">{config.company_headline}</p>
-              )}
+      <div className="min-h-screen flex flex-col bg-stone-50">
+        <BookingHeader
+          config={config}
+          logoUrl={logoUrl}
+          defaultLogoUrl={defaultLogoUrl}
+          bgColor={bgColor}
+          textColor={textColor}
+          step={step}
+          booked
+        />
+        <main className="flex-1 flex items-center justify-center p-8">
+          <div className="text-center max-w-md space-y-6 app-fade-up">
+            <div
+              className="inline-flex h-16 w-16 items-center justify-center rounded-full mx-auto"
+              style={{
+                backgroundColor: `${bgColor}15`,
+                border: `1.5px solid ${bgColor}30`,
+              }}
+            >
+              <Check className="h-7 w-7" style={{ color: bgColor }} />
             </div>
-          </div>
-        </header>
-        <main className="flex-1 flex items-center justify-center p-8 bg-background">
-          <div className="text-center max-w-md space-y-6">
-            <h2 className="text-2xl font-bold">Appointment Confirmed</h2>
-            <p className="text-muted-foreground">
-              Your appointment has been successfully booked. You will receive a
-              confirmation email shortly.
-            </p>
-            <Button
+            <div className="space-y-2">
+              <h2 className="text-2xl font-semibold text-foreground tracking-tight">
+                Appointment confirmed
+              </h2>
+              <p className="text-sm text-muted-foreground leading-relaxed">
+                Your appointment has been booked. You'll receive a confirmation
+                email shortly.
+              </p>
+            </div>
+            <button
               onClick={() => {
                 setBooked(false);
                 setStep(1);
@@ -309,119 +335,101 @@ export default function BookAppointment() {
                 setSelectedSlot(null);
                 setFormFields({});
               }}
-              style={{ backgroundColor: bgColor, color: textColor }}
+              className="inline-flex h-10 items-center justify-center rounded-lg border border-border bg-white px-6 text-sm font-medium text-foreground hover:bg-stone-50 transition-colors shadow-sm"
             >
-              Make another Appointment
-            </Button>
+              Book another appointment
+            </button>
           </div>
         </main>
       </div>
     );
   }
 
+  /* ── Main booking flow ───────────────────────────────────── */
   return (
-    <div className="min-h-screen flex flex-col">
-      <header
-        className="px-6 py-4 flex items-center justify-between shrink-0"
-        style={{ backgroundColor: bgColor, color: textColor }}
-      >
-        <div className="flex items-center gap-4">
-          <img
-            src={logoUrl || defaultLogoUrl}
-            alt="Logo"
-            className="h-10 object-contain"
-          />
-          <div>
-            <h1 className="font-semibold text-lg">
-              {config.company_name || "Booking"}
-            </h1>
-            {config.company_headline && (
-              <p className="text-sm opacity-90">{config.company_headline}</p>
+    <div className="min-h-screen flex flex-col bg-stone-50">
+      <BookingHeader
+        config={config}
+        logoUrl={logoUrl}
+        defaultLogoUrl={defaultLogoUrl}
+        bgColor={bgColor}
+        textColor={textColor}
+        step={step}
+        booked={false}
+      />
+
+      <main className="flex-1 py-10 px-6">
+        <div className="max-w-4xl mx-auto space-y-8">
+          {/* Step content */}
+          <div className="app-fade-up">
+            {step === 1 && (
+              <Step1DateAndTime
+                selectedDate={selectedDate}
+                onDateSelect={handleDateSelect}
+                selectedSlot={selectedSlot}
+                onSlotSelect={setSelectedSlot}
+                slots={slots}
+                slotsLoading={slotsLoading}
+                userTimezone={userTimezone}
+                onTimezoneChange={setUserTimezone}
+                timeFormat={timeFormat}
+                disabledBefore={disabledBefore}
+                disabledDayOfWeek={disabledDayOfWeek}
+                firstWeekday={firstWeekday}
+                bgColor={bgColor}
+                textColor={textColor}
+              />
+            )}
+            {step === 2 && (
+              <Step2CustomerInfo
+                fields={displayedFields}
+                bookingFields={bookingFields}
+                formFields={formFields}
+                onFieldChange={setField}
+              />
+            )}
+            {step === 3 && selectedSlot && (
+              <Step3Confirmation
+                config={config}
+                selectedDate={selectedDate!}
+                selectedSlot={selectedSlot}
+                userTimezone={userTimezone}
+                timeFormat={timeFormat}
+                formFields={formFields}
+                displayedFields={displayedFields}
+                onConfirm={handleConfirm}
+                isPending={bookMutation.isPending}
+                bgColor={bgColor}
+                textColor={textColor}
+              />
             )}
           </div>
-        </div>
-        <div className="flex items-center gap-2">
-          {[1, 2, 3].map((s) => (
-            <div
-              key={s}
-              className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
-                step === s
-                  ? "bg-white/20"
-                  : "border border-white/40 text-white/80"
-              }`}
-            >
-              {s}
-            </div>
-          ))}
-        </div>
-      </header>
 
-      <main className="flex-1 p-8 bg-background">
-        <div className="max-w-4xl mx-auto">
-          {step === 1 && (
-            <Step1DateAndTime
-              config={config}
-              selectedDate={selectedDate}
-              onDateSelect={handleDateSelect}
-              selectedSlot={selectedSlot}
-              onSlotSelect={setSelectedSlot}
-              slots={slots}
-              slotsLoading={slotsLoading}
-              userTimezone={userTimezone}
-              onTimezoneChange={setUserTimezone}
-              timeFormat={timeFormat}
-              disabledBefore={disabledBefore}
-              disabledDayOfWeek={disabledDayOfWeek}
-              firstWeekday={firstWeekday}
-              bgColor={bgColor}
-              textColor={textColor}
-            />
-          )}
-          {step === 2 && (
-            <Step2CustomerInfo
-              fields={displayedFields}
-              bookingFields={bookingFields}
-              formFields={formFields}
-              onFieldChange={setField}
-            />
-          )}
-          {step === 3 && selectedSlot && (
-            <Step3Confirmation
-              config={config}
-              selectedDate={selectedDate!}
-              selectedSlot={selectedSlot}
-              userTimezone={userTimezone}
-              timeFormat={timeFormat}
-              formFields={formFields}
-              displayedFields={displayedFields}
-              onConfirm={handleConfirm}
-              isPending={bookMutation.isPending}
-            />
-          )}
-
-          <div className="flex justify-between mt-8">
-            <Button
+          {/* Navigation */}
+          <div className="flex justify-between items-center pt-2">
+            <button
               type="button"
-              variant="outline"
               onClick={() => setStep((s) => Math.max(1, s - 1))}
               disabled={step === 1}
+              className="inline-flex items-center gap-1.5 h-10 rounded-lg border border-border bg-white px-4 text-sm font-medium text-foreground hover:bg-stone-50 transition-colors shadow-sm disabled:opacity-40 disabled:pointer-events-none"
             >
-              <ChevronLeft className="h-4 w-4 mr-1" />
+              <ChevronLeft className="h-4 w-4" />
               Back
-            </Button>
+            </button>
             {step < 3 ? (
-              <Button
+              <button
                 type="button"
                 onClick={() => setStep((s) => s + 1)}
-                style={{ backgroundColor: bgColor, color: textColor }}
                 disabled={
                   (step === 1 && !canProceedStep1) ||
                   (step === 2 && !canProceedStep2)
                 }
+                className="inline-flex items-center gap-1.5 h-10 rounded-lg px-5 text-sm font-medium transition-all shadow-sm disabled:opacity-40 disabled:pointer-events-none hover:opacity-90"
+                style={{ backgroundColor: bgColor, color: textColor }}
               >
                 Next
-                <ChevronRight className="h-4 w-4 ml-1" />
-              </Button>
+                <ChevronRight className="h-4 w-4" />
+              </button>
             ) : null}
           </div>
         </div>
@@ -430,8 +438,94 @@ export default function BookAppointment() {
   );
 }
 
-function Step1DateAndTime({
+/* ── Booking Header ──────────────────────────────────────────── */
+
+function BookingHeader({
   config,
+  logoUrl,
+  defaultLogoUrl,
+  bgColor,
+  textColor,
+  step,
+  booked,
+}: {
+  config: PublicConfig;
+  logoUrl: string | null | undefined;
+  defaultLogoUrl: string;
+  bgColor: string;
+  textColor: string;
+  step: number;
+  booked: boolean;
+}) {
+  return (
+    <header
+      className="shrink-0 px-6 py-4 flex items-center justify-between"
+      style={{ backgroundColor: bgColor, color: textColor }}
+    >
+      {/* Brand */}
+      <div className="flex items-center gap-3">
+        <img
+          src={logoUrl || defaultLogoUrl}
+          alt="Logo"
+          className="h-9 object-contain"
+        />
+        <div>
+          <p
+            className="font-semibold text-base leading-tight"
+            style={{ color: textColor }}
+          >
+            {config.company_name || "Booking"}
+          </p>
+          {config.company_headline && (
+            <p
+              className="text-xs leading-tight"
+              style={{ color: `${textColor}99` }}
+            >
+              {config.company_headline}
+            </p>
+          )}
+        </div>
+      </div>
+
+      {/* Step indicators */}
+      {!booked && (
+        <div className="flex items-center gap-1">
+          {STEPS.map((s, idx) => {
+            const done = step > s.n;
+            const active = step === s.n;
+            return (
+              <div key={s.n} className="flex items-center gap-1">
+                <div
+                  className={cn(
+                    "flex items-center justify-center h-7 w-7 rounded-full text-xs font-semibold transition-all",
+                    done
+                      ? "bg-white/20"
+                      : active
+                        ? "bg-white/25 ring-2 ring-white/40"
+                        : "bg-white/8"
+                  )}
+                  style={{ color: textColor }}
+                >
+                  {done ? <Check className="h-3.5 w-3.5" /> : s.n}
+                </div>
+                {idx < STEPS.length - 1 && (
+                  <div
+                    className="w-6 h-px"
+                    style={{ backgroundColor: `${textColor}30` }}
+                  />
+                )}
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </header>
+  );
+}
+
+/* ── Step 1: Date & Time ─────────────────────────────────────── */
+
+function Step1DateAndTime({
   selectedDate,
   onDateSelect,
   selectedSlot,
@@ -447,7 +541,6 @@ function Step1DateAndTime({
   bgColor,
   textColor,
 }: {
-  config: PublicConfig;
   selectedDate: Date | undefined;
   onDateSelect: (d: Date | undefined) => void;
   selectedSlot: string | null;
@@ -465,12 +558,39 @@ function Step1DateAndTime({
 }) {
   return (
     <div className="space-y-6">
-      <h2 className="text-xl font-medium text-muted-foreground uppercase tracking-wide text-center">
-        Appointment Date & Time
-      </h2>
+      <div>
+        <h2 className="text-xl font-semibold text-foreground tracking-tight">
+          Choose a date & time
+        </h2>
+        <p className="text-sm text-muted-foreground mt-0.5">
+          Select a day and available slot that works for you
+        </p>
+      </div>
 
-      <div className="grid md:grid-cols-2 gap-8">
-        <div className="rounded-md border overflow-hidden w-full">
+      <div className="grid md:grid-cols-2 gap-6">
+        {/* Calendar */}
+        <div className="booking-cal rounded-2xl border border-border bg-white shadow-sm overflow-hidden">
+          <style>{`
+            .booking-cal [data-selected-single="true"] {
+              background-color: ${bgColor} !important;
+              color: ${textColor} !important;
+            }
+            .booking-cal td.rdp-day_today,
+            .booking-cal [data-today="true"] {
+              background-color: #f5f4f1 !important;
+            }
+            .booking-cal [data-today="true"] button:not([data-selected-single="true"]) {
+              font-weight: 700;
+              color: ${bgColor} !important;
+              background-color: #f5f4f1 !important;
+            }
+            .booking-cal [data-today="true"] button:not([data-selected-single="true"]):hover {
+              background-color: #ece9e5 !important;
+            }
+            .booking-cal button:not([data-selected-single="true"]):not([disabled]):hover {
+              background-color: rgba(0,0,0,0.06) !important;
+            }
+          `}</style>
           <Calendar
             mode="single"
             selected={selectedDate}
@@ -487,59 +607,76 @@ function Step1DateAndTime({
             startMonth={disabledBefore}
             defaultMonth={selectedDate ?? new Date()}
             weekStartsOn={firstWeekday as 0 | 1}
-            className="border-0 w-full "
+            className="border-0 w-full"
+            classNames={{
+              today:
+                "rounded-md bg-[#f5f4f1] text-foreground data-[selected=true]:rounded-none",
+            }}
           />
         </div>
 
-        <div className="space-y-4 w-full min-w-0">
-          <div className="space-y-2 w-full">
-            <Label>Timezone</Label>
-            <div className="w-full">
-              <TimezoneSelect
-                value={userTimezone}
-                onChange={(tz) =>
-                  onTimezoneChange(typeof tz === "string" ? tz : tz.value)
-                }
-                className="[&_.react-select__control]:min-h-10 [&_.react-select__control]:rounded-md [&_.react-select__control]:border-input"
-              />
-            </div>
+        {/* Time slots */}
+        <div className="space-y-4">
+          {/* Timezone */}
+          <div className="space-y-1.5">
+            <label className="block text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
+              Timezone
+            </label>
+            <TimezoneSelect
+              value={userTimezone}
+              onChange={(tz) =>
+                onTimezoneChange(typeof tz === "string" ? tz : tz.value)
+              }
+              className="[&_.react-select__control]:min-h-10 [&_.react-select__control]:rounded-lg [&_.react-select__control]:border-border [&_.react-select__control]:bg-white [&_.react-select__control]:text-sm"
+            />
           </div>
 
           {selectedDate && (
-            <div className="space-y-2 w-full">
-              <Label>Available times</Label>
+            <div className="space-y-1.5">
+              <label className="block text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
+                Available times
+              </label>
               {slotsLoading ? (
-                <div className="flex flex-col gap-2">
+                <div className="space-y-2">
                   {[1, 2, 3, 4, 5].map((i) => (
                     <div
                       key={i}
-                      className="h-10 bg-muted rounded animate-pulse"
+                      className="h-10 bg-muted rounded-lg animate-pulse"
                     />
                   ))}
                 </div>
               ) : slots.length === 0 ? (
-                <p className="text-sm text-muted-foreground">
-                  No slots available for this date.
-                </p>
+                <div className="rounded-xl border border-border bg-white px-4 py-6 text-center">
+                  <p className="text-sm text-muted-foreground">
+                    No slots available for this date.
+                  </p>
+                </div>
               ) : (
-                <ScrollArea className="h-100 rounded-md border">
-                  <div className="flex flex-col gap-2 p-2">
-                    {slots.map((slot) => (
-                      <Button
-                        key={slot}
-                        type="button"
-                        variant={selectedSlot === slot ? "default" : "outline"}
-                        className="justify-start"
-                        onClick={() => onSlotSelect(slot)}
-                        style={
-                          selectedSlot === slot
-                            ? { backgroundColor: bgColor, color: "#fff" }
-                            : undefined
-                        }
-                      >
-                        {formatSlotInTimezone(slot, userTimezone, timeFormat)}
-                      </Button>
-                    ))}
+                <ScrollArea className="h-[380px] rounded-xl border border-border bg-white">
+                  <div className="flex flex-col gap-1.5 p-2">
+                    {slots.map((slot) => {
+                      const isSelected = selectedSlot === slot;
+                      return (
+                        <button
+                          key={slot}
+                          type="button"
+                          onClick={() => onSlotSelect(slot)}
+                          className={cn(
+                            "w-full h-10 rounded-lg text-sm font-medium text-left px-4 transition-all duration-150",
+                            isSelected
+                              ? "shadow-sm"
+                              : "border border-border text-foreground hover:bg-stone-50"
+                          )}
+                          style={
+                            isSelected
+                              ? { backgroundColor: bgColor, color: textColor }
+                              : undefined
+                          }
+                        >
+                          {formatSlotInTimezone(slot, userTimezone, timeFormat)}
+                        </button>
+                      );
+                    })}
                   </div>
                 </ScrollArea>
               )}
@@ -550,6 +687,8 @@ function Step1DateAndTime({
     </div>
   );
 }
+
+/* ── Step 2: Customer Info ───────────────────────────────────── */
 
 function Step2CustomerInfo({
   fields,
@@ -567,21 +706,36 @@ function Step2CustomerInfo({
 
   return (
     <div className="space-y-6">
-      <h2 className="text-xl font-medium text-muted-foreground uppercase tracking-wide text-center">
-        Customer Information
-      </h2>
+      <div>
+        <h2 className="text-xl font-semibold text-foreground tracking-tight">
+          Your information
+        </h2>
+        <p className="text-sm text-muted-foreground mt-0.5">
+          We'll use these details to confirm your appointment
+        </p>
+      </div>
 
-      <div className="grid md:grid-cols-2 gap-8">
-        <div className="space-y-4">
+      <div className="grid md:grid-cols-2 gap-6">
+        {/* Required fields */}
+        <div className="rounded-2xl border border-border bg-white p-5 space-y-4 shadow-sm">
+          <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
+            Required
+          </p>
           {required.map(({ key, label }) => (
-            <div key={key} className="space-y-2">
-              <Label htmlFor={key}>{label} *</Label>
+            <div key={key} className="space-y-1.5">
+              <Label
+                htmlFor={key}
+                className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground"
+              >
+                {label}
+              </Label>
               {key === "notes" ? (
                 <Textarea
                   id={key}
                   value={formFields[key] ?? ""}
                   onChange={(e) => onFieldChange(key, e.target.value)}
                   rows={3}
+                  className="resize-none text-sm"
                 />
               ) : (
                 <Input
@@ -589,37 +743,57 @@ function Step2CustomerInfo({
                   type={key === "email" ? "email" : "text"}
                   value={formFields[key] ?? ""}
                   onChange={(e) => onFieldChange(key, e.target.value)}
+                  className="h-10 text-sm"
                 />
               )}
             </div>
           ))}
+          {required.length === 0 && (
+            <p className="text-sm text-muted-foreground">No required fields.</p>
+          )}
         </div>
-        <div className="space-y-4">
-          {optional.map(({ key, label }) => (
-            <div key={key} className="space-y-2">
-              <Label htmlFor={key}>{label}</Label>
-              {key === "notes" ? (
-                <Textarea
-                  id={key}
-                  value={formFields[key] ?? ""}
-                  onChange={(e) => onFieldChange(key, e.target.value)}
-                  rows={3}
-                />
-              ) : (
-                <Input
-                  id={key}
-                  type={key === "email" ? "email" : "text"}
-                  value={formFields[key] ?? ""}
-                  onChange={(e) => onFieldChange(key, e.target.value)}
-                />
-              )}
-            </div>
-          ))}
-        </div>
+
+        {/* Optional fields */}
+        {optional.length > 0 && (
+          <div className="rounded-2xl border border-border bg-white p-5 space-y-4 shadow-sm">
+            <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
+              Optional
+            </p>
+            {optional.map(({ key, label }) => (
+              <div key={key} className="space-y-1.5">
+                <Label
+                  htmlFor={key}
+                  className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground"
+                >
+                  {label}
+                </Label>
+                {key === "notes" ? (
+                  <Textarea
+                    id={key}
+                    value={formFields[key] ?? ""}
+                    onChange={(e) => onFieldChange(key, e.target.value)}
+                    rows={3}
+                    className="resize-none text-sm"
+                  />
+                ) : (
+                  <Input
+                    id={key}
+                    type={key === "email" ? "email" : "text"}
+                    value={formFields[key] ?? ""}
+                    onChange={(e) => onFieldChange(key, e.target.value)}
+                    className="h-10 text-sm"
+                  />
+                )}
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );
 }
+
+/* ── Step 3: Confirmation ────────────────────────────────────── */
 
 function Step3Confirmation({
   config,
@@ -631,6 +805,8 @@ function Step3Confirmation({
   displayedFields,
   onConfirm,
   isPending,
+  bgColor,
+  textColor,
 }: {
   config: PublicConfig;
   selectedDate: Date;
@@ -641,8 +817,9 @@ function Step3Confirmation({
   displayedFields: { key: string; label: string }[];
   onConfirm: () => void;
   isPending: boolean;
+  bgColor: string;
+  textColor: string;
 }) {
-  const [start] = selectedSlot.split("--");
   const timeStr = formatSlotInTimezone(selectedSlot, userTimezone, timeFormat);
   const dateStr = selectedDate.toLocaleDateString("en-US", {
     weekday: "long",
@@ -652,43 +829,96 @@ function Step3Confirmation({
   });
 
   return (
-    <div className="flex flex-col items-center text-center space-y-6">
-      <h2 className="text-xl font-medium text-muted-foreground uppercase tracking-wide">
-        Appointment Confirmation
-      </h2>
+    <div className="space-y-6">
+      <div>
+        <h2 className="text-xl font-semibold text-foreground tracking-tight">
+          Review & confirm
+        </h2>
+        <p className="text-sm text-muted-foreground mt-0.5">
+          Everything look good? Confirm to book your slot.
+        </p>
+      </div>
 
-      <div className="rounded-xl border bg-card p-6 w-full max-w-md space-y-6 shadow-sm">
-        <div className="space-y-1">
-          <p className="text-sm text-muted-foreground">Date & Time</p>
-          <p className="text-lg font-semibold">
-            {dateStr} at {timeStr}
+      <div className="grid md:grid-cols-2 gap-6">
+        {/* Appointment summary */}
+        <div className="rounded-2xl border border-border bg-white p-5 shadow-sm space-y-4">
+          <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
+            Appointment
           </p>
+          <div className="space-y-3">
+            <div className="flex items-start gap-3">
+              <div
+                className="mt-0.5 h-8 w-8 rounded-lg flex items-center justify-center shrink-0"
+                style={{ backgroundColor: `${bgColor}15` }}
+              >
+                <CalendarDays className="h-4 w-4" style={{ color: bgColor }} />
+              </div>
+              <div>
+                <p className="text-sm font-semibold text-foreground">
+                  {dateStr}
+                </p>
+                <p className="text-sm text-muted-foreground">
+                  {timeStr} · {userTimezone}
+                </p>
+              </div>
+            </div>
+            {config.company_name && (
+              <div className="flex items-center gap-3">
+                <div
+                  className="h-8 w-8 rounded-lg flex items-center justify-center shrink-0"
+                  style={{ backgroundColor: `${bgColor}15` }}
+                >
+                  <User className="h-4 w-4" style={{ color: bgColor }} />
+                </div>
+                <p className="text-sm text-foreground">{config.company_name}</p>
+              </div>
+            )}
+          </div>
         </div>
-        <div className="border-t pt-4 space-y-2">
-          <p className="text-sm text-muted-foreground">Customer Details</p>
-          <dl className="space-y-2 text-left">
+
+        {/* Customer details */}
+        <div className="rounded-2xl border border-border bg-white p-5 shadow-sm space-y-4">
+          <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
+            Your details
+          </p>
+          <dl className="space-y-2.5">
             {displayedFields
               .filter((f) => formFields[f.key])
               .map(({ key, label }) => (
-                <div key={key} className="flex justify-between gap-4">
-                  <dt className="text-muted-foreground">{label}</dt>
-                  <dd className="font-medium text-right">{formFields[key]}</dd>
+                <div key={key} className="grid grid-cols-[100px_1fr] gap-2">
+                  <dt className="text-xs text-muted-foreground pt-0.5">
+                    {label}
+                  </dt>
+                  <dd className="text-sm font-medium text-foreground">
+                    {formFields[key]}
+                  </dd>
                 </div>
               ))}
           </dl>
         </div>
       </div>
 
-      <Button
-        onClick={onConfirm}
-        disabled={isPending}
-        style={{
-          backgroundColor: config.company_color ?? "#1a1a1a",
-          color: config.company_text_color ?? "#ffffff",
-        }}
-      >
-        {isPending ? "Confirming..." : "Confirm"}
-      </Button>
+      {/* Confirm CTA */}
+      <div className="flex justify-center pt-2">
+        <button
+          onClick={onConfirm}
+          disabled={isPending}
+          className="inline-flex items-center gap-2 h-11 rounded-lg px-8 text-sm font-semibold transition-all shadow-md hover:opacity-90 disabled:opacity-50 disabled:pointer-events-none"
+          style={{ backgroundColor: bgColor, color: textColor }}
+        >
+          {isPending ? (
+            <>
+              <div className="h-4 w-4 rounded-full border-2 border-current/30 border-t-current animate-spin" />
+              Confirming…
+            </>
+          ) : (
+            <>
+              <Check className="h-4 w-4" />
+              Confirm appointment
+            </>
+          )}
+        </button>
+      </div>
     </div>
   );
 }

@@ -27,22 +27,14 @@ import {
   AlertDialogTitle,
 } from "~/components/ui/alert-dialog";
 import { formatDistanceToNow } from "date-fns";
-import {
-  Loader2,
-  MoreHorizontal,
-  Pencil,
-  FileText,
-  Trash2,
-} from "lucide-react";
+import { MoreHorizontal, Pencil, Trash2, Plus } from "lucide-react";
 import { cn } from "~/lib/utils";
 import TooltipContainer from "~/components/tooltip-container";
 
 function getInitials(note: Note): string {
   const first = note.user_first_name?.trim() ?? "";
   const last = note.user_last_name?.trim() ?? "";
-  if (first && last) {
-    return `${first[0]}${last[0]}`.toUpperCase();
-  }
+  if (first && last) return `${first[0]}${last[0]}`.toUpperCase();
   if (first) return first.slice(0, 2).toUpperCase();
   if (last) return last.slice(0, 2).toUpperCase();
   return "?";
@@ -236,182 +228,185 @@ export function LeadNotesSection({
 
   if (isLoading) {
     return (
-      <div className="space-y-4">
-        <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wide">
+      <div className="space-y-3">
+        <h3 className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
           Notes
         </h3>
-        <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+        <div className="flex items-center gap-2">
+          <div className="h-4 w-4 app-spin rounded-full border-2 border-muted-foreground/20 border-t-muted-foreground/60" />
+          <span className="text-sm text-muted-foreground">Loading…</span>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-3">
       <div className="flex items-center justify-between gap-2">
-        <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wide flex items-center gap-2">
-          <FileText className="h-4 w-4" />
-          Notes
+        <h3 className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
+          Notes {notes.length > 0 && <span className="ml-1 normal-case tracking-normal font-normal text-muted-foreground/60">({notes.length})</span>}
         </h3>
-        <Button
-          variant="secondary"
-          size="sm"
-          onClick={() => setIsAddingNew(true)}
-          disabled={!canEdit || isAddingNew}
-        >
-          + Add note
-        </Button>
+        {canEdit && (
+          <button
+            onClick={() => setIsAddingNew(true)}
+            disabled={isAddingNew}
+            className="inline-flex items-center gap-1 rounded-md border border-border bg-muted/60 px-2.5 py-1 text-xs font-medium text-foreground hover:bg-muted transition-colors disabled:opacity-50"
+          >
+            <Plus className="h-3 w-3" />
+            Add note
+          </button>
+        )}
       </div>
 
-      <div className="space-y-3">
+      <div className="space-y-2">
+        {/* New note input */}
         {isAddingNew && (
-          <div className="rounded-lg border border-border bg-card shadow-[var(--shadow)] p-3 space-y-2">
+          <div className="rounded-xl border border-primary/30 bg-primary/4 p-3 space-y-2.5 shadow-sm">
+            <div className="flex items-center gap-2 text-xs text-muted-foreground">
+              <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-primary/10 text-primary text-[9px] font-bold">
+                {getCurrentUserInitials(user?.first_name, user?.last_name)}
+              </span>
+              <span className="font-medium text-muted-foreground/70">New note</span>
+            </div>
             <Textarea
               autoFocus
-              placeholder="Write a note..."
+              placeholder="Write a note…"
               value={newNoteContent}
               onChange={(e) => setNewNoteContent(e.target.value)}
               onBlur={handleAddNoteBlur}
-              className="min-h-[80px] resize-none"
+              className="min-h-[72px] resize-none border-border/60 bg-white text-sm focus-visible:ring-1 focus-visible:ring-primary/30"
             />
-            <div className="flex items-center gap-2 text-xs text-muted-foreground">
-              <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-muted text-[10px] font-medium">
-                {getCurrentUserInitials(user?.first_name, user?.last_name)}
-              </span>
-              <span>just now</span>
-            </div>
           </div>
         )}
 
         {notes.length === 0 && !isAddingNew ? (
-          <p className="text-sm text-muted-foreground py-4">No notes yet.</p>
+          <p className="text-sm text-muted-foreground py-2">No notes yet.</p>
         ) : (
           notes.map((note) =>
             editingNoteId === note.id && canEdit ? (
+              /* Editing state */
               <div
                 key={note.id}
-                className="rounded-lg border border-border bg-card shadow-[var(--shadow)] p-3 space-y-2"
+                className="rounded-xl border border-primary/30 bg-primary/4 p-3 space-y-2.5 shadow-sm"
               >
+                <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                  <TooltipContainer
+                    tooltipContent={
+                      note.user_first_name && note.user_last_name
+                        ? `${note.user_first_name} ${note.user_last_name}`
+                        : "System"
+                    }
+                    showCopyButton={false}
+                  >
+                    <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-muted text-[9px] font-bold">
+                      {getInitials(note)}
+                    </span>
+                  </TooltipContainer>
+                  <span>Editing…</span>
+                </div>
                 <Textarea
                   autoFocus
                   value={editingContent}
                   onChange={(e) => setEditingContent(e.target.value)}
                   onBlur={() => handleEditBlur(note)}
-                  className="min-h-[80px] resize-none"
+                  className="min-h-[72px] resize-none border-border/60 bg-white text-sm focus-visible:ring-1 focus-visible:ring-primary/30"
                 />
-                <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                  <TooltipContainer
-                    tooltipContent={
-                      note.user_first_name && note.user_last_name
-                        ? note.user_first_name + " " + note.user_last_name
-                        : "System"
-                    }
-                    showCopyButton={false}
-                  >
-                    <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-muted text-[10px] font-medium">
-                      {getInitials(note)}
-                    </span>
-                  </TooltipContainer>
-                  <span>{getRelativeTime(note)}</span>
-                </div>
               </div>
             ) : (
+              /* Display state */
               <div
                 key={note.id}
-                className={cn(
-                  "group rounded-lg border border-border bg-card shadow-[var(--shadow)] p-3 transition-colors hover:shadow-md relative"
-                )}
+                className="group relative rounded-xl border border-border bg-card p-3.5 transition-all duration-150 hover:border-border/80 hover:shadow-sm"
               >
                 <p
                   className={cn(
-                    "text-sm whitespace-pre-wrap",
-                    canEdit && "pr-8"
+                    "text-sm whitespace-pre-wrap text-foreground leading-relaxed",
+                    canEdit && "pr-14"
                   )}
                 >
                   {note.content}
                 </p>
-                <div className="flex items-center justify-between gap-2 mt-2">
-                  <div className="flex items-center gap-2 text-xs text-muted-foreground flex-wrap">
+                <div className="flex items-center justify-between gap-2 mt-2.5">
+                  <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
                     <TooltipContainer
                       tooltipContent={
                         note.user_first_name && note.user_last_name
-                          ? note.user_first_name + " " + note.user_last_name
+                          ? `${note.user_first_name} ${note.user_last_name}`
                           : "System"
                       }
                       showCopyButton={false}
                     >
-                      <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-muted text-[10px] font-medium">
+                      <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-muted text-[9px] font-bold">
                         {getInitials(note)}
                       </span>
                     </TooltipContainer>
                     <span>{getRelativeTime(note)}</span>
                     {note.version > 1 && (
-                      <span className="text-muted-foreground/80 italic">
-                        edited
-                      </span>
+                      <span className="italic text-muted-foreground/60">edited</span>
                     )}
                   </div>
-                  {canEdit && (
-                    <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <Button
-                        variant="ghost"
-                        size="icon-xs"
-                        className="h-6 w-6"
-                        onClick={() => handleStartEdit(note)}
-                        aria-label="Edit note"
-                      >
-                        <Pencil className="h-3 w-3" />
-                      </Button>
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button
-                            variant="ghost"
-                            size="icon-xs"
-                            className="h-6 w-6"
-                            aria-label="More options"
-                          >
-                            <MoreHorizontal className="h-3 w-3" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem
-                            variant="destructive"
-                            onSelect={() => setNoteIdToDelete(note.id)}
-                          >
-                            <Trash2 className="h-4 w-4" />
-                            Delete
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                      <AlertDialog
-                        open={noteIdToDelete === note.id}
-                        onOpenChange={(open) =>
-                          !open && setNoteIdToDelete(null)
-                        }
-                      >
-                        <AlertDialogContent>
-                          <AlertDialogHeader>
-                            <AlertDialogTitle>Delete note?</AlertDialogTitle>
-                            <AlertDialogDescription>
-                              This action cannot be undone.
-                            </AlertDialogDescription>
-                          </AlertDialogHeader>
-                          <AlertDialogFooter>
-                            <AlertDialogCancel>Cancel</AlertDialogCancel>
-                            <AlertDialogAction
-                              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                              onClick={() => {
-                                deleteMutation.mutate(note.id);
-                                setNoteIdToDelete(null);
-                              }}
-                            >
-                              Delete
-                            </AlertDialogAction>
-                          </AlertDialogFooter>
-                        </AlertDialogContent>
-                      </AlertDialog>
-                    </div>
-                  )}
                 </div>
+
+                {/* Edit/delete controls */}
+                {canEdit && (
+                  <div className="absolute top-3 right-3 flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity duration-150">
+                    <Button
+                      variant="ghost"
+                      size="icon-xs"
+                      className="h-6 w-6 text-muted-foreground hover:text-foreground"
+                      onClick={() => handleStartEdit(note)}
+                      aria-label="Edit note"
+                    >
+                      <Pencil className="h-3 w-3" />
+                    </Button>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          size="icon-xs"
+                          className="h-6 w-6 text-muted-foreground hover:text-foreground"
+                          aria-label="More options"
+                        >
+                          <MoreHorizontal className="h-3 w-3" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem
+                          variant="destructive"
+                          onSelect={() => setNoteIdToDelete(note.id)}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                          Delete note
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                    <AlertDialog
+                      open={noteIdToDelete === note.id}
+                      onOpenChange={(open) => !open && setNoteIdToDelete(null)}
+                    >
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Delete note?</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            This action cannot be undone.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Cancel</AlertDialogCancel>
+                          <AlertDialogAction
+                            className="bg-foreground text-background hover:opacity-90 transition-opacity"
+                            onClick={() => {
+                              deleteMutation.mutate(note.id);
+                              setNoteIdToDelete(null);
+                            }}
+                          >
+                            Delete
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+                  </div>
+                )}
               </div>
             )
           )

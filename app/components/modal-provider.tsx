@@ -19,8 +19,13 @@ const ConfirmationModal = lazy(
   () => import("~/components/organism/modals/confirm-modal")
 );
 
+const SwitchWorkspaceModal = lazy(
+  () => import("~/components/organism/modals/switch-workspace-modal")
+);
+
 const Modals = {
   ConfirmationModal,
+  SwitchWorkspaceModal,
 } as const;
 
 type ModalComponents = {

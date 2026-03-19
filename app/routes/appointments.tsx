@@ -1,14 +1,20 @@
-import { useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router";
 import { useAuthContext } from "~/providers/auth-provider";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "~/components/ui/tabs";
-import { getAppointmentConfig, type AppointmentConfig } from "~/lib/api/appointments";
-import { useAppointmentConfig } from "~/lib/hooks/useAppointmentConfig";
+import { type AppointmentConfig } from "~/lib/api/appointments";
+import { useAppointmentConfigs } from "~/lib/hooks/useAppointmentConfigs";
 import { CalendarTab } from "~/components/appointments/CalendarTab";
 import { GeneralSettingsTab } from "~/components/appointments/GeneralSettingsTab";
 import { BookingSettingsTab } from "~/components/appointments/BookingSettingsTab";
 import { BusinessLogicTab } from "~/components/appointments/BusinessLogicTab";
-import { Calendar, Settings, BookOpen, Briefcase } from "lucide-react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "~/components/ui/select";
 
 export function meta() {
   return [
@@ -25,12 +31,20 @@ export default function Appointments() {
       (s) => s.service_type === "appointments"
     ) ?? false;
 
-  const { data: config, isLoading: configLoading } = useAppointmentConfig(
+  const { data: configs, isLoading: configsLoading } = useAppointmentConfigs(
     hasAccess && !!currentWorkspace?.id
   );
 
+  const [selectedConfigId, setSelectedConfigId] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (configs && configs.length > 0 && !selectedConfigId) {
+      setSelectedConfigId(configs[0].id);
+    }
+  }, [configs, selectedConfigId]);
+
   const shouldRedirect =
-    !hasAccess || (hasAccess && !configLoading && !config);
+    !hasAccess || (!configsLoading && (!configs || configs.length === 0));
 
   useEffect(() => {
     if (shouldRedirect) {
@@ -42,70 +56,105 @@ export default function Appointments() {
     return null;
   }
 
-  if (configLoading) {
+  if (configsLoading || !configs) {
     return (
-      <div className="p-6">
-        <div className="animate-pulse space-y-4">
-          <div className="h-8 w-48 bg-muted rounded" />
-          <div className="h-64 bg-muted rounded" />
+      <div className="p-6 space-y-6">
+        <div className="space-y-1.5">
+          <div className="h-7 w-44 bg-muted rounded-lg animate-pulse" />
+          <div className="h-4 w-64 bg-muted/60 rounded animate-pulse" />
         </div>
+        <div className="h-px bg-border" />
+        <div className="h-[520px] bg-muted rounded-2xl animate-pulse" />
       </div>
     );
   }
 
-  if (!config) {
+  const selectedConfig =
+    configs.find((c) => c.id === selectedConfigId) ?? configs[0];
+
+  if (!selectedConfig) {
     return null;
   }
 
-  return <AppointmentsDashboard config={config} />;
+  return (
+    <AppointmentsDashboard
+      key={selectedConfig.id}
+      config={selectedConfig}
+      configs={configs}
+      selectedConfigId={selectedConfig.id}
+      onConfigChange={setSelectedConfigId}
+    />
+  );
 }
 
-function AppointmentsDashboard({ config }: { config: AppointmentConfig }) {
+function AppointmentsDashboard({
+  config,
+  configs,
+  selectedConfigId,
+  onConfigChange,
+}: {
+  config: AppointmentConfig;
+  configs: AppointmentConfig[];
+  selectedConfigId: string;
+  onConfigChange: (id: string) => void;
+}) {
   return (
-    <div className="p-6">
-      <h1 className="text-2xl font-bold mb-6 flex items-center gap-2">
-        <Calendar className="h-6 w-6" />
-        Appointments
-      </h1>
+    <div className="p-6 space-y-6 app-fade-in">
+      {/* Header */}
+      <div className="flex items-start justify-between gap-4 app-fade-up">
+        <div>
+          <h1 className="text-2xl font-semibold text-foreground tracking-tight">
+            Appointments
+          </h1>
+          <p className="text-sm text-muted-foreground mt-0.5">
+            Manage your calendar, booking page, and scheduling rules
+          </p>
+        </div>
 
-      <Tabs defaultValue="calendar" className="space-y-4">
-        <TabsList className="flex flex-wrap gap-1">
-          <TabsTrigger value="calendar" className="gap-2">
-            <Calendar className="h-4 w-4" />
-            Calendar
-          </TabsTrigger>
-          <TabsTrigger value="general" className="gap-2">
-            <Settings className="h-4 w-4" />
-            General Settings
-          </TabsTrigger>
-          <TabsTrigger value="booking" className="gap-2">
-            <BookOpen className="h-4 w-4" />
-            Booking Settings
-          </TabsTrigger>
-          <TabsTrigger value="business" className="gap-2">
-            <Briefcase className="h-4 w-4" />
-            Business Logic
-          </TabsTrigger>
+        {configs.length > 1 && (
+          <div className="flex items-center gap-2 shrink-0">
+            <span className="text-xs text-muted-foreground font-medium">
+              Config
+            </span>
+            <Select value={selectedConfigId} onValueChange={onConfigChange}>
+              <SelectTrigger className="h-9 text-sm w-52">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {configs.map((c) => (
+                  <SelectItem key={c.id} value={c.id}>
+                    {c.company_name || c.id.slice(0, 8)}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        )}
+      </div>
+
+      <div className="border-t border-border" />
+
+      <Tabs defaultValue="calendar" className="w-full app-fade-up app-fade-up-d1">
+        <TabsList variant="line" className="w-full mb-6">
+          <TabsTrigger value="calendar">Calendar</TabsTrigger>
+          <TabsTrigger value="general">General</TabsTrigger>
+          <TabsTrigger value="booking">Booking form</TabsTrigger>
+          <TabsTrigger value="business">Working hours</TabsTrigger>
         </TabsList>
 
         <TabsContent value="calendar" className="space-y-4">
-          <p className="text-muted-foreground">
-            Your appointments from Baikal CalDAV. Switch between day, week, and
-            month views. Times shown in your configured timezone (
-            {config.timezone ?? "UTC"}).
-          </p>
           <CalendarTab config={config} />
         </TabsContent>
 
-        <TabsContent value="general" className="space-y-4">
+        <TabsContent value="general">
           <GeneralSettingsTab config={config} />
         </TabsContent>
 
-        <TabsContent value="booking" className="space-y-4">
+        <TabsContent value="booking">
           <BookingSettingsTab config={config} />
         </TabsContent>
 
-        <TabsContent value="business" className="space-y-4">
+        <TabsContent value="business">
           <BusinessLogicTab config={config} />
         </TabsContent>
       </Tabs>
