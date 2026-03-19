@@ -80,6 +80,15 @@ export default function ProtectedLayout() {
       return;
     }
 
+    // Active workspace → onboarding is irrelevant, go straight to dashboard
+    if (status === "active") {
+      if (isOnPending || isOnOnboarding) {
+        navigate("/", { replace: true });
+      }
+      return;
+    }
+
+    // Pending workspace — sequential onboarding gates
     const hasBilling = !!(ws as { stripe_customer_id?: string | null }).stripe_customer_id;
     const hasProducts = !!((ws as { products?: unknown[] }).products?.length);
 
@@ -109,18 +118,9 @@ export default function ProtectedLayout() {
       return;
     }
 
-    // All onboarding complete — now status decides
-    if (status === "pending") {
-      if (!isOnPending) {
-        navigate(PENDING_PATH, { replace: true });
-      }
-      return;
-    }
-
-    // Active (or any other non-pending/canceled status)
-    if (isOnPending || isOnOnboarding) {
-      navigate("/", { replace: true });
-      return;
+    // All onboarding complete → hold on /pending
+    if (!isOnPending) {
+      navigate(PENDING_PATH, { replace: true });
     }
   }, [
     isAuthenticated,
@@ -177,19 +177,22 @@ export default function ProtectedLayout() {
     if (status === "canceled" && !isOnClosed) return null;
     if (status !== "canceled" && isOnClosed) return null;
 
-    const hasBilling = !!(ws as { stripe_customer_id?: string | null }).stripe_customer_id;
-    const hasProducts = !!((ws as { products?: unknown[] }).products?.length);
-
-    if (!hasBilling) {
-      if (path === "/onboarding/products" || isOnPending) return null;
-      if (!isOnOnboarding) return null;
-    } else if (!hasProducts) {
-      if (isOnPending) return null;
-      if (!isOnOnboarding) return null;
+    if (status === "active") {
+      if (isOnPending || isOnOnboarding) return null;
     } else {
-      // All complete
-      if (status === "pending" && !isOnPending) return null;
-      if (status !== "pending" && status !== "canceled" && (isOnPending || isOnOnboarding)) return null;
+      // Pending workspace — sequential onboarding gates
+      const hasBilling = !!(ws as { stripe_customer_id?: string | null }).stripe_customer_id;
+      const hasProducts = !!((ws as { products?: unknown[] }).products?.length);
+
+      if (!hasBilling) {
+        if (path === "/onboarding/products" || isOnPending) return null;
+        if (!isOnOnboarding) return null;
+      } else if (!hasProducts) {
+        if (isOnPending) return null;
+        if (!isOnOnboarding) return null;
+      } else {
+        if (!isOnPending) return null;
+      }
     }
   }
 

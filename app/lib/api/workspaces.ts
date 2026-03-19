@@ -29,6 +29,25 @@ export async function getWorkspaceDetail(): Promise<WorkspaceDetail> {
   return response.data;
 }
 
+export async function getServiceConfig(
+  serviceId: string,
+): Promise<Record<string, unknown>> {
+  const response = await apiClient.get<Record<string, unknown>>(
+    `/users/me/workspace/service-config/${serviceId}`,
+  );
+  return response.data;
+}
+
+export async function decryptEmailConfigPassword(
+  serviceId: string,
+): Promise<{ password: string }> {
+  const response = await apiClient.get<{ password: string }>(
+    "/users/me/workspace/email-config-password",
+    { params: { serviceId } },
+  );
+  return response.data;
+}
+
 export async function updateWorkspaceMember(
   userId: string,
   data: { role?: "admin" | "editor" | "viewer"; lead_notification?: boolean }

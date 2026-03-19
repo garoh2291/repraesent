@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { useAuthContext } from "~/providers/auth-provider";
+import { getServiceConfig } from "~/lib/api/workspaces";
 
 export function meta() {
   return [
@@ -16,12 +18,16 @@ export default function Analytics() {
   const [isLoading, setIsLoading] = useState(true);
 
   const analyticsService = currentWorkspace?.services?.find(
-    (s) => s.service_type === "analytics"
+    (s) => s.service_type === "analytics",
   );
 
-  const sharedLink = analyticsService?.service_config?.shared_link as
-    | string
-    | undefined;
+  const { data: serviceConfig, isPending } = useQuery({
+    queryKey: ["service-config", analyticsService?.service_id],
+    queryFn: () => getServiceConfig(analyticsService!.service_id),
+    enabled: !!analyticsService?.service_id,
+  });
+
+  const sharedLink = serviceConfig?.shared_link as string | undefined;
 
   useEffect(() => {
     if (!sharedLink) return;
@@ -43,7 +49,7 @@ export default function Analytics() {
     }
   }, []);
 
-  if (!analyticsService) {
+  if (!analyticsService && !isPending) {
     return (
       <div className="flex h-full items-center justify-center">
         <p className="text-muted-foreground">
@@ -53,7 +59,7 @@ export default function Analytics() {
     );
   }
 
-  if (!sharedLink) {
+  if (!sharedLink && !isPending) {
     return (
       <div className="flex h-full items-center justify-center">
         <p className="text-muted-foreground">
@@ -67,7 +73,7 @@ export default function Analytics() {
 
   return (
     <div className="w-full h-full overflow-auto relative">
-      {isLoading && (
+      {(isLoading || isPending) && (
         <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-background">
           <div className="h-8 w-8 animate-spin rounded-full border-4 border-muted border-t-primary" />
           <p className="text-sm text-muted-foreground">Loading analytics...</p>

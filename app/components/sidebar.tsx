@@ -24,7 +24,7 @@ import {
 import logoUrl from "~/components/icons/re_praesent-mark-brand-hor.svg?url";
 
 const lucideIconNames = new Set(
-  Object.keys(LucideIcons).filter((key) => /^[A-Z]/.test(key))
+  Object.keys(LucideIcons).filter((key) => /^[A-Z]/.test(key)),
 );
 
 function kebabToPascal(name: string) {
@@ -74,8 +74,8 @@ function NavLink({
         disabled
           ? "cursor-not-allowed border-transparent text-white/25"
           : isActive
-          ? "border-amber-400 bg-amber-400/10 text-amber-300"
-          : "border-transparent text-white/45 hover:bg-white/5 hover:text-white/75",
+            ? "border-amber-400 bg-amber-400/10 text-amber-300"
+            : "border-transparent text-white/45 hover:bg-white/5 hover:text-white/75",
         className ?? "",
       ].join(" ")}
     >
@@ -95,13 +95,15 @@ export function Sidebar() {
   const location = useLocation();
   const navigate = useNavigate();
   const hasMultipleWorkspaces = (workspaces?.length ?? 0) > 1;
-  const [instructionsMarkdown, setInstructionsMarkdown] = useState<string | null>(null);
+  const [instructionsMarkdown, setInstructionsMarkdown] = useState<
+    string | null
+  >(null);
   const hasAppointmentsService =
     currentWorkspace?.services?.some(
-      (s) => s.service_type === "appointments"
+      (s) => s.service_type === "appointments",
     ) ?? false;
   const { data: appointmentConfig } = useAppointmentConfig(
-    hasAppointmentsService && !!currentWorkspace?.id
+    hasAppointmentsService && !!currentWorkspace?.id,
   );
   const showAppointmentsInSidebar =
     hasAppointmentsService && !!appointmentConfig;
@@ -171,10 +173,7 @@ export function Sidebar() {
           Home
         </NavLink>
 
-        <NavLink
-          to="/products"
-          isActive={location.pathname === "/products"}
-        >
+        <NavLink to="/products" isActive={location.pathname === "/products"}>
           <Package className="h-4 w-4 shrink-0" />
           Products
         </NavLink>
@@ -183,7 +182,7 @@ export function Sidebar() {
           ?.filter(
             (service) =>
               service.service_type !== "appointments" ||
-              showAppointmentsInSidebar
+              showAppointmentsInSidebar,
           )
           ?.map((service) => {
             const href = service.service_slug
@@ -199,13 +198,15 @@ export function Sidebar() {
               : null;
             const hasIcon = !!iconName && lucideIconNames.has(iconName);
 
-            const instructions =
-              (service.service_config as Record<string, unknown> | null)
-                ?.instructions as string | undefined;
+            const instructions = (
+              service.service_config as Record<string, unknown> | null
+            )?.instructions as string | undefined;
             const hasInstructions = !!instructions;
-
             return (
-              <div key={service.service_id} className="flex items-center group/svc">
+              <div
+                key={service.service_id}
+                className="flex items-center group/svc"
+              >
                 <NavLink
                   to={href}
                   isActive={isActive}
@@ -214,7 +215,10 @@ export function Sidebar() {
                   className="flex-1 min-w-0"
                 >
                   {hasIcon && (
-                    <DynamicIcon name={iconName!} className="h-4 w-4 shrink-0" />
+                    <DynamicIcon
+                      name={iconName!}
+                      className="h-4 w-4 shrink-0"
+                    />
                   )}
                   <span className="truncate">{service.service_name}</span>
                 </NavLink>
@@ -237,10 +241,7 @@ export function Sidebar() {
             );
           })}
 
-        <NavLink
-          to="/settings"
-          isActive={location.pathname === "/settings"}
-        >
+        <NavLink to="/settings" isActive={location.pathname === "/settings"}>
           <Settings className="h-4 w-4 shrink-0" />
           Settings
         </NavLink>

@@ -30,6 +30,7 @@ export default [
       route("lead-form/:leadId", "routes/lead-form.$leadId.tsx"),
       route("appointments", "routes/appointments.tsx"),
       route("analytics", "routes/analytics.tsx"),
+      route("email", "routes/email.tsx"),
       route("settings", "routes/settings.tsx"),
     ]),
   ]),
