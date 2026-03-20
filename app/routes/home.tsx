@@ -2,7 +2,7 @@ import { useState, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router";
 import { useTranslation } from "react-i18next";
-import { ChevronRight, Package } from "lucide-react";
+import { ChevronRight, Package, ArrowRight, CheckCircle2, Circle, AlertCircle, Clock } from "lucide-react";
 import {
   ResponsiveContainer,
   LineChart,
@@ -12,10 +12,12 @@ import {
   CartesianGrid,
   Tooltip,
 } from "recharts";
+import { format, isToday, isTomorrow, isPast, formatDistanceToNow } from "date-fns";
 import { getLocalizedServiceName } from "~/lib/api/auth";
 import { useAuthContext } from "~/providers/auth-provider";
 import { cn } from "~/lib/utils";
 import { getLeadAnalytics, type LeadAnalyticsPeriod } from "~/lib/api/leads";
+import { getAllTasks, type Task } from "~/lib/api/tasks";
 
 export function meta() {
   return [
@@ -38,7 +40,6 @@ const SOURCE_COLORS: Record<string, string> = {
   appointment_booking: "#f5d74f",
 };
 
-/** Fill in zero-count data points for the full range so the chart has no gaps. */
 function fillSeriesGaps(
   series: { date: string; count: number }[],
   period: LeadAnalyticsPeriod,
@@ -72,7 +73,6 @@ function fillSeriesGaps(
       );
     }
   } else {
-    // all_time — fill every day from the earliest data point to today
     if (series.length === 0) return [];
     const start = new Date(series[0].date + "T00:00:00");
     const end = new Date(now.getFullYear(), now.getMonth(), now.getDate());
@@ -86,13 +86,11 @@ function fillSeriesGaps(
   return slots.map((key) => ({ date: key, count: map.get(key) ?? 0 }));
 }
 
-/** Format an ISO date key for X-axis display */
 function formatXLabel(date: string, period: LeadAnalyticsPeriod): string {
   if (period === "today") {
     const hour = parseInt(date.slice(11, 13), 10);
     return `${hour.toString().padStart(2, "0")}:00`;
   }
-  // this_week / this_month / all_time — all use YYYY-MM-DD
   const [year, month, day] = date.split("-");
   const d = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
   return d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
@@ -144,7 +142,6 @@ function LeadAnalyticsChart() {
   const maxY = Math.max(...chartData.map((p) => p.count), 1);
   const yDomain: [number, number] = [0, maxY + Math.ceil(maxY * 0.2)];
 
-  // Show every Nth tick so labels don't overlap
   const tickCount = chartData.length;
   const tickStep =
     tickCount <= 10 ? 1 : tickCount <= 20 ? 2 : Math.ceil(tickCount / 10);
@@ -157,7 +154,6 @@ function LeadAnalyticsChart() {
       className="app-fade-up rounded-2xl border border-border bg-card p-6 space-y-5"
       style={{ animationDelay: "0.06s" }}
     >
-      {/* Header row */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div className="space-y-1">
           <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
@@ -172,7 +168,6 @@ function LeadAnalyticsChart() {
           )}
         </div>
 
-        {/* Period selector */}
         <div className="flex items-center gap-1 rounded-xl bg-muted p-1 self-start">
           {periods.map((p) => (
             <button
@@ -191,7 +186,6 @@ function LeadAnalyticsChart() {
         </div>
       </div>
 
-      {/* Source badges */}
       {!isLoading && data && data.sources.length > 0 && (
         <div className="flex flex-wrap gap-2">
           {data.sources.map((s) => (
@@ -213,7 +207,6 @@ function LeadAnalyticsChart() {
         </div>
       )}
 
-      {/* Chart */}
       <div className="h-48">
         {isLoading ? (
           <div className="h-full w-full animate-pulse rounded-xl bg-muted" />
@@ -278,6 +271,186 @@ function LeadAnalyticsChart() {
   );
 }
 
+function formatTaskDueLabel(dateStr: string): {
+  label: string;
+  urgent: boolean;
+  overdue: boolean;
+} {
+  const d = new Date(dateStr);
+  if (isPast(d) && !isToday(d)) return { label: formatDistanceToNow(d, { addSuffix: true }), urgent: true, overdue: true };
+  if (isToday(d)) return { label: "Today", urgent: true, overdue: false };
+  if (isTomorrow(d)) return { label: "Tomorrow", urgent: false, overdue: false };
+  return { label: format(d, "MMM d"), urgent: false, overdue: false };
+}
+
+function MyTaskRow({ task }: { task: Task }) {
+  const isDone = task.status === "done";
+  const dueInfo = task.due_date ? formatTaskDueLabel(task.due_date) : null;
+
+  return (
+    <div
+      className={cn(
+        "group flex items-center gap-3 rounded-xl border px-4 py-3 transition-all duration-150",
+        isDone
+          ? "border-border/50 bg-muted/30"
+          : task.urgency === "overdue"
+            ? "border-red-200/70 bg-red-50/50 hover:border-red-200 hover:bg-red-50"
+            : task.urgency === "due_soon"
+              ? "border-yellow-200/70 bg-yellow-50/40 hover:border-yellow-200 hover:bg-yellow-50"
+              : "border-border bg-card hover:border-border/80 hover:bg-muted/30",
+      )}
+    >
+      {/* Status icon */}
+      <div className="shrink-0">
+        {isDone ? (
+          <CheckCircle2 className="h-4 w-4 text-emerald-500" />
+        ) : task.urgency === "overdue" ? (
+          <AlertCircle className="h-4 w-4 text-red-500" />
+        ) : task.urgency === "due_soon" ? (
+          <Clock className="h-4 w-4 text-yellow-600" />
+        ) : (
+          <Circle className="h-4 w-4 text-muted-foreground/40" />
+        )}
+      </div>
+
+      {/* Title + meta */}
+      <div className="flex-1 min-w-0">
+        <p
+          className={cn(
+            "text-sm font-medium leading-snug truncate",
+            isDone && "line-through text-muted-foreground/60",
+          )}
+        >
+          {task.title}
+        </p>
+        {task.lead_full_name && (
+          <p className="text-[11px] text-muted-foreground truncate mt-0.5">
+            {task.lead_full_name}
+          </p>
+        )}
+      </div>
+
+      {/* Due date badge */}
+      {dueInfo && (
+        <span
+          className={cn(
+            "shrink-0 text-[11px] font-medium px-2 py-0.5 rounded-full",
+            isDone
+              ? "bg-muted text-muted-foreground/60"
+              : dueInfo.overdue
+                ? "bg-red-100 text-red-700"
+                : dueInfo.urgent
+                  ? "bg-yellow-100 text-yellow-800"
+                  : "bg-muted text-muted-foreground",
+          )}
+        >
+          {dueInfo.label}
+        </span>
+      )}
+    </div>
+  );
+}
+
+function getTodayRange() {
+  const start = new Date();
+  start.setHours(0, 0, 0, 0);
+  const end = new Date();
+  end.setHours(23, 59, 59, 999);
+  return { start: start.toISOString(), end: end.toISOString() };
+}
+
+function MyTasksSection({ userId }: { userId: string }) {
+  const { t } = useTranslation();
+  const { currentWorkspace } = useAuthContext();
+  const { start: todayStart, end: todayEnd } = getTodayRange();
+
+  const { data, isLoading } = useQuery({
+    queryKey: ["home-my-tasks", userId, currentWorkspace?.id, todayStart.slice(0, 10)],
+    queryFn: () =>
+      getAllTasks({
+        assignee_id: userId,
+        limit: 5,
+        due_date_from: todayStart,
+        due_date_to: todayEnd,
+      }),
+    enabled: !!userId && !!currentWorkspace,
+    refetchOnMount: "always",
+  });
+
+  const tasks = data?.data ?? [];
+  const openCount = tasks.filter((t) => t.status !== "done").length;
+
+  return (
+    <div
+      className="app-fade-up rounded-2xl border border-border bg-card p-6 space-y-5"
+      style={{ animationDelay: "0.1s" }}
+    >
+      {/* Header */}
+      <div className="flex items-start justify-between gap-4">
+        <div className="space-y-1">
+          <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
+            {t("home.myTasks")}
+          </p>
+          {isLoading ? (
+            <div className="h-8 w-12 animate-pulse rounded-md bg-muted" />
+          ) : (
+            <div className="flex items-baseline gap-2">
+              <p className="text-3xl font-bold tracking-tight text-foreground">
+                {openCount}
+              </p>
+              <span className="text-sm text-muted-foreground">
+                {t("home.myTasksOpen")}
+              </span>
+            </div>
+          )}
+        </div>
+
+        <Link
+          to="/tasks"
+          className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-muted/50 px-3 py-1.5 text-xs font-medium text-foreground hover:bg-muted transition-colors shrink-0 mt-1"
+        >
+          {t("home.viewAllTasks")}
+          <ArrowRight className="h-3 w-3" />
+        </Link>
+      </div>
+
+      {/* Task list */}
+      {isLoading ? (
+        <div className="space-y-2">
+          {[1, 2, 3].map((i) => (
+            <div
+              key={i}
+              className="h-[58px] rounded-xl border border-border animate-pulse bg-muted/40"
+            />
+          ))}
+        </div>
+      ) : tasks.length === 0 ? (
+        <div className="flex flex-col items-center justify-center py-8 gap-2">
+          <CheckCircle2 className="h-8 w-8 text-muted-foreground/25" />
+          <p className="text-sm text-muted-foreground">
+            {t("home.noMyTasks")}
+          </p>
+        </div>
+      ) : (
+        <div className="space-y-2">
+          {tasks.map((task) => (
+            <MyTaskRow key={task.id} task={task} />
+          ))}
+          {(data?.total ?? 0) > 5 && (
+            <Link
+              to="/tasks"
+              className="flex items-center justify-center gap-1.5 py-2 text-xs text-muted-foreground hover:text-foreground transition-colors"
+            >
+              +{(data?.total ?? 0) - 5} {t("home.moreTasks")}
+              <ArrowRight className="h-3 w-3" />
+            </Link>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function Home() {
   const { user, currentWorkspace } = useAuthContext();
   const { t, i18n } = useTranslation();
@@ -301,38 +474,11 @@ export default function Home() {
         </p>
       </div>
 
+      {/* My tasks */}
+      {user?.id && <MyTasksSection userId={user.id} />}
+
       {/* Analytics chart */}
       <LeadAnalyticsChart />
-
-      {/* User + workspace info */}
-      <div className="grid gap-4 sm:grid-cols-2 app-fade-up app-fade-up-d3">
-        <div className="rounded-2xl border border-border bg-card p-5 space-y-3">
-          <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
-            {t("home.account")}
-          </p>
-          <div>
-            <p className="text-lg font-semibold text-foreground">
-              {displayName || "—"}
-            </p>
-            <p className="text-sm text-muted-foreground mt-0.5">
-              {user?.email}
-            </p>
-          </div>
-        </div>
-        <div className="rounded-2xl border border-border bg-card p-5 space-y-3">
-          <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
-            {t("home.workspace")}
-          </p>
-          <div>
-            <p className="text-lg font-semibold text-foreground">
-              {currentWorkspace?.name ?? "—"}
-            </p>
-            <p className="text-sm text-muted-foreground mt-0.5 capitalize">
-              {t("home.role")}: {role}
-            </p>
-          </div>
-        </div>
-      </div>
 
       {/* Services */}
       <div className="app-fade-up app-fade-up-d4 space-y-4">
