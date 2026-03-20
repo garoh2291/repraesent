@@ -1,7 +1,9 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams, Link } from "react-router";
+import { useTranslation } from "react-i18next";
 import { Input } from "~/components/ui/input";
 import { useAuthContext } from "~/providers/auth-provider";
+import { LanguageSwitcher } from "~/components/language-switcher";
 
 import logoUrl from "~/components/icons/re_praesent-mark-brand-hor.svg?url";
 
@@ -12,13 +14,14 @@ export function meta() {
   ];
 }
 
-const FEATURES = [
-  "Smart lead management",
-  "Appointment booking",
-  "Team collaboration",
-];
+const FEATURE_KEYS = [
+  "auth.login.feature1",
+  "auth.login.feature2",
+  "auth.login.feature3",
+] as const;
 
 export default function Login() {
+  const { t } = useTranslation();
   const [email, setEmail] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
@@ -46,11 +49,11 @@ export default function Login() {
     setSuccess(false);
 
     if (!email) {
-      setError("Please enter your email address");
+      setError(t("auth.login.emailRequired"));
       return;
     }
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      setError("Please enter a valid email address");
+      setError(t("auth.login.emailInvalid"));
       return;
     }
 
@@ -61,7 +64,7 @@ export default function Login() {
       setError(
         err instanceof Error
           ? err.message
-          : magicLinkError?.message || "Something went wrong. Please try again."
+          : magicLinkError?.message || t("auth.login.somethingWrong"),
       );
     }
   };
@@ -106,12 +109,17 @@ export default function Login() {
 
         {/* Content */}
         <div className="relative z-10 flex flex-col h-full">
-          <img
-            src={logoUrl}
-            alt="Repraesent"
-            className="app-fade-down h-7 w-auto max-w-[120px] brightness-0 invert opacity-85"
-            style={{ animationDelay: "0s" }}
-          />
+          <div className="flex items-center justify-between">
+            <img
+              src={logoUrl}
+              alt="Repraesent"
+              className="app-fade-down h-7 w-auto max-w-[120px] brightness-0 invert opacity-85"
+              style={{ animationDelay: "0s" }}
+            />
+            <div className="app-fade-in" style={{ animationDelay: "0.1s" }}>
+              <LanguageSwitcher variant="dark" />
+            </div>
+          </div>
 
           <div className="flex-1 flex flex-col justify-center space-y-8">
             <div className="space-y-3">
@@ -122,28 +130,27 @@ export default function Login() {
                   animationDelay: "0.15s",
                 }}
               >
-                Represent your
+                {t("auth.login.brandLine1")}
                 <br />
-                best work.
+                {t("auth.login.brandLine2")}
               </h2>
               <p
                 className="app-fade-up text-sm text-white/45 leading-relaxed max-w-[260px]"
                 style={{ animationDelay: "0.25s" }}
               >
-                The platform for modern sales teams. Manage leads, schedule
-                appointments, and close deals.
+                {t("auth.login.brandSubtitle")}
               </p>
             </div>
 
             <div className="space-y-2.5">
-              {FEATURES.map((f, i) => (
+              {FEATURE_KEYS.map((key, i) => (
                 <div
-                  key={f}
+                  key={key}
                   className="app-fade-up flex items-center gap-3"
                   style={{ animationDelay: `${0.35 + i * 0.1}s` }}
                 >
                   <div className="h-1.5 w-1.5 rounded-full bg-amber-400 shrink-0" />
-                  <span className="text-sm text-white/50">{f}</span>
+                  <span className="text-sm text-white/50">{t(key)}</span>
                 </div>
               ))}
             </div>
@@ -161,42 +168,41 @@ export default function Login() {
       {/* Right form panel */}
       <div className="flex-1 flex items-center justify-center bg-stone-50 p-8">
         <div className="w-full max-w-sm space-y-8 app-fade-up">
-          {/* Mobile logo */}
-          <div className="lg:hidden">
+          {/* Mobile logo + language switcher */}
+          <div className="lg:hidden flex items-center justify-between">
             <img
               src={logoUrl}
               alt="Repraesent"
               className="h-7 w-auto max-w-[120px]"
             />
+            <LanguageSwitcher variant="light" />
           </div>
 
           <div className="space-y-1">
             <h1 className="text-2xl font-semibold text-foreground tracking-tight">
-              Sign in
+              {t("auth.login.title")}
             </h1>
             <p className="text-sm text-muted-foreground">
-              Enter your email to receive a sign-in link
+              {t("auth.login.subtitle")}
             </p>
           </div>
 
           {success ? (
             <div className="space-y-5 app-fade-up">
               <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-4 text-sm text-emerald-800 leading-relaxed">
-                <p className="font-medium">Check your inbox</p>
+                <p className="font-medium">{t("auth.login.checkInbox")}</p>
                 <p className="text-emerald-700/80 mt-0.5">
-                  We sent a sign-in link to{" "}
-                  <span className="font-medium">{email}</span>. It expires in 30
-                  minutes.
+                  {t("auth.login.checkInboxDetail", { email })}
                 </p>
               </div>
               <p className="text-sm text-muted-foreground text-center">
-                Didn't receive it?{" "}
+                {t("auth.login.didntReceive")}{" "}
                 <button
                   type="button"
                   className="text-primary font-medium hover:underline"
                   onClick={() => setSuccess(false)}
                 >
-                  Try again
+                  {t("auth.login.tryAgain")}
                 </button>
               </p>
             </div>
@@ -216,12 +222,12 @@ export default function Login() {
                   htmlFor="email"
                   className="block text-[11px] font-semibold uppercase tracking-widest text-muted-foreground"
                 >
-                  Email address
+                  {t("auth.login.emailLabel")}
                 </label>
                 <Input
                   id="email"
                   type="email"
-                  placeholder="you@example.com"
+                  placeholder={t("auth.login.emailPlaceholder")}
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   disabled={isRequestingMagicLink}
@@ -240,20 +246,20 @@ export default function Login() {
                 {isRequestingMagicLink ? (
                   <>
                     <div className="h-4 w-4 app-spin rounded-full border-2 border-background/30 border-t-background" />
-                    Sending…
+                    {t("auth.login.submittingButton")}
                   </>
                 ) : (
-                  "Send magic link →"
+                  t("auth.login.submitButton")
                 )}
               </button>
 
               <p className="text-center text-sm text-muted-foreground">
-                No account?{" "}
+                {t("auth.login.noAccount")}{" "}
                 <Link
                   to="/register"
                   className="text-primary font-medium hover:underline"
                 >
-                  Create one
+                  {t("auth.login.createOne")}
                 </Link>
               </p>
             </form>

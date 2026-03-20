@@ -1,4 +1,5 @@
 import { useNavigate } from "react-router";
+import { useTranslation } from "react-i18next";
 import { Building2, Check } from "lucide-react";
 import { useAuthContext } from "~/providers/auth-provider";
 import {
@@ -14,6 +15,7 @@ export default function SwitchWorkspaceModal({
 }: {
   setIsOpen?: (isOpen: boolean) => void;
 }) {
+  const { t } = useTranslation();
   const { workspaces, currentWorkspace, setCurrentWorkspace } =
     useAuthContext();
   const navigate = useNavigate();
@@ -28,10 +30,10 @@ export default function SwitchWorkspaceModal({
     <DialogContent className="flex w-[400px] flex-col gap-0">
       <DialogHeader>
         <DialogTitle className="text-base font-semibold text-foreground">
-          Switch workspace
+          {t("switchWorkspace.title")}
         </DialogTitle>
         <DialogDescription className="text-sm text-muted-foreground">
-          Choose a workspace to switch to.
+          {t("switchWorkspace.description")}
         </DialogDescription>
       </DialogHeader>
       <div className="mt-5 flex flex-col gap-1.5">

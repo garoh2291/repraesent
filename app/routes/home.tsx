@@ -1,6 +1,7 @@
 import { useState, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router";
+import { useTranslation } from "react-i18next";
 import { ChevronRight, Package } from "lucide-react";
 import {
   ResponsiveContainer,
@@ -22,12 +23,14 @@ export function meta() {
   ];
 }
 
-const PERIODS: { value: LeadAnalyticsPeriod; label: string }[] = [
-  { value: "today", label: "Today" },
-  { value: "this_week", label: "This week" },
-  { value: "this_month", label: "This month" },
-  { value: "all_time", label: "All time" },
-];
+function usePeriods(): { value: LeadAnalyticsPeriod; labelKey: string }[] {
+  return [
+    { value: "today", labelKey: "home.periodToday" },
+    { value: "this_week", labelKey: "home.periodThisWeek" },
+    { value: "this_month", labelKey: "home.periodThisMonth" },
+    { value: "all_time", labelKey: "home.periodAllTime" },
+  ];
+}
 
 const SOURCE_COLORS: Record<string, string> = {
   urls: "#5265f3",
@@ -105,6 +108,7 @@ function CustomTooltip({
   label?: string;
   period: LeadAnalyticsPeriod;
 }) {
+  const { t } = useTranslation();
   if (!active || !payload?.length || !label) return null;
   const count = payload[0].value;
   return (
@@ -113,7 +117,7 @@ function CustomTooltip({
         {formatXLabel(label, period)}
       </p>
       <p className="font-semibold text-foreground">
-        {count} {count === 1 ? "lead" : "leads"}
+        {t("home.tooltipLead", { count })}
       </p>
     </div>
   );
@@ -121,6 +125,8 @@ function CustomTooltip({
 
 function LeadAnalyticsChart() {
   const { currentWorkspace } = useAuthContext();
+  const { t } = useTranslation();
+  const periods = usePeriods();
   const [period, setPeriod] = useState<LeadAnalyticsPeriod>("this_week");
 
   const { data, isLoading } = useQuery({
@@ -154,7 +160,7 @@ function LeadAnalyticsChart() {
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div className="space-y-1">
           <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
-            Leads
+            {t("home.leadsChartTitle")}
           </p>
           {isLoading ? (
             <div className="h-8 w-12 animate-pulse rounded-md bg-muted" />
@@ -167,7 +173,7 @@ function LeadAnalyticsChart() {
 
         {/* Period selector */}
         <div className="flex items-center gap-1 rounded-xl bg-muted p-1 self-start">
-          {PERIODS.map((p) => (
+          {periods.map((p) => (
             <button
               key={p.value}
               onClick={() => setPeriod(p.value)}
@@ -178,7 +184,7 @@ function LeadAnalyticsChart() {
                   : "text-muted-foreground hover:text-foreground",
               )}
             >
-              {p.label}
+              {t(p.labelKey)}
             </button>
           ))}
         </div>
@@ -273,19 +279,21 @@ function LeadAnalyticsChart() {
 
 export default function Home() {
   const { user, currentWorkspace } = useAuthContext();
+  const { t } = useTranslation();
 
   const services = currentWorkspace?.services ?? [];
   const role = currentWorkspace?.member_role ?? "—";
   const displayName = [user?.first_name, user?.last_name]
     .filter(Boolean)
     .join(" ");
+  const firstName = displayName.split(" ")[0];
 
   return (
     <div className="mx-auto max-w-5xl p-6 space-y-8 app-fade-in">
       {/* Page heading */}
       <div className="app-fade-up space-y-1">
         <h1 className="text-2xl font-semibold text-foreground tracking-tight">
-          Good to see you{displayName ? `, ${displayName.split(" ")[0]}` : ""}.
+          {t("home.greeting", { name: firstName ? `, ${firstName}` : "" })}
         </h1>
         <p className="text-sm text-muted-foreground">
           {currentWorkspace?.name} · <span className="capitalize">{role}</span>
@@ -299,7 +307,7 @@ export default function Home() {
       <div className="grid gap-4 sm:grid-cols-2 app-fade-up app-fade-up-d3">
         <div className="rounded-2xl border border-border bg-card p-5 space-y-3">
           <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
-            Account
+            {t("home.account")}
           </p>
           <div>
             <p className="text-lg font-semibold text-foreground">
@@ -312,14 +320,14 @@ export default function Home() {
         </div>
         <div className="rounded-2xl border border-border bg-card p-5 space-y-3">
           <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
-            Workspace
+            {t("home.workspace")}
           </p>
           <div>
             <p className="text-lg font-semibold text-foreground">
               {currentWorkspace?.name ?? "—"}
             </p>
             <p className="text-sm text-muted-foreground mt-0.5 capitalize">
-              Role: {role}
+              {t("home.role")}: {role}
             </p>
           </div>
         </div>
@@ -329,24 +337,17 @@ export default function Home() {
       <div className="app-fade-up app-fade-up-d4 space-y-4">
         <div>
           <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
-            Services
+            {t("home.services")}
           </p>
           <p className="text-sm text-muted-foreground/70 mt-0.5">
-            Services attached to this workspace
+            {t("home.servicesHint")}
           </p>
         </div>
 
         {services.length === 0 ? (
           <div className="rounded-2xl border border-dashed border-border bg-card p-6">
             <p className="text-sm text-muted-foreground">
-              No services attached yet. Contact{" "}
-              <a
-                href="mailto:support@repraesent.com"
-                className="text-primary hover:underline font-medium"
-              >
-                support@repraesent.com
-              </a>{" "}
-              to get started.
+              {t("home.noServices")}
             </p>
           </div>
         ) : (
@@ -380,11 +381,11 @@ export default function Home() {
                     <p className="flex items-center gap-1 text-xs text-muted-foreground mt-0.5">
                       {hasSlug ? (
                         <>
-                          Open section
+                          {t("home.openSection")}
                           <ChevronRight className="h-3.5 w-3.5 shrink-0 text-primary" />
                         </>
                       ) : (
-                        "Not available"
+                        t("home.notAvailable")
                       )}
                     </p>
                   </div>

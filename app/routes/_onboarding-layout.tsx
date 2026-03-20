@@ -1,17 +1,19 @@
 import { Outlet, Link, useLocation } from "react-router";
 import { Check } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import logoUrl from "~/components/icons/re_praesent-mark-brand-hor.svg?url";
 
-const STEPS = [
-  { path: "/onboarding/profile", label: "Profile" },
-  { path: "/onboarding/workspace", label: "Workspace" },
-  { path: "/onboarding/billing", label: "Billing" },
-  { path: "/onboarding/products", label: "Products" },
+const STEP_KEYS = [
+  { path: "/onboarding/profile", key: "onboarding.steps.profile" },
+  { path: "/onboarding/workspace", key: "onboarding.steps.workspace" },
+  { path: "/onboarding/billing", key: "onboarding.steps.billing" },
+  { path: "/onboarding/products", key: "onboarding.steps.products" },
 ];
 
 export default function OnboardingLayout() {
+  const { t } = useTranslation();
   const location = useLocation();
-  const currentIndex = STEPS.findIndex((s) => location.pathname === s.path);
+  const currentIndex = STEP_KEYS.findIndex((s) => location.pathname === s.path);
   const activeIndex = currentIndex >= 0 ? currentIndex : 0;
 
   return (
@@ -76,7 +78,7 @@ export default function OnboardingLayout() {
           {/* Stepper */}
           <div className="pb-10 pt-2 ob-fade-up">
             <div className="flex items-center">
-              {STEPS.map((step, i) => {
+              {STEP_KEYS.map((step, i) => {
                 const isCompleted = i < activeIndex;
                 const isActive = i === activeIndex;
                 return (
@@ -118,12 +120,12 @@ export default function OnboardingLayout() {
                             : "text-muted-foreground",
                         ].join(" ")}
                       >
-                        {step.label}
+                        {t(step.key)}
                       </span>
                     </Link>
 
                     {/* Connector line */}
-                    {i < STEPS.length - 1 && (
+                    {i < STEP_KEYS.length - 1 && (
                       <div className="mx-3 flex-1 h-px bg-stone-200 dark:bg-zinc-800" />
                     )}
                   </div>

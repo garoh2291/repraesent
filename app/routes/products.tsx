@@ -1,4 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
 import { useAuthContext } from "~/providers/auth-provider";
 import { getStoredWorkspaceId } from "~/lib/api/axios-instance";
 import { getWorkspaceInvoices } from "~/lib/api/workspaces";
@@ -45,6 +46,7 @@ function StatusPill({ status }: { status: string }) {
 }
 
 export default function Products() {
+  const { t } = useTranslation();
   const { currentWorkspace, workspaces } = useAuthContext();
   const workspaceId =
     getStoredWorkspaceId() ?? currentWorkspace?.id ?? workspaces[0]?.id;
@@ -64,10 +66,10 @@ export default function Products() {
       {/* Heading */}
       <div className="app-fade-up space-y-1">
         <h1 className="text-2xl font-semibold text-foreground tracking-tight">
-          Products
+          {t("products.title")}
         </h1>
         <p className="text-sm text-muted-foreground">
-          Your active subscriptions and invoice history
+          {t("products.subtitle")}
         </p>
       </div>
 
@@ -77,7 +79,7 @@ export default function Products() {
           <div className="flex items-center gap-2.5">
             <AlertTriangle className="h-4 w-4 shrink-0 text-red-600" />
             <p className="text-sm font-medium text-red-800">
-              Some subscriptions are past due — pay now to avoid suspension.
+              {t("products.pastDueWarning")}
             </p>
           </div>
           {(ws as { unpaid_invoice_url?: string })?.unpaid_invoice_url && (
@@ -92,7 +94,7 @@ export default function Products() {
                 target="_blank"
                 rel="noopener noreferrer"
               >
-                Pay now →
+                {t("products.payNow")}
               </a>
             </Button>
           )}
@@ -104,7 +106,7 @@ export default function Products() {
         <div className="flex items-center gap-2">
           <Package2 className="h-4 w-4 text-muted-foreground" />
           <h2 className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
-            Subscriptions
+            {t("products.subscriptions")}
           </h2>
         </div>
 
@@ -125,12 +127,12 @@ export default function Products() {
               const now = Math.floor(Date.now() / 1000);
               const dateLabel =
                 product.status === "canceled"
-                  ? periodEnd != null && periodEnd < now ? "Ended on" : "Ends on"
+                  ? periodEnd != null && periodEnd < now ? t("products.dateEnded") : t("products.dateEnds")
                   : product.status === "trialing"
-                  ? "Trial ends on"
+                  ? t("products.dateTrial")
                   : product.status === "past_due"
-                  ? "Due since"
-                  : "Renews on";
+                  ? t("products.dateDue")
+                  : t("products.dateRenews");
 
               return (
                 <div
@@ -165,7 +167,7 @@ export default function Products() {
         ) : (
           <div className="rounded-xl border border-dashed border-border bg-card px-5 py-8 text-center">
             <p className="text-sm text-muted-foreground">
-              No subscriptions yet. Add products during onboarding.
+              {t("products.noSubscriptions")}
             </p>
           </div>
         )}
@@ -174,7 +176,7 @@ export default function Products() {
       {/* Invoice history */}
       <div className="app-fade-up app-fade-up-d3 space-y-4">
         <h2 className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
-          Invoice history
+          {t("products.invoiceHistory")}
         </h2>
 
         {invoices.length > 0 ? (
@@ -183,13 +185,13 @@ export default function Products() {
               <thead>
                 <tr className="border-b border-border bg-muted/40">
                   <th className="text-left px-5 py-3 text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
-                    Status
+                    {t("settings.invoices.status")}
                   </th>
                   <th className="text-left px-5 py-3 text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
-                    Date
+                    {t("settings.invoices.dueDate")}
                   </th>
                   <th className="text-right px-5 py-3 text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
-                    Amount
+                    {t("settings.invoices.amount")}
                   </th>
                   <th className="w-20 px-5 py-3" />
                 </tr>
@@ -205,9 +207,9 @@ export default function Products() {
                     </td>
                     <td className="px-5 py-3.5 text-sm text-muted-foreground">
                       {inv.status === "paid" && inv.paid_at
-                        ? `Paid ${formatDate(inv.paid_at)}`
+                        ? t("products.datePaid", { date: formatDate(inv.paid_at) })
                         : inv.due_date
-                        ? `Due ${formatDate(inv.due_date)}`
+                        ? t("products.dateDueLabel", { date: formatDate(inv.due_date) })
                         : "—"}
                     </td>
                     <td className="px-5 py-3.5 text-right font-semibold text-foreground tabular-nums">
@@ -223,7 +225,7 @@ export default function Products() {
                           rel="noopener noreferrer"
                           className="inline-flex items-center gap-1 text-xs font-medium text-primary hover:underline"
                         >
-                          View
+                          {t("products.viewInvoice")}
                           <ExternalLink className="h-3 w-3" />
                         </a>
                       )}
@@ -235,7 +237,7 @@ export default function Products() {
           </div>
         ) : (
           <div className="rounded-xl border border-dashed border-border bg-card px-5 py-8 text-center">
-            <p className="text-sm text-muted-foreground">No invoices yet.</p>
+            <p className="text-sm text-muted-foreground">{t("products.noInvoicesYet")}</p>
           </div>
         )}
       </div>

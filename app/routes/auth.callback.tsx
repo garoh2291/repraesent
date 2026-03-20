@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router";
 import { useQueryClient } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
 import {
   verifyMagicLink,
   getUserContext,
@@ -22,6 +23,7 @@ export function meta() {
 }
 
 export default function AuthCallback() {
+  const { t } = useTranslation();
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -100,17 +102,17 @@ export default function AuthCallback() {
           </div>
           <div className="space-y-2">
             <h1 className="text-xl font-semibold text-white">
-              Link expired
+              {t("auth.callback.linkExpired")}
             </h1>
             <p className="text-sm text-white/45 leading-relaxed">
-              This magic link is invalid or has expired. Please request a new one to sign in.
+              {t("auth.callback.linkExpiredDetail")}
             </p>
           </div>
           <a
             href="/login"
             className="inline-flex h-10 items-center justify-center rounded-lg border border-white/15 bg-white/8 px-6 text-sm font-medium text-white/80 hover:bg-white/12 hover:text-white transition-all duration-150"
           >
-            Back to sign in
+            {t("auth.callback.backToSignIn")}
           </a>
         </div>
       </div>
@@ -124,8 +126,8 @@ export default function AuthCallback() {
           <div className="h-10 w-10 app-spin rounded-full border-2 border-white/10 border-t-white/50" />
         </div>
         <div className="text-center space-y-1">
-          <p className="text-sm font-medium text-white/70">Signing you in</p>
-          <p className="text-xs text-white/30">Just a moment…</p>
+          <p className="text-sm font-medium text-white/70">{t("auth.callback.signingIn")}</p>
+          <p className="text-xs text-white/30">{t("auth.callback.moment")}</p>
         </div>
       </div>
     </div>

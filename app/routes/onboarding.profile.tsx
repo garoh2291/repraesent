@@ -1,5 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router";
+import { useTranslation } from "react-i18next";
+import i18n from "~/i18n";
 import { useAuthContext } from "~/providers/auth-provider";
 import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
@@ -8,12 +10,13 @@ import { useQueryClient } from "@tanstack/react-query";
 
 export function meta() {
   return [
-    { title: "Your profile - Repraesent" },
-    { name: "description", content: "Complete your profile" },
+    { title: i18n.t("onboarding.profile.metaTitle") },
+    { name: "description", content: i18n.t("onboarding.profile.metaDescription") },
   ];
 }
 
 export default function OnboardingProfile() {
+  const { t } = useTranslation();
   const { user } = useAuthContext();
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
@@ -32,7 +35,7 @@ export default function OnboardingProfile() {
     e.preventDefault();
     setError(null);
     if (!firstName.trim() || !lastName.trim()) {
-      setError("First name and last name are required");
+      setError(t("onboarding.profile.nameRequired"));
       return;
     }
     setIsSubmitting(true);
@@ -44,7 +47,7 @@ export default function OnboardingProfile() {
       queryClient.invalidateQueries({ queryKey: ["auth"] });
       navigate("/onboarding/workspace", { replace: true });
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Something went wrong");
+      setError(err instanceof Error ? err.message : t("common.somethingWentWrong"));
     } finally {
       setIsSubmitting(false);
     }
@@ -55,10 +58,10 @@ export default function OnboardingProfile() {
       {/* Section heading */}
       <div className="mb-8 space-y-1.5">
         <h1 className="ob-heading text-[26px] font-semibold tracking-tight text-foreground leading-snug">
-          Personal information
+          {t("onboarding.profile.title")}
         </h1>
         <p className="text-sm text-muted-foreground">
-          Tell us a bit about yourself to get started.
+          {t("onboarding.profile.subtitle")}
         </p>
       </div>
 
@@ -77,13 +80,13 @@ export default function OnboardingProfile() {
                 htmlFor="firstName"
                 className="block text-[11px] font-semibold uppercase tracking-widest text-muted-foreground"
               >
-                First name
+                {t("onboarding.profile.firstName")}
               </label>
               <Input
                 id="firstName"
                 value={firstName}
                 onChange={(e) => setFirstName(e.target.value)}
-                placeholder="John"
+                placeholder={t("onboarding.profile.placeholderFirstName")}
                 required
                 disabled={isSubmitting}
                 autoFocus
@@ -96,13 +99,13 @@ export default function OnboardingProfile() {
                 htmlFor="lastName"
                 className="block text-[11px] font-semibold uppercase tracking-widest text-muted-foreground"
               >
-                Last name
+                {t("onboarding.profile.lastName")}
               </label>
               <Input
                 id="lastName"
                 value={lastName}
                 onChange={(e) => setLastName(e.target.value)}
-                placeholder="Doe"
+                placeholder={t("onboarding.profile.placeholderLastName")}
                 required
                 disabled={isSubmitting}
                 className="h-11 border-stone-200 dark:border-zinc-700 bg-stone-50 dark:bg-zinc-950 focus-visible:ring-1 focus-visible:ring-foreground/25 transition-shadow"
@@ -116,7 +119,7 @@ export default function OnboardingProfile() {
               disabled={isSubmitting}
               className="h-11 px-8 font-medium text-sm bg-foreground text-background hover:opacity-90 transition-opacity"
             >
-              {isSubmitting ? "Saving…" : "Continue →"}
+              {isSubmitting ? t("common.saving") : t("common.continueArrow")}
             </Button>
           </div>
         </form>

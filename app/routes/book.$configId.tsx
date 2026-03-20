@@ -1,7 +1,9 @@
 import { useState, useMemo, useEffect } from "react";
 import { useParams } from "react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
+import i18n from "~/i18n";
 import {
   getPublicConfig,
   getAvailabilitiesPublic,
@@ -30,21 +32,21 @@ import { cn } from "~/lib/utils";
 
 export function meta() {
   return [
-    { title: "Book an Appointment" },
-    { name: "description", content: "Schedule your appointment" },
+    { title: i18n.t("booking.metaTitle") },
+    { name: "description", content: i18n.t("booking.metaDescription") },
   ];
 }
 
-const BOOKING_FIELDS: { key: string; label: string }[] = [
-  { key: "first_name", label: "First Name" },
-  { key: "last_name", label: "Last Name" },
-  { key: "email", label: "Email" },
-  { key: "phone", label: "Phone Number" },
-  { key: "address", label: "Address" },
-  { key: "city", label: "City" },
-  { key: "zip_code", label: "Zip Code" },
-  { key: "notes", label: "Notes" },
-];
+const BOOKING_FIELD_KEYS = [
+  "first_name",
+  "last_name",
+  "email",
+  "phone",
+  "address",
+  "city",
+  "zip_code",
+  "notes",
+] as const;
 
 const DEFAULT_BOOKING_FIELDS: Record<string, BookingFieldConfig> = {
   first_name: { display: true, require: true },
@@ -96,12 +98,13 @@ function getNextWorkingDay(
 }
 
 const STEPS = [
-  { n: 1, label: "Date & Time", icon: CalendarDays },
-  { n: 2, label: "Your Info", icon: User },
-  { n: 3, label: "Confirm", icon: ClipboardCheck },
+  { n: 1, labelKey: "booking.step1Label", icon: CalendarDays },
+  { n: 2, labelKey: "booking.step2Label", icon: User },
+  { n: 3, labelKey: "booking.step3Label", icon: ClipboardCheck },
 ];
 
 export default function BookAppointment() {
+  const { t } = useTranslation();
   const { configId } = useParams<{ configId: string }>();
   const queryClient = useQueryClient();
   const [step, setStep] = useState(1);
@@ -135,7 +138,7 @@ export default function BookAppointment() {
       queryClient.invalidateQueries({ queryKey: ["availabilities-public"] });
     },
     onError: (error) => {
-      toast.error("Failed to book", {
+      toast.error(t("booking.failedToBook"), {
         description: extractErrorMessage(error),
       });
     },
@@ -177,9 +180,9 @@ export default function BookAppointment() {
   const defaultLogoUrl = "/re_praesent_logo.svg";
 
   const bookingFields = config?.booking_fields ?? DEFAULT_BOOKING_FIELDS;
-  const displayedFields = BOOKING_FIELDS.filter(
-    (f) => bookingFields[f.key]?.display !== false
-  );
+  const displayedFields = BOOKING_FIELD_KEYS.filter(
+    (key) => bookingFields[key]?.display !== false
+  ).map((key) => ({ key, label: t(`booking.fields.${key}`) }));
 
   useEffect(() => {
     if (config && selectedDate === undefined) {
@@ -258,10 +261,10 @@ export default function BookAppointment() {
       <div className="min-h-screen flex items-center justify-center p-6 bg-stone-50">
         <div className="text-center space-y-2">
           <p className="text-sm font-medium text-foreground">
-            Invalid booking link
+            {t("booking.invalidLink")}
           </p>
           <p className="text-sm text-muted-foreground">
-            Please check the URL and try again.
+            {t("booking.invalidLinkDesc")}
           </p>
         </div>
       </div>
@@ -273,7 +276,7 @@ export default function BookAppointment() {
       <div className="min-h-screen flex items-center justify-center p-6 bg-stone-50">
         <div className="flex flex-col items-center gap-4">
           <div className="h-8 w-8 rounded-full border-2 border-stone-200 border-t-stone-500 animate-spin" />
-          <p className="text-sm text-muted-foreground">Loading…</p>
+          <p className="text-sm text-muted-foreground">{t("common.loading")}</p>
         </div>
       </div>
     );
@@ -284,10 +287,10 @@ export default function BookAppointment() {
       <div className="min-h-screen flex items-center justify-center p-6 bg-stone-50">
         <div className="text-center space-y-2">
           <p className="text-sm font-medium text-foreground">
-            Booking not found
+            {t("booking.bookingNotFound")}
           </p>
           <p className="text-sm text-muted-foreground">
-            This appointment page doesn't exist.
+            {t("booking.bookingNotFoundDesc")}
           </p>
         </div>
       </div>
@@ -306,6 +309,7 @@ export default function BookAppointment() {
           textColor={textColor}
           step={step}
           booked
+          t={t}
         />
         <main className="flex-1 flex items-center justify-center p-8">
           <div className="text-center max-w-md space-y-6 app-fade-up">
@@ -320,11 +324,10 @@ export default function BookAppointment() {
             </div>
             <div className="space-y-2">
               <h2 className="text-2xl font-semibold text-foreground tracking-tight">
-                Appointment confirmed
+                {t("booking.confirmedTitle")}
               </h2>
               <p className="text-sm text-muted-foreground leading-relaxed">
-                Your appointment has been booked. You'll receive a confirmation
-                email shortly.
+                {t("booking.confirmedDesc")}
               </p>
             </div>
             <button
@@ -337,7 +340,7 @@ export default function BookAppointment() {
               }}
               className="inline-flex h-10 items-center justify-center rounded-lg border border-border bg-white px-6 text-sm font-medium text-foreground hover:bg-stone-50 transition-colors shadow-sm"
             >
-              Book another appointment
+              {t("booking.bookAnother")}
             </button>
           </div>
         </main>
@@ -356,6 +359,7 @@ export default function BookAppointment() {
         textColor={textColor}
         step={step}
         booked={false}
+        t={t}
       />
 
       <main className="flex-1 py-10 px-6">
@@ -364,6 +368,7 @@ export default function BookAppointment() {
           <div className="app-fade-up">
             {step === 1 && (
               <Step1DateAndTime
+                t={t}
                 selectedDate={selectedDate}
                 onDateSelect={handleDateSelect}
                 selectedSlot={selectedSlot}
@@ -382,6 +387,7 @@ export default function BookAppointment() {
             )}
             {step === 2 && (
               <Step2CustomerInfo
+                t={t}
                 fields={displayedFields}
                 bookingFields={bookingFields}
                 formFields={formFields}
@@ -390,6 +396,7 @@ export default function BookAppointment() {
             )}
             {step === 3 && selectedSlot && (
               <Step3Confirmation
+                t={t}
                 config={config}
                 selectedDate={selectedDate!}
                 selectedSlot={selectedSlot}
@@ -414,7 +421,7 @@ export default function BookAppointment() {
               className="inline-flex items-center gap-1.5 h-10 rounded-lg border border-border bg-white px-4 text-sm font-medium text-foreground hover:bg-stone-50 transition-colors shadow-sm disabled:opacity-40 disabled:pointer-events-none"
             >
               <ChevronLeft className="h-4 w-4" />
-              Back
+              {t("booking.back")}
             </button>
             {step < 3 ? (
               <button
@@ -427,7 +434,7 @@ export default function BookAppointment() {
                 className="inline-flex items-center gap-1.5 h-10 rounded-lg px-5 text-sm font-medium transition-all shadow-sm disabled:opacity-40 disabled:pointer-events-none hover:opacity-90"
                 style={{ backgroundColor: bgColor, color: textColor }}
               >
-                Next
+                {t("common.next")}
                 <ChevronRight className="h-4 w-4" />
               </button>
             ) : null}
@@ -448,6 +455,7 @@ function BookingHeader({
   textColor,
   step,
   booked,
+  t,
 }: {
   config: PublicConfig;
   logoUrl: string | null | undefined;
@@ -456,6 +464,7 @@ function BookingHeader({
   textColor: string;
   step: number;
   booked: boolean;
+  t: (key: string) => string;
 }) {
   return (
     <header
@@ -474,7 +483,7 @@ function BookingHeader({
             className="font-semibold text-base leading-tight"
             style={{ color: textColor }}
           >
-            {config.company_name || "Booking"}
+            {config.company_name || t("booking.fallbackCompany")}
           </p>
           {config.company_headline && (
             <p
@@ -526,6 +535,7 @@ function BookingHeader({
 /* ── Step 1: Date & Time ─────────────────────────────────────── */
 
 function Step1DateAndTime({
+  t,
   selectedDate,
   onDateSelect,
   selectedSlot,
@@ -541,6 +551,7 @@ function Step1DateAndTime({
   bgColor,
   textColor,
 }: {
+  t: (key: string) => string;
   selectedDate: Date | undefined;
   onDateSelect: (d: Date | undefined) => void;
   selectedSlot: string | null;
@@ -560,10 +571,10 @@ function Step1DateAndTime({
     <div className="space-y-6">
       <div>
         <h2 className="text-xl font-semibold text-foreground tracking-tight">
-          Choose a date & time
+          {t("booking.chooseDateAndTime")}
         </h2>
         <p className="text-sm text-muted-foreground mt-0.5">
-          Select a day and available slot that works for you
+          {t("booking.chooseDateAndTimeDesc")}
         </p>
       </div>
 
@@ -620,7 +631,7 @@ function Step1DateAndTime({
           {/* Timezone */}
           <div className="space-y-1.5">
             <label className="block text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
-              Timezone
+              {t("booking.timezone")}
             </label>
             <TimezoneSelect
               value={userTimezone}
@@ -634,7 +645,7 @@ function Step1DateAndTime({
           {selectedDate && (
             <div className="space-y-1.5">
               <label className="block text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
-                Available times
+                {t("booking.availableTimes")}
               </label>
               {slotsLoading ? (
                 <div className="space-y-2">
@@ -648,7 +659,7 @@ function Step1DateAndTime({
               ) : slots.length === 0 ? (
                 <div className="rounded-xl border border-border bg-white px-4 py-6 text-center">
                   <p className="text-sm text-muted-foreground">
-                    No slots available for this date.
+                    {t("booking.noSlotsForDate")}
                   </p>
                 </div>
               ) : (
@@ -691,11 +702,13 @@ function Step1DateAndTime({
 /* ── Step 2: Customer Info ───────────────────────────────────── */
 
 function Step2CustomerInfo({
+  t,
   fields,
   bookingFields,
   formFields,
   onFieldChange,
 }: {
+  t: (key: string) => string;
   fields: { key: string; label: string }[];
   bookingFields: Record<string, BookingFieldConfig>;
   formFields: Record<string, string>;
@@ -708,10 +721,10 @@ function Step2CustomerInfo({
     <div className="space-y-6">
       <div>
         <h2 className="text-xl font-semibold text-foreground tracking-tight">
-          Your information
+          {t("booking.yourInformation")}
         </h2>
         <p className="text-sm text-muted-foreground mt-0.5">
-          We'll use these details to confirm your appointment
+          {t("booking.yourInformationDesc")}
         </p>
       </div>
 
@@ -719,7 +732,7 @@ function Step2CustomerInfo({
         {/* Required fields */}
         <div className="rounded-2xl border border-border bg-white p-5 space-y-4 shadow-sm">
           <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
-            Required
+            {t("booking.requiredSection")}
           </p>
           {required.map(({ key, label }) => (
             <div key={key} className="space-y-1.5">
@@ -749,7 +762,7 @@ function Step2CustomerInfo({
             </div>
           ))}
           {required.length === 0 && (
-            <p className="text-sm text-muted-foreground">No required fields.</p>
+            <p className="text-sm text-muted-foreground">{t("booking.noRequiredFields")}</p>
           )}
         </div>
 
@@ -757,7 +770,7 @@ function Step2CustomerInfo({
         {optional.length > 0 && (
           <div className="rounded-2xl border border-border bg-white p-5 space-y-4 shadow-sm">
             <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
-              Optional
+              {t("booking.optionalSection")}
             </p>
             {optional.map(({ key, label }) => (
               <div key={key} className="space-y-1.5">
@@ -796,6 +809,7 @@ function Step2CustomerInfo({
 /* ── Step 3: Confirmation ────────────────────────────────────── */
 
 function Step3Confirmation({
+  t,
   config,
   selectedDate,
   selectedSlot,
@@ -808,6 +822,7 @@ function Step3Confirmation({
   bgColor,
   textColor,
 }: {
+  t: (key: string) => string;
   config: PublicConfig;
   selectedDate: Date;
   selectedSlot: string;
@@ -832,10 +847,10 @@ function Step3Confirmation({
     <div className="space-y-6">
       <div>
         <h2 className="text-xl font-semibold text-foreground tracking-tight">
-          Review & confirm
+          {t("booking.reviewAndConfirm")}
         </h2>
         <p className="text-sm text-muted-foreground mt-0.5">
-          Everything look good? Confirm to book your slot.
+          {t("booking.reviewAndConfirmDesc")}
         </p>
       </div>
 
@@ -843,7 +858,7 @@ function Step3Confirmation({
         {/* Appointment summary */}
         <div className="rounded-2xl border border-border bg-white p-5 shadow-sm space-y-4">
           <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
-            Appointment
+            {t("booking.appointmentSection")}
           </p>
           <div className="space-y-3">
             <div className="flex items-start gap-3">
@@ -879,7 +894,7 @@ function Step3Confirmation({
         {/* Customer details */}
         <div className="rounded-2xl border border-border bg-white p-5 shadow-sm space-y-4">
           <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
-            Your details
+            {t("booking.yourDetails")}
           </p>
           <dl className="space-y-2.5">
             {displayedFields
@@ -909,12 +924,12 @@ function Step3Confirmation({
           {isPending ? (
             <>
               <div className="h-4 w-4 rounded-full border-2 border-current/30 border-t-current animate-spin" />
-              Confirming…
+              {t("booking.confirming")}
             </>
           ) : (
             <>
               <Check className="h-4 w-4" />
-              Confirm appointment
+              {t("booking.confirmAppointment")}
             </>
           )}
         </button>

@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import {
   Select,
   SelectContent,
@@ -8,7 +9,6 @@ import {
 import {
   LEAD_STATUSES,
   LEAD_STATUS_COLORS,
-  LEAD_STATUS_LABELS,
   type LeadStatus,
 } from "~/lib/leads/constants";
 import { cn } from "~/lib/utils";
@@ -37,6 +37,7 @@ export function LeadStatusSelect({
   disabled,
   className,
 }: LeadStatusSelectProps) {
+  const { t } = useTranslation();
   const currentStatus = value as LeadStatus;
   const borderClass =
     STATUS_BORDER_CLASSES[currentStatus] ?? "border-l-transparent";
@@ -63,7 +64,7 @@ export function LeadStatusSelect({
               <span
                 className={cn("w-2 h-2 rounded-full", LEAD_STATUS_COLORS[s])}
               />
-              {LEAD_STATUS_LABELS[s]}
+              {t(`leads.statuses.${s}`)}
             </span>
           </SelectItem>
         ))}

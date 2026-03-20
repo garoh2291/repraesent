@@ -1,5 +1,6 @@
 import { useState, useCallback, useRef } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
 import {
   Dialog,
   DialogContent,
@@ -24,22 +25,27 @@ import {
   type CsvFieldMapping,
   type LeadImportRow,
 } from "~/lib/api/leads-import";
-import { LEAD_SOURCES } from "~/lib/leads/constants";
+import type { TFunction } from "i18next";
 import { extractErrorMessage } from "~/lib/api/axios-instance";
 import { toast } from "sonner";
 import { Upload, Loader2, ChevronRight, FileSpreadsheet } from "lucide-react";
 import TooltipContainer from "~/components/tooltip-container";
 
-const LEAD_FIELD_LABELS: Record<string, string> = {
-  first_name: "First Name",
-  last_name: "Last Name",
-  full_name: "Full Name",
-  email: "Email",
-  phone: "Phone",
-  created_at: "Created At",
-  updated_at: "Updated At",
-  metadata: "Metadata",
+const LEAD_FIELD_KEY_MAP: Record<string, string> = {
+  first_name: "leads.columns.firstName",
+  last_name: "leads.columns.lastName",
+  full_name: "leads.columns.fullName",
+  email: "leads.columns.email",
+  phone: "leads.columns.phone",
+  created_at: "leads.columns.createdAt",
+  updated_at: "leads.columns.updatedAt",
+  metadata: "leads.columns.metadata",
 };
+
+function getFieldLabel(field: string, t: TFunction): string {
+  const key = LEAD_FIELD_KEY_MAP[field];
+  return key ? t(key) : field;
+}
 
 // Returns true for both legacy "metadata" and new "metadata.xxx" leadField format
 function isMetaField(m: CsvFieldMapping): boolean {
@@ -59,6 +65,7 @@ interface LeadImportModalProps {
 }
 
 export function LeadImportModal({ open, onOpenChange }: LeadImportModalProps) {
+  const { t } = useTranslation();
   const queryClient = useQueryClient();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -96,7 +103,7 @@ export function LeadImportModal({ open, onOpenChange }: LeadImportModalProps) {
   const uploadMutation = useMutation({
     mutationFn: uploadLeadsImport,
     onSuccess: (data) => {
-      toast.success(`${data.created} lead(s) imported successfully`);
+      toast.success(t("leads.import.importedSuccess", { count: data.created }));
       queryClient.invalidateQueries({ queryKey: ["leads"] });
       queryClient.invalidateQueries({ queryKey: ["leadStats"] });
       handleClose();
@@ -124,7 +131,7 @@ export function LeadImportModal({ open, onOpenChange }: LeadImportModalProps) {
     const f = e.target.files?.[0];
     if (f) {
       if (!f.name.toLowerCase().endsWith(".csv")) {
-        toast.error("Please select a CSV file");
+        toast.error(t("leads.import.selectCsvError"));
         return;
       }
       setFile(f);
@@ -139,7 +146,7 @@ export function LeadImportModal({ open, onOpenChange }: LeadImportModalProps) {
       setFile(f);
       parseMutation.mutate(f);
     } else {
-      toast.error("Please drop a CSV file");
+      toast.error(t("leads.import.dropCsvError"));
     }
   };
 
@@ -244,12 +251,12 @@ export function LeadImportModal({ open, onOpenChange }: LeadImportModalProps) {
       >
         <DialogHeader>
           <DialogTitle className="text-base font-semibold text-foreground">
-            Import leads from CSV
+            {t("leads.import.title")}
           </DialogTitle>
           <DialogDescription className="text-sm text-muted-foreground">
             {step === 1
-              ? "Upload a CSV file. We'll map columns to lead fields automatically."
-              : "Review and confirm your import."}
+              ? t("leads.import.step1Desc")
+              : t("leads.import.step2Desc")}
           </DialogDescription>
         </DialogHeader>
 
@@ -273,17 +280,17 @@ export function LeadImportModal({ open, onOpenChange }: LeadImportModalProps) {
                   <div className="flex flex-col items-center gap-2">
                     <Loader2 className="h-10 w-10 animate-spin text-muted-foreground" />
                     <p className="text-sm text-muted-foreground">
-                      Parsing CSV and mapping fields...
+                      {t("leads.import.parseCsv")}
                     </p>
                   </div>
                 ) : (
                   <div className="flex flex-col items-center gap-2">
                     <FileSpreadsheet className="h-10 w-10 text-muted-foreground" />
                     <p className="text-sm font-medium">
-                      Drop your CSV here or click to browse
+                      {t("leads.import.dropCsv")}
                     </p>
                     <p className="text-xs text-muted-foreground">
-                      Max 500 rows
+                      {t("leads.import.maxRows")}
                     </p>
                   </div>
                 )}
@@ -291,8 +298,7 @@ export function LeadImportModal({ open, onOpenChange }: LeadImportModalProps) {
             ) : (
               <>
                 <p className="text-sm text-muted-foreground">
-                  {file?.name} — {rows.length} rows. Select fields and rows to
-                  import.
+                  {t("leads.import.fileInfo", { filename: file?.name, count: rows.length })}
                 </p>
                 <div className="flex-1 rounded-md border border-border bg-card shadow-[var(--shadow)] overflow-auto max-h-[300px] max-w-full">
                   <Table>
@@ -338,14 +344,14 @@ export function LeadImportModal({ open, onOpenChange }: LeadImportModalProps) {
                                 tooltipContent={
                                   isMetaField(m)
                                     ? m.csvColumn
-                                    : `${m.csvColumn} → ${LEAD_FIELD_LABELS[m.leadField] ?? m.leadField}`
+                                    : `${m.csvColumn} → ${getFieldLabel(m.leadField, t)}`
                                 }
                                 showCopyButton={false}
                               >
                                 <span className="text-xs truncate max-w-[100px]">
                                   {isMetaField(m)
                                     ? m.csvColumn
-                                    : `${m.csvColumn} → ${LEAD_FIELD_LABELS[m.leadField] ?? m.leadField}`}
+                                    : `${m.csvColumn} → ${getFieldLabel(m.leadField, t)}`}
                                 </span>
                               </TooltipContainer>
                             </div>
@@ -389,8 +395,7 @@ export function LeadImportModal({ open, onOpenChange }: LeadImportModalProps) {
                   </Table>
                   {rows.length > 20 && (
                     <p className="text-xs text-muted-foreground p-2">
-                      Showing first 20 of {rows.length} rows. All selected rows
-                      will be imported.
+                      {t("leads.import.showingFirst", { count: rows.length })}
                     </p>
                   )}
                 </div>
@@ -403,19 +408,19 @@ export function LeadImportModal({ open, onOpenChange }: LeadImportModalProps) {
           <div className="flex flex-col gap-5">
             <div className="rounded-xl border border-border bg-muted/40 px-4 py-3">
               <p className="text-sm text-foreground">
-                <span className="font-semibold">{filteredRows.length}</span> lead{filteredRows.length !== 1 ? "s" : ""} will be imported.
+                {t("leads.import.willBeImported", { count: filteredRows.length })}
               </p>
             </div>
             <div className="flex flex-col gap-1.5">
               <label className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
-                Source
+                {t("leads.import.source")}
               </label>
               <select
                 className="w-full border border-border rounded-lg px-3 py-2.5 text-sm bg-background text-foreground focus:outline-none focus:ring-1 focus:ring-foreground/25 transition-shadow"
                 value={source}
                 onChange={(e) => setSource(e.target.value as "website")}
               >
-                <option value="website">{LEAD_SOURCES.website.label}</option>
+                <option value="website">{t("leads.filters.websiteSource")}</option>
               </select>
             </div>
           </div>
@@ -425,20 +430,20 @@ export function LeadImportModal({ open, onOpenChange }: LeadImportModalProps) {
           {step === 1 ? (
             <>
               <Button variant="outline" onClick={handleClose}>
-                Cancel
+                {t("common.cancel")}
               </Button>
               <Button
                 className="bg-foreground text-background hover:opacity-90 transition-opacity"
                 onClick={handleNext}
                 disabled={!canProceed}
               >
-                Next <ChevronRight className="h-4 w-4 ml-1" />
+                {t("common.next")} <ChevronRight className="h-4 w-4 ml-1" />
               </Button>
             </>
           ) : (
             <>
               <Button variant="outline" onClick={() => setStep(1)}>
-                Back
+                {t("common.back")}
               </Button>
               <Button
                 className="bg-foreground text-background hover:opacity-90 transition-opacity"
@@ -450,7 +455,7 @@ export function LeadImportModal({ open, onOpenChange }: LeadImportModalProps) {
                 ) : (
                   <Upload className="h-4 w-4 mr-2" />
                 )}
-                Upload {filteredRows.length} leads
+                {t("leads.import.uploadLeads", { count: filteredRows.length })}
               </Button>
             </>
           )}

@@ -3,6 +3,7 @@
 import * as React from "react";
 import { Check, ChevronLeft, Filter, Search } from "lucide-react";
 import { useLocation, useNavigate, useSearchParams } from "react-router";
+import { useTranslation } from "react-i18next";
 import { format } from "date-fns";
 
 import { cn } from "~/lib/utils";
@@ -33,17 +34,10 @@ const STATIC_FILTERS: Record<string, FilterType[]> = {
   leads: LEADS_FILTERS,
 };
 
-const FILTER_LABELS: Record<string, string> = {
-  status: "Status",
-  source: "Source",
+const FILTER_LABEL_KEYS: Record<string, string> = {
+  status: "leads.filters.status",
+  source: "leads.filters.source",
 };
-
-function getFilterLabel(name: string): string {
-  return (
-    FILTER_LABELS[name] ??
-    name.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase())
-  );
-}
 
 export interface FilterComponentProps {
   optionKey?: string;
@@ -58,9 +52,16 @@ export function FilterComponent({
   currentSearchValues = {},
   filters: customFilters,
 }: FilterComponentProps) {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { pathname } = useLocation();
   const [searchParams] = useSearchParams();
+
+  const getFilterLabel = (name: string): string => {
+    const key = FILTER_LABEL_KEYS[name];
+    if (key) return t(key);
+    return name.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+  };
 
   const [open, setOpen] = React.useState(false);
   const [activeFilter, setActiveFilter] = React.useState<string | null>(null);
@@ -187,12 +188,12 @@ export function FilterComponent({
           const option = filter.options.find(
             (opt: FilterOption) => opt.key === key
           );
-          return option ? option.label : "";
+          return option ? t(option.label, { defaultValue: option.label }) : "";
         });
       })
       .filter(Boolean);
 
-    if (allSelectedFilters.length === 0) return "Filter";
+    if (allSelectedFilters.length === 0) return t("common.filter");
     if (allSelectedFilters.length === 1) {
       const filterValue = allSelectedFilters[0];
       return filterValue.length > 20
@@ -375,7 +376,7 @@ export function FilterComponent({
             <div className="flex items-center border-b px-3">
               <Search className="mr-2 h-4 w-4 shrink-0 opacity-50" />
               <input
-                placeholder="Search filters..."
+                placeholder={t("leads.filters.searchFilters")}
                 value={groupSearch}
                 onChange={(e) => setGroupSearch(e.target.value)}
                 className="flex h-10 w-full rounded-md bg-transparent py-3 text-sm outline-none placeholder:text-muted-foreground disabled:cursor-not-allowed disabled:opacity-50"
@@ -385,7 +386,7 @@ export function FilterComponent({
 
           {activeFilter && !isDateFilter && (
             <CommandInput
-              placeholder="Search options..."
+              placeholder={t("leads.filters.searchOptions")}
               value={search}
               onValueChange={(value) => {
                 setSearch(value);
@@ -397,7 +398,7 @@ export function FilterComponent({
             />
           )}
           <CommandList className={cn(isDateFilter ? "max-h-none" : "")}>
-            <CommandEmpty>No results.</CommandEmpty>
+            <CommandEmpty>{t("common.noResults")}</CommandEmpty>
             {activeFilter ? (
               <div
                 key="options"
@@ -416,7 +417,7 @@ export function FilterComponent({
                     className="cursor-pointer capitalize"
                   >
                     <ChevronLeft className="mr-2 h-4 w-4" />
-                    Back
+                    {t("common.back")}
                   </CommandItem>
                 </CommandGroup>
                 <CommandGroup
@@ -424,14 +425,14 @@ export function FilterComponent({
                   className="capitalize"
                 >
                   {currentFilterForActive?.isLoading ? (
-                    <CommandItem disabled>Loading...</CommandItem>
+                    <CommandItem disabled>{t("common.loading")}</CommandItem>
                   ) : isDateFilter ? (
                     <div className="p-3 min-h-[320px]">
                       <div className="flex items-center justify-between mb-2">
                         <span className="text-sm font-medium capitalize">
                           {dateFilters[activeFilter]
                             ? format(dateFilters[activeFilter]!, "MMM dd, yyyy")
-                            : "Pick a date"}
+                            : t("leads.filters.pickADate")}
                         </span>
                         {dateFilters[activeFilter] && (
                           <Button
@@ -442,7 +443,7 @@ export function FilterComponent({
                             }
                             className="h-6 px-2 text-xs capitalize"
                           >
-                            Clear
+                            {t("common.remove")}
                           </Button>
                         )}
                       </div>
@@ -479,7 +480,7 @@ export function FilterComponent({
                             )}
                           >
                             <span className="flex-1 truncate">
-                              {option.label}
+                              {t(option.label, { defaultValue: option.label })}
                             </span>
                             <div className="flex items-center gap-1 ml-auto">
                               {isMultiSelect && (
@@ -496,7 +497,7 @@ export function FilterComponent({
                                       : "opacity-0 pointer-events-none"
                                   )}
                                 >
-                                  Select only
+                                  {t("leads.filters.selectOnly")}
                                 </button>
                               )}
                               <Check
@@ -517,7 +518,7 @@ export function FilterComponent({
             ) : (
               <div key="groups" className="animate-in fade-in-0 duration-200">
                 {filteredGroups.length === 0 ? (
-                  <CommandItem disabled>No filter groups found</CommandItem>
+                  <CommandItem disabled>{t("leads.filters.noFilterGroups")}</CommandItem>
                 ) : (
                   filteredGroups.map((filter) => (
                     <CommandItem

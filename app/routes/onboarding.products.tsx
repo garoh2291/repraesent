@@ -1,6 +1,8 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useNavigate } from "react-router";
 import { useQuery } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
+import i18n from "~/i18n";
 import { Button } from "~/components/ui/button";
 import {
   getVisibleStripeProducts,
@@ -15,8 +17,8 @@ import { Check, Star, ChevronLeft, ChevronRight } from "lucide-react";
 
 export function meta() {
   return [
-    { title: "Choose your plan - Repraesent" },
-    { name: "description", content: "Select a plan that suits your needs" },
+    { title: i18n.t("onboarding.products.metaTitle") },
+    { name: "description", content: i18n.t("onboarding.products.metaDescription") },
   ];
 }
 
@@ -67,6 +69,7 @@ function ProductCard({
   onToggle: () => void;
   isCurrent: boolean;
 }) {
+  const { t } = useTranslation();
   const price = getPriceForInterval(product, interval);
   const savingPct = interval === "year" ? getSavingPercent(product) : 0;
 
@@ -89,7 +92,7 @@ function ProductCard({
         <div className="absolute -top-3 left-1/2 -translate-x-1/2">
           <span className="inline-flex items-center gap-1 rounded-full bg-amber-500 px-3 py-1 text-[11px] font-semibold text-white shadow-sm whitespace-nowrap">
             <Star className="h-3 w-3 fill-white" />
-            Recommended
+            {t("onboarding.products.recommended")}
           </span>
         </div>
       )}
@@ -130,17 +133,17 @@ function ProductCard({
                 {formatPrice(price.unit_amount, price.currency)}
               </span>
               <span className="text-sm text-muted-foreground pb-0.5">
-                /{interval === "month" ? "mo" : "yr"}
+                /{interval === "month" ? t("onboarding.products.perMonthShort") : t("onboarding.products.perYearShort")}
               </span>
               {savingPct > 0 && (
                 <span className="rounded-full bg-emerald-500/12 border border-emerald-500/20 px-2 py-0.5 text-[11px] font-semibold text-emerald-700 dark:text-emerald-400">
-                  Save {savingPct}%
+                  {t("onboarding.products.save", { percent: savingPct })}
                 </span>
               )}
             </div>
           ) : (
             <span className="text-sm text-muted-foreground">
-              Not available for this billing period
+              {t("onboarding.products.notAvailable")}
             </span>
           )}
         </div>
@@ -162,6 +165,7 @@ function ProductCard({
 }
 
 export default function OnboardingProducts() {
+  const { t } = useTranslation();
   const { user, currentWorkspace, workspaces } = useAuthContext();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -275,12 +279,12 @@ export default function OnboardingProducts() {
   const handleSubmit = async () => {
     setError(null);
     if (!workspaceId) {
-      setError("No workspace selected");
+      setError(t("onboarding.products.noWorkspaceSelected"));
       return;
     }
     const items = Object.values(selectedProducts);
     if (items.length === 0) {
-      setError("Please select at least one product");
+      setError(t("onboarding.products.selectAtLeastOne"));
       return;
     }
     setIsSubmitting(true);
@@ -295,7 +299,7 @@ export default function OnboardingProducts() {
       queryClient.invalidateQueries({ queryKey: ["auth"] });
       navigate("/pending", { replace: true });
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Something went wrong");
+      setError(err instanceof Error ? err.message : t("common.somethingWentWrong"));
     } finally {
       setIsSubmitting(false);
     }
@@ -316,7 +320,7 @@ export default function OnboardingProducts() {
     return (
       <div className="flex flex-col items-center justify-center py-24 gap-4 ob-fade-in">
         <div className="h-7 w-7 ob-spin-slow rounded-full border-2 border-foreground/20 border-t-foreground" />
-        <p className="text-sm text-muted-foreground">Loading plans…</p>
+        <p className="text-sm text-muted-foreground">{t("onboarding.products.loading")}</p>
       </div>
     );
   }
@@ -325,7 +329,7 @@ export default function OnboardingProducts() {
     return (
       <div className="flex flex-col items-center justify-center py-24 ob-fade-in">
         <p className="text-sm text-muted-foreground">
-          No plans available. Please contact support.
+          {t("onboarding.products.noPlans")}
         </p>
       </div>
     );
@@ -339,10 +343,10 @@ export default function OnboardingProducts() {
       {/* Header */}
       <div className="text-center mb-8 space-y-2 px-4 w-full">
         <h1 className="ob-heading text-[26px] font-semibold tracking-tight text-foreground">
-          Choose your plan
+          {t("onboarding.products.heading")}
         </h1>
         <p className="text-sm text-muted-foreground">
-          Select one or more products. Our team will set up your subscription.
+          {t("onboarding.products.subtitle")}
         </p>
       </div>
 
@@ -361,10 +365,10 @@ export default function OnboardingProducts() {
                   : "text-muted-foreground hover:text-foreground",
               ].join(" ")}
             >
-              {iv === "month" ? "Monthly" : "Yearly"}
+              {iv === "month" ? t("onboarding.products.monthly") : t("onboarding.products.yearly")}
               {iv === "year" && maxSaving > 0 && (
                 <span className="ml-2 rounded-full bg-emerald-500/12 border border-emerald-500/20 px-1.5 py-0.5 text-[10px] font-semibold text-emerald-700 dark:text-emerald-400">
-                  Save up to {maxSaving}%
+                  {t("onboarding.products.saveUpTo", { percent: maxSaving })}
                 </span>
               )}
             </button>
@@ -379,7 +383,7 @@ export default function OnboardingProducts() {
           onClick={goToPrev}
           disabled={currentIndex === 0}
           className="shrink-0 flex h-10 w-10 items-center justify-center rounded-full border border-stone-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 shadow-sm hover:bg-stone-50 dark:hover:bg-zinc-800 transition-all duration-150 disabled:opacity-30 disabled:cursor-not-allowed"
-          aria-label="Previous"
+          aria-label={t("onboarding.products.ariaPrevious")}
         >
           <ChevronLeft className="h-4 w-4" />
         </button>
@@ -421,7 +425,7 @@ export default function OnboardingProducts() {
           onClick={goToNext}
           disabled={currentIndex === products.length - 1}
           className="shrink-0 flex h-10 w-10 items-center justify-center rounded-full border border-stone-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 shadow-sm hover:bg-stone-50 dark:hover:bg-zinc-800 transition-all duration-150 disabled:opacity-30 disabled:cursor-not-allowed"
-          aria-label="Next"
+          aria-label={t("onboarding.products.ariaNext")}
         >
           <ChevronRight className="h-4 w-4" />
         </button>
@@ -441,7 +445,7 @@ export default function OnboardingProducts() {
                   ? "w-5 bg-foreground"
                   : "w-1.5 bg-stone-300 dark:bg-zinc-600 hover:bg-stone-400 dark:hover:bg-zinc-500",
               ].join(" ")}
-              aria-label={`Go to product ${idx + 1}`}
+              aria-label={t("onboarding.products.ariaGoToProduct", { name: String(idx + 1) })}
             />
           ))}
         </div>
@@ -450,7 +454,7 @@ export default function OnboardingProducts() {
       {/* Selection summary */}
       {selectedCount > 0 && (
         <div className="ob-fade-up mt-6 mx-4 rounded-xl border border-stone-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 px-5 py-3 text-sm text-center shadow-sm">
-          <span className="font-medium text-foreground">Selected: </span>
+          <span className="font-medium text-foreground">{t("onboarding.products.selected")} </span>
           <span className="text-muted-foreground">
             {Object.keys(selectedProducts)
               .map((id) => products.find((p) => p.id === id)?.name)
@@ -476,14 +480,14 @@ export default function OnboardingProducts() {
           disabled={isSubmitting}
           className="h-11 px-6 border-stone-200 dark:border-zinc-700 hover:bg-stone-50 dark:hover:bg-zinc-800 transition-colors"
         >
-          ← Back
+          {t("common.backArrow")}
         </Button>
         <Button
           onClick={handleSubmit}
           disabled={selectedCount === 0 || isSubmitting}
           className="h-11 px-8 font-medium text-sm bg-foreground text-background hover:opacity-90 transition-opacity"
         >
-          {isSubmitting ? "Saving…" : "Continue →"}
+          {isSubmitting ? t("common.saving") : t("common.continueArrow")}
         </Button>
       </div>
     </div>

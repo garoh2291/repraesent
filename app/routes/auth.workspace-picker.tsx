@@ -1,4 +1,5 @@
 import { useNavigate } from "react-router";
+import { useTranslation } from "react-i18next";
 import { useAuthContext } from "~/providers/auth-provider";
 import { setStoredWorkspaceId } from "~/lib/api/axios-instance";
 
@@ -12,6 +13,7 @@ export function meta() {
 }
 
 export default function WorkspacePicker() {
+  const { t } = useTranslation();
   const { workspaces, setCurrentWorkspace } = useAuthContext();
   const navigate = useNavigate();
 
@@ -41,10 +43,10 @@ export default function WorkspacePicker() {
             className="text-[28px] font-semibold tracking-tight text-foreground"
             style={{ fontFamily: "'Lora', Georgia, serif" }}
           >
-            Choose your workspace
+            {t("auth.workspacePicker.title")}
           </h1>
           <p className="text-sm text-muted-foreground">
-            You have access to {workspaces.length} workspaces. Select one to continue.
+            {t("auth.workspacePicker.subtitle", { count: workspaces.length })}
           </p>
         </div>
 
@@ -69,7 +71,7 @@ export default function WorkspacePicker() {
                   {workspace.name}
                 </p>
                 <p className="text-xs text-muted-foreground mt-0.5">
-                  Click to enter workspace
+                  {t("auth.workspacePicker.clickToEnter")}
                 </p>
               </div>
 

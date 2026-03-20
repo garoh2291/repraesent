@@ -1,7 +1,9 @@
 import { useState } from "react";
 import { Link } from "react-router";
+import { useTranslation } from "react-i18next";
 import { Input } from "~/components/ui/input";
 import { register } from "~/lib/api/auth";
+import { LanguageSwitcher } from "~/components/language-switcher";
 
 import logoUrl from "~/components/icons/re_praesent-mark-brand-hor.svg?url";
 
@@ -12,13 +14,14 @@ export function meta() {
   ];
 }
 
-const BENEFITS = [
-  "Up and running in minutes",
-  "Magic link — no password needed",
-  "Invite your team anytime",
-];
+const BENEFIT_KEYS = [
+  "auth.register.benefit1",
+  "auth.register.benefit2",
+  "auth.register.benefit3",
+] as const;
 
 export default function Register() {
+  const { t } = useTranslation();
   const [email, setEmail] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
@@ -30,11 +33,11 @@ export default function Register() {
     setSuccess(false);
 
     if (!email) {
-      setError("Please enter your email address");
+      setError(t("auth.register.emailRequired"));
       return;
     }
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      setError("Please enter a valid email address");
+      setError(t("auth.register.emailInvalid"));
       return;
     }
 
@@ -46,7 +49,7 @@ export default function Register() {
       setError(
         err instanceof Error
           ? err.message
-          : "Something went wrong. Please try again."
+          : t("auth.register.somethingWrong")
       );
     } finally {
       setIsSubmitting(false);
@@ -85,12 +88,17 @@ export default function Register() {
 
         {/* Content */}
         <div className="relative z-10 flex flex-col h-full">
-          <img
-            src={logoUrl}
-            alt="Repraesent"
-            className="app-fade-down h-7 w-auto max-w-[120px] brightness-0 invert opacity-85"
-            style={{ animationDelay: "0s" }}
-          />
+          <div className="flex items-center justify-between">
+            <img
+              src={logoUrl}
+              alt="Repraesent"
+              className="app-fade-down h-7 w-auto max-w-[120px] brightness-0 invert opacity-85"
+              style={{ animationDelay: "0s" }}
+            />
+            <div className="app-fade-in" style={{ animationDelay: "0.1s" }}>
+              <LanguageSwitcher variant="dark" />
+            </div>
+          </div>
 
           <div className="flex-1 flex flex-col justify-center space-y-8">
             <div className="space-y-3">
@@ -101,28 +109,27 @@ export default function Register() {
                   animationDelay: "0.15s",
                 }}
               >
-                Start strong.
+                {t("auth.register.brandLine1")}
                 <br />
-                Grow faster.
+                {t("auth.register.brandLine2")}
               </h2>
               <p
                 className="app-fade-up text-sm text-white/45 leading-relaxed max-w-[260px]"
                 style={{ animationDelay: "0.25s" }}
               >
-                Join sales teams who use Repraesent to close more deals and
-                delight their clients.
+                {t("auth.register.brandSubtitle")}
               </p>
             </div>
 
             <div className="space-y-2.5">
-              {BENEFITS.map((b, i) => (
+              {BENEFIT_KEYS.map((key, i) => (
                 <div
-                  key={b}
+                  key={key}
                   className="app-fade-up flex items-center gap-3"
                   style={{ animationDelay: `${0.35 + i * 0.1}s` }}
                 >
                   <div className="h-1.5 w-1.5 rounded-full bg-amber-400 shrink-0" />
-                  <span className="text-sm text-white/50">{b}</span>
+                  <span className="text-sm text-white/50">{t(key)}</span>
                 </div>
               ))}
             </div>
@@ -140,42 +147,41 @@ export default function Register() {
       {/* Right form panel */}
       <div className="flex-1 flex items-center justify-center bg-stone-50 p-8">
         <div className="w-full max-w-sm space-y-8 app-fade-up">
-          {/* Mobile logo */}
-          <div className="lg:hidden">
+          {/* Mobile logo + language switcher */}
+          <div className="lg:hidden flex items-center justify-between">
             <img
               src={logoUrl}
               alt="Repraesent"
               className="h-7 w-auto max-w-[120px]"
             />
+            <LanguageSwitcher variant="light" />
           </div>
 
           <div className="space-y-1">
             <h1 className="text-2xl font-semibold text-foreground tracking-tight">
-              Create account
+              {t("auth.register.title")}
             </h1>
             <p className="text-sm text-muted-foreground">
-              Enter your email to receive a sign-up link
+              {t("auth.register.subtitle")}
             </p>
           </div>
 
           {success ? (
             <div className="space-y-5 app-fade-up">
               <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-4 text-sm text-emerald-800 leading-relaxed">
-                <p className="font-medium">Check your inbox</p>
+                <p className="font-medium">{t("auth.login.checkInbox")}</p>
                 <p className="text-emerald-700/80 mt-0.5">
-                  We sent a sign-up link to{" "}
-                  <span className="font-medium">{email}</span>. It expires in 6
-                  hours.
+                  {t("auth.register.checkInboxDetail", { email })}
                 </p>
               </div>
               <p className="text-sm text-muted-foreground text-center">
-                Didn't receive it?{" "}
+                {t("auth.login.didntReceive")}{" "}
                 <button
                   type="button"
                   className="text-primary font-medium hover:underline"
                   onClick={() => setSuccess(false)}
                 >
-                  Try again
+                  {t("auth.login.tryAgain")}
                 </button>
               </p>
             </div>
@@ -195,12 +201,12 @@ export default function Register() {
                   htmlFor="email"
                   className="block text-[11px] font-semibold uppercase tracking-widest text-muted-foreground"
                 >
-                  Email address
+                  {t("auth.login.emailLabel")}
                 </label>
                 <Input
                   id="email"
                   type="email"
-                  placeholder="you@example.com"
+                  placeholder={t("auth.login.emailPlaceholder")}
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   disabled={isSubmitting}
@@ -219,20 +225,20 @@ export default function Register() {
                 {isSubmitting ? (
                   <>
                     <div className="h-4 w-4 app-spin rounded-full border-2 border-background/30 border-t-background" />
-                    Sending…
+                    {t("auth.register.submittingButton")}
                   </>
                 ) : (
-                  "Create account →"
+                  t("auth.register.submitButton")
                 )}
               </button>
 
               <p className="text-center text-sm text-muted-foreground">
-                Already have an account?{" "}
+                {t("auth.register.hasAccount")}{" "}
                 <Link
                   to="/login"
                   className="text-primary font-medium hover:underline"
                 >
-                  Sign in
+                  {t("auth.register.signIn")}
                 </Link>
               </p>
             </form>

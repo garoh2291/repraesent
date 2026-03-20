@@ -3,6 +3,7 @@ import { apiClient } from "./axios-instance";
 export interface WorkspaceDetail {
   id: string;
   name: string;
+  language: string;
   url?: { id: string; url: string; type?: string } | null;
   urls?: Array<{ id: string; url: string; type?: string }>;
   services: Array<{
@@ -46,6 +47,10 @@ export async function decryptEmailConfigPassword(
     { params: { serviceId } },
   );
   return response.data;
+}
+
+export async function updateWorkspaceLanguage(language: "en" | "de"): Promise<void> {
+  await apiClient.patch("/users/me/workspace/language", { language });
 }
 
 export async function updateWorkspaceMember(

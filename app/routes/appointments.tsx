@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router";
+import { useTranslation } from "react-i18next";
 import { useAuthContext } from "~/providers/auth-provider";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "~/components/ui/tabs";
 import { type AppointmentConfig } from "~/lib/api/appointments";
@@ -98,23 +99,24 @@ function AppointmentsDashboard({
   selectedConfigId: string;
   onConfigChange: (id: string) => void;
 }) {
+  const { t } = useTranslation();
   return (
     <div className="p-6 space-y-6 app-fade-in">
       {/* Header */}
       <div className="flex items-start justify-between gap-4 app-fade-up">
         <div>
           <h1 className="text-2xl font-semibold text-foreground tracking-tight">
-            Appointments
+            {t("appointments.title")}
           </h1>
           <p className="text-sm text-muted-foreground mt-0.5">
-            Manage your calendar, booking page, and scheduling rules
+            {t("appointments.manageHint")}
           </p>
         </div>
 
         {configs.length > 1 && (
           <div className="flex items-center gap-2 shrink-0">
             <span className="text-xs text-muted-foreground font-medium">
-              Config
+              {t("appointments.configLabel")}
             </span>
             <Select value={selectedConfigId} onValueChange={onConfigChange}>
               <SelectTrigger className="h-9 text-sm w-52">
@@ -136,10 +138,10 @@ function AppointmentsDashboard({
 
       <Tabs defaultValue="calendar" className="w-full app-fade-up app-fade-up-d1">
         <TabsList variant="line" className="w-full mb-6">
-          <TabsTrigger value="calendar">Calendar</TabsTrigger>
-          <TabsTrigger value="general">General</TabsTrigger>
-          <TabsTrigger value="booking">Booking form</TabsTrigger>
-          <TabsTrigger value="business">Working hours</TabsTrigger>
+          <TabsTrigger value="calendar">{t("appointments.tabCalendar")}</TabsTrigger>
+          <TabsTrigger value="general">{t("appointments.tabGeneral")}</TabsTrigger>
+          <TabsTrigger value="booking">{t("appointments.tabBooking")}</TabsTrigger>
+          <TabsTrigger value="business">{t("appointments.tabBusinessHours")}</TabsTrigger>
         </TabsList>
 
         <TabsContent value="calendar" className="space-y-4">

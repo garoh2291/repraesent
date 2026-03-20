@@ -1,6 +1,8 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
+import i18n from "~/i18n";
 import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
 import {
@@ -14,18 +16,12 @@ import { useAuthContext } from "~/providers/auth-provider";
 
 export function meta() {
   return [
-    { title: "Billing information - Repraesent" },
-    { name: "description", content: "Add billing details for invoicing" },
+    { title: i18n.t("onboarding.billing.metaTitle") },
+    { name: "description", content: i18n.t("onboarding.billing.metaDescription") },
   ];
 }
 
-const COUNTRIES = [
-  { code: "DE", label: "Germany" },
-  { code: "GB", label: "United Kingdom" },
-  { code: "FR", label: "France" },
-  { code: "ES", label: "Spain" },
-  { code: "AT", label: "Austria" },
-];
+const COUNTRY_CODES = ["DE", "GB", "FR", "ES", "AT"];
 
 const inputCls =
   "h-11 border-stone-200 dark:border-zinc-700 bg-stone-50 dark:bg-zinc-950 focus-visible:ring-1 focus-visible:ring-foreground/25 transition-shadow";
@@ -37,6 +33,7 @@ const selectCls =
   "flex h-11 w-full rounded-md border border-stone-200 dark:border-zinc-700 bg-stone-50 dark:bg-zinc-950 px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-foreground/25 disabled:cursor-not-allowed disabled:opacity-50";
 
 export default function OnboardingBilling() {
+  const { t } = useTranslation();
   const { user, currentWorkspace, workspaces } = useAuthContext();
   const workspaceId =
     getStoredWorkspaceId() ?? currentWorkspace?.id ?? workspaces[0]?.id;
@@ -107,17 +104,17 @@ export default function OnboardingBilling() {
     e.preventDefault();
     setError(null);
 
-    if (!name.trim()) { setError("Name is required"); return; }
-    if (!email.trim()) { setError("Email is required"); return; }
+    if (!name.trim()) { setError(t("onboarding.billing.nameRequired")); return; }
+    if (!email.trim()) { setError(t("onboarding.billing.emailRequired")); return; }
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
-      setError("Please enter a valid email address"); return;
+      setError(t("onboarding.billing.emailInvalid")); return;
     }
-    if (!hasStripeCustomer && !company.trim()) { setError("Company is required"); return; }
-    if (!address.trim()) { setError("Address is required"); return; }
-    if (!city.trim()) { setError("City is required"); return; }
-    if (!country) { setError("Country is required"); return; }
-    if (!postalCode.trim()) { setError("Postal code is required"); return; }
-    if (!workspaceId) { setError("No workspace selected"); return; }
+    if (!hasStripeCustomer && !company.trim()) { setError(t("onboarding.billing.companyRequired")); return; }
+    if (!address.trim()) { setError(t("onboarding.billing.addressRequired")); return; }
+    if (!city.trim()) { setError(t("onboarding.billing.cityRequired")); return; }
+    if (!country) { setError(t("onboarding.billing.countryRequired")); return; }
+    if (!postalCode.trim()) { setError(t("onboarding.billing.postalCodeRequired")); return; }
+    if (!workspaceId) { setError(t("onboarding.billing.noWorkspaceSelected")); return; }
 
     setIsSubmitting(true);
     try {
@@ -146,7 +143,7 @@ export default function OnboardingBilling() {
       queryClient.invalidateQueries({ queryKey: ["auth"] });
       navigate("/onboarding/products", { replace: true });
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Something went wrong");
+      setError(err instanceof Error ? err.message : t("common.somethingWentWrong"));
     } finally {
       setIsSubmitting(false);
     }
@@ -162,10 +159,10 @@ export default function OnboardingBilling() {
       {/* Section heading */}
       <div className="mb-8 space-y-1.5">
         <h1 className="ob-heading text-[26px] font-semibold tracking-tight text-foreground leading-snug">
-          Billing information
+          {t("onboarding.billing.title")}
         </h1>
         <p className="text-sm text-muted-foreground">
-          Add your billing details so we can create your Stripe customer and send invoices.
+          {t("onboarding.billing.subtitle")}
         </p>
       </div>
 
@@ -199,14 +196,14 @@ export default function OnboardingBilling() {
 
           <div className="space-y-1.5">
             <label htmlFor="email" className={labelCls}>
-              Email <span className="text-destructive normal-case tracking-normal">*</span>
+              {t("onboarding.billing.email")} <span className="text-destructive normal-case tracking-normal">*</span>
             </label>
             <Input
               id="email"
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="billing@company.com"
+              placeholder={t("onboarding.billing.placeholderEmail")}
               required
               disabled={isSubmitting}
               className={inputCls}
@@ -215,12 +212,12 @@ export default function OnboardingBilling() {
 
           <div className="space-y-1.5">
             <label htmlFor="company" className={labelCls}>
-              Company{" "}
+              {t("onboarding.billing.company")}{" "}
               {!hasStripeCustomer ? (
                 <span className="text-destructive normal-case tracking-normal">*</span>
               ) : (
                 <span className="normal-case tracking-normal font-normal text-muted-foreground/60">
-                  (optional)
+                  {t("onboarding.billing.optional")}
                 </span>
               )}
             </label>
@@ -228,7 +225,7 @@ export default function OnboardingBilling() {
               id="company"
               value={company}
               onChange={(e) => setCompany(e.target.value)}
-              placeholder="Acme Inc."
+              placeholder={t("onboarding.billing.placeholderCompany")}
               required
               disabled={isSubmitting}
               className={inputCls}
@@ -239,18 +236,18 @@ export default function OnboardingBilling() {
         {/* Address section */}
         <div className="rounded-xl border border-stone-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-6 shadow-sm space-y-5 ob-fade-up ob-fade-up-d3">
           <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground/60">
-            Address
+            {t("onboarding.billing.sectionAddress")}
           </p>
 
           <div className="space-y-1.5">
             <label htmlFor="address" className={labelCls}>
-              Street address <span className="text-destructive normal-case tracking-normal">*</span>
+              {t("onboarding.billing.streetAddress")} <span className="text-destructive normal-case tracking-normal">*</span>
             </label>
             <Input
               id="address"
               value={address}
               onChange={(e) => setAddress(e.target.value)}
-              placeholder="123 Main St"
+              placeholder={t("onboarding.billing.placeholderAddress")}
               required
               disabled={isSubmitting}
               className={inputCls}
@@ -260,13 +257,13 @@ export default function OnboardingBilling() {
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-1.5">
               <label htmlFor="city" className={labelCls}>
-                City <span className="text-destructive normal-case tracking-normal">*</span>
+                {t("onboarding.billing.city")} <span className="text-destructive normal-case tracking-normal">*</span>
               </label>
               <Input
                 id="city"
                 value={city}
                 onChange={(e) => setCity(e.target.value)}
-                placeholder="Berlin"
+                placeholder={t("onboarding.billing.placeholderCity")}
                 required
                 disabled={isSubmitting}
                 className={inputCls}
@@ -274,13 +271,13 @@ export default function OnboardingBilling() {
             </div>
             <div className="space-y-1.5">
               <label htmlFor="postalCode" className={labelCls}>
-                Postal / ZIP <span className="text-destructive normal-case tracking-normal">*</span>
+                {t("onboarding.billing.postalZip")} <span className="text-destructive normal-case tracking-normal">*</span>
               </label>
               <Input
                 id="postalCode"
                 value={postalCode}
                 onChange={(e) => setPostalCode(e.target.value)}
-                placeholder="10115"
+                placeholder={t("onboarding.billing.placeholderPostalCode")}
                 required
                 disabled={isSubmitting}
                 className={inputCls}
@@ -290,7 +287,7 @@ export default function OnboardingBilling() {
 
           <div className="space-y-1.5">
             <label htmlFor="country" className={labelCls}>
-              Country <span className="text-destructive normal-case tracking-normal">*</span>
+              {t("onboarding.billing.country")} <span className="text-destructive normal-case tracking-normal">*</span>
             </label>
             <select
               id="country"
@@ -300,10 +297,10 @@ export default function OnboardingBilling() {
               disabled={isSubmitting}
               className={selectCls}
             >
-              <option value="">Select country</option>
-              {COUNTRIES.map((c) => (
-                <option key={c.code} value={c.code}>
-                  {c.label}
+              <option value="">{t("onboarding.billing.selectCountry")}</option>
+              {COUNTRY_CODES.map((code) => (
+                <option key={code} value={code}>
+                  {t(`onboarding.billing.countries.${code}`)}
                 </option>
               ))}
             </select>
@@ -313,21 +310,21 @@ export default function OnboardingBilling() {
         {/* Tax section */}
         <div className="rounded-xl border border-stone-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-6 shadow-sm space-y-5 ob-fade-up ob-fade-up-d4">
           <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground/60">
-            Tax
+            {t("onboarding.billing.sectionTax")}
           </p>
 
           <div className="space-y-1.5">
             <label htmlFor="vatNumber" className={labelCls}>
-              VAT number{" "}
+              {t("onboarding.billing.vatNumber")}{" "}
               <span className="normal-case tracking-normal font-normal text-muted-foreground/60">
-                (optional)
+                {t("onboarding.billing.optional")}
               </span>
             </label>
             <Input
               id="vatNumber"
               value={vatNumber}
               onChange={(e) => setVatNumber(e.target.value)}
-              placeholder="DE123456789"
+              placeholder={t("onboarding.billing.placeholderVat")}
               disabled={isSubmitting}
               className={inputCls}
             />
@@ -343,14 +340,14 @@ export default function OnboardingBilling() {
             disabled={isSubmitting}
             className="h-11 px-6 border-stone-200 dark:border-zinc-700 hover:bg-stone-50 dark:hover:bg-zinc-800 transition-colors"
           >
-            ← Back
+            {t("common.backArrow")}
           </Button>
           <Button
             type="submit"
             disabled={isSubmitting}
             className="h-11 px-8 font-medium text-sm bg-foreground text-background hover:opacity-90 transition-opacity"
           >
-            {isSubmitting ? "Saving…" : "Continue →"}
+            {isSubmitting ? t("common.saving") : t("common.continueArrow")}
           </Button>
         </div>
       </form>

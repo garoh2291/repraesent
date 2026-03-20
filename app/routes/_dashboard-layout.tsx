@@ -1,4 +1,6 @@
+import { useEffect } from "react";
 import { Outlet } from "react-router";
+import { useTranslation } from "react-i18next";
 import { useAuthContext } from "~/providers/auth-provider";
 import { Sidebar } from "~/components/sidebar";
 import { Button } from "~/components/ui/button";
@@ -17,6 +19,19 @@ function formatDueDate(unixStr: string): string {
 
 export default function DashboardLayout() {
   const { currentWorkspace } = useAuthContext();
+  const { i18n, t } = useTranslation();
+
+  // Sync workspace language unless the user has a personal language override
+  useEffect(() => {
+    if (!currentWorkspace?.language) return;
+    const hasPersonal = document.cookie.split(";").some((c) =>
+      c.trim().startsWith("personal_lang="),
+    );
+    if (!hasPersonal) {
+      i18n.changeLanguage(currentWorkspace.language);
+    }
+  }, [currentWorkspace?.language, i18n]);
+
   const showUnpaidBanner =
     currentWorkspace?.status === "active" &&
     currentWorkspace?.unpaid_invoice_due_date &&
@@ -32,11 +47,11 @@ export default function DashboardLayout() {
             <div className="flex items-center gap-2.5">
               <AlertTriangle className="h-4 w-4 shrink-0 text-amber-600" />
               <p className="text-sm font-medium text-amber-900">
-                Unpaid invoice — pay by{" "}
-                <span className="font-semibold">
-                  {formatDueDate(currentWorkspace!.unpaid_invoice_due_date!)}
-                </span>{" "}
-                or your workspace will be suspended.
+                {t("billing.unpaidBanner", {
+                  date: formatDueDate(
+                    currentWorkspace!.unpaid_invoice_due_date!,
+                  ),
+                })}
               </p>
             </div>
             <Button
@@ -50,7 +65,7 @@ export default function DashboardLayout() {
                 target="_blank"
                 rel="noopener noreferrer"
               >
-                Pay now →
+                {t("billing.payNow")}
               </a>
             </Button>
           </div>

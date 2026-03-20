@@ -71,6 +71,7 @@ export interface WorkspaceContext {
   products?: WorkspaceProduct[];
   services: WorkspaceService[];
   member_role: "admin" | "editor" | "viewer";
+  language: string;
 }
 
 /**

@@ -1,4 +1,5 @@
 import * as React from "react";
+import { useTranslation } from "react-i18next";
 import {
   type ColumnDef,
   type SortingState,
@@ -58,11 +59,12 @@ export function DataTable<TData, TValue>({
   onSearchChange,
   searchValue: externalSearchValue,
   searchPlaceholder = "Search...",
-  emptyMessage = "No results found.",
+  emptyMessage,
   pageSizeOptions = [10, 20, 50, 100],
   additionalElement,
   onRowClick,
 }: DataTableProps<TData, TValue>) {
+  const { t } = useTranslation();
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [internalSearchValue, setInternalSearchValue] = React.useState("");
 
@@ -126,7 +128,7 @@ export function DataTable<TData, TValue>({
               size="icon-xs"
               onClick={() => handleSearchChange("")}
               className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground h-6 w-6"
-              aria-label="Clear search"
+              aria-label={t("common.clearSearch")}
             >
               <X className="h-4 w-4" />
             </Button>
@@ -170,7 +172,7 @@ export function DataTable<TData, TValue>({
                   colSpan={columns.length}
                   className="h-24 text-center"
                 >
-                  Loading...
+                  {t("common.loading")}
                 </TableCell>
               </TableRow>
             ) : table.getRowModel().rows?.length ? (
@@ -213,7 +215,7 @@ export function DataTable<TData, TValue>({
                   colSpan={columns.length}
                   className="h-24 text-center"
                 >
-                  {emptyMessage}
+                  {emptyMessage ?? t("common.noResultsFound")}
                 </TableCell>
               </TableRow>
             )}
@@ -225,8 +227,11 @@ export function DataTable<TData, TValue>({
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <p className="text-sm text-muted-foreground">
-              Showing {total > 0 ? (currentPage - 1) * limit + 1 : 0} to{" "}
-              {Math.min(currentPage * limit, total)} of {total} results
+              {t("common.showingResults", {
+                from: total > 0 ? (currentPage - 1) * limit + 1 : 0,
+                to: Math.min(currentPage * limit, total),
+                total,
+              })}
             </p>
           </div>
           <div className="flex items-center gap-2">

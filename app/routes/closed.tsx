@@ -1,12 +1,14 @@
 import { useEffect } from "react";
 import { useNavigate } from "react-router";
+import { useTranslation } from "react-i18next";
+import i18n from "~/i18n";
 import { useAuthContext } from "~/providers/auth-provider";
 import { StatusPageHeader } from "~/components/status-page-header";
 
 export function meta() {
   return [
-    { title: "Workspace closed - Repraesent" },
-    { name: "description", content: "Your workspace has been closed" },
+    { title: i18n.t("closed.metaTitle") },
+    { name: "description", content: i18n.t("closed.metaDescription") },
   ];
 }
 
@@ -24,6 +26,7 @@ const CLOSED_STYLES = `
 `;
 
 export default function Closed() {
+  const { t } = useTranslation();
   const { currentWorkspace, workspaces } = useAuthContext();
   const navigate = useNavigate();
   const ws = currentWorkspace ?? workspaces[0];
@@ -80,11 +83,10 @@ export default function Closed() {
           {/* Copy */}
           <div className="space-y-3 cl-fade-up cl-fade-up-d1">
             <h1 className="cl-heading text-[26px] font-semibold text-foreground leading-snug">
-              Workspace closed
+              {t("closed.title")}
             </h1>
             <p className="text-sm text-muted-foreground leading-relaxed">
-              Your workspace has been closed. If you believe this is an error or
-              would like to reactivate, please reach out to our support team.
+              {t("closed.description")}
             </p>
           </div>
 
@@ -94,7 +96,7 @@ export default function Closed() {
               href="mailto:support@repraesent.com"
               className="inline-flex h-11 items-center justify-center rounded-lg border border-stone-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 px-8 text-sm font-medium text-foreground shadow-sm transition-all duration-150 hover:bg-stone-50 dark:hover:bg-zinc-800 hover:border-stone-300 dark:hover:border-zinc-600"
             >
-              Contact support →
+              {t("closed.contactSupport")}
             </a>
             <p className="mt-3 text-xs text-muted-foreground/60">
               support@repraesent.com

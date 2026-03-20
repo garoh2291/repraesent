@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import { Link, useParams, useNavigate } from "react-router";
 import { useQuery } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
 import { useAuthContext } from "~/providers/auth-provider";
 import {
   LeadInfoSection,
@@ -21,6 +22,7 @@ export function meta() {
 }
 
 export default function LeadFormLeadId() {
+  const { t } = useTranslation();
   const { leadId } = useParams<{ leadId: string }>();
   const navigate = useNavigate();
   const { currentWorkspace } = useAuthContext();
@@ -79,7 +81,7 @@ export default function LeadFormLeadId() {
       <div className="flex items-center justify-center min-h-[50vh]">
         <div className="flex flex-col items-center gap-3">
           <div className="h-6 w-6 app-spin rounded-full border-2 border-primary/20 border-t-primary" />
-          <p className="text-sm text-muted-foreground">Loading lead…</p>
+          <p className="text-sm text-muted-foreground">{t("leads.detail.loading")}</p>
         </div>
       </div>
     );
@@ -106,7 +108,7 @@ export default function LeadFormLeadId() {
           className="inline-flex items-center gap-1.5 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors"
         >
           <ArrowLeft className="h-3.5 w-3.5" />
-          Back to leads
+          {t("leads.detail.backToLeads")}
         </Link>
         <h1 className="text-2xl font-semibold text-foreground tracking-tight">
           {displayName}
@@ -131,8 +133,8 @@ export default function LeadFormLeadId() {
         <div className="rounded-2xl border border-border bg-card p-6">
           <Tabs defaultValue="notes" className="w-full">
             <TabsList variant="line" className="w-full mb-5">
-              <TabsTrigger value="notes">Notes</TabsTrigger>
-              <TabsTrigger value="history">History</TabsTrigger>
+              <TabsTrigger value="notes">{t("leads.detail.notes")}</TabsTrigger>
+              <TabsTrigger value="history">{t("leads.detail.history")}</TabsTrigger>
             </TabsList>
             <TabsContent value="notes" className="mt-0">
               <LeadNotesSection leadId={lead.id} canEdit={canEdit} />

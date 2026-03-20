@@ -1,5 +1,6 @@
 import { Link, useLocation, useNavigate } from "react-router";
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   Building2,
   ChevronDown,
@@ -14,6 +15,7 @@ import { InstructionsModal } from "~/components/instructions-modal";
 
 import { useAuthContext } from "~/providers/auth-provider";
 import { useAppointmentConfig } from "~/lib/hooks/useAppointmentConfig";
+import { LanguageSwitcher } from "~/components/language-switcher";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -92,6 +94,7 @@ export function Sidebar() {
     logout,
     isLoggingOut,
   } = useAuthContext();
+  const { t } = useTranslation();
   const location = useLocation();
   const navigate = useNavigate();
   const hasMultipleWorkspaces = (workspaces?.length ?? 0) > 1;
@@ -170,12 +173,12 @@ export function Sidebar() {
       <nav className="min-h-0 flex-1 overflow-y-auto p-3 space-y-0.5">
         <NavLink to="/" isActive={location.pathname === "/"}>
           <HomeIcon className="h-4 w-4 shrink-0" />
-          Home
+          {t("nav.home")}
         </NavLink>
 
         <NavLink to="/products" isActive={location.pathname === "/products"}>
           <Package className="h-4 w-4 shrink-0" />
-          Products
+          {t("nav.products")}
         </NavLink>
 
         {currentWorkspace?.services
@@ -243,19 +246,22 @@ export function Sidebar() {
 
         <NavLink to="/settings" isActive={location.pathname === "/settings"}>
           <Settings className="h-4 w-4 shrink-0" />
-          Settings
+          {t("nav.settings")}
         </NavLink>
       </nav>
 
-      {/* Bottom: logout */}
-      <div className="shrink-0 border-t border-white/5 p-3">
+      {/* Bottom: language + logout */}
+      <div className="shrink-0 border-t border-white/5 p-3 space-y-1.5">
+        <div className="px-3 py-1">
+          <LanguageSwitcher variant="dark" />
+        </div>
         <button
           onClick={() => logout()}
           disabled={isLoggingOut}
           className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-[13px] font-medium text-white/35 hover:bg-white/5 hover:text-white/60 transition-all duration-150 disabled:opacity-50"
         >
           <LogOut className="h-4 w-4 shrink-0" />
-          {isLoggingOut ? "Signing out…" : "Sign out"}
+          {isLoggingOut ? t("common.loading") : t("nav.logout")}
         </button>
       </div>
 

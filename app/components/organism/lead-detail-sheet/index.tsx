@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router";
+import { useTranslation } from "react-i18next";
 import {
   Sheet,
   SheetContent,
@@ -15,10 +16,8 @@ import {
 } from "~/lib/api/leads";
 import { LeadNotesSection } from "~/components/organism/lead-notes-section";
 import { LeadStatusSelect } from "~/components/molecule/lead-status-select";
-import {
-  LEAD_STATUS_LABELS,
-  type LeadStatus as LeadStatusType,
-} from "~/lib/leads/constants";
+import type { LeadStatus as LeadStatusType } from "~/lib/leads/constants";
+import type { TFunction } from "i18next";
 import TooltipContainer from "~/components/tooltip-container";
 import { format, formatDistanceToNow } from "date-fns";
 import { ExternalLink } from "lucide-react";
@@ -33,26 +32,20 @@ function getHistoryItemInitials(item: LeadHistoryItem): string {
   return "S";
 }
 
-function formatHistoryAction(item: LeadHistoryItem): string {
-  if (item.action === "lead_created") return "Lead created";
+function formatHistoryAction(item: LeadHistoryItem, t: TFunction): string {
+  if (item.action === "lead_created") return t("leads.detail.historyLeadCreated");
   if (item.action === "lead_status_updated") {
     const oldStatus = item.details?.old_status as string | undefined;
     const newStatus = item.details?.new_status as string | undefined;
-    const oldLabel = oldStatus
-      ? (LEAD_STATUS_LABELS[oldStatus as keyof typeof LEAD_STATUS_LABELS] ??
-        oldStatus)
-      : "";
-    const newLabel = newStatus
-      ? (LEAD_STATUS_LABELS[newStatus as keyof typeof LEAD_STATUS_LABELS] ??
-        newStatus)
-      : "";
-    if (oldLabel && newLabel) return `Status: ${oldLabel} → ${newLabel}`;
-    if (newLabel) return `Status changed to ${newLabel}`;
-    return "Status updated";
+    const oldLabel = oldStatus ? t(`leads.statuses.${oldStatus}`, { defaultValue: oldStatus }) : "";
+    const newLabel = newStatus ? t(`leads.statuses.${newStatus}`, { defaultValue: newStatus }) : "";
+    if (oldLabel && newLabel) return t("leads.detail.historyStatusChanged", { oldLabel, newLabel });
+    if (newLabel) return t("leads.detail.historyStatusChangedTo", { newLabel });
+    return t("leads.detail.historyStatusUpdated");
   }
-  if (item.action === "note_created") return "Note added";
-  if (item.action === "note_updated") return "Note edited";
-  if (item.action === "note_deleted") return "Note deleted";
+  if (item.action === "note_created") return t("leads.detail.historyNoteAdded");
+  if (item.action === "note_updated") return t("leads.detail.historyNoteEdited");
+  if (item.action === "note_deleted") return t("leads.detail.historyNoteDeleted");
   return item.action.replace(/_/g, " ");
 }
 
@@ -73,6 +66,7 @@ export function LeadDetailSheet({
   isStatusUpdating,
   canEdit = true,
 }: LeadDetailSheetProps) {
+  const { t } = useTranslation();
   const { data: lead, isLoading: leadLoading } = useQuery({
     queryKey: ["lead", leadId],
     queryFn: () => getLead(leadId!),
@@ -107,7 +101,7 @@ export function LeadDetailSheet({
           {leadLoading || !lead ? (
             <div className="flex flex-col items-center justify-center py-16 gap-3">
               <div className="h-5 w-5 app-spin rounded-full border-2 border-primary/20 border-t-primary" />
-              <p className="text-sm text-muted-foreground">Loading…</p>
+              <p className="text-sm text-muted-foreground">{t("common.loading")}</p>
             </div>
           ) : (
             <div className="divide-y divide-border">
@@ -189,6 +183,7 @@ export function LeadInfoSection({
   isStatusUpdating?: boolean;
   withoutLink?: boolean;
 }) {
+  const { t } = useTranslation();
   const currentStatus = lead.status as LeadStatusType;
   const metadata = lead.metadata as Record<string, unknown> | null | undefined;
   const metadataEntries =
@@ -198,20 +193,20 @@ export function LeadInfoSection({
     <div className="space-y-4">
       <div className="flex items-center justify-between gap-2 mb-4">
         <h3 className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
-          Lead Information
+          {t("leads.detail.leadInformation")}
         </h3>
         {!withoutLink && (
           <Link
             to={`/lead-form/${lead.id}`}
             className="inline-flex items-center gap-1 text-xs font-medium text-foreground hover:underline"
           >
-            Full page <ExternalLink className="h-3 w-3" />
+            {t("leads.detail.fullPage")} <ExternalLink className="h-3 w-3" />
           </Link>
         )}
       </div>
 
       <div className="space-y-2.5">
-        <FieldRow label="Status">
+        <FieldRow label={t("leads.columns.status")}>
           {onStatusChange ? (
             <LeadStatusSelect
               value={lead.status}
@@ -221,30 +216,30 @@ export function LeadInfoSection({
             />
           ) : (
             <FieldValue>
-              {LEAD_STATUS_LABELS[currentStatus] ?? lead.status}
+              {t(`leads.statuses.${currentStatus}`, { defaultValue: lead.status })}
             </FieldValue>
           )}
         </FieldRow>
 
-        <FieldRow label="Name">
+        <FieldRow label={t("leads.columns.fullName")}>
           <FieldValue>{lead.full_name || "—"}</FieldValue>
         </FieldRow>
 
-        <FieldRow label="Email">
+        <FieldRow label={t("leads.columns.email")}>
           <FieldValue className="break-all">{lead.email || "—"}</FieldValue>
         </FieldRow>
 
-        <FieldRow label="Phone">
+        <FieldRow label={t("leads.columns.phone")}>
           <FieldValue>{lead.phone || "—"}</FieldValue>
         </FieldRow>
 
-        <FieldRow label="Source">
+        <FieldRow label={t("leads.columns.source")}>
           <FieldValue>
             {lead.source_label || lead.source_table || "—"}
           </FieldValue>
         </FieldRow>
 
-        <FieldRow label="Created">
+        <FieldRow label={t("leads.columns.createdAt")}>
           <FieldValue>
             {lead.created_at ? format(new Date(lead.created_at), "PPp") : "—"}
           </FieldValue>
@@ -277,19 +272,20 @@ export function LeadHistorySection({
   isLoading: boolean;
   withoutLink?: boolean;
 }) {
+  const { t } = useTranslation();
   return (
     <div className="space-y-4">
       <h3 className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
-        History
+        {t("leads.detail.history")}
       </h3>
 
       {isLoading ? (
         <div className="flex items-center gap-2">
           <div className="h-4 w-4 app-spin rounded-full border-2 border-muted-foreground/20 border-t-muted-foreground/60" />
-          <span className="text-sm text-muted-foreground">Loading…</span>
+          <span className="text-sm text-muted-foreground">{t("common.loading")}</span>
         </div>
       ) : history.length === 0 ? (
-        <p className="text-sm text-muted-foreground">No history yet.</p>
+        <p className="text-sm text-muted-foreground">{t("leads.detail.noHistory")}</p>
       ) : (
         <div
           className={cn(
@@ -307,7 +303,7 @@ export function LeadHistorySection({
             />
             <div className="space-y-0">
               {history.map((item, idx) => {
-                const actionText = formatHistoryAction(item);
+                const actionText = formatHistoryAction(item, t);
                 const relativeTime = item.created_at
                   ? formatDistanceToNow(new Date(item.created_at), {
                       addSuffix: true,
@@ -334,7 +330,7 @@ export function LeadHistorySection({
                           tooltipContent={
                             item.user_first_name && item.user_last_name
                               ? `${item.user_first_name} ${item.user_last_name}`
-                              : "System"
+                              : t("leads.detail.system")
                           }
                           showCopyButton={false}
                         >

@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
+import { useTranslation } from "react-i18next";
 import {
   Package,
   Trash2,
@@ -15,6 +16,7 @@ import {
   getCurrentWorkspaceInvoices,
   updateWorkspaceMember,
   removeWorkspaceMember,
+  updateWorkspaceLanguage,
   type WorkspaceDetail,
   type WorkspaceInvoice,
 } from "~/lib/api/workspaces";
@@ -71,16 +73,20 @@ function formatDate(unixStr: string | null): string {
   return new Date(sec * 1000).toLocaleDateString();
 }
 
-function getInvoiceStatusLabel(status: string, dueDate: string | null): string {
-  if (status === "paid") return "Paid";
+function getInvoiceStatusCode(
+  status: string,
+  dueDate: string | null,
+): string {
+  if (status === "paid") return "paid";
   if (status === "open") {
     if (dueDate) {
       const sec = parseInt(dueDate, 10);
-      if (!Number.isNaN(sec) && sec * 1000 < Date.now()) return "Overdue";
+      if (!Number.isNaN(sec) && sec * 1000 < Date.now()) return "overdue";
     }
-    return "Unpaid";
+    return "unpaid";
   }
-  return status || "—";
+  if (status === "draft") return "draft";
+  return status || "unknown";
 }
 
 function SectionLabel({ children }: { children: React.ReactNode }) {
@@ -113,14 +119,14 @@ function SettingsSection({
   );
 }
 
-function StatusPill({ label }: { label: string }) {
+function StatusPill({ code, label }: { code: string; label: string }) {
   const map: Record<string, string> = {
-    Paid: "bg-emerald-50 text-emerald-700 border-emerald-200",
-    Overdue: "bg-red-50 text-red-700 border-red-200",
-    Unpaid: "bg-amber-50 text-amber-700 border-amber-200",
-    Upcoming: "bg-stone-100 text-stone-500 border-stone-200",
+    paid: "bg-emerald-50 text-emerald-700 border-emerald-200",
+    overdue: "bg-red-50 text-red-700 border-red-200",
+    unpaid: "bg-amber-50 text-amber-700 border-amber-200",
+    draft: "bg-stone-100 text-stone-500 border-stone-200",
   };
-  const cls = map[label] ?? "bg-stone-100 text-stone-500 border-stone-200";
+  const cls = map[code] ?? "bg-stone-100 text-stone-500 border-stone-200";
   return (
     <span
       className={cn(
@@ -135,6 +141,7 @@ function StatusPill({ label }: { label: string }) {
 
 function SettingsInvoicesTab() {
   const { currentWorkspace } = useAuthContext();
+  const { t } = useTranslation();
   const { data, isLoading } = useQuery({
     queryKey: ["workspaceInvoices", currentWorkspace?.id],
     queryFn: getCurrentWorkspaceInvoices,
@@ -158,7 +165,7 @@ function SettingsInvoicesTab() {
         <div className="inline-flex h-12 w-12 items-center justify-center rounded-xl bg-muted mx-auto">
           <FileText className="h-5 w-5 text-muted-foreground" />
         </div>
-        <p className="text-sm text-muted-foreground">No invoices yet.</p>
+        <p className="text-sm text-muted-foreground">{t("settings.invoices.noInvoices")}</p>
       </div>
     );
   }
@@ -167,7 +174,7 @@ function SettingsInvoicesTab() {
     <div className="rounded-2xl border border-border bg-card overflow-hidden">
       {/* Table header */}
       <div className="grid grid-cols-[1fr_120px_100px_160px] gap-4 px-5 py-3 bg-muted/40 border-b border-border">
-        {["Invoice #", "Amount", "Status", ""].map((h) => (
+        {[t("settings.invoices.number"), t("settings.invoices.amount"), t("settings.invoices.status"), ""].map((h) => (
           <span
             key={h}
             className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground"
@@ -178,13 +185,9 @@ function SettingsInvoicesTab() {
       </div>
       <div className="divide-y divide-border">
         {invoices.map((inv: WorkspaceInvoice) => {
-          const statusLabel = getInvoiceStatusLabel(
-            inv.status,
-            inv.due_date ?? null,
-          );
+          const statusCode = getInvoiceStatusCode(inv.status, inv.due_date ?? null);
+          const statusLabel = t(`settings.invoices.statuses.${statusCode}`, { defaultValue: statusCode });
           const isPaid = inv.status === "paid";
-          const displayStatus =
-            statusLabel === "draft" ? "Upcoming" : statusLabel;
           return (
             <div
               key={inv.id}
@@ -199,13 +202,13 @@ function SettingsInvoicesTab() {
                   inv.currency ?? null,
                 )}
               </span>
-              <StatusPill label={displayStatus} />
+              <StatusPill code={statusCode} label={statusLabel} />
               <div>
                 {inv.status === "draft" ? (
                   <span className="text-xs text-muted-foreground">
                     {inv.due_date
-                      ? `Due ${formatDate(inv.due_date ?? null)}`
-                      : "Upcoming"}
+                      ? t("settings.invoices.dueLabel", { date: formatDate(inv.due_date ?? null) })
+                      : t("settings.invoices.upcoming")}
                   </span>
                 ) : isPaid ? (
                   (inv.invoice_pdf || inv.hosted_invoice_url) && (
@@ -216,7 +219,7 @@ function SettingsInvoicesTab() {
                       className="inline-flex items-center gap-1.5 text-xs font-medium text-primary hover:underline"
                     >
                       <Download className="h-3.5 w-3.5" />
-                      Download receipt
+                      {t("settings.invoices.downloadReceipt")}
                     </a>
                   )
                 ) : (
@@ -228,7 +231,7 @@ function SettingsInvoicesTab() {
                       className="inline-flex items-center gap-1.5 text-xs font-medium text-primary hover:underline"
                     >
                       <ExternalLink className="h-3.5 w-3.5" />
-                      View invoice
+                      {t("settings.invoices.viewInvoice")}
                     </a>
                   )
                 )}
@@ -243,6 +246,7 @@ function SettingsInvoicesTab() {
 
 export default function Settings() {
   const { user, currentWorkspace } = useAuthContext();
+  const { t, i18n } = useTranslation();
   const queryClient = useQueryClient();
   const [memberToRemove, setMemberToRemove] = useState<{
     userId: string;
@@ -317,8 +321,8 @@ export default function Settings() {
     onSuccess: (_, variables) => {
       toast.success(
         variables.data.lead_notification !== undefined
-          ? "Lead notifications updated"
-          : "Member role updated",
+          ? t("settings.members.notificationsUpdated")
+          : t("settings.members.roleUpdated"),
       );
     },
     onSettled: (_, __, ___, context) => {
@@ -335,12 +339,38 @@ export default function Settings() {
         queryKey: ["workspaceDetail", currentWorkspace?.id],
       });
       setMemberToRemove(null);
-      toast.success("Member removed");
+      toast.success(t("settings.members.memberRemoved"));
     },
     onError: (error) => {
       toast.error(extractErrorMessage(error));
     },
   });
+
+  const workspaceLanguageMutation = useMutation({
+    mutationFn: (language: "en" | "de") => updateWorkspaceLanguage(language),
+    onSuccess: (_, language) => {
+      queryClient.invalidateQueries({ queryKey: ["userContext"] });
+      toast.success(t("settings.workspace.saveSuccess"));
+      // If no personal override, also update UI language to match
+      const hasPersonal = document.cookie
+        .split(";")
+        .some((c) => c.trim().startsWith("personal_lang="));
+      if (!hasPersonal) {
+        i18n.changeLanguage(language);
+      }
+    },
+    onError: (error) => {
+      toast.error(t("settings.workspace.saveFailed"), {
+        description: extractErrorMessage(error),
+      });
+    },
+  });
+
+  const handlePersonalLanguageChange = (lang: "en" | "de") => {
+    const maxAge = 60 * 60 * 24 * 365;
+    document.cookie = `personal_lang=${lang}; path=/; max-age=${maxAge}; samesite=lax`;
+    i18n.changeLanguage(lang);
+  };
 
   const handleRemoveMember = () => {
     if (memberToRemove) {
@@ -353,7 +383,7 @@ export default function Settings() {
       <div className="flex min-h-[50vh] items-center justify-center p-6">
         <div className="flex items-center gap-2.5 text-muted-foreground">
           <div className="h-4 w-4 app-spin rounded-full border-2 border-primary/20 border-t-primary" />
-          <span className="text-sm">Loading settings…</span>
+          <span className="text-sm">{t("common.loading")}</span>
         </div>
       </div>
     );
@@ -368,10 +398,10 @@ export default function Settings() {
       {/* Header */}
       <div className="app-fade-up">
         <h1 className="text-2xl font-semibold text-foreground tracking-tight">
-          Settings
+          {t("settings.title")}
         </h1>
         <p className="text-sm text-muted-foreground mt-0.5">
-          Manage your workspace configuration and team
+          {t("settings.workspace.title")}
         </p>
       </div>
 
@@ -382,13 +412,13 @@ export default function Settings() {
         className="w-full app-fade-up app-fade-up-d1"
       >
         <TabsList variant="line" className="w-full mb-6">
-          <TabsTrigger value="general">General</TabsTrigger>
-          <TabsTrigger value="invoices">Invoices</TabsTrigger>
+          <TabsTrigger value="general">{t("settings.workspace.title")}</TabsTrigger>
+          <TabsTrigger value="invoices">{t("settings.invoices.title")}</TabsTrigger>
         </TabsList>
 
         <TabsContent value="general" className="space-y-8">
           {/* Services */}
-          <SettingsSection label="Services">
+          <SettingsSection label={t("settings.services.title")}>
             {services.length > 0 ? (
               <div className="rounded-2xl border border-border bg-card overflow-hidden">
                 <div className="divide-y divide-border">
@@ -418,14 +448,7 @@ export default function Settings() {
             ) : (
               <div className="rounded-2xl border border-border bg-card px-5 py-6">
                 <p className="text-sm text-muted-foreground">
-                  No services active.{" "}
-                  <a
-                    href="mailto:support@repraesent.com"
-                    className="text-primary hover:underline"
-                  >
-                    Contact support
-                  </a>{" "}
-                  to get started.
+                  {t("settings.services.noServices")}
                 </p>
               </div>
             )}
@@ -434,7 +457,7 @@ export default function Settings() {
           <div className="border-t border-border" />
 
           {/* URL */}
-          <SettingsSection label="Workspace URL">
+          <SettingsSection label={t("settings.workspace.urlLabel")}>
             <TooltipProvider>
               <div className="flex items-center gap-2 max-w-md">
                 <Input
@@ -450,13 +473,7 @@ export default function Settings() {
                     </button>
                   </TooltipTrigger>
                   <TooltipContent side="right" className="max-w-xs text-xs">
-                    To change the URL, contact{" "}
-                    <a
-                      href="mailto:support@repraesent.com"
-                      className="underline"
-                    >
-                      support@repraesent.com
-                    </a>
+                    {t("settings.workspace.urlTooltip")}
                   </TooltipContent>
                 </Tooltip>
               </div>
@@ -467,14 +484,20 @@ export default function Settings() {
 
           {/* Members */}
           <SettingsSection
-            label="Team members"
-            description={`To add members, contact support@repraesent.com`}
+            label={t("settings.members.title")}
+            description={t("settings.members.addHint")}
           >
             {members.length > 0 ? (
               <div className="rounded-2xl border border-border bg-card overflow-hidden">
                 {/* Header row */}
                 <div className="hidden md:grid grid-cols-[1fr_180px_140px_100px_48px] gap-4 px-5 py-3 bg-muted/40 border-b border-border">
-                  {["Member", "Email", "Role", "Lead alerts", ""].map((h) => (
+                  {[
+                    t("settings.members.headerMember"),
+                    t("settings.members.headerEmail"),
+                    t("settings.members.headerRole"),
+                    t("settings.members.headerLeadAlerts"),
+                    "",
+                  ].map((h) => (
                     <span
                       key={h}
                       className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground"
@@ -513,7 +536,7 @@ export default function Settings() {
                               {displayName}
                               {isSelf && (
                                 <span className="ml-1.5 text-[10px] font-medium text-muted-foreground/60 uppercase tracking-wider">
-                                  you
+                                  {t("settings.members.youBadge")}
                                 </span>
                               )}
                             </p>
@@ -540,9 +563,9 @@ export default function Settings() {
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="admin">Admin</SelectItem>
-                            <SelectItem value="editor">Editor</SelectItem>
-                            <SelectItem value="viewer">Viewer</SelectItem>
+                            <SelectItem value="admin">{t("settings.members.roles.admin")}</SelectItem>
+                            <SelectItem value="editor">{t("settings.members.roles.editor")}</SelectItem>
+                            <SelectItem value="viewer">{t("settings.members.roles.viewer")}</SelectItem>
                           </SelectContent>
                         </Select>
                         {/* Lead notification */}
@@ -570,7 +593,7 @@ export default function Settings() {
                               })
                             }
                             disabled={!canDelete}
-                            aria-label={`Remove ${displayName}`}
+                            aria-label={t("settings.members.removeMember")}
                             className="h-8 w-8 rounded-lg flex items-center justify-center text-muted-foreground hover:text-destructive hover:bg-destructive/8 transition-colors disabled:opacity-30 disabled:pointer-events-none"
                           >
                             <Trash2 className="h-3.5 w-3.5" />
@@ -584,10 +607,57 @@ export default function Settings() {
             ) : (
               <div className="rounded-2xl border border-border bg-card px-5 py-6">
                 <p className="text-sm text-muted-foreground">
-                  No members in this workspace.
+                  {t("settings.members.noMembers")}
                 </p>
               </div>
             )}
+          </SettingsSection>
+
+          <div className="border-t border-border" />
+
+          {/* Workspace Language (admin only) */}
+          {isAdmin && (
+            <SettingsSection
+              label={t("settings.workspace.language")}
+              description={t("settings.workspace.languageHint")}
+            >
+              <Select
+                value={currentWorkspace?.language ?? "de"}
+                onValueChange={(v) =>
+                  workspaceLanguageMutation.mutate(v as "en" | "de")
+                }
+                disabled={workspaceLanguageMutation.isPending}
+              >
+                <SelectTrigger className="h-10 max-w-[240px]">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="de">{t("settings.workspace.languageDe")}</SelectItem>
+                  <SelectItem value="en">{t("settings.workspace.languageEn")}</SelectItem>
+                </SelectContent>
+              </Select>
+            </SettingsSection>
+          )}
+
+          <div className="border-t border-border" />
+
+          {/* Personal Language */}
+          <SettingsSection
+            label={t("settings.language.title")}
+            description={t("settings.language.hint")}
+          >
+            <Select
+              value={i18n.language?.startsWith("de") ? "de" : "en"}
+              onValueChange={(v) => handlePersonalLanguageChange(v as "en" | "de")}
+            >
+              <SelectTrigger className="h-10 max-w-[240px]">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="de">{t("settings.language.de")}</SelectItem>
+                <SelectItem value="en">{t("settings.language.en")}</SelectItem>
+              </SelectContent>
+            </Select>
           </SettingsSection>
         </TabsContent>
 
@@ -603,20 +673,21 @@ export default function Settings() {
       >
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Remove member?</AlertDialogTitle>
+            <AlertDialogTitle>{t("settings.members.removeTitle")}</AlertDialogTitle>
             <AlertDialogDescription>
-              This will remove <strong>{memberToRemove?.name}</strong> from the
-              workspace. This action cannot be undone.
+              {t("settings.members.removeDescription", { name: memberToRemove?.name ?? "" })}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel>{t("common.cancel")}</AlertDialogCancel>
             <Button
               className="bg-foreground text-background hover:bg-foreground/90 hover:text-background transition-colors"
               onClick={handleRemoveMember}
               disabled={removeMemberMutation.isPending}
             >
-              {removeMemberMutation.isPending ? "Removing…" : "Remove"}
+              {removeMemberMutation.isPending
+                ? t("settings.members.removing")
+                : t("settings.members.removeMember")}
             </Button>
           </AlertDialogFooter>
         </AlertDialogContent>
