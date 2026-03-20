@@ -9,6 +9,8 @@ export interface WorkspaceDetail {
   services: Array<{
     service_id: string;
     service_name: string;
+    service_name_en: string | null;
+    service_name_de: string | null;
     service_image: string | null;
     service_slug: string | null;
     service_type: string | null;

@@ -35,15 +35,33 @@ export interface AuthResponse {
 
 /**
  * Workspace service item
+ * Use getLocalizedServiceName() to display based on user's preferred language
  */
 export interface WorkspaceService {
   service_id: string;
   service_name: string;
+  service_name_en: string | null;
+  service_name_de: string | null;
   service_image: string | null;
   service_slug: string | null;
   service_type: string | null;
   service_icon: string | null;
   service_config: Record<string, unknown> | null;
+}
+
+/**
+ * Get service display name based on user's preferred language (i18n).
+ * Uses personal language override, not workspace language.
+ */
+export function getLocalizedServiceName(
+  service: Pick<WorkspaceService, "service_name" | "service_name_en" | "service_name_de">,
+  lang: string
+): string {
+  const isDe = lang?.startsWith("de");
+  if (isDe) {
+    return service.service_name_de ?? service.service_name_en ?? service.service_name;
+  }
+  return service.service_name_en ?? service.service_name_de ?? service.service_name;
 }
 
 /**

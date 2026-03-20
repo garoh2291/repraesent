@@ -39,9 +39,9 @@
     "home": "Startseite",
     "leads": "Leads",
     "appointments": "Termine",
-    "products": "Produkte",
     "settings": "Einstellungen",
-    "logout": "Abmelden"
+    "logout": "Abmelden",
+    "subscriptions": "Abonnements"
   },
   "auth": {
     "login": {

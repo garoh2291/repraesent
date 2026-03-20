@@ -12,6 +12,7 @@ import {
   CartesianGrid,
   Tooltip,
 } from "recharts";
+import { getLocalizedServiceName } from "~/lib/api/auth";
 import { useAuthContext } from "~/providers/auth-provider";
 import { cn } from "~/lib/utils";
 import { getLeadAnalytics, type LeadAnalyticsPeriod } from "~/lib/api/leads";
@@ -279,7 +280,7 @@ function LeadAnalyticsChart() {
 
 export default function Home() {
   const { user, currentWorkspace } = useAuthContext();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
 
   const services = currentWorkspace?.services ?? [];
   const role = currentWorkspace?.member_role ?? "—";
@@ -366,7 +367,7 @@ export default function Home() {
                   {s.service_image ? (
                     <img
                       src={s.service_image}
-                      alt={s.service_name}
+                      alt={getLocalizedServiceName(s, i18n.language ?? "de")}
                       className="h-full w-20 shrink-0 object-cover p-2"
                     />
                   ) : (
@@ -376,7 +377,7 @@ export default function Home() {
                   )}
                   <div className="flex-1 min-w-0 pr-4">
                     <p className="font-semibold text-sm text-foreground truncate">
-                      {s.service_name}
+                      {getLocalizedServiceName(s, i18n.language ?? "de")}
                     </p>
                     <p className="flex items-center gap-1 text-xs text-muted-foreground mt-0.5">
                       {hasSlug ? (

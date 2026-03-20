@@ -11,6 +11,7 @@ import {
   ExternalLink,
 } from "lucide-react";
 import { useAuthContext } from "~/providers/auth-provider";
+import { getLocalizedServiceName } from "~/lib/api/auth";
 import {
   getWorkspaceDetail,
   getCurrentWorkspaceInvoices,
@@ -439,7 +440,7 @@ export default function Settings() {
                         </div>
                       )}
                       <span className="text-sm font-medium text-foreground">
-                        {s.service_name}
+                        {getLocalizedServiceName(s, i18n.language ?? "de")}
                       </span>
                     </div>
                   ))}

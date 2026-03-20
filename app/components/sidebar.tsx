@@ -13,6 +13,7 @@ import {
 import * as LucideIcons from "lucide-react";
 import { InstructionsModal } from "~/components/instructions-modal";
 
+import { getLocalizedServiceName } from "~/lib/api/auth";
 import { useAuthContext } from "~/providers/auth-provider";
 import { useAppointmentConfig } from "~/lib/hooks/useAppointmentConfig";
 import { LanguageSwitcher } from "~/components/language-switcher";
@@ -26,7 +27,7 @@ import {
 import logoUrl from "~/components/icons/re_praesent-mark-brand-hor.svg?url";
 
 const lucideIconNames = new Set(
-  Object.keys(LucideIcons).filter((key) => /^[A-Z]/.test(key)),
+  Object.keys(LucideIcons).filter((key) => /^[A-Z]/.test(key))
 );
 
 function kebabToPascal(name: string) {
@@ -94,7 +95,7 @@ export function Sidebar() {
     logout,
     isLoggingOut,
   } = useAuthContext();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const location = useLocation();
   const navigate = useNavigate();
   const hasMultipleWorkspaces = (workspaces?.length ?? 0) > 1;
@@ -103,10 +104,10 @@ export function Sidebar() {
   >(null);
   const hasAppointmentsService =
     currentWorkspace?.services?.some(
-      (s) => s.service_type === "appointments",
+      (s) => s.service_type === "appointments"
     ) ?? false;
   const { data: appointmentConfig } = useAppointmentConfig(
-    hasAppointmentsService && !!currentWorkspace?.id,
+    hasAppointmentsService && !!currentWorkspace?.id
   );
   const showAppointmentsInSidebar =
     hasAppointmentsService && !!appointmentConfig;
@@ -176,16 +177,11 @@ export function Sidebar() {
           {t("nav.home")}
         </NavLink>
 
-        <NavLink to="/products" isActive={location.pathname === "/products"}>
-          <Package className="h-4 w-4 shrink-0" />
-          {t("nav.products")}
-        </NavLink>
-
         {currentWorkspace?.services
           ?.filter(
             (service) =>
               service.service_type !== "appointments" ||
-              showAppointmentsInSidebar,
+              showAppointmentsInSidebar
           )
           ?.map((service) => {
             const href = service.service_slug
@@ -223,7 +219,9 @@ export function Sidebar() {
                       className="h-4 w-4 shrink-0"
                     />
                   )}
-                  <span className="truncate">{service.service_name}</span>
+                  <span className="truncate">
+                    {getLocalizedServiceName(service, i18n.language ?? "de")}
+                  </span>
                 </NavLink>
                 {hasInstructions && (
                   <button
@@ -247,6 +245,10 @@ export function Sidebar() {
         <NavLink to="/settings" isActive={location.pathname === "/settings"}>
           <Settings className="h-4 w-4 shrink-0" />
           {t("nav.settings")}
+        </NavLink>
+        <NavLink to="/products" isActive={location.pathname === "/products"}>
+          <Package className="h-4 w-4 shrink-0" />
+          {t("nav.subscriptions")}
         </NavLink>
       </nav>
 
