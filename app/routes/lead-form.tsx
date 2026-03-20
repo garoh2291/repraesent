@@ -12,7 +12,7 @@ import FilterComponent from "~/components/molecule/filter-component";
 import { Button } from "~/components/ui/button";
 import TooltipContainer from "~/components/tooltip-container";
 import { getLeads, type Lead, type LeadStatus } from "~/lib/api/leads";
-import { shortLeadId } from "~/lib/leads/utils";
+import { LeadTasksSummaryCell } from "~/components/organism/tasks/lead-tasks-summary-cell";
 import { useDebounce } from "~/lib/hooks/useDebounce";
 import { useSearchParamsSelect } from "~/lib/hooks/useQueryParams";
 import { useLeadsViewMode } from "~/lib/hooks/useLocalStorage";
@@ -168,19 +168,14 @@ export default function LeadForm() {
 
   const columns: ColumnDef<Lead>[] = [
     {
-      accessorKey: "id",
-      header: t("leads.columns.id"),
-      cell: ({ row }) => {
-        const id = row.original.id;
-        const short = shortLeadId(id);
-        return (
-          <TooltipContainer tooltipContent={id} copyText={id}>
-            <span className="font-mono text-xs text-muted-foreground bg-muted px-1.5 py-0.5 rounded">
-              {short}
-            </span>
-          </TooltipContainer>
-        );
-      },
+      id: "tasks_summary",
+      header: t("tasks.leadRow.columnHeader"),
+      cell: ({ row }) => (
+        <LeadTasksSummaryCell
+          lead={row.original}
+          onClick={() => setSelectedLeadId(row.original.id)}
+        />
+      ),
     },
     {
       accessorKey: "full_name",

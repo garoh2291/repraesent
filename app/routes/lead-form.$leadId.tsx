@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
 import { Link, useParams, useNavigate } from "react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
@@ -8,8 +8,11 @@ import {
   LeadHistorySection,
 } from "~/components/organism/lead-detail-sheet";
 import { LeadNotesSection } from "~/components/organism/lead-notes-section";
+import { LeadTasksSection } from "~/components/organism/tasks/lead-tasks-section";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "~/components/ui/tabs";
 import { getLead, getLeadHistory } from "~/lib/api/leads";
+import { getWorkspaceDetail } from "~/lib/api/workspaces";
+import type { WorkspaceMemberItem } from "~/components/organism/tasks/task-form-modal";
 import { useCanEditLeads } from "~/lib/hooks/useCanEditLeads";
 import { useUpdateLeadStatus } from "~/lib/hooks/useUpdateLeadStatus";
 import { ArrowLeft } from "lucide-react";
@@ -29,6 +32,24 @@ export default function LeadFormLeadId() {
 
   const updateStatusMutation = useUpdateLeadStatus();
   const canEdit = useCanEditLeads();
+
+  const workspaceQuery = useQuery({
+    queryKey: ["workspace-detail"],
+    queryFn: () => getWorkspaceDetail(),
+    enabled: !!currentWorkspace,
+  });
+
+  const workspaceMembers: WorkspaceMemberItem[] = useMemo(
+    () =>
+      (workspaceQuery.data?.members ?? []).map((m) => ({
+        user_id: m.user_id,
+        user_first_name: m.user_first_name,
+        user_last_name: m.user_last_name,
+        user_email: m.user_email,
+        role: m.role,
+      })),
+    [workspaceQuery.data],
+  );
 
   const { data: lead, isLoading: leadLoading } = useQuery({
     queryKey: ["lead", leadId],
@@ -129,13 +150,21 @@ export default function LeadFormLeadId() {
           />
         </div>
 
-        {/* Notes + history panel */}
+        {/* Tasks + Notes + History panel */}
         <div className="rounded-2xl border border-border bg-card p-6">
-          <Tabs defaultValue="notes" className="w-full">
+          <Tabs defaultValue="tasks" className="w-full">
             <TabsList variant="line" className="w-full mb-5">
+              <TabsTrigger value="tasks">{t("tasks.title")}</TabsTrigger>
               <TabsTrigger value="notes">{t("leads.detail.notes")}</TabsTrigger>
               <TabsTrigger value="history">{t("leads.detail.history")}</TabsTrigger>
             </TabsList>
+            <TabsContent value="tasks" className="mt-0">
+              <LeadTasksSection
+                leadId={lead.id}
+                canEdit={canEdit}
+                workspaceMembers={workspaceMembers}
+              />
+            </TabsContent>
             <TabsContent value="notes" className="mt-0">
               <LeadNotesSection leadId={lead.id} canEdit={canEdit} />
             </TabsContent>

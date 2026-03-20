@@ -39,6 +39,7 @@
     "home": "Home",
     "leads": "Leads",
     "appointments": "Appointments",
+    "tasks": "Tasks",
     "subscriptions": "Subscriptions",
     "settings": "Settings",
     "logout": "Log out"
@@ -648,6 +649,107 @@
     "needHelp": "Need help?",
     "signOut": "Sign out",
     "signingOut": "Signing out…"
+  },
+  "tasks": {
+    "title": "Tasks",
+    "pageHint": "Manage your team's tasks across all leads",
+    "newTask": "New task",
+    "noTasks": "No tasks yet",
+    "noTasksHint": "Add a task to track actions for this lead",
+    "noTasksPage": "No tasks found",
+    "searchPlaceholder": "Search tasks...",
+    "allAssignees": "All assignees",
+    "allStatuses": "All statuses",
+    "clearFilters": "Clear filters",
+    "kanbanView": "Kanban",
+    "calendarView": "Calendar",
+    "showCompleted": "Show completed ({{count}})",
+    "hideCompleted": "Hide completed",
+    "addTask": "Add task",
+    "openTasks": "{{count}} open",
+    "tasksCount_one": "{{count}} task",
+    "tasksCount_other": "{{count}} tasks",
+    "fields": {
+      "title": "Title",
+      "description": "Comment",
+      "dueDate": "Due date",
+      "assignee": "Assignee",
+      "status": "Status",
+      "lead": "Lead",
+      "createdBy": "Created by",
+      "createdAt": "Created",
+      "updatedAt": "Updated"
+    },
+    "statuses": {
+      "todo": "To Do",
+      "in_progress": "In Progress",
+      "done": "Done"
+    },
+    "urgency": {
+      "overdue": "Overdue",
+      "due_soon": "Due soon",
+      "upcoming": "Upcoming"
+    },
+    "actions": {
+      "markDone": "Mark as done",
+      "reopen": "Reopen",
+      "edit": "Edit task",
+      "delete": "Delete task",
+      "confirmDeleteTitle": "Delete task?",
+      "confirmDeleteDesc": "This action cannot be undone.",
+      "save": "Save task",
+      "addTask": "Add task",
+      "newNote": "New task",
+      "editing": "Editing…"
+    },
+    "confirm": {
+      "markDoneTitle": "Mark as done?",
+      "markDoneDesc": "This will mark the task as completed.",
+      "reopenTitle": "Reopen task?",
+      "reopenDesc": "This will move the task back to open."
+    },
+    "form": {
+      "titlePlaceholder": "e.g. Call the client",
+      "descriptionPlaceholder": "Add a comment or note...",
+      "dueDatePlaceholder": "Pick a due date",
+      "unassigned": "Unassigned",
+      "noMembers": "No members found",
+      "editTitle": "Edit task",
+      "createTitle": "New task",
+      "searchLead": "Search lead..."
+    },
+    "detail": {
+      "attachedLead": "Lead",
+      "history": "History",
+      "noHistory": "No history yet.",
+      "system": "System",
+      "historyTaskCreated": "Task created",
+      "historyTaskUpdated": "Task updated",
+      "historyStatusChanged": "Status changed to {{newStatus}}",
+      "historyTaskDeleted": "Task deleted"
+    },
+    "calendar": {
+      "noTasksOnDay": "No tasks on this day",
+      "tasksOnDay_one": "{{count}} task on {{date}}",
+      "tasksOnDay_other": "{{count}} tasks on {{date}}",
+      "today": "Today",
+      "prevMonth": "Previous month",
+      "nextMonth": "Next month",
+      "monthView": "Month",
+      "weekView": "Week"
+    },
+    "columns": {
+      "title": "Title",
+      "lead": "Lead",
+      "assignee": "Assignee",
+      "dueDate": "Due",
+      "status": "Status"
+    },
+    "leadRow": {
+      "columnHeader": "Tasks",
+      "noTasks": "—",
+      "openCount": "{{count}} open"
+    }
   },
   "meta": {
     "titleSuffix": " - Repraesent"

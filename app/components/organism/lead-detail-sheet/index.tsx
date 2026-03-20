@@ -1,3 +1,4 @@
+import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router";
 import { useTranslation } from "react-i18next";
@@ -15,6 +16,7 @@ import {
   type LeadStatus,
 } from "~/lib/api/leads";
 import { LeadNotesSection } from "~/components/organism/lead-notes-section";
+import { LeadTasksSection } from "~/components/organism/tasks/lead-tasks-section";
 import { LeadStatusSelect } from "~/components/molecule/lead-status-select";
 import type { LeadStatus as LeadStatusType } from "~/lib/leads/constants";
 import type { TFunction } from "i18next";
@@ -22,6 +24,8 @@ import TooltipContainer from "~/components/tooltip-container";
 import { format, formatDistanceToNow } from "date-fns";
 import { ExternalLink } from "lucide-react";
 import { cn } from "~/lib/utils";
+import { getWorkspaceDetail } from "~/lib/api/workspaces";
+import type { WorkspaceMemberItem } from "~/components/organism/tasks/task-form-modal";
 
 function getHistoryItemInitials(item: LeadHistoryItem): string {
   const first = item.user_first_name?.trim() ?? "";
@@ -33,19 +37,27 @@ function getHistoryItemInitials(item: LeadHistoryItem): string {
 }
 
 function formatHistoryAction(item: LeadHistoryItem, t: TFunction): string {
-  if (item.action === "lead_created") return t("leads.detail.historyLeadCreated");
+  if (item.action === "lead_created")
+    return t("leads.detail.historyLeadCreated");
   if (item.action === "lead_status_updated") {
     const oldStatus = item.details?.old_status as string | undefined;
     const newStatus = item.details?.new_status as string | undefined;
-    const oldLabel = oldStatus ? t(`leads.statuses.${oldStatus}`, { defaultValue: oldStatus }) : "";
-    const newLabel = newStatus ? t(`leads.statuses.${newStatus}`, { defaultValue: newStatus }) : "";
-    if (oldLabel && newLabel) return t("leads.detail.historyStatusChanged", { oldLabel, newLabel });
+    const oldLabel = oldStatus
+      ? t(`leads.statuses.${oldStatus}`, { defaultValue: oldStatus })
+      : "";
+    const newLabel = newStatus
+      ? t(`leads.statuses.${newStatus}`, { defaultValue: newStatus })
+      : "";
+    if (oldLabel && newLabel)
+      return t("leads.detail.historyStatusChanged", { oldLabel, newLabel });
     if (newLabel) return t("leads.detail.historyStatusChangedTo", { newLabel });
     return t("leads.detail.historyStatusUpdated");
   }
   if (item.action === "note_created") return t("leads.detail.historyNoteAdded");
-  if (item.action === "note_updated") return t("leads.detail.historyNoteEdited");
-  if (item.action === "note_deleted") return t("leads.detail.historyNoteDeleted");
+  if (item.action === "note_updated")
+    return t("leads.detail.historyNoteEdited");
+  if (item.action === "note_deleted")
+    return t("leads.detail.historyNoteDeleted");
   return item.action.replace(/_/g, " ");
 }
 
@@ -79,6 +91,24 @@ export function LeadDetailSheet({
     enabled: !!leadId && open,
   });
 
+  const { data: workspaceData } = useQuery({
+    queryKey: ["workspace-detail"],
+    queryFn: () => getWorkspaceDetail(),
+    enabled: open,
+  });
+
+  const workspaceMembers: WorkspaceMemberItem[] = useMemo(
+    () =>
+      (workspaceData?.members ?? []).map((m) => ({
+        user_id: m.user_id,
+        user_first_name: m.user_first_name,
+        user_last_name: m.user_last_name,
+        user_email: m.user_email,
+        role: m.role,
+      })),
+    [workspaceData]
+  );
+
   const displayName = lead
     ? lead.full_name ||
       [lead.first_name, lead.last_name].filter(Boolean).join(" ").trim() ||
@@ -101,7 +131,9 @@ export function LeadDetailSheet({
           {leadLoading || !lead ? (
             <div className="flex flex-col items-center justify-center py-16 gap-3">
               <div className="h-5 w-5 app-spin rounded-full border-2 border-primary/20 border-t-primary" />
-              <p className="text-sm text-muted-foreground">{t("common.loading")}</p>
+              <p className="text-sm text-muted-foreground">
+                {t("common.loading")}
+              </p>
             </div>
           ) : (
             <div className="divide-y divide-border">
@@ -111,6 +143,14 @@ export function LeadDetailSheet({
                   lead={lead}
                   onStatusChange={onStatusChange}
                   isStatusUpdating={isStatusUpdating}
+                />
+              </div>
+              {/* Tasks */}
+              <div className="px-5 py-5">
+                <LeadTasksSection
+                  leadId={lead.id}
+                  canEdit={canEdit}
+                  workspaceMembers={workspaceMembers}
                 />
               </div>
               {/* Notes */}
@@ -143,9 +183,11 @@ function FieldRow({
 }) {
   return (
     <div className="grid grid-cols-[100px_1fr] gap-2 items-start">
-      <span className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground pt-1.5">
-        {label}
-      </span>
+      <TooltipContainer tooltipContent={label}>
+        <span className="text-[11px] max-w-[150px] truncate font-semibold uppercase tracking-widest text-muted-foreground pt-1.5">
+          {label}
+        </span>
+      </TooltipContainer>
       <div className="min-w-0">{children}</div>
     </div>
   );
@@ -216,7 +258,9 @@ export function LeadInfoSection({
             />
           ) : (
             <FieldValue>
-              {t(`leads.statuses.${currentStatus}`, { defaultValue: lead.status })}
+              {t(`leads.statuses.${currentStatus}`, {
+                defaultValue: lead.status,
+              })}
             </FieldValue>
           )}
         </FieldRow>
@@ -282,10 +326,14 @@ export function LeadHistorySection({
       {isLoading ? (
         <div className="flex items-center gap-2">
           <div className="h-4 w-4 app-spin rounded-full border-2 border-muted-foreground/20 border-t-muted-foreground/60" />
-          <span className="text-sm text-muted-foreground">{t("common.loading")}</span>
+          <span className="text-sm text-muted-foreground">
+            {t("common.loading")}
+          </span>
         </div>
       ) : history.length === 0 ? (
-        <p className="text-sm text-muted-foreground">{t("leads.detail.noHistory")}</p>
+        <p className="text-sm text-muted-foreground">
+          {t("leads.detail.noHistory")}
+        </p>
       ) : (
         <div
           className={cn(

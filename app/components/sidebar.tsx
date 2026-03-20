@@ -3,6 +3,7 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   Building2,
+  CheckSquare,
   ChevronDown,
   HomeIcon,
   Info,
@@ -241,6 +242,11 @@ export function Sidebar() {
               </div>
             );
           })}
+
+        <NavLink to="/tasks" isActive={location.pathname === "/tasks"}>
+          <CheckSquare className="h-4 w-4 shrink-0" />
+          {t("nav.tasks")}
+        </NavLink>
 
         <NavLink to="/settings" isActive={location.pathname === "/settings"}>
           <Settings className="h-4 w-4 shrink-0" />

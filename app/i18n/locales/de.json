@@ -39,6 +39,7 @@
     "home": "Startseite",
     "leads": "Leads",
     "appointments": "Termine",
+    "tasks": "Aufgaben",
     "settings": "Einstellungen",
     "logout": "Abmelden",
     "subscriptions": "Abonnements"
@@ -648,6 +649,107 @@
     "needHelp": "Hilfe benötigt?",
     "signOut": "Abmelden",
     "signingOut": "Wird abgemeldet…"
+  },
+  "tasks": {
+    "title": "Aufgaben",
+    "pageHint": "Verwalten Sie die Teamaufgaben für alle Leads",
+    "newTask": "Neue Aufgabe",
+    "noTasks": "Noch keine Aufgaben",
+    "noTasksHint": "Fügen Sie eine Aufgabe hinzu, um Aktionen für diesen Lead zu verfolgen",
+    "noTasksPage": "Keine Aufgaben gefunden",
+    "searchPlaceholder": "Aufgaben suchen...",
+    "allAssignees": "Alle Mitglieder",
+    "allStatuses": "Alle Status",
+    "clearFilters": "Filter zurücksetzen",
+    "kanbanView": "Kanban",
+    "calendarView": "Kalender",
+    "showCompleted": "Erledigte anzeigen ({{count}})",
+    "hideCompleted": "Erledigte ausblenden",
+    "addTask": "Aufgabe hinzufügen",
+    "openTasks": "{{count}} offen",
+    "tasksCount_one": "{{count}} Aufgabe",
+    "tasksCount_other": "{{count}} Aufgaben",
+    "fields": {
+      "title": "Titel",
+      "description": "Kommentar",
+      "dueDate": "Fälligkeitsdatum",
+      "assignee": "Zugewiesen an",
+      "status": "Status",
+      "lead": "Lead",
+      "createdBy": "Erstellt von",
+      "createdAt": "Erstellt",
+      "updatedAt": "Aktualisiert"
+    },
+    "statuses": {
+      "todo": "Offen",
+      "in_progress": "In Bearbeitung",
+      "done": "Erledigt"
+    },
+    "urgency": {
+      "overdue": "Überfällig",
+      "due_soon": "Bald fällig",
+      "upcoming": "Demnächst"
+    },
+    "actions": {
+      "markDone": "Als erledigt markieren",
+      "reopen": "Wieder öffnen",
+      "edit": "Aufgabe bearbeiten",
+      "delete": "Aufgabe löschen",
+      "confirmDeleteTitle": "Aufgabe löschen?",
+      "confirmDeleteDesc": "Diese Aktion kann nicht rückgängig gemacht werden.",
+      "save": "Aufgabe speichern",
+      "addTask": "Aufgabe hinzufügen",
+      "newNote": "Neue Aufgabe",
+      "editing": "Wird bearbeitet…"
+    },
+    "confirm": {
+      "markDoneTitle": "Als erledigt markieren?",
+      "markDoneDesc": "Die Aufgabe wird als abgeschlossen markiert.",
+      "reopenTitle": "Aufgabe wieder öffnen?",
+      "reopenDesc": "Die Aufgabe wird wieder als offen markiert."
+    },
+    "form": {
+      "titlePlaceholder": "z.B. Kunden anrufen",
+      "descriptionPlaceholder": "Kommentar oder Notiz hinzufügen...",
+      "dueDatePlaceholder": "Fälligkeitsdatum wählen",
+      "unassigned": "Nicht zugewiesen",
+      "noMembers": "Keine Mitglieder gefunden",
+      "editTitle": "Aufgabe bearbeiten",
+      "createTitle": "Neue Aufgabe",
+      "searchLead": "Lead suchen..."
+    },
+    "detail": {
+      "attachedLead": "Lead",
+      "history": "Verlauf",
+      "noHistory": "Noch kein Verlauf.",
+      "system": "System",
+      "historyTaskCreated": "Aufgabe erstellt",
+      "historyTaskUpdated": "Aufgabe aktualisiert",
+      "historyStatusChanged": "Status geändert zu {{newStatus}}",
+      "historyTaskDeleted": "Aufgabe gelöscht"
+    },
+    "calendar": {
+      "noTasksOnDay": "Keine Aufgaben an diesem Tag",
+      "tasksOnDay_one": "{{count}} Aufgabe am {{date}}",
+      "tasksOnDay_other": "{{count}} Aufgaben am {{date}}",
+      "today": "Heute",
+      "prevMonth": "Vorheriger Monat",
+      "nextMonth": "Nächster Monat",
+      "monthView": "Monat",
+      "weekView": "Woche"
+    },
+    "columns": {
+      "title": "Titel",
+      "lead": "Lead",
+      "assignee": "Zugewiesen",
+      "dueDate": "Fällig",
+      "status": "Status"
+    },
+    "leadRow": {
+      "columnHeader": "Aufgaben",
+      "noTasks": "—",
+      "openCount": "{{count}} offen"
+    }
   },
   "meta": {
     "titleSuffix": " - Repraesent"

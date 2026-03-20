@@ -31,6 +31,7 @@ export default [
       route("appointments", "routes/appointments.tsx"),
       route("analytics", "routes/analytics.tsx"),
       route("email", "routes/email.tsx"),
+      route("tasks", "routes/tasks.tsx"),
       route("settings", "routes/settings.tsx"),
     ]),
   ]),
