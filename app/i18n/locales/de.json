@@ -848,6 +848,13 @@
     "preview": "Vorschau",
     "htmlHint": "Vollständiges HTML einfügen. Die Vorschau zeigt die E-Mail genau so, wie der Empfänger sie sehen wird.",
     "saved": "Gespeichert",
+    "sendingFrom": "Gesendet von",
+    "fromLabel": "Von",
+    "subjectLabel": "Betreff",
+    "configuredInEmailSettings": "via E-Mail-Einstellungen",
+    "noEmailConfigured": "Keine E-Mail konfiguriert — zu den E-Mail-Einstellungen",
+    "fillToEnable": "Zuerst Betreff & Inhalt ausfüllen",
+    "missingFields": "Betreff und E-Mail-Inhalt sind erforderlich, bevor dies aktiviert werden kann.",
     "sources": {
       "urls": {
         "label": "Website-Formular",

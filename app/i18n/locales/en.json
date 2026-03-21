@@ -848,6 +848,13 @@
     "preview": "Preview",
     "htmlHint": "Paste full HTML. Variables coming soon. The preview renders the email exactly as the recipient will see it.",
     "saved": "Saved",
+    "sendingFrom": "Sending from",
+    "fromLabel": "From",
+    "subjectLabel": "Subject",
+    "configuredInEmailSettings": "via email settings",
+    "noEmailConfigured": "No email configured — go to Email settings",
+    "fillToEnable": "Add subject & content first",
+    "missingFields": "Subject and email content are required before this can go live.",
     "sources": {
       "urls": {
         "label": "Website Form",
