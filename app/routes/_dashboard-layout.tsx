@@ -90,7 +90,13 @@ export default function DashboardLayout() {
         <Outlet />
       </main>
 
-      {showTour && <OnboardingTour onDone={handleTourDone} locale={user?.locale ?? "de"} />}
+      {showTour && (
+        <OnboardingTour
+          onDone={handleTourDone}
+          locale={user?.locale ?? "de"}
+          services={currentWorkspace?.services ?? []}
+        />
+      )}
     </div>
   );
 }

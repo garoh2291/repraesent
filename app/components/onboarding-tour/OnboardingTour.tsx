@@ -21,17 +21,23 @@ interface StepContent {
   description: string;
 }
 
-// Screenshot paths — shared between both languages
-const STEP_META: Array<{ id: string; screenshot: string | null; screenshotAlt: string }> = [
-  { id: "welcome",      screenshot: null,                                  screenshotAlt: "" },
-  { id: "dashboard",    screenshot: "/onboarding/dashboard-overview.png",  screenshotAlt: "Dashboard" },
-  { id: "leads",        screenshot: "/onboarding/leads-board.png",         screenshotAlt: "Leads board" },
-  { id: "lead-detail",  screenshot: "/onboarding/lead-detail.png",         screenshotAlt: "Lead detail" },
-  { id: "appointments", screenshot: "/onboarding/appointments-calendar.png", screenshotAlt: "Appointments" },
-  { id: "tasks",        screenshot: "/onboarding/tasks.png",               screenshotAlt: "Tasks" },
-  { id: "analytics",    screenshot: "/onboarding/analytics.png",           screenshotAlt: "Analytics" },
-  { id: "email",        screenshot: "/onboarding/email-config.png",        screenshotAlt: "Email setup" },
-  { id: "settings",     screenshot: "/onboarding/workspace-settings.png",  screenshotAlt: "Settings" },
+// Screenshot paths + which service slug/type gates each step (null = always shown)
+const STEP_META: Array<{
+  id: string;
+  screenshot: string | null;
+  screenshotAlt: string;
+  /** service_slug or service_type that must be present on the workspace */
+  requiredService: string | null;
+}> = [
+  { id: "welcome",      screenshot: null,                                    screenshotAlt: "",              requiredService: null },
+  { id: "dashboard",    screenshot: "/onboarding/dashboard-overview.png",    screenshotAlt: "Dashboard",     requiredService: null },
+  { id: "leads",        screenshot: "/onboarding/leads-board.png",           screenshotAlt: "Leads board",   requiredService: "lead-form" },
+  { id: "lead-detail",  screenshot: "/onboarding/lead-detail.png",           screenshotAlt: "Lead detail",   requiredService: "lead-form" },
+  { id: "appointments", screenshot: "/onboarding/appointments-calendar.png", screenshotAlt: "Appointments",  requiredService: "appointments" },
+  { id: "tasks",        screenshot: "/onboarding/tasks.png",                 screenshotAlt: "Tasks",         requiredService: "lead-form" },
+  { id: "analytics",    screenshot: "/onboarding/analytics.png",             screenshotAlt: "Analytics",     requiredService: "analytics" },
+  { id: "email",        screenshot: "/onboarding/email-config.png",          screenshotAlt: "Email setup",   requiredService: "email" },
+  { id: "settings",     screenshot: "/onboarding/workspace-settings.png",    screenshotAlt: "Settings",      requiredService: null },
 ];
 
 // Localised copy
@@ -168,10 +174,40 @@ const STEP_CONTENT: Record<"en" | "de", StepContent[]> = {
   ],
 };
 
-function buildSteps(locale: string): Step[] {
+interface ActiveService {
+  service_slug: string | null;
+  service_type: string | null;
+}
+
+function hasService(services: ActiveService[], key: string): boolean {
+  return services.some(
+    (s) => s.service_slug === key || s.service_type === key,
+  );
+}
+
+function buildSteps(locale: string, services: ActiveService[]): Step[] {
   const lang: "en" | "de" = locale?.startsWith("de") ? "de" : "en";
   const content = STEP_CONTENT[lang];
-  return STEP_META.map((meta, i) => ({ ...meta, ...content[i] }));
+
+  // Re-number badges dynamically after filtering
+  const filtered = STEP_META.filter(
+    (meta) =>
+      meta.requiredService === null ||
+      hasService(services, meta.requiredService),
+  );
+
+  // Renumber non-welcome steps sequentially
+  let featureIndex = 0;
+  return filtered.map((meta, i) => {
+    const base = content[STEP_META.indexOf(meta)];
+    if (meta.id === "welcome") return { ...meta, ...base };
+    featureIndex += 1;
+    const paddedNum = String(featureIndex).padStart(2, "0");
+    const badgeLabel = lang === "de"
+      ? base.badge.replace(/^\d{2} — /, `${paddedNum} — `)
+      : base.badge.replace(/^\d{2} — /, `${paddedNum} — `);
+    return { ...meta, ...base, badge: badgeLabel };
+  });
 }
 
 /* ─────────────────────────────────────────────────────────
@@ -180,6 +216,7 @@ function buildSteps(locale: string): Step[] {
 interface OnboardingTourProps {
   onDone: () => void;
   locale?: string;
+  services?: ActiveService[];
 }
 
 /* ─────────────────────────────────────────────────────────
@@ -422,8 +459,8 @@ function StepDots({
 /* ─────────────────────────────────────────────────────────
    Main component
 ───────────────────────────────────────────────────────── */
-export function OnboardingTour({ onDone, locale = "de" }: OnboardingTourProps) {
-  const steps = buildSteps(locale);
+export function OnboardingTour({ onDone, locale = "de", services = [] }: OnboardingTourProps) {
+  const steps = buildSteps(locale, services);
   const [step, setStep] = useState(0);
   const [direction, setDirection] = useState<1 | -1>(1); // 1=forward, -1=backward
   const [animKey, setAnimKey] = useState(0);

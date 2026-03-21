@@ -1,5 +1,5 @@
-import { useMemo, useState, useCallback } from "react";
-import { useSearchParams } from "react-router";
+import { useMemo, useState, useCallback, useEffect } from "react";
+import { useSearchParams, useNavigate } from "react-router";
 import { useTranslation } from "react-i18next";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuthContext } from "~/providers/auth-provider";
@@ -41,8 +41,22 @@ export function meta() {
 export default function TasksPage() {
   const { t } = useTranslation();
   const { currentWorkspace } = useAuthContext();
+  const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [searchParams] = useSearchParams();
+
+  const hasLeadFormService =
+    currentWorkspace?.services?.some(
+      (s) => s.service_type === "lead-form" || s.service_slug === "lead-form",
+    ) ?? false;
+
+  useEffect(() => {
+    if (currentWorkspace && !hasLeadFormService) {
+      navigate("/", { replace: true });
+    }
+  }, [currentWorkspace, hasLeadFormService, navigate]);
+
+  if (currentWorkspace && !hasLeadFormService) return null;
   const [onSelect, clearParams] = useSearchParamsSelect();
 
   const viewMode = (searchParams.get("view") ?? "kanban") as

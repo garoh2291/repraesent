@@ -107,6 +107,10 @@ export function Sidebar() {
     currentWorkspace?.services?.some(
       (s) => s.service_type === "appointments"
     ) ?? false;
+  const hasLeadFormService =
+    currentWorkspace?.services?.some(
+      (s) => s.service_type === "lead-form" || s.service_slug === "lead-form"
+    ) ?? false;
   const { data: appointmentConfig } = useAppointmentConfig(
     hasAppointmentsService && !!currentWorkspace?.id
   );
@@ -243,10 +247,12 @@ export function Sidebar() {
             );
           })}
 
-        <NavLink to="/tasks" isActive={location.pathname === "/tasks"}>
-          <CheckSquare className="h-4 w-4 shrink-0" />
-          {t("nav.tasks")}
-        </NavLink>
+        {hasLeadFormService && (
+          <NavLink to="/tasks" isActive={location.pathname === "/tasks"}>
+            <CheckSquare className="h-4 w-4 shrink-0" />
+            {t("nav.tasks")}
+          </NavLink>
+        )}
 
         <NavLink to="/settings" isActive={location.pathname === "/settings"}>
           <Settings className="h-4 w-4 shrink-0" />

@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { format, formatDistanceToNow } from "date-fns";
@@ -99,11 +99,17 @@ export function TaskDetailModal({
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [calendarOpen, setCalendarOpen] = useState(false);
 
-  const { data: task, isLoading } = useQuery({
+  const { data: task, isLoading, isError } = useQuery({
     queryKey: ["task", taskId],
     queryFn: () => getTask(taskId!),
     enabled: !!taskId && open,
+    retry: false,
   });
+
+  // Close modal immediately when the backend returns an error (e.g. invalid/unknown task ID)
+  useEffect(() => {
+    if (isError) onOpenChange(false);
+  }, [isError, onOpenChange]);
 
   const { data: history = [], isLoading: historyLoading } = useQuery({
     queryKey: ["task-history", taskId],
