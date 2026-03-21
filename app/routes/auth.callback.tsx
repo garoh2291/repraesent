@@ -70,6 +70,18 @@ export default function AuthCallback() {
         }
 
         if (context.workspaces.length > 1) {
+          const workspaceParam = searchParams.get("workspace");
+          const workspaceFromUrl =
+            workspaceParam && context.workspaces.some((w) => w.id === workspaceParam)
+              ? workspaceParam
+              : null;
+
+          if (workspaceFromUrl) {
+            setStoredWorkspaceId(workspaceFromUrl);
+            navigate("/", { replace: true });
+            return;
+          }
+
           const stored = getStoredWorkspaceId();
           const hasValidStored = stored && context.workspaces.some((w) => w.id === stored);
           if (hasValidStored) {
