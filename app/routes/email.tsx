@@ -153,7 +153,9 @@ function PasswordRow({
   const [revealed, setRevealed] = useState(false);
   const [revealedPassword, setRevealedPassword] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [copyLoading, setCopyLoading] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [copiedSilently, setCopiedSilently] = useState(false);
 
   const handleToggle = async () => {
     if (revealed) {
@@ -173,50 +175,74 @@ function PasswordRow({
     }
   };
 
-  const handleCopy = () => {
-    if (!revealedPassword) return;
-    navigator.clipboard.writeText(revealedPassword);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+  const handleCopy = async () => {
+    if (revealedPassword) {
+      // Password already decrypted — copy directly
+      navigator.clipboard.writeText(revealedPassword);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } else {
+      // Silently decrypt and copy without revealing
+      setCopyLoading(true);
+      try {
+        const { password } = await decryptEmailConfigPassword(serviceId);
+        navigator.clipboard.writeText(password);
+        setCopiedSilently(true);
+        setTimeout(() => setCopiedSilently(false), 3000);
+      } catch {
+        // silently ignore
+      } finally {
+        setCopyLoading(false);
+      }
+    }
   };
 
   return (
-    <div className="flex items-center justify-between gap-4 py-3 border-b border-border last:border-0">
-      <span className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground w-32 shrink-0">
-        {label}
-      </span>
-      <span className="flex-1 font-mono text-sm text-foreground break-all">
-        {revealed && revealedPassword ? revealedPassword : "*******"}
-      </span>
-      <div className="flex items-center gap-1.5 shrink-0">
-        {revealed && revealedPassword && (
+    <div className="flex flex-col gap-1.5 py-3 border-b border-border last:border-0">
+      <div className="flex items-center justify-between gap-4">
+        <span className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground w-32 shrink-0">
+          {label}
+        </span>
+        <span className="flex-1 font-mono text-sm text-foreground break-all">
+          {revealed && revealedPassword ? revealedPassword : "*******"}
+        </span>
+        <div className="flex items-center gap-1.5 shrink-0">
           <button
             onClick={handleCopy}
-            className="flex items-center gap-1.5 rounded-md border border-border bg-muted/40 px-2.5 py-1 text-xs font-medium text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+            disabled={copyLoading}
+            className="flex items-center gap-1.5 rounded-md border border-border bg-muted/40 px-2.5 py-1 text-xs font-medium text-muted-foreground hover:bg-muted hover:text-foreground transition-colors disabled:opacity-50"
           >
-            {copied ? (
+            {copyLoading ? (
+              <Loader2 className="h-3 w-3 animate-spin" />
+            ) : copied || copiedSilently ? (
               <Check className="h-3 w-3 text-emerald-500" />
             ) : (
               <Copy className="h-3 w-3" />
             )}
-            {copied ? t("common.copied") : t("common.copy")}
+            {copied || copiedSilently ? t("common.copied") : t("common.copy")}
           </button>
-        )}
-        <button
-          onClick={handleToggle}
-          disabled={loading}
-          className="flex items-center justify-center rounded-md border border-border bg-muted/40 p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground transition-colors disabled:opacity-50"
-          title={revealed ? t("email.hidePassword") : t("email.showPassword")}
-        >
-          {loading ? (
-            <Loader2 className="h-3.5 w-3.5 animate-spin" />
-          ) : revealed ? (
-            <EyeOff className="h-3.5 w-3.5" />
-          ) : (
-            <Eye className="h-3.5 w-3.5" />
-          )}
-        </button>
+          <button
+            onClick={handleToggle}
+            disabled={loading}
+            className="flex items-center justify-center rounded-md border border-border bg-muted/40 p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground transition-colors disabled:opacity-50"
+            title={revealed ? t("email.hidePassword") : t("email.showPassword")}
+          >
+            {loading ? (
+              <Loader2 className="h-3.5 w-3.5 animate-spin" />
+            ) : revealed ? (
+              <EyeOff className="h-3.5 w-3.5" />
+            ) : (
+              <Eye className="h-3.5 w-3.5" />
+            )}
+          </button>
+        </div>
       </div>
+      {copiedSilently && (
+        <div className="flex items-center gap-1.5 rounded-lg bg-emerald-500/10 border border-emerald-500/20 px-3 py-1.5 text-xs font-medium text-emerald-600 dark:text-emerald-400">
+          <Check className="h-3 w-3 shrink-0" />
+          {t("email.passwordCopied")}
+        </div>
+      )}
     </div>
   );
 }

@@ -808,6 +808,7 @@
     "otherDesc": "Thunderbird, Apple Mail, Android, iPhone — verwenden Sie die obigen Servereinstellungen",
     "hidePassword": "Passwort verbergen",
     "showPassword": "Passwort anzeigen",
+    "passwordCopied": "Passwort in die Zwischenablage kopiert",
     "steps": {
       "outlook": {
         "step1": "Öffnen Sie Microsoft Outlook. Geben Sie Ihre E-Mail-Adresse ein und klicken Sie auf <0>Weiter</0>.",

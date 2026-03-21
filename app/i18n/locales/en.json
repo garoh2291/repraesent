@@ -808,6 +808,7 @@
     "otherDesc": "Thunderbird, Apple Mail, Android, iPhone — use the manual server settings above",
     "hidePassword": "Hide password",
     "showPassword": "Show password",
+    "passwordCopied": "Password copied to clipboard",
     "steps": {
       "outlook": {
         "step1": "Open Microsoft Outlook. On the welcome screen, enter your email address and click <0>Continue</0>.",
