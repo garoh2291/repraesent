@@ -21,15 +21,13 @@ export default function DashboardLayout() {
   const { user, currentWorkspace } = useAuthContext();
   const { i18n, t } = useTranslation();
 
-  // Sync i18n from user's locale
+  // Sync i18n and cookie from user's DB locale (source of truth for logged-in users)
   useEffect(() => {
-    const locale = user?.locale ?? "de";
-    const hasPersonal = document.cookie.split(";").some((c) =>
-      c.trim().startsWith("personal_lang="),
-    );
-    if (!hasPersonal) {
-      i18n.changeLanguage(locale);
-    }
+    if (!user?.locale) return;
+    const locale = user.locale === "en" || user.locale === "de" ? user.locale : "de";
+    i18n.changeLanguage(locale);
+    const maxAge = 60 * 60 * 24 * 365;
+    document.cookie = `personal_lang=${locale}; path=/; max-age=${maxAge}; samesite=lax`;
   }, [user?.locale, i18n]);
 
   const showUnpaidBanner =
