@@ -1,10 +1,11 @@
-import { useEffect } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { Outlet } from "react-router";
 import { useTranslation } from "react-i18next";
 import { useAuthContext } from "~/providers/auth-provider";
 import { Sidebar } from "~/components/sidebar";
 import { Button } from "~/components/ui/button";
 import { AlertTriangle } from "lucide-react";
+import { OnboardingTour } from "~/components/onboarding-tour/OnboardingTour";
 
 function formatDueDate(unixStr: string): string {
   const sec = parseInt(unixStr, 10);
@@ -20,6 +21,7 @@ function formatDueDate(unixStr: string): string {
 export default function DashboardLayout() {
   const { user, currentWorkspace } = useAuthContext();
   const { i18n, t } = useTranslation();
+  const [showTour, setShowTour] = useState(false);
 
   // Sync i18n and cookie from user's DB locale (source of truth for logged-in users)
   useEffect(() => {
@@ -29,6 +31,23 @@ export default function DashboardLayout() {
     const maxAge = 60 * 60 * 24 * 365;
     document.cookie = `personal_lang=${locale}; path=/; max-age=${maxAge}; samesite=lax`;
   }, [user?.locale, i18n]);
+
+  // Show onboarding tour for active-workspace users who haven't completed it yet
+  useEffect(() => {
+    if (
+      user &&
+      user.onboarding_completed_at == null &&
+      currentWorkspace?.status === "active"
+    ) {
+      // Small delay so the dashboard renders first — feels more natural
+      const timer = setTimeout(() => setShowTour(true), 600);
+      return () => clearTimeout(timer);
+    }
+  }, [user?.id, user?.onboarding_completed_at, currentWorkspace?.status]);
+
+  const handleTourDone = useCallback(() => {
+    setShowTour(false);
+  }, []);
 
   const showUnpaidBanner =
     currentWorkspace?.status === "active" &&
@@ -70,6 +89,8 @@ export default function DashboardLayout() {
         )}
         <Outlet />
       </main>
+
+      {showTour && <OnboardingTour onDone={handleTourDone} locale={user?.locale ?? "de"} />}
     </div>
   );
 }

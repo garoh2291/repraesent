@@ -16,6 +16,7 @@ export interface User {
   email: string;
   user_type: string;
   locale?: string;
+  onboarding_completed_at?: string | null;
   created_at?: string;
   updated_at?: string;
 }
@@ -178,6 +179,13 @@ export const updateUserLocale = async (
   locale: "en" | "de"
 ): Promise<void> => {
   await apiClient.patch("/users/me/locale", { locale });
+};
+
+/**
+ * Mark the onboarding tour as completed for the current user
+ */
+export const completeOnboarding = async (): Promise<void> => {
+  await apiClient.patch("/users/me/onboarding/complete");
 };
 
 /**
