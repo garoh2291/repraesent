@@ -17,7 +17,6 @@ import {
   getCurrentWorkspaceInvoices,
   updateWorkspaceMember,
   removeWorkspaceMember,
-  updateWorkspaceLanguage,
   type WorkspaceDetail,
   type WorkspaceInvoice,
 } from "~/lib/api/workspaces";
@@ -358,32 +357,6 @@ export default function Settings() {
     },
   });
 
-  const workspaceLanguageMutation = useMutation({
-    mutationFn: (language: "en" | "de") => updateWorkspaceLanguage(language),
-    onSuccess: (_, language) => {
-      queryClient.invalidateQueries({ queryKey: ["userContext"] });
-      toast.success(t("settings.workspace.saveSuccess"));
-      // If no personal override, also update UI language to match
-      const hasPersonal = document.cookie
-        .split(";")
-        .some((c) => c.trim().startsWith("personal_lang="));
-      if (!hasPersonal) {
-        i18n.changeLanguage(language);
-      }
-    },
-    onError: (error) => {
-      toast.error(t("settings.workspace.saveFailed"), {
-        description: extractErrorMessage(error),
-      });
-    },
-  });
-
-  const handlePersonalLanguageChange = (lang: "en" | "de") => {
-    const maxAge = 60 * 60 * 24 * 365;
-    document.cookie = `personal_lang=${lang}; path=/; max-age=${maxAge}; samesite=lax`;
-    i18n.changeLanguage(lang);
-  };
-
   const handleRemoveMember = () => {
     if (memberToRemove) {
       removeMemberMutation.mutate(memberToRemove.userId);
@@ -635,58 +608,6 @@ export default function Settings() {
             )}
           </SettingsSection>
 
-          <div className="border-t border-border" />
-
-          {/* Workspace Language (admin only) */}
-          {isAdmin && (
-            <SettingsSection
-              label={t("settings.workspace.language")}
-              description={t("settings.workspace.languageHint")}
-            >
-              <Select
-                value={currentWorkspace?.language ?? "de"}
-                onValueChange={(v) =>
-                  workspaceLanguageMutation.mutate(v as "en" | "de")
-                }
-                disabled={workspaceLanguageMutation.isPending}
-              >
-                <SelectTrigger className="h-10 max-w-[240px]">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="de">
-                    {t("settings.workspace.languageDe")}
-                  </SelectItem>
-                  <SelectItem value="en">
-                    {t("settings.workspace.languageEn")}
-                  </SelectItem>
-                </SelectContent>
-              </Select>
-            </SettingsSection>
-          )}
-
-          <div className="border-t border-border" />
-
-          {/* Personal Language */}
-          <SettingsSection
-            label={t("settings.language.title")}
-            description={t("settings.language.hint")}
-          >
-            <Select
-              value={i18n.language?.startsWith("de") ? "de" : "en"}
-              onValueChange={(v) =>
-                handlePersonalLanguageChange(v as "en" | "de")
-              }
-            >
-              <SelectTrigger className="h-10 max-w-[240px]">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="de">{t("settings.language.de")}</SelectItem>
-                <SelectItem value="en">{t("settings.language.en")}</SelectItem>
-              </SelectContent>
-            </Select>
-          </SettingsSection>
         </TabsContent>
 
         <TabsContent value="invoices">

@@ -1,19 +1,37 @@
 import { useTranslation } from "react-i18next";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { updateUserLocale } from "~/lib/api/auth";
 
 interface LanguageSwitcherProps {
   /** "dark" for sidebar/brand panels, "light" for form panels */
   variant?: "dark" | "light";
+  /** When true, persists locale to user profile (fire-and-forget, does not block UI) */
+  persistToDb?: boolean;
 }
 
-export function LanguageSwitcher({ variant = "dark" }: LanguageSwitcherProps) {
+export function LanguageSwitcher({
+  variant = "dark",
+  persistToDb = false,
+}: LanguageSwitcherProps) {
   const { i18n } = useTranslation();
+  const queryClient = useQueryClient();
   const current = i18n.language?.startsWith("de") ? "de" : "en";
+
+  const persistMutation = useMutation({
+    mutationFn: (locale: "en" | "de") => updateUserLocale(locale),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["auth"] });
+    },
+  });
 
   const handleChange = (lang: "en" | "de") => {
     if (lang === current) return;
     const maxAge = 60 * 60 * 24 * 365;
     document.cookie = `personal_lang=${lang}; path=/; max-age=${maxAge}; samesite=lax`;
     i18n.changeLanguage(lang);
+    if (persistToDb) {
+      persistMutation.mutate(lang);
+    }
   };
 
   if (variant === "dark") {

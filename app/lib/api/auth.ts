@@ -15,6 +15,7 @@ export interface User {
   last_name: string;
   email: string;
   user_type: string;
+  locale?: string;
   created_at?: string;
   updated_at?: string;
 }
@@ -89,7 +90,6 @@ export interface WorkspaceContext {
   products?: WorkspaceProduct[];
   services: WorkspaceService[];
   member_role: "admin" | "editor" | "viewer";
-  language: string;
 }
 
 /**
@@ -169,6 +169,15 @@ export const getUserContext = async (): Promise<UserContextResponse> => {
     }
     throw new Error(apiError.message || "Failed to fetch user context");
   }
+};
+
+/**
+ * Update current user's locale
+ */
+export const updateUserLocale = async (
+  locale: "en" | "de"
+): Promise<void> => {
+  await apiClient.patch("/users/me/locale", { locale });
 };
 
 /**

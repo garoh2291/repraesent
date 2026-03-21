@@ -18,19 +18,19 @@ function formatDueDate(unixStr: string): string {
 }
 
 export default function DashboardLayout() {
-  const { currentWorkspace } = useAuthContext();
+  const { user, currentWorkspace } = useAuthContext();
   const { i18n, t } = useTranslation();
 
-  // Sync workspace language unless the user has a personal language override
+  // Sync i18n from user's locale
   useEffect(() => {
-    if (!currentWorkspace?.language) return;
+    const locale = user?.locale ?? "de";
     const hasPersonal = document.cookie.split(";").some((c) =>
       c.trim().startsWith("personal_lang="),
     );
     if (!hasPersonal) {
-      i18n.changeLanguage(currentWorkspace.language);
+      i18n.changeLanguage(locale);
     }
-  }, [currentWorkspace?.language, i18n]);
+  }, [user?.locale, i18n]);
 
   const showUnpaidBanner =
     currentWorkspace?.status === "active" &&

@@ -261,7 +261,7 @@ export function Sidebar() {
       {/* Bottom: language + logout */}
       <div className="shrink-0 border-t border-white/5 p-3 space-y-1.5">
         <div className="px-3 py-1">
-          <LanguageSwitcher variant="dark" />
+          <LanguageSwitcher variant="dark" persistToDb />
         </div>
         <button
           onClick={() => logout()}

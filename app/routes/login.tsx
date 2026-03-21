@@ -3,7 +3,6 @@ import { useNavigate, useSearchParams, Link } from "react-router";
 import { useTranslation } from "react-i18next";
 import { Input } from "~/components/ui/input";
 import { useAuthContext } from "~/providers/auth-provider";
-import { LanguageSwitcher } from "~/components/language-switcher";
 
 import logoUrl from "~/components/icons/re_praesent-mark-brand-hor.svg?url";
 
@@ -109,16 +108,13 @@ export default function Login() {
 
         {/* Content */}
         <div className="relative z-10 flex flex-col h-full">
-          <div className="flex items-center justify-between">
+          <div className="flex items-center">
             <img
               src={logoUrl}
               alt="Repraesent"
               className="app-fade-down h-7 w-auto max-w-[120px] brightness-0 invert opacity-85"
               style={{ animationDelay: "0s" }}
             />
-            <div className="app-fade-in" style={{ animationDelay: "0.1s" }}>
-              <LanguageSwitcher variant="dark" />
-            </div>
           </div>
 
           <div className="flex-1 flex flex-col justify-center space-y-8">
@@ -168,14 +164,13 @@ export default function Login() {
       {/* Right form panel */}
       <div className="flex-1 flex items-center justify-center bg-stone-50 p-8">
         <div className="w-full max-w-sm space-y-8 app-fade-up">
-          {/* Mobile logo + language switcher */}
-          <div className="lg:hidden flex items-center justify-between">
+          {/* Mobile logo */}
+          <div className="lg:hidden flex items-center">
             <img
               src={logoUrl}
               alt="Repraesent"
               className="h-7 w-auto max-w-[120px]"
             />
-            <LanguageSwitcher variant="light" />
           </div>
 
           <div className="space-y-1">
