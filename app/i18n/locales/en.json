@@ -372,9 +372,9 @@
       "urlLabel": "Workspace URL",
       "urlTooltip": "To change the URL, contact support@repraesent.com"
     },
-    "services": {
-      "title": "Services",
-      "noServices": "No services active."
+    "products": {
+      "title": "Products",
+      "noProducts": "No products active."
     },
     "members": {
       "title": "Team members",
