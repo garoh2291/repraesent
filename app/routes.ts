@@ -27,6 +27,7 @@ export default [
       index("routes/home.tsx"),
       route("products", "routes/products.tsx"),
       route("lead-form", "routes/lead-form.tsx"),
+      route("lead-form/fallback", "routes/lead-form.fallback.tsx"),
       route("lead-form/:leadId", "routes/lead-form.$leadId.tsx"),
       route("appointments", "routes/appointments.tsx"),
       route("analytics", "routes/analytics.tsx"),

@@ -143,6 +143,7 @@
     "kanbanView": "Kanban",
     "addLead": "Add lead",
     "importLeads": "Import CSV",
+    "leadFallback": "Lead Fallback",
     "exportLeads": "Export leads",
     "openLead": "Open",
     "clearFilters": "Clear filters",
@@ -831,6 +832,30 @@
         "step4": "For incoming mail, select IMAP and enter the server details from the table above.",
         "step5": "For outgoing mail, enter the SMTP server details with authentication enabled.",
         "step6": "Save and test the connection."
+      }
+    }
+  },
+  "leadFallback": {
+    "title": "Lead Fallback Emails",
+    "subtitle": "Automatically send a custom email to new leads using your workspace SMTP configuration",
+    "backToLeads": "Back to Leads",
+    "infoBanner": "Fallback emails are sent automatically when a new lead is created. The lead must have an email address and the configuration must be enabled. Emails are sent via your workspace email configuration.",
+    "enabled": "Enabled",
+    "disabled": "Disabled",
+    "subjectLine": "Subject line",
+    "subjectPlaceholder": "e.g. Thank you for your inquiry",
+    "emailContent": "Email content (HTML)",
+    "preview": "Preview",
+    "htmlHint": "Paste full HTML. Variables coming soon. The preview renders the email exactly as the recipient will see it.",
+    "saved": "Saved",
+    "sources": {
+      "urls": {
+        "label": "Website Form",
+        "desc": "Sent when a lead is created via a web form or webhook (source: urls)"
+      },
+      "appointment_booking": {
+        "label": "Appointment Booking",
+        "desc": "Sent when a lead is created from a new appointment booking"
       }
     }
   }

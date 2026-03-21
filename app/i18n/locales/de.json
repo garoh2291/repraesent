@@ -143,6 +143,7 @@
     "kanbanView": "Kanban",
     "addLead": "Lead hinzufügen",
     "importLeads": "CSV importieren",
+    "leadFallback": "Lead-Fallback",
     "exportLeads": "Leads exportieren",
     "openLead": "Öffnen",
     "clearFilters": "Filter zurücksetzen",
@@ -831,6 +832,30 @@
         "step4": "Wählen Sie für eingehende E-Mails IMAP und geben Sie die Serverdaten ein.",
         "step5": "Geben Sie für ausgehende E-Mails die SMTP-Serverdaten mit Authentifizierung ein.",
         "step6": "Speichern und testen Sie die Verbindung."
+      }
+    }
+  },
+  "leadFallback": {
+    "title": "Lead-Fallback-E-Mails",
+    "subtitle": "Senden Sie automatisch eine E-Mail an neue Leads über Ihre Workspace-SMTP-Konfiguration",
+    "backToLeads": "Zurück zu Leads",
+    "infoBanner": "Fallback-E-Mails werden automatisch gesendet, wenn ein neuer Lead erstellt wird. Der Lead muss eine E-Mail-Adresse haben und die Konfiguration muss aktiviert sein.",
+    "enabled": "Aktiv",
+    "disabled": "Inaktiv",
+    "subjectLine": "Betreffzeile",
+    "subjectPlaceholder": "z.B. Vielen Dank für Ihre Anfrage",
+    "emailContent": "E-Mail-Inhalt (HTML)",
+    "preview": "Vorschau",
+    "htmlHint": "Vollständiges HTML einfügen. Die Vorschau zeigt die E-Mail genau so, wie der Empfänger sie sehen wird.",
+    "saved": "Gespeichert",
+    "sources": {
+      "urls": {
+        "label": "Website-Formular",
+        "desc": "Wird gesendet, wenn ein Lead über ein Web-Formular oder Webhook erstellt wird"
+      },
+      "appointment_booking": {
+        "label": "Terminbuchung",
+        "desc": "Wird gesendet, wenn ein Lead aus einer neuen Terminbuchung erstellt wird"
       }
     }
   }
