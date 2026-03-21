@@ -514,7 +514,8 @@
       "createSubtitle": "Set up your workspace and optionally invite team members.",
       "nameRequired": "Workspace name is required",
       "urlRequired": "Website URL is required",
-      "urlInvalid": "Please enter a valid URL"
+      "urlInvalid": "Please enter a valid URL",
+      "urlTaken": "This URL is already linked to another workspace. If you're part of that team, ask them to add you. Otherwise contact support."
     },
     "profile": {
       "metaTitle": "Your profile - Repraesent",

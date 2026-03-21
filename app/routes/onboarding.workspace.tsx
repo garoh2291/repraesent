@@ -119,8 +119,14 @@ export default function OnboardingWorkspace() {
         queryClient.invalidateQueries({ queryKey: ["auth"] });
       }
       navigate("/onboarding/billing", { replace: true });
-    } catch (err) {
-      setError(err instanceof Error ? err.message : t("common.somethingWentWrong"));
+    } catch (err: unknown) {
+      const status = (err as any)?.response?.status;
+      const msg = (err as any)?.response?.data?.message;
+      if (status === 409 && msg === "URL_ALREADY_TAKEN") {
+        setError(t("onboarding.workspace.urlTaken"));
+      } else {
+        setError(err instanceof Error ? err.message : t("common.somethingWentWrong"));
+      }
     } finally {
       setIsSubmitting(false);
     }

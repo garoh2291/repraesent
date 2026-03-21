@@ -514,7 +514,8 @@
       "createSubtitle": "Richten Sie Ihren Workspace ein und laden Sie optional Teammitglieder ein.",
       "nameRequired": "Workspace-Name ist erforderlich",
       "urlRequired": "Website-URL ist erforderlich",
-      "urlInvalid": "Bitte geben Sie eine gültige URL ein"
+      "urlInvalid": "Bitte geben Sie eine gültige URL ein",
+      "urlTaken": "Diese URL ist bereits mit einem anderen Workspace verknüpft. Wenn Sie Teil dieses Teams sind, bitten Sie sie, Sie hinzuzufügen. Andernfalls wenden Sie sich an den Support."
     },
     "profile": {
       "metaTitle": "Ihr Profil - Repraesent",
