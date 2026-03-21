@@ -130,9 +130,9 @@
     "noMyTasks": "Heute nichts auf dem Plan. Alles erledigt!",
     "viewAllTasks": "Alle Aufgaben",
     "moreTasks": "weitere Aufgaben",
-    "services": "Dienste",
-    "servicesHint": "Mit diesem Workspace verknüpfte Dienste",
-    "noServices": "Noch keine Dienste hinzugefügt. Kontaktieren Sie support@repraesent.com.",
+    "products": "Produkte",
+    "productsHint": "Produkte, die mit diesem Workspace verknüpft sind",
+    "noProducts": "Noch keine Produkte verknüpft. Kontaktieren Sie support@repraesent.com, um loszulegen.",
     "openSection": "Abschnitt öffnen",
     "notAvailable": "Nicht verfügbar"
   },
@@ -372,9 +372,9 @@
       "urlLabel": "Workspace-URL",
       "urlTooltip": "Um die URL zu ändern, kontaktieren Sie support@repraesent.com"
     },
-    "services": {
-      "title": "Dienste",
-      "noServices": "Keine Dienste aktiv."
+    "products": {
+      "title": "Produkte",
+      "noProducts": "Keine Produkte aktiv."
     },
     "members": {
       "title": "Team-Mitglieder",

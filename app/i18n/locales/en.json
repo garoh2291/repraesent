@@ -130,9 +130,9 @@
     "noMyTasks": "Nothing on your plate today. All clear!",
     "viewAllTasks": "View all tasks",
     "moreTasks": "more tasks",
-    "services": "Services",
-    "servicesHint": "Services attached to this workspace",
-    "noServices": "No services attached yet. Contact support@repraesent.com to get started.",
+    "products": "Products",
+    "productsHint": "Products attached to this workspace",
+    "noProducts": "No products attached yet. Contact support@repraesent.com to get started.",
     "openSection": "Open section",
     "notAvailable": "Not available"
   },

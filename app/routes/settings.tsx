@@ -74,10 +74,7 @@ function formatDate(unixStr: string | null): string {
   return new Date(sec * 1000).toLocaleDateString();
 }
 
-function getInvoiceStatusCode(
-  status: string,
-  dueDate: string | null,
-): string {
+function getInvoiceStatusCode(status: string, dueDate: string | null): string {
   if (status === "paid") return "paid";
   if (status === "open") {
     if (dueDate) {
@@ -132,7 +129,7 @@ function StatusPill({ code, label }: { code: string; label: string }) {
     <span
       className={cn(
         "inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-medium",
-        cls,
+        cls
       )}
     >
       {label}
@@ -166,7 +163,9 @@ function SettingsInvoicesTab() {
         <div className="inline-flex h-12 w-12 items-center justify-center rounded-xl bg-muted mx-auto">
           <FileText className="h-5 w-5 text-muted-foreground" />
         </div>
-        <p className="text-sm text-muted-foreground">{t("settings.invoices.noInvoices")}</p>
+        <p className="text-sm text-muted-foreground">
+          {t("settings.invoices.noInvoices")}
+        </p>
       </div>
     );
   }
@@ -175,7 +174,12 @@ function SettingsInvoicesTab() {
     <div className="rounded-2xl border border-border bg-card overflow-hidden">
       {/* Table header */}
       <div className="grid grid-cols-[1fr_120px_100px_160px] gap-4 px-5 py-3 bg-muted/40 border-b border-border">
-        {[t("settings.invoices.number"), t("settings.invoices.amount"), t("settings.invoices.status"), ""].map((h) => (
+        {[
+          t("settings.invoices.number"),
+          t("settings.invoices.amount"),
+          t("settings.invoices.status"),
+          "",
+        ].map((h) => (
           <span
             key={h}
             className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground"
@@ -186,8 +190,13 @@ function SettingsInvoicesTab() {
       </div>
       <div className="divide-y divide-border">
         {invoices.map((inv: WorkspaceInvoice) => {
-          const statusCode = getInvoiceStatusCode(inv.status, inv.due_date ?? null);
-          const statusLabel = t(`settings.invoices.statuses.${statusCode}`, { defaultValue: statusCode });
+          const statusCode = getInvoiceStatusCode(
+            inv.status,
+            inv.due_date ?? null
+          );
+          const statusLabel = t(`settings.invoices.statuses.${statusCode}`, {
+            defaultValue: statusCode,
+          });
           const isPaid = inv.status === "paid";
           return (
             <div
@@ -200,7 +209,7 @@ function SettingsInvoicesTab() {
               <span className="text-sm font-medium text-foreground">
                 {formatAmount(
                   (isPaid ? inv.amount_paid : inv.amount_due) ?? null,
-                  inv.currency ?? null,
+                  inv.currency ?? null
                 )}
               </span>
               <StatusPill code={statusCode} label={statusLabel} />
@@ -208,7 +217,9 @@ function SettingsInvoicesTab() {
                 {inv.status === "draft" ? (
                   <span className="text-xs text-muted-foreground">
                     {inv.due_date
-                      ? t("settings.invoices.dueLabel", { date: formatDate(inv.due_date ?? null) })
+                      ? t("settings.invoices.dueLabel", {
+                          date: formatDate(inv.due_date ?? null),
+                        })
                       : t("settings.invoices.upcoming")}
                   </span>
                 ) : isPaid ? (
@@ -267,7 +278,7 @@ export default function Settings() {
 
   const canChangeLeadNotification = (
     memberRole: string,
-    memberUserId: string,
+    memberUserId: string
   ): boolean => {
     if (currentUserRole === "admin") return true;
     if (currentUserRole === "editor")
@@ -307,7 +318,7 @@ export default function Settings() {
                     lead_notification: variables.data.lead_notification,
                   }),
                 }
-              : m,
+              : m
           ),
         };
       });
@@ -323,7 +334,7 @@ export default function Settings() {
       toast.success(
         variables.data.lead_notification !== undefined
           ? t("settings.members.notificationsUpdated")
-          : t("settings.members.roleUpdated"),
+          : t("settings.members.roleUpdated")
       );
     },
     onSettled: (_, __, ___, context) => {
@@ -413,13 +424,17 @@ export default function Settings() {
         className="w-full app-fade-up app-fade-up-d1"
       >
         <TabsList variant="line" className="w-full mb-6">
-          <TabsTrigger value="general">{t("settings.workspace.title")}</TabsTrigger>
-          <TabsTrigger value="invoices">{t("settings.invoices.title")}</TabsTrigger>
+          <TabsTrigger value="general">
+            {t("settings.workspace.title")}
+          </TabsTrigger>
+          <TabsTrigger value="invoices">
+            {t("settings.invoices.title")}
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="general" className="space-y-8">
           {/* Services */}
-          <SettingsSection label={t("settings.services.title")}>
+          <SettingsSection label={t("settings.products.title")}>
             {services.length > 0 ? (
               <div className="rounded-2xl border border-border bg-card overflow-hidden">
                 <div className="divide-y divide-border">
@@ -449,7 +464,7 @@ export default function Settings() {
             ) : (
               <div className="rounded-2xl border border-border bg-card px-5 py-6">
                 <p className="text-sm text-muted-foreground">
-                  {t("settings.services.noServices")}
+                  {t("settings.products.noProducts")}
                 </p>
               </div>
             )}
@@ -564,9 +579,15 @@ export default function Settings() {
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="admin">{t("settings.members.roles.admin")}</SelectItem>
-                            <SelectItem value="editor">{t("settings.members.roles.editor")}</SelectItem>
-                            <SelectItem value="viewer">{t("settings.members.roles.viewer")}</SelectItem>
+                            <SelectItem value="admin">
+                              {t("settings.members.roles.admin")}
+                            </SelectItem>
+                            <SelectItem value="editor">
+                              {t("settings.members.roles.editor")}
+                            </SelectItem>
+                            <SelectItem value="viewer">
+                              {t("settings.members.roles.viewer")}
+                            </SelectItem>
                           </SelectContent>
                         </Select>
                         {/* Lead notification */}
@@ -633,8 +654,12 @@ export default function Settings() {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="de">{t("settings.workspace.languageDe")}</SelectItem>
-                  <SelectItem value="en">{t("settings.workspace.languageEn")}</SelectItem>
+                  <SelectItem value="de">
+                    {t("settings.workspace.languageDe")}
+                  </SelectItem>
+                  <SelectItem value="en">
+                    {t("settings.workspace.languageEn")}
+                  </SelectItem>
                 </SelectContent>
               </Select>
             </SettingsSection>
@@ -649,7 +674,9 @@ export default function Settings() {
           >
             <Select
               value={i18n.language?.startsWith("de") ? "de" : "en"}
-              onValueChange={(v) => handlePersonalLanguageChange(v as "en" | "de")}
+              onValueChange={(v) =>
+                handlePersonalLanguageChange(v as "en" | "de")
+              }
             >
               <SelectTrigger className="h-10 max-w-[240px]">
                 <SelectValue />
@@ -674,9 +701,13 @@ export default function Settings() {
       >
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>{t("settings.members.removeTitle")}</AlertDialogTitle>
+            <AlertDialogTitle>
+              {t("settings.members.removeTitle")}
+            </AlertDialogTitle>
             <AlertDialogDescription>
-              {t("settings.members.removeDescription", { name: memberToRemove?.name ?? "" })}
+              {t("settings.members.removeDescription", {
+                name: memberToRemove?.name ?? "",
+              })}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

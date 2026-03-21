@@ -25,8 +25,8 @@ import { LeadImportModal } from "~/components/organism/lead-import-modal";
 
 export function meta() {
   return [
-    { title: "Lead Form - Repraesent" },
-    { name: "description", content: "Lead form" },
+    { title: "Leads - Repraesent" },
+    { name: "description", content: "Leads management" },
   ];
 }
 

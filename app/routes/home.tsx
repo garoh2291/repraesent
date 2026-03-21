@@ -2,7 +2,15 @@ import { useState, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router";
 import { useTranslation } from "react-i18next";
-import { ChevronRight, Package, ArrowRight, CheckCircle2, Circle, AlertCircle, Clock } from "lucide-react";
+import {
+  ChevronRight,
+  Package,
+  ArrowRight,
+  CheckCircle2,
+  Circle,
+  AlertCircle,
+  Clock,
+} from "lucide-react";
 import {
   ResponsiveContainer,
   LineChart,
@@ -12,7 +20,13 @@ import {
   CartesianGrid,
   Tooltip,
 } from "recharts";
-import { format, isToday, isTomorrow, isPast, formatDistanceToNow } from "date-fns";
+import {
+  format,
+  isToday,
+  isTomorrow,
+  isPast,
+  formatDistanceToNow,
+} from "date-fns";
 import { getLocalizedServiceName } from "~/lib/api/auth";
 import { useAuthContext } from "~/providers/auth-provider";
 import { cn } from "~/lib/utils";
@@ -42,7 +56,7 @@ const SOURCE_COLORS: Record<string, string> = {
 
 function fillSeriesGaps(
   series: { date: string; count: number }[],
-  period: LeadAnalyticsPeriod,
+  period: LeadAnalyticsPeriod
 ): { date: string; count: number }[] {
   const now = new Date();
   const map = new Map(series.map((p) => [p.date, p.count]));
@@ -61,7 +75,7 @@ function fillSeriesGaps(
       const d = new Date(now);
       d.setDate(d.getDate() - i);
       slots.push(
-        `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`,
+        `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`
       );
     }
   } else if (period === "this_month") {
@@ -69,7 +83,7 @@ function fillSeriesGaps(
     for (let i = 1; i <= days; i++) {
       const d = new Date(now.getFullYear(), now.getMonth(), i);
       slots.push(
-        `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`,
+        `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`
       );
     }
   } else {
@@ -78,7 +92,7 @@ function fillSeriesGaps(
     const end = new Date(now.getFullYear(), now.getMonth(), now.getDate());
     for (const d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
       slots.push(
-        `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`,
+        `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`
       );
     }
   }
@@ -136,7 +150,7 @@ function LeadAnalyticsChart() {
 
   const chartData = useMemo(
     () => fillSeriesGaps(data?.series ?? [], period),
-    [data?.series, period],
+    [data?.series, period]
   );
 
   const maxY = Math.max(...chartData.map((p) => p.count), 1);
@@ -177,7 +191,7 @@ function LeadAnalyticsChart() {
                 "rounded-lg px-3 py-1.5 text-[12px] font-medium transition-all duration-150",
                 period === p.value
                   ? "bg-card text-foreground shadow-sm"
-                  : "text-muted-foreground hover:text-foreground",
+                  : "text-muted-foreground hover:text-foreground"
               )}
             >
               {t(p.labelKey)}
@@ -277,9 +291,15 @@ function formatTaskDueLabel(dateStr: string): {
   overdue: boolean;
 } {
   const d = new Date(dateStr);
-  if (isPast(d) && !isToday(d)) return { label: formatDistanceToNow(d, { addSuffix: true }), urgent: true, overdue: true };
+  if (isPast(d) && !isToday(d))
+    return {
+      label: formatDistanceToNow(d, { addSuffix: true }),
+      urgent: true,
+      overdue: true,
+    };
   if (isToday(d)) return { label: "Today", urgent: true, overdue: false };
-  if (isTomorrow(d)) return { label: "Tomorrow", urgent: false, overdue: false };
+  if (isTomorrow(d))
+    return { label: "Tomorrow", urgent: false, overdue: false };
   return { label: format(d, "MMM d"), urgent: false, overdue: false };
 }
 
@@ -297,7 +317,7 @@ function MyTaskRow({ task }: { task: Task }) {
             ? "border-red-200/70 bg-red-50/50 hover:border-red-200 hover:bg-red-50"
             : task.urgency === "due_soon"
               ? "border-yellow-200/70 bg-yellow-50/40 hover:border-yellow-200 hover:bg-yellow-50"
-              : "border-border bg-card hover:border-border/80 hover:bg-muted/30",
+              : "border-border bg-card hover:border-border/80 hover:bg-muted/30"
       )}
     >
       {/* Status icon */}
@@ -318,7 +338,7 @@ function MyTaskRow({ task }: { task: Task }) {
         <p
           className={cn(
             "text-sm font-medium leading-snug truncate",
-            isDone && "line-through text-muted-foreground/60",
+            isDone && "line-through text-muted-foreground/60"
           )}
         >
           {task.title}
@@ -341,7 +361,7 @@ function MyTaskRow({ task }: { task: Task }) {
                 ? "bg-red-100 text-red-700"
                 : dueInfo.urgent
                   ? "bg-yellow-100 text-yellow-800"
-                  : "bg-muted text-muted-foreground",
+                  : "bg-muted text-muted-foreground"
           )}
         >
           {dueInfo.label}
@@ -365,7 +385,12 @@ function MyTasksSection({ userId }: { userId: string }) {
   const { start: todayStart, end: todayEnd } = getTodayRange();
 
   const { data, isLoading } = useQuery({
-    queryKey: ["home-my-tasks", userId, currentWorkspace?.id, todayStart.slice(0, 10)],
+    queryKey: [
+      "home-my-tasks",
+      userId,
+      currentWorkspace?.id,
+      todayStart.slice(0, 10),
+    ],
     queryFn: () =>
       getAllTasks({
         assignee_id: userId,
@@ -427,9 +452,7 @@ function MyTasksSection({ userId }: { userId: string }) {
       ) : tasks.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-8 gap-2">
           <CheckCircle2 className="h-8 w-8 text-muted-foreground/25" />
-          <p className="text-sm text-muted-foreground">
-            {t("home.noMyTasks")}
-          </p>
+          <p className="text-sm text-muted-foreground">{t("home.noMyTasks")}</p>
         </div>
       ) : (
         <div className="space-y-2">
@@ -484,17 +507,17 @@ export default function Home() {
       <div className="app-fade-up app-fade-up-d4 space-y-4">
         <div>
           <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
-            {t("home.services")}
+            {t("home.products")}
           </p>
           <p className="text-sm text-muted-foreground/70 mt-0.5">
-            {t("home.servicesHint")}
+            {t("home.productsHint")}
           </p>
         </div>
 
         {services.length === 0 ? (
           <div className="rounded-2xl border border-dashed border-border bg-card p-6">
             <p className="text-sm text-muted-foreground">
-              {t("home.noServices")}
+              {t("home.noProducts")}
             </p>
           </div>
         ) : (
@@ -507,7 +530,7 @@ export default function Home() {
                     "flex items-center gap-4 rounded-2xl border border-border bg-card overflow-hidden h-[76px] transition-all duration-200",
                     hasSlug
                       ? "hover:border-primary/30 hover:shadow-md hover:shadow-primary/5 cursor-pointer"
-                      : "opacity-55 cursor-not-allowed",
+                      : "opacity-55 cursor-not-allowed"
                   )}
                 >
                   {s.service_image ? (
