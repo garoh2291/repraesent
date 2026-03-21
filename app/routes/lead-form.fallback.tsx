@@ -10,6 +10,7 @@ import axios from "axios";
 import {
   getLeadFallbackConfig,
   updateLeadFallbackConfig,
+  getServiceConfig,
   type LeadFallbackConfig,
   type LeadFallbackSourceConfig,
 } from "~/lib/api/workspaces";
@@ -424,12 +425,20 @@ export default function LeadFallbackPage() {
         s.service_type === "email-config" || s.service_slug === "email-config"
     ) ?? false;
 
-  // From email address (from the email-config service config)
-  const fromEmail =
-    (currentWorkspace?.services?.find(
+  // Find the email-config service ID so we can fetch its full config
+  const emailConfigServiceId =
+    currentWorkspace?.services?.find(
       (s) =>
         s.service_type === "email-config" || s.service_slug === "email-config"
-    )?.service_config?.["email"] as string | undefined) ?? null;
+    )?.service_id ?? null;
+
+  const { data: emailServiceConfig } = useQuery({
+    queryKey: ["service-config", emailConfigServiceId],
+    queryFn: () => getServiceConfig(emailConfigServiceId!),
+    enabled: !!emailConfigServiceId,
+  });
+
+  const fromEmail = (emailServiceConfig?.["email"] as string | undefined) ?? null;
 
   useEffect(() => {
     if (currentWorkspace && (!hasLeadForm || !hasEmailConfig)) {
