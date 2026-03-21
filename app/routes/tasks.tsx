@@ -19,6 +19,7 @@ import {
   TaskFormModal,
   type WorkspaceMemberItem,
 } from "~/components/organism/tasks/task-form-modal";
+import { TaskDetailModal } from "~/components/organism/tasks/task-detail-modal";
 import {
   getAllTasks,
   updateTask,
@@ -52,7 +53,17 @@ export default function TasksPage() {
   const search = searchParams.get("search") ?? "";
   const debouncedSearch = useDebounce(search, 300);
 
+  const selectedTaskId = searchParams.get("task_id") ?? null;
   const [formOpen, setFormOpen] = useState(false);
+
+  const handleTaskSelect = useCallback(
+    (taskId: string) => onSelect({ task_id: taskId }, true),
+    [onSelect]
+  );
+  const handleTaskModalClose = useCallback(
+    () => onSelect({ task_id: "" }, true),
+    [onSelect]
+  );
 
   const hasFilters = !!(assigneeFilter || statusFilter || debouncedSearch);
   const tasksQuery = useQuery({
@@ -290,6 +301,7 @@ export default function TasksPage() {
             isUpdating={statusChangeMutation.isPending}
             canEdit={true}
             workspaceMembers={workspaceMembers}
+            onTaskSelect={handleTaskSelect}
           />
         </div>
       ) : (
@@ -298,8 +310,18 @@ export default function TasksPage() {
           isLoading={tasksQuery.isLoading}
           workspaceMembers={workspaceMembers}
           canEdit={true}
+          onTaskSelect={handleTaskSelect}
         />
       )}
+
+      {/* Task detail modal (sync with task_id URL param) */}
+      <TaskDetailModal
+        open={!!selectedTaskId}
+        onOpenChange={(open) => !open && handleTaskModalClose()}
+        taskId={selectedTaskId}
+        workspaceMembers={workspaceMembers}
+        canEdit={true}
+      />
 
       {/* Task form modal */}
       <TaskFormModal

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router";
 import { useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
@@ -13,6 +13,7 @@ import {
   clearStoredToken,
   clearStoredWorkspaceId,
   getStoredWorkspaceId,
+  getStoredToken,
 } from "~/lib/api/axios-instance";
 
 export function meta() {
@@ -28,6 +29,7 @@ export default function AuthCallback() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [status, setStatus] = useState<"loading" | "error">("loading");
+  const hasAttemptedRef = useRef(false);
 
   useEffect(() => {
     const token = searchParams.get("token");
@@ -36,6 +38,9 @@ export default function AuthCallback() {
       navigate("/login?error=missing_token", { replace: true });
       return;
     }
+
+    if (hasAttemptedRef.current) return;
+    hasAttemptedRef.current = true;
 
     const run = async () => {
       try {
@@ -93,7 +98,48 @@ export default function AuthCallback() {
         }
 
         navigate("/", { replace: true });
-      } catch {
+      } catch (err) {
+        const message = err instanceof Error ? err.message : String(err);
+        const isAlreadyUsed =
+          message.toLowerCase().includes("already used") && !!getStoredToken();
+
+        if (isAlreadyUsed) {
+          // Second effect run after first succeeded; token was consumed but we're already authenticated
+          try {
+            queryClient.invalidateQueries({ queryKey: ["auth"] });
+            const context: UserContextResponse = await getUserContext();
+            if (!context.workspaces?.length) {
+              navigate("/onboarding/profile", { replace: true });
+              return;
+            }
+            if (context.workspaces.length === 1) {
+              const ws = context.workspaces[0];
+              setStoredWorkspaceId(ws.id);
+              navigate("/", { replace: true });
+              return;
+            }
+            if (context.workspaces.length > 1) {
+              const workspaceParam = searchParams.get("workspace");
+              const workspaceFromUrl =
+                workspaceParam &&
+                context.workspaces.some((w) => w.id === workspaceParam)
+                  ? workspaceParam
+                  : null;
+              if (workspaceFromUrl) {
+                setStoredWorkspaceId(workspaceFromUrl);
+              }
+              navigate("/", { replace: true });
+              return;
+            }
+            navigate("/", { replace: true });
+          } catch {
+            setStatus("error");
+            clearStoredToken();
+            clearStoredWorkspaceId();
+          }
+          return;
+        }
+
         setStatus("error");
         clearStoredToken();
         clearStoredWorkspaceId();

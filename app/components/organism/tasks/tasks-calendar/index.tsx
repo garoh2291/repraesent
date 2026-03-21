@@ -16,7 +16,6 @@ import {
 } from "date-fns";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { cn } from "~/lib/utils";
-import { TaskDetailModal } from "~/components/organism/tasks/task-detail-modal";
 import type { Task } from "~/lib/api/tasks";
 import type { WorkspaceMemberItem } from "~/components/organism/tasks/task-form-modal";
 
@@ -28,6 +27,7 @@ interface TasksCalendarProps {
   workspaceMembers: WorkspaceMemberItem[];
   canEdit?: boolean;
   onMonthChange?: (year: number, month: number) => void;
+  onTaskSelect: (taskId: string) => void;
 }
 
 export function TasksCalendar({
@@ -36,10 +36,10 @@ export function TasksCalendar({
   workspaceMembers,
   canEdit = true,
   onMonthChange,
+  onTaskSelect,
 }: TasksCalendarProps) {
   const { t } = useTranslation();
   const [currentDate, setCurrentDate] = useState(new Date());
-  const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
   const [expandedDay, setExpandedDay] = useState<string | null>(null);
   const [calViewType, setCalViewType] = useState<CalViewType>("month");
 
@@ -245,7 +245,7 @@ export function TasksCalendar({
                             className={taskPillClass(task)}
                             onClick={(e) => {
                               e.stopPropagation();
-                              setSelectedTaskId(task.id);
+                              onTaskSelect(task.id);
                             }}
                           >
                             {task.title}
@@ -268,7 +268,7 @@ export function TasksCalendar({
                             className={taskPillClass(task)}
                             onClick={(e) => {
                               e.stopPropagation();
-                              setSelectedTaskId(task.id);
+                              onTaskSelect(task.id);
                             }}
                           >
                             {task.title}
@@ -333,7 +333,7 @@ export function TasksCalendar({
                         <div
                           key={task.id}
                           className={taskPillClass(task)}
-                          onClick={() => setSelectedTaskId(task.id)}
+                          onClick={() => onTaskSelect(task.id)}
                         >
                           {task.title}
                         </div>
@@ -346,14 +346,6 @@ export function TasksCalendar({
           </div>
         )}
       </div>
-
-      <TaskDetailModal
-        open={!!selectedTaskId}
-        onOpenChange={(open) => !open && setSelectedTaskId(null)}
-        taskId={selectedTaskId}
-        workspaceMembers={workspaceMembers}
-        canEdit={canEdit}
-      />
     </>
   );
 }

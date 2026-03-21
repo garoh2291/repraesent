@@ -14,7 +14,6 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { cn } from "~/lib/utils";
 import { TaskCard } from "./task-card";
-import { TaskDetailModal } from "~/components/organism/tasks/task-detail-modal";
 import { updateTask, type Task, type TaskStatus } from "~/lib/api/tasks";
 import type { WorkspaceMemberItem } from "~/components/organism/tasks/task-form-modal";
 
@@ -33,6 +32,7 @@ interface TasksKanbanProps {
   isUpdating?: boolean;
   canEdit?: boolean;
   workspaceMembers: WorkspaceMemberItem[];
+  onTaskSelect: (taskId: string) => void;
 }
 
 export function TasksKanban({
@@ -42,10 +42,10 @@ export function TasksKanban({
   isUpdating,
   canEdit = true,
   workspaceMembers,
+  onTaskSelect,
 }: TasksKanbanProps) {
   const { t } = useTranslation();
   const [activeId, setActiveId] = useState<string | null>(null);
-  const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
   const undoStackRef = useRef<
     Array<{ taskId: string; previousStatus: TaskStatus }>
   >([]);
@@ -129,7 +129,7 @@ export function TasksKanban({
               key={status}
               status={status}
               tasks={tasksByStatus[status]}
-              onTaskSelect={(id) => setSelectedTaskId(id)}
+              onTaskSelect={onTaskSelect}
               isUpdating={isUpdating}
               canEdit={canEdit}
               colorClass={TASK_STATUS_COLORS[status]}
@@ -148,14 +148,6 @@ export function TasksKanban({
           ) : null}
         </DragOverlay>
       </DndContext>
-
-      <TaskDetailModal
-        open={!!selectedTaskId}
-        onOpenChange={(open) => !open && setSelectedTaskId(null)}
-        taskId={selectedTaskId}
-        workspaceMembers={workspaceMembers}
-        canEdit={canEdit}
-      />
     </>
   );
 }

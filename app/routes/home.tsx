@@ -308,7 +308,8 @@ function MyTaskRow({ task }: { task: Task }) {
   const dueInfo = task.due_date ? formatTaskDueLabel(task.due_date) : null;
 
   return (
-    <div
+    <Link
+      to={`/tasks?task_id=${task.id}`}
       className={cn(
         "group flex items-center gap-3 rounded-xl border px-4 py-3 transition-all duration-150",
         isDone
@@ -367,7 +368,7 @@ function MyTaskRow({ task }: { task: Task }) {
           {dueInfo.label}
         </span>
       )}
-    </div>
+    </Link>
   );
 }
 
