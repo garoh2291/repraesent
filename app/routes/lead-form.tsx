@@ -1,5 +1,6 @@
 import { useMemo, useEffect, useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router";
+import { useTranslation } from "react-i18next";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import type { ColumnDef } from "@tanstack/react-table";
 import { useAuthContext } from "~/providers/auth-provider";
@@ -11,21 +12,21 @@ import FilterComponent from "~/components/molecule/filter-component";
 import { Button } from "~/components/ui/button";
 import TooltipContainer from "~/components/tooltip-container";
 import { getLeads, type Lead, type LeadStatus } from "~/lib/api/leads";
-import { shortLeadId } from "~/lib/leads/utils";
+import { LeadTasksSummaryCell } from "~/components/organism/tasks/lead-tasks-summary-cell";
 import { useDebounce } from "~/lib/hooks/useDebounce";
 import { useSearchParamsSelect } from "~/lib/hooks/useQueryParams";
 import { useLeadsViewMode } from "~/lib/hooks/useLocalStorage";
 import { useCanEditLeads } from "~/lib/hooks/useCanEditLeads";
 import { useUpdateLeadStatus } from "~/lib/hooks/useUpdateLeadStatus";
 import { format } from "date-fns";
-import { ArrowRight, LayoutGrid, Table2, Upload, X } from "lucide-react";
+import { ArrowRight, LayoutGrid, Table2, Upload, X, Mail } from "lucide-react";
 import { cn } from "~/lib/utils";
 import { LeadImportModal } from "~/components/organism/lead-import-modal";
 
 export function meta() {
   return [
-    { title: "Lead Form - Repraesent" },
-    { name: "description", content: "Lead form" },
+    { title: "Leads - Repraesent" },
+    { name: "description", content: "Leads management" },
   ];
 }
 
@@ -40,6 +41,7 @@ function parseLimit(v: string | null): number {
 }
 
 export default function LeadForm() {
+  const { t } = useTranslation();
   const { currentWorkspace } = useAuthContext();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -160,29 +162,29 @@ export default function LeadForm() {
     currentWorkspace?.services?.some((s) => s.service_type === "lead-form") ??
     false;
 
+  const hasEmailConfigService =
+    currentWorkspace?.services?.some(
+      (s) => s.service_type === "email-config" || s.service_slug === "email-config"
+    ) ?? false;
+
   if (!hasAccess) {
     return null;
   }
 
   const columns: ColumnDef<Lead>[] = [
     {
-      accessorKey: "id",
-      header: "ID",
-      cell: ({ row }) => {
-        const id = row.original.id;
-        const short = shortLeadId(id);
-        return (
-          <TooltipContainer tooltipContent={id} copyText={id}>
-            <span className="font-mono text-xs text-muted-foreground bg-muted px-1.5 py-0.5 rounded">
-              {short}
-            </span>
-          </TooltipContainer>
-        );
-      },
+      id: "tasks_summary",
+      header: t("tasks.leadRow.columnHeader"),
+      cell: ({ row }) => (
+        <LeadTasksSummaryCell
+          lead={row.original}
+          onClick={() => setSelectedLeadId(row.original.id)}
+        />
+      ),
     },
     {
       accessorKey: "full_name",
-      header: "Full Name",
+      header: t("leads.columns.fullName"),
       cell: ({ row }) => {
         const name = row.original.full_name ?? "—";
         return (
@@ -196,7 +198,7 @@ export default function LeadForm() {
     },
     {
       accessorKey: "email",
-      header: "Email",
+      header: t("leads.columns.email"),
       cell: ({ row }) => {
         const email = row.original.email ?? "—";
         return (
@@ -210,7 +212,7 @@ export default function LeadForm() {
     },
     {
       accessorKey: "source_label",
-      header: "Source",
+      header: t("leads.columns.source"),
       cell: ({ row }) => {
         const label =
           row.original.source_label ?? row.original.source_table ?? "—";
@@ -225,7 +227,7 @@ export default function LeadForm() {
     },
     {
       accessorKey: "status",
-      header: "Status",
+      header: t("leads.columns.status"),
       cell: ({ row }) => {
         const lead = row.original;
         return (
@@ -242,7 +244,7 @@ export default function LeadForm() {
     },
     {
       accessorKey: "created_at",
-      header: "Created",
+      header: t("leads.columns.createdAt"),
       cell: ({ row }) =>
         row.original.created_at ? (
           <span className="text-muted-foreground text-sm">
@@ -263,7 +265,7 @@ export default function LeadForm() {
           to={`/lead-form/${row.original.id}`}
           className="inline-flex items-center gap-1 text-xs font-medium text-foreground hover:underline"
         >
-          Open <ArrowRight className="h-3.5 w-3.5" />
+          {t("leads.openLead")} <ArrowRight className="h-3.5 w-3.5" />
         </Link>
       ),
     },
@@ -282,13 +284,24 @@ export default function LeadForm() {
       <div className="flex items-center justify-between shrink-0 app-fade-up">
         <div>
           <h1 className="text-2xl font-semibold text-foreground tracking-tight">
-            Leads
+            {t("leads.title")}
           </h1>
           <p className="text-sm text-muted-foreground mt-0.5">
-            Manage and track your incoming leads
+            {t("leads.manageHint")}
           </p>
         </div>
         <div className="flex items-center gap-2">
+          {hasEmailConfigService && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => navigate("/lead-form/fallback")}
+              className="h-9 gap-1.5 text-xs"
+            >
+              <Mail className="h-3.5 w-3.5" />
+              {t("leads.leadFallback")}
+            </Button>
+          )}
           {canEdit && (
             <Button
               variant="outline"
@@ -297,7 +310,7 @@ export default function LeadForm() {
               className="h-9 gap-1.5 text-xs"
             >
               <Upload className="h-3.5 w-3.5" />
-              Import CSV
+              {t("leads.importLeads")}
             </Button>
           )}
           <div className="flex items-center rounded-lg border border-border bg-muted/50 p-0.5">
@@ -314,7 +327,7 @@ export default function LeadForm() {
               )}
             >
               <Table2 className="h-3.5 w-3.5" />
-              Table
+              {t("leads.tableView")}
             </button>
             <button
               onClick={() => {
@@ -329,7 +342,7 @@ export default function LeadForm() {
               )}
             >
               <LayoutGrid className="h-3.5 w-3.5" />
-              Kanban
+              {t("leads.kanbanView")}
             </button>
           </div>
         </div>
@@ -350,7 +363,7 @@ export default function LeadForm() {
                     onSelect({ status: "", source: "", page: "1" }, true)
                   }
                 >
-                  Clear filters <X size={12} />
+                  {t("leads.clearFilters")} <X size={12} />
                 </button>
               )}
             </div>
@@ -378,7 +391,7 @@ export default function LeadForm() {
             onSelect({ search: value, page: "1" }, true);
           }}
           searchValue={search}
-          searchPlaceholder="Search by email, name, phone..."
+          searchPlaceholder={t("leads.searchPlaceholder")}
           onRowClick={(row) => setSelectedLeadId(row.id)}
         />
       ) : (

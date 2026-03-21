@@ -1,5 +1,6 @@
 import { useState, useCallback, useEffect, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
 import { Calendar, momentLocalizer } from "react-big-calendar";
 import moment from "moment-timezone";
 import { formatInTimeZone } from "date-fns-tz";
@@ -66,7 +67,8 @@ function AppointmentEventWrapper({
   timezone: string;
   timeFormat: string;
 }) {
-  const title = event.title ?? "Appointment";
+  const { t } = useTranslation();
+  const title = event.title ?? t("appointments.calendar.appointment");
   const rawNotes = event.notes ?? "";
   const parsed = parseBookingNotes(rawNotes);
   const start =

@@ -1,18 +1,21 @@
 import { useEffect, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
+import i18n from "~/i18n";
 import { useAuthContext } from "~/providers/auth-provider";
 import { getServiceConfig } from "~/lib/api/workspaces";
 
 export function meta() {
   return [
-    { title: "Analytics - Repraesent" },
-    { name: "description", content: "Analytics dashboard" },
+    { title: i18n.t("analytics.metaTitle") },
+    { name: "description", content: i18n.t("analytics.metaDescription") },
   ];
 }
 
 const PLAUSIBLE_SCRIPT = "https://plausible0.gagadomains.com/js/embed.host.js";
 
 export default function Analytics() {
+  const { t } = useTranslation();
   const { currentWorkspace } = useAuthContext();
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -52,9 +55,7 @@ export default function Analytics() {
   if (!analyticsService && !isPending) {
     return (
       <div className="flex h-full items-center justify-center">
-        <p className="text-muted-foreground">
-          Analytics service is not enabled for this workspace.
-        </p>
+        <p className="text-muted-foreground">{t("analytics.notEnabled")}</p>
       </div>
     );
   }
@@ -62,9 +63,7 @@ export default function Analytics() {
   if (!sharedLink && !isPending) {
     return (
       <div className="flex h-full items-center justify-center">
-        <p className="text-muted-foreground">
-          Analytics is not configured yet. Please contact your administrator.
-        </p>
+        <p className="text-muted-foreground">{t("analytics.notConfigured")}</p>
       </div>
     );
   }
@@ -76,7 +75,7 @@ export default function Analytics() {
       {(isLoading || isPending) && (
         <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-background">
           <div className="h-8 w-8 animate-spin rounded-full border-4 border-muted border-t-primary" />
-          <p className="text-sm text-muted-foreground">Loading analytics...</p>
+          <p className="text-sm text-muted-foreground">{t("analytics.loading")}</p>
         </div>
       )}
       <iframe
@@ -92,7 +91,7 @@ export default function Analytics() {
           opacity: isLoading ? 0 : 1,
           transition: "opacity 0.3s ease",
         }}
-        title="Analytics"
+        title={t("analytics.iframeTitle")}
         onLoad={() => setIsLoading(false)}
       />
     </div>

@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { useAuthContext } from "~/providers/auth-provider";
 import { getStoredWorkspaceId } from "~/lib/api/axios-instance";
 import {
@@ -88,6 +89,7 @@ const STATUS_STYLES = `
 `;
 
 export default function Pending() {
+  const { t } = useTranslation();
   const { currentWorkspace, workspaces } = useAuthContext();
   const workspaceId =
     getStoredWorkspaceId() ?? currentWorkspace?.id ?? workspaces[0]?.id;
@@ -112,7 +114,7 @@ export default function Pending() {
   if (!workspaceId) {
     return (
       <div className="flex min-h-screen items-center justify-center">
-        <p className="text-muted-foreground text-sm">Loading…</p>
+        <p className="text-muted-foreground text-sm">{t("common.loading")}</p>
       </div>
     );
   }
@@ -124,47 +126,31 @@ export default function Pending() {
         <StatusPageHeader />
         <div className="flex flex-1 flex-col items-center justify-center p-8">
           <div className="mx-auto max-w-sm space-y-7 text-center sp-fade-up">
-            {/* Icon */}
             <div className="flex justify-center sp-fade-up">
               <div className="relative flex h-20 w-20 items-center justify-center rounded-full bg-amber-50 dark:bg-amber-950/30 border-2 border-amber-200 dark:border-amber-800">
                 <FileText className="h-8 w-8 text-amber-600 dark:text-amber-400" />
               </div>
             </div>
-
-            {/* Copy */}
             <div className="space-y-3 sp-fade-up sp-fade-up-d1">
               <h1 className="sp-heading text-[26px] font-semibold text-foreground leading-snug">
-                Payment overdue
+                {t("pending.paymentOverdue")}
               </h1>
               <p className="text-sm text-muted-foreground leading-relaxed">
-                Please check your inbox for an invoice from Stripe, or use the
-                link below to pay directly.
+                {t("pending.paymentOverdueHint")}
               </p>
             </div>
-
             {invoiceUrl && (
               <div className="sp-fade-up sp-fade-up-d2">
-                <Button
-                  asChild
-                  className="h-11 px-8 font-medium text-sm transition-all duration-150 hover:opacity-90"
-                >
-                  <a
-                    href={invoiceUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    View invoice →
+                <Button asChild className="h-11 px-8 font-medium text-sm transition-all duration-150 hover:opacity-90">
+                  <a href={invoiceUrl} target="_blank" rel="noopener noreferrer">
+                    {t("pending.viewInvoice")}
                   </a>
                 </Button>
               </div>
             )}
-
             <div className="sp-fade-up sp-fade-up-d3 pt-2 border-t border-stone-200 dark:border-zinc-800">
-              <p className="text-xs text-muted-foreground">Need help?</p>
-              <a
-                href="mailto:support@repraesent.com"
-                className="mt-1 inline-flex items-center gap-1.5 text-xs font-medium text-foreground hover:opacity-70 transition-opacity"
-              >
+              <p className="text-xs text-muted-foreground">{t("pending.needHelp")}</p>
+              <a href="mailto:support@repraesent.com" className="mt-1 inline-flex items-center gap-1.5 text-xs font-medium text-foreground hover:opacity-70 transition-opacity">
                 <Mail className="h-3.5 w-3.5" />
                 support@repraesent.com
               </a>
@@ -182,47 +168,31 @@ export default function Pending() {
         <StatusPageHeader />
         <div className="flex flex-1 flex-col items-center justify-center p-8">
           <div className="mx-auto max-w-sm space-y-7 text-center">
-            {/* Icon */}
             <div className="flex justify-center sp-fade-up">
               <div className="relative flex h-20 w-20 items-center justify-center rounded-full bg-blue-50 dark:bg-blue-950/30 border-2 border-blue-200 dark:border-blue-800">
                 <FileText className="h-8 w-8 text-blue-600 dark:text-blue-400" />
               </div>
             </div>
-
-            {/* Copy */}
             <div className="space-y-3 sp-fade-up sp-fade-up-d1">
               <h1 className="sp-heading text-[26px] font-semibold text-foreground leading-snug">
-                Invoice sent — awaiting your payment
+                {t("pending.invoiceSent")}
               </h1>
               <p className="text-sm text-muted-foreground leading-relaxed">
-                We sent you an invoice by email. Pay it to activate your
-                workspace and get started.
+                {t("pending.invoiceSentHint")}
               </p>
             </div>
-
             {invoiceUrl && (
               <div className="sp-fade-up sp-fade-up-d2">
-                <Button
-                  asChild
-                  className="h-11 px-8 font-medium text-sm transition-all duration-150 hover:opacity-90"
-                >
-                  <a
-                    href={invoiceUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    Pay invoice now →
+                <Button asChild className="h-11 px-8 font-medium text-sm transition-all duration-150 hover:opacity-90">
+                  <a href={invoiceUrl} target="_blank" rel="noopener noreferrer">
+                    {t("pending.payInvoice")}
                   </a>
                 </Button>
               </div>
             )}
-
             <div className="sp-fade-up sp-fade-up-d3 pt-2 border-t border-stone-200 dark:border-zinc-800">
-              <p className="text-xs text-muted-foreground">Need help?</p>
-              <a
-                href="mailto:support@repraesent.com"
-                className="mt-1 inline-flex items-center gap-1.5 text-xs font-medium text-foreground hover:opacity-70 transition-opacity"
-              >
+              <p className="text-xs text-muted-foreground">{t("pending.needHelp")}</p>
+              <a href="mailto:support@repraesent.com" className="mt-1 inline-flex items-center gap-1.5 text-xs font-medium text-foreground hover:opacity-70 transition-opacity">
                 <Mail className="h-3.5 w-3.5" />
                 support@repraesent.com
               </a>
@@ -239,87 +209,68 @@ export default function Pending() {
       <StatusPageHeader />
       <div className="flex flex-1 flex-col items-center justify-center p-8">
         <div className="mx-auto max-w-sm space-y-8 text-center">
-          {/* ── Animated illustration ── */}
           <div className="sp-fade-up flex flex-col items-center gap-4">
-            {/* Three floating icon chips */}
             <div className="flex items-end justify-center gap-3">
-              {/* Chip 1 — Team */}
               <div className="sp-icon-float-1 flex flex-col items-center gap-1.5">
                 <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white dark:bg-zinc-900 border border-stone-200 dark:border-zinc-700 shadow-sm">
                   <Users className="h-5 w-5 text-foreground/50" />
                 </div>
                 <span className="text-[9px] font-semibold uppercase tracking-widest text-muted-foreground/50">
-                  Team
+                  {t("pending.teamLabel")}
                 </span>
               </div>
-
-              {/* Connector dots */}
               <div className="sp-connector mb-5 flex gap-0.5 pb-1">
                 <span className="h-1 w-1 rounded-full bg-stone-300 dark:bg-zinc-600" />
                 <span className="h-1 w-1 rounded-full bg-stone-300 dark:bg-zinc-600" />
                 <span className="h-1 w-1 rounded-full bg-stone-300 dark:bg-zinc-600" />
               </div>
-
-              {/* Chip 2 — Workspace (center, tallest) */}
               <div className="sp-icon-float-2 flex flex-col items-center gap-1.5">
                 <div className="relative flex h-16 w-16 items-center justify-center rounded-2xl bg-[#111113] shadow-lg sp-ring-pulse text-[#111113]">
                   <Building2 className="h-7 w-7 text-white/80" />
-                  {/* amber dot */}
                   <span className="absolute -top-1 -right-1 h-3 w-3 rounded-full bg-amber-400 border-2 border-stone-50 dark:border-zinc-950 sp-breathe" />
                 </div>
                 <span className="text-[9px] font-semibold uppercase tracking-widest text-muted-foreground/50">
-                  Workspace
+                  {t("pending.workspaceLabel")}
                 </span>
               </div>
-
-              {/* Connector dots */}
               <div className="sp-connector-2 mb-5 flex gap-0.5 pb-1">
                 <span className="h-1 w-1 rounded-full bg-stone-300 dark:bg-zinc-600" />
                 <span className="h-1 w-1 rounded-full bg-stone-300 dark:bg-zinc-600" />
                 <span className="h-1 w-1 rounded-full bg-stone-300 dark:bg-zinc-600" />
               </div>
-
-              {/* Chip 3 — Features */}
               <div className="sp-icon-float-3 flex flex-col items-center gap-1.5">
                 <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white dark:bg-zinc-900 border border-stone-200 dark:border-zinc-700 shadow-sm">
                   <Sparkles className="h-5 w-5 text-amber-500" />
                 </div>
                 <span className="text-[9px] font-semibold uppercase tracking-widest text-muted-foreground/50">
-                  Features
+                  {t("pending.featuresLabel")}
                 </span>
               </div>
             </div>
           </div>
 
-          {/* Copy */}
           <div className="space-y-3 sp-fade-up sp-fade-up-d2">
             <h1 className="sp-heading text-[26px] font-semibold text-foreground leading-snug">
-              Setting up your workspace
+              {t("pending.title")}
             </h1>
             <p className="text-sm text-muted-foreground leading-relaxed">
-              Our team is configuring your subscription. You'll receive an email
-              once your workspace is ready.
+              {t("pending.description")}
             </p>
           </div>
 
-          {/* Status pill */}
           <div className="sp-fade-up sp-fade-up-d3 inline-flex items-center gap-2 rounded-full border border-stone-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 px-4 py-2 text-xs font-medium text-muted-foreground shadow-sm">
             <span className="relative flex h-2 w-2">
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-foreground/40 opacity-75" />
               <span className="relative inline-flex rounded-full h-2 w-2 bg-foreground/60" />
             </span>
-            In progress
+            {t("pending.inProgress")}
           </div>
 
-          {/* Support contact */}
           <div className="sp-fade-up sp-fade-up-d4 pt-2 border-t border-stone-200 dark:border-zinc-800">
             <p className="text-xs text-muted-foreground leading-relaxed">
-              Questions? Reach out to our support team
+              {t("pending.questionsHint")}
             </p>
-            <a
-              href="mailto:support@repraesent.com"
-              className="mt-1.5 inline-flex items-center gap-1.5 text-xs font-medium text-foreground hover:opacity-70 transition-opacity"
-            >
+            <a href="mailto:support@repraesent.com" className="mt-1.5 inline-flex items-center gap-1.5 text-xs font-medium text-foreground hover:opacity-70 transition-opacity">
               <Mail className="h-3.5 w-3.5" />
               support@repraesent.com
             </a>

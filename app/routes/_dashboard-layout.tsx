@@ -1,8 +1,11 @@
+import { useEffect, useState, useCallback } from "react";
 import { Outlet } from "react-router";
+import { useTranslation } from "react-i18next";
 import { useAuthContext } from "~/providers/auth-provider";
 import { Sidebar } from "~/components/sidebar";
 import { Button } from "~/components/ui/button";
 import { AlertTriangle } from "lucide-react";
+import { OnboardingTour } from "~/components/onboarding-tour/OnboardingTour";
 
 function formatDueDate(unixStr: string): string {
   const sec = parseInt(unixStr, 10);
@@ -16,7 +19,36 @@ function formatDueDate(unixStr: string): string {
 }
 
 export default function DashboardLayout() {
-  const { currentWorkspace } = useAuthContext();
+  const { user, currentWorkspace } = useAuthContext();
+  const { i18n, t } = useTranslation();
+  const [showTour, setShowTour] = useState(false);
+
+  // Sync i18n and cookie from user's DB locale (source of truth for logged-in users)
+  useEffect(() => {
+    if (!user?.locale) return;
+    const locale = user.locale === "en" || user.locale === "de" ? user.locale : "de";
+    i18n.changeLanguage(locale);
+    const maxAge = 60 * 60 * 24 * 365;
+    document.cookie = `personal_lang=${locale}; path=/; max-age=${maxAge}; samesite=lax`;
+  }, [user?.locale, i18n]);
+
+  // Show onboarding tour for active-workspace users who haven't completed it yet
+  useEffect(() => {
+    if (
+      user &&
+      user.onboarding_completed_at == null &&
+      currentWorkspace?.status === "active"
+    ) {
+      // Small delay so the dashboard renders first — feels more natural
+      const timer = setTimeout(() => setShowTour(true), 600);
+      return () => clearTimeout(timer);
+    }
+  }, [user?.id, user?.onboarding_completed_at, currentWorkspace?.status]);
+
+  const handleTourDone = useCallback(() => {
+    setShowTour(false);
+  }, []);
+
   const showUnpaidBanner =
     currentWorkspace?.status === "active" &&
     currentWorkspace?.unpaid_invoice_due_date &&
@@ -32,11 +64,11 @@ export default function DashboardLayout() {
             <div className="flex items-center gap-2.5">
               <AlertTriangle className="h-4 w-4 shrink-0 text-amber-600" />
               <p className="text-sm font-medium text-amber-900">
-                Unpaid invoice — pay by{" "}
-                <span className="font-semibold">
-                  {formatDueDate(currentWorkspace!.unpaid_invoice_due_date!)}
-                </span>{" "}
-                or your workspace will be suspended.
+                {t("billing.unpaidBanner", {
+                  date: formatDueDate(
+                    currentWorkspace!.unpaid_invoice_due_date!,
+                  ),
+                })}
               </p>
             </div>
             <Button
@@ -50,13 +82,21 @@ export default function DashboardLayout() {
                 target="_blank"
                 rel="noopener noreferrer"
               >
-                Pay now →
+                {t("billing.payNow")}
               </a>
             </Button>
           </div>
         )}
         <Outlet />
       </main>
+
+      {showTour && (
+        <OnboardingTour
+          onDone={handleTourDone}
+          locale={user?.locale ?? "de"}
+          services={currentWorkspace?.services ?? []}
+        />
+      )}
     </div>
   );
 }

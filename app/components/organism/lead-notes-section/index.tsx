@@ -1,5 +1,6 @@
 import { useState, useCallback } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
 import {
   getNotes,
   createNote,
@@ -67,6 +68,7 @@ export function LeadNotesSection({
   leadId,
   canEdit = true,
 }: LeadNotesSectionProps) {
+  const { t } = useTranslation();
   const queryClient = useQueryClient();
   const { user } = useAuthContext();
   const [isAddingNew, setIsAddingNew] = useState(false);
@@ -230,11 +232,11 @@ export function LeadNotesSection({
     return (
       <div className="space-y-3">
         <h3 className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
-          Notes
+          {t("leads.detail.notes")}
         </h3>
         <div className="flex items-center gap-2">
           <div className="h-4 w-4 app-spin rounded-full border-2 border-muted-foreground/20 border-t-muted-foreground/60" />
-          <span className="text-sm text-muted-foreground">Loading…</span>
+          <span className="text-sm text-muted-foreground">{t("common.loading")}</span>
         </div>
       </div>
     );
@@ -244,7 +246,7 @@ export function LeadNotesSection({
     <div className="space-y-3">
       <div className="flex items-center justify-between gap-2">
         <h3 className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
-          Notes {notes.length > 0 && <span className="ml-1 normal-case tracking-normal font-normal text-muted-foreground/60">({notes.length})</span>}
+          {t("leads.detail.notes")} {notes.length > 0 && <span className="ml-1 normal-case tracking-normal font-normal text-muted-foreground/60">({notes.length})</span>}
         </h3>
         {canEdit && (
           <button
@@ -253,7 +255,7 @@ export function LeadNotesSection({
             className="inline-flex items-center gap-1 rounded-md border border-border bg-muted/60 px-2.5 py-1 text-xs font-medium text-foreground hover:bg-muted transition-colors disabled:opacity-50"
           >
             <Plus className="h-3 w-3" />
-            Add note
+            {t("leads.detail.addNote")}
           </button>
         )}
       </div>
@@ -266,11 +268,11 @@ export function LeadNotesSection({
               <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-primary/10 text-primary text-[9px] font-bold">
                 {getCurrentUserInitials(user?.first_name, user?.last_name)}
               </span>
-              <span className="font-medium text-muted-foreground/70">New note</span>
+              <span className="font-medium text-muted-foreground/70">{t("leads.detail.newNote")}</span>
             </div>
             <Textarea
               autoFocus
-              placeholder="Write a note…"
+              placeholder={t("leads.detail.notePlaceholder")}
               value={newNoteContent}
               onChange={(e) => setNewNoteContent(e.target.value)}
               onBlur={handleAddNoteBlur}
@@ -280,7 +282,7 @@ export function LeadNotesSection({
         )}
 
         {notes.length === 0 && !isAddingNew ? (
-          <p className="text-sm text-muted-foreground py-2">No notes yet.</p>
+          <p className="text-sm text-muted-foreground py-2">{t("leads.detail.noNotes")}</p>
         ) : (
           notes.map((note) =>
             editingNoteId === note.id && canEdit ? (
@@ -294,7 +296,7 @@ export function LeadNotesSection({
                     tooltipContent={
                       note.user_first_name && note.user_last_name
                         ? `${note.user_first_name} ${note.user_last_name}`
-                        : "System"
+                        : t("leads.detail.system")
                     }
                     showCopyButton={false}
                   >
@@ -302,7 +304,7 @@ export function LeadNotesSection({
                       {getInitials(note)}
                     </span>
                   </TooltipContainer>
-                  <span>Editing…</span>
+                  <span>{t("leads.detail.editing")}</span>
                 </div>
                 <Textarea
                   autoFocus
@@ -332,7 +334,7 @@ export function LeadNotesSection({
                       tooltipContent={
                         note.user_first_name && note.user_last_name
                           ? `${note.user_first_name} ${note.user_last_name}`
-                          : "System"
+                          : t("leads.detail.system")
                       }
                       showCopyButton={false}
                     >
@@ -342,7 +344,7 @@ export function LeadNotesSection({
                     </TooltipContainer>
                     <span>{getRelativeTime(note)}</span>
                     {note.version > 1 && (
-                      <span className="italic text-muted-foreground/60">edited</span>
+                      <span className="italic text-muted-foreground/60">{t("leads.detail.editedBadge")}</span>
                     )}
                   </div>
                 </div>
@@ -376,7 +378,7 @@ export function LeadNotesSection({
                           onSelect={() => setNoteIdToDelete(note.id)}
                         >
                           <Trash2 className="h-4 w-4" />
-                          Delete note
+                          {t("leads.detail.deleteNote")}
                         </DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
@@ -386,13 +388,13 @@ export function LeadNotesSection({
                     >
                       <AlertDialogContent>
                         <AlertDialogHeader>
-                          <AlertDialogTitle>Delete note?</AlertDialogTitle>
+                          <AlertDialogTitle>{t("leads.detail.deleteNoteConfirmTitle")}</AlertDialogTitle>
                           <AlertDialogDescription>
-                            This action cannot be undone.
+                            {t("leads.detail.deleteNoteConfirmDesc")}
                           </AlertDialogDescription>
                         </AlertDialogHeader>
                         <AlertDialogFooter>
-                          <AlertDialogCancel>Cancel</AlertDialogCancel>
+                          <AlertDialogCancel>{t("common.cancel")}</AlertDialogCancel>
                           <AlertDialogAction
                             className="bg-foreground text-background hover:opacity-90 transition-opacity"
                             onClick={() => {
@@ -400,7 +402,7 @@ export function LeadNotesSection({
                               setNoteIdToDelete(null);
                             }}
                           >
-                            Delete
+                            {t("common.delete")}
                           </AlertDialogAction>
                         </AlertDialogFooter>
                       </AlertDialogContent>

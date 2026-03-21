@@ -1,7 +1,16 @@
 import { useState, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router";
-import { ChevronRight, Package } from "lucide-react";
+import { useTranslation } from "react-i18next";
+import {
+  ChevronRight,
+  Package,
+  ArrowRight,
+  CheckCircle2,
+  Circle,
+  AlertCircle,
+  Clock,
+} from "lucide-react";
 import {
   ResponsiveContainer,
   LineChart,
@@ -11,9 +20,18 @@ import {
   CartesianGrid,
   Tooltip,
 } from "recharts";
+import {
+  format,
+  isToday,
+  isTomorrow,
+  isPast,
+  formatDistanceToNow,
+} from "date-fns";
+import { getLocalizedServiceName } from "~/lib/api/auth";
 import { useAuthContext } from "~/providers/auth-provider";
 import { cn } from "~/lib/utils";
 import { getLeadAnalytics, type LeadAnalyticsPeriod } from "~/lib/api/leads";
+import { getAllTasks, type Task } from "~/lib/api/tasks";
 
 export function meta() {
   return [
@@ -22,22 +40,23 @@ export function meta() {
   ];
 }
 
-const PERIODS: { value: LeadAnalyticsPeriod; label: string }[] = [
-  { value: "today", label: "Today" },
-  { value: "this_week", label: "This week" },
-  { value: "this_month", label: "This month" },
-  { value: "all_time", label: "All time" },
-];
+function usePeriods(): { value: LeadAnalyticsPeriod; labelKey: string }[] {
+  return [
+    { value: "today", labelKey: "home.periodToday" },
+    { value: "this_week", labelKey: "home.periodThisWeek" },
+    { value: "this_month", labelKey: "home.periodThisMonth" },
+    { value: "all_time", labelKey: "home.periodAllTime" },
+  ];
+}
 
 const SOURCE_COLORS: Record<string, string> = {
   urls: "#5265f3",
   appointment_booking: "#f5d74f",
 };
 
-/** Fill in zero-count data points for the full range so the chart has no gaps. */
 function fillSeriesGaps(
   series: { date: string; count: number }[],
-  period: LeadAnalyticsPeriod,
+  period: LeadAnalyticsPeriod
 ): { date: string; count: number }[] {
   const now = new Date();
   const map = new Map(series.map((p) => [p.date, p.count]));
@@ -56,7 +75,7 @@ function fillSeriesGaps(
       const d = new Date(now);
       d.setDate(d.getDate() - i);
       slots.push(
-        `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`,
+        `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`
       );
     }
   } else if (period === "this_month") {
@@ -64,17 +83,16 @@ function fillSeriesGaps(
     for (let i = 1; i <= days; i++) {
       const d = new Date(now.getFullYear(), now.getMonth(), i);
       slots.push(
-        `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`,
+        `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`
       );
     }
   } else {
-    // all_time — fill every day from the earliest data point to today
     if (series.length === 0) return [];
     const start = new Date(series[0].date + "T00:00:00");
     const end = new Date(now.getFullYear(), now.getMonth(), now.getDate());
     for (const d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
       slots.push(
-        `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`,
+        `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`
       );
     }
   }
@@ -82,13 +100,11 @@ function fillSeriesGaps(
   return slots.map((key) => ({ date: key, count: map.get(key) ?? 0 }));
 }
 
-/** Format an ISO date key for X-axis display */
 function formatXLabel(date: string, period: LeadAnalyticsPeriod): string {
   if (period === "today") {
     const hour = parseInt(date.slice(11, 13), 10);
     return `${hour.toString().padStart(2, "0")}:00`;
   }
-  // this_week / this_month / all_time — all use YYYY-MM-DD
   const [year, month, day] = date.split("-");
   const d = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
   return d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
@@ -105,6 +121,7 @@ function CustomTooltip({
   label?: string;
   period: LeadAnalyticsPeriod;
 }) {
+  const { t } = useTranslation();
   if (!active || !payload?.length || !label) return null;
   const count = payload[0].value;
   return (
@@ -113,7 +130,7 @@ function CustomTooltip({
         {formatXLabel(label, period)}
       </p>
       <p className="font-semibold text-foreground">
-        {count} {count === 1 ? "lead" : "leads"}
+        {t("home.tooltipLead", { count })}
       </p>
     </div>
   );
@@ -121,6 +138,8 @@ function CustomTooltip({
 
 function LeadAnalyticsChart() {
   const { currentWorkspace } = useAuthContext();
+  const { t } = useTranslation();
+  const periods = usePeriods();
   const [period, setPeriod] = useState<LeadAnalyticsPeriod>("this_week");
 
   const { data, isLoading } = useQuery({
@@ -131,13 +150,12 @@ function LeadAnalyticsChart() {
 
   const chartData = useMemo(
     () => fillSeriesGaps(data?.series ?? [], period),
-    [data?.series, period],
+    [data?.series, period]
   );
 
   const maxY = Math.max(...chartData.map((p) => p.count), 1);
   const yDomain: [number, number] = [0, maxY + Math.ceil(maxY * 0.2)];
 
-  // Show every Nth tick so labels don't overlap
   const tickCount = chartData.length;
   const tickStep =
     tickCount <= 10 ? 1 : tickCount <= 20 ? 2 : Math.ceil(tickCount / 10);
@@ -150,11 +168,10 @@ function LeadAnalyticsChart() {
       className="app-fade-up rounded-2xl border border-border bg-card p-6 space-y-5"
       style={{ animationDelay: "0.06s" }}
     >
-      {/* Header row */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div className="space-y-1">
           <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
-            Leads
+            {t("home.leadsChartTitle")}
           </p>
           {isLoading ? (
             <div className="h-8 w-12 animate-pulse rounded-md bg-muted" />
@@ -165,9 +182,8 @@ function LeadAnalyticsChart() {
           )}
         </div>
 
-        {/* Period selector */}
         <div className="flex items-center gap-1 rounded-xl bg-muted p-1 self-start">
-          {PERIODS.map((p) => (
+          {periods.map((p) => (
             <button
               key={p.value}
               onClick={() => setPeriod(p.value)}
@@ -175,16 +191,15 @@ function LeadAnalyticsChart() {
                 "rounded-lg px-3 py-1.5 text-[12px] font-medium transition-all duration-150",
                 period === p.value
                   ? "bg-card text-foreground shadow-sm"
-                  : "text-muted-foreground hover:text-foreground",
+                  : "text-muted-foreground hover:text-foreground"
               )}
             >
-              {p.label}
+              {t(p.labelKey)}
             </button>
           ))}
         </div>
       </div>
 
-      {/* Source badges */}
       {!isLoading && data && data.sources.length > 0 && (
         <div className="flex flex-wrap gap-2">
           {data.sources.map((s) => (
@@ -206,7 +221,6 @@ function LeadAnalyticsChart() {
         </div>
       )}
 
-      {/* Chart */}
       <div className="h-48">
         {isLoading ? (
           <div className="h-full w-full animate-pulse rounded-xl bg-muted" />
@@ -271,82 +285,240 @@ function LeadAnalyticsChart() {
   );
 }
 
+function formatTaskDueLabel(dateStr: string): {
+  label: string;
+  urgent: boolean;
+  overdue: boolean;
+} {
+  const d = new Date(dateStr);
+  if (isPast(d) && !isToday(d))
+    return {
+      label: formatDistanceToNow(d, { addSuffix: true }),
+      urgent: true,
+      overdue: true,
+    };
+  if (isToday(d)) return { label: "Today", urgent: true, overdue: false };
+  if (isTomorrow(d))
+    return { label: "Tomorrow", urgent: false, overdue: false };
+  return { label: format(d, "MMM d"), urgent: false, overdue: false };
+}
+
+function MyTaskRow({ task }: { task: Task }) {
+  const isDone = task.status === "done";
+  const dueInfo = task.due_date ? formatTaskDueLabel(task.due_date) : null;
+
+  return (
+    <Link
+      to={`/tasks?task_id=${task.id}`}
+      className={cn(
+        "group flex items-center gap-3 rounded-xl border px-4 py-3 transition-all duration-150",
+        isDone
+          ? "border-border/50 bg-muted/30"
+          : task.urgency === "overdue"
+            ? "border-red-200/70 bg-red-50/50 hover:border-red-200 hover:bg-red-50"
+            : task.urgency === "due_soon"
+              ? "border-yellow-200/70 bg-yellow-50/40 hover:border-yellow-200 hover:bg-yellow-50"
+              : "border-border bg-card hover:border-border/80 hover:bg-muted/30"
+      )}
+    >
+      {/* Status icon */}
+      <div className="shrink-0">
+        {isDone ? (
+          <CheckCircle2 className="h-4 w-4 text-emerald-500" />
+        ) : task.urgency === "overdue" ? (
+          <AlertCircle className="h-4 w-4 text-red-500" />
+        ) : task.urgency === "due_soon" ? (
+          <Clock className="h-4 w-4 text-yellow-600" />
+        ) : (
+          <Circle className="h-4 w-4 text-muted-foreground/40" />
+        )}
+      </div>
+
+      {/* Title + meta */}
+      <div className="flex-1 min-w-0">
+        <p
+          className={cn(
+            "text-sm font-medium leading-snug truncate",
+            isDone && "line-through text-muted-foreground/60"
+          )}
+        >
+          {task.title}
+        </p>
+        {task.lead_full_name && (
+          <p className="text-[11px] text-muted-foreground truncate mt-0.5">
+            {task.lead_full_name}
+          </p>
+        )}
+      </div>
+
+      {/* Due date badge */}
+      {dueInfo && (
+        <span
+          className={cn(
+            "shrink-0 text-[11px] font-medium px-2 py-0.5 rounded-full",
+            isDone
+              ? "bg-muted text-muted-foreground/60"
+              : dueInfo.overdue
+                ? "bg-red-100 text-red-700"
+                : dueInfo.urgent
+                  ? "bg-yellow-100 text-yellow-800"
+                  : "bg-muted text-muted-foreground"
+          )}
+        >
+          {dueInfo.label}
+        </span>
+      )}
+    </Link>
+  );
+}
+
+function getTodayRange() {
+  const start = new Date();
+  start.setHours(0, 0, 0, 0);
+  const end = new Date();
+  end.setHours(23, 59, 59, 999);
+  return { start: start.toISOString(), end: end.toISOString() };
+}
+
+function MyTasksSection({ userId }: { userId: string }) {
+  const { t } = useTranslation();
+  const { currentWorkspace } = useAuthContext();
+  const { start: todayStart, end: todayEnd } = getTodayRange();
+
+  const { data, isLoading } = useQuery({
+    queryKey: [
+      "home-my-tasks",
+      userId,
+      currentWorkspace?.id,
+      todayStart.slice(0, 10),
+    ],
+    queryFn: () =>
+      getAllTasks({
+        assignee_id: userId,
+        limit: 5,
+        due_date_from: todayStart,
+        due_date_to: todayEnd,
+      }),
+    enabled: !!userId && !!currentWorkspace,
+    refetchOnMount: "always",
+  });
+
+  const tasks = data?.data ?? [];
+  const openCount = tasks.filter((t) => t.status !== "done").length;
+
+  return (
+    <div
+      className="app-fade-up rounded-2xl border border-border bg-card p-6 space-y-5"
+      style={{ animationDelay: "0.1s" }}
+    >
+      {/* Header */}
+      <div className="flex items-start justify-between gap-4">
+        <div className="space-y-1">
+          <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
+            {t("home.myTasks")}
+          </p>
+          {isLoading ? (
+            <div className="h-8 w-12 animate-pulse rounded-md bg-muted" />
+          ) : (
+            <div className="flex items-baseline gap-2">
+              <p className="text-3xl font-bold tracking-tight text-foreground">
+                {openCount}
+              </p>
+              <span className="text-sm text-muted-foreground">
+                {t("home.myTasksOpen")}
+              </span>
+            </div>
+          )}
+        </div>
+
+        <Link
+          to="/tasks"
+          className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-muted/50 px-3 py-1.5 text-xs font-medium text-foreground hover:bg-muted transition-colors shrink-0 mt-1"
+        >
+          {t("home.viewAllTasks")}
+          <ArrowRight className="h-3 w-3" />
+        </Link>
+      </div>
+
+      {/* Task list */}
+      {isLoading ? (
+        <div className="space-y-2">
+          {[1, 2, 3].map((i) => (
+            <div
+              key={i}
+              className="h-[58px] rounded-xl border border-border animate-pulse bg-muted/40"
+            />
+          ))}
+        </div>
+      ) : tasks.length === 0 ? (
+        <div className="flex flex-col items-center justify-center py-8 gap-2">
+          <CheckCircle2 className="h-8 w-8 text-muted-foreground/25" />
+          <p className="text-sm text-muted-foreground">{t("home.noMyTasks")}</p>
+        </div>
+      ) : (
+        <div className="space-y-2">
+          {tasks.map((task) => (
+            <MyTaskRow key={task.id} task={task} />
+          ))}
+          {(data?.total ?? 0) > 5 && (
+            <Link
+              to="/tasks"
+              className="flex items-center justify-center gap-1.5 py-2 text-xs text-muted-foreground hover:text-foreground transition-colors"
+            >
+              +{(data?.total ?? 0) - 5} {t("home.moreTasks")}
+              <ArrowRight className="h-3 w-3" />
+            </Link>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function Home() {
   const { user, currentWorkspace } = useAuthContext();
+  const { t, i18n } = useTranslation();
 
   const services = currentWorkspace?.services ?? [];
   const role = currentWorkspace?.member_role ?? "—";
   const displayName = [user?.first_name, user?.last_name]
     .filter(Boolean)
     .join(" ");
+  const firstName = displayName.split(" ")[0];
 
   return (
     <div className="mx-auto max-w-5xl p-6 space-y-8 app-fade-in">
       {/* Page heading */}
       <div className="app-fade-up space-y-1">
         <h1 className="text-2xl font-semibold text-foreground tracking-tight">
-          Good to see you{displayName ? `, ${displayName.split(" ")[0]}` : ""}.
+          {t("home.greeting", { name: firstName ? `, ${firstName}` : "" })}
         </h1>
         <p className="text-sm text-muted-foreground">
           {currentWorkspace?.name} · <span className="capitalize">{role}</span>
         </p>
       </div>
 
+      {/* My tasks */}
+      {user?.id && <MyTasksSection userId={user.id} />}
+
       {/* Analytics chart */}
       <LeadAnalyticsChart />
-
-      {/* User + workspace info */}
-      <div className="grid gap-4 sm:grid-cols-2 app-fade-up app-fade-up-d3">
-        <div className="rounded-2xl border border-border bg-card p-5 space-y-3">
-          <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
-            Account
-          </p>
-          <div>
-            <p className="text-lg font-semibold text-foreground">
-              {displayName || "—"}
-            </p>
-            <p className="text-sm text-muted-foreground mt-0.5">
-              {user?.email}
-            </p>
-          </div>
-        </div>
-        <div className="rounded-2xl border border-border bg-card p-5 space-y-3">
-          <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
-            Workspace
-          </p>
-          <div>
-            <p className="text-lg font-semibold text-foreground">
-              {currentWorkspace?.name ?? "—"}
-            </p>
-            <p className="text-sm text-muted-foreground mt-0.5 capitalize">
-              Role: {role}
-            </p>
-          </div>
-        </div>
-      </div>
 
       {/* Services */}
       <div className="app-fade-up app-fade-up-d4 space-y-4">
         <div>
           <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
-            Services
+            {t("home.products")}
           </p>
           <p className="text-sm text-muted-foreground/70 mt-0.5">
-            Services attached to this workspace
+            {t("home.productsHint")}
           </p>
         </div>
 
         {services.length === 0 ? (
           <div className="rounded-2xl border border-dashed border-border bg-card p-6">
             <p className="text-sm text-muted-foreground">
-              No services attached yet. Contact{" "}
-              <a
-                href="mailto:support@repraesent.com"
-                className="text-primary hover:underline font-medium"
-              >
-                support@repraesent.com
-              </a>{" "}
-              to get started.
+              {t("home.noProducts")}
             </p>
           </div>
         ) : (
@@ -359,13 +531,13 @@ export default function Home() {
                     "flex items-center gap-4 rounded-2xl border border-border bg-card overflow-hidden h-[76px] transition-all duration-200",
                     hasSlug
                       ? "hover:border-primary/30 hover:shadow-md hover:shadow-primary/5 cursor-pointer"
-                      : "opacity-55 cursor-not-allowed",
+                      : "opacity-55 cursor-not-allowed"
                   )}
                 >
                   {s.service_image ? (
                     <img
                       src={s.service_image}
-                      alt={s.service_name}
+                      alt={getLocalizedServiceName(s, i18n.language ?? "de")}
                       className="h-full w-20 shrink-0 object-cover p-2"
                     />
                   ) : (
@@ -375,16 +547,16 @@ export default function Home() {
                   )}
                   <div className="flex-1 min-w-0 pr-4">
                     <p className="font-semibold text-sm text-foreground truncate">
-                      {s.service_name}
+                      {getLocalizedServiceName(s, i18n.language ?? "de")}
                     </p>
                     <p className="flex items-center gap-1 text-xs text-muted-foreground mt-0.5">
                       {hasSlug ? (
                         <>
-                          Open section
+                          {t("home.openSection")}
                           <ChevronRight className="h-3.5 w-3.5 shrink-0 text-primary" />
                         </>
                       ) : (
-                        "Not available"
+                        t("home.notAvailable")
                       )}
                     </p>
                   </div>

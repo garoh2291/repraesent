@@ -15,6 +15,8 @@ export interface User {
   last_name: string;
   email: string;
   user_type: string;
+  locale?: string;
+  onboarding_completed_at?: string | null;
   created_at?: string;
   updated_at?: string;
 }
@@ -35,15 +37,33 @@ export interface AuthResponse {
 
 /**
  * Workspace service item
+ * Use getLocalizedServiceName() to display based on user's preferred language
  */
 export interface WorkspaceService {
   service_id: string;
   service_name: string;
+  service_name_en: string | null;
+  service_name_de: string | null;
   service_image: string | null;
   service_slug: string | null;
   service_type: string | null;
   service_icon: string | null;
   service_config: Record<string, unknown> | null;
+}
+
+/**
+ * Get service display name based on user's preferred language (i18n).
+ * Uses personal language override, not workspace language.
+ */
+export function getLocalizedServiceName(
+  service: Pick<WorkspaceService, "service_name" | "service_name_en" | "service_name_de">,
+  lang: string
+): string {
+  const isDe = lang?.startsWith("de");
+  if (isDe) {
+    return service.service_name_de ?? service.service_name_en ?? service.service_name;
+  }
+  return service.service_name_en ?? service.service_name_de ?? service.service_name;
 }
 
 /**
@@ -150,6 +170,22 @@ export const getUserContext = async (): Promise<UserContextResponse> => {
     }
     throw new Error(apiError.message || "Failed to fetch user context");
   }
+};
+
+/**
+ * Update current user's locale
+ */
+export const updateUserLocale = async (
+  locale: "en" | "de"
+): Promise<void> => {
+  await apiClient.patch("/users/me/locale", { locale });
+};
+
+/**
+ * Mark the onboarding tour as completed for the current user
+ */
+export const completeOnboarding = async (): Promise<void> => {
+  await apiClient.patch("/users/me/onboarding/complete");
 };
 
 /**

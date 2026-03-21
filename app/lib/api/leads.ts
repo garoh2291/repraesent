@@ -13,6 +13,13 @@ export const LEAD_STATUSES = [
 
 export type LeadStatus = (typeof LEAD_STATUSES)[number];
 
+export interface LeadTasksSummary {
+  open_count: number;
+  nearest_due_date: string | null;
+  nearest_urgency: "overdue" | "due_soon" | "upcoming" | null;
+  nearest_title: string | null;
+}
+
 export interface Lead {
   id: string;
   first_name: string | null;
@@ -27,6 +34,7 @@ export interface Lead {
   status: string;
   created_at: string;
   updated_at: string;
+  tasks_summary: LeadTasksSummary;
 }
 
 export interface LeadHistoryItem {

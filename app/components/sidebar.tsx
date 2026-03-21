@@ -1,7 +1,9 @@
 import { Link, useLocation, useNavigate } from "react-router";
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   Building2,
+  CheckSquare,
   ChevronDown,
   HomeIcon,
   Info,
@@ -12,8 +14,10 @@ import {
 import * as LucideIcons from "lucide-react";
 import { InstructionsModal } from "~/components/instructions-modal";
 
+import { getLocalizedServiceName } from "~/lib/api/auth";
 import { useAuthContext } from "~/providers/auth-provider";
 import { useAppointmentConfig } from "~/lib/hooks/useAppointmentConfig";
+import { LanguageSwitcher } from "~/components/language-switcher";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -24,7 +28,7 @@ import {
 import logoUrl from "~/components/icons/re_praesent-mark-brand-hor.svg?url";
 
 const lucideIconNames = new Set(
-  Object.keys(LucideIcons).filter((key) => /^[A-Z]/.test(key)),
+  Object.keys(LucideIcons).filter((key) => /^[A-Z]/.test(key))
 );
 
 function kebabToPascal(name: string) {
@@ -92,6 +96,7 @@ export function Sidebar() {
     logout,
     isLoggingOut,
   } = useAuthContext();
+  const { t, i18n } = useTranslation();
   const location = useLocation();
   const navigate = useNavigate();
   const hasMultipleWorkspaces = (workspaces?.length ?? 0) > 1;
@@ -100,10 +105,14 @@ export function Sidebar() {
   >(null);
   const hasAppointmentsService =
     currentWorkspace?.services?.some(
-      (s) => s.service_type === "appointments",
+      (s) => s.service_type === "appointments"
+    ) ?? false;
+  const hasLeadFormService =
+    currentWorkspace?.services?.some(
+      (s) => s.service_type === "lead-form" || s.service_slug === "lead-form"
     ) ?? false;
   const { data: appointmentConfig } = useAppointmentConfig(
-    hasAppointmentsService && !!currentWorkspace?.id,
+    hasAppointmentsService && !!currentWorkspace?.id
   );
   const showAppointmentsInSidebar =
     hasAppointmentsService && !!appointmentConfig;
@@ -170,19 +179,14 @@ export function Sidebar() {
       <nav className="min-h-0 flex-1 overflow-y-auto p-3 space-y-0.5">
         <NavLink to="/" isActive={location.pathname === "/"}>
           <HomeIcon className="h-4 w-4 shrink-0" />
-          Home
-        </NavLink>
-
-        <NavLink to="/products" isActive={location.pathname === "/products"}>
-          <Package className="h-4 w-4 shrink-0" />
-          Products
+          {t("nav.home")}
         </NavLink>
 
         {currentWorkspace?.services
           ?.filter(
             (service) =>
               service.service_type !== "appointments" ||
-              showAppointmentsInSidebar,
+              showAppointmentsInSidebar
           )
           ?.map((service) => {
             const href = service.service_slug
@@ -220,7 +224,9 @@ export function Sidebar() {
                       className="h-4 w-4 shrink-0"
                     />
                   )}
-                  <span className="truncate">{service.service_name}</span>
+                  <span className="truncate">
+                    {getLocalizedServiceName(service, i18n.language ?? "de")}
+                  </span>
                 </NavLink>
                 {hasInstructions && (
                   <button
@@ -241,21 +247,35 @@ export function Sidebar() {
             );
           })}
 
+        {hasLeadFormService && (
+          <NavLink to="/tasks" isActive={location.pathname === "/tasks"}>
+            <CheckSquare className="h-4 w-4 shrink-0" />
+            {t("nav.tasks")}
+          </NavLink>
+        )}
+
         <NavLink to="/settings" isActive={location.pathname === "/settings"}>
           <Settings className="h-4 w-4 shrink-0" />
-          Settings
+          {t("nav.settings")}
+        </NavLink>
+        <NavLink to="/products" isActive={location.pathname === "/products"}>
+          <Package className="h-4 w-4 shrink-0" />
+          {t("nav.subscriptions")}
         </NavLink>
       </nav>
 
-      {/* Bottom: logout */}
-      <div className="shrink-0 border-t border-white/5 p-3">
+      {/* Bottom: language + logout */}
+      <div className="shrink-0 border-t border-white/5 p-3 space-y-1.5">
+        <div className="px-3 py-1">
+          <LanguageSwitcher variant="dark" persistToDb />
+        </div>
         <button
           onClick={() => logout()}
           disabled={isLoggingOut}
           className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-[13px] font-medium text-white/35 hover:bg-white/5 hover:text-white/60 transition-all duration-150 disabled:opacity-50"
         >
           <LogOut className="h-4 w-4 shrink-0" />
-          {isLoggingOut ? "Signing out…" : "Sign out"}
+          {isLoggingOut ? t("common.loading") : t("nav.logout")}
         </button>
       </div>
 

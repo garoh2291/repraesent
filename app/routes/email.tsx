@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { Navigate } from "react-router";
 import { useQuery } from "@tanstack/react-query";
+import { useTranslation, Trans } from "react-i18next";
+import i18n from "~/i18n";
 import {
   Mail,
   Copy,
@@ -20,243 +22,39 @@ import {
 
 export function meta() {
   return [
-    { title: "Email Setup - Repraesent" },
-    { name: "description", content: "Email configuration guide" },
+    { title: i18n.t("email.metaTitle") },
+    { name: "description", content: i18n.t("email.metaDescription") },
   ];
 }
 
-type Lang = "en" | "de";
+const OUTLOOK_STEP_KEYS = [
+  "email.steps.outlook.step1",
+  "email.steps.outlook.step2",
+  "email.steps.outlook.step3",
+  "email.steps.outlook.step4",
+  "email.steps.outlook.step5",
+  "email.steps.outlook.step6",
+] as const;
 
-const labels = {
-  en: {
-    pageTitle: "Email Setup",
-    pageSubtitle: "Step-by-step guide for configuring your email account",
-    notConfigured: "Email not configured yet",
-    notConfiguredDesc:
-      "Contact your administrator to set up the email configuration.",
-    credentialsTitle: "Account Credentials",
-    credentialsDesc:
-      "Use these credentials for all email services. The password is the same for all.",
-    credentialNote: "The username is always",
-    credentialNoteSuffix: "— use it for both incoming and outgoing mail.",
-    emailLabel: "Email",
-    passwordLabel: "Password",
-    serverTitle: "Server Settings",
-    serverDesc:
-      "Use these settings in any email client — Thunderbird, Apple Mail, mobile apps, etc.",
-    incomingLabel: "Incoming Mail (IMAP)",
-    outgoingLabel: "Outgoing Mail (SMTP)",
-    serverLabel: "Server",
-    portSslLabel: "Port (SSL/TLS)",
-    portStartLabel: "Port (STARTTLS)",
-    usernameLabel: "Username",
-    authLabel: "Authentication",
-    authRequired: "Required",
-    authNotRequired: "Not required",
-    outlookTitle: "Microsoft Outlook",
-    outlookDesc:
-      "Setup instructions for new and existing Outlook users — follow the screenshots below",
-    otherTitle: "Other Email Clients",
-    otherDesc:
-      "Thunderbird, Apple Mail, Android, iPhone — use the manual server settings above",
-    steps: {
-      outlook: [
-        {
-          text: (
-            <>
-              Open Microsoft Outlook. On the welcome screen, enter your email
-              address and click{" "}
-              <strong className="text-foreground font-medium">Continue</strong>.
-            </>
-          ),
-          alt: "Outlook welcome screen — enter email address",
-        },
-        {
-          text: (
-            <>
-              <strong className="text-foreground font-medium">
-                Existing Outlook users:
-              </strong>{" "}
-              Go to{" "}
-              <strong className="text-foreground font-medium">
-                Settings → Account → Add Account
-              </strong>
-              .
-            </>
-          ),
-          alt: "Outlook Settings — Account — Add Account",
-        },
-        {
-          text: (
-            <>
-              Confirm by clicking{" "}
-              <strong className="text-foreground font-medium">
-                Add Account
-              </strong>{" "}
-              to proceed.
-            </>
-          ),
-          alt: "Outlook — confirm Add Account",
-        },
-        {
-          text: (
-            <>
-              When asked how to connect, select{" "}
-              <strong className="text-foreground font-medium">
-                "Synchronize directly with IMAP"
-              </strong>
-              .
-            </>
-          ),
-          alt: "Outlook account type selection — choose IMAP",
-        },
-        {
-          text: (
-            <>
-              Enter your password. Outlook will automatically populate the IMAP
-              and SMTP server settings.
-            </>
-          ),
-          alt: "Outlook IMAP settings auto-filled",
-        },
-        {
-          text: (
-            <>
-              Click{" "}
-              <strong className="text-foreground font-medium">Done</strong> to
-              complete the setup.
-            </>
-          ),
-          alt: "Outlook setup complete — click Done",
-        },
-      ],
-      other: [
-        "Open your email client and go to account settings.",
-        "Choose to add a new account manually (do not use auto-detect).",
-        "Enter your email address and password.",
-        "For incoming mail, select IMAP and enter the server details from the table above.",
-        "For outgoing mail, enter the SMTP server details with authentication enabled.",
-        "Save and test the connection.",
-      ],
-    },
-  },
-  de: {
-    pageTitle: "E-Mail Einrichtung",
-    pageSubtitle:
-      "Schritt-für-Schritt-Anleitung zur Konfiguration Ihres E-Mail-Kontos",
-    notConfigured: "E-Mail noch nicht konfiguriert",
-    notConfiguredDesc:
-      "Bitte wenden Sie sich an Ihren Administrator, um die E-Mail-Konfiguration einzurichten.",
-    credentialsTitle: "Ihre E-Mail-Zugangsdaten",
-    credentialsDesc:
-      "Verwenden Sie diese Zugangsdaten für alle E-Mail-Dienste. Das Passwort ist für alle identisch.",
-    credentialNote: "Der Benutzername ist immer",
-    credentialNoteSuffix:
-      "— verwenden Sie ihn für ein- und ausgehende E-Mails.",
-    emailLabel: "E-Mail-Adresse",
-    passwordLabel: "Passwort",
-    serverTitle: "Servereinstellungen",
-    serverDesc:
-      "Verwenden Sie diese Einstellungen in jedem E-Mail-Programm — Thunderbird, Apple Mail, mobile Apps usw.",
-    incomingLabel: "Eingangsserver (IMAP)",
-    outgoingLabel: "Ausgangsserver (SMTP)",
-    serverLabel: "Server",
-    portSslLabel: "Port (SSL/TLS)",
-    portStartLabel: "Port (STARTTLS)",
-    usernameLabel: "Benutzername",
-    authLabel: "Authentifizierung",
-    authRequired: "Erforderlich",
-    authNotRequired: "Nicht erforderlich",
-    outlookTitle: "Microsoft Outlook",
-    outlookDesc:
-      "Einrichtungsanleitung für neue und bestehende Outlook-Nutzer — folgen Sie den Screenshots unten",
-    otherTitle: "Andere E-Mail-Clients",
-    otherDesc:
-      "Thunderbird, Apple Mail, Android, iPhone — verwenden Sie die obigen Servereinstellungen",
-    steps: {
-      outlook: [
-        {
-          text: (
-            <>
-              Öffnen Sie Microsoft Outlook. Geben Sie Ihre E-Mail-Adresse ein
-              und klicken Sie auf{" "}
-              <strong className="text-foreground font-medium">Weiter</strong>.
-            </>
-          ),
-          alt: "Outlook Willkommensbildschirm",
-        },
-        {
-          text: (
-            <>
-              <strong className="text-foreground font-medium">
-                Bestehende Nutzer:
-              </strong>{" "}
-              Öffnen Sie{" "}
-              <strong className="text-foreground font-medium">
-                Einstellungen → Konto → Konto hinzufügen
-              </strong>
-              .
-            </>
-          ),
-          alt: "Outlook Einstellungen — Konto hinzufügen",
-        },
-        {
-          text: (
-            <>
-              Bestätigen Sie durch Klicken auf{" "}
-              <strong className="text-foreground font-medium">
-                Konto hinzufügen
-              </strong>
-              .
-            </>
-          ),
-          alt: "Outlook — Konto hinzufügen bestätigen",
-        },
-        {
-          text: (
-            <>
-              Wählen Sie{" "}
-              <strong className="text-foreground font-medium">
-                „Direkt mit IMAP synchronisieren"
-              </strong>
-              .
-            </>
-          ),
-          alt: "Outlook Kontotyp — IMAP wählen",
-        },
-        {
-          text: (
-            <>
-              Geben Sie Ihr Passwort ein. Outlook füllt die Servereinstellungen
-              automatisch aus.
-            </>
-          ),
-          alt: "Outlook IMAP-Einstellungen automatisch ausgefüllt",
-        },
-        {
-          text: (
-            <>
-              Klicken Sie auf{" "}
-              <strong className="text-foreground font-medium">Fertig</strong>.
-              Ihr Konto ist jetzt aktiv.
-            </>
-          ),
-          alt: "Outlook-Einrichtung abgeschlossen",
-        },
-      ],
-      other: [
-        "Öffnen Sie Ihr E-Mail-Programm und gehen Sie zu den Kontoeinstellungen.",
-        "Wählen Sie, ein neues Konto manuell hinzuzufügen.",
-        "Geben Sie Ihre E-Mail-Adresse und Ihr Passwort ein.",
-        "Wählen Sie für eingehende E-Mails IMAP und geben Sie die Serverdaten ein.",
-        "Geben Sie für ausgehende E-Mails die SMTP-Serverdaten mit Authentifizierung ein.",
-        "Speichern und testen Sie die Verbindung.",
-      ],
-    },
-  },
-} as const;
+const OUTLOOK_STEP_ALT_KEYS = [
+  "email.steps.outlook.step1Alt",
+  "email.steps.outlook.step2Alt",
+  "email.steps.outlook.step3Alt",
+  "email.steps.outlook.step4Alt",
+  "email.steps.outlook.step5Alt",
+  "email.steps.outlook.step6Alt",
+] as const;
 
-function CopyButton({ value }: { value: string }) {
+const OTHER_STEP_KEYS = [
+  "email.steps.other.step1",
+  "email.steps.other.step2",
+  "email.steps.other.step3",
+  "email.steps.other.step4",
+  "email.steps.other.step5",
+  "email.steps.other.step6",
+] as const;
+
+function CopyButton({ value, t }: { value: string; t: (key: string) => string }) {
   const [copied, setCopied] = useState(false);
   const handleCopy = () => {
     navigator.clipboard.writeText(value);
@@ -273,12 +71,12 @@ function CopyButton({ value }: { value: string }) {
       ) : (
         <Copy className="h-3 w-3" />
       )}
-      {copied ? "Copied" : "Copy"}
+      {copied ? t("common.copied") : t("common.copy")}
     </button>
   );
 }
 
-function CredentialRow({ label, value }: { label: string; value: string }) {
+function CredentialRow({ label, value, t }: { label: string; value: string; t: (key: string) => string }) {
   return (
     <div className="flex items-center justify-between gap-4 py-3 border-b border-border last:border-0">
       <span className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground w-32 shrink-0">
@@ -287,19 +85,19 @@ function CredentialRow({ label, value }: { label: string; value: string }) {
       <span className="flex-1 font-mono text-sm text-foreground break-all">
         {value}
       </span>
-      <CopyButton value={value} />
+      <CopyButton value={value} t={t} />
     </div>
   );
 }
 
-function ServerRow({ label, value }: { label: string; value: string }) {
+function ServerRow({ label, value, t }: { label: string; value: string; t: (key: string) => string }) {
   return (
     <div className="flex items-center justify-between gap-4 py-3 border-b border-border last:border-0">
       <span className="text-sm text-muted-foreground w-40 shrink-0">
         {label}
       </span>
       <span className="flex-1 font-mono text-sm text-foreground">{value}</span>
-      <CopyButton value={value} />
+      <CopyButton value={value} t={t} />
     </div>
   );
 }
@@ -346,14 +144,18 @@ function StepBadge({ number }: { number: number }) {
 function PasswordRow({
   label,
   serviceId,
+  t,
 }: {
   label: string;
   serviceId: string;
+  t: (key: string) => string;
 }) {
   const [revealed, setRevealed] = useState(false);
   const [revealedPassword, setRevealedPassword] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [copyLoading, setCopyLoading] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [copiedSilently, setCopiedSilently] = useState(false);
 
   const handleToggle = async () => {
     if (revealed) {
@@ -373,58 +175,81 @@ function PasswordRow({
     }
   };
 
-  const handleCopy = () => {
-    if (!revealedPassword) return;
-    navigator.clipboard.writeText(revealedPassword);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+  const handleCopy = async () => {
+    if (revealedPassword) {
+      // Password already decrypted — copy directly
+      navigator.clipboard.writeText(revealedPassword);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } else {
+      // Silently decrypt and copy without revealing
+      setCopyLoading(true);
+      try {
+        const { password } = await decryptEmailConfigPassword(serviceId);
+        navigator.clipboard.writeText(password);
+        setCopiedSilently(true);
+        setTimeout(() => setCopiedSilently(false), 3000);
+      } catch {
+        // silently ignore
+      } finally {
+        setCopyLoading(false);
+      }
+    }
   };
 
   return (
-    <div className="flex items-center justify-between gap-4 py-3 border-b border-border last:border-0">
-      <span className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground w-32 shrink-0">
-        {label}
-      </span>
-      <span className="flex-1 font-mono text-sm text-foreground break-all">
-        {revealed && revealedPassword ? revealedPassword : "*******"}
-      </span>
-      <div className="flex items-center gap-1.5 shrink-0">
-        {revealed && revealedPassword && (
+    <div className="flex flex-col gap-1.5 py-3 border-b border-border last:border-0">
+      <div className="flex items-center justify-between gap-4">
+        <span className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground w-32 shrink-0">
+          {label}
+        </span>
+        <span className="flex-1 font-mono text-sm text-foreground break-all">
+          {revealed && revealedPassword ? revealedPassword : "*******"}
+        </span>
+        <div className="flex items-center gap-1.5 shrink-0">
           <button
             onClick={handleCopy}
-            className="flex items-center gap-1.5 rounded-md border border-border bg-muted/40 px-2.5 py-1 text-xs font-medium text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+            disabled={copyLoading}
+            className="flex items-center gap-1.5 rounded-md border border-border bg-muted/40 px-2.5 py-1 text-xs font-medium text-muted-foreground hover:bg-muted hover:text-foreground transition-colors disabled:opacity-50"
           >
-            {copied ? (
+            {copyLoading ? (
+              <Loader2 className="h-3 w-3 animate-spin" />
+            ) : copied || copiedSilently ? (
               <Check className="h-3 w-3 text-emerald-500" />
             ) : (
               <Copy className="h-3 w-3" />
             )}
-            {copied ? "Copied" : "Copy"}
+            {copied || copiedSilently ? t("common.copied") : t("common.copy")}
           </button>
-        )}
-        <button
-          onClick={handleToggle}
-          disabled={loading}
-          className="flex items-center justify-center rounded-md border border-border bg-muted/40 p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground transition-colors disabled:opacity-50"
-          title={revealed ? "Hide password" : "Show password"}
-        >
-          {loading ? (
-            <Loader2 className="h-3.5 w-3.5 animate-spin" />
-          ) : revealed ? (
-            <EyeOff className="h-3.5 w-3.5" />
-          ) : (
-            <Eye className="h-3.5 w-3.5" />
-          )}
-        </button>
+          <button
+            onClick={handleToggle}
+            disabled={loading}
+            className="flex items-center justify-center rounded-md border border-border bg-muted/40 p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground transition-colors disabled:opacity-50"
+            title={revealed ? t("email.hidePassword") : t("email.showPassword")}
+          >
+            {loading ? (
+              <Loader2 className="h-3.5 w-3.5 animate-spin" />
+            ) : revealed ? (
+              <EyeOff className="h-3.5 w-3.5" />
+            ) : (
+              <Eye className="h-3.5 w-3.5" />
+            )}
+          </button>
+        </div>
       </div>
+      {copiedSilently && (
+        <div className="flex items-center gap-1.5 rounded-lg bg-emerald-500/10 border border-emerald-500/20 px-3 py-1.5 text-xs font-medium text-emerald-600 dark:text-emerald-400">
+          <Check className="h-3 w-3 shrink-0" />
+          {t("email.passwordCopied")}
+        </div>
+      )}
     </div>
   );
 }
 
 export default function Emails() {
+  const { t } = useTranslation();
   const { currentWorkspace } = useAuthContext();
-  const [lang, setLang] = useState<Lang>("en");
-  const tx = labels[lang];
 
   const emailService = currentWorkspace?.services?.find(
     (s) => s.service_type === "email-config"
@@ -453,38 +278,12 @@ export default function Emails() {
             </div>
             <div>
               <h1 className="text-2xl font-semibold text-foreground tracking-tight">
-                {tx.pageTitle}
+                {t("email.pageTitle")}
               </h1>
               <p className="text-sm text-muted-foreground mt-0.5">
-                {tx.pageSubtitle}
+                {t("email.pageSubtitle")}
               </p>
             </div>
-          </div>
-
-          {/* Language toggle */}
-          <div className="flex shrink-0 items-center rounded-lg border border-border bg-muted/30 p-0.5">
-            <button
-              onClick={() => setLang("en")}
-              className={[
-                "rounded-md px-3 py-1.5 text-xs font-semibold transition-all duration-150",
-                lang === "en"
-                  ? "bg-background text-foreground shadow-sm border border-border"
-                  : "text-muted-foreground hover:text-foreground",
-              ].join(" ")}
-            >
-              EN
-            </button>
-            <button
-              onClick={() => setLang("de")}
-              className={[
-                "rounded-md px-3 py-1.5 text-xs font-semibold transition-all duration-150",
-                lang === "de"
-                  ? "bg-background text-foreground shadow-sm border border-border"
-                  : "text-muted-foreground hover:text-foreground",
-              ].join(" ")}
-            >
-              DE
-            </button>
           </div>
         </div>
 
@@ -497,10 +296,10 @@ export default function Emails() {
               <Mail className="h-5 w-5 text-muted-foreground" />
             </div>
             <p className="text-sm font-medium text-foreground">
-              {tx.notConfigured}
+              {t("email.notConfigured")}
             </p>
             <p className="text-sm text-muted-foreground">
-              {tx.notConfiguredDesc}
+              {t("email.notConfiguredDesc")}
             </p>
           </div>
         ) : (
@@ -509,24 +308,26 @@ export default function Emails() {
             <div className="app-fade-up app-fade-up-d1">
               <SectionCard
                 icon={Shield}
-                title={tx.credentialsTitle}
-                description={tx.credentialsDesc}
+                title={t("email.credentialsTitle")}
+                description={t("email.credentialsDesc")}
               >
                 <CredentialRow
-                  label={tx.emailLabel}
+                  label={t("email.emailLabel")}
                   value={String(cfg.email ?? "")}
+                  t={t}
                 />
                 <PasswordRow
-                  label={tx.passwordLabel}
+                  label={t("email.passwordLabel")}
                   serviceId={emailService.service_id}
+                  t={t}
                 />
                 <div className="py-3">
                   <p className="text-xs text-muted-foreground">
-                    {tx.credentialNote}{" "}
+                    {t("email.credentialNote")}{" "}
                     <code className="font-mono bg-muted px-1 py-0.5 rounded text-foreground">
                       {String(cfg.email ?? "")}
                     </code>{" "}
-                    {tx.credentialNoteSuffix}
+                    {t("email.credentialNoteSuffix")}
                   </p>
                 </div>
               </SectionCard>
@@ -536,56 +337,63 @@ export default function Emails() {
             <div className="app-fade-up app-fade-up-d2">
               <SectionCard
                 icon={Server}
-                title={tx.serverTitle}
-                description={tx.serverDesc}
+                title={t("email.serverTitle")}
+                description={t("email.serverDesc")}
               >
                 <div className="pt-4 pb-2">
                   <span className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
-                    {tx.incomingLabel}
+                    {t("email.incomingLabel")}
                   </span>
                 </div>
                 <ServerRow
-                  label={tx.serverLabel}
+                  label={t("email.serverLabel")}
                   value={String(cfg.imap_server ?? "")}
+                  t={t}
                 />
                 <ServerRow
-                  label={tx.portSslLabel}
+                  label={t("email.portSslLabel")}
                   value={String(cfg.imap_port_ssl ?? 993)}
+                  t={t}
                 />
                 <ServerRow
-                  label={tx.portStartLabel}
+                  label={t("email.portStartLabel")}
                   value={String(cfg.imap_port_starttls ?? 143)}
+                  t={t}
                 />
                 <ServerRow
-                  label={tx.usernameLabel}
+                  label={t("email.usernameLabel")}
                   value={String(cfg.imap_username ?? cfg.email ?? "")}
+                  t={t}
                 />
 
                 <div className="pt-5 pb-2">
                   <span className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
-                    {tx.outgoingLabel}
+                    {t("email.outgoingLabel")}
                   </span>
                 </div>
                 <ServerRow
-                  label={tx.serverLabel}
+                  label={t("email.serverLabel")}
                   value={String(cfg.smtp_server ?? "")}
+                  t={t}
                 />
                 <ServerRow
-                  label={tx.portStartLabel}
+                  label={t("email.portStartLabel")}
                   value={String(cfg.smtp_port_starttls ?? 587)}
+                  t={t}
                 />
                 <ServerRow
-                  label={tx.portSslLabel}
+                  label={t("email.portSslLabel")}
                   value={String(cfg.smtp_port_ssl ?? 465)}
+                  t={t}
                 />
                 <div className="flex items-center justify-between gap-4 py-3">
                   <span className="text-sm text-muted-foreground w-40 shrink-0">
-                    {tx.authLabel}
+                    {t("email.authLabel")}
                   </span>
                   <span className="flex-1 font-mono text-sm text-foreground">
                     {cfg.smtp_auth_required !== false
-                      ? tx.authRequired
-                      : tx.authNotRequired}
+                      ? t("email.authRequired")
+                      : t("email.authNotRequired")}
                   </span>
                 </div>
               </SectionCard>
@@ -597,23 +405,26 @@ export default function Emails() {
         <div className="app-fade-up app-fade-up-d3">
           <SectionCard
             icon={Mail}
-            title={tx.outlookTitle}
-            description={tx.outlookDesc}
+            title={t("email.outlookTitle")}
+            description={t("email.outlookDesc")}
           >
             <div className="py-4 space-y-6">
-              {tx.steps.outlook.map((step, i) => (
+              {OUTLOOK_STEP_KEYS.map((key, i) => (
                 <div key={i}>
                   {i > 0 && <div className="border-t border-border mb-6" />}
                   <div className="flex items-start gap-2.5">
                     <StepBadge number={i + 1} />
                     <div className="space-y-3 flex-1 min-w-0">
                       <p className="text-sm text-muted-foreground leading-relaxed">
-                        {step.text}
+                        <Trans
+                          i18nKey={key}
+                          components={{ 0: <strong className="text-foreground font-medium" />, 1: <strong className="text-foreground font-medium" /> }}
+                        />
                       </p>
                       <div className="rounded-xl overflow-hidden border border-border bg-muted/30">
                         <img
                           src={`/outlook-step-${i + 1}.png`}
-                          alt={step.alt}
+                          alt={t(OUTLOOK_STEP_ALT_KEYS[i])}
                           className="w-full h-auto object-contain"
                         />
                       </div>
@@ -629,15 +440,15 @@ export default function Emails() {
         <div className="app-fade-up app-fade-up-d3">
           <SectionCard
             icon={Smartphone}
-            title={tx.otherTitle}
-            description={tx.otherDesc}
+            title={t("email.otherTitle")}
+            description={t("email.otherDesc")}
           >
             <div className="py-4 space-y-3">
-              {tx.steps.other.map((step, i) => (
+              {OTHER_STEP_KEYS.map((key, i) => (
                 <div key={i} className="flex items-start gap-2.5">
                   <StepBadge number={i + 1} />
                   <p className="text-sm text-muted-foreground leading-relaxed">
-                    {step}
+                    {t(key)}
                   </p>
                 </div>
               ))}

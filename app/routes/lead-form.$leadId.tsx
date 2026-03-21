@@ -1,14 +1,18 @@
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
 import { Link, useParams, useNavigate } from "react-router";
 import { useQuery } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
 import { useAuthContext } from "~/providers/auth-provider";
 import {
   LeadInfoSection,
   LeadHistorySection,
 } from "~/components/organism/lead-detail-sheet";
 import { LeadNotesSection } from "~/components/organism/lead-notes-section";
+import { LeadTasksSection } from "~/components/organism/tasks/lead-tasks-section";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "~/components/ui/tabs";
 import { getLead, getLeadHistory } from "~/lib/api/leads";
+import { getWorkspaceDetail } from "~/lib/api/workspaces";
+import type { WorkspaceMemberItem } from "~/components/organism/tasks/task-form-modal";
 import { useCanEditLeads } from "~/lib/hooks/useCanEditLeads";
 import { useUpdateLeadStatus } from "~/lib/hooks/useUpdateLeadStatus";
 import { ArrowLeft } from "lucide-react";
@@ -21,12 +25,31 @@ export function meta() {
 }
 
 export default function LeadFormLeadId() {
+  const { t } = useTranslation();
   const { leadId } = useParams<{ leadId: string }>();
   const navigate = useNavigate();
   const { currentWorkspace } = useAuthContext();
 
   const updateStatusMutation = useUpdateLeadStatus();
   const canEdit = useCanEditLeads();
+
+  const workspaceQuery = useQuery({
+    queryKey: ["workspace-detail"],
+    queryFn: () => getWorkspaceDetail(),
+    enabled: !!currentWorkspace,
+  });
+
+  const workspaceMembers: WorkspaceMemberItem[] = useMemo(
+    () =>
+      (workspaceQuery.data?.members ?? []).map((m) => ({
+        user_id: m.user_id,
+        user_first_name: m.user_first_name,
+        user_last_name: m.user_last_name,
+        user_email: m.user_email,
+        role: m.role,
+      })),
+    [workspaceQuery.data],
+  );
 
   const { data: lead, isLoading: leadLoading } = useQuery({
     queryKey: ["lead", leadId],
@@ -79,7 +102,7 @@ export default function LeadFormLeadId() {
       <div className="flex items-center justify-center min-h-[50vh]">
         <div className="flex flex-col items-center gap-3">
           <div className="h-6 w-6 app-spin rounded-full border-2 border-primary/20 border-t-primary" />
-          <p className="text-sm text-muted-foreground">Loading lead…</p>
+          <p className="text-sm text-muted-foreground">{t("leads.detail.loading")}</p>
         </div>
       </div>
     );
@@ -106,7 +129,7 @@ export default function LeadFormLeadId() {
           className="inline-flex items-center gap-1.5 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors"
         >
           <ArrowLeft className="h-3.5 w-3.5" />
-          Back to leads
+          {t("leads.detail.backToLeads")}
         </Link>
         <h1 className="text-2xl font-semibold text-foreground tracking-tight">
           {displayName}
@@ -127,13 +150,21 @@ export default function LeadFormLeadId() {
           />
         </div>
 
-        {/* Notes + history panel */}
+        {/* Tasks + Notes + History panel */}
         <div className="rounded-2xl border border-border bg-card p-6">
-          <Tabs defaultValue="notes" className="w-full">
+          <Tabs defaultValue="tasks" className="w-full">
             <TabsList variant="line" className="w-full mb-5">
-              <TabsTrigger value="notes">Notes</TabsTrigger>
-              <TabsTrigger value="history">History</TabsTrigger>
+              <TabsTrigger value="tasks">{t("tasks.title")}</TabsTrigger>
+              <TabsTrigger value="notes">{t("leads.detail.notes")}</TabsTrigger>
+              <TabsTrigger value="history">{t("leads.detail.history")}</TabsTrigger>
             </TabsList>
+            <TabsContent value="tasks" className="mt-0">
+              <LeadTasksSection
+                leadId={lead.id}
+                canEdit={canEdit}
+                workspaceMembers={workspaceMembers}
+              />
+            </TabsContent>
             <TabsContent value="notes" className="mt-0">
               <LeadNotesSection leadId={lead.id} canEdit={canEdit} />
             </TabsContent>

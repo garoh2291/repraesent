@@ -1,5 +1,6 @@
 import { useMemo } from "react";
 import { marked } from "marked";
+import { useTranslation } from "react-i18next";
 import { X, BookOpen } from "lucide-react";
 import {
   Dialog,
@@ -33,6 +34,7 @@ export function InstructionsModal({
   onClose,
   markdown,
 }: InstructionsModalProps) {
+  const { t } = useTranslation();
   const html = useMemo(() => {
     const clean = stripMarkdownFence(markdown);
     return marked.parse(clean, { async: false }) as string;
@@ -55,7 +57,7 @@ export function InstructionsModal({
               <BookOpen className="h-3.5 w-3.5 text-amber-400" />
             </div>
             <DialogTitle className="text-[15px] font-semibold text-white/90 tracking-tight">
-              Instructions
+              {t("instructions.title")}
             </DialogTitle>
           </div>
           <button

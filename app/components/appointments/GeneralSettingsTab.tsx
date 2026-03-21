@@ -1,6 +1,7 @@
 import { useState, useRef } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
+import { useTranslation } from "react-i18next";
 import { Input } from "~/components/ui/input";
 import { Label } from "~/components/ui/label";
 import { Textarea } from "~/components/ui/textarea";
@@ -25,16 +26,6 @@ const DATE_FORMATS = [
   { value: "YYYY-MM-DD", label: "YYYY-MM-DD" },
   { value: "DD/MM/YYYY", label: "DD/MM/YYYY" },
   { value: "MM/DD/YYYY", label: "MM/DD/YYYY" },
-];
-
-const TIME_FORMATS = [
-  { value: "24h", label: "24-hour" },
-  { value: "12h", label: "12-hour" },
-];
-
-const FIRST_WEEKDAYS = [
-  { value: "monday", label: "Monday" },
-  { value: "sunday", label: "Sunday" },
 ];
 
 interface GeneralSettingsTabProps {
@@ -71,6 +62,7 @@ function FieldLabel({ htmlFor, children }: { htmlFor?: string; children: React.R
 }
 
 export function GeneralSettingsTab({ config }: GeneralSettingsTabProps) {
+  const { t } = useTranslation();
   const queryClient = useQueryClient();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -89,11 +81,11 @@ export function GeneralSettingsTab({ config }: GeneralSettingsTabProps) {
     mutationFn: (dto: Parameters<typeof updateAppointmentConfigById>[1]) =>
       updateAppointmentConfigById(config.id, dto),
     onSuccess: () => {
-      toast.success("Settings saved");
+      toast.success(t("appointments.general.settingsSaved"));
       queryClient.invalidateQueries({ queryKey: ["appointment-configs"] });
     },
     onError: (error) => {
-      toast.error("Failed to save", { description: extractErrorMessage(error) });
+      toast.error(t("common.failedToSave"), { description: extractErrorMessage(error) });
     },
   });
 
@@ -101,17 +93,27 @@ export function GeneralSettingsTab({ config }: GeneralSettingsTabProps) {
     mutationFn: (file: File) =>
       uploadAppointmentLogoByConfigId(config.id, file),
     onSuccess: (data) => {
-      toast.success("Logo uploaded");
+      toast.success(t("appointments.general.logoUploaded"));
       queryClient.invalidateQueries({ queryKey: ["appointment-configs"] });
       updateMutation.mutate({ company_logo_url: data.company_logo_url });
     },
     onError: (error) => {
-      toast.error("Failed to upload logo", { description: extractErrorMessage(error) });
+      toast.error(t("appointments.general.failedToUploadLogo"), { description: extractErrorMessage(error) });
     },
   });
 
   const publicBookingUrl = buildPublicBookingUrl(config.id);
   const logoUrl = getLogoFullUrl(config.company_logo_url);
+
+  const TIME_FORMATS = [
+    { value: "24h", label: t("appointments.general.timeFormat24h") },
+    { value: "12h", label: t("appointments.general.timeFormat12h") },
+  ];
+
+  const FIRST_WEEKDAYS = [
+    { value: "monday", label: t("appointments.settings.monday") },
+    { value: "sunday", label: t("appointments.settings.sunday") },
+  ];
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -138,10 +140,10 @@ export function GeneralSettingsTab({ config }: GeneralSettingsTabProps) {
   return (
     <form onSubmit={handleSubmit} className="space-y-5 max-w-2xl">
       {/* Company info */}
-      <SectionPanel title="Company">
+      <SectionPanel title={t("appointments.general.section")}>
         <div className="grid gap-4 sm:grid-cols-2">
           <FieldGroup>
-            <FieldLabel htmlFor="company_name">Company name *</FieldLabel>
+            <FieldLabel htmlFor="company_name">{t("appointments.general.companyName")}</FieldLabel>
             <Input
               id="company_name"
               value={companyName}
@@ -151,7 +153,7 @@ export function GeneralSettingsTab({ config }: GeneralSettingsTabProps) {
             />
           </FieldGroup>
           <FieldGroup>
-            <FieldLabel htmlFor="company_email">Company email *</FieldLabel>
+            <FieldLabel htmlFor="company_email">{t("appointments.general.companyEmail")}</FieldLabel>
             <Input
               id="company_email"
               type="email"
@@ -163,7 +165,7 @@ export function GeneralSettingsTab({ config }: GeneralSettingsTabProps) {
           </FieldGroup>
         </div>
         <FieldGroup>
-          <FieldLabel htmlFor="company_link">Company link *</FieldLabel>
+          <FieldLabel htmlFor="company_link">{t("appointments.general.companyLink")}</FieldLabel>
           <Input
             id="company_link"
             type="url"
@@ -175,7 +177,7 @@ export function GeneralSettingsTab({ config }: GeneralSettingsTabProps) {
           />
         </FieldGroup>
         <FieldGroup>
-          <FieldLabel htmlFor="company_headline">Headline</FieldLabel>
+          <FieldLabel htmlFor="company_headline">{t("appointments.general.headline")}</FieldLabel>
           <Textarea
             id="company_headline"
             value={companyHeadline}
@@ -187,7 +189,7 @@ export function GeneralSettingsTab({ config }: GeneralSettingsTabProps) {
 
         {/* Logo */}
         <FieldGroup>
-          <FieldLabel>Company logo</FieldLabel>
+          <FieldLabel>{t("appointments.general.companyLogo")}</FieldLabel>
           <div className="flex items-center gap-4">
             <input
               ref={fileInputRef}
@@ -204,7 +206,7 @@ export function GeneralSettingsTab({ config }: GeneralSettingsTabProps) {
               />
             ) : (
               <div className="flex h-14 w-14 items-center justify-center rounded-xl border border-border bg-muted text-[10px] font-medium text-muted-foreground">
-                No logo
+                {t("appointments.general.noLogo")}
               </div>
             )}
             <button
@@ -214,7 +216,7 @@ export function GeneralSettingsTab({ config }: GeneralSettingsTabProps) {
               className="inline-flex items-center gap-2 h-9 rounded-lg border border-border bg-muted/40 px-3 text-sm font-medium text-foreground hover:bg-muted transition-colors disabled:opacity-50"
             >
               <Upload className="h-3.5 w-3.5" />
-              {uploadMutation.isPending ? "Uploading…" : "Upload"}
+              {uploadMutation.isPending ? t("appointments.general.uploading") : t("appointments.general.upload")}
             </button>
           </div>
         </FieldGroup>
@@ -222,7 +224,7 @@ export function GeneralSettingsTab({ config }: GeneralSettingsTabProps) {
         {/* Colors */}
         <div className="grid gap-4 sm:grid-cols-2">
           <FieldGroup>
-            <FieldLabel htmlFor="company_color">Brand color</FieldLabel>
+            <FieldLabel htmlFor="company_color">{t("appointments.general.brandColor")}</FieldLabel>
             <div className="flex items-center gap-2">
               <input
                 id="company_color"
@@ -239,7 +241,7 @@ export function GeneralSettingsTab({ config }: GeneralSettingsTabProps) {
             </div>
           </FieldGroup>
           <FieldGroup>
-            <FieldLabel htmlFor="company_text_color">Header text color</FieldLabel>
+            <FieldLabel htmlFor="company_text_color">{t("appointments.general.headerTextColor")}</FieldLabel>
             <div className="flex items-center gap-2">
               <input
                 id="company_text_color"
@@ -259,9 +261,9 @@ export function GeneralSettingsTab({ config }: GeneralSettingsTabProps) {
       </SectionPanel>
 
       {/* Localization */}
-      <SectionPanel title="Localization">
+      <SectionPanel title={t("appointments.general.localization")}>
         <FieldGroup>
-          <FieldLabel>Timezone</FieldLabel>
+          <FieldLabel>{t("appointments.timezone")}</FieldLabel>
           <TimezoneSelect
             value={timezone}
             onChange={(tz) => setTimezone(typeof tz === "string" ? tz : tz.value)}
@@ -270,7 +272,7 @@ export function GeneralSettingsTab({ config }: GeneralSettingsTabProps) {
         </FieldGroup>
         <div className="grid gap-4 sm:grid-cols-3">
           <FieldGroup>
-            <FieldLabel htmlFor="date_format">Date format</FieldLabel>
+            <FieldLabel htmlFor="date_format">{t("appointments.settings.dateFormat")}</FieldLabel>
             <Select value={dateFormat} onValueChange={setDateFormat}>
               <SelectTrigger id="date_format" className="h-10 text-sm">
                 <SelectValue />
@@ -283,7 +285,7 @@ export function GeneralSettingsTab({ config }: GeneralSettingsTabProps) {
             </Select>
           </FieldGroup>
           <FieldGroup>
-            <FieldLabel htmlFor="time_format">Time format</FieldLabel>
+            <FieldLabel htmlFor="time_format">{t("appointments.settings.timeFormat")}</FieldLabel>
             <Select value={timeFormat} onValueChange={setTimeFormat}>
               <SelectTrigger id="time_format" className="h-10 text-sm">
                 <SelectValue />
@@ -296,7 +298,7 @@ export function GeneralSettingsTab({ config }: GeneralSettingsTabProps) {
             </Select>
           </FieldGroup>
           <FieldGroup>
-            <FieldLabel htmlFor="first_weekday">Week starts on</FieldLabel>
+            <FieldLabel htmlFor="first_weekday">{t("appointments.general.weekStartsOn")}</FieldLabel>
             <Select value={firstWeekday} onValueChange={setFirstWeekday}>
               <SelectTrigger id="first_weekday" className="h-10 text-sm">
                 <SelectValue />
@@ -312,7 +314,7 @@ export function GeneralSettingsTab({ config }: GeneralSettingsTabProps) {
       </SectionPanel>
 
       {/* Booking link */}
-      <SectionPanel title="Public booking link">
+      <SectionPanel title={t("appointments.general.publicBookingLink")}>
         <FieldGroup>
           <div className="flex gap-2">
             <Input
@@ -324,12 +326,12 @@ export function GeneralSettingsTab({ config }: GeneralSettingsTabProps) {
               type="button"
               onClick={() => {
                 navigator.clipboard.writeText(publicBookingUrl);
-                toast.success("Link copied");
+                toast.success(t("appointments.general.linkCopied"));
               }}
               className="inline-flex items-center gap-2 h-10 rounded-lg border border-border bg-muted/40 px-3 text-sm font-medium text-foreground hover:bg-muted transition-colors shrink-0"
             >
               <Copy className="h-3.5 w-3.5" />
-              Copy
+              {t("common.copy")}
             </button>
           </div>
         </FieldGroup>
@@ -340,7 +342,7 @@ export function GeneralSettingsTab({ config }: GeneralSettingsTabProps) {
         disabled={updateMutation.isPending}
         className="inline-flex h-10 items-center justify-center rounded-lg bg-foreground text-background text-sm font-medium px-6 hover:opacity-90 transition-opacity disabled:opacity-50"
       >
-        {updateMutation.isPending ? "Saving…" : "Save changes"}
+        {updateMutation.isPending ? t("common.saving") : t("common.saveChanges")}
       </button>
     </form>
   );

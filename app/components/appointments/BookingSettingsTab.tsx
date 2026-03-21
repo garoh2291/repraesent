@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
+import { useTranslation } from "react-i18next";
 import { Switch } from "~/components/ui/switch";
 import {
   updateAppointmentConfigById,
@@ -10,15 +11,15 @@ import {
 import { extractErrorMessage } from "~/lib/api/axios-instance";
 import { cn } from "~/lib/utils";
 
-const BOOKING_FIELDS: { key: string; label: string }[] = [
-  { key: "first_name", label: "First Name" },
-  { key: "last_name", label: "Last Name" },
-  { key: "email", label: "Email" },
-  { key: "phone", label: "Phone Number" },
-  { key: "address", label: "Address" },
-  { key: "city", label: "City" },
-  { key: "zip_code", label: "Zip Code" },
-  { key: "notes", label: "Notes" },
+const BOOKING_FIELD_KEYS: string[] = [
+  "first_name",
+  "last_name",
+  "email",
+  "phone",
+  "address",
+  "city",
+  "zip_code",
+  "notes",
 ];
 
 const DEFAULT_BOOKING_FIELDS: Record<string, BookingFieldConfig> = {
@@ -37,6 +38,7 @@ interface BookingSettingsTabProps {
 }
 
 export function BookingSettingsTab({ config }: BookingSettingsTabProps) {
+  const { t } = useTranslation();
   const queryClient = useQueryClient();
   const [fields, setFields] = useState<Record<string, BookingFieldConfig>>(
     () => config.booking_fields ?? DEFAULT_BOOKING_FIELDS
@@ -50,11 +52,11 @@ export function BookingSettingsTab({ config }: BookingSettingsTabProps) {
     mutationFn: (dto: Parameters<typeof updateAppointmentConfigById>[1]) =>
       updateAppointmentConfigById(config.id, dto),
     onSuccess: () => {
-      toast.success("Booking settings saved");
+      toast.success(t("appointments.bookingForm.saved"));
       queryClient.invalidateQueries({ queryKey: ["appointment-configs"] });
     },
     onError: (error) => {
-      toast.error("Failed to save", { description: extractErrorMessage(error) });
+      toast.error(t("common.failedToSave"), { description: extractErrorMessage(error) });
     },
   });
 
@@ -77,13 +79,14 @@ export function BookingSettingsTab({ config }: BookingSettingsTabProps) {
       <div className="rounded-2xl border border-border bg-card overflow-hidden">
         {/* Header row */}
         <div className="grid grid-cols-[1fr_100px_100px] gap-4 px-5 py-3 bg-muted/40 border-b border-border">
-          <span className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">Field</span>
-          <span className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground text-center">Display</span>
-          <span className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground text-center">Required</span>
+          <span className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">{t("appointments.bookingForm.fieldCol")}</span>
+          <span className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground text-center">{t("appointments.bookingForm.displayCol")}</span>
+          <span className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground text-center">{t("appointments.bookingForm.requiredCol")}</span>
         </div>
         <div className="divide-y divide-border">
-          {BOOKING_FIELDS.map(({ key, label }) => {
+          {BOOKING_FIELD_KEYS.map((key) => {
             const field = fields[key] ?? { display: false, require: false };
+            const label = t(`appointments.bookingForm.fields.${key}`, { defaultValue: key });
             return (
               <div
                 key={key}
@@ -123,7 +126,7 @@ export function BookingSettingsTab({ config }: BookingSettingsTabProps) {
         disabled={updateMutation.isPending}
         className="inline-flex h-10 items-center justify-center rounded-lg bg-foreground text-background text-sm font-medium px-6 hover:opacity-90 transition-opacity disabled:opacity-50"
       >
-        {updateMutation.isPending ? "Saving…" : "Save changes"}
+        {updateMutation.isPending ? t("common.saving") : t("common.saveChanges")}
       </button>
     </div>
   );

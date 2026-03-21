@@ -10,11 +10,11 @@ import {
   useDroppable,
 } from "@dnd-kit/core";
 import type { DragEndEvent, DragStartEvent } from "@dnd-kit/core";
+import { useTranslation } from "react-i18next";
 import { type Lead } from "~/lib/api/leads";
 import {
   LEAD_STATUSES,
   LEAD_STATUS_COLORS,
-  LEAD_STATUS_LABELS,
   type LeadStatus,
 } from "~/lib/leads/constants";
 import { cn } from "~/lib/utils";
@@ -153,6 +153,7 @@ function KanbanColumn({
   isUpdating: boolean;
   canEdit: boolean;
 }) {
+  const { t } = useTranslation();
   const { setNodeRef, isOver } = useDroppable({ id: status });
   const color = LEAD_STATUS_COLORS[status];
 
@@ -171,7 +172,7 @@ function KanbanColumn({
       <div className="shrink-0 p-3">
         <h3 className="font-medium text-sm flex items-center gap-2">
           <span className={cn("inline-block h-2 w-2 rounded-full shrink-0", color)} />
-          <span className="truncate">{LEAD_STATUS_LABELS[status]}</span>
+          <span className="truncate">{t(`leads.statuses.${status}`)}</span>
           <span className="inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-background px-1.5 text-xs font-medium text-muted-foreground">
             {leads.length}
           </span>
@@ -205,6 +206,7 @@ function KanbanCard({
   isDragging?: boolean;
   canEdit?: boolean;
 }) {
+  const { t } = useTranslation();
   const status = lead.status as LeadStatus;
   const color = LEAD_STATUS_COLORS[status] ?? "bg-muted";
 
@@ -250,7 +252,7 @@ function KanbanCard({
             )}
           >
             <span className={cn("h-1 w-1 rounded-full", color === "bg-muted" ? "bg-foreground/60" : "bg-white/80")} />
-            {LEAD_STATUS_LABELS[status]}
+            {t(`leads.statuses.${status}`)}
           </span>
         </div>
         <p className="font-semibold text-sm truncate leading-tight">

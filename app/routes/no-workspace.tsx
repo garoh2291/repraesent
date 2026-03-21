@@ -1,16 +1,19 @@
+import { useTranslation } from "react-i18next";
+import i18n from "~/i18n";
 import { useAuthContext } from "~/providers/auth-provider";
 
 export function meta() {
   return [
-    { title: "No Workspace - Repraesent" },
+    { title: i18n.t("noWorkspace.metaTitle") },
     {
       name: "description",
-      content: "Your account is not connected to any workspace",
+      content: i18n.t("noWorkspace.metaDescription"),
     },
   ];
 }
 
 export default function NoWorkspace() {
+  const { t } = useTranslation();
   const { logout, isLoggingOut } = useAuthContext();
 
   return (
@@ -36,18 +39,17 @@ export default function NoWorkspace() {
         {/* Text */}
         <div className="space-y-3">
           <h1 className="text-xl font-semibold text-white">
-            No workspace found
+            {t("noWorkspace.title")}
           </h1>
           <p className="text-sm text-white/40 leading-relaxed">
-            Your account isn't connected to any workspace yet. Reach out to your
-            workspace owner or our support team for access.
+            {t("noWorkspace.description")}
           </p>
         </div>
 
         {/* Contact */}
         <div className="rounded-xl border border-white/8 bg-white/4 px-5 py-4">
           <p className="text-[11px] font-semibold uppercase tracking-widest text-white/25 mb-2">
-            Need help?
+            {t("noWorkspace.needHelp")}
           </p>
           <a
             href="mailto:support@repraesent.com"
@@ -63,7 +65,7 @@ export default function NoWorkspace() {
           disabled={isLoggingOut}
           className="inline-flex h-10 items-center justify-center rounded-lg border border-white/10 bg-white/6 px-6 text-sm font-medium text-white/50 hover:bg-white/10 hover:text-white/70 transition-all duration-150 disabled:opacity-40"
         >
-          {isLoggingOut ? "Signing out…" : "Sign out"}
+          {isLoggingOut ? t("noWorkspace.signingOut") : t("noWorkspace.signOut")}
         </button>
       </div>
     </div>

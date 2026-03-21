@@ -1,5 +1,6 @@
 import { useEffect } from "react";
 import { Outlet, useNavigate, useLocation } from "react-router";
+import { useTranslation } from "react-i18next";
 import { useAuthContext } from "~/providers/auth-provider";
 import { getStoredWorkspaceId } from "~/lib/api/axios-instance";
 import { clearStoredAuth } from "~/lib/hooks/use-auth";
@@ -9,6 +10,7 @@ const PENDING_PATH = "/pending";
 const CLOSED_PATH = "/closed";
 
 export default function ProtectedLayout() {
+  const { t } = useTranslation();
   const { isAuthenticated, isLoading, user, workspaces, currentWorkspace } =
     useAuthContext();
   const navigate = useNavigate();
@@ -146,7 +148,7 @@ export default function ProtectedLayout() {
       <div className="flex min-h-screen items-center justify-center">
         <div className="flex flex-col items-center gap-4">
           <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
-          <p className="text-sm text-muted-foreground">Loading...</p>
+          <p className="text-sm text-muted-foreground">{t("common.loading")}</p>
         </div>
       </div>
     );
@@ -219,7 +221,7 @@ export default function ProtectedLayout() {
     <div className="flex flex-col min-h-screen">
       {showPastDueBanner && (
         <div className="bg-amber-500/20 border-b border-amber-500/30 px-4 py-2 text-center text-sm font-medium text-amber-800 dark:text-amber-200">
-          Payment overdue —{" "}
+          {t("errors.paymentOverdue")} —{" "}
           {invoiceUrl ? (
             <a
               href={invoiceUrl}
@@ -227,10 +229,10 @@ export default function ProtectedLayout() {
               rel="noopener noreferrer"
               className="underline hover:no-underline"
             >
-              view your invoice
+              {t("errors.viewYourInvoice")}
             </a>
           ) : (
-            "please check your inbox for an invoice from Stripe"
+            t("errors.checkInboxForStripe")
           )}
         </div>
       )}

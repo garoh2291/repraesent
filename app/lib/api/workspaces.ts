@@ -8,6 +8,8 @@ export interface WorkspaceDetail {
   services: Array<{
     service_id: string;
     service_name: string;
+    service_name_en: string | null;
+    service_name_de: string | null;
     service_image: string | null;
     service_slug: string | null;
     service_type: string | null;
@@ -92,4 +94,28 @@ export async function getCurrentWorkspaceInvoices(): Promise<{
     "/users/me/workspace/invoices"
   );
   return { invoices: response.data.invoices ?? [] };
+}
+
+export interface LeadFallbackSourceConfig {
+  enabled: boolean;
+  subject: string;
+  html: string;
+}
+
+export interface LeadFallbackConfig {
+  urls?: LeadFallbackSourceConfig;
+  appointment_booking?: LeadFallbackSourceConfig;
+}
+
+export async function getLeadFallbackConfig(): Promise<LeadFallbackConfig> {
+  const response = await apiClient.get<LeadFallbackConfig>(
+    "/users/me/workspace/lead-fallback-config"
+  );
+  return response.data;
+}
+
+export async function updateLeadFallbackConfig(
+  config: LeadFallbackConfig
+): Promise<void> {
+  await apiClient.put("/users/me/workspace/lead-fallback-config", config);
 }

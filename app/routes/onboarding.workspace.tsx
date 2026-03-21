@@ -1,6 +1,8 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
+import i18n from "~/i18n";
 import { useAuthContext } from "~/providers/auth-provider";
 import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
@@ -14,12 +16,13 @@ import { X } from "lucide-react";
 
 export function meta() {
   return [
-    { title: "Create workspace - Repraesent" },
-    { name: "description", content: "Create your workspace" },
+    { title: i18n.t("onboarding.workspace.metaTitle") },
+    { name: "description", content: i18n.t("onboarding.workspace.metaDescription") },
   ];
 }
 
 export default function OnboardingWorkspace() {
+  const { t } = useTranslation();
   const { user, currentWorkspace, workspaces } = useAuthContext();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -83,17 +86,17 @@ export default function OnboardingWorkspace() {
     e.preventDefault();
     setError(null);
     if (!name.trim()) {
-      setError("Workspace name is required");
+      setError(t("onboarding.workspace.nameRequired"));
       return;
     }
     if (!url.trim()) {
-      setError("Website URL is required");
+      setError(t("onboarding.workspace.urlRequired"));
       return;
     }
     try {
       new URL(url);
     } catch {
-      setError("Please enter a valid URL");
+      setError(t("onboarding.workspace.urlInvalid"));
       return;
     }
 
@@ -116,8 +119,14 @@ export default function OnboardingWorkspace() {
         queryClient.invalidateQueries({ queryKey: ["auth"] });
       }
       navigate("/onboarding/billing", { replace: true });
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Something went wrong");
+    } catch (err: unknown) {
+      const status = (err as any)?.response?.status;
+      const msg = (err as any)?.response?.data?.message;
+      if (status === 409 && msg === "URL_ALREADY_TAKEN") {
+        setError(t("onboarding.workspace.urlTaken"));
+      } else {
+        setError(err instanceof Error ? err.message : t("common.somethingWentWrong"));
+      }
     } finally {
       setIsSubmitting(false);
     }
@@ -128,12 +137,12 @@ export default function OnboardingWorkspace() {
       {/* Section heading */}
       <div className="mb-8 space-y-1.5">
         <h1 className="ob-heading text-[26px] font-semibold tracking-tight text-foreground leading-snug">
-          {existingWorkspace ? "Your workspace" : "Create your workspace"}
+          {existingWorkspace ? t("onboarding.workspace.yourWorkspace") : t("onboarding.workspace.title")}
         </h1>
         <p className="text-sm text-muted-foreground">
           {existingWorkspace
-            ? "Update your workspace details below."
-            : "Set up your workspace and optionally invite team members."}
+            ? t("onboarding.workspace.updateSubtitle")
+            : t("onboarding.workspace.createSubtitle")}
         </p>
       </div>
 
@@ -152,13 +161,13 @@ export default function OnboardingWorkspace() {
               htmlFor="name"
               className="block text-[11px] font-semibold uppercase tracking-widest text-muted-foreground"
             >
-              Workspace name
+              {t("onboarding.workspace.nameLabel")}
             </label>
             <Input
               id="name"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder="Acme Corp"
+              placeholder={t("onboarding.workspace.namePlaceholderCreate")}
               required
               disabled={isSubmitting}
               className="h-11 border-stone-200 dark:border-zinc-700 bg-stone-50 dark:bg-zinc-950 focus-visible:ring-1 focus-visible:ring-foreground/25 transition-shadow"
@@ -171,14 +180,14 @@ export default function OnboardingWorkspace() {
               htmlFor="url"
               className="block text-[11px] font-semibold uppercase tracking-widest text-muted-foreground"
             >
-              Website URL
+              {t("onboarding.workspace.websiteUrl")}
             </label>
             <Input
               id="url"
               type="url"
               value={url}
               onChange={(e) => setUrl(e.target.value)}
-              placeholder="https://acme.com"
+              placeholder={t("onboarding.workspace.urlPlaceholder")}
               required
               disabled={isSubmitting}
               className="h-11 border-stone-200 dark:border-zinc-700 bg-stone-50 dark:bg-zinc-950 focus-visible:ring-1 focus-visible:ring-foreground/25 transition-shadow"
@@ -188,9 +197,9 @@ export default function OnboardingWorkspace() {
           {/* Invite members */}
           <div className="space-y-1.5 ob-fade-up ob-fade-up-d4">
             <label className="block text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
-              Invite members{" "}
+              {t("onboarding.workspace.inviteMembers")}{" "}
               <span className="normal-case tracking-normal font-normal text-muted-foreground/70">
-                (optional)
+                {t("onboarding.workspace.optional")}
               </span>
             </label>
             <div className="flex gap-2">
@@ -201,7 +210,7 @@ export default function OnboardingWorkspace() {
                 onKeyDown={(e) =>
                   e.key === "Enter" && (e.preventDefault(), addMember())
                 }
-                placeholder="member@example.com"
+                placeholder={t("onboarding.workspace.memberPlaceholder")}
                 disabled={isSubmitting}
                 className="h-11 border-stone-200 dark:border-zinc-700 bg-stone-50 dark:bg-zinc-950 focus-visible:ring-1 focus-visible:ring-foreground/25 transition-shadow"
               />
@@ -212,7 +221,7 @@ export default function OnboardingWorkspace() {
                 disabled={isSubmitting}
                 className="h-11 px-5 shrink-0 border-stone-200 dark:border-zinc-700 hover:bg-stone-50 dark:hover:bg-zinc-800 transition-colors"
               >
-                Add
+                {t("common.add")}
               </Button>
             </div>
 
@@ -246,14 +255,14 @@ export default function OnboardingWorkspace() {
               disabled={isSubmitting}
               className="h-11 px-6 border-stone-200 dark:border-zinc-700 hover:bg-stone-50 dark:hover:bg-zinc-800 transition-colors"
             >
-              ← Back
+              {t("common.backArrow")}
             </Button>
             <Button
               type="submit"
               disabled={isSubmitting}
               className="h-11 px-8 font-medium text-sm bg-foreground text-background hover:opacity-90 transition-opacity"
             >
-              {isSubmitting ? "Saving…" : "Continue →"}
+              {isSubmitting ? t("common.saving") : t("common.continueArrow")}
             </Button>
           </div>
         </form>

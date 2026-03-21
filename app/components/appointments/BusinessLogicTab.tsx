@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
+import { useTranslation } from "react-i18next";
 import { Input } from "~/components/ui/input";
 import { Checkbox } from "~/components/ui/checkbox";
 import {
@@ -21,15 +22,7 @@ import { extractErrorMessage } from "~/lib/api/axios-instance";
 import { Plus, Trash2 } from "lucide-react";
 import { cn } from "~/lib/utils";
 
-const DAYS = [
-  { key: "mon", label: "Monday" },
-  { key: "tue", label: "Tuesday" },
-  { key: "wed", label: "Wednesday" },
-  { key: "thu", label: "Thursday" },
-  { key: "fri", label: "Friday" },
-  { key: "sat", label: "Saturday" },
-  { key: "sun", label: "Sunday" },
-];
+const DAY_KEYS = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"] as const;
 
 const SLOT_OPTIONS = [15, 30, 45, 60];
 
@@ -76,6 +69,7 @@ function SectionPanel({
 }
 
 export function BusinessLogicTab({ config }: BusinessLogicTabProps) {
+  const { t } = useTranslation();
   const queryClient = useQueryClient();
   const { data: providerSettings } = useQuery({
     queryKey: ["appointment-provider-settings", config.id],
@@ -103,12 +97,12 @@ export function BusinessLogicTab({ config }: BusinessLogicTabProps) {
     mutationFn: (data: Parameters<typeof updateProviderSettingsByConfigId>[1]) =>
       updateProviderSettingsByConfigId(config.id, data),
     onSuccess: () => {
-      toast.success("Business logic saved");
+      toast.success(t("appointments.businessLogic.saved"));
       queryClient.invalidateQueries({ queryKey: ["appointment-configs"] });
       queryClient.invalidateQueries({ queryKey: ["appointment-provider-settings", config.id] });
     },
     onError: (error) => {
-      toast.error("Failed to save", { description: extractErrorMessage(error) });
+      toast.error(t("common.failedToSave"), { description: extractErrorMessage(error) });
     },
   });
 
@@ -153,23 +147,31 @@ export function BusinessLogicTab({ config }: BusinessLogicTabProps) {
     });
   }
 
+  const columnHeaders = [
+    t("appointments.businessLogic.day"),
+    t("appointments.businessLogic.on"),
+    t("appointments.businessLogic.start"),
+    t("appointments.businessLogic.end"),
+  ];
+
   return (
     <div className="space-y-5 max-w-2xl">
       {/* Working hours */}
       <SectionPanel
-        title="Working plan"
-        description="Days and hours you accept appointments. Customers cannot book outside these times."
+        title={t("appointments.businessLogic.workingPlan")}
+        description={t("appointments.businessLogic.workingPlanDesc")}
       >
         {/* Column headers */}
         <div className="grid grid-cols-[120px_48px_1fr_1fr] gap-4 px-1">
-          {["Day", "On", "Start", "End"].map((h) => (
+          {columnHeaders.map((h) => (
             <span key={h} className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
               {h}
             </span>
           ))}
         </div>
         <div className="rounded-xl border border-border overflow-hidden divide-y divide-border">
-          {DAYS.map(({ key, label }) => {
+          {DAY_KEYS.map((key) => {
+            const label = t(`appointments.businessLogic.days.${key}`);
             const wh = workingHours[key] ?? { enabled: true, start: "09:00", end: "17:00" };
             const isEnabled = wh.enabled !== false;
             return (
@@ -206,7 +208,7 @@ export function BusinessLogicTab({ config }: BusinessLogicTabProps) {
       </SectionPanel>
 
       {/* Slot duration */}
-      <SectionPanel title="Slot duration">
+      <SectionPanel title={t("appointments.businessLogic.slotDuration")}>
         <Select
           value={String(slotDuration)}
           onValueChange={(v) => setSlotDuration(Number(v))}
@@ -216,7 +218,9 @@ export function BusinessLogicTab({ config }: BusinessLogicTabProps) {
           </SelectTrigger>
           <SelectContent>
             {SLOT_OPTIONS.map((m) => (
-              <SelectItem key={m} value={String(m)}>{m} minutes</SelectItem>
+              <SelectItem key={m} value={String(m)}>
+                {t("appointments.businessLogic.minutesSuffix", { count: m })}
+              </SelectItem>
             ))}
           </SelectContent>
         </Select>
@@ -224,8 +228,8 @@ export function BusinessLogicTab({ config }: BusinessLogicTabProps) {
 
       {/* Breaks */}
       <SectionPanel
-        title="Breaks"
-        description="Time blocks that are unavailable for booking each week."
+        title={t("appointments.businessLogic.breaks")}
+        description={t("appointments.businessLogic.breaksDesc")}
       >
         <button
           type="button"
@@ -233,15 +237,20 @@ export function BusinessLogicTab({ config }: BusinessLogicTabProps) {
           className="inline-flex items-center gap-2 h-9 rounded-lg border border-border bg-muted/40 px-3 text-sm font-medium text-foreground hover:bg-muted transition-colors"
         >
           <Plus className="h-3.5 w-3.5" />
-          Add break
+          {t("appointments.businessLogic.addBreak")}
         </button>
 
         {breaks.length > 0 && (
           <div className="rounded-xl border border-border overflow-hidden divide-y divide-border">
             {/* Header */}
             <div className="grid grid-cols-[120px_1fr_1fr_40px] gap-4 px-4 py-2 bg-muted/40">
-              {["Day", "Start", "End", ""].map((h) => (
-                <span key={h} className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
+              {[
+                t("appointments.businessLogic.day"),
+                t("appointments.businessLogic.start"),
+                t("appointments.businessLogic.end"),
+                "",
+              ].map((h, i) => (
+                <span key={i} className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
                   {h}
                 </span>
               ))}
@@ -256,8 +265,10 @@ export function BusinessLogicTab({ config }: BusinessLogicTabProps) {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    {DAYS.map(({ key, label }) => (
-                      <SelectItem key={key} value={key}>{label}</SelectItem>
+                    {DAY_KEYS.map((key) => (
+                      <SelectItem key={key} value={key}>
+                        {t(`appointments.businessLogic.days.${key}`)}
+                      </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
@@ -277,7 +288,7 @@ export function BusinessLogicTab({ config }: BusinessLogicTabProps) {
                   type="button"
                   onClick={() => handleRemoveBreak(i)}
                   className="h-8 w-8 flex items-center justify-center rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/8 transition-colors"
-                  aria-label="Remove break"
+                  aria-label={t("appointments.businessLogic.removeBreak")}
                 >
                   <Trash2 className="h-3.5 w-3.5" />
                 </button>
@@ -293,7 +304,7 @@ export function BusinessLogicTab({ config }: BusinessLogicTabProps) {
         disabled={updateMutation.isPending}
         className="inline-flex h-10 items-center justify-center rounded-lg bg-foreground text-background text-sm font-medium px-6 hover:opacity-90 transition-opacity disabled:opacity-50"
       >
-        {updateMutation.isPending ? "Saving…" : "Save changes"}
+        {updateMutation.isPending ? t("common.saving") : t("common.saveChanges")}
       </button>
     </div>
   );
