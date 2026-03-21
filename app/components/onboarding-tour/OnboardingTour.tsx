@@ -21,23 +21,74 @@ interface StepContent {
   description: string;
 }
 
-// Screenshot paths + which service slug/type gates each step (null = always shown)
+// Screenshot paths + which service slugs/types gate each step (null = always shown, array = ALL must be present)
 const STEP_META: Array<{
   id: string;
   screenshot: string | null;
   screenshotAlt: string;
-  /** service_slug or service_type that must be present on the workspace */
-  requiredService: string | null;
+  /** service_slug or service_type(s) that must ALL be present on the workspace */
+  requiredServices: string[] | null;
 }> = [
-  { id: "welcome",      screenshot: null,                                    screenshotAlt: "",              requiredService: null },
-  { id: "dashboard",    screenshot: "/onboarding/dashboard-overview.png",    screenshotAlt: "Dashboard",     requiredService: null },
-  { id: "leads",        screenshot: "/onboarding/leads-board.png",           screenshotAlt: "Leads board",   requiredService: "lead-form" },
-  { id: "lead-detail",  screenshot: "/onboarding/lead-detail.png",           screenshotAlt: "Lead detail",   requiredService: "lead-form" },
-  { id: "appointments", screenshot: "/onboarding/appointments-calendar.png", screenshotAlt: "Appointments",  requiredService: "appointments" },
-  { id: "tasks",        screenshot: "/onboarding/tasks.png",                 screenshotAlt: "Tasks",         requiredService: "lead-form" },
-  { id: "analytics",    screenshot: "/onboarding/analytics.png",             screenshotAlt: "Analytics",     requiredService: "analytics" },
-  { id: "email",        screenshot: "/onboarding/email-config.png",          screenshotAlt: "Email setup",   requiredService: "email" },
-  { id: "settings",     screenshot: "/onboarding/workspace-settings.png",    screenshotAlt: "Settings",      requiredService: null },
+  {
+    id: "welcome",
+    screenshot: null,
+    screenshotAlt: "",
+    requiredServices: null,
+  },
+  {
+    id: "dashboard",
+    screenshot: "/onboarding/dashboard-overview.png",
+    screenshotAlt: "Dashboard",
+    requiredServices: null,
+  },
+  {
+    id: "leads",
+    screenshot: "/onboarding/leads-board.png",
+    screenshotAlt: "Leads board",
+    requiredServices: ["lead-form"],
+  },
+  {
+    id: "lead-fallback",
+    screenshot: "/onboarding/lead-fallback-email.png",
+    screenshotAlt: "Lead fallback email",
+    requiredServices: ["lead-form", "email-config"],
+  },
+  {
+    id: "lead-detail",
+    screenshot: "/onboarding/lead-detail.png",
+    screenshotAlt: "Lead detail",
+    requiredServices: ["lead-form"],
+  },
+  {
+    id: "appointments",
+    screenshot: "/onboarding/appointments-calendar.png",
+    screenshotAlt: "Appointments",
+    requiredServices: ["appointments"],
+  },
+  {
+    id: "tasks",
+    screenshot: "/onboarding/tasks.png",
+    screenshotAlt: "Tasks",
+    requiredServices: ["lead-form"],
+  },
+  {
+    id: "analytics",
+    screenshot: "/onboarding/analytics.png",
+    screenshotAlt: "Analytics",
+    requiredServices: ["analytics"],
+  },
+  {
+    id: "email",
+    screenshot: "/onboarding/email-config.png",
+    screenshotAlt: "Email setup",
+    requiredServices: ["email"],
+  },
+  {
+    id: "settings",
+    screenshot: "/onboarding/workspace-settings.png",
+    screenshotAlt: "Settings",
+    requiredServices: null,
+  },
 ];
 
 // Localised copy
@@ -65,7 +116,14 @@ const STEP_CONTENT: Record<"en" | "de", StepContent[]> = {
         "Manage every prospect through a drag-and-drop kanban board or a clean table view. Update statuses, add notes, and track the full journey from first contact to closed deal.",
     },
     {
-      badge: "03 — Lead Detail",
+      badge: "03 — Fallback Email",
+      title: "Reply to Every\nLead Automatically",
+      subtitle: "Set it once, follow up on autopilot.",
+      description:
+        "When a new lead submits your form or books an appointment, Repraesent automatically sends them a personalized reply from your own email address. Configure a custom subject line and HTML body per source — no extra tools needed.",
+    },
+    {
+      badge: "04 — Lead Detail",
       title: "Every Lead,\nFully Documented",
       subtitle: "The full story in one place.",
       description:
@@ -130,7 +188,14 @@ const STEP_CONTENT: Record<"en" | "de", StepContent[]> = {
         "Verwalte jeden Interessenten über ein Drag-and-Drop-Kanban-Board oder eine übersichtliche Tabellenansicht. Aktualisiere Status, füge Notizen hinzu und verfolge den gesamten Weg vom Erstkontakt bis zum Abschluss.",
     },
     {
-      badge: "03 — Lead-Detail",
+      badge: "03 — Automatische Antwort",
+      title: "Automatisch auf\njeden Lead antworten",
+      subtitle: "Einmal einrichten, automatisch nachfassen.",
+      description:
+        "Wenn ein neuer Lead dein Formular ausfüllt oder einen Termin bucht, sendet Repraesent automatisch eine personalisierte Antwort von deiner eigenen E-Mail-Adresse. Lege Betreff und HTML-Inhalt je Quelle fest — keine zusätzlichen Tools nötig.",
+    },
+    {
+      badge: "04 — Lead-Detail",
       title: "Jeder Lead,\nvollständig dokumentiert",
       subtitle: "Die ganze Geschichte an einem Ort.",
       description:
@@ -180,9 +245,7 @@ interface ActiveService {
 }
 
 function hasService(services: ActiveService[], key: string): boolean {
-  return services.some(
-    (s) => s.service_slug === key || s.service_type === key,
-  );
+  return services.some((s) => s.service_slug === key || s.service_type === key);
 }
 
 function buildSteps(locale: string, services: ActiveService[]): Step[] {
@@ -192,20 +255,21 @@ function buildSteps(locale: string, services: ActiveService[]): Step[] {
   // Re-number badges dynamically after filtering
   const filtered = STEP_META.filter(
     (meta) =>
-      meta.requiredService === null ||
-      hasService(services, meta.requiredService),
+      meta.requiredServices === null ||
+      meta.requiredServices.every((svc) => hasService(services, svc)),
   );
 
   // Renumber non-welcome steps sequentially
   let featureIndex = 0;
-  return filtered.map((meta, i) => {
+  return filtered.map((meta) => {
     const base = content[STEP_META.indexOf(meta)];
     if (meta.id === "welcome") return { ...meta, ...base };
     featureIndex += 1;
     const paddedNum = String(featureIndex).padStart(2, "0");
-    const badgeLabel = lang === "de"
-      ? base.badge.replace(/^\d{2} — /, `${paddedNum} — `)
-      : base.badge.replace(/^\d{2} — /, `${paddedNum} — `);
+    const badgeLabel =
+      lang === "de"
+        ? base.badge.replace(/^\d{2} — /, `${paddedNum} — `)
+        : base.badge.replace(/^\d{2} — /, `${paddedNum} — `);
     return { ...meta, ...base, badge: badgeLabel };
   });
 }
@@ -271,9 +335,12 @@ function LaptopMockup({
         display: "flex",
         flexDirection: "column",
         alignItems: "center",
-        transform: visible ? "translateY(0) scale(1)" : "translateY(14px) scale(0.97)",
+        transform: visible
+          ? "translateY(0) scale(1)"
+          : "translateY(14px) scale(0.97)",
         opacity: visible ? 1 : 0,
-        transition: "transform 0.5s cubic-bezier(.22,.68,0,1.2), opacity 0.4s ease",
+        transition:
+          "transform 0.5s cubic-bezier(.22,.68,0,1.2), opacity 0.4s ease",
         filter: "drop-shadow(0 24px 48px rgba(0,0,0,0.7))",
       }}
     >
@@ -345,7 +412,8 @@ function LaptopMockup({
               position: "absolute",
               inset: 0,
               borderRadius: 6,
-              boxShadow: "inset 0 0 0 1px rgba(0,0,0,0.4), inset 0 2px 8px rgba(0,0,0,0.3)",
+              boxShadow:
+                "inset 0 0 0 1px rgba(0,0,0,0.4), inset 0 2px 8px rgba(0,0,0,0.3)",
               pointerEvents: "none",
             }}
           />
@@ -357,7 +425,8 @@ function LaptopMockup({
         style={{
           width: 480,
           height: 3,
-          background: "linear-gradient(90deg, #111115, #222228 20%, #2a2a32 50%, #222228 80%, #111115)",
+          background:
+            "linear-gradient(90deg, #111115, #222228 20%, #2a2a32 50%, #222228 80%, #111115)",
           borderLeft: "1px solid rgba(255,255,255,0.06)",
           borderRight: "1px solid rgba(255,255,255,0.06)",
         }}
@@ -396,7 +465,8 @@ function LaptopMockup({
             left: "10%",
             width: "80%",
             height: 1,
-            background: "linear-gradient(90deg, transparent, rgba(255,255,255,0.06), transparent)",
+            background:
+              "linear-gradient(90deg, transparent, rgba(255,255,255,0.06), transparent)",
             borderRadius: "0 0 10px 10px",
           }}
         />
@@ -407,7 +477,8 @@ function LaptopMockup({
         style={{
           width: 420,
           height: 8,
-          background: "linear-gradient(180deg, rgba(255,255,255,0.04) 0%, transparent 100%)",
+          background:
+            "linear-gradient(180deg, rgba(255,255,255,0.04) 0%, transparent 100%)",
           borderRadius: "0 0 50% 50%",
           marginTop: 1,
         }}
@@ -459,7 +530,11 @@ function StepDots({
 /* ─────────────────────────────────────────────────────────
    Main component
 ───────────────────────────────────────────────────────── */
-export function OnboardingTour({ onDone, locale = "de", services = [] }: OnboardingTourProps) {
+export function OnboardingTour({
+  onDone,
+  locale = "de",
+  services = [],
+}: OnboardingTourProps) {
   const steps = buildSteps(locale, services);
   const [step, setStep] = useState(0);
   const [direction, setDirection] = useState<1 | -1>(1); // 1=forward, -1=backward
@@ -482,7 +557,7 @@ export function OnboardingTour({ onDone, locale = "de", services = [] }: Onboard
         setTimeout(() => setImageVisible(true), 60);
       }, 180);
     },
-    [step],
+    [step]
   );
 
   const handleNext = useCallback(() => {
@@ -850,7 +925,8 @@ function WelcomeScreen({
           transition: "transform 0.15s, box-shadow 0.15s",
         }}
         onMouseEnter={(e) => {
-          (e.currentTarget as HTMLButtonElement).style.transform = "scale(1.03)";
+          (e.currentTarget as HTMLButtonElement).style.transform =
+            "scale(1.03)";
           (e.currentTarget as HTMLButtonElement).style.boxShadow =
             "0 6px 28px rgba(245,158,11,0.5)";
         }}
@@ -947,7 +1023,8 @@ function StepScreen({
             width: 400,
             height: 160,
             borderRadius: "50%",
-            background: "radial-gradient(ellipse, rgba(245,158,11,0.07) 0%, transparent 70%)",
+            background:
+              "radial-gradient(ellipse, rgba(245,158,11,0.07) 0%, transparent 70%)",
             pointerEvents: "none",
           }}
         />
@@ -959,7 +1036,8 @@ function StepScreen({
             width: 180,
             height: 180,
             borderRadius: "50%",
-            background: "radial-gradient(ellipse, rgba(139,92,246,0.05) 0%, transparent 70%)",
+            background:
+              "radial-gradient(ellipse, rgba(139,92,246,0.05) 0%, transparent 70%)",
             pointerEvents: "none",
           }}
         />
@@ -1041,7 +1119,14 @@ function StepScreen({
         </button>
 
         {/* badge + title row */}
-        <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 10 }}>
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 10,
+            marginBottom: 10,
+          }}
+        >
           <span
             style={{
               display: "inline-flex",
@@ -1100,11 +1185,7 @@ function StepScreen({
             justifyContent: "space-between",
           }}
         >
-          <StepDots
-            total={totalSteps}
-            current={stepIndex}
-            onGoto={onGoto}
-          />
+          <StepDots total={totalSteps} current={stepIndex} onGoto={onGoto} />
 
           <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
             {stepIndex > 0 && (
