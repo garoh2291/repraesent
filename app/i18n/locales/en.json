@@ -753,7 +753,7 @@
       "status": "Status"
     },
     "leadRow": {
-      "columnHeader": "Tasks",
+      "columnHeader": "Pending tasks",
       "noTasks": "—",
       "openCount": "{{count}} open"
     }
