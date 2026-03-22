@@ -151,7 +151,7 @@ export default function AuthCallback() {
 
   if (status === "error") {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-[#0f0f11] p-8">
+      <div className="flex min-h-screen items-center justify-center bg-[#0f0f11] p-4 sm:p-8">
         <div className="w-full max-w-sm text-center space-y-6 app-fade-up">
           <div className="inline-flex h-14 w-14 items-center justify-center rounded-full bg-white/5 border border-white/10 mx-auto">
             <svg className="h-6 w-6 text-white/40" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>

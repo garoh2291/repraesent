@@ -101,11 +101,11 @@ function AppointmentsDashboard({
 }) {
   const { t } = useTranslation();
   return (
-    <div className="p-6 space-y-6 app-fade-in">
+    <div className="p-4 sm:p-6 space-y-4 sm:space-y-6 app-fade-in">
       {/* Header */}
-      <div className="flex items-start justify-between gap-4 app-fade-up">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between app-fade-up">
         <div>
-          <h1 className="text-2xl font-semibold text-foreground tracking-tight">
+          <h1 className="text-xl sm:text-2xl font-semibold text-foreground tracking-tight">
             {t("appointments.title")}
           </h1>
           <p className="text-sm text-muted-foreground mt-0.5">
@@ -114,12 +114,12 @@ function AppointmentsDashboard({
         </div>
 
         {configs.length > 1 && (
-          <div className="flex items-center gap-2 shrink-0">
-            <span className="text-xs text-muted-foreground font-medium">
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-muted-foreground font-medium shrink-0">
               {t("appointments.configLabel")}
             </span>
             <Select value={selectedConfigId} onValueChange={onConfigChange}>
-              <SelectTrigger className="h-9 text-sm w-52">
+              <SelectTrigger className="h-9 text-sm w-full sm:w-52">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -137,12 +137,14 @@ function AppointmentsDashboard({
       <div className="border-t border-border" />
 
       <Tabs defaultValue="calendar" className="w-full app-fade-up app-fade-up-d1">
-        <TabsList variant="line" className="w-full mb-6">
-          <TabsTrigger value="calendar">{t("appointments.tabCalendar")}</TabsTrigger>
-          <TabsTrigger value="general">{t("appointments.tabGeneral")}</TabsTrigger>
-          <TabsTrigger value="booking">{t("appointments.tabBooking")}</TabsTrigger>
-          <TabsTrigger value="business">{t("appointments.tabBusinessHours")}</TabsTrigger>
-        </TabsList>
+        <div className="overflow-x-auto scrollbar-hide -mx-4 sm:mx-0 px-4 sm:px-0">
+          <TabsList variant="line" className="w-full mb-4 sm:mb-6 min-w-max sm:min-w-0">
+            <TabsTrigger value="calendar">{t("appointments.tabCalendar")}</TabsTrigger>
+            <TabsTrigger value="general">{t("appointments.tabGeneral")}</TabsTrigger>
+            <TabsTrigger value="booking">{t("appointments.tabBooking")}</TabsTrigger>
+            <TabsTrigger value="business">{t("appointments.tabBusinessHours")}</TabsTrigger>
+          </TabsList>
+        </div>
 
         <TabsContent value="calendar" className="space-y-4">
           <CalendarTab config={config} />

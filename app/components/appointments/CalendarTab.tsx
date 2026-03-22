@@ -194,7 +194,7 @@ export function CalendarTab({ config }: CalendarTabProps) {
   }
 
   return (
-    <div className="appointments-calendar h-[520px] rounded-2xl border border-border overflow-hidden">
+    <div className="appointments-calendar h-[400px] sm:h-[520px] rounded-2xl border border-border overflow-hidden">
       <Calendar
         localizer={localizer}
         formats={formats}

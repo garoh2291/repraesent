@@ -171,8 +171,8 @@ function SettingsInvoicesTab() {
 
   return (
     <div className="rounded-2xl border border-border bg-card overflow-hidden">
-      {/* Table header */}
-      <div className="grid grid-cols-[1fr_120px_100px_160px] gap-4 px-5 py-3 bg-muted/40 border-b border-border">
+      {/* Desktop table header */}
+      <div className="hidden sm:grid grid-cols-[1fr_120px_100px_160px] gap-4 px-5 py-3 bg-muted/40 border-b border-border">
         {[
           t("settings.invoices.number"),
           t("settings.invoices.amount"),
@@ -197,55 +197,73 @@ function SettingsInvoicesTab() {
             defaultValue: statusCode,
           });
           const isPaid = inv.status === "paid";
+          const actionNode = inv.status === "draft" ? (
+            <span className="text-xs text-muted-foreground">
+              {inv.due_date
+                ? t("settings.invoices.dueLabel", {
+                    date: formatDate(inv.due_date ?? null),
+                  })
+                : t("settings.invoices.upcoming")}
+            </span>
+          ) : isPaid ? (
+            (inv.invoice_pdf || inv.hosted_invoice_url) ? (
+              <a
+                href={inv.invoice_pdf ?? inv.hosted_invoice_url ?? "#"}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1.5 text-xs font-medium text-primary hover:underline"
+              >
+                <Download className="h-3.5 w-3.5" />
+                {t("settings.invoices.downloadReceipt")}
+              </a>
+            ) : null
+          ) : (
+            inv.hosted_invoice_url ? (
+              <a
+                href={inv.hosted_invoice_url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1.5 text-xs font-medium text-primary hover:underline"
+              >
+                <ExternalLink className="h-3.5 w-3.5" />
+                {t("settings.invoices.viewInvoice")}
+              </a>
+            ) : null
+          );
+
           return (
-            <div
-              key={inv.id}
-              className="grid grid-cols-[1fr_120px_100px_160px] gap-4 px-5 py-3.5 items-center hover:bg-muted/30 transition-colors"
-            >
-              <span className="font-mono text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded w-fit">
-                {inv.number ?? inv.id.slice(-8)}
-              </span>
-              <span className="text-sm font-medium text-foreground">
-                {formatAmount(
-                  (isPaid ? inv.amount_paid : inv.amount_due) ?? null,
-                  inv.currency ?? null
-                )}
-              </span>
-              <StatusPill code={statusCode} label={statusLabel} />
-              <div>
-                {inv.status === "draft" ? (
-                  <span className="text-xs text-muted-foreground">
-                    {inv.due_date
-                      ? t("settings.invoices.dueLabel", {
-                          date: formatDate(inv.due_date ?? null),
-                        })
-                      : t("settings.invoices.upcoming")}
+            <div key={inv.id} className="hover:bg-muted/30 transition-colors">
+              {/* Mobile card layout */}
+              <div className="sm:hidden px-4 py-3.5 space-y-2">
+                <div className="flex items-center justify-between gap-2">
+                  <span className="font-mono text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded">
+                    {inv.number ?? inv.id.slice(-8)}
                   </span>
-                ) : isPaid ? (
-                  (inv.invoice_pdf || inv.hosted_invoice_url) && (
-                    <a
-                      href={inv.invoice_pdf ?? inv.hosted_invoice_url ?? "#"}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center gap-1.5 text-xs font-medium text-primary hover:underline"
-                    >
-                      <Download className="h-3.5 w-3.5" />
-                      {t("settings.invoices.downloadReceipt")}
-                    </a>
-                  )
-                ) : (
-                  inv.hosted_invoice_url && (
-                    <a
-                      href={inv.hosted_invoice_url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center gap-1.5 text-xs font-medium text-primary hover:underline"
-                    >
-                      <ExternalLink className="h-3.5 w-3.5" />
-                      {t("settings.invoices.viewInvoice")}
-                    </a>
-                  )
-                )}
+                  <StatusPill code={statusCode} label={statusLabel} />
+                </div>
+                <div className="flex items-center justify-between gap-2">
+                  <span className="text-sm font-medium text-foreground">
+                    {formatAmount(
+                      (isPaid ? inv.amount_paid : inv.amount_due) ?? null,
+                      inv.currency ?? null
+                    )}
+                  </span>
+                  <div>{actionNode}</div>
+                </div>
+              </div>
+              {/* Desktop row layout */}
+              <div className="hidden sm:grid grid-cols-[1fr_120px_100px_160px] gap-4 px-5 py-3.5 items-center">
+                <span className="font-mono text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded w-fit">
+                  {inv.number ?? inv.id.slice(-8)}
+                </span>
+                <span className="text-sm font-medium text-foreground">
+                  {formatAmount(
+                    (isPaid ? inv.amount_paid : inv.amount_due) ?? null,
+                    inv.currency ?? null
+                  )}
+                </span>
+                <StatusPill code={statusCode} label={statusLabel} />
+                <div>{actionNode}</div>
               </div>
             </div>
           );
@@ -379,10 +397,10 @@ export default function Settings() {
   const workspaceUrl = workspace.url?.url ?? "—";
 
   return (
-    <div className="p-6 space-y-6 app-fade-in">
+    <div className="p-4 sm:p-6 space-y-4 sm:space-y-6 app-fade-in">
       {/* Header */}
       <div className="app-fade-up">
-        <h1 className="text-2xl font-semibold text-foreground tracking-tight">
+        <h1 className="text-xl sm:text-2xl font-semibold text-foreground tracking-tight">
           {t("settings.title")}
         </h1>
         <p className="text-sm text-muted-foreground mt-0.5">
@@ -396,7 +414,8 @@ export default function Settings() {
         defaultValue="general"
         className="w-full app-fade-up app-fade-up-d1"
       >
-        <TabsList variant="line" className="w-full mb-6">
+        <div className="overflow-x-auto scrollbar-hide -mx-4 sm:mx-0 px-4 sm:px-0">
+          <TabsList variant="line" className="w-full mb-4 sm:mb-6 min-w-max sm:min-w-0">
           <TabsTrigger value="general">
             {t("settings.workspace.title")}
           </TabsTrigger>
@@ -404,8 +423,9 @@ export default function Settings() {
             {t("settings.invoices.title")}
           </TabsTrigger>
         </TabsList>
+        </div>
 
-        <TabsContent value="general" className="space-y-8">
+        <TabsContent value="general" className="space-y-6 sm:space-y-8">
           {/* Services */}
           <SettingsSection label={t("settings.products.title")}>
             {services.length > 0 ? (

@@ -162,14 +162,15 @@ export function BusinessLogicTab({ config }: BusinessLogicTabProps) {
         description={t("appointments.businessLogic.workingPlanDesc")}
       >
         {/* Column headers */}
-        <div className="grid grid-cols-[120px_48px_1fr_1fr] gap-4 px-1">
+        <div className="overflow-x-auto -mx-1">
+        <div className="grid grid-cols-[120px_48px_1fr_1fr] gap-4 px-1 min-w-[360px]">
           {columnHeaders.map((h) => (
             <span key={h} className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
               {h}
             </span>
           ))}
         </div>
-        <div className="rounded-xl border border-border overflow-hidden divide-y divide-border">
+        <div className="rounded-xl border border-border overflow-hidden divide-y divide-border min-w-[360px]">
           {DAY_KEYS.map((key) => {
             const label = t(`appointments.businessLogic.days.${key}`);
             const wh = workingHours[key] ?? { enabled: true, start: "09:00", end: "17:00" };
@@ -204,6 +205,7 @@ export function BusinessLogicTab({ config }: BusinessLogicTabProps) {
               </div>
             );
           })}
+        </div>
         </div>
       </SectionPanel>
 
@@ -241,7 +243,8 @@ export function BusinessLogicTab({ config }: BusinessLogicTabProps) {
         </button>
 
         {breaks.length > 0 && (
-          <div className="rounded-xl border border-border overflow-hidden divide-y divide-border">
+          <div className="overflow-x-auto">
+          <div className="rounded-xl border border-border overflow-hidden divide-y divide-border min-w-[360px]">
             {/* Header */}
             <div className="grid grid-cols-[120px_1fr_1fr_40px] gap-4 px-4 py-2 bg-muted/40">
               {[
@@ -294,6 +297,7 @@ export function BusinessLogicTab({ config }: BusinessLogicTabProps) {
                 </button>
               </div>
             ))}
+          </div>
           </div>
         )}
       </SectionPanel>

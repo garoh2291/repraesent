@@ -4,8 +4,10 @@ import { useTranslation } from "react-i18next";
 import { useAuthContext } from "~/providers/auth-provider";
 import { Sidebar } from "~/components/sidebar";
 import { Button } from "~/components/ui/button";
-import { AlertTriangle } from "lucide-react";
+import { AlertTriangle, Menu } from "lucide-react";
 import { OnboardingTour } from "~/components/onboarding-tour/OnboardingTour";
+import { Sheet, SheetContent } from "~/components/ui/sheet";
+import logoUrl from "~/components/icons/re_praesent-mark-brand-hor.svg?url";
 
 function formatDueDate(unixStr: string): string {
   const sec = parseInt(unixStr, 10);
@@ -49,6 +51,8 @@ export default function DashboardLayout() {
     setShowTour(false);
   }, []);
 
+  const [mobileNavOpen, setMobileNavOpen] = useState(false);
+
   const showUnpaidBanner =
     currentWorkspace?.status === "active" &&
     currentWorkspace?.unpaid_invoice_due_date &&
@@ -56,12 +60,43 @@ export default function DashboardLayout() {
 
   return (
     <div className="flex h-screen overflow-hidden bg-[#0f0f11]">
-      <Sidebar />
+      {/* Desktop sidebar */}
+      <Sidebar className="hidden lg:flex" />
 
-      <main className="flex-1 min-w-0 m-2 ml-0 rounded-2xl overflow-y-auto bg-background flex flex-col shadow-[0_0_0_1px_rgba(255,255,255,0.04)]">
+      {/* Mobile sidebar (Sheet) */}
+      <Sheet open={mobileNavOpen} onOpenChange={setMobileNavOpen}>
+        <SheetContent
+          side="left"
+          showCloseButton={false}
+          className="p-0 w-[260px] bg-[#111113] border-r border-white/5 gap-0"
+        >
+          <Sidebar onClose={() => setMobileNavOpen(false)} />
+        </SheetContent>
+      </Sheet>
+
+      <main className="flex-1 min-w-0 m-2 lg:ml-0 rounded-2xl overflow-y-auto bg-background flex flex-col shadow-[0_0_0_1px_rgba(255,255,255,0.04)]">
+        {/* Mobile top bar */}
+        <div className="flex lg:hidden items-center h-14 px-4 border-b border-border bg-card shrink-0 gap-3">
+          <button
+            onClick={() => setMobileNavOpen(true)}
+            className="flex h-9 w-9 items-center justify-center rounded-lg border border-border text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+            aria-label="Open navigation"
+          >
+            <Menu className="h-4 w-4" />
+          </button>
+          <div className="flex-1 flex justify-center">
+            <img
+              src={logoUrl}
+              alt="Repraesent"
+              className="h-6 w-auto max-w-[110px]"
+            />
+          </div>
+          <div className="w-9" />
+        </div>
+
         {showUnpaidBanner && (
-          <div className="mx-4 mt-4 flex items-center justify-between gap-4 rounded-xl border border-amber-400/30 bg-amber-400/8 px-4 py-3 text-amber-800">
-            <div className="flex items-center gap-2.5">
+          <div className="mx-3 mt-3 sm:mx-4 sm:mt-4 flex flex-col sm:flex-row sm:items-center gap-3 rounded-xl border border-amber-400/30 bg-amber-400/8 px-4 py-3 text-amber-800">
+            <div className="flex items-center gap-2.5 flex-1 min-w-0">
               <AlertTriangle className="h-4 w-4 shrink-0 text-amber-600" />
               <p className="text-sm font-medium text-amber-900">
                 {t("billing.unpaidBanner", {
@@ -75,7 +110,7 @@ export default function DashboardLayout() {
               variant="outline"
               size="sm"
               asChild
-              className="shrink-0 h-8 border-amber-400/40 text-amber-800 hover:bg-amber-50 text-xs"
+              className="shrink-0 h-8 border-amber-400/40 text-amber-800 hover:bg-amber-50 text-xs self-start sm:self-auto"
             >
               <a
                 href={currentWorkspace!.unpaid_invoice_url!}

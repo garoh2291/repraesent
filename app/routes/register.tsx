@@ -141,7 +141,7 @@ export default function Register() {
       </div>
 
       {/* Right form panel */}
-      <div className="flex-1 flex items-center justify-center bg-stone-50 p-8">
+      <div className="flex-1 flex items-center justify-center bg-stone-50 p-4 sm:p-8">
         <div className="w-full max-w-sm space-y-8 app-fade-up">
           {/* Mobile logo */}
           <div className="lg:hidden flex items-center">

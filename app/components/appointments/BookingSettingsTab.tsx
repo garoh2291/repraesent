@@ -76,14 +76,14 @@ export function BookingSettingsTab({ config }: BookingSettingsTabProps) {
 
   return (
     <div className="space-y-5 max-w-2xl">
-      <div className="rounded-2xl border border-border bg-card overflow-hidden">
+      <div className="rounded-2xl border border-border bg-card overflow-x-auto">
         {/* Header row */}
-        <div className="grid grid-cols-[1fr_100px_100px] gap-4 px-5 py-3 bg-muted/40 border-b border-border">
+        <div className="grid grid-cols-[1fr_100px_100px] gap-4 px-5 py-3 bg-muted/40 border-b border-border min-w-[320px]">
           <span className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">{t("appointments.bookingForm.fieldCol")}</span>
           <span className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground text-center">{t("appointments.bookingForm.displayCol")}</span>
           <span className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground text-center">{t("appointments.bookingForm.requiredCol")}</span>
         </div>
-        <div className="divide-y divide-border">
+        <div className="divide-y divide-border min-w-[320px]">
           {BOOKING_FIELD_KEYS.map((key) => {
             const field = fields[key] ?? { display: false, require: false };
             const label = t(`appointments.bookingForm.fields.${key}`, { defaultValue: key });

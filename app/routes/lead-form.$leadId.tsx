@@ -121,7 +121,7 @@ export default function LeadFormLeadId() {
     "Lead";
 
   return (
-    <div className="p-6 space-y-6 app-fade-in">
+    <div className="p-4 sm:p-6 space-y-4 sm:space-y-6 app-fade-in">
       {/* Header */}
       <div className="app-fade-up space-y-2">
         <Link
@@ -131,7 +131,7 @@ export default function LeadFormLeadId() {
           <ArrowLeft className="h-3.5 w-3.5" />
           {t("leads.detail.backToLeads")}
         </Link>
-        <h1 className="text-2xl font-semibold text-foreground tracking-tight">
+        <h1 className="text-xl sm:text-2xl font-semibold text-foreground tracking-tight">
           {displayName}
         </h1>
       </div>
@@ -139,9 +139,9 @@ export default function LeadFormLeadId() {
       <div className="border-t border-border" />
 
       {/* Content grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 app-fade-up app-fade-up-d1">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 app-fade-up app-fade-up-d1">
         {/* Lead info panel */}
-        <div className="rounded-2xl border border-border bg-card p-6">
+        <div className="rounded-2xl border border-border bg-card p-4 sm:p-6">
           <LeadInfoSection
             lead={lead}
             onStatusChange={canEdit ? handleStatusChange : undefined}
@@ -151,9 +151,9 @@ export default function LeadFormLeadId() {
         </div>
 
         {/* Tasks + Notes + History panel */}
-        <div className="rounded-2xl border border-border bg-card p-6">
+        <div className="rounded-2xl border border-border bg-card p-4 sm:p-6">
           <Tabs defaultValue="tasks" className="w-full">
-            <TabsList variant="line" className="w-full mb-5">
+            <TabsList variant="line" className="w-full mb-4 sm:mb-5">
               <TabsTrigger value="tasks">{t("tasks.title")}</TabsTrigger>
               <TabsTrigger value="notes">{t("leads.detail.notes")}</TabsTrigger>
               <TabsTrigger value="history">{t("leads.detail.history")}</TabsTrigger>
