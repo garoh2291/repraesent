@@ -283,6 +283,25 @@ interface OnboardingTourProps {
   services?: ActiveService[];
 }
 
+const UI_STRINGS = {
+  en: {
+    startTour: "Start Tour →",
+    skipForNow: "Skip for now",
+    skipTour: "Skip tour",
+    back: "← Back",
+    next: "Next →",
+    getStarted: "Get Started ✦",
+  },
+  de: {
+    startTour: "Tour starten →",
+    skipForNow: "Jetzt überspringen",
+    skipTour: "Tour überspringen",
+    back: "← Zurück",
+    next: "Weiter →",
+    getStarted: "Loslegen ✦",
+  },
+} as const;
+
 /* ─────────────────────────────────────────────────────────
    Particle — tiny floating orb for the welcome screen
 ───────────────────────────────────────────────────────── */
@@ -331,6 +350,7 @@ function LaptopMockup({
 }) {
   return (
     <div
+      className="ot-laptop-scaler"
       style={{
         display: "flex",
         flexDirection: "column",
@@ -535,6 +555,7 @@ export function OnboardingTour({
   locale = "de",
   services = [],
 }: OnboardingTourProps) {
+  const lang: "en" | "de" = locale?.startsWith("de") ? "de" : "en";
   const steps = buildSteps(locale, services);
   const [step, setStep] = useState(0);
   const [direction, setDirection] = useState<1 | -1>(1); // 1=forward, -1=backward
@@ -633,6 +654,36 @@ export function OnboardingTour({
           0%,100% { opacity: 0.4; }
           50%      { opacity: 0.7; }
         }
+        @media (max-width: 540px) {
+          .ot-laptop-panel {
+            height: 185px !important;
+            padding-top: 0 !important;
+            align-items: flex-start !important;
+          }
+          .ot-laptop-scaler {
+            transform: scale(0.57) !important;
+            transform-origin: top center !important;
+          }
+          .ot-welcome-container {
+            padding: 36px 24px 28px !important;
+            min-height: 300px !important;
+          }
+          .ot-step-content {
+            padding: 20px 20px 20px !important;
+          }
+          .ot-step-desc {
+            padding-right: 0 !important;
+          }
+          .ot-nav-row {
+            flex-direction: column !important;
+            align-items: center !important;
+            justify-content: center !important;
+            gap: 14px !important;
+          }
+          .ot-nav-row > div:last-child {
+            margin-left: 0 !important;
+          }
+        }
         .ot-btn-primary {
           position: relative;
           overflow: hidden;
@@ -697,6 +748,7 @@ export function OnboardingTour({
           {isWelcome ? (
             <WelcomeScreen
               step={current}
+              lang={lang}
               onNext={handleNext}
               onSkip={handleDone}
             />
@@ -709,6 +761,7 @@ export function OnboardingTour({
               direction={direction}
               isLast={isLast}
               imageVisible={imageVisible}
+              lang={lang}
               onNext={handleNext}
               onBack={handleBack}
               onSkip={handleDone}
@@ -726,10 +779,12 @@ export function OnboardingTour({
 ───────────────────────────────────────────────────────── */
 function WelcomeScreen({
   step,
+  lang,
   onNext,
   onSkip,
 }: {
   step: Step;
+  lang: "en" | "de";
   onNext: () => void;
   onSkip: () => void;
 }) {
@@ -746,6 +801,7 @@ function WelcomeScreen({
 
   return (
     <div
+      className="ot-welcome-container"
       style={{
         position: "relative",
         padding: "52px 48px 44px",
@@ -936,7 +992,7 @@ function WelcomeScreen({
             "0 4px 20px rgba(245,158,11,0.35)";
         }}
       >
-        Start Tour →
+        {UI_STRINGS[lang].startTour}
       </button>
 
       {/* skip link */}
@@ -962,7 +1018,7 @@ function WelcomeScreen({
             "rgba(255,255,255,0.25)")
         }
       >
-        Skip for now
+        {UI_STRINGS[lang].skipForNow}
       </button>
     </div>
   );
@@ -978,6 +1034,7 @@ function StepScreen({
   direction,
   isLast,
   imageVisible,
+  lang,
   onNext,
   onBack,
   onSkip,
@@ -989,6 +1046,7 @@ function StepScreen({
   direction: 1 | -1;
   isLast: boolean;
   imageVisible: boolean;
+  lang: "en" | "de";
   onNext: () => void;
   onBack: () => void;
   onSkip: () => void;
@@ -1001,6 +1059,7 @@ function StepScreen({
     <div style={{ display: "flex", flexDirection: "column" }}>
       {/* ── Top: laptop visual panel ────────────────────── */}
       <div
+        className="ot-laptop-panel"
         style={{
           background: "linear-gradient(180deg, #111116 0%, #0c0c11 100%)",
           borderBottom: "1px solid rgba(255,255,255,0.06)",
@@ -1051,6 +1110,7 @@ function StepScreen({
         ) : (
           /* placeholder laptop outline when no screenshot */
           <div
+            className="ot-laptop-scaler"
             style={{
               width: 468,
               height: 290,
@@ -1072,6 +1132,7 @@ function StepScreen({
 
       {/* ── Bottom: content panel ────────────────────────── */}
       <div
+        className="ot-step-content"
         style={{
           padding: "28px 36px 28px",
           display: "flex",
@@ -1080,44 +1141,6 @@ function StepScreen({
           position: "relative",
         }}
       >
-        {/* close button */}
-        <button
-          onClick={onSkip}
-          aria-label="Close tour"
-          style={{
-            position: "absolute",
-            top: 16,
-            right: 16,
-            width: 28,
-            height: 28,
-            borderRadius: 7,
-            background: "rgba(255,255,255,0.05)",
-            border: "1px solid rgba(255,255,255,0.08)",
-            color: "rgba(255,255,255,0.35)",
-            cursor: "pointer",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            fontSize: 12,
-            transition: "all 0.15s",
-            padding: 0,
-          }}
-          onMouseEnter={(e) => {
-            (e.currentTarget as HTMLButtonElement).style.background =
-              "rgba(255,255,255,0.1)";
-            (e.currentTarget as HTMLButtonElement).style.color =
-              "rgba(255,255,255,0.6)";
-          }}
-          onMouseLeave={(e) => {
-            (e.currentTarget as HTMLButtonElement).style.background =
-              "rgba(255,255,255,0.05)";
-            (e.currentTarget as HTMLButtonElement).style.color =
-              "rgba(255,255,255,0.35)";
-          }}
-        >
-          ✕
-        </button>
-
         {/* badge + title row */}
         <div
           style={{
@@ -1165,13 +1188,13 @@ function StepScreen({
 
         {/* description */}
         <p
+          className="ot-step-desc"
           style={{
             fontFamily: "'Plus Jakarta Sans', sans-serif",
             fontSize: 13,
             color: "rgba(255,255,255,0.48)",
             lineHeight: 1.7,
             margin: "0 0 20px",
-            paddingRight: 32,
           }}
         >
           {step.description}
@@ -1179,6 +1202,7 @@ function StepScreen({
 
         {/* bottom row: dots + navigation */}
         <div
+          className="ot-nav-row"
           style={{
             display: "flex",
             alignItems: "center",
@@ -1216,7 +1240,7 @@ function StepScreen({
                     "rgba(255,255,255,0.6)";
                 }}
               >
-                ← Back
+                {UI_STRINGS[lang].back}
               </button>
             )}
 
@@ -1251,10 +1275,38 @@ function StepScreen({
                   "0 2px 12px rgba(245,158,11,0.3)";
               }}
             >
-              {isLast ? "Get Started ✦" : "Next →"}
+              {isLast ? UI_STRINGS[lang].getStarted : UI_STRINGS[lang].next}
             </button>
           </div>
         </div>
+
+        {/* skip link — centered below nav row */}
+        <button
+          onClick={onSkip}
+          style={{
+            marginTop: 14,
+            alignSelf: "center",
+            background: "none",
+            border: "none",
+            color: "rgba(255,255,255,0.22)",
+            fontFamily: "'Plus Jakarta Sans', sans-serif",
+            fontSize: 11,
+            cursor: "pointer",
+            letterSpacing: "0.01em",
+            transition: "color 0.15s",
+            padding: "4px 8px",
+          }}
+          onMouseEnter={(e) =>
+            ((e.currentTarget as HTMLButtonElement).style.color =
+              "rgba(255,255,255,0.45)")
+          }
+          onMouseLeave={(e) =>
+            ((e.currentTarget as HTMLButtonElement).style.color =
+              "rgba(255,255,255,0.22)")
+          }
+        >
+          {UI_STRINGS[lang].skipTour}
+        </button>
       </div>
     </div>
   );
