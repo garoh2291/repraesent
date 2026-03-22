@@ -29,6 +29,7 @@ import {
   Save,
 } from "lucide-react";
 import { cn } from "~/lib/utils";
+import TooltipContainer from "~/components/tooltip-container";
 
 export function meta() {
   return [
@@ -191,9 +192,11 @@ function TabButton({
               {enabled ? "Active" : "Off"}
             </span>
           </div>
-          <p className="text-[11px] text-muted-foreground mt-0.5 truncate">
-            {desc}
-          </p>
+          <TooltipContainer showCopyButton={false} tooltipContent={desc}>
+            <p className="text-[11px] text-muted-foreground mt-0.5 truncate">
+              {desc}
+            </p>
+          </TooltipContainer>
         </div>
       </div>
     </button>
@@ -438,7 +441,8 @@ export default function LeadFallbackPage() {
     enabled: !!emailConfigServiceId,
   });
 
-  const fromEmail = (emailServiceConfig?.["email"] as string | undefined) ?? null;
+  const fromEmail =
+    (emailServiceConfig?.["email"] as string | undefined) ?? null;
 
   useEffect(() => {
     if (currentWorkspace && (!hasLeadForm || !hasEmailConfig)) {
