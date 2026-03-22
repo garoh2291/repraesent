@@ -62,10 +62,10 @@ export default function Products() {
   const hasPastDue = products.some((p) => p.status === "past_due");
 
   return (
-    <div className="mx-auto max-w-4xl p-6 space-y-8 app-fade-in">
+    <div className="mx-auto max-w-4xl p-4 sm:p-6 space-y-6 sm:space-y-8 app-fade-in">
       {/* Heading */}
       <div className="app-fade-up space-y-1">
-        <h1 className="text-2xl font-semibold text-foreground tracking-tight">
+        <h1 className="text-xl sm:text-2xl font-semibold text-foreground tracking-tight">
           {t("products.title")}
         </h1>
         <p className="text-sm text-muted-foreground">
@@ -75,7 +75,7 @@ export default function Products() {
 
       {/* Past-due warning */}
       {hasPastDue && (
-        <div className="app-fade-up app-fade-up-d1 flex items-center justify-between gap-4 rounded-xl border border-red-300/40 bg-red-50 px-4 py-3.5">
+        <div className="app-fade-up app-fade-up-d1 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 rounded-xl border border-red-300/40 bg-red-50 px-4 py-3.5">
           <div className="flex items-center gap-2.5">
             <AlertTriangle className="h-4 w-4 shrink-0 text-red-600" />
             <p className="text-sm font-medium text-red-800">

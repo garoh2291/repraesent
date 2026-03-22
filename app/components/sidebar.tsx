@@ -1,5 +1,6 @@
 import { Link, useLocation, useNavigate } from "react-router";
 import { useState } from "react";
+import { cn } from "~/lib/utils";
 import { useTranslation } from "react-i18next";
 import {
   Building2,
@@ -10,6 +11,7 @@ import {
   LogOut,
   Package,
   Settings,
+  X,
 } from "lucide-react";
 import * as LucideIcons from "lucide-react";
 import { InstructionsModal } from "~/components/instructions-modal";
@@ -88,7 +90,7 @@ function NavLink({
   );
 }
 
-export function Sidebar() {
+export function Sidebar({ onClose, className }: { onClose?: () => void; className?: string }) {
   const {
     currentWorkspace,
     workspaces,
@@ -123,16 +125,25 @@ export function Sidebar() {
   };
 
   return (
-    <aside className="flex h-screen w-[220px] shrink-0 flex-col bg-[#111113] border-r border-white/5">
+    <aside className={cn("flex h-full w-[220px] shrink-0 flex-col bg-[#111113] border-r border-white/5", className)}>
       {/* Logo */}
-      <div className="flex h-14 shrink-0 items-center px-4 border-b border-white/5">
-        <Link to="/" className="flex items-center">
+      <div className="flex h-14 shrink-0 items-center px-4 border-b border-white/5 gap-2">
+        <Link to="/" className="flex items-center flex-1 min-w-0" onClick={onClose}>
           <img
             src={logoUrl}
             alt="Repraesent"
             className="h-7 w-auto max-w-[120px] brightness-0 invert opacity-90"
           />
         </Link>
+        {onClose && (
+          <button
+            onClick={onClose}
+            className="shrink-0 flex h-7 w-7 items-center justify-center rounded-md text-white/35 hover:text-white/70 hover:bg-white/5 transition-colors"
+            aria-label="Close navigation"
+          >
+            <X className="h-3.5 w-3.5" />
+          </button>
+        )}
       </div>
 
       {/* Workspace selector */}
@@ -177,7 +188,7 @@ export function Sidebar() {
 
       {/* Navigation */}
       <nav className="min-h-0 flex-1 overflow-y-auto p-3 space-y-0.5">
-        <NavLink to="/" isActive={location.pathname === "/"}>
+        <NavLink to="/" isActive={location.pathname === "/"} onClick={onClose}>
           <HomeIcon className="h-4 w-4 shrink-0" />
           {t("nav.home")}
         </NavLink>
@@ -215,7 +226,10 @@ export function Sidebar() {
                   to={href}
                   isActive={isActive}
                   disabled={!hasSlug}
-                  onClick={(e) => !hasSlug && e.preventDefault()}
+                  onClick={(e) => {
+                    if (!hasSlug) e.preventDefault();
+                    else onClose?.();
+                  }}
                   className="flex-1 min-w-0"
                 >
                   {hasIcon && (
@@ -248,17 +262,17 @@ export function Sidebar() {
           })}
 
         {hasLeadFormService && (
-          <NavLink to="/tasks" isActive={location.pathname === "/tasks"}>
+          <NavLink to="/tasks" isActive={location.pathname === "/tasks"} onClick={onClose}>
             <CheckSquare className="h-4 w-4 shrink-0" />
             {t("nav.tasks")}
           </NavLink>
         )}
 
-        <NavLink to="/settings" isActive={location.pathname === "/settings"}>
+        <NavLink to="/settings" isActive={location.pathname === "/settings"} onClick={onClose}>
           <Settings className="h-4 w-4 shrink-0" />
           {t("nav.settings")}
         </NavLink>
-        <NavLink to="/products" isActive={location.pathname === "/products"}>
+        <NavLink to="/products" isActive={location.pathname === "/products"} onClick={onClose}>
           <Package className="h-4 w-4 shrink-0" />
           {t("nav.subscriptions")}
         </NavLink>

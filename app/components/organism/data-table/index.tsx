@@ -112,8 +112,8 @@ export function DataTable<TData, TValue>({
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between gap-4">
-        <div className="relative flex-1 max-w-sm">
+      <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:justify-between">
+        <div className="relative flex-1 sm:max-w-sm">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
             placeholder={searchPlaceholder}
@@ -137,8 +137,8 @@ export function DataTable<TData, TValue>({
         {additionalElement && <div>{additionalElement}</div>}
       </div>
 
-      <div className="rounded-md border border-border bg-card shadow-[var(--shadow)] overflow-hidden">
-        <Table>
+      <div className="rounded-md border border-border bg-card shadow-[var(--shadow)] overflow-hidden overflow-x-auto">
+        <Table className="min-w-[640px]">
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow key={headerGroup.id}>
@@ -224,17 +224,15 @@ export function DataTable<TData, TValue>({
       </div>
 
       {pagination && (
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <p className="text-sm text-muted-foreground">
-              {t("common.showingResults", {
-                from: total > 0 ? (currentPage - 1) * limit + 1 : 0,
-                to: Math.min(currentPage * limit, total),
-                total,
-              })}
-            </p>
-          </div>
-          <div className="flex items-center gap-2">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:justify-between">
+          <p className="text-sm text-muted-foreground order-2 sm:order-1">
+            {t("common.showingResults", {
+              from: total > 0 ? (currentPage - 1) * limit + 1 : 0,
+              to: Math.min(currentPage * limit, total),
+              total,
+            })}
+          </p>
+          <div className="flex items-center gap-2 order-1 sm:order-2">
             <Select
               value={limit.toString()}
               onValueChange={(value) => handlePageSizeChange(Number(value))}
@@ -259,7 +257,7 @@ export function DataTable<TData, TValue>({
               >
                 <ChevronLeft className="h-4 w-4" />
               </Button>
-              <div className="flex items-center gap-1">
+              <div className="hidden sm:flex items-center gap-1">
                 {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
                   let pageNum: number;
                   if (totalPages <= 5) {
@@ -283,6 +281,9 @@ export function DataTable<TData, TValue>({
                   );
                 })}
               </div>
+              <span className="flex sm:hidden text-sm text-muted-foreground px-2">
+                {currentPage} / {totalPages}
+              </span>
               <Button
                 variant="outline"
                 size="sm"

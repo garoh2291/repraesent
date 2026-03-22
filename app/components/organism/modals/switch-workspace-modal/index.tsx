@@ -27,7 +27,7 @@ export default function SwitchWorkspaceModal({
   };
 
   return (
-    <DialogContent className="flex w-[400px] flex-col gap-0">
+    <DialogContent className="flex w-[calc(100vw-2rem)] sm:w-[400px] flex-col gap-0">
       <DialogHeader>
         <DialogTitle className="text-base font-semibold text-foreground">
           {t("switchWorkspace.title")}

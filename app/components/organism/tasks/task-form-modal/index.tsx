@@ -243,7 +243,7 @@ export function TaskFormModal({
                     )}
                   </button>
                 </PopoverTrigger>
-                <PopoverContent className="w-[400px] p-0 flex flex-col overflow-hidden" align="start">
+                <PopoverContent className="w-[min(400px,calc(100vw-2rem))] p-0 flex flex-col overflow-hidden" align="start">
                   <div className="flex items-center gap-2 border-b border-border px-3 py-2 shrink-0">
                     <Search className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
                     <Input

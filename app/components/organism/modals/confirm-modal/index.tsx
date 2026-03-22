@@ -39,7 +39,7 @@ export default function ConfirmationModal({
   }
 
   return (
-    <DialogContent className="flex min-w-[528px] flex-col gap-0">
+    <DialogContent className="flex w-[calc(100vw-2rem)] sm:min-w-[480px] sm:max-w-[528px] flex-col gap-0">
       <DialogHeader>
         <DialogTitle className="text-lg font-semibold text-foreground">
           {displayTitle}

@@ -78,11 +78,11 @@ function CopyButton({ value, t }: { value: string; t: (key: string) => string })
 
 function CredentialRow({ label, value, t }: { label: string; value: string; t: (key: string) => string }) {
   return (
-    <div className="flex items-center justify-between gap-4 py-3 border-b border-border last:border-0">
-      <span className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground w-32 shrink-0">
+    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1 sm:gap-4 py-3 border-b border-border last:border-0">
+      <span className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground sm:w-32 shrink-0">
         {label}
       </span>
-      <span className="flex-1 font-mono text-sm text-foreground break-all">
+      <span className="flex-1 font-mono text-sm text-foreground break-all min-w-0">
         {value}
       </span>
       <CopyButton value={value} t={t} />
@@ -92,11 +92,11 @@ function CredentialRow({ label, value, t }: { label: string; value: string; t: (
 
 function ServerRow({ label, value, t }: { label: string; value: string; t: (key: string) => string }) {
   return (
-    <div className="flex items-center justify-between gap-4 py-3 border-b border-border last:border-0">
-      <span className="text-sm text-muted-foreground w-40 shrink-0">
+    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1 sm:gap-4 py-3 border-b border-border last:border-0">
+      <span className="text-sm text-muted-foreground sm:w-40 shrink-0">
         {label}
       </span>
-      <span className="flex-1 font-mono text-sm text-foreground">{value}</span>
+      <span className="flex-1 font-mono text-sm text-foreground break-all min-w-0">{value}</span>
       <CopyButton value={value} t={t} />
     </div>
   );
@@ -115,7 +115,7 @@ function SectionCard({
 }) {
   return (
     <div className="rounded-2xl border border-border bg-card overflow-hidden">
-      <div className="flex items-start gap-3 px-6 py-4 border-b border-border bg-muted/20">
+      <div className="flex items-start gap-3 px-4 sm:px-6 py-4 border-b border-border bg-muted/20">
         <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-amber-400/10 text-amber-400">
           <Icon className="h-4 w-4" />
         </div>
@@ -128,7 +128,7 @@ function SectionCard({
           )}
         </div>
       </div>
-      <div className="px-6">{children}</div>
+      <div className="px-4 sm:px-6">{children}</div>
     </div>
   );
 }
@@ -199,11 +199,11 @@ function PasswordRow({
 
   return (
     <div className="flex flex-col gap-1.5 py-3 border-b border-border last:border-0">
-      <div className="flex items-center justify-between gap-4">
-        <span className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground w-32 shrink-0">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1 sm:gap-4">
+        <span className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground sm:w-32 shrink-0">
           {label}
         </span>
-        <span className="flex-1 font-mono text-sm text-foreground break-all">
+        <span className="flex-1 font-mono text-sm text-foreground break-all min-w-0">
           {revealed && revealedPassword ? revealedPassword : "*******"}
         </span>
         <div className="flex items-center gap-1.5 shrink-0">
@@ -268,7 +268,7 @@ export default function Emails() {
   const isConfigured = !!(cfg.email && cfg.imap_server && cfg.smtp_server);
 
   return (
-    <div className="p-6 app-fade-in">
+    <div className="p-4 sm:p-6 app-fade-in">
       <div className="mx-auto max-w-4xl space-y-6">
         {/* Header */}
         <div className="app-fade-up flex items-start justify-between gap-4">
@@ -277,7 +277,7 @@ export default function Emails() {
               <Mail className="h-5 w-5 text-amber-400" />
             </div>
             <div>
-              <h1 className="text-2xl font-semibold text-foreground tracking-tight">
+              <h1 className="text-xl sm:text-2xl font-semibold text-foreground tracking-tight">
                 {t("email.pageTitle")}
               </h1>
               <p className="text-sm text-muted-foreground mt-0.5">
@@ -386,8 +386,8 @@ export default function Emails() {
                   value={String(cfg.smtp_port_ssl ?? 465)}
                   t={t}
                 />
-                <div className="flex items-center justify-between gap-4 py-3">
-                  <span className="text-sm text-muted-foreground w-40 shrink-0">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1 sm:gap-4 py-3">
+                  <span className="text-sm text-muted-foreground sm:w-40 shrink-0">
                     {t("email.authLabel")}
                   </span>
                   <span className="flex-1 font-mono text-sm text-foreground">

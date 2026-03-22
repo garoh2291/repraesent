@@ -17,7 +17,7 @@ export default function NoWorkspace() {
   const { logout, isLoggingOut } = useAuthContext();
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-[#0f0f11] p-8">
+    <div className="flex min-h-screen items-center justify-center bg-[#0f0f11] p-4 sm:p-8">
       <div className="w-full max-w-sm text-center space-y-8 app-fade-up">
         {/* Icon */}
         <div className="inline-flex h-16 w-16 items-center justify-center rounded-2xl bg-white/5 border border-white/8 mx-auto">

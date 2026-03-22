@@ -124,7 +124,7 @@ export default function Pending() {
       <div className="flex min-h-screen flex-col bg-stone-50 dark:bg-zinc-950">
         <style>{STATUS_STYLES}</style>
         <StatusPageHeader />
-        <div className="flex flex-1 flex-col items-center justify-center p-8">
+        <div className="flex flex-1 flex-col items-center justify-center p-4 sm:p-8">
           <div className="mx-auto max-w-sm space-y-7 text-center sp-fade-up">
             <div className="flex justify-center sp-fade-up">
               <div className="relative flex h-20 w-20 items-center justify-center rounded-full bg-amber-50 dark:bg-amber-950/30 border-2 border-amber-200 dark:border-amber-800">
@@ -166,7 +166,7 @@ export default function Pending() {
       <div className="flex min-h-screen flex-col bg-stone-50 dark:bg-zinc-950">
         <style>{STATUS_STYLES}</style>
         <StatusPageHeader />
-        <div className="flex flex-1 flex-col items-center justify-center p-8">
+        <div className="flex flex-1 flex-col items-center justify-center p-4 sm:p-8">
           <div className="mx-auto max-w-sm space-y-7 text-center">
             <div className="flex justify-center sp-fade-up">
               <div className="relative flex h-20 w-20 items-center justify-center rounded-full bg-blue-50 dark:bg-blue-950/30 border-2 border-blue-200 dark:border-blue-800">

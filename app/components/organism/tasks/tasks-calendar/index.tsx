@@ -122,7 +122,7 @@ export function TasksCalendar({
             >
               <ChevronLeft className="h-4 w-4" />
             </button>
-            <h2 className="text-base font-semibold text-foreground min-w-[180px] text-center">
+            <h2 className="text-sm sm:text-base font-semibold text-foreground min-w-[120px] sm:min-w-[180px] text-center">
               {navigationTitle}
             </h2>
             <button

@@ -123,7 +123,7 @@ export function TasksKanban({
         onDragStart={handleDragStart}
         onDragEnd={handleDragEnd}
       >
-        <div className="grid grid-cols-3 gap-4 flex-1 min-h-0 pb-4">
+        <div className="flex gap-4 flex-1 min-h-0 pb-4 overflow-x-auto scrollbar-hide sm:grid sm:grid-cols-3">
           {TASK_STATUS_COLUMNS.map((status) => (
             <KanbanColumn
               key={status}
@@ -175,7 +175,7 @@ function KanbanColumn({
     <div
       ref={setNodeRef}
       className={cn(
-        "flex flex-col rounded-xl border bg-muted/50 transition-all duration-150 min-h-[200px]",
+        "flex flex-col rounded-xl border bg-muted/50 transition-all duration-150 min-h-[200px] min-w-[240px] sm:min-w-0 shrink-0 sm:shrink",
         isOver && "ring-2 ring-primary/40 bg-primary/5",
       )}
     >

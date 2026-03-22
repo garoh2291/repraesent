@@ -246,7 +246,7 @@ export function LeadImportModal({ open, onOpenChange }: LeadImportModalProps) {
       onOpenChange={(o) => (!o ? handleClose() : onOpenChange(o))}
     >
       <DialogContent
-        className="max-w-6xl md:min-w-[900px] max-h-[90vh] flex flex-col"
+        className="w-[calc(100vw-2rem)] max-w-6xl md:min-w-[900px] max-h-[90vh] flex flex-col"
         showCloseButton={true}
       >
         <DialogHeader>

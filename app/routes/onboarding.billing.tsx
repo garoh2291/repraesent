@@ -254,7 +254,7 @@ export default function OnboardingBilling() {
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-1.5">
               <label htmlFor="city" className={labelCls}>
                 {t("onboarding.billing.city")} <span className="text-destructive normal-case tracking-normal">*</span>

@@ -363,8 +363,8 @@ export function FilterComponent({
       <PopoverContent
         align="end"
         className={cn(
-          "w-full  p-0",
-          activeFilter && isDateFilter ? "max-w-[350px]" : "max-w-[400px]"
+          "w-[min(100vw-1rem,400px)] p-0",
+          activeFilter && isDateFilter ? "sm:max-w-[350px]" : "sm:max-w-[400px]"
         )}
       >
         <Command

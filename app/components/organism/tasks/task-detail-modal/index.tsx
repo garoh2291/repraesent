@@ -158,7 +158,7 @@ export function TaskDetailModal({
   return (
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="sm:max-w-[560px] max-h-[90vh] flex flex-col overflow-hidden p-0">
+        <DialogContent className="w-[calc(100vw-2rem)] sm:max-w-[560px] max-h-[90vh] flex flex-col overflow-hidden p-0">
           {isLoading || !task ? (
             <div className="flex items-center justify-center py-16">
               <div className="h-5 w-5 app-spin rounded-full border-2 border-primary/20 border-t-primary" />

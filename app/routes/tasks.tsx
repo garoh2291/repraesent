@@ -174,14 +174,14 @@ export default function TasksPage() {
       className={cn(
         "app-fade-in",
         viewMode === "kanban"
-          ? "flex flex-col min-h-[calc(100vh-8rem)] p-6 gap-6"
-          : "p-6 space-y-6"
+          ? "flex flex-col min-h-[calc(100vh-8rem)] p-4 sm:p-6 gap-4 sm:gap-6"
+          : "p-4 sm:p-6 space-y-4 sm:space-y-6"
       )}
     >
       {/* Header */}
-      <div className="flex items-center justify-between shrink-0 app-fade-up">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between shrink-0 app-fade-up">
         <div>
-          <h1 className="text-2xl font-semibold text-foreground tracking-tight">
+          <h1 className="text-xl sm:text-2xl font-semibold text-foreground tracking-tight">
             {t("tasks.title")}
           </h1>
           <p className="text-sm text-muted-foreground mt-0.5">
@@ -189,7 +189,7 @@ export default function TasksPage() {
           </p>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           {/* New task button */}
           <Button
             size="sm"
@@ -233,74 +233,76 @@ export default function TasksPage() {
       <div className="border-t border-border shrink-0" />
 
       {/* Filters */}
-      <div className="flex flex-wrap items-center gap-3 shrink-0 app-fade-up app-fade-up-d1">
+      <div className="flex flex-col sm:flex-row sm:flex-wrap sm:items-center gap-2 sm:gap-3 shrink-0 app-fade-up app-fade-up-d1">
         {/* Search */}
-        <div className="relative">
+        <div className="relative flex-1 sm:flex-none">
           <Input
             value={search}
             onChange={(e) =>
               onSelect({ search: e.target.value, page: "1" }, true)
             }
             placeholder={t("tasks.searchPlaceholder")}
-            className="h-9 w-[220px] text-sm pr-3"
+            className="h-9 w-full sm:w-[220px] text-sm pr-3"
           />
         </div>
 
-        {/* Assignee filter */}
-        <Select
-          value={assigneeFilter || "all"}
-          onValueChange={(v) =>
-            onSelect({ assignee: v === "all" ? "" : v }, true)
-          }
-        >
-          <SelectTrigger className="h-9 w-[160px] text-xs">
-            <SelectValue placeholder={t("tasks.allAssignees")} />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all" className="text-xs">
-              {t("tasks.allAssignees")}
-            </SelectItem>
-            {workspaceMembers.map((m) => (
-              <SelectItem key={m.user_id} value={m.user_id} className="text-xs">
-                {m.user_first_name} {m.user_last_name}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-
-        {/* Status filter */}
-        <Select
-          value={statusFilter || "all"}
-          onValueChange={(v) =>
-            onSelect({ status: v === "all" ? "" : v }, true)
-          }
-        >
-          <SelectTrigger className="h-9 w-[140px] text-xs">
-            <SelectValue placeholder={t("tasks.allStatuses")} />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all" className="text-xs">
-              {t("tasks.allStatuses")}
-            </SelectItem>
-            {(["todo", "in_progress", "done"] as TaskStatus[]).map((s) => (
-              <SelectItem key={s} value={s} className="text-xs">
-                {t(`tasks.statuses.${s}`)}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-
-        {/* Clear filters */}
-        {hasFilters && (
-          <button
-            className="inline-flex items-center gap-1 rounded-full border border-dashed border-border px-3 py-1 text-xs font-medium text-muted-foreground hover:text-foreground hover:border-border/80 transition-colors"
-            onClick={() =>
-              onSelect({ assignee: "", status: "", search: "" }, true)
+        <div className="flex items-center gap-2 flex-wrap">
+          {/* Assignee filter */}
+          <Select
+            value={assigneeFilter || "all"}
+            onValueChange={(v) =>
+              onSelect({ assignee: v === "all" ? "" : v }, true)
             }
           >
-            {t("tasks.clearFilters")} <X size={12} />
-          </button>
-        )}
+            <SelectTrigger className="h-9 w-[150px] text-xs">
+              <SelectValue placeholder={t("tasks.allAssignees")} />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all" className="text-xs">
+                {t("tasks.allAssignees")}
+              </SelectItem>
+              {workspaceMembers.map((m) => (
+                <SelectItem key={m.user_id} value={m.user_id} className="text-xs">
+                  {m.user_first_name} {m.user_last_name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+
+          {/* Status filter */}
+          <Select
+            value={statusFilter || "all"}
+            onValueChange={(v) =>
+              onSelect({ status: v === "all" ? "" : v }, true)
+            }
+          >
+            <SelectTrigger className="h-9 w-[130px] text-xs">
+              <SelectValue placeholder={t("tasks.allStatuses")} />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all" className="text-xs">
+                {t("tasks.allStatuses")}
+              </SelectItem>
+              {(["todo", "in_progress", "done"] as TaskStatus[]).map((s) => (
+                <SelectItem key={s} value={s} className="text-xs">
+                  {t(`tasks.statuses.${s}`)}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+
+          {/* Clear filters */}
+          {hasFilters && (
+            <button
+              className="inline-flex items-center gap-1 rounded-full border border-dashed border-border px-3 py-1 text-xs font-medium text-muted-foreground hover:text-foreground hover:border-border/80 transition-colors"
+              onClick={() =>
+                onSelect({ assignee: "", status: "", search: "" }, true)
+              }
+            >
+              {t("tasks.clearFilters")} <X size={12} />
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Content */}

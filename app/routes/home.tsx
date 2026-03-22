@@ -165,7 +165,7 @@ function LeadAnalyticsChart() {
 
   return (
     <div
-      className="app-fade-up rounded-2xl border border-border bg-card p-6 space-y-5"
+      className="app-fade-up rounded-2xl border border-border bg-card p-4 sm:p-6 space-y-4 sm:space-y-5"
       style={{ animationDelay: "0.06s" }}
     >
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
@@ -182,13 +182,13 @@ function LeadAnalyticsChart() {
           )}
         </div>
 
-        <div className="flex items-center gap-1 rounded-xl bg-muted p-1 self-start">
+        <div className="flex items-center gap-1 rounded-xl bg-muted p-1 self-start overflow-x-auto scrollbar-hide">
           {periods.map((p) => (
             <button
               key={p.value}
               onClick={() => setPeriod(p.value)}
               className={cn(
-                "rounded-lg px-3 py-1.5 text-[12px] font-medium transition-all duration-150",
+                "rounded-lg px-2.5 sm:px-3 py-1.5 text-[11px] sm:text-[12px] font-medium transition-all duration-150 whitespace-nowrap shrink-0",
                 period === p.value
                   ? "bg-card text-foreground shadow-sm"
                   : "text-muted-foreground hover:text-foreground"
@@ -408,7 +408,7 @@ function MyTasksSection({ userId }: { userId: string }) {
 
   return (
     <div
-      className="app-fade-up rounded-2xl border border-border bg-card p-6 space-y-5"
+      className="app-fade-up rounded-2xl border border-border bg-card p-4 sm:p-6 space-y-4 sm:space-y-5"
       style={{ animationDelay: "0.1s" }}
     >
       {/* Header */}
@@ -487,7 +487,7 @@ export default function Home() {
   const firstName = displayName.split(" ")[0];
 
   return (
-    <div className="mx-auto max-w-5xl p-6 space-y-8 app-fade-in">
+    <div className="mx-auto max-w-5xl p-4 sm:p-6 space-y-6 sm:space-y-8 app-fade-in">
       {/* Page heading */}
       <div className="app-fade-up space-y-1">
         <h1 className="text-2xl font-semibold text-foreground tracking-tight">

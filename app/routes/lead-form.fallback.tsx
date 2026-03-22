@@ -193,7 +193,7 @@ function TabButton({
             </span>
           </div>
           <TooltipContainer showCopyButton={false} tooltipContent={desc}>
-            <p className="text-[11px] text-muted-foreground mt-0.5 truncate">
+            <p className="text-[11px] text-muted-foreground mt-0.5 line-clamp-2 sm:truncate">
               {desc}
             </p>
           </TooltipContainer>
@@ -247,7 +247,7 @@ function EditorPanel({
   return (
     <div className="flex flex-col h-full">
       {/* Panel header */}
-      <div className="flex items-start justify-between gap-4 pb-5 border-b border-border shrink-0">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between sm:gap-4 pb-5 border-b border-border shrink-0">
         <div className="flex items-start gap-3">
           <div className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-muted">
             <Icon className="h-4 w-4 text-foreground" />
@@ -261,7 +261,7 @@ function EditorPanel({
         </div>
 
         {/* Enable toggle */}
-        <div className="flex items-center gap-2.5 shrink-0 mt-0.5">
+        <div className="flex items-center gap-2.5 shrink-0 sm:mt-0.5">
           {!canEnable && !local.enabled && (
             <span className="text-[11px] text-muted-foreground">
               {t("leadFallback.fillToEnable")}
@@ -302,7 +302,7 @@ function EditorPanel({
               <span className="text-sm font-mono text-foreground truncate">
                 {fromEmail}
               </span>
-              <span className="ml-auto shrink-0 text-[10px] text-muted-foreground/50 italic">
+              <span className="ml-auto shrink-0 text-[10px] text-muted-foreground/50 italic hidden sm:inline">
                 {t("leadFallback.configuredInEmailSettings")}
               </span>
             </div>
@@ -353,7 +353,7 @@ function EditorPanel({
             </div>
           </div>
 
-          <div className="rounded-xl border border-border overflow-hidden h-[380px]">
+          <div className="rounded-xl border border-border overflow-hidden h-[260px] sm:h-[380px]">
             {viewMode === "code" ? (
               <textarea
                 value={local.html}
@@ -587,7 +587,7 @@ export default function LeadFallbackPage() {
   if (!currentWorkspace) return null;
 
   return (
-    <div className="app-fade-in flex flex-col min-h-[calc(100vh-8rem)] p-6 gap-0">
+    <div className="app-fade-in flex flex-col min-h-[calc(100vh-8rem)] p-4 sm:p-6 gap-0">
       {/* ── Page header ── */}
       <div className="shrink-0 pb-5">
         <button
@@ -622,9 +622,9 @@ export default function LeadFallbackPage() {
         </div>
       ) : (
         /* ── Split panel ── */
-        <div className="flex gap-5 flex-1 min-h-0">
+        <div className="flex flex-col sm:flex-row gap-4 sm:gap-5 flex-1 min-h-0">
           {/* Left: tab list */}
-          <div className="w-64 shrink-0 flex flex-col gap-1.5">
+          <div className="sm:w-64 shrink-0 flex flex-col gap-1.5">
             {SOURCE_DEFS.map(({ key, labelKey, descKey, Icon }) => (
               <TabButton
                 key={key}

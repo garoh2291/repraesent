@@ -362,8 +362,8 @@ export default function BookAppointment() {
         t={t}
       />
 
-      <main className="flex-1 py-10 px-6">
-        <div className="max-w-4xl mx-auto space-y-8">
+      <main className="flex-1 py-6 sm:py-10 px-4 sm:px-6">
+        <div className="max-w-4xl mx-auto space-y-6 sm:space-y-8">
           {/* Step content */}
           <div className="app-fade-up">
             {step === 1 && (
@@ -663,7 +663,7 @@ function Step1DateAndTime({
                   </p>
                 </div>
               ) : (
-                <ScrollArea className="h-[380px] rounded-xl border border-border bg-white">
+                <ScrollArea className="h-[280px] sm:h-[380px] rounded-xl border border-border bg-white">
                   <div className="flex flex-col gap-1.5 p-2">
                     {slots.map((slot) => {
                       const isSelected = selectedSlot === slot;

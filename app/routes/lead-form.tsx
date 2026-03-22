@@ -280,21 +280,21 @@ export default function LeadForm() {
       className={cn(
         "app-fade-in",
         viewMode === "kanban"
-          ? "flex flex-col min-h-[calc(100vh-8rem)] p-6"
-          : "p-6 space-y-6"
+          ? "flex flex-col min-h-[calc(100vh-8rem)] p-4 sm:p-6"
+          : "p-4 sm:p-6 space-y-4 sm:space-y-6"
       )}
     >
       {/* Header */}
-      <div className="flex items-center justify-between shrink-0 app-fade-up">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between shrink-0 app-fade-up">
         <div>
-          <h1 className="text-2xl font-semibold text-foreground tracking-tight">
+          <h1 className="text-xl sm:text-2xl font-semibold text-foreground tracking-tight">
             {t("leads.title")}
           </h1>
           <p className="text-sm text-muted-foreground mt-0.5">
             {t("leads.manageHint")}
           </p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <TooltipContainer
             tooltipContent={fallbackButtonTooltip ?? ""}
             showCopyButton={false}
