@@ -163,8 +163,8 @@ export function CalendarTab({ config }: CalendarTabProps) {
   );
 
   const { data: appointments = [], isLoading } = useQuery({
-    queryKey: ["appointments-list"],
-    queryFn: getAppointments,
+    queryKey: ["appointments-list", config.id],
+    queryFn: () => getAppointmentsByConfigId(config.id),
   });
 
   const events: CalendarEvent[] = appointments.map((apt: unknown) => {
