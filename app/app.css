@@ -398,18 +398,23 @@ body {
 /* ── Mobile-first touch & interaction improvements ────────── */
 @media (max-width: 1023px) {
   /* Larger tap targets on mobile */
-  button, a, [role="button"] {
+  button,
+  a,
+  [role="button"] {
     -webkit-tap-highlight-color: transparent;
   }
 
   /* Prevent text overflow in headers on narrow screens */
-  h1, h2, h3 {
+  h1,
+  h2,
+  h3 {
     overflow-wrap: break-word;
     word-break: break-word;
   }
 
   /* Better touch scrolling */
-  .overflow-x-auto, .overflow-y-auto {
+  .overflow-x-auto,
+  .overflow-y-auto {
     -webkit-overflow-scrolling: touch;
   }
 }
@@ -523,7 +528,7 @@ body {
 }
 .appointments-calendar .rbc-timeslot-group {
   border-bottom: 1px solid var(--border) / 50%;
-  min-height: 40px;
+  min-height: 150px;
 }
 .appointments-calendar .rbc-label {
   font-size: 0.6875rem;
@@ -610,7 +615,7 @@ body {
     font-size: 0.6875rem;
   }
   .appointments-calendar .rbc-timeslot-group {
-    min-height: 32px;
+    min-height: 48px;
   }
   .appointments-calendar .rbc-label {
     font-size: 0.625rem;
