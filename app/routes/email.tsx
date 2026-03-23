@@ -54,7 +54,13 @@ const OTHER_STEP_KEYS = [
   "email.steps.other.step6",
 ] as const;
 
-function CopyButton({ value, t }: { value: string; t: (key: string) => string }) {
+function CopyButton({
+  value,
+  t,
+}: {
+  value: string;
+  t: (key: string) => string;
+}) {
   const [copied, setCopied] = useState(false);
   const handleCopy = () => {
     navigator.clipboard.writeText(value);
@@ -76,7 +82,15 @@ function CopyButton({ value, t }: { value: string; t: (key: string) => string })
   );
 }
 
-function CredentialRow({ label, value, t }: { label: string; value: string; t: (key: string) => string }) {
+function CredentialRow({
+  label,
+  value,
+  t,
+}: {
+  label: string;
+  value: string;
+  t: (key: string) => string;
+}) {
   return (
     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1 sm:gap-4 py-3 border-b border-border last:border-0">
       <span className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground sm:w-32 shrink-0">
@@ -90,13 +104,23 @@ function CredentialRow({ label, value, t }: { label: string; value: string; t: (
   );
 }
 
-function ServerRow({ label, value, t }: { label: string; value: string; t: (key: string) => string }) {
+function ServerRow({
+  label,
+  value,
+  t,
+}: {
+  label: string;
+  value: string;
+  t: (key: string) => string;
+}) {
   return (
     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1 sm:gap-4 py-3 border-b border-border last:border-0">
       <span className="text-sm text-muted-foreground sm:w-40 shrink-0">
         {label}
       </span>
-      <span className="flex-1 font-mono text-sm text-foreground break-all min-w-0">{value}</span>
+      <span className="flex-1 font-mono text-sm text-foreground break-all min-w-0">
+        {value}
+      </span>
       <CopyButton value={value} t={t} />
     </div>
   );
@@ -332,72 +356,6 @@ export default function Emails() {
                 </div>
               </SectionCard>
             </div>
-
-            {/* Server Settings */}
-            <div className="app-fade-up app-fade-up-d2">
-              <SectionCard
-                icon={Server}
-                title={t("email.serverTitle")}
-                description={t("email.serverDesc")}
-              >
-                <div className="pt-4 pb-2">
-                  <span className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
-                    {t("email.incomingLabel")}
-                  </span>
-                </div>
-                <ServerRow
-                  label={t("email.serverLabel")}
-                  value={String(cfg.imap_server ?? "")}
-                  t={t}
-                />
-                <ServerRow
-                  label={t("email.portSslLabel")}
-                  value={String(cfg.imap_port_ssl ?? 993)}
-                  t={t}
-                />
-                <ServerRow
-                  label={t("email.portStartLabel")}
-                  value={String(cfg.imap_port_starttls ?? 143)}
-                  t={t}
-                />
-                <ServerRow
-                  label={t("email.usernameLabel")}
-                  value={String(cfg.imap_username ?? cfg.email ?? "")}
-                  t={t}
-                />
-
-                <div className="pt-5 pb-2">
-                  <span className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
-                    {t("email.outgoingLabel")}
-                  </span>
-                </div>
-                <ServerRow
-                  label={t("email.serverLabel")}
-                  value={String(cfg.smtp_server ?? "")}
-                  t={t}
-                />
-                <ServerRow
-                  label={t("email.portStartLabel")}
-                  value={String(cfg.smtp_port_starttls ?? 587)}
-                  t={t}
-                />
-                <ServerRow
-                  label={t("email.portSslLabel")}
-                  value={String(cfg.smtp_port_ssl ?? 465)}
-                  t={t}
-                />
-                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1 sm:gap-4 py-3">
-                  <span className="text-sm text-muted-foreground sm:w-40 shrink-0">
-                    {t("email.authLabel")}
-                  </span>
-                  <span className="flex-1 font-mono text-sm text-foreground">
-                    {cfg.smtp_auth_required !== false
-                      ? t("email.authRequired")
-                      : t("email.authNotRequired")}
-                  </span>
-                </div>
-              </SectionCard>
-            </div>
           </>
         )}
 
@@ -418,7 +376,14 @@ export default function Emails() {
                       <p className="text-sm text-muted-foreground leading-relaxed">
                         <Trans
                           i18nKey={key}
-                          components={{ 0: <strong className="text-foreground font-medium" />, 1: <strong className="text-foreground font-medium" /> }}
+                          components={{
+                            0: (
+                              <strong className="text-foreground font-medium" />
+                            ),
+                            1: (
+                              <strong className="text-foreground font-medium" />
+                            ),
+                          }}
                         />
                       </p>
                       <div className="rounded-xl overflow-hidden border border-border bg-muted/30">
@@ -452,6 +417,71 @@ export default function Emails() {
                   </p>
                 </div>
               ))}
+            </div>
+          </SectionCard>
+        </div>
+        {/* Server Settings */}
+        <div className="app-fade-up app-fade-up-d2">
+          <SectionCard
+            icon={Server}
+            title={t("email.serverTitle")}
+            description={t("email.serverDesc")}
+          >
+            <div className="pt-4 pb-2">
+              <span className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
+                {t("email.incomingLabel")}
+              </span>
+            </div>
+            <ServerRow
+              label={t("email.serverLabel")}
+              value={String(cfg.imap_server ?? "")}
+              t={t}
+            />
+            <ServerRow
+              label={t("email.portSslLabel")}
+              value={String(cfg.imap_port_ssl ?? 993)}
+              t={t}
+            />
+            <ServerRow
+              label={t("email.portStartLabel")}
+              value={String(cfg.imap_port_starttls ?? 143)}
+              t={t}
+            />
+            <ServerRow
+              label={t("email.usernameLabel")}
+              value={String(cfg.imap_username ?? cfg.email ?? "")}
+              t={t}
+            />
+
+            <div className="pt-5 pb-2">
+              <span className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
+                {t("email.outgoingLabel")}
+              </span>
+            </div>
+            <ServerRow
+              label={t("email.serverLabel")}
+              value={String(cfg.smtp_server ?? "")}
+              t={t}
+            />
+            <ServerRow
+              label={t("email.portStartLabel")}
+              value={String(cfg.smtp_port_starttls ?? 587)}
+              t={t}
+            />
+            <ServerRow
+              label={t("email.portSslLabel")}
+              value={String(cfg.smtp_port_ssl ?? 465)}
+              t={t}
+            />
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1 sm:gap-4 py-3">
+              <span className="text-sm text-muted-foreground sm:w-40 shrink-0">
+                {t("email.authLabel")}
+              </span>
+              <span className="flex-1 font-mono text-sm text-foreground">
+                {cfg.smtp_auth_required !== false
+                  ? t("email.authRequired")
+                  : t("email.authNotRequired")}
+              </span>
             </div>
           </SectionCard>
         </div>

@@ -108,11 +108,11 @@
       "redirecting": "Sie werden weitergeleitet..."
     },
     "workspacePicker": {
-      "title": "Workspace auswählen",
-      "subtitle": "Sie haben Zugriff auf {{count}} Workspace. Wählen Sie einen aus.",
-      "subtitle_other": "Sie haben Zugriff auf {{count}} Workspaces. Wählen Sie einen aus.",
-      "noWorkspaces": "Kein Workspace gefunden",
-      "clickToEnter": "Klicken, um den Workspace zu betreten"
+      "title": "Bereich auswählen",
+      "subtitle": "Sie haben Zugriff auf {{count}} Bereich. Wählen Sie einen aus.",
+      "subtitle_other": "Sie haben Zugriff auf {{count}} Bereiche. Wählen Sie einen aus.",
+      "noWorkspaces": "Kein Bereich gefunden",
+      "clickToEnter": "Klicken, um den Bereich zu betreten"
     }
   },
   "home": {
@@ -131,7 +131,7 @@
     "tooltipLead_one": "{{count}} Lead",
     "tooltipLead_other": "{{count}} Leads",
     "account": "Konto",
-    "workspace": "Workspace",
+    "workspace": "Bereich",
     "role": "Rolle",
     "myTasks": "Heutige Aufgaben",
     "myTasksOpen": "fällig heute",
@@ -139,7 +139,7 @@
     "viewAllTasks": "Alle Aufgaben",
     "moreTasks": "weitere Aufgaben",
     "products": "Produkte",
-    "productsHint": "Produkte, die mit diesem Workspace verknüpft sind",
+    "productsHint": "Produkte, die mit diesem Bereich verknüpft sind",
     "noProducts": "Noch keine Produkte verknüpft. Kontaktieren Sie support@repraesent.com, um loszulegen.",
     "openSection": "Abschnitt öffnen",
     "notAvailable": "Nicht verfügbar"
@@ -370,15 +370,15 @@
   "settings": {
     "title": "Einstellungen",
     "workspace": {
-      "title": "Workspace-Einstellungen",
-      "name": "Workspace-Name",
-      "language": "Workspace-Sprache",
-      "languageHint": "Diese Sprache wird für E-Mails an alle Workspace-Mitglieder verwendet.",
+      "title": "Bereich-Einstellungen",
+      "name": "Bereich-Name",
+      "language": "Bereich-Sprache",
+      "languageHint": "Diese Sprache wird für E-Mails an alle Bereich-Mitglieder verwendet.",
       "languageEn": "Englisch",
       "languageDe": "Deutsch",
       "saveSuccess": "Einstellungen gespeichert",
       "saveFailed": "Einstellungen konnten nicht gespeichert werden",
-      "urlLabel": "Workspace-URL",
+      "urlLabel": "Bereich-URL",
       "urlTooltip": "Um die URL zu ändern, kontaktieren Sie support@repraesent.com"
     },
     "products": {
@@ -393,7 +393,7 @@
       "headerRole": "Rolle",
       "headerLeadAlerts": "Lead-Benachrichtigungen",
       "youBadge": "Sie",
-      "noMembers": "Keine Mitglieder in diesem Workspace.",
+      "noMembers": "Keine Mitglieder in diesem Bereich.",
       "role": "Rolle",
       "roles": {
         "admin": "Admin",
@@ -404,7 +404,7 @@
       "removeMember": "Mitglied entfernen",
       "confirmRemove": "Sind Sie sicher, dass Sie dieses Mitglied entfernen möchten?",
       "removeTitle": "Mitglied entfernen?",
-      "removeDescription": "{{name}} wird aus dem Workspace entfernt. Diese Aktion kann nicht rückgängig gemacht werden.",
+      "removeDescription": "{{name}} wird aus dem Bereich entfernt. Diese Aktion kann nicht rückgängig gemacht werden.",
       "removing": "Wird entfernt…",
       "memberRemoved": "Mitglied entfernt",
       "inviteMember": "Mitglied einladen",
@@ -416,7 +416,7 @@
     },
     "language": {
       "title": "Meine Sprache",
-      "hint": "Diese Einstellung gilt nur für Sie persönlich und überschreibt die Workspace-Sprache.",
+      "hint": "Diese Einstellung gilt nur für Sie persönlich und überschreibt die Bereich-Sprache.",
       "en": "English",
       "de": "Deutsch"
     },
@@ -501,29 +501,29 @@
   "onboarding": {
     "steps": {
       "profile": "Profil",
-      "workspace": "Workspace",
+      "workspace": "Bereich",
       "billing": "Abrechnung",
       "products": "Produkte"
     },
     "workspace": {
-      "metaTitle": "Workspace erstellen - Repraesent",
-      "metaDescription": "Workspace erstellen",
-      "title": "Workspace erstellen",
-      "yourWorkspace": "Ihr Workspace",
-      "nameLabel": "Workspace-Name",
-      "namePlaceholder": "Mein Workspace",
+      "metaTitle": "Bereich erstellen - Repraesent",
+      "metaDescription": "Bereich erstellen",
+      "title": "Bereich erstellen",
+      "yourWorkspace": "Ihr Bereich",
+      "nameLabel": "Bereich-Name",
+      "namePlaceholder": "Mein Bereich",
       "namePlaceholderCreate": "Beispiel GmbH",
       "websiteUrl": "Website-URL",
       "urlPlaceholder": "https://beispiel.de",
       "inviteMembers": "Mitglieder einladen",
       "memberPlaceholder": "mitglied@beispiel.de",
       "optional": "(optional)",
-      "updateSubtitle": "Aktualisieren Sie Ihre Workspace-Details.",
-      "createSubtitle": "Richten Sie Ihren Workspace ein und laden Sie optional Teammitglieder ein.",
-      "nameRequired": "Workspace-Name ist erforderlich",
+      "updateSubtitle": "Aktualisieren Sie Ihre Bereich-Details.",
+      "createSubtitle": "Richten Sie Ihren Bereich ein und laden Sie optional Teammitglieder ein.",
+      "nameRequired": "Bereich-Name ist erforderlich",
       "urlRequired": "Website-URL ist erforderlich",
       "urlInvalid": "Bitte geben Sie eine gültige URL ein",
-      "urlTaken": "Diese URL ist bereits mit einem anderen Workspace verknüpft. Wenn Sie Teil dieses Teams sind, bitten Sie sie, Sie hinzuzufügen. Andernfalls wenden Sie sich an den Support."
+      "urlTaken": "Diese URL ist bereits mit einem anderen Bereich verknüpft. Wenn Sie Teil dieses Teams sind, bitten Sie sie, Sie hinzuzufügen. Andernfalls wenden Sie sich an den Support."
     },
     "profile": {
       "metaTitle": "Ihr Profil - Repraesent",
@@ -569,7 +569,7 @@
       "cityRequired": "Stadt ist erforderlich",
       "countryRequired": "Land ist erforderlich",
       "postalCodeRequired": "Postleitzahl ist erforderlich",
-      "noWorkspaceSelected": "Kein Workspace ausgewählt",
+      "noWorkspaceSelected": "Kein Bereich ausgewählt",
       "placeholderFullName": "Max Mustermann",
       "placeholderEmail": "rechnung@firma.de",
       "placeholderCompany": "Beispiel GmbH",
@@ -602,7 +602,7 @@
       "perYearShort": "Jahr",
       "notAvailable": "Nicht verfügbar für diesen Abrechnungszeitraum",
       "selected": "Ausgewählt:",
-      "noWorkspaceSelected": "Kein Workspace ausgewählt",
+      "noWorkspaceSelected": "Kein Bereich ausgewählt",
       "selectAtLeastOne": "Bitte wählen Sie mindestens ein Produkt aus",
       "ariaPrevious": "Zurück",
       "ariaNext": "Weiter",
@@ -610,24 +610,24 @@
     }
   },
   "pending": {
-    "title": "Workspace wird eingerichtet",
-    "description": "Unser Team konfiguriert gerade Ihr Abonnement. Sie erhalten eine E-Mail, sobald Ihr Workspace bereit ist.",
+    "title": "Bereich wird eingerichtet",
+    "description": "Unser Team konfiguriert gerade Ihr Abonnement. Sie erhalten eine E-Mail, sobald Ihr Bereich bereit ist.",
     "inProgress": "In Bearbeitung",
     "questionsHint": "Fragen? Kontaktieren Sie unser Support-Team",
     "viewInvoice": "Rechnung ansehen →",
     "payInvoice": "Rechnung jetzt bezahlen →",
-    "invoicePending": "Ihre Rechnung ist bereit. Bitte bezahlen Sie, um Ihren Workspace zu aktivieren.",
+    "invoicePending": "Ihre Rechnung ist bereit. Bitte bezahlen Sie, um Ihren Bereich zu aktivieren.",
     "paymentOverdue": "Zahlung überfällig",
     "paymentOverdueHint": "Bitte prüfen Sie Ihren Posteingang auf eine Rechnung von Stripe, oder nutzen Sie den unten stehenden Link zur direkten Zahlung.",
     "invoiceSent": "Rechnung gesendet – Zahlung ausstehend",
-    "invoiceSentHint": "Wir haben Ihnen eine Rechnung per E-Mail gesendet. Bezahlen Sie diese, um Ihren Workspace zu aktivieren.",
+    "invoiceSentHint": "Wir haben Ihnen eine Rechnung per E-Mail gesendet. Bezahlen Sie diese, um Ihren Bereich zu aktivieren.",
     "needHelp": "Hilfe benötigt?",
     "teamLabel": "Team",
-    "workspaceLabel": "Workspace",
+    "workspaceLabel": "Bereich",
     "featuresLabel": "Funktionen"
   },
   "billing": {
-    "unpaidBanner": "Unbezahlte Rechnung — bitte bezahlen Sie bis {{date}}, sonst wird Ihr Workspace gesperrt.",
+    "unpaidBanner": "Unbezahlte Rechnung — bitte bezahlen Sie bis {{date}}, sonst wird Ihr Bereich gesperrt.",
     "payNow": "Jetzt bezahlen →"
   },
   "errors": {
@@ -644,23 +644,23 @@
   "analytics": {
     "metaTitle": "Analyse - Repraesent",
     "metaDescription": "Analyse-Dashboard",
-    "notEnabled": "Analysedienst ist für diesen Workspace nicht aktiviert.",
+    "notEnabled": "Analysedienst ist für diesen Bereich nicht aktiviert.",
     "notConfigured": "Analyse ist noch nicht konfiguriert. Bitte wenden Sie sich an Ihren Administrator.",
     "loading": "Analyse wird geladen...",
     "iframeTitle": "Analyse"
   },
   "closed": {
-    "metaTitle": "Workspace geschlossen - Repraesent",
-    "metaDescription": "Ihr Workspace wurde geschlossen",
-    "title": "Workspace geschlossen",
-    "description": "Ihr Workspace wurde geschlossen. Falls Sie glauben, dass dies ein Fehler ist, oder Sie ihn reaktivieren möchten, wenden Sie sich bitte an unser Support-Team.",
+    "metaTitle": "Bereich geschlossen - Repraesent",
+    "metaDescription": "Ihr Bereich wurde geschlossen",
+    "title": "Bereich geschlossen",
+    "description": "Ihr Bereich wurde geschlossen. Falls Sie glauben, dass dies ein Fehler ist, oder Sie ihn reaktivieren möchten, wenden Sie sich bitte an unser Support-Team.",
     "contactSupport": "Support kontaktieren →"
   },
   "noWorkspace": {
-    "metaTitle": "Kein Workspace - Repraesent",
-    "metaDescription": "Ihr Konto ist mit keinem Workspace verbunden",
-    "title": "Kein Workspace gefunden",
-    "description": "Ihr Konto ist noch mit keinem Workspace verbunden. Wenden Sie sich an Ihren Workspace-Besitzer oder unser Support-Team.",
+    "metaTitle": "Kein Bereich - Repraesent",
+    "metaDescription": "Ihr Konto ist mit keinem Bereich verbunden",
+    "title": "Kein Bereich gefunden",
+    "description": "Ihr Konto ist noch mit keinem Bereich verbunden. Wenden Sie sich an Ihren Bereich-Inhaber oder unser Support-Team.",
     "needHelp": "Hilfe benötigt?",
     "signOut": "Abmelden",
     "signingOut": "Wird abgemeldet…"
@@ -770,14 +770,14 @@
     "titleSuffix": " - Repraesent"
   },
   "statusPage": {
-    "switchWorkspace": "Workspace wechseln",
+    "switchWorkspace": "Bereich wechseln",
     "signOut": "Abmelden",
     "signingOut": "Wird abgemeldet…",
     "logoAlt": "Repraesent"
   },
   "switchWorkspace": {
-    "title": "Workspace wechseln",
-    "description": "Wählen Sie einen Workspace zum Wechseln."
+    "title": "Bereich wechseln",
+    "description": "Wählen Sie einen Bereich zum Wechseln."
   },
   "instructions": {
     "title": "Anleitung"
@@ -846,7 +846,7 @@
   },
   "leadFallback": {
     "title": "Lead-Fallback-E-Mails",
-    "subtitle": "Senden Sie automatisch eine E-Mail an neue Leads über Ihre Workspace-SMTP-Konfiguration",
+    "subtitle": "Senden Sie automatisch eine E-Mail an neue Leads über Ihre Bereich-SMTP-Konfiguration",
     "backToLeads": "Zurück zu Leads",
     "infoBanner": "Fallback-E-Mails werden automatisch gesendet, wenn ein neuer Lead erstellt wird. Der Lead muss eine E-Mail-Adresse haben und die Konfiguration muss aktiviert sein.",
     "enabled": "Aktiv",

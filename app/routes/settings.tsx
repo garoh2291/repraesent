@@ -52,7 +52,7 @@ import { cn } from "~/lib/utils";
 export function meta() {
   return [
     { title: "Settings - Repraesent" },
-    { name: "description", content: "Workspace settings" },
+    { name: "description", content: "Area settings" },
   ];
 }
 

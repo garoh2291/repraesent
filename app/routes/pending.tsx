@@ -15,7 +15,7 @@ import { StatusPageHeader } from "~/components/status-page-header";
 export function meta() {
   return [
     { title: "Setting up - Repraesent" },
-    { name: "description", content: "Your workspace is being set up" },
+    { name: "description", content: "Your area is being set up" },
   ];
 }
 

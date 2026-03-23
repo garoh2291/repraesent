@@ -108,11 +108,11 @@
       "redirecting": "Redirecting you now..."
     },
     "workspacePicker": {
-      "title": "Choose your workspace",
-      "subtitle": "You have access to {{count}} workspace. Select one to continue.",
-      "subtitle_other": "You have access to {{count}} workspaces. Select one to continue.",
-      "noWorkspaces": "No workspace found",
-      "clickToEnter": "Click to enter workspace"
+      "title": "Choose your area",
+      "subtitle": "You have access to {{count}} area. Select one to continue.",
+      "subtitle_other": "You have access to {{count}} areas. Select one to continue.",
+      "noWorkspaces": "No area found",
+      "clickToEnter": "Click to enter area"
     }
   },
   "home": {
@@ -131,7 +131,7 @@
     "tooltipLead_one": "{{count}} lead",
     "tooltipLead_other": "{{count}} leads",
     "account": "Account",
-    "workspace": "Workspace",
+    "workspace": "Area",
     "role": "Role",
     "myTasks": "Today's Action Items",
     "myTasksOpen": "due today",
@@ -139,7 +139,7 @@
     "viewAllTasks": "View all tasks",
     "moreTasks": "more tasks",
     "products": "Products",
-    "productsHint": "Products attached to this workspace",
+    "productsHint": "Products attached to this area",
     "noProducts": "No products attached yet. Contact support@repraesent.com to get started.",
     "openSection": "Open section",
     "notAvailable": "Not available"
@@ -370,15 +370,15 @@
   "settings": {
     "title": "Settings",
     "workspace": {
-      "title": "Workspace settings",
-      "name": "Workspace name",
-      "language": "Workspace language",
-      "languageHint": "This language is used for emails sent to all workspace members.",
+      "title": "Area settings",
+      "name": "Area name",
+      "language": "Area language",
+      "languageHint": "This language is used for emails sent to all area members.",
       "languageEn": "English",
       "languageDe": "German",
       "saveSuccess": "Settings saved",
       "saveFailed": "Failed to save settings",
-      "urlLabel": "Workspace URL",
+      "urlLabel": "Area URL",
       "urlTooltip": "To change the URL, contact support@repraesent.com"
     },
     "products": {
@@ -393,7 +393,7 @@
       "headerRole": "Role",
       "headerLeadAlerts": "Lead alerts",
       "youBadge": "you",
-      "noMembers": "No members in this workspace.",
+      "noMembers": "No members in this area.",
       "role": "Role",
       "roles": {
         "admin": "Admin",
@@ -404,7 +404,7 @@
       "removeMember": "Remove member",
       "confirmRemove": "Are you sure you want to remove this member?",
       "removeTitle": "Remove member?",
-      "removeDescription": "This will remove {{name}} from the workspace. This action cannot be undone.",
+      "removeDescription": "This will remove {{name}} from the area. This action cannot be undone.",
       "removing": "Removing…",
       "memberRemoved": "Member removed",
       "inviteMember": "Invite member",
@@ -416,7 +416,7 @@
     },
     "language": {
       "title": "My language",
-      "hint": "This setting applies to you personally and overrides the workspace language.",
+      "hint": "This setting applies to you personally and overrides the area language.",
       "en": "English",
       "de": "Deutsch"
     },
@@ -501,29 +501,29 @@
   "onboarding": {
     "steps": {
       "profile": "Profile",
-      "workspace": "Workspace",
+      "workspace": "Area",
       "billing": "Billing",
       "products": "Products"
     },
     "workspace": {
-      "metaTitle": "Create workspace - Repraesent",
-      "metaDescription": "Create your workspace",
-      "title": "Create your workspace",
-      "yourWorkspace": "Your workspace",
-      "nameLabel": "Workspace name",
-      "namePlaceholder": "My Workspace",
+      "metaTitle": "Create area - Repraesent",
+      "metaDescription": "Create your area",
+      "title": "Create your area",
+      "yourWorkspace": "Your area",
+      "nameLabel": "Area name",
+      "namePlaceholder": "My Area",
       "namePlaceholderCreate": "Acme Corp",
       "websiteUrl": "Website URL",
       "urlPlaceholder": "https://acme.com",
       "inviteMembers": "Invite members",
       "memberPlaceholder": "member@example.com",
       "optional": "(optional)",
-      "updateSubtitle": "Update your workspace details below.",
-      "createSubtitle": "Set up your workspace and optionally invite team members.",
-      "nameRequired": "Workspace name is required",
+      "updateSubtitle": "Update your area details below.",
+      "createSubtitle": "Set up your area and optionally invite team members.",
+      "nameRequired": "Area name is required",
       "urlRequired": "Website URL is required",
       "urlInvalid": "Please enter a valid URL",
-      "urlTaken": "This URL is already linked to another workspace. If you're part of that team, ask them to add you. Otherwise contact support."
+      "urlTaken": "This URL is already linked to another area. If you're part of that team, ask them to add you. Otherwise contact support."
     },
     "profile": {
       "metaTitle": "Your profile - Repraesent",
@@ -569,7 +569,7 @@
       "cityRequired": "City is required",
       "countryRequired": "Country is required",
       "postalCodeRequired": "Postal code is required",
-      "noWorkspaceSelected": "No workspace selected",
+      "noWorkspaceSelected": "No area selected",
       "placeholderFullName": "John Doe",
       "placeholderEmail": "billing@company.com",
       "placeholderCompany": "Acme Inc.",
@@ -602,7 +602,7 @@
       "perYearShort": "yr",
       "notAvailable": "Not available for this billing period",
       "selected": "Selected:",
-      "noWorkspaceSelected": "No workspace selected",
+      "noWorkspaceSelected": "No area selected",
       "selectAtLeastOne": "Please select at least one product",
       "ariaPrevious": "Previous",
       "ariaNext": "Next",
@@ -610,24 +610,24 @@
     }
   },
   "pending": {
-    "title": "Setting up your workspace",
-    "description": "Our team is configuring your subscription. You'll receive an email once your workspace is ready.",
+    "title": "Setting up your area",
+    "description": "Our team is configuring your subscription. You'll receive an email once your area is ready.",
     "inProgress": "In progress",
     "questionsHint": "Questions? Reach out to our support team",
     "viewInvoice": "View invoice →",
     "payInvoice": "Pay invoice now →",
-    "invoicePending": "Your invoice is ready. Please pay to activate your workspace.",
+    "invoicePending": "Your invoice is ready. Please pay to activate your area.",
     "paymentOverdue": "Payment overdue",
     "paymentOverdueHint": "Please check your inbox for an invoice from Stripe, or use the link below to pay directly.",
     "invoiceSent": "Invoice sent — awaiting your payment",
-    "invoiceSentHint": "We sent you an invoice by email. Pay it to activate your workspace and get started.",
+    "invoiceSentHint": "We sent you an invoice by email. Pay it to activate your area and get started.",
     "needHelp": "Need help?",
     "teamLabel": "Team",
-    "workspaceLabel": "Workspace",
+    "workspaceLabel": "Area",
     "featuresLabel": "Features"
   },
   "billing": {
-    "unpaidBanner": "Unpaid invoice — pay by {{date}} or your workspace will be suspended.",
+    "unpaidBanner": "Unpaid invoice — pay by {{date}} or your area will be suspended.",
     "payNow": "Pay now →"
   },
   "errors": {
@@ -644,23 +644,23 @@
   "analytics": {
     "metaTitle": "Analytics - Repraesent",
     "metaDescription": "Analytics dashboard",
-    "notEnabled": "Analytics service is not enabled for this workspace.",
+    "notEnabled": "Analytics service is not enabled for this area.",
     "notConfigured": "Analytics is not configured yet. Please contact your administrator.",
     "loading": "Loading analytics...",
     "iframeTitle": "Analytics"
   },
   "closed": {
-    "metaTitle": "Workspace closed - Repraesent",
-    "metaDescription": "Your workspace has been closed",
-    "title": "Workspace closed",
-    "description": "Your workspace has been closed. If you believe this is an error or would like to reactivate, please reach out to our support team.",
+    "metaTitle": "Area closed - Repraesent",
+    "metaDescription": "Your area has been closed",
+    "title": "Area closed",
+    "description": "Your area has been closed. If you believe this is an error or would like to reactivate, please reach out to our support team.",
     "contactSupport": "Contact support →"
   },
   "noWorkspace": {
-    "metaTitle": "No Workspace - Repraesent",
-    "metaDescription": "Your account is not connected to any workspace",
-    "title": "No workspace found",
-    "description": "Your account isn't connected to any workspace yet. Reach out to your workspace owner or our support team for access.",
+    "metaTitle": "No Area - Repraesent",
+    "metaDescription": "Your account is not connected to any area",
+    "title": "No area found",
+    "description": "Your account isn't connected to any area yet. Reach out to your area owner or our support team for access.",
     "needHelp": "Need help?",
     "signOut": "Sign out",
     "signingOut": "Signing out…"
@@ -770,14 +770,14 @@
     "titleSuffix": " - Repraesent"
   },
   "statusPage": {
-    "switchWorkspace": "Switch workspace",
+    "switchWorkspace": "Switch area",
     "signOut": "Sign out",
     "signingOut": "Signing out…",
     "logoAlt": "Repraesent"
   },
   "switchWorkspace": {
-    "title": "Switch workspace",
-    "description": "Choose a workspace to switch to."
+    "title": "Switch area",
+    "description": "Choose an area to switch to."
   },
   "instructions": {
     "title": "Instructions"
@@ -846,9 +846,9 @@
   },
   "leadFallback": {
     "title": "Lead Fallback Emails",
-    "subtitle": "Automatically send a custom email to new leads using your workspace SMTP configuration",
+    "subtitle": "Automatically send a custom email to new leads using your area SMTP configuration",
     "backToLeads": "Back to Leads",
-    "infoBanner": "Fallback emails are sent automatically when a new lead is created. The lead must have an email address and the configuration must be enabled. Emails are sent via your workspace email configuration.",
+    "infoBanner": "Fallback emails are sent automatically when a new lead is created. The lead must have an email address and the configuration must be enabled. Emails are sent via your area email configuration.",
     "enabled": "Enabled",
     "disabled": "Disabled",
     "subjectLine": "Subject line",

@@ -7,8 +7,8 @@ import logoUrl from "~/components/icons/re_praesent-mark-brand-hor.svg?url";
 
 export function meta() {
   return [
-    { title: "Choose workspace - Repraesent" },
-    { name: "description", content: "Select a workspace to continue" },
+    { title: "Choose area - Repraesent" },
+    { name: "description", content: "Select an area to continue" },
   ];
 }
 

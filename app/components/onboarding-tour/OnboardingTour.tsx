@@ -99,14 +99,14 @@ const STEP_CONTENT: Record<"en" | "de", StepContent[]> = {
       title: "You're in.",
       subtitle: "Let's get you started in 2 minutes.",
       description:
-        "Repraesent is your all-in-one workspace for managing leads, booking appointments, and growing your business. This quick tour shows you everything you need to hit the ground running.",
+        "Repraesent is your all-in-one area for managing leads, booking appointments, and growing your business. This quick tour shows you everything you need to hit the ground running.",
     },
     {
       badge: "01 — Dashboard",
       title: "Your Mission\nControl Center",
       subtitle: "Everything at a glance.",
       description:
-        "The dashboard gives you a real-time pulse on your business. Track today's tasks, monitor lead activity over time, and jump straight into any workspace service from one clean screen.",
+        "The dashboard gives you a real-time pulse on your business. Track today's tasks, monitor lead activity over time, and jump straight into any area service from one clean screen.",
     },
     {
       badge: "02 — Leads",
@@ -160,9 +160,9 @@ const STEP_CONTENT: Record<"en" | "de", StepContent[]> = {
     {
       badge: "08 — Settings",
       title: "Make It\nCompletely Yours",
-      subtitle: "Your workspace, your rules.",
+      subtitle: "Your area, your rules.",
       description:
-        "Customize your workspace name, manage team members and their roles, and fine-tune your public booking page. Every detail can be tailored to match your brand and workflow.",
+        "Customize your area name, manage team members and their roles, and fine-tune your public booking page. Every detail can be tailored to match your brand and workflow.",
     },
   ],
   de: [
@@ -171,14 +171,14 @@ const STEP_CONTENT: Record<"en" | "de", StepContent[]> = {
       title: "Du bist dabei.",
       subtitle: "Starte in 2 Minuten durch.",
       description:
-        "Repraesent ist dein All-in-One-Workspace für Lead-Management, Terminbuchungen und Unternehmenswachstum. Diese kurze Tour zeigt dir alles, was du für einen erfolgreichen Start brauchst.",
+        "Repraesent ist dein All-in-One-Bereich für Lead-Management, Terminbuchungen und Unternehmenswachstum. Diese kurze Tour zeigt dir alles, was du für einen erfolgreichen Start brauchst.",
     },
     {
       badge: "01 — Dashboard",
       title: "Dein persönliches\nKontrollzentrum",
       subtitle: "Alles auf einen Blick.",
       description:
-        "Das Dashboard zeigt dir in Echtzeit den Puls deines Unternehmens. Verfolge heutige Aufgaben, beobachte Lead-Aktivitäten im Zeitverlauf und springe direkt in jeden Workspace-Dienst.",
+        "Das Dashboard zeigt dir in Echtzeit den Puls deines Unternehmens. Verfolge heutige Aufgaben, beobachte Lead-Aktivitäten im Zeitverlauf und springe direkt in jeden Bereich-Dienst.",
     },
     {
       badge: "02 — Leads",
@@ -232,9 +232,9 @@ const STEP_CONTENT: Record<"en" | "de", StepContent[]> = {
     {
       badge: "08 — Einstellungen",
       title: "Mach es ganz\nzu deinem",
-      subtitle: "Dein Workspace, deine Regeln.",
+      subtitle: "Dein Bereich, deine Regeln.",
       description:
-        "Passe deinen Workspace-Namen an, verwalte Teammitglieder und deren Rollen und konfiguriere deine öffentliche Buchungsseite. Jedes Detail lässt sich an deine Marke und deinen Workflow anpassen.",
+        "Passe deinen Bereich-Namen an, verwalte Teammitglieder und deren Rollen und konfiguriere deine öffentliche Buchungsseite. Jedes Detail lässt sich an deine Marke und deinen Workflow anpassen.",
     },
   ],
 };
