@@ -15,7 +15,6 @@ import {
   type LeadFallbackSourceConfig,
 } from "~/lib/api/workspaces";
 import {
-  ArrowLeft,
   Mail,
   Globe,
   CalendarDays,
@@ -30,11 +29,12 @@ import {
 } from "lucide-react";
 import { cn } from "~/lib/utils";
 import TooltipContainer from "~/components/tooltip-container";
+import { EmailTabs } from "~/components/email-tabs";
 
 export function meta() {
   return [
-    { title: "Lead Fallback — Repraesent" },
-    { name: "description", content: "Configure lead fallback emails" },
+    { title: "Confirmation Email — Repraesent" },
+    { name: "description", content: "Configure confirmation emails for new leads" },
   ];
 }
 
@@ -446,7 +446,7 @@ export default function LeadFallbackPage() {
 
   useEffect(() => {
     if (currentWorkspace && (!hasLeadForm || !hasEmailConfig)) {
-      navigate("/lead-form", { replace: true });
+      navigate("/email", { replace: true });
     }
   }, [currentWorkspace, hasLeadForm, hasEmailConfig, navigate]);
 
@@ -590,31 +590,25 @@ export default function LeadFallbackPage() {
     <div className="app-fade-in flex flex-col min-h-[calc(100vh-8rem)] p-4 sm:p-6 gap-0">
       {/* ── Page header ── */}
       <div className="shrink-0 pb-5">
-        <button
-          type="button"
-          onClick={() => navigate("/lead-form")}
-          className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors mb-4"
-        >
-          <ArrowLeft className="h-3.5 w-3.5" />
-          {t("leadFallback.backToLeads")}
-        </button>
-
-        <div className="flex items-center gap-3">
-          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-foreground text-background">
-            <Mail className="h-4 w-4" />
-          </div>
-          <div>
-            <h1 className="text-xl font-semibold text-foreground tracking-tight leading-none">
-              {t("leadFallback.title")}
-            </h1>
-            <p className="text-xs text-muted-foreground mt-1">
-              {t("leadFallback.subtitle")}
-            </p>
+        <div className="app-fade-up flex items-start justify-between gap-4 pb-4">
+          <div className="flex items-center gap-3">
+            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-amber-400/10">
+              <Mail className="h-5 w-5 text-amber-400" />
+            </div>
+            <div>
+              <h1 className="text-xl sm:text-2xl font-semibold text-foreground tracking-tight">
+                {t("email.tabConfirmation")}
+              </h1>
+              <p className="text-sm text-muted-foreground mt-0.5">
+                {t("leadFallback.subtitle")}
+              </p>
+            </div>
           </div>
         </div>
+        <EmailTabs />
       </div>
 
-      <div className="border-t border-border mb-5 shrink-0" />
+      <div className="h-1 shrink-0" />
 
       {isLoading ? (
         <div className="flex flex-1 items-center justify-center">

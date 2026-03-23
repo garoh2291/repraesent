@@ -19,7 +19,7 @@ import { useLeadsViewMode } from "~/lib/hooks/useLocalStorage";
 import { useCanEditLeads } from "~/lib/hooks/useCanEditLeads";
 import { useUpdateLeadStatus } from "~/lib/hooks/useUpdateLeadStatus";
 import { format } from "date-fns";
-import { ArrowRight, LayoutGrid, Table2, Upload, X, Mail } from "lucide-react";
+import { ArrowRight, LayoutGrid, Table2, Upload, X } from "lucide-react";
 import { cn } from "~/lib/utils";
 import { LeadImportModal } from "~/components/organism/lead-import-modal";
 
@@ -162,15 +162,6 @@ export default function LeadForm() {
     currentWorkspace?.services?.some((s) => s.service_type === "lead-form") ??
     false;
 
-  const hasEmailConfigService =
-    currentWorkspace?.services?.some(
-      (s) => s.service_type === "email-config" || s.service_slug === "email-config"
-    ) ?? false;
-
-  const fallbackButtonTooltip = !hasEmailConfigService
-    ? "Email Contact service not activated. Contact our support team to order this service."
-    : undefined;
-
   if (!hasAccess) {
     return null;
   }
@@ -295,37 +286,6 @@ export default function LeadForm() {
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
-          <TooltipContainer
-            tooltipContent={fallbackButtonTooltip ?? ""}
-            showCopyButton={false}
-            side="bottom"
-            delayDuration={200}
-            disableTooltip={!fallbackButtonTooltip}
-          >
-            {!hasEmailConfigService ? (
-              <div className="cursor-not-allowed inline-flex">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  disabled
-                  className="h-9 gap-1.5 text-xs pointer-events-none opacity-50"
-                >
-                  <Mail className="h-3.5 w-3.5" />
-                  {t("leads.leadFallback")}
-                </Button>
-              </div>
-            ) : (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => navigate("/lead-form/fallback")}
-                className="h-9 gap-1.5 text-xs"
-              >
-                <Mail className="h-3.5 w-3.5" />
-                {t("leads.leadFallback")}
-              </Button>
-            )}
-          </TooltipContainer>
           {canEdit && (
             <Button
               variant="outline"

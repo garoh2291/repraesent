@@ -19,6 +19,7 @@ import {
   getServiceConfig,
   decryptEmailConfigPassword,
 } from "~/lib/api/workspaces";
+import { EmailTabs } from "~/components/email-tabs";
 
 export function meta() {
   return [
@@ -311,7 +312,7 @@ export default function Emails() {
           </div>
         </div>
 
-        <div className="border-t border-border" />
+        <EmailTabs />
 
         {/* Not configured */}
         {!isConfigured && !isPending ? (

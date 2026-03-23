@@ -793,6 +793,8 @@
     "metaDescription": "Email configuration guide",
     "pageTitle": "Email Setup",
     "pageSubtitle": "Step-by-step guide for configuring your email account",
+    "tabConfig": "Email Setup",
+    "tabConfirmation": "Confirmation Email",
     "notConfigured": "Email not configured yet",
     "notConfiguredDesc": "Contact your administrator to set up the email configuration.",
     "credentialsTitle": "Account Credentials",

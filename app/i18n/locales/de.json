@@ -793,6 +793,8 @@
     "metaDescription": "E-Mail-Konfigurationsanleitung",
     "pageTitle": "E-Mail Einrichtung",
     "pageSubtitle": "Schritt-für-Schritt-Anleitung zur Konfiguration Ihres E-Mail-Kontos",
+    "tabConfig": "E-Mail-Einrichtung",
+    "tabConfirmation": "Bestätigungs-E-Mail",
     "notConfigured": "E-Mail noch nicht konfiguriert",
     "notConfiguredDesc": "Bitte wenden Sie sich an Ihren Administrator, um die E-Mail-Konfiguration einzurichten.",
     "credentialsTitle": "Ihre E-Mail-Zugangsdaten",
