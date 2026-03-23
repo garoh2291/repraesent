@@ -45,6 +45,14 @@
     "logout": "Log out"
   },
   "auth": {
+    "carousel": {
+      "item1": "Capture leads — effortlessly",
+      "item2": "Book appointments — instantly",
+      "item3": "Track your pipeline — in real time",
+      "item4": "Impress every client — every time",
+      "item5": "Close more deals — faster",
+      "tagline": "The platform for modern sales teams"
+    },
     "login": {
       "title": "Sign in",
       "subtitle": "Enter your email to receive a sign-in link",

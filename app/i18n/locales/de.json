@@ -45,6 +45,14 @@
     "subscriptions": "Abonnements"
   },
   "auth": {
+    "carousel": {
+      "item1": "Leads erfassen — mühelos",
+      "item2": "Termine buchen — sofort",
+      "item3": "Pipeline verfolgen — in Echtzeit",
+      "item4": "Jeden Kunden beeindrucken — jedes Mal",
+      "item5": "Mehr Deals abschließen — schneller",
+      "tagline": "Die Plattform für moderne Vertriebsteams"
+    },
     "login": {
       "title": "Anmelden",
       "subtitle": "Geben Sie Ihre E-Mail-Adresse ein, um einen Anmelde-Link zu erhalten",

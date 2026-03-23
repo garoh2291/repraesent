@@ -291,6 +291,33 @@ export function Sidebar({ onClose, className }: { onClose?: () => void; classNam
           <LogOut className="h-4 w-4 shrink-0" />
           {isLoggingOut ? t("common.loading") : t("nav.logout")}
         </button>
+
+        {/* Legal links */}
+        {(() => {
+          const isEn = i18n.language === "en";
+          const base = isEn ? "https://repraesent.com/en" : "https://repraesent.com";
+          return (
+            <div className="flex items-center gap-3 px-3 pt-1">
+              <a
+                href={`${base}/privacy.html`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-[10px] text-white/20 hover:text-white/45 transition-colors"
+              >
+                {isEn ? "Privacy" : "Datenschutz"}
+              </a>
+              <span className="text-white/10 text-[10px]">·</span>
+              <a
+                href={`${base}/impressum.html`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-[10px] text-white/20 hover:text-white/45 transition-colors"
+              >
+                Impressum
+              </a>
+            </div>
+          );
+        })()}
       </div>
 
       {/* Instructions modal */}

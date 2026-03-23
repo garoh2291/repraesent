@@ -28,7 +28,8 @@ export default function DashboardLayout() {
   // Sync i18n and cookie from user's DB locale (source of truth for logged-in users)
   useEffect(() => {
     if (!user?.locale) return;
-    const locale = user.locale === "en" || user.locale === "de" ? user.locale : "de";
+    const locale =
+      user.locale === "en" || user.locale === "de" ? user.locale : "de";
     i18n.changeLanguage(locale);
     const maxAge = 60 * 60 * 24 * 365;
     document.cookie = `personal_lang=${locale}; path=/; max-age=${maxAge}; samesite=lax`;
@@ -68,7 +69,7 @@ export default function DashboardLayout() {
         <SheetContent
           side="left"
           showCloseButton={false}
-          className="p-0 w-[260px] bg-[#111113] border-r border-white/5 gap-0"
+          className="p-0 w-[220px] bg-[#111113] border-r border-white/5 gap-0"
         >
           <Sidebar onClose={() => setMobileNavOpen(false)} />
         </SheetContent>
@@ -101,7 +102,7 @@ export default function DashboardLayout() {
               <p className="text-sm font-medium text-amber-900">
                 {t("billing.unpaidBanner", {
                   date: formatDueDate(
-                    currentWorkspace!.unpaid_invoice_due_date!,
+                    currentWorkspace!.unpaid_invoice_due_date!
                   ),
                 })}
               </p>

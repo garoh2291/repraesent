@@ -5,6 +5,7 @@ import { Input } from "~/components/ui/input";
 import { register } from "~/lib/api/auth";
 
 import logoUrl from "~/components/icons/re_praesent-mark-brand-hor.svg?url";
+import { LegalFooter } from "~/components/molecule/legal-footer";
 
 export function meta() {
   return [
@@ -46,9 +47,7 @@ export default function Register() {
       setSuccess(true);
     } catch (err) {
       setError(
-        err instanceof Error
-          ? err.message
-          : t("auth.register.somethingWrong")
+        err instanceof Error ? err.message : t("auth.register.somethingWrong")
       );
     } finally {
       setIsSubmitting(false);
@@ -141,104 +140,109 @@ export default function Register() {
       </div>
 
       {/* Right form panel */}
-      <div className="flex-1 flex items-center justify-center bg-stone-50 p-4 sm:p-8">
-        <div className="w-full max-w-sm space-y-8 app-fade-up">
-          {/* Mobile logo */}
-          <div className="lg:hidden flex items-center">
-            <img
-              src={logoUrl}
-              alt="Repraesent"
-              className="h-7 w-auto max-w-[120px]"
-            />
-          </div>
+      <div className="flex-1 flex flex-col bg-stone-50">
+        <div className="flex-1 flex items-center justify-center p-4 sm:p-8">
+          <div className="w-full max-w-sm space-y-8 app-fade-up">
+            {/* Mobile logo */}
+            <div className="lg:hidden flex items-center">
+              <img
+                src={logoUrl}
+                alt="Repraesent"
+                className="h-7 w-auto max-w-[120px]"
+              />
+            </div>
 
-          <div className="space-y-1">
-            <h1 className="text-2xl font-semibold text-foreground tracking-tight">
-              {t("auth.register.title")}
-            </h1>
-            <p className="text-sm text-muted-foreground">
-              {t("auth.register.subtitle")}
-            </p>
-          </div>
-
-          {success ? (
-            <div className="space-y-5 app-fade-up">
-              <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-4 text-sm text-emerald-800 leading-relaxed">
-                <p className="font-medium">{t("auth.login.checkInbox")}</p>
-                <p className="text-emerald-700/80 mt-0.5">
-                  {t("auth.register.checkInboxDetail", { email })}
-                </p>
-              </div>
-              <p className="text-sm text-muted-foreground text-center">
-                {t("auth.login.didntReceive")}{" "}
-                <button
-                  type="button"
-                  className="text-primary font-medium hover:underline"
-                  onClick={() => setSuccess(false)}
-                >
-                  {t("auth.login.tryAgain")}
-                </button>
+            <div className="space-y-1">
+              <h1 className="text-2xl font-semibold text-foreground tracking-tight">
+                {t("auth.register.title")}
+              </h1>
+              <p className="text-sm text-muted-foreground">
+                {t("auth.register.subtitle")}
               </p>
             </div>
-          ) : (
-            <form
-              onSubmit={handleSubmit}
-              className="space-y-5 app-fade-up app-fade-up-d1"
-            >
-              {error && (
-                <div className="rounded-lg border border-destructive/20 bg-destructive/6 px-4 py-3 text-sm text-destructive">
-                  {error}
+
+            {success ? (
+              <div className="space-y-5 app-fade-up">
+                <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-4 text-sm text-emerald-800 leading-relaxed">
+                  <p className="font-medium">{t("auth.login.checkInbox")}</p>
+                  <p className="text-emerald-700/80 mt-0.5">
+                    {t("auth.register.checkInboxDetail", { email })}
+                  </p>
                 </div>
-              )}
-
-              <div className="space-y-1.5">
-                <label
-                  htmlFor="email"
-                  className="block text-[11px] font-semibold uppercase tracking-widest text-muted-foreground"
-                >
-                  {t("auth.login.emailLabel")}
-                </label>
-                <Input
-                  id="email"
-                  type="email"
-                  placeholder={t("auth.login.emailPlaceholder")}
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  disabled={isSubmitting}
-                  required
-                  autoComplete="email"
-                  autoFocus
-                  className="h-11 border-stone-200 bg-white focus-visible:ring-1 focus-visible:ring-foreground/25 transition-shadow"
-                />
+                <p className="text-sm text-muted-foreground text-center">
+                  {t("auth.login.didntReceive")}{" "}
+                  <button
+                    type="button"
+                    className="text-primary font-medium hover:underline"
+                    onClick={() => setSuccess(false)}
+                  >
+                    {t("auth.login.tryAgain")}
+                  </button>
+                </p>
               </div>
-
-              <button
-                type="submit"
-                disabled={isSubmitting}
-                className="w-full h-11 rounded-lg bg-foreground text-background text-sm font-medium transition-all duration-150 hover:opacity-90 disabled:opacity-50 flex items-center justify-center gap-2"
+            ) : (
+              <form
+                onSubmit={handleSubmit}
+                className="space-y-5 app-fade-up app-fade-up-d1"
               >
-                {isSubmitting ? (
-                  <>
-                    <div className="h-4 w-4 app-spin rounded-full border-2 border-background/30 border-t-background" />
-                    {t("auth.register.submittingButton")}
-                  </>
-                ) : (
-                  t("auth.register.submitButton")
+                {error && (
+                  <div className="rounded-lg border border-destructive/20 bg-destructive/6 px-4 py-3 text-sm text-destructive">
+                    {error}
+                  </div>
                 )}
-              </button>
 
-              <p className="text-center text-sm text-muted-foreground">
-                {t("auth.register.hasAccount")}{" "}
-                <Link
-                  to="/login"
-                  className="text-primary font-medium hover:underline"
+                <div className="space-y-1.5">
+                  <label
+                    htmlFor="email"
+                    className="block text-[11px] font-semibold uppercase tracking-widest text-muted-foreground"
+                  >
+                    {t("auth.login.emailLabel")}
+                  </label>
+                  <Input
+                    id="email"
+                    type="email"
+                    placeholder={t("auth.login.emailPlaceholder")}
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    disabled={isSubmitting}
+                    required
+                    autoComplete="email"
+                    autoFocus
+                    className="h-11 border-stone-200 bg-white focus-visible:ring-1 focus-visible:ring-foreground/25 transition-shadow"
+                  />
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={isSubmitting}
+                  className="w-full h-11 rounded-lg bg-foreground text-background text-sm font-medium transition-all duration-150 hover:opacity-90 disabled:opacity-50 flex items-center justify-center gap-2"
                 >
-                  {t("auth.register.signIn")}
-                </Link>
-              </p>
-            </form>
-          )}
+                  {isSubmitting ? (
+                    <>
+                      <div className="h-4 w-4 app-spin rounded-full border-2 border-background/30 border-t-background" />
+                      {t("auth.register.submittingButton")}
+                    </>
+                  ) : (
+                    t("auth.register.submitButton")
+                  )}
+                </button>
+
+                <p className="text-center text-sm text-muted-foreground">
+                  {t("auth.register.hasAccount")}{" "}
+                  <Link
+                    to="/login"
+                    className="text-primary font-medium hover:underline"
+                  >
+                    {t("auth.register.signIn")}
+                  </Link>
+                </p>
+              </form>
+            )}
+          </div>
         </div>
+
+        {/* Legal links */}
+        <LegalFooter />
       </div>
     </div>
   );
