@@ -24,8 +24,6 @@ import { cn } from "~/lib/utils";
 
 const DAY_KEYS = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"] as const;
 
-const SLOT_OPTIONS = [15, 30, 45, 60];
-
 function ensureBreaksArray(v: unknown): BreakConfig[] {
   return Array.isArray(v) ? v : [];
 }
@@ -79,9 +77,6 @@ export function BusinessLogicTab({ config }: BusinessLogicTabProps) {
   const [workingHours, setWorkingHours] = useState<Record<string, WorkingHoursDay>>(
     () => providerSettings?.working_hours ?? config.working_hours ?? DEFAULT_WORKING_HOURS
   );
-  const [slotDuration, setSlotDuration] = useState(
-    providerSettings?.slot_duration_minutes ?? config.slot_duration_minutes ?? 30
-  );
   const [breaks, setBreaks] = useState<BreakConfig[]>(
     () => ensureBreaksArray(providerSettings?.breaks ?? config.breaks)
   );
@@ -89,7 +84,6 @@ export function BusinessLogicTab({ config }: BusinessLogicTabProps) {
   useEffect(() => {
     const wh = providerSettings?.working_hours ?? config.working_hours ?? DEFAULT_WORKING_HOURS;
     setWorkingHours(wh);
-    setSlotDuration(providerSettings?.slot_duration_minutes ?? config.slot_duration_minutes ?? 30);
     setBreaks(ensureBreaksArray(providerSettings?.breaks ?? config.breaks));
   }, [providerSettings, config]);
 
@@ -141,7 +135,6 @@ export function BusinessLogicTab({ config }: BusinessLogicTabProps) {
 
   function handleSave() {
     updateMutation.mutate({
-      slot_duration_minutes: slotDuration,
       working_hours: workingHours,
       breaks,
     });
@@ -207,25 +200,6 @@ export function BusinessLogicTab({ config }: BusinessLogicTabProps) {
           })}
         </div>
         </div>
-      </SectionPanel>
-
-      {/* Slot duration */}
-      <SectionPanel title={t("appointments.businessLogic.slotDuration")}>
-        <Select
-          value={String(slotDuration)}
-          onValueChange={(v) => setSlotDuration(Number(v))}
-        >
-          <SelectTrigger className="w-36 h-10 text-sm">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            {SLOT_OPTIONS.map((m) => (
-              <SelectItem key={m} value={String(m)}>
-                {t("appointments.businessLogic.minutesSuffix", { count: m })}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
       </SectionPanel>
 
       {/* Breaks */}

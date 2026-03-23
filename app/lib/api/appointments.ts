@@ -6,6 +6,13 @@ export type WorkingHoursDay = {
   end: string;
 };
 
+export type AppointmentService = {
+  id: string;
+  name: string;
+  duration_minutes: number;
+  description?: string;
+};
+
 export type BookingFieldConfig = {
   display: boolean;
   require: boolean;
@@ -26,8 +33,6 @@ export interface AppointmentConfig {
   slot_duration_minutes: number;
   working_hours?: Record<string, WorkingHoursDay> | null;
   company_name?: string;
-  company_email?: string;
-  company_link?: string;
   company_headline?: string | null;
   company_logo_url?: string | null;
   company_color?: string;
@@ -36,8 +41,11 @@ export interface AppointmentConfig {
   date_format?: string;
   time_format?: string;
   first_weekday?: string;
+  provider_name?: string | null;
+  provider_email?: string | null;
   booking_fields?: Record<string, BookingFieldConfig> | null;
   breaks?: BreakConfig[] | null;
+  services?: AppointmentService[] | null;
   created_at: string;
   updated_at: string;
 }
@@ -55,8 +63,6 @@ export interface UpdateAppointmentConfigDto {
   slot_duration_minutes?: number;
   working_hours?: Record<string, WorkingHoursDay>;
   company_name?: string;
-  company_email?: string;
-  company_link?: string;
   company_headline?: string;
   company_logo_url?: string;
   company_color?: string;
@@ -65,8 +71,11 @@ export interface UpdateAppointmentConfigDto {
   date_format?: string;
   time_format?: string;
   first_weekday?: string;
+  provider_name?: string;
+  provider_email?: string;
   booking_fields?: Record<string, BookingFieldConfig>;
   breaks?: BreakConfig[];
+  services?: AppointmentService[];
 }
 
 export interface PublicConfig {
@@ -84,7 +93,15 @@ export interface PublicConfig {
   timezone?: string;
   time_format?: string;
   first_weekday?: string;
+  provider_name?: string | null;
+  provider_email?: string | null;
   booking_fields?: Record<string, BookingFieldConfig> | null;
+  services?: AppointmentService[] | null;
+}
+
+export interface ProviderPublic {
+  id: string;
+  provider_name: string | null;
 }
 
 export interface CreateBookingDto {
@@ -101,6 +118,8 @@ export interface CreateBookingDto {
   city?: string;
   zip_code?: string;
   notes?: string;
+  service_id?: string;
+  service_name?: string;
 }
 
 export async function getAppointmentConfig(): Promise<AppointmentConfig | null> {
@@ -267,13 +286,23 @@ export async function getPublicConfig(
   return response.data ?? null;
 }
 
+export async function getWorkspaceProvidersPublic(
+  configId: string
+): Promise<ProviderPublic[]> {
+  const response = await apiClient.get<ProviderPublic[]>(
+    `/appointments/workspace-providers-public/${configId}`
+  );
+  return response.data ?? [];
+}
+
 export async function getAvailabilitiesPublic(
   configId: string,
-  date: string
+  date: string,
+  duration?: number
 ): Promise<string[]> {
   const response = await apiClient.get<string[]>(
     "/appointments/availabilities-public",
-    { params: { configId, date } }
+    { params: { configId, date, ...(duration ? { duration } : {}) } }
   );
   return response.data ?? [];
 }

@@ -9,6 +9,8 @@ import { CalendarTab } from "~/components/appointments/CalendarTab";
 import { GeneralSettingsTab } from "~/components/appointments/GeneralSettingsTab";
 import { BookingSettingsTab } from "~/components/appointments/BookingSettingsTab";
 import { BusinessLogicTab } from "~/components/appointments/BusinessLogicTab";
+import { ServicesTab } from "~/components/appointments/ServicesTab";
+import { ProviderTab } from "~/components/appointments/ProviderTab";
 import {
   Select,
   SelectContent,
@@ -140,6 +142,8 @@ function AppointmentsDashboard({
         <div className="overflow-x-auto scrollbar-hide -mx-4 sm:mx-0 px-4 sm:px-0">
           <TabsList variant="line" className="w-full mb-4 sm:mb-6 min-w-max sm:min-w-0">
             <TabsTrigger value="calendar">{t("appointments.tabCalendar")}</TabsTrigger>
+            <TabsTrigger value="services">{t("appointments.tabServices")}</TabsTrigger>
+            <TabsTrigger value="provider">{t("appointments.tabProvider")}</TabsTrigger>
             <TabsTrigger value="general">{t("appointments.tabGeneral")}</TabsTrigger>
             <TabsTrigger value="booking">{t("appointments.tabBooking")}</TabsTrigger>
             <TabsTrigger value="business">{t("appointments.tabBusinessHours")}</TabsTrigger>
@@ -148,6 +152,14 @@ function AppointmentsDashboard({
 
         <TabsContent value="calendar" className="space-y-4">
           <CalendarTab config={config} />
+        </TabsContent>
+
+        <TabsContent value="services">
+          <ServicesTab config={config} />
+        </TabsContent>
+
+        <TabsContent value="provider">
+          <ProviderTab config={config} />
         </TabsContent>
 
         <TabsContent value="general">

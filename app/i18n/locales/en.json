@@ -251,6 +251,8 @@
     "title": "Appointments",
     "manageHint": "Manage your calendar, booking page, and scheduling rules",
     "tabCalendar": "Calendar",
+    "tabServices": "Services",
+    "tabProvider": "Provider",
     "tabGeneral": "General",
     "tabBooking": "Booking form",
     "tabBusinessHours": "Working hours",
@@ -295,6 +297,7 @@
       "timeFormat24h": "24-hour",
       "timeFormat12h": "12-hour",
       "publicBookingLink": "Public booking link",
+      "iframeEmbed": "Embed code (iframe)",
       "linkCopied": "Link copied",
       "settingsSaved": "Settings saved",
       "logoUploaded": "Logo uploaded",
@@ -315,6 +318,27 @@
         "zip_code": "Zip Code",
         "notes": "Notes"
       }
+    },
+    "services": {
+      "title": "Bookable services",
+      "description": "Define the services customers can book. Each service has its own name, duration, and optional description.",
+      "name": "Service name",
+      "namePlaceholder": "e.g. Initial consultation",
+      "duration": "Duration",
+      "descriptionLabel": "Description",
+      "descriptionPlaceholder": "Describe what this service involves…",
+      "addService": "Add service",
+      "remove": "Remove service",
+      "saved": "Services saved"
+    },
+    "provider": {
+      "section": "Provider details",
+      "description": "This information appears on the public booking page. Changing it here won't affect your account details.",
+      "name": "Full name",
+      "namePlaceholder": "e.g. Jane Smith",
+      "email": "Contact email",
+      "emailPlaceholder": "e.g. jane@example.com",
+      "saved": "Provider details saved"
     },
     "businessLogic": {
       "workingPlan": "Working plan",
@@ -468,6 +492,11 @@
     "invalidLinkDesc": "Please check the URL and try again.",
     "bookingNotFound": "Booking not found",
     "bookingNotFoundDesc": "This appointment page doesn't exist.",
+    "chooseProvider": "Choose a provider",
+    "chooseProviderDesc": "Select the person you'd like to book with",
+    "unknownProvider": "Unknown provider",
+    "chooseService": "Choose a service",
+    "chooseServiceDesc": "Select the service you'd like to book",
     "chooseDateAndTime": "Choose a date & time",
     "chooseDateAndTimeDesc": "Select a day and available slot that works for you",
     "timezone": "Timezone",

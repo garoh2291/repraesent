@@ -7,10 +7,13 @@ import i18n from "~/i18n";
 import {
   getPublicConfig,
   getAvailabilitiesPublic,
+  getWorkspaceProvidersPublic,
   createBooking,
   type CreateBookingDto,
   type PublicConfig,
   type BookingFieldConfig,
+  type AppointmentService,
+  type ProviderPublic,
 } from "~/lib/api/appointments";
 import { extractErrorMessage } from "~/lib/api/axios-instance";
 import { getLogoFullUrl } from "~/lib/config";
@@ -27,6 +30,7 @@ import {
   CalendarDays,
   User,
   ClipboardCheck,
+  Layers,
 } from "lucide-react";
 import { cn } from "~/lib/utils";
 
@@ -107,6 +111,9 @@ export default function BookAppointment() {
   const { t } = useTranslation();
   const { configId } = useParams<{ configId: string }>();
   const queryClient = useQueryClient();
+  const [activeConfigId, setActiveConfigId] = useState<string | null>(configId ?? null);
+  const [selectedProvider, setSelectedProvider] = useState<ProviderPublic | null>(null);
+  const [selectedService, setSelectedService] = useState<AppointmentService | null>(null);
   const [step, setStep] = useState(1);
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
   const [selectedSlot, setSelectedSlot] = useState<string | null>(null);
@@ -114,10 +121,16 @@ export default function BookAppointment() {
   const [formFields, setFormFields] = useState<Record<string, string>>({});
   const [booked, setBooked] = useState(false);
 
-  const { data: config, isLoading: configLoading } = useQuery({
-    queryKey: ["public-config", configId],
-    queryFn: () => getPublicConfig(configId!),
+  const { data: providers } = useQuery({
+    queryKey: ["workspace-providers", configId],
+    queryFn: () => getWorkspaceProvidersPublic(configId!),
     enabled: !!configId,
+  });
+
+  const { data: config, isLoading: configLoading } = useQuery({
+    queryKey: ["public-config", activeConfigId],
+    queryFn: () => getPublicConfig(activeConfigId!),
+    enabled: !!activeConfigId,
   });
 
   const selectedDateStr = selectedDate
@@ -125,10 +138,12 @@ export default function BookAppointment() {
     : "";
   const isValidDate = /^\d{4}-\d{2}-\d{2}$/.test(selectedDateStr);
 
+  const serviceDuration = selectedService?.duration_minutes;
+
   const { data: slots = [], isLoading: slotsLoading } = useQuery({
-    queryKey: ["availabilities-public", configId, selectedDateStr],
-    queryFn: () => getAvailabilitiesPublic(configId!, selectedDateStr),
-    enabled: !!configId && !!selectedDateStr && isValidDate,
+    queryKey: ["availabilities-public", activeConfigId, selectedDateStr, serviceDuration],
+    queryFn: () => getAvailabilitiesPublic(activeConfigId!, selectedDateStr, serviceDuration),
+    enabled: !!activeConfigId && !!selectedDateStr && isValidDate,
   });
 
   const bookMutation = useMutation({
@@ -179,6 +194,36 @@ export default function BookAppointment() {
   const logoUrl = getLogoFullUrl(config?.company_logo_url);
   const defaultLogoUrl = "/re_praesent_logo.svg";
 
+  const hasMultipleProviders = providers && providers.length > 1;
+
+  // Auto-select provider: if only one provider, skip provider selection
+  useEffect(() => {
+    if (providers && !selectedProvider) {
+      if (providers.length === 1) {
+        setSelectedProvider(providers[0]!);
+        setActiveConfigId(providers[0]!.id);
+        // step will be set by service effect below
+      } else if (providers.length > 1) {
+        setStep(-1);
+      }
+    }
+  }, [providers, selectedProvider]);
+
+  // Auto-select service: if only one service exists, skip service selection step
+  const services = config?.services ?? null;
+  const hasMultipleServices = services && services.length > 1;
+
+  useEffect(() => {
+    if (config && services && selectedProvider) {
+      if (services.length === 1 && !selectedService) {
+        setSelectedService(services[0]!);
+        setStep(1);
+      } else if (services.length > 1 && !selectedService) {
+        setStep(0);
+      }
+    }
+  }, [config, services, selectedService, selectedProvider]);
+
   const bookingFields = config?.booking_fields ?? DEFAULT_BOOKING_FIELDS;
   const displayedFields = BOOKING_FIELD_KEYS.filter(
     (key) => bookingFields[key]?.display !== false
@@ -227,11 +272,11 @@ export default function BookAppointment() {
   }
 
   function handleConfirm() {
-    if (!configId || !selectedSlot) return;
+    if (!activeConfigId || !selectedSlot) return;
 
     const [start, end] = selectedSlot.split("--");
     const dto: CreateBookingDto = {
-      configId,
+      configId: activeConfigId,
       start,
       end,
       ...formFields,
@@ -242,6 +287,8 @@ export default function BookAppointment() {
               .join(" ")
           : undefined,
       customerEmail: formFields.email || undefined,
+      service_id: selectedService?.id,
+      service_name: selectedService?.name,
     };
 
     bookMutation.mutate(dto);
@@ -309,6 +356,7 @@ export default function BookAppointment() {
           textColor={textColor}
           step={step}
           booked
+          selectedService={selectedService}
           t={t}
         />
         <main className="flex-1 flex items-center justify-center p-8">
@@ -333,10 +381,20 @@ export default function BookAppointment() {
             <button
               onClick={() => {
                 setBooked(false);
-                setStep(1);
                 setSelectedDate(undefined);
                 setSelectedSlot(null);
                 setFormFields({});
+                if (hasMultipleProviders) {
+                  setSelectedProvider(null);
+                  setSelectedService(null);
+                  setActiveConfigId(configId ?? null);
+                  setStep(-1);
+                } else if (hasMultipleServices) {
+                  setSelectedService(null);
+                  setStep(0);
+                } else {
+                  setStep(1);
+                }
               }}
               className="inline-flex h-10 items-center justify-center rounded-lg border border-border bg-white px-6 text-sm font-medium text-foreground hover:bg-stone-50 transition-colors shadow-sm"
             >
@@ -359,6 +417,7 @@ export default function BookAppointment() {
         textColor={textColor}
         step={step}
         booked={false}
+        selectedService={selectedService}
         t={t}
       />
 
@@ -366,6 +425,34 @@ export default function BookAppointment() {
         <div className="max-w-4xl mx-auto space-y-6 sm:space-y-8">
           {/* Step content */}
           <div className="app-fade-up">
+            {step === -1 && providers && (
+              <StepNegative1ProviderSelection
+                t={t}
+                providers={providers}
+                selectedProvider={selectedProvider}
+                onSelect={(provider) => {
+                  setSelectedProvider(provider);
+                  setActiveConfigId(provider.id);
+                  setSelectedService(null);
+                  setStep(0);
+                }}
+                bgColor={bgColor}
+                textColor={textColor}
+              />
+            )}
+            {step === 0 && services && (
+              <Step0ServiceSelection
+                t={t}
+                services={services}
+                selectedService={selectedService}
+                onSelect={(svc) => {
+                  setSelectedService(svc);
+                  setStep(1);
+                }}
+                bgColor={bgColor}
+                textColor={textColor}
+              />
+            )}
             {step === 1 && (
               <Step1DateAndTime
                 t={t}
@@ -383,6 +470,7 @@ export default function BookAppointment() {
                 firstWeekday={firstWeekday}
                 bgColor={bgColor}
                 textColor={textColor}
+                selectedService={selectedService}
               />
             )}
             {step === 2 && (
@@ -408,37 +496,52 @@ export default function BookAppointment() {
                 isPending={bookMutation.isPending}
                 bgColor={bgColor}
                 textColor={textColor}
+                selectedService={selectedService}
               />
             )}
           </div>
 
           {/* Navigation */}
-          <div className="flex justify-between items-center pt-2">
-            <button
-              type="button"
-              onClick={() => setStep((s) => Math.max(1, s - 1))}
-              disabled={step === 1}
-              className="inline-flex items-center gap-1.5 h-10 rounded-lg border border-border bg-white px-4 text-sm font-medium text-foreground hover:bg-stone-50 transition-colors shadow-sm disabled:opacity-40 disabled:pointer-events-none"
-            >
-              <ChevronLeft className="h-4 w-4" />
-              {t("booking.back")}
-            </button>
-            {step < 3 ? (
+          {(step > 0 || (step === 0 && !!hasMultipleProviders)) && (
+            <div className="flex justify-between items-center pt-2">
               <button
                 type="button"
-                onClick={() => setStep((s) => s + 1)}
-                disabled={
-                  (step === 1 && !canProceedStep1) ||
-                  (step === 2 && !canProceedStep2)
-                }
-                className="inline-flex items-center gap-1.5 h-10 rounded-lg px-5 text-sm font-medium transition-all shadow-sm disabled:opacity-40 disabled:pointer-events-none hover:opacity-90"
-                style={{ backgroundColor: bgColor, color: textColor }}
+                onClick={() => {
+                  if (step === 1 && hasMultipleServices) {
+                    setSelectedService(null);
+                    setStep(0);
+                  } else if (step === 0 && hasMultipleProviders) {
+                    setSelectedProvider(null);
+                    setSelectedService(null);
+                    setActiveConfigId(configId ?? null);
+                    setStep(-1);
+                  } else {
+                    setStep((s) => Math.max(1, s - 1));
+                  }
+                }}
+                disabled={step === 1 && !hasMultipleServices && !hasMultipleProviders}
+                className="inline-flex items-center gap-1.5 h-10 rounded-lg border border-border bg-white px-4 text-sm font-medium text-foreground hover:bg-stone-50 transition-colors shadow-sm disabled:opacity-40 disabled:pointer-events-none"
               >
-                {t("common.next")}
-                <ChevronRight className="h-4 w-4" />
+                <ChevronLeft className="h-4 w-4" />
+                {t("booking.back")}
               </button>
-            ) : null}
-          </div>
+              {step < 3 ? (
+                <button
+                  type="button"
+                  onClick={() => setStep((s) => s + 1)}
+                  disabled={
+                    (step === 1 && !canProceedStep1) ||
+                    (step === 2 && !canProceedStep2)
+                  }
+                  className="inline-flex items-center gap-1.5 h-10 rounded-lg px-5 text-sm font-medium transition-all shadow-sm disabled:opacity-40 disabled:pointer-events-none hover:opacity-90"
+                  style={{ backgroundColor: bgColor, color: textColor }}
+                >
+                  {t("common.next")}
+                  <ChevronRight className="h-4 w-4" />
+                </button>
+              ) : null}
+            </div>
+          )}
         </div>
       </main>
     </div>
@@ -455,6 +558,7 @@ function BookingHeader({
   textColor,
   step,
   booked,
+  selectedService,
   t,
 }: {
   config: PublicConfig;
@@ -464,7 +568,8 @@ function BookingHeader({
   textColor: string;
   step: number;
   booked: boolean;
-  t: (key: string) => string;
+  selectedService: AppointmentService | null;
+  t: (key: string, opts?: Record<string, unknown>) => string;
 }) {
   return (
     <header
@@ -485,19 +590,21 @@ function BookingHeader({
           >
             {config.company_name || t("booking.fallbackCompany")}
           </p>
-          {config.company_headline && (
+          {config.services && config.services.length > 0 && (
             <p
               className="text-xs leading-tight"
               style={{ color: `${textColor}99` }}
             >
-              {config.company_headline}
+              {selectedService
+                ? [selectedService.name, config.provider_name].filter(Boolean).join(" │ ")
+                : config.services.map((s) => s.name).join(" │ ")}
             </p>
           )}
         </div>
       </div>
 
       {/* Step indicators */}
-      {!booked && (
+      {!booked && step > 0 && (
         <div className="flex items-center gap-1">
           {STEPS.map((s, idx) => {
             const done = step > s.n;
@@ -532,6 +639,155 @@ function BookingHeader({
   );
 }
 
+/* ── Step -1: Provider Selection ────────────────────────────── */
+
+function StepNegative1ProviderSelection({
+  t,
+  providers,
+  selectedProvider,
+  onSelect,
+  bgColor,
+  textColor,
+}: {
+  t: (key: string, opts?: Record<string, unknown>) => string;
+  providers: ProviderPublic[];
+  selectedProvider: ProviderPublic | null;
+  onSelect: (provider: ProviderPublic) => void;
+  bgColor: string;
+  textColor: string;
+}) {
+  return (
+    <div className="space-y-6">
+      <div>
+        <h2 className="text-xl font-semibold text-foreground tracking-tight">
+          {t("booking.chooseProvider")}
+        </h2>
+        <p className="text-sm text-muted-foreground mt-0.5">
+          {t("booking.chooseProviderDesc")}
+        </p>
+      </div>
+
+      <div className="grid sm:grid-cols-2 gap-3">
+        {providers.map((provider) => {
+          const isSelected = selectedProvider?.id === provider.id;
+          return (
+            <button
+              key={provider.id}
+              type="button"
+              onClick={() => onSelect(provider)}
+              className={cn(
+                "text-left rounded-2xl border p-5 transition-all duration-150 shadow-sm hover:shadow-md",
+                isSelected
+                  ? "ring-2"
+                  : "border-border bg-white hover:border-stone-300"
+              )}
+              style={
+                isSelected
+                  ? {
+                      backgroundColor: `${bgColor}08`,
+                      borderColor: bgColor,
+                    }
+                  : undefined
+              }
+            >
+              <div className="flex items-center gap-3">
+                <div
+                  className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-sm font-semibold"
+                  style={{ backgroundColor: `${bgColor}15`, color: bgColor }}
+                >
+                  {(provider.provider_name ?? "?").charAt(0).toUpperCase()}
+                </div>
+                <p className="text-sm font-semibold text-foreground leading-snug">
+                  {provider.provider_name ?? t("booking.unknownProvider")}
+                </p>
+              </div>
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+/* ── Step 0: Service Selection ───────────────────────────────── */
+
+function Step0ServiceSelection({
+  t,
+  services,
+  selectedService,
+  onSelect,
+  bgColor,
+  textColor,
+}: {
+  t: (key: string, opts?: Record<string, unknown>) => string;
+  services: AppointmentService[];
+  selectedService: AppointmentService | null;
+  onSelect: (svc: AppointmentService) => void;
+  bgColor: string;
+  textColor: string;
+}) {
+  return (
+    <div className="space-y-6">
+      <div>
+        <h2 className="text-xl font-semibold text-foreground tracking-tight">
+          {t("booking.chooseService")}
+        </h2>
+        <p className="text-sm text-muted-foreground mt-0.5">
+          {t("booking.chooseServiceDesc")}
+        </p>
+      </div>
+
+      <div className="grid sm:grid-cols-2 gap-3">
+        {services.map((svc) => {
+          const isSelected = selectedService?.id === svc.id;
+          return (
+            <button
+              key={svc.id}
+              type="button"
+              onClick={() => onSelect(svc)}
+              className={cn(
+                "text-left rounded-2xl border p-5 transition-all duration-150 space-y-2 shadow-sm hover:shadow-md",
+                isSelected
+                  ? "ring-2"
+                  : "border-border bg-white hover:border-stone-300"
+              )}
+              style={
+                isSelected
+                  ? {
+                      backgroundColor: `${bgColor}08`,
+                      borderColor: bgColor,
+                      ringColor: bgColor,
+                    }
+                  : undefined
+              }
+            >
+              <div className="flex items-start justify-between gap-3">
+                <p className="text-sm font-semibold text-foreground leading-snug">
+                  {svc.name}
+                </p>
+                <span
+                  className="shrink-0 text-xs font-medium px-2 py-0.5 rounded-full"
+                  style={{
+                    backgroundColor: `${bgColor}15`,
+                    color: bgColor,
+                  }}
+                >
+                  {t("appointments.businessLogic.minutesSuffix", { count: svc.duration_minutes })}
+                </span>
+              </div>
+              {svc.description && (
+                <p className="text-xs text-muted-foreground leading-relaxed">
+                  {svc.description}
+                </p>
+              )}
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 /* ── Step 1: Date & Time ─────────────────────────────────────── */
 
 function Step1DateAndTime({
@@ -550,8 +806,9 @@ function Step1DateAndTime({
   firstWeekday,
   bgColor,
   textColor,
+  selectedService,
 }: {
-  t: (key: string) => string;
+  t: (key: string, opts?: Record<string, unknown>) => string;
   selectedDate: Date | undefined;
   onDateSelect: (d: Date | undefined) => void;
   selectedSlot: string | null;
@@ -566,6 +823,7 @@ function Step1DateAndTime({
   firstWeekday: number;
   bgColor: string;
   textColor: string;
+  selectedService: AppointmentService | null;
 }) {
   return (
     <div className="space-y-6">
@@ -576,6 +834,16 @@ function Step1DateAndTime({
         <p className="text-sm text-muted-foreground mt-0.5">
           {t("booking.chooseDateAndTimeDesc")}
         </p>
+        {selectedService && (
+          <div className="mt-2 inline-flex items-center gap-2 rounded-lg border border-border bg-white px-3 py-1.5 text-sm shadow-sm">
+            <Layers className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+            <span className="font-medium text-foreground">{selectedService.name}</span>
+            <span className="text-muted-foreground">·</span>
+            <span className="text-muted-foreground">
+              {t("appointments.businessLogic.minutesSuffix", { count: selectedService.duration_minutes })}
+            </span>
+          </div>
+        )}
       </div>
 
       <div className="grid md:grid-cols-2 gap-6">
@@ -821,8 +1089,9 @@ function Step3Confirmation({
   isPending,
   bgColor,
   textColor,
+  selectedService,
 }: {
-  t: (key: string) => string;
+  t: (key: string, opts?: Record<string, unknown>) => string;
   config: PublicConfig;
   selectedDate: Date;
   selectedSlot: string;
@@ -834,6 +1103,7 @@ function Step3Confirmation({
   isPending: boolean;
   bgColor: string;
   textColor: string;
+  selectedService: AppointmentService | null;
 }) {
   const timeStr = formatSlotInTimezone(selectedSlot, userTimezone, timeFormat);
   const dateStr = selectedDate.toLocaleDateString("en-US", {
@@ -877,6 +1147,22 @@ function Step3Confirmation({
                 </p>
               </div>
             </div>
+            {selectedService && (
+              <div className="flex items-center gap-3">
+                <div
+                  className="h-8 w-8 rounded-lg flex items-center justify-center shrink-0"
+                  style={{ backgroundColor: `${bgColor}15` }}
+                >
+                  <Layers className="h-4 w-4" style={{ color: bgColor }} />
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-foreground">{selectedService.name}</p>
+                  <p className="text-xs text-muted-foreground">
+                    {t("appointments.businessLogic.minutesSuffix", { count: selectedService.duration_minutes })}
+                  </p>
+                </div>
+              </div>
+            )}
             {config.company_name && (
               <div className="flex items-center gap-3">
                 <div

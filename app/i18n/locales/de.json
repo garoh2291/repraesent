@@ -251,6 +251,8 @@
     "title": "Termine",
     "manageHint": "Verwalten Sie Ihren Kalender, die Buchungsseite und die Planungsregeln",
     "tabCalendar": "Kalender",
+    "tabServices": "Leistungen",
+    "tabProvider": "Anbieter",
     "tabGeneral": "Allgemein",
     "tabBooking": "Buchungsformular",
     "tabBusinessHours": "Arbeitszeiten",
@@ -295,6 +297,7 @@
       "timeFormat24h": "24-Stunden",
       "timeFormat12h": "12-Stunden",
       "publicBookingLink": "Öffentlicher Buchungslink",
+      "iframeEmbed": "Einbettungscode (iframe)",
       "linkCopied": "Link kopiert",
       "settingsSaved": "Einstellungen gespeichert",
       "logoUploaded": "Logo hochgeladen",
@@ -315,6 +318,27 @@
         "zip_code": "Postleitzahl",
         "notes": "Anmerkungen"
       }
+    },
+    "services": {
+      "title": "Buchbare Leistungen",
+      "description": "Definieren Sie die Leistungen, die Kunden buchen können. Jede Leistung hat einen eigenen Namen, eine Dauer und eine optionale Beschreibung.",
+      "name": "Leistungsname",
+      "namePlaceholder": "z.B. Erstberatung",
+      "duration": "Dauer",
+      "descriptionLabel": "Beschreibung",
+      "descriptionPlaceholder": "Beschreiben Sie diese Leistung…",
+      "addService": "Leistung hinzufügen",
+      "remove": "Leistung entfernen",
+      "saved": "Leistungen gespeichert"
+    },
+    "provider": {
+      "section": "Anbieterdetails",
+      "description": "Diese Informationen erscheinen auf der öffentlichen Buchungsseite. Änderungen hier wirken sich nicht auf Ihre Kontodaten aus.",
+      "name": "Vollständiger Name",
+      "namePlaceholder": "z.B. Max Mustermann",
+      "email": "Kontakt-E-Mail",
+      "emailPlaceholder": "z.B. max@example.com",
+      "saved": "Anbieterdetails gespeichert"
     },
     "businessLogic": {
       "workingPlan": "Arbeitsplan",
@@ -468,6 +492,11 @@
     "invalidLinkDesc": "Bitte überprüfen Sie die URL und versuchen Sie es erneut.",
     "bookingNotFound": "Buchung nicht gefunden",
     "bookingNotFoundDesc": "Diese Terminseite existiert nicht.",
+    "chooseProvider": "Anbieter wählen",
+    "chooseProviderDesc": "Wählen Sie die Person, bei der Sie buchen möchten",
+    "unknownProvider": "Unbekannter Anbieter",
+    "chooseService": "Leistung wählen",
+    "chooseServiceDesc": "Wählen Sie die Leistung, die Sie buchen möchten",
     "chooseDateAndTime": "Datum & Uhrzeit wählen",
     "chooseDateAndTimeDesc": "Wählen Sie einen Tag und einen verfügbaren Slot",
     "timezone": "Zeitzone",
