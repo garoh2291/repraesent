@@ -18,7 +18,7 @@ import { InstructionsModal } from "~/components/instructions-modal";
 
 import { getLocalizedServiceName } from "~/lib/api/auth";
 import { useAuthContext } from "~/providers/auth-provider";
-import { useAppointmentConfig } from "~/lib/hooks/useAppointmentConfig";
+import { useAppointmentConfigs } from "~/lib/hooks/useAppointmentConfigs";
 import { LanguageSwitcher } from "~/components/language-switcher";
 import {
   DropdownMenu,
@@ -113,11 +113,11 @@ export function Sidebar({ onClose, className }: { onClose?: () => void; classNam
     currentWorkspace?.services?.some(
       (s) => s.service_type === "lead-form" || s.service_slug === "lead-form"
     ) ?? false;
-  const { data: appointmentConfig } = useAppointmentConfig(
+  const { data: appointmentConfigs } = useAppointmentConfigs(
     hasAppointmentsService && !!currentWorkspace?.id
   );
   const showAppointmentsInSidebar =
-    hasAppointmentsService && !!appointmentConfig;
+    hasAppointmentsService && !!appointmentConfigs?.length;
 
   const handleWorkspaceChange = (workspaceId: string) => {
     setCurrentWorkspace(workspaceId);
