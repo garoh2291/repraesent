@@ -221,7 +221,7 @@ function EditorPanel({
   fromEmail,
 }: EditorPanelProps) {
   const { t } = useTranslation();
-  const [viewMode, setViewMode] = useState<"preview" | "preview">("code");
+  const [viewMode, setViewMode] = useState<"code" | "preview">("preview");
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   const canEnable = local.subject.trim() !== "" && local.html.trim() !== "";
