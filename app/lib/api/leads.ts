@@ -54,6 +54,7 @@ export interface GetLeadsParams {
   status?: LeadStatus;
   source?: "website";
   form_name?: string;
+  include_hidden?: boolean;
 }
 
 export interface PaginatedLeads {
@@ -76,6 +77,7 @@ export async function getLeads(
   if (params.status) searchParams.set("status", params.status);
   if (params.source) searchParams.set("source", params.source);
   if (params.form_name) searchParams.set("form_name", params.form_name);
+  if (params.include_hidden) searchParams.set("include_hidden", "true");
 
   const res = await apiClient.get<PaginatedLeads>(
     `/leads?${searchParams.toString()}`

@@ -155,6 +155,8 @@
     "exportLeads": "Export leads",
     "openLead": "Open",
     "clearFilters": "Clear filters",
+    "showHidden": "Show hidden",
+    "hideHidden": "Hide hidden",
     "searchPlaceholder": "Search by email, name, phone...",
     "columns": {
       "id": "ID",

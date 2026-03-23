@@ -9,18 +9,38 @@ import { LeadDetailSheet } from "~/components/organism/lead-detail-sheet";
 import { LeadsKanban } from "~/components/organism/leads-kanban";
 import { LeadStatusSelect } from "~/components/molecule/lead-status-select";
 import FilterComponent from "~/components/molecule/filter-component";
-import { LEAD_FILTER_STATUS_OPTIONS, LEAD_FILTER_SOURCE_OPTIONS } from "~/lib/leads/filter-presets";
+import {
+  LEAD_FILTER_STATUS_OPTIONS,
+  LEAD_FILTER_SOURCE_OPTIONS,
+} from "~/lib/leads/filter-presets";
 import { Button } from "~/components/ui/button";
 import TooltipContainer from "~/components/tooltip-container";
-import { getLeads, getLeadFormNames, type Lead, type LeadStatus } from "~/lib/api/leads";
+import {
+  getLeads,
+  getLeadFormNames,
+  type Lead,
+  type LeadStatus,
+} from "~/lib/api/leads";
 import { LeadTasksSummaryCell } from "~/components/organism/tasks/lead-tasks-summary-cell";
+import { TaskFormModal } from "~/components/organism/tasks/task-form-modal";
+import type { WorkspaceMemberItem } from "~/components/organism/tasks/task-form-modal";
+import { getWorkspaceDetail } from "~/lib/api/workspaces";
 import { useDebounce } from "~/lib/hooks/useDebounce";
 import { useSearchParamsSelect } from "~/lib/hooks/useQueryParams";
 import { useLeadsViewMode } from "~/lib/hooks/useLocalStorage";
 import { useCanEditLeads } from "~/lib/hooks/useCanEditLeads";
 import { useUpdateLeadStatus } from "~/lib/hooks/useUpdateLeadStatus";
 import { format } from "date-fns";
-import { ArrowRight, LayoutGrid, Table2, Upload, X } from "lucide-react";
+import {
+  ArrowRight,
+  LayoutGrid,
+  Table2,
+  Upload,
+  X,
+  Plus,
+  EyeOff,
+  Eye,
+} from "lucide-react";
 import { cn } from "~/lib/utils";
 import { LeadImportModal } from "~/components/organism/lead-import-modal";
 
@@ -65,9 +85,32 @@ export default function LeadForm() {
   const [viewMode, setViewMode] = useLeadsViewMode();
   const [selectedLeadId, setSelectedLeadId] = useState<string | null>(null);
   const [importModalOpen, setImportModalOpen] = useState(false);
+  const [showHidden, setShowHidden] = useState(false);
+
+  // Task create modal state
+  const [taskCreateLeadId, setTaskCreateLeadId] = useState<string | null>(null);
+  const [taskCreateLeadName, setTaskCreateLeadName] = useState<string>("");
 
   const debouncedSearch = useDebounce(search, 300);
   const canEdit = useCanEditLeads();
+
+  const { data: workspaceData } = useQuery({
+    queryKey: ["workspace-detail"],
+    queryFn: () => getWorkspaceDetail(),
+    enabled: !!currentWorkspace,
+  });
+
+  const workspaceMembers: WorkspaceMemberItem[] = useMemo(
+    () =>
+      (workspaceData?.members ?? []).map((m) => ({
+        user_id: m.user_id,
+        user_first_name: m.user_first_name,
+        user_last_name: m.user_last_name,
+        user_email: m.user_email,
+        role: m.role,
+      })),
+    [workspaceData]
+  );
 
   const updateStatusMutation = useUpdateLeadStatus({
     onMutate: async ({ id, status }) => {
@@ -80,6 +123,7 @@ export default function LeadForm() {
         statusFilter || undefined,
         sourceFilter || undefined,
         formNameFilter || undefined,
+        showHidden,
         viewMode,
       ]);
       queryClient.setQueryData(
@@ -90,6 +134,8 @@ export default function LeadForm() {
           debouncedSearch,
           statusFilter || undefined,
           sourceFilter || undefined,
+          formNameFilter || undefined,
+          showHidden,
           viewMode,
         ],
         (old: Awaited<ReturnType<typeof getLeads>> | undefined) => {
@@ -116,6 +162,8 @@ export default function LeadForm() {
             debouncedSearch,
             statusFilter || undefined,
             sourceFilter || undefined,
+            formNameFilter || undefined,
+            showHidden,
             viewMode,
           ],
           prev
@@ -150,7 +198,9 @@ export default function LeadForm() {
     () =>
       (formNamesQuery.data ?? []).map((name) => ({
         key: name,
-        label: name.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase()),
+        label: name
+          .replace(/_/g, " ")
+          .replace(/\b\w/g, (c) => c.toUpperCase()),
       })),
     [formNamesQuery.data]
   );
@@ -164,6 +214,7 @@ export default function LeadForm() {
       statusFilter || undefined,
       sourceFilter || undefined,
       formNameFilter || undefined,
+      showHidden,
       viewMode,
     ],
     queryFn: () =>
@@ -174,6 +225,7 @@ export default function LeadForm() {
         status: (statusFilter || undefined) as LeadStatus | undefined,
         source: sourceFilter || undefined,
         form_name: formNameFilter || undefined,
+        include_hidden: viewMode === "kanban" ? true : showHidden || undefined,
       }),
     enabled: !!currentWorkspace,
     refetchOnMount: "always",
@@ -215,12 +267,65 @@ export default function LeadForm() {
     {
       id: "tasks_summary",
       header: t("tasks.leadRow.columnHeader"),
-      cell: ({ row }) => (
-        <LeadTasksSummaryCell
-          lead={row.original}
-          onClick={() => setSelectedLeadId(row.original.id)}
-        />
-      ),
+      cell: ({ row }) => {
+        const lead = row.original;
+        const hasOpenTasks =
+          lead.tasks_summary && lead.tasks_summary.open_count > 0;
+        if (hasOpenTasks) {
+          return (
+            <LeadTasksSummaryCell
+              lead={lead}
+              onClick={() => setSelectedLeadId(lead.id)}
+            />
+          );
+        }
+        if (!canEdit) {
+          return (
+            <span className="text-muted-foreground/40 text-sm select-none">
+              —
+            </span>
+          );
+        }
+        return (
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              const name =
+                lead.full_name ||
+                [lead.first_name, lead.last_name]
+                  .filter(Boolean)
+                  .join(" ")
+                  .trim() ||
+                lead.email ||
+                "Lead";
+              setTaskCreateLeadId(lead.id);
+              setTaskCreateLeadName(name);
+            }}
+            className="inline-flex items-center gap-1 rounded-md px-2 py-1 -mx-2 -my-1 text-muted-foreground/50 hover:text-foreground hover:bg-muted/60 transition-colors"
+          >
+            <Plus className="h-3 w-3" />
+            <span className="text-[11px] font-medium">
+              {t("tasks.addTask")}
+            </span>
+          </button>
+        );
+      },
+    },
+    {
+      accessorKey: "form_name",
+      header: t("leads.columns.formName"),
+      cell: ({ row }) => {
+        const formName = row.original.form_name ?? "—";
+        const displayName = formName
+          .replace(/_/g, " ")
+          .replace(/\b\w/g, (c) => c.toUpperCase());
+        return (
+          <span className="truncate max-w-[140px] block text-muted-foreground text-sm">
+            {displayName}
+          </span>
+        );
+      },
     },
     {
       accessorKey: "full_name",
@@ -262,19 +367,6 @@ export default function LeadForm() {
               {label}
             </span>
           </TooltipContainer>
-        );
-      },
-    },
-    {
-      accessorKey: "form_name",
-      header: t("leads.columns.formName"),
-      cell: ({ row }) => {
-        const formName = row.original.form_name ?? "—";
-        const displayName = formName.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
-        return (
-          <span className="truncate max-w-[140px] block text-muted-foreground text-sm">
-            {displayName}
-          </span>
         );
       },
     },
@@ -397,12 +489,38 @@ export default function LeadForm() {
           columns={columns}
           additionalElement={
             <div className="flex flex-wrap gap-3 items-center">
+              <button
+                onClick={() => setShowHidden((prev) => !prev)}
+                className={cn(
+                  "inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-medium transition-colors",
+                  showHidden
+                    ? "border-amber-300 bg-amber-50 text-amber-700 hover:bg-amber-100"
+                    : "border-border bg-muted/50 text-muted-foreground hover:text-foreground hover:bg-muted"
+                )}
+              >
+                {showHidden ? (
+                  <Eye className="h-3.5 w-3.5" />
+                ) : (
+                  <EyeOff className="h-3.5 w-3.5" />
+                )}
+                {showHidden
+                  ? t("leads.hideHidden")
+                  : t("leads.showHidden")}
+              </button>
               <FilterComponent filters={leadsFilters} />
               {(statusFilter || sourceFilter || formNameFilter) && (
                 <button
                   className="inline-flex items-center gap-1 rounded-full border border-dashed border-border px-3 py-1 text-xs font-medium text-muted-foreground hover:text-foreground hover:border-border/80 transition-colors"
                   onClick={() =>
-                    onSelect({ status: "", source: "", form_name: "", page: "1" }, true)
+                    onSelect(
+                      {
+                        status: "",
+                        source: "",
+                        form_name: "",
+                        page: "1",
+                      },
+                      true
+                    )
                   }
                 >
                   {t("leads.clearFilters")} <X size={12} />
@@ -467,6 +585,24 @@ export default function LeadForm() {
       <LeadImportModal
         open={importModalOpen}
         onOpenChange={setImportModalOpen}
+      />
+
+      <TaskFormModal
+        open={!!taskCreateLeadId}
+        onOpenChange={(open) => {
+          if (!open) {
+            setTaskCreateLeadId(null);
+            setTaskCreateLeadName("");
+          }
+        }}
+        leadId={taskCreateLeadId ?? undefined}
+        leadName={taskCreateLeadName || undefined}
+        workspaceMembers={workspaceMembers}
+        onSuccess={() => {
+          setTaskCreateLeadId(null);
+          setTaskCreateLeadName("");
+          queryClient.invalidateQueries({ queryKey: ["leads"] });
+        }}
       />
     </div>
   );
