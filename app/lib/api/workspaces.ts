@@ -103,8 +103,7 @@ export interface LeadFallbackSourceConfig {
 }
 
 export interface LeadFallbackConfig {
-  urls?: LeadFallbackSourceConfig;
-  appointment_booking?: LeadFallbackSourceConfig;
+  [formName: string]: LeadFallbackSourceConfig | undefined;
 }
 
 export async function getLeadFallbackConfig(): Promise<LeadFallbackConfig> {

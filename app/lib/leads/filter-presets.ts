@@ -27,4 +27,10 @@ export const LEADS_FILTERS = [
     options: LEAD_FILTER_SOURCE_OPTIONS,
     single: true,
   },
+  {
+    name: "form_name",
+    paramKey: "form_name",
+    options: [] as { key: string; label: string }[],
+    single: true,
+  },
 ];

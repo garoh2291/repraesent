@@ -168,7 +168,8 @@
       "updatedAt": "Updated at",
       "firstName": "First Name",
       "lastName": "Last Name",
-      "metadata": "Metadata"
+      "metadata": "Metadata",
+      "formName": "Form"
     },
     "statuses": {
       "new_lead": "New lead",
@@ -895,15 +896,14 @@
     "noEmailConfigured": "No email configured — go to Email settings",
     "fillToEnable": "Add subject & content first",
     "missingFields": "Subject and email content are required before this can go live.",
-    "sources": {
-      "urls": {
-        "label": "Website Form",
-        "desc": "Sent when a lead is created via a web form or webhook (source: urls)"
-      },
-      "appointment_booking": {
-        "label": "Appointment Booking",
-        "desc": "Sent when a lead is created from a new appointment booking"
-      }
-    }
+    "addForm": "Add confirmation email",
+    "newFormTitle": "New form configuration",
+    "formNamePlaceholder": "e.g. Contact Form, Quote Request...",
+    "formKey": "Key",
+    "formKeyExists": "already exists",
+    "deleteForm": "Delete",
+    "confirmDelete": "Are you sure?",
+    "noFormsYet": "No confirmation emails yet. Add one to get started.",
+    "selectForm": "Select a form from the left to edit its email."
   }
 }

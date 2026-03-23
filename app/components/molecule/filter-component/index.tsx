@@ -37,6 +37,7 @@ const STATIC_FILTERS: Record<string, FilterType[]> = {
 const FILTER_LABEL_KEYS: Record<string, string> = {
   status: "leads.filters.status",
   source: "leads.filters.source",
+  form_name: "leads.columns.formName",
 };
 
 export interface FilterComponentProps {

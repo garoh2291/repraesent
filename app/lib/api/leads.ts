@@ -30,6 +30,7 @@ export interface Lead {
   metadata: Record<string, unknown>;
   source_id: string;
   source_table: string;
+  form_name: string;
   source_label: string | null;
   status: string;
   created_at: string;
@@ -52,6 +53,7 @@ export interface GetLeadsParams {
   search?: string;
   status?: LeadStatus;
   source?: "website";
+  form_name?: string;
 }
 
 export interface PaginatedLeads {
@@ -73,6 +75,7 @@ export async function getLeads(
   if (params.search) searchParams.set("search", params.search);
   if (params.status) searchParams.set("status", params.status);
   if (params.source) searchParams.set("source", params.source);
+  if (params.form_name) searchParams.set("form_name", params.form_name);
 
   const res = await apiClient.get<PaginatedLeads>(
     `/leads?${searchParams.toString()}`
@@ -103,6 +106,11 @@ export interface LeadStats {
   new_this_week: number;
 }
 
+export async function getLeadFormNames(): Promise<string[]> {
+  const res = await apiClient.get<string[]>("/leads/form-names");
+  return res.data;
+}
+
 export async function getLeadStats(): Promise<LeadStats> {
   const res = await apiClient.get<LeadStats>("/leads/stats");
   return res.data;
@@ -116,7 +124,7 @@ export type LeadAnalyticsPeriod =
 
 export interface LeadAnalytics {
   series: { date: string; count: number }[];
-  sources: { source: string; label: string; count: number }[];
+  form_names: { form_name: string; label: string; count: number }[];
   total: number;
 }
 

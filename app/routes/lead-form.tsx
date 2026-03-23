@@ -9,9 +9,10 @@ import { LeadDetailSheet } from "~/components/organism/lead-detail-sheet";
 import { LeadsKanban } from "~/components/organism/leads-kanban";
 import { LeadStatusSelect } from "~/components/molecule/lead-status-select";
 import FilterComponent from "~/components/molecule/filter-component";
+import { LEAD_FILTER_STATUS_OPTIONS, LEAD_FILTER_SOURCE_OPTIONS } from "~/lib/leads/filter-presets";
 import { Button } from "~/components/ui/button";
 import TooltipContainer from "~/components/tooltip-container";
-import { getLeads, type Lead, type LeadStatus } from "~/lib/api/leads";
+import { getLeads, getLeadFormNames, type Lead, type LeadStatus } from "~/lib/api/leads";
 import { LeadTasksSummaryCell } from "~/components/organism/tasks/lead-tasks-summary-cell";
 import { useDebounce } from "~/lib/hooks/useDebounce";
 import { useSearchParamsSelect } from "~/lib/hooks/useQueryParams";
@@ -59,6 +60,7 @@ export default function LeadForm() {
   const search = searchParams.get("search") ?? "";
   const statusFilter = searchParams.get("status") ?? "";
   const sourceFilter = (searchParams.get("source") ?? "") as "" | "website";
+  const formNameFilter = searchParams.get("form_name") ?? "";
 
   const [viewMode, setViewMode] = useLeadsViewMode();
   const [selectedLeadId, setSelectedLeadId] = useState<string | null>(null);
@@ -77,6 +79,7 @@ export default function LeadForm() {
         debouncedSearch,
         statusFilter || undefined,
         sourceFilter || undefined,
+        formNameFilter || undefined,
         viewMode,
       ]);
       queryClient.setQueryData(
@@ -136,6 +139,22 @@ export default function LeadForm() {
     }
   }, [currentWorkspace, navigate]);
 
+  const formNamesQuery = useQuery({
+    queryKey: ["lead-form-names"],
+    queryFn: getLeadFormNames,
+    enabled: !!currentWorkspace,
+    staleTime: 60_000,
+  });
+
+  const formNameFilterOptions = useMemo(
+    () =>
+      (formNamesQuery.data ?? []).map((name) => ({
+        key: name,
+        label: name.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase()),
+      })),
+    [formNamesQuery.data]
+  );
+
   const leadsQuery = useQuery({
     queryKey: [
       "leads",
@@ -144,6 +163,7 @@ export default function LeadForm() {
       debouncedSearch,
       statusFilter || undefined,
       sourceFilter || undefined,
+      formNameFilter || undefined,
       viewMode,
     ],
     queryFn: () =>
@@ -153,10 +173,35 @@ export default function LeadForm() {
         search: debouncedSearch || undefined,
         status: (statusFilter || undefined) as LeadStatus | undefined,
         source: sourceFilter || undefined,
+        form_name: formNameFilter || undefined,
       }),
     enabled: !!currentWorkspace,
     refetchOnMount: "always",
   });
+
+  const leadsFilters = useMemo(
+    () => [
+      {
+        name: "status",
+        paramKey: "status",
+        options: LEAD_FILTER_STATUS_OPTIONS,
+        single: true,
+      },
+      {
+        name: "source",
+        paramKey: "source",
+        options: LEAD_FILTER_SOURCE_OPTIONS,
+        single: true,
+      },
+      {
+        name: "form_name",
+        paramKey: "form_name",
+        options: formNameFilterOptions,
+        single: true,
+      },
+    ],
+    [formNameFilterOptions]
+  );
 
   const hasAccess =
     currentWorkspace?.services?.some((s) => s.service_type === "lead-form") ??
@@ -217,6 +262,19 @@ export default function LeadForm() {
               {label}
             </span>
           </TooltipContainer>
+        );
+      },
+    },
+    {
+      accessorKey: "form_name",
+      header: t("leads.columns.formName"),
+      cell: ({ row }) => {
+        const formName = row.original.form_name ?? "—";
+        const displayName = formName.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+        return (
+          <span className="truncate max-w-[140px] block text-muted-foreground text-sm">
+            {displayName}
+          </span>
         );
       },
     },
@@ -339,12 +397,12 @@ export default function LeadForm() {
           columns={columns}
           additionalElement={
             <div className="flex flex-wrap gap-3 items-center">
-              <FilterComponent optionKey="leads" />
-              {(statusFilter || sourceFilter) && (
+              <FilterComponent filters={leadsFilters} />
+              {(statusFilter || sourceFilter || formNameFilter) && (
                 <button
                   className="inline-flex items-center gap-1 rounded-full border border-dashed border-border px-3 py-1 text-xs font-medium text-muted-foreground hover:text-foreground hover:border-border/80 transition-colors"
                   onClick={() =>
-                    onSelect({ status: "", source: "", page: "1" }, true)
+                    onSelect({ status: "", source: "", form_name: "", page: "1" }, true)
                   }
                 >
                   {t("leads.clearFilters")} <X size={12} />

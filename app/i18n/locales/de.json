@@ -168,7 +168,8 @@
       "updatedAt": "Aktualisiert am",
       "firstName": "Vorname",
       "lastName": "Nachname",
-      "metadata": "Metadaten"
+      "metadata": "Metadaten",
+      "formName": "Formular"
     },
     "statuses": {
       "new_lead": "Neuer Lead",
@@ -895,15 +896,14 @@
     "noEmailConfigured": "Keine E-Mail konfiguriert — zu den E-Mail-Einstellungen",
     "fillToEnable": "Zuerst Betreff & Inhalt ausfüllen",
     "missingFields": "Betreff und E-Mail-Inhalt sind erforderlich, bevor dies aktiviert werden kann.",
-    "sources": {
-      "urls": {
-        "label": "Website-Formular",
-        "desc": "Wird gesendet, wenn ein Lead über ein Web-Formular oder Webhook erstellt wird"
-      },
-      "appointment_booking": {
-        "label": "Terminbuchung",
-        "desc": "Wird gesendet, wenn ein Lead aus einer neuen Terminbuchung erstellt wird"
-      }
-    }
+    "addForm": "Bestätigungsmail hinzufügen",
+    "newFormTitle": "Neue Formularkonfiguration",
+    "formNamePlaceholder": "z.B. Kontaktformular, Angebotsanfrage...",
+    "formKey": "Schlüssel",
+    "formKeyExists": "existiert bereits",
+    "deleteForm": "Löschen",
+    "confirmDelete": "Sind Sie sicher?",
+    "noFormsYet": "Noch keine Bestätigungsmails. Fügen Sie eine hinzu, um zu beginnen.",
+    "selectForm": "Wählen Sie links ein Formular aus, um die E-Mail zu bearbeiten."
   }
 }

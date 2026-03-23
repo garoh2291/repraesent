@@ -49,10 +49,20 @@ function usePeriods(): { value: LeadAnalyticsPeriod; labelKey: string }[] {
   ];
 }
 
-const SOURCE_COLORS: Record<string, string> = {
-  urls: "#5265f3",
-  appointment_booking: "#f5d74f",
-};
+const FORM_NAME_COLORS = [
+  "#5265f3",
+  "#f5d74f",
+  "#34d399",
+  "#f472b6",
+  "#fb923c",
+  "#a78bfa",
+  "#38bdf8",
+  "#f87171",
+];
+
+function getFormNameColor(index: number): string {
+  return FORM_NAME_COLORS[index % FORM_NAME_COLORS.length];
+}
 
 function fillSeriesGaps(
   series: { date: string; count: number }[],
@@ -200,22 +210,22 @@ function LeadAnalyticsChart() {
         </div>
       </div>
 
-      {!isLoading && data && data.sources.length > 0 && (
+      {!isLoading && data && data.form_names.length > 0 && (
         <div className="flex flex-wrap gap-2">
-          {data.sources.map((s) => (
+          {data.form_names.map((f, idx) => (
             <Link
-              key={s.source}
-              to={`/lead-form?source=${s.source}`}
+              key={f.form_name}
+              to={`/lead-form?form_name=${f.form_name}`}
               className="flex items-center gap-1.5 rounded-full border border-border bg-muted/50 px-3 py-1 text-[12px] no-underline transition-colors hover:border-primary/40 hover:bg-muted"
             >
               <span
                 className="h-2 w-2 rounded-full shrink-0"
                 style={{
-                  backgroundColor: SOURCE_COLORS[s.source] ?? "#9aa3b2",
+                  backgroundColor: getFormNameColor(idx),
                 }}
               />
-              <span className="text-muted-foreground">{s.label}</span>
-              <span className="font-semibold text-foreground">{s.count}</span>
+              <span className="text-muted-foreground">{f.label}</span>
+              <span className="font-semibold text-foreground">{f.count}</span>
             </Link>
           ))}
         </div>

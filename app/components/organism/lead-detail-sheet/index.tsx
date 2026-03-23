@@ -283,6 +283,14 @@ export function LeadInfoSection({
           </FieldValue>
         </FieldRow>
 
+        <FieldRow label={t("leads.columns.formName")}>
+          <FieldValue>
+            {lead.form_name
+              ? lead.form_name.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase())
+              : "—"}
+          </FieldValue>
+        </FieldRow>
+
         <FieldRow label={t("leads.columns.createdAt")}>
           <FieldValue>
             {lead.created_at ? format(new Date(lead.created_at), "PPp") : "—"}
