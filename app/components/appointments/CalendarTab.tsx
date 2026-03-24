@@ -629,30 +629,37 @@ export function CalendarTab({ config }: CalendarTabProps) {
     [timeFormat],
   );
 
-  // Compute visible date range for the current RBC view
+  // Compute visible date range for the current RBC view (in config timezone)
   const { rangeStart, rangeEnd } = useMemo(() => {
     const d = date;
-    let start: Date;
-    let end: Date;
+    const tz = timezone;
+
+    // Build a moment in the config timezone for the navigated date
+    const mDate = moment.tz
+      ? moment.tz([d.getFullYear(), d.getMonth(), d.getDate()], tz)
+      : moment([d.getFullYear(), d.getMonth(), d.getDate()]);
+
+    let mStart: moment.Moment;
+    let mEnd: moment.Moment;
 
     if (rbcView === "month") {
       // Month view shows partial weeks at edges — pad by 7 days
-      start = new Date(d.getFullYear(), d.getMonth(), -6);
-      end = new Date(d.getFullYear(), d.getMonth() + 1, 7, 23, 59, 59);
+      mStart = mDate.clone().startOf("month").subtract(7, "days").startOf("day");
+      mEnd = mDate.clone().endOf("month").add(7, "days").endOf("day");
     } else if (rbcView === "week") {
       const dow = firstWeekday === "sunday" ? 0 : 1;
-      const dayOfWeek = d.getDay();
+      const dayOfWeek = mDate.day();
       const diff = (dayOfWeek - dow + 7) % 7;
-      start = new Date(d.getFullYear(), d.getMonth(), d.getDate() - diff);
-      end = new Date(start.getFullYear(), start.getMonth(), start.getDate() + 6, 23, 59, 59);
+      mStart = mDate.clone().subtract(diff, "days").startOf("day");
+      mEnd = mStart.clone().add(6, "days").endOf("day");
     } else {
-      // day view
-      start = new Date(d.getFullYear(), d.getMonth(), d.getDate());
-      end = new Date(d.getFullYear(), d.getMonth(), d.getDate(), 23, 59, 59);
+      // day view — pad by 1 day each side to catch timezone edge cases in CalDAV
+      mStart = mDate.clone().subtract(1, "day").startOf("day");
+      mEnd = mDate.clone().add(1, "day").endOf("day");
     }
 
-    return { rangeStart: start.toISOString(), rangeEnd: end.toISOString() };
-  }, [date, rbcView, firstWeekday]);
+    return { rangeStart: mStart.toISOString(), rangeEnd: mEnd.toISOString() };
+  }, [date, rbcView, firstWeekday, timezone]);
 
   const { data: appointments = [], isLoading, isFetching } = useQuery({
     queryKey: ["appointments-list", config.id, rangeStart, rangeEnd],
@@ -717,18 +724,42 @@ export function CalendarTab({ config }: CalendarTabProps) {
     }
   }, []);
 
-  const { min: calendarMin, max: calendarMax, scrollToTime } = useMemo(() => {
-    const { min, max } = calendarMinMaxDates(timezone);
-    return {
-      min,
-      max,
-      scrollToTime: buildScrollToTimeForTimezone(
-        timezone,
-        DAY_VIEW_START_HOUR,
-        DAY_VIEW_END_HOUR,
-      ),
-    };
-  }, [timezone, rbcView]);
+  const { min: calendarMin, max: calendarMax } = useMemo(
+    () => calendarMinMaxDates(timezone),
+    [timezone],
+  );
+
+  // Scroll to earliest event (with 1h margin) for day/week views, else current time
+  const scrollToTime = useMemo(() => {
+    if (rbcView === "month" || events.length === 0) {
+      return buildScrollToTimeForTimezone(timezone, DAY_VIEW_START_HOUR, DAY_VIEW_END_HOUR);
+    }
+
+    // Find the earliest event hour in the visible range
+    let earliestHour = 24;
+    let earliestMin = 0;
+    for (const evt of events) {
+      const s = evt.start;
+      if (!(s instanceof Date)) continue;
+      const h = s.getHours();
+      const m = s.getMinutes();
+      if (h < earliestHour || (h === earliestHour && m < earliestMin)) {
+        earliestHour = h;
+        earliestMin = m;
+      }
+    }
+
+    if (earliestHour >= 24) {
+      return buildScrollToTimeForTimezone(timezone, DAY_VIEW_START_HOUR, DAY_VIEW_END_HOUR);
+    }
+
+    // 1 hour margin before the earliest event, clamped to visible range
+    let scrollH = earliestHour - 1;
+    if (scrollH < DAY_VIEW_START_HOUR) scrollH = DAY_VIEW_START_HOUR;
+    if (scrollH > DAY_VIEW_END_HOUR) scrollH = DAY_VIEW_END_HOUR;
+
+    return new Date(2000, 0, 1, scrollH, 0, 0);
+  }, [rbcView, events, timezone]);
 
   const getNow = useCallback(() => {
     return moment.tz ? moment.tz(timezone).toDate() : new Date();

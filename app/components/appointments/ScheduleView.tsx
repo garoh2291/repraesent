@@ -1,6 +1,7 @@
 import { useState, useMemo, useCallback, useRef } from "react";
 import { useTranslation } from "react-i18next";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
+import moment from "moment-timezone";
 import { Trash2, Clock, ChevronLeft, ChevronRight, Loader2 } from "lucide-react";
 import {
   HoverCard,
@@ -132,15 +133,17 @@ export function ScheduleView({
     return { year: now.getFullYear(), month: now.getMonth() };
   });
 
-  // Compute date range for the API call
+  // Compute date range for the API call (in config timezone, padded by 1 day for CalDAV edge cases)
   const { rangeStart, rangeEnd } = useMemo(() => {
-    const start = new Date(currentMonth.year, currentMonth.month, 1);
-    const end = new Date(currentMonth.year, currentMonth.month + 1, 0, 23, 59, 59);
+    const mStart = moment.tz
+      ? moment.tz([currentMonth.year, currentMonth.month, 1], timezone).subtract(1, "day").startOf("day")
+      : moment([currentMonth.year, currentMonth.month, 1]).subtract(1, "day").startOf("day");
+    const mEnd = mStart.clone().add(1, "day").endOf("month").add(1, "day").endOf("day");
     return {
-      rangeStart: start.toISOString(),
-      rangeEnd: end.toISOString(),
+      rangeStart: mStart.toISOString(),
+      rangeEnd: mEnd.toISOString(),
     };
-  }, [currentMonth]);
+  }, [currentMonth, timezone]);
 
   // Fetch appointments for the current month
   const { data: rawAppointments = [], isLoading, isFetching } = useQuery({

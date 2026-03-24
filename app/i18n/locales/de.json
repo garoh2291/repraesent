@@ -367,6 +367,8 @@
         "sun": "Sonntag"
       }
     },
+    "addAppointment": "Termin hinzufügen",
+    "addShort": "Neu",
     "calendar": {
       "appointment": "Termin",
       "deleteAppointment": "Termin löschen",
@@ -375,6 +377,37 @@
       "deleteConfirm": "Löschen",
       "deleteSuccess": "Termin gelöscht",
       "deleteError": "Termin konnte nicht gelöscht werden"
+    },
+    "schedule": {
+      "today": "Heute",
+      "loading": "Termine werden geladen...",
+      "noEventsMonth": "Keine Termine in diesem Monat"
+    },
+    "viewMode": {
+      "schedule": "Zeitplan",
+      "month": "Monat",
+      "week": "Woche",
+      "day": "Tag"
+    },
+    "addDialog": {
+      "title": "Termin hinzufügen",
+      "withProvider": "Mit",
+      "service": "Leistung",
+      "date": "Datum",
+      "pickDate": "Datum wählen",
+      "time": "Uhrzeit",
+      "loadingSlots": "Verfügbare Zeiten werden geladen...",
+      "noSlots": "Keine verfügbaren Zeiten für dieses Datum.",
+      "customerInfo": "Kundeninformationen",
+      "firstName": "Vorname",
+      "lastName": "Nachname",
+      "email": "E-Mail",
+      "phone": "Telefon",
+      "notes": "Anmerkungen",
+      "notesPlaceholder": "Zusätzliche Anmerkungen...",
+      "submit": "Termin erstellen",
+      "successToast": "Termin erstellt",
+      "errorToast": "Termin konnte nicht erstellt werden"
     }
   },
   "products": {
