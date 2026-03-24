@@ -441,6 +441,7 @@ export function CustomerEmailTab({ config }: CustomerEmailTabProps) {
                 <span className="text-[11px] text-muted-foreground">{replacePreview(subject)}</span>
               </div>
               <iframe
+                key={html + subject}
                 srcDoc={replacePreview(html)}
                 title="Email Preview"
                 className="h-[400px] w-full rounded-b-lg"
