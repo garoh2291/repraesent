@@ -837,6 +837,7 @@ export function CalendarTab({ config }: CalendarTabProps) {
           )}
           <div className={`appointments-calendar h-[560px] sm:h-[700px] rounded-2xl border border-border overflow-hidden transition-opacity duration-150 ${isFetching ? "opacity-70" : "opacity-100"}`}>
             <Calendar
+              key={`${rbcView}-${date.toISOString()}`}
               localizer={localizer}
               formats={formats}
               events={events}
