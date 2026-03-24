@@ -408,6 +408,23 @@
       "submit": "Termin erstellen",
       "successToast": "Termin erstellt",
       "errorToast": "Termin konnte nicht erstellt werden"
+    },
+    "tabCustomerEmail": "Bestätigungs-E-Mail",
+    "customerEmail": {
+      "title": "Kundenbestätigungs-E-Mail",
+      "description": "Wird nach der Buchung über Ihren eigenen E-Mail-Dienst an Kunden gesendet",
+      "saved": "Gespeichert",
+      "icsInfo": "Kalendereinladung (.ics) wird automatisch angehängt",
+      "icsInfoDetail": "Jede Bestätigungs-E-Mail enthält eine .ics-Datei, damit der Kunde den Termin in seinen Kalender eintragen kann. Dies kann nicht deaktiviert werden.",
+      "subject": "Betreff",
+      "subjectHint": "Sie können auch im Betreff {{Variablen}} verwenden.",
+      "variables": "Verfügbare Variablen",
+      "body": "E-Mail-Text (HTML)",
+      "previewReal": "Vorschau verwendet Daten der letzten Terminbuchung.",
+      "previewDummy": "Noch keine Buchungen — Vorschau verwendet Beispieldaten. Sobald ein Kunde bucht, werden dessen Daten hier angezeigt.",
+      "unsaved": "Nicht gespeicherte Änderungen",
+      "allSaved": "Alle Änderungen gespeichert",
+      "save": "Speichern"
     }
   },
   "products": {

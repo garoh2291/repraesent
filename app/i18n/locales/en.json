@@ -408,6 +408,23 @@
       "submit": "Create Appointment",
       "successToast": "Appointment created",
       "errorToast": "Failed to create appointment"
+    },
+    "tabCustomerEmail": "Confirm Email",
+    "customerEmail": {
+      "title": "Customer Confirmation Email",
+      "description": "Sent to customers after booking via your own email service",
+      "saved": "Saved",
+      "icsInfo": "Calendar invite (.ics) is automatically attached",
+      "icsInfoDetail": "Every confirmation email includes an .ics file so the customer can add the appointment to their calendar. This cannot be disabled.",
+      "subject": "Subject",
+      "subjectHint": "You can use {{variables}} in the subject line too.",
+      "variables": "Available Variables",
+      "body": "Email Body (HTML)",
+      "previewReal": "Preview uses data from the last appointment booking.",
+      "previewDummy": "No bookings yet — preview uses sample data. Once a customer books, their details will appear here.",
+      "unsaved": "You have unsaved changes",
+      "allSaved": "All changes saved",
+      "save": "Save"
     }
   },
   "products": {

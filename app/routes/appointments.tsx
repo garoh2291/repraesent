@@ -13,6 +13,7 @@ import { BookingSettingsTab } from "~/components/appointments/BookingSettingsTab
 import { BusinessLogicTab } from "~/components/appointments/BusinessLogicTab";
 import { ServicesTab } from "~/components/appointments/ServicesTab";
 import { ProviderTab } from "~/components/appointments/ProviderTab";
+import { CustomerEmailTab } from "~/components/appointments/CustomerEmailTab";
 import {
   Select,
   SelectContent,
@@ -187,6 +188,11 @@ function AppointmentsDashboard({
   onConfigChange: (id: string) => void;
 }) {
   const { t } = useTranslation();
+  const { currentWorkspace } = useAuthContext();
+  const hasEmailConfig =
+    currentWorkspace?.services?.some(
+      (s) => s.service_type === "email-config" || s.service_slug === "email-config",
+    ) ?? false;
   return (
     <div className="p-4 sm:p-6 space-y-4 sm:space-y-6 app-fade-in relative">
       {/* Header */}
@@ -232,6 +238,9 @@ function AppointmentsDashboard({
             <TabsTrigger value="general">{t("appointments.tabGeneral")}</TabsTrigger>
             <TabsTrigger value="booking">{t("appointments.tabBooking")}</TabsTrigger>
             <TabsTrigger value="business">{t("appointments.tabBusinessHours")}</TabsTrigger>
+            {hasEmailConfig && (
+              <TabsTrigger value="customer-email">{t("appointments.tabCustomerEmail", "Confirm Email")}</TabsTrigger>
+            )}
           </TabsList>
         </div>
 
@@ -258,6 +267,12 @@ function AppointmentsDashboard({
         <TabsContent value="business">
           <BusinessLogicTab config={config} />
         </TabsContent>
+
+        {hasEmailConfig && (
+          <TabsContent value="customer-email">
+            <CustomerEmailTab config={config} />
+          </TabsContent>
+        )}
       </Tabs>
 
       {import.meta.env.DEV && <DevEmailProcessor />}

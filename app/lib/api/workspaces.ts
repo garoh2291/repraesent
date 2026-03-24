@@ -118,3 +118,16 @@ export async function updateLeadFallbackConfig(
 ): Promise<void> {
   await apiClient.put("/users/me/workspace/lead-fallback-config", config);
 }
+
+export async function getAppointmentsFallbackConfig(): Promise<LeadFallbackConfig> {
+  const response = await apiClient.get<LeadFallbackConfig>(
+    "/users/me/workspace/appointments-fallback-config"
+  );
+  return response.data;
+}
+
+export async function updateAppointmentsFallbackConfig(
+  config: LeadFallbackConfig
+): Promise<void> {
+  await apiClient.put("/users/me/workspace/appointments-fallback-config", config);
+}
