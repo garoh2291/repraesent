@@ -258,10 +258,13 @@ export async function deleteAppointmentEvent(
 }
 
 export async function getAppointmentsByConfigId(
-  configId: string
+  configId: string,
+  start?: string,
+  end?: string,
 ): Promise<unknown[]> {
   const response = await apiClient.get<unknown[]>(
-    `/appointments/list/${configId}`
+    `/appointments/list/${configId}`,
+    start && end ? { params: { start, end } } : undefined,
   );
   return response.data ?? [];
 }

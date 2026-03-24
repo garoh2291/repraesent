@@ -52,8 +52,11 @@ import {
 import { Calendar as DatePickerCalendar } from "~/components/ui/calendar";
 import { toast } from "sonner";
 import { format, startOfDay } from "date-fns";
-import { Plus, Clock, Loader2, CalendarIcon, Trash2 } from "lucide-react";
+import { Plus, Clock, Loader2, CalendarIcon, Trash2, List, CalendarDays, CalendarRange } from "lucide-react";
 import "react-big-calendar/lib/css/react-big-calendar.css";
+import { ScheduleView } from "./ScheduleView";
+import type { ScheduleEvent } from "./ScheduleView";
+// ScheduleEvent type used for delete handler typing
 
 const localizer = momentLocalizer(moment);
 
@@ -581,9 +584,19 @@ interface CalendarTabProps {
   config: AppointmentConfig;
 }
 
+type CalendarViewMode = "schedule" | "month" | "week" | "day";
+
+const VIEW_MODE_ICONS: Record<CalendarViewMode, React.ReactNode> = {
+  schedule: <List className="w-3.5 h-3.5" />,
+  month: <CalendarDays className="w-3.5 h-3.5" />,
+  week: <CalendarRange className="w-3.5 h-3.5" />,
+  day: <CalendarIcon className="w-3.5 h-3.5" />,
+};
+
 export function CalendarTab({ config }: CalendarTabProps) {
   const { t } = useTranslation();
-  const [view, setView] = useState<View>("week");
+  const [viewMode, setViewMode] = useState<CalendarViewMode>("schedule");
+  const [rbcView, setRbcView] = useState<View>("week");
   const [date, setDate] = useState(new Date());
   const [addDialogOpen, setAddDialogOpen] = useState(false);
   const timezone = config.timezone ?? "UTC";
@@ -616,9 +629,35 @@ export function CalendarTab({ config }: CalendarTabProps) {
     [timeFormat],
   );
 
+  // Compute visible date range for the current RBC view
+  const { rangeStart, rangeEnd } = useMemo(() => {
+    const d = date;
+    let start: Date;
+    let end: Date;
+
+    if (rbcView === "month") {
+      // Month view shows partial weeks at edges — pad by 7 days
+      start = new Date(d.getFullYear(), d.getMonth(), -6);
+      end = new Date(d.getFullYear(), d.getMonth() + 1, 7, 23, 59, 59);
+    } else if (rbcView === "week") {
+      const dow = firstWeekday === "sunday" ? 0 : 1;
+      const dayOfWeek = d.getDay();
+      const diff = (dayOfWeek - dow + 7) % 7;
+      start = new Date(d.getFullYear(), d.getMonth(), d.getDate() - diff);
+      end = new Date(start.getFullYear(), start.getMonth(), start.getDate() + 6, 23, 59, 59);
+    } else {
+      // day view
+      start = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+      end = new Date(d.getFullYear(), d.getMonth(), d.getDate(), 23, 59, 59);
+    }
+
+    return { rangeStart: start.toISOString(), rangeEnd: end.toISOString() };
+  }, [date, rbcView, firstWeekday]);
+
   const { data: appointments = [], isLoading } = useQuery({
-    queryKey: ["appointments-list", config.id],
-    queryFn: () => getAppointmentsByConfigId(config.id),
+    queryKey: ["appointments-list", config.id, rangeStart, rangeEnd],
+    queryFn: () => getAppointmentsByConfigId(config.id, rangeStart, rangeEnd),
+    enabled: viewMode !== "schedule",
   });
 
   const events: CalendarEvent[] = appointments.map((apt: unknown) => {
@@ -644,7 +683,9 @@ export function CalendarTab({ config }: CalendarTabProps) {
       deleteAppointmentEvent(config.id, eventUrl),
     onSuccess: () => {
       toast.success(t("appointments.calendar.deleteSuccess", "Appointment deleted"));
+      // Invalidate both calendar and schedule queries
       queryClient.invalidateQueries({ queryKey: ["appointments-list", config.id] });
+      queryClient.invalidateQueries({ queryKey: ["schedule-appointments", config.id] });
       setDeleteTarget(null);
     },
     onError: () => {
@@ -656,12 +697,23 @@ export function CalendarTab({ config }: CalendarTabProps) {
     setDeleteTarget(event);
   }, []);
 
+  const handleScheduleDelete = useCallback((event: ScheduleEvent) => {
+    setDeleteTarget(event as CalendarEvent);
+  }, []);
+
   const onNavigate = useCallback((newDate: Date) => {
     setDate(newDate);
   }, []);
 
   const onView = useCallback((newView: View) => {
-    setView(newView);
+    setRbcView(newView);
+  }, []);
+
+  const handleViewModeChange = useCallback((mode: CalendarViewMode) => {
+    setViewMode(mode);
+    if (mode !== "schedule") {
+      setRbcView(mode as View);
+    }
   }, []);
 
   const { min: calendarMin, max: calendarMax, scrollToTime } = useMemo(() => {
@@ -675,7 +727,7 @@ export function CalendarTab({ config }: CalendarTabProps) {
         DAY_VIEW_END_HOUR,
       ),
     };
-  }, [timezone, view]);
+  }, [timezone, rbcView]);
 
   const getNow = useCallback(() => {
     return moment.tz ? moment.tz(timezone).toDate() : new Date();
@@ -683,56 +735,104 @@ export function CalendarTab({ config }: CalendarTabProps) {
 
   function handleAppointmentAdded() {
     queryClient.invalidateQueries({ queryKey: ["appointments-list", config.id] });
+    queryClient.invalidateQueries({ queryKey: ["schedule-appointments", config.id] });
   }
 
   if (isLoading) {
     return <div className="h-[600px] animate-pulse rounded-2xl bg-muted" />;
   }
 
+  const viewModes: CalendarViewMode[] = ["schedule", "month", "week", "day"];
+
   return (
     <div className="space-y-3">
-      <div className="flex justify-end">
+      {/* Top bar: view switcher + add button */}
+      <div className="flex items-center justify-between gap-2">
+        {/* View mode switcher */}
+        <div className="inline-flex items-center rounded-lg border border-border bg-card p-0.5 gap-0.5">
+          {viewModes.map((mode) => (
+            <button
+              key={mode}
+              type="button"
+              onClick={() => handleViewModeChange(mode)}
+              className={`
+                inline-flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-xs font-medium
+                transition-colors duration-100
+                ${
+                  viewMode === mode
+                    ? "bg-foreground text-background shadow-sm"
+                    : "text-muted-foreground hover:text-foreground hover:bg-muted"
+                }
+              `}
+            >
+              {VIEW_MODE_ICONS[mode]}
+              <span className="hidden sm:inline">
+                {t(`appointments.viewMode.${mode}`, mode.charAt(0).toUpperCase() + mode.slice(1))}
+              </span>
+            </button>
+          ))}
+        </div>
+
         <Button
           size="sm"
           onClick={() => setAddDialogOpen(true)}
           className="gap-2"
         >
           <Plus className="w-4 h-4" />
-          {t("appointments.addAppointment", "Add Appointment")}
+          <span className="hidden sm:inline">
+            {t("appointments.addAppointment", "Add Appointment")}
+          </span>
+          <span className="sm:hidden">
+            {t("appointments.addShort", "Add")}
+          </span>
         </Button>
       </div>
 
-      <div className="appointments-calendar h-[560px] sm:h-[700px] rounded-2xl border border-border overflow-hidden">
-        <Calendar
-          localizer={localizer}
-          formats={formats}
-          events={events}
-          startAccessor="start"
-          endAccessor="end"
-          titleAccessor="title"
-          views={["month", "week", "day"]}
-          view={view}
-          date={date}
-          onView={onView}
-          onNavigate={onNavigate}
-          min={calendarMin}
-          max={calendarMax}
-          scrollToTime={scrollToTime}
-          getNow={getNow}
-          popup
-          components={{
-            event: AppointmentEvent,
-            eventWrapper: (props) => (
-              <AppointmentEventWrapper
-                {...props}
-                timezone={timezone}
-                timeFormat={timeFormat}
-                onDelete={handleDeleteRequest}
-              />
-            ),
-          }}
+      {/* Schedule View */}
+      {viewMode === "schedule" && (
+        <ScheduleView
+          configId={config.id}
+          timezone={timezone}
+          timeFormat={timeFormat}
+          onDelete={handleScheduleDelete}
         />
-      </div>
+      )}
+
+      {/* Calendar Views (month / week / day) */}
+      {viewMode !== "schedule" && (
+        <div className="appointments-calendar h-[560px] sm:h-[700px] rounded-2xl border border-border overflow-hidden">
+          <Calendar
+            localizer={localizer}
+            formats={formats}
+            events={events}
+            startAccessor="start"
+            endAccessor="end"
+            titleAccessor="title"
+            views={["month", "week", "day"]}
+            view={rbcView}
+            date={date}
+            onView={onView}
+            onNavigate={onNavigate}
+            min={calendarMin}
+            max={calendarMax}
+            scrollToTime={scrollToTime}
+            getNow={getNow}
+            popup
+            toolbar={true}
+            components={{
+              event: AppointmentEvent,
+              eventWrapper: (props) => (
+                <AppointmentEventWrapper
+                  {...props}
+                  timezone={timezone}
+                  timeFormat={timeFormat}
+                  onDelete={handleDeleteRequest}
+                />
+              ),
+            }}
+          />
+        </div>
+      )}
 
       <AddAppointmentDialog
         open={addDialogOpen}
