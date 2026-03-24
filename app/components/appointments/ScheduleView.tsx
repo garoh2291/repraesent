@@ -143,9 +143,10 @@ export function ScheduleView({
   }, [currentMonth]);
 
   // Fetch appointments for the current month
-  const { data: rawAppointments = [], isLoading } = useQuery({
+  const { data: rawAppointments = [], isLoading, isFetching } = useQuery({
     queryKey: ["schedule-appointments", configId, currentMonth.year, currentMonth.month],
     queryFn: () => getAppointmentsByConfigId(configId, rangeStart, rangeEnd),
+    placeholderData: (prev) => prev,
   });
 
   // Parse raw appointments into ScheduleEvent[]
@@ -262,8 +263,14 @@ export function ScheduleView({
       </div>
 
       {/* ── Event List ───────────────────────────────────────── */}
-      <div ref={scrollRef}>
-        {isLoading ? (
+      <div ref={scrollRef} className="relative">
+        {/* Subtle loading bar */}
+        {isFetching && (
+          <div className="absolute top-0 left-0 right-0 z-20 h-0.5 overflow-hidden">
+            <div className="h-full w-full bg-primary/40 animate-pulse" />
+          </div>
+        )}
+        {isLoading && filteredDays.length === 0 ? (
           <div className="flex items-center justify-center h-[200px] text-muted-foreground text-sm gap-2">
             <Loader2 className="w-4 h-4 animate-spin" />
             {t("appointments.schedule.loading", "Loading appointments...")}
@@ -276,7 +283,8 @@ export function ScheduleView({
             )}
           </div>
         ) : (
-          filteredDays.map((day) => {
+          <div className={`transition-opacity duration-150 ${isFetching ? "opacity-60" : "opacity-100"}`}>
+          {filteredDays.map((day) => {
             const today = isToday(day.date);
             return (
               <div
@@ -324,7 +332,8 @@ export function ScheduleView({
                 </div>
               </div>
             );
-          })
+          })}
+          </div>
         )}
 
         {/* Bottom padding */}

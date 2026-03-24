@@ -654,10 +654,11 @@ export function CalendarTab({ config }: CalendarTabProps) {
     return { rangeStart: start.toISOString(), rangeEnd: end.toISOString() };
   }, [date, rbcView, firstWeekday]);
 
-  const { data: appointments = [], isLoading } = useQuery({
+  const { data: appointments = [], isLoading, isFetching } = useQuery({
     queryKey: ["appointments-list", config.id, rangeStart, rangeEnd],
     queryFn: () => getAppointmentsByConfigId(config.id, rangeStart, rangeEnd),
     enabled: viewMode !== "schedule",
+    placeholderData: (prev) => prev,
   });
 
   const events: CalendarEvent[] = appointments.map((apt: unknown) => {
@@ -738,10 +739,6 @@ export function CalendarTab({ config }: CalendarTabProps) {
     queryClient.invalidateQueries({ queryKey: ["schedule-appointments", config.id] });
   }
 
-  if (isLoading) {
-    return <div className="h-[600px] animate-pulse rounded-2xl bg-muted" />;
-  }
-
   const viewModes: CalendarViewMode[] = ["schedule", "month", "week", "day"];
 
   return (
@@ -800,37 +797,45 @@ export function CalendarTab({ config }: CalendarTabProps) {
 
       {/* Calendar Views (month / week / day) */}
       {viewMode !== "schedule" && (
-        <div className="appointments-calendar h-[560px] sm:h-[700px] rounded-2xl border border-border overflow-hidden">
-          <Calendar
-            localizer={localizer}
-            formats={formats}
-            events={events}
-            startAccessor="start"
-            endAccessor="end"
-            titleAccessor="title"
-            views={["month", "week", "day"]}
-            view={rbcView}
-            date={date}
-            onView={onView}
-            onNavigate={onNavigate}
-            min={calendarMin}
-            max={calendarMax}
-            scrollToTime={scrollToTime}
-            getNow={getNow}
-            popup
-            toolbar={true}
-            components={{
-              event: AppointmentEvent,
-              eventWrapper: (props) => (
-                <AppointmentEventWrapper
-                  {...props}
-                  timezone={timezone}
-                  timeFormat={timeFormat}
-                  onDelete={handleDeleteRequest}
-                />
-              ),
-            }}
-          />
+        <div className="relative">
+          {/* Subtle loading bar at top during fetch */}
+          {isFetching && (
+            <div className="absolute top-0 left-0 right-0 z-20 h-0.5 overflow-hidden rounded-t-2xl">
+              <div className="h-full w-full bg-primary/40 animate-pulse" />
+            </div>
+          )}
+          <div className={`appointments-calendar h-[560px] sm:h-[700px] rounded-2xl border border-border overflow-hidden transition-opacity duration-150 ${isFetching ? "opacity-70" : "opacity-100"}`}>
+            <Calendar
+              localizer={localizer}
+              formats={formats}
+              events={events}
+              startAccessor="start"
+              endAccessor="end"
+              titleAccessor="title"
+              views={["month", "week", "day"]}
+              view={rbcView}
+              date={date}
+              onView={onView}
+              onNavigate={onNavigate}
+              min={calendarMin}
+              max={calendarMax}
+              scrollToTime={scrollToTime}
+              getNow={getNow}
+              popup
+              toolbar={true}
+              components={{
+                event: AppointmentEvent,
+                eventWrapper: (props) => (
+                  <AppointmentEventWrapper
+                    {...props}
+                    timezone={timezone}
+                    timeFormat={timeFormat}
+                    onDelete={handleDeleteRequest}
+                  />
+                ),
+              }}
+            />
+          </div>
         </div>
       )}
 
