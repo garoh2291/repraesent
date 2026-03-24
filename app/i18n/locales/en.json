@@ -368,7 +368,13 @@
       }
     },
     "calendar": {
-      "appointment": "Appointment"
+      "appointment": "Appointment",
+      "deleteAppointment": "Delete appointment",
+      "deleteTitle": "Delete appointment",
+      "deleteDescription": "This appointment will be permanently deleted from your calendar. This action cannot be undone.",
+      "deleteConfirm": "Delete",
+      "deleteSuccess": "Appointment deleted",
+      "deleteError": "Failed to delete appointment"
     }
   },
   "products": {

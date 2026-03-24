@@ -248,6 +248,15 @@ export async function updateProviderSettingsByConfigId(
   return response.data;
 }
 
+export async function deleteAppointmentEvent(
+  configId: string,
+  eventUrl: string
+): Promise<void> {
+  await apiClient.delete(`/appointments/event/${configId}`, {
+    data: { eventUrl },
+  });
+}
+
 export async function getAppointmentsByConfigId(
   configId: string
 ): Promise<unknown[]> {

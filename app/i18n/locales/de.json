@@ -368,7 +368,13 @@
       }
     },
     "calendar": {
-      "appointment": "Termin"
+      "appointment": "Termin",
+      "deleteAppointment": "Termin löschen",
+      "deleteTitle": "Termin löschen",
+      "deleteDescription": "Dieser Termin wird dauerhaft aus Ihrem Kalender gelöscht. Diese Aktion kann nicht rückgängig gemacht werden.",
+      "deleteConfirm": "Löschen",
+      "deleteSuccess": "Termin gelöscht",
+      "deleteError": "Termin konnte nicht gelöscht werden"
     }
   },
   "products": {

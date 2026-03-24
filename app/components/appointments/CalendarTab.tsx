@@ -7,6 +7,7 @@ import {
   getAppointmentsByConfigId,
   getAvailabilitiesPublic,
   createBooking,
+  deleteAppointmentEvent,
 } from "~/lib/api/appointments";
 import type { AppointmentConfig } from "~/lib/api/appointments";
 import type { Event, View } from "react-big-calendar";
@@ -22,6 +23,16 @@ import {
   DialogTitle,
   DialogFooter,
 } from "~/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "~/components/ui/alert-dialog";
 import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
 import { Label } from "~/components/ui/label";
@@ -41,7 +52,7 @@ import {
 import { Calendar as DatePickerCalendar } from "~/components/ui/calendar";
 import { toast } from "sonner";
 import { format, startOfDay } from "date-fns";
-import { Plus, Clock, Loader2, CalendarIcon } from "lucide-react";
+import { Plus, Clock, Loader2, CalendarIcon, Trash2 } from "lucide-react";
 import "react-big-calendar/lib/css/react-big-calendar.css";
 
 const localizer = momentLocalizer(moment);
@@ -81,18 +92,20 @@ function parseBookingNotes(notes: string): ParsedBookingInfo {
   return result;
 }
 
-type CalendarEvent = Event & { notes?: string };
+type CalendarEvent = Event & { notes?: string; eventId?: string; eventUrl?: string };
 
 function AppointmentEventWrapper({
   event,
   children,
   timezone,
   timeFormat,
+  onDelete,
 }: {
   event: CalendarEvent;
   children?: React.ReactNode;
   timezone: string;
   timeFormat: string;
+  onDelete?: (event: CalendarEvent) => void;
 }) {
   const { t } = useTranslation();
   const title = event.title ?? t("appointments.calendar.appointment");
@@ -110,7 +123,22 @@ function AppointmentEventWrapper({
       <HoverCardTrigger asChild>{children}</HoverCardTrigger>
       <HoverCardContent side="top" className="w-80">
         <div className="space-y-3">
-          <p className="font-medium">{title}</p>
+          <div className="flex items-start justify-between gap-2">
+            <p className="font-medium">{title}</p>
+            {event.eventUrl && onDelete && (
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onDelete(event);
+                }}
+                className="shrink-0 rounded-md p-1.5 text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
+                title={t("appointments.calendar.deleteAppointment", "Delete appointment")}
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+              </button>
+            )}
+          </div>
           <p className="text-sm text-muted-foreground">
             {formatInTimezone(start, timezone, timeFormat)} –{" "}
             {formatInTimezone(end, timezone, timeFormat)}
@@ -565,8 +593,29 @@ export function CalendarTab({ config }: CalendarTabProps) {
       end: new Date(end),
       title: summary,
       notes: notes || undefined,
+      eventId: (a.id as string) || undefined,
+      eventUrl: (a.url as string) || undefined,
     };
   });
+
+  const [deleteTarget, setDeleteTarget] = useState<CalendarEvent | null>(null);
+
+  const deleteMutation = useMutation({
+    mutationFn: (eventUrl: string) =>
+      deleteAppointmentEvent(config.id, eventUrl),
+    onSuccess: () => {
+      toast.success(t("appointments.calendar.deleteSuccess", "Appointment deleted"));
+      queryClient.invalidateQueries({ queryKey: ["appointments-list", config.id] });
+      setDeleteTarget(null);
+    },
+    onError: () => {
+      toast.error(t("appointments.calendar.deleteError", "Failed to delete appointment"));
+    },
+  });
+
+  const handleDeleteRequest = useCallback((event: CalendarEvent) => {
+    setDeleteTarget(event);
+  }, []);
 
   const onNavigate = useCallback((newDate: Date) => {
     setDate(newDate);
@@ -621,6 +670,7 @@ export function CalendarTab({ config }: CalendarTabProps) {
                 {...props}
                 timezone={timezone}
                 timeFormat={timeFormat}
+                onDelete={handleDeleteRequest}
               />
             ),
           }}
@@ -633,6 +683,46 @@ export function CalendarTab({ config }: CalendarTabProps) {
         config={config}
         onSuccess={handleAppointmentAdded}
       />
+
+      <AlertDialog
+        open={!!deleteTarget}
+        onOpenChange={(open) => {
+          if (!open) setDeleteTarget(null);
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              {t("appointments.calendar.deleteTitle", "Delete appointment")}
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              {t(
+                "appointments.calendar.deleteDescription",
+                "This appointment will be permanently deleted from your calendar. This action cannot be undone.",
+              )}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={deleteMutation.isPending}>
+              {t("common.cancel", "Cancel")}
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                if (deleteTarget?.eventUrl) {
+                  deleteMutation.mutate(deleteTarget.eventUrl);
+                }
+              }}
+              disabled={deleteMutation.isPending}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {deleteMutation.isPending && (
+                <Loader2 className="w-4 h-4 animate-spin mr-2" />
+              )}
+              {t("appointments.calendar.deleteConfirm", "Delete")}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
