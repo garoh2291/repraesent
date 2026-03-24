@@ -534,21 +534,45 @@ function AddAppointmentDialog({
   );
 }
 
-const CALENDAR_MIN = new Date(2000, 0, 1, 7, 0, 0);
-const CALENDAR_MAX = new Date(2000, 0, 1, 22, 0, 0);
+/** Week/day time grid in config timezone (react-big-calendar uses clock from template Date). */
+const DAY_VIEW_START_HOUR = 7;
+const DAY_VIEW_END_HOUR = 20;
+
+function padHour(h: number): string {
+  return String(h).padStart(2, "0");
+}
+
+function calendarMinMaxDates(tz: string): { min: Date; max: Date } {
+  if (moment.tz) {
+    return {
+      min: moment
+        .tz(`2000-01-01 ${padHour(DAY_VIEW_START_HOUR)}:00:00`, tz)
+        .toDate(),
+      max: moment
+        .tz(`2000-01-01 ${padHour(DAY_VIEW_END_HOUR)}:00:00`, tz)
+        .toDate(),
+    };
+  }
+  return {
+    min: new Date(2000, 0, 1, DAY_VIEW_START_HOUR, 0, 0),
+    max: new Date(2000, 0, 1, DAY_VIEW_END_HOUR, 0, 0),
+  };
+}
 
 /** RBC uses only the clock portion; anchor matches min/max. Clamped to visible range. */
-function buildScrollToTimeForTimezone(tz: string): Date {
+function buildScrollToTimeForTimezone(
+  tz: string,
+  startHour: number,
+  endHour: number,
+): Date {
   const m = moment.tz ? moment.tz(tz) : moment();
   let h = m.hour();
   let mins = m.minute();
-  const minH = CALENDAR_MIN.getHours();
-  const maxH = CALENDAR_MAX.getHours();
-  if (h < minH) {
-    return new Date(2000, 0, 1, minH, 0, 0);
+  if (h < startHour) {
+    return new Date(2000, 0, 1, startHour, 0, 0);
   }
-  if (h > maxH || (h === maxH && mins > CALENDAR_MAX.getMinutes())) {
-    return new Date(2000, 0, 1, maxH, 0, 0);
+  if (h > endHour || (h === endHour && mins > 0)) {
+    return new Date(2000, 0, 1, endHour, 0, 0);
   }
   return new Date(2000, 0, 1, h, mins, 0);
 }
@@ -640,11 +664,18 @@ export function CalendarTab({ config }: CalendarTabProps) {
     setView(newView);
   }, []);
 
-  // Recomputed when switching to/from time-grid views so mount-time scroll uses current clock.
-  const scrollToTime = useMemo(
-    () => buildScrollToTimeForTimezone(timezone),
-    [timezone, view],
-  );
+  const { min: calendarMin, max: calendarMax, scrollToTime } = useMemo(() => {
+    const { min, max } = calendarMinMaxDates(timezone);
+    return {
+      min,
+      max,
+      scrollToTime: buildScrollToTimeForTimezone(
+        timezone,
+        DAY_VIEW_START_HOUR,
+        DAY_VIEW_END_HOUR,
+      ),
+    };
+  }, [timezone, view]);
 
   const getNow = useCallback(() => {
     return moment.tz ? moment.tz(timezone).toDate() : new Date();
@@ -684,8 +715,8 @@ export function CalendarTab({ config }: CalendarTabProps) {
           date={date}
           onView={onView}
           onNavigate={onNavigate}
-          min={CALENDAR_MIN}
-          max={CALENDAR_MAX}
+          min={calendarMin}
+          max={calendarMax}
           scrollToTime={scrollToTime}
           getNow={getNow}
           popup
