@@ -593,6 +593,34 @@ body {
   color: var(--muted-foreground);
 }
 
+/* ── Schedule view (Google Calendar-style agenda) ────────── */
+.schedule-view {
+  font-family: inherit;
+}
+.schedule-today-number {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  border-radius: 9999px;
+  background-color: var(--primary);
+  color: var(--primary-foreground);
+}
+.schedule-day-row {
+  position: relative;
+}
+.schedule-day-row:hover {
+  background-color: oklch(from var(--foreground) l c h / 0.02);
+}
+@media (max-width: 767px) {
+  .schedule-today-number {
+    width: 1.5rem;
+    height: 1.5rem;
+    font-size: 0.875rem !important;
+  }
+}
+
 /* ── Mobile calendar overrides ────────────────────────────── */
 @media (max-width: 767px) {
   .appointments-calendar {

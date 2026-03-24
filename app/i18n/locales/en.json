@@ -367,6 +367,8 @@
         "sun": "Sunday"
       }
     },
+    "addAppointment": "Add Appointment",
+    "addShort": "Add",
     "calendar": {
       "appointment": "Appointment",
       "deleteAppointment": "Delete appointment",
@@ -375,6 +377,37 @@
       "deleteConfirm": "Delete",
       "deleteSuccess": "Appointment deleted",
       "deleteError": "Failed to delete appointment"
+    },
+    "schedule": {
+      "today": "Today",
+      "loading": "Loading appointments...",
+      "noEventsMonth": "No appointments this month"
+    },
+    "viewMode": {
+      "schedule": "Schedule",
+      "month": "Month",
+      "week": "Week",
+      "day": "Day"
+    },
+    "addDialog": {
+      "title": "Add Appointment",
+      "withProvider": "With",
+      "service": "Service",
+      "date": "Date",
+      "pickDate": "Pick a date",
+      "time": "Time",
+      "loadingSlots": "Loading available slots...",
+      "noSlots": "No available slots for this date.",
+      "customerInfo": "Customer Info",
+      "firstName": "First Name",
+      "lastName": "Last Name",
+      "email": "Email",
+      "phone": "Phone",
+      "notes": "Notes",
+      "notesPlaceholder": "Additional notes...",
+      "submit": "Create Appointment",
+      "successToast": "Appointment created",
+      "errorToast": "Failed to create appointment"
     }
   },
   "products": {
