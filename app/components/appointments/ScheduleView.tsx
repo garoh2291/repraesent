@@ -109,6 +109,15 @@ interface DayGroup {
   events: ScheduleEvent[];
 }
 
+interface MonthGroup {
+  year: number;
+  month: number;
+  label: string;
+  days: DayGroup[];
+}
+
+const SCHEDULE_MONTH_SPAN = 3;
+
 interface ScheduleViewProps {
   configId: string;
   timezone: string;
@@ -127,27 +136,39 @@ export function ScheduleView({
   const { t } = useTranslation();
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  // Current visible month
-  const [currentMonth, setCurrentMonth] = useState(() => {
+  // Start month of the 3-month window (navigates by 1 month)
+  const [startMonth, setStartMonth] = useState(() => {
     const now = new Date();
     return { year: now.getFullYear(), month: now.getMonth() };
   });
 
-  // Compute date range for the API call (in config timezone, padded by 1 day for CalDAV edge cases)
-  const { rangeStart, rangeEnd } = useMemo(() => {
+  // Compute the 3-month window boundaries
+  const { endMonth, rangeStart, rangeEnd } = useMemo(() => {
+    // End month = startMonth + 2
+    let eMonth = startMonth.month + SCHEDULE_MONTH_SPAN - 1;
+    let eYear = startMonth.year;
+    if (eMonth > 11) {
+      eYear += Math.floor(eMonth / 12);
+      eMonth = eMonth % 12;
+    }
+
     const mStart = moment.tz
-      ? moment.tz([currentMonth.year, currentMonth.month, 1], timezone).subtract(1, "day").startOf("day")
-      : moment([currentMonth.year, currentMonth.month, 1]).subtract(1, "day").startOf("day");
-    const mEnd = mStart.clone().add(1, "day").endOf("month").add(1, "day").endOf("day");
+      ? moment.tz([startMonth.year, startMonth.month, 1], timezone).subtract(1, "day").startOf("day")
+      : moment([startMonth.year, startMonth.month, 1]).subtract(1, "day").startOf("day");
+    const mEnd = moment.tz
+      ? moment.tz([eYear, eMonth, 1], timezone).endOf("month").add(1, "day").endOf("day")
+      : moment([eYear, eMonth, 1]).endOf("month").add(1, "day").endOf("day");
+
     return {
+      endMonth: { year: eYear, month: eMonth },
       rangeStart: mStart.toISOString(),
       rangeEnd: mEnd.toISOString(),
     };
-  }, [currentMonth, timezone]);
+  }, [startMonth, timezone]);
 
-  // Fetch appointments for the current month
+  // Fetch appointments for the 3-month window
   const { data: rawAppointments = [], isLoading, isFetching } = useQuery({
-    queryKey: ["schedule-appointments", configId, currentMonth.year, currentMonth.month],
+    queryKey: ["schedule-appointments", configId, startMonth.year, startMonth.month, SCHEDULE_MONTH_SPAN],
     queryFn: () => getAppointmentsByConfigId(configId, rangeStart, rangeEnd),
     placeholderData: (prev) => prev,
   });
@@ -172,14 +193,15 @@ export function ScheduleView({
       .filter(Boolean) as ScheduleEvent[];
   }, [rawAppointments]);
 
-  // Group events by day
-  const filteredDays = useMemo(() => {
+  // Group events by day, then by month
+  const monthGroups = useMemo(() => {
     if (events.length === 0) return [];
 
     const sorted = [...events].sort(
       (a, b) => a.start.getTime() - b.start.getTime(),
     );
 
+    // Group by day
     const dayMap = new Map<string, DayGroup>();
     for (const evt of sorted) {
       const key = `${evt.start.getFullYear()}-${evt.start.getMonth()}-${evt.start.getDate()}`;
@@ -196,13 +218,33 @@ export function ScheduleView({
       dayMap.get(key)!.events.push(evt);
     }
 
-    return Array.from(dayMap.values()).sort(
-      (a, b) => a.date.getTime() - b.date.getTime(),
-    );
+    // Group days by month
+    const mMap = new Map<string, MonthGroup>();
+    for (const day of dayMap.values()) {
+      const mKey = `${day.date.getFullYear()}-${day.date.getMonth()}`;
+      if (!mMap.has(mKey)) {
+        mMap.set(mKey, {
+          year: day.date.getFullYear(),
+          month: day.date.getMonth(),
+          label: MONTH_NAMES[day.date.getMonth()],
+          days: [],
+        });
+      }
+      mMap.get(mKey)!.days.push(day);
+    }
+
+    const result = Array.from(mMap.values()).sort((a, b) => {
+      if (a.year !== b.year) return a.year - b.year;
+      return a.month - b.month;
+    });
+    for (const mg of result) {
+      mg.days.sort((a, b) => a.date.getTime() - b.date.getTime());
+    }
+    return result;
   }, [events]);
 
   const navigatePrev = useCallback(() => {
-    setCurrentMonth((prev) => {
+    setStartMonth((prev) => {
       const m = prev.month - 1;
       return m < 0
         ? { year: prev.year - 1, month: 11 }
@@ -211,7 +253,7 @@ export function ScheduleView({
   }, []);
 
   const navigateNext = useCallback(() => {
-    setCurrentMonth((prev) => {
+    setStartMonth((prev) => {
       const m = prev.month + 1;
       return m > 11
         ? { year: prev.year + 1, month: 0 }
@@ -221,15 +263,25 @@ export function ScheduleView({
 
   const navigateToday = useCallback(() => {
     const now = new Date();
-    setCurrentMonth({ year: now.getFullYear(), month: now.getMonth() });
+    setStartMonth({ year: now.getFullYear(), month: now.getMonth() });
   }, []);
 
-  const headerLabel = `${MONTH_NAMES[currentMonth.month]} ${currentMonth.year}`;
+  // Header label: "Mar – May 2026" or "Nov 2025 – Jan 2026"
+  const headerLabel = useMemo(() => {
+    const sAbbr = MONTH_NAMES[startMonth.month].slice(0, 3);
+    const eAbbr = MONTH_NAMES[endMonth.month].slice(0, 3);
+    if (startMonth.year === endMonth.year) {
+      return `${sAbbr} – ${eAbbr} ${startMonth.year}`;
+    }
+    return `${sAbbr} ${startMonth.year} – ${eAbbr} ${endMonth.year}`;
+  }, [startMonth, endMonth]);
 
   const now = new Date();
   const isCurrentMonth =
-    currentMonth.year === now.getFullYear() &&
-    currentMonth.month === now.getMonth();
+    startMonth.year === now.getFullYear() &&
+    startMonth.month === now.getMonth();
+
+  const hasEvents = monthGroups.length > 0;
 
   return (
     <div className="schedule-view bg-card rounded-2xl border border-border overflow-hidden">
@@ -273,12 +325,12 @@ export function ScheduleView({
             <div className="h-full w-full bg-primary/40 animate-pulse" />
           </div>
         )}
-        {isLoading && filteredDays.length === 0 ? (
+        {isLoading && !hasEvents ? (
           <div className="flex items-center justify-center h-[200px] text-muted-foreground text-sm gap-2">
             <Loader2 className="w-4 h-4 animate-spin" />
             {t("appointments.schedule.loading", "Loading appointments...")}
           </div>
-        ) : filteredDays.length === 0 ? (
+        ) : !hasEvents ? (
           <div className="flex items-center justify-center h-[200px] text-muted-foreground text-sm">
             {t(
               "appointments.schedule.noEventsMonth",
@@ -287,55 +339,67 @@ export function ScheduleView({
           </div>
         ) : (
           <div className={`transition-opacity duration-150 ${isFetching ? "opacity-60" : "opacity-100"}`}>
-          {filteredDays.map((day) => {
-            const today = isToday(day.date);
-            return (
-              <div
-                key={day.date.toISOString()}
-                className="schedule-day-row group"
-              >
-                {/* Day divider line */}
-                <div className="border-b border-border/40" />
-
-                <div className="flex min-h-[40px]">
-                  {/* ── Day gutter ─────────────────────────── */}
-                  <div className="shrink-0 w-[60px] sm:w-[72px] flex items-start pt-2 pb-2 pl-3 sm:pl-4">
-                    <div className="flex flex-col items-center">
-                      <span
-                        className={`
-                          text-base sm:text-lg leading-none font-semibold tabular-nums
-                          ${today ? "schedule-today-number" : "text-foreground"}
-                        `}
-                      >
-                        {day.date.getDate()}
-                      </span>
-                      <span
-                        className={`
-                          text-[0.5625rem] sm:text-[0.625rem] font-bold uppercase tracking-wider mt-0.5
-                          ${today ? "text-primary" : "text-muted-foreground/60"}
-                        `}
-                      >
-                        {DAY_ABBR[day.date.getDay()]}
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* ── Events column ───────────────────────── */}
-                  <div className="flex-1 py-1.5 pr-3 sm:pr-4 space-y-0">
-                    {day.events.map((evt, i) => (
-                      <ScheduleEventRow
-                        key={evt.eventId ?? `${evt.start.toISOString()}-${i}`}
-                        event={evt}
-                        timezone={timezone}
-                        timeFormat={timeFormat}
-                        onDelete={onDelete}
-                      />
-                    ))}
+            {monthGroups.map((mg) => (
+              <div key={`${mg.year}-${mg.month}`}>
+                {/* Month header */}
+                <div className="sticky top-0 z-10 bg-card/95 backdrop-blur-sm border-b border-border/50">
+                  <div className="px-3 sm:px-4 py-1.5">
+                    <span className="text-[0.6875rem] font-bold text-muted-foreground uppercase tracking-widest">
+                      {mg.label}
+                    </span>
                   </div>
                 </div>
+
+                {mg.days.map((day) => {
+                  const today = isToday(day.date);
+                  return (
+                    <div
+                      key={day.date.toISOString()}
+                      className="schedule-day-row group"
+                    >
+                      <div className="border-b border-border/40" />
+
+                      <div className="flex min-h-[40px]">
+                        {/* ── Day gutter ─────────────────────── */}
+                        <div className="shrink-0 w-[60px] sm:w-[72px] flex items-start pt-2 pb-2 pl-3 sm:pl-4">
+                          <div className="flex flex-col items-center">
+                            <span
+                              className={`
+                                text-base sm:text-lg leading-none font-semibold tabular-nums
+                                ${today ? "schedule-today-number" : "text-foreground"}
+                              `}
+                            >
+                              {day.date.getDate()}
+                            </span>
+                            <span
+                              className={`
+                                text-[0.5625rem] sm:text-[0.625rem] font-bold uppercase tracking-wider mt-0.5
+                                ${today ? "text-primary" : "text-muted-foreground/60"}
+                              `}
+                            >
+                              {DAY_ABBR[day.date.getDay()]}
+                            </span>
+                          </div>
+                        </div>
+
+                        {/* ── Events column ───────────────────── */}
+                        <div className="flex-1 py-1.5 pr-3 sm:pr-4 space-y-0">
+                          {day.events.map((evt, i) => (
+                            <ScheduleEventRow
+                              key={evt.eventId ?? `${evt.start.toISOString()}-${i}`}
+                              event={evt}
+                              timezone={timezone}
+                              timeFormat={timeFormat}
+                              onDelete={onDelete}
+                            />
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
-            );
-          })}
+            ))}
           </div>
         )}
 
