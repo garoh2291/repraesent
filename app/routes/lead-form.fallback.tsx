@@ -756,7 +756,7 @@ export default function LeadFallbackPage() {
     setTriggerResult(null);
     try {
       const res = await axios.post(
-        `${apiUrl}/internal/process-lead-fallback-emails`,
+        `${apiUrl}/internal/process-email-queue`,
         {},
         { headers: { "x-cron-api-key": cronKey } }
       );
