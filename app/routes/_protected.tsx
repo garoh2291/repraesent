@@ -8,6 +8,7 @@ import { clearStoredAuth } from "~/lib/hooks/use-auth";
 const ONBOARDING_PREFIX = "/onboarding";
 const PENDING_PATH = "/pending";
 const CLOSED_PATH = "/closed";
+const BRAND_PREFIX = "/brand";
 
 export default function ProtectedLayout() {
   const { t } = useTranslation();
@@ -21,6 +22,8 @@ export default function ProtectedLayout() {
   const isOnClosed = path === CLOSED_PATH;
   const isOnNoWorkspace = path === "/no-workspace";
   const isOnWorkspacePicker = path === "/auth/workspace-picker";
+  const isOnBrand = path.startsWith(BRAND_PREFIX);
+  const isBrandUser = user?.user_type === "brand";
 
   useEffect(() => {
     if (isLoading) return;
@@ -33,9 +36,24 @@ export default function ProtectedLayout() {
       return;
     }
 
-    if (user && user.user_type && user.user_type !== "user") {
+    // Only allow "user" and "brand" types
+    if (user && user.user_type && user.user_type !== "user" && user.user_type !== "brand") {
       clearStoredAuth();
       navigate("/login", { replace: true });
+      return;
+    }
+
+    // Brand user routing: must stay on /brand, redirect if elsewhere
+    if (isBrandUser) {
+      if (!isOnBrand) {
+        navigate("/brand", { replace: true });
+      }
+      return;
+    }
+
+    // Regular user: cannot access /brand
+    if (isOnBrand) {
+      navigate("/", { replace: true });
       return;
     }
 
@@ -141,6 +159,8 @@ export default function ProtectedLayout() {
     isOnClosed,
     isOnNoWorkspace,
     isOnWorkspacePicker,
+    isBrandUser,
+    isOnBrand,
   ]);
 
   if (isLoading) {
@@ -154,10 +174,22 @@ export default function ProtectedLayout() {
     );
   }
 
-  if (
-    !isAuthenticated ||
-    (user && user.user_type && user.user_type !== "user")
-  ) {
+  if (!isAuthenticated) {
+    return null;
+  }
+
+  // Block non-user/non-brand types
+  if (user && user.user_type && user.user_type !== "user" && user.user_type !== "brand") {
+    return null;
+  }
+
+  // Brand user: only render if on /brand
+  if (isBrandUser) {
+    return isOnBrand ? <Outlet /> : null;
+  }
+
+  // Regular user: block /brand
+  if (isOnBrand) {
     return null;
   }
 

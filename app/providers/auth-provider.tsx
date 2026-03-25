@@ -1,6 +1,6 @@
 import { createContext, useContext, type ReactNode } from "react";
 import { useAuth } from "~/lib/hooks/use-auth";
-import type { User, WorkspaceContext } from "~/lib/api/auth";
+import type { User, WorkspaceContext, BrandInfo, BrandWorkspace } from "~/lib/api/auth";
 
 interface AuthContextType {
   user: User | null;
@@ -8,6 +8,8 @@ interface AuthContextType {
   currentWorkspace: WorkspaceContext | null;
   isAuthenticated: boolean;
   isLoading: boolean;
+  brand: BrandInfo | null;
+  brandWorkspaces: BrandWorkspace[];
   requestMagicLink: (email: string) => void;
   requestMagicLinkAsync: (email: string) => Promise<void>;
   isRequestingMagicLink: boolean;

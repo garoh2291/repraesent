@@ -16,9 +16,39 @@ export interface User {
   email: string;
   user_type: string;
   locale?: string;
+  brand_id?: string | null;
   onboarding_completed_at?: string | null;
   created_at?: string;
   updated_at?: string;
+}
+
+/**
+ * Brand info for brand users
+ */
+export interface BrandInfo {
+  id: string;
+  name: string;
+  logo: string | null;
+}
+
+/**
+ * Brand workspace (simplified, no member role)
+ */
+export interface BrandWorkspace {
+  id: string;
+  name: string;
+  status: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+/**
+ * Brand user context response
+ */
+export interface BrandContextResponse {
+  user: User;
+  brand: BrandInfo;
+  workspaces: BrandWorkspace[];
 }
 
 /**
@@ -112,11 +142,15 @@ export const register = async (email: string): Promise<{ status: string }> => {
 };
 
 /**
- * User context response (user + workspaces)
+ * User context response (user + workspaces for regular users, or brand context for brand users)
  */
 export interface UserContextResponse {
   user: User;
   workspaces: WorkspaceContext[];
+  /** Present only for brand users */
+  brand?: BrandInfo;
+  /** Present only for brand users (brand-connected workspaces) */
+  brandWorkspaces?: BrandWorkspace[];
 }
 
 /**
