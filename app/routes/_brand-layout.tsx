@@ -1,18 +1,92 @@
-import { useEffect } from "react";
-import { Outlet } from "react-router";
+import { useEffect, useState } from "react";
+import { Link, Outlet, useLocation } from "react-router";
 import { useTranslation } from "react-i18next";
 import { useAuthContext } from "~/providers/auth-provider";
-import { LogOut } from "lucide-react";
+import { BarChart3, LogOut, Menu, X } from "lucide-react";
+import { Sheet, SheetContent } from "~/components/ui/sheet";
+import { cn } from "~/lib/utils";
 
-// the same but without the /api prefix
-
-export default function BrandLayout() {
+function BrandSidebar({ onClose }: { onClose?: () => void }) {
   const { user, brand, logout, isLoggingOut } = useAuthContext();
-  const { i18n, t } = useTranslation();
+  const { t } = useTranslation();
+  const location = useLocation();
 
   const BACKEND_IMG_URL =
-    import.meta.env.VITE_API_URL?.replace("/api", "") ||
-    "http://localhost:8000";
+    import.meta.env.VITE_API_URL?.replace("/api", "") || "http://localhost:8000";
+
+  const isActive =
+    location.pathname === "/brand" || location.pathname === "/";
+
+  return (
+    <aside className="flex h-full w-[220px] shrink-0 flex-col bg-[#111113] border-r border-white/5">
+      {/* Brand identity */}
+      <div className="flex h-14 shrink-0 items-center px-4 border-b border-white/5 gap-2.5">
+        {brand?.logo ? (
+          <img
+            src={`${BACKEND_IMG_URL}${brand.logo}`}
+            alt={brand.name}
+            className="h-7 w-7 rounded-lg object-contain shrink-0"
+          />
+        ) : (
+          <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-white/10 text-white text-[11px] font-bold">
+            {brand?.name?.charAt(0)?.toUpperCase() ?? "B"}
+          </div>
+        )}
+        <div className="flex-1 min-w-0">
+          <p className="text-[13px] font-semibold text-white/90 truncate leading-tight">
+            {brand?.name ?? "Brand"}
+          </p>
+          <p className="text-[11px] text-white/35 truncate leading-tight">
+            {user?.email}
+          </p>
+        </div>
+        {onClose && (
+          <button
+            onClick={onClose}
+            className="shrink-0 flex h-7 w-7 items-center justify-center rounded-md text-white/35 hover:text-white/70 hover:bg-white/5 transition-colors"
+            aria-label="Close navigation"
+          >
+            <X className="h-3.5 w-3.5" />
+          </button>
+        )}
+      </div>
+
+      {/* Navigation */}
+      <nav className="flex-1 p-3 space-y-0.5">
+        <Link
+          to="/brand"
+          onClick={onClose}
+          className={cn(
+            "flex items-center gap-2.5 rounded-lg px-3 py-2 text-[13px] font-medium border-l-2 transition-all duration-150",
+            isActive
+              ? "border-amber-400 bg-amber-400/10 text-amber-300"
+              : "border-transparent text-white/45 hover:bg-white/5 hover:text-white/75"
+          )}
+        >
+          <BarChart3 className="h-4 w-4 shrink-0" />
+          {t("brand.navHome", "Home")}
+        </Link>
+      </nav>
+
+      {/* Bottom: logout */}
+      <div className="shrink-0 border-t border-white/5 p-3">
+        <button
+          onClick={() => logout()}
+          disabled={isLoggingOut}
+          className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-[13px] font-medium text-white/35 hover:bg-white/5 hover:text-white/60 transition-all duration-150 disabled:opacity-50"
+        >
+          <LogOut className="h-4 w-4 shrink-0" />
+          {isLoggingOut ? t("common.loading") : t("common.logout", "Sign out")}
+        </button>
+      </div>
+    </aside>
+  );
+}
+
+export default function BrandLayout() {
+  const { user } = useAuthContext();
+  const { i18n, t } = useTranslation();
+  const [mobileNavOpen, setMobileNavOpen] = useState(false);
 
   useEffect(() => {
     if (!user?.locale) return;
@@ -24,38 +98,41 @@ export default function BrandLayout() {
   }, [user?.locale, i18n]);
 
   return (
-    <div className="min-h-screen bg-[#0f0f11] text-white">
-      {/* Header */}
-      <header className="border-b border-white/6 bg-[#111113]">
-        <div className="mx-auto flex h-16 max-w-5xl items-center justify-between px-4 sm:px-6">
-          <div className="flex items-center gap-3">
-            {brand?.logo && (
-              <img
-                src={`${BACKEND_IMG_URL}${brand.logo}`}
-                alt={brand.name}
-                className="h-8 w-8 rounded-lg object-contain"
-              />
-            )}
-            <div>
-              <h1 className="text-sm font-semibold text-white/90">
-                {brand?.name ?? "Brand"}
-              </h1>
-              <p className="text-xs text-white/40">{user?.email}</p>
-            </div>
-          </div>
-          <button
-            onClick={() => logout()}
-            disabled={isLoggingOut}
-            className="flex h-9 items-center gap-2 rounded-lg border border-white/10 bg-white/5 px-3 text-xs font-medium text-white/60 transition-colors hover:bg-white/8 hover:text-white/80 disabled:opacity-50"
-          >
-            <LogOut className="h-3.5 w-3.5" />
-            {t("common.logout", "Sign out")}
-          </button>
-        </div>
-      </header>
+    <div className="flex h-screen overflow-hidden bg-[#0f0f11]">
+      {/* Desktop sidebar */}
+      <div className="hidden lg:flex">
+        <BrandSidebar />
+      </div>
 
-      {/* Content */}
-      <main className="mx-auto max-w-5xl px-4 py-8 sm:px-6">
+      {/* Mobile sidebar sheet */}
+      <Sheet open={mobileNavOpen} onOpenChange={setMobileNavOpen}>
+        <SheetContent
+          side="left"
+          showCloseButton={false}
+          className="p-0 w-[220px] bg-[#111113] border-r border-white/5 gap-0"
+        >
+          <BrandSidebar onClose={() => setMobileNavOpen(false)} />
+        </SheetContent>
+      </Sheet>
+
+      <main className="flex-1 min-w-0 m-2 lg:ml-0 rounded-2xl overflow-y-auto bg-background flex flex-col shadow-[0_0_0_1px_rgba(255,255,255,0.04)]">
+        {/* Mobile top bar */}
+        <div className="flex lg:hidden items-center h-14 px-4 border-b border-border bg-card shrink-0 gap-3">
+          <button
+            onClick={() => setMobileNavOpen(true)}
+            className="flex h-9 w-9 items-center justify-center rounded-lg border border-border text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+            aria-label="Open navigation"
+          >
+            <Menu className="h-4 w-4" />
+          </button>
+          <div className="flex-1 flex justify-center">
+            <span className="text-sm font-semibold text-foreground">
+              {t("brand.navHome", "Home")}
+            </span>
+          </div>
+          <div className="w-9" />
+        </div>
+
         <Outlet />
       </main>
     </div>

@@ -1020,5 +1020,17 @@
     "confirmDelete": "Are you sure?",
     "noFormsYet": "No confirmation emails yet. Add one to get started.",
     "selectForm": "Select a form from the left to edit its email."
+  },
+  "brand": {
+    "navHome": "Home",
+    "pageTitle": "Brand Dashboard - Repraesent",
+    "greeting": "Good to see you.",
+    "greetingSubtitle": "Here's how your workspaces are performing.",
+    "analytics": "Home",
+    "bookingsChart": "Appointment Bookings",
+    "bookingsDescription": "Leads submitted via the appointment booking form",
+    "submissionsChart": "Form Submissions",
+    "submissionsDescription": "All form submissions excluding appointment bookings and hidden leads",
+    "noData": "No data available"
   }
 }

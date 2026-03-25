@@ -1020,5 +1020,17 @@
     "confirmDelete": "Sind Sie sicher?",
     "noFormsYet": "Noch keine Bestätigungsmails. Fügen Sie eine hinzu, um zu beginnen.",
     "selectForm": "Wählen Sie links ein Formular aus, um die E-Mail zu bearbeiten."
+  },
+  "brand": {
+    "navHome": "Startseite",
+    "pageTitle": "Brand Dashboard - Repraesent",
+    "greeting": "Schön, Sie zu sehen.",
+    "greetingSubtitle": "So entwickeln sich Ihre Arbeitsbereiche.",
+    "analytics": "Startseite",
+    "bookingsChart": "Terminbuchungen",
+    "bookingsDescription": "Leads über das Terminbuchungsformular",
+    "submissionsChart": "Formularanfragen",
+    "submissionsDescription": "Alle Formularanfragen ohne Terminbuchungen und ausgeblendete Leads",
+    "noData": "Keine Daten verfügbar"
   }
 }
