@@ -131,3 +131,30 @@ export async function updateAppointmentsFallbackConfig(
 ): Promise<void> {
   await apiClient.put("/users/me/workspace/appointments-fallback-config", config);
 }
+
+export interface CalDavConfig {
+  caldav_username: string;
+  caldav_server: string;
+  caldav_path: string;
+  caldav_port: number;
+  caldav_ssl: boolean;
+  caldav_full_url: string;
+  has_password: boolean;
+  service_id: string;
+}
+
+export async function getCalDavConfig(): Promise<CalDavConfig | null> {
+  const response = await apiClient.get<CalDavConfig | null>(
+    "/users/me/workspace/caldav-config"
+  );
+  return response.data;
+}
+
+export async function decryptCalDavPassword(
+  serviceId: string
+): Promise<string> {
+  const response = await apiClient.get<{ password: string }>(
+    `/users/me/workspace/email-config-password?serviceId=${serviceId}`
+  );
+  return response.data.password;
+}

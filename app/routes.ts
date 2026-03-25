@@ -34,6 +34,7 @@ export default [
       route("email", "routes/email.tsx"),
       route("tasks", "routes/tasks.tsx"),
       route("settings", "routes/settings.tsx"),
+      route("instructions", "routes/instructions.tsx"),
     ]),
   ]),
 ] satisfies RouteConfig;

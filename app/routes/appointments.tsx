@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router";
 import { useTranslation } from "react-i18next";
 import axios from "axios";
-import { Play, Loader2, CheckCircle2, XCircle } from "lucide-react";
+import { Play, Loader2, CheckCircle2, XCircle, CalendarCog } from "lucide-react";
 import { useAuthContext } from "~/providers/auth-provider";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "~/components/ui/tabs";
 import { type AppointmentConfig } from "~/lib/api/appointments";
@@ -14,6 +14,7 @@ import { BusinessLogicTab } from "~/components/appointments/BusinessLogicTab";
 import { ServicesTab } from "~/components/appointments/ServicesTab";
 import { ProviderTab } from "~/components/appointments/ProviderTab";
 import { CustomerEmailTab } from "~/components/appointments/CustomerEmailTab";
+import { useCalDavConfig } from "~/components/appointments/CalDavInstructionsModal";
 import {
   Select,
   SelectContent,
@@ -193,6 +194,8 @@ function AppointmentsDashboard({
     currentWorkspace?.services?.some(
       (s) => s.service_type === "email-config" || s.service_slug === "email-config",
     ) ?? false;
+  const { data: caldavConfig } = useCalDavConfig();
+  const navigate = useNavigate();
   return (
     <div className="p-4 sm:p-6 space-y-4 sm:space-y-6 app-fade-in relative">
       {/* Header */}
@@ -224,6 +227,17 @@ function AppointmentsDashboard({
               </SelectContent>
             </Select>
           </div>
+        )}
+
+        {caldavConfig && (
+          <button
+            type="button"
+            onClick={() => navigate("/instructions")}
+            className="inline-flex items-center gap-1.5 rounded-lg bg-emerald-600 px-3.5 py-2 text-xs font-semibold text-white shadow-sm transition-colors hover:bg-emerald-700"
+          >
+            <CalendarCog className="h-3.5 w-3.5" />
+            {t("appointments.caldav.setupButton")}
+          </button>
         )}
       </div>
 
@@ -276,6 +290,7 @@ function AppointmentsDashboard({
       </Tabs>
 
       {import.meta.env.DEV && <DevEmailProcessor />}
+
     </div>
   );
 }
