@@ -112,25 +112,88 @@ function PasswordCopyButton({ config }: { config: CalDavConfig }) {
   );
 }
 
-function StepItem({ num, text }: { num: number; text: string }) {
-  const rendered = text.replace(
-    /\*\*(.+?)\*\*/g,
-    '<strong class="font-semibold text-neutral-900">$1</strong>',
-  );
-  const withLinks = rendered.replace(
-    /\[([^\]]+)\]\(([^)]+)\)/g,
-    '<a href="$2" target="_blank" rel="noopener noreferrer" class="underline text-emerald-700 hover:text-emerald-600">$1</a>',
-  );
+function StepItem({
+  num,
+  text,
+  values,
+}: {
+  num: number;
+  text: string;
+  values?: Record<string, string>;
+}) {
+  // Parse: **bold**, [link](url), {{val:key:Label}}
+  // Split on all three patterns, preserving delimiters
+  const parts: React.ReactNode[] = [];
+  // Process in order: first replace {{val:...}} markers, then bold, then links
+  const regex =
+    /(\*\*(.+?)\*\*|\[([^\]]+)\]\(([^)]+)\)|\{\{val:([^:}]+):([^}]+)\}\})/g;
+  let lastIndex = 0;
+  let match: RegExpExecArray | null;
+
+  while ((match = regex.exec(text)) !== null) {
+    // Push text before match
+    if (match.index > lastIndex) {
+      parts.push(text.slice(lastIndex, match.index));
+    }
+
+    if (match[2]) {
+      // **bold**
+      parts.push(
+        <strong key={match.index} className="font-semibold text-neutral-900">
+          {match[2]}
+        </strong>,
+      );
+    } else if (match[3] && match[4]) {
+      // [text](url)
+      parts.push(
+        <a
+          key={match.index}
+          href={match[4]}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="underline text-emerald-700 hover:text-emerald-600"
+        >
+          {match[3]}
+        </a>,
+      );
+    } else if (match[5] && match[6]) {
+      // {{val:key:Label}} — hoverable value tooltip
+      const val = values?.[match[5]];
+      if (val) {
+        parts.push(
+          <span key={match.index} className="relative group/val inline-block">
+            <span className="font-semibold text-neutral-900 border-b border-dashed border-neutral-400 cursor-help">
+              {match[6]}
+            </span>
+            <span className="pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-2 whitespace-nowrap rounded-lg bg-neutral-900 px-3 py-1.5 text-[11px] font-mono text-white opacity-0 shadow-lg transition-opacity group-hover/val:opacity-100 z-10">
+              {val}
+              <span className="absolute top-full left-1/2 -translate-x-1/2 -mt-px border-4 border-transparent border-t-neutral-900" />
+            </span>
+          </span>,
+        );
+      } else {
+        parts.push(
+          <strong key={match.index} className="font-semibold text-neutral-900">
+            {match[6]}
+          </strong>,
+        );
+      }
+    }
+
+    lastIndex = match.index + match[0].length;
+  }
+
+  // Push remaining text
+  if (lastIndex < text.length) {
+    parts.push(text.slice(lastIndex));
+  }
 
   return (
     <div className="flex gap-4">
       <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-neutral-900 text-xs font-bold text-white">
         {num}
       </div>
-      <p
-        className="text-sm leading-relaxed text-neutral-600 pt-1"
-        dangerouslySetInnerHTML={{ __html: withLinks }}
-      />
+      <p className="text-sm leading-relaxed text-neutral-600 pt-1">{parts}</p>
     </div>
   );
 }
@@ -199,6 +262,14 @@ export default function InstructionsPage() {
   const fullUrl =
     config.caldav_full_url ||
     `${config.caldav_ssl ? "https" : "http"}://${config.caldav_server}${config.caldav_port !== 443 && config.caldav_port !== 80 ? `:${config.caldav_port}` : ""}${config.caldav_path}`;
+
+  const stepValues: Record<string, string> = {
+    username: config.caldav_username,
+    server: config.caldav_server,
+    path: config.caldav_path,
+    port: String(config.caldav_port),
+    full_url: fullUrl,
+  };
 
   return (
     <div className="p-4 sm:p-6 lg:p-8 max-w-3xl mx-auto app-fade-in">
@@ -281,17 +352,17 @@ export default function InstructionsPage() {
           </h2>
         </div>
         <div className="space-y-4 pl-1">
-          <StepItem num={1} text={t("appointments.caldav.appleStep1")} />
-          <StepItem num={2} text={t("appointments.caldav.appleStep2")} />
-          <StepItem num={3} text={t("appointments.caldav.appleStep3")} />
+          <StepItem values={stepValues} num={1} text={t("appointments.caldav.appleStep1")} />
+          <StepItem values={stepValues} num={2} text={t("appointments.caldav.appleStep2")} />
+          <StepItem values={stepValues} num={3} text={t("appointments.caldav.appleStep3")} />
           <ImagePlaceholder name={t("appointments.caldav.appleImg1")} />
-          <StepItem num={4} text={t("appointments.caldav.appleStep4")} />
+          <StepItem values={stepValues} num={4} text={t("appointments.caldav.appleStep4")} />
           <ImagePlaceholder name={t("appointments.caldav.appleImg2")} />
-          <StepItem num={5} text={t("appointments.caldav.appleStep5")} />
-          <StepItem num={6} text={t("appointments.caldav.appleStep6")} />
-          <StepItem num={7} text={t("appointments.caldav.appleStep7")} />
+          <StepItem values={stepValues} num={5} text={t("appointments.caldav.appleStep5")} />
+          <StepItem values={stepValues} num={6} text={t("appointments.caldav.appleStep6")} />
+          <StepItem values={stepValues} num={7} text={t("appointments.caldav.appleStep7")} />
           <ImagePlaceholder name={t("appointments.caldav.appleImg3")} />
-          <StepItem num={8} text={t("appointments.caldav.appleStep8")} />
+          <StepItem values={stepValues} num={8} text={t("appointments.caldav.appleStep8")} />
           <ImagePlaceholder name={t("appointments.caldav.appleImg4")} />
         </div>
       </section>
@@ -309,16 +380,16 @@ export default function InstructionsPage() {
           </h2>
         </div>
         <div className="space-y-4 pl-1">
-          <StepItem num={1} text={t("appointments.caldav.oneCalStep1")} />
-          <StepItem num={2} text={t("appointments.caldav.oneCalStep2")} />
-          <StepItem num={3} text={t("appointments.caldav.oneCalStep3")} />
+          <StepItem values={stepValues} num={1} text={t("appointments.caldav.oneCalStep1")} />
+          <StepItem values={stepValues} num={2} text={t("appointments.caldav.oneCalStep2")} />
+          <StepItem values={stepValues} num={3} text={t("appointments.caldav.oneCalStep3")} />
           <ImagePlaceholder name={t("appointments.caldav.oneCalImg1")} />
-          <StepItem num={4} text={t("appointments.caldav.oneCalStep4")} />
-          <StepItem num={5} text={t("appointments.caldav.oneCalStep5")} />
+          <StepItem values={stepValues} num={4} text={t("appointments.caldav.oneCalStep4")} />
+          <StepItem values={stepValues} num={5} text={t("appointments.caldav.oneCalStep5")} />
           <ImagePlaceholder name={t("appointments.caldav.oneCalImg2")} />
-          <StepItem num={6} text={t("appointments.caldav.oneCalStep6")} />
+          <StepItem values={stepValues} num={6} text={t("appointments.caldav.oneCalStep6")} />
           <ImagePlaceholder name={t("appointments.caldav.oneCalImg3")} />
-          <StepItem num={7} text={t("appointments.caldav.oneCalStep7")} />
+          <StepItem values={stepValues} num={7} text={t("appointments.caldav.oneCalStep7")} />
           <ImagePlaceholder name={t("appointments.caldav.oneCalImg4")} />
         </div>
       </section>

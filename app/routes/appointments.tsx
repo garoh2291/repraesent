@@ -2,7 +2,15 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router";
 import { useTranslation } from "react-i18next";
 import axios from "axios";
-import { Play, Loader2, CheckCircle2, XCircle, CalendarCog } from "lucide-react";
+import { Play, Loader2, CheckCircle2, XCircle, CalendarCog, Info } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import { getAppointmentsFallbackConfig } from "~/lib/api/workspaces";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "~/components/ui/tooltip";
 import { useAuthContext } from "~/providers/auth-provider";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "~/components/ui/tabs";
 import { type AppointmentConfig } from "~/lib/api/appointments";
@@ -195,6 +203,12 @@ function AppointmentsDashboard({
       (s) => s.service_type === "email-config" || s.service_slug === "email-config",
     ) ?? false;
   const { data: caldavConfig } = useCalDavConfig();
+  const { data: apptFallback } = useQuery({
+    queryKey: ["appointments-fallback-config"],
+    queryFn: getAppointmentsFallbackConfig,
+    enabled: hasEmailConfig,
+  });
+  const isConfirmEmailActive = !!apptFallback?.appointment_booking?.enabled;
   const navigate = useNavigate();
   return (
     <div className="p-4 sm:p-6 space-y-4 sm:space-y-6 app-fade-in relative">
@@ -253,7 +267,23 @@ function AppointmentsDashboard({
             <TabsTrigger value="booking">{t("appointments.tabBooking")}</TabsTrigger>
             <TabsTrigger value="business">{t("appointments.tabBusinessHours")}</TabsTrigger>
             {hasEmailConfig && (
-              <TabsTrigger value="customer-email">{t("appointments.tabCustomerEmail", "Confirm Email")}</TabsTrigger>
+              <TabsTrigger value="customer-email" className="gap-1.5">
+                {t("appointments.tabCustomerEmail", "Confirm Email")}
+                {!isConfirmEmailActive && (
+                  <TooltipProvider delayDuration={200}>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <span className="inline-flex h-4.5 w-4.5 items-center justify-center rounded-full bg-amber-500 shadow-sm shadow-amber-500/30 cursor-help">
+                          <Info className="h-2.5 w-2.5 text-white" strokeWidth={3} />
+                        </span>
+                      </TooltipTrigger>
+                      <TooltipContent side="bottom" className="max-w-[220px] text-center text-xs">
+                        {t("appointments.confirmEmailInactive")}
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                )}
+              </TabsTrigger>
             )}
           </TabsList>
         </div>
