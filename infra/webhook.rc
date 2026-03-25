@@ -1,0 +1,21 @@
+#!/bin/sh
+
+# PROVIDE: webhook
+# REQUIRE: NETWORKING
+# KEYWORD: shutdown
+
+. /etc/rc.subr
+
+name="webhook"
+rcvar="webhook_enable"
+
+load_rc_config $name
+
+: ${webhook_enable:="NO"}
+
+pidfile="/var/run/${name}.pid"
+logfile="/var/log/${name}.log"
+command="/usr/sbin/daemon"
+command_args="-f -p ${pidfile} -o ${logfile} /usr/local/bin/node /usr/local/bin/webhook.js"
+
+run_rc_command "$1"

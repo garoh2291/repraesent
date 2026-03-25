@@ -1,0 +1,22 @@
+#!/bin/sh
+
+# PROVIDE: nodeapp
+# REQUIRE: NETWORKING
+# KEYWORD: shutdown
+
+. /etc/rc.subr
+
+name="nodeapp"
+rcvar="nodeapp_enable"
+
+load_rc_config $name
+
+: ${nodeapp_enable:="NO"}
+: ${nodeapp_dir:="/usr/local/www/my.repraesent.com"}
+
+pidfile="/var/run/${name}.pid"
+logfile="/var/log/${name}.log"
+command="/usr/sbin/daemon"
+command_args="-f -p ${pidfile} -o ${logfile} /bin/sh -c 'cd ${nodeapp_dir} && /usr/local/bin/node node_modules/.bin/react-router-serve build/server/index.js'"
+
+run_rc_command "$1"
