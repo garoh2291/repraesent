@@ -112,26 +112,87 @@ function PasswordCopyButton({ config }: { config: CalDavConfig }) {
   );
 }
 
+function InlineValueChip({ value }: { value: string }) {
+  const [copied, setCopied] = useState(false);
+  return (
+    <span className="inline-flex items-center gap-1 mx-0.5 rounded-md bg-neutral-100 border border-neutral-200 px-1.5 py-0.5 align-middle">
+      <span className="font-mono text-[11px] text-neutral-700 max-w-[180px] truncate">
+        {value}
+      </span>
+      <button
+        type="button"
+        onClick={() => {
+          navigator.clipboard.writeText(value);
+          setCopied(true);
+          setTimeout(() => setCopied(false), 2000);
+        }}
+        className="flex h-4 w-4 shrink-0 items-center justify-center rounded text-neutral-400 hover:text-neutral-700 transition-colors"
+      >
+        {copied ? (
+          <Check className="h-2.5 w-2.5 text-emerald-600" />
+        ) : (
+          <Copy className="h-2.5 w-2.5" />
+        )}
+      </button>
+    </span>
+  );
+}
+
+function InlinePasswordChip({ serviceId }: { serviceId: string }) {
+  const [copied, setCopied] = useState(false);
+  const [loading, setLoading] = useState(false);
+  return (
+    <span className="inline-flex items-center gap-1 mx-0.5 rounded-md bg-neutral-100 border border-neutral-200 px-1.5 py-0.5 align-middle">
+      <span className="font-mono text-[11px] text-neutral-400">••••••••</span>
+      <button
+        type="button"
+        disabled={loading}
+        onClick={async () => {
+          setLoading(true);
+          try {
+            const pw = await decryptCalDavPassword(serviceId);
+            await navigator.clipboard.writeText(pw);
+            setCopied(true);
+            setTimeout(() => setCopied(false), 3000);
+          } catch {
+            /* */
+          } finally {
+            setLoading(false);
+          }
+        }}
+        className="flex h-4 w-4 shrink-0 items-center justify-center rounded text-neutral-400 hover:text-neutral-700 transition-colors disabled:opacity-50"
+      >
+        {copied ? (
+          <Check className="h-2.5 w-2.5 text-emerald-600" />
+        ) : loading ? (
+          <span className="h-2.5 w-2.5 animate-spin rounded-full border border-neutral-400 border-t-transparent" />
+        ) : (
+          <Lock className="h-2.5 w-2.5" />
+        )}
+      </button>
+    </span>
+  );
+}
+
 function StepItem({
   num,
   text,
   values,
+  serviceId,
 }: {
   num: number;
   text: string;
   values?: Record<string, string>;
+  serviceId?: string;
 }) {
-  // Parse: **bold**, [link](url), {{val:key:Label}}
-  // Split on all three patterns, preserving delimiters
+  // Parse: **bold**, [link](url), {{val:key:Label}}, {{pwd:Label}}
   const parts: React.ReactNode[] = [];
-  // Process in order: first replace {{val:...}} markers, then bold, then links
   const regex =
-    /(\*\*(.+?)\*\*|\[([^\]]+)\]\(([^)]+)\)|\{\{val:([^:}]+):([^}]+)\}\})/g;
+    /(\*\*(.+?)\*\*|\[([^\]]+)\]\(([^)]+)\)|\{\{val:([^:}]+):([^}]+)\}\}|\{\{pwd:([^}]+)\}\})/g;
   let lastIndex = 0;
   let match: RegExpExecArray | null;
 
   while ((match = regex.exec(text)) !== null) {
-    // Push text before match
     if (match.index > lastIndex) {
       parts.push(text.slice(lastIndex, match.index));
     }
@@ -157,33 +218,27 @@ function StepItem({
         </a>,
       );
     } else if (match[5] && match[6]) {
-      // {{val:key:Label}} — hoverable value tooltip
+      // {{val:key:Label}} — inline value + copy
       const val = values?.[match[5]];
-      if (val) {
-        parts.push(
-          <span key={match.index} className="relative group/val inline-block">
-            <span className="font-semibold text-neutral-900 border-b border-dashed border-neutral-400 cursor-help">
-              {match[6]}
-            </span>
-            <span className="pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-2 whitespace-nowrap rounded-lg bg-neutral-900 px-3 py-1.5 text-[11px] font-mono text-white opacity-0 shadow-lg transition-opacity group-hover/val:opacity-100 z-10">
-              {val}
-              <span className="absolute top-full left-1/2 -translate-x-1/2 -mt-px border-4 border-transparent border-t-neutral-900" />
-            </span>
-          </span>,
-        );
-      } else {
-        parts.push(
-          <strong key={match.index} className="font-semibold text-neutral-900">
-            {match[6]}
-          </strong>,
-        );
-      }
+      parts.push(
+        <span key={match.index}>
+          <strong className="font-semibold text-neutral-900">{match[6]}</strong>
+          {val && <InlineValueChip value={val} />}
+        </span>,
+      );
+    } else if (match[7]) {
+      // {{pwd:Label}} — password with decrypt copy
+      parts.push(
+        <span key={match.index}>
+          <strong className="font-semibold text-neutral-900">{match[7]}</strong>
+          {serviceId && <InlinePasswordChip serviceId={serviceId} />}
+        </span>,
+      );
     }
 
     lastIndex = match.index + match[0].length;
   }
 
-  // Push remaining text
   if (lastIndex < text.length) {
     parts.push(text.slice(lastIndex));
   }
@@ -352,17 +407,17 @@ export default function InstructionsPage() {
           </h2>
         </div>
         <div className="space-y-4 pl-1">
-          <StepItem values={stepValues} num={1} text={t("appointments.caldav.appleStep1")} />
-          <StepItem values={stepValues} num={2} text={t("appointments.caldav.appleStep2")} />
-          <StepItem values={stepValues} num={3} text={t("appointments.caldav.appleStep3")} />
+          <StepItem values={stepValues} serviceId={config.service_id} num={1} text={t("appointments.caldav.appleStep1")} />
+          <StepItem values={stepValues} serviceId={config.service_id} num={2} text={t("appointments.caldav.appleStep2")} />
+          <StepItem values={stepValues} serviceId={config.service_id} num={3} text={t("appointments.caldav.appleStep3")} />
           <ImagePlaceholder name={t("appointments.caldav.appleImg1")} />
-          <StepItem values={stepValues} num={4} text={t("appointments.caldav.appleStep4")} />
+          <StepItem values={stepValues} serviceId={config.service_id} num={4} text={t("appointments.caldav.appleStep4")} />
           <ImagePlaceholder name={t("appointments.caldav.appleImg2")} />
-          <StepItem values={stepValues} num={5} text={t("appointments.caldav.appleStep5")} />
-          <StepItem values={stepValues} num={6} text={t("appointments.caldav.appleStep6")} />
-          <StepItem values={stepValues} num={7} text={t("appointments.caldav.appleStep7")} />
+          <StepItem values={stepValues} serviceId={config.service_id} num={5} text={t("appointments.caldav.appleStep5")} />
+          <StepItem values={stepValues} serviceId={config.service_id} num={6} text={t("appointments.caldav.appleStep6")} />
+          <StepItem values={stepValues} serviceId={config.service_id} num={7} text={t("appointments.caldav.appleStep7")} />
           <ImagePlaceholder name={t("appointments.caldav.appleImg3")} />
-          <StepItem values={stepValues} num={8} text={t("appointments.caldav.appleStep8")} />
+          <StepItem values={stepValues} serviceId={config.service_id} num={8} text={t("appointments.caldav.appleStep8")} />
           <ImagePlaceholder name={t("appointments.caldav.appleImg4")} />
         </div>
       </section>
@@ -380,16 +435,16 @@ export default function InstructionsPage() {
           </h2>
         </div>
         <div className="space-y-4 pl-1">
-          <StepItem values={stepValues} num={1} text={t("appointments.caldav.oneCalStep1")} />
-          <StepItem values={stepValues} num={2} text={t("appointments.caldav.oneCalStep2")} />
-          <StepItem values={stepValues} num={3} text={t("appointments.caldav.oneCalStep3")} />
+          <StepItem values={stepValues} serviceId={config.service_id} num={1} text={t("appointments.caldav.oneCalStep1")} />
+          <StepItem values={stepValues} serviceId={config.service_id} num={2} text={t("appointments.caldav.oneCalStep2")} />
+          <StepItem values={stepValues} serviceId={config.service_id} num={3} text={t("appointments.caldav.oneCalStep3")} />
           <ImagePlaceholder name={t("appointments.caldav.oneCalImg1")} />
-          <StepItem values={stepValues} num={4} text={t("appointments.caldav.oneCalStep4")} />
-          <StepItem values={stepValues} num={5} text={t("appointments.caldav.oneCalStep5")} />
+          <StepItem values={stepValues} serviceId={config.service_id} num={4} text={t("appointments.caldav.oneCalStep4")} />
+          <StepItem values={stepValues} serviceId={config.service_id} num={5} text={t("appointments.caldav.oneCalStep5")} />
           <ImagePlaceholder name={t("appointments.caldav.oneCalImg2")} />
-          <StepItem values={stepValues} num={6} text={t("appointments.caldav.oneCalStep6")} />
+          <StepItem values={stepValues} serviceId={config.service_id} num={6} text={t("appointments.caldav.oneCalStep6")} />
           <ImagePlaceholder name={t("appointments.caldav.oneCalImg3")} />
-          <StepItem values={stepValues} num={7} text={t("appointments.caldav.oneCalStep7")} />
+          <StepItem values={stepValues} serviceId={config.service_id} num={7} text={t("appointments.caldav.oneCalStep7")} />
           <ImagePlaceholder name={t("appointments.caldav.oneCalImg4")} />
         </div>
       </section>
