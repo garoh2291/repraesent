@@ -150,6 +150,23 @@ export async function getCalDavConfig(): Promise<CalDavConfig | null> {
   return response.data;
 }
 
+export type EmailAnalyticsPeriod = "today" | "this_week" | "this_month" | "all_time";
+
+export interface EmailAnalytics {
+  series: { date: string; success: number; error: number }[];
+  total_success: number;
+  total_error: number;
+}
+
+export async function getEmailAnalytics(
+  period: EmailAnalyticsPeriod
+): Promise<EmailAnalytics> {
+  const res = await apiClient.get<EmailAnalytics>(
+    `/users/me/workspace/email-analytics?period=${period}`
+  );
+  return res.data;
+}
+
 export async function decryptCalDavPassword(
   serviceId: string
 ): Promise<string> {

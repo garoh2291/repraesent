@@ -424,7 +424,17 @@
       "previewDummy": "Noch keine Buchungen — Vorschau verwendet Beispieldaten. Sobald ein Kunde bucht, werden dessen Daten hier angezeigt.",
       "unsaved": "Nicht gespeicherte Änderungen",
       "allSaved": "Alle Änderungen gespeichert",
-      "save": "Speichern"
+      "save": "Speichern",
+      "periodToday": "Heute",
+      "periodWeek": "Woche",
+      "periodMonth": "Monat",
+      "periodAll": "Alle",
+      "activityTitle": "E-Mail-Aktivität",
+      "activityCount": "{{count}} E-Mails gesendet",
+      "activityNone": "Noch keine E-Mails gesendet",
+      "sent": "Gesendet",
+      "failed": "Fehlgeschlagen",
+      "noData": "Keine Daten für diesen Zeitraum"
     },
     "confirmEmailInactive": "Bestätigungs-E-Mail ist nicht aktiv. Aktivieren Sie sie, damit Ihre Kunden eine Buchungsbestätigung erhalten.",
     "caldav": {

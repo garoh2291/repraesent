@@ -2,14 +2,25 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { useTranslation } from "react-i18next";
-import { Save, Eye, Code, Mail, Paperclip, Info } from "lucide-react";
+import {
+  ResponsiveContainer,
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip as RechartsTooltip,
+} from "recharts";
+import { Save, Eye, Code, Mail, Paperclip, Info, Activity } from "lucide-react";
 import { Switch } from "~/components/ui/switch";
 import { Input } from "~/components/ui/input";
 import { Label } from "~/components/ui/label";
 import {
   getAppointmentsFallbackConfig,
   updateAppointmentsFallbackConfig,
+  getEmailAnalytics,
   type LeadFallbackConfig,
+  type EmailAnalyticsPeriod,
 } from "~/lib/api/workspaces";
 import { getLeads } from "~/lib/api/leads";
 import { type AppointmentConfig } from "~/lib/api/appointments";
@@ -469,6 +480,179 @@ export function CustomerEmailTab({ config }: CustomerEmailTabProps) {
           {t("appointments.customerEmail.save", "Save")}
         </button>
       </div>
+
+      {/* Activity Logs */}
+      <EmailActivityChart />
+    </div>
+  );
+}
+
+/* ── Activity Logs Chart ─────────────────────────────────────────── */
+
+const PERIODS: { key: EmailAnalyticsPeriod; labelKey: string }[] = [
+  { key: "today", labelKey: "appointments.customerEmail.periodToday" },
+  { key: "this_week", labelKey: "appointments.customerEmail.periodWeek" },
+  { key: "this_month", labelKey: "appointments.customerEmail.periodMonth" },
+  { key: "all_time", labelKey: "appointments.customerEmail.periodAll" },
+];
+
+function EmailActivityChart() {
+  const { t } = useTranslation();
+  const [period, setPeriod] = useState<EmailAnalyticsPeriod>("this_week");
+
+  const { data } = useQuery({
+    queryKey: ["email-analytics", period],
+    queryFn: () => getEmailAnalytics(period),
+  });
+
+  const series = data?.series ?? [];
+  const totalSuccess = data?.total_success ?? 0;
+  const totalError = data?.total_error ?? 0;
+  const total = totalSuccess + totalError;
+  const maxY = Math.max(...series.map((d) => d.success + d.error), 1);
+
+  const formatTick = (val: string) => {
+    if (period === "today") {
+      return val.split("T")[1]?.slice(0, 5) ?? val;
+    }
+    const d = new Date(val);
+    return `${d.getDate()}.${d.getMonth() + 1}`;
+  };
+
+  return (
+    <div className="rounded-xl border border-border bg-card p-4 sm:p-5 shadow-sm space-y-4">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+        <div className="flex items-center gap-2.5">
+          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-neutral-100">
+            <Activity className="h-4 w-4 text-neutral-600" />
+          </div>
+          <div>
+            <p className="text-sm font-semibold text-foreground">
+              {t("appointments.customerEmail.activityTitle", "Email Activity")}
+            </p>
+            <p className="text-xs text-muted-foreground">
+              {total > 0
+                ? t("appointments.customerEmail.activityCount", "{{count}} emails sent", { count: total })
+                : t("appointments.customerEmail.activityNone", "No emails sent yet")}
+            </p>
+          </div>
+        </div>
+        <div className="flex items-center gap-0.5 rounded-lg border border-border bg-muted/50 p-0.5">
+          {PERIODS.map((p) => (
+            <button
+              key={p.key}
+              type="button"
+              onClick={() => setPeriod(p.key)}
+              className={`rounded-md px-2.5 py-1 text-[11px] font-medium transition-all ${
+                period === p.key
+                  ? "bg-neutral-900 text-white shadow-sm"
+                  : "text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              {t(p.labelKey)}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Stats badges */}
+      {total > 0 && (
+        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-1.5 text-xs">
+            <span className="h-2.5 w-2.5 rounded-full bg-emerald-500" />
+            <span className="text-muted-foreground">
+              {t("appointments.customerEmail.sent", "Sent")}
+            </span>
+            <span className="font-semibold text-foreground">{totalSuccess}</span>
+          </div>
+          {totalError > 0 && (
+            <div className="flex items-center gap-1.5 text-xs">
+              <span className="h-2.5 w-2.5 rounded-full bg-red-500" />
+              <span className="text-muted-foreground">
+                {t("appointments.customerEmail.failed", "Failed")}
+              </span>
+              <span className="font-semibold text-foreground">{totalError}</span>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Chart */}
+      {series.length > 0 ? (
+        <div className="h-48">
+          <ResponsiveContainer width="100%" height="100%">
+            <LineChart data={series} margin={{ top: 4, right: 4, bottom: 0, left: -20 }}>
+              <CartesianGrid
+                strokeDasharray="3 3"
+                stroke="var(--color-border, #e5e5e5)"
+                vertical={false}
+              />
+              <XAxis
+                dataKey="date"
+                tickFormatter={formatTick}
+                tick={{ fontSize: 10, fill: "#999" }}
+                axisLine={false}
+                tickLine={false}
+                interval={Math.max(0, Math.floor(series.length / 8) - 1)}
+              />
+              <YAxis
+                domain={[0, maxY + Math.ceil(maxY * 0.2)]}
+                tick={{ fontSize: 10, fill: "#999" }}
+                axisLine={false}
+                tickLine={false}
+                allowDecimals={false}
+              />
+              <RechartsTooltip
+                contentStyle={{
+                  background: "#1a1a1a",
+                  border: "none",
+                  borderRadius: 8,
+                  fontSize: 12,
+                  color: "#fff",
+                  padding: "8px 12px",
+                }}
+                labelFormatter={(label: string) =>
+                  period === "today"
+                    ? label.split("T")[1]?.slice(0, 5) ?? label
+                    : new Date(label).toLocaleDateString("de-DE", {
+                        day: "numeric",
+                        month: "short",
+                      })
+                }
+                formatter={(value: number, name: string) => [
+                  value,
+                  name === "success"
+                    ? t("appointments.customerEmail.sent", "Sent")
+                    : t("appointments.customerEmail.failed", "Failed"),
+                ]}
+              />
+              <Line
+                type="monotone"
+                dataKey="success"
+                stroke="#10b981"
+                strokeWidth={2}
+                dot={series.length < 20}
+                activeDot={{ r: 4, strokeWidth: 0 }}
+              />
+              <Line
+                type="monotone"
+                dataKey="error"
+                stroke="#ef4444"
+                strokeWidth={2}
+                dot={false}
+                activeDot={{ r: 4, strokeWidth: 0 }}
+              />
+            </LineChart>
+          </ResponsiveContainer>
+        </div>
+      ) : (
+        <div className="flex h-32 items-center justify-center rounded-lg bg-muted/30">
+          <p className="text-xs text-muted-foreground">
+            {t("appointments.customerEmail.noData", "No data for this period")}
+          </p>
+        </div>
+      )}
     </div>
   );
 }

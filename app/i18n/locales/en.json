@@ -424,7 +424,17 @@
       "previewDummy": "No bookings yet — preview uses sample data. Once a customer books, their details will appear here.",
       "unsaved": "You have unsaved changes",
       "allSaved": "All changes saved",
-      "save": "Save"
+      "save": "Save",
+      "periodToday": "Today",
+      "periodWeek": "Week",
+      "periodMonth": "Month",
+      "periodAll": "All",
+      "activityTitle": "Email Activity",
+      "activityCount": "{{count}} emails sent",
+      "activityNone": "No emails sent yet",
+      "sent": "Sent",
+      "failed": "Failed",
+      "noData": "No data for this period"
     },
     "confirmEmailInactive": "Confirmation email is not active. Turn it on so your customers receive a booking confirmation.",
     "caldav": {
