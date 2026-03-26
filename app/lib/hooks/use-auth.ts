@@ -7,6 +7,8 @@ import {
   type User,
   type WorkspaceContext,
   type UserContextResponse,
+  type BrandInfo,
+  type BrandWorkspace,
 } from "~/lib/api/auth";
 import {
   getStoredToken,
@@ -24,6 +26,8 @@ export interface AuthState {
   token: string | null;
   isAuthenticated: boolean;
   isLoading: boolean;
+  brand: BrandInfo | null;
+  brandWorkspaces: BrandWorkspace[];
 }
 
 export const clearStoredAuth = (): void => {
@@ -54,12 +58,29 @@ export function useAuth() {
           token: null,
           isAuthenticated: false,
           isLoading: false,
+          brand: null,
+          brandWorkspaces: [],
         };
       }
 
       try {
         const context = await getUserContext();
 
+        // Brand user path — context includes brand + brandWorkspaces
+        if (context.user.user_type === "brand") {
+          return {
+            user: context.user,
+            workspaces: [],
+            currentWorkspace: null,
+            token,
+            isAuthenticated: true,
+            isLoading: false,
+            brand: context.brand ?? null,
+            brandWorkspaces: context.brandWorkspaces ?? [],
+          };
+        }
+
+        // Regular user path
         if (!context.workspaces?.length) {
           return {
             user: context.user,
@@ -68,6 +89,8 @@ export function useAuth() {
             token,
             isAuthenticated: true,
             isLoading: false,
+            brand: null,
+            brandWorkspaces: [],
           };
         }
 
@@ -89,6 +112,8 @@ export function useAuth() {
           token,
           isAuthenticated: true,
           isLoading: false,
+          brand: null,
+          brandWorkspaces: [],
         };
       } catch {
         clearStoredAuth();
@@ -99,6 +124,8 @@ export function useAuth() {
           token: null,
           isAuthenticated: false,
           isLoading: false,
+          brand: null,
+          brandWorkspaces: [],
         };
       }
     },
@@ -125,6 +152,8 @@ export function useAuth() {
         token: null,
         isAuthenticated: false,
         isLoading: false,
+        brand: null,
+        brandWorkspaces: [],
       });
       queryClient.clear();
       navigate("/login", { replace: true });
@@ -165,6 +194,8 @@ export function useAuth() {
     token: authState?.token ?? null,
     isAuthenticated: authState?.isAuthenticated ?? false,
     isLoading,
+    brand: authState?.brand ?? null,
+    brandWorkspaces: authState?.brandWorkspaces ?? [],
     requestMagicLink: requestMagicLinkMutation.mutate,
     requestMagicLinkAsync: requestMagicLinkMutation.mutateAsync,
     isRequestingMagicLink: requestMagicLinkMutation.isPending,

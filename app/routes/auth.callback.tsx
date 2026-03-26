@@ -50,6 +50,12 @@ export default function AuthCallback() {
 
         const context: UserContextResponse = await getUserContext();
 
+        // Brand user → straight to /brand
+        if (context.user.user_type === "brand") {
+          navigate("/brand", { replace: true });
+          return;
+        }
+
         if (!context.workspaces?.length) {
           navigate("/onboarding/profile", { replace: true });
           return;
@@ -108,6 +114,13 @@ export default function AuthCallback() {
           try {
             queryClient.invalidateQueries({ queryKey: ["auth"] });
             const context: UserContextResponse = await getUserContext();
+
+            // Brand user → straight to /brand
+            if (context.user.user_type === "brand") {
+              navigate("/brand", { replace: true });
+              return;
+            }
+
             if (!context.workspaces?.length) {
               navigate("/onboarding/profile", { replace: true });
               return;

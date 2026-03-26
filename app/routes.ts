@@ -23,6 +23,12 @@ export default [
       route("onboarding/offers", "routes/onboarding.offers.tsx"),
       route("onboarding/billing", "routes/onboarding.billing.tsx"),
     ]),
+    layout("routes/_brand-layout.tsx", [
+      route("brand", "routes/brand.tsx"),
+      route("brand/workspaces", "routes/brand.workspaces.tsx"),
+      route("brand/analytics", "routes/brand.analytics.tsx"),
+      route("brand/orders", "routes/brand.orders.tsx"),
+    ]),
     layout("routes/_dashboard-layout.tsx", [
       index("routes/home.tsx"),
       route("products", "routes/products.tsx"),

@@ -26,6 +26,7 @@ export default function Login() {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
   const {
+    user,
     requestMagicLinkAsync,
     isAuthenticated,
     isLoading: isAuthLoading,
@@ -38,10 +39,15 @@ export default function Login() {
   useEffect(() => {
     if (isAuthLoading) return;
     if (isAuthenticated) {
+      // Brand users always go to /brand regardless of returnUrl
+      if (user?.user_type === "brand") {
+        navigate("/brand", { replace: true });
+        return;
+      }
       const returnUrl = searchParams.get("returnUrl");
       navigate(returnUrl || "/", { replace: true });
     }
-  }, [isAuthenticated, isAuthLoading, navigate, searchParams]);
+  }, [isAuthenticated, isAuthLoading, navigate, searchParams, user]);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();

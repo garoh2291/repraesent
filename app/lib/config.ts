@@ -15,15 +15,17 @@ export function buildPublicBookingUrl(configId: string): string {
   return `${base}/book/${configId}`;
 }
 
-/** API origin (e.g. http://localhost:8000) for static assets like logo */
+/** API origin (e.g. http://localhost:8001) for static assets like logo */
 export function getApiOrigin(): string {
-  const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:8000/api";
-  return apiUrl.replace(/\/api\/?$/, "") || "http://localhost:8000";
+  const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:8001/api";
+  return apiUrl.replace(/\/api\/?$/, "") || "http://localhost:8001";
 }
 
 /** Full URL for appointment logo (path from API e.g. /uploads/appointments/xxx/logo.png) */
 export function getLogoFullUrl(path: string | null | undefined): string {
   if (!path) return "";
   const origin = getApiOrigin();
-  return path.startsWith("http") ? path : `${origin}${path.startsWith("/") ? "" : "/"}${path}`;
+  return path.startsWith("http")
+    ? path
+    : `${origin}${path.startsWith("/") ? "" : "/"}${path}`;
 }
