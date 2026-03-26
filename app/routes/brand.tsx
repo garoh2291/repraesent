@@ -31,11 +31,11 @@ export function meta() {
 
 // ─── Constants ──────────────────────────────────────────────────────────────
 
-const PERIODS: { value: LeadAnalyticsPeriod; label: string }[] = [
-  { value: "today", label: "Today" },
-  { value: "this_week", label: "This Week" },
-  { value: "this_month", label: "This Month" },
-  { value: "all_time", label: "All Time" },
+const PERIODS: { value: LeadAnalyticsPeriod; labelKey: string }[] = [
+  { value: "today", labelKey: "brand.periodToday" },
+  { value: "this_week", labelKey: "brand.periodThisWeek" },
+  { value: "this_month", labelKey: "brand.periodThisMonth" },
+  { value: "all_time", labelKey: "brand.periodAllTime" },
 ];
 
 const WORKSPACE_COLORS = [
@@ -59,14 +59,14 @@ const STATUS_COLORS: Record<string, string> = {
   stale: "#6b7280",
 };
 
-const STATUS_LABELS: Record<string, string> = {
-  new_lead: "New Lead",
-  in_progress: "In Progress",
-  on_hold: "On Hold",
-  pending: "Pending",
-  success: "Success",
-  rejected: "Rejected",
-  stale: "Stale",
+const STATUS_LABEL_KEYS: Record<string, string> = {
+  new_lead: "brand.statusNewLead",
+  in_progress: "brand.statusInProgress",
+  on_hold: "brand.statusOnHold",
+  pending: "brand.statusPending",
+  success: "brand.statusSuccess",
+  rejected: "brand.statusRejected",
+  stale: "brand.statusStale",
 };
 
 const VISIBLE_STATUSES = [
@@ -220,6 +220,7 @@ function StatusTooltip({
   payload?: { value: number; fill: string; dataKey: string }[];
   label?: string;
 }) {
+  const { t } = useTranslation();
   if (!active || !payload?.length || !label) return null;
   const filtered = payload.filter((p) => p.value > 0);
   if (!filtered.length) return null;
@@ -235,7 +236,7 @@ function StatusTooltip({
             style={{ backgroundColor: entry.fill }}
           />
           <span className="text-muted-foreground truncate flex-1 text-[12px]">
-            {STATUS_LABELS[entry.dataKey] ?? entry.dataKey}
+            {STATUS_LABEL_KEYS[entry.dataKey] ? t(STATUS_LABEL_KEYS[entry.dataKey]) : entry.dataKey}
           </span>
           <span className="font-semibold text-foreground shrink-0">
             {entry.value}
@@ -265,6 +266,7 @@ function ChartSection({
   onPeriodChange: (p: LeadAnalyticsPeriod) => void;
   lineStyle?: "solid" | "dashed";
 }) {
+  const { t } = useTranslation();
   const [view, setView] = useState<"line" | "bar">("line");
   const [hoveredWorkspace, setHoveredWorkspace] = useState<string | null>(null);
 
@@ -333,7 +335,7 @@ function ChartSection({
               )}
             >
               <TrendingUp className="h-3 w-3 shrink-0" />
-              Trend
+              {t("brand.viewTrend")}
             </button>
             <button
               onClick={() => setView("bar")}
@@ -345,7 +347,7 @@ function ChartSection({
               )}
             >
               <LayoutList className="h-3 w-3 shrink-0" />
-              Status
+              {t("brand.viewStatus")}
             </button>
           </div>
 
@@ -362,7 +364,7 @@ function ChartSection({
                     : "text-muted-foreground hover:text-foreground"
                 )}
               >
-                {p.label}
+                {t(p.labelKey)}
               </button>
             ))}
           </div>
@@ -421,7 +423,7 @@ function ChartSection({
                 className="h-2 w-2 rounded-full shrink-0"
                 style={{ backgroundColor: STATUS_COLORS[s] }}
               />
-              <span className="text-muted-foreground">{STATUS_LABELS[s]}</span>
+              <span className="text-muted-foreground">{STATUS_LABEL_KEYS[s] ? t(STATUS_LABEL_KEYS[s]) : s}</span>
             </div>
           ))}
         </div>
@@ -432,7 +434,7 @@ function ChartSection({
         <div className="h-48 w-full animate-pulse rounded-xl bg-muted" />
       ) : workspaces.length === 0 ? (
         <div className="flex h-48 items-center justify-center">
-          <p className="text-sm text-muted-foreground">No data available</p>
+          <p className="text-sm text-muted-foreground">{t("brand.noData")}</p>
         </div>
       ) : view === "line" ? (
         <div className="h-48">
@@ -554,7 +556,7 @@ function ChartSection({
                   dataKey={s}
                   stackId="stack"
                   fill={STATUS_COLORS[s]}
-                  name={STATUS_LABELS[s]}
+                  name={STATUS_LABEL_KEYS[s] ? t(STATUS_LABEL_KEYS[s]) : s}
                   radius={
                     idx === VISIBLE_STATUSES.length - 1
                       ? [0, 3, 3, 0]
@@ -627,7 +629,7 @@ function WorkspaceLeaderboard({
       <div className="flex items-start justify-between gap-3">
         <div className="space-y-0.5">
           <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
-            {t("brand.leaderboardTitle", "Top Workspaces")}
+            {t("brand.leaderboardTitle", "Top Partner Houses")}
           </p>
           <p className="text-2xl font-bold tracking-tight text-foreground tabular-nums">
             {total.toLocaleString()}
@@ -763,7 +765,7 @@ export default function BrandDashboard() {
           {t("brand.greeting", "Good to see you.")}
         </h1>
         <p className="text-sm text-muted-foreground">
-          {t("brand.greetingSubtitle", "Here's how your workspaces are performing.")}
+          {t("brand.greetingSubtitle", "Here's how your partner houses are performing.")}
         </p>
       </div>
 

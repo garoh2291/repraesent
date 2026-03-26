@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
+import type { TFunction } from "i18next";
 import { useSearchParams } from "react-router";
 import { ChevronDown, Search, X } from "lucide-react";
 import { useDebounce } from "~/lib/hooks/useDebounce";
@@ -25,31 +26,28 @@ function isOnline(iso: string | null): boolean {
   return Date.now() - new Date(iso).getTime() < 5 * 60 * 1000;
 }
 
-function formatRelative(iso: string | null | undefined): string {
+function formatRelative(iso: string | null | undefined, t: TFunction): string {
   if (!iso) return "—";
   const diff = Date.now() - new Date(iso).getTime();
   const mins = Math.floor(diff / 60_000);
-  if (mins < 1) return "Just now";
-  if (mins < 60) return `${mins}m ago`;
+  if (mins < 1) return t("brand.wsJustNow");
+  if (mins < 60) return t("brand.wsMinutesAgo", { count: mins });
   const hrs = Math.floor(mins / 60);
-  if (hrs < 24) return `${hrs}h ago`;
+  if (hrs < 24) return t("brand.wsHoursAgo", { count: hrs });
   const days = Math.floor(hrs / 24);
-  if (days < 30) return `${days}d ago`;
-  return new Date(iso).toLocaleDateString("en-GB", {
+  if (days < 30) return t("brand.wsDaysAgo", { count: days });
+  return new Date(iso).toLocaleDateString(undefined, {
     day: "2-digit",
     month: "short",
     year: "numeric",
   });
 }
 
-function formatFormName(formName: string): string {
-  const map: Record<string, string> = {
-    appointment_booking: "Appointment Bookings",
-  };
-  return (
-    map[formName] ??
-    formName.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase())
-  );
+function formatFormName(formName: string, t: TFunction): string {
+  if (formName === "appointment_booking") {
+    return t("brand.wsAppointmentBookings");
+  }
+  return formName.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
 }
 
 function roleOrder(role: string) {
@@ -66,17 +64,20 @@ const STATUS_STYLES: Record<string, string> = {
     "bg-orange-500/10 text-orange-400 ring-1 ring-orange-500/20",
 };
 
-const STATUS_LABELS: Record<string, string> = {
-  active: "Active",
-  pending: "Pending Setup",
-  canceled: "Canceled",
-  waiting_for_payment: "Awaiting Payment",
+const STATUS_LABEL_KEYS: Record<string, string> = {
+  active: "brand.wsStatusActive",
+  pending: "brand.wsStatusPendingSetup",
+  canceled: "brand.wsStatusCanceled",
+  waiting_for_payment: "brand.wsStatusAwaitingPayment",
 };
 
 function StatusBadge({ status }: { status: string }) {
+  const { t } = useTranslation();
   const cls =
     STATUS_STYLES[status] ?? "bg-white/5 text-white/30 ring-1 ring-white/10";
-  const label = STATUS_LABELS[status] ?? status.replace(/_/g, " ");
+  const label = STATUS_LABEL_KEYS[status]
+    ? t(STATUS_LABEL_KEYS[status])
+    : status.replace(/_/g, " ");
   return (
     <span
       className={cn(
@@ -91,10 +92,10 @@ function StatusBadge({ status }: { status: string }) {
 
 // ── Role badge ────────────────────────────────────────────────────────────────
 
-const ROLE_LABELS: Record<string, string> = {
-  admin: "Admin",
-  editor: "Editor",
-  viewer: "Viewer",
+const ROLE_LABEL_KEYS: Record<string, string> = {
+  admin: "brand.wsRoleAdmin",
+  editor: "brand.wsRoleEditor",
+  viewer: "brand.wsRoleViewer",
 };
 
 // ── Product pill (light panel) ────────────────────────────────────────────────
@@ -174,7 +175,7 @@ function ExpandedPanel({ ws }: { ws: BrandWorkspaceOverviewItem }) {
                 <div key={lf.form_name} className="space-y-1">
                   <div className="flex items-center justify-between">
                     <span className="text-[11px] text-slate-600 truncate pr-3">
-                      {formatFormName(lf.form_name)}
+                      {formatFormName(lf.form_name, t)}
                     </span>
                     <span className="text-[11px] font-semibold text-slate-800 tabular-nums shrink-0">
                       {lf.count.toLocaleString()}
@@ -199,7 +200,7 @@ function ExpandedPanel({ ws }: { ws: BrandWorkspaceOverviewItem }) {
           </p>
           {sortedMembers.length === 0 ? (
             <p className="text-xs text-slate-400">
-              {t("brand.wsNoMembers", "No team members assigned")}
+              {t("brand.wsNoMembersAssigned")}
             </p>
           ) : (
             <div className="space-y-1 max-h-40 overflow-y-auto">
@@ -215,13 +216,14 @@ function ExpandedPanel({ ws }: { ws: BrandWorkspaceOverviewItem }) {
 }
 
 function MemberRow({ member }: { member: BrandWorkspaceMemberItem }) {
+  const { t } = useTranslation();
   const online = isOnline(member.last_activity_at);
   const name =
     [member.user_first_name, member.user_last_name].filter(Boolean).join(" ") ||
     member.user_email;
   const roleCls =
     ROLE_STYLES_LIGHT[member.role] ?? "bg-slate-100 text-slate-500";
-  const roleLabel = ROLE_LABELS[member.role] ?? member.role;
+  const roleLabel = ROLE_LABEL_KEYS[member.role] ? t(ROLE_LABEL_KEYS[member.role]) : member.role;
 
   return (
     <div className="flex items-center gap-2 py-1 text-xs">
@@ -262,7 +264,7 @@ function MemberRow({ member }: { member: BrandWorkspaceMemberItem }) {
           online ? "text-emerald-600 font-medium" : "text-slate-400"
         )}
       >
-        {online ? "Online" : formatRelative(member.last_activity_at)}
+        {online ? t("brand.wsOnline") : formatRelative(member.last_activity_at, t)}
       </span>
     </div>
   );
@@ -357,11 +359,8 @@ export default function BrandWorkspaces() {
           </h1>
           <p className="text-sm text-muted-foreground mt-0.5">
             {total > 0
-              ? `${total} connected workspace${total === 1 ? "" : "s"}`
-              : t(
-                  "brand.workspacesSubtitle",
-                  "All workspaces connected to your brand"
-                )}
+              ? t("brand.wsWorkspacesCount", { count: total })
+              : t("brand.workspacesSubtitle")}
           </p>
         </div>
 
@@ -407,7 +406,7 @@ export default function BrandWorkspaces() {
         {/* Column headers */}
         <div className="grid grid-cols-[1fr_130px_72px_40px] lg:grid-cols-[1fr_170px_120px_72px_40px] items-center bg-[#dddbd7] border-b border-[#cccac6] px-5 py-2.5">
           <span className="text-[10px] font-bold uppercase tracking-[0.12em] text-muted-foreground">
-            {t("brand.wsColWorkspace", "Workspace")}
+            {t("brand.wsColWorkspace", "Partner House")}
           </span>
           <span className="hidden lg:block text-[10px] font-bold uppercase tracking-[0.12em] text-muted-foreground">
             {t("brand.wsColProducts", "Products")}
@@ -427,11 +426,8 @@ export default function BrandWorkspaces() {
         ) : workspaces.length === 0 ? (
           <div className="py-20 text-center text-sm text-muted-foreground">
             {debouncedSearch
-              ? t("common.noResults", "No workspaces match your search")
-              : t(
-                  "brand.wsNoWorkspaces",
-                  "No workspaces connected to your brand yet"
-                )}
+              ? t("brand.wsNoWorkspacesSearch")
+              : t("brand.wsNoWorkspaces")}
           </div>
         ) : (
           workspaces.map((ws) => {
@@ -495,7 +491,7 @@ export default function BrandWorkspaces() {
 
                   {/* Recent activity */}
                   <span className="text-xs text-muted-foreground tabular-nums">
-                    {formatRelative(ws.last_activity_at)}
+                    {formatRelative(ws.last_activity_at, t)}
                   </span>
 
                   {/* Leads count */}
@@ -535,7 +531,7 @@ export default function BrandWorkspaces() {
       {totalPages > 1 && (
         <div className="flex items-center justify-between text-sm text-muted-foreground">
           <span>
-            Page {page} of {totalPages}
+            {t("brand.wsPaginationPage", { page, total: totalPages })}
           </span>
           <div className="flex gap-1.5">
             <button
@@ -543,14 +539,14 @@ export default function BrandWorkspaces() {
               disabled={page <= 1}
               className="rounded-lg border border-border px-3 py-1.5 text-xs font-medium transition-colors hover:bg-muted disabled:opacity-40 disabled:pointer-events-none"
             >
-              {t("common.back", "Previous")}
+              {t("brand.wsPrevPage")}
             </button>
             <button
               onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
               disabled={page >= totalPages}
               className="rounded-lg border border-border px-3 py-1.5 text-xs font-medium transition-colors hover:bg-muted disabled:opacity-40 disabled:pointer-events-none"
             >
-              {t("common.next", "Next")}
+              {t("brand.wsNextPage")}
             </button>
           </div>
         </div>
