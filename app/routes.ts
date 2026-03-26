@@ -26,6 +26,7 @@ export default [
     layout("routes/_brand-layout.tsx", [
       route("brand", "routes/brand.tsx"),
       route("brand/workspaces", "routes/brand.workspaces.tsx"),
+      route("brand/analytics", "routes/brand.analytics.tsx"),
     ]),
     layout("routes/_dashboard-layout.tsx", [
       index("routes/home.tsx"),

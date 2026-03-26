@@ -54,6 +54,20 @@ export interface BrandService {
   name_de: string | null;
 }
 
+export interface BrandAnalyticsWorkspace {
+  id: string;
+  name: string;
+  has_analytics: boolean;
+  shared_link: string | null;
+}
+
+export async function getBrandAnalyticsWorkspaces(): Promise<BrandAnalyticsWorkspace[]> {
+  const res = await apiClient.get<BrandAnalyticsWorkspace[]>(
+    "/brands/me/analytics-workspaces"
+  );
+  return res.data;
+}
+
 export async function getBrandServices(): Promise<BrandService[]> {
   const res = await apiClient.get<BrandService[]>("/brands/me/services");
   return res.data;

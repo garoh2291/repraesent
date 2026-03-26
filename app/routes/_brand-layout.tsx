@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Link, Outlet, useLocation } from "react-router";
 import { useTranslation } from "react-i18next";
 import { useAuthContext } from "~/providers/auth-provider";
-import { BarChart3, Store, LogOut, Menu, X } from "lucide-react";
+import { BarChart3, Store, LineChart, LogOut, Menu, X } from "lucide-react";
 import { Sheet, SheetContent } from "~/components/ui/sheet";
 import { LanguageSwitcher } from "~/components/language-switcher";
 import { cn } from "~/lib/utils";
@@ -10,6 +10,7 @@ import { cn } from "~/lib/utils";
 const NAV_ITEMS = [
   { key: "navHome", path: "/brand", icon: BarChart3, exact: true },
   { key: "navWorkspaces", path: "/brand/workspaces", icon: Store, exact: false },
+  { key: "navAnalytics", path: "/brand/analytics", icon: LineChart, exact: false },
 ] as const;
 
 function BrandSidebar({ onClose }: { onClose?: () => void }) {
