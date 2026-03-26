@@ -26,6 +26,24 @@ function isOnline(iso: string | null): boolean {
   return Date.now() - new Date(iso).getTime() < 5 * 60 * 1000;
 }
 
+function localizeServiceName(
+  service: { service_name: string; service_name_en?: string | null; service_name_de?: string | null },
+  lang: string
+): string {
+  const isDe = lang?.startsWith("de");
+  if (isDe) return service.service_name_de ?? service.service_name_en ?? service.service_name;
+  return service.service_name_en ?? service.service_name_de ?? service.service_name;
+}
+
+function localizeFilterName(
+  service: { name: string; name_en?: string | null; name_de?: string | null },
+  lang: string
+): string {
+  const isDe = lang?.startsWith("de");
+  if (isDe) return service.name_de ?? service.name_en ?? service.name;
+  return service.name_en ?? service.name_de ?? service.name;
+}
+
 function formatRelative(iso: string | null | undefined, t: TFunction): string {
   if (!iso) return "—";
   const diff = Date.now() - new Date(iso).getTime();
@@ -117,7 +135,7 @@ const ROLE_STYLES_LIGHT: Record<string, string> = {
 // ── Expanded panel ────────────────────────────────────────────────────────────
 
 function ExpandedPanel({ ws }: { ws: BrandWorkspaceOverviewItem }) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
 
   const sortedMembers = [...ws.members].sort(
     (a, b) => roleOrder(a.role) - roleOrder(b.role)
@@ -152,7 +170,7 @@ function ExpandedPanel({ ws }: { ws: BrandWorkspaceOverviewItem }) {
                       cls
                     )}
                   >
-                    {svc.service_name}
+                    {localizeServiceName(svc, i18n.language)}
                   </span>
                 );
               })}
@@ -274,7 +292,7 @@ function MemberRow({ member }: { member: BrandWorkspaceMemberItem }) {
 
 function SkeletonRow() {
   return (
-    <div className="grid grid-cols-[1fr_130px_72px_40px] lg:grid-cols-[1fr_170px_120px_72px_40px] items-center border-b border-white/6 px-5 py-4 animate-pulse">
+    <div className="grid grid-cols-[1fr_130px_80px_40px] lg:grid-cols-[1fr_180px_140px_80px_40px] gap-x-6 items-center border-b border-white/6 px-5 py-4 animate-pulse">
       <div className="flex items-center gap-2 pr-4">
         <div className="h-4 w-36 rounded-md bg-black/8" />
         <div className="h-5 w-16 rounded-md bg-black/5" />
@@ -293,7 +311,7 @@ function SkeletonRow() {
 // ── Page ──────────────────────────────────────────────────────────────────────
 
 export default function BrandWorkspaces() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const [searchParams] = useSearchParams();
   const [searchInput, setSearchInput] = useState("");
   const [page, setPage] = useState(1);
@@ -392,7 +410,7 @@ export default function BrandWorkspaces() {
                 paramKey: "service_id",
                 options: (servicesData ?? []).map((s) => ({
                   key: s.id,
-                  label: s.name,
+                  label: localizeFilterName(s, i18n.language),
                 })),
                 isLoading: servicesLoading,
               },
@@ -404,7 +422,7 @@ export default function BrandWorkspaces() {
       {/* Table */}
       <div className="rounded-xl overflow-hidden border border-border shadow-sm">
         {/* Column headers */}
-        <div className="grid grid-cols-[1fr_130px_72px_40px] lg:grid-cols-[1fr_170px_120px_72px_40px] items-center bg-[#dddbd7] border-b border-[#cccac6] px-5 py-2.5">
+        <div className="grid grid-cols-[1fr_130px_80px_40px] lg:grid-cols-[1fr_180px_140px_80px_40px] gap-x-6 items-center bg-[#dddbd7] border-b border-[#cccac6] px-5 py-2.5">
           <span className="text-[10px] font-bold uppercase tracking-[0.12em] text-muted-foreground">
             {t("brand.wsColWorkspace", "Partner House")}
           </span>
@@ -442,7 +460,7 @@ export default function BrandWorkspaces() {
                   type="button"
                   onClick={() => toggleRow(ws.id)}
                   className={cn(
-                    "w-full grid grid-cols-[1fr_130px_72px_40px] lg:grid-cols-[1fr_170px_120px_72px_40px] items-center px-5 py-3.5 text-left transition-colors duration-100",
+                    "w-full grid grid-cols-[1fr_130px_80px_40px] lg:grid-cols-[1fr_180px_140px_80px_40px] gap-x-6 items-center px-5 py-3.5 text-left transition-colors duration-100",
                     isExpanded
                       ? "bg-[#e3e1dd]"
                       : "bg-[#eceae6] hover:bg-[#e7e5e1]"
@@ -470,7 +488,7 @@ export default function BrandWorkspaces() {
                             cls
                           )}
                         >
-                          {s.service_name}
+                          {localizeServiceName(s, i18n.language)}
                         </span>
                       );
                     })}
@@ -478,7 +496,7 @@ export default function BrandWorkspaces() {
                       <TooltipContainer
                         tooltipContent={ws.services
                           .slice(2)
-                          .map((s) => s.service_name)
+                          .map((s) => localizeServiceName(s, i18n.language))
                           .join(", ")}
                         showCopyButton={false}
                       >

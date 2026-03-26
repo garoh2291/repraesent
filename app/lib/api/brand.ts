@@ -4,6 +4,8 @@ import type { LeadAnalyticsPeriod } from "./leads";
 export interface BrandWorkspaceServiceItem {
   service_id: string;
   service_name: string;
+  service_name_en: string | null;
+  service_name_de: string | null;
   service_slug: string | null;
   service_type: string | null;
   service_icon: string | null;
@@ -48,6 +50,8 @@ export interface BrandWorkspacesOverviewResponse {
 export interface BrandService {
   id: string;
   name: string;
+  name_en: string | null;
+  name_de: string | null;
 }
 
 export async function getBrandServices(): Promise<BrandService[]> {
