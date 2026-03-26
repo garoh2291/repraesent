@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 import { useAuthContext } from "~/providers/auth-provider";
 import { BarChart3, Building2, LogOut, Menu, X } from "lucide-react";
 import { Sheet, SheetContent } from "~/components/ui/sheet";
+import { LanguageSwitcher } from "~/components/language-switcher";
 import { cn } from "~/lib/utils";
 
 const NAV_ITEMS = [
@@ -78,8 +79,11 @@ function BrandSidebar({ onClose }: { onClose?: () => void }) {
         })}
       </nav>
 
-      {/* Bottom: logout */}
-      <div className="shrink-0 border-t border-white/5 p-3">
+      {/* Bottom: language + logout */}
+      <div className="shrink-0 border-t border-white/5 p-3 space-y-1">
+        <div className="px-1 py-1">
+          <LanguageSwitcher variant="dark" persistToDb />
+        </div>
         <button
           onClick={() => logout()}
           disabled={isLoggingOut}

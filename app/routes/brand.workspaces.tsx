@@ -12,6 +12,7 @@ import {
 } from "~/lib/api/brand";
 import { FilterComponent } from "~/components/molecule/filter-component";
 import { cn } from "~/lib/utils";
+import TooltipContainer from "~/components/tooltip-container";
 
 export function meta() {
   return [{ title: "Workspaces – Repraesent" }];
@@ -47,9 +48,7 @@ function formatFormName(formName: string): string {
   };
   return (
     map[formName] ??
-    formName
-      .replace(/_/g, " ")
-      .replace(/\b\w/g, (c) => c.toUpperCase())
+    formName.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase())
   );
 }
 
@@ -218,9 +217,8 @@ function ExpandedPanel({ ws }: { ws: BrandWorkspaceOverviewItem }) {
 function MemberRow({ member }: { member: BrandWorkspaceMemberItem }) {
   const online = isOnline(member.last_activity_at);
   const name =
-    [member.user_first_name, member.user_last_name]
-      .filter(Boolean)
-      .join(" ") || member.user_email;
+    [member.user_first_name, member.user_last_name].filter(Boolean).join(" ") ||
+    member.user_email;
   const roleCls =
     ROLE_STYLES_LIGHT[member.role] ?? "bg-slate-100 text-slate-500";
   const roleLabel = ROLE_LABELS[member.role] ?? member.role;
@@ -250,7 +248,10 @@ function MemberRow({ member }: { member: BrandWorkspaceMemberItem }) {
       </span>
 
       {/* Name */}
-      <span className="flex-1 truncate text-slate-700" title={member.user_email}>
+      <span
+        className="flex-1 truncate text-slate-700"
+        title={member.user_email}
+      >
         {name}
       </span>
 
@@ -271,16 +272,18 @@ function MemberRow({ member }: { member: BrandWorkspaceMemberItem }) {
 
 function SkeletonRow() {
   return (
-    <div className="grid grid-cols-[1fr_130px_72px_40px] items-center border-b border-white/6 px-5 py-4 animate-pulse">
-      <div className="space-y-2 pr-4">
-        <div className="flex items-center gap-2">
-          <div className="h-4 w-40 rounded-md bg-white/8" />
-          <div className="h-5 w-20 rounded-md bg-white/5" />
-        </div>
+    <div className="grid grid-cols-[1fr_130px_72px_40px] lg:grid-cols-[1fr_170px_120px_72px_40px] items-center border-b border-white/6 px-5 py-4 animate-pulse">
+      <div className="flex items-center gap-2 pr-4">
+        <div className="h-4 w-36 rounded-md bg-black/8" />
+        <div className="h-5 w-16 rounded-md bg-black/5" />
       </div>
-      <div className="h-3 w-16 rounded bg-white/6" />
-      <div className="h-3 w-8 rounded bg-white/6 ml-auto" />
-      <div className="h-4 w-4 rounded bg-white/5 ml-auto" />
+      <div className="hidden lg:flex gap-1">
+        <div className="h-5 w-16 rounded-md bg-black/6" />
+        <div className="h-5 w-20 rounded-md bg-black/5" />
+      </div>
+      <div className="h-3 w-14 rounded bg-black/6" />
+      <div className="h-3 w-6 rounded bg-black/6 ml-auto" />
+      <div className="h-4 w-4 rounded bg-black/5 ml-auto" />
     </div>
   );
 }
@@ -310,7 +313,12 @@ export default function BrandWorkspaces() {
   });
 
   const { data, isLoading } = useQuery({
-    queryKey: ["brand-workspaces-overview", effectivePage, debouncedSearch, serviceIdParam],
+    queryKey: [
+      "brand-workspaces-overview",
+      effectivePage,
+      debouncedSearch,
+      serviceIdParam,
+    ],
     queryFn: () =>
       getBrandWorkspacesOverview({
         search: debouncedSearch || undefined,
@@ -397,12 +405,15 @@ export default function BrandWorkspaces() {
       {/* Table */}
       <div className="rounded-xl overflow-hidden border border-border shadow-sm">
         {/* Column headers */}
-        <div className="grid grid-cols-[1fr_130px_72px_40px] items-center bg-[#dddbd7] border-b border-[#cccac6] px-5 py-2.5">
+        <div className="grid grid-cols-[1fr_130px_72px_40px] lg:grid-cols-[1fr_170px_120px_72px_40px] items-center bg-[#dddbd7] border-b border-[#cccac6] px-5 py-2.5">
           <span className="text-[10px] font-bold uppercase tracking-[0.12em] text-muted-foreground">
             {t("brand.wsColWorkspace", "Workspace")}
           </span>
+          <span className="hidden lg:block text-[10px] font-bold uppercase tracking-[0.12em] text-muted-foreground">
+            {t("brand.wsColProducts", "Products")}
+          </span>
           <span className="text-[10px] font-bold uppercase tracking-[0.12em] text-muted-foreground">
-            {t("brand.wsColLastActivity", "Last Activity")}
+            {t("brand.wsColRecentActivity", "Recent Activity")}
           </span>
           <span className="text-[10px] font-bold uppercase tracking-[0.12em] text-muted-foreground text-right">
             {t("brand.wsColLeads", "Leads")}
@@ -435,21 +446,54 @@ export default function BrandWorkspaces() {
                   type="button"
                   onClick={() => toggleRow(ws.id)}
                   className={cn(
-                    "w-full grid grid-cols-[1fr_130px_72px_40px] items-center px-5 py-4 text-left transition-colors duration-100",
+                    "w-full grid grid-cols-[1fr_130px_72px_40px] lg:grid-cols-[1fr_170px_120px_72px_40px] items-center px-5 py-3.5 text-left transition-colors duration-100",
                     isExpanded
                       ? "bg-[#e3e1dd]"
                       : "bg-[#eceae6] hover:bg-[#e7e5e1]"
                   )}
                 >
                   {/* Name + status */}
-                  <div className="min-w-0 pr-4 flex items-center gap-2.5 flex-wrap">
+                  <div className="min-w-0 pr-3 flex items-center gap-2 flex-wrap">
                     <span className="text-sm font-semibold text-foreground truncate">
                       {ws.name}
                     </span>
                     <StatusBadge status={ws.status} />
                   </div>
 
-                  {/* Last active */}
+                  {/* Products (lg+) */}
+                  <div className="hidden lg:flex items-center gap-1 flex-wrap pr-2">
+                    {ws.services.slice(0, 2).map((s) => {
+                      const cls =
+                        PRODUCT_STYLES[s.service_type ?? ""] ??
+                        "bg-slate-100 text-slate-600 ring-1 ring-slate-200/80";
+                      return (
+                        <span
+                          key={s.service_id}
+                          className={cn(
+                            "inline-flex items-center rounded-md px-1.5 py-0.5 text-[10px] font-medium whitespace-nowrap",
+                            cls
+                          )}
+                        >
+                          {s.service_name}
+                        </span>
+                      );
+                    })}
+                    {ws.services.length > 2 && (
+                      <TooltipContainer
+                        tooltipContent={ws.services
+                          .slice(2)
+                          .map((s) => s.service_name)
+                          .join(", ")}
+                        showCopyButton={false}
+                      >
+                        <span className="text-[10px] text-slate-400 font-medium">
+                          +{ws.services.length - 2}
+                        </span>
+                      </TooltipContainer>
+                    )}
+                  </div>
+
+                  {/* Recent activity */}
                   <span className="text-xs text-muted-foreground tabular-nums">
                     {formatRelative(ws.last_activity_at)}
                   </span>

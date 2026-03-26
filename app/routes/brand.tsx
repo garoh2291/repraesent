@@ -1,7 +1,8 @@
 import { useState, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
-import { LayoutList, TrendingUp } from "lucide-react";
+import { Link } from "react-router";
+import { ArrowRight, LayoutList, TrendingUp } from "lucide-react";
 import {
   ResponsiveContainer,
   LineChart,
@@ -16,6 +17,7 @@ import {
 import { cn } from "~/lib/utils";
 import {
   getBrandAnalytics,
+  getBrandWorkspacesOverview,
   type WorkspaceLeadSeries,
 } from "~/lib/api/brand";
 import type { LeadAnalyticsPeriod } from "~/lib/api/leads";
@@ -568,6 +570,152 @@ function ChartSection({
   );
 }
 
+// ─── Leaderboard ──────────────────────────────────────────────────────────────
+
+const RANK_CONFIG = [
+  { color: "#f5d74f", label: "bg-amber-400/15 text-amber-300 border border-amber-400/20" },
+  { color: "#94a3b8", label: "bg-slate-400/15 text-slate-300 border border-slate-400/15" },
+  { color: "#fb923c", label: "bg-orange-400/15 text-orange-300 border border-orange-400/15" },
+];
+
+function LeaderboardSkeleton() {
+  return (
+    <div className="rounded-2xl border border-border bg-card p-5 sm:p-6 space-y-5 animate-pulse">
+      <div className="flex items-center justify-between">
+        <div className="space-y-1.5">
+          <div className="h-2.5 w-28 rounded bg-muted" />
+          <div className="h-5 w-20 rounded bg-muted" />
+        </div>
+        <div className="h-4 w-16 rounded bg-muted" />
+      </div>
+      <div className="space-y-3">
+        {Array.from({ length: 5 }).map((_, i) => (
+          <div key={i} className="space-y-2 px-1">
+            <div className="flex items-center gap-3">
+              <div className="h-6 w-6 rounded-full bg-muted shrink-0" />
+              <div className="h-3 flex-1 rounded bg-muted" style={{ maxWidth: `${80 - i * 10}%` }} />
+              <div className="h-3 w-8 rounded bg-muted shrink-0" />
+            </div>
+            <div className="ml-9 h-1.5 rounded-full bg-muted overflow-hidden">
+              <div className="h-full rounded-full bg-muted-foreground/20" style={{ width: `${80 - i * 12}%` }} />
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function WorkspaceLeaderboard({
+  workspaces,
+  isLoading,
+  total,
+}: {
+  workspaces: { id: string; name: string; leads_count: number }[];
+  isLoading: boolean;
+  total: number;
+}) {
+  const { t } = useTranslation();
+  if (isLoading) return <LeaderboardSkeleton />;
+  if (!workspaces.length) return null;
+
+  const max = Math.max(...workspaces.map((w) => w.leads_count), 1);
+
+  return (
+    <div className="rounded-2xl border border-border bg-card p-5 sm:p-6 space-y-5">
+      {/* Header */}
+      <div className="flex items-start justify-between gap-3">
+        <div className="space-y-0.5">
+          <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
+            {t("brand.leaderboardTitle", "Top Workspaces")}
+          </p>
+          <p className="text-2xl font-bold tracking-tight text-foreground tabular-nums">
+            {total.toLocaleString()}
+          </p>
+          <p className="text-xs text-muted-foreground">
+            {t("brand.leaderboardSubtitle", "total leads, all time")}
+          </p>
+        </div>
+        <Link
+          to="/brand/workspaces"
+          className="flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-[11px] font-medium text-muted-foreground hover:text-foreground hover:bg-muted transition-all duration-150 shrink-0 mt-0.5"
+        >
+          {t("brand.leaderboardViewAll", "View all")}
+          <ArrowRight className="h-3 w-3" />
+        </Link>
+      </div>
+
+      {/* Ranked rows */}
+      <div className="space-y-2">
+        {workspaces.map((ws, i) => {
+          const pct = (ws.leads_count / max) * 100;
+          const rank = RANK_CONFIG[i] ?? {
+            color: WORKSPACE_COLORS[i % WORKSPACE_COLORS.length],
+            label: "bg-muted text-muted-foreground border border-transparent",
+          };
+          const isFirst = i === 0;
+
+          return (
+            <div
+              key={ws.id}
+              className={cn(
+                "rounded-xl px-3 py-2.5 transition-colors duration-100",
+                isFirst
+                  ? "bg-amber-400/5 border border-amber-400/10"
+                  : "hover:bg-muted/30"
+              )}
+            >
+              <div className="flex items-center gap-3 mb-2">
+                {/* Rank badge */}
+                <span
+                  className={cn(
+                    "h-6 w-6 rounded-full flex items-center justify-center text-[10px] font-black shrink-0",
+                    rank.label
+                  )}
+                >
+                  {i + 1}
+                </span>
+
+                {/* Name */}
+                <span
+                  className={cn(
+                    "flex-1 text-[13px] font-medium truncate",
+                    isFirst ? "text-foreground" : "text-foreground/80"
+                  )}
+                >
+                  {ws.name}
+                </span>
+
+                {/* Count */}
+                <span
+                  className={cn(
+                    "tabular-nums text-sm font-bold shrink-0",
+                    isFirst ? "text-amber-300" : "text-foreground/60"
+                  )}
+                >
+                  {ws.leads_count.toLocaleString()}
+                </span>
+              </div>
+
+              {/* Bar */}
+              <div className="ml-9 h-1 rounded-full bg-muted overflow-hidden">
+                <div
+                  className="h-full rounded-full transition-[width] duration-700 ease-out"
+                  style={{
+                    width: `${pct}%`,
+                    backgroundColor: rank.color,
+                    transitionDelay: `${i * 60}ms`,
+                  }}
+                />
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function BrandDashboard() {
@@ -589,6 +737,24 @@ export default function BrandDashboard() {
     staleTime: 0,
   });
 
+  const { data: overviewData, isLoading: overviewLoading } = useQuery({
+    queryKey: ["brand-workspaces-overview-leaderboard"],
+    queryFn: () => getBrandWorkspacesOverview({ limit: 50, page: 1 }),
+    staleTime: 60_000,
+  });
+
+  const topWorkspaces = useMemo(() => {
+    const all = overviewData?.data ?? [];
+    return [...all]
+      .sort((a, b) => b.leads_count - a.leads_count)
+      .slice(0, 8);
+  }, [overviewData]);
+
+  const totalLeads = useMemo(
+    () => (overviewData?.data ?? []).reduce((s, w) => s + w.leads_count, 0),
+    [overviewData]
+  );
+
   return (
     <div className="mx-auto max-w-5xl p-4 sm:p-6 space-y-6 sm:space-y-8">
       {/* Page heading */}
@@ -600,6 +766,13 @@ export default function BrandDashboard() {
           {t("brand.greetingSubtitle", "Here's how your workspaces are performing.")}
         </p>
       </div>
+
+      {/* Workspace leaderboard */}
+      <WorkspaceLeaderboard
+        workspaces={topWorkspaces}
+        isLoading={overviewLoading}
+        total={totalLeads}
+      />
 
       {/* Appointment Bookings Chart */}
       <ChartSection
