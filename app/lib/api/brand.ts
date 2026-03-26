@@ -122,3 +122,114 @@ export async function getBrandAnalytics(
   );
   return res.data;
 }
+
+// ─── Brand Orders ────────────────────────────────────────────────
+
+export interface BrandOrderStripeProduct {
+  id: string;
+  name: string;
+  description: string | null;
+  features: string[];
+  prices: {
+    id: string;
+    interval: "month" | "year";
+    amount: number;
+    currency: string;
+  }[];
+}
+
+export interface BrandOrderService {
+  id: string;
+  name: string;
+  name_en: string | null;
+  name_de: string | null;
+  icon: string | null;
+  type: string | null;
+  already_active: boolean;
+}
+
+export interface BrandOrderWorkspace {
+  id: string;
+  name: string;
+}
+
+export interface BrandOrder {
+  id: string;
+  order_type: "workspace" | "service";
+  workspace_id: string | null;
+  workspace_name: string | null;
+  status: "new" | "pending" | "completed" | "declined";
+  metadata: Record<string, unknown>;
+  created_at: string;
+}
+
+export interface CreateBrandOrderPayload {
+  order_type: "workspace" | "service";
+  workspace_id?: string;
+  metadata: {
+    product_id?: string;
+    price_id?: string;
+    billing?: "monthly" | "yearly";
+    service_ids?: string[];
+    notes?: string;
+  };
+}
+
+export interface BrandOrdersResponse {
+  data: BrandOrder[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+  hasNext: boolean;
+  hasPrev: boolean;
+}
+
+export async function getBrandOrderStripeProducts(): Promise<
+  BrandOrderStripeProduct[]
+> {
+  const res = await apiClient.get<BrandOrderStripeProduct[]>(
+    "/brands/me/orders/stripe-products"
+  );
+  return res.data;
+}
+
+export async function getBrandOrderWorkspaces(): Promise<
+  BrandOrderWorkspace[]
+> {
+  const res = await apiClient.get<BrandOrderWorkspace[]>(
+    "/brands/me/orders/workspaces"
+  );
+  return res.data;
+}
+
+export async function getBrandOrderAvailableServices(
+  workspaceId: string
+): Promise<BrandOrderService[]> {
+  const res = await apiClient.get<BrandOrderService[]>(
+    `/brands/me/orders/available-services?workspace_id=${workspaceId}`
+  );
+  return res.data;
+}
+
+export async function createBrandOrder(
+  payload: CreateBrandOrderPayload
+): Promise<BrandOrder> {
+  const res = await apiClient.post<BrandOrder>(
+    "/brands/me/orders",
+    payload
+  );
+  return res.data;
+}
+
+export async function listMyBrandOrders(params?: {
+  page?: number;
+  limit?: number;
+  status?: string;
+}): Promise<BrandOrdersResponse> {
+  const res = await apiClient.get<BrandOrdersResponse>(
+    "/brands/me/orders",
+    { params }
+  );
+  return res.data;
+}
