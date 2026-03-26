@@ -1023,6 +1023,7 @@
   },
   "brand": {
     "navHome": "Startseite",
+    "navWorkspaces": "Arbeitsbereiche",
     "pageTitle": "Brand Dashboard - Repraesent",
     "greeting": "Schön, Sie zu sehen.",
     "greetingSubtitle": "So entwickeln sich Ihre Arbeitsbereiche.",
@@ -1031,6 +1032,25 @@
     "bookingsDescription": "Leads über das Terminbuchungsformular",
     "submissionsChart": "Formularanfragen",
     "submissionsDescription": "Alle Formularanfragen ohne Terminbuchungen und ausgeblendete Leads",
-    "noData": "Keine Daten verfügbar"
+    "noData": "Keine Daten verfügbar",
+    "workspacesTitle": "Arbeitsbereiche",
+    "workspacesSubtitle": "Ihre verbundenen Arbeitsbereiche.",
+    "workspacesTotal": "Arbeitsbereiche",
+    "wsSearchPlaceholder": "Arbeitsbereiche suchen…",
+    "wsNoWorkspaces": "Keine Arbeitsbereiche verbunden.",
+    "wsCreated": "Erstellt",
+    "wsLastActivity": "Aktivität",
+    "wsLeads": "Leads",
+    "wsServices": "Dienste",
+    "wsConfirmEmails": "Bestätigungsmails",
+    "wsLeadBreakdown": "Lead-Aufschlüsselung",
+    "wsMembers": "Mitglieder",
+    "wsAppointments": "Termine",
+    "wsOtherLeads": "Andere Leads",
+    "wsNoServices": "Keine Dienste",
+    "wsNoMembers": "Keine Mitglieder",
+    "wsLeadConfirmOn": "Ein",
+    "wsLeadConfirmOff": "Aus",
+    "wsPage": "Seite"
   }
 }

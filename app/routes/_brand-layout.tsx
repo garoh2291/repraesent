@@ -2,9 +2,14 @@ import { useEffect, useState } from "react";
 import { Link, Outlet, useLocation } from "react-router";
 import { useTranslation } from "react-i18next";
 import { useAuthContext } from "~/providers/auth-provider";
-import { BarChart3, LogOut, Menu, X } from "lucide-react";
+import { BarChart3, Building2, LogOut, Menu, X } from "lucide-react";
 import { Sheet, SheetContent } from "~/components/ui/sheet";
 import { cn } from "~/lib/utils";
+
+const NAV_ITEMS = [
+  { key: "navHome", path: "/brand", icon: BarChart3, exact: true },
+  { key: "navWorkspaces", path: "/brand/workspaces", icon: Building2, exact: false },
+] as const;
 
 function BrandSidebar({ onClose }: { onClose?: () => void }) {
   const { user, brand, logout, isLoggingOut } = useAuthContext();
@@ -13,9 +18,6 @@ function BrandSidebar({ onClose }: { onClose?: () => void }) {
 
   const BACKEND_IMG_URL =
     import.meta.env.VITE_API_URL?.replace("/api", "") || "http://localhost:8000";
-
-  const isActive =
-    location.pathname === "/brand" || location.pathname === "/";
 
   return (
     <aside className="flex h-full w-[220px] shrink-0 flex-col bg-[#111113] border-r border-white/5">
@@ -53,19 +55,27 @@ function BrandSidebar({ onClose }: { onClose?: () => void }) {
 
       {/* Navigation */}
       <nav className="flex-1 p-3 space-y-0.5">
-        <Link
-          to="/brand"
-          onClick={onClose}
-          className={cn(
-            "flex items-center gap-2.5 rounded-lg px-3 py-2 text-[13px] font-medium border-l-2 transition-all duration-150",
-            isActive
-              ? "border-amber-400 bg-amber-400/10 text-amber-300"
-              : "border-transparent text-white/45 hover:bg-white/5 hover:text-white/75"
-          )}
-        >
-          <BarChart3 className="h-4 w-4 shrink-0" />
-          {t("brand.navHome", "Home")}
-        </Link>
+        {NAV_ITEMS.map(({ key, path, icon: Icon, exact }) => {
+          const isActive = exact
+            ? location.pathname === path
+            : location.pathname.startsWith(path);
+          return (
+            <Link
+              key={key}
+              to={path}
+              onClick={onClose}
+              className={cn(
+                "flex items-center gap-2.5 rounded-lg px-3 py-2 text-[13px] font-medium border-l-2 transition-all duration-150",
+                isActive
+                  ? "border-amber-400 bg-amber-400/10 text-amber-300"
+                  : "border-transparent text-white/45 hover:bg-white/5 hover:text-white/75"
+              )}
+            >
+              <Icon className="h-4 w-4 shrink-0" />
+              {t(`brand.${key}`, key)}
+            </Link>
+          );
+        })}
       </nav>
 
       {/* Bottom: logout */}
@@ -87,6 +97,11 @@ export default function BrandLayout() {
   const { user } = useAuthContext();
   const { i18n, t } = useTranslation();
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
+  const location = useLocation();
+
+  const activeNav = NAV_ITEMS.find(({ path, exact }) =>
+    exact ? location.pathname === path : location.pathname.startsWith(path)
+  ) ?? NAV_ITEMS[0];
 
   useEffect(() => {
     if (!user?.locale) return;
@@ -127,7 +142,7 @@ export default function BrandLayout() {
           </button>
           <div className="flex-1 flex justify-center">
             <span className="text-sm font-semibold text-foreground">
-              {t("brand.navHome", "Home")}
+              {t(`brand.${activeNav.key}`, activeNav.key)}
             </span>
           </div>
           <div className="w-9" />

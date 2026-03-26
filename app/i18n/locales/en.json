@@ -1023,6 +1023,7 @@
   },
   "brand": {
     "navHome": "Home",
+    "navWorkspaces": "Workspaces",
     "pageTitle": "Brand Dashboard - Repraesent",
     "greeting": "Good to see you.",
     "greetingSubtitle": "Here's how your workspaces are performing.",
@@ -1031,6 +1032,25 @@
     "bookingsDescription": "Leads submitted via the appointment booking form",
     "submissionsChart": "Form Submissions",
     "submissionsDescription": "All form submissions excluding appointment bookings and hidden leads",
-    "noData": "No data available"
+    "noData": "No data available",
+    "workspacesTitle": "Workspaces",
+    "workspacesSubtitle": "Your connected workspaces.",
+    "workspacesTotal": "workspaces",
+    "wsSearchPlaceholder": "Search workspaces…",
+    "wsNoWorkspaces": "No workspaces connected.",
+    "wsCreated": "Created",
+    "wsLastActivity": "Activity",
+    "wsLeads": "Leads",
+    "wsServices": "Services",
+    "wsConfirmEmails": "Confirm emails",
+    "wsLeadBreakdown": "Lead breakdown",
+    "wsMembers": "Members",
+    "wsAppointments": "Appointments",
+    "wsOtherLeads": "Other leads",
+    "wsNoServices": "No services",
+    "wsNoMembers": "No members",
+    "wsLeadConfirmOn": "On",
+    "wsLeadConfirmOff": "Off",
+    "wsPage": "Page"
   }
 }

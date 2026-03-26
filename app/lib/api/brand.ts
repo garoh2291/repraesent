@@ -1,6 +1,68 @@
 import { apiClient } from "./axios-instance";
 import type { LeadAnalyticsPeriod } from "./leads";
 
+export interface BrandWorkspaceServiceItem {
+  service_id: string;
+  service_name: string;
+  service_slug: string | null;
+  service_type: string | null;
+  service_icon: string | null;
+}
+
+export interface BrandWorkspaceMemberItem {
+  user_id: string;
+  user_email: string;
+  user_first_name: string;
+  user_last_name: string;
+  role: string;
+  last_activity_at: string | null;
+}
+
+export interface BrandWorkspaceLeadByForm {
+  form_name: string;
+  count: number;
+}
+
+export interface BrandWorkspaceOverviewItem {
+  id: string;
+  name: string;
+  status: string;
+  created_at: string;
+  last_activity_at: string | null;
+  leads_count: number;
+  leads_by_form: BrandWorkspaceLeadByForm[];
+  services: BrandWorkspaceServiceItem[];
+  members: BrandWorkspaceMemberItem[];
+}
+
+export interface BrandWorkspacesOverviewResponse {
+  data: BrandWorkspaceOverviewItem[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+  hasNext: boolean;
+  hasPrev: boolean;
+}
+
+export async function getBrandWorkspacesOverview(params?: {
+  search?: string;
+  page?: number;
+  limit?: number;
+}): Promise<BrandWorkspacesOverviewResponse> {
+  const res = await apiClient.get<BrandWorkspacesOverviewResponse>(
+    "/brands/me/workspaces-overview",
+    {
+      params: {
+        ...(params?.search && { search: params.search }),
+        ...(params?.page && { page: params.page }),
+        ...(params?.limit && { limit: params.limit }),
+      },
+    }
+  );
+  return res.data;
+}
+
 export interface WorkspaceLeadSeries {
   workspace_id: string;
   workspace_name: string;
