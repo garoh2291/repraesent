@@ -2,15 +2,33 @@ import { useEffect, useState } from "react";
 import { Link, Outlet, useLocation } from "react-router";
 import { useTranslation } from "react-i18next";
 import { useAuthContext } from "~/providers/auth-provider";
-import { BarChart3, Store, LineChart, ShoppingBag, LogOut, Menu, X } from "lucide-react";
+import {
+  BarChart3,
+  Store,
+  LineChart,
+  ShoppingBag,
+  LogOut,
+  Menu,
+  X,
+} from "lucide-react";
 import { Sheet, SheetContent } from "~/components/ui/sheet";
 import { LanguageSwitcher } from "~/components/language-switcher";
 import { cn } from "~/lib/utils";
 
 const NAV_ITEMS = [
   { key: "navHome", path: "/brand", icon: BarChart3, exact: true },
-  { key: "navWorkspaces", path: "/brand/workspaces", icon: Store, exact: false },
-  { key: "navAnalytics", path: "/brand/analytics", icon: LineChart, exact: false },
+  {
+    key: "navWorkspaces",
+    path: "/brand/workspaces",
+    icon: Store,
+    exact: false,
+  },
+  {
+    key: "navAnalytics",
+    path: "/brand/analytics",
+    icon: LineChart,
+    exact: false,
+  },
   { key: "navOrders", path: "/brand/orders", icon: ShoppingBag, exact: false },
 ] as const;
 
@@ -20,7 +38,8 @@ function BrandSidebar({ onClose }: { onClose?: () => void }) {
   const location = useLocation();
 
   const BACKEND_IMG_URL =
-    import.meta.env.VITE_API_URL?.replace("/api", "") || "http://localhost:8000";
+    import.meta.env.VITE_API_URL?.replace("/api", "") ||
+    "http://localhost:8001";
 
   return (
     <aside className="flex h-full w-[220px] shrink-0 flex-col bg-[#111113] border-r border-white/5">
@@ -105,9 +124,10 @@ export default function BrandLayout() {
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const location = useLocation();
 
-  const activeNav = NAV_ITEMS.find(({ path, exact }) =>
-    exact ? location.pathname === path : location.pathname.startsWith(path)
-  ) ?? NAV_ITEMS[0];
+  const activeNav =
+    NAV_ITEMS.find(({ path, exact }) =>
+      exact ? location.pathname === path : location.pathname.startsWith(path)
+    ) ?? NAV_ITEMS[0];
 
   useEffect(() => {
     if (!user?.locale) return;

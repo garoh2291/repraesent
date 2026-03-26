@@ -2,7 +2,14 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router";
 import { useTranslation } from "react-i18next";
 import axios from "axios";
-import { Play, Loader2, CheckCircle2, XCircle, CalendarCog, Info } from "lucide-react";
+import {
+  Play,
+  Loader2,
+  CheckCircle2,
+  XCircle,
+  CalendarCog,
+  Info,
+} from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { getAppointmentsFallbackConfig } from "~/lib/api/workspaces";
 import {
@@ -103,12 +110,14 @@ export default function Appointments() {
 }
 
 function DevEmailProcessor() {
-  const [state, setState] = useState<"idle" | "loading" | "ok" | "error">("idle");
+  const [state, setState] = useState<"idle" | "loading" | "ok" | "error">(
+    "idle"
+  );
   const [result, setResult] = useState<string | null>(null);
   const [expanded, setExpanded] = useState(false);
 
   const handleTrigger = async () => {
-    const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:8000/api";
+    const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:8001/api";
     const cronKey = import.meta.env.VITE_CRON_API_KEY || "";
     setState("loading");
     setResult(null);
@@ -116,7 +125,7 @@ function DevEmailProcessor() {
       const res = await axios.post(
         `${apiUrl}/internal/process-email-queue`,
         {},
-        { headers: { "x-cron-api-key": cronKey } },
+        { headers: { "x-cron-api-key": cronKey } }
       );
       setResult(JSON.stringify(res.data));
       setState("ok");
@@ -153,7 +162,9 @@ function DevEmailProcessor() {
       </div>
       <p className="text-[10px] text-amber-600 leading-relaxed">
         Simulates the cron. Set{" "}
-        <code className="font-mono bg-amber-100 px-1 rounded">VITE_CRON_API_KEY</code>{" "}
+        <code className="font-mono bg-amber-100 px-1 rounded">
+          VITE_CRON_API_KEY
+        </code>{" "}
         in <code className="font-mono bg-amber-100 px-1 rounded">.env</code>.
       </p>
       <button
@@ -200,7 +211,8 @@ function AppointmentsDashboard({
   const { currentWorkspace } = useAuthContext();
   const hasEmailConfig =
     currentWorkspace?.services?.some(
-      (s) => s.service_type === "email-config" || s.service_slug === "email-config",
+      (s) =>
+        s.service_type === "email-config" || s.service_slug === "email-config"
     ) ?? false;
   const { data: caldavConfig } = useCalDavConfig();
   const { data: apptFallback } = useQuery({
@@ -257,15 +269,33 @@ function AppointmentsDashboard({
 
       <div className="border-t border-border" />
 
-      <Tabs defaultValue="calendar" className="w-full app-fade-up app-fade-up-d1">
+      <Tabs
+        defaultValue="calendar"
+        className="w-full app-fade-up app-fade-up-d1"
+      >
         <div className="overflow-x-auto scrollbar-hide -mx-4 sm:mx-0 px-4 sm:px-0">
-          <TabsList variant="line" className="w-full mb-4 sm:mb-6 min-w-max sm:min-w-0">
-            <TabsTrigger value="calendar">{t("appointments.tabCalendar")}</TabsTrigger>
-            <TabsTrigger value="services">{t("appointments.tabServices")}</TabsTrigger>
-            <TabsTrigger value="provider">{t("appointments.tabProvider")}</TabsTrigger>
-            <TabsTrigger value="general">{t("appointments.tabGeneral")}</TabsTrigger>
-            <TabsTrigger value="booking">{t("appointments.tabBooking")}</TabsTrigger>
-            <TabsTrigger value="business">{t("appointments.tabBusinessHours")}</TabsTrigger>
+          <TabsList
+            variant="line"
+            className="w-full mb-4 sm:mb-6 min-w-max sm:min-w-0"
+          >
+            <TabsTrigger value="calendar">
+              {t("appointments.tabCalendar")}
+            </TabsTrigger>
+            <TabsTrigger value="services">
+              {t("appointments.tabServices")}
+            </TabsTrigger>
+            <TabsTrigger value="provider">
+              {t("appointments.tabProvider")}
+            </TabsTrigger>
+            <TabsTrigger value="general">
+              {t("appointments.tabGeneral")}
+            </TabsTrigger>
+            <TabsTrigger value="booking">
+              {t("appointments.tabBooking")}
+            </TabsTrigger>
+            <TabsTrigger value="business">
+              {t("appointments.tabBusinessHours")}
+            </TabsTrigger>
             {hasEmailConfig && (
               <TabsTrigger value="customer-email" className="gap-1.5">
                 {t("appointments.tabCustomerEmail", "Confirm Email")}
@@ -274,10 +304,16 @@ function AppointmentsDashboard({
                     <Tooltip>
                       <TooltipTrigger asChild>
                         <span className="inline-flex h-4.5 w-4.5 items-center justify-center rounded-full bg-amber-500 shadow-sm shadow-amber-500/30 cursor-help">
-                          <Info className="h-2.5 w-2.5 text-white" strokeWidth={3} />
+                          <Info
+                            className="h-2.5 w-2.5 text-white"
+                            strokeWidth={3}
+                          />
                         </span>
                       </TooltipTrigger>
-                      <TooltipContent side="bottom" className="max-w-[220px] text-center text-xs">
+                      <TooltipContent
+                        side="bottom"
+                        className="max-w-[220px] text-center text-xs"
+                      >
                         {t("appointments.confirmEmailInactive")}
                       </TooltipContent>
                     </Tooltip>
@@ -320,7 +356,6 @@ function AppointmentsDashboard({
       </Tabs>
 
       {import.meta.env.DEV && <DevEmailProcessor />}
-
     </div>
   );
 }

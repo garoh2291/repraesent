@@ -750,7 +750,7 @@ export default function LeadFallbackPage() {
   const [triggerResult, setTriggerResult] = useState<string | null>(null);
 
   const handleTrigger = async () => {
-    const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:8000/api";
+    const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:8001/api";
     const cronKey = import.meta.env.VITE_CRON_API_KEY || "";
     setTriggerState("loading");
     setTriggerResult(null);
