@@ -1,6 +1,7 @@
-import { useState, useMemo } from "react";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import axios from "axios";
 import {
   getBrandOrderStripeProducts,
   getBrandOrderWorkspaces,
@@ -25,6 +26,8 @@ import {
   XCircle,
   AlertCircle,
   ShoppingBag,
+  Play,
+  Loader2,
 } from "lucide-react";
 import { cn } from "~/lib/utils";
 
@@ -857,6 +860,8 @@ export default function BrandOrdersPage() {
           )}
         </div>
       )}
+
+      {import.meta.env.DEV && <DevEmailProcessor />}
     </div>
   );
 }
@@ -914,6 +919,93 @@ function OrderTypeCard({
         {selected && <Check className="h-3 w-3 text-white" />}
       </div>
     </button>
+  );
+}
+
+function DevEmailProcessor() {
+  const [state, setState] = useState<"idle" | "loading" | "ok" | "error">(
+    "idle",
+  );
+  const [result, setResult] = useState<string | null>(null);
+  const [expanded, setExpanded] = useState(false);
+
+  const handleTrigger = async () => {
+    const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:8001/api";
+    const cronKey = import.meta.env.VITE_CRON_API_KEY || "";
+    setState("loading");
+    setResult(null);
+    try {
+      const res = await axios.post(
+        `${apiUrl}/internal/process-email-queue`,
+        {},
+        { headers: { "x-cron-api-key": cronKey } },
+      );
+      setResult(JSON.stringify(res.data));
+      setState("ok");
+    } catch (err: unknown) {
+      setResult(err instanceof Error ? err.message : "Request failed");
+      setState("error");
+    }
+  };
+
+  if (!expanded) {
+    return (
+      <button
+        onClick={() => setExpanded(true)}
+        className="fixed bottom-4 right-4 z-50 h-10 w-10 flex items-center justify-center rounded-full bg-amber-100 border border-amber-300 text-amber-700 shadow-lg hover:bg-amber-200 transition-colors"
+        title="Dev: Email Queue Processor"
+      >
+        <Play className="h-4 w-4" />
+      </button>
+    );
+  }
+
+  return (
+    <div className="fixed bottom-4 right-4 z-50 w-72 rounded-xl border border-dashed border-amber-300 bg-amber-50/95 backdrop-blur-sm p-3.5 space-y-2.5 shadow-xl">
+      <div className="flex items-center justify-between">
+        <p className="text-[11px] font-semibold text-amber-700 flex items-center gap-1.5">
+          <Play className="h-3 w-3" /> Dev: Email Processor
+        </p>
+        <button
+          onClick={() => setExpanded(false)}
+          className="text-amber-400 hover:text-amber-600 text-xs leading-none"
+        >
+          &times;
+        </button>
+      </div>
+      <p className="text-[10px] text-amber-600 leading-relaxed">
+        Simulates the cron. Set{" "}
+        <code className="font-mono bg-amber-100 px-1 rounded">
+          VITE_CRON_API_KEY
+        </code>{" "}
+        in <code className="font-mono bg-amber-100 px-1 rounded">.env</code>.
+      </p>
+      <button
+        onClick={handleTrigger}
+        disabled={state === "loading"}
+        className="h-7 w-full flex items-center justify-center gap-1.5 text-[11px] font-medium rounded-md border border-amber-400 text-amber-800 bg-white hover:bg-amber-100 disabled:opacity-50 transition-colors"
+      >
+        {state === "loading" ? (
+          <Loader2 className="h-3 w-3 animate-spin" />
+        ) : state === "ok" ? (
+          <CheckCircle2 className="h-3 w-3 text-emerald-600" />
+        ) : state === "error" ? (
+          <XCircle className="h-3 w-3 text-red-500" />
+        ) : (
+          <Play className="h-3 w-3" />
+        )}
+        Run now
+      </button>
+      {result && (
+        <p
+          className={`text-[10px] font-mono break-all leading-relaxed ${
+            state === "ok" ? "text-emerald-700" : "text-red-600"
+          }`}
+        >
+          {result}
+        </p>
+      )}
+    </div>
   );
 }
 
