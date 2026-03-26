@@ -1,13 +1,16 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
+import { useSearchParams } from "react-router";
 import { ChevronDown, Search, X } from "lucide-react";
 import { useDebounce } from "~/lib/hooks/useDebounce";
 import {
   getBrandWorkspacesOverview,
+  getBrandServices,
   type BrandWorkspaceOverviewItem,
   type BrandWorkspaceMemberItem,
 } from "~/lib/api/brand";
+import { FilterComponent } from "~/components/molecule/filter-component";
 import { cn } from "~/lib/utils";
 
 export function meta() {
@@ -286,19 +289,34 @@ function SkeletonRow() {
 
 export default function BrandWorkspaces() {
   const { t } = useTranslation();
+  const [searchParams] = useSearchParams();
   const [searchInput, setSearchInput] = useState("");
   const [page, setPage] = useState(1);
   const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
 
   const debouncedSearch = useDebounce(searchInput, 400);
 
+  // Read active service filter from URL (FilterComponent writes it automatically)
+  const serviceIdParam = searchParams.get("service_id") ?? undefined;
+
+  // Reset page when URL-driven filters change
+  const urlPage = Number(searchParams.get("page") ?? 1);
+  const effectivePage = urlPage > 0 ? urlPage : page;
+
+  const { data: servicesData, isLoading: servicesLoading } = useQuery({
+    queryKey: ["brand-services"],
+    queryFn: getBrandServices,
+    staleTime: 5 * 60 * 1000,
+  });
+
   const { data, isLoading } = useQuery({
-    queryKey: ["brand-workspaces-overview", page, debouncedSearch],
+    queryKey: ["brand-workspaces-overview", effectivePage, debouncedSearch, serviceIdParam],
     queryFn: () =>
       getBrandWorkspacesOverview({
         search: debouncedSearch || undefined,
-        page,
+        page: effectivePage,
         limit: 20,
+        service_id: serviceIdParam,
       }),
     staleTime: 0,
   });
@@ -339,24 +357,40 @@ export default function BrandWorkspaces() {
           </p>
         </div>
 
-        {/* Search */}
-        <div className="relative w-full sm:w-64 shrink-0">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
-          <input
-            type="text"
-            placeholder={t("brand.wsSearchPlaceholder", "Search workspaces…")}
-            value={searchInput}
-            onChange={(e) => handleSearch(e.target.value)}
-            className="w-full rounded-lg border border-border bg-card pl-9 pr-8 py-2 text-sm text-foreground outline-none focus:ring-2 focus:ring-ring placeholder:text-muted-foreground"
+        {/* Search + Filter */}
+        <div className="flex items-center gap-2 w-full sm:w-auto shrink-0">
+          <div className="relative flex-1 sm:w-56">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
+            <input
+              type="text"
+              placeholder={t("brand.wsSearchPlaceholder", "Search workspaces…")}
+              value={searchInput}
+              onChange={(e) => handleSearch(e.target.value)}
+              className="w-full rounded-lg border border-border bg-card pl-9 pr-8 py-2 text-sm text-foreground outline-none focus:ring-2 focus:ring-ring placeholder:text-muted-foreground"
+            />
+            {searchInput && (
+              <button
+                onClick={() => handleSearch("")}
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+              >
+                <X className="h-3.5 w-3.5" />
+              </button>
+            )}
+          </div>
+
+          <FilterComponent
+            additionalFilters={[
+              {
+                name: "products",
+                paramKey: "service_id",
+                options: (servicesData ?? []).map((s) => ({
+                  key: s.id,
+                  label: s.name,
+                })),
+                isLoading: servicesLoading,
+              },
+            ]}
           />
-          {searchInput && (
-            <button
-              onClick={() => handleSearch("")}
-              className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
-            >
-              <X className="h-3.5 w-3.5" />
-            </button>
-          )}
         </div>
       </div>
 

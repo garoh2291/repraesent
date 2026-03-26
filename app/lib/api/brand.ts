@@ -45,10 +45,21 @@ export interface BrandWorkspacesOverviewResponse {
   hasPrev: boolean;
 }
 
+export interface BrandService {
+  id: string;
+  name: string;
+}
+
+export async function getBrandServices(): Promise<BrandService[]> {
+  const res = await apiClient.get<BrandService[]>("/brands/me/services");
+  return res.data;
+}
+
 export async function getBrandWorkspacesOverview(params?: {
   search?: string;
   page?: number;
   limit?: number;
+  service_id?: string;
 }): Promise<BrandWorkspacesOverviewResponse> {
   const res = await apiClient.get<BrandWorkspacesOverviewResponse>(
     "/brands/me/workspaces-overview",
@@ -57,6 +68,7 @@ export async function getBrandWorkspacesOverview(params?: {
         ...(params?.search && { search: params.search }),
         ...(params?.page && { page: params.page }),
         ...(params?.limit && { limit: params.limit }),
+        ...(params?.service_id && { service_id: params.service_id }),
       },
     }
   );
