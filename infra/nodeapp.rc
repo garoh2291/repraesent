@@ -17,6 +17,6 @@ load_rc_config $name
 pidfile="/var/run/${name}.pid"
 logfile="/var/log/${name}.log"
 command="/usr/sbin/daemon"
-command_args="-f -p ${pidfile} -o ${logfile} /bin/sh -c 'cd ${nodeapp_dir} && /usr/local/bin/node node_modules/.bin/react-router-serve build/server/index.js'"
+command_args="-f -p ${pidfile} -o ${logfile} /bin/sh -c 'cd ${nodeapp_dir} && exec ./node_modules/.bin/yarn run start'"
 
 run_rc_command "$1"
