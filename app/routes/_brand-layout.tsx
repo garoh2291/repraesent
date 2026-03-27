@@ -38,7 +38,7 @@ function BrandSidebar({ onClose }: { onClose?: () => void }) {
   const location = useLocation();
 
   const BACKEND_IMG_URL =
-    import.meta.env.VITE_API_URL?.replace("/api", "") ||
+    import.meta.env.VITE_API_URL?.replace(/\/api$/, "") ||
     "http://localhost:8001";
 
   return (
