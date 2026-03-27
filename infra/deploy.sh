@@ -41,10 +41,32 @@ git fetch origin >> "$LOG" 2>&1
 git reset --hard origin/main >> "$LOG" 2>&1
 git clean -fdx -e .env -e uploads >> "$LOG" 2>&1
 
+rm -f package-lock.json
+if [ ! -f yarn.lock ]; then
+  log "yarn.lock missing after git sync (repo must ship yarn.lock)"
+  exit 1
+fi
+
 run_yarn install --frozen-lockfile >> "$LOG" 2>&1
+if [ -f package-lock.json ]; then
+  log "package-lock.json exists after yarn install — aborting"
+  rm -f package-lock.json
+  exit 1
+fi
+
+if ! git -C "$APP_DIR" diff --quiet yarn.lock; then
+  log "yarn.lock differs from HEAD after install — frozen lockfile violated"
+  exit 1
+fi
+
 run_yarn build >> "$LOG" 2>&1
 
 /usr/sbin/daemon -f -p "$PIDFILE" -o "$NODEAPP_LOG" \
   /bin/sh -c "cd \"$APP_DIR\" && exec \"$NODE_BIN\" node_modules/@react-router/serve/bin.js ./build/server/index.js"
+
+dirty="$(git -C "$APP_DIR" status --porcelain 2>/dev/null || true)"
+if [ -n "$dirty" ]; then
+  log "WARNING: dirty tree after deploy:"; printf '%s\n' "$dirty" >> "$LOG"
+fi
 
 log "Deploy finished"
