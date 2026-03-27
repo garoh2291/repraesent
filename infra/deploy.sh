@@ -1,7 +1,7 @@
 #!/bin/sh
 set -e
 
-PATH=/usr/local/bin:/usr/local/sbin:/usr/sbin:/usr/bin:/bin
+PATH=/usr/local/bin:/usr/local/lib/node_modules/corepack/shims:/usr/local/sbin:/usr/sbin:/usr/bin:/bin
 
 APP_DIR="/usr/local/www/my.repraesent.com"
 LOG="/var/log/deploy.log"
