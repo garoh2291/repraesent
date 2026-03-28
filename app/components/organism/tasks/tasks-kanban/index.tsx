@@ -10,11 +10,13 @@ import {
   type DragStartEvent,
 } from "@dnd-kit/core";
 import { useDroppable } from "@dnd-kit/core";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
+import { format } from "date-fns";
+import { ChevronDown } from "lucide-react";
 import { cn } from "~/lib/utils";
 import { TaskCard } from "./task-card";
-import { updateTask, type Task, type TaskStatus } from "~/lib/api/tasks";
+import { TaskUrgencyBadge } from "~/components/organism/tasks/task-urgency-badge";
+import { type Task, type TaskStatus } from "~/lib/api/tasks";
 import type { WorkspaceMemberItem } from "~/components/organism/tasks/task-form-modal";
 
 const TASK_STATUS_COLUMNS: TaskStatus[] = ["todo", "in_progress", "done"];
@@ -118,36 +120,47 @@ export function TasksKanban({
 
   return (
     <>
-      <DndContext
-        sensors={sensors}
-        onDragStart={handleDragStart}
-        onDragEnd={handleDragEnd}
-      >
-        <div className="flex gap-4 flex-1 min-h-0 pb-4 overflow-x-auto scrollbar-hide sm:grid sm:grid-cols-3">
-          {TASK_STATUS_COLUMNS.map((status) => (
-            <KanbanColumn
-              key={status}
-              status={status}
-              tasks={tasksByStatus[status]}
-              onTaskSelect={onTaskSelect}
-              isUpdating={isUpdating}
-              canEdit={canEdit}
-              colorClass={TASK_STATUS_COLORS[status]}
-            />
-          ))}
-        </div>
+      {/* Mobile: Schedule-style accordion list */}
+      <div className="sm:hidden">
+        <TasksMobileSchedule
+          tasksByStatus={tasksByStatus}
+          onTaskSelect={onTaskSelect}
+        />
+      </div>
 
-        <DragOverlay>
-          {activeTask ? (
-            <TaskCard
-              task={activeTask}
-              onSelect={() => {}}
-              isDragging
-              canEdit={canEdit}
-            />
-          ) : null}
-        </DragOverlay>
-      </DndContext>
+      {/* Desktop: Kanban board */}
+      <div className="hidden sm:block flex-1 min-h-0">
+        <DndContext
+          sensors={sensors}
+          onDragStart={handleDragStart}
+          onDragEnd={handleDragEnd}
+        >
+          <div className="flex gap-4 flex-1 min-h-0 pb-4 overflow-x-auto scrollbar-hide sm:grid sm:grid-cols-3">
+            {TASK_STATUS_COLUMNS.map((status) => (
+              <KanbanColumn
+                key={status}
+                status={status}
+                tasks={tasksByStatus[status]}
+                onTaskSelect={onTaskSelect}
+                isUpdating={isUpdating}
+                canEdit={canEdit}
+                colorClass={TASK_STATUS_COLORS[status]}
+              />
+            ))}
+          </div>
+
+          <DragOverlay>
+            {activeTask ? (
+              <TaskCard
+                task={activeTask}
+                onSelect={() => {}}
+                isDragging
+                canEdit={canEdit}
+              />
+            ) : null}
+          </DragOverlay>
+        </DndContext>
+      </div>
     </>
   );
 }
@@ -210,6 +223,190 @@ function KanbanColumn({
             />
           ))
         )}
+      </div>
+    </div>
+  );
+}
+
+/* ─── Mobile Schedule List (Google Calendar-style) ─── */
+
+function TasksMobileSchedule({
+  tasksByStatus,
+  onTaskSelect,
+}: {
+  tasksByStatus: Record<TaskStatus, Task[]>;
+  onTaskSelect: (id: string) => void;
+}) {
+  const { t } = useTranslation();
+
+  return (
+    <div className="space-y-2 pt-2 pb-6">
+      {TASK_STATUS_COLUMNS.map((status) => {
+        const tasks = tasksByStatus[status];
+        const colorClass = TASK_STATUS_COLORS[status];
+        const count = tasks.length;
+
+        return (
+          <ScheduleSection
+            key={status}
+            defaultOpen={count > 0}
+            header={
+              <>
+                <div className={cn("h-8 w-1 rounded-full shrink-0", colorClass)} />
+                <div className="flex-1 min-w-0">
+                  <span className="text-sm font-semibold text-foreground">
+                    {t(`tasks.statuses.${status}`)}
+                  </span>
+                </div>
+                <span
+                  className={cn(
+                    "inline-flex h-6 min-w-6 items-center justify-center rounded-full px-1.5 text-xs font-semibold",
+                    count > 0
+                      ? `${colorClass} text-white`
+                      : "bg-muted text-muted-foreground"
+                  )}
+                >
+                  {count}
+                </span>
+              </>
+            }
+          >
+            {count === 0 ? (
+              <div className="px-4 pb-4 pt-1">
+                <p className="text-xs text-muted-foreground/50 text-center py-3">
+                  —
+                </p>
+              </div>
+            ) : (
+              <div className="px-3 pb-3 space-y-1">
+                {tasks.map((task) => (
+                  <TaskScheduleRow
+                    key={task.id}
+                    task={task}
+                    colorClass={colorClass}
+                    onSelect={() => onTaskSelect(task.id)}
+                  />
+                ))}
+              </div>
+            )}
+          </ScheduleSection>
+        );
+      })}
+    </div>
+  );
+}
+
+function TaskScheduleRow({
+  task,
+  colorClass,
+  onSelect,
+}: {
+  task: Task;
+  colorClass: string;
+  onSelect: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onSelect}
+      className={cn(
+        "flex w-full items-start gap-3 rounded-lg px-3 py-2.5 text-left transition-colors",
+        "hover:bg-muted/60 active:bg-muted"
+      )}
+    >
+      {/* Color accent line */}
+      <div className={cn("mt-1 h-4 w-0.5 rounded-full shrink-0", colorClass)} />
+
+      {/* Content */}
+      <div className="flex-1 min-w-0 space-y-0.5">
+        <p
+          className={cn(
+            "text-sm font-medium leading-snug truncate",
+            task.status === "done" && "line-through text-muted-foreground"
+          )}
+        >
+          {task.title}
+        </p>
+
+        {task.description && (
+          <p className="text-xs text-muted-foreground line-clamp-1">
+            {task.description}
+          </p>
+        )}
+
+        {/* Meta row: urgency, due date, lead name */}
+        <div className="flex items-center gap-2 flex-wrap pt-0.5">
+          {task.urgency && <TaskUrgencyBadge urgency={task.urgency} />}
+          {task.due_date && (
+            <span className="text-[10px] text-muted-foreground">
+              {format(new Date(task.due_date), "MMM d")}
+            </span>
+          )}
+          {task.lead_full_name && (
+            <span className="text-[10px] text-muted-foreground truncate max-w-[100px]">
+              {task.lead_full_name}
+            </span>
+          )}
+        </div>
+      </div>
+
+      {/* Assignee avatar */}
+      {task.assignee_id && (
+        <span
+          className="mt-0.5 inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-muted text-[10px] font-bold text-muted-foreground"
+          title={`${task.assignee_first_name ?? ""} ${task.assignee_last_name ?? ""}`.trim()}
+        >
+          {(() => {
+            const f = task.assignee_first_name?.trim() ?? "";
+            const l = task.assignee_last_name?.trim() ?? "";
+            if (f && l) return `${f[0]}${l[0]}`.toUpperCase();
+            if (f) return f.slice(0, 2).toUpperCase();
+            return "?";
+          })()}
+        </span>
+      )}
+    </button>
+  );
+}
+
+/* ─── Lightweight disclosure (no Radix, no mount/unmount) ─── */
+
+function ScheduleSection({
+  defaultOpen,
+  header,
+  children,
+}: {
+  defaultOpen: boolean;
+  header: React.ReactNode;
+  children: React.ReactNode;
+}) {
+  const [open, setOpen] = useState(defaultOpen);
+
+  return (
+    <div
+      className={cn(
+        "rounded-xl border border-border bg-card overflow-hidden",
+        "shadow-[0_1px_2px_0_rgba(0,0,0,0.04)]"
+      )}
+    >
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        className="flex w-full items-center gap-3 px-4 py-3 text-left"
+      >
+        {header}
+        <ChevronDown
+          className={cn(
+            "h-4 w-4 shrink-0 text-muted-foreground transition-transform duration-200",
+            open && "rotate-180"
+          )}
+        />
+      </button>
+      <div
+        className="grid transition-[grid-template-rows] duration-200 ease-out"
+        style={{ gridTemplateRows: open ? "1fr" : "0fr" }}
+      >
+        <div className="overflow-hidden">{children}</div>
       </div>
     </div>
   );

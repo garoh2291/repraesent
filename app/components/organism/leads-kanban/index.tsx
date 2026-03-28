@@ -11,6 +11,8 @@ import {
 } from "@dnd-kit/core";
 import type { DragEndEvent, DragStartEvent } from "@dnd-kit/core";
 import { useTranslation } from "react-i18next";
+import { format } from "date-fns";
+import { ChevronDown, Loader2 } from "lucide-react";
 import { type Lead } from "~/lib/api/leads";
 import {
   LEAD_STATUSES,
@@ -18,7 +20,6 @@ import {
   type LeadStatus,
 } from "~/lib/leads/constants";
 import { cn } from "~/lib/utils";
-import { Loader2 } from "lucide-react";
 
 interface LeadsKanbanProps {
   leads: Lead[];
@@ -106,37 +107,50 @@ export function LeadsKanban({
   }
 
   return (
-    <DndContext
-      sensors={sensors}
-      onDragStart={handleDragStart}
-      onDragEnd={handleDragEnd}
-    >
-      <div
-        className={cn(
-          "flex flex-1 min-h-0 h-full gap-4 overflow-x-auto overflow-y-hidden rounded-lg py-4 pl-0 pr-4 pt-5 scrollbar-hide"
-        )}
-      >
-        {LEAD_STATUSES.map((status) => (
-          <KanbanColumn
-            key={status}
-            status={status}
-            leads={leadsByStatus[status] ?? []}
-            onLeadSelect={onLeadSelect}
-            isUpdating={isUpdating}
-            canEdit={canEdit}
-          />
-        ))}
+    <>
+      {/* Mobile: Schedule-style accordion list */}
+      <div className="sm:hidden">
+        <LeadsMobileSchedule
+          leadsByStatus={leadsByStatus}
+          onLeadSelect={onLeadSelect}
+        />
       </div>
 
-      <DragOverlay>
-        {activeLead ? (
-          <KanbanCard
-            lead={activeLead}
-            isDragging
-          />
-        ) : null}
-      </DragOverlay>
-    </DndContext>
+      {/* Desktop: Kanban board */}
+      <div className="hidden sm:block flex-1 min-h-0 h-full">
+        <DndContext
+          sensors={sensors}
+          onDragStart={handleDragStart}
+          onDragEnd={handleDragEnd}
+        >
+          <div
+            className={cn(
+              "flex flex-1 min-h-0 h-full gap-4 overflow-x-auto overflow-y-hidden rounded-lg py-4 pl-0 pr-4 pt-5 scrollbar-hide"
+            )}
+          >
+            {LEAD_STATUSES.map((status) => (
+              <KanbanColumn
+                key={status}
+                status={status}
+                leads={leadsByStatus[status] ?? []}
+                onLeadSelect={onLeadSelect}
+                isUpdating={isUpdating}
+                canEdit={canEdit}
+              />
+            ))}
+          </div>
+
+          <DragOverlay>
+            {activeLead ? (
+              <KanbanCard
+                lead={activeLead}
+                isDragging
+              />
+            ) : null}
+          </DragOverlay>
+        </DndContext>
+      </div>
+    </>
   );
 }
 
@@ -261,6 +275,183 @@ function KanbanCard({
         <p className="text-xs text-muted-foreground truncate line-clamp-2">
           {lead.email || lead.phone || "—"}
         </p>
+      </div>
+    </div>
+  );
+}
+
+/* ─── Mobile Schedule List (Google Calendar-style) ─── */
+
+function LeadsMobileSchedule({
+  leadsByStatus,
+  onLeadSelect,
+}: {
+  leadsByStatus: Record<LeadStatus, Lead[]>;
+  onLeadSelect: (id: string) => void;
+}) {
+  const { t } = useTranslation();
+
+  return (
+    <div className="space-y-2 pt-4 pb-6">
+      {LEAD_STATUSES.map((status) => {
+        const leads = leadsByStatus[status] ?? [];
+        const colorClass = LEAD_STATUS_COLORS[status];
+        const count = leads.length;
+
+        return (
+          <ScheduleSection
+            key={status}
+            defaultOpen={count > 0}
+            header={
+              <>
+                <div className={cn("h-8 w-1 rounded-full shrink-0", colorClass)} />
+                <div className="flex-1 min-w-0">
+                  <span className="text-sm font-semibold text-foreground">
+                    {t(`leads.statuses.${status}`)}
+                  </span>
+                </div>
+                <span
+                  className={cn(
+                    "inline-flex h-6 min-w-6 items-center justify-center rounded-full px-1.5 text-xs font-semibold",
+                    count > 0
+                      ? `${colorClass} ${colorClass === "bg-muted" ? "text-foreground" : "text-white"}`
+                      : "bg-muted text-muted-foreground"
+                  )}
+                >
+                  {count}
+                </span>
+              </>
+            }
+          >
+            {count === 0 ? (
+              <div className="px-4 pb-4 pt-1">
+                <p className="text-xs text-muted-foreground/50 text-center py-3">
+                  —
+                </p>
+              </div>
+            ) : (
+              <div className="px-3 pb-3 space-y-1">
+                {leads.map((lead) => (
+                  <LeadScheduleRow
+                    key={lead.id}
+                    lead={lead}
+                    colorClass={colorClass}
+                    onSelect={() => onLeadSelect(lead.id)}
+                  />
+                ))}
+              </div>
+            )}
+          </ScheduleSection>
+        );
+      })}
+    </div>
+  );
+}
+
+function LeadScheduleRow({
+  lead,
+  colorClass,
+  onSelect,
+}: {
+  lead: Lead;
+  colorClass: string;
+  onSelect: () => void;
+}) {
+  const displayName = lead.full_name || lead.email || "—";
+  const subtitle = lead.email || lead.phone || null;
+  const formName = lead.form_name
+    ? lead.form_name
+        .replace(/_/g, " ")
+        .replace(/\b\w/g, (c) => c.toUpperCase())
+    : null;
+
+  return (
+    <button
+      type="button"
+      onClick={onSelect}
+      className={cn(
+        "flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left transition-colors",
+        "hover:bg-muted/60 active:bg-muted"
+      )}
+    >
+      {/* Color accent line */}
+      <div className={cn("h-8 w-0.5 rounded-full shrink-0", colorClass)} />
+
+      {/* Content */}
+      <div className="flex-1 min-w-0 space-y-0.5">
+        <p className="text-sm font-medium leading-snug truncate">
+          {displayName}
+        </p>
+
+        {subtitle && subtitle !== displayName && (
+          <p className="text-xs text-muted-foreground truncate">
+            {subtitle}
+          </p>
+        )}
+
+        {/* Meta: form name + date */}
+        <div className="flex items-center gap-2 pt-0.5">
+          {formName && (
+            <span className="text-[10px] text-muted-foreground/70 truncate max-w-[120px]">
+              {formName}
+            </span>
+          )}
+          {lead.created_at && (
+            <span className="text-[10px] text-muted-foreground/50">
+              {format(new Date(lead.created_at), "MMM d")}
+            </span>
+          )}
+        </div>
+      </div>
+
+      {/* Source indicator */}
+      {lead.source_label && (
+        <span className="text-[10px] text-muted-foreground/60 shrink-0">
+          {lead.source_label}
+        </span>
+      )}
+    </button>
+  );
+}
+
+/* ─── Lightweight disclosure (no Radix, no mount/unmount) ─── */
+
+function ScheduleSection({
+  defaultOpen,
+  header,
+  children,
+}: {
+  defaultOpen: boolean;
+  header: React.ReactNode;
+  children: React.ReactNode;
+}) {
+  const [open, setOpen] = useState(defaultOpen);
+
+  return (
+    <div
+      className={cn(
+        "rounded-xl border border-border bg-card overflow-hidden",
+        "shadow-[0_1px_2px_0_rgba(0,0,0,0.04)]"
+      )}
+    >
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        className="flex w-full items-center gap-3 px-4 py-3 text-left"
+      >
+        {header}
+        <ChevronDown
+          className={cn(
+            "h-4 w-4 shrink-0 text-muted-foreground transition-transform duration-200",
+            open && "rotate-180"
+          )}
+        />
+      </button>
+      <div
+        className="grid transition-[grid-template-rows] duration-200 ease-out"
+        style={{ gridTemplateRows: open ? "1fr" : "0fr" }}
+      >
+        <div className="overflow-hidden">{children}</div>
       </div>
     </div>
   );
