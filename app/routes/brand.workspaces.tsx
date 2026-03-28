@@ -134,7 +134,7 @@ const ROLE_STYLES_LIGHT: Record<string, string> = {
 
 // ── Expanded panel ────────────────────────────────────────────────────────────
 
-function ExpandedPanel({ ws }: { ws: BrandWorkspaceOverviewItem }) {
+function ExpandedPanel({ ws, globalMaxLeads }: { ws: BrandWorkspaceOverviewItem; globalMaxLeads: number }) {
   const { t, i18n } = useTranslation();
 
   const sortedMembers = [...ws.members].sort(
@@ -142,7 +142,7 @@ function ExpandedPanel({ ws }: { ws: BrandWorkspaceOverviewItem }) {
   );
 
   const sortedLeads = [...ws.leads_by_form].sort((a, b) => b.count - a.count);
-  const maxLeads = Math.max(...sortedLeads.map((l) => l.count), 1);
+  const maxLeads = globalMaxLeads;
 
   return (
     <div className="border-t border-slate-200/60 bg-[#f5f4f1]">
@@ -353,6 +353,12 @@ export default function BrandWorkspaces() {
   const totalPages = data?.totalPages ?? 1;
   const total = data?.total ?? 0;
 
+  // Global max lead count across all workspaces' form names — bars are relative to this
+  const globalMaxLeads = Math.max(
+    ...workspaces.flatMap((ws) => ws.leads_by_form.map((lf) => lf.count)),
+    1
+  );
+
   const toggleRow = (id: string) => {
     setExpandedRows((prev) => {
       const next = new Set(prev);
@@ -536,7 +542,7 @@ export default function BrandWorkspaces() {
                   className="grid transition-[grid-template-rows] duration-300 ease-in-out"
                 >
                   <div className="overflow-hidden">
-                    <ExpandedPanel ws={ws} />
+                    <ExpandedPanel ws={ws} globalMaxLeads={globalMaxLeads} />
                   </div>
                 </div>
               </div>
