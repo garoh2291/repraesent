@@ -293,8 +293,8 @@ export default function Emails() {
   const isConfigured = !!(cfg.email && cfg.imap_server && cfg.smtp_server);
 
   return (
-    <div className="p-4 sm:p-6 app-fade-in">
-      <div className="mx-auto max-w-4xl space-y-6">
+    <div className="mx-auto w-full max-w-[1280px] p-4 sm:p-6 py-10! space-y-6 sm:space-y-8 app-fade-in">
+      <div className="mx-auto w-full space-y-6">
         {/* Header */}
         <div className="app-fade-up flex items-start justify-between gap-4">
           <div className="flex items-center gap-3">

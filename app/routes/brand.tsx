@@ -112,9 +112,7 @@ function getDateSlots(
   } else if (period === "this_month") {
     for (let i = 1; i <= now.getDate(); i++) {
       const d = new Date(now.getFullYear(), now.getMonth(), i);
-      slots.push(
-        `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(i)}`
-      );
+      slots.push(`${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(i)}`);
     }
   } else {
     // all_time: collect all unique dates across all workspaces
@@ -236,7 +234,9 @@ function StatusTooltip({
             style={{ backgroundColor: entry.fill }}
           />
           <span className="text-muted-foreground truncate flex-1 text-[12px]">
-            {STATUS_LABEL_KEYS[entry.dataKey] ? t(STATUS_LABEL_KEYS[entry.dataKey]) : entry.dataKey}
+            {STATUS_LABEL_KEYS[entry.dataKey]
+              ? t(STATUS_LABEL_KEYS[entry.dataKey])
+              : entry.dataKey}
           </span>
           <span className="font-semibold text-foreground shrink-0">
             {entry.value}
@@ -283,7 +283,11 @@ function ChartSection({
 
   // x-axis tick decimation for line chart
   const tickStep =
-    lineData.length <= 10 ? 1 : lineData.length <= 20 ? 2 : Math.ceil(lineData.length / 10);
+    lineData.length <= 10
+      ? 1
+      : lineData.length <= 20
+        ? 2
+        : Math.ceil(lineData.length / 10);
   const xTicks = lineData
     .filter((_, i) => i % tickStep === 0 || i === lineData.length - 1)
     .map((p) => p.date as string);
@@ -391,7 +395,8 @@ function ChartSection({
         <div className="flex flex-wrap gap-x-4 gap-y-2">
           {workspaces.map((ws) => {
             const wsColor = colorMap[ws.workspace_id] ?? WORKSPACE_COLORS[0];
-            const isActive = hoveredWorkspace === null || hoveredWorkspace === ws.workspace_id;
+            const isActive =
+              hoveredWorkspace === null || hoveredWorkspace === ws.workspace_id;
             return (
               <div
                 key={ws.workspace_id}
@@ -404,13 +409,23 @@ function ChartSection({
                   className="h-2.5 w-2.5 rounded-full shrink-0 transition-transform duration-150"
                   style={{
                     backgroundColor: wsColor,
-                    transform: hoveredWorkspace === ws.workspace_id ? "scale(1.4)" : "scale(1)",
+                    transform:
+                      hoveredWorkspace === ws.workspace_id
+                        ? "scale(1.4)"
+                        : "scale(1)",
                   }}
                 />
-                <span className={cn("transition-colors duration-150", isActive ? "text-foreground" : "text-muted-foreground")}>
+                <span
+                  className={cn(
+                    "transition-colors duration-150",
+                    isActive ? "text-foreground" : "text-muted-foreground"
+                  )}
+                >
                   {ws.workspace_name}
                 </span>
-                <span className="font-semibold text-foreground">{ws.total}</span>
+                <span className="font-semibold text-foreground">
+                  {ws.total}
+                </span>
               </div>
             );
           })}
@@ -426,7 +441,9 @@ function ChartSection({
                 className="h-2 w-2 rounded-full shrink-0"
                 style={{ backgroundColor: STATUS_COLORS[s] }}
               />
-              <span className="text-muted-foreground">{STATUS_LABEL_KEYS[s] ? t(STATUS_LABEL_KEYS[s]) : s}</span>
+              <span className="text-muted-foreground">
+                {STATUS_LABEL_KEYS[s] ? t(STATUS_LABEL_KEYS[s]) : s}
+              </span>
             </div>
           ))}
         </div>
@@ -483,8 +500,11 @@ function ChartSection({
                 cursor={{ stroke: "var(--border)", strokeWidth: 1 }}
               />
               {workspaces.map((ws) => {
-                const wsColor = colorMap[ws.workspace_id] ?? WORKSPACE_COLORS[0];
-                const isActive = hoveredWorkspace === null || hoveredWorkspace === ws.workspace_id;
+                const wsColor =
+                  colorMap[ws.workspace_id] ?? WORKSPACE_COLORS[0];
+                const isActive =
+                  hoveredWorkspace === null ||
+                  hoveredWorkspace === ws.workspace_id;
                 return (
                   <Line
                     key={ws.workspace_id}
@@ -579,9 +599,18 @@ function ChartSection({
 // ─── Leaderboard ──────────────────────────────────────────────────────────────
 
 const RANK_CONFIG = [
-  { color: "#f5d74f", label: "bg-amber-400/15 text-amber-300 border border-amber-400/20" },
-  { color: "#94a3b8", label: "bg-slate-400/15 text-slate-300 border border-slate-400/15" },
-  { color: "#fb923c", label: "bg-orange-400/15 text-orange-300 border border-orange-400/15" },
+  {
+    color: "#f5d74f",
+    label: "bg-amber-400/15 text-amber-300 border border-amber-400/20",
+  },
+  {
+    color: "#94a3b8",
+    label: "bg-slate-400/15 text-slate-300 border border-slate-400/15",
+  },
+  {
+    color: "#fb923c",
+    label: "bg-orange-400/15 text-orange-300 border border-orange-400/15",
+  },
 ];
 
 function LeaderboardSkeleton() {
@@ -599,11 +628,17 @@ function LeaderboardSkeleton() {
           <div key={i} className="space-y-2 px-1">
             <div className="flex items-center gap-3">
               <div className="h-6 w-6 rounded-full bg-muted shrink-0" />
-              <div className="h-3 flex-1 rounded bg-muted" style={{ maxWidth: `${80 - i * 10}%` }} />
+              <div
+                className="h-3 flex-1 rounded bg-muted"
+                style={{ maxWidth: `${80 - i * 10}%` }}
+              />
               <div className="h-3 w-8 rounded bg-muted shrink-0" />
             </div>
             <div className="ml-9 h-1.5 rounded-full bg-muted overflow-hidden">
-              <div className="h-full rounded-full bg-muted-foreground/20" style={{ width: `${80 - i * 12}%` }} />
+              <div
+                className="h-full rounded-full bg-muted-foreground/20"
+                style={{ width: `${80 - i * 12}%` }}
+              />
             </div>
           </div>
         ))}
@@ -657,7 +692,8 @@ function WorkspaceLeaderboard({
       <div className="space-y-2">
         {workspaces.map((ws, i) => {
           const pct = (ws.leads_count / max) * 100;
-          const wsColor = colorMap[ws.id] ?? WORKSPACE_COLORS[i % WORKSPACE_COLORS.length];
+          const wsColor =
+            colorMap[ws.id] ?? WORKSPACE_COLORS[i % WORKSPACE_COLORS.length];
           const rank = RANK_CONFIG[i] ?? {
             label: "bg-muted text-muted-foreground border border-transparent",
           };
@@ -753,9 +789,7 @@ export default function BrandDashboard() {
 
   const topWorkspaces = useMemo(() => {
     const all = overviewData?.data ?? [];
-    return [...all]
-      .sort((a, b) => b.leads_count - a.leads_count)
-      .slice(0, 8);
+    return [...all].sort((a, b) => b.leads_count - a.leads_count).slice(0, 8);
   }, [overviewData]);
 
   const totalLeads = useMemo(
@@ -770,7 +804,9 @@ export default function BrandDashboard() {
     topWorkspaces.forEach((ws) => ids.add(ws.id));
     // Then bookings & submissions workspaces (in case they have workspaces not in leaderboard)
     (bookingsData?.bookings ?? []).forEach((ws) => ids.add(ws.workspace_id));
-    (submissionsData?.submissions ?? []).forEach((ws) => ids.add(ws.workspace_id));
+    (submissionsData?.submissions ?? []).forEach((ws) =>
+      ids.add(ws.workspace_id)
+    );
     const map: Record<string, string> = {};
     let i = 0;
     ids.forEach((id) => {
@@ -781,14 +817,17 @@ export default function BrandDashboard() {
   }, [topWorkspaces, bookingsData, submissionsData]);
 
   return (
-    <div className="mx-auto max-w-5xl p-4 sm:p-6 space-y-6 sm:space-y-8">
+    <div className="mx-auto w-full max-w-[1280px] p-4 sm:p-6 py-10! space-y-6 sm:space-y-8 app-fade-in">
       {/* Page heading */}
       <div className="space-y-1">
         <h1 className="text-2xl font-semibold text-foreground tracking-tight">
           {t("brand.greeting", "Good to see you.")}
         </h1>
         <p className="text-sm text-muted-foreground">
-          {t("brand.greetingSubtitle", "Here's how your partner houses are performing.")}
+          {t(
+            "brand.greetingSubtitle",
+            "Here's how your partner houses are performing."
+          )}
         </p>
       </div>
 

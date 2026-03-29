@@ -197,28 +197,28 @@ function SettingsInvoicesTab() {
             defaultValue: statusCode,
           });
           const isPaid = inv.status === "paid";
-          const actionNode = inv.status === "draft" ? (
-            <span className="text-xs text-muted-foreground">
-              {inv.due_date
-                ? t("settings.invoices.dueLabel", {
-                    date: formatDate(inv.due_date ?? null),
-                  })
-                : t("settings.invoices.upcoming")}
-            </span>
-          ) : isPaid ? (
-            (inv.invoice_pdf || inv.hosted_invoice_url) ? (
-              <a
-                href={inv.invoice_pdf ?? inv.hosted_invoice_url ?? "#"}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-1.5 text-xs font-medium text-primary hover:underline"
-              >
-                <Download className="h-3.5 w-3.5" />
-                {t("settings.invoices.downloadReceipt")}
-              </a>
-            ) : null
-          ) : (
-            inv.hosted_invoice_url ? (
+          const actionNode =
+            inv.status === "draft" ? (
+              <span className="text-xs text-muted-foreground">
+                {inv.due_date
+                  ? t("settings.invoices.dueLabel", {
+                      date: formatDate(inv.due_date ?? null),
+                    })
+                  : t("settings.invoices.upcoming")}
+              </span>
+            ) : isPaid ? (
+              inv.invoice_pdf || inv.hosted_invoice_url ? (
+                <a
+                  href={inv.invoice_pdf ?? inv.hosted_invoice_url ?? "#"}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1.5 text-xs font-medium text-primary hover:underline"
+                >
+                  <Download className="h-3.5 w-3.5" />
+                  {t("settings.invoices.downloadReceipt")}
+                </a>
+              ) : null
+            ) : inv.hosted_invoice_url ? (
               <a
                 href={inv.hosted_invoice_url}
                 target="_blank"
@@ -228,8 +228,7 @@ function SettingsInvoicesTab() {
                 <ExternalLink className="h-3.5 w-3.5" />
                 {t("settings.invoices.viewInvoice")}
               </a>
-            ) : null
-          );
+            ) : null;
 
           return (
             <div key={inv.id} className="hover:bg-muted/30 transition-colors">
@@ -397,7 +396,7 @@ export default function Settings() {
   const workspaceUrl = workspace.url?.url ?? "—";
 
   return (
-    <div className="p-4 sm:p-6 space-y-4 sm:space-y-6 app-fade-in">
+    <div className="mx-auto w-full max-w-[1280px] p-4 sm:p-6 py-10! space-y-6 sm:space-y-8 app-fade-in">
       {/* Header */}
       <div className="app-fade-up">
         <h1 className="text-xl sm:text-2xl font-semibold text-foreground tracking-tight">
@@ -415,14 +414,17 @@ export default function Settings() {
         className="w-full app-fade-up app-fade-up-d1"
       >
         <div className="overflow-x-auto scrollbar-hide -mx-4 sm:mx-0 px-4 sm:px-0">
-          <TabsList variant="line" className="w-full mb-4 sm:mb-6 min-w-max sm:min-w-0">
-          <TabsTrigger value="general">
-            {t("settings.workspace.title")}
-          </TabsTrigger>
-          <TabsTrigger value="invoices">
-            {t("settings.invoices.title")}
-          </TabsTrigger>
-        </TabsList>
+          <TabsList
+            variant="line"
+            className="w-full mb-4 sm:mb-6 min-w-max sm:min-w-0"
+          >
+            <TabsTrigger value="general">
+              {t("settings.workspace.title")}
+            </TabsTrigger>
+            <TabsTrigger value="invoices">
+              {t("settings.invoices.title")}
+            </TabsTrigger>
+          </TabsList>
         </div>
 
         <TabsContent value="general" className="space-y-6 sm:space-y-8">
@@ -627,7 +629,6 @@ export default function Settings() {
               </div>
             )}
           </SettingsSection>
-
         </TabsContent>
 
         <TabsContent value="invoices">

@@ -62,7 +62,7 @@ export default function Products() {
   const hasPastDue = products.some((p) => p.status === "past_due");
 
   return (
-    <div className="mx-auto max-w-4xl p-4 sm:p-6 space-y-6 sm:space-y-8 app-fade-in">
+    <div className="mx-auto w-full max-w-[1280px] p-4 sm:p-6 py-10! space-y-6 sm:space-y-8 app-fade-in">
       {/* Heading */}
       <div className="app-fade-up space-y-1">
         <h1 className="text-xl sm:text-2xl font-semibold text-foreground tracking-tight">
@@ -90,7 +90,9 @@ export default function Products() {
               className="shrink-0 h-8 text-xs border-red-300 text-red-700 hover:bg-red-50"
             >
               <a
-                href={(ws as { unpaid_invoice_url?: string }).unpaid_invoice_url!}
+                href={
+                  (ws as { unpaid_invoice_url?: string }).unpaid_invoice_url!
+                }
                 target="_blank"
                 rel="noopener noreferrer"
               >
@@ -127,12 +129,14 @@ export default function Products() {
               const now = Math.floor(Date.now() / 1000);
               const dateLabel =
                 product.status === "canceled"
-                  ? periodEnd != null && periodEnd < now ? t("products.dateEnded") : t("products.dateEnds")
+                  ? periodEnd != null && periodEnd < now
+                    ? t("products.dateEnded")
+                    : t("products.dateEnds")
                   : product.status === "trialing"
-                  ? t("products.dateTrial")
-                  : product.status === "past_due"
-                  ? t("products.dateDue")
-                  : t("products.dateRenews");
+                    ? t("products.dateTrial")
+                    : product.status === "past_due"
+                      ? t("products.dateDue")
+                      : t("products.dateRenews");
 
               return (
                 <div
@@ -207,10 +211,14 @@ export default function Products() {
                     </td>
                     <td className="px-5 py-3.5 text-sm text-muted-foreground">
                       {inv.status === "paid" && inv.paid_at
-                        ? t("products.datePaid", { date: formatDate(inv.paid_at) })
+                        ? t("products.datePaid", {
+                            date: formatDate(inv.paid_at),
+                          })
                         : inv.due_date
-                        ? t("products.dateDueLabel", { date: formatDate(inv.due_date) })
-                        : "—"}
+                          ? t("products.dateDueLabel", {
+                              date: formatDate(inv.due_date),
+                            })
+                          : "—"}
                     </td>
                     <td className="px-5 py-3.5 text-right font-semibold text-foreground tabular-nums">
                       {inv.amount_due != null
@@ -237,7 +245,9 @@ export default function Products() {
           </div>
         ) : (
           <div className="rounded-xl border border-dashed border-border bg-card px-5 py-8 text-center">
-            <p className="text-sm text-muted-foreground">{t("products.noInvoicesYet")}</p>
+            <p className="text-sm text-muted-foreground">
+              {t("products.noInvoicesYet")}
+            </p>
           </div>
         )}
       </div>

@@ -90,7 +90,7 @@ export default function BrandAnalytics() {
   return (
     <div className="flex flex-col h-full">
       {/* ── Header ── */}
-      <div className="shrink-0 flex items-center justify-between gap-4 px-5 sm:px-6 py-4 border-b border-border bg-card">
+      <div className="mx-auto w-full max-w-[1280px] p-4 sm:p-6 py-10! shrink-0 flex items-center justify-between gap-4 px-5 sm:px-6 border-b border-border bg-card">
         <div className="min-w-0">
           <h1 className="text-lg font-semibold text-foreground tracking-tight truncate">
             {selected ? selected.name : t("brand.analyticsTitle")}
@@ -180,7 +180,9 @@ export default function BrandAnalytics() {
         {isLoading && (
           <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-background">
             <div className="h-8 w-8 animate-spin rounded-full border-4 border-muted border-t-primary" />
-            <p className="text-sm text-muted-foreground">{t("common.loading")}</p>
+            <p className="text-sm text-muted-foreground">
+              {t("common.loading")}
+            </p>
           </div>
         )}
 

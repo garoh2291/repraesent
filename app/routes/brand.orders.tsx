@@ -71,7 +71,7 @@ function formatPrice(amount: number, currency: string): string {
 
 function localizeServiceName(
   s: { name: string; name_en: string | null; name_de: string | null },
-  lang: string,
+  lang: string
 ): string {
   if (lang === "de" && s.name_de) return s.name_de;
   if (lang === "en" && s.name_en) return s.name_en;
@@ -86,9 +86,13 @@ export default function BrandOrdersPage() {
   const [step, setStep] = useState<WizardStep>(1);
   const [orderType, setOrderType] = useState<OrderType | null>(null);
   const [billing, setBilling] = useState<Billing>("monthly");
-  const [selectedProductId, setSelectedProductId] = useState<string | null>(null);
+  const [selectedProductId, setSelectedProductId] = useState<string | null>(
+    null
+  );
   const [selectedPriceId, setSelectedPriceId] = useState<string | null>(null);
-  const [selectedWorkspaceId, setSelectedWorkspaceId] = useState<string | null>(null);
+  const [selectedWorkspaceId, setSelectedWorkspaceId] = useState<string | null>(
+    null
+  );
   const [selectedServiceIds, setSelectedServiceIds] = useState<string[]>([]);
   const [notes, setNotes] = useState("");
   const [showSuccess, setShowSuccess] = useState(false);
@@ -129,11 +133,11 @@ export default function BrandOrdersPage() {
   // Derived
   const selectedProduct = products.find((p) => p.id === selectedProductId);
   const currentPrice = selectedProduct?.prices.find(
-    (p) => p.interval === (billing === "monthly" ? "month" : "year"),
+    (p) => p.interval === (billing === "monthly" ? "month" : "year")
   );
   const availableServices = services.filter((s) => !s.already_active);
   const selectedWorkspace = workspaces.find(
-    (w) => w.id === selectedWorkspaceId,
+    (w) => w.id === selectedWorkspaceId
   );
 
   const canContinueStep1 = !!orderType;
@@ -177,17 +181,14 @@ export default function BrandOrdersPage() {
   // ─── Render ────────────────────────────────────────────────────────
 
   return (
-    <div className="flex-1 px-4 sm:px-6 lg:px-8 py-6 sm:py-8 max-w-5xl mx-auto w-full">
+    <div className="mx-auto w-full max-w-[1280px] p-4 sm:p-6 py-10! space-y-6 sm:space-y-8 app-fade-in">
       {/* Header */}
       <div className="mb-6 sm:mb-8">
         <h1 className="text-xl sm:text-2xl font-bold text-foreground tracking-tight">
           {t("brand.navOrders", "Orders")}
         </h1>
         <p className="text-sm text-muted-foreground mt-1">
-          {t(
-            "brand.ordersSubtitle",
-            "Request new partner houses or services",
-          )}
+          {t("brand.ordersSubtitle", "Request new partner houses or services")}
         </p>
       </div>
 
@@ -199,7 +200,7 @@ export default function BrandOrdersPage() {
             "px-4 py-1.5 rounded-lg text-[13px] font-medium transition-all duration-200",
             view === "wizard"
               ? "bg-white text-foreground shadow-sm"
-              : "text-muted-foreground hover:text-foreground",
+              : "text-muted-foreground hover:text-foreground"
           )}
         >
           {t("brand.orderNewRequest", "New Request")}
@@ -210,7 +211,7 @@ export default function BrandOrdersPage() {
             "px-4 py-1.5 rounded-lg text-[13px] font-medium transition-all duration-200",
             view === "history"
               ? "bg-white text-foreground shadow-sm"
-              : "text-muted-foreground hover:text-foreground",
+              : "text-muted-foreground hover:text-foreground"
           )}
         >
           {t("brand.orderHistoryTitle", "My Requests")}
@@ -235,7 +236,7 @@ export default function BrandOrdersPage() {
                       ? "bg-amber-400 text-amber-950"
                       : s === step
                         ? "bg-foreground text-background ring-4 ring-foreground/10"
-                        : "bg-muted text-muted-foreground",
+                        : "bg-muted text-muted-foreground"
                   )}
                 >
                   {s < step ? <Check className="h-3.5 w-3.5" /> : s}
@@ -244,7 +245,7 @@ export default function BrandOrdersPage() {
                   <div
                     className={cn(
                       "h-px w-8 sm:w-12 transition-colors duration-300",
-                      s < step ? "bg-amber-400" : "bg-border",
+                      s < step ? "bg-amber-400" : "bg-border"
                     )}
                   />
                 )}
@@ -261,20 +262,17 @@ export default function BrandOrdersPage() {
               <p className="text-sm text-muted-foreground mb-6">
                 {t(
                   "brand.orderStep1Desc",
-                  "Choose the type of request you'd like to submit.",
+                  "Choose the type of request you'd like to submit."
                 )}
               </p>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <OrderTypeCard
                   icon={Building2}
-                  title={t(
-                    "brand.orderNewWorkspace",
-                    "New Partner House",
-                  )}
+                  title={t("brand.orderNewWorkspace", "New Partner House")}
                   description={t(
                     "brand.orderNewWorkspaceDesc",
-                    "Request a new workspace with a subscription plan",
+                    "Request a new workspace with a subscription plan"
                   )}
                   selected={orderType === "workspace"}
                   onClick={() => setOrderType("workspace")}
@@ -284,7 +282,7 @@ export default function BrandOrdersPage() {
                   title={t("brand.orderAddService", "Add Service")}
                   description={t(
                     "brand.orderAddServiceDesc",
-                    "Add a service to an existing partner house",
+                    "Add a service to an existing partner house"
                   )}
                   selected={orderType === "service"}
                   onClick={() => setOrderType("service")}
@@ -299,7 +297,7 @@ export default function BrandOrdersPage() {
                     "inline-flex items-center gap-2 rounded-xl px-5 py-2.5 text-[13px] font-semibold transition-all duration-200",
                     canContinueStep1
                       ? "bg-foreground text-background hover:opacity-90 shadow-sm"
-                      : "bg-muted text-muted-foreground cursor-not-allowed",
+                      : "bg-muted text-muted-foreground cursor-not-allowed"
                   )}
                 >
                   {t("common.continueArrow", "Continue")}
@@ -334,7 +332,7 @@ export default function BrandOrdersPage() {
                     "px-4 py-1.5 rounded-lg text-[13px] font-medium transition-all duration-200",
                     billing === "monthly"
                       ? "bg-white text-foreground shadow-sm"
-                      : "text-muted-foreground hover:text-foreground",
+                      : "text-muted-foreground hover:text-foreground"
                   )}
                 >
                   {t("brand.orderBillingMonthly", "Monthly")}
@@ -345,7 +343,7 @@ export default function BrandOrdersPage() {
                     "px-4 py-1.5 rounded-lg text-[13px] font-medium transition-all duration-200",
                     billing === "yearly"
                       ? "bg-white text-foreground shadow-sm"
-                      : "text-muted-foreground hover:text-foreground",
+                      : "text-muted-foreground hover:text-foreground"
                   )}
                 >
                   {t("brand.orderBillingYearly", "Yearly")}
@@ -367,7 +365,7 @@ export default function BrandOrdersPage() {
                     const price = product.prices.find(
                       (p) =>
                         p.interval ===
-                        (billing === "monthly" ? "month" : "year"),
+                        (billing === "monthly" ? "month" : "year")
                     );
                     const isSelected = selectedProductId === product.id;
                     return (
@@ -382,7 +380,7 @@ export default function BrandOrdersPage() {
                           "relative text-left rounded-2xl border-2 p-5 sm:p-6 transition-all duration-200 group",
                           isSelected
                             ? "border-amber-400 bg-amber-400/[0.04] shadow-[0_0_0_3px_rgba(251,191,36,0.12)]"
-                            : "border-border hover:border-border/80 hover:shadow-sm bg-card",
+                            : "border-border hover:border-border/80 hover:shadow-sm bg-card"
                         )}
                       >
                         {/* Radio indicator */}
@@ -391,7 +389,7 @@ export default function BrandOrdersPage() {
                             "absolute top-4 right-4 flex h-5 w-5 items-center justify-center rounded-full border-2 transition-colors",
                             isSelected
                               ? "border-amber-400 bg-amber-400"
-                              : "border-muted-foreground/30",
+                              : "border-muted-foreground/30"
                           )}
                         >
                           {isSelected && (
@@ -450,7 +448,7 @@ export default function BrandOrdersPage() {
                     "inline-flex items-center gap-2 rounded-xl px-5 py-2.5 text-[13px] font-semibold transition-all duration-200",
                     canContinueStep2
                       ? "bg-foreground text-background hover:opacity-90 shadow-sm"
-                      : "bg-muted text-muted-foreground cursor-not-allowed",
+                      : "bg-muted text-muted-foreground cursor-not-allowed"
                   )}
                 >
                   {t("common.continueArrow", "Continue")}
@@ -474,7 +472,7 @@ export default function BrandOrdersPage() {
                   <h2 className="text-lg font-semibold">
                     {t(
                       "brand.orderStep2ServiceTitle",
-                      "Select Partner House & Services",
+                      "Select Partner House & Services"
                     )}
                   </h2>
                 </div>
@@ -495,7 +493,7 @@ export default function BrandOrdersPage() {
                 <option value="">
                   {t(
                     "brand.orderSelectWorkspacePlaceholder",
-                    "Choose a partner house...",
+                    "Choose a partner house..."
                   )}
                 </option>
                 {workspaces.map((ws) => (
@@ -522,7 +520,7 @@ export default function BrandOrdersPage() {
                       <AlertCircle className="h-4 w-4 shrink-0" />
                       {t(
                         "brand.orderNoServices",
-                        "All services are already active",
+                        "All services are already active"
                       )}
                     </div>
                   ) : (
@@ -530,7 +528,7 @@ export default function BrandOrdersPage() {
                       {services.map((service) => {
                         const isActive = service.already_active;
                         const isChecked = selectedServiceIds.includes(
-                          service.id,
+                          service.id
                         );
                         return (
                           <button
@@ -541,7 +539,7 @@ export default function BrandOrdersPage() {
                               setSelectedServiceIds((prev) =>
                                 isChecked
                                   ? prev.filter((id) => id !== service.id)
-                                  : [...prev, service.id],
+                                  : [...prev, service.id]
                               );
                             }}
                             className={cn(
@@ -550,7 +548,7 @@ export default function BrandOrdersPage() {
                                 ? "border-border/50 bg-muted/30 opacity-50 cursor-not-allowed"
                                 : isChecked
                                   ? "border-amber-400 bg-amber-400/[0.04] shadow-[0_0_0_2px_rgba(251,191,36,0.1)]"
-                                  : "border-border hover:border-border/80 bg-card",
+                                  : "border-border hover:border-border/80 bg-card"
                             )}
                           >
                             <div
@@ -558,7 +556,7 @@ export default function BrandOrdersPage() {
                                 "flex h-5 w-5 items-center justify-center rounded border-2 shrink-0 transition-colors",
                                 isChecked
                                   ? "border-amber-400 bg-amber-400"
-                                  : "border-muted-foreground/30",
+                                  : "border-muted-foreground/30"
                               )}
                             >
                               {isChecked && (
@@ -596,7 +594,7 @@ export default function BrandOrdersPage() {
                     "inline-flex items-center gap-2 rounded-xl px-5 py-2.5 text-[13px] font-semibold transition-all duration-200",
                     canContinueStep2
                       ? "bg-foreground text-background hover:opacity-90 shadow-sm"
-                      : "bg-muted text-muted-foreground cursor-not-allowed",
+                      : "bg-muted text-muted-foreground cursor-not-allowed"
                   )}
                 >
                   {t("common.continueArrow", "Continue")}
@@ -639,23 +637,28 @@ export default function BrandOrdersPage() {
                   )}
                 </div>
 
-                {orderType === "workspace" && selectedProduct && currentPrice && (
-                  <div className="space-y-1.5">
-                    <p className="text-base font-semibold text-foreground">
-                      {selectedProduct.name}
-                    </p>
-                    <p className="text-sm text-muted-foreground">
-                      {billing === "monthly"
-                        ? t("brand.orderBillingMonthly", "Monthly")
-                        : t("brand.orderBillingYearly", "Yearly")}{" "}
-                      &middot;{" "}
-                      {formatPrice(currentPrice.amount, currentPrice.currency)}
-                      {billing === "monthly"
-                        ? t("brand.orderPerMonth", " / month")
-                        : t("brand.orderPerYear", " / year")}
-                    </p>
-                  </div>
-                )}
+                {orderType === "workspace" &&
+                  selectedProduct &&
+                  currentPrice && (
+                    <div className="space-y-1.5">
+                      <p className="text-base font-semibold text-foreground">
+                        {selectedProduct.name}
+                      </p>
+                      <p className="text-sm text-muted-foreground">
+                        {billing === "monthly"
+                          ? t("brand.orderBillingMonthly", "Monthly")
+                          : t("brand.orderBillingYearly", "Yearly")}{" "}
+                        &middot;{" "}
+                        {formatPrice(
+                          currentPrice.amount,
+                          currentPrice.currency
+                        )}
+                        {billing === "monthly"
+                          ? t("brand.orderPerMonth", " / month")
+                          : t("brand.orderPerYear", " / year")}
+                      </p>
+                    </div>
+                  )}
 
                 {orderType === "service" && selectedWorkspace && (
                   <div className="space-y-2">
@@ -694,7 +697,7 @@ export default function BrandOrdersPage() {
                   onChange={(e) => setNotes(e.target.value)}
                   placeholder={t(
                     "brand.orderNotesPlaceholder",
-                    "Optional notes...",
+                    "Optional notes..."
                   )}
                   rows={3}
                   className="w-full rounded-xl border border-border bg-card px-3 py-2.5 text-sm text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:ring-2 focus:ring-foreground/20 resize-none"
@@ -744,10 +747,7 @@ export default function BrandOrdersPage() {
             {t("brand.orderSubmitted", "Request submitted!")}
           </h2>
           <p className="text-sm text-muted-foreground max-w-sm mb-6">
-            {t(
-              "brand.orderSubmittedDesc",
-              "We'll get back to you shortly.",
-            )}
+            {t("brand.orderSubmittedDesc", "We'll get back to you shortly.")}
           </p>
           <div className="flex gap-3">
             <button
@@ -815,10 +815,7 @@ export default function BrandOrdersPage() {
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium text-foreground truncate">
                         {order.order_type === "workspace"
-                          ? t(
-                              "brand.orderTypeWorkspace",
-                              "New Partner House",
-                            )
+                          ? t("brand.orderTypeWorkspace", "New Partner House")
                           : t("brand.orderTypeService", "Add Service")}
                         {order.workspace_name && (
                           <span className="text-muted-foreground font-normal">
@@ -834,7 +831,7 @@ export default function BrandOrdersPage() {
                             day: "numeric",
                             month: "short",
                             year: "numeric",
-                          },
+                          }
                         )}
                       </p>
                     </div>
@@ -844,13 +841,13 @@ export default function BrandOrdersPage() {
                       className={cn(
                         "inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-lg shrink-0",
                         status.bg,
-                        status.color,
+                        status.color
                       )}
                     >
                       <StatusIcon className="h-3 w-3" />
                       {t(
                         `brand.orderStatus${order.status.charAt(0).toUpperCase() + order.status.slice(1)}`,
-                        order.status,
+                        order.status
                       )}
                     </span>
                   </div>
@@ -889,7 +886,7 @@ function OrderTypeCard({
         "relative flex flex-col items-start text-left rounded-2xl border-2 p-5 sm:p-6 transition-all duration-200 group",
         selected
           ? "border-amber-400 bg-amber-400/[0.04] shadow-[0_0_0_3px_rgba(251,191,36,0.12)]"
-          : "border-border hover:border-border/80 hover:shadow-sm bg-card",
+          : "border-border hover:border-border/80 hover:shadow-sm bg-card"
       )}
     >
       <div
@@ -897,7 +894,7 @@ function OrderTypeCard({
           "flex h-10 w-10 items-center justify-center rounded-xl mb-4 transition-colors",
           selected
             ? "bg-amber-400/15 text-amber-600"
-            : "bg-muted text-muted-foreground group-hover:bg-muted/80",
+            : "bg-muted text-muted-foreground group-hover:bg-muted/80"
         )}
       >
         <Icon className="h-5 w-5" />
@@ -913,7 +910,7 @@ function OrderTypeCard({
           "absolute top-4 right-4 flex h-5 w-5 items-center justify-center rounded-full border-2 transition-colors",
           selected
             ? "border-amber-400 bg-amber-400"
-            : "border-muted-foreground/30",
+            : "border-muted-foreground/30"
         )}
       >
         {selected && <Check className="h-3 w-3 text-white" />}
@@ -924,7 +921,7 @@ function OrderTypeCard({
 
 function DevEmailProcessor() {
   const [state, setState] = useState<"idle" | "loading" | "ok" | "error">(
-    "idle",
+    "idle"
   );
   const [result, setResult] = useState<string | null>(null);
   const [expanded, setExpanded] = useState(false);
@@ -938,7 +935,7 @@ function DevEmailProcessor() {
       const res = await axios.post(
         `${apiUrl}/internal/process-email-queue`,
         {},
-        { headers: { "x-cron-api-key": cronKey } },
+        { headers: { "x-cron-api-key": cronKey } }
       );
       setResult(JSON.stringify(res.data));
       setState("ok");
@@ -1008,4 +1005,3 @@ function DevEmailProcessor() {
     </div>
   );
 }
-

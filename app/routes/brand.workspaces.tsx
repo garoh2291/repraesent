@@ -27,12 +27,21 @@ function isOnline(iso: string | null): boolean {
 }
 
 function localizeServiceName(
-  service: { service_name: string; service_name_en?: string | null; service_name_de?: string | null },
+  service: {
+    service_name: string;
+    service_name_en?: string | null;
+    service_name_de?: string | null;
+  },
   lang: string
 ): string {
   const isDe = lang?.startsWith("de");
-  if (isDe) return service.service_name_de ?? service.service_name_en ?? service.service_name;
-  return service.service_name_en ?? service.service_name_de ?? service.service_name;
+  if (isDe)
+    return (
+      service.service_name_de ?? service.service_name_en ?? service.service_name
+    );
+  return (
+    service.service_name_en ?? service.service_name_de ?? service.service_name
+  );
 }
 
 function localizeFilterName(
@@ -134,7 +143,13 @@ const ROLE_STYLES_LIGHT: Record<string, string> = {
 
 // ── Expanded panel ────────────────────────────────────────────────────────────
 
-function ExpandedPanel({ ws, globalMaxLeads }: { ws: BrandWorkspaceOverviewItem; globalMaxLeads: number }) {
+function ExpandedPanel({
+  ws,
+  globalMaxLeads,
+}: {
+  ws: BrandWorkspaceOverviewItem;
+  globalMaxLeads: number;
+}) {
   const { t, i18n } = useTranslation();
 
   const sortedMembers = [...ws.members].sort(
@@ -241,7 +256,9 @@ function MemberRow({ member }: { member: BrandWorkspaceMemberItem }) {
     member.user_email;
   const roleCls =
     ROLE_STYLES_LIGHT[member.role] ?? "bg-slate-100 text-slate-500";
-  const roleLabel = ROLE_LABEL_KEYS[member.role] ? t(ROLE_LABEL_KEYS[member.role]) : member.role;
+  const roleLabel = ROLE_LABEL_KEYS[member.role]
+    ? t(ROLE_LABEL_KEYS[member.role])
+    : member.role;
 
   return (
     <div className="flex items-center gap-2 py-1 text-xs">
@@ -282,7 +299,9 @@ function MemberRow({ member }: { member: BrandWorkspaceMemberItem }) {
           online ? "text-emerald-600 font-medium" : "text-slate-400"
         )}
       >
-        {online ? t("brand.wsOnline") : formatRelative(member.last_activity_at, t)}
+        {online
+          ? t("brand.wsOnline")
+          : formatRelative(member.last_activity_at, t)}
       </span>
     </div>
   );
@@ -374,7 +393,7 @@ export default function BrandWorkspaces() {
   };
 
   return (
-    <div className="p-4 sm:p-6 space-y-5 app-fade-in">
+    <div className="mx-auto w-full max-w-[1280px] p-4 sm:p-6 py-10! space-y-6 sm:space-y-8 app-fade-in">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3">
         <div>

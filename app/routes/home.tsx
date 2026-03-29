@@ -403,8 +403,10 @@ function getDateGroupLabel(
   }
   const todayStr = format(new Date(), "yyyy-MM-dd");
   const tomorrowStr = format(addDays(new Date(), 1), "yyyy-MM-dd");
-  if (key === todayStr) return { label: t("home.taskDateToday"), isOverdue: false };
-  if (key === tomorrowStr) return { label: t("home.taskDateTomorrow"), isOverdue: false };
+  if (key === todayStr)
+    return { label: t("home.taskDateToday"), isOverdue: false };
+  if (key === tomorrowStr)
+    return { label: t("home.taskDateTomorrow"), isOverdue: false };
   const d = new Date(key + "T00:00:00");
   const isOverdue = key < todayStr;
   return { label: format(d, "EEE, MMM d"), isOverdue };
@@ -450,9 +452,18 @@ function MyTasksSection({ userId }: { userId: string }) {
 
   // Overdue tasks (past due, not done)
   const { data: overdueData, isLoading: overdueLoading } = useQuery({
-    queryKey: ["home-tasks-overdue", userId, currentWorkspace?.id, yesterdayStr],
+    queryKey: [
+      "home-tasks-overdue",
+      userId,
+      currentWorkspace?.id,
+      yesterdayStr,
+    ],
     queryFn: () =>
-      getAllTasks({ assignee_id: userId, due_date_to: yesterdayStr, limit: 50 }),
+      getAllTasks({
+        assignee_id: userId,
+        due_date_to: yesterdayStr,
+        limit: 50,
+      }),
     enabled: !!userId && !!currentWorkspace,
     refetchOnMount: "always",
   });
@@ -579,7 +590,7 @@ export default function Home() {
   const firstName = displayName.split(" ")[0];
 
   return (
-    <div className="mx-auto w-full max-w-[1280px] p-4 sm:p-6 space-y-6 sm:space-y-8 app-fade-in">
+    <div className="mx-auto w-full max-w-[1280px] p-4 sm:p-6 py-10! space-y-6 sm:space-y-8 app-fade-in">
       {/* Page heading */}
       <div className="app-fade-up space-y-1">
         <h1 className="text-2xl font-semibold text-foreground tracking-tight">
