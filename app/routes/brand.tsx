@@ -257,6 +257,7 @@ function ChartSection({
   period,
   onPeriodChange,
   lineStyle = "solid",
+  colorMap,
 }: {
   title: string;
   description: string;
@@ -265,6 +266,7 @@ function ChartSection({
   period: LeadAnalyticsPeriod;
   onPeriodChange: (p: LeadAnalyticsPeriod) => void;
   lineStyle?: "solid" | "dashed";
+  colorMap: Record<string, string>;
 }) {
   const { t } = useTranslation();
   const [view, setView] = useState<"line" | "bar">("line");
@@ -387,7 +389,8 @@ function ChartSection({
       {/* Workspace color legend (line view) */}
       {view === "line" && !isLoading && workspaces.length > 0 && (
         <div className="flex flex-wrap gap-x-4 gap-y-2">
-          {workspaces.map((ws, i) => {
+          {workspaces.map((ws) => {
+            const wsColor = colorMap[ws.workspace_id] ?? WORKSPACE_COLORS[0];
             const isActive = hoveredWorkspace === null || hoveredWorkspace === ws.workspace_id;
             return (
               <div
@@ -400,7 +403,7 @@ function ChartSection({
                 <span
                   className="h-2.5 w-2.5 rounded-full shrink-0 transition-transform duration-150"
                   style={{
-                    backgroundColor: WORKSPACE_COLORS[i % WORKSPACE_COLORS.length],
+                    backgroundColor: wsColor,
                     transform: hoveredWorkspace === ws.workspace_id ? "scale(1.4)" : "scale(1)",
                   }}
                 />
@@ -479,14 +482,15 @@ function ChartSection({
                 }
                 cursor={{ stroke: "var(--border)", strokeWidth: 1 }}
               />
-              {workspaces.map((ws, i) => {
+              {workspaces.map((ws) => {
+                const wsColor = colorMap[ws.workspace_id] ?? WORKSPACE_COLORS[0];
                 const isActive = hoveredWorkspace === null || hoveredWorkspace === ws.workspace_id;
                 return (
                   <Line
                     key={ws.workspace_id}
                     type="monotone"
                     dataKey={ws.workspace_id}
-                    stroke={WORKSPACE_COLORS[i % WORKSPACE_COLORS.length]}
+                    stroke={wsColor}
                     strokeWidth={hoveredWorkspace === ws.workspace_id ? 3 : 2}
                     strokeOpacity={isActive ? 1 : 0.1}
                     strokeDasharray={lineStyle === "dashed" ? "6 3" : undefined}
@@ -495,7 +499,7 @@ function ChartSection({
                       isActive
                         ? {
                             r: 4,
-                            fill: WORKSPACE_COLORS[i % WORKSPACE_COLORS.length],
+                            fill: wsColor,
                             stroke: "var(--card)",
                             strokeWidth: 2,
                           }
@@ -612,10 +616,12 @@ function WorkspaceLeaderboard({
   workspaces,
   isLoading,
   total,
+  colorMap,
 }: {
   workspaces: { id: string; name: string; leads_count: number }[];
   isLoading: boolean;
   total: number;
+  colorMap: Record<string, string>;
 }) {
   const { t } = useTranslation();
   if (isLoading) return <LeaderboardSkeleton />;
@@ -651,8 +657,8 @@ function WorkspaceLeaderboard({
       <div className="space-y-2">
         {workspaces.map((ws, i) => {
           const pct = (ws.leads_count / max) * 100;
+          const wsColor = colorMap[ws.id] ?? WORKSPACE_COLORS[i % WORKSPACE_COLORS.length];
           const rank = RANK_CONFIG[i] ?? {
-            color: WORKSPACE_COLORS[i % WORKSPACE_COLORS.length],
             label: "bg-muted text-muted-foreground border border-transparent",
           };
           const isFirst = i === 0;
@@ -705,7 +711,7 @@ function WorkspaceLeaderboard({
                   className="h-full rounded-full transition-[width] duration-700 ease-out"
                   style={{
                     width: `${pct}%`,
-                    backgroundColor: rank.color,
+                    backgroundColor: wsColor,
                     transitionDelay: `${i * 60}ms`,
                   }}
                 />
@@ -757,6 +763,23 @@ export default function BrandDashboard() {
     [overviewData]
   );
 
+  // Stable workspace → color map across all 3 charts
+  const workspaceColorMap = useMemo(() => {
+    const ids = new Set<string>();
+    // Leaderboard workspaces first (they define the "canonical" ordering)
+    topWorkspaces.forEach((ws) => ids.add(ws.id));
+    // Then bookings & submissions workspaces (in case they have workspaces not in leaderboard)
+    (bookingsData?.bookings ?? []).forEach((ws) => ids.add(ws.workspace_id));
+    (submissionsData?.submissions ?? []).forEach((ws) => ids.add(ws.workspace_id));
+    const map: Record<string, string> = {};
+    let i = 0;
+    ids.forEach((id) => {
+      map[id] = WORKSPACE_COLORS[i % WORKSPACE_COLORS.length];
+      i++;
+    });
+    return map;
+  }, [topWorkspaces, bookingsData, submissionsData]);
+
   return (
     <div className="mx-auto max-w-5xl p-4 sm:p-6 space-y-6 sm:space-y-8">
       {/* Page heading */}
@@ -774,6 +797,7 @@ export default function BrandDashboard() {
         workspaces={topWorkspaces}
         isLoading={overviewLoading}
         total={totalLeads}
+        colorMap={workspaceColorMap}
       />
 
       {/* Appointment Bookings Chart */}
@@ -788,6 +812,7 @@ export default function BrandDashboard() {
         period={bookingsPeriod}
         onPeriodChange={setBookingsPeriod}
         lineStyle="solid"
+        colorMap={workspaceColorMap}
       />
 
       {/* Form Submissions Chart */}
@@ -802,6 +827,7 @@ export default function BrandDashboard() {
         period={submissionsPeriod}
         onPeriodChange={setSubmissionsPeriod}
         lineStyle="dashed"
+        colorMap={workspaceColorMap}
       />
     </div>
   );
