@@ -90,49 +90,44 @@ export default function BrandAnalytics() {
   return (
     <div className="flex flex-col h-full">
       {/* ── Header ── */}
-      <div className="mx-auto w-full max-w-[1280px] p-4 sm:p-6 py-10! shrink-0 flex items-center justify-between gap-4 px-5 sm:px-6 border-b border-border bg-card">
-        <div className="min-w-0">
-          <h1 className="text-lg font-semibold text-foreground tracking-tight truncate">
-            {selected ? selected.name : t("brand.analyticsTitle")}
-          </h1>
-          <p className="text-xs text-muted-foreground mt-0.5">
+      <div className="mx-auto w-full max-w-[1280px] shrink-0 px-4  sm:px-6 pt-10! pb-5 ">
+        {/* Workspace picker as title */}
+        <div className="relative" ref={dropdownRef}>
+          <button
+            onClick={() => setDropdownOpen((o) => !o)}
+            disabled={isLoading || workspaces.length === 0}
+            className={cn(
+              "group flex items-center gap-1.5 -mx-1.5 px-1.5 py-1 rounded-lg text-left",
+              "hover:bg-muted/60 transition-colors duration-150",
+              "disabled:opacity-50 disabled:pointer-events-none"
+            )}
+          >
+            <h1 className="text-xl font-semibold text-foreground tracking-tight truncate max-w-[480px]">
+              {isLoading
+                ? t("common.loading")
+                : selected
+                  ? selected.name
+                  : t("brand.analyticsTitle")}
+            </h1>
+            <ChevronDown
+              className={cn(
+                "h-5 w-5 text-muted-foreground shrink-0 transition-transform duration-200 mt-0.5",
+                "group-hover:text-foreground",
+                dropdownOpen && "rotate-180"
+              )}
+            />
+          </button>
+
+          <p className="text-xs text-muted-foreground mt-0.5 px-1.5">
             {selected
               ? t("brand.analyticsViewingSubtitle")
               : isLoading
                 ? t("common.loading")
                 : `${connectedCount} / ${workspaces.length} connected`}
           </p>
-        </div>
-
-        {/* Workspace picker */}
-        <div className="relative shrink-0" ref={dropdownRef}>
-          <button
-            onClick={() => setDropdownOpen((o) => !o)}
-            disabled={isLoading || workspaces.length === 0}
-            className={cn(
-              "flex items-center gap-2 rounded-xl border border-border bg-background px-3.5 py-2 text-sm font-medium text-foreground",
-              "hover:bg-muted transition-colors disabled:opacity-50 disabled:pointer-events-none",
-              "min-w-[180px] max-w-[260px]"
-            )}
-          >
-            <span className="flex-1 truncate text-left">
-              {isLoading
-                ? t("common.loading")
-                : selected
-                  ? selected.name
-                  : t("brand.analyticsSelectPlaceholder")}
-            </span>
-            <ChevronDown
-              className={cn(
-                "h-4 w-4 text-muted-foreground shrink-0 transition-transform duration-150",
-                dropdownOpen && "rotate-180"
-              )}
-            />
-          </button>
 
           {dropdownOpen && (
-            <div className="absolute right-0 top-full mt-1.5 z-50 min-w-[240px] rounded-xl border border-border bg-card shadow-xl overflow-hidden">
-              {/* Connected group header */}
+            <div className="absolute left-0 top-full mt-1.5 z-50 min-w-[280px] rounded-xl border border-border bg-card shadow-xl overflow-hidden">
               {connectedCount > 0 && (
                 <div className="px-3 pt-2.5 pb-1">
                   <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
