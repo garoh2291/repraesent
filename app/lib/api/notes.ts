@@ -10,6 +10,8 @@ export interface Note {
   updated_by: string | null;
   user_first_name: string | null;
   user_last_name: string | null;
+  user_email: string | null;
+  user_is_deleted: boolean;
 }
 
 export async function getNotes(leadId: string): Promise<Note[]> {

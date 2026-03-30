@@ -59,6 +59,13 @@ function getRelativeTime(note: Note): string {
   return formatDistanceToNow(date, { addSuffix: true });
 }
 
+function buildNoteUserLabel(note: Note, fallback: string): string {
+  const name = [note.user_first_name, note.user_last_name].filter(Boolean).join(" ").trim()
+    || note.user_email
+    || fallback;
+  return note.user_is_deleted ? `${name} (Deleted)` : name;
+}
+
 interface LeadNotesSectionProps {
   leadId: string;
   canEdit?: boolean;
@@ -293,14 +300,10 @@ export function LeadNotesSection({
               >
                 <div className="flex items-center gap-2 text-xs text-muted-foreground">
                   <TooltipContainer
-                    tooltipContent={
-                      note.user_first_name && note.user_last_name
-                        ? `${note.user_first_name} ${note.user_last_name}`
-                        : t("leads.detail.system")
-                    }
+                    tooltipContent={buildNoteUserLabel(note, t("leads.detail.system"))}
                     showCopyButton={false}
                   >
-                    <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-muted text-[9px] font-bold">
+                    <span className={`inline-flex h-5 w-5 items-center justify-center rounded-full text-[9px] font-bold ${note.user_is_deleted ? "bg-muted/50 text-muted-foreground/60" : "bg-muted"}`}>
                       {getInitials(note)}
                     </span>
                   </TooltipContainer>
@@ -331,17 +334,16 @@ export function LeadNotesSection({
                 <div className="flex items-center justify-between gap-2 mt-2.5">
                   <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
                     <TooltipContainer
-                      tooltipContent={
-                        note.user_first_name && note.user_last_name
-                          ? `${note.user_first_name} ${note.user_last_name}`
-                          : t("leads.detail.system")
-                      }
+                      tooltipContent={buildNoteUserLabel(note, t("leads.detail.system"))}
                       showCopyButton={false}
                     >
-                      <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-muted text-[9px] font-bold">
+                      <span className={`inline-flex h-5 w-5 items-center justify-center rounded-full text-[9px] font-bold ${note.user_is_deleted ? "bg-muted/50 text-muted-foreground/60" : "bg-muted"}`}>
                         {getInitials(note)}
                       </span>
                     </TooltipContainer>
+                    {note.user_is_deleted && (
+                      <span className="text-[10px] text-muted-foreground/60">(Deleted)</span>
+                    )}
                     <span>{getRelativeTime(note)}</span>
                     {note.version > 1 && (
                       <span className="italic text-muted-foreground/60">{t("leads.detail.editedBadge")}</span>
