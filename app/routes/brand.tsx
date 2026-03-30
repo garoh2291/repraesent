@@ -2,7 +2,7 @@ import { useState, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router";
-import { ArrowRight, LayoutList, TrendingUp } from "lucide-react";
+import { ArrowRight, LayoutList, TrendingUp, FileDown, Loader2 } from "lucide-react";
 import {
   ResponsiveContainer,
   LineChart,
@@ -18,9 +18,19 @@ import { cn } from "~/lib/utils";
 import {
   getBrandAnalytics,
   getBrandWorkspacesOverview,
+  exportBrandReport,
   type WorkspaceLeadSeries,
 } from "~/lib/api/brand";
 import type { LeadAnalyticsPeriod } from "~/lib/api/leads";
+import { Button } from "~/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+  DialogDescription,
+} from "~/components/ui/dialog";
 
 export function meta() {
   return [
@@ -760,6 +770,170 @@ function WorkspaceLeaderboard({
   );
 }
 
+// ─── Export Report Modal ──────────────────────────────────────────────────────
+
+const EXPORT_PERIODS: { value: LeadAnalyticsPeriod; labelKey: string }[] = [
+  { value: "today", labelKey: "brand.periodToday" },
+  { value: "this_week", labelKey: "brand.periodThisWeek" },
+  { value: "this_month", labelKey: "brand.periodThisMonth" },
+  { value: "all_time", labelKey: "brand.periodAllTime" },
+];
+
+function ExportReportModal({
+  open,
+  onClose,
+}: {
+  open: boolean;
+  onClose: () => void;
+}) {
+  const { t } = useTranslation();
+  const [selectedWorkspaceId, setSelectedWorkspaceId] = useState<string>("");
+  const [selectedPeriod, setSelectedPeriod] =
+    useState<LeadAnalyticsPeriod>("this_month");
+  const [isExporting, setIsExporting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const { data: workspaceData, isLoading: wsLoading } = useQuery({
+    queryKey: ["brand-workspaces-export-list"],
+    queryFn: () => getBrandWorkspacesOverview({ limit: 100, page: 1 }),
+    enabled: open,
+    staleTime: 60_000,
+  });
+
+  const workspaces = workspaceData?.data ?? [];
+  const activeId = selectedWorkspaceId || workspaces[0]?.id || "";
+  const activeName =
+    workspaces.find((w) => w.id === activeId)?.name ?? "";
+
+  async function handleExport() {
+    if (!activeId) return;
+    setIsExporting(true);
+    setError(null);
+    try {
+      await exportBrandReport(activeId, selectedPeriod, activeName);
+      onClose();
+    } catch {
+      setError(t("brand.exportError"));
+    } finally {
+      setIsExporting(false);
+    }
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
+      <DialogContent className="w-[calc(100vw-2rem)] sm:max-w-[460px]">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2 text-base font-semibold">
+            <FileDown className="h-4 w-4 text-muted-foreground" />
+            {t("brand.exportTitle")}
+          </DialogTitle>
+          <DialogDescription className="text-sm text-muted-foreground leading-relaxed">
+            {t("brand.exportDescription")}
+          </DialogDescription>
+        </DialogHeader>
+
+        <div className="space-y-4 py-2">
+          {/* Workspace */}
+          <div className="space-y-1.5">
+            <label className="text-xs font-medium text-foreground">
+              {t("brand.exportWorkspace")}
+            </label>
+            {wsLoading ? (
+              <div className="h-9 animate-pulse rounded-md bg-muted" />
+            ) : (
+              <div className="flex flex-col gap-1.5 max-h-48 overflow-y-auto rounded-xl border border-border p-1">
+                {workspaces.map((ws) => (
+                  <button
+                    key={ws.id}
+                    type="button"
+                    onClick={() => setSelectedWorkspaceId(ws.id)}
+                    className={cn(
+                      "flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-left transition-colors duration-100",
+                      (selectedWorkspaceId || workspaces[0]?.id) === ws.id
+                        ? "bg-primary/8 text-foreground font-medium"
+                        : "text-foreground/70 hover:bg-muted/60"
+                    )}
+                  >
+                    <span
+                      className="h-2 w-2 rounded-full shrink-0"
+                      style={{
+                        backgroundColor:
+                          WORKSPACE_COLORS[
+                            workspaces.findIndex((w) => w.id === ws.id) %
+                              WORKSPACE_COLORS.length
+                          ],
+                      }}
+                    />
+                    <span className="truncate flex-1">{ws.name}</span>
+                  </button>
+                ))}
+                {workspaces.length === 0 && (
+                  <p className="px-3 py-4 text-center text-xs text-muted-foreground">
+                    {t("brand.exportNoWorkspaces")}
+                  </p>
+                )}
+              </div>
+            )}
+          </div>
+
+          {/* Period */}
+          <div className="space-y-1.5">
+            <label className="text-xs font-medium text-foreground">
+              {t("brand.exportPeriod")}
+            </label>
+            <div className="grid grid-cols-2 gap-1.5">
+              {EXPORT_PERIODS.map((p) => (
+                <button
+                  key={p.value}
+                  type="button"
+                  onClick={() => setSelectedPeriod(p.value)}
+                  className={cn(
+                    "rounded-xl border px-3 py-2 text-[13px] font-medium text-left transition-all duration-100",
+                    selectedPeriod === p.value
+                      ? "border-primary bg-primary/6 text-foreground"
+                      : "border-border text-muted-foreground hover:border-border/80 hover:text-foreground"
+                  )}
+                >
+                  {t(p.labelKey)}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {error && (
+            <p className="rounded-lg bg-destructive/10 px-3 py-2 text-xs text-destructive">
+              {error}
+            </p>
+          )}
+        </div>
+
+        <DialogFooter className="gap-2">
+          <Button variant="outline" onClick={onClose} disabled={isExporting}>
+            {t("brand.exportCancel")}
+          </Button>
+          <Button
+            onClick={handleExport}
+            disabled={isExporting || !activeId}
+            className="gap-2"
+          >
+            {isExporting ? (
+              <>
+                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                {t("brand.exportGenerating")}
+              </>
+            ) : (
+              <>
+                <FileDown className="h-3.5 w-3.5" />
+                {t("brand.exportDownload")}
+              </>
+            )}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function BrandDashboard() {
@@ -768,6 +942,7 @@ export default function BrandDashboard() {
     useState<LeadAnalyticsPeriod>("this_week");
   const [submissionsPeriod, setSubmissionsPeriod] =
     useState<LeadAnalyticsPeriod>("this_week");
+  const [exportOpen, setExportOpen] = useState(false);
 
   const { data: bookingsData, isLoading: bookingsLoading } = useQuery({
     queryKey: ["brand-analytics", "bookings", bookingsPeriod],
@@ -819,17 +994,31 @@ export default function BrandDashboard() {
   return (
     <div className="mx-auto w-full max-w-[1280px] p-4 sm:p-6 py-10! space-y-6 sm:space-y-8 app-fade-in">
       {/* Page heading */}
-      <div className="space-y-1">
-        <h1 className="text-2xl font-semibold text-foreground tracking-tight">
-          {t("brand.greeting", "Good to see you.")}
-        </h1>
-        <p className="text-sm text-muted-foreground">
-          {t(
-            "brand.greetingSubtitle",
-            "Here's how your partner houses are performing."
-          )}
-        </p>
+      <div className="flex items-start justify-between gap-4">
+        <div className="space-y-1">
+          <h1 className="text-2xl font-semibold text-foreground tracking-tight">
+            {t("brand.greeting", "Good to see you.")}
+          </h1>
+          <p className="text-sm text-muted-foreground">
+            {t(
+              "brand.greetingSubtitle",
+              "Here's how your partner houses are performing."
+            )}
+          </p>
+        </div>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => setExportOpen(true)}
+          className="shrink-0 gap-1.5"
+        >
+          <FileDown className="h-3.5 w-3.5" />
+          <span className="hidden sm:inline">{t("brand.exportButton")}</span>
+          <span className="sm:hidden">{t("brand.exportButtonShort")}</span>
+        </Button>
       </div>
+
+      <ExportReportModal open={exportOpen} onClose={() => setExportOpen(false)} />
 
       {/* Workspace leaderboard */}
       <WorkspaceLeaderboard

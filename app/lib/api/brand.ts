@@ -233,3 +233,22 @@ export async function listMyBrandOrders(params?: {
   );
   return res.data;
 }
+
+export async function exportBrandReport(
+  workspaceId: string,
+  period: string,
+  workspaceName: string,
+): Promise<void> {
+  const res = await apiClient.get("/brands/me/export-report", {
+    params: { workspace_id: workspaceId, period },
+    responseType: "blob",
+  });
+  const url = URL.createObjectURL(new Blob([res.data], { type: "application/pdf" }));
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `report-${workspaceName.replace(/[^a-z0-9]/gi, "_").toLowerCase()}.pdf`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}

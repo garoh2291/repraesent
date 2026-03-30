@@ -1151,6 +1151,17 @@
     "orderNoServices": "All services are already active",
     "orderNoOrders": "No orders yet",
     "orderPerMonth": "/ month",
-    "orderPerYear": "/ year"
+    "orderPerYear": "/ year",
+    "exportTitle": "Export Analytics Report",
+    "exportDescription": "Select a workspace and period. A PDF report will be downloaded with lead stats and web analytics.",
+    "exportWorkspace": "Workspace",
+    "exportPeriod": "Period",
+    "exportNoWorkspaces": "No workspaces found.",
+    "exportError": "Failed to generate report. Please try again.",
+    "exportCancel": "Cancel",
+    "exportGenerating": "Generating…",
+    "exportDownload": "Download PDF",
+    "exportButton": "Export Report",
+    "exportButtonShort": "Export"
   }
 }
