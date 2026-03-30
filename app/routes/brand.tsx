@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useRef, useCallback } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router";
@@ -686,6 +686,17 @@ function AnalyticsChartSection({
 }) {
   const { t } = useTranslation();
   const [hoveredWorkspace, setHoveredWorkspace] = useState<string | null>(null);
+  const hoverTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const handleWorkspaceEnter = useCallback((wsId: string) => {
+    if (hoverTimerRef.current) clearTimeout(hoverTimerRef.current);
+    setHoveredWorkspace(wsId);
+  }, []);
+
+  const handleWorkspaceLeave = useCallback(() => {
+    if (hoverTimerRef.current) clearTimeout(hoverTimerRef.current);
+    hoverTimerRef.current = setTimeout(() => setHoveredWorkspace(null), 150);
+  }, []);
 
   const lineData = useMemo(
     () => buildPlausibleLineData(workspaces),
@@ -730,7 +741,7 @@ function AnalyticsChartSection({
   ];
 
   return (
-    <div className="app-fade-up rounded-2xl border border-border bg-card p-4 sm:p-6 space-y-4 sm:space-y-5">
+    <div className="app-fade-up rounded-2xl border border-border bg-card p-4 sm:p-6 space-y-4 sm:space-y-5 overflow-visible relative z-10">
       {/* Header row */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div className="space-y-1">
@@ -782,12 +793,17 @@ function AnalyticsChartSection({
           {metricCards.map((card) => (
             <div
               key={card.label}
-              className="rounded-xl border border-border bg-muted/30 px-3 py-2.5 transition-all duration-200"
+              className={cn(
+                "rounded-xl border px-3 py-2.5 transition-all duration-300 ease-out",
+                hoveredWorkspace
+                  ? "border-primary/20 bg-primary/5"
+                  : "border-border bg-muted/30"
+              )}
             >
               <p className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground mb-0.5">
                 {card.label}
               </p>
-              <p className="text-lg font-bold tracking-tight text-foreground tabular-nums">
+              <p className="text-lg font-bold tracking-tight text-foreground tabular-nums transition-opacity duration-200">
                 {card.value}
               </p>
             </div>
@@ -818,8 +834,8 @@ function AnalyticsChartSection({
                 key={ws.workspace_id}
                 className="flex items-center gap-1.5 text-[12px] cursor-pointer select-none transition-opacity duration-150"
                 style={{ opacity: isActive ? 1 : 0.35 }}
-                onMouseEnter={() => setHoveredWorkspace(ws.workspace_id)}
-                onMouseLeave={() => setHoveredWorkspace(null)}
+                onMouseEnter={() => handleWorkspaceEnter(ws.workspace_id)}
+                onMouseLeave={handleWorkspaceLeave}
               >
                 <span
                   className="h-2.5 w-2.5 rounded-full shrink-0 transition-transform duration-150"
@@ -856,7 +872,7 @@ function AnalyticsChartSection({
           <p className="text-sm text-muted-foreground">{t("brand.noData")}</p>
         </div>
       ) : (
-        <div className="h-48">
+        <div className="h-48 relative" style={{ overflow: "visible" }}>
           <ResponsiveContainer width="100%" height="100%">
             <LineChart
               data={lineData}
@@ -897,6 +913,8 @@ function AnalyticsChartSection({
                   <PlausibleTooltip period={period} workspaces={workspaces} />
                 }
                 cursor={{ stroke: "var(--border)", strokeWidth: 1 }}
+                allowEscapeViewBox={{ x: false, y: true }}
+                wrapperStyle={{ zIndex: 50 }}
               />
               {workspaces.map((ws) => {
                 const wsColor =
