@@ -508,6 +508,26 @@
   },
   "settings": {
     "title": "Settings",
+    "subtitle": "Your profile and team",
+    "tabs": {
+      "profile": "Profile",
+      "areaSettings": "Area Settings"
+    },
+    "profile": {
+      "metaTitle": "Profile settings",
+      "metaDescription": "Update your name",
+      "sectionTitle": "Your profile",
+      "sectionDescription": "This name appears to your team and in notifications.",
+      "firstName": "First name",
+      "lastName": "Last name",
+      "save": "Save changes",
+      "saved": "Profile updated",
+      "required": "First and last name are required."
+    },
+    "team": {
+      "metaTitle": "Area Settings",
+      "metaDescription": "Manage team members, roles, and notifications"
+    },
     "workspace": {
       "title": "Area settings",
       "name": "Area name",

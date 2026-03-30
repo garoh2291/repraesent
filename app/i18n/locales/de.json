@@ -508,6 +508,26 @@
   },
   "settings": {
     "title": "Einstellungen",
+    "subtitle": "Ihr Profil und Team",
+    "tabs": {
+      "profile": "Profil",
+      "areaSettings": "Bereich-Einstellungen"
+    },
+    "profile": {
+      "metaTitle": "Profil-Einstellungen",
+      "metaDescription": "Namen aktualisieren",
+      "sectionTitle": "Ihr Profil",
+      "sectionDescription": "Dieser Name wird Ihrem Team und in Benachrichtigungen angezeigt.",
+      "firstName": "Vorname",
+      "lastName": "Nachname",
+      "save": "Änderungen speichern",
+      "saved": "Profil aktualisiert",
+      "required": "Vor- und Nachname sind erforderlich."
+    },
+    "team": {
+      "metaTitle": "Bereich-Einstellungen",
+      "metaDescription": "Team-Mitglieder, Rollen und Benachrichtigungen verwalten"
+    },
     "workspace": {
       "title": "Bereich-Einstellungen",
       "name": "Bereich-Name",

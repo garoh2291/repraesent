@@ -40,7 +40,11 @@ export default [
       route("analytics", "routes/analytics.tsx"),
       route("email", "routes/email.tsx"),
       route("tasks", "routes/tasks.tsx"),
-      route("settings", "routes/settings.tsx"),
+      route("settings", "routes/settings._layout.tsx", [
+        index("routes/settings._index.tsx"),
+        route("profile", "routes/settings.profile.tsx"),
+        route("team", "routes/settings.team.tsx"),
+      ]),
       route("instructions", "routes/instructions.tsx"),
     ]),
   ]),
