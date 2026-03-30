@@ -355,7 +355,7 @@ export function ScheduleView({
                   return (
                     <div
                       key={day.date.toISOString()}
-                      className="schedule-day-row group"
+                      className="schedule-day-row"
                     >
                       <div className="border-b border-border/40" />
 
@@ -432,6 +432,7 @@ function ScheduleEventRow({
       <HoverCardTrigger asChild>
         <div
           className="
+            group
             flex items-center gap-2.5 px-2 py-1.5 -mx-1 rounded-md
             cursor-default
             transition-colors duration-100
