@@ -649,6 +649,8 @@
     "confirmedTitle": "Termin bestätigt",
     "confirmedDesc": "Ihr Termin wurde gebucht. Sie erhalten in Kürze eine Bestätigungs-E-Mail.",
     "failedToBook": "Buchung fehlgeschlagen",
+    "slotTaken": "Dieser Slot wurde gerade gebucht",
+    "slotTakenDesc": "Jemand anderes hat diesen Termin gebucht, während Sie Ihre Daten eingegeben haben. Bitte wählen Sie einen anderen verfügbaren Slot.",
     "confirming": "Wird bestätigt…",
     "confirmAppointment": "Termin bestätigen",
     "fields": {

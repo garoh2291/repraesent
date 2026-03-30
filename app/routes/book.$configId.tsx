@@ -23,6 +23,7 @@ import { Textarea } from "~/components/ui/textarea";
 import { Calendar } from "~/components/ui/calendar";
 import { ScrollArea } from "~/components/ui/scroll-area";
 import TimezoneSelect from "react-timezone-select";
+import axios from "axios";
 import {
   ChevronLeft,
   ChevronRight,
@@ -31,6 +32,8 @@ import {
   User,
   ClipboardCheck,
   Layers,
+  Clock,
+  X,
 } from "lucide-react";
 import { cn } from "~/lib/utils";
 
@@ -120,6 +123,7 @@ export default function BookAppointment() {
   const [userTimezone, setUserTimezone] = useState<string>(getDefaultTimezone);
   const [formFields, setFormFields] = useState<Record<string, string>>({});
   const [booked, setBooked] = useState(false);
+  const [slotConflictError, setSlotConflictError] = useState(false);
 
   const { data: providers } = useQuery({
     queryKey: ["workspace-providers", configId],
@@ -153,9 +157,16 @@ export default function BookAppointment() {
       queryClient.invalidateQueries({ queryKey: ["availabilities-public"] });
     },
     onError: (error) => {
-      toast.error(t("booking.failedToBook"), {
-        description: extractErrorMessage(error),
-      });
+      if (axios.isAxiosError(error) && error.response?.status === 409) {
+        setSlotConflictError(true);
+        setSelectedSlot(null);
+        setStep(1);
+        queryClient.invalidateQueries({ queryKey: ["availabilities-public"] });
+      } else {
+        toast.error(t("booking.failedToBook"), {
+          description: extractErrorMessage(error),
+        });
+      }
     },
   });
 
@@ -459,7 +470,10 @@ export default function BookAppointment() {
                 selectedDate={selectedDate}
                 onDateSelect={handleDateSelect}
                 selectedSlot={selectedSlot}
-                onSlotSelect={setSelectedSlot}
+                onSlotSelect={(slot) => {
+                  setSlotConflictError(false);
+                  setSelectedSlot(slot);
+                }}
                 slots={slots}
                 slotsLoading={slotsLoading}
                 userTimezone={userTimezone}
@@ -471,6 +485,8 @@ export default function BookAppointment() {
                 bgColor={bgColor}
                 textColor={textColor}
                 selectedService={selectedService}
+                slotConflictError={slotConflictError}
+                onDismissConflict={() => setSlotConflictError(false)}
               />
             )}
             {step === 2 && (
@@ -807,6 +823,8 @@ function Step1DateAndTime({
   bgColor,
   textColor,
   selectedService,
+  slotConflictError,
+  onDismissConflict,
 }: {
   t: (key: string, opts?: Record<string, unknown>) => string;
   selectedDate: Date | undefined;
@@ -824,9 +842,43 @@ function Step1DateAndTime({
   bgColor: string;
   textColor: string;
   selectedService: AppointmentService | null;
+  slotConflictError?: boolean;
+  onDismissConflict?: () => void;
 }) {
   return (
     <div className="space-y-6">
+      {slotConflictError && (
+        <style>{`
+          @keyframes slot-conflict-in {
+            from { opacity: 0; transform: translateY(-8px) scale(0.98); }
+            to   { opacity: 1; transform: translateY(0)    scale(1);    }
+          }
+          .slot-conflict-banner { animation: slot-conflict-in 0.25s cubic-bezier(0.16,1,0.3,1) both; }
+        `}</style>
+      )}
+      {slotConflictError && (
+        <div className="slot-conflict-banner rounded-2xl border border-amber-200 bg-amber-50 p-4 flex items-start gap-3 shadow-sm">
+          <div className="shrink-0 mt-0.5 h-8 w-8 rounded-lg bg-amber-100 border border-amber-200 flex items-center justify-center">
+            <Clock className="h-4 w-4 text-amber-600" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-semibold text-amber-900">
+              {t("booking.slotTaken")}
+            </p>
+            <p className="text-sm text-amber-700 mt-0.5 leading-snug">
+              {t("booking.slotTakenDesc")}
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={onDismissConflict}
+            className="shrink-0 h-6 w-6 rounded-md hover:bg-amber-100 flex items-center justify-center transition-colors"
+            aria-label="Dismiss"
+          >
+            <X className="h-3.5 w-3.5 text-amber-500" />
+          </button>
+        </div>
+      )}
       <div>
         <h2 className="text-xl font-semibold text-foreground tracking-tight">
           {t("booking.chooseDateAndTime")}

@@ -649,6 +649,8 @@
     "confirmedTitle": "Appointment confirmed",
     "confirmedDesc": "Your appointment has been booked. You'll receive a confirmation email shortly.",
     "failedToBook": "Failed to book",
+    "slotTaken": "This slot was just taken",
+    "slotTakenDesc": "Someone else booked this time while you were filling in your details. Please select another available slot.",
     "confirming": "Confirming…",
     "confirmAppointment": "Confirm appointment",
     "fields": {
