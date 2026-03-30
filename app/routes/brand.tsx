@@ -2,7 +2,7 @@ import { useState, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router";
-import { ArrowRight, LayoutList, TrendingUp, FileDown, Loader2 } from "lucide-react";
+import { ArrowRight, LayoutList, TrendingUp, FileDown, Loader2, Globe } from "lucide-react";
 import {
   ResponsiveContainer,
   LineChart,
@@ -17,9 +17,11 @@ import {
 import { cn } from "~/lib/utils";
 import {
   getBrandAnalytics,
+  getBrandPlausibleAnalytics,
   getBrandWorkspacesOverview,
   exportBrandReport,
   type WorkspaceLeadSeries,
+  type PlausibleWorkspaceSeries,
 } from "~/lib/api/brand";
 import type { LeadAnalyticsPeriod } from "~/lib/api/leads";
 import { Button } from "~/components/ui/button";
@@ -606,6 +608,332 @@ function ChartSection({
   );
 }
 
+// ─── Analytics Chart Section (trend-only) ────────────────────────────────────
+
+function buildPlausibleLineData(
+  workspaces: PlausibleWorkspaceSeries[],
+): Record<string, string | number>[] {
+  const allDates = new Set<string>();
+  workspaces.forEach((ws) =>
+    ws.timeseries.forEach((t) => allDates.add(t.date))
+  );
+  const slots = Array.from(allDates).sort();
+
+  return slots.map((date) => {
+    const point: Record<string, string | number> = { date };
+    workspaces.forEach((ws) => {
+      const found = ws.timeseries.find((t) => t.date === date);
+      point[ws.workspace_id] = found?.visitors ?? 0;
+    });
+    return point;
+  });
+}
+
+function PlausibleTooltip({
+  active,
+  payload,
+  label,
+  period,
+  workspaces,
+}: {
+  active?: boolean;
+  payload?: { value: number; color: string; dataKey: string }[];
+  label?: string;
+  period: LeadAnalyticsPeriod;
+  workspaces: PlausibleWorkspaceSeries[];
+}) {
+  if (!active || !payload?.length || !label) return null;
+  const wsMap = new Map(
+    workspaces.map((ws) => [ws.workspace_id, ws.workspace_name])
+  );
+  const visible = payload.filter((e) => e.value > 0);
+  if (!visible.length) return null;
+  return (
+    <div className="rounded-lg border border-border bg-card px-3 py-2 shadow-md text-[13px] space-y-1.5 max-w-[220px]">
+      <p className="text-muted-foreground text-[11px]">
+        {formatXLabel(label, period)}
+      </p>
+      {visible.map((entry, i) => (
+        <div key={i} className="flex items-center gap-2">
+          <span
+            className="h-2 w-2 rounded-full shrink-0"
+            style={{ backgroundColor: entry.color }}
+          />
+          <span className="text-muted-foreground truncate flex-1 text-[12px]">
+            {wsMap.get(entry.dataKey) ?? entry.dataKey}
+          </span>
+          <span className="font-semibold text-foreground shrink-0">
+            {entry.value}
+          </span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function AnalyticsChartSection({
+  workspaces,
+  isLoading,
+  period,
+  onPeriodChange,
+  colorMap,
+}: {
+  workspaces: PlausibleWorkspaceSeries[];
+  isLoading: boolean;
+  period: LeadAnalyticsPeriod;
+  onPeriodChange: (p: LeadAnalyticsPeriod) => void;
+  colorMap: Record<string, string>;
+}) {
+  const { t } = useTranslation();
+  const [hoveredWorkspace, setHoveredWorkspace] = useState<string | null>(null);
+
+  const lineData = useMemo(
+    () => buildPlausibleLineData(workspaces),
+    [workspaces]
+  );
+
+  // Aggregate metrics (all or hovered-only)
+  const metrics = useMemo(() => {
+    const filtered = hoveredWorkspace
+      ? workspaces.filter((ws) => ws.workspace_id === hoveredWorkspace)
+      : workspaces;
+    const visitors = filtered.reduce((s, ws) => s + ws.visitors, 0);
+    const pageviews = filtered.reduce((s, ws) => s + ws.pageviews, 0);
+    const visits = filtered.reduce((s, ws) => s + ws.visits, 0);
+    const viewsPerVisit = visits > 0 ? Math.round((pageviews / visits) * 10) / 10 : 0;
+    return { visitors, pageviews, visits, viewsPerVisit };
+  }, [workspaces, hoveredWorkspace]);
+
+  const tickStep =
+    lineData.length <= 10
+      ? 1
+      : lineData.length <= 20
+        ? 2
+        : Math.ceil(lineData.length / 10);
+  const xTicks = lineData
+    .filter((_, i) => i % tickStep === 0 || i === lineData.length - 1)
+    .map((p) => p.date as string);
+
+  const maxY = Math.max(
+    ...lineData.flatMap((point) =>
+      workspaces.map((ws) => (point[ws.workspace_id] as number) ?? 0)
+    ),
+    1
+  );
+  const yDomain: [number, number] = [0, maxY + Math.ceil(maxY * 0.2)];
+
+  const metricCards = [
+    { label: t("brand.metricVisitors", "Unique Visitors"), value: metrics.visitors.toLocaleString() },
+    { label: t("brand.metricVisits", "Total Visits"), value: metrics.visits.toLocaleString() },
+    { label: t("brand.metricPageviews", "Pageviews"), value: metrics.pageviews.toLocaleString() },
+    { label: t("brand.metricViewsPerVisit", "Views / Visit"), value: metrics.viewsPerVisit.toFixed(1) },
+  ];
+
+  return (
+    <div className="app-fade-up rounded-2xl border border-border bg-card p-4 sm:p-6 space-y-4 sm:space-y-5">
+      {/* Header row */}
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+        <div className="space-y-1">
+          <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground flex items-center gap-1.5">
+            <Globe className="h-3 w-3" />
+            {t("brand.webAnalyticsChart", "Web Analytics")}
+          </p>
+          {isLoading ? (
+            <div className="h-8 w-16 animate-pulse rounded-md bg-muted" />
+          ) : (
+            <p className="text-3xl font-bold tracking-tight text-foreground">
+              {metrics.visitors.toLocaleString()}
+            </p>
+          )}
+          <p className="text-xs text-muted-foreground">
+            {t("brand.webAnalyticsDescription", "Website visitor data across all partner houses")}
+          </p>
+        </div>
+
+        <div className="flex flex-wrap items-center gap-2 self-start">
+          <div className="flex items-center gap-1 rounded-xl bg-muted p-1 overflow-x-auto scrollbar-hide">
+            {PERIODS.map((p) => (
+              <button
+                key={p.value}
+                onClick={() => onPeriodChange(p.value)}
+                className={cn(
+                  "rounded-lg px-2.5 py-1.5 text-[11px] font-medium transition-all duration-150 whitespace-nowrap shrink-0",
+                  period === p.value
+                    ? "bg-card text-foreground shadow-sm"
+                    : "text-muted-foreground hover:text-foreground"
+                )}
+              >
+                {t(p.labelKey)}
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Metric cards */}
+      {isLoading ? (
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <div key={i} className="h-14 animate-pulse rounded-xl bg-muted" />
+          ))}
+        </div>
+      ) : workspaces.length > 0 ? (
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          {metricCards.map((card) => (
+            <div
+              key={card.label}
+              className="rounded-xl border border-border bg-muted/30 px-3 py-2.5 transition-all duration-200"
+            >
+              <p className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground mb-0.5">
+                {card.label}
+              </p>
+              <p className="text-lg font-bold tracking-tight text-foreground tabular-nums">
+                {card.value}
+              </p>
+            </div>
+          ))}
+        </div>
+      ) : null}
+
+      {/* Workspace color legend */}
+      {isLoading && (
+        <div className="flex flex-wrap gap-x-4 gap-y-2">
+          {[72, 96, 80].map((w, i) => (
+            <div
+              key={i}
+              className="h-[18px] animate-pulse rounded-md bg-muted"
+              style={{ width: `${w}px` }}
+            />
+          ))}
+        </div>
+      )}
+      {!isLoading && workspaces.length > 0 && (
+        <div className="flex flex-wrap gap-x-4 gap-y-2">
+          {workspaces.map((ws) => {
+            const wsColor = colorMap[ws.workspace_id] ?? WORKSPACE_COLORS[0];
+            const isActive =
+              hoveredWorkspace === null || hoveredWorkspace === ws.workspace_id;
+            return (
+              <div
+                key={ws.workspace_id}
+                className="flex items-center gap-1.5 text-[12px] cursor-pointer select-none transition-opacity duration-150"
+                style={{ opacity: isActive ? 1 : 0.35 }}
+                onMouseEnter={() => setHoveredWorkspace(ws.workspace_id)}
+                onMouseLeave={() => setHoveredWorkspace(null)}
+              >
+                <span
+                  className="h-2.5 w-2.5 rounded-full shrink-0 transition-transform duration-150"
+                  style={{
+                    backgroundColor: wsColor,
+                    transform:
+                      hoveredWorkspace === ws.workspace_id
+                        ? "scale(1.4)"
+                        : "scale(1)",
+                  }}
+                />
+                <span
+                  className={cn(
+                    "transition-colors duration-150",
+                    isActive ? "text-foreground" : "text-muted-foreground"
+                  )}
+                >
+                  {ws.workspace_name}
+                </span>
+                <span className="font-semibold text-foreground">
+                  {ws.visitors.toLocaleString()}
+                </span>
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {/* Chart */}
+      {isLoading ? (
+        <div className="h-48 w-full animate-pulse rounded-xl bg-muted" />
+      ) : workspaces.length === 0 ? (
+        <div className="flex h-48 items-center justify-center">
+          <p className="text-sm text-muted-foreground">{t("brand.noData")}</p>
+        </div>
+      ) : (
+        <div className="h-48">
+          <ResponsiveContainer width="100%" height="100%">
+            <LineChart
+              data={lineData}
+              margin={{ top: 4, right: 4, bottom: 0, left: -16 }}
+            >
+              <CartesianGrid
+                strokeDasharray="3 3"
+                stroke="var(--border)"
+                vertical={false}
+              />
+              <XAxis
+                dataKey="date"
+                ticks={xTicks}
+                tickFormatter={(v) => formatXLabel(v, period)}
+                tick={{
+                  fontSize: 11,
+                  fill: "var(--muted-foreground)",
+                  fontFamily: "inherit",
+                }}
+                axisLine={false}
+                tickLine={false}
+                dy={8}
+              />
+              <YAxis
+                domain={yDomain}
+                allowDecimals={false}
+                tick={{
+                  fontSize: 11,
+                  fill: "var(--muted-foreground)",
+                  fontFamily: "inherit",
+                }}
+                axisLine={false}
+                tickLine={false}
+                width={32}
+              />
+              <Tooltip
+                content={
+                  <PlausibleTooltip period={period} workspaces={workspaces} />
+                }
+                cursor={{ stroke: "var(--border)", strokeWidth: 1 }}
+              />
+              {workspaces.map((ws) => {
+                const wsColor =
+                  colorMap[ws.workspace_id] ?? WORKSPACE_COLORS[0];
+                const isActive =
+                  hoveredWorkspace === null ||
+                  hoveredWorkspace === ws.workspace_id;
+                return (
+                  <Line
+                    key={ws.workspace_id}
+                    type="monotone"
+                    dataKey={ws.workspace_id}
+                    stroke={wsColor}
+                    strokeWidth={hoveredWorkspace === ws.workspace_id ? 3 : 2}
+                    strokeOpacity={isActive ? 1 : 0.1}
+                    dot={false}
+                    activeDot={
+                      isActive
+                        ? {
+                            r: 4,
+                            fill: wsColor,
+                            stroke: "var(--card)",
+                            strokeWidth: 2,
+                          }
+                        : false
+                    }
+                  />
+                );
+              })}
+            </LineChart>
+          </ResponsiveContainer>
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ─── Leaderboard ──────────────────────────────────────────────────────────────
 
 const RANK_CONFIG = [
@@ -942,6 +1270,8 @@ export default function BrandDashboard() {
     useState<LeadAnalyticsPeriod>("this_week");
   const [submissionsPeriod, setSubmissionsPeriod] =
     useState<LeadAnalyticsPeriod>("this_week");
+  const [plausiblePeriod, setPlausiblePeriod] =
+    useState<LeadAnalyticsPeriod>("this_week");
   const [exportOpen, setExportOpen] = useState(false);
 
   const { data: bookingsData, isLoading: bookingsLoading } = useQuery({
@@ -953,6 +1283,12 @@ export default function BrandDashboard() {
   const { data: submissionsData, isLoading: submissionsLoading } = useQuery({
     queryKey: ["brand-analytics", "submissions", submissionsPeriod],
     queryFn: () => getBrandAnalytics(submissionsPeriod),
+    staleTime: 0,
+  });
+
+  const { data: plausibleData, isLoading: plausibleLoading } = useQuery({
+    queryKey: ["brand-analytics", "plausible", plausiblePeriod],
+    queryFn: () => getBrandPlausibleAnalytics(plausiblePeriod),
     staleTime: 0,
   });
 
@@ -972,14 +1308,17 @@ export default function BrandDashboard() {
     [overviewData]
   );
 
-  // Stable workspace → color map across all 3 charts
+  // Stable workspace → color map across all charts
   const workspaceColorMap = useMemo(() => {
     const ids = new Set<string>();
     // Leaderboard workspaces first (they define the "canonical" ordering)
     topWorkspaces.forEach((ws) => ids.add(ws.id));
-    // Then bookings & submissions workspaces (in case they have workspaces not in leaderboard)
+    // Then bookings, submissions & plausible workspaces
     (bookingsData?.bookings ?? []).forEach((ws) => ids.add(ws.workspace_id));
     (submissionsData?.submissions ?? []).forEach((ws) =>
+      ids.add(ws.workspace_id)
+    );
+    (plausibleData?.workspaces ?? []).forEach((ws) =>
       ids.add(ws.workspace_id)
     );
     const map: Record<string, string> = {};
@@ -989,7 +1328,7 @@ export default function BrandDashboard() {
       i++;
     });
     return map;
-  }, [topWorkspaces, bookingsData, submissionsData]);
+  }, [topWorkspaces, bookingsData, submissionsData, plausibleData]);
 
   return (
     <div className="mx-auto w-full max-w-[1280px] p-4 sm:p-6 py-10! space-y-6 sm:space-y-8 app-fade-in">
@@ -1025,6 +1364,15 @@ export default function BrandDashboard() {
         workspaces={topWorkspaces}
         isLoading={overviewLoading}
         total={totalLeads}
+        colorMap={workspaceColorMap}
+      />
+
+      {/* Web Analytics Chart */}
+      <AnalyticsChartSection
+        workspaces={plausibleData?.workspaces ?? []}
+        isLoading={plausibleLoading}
+        period={plausiblePeriod}
+        onPeriodChange={setPlausiblePeriod}
         colorMap={workspaceColorMap}
       />
 

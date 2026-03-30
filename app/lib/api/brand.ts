@@ -123,6 +123,31 @@ export async function getBrandAnalytics(
   return res.data;
 }
 
+// ─── Brand Plausible Analytics ───────────────────────────────
+
+export interface PlausibleWorkspaceSeries {
+  workspace_id: string;
+  workspace_name: string;
+  visitors: number;
+  pageviews: number;
+  visits: number;
+  views_per_visit: number;
+  timeseries: { date: string; visitors: number }[];
+}
+
+export interface BrandPlausibleAnalytics {
+  workspaces: PlausibleWorkspaceSeries[];
+}
+
+export async function getBrandPlausibleAnalytics(
+  period: LeadAnalyticsPeriod
+): Promise<BrandPlausibleAnalytics> {
+  const res = await apiClient.get<BrandPlausibleAnalytics>(
+    `/brands/me/analytics/plausible?period=${period}`
+  );
+  return res.data;
+}
+
 // ─── Brand Orders ────────────────────────────────────────────────
 
 export interface BrandOrderStripeProduct {
