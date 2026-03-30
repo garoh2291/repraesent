@@ -1110,9 +1110,11 @@ const EXPORT_PERIODS: { value: LeadAnalyticsPeriod; labelKey: string }[] = [
 function ExportReportModal({
   open,
   onClose,
+  colorMap,
 }: {
   open: boolean;
   onClose: () => void;
+  colorMap: Record<string, string>;
 }) {
   const { t } = useTranslation();
   const [selectedWorkspaceId, setSelectedWorkspaceId] = useState<string>("");
@@ -1186,6 +1188,7 @@ function ExportReportModal({
                       className="h-2 w-2 rounded-full shrink-0"
                       style={{
                         backgroundColor:
+                          colorMap[ws.id] ??
                           WORKSPACE_COLORS[
                             workspaces.findIndex((w) => w.id === ws.id) %
                               WORKSPACE_COLORS.length
@@ -1357,7 +1360,7 @@ export default function BrandDashboard() {
         </Button>
       </div>
 
-      <ExportReportModal open={exportOpen} onClose={() => setExportOpen(false)} />
+      <ExportReportModal open={exportOpen} onClose={() => setExportOpen(false)} colorMap={workspaceColorMap} />
 
       {/* Workspace leaderboard */}
       <WorkspaceLeaderboard
