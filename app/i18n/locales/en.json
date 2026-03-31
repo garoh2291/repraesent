@@ -504,7 +504,11 @@
     "dateRenews": "Renews on",
     "datePaid": "Paid {{date}}",
     "dateDueLabel": "Due {{date}}",
-    "viewInvoice": "View"
+    "viewInvoice": "View",
+    "invoice": "Invoice",
+    "receipt": "Receipt",
+    "downloadInvoice": "Download invoice PDF",
+    "viewReceipt": "View receipt"
   },
   "settings": {
     "title": "Settings",

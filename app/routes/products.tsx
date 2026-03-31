@@ -5,7 +5,13 @@ import { getStoredWorkspaceId } from "~/lib/api/axios-instance";
 import { getWorkspaceInvoices } from "~/lib/api/workspaces";
 import { formatBillingInterval } from "~/lib/utils/stripe";
 import { formatDateMedium, formatCurrencyFromCents } from "~/lib/utils/format";
-import { AlertTriangle, ExternalLink, Package2 } from "lucide-react";
+import {
+  AlertTriangle,
+  ExternalLink,
+  FileText,
+  Receipt,
+  Package2,
+} from "lucide-react";
 import { Button } from "~/components/ui/button";
 
 export function meta() {
@@ -118,6 +124,8 @@ export default function Products() {
                 current_period_end?: number | null;
                 recurring_interval?: string | null;
                 type?: string | null;
+                unit_amount?: string | null;
+                currency?: string | null;
               };
               const periodEnd = product.current_period_end;
               const showDate =
@@ -135,6 +143,9 @@ export default function Products() {
                       ? t("products.dateDue")
                       : t("products.dateRenews");
 
+              const hasPrice =
+                product.unit_amount != null && Number(product.unit_amount) > 0;
+
               return (
                 <div
                   key={p.id}
@@ -145,6 +156,19 @@ export default function Products() {
                       <span className="font-semibold text-foreground">
                         {product.stripe_product_name}
                       </span>
+                      {hasPrice && (
+                        <span className="text-sm font-medium text-foreground">
+                          {formatCurrencyFromCents(
+                            Number(product.unit_amount),
+                            product.currency ?? "EUR"
+                          )}
+                          {product.recurring_interval && (
+                            <span className="text-xs text-muted-foreground font-normal">
+                              /{product.recurring_interval}
+                            </span>
+                          )}
+                        </span>
+                      )}
                       {(product.recurring_interval || product.type) && (
                         <span className="text-xs text-muted-foreground bg-muted rounded-full px-2 py-0.5">
                           {formatBillingInterval(
@@ -194,49 +218,87 @@ export default function Products() {
                   <th className="text-right px-5 py-3 text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
                     {t("settings.invoices.amount")}
                   </th>
-                  <th className="w-20 px-5 py-3" />
+                  <th className="w-28 px-5 py-3" />
                 </tr>
               </thead>
               <tbody>
-                {invoices.map((inv, i) => (
-                  <tr
-                    key={inv.id}
-                    className="border-b border-border/60 last:border-0 hover:bg-muted/30 transition-colors"
-                  >
-                    <td className="px-5 py-3.5">
-                      <StatusPill status={inv.status ?? "unknown"} />
-                    </td>
-                    <td className="px-5 py-3.5 text-sm text-muted-foreground">
-                      {inv.status === "paid" && inv.paid_at
-                        ? t("products.datePaid", {
-                            date: formatDate(inv.paid_at),
-                          })
-                        : inv.due_date
-                          ? t("products.dateDueLabel", {
-                              date: formatDate(inv.due_date),
+                {invoices.map((inv) => {
+                  const isPaid = inv.status === "paid";
+
+                  return (
+                    <tr
+                      key={inv.id}
+                      className="border-b border-border/60 last:border-0 hover:bg-muted/30 transition-colors"
+                    >
+                      <td className="px-5 py-3.5">
+                        <StatusPill status={inv.status ?? "unknown"} />
+                      </td>
+                      <td className="px-5 py-3.5 text-sm text-muted-foreground">
+                        {isPaid && inv.paid_at
+                          ? t("products.datePaid", {
+                              date: formatDate(inv.paid_at),
                             })
+                          : inv.due_date
+                            ? t("products.dateDueLabel", {
+                                date: formatDate(inv.due_date),
+                              })
+                            : "—"}
+                      </td>
+                      <td className="px-5 py-3.5 text-right font-semibold text-foreground tabular-nums">
+                        {inv.amount_due != null
+                          ? formatCurrencyFromCents(
+                              Number(inv.amount_due),
+                              inv.currency ?? "EUR"
+                            )
                           : "—"}
-                    </td>
-                    <td className="px-5 py-3.5 text-right font-semibold text-foreground tabular-nums">
-                      {inv.amount_due != null
-                        ? formatCurrencyFromCents(Number(inv.amount_due), "EUR")
-                        : "—"}
-                    </td>
-                    <td className="px-5 py-3.5">
-                      {inv.hosted_invoice_url && (
-                        <a
-                          href={inv.hosted_invoice_url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="inline-flex items-center gap-1 text-xs font-medium text-primary hover:underline"
-                        >
-                          {t("products.viewInvoice")}
-                          <ExternalLink className="h-3 w-3" />
-                        </a>
-                      )}
-                    </td>
-                  </tr>
-                ))}
+                      </td>
+                      <td className="px-5 py-3.5">
+                        <div className="flex items-center gap-2 justify-end">
+                          {isPaid ? (
+                            <>
+                              {inv.invoice_pdf && (
+                                <a
+                                  href={inv.invoice_pdf}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="inline-flex items-center gap-1 text-xs font-medium text-primary hover:underline"
+                                  title={t("products.downloadInvoice")}
+                                >
+                                  <FileText className="h-3 w-3" />
+                                  {t("products.invoice")}
+                                </a>
+                              )}
+                              {inv.hosted_invoice_url && (
+                                <a
+                                  href={inv.hosted_invoice_url}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="inline-flex items-center gap-1 text-xs font-medium text-primary hover:underline"
+                                  title={t("products.viewReceipt")}
+                                >
+                                  <Receipt className="h-3 w-3" />
+                                  {t("products.receipt")}
+                                </a>
+                              )}
+                            </>
+                          ) : (
+                            inv.hosted_invoice_url && (
+                              <a
+                                href={inv.hosted_invoice_url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="inline-flex items-center gap-1 text-xs font-medium text-primary hover:underline"
+                              >
+                                {t("products.viewInvoice")}
+                                <ExternalLink className="h-3 w-3" />
+                              </a>
+                            )
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>

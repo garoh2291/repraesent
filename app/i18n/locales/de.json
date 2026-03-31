@@ -504,7 +504,11 @@
     "dateRenews": "Verlängert sich am",
     "datePaid": "Bezahlt am {{date}}",
     "dateDueLabel": "Fällig am {{date}}",
-    "viewInvoice": "Ansehen"
+    "viewInvoice": "Ansehen",
+    "invoice": "Rechnung",
+    "receipt": "Quittung",
+    "downloadInvoice": "Rechnung als PDF herunterladen",
+    "viewReceipt": "Quittung ansehen"
   },
   "settings": {
     "title": "Einstellungen",
