@@ -30,7 +30,6 @@ import { useSearchParamsSelect } from "~/lib/hooks/useQueryParams";
 import { useLeadsViewMode } from "~/lib/hooks/useLocalStorage";
 import { useCanEditLeads } from "~/lib/hooks/useCanEditLeads";
 import { useUpdateLeadStatus } from "~/lib/hooks/useUpdateLeadStatus";
-import { format } from "date-fns";
 import {
   ArrowRight,
   LayoutGrid,
@@ -42,6 +41,7 @@ import {
   Eye,
 } from "lucide-react";
 import { cn } from "~/lib/utils";
+import { formatDate } from "~/lib/utils/format";
 import { LeadImportModal } from "~/components/organism/lead-import-modal";
 
 export function meta() {
@@ -393,7 +393,7 @@ export default function LeadForm() {
       cell: ({ row }) =>
         row.original.created_at ? (
           <span className="text-muted-foreground text-sm">
-            {format(new Date(row.original.created_at), "PP")}
+            {formatDate(new Date(row.original.created_at), "PP")}
           </span>
         ) : (
           "—"

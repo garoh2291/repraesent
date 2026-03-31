@@ -23,12 +23,12 @@ import {
   isToday,
   isTomorrow,
   isPast,
-  formatDistanceToNow,
   addDays,
   subDays,
 } from "date-fns";
 import { useAuthContext } from "~/providers/auth-provider";
 import { cn } from "~/lib/utils";
+import { formatDate as fmtDate, formatRelativeTime, formatDateShort, getDateFnsLocale } from "~/lib/utils/format";
 import { getLeadAnalytics, type LeadAnalyticsPeriod } from "~/lib/api/leads";
 import { getAllTasks, type Task } from "~/lib/api/tasks";
 
@@ -116,7 +116,7 @@ function formatXLabel(date: string, period: LeadAnalyticsPeriod): string {
   }
   const [year, month, day] = date.split("-");
   const d = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
-  return d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+  return formatDateShort(d);
 }
 
 function CustomTooltip({
@@ -310,14 +310,14 @@ function formatTaskDueLabel(dateStr: string): {
   const d = new Date(dateStr);
   if (isPast(d) && !isToday(d))
     return {
-      label: formatDistanceToNow(d, { addSuffix: true }),
+      label: formatRelativeTime(d),
       urgent: true,
       overdue: true,
     };
   if (isToday(d)) return { label: "Today", urgent: true, overdue: false };
   if (isTomorrow(d))
     return { label: "Tomorrow", urgent: false, overdue: false };
-  return { label: format(d, "MMM d"), urgent: false, overdue: false };
+  return { label: fmtDate(d, "MMM d"), urgent: false, overdue: false };
 }
 
 function MyTaskRow({ task }: { task: Task }) {
@@ -409,7 +409,7 @@ function getDateGroupLabel(
     return { label: t("home.taskDateTomorrow"), isOverdue: false };
   const d = new Date(key + "T00:00:00");
   const isOverdue = key < todayStr;
-  return { label: format(d, "EEE, MMM d"), isOverdue };
+  return { label: fmtDate(d, "EEE, MMM d"), isOverdue };
 }
 
 function groupTasksByDate(

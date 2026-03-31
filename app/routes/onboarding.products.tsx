@@ -13,6 +13,7 @@ import {
 import { getStoredWorkspaceId } from "~/lib/api/axios-instance";
 import { useAuthContext } from "~/providers/auth-provider";
 import { useQueryClient } from "@tanstack/react-query";
+import { formatCurrencyFromCents } from "~/lib/utils/format";
 import { Check, Star, ChevronLeft, ChevronRight } from "lucide-react";
 
 export function meta() {
@@ -30,13 +31,7 @@ const CARD_STEP = CARD_WIDTH + CARD_GAP;
 
 function formatPrice(amount: string | null, currency: string | null): string {
   if (amount == null) return "—";
-  const num = Number(amount) / 100;
-  return new Intl.NumberFormat("en-EU", {
-    style: "currency",
-    currency: currency?.toUpperCase() ?? "EUR",
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 2,
-  }).format(num);
+  return formatCurrencyFromCents(Number(amount), currency ?? "EUR");
 }
 
 function getSavingPercent(product: VisibleStripeProduct): number {

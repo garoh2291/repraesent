@@ -10,6 +10,7 @@ import {
 } from "~/components/ui/hover-card";
 import { Button } from "~/components/ui/button";
 import { getAppointmentsByConfigId } from "~/lib/api/appointments";
+import { getIntlLocale, formatTime } from "~/lib/utils/format";
 
 /* ── Helpers ────────────────────────────────────────────────────── */
 
@@ -56,40 +57,15 @@ function formatTimeRange(
     minute: "2-digit",
     hour12: timeFormat === "12h",
   };
-  const s = start.toLocaleTimeString(undefined, opts);
-  const e = end.toLocaleTimeString(undefined, opts);
+  const s = start.toLocaleTimeString(getIntlLocale(), opts);
+  const e = end.toLocaleTimeString(getIntlLocale(), opts);
   return `${s} – ${e}`;
 }
 
-const MONTH_NAMES = [
-  "January",
-  "February",
-  "March",
-  "April",
-  "May",
-  "June",
-  "July",
-  "August",
-  "September",
-  "October",
-  "November",
-  "December",
-];
-
-const MONTH_ABBR = [
-  "JAN",
-  "FEB",
-  "MAR",
-  "APR",
-  "MAY",
-  "JUN",
-  "JUL",
-  "AUG",
-  "SEP",
-  "OCT",
-  "NOV",
-  "DEC",
-];
+function getMonthName(monthIndex: number, style: "long" | "short" = "long"): string {
+  const d = new Date(2000, monthIndex, 1);
+  return d.toLocaleString(getIntlLocale(), { month: style });
+}
 
 const DAY_ABBR = ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"];
 
@@ -226,7 +202,7 @@ export function ScheduleView({
         mMap.set(mKey, {
           year: day.date.getFullYear(),
           month: day.date.getMonth(),
-          label: MONTH_NAMES[day.date.getMonth()],
+          label: getMonthName(day.date.getMonth()),
           days: [],
         });
       }
@@ -268,8 +244,8 @@ export function ScheduleView({
 
   // Header label: "Mar – May 2026" or "Nov 2025 – Jan 2026"
   const headerLabel = useMemo(() => {
-    const sAbbr = MONTH_NAMES[startMonth.month].slice(0, 3);
-    const eAbbr = MONTH_NAMES[endMonth.month].slice(0, 3);
+    const sAbbr = getMonthName(startMonth.month, "short");
+    const eAbbr = getMonthName(endMonth.month, "short");
     if (startMonth.year === endMonth.year) {
       return `${sAbbr} – ${eAbbr} ${startMonth.year}`;
     }

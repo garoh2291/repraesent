@@ -37,7 +37,7 @@ export function LanguageSwitcher({
   if (variant === "dark") {
     return (
       <div className="flex items-center gap-0.5 rounded-lg w-fit bg-white/5 p-0.5">
-        {(["en", "de"] as const).map((lang) => (
+        {(["de", "en"] as const).map((lang) => (
           <button
             key={lang}
             type="button"
@@ -58,7 +58,7 @@ export function LanguageSwitcher({
 
   return (
     <div className="flex items-center rounded-lg border border-stone-200 bg-white p-0.5 shadow-sm">
-      {(["en", "de"] as const).map((lang) => (
+      {(["de", "en"] as const).map((lang) => (
         <button
           key={lang}
           type="button"

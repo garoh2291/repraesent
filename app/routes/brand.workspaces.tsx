@@ -13,6 +13,7 @@ import {
 } from "~/lib/api/brand";
 import { FilterComponent } from "~/components/molecule/filter-component";
 import { cn } from "~/lib/utils";
+import { formatNumber, formatDateMedium } from "~/lib/utils/format";
 import TooltipContainer from "~/components/tooltip-container";
 
 export function meta() {
@@ -63,11 +64,7 @@ function formatRelative(iso: string | null | undefined, t: TFunction): string {
   if (hrs < 24) return t("brand.wsHoursAgo", { count: hrs });
   const days = Math.floor(hrs / 24);
   if (days < 30) return t("brand.wsDaysAgo", { count: days });
-  return new Date(iso).toLocaleDateString(undefined, {
-    day: "2-digit",
-    month: "short",
-    year: "numeric",
-  });
+  return formatDateMedium(new Date(iso));
 }
 
 function formatFormName(formName: string, t: TFunction): string {
@@ -211,7 +208,7 @@ function ExpandedPanel({
                       {formatFormName(lf.form_name, t)}
                     </span>
                     <span className="text-[11px] font-semibold text-slate-800 tabular-nums shrink-0">
-                      {lf.count.toLocaleString()}
+                      {formatNumber(lf.count)}
                     </span>
                   </div>
                   <div className="h-[3px] w-full rounded-full bg-black/8 overflow-hidden">
@@ -539,7 +536,7 @@ export default function BrandWorkspaces() {
 
                   {/* Leads count */}
                   <span className="text-sm font-semibold text-foreground tabular-nums text-right">
-                    {ws.leads_count.toLocaleString()}
+                    {formatNumber(ws.leads_count)}
                   </span>
 
                   {/* Chevron */}

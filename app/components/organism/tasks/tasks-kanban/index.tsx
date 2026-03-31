@@ -11,8 +11,8 @@ import {
 } from "@dnd-kit/core";
 import { useDroppable } from "@dnd-kit/core";
 import { useTranslation } from "react-i18next";
-import { format } from "date-fns";
 import { ChevronDown } from "lucide-react";
+import { formatDate } from "~/lib/utils/format";
 import { cn } from "~/lib/utils";
 import { TaskCard } from "./task-card";
 import { TaskUrgencyBadge } from "~/components/organism/tasks/task-urgency-badge";
@@ -339,7 +339,7 @@ function TaskScheduleRow({
           {task.urgency && <TaskUrgencyBadge urgency={task.urgency} />}
           {task.due_date && (
             <span className="text-[10px] text-muted-foreground">
-              {format(new Date(task.due_date), "MMM d")}
+              {formatDate(new Date(task.due_date), "MMM d")}
             </span>
           )}
           {task.lead_full_name && (

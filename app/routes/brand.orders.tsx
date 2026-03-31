@@ -30,6 +30,7 @@ import {
   Loader2,
 } from "lucide-react";
 import { cn } from "~/lib/utils";
+import { formatCurrencyFromCents, formatDateMedium } from "~/lib/utils/format";
 
 type OrderType = "workspace" | "service";
 type WizardStep = 1 | 2 | 3;
@@ -62,11 +63,7 @@ const STATUS_CONFIG: Record<
 };
 
 function formatPrice(amount: number, currency: string): string {
-  return new Intl.NumberFormat("de-DE", {
-    style: "currency",
-    currency: currency.toUpperCase(),
-    minimumFractionDigits: 0,
-  }).format(amount / 100);
+  return formatCurrencyFromCents(amount, currency);
 }
 
 function localizeServiceName(
@@ -825,14 +822,7 @@ export default function BrandOrdersPage() {
                         )}
                       </p>
                       <p className="text-xs text-muted-foreground mt-0.5">
-                        {new Date(order.created_at).toLocaleDateString(
-                          i18n.language === "de" ? "de-DE" : "en-US",
-                          {
-                            day: "numeric",
-                            month: "short",
-                            year: "numeric",
-                          }
-                        )}
+                        {formatDateMedium(order.created_at)}
                       </p>
                     </div>
 

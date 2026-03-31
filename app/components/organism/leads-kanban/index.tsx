@@ -11,8 +11,8 @@ import {
 } from "@dnd-kit/core";
 import type { DragEndEvent, DragStartEvent } from "@dnd-kit/core";
 import { useTranslation } from "react-i18next";
-import { format } from "date-fns";
 import { ChevronDown, Loader2 } from "lucide-react";
+import { formatDate } from "~/lib/utils/format";
 import { type Lead } from "~/lib/api/leads";
 import {
   LEAD_STATUSES,
@@ -398,7 +398,7 @@ function LeadScheduleRow({
           )}
           {lead.created_at && (
             <span className="text-[10px] text-muted-foreground/50">
-              {format(new Date(lead.created_at), "MMM d")}
+              {formatDate(new Date(lead.created_at), "MMM d")}
             </span>
           )}
         </div>

@@ -4,6 +4,7 @@ import { useAuthContext } from "~/providers/auth-provider";
 import { getStoredWorkspaceId } from "~/lib/api/axios-instance";
 import { getWorkspaceInvoices } from "~/lib/api/workspaces";
 import { formatBillingInterval } from "~/lib/utils/stripe";
+import { formatDateMedium, formatCurrencyFromCents } from "~/lib/utils/format";
 import { AlertTriangle, ExternalLink, Package2 } from "lucide-react";
 import { Button } from "~/components/ui/button";
 
@@ -18,11 +19,7 @@ function formatDate(ts: string | number | undefined | null): string {
   if (ts == null) return "—";
   const sec = typeof ts === "string" ? parseInt(ts, 10) : ts;
   if (Number.isNaN(sec)) return "—";
-  return new Date(sec * 1000).toLocaleDateString(undefined, {
-    year: "numeric",
-    month: "short",
-    day: "numeric",
-  });
+  return formatDateMedium(new Date(sec * 1000));
 }
 
 function StatusPill({ status }: { status: string }) {
@@ -222,7 +219,7 @@ export default function Products() {
                     </td>
                     <td className="px-5 py-3.5 text-right font-semibold text-foreground tabular-nums">
                       {inv.amount_due != null
-                        ? `€${(Number(inv.amount_due) / 100).toFixed(2)}`
+                        ? formatCurrencyFromCents(Number(inv.amount_due), "EUR")
                         : "—"}
                     </td>
                     <td className="px-5 py-3.5">

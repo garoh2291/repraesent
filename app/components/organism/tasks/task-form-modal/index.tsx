@@ -2,8 +2,9 @@ import { useState, useEffect, useRef, useMemo } from "react";
 import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { useAuthContext } from "~/providers/auth-provider";
-import { format, startOfDay } from "date-fns";
+import { startOfDay } from "date-fns";
 import { CalendarIcon, X, Search, ChevronDown } from "lucide-react";
+import { formatDate } from "~/lib/utils/format";
 import {
   Dialog,
   DialogContent,
@@ -368,7 +369,7 @@ export function TaskFormModal({
                   <CalendarIcon className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
                   <span className="flex-1 text-left">
                     {dueDate
-                      ? format(dueDate, "PPP")
+                      ? formatDate(dueDate, "PPP")
                       : t("tasks.form.dueDatePlaceholder")}
                   </span>
                   {dueDate && (

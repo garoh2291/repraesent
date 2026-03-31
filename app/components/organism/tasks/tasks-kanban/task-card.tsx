@@ -1,7 +1,7 @@
 import { useDraggable } from "@dnd-kit/core";
 import { useTranslation } from "react-i18next";
-import { format } from "date-fns";
 import { Link } from "react-router";
+import { formatDate } from "~/lib/utils/format";
 import { cn } from "~/lib/utils";
 import { TaskUrgencyBadge } from "~/components/organism/tasks/task-urgency-badge";
 import type { Task } from "~/lib/api/tasks";
@@ -86,7 +86,7 @@ export function TaskCard({
           )}
           {task.due_date && (
             <span className="text-[10px] text-muted-foreground">
-              {format(new Date(task.due_date), "MMM d")}
+              {formatDate(new Date(task.due_date), "MMM d")}
             </span>
           )}
         </div>

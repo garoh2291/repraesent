@@ -1,8 +1,9 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
-import { format, isToday, isTomorrow } from "date-fns";
+import { isToday, isTomorrow } from "date-fns";
 import { Plus, Check } from "lucide-react";
+import { formatDate } from "~/lib/utils/format";
 import { cn } from "~/lib/utils";
 import { TaskUrgencyBadge } from "~/components/organism/tasks/task-urgency-badge";
 import { TaskFormModal, type WorkspaceMemberItem } from "~/components/organism/tasks/task-form-modal";
@@ -36,7 +37,7 @@ function formatDueDate(dateStr: string): string {
   const d = new Date(dateStr);
   if (isToday(d)) return "Today";
   if (isTomorrow(d)) return "Tomorrow";
-  return format(d, "MMM d");
+  return formatDate(d, "MMM d");
 }
 
 interface LeadTasksSectionProps {

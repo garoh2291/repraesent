@@ -27,8 +27,8 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "~/components/ui/alert-dialog";
-import { formatDistanceToNow } from "date-fns";
 import { MoreHorizontal, Pencil, Trash2, Plus } from "lucide-react";
+import { formatRelativeTime } from "~/lib/utils/format";
 import { cn } from "~/lib/utils";
 import TooltipContainer from "~/components/tooltip-container";
 
@@ -56,7 +56,7 @@ function getCurrentUserInitials(
 function getRelativeTime(note: Note): string {
   const date =
     note.version > 1 ? new Date(note.updated_at) : new Date(note.created_at);
-  return formatDistanceToNow(date, { addSuffix: true });
+  return formatRelativeTime(date);
 }
 
 function buildNoteUserLabel(note: Note, fallback: string): string {

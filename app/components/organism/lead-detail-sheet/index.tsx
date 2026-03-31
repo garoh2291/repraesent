@@ -21,8 +21,8 @@ import { LeadStatusSelect } from "~/components/molecule/lead-status-select";
 import type { LeadStatus as LeadStatusType } from "~/lib/leads/constants";
 import type { TFunction } from "i18next";
 import TooltipContainer from "~/components/tooltip-container";
-import { format, formatDistanceToNow } from "date-fns";
 import { ExternalLink } from "lucide-react";
+import { formatDate, formatRelativeTime } from "~/lib/utils/format";
 import { cn } from "~/lib/utils";
 import { getWorkspaceDetail } from "~/lib/api/workspaces";
 import type { WorkspaceMemberItem } from "~/components/organism/tasks/task-form-modal";
@@ -302,7 +302,7 @@ export function LeadInfoSection({
 
         <FieldRow label={t("leads.columns.createdAt")}>
           <FieldValue>
-            {lead.created_at ? format(new Date(lead.created_at), "PPp") : "—"}
+            {lead.created_at ? formatDate(new Date(lead.created_at), "PPp") : "—"}
           </FieldValue>
         </FieldRow>
 
@@ -370,9 +370,7 @@ export function LeadHistorySection({
               {history.map((item, idx) => {
                 const actionText = formatHistoryAction(item, t);
                 const relativeTime = item.created_at
-                  ? formatDistanceToNow(new Date(item.created_at), {
-                      addSuffix: true,
-                    })
+                  ? formatRelativeTime(item.created_at)
                   : "";
                 return (
                   <div key={idx} className="relative flex gap-3 pb-4 last:pb-0">

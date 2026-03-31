@@ -36,6 +36,7 @@ import {
   X,
 } from "lucide-react";
 import { cn } from "~/lib/utils";
+import { formatDateLong, formatTime } from "~/lib/utils/format";
 
 export function meta() {
   return [
@@ -73,12 +74,7 @@ function formatSlotInTimezone(
 ): string {
   const [start] = slot.split("--");
   const date = new Date(start);
-  return date.toLocaleTimeString("en-US", {
-    timeZone: timezone,
-    hour: "2-digit",
-    minute: "2-digit",
-    hour12: timeFormat === "12h",
-  });
+  return formatTime(date, { hour12: timeFormat === "12h", timeZone: timezone });
 }
 
 function getDefaultTimezone(): string {
@@ -589,26 +585,26 @@ function BookingHeader({
 }) {
   return (
     <header
-      className="shrink-0 px-6 py-4 flex items-center justify-between"
+      className="shrink-0 px-4 sm:px-6 py-3 sm:py-4 flex flex-col items-center sm:flex-row sm:justify-between gap-3"
       style={{ backgroundColor: bgColor, color: textColor }}
     >
       {/* Brand */}
-      <div className="flex items-center gap-3">
+      <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-3 min-w-0">
         <img
           src={logoUrl || defaultLogoUrl}
           alt="Logo"
-          className="h-9 object-contain"
+          className="h-8 sm:h-9 object-contain shrink-0"
         />
-        <div>
+        <div className="min-w-0 text-center sm:text-left">
           <p
-            className="font-semibold text-base leading-tight"
+            className="font-semibold text-sm sm:text-base leading-tight truncate"
             style={{ color: textColor }}
           >
             {config.company_name || t("booking.fallbackCompany")}
           </p>
           {config.services && config.services.length > 0 && (
             <p
-              className="text-xs leading-tight"
+              className="text-[11px] sm:text-xs leading-tight truncate"
               style={{ color: `${textColor}99` }}
             >
               {selectedService
@@ -621,7 +617,7 @@ function BookingHeader({
 
       {/* Step indicators */}
       {!booked && step > 0 && (
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-1 shrink-0 self-center sm:self-auto">
           {STEPS.map((s, idx) => {
             const done = step > s.n;
             const active = step === s.n;
@@ -629,7 +625,7 @@ function BookingHeader({
               <div key={s.n} className="flex items-center gap-1">
                 <div
                   className={cn(
-                    "flex items-center justify-center h-7 w-7 rounded-full text-xs font-semibold transition-all",
+                    "flex items-center justify-center h-6 w-6 sm:h-7 sm:w-7 rounded-full text-[11px] sm:text-xs font-semibold transition-all",
                     done
                       ? "bg-white/20"
                       : active
@@ -638,11 +634,11 @@ function BookingHeader({
                   )}
                   style={{ color: textColor }}
                 >
-                  {done ? <Check className="h-3.5 w-3.5" /> : s.n}
+                  {done ? <Check className="h-3 w-3 sm:h-3.5 sm:w-3.5" /> : s.n}
                 </div>
                 {idx < STEPS.length - 1 && (
                   <div
-                    className="w-6 h-px"
+                    className="w-4 sm:w-6 h-px"
                     style={{ backgroundColor: `${textColor}30` }}
                   />
                 )}
@@ -1158,12 +1154,7 @@ function Step3Confirmation({
   selectedService: AppointmentService | null;
 }) {
   const timeStr = formatSlotInTimezone(selectedSlot, userTimezone, timeFormat);
-  const dateStr = selectedDate.toLocaleDateString("en-US", {
-    weekday: "long",
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-  });
+  const dateStr = formatDateLong(selectedDate);
 
   return (
     <div className="space-y-6">

@@ -1,8 +1,8 @@
 import { useState, useCallback, useEffect, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
-import { format, formatDistanceToNow } from "date-fns";
 import { Link } from "react-router";
+import { formatDate, formatRelativeTime } from "~/lib/utils/format";
 import {
   Pencil,
   Trash2,
@@ -306,7 +306,7 @@ export function TaskDetailModal({
                           >
                             <CalendarIcon className="h-3 w-3 text-muted-foreground" />
                             {task.due_date
-                              ? format(new Date(task.due_date), "PPP")
+                              ? formatDate(new Date(task.due_date), "PPP")
                               : t("tasks.form.dueDatePlaceholder")}
                           </button>
                         </PopoverTrigger>
@@ -344,7 +344,7 @@ export function TaskDetailModal({
                       </Popover>
                     ) : task.due_date ? (
                       <span className="text-xs text-muted-foreground">
-                        {format(new Date(task.due_date), "PPP")}
+                        {formatDate(new Date(task.due_date), "PPP")}
                       </span>
                     ) : (
                       <span className="text-xs text-muted-foreground">—</span>
@@ -438,9 +438,7 @@ export function TaskDetailModal({
                     </span>
                     <span className="text-muted-foreground/60">·</span>
                     <span>
-                      {formatDistanceToNow(new Date(task.created_at), {
-                        addSuffix: true,
-                      })}
+                      {formatRelativeTime(task.created_at)}
                     </span>
                   </div>
                 </div>
@@ -468,9 +466,7 @@ export function TaskDetailModal({
                         {history.map((item, idx) => {
                           const actionText = formatHistoryAction(item, t);
                           const relativeTime = item.created_at
-                            ? formatDistanceToNow(new Date(item.created_at), {
-                                addSuffix: true,
-                              })
+                            ? formatRelativeTime(item.created_at)
                             : "";
                           return (
                             <div

@@ -51,8 +51,9 @@ import {
 } from "~/components/ui/popover";
 import { Calendar as DatePickerCalendar } from "~/components/ui/calendar";
 import { toast } from "sonner";
-import { format, startOfDay } from "date-fns";
+import { startOfDay } from "date-fns";
 import { Plus, Clock, Loader2, CalendarIcon, Trash2, List, CalendarDays, CalendarRange } from "lucide-react";
+import { formatDate, formatDateIntl, getIntlLocale } from "~/lib/utils/format";
 import "react-big-calendar/lib/css/react-big-calendar.css";
 import { ScheduleView } from "./ScheduleView";
 import type { ScheduleEvent } from "./ScheduleView";
@@ -65,7 +66,7 @@ function formatInTimezone(
   timezone: string,
   timeFormat: string,
 ): string {
-  return date.toLocaleString(undefined, {
+  return formatDateIntl(date, {
     timeZone: timezone,
     dateStyle: "medium",
     timeStyle: "short",
@@ -205,7 +206,7 @@ function formatDateForInput(date: Date): string {
 function formatSlotTime(slot: string, timezone: string, timeFormat: string): string {
   const [start] = slot.split("--");
   const date = new Date(start);
-  return date.toLocaleTimeString(undefined, {
+  return formatDateIntl(date, {
     timeZone: timezone,
     hour: "2-digit",
     minute: "2-digit",
@@ -373,7 +374,7 @@ function AddAppointmentDialog({
                 >
                   <CalendarIcon className="mr-2 h-4 w-4" />
                   {selectedDate
-                    ? format(new Date(selectedDate + "T12:00:00"), "PPP")
+                    ? formatDate(new Date(selectedDate + "T12:00:00"), "PPP")
                     : t("appointments.addDialog.pickDate", "Pick a date")}
                 </Button>
               </PopoverTrigger>

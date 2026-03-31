@@ -15,6 +15,7 @@ import {
   Tooltip,
 } from "recharts";
 import { cn } from "~/lib/utils";
+import { formatNumber, formatDecimal, formatDateShort } from "~/lib/utils/format";
 import {
   getBrandAnalytics,
   getBrandPlausibleAnalytics,
@@ -144,7 +145,7 @@ function formatXLabel(date: string, period: LeadAnalyticsPeriod): string {
   }
   const [year, month, day] = date.split("-");
   const d = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
-  return d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+  return formatDateShort(d);
 }
 
 function buildLineData(
@@ -734,10 +735,10 @@ function AnalyticsChartSection({
   const yDomain: [number, number] = [0, maxY + Math.ceil(maxY * 0.2)];
 
   const metricCards = [
-    { label: t("brand.metricVisitors", "Unique Visitors"), value: metrics.visitors.toLocaleString() },
-    { label: t("brand.metricVisits", "Total Visits"), value: metrics.visits.toLocaleString() },
-    { label: t("brand.metricPageviews", "Pageviews"), value: metrics.pageviews.toLocaleString() },
-    { label: t("brand.metricViewsPerVisit", "Views / Visit"), value: metrics.viewsPerVisit.toFixed(1) },
+    { label: t("brand.metricVisitors", "Unique Visitors"), value: formatNumber(metrics.visitors) },
+    { label: t("brand.metricVisits", "Total Visits"), value: formatNumber(metrics.visits) },
+    { label: t("brand.metricPageviews", "Pageviews"), value: formatNumber(metrics.pageviews) },
+    { label: t("brand.metricViewsPerVisit", "Views / Visit"), value: formatDecimal(metrics.viewsPerVisit, 1) },
   ];
 
   return (
@@ -753,7 +754,7 @@ function AnalyticsChartSection({
             <div className="h-8 w-16 animate-pulse rounded-md bg-muted" />
           ) : (
             <p className="text-3xl font-bold tracking-tight text-foreground">
-              {metrics.visitors.toLocaleString()}
+              {formatNumber(metrics.visitors)}
             </p>
           )}
           <p className="text-xs text-muted-foreground">
@@ -856,7 +857,7 @@ function AnalyticsChartSection({
                   {ws.workspace_name}
                 </span>
                 <span className="font-semibold text-foreground">
-                  {ws.visitors.toLocaleString()}
+                  {formatNumber(ws.visitors)}
                 </span>
               </div>
             );
@@ -1029,7 +1030,7 @@ function WorkspaceLeaderboard({
             {t("brand.leaderboardTitle", "Top Partner Houses")}
           </p>
           <p className="text-2xl font-bold tracking-tight text-foreground tabular-nums">
-            {total.toLocaleString()}
+            {formatNumber(total)}
           </p>
           <p className="text-xs text-muted-foreground">
             {t("brand.leaderboardSubtitle", "total leads, all time")}
@@ -1093,7 +1094,7 @@ function WorkspaceLeaderboard({
                     isFirst ? "text-amber-300" : "text-foreground/60"
                   )}
                 >
-                  {ws.leads_count.toLocaleString()}
+                  {formatNumber(ws.leads_count)}
                 </span>
               </div>
 
