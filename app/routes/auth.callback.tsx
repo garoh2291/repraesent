@@ -54,20 +54,6 @@ export default function AuthCallback() {
         return fallback;
       };
 
-      // Set workspace + navigate helper for contexts that have a specific workspace
-      const setWorkspaceAndGo = (
-        context: UserContextResponse,
-        wsId: string,
-        fallbackDest: string,
-      ) => {
-        if (context.workspaces.some((w) => w.id === wsId)) {
-          setStoredWorkspaceId(wsId);
-          navigate(resolveDestination(fallbackDest), { replace: true });
-          return true;
-        }
-        return false;
-      };
-
       // Route based on context — shared between fresh auth and already-used-token recovery
       const routeAfterAuth = (context: UserContextResponse) => {
         // Brand user → straight to /brand
@@ -82,8 +68,12 @@ export default function AuthCallback() {
         }
 
         // If workspace param is provided and valid, always use it (email deep link)
-        if (workspaceParam) {
-          if (setWorkspaceAndGo(context, workspaceParam, "/")) return;
+        if (workspaceParam && context.workspaces.some((w) => w.id === workspaceParam)) {
+          setStoredWorkspaceId(workspaceParam);
+          // Invalidate all queries so sidebar/data re-fetches with the correct workspace
+          queryClient.removeQueries();
+          navigate(resolveDestination("/"), { replace: true });
+          return;
         }
 
         if (context.workspaces.length === 1) {
