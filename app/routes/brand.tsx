@@ -2,7 +2,8 @@ import { useState, useMemo, useRef, useCallback } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router";
-import { ArrowRight, LayoutList, TrendingUp, FileDown, Loader2, Globe } from "lucide-react";
+import { ArrowRight, LayoutList, TrendingUp, FileDown, Loader2, Globe, ExternalLink } from "lucide-react";
+import { HoverCard, HoverCardTrigger, HoverCardContent } from "~/components/ui/hover-card";
 import {
   ResponsiveContainer,
   LineChart,
@@ -831,35 +832,51 @@ function AnalyticsChartSection({
             const isActive =
               hoveredWorkspace === null || hoveredWorkspace === ws.workspace_id;
             return (
-              <div
-                key={ws.workspace_id}
-                className="flex items-center gap-1.5 text-[12px] cursor-pointer select-none transition-opacity duration-150"
-                style={{ opacity: isActive ? 1 : 0.35 }}
-                onMouseEnter={() => handleWorkspaceEnter(ws.workspace_id)}
-                onMouseLeave={handleWorkspaceLeave}
-              >
-                <span
-                  className="h-2.5 w-2.5 rounded-full shrink-0 transition-transform duration-150"
-                  style={{
-                    backgroundColor: wsColor,
-                    transform:
-                      hoveredWorkspace === ws.workspace_id
-                        ? "scale(1.4)"
-                        : "scale(1)",
-                  }}
-                />
-                <span
-                  className={cn(
-                    "transition-colors duration-150",
-                    isActive ? "text-foreground" : "text-muted-foreground"
-                  )}
+              <HoverCard key={ws.workspace_id} openDelay={200} closeDelay={100}>
+                <HoverCardTrigger asChild>
+                  <div
+                    className="flex items-center gap-1.5 text-[12px] cursor-pointer select-none transition-opacity duration-150"
+                    style={{ opacity: isActive ? 1 : 0.35 }}
+                    onMouseEnter={() => handleWorkspaceEnter(ws.workspace_id)}
+                    onMouseLeave={handleWorkspaceLeave}
+                  >
+                    <span
+                      className="h-2.5 w-2.5 rounded-full shrink-0 transition-transform duration-150"
+                      style={{
+                        backgroundColor: wsColor,
+                        transform:
+                          hoveredWorkspace === ws.workspace_id
+                            ? "scale(1.4)"
+                            : "scale(1)",
+                      }}
+                    />
+                    <span
+                      className={cn(
+                        "transition-colors duration-150",
+                        isActive ? "text-foreground" : "text-muted-foreground"
+                      )}
+                    >
+                      {ws.workspace_name}
+                    </span>
+                    <span className="font-semibold text-foreground">
+                      {formatNumber(ws.visitors)}
+                    </span>
+                  </div>
+                </HoverCardTrigger>
+                <HoverCardContent
+                  side="top"
+                  sideOffset={8}
+                  className="w-auto p-2"
                 >
-                  {ws.workspace_name}
-                </span>
-                <span className="font-semibold text-foreground">
-                  {formatNumber(ws.visitors)}
-                </span>
-              </div>
+                  <Link
+                    to={`/brand/analytics?workspace=${ws.workspace_id}`}
+                    className="flex items-center gap-2 rounded-lg px-2.5 py-2 text-[12px] font-medium text-foreground hover:bg-muted transition-colors duration-100"
+                  >
+                    <ExternalLink className="h-3.5 w-3.5 text-muted-foreground" />
+                    {t("brand.fullAnalytics", "See full analytics")}
+                  </Link>
+                </HoverCardContent>
+              </HoverCard>
             );
           })}
         </div>

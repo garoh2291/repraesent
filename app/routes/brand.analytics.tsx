@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
+import { useSearchParams } from "react-router";
 import { ChevronDown, LineChart, AlertCircle } from "lucide-react";
 import {
   getBrandAnalyticsWorkspaces,
@@ -19,10 +20,12 @@ const PLAUSIBLE_SCRIPT = "https://plausible0.gagadomains.com/js/embed.host.js";
 
 export default function BrandAnalytics() {
   const { t } = useTranslation();
+  const [searchParams, setSearchParams] = useSearchParams();
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const [isIframeLoading, setIsIframeLoading] = useState(true);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const initializedRef = useRef(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   const { data: workspaces = [], isLoading } = useQuery({
@@ -31,13 +34,29 @@ export default function BrandAnalytics() {
     staleTime: 5 * 60_000,
   });
 
-  // Auto-select first workspace that has analytics
+  // Auto-select from ?workspace= query param, or first available
   useEffect(() => {
-    if (workspaces.length > 0 && selectedId === null) {
+    if (workspaces.length > 0 && !initializedRef.current) {
+      initializedRef.current = true;
+      const wsParam = searchParams.get("workspace");
+      if (wsParam) {
+        const match = workspaces.find((w) => w.id === wsParam && w.has_analytics);
+        if (match) {
+          setSelectedId(match.id);
+          return;
+        }
+      }
       const first = workspaces.find((w) => w.has_analytics);
-      if (first) setSelectedId(first.id);
+      if (first) {
+        setSelectedId(first.id);
+        setSearchParams((prev) => {
+          const next = new URLSearchParams(prev);
+          next.set("workspace", first.id);
+          return next;
+        }, { replace: true });
+      }
     }
-  }, [workspaces, selectedId]);
+  }, [workspaces, searchParams, setSearchParams]);
 
   // Close dropdown on outside click
   useEffect(() => {
@@ -77,6 +96,11 @@ export default function BrandAnalytics() {
     if (ws.id !== selectedId) {
       setSelectedId(ws.id);
       setIsIframeLoading(true);
+      setSearchParams((prev) => {
+        const next = new URLSearchParams(prev);
+        next.set("workspace", ws.id);
+        return next;
+      }, { replace: true });
     }
     setDropdownOpen(false);
   };
