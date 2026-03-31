@@ -78,6 +78,7 @@ export async function getBrandWorkspacesOverview(params?: {
   page?: number;
   limit?: number;
   service_id?: string;
+  period?: string;
 }): Promise<BrandWorkspacesOverviewResponse> {
   const res = await apiClient.get<BrandWorkspacesOverviewResponse>(
     "/brands/me/workspaces-overview",
@@ -87,6 +88,7 @@ export async function getBrandWorkspacesOverview(params?: {
         ...(params?.page && { page: params.page }),
         ...(params?.limit && { limit: params.limit }),
         ...(params?.service_id && { service_id: params.service_id }),
+        ...(params?.period && { period: params.period }),
       },
     }
   );
@@ -119,6 +121,31 @@ export async function getBrandAnalytics(
 ): Promise<BrandAnalytics> {
   const res = await apiClient.get<BrandAnalytics>(
     `/brands/me/analytics?period=${period}`
+  );
+  return res.data;
+}
+
+// ─── Brand Plausible Analytics ───────────────────────────────
+
+export interface PlausibleWorkspaceSeries {
+  workspace_id: string;
+  workspace_name: string;
+  visitors: number;
+  pageviews: number;
+  visits: number;
+  views_per_visit: number;
+  timeseries: { date: string; visitors: number }[];
+}
+
+export interface BrandPlausibleAnalytics {
+  workspaces: PlausibleWorkspaceSeries[];
+}
+
+export async function getBrandPlausibleAnalytics(
+  period: LeadAnalyticsPeriod
+): Promise<BrandPlausibleAnalytics> {
+  const res = await apiClient.get<BrandPlausibleAnalytics>(
+    `/brands/me/analytics/plausible?period=${period}`
   );
   return res.data;
 }
@@ -232,4 +259,23 @@ export async function listMyBrandOrders(params?: {
     { params }
   );
   return res.data;
+}
+
+export async function exportBrandReport(
+  workspaceId: string,
+  period: string,
+  workspaceName: string,
+): Promise<void> {
+  const res = await apiClient.get("/brands/me/export-report", {
+    params: { workspace_id: workspaceId, period },
+    responseType: "blob",
+  });
+  const url = URL.createObjectURL(new Blob([res.data], { type: "application/pdf" }));
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `report-${workspaceName.replace(/[^a-z0-9]/gi, "_").toLowerCase()}.pdf`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
 }

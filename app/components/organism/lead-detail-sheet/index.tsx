@@ -21,8 +21,8 @@ import { LeadStatusSelect } from "~/components/molecule/lead-status-select";
 import type { LeadStatus as LeadStatusType } from "~/lib/leads/constants";
 import type { TFunction } from "i18next";
 import TooltipContainer from "~/components/tooltip-container";
-import { format, formatDistanceToNow } from "date-fns";
 import { ExternalLink } from "lucide-react";
+import { formatDate, formatRelativeTime } from "~/lib/utils/format";
 import { cn } from "~/lib/utils";
 import { getWorkspaceDetail } from "~/lib/api/workspaces";
 import type { WorkspaceMemberItem } from "~/components/organism/tasks/task-form-modal";
@@ -58,7 +58,16 @@ function formatHistoryAction(item: LeadHistoryItem, t: TFunction): string {
     return t("leads.detail.historyNoteEdited");
   if (item.action === "note_deleted")
     return t("leads.detail.historyNoteDeleted");
+  if (item.action === "task_assignee_removed")
+    return t("leads.detail.historyTaskAssigneeRemoved", { defaultValue: "Task assignee removed" });
   return item.action.replace(/_/g, " ");
+}
+
+function buildUserLabel(item: LeadHistoryItem, t: TFunction): string {
+  const name = [item.user_first_name, item.user_last_name].filter(Boolean).join(" ").trim()
+    || item.user_email
+    || t("leads.detail.system");
+  return item.user_is_deleted ? `${name} (${t("common.deleted", { defaultValue: "Deleted" })})` : name;
 }
 
 interface LeadDetailSheetProps {
@@ -293,7 +302,7 @@ export function LeadInfoSection({
 
         <FieldRow label={t("leads.columns.createdAt")}>
           <FieldValue>
-            {lead.created_at ? format(new Date(lead.created_at), "PPp") : "—"}
+            {lead.created_at ? formatDate(new Date(lead.created_at), "PPp") : "—"}
           </FieldValue>
         </FieldRow>
 
@@ -361,9 +370,7 @@ export function LeadHistorySection({
               {history.map((item, idx) => {
                 const actionText = formatHistoryAction(item, t);
                 const relativeTime = item.created_at
-                  ? formatDistanceToNow(new Date(item.created_at), {
-                      addSuffix: true,
-                    })
+                  ? formatRelativeTime(item.created_at)
                   : "";
                 return (
                   <div key={idx} className="relative flex gap-3 pb-4 last:pb-0">
@@ -383,17 +390,16 @@ export function LeadHistorySection({
                       </TooltipContainer>
                       <div className="flex items-center gap-2 text-xs text-muted-foreground mt-1">
                         <TooltipContainer
-                          tooltipContent={
-                            item.user_first_name && item.user_last_name
-                              ? `${item.user_first_name} ${item.user_last_name}`
-                              : t("leads.detail.system")
-                          }
+                          tooltipContent={buildUserLabel(item, t)}
                           showCopyButton={false}
                         >
-                          <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-muted text-[9px] font-bold">
+                          <span className={`inline-flex h-5 w-5 items-center justify-center rounded-full text-[9px] font-bold ${item.user_is_deleted ? "bg-muted/50 text-muted-foreground/60" : "bg-muted"}`}>
                             {getHistoryItemInitials(item)}
                           </span>
                         </TooltipContainer>
+                        {item.user_is_deleted && (
+                          <span className="text-[10px] text-muted-foreground/60">(Deleted)</span>
+                        )}
                         <span>{relativeTime}</span>
                       </div>
                     </div>

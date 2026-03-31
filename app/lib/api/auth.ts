@@ -104,6 +104,9 @@ export interface WorkspaceProduct {
   stripe_product_id: string;
   stripe_product_name: string;
   stripe_price_id: string;
+  unit_amount?: string | null;
+  currency?: string | null;
+  recurring_interval?: string | null;
   status: string;
   stripe_subscription_id?: string | null;
   hosted_invoice_url?: string | null;

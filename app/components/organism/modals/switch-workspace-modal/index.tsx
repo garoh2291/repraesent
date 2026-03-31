@@ -27,7 +27,7 @@ export default function SwitchWorkspaceModal({
   };
 
   return (
-    <DialogContent className="flex w-[calc(100vw-2rem)] sm:w-[400px] flex-col gap-0">
+    <DialogContent className="flex w-[calc(100vw-2rem)] sm:w-[400px] max-h-[85vh] flex-col gap-0">
       <DialogHeader>
         <DialogTitle className="text-base font-semibold text-foreground">
           {t("switchWorkspace.title")}
@@ -36,7 +36,7 @@ export default function SwitchWorkspaceModal({
           {t("switchWorkspace.description")}
         </DialogDescription>
       </DialogHeader>
-      <div className="mt-5 flex flex-col gap-1.5">
+      <div className="mt-5 flex flex-col gap-1.5 overflow-y-auto overscroll-contain -mr-2 pr-2">
         {workspaces.map((ws) => {
           const isActive = ws.id === currentWorkspace?.id;
           return (

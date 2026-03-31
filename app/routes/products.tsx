@@ -4,7 +4,14 @@ import { useAuthContext } from "~/providers/auth-provider";
 import { getStoredWorkspaceId } from "~/lib/api/axios-instance";
 import { getWorkspaceInvoices } from "~/lib/api/workspaces";
 import { formatBillingInterval } from "~/lib/utils/stripe";
-import { AlertTriangle, ExternalLink, Package2 } from "lucide-react";
+import { formatDateMedium, formatCurrencyFromCents } from "~/lib/utils/format";
+import {
+  AlertTriangle,
+  ExternalLink,
+  FileText,
+  Receipt,
+  Package2,
+} from "lucide-react";
 import { Button } from "~/components/ui/button";
 
 export function meta() {
@@ -18,11 +25,7 @@ function formatDate(ts: string | number | undefined | null): string {
   if (ts == null) return "—";
   const sec = typeof ts === "string" ? parseInt(ts, 10) : ts;
   if (Number.isNaN(sec)) return "—";
-  return new Date(sec * 1000).toLocaleDateString(undefined, {
-    year: "numeric",
-    month: "short",
-    day: "numeric",
-  });
+  return formatDateMedium(new Date(sec * 1000));
 }
 
 function StatusPill({ status }: { status: string }) {
@@ -62,7 +65,7 @@ export default function Products() {
   const hasPastDue = products.some((p) => p.status === "past_due");
 
   return (
-    <div className="mx-auto max-w-4xl p-4 sm:p-6 space-y-6 sm:space-y-8 app-fade-in">
+    <div className="mx-auto w-full max-w-[1280px] p-4 sm:p-6 py-10! space-y-6 sm:space-y-8 app-fade-in">
       {/* Heading */}
       <div className="app-fade-up space-y-1">
         <h1 className="text-xl sm:text-2xl font-semibold text-foreground tracking-tight">
@@ -90,7 +93,9 @@ export default function Products() {
               className="shrink-0 h-8 text-xs border-red-300 text-red-700 hover:bg-red-50"
             >
               <a
-                href={(ws as { unpaid_invoice_url?: string }).unpaid_invoice_url!}
+                href={
+                  (ws as { unpaid_invoice_url?: string }).unpaid_invoice_url!
+                }
                 target="_blank"
                 rel="noopener noreferrer"
               >
@@ -119,6 +124,8 @@ export default function Products() {
                 current_period_end?: number | null;
                 recurring_interval?: string | null;
                 type?: string | null;
+                unit_amount?: string | null;
+                currency?: string | null;
               };
               const periodEnd = product.current_period_end;
               const showDate =
@@ -127,12 +134,17 @@ export default function Products() {
               const now = Math.floor(Date.now() / 1000);
               const dateLabel =
                 product.status === "canceled"
-                  ? periodEnd != null && periodEnd < now ? t("products.dateEnded") : t("products.dateEnds")
+                  ? periodEnd != null && periodEnd < now
+                    ? t("products.dateEnded")
+                    : t("products.dateEnds")
                   : product.status === "trialing"
-                  ? t("products.dateTrial")
-                  : product.status === "past_due"
-                  ? t("products.dateDue")
-                  : t("products.dateRenews");
+                    ? t("products.dateTrial")
+                    : product.status === "past_due"
+                      ? t("products.dateDue")
+                      : t("products.dateRenews");
+
+              const hasPrice =
+                product.unit_amount != null && Number(product.unit_amount) > 0;
 
               return (
                 <div
@@ -144,6 +156,19 @@ export default function Products() {
                       <span className="font-semibold text-foreground">
                         {product.stripe_product_name}
                       </span>
+                      {hasPrice && (
+                        <span className="text-sm font-medium text-foreground">
+                          {formatCurrencyFromCents(
+                            Number(product.unit_amount),
+                            product.currency ?? "EUR"
+                          )}
+                          {product.recurring_interval && (
+                            <span className="text-xs text-muted-foreground font-normal">
+                              /{product.recurring_interval}
+                            </span>
+                          )}
+                        </span>
+                      )}
                       {(product.recurring_interval || product.type) && (
                         <span className="text-xs text-muted-foreground bg-muted rounded-full px-2 py-0.5">
                           {formatBillingInterval(
@@ -193,51 +218,95 @@ export default function Products() {
                   <th className="text-right px-5 py-3 text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
                     {t("settings.invoices.amount")}
                   </th>
-                  <th className="w-20 px-5 py-3" />
+                  <th className="w-28 px-5 py-3" />
                 </tr>
               </thead>
               <tbody>
-                {invoices.map((inv, i) => (
-                  <tr
-                    key={inv.id}
-                    className="border-b border-border/60 last:border-0 hover:bg-muted/30 transition-colors"
-                  >
-                    <td className="px-5 py-3.5">
-                      <StatusPill status={inv.status ?? "unknown"} />
-                    </td>
-                    <td className="px-5 py-3.5 text-sm text-muted-foreground">
-                      {inv.status === "paid" && inv.paid_at
-                        ? t("products.datePaid", { date: formatDate(inv.paid_at) })
-                        : inv.due_date
-                        ? t("products.dateDueLabel", { date: formatDate(inv.due_date) })
-                        : "—"}
-                    </td>
-                    <td className="px-5 py-3.5 text-right font-semibold text-foreground tabular-nums">
-                      {inv.amount_due != null
-                        ? `€${(Number(inv.amount_due) / 100).toFixed(2)}`
-                        : "—"}
-                    </td>
-                    <td className="px-5 py-3.5">
-                      {inv.hosted_invoice_url && (
-                        <a
-                          href={inv.hosted_invoice_url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="inline-flex items-center gap-1 text-xs font-medium text-primary hover:underline"
-                        >
-                          {t("products.viewInvoice")}
-                          <ExternalLink className="h-3 w-3" />
-                        </a>
-                      )}
-                    </td>
-                  </tr>
-                ))}
+                {invoices.map((inv) => {
+                  const isPaid = inv.status === "paid";
+
+                  return (
+                    <tr
+                      key={inv.id}
+                      className="border-b border-border/60 last:border-0 hover:bg-muted/30 transition-colors"
+                    >
+                      <td className="px-5 py-3.5">
+                        <StatusPill status={inv.status ?? "unknown"} />
+                      </td>
+                      <td className="px-5 py-3.5 text-sm text-muted-foreground">
+                        {isPaid && inv.paid_at
+                          ? t("products.datePaid", {
+                              date: formatDate(inv.paid_at),
+                            })
+                          : inv.due_date
+                            ? t("products.dateDueLabel", {
+                                date: formatDate(inv.due_date),
+                              })
+                            : "—"}
+                      </td>
+                      <td className="px-5 py-3.5 text-right font-semibold text-foreground tabular-nums">
+                        {inv.amount_due != null
+                          ? formatCurrencyFromCents(
+                              Number(inv.amount_due),
+                              inv.currency ?? "EUR"
+                            )
+                          : "—"}
+                      </td>
+                      <td className="px-5 py-3.5">
+                        <div className="flex items-center gap-2 justify-end">
+                          {isPaid ? (
+                            <>
+                              {inv.invoice_pdf && (
+                                <a
+                                  href={inv.invoice_pdf}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="inline-flex items-center gap-1 text-xs font-medium text-primary hover:underline"
+                                  title={t("products.downloadInvoice")}
+                                >
+                                  <FileText className="h-3 w-3" />
+                                  {t("products.invoice")}
+                                </a>
+                              )}
+                              {inv.hosted_invoice_url && (
+                                <a
+                                  href={inv.hosted_invoice_url}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="inline-flex items-center gap-1 text-xs font-medium text-primary hover:underline"
+                                  title={t("products.viewReceipt")}
+                                >
+                                  <Receipt className="h-3 w-3" />
+                                  {t("products.receipt")}
+                                </a>
+                              )}
+                            </>
+                          ) : (
+                            inv.hosted_invoice_url && (
+                              <a
+                                href={inv.hosted_invoice_url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="inline-flex items-center gap-1 text-xs font-medium text-primary hover:underline"
+                              >
+                                {t("products.viewInvoice")}
+                                <ExternalLink className="h-3 w-3" />
+                              </a>
+                            )
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
         ) : (
           <div className="rounded-xl border border-dashed border-border bg-card px-5 py-8 text-center">
-            <p className="text-sm text-muted-foreground">{t("products.noInvoicesYet")}</p>
+            <p className="text-sm text-muted-foreground">
+              {t("products.noInvoicesYet")}
+            </p>
           </div>
         )}
       </div>

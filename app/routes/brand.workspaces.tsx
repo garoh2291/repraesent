@@ -13,6 +13,7 @@ import {
 } from "~/lib/api/brand";
 import { FilterComponent } from "~/components/molecule/filter-component";
 import { cn } from "~/lib/utils";
+import { formatNumber, formatDateMedium } from "~/lib/utils/format";
 import TooltipContainer from "~/components/tooltip-container";
 
 export function meta() {
@@ -27,12 +28,21 @@ function isOnline(iso: string | null): boolean {
 }
 
 function localizeServiceName(
-  service: { service_name: string; service_name_en?: string | null; service_name_de?: string | null },
+  service: {
+    service_name: string;
+    service_name_en?: string | null;
+    service_name_de?: string | null;
+  },
   lang: string
 ): string {
   const isDe = lang?.startsWith("de");
-  if (isDe) return service.service_name_de ?? service.service_name_en ?? service.service_name;
-  return service.service_name_en ?? service.service_name_de ?? service.service_name;
+  if (isDe)
+    return (
+      service.service_name_de ?? service.service_name_en ?? service.service_name
+    );
+  return (
+    service.service_name_en ?? service.service_name_de ?? service.service_name
+  );
 }
 
 function localizeFilterName(
@@ -54,11 +64,7 @@ function formatRelative(iso: string | null | undefined, t: TFunction): string {
   if (hrs < 24) return t("brand.wsHoursAgo", { count: hrs });
   const days = Math.floor(hrs / 24);
   if (days < 30) return t("brand.wsDaysAgo", { count: days });
-  return new Date(iso).toLocaleDateString(undefined, {
-    day: "2-digit",
-    month: "short",
-    year: "numeric",
-  });
+  return formatDateMedium(new Date(iso));
 }
 
 function formatFormName(formName: string, t: TFunction): string {
@@ -134,7 +140,13 @@ const ROLE_STYLES_LIGHT: Record<string, string> = {
 
 // ── Expanded panel ────────────────────────────────────────────────────────────
 
-function ExpandedPanel({ ws }: { ws: BrandWorkspaceOverviewItem }) {
+function ExpandedPanel({
+  ws,
+  globalMaxLeads,
+}: {
+  ws: BrandWorkspaceOverviewItem;
+  globalMaxLeads: number;
+}) {
   const { t, i18n } = useTranslation();
 
   const sortedMembers = [...ws.members].sort(
@@ -142,7 +154,7 @@ function ExpandedPanel({ ws }: { ws: BrandWorkspaceOverviewItem }) {
   );
 
   const sortedLeads = [...ws.leads_by_form].sort((a, b) => b.count - a.count);
-  const maxLeads = Math.max(...sortedLeads.map((l) => l.count), 1);
+  const maxLeads = globalMaxLeads;
 
   return (
     <div className="border-t border-slate-200/60 bg-[#f5f4f1]">
@@ -196,7 +208,7 @@ function ExpandedPanel({ ws }: { ws: BrandWorkspaceOverviewItem }) {
                       {formatFormName(lf.form_name, t)}
                     </span>
                     <span className="text-[11px] font-semibold text-slate-800 tabular-nums shrink-0">
-                      {lf.count.toLocaleString()}
+                      {formatNumber(lf.count)}
                     </span>
                   </div>
                   <div className="h-[3px] w-full rounded-full bg-black/8 overflow-hidden">
@@ -241,7 +253,9 @@ function MemberRow({ member }: { member: BrandWorkspaceMemberItem }) {
     member.user_email;
   const roleCls =
     ROLE_STYLES_LIGHT[member.role] ?? "bg-slate-100 text-slate-500";
-  const roleLabel = ROLE_LABEL_KEYS[member.role] ? t(ROLE_LABEL_KEYS[member.role]) : member.role;
+  const roleLabel = ROLE_LABEL_KEYS[member.role]
+    ? t(ROLE_LABEL_KEYS[member.role])
+    : member.role;
 
   return (
     <div className="flex items-center gap-2 py-1 text-xs">
@@ -282,7 +296,9 @@ function MemberRow({ member }: { member: BrandWorkspaceMemberItem }) {
           online ? "text-emerald-600 font-medium" : "text-slate-400"
         )}
       >
-        {online ? t("brand.wsOnline") : formatRelative(member.last_activity_at, t)}
+        {online
+          ? t("brand.wsOnline")
+          : formatRelative(member.last_activity_at, t)}
       </span>
     </div>
   );
@@ -353,6 +369,12 @@ export default function BrandWorkspaces() {
   const totalPages = data?.totalPages ?? 1;
   const total = data?.total ?? 0;
 
+  // Global max lead count across all workspaces' form names — bars are relative to this
+  const globalMaxLeads = Math.max(
+    ...workspaces.flatMap((ws) => ws.leads_by_form.map((lf) => lf.count)),
+    1
+  );
+
   const toggleRow = (id: string) => {
     setExpandedRows((prev) => {
       const next = new Set(prev);
@@ -368,7 +390,7 @@ export default function BrandWorkspaces() {
   };
 
   return (
-    <div className="p-4 sm:p-6 space-y-5 app-fade-in">
+    <div className="mx-auto w-full max-w-[1280px] p-4 sm:p-6 py-10! space-y-6 sm:space-y-8 app-fade-in">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3">
         <div>
@@ -514,7 +536,7 @@ export default function BrandWorkspaces() {
 
                   {/* Leads count */}
                   <span className="text-sm font-semibold text-foreground tabular-nums text-right">
-                    {ws.leads_count.toLocaleString()}
+                    {formatNumber(ws.leads_count)}
                   </span>
 
                   {/* Chevron */}
@@ -536,7 +558,7 @@ export default function BrandWorkspaces() {
                   className="grid transition-[grid-template-rows] duration-300 ease-in-out"
                 >
                   <div className="overflow-hidden">
-                    <ExpandedPanel ws={ws} />
+                    <ExpandedPanel ws={ws} globalMaxLeads={globalMaxLeads} />
                   </div>
                 </div>
               </div>

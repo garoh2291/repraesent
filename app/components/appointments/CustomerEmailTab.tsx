@@ -13,6 +13,7 @@ import {
 } from "recharts";
 import { Save, Eye, Code, Mail, Paperclip, Info, Activity } from "lucide-react";
 import { Switch } from "~/components/ui/switch";
+import { formatDateLong, formatTime, formatDateShort } from "~/lib/utils/format";
 import { Input } from "~/components/ui/input";
 import { Label } from "~/components/ui/label";
 import {
@@ -149,12 +150,10 @@ export function CustomerEmailTab({ config }: CustomerEmailTabProps) {
         customer_email: lastLead.email || DUMMY_VARIABLES.customer_email,
         customer_phone: lastLead.phone || DUMMY_VARIABLES.customer_phone,
         appointment_date: (lastLead.metadata?.start
-          ? new Date(lastLead.metadata.start as string).toLocaleDateString("de-DE", {
-              weekday: "long", year: "numeric", month: "long", day: "numeric",
-            })
+          ? formatDateLong(lastLead.metadata.start as string)
           : DUMMY_VARIABLES.appointment_date),
         appointment_time: (lastLead.metadata?.start && lastLead.metadata?.end
-          ? `${new Date(lastLead.metadata.start as string).toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" })} \u2013 ${new Date(lastLead.metadata.end as string).toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" })}`
+          ? `${formatTime(lastLead.metadata.start as string)} \u2013 ${formatTime(lastLead.metadata.end as string)}`
           : DUMMY_VARIABLES.appointment_time),
         service_name: (lastLead.metadata?.service_name as string) || DUMMY_VARIABLES.service_name,
         provider_name: config.provider_name || DUMMY_VARIABLES.provider_name,
@@ -615,10 +614,7 @@ function EmailActivityChart() {
                 labelFormatter={(label: string) =>
                   period === "today"
                     ? label.split("T")[1]?.slice(0, 5) ?? label
-                    : new Date(label).toLocaleDateString("de-DE", {
-                        day: "numeric",
-                        month: "short",
-                      })
+                    : formatDateShort(label)
                 }
                 formatter={(value: number, name: string) => [
                   value,

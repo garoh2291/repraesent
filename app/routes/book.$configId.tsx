@@ -23,6 +23,7 @@ import { Textarea } from "~/components/ui/textarea";
 import { Calendar } from "~/components/ui/calendar";
 import { ScrollArea } from "~/components/ui/scroll-area";
 import TimezoneSelect from "react-timezone-select";
+import axios from "axios";
 import {
   ChevronLeft,
   ChevronRight,
@@ -31,8 +32,11 @@ import {
   User,
   ClipboardCheck,
   Layers,
+  Clock,
+  X,
 } from "lucide-react";
 import { cn } from "~/lib/utils";
+import { formatDateLong, formatTime } from "~/lib/utils/format";
 
 export function meta() {
   return [
@@ -70,12 +74,7 @@ function formatSlotInTimezone(
 ): string {
   const [start] = slot.split("--");
   const date = new Date(start);
-  return date.toLocaleTimeString("en-US", {
-    timeZone: timezone,
-    hour: "2-digit",
-    minute: "2-digit",
-    hour12: timeFormat === "12h",
-  });
+  return formatTime(date, { hour12: timeFormat === "12h", timeZone: timezone });
 }
 
 function getDefaultTimezone(): string {
@@ -111,15 +110,20 @@ export default function BookAppointment() {
   const { t } = useTranslation();
   const { configId } = useParams<{ configId: string }>();
   const queryClient = useQueryClient();
-  const [activeConfigId, setActiveConfigId] = useState<string | null>(configId ?? null);
-  const [selectedProvider, setSelectedProvider] = useState<ProviderPublic | null>(null);
-  const [selectedService, setSelectedService] = useState<AppointmentService | null>(null);
+  const [activeConfigId, setActiveConfigId] = useState<string | null>(
+    configId ?? null
+  );
+  const [selectedProvider, setSelectedProvider] =
+    useState<ProviderPublic | null>(null);
+  const [selectedService, setSelectedService] =
+    useState<AppointmentService | null>(null);
   const [step, setStep] = useState(1);
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
   const [selectedSlot, setSelectedSlot] = useState<string | null>(null);
   const [userTimezone, setUserTimezone] = useState<string>(getDefaultTimezone);
   const [formFields, setFormFields] = useState<Record<string, string>>({});
   const [booked, setBooked] = useState(false);
+  const [slotConflictError, setSlotConflictError] = useState(false);
 
   const { data: providers } = useQuery({
     queryKey: ["workspace-providers", configId],
@@ -141,8 +145,18 @@ export default function BookAppointment() {
   const serviceDuration = selectedService?.duration_minutes;
 
   const { data: slots = [], isLoading: slotsLoading } = useQuery({
-    queryKey: ["availabilities-public", activeConfigId, selectedDateStr, serviceDuration],
-    queryFn: () => getAvailabilitiesPublic(activeConfigId!, selectedDateStr, serviceDuration),
+    queryKey: [
+      "availabilities-public",
+      activeConfigId,
+      selectedDateStr,
+      serviceDuration,
+    ],
+    queryFn: () =>
+      getAvailabilitiesPublic(
+        activeConfigId!,
+        selectedDateStr,
+        serviceDuration
+      ),
     enabled: !!activeConfigId && !!selectedDateStr && isValidDate,
   });
 
@@ -153,9 +167,16 @@ export default function BookAppointment() {
       queryClient.invalidateQueries({ queryKey: ["availabilities-public"] });
     },
     onError: (error) => {
-      toast.error(t("booking.failedToBook"), {
-        description: extractErrorMessage(error),
-      });
+      if (axios.isAxiosError(error) && error.response?.status === 409) {
+        setSlotConflictError(true);
+        setSelectedSlot(null);
+        setStep(1);
+        queryClient.invalidateQueries({ queryKey: ["availabilities-public"] });
+      } else {
+        toast.error(t("booking.failedToBook"), {
+          description: extractErrorMessage(error),
+        });
+      }
     },
   });
 
@@ -459,7 +480,10 @@ export default function BookAppointment() {
                 selectedDate={selectedDate}
                 onDateSelect={handleDateSelect}
                 selectedSlot={selectedSlot}
-                onSlotSelect={setSelectedSlot}
+                onSlotSelect={(slot) => {
+                  setSlotConflictError(false);
+                  setSelectedSlot(slot);
+                }}
                 slots={slots}
                 slotsLoading={slotsLoading}
                 userTimezone={userTimezone}
@@ -471,6 +495,8 @@ export default function BookAppointment() {
                 bgColor={bgColor}
                 textColor={textColor}
                 selectedService={selectedService}
+                slotConflictError={slotConflictError}
+                onDismissConflict={() => setSlotConflictError(false)}
               />
             )}
             {step === 2 && (
@@ -519,7 +545,9 @@ export default function BookAppointment() {
                     setStep((s) => Math.max(1, s - 1));
                   }
                 }}
-                disabled={step === 1 && !hasMultipleServices && !hasMultipleProviders}
+                disabled={
+                  step === 1 && !hasMultipleServices && !hasMultipleProviders
+                }
                 className="inline-flex items-center gap-1.5 h-10 rounded-lg border border-border bg-white px-4 text-sm font-medium text-foreground hover:bg-stone-50 transition-colors shadow-sm disabled:opacity-40 disabled:pointer-events-none"
               >
                 <ChevronLeft className="h-4 w-4" />
@@ -573,30 +601,32 @@ function BookingHeader({
 }) {
   return (
     <header
-      className="shrink-0 px-6 py-4 flex items-center justify-between"
+      className="shrink-0 px-4 sm:px-6 py-3 sm:py-4 flex flex-col items-center sm:flex-row sm:justify-between gap-3"
       style={{ backgroundColor: bgColor, color: textColor }}
     >
       {/* Brand */}
-      <div className="flex items-center gap-3">
+      <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-3 min-w-0">
         <img
           src={logoUrl || defaultLogoUrl}
           alt="Logo"
-          className="h-9 object-contain"
+          className="h-8 sm:h-9 object-contain shrink-0"
         />
-        <div>
+        <div className="min-w-0 text-center sm:text-left">
           <p
-            className="font-semibold text-base leading-tight"
+            className="font-semibold text-sm sm:text-base leading-tight truncate"
             style={{ color: textColor }}
           >
             {config.company_name || t("booking.fallbackCompany")}
           </p>
           {config.services && config.services.length > 0 && (
             <p
-              className="text-xs leading-tight"
+              className="text-[11px] sm:text-xs leading-tight truncate"
               style={{ color: `${textColor}99` }}
             >
               {selectedService
-                ? [selectedService.name, config.provider_name].filter(Boolean).join(" │ ")
+                ? [selectedService.name, config.provider_name]
+                    .filter(Boolean)
+                    .join(" │ ")
                 : config.services.map((s) => s.name).join(" │ ")}
             </p>
           )}
@@ -605,7 +635,7 @@ function BookingHeader({
 
       {/* Step indicators */}
       {!booked && step > 0 && (
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-1 shrink-0 self-center sm:self-auto">
           {STEPS.map((s, idx) => {
             const done = step > s.n;
             const active = step === s.n;
@@ -613,7 +643,7 @@ function BookingHeader({
               <div key={s.n} className="flex items-center gap-1">
                 <div
                   className={cn(
-                    "flex items-center justify-center h-7 w-7 rounded-full text-xs font-semibold transition-all",
+                    "flex items-center justify-center h-6 w-6 sm:h-7 sm:w-7 rounded-full text-[11px] sm:text-xs font-semibold transition-all",
                     done
                       ? "bg-white/20"
                       : active
@@ -622,11 +652,11 @@ function BookingHeader({
                   )}
                   style={{ color: textColor }}
                 >
-                  {done ? <Check className="h-3.5 w-3.5" /> : s.n}
+                  {done ? <Check className="h-3 w-3 sm:h-3.5 sm:w-3.5" /> : s.n}
                 </div>
                 {idx < STEPS.length - 1 && (
                   <div
-                    className="w-6 h-px"
+                    className="w-4 sm:w-6 h-px"
                     style={{ backgroundColor: `${textColor}30` }}
                   />
                 )}
@@ -772,7 +802,9 @@ function Step0ServiceSelection({
                     color: bgColor,
                   }}
                 >
-                  {t("appointments.businessLogic.minutesSuffix", { count: svc.duration_minutes })}
+                  {t("appointments.businessLogic.minutesSuffix", {
+                    count: svc.duration_minutes,
+                  })}
                 </span>
               </div>
               {svc.description && (
@@ -807,6 +839,8 @@ function Step1DateAndTime({
   bgColor,
   textColor,
   selectedService,
+  slotConflictError,
+  onDismissConflict,
 }: {
   t: (key: string, opts?: Record<string, unknown>) => string;
   selectedDate: Date | undefined;
@@ -824,9 +858,43 @@ function Step1DateAndTime({
   bgColor: string;
   textColor: string;
   selectedService: AppointmentService | null;
+  slotConflictError?: boolean;
+  onDismissConflict?: () => void;
 }) {
   return (
     <div className="space-y-6">
+      {slotConflictError && (
+        <style>{`
+          @keyframes slot-conflict-in {
+            from { opacity: 0; transform: translateY(-8px) scale(0.98); }
+            to   { opacity: 1; transform: translateY(0)    scale(1);    }
+          }
+          .slot-conflict-banner { animation: slot-conflict-in 0.25s cubic-bezier(0.16,1,0.3,1) both; }
+        `}</style>
+      )}
+      {slotConflictError && (
+        <div className="slot-conflict-banner rounded-2xl border border-amber-200 bg-amber-50 p-4 flex items-start gap-3 shadow-sm">
+          <div className="shrink-0 mt-0.5 h-8 w-8 rounded-lg bg-amber-100 border border-amber-200 flex items-center justify-center">
+            <Clock className="h-4 w-4 text-amber-600" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-semibold text-amber-900">
+              {t("booking.slotTaken")}
+            </p>
+            <p className="text-sm text-amber-700 mt-0.5 leading-snug">
+              {t("booking.slotTakenDesc")}
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={onDismissConflict}
+            className="shrink-0 h-6 w-6 rounded-md hover:bg-amber-100 flex items-center justify-center transition-colors"
+            aria-label="Dismiss"
+          >
+            <X className="h-3.5 w-3.5 text-amber-500" />
+          </button>
+        </div>
+      )}
       <div>
         <h2 className="text-xl font-semibold text-foreground tracking-tight">
           {t("booking.chooseDateAndTime")}
@@ -837,10 +905,14 @@ function Step1DateAndTime({
         {selectedService && (
           <div className="mt-2 inline-flex items-center gap-2 rounded-lg border border-border bg-white px-3 py-1.5 text-sm shadow-sm">
             <Layers className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
-            <span className="font-medium text-foreground">{selectedService.name}</span>
+            <span className="font-medium text-foreground">
+              {selectedService.name}
+            </span>
             <span className="text-muted-foreground">·</span>
             <span className="text-muted-foreground">
-              {t("appointments.businessLogic.minutesSuffix", { count: selectedService.duration_minutes })}
+              {t("appointments.businessLogic.minutesSuffix", {
+                count: selectedService.duration_minutes,
+              })}
             </span>
           </div>
         )}
@@ -1030,7 +1102,9 @@ function Step2CustomerInfo({
             </div>
           ))}
           {required.length === 0 && (
-            <p className="text-sm text-muted-foreground">{t("booking.noRequiredFields")}</p>
+            <p className="text-sm text-muted-foreground">
+              {t("booking.noRequiredFields")}
+            </p>
           )}
         </div>
 
@@ -1106,12 +1180,7 @@ function Step3Confirmation({
   selectedService: AppointmentService | null;
 }) {
   const timeStr = formatSlotInTimezone(selectedSlot, userTimezone, timeFormat);
-  const dateStr = selectedDate.toLocaleDateString("en-US", {
-    weekday: "long",
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-  });
+  const dateStr = formatDateLong(selectedDate);
 
   return (
     <div className="space-y-6">
@@ -1156,9 +1225,13 @@ function Step3Confirmation({
                   <Layers className="h-4 w-4" style={{ color: bgColor }} />
                 </div>
                 <div>
-                  <p className="text-sm font-medium text-foreground">{selectedService.name}</p>
+                  <p className="text-sm font-medium text-foreground">
+                    {selectedService.name}
+                  </p>
                   <p className="text-xs text-muted-foreground">
-                    {t("appointments.businessLogic.minutesSuffix", { count: selectedService.duration_minutes })}
+                    {t("appointments.businessLogic.minutesSuffix", {
+                      count: selectedService.duration_minutes,
+                    })}
                   </p>
                 </div>
               </div>

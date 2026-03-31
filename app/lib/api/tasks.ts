@@ -17,6 +17,8 @@ export interface Task {
   assignee_id: string | null;
   assignee_first_name: string | null;
   assignee_last_name: string | null;
+  assignee_email: string | null;
+  assignee_is_deleted: boolean;
   created_by: string;
   creator_first_name: string | null;
   creator_last_name: string | null;
@@ -40,6 +42,8 @@ export interface TaskHistoryItem {
   user_id: string | null;
   user_first_name: string | null;
   user_last_name: string | null;
+  user_email: string | null;
+  user_is_deleted: boolean;
   created_at: string;
 }
 

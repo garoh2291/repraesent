@@ -3,8 +3,6 @@ import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router";
 import { useTranslation } from "react-i18next";
 import {
-  ChevronRight,
-  Package,
   ArrowRight,
   CheckCircle2,
   Circle,
@@ -25,11 +23,12 @@ import {
   isToday,
   isTomorrow,
   isPast,
-  formatDistanceToNow,
+  addDays,
+  subDays,
 } from "date-fns";
-import { getLocalizedServiceName } from "~/lib/api/auth";
 import { useAuthContext } from "~/providers/auth-provider";
 import { cn } from "~/lib/utils";
+import { formatDate as fmtDate, formatRelativeTime, formatDateShort, getDateFnsLocale } from "~/lib/utils/format";
 import { getLeadAnalytics, type LeadAnalyticsPeriod } from "~/lib/api/leads";
 import { getAllTasks, type Task } from "~/lib/api/tasks";
 
@@ -117,7 +116,7 @@ function formatXLabel(date: string, period: LeadAnalyticsPeriod): string {
   }
   const [year, month, day] = date.split("-");
   const d = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
-  return d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+  return formatDateShort(d);
 }
 
 function CustomTooltip({
@@ -178,7 +177,7 @@ function LeadAnalyticsChart() {
       className="app-fade-up rounded-2xl border border-border bg-card p-4 sm:p-6 space-y-4 sm:space-y-5"
       style={{ animationDelay: "0.06s" }}
     >
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+      <div className="flex items-start justify-between gap-4">
         <div className="space-y-1">
           <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
             {t("home.leadsChartTitle")}
@@ -192,22 +191,30 @@ function LeadAnalyticsChart() {
           )}
         </div>
 
-        <div className="flex items-center gap-1 rounded-xl bg-muted p-1 self-start overflow-x-auto scrollbar-hide">
-          {periods.map((p) => (
-            <button
-              key={p.value}
-              onClick={() => setPeriod(p.value)}
-              className={cn(
-                "rounded-lg px-2.5 sm:px-3 py-1.5 text-[11px] sm:text-[12px] font-medium transition-all duration-150 whitespace-nowrap shrink-0",
-                period === p.value
-                  ? "bg-card text-foreground shadow-sm"
-                  : "text-muted-foreground hover:text-foreground"
-              )}
-            >
-              {t(p.labelKey)}
-            </button>
-          ))}
-        </div>
+        <Link
+          to="/lead-form"
+          className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-muted/50 px-3 py-1.5 text-xs font-medium text-foreground hover:bg-muted transition-colors shrink-0 mt-1"
+        >
+          {t("home.viewAllLeads")}
+          <ArrowRight className="h-3 w-3" />
+        </Link>
+      </div>
+
+      <div className="flex items-center gap-1 rounded-xl bg-muted p-1 overflow-x-auto scrollbar-hide w-fit">
+        {periods.map((p) => (
+          <button
+            key={p.value}
+            onClick={() => setPeriod(p.value)}
+            className={cn(
+              "rounded-lg px-2.5 sm:px-3 py-1.5 text-[11px] sm:text-[12px] font-medium transition-all duration-150 whitespace-nowrap shrink-0",
+              period === p.value
+                ? "bg-card text-foreground shadow-sm"
+                : "text-muted-foreground hover:text-foreground"
+            )}
+          >
+            {t(p.labelKey)}
+          </button>
+        ))}
       </div>
 
       {!isLoading && data && data.form_names.length > 0 && (
@@ -303,14 +310,14 @@ function formatTaskDueLabel(dateStr: string): {
   const d = new Date(dateStr);
   if (isPast(d) && !isToday(d))
     return {
-      label: formatDistanceToNow(d, { addSuffix: true }),
+      label: formatRelativeTime(d),
       urgent: true,
       overdue: true,
     };
   if (isToday(d)) return { label: "Today", urgent: true, overdue: false };
   if (isTomorrow(d))
     return { label: "Tomorrow", urgent: false, overdue: false };
-  return { label: format(d, "MMM d"), urgent: false, overdue: false };
+  return { label: fmtDate(d, "MMM d"), urgent: false, overdue: false };
 }
 
 function MyTaskRow({ task }: { task: Task }) {
@@ -382,39 +389,98 @@ function MyTaskRow({ task }: { task: Task }) {
   );
 }
 
-function getTodayRange() {
-  const start = new Date();
-  start.setHours(0, 0, 0, 0);
-  const end = new Date();
-  end.setHours(23, 59, 59, 999);
-  return { start: start.toISOString(), end: end.toISOString() };
+function getDateGroupKey(task: Task): string {
+  if (!task.due_date) return "9999-99-99";
+  return task.due_date.slice(0, 10);
+}
+
+function getDateGroupLabel(
+  key: string,
+  t: (key: string) => string
+): { label: string; isOverdue: boolean } {
+  if (key === "9999-99-99") {
+    return { label: t("home.taskDateNoDueDate"), isOverdue: false };
+  }
+  const todayStr = format(new Date(), "yyyy-MM-dd");
+  const tomorrowStr = format(addDays(new Date(), 1), "yyyy-MM-dd");
+  if (key === todayStr)
+    return { label: t("home.taskDateToday"), isOverdue: false };
+  if (key === tomorrowStr)
+    return { label: t("home.taskDateTomorrow"), isOverdue: false };
+  const d = new Date(key + "T00:00:00");
+  const isOverdue = key < todayStr;
+  return { label: fmtDate(d, "EEE, MMM d"), isOverdue };
+}
+
+function groupTasksByDate(
+  tasks: Task[],
+  t: (key: string) => string
+): { label: string; isOverdue: boolean; tasks: Task[] }[] {
+  const groups = new Map<string, Task[]>();
+  for (const task of tasks) {
+    const key = getDateGroupKey(task);
+    const existing = groups.get(key);
+    if (existing) existing.push(task);
+    else groups.set(key, [task]);
+  }
+  return Array.from(groups.entries())
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([key, groupTasks]) => {
+      const { label, isOverdue } = getDateGroupLabel(key, t);
+      return { label, isOverdue, tasks: groupTasks };
+    });
 }
 
 function MyTasksSection({ userId }: { userId: string }) {
   const { t } = useTranslation();
   const { currentWorkspace } = useAuthContext();
-  const { start: todayStart, end: todayEnd } = getTodayRange();
 
-  const { data, isLoading } = useQuery({
+  const todayStr = useMemo(() => format(new Date(), "yyyy-MM-dd"), []);
+  const yesterdayStr = useMemo(
+    () => format(subDays(new Date(), 1), "yyyy-MM-dd"),
+    []
+  );
+
+  // Today + future tasks (all statuses, up to 10)
+  const { data: upcomingData, isLoading: upcomingLoading } = useQuery({
+    queryKey: ["home-tasks-upcoming", userId, currentWorkspace?.id, todayStr],
+    queryFn: () =>
+      getAllTasks({ assignee_id: userId, due_date_from: todayStr, limit: 10 }),
+    enabled: !!userId && !!currentWorkspace,
+    refetchOnMount: "always",
+  });
+
+  // Overdue tasks (past due, not done)
+  const { data: overdueData, isLoading: overdueLoading } = useQuery({
     queryKey: [
-      "home-my-tasks",
+      "home-tasks-overdue",
       userId,
       currentWorkspace?.id,
-      todayStart.slice(0, 10),
+      yesterdayStr,
     ],
     queryFn: () =>
       getAllTasks({
         assignee_id: userId,
-        limit: 5,
-        due_date_from: todayStart,
-        due_date_to: todayEnd,
+        due_date_to: yesterdayStr,
+        limit: 50,
       }),
     enabled: !!userId && !!currentWorkspace,
     refetchOnMount: "always",
   });
 
-  const tasks = data?.data ?? [];
-  const openCount = tasks.filter((t) => t.status !== "done").length;
+  const isLoading = upcomingLoading || overdueLoading;
+
+  const tasks = useMemo(() => {
+    const upcoming = upcomingData?.data ?? [];
+    const overdue = (overdueData?.data ?? []).filter(
+      (task) => task.status !== "done"
+    );
+    // Overdue first (oldest → newest), then upcoming
+    return [...overdue, ...upcoming];
+  }, [upcomingData, overdueData]);
+
+  const openCount = tasks.filter((task) => task.status !== "done").length;
+  const dateGroups = useMemo(() => groupTasksByDate(tasks, t), [tasks, t]);
 
   return (
     <div
@@ -450,7 +516,7 @@ function MyTasksSection({ userId }: { userId: string }) {
         </Link>
       </div>
 
-      {/* Task list */}
+      {/* Task list grouped by date */}
       {isLoading ? (
         <div className="space-y-2">
           {[1, 2, 3].map((i) => (
@@ -466,16 +532,44 @@ function MyTasksSection({ userId }: { userId: string }) {
           <p className="text-sm text-muted-foreground">{t("home.noMyTasks")}</p>
         </div>
       ) : (
-        <div className="space-y-2">
-          {tasks.map((task) => (
-            <MyTaskRow key={task.id} task={task} />
+        <div className="space-y-4">
+          {dateGroups.map((group) => (
+            <div key={group.label} className="space-y-1.5">
+              {/* Date group header */}
+              <div className="flex items-center gap-2 px-1">
+                {group.isOverdue && (
+                  <span className="h-1.5 w-1.5 rounded-full bg-red-500 shrink-0" />
+                )}
+                <p
+                  className={cn(
+                    "text-[11px] font-semibold uppercase tracking-wider",
+                    group.isOverdue
+                      ? "text-red-500"
+                      : group.label === t("home.taskDateToday")
+                        ? "text-foreground"
+                        : "text-muted-foreground"
+                  )}
+                >
+                  {group.label}
+                </p>
+                <span className="flex-1 h-px bg-border/50" />
+                <span className="text-[10px] text-muted-foreground/60">
+                  {group.tasks.length}
+                </span>
+              </div>
+              <div className="space-y-1.5">
+                {group.tasks.map((task) => (
+                  <MyTaskRow key={task.id} task={task} />
+                ))}
+              </div>
+            </div>
           ))}
-          {(data?.total ?? 0) > 5 && (
+          {(upcomingData?.total ?? 0) > 10 && (
             <Link
               to="/tasks"
               className="flex items-center justify-center gap-1.5 py-2 text-xs text-muted-foreground hover:text-foreground transition-colors"
             >
-              +{(data?.total ?? 0) - 5} {t("home.moreTasks")}
+              +{(upcomingData?.total ?? 0) - 10} {t("home.moreTasks")}
               <ArrowRight className="h-3 w-3" />
             </Link>
           )}
@@ -487,9 +581,8 @@ function MyTasksSection({ userId }: { userId: string }) {
 
 export default function Home() {
   const { user, currentWorkspace } = useAuthContext();
-  const { t, i18n } = useTranslation();
+  const { t } = useTranslation();
 
-  const services = currentWorkspace?.services ?? [];
   const role = currentWorkspace?.member_role ?? "—";
   const displayName = [user?.first_name, user?.last_name]
     .filter(Boolean)
@@ -497,7 +590,7 @@ export default function Home() {
   const firstName = displayName.split(" ")[0];
 
   return (
-    <div className="mx-auto max-w-5xl p-4 sm:p-6 space-y-6 sm:space-y-8 app-fade-in">
+    <div className="mx-auto w-full max-w-[1280px] p-4 sm:p-6 py-10! space-y-6 sm:space-y-8 app-fade-in">
       {/* Page heading */}
       <div className="app-fade-up space-y-1">
         <h1 className="text-2xl font-semibold text-foreground tracking-tight">
@@ -513,81 +606,6 @@ export default function Home() {
 
       {/* Analytics chart */}
       <LeadAnalyticsChart />
-
-      {/* Services */}
-      <div className="app-fade-up app-fade-up-d4 space-y-4">
-        <div>
-          <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
-            {t("home.products")}
-          </p>
-          <p className="text-sm text-muted-foreground/70 mt-0.5">
-            {t("home.productsHint")}
-          </p>
-        </div>
-
-        {services.length === 0 ? (
-          <div className="rounded-2xl border border-dashed border-border bg-card p-6">
-            <p className="text-sm text-muted-foreground">
-              {t("home.noProducts")}
-            </p>
-          </div>
-        ) : (
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-            {services.map((s) => {
-              const hasSlug = !!s.service_slug;
-              const cardContent = (
-                <div
-                  className={cn(
-                    "flex items-center gap-4 rounded-2xl border border-border bg-card overflow-hidden h-[76px] transition-all duration-200",
-                    hasSlug
-                      ? "hover:border-primary/30 hover:shadow-md hover:shadow-primary/5 cursor-pointer"
-                      : "opacity-55 cursor-not-allowed"
-                  )}
-                >
-                  {s.service_image ? (
-                    <img
-                      src={s.service_image}
-                      alt={getLocalizedServiceName(s, i18n.language ?? "de")}
-                      className="h-full w-20 shrink-0 object-cover p-2"
-                    />
-                  ) : (
-                    <div className="flex h-full w-20 shrink-0 items-center justify-center bg-primary/6">
-                      <Package className="h-6 w-6 text-primary/60" />
-                    </div>
-                  )}
-                  <div className="flex-1 min-w-0 pr-4">
-                    <p className="font-semibold text-sm text-foreground truncate">
-                      {getLocalizedServiceName(s, i18n.language ?? "de")}
-                    </p>
-                    <p className="flex items-center gap-1 text-xs text-muted-foreground mt-0.5">
-                      {hasSlug ? (
-                        <>
-                          {t("home.openSection")}
-                          <ChevronRight className="h-3.5 w-3.5 shrink-0 text-primary" />
-                        </>
-                      ) : (
-                        t("home.notAvailable")
-                      )}
-                    </p>
-                  </div>
-                </div>
-              );
-
-              return hasSlug ? (
-                <Link
-                  key={s.service_id}
-                  to={`/${s.service_slug}`}
-                  className="block no-underline text-inherit"
-                >
-                  {cardContent}
-                </Link>
-              ) : (
-                <div key={s.service_id}>{cardContent}</div>
-              );
-            })}
-          </div>
-        )}
-      </div>
     </div>
   );
 }

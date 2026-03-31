@@ -133,16 +133,16 @@
     "account": "Account",
     "workspace": "Area",
     "role": "Role",
-    "myTasks": "Today's Action Items",
-    "myTasksOpen": "due today",
-    "noMyTasks": "Nothing on your plate today. All clear!",
+    "myTasks": "Tasks",
+    "myTasksOpen": "open",
+    "noMyTasks": "No upcoming tasks. All clear!",
     "viewAllTasks": "View all tasks",
+    "viewAllLeads": "View all leads",
     "moreTasks": "more tasks",
-    "products": "Products",
-    "productsHint": "Products attached to this area",
-    "noProducts": "No products attached yet. Contact support@repraesent.com to get started.",
-    "openSection": "Open section",
-    "notAvailable": "Not available"
+    "taskDateToday": "Today",
+    "taskDateTomorrow": "Tomorrow",
+    "taskDateOverdue": "Overdue",
+    "taskDateNoDueDate": "No due date"
   },
   "leads": {
     "title": "Leads",
@@ -504,10 +504,34 @@
     "dateRenews": "Renews on",
     "datePaid": "Paid {{date}}",
     "dateDueLabel": "Due {{date}}",
-    "viewInvoice": "View"
+    "viewInvoice": "View",
+    "invoice": "Invoice",
+    "receipt": "Receipt",
+    "downloadInvoice": "Download invoice PDF",
+    "viewReceipt": "View receipt"
   },
   "settings": {
     "title": "Settings",
+    "subtitle": "Your profile and team",
+    "tabs": {
+      "profile": "Profile",
+      "areaSettings": "Area Settings"
+    },
+    "profile": {
+      "metaTitle": "Profile settings",
+      "metaDescription": "Update your name",
+      "sectionTitle": "Your profile",
+      "sectionDescription": "This name appears to your team and in notifications.",
+      "firstName": "First name",
+      "lastName": "Last name",
+      "save": "Save changes",
+      "saved": "Profile updated",
+      "required": "First and last name are required."
+    },
+    "team": {
+      "metaTitle": "Area Settings",
+      "metaDescription": "Manage team members, roles, and notifications"
+    },
     "workspace": {
       "title": "Area settings",
       "name": "Area name",
@@ -629,6 +653,8 @@
     "confirmedTitle": "Appointment confirmed",
     "confirmedDesc": "Your appointment has been booked. You'll receive a confirmation email shortly.",
     "failedToBook": "Failed to book",
+    "slotTaken": "This slot was just taken",
+    "slotTakenDesc": "Someone else booked this time while you were filling in your details. Please select another available slot.",
     "confirming": "Confirming…",
     "confirmAppointment": "Confirm appointment",
     "fields": {
@@ -1041,6 +1067,12 @@
     "bookingsDescription": "Leads submitted via the appointment booking form",
     "submissionsChart": "Form Submissions",
     "submissionsDescription": "All form submissions excluding appointment bookings and hidden leads",
+    "webAnalyticsChart": "Web Analytics",
+    "webAnalyticsDescription": "Website visitor data across all partner houses",
+    "metricVisitors": "Unique Visitors",
+    "metricVisits": "Total Visits",
+    "metricPageviews": "Pageviews",
+    "metricViewsPerVisit": "Views / Visit",
     "noData": "No data available",
     "viewTrend": "Trend",
     "viewStatus": "Status",
@@ -1129,6 +1161,17 @@
     "orderNoServices": "All services are already active",
     "orderNoOrders": "No orders yet",
     "orderPerMonth": "/ month",
-    "orderPerYear": "/ year"
+    "orderPerYear": "/ year",
+    "exportTitle": "Export Analytics Report",
+    "exportDescription": "Select a workspace and period. A PDF report will be downloaded with lead stats and web analytics.",
+    "exportWorkspace": "Workspace",
+    "exportPeriod": "Period",
+    "exportNoWorkspaces": "No workspaces found.",
+    "exportError": "Failed to generate report. Please try again.",
+    "exportCancel": "Cancel",
+    "exportGenerating": "Generating…",
+    "exportDownload": "Download PDF",
+    "exportButton": "Export Report",
+    "exportButtonShort": "Export"
   }
 }

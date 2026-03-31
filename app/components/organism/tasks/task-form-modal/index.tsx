@@ -1,8 +1,10 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
-import { format, startOfDay } from "date-fns";
+import { useAuthContext } from "~/providers/auth-provider";
+import { startOfDay } from "date-fns";
 import { CalendarIcon, X, Search, ChevronDown } from "lucide-react";
+import { formatDate } from "~/lib/utils/format";
 import {
   Dialog,
   DialogContent,
@@ -68,6 +70,14 @@ export function TaskFormModal({
 }: TaskFormModalProps) {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
+  const { user: currentUser } = useAuthContext();
+
+  const sortedMembers = useMemo(() => {
+    if (!currentUser) return workspaceMembers;
+    const others = workspaceMembers.filter((m) => m.user_id !== currentUser.id);
+    const me = workspaceMembers.find((m) => m.user_id === currentUser.id);
+    return me ? [me, ...others] : others;
+  }, [workspaceMembers, currentUser]);
   const isEdit = !!task;
 
   const [title, setTitle] = useState("");
@@ -359,7 +369,7 @@ export function TaskFormModal({
                   <CalendarIcon className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
                   <span className="flex-1 text-left">
                     {dueDate
-                      ? format(dueDate, "PPP")
+                      ? formatDate(dueDate, "PPP")
                       : t("tasks.form.dueDatePlaceholder")}
                   </span>
                   {dueDate && (
@@ -409,16 +419,26 @@ export function TaskFormModal({
                 <SelectItem value="unassigned">
                   {t("tasks.form.unassigned")}
                 </SelectItem>
-                {workspaceMembers.length === 0 ? (
+                {sortedMembers.length === 0 ? (
                   <div className="px-3 py-2 text-xs text-muted-foreground">
                     {t("tasks.form.noMembers")}
                   </div>
                 ) : (
-                  workspaceMembers.map((m) => (
-                    <SelectItem key={m.user_id} value={m.user_id}>
-                      {m.user_first_name} {m.user_last_name}
-                    </SelectItem>
-                  ))
+                  sortedMembers.map((m) => {
+                    const isMe = m.user_id === currentUser?.id;
+                    const name = [m.user_first_name, m.user_last_name]
+                      .filter(Boolean)
+                      .join(" ")
+                      .trim() || m.user_email;
+                    const label = isMe
+                      ? `${t("common.you", { defaultValue: "You" })} (${name})`
+                      : name;
+                    return (
+                      <SelectItem key={m.user_id} value={m.user_id}>
+                        {label}
+                      </SelectItem>
+                    );
+                  })
                 )}
               </SelectContent>
             </Select>

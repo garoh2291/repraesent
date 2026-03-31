@@ -43,13 +43,19 @@ export default function AuthCallback() {
     hasAttemptedRef.current = true;
 
     const run = async () => {
-      try {
-        const auth = await verifyMagicLink(token);
-        setStoredToken(auth.access_token);
-        queryClient.invalidateQueries({ queryKey: ["auth"] });
+      const workspaceParam = searchParams.get("workspace");
+      const redirectParam = searchParams.get("redirect");
 
-        const context: UserContextResponse = await getUserContext();
+      // Resolve where to go after auth — use redirect param if it's a safe relative path
+      const resolveDestination = (fallback: string) => {
+        if (redirectParam && redirectParam.startsWith("/")) {
+          return redirectParam;
+        }
+        return fallback;
+      };
 
+      // Route based on context — shared between fresh auth and already-used-token recovery
+      const routeAfterAuth = (context: UserContextResponse) => {
         // Brand user → straight to /brand
         if (context.user.user_type === "brand") {
           navigate("/brand", { replace: true });
@@ -58,6 +64,15 @@ export default function AuthCallback() {
 
         if (!context.workspaces?.length) {
           navigate("/onboarding/profile", { replace: true });
+          return;
+        }
+
+        // If workspace param is provided and valid, always use it (email deep link)
+        if (workspaceParam && context.workspaces.some((w) => w.id === workspaceParam)) {
+          setStoredWorkspaceId(workspaceParam);
+          // Invalidate all queries so sidebar/data re-fetches with the correct workspace
+          queryClient.removeQueries();
+          navigate(resolveDestination("/"), { replace: true });
           return;
         }
 
@@ -76,75 +91,42 @@ export default function AuthCallback() {
             navigate("/onboarding/products", { replace: true });
             return;
           }
-          navigate("/", { replace: true });
+          navigate(resolveDestination("/"), { replace: true });
           return;
         }
 
         if (context.workspaces.length > 1) {
-          const workspaceParam = searchParams.get("workspace");
-          const workspaceFromUrl =
-            workspaceParam && context.workspaces.some((w) => w.id === workspaceParam)
-              ? workspaceParam
-              : null;
-
-          if (workspaceFromUrl) {
-            setStoredWorkspaceId(workspaceFromUrl);
-            navigate("/", { replace: true });
-            return;
-          }
-
           const stored = getStoredWorkspaceId();
           const hasValidStored = stored && context.workspaces.some((w) => w.id === stored);
           if (hasValidStored) {
-            navigate("/", { replace: true });
+            navigate(resolveDestination("/"), { replace: true });
             return;
           }
           navigate("/auth/workspace-picker", { replace: true });
           return;
         }
 
-        navigate("/", { replace: true });
+        navigate(resolveDestination("/"), { replace: true });
+      };
+
+      try {
+        const auth = await verifyMagicLink(token);
+        setStoredToken(auth.access_token);
+        queryClient.invalidateQueries({ queryKey: ["auth"] });
+
+        const context: UserContextResponse = await getUserContext();
+        routeAfterAuth(context);
       } catch (err) {
         const message = err instanceof Error ? err.message : String(err);
         const isAlreadyUsed =
           message.toLowerCase().includes("already used") && !!getStoredToken();
 
         if (isAlreadyUsed) {
-          // Second effect run after first succeeded; token was consumed but we're already authenticated
+          // Token was consumed by a prior render; user is already authenticated
           try {
             queryClient.invalidateQueries({ queryKey: ["auth"] });
             const context: UserContextResponse = await getUserContext();
-
-            // Brand user → straight to /brand
-            if (context.user.user_type === "brand") {
-              navigate("/brand", { replace: true });
-              return;
-            }
-
-            if (!context.workspaces?.length) {
-              navigate("/onboarding/profile", { replace: true });
-              return;
-            }
-            if (context.workspaces.length === 1) {
-              const ws = context.workspaces[0];
-              setStoredWorkspaceId(ws.id);
-              navigate("/", { replace: true });
-              return;
-            }
-            if (context.workspaces.length > 1) {
-              const workspaceParam = searchParams.get("workspace");
-              const workspaceFromUrl =
-                workspaceParam &&
-                context.workspaces.some((w) => w.id === workspaceParam)
-                  ? workspaceParam
-                  : null;
-              if (workspaceFromUrl) {
-                setStoredWorkspaceId(workspaceFromUrl);
-              }
-              navigate("/", { replace: true });
-              return;
-            }
-            navigate("/", { replace: true });
+            routeAfterAuth(context);
           } catch {
             setStatus("error");
             clearStoredToken();

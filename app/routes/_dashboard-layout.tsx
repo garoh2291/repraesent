@@ -8,11 +8,12 @@ import { AlertTriangle, Menu } from "lucide-react";
 import { OnboardingTour } from "~/components/onboarding-tour/OnboardingTour";
 import { Sheet, SheetContent } from "~/components/ui/sheet";
 import logoUrl from "~/components/icons/re_praesent-mark-brand-hor.svg?url";
+import { formatDateIntl } from "~/lib/utils/format";
 
 function formatDueDate(unixStr: string): string {
   const sec = parseInt(unixStr, 10);
   if (Number.isNaN(sec)) return unixStr;
-  return new Date(sec * 1000).toLocaleDateString(undefined, {
+  return formatDateIntl(new Date(sec * 1000), {
     weekday: "short",
     year: "numeric",
     month: "short",
