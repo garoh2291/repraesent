@@ -832,13 +832,24 @@ function AnalyticsChartSection({
             const isActive =
               hoveredWorkspace === null || hoveredWorkspace === ws.workspace_id;
             return (
-              <HoverCard key={ws.workspace_id} openDelay={200} closeDelay={100}>
+              <HoverCard
+                key={ws.workspace_id}
+                openDelay={200}
+                closeDelay={100}
+                onOpenChange={(open) => {
+                  if (open) {
+                    handleWorkspaceEnter(ws.workspace_id);
+                  } else {
+                    handleWorkspaceLeave();
+                  }
+                }}
+              >
                 <HoverCardTrigger asChild>
                   <div
                     className="flex items-center gap-1.5 text-[12px] cursor-pointer select-none transition-opacity duration-150"
                     style={{ opacity: isActive ? 1 : 0.35 }}
                     onMouseEnter={() => handleWorkspaceEnter(ws.workspace_id)}
-                    onMouseLeave={handleWorkspaceLeave}
+                    onMouseLeave={() => {/* let HoverCard onOpenChange handle it */}}
                   >
                     <span
                       className="h-2.5 w-2.5 rounded-full shrink-0 transition-transform duration-150"
