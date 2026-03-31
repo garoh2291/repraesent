@@ -78,6 +78,7 @@ export async function getBrandWorkspacesOverview(params?: {
   page?: number;
   limit?: number;
   service_id?: string;
+  period?: string;
 }): Promise<BrandWorkspacesOverviewResponse> {
   const res = await apiClient.get<BrandWorkspacesOverviewResponse>(
     "/brands/me/workspaces-overview",
@@ -87,6 +88,7 @@ export async function getBrandWorkspacesOverview(params?: {
         ...(params?.page && { page: params.page }),
         ...(params?.limit && { limit: params.limit }),
         ...(params?.service_id && { service_id: params.service_id }),
+        ...(params?.period && { period: params.period }),
       },
     }
   );

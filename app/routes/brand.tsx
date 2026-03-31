@@ -1009,11 +1009,15 @@ function WorkspaceLeaderboard({
   isLoading,
   total,
   colorMap,
+  period,
+  onPeriodChange,
 }: {
   workspaces: { id: string; name: string; leads_count: number }[];
   isLoading: boolean;
   total: number;
   colorMap: Record<string, string>;
+  period: LeadAnalyticsPeriod;
+  onPeriodChange: (p: LeadAnalyticsPeriod) => void;
 }) {
   const { t } = useTranslation();
   if (isLoading) return <LeaderboardSkeleton />;
@@ -1022,9 +1026,9 @@ function WorkspaceLeaderboard({
   const max = Math.max(...workspaces.map((w) => w.leads_count), 1);
 
   return (
-    <div className="rounded-2xl border border-border bg-card p-5 sm:p-6 space-y-5">
+    <div className="app-fade-up rounded-2xl border border-border bg-card p-5 sm:p-6 space-y-5">
       {/* Header */}
-      <div className="flex items-start justify-between gap-3">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div className="space-y-0.5">
           <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
             {t("brand.leaderboardTitle", "Top Partner Houses")}
@@ -1033,16 +1037,28 @@ function WorkspaceLeaderboard({
             {formatNumber(total)}
           </p>
           <p className="text-xs text-muted-foreground">
-            {t("brand.leaderboardSubtitle", "total leads, all time")}
+            {t("brand.leaderboardSubtitle", "total leads")}
           </p>
         </div>
-        <Link
-          to="/brand/workspaces"
-          className="flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-[11px] font-medium text-muted-foreground hover:text-foreground hover:bg-muted transition-all duration-150 shrink-0 mt-0.5"
-        >
-          {t("brand.leaderboardViewAll", "View all")}
-          <ArrowRight className="h-3 w-3" />
-        </Link>
+
+        <div className="flex flex-wrap items-center gap-2 self-start">
+          <div className="flex items-center gap-1 rounded-xl bg-muted p-1 overflow-x-auto scrollbar-hide">
+            {PERIODS.map((p) => (
+              <button
+                key={p.value}
+                onClick={() => onPeriodChange(p.value)}
+                className={cn(
+                  "rounded-lg px-2.5 py-1.5 text-[11px] font-medium transition-all duration-150 whitespace-nowrap shrink-0",
+                  period === p.value
+                    ? "bg-card text-foreground shadow-sm"
+                    : "text-muted-foreground hover:text-foreground"
+                )}
+              >
+                {t(p.labelKey)}
+              </button>
+            ))}
+          </div>
+        </div>
       </div>
 
       {/* Ranked rows */}
@@ -1112,6 +1128,17 @@ function WorkspaceLeaderboard({
             </div>
           );
         })}
+      </div>
+
+      {/* View all at bottom */}
+      <div className="flex justify-center pt-1">
+        <Link
+          to="/brand/workspaces"
+          className="flex items-center gap-1.5 rounded-xl px-4 py-2 text-[12px] font-medium text-muted-foreground hover:text-foreground hover:bg-muted transition-all duration-150"
+        >
+          {t("brand.leaderboardViewAll", "View all")}
+          <ArrowRight className="h-3 w-3" />
+        </Link>
       </div>
     </div>
   );
@@ -1294,6 +1321,8 @@ export default function BrandDashboard() {
     useState<LeadAnalyticsPeriod>("this_week");
   const [plausiblePeriod, setPlausiblePeriod] =
     useState<LeadAnalyticsPeriod>("this_week");
+  const [leaderboardPeriod, setLeaderboardPeriod] =
+    useState<LeadAnalyticsPeriod>("all_time");
   const [exportOpen, setExportOpen] = useState(false);
 
   const { data: bookingsData, isLoading: bookingsLoading } = useQuery({
@@ -1315,9 +1344,9 @@ export default function BrandDashboard() {
   });
 
   const { data: overviewData, isLoading: overviewLoading } = useQuery({
-    queryKey: ["brand-workspaces-overview-leaderboard"],
-    queryFn: () => getBrandWorkspacesOverview({ limit: 50, page: 1 }),
-    staleTime: 60_000,
+    queryKey: ["brand-workspaces-overview-leaderboard", leaderboardPeriod],
+    queryFn: () => getBrandWorkspacesOverview({ limit: 50, page: 1, period: leaderboardPeriod }),
+    staleTime: 0,
   });
 
   const topWorkspaces = useMemo(() => {
@@ -1381,14 +1410,6 @@ export default function BrandDashboard() {
 
       <ExportReportModal open={exportOpen} onClose={() => setExportOpen(false)} colorMap={workspaceColorMap} />
 
-      {/* Workspace leaderboard */}
-      <WorkspaceLeaderboard
-        workspaces={topWorkspaces}
-        isLoading={overviewLoading}
-        total={totalLeads}
-        colorMap={workspaceColorMap}
-      />
-
       {/* Web Analytics Chart */}
       <AnalyticsChartSection
         workspaces={plausibleData?.workspaces ?? []}
@@ -1396,6 +1417,16 @@ export default function BrandDashboard() {
         period={plausiblePeriod}
         onPeriodChange={setPlausiblePeriod}
         colorMap={workspaceColorMap}
+      />
+
+      {/* Workspace leaderboard */}
+      <WorkspaceLeaderboard
+        workspaces={topWorkspaces}
+        isLoading={overviewLoading}
+        total={totalLeads}
+        colorMap={workspaceColorMap}
+        period={leaderboardPeriod}
+        onPeriodChange={setLeaderboardPeriod}
       />
 
       {/* Appointment Bookings Chart */}

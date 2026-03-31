@@ -110,9 +110,13 @@ export default function BookAppointment() {
   const { t } = useTranslation();
   const { configId } = useParams<{ configId: string }>();
   const queryClient = useQueryClient();
-  const [activeConfigId, setActiveConfigId] = useState<string | null>(configId ?? null);
-  const [selectedProvider, setSelectedProvider] = useState<ProviderPublic | null>(null);
-  const [selectedService, setSelectedService] = useState<AppointmentService | null>(null);
+  const [activeConfigId, setActiveConfigId] = useState<string | null>(
+    configId ?? null
+  );
+  const [selectedProvider, setSelectedProvider] =
+    useState<ProviderPublic | null>(null);
+  const [selectedService, setSelectedService] =
+    useState<AppointmentService | null>(null);
   const [step, setStep] = useState(1);
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
   const [selectedSlot, setSelectedSlot] = useState<string | null>(null);
@@ -141,8 +145,18 @@ export default function BookAppointment() {
   const serviceDuration = selectedService?.duration_minutes;
 
   const { data: slots = [], isLoading: slotsLoading } = useQuery({
-    queryKey: ["availabilities-public", activeConfigId, selectedDateStr, serviceDuration],
-    queryFn: () => getAvailabilitiesPublic(activeConfigId!, selectedDateStr, serviceDuration),
+    queryKey: [
+      "availabilities-public",
+      activeConfigId,
+      selectedDateStr,
+      serviceDuration,
+    ],
+    queryFn: () =>
+      getAvailabilitiesPublic(
+        activeConfigId!,
+        selectedDateStr,
+        serviceDuration
+      ),
     enabled: !!activeConfigId && !!selectedDateStr && isValidDate,
   });
 
@@ -531,7 +545,9 @@ export default function BookAppointment() {
                     setStep((s) => Math.max(1, s - 1));
                   }
                 }}
-                disabled={step === 1 && !hasMultipleServices && !hasMultipleProviders}
+                disabled={
+                  step === 1 && !hasMultipleServices && !hasMultipleProviders
+                }
                 className="inline-flex items-center gap-1.5 h-10 rounded-lg border border-border bg-white px-4 text-sm font-medium text-foreground hover:bg-stone-50 transition-colors shadow-sm disabled:opacity-40 disabled:pointer-events-none"
               >
                 <ChevronLeft className="h-4 w-4" />
@@ -608,7 +624,9 @@ function BookingHeader({
               style={{ color: `${textColor}99` }}
             >
               {selectedService
-                ? [selectedService.name, config.provider_name].filter(Boolean).join(" │ ")
+                ? [selectedService.name, config.provider_name]
+                    .filter(Boolean)
+                    .join(" │ ")
                 : config.services.map((s) => s.name).join(" │ ")}
             </p>
           )}
@@ -784,7 +802,9 @@ function Step0ServiceSelection({
                     color: bgColor,
                   }}
                 >
-                  {t("appointments.businessLogic.minutesSuffix", { count: svc.duration_minutes })}
+                  {t("appointments.businessLogic.minutesSuffix", {
+                    count: svc.duration_minutes,
+                  })}
                 </span>
               </div>
               {svc.description && (
@@ -885,10 +905,14 @@ function Step1DateAndTime({
         {selectedService && (
           <div className="mt-2 inline-flex items-center gap-2 rounded-lg border border-border bg-white px-3 py-1.5 text-sm shadow-sm">
             <Layers className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
-            <span className="font-medium text-foreground">{selectedService.name}</span>
+            <span className="font-medium text-foreground">
+              {selectedService.name}
+            </span>
             <span className="text-muted-foreground">·</span>
             <span className="text-muted-foreground">
-              {t("appointments.businessLogic.minutesSuffix", { count: selectedService.duration_minutes })}
+              {t("appointments.businessLogic.minutesSuffix", {
+                count: selectedService.duration_minutes,
+              })}
             </span>
           </div>
         )}
@@ -1078,7 +1102,9 @@ function Step2CustomerInfo({
             </div>
           ))}
           {required.length === 0 && (
-            <p className="text-sm text-muted-foreground">{t("booking.noRequiredFields")}</p>
+            <p className="text-sm text-muted-foreground">
+              {t("booking.noRequiredFields")}
+            </p>
           )}
         </div>
 
@@ -1199,9 +1225,13 @@ function Step3Confirmation({
                   <Layers className="h-4 w-4" style={{ color: bgColor }} />
                 </div>
                 <div>
-                  <p className="text-sm font-medium text-foreground">{selectedService.name}</p>
+                  <p className="text-sm font-medium text-foreground">
+                    {selectedService.name}
+                  </p>
                   <p className="text-xs text-muted-foreground">
-                    {t("appointments.businessLogic.minutesSuffix", { count: selectedService.duration_minutes })}
+                    {t("appointments.businessLogic.minutesSuffix", {
+                      count: selectedService.duration_minutes,
+                    })}
                   </p>
                 </div>
               </div>
