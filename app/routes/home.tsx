@@ -644,21 +644,17 @@ function WebAnalyticsSection() {
   const { currentWorkspace } = useAuthContext();
   const [period, setPeriod] = useState<PlausiblePeriod>("this_week");
 
-  const analyticsService = currentWorkspace?.services?.find(
-    (s) => s.service_type === "analytics",
-  );
+  const hasPlausible = currentWorkspace?.has_plausible_analytics ?? false;
 
   const { data: stats, isLoading } = useQuery({
     queryKey: ["workspace-plausible-stats", currentWorkspace?.id, period],
     queryFn: () => getWorkspacePlausibleStats(period),
-    enabled: !!analyticsService,
+    enabled: hasPlausible,
     staleTime: 60_000,
   });
 
-  // Don't render if workspace has no analytics service
-  if (!analyticsService) return null;
-  // Don't render if API returned null (not configured)
-  if (!isLoading && stats === null) return null;
+  // Don't render if workspace has no analytics service or no brand plausible key
+  if (!hasPlausible) return null;
 
   const timeseries = stats?.timeseries ?? [];
   const agg = stats?.aggregate;
