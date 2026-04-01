@@ -1,12 +1,14 @@
 import { useEffect, useState, useCallback } from "react";
 import { Outlet } from "react-router";
 import { useTranslation } from "react-i18next";
+import { useQuery } from "@tanstack/react-query";
 import { useAuthContext } from "~/providers/auth-provider";
 import { Sidebar } from "~/components/sidebar";
 import { Button } from "~/components/ui/button";
 import { AlertTriangle, Menu } from "lucide-react";
 import { OnboardingTour } from "~/components/onboarding-tour/OnboardingTour";
 import { Sheet, SheetContent } from "~/components/ui/sheet";
+import { getWorkspaceInvoices } from "~/lib/api/workspaces";
 import logoUrl from "~/components/icons/re_praesent-mark-brand-hor.svg?url";
 export default function DashboardLayout() {
   const { user, currentWorkspace } = useAuthContext();
@@ -45,6 +47,17 @@ export default function DashboardLayout() {
   const showUnpaidBanner =
     currentWorkspace?.status === "active" &&
     currentWorkspace?.unpaid_invoice_due_date &&
+    currentWorkspace?.unpaid_invoice_url;
+
+  const { data: unpaidInvoices = [] } = useQuery({
+    queryKey: ["workspace-invoices", currentWorkspace?.id],
+    queryFn: () => getWorkspaceInvoices(currentWorkspace!.id),
+    enabled: !!showUnpaidBanner && !!currentWorkspace?.id,
+  });
+
+  const freshInvoiceUrl =
+    unpaidInvoices.find((inv) => inv.status === "open" && inv.hosted_invoice_url)
+      ?.hosted_invoice_url ??
     currentWorkspace?.unpaid_invoice_url;
 
   return (
@@ -98,7 +111,7 @@ export default function DashboardLayout() {
               className="shrink-0 h-8 border-amber-400/40 text-amber-800 hover:bg-amber-50 hover:text-amber-800 text-xs self-start sm:self-auto"
             >
               <a
-                href={currentWorkspace!.unpaid_invoice_url!}
+                href={freshInvoiceUrl!}
                 target="_blank"
                 rel="noopener noreferrer"
               >
