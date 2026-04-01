@@ -112,7 +112,7 @@ export default function DashboardLayout() {
               variant="outline"
               size="sm"
               asChild
-              className="shrink-0 h-8 border-amber-400/40 text-amber-800 hover:bg-amber-50 text-xs self-start sm:self-auto"
+              className="shrink-0 h-8 border-amber-400/40 text-amber-800 hover:bg-amber-50 hover:text-amber-800 text-xs self-start sm:self-auto"
             >
               <a
                 href={currentWorkspace!.unpaid_invoice_url!}

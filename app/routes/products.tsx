@@ -90,7 +90,7 @@ export default function Products() {
               variant="outline"
               size="sm"
               asChild
-              className="shrink-0 h-8 text-xs border-red-300 text-red-700 hover:bg-red-50"
+              className="shrink-0 h-8 text-xs border-red-300 text-red-700 hover:bg-red-50 hover:text-red-700"
             >
               <a
                 href={
