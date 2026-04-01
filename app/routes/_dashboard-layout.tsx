@@ -8,19 +8,6 @@ import { AlertTriangle, Menu } from "lucide-react";
 import { OnboardingTour } from "~/components/onboarding-tour/OnboardingTour";
 import { Sheet, SheetContent } from "~/components/ui/sheet";
 import logoUrl from "~/components/icons/re_praesent-mark-brand-hor.svg?url";
-import { formatDateIntl } from "~/lib/utils/format";
-
-function formatDueDate(unixStr: string): string {
-  const sec = parseInt(unixStr, 10);
-  if (Number.isNaN(sec)) return unixStr;
-  return formatDateIntl(new Date(sec * 1000), {
-    weekday: "short",
-    year: "numeric",
-    month: "short",
-    day: "numeric",
-  });
-}
-
 export default function DashboardLayout() {
   const { user, currentWorkspace } = useAuthContext();
   const { i18n, t } = useTranslation();
@@ -101,11 +88,7 @@ export default function DashboardLayout() {
             <div className="flex items-center gap-2.5 flex-1 min-w-0">
               <AlertTriangle className="h-4 w-4 shrink-0 text-amber-600" />
               <p className="text-sm font-medium text-amber-900">
-                {t("billing.unpaidBanner", {
-                  date: formatDueDate(
-                    currentWorkspace!.unpaid_invoice_due_date!
-                  ),
-                })}
+                {t("billing.unpaidBanner")}
               </p>
             </div>
             <Button
