@@ -165,6 +165,26 @@ export default function ProtectedLayout() {
     isOnBrand,
   ]);
 
+  const wsStatus = currentWorkspace?.status ?? "active";
+  const hasPastDueProduct = currentWorkspace?.products?.some(
+    (p: { status?: string }) => p.status === "past_due",
+  );
+  const showPastDueBanner =
+    wsStatus === "past_due" || (wsStatus === "active" && hasPastDueProduct);
+
+  const _workspaceId = currentWorkspace?.id;
+  const { data: invoices = [] } = useQuery({
+    queryKey: ["workspace-invoices", _workspaceId],
+    queryFn: () => getWorkspaceInvoices(_workspaceId!),
+    enabled: !!_workspaceId && showPastDueBanner,
+  });
+
+  const invoiceUrl =
+    invoices.find((inv) => inv.status === "open" && inv.hosted_invoice_url)
+      ?.hosted_invoice_url ??
+    (currentWorkspace as { unpaid_invoice_url?: string } | null)
+      ?.unpaid_invoice_url;
+
   if (isLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center">
@@ -240,26 +260,6 @@ export default function ProtectedLayout() {
       }
     }
   }
-
-  const wsStatus = currentWorkspace?.status ?? "active";
-  const hasPastDueProduct = currentWorkspace?.products?.some(
-    (p: { status?: string }) => p.status === "past_due",
-  );
-  const showPastDueBanner =
-    wsStatus === "past_due" || (wsStatus === "active" && hasPastDueProduct);
-
-  const workspaceId = currentWorkspace?.id;
-  const { data: invoices = [] } = useQuery({
-    queryKey: ["workspace-invoices", workspaceId],
-    queryFn: () => getWorkspaceInvoices(workspaceId!),
-    enabled: !!workspaceId && showPastDueBanner,
-  });
-
-  const invoiceUrl =
-    invoices.find((inv) => inv.status === "open" && inv.hosted_invoice_url)
-      ?.hosted_invoice_url ??
-    (currentWorkspace as { unpaid_invoice_url?: string } | null)
-      ?.unpaid_invoice_url;
 
   return (
     <div className="flex flex-col min-h-screen">
