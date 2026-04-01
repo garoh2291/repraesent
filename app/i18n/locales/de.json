@@ -142,7 +142,19 @@
     "taskDateToday": "Heute",
     "taskDateTomorrow": "Morgen",
     "taskDateOverdue": "Überfällig",
-    "taskDateNoDueDate": "Ohne Fälligkeitsdatum"
+    "taskDateNoDueDate": "Ohne Fälligkeitsdatum",
+    "webAnalytics": "Web-Analyse",
+    "webAnalyticsDescription": "Website-Besucherdaten",
+    "metricVisitors": "Einzelbesucher",
+    "metricVisits": "Besuche gesamt",
+    "metricPageviews": "Seitenaufrufe",
+    "metricBounceRate": "Absprungrate",
+    "noAnalyticsData": "Keine Daten verfügbar",
+    "viewFullAnalytics": "Vollständige Analyse",
+    "analyticsLoading": "Analyse wird geladen…",
+    "plausibleVisitors_one": "{{count}} Besucher",
+    "plausibleVisitors_other": "{{count}} Besucher",
+    "period30d": "30 Tage"
   },
   "leads": {
     "title": "Leads",

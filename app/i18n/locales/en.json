@@ -142,7 +142,19 @@
     "taskDateToday": "Today",
     "taskDateTomorrow": "Tomorrow",
     "taskDateOverdue": "Overdue",
-    "taskDateNoDueDate": "No due date"
+    "taskDateNoDueDate": "No due date",
+    "webAnalytics": "Web Analytics",
+    "webAnalyticsDescription": "Website visitor data",
+    "metricVisitors": "Unique Visitors",
+    "metricVisits": "Total Visits",
+    "metricPageviews": "Pageviews",
+    "metricBounceRate": "Bounce Rate",
+    "noAnalyticsData": "No data available",
+    "viewFullAnalytics": "Full analytics",
+    "analyticsLoading": "Loading analytics…",
+    "plausibleVisitors_one": "{{count}} visitor",
+    "plausibleVisitors_other": "{{count}} visitors",
+    "period30d": "30 days"
   },
   "leads": {
     "title": "Leads",

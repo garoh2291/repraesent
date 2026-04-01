@@ -123,6 +123,7 @@ export interface WorkspaceContext {
   unpaid_invoice_url?: string | null;
   products?: WorkspaceProduct[];
   services: WorkspaceService[];
+  has_plausible_analytics?: boolean;
   member_role: "admin" | "editor" | "viewer";
 }
 
