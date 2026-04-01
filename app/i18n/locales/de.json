@@ -809,7 +809,7 @@
     "featuresLabel": "Funktionen"
   },
   "billing": {
-    "unpaidBanner": "Unbezahlte Rechnung — bitte bezahlen Sie bis {{date}}, sonst wird Ihr Bereich gesperrt.",
+    "unpaidBanner": "Unbezahlte Rechnung — bitte bezahlen Sie innerhalb der nächsten Tage, sonst wird Ihr Bereich gesperrt.",
     "payNow": "Jetzt bezahlen →"
   },
   "errors": {

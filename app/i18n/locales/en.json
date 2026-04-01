@@ -809,7 +809,7 @@
     "featuresLabel": "Features"
   },
   "billing": {
-    "unpaidBanner": "Unpaid invoice — pay by {{date}} or your area will be suspended.",
+    "unpaidBanner": "Unpaid invoice — please pay within the upcoming days or your area will be suspended.",
     "payNow": "Pay now →"
   },
   "errors": {
