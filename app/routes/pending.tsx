@@ -1,6 +1,8 @@
 import { useTranslation } from "react-i18next";
+import { useQuery } from "@tanstack/react-query";
 import { useAuthContext } from "~/providers/auth-provider";
 import { getStoredWorkspaceId } from "~/lib/api/axios-instance";
+import { getWorkspaceInvoices } from "~/lib/api/workspaces";
 import {
   FileText,
   Clock,
@@ -108,7 +110,16 @@ export default function Pending() {
     status === "past_due" || products.some((p) => p.status === "past_due");
   console.log("hasPastDue", hasPastDue, products);
   const hasInvoiceSent = products.some((p) => p.status === "invoice_sent");
+
+  const { data: invoices = [] } = useQuery({
+    queryKey: ["workspace-invoices", workspaceId],
+    queryFn: () => getWorkspaceInvoices(workspaceId!),
+    enabled: !!workspaceId,
+  });
+
   const invoiceUrl =
+    invoices.find((inv) => inv.status === "open" && inv.hosted_invoice_url)
+      ?.hosted_invoice_url ??
     products.find((p) => p.status === "invoice_sent")?.hosted_invoice_url ??
     (ws as { unpaid_invoice_url?: string })?.unpaid_invoice_url;
 
