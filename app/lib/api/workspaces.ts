@@ -175,3 +175,33 @@ export async function decryptCalDavPassword(
   );
   return response.data.password;
 }
+
+// ─── Plausible Web Analytics ────────────────────────────────────────────────
+
+export type PlausiblePeriod = "today" | "this_week" | "this_month" | "all_time";
+
+export interface PlausibleStats {
+  site_id: string;
+  period: string;
+  aggregate: {
+    visitors: number;
+    pageviews: number;
+    visits: number;
+    bounce_rate: number;
+    visit_duration: number;
+  };
+  timeseries: { date: string; visitors: number; pageviews: number }[];
+  top_sources: { source: string; visitors: number; visits: number }[];
+  top_pages: { page: string; visitors: number; pageviews: number }[];
+  countries: { country: string; visitors: number }[];
+  cities: { city: string; visitors: number }[];
+}
+
+export async function getWorkspacePlausibleStats(
+  period: PlausiblePeriod
+): Promise<PlausibleStats | null> {
+  const res = await apiClient.get<PlausibleStats | null>(
+    `/users/me/workspace/plausible-stats?period=${period}`
+  );
+  return res.data;
+}
