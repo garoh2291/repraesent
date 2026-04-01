@@ -29,7 +29,12 @@ import {
 } from "date-fns";
 import { useAuthContext } from "~/providers/auth-provider";
 import { cn } from "~/lib/utils";
-import { formatDate as fmtDate, formatRelativeTime, formatDateShort, formatNumber } from "~/lib/utils/format";
+import {
+  formatDate as fmtDate,
+  formatRelativeTime,
+  formatDateShort,
+  formatNumber,
+} from "~/lib/utils/format";
 import { getLeadAnalytics, type LeadAnalyticsPeriod } from "~/lib/api/leads";
 import { getAllTasks, type Task } from "~/lib/api/tasks";
 import {
@@ -642,7 +647,7 @@ function PlausibleStatsTooltip({
 function WebAnalyticsSection() {
   const { t } = useTranslation();
   const { currentWorkspace } = useAuthContext();
-  const [period, setPeriod] = useState<PlausiblePeriod>("this_week");
+  const [period, setPeriod] = useState<PlausiblePeriod>("this_month");
 
   const hasPlausible = currentWorkspace?.has_plausible_analytics ?? false;
 
@@ -676,7 +681,10 @@ function WebAnalyticsSection() {
     ? [
         { label: t("home.metricVisitors"), value: formatNumber(agg.visitors) },
         { label: t("home.metricVisits"), value: formatNumber(agg.visits) },
-        { label: t("home.metricPageviews"), value: formatNumber(agg.pageviews) },
+        {
+          label: t("home.metricPageviews"),
+          value: formatNumber(agg.pageviews),
+        },
         { label: t("home.metricBounceRate"), value: `${agg.bounce_rate}%` },
       ]
     : [];
