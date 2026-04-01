@@ -63,6 +63,9 @@ export default function Products() {
   });
 
   const hasPastDue = products.some((p) => p.status === "past_due");
+  const openInvoiceUrl = invoices.find(
+    (inv) => inv.status === "open" && inv.hosted_invoice_url
+  )?.hosted_invoice_url;
 
   return (
     <div className="mx-auto w-full max-w-[1280px] p-4 sm:p-6 py-10! space-y-6 sm:space-y-8 app-fade-in">
@@ -85,7 +88,7 @@ export default function Products() {
               {t("products.pastDueWarning")}
             </p>
           </div>
-          {(ws as { unpaid_invoice_url?: string })?.unpaid_invoice_url && (
+          {openInvoiceUrl && (
             <Button
               variant="outline"
               size="sm"
@@ -93,9 +96,7 @@ export default function Products() {
               className="shrink-0 h-8 text-xs border-red-300 text-red-700 hover:bg-red-50 hover:text-red-700"
             >
               <a
-                href={
-                  (ws as { unpaid_invoice_url?: string }).unpaid_invoice_url!
-                }
+                href={openInvoiceUrl}
                 target="_blank"
                 rel="noopener noreferrer"
               >

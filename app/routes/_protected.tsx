@@ -1,8 +1,10 @@
 import { useEffect } from "react";
 import { Outlet, useNavigate, useLocation } from "react-router";
 import { useTranslation } from "react-i18next";
+import { useQuery } from "@tanstack/react-query";
 import { useAuthContext } from "~/providers/auth-provider";
 import { getStoredWorkspaceId } from "~/lib/api/axios-instance";
+import { getWorkspaceInvoices } from "~/lib/api/workspaces";
 import { clearStoredAuth } from "~/lib/hooks/use-auth";
 
 const ONBOARDING_PREFIX = "/onboarding";
@@ -245,9 +247,19 @@ export default function ProtectedLayout() {
   );
   const showPastDueBanner =
     wsStatus === "past_due" || (wsStatus === "active" && hasPastDueProduct);
-  const invoiceUrl = (
-    currentWorkspace as { unpaid_invoice_url?: string } | null
-  )?.unpaid_invoice_url;
+
+  const workspaceId = currentWorkspace?.id;
+  const { data: invoices = [] } = useQuery({
+    queryKey: ["workspace-invoices", workspaceId],
+    queryFn: () => getWorkspaceInvoices(workspaceId!),
+    enabled: !!workspaceId && showPastDueBanner,
+  });
+
+  const invoiceUrl =
+    invoices.find((inv) => inv.status === "open" && inv.hosted_invoice_url)
+      ?.hosted_invoice_url ??
+    (currentWorkspace as { unpaid_invoice_url?: string } | null)
+      ?.unpaid_invoice_url;
 
   return (
     <div className="flex flex-col min-h-screen">
