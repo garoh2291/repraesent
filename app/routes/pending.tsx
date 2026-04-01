@@ -106,6 +106,7 @@ export default function Pending() {
   const status = ws?.status ?? "pending";
   const hasPastDue =
     status === "past_due" || products.some((p) => p.status === "past_due");
+  console.log("hasPastDue", hasPastDue, products);
   const hasInvoiceSent = products.some((p) => p.status === "invoice_sent");
   const invoiceUrl =
     products.find((p) => p.status === "invoice_sent")?.hosted_invoice_url ??
@@ -141,16 +142,28 @@ export default function Pending() {
             </div>
             {invoiceUrl && (
               <div className="sp-fade-up sp-fade-up-d2">
-                <Button asChild className="h-11 px-8 font-medium text-sm transition-all duration-150 hover:opacity-90">
-                  <a href={invoiceUrl} target="_blank" rel="noopener noreferrer">
+                <Button
+                  asChild
+                  className="h-11 px-8 font-medium text-sm transition-all duration-150 hover:opacity-90"
+                >
+                  <a
+                    href={invoiceUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
                     {t("pending.viewInvoice")}
                   </a>
                 </Button>
               </div>
             )}
             <div className="sp-fade-up sp-fade-up-d3 pt-2 border-t border-stone-200 dark:border-zinc-800">
-              <p className="text-xs text-muted-foreground">{t("pending.needHelp")}</p>
-              <a href="mailto:support@repraesent.com" className="mt-1 inline-flex items-center gap-1.5 text-xs font-medium text-foreground hover:opacity-70 transition-opacity">
+              <p className="text-xs text-muted-foreground">
+                {t("pending.needHelp")}
+              </p>
+              <a
+                href="mailto:support@repraesent.com"
+                className="mt-1 inline-flex items-center gap-1.5 text-xs font-medium text-foreground hover:opacity-70 transition-opacity"
+              >
                 <Mail className="h-3.5 w-3.5" />
                 support@repraesent.com
               </a>
@@ -183,16 +196,28 @@ export default function Pending() {
             </div>
             {invoiceUrl && (
               <div className="sp-fade-up sp-fade-up-d2">
-                <Button asChild className="h-11 px-8 font-medium text-sm transition-all duration-150 hover:opacity-90">
-                  <a href={invoiceUrl} target="_blank" rel="noopener noreferrer">
+                <Button
+                  asChild
+                  className="h-11 px-8 font-medium text-sm transition-all duration-150 hover:opacity-90"
+                >
+                  <a
+                    href={invoiceUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
                     {t("pending.payInvoice")}
                   </a>
                 </Button>
               </div>
             )}
             <div className="sp-fade-up sp-fade-up-d3 pt-2 border-t border-stone-200 dark:border-zinc-800">
-              <p className="text-xs text-muted-foreground">{t("pending.needHelp")}</p>
-              <a href="mailto:support@repraesent.com" className="mt-1 inline-flex items-center gap-1.5 text-xs font-medium text-foreground hover:opacity-70 transition-opacity">
+              <p className="text-xs text-muted-foreground">
+                {t("pending.needHelp")}
+              </p>
+              <a
+                href="mailto:support@repraesent.com"
+                className="mt-1 inline-flex items-center gap-1.5 text-xs font-medium text-foreground hover:opacity-70 transition-opacity"
+              >
                 <Mail className="h-3.5 w-3.5" />
                 support@repraesent.com
               </a>
@@ -270,7 +295,10 @@ export default function Pending() {
             <p className="text-xs text-muted-foreground leading-relaxed">
               {t("pending.questionsHint")}
             </p>
-            <a href="mailto:support@repraesent.com" className="mt-1.5 inline-flex items-center gap-1.5 text-xs font-medium text-foreground hover:opacity-70 transition-opacity">
+            <a
+              href="mailto:support@repraesent.com"
+              className="mt-1.5 inline-flex items-center gap-1.5 text-xs font-medium text-foreground hover:opacity-70 transition-opacity"
+            >
               <Mail className="h-3.5 w-3.5" />
               support@repraesent.com
             </a>

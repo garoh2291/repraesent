@@ -1,7 +1,7 @@
 import { useDraggable } from "@dnd-kit/core";
 import { useTranslation } from "react-i18next";
-import { format } from "date-fns";
 import { Link } from "react-router";
+import { formatDate } from "~/lib/utils/format";
 import { cn } from "~/lib/utils";
 import { TaskUrgencyBadge } from "~/components/organism/tasks/task-urgency-badge";
 import type { Task } from "~/lib/api/tasks";
@@ -86,7 +86,7 @@ export function TaskCard({
           )}
           {task.due_date && (
             <span className="text-[10px] text-muted-foreground">
-              {format(new Date(task.due_date), "MMM d")}
+              {formatDate(new Date(task.due_date), "MMM d")}
             </span>
           )}
         </div>
@@ -107,8 +107,11 @@ export function TaskCard({
 
         {task.assignee_id && (
           <span
-            className="inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-muted text-[9px] font-bold"
-            title={`${task.assignee_first_name ?? ""} ${task.assignee_last_name ?? ""}`.trim()}
+            className={`inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[9px] font-bold ${task.assignee_is_deleted ? "bg-muted/50 text-muted-foreground/60" : "bg-muted"}`}
+            title={[
+              [task.assignee_first_name, task.assignee_last_name].filter(Boolean).join(" ").trim() || task.assignee_email || "",
+              task.assignee_is_deleted ? "(Deleted)" : "",
+            ].filter(Boolean).join(" ")}
           >
             {getAssigneeInitials(task)}
           </span>

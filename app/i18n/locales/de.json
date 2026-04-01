@@ -133,16 +133,16 @@
     "account": "Konto",
     "workspace": "Bereich",
     "role": "Rolle",
-    "myTasks": "Heutige Aufgaben",
-    "myTasksOpen": "fällig heute",
-    "noMyTasks": "Heute nichts auf dem Plan. Alles erledigt!",
+    "myTasks": "Aufgaben",
+    "myTasksOpen": "offen",
+    "noMyTasks": "Keine anstehenden Aufgaben. Alles erledigt!",
     "viewAllTasks": "Alle Aufgaben",
+    "viewAllLeads": "Alle Leads",
     "moreTasks": "weitere Aufgaben",
-    "products": "Produkte",
-    "productsHint": "Produkte, die mit diesem Bereich verknüpft sind",
-    "noProducts": "Noch keine Produkte verknüpft. Kontaktieren Sie support@repraesent.com, um loszulegen.",
-    "openSection": "Abschnitt öffnen",
-    "notAvailable": "Nicht verfügbar"
+    "taskDateToday": "Heute",
+    "taskDateTomorrow": "Morgen",
+    "taskDateOverdue": "Überfällig",
+    "taskDateNoDueDate": "Ohne Fälligkeitsdatum"
   },
   "leads": {
     "title": "Leads",
@@ -504,10 +504,34 @@
     "dateRenews": "Verlängert sich am",
     "datePaid": "Bezahlt am {{date}}",
     "dateDueLabel": "Fällig am {{date}}",
-    "viewInvoice": "Ansehen"
+    "viewInvoice": "Ansehen",
+    "invoice": "Rechnung",
+    "receipt": "Quittung",
+    "downloadInvoice": "Rechnung als PDF herunterladen",
+    "viewReceipt": "Quittung ansehen"
   },
   "settings": {
     "title": "Einstellungen",
+    "subtitle": "Ihr Profil und Team",
+    "tabs": {
+      "profile": "Profil",
+      "areaSettings": "Bereich-Einstellungen"
+    },
+    "profile": {
+      "metaTitle": "Profil-Einstellungen",
+      "metaDescription": "Namen aktualisieren",
+      "sectionTitle": "Ihr Profil",
+      "sectionDescription": "Dieser Name wird Ihrem Team und in Benachrichtigungen angezeigt.",
+      "firstName": "Vorname",
+      "lastName": "Nachname",
+      "save": "Änderungen speichern",
+      "saved": "Profil aktualisiert",
+      "required": "Vor- und Nachname sind erforderlich."
+    },
+    "team": {
+      "metaTitle": "Bereich-Einstellungen",
+      "metaDescription": "Team-Mitglieder, Rollen und Benachrichtigungen verwalten"
+    },
     "workspace": {
       "title": "Bereich-Einstellungen",
       "name": "Bereich-Name",
@@ -629,6 +653,8 @@
     "confirmedTitle": "Termin bestätigt",
     "confirmedDesc": "Ihr Termin wurde gebucht. Sie erhalten in Kürze eine Bestätigungs-E-Mail.",
     "failedToBook": "Buchung fehlgeschlagen",
+    "slotTaken": "Dieser Slot wurde gerade gebucht",
+    "slotTakenDesc": "Jemand anderes hat diesen Termin gebucht, während Sie Ihre Daten eingegeben haben. Bitte wählen Sie einen anderen verfügbaren Slot.",
     "confirming": "Wird bestätigt…",
     "confirmAppointment": "Termin bestätigen",
     "fields": {
@@ -1041,6 +1067,12 @@
     "bookingsDescription": "Leads über das Terminbuchungsformular",
     "submissionsChart": "Formularanfragen",
     "submissionsDescription": "Alle Formularanfragen ohne Terminbuchungen und ausgeblendete Leads",
+    "webAnalyticsChart": "Web-Analyse",
+    "webAnalyticsDescription": "Website-Besucherdaten aller Händler-Partner",
+    "metricVisitors": "Einzelbesucher",
+    "metricVisits": "Besuche gesamt",
+    "metricPageviews": "Seitenaufrufe",
+    "metricViewsPerVisit": "Aufrufe / Besuch",
     "noData": "Keine Daten verfügbar",
     "viewTrend": "Trend",
     "viewStatus": "Status",
@@ -1129,6 +1161,17 @@
     "orderNoServices": "Alle Dienste bereits aktiv",
     "orderNoOrders": "Noch keine Bestellungen",
     "orderPerMonth": "/ Monat",
-    "orderPerYear": "/ Jahr"
+    "orderPerYear": "/ Jahr",
+    "exportTitle": "Analysebericht exportieren",
+    "exportDescription": "Wählen Sie einen Arbeitsbereich und Zeitraum. Ein PDF-Bericht mit Lead-Statistiken und Web-Analyse wird heruntergeladen.",
+    "exportWorkspace": "Arbeitsbereich",
+    "exportPeriod": "Zeitraum",
+    "exportNoWorkspaces": "Keine Arbeitsbereiche gefunden.",
+    "exportError": "Bericht konnte nicht erstellt werden. Bitte versuchen Sie es erneut.",
+    "exportCancel": "Abbrechen",
+    "exportGenerating": "Wird erstellt…",
+    "exportDownload": "PDF herunterladen",
+    "exportButton": "Bericht exportieren",
+    "exportButtonShort": "Export"
   }
 }

@@ -268,7 +268,11 @@ export function Sidebar({ onClose, className }: { onClose?: () => void; classNam
           </NavLink>
         )}
 
-        <NavLink to="/settings" isActive={location.pathname === "/settings"} onClick={onClose}>
+        <NavLink
+          to="/settings/profile"
+          isActive={location.pathname.startsWith("/settings")}
+          onClick={onClose}
+        >
           <Settings className="h-4 w-4 shrink-0" />
           {t("nav.settings")}
         </NavLink>

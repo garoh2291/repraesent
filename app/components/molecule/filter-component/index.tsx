@@ -4,9 +4,8 @@ import * as React from "react";
 import { Check, ChevronLeft, Filter, Search } from "lucide-react";
 import { useLocation, useNavigate, useSearchParams } from "react-router";
 import { useTranslation } from "react-i18next";
-import { format } from "date-fns";
-
 import { cn } from "~/lib/utils";
+import { formatDate } from "~/lib/utils/format";
 import { Button } from "~/components/ui/button";
 import {
   Command,
@@ -181,7 +180,7 @@ export function FilterComponent({
         return selectedKeys.map((key) => {
           if (filter.type === "date") {
             try {
-              return format(new Date(key), "MMM dd, yyyy");
+              return formatDate(new Date(key), "MMM dd, yyyy");
             } catch {
               return key;
             }
@@ -432,7 +431,7 @@ export function FilterComponent({
                       <div className="flex items-center justify-between mb-2">
                         <span className="text-sm font-medium capitalize">
                           {dateFilters[activeFilter]
-                            ? format(dateFilters[activeFilter]!, "MMM dd, yyyy")
+                            ? formatDate(dateFilters[activeFilter]!, "MMM dd, yyyy")
                             : t("leads.filters.pickADate")}
                         </span>
                         {dateFilters[activeFilter] && (

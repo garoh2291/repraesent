@@ -27,8 +27,8 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "~/components/ui/alert-dialog";
-import { formatDistanceToNow } from "date-fns";
 import { MoreHorizontal, Pencil, Trash2, Plus } from "lucide-react";
+import { formatRelativeTime } from "~/lib/utils/format";
 import { cn } from "~/lib/utils";
 import TooltipContainer from "~/components/tooltip-container";
 
@@ -56,7 +56,14 @@ function getCurrentUserInitials(
 function getRelativeTime(note: Note): string {
   const date =
     note.version > 1 ? new Date(note.updated_at) : new Date(note.created_at);
-  return formatDistanceToNow(date, { addSuffix: true });
+  return formatRelativeTime(date);
+}
+
+function buildNoteUserLabel(note: Note, fallback: string): string {
+  const name = [note.user_first_name, note.user_last_name].filter(Boolean).join(" ").trim()
+    || note.user_email
+    || fallback;
+  return note.user_is_deleted ? `${name} (Deleted)` : name;
 }
 
 interface LeadNotesSectionProps {
@@ -293,14 +300,10 @@ export function LeadNotesSection({
               >
                 <div className="flex items-center gap-2 text-xs text-muted-foreground">
                   <TooltipContainer
-                    tooltipContent={
-                      note.user_first_name && note.user_last_name
-                        ? `${note.user_first_name} ${note.user_last_name}`
-                        : t("leads.detail.system")
-                    }
+                    tooltipContent={buildNoteUserLabel(note, t("leads.detail.system"))}
                     showCopyButton={false}
                   >
-                    <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-muted text-[9px] font-bold">
+                    <span className={`inline-flex h-5 w-5 items-center justify-center rounded-full text-[9px] font-bold ${note.user_is_deleted ? "bg-muted/50 text-muted-foreground/60" : "bg-muted"}`}>
                       {getInitials(note)}
                     </span>
                   </TooltipContainer>
@@ -331,17 +334,16 @@ export function LeadNotesSection({
                 <div className="flex items-center justify-between gap-2 mt-2.5">
                   <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
                     <TooltipContainer
-                      tooltipContent={
-                        note.user_first_name && note.user_last_name
-                          ? `${note.user_first_name} ${note.user_last_name}`
-                          : t("leads.detail.system")
-                      }
+                      tooltipContent={buildNoteUserLabel(note, t("leads.detail.system"))}
                       showCopyButton={false}
                     >
-                      <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-muted text-[9px] font-bold">
+                      <span className={`inline-flex h-5 w-5 items-center justify-center rounded-full text-[9px] font-bold ${note.user_is_deleted ? "bg-muted/50 text-muted-foreground/60" : "bg-muted"}`}>
                         {getInitials(note)}
                       </span>
                     </TooltipContainer>
+                    {note.user_is_deleted && (
+                      <span className="text-[10px] text-muted-foreground/60">(Deleted)</span>
+                    )}
                     <span>{getRelativeTime(note)}</span>
                     {note.version > 1 && (
                       <span className="italic text-muted-foreground/60">{t("leads.detail.editedBadge")}</span>

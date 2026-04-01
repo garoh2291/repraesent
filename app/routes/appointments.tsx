@@ -223,7 +223,7 @@ function AppointmentsDashboard({
   const isConfirmEmailActive = !!apptFallback?.appointment_booking?.enabled;
   const navigate = useNavigate();
   return (
-    <div className="p-4 sm:p-6 space-y-4 sm:space-y-6 app-fade-in relative">
+    <div className="mx-auto w-full max-w-[1280px] p-4 sm:p-6 py-10! space-y-6 sm:space-y-8 app-fade-in">
       {/* Header */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between app-fade-up">
         <div>

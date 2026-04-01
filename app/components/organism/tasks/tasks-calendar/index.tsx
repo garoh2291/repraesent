@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
-  format,
+  format as dateFnsFormat,
   startOfMonth,
   endOfMonth,
   startOfWeek,
@@ -16,6 +16,7 @@ import {
 } from "date-fns";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { cn } from "~/lib/utils";
+import { formatDate } from "~/lib/utils/format";
 import type { Task } from "~/lib/api/tasks";
 import type { WorkspaceMemberItem } from "~/components/organism/tasks/task-form-modal";
 
@@ -60,7 +61,7 @@ export function TasksCalendar({
   const tasksByDay: Record<string, Task[]> = {};
   for (const task of tasks) {
     if (!task.due_date) continue;
-    const key = format(new Date(task.due_date), "yyyy-MM-dd");
+    const key = dateFnsFormat(new Date(task.due_date), "yyyy-MM-dd");
     if (!tasksByDay[key]) tasksByDay[key] = [];
     tasksByDay[key].push(task);
   }
@@ -105,8 +106,8 @@ export function TasksCalendar({
 
   const navigationTitle =
     calViewType === "week"
-      ? `${format(weekStart, "MMM d")} – ${format(addDays(weekStart, 6), "MMM d, yyyy")}`
-      : format(currentDate, "MMMM yyyy");
+      ? `${formatDate(weekStart, "MMM d")} – ${formatDate(addDays(weekStart, 6), "MMM d, yyyy")}`
+      : formatDate(currentDate, "MMMM yyyy");
 
   return (
     <>
@@ -192,7 +193,7 @@ export function TasksCalendar({
             {/* Calendar grid */}
             <div className="grid grid-cols-7 gap-1">
               {monthDays.map((day) => {
-                const key = format(day, "yyyy-MM-dd");
+                const key = dateFnsFormat(day, "yyyy-MM-dd");
                 const dayTasks = tasksByDay[key] ?? [];
                 const isCurrentMonth = isSameMonth(day, currentDate);
                 const isExpanded = expandedDay === key;
@@ -229,7 +230,7 @@ export function TasksCalendar({
                               : "text-muted-foreground/50",
                         )}
                       >
-                        {format(day, "d")}
+                        {formatDate(day, "d")}
                       </span>
                       {hasUrgent && (
                         <span className="h-1.5 w-1.5 rounded-full bg-red-500" />
@@ -287,7 +288,7 @@ export function TasksCalendar({
         {calViewType === "week" && (
           <div className="grid grid-cols-7 gap-2">
             {weekDays.map((day) => {
-              const key = format(day, "yyyy-MM-dd");
+              const key = dateFnsFormat(day, "yyyy-MM-dd");
               const dayTasks = tasksByDay[key] ?? [];
 
               return (
@@ -308,7 +309,7 @@ export function TasksCalendar({
                     )}
                   >
                     <div className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-                      {format(day, "EEE")}
+                      {formatDate(day, "EEE")}
                     </div>
                     <div
                       className={cn(
@@ -318,7 +319,7 @@ export function TasksCalendar({
                           : "text-foreground",
                       )}
                     >
-                      {format(day, "d")}
+                      {formatDate(day, "d")}
                     </div>
                   </div>
 

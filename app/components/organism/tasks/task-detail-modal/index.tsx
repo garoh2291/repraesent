@@ -1,8 +1,8 @@
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
-import { format, formatDistanceToNow } from "date-fns";
 import { Link } from "react-router";
+import { formatDate, formatRelativeTime } from "~/lib/utils/format";
 import {
   Pencil,
   Trash2,
@@ -43,6 +43,7 @@ import { Calendar } from "~/components/ui/calendar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "~/components/ui/tabs";
 import { cn } from "~/lib/utils";
 import TooltipContainer from "~/components/tooltip-container";
+import { useAuthContext } from "~/providers/auth-provider";
 import { TaskUrgencyBadge } from "~/components/organism/tasks/task-urgency-badge";
 import { TaskFormModal, type WorkspaceMemberItem } from "~/components/organism/tasks/task-form-modal";
 import {
@@ -56,6 +57,7 @@ import {
 function formatHistoryAction(item: TaskHistoryItem, t: ReturnType<typeof useTranslation>["t"]): string {
   if (item.action === "task_created") return t("tasks.detail.historyTaskCreated");
   if (item.action === "task_deleted") return t("tasks.detail.historyTaskDeleted");
+  if (item.action === "task_assignee_removed") return t("tasks.detail.historyAssigneeRemoved", { defaultValue: "Assignee removed" });
   if (item.action === "task_updated") {
     const details = item.details as Record<string, unknown>;
     if (details.new_status) {
@@ -67,6 +69,17 @@ function formatHistoryAction(item: TaskHistoryItem, t: ReturnType<typeof useTran
     return t("tasks.detail.historyTaskUpdated");
   }
   return item.action.replace(/_/g, " ");
+}
+
+function buildUserLabel(
+  firstName: string | null,
+  lastName: string | null,
+  email: string | null,
+  isDeleted: boolean,
+  t: ReturnType<typeof useTranslation>["t"],
+): string {
+  const name = [firstName, lastName].filter(Boolean).join(" ").trim() || email || t("tasks.detail.system");
+  return isDeleted ? `${name} (${t("common.deleted", { defaultValue: "Deleted" })})` : name;
 }
 
 function getInitials(first: string | null, last: string | null): string {
@@ -95,6 +108,14 @@ export function TaskDetailModal({
 }: TaskDetailModalProps) {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
+  const { user: currentUser } = useAuthContext();
+
+  const sortedMembers = useMemo(() => {
+    if (!currentUser) return workspaceMembers;
+    const others = workspaceMembers.filter((m) => m.user_id !== currentUser.id);
+    const me = workspaceMembers.find((m) => m.user_id === currentUser.id);
+    return me ? [me, ...others] : others;
+  }, [workspaceMembers, currentUser]);
   const [editOpen, setEditOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [calendarOpen, setCalendarOpen] = useState(false);
@@ -285,7 +306,7 @@ export function TaskDetailModal({
                           >
                             <CalendarIcon className="h-3 w-3 text-muted-foreground" />
                             {task.due_date
-                              ? format(new Date(task.due_date), "PPP")
+                              ? formatDate(new Date(task.due_date), "PPP")
                               : t("tasks.form.dueDatePlaceholder")}
                           </button>
                         </PopoverTrigger>
@@ -323,7 +344,7 @@ export function TaskDetailModal({
                       </Popover>
                     ) : task.due_date ? (
                       <span className="text-xs text-muted-foreground">
-                        {format(new Date(task.due_date), "PPP")}
+                        {formatDate(new Date(task.due_date), "PPP")}
                       </span>
                     ) : (
                       <span className="text-xs text-muted-foreground">—</span>
@@ -355,26 +376,46 @@ export function TaskDetailModal({
                           <SelectItem value="unassigned" className="text-xs">
                             {t("tasks.form.unassigned")}
                           </SelectItem>
-                          {workspaceMembers.map((m) => (
-                            <SelectItem
-                              key={m.user_id}
-                              value={m.user_id}
-                              className="text-xs"
-                            >
-                              {m.user_first_name} {m.user_last_name}
-                            </SelectItem>
-                          ))}
+                          {sortedMembers.map((m) => {
+                            const isMe = m.user_id === currentUser?.id;
+                            const name = [m.user_first_name, m.user_last_name]
+                              .filter(Boolean)
+                              .join(" ")
+                              .trim() || m.user_email;
+                            const label = isMe
+                              ? `${t("common.you", { defaultValue: "You" })} (${name})`
+                              : name;
+                            return (
+                              <SelectItem
+                                key={m.user_id}
+                                value={m.user_id}
+                                className="text-xs"
+                              >
+                                {label}
+                              </SelectItem>
+                            );
+                          })}
                         </SelectContent>
                       </Select>
                     ) : task.assignee_id ? (
                       <div className="flex items-center gap-1.5 text-xs">
-                        <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-muted text-[9px] font-bold">
-                          {getInitials(
-                            task.assignee_first_name,
-                            task.assignee_last_name,
+                        <TooltipContainer
+                          tooltipContent={buildUserLabel(task.assignee_first_name, task.assignee_last_name, task.assignee_email, task.assignee_is_deleted, t)}
+                          showCopyButton={false}
+                        >
+                          <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-muted text-[9px] font-bold">
+                            {getInitials(
+                              task.assignee_first_name,
+                              task.assignee_last_name,
+                            )}
+                          </span>
+                        </TooltipContainer>
+                        <span>
+                          {[task.assignee_first_name, task.assignee_last_name].filter(Boolean).join(" ") || task.assignee_email}
+                          {task.assignee_is_deleted && (
+                            <span className="ml-1 text-muted-foreground/60">(Deleted)</span>
                           )}
                         </span>
-                        {task.assignee_first_name} {task.assignee_last_name}
                       </div>
                     ) : (
                       <span className="text-xs text-muted-foreground">—</span>
@@ -397,9 +438,7 @@ export function TaskDetailModal({
                     </span>
                     <span className="text-muted-foreground/60">·</span>
                     <span>
-                      {formatDistanceToNow(new Date(task.created_at), {
-                        addSuffix: true,
-                      })}
+                      {formatRelativeTime(task.created_at)}
                     </span>
                   </div>
                 </div>
@@ -427,9 +466,7 @@ export function TaskDetailModal({
                         {history.map((item, idx) => {
                           const actionText = formatHistoryAction(item, t);
                           const relativeTime = item.created_at
-                            ? formatDistanceToNow(new Date(item.created_at), {
-                                addSuffix: true,
-                              })
+                            ? formatRelativeTime(item.created_at)
                             : "";
                           return (
                             <div
@@ -445,20 +482,19 @@ export function TaskDetailModal({
                                 </p>
                                 <div className="flex items-center gap-2 text-xs text-muted-foreground mt-1">
                                   <TooltipContainer
-                                    tooltipContent={
-                                      item.user_first_name && item.user_last_name
-                                        ? `${item.user_first_name} ${item.user_last_name}`
-                                        : t("tasks.detail.system")
-                                    }
+                                    tooltipContent={buildUserLabel(item.user_first_name, item.user_last_name, item.user_email, item.user_is_deleted, t)}
                                     showCopyButton={false}
                                   >
-                                    <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-muted text-[9px] font-bold">
+                                    <span className={`inline-flex h-5 w-5 items-center justify-center rounded-full text-[9px] font-bold ${item.user_is_deleted ? "bg-muted/50 text-muted-foreground/60" : "bg-muted"}`}>
                                       {getInitials(
                                         item.user_first_name,
                                         item.user_last_name,
                                       )}
                                     </span>
                                   </TooltipContainer>
+                                  {item.user_is_deleted && (
+                                    <span className="text-[10px] text-muted-foreground/60">(Deleted)</span>
+                                  )}
                                   <span>{relativeTime}</span>
                                 </div>
                               </div>
