@@ -308,19 +308,33 @@ function MemberRow({ member }: { member: BrandWorkspaceMemberItem }) {
 
 function SkeletonRow() {
   return (
-    <div className="grid grid-cols-[1fr_130px_80px_40px] lg:grid-cols-[1fr_180px_140px_80px_40px] gap-x-6 items-center border-b border-white/6 px-5 py-4 animate-pulse">
-      <div className="flex items-center gap-2 pr-4">
-        <div className="h-4 w-36 rounded-md bg-black/8" />
-        <div className="h-5 w-16 rounded-md bg-black/5" />
+    <>
+      {/* Mobile skeleton */}
+      <div className="sm:hidden border-b border-white/6 px-4 py-3.5 animate-pulse space-y-2.5">
+        <div className="flex items-center gap-2">
+          <div className="h-4 w-32 rounded-md bg-black/8" />
+          <div className="h-5 w-14 rounded-md bg-black/5" />
+        </div>
+        <div className="flex items-center gap-4">
+          <div className="h-3 w-20 rounded bg-black/6" />
+          <div className="h-3 w-10 rounded bg-black/6" />
+        </div>
       </div>
-      <div className="hidden lg:flex gap-1">
-        <div className="h-5 w-16 rounded-md bg-black/6" />
-        <div className="h-5 w-20 rounded-md bg-black/5" />
+      {/* Desktop skeleton */}
+      <div className="hidden sm:grid grid-cols-[1fr_130px_80px_40px] lg:grid-cols-[1fr_180px_140px_80px_40px] gap-x-6 items-center border-b border-white/6 px-5 py-4 animate-pulse">
+        <div className="flex items-center gap-2 pr-4">
+          <div className="h-4 w-36 rounded-md bg-black/8" />
+          <div className="h-5 w-16 rounded-md bg-black/5" />
+        </div>
+        <div className="hidden lg:flex gap-1">
+          <div className="h-5 w-16 rounded-md bg-black/6" />
+          <div className="h-5 w-20 rounded-md bg-black/5" />
+        </div>
+        <div className="h-3 w-14 rounded bg-black/6" />
+        <div className="h-3 w-6 rounded bg-black/6 ml-auto" />
+        <div className="h-4 w-4 rounded bg-black/5 ml-auto" />
       </div>
-      <div className="h-3 w-14 rounded bg-black/6" />
-      <div className="h-3 w-6 rounded bg-black/6 ml-auto" />
-      <div className="h-4 w-4 rounded bg-black/5 ml-auto" />
-    </div>
+    </>
   );
 }
 
@@ -443,8 +457,8 @@ export default function BrandWorkspaces() {
 
       {/* Table */}
       <div className="rounded-xl overflow-hidden border border-border shadow-sm">
-        {/* Column headers */}
-        <div className="grid grid-cols-[1fr_130px_80px_40px] lg:grid-cols-[1fr_180px_140px_80px_40px] gap-x-6 items-center bg-[#dddbd7] border-b border-[#cccac6] px-5 py-2.5">
+        {/* Column headers — hidden on mobile */}
+        <div className="hidden sm:grid grid-cols-[1fr_130px_80px_40px] lg:grid-cols-[1fr_180px_140px_80px_40px] gap-x-6 items-center bg-[#dddbd7] border-b border-[#cccac6] px-5 py-2.5">
           <span className="text-[10px] font-bold uppercase tracking-[0.12em] text-muted-foreground">
             {t("brand.wsColWorkspace", "Partner House")}
           </span>
@@ -477,12 +491,45 @@ export default function BrandWorkspaces() {
                 key={ws.id}
                 className="border-b border-white/6 last:border-0"
               >
-                {/* Collapsed row */}
+                {/* Mobile collapsed row */}
                 <button
                   type="button"
                   onClick={() => toggleRow(ws.id)}
                   className={cn(
-                    "w-full grid grid-cols-[1fr_130px_80px_40px] lg:grid-cols-[1fr_180px_140px_80px_40px] gap-x-6 items-center px-5 py-3.5 text-left transition-colors duration-100",
+                    "sm:hidden w-full flex items-start gap-3 px-4 py-3.5 text-left transition-colors duration-100",
+                    isExpanded
+                      ? "bg-[#e3e1dd]"
+                      : "bg-[#eceae6] hover:bg-[#e7e5e1]"
+                  )}
+                >
+                  <div className="flex-1 min-w-0 space-y-1.5">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="text-sm font-semibold text-foreground truncate">
+                        {ws.name}
+                      </span>
+                      <StatusBadge status={ws.status} />
+                    </div>
+                    <div className="flex items-center gap-3 text-[11px] text-muted-foreground">
+                      <span className="tabular-nums">{formatRelative(ws.last_activity_at, t)}</span>
+                      <span className="text-foreground font-semibold tabular-nums">
+                        {formatNumber(ws.leads_count)} {t("brand.wsColLeads", "Leads").toLowerCase()}
+                      </span>
+                    </div>
+                  </div>
+                  <ChevronDown
+                    className={cn(
+                      "h-4 w-4 text-muted-foreground/50 transition-transform duration-200 shrink-0 mt-1",
+                      isExpanded && "rotate-180 text-amber-400"
+                    )}
+                  />
+                </button>
+
+                {/* Desktop collapsed row */}
+                <button
+                  type="button"
+                  onClick={() => toggleRow(ws.id)}
+                  className={cn(
+                    "hidden sm:grid w-full grid-cols-[1fr_130px_80px_40px] lg:grid-cols-[1fr_180px_140px_80px_40px] gap-x-6 items-center px-5 py-3.5 text-left transition-colors duration-100",
                     isExpanded
                       ? "bg-[#e3e1dd]"
                       : "bg-[#eceae6] hover:bg-[#e7e5e1]"

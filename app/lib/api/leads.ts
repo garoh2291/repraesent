@@ -121,9 +121,9 @@ export async function getLeadStats(): Promise<LeadStats> {
 }
 
 export type LeadAnalyticsPeriod =
-  | "today"
-  | "this_week"
-  | "this_month"
+  | "1d"
+  | "7d"
+  | "30d"
   | "all_time";
 
 export interface LeadAnalytics {

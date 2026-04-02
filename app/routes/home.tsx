@@ -51,9 +51,9 @@ export function meta() {
 
 function usePeriods(): { value: LeadAnalyticsPeriod; labelKey: string }[] {
   return [
-    { value: "today", labelKey: "home.periodToday" },
-    { value: "this_week", labelKey: "home.periodThisWeek" },
-    { value: "this_month", labelKey: "home.periodThisMonth" },
+    { value: "1d", labelKey: "home.period1d" },
+    { value: "7d", labelKey: "home.period7d" },
+    { value: "30d", labelKey: "home.period30d" },
     { value: "all_time", labelKey: "home.periodAllTime" },
   ];
 }
@@ -81,7 +81,7 @@ function fillSeriesGaps(
   const map = new Map(series.map((p) => [p.date, p.count]));
   const slots: string[] = [];
 
-  if (period === "today") {
+  if (period === "1d") {
     const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
     for (let h = 0; h <= now.getHours(); h++) {
       const d = new Date(today);
@@ -89,7 +89,7 @@ function fillSeriesGaps(
       const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}T${String(h).padStart(2, "0")}:00:00`;
       slots.push(key);
     }
-  } else if (period === "this_week") {
+  } else if (period === "7d") {
     for (let i = 6; i >= 0; i--) {
       const d = new Date(now);
       d.setDate(d.getDate() - i);
@@ -97,10 +97,10 @@ function fillSeriesGaps(
         `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`
       );
     }
-  } else if (period === "this_month") {
-    const days = now.getDate();
-    for (let i = 1; i <= days; i++) {
-      const d = new Date(now.getFullYear(), now.getMonth(), i);
+  } else if (period === "30d") {
+    for (let i = 29; i >= 0; i--) {
+      const d = new Date(now);
+      d.setDate(d.getDate() - i);
       slots.push(
         `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`
       );
@@ -120,7 +120,7 @@ function fillSeriesGaps(
 }
 
 function formatXLabel(date: string, period: LeadAnalyticsPeriod): string {
-  if (period === "today") {
+  if (period === "1d") {
     const hour = parseInt(date.slice(11, 13), 10);
     return `${hour.toString().padStart(2, "0")}:00`;
   }
@@ -159,7 +159,7 @@ function LeadAnalyticsChart() {
   const { currentWorkspace } = useAuthContext();
   const { t } = useTranslation();
   const periods = usePeriods();
-  const [period, setPeriod] = useState<LeadAnalyticsPeriod>("this_week");
+  const [period, setPeriod] = useState<LeadAnalyticsPeriod>("7d");
 
   const { data, isLoading } = useQuery({
     queryKey: ["leadAnalytics", currentWorkspace?.id, period],
@@ -210,13 +210,13 @@ function LeadAnalyticsChart() {
         </Link>
       </div>
 
-      <div className="flex items-center gap-1 rounded-xl bg-muted p-1 overflow-x-auto scrollbar-hide w-fit">
+      <div className="flex items-center gap-0.5 sm:gap-1 rounded-xl bg-muted p-0.5 sm:p-1 overflow-x-auto scrollbar-hide w-fit">
         {periods.map((p) => (
           <button
             key={p.value}
             onClick={() => setPeriod(p.value)}
             className={cn(
-              "rounded-lg px-2.5 sm:px-3 py-1.5 text-[11px] sm:text-[12px] font-medium transition-all duration-150 whitespace-nowrap shrink-0",
+              "rounded-lg px-1.5 sm:px-2.5 py-1 sm:py-1.5 text-[10px] sm:text-[11px] font-medium transition-all duration-150 whitespace-nowrap shrink-0",
               period === p.value
                 ? "bg-card text-foreground shadow-sm"
                 : "text-muted-foreground hover:text-foreground"
@@ -592,14 +592,54 @@ function MyTasksSection({ userId }: { userId: string }) {
 // ─── Plausible Web Analytics Section ─────────────────────────────────────────
 
 const PLAUSIBLE_PERIODS: { value: PlausiblePeriod; labelKey: string }[] = [
-  { value: "today", labelKey: "home.periodToday" },
-  { value: "this_week", labelKey: "home.periodThisWeek" },
-  { value: "this_month", labelKey: "home.period30d" },
+  { value: "1d", labelKey: "home.period1d" },
+  { value: "7d", labelKey: "home.period7d" },
+  { value: "30d", labelKey: "home.period30d" },
   { value: "all_time", labelKey: "home.periodAllTime" },
 ];
 
+function fillPlausibleSeriesGaps(
+  series: { date: string; visitors: number; pageviews: number }[],
+  period: PlausiblePeriod
+): { date: string; visitors: number; pageviews: number }[] {
+  const now = new Date();
+  const map = new Map(series.map((p) => [p.date, p]));
+  const slots: string[] = [];
+  const pad = (n: number) => String(n).padStart(2, "0");
+
+  if (period === "1d") {
+    const y = now.getFullYear();
+    const m = pad(now.getMonth() + 1);
+    const d = pad(now.getDate());
+    for (let h = 0; h <= now.getHours(); h++) {
+      slots.push(`${y}-${m}-${d}T${pad(h)}:00:00`);
+    }
+  } else if (period === "7d") {
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date(now);
+      d.setDate(d.getDate() - i);
+      slots.push(`${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`);
+    }
+  } else if (period === "30d") {
+    for (let i = 29; i >= 0; i--) {
+      const d = new Date(now);
+      d.setDate(d.getDate() - i);
+      slots.push(`${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`);
+    }
+  } else {
+    // all_time — just return as-is (monthly buckets from API)
+    return series;
+  }
+
+  // Plausible may use space or T separator for hourly data — normalize matching
+  return slots.map((key) => {
+    const found = map.get(key) ?? map.get(key.replace("T", " "));
+    return found ?? { date: key, visitors: 0, pageviews: 0 };
+  });
+}
+
 function formatPlausibleXLabel(date: string, period: PlausiblePeriod): string {
-  if (period === "today") {
+  if (period === "1d") {
     // hourly data like "2026-04-01 14:00:00" or "2026-04-01T14:00:00"
     const hourMatch = date.match(/(\d{2}):00/);
     if (hourMatch) return `${hourMatch[1]}:00`;
@@ -647,7 +687,7 @@ function PlausibleStatsTooltip({
 function WebAnalyticsSection() {
   const { t } = useTranslation();
   const { currentWorkspace } = useAuthContext();
-  const [period, setPeriod] = useState<PlausiblePeriod>("this_month");
+  const [period, setPeriod] = useState<PlausiblePeriod>("30d");
 
   const hasPlausible = currentWorkspace?.has_plausible_analytics ?? false;
 
@@ -658,10 +698,14 @@ function WebAnalyticsSection() {
     staleTime: 60_000,
   });
 
+  const timeseries = useMemo(
+    () => fillPlausibleSeriesGaps(stats?.timeseries ?? [], period),
+    [stats?.timeseries, period]
+  );
+
   // Don't render if workspace has no analytics service or no brand plausible key
   if (!hasPlausible) return null;
 
-  const timeseries = stats?.timeseries ?? [];
   const agg = stats?.aggregate;
 
   const tickStep =
@@ -714,13 +758,13 @@ function WebAnalyticsSection() {
         </div>
 
         <div className="flex flex-wrap items-center gap-2 self-start">
-          <div className="flex items-center gap-1 rounded-xl bg-muted p-1 overflow-x-auto scrollbar-hide">
+          <div className="flex items-center gap-0.5 sm:gap-1 rounded-xl bg-muted p-0.5 sm:p-1 overflow-x-auto scrollbar-hide">
             {PLAUSIBLE_PERIODS.map((p) => (
               <button
                 key={p.value}
                 onClick={() => setPeriod(p.value)}
                 className={cn(
-                  "rounded-lg px-2.5 py-1.5 text-[11px] font-medium transition-all duration-150 whitespace-nowrap shrink-0",
+                  "rounded-lg px-1.5 sm:px-2.5 py-1 sm:py-1.5 text-[10px] sm:text-[11px] font-medium transition-all duration-150 whitespace-nowrap shrink-0",
                   period === p.value
                     ? "bg-card text-foreground shadow-sm"
                     : "text-muted-foreground hover:text-foreground"
