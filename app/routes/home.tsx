@@ -906,11 +906,11 @@ export default function Home() {
       {/* Web Analytics (Plausible) — shown if workspace has analytics service */}
       <WebAnalyticsSection />
 
-      {/* My tasks */}
-      {user?.id && <MyTasksSection userId={user.id} />}
-
       {/* Analytics chart */}
       <LeadAnalyticsChart />
+
+      {/* My tasks */}
+      {user?.id && <MyTasksSection userId={user.id} />}
     </div>
   );
 }
