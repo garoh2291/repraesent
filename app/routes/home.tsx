@@ -598,6 +598,46 @@ const PLAUSIBLE_PERIODS: { value: PlausiblePeriod; labelKey: string }[] = [
   { value: "all_time", labelKey: "home.periodAllTime" },
 ];
 
+function fillPlausibleSeriesGaps(
+  series: { date: string; visitors: number; pageviews: number }[],
+  period: PlausiblePeriod
+): { date: string; visitors: number; pageviews: number }[] {
+  const now = new Date();
+  const map = new Map(series.map((p) => [p.date, p]));
+  const slots: string[] = [];
+  const pad = (n: number) => String(n).padStart(2, "0");
+
+  if (period === "1d") {
+    const y = now.getFullYear();
+    const m = pad(now.getMonth() + 1);
+    const d = pad(now.getDate());
+    for (let h = 0; h <= now.getHours(); h++) {
+      slots.push(`${y}-${m}-${d}T${pad(h)}:00:00`);
+    }
+  } else if (period === "7d") {
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date(now);
+      d.setDate(d.getDate() - i);
+      slots.push(`${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`);
+    }
+  } else if (period === "30d") {
+    for (let i = 29; i >= 0; i--) {
+      const d = new Date(now);
+      d.setDate(d.getDate() - i);
+      slots.push(`${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`);
+    }
+  } else {
+    // all_time — just return as-is (monthly buckets from API)
+    return series;
+  }
+
+  // Plausible may use space or T separator for hourly data — normalize matching
+  return slots.map((key) => {
+    const found = map.get(key) ?? map.get(key.replace("T", " "));
+    return found ?? { date: key, visitors: 0, pageviews: 0 };
+  });
+}
+
 function formatPlausibleXLabel(date: string, period: PlausiblePeriod): string {
   if (period === "1d") {
     // hourly data like "2026-04-01 14:00:00" or "2026-04-01T14:00:00"
@@ -658,10 +698,14 @@ function WebAnalyticsSection() {
     staleTime: 60_000,
   });
 
+  const timeseries = useMemo(
+    () => fillPlausibleSeriesGaps(stats?.timeseries ?? [], period),
+    [stats?.timeseries, period]
+  );
+
   // Don't render if workspace has no analytics service or no brand plausible key
   if (!hasPlausible) return null;
 
-  const timeseries = stats?.timeseries ?? [];
   const agg = stats?.aggregate;
 
   const tickStep =

@@ -615,19 +615,60 @@ function ChartSection({
 
 // ─── Analytics Chart Section (trend-only) ────────────────────────────────────
 
-function buildPlausibleLineData(
-  workspaces: PlausibleWorkspaceSeries[],
-): Record<string, string | number>[] {
+function getPlausibleSlots(
+  period: LeadAnalyticsPeriod,
+  workspaces: PlausibleWorkspaceSeries[]
+): string[] {
+  const now = new Date();
+
+  if (period === "1d") {
+    const slots: string[] = [];
+    const y = now.getFullYear();
+    const m = pad(now.getMonth() + 1);
+    const d = pad(now.getDate());
+    for (let h = 0; h <= now.getHours(); h++) {
+      slots.push(`${y}-${m}-${d}T${pad(h)}:00:00`);
+    }
+    return slots;
+  }
+  if (period === "7d") {
+    const slots: string[] = [];
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date(now);
+      d.setDate(d.getDate() - i);
+      slots.push(`${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`);
+    }
+    return slots;
+  }
+  if (period === "30d") {
+    const slots: string[] = [];
+    for (let i = 29; i >= 0; i--) {
+      const d = new Date(now);
+      d.setDate(d.getDate() - i);
+      slots.push(`${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`);
+    }
+    return slots;
+  }
+  // all_time — collect unique dates from data
   const allDates = new Set<string>();
   workspaces.forEach((ws) =>
     ws.timeseries.forEach((t) => allDates.add(t.date))
   );
-  const slots = Array.from(allDates).sort();
+  return Array.from(allDates).sort();
+}
+
+function buildPlausibleLineData(
+  workspaces: PlausibleWorkspaceSeries[],
+  period: LeadAnalyticsPeriod,
+): Record<string, string | number>[] {
+  const slots = getPlausibleSlots(period, workspaces);
 
   return slots.map((date) => {
     const point: Record<string, string | number> = { date };
     workspaces.forEach((ws) => {
-      const found = ws.timeseries.find((t) => t.date === date);
+      const found = ws.timeseries.find(
+        (t) => t.date === date || t.date === date.replace("T", " ")
+      );
       point[ws.workspace_id] = found?.visitors ?? 0;
     });
     return point;
@@ -704,8 +745,8 @@ function AnalyticsChartSection({
   }, []);
 
   const lineData = useMemo(
-    () => buildPlausibleLineData(workspaces),
-    [workspaces]
+    () => buildPlausibleLineData(workspaces, period),
+    [workspaces, period]
   );
 
   // Aggregate metrics (all or hovered-only)
