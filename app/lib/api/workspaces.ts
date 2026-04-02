@@ -150,7 +150,7 @@ export async function getCalDavConfig(): Promise<CalDavConfig | null> {
   return response.data;
 }
 
-export type EmailAnalyticsPeriod = "today" | "this_week" | "this_month" | "all_time";
+export type EmailAnalyticsPeriod = "1d" | "7d" | "30d" | "all_time";
 
 export interface EmailAnalytics {
   series: { date: string; success: number; error: number }[];
@@ -178,7 +178,7 @@ export async function decryptCalDavPassword(
 
 // ─── Plausible Web Analytics ────────────────────────────────────────────────
 
-export type PlausiblePeriod = "today" | "this_week" | "this_month" | "all_time";
+export type PlausiblePeriod = "1d" | "7d" | "30d" | "all_time";
 
 export interface PlausibleStats {
   site_id: string;

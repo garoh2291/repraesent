@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { useTranslation } from "react-i18next";
@@ -489,29 +489,82 @@ export function CustomerEmailTab({ config }: CustomerEmailTabProps) {
 /* ── Activity Logs Chart ─────────────────────────────────────────── */
 
 const PERIODS: { key: EmailAnalyticsPeriod; labelKey: string }[] = [
-  { key: "today", labelKey: "appointments.customerEmail.periodToday" },
-  { key: "this_week", labelKey: "appointments.customerEmail.periodWeek" },
-  { key: "this_month", labelKey: "appointments.customerEmail.periodMonth" },
+  { key: "1d", labelKey: "appointments.customerEmail.period1d" },
+  { key: "7d", labelKey: "appointments.customerEmail.period7d" },
+  { key: "30d", labelKey: "appointments.customerEmail.period30d" },
   { key: "all_time", labelKey: "appointments.customerEmail.periodAll" },
 ];
 
+function fillEmailSeriesGaps(
+  series: { date: string; success: number; error: number }[],
+  period: EmailAnalyticsPeriod
+): { date: string; success: number; error: number }[] {
+  const now = new Date();
+  const map = new Map(series.map((p) => [p.date, p]));
+  const slots: string[] = [];
+
+  if (period === "1d") {
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    for (let h = 0; h <= now.getHours(); h++) {
+      const d = new Date(today);
+      d.setHours(h);
+      slots.push(
+        `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}T${String(h).padStart(2, "0")}:00:00`
+      );
+    }
+  } else if (period === "7d") {
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date(now);
+      d.setDate(d.getDate() - i);
+      slots.push(
+        `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`
+      );
+    }
+  } else if (period === "30d") {
+    for (let i = 29; i >= 0; i--) {
+      const d = new Date(now);
+      d.setDate(d.getDate() - i);
+      slots.push(
+        `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`
+      );
+    }
+  } else {
+    if (series.length === 0) return [];
+    const start = new Date(series[0].date + "T00:00:00");
+    const end = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    for (const d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+      slots.push(
+        `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`
+      );
+    }
+  }
+
+  return slots.map((key) => {
+    const found = map.get(key);
+    return found ?? { date: key, success: 0, error: 0 };
+  });
+}
+
 function EmailActivityChart() {
   const { t } = useTranslation();
-  const [period, setPeriod] = useState<EmailAnalyticsPeriod>("this_week");
+  const [period, setPeriod] = useState<EmailAnalyticsPeriod>("7d");
 
   const { data } = useQuery({
     queryKey: ["email-analytics", period],
     queryFn: () => getEmailAnalytics(period),
   });
 
-  const series = data?.series ?? [];
+  const series = useMemo(
+    () => fillEmailSeriesGaps(data?.series ?? [], period),
+    [data?.series, period]
+  );
   const totalSuccess = data?.total_success ?? 0;
   const totalError = data?.total_error ?? 0;
   const total = totalSuccess + totalError;
   const maxY = Math.max(...series.map((d) => d.success + d.error), 1);
 
   const formatTick = (val: string) => {
-    if (period === "today") {
+    if (period === "1d") {
       return val.split("T")[1]?.slice(0, 5) ?? val;
     }
     const d = new Date(val);
@@ -537,13 +590,13 @@ function EmailActivityChart() {
             </p>
           </div>
         </div>
-        <div className="flex items-center gap-0.5 rounded-lg border border-border bg-muted/50 p-0.5">
+        <div className="flex items-center gap-0.5 rounded-lg border border-border bg-muted/50 p-0.5 overflow-x-auto scrollbar-hide">
           {PERIODS.map((p) => (
             <button
               key={p.key}
               type="button"
               onClick={() => setPeriod(p.key)}
-              className={`rounded-md px-2.5 py-1 text-[11px] font-medium transition-all ${
+              className={`rounded-md px-1.5 sm:px-2.5 py-1 text-[10px] sm:text-[11px] font-medium whitespace-nowrap shrink-0 transition-all ${
                 period === p.key
                   ? "bg-neutral-900 text-white shadow-sm"
                   : "text-muted-foreground hover:text-foreground"
@@ -612,7 +665,7 @@ function EmailActivityChart() {
                   padding: "8px 12px",
                 }}
                 labelFormatter={(label: string) =>
-                  period === "today"
+                  period === "1d"
                     ? label.split("T")[1]?.slice(0, 5) ?? label
                     : formatDateShort(label)
                 }
@@ -628,8 +681,8 @@ function EmailActivityChart() {
                 dataKey="success"
                 stroke="#10b981"
                 strokeWidth={2}
-                dot={series.length < 20}
-                activeDot={{ r: 4, strokeWidth: 0 }}
+                dot={false}
+                activeDot={{ r: 4, fill: "#10b981", stroke: "var(--card)", strokeWidth: 2 }}
               />
               <Line
                 type="monotone"

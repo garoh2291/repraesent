@@ -46,9 +46,9 @@ export function meta() {
 // ─── Constants ──────────────────────────────────────────────────────────────
 
 const PERIODS: { value: LeadAnalyticsPeriod; labelKey: string }[] = [
-  { value: "today", labelKey: "brand.periodToday" },
-  { value: "this_week", labelKey: "brand.periodThisWeek" },
-  { value: "this_month", labelKey: "brand.periodThisMonth" },
+  { value: "1d", labelKey: "brand.period1d" },
+  { value: "7d", labelKey: "brand.period7d" },
+  { value: "30d", labelKey: "brand.period30d" },
   { value: "all_time", labelKey: "brand.periodAllTime" },
 ];
 
@@ -106,7 +106,7 @@ function getDateSlots(
   const now = new Date();
   const slots: string[] = [];
 
-  if (period === "today") {
+  if (period === "1d") {
     const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
     for (let h = 0; h <= now.getHours(); h++) {
       const d = new Date(today);
@@ -115,7 +115,7 @@ function getDateSlots(
         `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(h)}:00:00`
       );
     }
-  } else if (period === "this_week") {
+  } else if (period === "7d") {
     for (let i = 6; i >= 0; i--) {
       const d = new Date(now);
       d.setDate(d.getDate() - i);
@@ -123,10 +123,13 @@ function getDateSlots(
         `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`
       );
     }
-  } else if (period === "this_month") {
-    for (let i = 1; i <= now.getDate(); i++) {
-      const d = new Date(now.getFullYear(), now.getMonth(), i);
-      slots.push(`${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(i)}`);
+  } else if (period === "30d") {
+    for (let i = 29; i >= 0; i--) {
+      const d = new Date(now);
+      d.setDate(d.getDate() - i);
+      slots.push(
+        `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`
+      );
     }
   } else {
     // all_time: collect all unique dates across all workspaces
@@ -140,7 +143,7 @@ function getDateSlots(
 }
 
 function formatXLabel(date: string, period: LeadAnalyticsPeriod): string {
-  if (period === "today") {
+  if (period === "1d") {
     const hour = parseInt(date.slice(11, 13), 10);
     return `${hour.toString().padStart(2, "0")}:00`;
   }
@@ -344,11 +347,11 @@ function ChartSection({
 
         <div className="flex flex-wrap items-center gap-2 self-start">
           {/* View toggle: Trend line / Status bar */}
-          <div className="flex items-center gap-1 rounded-xl bg-muted p-1">
+          <div className="flex items-center gap-0.5 sm:gap-1 rounded-xl bg-muted p-0.5 sm:p-1">
             <button
               onClick={() => setView("line")}
               className={cn(
-                "flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-[11px] font-medium transition-all duration-150 whitespace-nowrap",
+                "flex items-center gap-1 sm:gap-1.5 rounded-lg px-1.5 sm:px-2.5 py-1 sm:py-1.5 text-[10px] sm:text-[11px] font-medium transition-all duration-150 whitespace-nowrap",
                 view === "line"
                   ? "bg-card text-foreground shadow-sm"
                   : "text-muted-foreground hover:text-foreground"
@@ -360,7 +363,7 @@ function ChartSection({
             <button
               onClick={() => setView("bar")}
               className={cn(
-                "flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-[11px] font-medium transition-all duration-150 whitespace-nowrap",
+                "flex items-center gap-1 sm:gap-1.5 rounded-lg px-1.5 sm:px-2.5 py-1 sm:py-1.5 text-[10px] sm:text-[11px] font-medium transition-all duration-150 whitespace-nowrap",
                 view === "bar"
                   ? "bg-card text-foreground shadow-sm"
                   : "text-muted-foreground hover:text-foreground"
@@ -372,13 +375,13 @@ function ChartSection({
           </div>
 
           {/* Period buttons — shown for both trend and status views */}
-          <div className="flex items-center gap-1 rounded-xl bg-muted p-1 overflow-x-auto scrollbar-hide">
+          <div className="flex items-center gap-0.5 sm:gap-1 rounded-xl bg-muted p-0.5 sm:p-1 overflow-x-auto scrollbar-hide">
             {PERIODS.map((p) => (
               <button
                 key={p.value}
                 onClick={() => onPeriodChange(p.value)}
                 className={cn(
-                  "rounded-lg px-2.5 py-1.5 text-[11px] font-medium transition-all duration-150 whitespace-nowrap shrink-0",
+                  "rounded-lg px-1.5 sm:px-2.5 py-1 sm:py-1.5 text-[10px] sm:text-[11px] font-medium transition-all duration-150 whitespace-nowrap shrink-0",
                   period === p.value
                     ? "bg-card text-foreground shadow-sm"
                     : "text-muted-foreground hover:text-foreground"
@@ -764,13 +767,13 @@ function AnalyticsChartSection({
         </div>
 
         <div className="flex flex-wrap items-center gap-2 self-start">
-          <div className="flex items-center gap-1 rounded-xl bg-muted p-1 overflow-x-auto scrollbar-hide">
+          <div className="flex items-center gap-0.5 sm:gap-1 rounded-xl bg-muted p-0.5 sm:p-1 overflow-x-auto scrollbar-hide">
             {PERIODS.map((p) => (
               <button
                 key={p.value}
                 onClick={() => onPeriodChange(p.value)}
                 className={cn(
-                  "rounded-lg px-2.5 py-1.5 text-[11px] font-medium transition-all duration-150 whitespace-nowrap shrink-0",
+                  "rounded-lg px-1.5 sm:px-2.5 py-1 sm:py-1.5 text-[10px] sm:text-[11px] font-medium transition-all duration-150 whitespace-nowrap shrink-0",
                   period === p.value
                     ? "bg-card text-foreground shadow-sm"
                     : "text-muted-foreground hover:text-foreground"
@@ -1070,13 +1073,13 @@ function WorkspaceLeaderboard({
         </div>
 
         <div className="flex flex-wrap items-center gap-2 self-start">
-          <div className="flex items-center gap-1 rounded-xl bg-muted p-1 overflow-x-auto scrollbar-hide">
+          <div className="flex items-center gap-0.5 sm:gap-1 rounded-xl bg-muted p-0.5 sm:p-1 overflow-x-auto scrollbar-hide">
             {PERIODS.map((p) => (
               <button
                 key={p.value}
                 onClick={() => onPeriodChange(p.value)}
                 className={cn(
-                  "rounded-lg px-2.5 py-1.5 text-[11px] font-medium transition-all duration-150 whitespace-nowrap shrink-0",
+                  "rounded-lg px-1.5 sm:px-2.5 py-1 sm:py-1.5 text-[10px] sm:text-[11px] font-medium transition-all duration-150 whitespace-nowrap shrink-0",
                   period === p.value
                     ? "bg-card text-foreground shadow-sm"
                     : "text-muted-foreground hover:text-foreground"
@@ -1175,9 +1178,9 @@ function WorkspaceLeaderboard({
 // ─── Export Report Modal ──────────────────────────────────────────────────────
 
 const EXPORT_PERIODS: { value: LeadAnalyticsPeriod; labelKey: string }[] = [
-  { value: "today", labelKey: "brand.periodToday" },
-  { value: "this_week", labelKey: "brand.periodThisWeek" },
-  { value: "this_month", labelKey: "brand.periodThisMonth" },
+  { value: "1d", labelKey: "brand.period1d" },
+  { value: "7d", labelKey: "brand.period7d" },
+  { value: "30d", labelKey: "brand.period30d" },
   { value: "all_time", labelKey: "brand.periodAllTime" },
 ];
 
@@ -1193,7 +1196,7 @@ function ExportReportModal({
   const { t } = useTranslation();
   const [selectedWorkspaceId, setSelectedWorkspaceId] = useState<string>("");
   const [selectedPeriod, setSelectedPeriod] =
-    useState<LeadAnalyticsPeriod>("this_month");
+    useState<LeadAnalyticsPeriod>("30d");
   const [isExporting, setIsExporting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -1344,11 +1347,11 @@ function ExportReportModal({
 export default function BrandDashboard() {
   const { t } = useTranslation();
   const [bookingsPeriod, setBookingsPeriod] =
-    useState<LeadAnalyticsPeriod>("this_week");
+    useState<LeadAnalyticsPeriod>("7d");
   const [submissionsPeriod, setSubmissionsPeriod] =
-    useState<LeadAnalyticsPeriod>("this_week");
+    useState<LeadAnalyticsPeriod>("7d");
   const [plausiblePeriod, setPlausiblePeriod] =
-    useState<LeadAnalyticsPeriod>("this_week");
+    useState<LeadAnalyticsPeriod>("7d");
   const [leaderboardPeriod, setLeaderboardPeriod] =
     useState<LeadAnalyticsPeriod>("all_time");
   const [exportOpen, setExportOpen] = useState(false);
