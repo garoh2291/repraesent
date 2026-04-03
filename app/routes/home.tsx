@@ -627,8 +627,19 @@ function fillPlausibleSeriesGaps(
       slots.push(`${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`);
     }
   } else {
-    // all_time — just return as-is (monthly buckets from API)
-    return series;
+    // all_time — monthly buckets, fill gaps between first and last data point
+    if (series.length === 0) return series;
+    const first = series[0].date; // e.g. "2025-03-01"
+    const [fy, fm] = first.split("-").map(Number);
+    const nowY = now.getFullYear();
+    const nowM = now.getMonth() + 1;
+    let y = fy;
+    let m = fm;
+    while (y < nowY || (y === nowY && m <= nowM)) {
+      slots.push(`${y}-${pad(m)}-01`);
+      m++;
+      if (m > 12) { m = 1; y++; }
+    }
   }
 
   // Plausible may use space or T separator for hourly data — normalize matching
