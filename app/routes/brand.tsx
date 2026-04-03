@@ -147,6 +147,13 @@ function formatXLabel(date: string, period: LeadAnalyticsPeriod): string {
     const hour = parseInt(date.slice(11, 13), 10);
     return `${hour.toString().padStart(2, "0")}:00`;
   }
+  if (period === "all_time") {
+    const parts = date.split("-");
+    if (parts.length >= 2) {
+      const d = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, 1);
+      return d.toLocaleString(undefined, { month: "short", year: "2-digit" });
+    }
+  }
   const [year, month, day] = date.split("-");
   const d = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
   return formatDateShort(d);
@@ -649,12 +656,26 @@ function getPlausibleSlots(
     }
     return slots;
   }
-  // all_time — collect unique dates from data
+  // all_time — monthly buckets, fill gaps between first data point and now
   const allDates = new Set<string>();
   workspaces.forEach((ws) =>
     ws.timeseries.forEach((t) => allDates.add(t.date))
   );
-  return Array.from(allDates).sort();
+  if (allDates.size === 0) return [];
+  const sorted = Array.from(allDates).sort();
+  const first = sorted[0];
+  const [fy, fm] = first.split("-").map(Number);
+  const nowY = now.getFullYear();
+  const nowM = now.getMonth() + 1;
+  const slots: string[] = [];
+  let y = fy;
+  let m = fm;
+  while (y < nowY || (y === nowY && m <= nowM)) {
+    slots.push(`${y}-${pad(m)}-01`);
+    m++;
+    if (m > 12) { m = 1; y++; }
+  }
+  return slots;
 }
 
 function buildPlausibleLineData(
