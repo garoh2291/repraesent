@@ -38,8 +38,7 @@ export default [
       route("lead-form/:leadId", "routes/lead-form.$leadId.tsx"),
       route("appointments", "routes/appointments.tsx"),
       route("analytics", "routes/analytics.tsx"),
-      route("google-ads", "routes/google-ads.tsx"),
-      route("facebook-ads", "routes/facebook-ads.tsx"),
+      route("social-ads", "routes/social-ads.tsx"),
       route("email", "routes/email.tsx"),
       route("tasks", "routes/tasks.tsx"),
       route("settings", "routes/settings._layout.tsx", [

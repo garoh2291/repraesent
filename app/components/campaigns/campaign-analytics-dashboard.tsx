@@ -406,7 +406,7 @@ function CampaignListSkeleton() {
 
 /* ─── Campaign List with Tabs (backend-driven) ─── */
 
-function CampaignListSection({ platform }: { platform: string }) {
+function CampaignListSection({ platform }: { platform?: string }) {
   const { t } = useTranslation();
   const { currentWorkspace } = useAuthContext();
   const [tab, setTab] = useState<"active" | "inactive">("active");
@@ -588,7 +588,7 @@ function CampaignFilterDropdown({
   selectedNames,
   onChange,
 }: {
-  platform: string;
+  platform?: string;
   selectedIds: string[];
   selectedNames: Map<string, string>;
   onChange: (ids: string[], names: Map<string, string>) => void;
@@ -796,10 +796,10 @@ function CampaignFilterDropdown({
 
 export function CampaignAnalyticsDashboard({
   title,
-  platform,
+  platform: fixedPlatform,
 }: {
   title: string;
-  platform: string;
+  platform?: string;
 }) {
   const { t } = useTranslation();
   const { currentWorkspace } = useAuthContext();
@@ -808,11 +808,23 @@ export function CampaignAnalyticsDashboard({
   const [selectedCampaignNames, setSelectedCampaignNames] = useState<
     Map<string, string>
   >(new Map());
+  const [platformTab, setPlatformTab] = useState<string>("all");
+
+  // When a fixed platform is provided, use it directly; otherwise use the tab
+  const platform =
+    fixedPlatform ?? (platformTab === "all" ? undefined : platformTab);
+
+  // Reset campaign filter when platform tab changes
+  useEffect(() => {
+    setSelectedCampaignIds([]);
+    setSelectedCampaignNames(new Map());
+  }, [platformTab]);
 
   // Light check: does workspace have any campaigns at all?
   const { data: anyCheck, isLoading: anyCheckLoading } = useQuery({
     queryKey: ["campaign-any-check", currentWorkspace?.id, platform],
-    queryFn: () => getConnectedCampaigns({ platform, limit: 1 }),
+    queryFn: () =>
+      getConnectedCampaigns({ platform: platform ?? undefined, limit: 1 }),
     enabled: !!currentWorkspace?.id,
   });
 
@@ -893,6 +905,31 @@ export function CampaignAnalyticsDashboard({
             <CampaignDatePicker value={dateRange} onChange={setDateRange} />
           </div>
         </div>
+        {/* Platform tabs — only when no fixed platform */}
+        {!fixedPlatform && (
+          <div className="flex gap-0.5 rounded-lg bg-muted/50 p-0.5 w-fit">
+            {(
+              [
+                { key: "all", label: t("campaigns.platformAll") },
+                { key: "google", label: "Google" },
+                { key: "facebook", label: "Facebook" },
+              ] as const
+            ).map((tab) => (
+              <button
+                key={tab.key}
+                onClick={() => setPlatformTab(tab.key)}
+                className={cn(
+                  "rounded-md px-3 py-1 text-[11px] font-medium transition-all whitespace-nowrap",
+                  platformTab === tab.key
+                    ? "bg-card text-foreground shadow-sm"
+                    : "text-muted-foreground hover:text-foreground",
+                )}
+              >
+                {tab.label}
+              </button>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Metric Cards — skeleton or real */}
