@@ -1276,6 +1276,7 @@
     "settingsTitle": "Datenmigration",
     "settingsFinished": "Doorboost-Datenmigration erfolgreich abgeschlossen",
     "settingsFailed": "Datenmigration fehlgeschlagen",
+    "settingsFailedDescription": "Bitte kontaktieren Sie den Support für Hilfe.",
     "settingsContactSupport": "Support kontaktieren",
     "settingsAvailable": "Doorboost-Daten importieren",
     "settingsAvailableDescription": "Importieren Sie Ihre Kampagnen, Leads und Ihr Team von Doorboost.",

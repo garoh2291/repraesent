@@ -473,11 +473,10 @@ function DoorboostMigrationSection() {
                   <p className="text-sm font-medium text-foreground">
                     {t("historicalData.settingsFailed")}
                   </p>
-                  {record?.error_reason && (
-                    <p className="text-xs text-red-400/80 mt-1 font-mono leading-relaxed break-all">
-                      {record.error_reason}
-                    </p>
-                  )}
+
+                  <p className="text-xs text-red-400/80 mt-1 font-mono leading-relaxed break-all">
+                    {t("historicalData.settingsFailedDescription")}
+                  </p>
                 </div>
                 <div className="flex items-center gap-2 pt-1">
                   <a
