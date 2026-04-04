@@ -67,7 +67,12 @@ export async function createHistoricalData(
 }
 
 export async function updateHistoricalData(data: {
-  metadata: { leads: boolean; campaigns: boolean; users: string[] };
+  metadata: {
+    leads: boolean;
+    campaigns: boolean;
+    users: string[];
+    notify_users?: boolean;
+  };
 }): Promise<HistoricalDataRecord> {
   const res = await apiClient.patch<HistoricalDataRecord>(
     "/users/me/workspace/historical-data",

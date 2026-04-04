@@ -370,12 +370,16 @@ function LeadsStep({
 function UsersStep({
   selectedUserIds,
   onSelectionChange,
+  notifyUsers,
+  onNotifyUsersChange,
   onSync,
   onBack,
   isSyncing,
 }: {
   selectedUserIds: Set<string>;
   onSelectionChange: (ids: Set<string>) => void;
+  notifyUsers: boolean;
+  onNotifyUsersChange: (v: boolean) => void;
   onSync: () => void;
   onBack: () => void;
   isSyncing: boolean;
@@ -462,6 +466,38 @@ function UsersStep({
         </div>
       )}
 
+      {/* Notify users checkbox */}
+      {selectedUserIds.size > 0 && (
+        <button
+          onClick={() => onNotifyUsersChange(!notifyUsers)}
+          className={cn(
+            "flex w-full items-center gap-3 rounded-2xl border px-4 py-3.5 transition-all duration-200",
+            notifyUsers
+              ? "border-amber-500/30 bg-amber-500/5"
+              : "border-border bg-card hover:border-border/80",
+          )}
+        >
+          <div
+            className={cn(
+              "flex h-5 w-5 shrink-0 items-center justify-center rounded-md border transition-all duration-200",
+              notifyUsers
+                ? "border-amber-500 bg-amber-500 text-black"
+                : "border-muted-foreground/30",
+            )}
+          >
+            {notifyUsers && <Check className="h-3 w-3" />}
+          </div>
+          <span
+            className={cn(
+              "text-sm font-medium transition-colors",
+              notifyUsers ? "text-foreground" : "text-muted-foreground",
+            )}
+          >
+            {t("historicalData.notifyUsers")}
+          </span>
+        </button>
+      )}
+
       <div className="flex items-center justify-between pt-1">
         <Button
           variant="ghost"
@@ -496,6 +532,7 @@ export default function SyncPage() {
   const { currentWorkspace } = useAuthContext();
   const [step, setStep] = useState(0);
   const [syncLeads, setSyncLeads] = useState(false);
+  const [notifyUsers, setNotifyUsers] = useState(false);
   const [selectedUserIds, setSelectedUserIds] = useState<Set<string>>(
     new Set(),
   );
@@ -521,6 +558,7 @@ export default function SyncPage() {
           leads: syncLeads,
           campaigns: true,
           users: [...selectedUserIds],
+          notify_users: notifyUsers,
         },
       }),
     onSuccess: () => {
@@ -562,6 +600,8 @@ export default function SyncPage() {
         <UsersStep
           selectedUserIds={selectedUserIds}
           onSelectionChange={setSelectedUserIds}
+          notifyUsers={notifyUsers}
+          onNotifyUsersChange={setNotifyUsers}
           onSync={() => submitMutation.mutate()}
           onBack={() => setStep(1)}
           isSyncing={submitMutation.isPending}

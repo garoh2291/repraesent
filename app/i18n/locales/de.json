@@ -1263,6 +1263,7 @@
     "noCampaigns": "Keine Kampagnen für Ihr Doorboost-Konto gefunden.",
     "noLeads": "Keine Leads für Ihre Kampagnen gefunden.",
     "noUsers": "Keine Teammitglieder gefunden.",
+    "notifyUsers": "Ausgewählte Benutzer per E-Mail benachrichtigen",
     "completeTitle": "Migration abgeschlossen!",
     "completeDescription": "Ihre Doorboost-Daten wurden erfolgreich importiert. Kampagnen, Leads und Teammitglieder stehen bereit.",
     "completeGoToAds": "Ihre Anzeigen ansehen",
