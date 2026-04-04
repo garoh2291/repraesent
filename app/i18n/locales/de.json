@@ -218,6 +218,8 @@
       "statusChanged": "Status geändert",
       "metadata": "Weitere Informationen",
       "historyLeadCreated": "Lead erstellt",
+      "historyLeadCreatedInDoorboost": "Lead in Doorboost erstellt",
+      "historyLeadHistoricalSynced": "Lead aus historischen Daten synchronisiert",
       "historyStatusChanged": "Status: {{oldLabel}} → {{newLabel}}",
       "historyStatusChangedTo": "Status geändert zu {{newLabel}}",
       "historyStatusUpdated": "Status aktualisiert",
@@ -1242,6 +1244,8 @@
   },
   "historicalData": {
     "bannerTitle": "Historische Daten synchronisieren",
+    "bannerContinue": "Datensynchronisation fortsetzen",
+    "settingsResumeSync": "Datensynchronisation fortsetzen",
     "bannerDescription": "Importieren Sie Ihre Kampagnen, Leads und Ihr Team von Doorboost in re:praesent.",
     "bannerStart": "Starten",
     "bannerNotNeeded": "Nicht benötigt",

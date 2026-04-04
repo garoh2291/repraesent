@@ -415,17 +415,23 @@ function DoorboostMigrationSection() {
   const formatDate = (dateStr: string | null | undefined) => {
     if (!dateStr) return "—";
     try {
-      return new Intl.DateTimeFormat(i18n.language === "de" ? "de-DE" : "en-US", {
-        dateStyle: "medium",
-        timeStyle: "short",
-      }).format(new Date(dateStr));
+      return new Intl.DateTimeFormat(
+        i18n.language === "de" ? "de-DE" : "en-US",
+        {
+          dateStyle: "medium",
+          timeStyle: "short",
+        }
+      ).format(new Date(dateStr));
     } catch {
       return dateStr;
     }
   };
 
   return (
-    <div className="space-y-4 mt-8 app-fade-up" style={{ animationDelay: "0.12s" }}>
+    <div
+      className="space-y-4 mt-8 app-fade-up"
+      style={{ animationDelay: "0.12s" }}
+    >
       <div className="space-y-0.5">
         <h2 className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
           {t("historicalData.settingsTitle")}
@@ -488,7 +494,7 @@ function DoorboostMigrationSection() {
         )}
 
         {/* Ignored or no record — show start button */}
-        {(status === "ignored" || !record) && (
+        {(status === "not_ready" || status === "ignored" || !record) && (
           <div className="px-5 py-4">
             <div className="flex flex-col sm:flex-row sm:items-center gap-3">
               <div className="flex items-center gap-3 flex-1 min-w-0">
@@ -510,7 +516,9 @@ function DoorboostMigrationSection() {
                 onClick={() => startMutation.mutate()}
                 disabled={startMutation.isPending}
               >
-                {t("historicalData.settingsStartSync")}
+                {status === "not_synced"
+                  ? t("historicalData.settingsStartSync")
+                  : t("historicalData.settingsResumeSync")}
                 <ArrowRight className="ml-1.5 h-3 w-3" />
               </Button>
             </div>
@@ -518,7 +526,7 @@ function DoorboostMigrationSection() {
         )}
 
         {/* Pending / not_synced / not_ready */}
-        {(status === "not_synced" || status === "pending" || status === "not_ready") && (
+        {(status === "pending" || status === "not_synced") && (
           <div className="px-5 py-4">
             <div className="flex items-center gap-3">
               <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-amber-500/10">

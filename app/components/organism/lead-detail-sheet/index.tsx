@@ -34,12 +34,16 @@ function getHistoryItemInitials(item: LeadHistoryItem): string {
   if (first && last) return `${first[0]}${last[0]}`.toUpperCase();
   if (first) return first.slice(0, 2).toUpperCase();
   if (last) return last.slice(0, 2).toUpperCase();
-  return "S";
+  return "D";
 }
 
 function formatHistoryAction(item: LeadHistoryItem, t: TFunction): string {
   if (item.action === "lead_created")
     return t("leads.detail.historyLeadCreated");
+  if (item.action === "lead_created_in_doorboost")
+    return t("leads.detail.historyLeadCreatedInDoorboost");
+  if (item.action === "lead_historical_synced")
+    return t("leads.detail.historyLeadHistoricalSynced");
   if (item.action === "lead_status_updated") {
     const oldStatus = item.details?.old_status as string | undefined;
     const newStatus = item.details?.new_status as string | undefined;

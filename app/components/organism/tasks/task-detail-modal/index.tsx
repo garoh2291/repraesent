@@ -100,7 +100,7 @@ function getInitials(first: string | null, last: string | null): string {
   if (f && l) return `${f[0]}${l[0]}`.toUpperCase();
   if (f) return f.slice(0, 2).toUpperCase();
   if (l) return l.slice(0, 2).toUpperCase();
-  return "S";
+  return "D";
 }
 
 interface TaskDetailModalProps {

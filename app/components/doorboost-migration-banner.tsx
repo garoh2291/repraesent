@@ -56,7 +56,7 @@ function FloatingMessages({ lang }: { lang: "en" | "de" }) {
           "text-xs font-medium transition-all duration-400 ease-out absolute inset-x-0",
           animState === "enter"
             ? "opacity-100 translate-y-0"
-            : "opacity-0 -translate-y-3",
+            : "opacity-0 -translate-y-3"
         )}
         style={{ color: "hsl(var(--muted-foreground) / 0.7)" }}
       >
@@ -83,8 +83,7 @@ export function DoorboostMigrationBanner() {
     queryKey: ["historical-data", currentWorkspace?.id],
     queryFn: getHistoricalData,
     enabled: isDoorboost,
-    refetchInterval:
-      isDoorboost ? 15000 : false,
+    refetchInterval: isDoorboost ? 15000 : false,
   });
 
   const createMutation = useMutation({
@@ -159,7 +158,7 @@ export function DoorboostMigrationBanner() {
               className="shrink-0 h-8 bg-amber-500 hover:bg-amber-600 text-black font-semibold text-xs rounded-lg self-start sm:self-auto"
               onClick={() => navigate("/sync")}
             >
-              {t("historicalData.bannerStart")}
+              {t("historicalData.bannerContinue")}
               <ArrowRight className="ml-1.5 h-3 w-3" />
             </Button>
           </div>
@@ -234,7 +233,7 @@ function DevSyncTrigger() {
       const res = await axios.post(
         `${apiUrl}/internal/process-historical-sync`,
         {},
-        { headers: { "x-cron-api-key": cronKey } },
+        { headers: { "x-cron-api-key": cronKey } }
       );
       setTriggerResult(JSON.stringify(res.data));
       setTriggerState("ok");
@@ -270,9 +269,7 @@ function DevSyncTrigger() {
         <p
           className={cn(
             "text-[10px] font-mono break-all leading-relaxed",
-            triggerState === "ok"
-              ? "text-emerald-500"
-              : "text-red-400",
+            triggerState === "ok" ? "text-emerald-500" : "text-red-400"
           )}
         >
           {triggerResult}
