@@ -820,12 +820,20 @@ export function CampaignAnalyticsDashboard({
     setSelectedCampaignNames(new Map());
   }, [platformTab]);
 
-  // Light check: does workspace have any campaigns at all?
+  // Unfiltered check: does workspace have ANY campaigns at all? (for true empty state)
+  const { data: totalCheck, isLoading: totalCheckLoading } = useQuery({
+    queryKey: ["campaign-total-check", currentWorkspace?.id],
+    queryFn: () => getConnectedCampaigns({ limit: 1 }),
+    enabled: !!currentWorkspace?.id,
+  });
+  const hasAnyCampaigns = (totalCheck?.total ?? 0) > 0;
+
+  // Filtered check: does current platform filter have campaigns?
   const { data: anyCheck, isLoading: anyCheckLoading } = useQuery({
     queryKey: ["campaign-any-check", currentWorkspace?.id, platform],
     queryFn: () =>
       getConnectedCampaigns({ platform: platform ?? undefined, limit: 1 }),
-    enabled: !!currentWorkspace?.id,
+    enabled: !!currentWorkspace?.id && hasAnyCampaigns,
   });
 
   const hasCampaigns = (anyCheck?.total ?? 0) > 0;
@@ -844,7 +852,7 @@ export function CampaignAnalyticsDashboard({
     enabled: !!currentWorkspace?.id && hasCampaigns,
   });
 
-  const isLoading = anyCheckLoading || overviewLoading;
+  const isLoading = totalCheckLoading || anyCheckLoading || overviewLoading;
   const totals = overview?.totals;
   const series = overview?.series ?? [];
 
@@ -862,8 +870,8 @@ export function CampaignAnalyticsDashboard({
     []
   );
 
-  // Empty state — no campaigns connected
-  if (!anyCheckLoading && !hasCampaigns) {
+  // True empty state — no campaigns connected AT ALL (not just filtered)
+  if (!totalCheckLoading && !hasAnyCampaigns) {
     return (
       <div className="mx-auto w-full max-w-[1280px] p-4 sm:p-6 py-10! app-fade-in">
         <div className="flex flex-col items-center justify-center min-h-[50vh] text-center">
@@ -932,11 +940,21 @@ export function CampaignAnalyticsDashboard({
         )}
       </div>
 
+      {/* Filtered empty state — platform has no campaigns but other platforms do */}
+      {!anyCheckLoading && !hasCampaigns && hasAnyCampaigns ? (
+        <div className="flex flex-col items-center justify-center py-16 text-center app-fade-in">
+          <TrendingUp className="h-8 w-8 text-muted-foreground/30 mb-3" />
+          <p className="text-sm text-muted-foreground max-w-sm">
+            {t("campaigns.noData")}
+          </p>
+        </div>
+      ) : (<>
+
       {/* Metric Cards — skeleton or real */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         {isLoading || !totals ? (
           <>
-            {Array.from({ length: 8 }).map((_, i) => (
+            {Array.from({ length: 7 }).map((_, i) => (
               <MetricCardSkeleton key={i} delay={`${0.04 + i * 0.04}s`} />
             ))}
           </>
@@ -978,25 +996,18 @@ export function CampaignAnalyticsDashboard({
               delay="0.20s"
             />
             <MetricCard
-              label={t("campaigns.convValue")}
-              value={formatCurrency(totals.conversions_value)}
-              icon={TrendingUp}
-              color={ACCENT.conversions_value}
-              delay="0.24s"
-            />
-            <MetricCard
               label={t("campaigns.ctr")}
               value={`${formatDecimal(ctr)}%`}
               icon={MousePointerClick}
               color="#14b8a6"
-              delay="0.28s"
+              delay="0.24s"
             />
             <MetricCard
               label={t("campaigns.cpc")}
               value={formatCurrency(cpc)}
               icon={DollarSign}
               color="#f97316"
-              delay="0.32s"
+              delay="0.28s"
             />
           </>
         )}
@@ -1191,6 +1202,7 @@ export function CampaignAnalyticsDashboard({
 
       {/* Connected Campaigns List with Active/Inactive tabs */}
       <CampaignListSection platform={platform} />
+      </>)}
     </div>
   );
 }
