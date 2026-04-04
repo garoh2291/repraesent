@@ -213,7 +213,6 @@ export default function BookAppointment() {
   const bgColor = config?.company_color ?? "#1a1a1a";
   const textColor = config?.company_text_color ?? "#ffffff";
   const logoUrl = getLogoFullUrl(config?.company_logo_url);
-  const defaultLogoUrl = "/re_praesent_logo.svg";
 
   const hasMultipleProviders = providers && providers.length > 1;
 
@@ -372,7 +371,6 @@ export default function BookAppointment() {
         <BookingHeader
           config={config}
           logoUrl={logoUrl}
-          defaultLogoUrl={defaultLogoUrl}
           bgColor={bgColor}
           textColor={textColor}
           step={step}
@@ -433,7 +431,6 @@ export default function BookAppointment() {
       <BookingHeader
         config={config}
         logoUrl={logoUrl}
-        defaultLogoUrl={defaultLogoUrl}
         bgColor={bgColor}
         textColor={textColor}
         step={step}
@@ -581,7 +578,6 @@ export default function BookAppointment() {
 function BookingHeader({
   config,
   logoUrl,
-  defaultLogoUrl,
   bgColor,
   textColor,
   step,
@@ -591,7 +587,6 @@ function BookingHeader({
 }: {
   config: PublicConfig;
   logoUrl: string | null | undefined;
-  defaultLogoUrl: string;
   bgColor: string;
   textColor: string;
   step: number;
@@ -606,11 +601,13 @@ function BookingHeader({
     >
       {/* Brand */}
       <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-3 min-w-0">
-        <img
-          src={logoUrl || defaultLogoUrl}
-          alt="Logo"
-          className="h-8 sm:h-9 object-contain shrink-0"
-        />
+        {logoUrl && (
+          <img
+            src={logoUrl}
+            alt="Logo"
+            className="h-8 sm:h-9 object-contain shrink-0"
+          />
+        )}
         <div className="min-w-0 text-center sm:text-left">
           <p
             className="font-semibold text-sm sm:text-base leading-tight truncate"
