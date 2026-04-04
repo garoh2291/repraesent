@@ -1,8 +1,17 @@
 import { useState } from "react";
+import { useNavigate } from "react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { useTranslation } from "react-i18next";
-import { Trash2 } from "lucide-react";
+import {
+  Trash2,
+  Database,
+  CheckCircle2,
+  AlertTriangle,
+  ArrowRight,
+  Clock,
+  Mail,
+} from "lucide-react";
 import i18n from "~/i18n";
 import { useAuthContext } from "~/providers/auth-provider";
 import {
@@ -12,6 +21,10 @@ import {
   type WorkspaceDetail,
 } from "~/lib/api/workspaces";
 import { extractErrorMessage } from "~/lib/api/axios-instance";
+import {
+  getHistoricalData,
+  createHistoricalData,
+} from "~/lib/api/historical-data";
 import { Button } from "~/components/ui/button";
 import {
   Select,
@@ -333,6 +346,8 @@ export default function SettingsTeam() {
         </SettingsSection>
       </div>
 
+      <DoorboostMigrationSection />
+
       <AlertDialog
         open={!!memberToRemove}
         onOpenChange={(open) => !open && setMemberToRemove(null)}
@@ -363,5 +378,164 @@ export default function SettingsTeam() {
         </AlertDialogContent>
       </AlertDialog>
     </>
+  );
+}
+
+/* ─── Doorboost Migration Info Section ─── */
+
+function DoorboostMigrationSection() {
+  const { t, i18n } = useTranslation();
+  const { currentWorkspace } = useAuthContext();
+  const navigate = useNavigate();
+  const queryClient = useQueryClient();
+
+  const isDoorboost =
+    currentWorkspace?.was_doorboost_client === true &&
+    !!currentWorkspace?.doorboost_partner_house_id;
+
+  const { data: record, isLoading } = useQuery({
+    queryKey: ["historical-data", currentWorkspace?.id],
+    queryFn: getHistoricalData,
+    enabled: isDoorboost,
+  });
+
+  const startMutation = useMutation({
+    mutationFn: () => createHistoricalData("not_ready"),
+    onSuccess: (data) => {
+      queryClient.setQueryData(["historical-data", currentWorkspace?.id], data);
+      navigate("/sync");
+    },
+    onError: (err) => toast.error(extractErrorMessage(err)),
+  });
+
+  if (!isDoorboost) return null;
+  if (isLoading) return null;
+
+  const status = record?.status;
+  const formatDate = (dateStr: string | null | undefined) => {
+    if (!dateStr) return "—";
+    try {
+      return new Intl.DateTimeFormat(i18n.language === "de" ? "de-DE" : "en-US", {
+        dateStyle: "medium",
+        timeStyle: "short",
+      }).format(new Date(dateStr));
+    } catch {
+      return dateStr;
+    }
+  };
+
+  return (
+    <div className="space-y-4 mt-8 app-fade-up" style={{ animationDelay: "0.12s" }}>
+      <div className="space-y-0.5">
+        <h2 className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
+          {t("historicalData.settingsTitle")}
+        </h2>
+      </div>
+
+      <div className="rounded-2xl border border-border bg-card overflow-hidden">
+        {/* Finished */}
+        {status === "finished" && (
+          <div className="px-5 py-4 space-y-3">
+            <div className="flex items-center gap-3">
+              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-emerald-500/10">
+                <CheckCircle2 className="h-4 w-4 text-emerald-500" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium text-foreground">
+                  {t("historicalData.settingsFinished")}
+                </p>
+                <div className="flex items-center gap-1.5 mt-0.5">
+                  <Clock className="h-3 w-3 text-muted-foreground/50" />
+                  <p className="text-xs text-muted-foreground">
+                    {formatDate(record?.finished_at)}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Failed */}
+        {status === "failed" && (
+          <div className="px-5 py-4 space-y-3">
+            <div className="flex items-start gap-3">
+              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-red-500/10 mt-0.5">
+                <AlertTriangle className="h-4 w-4 text-red-500" />
+              </div>
+              <div className="flex-1 min-w-0 space-y-2">
+                <div>
+                  <p className="text-sm font-medium text-foreground">
+                    {t("historicalData.settingsFailed")}
+                  </p>
+                  {record?.error_reason && (
+                    <p className="text-xs text-red-400/80 mt-1 font-mono leading-relaxed break-all">
+                      {record.error_reason}
+                    </p>
+                  )}
+                </div>
+                <div className="flex items-center gap-2 pt-1">
+                  <a
+                    href="mailto:support@repraesent.com"
+                    className="inline-flex items-center gap-1.5 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors"
+                  >
+                    <Mail className="h-3 w-3" />
+                    {t("historicalData.settingsContactSupport")}
+                  </a>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Ignored or no record — show start button */}
+        {(status === "ignored" || !record) && (
+          <div className="px-5 py-4">
+            <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+              <div className="flex items-center gap-3 flex-1 min-w-0">
+                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-amber-500/10">
+                  <Database className="h-4 w-4 text-amber-500" />
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-foreground">
+                    {t("historicalData.settingsAvailable")}
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    {t("historicalData.settingsAvailableDescription")}
+                  </p>
+                </div>
+              </div>
+              <Button
+                size="sm"
+                className="shrink-0 h-8 bg-amber-500 hover:bg-amber-600 text-black font-semibold text-xs rounded-lg self-start sm:self-auto"
+                onClick={() => startMutation.mutate()}
+                disabled={startMutation.isPending}
+              >
+                {t("historicalData.settingsStartSync")}
+                <ArrowRight className="ml-1.5 h-3 w-3" />
+              </Button>
+            </div>
+          </div>
+        )}
+
+        {/* Pending / not_synced / not_ready */}
+        {(status === "not_synced" || status === "pending" || status === "not_ready") && (
+          <div className="px-5 py-4">
+            <div className="flex items-center gap-3">
+              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-amber-500/10">
+                <div className="h-4 w-4 animate-spin rounded-full border-2 border-amber-500/20 border-t-amber-500" />
+              </div>
+              <div>
+                <p className="text-sm font-medium text-foreground">
+                  {t("historicalData.settingsInProgress")}
+                </p>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  {t("historicalData.bannerPendingDescription")}
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
   );
 }

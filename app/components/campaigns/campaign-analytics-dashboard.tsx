@@ -197,11 +197,13 @@ function BreakdownTable({
   if (!rows.length) return null;
   return (
     <div>
-      <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-2">
+      <p className="text-[10px] sm:text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-2">
         {title}
       </p>
-      <div className="border rounded-lg overflow-x-auto -mx-4 sm:mx-0">
-        <table className="w-full text-xs table-fixed min-w-[520px]">
+
+      {/* Desktop: table */}
+      <div className="hidden sm:block border rounded-lg overflow-x-auto">
+        <table className="w-full text-xs table-fixed min-w-[480px]">
           <colgroup>
             <col style={{ width: "40%" }} />
             <col style={{ width: "15%" }} />
@@ -229,13 +231,13 @@ function BreakdownTable({
           <tbody>
             {rows.map((r) => (
               <tr key={r.key} className="border-t border-border/50">
-                <td className="px-3 py-1.5">
+                <td className="px-3 py-1.5 max-w-0">
                   <TooltipContainer
                     tooltipContent={r.name}
                     showCopyButton={false}
                     delayDuration={200}
                   >
-                    <span className=" truncate">{r.name}</span>
+                    <p className="truncate text-foreground">{r.name}</p>
                   </TooltipContainer>
                 </td>
                 <td className="px-3 py-1.5 text-right tabular-nums whitespace-nowrap">
@@ -254,6 +256,44 @@ function BreakdownTable({
             ))}
           </tbody>
         </table>
+      </div>
+
+      {/* Mobile: card layout */}
+      <div className="sm:hidden space-y-2">
+        {rows.map((r) => (
+          <div
+            key={r.key}
+            className="rounded-lg border border-border/50 bg-muted/20 px-3 py-2.5"
+          >
+            <TooltipContainer
+              tooltipContent={r.name}
+              showCopyButton={false}
+              delayDuration={200}
+            >
+              <p className="text-[12px] font-medium text-foreground truncate mb-1.5">
+                {r.name}
+              </p>
+            </TooltipContainer>
+            <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-[11px]">
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">{columns.spend}</span>
+                <span className="tabular-nums text-foreground">{formatCurrency(r.cost)}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">{columns.clicks}</span>
+                <span className="tabular-nums text-foreground">{formatNumber(r.clicks)}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">{columns.impressions}</span>
+                <span className="tabular-nums text-foreground">{formatNumber(r.impressions)}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">{columns.conversions}</span>
+                <span className="tabular-nums text-foreground">{formatNumber(r.conversions)}</span>
+              </div>
+            </div>
+          </div>
+        ))}
       </div>
     </div>
   );
@@ -323,40 +363,43 @@ function CampaignDrilldown({ campaign }: { campaign: ConnectedCampaign }) {
     conversions: as.conversions ?? 0,
   }));
 
+  const campaignLabel = campaign.campaign_name ?? campaign.campaign_id;
+  const accountLabel = `${campaign.account_name ?? "—"} · ${campaign.platform}`;
+
   return (
     <div className="border-b border-border last:border-b-0">
       <button
         onClick={() => setExpanded(!expanded)}
-        className="flex w-full items-center gap-3 px-4 py-3 text-left hover:bg-muted/30 transition-colors"
+        className="flex w-full items-center gap-2.5 sm:gap-3 px-3 sm:px-4 py-2.5 sm:py-3 text-left hover:bg-muted/30 transition-colors"
       >
         {expanded ? (
-          <ChevronDown className="h-4 w-4 shrink-0 text-muted-foreground" />
+          <ChevronDown className="h-3.5 w-3.5 sm:h-4 sm:w-4 shrink-0 text-muted-foreground" />
         ) : (
-          <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" />
+          <ChevronRight className="h-3.5 w-3.5 sm:h-4 sm:w-4 shrink-0 text-muted-foreground" />
         )}
-        <div className="flex-1 min-w-0">
+        <div className="flex-1 min-w-0 overflow-hidden">
           <TooltipContainer
-            tooltipContent={campaign.campaign_name ?? campaign.campaign_id}
+            tooltipContent={campaignLabel}
             showCopyButton={false}
             delayDuration={200}
           >
-            <span className="font-medium text-sm truncate">
-              {campaign.campaign_name ?? campaign.campaign_id}
-            </span>
+            <p className="font-medium text-[13px] sm:text-sm text-foreground truncate">
+              {campaignLabel}
+            </p>
           </TooltipContainer>
           <TooltipContainer
-            tooltipContent={`${campaign.account_name ?? "—"} · ${campaign.platform}`}
+            tooltipContent={accountLabel}
             showCopyButton={false}
             delayDuration={200}
           >
-            <p className="text-xs text-muted-foreground truncate">
-              {campaign.account_name} &middot; {campaign.platform}
+            <p className="text-[11px] sm:text-xs text-muted-foreground truncate mt-0.5">
+              {accountLabel}
             </p>
           </TooltipContainer>
         </div>
         <span
           className={cn(
-            "inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-medium uppercase tracking-wider shrink-0",
+            "inline-flex items-center rounded-full px-1.5 sm:px-2 py-0.5 text-[9px] sm:text-[10px] font-medium uppercase tracking-wider shrink-0 ml-1",
             getStatusStyle(campaign.campaign_status)
           )}
         >
@@ -365,7 +408,7 @@ function CampaignDrilldown({ campaign }: { campaign: ConnectedCampaign }) {
       </button>
 
       {expanded && (
-        <div className="px-4 pb-4 space-y-4">
+        <div className="px-3 sm:px-4 pb-3 sm:pb-4 space-y-4">
           {adSetsLoading ? (
             <DrilldownSkeleton />
           ) : adSetRows.length > 0 ? (
@@ -463,19 +506,19 @@ function CampaignListSection({ platform }: { platform?: string }) {
       className="app-fade-up rounded-2xl border border-border bg-card overflow-hidden"
       style={{ animationDelay: "0.34s" }}
     >
-      {/* Header with tabs */}
-      <div className="px-4 sm:px-6 py-3 border-b border-border flex items-center justify-between gap-4">
-        <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground shrink-0">
+      {/* Header with tabs — stacks on mobile */}
+      <div className="px-3 sm:px-6 py-2.5 sm:py-3 border-b border-border flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-4">
+        <p className="text-[10px] sm:text-[11px] font-semibold uppercase tracking-widest text-muted-foreground shrink-0">
           {t("campaigns.connectedCampaigns")}
         </p>
-        <div className="flex gap-0.5 rounded-lg bg-muted/50 p-0.5">
+        <div className="flex gap-0.5 rounded-lg bg-muted/50 p-0.5 self-start sm:self-auto">
           <button
             onClick={() => setTab("active")}
             className={cn(
-              "rounded-md px-2.5 py-1 text-[10px] sm:text-[11px] font-medium transition-all whitespace-nowrap",
+              "rounded-md px-2 sm:px-2.5 py-1 text-[10px] sm:text-[11px] font-medium transition-all whitespace-nowrap",
               tab === "active"
                 ? "bg-card text-foreground shadow-sm"
-                : "text-muted-foreground hover:text-foreground"
+                : "text-muted-foreground hover:text-foreground",
             )}
           >
             {t("campaigns.tabActive")}
@@ -488,10 +531,10 @@ function CampaignListSection({ platform }: { platform?: string }) {
           <button
             onClick={() => setTab("inactive")}
             className={cn(
-              "rounded-md px-2.5 py-1 text-[10px] sm:text-[11px] font-medium transition-all whitespace-nowrap",
+              "rounded-md px-2 sm:px-2.5 py-1 text-[10px] sm:text-[11px] font-medium transition-all whitespace-nowrap",
               tab === "inactive"
                 ? "bg-card text-foreground shadow-sm"
-                : "text-muted-foreground hover:text-foreground"
+                : "text-muted-foreground hover:text-foreground",
             )}
           >
             {t("campaigns.tabInactive")}
@@ -505,7 +548,7 @@ function CampaignListSection({ platform }: { platform?: string }) {
       </div>
 
       {/* Search under tabs */}
-      <div className="px-4 sm:px-6 py-2.5 border-b border-border">
+      <div className="px-3 sm:px-6 py-2 sm:py-2.5 border-b border-border">
         <div className="flex items-center gap-2 rounded-lg bg-muted/50 px-2.5 py-1.5">
           <Search className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
           <input
@@ -536,8 +579,8 @@ function CampaignListSection({ platform }: { platform?: string }) {
           ))}
           {/* Pagination */}
           {totalPages > 1 && (
-            <div className="flex items-center justify-between px-4 sm:px-6 py-3 border-t border-border">
-              <p className="text-[11px] text-muted-foreground">
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-2 px-3 sm:px-6 py-2.5 sm:py-3 border-t border-border">
+              <p className="text-[10px] sm:text-[11px] text-muted-foreground">
                 {t("campaigns.showingOf", {
                   count: campaigns.length,
                   total,
@@ -547,17 +590,17 @@ function CampaignListSection({ platform }: { platform?: string }) {
                 <button
                   onClick={() => setPage((p) => Math.max(1, p - 1))}
                   disabled={page <= 1}
-                  className="rounded-md px-2 py-1 text-[11px] font-medium text-muted-foreground hover:text-foreground hover:bg-muted disabled:opacity-30 disabled:pointer-events-none transition-colors"
+                  className="rounded-md px-2 py-1 text-[10px] sm:text-[11px] font-medium text-muted-foreground hover:text-foreground hover:bg-muted disabled:opacity-30 disabled:pointer-events-none transition-colors"
                 >
                   {t("common.back")}
                 </button>
-                <span className="text-[11px] text-muted-foreground tabular-nums px-2">
+                <span className="text-[10px] sm:text-[11px] text-muted-foreground tabular-nums px-1.5 sm:px-2">
                   {page} / {totalPages}
                 </span>
                 <button
                   onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
                   disabled={page >= totalPages}
-                  className="rounded-md px-2 py-1 text-[11px] font-medium text-muted-foreground hover:text-foreground hover:bg-muted disabled:opacity-30 disabled:pointer-events-none transition-colors"
+                  className="rounded-md px-2 py-1 text-[10px] sm:text-[11px] font-medium text-muted-foreground hover:text-foreground hover:bg-muted disabled:opacity-30 disabled:pointer-events-none transition-colors"
                 >
                   {t("common.next")}
                 </button>

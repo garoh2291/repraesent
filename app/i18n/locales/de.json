@@ -1265,6 +1265,14 @@
     "noUsers": "Keine Teammitglieder gefunden.",
     "completeTitle": "Migration abgeschlossen!",
     "completeDescription": "Ihre Doorboost-Daten wurden erfolgreich importiert. Kampagnen, Leads und Teammitglieder stehen bereit.",
-    "completeGoToAds": "Ihre Anzeigen ansehen"
+    "completeGoToAds": "Ihre Anzeigen ansehen",
+    "settingsTitle": "Datenmigration",
+    "settingsFinished": "Doorboost-Datenmigration erfolgreich abgeschlossen",
+    "settingsFailed": "Datenmigration fehlgeschlagen",
+    "settingsContactSupport": "Support kontaktieren",
+    "settingsAvailable": "Doorboost-Daten importieren",
+    "settingsAvailableDescription": "Importieren Sie Ihre Kampagnen, Leads und Ihr Team von Doorboost.",
+    "settingsStartSync": "Import starten",
+    "settingsInProgress": "Migration läuft..."
   }
 }
