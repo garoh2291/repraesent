@@ -14,6 +14,7 @@ export interface HistoricalDataRecord {
   created_by: string | null;
   finished_at: string | null;
   updated_at: string;
+  user_click_notified: boolean;
 }
 
 export interface CampaignPreview {
@@ -95,6 +96,13 @@ export async function getHistoricalLeadsPreview(): Promise<{
 export async function getHistoricalUsers(): Promise<DoorboostUser[]> {
   const res = await apiClient.get<DoorboostUser[]>(
     "/users/me/workspace/historical-data/users",
+  );
+  return res.data;
+}
+
+export async function markHistoricalDataNotified(): Promise<HistoricalDataRecord> {
+  const res = await apiClient.post<HistoricalDataRecord>(
+    "/users/me/workspace/historical-data/mark-notified",
   );
   return res.data;
 }

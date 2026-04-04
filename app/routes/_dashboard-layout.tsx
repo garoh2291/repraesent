@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback } from "react";
-import { Outlet } from "react-router";
+import { Outlet, useNavigate } from "react-router";
 import { useTranslation } from "react-i18next";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuthContext } from "~/providers/auth-provider";
 import { Sidebar } from "~/components/sidebar";
 import { Button } from "~/components/ui/button";
@@ -9,7 +9,9 @@ import { AlertTriangle, Menu } from "lucide-react";
 import { OnboardingTour } from "~/components/onboarding-tour/OnboardingTour";
 import { Sheet, SheetContent } from "~/components/ui/sheet";
 import { getWorkspaceInvoices } from "~/lib/api/workspaces";
+import { createHistoricalData } from "~/lib/api/historical-data";
 import { DoorboostMigrationBanner } from "~/components/doorboost-migration-banner";
+import { SyncCompleteModal } from "~/components/sync-complete-modal";
 import logoUrl from "~/components/icons/re_praesent-mark-brand-hor.svg?url";
 export default function DashboardLayout() {
   const { user, currentWorkspace } = useAuthContext();
@@ -60,6 +62,28 @@ export default function DashboardLayout() {
     unpaidInvoices.find((inv) => inv.status === "open" && inv.hosted_invoice_url)
       ?.hosted_invoice_url ??
     currentWorkspace?.unpaid_invoice_url;
+
+  const isDoorboost =
+    currentWorkspace?.was_doorboost_client === true &&
+    !!currentWorkspace?.doorboost_partner_house_id;
+
+  const navigate = useNavigate();
+  const queryClient = useQueryClient();
+
+  const doorboostSyncMutation = useMutation({
+    mutationFn: () => createHistoricalData("not_ready"),
+    onSuccess: (data) => {
+      queryClient.setQueryData(["historical-data", currentWorkspace?.id], data);
+      navigate("/sync");
+    },
+  });
+
+  const doorboostIgnoreMutation = useMutation({
+    mutationFn: () => createHistoricalData("ignored"),
+    onSuccess: (data) => {
+      queryClient.setQueryData(["historical-data", currentWorkspace?.id], data);
+    },
+  });
 
   return (
     <div className="flex h-screen overflow-hidden bg-[#0f0f11]">
@@ -130,8 +154,13 @@ export default function DashboardLayout() {
           onDone={handleTourDone}
           locale={user?.locale ?? "de"}
           services={currentWorkspace?.services ?? []}
+          isDoorboost={isDoorboost}
+          onDoorboostSync={() => doorboostSyncMutation.mutate()}
+          onDoorboostIgnore={() => doorboostIgnoreMutation.mutate()}
         />
       )}
+
+      <SyncCompleteModal />
     </div>
   );
 }

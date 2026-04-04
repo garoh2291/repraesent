@@ -89,6 +89,12 @@ const STEP_META: Array<{
     screenshotAlt: "Settings",
     requiredServices: null,
   },
+  {
+    id: "doorboost-migration",
+    screenshot: null,
+    screenshotAlt: "Data migration",
+    requiredServices: null,
+  },
 ];
 
 // Localised copy
@@ -164,6 +170,13 @@ const STEP_CONTENT: Record<"en" | "de", StepContent[]> = {
       description:
         "Customize your area name, manage team members and their roles, and fine-tune your public booking page. Every detail can be tailored to match your brand and workflow.",
     },
+    {
+      badge: "Migration",
+      title: "Bring Your\nDoorboost Data",
+      subtitle: "Campaigns, leads & team — one click.",
+      description:
+        "We detected your Doorboost account. Import all your historical campaigns, leads, notes, and team members into re:praesent with a single sync. Your data is safe and nothing will be lost.",
+    },
   ],
   de: [
     {
@@ -236,6 +249,13 @@ const STEP_CONTENT: Record<"en" | "de", StepContent[]> = {
       description:
         "Passe deinen Bereich-Namen an, verwalte Teammitglieder und deren Rollen und konfiguriere deine öffentliche Buchungsseite. Jedes Detail lässt sich an deine Marke und deinen Workflow anpassen.",
     },
+    {
+      badge: "Migration",
+      title: "Deine Doorboost-\nDaten mitnehmen",
+      subtitle: "Kampagnen, Leads & Team — ein Klick.",
+      description:
+        "Wir haben dein Doorboost-Konto erkannt. Importiere alle historischen Kampagnen, Leads, Notizen und Teammitglieder mit einer einzigen Synchronisierung nach re:praesent. Deine Daten sind sicher und nichts geht verloren.",
+    },
   ],
 };
 
@@ -248,22 +268,29 @@ function hasService(services: ActiveService[], key: string): boolean {
   return services.some((s) => s.service_slug === key || s.service_type === key);
 }
 
-function buildSteps(locale: string, services: ActiveService[]): Step[] {
+function buildSteps(
+  locale: string,
+  services: ActiveService[],
+  isDoorboost = false,
+): Step[] {
   const lang: "en" | "de" = locale?.startsWith("de") ? "de" : "en";
   const content = STEP_CONTENT[lang];
 
   // Re-number badges dynamically after filtering
-  const filtered = STEP_META.filter(
-    (meta) =>
+  const filtered = STEP_META.filter((meta) => {
+    if (meta.id === "doorboost-migration") return isDoorboost;
+    return (
       meta.requiredServices === null ||
-      meta.requiredServices.every((svc) => hasService(services, svc)),
-  );
+      meta.requiredServices.every((svc) => hasService(services, svc))
+    );
+  });
 
   // Renumber non-welcome steps sequentially
   let featureIndex = 0;
   return filtered.map((meta) => {
     const base = content[STEP_META.indexOf(meta)];
     if (meta.id === "welcome") return { ...meta, ...base };
+    if (meta.id === "doorboost-migration") return { ...meta, ...base };
     featureIndex += 1;
     const paddedNum = String(featureIndex).padStart(2, "0");
     const badgeLabel =
@@ -281,6 +308,9 @@ interface OnboardingTourProps {
   onDone: () => void;
   locale?: string;
   services?: ActiveService[];
+  isDoorboost?: boolean;
+  onDoorboostSync?: () => void;
+  onDoorboostIgnore?: () => void;
 }
 
 const UI_STRINGS = {
@@ -291,6 +321,8 @@ const UI_STRINGS = {
     back: "← Back",
     next: "Next →",
     getStarted: "Get Started ✦",
+    syncData: "Sync My Data ✦",
+    skipSync: "Maybe later",
   },
   de: {
     startTour: "Tour starten →",
@@ -299,6 +331,8 @@ const UI_STRINGS = {
     back: "← Zurück",
     next: "Weiter →",
     getStarted: "Loslegen ✦",
+    syncData: "Daten synchronisieren ✦",
+    skipSync: "Vielleicht später",
   },
 } as const;
 
@@ -554,9 +588,12 @@ export function OnboardingTour({
   onDone,
   locale = "de",
   services = [],
+  isDoorboost = false,
+  onDoorboostSync,
+  onDoorboostIgnore,
 }: OnboardingTourProps) {
   const lang: "en" | "de" = locale?.startsWith("de") ? "de" : "en";
-  const steps = buildSteps(locale, services);
+  const steps = buildSteps(locale, services, isDoorboost);
   const [step, setStep] = useState(0);
   const [direction, setDirection] = useState<1 | -1>(1); // 1=forward, -1=backward
   const [animKey, setAnimKey] = useState(0);
@@ -566,6 +603,7 @@ export function OnboardingTour({
   const isWelcome = step === 0;
   const isLast = step === steps.length - 1;
   const current = steps[step];
+  const isDoorboostStep = current?.id === "doorboost-migration";
 
   const goTo = useCallback(
     (next: number) => {
@@ -582,12 +620,18 @@ export function OnboardingTour({
   );
 
   const handleNext = useCallback(() => {
+    if (isDoorboostStep) {
+      // On doorboost step, "Sync" triggers the migration then closes
+      onDoorboostSync?.();
+      handleDone();
+      return;
+    }
     if (isLast) {
       handleDone();
     } else {
       goTo(step + 1);
     }
-  }, [isLast, step, goTo]);
+  }, [isLast, isDoorboostStep, step, goTo, onDoorboostSync]);
 
   const handleBack = useCallback(() => {
     if (step > 0) goTo(step - 1);
@@ -760,11 +804,12 @@ export function OnboardingTour({
               totalSteps={steps.length}
               direction={direction}
               isLast={isLast}
+              isDoorboostStep={isDoorboostStep}
               imageVisible={imageVisible}
               lang={lang}
               onNext={handleNext}
               onBack={handleBack}
-              onSkip={handleDone}
+              onSkip={isDoorboostStep ? () => { onDoorboostIgnore?.(); handleDone(); } : handleDone}
               onGoto={goTo}
             />
           )}
@@ -1033,6 +1078,7 @@ function StepScreen({
   totalSteps,
   direction,
   isLast,
+  isDoorboostStep = false,
   imageVisible,
   lang,
   onNext,
@@ -1045,6 +1091,7 @@ function StepScreen({
   totalSteps: number;
   direction: 1 | -1;
   isLast: boolean;
+  isDoorboostStep?: boolean;
   imageVisible: boolean;
   lang: "en" | "de";
   onNext: () => void;
@@ -1107,6 +1154,86 @@ function StepScreen({
             alt={step.screenshotAlt}
             visible={imageVisible}
           />
+        ) : step.id === "doorboost-migration" ? (
+          /* Doorboost migration — animated data flow visual */
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: 16,
+              padding: "32px 0",
+              opacity: imageVisible ? 1 : 0,
+              transform: imageVisible ? "translateY(0)" : "translateY(14px)",
+              transition: "all 0.5s cubic-bezier(.22,.68,0,1.2)",
+            }}
+          >
+            <div style={{ position: "relative" }}>
+              <div
+                style={{
+                  width: 80,
+                  height: 80,
+                  borderRadius: 24,
+                  background: "linear-gradient(135deg, rgba(245,158,11,0.15), rgba(139,92,246,0.1))",
+                  border: "1px solid rgba(245,158,11,0.2)",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  fontSize: 36,
+                  boxShadow: "0 0 60px rgba(245,158,11,0.12)",
+                }}
+              >
+                🔄
+              </div>
+              <div
+                style={{
+                  position: "absolute",
+                  inset: -12,
+                  borderRadius: 36,
+                  border: "1px solid rgba(245,158,11,0.2)",
+                  animation: "ot-pulse-ring 2.5s ease-out infinite",
+                }}
+              />
+              <div
+                style={{
+                  position: "absolute",
+                  inset: -24,
+                  borderRadius: 48,
+                  border: "1px solid rgba(245,158,11,0.1)",
+                  animation: "ot-pulse-ring 2.5s ease-out 0.8s infinite",
+                }}
+              />
+            </div>
+            <div
+              style={{
+                display: "flex",
+                gap: 12,
+                alignItems: "center",
+              }}
+            >
+              {["📊", "👥", "📋"].map((emoji, i) => (
+                <div
+                  key={i}
+                  style={{
+                    width: 40,
+                    height: 40,
+                    borderRadius: 12,
+                    background: "rgba(255,255,255,0.04)",
+                    border: "1px solid rgba(255,255,255,0.08)",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    fontSize: 18,
+                    opacity: 0,
+                    animation: `ot-float ${2.5 + i * 0.3}s ease-in-out ${i * 0.4}s infinite`,
+                  }}
+                >
+                  {emoji}
+                </div>
+              ))}
+            </div>
+          </div>
         ) : (
           /* placeholder laptop outline when no screenshot */
           <div
@@ -1275,7 +1402,11 @@ function StepScreen({
                   "0 2px 12px rgba(245,158,11,0.3)";
               }}
             >
-              {isLast ? UI_STRINGS[lang].getStarted : UI_STRINGS[lang].next}
+              {isDoorboostStep
+                ? UI_STRINGS[lang].syncData
+                : isLast
+                  ? UI_STRINGS[lang].getStarted
+                  : UI_STRINGS[lang].next}
             </button>
           </div>
         </div>
@@ -1305,7 +1436,7 @@ function StepScreen({
               "rgba(255,255,255,0.22)")
           }
         >
-          {UI_STRINGS[lang].skipTour}
+          {isDoorboostStep ? UI_STRINGS[lang].skipSync : UI_STRINGS[lang].skipTour}
         </button>
       </div>
     </div>

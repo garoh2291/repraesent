@@ -1262,6 +1262,9 @@
     "back": "Zurück",
     "noCampaigns": "Keine Kampagnen für Ihr Doorboost-Konto gefunden.",
     "noLeads": "Keine Leads für Ihre Kampagnen gefunden.",
-    "noUsers": "Keine Teammitglieder gefunden."
+    "noUsers": "Keine Teammitglieder gefunden.",
+    "completeTitle": "Migration abgeschlossen!",
+    "completeDescription": "Ihre Doorboost-Daten wurden erfolgreich importiert. Kampagnen, Leads und Teammitglieder stehen bereit.",
+    "completeGoToAds": "Ihre Anzeigen ansehen"
   }
 }
