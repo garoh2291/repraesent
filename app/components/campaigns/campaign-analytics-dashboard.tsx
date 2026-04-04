@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from "react";
+import { Link } from "react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { format, subDays } from "date-fns";
@@ -27,7 +28,10 @@ import {
   X,
   Check,
   Search,
+  ArrowRight,
+  FileText,
 } from "lucide-react";
+import { Button } from "~/components/ui/button";
 import { useAuthContext } from "~/providers/auth-provider";
 import { cn } from "~/lib/utils";
 import {
@@ -339,7 +343,12 @@ function DrilldownSkeleton() {
 
 function CampaignDrilldown({ campaign }: { campaign: ConnectedCampaign }) {
   const { t } = useTranslation();
+  const { currentWorkspace } = useAuthContext();
   const [expanded, setExpanded] = useState(false);
+  const hasLeadForm =
+    currentWorkspace?.services?.some(
+      (s) => s.service_type === "lead-form" || s.service_slug === "lead-form",
+    ) ?? false;
 
   const { data: adSets, isLoading: adSetsLoading } = useQuery({
     queryKey: ["campaign-ad-sets", campaign.campaign_id],
@@ -421,6 +430,24 @@ function CampaignDrilldown({ campaign }: { campaign: ConnectedCampaign }) {
             <p className="text-xs text-muted-foreground py-2">
               {t("campaigns.noData")}
             </p>
+          )}
+          {hasLeadForm && (
+            <div className="flex justify-end pt-1">
+              <Button
+                asChild
+                size="sm"
+                variant="outline"
+                className="h-7 gap-1.5 text-[11px] border-amber-500/30 text-amber-600 hover:bg-amber-500/10 hover:text-amber-700"
+              >
+                <Link
+                  to={`/lead-form?platform_campaign_id=${encodeURIComponent(campaign.campaign_id)}`}
+                >
+                  <FileText className="h-3 w-3" />
+                  {t("campaigns.showLeads")}
+                  <ArrowRight className="h-3 w-3" />
+                </Link>
+              </Button>
+            </div>
           )}
         </div>
       )}

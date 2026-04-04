@@ -231,6 +231,7 @@
       "dateRange": "Date range",
       "source": "Source",
       "status": "Status",
+      "campaigns": "Campaigns",
       "websiteSource": "Website",
       "appointmentSource": "Appointment",
       "searchFilters": "Search filters...",
@@ -1222,7 +1223,8 @@
     "allCampaigns": "All campaigns",
     "campaignsSelected": "{{count}} campaigns selected",
     "searchCampaigns": "Search campaigns...",
-    "showingOf": "{{count}} of {{total}}"
+    "showingOf": "{{count}} of {{total}}",
+    "showLeads": "Show leads"
   },
   "datePicker": {
     "today": "Today",

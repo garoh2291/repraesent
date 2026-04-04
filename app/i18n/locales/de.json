@@ -231,6 +231,7 @@
       "dateRange": "Zeitraum",
       "source": "Quelle",
       "status": "Status",
+      "campaigns": "Kampagnen",
       "websiteSource": "Website",
       "appointmentSource": "Termin",
       "searchFilters": "Filter suchen...",
@@ -1222,7 +1223,8 @@
     "allCampaigns": "Alle Kampagnen",
     "campaignsSelected": "{{count}} Kampagnen ausgewählt",
     "searchCampaigns": "Kampagnen suchen...",
-    "showingOf": "{{count}} von {{total}}"
+    "showingOf": "{{count}} von {{total}}",
+    "showLeads": "Leads anzeigen"
   },
   "datePicker": {
     "today": "Heute",

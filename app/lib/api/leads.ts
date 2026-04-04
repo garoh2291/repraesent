@@ -57,6 +57,7 @@ export interface GetLeadsParams {
   source?: "website";
   form_name?: string;
   include_hidden?: boolean;
+  platform_campaign_id?: string;
 }
 
 export interface PaginatedLeads {
@@ -80,9 +81,36 @@ export async function getLeads(
   if (params.source) searchParams.set("source", params.source);
   if (params.form_name) searchParams.set("form_name", params.form_name);
   if (params.include_hidden) searchParams.set("include_hidden", "true");
+  if (params.platform_campaign_id)
+    searchParams.set("platform_campaign_id", params.platform_campaign_id);
 
   const res = await apiClient.get<PaginatedLeads>(
     `/leads?${searchParams.toString()}`
+  );
+  return res.data;
+}
+
+export interface GetKanbanCountsParams {
+  search?: string;
+  source?: "website";
+  form_name?: string;
+  platform_campaign_id?: string;
+}
+
+export type KanbanCounts = Record<LeadStatus, number>;
+
+export async function getLeadsKanbanCounts(
+  params: GetKanbanCountsParams = {},
+): Promise<KanbanCounts> {
+  const searchParams = new URLSearchParams();
+  if (params.search) searchParams.set("search", params.search);
+  if (params.source) searchParams.set("source", params.source);
+  if (params.form_name) searchParams.set("form_name", params.form_name);
+  if (params.platform_campaign_id)
+    searchParams.set("platform_campaign_id", params.platform_campaign_id);
+
+  const res = await apiClient.get<KanbanCounts>(
+    `/leads/kanban-counts?${searchParams.toString()}`,
   );
   return res.data;
 }

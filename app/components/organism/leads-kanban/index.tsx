@@ -1,4 +1,5 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
 import {
   DndContext,
   DragOverlay,
@@ -13,7 +14,11 @@ import type { DragEndEvent, DragStartEvent } from "@dnd-kit/core";
 import { useTranslation } from "react-i18next";
 import { ChevronDown, Loader2 } from "lucide-react";
 import { formatDate } from "~/lib/utils/format";
-import { type Lead } from "~/lib/api/leads";
+import {
+  getLeads,
+  getLeadsKanbanCounts,
+  type Lead,
+} from "~/lib/api/leads";
 import {
   LEAD_STATUSES,
   LEAD_STATUS_COLORS,
@@ -21,29 +26,132 @@ import {
 } from "~/lib/leads/constants";
 import { cn } from "~/lib/utils";
 
+const COLUMN_PAGE_SIZE = 50;
+
+interface KanbanFilters {
+  search?: string;
+  source?: "website";
+  form_name?: string;
+  platform_campaign_id?: string;
+}
+
 interface LeadsKanbanProps {
-  leads: Lead[];
-  isLoading: boolean;
+  filters: KanbanFilters;
   onStatusChange: (leadId: string, status: LeadStatus) => void;
   onLeadSelect: (leadId: string) => void;
   isUpdating: boolean;
   canEdit?: boolean;
 }
 
+/**
+ * Hook: fetches one status column's leads with infinite-scroll pagination.
+ * Returns the full accumulated lead list for the column + load-more state.
+ */
+function useColumnQuery(status: LeadStatus, filters: KanbanFilters) {
+  return useInfiniteQuery({
+    queryKey: ["leads-kanban-column", status, filters],
+    queryFn: ({ pageParam = 1 }) =>
+      getLeads({
+        status,
+        page: pageParam as number,
+        limit: COLUMN_PAGE_SIZE,
+        search: filters.search,
+        source: filters.source,
+        form_name: filters.form_name,
+        platform_campaign_id: filters.platform_campaign_id,
+        include_hidden: true,
+      }),
+    initialPageParam: 1,
+    getNextPageParam: (lastPage) =>
+      lastPage.hasNext ? lastPage.page + 1 : undefined,
+    staleTime: 10_000,
+  });
+}
+
 export function LeadsKanban({
-  leads,
-  isLoading,
+  filters,
   onStatusChange,
   onLeadSelect,
   isUpdating,
   canEdit = true,
 }: LeadsKanbanProps) {
   const [activeId, setActiveId] = useState<string | null>(null);
-  const undoStackRef = useRef<Array<{ leadId: string; previousStatus: LeadStatus }>>([]);
+  const undoStackRef = useRef<
+    Array<{ leadId: string; previousStatus: LeadStatus }>
+  >([]);
+
+  // One infinite query per status column — fixed hook order (8 calls)
+  const newLeadQ = useColumnQuery("new_lead", filters);
+  const pendingQ = useColumnQuery("pending", filters);
+  const inProgressQ = useColumnQuery("in_progress", filters);
+  const rejectedQ = useColumnQuery("rejected", filters);
+  const onHoldQ = useColumnQuery("on_hold", filters);
+  const staleQ = useColumnQuery("stale", filters);
+  const successQ = useColumnQuery("success", filters);
+  const hiddenQ = useColumnQuery("hidden", filters);
+
+  const columnQueries = useMemo(
+    () =>
+      ({
+        new_lead: newLeadQ,
+        pending: pendingQ,
+        in_progress: inProgressQ,
+        rejected: rejectedQ,
+        on_hold: onHoldQ,
+        stale: staleQ,
+        success: successQ,
+        hidden: hiddenQ,
+      }) as const,
+    [
+      newLeadQ,
+      pendingQ,
+      inProgressQ,
+      rejectedQ,
+      onHoldQ,
+      staleQ,
+      successQ,
+      hiddenQ,
+    ],
+  );
+
+  // Totals (global counts — not affected by per-column pagination)
+  const countsQuery = useQuery({
+    queryKey: ["leads-kanban-counts", filters],
+    queryFn: () =>
+      getLeadsKanbanCounts({
+        search: filters.search,
+        source: filters.source,
+        form_name: filters.form_name,
+        platform_campaign_id: filters.platform_campaign_id,
+      }),
+    staleTime: 10_000,
+  });
+
+  // Flatten all loaded leads by column for drag lookups
+  const leadsByStatus = useMemo(() => {
+    const acc = {} as Record<LeadStatus, Lead[]>;
+    for (const status of LEAD_STATUSES) {
+      const q = columnQueries[status];
+      acc[status] = q.data?.pages.flatMap((p) => p.data) ?? [];
+    }
+    return acc;
+  }, [columnQueries]);
+
+  // Flat array for drag overlay lookup
+  const allLoadedLeads = useMemo(
+    () => Object.values(leadsByStatus).flat(),
+    [leadsByStatus],
+  );
+
+  const isInitialLoading = LEAD_STATUSES.some(
+    (s) => columnQueries[s].isLoading,
+  );
 
   const sensors = useSensors(
     useSensor(MouseSensor, { activationConstraint: { distance: 8 } }),
-    useSensor(TouchSensor, { activationConstraint: { delay: 200, tolerance: 8 } })
+    useSensor(TouchSensor, {
+      activationConstraint: { delay: 200, tolerance: 8 },
+    }),
   );
 
   const handleDragStart = useCallback((event: DragStartEvent) => {
@@ -62,7 +170,7 @@ export function LeadsKanban({
 
       if (!LEAD_STATUSES.includes(newStatus as LeadStatus)) return;
 
-      const lead = leads.find((l) => l.id === leadId);
+      const lead = allLoadedLeads.find((l) => l.id === leadId);
       if (!lead || lead.status === newStatus) return;
 
       const previousStatus = lead.status as LeadStatus;
@@ -71,7 +179,7 @@ export function LeadsKanban({
 
       onStatusChange(leadId, newStatus as LeadStatus);
     },
-    [leads, onStatusChange]
+    [allLoadedLeads, onStatusChange],
   );
 
   useEffect(() => {
@@ -88,17 +196,11 @@ export function LeadsKanban({
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [onStatusChange]);
 
-  const leadsByStatus = LEAD_STATUSES.reduce(
-    (acc, status) => {
-      acc[status] = leads.filter((l) => l.status === status);
-      return acc;
-    },
-    {} as Record<LeadStatus, Lead[]>
-  );
+  const activeLead = activeId
+    ? allLoadedLeads.find((l) => `lead-${l.id}` === activeId)
+    : null;
 
-  const activeLead = activeId ? leads.find((l) => `lead-${l.id}` === activeId) : null;
-
-  if (isLoading) {
+  if (isInitialLoading) {
     return (
       <div className="flex flex-1 min-h-0 items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
@@ -112,6 +214,8 @@ export function LeadsKanban({
       <div className="sm:hidden">
         <LeadsMobileSchedule
           leadsByStatus={leadsByStatus}
+          totalsByStatus={countsQuery.data ?? {}}
+          columnQueries={columnQueries}
           onLeadSelect={onLeadSelect}
         />
       </div>
@@ -128,16 +232,23 @@ export function LeadsKanban({
               "flex flex-1 min-h-0 h-full gap-4 overflow-x-auto overflow-y-hidden rounded-lg py-4 pl-0 pr-4 pt-5 scrollbar-hide"
             )}
           >
-            {LEAD_STATUSES.map((status) => (
-              <KanbanColumn
-                key={status}
-                status={status}
-                leads={leadsByStatus[status] ?? []}
-                onLeadSelect={onLeadSelect}
-                isUpdating={isUpdating}
-                canEdit={canEdit}
-              />
-            ))}
+            {LEAD_STATUSES.map((status) => {
+              const q = columnQueries[status];
+              return (
+                <KanbanColumn
+                  key={status}
+                  status={status}
+                  leads={leadsByStatus[status] ?? []}
+                  total={countsQuery.data?.[status] ?? 0}
+                  hasNextPage={q.hasNextPage ?? false}
+                  isFetchingMore={q.isFetchingNextPage}
+                  onLoadMore={() => q.fetchNextPage()}
+                  onLeadSelect={onLeadSelect}
+                  isUpdating={isUpdating}
+                  canEdit={canEdit}
+                />
+              );
+            })}
           </div>
 
           <DragOverlay>
@@ -157,12 +268,20 @@ export function LeadsKanban({
 function KanbanColumn({
   status,
   leads,
+  total,
+  hasNextPage,
+  isFetchingMore,
+  onLoadMore,
   onLeadSelect,
   isUpdating,
   canEdit,
 }: {
   status: LeadStatus;
   leads: Lead[];
+  total: number;
+  hasNextPage: boolean;
+  isFetchingMore: boolean;
+  onLoadMore: () => void;
   onLeadSelect: (id: string) => void;
   isUpdating: boolean;
   canEdit: boolean;
@@ -171,7 +290,7 @@ function KanbanColumn({
   const { setNodeRef, isOver } = useDroppable({ id: status });
   const color = LEAD_STATUS_COLORS[status];
 
-  const isEmpty = leads.length === 0;
+  const isEmpty = total === 0;
 
   return (
     <div
@@ -188,7 +307,7 @@ function KanbanColumn({
           <span className={cn("inline-block h-2 w-2 rounded-full shrink-0", color)} />
           <span className="truncate">{t(`leads.statuses.${status}`)}</span>
           <span className="inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-background px-1.5 text-xs font-medium text-muted-foreground">
-            {leads.length}
+            {total}
           </span>
         </h3>
       </div>
@@ -202,6 +321,35 @@ function KanbanColumn({
             canEdit={canEdit}
           />
         ))}
+        {hasNextPage && (
+          <button
+            type="button"
+            onClick={onLoadMore}
+            disabled={isFetchingMore}
+            className={cn(
+              "w-full rounded-lg border border-dashed border-border bg-background/50 py-2 text-xs font-medium text-muted-foreground",
+              "hover:bg-background hover:text-foreground transition-colors",
+              "disabled:opacity-50 disabled:pointer-events-none",
+              "flex items-center justify-center gap-1.5",
+            )}
+          >
+            {isFetchingMore ? (
+              <>
+                <Loader2 className="h-3 w-3 animate-spin" />
+                {t("common.loading")}
+              </>
+            ) : (
+              <>
+                {t("leads.loadMore", {
+                  defaultValue: "Load more",
+                })}
+                <span className="text-muted-foreground/60">
+                  ({total - leads.length})
+                </span>
+              </>
+            )}
+          </button>
+        )}
       </div>
     </div>
   );
@@ -282,11 +430,21 @@ function KanbanCard({
 
 /* ─── Mobile Schedule List (Google Calendar-style) ─── */
 
+type ColumnQueryLike = {
+  hasNextPage?: boolean;
+  isFetchingNextPage: boolean;
+  fetchNextPage: () => void;
+};
+
 function LeadsMobileSchedule({
   leadsByStatus,
+  totalsByStatus,
+  columnQueries,
   onLeadSelect,
 }: {
   leadsByStatus: Record<LeadStatus, Lead[]>;
+  totalsByStatus: Partial<Record<string, number>>;
+  columnQueries: Record<LeadStatus, ColumnQueryLike>;
   onLeadSelect: (id: string) => void;
 }) {
   const { t } = useTranslation();
@@ -296,12 +454,13 @@ function LeadsMobileSchedule({
       {LEAD_STATUSES.map((status) => {
         const leads = leadsByStatus[status] ?? [];
         const colorClass = LEAD_STATUS_COLORS[status];
-        const count = leads.length;
+        const total = totalsByStatus[status] ?? 0;
+        const q = columnQueries[status];
 
         return (
           <ScheduleSection
             key={status}
-            defaultOpen={count > 0}
+            defaultOpen={total > 0}
             header={
               <>
                 <div className={cn("h-8 w-1 rounded-full shrink-0", colorClass)} />
@@ -313,17 +472,17 @@ function LeadsMobileSchedule({
                 <span
                   className={cn(
                     "inline-flex h-6 min-w-6 items-center justify-center rounded-full px-1.5 text-xs font-semibold",
-                    count > 0
+                    total > 0
                       ? `${colorClass} ${colorClass === "bg-muted" ? "text-foreground" : "text-white"}`
                       : "bg-muted text-muted-foreground"
                   )}
                 >
-                  {count}
+                  {total}
                 </span>
               </>
             }
           >
-            {count === 0 ? (
+            {total === 0 ? (
               <div className="px-4 pb-4 pt-1">
                 <p className="text-xs text-muted-foreground/50 text-center py-3">
                   —
@@ -339,6 +498,25 @@ function LeadsMobileSchedule({
                     onSelect={() => onLeadSelect(lead.id)}
                   />
                 ))}
+                {q.hasNextPage && (
+                  <button
+                    type="button"
+                    onClick={() => q.fetchNextPage()}
+                    disabled={q.isFetchingNextPage}
+                    className="w-full rounded-lg border border-dashed border-border py-2 text-[11px] font-medium text-muted-foreground hover:text-foreground hover:bg-muted transition-colors flex items-center justify-center gap-1.5"
+                  >
+                    {q.isFetchingNextPage ? (
+                      <Loader2 className="h-3 w-3 animate-spin" />
+                    ) : (
+                      <>
+                        {t("leads.loadMore", { defaultValue: "Load more" })}
+                        <span className="text-muted-foreground/60">
+                          ({total - leads.length})
+                        </span>
+                      </>
+                    )}
+                  </button>
+                )}
               </div>
             )}
           </ScheduleSection>

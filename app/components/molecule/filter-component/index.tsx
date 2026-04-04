@@ -37,6 +37,7 @@ const FILTER_LABEL_KEYS: Record<string, string> = {
   status: "leads.filters.status",
   source: "leads.filters.source",
   form_name: "leads.columns.formName",
+  campaigns: "leads.filters.campaigns",
 };
 
 export interface FilterComponentProps {

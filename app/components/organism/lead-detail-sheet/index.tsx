@@ -239,6 +239,13 @@ export function LeadInfoSection({
   const metadata = lead.metadata as Record<string, unknown> | null | undefined;
   const metadataEntries =
     metadata && typeof metadata === "object" ? Object.entries(metadata) : [];
+  // Hide empty metadata entries (null, undefined, empty string, empty object)
+  const visibleMetadataEntries = metadataEntries.filter(([, v]) => {
+    if (v == null || v === "") return false;
+    if (typeof v === "object" && v !== null && Object.keys(v).length === 0)
+      return false;
+    return true;
+  });
 
   return (
     <div className="space-y-4">
@@ -306,14 +313,12 @@ export function LeadInfoSection({
           </FieldValue>
         </FieldRow>
 
-        {metadataEntries.map(([key, value]) => (
+        {visibleMetadataEntries.map(([key, value]) => (
           <FieldRow key={key} label={key}>
             <FieldValue className="whitespace-pre-wrap">
-              {value == null
-                ? "—"
-                : typeof value === "object"
-                  ? JSON.stringify(value)
-                  : String(value)}
+              {typeof value === "object"
+                ? JSON.stringify(value)
+                : String(value)}
             </FieldValue>
           </FieldRow>
         ))}

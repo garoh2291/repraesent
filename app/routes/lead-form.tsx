@@ -21,6 +21,7 @@ import {
   type Lead,
   type LeadStatus,
 } from "~/lib/api/leads";
+import { getConnectedCampaigns } from "~/lib/api/campaigns";
 import { LeadTasksSummaryCell } from "~/components/organism/tasks/lead-tasks-summary-cell";
 import { TaskFormModal } from "~/components/organism/tasks/task-form-modal";
 import type { WorkspaceMemberItem } from "~/components/organism/tasks/task-form-modal";
@@ -81,6 +82,7 @@ export default function LeadForm() {
   const statusFilter = searchParams.get("status") ?? "";
   const sourceFilter = (searchParams.get("source") ?? "") as "" | "website";
   const formNameFilter = searchParams.get("form_name") ?? "";
+  const campaignFilter = searchParams.get("platform_campaign_id") ?? "";
 
   const [viewMode, setViewMode] = useLeadsViewMode();
   const [selectedLeadId, setSelectedLeadId] = useState<string | null>(null);
@@ -205,6 +207,23 @@ export default function LeadForm() {
     [formNamesQuery.data]
   );
 
+  // Connected campaigns for the campaigns filter
+  const campaignsQuery = useQuery({
+    queryKey: ["lead-filter-campaigns", currentWorkspace?.id],
+    queryFn: () => getConnectedCampaigns({ limit: 200 }),
+    enabled: !!currentWorkspace,
+    staleTime: 60_000,
+  });
+
+  const campaignFilterOptions = useMemo(
+    () =>
+      (campaignsQuery.data?.data ?? []).map((c) => ({
+        key: c.campaign_id,
+        label: c.campaign_name ?? c.campaign_id,
+      })),
+    [campaignsQuery.data]
+  );
+
   const leadsQuery = useQuery({
     queryKey: [
       "leads",
@@ -214,20 +233,21 @@ export default function LeadForm() {
       statusFilter || undefined,
       sourceFilter || undefined,
       formNameFilter || undefined,
+      campaignFilter || undefined,
       showHidden,
-      viewMode,
     ],
     queryFn: () =>
       getLeads({
         page,
-        limit: viewMode === "kanban" ? 100 : limit,
+        limit,
         search: debouncedSearch || undefined,
         status: (statusFilter || undefined) as LeadStatus | undefined,
         source: sourceFilter || undefined,
         form_name: formNameFilter || undefined,
-        include_hidden: viewMode === "kanban" ? true : showHidden || undefined,
+        platform_campaign_id: campaignFilter || undefined,
+        include_hidden: showHidden || undefined,
       }),
-    enabled: !!currentWorkspace,
+    enabled: !!currentWorkspace && viewMode === "table",
     refetchOnMount: "always",
   });
 
@@ -251,8 +271,14 @@ export default function LeadForm() {
         options: formNameFilterOptions,
         single: true,
       },
+      {
+        name: "campaigns",
+        paramKey: "platform_campaign_id",
+        options: campaignFilterOptions,
+        single: true,
+      },
     ],
-    [formNameFilterOptions]
+    [formNameFilterOptions, campaignFilterOptions]
   );
 
   const hasAccess =
@@ -557,8 +583,12 @@ export default function LeadForm() {
       ) : (
         <div className="flex-1 min-h-0 flex flex-col">
           <LeadsKanban
-            leads={leadsQuery.data?.data ?? []}
-            isLoading={leadsQuery.isLoading}
+            filters={{
+              search: debouncedSearch || undefined,
+              source: sourceFilter || undefined,
+              form_name: formNameFilter || undefined,
+              platform_campaign_id: campaignFilter || undefined,
+            }}
             onStatusChange={(id, status) =>
               updateStatusMutation.mutate({ id, status })
             }
