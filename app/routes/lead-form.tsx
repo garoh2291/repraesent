@@ -7,6 +7,7 @@ import { useAuthContext } from "~/providers/auth-provider";
 import { DataTable } from "~/components/organism/data-table";
 import { LeadDetailSheet } from "~/components/organism/lead-detail-sheet";
 import { LeadsKanban } from "~/components/organism/leads-kanban";
+import { LeadSourceIcon } from "~/components/organism/lead-source-icon";
 import { LeadStatusSelect } from "~/components/molecule/lead-status-select";
 import FilterComponent from "~/components/molecule/filter-component";
 import {
@@ -384,17 +385,13 @@ export default function LeadForm() {
     {
       accessorKey: "source_label",
       header: t("leads.columns.source"),
-      cell: ({ row }) => {
-        const label =
-          row.original.source_label ?? row.original.source_table ?? "—";
-        return (
-          <TooltipContainer tooltipContent={label}>
-            <span className="truncate max-w-[140px] block text-muted-foreground">
-              {label}
-            </span>
-          </TooltipContainer>
-        );
-      },
+      cell: ({ row }) => (
+        <LeadSourceIcon
+          source={row.original.source_label}
+          fallbackSource={row.original.source_table}
+          size={18}
+        />
+      ),
     },
     {
       accessorKey: "status",

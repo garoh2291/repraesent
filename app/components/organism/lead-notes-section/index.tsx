@@ -60,9 +60,13 @@ function getRelativeTime(note: Note): string {
 }
 
 function buildNoteUserLabel(note: Note, fallback: string): string {
-  const name = [note.user_first_name, note.user_last_name].filter(Boolean).join(" ").trim()
-    || note.user_email
-    || fallback;
+  const name =
+    [note.user_first_name, note.user_last_name]
+      .filter(Boolean)
+      .join(" ")
+      .trim() ||
+    note.user_email ||
+    fallback;
   return note.user_is_deleted ? `${name} (Deleted)` : name;
 }
 
@@ -108,6 +112,8 @@ export function LeadNotesSection({
         updated_by: user?.id ?? null,
         user_first_name: user?.first_name ?? null,
         user_last_name: user?.last_name ?? null,
+        user_email: user?.email ?? null,
+        user_is_deleted: false,
       };
       queryClient.setQueryData<Note[]>(["lead-notes", leadId], (old = []) => [
         optimisticNote,
@@ -149,6 +155,8 @@ export function LeadNotesSection({
             updated_by: user?.id ?? null,
             user_first_name: user?.first_name ?? null,
             user_last_name: user?.last_name ?? null,
+            user_email: user?.email ?? null,
+            user_is_deleted: false,
           }
         : {
             id: noteId,
@@ -160,6 +168,8 @@ export function LeadNotesSection({
             updated_by: user?.id ?? null,
             user_first_name: user?.first_name ?? null,
             user_last_name: user?.last_name ?? null,
+            user_email: user?.email ?? null,
+            user_is_deleted: false,
           };
       queryClient.setQueryData<Note[]>(["lead-notes", leadId], (old = []) =>
         old.map((n) => (n.id === noteId ? optimisticNote : n))
@@ -243,7 +253,9 @@ export function LeadNotesSection({
         </h3>
         <div className="flex items-center gap-2">
           <div className="h-4 w-4 app-spin rounded-full border-2 border-muted-foreground/20 border-t-muted-foreground/60" />
-          <span className="text-sm text-muted-foreground">{t("common.loading")}</span>
+          <span className="text-sm text-muted-foreground">
+            {t("common.loading")}
+          </span>
         </div>
       </div>
     );
@@ -253,7 +265,12 @@ export function LeadNotesSection({
     <div className="space-y-3">
       <div className="flex items-center justify-between gap-2">
         <h3 className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
-          {t("leads.detail.notes")} {notes.length > 0 && <span className="ml-1 normal-case tracking-normal font-normal text-muted-foreground/60">({notes.length})</span>}
+          {t("leads.detail.notes")}{" "}
+          {notes.length > 0 && (
+            <span className="ml-1 normal-case tracking-normal font-normal text-muted-foreground/60">
+              ({notes.length})
+            </span>
+          )}
         </h3>
         {canEdit && (
           <button
@@ -275,7 +292,9 @@ export function LeadNotesSection({
               <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-primary/10 text-primary text-[9px] font-bold">
                 {getCurrentUserInitials(user?.first_name, user?.last_name)}
               </span>
-              <span className="font-medium text-muted-foreground/70">{t("leads.detail.newNote")}</span>
+              <span className="font-medium text-muted-foreground/70">
+                {t("leads.detail.newNote")}
+              </span>
             </div>
             <Textarea
               autoFocus
@@ -289,7 +308,9 @@ export function LeadNotesSection({
         )}
 
         {notes.length === 0 && !isAddingNew ? (
-          <p className="text-sm text-muted-foreground py-2">{t("leads.detail.noNotes")}</p>
+          <p className="text-sm text-muted-foreground py-2">
+            {t("leads.detail.noNotes")}
+          </p>
         ) : (
           notes.map((note) =>
             editingNoteId === note.id && canEdit ? (
@@ -300,10 +321,15 @@ export function LeadNotesSection({
               >
                 <div className="flex items-center gap-2 text-xs text-muted-foreground">
                   <TooltipContainer
-                    tooltipContent={buildNoteUserLabel(note, t("leads.detail.system"))}
+                    tooltipContent={buildNoteUserLabel(
+                      note,
+                      t("leads.detail.deletedUser")
+                    )}
                     showCopyButton={false}
                   >
-                    <span className={`inline-flex h-5 w-5 items-center justify-center rounded-full text-[9px] font-bold ${note.user_is_deleted ? "bg-muted/50 text-muted-foreground/60" : "bg-muted"}`}>
+                    <span
+                      className={`inline-flex h-5 w-5 items-center justify-center rounded-full text-[9px] font-bold ${note.user_is_deleted ? "bg-muted/50 text-muted-foreground/60" : "bg-muted"}`}
+                    >
                       {getInitials(note)}
                     </span>
                   </TooltipContainer>
@@ -334,19 +360,28 @@ export function LeadNotesSection({
                 <div className="flex items-center justify-between gap-2 mt-2.5">
                   <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
                     <TooltipContainer
-                      tooltipContent={buildNoteUserLabel(note, t("leads.detail.system"))}
+                      tooltipContent={buildNoteUserLabel(
+                        note,
+                        t("leads.detail.deletedUser")
+                      )}
                       showCopyButton={false}
                     >
-                      <span className={`inline-flex h-5 w-5 items-center justify-center rounded-full text-[9px] font-bold ${note.user_is_deleted ? "bg-muted/50 text-muted-foreground/60" : "bg-muted"}`}>
+                      <span
+                        className={`inline-flex h-5 w-5 items-center justify-center rounded-full text-[9px] font-bold ${note.user_is_deleted ? "bg-muted/50 text-muted-foreground/60" : "bg-muted"}`}
+                      >
                         {getInitials(note)}
                       </span>
                     </TooltipContainer>
                     {note.user_is_deleted && (
-                      <span className="text-[10px] text-muted-foreground/60">(Deleted)</span>
+                      <span className="text-[10px] text-muted-foreground/60">
+                        (Deleted)
+                      </span>
                     )}
                     <span>{getRelativeTime(note)}</span>
                     {note.version > 1 && (
-                      <span className="italic text-muted-foreground/60">{t("leads.detail.editedBadge")}</span>
+                      <span className="italic text-muted-foreground/60">
+                        {t("leads.detail.editedBadge")}
+                      </span>
                     )}
                   </div>
                 </div>
@@ -390,13 +425,17 @@ export function LeadNotesSection({
                     >
                       <AlertDialogContent>
                         <AlertDialogHeader>
-                          <AlertDialogTitle>{t("leads.detail.deleteNoteConfirmTitle")}</AlertDialogTitle>
+                          <AlertDialogTitle>
+                            {t("leads.detail.deleteNoteConfirmTitle")}
+                          </AlertDialogTitle>
                           <AlertDialogDescription>
                             {t("leads.detail.deleteNoteConfirmDesc")}
                           </AlertDialogDescription>
                         </AlertDialogHeader>
                         <AlertDialogFooter>
-                          <AlertDialogCancel>{t("common.cancel")}</AlertDialogCancel>
+                          <AlertDialogCancel>
+                            {t("common.cancel")}
+                          </AlertDialogCancel>
                           <AlertDialogAction
                             className="bg-foreground text-background hover:opacity-90 transition-opacity"
                             onClick={() => {

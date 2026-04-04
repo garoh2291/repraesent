@@ -3,13 +3,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router";
 import { formatDate, formatRelativeTime } from "~/lib/utils/format";
-import {
-  Pencil,
-  Trash2,
-  ExternalLink,
-  CalendarIcon,
-  X,
-} from "lucide-react";
+import { Pencil, Trash2, ExternalLink, CalendarIcon, X } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -45,7 +39,10 @@ import { cn } from "~/lib/utils";
 import TooltipContainer from "~/components/tooltip-container";
 import { useAuthContext } from "~/providers/auth-provider";
 import { TaskUrgencyBadge } from "~/components/organism/tasks/task-urgency-badge";
-import { TaskFormModal, type WorkspaceMemberItem } from "~/components/organism/tasks/task-form-modal";
+import {
+  TaskFormModal,
+  type WorkspaceMemberItem,
+} from "~/components/organism/tasks/task-form-modal";
 import {
   getTask,
   getTaskHistory,
@@ -54,16 +51,26 @@ import {
   type TaskHistoryItem,
 } from "~/lib/api/tasks";
 
-function formatHistoryAction(item: TaskHistoryItem, t: ReturnType<typeof useTranslation>["t"]): string {
-  if (item.action === "task_created") return t("tasks.detail.historyTaskCreated");
-  if (item.action === "task_deleted") return t("tasks.detail.historyTaskDeleted");
-  if (item.action === "task_assignee_removed") return t("tasks.detail.historyAssigneeRemoved", { defaultValue: "Assignee removed" });
+function formatHistoryAction(
+  item: TaskHistoryItem,
+  t: ReturnType<typeof useTranslation>["t"]
+): string {
+  if (item.action === "task_created")
+    return t("tasks.detail.historyTaskCreated");
+  if (item.action === "task_deleted")
+    return t("tasks.detail.historyTaskDeleted");
+  if (item.action === "task_assignee_removed")
+    return t("tasks.detail.historyAssigneeRemoved", {
+      defaultValue: "Assignee removed",
+    });
   if (item.action === "task_updated") {
     const details = item.details as Record<string, unknown>;
     if (details.new_status) {
       const newStatus = details.new_status as string;
       return t("tasks.detail.historyStatusChanged", {
-        newStatus: t(`tasks.statuses.${newStatus}`, { defaultValue: newStatus }),
+        newStatus: t(`tasks.statuses.${newStatus}`, {
+          defaultValue: newStatus,
+        }),
       });
     }
     return t("tasks.detail.historyTaskUpdated");
@@ -76,10 +83,15 @@ function buildUserLabel(
   lastName: string | null,
   email: string | null,
   isDeleted: boolean,
-  t: ReturnType<typeof useTranslation>["t"],
+  t: ReturnType<typeof useTranslation>["t"]
 ): string {
-  const name = [firstName, lastName].filter(Boolean).join(" ").trim() || email || t("tasks.detail.system");
-  return isDeleted ? `${name} (${t("common.deleted", { defaultValue: "Deleted" })})` : name;
+  const name =
+    [firstName, lastName].filter(Boolean).join(" ").trim() ||
+    email ||
+    t("tasks.detail.deletedUser");
+  return isDeleted
+    ? `${name} (${t("common.deleted", { defaultValue: "Deleted" })})`
+    : name;
 }
 
 function getInitials(first: string | null, last: string | null): string {
@@ -120,7 +132,11 @@ export function TaskDetailModal({
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [calendarOpen, setCalendarOpen] = useState(false);
 
-  const { data: task, isLoading, isError } = useQuery({
+  const {
+    data: task,
+    isLoading,
+    isError,
+  } = useQuery({
     queryKey: ["task", taskId],
     queryFn: () => getTask(taskId!),
     enabled: !!taskId && open,
@@ -142,7 +158,9 @@ export function TaskDetailModal({
     queryClient.invalidateQueries({ queryKey: ["task", taskId] });
     queryClient.invalidateQueries({ queryKey: ["task-history", taskId] });
     if (task?.entity_id) {
-      queryClient.invalidateQueries({ queryKey: ["lead-tasks", task.entity_id] });
+      queryClient.invalidateQueries({
+        queryKey: ["lead-tasks", task.entity_id],
+      });
     }
     queryClient.invalidateQueries({ queryKey: ["tasks"] });
     queryClient.invalidateQueries({ queryKey: ["leads"] });
@@ -198,7 +216,7 @@ export function TaskDetailModal({
                         className={cn(
                           "text-base font-semibold leading-snug truncate",
                           task.status === "done" &&
-                            "line-through text-muted-foreground",
+                            "line-through text-muted-foreground"
                         )}
                       >
                         {task.title}
@@ -278,7 +296,7 @@ export function TaskDetailModal({
                               <SelectItem key={s} value={s} className="text-xs">
                                 {t(`tasks.statuses.${s}`)}
                               </SelectItem>
-                            ),
+                            )
                           )}
                         </SelectContent>
                       </Select>
@@ -295,13 +313,16 @@ export function TaskDetailModal({
                   </span>
                   <div className="flex items-center gap-2">
                     {canEdit ? (
-                      <Popover open={calendarOpen} onOpenChange={setCalendarOpen}>
+                      <Popover
+                        open={calendarOpen}
+                        onOpenChange={setCalendarOpen}
+                      >
                         <PopoverTrigger asChild>
                           <button
                             type="button"
                             className={cn(
                               "inline-flex items-center gap-1.5 rounded-lg border border-border bg-muted/40 px-3 py-1.5 text-xs transition-colors hover:bg-muted",
-                              !task.due_date && "text-muted-foreground",
+                              !task.due_date && "text-muted-foreground"
                             )}
                           >
                             <CalendarIcon className="h-3 w-3 text-muted-foreground" />
@@ -364,13 +385,15 @@ export function TaskDetailModal({
                         value={task.assignee_id ?? "unassigned"}
                         onValueChange={(v) =>
                           updateAssigneeMutation.mutate(
-                            v === "unassigned" ? null : v,
+                            v === "unassigned" ? null : v
                           )
                         }
                         disabled={updateAssigneeMutation.isPending}
                       >
                         <SelectTrigger className="h-8 text-xs w-[180px]">
-                          <SelectValue placeholder={t("tasks.form.unassigned")} />
+                          <SelectValue
+                            placeholder={t("tasks.form.unassigned")}
+                          />
                         </SelectTrigger>
                         <SelectContent>
                           <SelectItem value="unassigned" className="text-xs">
@@ -378,10 +401,11 @@ export function TaskDetailModal({
                           </SelectItem>
                           {sortedMembers.map((m) => {
                             const isMe = m.user_id === currentUser?.id;
-                            const name = [m.user_first_name, m.user_last_name]
-                              .filter(Boolean)
-                              .join(" ")
-                              .trim() || m.user_email;
+                            const name =
+                              [m.user_first_name, m.user_last_name]
+                                .filter(Boolean)
+                                .join(" ")
+                                .trim() || m.user_email;
                             const label = isMe
                               ? `${t("common.you", { defaultValue: "You" })} (${name})`
                               : name;
@@ -400,20 +424,30 @@ export function TaskDetailModal({
                     ) : task.assignee_id ? (
                       <div className="flex items-center gap-1.5 text-xs">
                         <TooltipContainer
-                          tooltipContent={buildUserLabel(task.assignee_first_name, task.assignee_last_name, task.assignee_email, task.assignee_is_deleted, t)}
+                          tooltipContent={buildUserLabel(
+                            task.assignee_first_name,
+                            task.assignee_last_name,
+                            task.assignee_email,
+                            task.assignee_is_deleted,
+                            t
+                          )}
                           showCopyButton={false}
                         >
                           <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-muted text-[9px] font-bold">
                             {getInitials(
                               task.assignee_first_name,
-                              task.assignee_last_name,
+                              task.assignee_last_name
                             )}
                           </span>
                         </TooltipContainer>
                         <span>
-                          {[task.assignee_first_name, task.assignee_last_name].filter(Boolean).join(" ") || task.assignee_email}
+                          {[task.assignee_first_name, task.assignee_last_name]
+                            .filter(Boolean)
+                            .join(" ") || task.assignee_email}
                           {task.assignee_is_deleted && (
-                            <span className="ml-1 text-muted-foreground/60">(Deleted)</span>
+                            <span className="ml-1 text-muted-foreground/60">
+                              (Deleted)
+                            </span>
                           )}
                         </span>
                       </div>
@@ -430,16 +464,14 @@ export function TaskDetailModal({
                     <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-muted text-[9px] font-bold">
                       {getInitials(
                         task.creator_first_name,
-                        task.creator_last_name,
+                        task.creator_last_name
                       )}
                     </span>
                     <span>
                       {task.creator_first_name} {task.creator_last_name}
                     </span>
                     <span className="text-muted-foreground/60">·</span>
-                    <span>
-                      {formatRelativeTime(task.created_at)}
-                    </span>
+                    <span>{formatRelativeTime(task.created_at)}</span>
                   </div>
                 </div>
 
@@ -482,18 +514,28 @@ export function TaskDetailModal({
                                 </p>
                                 <div className="flex items-center gap-2 text-xs text-muted-foreground mt-1">
                                   <TooltipContainer
-                                    tooltipContent={buildUserLabel(item.user_first_name, item.user_last_name, item.user_email, item.user_is_deleted, t)}
+                                    tooltipContent={buildUserLabel(
+                                      item.user_first_name,
+                                      item.user_last_name,
+                                      item.user_email,
+                                      item.user_is_deleted,
+                                      t
+                                    )}
                                     showCopyButton={false}
                                   >
-                                    <span className={`inline-flex h-5 w-5 items-center justify-center rounded-full text-[9px] font-bold ${item.user_is_deleted ? "bg-muted/50 text-muted-foreground/60" : "bg-muted"}`}>
+                                    <span
+                                      className={`inline-flex h-5 w-5 items-center justify-center rounded-full text-[9px] font-bold ${item.user_is_deleted ? "bg-muted/50 text-muted-foreground/60" : "bg-muted"}`}
+                                    >
                                       {getInitials(
                                         item.user_first_name,
-                                        item.user_last_name,
+                                        item.user_last_name
                                       )}
                                     </span>
                                   </TooltipContainer>
                                   {item.user_is_deleted && (
-                                    <span className="text-[10px] text-muted-foreground/60">(Deleted)</span>
+                                    <span className="text-[10px] text-muted-foreground/60">
+                                      (Deleted)
+                                    </span>
                                   )}
                                   <span>{relativeTime}</span>
                                 </div>

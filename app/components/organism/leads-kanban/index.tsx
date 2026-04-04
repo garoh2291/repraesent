@@ -19,6 +19,7 @@ import {
   getLeadsKanbanCounts,
   type Lead,
 } from "~/lib/api/leads";
+import { LeadSourceIcon } from "~/components/organism/lead-source-icon";
 import {
   LEAD_STATUSES,
   LEAD_STATUS_COLORS,
@@ -583,10 +584,13 @@ function LeadScheduleRow({
       </div>
 
       {/* Source indicator */}
-      {lead.source_label && (
-        <span className="text-[10px] text-muted-foreground/60 shrink-0">
-          {lead.source_label}
-        </span>
+      {(lead.source_label || lead.source_table) && (
+        <LeadSourceIcon
+          source={lead.source_label}
+          fallbackSource={lead.source_table}
+          size={16}
+          className="shrink-0"
+        />
       )}
     </button>
   );

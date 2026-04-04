@@ -17,6 +17,7 @@ import {
 } from "~/lib/api/leads";
 import { LeadNotesSection } from "~/components/organism/lead-notes-section";
 import { LeadTasksSection } from "~/components/organism/tasks/lead-tasks-section";
+import { LeadSourceIcon } from "~/components/organism/lead-source-icon";
 import { LeadStatusSelect } from "~/components/molecule/lead-status-select";
 import type { LeadStatus as LeadStatusType } from "~/lib/leads/constants";
 import type { TFunction } from "i18next";
@@ -59,15 +60,23 @@ function formatHistoryAction(item: LeadHistoryItem, t: TFunction): string {
   if (item.action === "note_deleted")
     return t("leads.detail.historyNoteDeleted");
   if (item.action === "task_assignee_removed")
-    return t("leads.detail.historyTaskAssigneeRemoved", { defaultValue: "Task assignee removed" });
+    return t("leads.detail.historyTaskAssigneeRemoved", {
+      defaultValue: "Task assignee removed",
+    });
   return item.action.replace(/_/g, " ");
 }
 
 function buildUserLabel(item: LeadHistoryItem, t: TFunction): string {
-  const name = [item.user_first_name, item.user_last_name].filter(Boolean).join(" ").trim()
-    || item.user_email
-    || t("leads.detail.system");
-  return item.user_is_deleted ? `${name} (${t("common.deleted", { defaultValue: "Deleted" })})` : name;
+  const name =
+    [item.user_first_name, item.user_last_name]
+      .filter(Boolean)
+      .join(" ")
+      .trim() ||
+    item.user_email ||
+    t("leads.detail.deletedUser");
+  return item.user_is_deleted
+    ? `${name} (${t("common.deleted", { defaultValue: "Deleted" })})`
+    : name;
 }
 
 interface LeadDetailSheetProps {
@@ -294,22 +303,33 @@ export function LeadInfoSection({
         </FieldRow>
 
         <FieldRow label={t("leads.columns.source")}>
-          <FieldValue>
-            {lead.source_label || lead.source_table || "—"}
+          <FieldValue className="flex items-center gap-2">
+            <LeadSourceIcon
+              source={lead.source_label}
+              fallbackSource={lead.source_table}
+              size={18}
+            />
+            <span className="text-muted-foreground text-xs">
+              {lead.source_label || lead.source_table || "—"}
+            </span>
           </FieldValue>
         </FieldRow>
 
         <FieldRow label={t("leads.columns.formName")}>
           <FieldValue>
             {lead.form_name
-              ? lead.form_name.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase())
+              ? lead.form_name
+                  .replace(/_/g, " ")
+                  .replace(/\b\w/g, (c) => c.toUpperCase())
               : "—"}
           </FieldValue>
         </FieldRow>
 
         <FieldRow label={t("leads.columns.createdAt")}>
           <FieldValue>
-            {lead.created_at ? formatDate(new Date(lead.created_at), "PPp") : "—"}
+            {lead.created_at
+              ? formatDate(new Date(lead.created_at), "PPp")
+              : "—"}
           </FieldValue>
         </FieldRow>
 
@@ -398,12 +418,16 @@ export function LeadHistorySection({
                           tooltipContent={buildUserLabel(item, t)}
                           showCopyButton={false}
                         >
-                          <span className={`inline-flex h-5 w-5 items-center justify-center rounded-full text-[9px] font-bold ${item.user_is_deleted ? "bg-muted/50 text-muted-foreground/60" : "bg-muted"}`}>
+                          <span
+                            className={`inline-flex h-5 w-5 items-center justify-center rounded-full text-[9px] font-bold ${item.user_is_deleted ? "bg-muted/50 text-muted-foreground/60" : "bg-muted"}`}
+                          >
                             {getHistoryItemInitials(item)}
                           </span>
                         </TooltipContainer>
                         {item.user_is_deleted && (
-                          <span className="text-[10px] text-muted-foreground/60">(Deleted)</span>
+                          <span className="text-[10px] text-muted-foreground/60">
+                            (Deleted)
+                          </span>
                         )}
                         <span>{relativeTime}</span>
                       </div>
