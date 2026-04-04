@@ -9,6 +9,7 @@ import { AlertTriangle, Menu } from "lucide-react";
 import { OnboardingTour } from "~/components/onboarding-tour/OnboardingTour";
 import { Sheet, SheetContent } from "~/components/ui/sheet";
 import { getWorkspaceInvoices } from "~/lib/api/workspaces";
+import { DoorboostMigrationBanner } from "~/components/doorboost-migration-banner";
 import logoUrl from "~/components/icons/re_praesent-mark-brand-hor.svg?url";
 export default function DashboardLayout() {
   const { user, currentWorkspace } = useAuthContext();
@@ -120,6 +121,7 @@ export default function DashboardLayout() {
             </Button>
           </div>
         )}
+        <DoorboostMigrationBanner />
         <Outlet />
       </main>
 

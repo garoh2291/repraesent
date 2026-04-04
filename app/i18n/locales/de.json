@@ -1237,5 +1237,31 @@
     "allTime": "Gesamter Zeitraum",
     "startDate": "Startdatum",
     "endDate": "Enddatum"
+  },
+  "historicalData": {
+    "bannerTitle": "Historische Daten synchronisieren",
+    "bannerDescription": "Importieren Sie Ihre Kampagnen, Leads und Ihr Team von Doorboost in re:praesent.",
+    "bannerStart": "Starten",
+    "bannerNotNeeded": "Nicht benötigt",
+    "bannerPending": "Wir bereiten Ihre Datenmigration vor...",
+    "bannerPendingDescription": "Dies kann einige Minuten dauern. Sie erhalten eine E-Mail, wenn es fertig ist.",
+    "stepCampaigns": "Kampagnen",
+    "stepLeads": "Leads",
+    "stepUsers": "Team",
+    "campaignsTitle": "Ihre Doorboost-Kampagnen",
+    "campaignsDescription": "Diese Kampagnen und ihre Metriken werden in Ihren Workspace synchronisiert.",
+    "leadsTitle": "Ihre Leads",
+    "leadsDescription": "Leads aus Ihren verbundenen Kampagnen.",
+    "leadsMore": "+{{count}} weitere Leads",
+    "leadsCheckbox": "Leads mit ihren Daten synchronisieren",
+    "usersTitle": "Ihr Team",
+    "usersDescription": "Ausgewählte Benutzer werden automatisch mit der Rolle Editor zu Ihrem Workspace hinzugefügt.",
+    "syncButton": "Synchronisierung starten",
+    "cancel": "Abbrechen",
+    "next": "Weiter",
+    "back": "Zurück",
+    "noCampaigns": "Keine Kampagnen für Ihr Doorboost-Konto gefunden.",
+    "noLeads": "Keine Leads für Ihre Kampagnen gefunden.",
+    "noUsers": "Keine Teammitglieder gefunden."
   }
 }

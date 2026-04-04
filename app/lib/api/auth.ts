@@ -125,6 +125,8 @@ export interface WorkspaceContext {
   services: WorkspaceService[];
   has_plausible_analytics?: boolean;
   member_role: "admin" | "editor" | "viewer";
+  was_doorboost_client?: boolean;
+  doorboost_partner_house_id?: string | null;
 }
 
 /**

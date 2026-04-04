@@ -39,6 +39,7 @@ export default [
       route("appointments", "routes/appointments.tsx"),
       route("analytics", "routes/analytics.tsx"),
       route("social-ads", "routes/social-ads.tsx"),
+      route("sync", "routes/sync.tsx"),
       route("email", "routes/email.tsx"),
       route("tasks", "routes/tasks.tsx"),
       route("settings", "routes/settings._layout.tsx", [
