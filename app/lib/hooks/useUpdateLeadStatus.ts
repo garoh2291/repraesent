@@ -26,6 +26,8 @@ export function useUpdateLeadStatus(opts?: UseUpdateLeadStatusOptions) {
     onMutate: opts?.onMutate,
     onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({ queryKey: ["leads"] });
+      queryClient.invalidateQueries({ queryKey: ["leads-kanban-column"] });
+      queryClient.invalidateQueries({ queryKey: ["leads-kanban-counts"] });
       queryClient.invalidateQueries({ queryKey: ["lead", variables.id] });
       queryClient.invalidateQueries({
         queryKey: ["lead-history", variables.id],
