@@ -440,26 +440,24 @@ export function LeadHistorySection({
               : "overflow-y-auto max-h-[calc(100vh-16rem)]"
           )}
         >
-          <div className="relative pl-4">
-            {/* Vertical timeline line */}
-            <div
-              className="absolute left-[7px] top-2 bottom-2 w-px bg-border"
-              aria-hidden
-            />
-            <div className="space-y-0">
-              {history.map((item, idx) => {
-                const actionText = formatHistoryAction(item, t);
-                const relativeTime = item.created_at
-                  ? formatRelativeTime(item.created_at)
-                  : "";
-                return (
-                  <div key={idx} className="relative flex gap-3 pb-4 last:pb-0">
-                    {/* Dot */}
-                    <div className="absolute -left-[9px] top-1.5 z-10">
-                      <span className="flex h-2.5 w-2.5 items-center justify-center rounded-full bg-border ring-2 ring-background" />
-                    </div>
-                    {/* Content */}
-                    <div className="min-w-0 flex-1 py-0.5 pl-2">
+          <div>
+            {history.map((item, idx) => {
+              const actionText = formatHistoryAction(item, t);
+              const relativeTime = item.created_at
+                ? formatRelativeTime(item.created_at)
+                : "";
+              const isLast = idx === history.length - 1;
+              return (
+                <div key={idx} className="flex gap-3">
+                  {/* Timeline track: dot + line, always center-aligned */}
+                  <div className="flex w-4 shrink-0 flex-col items-center">
+                    <span className="mt-1.5 h-2.5 w-2.5 shrink-0 rounded-full bg-border ring-2 ring-background" />
+                    {!isLast && (
+                      <div className="mt-1 w-px flex-1 bg-border" />
+                    )}
+                  </div>
+                  {/* Content */}
+                  <div className="min-w-0 flex-1 pb-4 last:pb-0">
                       <TooltipContainer
                         tooltipContent={actionText}
                         showCopyButton={false}
@@ -486,11 +484,10 @@ export function LeadHistorySection({
                         )}
                         <span>{relativeTime}</span>
                       </div>
-                    </div>
                   </div>
-                );
-              })}
-            </div>
+                </div>
+              );
+            })}
           </div>
         </div>
       )}
