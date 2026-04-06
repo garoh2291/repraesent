@@ -52,7 +52,7 @@ function StepIndicator({ current }: { current: number }) {
               <div
                 className={cn(
                   "h-px w-8 sm:w-12 transition-colors duration-300",
-                  done ? "bg-amber-500" : "bg-border",
+                  done ? "bg-amber-500" : "bg-border"
                 )}
               />
             )}
@@ -63,7 +63,7 @@ function StepIndicator({ current }: { current: number }) {
                   ? "bg-amber-500/10 border border-amber-500/20"
                   : done
                     ? "bg-emerald-500/10 border border-emerald-500/20"
-                    : "bg-muted/50 border border-transparent",
+                    : "bg-muted/50 border border-transparent"
               )}
             >
               <div
@@ -73,7 +73,7 @@ function StepIndicator({ current }: { current: number }) {
                     ? "bg-amber-500/20 text-amber-500"
                     : done
                       ? "bg-emerald-500/20 text-emerald-500"
-                      : "bg-muted text-muted-foreground/50",
+                      : "bg-muted text-muted-foreground/50"
                 )}
               >
                 {done ? (
@@ -89,10 +89,12 @@ function StepIndicator({ current }: { current: number }) {
                     ? "text-amber-500"
                     : done
                       ? "text-emerald-500/70"
-                      : "text-muted-foreground/40",
+                      : "text-muted-foreground/40"
                 )}
               >
-                {t(`historicalData.step${step.key.charAt(0).toUpperCase() + step.key.slice(1)}`)}
+                {t(
+                  `historicalData.step${step.key.charAt(0).toUpperCase() + step.key.slice(1)}`
+                )}
               </span>
             </div>
           </div>
@@ -186,7 +188,7 @@ function CampaignsStep({
                           c.campaign_status?.toLowerCase() === "enabled" ||
                             c.campaign_status?.toLowerCase() === "active"
                             ? "text-emerald-500"
-                            : "text-muted-foreground",
+                            : "text-muted-foreground"
                         )}
                       >
                         {c.campaign_status ?? "—"}
@@ -296,7 +298,9 @@ function LeadsStep({
                   <div className="flex items-center gap-3 text-xs text-muted-foreground mt-0.5">
                     {lead.email && <span>{lead.email}</span>}
                     {lead.phone_number && (
-                      <span className="text-muted-foreground/50">{lead.phone_number}</span>
+                      <span className="text-muted-foreground/50">
+                        {lead.phone_number}
+                      </span>
                     )}
                   </div>
                 </div>
@@ -317,7 +321,7 @@ function LeadsStep({
               "flex w-full items-center gap-3 rounded-2xl border px-4 py-3.5 transition-all duration-200",
               syncLeads
                 ? "border-amber-500/30 bg-amber-500/5"
-                : "border-border bg-card hover:border-border/80",
+                : "border-border bg-card hover:border-border/80"
             )}
           >
             <div
@@ -325,7 +329,7 @@ function LeadsStep({
                 "flex h-5 w-5 shrink-0 items-center justify-center rounded-md border transition-all duration-200",
                 syncLeads
                   ? "border-amber-500 bg-amber-500 text-black"
-                  : "border-muted-foreground/30",
+                  : "border-muted-foreground/30"
               )}
             >
               {syncLeads && <Check className="h-3 w-3" />}
@@ -333,7 +337,7 @@ function LeadsStep({
             <span
               className={cn(
                 "text-sm font-medium transition-colors",
-                syncLeads ? "text-foreground" : "text-muted-foreground",
+                syncLeads ? "text-foreground" : "text-muted-foreground"
               )}
             >
               {t("historicalData.leadsCheckbox")}
@@ -397,7 +401,7 @@ function UsersStep({
       else next.add(id);
       onSelectionChange(next);
     },
-    [selectedUserIds, onSelectionChange],
+    [selectedUserIds, onSelectionChange]
   );
 
   return (
@@ -433,9 +437,7 @@ function UsersStep({
                   onClick={() => toggle(user.id)}
                   className={cn(
                     "flex w-full items-center gap-3.5 px-4 py-3 text-left transition-all duration-150 app-fade-up",
-                    selected
-                      ? "bg-amber-500/5"
-                      : "hover:bg-muted/30",
+                    selected ? "bg-amber-500/5" : "hover:bg-muted/30"
                   )}
                   style={{ animationDelay: `${Math.min(i * 0.04, 0.3)}s` }}
                 >
@@ -444,7 +446,7 @@ function UsersStep({
                       "flex h-5 w-5 shrink-0 items-center justify-center rounded-md border transition-all duration-200",
                       selected
                         ? "border-amber-500 bg-amber-500 text-black"
-                        : "border-muted-foreground/30",
+                        : "border-muted-foreground/30"
                     )}
                   >
                     {selected && <Check className="h-3 w-3" />}
@@ -474,7 +476,7 @@ function UsersStep({
             "flex w-full items-center gap-3 rounded-2xl border px-4 py-3.5 transition-all duration-200",
             notifyUsers
               ? "border-amber-500/30 bg-amber-500/5"
-              : "border-border bg-card hover:border-border/80",
+              : "border-border bg-card hover:border-border/80"
           )}
         >
           <div
@@ -482,7 +484,7 @@ function UsersStep({
               "flex h-5 w-5 shrink-0 items-center justify-center rounded-md border transition-all duration-200",
               notifyUsers
                 ? "border-amber-500 bg-amber-500 text-black"
-                : "border-muted-foreground/30",
+                : "border-muted-foreground/30"
             )}
           >
             {notifyUsers && <Check className="h-3 w-3" />}
@@ -490,7 +492,7 @@ function UsersStep({
           <span
             className={cn(
               "text-sm font-medium transition-colors",
-              notifyUsers ? "text-foreground" : "text-muted-foreground",
+              notifyUsers ? "text-foreground" : "text-muted-foreground"
             )}
           >
             {t("historicalData.notifyUsers")}
@@ -531,10 +533,10 @@ export default function SyncPage() {
   const queryClient = useQueryClient();
   const { currentWorkspace } = useAuthContext();
   const [step, setStep] = useState(0);
-  const [syncLeads, setSyncLeads] = useState(false);
+  const [syncLeads, setSyncLeads] = useState(true);
   const [notifyUsers, setNotifyUsers] = useState(false);
   const [selectedUserIds, setSelectedUserIds] = useState<Set<string>>(
-    new Set(),
+    new Set()
   );
 
   // Guard: only allow access when status is "not_ready"

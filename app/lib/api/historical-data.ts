@@ -81,6 +81,19 @@ export async function updateHistoricalData(data: {
   return res.data;
 }
 
+export interface HistoricalDataCounts {
+  campaigns: number;
+  leads: number;
+  users: number;
+}
+
+export async function getHistoricalDataCounts(): Promise<HistoricalDataCounts> {
+  const res = await apiClient.get<HistoricalDataCounts>(
+    "/users/me/workspace/historical-data/counts",
+  );
+  return res.data;
+}
+
 export async function getHistoricalCampaigns(): Promise<CampaignPreview[]> {
   const res = await apiClient.get<CampaignPreview[]>(
     "/users/me/workspace/historical-data/campaigns",
