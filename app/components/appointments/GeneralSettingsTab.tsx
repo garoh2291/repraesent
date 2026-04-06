@@ -246,13 +246,13 @@ export function GeneralSettingsTab({ config }: GeneralSettingsTabProps) {
           <FieldLabel>{t("appointments.general.iframeEmbed")}</FieldLabel>
           <div className="relative">
             <pre className="rounded-lg border border-border bg-muted/40 px-4 py-3 text-xs font-mono text-foreground leading-relaxed overflow-x-auto whitespace-pre-wrap break-all select-all">
-              {`<iframe\n  class="easyappointments-iframe"\n  src="${publicBookingUrl}"\n  width="100%"\n  height="1000px"\n  style="border:none;"\n></iframe>`}
+              {`<iframe\n  class="easyappointments-iframe"\n  src="${publicBookingUrl}"\n  width="100%"\n  height="800px"\n  style="border:none;"\n></iframe>`}
             </pre>
             <button
               type="button"
               onClick={() => {
                 navigator.clipboard.writeText(
-                  `<iframe class="easyappointments-iframe" src="${publicBookingUrl}" width="100%" height="1000px" style="border:none;"></iframe>`
+                  `<iframe class="easyappointments-iframe" src="${publicBookingUrl}" width="100%" height="800px" style="border:none;"></iframe>`
                 );
                 toast.success(t("common.copied"));
               }}

@@ -414,7 +414,7 @@ export default function BookAppointment() {
 
   /* ── Main booking flow ───────────────────────────────────── */
   return (
-    <div className="min-h-screen flex flex-col bg-stone-50 text-foreground">
+    <div className="min-h-screen flex flex-col bg-[#eeeeee] text-foreground">
       <main className="flex-1 py-6 sm:py-10 px-4 sm:px-6">
         <div
           className={cn(
