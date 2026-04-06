@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
@@ -11,6 +11,8 @@ import {
   Users,
   FileText,
   Sparkles,
+  UserCog,
+  AlertTriangle,
 } from "lucide-react";
 import { Button } from "~/components/ui/button";
 import { cn } from "~/lib/utils";
@@ -22,6 +24,9 @@ import {
   getHistoricalUsers,
   updateHistoricalData,
 } from "~/lib/api/historical-data";
+import type { FallbackNoteUser, DoorboostUser } from "~/lib/api/historical-data";
+import { getWorkspaceDetail } from "~/lib/api/workspaces";
+import { extractErrorMessage } from "~/lib/api/axios-instance";
 
 export function meta() {
   return [
@@ -32,17 +37,31 @@ export function meta() {
 
 /* ─── Step Indicator ─── */
 
-const STEPS = [
-  { key: "campaigns", icon: Megaphone },
-  { key: "leads", icon: FileText },
-  { key: "users", icon: Users },
+const BASE_STEPS = [
+  { key: "campaigns", icon: Megaphone, labelKey: "stepCampaigns" },
+  { key: "leads", icon: FileText, labelKey: "stepLeads" },
+  { key: "users", icon: Users, labelKey: "stepUsers" },
 ] as const;
 
-function StepIndicator({ current }: { current: number }) {
+const ATTRIBUTION_STEP = {
+  key: "attribution",
+  icon: UserCog,
+  labelKey: "stepAttribution",
+} as const;
+
+type StepDef = { key: string; icon: typeof Megaphone; labelKey: string };
+
+function StepIndicator({
+  current,
+  steps,
+}: {
+  current: number;
+  steps: StepDef[];
+}) {
   const { t } = useTranslation();
   return (
     <div className="flex items-center justify-center gap-1 sm:gap-2 mb-8">
-      {STEPS.map((step, i) => {
+      {steps.map((step, i) => {
         const StepIcon = step.icon;
         const done = i < current;
         const active = i === current;
@@ -92,9 +111,7 @@ function StepIndicator({ current }: { current: number }) {
                       : "text-muted-foreground/40"
                 )}
               >
-                {t(
-                  `historicalData.step${step.key.charAt(0).toUpperCase() + step.key.slice(1)}`
-                )}
+                {t(`historicalData.${step.labelKey}`)}
               </span>
             </div>
           </div>
@@ -376,23 +393,27 @@ function UsersStep({
   onSelectionChange,
   notifyUsers,
   onNotifyUsersChange,
-  onSync,
+  onNext,
   onBack,
+  users,
+  isLoading,
+  showSyncButton,
+  onSync,
   isSyncing,
 }: {
   selectedUserIds: Set<string>;
   onSelectionChange: (ids: Set<string>) => void;
   notifyUsers: boolean;
   onNotifyUsersChange: (v: boolean) => void;
-  onSync: () => void;
+  onNext: () => void;
   onBack: () => void;
+  users: DoorboostUser[];
+  isLoading: boolean;
+  showSyncButton: boolean;
+  onSync: () => void;
   isSyncing: boolean;
 }) {
   const { t } = useTranslation();
-  const { data: users = [], isLoading } = useQuery({
-    queryKey: ["historical-users"],
-    queryFn: getHistoricalUsers,
-  });
 
   const toggle = useCallback(
     (id: string) => {
@@ -511,13 +532,299 @@ function UsersStep({
           <ArrowLeft className="mr-1.5 h-3.5 w-3.5" />
           {t("historicalData.back")}
         </Button>
+        {showSyncButton ? (
+          <Button
+            size="sm"
+            onClick={onSync}
+            disabled={isSyncing}
+            className="bg-amber-500 hover:bg-amber-600 text-black font-semibold rounded-lg"
+          >
+            {isSyncing && (
+              <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
+            )}
+            <Sparkles className="mr-1.5 h-3.5 w-3.5" />
+            {t("historicalData.syncButton")}
+          </Button>
+        ) : (
+          <Button
+            size="sm"
+            onClick={onNext}
+            className="bg-amber-500 hover:bg-amber-600 text-black font-semibold rounded-lg"
+          >
+            {t("historicalData.next")}
+            <ArrowRight className="ml-1.5 h-3.5 w-3.5" />
+          </Button>
+        )}
+      </div>
+    </div>
+  );
+}
+
+/* ─── Step 4: Fallback Note User ─── */
+
+function FallbackUserStep({
+  fallbackOption,
+  onFallbackChange,
+  onSync,
+  onBack,
+  isSyncing,
+  syncError,
+}: {
+  fallbackOption: FallbackNoteUser | null;
+  onFallbackChange: (option: FallbackNoteUser) => void;
+  onSync: () => void;
+  onBack: () => void;
+  isSyncing: boolean;
+  syncError: string | null;
+}) {
+  const { t } = useTranslation();
+  const { user } = useAuthContext();
+  const activeTab =
+    fallbackOption?.type === "new" ? ("new" as const) : ("existing" as const);
+
+  const { data: workspace, isLoading: isMembersLoading } = useQuery({
+    queryKey: ["workspace-detail"],
+    queryFn: getWorkspaceDetail,
+  });
+
+  const members = workspace?.members ?? [];
+
+  const [newForm, setNewForm] = useState({
+    first_name: "",
+    last_name: "",
+    email: "",
+  });
+
+  const isNewFormValid =
+    newForm.first_name.trim() !== "" &&
+    newForm.last_name.trim() !== "" &&
+    newForm.email.trim() !== "" &&
+    newForm.email.includes("@");
+
+  const canSync =
+    activeTab === "existing"
+      ? fallbackOption?.type === "existing" && fallbackOption.user_id
+      : isNewFormValid;
+
+  return (
+    <div className="space-y-5 app-fade-in">
+      {/* Warning */}
+      <div className="rounded-2xl border border-amber-500/30 bg-amber-500/5 px-4 py-3.5 flex items-start gap-3">
+        <AlertTriangle className="h-5 w-5 text-amber-500 shrink-0 mt-0.5" />
+        <div className="space-y-1">
+          <h2 className="text-lg font-bold tracking-tight text-foreground">
+            {t("historicalData.fallbackTitle")}
+          </h2>
+          <p className="text-sm text-muted-foreground">
+            {t("historicalData.fallbackDescription")}
+          </p>
+        </div>
+      </div>
+
+      {/* Tab selector */}
+      <div className="flex gap-2">
+        <button
+          onClick={() => {
+            const currentUserId = user?.id;
+            if (currentUserId) {
+              onFallbackChange({ type: "existing", user_id: currentUserId });
+            } else if (members.length > 0) {
+              onFallbackChange({
+                type: "existing",
+                user_id: members[0].user_id,
+              });
+            }
+          }}
+          className={cn(
+            "flex-1 rounded-xl border px-3 py-2.5 text-sm font-medium transition-all duration-200 text-left",
+            activeTab === "existing"
+              ? "border-amber-500/30 bg-amber-500/5 text-foreground"
+              : "border-border bg-card text-muted-foreground hover:border-border/80"
+          )}
+        >
+          {t("historicalData.fallbackExistingOption")}
+        </button>
+        <button
+          onClick={() => {
+            onFallbackChange({
+              type: "new",
+              first_name: newForm.first_name,
+              last_name: newForm.last_name,
+              email: newForm.email,
+            });
+          }}
+          className={cn(
+            "flex-1 rounded-xl border px-3 py-2.5 text-sm font-medium transition-all duration-200 text-left",
+            activeTab === "new"
+              ? "border-amber-500/30 bg-amber-500/5 text-foreground"
+              : "border-border bg-card text-muted-foreground hover:border-border/80"
+          )}
+        >
+          {t("historicalData.fallbackNewOption")}
+        </button>
+      </div>
+
+      {/* Existing member list */}
+      {activeTab === "existing" && (
+        <div className="rounded-2xl border border-border bg-card overflow-hidden">
+          {isMembersLoading ? (
+            <div className="flex items-center justify-center py-12">
+              <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+            </div>
+          ) : (
+            <div className="max-h-[320px] overflow-y-auto divide-y divide-border/50">
+              {members.map((member, i) => {
+                const selected =
+                  fallbackOption?.type === "existing" &&
+                  fallbackOption.user_id === member.user_id;
+                return (
+                  <button
+                    key={member.user_id}
+                    onClick={() =>
+                      onFallbackChange({
+                        type: "existing",
+                        user_id: member.user_id,
+                      })
+                    }
+                    className={cn(
+                      "flex w-full items-center gap-3.5 px-4 py-3 text-left transition-all duration-150 app-fade-up",
+                      selected ? "bg-amber-500/5" : "hover:bg-muted/30"
+                    )}
+                    style={{
+                      animationDelay: `${Math.min(i * 0.04, 0.3)}s`,
+                    }}
+                  >
+                    <div
+                      className={cn(
+                        "flex h-5 w-5 shrink-0 items-center justify-center rounded-full border transition-all duration-200",
+                        selected
+                          ? "border-amber-500 bg-amber-500 text-black"
+                          : "border-muted-foreground/30"
+                      )}
+                    >
+                      {selected && (
+                        <div className="h-2 w-2 rounded-full bg-black" />
+                      )}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium text-sm text-foreground truncate">
+                        {[member.user_first_name, member.user_last_name]
+                          .filter(Boolean)
+                          .join(" ") || "—"}
+                      </p>
+                      <p className="text-xs text-muted-foreground truncate mt-0.5">
+                        {member.user_email}
+                      </p>
+                    </div>
+                    {member.user_id === user?.id && (
+                      <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/60 bg-muted px-1.5 py-0.5 rounded-md">
+                        You
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* New user form */}
+      {activeTab === "new" && (
+        <div className="rounded-2xl border border-border bg-card p-4 space-y-3">
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground mb-1.5 block">
+                {t("historicalData.fallbackFirstName")}
+              </label>
+              <input
+                type="text"
+                value={newForm.first_name}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  setNewForm((f) => ({ ...f, first_name: val }));
+                  onFallbackChange({
+                    type: "new",
+                    first_name: val,
+                    last_name: newForm.last_name,
+                    email: newForm.email,
+                  });
+                }}
+                className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-amber-500/30 focus:border-amber-500/50"
+              />
+            </div>
+            <div>
+              <label className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground mb-1.5 block">
+                {t("historicalData.fallbackLastName")}
+              </label>
+              <input
+                type="text"
+                value={newForm.last_name}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  setNewForm((f) => ({ ...f, last_name: val }));
+                  onFallbackChange({
+                    type: "new",
+                    first_name: newForm.first_name,
+                    last_name: val,
+                    email: newForm.email,
+                  });
+                }}
+                className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-amber-500/30 focus:border-amber-500/50"
+              />
+            </div>
+          </div>
+          <div>
+            <label className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground mb-1.5 block">
+              {t("historicalData.fallbackEmail")}
+            </label>
+            <input
+              type="email"
+              value={newForm.email}
+              onChange={(e) => {
+                const val = e.target.value;
+                setNewForm((f) => ({ ...f, email: val }));
+                onFallbackChange({
+                  type: "new",
+                  first_name: newForm.first_name,
+                  last_name: newForm.last_name,
+                  email: val,
+                });
+              }}
+              className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-amber-500/30 focus:border-amber-500/50"
+            />
+          </div>
+        </div>
+      )}
+
+      {/* Error */}
+      {syncError && (
+        <div className="rounded-xl border border-red-500/30 bg-red-500/5 px-4 py-3 text-sm text-red-500 font-medium">
+          {syncError}
+        </div>
+      )}
+
+      {/* Footer */}
+      <div className="flex items-center justify-between pt-1">
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={onBack}
+          disabled={isSyncing}
+          className="text-muted-foreground"
+        >
+          <ArrowLeft className="mr-1.5 h-3.5 w-3.5" />
+          {t("historicalData.back")}
+        </Button>
         <Button
           size="sm"
           onClick={onSync}
-          disabled={isSyncing}
+          disabled={isSyncing || !canSync}
           className="bg-amber-500 hover:bg-amber-600 text-black font-semibold rounded-lg"
         >
-          {isSyncing && <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />}
+          {isSyncing && (
+            <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
+          )}
           <Sparkles className="mr-1.5 h-3.5 w-3.5" />
           {t("historicalData.syncButton")}
         </Button>
@@ -531,12 +838,33 @@ function UsersStep({
 export default function SyncPage() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const { currentWorkspace } = useAuthContext();
+  const { currentWorkspace, user } = useAuthContext();
   const [step, setStep] = useState(0);
   const [syncLeads, setSyncLeads] = useState(true);
   const [notifyUsers, setNotifyUsers] = useState(false);
   const [selectedUserIds, setSelectedUserIds] = useState<Set<string>>(
     new Set()
+  );
+  const [fallbackOption, setFallbackOption] =
+    useState<FallbackNoteUser | null>(
+      user?.id ? { type: "existing", user_id: user.id } : null
+    );
+
+  // Lift Doorboost users query so parent can compute needsFallbackStep
+  const { data: doorboostUsers = [], isLoading: usersLoading } = useQuery({
+    queryKey: ["historical-users"],
+    queryFn: getHistoricalUsers,
+  });
+
+  const needsFallbackStep =
+    syncLeads && selectedUserIds.size < doorboostUsers.length;
+
+  const steps: StepDef[] = useMemo(
+    () =>
+      needsFallbackStep
+        ? [...BASE_STEPS, ATTRIBUTION_STEP]
+        : [...BASE_STEPS],
+    [needsFallbackStep]
   );
 
   // Guard: only allow access when status is "not_ready"
@@ -561,6 +889,9 @@ export default function SyncPage() {
           campaigns: true,
           users: [...selectedUserIds],
           notify_users: notifyUsers,
+          ...(needsFallbackStep && fallbackOption
+            ? { fallback_note_user: fallbackOption }
+            : {}),
         },
       }),
     onSuccess: () => {
@@ -582,7 +913,7 @@ export default function SyncPage() {
 
   return (
     <div className="mx-auto w-full max-w-[680px] p-4 sm:p-6 py-8 sm:py-12">
-      <StepIndicator current={step} />
+      <StepIndicator current={step} steps={steps} />
 
       {step === 0 && (
         <CampaignsStep
@@ -604,9 +935,27 @@ export default function SyncPage() {
           onSelectionChange={setSelectedUserIds}
           notifyUsers={notifyUsers}
           onNotifyUsersChange={setNotifyUsers}
-          onSync={() => submitMutation.mutate()}
+          onNext={() => setStep(3)}
           onBack={() => setStep(1)}
+          users={doorboostUsers}
+          isLoading={usersLoading}
+          showSyncButton={!needsFallbackStep}
+          onSync={() => submitMutation.mutate()}
           isSyncing={submitMutation.isPending}
+        />
+      )}
+      {step === 3 && needsFallbackStep && (
+        <FallbackUserStep
+          fallbackOption={fallbackOption}
+          onFallbackChange={setFallbackOption}
+          onSync={() => submitMutation.mutate()}
+          onBack={() => setStep(2)}
+          isSyncing={submitMutation.isPending}
+          syncError={
+            submitMutation.error
+              ? extractErrorMessage(submitMutation.error)
+              : null
+          }
         />
       )}
     </div>

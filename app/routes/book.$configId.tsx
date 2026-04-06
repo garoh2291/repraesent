@@ -16,7 +16,6 @@ import {
   type ProviderPublic,
 } from "~/lib/api/appointments";
 import { extractErrorMessage } from "~/lib/api/axios-instance";
-import { getLogoFullUrl } from "~/lib/config";
 import { Input } from "~/components/ui/input";
 import { Label } from "~/components/ui/label";
 import { Textarea } from "~/components/ui/textarea";
@@ -30,7 +29,6 @@ import {
   Check,
   CalendarDays,
   User,
-  ClipboardCheck,
   Layers,
   Clock,
   X,
@@ -100,11 +98,8 @@ function getNextWorkingDay(
   return d;
 }
 
-const STEPS = [
-  { n: 1, labelKey: "booking.step1Label", icon: CalendarDays },
-  { n: 2, labelKey: "booking.step2Label", icon: User },
-  { n: 3, labelKey: "booking.step3Label", icon: ClipboardCheck },
-];
+/** Showroom-style neutrals (aligned with light contact-form pages) */
+const BOOKING_RADIUS_CARD = "rounded-lg";
 
 export default function BookAppointment() {
   const { t } = useTranslation();
@@ -210,9 +205,8 @@ export default function BookAppointment() {
 
   const firstWeekday = config?.first_weekday === "sunday" ? 0 : 1;
   const timeFormat = config?.time_format ?? "24h";
-  const bgColor = config?.company_color ?? "#1a1a1a";
+  const bgColor = config?.company_color ?? "#262626";
   const textColor = config?.company_text_color ?? "#ffffff";
-  const logoUrl = getLogoFullUrl(config?.company_logo_url);
 
   const hasMultipleProviders = providers && providers.length > 1;
 
@@ -368,26 +362,16 @@ export default function BookAppointment() {
   if (booked) {
     return (
       <div className="min-h-screen flex flex-col bg-stone-50">
-        <BookingHeader
-          config={config}
-          logoUrl={logoUrl}
-          bgColor={bgColor}
-          textColor={textColor}
-          step={step}
-          booked
-          selectedService={selectedService}
-          t={t}
-        />
         <main className="flex-1 flex items-center justify-center p-8">
-          <div className="text-center max-w-md space-y-6 app-fade-up">
+          <div className="text-center max-w-md space-y-6 app-fade-up w-full">
             <div
-              className="inline-flex h-16 w-16 items-center justify-center rounded-full mx-auto"
-              style={{
-                backgroundColor: `${bgColor}15`,
-                border: `1.5px solid ${bgColor}30`,
-              }}
+              className={cn(
+                "inline-flex h-16 w-16 items-center justify-center mx-auto border-2 bg-white",
+                BOOKING_RADIUS_CARD
+              )}
+              style={{ borderColor: bgColor, color: bgColor }}
             >
-              <Check className="h-7 w-7" style={{ color: bgColor }} />
+              <Check className="h-7 w-7" />
             </div>
             <div className="space-y-2">
               <h2 className="text-2xl font-semibold text-foreground tracking-tight">
@@ -415,7 +399,10 @@ export default function BookAppointment() {
                   setStep(1);
                 }
               }}
-              className="inline-flex h-10 items-center justify-center rounded-lg border border-border bg-white px-6 text-sm font-medium text-foreground hover:bg-stone-50 transition-colors shadow-sm"
+              className={cn(
+                "inline-flex h-10 items-center justify-center border border-stone-300 bg-white px-6 text-sm font-medium text-foreground hover:bg-stone-50 transition-colors",
+                BOOKING_RADIUS_CARD
+              )}
             >
               {t("booking.bookAnother")}
             </button>
@@ -427,20 +414,14 @@ export default function BookAppointment() {
 
   /* ── Main booking flow ───────────────────────────────────── */
   return (
-    <div className="min-h-screen flex flex-col bg-stone-50">
-      <BookingHeader
-        config={config}
-        logoUrl={logoUrl}
-        bgColor={bgColor}
-        textColor={textColor}
-        step={step}
-        booked={false}
-        selectedService={selectedService}
-        t={t}
-      />
-
+    <div className="min-h-screen flex flex-col bg-stone-50 text-foreground">
       <main className="flex-1 py-6 sm:py-10 px-4 sm:px-6">
-        <div className="max-w-4xl mx-auto space-y-6 sm:space-y-8">
+        <div
+          className={cn(
+            "mx-auto w-full space-y-6 sm:space-y-8",
+            step === 1 ? "max-w-4xl" : "max-w-2xl"
+          )}
+        >
           {/* Step content */}
           <div className="app-fade-up">
             {step === -1 && providers && (
@@ -454,8 +435,7 @@ export default function BookAppointment() {
                   setSelectedService(null);
                   setStep(0);
                 }}
-                bgColor={bgColor}
-                textColor={textColor}
+                accentColor={bgColor}
               />
             )}
             {step === 0 && services && (
@@ -467,8 +447,7 @@ export default function BookAppointment() {
                   setSelectedService(svc);
                   setStep(1);
                 }}
-                bgColor={bgColor}
-                textColor={textColor}
+                accentColor={bgColor}
               />
             )}
             {step === 1 && (
@@ -545,7 +524,10 @@ export default function BookAppointment() {
                 disabled={
                   step === 1 && !hasMultipleServices && !hasMultipleProviders
                 }
-                className="inline-flex items-center gap-1.5 h-10 rounded-lg border border-border bg-white px-4 text-sm font-medium text-foreground hover:bg-stone-50 transition-colors shadow-sm disabled:opacity-40 disabled:pointer-events-none"
+                className={cn(
+                  "inline-flex items-center gap-1.5 h-10 border border-stone-300 bg-white px-4 text-sm font-medium text-foreground hover:bg-stone-50 transition-colors disabled:opacity-40 disabled:pointer-events-none",
+                  BOOKING_RADIUS_CARD
+                )}
               >
                 <ChevronLeft className="h-4 w-4" />
                 {t("booking.back")}
@@ -558,7 +540,10 @@ export default function BookAppointment() {
                     (step === 1 && !canProceedStep1) ||
                     (step === 2 && !canProceedStep2)
                   }
-                  className="inline-flex items-center gap-1.5 h-10 rounded-lg px-5 text-sm font-medium transition-all shadow-sm disabled:opacity-40 disabled:pointer-events-none hover:opacity-90"
+                  className={cn(
+                    "inline-flex items-center gap-1.5 h-10 px-5 text-sm font-medium transition-opacity disabled:opacity-40 disabled:pointer-events-none hover:opacity-90 border border-transparent",
+                    BOOKING_RADIUS_CARD
+                  )}
                   style={{ backgroundColor: bgColor, color: textColor }}
                 >
                   {t("common.next")}
@@ -573,99 +558,6 @@ export default function BookAppointment() {
   );
 }
 
-/* ── Booking Header ──────────────────────────────────────────── */
-
-function BookingHeader({
-  config,
-  logoUrl,
-  bgColor,
-  textColor,
-  step,
-  booked,
-  selectedService,
-  t,
-}: {
-  config: PublicConfig;
-  logoUrl: string | null | undefined;
-  bgColor: string;
-  textColor: string;
-  step: number;
-  booked: boolean;
-  selectedService: AppointmentService | null;
-  t: (key: string, opts?: Record<string, unknown>) => string;
-}) {
-  return (
-    <header
-      className="shrink-0 px-4 sm:px-6 py-3 sm:py-4 flex flex-col items-center sm:flex-row sm:justify-between gap-3"
-      style={{ backgroundColor: bgColor, color: textColor }}
-    >
-      {/* Brand */}
-      <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-3 min-w-0">
-        {logoUrl && (
-          <img
-            src={logoUrl}
-            alt="Logo"
-            className="h-8 sm:h-9 object-contain shrink-0"
-          />
-        )}
-        <div className="min-w-0 text-center sm:text-left">
-          <p
-            className="font-semibold text-sm sm:text-base leading-tight truncate"
-            style={{ color: textColor }}
-          >
-            {config.company_name || t("booking.fallbackCompany")}
-          </p>
-          {config.services && config.services.length > 0 && (
-            <p
-              className="text-[11px] sm:text-xs leading-tight truncate"
-              style={{ color: `${textColor}99` }}
-            >
-              {selectedService
-                ? [selectedService.name, config.provider_name]
-                    .filter(Boolean)
-                    .join(" │ ")
-                : config.services.map((s) => s.name).join(" │ ")}
-            </p>
-          )}
-        </div>
-      </div>
-
-      {/* Step indicators */}
-      {!booked && step > 0 && (
-        <div className="flex items-center gap-1 shrink-0 self-center sm:self-auto">
-          {STEPS.map((s, idx) => {
-            const done = step > s.n;
-            const active = step === s.n;
-            return (
-              <div key={s.n} className="flex items-center gap-1">
-                <div
-                  className={cn(
-                    "flex items-center justify-center h-6 w-6 sm:h-7 sm:w-7 rounded-full text-[11px] sm:text-xs font-semibold transition-all",
-                    done
-                      ? "bg-white/20"
-                      : active
-                        ? "bg-white/25 ring-2 ring-white/40"
-                        : "bg-white/8"
-                  )}
-                  style={{ color: textColor }}
-                >
-                  {done ? <Check className="h-3 w-3 sm:h-3.5 sm:w-3.5" /> : s.n}
-                </div>
-                {idx < STEPS.length - 1 && (
-                  <div
-                    className="w-4 sm:w-6 h-px"
-                    style={{ backgroundColor: `${textColor}30` }}
-                  />
-                )}
-              </div>
-            );
-          })}
-        </div>
-      )}
-    </header>
-  );
-}
-
 /* ── Step -1: Provider Selection ────────────────────────────── */
 
 function StepNegative1ProviderSelection({
@@ -673,15 +565,13 @@ function StepNegative1ProviderSelection({
   providers,
   selectedProvider,
   onSelect,
-  bgColor,
-  textColor,
+  accentColor,
 }: {
   t: (key: string, opts?: Record<string, unknown>) => string;
   providers: ProviderPublic[];
   selectedProvider: ProviderPublic | null;
   onSelect: (provider: ProviderPublic) => void;
-  bgColor: string;
-  textColor: string;
+  accentColor: string;
 }) {
   return (
     <div className="space-y-6">
@@ -703,24 +593,16 @@ function StepNegative1ProviderSelection({
               type="button"
               onClick={() => onSelect(provider)}
               className={cn(
-                "text-left rounded-2xl border p-5 transition-all duration-150 shadow-sm hover:shadow-md",
-                isSelected
-                  ? "ring-2"
-                  : "border-border bg-white hover:border-stone-300"
+                "text-left border bg-white p-4 transition-colors duration-150 hover:border-stone-400",
+                BOOKING_RADIUS_CARD,
+                isSelected ? "border-2 shadow-sm" : "border-stone-200"
               )}
-              style={
-                isSelected
-                  ? {
-                      backgroundColor: `${bgColor}08`,
-                      borderColor: bgColor,
-                    }
-                  : undefined
-              }
+              style={isSelected ? { borderColor: accentColor } : undefined}
             >
               <div className="flex items-center gap-3">
                 <div
-                  className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-sm font-semibold"
-                  style={{ backgroundColor: `${bgColor}15`, color: bgColor }}
+                  className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-stone-200 bg-stone-50 text-sm font-semibold text-foreground"
+                  style={{ color: isSelected ? accentColor : undefined }}
                 >
                   {(provider.provider_name ?? "?").charAt(0).toUpperCase()}
                 </div>
@@ -743,15 +625,13 @@ function Step0ServiceSelection({
   services,
   selectedService,
   onSelect,
-  bgColor,
-  textColor,
+  accentColor,
 }: {
   t: (key: string, opts?: Record<string, unknown>) => string;
   services: AppointmentService[];
   selectedService: AppointmentService | null;
   onSelect: (svc: AppointmentService) => void;
-  bgColor: string;
-  textColor: string;
+  accentColor: string;
 }) {
   return (
     <div className="space-y-6">
@@ -764,7 +644,7 @@ function Step0ServiceSelection({
         </p>
       </div>
 
-      <div className="grid sm:grid-cols-2 gap-3">
+      <div className="flex w-full flex-col gap-4">
         {services.map((svc) => {
           const isSelected = selectedService?.id === svc.id;
           return (
@@ -773,31 +653,23 @@ function Step0ServiceSelection({
               type="button"
               onClick={() => onSelect(svc)}
               className={cn(
-                "text-left rounded-2xl border p-5 transition-all duration-150 space-y-2 shadow-sm hover:shadow-md",
-                isSelected
-                  ? "ring-2"
-                  : "border-border bg-white hover:border-stone-300"
+                "w-full text-left border bg-white px-5 py-5 transition-colors duration-150 sm:px-6 sm:py-6 space-y-3 hover:border-stone-400",
+                BOOKING_RADIUS_CARD,
+                isSelected ? "border-2 shadow-sm" : "border-stone-200"
               )}
-              style={
-                isSelected
-                  ? {
-                      backgroundColor: `${bgColor}08`,
-                      borderColor: bgColor,
-                      ringColor: bgColor,
-                    }
-                  : undefined
-              }
+              style={isSelected ? { borderColor: accentColor } : undefined}
             >
-              <div className="flex items-start justify-between gap-3">
-                <p className="text-sm font-semibold text-foreground leading-snug">
+              <div className="flex items-start justify-between gap-4">
+                <p className="text-base font-semibold text-foreground leading-snug sm:text-lg">
                   {svc.name}
                 </p>
                 <span
-                  className="shrink-0 text-xs font-medium px-2 py-0.5 rounded-full"
-                  style={{
-                    backgroundColor: `${bgColor}15`,
-                    color: bgColor,
-                  }}
+                  className="shrink-0 rounded-md border border-stone-200 bg-stone-50 px-2.5 py-1 text-sm font-medium text-foreground"
+                  style={
+                    isSelected
+                      ? { borderColor: accentColor, color: accentColor }
+                      : undefined
+                  }
                 >
                   {t("appointments.businessLogic.minutesSuffix", {
                     count: svc.duration_minutes,
@@ -805,7 +677,7 @@ function Step0ServiceSelection({
                 </span>
               </div>
               {svc.description && (
-                <p className="text-xs text-muted-foreground leading-relaxed">
+                <p className="text-sm text-muted-foreground leading-relaxed sm:text-[15px]">
                   {svc.description}
                 </p>
               )}
@@ -870,7 +742,7 @@ function Step1DateAndTime({
         `}</style>
       )}
       {slotConflictError && (
-        <div className="slot-conflict-banner rounded-2xl border border-amber-200 bg-amber-50 p-4 flex items-start gap-3 shadow-sm">
+        <div className="slot-conflict-banner border border-amber-200 bg-amber-50 p-4 flex items-start gap-3 rounded-lg">
           <div className="shrink-0 mt-0.5 h-8 w-8 rounded-lg bg-amber-100 border border-amber-200 flex items-center justify-center">
             <Clock className="h-4 w-4 text-amber-600" />
           </div>
@@ -900,7 +772,7 @@ function Step1DateAndTime({
           {t("booking.chooseDateAndTimeDesc")}
         </p>
         {selectedService && (
-          <div className="mt-2 inline-flex items-center gap-2 rounded-lg border border-border bg-white px-3 py-1.5 text-sm shadow-sm">
+          <div className="mt-2 inline-flex items-center gap-2 border border-stone-200 bg-white px-3 py-1.5 text-sm rounded-md">
             <Layers className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
             <span className="font-medium text-foreground">
               {selectedService.name}
@@ -917,7 +789,13 @@ function Step1DateAndTime({
 
       <div className="grid md:grid-cols-2 gap-6">
         {/* Calendar */}
-        <div className="booking-cal rounded-2xl border border-border bg-white shadow-sm overflow-hidden">
+        <div
+          className={cn(
+            "booking-cal overflow-hidden border bg-[#f5f4f1]",
+            BOOKING_RADIUS_CARD,
+            "border-stone-200"
+          )}
+        >
           <style>{`
             .booking-cal [data-selected-single="true"] {
               background-color: ${bgColor} !important;
@@ -975,7 +853,7 @@ function Step1DateAndTime({
               onChange={(tz) =>
                 onTimezoneChange(typeof tz === "string" ? tz : tz.value)
               }
-              className="[&_.react-select__control]:min-h-10 [&_.react-select__control]:rounded-lg [&_.react-select__control]:border-border [&_.react-select__control]:bg-white [&_.react-select__control]:text-sm"
+              className="[&_.react-select__control]:min-h-10 [&_.react-select__control]:rounded-md [&_.react-select__control]:border-stone-200 [&_.react-select__control]:bg-white [&_.react-select__control]:text-sm"
             />
           </div>
 
@@ -994,13 +872,13 @@ function Step1DateAndTime({
                   ))}
                 </div>
               ) : slots.length === 0 ? (
-                <div className="rounded-xl border border-border bg-white px-4 py-6 text-center">
+                <div className="border border-stone-200 bg-white px-4 py-6 text-center rounded-lg">
                   <p className="text-sm text-muted-foreground">
                     {t("booking.noSlotsForDate")}
                   </p>
                 </div>
               ) : (
-                <ScrollArea className="h-[280px] sm:h-[380px] rounded-xl border border-border bg-white">
+                <ScrollArea className="h-[280px] sm:h-[380px] border border-stone-200 bg-white rounded-lg">
                   <div className="flex flex-col gap-1.5 p-2">
                     {slots.map((slot) => {
                       const isSelected = selectedSlot === slot;
@@ -1010,14 +888,14 @@ function Step1DateAndTime({
                           type="button"
                           onClick={() => onSlotSelect(slot)}
                           className={cn(
-                            "w-full h-10 rounded-lg text-sm font-medium text-left px-4 transition-all duration-150",
+                            "w-full h-10 rounded-md text-sm font-medium text-left px-4 transition-colors duration-150 border",
                             isSelected
-                              ? "shadow-sm"
-                              : "border border-border text-foreground hover:bg-stone-50"
+                              ? "border-2 bg-white"
+                              : "border-stone-200 text-foreground hover:bg-stone-50"
                           )}
                           style={
                             isSelected
-                              ? { backgroundColor: bgColor, color: textColor }
+                              ? { borderColor: bgColor, color: bgColor }
                               : undefined
                           }
                         >
@@ -1055,7 +933,7 @@ function Step2CustomerInfo({
   const optional = fields.filter((f) => !bookingFields[f.key]?.require);
 
   return (
-    <div className="space-y-6">
+    <div className="mx-auto max-w-xl space-y-6">
       <div>
         <h2 className="text-xl font-semibold text-foreground tracking-tight">
           {t("booking.yourInformation")}
@@ -1065,9 +943,14 @@ function Step2CustomerInfo({
         </p>
       </div>
 
-      <div className="grid md:grid-cols-2 gap-6">
+      <div className="space-y-6">
         {/* Required fields */}
-        <div className="rounded-2xl border border-border bg-white p-5 space-y-4 shadow-sm">
+        <div
+          className={cn(
+            "border border-stone-200 bg-white p-5 space-y-4",
+            BOOKING_RADIUS_CARD
+          )}
+        >
           <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
             {t("booking.requiredSection")}
           </p>
@@ -1107,7 +990,12 @@ function Step2CustomerInfo({
 
         {/* Optional fields */}
         {optional.length > 0 && (
-          <div className="rounded-2xl border border-border bg-white p-5 space-y-4 shadow-sm">
+          <div
+            className={cn(
+              "border border-stone-200 bg-white p-5 space-y-4",
+              BOOKING_RADIUS_CARD
+            )}
+          >
             <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
               {t("booking.optionalSection")}
             </p>
@@ -1190,18 +1078,20 @@ function Step3Confirmation({
         </p>
       </div>
 
-      <div className="grid md:grid-cols-2 gap-6">
+      <div className="space-y-6">
         {/* Appointment summary */}
-        <div className="rounded-2xl border border-border bg-white p-5 shadow-sm space-y-4">
+        <div
+          className={cn(
+            "border border-stone-200 bg-white p-5 space-y-4",
+            BOOKING_RADIUS_CARD
+          )}
+        >
           <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
             {t("booking.appointmentSection")}
           </p>
           <div className="space-y-3">
             <div className="flex items-start gap-3">
-              <div
-                className="mt-0.5 h-8 w-8 rounded-lg flex items-center justify-center shrink-0"
-                style={{ backgroundColor: `${bgColor}15` }}
-              >
+              <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-md border border-stone-200 bg-stone-50">
                 <CalendarDays className="h-4 w-4" style={{ color: bgColor }} />
               </div>
               <div>
@@ -1215,10 +1105,7 @@ function Step3Confirmation({
             </div>
             {selectedService && (
               <div className="flex items-center gap-3">
-                <div
-                  className="h-8 w-8 rounded-lg flex items-center justify-center shrink-0"
-                  style={{ backgroundColor: `${bgColor}15` }}
-                >
+                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md border border-stone-200 bg-stone-50">
                   <Layers className="h-4 w-4" style={{ color: bgColor }} />
                 </div>
                 <div>
@@ -1235,10 +1122,7 @@ function Step3Confirmation({
             )}
             {config.company_name && (
               <div className="flex items-center gap-3">
-                <div
-                  className="h-8 w-8 rounded-lg flex items-center justify-center shrink-0"
-                  style={{ backgroundColor: `${bgColor}15` }}
-                >
+                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md border border-stone-200 bg-stone-50">
                   <User className="h-4 w-4" style={{ color: bgColor }} />
                 </div>
                 <p className="text-sm text-foreground">{config.company_name}</p>
@@ -1248,7 +1132,12 @@ function Step3Confirmation({
         </div>
 
         {/* Customer details */}
-        <div className="rounded-2xl border border-border bg-white p-5 shadow-sm space-y-4">
+        <div
+          className={cn(
+            "border border-stone-200 bg-white p-5 space-y-4",
+            BOOKING_RADIUS_CARD
+          )}
+        >
           <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
             {t("booking.yourDetails")}
           </p>
@@ -1274,7 +1163,10 @@ function Step3Confirmation({
         <button
           onClick={onConfirm}
           disabled={isPending}
-          className="inline-flex items-center gap-2 h-11 rounded-lg px-8 text-sm font-semibold transition-all shadow-md hover:opacity-90 disabled:opacity-50 disabled:pointer-events-none"
+          className={cn(
+            "inline-flex h-11 items-center gap-2 border border-transparent px-8 text-sm font-semibold transition-opacity hover:opacity-90 disabled:pointer-events-none disabled:opacity-50",
+            BOOKING_RADIUS_CARD
+          )}
           style={{ backgroundColor: bgColor, color: textColor }}
         >
           {isPending ? (

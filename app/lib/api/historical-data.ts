@@ -1,5 +1,9 @@
 import { apiClient } from "./axios-instance";
 
+export type FallbackNoteUser =
+  | { type: "existing"; user_id: string }
+  | { type: "new"; first_name: string; last_name: string; email: string };
+
 export interface HistoricalDataRecord {
   id: string;
   workspace_id: string;
@@ -9,6 +13,7 @@ export interface HistoricalDataRecord {
     leads: boolean;
     campaigns: boolean;
     users: string[];
+    fallback_note_user?: FallbackNoteUser;
   };
   created_at: string;
   created_by: string | null;
@@ -51,17 +56,17 @@ export interface DoorboostUser {
 
 export async function getHistoricalData(): Promise<HistoricalDataRecord | null> {
   const res = await apiClient.get<HistoricalDataRecord | null>(
-    "/users/me/workspace/historical-data",
+    "/users/me/workspace/historical-data"
   );
   return res.data;
 }
 
 export async function createHistoricalData(
-  status: "not_ready" | "ignored",
+  status: "not_ready" | "ignored"
 ): Promise<HistoricalDataRecord> {
   const res = await apiClient.post<HistoricalDataRecord>(
     "/users/me/workspace/historical-data",
-    { status },
+    { status }
   );
   return res.data;
 }
@@ -72,11 +77,13 @@ export async function updateHistoricalData(data: {
     campaigns: boolean;
     users: string[];
     notify_users?: boolean;
+    fallback_note_user?: FallbackNoteUser;
   };
 }): Promise<HistoricalDataRecord> {
+  console.log("data", data);
   const res = await apiClient.patch<HistoricalDataRecord>(
     "/users/me/workspace/historical-data",
-    data,
+    data
   );
   return res.data;
 }
@@ -89,14 +96,14 @@ export interface HistoricalDataCounts {
 
 export async function getHistoricalDataCounts(): Promise<HistoricalDataCounts> {
   const res = await apiClient.get<HistoricalDataCounts>(
-    "/users/me/workspace/historical-data/counts",
+    "/users/me/workspace/historical-data/counts"
   );
   return res.data;
 }
 
 export async function getHistoricalCampaigns(): Promise<CampaignPreview[]> {
   const res = await apiClient.get<CampaignPreview[]>(
-    "/users/me/workspace/historical-data/campaigns",
+    "/users/me/workspace/historical-data/campaigns"
   );
   return res.data;
 }
@@ -106,21 +113,21 @@ export async function getHistoricalLeadsPreview(): Promise<{
   total: number;
 }> {
   const res = await apiClient.get<{ leads: LeadPreview[]; total: number }>(
-    "/users/me/workspace/historical-data/leads-preview",
+    "/users/me/workspace/historical-data/leads-preview"
   );
   return res.data;
 }
 
 export async function getHistoricalUsers(): Promise<DoorboostUser[]> {
   const res = await apiClient.get<DoorboostUser[]>(
-    "/users/me/workspace/historical-data/users",
+    "/users/me/workspace/historical-data/users"
   );
   return res.data;
 }
 
 export async function markHistoricalDataNotified(): Promise<HistoricalDataRecord> {
   const res = await apiClient.post<HistoricalDataRecord>(
-    "/users/me/workspace/historical-data/mark-notified",
+    "/users/me/workspace/historical-data/mark-notified"
   );
   return res.data;
 }

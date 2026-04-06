@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { useTranslation } from "react-i18next";
@@ -14,18 +14,19 @@ import {
 import TimezoneSelect from "react-timezone-select";
 import {
   updateAppointmentConfigById,
-  uploadAppointmentLogoByConfigId,
   type AppointmentConfig,
 } from "~/lib/api/appointments";
-import { buildPublicBookingUrl, getLogoFullUrl } from "~/lib/config";
+import { buildPublicBookingUrl } from "~/lib/config";
 import { extractErrorMessage } from "~/lib/api/axios-instance";
-import { Copy, Upload } from "lucide-react";
+import { Copy } from "lucide-react";
 
 const DATE_FORMATS = [
   { value: "YYYY-MM-DD", label: "YYYY-MM-DD" },
   { value: "DD/MM/YYYY", label: "DD/MM/YYYY" },
   { value: "MM/DD/YYYY", label: "MM/DD/YYYY" },
 ];
+
+const DEFAULT_TEXT_ON_ACCENT = "#ffffff";
 
 interface GeneralSettingsTabProps {
   config: AppointmentConfig;
@@ -72,14 +73,9 @@ function FieldLabel({
 export function GeneralSettingsTab({ config }: GeneralSettingsTabProps) {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
-  const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const [companyName, setCompanyName] = useState(config.company_name ?? "");
   const [companyColor, setCompanyColor] = useState(
-    config.company_color ?? "#000000"
-  );
-  const [companyTextColor, setCompanyTextColor] = useState(
-    config.company_text_color ?? "#ffffff"
+    config.company_color ?? "#262626"
   );
   const [timezone, setTimezone] = useState(config.timezone ?? "UTC");
   const [dateFormat, setDateFormat] = useState(
@@ -104,23 +100,7 @@ export function GeneralSettingsTab({ config }: GeneralSettingsTabProps) {
     },
   });
 
-  const uploadMutation = useMutation({
-    mutationFn: (file: File) =>
-      uploadAppointmentLogoByConfigId(config.id, file),
-    onSuccess: (data) => {
-      toast.success(t("appointments.general.logoUploaded"));
-      queryClient.invalidateQueries({ queryKey: ["appointment-configs"] });
-      updateMutation.mutate({ company_logo_url: data.company_logo_url });
-    },
-    onError: (error) => {
-      toast.error(t("appointments.general.failedToUploadLogo"), {
-        description: extractErrorMessage(error),
-      });
-    },
-  });
-
   const publicBookingUrl = buildPublicBookingUrl(config.id);
-  const logoUrl = getLogoFullUrl(config.company_logo_url);
 
   const TIME_FORMATS = [
     { value: "24h", label: t("appointments.general.timeFormat24h") },
@@ -135,9 +115,8 @@ export function GeneralSettingsTab({ config }: GeneralSettingsTabProps) {
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     updateMutation.mutate({
-      company_name: companyName,
       company_color: companyColor,
-      company_text_color: companyTextColor,
+      company_text_color: DEFAULT_TEXT_ON_ACCENT,
       timezone,
       date_format: dateFormat,
       time_format: timeFormat,
@@ -145,106 +124,32 @@ export function GeneralSettingsTab({ config }: GeneralSettingsTabProps) {
     });
   }
 
-  function handleLogoChange(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
-    if (file) uploadMutation.mutate(file);
-    e.target.value = "";
-  }
-
   return (
     <form onSubmit={handleSubmit} className="space-y-5 max-w-2xl">
       {/* Company info */}
       <SectionPanel title={t("appointments.general.section")}>
         <FieldGroup>
-          <FieldLabel htmlFor="company_name">
-            {t("appointments.general.companyName")}
+          <FieldLabel htmlFor="company_color">
+            {t("appointments.general.accentColor")}
           </FieldLabel>
-          <Input
-            id="company_name"
-            value={companyName}
-            onChange={(e) => setCompanyName(e.target.value)}
-            required
-            className="h-10 text-sm"
-          />
-        </FieldGroup>
-        {/* Logo */}
-        <FieldGroup>
-          <FieldLabel>{t("appointments.general.companyLogo")}</FieldLabel>
-          <div className="flex items-center gap-4">
+          <p className="text-xs text-muted-foreground leading-snug">
+            {t("appointments.general.accentColorHint")}
+          </p>
+          <div className="flex items-center gap-2">
             <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/png,image/jpeg,image/webp"
-              className="hidden"
-              onChange={handleLogoChange}
+              id="company_color"
+              type="color"
+              value={companyColor}
+              onChange={(e) => setCompanyColor(e.target.value)}
+              className="h-10 w-12 cursor-pointer rounded-lg border border-border p-1"
             />
-            {logoUrl ? (
-              <img
-                src={logoUrl}
-                alt="Company logo"
-                className="h-14 w-14 rounded-xl border border-border object-cover"
-                style={{ backgroundColor: companyColor }}
-              />
-            ) : (
-              <div className="flex h-14 w-14 items-center justify-center rounded-xl border border-border bg-muted text-[10px] font-medium text-muted-foreground">
-                {t("appointments.general.noLogo")}
-              </div>
-            )}
-            <button
-              type="button"
-              onClick={() => fileInputRef.current?.click()}
-              disabled={uploadMutation.isPending}
-              className="inline-flex items-center gap-2 h-9 rounded-lg border border-border bg-muted/40 px-3 text-sm font-medium text-foreground hover:bg-muted transition-colors disabled:opacity-50"
-            >
-              <Upload className="h-3.5 w-3.5" />
-              {uploadMutation.isPending
-                ? t("appointments.general.uploading")
-                : t("appointments.general.upload")}
-            </button>
+            <Input
+              value={companyColor}
+              onChange={(e) => setCompanyColor(e.target.value)}
+              className="font-mono text-sm h-10 w-28"
+            />
           </div>
         </FieldGroup>
-
-        {/* Colors */}
-        <div className="grid gap-4 sm:grid-cols-2">
-          <FieldGroup>
-            <FieldLabel htmlFor="company_color">
-              {t("appointments.general.brandColor")}
-            </FieldLabel>
-            <div className="flex items-center gap-2">
-              <input
-                id="company_color"
-                type="color"
-                value={companyColor}
-                onChange={(e) => setCompanyColor(e.target.value)}
-                className="h-10 w-12 cursor-pointer rounded-lg border border-border p-1"
-              />
-              <Input
-                value={companyColor}
-                onChange={(e) => setCompanyColor(e.target.value)}
-                className="font-mono text-sm h-10 w-28"
-              />
-            </div>
-          </FieldGroup>
-          <FieldGroup>
-            <FieldLabel htmlFor="company_text_color">
-              {t("appointments.general.headerTextColor")}
-            </FieldLabel>
-            <div className="flex items-center gap-2">
-              <input
-                id="company_text_color"
-                type="color"
-                value={companyTextColor}
-                onChange={(e) => setCompanyTextColor(e.target.value)}
-                className="h-10 w-12 cursor-pointer rounded-lg border border-border p-1"
-              />
-              <Input
-                value={companyTextColor}
-                onChange={(e) => setCompanyTextColor(e.target.value)}
-                className="font-mono text-sm h-10 w-28"
-              />
-            </div>
-          </FieldGroup>
-        </div>
       </SectionPanel>
 
       {/* Localization */}
