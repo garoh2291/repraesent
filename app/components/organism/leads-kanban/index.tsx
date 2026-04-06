@@ -588,6 +588,7 @@ function LeadScheduleRow({
         <LeadSourceIcon
           source={lead.source_label}
           fallbackSource={lead.source_table}
+          platform={lead.source_platform}
           size={16}
           className="shrink-0"
         />

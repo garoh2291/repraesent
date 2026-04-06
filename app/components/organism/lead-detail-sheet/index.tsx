@@ -22,11 +22,16 @@ import { LeadStatusSelect } from "~/components/molecule/lead-status-select";
 import type { LeadStatus as LeadStatusType } from "~/lib/leads/constants";
 import type { TFunction } from "i18next";
 import TooltipContainer from "~/components/tooltip-container";
-import { ExternalLink } from "lucide-react";
+import { ChevronDown, ExternalLink } from "lucide-react";
 import { formatDate, formatRelativeTime } from "~/lib/utils/format";
 import { cn } from "~/lib/utils";
 import { getWorkspaceDetail } from "~/lib/api/workspaces";
 import type { WorkspaceMemberItem } from "~/components/organism/tasks/task-form-modal";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "~/components/ui/collapsible";
 
 function getHistoryItemInitials(item: LeadHistoryItem): string {
   const first = item.user_first_name?.trim() ?? "";
@@ -196,6 +201,14 @@ export function LeadDetailSheet({
 
 /* ── Field helpers ─────────────────────────────────────────── */
 
+/** Turn snake_case or camelCase keys into Title Case for display. */
+function formatFieldKey(key: string): string {
+  return key
+    .replace(/([a-z])([A-Z])/g, "$1 $2")
+    .replace(/_/g, " ")
+    .replace(/\b\w/g, (c) => c.toUpperCase());
+}
+
 function FieldRow({
   label,
   children,
@@ -204,9 +217,9 @@ function FieldRow({
   children: React.ReactNode;
 }) {
   return (
-    <div className="grid grid-cols-[100px_1fr] gap-2 items-start">
+    <div className="grid grid-cols-[110px_1fr] gap-3 items-start py-1.5 border-b border-border/40 last:border-0">
       <TooltipContainer tooltipContent={label}>
-        <span className="text-[11px] max-w-[150px] truncate font-semibold uppercase tracking-widest text-muted-foreground pt-1.5">
+        <span className="text-[11px] font-medium text-muted-foreground/80 leading-5 mt-0.5 truncate">
           {label}
         </span>
       </TooltipContainer>
@@ -225,7 +238,7 @@ function FieldValue({
   return (
     <div
       className={cn(
-        "rounded-lg bg-muted/60 px-3 py-2 text-sm text-foreground min-h-[34px] flex items-center",
+        "text-sm text-foreground leading-5",
         className
       )}
     >
@@ -235,6 +248,11 @@ function FieldValue({
 }
 
 /* ── Lead Info Section ─────────────────────────────────────── */
+
+// Keys always hidden from display (internal/noise)
+const HIDDEN_META_KEYS = new Set(["misc", "platform_campaign_id"]);
+// Keys shown inline in the main section (not collapsed)
+const PROMOTED_META_KEYS = new Set(["message"]);
 
 export function LeadInfoSection({
   lead,
@@ -252,7 +270,8 @@ export function LeadInfoSection({
   const metadata = lead.metadata as Record<string, unknown> | null | undefined;
   const metadataEntries =
     metadata && typeof metadata === "object" ? Object.entries(metadata) : [];
-  // Hide empty metadata entries (null, undefined, empty string, empty object)
+
+  // Remove empty values
   const visibleMetadataEntries = metadataEntries.filter(([, v]) => {
     if (v == null || v === "") return false;
     if (typeof v === "object" && v !== null && Object.keys(v).length === 0)
@@ -260,10 +279,18 @@ export function LeadInfoSection({
     return true;
   });
 
+  // message → shown inline; misc/platform_campaign_id → hidden; rest → collapsible
+  const promotedEntries = visibleMetadataEntries.filter(([key]) =>
+    PROMOTED_META_KEYS.has(key),
+  );
+  const collapsibleEntries = visibleMetadataEntries.filter(
+    ([key]) => !PROMOTED_META_KEYS.has(key) && !HIDDEN_META_KEYS.has(key),
+  );
+
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between gap-2 mb-4">
-        <h3 className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
+      <div className="flex items-center justify-between gap-2">
+        <h3 className="text-xs font-semibold text-muted-foreground">
           {t("leads.detail.leadInformation")}
         </h3>
         {!withoutLink && (
@@ -276,76 +303,100 @@ export function LeadInfoSection({
         )}
       </div>
 
-      <div className="space-y-2.5">
-        <FieldRow label={t("leads.columns.status")}>
-          {onStatusChange ? (
-            <LeadStatusSelect
-              value={lead.status}
-              onValueChange={(status) => onStatusChange(lead.id, status)}
-              disabled={isStatusUpdating}
-              className="w-full"
-            />
-          ) : (
-            <FieldValue>
-              {t(`leads.statuses.${currentStatus}`, {
-                defaultValue: lead.status,
-              })}
-            </FieldValue>
-          )}
-        </FieldRow>
+      <div className="rounded-lg border border-border/50 bg-card overflow-hidden">
+        <div className="px-3">
+          <FieldRow label={t("leads.columns.status")}>
+            {onStatusChange ? (
+              <LeadStatusSelect
+                value={lead.status}
+                onValueChange={(status) => onStatusChange(lead.id, status)}
+                disabled={isStatusUpdating}
+                className="w-full -ml-2.5 -my-0.5"
+              />
+            ) : (
+              <FieldValue>
+                {t(`leads.statuses.${currentStatus}`, {
+                  defaultValue: lead.status,
+                })}
+              </FieldValue>
+            )}
+          </FieldRow>
 
-        <FieldRow label={t("leads.columns.fullName")}>
-          <FieldValue>{lead.full_name || "—"}</FieldValue>
-        </FieldRow>
+          <FieldRow label={t("leads.columns.fullName")}>
+            <FieldValue>{lead.full_name || "—"}</FieldValue>
+          </FieldRow>
 
-        <FieldRow label={t("leads.columns.email")}>
-          <FieldValue className="break-all">{lead.email || "—"}</FieldValue>
-        </FieldRow>
+          <FieldRow label={t("leads.columns.email")}>
+            <FieldValue className="break-all">{lead.email || "—"}</FieldValue>
+          </FieldRow>
 
-        <FieldRow label={t("leads.columns.phone")}>
-          <FieldValue>{lead.phone || "—"}</FieldValue>
-        </FieldRow>
+          <FieldRow label={t("leads.columns.phone")}>
+            <FieldValue>{lead.phone || "—"}</FieldValue>
+          </FieldRow>
 
-        <FieldRow label={t("leads.columns.source")}>
-          <FieldValue className="flex items-center gap-2">
-            <LeadSourceIcon
-              source={lead.source_label}
-              fallbackSource={lead.source_table}
-              size={18}
-            />
-            <span className="text-muted-foreground text-xs">
-              {lead.source_label || lead.source_table || "—"}
-            </span>
-          </FieldValue>
-        </FieldRow>
-
-        <FieldRow label={t("leads.columns.formName")}>
-          <FieldValue>
-            {lead.form_name
-              ? lead.form_name
-                  .replace(/_/g, " ")
-                  .replace(/\b\w/g, (c) => c.toUpperCase())
-              : "—"}
-          </FieldValue>
-        </FieldRow>
-
-        <FieldRow label={t("leads.columns.createdAt")}>
-          <FieldValue>
-            {lead.created_at
-              ? formatDate(new Date(lead.created_at), "PPp")
-              : "—"}
-          </FieldValue>
-        </FieldRow>
-
-        {visibleMetadataEntries.map(([key, value]) => (
-          <FieldRow key={key} label={key}>
-            <FieldValue className="whitespace-pre-wrap">
-              {typeof value === "object"
-                ? JSON.stringify(value)
-                : String(value)}
+          <FieldRow label={t("leads.columns.source")}>
+            <FieldValue className="flex items-center gap-2">
+              <LeadSourceIcon
+                source={lead.source_label}
+                fallbackSource={lead.source_table}
+                platform={lead.source_platform}
+                size={16}
+              />
+              <span className="text-xs text-muted-foreground">
+                {lead.source_label || lead.source_table || "—"}
+              </span>
             </FieldValue>
           </FieldRow>
-        ))}
+
+          <FieldRow label={t("leads.columns.formName")}>
+            <FieldValue>
+              {lead.form_name ? formatFieldKey(lead.form_name) : "—"}
+            </FieldValue>
+          </FieldRow>
+
+          <FieldRow label={t("leads.columns.createdAt")}>
+            <FieldValue>
+              {lead.created_at
+                ? formatDate(new Date(lead.created_at), "PPp")
+                : "—"}
+            </FieldValue>
+          </FieldRow>
+
+          {promotedEntries.map(([key, value]) => (
+            <FieldRow key={key} label={formatFieldKey(key)}>
+              <FieldValue className="whitespace-pre-wrap">
+                {typeof value === "object"
+                  ? JSON.stringify(value)
+                  : String(value)}
+              </FieldValue>
+            </FieldRow>
+          ))}
+        </div>
+
+        {collapsibleEntries.length > 0 && (
+          <Collapsible defaultOpen={false}>
+            <CollapsibleTrigger className="group flex w-full items-center gap-2 border-t border-border/40 px-3 py-2.5 text-xs font-medium text-muted-foreground transition-colors hover:text-foreground hover:bg-muted/30">
+              <ChevronDown className="h-3.5 w-3.5 shrink-0 transition-transform duration-200 group-data-[state=open]:rotate-180" />
+              Additional info
+              <span className="ml-auto tabular-nums text-muted-foreground/50">
+                {collapsibleEntries.length}
+              </span>
+            </CollapsibleTrigger>
+            <CollapsibleContent>
+              <div className="px-3 border-t border-border/40">
+                {collapsibleEntries.map(([key, value]) => (
+                  <FieldRow key={key} label={formatFieldKey(key)}>
+                    <FieldValue className="whitespace-pre-wrap">
+                      {typeof value === "object"
+                        ? JSON.stringify(value)
+                        : String(value)}
+                    </FieldValue>
+                  </FieldRow>
+                ))}
+              </div>
+            </CollapsibleContent>
+          </Collapsible>
+        )}
       </div>
     </div>
   );
@@ -365,7 +416,7 @@ export function LeadHistorySection({
   const { t } = useTranslation();
   return (
     <div className="space-y-4">
-      <h3 className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
+      <h3 className="text-xs font-semibold text-muted-foreground">
         {t("leads.detail.history")}
       </h3>
 

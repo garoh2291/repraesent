@@ -2,7 +2,7 @@ import { useState, useRef, useEffect, useCallback } from "react";
 import { Link } from "react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
-import { format, subDays } from "date-fns";
+import { format } from "date-fns";
 import {
   ResponsiveContainer,
   LineChart,
@@ -63,7 +63,7 @@ const ACCENT = {
 function defaultRange(): DateRange {
   const today = new Date();
   return {
-    startDate: format(subDays(today, 6), "yyyy-MM-dd"),
+    startDate: format(new Date(2020, 0, 1), "yyyy-MM-dd"),
     endDate: format(today, "yyyy-MM-dd"),
   };
 }
