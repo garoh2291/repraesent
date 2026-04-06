@@ -16,7 +16,8 @@ import logoUrl from "~/components/icons/re_praesent-mark-brand-hor.svg?url";
 export default function DashboardLayout() {
   const { user, currentWorkspace } = useAuthContext();
   const location = useLocation();
-  const isHomePage = location.pathname === "/";
+  const isHomeOrSyncPage =
+    location.pathname === "/" || location.pathname === "/sync";
   const { i18n, t } = useTranslation();
   const [showTour, setShowTour] = useState(false);
 
@@ -61,9 +62,9 @@ export default function DashboardLayout() {
   });
 
   const freshInvoiceUrl =
-    unpaidInvoices.find((inv) => inv.status === "open" && inv.hosted_invoice_url)
-      ?.hosted_invoice_url ??
-    currentWorkspace?.unpaid_invoice_url;
+    unpaidInvoices.find(
+      (inv) => inv.status === "open" && inv.hosted_invoice_url
+    )?.hosted_invoice_url ?? currentWorkspace?.unpaid_invoice_url;
 
   const isDoorboost =
     currentWorkspace?.was_doorboost_client === true &&
@@ -147,7 +148,7 @@ export default function DashboardLayout() {
             </Button>
           </div>
         )}
-        {!isHomePage && <DoorboostMigrationBanner />}
+        {!isHomeOrSyncPage && <DoorboostMigrationBanner />}
         <Outlet />
       </main>
 

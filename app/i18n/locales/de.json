@@ -1281,6 +1281,17 @@
     "settingsAvailable": "Doorboost-Daten importieren",
     "settingsAvailableDescription": "Importieren Sie Ihre Kampagnen, Leads und Ihr Team von Doorboost.",
     "settingsStartSync": "Import starten",
-    "settingsInProgress": "Migration läuft..."
+    "settingsInProgress": "Migration läuft...",
+    "modalTitle": "Migration überspringen?",
+    "modalSubtitle": "Du verlierst dauerhaft den Zugriff auf:",
+    "modalCampaigns_one": "{{count}} Kampagne",
+    "modalCampaigns_other": "{{count}} Kampagnen",
+    "modalLeads_one": "{{count}} Lead",
+    "modalLeads_other": "{{count}} Leads",
+    "modalUsers_one": "{{count}} Teammitglied",
+    "modalUsers_other": "{{count}} Teammitglieder",
+    "modalWarning": "Diese Aktion kann nicht rückgängig gemacht werden. Deine Doorboost-Daten werden nicht importiert.",
+    "modalConfirm": "Ja, Migration überspringen",
+    "modalCancel": "Abbrechen"
   }
 }

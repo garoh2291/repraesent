@@ -1,16 +1,9 @@
-import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router";
 import { useTranslation } from "react-i18next";
-import {
-  ArrowRight,
-  X,
-  AlertTriangle,
-  Megaphone,
-  UserRound,
-  Layers,
-} from "lucide-react";
+import { ArrowRight, X, Megaphone, UserRound, Layers } from "lucide-react";
 import { useAuthContext } from "~/providers/auth-provider";
+import { useModal } from "~/components/modal-provider";
 import {
   getHistoricalData,
   createHistoricalData,
@@ -38,16 +31,6 @@ const COPY = {
     statUsers: "Team members",
     statLoading: "—",
     inProgress: "In progress",
-    // Modal
-    modalTitle: "Skip data migration?",
-    modalSubtitle: "You will permanently lose access to:",
-    modalCampaigns: (n: number) => `${n} campaign${n !== 1 ? "s" : ""}`,
-    modalLeads: (n: number) => `${n} lead${n !== 1 ? "s" : ""}`,
-    modalUsers: (n: number) => `${n} team member${n !== 1 ? "s" : ""}`,
-    modalWarning:
-      "This action cannot be undone. Your Doorboost data will not be imported.",
-    modalConfirm: "Yes, skip migration",
-    modalCancel: "Cancel",
   },
   de: {
     badge: "Datenmigration",
@@ -68,16 +51,6 @@ const COPY = {
     statUsers: "Teammitglieder",
     statLoading: "—",
     inProgress: "Läuft",
-    // Modal
-    modalTitle: "Migration überspringen?",
-    modalSubtitle: "Du verlierst dauerhaft den Zugriff auf:",
-    modalCampaigns: (n: number) => `${n} Kampagne${n !== 1 ? "n" : ""}`,
-    modalLeads: (n: number) => `${n} Lead${n !== 1 ? "s" : ""}`,
-    modalUsers: (n: number) => `${n} Teammitglied${n !== 1 ? "er" : ""}`,
-    modalWarning:
-      "Diese Aktion kann nicht rückgängig gemacht werden. Deine Doorboost-Daten werden nicht importiert.",
-    modalConfirm: "Ja, Migration überspringen",
-    modalCancel: "Abbrechen",
   },
 } as const;
 
@@ -211,247 +184,6 @@ function StatCard({
   );
 }
 
-/* ── Dismiss confirmation modal ── */
-function DismissModal({
-  campaignCount,
-  leadCount,
-  userCount,
-  onConfirm,
-  onCancel,
-  isPending,
-  copy,
-}: {
-  campaignCount: number | undefined;
-  leadCount: number | undefined;
-  userCount: number | undefined;
-  onConfirm: () => void;
-  onCancel: () => void;
-  isPending: boolean;
-  copy: (typeof COPY)["en"] | (typeof COPY)["de"];
-}) {
-  return (
-    <div
-      style={{
-        position: "fixed",
-        inset: 0,
-        zIndex: 9999,
-        background: "rgba(0,0,0,0.72)",
-        backdropFilter: "blur(6px)",
-        WebkitBackdropFilter: "blur(6px)",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        padding: 24,
-        animation: "db-chip-in 0.2s ease both",
-      }}
-      onClick={onCancel}
-    >
-      <div
-        style={{
-          background: "linear-gradient(145deg, #111116 0%, #0c0c10 100%)",
-          border: "1px solid rgba(245,158,11,0.22)",
-          borderRadius: 22,
-          padding: "28px 28px 24px",
-          maxWidth: 420,
-          width: "100%",
-          boxShadow:
-            "0 32px 80px rgba(0,0,0,0.7), 0 0 0 1px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.04)",
-          animation: "db-modal-in 0.25s cubic-bezier(.22,.68,0,1.2) both",
-        }}
-        onClick={(e) => e.stopPropagation()}
-      >
-        {/* Top shimmer line */}
-        <div
-          style={{
-            height: 1,
-            marginBottom: 24,
-            background:
-              "linear-gradient(90deg, transparent, rgba(245,158,11,0.5) 50%, transparent)",
-            marginTop: -28,
-            marginLeft: -28,
-            marginRight: -28,
-            borderRadius: "22px 22px 0 0",
-          }}
-        />
-
-        {/* Warning icon */}
-        <div
-          style={{
-            display: "flex",
-            alignItems: "flex-start",
-            gap: 14,
-            marginBottom: 20,
-          }}
-        >
-          <div
-            style={{
-              width: 44,
-              height: 44,
-              borderRadius: 12,
-              background: "rgba(239,68,68,0.1)",
-              border: "1px solid rgba(239,68,68,0.2)",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              flexShrink: 0,
-            }}
-          >
-            <AlertTriangle size={20} style={{ color: "rgba(239,68,68,0.9)" }} />
-          </div>
-          <div>
-            <p
-              style={{
-                fontSize: 15,
-                fontWeight: 700,
-                color: "rgba(255,255,255,0.92)",
-                marginBottom: 4,
-                lineHeight: 1.3,
-              }}
-            >
-              {copy.modalTitle}
-            </p>
-            <p
-              style={{
-                fontSize: 12,
-                color: "rgba(255,255,255,0.45)",
-                lineHeight: 1.5,
-              }}
-            >
-              {copy.modalSubtitle}
-            </p>
-          </div>
-        </div>
-
-        {/* Loss list */}
-        <div
-          style={{
-            borderRadius: 12,
-            border: "1px solid rgba(239,68,68,0.12)",
-            background: "rgba(239,68,68,0.05)",
-            padding: "12px 16px",
-            display: "flex",
-            flexDirection: "column",
-            gap: 8,
-            marginBottom: 16,
-          }}
-        >
-          {[
-            {
-              icon: <Megaphone size={13} />,
-              text:
-                campaignCount !== undefined
-                  ? copy.modalCampaigns(campaignCount)
-                  : copy.statLoading,
-            },
-            {
-              icon: <UserRound size={13} />,
-              text:
-                leadCount !== undefined
-                  ? copy.modalLeads(leadCount)
-                  : copy.statLoading,
-            },
-            {
-              icon: <Layers size={13} />,
-              text:
-                userCount !== undefined
-                  ? copy.modalUsers(userCount)
-                  : copy.statLoading,
-            },
-          ].map(({ icon, text }, i) => (
-            <div
-              key={i}
-              style={{ display: "flex", alignItems: "center", gap: 10 }}
-            >
-              <span style={{ color: "rgba(239,68,68,0.6)", display: "flex" }}>
-                {icon}
-              </span>
-              <span
-                style={{
-                  fontSize: 12,
-                  fontWeight: 600,
-                  color: "rgba(255,255,255,0.75)",
-                }}
-              >
-                {text}
-              </span>
-            </div>
-          ))}
-        </div>
-
-        {/* Warning text */}
-        <p
-          style={{
-            fontSize: 11,
-            color: "rgba(255,255,255,0.35)",
-            lineHeight: 1.6,
-            marginBottom: 20,
-          }}
-        >
-          {copy.modalWarning}
-        </p>
-
-        {/* Actions */}
-        <div style={{ display: "flex", gap: 10 }}>
-          <button
-            onClick={onCancel}
-            style={{
-              flex: 1,
-              height: 40,
-              borderRadius: 10,
-              border: "1px solid rgba(255,255,255,0.1)",
-              background: "rgba(255,255,255,0.05)",
-              color: "rgba(255,255,255,0.65)",
-              fontSize: 12,
-              fontWeight: 600,
-              cursor: "pointer",
-              transition: "all 0.15s",
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.background = "rgba(255,255,255,0.08)";
-              e.currentTarget.style.color = "rgba(255,255,255,0.85)";
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.background = "rgba(255,255,255,0.05)";
-              e.currentTarget.style.color = "rgba(255,255,255,0.65)";
-            }}
-          >
-            {copy.modalCancel}
-          </button>
-          <button
-            onClick={onConfirm}
-            disabled={isPending}
-            style={{
-              flex: 1.6,
-              height: 40,
-              borderRadius: 10,
-              border: "1px solid rgba(239,68,68,0.25)",
-              background: "rgba(239,68,68,0.12)",
-              color: "rgba(239,68,68,0.9)",
-              fontSize: 12,
-              fontWeight: 700,
-              cursor: isPending ? "not-allowed" : "pointer",
-              opacity: isPending ? 0.6 : 1,
-              transition: "all 0.15s",
-            }}
-            onMouseEnter={(e) => {
-              if (!isPending) {
-                e.currentTarget.style.background = "rgba(239,68,68,0.2)";
-                e.currentTarget.style.color = "rgba(239,68,68,1)";
-              }
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.background = "rgba(239,68,68,0.12)";
-              e.currentTarget.style.color = "rgba(239,68,68,0.9)";
-            }}
-          >
-            {copy.modalConfirm}
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-}
-
 /* ── Main component ── */
 export function DoorboostHomeSection() {
   const { i18n } = useTranslation();
@@ -460,8 +192,7 @@ export function DoorboostHomeSection() {
   const queryClient = useQueryClient();
   const lang: "en" | "de" = i18n.language?.startsWith("de") ? "de" : "en";
   const copy = COPY[lang];
-
-  const [showDismissModal, setShowDismissModal] = useState(false);
+  const { openModal } = useModal();
 
   const isDoorboost =
     currentWorkspace?.was_doorboost_client === true &&
@@ -542,10 +273,6 @@ export function DoorboostHomeSection() {
           0%   { background-position: -200% center; }
           100% { background-position: 200% center; }
         }
-        @keyframes db-modal-in {
-          from { opacity: 0; transform: translateY(12px) scale(0.96); }
-          to   { opacity: 1; transform: translateY(0) scale(1); }
-        }
         .db-section-in {
           animation: db-chip-in 0.5s cubic-bezier(.22,.68,0,1.2) both;
         }
@@ -561,21 +288,6 @@ export function DoorboostHomeSection() {
           background: rgba(255,255,255,0.07) !important;
         }
       `}</style>
-
-      {showDismissModal && (
-        <DismissModal
-          campaignCount={campaignCount}
-          leadCount={leadCount}
-          userCount={userCount}
-          onConfirm={() => {
-            createMutation.mutate("ignored");
-            setShowDismissModal(false);
-          }}
-          onCancel={() => setShowDismissModal(false)}
-          isPending={createMutation.isPending}
-          copy={copy}
-        />
-      )}
 
       <div
         className="db-section-in rounded-2xl overflow-hidden"
@@ -655,7 +367,15 @@ export function DoorboostHomeSection() {
               !isResuming && (
                 <button
                   className="db-dismiss-btn"
-                  onClick={() => setShowDismissModal(true)}
+                  onClick={() =>
+                    openModal({
+                      modalName: "DoorboostDismissModal",
+                      props: {
+                        onConfirm: () => createMutation.mutate("ignored"),
+                        isPending: createMutation.isPending,
+                      },
+                    })
+                  }
                   disabled={createMutation.isPending}
                   style={{
                     flexShrink: 0,

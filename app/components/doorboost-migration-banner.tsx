@@ -7,6 +7,7 @@ import axios from "axios";
 import { Button } from "~/components/ui/button";
 import { cn } from "~/lib/utils";
 import { useAuthContext } from "~/providers/auth-provider";
+import { useModal } from "~/components/modal-provider";
 import {
   getHistoricalData,
   createHistoricalData,
@@ -73,6 +74,7 @@ export function DoorboostMigrationBanner() {
   const { currentWorkspace } = useAuthContext();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const { openModal } = useModal();
   const lang: "en" | "de" = i18n.language?.startsWith("de") ? "de" : "en";
 
   const isDoorboost =
@@ -105,6 +107,16 @@ export function DoorboostMigrationBanner() {
   ) {
     return null;
   }
+
+  const handleDismiss = () => {
+    openModal({
+      modalName: "DoorboostDismissModal",
+      props: {
+        onConfirm: () => createMutation.mutate("ignored"),
+        isPending: createMutation.isPending,
+      },
+    });
+  };
 
   // ── Pending / not_synced: animated status banner ──
   if (record?.status === "not_synced" || record?.status === "pending") {
@@ -193,7 +205,7 @@ export function DoorboostMigrationBanner() {
               size="sm"
               variant="ghost"
               className="shrink-0 h-8 text-muted-foreground hover:text-foreground text-xs"
-              onClick={() => createMutation.mutate("ignored")}
+              onClick={handleDismiss}
               disabled={createMutation.isPending}
             >
               {t("historicalData.bannerNotNeeded")}
