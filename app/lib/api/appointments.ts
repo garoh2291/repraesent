@@ -32,11 +32,9 @@ export interface AppointmentConfig {
   baikal_username: string;
   slot_duration_minutes: number;
   working_hours?: Record<string, WorkingHoursDay> | null;
+  /** Resolved from workspace name on the server */
   company_name?: string;
-  company_headline?: string | null;
-  company_logo_url?: string | null;
   company_color?: string;
-  company_text_color?: string;
   timezone?: string;
   date_format?: string;
   time_format?: string;
@@ -62,11 +60,7 @@ export interface UpdateAppointmentConfigDto {
   baikal_password?: string;
   slot_duration_minutes?: number;
   working_hours?: Record<string, WorkingHoursDay>;
-  company_name?: string;
-  company_headline?: string;
-  company_logo_url?: string;
   company_color?: string;
-  company_text_color?: string;
   timezone?: string;
   date_format?: string;
   time_format?: string;
@@ -85,11 +79,9 @@ export interface PublicConfig {
     string,
     { start: string; end: string; enabled?: boolean }
   > | null;
+  /** Resolved from workspace name on the server */
   company_name?: string;
-  company_headline?: string | null;
-  company_logo_url?: string | null;
   company_color?: string;
-  company_text_color?: string;
   timezone?: string;
   time_format?: string;
   first_weekday?: string;
@@ -183,23 +175,6 @@ export async function updateAppointmentProviderSettings(data: {
   return response.data;
 }
 
-export async function uploadAppointmentLogo(
-  file: File
-): Promise<{ company_logo_url: string }> {
-  const formData = new FormData();
-  formData.append("file", file);
-  const response = await apiClient.post<{ company_logo_url: string }>(
-    "/appointments/config/logo",
-    formData,
-    {
-      headers: {
-        "Content-Type": "multipart/form-data",
-      },
-    }
-  );
-  return response.data;
-}
-
 export async function getAppointmentConfigs(): Promise<AppointmentConfig[]> {
   const response = await apiClient.get<AppointmentConfig[]>(
     "/appointments/workspace-configs"
@@ -267,24 +242,6 @@ export async function getAppointmentsByConfigId(
     start && end ? { params: { start, end } } : undefined,
   );
   return response.data ?? [];
-}
-
-export async function uploadAppointmentLogoByConfigId(
-  configId: string,
-  file: File
-): Promise<{ company_logo_url: string }> {
-  const formData = new FormData();
-  formData.append("file", file);
-  const response = await apiClient.post<{ company_logo_url: string }>(
-    `/appointments/config/${configId}/logo`,
-    formData,
-    {
-      headers: {
-        "Content-Type": "multipart/form-data",
-      },
-    }
-  );
-  return response.data;
 }
 
 // Public API (no auth required)

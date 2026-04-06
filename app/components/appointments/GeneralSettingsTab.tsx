@@ -26,8 +26,6 @@ const DATE_FORMATS = [
   { value: "MM/DD/YYYY", label: "MM/DD/YYYY" },
 ];
 
-const DEFAULT_TEXT_ON_ACCENT = "#ffffff";
-
 interface GeneralSettingsTabProps {
   config: AppointmentConfig;
 }
@@ -116,7 +114,6 @@ export function GeneralSettingsTab({ config }: GeneralSettingsTabProps) {
     e.preventDefault();
     updateMutation.mutate({
       company_color: companyColor,
-      company_text_color: DEFAULT_TEXT_ON_ACCENT,
       timezone,
       date_format: dateFormat,
       time_format: timeFormat,

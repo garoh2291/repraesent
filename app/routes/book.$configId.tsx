@@ -206,7 +206,8 @@ export default function BookAppointment() {
   const firstWeekday = config?.first_weekday === "sunday" ? 0 : 1;
   const timeFormat = config?.time_format ?? "24h";
   const bgColor = config?.company_color ?? "#262626";
-  const textColor = config?.company_text_color ?? "#ffffff";
+  /** Fixed on-accent text (company_text_color column removed) */
+  const textColor = "#ffffff";
 
   const hasMultipleProviders = providers && providers.length > 1;
 
