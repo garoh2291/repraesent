@@ -56,6 +56,12 @@ export interface LeadSourceIconProps {
   source: string | null | undefined;
   /** Optional second source used as fallback if first is null */
   fallbackSource?: string | null;
+  /**
+   * Direct platform override (e.g. "facebook", "google").
+   * When provided, skips string-based resolution and uses this directly.
+   * Use for campaign leads where source_label is a campaign name, not a URL.
+   */
+  platform?: string | null;
   className?: string;
   size?: number;
 }
@@ -67,11 +73,13 @@ export interface LeadSourceIconProps {
 export function LeadSourceIcon({
   source,
   fallbackSource,
+  platform,
   className,
   size = 18,
 }: LeadSourceIconProps) {
   const resolved = source ?? fallbackSource ?? null;
-  const kind = resolveSourceKind(resolved);
+  // platform prop takes precedence — used when source_label is a campaign name
+  const kind = platform ? resolveSourceKind(platform) : resolveSourceKind(resolved);
   const tooltipLabel = resolved ?? "—";
 
   if (kind === "unknown") {

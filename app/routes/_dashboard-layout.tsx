@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback } from "react";
-import { Outlet, useNavigate } from "react-router";
+import { Outlet, useNavigate, useLocation } from "react-router";
 import { useTranslation } from "react-i18next";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuthContext } from "~/providers/auth-provider";
@@ -15,6 +15,9 @@ import { SyncCompleteModal } from "~/components/sync-complete-modal";
 import logoUrl from "~/components/icons/re_praesent-mark-brand-hor.svg?url";
 export default function DashboardLayout() {
   const { user, currentWorkspace } = useAuthContext();
+  const location = useLocation();
+  const isHomeOrSyncPage =
+    location.pathname === "/" || location.pathname === "/sync";
   const { i18n, t } = useTranslation();
   const [showTour, setShowTour] = useState(false);
 
@@ -59,9 +62,9 @@ export default function DashboardLayout() {
   });
 
   const freshInvoiceUrl =
-    unpaidInvoices.find((inv) => inv.status === "open" && inv.hosted_invoice_url)
-      ?.hosted_invoice_url ??
-    currentWorkspace?.unpaid_invoice_url;
+    unpaidInvoices.find(
+      (inv) => inv.status === "open" && inv.hosted_invoice_url
+    )?.hosted_invoice_url ?? currentWorkspace?.unpaid_invoice_url;
 
   const isDoorboost =
     currentWorkspace?.was_doorboost_client === true &&
@@ -145,7 +148,7 @@ export default function DashboardLayout() {
             </Button>
           </div>
         )}
-        <DoorboostMigrationBanner />
+        {!isHomeOrSyncPage && <DoorboostMigrationBanner />}
         <Outlet />
       </main>
 

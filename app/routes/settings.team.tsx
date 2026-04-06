@@ -492,8 +492,37 @@ function DoorboostMigrationSection() {
           </div>
         )}
 
-        {/* Ignored or no record — show start button */}
-        {(status === "not_ready" || status === "ignored" || !record) && (
+        {/* not_ready — resume wizard (record exists, just navigate) */}
+        {status === "not_ready" && (
+          <div className="px-5 py-4">
+            <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+              <div className="flex items-center gap-3 flex-1 min-w-0">
+                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-amber-500/10">
+                  <Database className="h-4 w-4 text-amber-500" />
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-foreground">
+                    {t("historicalData.settingsAvailable")}
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    {t("historicalData.settingsAvailableDescription")}
+                  </p>
+                </div>
+              </div>
+              <Button
+                size="sm"
+                className="shrink-0 h-8 bg-amber-500 hover:bg-amber-600 text-black font-semibold text-xs rounded-lg self-start sm:self-auto"
+                onClick={() => navigate("/sync")}
+              >
+                {t("historicalData.settingsResumeSync")}
+                <ArrowRight className="ml-1.5 h-3 w-3" />
+              </Button>
+            </div>
+          </div>
+        )}
+
+        {/* Ignored or no record — create new and start */}
+        {(status === "ignored" || !record) && (
           <div className="px-5 py-4">
             <div className="flex flex-col sm:flex-row sm:items-center gap-3">
               <div className="flex items-center gap-3 flex-1 min-w-0">
@@ -515,9 +544,7 @@ function DoorboostMigrationSection() {
                 onClick={() => startMutation.mutate()}
                 disabled={startMutation.isPending}
               >
-                {status === "not_synced"
-                  ? t("historicalData.settingsStartSync")
-                  : t("historicalData.settingsResumeSync")}
+                {t("historicalData.settingsStartSync")}
                 <ArrowRight className="ml-1.5 h-3 w-3" />
               </Button>
             </div>

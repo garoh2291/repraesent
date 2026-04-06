@@ -28,6 +28,7 @@ import {
   subDays,
 } from "date-fns";
 import { useAuthContext } from "~/providers/auth-provider";
+import { DoorboostHomeSection } from "~/components/doorboost-home-section";
 import { cn } from "~/lib/utils";
 import {
   formatDate as fmtDate,
@@ -618,13 +619,17 @@ function fillPlausibleSeriesGaps(
     for (let i = 6; i >= 0; i--) {
       const d = new Date(now);
       d.setDate(d.getDate() - i);
-      slots.push(`${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`);
+      slots.push(
+        `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`
+      );
     }
   } else if (period === "30d") {
     for (let i = 29; i >= 0; i--) {
       const d = new Date(now);
       d.setDate(d.getDate() - i);
-      slots.push(`${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`);
+      slots.push(
+        `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`
+      );
     }
   } else {
     // all_time — monthly buckets, fill gaps between first and last data point
@@ -638,7 +643,10 @@ function fillPlausibleSeriesGaps(
     while (y < nowY || (y === nowY && m <= nowM)) {
       slots.push(`${y}-${pad(m)}-01`);
       m++;
-      if (m > 12) { m = 1; y++; }
+      if (m > 12) {
+        m = 1;
+        y++;
+      }
     }
   }
 
@@ -913,6 +921,8 @@ export default function Home() {
           {currentWorkspace?.name} · <span className="capitalize">{role}</span>
         </p>
       </div>
+
+      <DoorboostHomeSection />
 
       {/* Web Analytics (Plausible) — shown if workspace has analytics service */}
       <WebAnalyticsSection />

@@ -23,9 +23,14 @@ const SwitchWorkspaceModal = lazy(
   () => import("~/components/organism/modals/switch-workspace-modal")
 );
 
+const DoorboostDismissModal = lazy(
+  () => import("~/components/organism/modals/doorboost-dismiss-modal")
+);
+
 const Modals = {
   ConfirmationModal,
   SwitchWorkspaceModal,
+  DoorboostDismissModal,
 } as const;
 
 type ModalComponents = {

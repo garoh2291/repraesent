@@ -389,6 +389,7 @@ export default function LeadForm() {
         <LeadSourceIcon
           source={row.original.source_label}
           fallbackSource={row.original.source_table}
+          platform={row.original.source_platform}
           size={18}
         />
       ),

@@ -32,6 +32,7 @@ export interface Lead {
   source_table: string;
   form_name: string;
   source_label: string | null;
+  source_platform: string | null;
   status: string;
   created_at: string;
   updated_at: string;

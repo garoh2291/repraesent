@@ -265,7 +265,7 @@ export function CampaignDatePicker({
   const [selEnd, setSelEnd] = useState<Date | null>(null);
   const [hoverDate, setHoverDate] = useState<Date | null>(null);
   const [calMonth, setCalMonth] = useState(new Date());
-  const [activePreset, setActivePreset] = useState<string | null>("last_7");
+  const [activePreset, setActivePreset] = useState<string | null>("all_time");
 
   // Custom inputs
   const [customStartInput, setCustomStartInput] = useState("");
