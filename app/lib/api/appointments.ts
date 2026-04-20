@@ -44,6 +44,7 @@ export interface AppointmentConfig {
   booking_fields?: Record<string, BookingFieldConfig> | null;
   breaks?: BreakConfig[] | null;
   services?: AppointmentService[] | null;
+  email_account_id?: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -70,6 +71,7 @@ export interface UpdateAppointmentConfigDto {
   booking_fields?: Record<string, BookingFieldConfig>;
   breaks?: BreakConfig[];
   services?: AppointmentService[];
+  email_account_id?: string | null;
 }
 
 export interface PublicConfig {

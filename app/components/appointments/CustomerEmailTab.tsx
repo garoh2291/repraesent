@@ -20,9 +20,17 @@ import {
   getAppointmentsFallbackConfig,
   updateAppointmentsFallbackConfig,
   getEmailAnalytics,
+  listEmailAccounts,
   type LeadFallbackConfig,
   type EmailAnalyticsPeriod,
 } from "~/lib/api/workspaces";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "~/components/ui/select";
 import { getLeads } from "~/lib/api/leads";
 import { type AppointmentConfig } from "~/lib/api/appointments";
 import { extractErrorMessage } from "~/lib/api/axios-instance";
@@ -134,6 +142,12 @@ export function CustomerEmailTab({ config }: CustomerEmailTabProps) {
     queryFn: getAppointmentsFallbackConfig,
   });
 
+  // Available email accounts for this workspace (for the "Send from" switcher)
+  const { data: emailAccounts = [] } = useQuery({
+    queryKey: ["workspace-email-accounts"],
+    queryFn: listEmailAccounts,
+  });
+
   // Fetch last appointment booking lead for preview variables
   const { data: lastLeadData } = useQuery({
     queryKey: ["leads", "appointment_booking", "latest"],
@@ -169,6 +183,7 @@ export function CustomerEmailTab({ config }: CustomerEmailTabProps) {
   const [enabled, setEnabled] = useState(false);
   const [subject, setSubject] = useState(DEFAULT_SUBJECT);
   const [html, setHtml] = useState(DEFAULT_HTML);
+  const [emailAccountId, setEmailAccountId] = useState<string | null>(null);
   const [view, setView] = useState<"code" | "preview">("preview");
   const [dirty, setDirty] = useState(false);
 
@@ -179,10 +194,12 @@ export function CustomerEmailTab({ config }: CustomerEmailTabProps) {
         setEnabled(cfg.enabled);
         setSubject(cfg.subject || DEFAULT_SUBJECT);
         setHtml(cfg.html || DEFAULT_HTML);
+        setEmailAccountId(cfg.email_account_id ?? null);
       } else {
         setEnabled(false);
         setSubject(DEFAULT_SUBJECT);
         setHtml(DEFAULT_HTML);
+        setEmailAccountId(null);
       }
       setDirty(false);
     }
@@ -209,18 +226,27 @@ export function CustomerEmailTab({ config }: CustomerEmailTabProps) {
   });
 
   const save = useCallback(
-    (overrides?: { enabled?: boolean; subject?: string; html?: string }) => {
+    (overrides?: {
+      enabled?: boolean;
+      subject?: string;
+      html?: string;
+      email_account_id?: string | null;
+    }) => {
       const merged = {
         ...fallbackConfig,
         [FORM_KEY]: {
           enabled: overrides?.enabled ?? enabled,
           subject: overrides?.subject ?? subject,
           html: overrides?.html ?? html,
+          email_account_id:
+            overrides?.email_account_id !== undefined
+              ? overrides.email_account_id
+              : emailAccountId,
         },
       };
       mutation.mutate(merged);
     },
-    [fallbackConfig, enabled, subject, html, mutation],
+    [fallbackConfig, enabled, subject, html, emailAccountId, mutation],
   );
 
   const handleToggle = useCallback(
@@ -337,6 +363,38 @@ export function CustomerEmailTab({ config }: CustomerEmailTabProps) {
           </p>
         </div>
       </div>
+
+      {/* Send-from account switcher (only visible when >1 account exists) */}
+      {emailAccounts.length > 1 && (
+        <div className="space-y-2">
+          <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+            {t("appointments.customerEmail.sendFrom", "Send from")}
+          </Label>
+          <Select
+            value={
+              emailAccountId ??
+              emailAccounts.find((a) => a.is_default)?.id ??
+              emailAccounts[0].id
+            }
+            onValueChange={(v) => {
+              setEmailAccountId(v);
+              save({ email_account_id: v });
+            }}
+          >
+            <SelectTrigger className="h-10 text-sm">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {emailAccounts.map((a) => (
+                <SelectItem key={a.id} value={a.id}>
+                  {a.email}
+                  {a.is_default ? " (default)" : ""}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      )}
 
       {/* Subject */}
       <div className="space-y-2">
