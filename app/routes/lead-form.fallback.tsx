@@ -11,9 +11,18 @@ import {
   getLeadFallbackConfig,
   updateLeadFallbackConfig,
   getServiceConfig,
+  listEmailAccounts,
   type LeadFallbackConfig,
   type LeadFallbackSourceConfig,
+  type WorkspaceEmailAccountSummary,
 } from "~/lib/api/workspaces";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "~/components/ui/select";
 import {
   Mail,
   Eye,
@@ -71,11 +80,16 @@ const DEFAULT_HTML = `<!DOCTYPE html>
 // ─── helpers ──────────────────────────────────────────────────────────────────
 
 function makeEmpty(): LeadFallbackSourceConfig {
-  return { enabled: false, subject: "", html: "" };
+  return { enabled: false, subject: "", html: "", email_account_id: null };
 }
 
 function makeDefault(): LeadFallbackSourceConfig {
-  return { enabled: false, subject: "Thank You", html: DEFAULT_HTML };
+  return {
+    enabled: false,
+    subject: "Thank You",
+    html: DEFAULT_HTML,
+    email_account_id: null,
+  };
 }
 
 function cfgOrEmpty(
@@ -201,10 +215,12 @@ interface EditorPanelProps {
   onToggle: (key: string, enabled: boolean) => void;
   onSave: (key: string) => void;
   onDelete: (key: string) => void;
+  onEmailAccountChange: (key: string, accountId: string | null) => void;
   isSaving: boolean;
   isTogglingOn: boolean;
   justSaved: boolean;
   fromEmail: string | null;
+  emailAccounts: WorkspaceEmailAccountSummary[];
 }
 
 function EditorPanel({
@@ -215,10 +231,12 @@ function EditorPanel({
   onToggle,
   onSave,
   onDelete,
+  onEmailAccountChange,
   isSaving,
   isTogglingOn,
   justSaved,
   fromEmail,
+  emailAccounts,
 }: EditorPanelProps) {
   const { t } = useTranslation();
   const [viewMode, setViewMode] = useState<"code" | "preview">("preview");
@@ -228,6 +246,14 @@ function EditorPanel({
   const isDirty = local.subject !== saved.subject || local.html !== saved.html;
   const canSave =
     isDirty && local.subject.trim() !== "" && local.html.trim() !== "";
+
+  // Which account's email is displayed in the "From" field:
+  // explicit pick > workspace default > first account
+  const selectedAccount =
+    emailAccounts.find((a) => a.id === local.email_account_id) ??
+    emailAccounts.find((a) => a.is_default) ??
+    emailAccounts[0] ??
+    null;
 
   const displayName = formatFormName(formKey);
 
@@ -281,19 +307,35 @@ function EditorPanel({
       <div className="flex flex-col gap-4 pt-5 overflow-y-auto flex-1 min-h-0">
         {/* Email composer header: From + Subject */}
         <div className="rounded-xl border border-border overflow-hidden shrink-0">
-          {/* From — read-only */}
+          {/* From — dropdown when >1 account, plain value when only 1 */}
           <div className="flex items-center border-b border-border/60">
             <span className="shrink-0 w-[72px] px-3.5 py-2.5 text-[10px] font-semibold text-muted-foreground uppercase tracking-widest bg-muted/50 border-r border-border/60 select-none">
               {t("leadFallback.fromLabel")}
             </span>
             <div className="flex items-center gap-2 flex-1 px-3.5 py-2.5 bg-muted/20 min-w-0">
               <Mail className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
-              <span className="text-sm font-mono text-foreground truncate">
-                {fromEmail}
-              </span>
-              <span className="ml-auto shrink-0 text-[10px] text-muted-foreground/50 italic hidden sm:inline">
-                {t("leadFallback.configuredInEmailSettings")}
-              </span>
+              {emailAccounts.length > 1 ? (
+                <Select
+                  value={selectedAccount?.id ?? emailAccounts[0].id}
+                  onValueChange={(v) => onEmailAccountChange(formKey, v)}
+                >
+                  <SelectTrigger className="h-7 w-full max-w-[400px] text-sm font-mono border-0 bg-transparent px-0 shadow-none focus:ring-0">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {emailAccounts.map((a) => (
+                      <SelectItem key={a.id} value={a.id}>
+                        {a.email}
+                        {a.is_default ? " (default)" : ""}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              ) : (
+                <span className="text-sm font-mono text-foreground truncate">
+                  {selectedAccount?.email ?? fromEmail ?? ""}
+                </span>
+              )}
             </div>
           </div>
 
@@ -580,6 +622,12 @@ export default function LeadFallbackPage() {
     enabled: !!currentWorkspace && hasLeadForm && hasEmailConfig,
   });
 
+  const { data: emailAccounts = [] } = useQuery({
+    queryKey: ["workspace-email-accounts"],
+    queryFn: listEmailAccounts,
+    enabled: !!currentWorkspace && hasLeadForm && hasEmailConfig,
+  });
+
   // ── Dynamic form keys from config ────────────────────────────────────────
   const [local, setLocal] = useState<Record<string, LeadFallbackSourceConfig>>(
     {}
@@ -717,6 +765,16 @@ export default function LeadFallbackPage() {
     (key: string) => {
       setSavingKey(key);
       mutate.mutate({ key, cfg: local[key] });
+    },
+    [local, mutate]
+  );
+
+  const handleEmailAccountChange = useCallback(
+    (key: string, accountId: string | null) => {
+      const next = { ...local[key], email_account_id: accountId };
+      setLocal((prev) => ({ ...prev, [key]: next }));
+      setSavingKey(key);
+      mutate.mutate({ key, cfg: next });
     },
     [local, mutate]
   );
@@ -879,10 +937,12 @@ export default function LeadFallbackPage() {
                 onToggle={handleToggle}
                 onSave={handleSave}
                 onDelete={handleDelete}
+                onEmailAccountChange={handleEmailAccountChange}
                 isSaving={savingKey === activeTab}
                 isTogglingOn={togglingKey === activeTab}
                 justSaved={justSavedKey === activeTab}
                 fromEmail={fromEmail}
+                emailAccounts={emailAccounts}
               />
             ) : (
               <div className="flex flex-1 items-center justify-center">

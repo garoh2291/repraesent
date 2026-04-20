@@ -100,10 +100,46 @@ export interface LeadFallbackSourceConfig {
   enabled: boolean;
   subject: string;
   html: string;
+  /** Which workspace_email_accounts row to send this form's confirmation from. Null/omitted = workspace default. */
+  email_account_id?: string | null;
 }
 
 export interface LeadFallbackConfig {
   [formName: string]: LeadFallbackSourceConfig | undefined;
+}
+
+export interface WorkspaceEmailAccountSummary {
+  id: string;
+  name: string;
+  email: string;
+  is_default: boolean;
+  smtp_server: string;
+  smtp_port_ssl: number | null;
+  smtp_port_starttls: number | null;
+  smtp_auth_required: boolean;
+  smtp_username: string | null;
+  imap_server: string | null;
+  imap_port_ssl: number | null;
+  imap_port_starttls: number | null;
+  imap_username: string | null;
+}
+
+export async function listEmailAccounts(): Promise<
+  WorkspaceEmailAccountSummary[]
+> {
+  const response = await apiClient.get<WorkspaceEmailAccountSummary[]>(
+    "/users/me/workspace/email-accounts"
+  );
+  return response.data;
+}
+
+export async function decryptEmailAccountPassword(
+  accountId: string
+): Promise<{ password: string }> {
+  const response = await apiClient.get<{ password: string }>(
+    `/users/me/workspace/email-accounts/${accountId}/password`
+  );
+  return response.data;
 }
 
 export async function getLeadFallbackConfig(): Promise<LeadFallbackConfig> {

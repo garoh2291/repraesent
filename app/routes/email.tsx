@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Navigate } from "react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslation, Trans } from "react-i18next";
@@ -16,10 +16,17 @@ import {
 } from "lucide-react";
 import { useAuthContext } from "~/providers/auth-provider";
 import {
-  getServiceConfig,
-  decryptEmailConfigPassword,
+  listEmailAccounts,
+  decryptEmailAccountPassword,
 } from "~/lib/api/workspaces";
 import { EmailTabs } from "~/components/email-tabs";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "~/components/ui/select";
 
 export function meta() {
   return [
@@ -168,11 +175,11 @@ function StepBadge({ number }: { number: number }) {
 
 function PasswordRow({
   label,
-  serviceId,
+  accountId,
   t,
 }: {
   label: string;
-  serviceId: string;
+  accountId: string;
   t: (key: string) => string;
 }) {
   const [revealed, setRevealed] = useState(false);
@@ -190,7 +197,7 @@ function PasswordRow({
     }
     setLoading(true);
     try {
-      const { password } = await decryptEmailConfigPassword(serviceId);
+      const { password } = await decryptEmailAccountPassword(accountId);
       setRevealedPassword(password);
       setRevealed(true);
     } catch {
@@ -210,7 +217,7 @@ function PasswordRow({
       // Silently decrypt and copy without revealing
       setCopyLoading(true);
       try {
-        const { password } = await decryptEmailConfigPassword(serviceId);
+        const { password } = await decryptEmailAccountPassword(accountId);
         navigator.clipboard.writeText(password);
         setCopiedSilently(true);
         setTimeout(() => setCopiedSilently(false), 3000);
@@ -280,17 +287,36 @@ export default function Emails() {
     (s) => s.service_type === "email-config"
   );
 
-  const { data: cfg = {}, isPending } = useQuery({
-    queryKey: ["service-config", emailService?.service_id],
-    queryFn: () => getServiceConfig(emailService!.service_id),
-    enabled: !!emailService?.service_id,
+  const { data: accounts = [], isPending } = useQuery({
+    queryKey: ["workspace-email-accounts"],
+    queryFn: listEmailAccounts,
+    enabled: !!emailService,
   });
+
+  const [selectedAccountId, setSelectedAccountId] = useState<string | null>(
+    null
+  );
+
+  useEffect(() => {
+    if (accounts.length === 0) {
+      if (selectedAccountId !== null) setSelectedAccountId(null);
+      return;
+    }
+    // Initialize once, or fix up if the current selection disappeared.
+    if (!selectedAccountId || !accounts.some((a) => a.id === selectedAccountId)) {
+      const initial =
+        accounts.find((a) => a.is_default)?.id ?? accounts[0]!.id;
+      setSelectedAccountId(initial);
+    }
+  }, [accounts, selectedAccountId]);
 
   if (!emailService) {
     return <Navigate to="/" replace />;
   }
 
-  const isConfigured = !!(cfg.email && cfg.imap_server && cfg.smtp_server);
+  const account =
+    accounts.find((a) => a.id === selectedAccountId) ?? null;
+  const isConfigured = !!account;
 
   return (
     <div className="mx-auto w-full max-w-[1280px] p-4 sm:p-6 py-10! space-y-6 sm:space-y-8 app-fade-in">
@@ -328,36 +354,66 @@ export default function Emails() {
             </p>
           </div>
         ) : (
-          <>
-            {/* Account Credentials */}
-            <div className="app-fade-up app-fade-up-d1">
-              <SectionCard
-                icon={Shield}
-                title={t("email.credentialsTitle")}
-                description={t("email.credentialsDesc")}
-              >
-                <CredentialRow
-                  label={t("email.emailLabel")}
-                  value={String(cfg.email ?? "")}
-                  t={t}
-                />
-                <PasswordRow
-                  label={t("email.passwordLabel")}
-                  serviceId={emailService.service_id}
-                  t={t}
-                />
-                <div className="py-3">
-                  <p className="text-xs text-muted-foreground">
-                    {t("email.credentialNote")}{" "}
-                    <code className="font-mono bg-muted px-1 py-0.5 rounded text-foreground">
-                      {String(cfg.email ?? "")}
-                    </code>{" "}
-                    {t("email.credentialNoteSuffix")}
-                  </p>
-                </div>
-              </SectionCard>
-            </div>
-          </>
+          account && (
+            <>
+              {/* Account Credentials */}
+              <div className="app-fade-up app-fade-up-d1">
+                <SectionCard
+                  icon={Shield}
+                  title={t("email.credentialsTitle")}
+                  description={t("email.credentialsDesc")}
+                >
+                  {/* Email row — dropdown when >1 account, plain value when only 1 */}
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1 sm:gap-4 py-3 border-b border-border">
+                    <span className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground sm:w-32 shrink-0">
+                      {t("email.emailLabel")}
+                    </span>
+                    {accounts.length > 1 ? (
+                      <div className="flex-1 min-w-0 flex">
+                        <Select
+                          value={account.id}
+                          onValueChange={(v) => setSelectedAccountId(v)}
+                        >
+                          <SelectTrigger className="h-9 w-full max-w-[400px] text-sm font-mono">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {accounts.map((a) => (
+                              <SelectItem key={a.id} value={a.id}>
+                                {a.email}
+                                {a.is_default ? " (default)" : ""}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    ) : (
+                      <span className="flex-1 font-mono text-sm text-foreground break-all min-w-0">
+                        {account.email}
+                      </span>
+                    )}
+                    <CopyButton value={account.email} t={t} />
+                  </div>
+
+                  <PasswordRow
+                    key={account.id}
+                    label={t("email.passwordLabel")}
+                    accountId={account.id}
+                    t={t}
+                  />
+                  <div className="py-3">
+                    <p className="text-xs text-muted-foreground">
+                      {t("email.credentialNote")}{" "}
+                      <code className="font-mono bg-muted px-1 py-0.5 rounded text-foreground">
+                        {account.email}
+                      </code>{" "}
+                      {t("email.credentialNoteSuffix")}
+                    </p>
+                  </div>
+                </SectionCard>
+              </div>
+            </>
+          )
         )}
 
         {/* Outlook Setup */}
@@ -422,70 +478,72 @@ export default function Emails() {
           </SectionCard>
         </div>
         {/* Server Settings */}
-        <div className="app-fade-up app-fade-up-d2">
-          <SectionCard
-            icon={Server}
-            title={t("email.serverTitle")}
-            description={t("email.serverDesc")}
-          >
-            <div className="pt-4 pb-2">
-              <span className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
-                {t("email.incomingLabel")}
-              </span>
-            </div>
-            <ServerRow
-              label={t("email.serverLabel")}
-              value={String(cfg.imap_server ?? "")}
-              t={t}
-            />
-            <ServerRow
-              label={t("email.portSslLabel")}
-              value={String(cfg.imap_port_ssl ?? 993)}
-              t={t}
-            />
-            <ServerRow
-              label={t("email.portStartLabel")}
-              value={String(cfg.imap_port_starttls ?? 143)}
-              t={t}
-            />
-            <ServerRow
-              label={t("email.usernameLabel")}
-              value={String(cfg.imap_username ?? cfg.email ?? "")}
-              t={t}
-            />
+        {account && (
+          <div className="app-fade-up app-fade-up-d2">
+            <SectionCard
+              icon={Server}
+              title={t("email.serverTitle")}
+              description={t("email.serverDesc")}
+            >
+              <div className="pt-4 pb-2">
+                <span className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
+                  {t("email.incomingLabel")}
+                </span>
+              </div>
+              <ServerRow
+                label={t("email.serverLabel")}
+                value={String(account.imap_server ?? "")}
+                t={t}
+              />
+              <ServerRow
+                label={t("email.portSslLabel")}
+                value={String(account.imap_port_ssl ?? 993)}
+                t={t}
+              />
+              <ServerRow
+                label={t("email.portStartLabel")}
+                value={String(account.imap_port_starttls ?? 143)}
+                t={t}
+              />
+              <ServerRow
+                label={t("email.usernameLabel")}
+                value={String(account.imap_username ?? account.email)}
+                t={t}
+              />
 
-            <div className="pt-5 pb-2">
-              <span className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
-                {t("email.outgoingLabel")}
-              </span>
-            </div>
-            <ServerRow
-              label={t("email.serverLabel")}
-              value={String(cfg.smtp_server ?? "")}
-              t={t}
-            />
-            <ServerRow
-              label={t("email.portStartLabel")}
-              value={String(cfg.smtp_port_starttls ?? 587)}
-              t={t}
-            />
-            <ServerRow
-              label={t("email.portSslLabel")}
-              value={String(cfg.smtp_port_ssl ?? 465)}
-              t={t}
-            />
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1 sm:gap-4 py-3">
-              <span className="text-sm text-muted-foreground sm:w-40 shrink-0">
-                {t("email.authLabel")}
-              </span>
-              <span className="flex-1 font-mono text-sm text-foreground">
-                {cfg.smtp_auth_required !== false
-                  ? t("email.authRequired")
-                  : t("email.authNotRequired")}
-              </span>
-            </div>
-          </SectionCard>
-        </div>
+              <div className="pt-5 pb-2">
+                <span className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
+                  {t("email.outgoingLabel")}
+                </span>
+              </div>
+              <ServerRow
+                label={t("email.serverLabel")}
+                value={String(account.smtp_server)}
+                t={t}
+              />
+              <ServerRow
+                label={t("email.portStartLabel")}
+                value={String(account.smtp_port_starttls ?? 587)}
+                t={t}
+              />
+              <ServerRow
+                label={t("email.portSslLabel")}
+                value={String(account.smtp_port_ssl ?? 465)}
+                t={t}
+              />
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1 sm:gap-4 py-3">
+                <span className="text-sm text-muted-foreground sm:w-40 shrink-0">
+                  {t("email.authLabel")}
+                </span>
+                <span className="flex-1 font-mono text-sm text-foreground">
+                  {account.smtp_auth_required
+                    ? t("email.authRequired")
+                    : t("email.authNotRequired")}
+                </span>
+              </div>
+            </SectionCard>
+          </div>
+        )}
       </div>
     </div>
   );
