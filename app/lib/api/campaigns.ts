@@ -93,31 +93,37 @@ export interface CampaignListParams {
   limit?: number;
 }
 
+/**
+ * Default mount-point for the workspace's own campaigns endpoints.
+ * Override per call to point at retailer-scoped endpoints (used by the
+ * doorboost_brand workspace view) without duplicating the surface.
+ */
+export const DEFAULT_CAMPAIGNS_BASE = "/users/me/workspace/campaigns";
+
 export async function getConnectedCampaigns(
-  params: CampaignListParams = {}
+  params: CampaignListParams = {},
+  basePath: string = DEFAULT_CAMPAIGNS_BASE,
 ): Promise<PaginatedCampaigns> {
-  const res = await apiClient.get<PaginatedCampaigns>(
-    "/users/me/workspace/campaigns",
-    {
-      params: {
-        ...(params.platform ? { platform: params.platform } : {}),
-        ...(params.search ? { search: params.search } : {}),
-        ...(params.status ? { status: params.status } : {}),
-        page: params.page ?? 1,
-        limit: params.limit ?? 20,
-      },
-    }
-  );
+  const res = await apiClient.get<PaginatedCampaigns>(basePath, {
+    params: {
+      ...(params.platform ? { platform: params.platform } : {}),
+      ...(params.search ? { search: params.search } : {}),
+      ...(params.status ? { status: params.status } : {}),
+      page: params.page ?? 1,
+      limit: params.limit ?? 20,
+    },
+  });
   return res.data;
 }
 
 export async function getCampaignsOverview(
   range: DateRange,
   platform?: string,
-  campaignIds?: string[]
+  campaignIds?: string[],
+  basePath: string = DEFAULT_CAMPAIGNS_BASE,
 ): Promise<CampaignInsightsResponse> {
   const res = await apiClient.get<CampaignInsightsResponse>(
-    "/users/me/workspace/campaigns/overview",
+    `${basePath}/overview`,
     {
       params: {
         start_date: range.startDate,
@@ -125,45 +131,49 @@ export async function getCampaignsOverview(
         ...(platform ? { platform } : {}),
         ...(campaignIds?.length ? { campaign_ids: campaignIds.join(",") } : {}),
       },
-    }
+    },
   );
   return res.data;
 }
 
 export async function getCampaignInsights(
   campaignId: string,
-  range: DateRange
+  range: DateRange,
+  basePath: string = DEFAULT_CAMPAIGNS_BASE,
 ): Promise<CampaignInsightsResponse> {
   const res = await apiClient.get<CampaignInsightsResponse>(
-    `/users/me/workspace/campaigns/${campaignId}/insights`,
-    { params: { start_date: range.startDate, end_date: range.endDate } }
+    `${basePath}/${campaignId}/insights`,
+    { params: { start_date: range.startDate, end_date: range.endDate } },
   );
   return res.data;
 }
 
 export async function getCampaignWeekly(
-  campaignId: string
+  campaignId: string,
+  basePath: string = DEFAULT_CAMPAIGNS_BASE,
 ): Promise<WeeklyInsight[]> {
   const res = await apiClient.get<WeeklyInsight[]>(
-    `/users/me/workspace/campaigns/${campaignId}/insights/weekly`
+    `${basePath}/${campaignId}/insights/weekly`,
   );
   return res.data;
 }
 
 export async function getCampaignAds(
-  campaignId: string
+  campaignId: string,
+  basePath: string = DEFAULT_CAMPAIGNS_BASE,
 ): Promise<AdInsight[]> {
   const res = await apiClient.get<AdInsight[]>(
-    `/users/me/workspace/campaigns/${campaignId}/insights/ads`
+    `${basePath}/${campaignId}/insights/ads`,
   );
   return res.data;
 }
 
 export async function getCampaignAdSets(
-  campaignId: string
+  campaignId: string,
+  basePath: string = DEFAULT_CAMPAIGNS_BASE,
 ): Promise<AdSetInsight[]> {
   const res = await apiClient.get<AdSetInsight[]>(
-    `/users/me/workspace/campaigns/${campaignId}/insights/ad-sets`
+    `${basePath}/${campaignId}/insights/ad-sets`,
   );
   return res.data;
 }

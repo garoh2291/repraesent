@@ -1,11 +1,16 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { Outlet, useNavigate, useLocation } from "react-router";
 import { useTranslation } from "react-i18next";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAuthContext } from "~/providers/auth-provider";
 import { getStoredWorkspaceId } from "~/lib/api/axios-instance";
 import { getWorkspaceInvoices } from "~/lib/api/workspaces";
 import { clearStoredAuth } from "~/lib/hooks/use-auth";
+import {
+  getDoorboostEligibility,
+  type DoorboostEligibility,
+} from "~/lib/api/doorboost-restore";
+import { updateOnboardingProfile } from "~/lib/api/onboarding";
 
 const ONBOARDING_PREFIX = "/onboarding";
 const PENDING_PATH = "/pending";
@@ -26,6 +31,63 @@ export default function ProtectedLayout() {
   const isOnWorkspacePicker = path === "/auth/workspace-picker";
   const isOnBrand = path.startsWith(BRAND_PREFIX);
   const isBrandUser = user?.user_type === "brand";
+
+  const hasProfile = !!(user?.first_name?.trim() && user?.last_name?.trim());
+  const noWorkspacesYet = (workspaces?.length ?? 0) === 0;
+
+  // Pre-profile eligibility probe. Runs once for fresh users (regular type, no
+  // profile, no workspaces) so that returning Doorboost customers can skip the
+  // manual name entry — their first/last name already exists in ClickHouse.
+  const queryClient = useQueryClient();
+  const shouldProbeEligibility =
+    isAuthenticated &&
+    !isLoading &&
+    !!user &&
+    user.user_type === "user" &&
+    !hasProfile &&
+    noWorkspacesYet;
+
+  const { data: eligibility, isLoading: isEligibilityLoading } =
+    useQuery<DoorboostEligibility>({
+      queryKey: ["doorboost-eligibility"],
+      queryFn: getDoorboostEligibility,
+      enabled: shouldProbeEligibility,
+      staleTime: 0,
+      retry: false,
+    });
+
+  const autoProfileMutation = useMutation({
+    mutationFn: updateOnboardingProfile,
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ["auth"] });
+    },
+  });
+  const autoProfileTriedRef = useRef(false);
+
+  const eligibilityHint = eligibility?.hint;
+  const hintFirst = eligibilityHint?.firstName?.trim() ?? "";
+  const hintLast = eligibilityHint?.lastName?.trim() ?? "";
+  const hintHasBothNames = !!(hintFirst && hintLast);
+  const eligibilityProbeDone =
+    !shouldProbeEligibility || (!isEligibilityLoading && eligibility !== undefined);
+
+  useEffect(() => {
+    if (!shouldProbeEligibility) return;
+    if (!hintHasBothNames) return;
+    if (autoProfileTriedRef.current) return;
+    if (autoProfileMutation.isPending) return;
+    autoProfileTriedRef.current = true;
+    autoProfileMutation.mutate({
+      first_name: hintFirst,
+      last_name: hintLast,
+    });
+  }, [
+    shouldProbeEligibility,
+    hintHasBothNames,
+    hintFirst,
+    hintLast,
+    autoProfileMutation,
+  ]);
 
   useEffect(() => {
     if (isLoading) return;
@@ -59,19 +121,32 @@ export default function ProtectedLayout() {
       return;
     }
 
-    // STEP 1: Profile — must have first + last name
-    const hasProfile = !!(user?.first_name?.trim() && user?.last_name?.trim());
+    // STEP 1: Profile — must have first + last name.
     if (!hasProfile) {
+      // Wait for the eligibility probe before deciding. If a hint provides
+      // both names we'll auto-save and let the next render pass the gate;
+      // if it has only partial names (or none) we redirect to the profile
+      // page and prefill what we have via router state.
+      if (!eligibilityProbeDone) return;
+      if (hintHasBothNames || autoProfileMutation.isPending) return;
+
       if (path !== "/onboarding/profile") {
-        navigate("/onboarding/profile", { replace: true });
+        navigate("/onboarding/profile", {
+          replace: true,
+          state: eligibilityHint ? { hint: eligibilityHint } : undefined,
+        });
       }
       return;
     }
 
-    // STEP 2: No workspace → workspace creation
-    if (!workspaces?.length) {
+    // STEP 2: No workspace → always pass through the Doorboost-choice gate.
+    // The choice page itself fetches /onboarding/doorboost/eligibility and
+    // auto-redirects to /onboarding/workspace when the user isn't a returning
+    // Doorboost customer. This avoids a race where /onboarding/workspace
+    // renders before the (async) eligibility fetch resolves.
+    if (noWorkspacesYet) {
       if (!isOnOnboarding && !isOnNoWorkspace) {
-        navigate("/onboarding/workspace", { replace: true });
+        navigate("/onboarding/doorboost-choice", { replace: true });
       }
       return;
     }
@@ -92,6 +167,16 @@ export default function ProtectedLayout() {
     const ws = currentWorkspace;
     const status = ws?.status ?? "active";
 
+    // Doorboost-brand workspace: bypass all product/Stripe/onboarding gating.
+    // Land users on /db-brand. Settings is intentionally not exposed here.
+    if (ws.type === "doorboost_brand") {
+      const isOnDbBrand = path.startsWith("/db-brand");
+      if (!isOnDbBrand && !isOnWorkspacePicker) {
+        navigate("/db-brand", { replace: true });
+      }
+      return;
+    }
+
     // Canceled → only /closed, nothing else
     if (status === "canceled") {
       if (!isOnClosed) {
@@ -104,9 +189,16 @@ export default function ProtectedLayout() {
       return;
     }
 
-    // Active workspace → onboarding is irrelevant, go straight to dashboard
-    if (status === "active") {
-      if (isOnPending || isOnOnboarding) {
+    // Trial workspaces (Doorboost-restored) act like "active" — full UI access.
+    // The TrialBanner in _dashboard-layout signals limited features.
+    if (status === "active" || status === "trial") {
+      if (isOnPending) {
+        navigate("/", { replace: true });
+        return;
+      }
+      // Allow staying on /onboarding/sync-pending — that page polls for the
+      // historical sync to finish and self-redirects when ready.
+      if (isOnOnboarding && path !== "/onboarding/sync-pending") {
         navigate("/", { replace: true });
       }
       return;
@@ -163,6 +255,11 @@ export default function ProtectedLayout() {
     isOnWorkspacePicker,
     isBrandUser,
     isOnBrand,
+    eligibilityProbeDone,
+    eligibilityHint,
+    hintHasBothNames,
+    autoProfileMutation.isPending,
+    hasProfile,
   ]);
 
   const wsStatus = currentWorkspace?.status ?? "active";
@@ -185,7 +282,16 @@ export default function ProtectedLayout() {
     (currentWorkspace as { unpaid_invoice_url?: string } | null)
       ?.unpaid_invoice_url;
 
-  if (isLoading) {
+  // Hold the spinner while the pre-profile eligibility probe (and any
+  // resulting auto-save) is in flight, otherwise the user briefly sees the
+  // blank profile page before being redirected through.
+  const isPreProfileChecking =
+    !isLoading &&
+    !hasProfile &&
+    (!eligibilityProbeDone ||
+      (hintHasBothNames && (autoProfileMutation.isPending || !user?.first_name?.trim())));
+
+  if (isLoading || isPreProfileChecking) {
     return (
       <div className="flex min-h-screen items-center justify-center">
         <div className="flex flex-col items-center gap-4">
@@ -215,7 +321,6 @@ export default function ProtectedLayout() {
     return null;
   }
 
-  const hasProfile = !!(user?.first_name?.trim() && user?.last_name?.trim());
   if (!hasProfile && path !== "/onboarding/profile") {
     return null;
   }
@@ -236,13 +341,18 @@ export default function ProtectedLayout() {
     const ws = currentWorkspace;
     const status = ws?.status ?? "active";
 
-    if (status === "canceled") {
+    // Doorboost-brand: only render /db-brand/**.
+    if (ws.type === "doorboost_brand") {
+      const isOnDbBrand = path.startsWith("/db-brand");
+      if (!isOnDbBrand && !isOnWorkspacePicker) return null;
+    } else if (status === "canceled") {
       if (!isOnClosed) return null;
       // canceled + on /closed → render, skip all other guards
     } else if (isOnClosed) {
       return null;
-    } else if (status === "active") {
-      if (isOnPending || isOnOnboarding) return null;
+    } else if (status === "active" || status === "trial") {
+      if (isOnPending) return null;
+      if (isOnOnboarding && path !== "/onboarding/sync-pending") return null;
     } else {
       // Pending workspace — sequential onboarding gates
       const hasBilling = !!(ws as { stripe_customer_id?: string | null })

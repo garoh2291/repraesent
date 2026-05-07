@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router";
+import { useLocation, useNavigate } from "react-router";
 import { useTranslation } from "react-i18next";
 import i18n from "~/i18n";
 import { useAuthContext } from "~/providers/auth-provider";
@@ -7,6 +7,10 @@ import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
 import { updateOnboardingProfile } from "~/lib/api/onboarding";
 import { useQueryClient } from "@tanstack/react-query";
+
+interface ProfileLocationState {
+  hint?: { firstName?: string | null; lastName?: string | null };
+}
 
 export function meta() {
   return [
@@ -18,8 +22,10 @@ export function meta() {
 export default function OnboardingProfile() {
   const { t } = useTranslation();
   const { user } = useAuthContext();
-  const [firstName, setFirstName] = useState("");
-  const [lastName, setLastName] = useState("");
+  const location = useLocation();
+  const hint = (location.state as ProfileLocationState | null)?.hint;
+  const [firstName, setFirstName] = useState(hint?.firstName?.trim() ?? "");
+  const [lastName, setLastName] = useState(hint?.lastName?.trim() ?? "");
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const navigate = useNavigate();
@@ -27,7 +33,10 @@ export default function OnboardingProfile() {
 
   useEffect(() => {
     if (user?.first_name?.trim() && user?.last_name?.trim()) {
-      navigate("/onboarding/workspace", { replace: true });
+      // Always go through the doorboost-choice gate; that page checks
+      // eligibility and auto-redirects to /onboarding/workspace when the
+      // user isn't a returning Doorboost customer.
+      navigate("/onboarding/doorboost-choice", { replace: true });
     }
   }, [user?.first_name, user?.last_name, navigate]);
 
@@ -45,7 +54,10 @@ export default function OnboardingProfile() {
         last_name: lastName.trim(),
       });
       queryClient.invalidateQueries({ queryKey: ["auth"] });
-      navigate("/onboarding/workspace", { replace: true });
+      // Always go through the doorboost-choice gate; that page checks
+      // eligibility and auto-redirects to /onboarding/workspace when the
+      // user isn't a returning Doorboost customer.
+      navigate("/onboarding/doorboost-choice", { replace: true });
     } catch (err) {
       setError(err instanceof Error ? err.message : t("common.somethingWentWrong"));
     } finally {

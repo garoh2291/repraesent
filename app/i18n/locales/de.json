@@ -42,7 +42,34 @@
     "tasks": "Aufgaben",
     "settings": "Einstellungen",
     "logout": "Abmelden",
-    "subscriptions": "Abonnements"
+    "subscriptions": "Abonnements",
+    "brand_retailers": "Händler",
+    "brand_retailers_empty": "Diesem Brand sind noch keine Händler zugeordnet."
+  },
+  "db_brand": {
+    "subtitle": "Wähle einen Händler in der Seitenleiste, um Social Ads & Leads zu sehen.",
+    "no_retailers": "Diesem Brand sind noch keine Händler zugeordnet.",
+    "tabs": {
+      "social_ads": "Social Ads",
+      "leads": "Leads"
+    },
+    "campaigns": "Kampagnen",
+    "daily_performance": "Tagesperformance",
+    "no_data": "Keine Daten im gewählten Zeitraum.",
+    "leads": {
+      "search": "Suche",
+      "search_placeholder": "Name, E-Mail oder Telefon…",
+      "status": "Status",
+      "platform": "Plattform",
+      "results": "Leads",
+      "name": "Name",
+      "email": "E-Mail",
+      "phone": "Telefon",
+      "created": "Erstellt",
+      "page": "Seite",
+      "empty": "Keine Leads passen zu deinen Filtern.",
+      "export": "Excel-Export"
+    }
   },
   "auth": {
     "carousel": {
@@ -524,7 +551,18 @@
     "invoice": "Rechnung",
     "receipt": "Quittung",
     "downloadInvoice": "Rechnung als PDF herunterladen",
-    "viewReceipt": "Quittung ansehen"
+    "viewReceipt": "Quittung ansehen",
+    "trial_card": {
+      "eyebrow": "Doorboost-Testphase",
+      "title": "Du arbeitest mit den vertrauten Daten aus Doorboost.",
+      "body": "Jede Kampagne, jeder Lead, jede Notiz und jeder Kunde aus deinem Doorboost-Konto sind in re:praesent verfügbar — zum Lesen, Suchen und Auswerten. Mit einem Upgrade schaltest du den Rest der Plattform frei:",
+      "feature_appointments": "Termine & smarte Buchungsseiten",
+      "feature_web_analytics": "Website-Analytics & Besucher-Insights",
+      "feature_ad_analytics": "Anzeigen-Analytics für neue Kampagnen",
+      "feature_new_leads": "Lead-Erfassung & -Routing für neue Kampagnen",
+      "cta": "Mit unserem Team sprechen",
+      "contact": "Oder schreib uns direkt an <0>{{supportEmail}}</0>"
+    }
   },
   "settings": {
     "title": "Einstellungen",
@@ -1303,5 +1341,70 @@
     "modalWarning": "Diese Aktion kann nicht rückgängig gemacht werden. Deine Doorboost-Daten werden nicht importiert.",
     "modalConfirm": "Ja, Migration überspringen",
     "modalCancel": "Abbrechen"
+  },
+  "workspace": {
+    "trial_banner": {
+      "message": "Du erkundest re:praesent in der Doorboost-Testphase — jede Kampagne, jeder Lead und jede Notiz aus deinem Doorboost-Konto sind direkt hier. Bereit, die volle Plattform freizuschalten? Schreib uns an <0>{{supportEmail}}</0>."
+    }
+  },
+  "doorboost_restore": {
+    "choice_title": "Willkommen zurück!",
+    "choice_subtitle": "Wir haben einen Doorboost-Workspace unter {{retailerName}} gefunden. Was möchtest du tun?",
+    "choice_restore": "Doorboost-Workspace wiederherstellen",
+    "choice_restore_hint": "Übernehme deine Kampagnen, Leads, Nutzer und Notizen.",
+    "choice_create": "Neu beginnen",
+    "choice_create_hint": "Erstelle einen frischen Workspace.",
+    "wizard_title": "Aus Doorboost wiederherstellen",
+    "wizard_step_name": "Workspace benennen",
+    "wizard_step_campaigns": "Kampagnen",
+    "wizard_step_leads": "Leads",
+    "wizard_step_users": "Nutzer",
+    "wizard_step_attribution": "Notiz-Zuordnung",
+    "wizard_step_confirm": "Bestätigen",
+    "wizard_workspace_name_label": "Workspace-Name",
+    "wizard_workspace_name_help": "Wir haben den Händlernamen vorausgefüllt. Du kannst ihn ändern.",
+    "wizard_back": "Zurück",
+    "wizard_next": "Weiter",
+    "wizard_submit": "Wiederherstellung starten",
+    "pending_title": "Wir stellen deine Doorboost-Daten wieder her",
+    "pending_subtitle": "Das dauert meist nur ein paar Minuten. Du erhältst eine E-Mail, sobald alles bereit ist.",
+    "pending_keep_open": "Du kannst dieses Fenster gerne schließen — wir senden dir einen Magic-Link per E-Mail, sobald die Daten da sind.",
+    "failed_title": "Etwas ist schiefgelaufen",
+    "failed_retry": "Erneut versuchen",
+    "wizard_users_help": "Wähle Teammitglieder für deinen Workspace. Wir senden jedem eine Magic-Link-Einladung.",
+    "wizard_users_none": "In deinem Doorboost-Workspace wurden keine Teammitglieder gefunden.",
+    "wizard_send_invites": "Einladungs-E-Mails sofort senden",
+    "wizard_attribution_help": "Wenn importierte Leads Notizen enthalten — wer soll als Standard-Autor gelten, falls der ursprüngliche Doorboost-Autor keinem Workspace-Mitglied zugeordnet werden kann?",
+    "wizard_fallback_me": "Mich als Standard verwenden",
+    "wizard_fallback_me_hint": "Nicht zugeordnete Notiz-Autoren erscheinen unter deinem Namen.",
+    "wizard_fallback_new": "Platzhalter-Nutzer erstellen",
+    "wizard_fallback_new_hint": "Wird nur als Name auf importierten Notizen verwendet. Es wird keine Einladung gesendet.",
+    "wizard_first_name": "Vorname",
+    "wizard_last_name": "Nachname",
+    "wizard_email": "E-Mail",
+    "scope_available": "{{count}} in Doorboost verfügbar",
+    "summary_workspace_name": "Workspace-Name",
+    "summary_campaigns": "Kampagnen",
+    "summary_leads": "Leads",
+    "summary_users": "Nutzer",
+    "summary_attribution": "Notiz-Standard",
+    "summary_import_count": "Import ({{value}})",
+    "summary_skip": "Überspringen",
+    "summary_users_selected": "{{count}} ausgewählt",
+    "summary_invites_on": "Einladungen aktiv",
+    "summary_none": "Keine",
+    "summary_me": "Ich",
+    "submit_failed": "Übermittlung fehlgeschlagen",
+    "unknown_error": "Unbekannter Fehler",
+    "status": {
+      "queued": "In Warteschlange",
+      "not_synced": "In Warteschlange",
+      "not_ready": "Wird vorbereitet",
+      "processing": "Wird verarbeitet",
+      "running": "Wird verarbeitet",
+      "finished": "Fertig",
+      "failed": "Fehlgeschlagen",
+      "ignored": "Übersprungen"
+    }
   }
 }

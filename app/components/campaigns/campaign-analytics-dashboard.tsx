@@ -47,6 +47,10 @@ import {
   type ConnectedCampaign,
   type AdSetInsight,
 } from "~/lib/api/campaigns";
+import {
+  useCampaignsBasePath,
+  useCampaignsLeadsLink,
+} from "~/lib/campaigns-base-path-context";
 import { CampaignDatePicker } from "./campaign-date-picker";
 import TooltipContainer from "~/components/tooltip-container";
 import { useDebounce } from "~/lib/hooks/useDebounce";
@@ -345,14 +349,20 @@ function CampaignDrilldown({ campaign }: { campaign: ConnectedCampaign }) {
   const { t } = useTranslation();
   const { currentWorkspace } = useAuthContext();
   const [expanded, setExpanded] = useState(false);
+  const isBrandWs = currentWorkspace?.type === "doorboost_brand";
   const hasLeadForm =
-    currentWorkspace?.services?.some(
+    isBrandWs ||
+    (currentWorkspace?.services?.some(
       (s) => s.service_type === "lead-form" || s.service_slug === "lead-form",
-    ) ?? false;
+    ) ?? false);
 
+  const buildLeadsLink = useCampaignsLeadsLink();
+  const leadsLink = buildLeadsLink(campaign.campaign_id);
+
+  const basePath = useCampaignsBasePath();
   const { data: adSets, isLoading: adSetsLoading } = useQuery({
-    queryKey: ["campaign-ad-sets", campaign.campaign_id],
-    queryFn: () => getCampaignAdSets(campaign.campaign_id),
+    queryKey: ["campaign-ad-sets", basePath, campaign.campaign_id],
+    queryFn: () => getCampaignAdSets(campaign.campaign_id, basePath),
     enabled: expanded,
   });
 
@@ -431,7 +441,7 @@ function CampaignDrilldown({ campaign }: { campaign: ConnectedCampaign }) {
               {t("campaigns.noData")}
             </p>
           )}
-          {hasLeadForm && (
+          {hasLeadForm && leadsLink && (
             <div className="flex justify-end pt-1">
               <Button
                 asChild
@@ -439,9 +449,7 @@ function CampaignDrilldown({ campaign }: { campaign: ConnectedCampaign }) {
                 variant="outline"
                 className="h-7 gap-1.5 text-[11px] border-amber-500/30 text-amber-600 hover:bg-amber-500/10 hover:text-amber-700"
               >
-                <Link
-                  to={`/lead-form?platform_campaign_id=${encodeURIComponent(campaign.campaign_id)}`}
-                >
+                <Link to={leadsLink!}>
                   <FileText className="h-3 w-3" />
                   {t("campaigns.showLeads")}
                   <ArrowRight className="h-3 w-3" />
@@ -489,9 +497,11 @@ function CampaignListSection({ platform }: { platform?: string }) {
     setPage(1);
   }, [debouncedSearch, tab]);
 
+  const basePath = useCampaignsBasePath();
   const { data, isLoading, isFetching } = useQuery({
     queryKey: [
       "campaign-list",
+      basePath,
       currentWorkspace?.id,
       platform,
       tab,
@@ -499,28 +509,47 @@ function CampaignListSection({ platform }: { platform?: string }) {
       page,
     ],
     queryFn: () =>
-      getConnectedCampaigns({
-        platform,
-        status: tab,
-        search: debouncedSearch || undefined,
-        page,
-        limit: 20,
-      }),
+      getConnectedCampaigns(
+        {
+          platform,
+          status: tab,
+          search: debouncedSearch || undefined,
+          page,
+          limit: 20,
+        },
+        basePath,
+      ),
     enabled: !!currentWorkspace?.id,
     placeholderData: (prev) => prev,
   });
 
   // Fetch counts for tab badges
   const { data: activeCount } = useQuery({
-    queryKey: ["campaign-count-active", currentWorkspace?.id, platform],
+    queryKey: [
+      "campaign-count-active",
+      basePath,
+      currentWorkspace?.id,
+      platform,
+    ],
     queryFn: () =>
-      getConnectedCampaigns({ platform, status: "active", limit: 1 }),
+      getConnectedCampaigns(
+        { platform, status: "active", limit: 1 },
+        basePath,
+      ),
     enabled: !!currentWorkspace?.id,
   });
   const { data: inactiveCount } = useQuery({
-    queryKey: ["campaign-count-inactive", currentWorkspace?.id, platform],
+    queryKey: [
+      "campaign-count-inactive",
+      basePath,
+      currentWorkspace?.id,
+      platform,
+    ],
     queryFn: () =>
-      getConnectedCampaigns({ platform, status: "inactive", limit: 1 }),
+      getConnectedCampaigns(
+        { platform, status: "inactive", limit: 1 },
+        basePath,
+      ),
     enabled: !!currentWorkspace?.id,
   });
 
@@ -694,20 +723,25 @@ function CampaignFilterDropdown({
     }
   }, [open]);
 
+  const basePath = useCampaignsBasePath();
   // Backend search query
   const { data, isLoading: searchLoading } = useQuery({
     queryKey: [
       "campaign-filter-search",
+      basePath,
       currentWorkspace?.id,
       platform,
       debouncedSearch,
     ],
     queryFn: () =>
-      getConnectedCampaigns({
-        platform,
-        search: debouncedSearch || undefined,
-        limit: 30,
-      }),
+      getConnectedCampaigns(
+        {
+          platform,
+          search: debouncedSearch || undefined,
+          limit: 30,
+        },
+        basePath,
+      ),
     enabled: !!currentWorkspace?.id && open,
   });
 
@@ -890,19 +924,29 @@ export function CampaignAnalyticsDashboard({
     setSelectedCampaignNames(new Map());
   }, [platformTab]);
 
+  const basePath = useCampaignsBasePath();
+
   // Unfiltered check: does workspace have ANY campaigns at all? (for true empty state)
   const { data: totalCheck, isLoading: totalCheckLoading } = useQuery({
-    queryKey: ["campaign-total-check", currentWorkspace?.id],
-    queryFn: () => getConnectedCampaigns({ limit: 1 }),
+    queryKey: ["campaign-total-check", basePath, currentWorkspace?.id],
+    queryFn: () => getConnectedCampaigns({ limit: 1 }, basePath),
     enabled: !!currentWorkspace?.id,
   });
   const hasAnyCampaigns = (totalCheck?.total ?? 0) > 0;
 
   // Filtered check: does current platform filter have campaigns?
   const { data: anyCheck, isLoading: anyCheckLoading } = useQuery({
-    queryKey: ["campaign-any-check", currentWorkspace?.id, platform],
+    queryKey: [
+      "campaign-any-check",
+      basePath,
+      currentWorkspace?.id,
+      platform,
+    ],
     queryFn: () =>
-      getConnectedCampaigns({ platform: platform ?? undefined, limit: 1 }),
+      getConnectedCampaigns(
+        { platform: platform ?? undefined, limit: 1 },
+        basePath,
+      ),
     enabled: !!currentWorkspace?.id && hasAnyCampaigns,
   });
 
@@ -913,12 +957,14 @@ export function CampaignAnalyticsDashboard({
   const { data: overview, isLoading: overviewLoading } = useQuery({
     queryKey: [
       "campaign-overview",
+      basePath,
       currentWorkspace?.id,
       dateRange,
       platform,
       filterIds,
     ],
-    queryFn: () => getCampaignsOverview(dateRange, platform, filterIds),
+    queryFn: () =>
+      getCampaignsOverview(dateRange, platform, filterIds, basePath),
     enabled: !!currentWorkspace?.id && hasCampaigns,
   });
 

@@ -12,6 +12,7 @@ import { getWorkspaceInvoices } from "~/lib/api/workspaces";
 import { createHistoricalData } from "~/lib/api/historical-data";
 import { DoorboostMigrationBanner } from "~/components/doorboost-migration-banner";
 import { SyncCompleteModal } from "~/components/sync-complete-modal";
+import { TrialBanner } from "~/components/trial-banner";
 import logoUrl from "~/components/icons/re_praesent-mark-brand-hor.svg?url";
 export default function DashboardLayout() {
   const { user, currentWorkspace } = useAuthContext();
@@ -148,7 +149,12 @@ export default function DashboardLayout() {
             </Button>
           </div>
         )}
-        {!isHomeOrSyncPage && <DoorboostMigrationBanner />}
+        {currentWorkspace?.status === "trial" && currentWorkspace?.id && (
+          <TrialBanner workspaceId={currentWorkspace.id} />
+        )}
+        {!isHomeOrSyncPage && currentWorkspace?.type !== "doorboost_brand" && (
+          <DoorboostMigrationBanner />
+        )}
         <Outlet />
       </main>
 
