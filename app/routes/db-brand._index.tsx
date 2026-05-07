@@ -1,13 +1,15 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router";
 import { useQuery } from "@tanstack/react-query";
-import { Boxes, ChevronRight, Search, Store } from "lucide-react";
+import { Boxes, ChevronRight, Download, Search, Store } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useAuthContext } from "~/providers/auth-provider";
 import {
   listBrandRetailers,
   type BrandRetailer,
 } from "~/lib/api/doorboost-brand";
+import { Button } from "~/components/ui/button";
+import { BulkLeadsExportModal } from "~/components/db-brand/bulk-leads-export-modal";
 
 const lastIdSegment = (id: string) => id.split("-").pop() ?? id;
 
@@ -24,6 +26,7 @@ export default function DbBrandIndex() {
   });
 
   const [search, setSearch] = useState("");
+  const [bulkExportOpen, setBulkExportOpen] = useState(false);
   const filteredRetailers = useMemo(() => {
     const needle = search.trim().toLowerCase();
     if (!needle) return retailers;
@@ -50,21 +53,34 @@ export default function DbBrandIndex() {
   return (
     <div className="mx-auto w-full max-w-7xl p-4 sm:p-8">
       <div className="space-y-6">
-        <div className="flex items-center gap-3">
-          <span className="grid place-items-center w-12 h-12 rounded-xl bg-amber-400/10 text-amber-400">
-            <Boxes className="w-6 h-6" />
-          </span>
-          <div>
-            <h1 className="text-2xl font-bold tracking-tight">
-              {currentWorkspace.name}
-            </h1>
-            <p className="text-sm text-muted-foreground">
-              {t(
-                "db_brand.subtitle",
-                "Pick a retailer from the sidebar to view its Social Ads & Leads.",
-              )}
-            </p>
+        <div className="flex items-start sm:items-center gap-3 flex-col sm:flex-row sm:justify-between">
+          <div className="flex items-center gap-3">
+            <span className="grid place-items-center w-12 h-12 rounded-xl bg-amber-400/10 text-amber-400">
+              <Boxes className="w-6 h-6" />
+            </span>
+            <div>
+              <h1 className="text-2xl font-bold tracking-tight">
+                {currentWorkspace.name}
+              </h1>
+              <p className="text-sm text-muted-foreground">
+                {t(
+                  "db_brand.subtitle",
+                  "Pick a retailer from the sidebar to view its Social Ads & Leads.",
+                )}
+              </p>
+            </div>
           </div>
+          {retailers.length > 0 && (
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setBulkExportOpen(true)}
+              className="gap-2 self-stretch sm:self-auto"
+            >
+              <Download className="w-4 h-4" />
+              {t("db_brand.bulk_export.button", "Download all leads")}
+            </Button>
+          )}
         </div>
 
         {isLoading ? (
@@ -139,6 +155,12 @@ export default function DbBrandIndex() {
           </>
         )}
       </div>
+
+      <BulkLeadsExportModal
+        open={bulkExportOpen}
+        onOpenChange={setBulkExportOpen}
+        retailers={retailers}
+      />
     </div>
   );
 }

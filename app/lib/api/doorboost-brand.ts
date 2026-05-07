@@ -161,6 +161,77 @@ export function buildBrandRetailerLeadsExportUrl(
  * automatically) and trigger a browser download. Preferred over the URL
  * builder when reliable header-based auth is available.
  */
+export interface BrandPlatformCampaign {
+  campaign_id: string;
+  platform: string;
+  retailer_id: string;
+  campaign_name: string;
+}
+
+export interface BrandPlatformCampaignsPage {
+  data: BrandPlatformCampaign[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+  hasNext: boolean;
+  hasPrev: boolean;
+}
+
+/**
+ * Step 2 of the bulk-export modal: paginated + searchable list of every
+ * platform campaign attached to the chosen retailers (backend scopes to the
+ * caller's brand). Search matches campaign_name or campaign_id.
+ */
+export async function listBrandPlatformCampaignsForRetailers(
+  retailerIds: string[],
+  opts: { q?: string; page?: number; limit?: number } = {},
+): Promise<BrandPlatformCampaignsPage> {
+  // POST not GET — a brand can hold hundreds of retailer ids, which would
+  // blow past URL length limits as a query string.
+  // An empty `retailerIds` is intentional and means "all brand retailers";
+  // the backend expands it server-side. We do NOT short-circuit here.
+  const r = await apiClient.post<BrandPlatformCampaignsPage>(
+    `${BASE}/platform-campaigns`,
+    {
+      retailer_ids: retailerIds,
+      ...(opts.q ? { q: opts.q } : {}),
+      ...(opts.page ? { page: opts.page } : {}),
+      ...(opts.limit ? { limit: opts.limit } : {}),
+    },
+  );
+  return r.data;
+}
+
+/**
+ * Bulk export across many retailers + platform campaigns. Triggers a
+ * browser download with `leads-YYYY-MM-DD.xlsx`.
+ */
+export async function downloadBulkBrandLeadsXlsx(
+  retailerIds: string[],
+  platformCampaignIds: string[],
+): Promise<void> {
+  const response = await apiClient.post<Blob>(
+    `${BASE}/leads/export-bulk`,
+    {
+      retailer_ids: retailerIds,
+      platform_campaign_ids: platformCampaignIds,
+    },
+    { responseType: "blob" },
+  );
+  const blob = new Blob([response.data], {
+    type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+  });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `leads-${new Date().toISOString().slice(0, 10)}.xlsx`;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+}
+
 export async function downloadBrandRetailerLeadsXlsx(
   retailerId: string,
   retailerName: string | undefined,
