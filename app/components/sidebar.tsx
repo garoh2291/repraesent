@@ -1,8 +1,11 @@
-import { Link, useLocation, useNavigate } from "react-router";
-import { useState } from "react";
+import { Link, useLocation, useNavigate, useParams } from "react-router";
+import { useMemo, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { Search } from "lucide-react";
 import { cn } from "~/lib/utils";
 import { useTranslation } from "react-i18next";
 import {
+  Boxes,
   Building2,
   CheckSquare,
   ChevronDown,
@@ -11,8 +14,14 @@ import {
   LogOut,
   Package,
   Settings,
+  Store,
   X,
 } from "lucide-react";
+// `Search` icon imported above already.
+import {
+  listBrandRetailers,
+  type BrandRetailer,
+} from "~/lib/api/doorboost-brand";
 import * as LucideIcons from "lucide-react";
 import { InstructionsModal } from "~/components/instructions-modal";
 
@@ -118,11 +127,35 @@ export function Sidebar({ onClose, className }: { onClose?: () => void; classNam
   );
   const showAppointmentsInSidebar =
     hasAppointmentsService && !!appointmentConfigs?.length;
+  const isDoorboostBrandWs = currentWorkspace?.type === "doorboost_brand";
+
+  const { data: brandRetailers = [], isLoading: brandRetailersLoading } =
+    useQuery<BrandRetailer[]>({
+      queryKey: ["db-brand-retailers", currentWorkspace?.id],
+      queryFn: listBrandRetailers,
+      enabled: isDoorboostBrandWs && !!currentWorkspace?.id,
+      staleTime: 60_000,
+    });
 
   const handleWorkspaceChange = (workspaceId: string) => {
     setCurrentWorkspace(workspaceId);
     navigate("/", { replace: true });
   };
+
+  const params = useParams();
+  const activeRetailerId =
+    typeof params.retailerId === "string" ? params.retailerId : null;
+
+  const [retailerSearch, setRetailerSearch] = useState("");
+  const filteredBrandRetailers = useMemo(() => {
+    const needle = retailerSearch.trim().toLowerCase();
+    if (!needle) return brandRetailers;
+    return brandRetailers.filter(
+      (r) =>
+        (r.retailer_name || "").toLowerCase().includes(needle) ||
+        r.retailer_id.toLowerCase().includes(needle),
+    );
+  }, [brandRetailers, retailerSearch]);
 
   return (
     <aside className={cn("flex h-full w-[220px] shrink-0 flex-col bg-[#111113] border-r border-white/5", className)}>
@@ -188,98 +221,191 @@ export function Sidebar({ onClose, className }: { onClose?: () => void; classNam
 
       {/* Navigation */}
       <nav className="min-h-0 flex-1 overflow-y-auto p-3 space-y-0.5">
-        <NavLink to="/" isActive={location.pathname === "/"} onClick={onClose}>
-          <HomeIcon className="h-4 w-4 shrink-0" />
-          {t("nav.home")}
-        </NavLink>
-
-        {currentWorkspace?.services
-          ?.filter(
-            (service) =>
-              service.service_type !== "appointments" ||
-              showAppointmentsInSidebar
-          )
-          ?.map((service) => {
-            const href = service.service_slug
-              ? `/${service.service_slug}`
-              : "#";
-            const isActive =
-              !!service.service_slug &&
-              (location.pathname === `/${service.service_slug}` ||
-                location.pathname.startsWith(`/${service.service_slug}/`));
-            const hasSlug = !!service.service_slug;
-            const iconName = service.service_icon
-              ? kebabToPascal(service.service_icon)
-              : null;
-            const hasIcon = !!iconName && lucideIconNames.has(iconName);
-
-            const instructions = (
-              service.service_config as Record<string, unknown> | null
-            )?.instructions as string | undefined;
-            const hasInstructions = !!instructions;
-            return (
-              <div
-                key={service.service_id}
-                className="flex items-center group/svc"
-              >
-                <NavLink
-                  to={href}
-                  isActive={isActive}
-                  disabled={!hasSlug}
-                  onClick={(e) => {
-                    if (!hasSlug) e.preventDefault();
-                    else onClose?.();
-                  }}
-                  className="flex-1 min-w-0"
-                >
-                  {hasIcon && (
-                    <DynamicIcon
-                      name={iconName!}
-                      className="h-4 w-4 shrink-0"
-                    />
-                  )}
-                  <span className="truncate">
-                    {getLocalizedServiceName(service, i18n.language ?? "de")}
+        {isDoorboostBrandWs ? (
+          <>
+            {/* Doorboost-brand workspaces: only Retailers. */}
+            <div className="px-3 pt-2 pb-1">
+              <div className="flex items-center gap-2 text-[10px] uppercase tracking-[0.18em] text-white/30">
+                <Boxes className="h-3 w-3" />
+                <span>{t("nav.brand_retailers", "Retailers")}</span>
+                {brandRetailers.length > 0 && (
+                  <span className="ml-auto text-white/40 normal-case tracking-normal text-[10px]">
+                    {brandRetailers.length}
                   </span>
-                </NavLink>
-                {hasInstructions && (
-                  <button
-                    type="button"
-                    title="View instructions"
-                    onClick={() => setInstructionsMarkdown(instructions!)}
-                    className="
+                )}
+              </div>
+            </div>
+
+            {brandRetailersLoading ? (
+              <div className="space-y-1 px-2 py-1">
+                {[0, 1, 2].map((i) => (
+                  <div
+                    key={i}
+                    className="h-7 rounded-md bg-white/5 animate-pulse"
+                  />
+                ))}
+              </div>
+            ) : brandRetailers.length === 0 ? (
+              <p className="px-3 py-2 text-[12px] text-white/35 leading-snug">
+                {t(
+                  "nav.brand_retailers_empty",
+                  "No retailers attached to this brand yet.",
+                )}
+              </p>
+            ) : (
+              <>
+                {brandRetailers.length > 5 && (
+                  <div className="relative px-2 py-1">
+                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-3 w-3 text-white/30" />
+                    <input
+                      value={retailerSearch}
+                      onChange={(e) => setRetailerSearch(e.target.value)}
+                      placeholder={t(
+                        "nav.brand_retailers_search",
+                        "Search retailers…",
+                      )}
+                      className="w-full rounded-md bg-white/5 pl-7 pr-2 py-1.5 text-[12px] text-white/80 placeholder:text-white/25 outline-none focus:bg-white/10 focus:ring-1 focus:ring-white/15"
+                    />
+                  </div>
+                )}
+                <div className="space-y-0.5 max-h-[40vh] overflow-y-auto pr-0.5">
+                  {filteredBrandRetailers.length === 0 ? (
+                    <p className="px-3 py-2 text-[12px] text-white/30 leading-snug">
+                      {t("common.noResults", "No matches")}
+                    </p>
+                  ) : (
+                    filteredBrandRetailers.map((r) => {
+                      const isActive = activeRetailerId === r.retailer_id;
+                      return (
+                        <NavLink
+                          key={r.retailer_id}
+                          to={`/db-brand/retailers/${r.retailer_id}/social-ads`}
+                          isActive={isActive}
+                          onClick={onClose}
+                        >
+                          <Store className="h-4 w-4 shrink-0" />
+                          <span className="truncate">
+                            {r.retailer_name || r.retailer_id}
+                          </span>
+                        </NavLink>
+                      );
+                    })
+                  )}
+                </div>
+              </>
+            )}
+          </>
+        ) : (
+          <>
+            <NavLink
+              to="/"
+              isActive={location.pathname === "/"}
+              onClick={onClose}
+            >
+              <HomeIcon className="h-4 w-4 shrink-0" />
+              {t("nav.home")}
+            </NavLink>
+
+            {currentWorkspace?.services
+              ?.filter(
+                (service) =>
+                  service.service_type !== "appointments" ||
+                  showAppointmentsInSidebar,
+              )
+              ?.map((service) => {
+                const href = service.service_slug
+                  ? `/${service.service_slug}`
+                  : "#";
+                const isActive =
+                  !!service.service_slug &&
+                  (location.pathname === `/${service.service_slug}` ||
+                    location.pathname.startsWith(`/${service.service_slug}/`));
+                const hasSlug = !!service.service_slug;
+                const iconName = service.service_icon
+                  ? kebabToPascal(service.service_icon)
+                  : null;
+                const hasIcon = !!iconName && lucideIconNames.has(iconName);
+
+                const instructions = (
+                  service.service_config as Record<string, unknown> | null
+                )?.instructions as string | undefined;
+                const hasInstructions = !!instructions;
+                return (
+                  <div
+                    key={service.service_id}
+                    className="flex items-center group/svc"
+                  >
+                    <NavLink
+                      to={href}
+                      isActive={isActive}
+                      disabled={!hasSlug}
+                      onClick={(e) => {
+                        if (!hasSlug) e.preventDefault();
+                        else onClose?.();
+                      }}
+                      className="flex-1 min-w-0"
+                    >
+                      {hasIcon && (
+                        <DynamicIcon
+                          name={iconName!}
+                          className="h-4 w-4 shrink-0"
+                        />
+                      )}
+                      <span className="truncate">
+                        {getLocalizedServiceName(
+                          service,
+                          i18n.language ?? "de",
+                        )}
+                      </span>
+                    </NavLink>
+                    {hasInstructions && (
+                      <button
+                        type="button"
+                        title="View instructions"
+                        onClick={() => setInstructionsMarkdown(instructions!)}
+                        className="
                       ml-0.5 mr-1 flex h-5 w-5 shrink-0 items-center justify-center
                       rounded opacity-0 group-hover/svc:opacity-100
                       text-white/25 hover:text-amber-400 hover:bg-amber-400/8
                       transition-all duration-150
                     "
-                  >
-                    <Info className="h-3 w-3" />
-                  </button>
-                )}
-              </div>
-            );
-          })}
+                      >
+                        <Info className="h-3 w-3" />
+                      </button>
+                    )}
+                  </div>
+                );
+              })}
 
-        {hasLeadFormService && (
-          <NavLink to="/tasks" isActive={location.pathname === "/tasks"} onClick={onClose}>
-            <CheckSquare className="h-4 w-4 shrink-0" />
-            {t("nav.tasks")}
-          </NavLink>
+            {hasLeadFormService && (
+              <NavLink
+                to="/tasks"
+                isActive={location.pathname === "/tasks"}
+                onClick={onClose}
+              >
+                <CheckSquare className="h-4 w-4 shrink-0" />
+                {t("nav.tasks")}
+              </NavLink>
+            )}
+
+            <NavLink
+              to="/settings/profile"
+              isActive={location.pathname.startsWith("/settings")}
+              onClick={onClose}
+            >
+              <Settings className="h-4 w-4 shrink-0" />
+              {t("nav.settings")}
+            </NavLink>
+            <NavLink
+              to="/products"
+              isActive={location.pathname === "/products"}
+              onClick={onClose}
+            >
+              <Package className="h-4 w-4 shrink-0" />
+              {t("nav.subscriptions")}
+            </NavLink>
+          </>
         )}
-
-        <NavLink
-          to="/settings/profile"
-          isActive={location.pathname.startsWith("/settings")}
-          onClick={onClose}
-        >
-          <Settings className="h-4 w-4 shrink-0" />
-          {t("nav.settings")}
-        </NavLink>
-        <NavLink to="/products" isActive={location.pathname === "/products"} onClick={onClose}>
-          <Package className="h-4 w-4 shrink-0" />
-          {t("nav.subscriptions")}
-        </NavLink>
       </nav>
 
       {/* Bottom: language + logout */}

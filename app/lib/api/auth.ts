@@ -112,12 +112,14 @@ export interface WorkspaceProduct {
   hosted_invoice_url?: string | null;
 }
 
+export type WorkspaceType = "retailer" | "doorboost_brand";
+
 export interface WorkspaceContext {
   id: string;
   name: string;
   created_at: string;
   updated_at: string;
-  status?: "active" | "pending" | "past_due" | "canceled";
+  status?: "active" | "pending" | "past_due" | "canceled" | "trial";
   stripe_customer_id?: string | null;
   unpaid_invoice_due_date?: string | null;
   unpaid_invoice_url?: string | null;
@@ -127,6 +129,8 @@ export interface WorkspaceContext {
   member_role: "admin" | "editor" | "viewer";
   was_doorboost_client?: boolean;
   doorboost_partner_house_id?: string | null;
+  type?: WorkspaceType;
+  doorboost_brand_id?: string | null;
 }
 
 /**

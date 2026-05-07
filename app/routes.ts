@@ -23,6 +23,15 @@ export default [
       route("onboarding/products", "routes/onboarding.products.tsx"),
       route("onboarding/offers", "routes/onboarding.offers.tsx"),
       route("onboarding/billing", "routes/onboarding.billing.tsx"),
+      route(
+        "onboarding/doorboost-choice",
+        "routes/onboarding.doorboost-choice.tsx",
+      ),
+      route(
+        "onboarding/doorboost-restore",
+        "routes/onboarding.doorboost-restore.tsx",
+      ),
+      route("onboarding/sync-pending", "routes/onboarding.sync-pending.tsx"),
     ]),
     layout("routes/_brand-layout.tsx", [
       route("brand", "routes/brand.tsx"),
@@ -48,6 +57,15 @@ export default [
         route("team", "routes/settings.team.tsx"),
       ]),
       route("instructions", "routes/instructions.tsx"),
+      route("db-brand", "routes/db-brand._index.tsx"),
+      route(
+        "db-brand/retailers/:retailerId/social-ads",
+        "routes/db-brand.retailers.$retailerId.social-ads.tsx",
+      ),
+      route(
+        "db-brand/retailers/:retailerId/leads",
+        "routes/db-brand.retailers.$retailerId.leads.tsx",
+      ),
     ]),
   ]),
 ] satisfies RouteConfig;

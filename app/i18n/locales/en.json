@@ -42,7 +42,34 @@
     "tasks": "Tasks",
     "subscriptions": "Subscriptions",
     "settings": "Settings",
-    "logout": "Log out"
+    "logout": "Log out",
+    "brand_retailers": "Retailers",
+    "brand_retailers_empty": "No retailers attached to this brand yet."
+  },
+  "db_brand": {
+    "subtitle": "Pick a retailer from the sidebar to view its Social Ads & Leads.",
+    "no_retailers": "No retailers attached to this brand yet.",
+    "tabs": {
+      "social_ads": "Social Ads",
+      "leads": "Leads"
+    },
+    "campaigns": "Campaigns",
+    "daily_performance": "Daily performance",
+    "no_data": "No data for the selected range.",
+    "leads": {
+      "search": "Search",
+      "search_placeholder": "Name, email or phone…",
+      "status": "Status",
+      "platform": "Platform",
+      "results": "leads",
+      "name": "Name",
+      "email": "Email",
+      "phone": "Phone",
+      "created": "Created",
+      "page": "Page",
+      "empty": "No leads match your filters.",
+      "export": "Export Excel"
+    }
   },
   "auth": {
     "carousel": {
@@ -524,7 +551,18 @@
     "invoice": "Invoice",
     "receipt": "Receipt",
     "downloadInvoice": "Download invoice PDF",
-    "viewReceipt": "View receipt"
+    "viewReceipt": "View receipt",
+    "trial_card": {
+      "eyebrow": "Doorboost Trial",
+      "title": "You're running on the Doorboost data you already trust.",
+      "body": "Every campaign, lead, note and customer record from your Doorboost account lives inside re:praesent — yours to read, search and report on. Upgrade your plan to bring the rest of the platform to life:",
+      "feature_appointments": "Appointments & smart booking pages",
+      "feature_web_analytics": "Website analytics & visitor insights",
+      "feature_ad_analytics": "Ad analytics for new campaigns",
+      "feature_new_leads": "Lead capture & routing for new campaigns",
+      "cta": "Talk to our team",
+      "contact": "Or write us directly at <0>{{supportEmail}}</0>"
+    }
   },
   "settings": {
     "title": "Settings",
@@ -1303,5 +1341,70 @@
     "modalWarning": "This action cannot be undone. Your Doorboost data will not be imported.",
     "modalConfirm": "Yes, skip migration",
     "modalCancel": "Cancel"
+  },
+  "workspace": {
+    "trial_banner": {
+      "message": "You're exploring re:praesent on a Doorboost trial — every campaign, lead and note from your Doorboost account is right here. Ready to unlock the full platform? Talk to us at <0>{{supportEmail}}</0>."
+    }
+  },
+  "doorboost_restore": {
+    "choice_title": "Welcome back!",
+    "choice_subtitle": "We found a Doorboost workspace under {{retailerName}}. What would you like to do?",
+    "choice_restore": "Restore my Doorboost workspace",
+    "choice_restore_hint": "Bring over your campaigns, leads, users and notes.",
+    "choice_create": "Start fresh",
+    "choice_create_hint": "Create a brand new workspace.",
+    "wizard_title": "Restore from Doorboost",
+    "wizard_step_name": "Name your workspace",
+    "wizard_step_campaigns": "Campaigns",
+    "wizard_step_leads": "Leads",
+    "wizard_step_users": "Users",
+    "wizard_step_attribution": "Note attribution",
+    "wizard_step_confirm": "Confirm",
+    "wizard_workspace_name_label": "Workspace name",
+    "wizard_workspace_name_help": "We pre-filled this with your retailer name. Edit if you'd like.",
+    "wizard_back": "Back",
+    "wizard_next": "Next",
+    "wizard_submit": "Start restore",
+    "pending_title": "Restoring your Doorboost data",
+    "pending_subtitle": "This usually takes a couple of minutes. We'll email you when it's ready.",
+    "pending_keep_open": "Feel free to close this window — we'll send a magic-link email when your data is in.",
+    "failed_title": "Something went wrong",
+    "failed_retry": "Try again",
+    "wizard_users_help": "Pick teammates to add to your workspace. We'll send each a magic-link invitation.",
+    "wizard_users_none": "No teammates found in your Doorboost workspace.",
+    "wizard_send_invites": "Send invitation emails immediately",
+    "wizard_attribution_help": "If imported leads have notes, who should be the fallback author when we can't match the original Doorboost author to a workspace member?",
+    "wizard_fallback_me": "Use me as fallback",
+    "wizard_fallback_me_hint": "Unmatched note authors will show your name.",
+    "wizard_fallback_new": "Create a placeholder user",
+    "wizard_fallback_new_hint": "Used as a name on imported notes only. Will not be invited.",
+    "wizard_first_name": "First name",
+    "wizard_last_name": "Last name",
+    "wizard_email": "Email",
+    "scope_available": "{{count}} available in Doorboost",
+    "summary_workspace_name": "Workspace name",
+    "summary_campaigns": "Campaigns",
+    "summary_leads": "Leads",
+    "summary_users": "Users",
+    "summary_attribution": "Note fallback",
+    "summary_import_count": "Import ({{value}})",
+    "summary_skip": "Skip",
+    "summary_users_selected": "{{count}} selected",
+    "summary_invites_on": "invites on",
+    "summary_none": "None",
+    "summary_me": "Me",
+    "submit_failed": "Submission failed",
+    "unknown_error": "Unknown error",
+    "status": {
+      "queued": "Queued",
+      "not_synced": "Queued",
+      "not_ready": "Preparing",
+      "processing": "Processing",
+      "running": "Processing",
+      "finished": "Finished",
+      "failed": "Failed",
+      "ignored": "Skipped"
+    }
   }
 }

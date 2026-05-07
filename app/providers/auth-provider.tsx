@@ -17,7 +17,7 @@ interface AuthContextType {
   setCurrentWorkspace: (workspaceId: string) => void;
   logout: () => void;
   isLoggingOut: boolean;
-  refetchAuth: () => void;
+  refetchAuth: () => Promise<unknown>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
