@@ -69,6 +69,11 @@
       "page": "Seite",
       "empty": "Keine Leads passen zu deinen Filtern.",
       "export": "Excel-Export"
+    },
+    "export": {
+      "button": "Exportieren",
+      "all": "Alle Leads exportieren",
+      "selected": "Auswahl exportieren"
     }
   },
   "auth": {

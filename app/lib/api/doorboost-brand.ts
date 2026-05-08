@@ -89,20 +89,33 @@ export async function listBrandRetailers(): Promise<BrandRetailer[]> {
 
 export async function listBrandRetailerCampaigns(
   retailerId: string,
+  opts: { platform?: string; search?: string; limit?: number } = {},
 ): Promise<BrandRetailerCampaign[]> {
-  // Backend returns a paginated envelope { data, total, page, ... }.
-  // Request the max page size (backend clamps to 100) — enough for the
-  // filter dropdown since retailers typically have <200 campaigns.
+  // Backend returns a paginated envelope { data, total, page, ... }. The
+  // backend already scopes campaigns to the workspace's doorboost_brand_id —
+  // we just forward optional platform/search so e.g. the leads-page dropdown
+  // can narrow by platform without paging.
   const r = await apiClient.get<{ data: BrandRetailerCampaign[] }>(
     `${BASE}/retailers/${retailerId}/campaigns`,
-    { params: { limit: 100 } },
+    {
+      params: {
+        limit: opts.limit ?? 100,
+        ...(opts.platform ? { platform: opts.platform } : {}),
+        ...(opts.search ? { search: opts.search } : {}),
+      },
+    },
   );
   return Array.isArray(r.data) ? r.data : (r.data?.data ?? []);
 }
 
 export async function getBrandRetailerSocialAds(
   retailerId: string,
-  opts: { from?: string; to?: string; campaignIds?: string[] } = {},
+  opts: {
+    from?: string;
+    to?: string;
+    campaignIds?: string[];
+    platform?: string;
+  } = {},
 ): Promise<RetailerSocialAdsResponse> {
   const r = await apiClient.get<RetailerSocialAdsResponse>(
     `${BASE}/retailers/${retailerId}/social-ads`,
@@ -110,6 +123,7 @@ export async function getBrandRetailerSocialAds(
       params: {
         ...(opts.from && { from: opts.from }),
         ...(opts.to && { to: opts.to }),
+        ...(opts.platform && { platform: opts.platform }),
         ...(opts.campaignIds?.length && {
           campaign_ids: opts.campaignIds.join(","),
         }),

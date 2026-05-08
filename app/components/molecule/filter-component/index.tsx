@@ -87,7 +87,11 @@ export function FilterComponent({
             const obj = item as Record<string, unknown>;
             const key = (obj.key ?? obj.id ?? obj.value ?? "").toString();
             const label = (obj.label ?? obj.name ?? obj.title ?? "").toString();
-            return { key, label };
+            const description =
+              typeof obj.description === "string"
+                ? (obj.description as string)
+                : undefined;
+            return { key, label, description };
           }
           return { key: "", label: "" };
         })
@@ -472,6 +476,11 @@ export function FilterComponent({
                           onMouseLeave={() => setHoveredOption(null)}
                         >
                           <CommandItem
+                            // cmdk derives the item's identity from `value` —
+                            // without this it falls back to the rendered text,
+                            // so multiple options with the same label end up
+                            // sharing hover/selection state.
+                            value={`${option.key}__${option.label}`}
                             onSelect={() =>
                               handleSelect(activeFilter, option.key)
                             }
@@ -480,9 +489,18 @@ export function FilterComponent({
                               isSelected && "bg-accent"
                             )}
                           >
-                            <span className="flex-1 truncate">
-                              {t(option.label, { defaultValue: option.label })}
-                            </span>
+                            <div className="flex-1 min-w-0">
+                              <div className="truncate">
+                                {t(option.label, {
+                                  defaultValue: option.label,
+                                })}
+                              </div>
+                              {option.description && (
+                                <div className="truncate text-[10px] font-mono normal-case text-muted-foreground/70">
+                                  {option.description}
+                                </div>
+                              )}
+                            </div>
                             <div className="flex items-center gap-1 ml-auto">
                               {isMultiSelect && (
                                 <button

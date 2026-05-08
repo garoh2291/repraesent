@@ -92,6 +92,9 @@ export default function DbBrandRetailerLeads() {
       campaigns.map((c) => ({
         key: c.campaign_id,
         label: c.campaign_name || c.campaign_id,
+        // Many ad accounts reuse the same display name across campaigns —
+        // surface the id (or its short tail) so the user can disambiguate.
+        description: c.campaign_name ? c.campaign_id : undefined,
       })),
     [campaigns]
   );
