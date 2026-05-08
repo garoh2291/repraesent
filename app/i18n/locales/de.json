@@ -558,13 +558,13 @@
     "downloadInvoice": "Rechnung als PDF herunterladen",
     "viewReceipt": "Quittung ansehen",
     "trial_card": {
-      "eyebrow": "Doorboost-Testphase",
+      "eyebrow": "Doorboost",
       "title": "Du arbeitest mit den vertrauten Daten aus Doorboost.",
-      "body": "Jede Kampagne, jeder Lead, jede Notiz und jeder Kunde aus deinem Doorboost-Konto sind in re:praesent verfügbar — zum Lesen, Suchen und Auswerten. Mit einem Upgrade schaltest du den Rest der Plattform frei:",
+      "body": "Jede Kampagne, jeder Lead, jede Notiz und jeder Kunde aus deinem Doorboost-Konto sind in re:praesent verfügbar — zum Lesen, Suchen und Auswerten, dauerhaft kostenlos. Wenn du eines der unten genannten Module aktivieren möchtest, wende dich an unseren Support:",
       "feature_appointments": "Termine & smarte Buchungsseiten",
       "feature_web_analytics": "Website-Analytics & Besucher-Insights",
       "feature_ad_analytics": "Anzeigen-Analytics für neue Kampagnen",
-      "feature_new_leads": "Lead-Erfassung & -Routing für neue Kampagnen",
+      "feature_new_leads": "Lead-Erfassung von der Website",
       "cta": "Mit unserem Team sprechen",
       "contact": "Oder schreib uns direkt an <0>{{supportEmail}}</0>"
     }
@@ -1349,7 +1349,7 @@
   },
   "workspace": {
     "trial_banner": {
-      "message": "Du erkundest re:praesent in der Doorboost-Testphase — jede Kampagne, jeder Lead und jede Notiz aus deinem Doorboost-Konto sind direkt hier. Bereit, die volle Plattform freizuschalten? Schreib uns an <0>{{supportEmail}}</0>."
+      "message": "Jede Kampagne, jeder Lead und jede Notiz aus deinem Doorboost-Konto sind in re:praesent gespeichert — dauerhaft kostenlos nutzbar. <0>Mehr Funktionen entdecken →</0>"
     }
   },
   "doorboost_restore": {

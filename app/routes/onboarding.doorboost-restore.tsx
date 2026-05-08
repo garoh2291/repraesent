@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
@@ -9,7 +9,6 @@ import {
   Loader2,
   Megaphone,
   RefreshCw,
-  StickyNote,
   Users,
 } from "lucide-react";
 import { Button } from "~/components/ui/button";
@@ -17,24 +16,22 @@ import { Input } from "~/components/ui/input";
 import { Label } from "~/components/ui/label";
 import { Switch } from "~/components/ui/switch";
 import {
-  RadioGroup,
-  RadioGroupItem,
-} from "~/components/ui/radio-group";
-import {
   getDoorboostEligibility,
   previewCounts,
   previewUsers,
   submitDoorboostRestore,
   type DoorboostEligibility,
   type DoorboostUser,
-  type FallbackNoteUser,
   type RetailerCounts,
 } from "~/lib/api/doorboost-restore";
 import { setStoredWorkspaceId } from "~/lib/api/axios-instance";
 import { useAuthContext } from "~/providers/auth-provider";
 
-type Step = "name" | "scope" | "users" | "attribution" | "confirm";
-const STEPS: Step[] = ["name", "scope", "users", "attribution", "confirm"];
+// "attribution" was removed: the current user is always used as the note
+// fallback (the backend already handles unmatched authors that way), so
+// surfacing the choice would just be noise.
+type Step = "name" | "scope" | "users" | "confirm";
+const STEPS: Step[] = ["name", "scope", "users", "confirm"];
 
 export default function OnboardingDoorboostRestore() {
   const { t } = useTranslation();
@@ -47,23 +44,34 @@ export default function OnboardingDoorboostRestore() {
   const [importLeads, setImportLeads] = useState(true);
   const [selectedUserIds, setSelectedUserIds] = useState<string[]>([]);
   const [notifyUsers, setNotifyUsers] = useState(true);
-  const [fallbackKind, setFallbackKind] = useState<"existing" | "new">(
-    "existing",
-  );
-  const [fallbackEmail, setFallbackEmail] = useState("");
-  const [fallbackFirstName, setFallbackFirstName] = useState("");
-  const [fallbackLastName, setFallbackLastName] = useState("");
 
   const { data: eligibility, isLoading: eligLoading } =
     useQuery<DoorboostEligibility>({
       queryKey: ["doorboost-eligibility"],
       queryFn: getDoorboostEligibility,
-      staleTime: 0,
+      // Pin the eligibility once the wizard has it. Without this, any
+      // background refetch (focus, reconnect, navigation) can briefly drop
+      // the cached value and the redirect-on-not-eligible effect below would
+      // unmount the wizard mid-flow — which is exactly the "state crash"
+      // the user reported when going forward then back.
+      staleTime: Infinity,
+      gcTime: Infinity,
+      refetchOnMount: false,
+      refetchOnWindowFocus: false,
+      refetchOnReconnect: false,
     });
 
-  // Eligibility expired or already restored → bounce back.
+  // Eligibility expired or already restored → bounce back. Ref-guarded so
+  // we never redirect twice during the same session.
+  const redirectedRef = useRef(false);
   useEffect(() => {
-    if (!eligLoading && eligibility && !eligibility.eligible) {
+    if (
+      !eligLoading &&
+      eligibility &&
+      !eligibility.eligible &&
+      !redirectedRef.current
+    ) {
+      redirectedRef.current = true;
       navigate("/onboarding/workspace", { replace: true });
     }
   }, [eligLoading, eligibility, navigate]);
@@ -81,6 +89,7 @@ export default function OnboardingDoorboostRestore() {
     queryKey: ["doorboost-restore-counts", retailerId],
     queryFn: () => previewCounts(retailerId!),
     enabled: !!retailerId,
+    staleTime: 5 * 60_000,
   });
 
   const { data: users = [], isLoading: usersLoading } = useQuery<
@@ -88,7 +97,13 @@ export default function OnboardingDoorboostRestore() {
   >({
     queryKey: ["doorboost-restore-users", retailerId, user?.email],
     queryFn: () => previewUsers(retailerId!, user?.email),
-    enabled: !!retailerId && step === "users",
+    // Keep the query mounted once we've fetched it. `step === 'users'` would
+    // unmount/remount on every back-nav, dropping the previous list and
+    // making the checkbox state look like it crashed. Pinning the query
+    // means the second visit is instant from cache.
+    enabled: !!retailerId,
+    staleTime: 5 * 60_000,
+    placeholderData: (prev) => prev,
   });
 
   const submitMutation = useMutation({
@@ -100,7 +115,8 @@ export default function OnboardingDoorboostRestore() {
         leads: importLeads,
         users: selectedUserIds,
         notify_users: notifyUsers,
-        fallback_note_user: buildFallback(),
+        // No fallback_note_user: backend treats unmatched note authors as
+        // the current user (workspace owner) by default.
       }),
     onSuccess: ({ workspace_id }) => {
       setStoredWorkspaceId(workspace_id);
@@ -109,27 +125,22 @@ export default function OnboardingDoorboostRestore() {
     },
   });
 
-  function buildFallback(): FallbackNoteUser | undefined {
-    if (fallbackKind === "existing") {
-      // The current user is the only existing member at submit time.
-      // We can omit the fallback to let the backend treat any unmatched note
-      // author as the fallback user. To force this, we explicitly pass it.
-      return undefined;
-    }
-    if (
-      !fallbackEmail.trim() ||
-      !fallbackFirstName.trim() ||
-      !fallbackLastName.trim()
-    ) {
-      return undefined;
-    }
+  // Synthetic "me" row prepended to the users list. The current user is
+  // always the workspace owner — we surface them disabled+checked so the
+  // wizard reads as "you, plus optional teammates" instead of an empty list
+  // when the doorboost workspace has no other users.
+  // NB: this hook MUST sit above the early-return below; otherwise React
+  // sees a different hook count between the loading and loaded renders
+  // ("Rendered more hooks than during the previous render").
+  const meRow = useMemo<DoorboostUser | null>(() => {
+    if (!user?.email) return null;
     return {
-      type: "new",
-      first_name: fallbackFirstName.trim(),
-      last_name: fallbackLastName.trim(),
-      email: fallbackEmail.trim(),
+      id: user.id || `__me__${user.email}`,
+      email: user.email,
+      first_name: user.first_name || null,
+      last_name: user.last_name || null,
     };
-  }
+  }, [user]);
 
   if (eligLoading || !eligibility?.eligible) {
     return (
@@ -145,14 +156,6 @@ export default function OnboardingDoorboostRestore() {
     if (step === "name") return workspaceName.trim().length > 0;
     if (step === "scope") return importCampaigns || importLeads;
     if (step === "users") return true;
-    if (step === "attribution") {
-      if (fallbackKind === "existing") return true;
-      return (
-        fallbackEmail.trim().length > 3 &&
-        fallbackFirstName.trim().length > 0 &&
-        fallbackLastName.trim().length > 0
-      );
-    }
     return false;
   })();
 
@@ -294,7 +297,7 @@ export default function OnboardingDoorboostRestore() {
                 )}
               </p>
 
-              {usersLoading ? (
+              {usersLoading && users.length === 0 ? (
                 <div className="space-y-2">
                   {[0, 1, 2].map((i) => (
                     <div
@@ -303,50 +306,83 @@ export default function OnboardingDoorboostRestore() {
                     />
                   ))}
                 </div>
-              ) : users.length === 0 ? (
-                <p className="text-sm text-muted-foreground py-3">
-                  {t(
-                    "doorboost_restore.wizard_users_none",
-                    "No teammates found in your Doorboost workspace.",
-                  )}
-                </p>
               ) : (
                 <div className="border rounded-lg overflow-hidden">
                   <ul className="divide-y">
-                    {users.map((u) => {
-                      const checked = selectedUserIds.includes(u.id);
-                      return (
-                        <li
-                          key={u.id}
-                          className="flex items-center gap-3 px-3 py-2 hover:bg-muted/40"
-                        >
-                          <input
-                            type="checkbox"
-                            id={`u-${u.id}`}
-                            checked={checked}
-                            onChange={(e) => {
-                              setSelectedUserIds((prev) =>
-                                e.target.checked
-                                  ? [...prev, u.id]
-                                  : prev.filter((x) => x !== u.id),
-                              );
-                            }}
-                            className="w-4 h-4"
-                          />
-                          <label
-                            htmlFor={`u-${u.id}`}
-                            className="flex-1 cursor-pointer"
+                    {meRow && (
+                      <li
+                        key={meRow.id}
+                        className="flex items-center gap-3 px-3 py-2 bg-muted/20"
+                      >
+                        <input
+                          type="checkbox"
+                          checked
+                          disabled
+                          readOnly
+                          aria-label={t(
+                            "doorboost_restore.wizard_users_you_label",
+                            "You (workspace owner — required)",
+                          )}
+                          className="w-4 h-4 opacity-60 cursor-not-allowed"
+                        />
+                        <div className="flex-1 min-w-0">
+                          <div className="text-sm font-medium flex items-center gap-2">
+                            <span className="truncate">
+                              {meRow.first_name} {meRow.last_name}
+                            </span>
+                            <span className="inline-flex items-center rounded-full bg-amber-400/15 text-amber-600 px-2 py-0.5 text-[10px] uppercase tracking-wide font-semibold">
+                              {t("doorboost_restore.wizard_users_you", "You")}
+                            </span>
+                          </div>
+                          <div className="text-xs text-muted-foreground truncate">
+                            {meRow.email}
+                          </div>
+                        </div>
+                      </li>
+                    )}
+                    {users.length === 0 && !meRow ? (
+                      <li className="px-3 py-3 text-sm text-muted-foreground">
+                        {t(
+                          "doorboost_restore.wizard_users_none",
+                          "No teammates found in your Doorboost workspace.",
+                        )}
+                      </li>
+                    ) : (
+                      users.map((u) => {
+                        const checked = selectedUserIds.includes(u.id);
+                        return (
+                          <li
+                            key={u.id}
+                            className="flex items-center gap-3 px-3 py-2 hover:bg-muted/40"
                           >
-                            <div className="text-sm font-medium">
-                              {u.first_name} {u.last_name}
-                            </div>
-                            <div className="text-xs text-muted-foreground">
-                              {u.email}
-                            </div>
-                          </label>
-                        </li>
-                      );
-                    })}
+                            <input
+                              type="checkbox"
+                              id={`u-${u.id}`}
+                              checked={checked}
+                              onChange={(e) => {
+                                setSelectedUserIds((prev) =>
+                                  e.target.checked
+                                    ? [...prev, u.id]
+                                    : prev.filter((x) => x !== u.id),
+                                );
+                              }}
+                              className="w-4 h-4"
+                            />
+                            <label
+                              htmlFor={`u-${u.id}`}
+                              className="flex-1 cursor-pointer"
+                            >
+                              <div className="text-sm font-medium">
+                                {u.first_name} {u.last_name}
+                              </div>
+                              <div className="text-xs text-muted-foreground">
+                                {u.email}
+                              </div>
+                            </label>
+                          </li>
+                        );
+                      })
+                    )}
                   </ul>
                 </div>
               )}
@@ -367,111 +403,6 @@ export default function OnboardingDoorboostRestore() {
                     checked={notifyUsers}
                     onCheckedChange={setNotifyUsers}
                   />
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* STEP: attribution */}
-          {step === "attribution" && (
-            <div className="space-y-4">
-              <h2 className="text-lg font-semibold flex items-center gap-2">
-                <StickyNote className="w-4 h-4 text-amber-500" />
-                {t(
-                  "doorboost_restore.wizard_step_attribution",
-                  "Note attribution",
-                )}
-              </h2>
-              <p className="text-sm text-muted-foreground">
-                {t(
-                  "doorboost_restore.wizard_attribution_help",
-                  "If imported leads have notes, who should be the fallback author when we can't match the original Doorboost author to a workspace member?",
-                )}
-              </p>
-
-              <RadioGroup
-                value={fallbackKind}
-                onValueChange={(v) =>
-                  setFallbackKind(v as "existing" | "new")
-                }
-                className="space-y-2"
-              >
-                <label className="flex items-start gap-3 rounded-lg border p-3 cursor-pointer hover:bg-muted/40">
-                  <RadioGroupItem value="existing" id="fk-me" />
-                  <div>
-                    <div className="font-medium text-sm">
-                      {t(
-                        "doorboost_restore.wizard_fallback_me",
-                        "Use me as fallback",
-                      )}
-                    </div>
-                    <div className="text-xs text-muted-foreground">
-                      {t(
-                        "doorboost_restore.wizard_fallback_me_hint",
-                        "Unmatched note authors will show your name.",
-                      )}
-                    </div>
-                  </div>
-                </label>
-                <label className="flex items-start gap-3 rounded-lg border p-3 cursor-pointer hover:bg-muted/40">
-                  <RadioGroupItem value="new" id="fk-new" />
-                  <div className="flex-1">
-                    <div className="font-medium text-sm">
-                      {t(
-                        "doorboost_restore.wizard_fallback_new",
-                        "Create a placeholder user",
-                      )}
-                    </div>
-                    <div className="text-xs text-muted-foreground">
-                      {t(
-                        "doorboost_restore.wizard_fallback_new_hint",
-                        "Used as a name on imported notes only. Will not be invited.",
-                      )}
-                    </div>
-                  </div>
-                </label>
-              </RadioGroup>
-
-              {fallbackKind === "new" && (
-                <div className="space-y-3 pt-2">
-                  <div className="grid grid-cols-2 gap-3">
-                    <div className="space-y-1">
-                      <Label className="text-xs">
-                        {t(
-                          "doorboost_restore.wizard_first_name",
-                          "First name",
-                        )}
-                      </Label>
-                      <Input
-                        value={fallbackFirstName}
-                        onChange={(e) =>
-                          setFallbackFirstName(e.target.value)
-                        }
-                      />
-                    </div>
-                    <div className="space-y-1">
-                      <Label className="text-xs">
-                        {t(
-                          "doorboost_restore.wizard_last_name",
-                          "Last name",
-                        )}
-                      </Label>
-                      <Input
-                        value={fallbackLastName}
-                        onChange={(e) => setFallbackLastName(e.target.value)}
-                      />
-                    </div>
-                  </div>
-                  <div className="space-y-1">
-                    <Label className="text-xs">
-                      {t("doorboost_restore.wizard_email", "Email")}
-                    </Label>
-                    <Input
-                      type="email"
-                      value={fallbackEmail}
-                      onChange={(e) => setFallbackEmail(e.target.value)}
-                    />
-                  </div>
                 </div>
               )}
             </div>
@@ -529,17 +460,6 @@ export default function OnboardingDoorboostRestore() {
                             : ""
                         }`
                       : t("doorboost_restore.summary_none", "None")
-                  }
-                />
-                <SummaryRow
-                  label={t(
-                    "doorboost_restore.summary_attribution",
-                    "Note fallback",
-                  )}
-                  value={
-                    fallbackKind === "existing"
-                      ? t("doorboost_restore.summary_me", "Me")
-                      : `${fallbackFirstName} ${fallbackLastName}`.trim()
                   }
                 />
               </ul>
