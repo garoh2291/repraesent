@@ -69,6 +69,11 @@
       "page": "Page",
       "empty": "No leads match your filters.",
       "export": "Export Excel"
+    },
+    "export": {
+      "button": "Export",
+      "all": "Export All Leads",
+      "selected": "Export Selected"
     }
   },
   "auth": {
@@ -553,13 +558,13 @@
     "downloadInvoice": "Download invoice PDF",
     "viewReceipt": "View receipt",
     "trial_card": {
-      "eyebrow": "Doorboost Trial",
+      "eyebrow": "Doorboost",
       "title": "You're running on the Doorboost data you already trust.",
-      "body": "Every campaign, lead, note and customer record from your Doorboost account lives inside re:praesent — yours to read, search and report on. Upgrade your plan to bring the rest of the platform to life:",
+      "body": "Every campaign, lead, note and customer record from your Doorboost account lives inside re:praesent — yours to read, search and report on, free forever. To activate any of the modules below, contact our support team:",
       "feature_appointments": "Appointments & smart booking pages",
       "feature_web_analytics": "Website analytics & visitor insights",
       "feature_ad_analytics": "Ad analytics for new campaigns",
-      "feature_new_leads": "Lead capture & routing for new campaigns",
+      "feature_new_leads": "Lead capture from website",
       "cta": "Talk to our team",
       "contact": "Or write us directly at <0>{{supportEmail}}</0>"
     }
@@ -1344,7 +1349,7 @@
   },
   "workspace": {
     "trial_banner": {
-      "message": "You're exploring re:praesent on a Doorboost trial — every campaign, lead and note from your Doorboost account is right here. Ready to unlock the full platform? Talk to us at <0>{{supportEmail}}</0>."
+      "message": "Every campaign, lead and note from your Doorboost account lives in re:praesent — yours to use, free forever. <0>See what else you can unlock →</0>"
     }
   },
   "doorboost_restore": {

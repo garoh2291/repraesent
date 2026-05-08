@@ -1,6 +1,12 @@
 export interface FilterOption {
   key: string;
   label: string;
+  /**
+   * Optional second line shown beneath the label — useful when several
+   * options share the same display name (e.g. campaigns named identically
+   * across ad accounts) so the user can still tell them apart.
+   */
+  description?: string;
 }
 
 export interface AdditionalFilter {

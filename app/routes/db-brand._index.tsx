@@ -1,14 +1,29 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router";
 import { useQuery } from "@tanstack/react-query";
-import { Boxes, ChevronRight, Download, Search, Store } from "lucide-react";
+import {
+  Boxes,
+  ChevronDown,
+  ChevronRight,
+  Download,
+  Loader2,
+  Search,
+  Store,
+} from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useAuthContext } from "~/providers/auth-provider";
 import {
+  downloadBulkBrandLeadsXlsx,
   listBrandRetailers,
   type BrandRetailer,
 } from "~/lib/api/doorboost-brand";
 import { Button } from "~/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "~/components/ui/dropdown-menu";
 import { BulkLeadsExportModal } from "~/components/db-brand/bulk-leads-export-modal";
 
 const lastIdSegment = (id: string) => id.split("-").pop() ?? id;
@@ -27,6 +42,19 @@ export default function DbBrandIndex() {
 
   const [search, setSearch] = useState("");
   const [bulkExportOpen, setBulkExportOpen] = useState(false);
+  const [exportingAll, setExportingAll] = useState(false);
+
+  async function handleExportAll() {
+    if (exportingAll) return;
+    setExportingAll(true);
+    try {
+      // Empty arrays = backend uses every retailer + every campaign that
+      // belongs to this workspace's doorboost brand.
+      await downloadBulkBrandLeadsXlsx([], []);
+    } finally {
+      setExportingAll(false);
+    }
+  }
   const filteredRetailers = useMemo(() => {
     const needle = search.trim().toLowerCase();
     if (!needle) return retailers;
@@ -71,15 +99,42 @@ export default function DbBrandIndex() {
             </div>
           </div>
           {retailers.length > 0 && (
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => setBulkExportOpen(true)}
-              className="gap-2 self-stretch sm:self-auto"
-            >
-              <Download className="w-4 h-4" />
-              {t("db_brand.bulk_export.button", "Download all leads")}
-            </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  type="button"
+                  variant="outline"
+                  disabled={exportingAll}
+                  className="gap-2 self-stretch sm:self-auto"
+                >
+                  {exportingAll ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <Download className="w-4 h-4" />
+                  )}
+                  {t("db_brand.export.button", "Export")}
+                  <ChevronDown className="w-3.5 h-3.5 opacity-70" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="min-w-[200px]">
+                <DropdownMenuItem
+                  onSelect={(e) => {
+                    e.preventDefault();
+                    void handleExportAll();
+                  }}
+                  disabled={exportingAll}
+                >
+                  <Download className="w-4 h-4" />
+                  {t("db_brand.export.all", "Export All Leads")}
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onSelect={() => setBulkExportOpen(true)}
+                >
+                  <Download className="w-4 h-4" />
+                  {t("db_brand.export.selected", "Export Selected")}
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           )}
         </div>
 

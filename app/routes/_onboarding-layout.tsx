@@ -2,6 +2,7 @@ import { Outlet, Link, useLocation } from "react-router";
 import { Check } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import logoUrl from "~/components/icons/re_praesent-mark-brand-hor.svg?url";
+import { LanguageSwitcher } from "~/components/language-switcher";
 
 const STEP_KEYS = [
   { path: "/onboarding/profile", key: "onboarding.steps.profile" },
@@ -67,12 +68,15 @@ export default function OnboardingLayout() {
         <div className="mx-auto max-w-2xl px-5">
 
           {/* Top bar */}
-          <div className="flex items-center h-16">
+          <div className="flex items-center justify-between h-16">
             <img
               src={logoUrl}
               alt="Repraesent"
               className="h-7 w-auto max-w-[130px] ob-fade-in"
             />
+            <div className="ob-fade-in">
+              <LanguageSwitcher variant="light" persistToDb />
+            </div>
           </div>
 
           {/* Stepper */}
