@@ -152,14 +152,9 @@ export function BulkLeadsExportModal({ open, onOpenChange, retailers }: Props) {
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl max-h-[85vh] flex flex-col gap-0 p-0">
         <DialogHeader className="px-6 pt-6 pb-4 border-b">
-          <DialogTitle>
-            {t("db_brand.bulk_export.title", "Download all leads")}
-          </DialogTitle>
+          <DialogTitle>{t("db_brand.bulk_export.title")}</DialogTitle>
           <p className="text-xs text-muted-foreground mt-1">
-            {t(
-              "db_brand.bulk_export.subtitle",
-              "Search and pick the platform campaigns whose leads you want to export.",
-            )}
+            {t("db_brand.bulk_export.subtitle")}
           </p>
         </DialogHeader>
 
@@ -168,10 +163,7 @@ export function BulkLeadsExportModal({ open, onOpenChange, retailers }: Props) {
             <SearchInput
               value={searchInput}
               onChange={setSearchInput}
-              placeholder={t(
-                "db_brand.bulk_export.search_campaigns",
-                "Search by campaign name or ID…",
-              )}
+              placeholder={t("db_brand.bulk_export.search_campaigns")}
               trailing={
                 campaignsFetching && !campaignsLoading ? (
                   <Loader2 className="w-3.5 h-3.5 animate-spin text-muted-foreground" />
@@ -183,7 +175,6 @@ export function BulkLeadsExportModal({ open, onOpenChange, retailers }: Props) {
                 {t("db_brand.bulk_export.selected_campaigns_total", {
                   selected: selectedCampaignIds.size,
                   total: totalCampaigns,
-                  defaultValue: "{{selected}} selected · {{total}} matching",
                 })}
               </p>
               <div className="flex items-center gap-1.5">
@@ -196,7 +187,7 @@ export function BulkLeadsExportModal({ open, onOpenChange, retailers }: Props) {
                   className="h-7 px-2 text-xs"
                 >
                   <Check className="w-3 h-3 mr-1" />
-                  {t("db_brand.bulk_export.select_page", "Select page")}
+                  {t("db_brand.bulk_export.select_page")}
                 </Button>
                 <Button
                   type="button"
@@ -207,7 +198,7 @@ export function BulkLeadsExportModal({ open, onOpenChange, retailers }: Props) {
                   className="h-7 px-2 text-xs"
                 >
                   <X className="w-3 h-3 mr-1" />
-                  {t("db_brand.bulk_export.clear_selected", "Clear")}
+                  {t("db_brand.bulk_export.clear_selected")}
                 </Button>
               </div>
             </div>
@@ -222,11 +213,8 @@ export function BulkLeadsExportModal({ open, onOpenChange, retailers }: Props) {
               <EmptyRow
                 text={
                   debouncedSearch
-                    ? t("common.noResults", "No matches")
-                    : t(
-                        "db_brand.bulk_export.no_campaigns",
-                        "No platform campaigns found for this brand.",
-                      )
+                    ? t("common.noResults")
+                    : t("db_brand.bulk_export.no_campaigns")
                 }
               />
             ) : (
@@ -274,7 +262,6 @@ export function BulkLeadsExportModal({ open, onOpenChange, retailers }: Props) {
                 {t("db_brand.bulk_export.page_of", {
                   page,
                   totalPages,
-                  defaultValue: "Page {{page}} of {{totalPages}}",
                 })}
               </p>
               <div className="flex items-center gap-1.5">
@@ -316,7 +303,7 @@ export function BulkLeadsExportModal({ open, onOpenChange, retailers }: Props) {
             onClick={() => onOpenChange(false)}
             disabled={isExporting}
           >
-            {t("common.cancel", "Cancel")}
+            {t("common.cancel")}
           </Button>
           <Button
             type="button"
@@ -329,7 +316,7 @@ export function BulkLeadsExportModal({ open, onOpenChange, retailers }: Props) {
             ) : (
               <Download className="w-4 h-4 mr-2" />
             )}
-            {t("db_brand.bulk_export.generate", "Generate Excel")}
+            {t("db_brand.bulk_export.generate")}
           </Button>
         </DialogFooter>
       </DialogContent>
@@ -372,7 +359,7 @@ function SearchInput({
             type="button"
             onClick={() => onChange("")}
             className="text-muted-foreground hover:text-foreground p-1"
-            aria-label={t("common.clearSearch", "Clear search")}
+            aria-label={t("common.clearSearch")}
           >
             <X className="w-3.5 h-3.5" />
           </button>

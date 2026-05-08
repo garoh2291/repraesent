@@ -74,6 +74,17 @@
       "button": "Exportieren",
       "all": "Alle Leads exportieren",
       "selected": "Auswahl exportieren"
+    },
+    "bulk_export": {
+      "title": "Alle Leads herunterladen",
+      "subtitle": "Suche und wähle die Plattform-Kampagnen, deren Leads du exportieren möchtest.",
+      "search_campaigns": "Nach Kampagnenname oder ID suchen…",
+      "selected_campaigns_total": "{{selected}} ausgewählt · {{total}} Treffer",
+      "select_page": "Seite auswählen",
+      "clear_selected": "Zurücksetzen",
+      "no_campaigns": "Für diesen Brand wurden keine Plattform-Kampagnen gefunden.",
+      "page_of": "Seite {{page}} von {{totalPages}}",
+      "generate": "Excel erstellen"
     }
   },
   "auth": {
