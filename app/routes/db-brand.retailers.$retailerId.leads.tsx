@@ -18,6 +18,9 @@ import { useSearchParamsSelect } from "~/lib/hooks/useQueryParams";
 import { formatDate } from "~/lib/utils/format";
 import {
   downloadBrandRetailerLeadsXlsx,
+  getBrandLead,
+  getBrandLeadHistory,
+  getBrandLeadNotes,
   listBrandRetailerCampaigns,
   listBrandRetailerLeads,
   listBrandRetailers,
@@ -26,6 +29,7 @@ import {
   type RetailerLead,
   type RetailerLeadsResponse,
 } from "~/lib/api/doorboost-brand";
+import { LeadDetailSheet } from "~/components/organism/lead-detail-sheet";
 import { RetailerTabsLayout } from "~/components/db-brand/retailer-tabs";
 import { useAuthContext } from "~/providers/auth-provider";
 
@@ -45,6 +49,7 @@ export default function DbBrandRetailerLeads() {
   const [searchParams] = useSearchParams();
   const [onSelect] = useSearchParamsSelect();
   const [downloading, setDownloading] = useState(false);
+  const [selectedLeadId, setSelectedLeadId] = useState<string | null>(null);
 
   const page = useMemo(
     () => parsePage(searchParams.get("page")),
@@ -254,6 +259,7 @@ export default function DbBrandRetailerLeads() {
           "Name, email or phone…"
         )}
         onSearchChange={setSearch}
+        onRowClick={(row) => setSelectedLeadId(row.id)}
         additionalElement={
           <div className="flex flex-wrap gap-3 items-center">
             <FilterComponent filters={filters} />
@@ -309,6 +315,16 @@ export default function DbBrandRetailerLeads() {
           onSelect(updates, true);
         }}
         emptyMessage={t("db_brand.leads.empty", "No leads match your filters.")}
+      />
+      <LeadDetailSheet
+        leadId={selectedLeadId}
+        open={!!selectedLeadId}
+        onOpenChange={(open) => !open && setSelectedLeadId(null)}
+        readOnly
+        fetchLead={getBrandLead}
+        fetchHistory={getBrandLeadHistory}
+        fetchNotes={getBrandLeadNotes}
+        scopeKey="brand"
       />
     </RetailerTabsLayout>
   );

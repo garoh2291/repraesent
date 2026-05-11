@@ -1,4 +1,6 @@
 import { apiClient, getStoredWorkspaceId, getStoredToken } from "./axios-instance";
+import type { Lead, LeadHistoryItem } from "./leads";
+import type { Note } from "./notes";
 
 const BASE = "/users/me/workspace/doorboost-brand";
 
@@ -338,6 +340,32 @@ export async function listBrandLeads(
   const r = await apiClient.get<RetailerLeadsResponse>(`${BASE}/leads`, {
     params: opts,
   });
+  return r.data;
+}
+
+// ── brand-scoped lead detail (read-only) ──
+
+/**
+ * Fetch a single lead via the brand-scoped endpoint. Authorisation is by
+ * brand-campaign membership, not workspace, so a brand admin can audit leads
+ * that live in a retailer's lead-form workspace.
+ */
+export async function getBrandLead(leadId: string): Promise<Lead> {
+  const r = await apiClient.get<Lead>(`${BASE}/leads/${leadId}`);
+  return r.data;
+}
+
+export async function getBrandLeadNotes(leadId: string): Promise<Note[]> {
+  const r = await apiClient.get<Note[]>(`${BASE}/leads/${leadId}/notes`);
+  return r.data;
+}
+
+export async function getBrandLeadHistory(
+  leadId: string,
+): Promise<LeadHistoryItem[]> {
+  const r = await apiClient.get<LeadHistoryItem[]>(
+    `${BASE}/leads/${leadId}/history`,
+  );
   return r.data;
 }
 

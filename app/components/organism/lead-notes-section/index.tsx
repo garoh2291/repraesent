@@ -73,11 +73,22 @@ function buildNoteUserLabel(note: Note, fallback: string): string {
 interface LeadNotesSectionProps {
   leadId: string;
   canEdit?: boolean;
+  /**
+   * Override the notes fetcher. Defaults to the workspace-scoped `getNotes`.
+   * Brand views pass `getBrandLeadNotes` so the read goes through the brand
+   * authorisation. The cache key gets a stable suffix when overridden to
+   * avoid colliding with the workspace cache.
+   */
+  fetchNotes?: (leadId: string) => Promise<Note[]>;
+  /** Stable identifier for the query cache when `fetchNotes` is overridden. */
+  scopeKey?: string;
 }
 
 export function LeadNotesSection({
   leadId,
   canEdit = true,
+  fetchNotes,
+  scopeKey,
 }: LeadNotesSectionProps) {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
@@ -88,9 +99,16 @@ export function LeadNotesSection({
   const [editingContent, setEditingContent] = useState("");
   const [noteIdToDelete, setNoteIdToDelete] = useState<string | null>(null);
 
+  // Default cache key matches the original shape so mutations below
+  // (which still target ["lead-notes", leadId]) stay in sync. Brand /
+  // read-only callers supply a `scopeKey` that yields a separate cache.
+  const notesQueryKey = scopeKey
+    ? ["lead-notes", scopeKey, leadId]
+    : ["lead-notes", leadId];
+
   const { data: notes = [], isLoading } = useQuery({
-    queryKey: ["lead-notes", leadId],
-    queryFn: () => getNotes(leadId),
+    queryKey: notesQueryKey,
+    queryFn: () => (fetchNotes ?? getNotes)(leadId),
     enabled: !!leadId,
   });
 

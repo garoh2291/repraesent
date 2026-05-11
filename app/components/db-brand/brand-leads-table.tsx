@@ -18,6 +18,9 @@ import { useSearchParamsSelect } from "~/lib/hooks/useQueryParams";
 import { formatDate } from "~/lib/utils/format";
 import {
   downloadBrandLeadsXlsx,
+  getBrandLead,
+  getBrandLeadHistory,
+  getBrandLeadNotes,
   listBrandCampaigns,
   listBrandLeads,
   listBrandRetailers,
@@ -27,6 +30,7 @@ import {
   type RetailerLead,
   type RetailerLeadsResponse,
 } from "~/lib/api/doorboost-brand";
+import { LeadDetailSheet } from "~/components/organism/lead-detail-sheet";
 import { useAuthContext } from "~/providers/auth-provider";
 
 function parsePage(v: string | null): number {
@@ -45,20 +49,25 @@ const lastIdSegment = (id: string) => id.split("-").pop() ?? id;
  * leads page but aggregates every retailer in the brand and exposes an extra
  * Retailer filter so the user can narrow without leaving the page.
  */
-export function BrandLeadsTable() {
+export function BrandLeadsTable({
+  withoutSourceFilter = false,
+}: {
+  withoutSourceFilter?: boolean;
+}) {
   const { t } = useTranslation();
   const { currentWorkspace } = useAuthContext();
   const [searchParams] = useSearchParams();
   const [onSelect] = useSearchParamsSelect();
   const [downloading, setDownloading] = useState(false);
+  const [selectedLeadId, setSelectedLeadId] = useState<string | null>(null);
 
   const page = useMemo(
     () => parsePage(searchParams.get("page")),
-    [searchParams],
+    [searchParams]
   );
   const limit = useMemo(
     () => parseLimit(searchParams.get("limit")),
-    [searchParams],
+    [searchParams]
   );
   const urlSearch = searchParams.get("search") ?? "";
   const statusFilter = searchParams.get("status") ?? "";
@@ -110,7 +119,7 @@ export function BrandLeadsTable() {
           description,
         };
       }),
-    [campaigns],
+    [campaigns]
   );
 
   const retailerFilterOptions = useMemo(
@@ -123,7 +132,7 @@ export function BrandLeadsTable() {
           description: r.retailer_name ? `#${tag}` : undefined,
         };
       }),
-    [retailers],
+    [retailers]
   );
 
   const queryFilters: BrandLeadFilters = {
@@ -269,12 +278,16 @@ export function BrandLeadsTable() {
         options: LEAD_FILTER_STATUS_OPTIONS,
         single: true,
       },
-      {
-        name: "source",
-        paramKey: "source",
-        options: LEAD_FILTER_SOURCE_OPTIONS,
-        single: true,
-      },
+      ...(!withoutSourceFilter
+        ? [
+            {
+              name: "source",
+              paramKey: "source",
+              options: LEAD_FILTER_SOURCE_OPTIONS,
+              single: true,
+            },
+          ]
+        : []),
       {
         name: "retailers",
         paramKey: "retailer_id",
@@ -288,79 +301,92 @@ export function BrandLeadsTable() {
         single: true,
       },
     ],
-    [retailerFilterOptions, campaignFilterOptions],
+    [retailerFilterOptions, campaignFilterOptions, withoutSourceFilter]
   );
 
   const anyFilter =
     statusFilter || sourceFilter || campaignFilter || retailerFilter;
 
   return (
-    <DataTable<RetailerLead, unknown>
-      columns={columns}
-      data={data?.data ?? []}
-      isLoading={isLoading || isFetching}
-      searchValue={search}
-      searchPlaceholder={t(
-        "db_brand.leads.search_placeholder",
-        "Name, email or phone…",
-      )}
-      onSearchChange={setSearch}
-      additionalElement={
-        <div className="flex flex-wrap gap-3 items-center">
-          <FilterComponent filters={filters} />
-          {anyFilter && (
-            <button
-              className="inline-flex items-center gap-1 rounded-full border border-dashed border-border px-3 py-1 text-xs font-medium text-muted-foreground hover:text-foreground hover:border-border/80 transition-colors"
-              onClick={() =>
-                onSelect(
-                  {
-                    status: "",
-                    source: "",
-                    platform_campaign_id: "",
-                    retailer_id: "",
-                    page: "1",
-                  },
-                  true,
-                )
-              }
-            >
-              {t("leads.clearFilters", "Clear filters")} <X size={12} />
-            </button>
-          )}
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleExport}
-            disabled={downloading || (data?.total ?? 0) === 0}
-            className="h-9 gap-1.5 text-xs"
-          >
-            {downloading ? (
-              <Loader2 className="h-3.5 w-3.5 animate-spin" />
-            ) : (
-              <Download className="h-3.5 w-3.5" />
+    <>
+      <DataTable<RetailerLead, unknown>
+        columns={columns}
+        data={data?.data ?? []}
+        isLoading={isLoading || isFetching}
+        searchValue={search}
+        searchPlaceholder={t(
+          "db_brand.leads.search_placeholder",
+          "Name, email or phone…"
+        )}
+        onSearchChange={setSearch}
+        onRowClick={(row) => setSelectedLeadId(row.id)}
+        additionalElement={
+          <div className="flex flex-wrap gap-3 items-center">
+            <FilterComponent filters={filters} />
+            {anyFilter && (
+              <button
+                className="inline-flex items-center gap-1 rounded-full border border-dashed border-border px-3 py-1 text-xs font-medium text-muted-foreground hover:text-foreground hover:border-border/80 transition-colors"
+                onClick={() =>
+                  onSelect(
+                    {
+                      status: "",
+                      source: "",
+                      platform_campaign_id: "",
+                      retailer_id: "",
+                      page: "1",
+                    },
+                    true
+                  )
+                }
+              >
+                {t("leads.clearFilters", "Clear filters")} <X size={12} />
+              </button>
             )}
-            {t("db_brand.leads.export", "Export Excel")}
-          </Button>
-        </div>
-      }
-      pagination={
-        data
-          ? {
-              page: data.page,
-              limit: data.limit,
-              total: data.total,
-              totalPages: data.totalPages,
-              hasNext: data.hasNext,
-              hasPrev: data.hasPrev,
-            }
-          : undefined
-      }
-      onPaginationChange={(p, l) => {
-        const updates: Record<string, string> = { page: String(p) };
-        if (Number(l) !== 10) updates.limit = String(l);
-        onSelect(updates, true);
-      }}
-      emptyMessage={t("db_brand.leads.empty", "No leads match your filters.")}
-    />
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleExport}
+              disabled={downloading || (data?.total ?? 0) === 0}
+              className="h-9 gap-1.5 text-xs"
+            >
+              {downloading ? (
+                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+              ) : (
+                <Download className="h-3.5 w-3.5" />
+              )}
+              {t("db_brand.leads.export", "Export Excel")}
+            </Button>
+          </div>
+        }
+        pagination={
+          data
+            ? {
+                page: data.page,
+                limit: data.limit,
+                total: data.total,
+                totalPages: data.totalPages,
+                hasNext: data.hasNext,
+                hasPrev: data.hasPrev,
+              }
+            : undefined
+        }
+        onPaginationChange={(p, l) => {
+          const updates: Record<string, string> = { page: String(p) };
+          if (Number(l) !== 10) updates.limit = String(l);
+          onSelect(updates, true);
+        }}
+        emptyMessage={t("db_brand.leads.empty", "No leads match your filters.")}
+      />
+      <LeadDetailSheet
+        leadId={selectedLeadId}
+        open={!!selectedLeadId}
+        onOpenChange={(open) => !open && setSelectedLeadId(null)}
+        readOnly
+        fetchLead={getBrandLead}
+        fetchHistory={getBrandLeadHistory}
+        fetchNotes={getBrandLeadNotes}
+        scopeKey="brand"
+      />
+    </>
   );
 }

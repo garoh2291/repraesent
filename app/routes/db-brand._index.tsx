@@ -16,7 +16,10 @@ import {
   DropdownMenuTrigger,
 } from "~/components/ui/dropdown-menu";
 import { BulkLeadsExportModal } from "~/components/db-brand/bulk-leads-export-modal";
-import { CampaignsBasePathContext, type CampaignsContextValue } from "~/lib/campaigns-base-path-context";
+import {
+  CampaignsBasePathContext,
+  type CampaignsContextValue,
+} from "~/lib/campaigns-base-path-context";
 import { CampaignAnalyticsDashboard } from "~/components/campaigns/campaign-analytics-dashboard";
 import { BrandLeadsTable } from "~/components/db-brand/brand-leads-table";
 
@@ -57,7 +60,7 @@ export default function DbBrandIndex() {
       buildLeadsLink: (campaignId) =>
         `/db-brand?platform_campaign_id=${encodeURIComponent(campaignId)}#leads`,
     }),
-    [],
+    []
   );
 
   if (!isBrandWs) {
@@ -78,7 +81,7 @@ export default function DbBrandIndex() {
             <p className="text-sm text-muted-foreground">
               {t(
                 "db_brand.subtitle_combined",
-                "Social ads & leads across every retailer in your brand.",
+                "Social ads & leads across every retailer in your brand."
               )}
             </p>
           </div>
@@ -141,12 +144,14 @@ export default function DbBrandIndex() {
             <p className="text-xs text-muted-foreground">
               {t(
                 "db_brand.leads.subtitle_combined",
-                "All retailers — filter by retailer, campaign, status or source.",
+                "All retailers — filter by retailer, campaign, status or source."
               )}
             </p>
           </div>
         </div>
-        <BrandLeadsTable />
+        <div className="mx-auto w-full max-w-[1280px] p-4 sm:p-6 py-10! space-y-6 sm:space-y-8 app-fade-in">
+          <BrandLeadsTable />
+        </div>
       </section>
 
       <BulkLeadsExportModal

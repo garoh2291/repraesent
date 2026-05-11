@@ -1,11 +1,8 @@
-import { Link, useLocation, useNavigate, useParams } from "react-router";
-import { useMemo, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { Search } from "lucide-react";
+import { Link, useLocation, useNavigate } from "react-router";
+import { useState } from "react";
 import { cn } from "~/lib/utils";
 import { useTranslation } from "react-i18next";
 import {
-  Boxes,
   Building2,
   CheckSquare,
   ChevronDown,
@@ -15,13 +12,9 @@ import {
   Package,
   Settings,
   Store,
+  Users,
   X,
 } from "lucide-react";
-// `Search` icon imported above already.
-import {
-  listBrandRetailers,
-  type BrandRetailer,
-} from "~/lib/api/doorboost-brand";
 import * as LucideIcons from "lucide-react";
 import { InstructionsModal } from "~/components/instructions-modal";
 
@@ -129,33 +122,10 @@ export function Sidebar({ onClose, className }: { onClose?: () => void; classNam
     hasAppointmentsService && !!appointmentConfigs?.length;
   const isDoorboostBrandWs = currentWorkspace?.type === "doorboost_brand";
 
-  const { data: brandRetailers = [], isLoading: brandRetailersLoading } =
-    useQuery<BrandRetailer[]>({
-      queryKey: ["db-brand-retailers", currentWorkspace?.id],
-      queryFn: listBrandRetailers,
-      enabled: isDoorboostBrandWs && !!currentWorkspace?.id,
-      staleTime: 60_000,
-    });
-
   const handleWorkspaceChange = (workspaceId: string) => {
     setCurrentWorkspace(workspaceId);
     navigate("/", { replace: true });
   };
-
-  const params = useParams();
-  const activeRetailerId =
-    typeof params.retailerId === "string" ? params.retailerId : null;
-
-  const [retailerSearch, setRetailerSearch] = useState("");
-  const filteredBrandRetailers = useMemo(() => {
-    const needle = retailerSearch.trim().toLowerCase();
-    if (!needle) return brandRetailers;
-    return brandRetailers.filter(
-      (r) =>
-        (r.retailer_name || "").toLowerCase().includes(needle) ||
-        r.retailer_id.toLowerCase().includes(needle),
-    );
-  }, [brandRetailers, retailerSearch]);
 
   return (
     <aside className={cn("flex h-full w-[220px] shrink-0 flex-col bg-[#111113] border-r border-white/5", className)}>
@@ -223,77 +193,33 @@ export function Sidebar({ onClose, className }: { onClose?: () => void; classNam
       <nav className="min-h-0 flex-1 overflow-y-auto p-3 space-y-0.5">
         {isDoorboostBrandWs ? (
           <>
-            {/* Doorboost-brand workspaces: only Retailers. */}
-            <div className="px-3 pt-2 pb-1">
-              <div className="flex items-center gap-2 text-[10px] uppercase tracking-[0.18em] text-white/30">
-                <Boxes className="h-3 w-3" />
-                <span>{t("nav.brand_retailers", "Retailers")}</span>
-                {brandRetailers.length > 0 && (
-                  <span className="ml-auto text-white/40 normal-case tracking-normal text-[10px]">
-                    {brandRetailers.length}
-                  </span>
-                )}
-              </div>
-            </div>
-
-            {brandRetailersLoading ? (
-              <div className="space-y-1 px-2 py-1">
-                {[0, 1, 2].map((i) => (
-                  <div
-                    key={i}
-                    className="h-7 rounded-md bg-white/5 animate-pulse"
-                  />
-                ))}
-              </div>
-            ) : brandRetailers.length === 0 ? (
-              <p className="px-3 py-2 text-[12px] text-white/35 leading-snug">
-                {t(
-                  "nav.brand_retailers_empty",
-                  "No retailers attached to this brand yet.",
-                )}
-              </p>
-            ) : (
-              <>
-                {brandRetailers.length > 5 && (
-                  <div className="relative px-2 py-1">
-                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-3 w-3 text-white/30" />
-                    <input
-                      value={retailerSearch}
-                      onChange={(e) => setRetailerSearch(e.target.value)}
-                      placeholder={t(
-                        "nav.brand_retailers_search",
-                        "Search retailers…",
-                      )}
-                      className="w-full rounded-md bg-white/5 pl-7 pr-2 py-1.5 text-[12px] text-white/80 placeholder:text-white/25 outline-none focus:bg-white/10 focus:ring-1 focus:ring-white/15"
-                    />
-                  </div>
-                )}
-                <div className="space-y-0.5 max-h-[40vh] overflow-y-auto pr-0.5">
-                  {filteredBrandRetailers.length === 0 ? (
-                    <p className="px-3 py-2 text-[12px] text-white/30 leading-snug">
-                      {t("common.noResults", "No matches")}
-                    </p>
-                  ) : (
-                    filteredBrandRetailers.map((r) => {
-                      const isActive = activeRetailerId === r.retailer_id;
-                      return (
-                        <NavLink
-                          key={r.retailer_id}
-                          to={`/db-brand/retailers/${r.retailer_id}/social-ads`}
-                          isActive={isActive}
-                          onClick={onClose}
-                        >
-                          <Store className="h-4 w-4 shrink-0" />
-                          <span className="truncate">
-                            {r.retailer_name || r.retailer_id}
-                          </span>
-                        </NavLink>
-                      );
-                    })
-                  )}
-                </div>
-              </>
-            )}
+            <NavLink
+              to="/db-brand"
+              isActive={location.pathname === "/db-brand"}
+              onClick={onClose}
+            >
+              <HomeIcon className="h-4 w-4 shrink-0" />
+              {t("nav.home", "Home")}
+            </NavLink>
+            <NavLink
+              to="/brand-retailers"
+              isActive={
+                location.pathname.startsWith("/brand-retailers") ||
+                location.pathname.startsWith("/db-brand/retailers")
+              }
+              onClick={onClose}
+            >
+              <Store className="h-4 w-4 shrink-0" />
+              {t("nav.brand_retailers", "Retailers")}
+            </NavLink>
+            <NavLink
+              to="/brand-leads"
+              isActive={location.pathname.startsWith("/brand-leads")}
+              onClick={onClose}
+            >
+              <Users className="h-4 w-4 shrink-0" />
+              {t("nav.brand_leads", "Leads")}
+            </NavLink>
           </>
         ) : (
           <>

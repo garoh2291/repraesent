@@ -17,6 +17,18 @@ const PENDING_PATH = "/pending";
 const CLOSED_PATH = "/closed";
 const BRAND_PREFIX = "/brand";
 
+/**
+ * Paths a doorboost_brand workspace is allowed to render. Anything outside
+ * this set gets redirected back to /db-brand.
+ */
+function isDoorboostBrandPath(path: string): boolean {
+  return (
+    path.startsWith("/db-brand") ||
+    path.startsWith("/brand-retailers") ||
+    path.startsWith("/brand-leads")
+  );
+}
+
 export default function ProtectedLayout() {
   const { t } = useTranslation();
   const { isAuthenticated, isLoading, user, workspaces, currentWorkspace } =
@@ -29,7 +41,9 @@ export default function ProtectedLayout() {
   const isOnClosed = path === CLOSED_PATH;
   const isOnNoWorkspace = path === "/no-workspace";
   const isOnWorkspacePicker = path === "/auth/workspace-picker";
-  const isOnBrand = path.startsWith(BRAND_PREFIX);
+  // Only match the brand-user routes (/brand, /brand/workspaces, …) — NOT
+  // doorboost-brand workspace routes like /brand-retailers or /brand-leads.
+  const isOnBrand = path === BRAND_PREFIX || path.startsWith(BRAND_PREFIX + "/");
   const isBrandUser = user?.user_type === "brand";
 
   const hasProfile = !!(user?.first_name?.trim() && user?.last_name?.trim());
@@ -170,8 +184,7 @@ export default function ProtectedLayout() {
     // Doorboost-brand workspace: bypass all product/Stripe/onboarding gating.
     // Land users on /db-brand. Settings is intentionally not exposed here.
     if (ws.type === "doorboost_brand") {
-      const isOnDbBrand = path.startsWith("/db-brand");
-      if (!isOnDbBrand && !isOnWorkspacePicker) {
+      if (!isDoorboostBrandPath(path) && !isOnWorkspacePicker) {
         navigate("/db-brand", { replace: true });
       }
       return;
@@ -341,10 +354,9 @@ export default function ProtectedLayout() {
     const ws = currentWorkspace;
     const status = ws?.status ?? "active";
 
-    // Doorboost-brand: only render /db-brand/**.
+    // Doorboost-brand: only render brand-scoped paths.
     if (ws.type === "doorboost_brand") {
-      const isOnDbBrand = path.startsWith("/db-brand");
-      if (!isOnDbBrand && !isOnWorkspacePicker) return null;
+      if (!isDoorboostBrandPath(path) && !isOnWorkspacePicker) return null;
     } else if (status === "canceled") {
       if (!isOnClosed) return null;
       // canceled + on /closed → render, skip all other guards
