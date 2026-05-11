@@ -484,13 +484,25 @@ function CampaignListSkeleton() {
 
 /* ─── Campaign List with Tabs (backend-driven) ─── */
 
-function CampaignListSection({ platform }: { platform?: string }) {
+function CampaignListSection({
+  platform,
+  restrictToCampaignIds,
+}: {
+  platform?: string;
+  /**
+   * When set, the list renders only those campaigns (client-filtered after
+   * fetch) and hides the active/inactive tabs + search input + pagination
+   * since the scope is locked.
+   */
+  restrictToCampaignIds?: string[];
+}) {
   const { t } = useTranslation();
   const { currentWorkspace } = useAuthContext();
   const [tab, setTab] = useState<"active" | "inactive">("active");
   const [search, setSearch] = useState("");
   const debouncedSearch = useDebounce(search, 400);
   const [page, setPage] = useState(1);
+  const isRestricted = !!restrictToCampaignIds?.length;
 
   // Reset page when search or tab changes
   useEffect(() => {
@@ -504,19 +516,22 @@ function CampaignListSection({ platform }: { platform?: string }) {
       basePath,
       currentWorkspace?.id,
       platform,
-      tab,
-      debouncedSearch,
-      page,
+      isRestricted ? "restricted" : tab,
+      isRestricted ? "" : debouncedSearch,
+      isRestricted ? 1 : page,
+      restrictToCampaignIds?.join(",") ?? "",
     ],
     queryFn: () =>
       getConnectedCampaigns(
-        {
-          platform,
-          status: tab,
-          search: debouncedSearch || undefined,
-          page,
-          limit: 20,
-        },
+        isRestricted
+          ? { platform, page: 1, limit: 200 }
+          : {
+              platform,
+              status: tab,
+              search: debouncedSearch || undefined,
+              page,
+              limit: 20,
+            },
         basePath,
       ),
     enabled: !!currentWorkspace?.id,
@@ -553,77 +568,87 @@ function CampaignListSection({ platform }: { platform?: string }) {
     enabled: !!currentWorkspace?.id,
   });
 
-  const campaigns = data?.data ?? [];
-  const totalPages = data?.totalPages ?? 1;
-  const total = data?.total ?? 0;
+  const rawCampaigns = data?.data ?? [];
+  const campaigns = isRestricted
+    ? rawCampaigns.filter((c) =>
+        restrictToCampaignIds!.includes(c.campaign_id),
+      )
+    : rawCampaigns;
+  const totalPages = isRestricted ? 1 : (data?.totalPages ?? 1);
+  const total = isRestricted ? campaigns.length : (data?.total ?? 0);
 
   return (
     <div
       className="app-fade-up rounded-2xl border border-border bg-card overflow-hidden"
       style={{ animationDelay: "0.34s" }}
     >
-      {/* Header with tabs — stacks on mobile */}
-      <div className="px-3 sm:px-6 py-2.5 sm:py-3 border-b border-border flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-4">
-        <p className="text-[10px] sm:text-[11px] font-semibold uppercase tracking-widest text-muted-foreground shrink-0">
-          {t("campaigns.connectedCampaigns")}
-        </p>
-        <div className="flex gap-0.5 rounded-lg bg-muted/50 p-0.5 self-start sm:self-auto">
-          <button
-            onClick={() => setTab("active")}
-            className={cn(
-              "rounded-md px-2 sm:px-2.5 py-1 text-[10px] sm:text-[11px] font-medium transition-all whitespace-nowrap",
-              tab === "active"
-                ? "bg-card text-foreground shadow-sm"
-                : "text-muted-foreground hover:text-foreground",
-            )}
-          >
-            {t("campaigns.tabActive")}
-            {activeCount != null && (
-              <span className="ml-1 text-muted-foreground">
-                {activeCount.total}
-              </span>
-            )}
-          </button>
-          <button
-            onClick={() => setTab("inactive")}
-            className={cn(
-              "rounded-md px-2 sm:px-2.5 py-1 text-[10px] sm:text-[11px] font-medium transition-all whitespace-nowrap",
-              tab === "inactive"
-                ? "bg-card text-foreground shadow-sm"
-                : "text-muted-foreground hover:text-foreground",
-            )}
-          >
-            {t("campaigns.tabInactive")}
-            {inactiveCount != null && (
-              <span className="ml-1 text-muted-foreground">
-                {inactiveCount.total}
-              </span>
-            )}
-          </button>
-        </div>
-      </div>
-
-      {/* Search under tabs */}
-      <div className="px-3 sm:px-6 py-2 sm:py-2.5 border-b border-border">
-        <div className="flex items-center gap-2 rounded-lg bg-muted/50 px-2.5 py-1.5">
-          <Search className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
-          <input
-            type="text"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder={t("campaigns.searchCampaigns")}
-            className="flex-1 bg-transparent text-xs text-foreground placeholder:text-muted-foreground/60 outline-none"
-          />
-          {search && (
-            <button onClick={() => setSearch("")}>
-              <X className="h-3 w-3 text-muted-foreground" />
+      {/* Header with tabs — stacks on mobile. Hidden when scope is locked
+          to a single campaign (active/inactive selector is irrelevant). */}
+      {!isRestricted && (
+        <div className="px-3 sm:px-6 py-2.5 sm:py-3 border-b border-border flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-4">
+          <p className="text-[10px] sm:text-[11px] font-semibold uppercase tracking-widest text-muted-foreground shrink-0">
+            {t("campaigns.connectedCampaigns")}
+          </p>
+          <div className="flex gap-0.5 rounded-lg bg-muted/50 p-0.5 self-start sm:self-auto">
+            <button
+              onClick={() => setTab("active")}
+              className={cn(
+                "rounded-md px-2 sm:px-2.5 py-1 text-[10px] sm:text-[11px] font-medium transition-all whitespace-nowrap",
+                tab === "active"
+                  ? "bg-card text-foreground shadow-sm"
+                  : "text-muted-foreground hover:text-foreground",
+              )}
+            >
+              {t("campaigns.tabActive")}
+              {activeCount != null && (
+                <span className="ml-1 text-muted-foreground">
+                  {activeCount.total}
+                </span>
+              )}
             </button>
-          )}
-          {isFetching && !isLoading && (
-            <div className="h-3 w-3 animate-spin rounded-full border border-muted border-t-foreground shrink-0" />
-          )}
+            <button
+              onClick={() => setTab("inactive")}
+              className={cn(
+                "rounded-md px-2 sm:px-2.5 py-1 text-[10px] sm:text-[11px] font-medium transition-all whitespace-nowrap",
+                tab === "inactive"
+                  ? "bg-card text-foreground shadow-sm"
+                  : "text-muted-foreground hover:text-foreground",
+              )}
+            >
+              {t("campaigns.tabInactive")}
+              {inactiveCount != null && (
+                <span className="ml-1 text-muted-foreground">
+                  {inactiveCount.total}
+                </span>
+              )}
+            </button>
+          </div>
         </div>
-      </div>
+      )}
+
+      {/* Search under tabs — also hidden in locked-scope view. */}
+      {!isRestricted && (
+        <div className="px-3 sm:px-6 py-2 sm:py-2.5 border-b border-border">
+          <div className="flex items-center gap-2 rounded-lg bg-muted/50 px-2.5 py-1.5">
+            <Search className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+            <input
+              type="text"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder={t("campaigns.searchCampaigns")}
+              className="flex-1 bg-transparent text-xs text-foreground placeholder:text-muted-foreground/60 outline-none"
+            />
+            {search && (
+              <button onClick={() => setSearch("")}>
+                <X className="h-3 w-3 text-muted-foreground" />
+              </button>
+            )}
+            {isFetching && !isLoading && (
+              <div className="h-3 w-3 animate-spin rounded-full border border-muted border-t-foreground shrink-0" />
+            )}
+          </div>
+        </div>
+      )}
 
       {/* Content */}
       {isLoading ? (
@@ -901,25 +926,46 @@ function CampaignFilterDropdown({
 export function CampaignAnalyticsDashboard({
   title,
   platform: fixedPlatform,
+  initialCampaignIds,
+  initialCampaignNames,
+  lockCampaignFilter = false,
 }: {
   title: string;
   platform?: string;
+  /** Seed the campaign filter (e.g. when deep-linking to /social-ads/:campaignId). */
+  initialCampaignIds?: string[];
+  /** Optional id → display name map shown in the filter chip. */
+  initialCampaignNames?: Map<string, string>;
+  /**
+   * Hide the campaign filter dropdown entirely. Used on campaign-scoped pages
+   * (e.g. /social-ads/:campaignId) where the campaign is already locked in.
+   */
+  lockCampaignFilter?: boolean;
 }) {
   const { t } = useTranslation();
   const { currentWorkspace } = useAuthContext();
   const [dateRange, setDateRange] = useState<DateRange>(defaultRange);
-  const [selectedCampaignIds, setSelectedCampaignIds] = useState<string[]>([]);
+  const [selectedCampaignIds, setSelectedCampaignIds] = useState<string[]>(
+    initialCampaignIds ?? [],
+  );
   const [selectedCampaignNames, setSelectedCampaignNames] = useState<
     Map<string, string>
-  >(new Map());
+  >(initialCampaignNames ?? new Map());
   const [platformTab, setPlatformTab] = useState<string>("all");
 
   // When a fixed platform is provided, use it directly; otherwise use the tab
   const platform =
     fixedPlatform ?? (platformTab === "all" ? undefined : platformTab);
 
-  // Reset campaign filter when platform tab changes
+  // Reset campaign filter when the platform tab CHANGES — but never on the
+  // initial mount, otherwise an `initialCampaignIds` prop passed in by a
+  // parent (e.g. /social-ads/:campaignId pre-filter) gets wiped immediately.
+  const firstPlatformTabRender = useRef(true);
   useEffect(() => {
+    if (firstPlatformTabRender.current) {
+      firstPlatformTabRender.current = false;
+      return;
+    }
     setSelectedCampaignIds([]);
     setSelectedCampaignNames(new Map());
   }, [platformTab]);
@@ -951,8 +997,16 @@ export function CampaignAnalyticsDashboard({
   });
 
   const hasCampaigns = (anyCheck?.total ?? 0) > 0;
+
+  // When the parent locks the filter (campaign-scoped page), the prop is the
+  // source of truth — bypass state so StrictMode / re-mounts / future state
+  // updates can never drift away from the URL-driven campaign.
+  const effectiveSelectedIds =
+    lockCampaignFilter && initialCampaignIds && initialCampaignIds.length > 0
+      ? initialCampaignIds
+      : selectedCampaignIds;
   const filterIds =
-    selectedCampaignIds.length > 0 ? selectedCampaignIds : undefined;
+    effectiveSelectedIds.length > 0 ? effectiveSelectedIds : undefined;
 
   const { data: overview, isLoading: overviewLoading } = useQuery({
     queryKey: [
@@ -1020,12 +1074,14 @@ export function CampaignAnalyticsDashboard({
             {title}
           </h1>
           <div className="flex items-center gap-2 flex-wrap">
-            <CampaignFilterDropdown
-              platform={platform}
-              selectedIds={selectedCampaignIds}
-              selectedNames={selectedCampaignNames}
-              onChange={handleFilterChange}
-            />
+            {!lockCampaignFilter && (
+              <CampaignFilterDropdown
+                platform={platform}
+                selectedIds={selectedCampaignIds}
+                selectedNames={selectedCampaignNames}
+                onChange={handleFilterChange}
+              />
+            )}
             <CampaignDatePicker value={dateRange} onChange={setDateRange} />
           </div>
         </div>
@@ -1316,8 +1372,17 @@ export function CampaignAnalyticsDashboard({
         </div>
       )}
 
-      {/* Connected Campaigns List with Active/Inactive tabs */}
-      <CampaignListSection platform={platform} />
+      {/* Connected Campaigns List with Active/Inactive tabs.
+          When the filter is locked (e.g. /social-ads/:campaignId), pass the
+          selected ids down so the list renders only that campaign. */}
+      <CampaignListSection
+        platform={platform}
+        restrictToCampaignIds={
+          lockCampaignFilter && effectiveSelectedIds.length > 0
+            ? effectiveSelectedIds
+            : undefined
+        }
+      />
       </>)}
     </div>
   );

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { useParams, useSearchParams } from "react-router";
+import { useNavigate, useParams, useSearchParams } from "react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import type { ColumnDef } from "@tanstack/react-table";
@@ -42,18 +42,27 @@ function parsePage(v: string | null): number {
   return isNaN(n) || n < 1 ? 1 : n;
 }
 function parseLimit(v: string | null): number {
-  const n = parseInt(v ?? "10", 10);
-  return isNaN(n) || n < 1 ? 10 : Math.min(100, n);
+  const n = parseInt(v ?? "50", 10);
+  return isNaN(n) || n < 1 ? 50 : Math.min(100, n);
 }
 
 export default function DbBrandRetailerLeads() {
-  const { retailerId } = useParams<{ retailerId: string }>();
+  const { retailerId, leadId: leadIdFromUrl } = useParams<{
+    retailerId: string;
+    leadId?: string;
+  }>();
+  const navigate = useNavigate();
   const { t } = useTranslation();
   const { currentWorkspace } = useAuthContext();
   const [searchParams] = useSearchParams();
   const [onSelect] = useSearchParamsSelect();
   const [downloading, setDownloading] = useState(false);
-  const [selectedLeadId, setSelectedLeadId] = useState<string | null>(null);
+  // Optional `:leadId` URL segment drives the sheet — falls back to local
+  // state for clicks that don't come with a leadId in the URL yet.
+  const [localSelectedLeadId, setLocalSelectedLeadId] = useState<string | null>(
+    null,
+  );
+  const selectedLeadId = leadIdFromUrl ?? localSelectedLeadId;
 
   const page = useMemo(
     () => parsePage(searchParams.get("page")),
@@ -233,22 +242,31 @@ export default function DbBrandRetailerLeads() {
     },
   ];
 
+  // When the URL already pins a `platform_campaign_id` (e.g. the user came
+  // from /social-ads/:campaignId via the Leads tab), hide the campaign filter
+  // dropdown — the scope is already locked.
   const filters = useMemo(
-    () => [
-      {
-        name: "status",
-        paramKey: "status",
-        options: LEAD_FILTER_STATUS_OPTIONS,
-        single: true,
-      },
-      {
-        name: "campaigns",
-        paramKey: "platform_campaign_id",
-        options: campaignFilterOptions,
-        single: true,
-      },
-    ],
-    [campaignFilterOptions]
+    () =>
+      [
+        {
+          name: "status",
+          paramKey: "status",
+          options: LEAD_FILTER_STATUS_OPTIONS,
+          single: true,
+        },
+        !campaignFilter && {
+          name: "campaigns",
+          paramKey: "platform_campaign_id",
+          options: campaignFilterOptions,
+          single: true,
+        },
+      ].filter(Boolean) as Array<{
+        name: string;
+        paramKey: string;
+        options: typeof campaignFilterOptions;
+        single: boolean;
+      }>,
+    [campaignFilterOptions, campaignFilter]
   );
 
   return (
@@ -263,7 +281,16 @@ export default function DbBrandRetailerLeads() {
           "Name, email or phone…"
         )}
         onSearchChange={setSearch}
-        onRowClick={(row) => setSelectedLeadId(row.id)}
+        onRowClick={(row) => {
+          // Drive the detail sheet through the URL so the page is shareable
+          // and back-button-friendly. Preserve current filter query string.
+          const qs = searchParams.toString();
+          navigate(
+            `/db-brand/retailers/${retailerId}/leads/${row.id}${
+              qs ? `?${qs}` : ""
+            }`,
+          );
+        }}
         additionalElement={
           <div className="flex flex-wrap gap-3 items-center">
             <FilterComponent filters={filters} />
@@ -315,7 +342,8 @@ export default function DbBrandRetailerLeads() {
         }
         onPaginationChange={(p, l) => {
           const updates: Record<string, string> = { page: String(p) };
-          if (Number(l) !== 10) updates.limit = String(l);
+          if (Number(l) !== 50) updates.limit = String(l);
+          else updates.limit = "";
           onSelect(updates, true);
         }}
         emptyMessage={t("db_brand.leads.empty", "No leads match your filters.")}
@@ -323,7 +351,18 @@ export default function DbBrandRetailerLeads() {
       <LeadDetailSheet
         leadId={selectedLeadId}
         open={!!selectedLeadId}
-        onOpenChange={(open) => !open && setSelectedLeadId(null)}
+        onOpenChange={(open) => {
+          if (open) return;
+          if (leadIdFromUrl) {
+            // Close → strip the :leadId segment, keep filters.
+            const qs = searchParams.toString();
+            navigate(
+              `/db-brand/retailers/${retailerId}/leads${qs ? `?${qs}` : ""}`,
+            );
+          } else {
+            setLocalSelectedLeadId(null);
+          }
+        }}
         readOnly
         fetchLead={getBrandLead}
         fetchHistory={getBrandLeadHistory}

@@ -59,14 +59,23 @@ export default [
       route("instructions", "routes/instructions.tsx"),
       route("db-brand", "routes/db-brand._index.tsx"),
       route("brand-retailers", "routes/brand-retailers.tsx"),
+      route("brand-campaigns", "routes/brand-campaigns.tsx"),
       route("brand-leads", "routes/brand-leads.tsx"),
       route(
         "db-brand/retailers/:retailerId/social-ads",
         "routes/db-brand.retailers.$retailerId.social-ads.tsx",
       ),
       route(
+        "db-brand/retailers/:retailerId/social-ads/:campaignId",
+        "routes/db-brand.retailers.$retailerId.social-ads.$campaignId.tsx",
+      ),
+      route(
         "db-brand/retailers/:retailerId/leads",
         "routes/db-brand.retailers.$retailerId.leads.tsx",
+      ),
+      route(
+        "db-brand/retailers/:retailerId/leads/:leadId",
+        "routes/db-brand.retailers.$retailerId.leads.$leadId.tsx",
       ),
     ]),
   ]),

@@ -4,8 +4,10 @@ import { useTranslation } from "react-i18next";
 import { ArrowLeft, BarChart3, Users } from "lucide-react";
 import { cn } from "~/lib/utils";
 import {
+  listBrandRetailerCampaigns,
   listBrandRetailers,
   type BrandRetailer,
+  type BrandRetailerCampaign,
 } from "~/lib/api/doorboost-brand";
 import { useAuthContext } from "~/providers/auth-provider";
 
@@ -17,7 +19,10 @@ interface Props {
  * Shared chrome for both retailer pages: header + tabs + back-to-brand link.
  */
 export function RetailerTabsLayout({ children }: Props) {
-  const { retailerId } = useParams<{ retailerId: string }>();
+  const { retailerId, campaignId } = useParams<{
+    retailerId: string;
+    campaignId?: string;
+  }>();
   const location = useLocation();
   const { t } = useTranslation();
   const { currentWorkspace } = useAuthContext();
@@ -30,14 +35,51 @@ export function RetailerTabsLayout({ children }: Props) {
   });
   const retailer = retailers.find((r) => r.retailer_id === retailerId);
 
+  // Campaign scope can come from a path param (/social-ads/:campaignId) or a
+  // query param on /leads (?platform_campaign_id=X) — pick whichever exists
+  // so switching tabs preserves the scope in both directions.
+  const queryCampaignId =
+    new URLSearchParams(location.search).get("platform_campaign_id") || "";
+  const scopedCampaignId = campaignId || queryCampaignId;
+
+  // Resolve the campaign name so the page header reads as the campaign on
+  // campaign-scoped views (and the retailer otherwise). Same cache key the
+  // social-ads/$campaignId route already warms.
+  const { data: retailerCampaigns = [] } = useQuery<BrandRetailerCampaign[]>({
+    queryKey: ["db-brand-retailer-campaigns-list", retailerId],
+    queryFn: () => listBrandRetailerCampaigns(retailerId!),
+    enabled: !!retailerId && !!scopedCampaignId,
+    staleTime: 60_000,
+  });
+  const scopedCampaign = scopedCampaignId
+    ? retailerCampaigns.find((c) => c.campaign_id === scopedCampaignId)
+    : undefined;
+  const stateCampaignName = (
+    location.state as { campaign_name?: string } | null
+  )?.campaign_name;
+  const campaignDisplayName =
+    stateCampaignName ||
+    scopedCampaign?.campaign_name ||
+    scopedCampaignId ||
+    "";
+
+  const socialAdsHref = scopedCampaignId
+    ? `/db-brand/retailers/${retailerId}/social-ads/${scopedCampaignId}`
+    : `/db-brand/retailers/${retailerId}/social-ads`;
+  const leadsHref = scopedCampaignId
+    ? `/db-brand/retailers/${retailerId}/leads?platform_campaign_id=${encodeURIComponent(
+        scopedCampaignId,
+      )}`
+    : `/db-brand/retailers/${retailerId}/leads`;
+
   const tabs: { to: string; label: string; Icon: typeof BarChart3 }[] = [
     {
-      to: `/db-brand/retailers/${retailerId}/social-ads`,
+      to: socialAdsHref,
       label: t("db_brand.tabs.social_ads", "Social Ads"),
       Icon: BarChart3,
     },
     {
-      to: `/db-brand/retailers/${retailerId}/leads`,
+      to: leadsHref,
       label: t("db_brand.tabs.leads", "Leads"),
       Icon: Users,
     },
@@ -57,12 +99,21 @@ export function RetailerTabsLayout({ children }: Props) {
       <div className="mb-6 flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">
-            {retailer?.retailer_name || retailerId?.split("-").pop()}
+            {scopedCampaignId
+              ? campaignDisplayName
+              : retailer?.retailer_name || retailerId?.split("-").pop()}
           </h1>
-          {retailerId && (
-            <p className="text-xs font-mono text-muted-foreground/70 mt-1">
-              #{retailerId.split("-").pop()}
+          {scopedCampaignId ? (
+            <p className="text-xs text-muted-foreground/70 mt-1">
+              {retailer?.retailer_name || retailerId?.split("-").pop()}
+              <span className="ml-2 font-mono">#{scopedCampaignId}</span>
             </p>
+          ) : (
+            retailerId && (
+              <p className="text-xs font-mono text-muted-foreground/70 mt-1">
+                #{retailerId.split("-").pop()}
+              </p>
+            )
           )}
         </div>
       </div>
@@ -70,7 +121,13 @@ export function RetailerTabsLayout({ children }: Props) {
       <div className="mb-6 border-b">
         <nav className="-mb-px flex gap-1">
           {tabs.map((tab) => {
-            const isActive = location.pathname === tab.to;
+            // tab.to may include a query string (campaign-scoped leads link)
+            // — compare on the path portion only so the active state still
+            // works once we navigate there.
+            const tabPath = tab.to.split("?")[0];
+            const isActive =
+              location.pathname === tabPath ||
+              location.pathname.startsWith(`${tabPath}/`);
             const Icon = tab.Icon;
             return (
               <Link
