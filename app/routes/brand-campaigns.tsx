@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { useSearchParams } from "react-router";
+import { useNavigate, useSearchParams } from "react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import type { ColumnDef } from "@tanstack/react-table";
@@ -45,6 +45,7 @@ function formatDateCell(raw: string | null | undefined): string {
 export default function BrandCampaigns() {
   const { t } = useTranslation();
   const { currentWorkspace } = useAuthContext();
+  const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const [onSelect] = useSearchParamsSelect();
   const isBrandWs = currentWorkspace?.type === "doorboost_brand";
@@ -266,6 +267,14 @@ export default function BrandCampaigns() {
           "db_brand.campaigns.search_placeholder",
           "Search name, id or retailer…",
         )}
+        onRowClick={(row) =>
+          navigate(
+            `/db-brand/retailers/${row.retailer_id}/social-ads/${row.campaign_id}`,
+            // Pass campaign name through route state so the filter chip on
+            // the destination page can render it without a second query.
+            { state: { campaign_name: row.campaign_name || row.campaign_id } },
+          )
+        }
         additionalElement={
           <div className="flex flex-wrap gap-3 items-center">
             <FilterComponent filters={filters} />

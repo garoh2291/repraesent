@@ -66,8 +66,16 @@ export default [
         "routes/db-brand.retailers.$retailerId.social-ads.tsx",
       ),
       route(
+        "db-brand/retailers/:retailerId/social-ads/:campaignId",
+        "routes/db-brand.retailers.$retailerId.social-ads.$campaignId.tsx",
+      ),
+      route(
         "db-brand/retailers/:retailerId/leads",
         "routes/db-brand.retailers.$retailerId.leads.tsx",
+      ),
+      route(
+        "db-brand/retailers/:retailerId/leads/:leadId",
+        "routes/db-brand.retailers.$retailerId.leads.$leadId.tsx",
       ),
     ]),
   ]),
