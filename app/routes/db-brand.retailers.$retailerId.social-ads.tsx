@@ -1,6 +1,10 @@
 import { useMemo } from "react";
 import { useParams } from "react-router";
 import { useTranslation } from "react-i18next";
+
+export function meta() {
+  return [{ title: "Doorboost Brand Dashboard" }];
+}
 import {
   CampaignsBasePathContext,
   type CampaignsContextValue,

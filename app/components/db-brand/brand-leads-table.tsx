@@ -1,13 +1,9 @@
 import { useEffect, useMemo, useState } from "react";
-import { useParams, useSearchParams } from "react-router";
+import { useSearchParams } from "react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import type { ColumnDef } from "@tanstack/react-table";
 import { Download, Loader2, X } from "lucide-react";
-
-export function meta() {
-  return [{ title: "Doorboost Brand Dashboard" }];
-}
 import { DataTable } from "~/components/organism/data-table";
 import FilterComponent from "~/components/molecule/filter-component";
 import {
@@ -21,20 +17,20 @@ import { useDebounce } from "~/lib/hooks/useDebounce";
 import { useSearchParamsSelect } from "~/lib/hooks/useQueryParams";
 import { formatDate } from "~/lib/utils/format";
 import {
-  downloadBrandRetailerLeadsXlsx,
+  downloadBrandLeadsXlsx,
   getBrandLead,
   getBrandLeadHistory,
   getBrandLeadNotes,
-  listBrandRetailerCampaigns,
-  listBrandRetailerLeads,
+  listBrandCampaigns,
+  listBrandLeads,
   listBrandRetailers,
+  type BrandCampaign,
+  type BrandLeadFilters,
   type BrandRetailer,
-  type BrandRetailerCampaign,
   type RetailerLead,
   type RetailerLeadsResponse,
 } from "~/lib/api/doorboost-brand";
 import { LeadDetailSheet } from "~/components/organism/lead-detail-sheet";
-import { RetailerTabsLayout } from "~/components/db-brand/retailer-tabs";
 import { useAuthContext } from "~/providers/auth-provider";
 
 function parsePage(v: string | null): number {
@@ -46,8 +42,18 @@ function parseLimit(v: string | null): number {
   return isNaN(n) || n < 1 ? 10 : Math.min(100, n);
 }
 
-export default function DbBrandRetailerLeads() {
-  const { retailerId } = useParams<{ retailerId: string }>();
+const lastIdSegment = (id: string) => id.split("-").pop() ?? id;
+
+/**
+ * Brand-wide leads table for the /db-brand index. Same shape as the retailer
+ * leads page but aggregates every retailer in the brand and exposes an extra
+ * Retailer filter so the user can narrow without leaving the page.
+ */
+export function BrandLeadsTable({
+  withoutSourceFilter = false,
+}: {
+  withoutSourceFilter?: boolean;
+}) {
   const { t } = useTranslation();
   const { currentWorkspace } = useAuthContext();
   const [searchParams] = useSearchParams();
@@ -67,9 +73,8 @@ export default function DbBrandRetailerLeads() {
   const statusFilter = searchParams.get("status") ?? "";
   const sourceFilter = searchParams.get("source") ?? "";
   const campaignFilter = searchParams.get("platform_campaign_id") ?? "";
+  const retailerFilter = searchParams.get("retailer_id") ?? "";
 
-  // Local input state keeps typing snappy; URL is updated after debounce so we
-  // don't pollute history and the query only refires once the user pauses.
   const [search, setSearch] = useState(urlSearch);
   const debouncedSearch = useDebounce(search, 300);
 
@@ -79,73 +84,106 @@ export default function DbBrandRetailerLeads() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [debouncedSearch]);
 
+  const isBrandWs = currentWorkspace?.type === "doorboost_brand";
+
   const { data: retailers = [] } = useQuery<BrandRetailer[]>({
     queryKey: ["db-brand-retailers", currentWorkspace?.id],
     queryFn: listBrandRetailers,
-    enabled: currentWorkspace?.type === "doorboost_brand",
-    staleTime: 60_000,
-  });
-  const retailerName = retailers.find(
-    (r) => r.retailer_id === retailerId
-  )?.retailer_name;
-
-  const { data: campaigns = [] } = useQuery<BrandRetailerCampaign[]>({
-    queryKey: ["db-brand-retailer-campaigns-list", retailerId],
-    queryFn: () => listBrandRetailerCampaigns(retailerId!),
-    enabled: !!retailerId,
+    enabled: isBrandWs,
     staleTime: 60_000,
   });
 
+  const { data: campaigns = [] } = useQuery<BrandCampaign[]>({
+    queryKey: ["db-brand-campaigns-list", currentWorkspace?.id],
+    queryFn: () => listBrandCampaigns({ limit: 500 }),
+    enabled: isBrandWs,
+    staleTime: 60_000,
+  });
+
+  // Many ad accounts reuse the same campaign name across brands and even
+  // across retailers in the same brand. We disambiguate with retailer name
+  // (when available) or campaign id tail so the dropdown is readable.
   const campaignFilterOptions = useMemo(
     () =>
-      campaigns.map((c) => ({
-        key: c.campaign_id,
-        label: c.campaign_name || c.campaign_id,
-        // Many ad accounts reuse the same display name across campaigns —
-        // surface the id (or its short tail) so the user can disambiguate.
-        description: c.campaign_name ? c.campaign_id : undefined,
-      })),
+      campaigns.map((c) => {
+        const tag = lastIdSegment(c.campaign_id);
+        const retailer = c.retailer_name?.trim();
+        const description = retailer
+          ? `${retailer} · #${tag}`
+          : c.campaign_name
+            ? `#${tag}`
+            : undefined;
+        return {
+          key: c.campaign_id,
+          label: c.campaign_name || c.campaign_id,
+          description,
+        };
+      }),
     [campaigns]
   );
 
+  const retailerFilterOptions = useMemo(
+    () =>
+      retailers.map((r) => {
+        const tag = lastIdSegment(r.retailer_id);
+        return {
+          key: r.retailer_id,
+          label: r.retailer_name || tag,
+          description: r.retailer_name ? `#${tag}` : undefined,
+        };
+      }),
+    [retailers]
+  );
+
+  const queryFilters: BrandLeadFilters = {
+    page,
+    limit,
+    search: debouncedSearch || undefined,
+    status: statusFilter || undefined,
+    platform: sourceFilter || undefined,
+    platform_campaign_id: campaignFilter || undefined,
+    retailer_id: retailerFilter || undefined,
+  };
+
   const { data, isLoading, isFetching } = useQuery<RetailerLeadsResponse>({
     queryKey: [
-      "db-brand-retailer-leads",
-      retailerId,
+      "db-brand-leads",
+      currentWorkspace?.id,
       page,
       limit,
       debouncedSearch,
       statusFilter,
       sourceFilter,
       campaignFilter,
+      retailerFilter,
     ],
-    queryFn: () =>
-      listBrandRetailerLeads(retailerId!, {
-        page,
-        limit,
-        search: debouncedSearch || undefined,
-        status: statusFilter || undefined,
-        platform: sourceFilter || undefined,
-        platform_campaign_id: campaignFilter || undefined,
-      }),
-    enabled: !!retailerId,
+    queryFn: () => listBrandLeads(queryFilters),
+    enabled: isBrandWs,
     placeholderData: (prev) => prev,
   });
 
   async function handleExport() {
-    if (!retailerId) return;
     setDownloading(true);
     try {
-      await downloadBrandRetailerLeadsXlsx(retailerId, retailerName, {
+      await downloadBrandLeadsXlsx(currentWorkspace?.name, {
         search: debouncedSearch || undefined,
         status: statusFilter || undefined,
         platform: sourceFilter || undefined,
         platform_campaign_id: campaignFilter || undefined,
+        retailer_id: retailerFilter || undefined,
       });
     } finally {
       setDownloading(false);
     }
   }
+
+  const retailerNameById = useMemo(() => {
+    const m = new Map<string, string>();
+    for (const r of retailers) {
+      m.set(r.retailer_id, r.retailer_name || lastIdSegment(r.retailer_id));
+    }
+    return m;
+  }, [retailers]);
 
   const columns: ColumnDef<RetailerLead>[] = [
     {
@@ -218,7 +256,6 @@ export default function DbBrandRetailerLeads() {
       cell: ({ row }) => {
         const ts = row.original.created_at || row.original.platform_created_at;
         if (!ts) return "—";
-        // ClickHouse format `YYYY-MM-DD HH:MM:SS` is parseable by Date.
         const d = new Date(ts.replace(" ", "T"));
         return Number.isNaN(d.getTime()) ? (
           <span className="text-muted-foreground text-sm">
@@ -241,6 +278,22 @@ export default function DbBrandRetailerLeads() {
         options: LEAD_FILTER_STATUS_OPTIONS,
         single: true,
       },
+      ...(!withoutSourceFilter
+        ? [
+            {
+              name: "source",
+              paramKey: "source",
+              options: LEAD_FILTER_SOURCE_OPTIONS,
+              single: true,
+            },
+          ]
+        : []),
+      {
+        name: "retailers",
+        paramKey: "retailer_id",
+        options: retailerFilterOptions,
+        single: true,
+      },
       {
         name: "campaigns",
         paramKey: "platform_campaign_id",
@@ -248,11 +301,14 @@ export default function DbBrandRetailerLeads() {
         single: true,
       },
     ],
-    [campaignFilterOptions]
+    [retailerFilterOptions, campaignFilterOptions, withoutSourceFilter]
   );
 
+  const anyFilter =
+    statusFilter || sourceFilter || campaignFilter || retailerFilter;
+
   return (
-    <RetailerTabsLayout>
+    <>
       <DataTable<RetailerLead, unknown>
         columns={columns}
         data={data?.data ?? []}
@@ -267,7 +323,7 @@ export default function DbBrandRetailerLeads() {
         additionalElement={
           <div className="flex flex-wrap gap-3 items-center">
             <FilterComponent filters={filters} />
-            {(statusFilter || sourceFilter || campaignFilter) && (
+            {anyFilter && (
               <button
                 className="inline-flex items-center gap-1 rounded-full border border-dashed border-border px-3 py-1 text-xs font-medium text-muted-foreground hover:text-foreground hover:border-border/80 transition-colors"
                 onClick={() =>
@@ -276,6 +332,7 @@ export default function DbBrandRetailerLeads() {
                       status: "",
                       source: "",
                       platform_campaign_id: "",
+                      retailer_id: "",
                       page: "1",
                     },
                     true
@@ -330,6 +387,6 @@ export default function DbBrandRetailerLeads() {
         fetchNotes={getBrandLeadNotes}
         scopeKey="brand"
       />
-    </RetailerTabsLayout>
+    </>
   );
 }

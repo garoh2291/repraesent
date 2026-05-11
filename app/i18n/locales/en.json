@@ -258,6 +258,7 @@
       "deleteNoteConfirmTitle": "Delete note?",
       "deleteNoteConfirmDesc": "This action cannot be undone.",
       "deletedUser": "Deleted user",
+      "systemUser": "System user",
       "statusChanged": "Status changed",
       "metadata": "Additional information",
       "historyLeadCreated": "Lead created",

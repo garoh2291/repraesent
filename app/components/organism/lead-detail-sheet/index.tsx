@@ -15,6 +15,7 @@ import {
   type LeadHistoryItem,
   type LeadStatus,
 } from "~/lib/api/leads";
+import type { Note } from "~/lib/api/notes";
 import { LeadNotesSection } from "~/components/organism/lead-notes-section";
 import { LeadTasksSection } from "~/components/organism/tasks/lead-tasks-section";
 import { LeadSourceIcon } from "~/components/organism/lead-source-icon";
@@ -39,7 +40,7 @@ function getHistoryItemInitials(item: LeadHistoryItem): string {
   if (first && last) return `${first[0]}${last[0]}`.toUpperCase();
   if (first) return first.slice(0, 2).toUpperCase();
   if (last) return last.slice(0, 2).toUpperCase();
-  return "D";
+  return "S";
 }
 
 function formatHistoryAction(item: LeadHistoryItem, t: TFunction): string {
@@ -82,7 +83,7 @@ function buildUserLabel(item: LeadHistoryItem, t: TFunction): string {
       .join(" ")
       .trim() ||
     item.user_email ||
-    t("leads.detail.deletedUser");
+    t("leads.detail.systemUser");
   return item.user_is_deleted
     ? `${name} (${t("common.deleted", { defaultValue: "Deleted" })})`
     : name;
@@ -95,6 +96,18 @@ interface LeadDetailSheetProps {
   onStatusChange?: (id: string, status: LeadStatus) => void;
   isStatusUpdating?: boolean;
   canEdit?: boolean;
+  /**
+   * Read-only mode used by brand workspaces. Hides Tasks, the "Full page"
+   * link, the status-change dropdown, and the add/edit/delete note controls.
+   * Notes + History still render.
+   */
+  readOnly?: boolean;
+  /** Override fetchers when reading via a different (brand-scoped) endpoint. */
+  fetchLead?: (id: string) => Promise<Lead>;
+  fetchHistory?: (id: string) => Promise<LeadHistoryItem[]>;
+  fetchNotes?: (id: string) => Promise<Note[]>;
+  /** Cache scope when fetchers are overridden. */
+  scopeKey?: string;
 }
 
 export function LeadDetailSheet({
@@ -104,24 +117,40 @@ export function LeadDetailSheet({
   onStatusChange,
   isStatusUpdating,
   canEdit = true,
+  readOnly = false,
+  fetchLead,
+  fetchHistory,
+  fetchNotes,
+  scopeKey,
 }: LeadDetailSheetProps) {
   const { t } = useTranslation();
+  const cacheScope = scopeKey ?? "workspace";
+
+  const leadQueryKey = scopeKey
+    ? ["lead", cacheScope, leadId]
+    : ["lead", leadId];
+  const historyQueryKey = scopeKey
+    ? ["lead-history", cacheScope, leadId]
+    : ["lead-history", leadId];
+
   const { data: lead, isLoading: leadLoading } = useQuery({
-    queryKey: ["lead", leadId],
-    queryFn: () => getLead(leadId!),
+    queryKey: leadQueryKey,
+    queryFn: () => (fetchLead ?? getLead)(leadId!),
     enabled: !!leadId && open,
   });
 
   const { data: history = [], isLoading: historyLoading } = useQuery({
-    queryKey: ["lead-history", leadId],
-    queryFn: () => getLeadHistory(leadId!),
+    queryKey: historyQueryKey,
+    queryFn: () => (fetchHistory ?? getLeadHistory)(leadId!),
     enabled: !!leadId && open,
   });
 
+  // Skip the workspace-detail query in read-only mode — it powers task
+  // assignment which is hidden in that mode.
   const { data: workspaceData } = useQuery({
     queryKey: ["workspace-detail"],
     queryFn: () => getWorkspaceDetail(),
-    enabled: open,
+    enabled: open && !readOnly,
   });
 
   const workspaceMembers: WorkspaceMemberItem[] = useMemo(
@@ -135,6 +164,14 @@ export function LeadDetailSheet({
       })),
     [workspaceData]
   );
+
+  // Read-only mode disables every write-affordance:
+  // - no status change (undefined `onStatusChange` makes the status render as
+  //   a static badge inside <LeadInfoSection>)
+  // - no Tasks section, no Add/Edit/Delete note controls (canEdit forced off)
+  // - no "Full page" link (controlled via `withoutLink`)
+  const effectiveOnStatusChange = readOnly ? undefined : onStatusChange;
+  const effectiveCanEdit = readOnly ? false : canEdit;
 
   const displayName = lead
     ? lead.full_name ||
@@ -168,21 +205,29 @@ export function LeadDetailSheet({
               <div className="px-5 py-5">
                 <LeadInfoSection
                   lead={lead}
-                  onStatusChange={onStatusChange}
+                  onStatusChange={effectiveOnStatusChange}
                   isStatusUpdating={isStatusUpdating}
+                  withoutLink={readOnly}
                 />
               </div>
-              {/* Tasks */}
-              <div className="px-5 py-5">
-                <LeadTasksSection
-                  leadId={lead.id}
-                  canEdit={canEdit}
-                  workspaceMembers={workspaceMembers}
-                />
-              </div>
+              {/* Tasks (hidden in read-only / brand mode) */}
+              {!readOnly && (
+                <div className="px-5 py-5">
+                  <LeadTasksSection
+                    leadId={lead.id}
+                    canEdit={effectiveCanEdit}
+                    workspaceMembers={workspaceMembers}
+                  />
+                </div>
+              )}
               {/* Notes */}
               <div className="px-5 py-5">
-                <LeadNotesSection leadId={lead.id} canEdit={canEdit} />
+                <LeadNotesSection
+                  leadId={lead.id}
+                  canEdit={effectiveCanEdit}
+                  fetchNotes={fetchNotes}
+                  scopeKey={scopeKey}
+                />
               </div>
               {/* History */}
               <div className="px-5 py-5">
@@ -236,12 +281,7 @@ function FieldValue({
   className?: string;
 }) {
   return (
-    <div
-      className={cn(
-        "text-sm text-foreground leading-5",
-        className
-      )}
-    >
+    <div className={cn("text-sm text-foreground leading-5", className)}>
       {children}
     </div>
   );
@@ -250,7 +290,7 @@ function FieldValue({
 /* ── Lead Info Section ─────────────────────────────────────── */
 
 // Keys always hidden from display (internal/noise)
-const HIDDEN_META_KEYS = new Set(["misc", "platform_campaign_id"]);
+const HIDDEN_META_KEYS = new Set(["misc"]);
 // Keys shown inline in the main section (not collapsed)
 const PROMOTED_META_KEYS = new Set(["message"]);
 
@@ -281,10 +321,10 @@ export function LeadInfoSection({
 
   // message → shown inline; misc/platform_campaign_id → hidden; rest → collapsible
   const promotedEntries = visibleMetadataEntries.filter(([key]) =>
-    PROMOTED_META_KEYS.has(key),
+    PROMOTED_META_KEYS.has(key)
   );
   const collapsibleEntries = visibleMetadataEntries.filter(
-    ([key]) => !PROMOTED_META_KEYS.has(key) && !HIDDEN_META_KEYS.has(key),
+    ([key]) => !PROMOTED_META_KEYS.has(key) && !HIDDEN_META_KEYS.has(key)
   );
 
   return (
@@ -452,38 +492,36 @@ export function LeadHistorySection({
                   {/* Timeline track: dot + line, always center-aligned */}
                   <div className="flex w-4 shrink-0 flex-col items-center">
                     <span className="mt-1.5 h-2.5 w-2.5 shrink-0 rounded-full bg-border ring-2 ring-background" />
-                    {!isLast && (
-                      <div className="mt-1 w-px flex-1 bg-border" />
-                    )}
+                    {!isLast && <div className="mt-1 w-px flex-1 bg-border" />}
                   </div>
                   {/* Content */}
                   <div className="min-w-0 flex-1 pb-4 last:pb-0">
+                    <TooltipContainer
+                      tooltipContent={actionText}
+                      showCopyButton={false}
+                    >
+                      <p className="text-sm font-medium text-foreground truncate">
+                        {actionText}
+                      </p>
+                    </TooltipContainer>
+                    <div className="flex items-center gap-2 text-xs text-muted-foreground mt-1">
                       <TooltipContainer
-                        tooltipContent={actionText}
+                        tooltipContent={buildUserLabel(item, t)}
                         showCopyButton={false}
                       >
-                        <p className="text-sm font-medium text-foreground truncate">
-                          {actionText}
-                        </p>
-                      </TooltipContainer>
-                      <div className="flex items-center gap-2 text-xs text-muted-foreground mt-1">
-                        <TooltipContainer
-                          tooltipContent={buildUserLabel(item, t)}
-                          showCopyButton={false}
+                        <span
+                          className={`inline-flex h-5 w-5 items-center justify-center rounded-full text-[9px] font-bold ${item.user_is_deleted ? "bg-muted/50 text-muted-foreground/60" : "bg-muted"}`}
                         >
-                          <span
-                            className={`inline-flex h-5 w-5 items-center justify-center rounded-full text-[9px] font-bold ${item.user_is_deleted ? "bg-muted/50 text-muted-foreground/60" : "bg-muted"}`}
-                          >
-                            {getHistoryItemInitials(item)}
-                          </span>
-                        </TooltipContainer>
-                        {item.user_is_deleted && (
-                          <span className="text-[10px] text-muted-foreground/60">
-                            (Deleted)
-                          </span>
-                        )}
-                        <span>{relativeTime}</span>
-                      </div>
+                          {getHistoryItemInitials(item)}
+                        </span>
+                      </TooltipContainer>
+                      {item.user_is_deleted && (
+                        <span className="text-[10px] text-muted-foreground/60">
+                          (Deleted)
+                        </span>
+                      )}
+                      <span>{relativeTime}</span>
+                    </div>
                   </div>
                 </div>
               );

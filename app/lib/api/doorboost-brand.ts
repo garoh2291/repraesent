@@ -1,4 +1,6 @@
 import { apiClient, getStoredWorkspaceId, getStoredToken } from "./axios-instance";
+import type { Lead, LeadHistoryItem } from "./leads";
+import type { Note } from "./notes";
 
 const BASE = "/users/me/workspace/doorboost-brand";
 
@@ -80,6 +82,20 @@ export interface RetailerLeadFilters {
   platform_campaign_id?: string;
   from?: string;
   to?: string;
+}
+
+/**
+ * Filters for the brand-wide leads endpoint. Same as the retailer scope plus
+ * an optional `retailer_id` to narrow aggregated results to a single retailer.
+ */
+export interface BrandLeadFilters extends RetailerLeadFilters {
+  retailer_id?: string;
+}
+
+/** Brand-wide campaign summary — extends the per-retailer shape with retailer info. */
+export interface BrandCampaign extends BrandRetailerCampaign {
+  retailer_id: string;
+  retailer_name: string;
 }
 
 export async function listBrandRetailers(): Promise<BrandRetailer[]> {
@@ -270,6 +286,113 @@ export async function downloadBrandRetailerLeadsXlsx(
       .replace(/^-+|-+$/g, "")
       .slice(0, 60) || "retailer";
   a.download = `${safe}-${new Date().toISOString().slice(0, 10)}.xlsx`;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+}
+
+// ── brand-wide aggregations (across every retailer in the brand) ──
+
+export async function getBrandSocialAds(
+  opts: {
+    from?: string;
+    to?: string;
+    campaignIds?: string[];
+    platform?: string;
+  } = {},
+): Promise<RetailerSocialAdsResponse> {
+  const r = await apiClient.get<RetailerSocialAdsResponse>(
+    `${BASE}/social-ads`,
+    {
+      params: {
+        ...(opts.from && { from: opts.from }),
+        ...(opts.to && { to: opts.to }),
+        ...(opts.platform && { platform: opts.platform }),
+        ...(opts.campaignIds?.length && {
+          campaign_ids: opts.campaignIds.join(","),
+        }),
+      },
+    },
+  );
+  return r.data;
+}
+
+export async function listBrandCampaigns(
+  opts: { platform?: string; search?: string; limit?: number } = {},
+): Promise<BrandCampaign[]> {
+  const r = await apiClient.get<{ data: BrandCampaign[] }>(
+    `${BASE}/campaigns`,
+    {
+      params: {
+        limit: opts.limit ?? 200,
+        ...(opts.platform ? { platform: opts.platform } : {}),
+        ...(opts.search ? { search: opts.search } : {}),
+      },
+    },
+  );
+  return Array.isArray(r.data) ? r.data : (r.data?.data ?? []);
+}
+
+export async function listBrandLeads(
+  opts: BrandLeadFilters = {},
+): Promise<RetailerLeadsResponse> {
+  const r = await apiClient.get<RetailerLeadsResponse>(`${BASE}/leads`, {
+    params: opts,
+  });
+  return r.data;
+}
+
+// ── brand-scoped lead detail (read-only) ──
+
+/**
+ * Fetch a single lead via the brand-scoped endpoint. Authorisation is by
+ * brand-campaign membership, not workspace, so a brand admin can audit leads
+ * that live in a retailer's lead-form workspace.
+ */
+export async function getBrandLead(leadId: string): Promise<Lead> {
+  const r = await apiClient.get<Lead>(`${BASE}/leads/${leadId}`);
+  return r.data;
+}
+
+export async function getBrandLeadNotes(leadId: string): Promise<Note[]> {
+  const r = await apiClient.get<Note[]>(`${BASE}/leads/${leadId}/notes`);
+  return r.data;
+}
+
+export async function getBrandLeadHistory(
+  leadId: string,
+): Promise<LeadHistoryItem[]> {
+  const r = await apiClient.get<LeadHistoryItem[]>(
+    `${BASE}/leads/${leadId}/history`,
+  );
+  return r.data;
+}
+
+/**
+ * Fetch a brand-wide leads XLSX via axios and trigger a browser download.
+ * Filename derives from the workspace name when supplied, else "brand".
+ */
+export async function downloadBrandLeadsXlsx(
+  brandName: string | undefined,
+  opts: BrandLeadFilters = {},
+): Promise<void> {
+  const response = await apiClient.get<Blob>(`${BASE}/leads/export`, {
+    params: opts,
+    responseType: "blob",
+  });
+  const blob = new Blob([response.data], {
+    type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+  });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  const safe =
+    (brandName ?? "brand")
+      .replace(/[^a-zA-Z0-9-_]+/g, "-")
+      .replace(/^-+|-+$/g, "")
+      .slice(0, 60) || "brand";
+  a.download = `${safe}-leads-${new Date().toISOString().slice(0, 10)}.xlsx`;
   document.body.appendChild(a);
   a.click();
   a.remove();

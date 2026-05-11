@@ -258,6 +258,7 @@
       "deleteNoteConfirmTitle": "Notiz löschen?",
       "deleteNoteConfirmDesc": "Diese Aktion kann nicht rückgängig gemacht werden.",
       "deletedUser": "Gelöschter Benutzer",
+      "systemUser": "Systembenutzer",
       "statusChanged": "Status geändert",
       "metadata": "Weitere Informationen",
       "historyLeadCreated": "Lead erstellt",
