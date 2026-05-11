@@ -1,15 +1,6 @@
-import { useEffect, useMemo, useState } from "react";
-import { useNavigate } from "react-router";
+import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import {
-  Boxes,
-  ChevronDown,
-  ChevronRight,
-  Download,
-  Loader2,
-  Search,
-  Store,
-} from "lucide-react";
+import { Boxes, ChevronDown, Download, Loader2, Users } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useAuthContext } from "~/providers/auth-provider";
 import {
@@ -25,22 +16,23 @@ import {
   DropdownMenuTrigger,
 } from "~/components/ui/dropdown-menu";
 import { BulkLeadsExportModal } from "~/components/db-brand/bulk-leads-export-modal";
-
-const lastIdSegment = (id: string) => id.split("-").pop() ?? id;
+import { CampaignsBasePathContext, type CampaignsContextValue } from "~/lib/campaigns-base-path-context";
+import { CampaignAnalyticsDashboard } from "~/components/campaigns/campaign-analytics-dashboard";
+import { BrandLeadsTable } from "~/components/db-brand/brand-leads-table";
 
 export default function DbBrandIndex() {
   const { currentWorkspace } = useAuthContext();
   const { t } = useTranslation();
-  const navigate = useNavigate();
   const isBrandWs = currentWorkspace?.type === "doorboost_brand";
 
-  const { data: retailers = [], isLoading } = useQuery<BrandRetailer[]>({
+  // Retailers query is still warmed here so the sidebar + bulk-export modal
+  // see the same cached list as the embedded leads table below.
+  const { data: retailers = [] } = useQuery<BrandRetailer[]>({
     queryKey: ["db-brand-retailers", currentWorkspace?.id],
     queryFn: listBrandRetailers,
     enabled: isBrandWs,
   });
 
-  const [search, setSearch] = useState("");
   const [bulkExportOpen, setBulkExportOpen] = useState(false);
   const [exportingAll, setExportingAll] = useState(false);
 
@@ -48,31 +40,25 @@ export default function DbBrandIndex() {
     if (exportingAll) return;
     setExportingAll(true);
     try {
-      // Empty arrays = backend uses every retailer + every campaign that
-      // belongs to this workspace's doorboost brand.
+      // Empty arrays = every retailer + every campaign that belongs to the
+      // workspace's doorboost brand. Same behavior as the old card view.
       await downloadBulkBrandLeadsXlsx([], []);
     } finally {
       setExportingAll(false);
     }
   }
-  const filteredRetailers = useMemo(() => {
-    const needle = search.trim().toLowerCase();
-    if (!needle) return retailers;
-    return retailers.filter(
-      (r) =>
-        (r.retailer_name || "").toLowerCase().includes(needle) ||
-        r.retailer_id.toLowerCase().includes(needle),
-    );
-  }, [retailers, search]);
 
-  // Auto-jump to first retailer when there's exactly one — saves a click.
-  useEffect(() => {
-    if (!isLoading && retailers.length === 1 && isBrandWs) {
-      navigate(`/db-brand/retailers/${retailers[0].retailer_id}/social-ads`, {
-        replace: true,
-      });
-    }
-  }, [isLoading, retailers, isBrandWs, navigate]);
+  // Re-point the embedded CampaignAnalyticsDashboard at the brand-wide API
+  // mount and rewrite the per-campaign "Show leads" link to filter the leads
+  // table on this same page (anchor scrolls to the section).
+  const campaignsCtx = useMemo<CampaignsContextValue>(
+    () => ({
+      basePath: `/users/me/workspace/doorboost-brand/campaigns`,
+      buildLeadsLink: (campaignId) =>
+        `/db-brand?platform_campaign_id=${encodeURIComponent(campaignId)}#leads`,
+    }),
+    [],
+  );
 
   if (!isBrandWs) {
     return null;
@@ -80,136 +66,88 @@ export default function DbBrandIndex() {
 
   return (
     <div className="mx-auto w-full max-w-7xl p-4 sm:p-8">
-      <div className="space-y-6">
-        <div className="flex items-start sm:items-center gap-3 flex-col sm:flex-row sm:justify-between">
-          <div className="flex items-center gap-3">
-            <span className="grid place-items-center w-12 h-12 rounded-xl bg-amber-400/10 text-amber-400">
-              <Boxes className="w-6 h-6" />
-            </span>
-            <div>
-              <h1 className="text-2xl font-bold tracking-tight">
-                {currentWorkspace.name}
-              </h1>
-              <p className="text-sm text-muted-foreground">
-                {t(
-                  "db_brand.subtitle",
-                  "Pick a retailer from the sidebar to view its Social Ads & Leads.",
-                )}
-              </p>
-            </div>
-          </div>
-          {retailers.length > 0 && (
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button
-                  type="button"
-                  variant="outline"
-                  disabled={exportingAll}
-                  className="gap-2 self-stretch sm:self-auto"
-                >
-                  {exportingAll ? (
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                  ) : (
-                    <Download className="w-4 h-4" />
-                  )}
-                  {t("db_brand.export.button", "Export")}
-                  <ChevronDown className="w-3.5 h-3.5 opacity-70" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="min-w-[200px]">
-                <DropdownMenuItem
-                  onSelect={(e) => {
-                    e.preventDefault();
-                    void handleExportAll();
-                  }}
-                  disabled={exportingAll}
-                >
-                  <Download className="w-4 h-4" />
-                  {t("db_brand.export.all", "Export All Leads")}
-                </DropdownMenuItem>
-                <DropdownMenuItem
-                  onSelect={() => setBulkExportOpen(true)}
-                >
-                  <Download className="w-4 h-4" />
-                  {t("db_brand.export.selected", "Export Selected")}
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          )}
-        </div>
-
-        {isLoading ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-            {[0, 1, 2, 3, 4, 5].map((i) => (
-              <div
-                key={i}
-                className="rounded-xl border bg-card h-20 animate-pulse"
-              />
-            ))}
-          </div>
-        ) : retailers.length === 0 ? (
-          <div className="rounded-xl border bg-card p-8 text-center">
-            <p className="text-muted-foreground">
+      <div className="flex items-start sm:items-center gap-3 flex-col sm:flex-row sm:justify-between">
+        <div className="flex items-center gap-3">
+          <span className="grid place-items-center w-12 h-12 rounded-xl bg-amber-400/10 text-amber-400">
+            <Boxes className="w-6 h-6" />
+          </span>
+          <div>
+            <h1 className="text-2xl font-bold tracking-tight">
+              {currentWorkspace.name}
+            </h1>
+            <p className="text-sm text-muted-foreground">
               {t(
-                "db_brand.no_retailers",
-                "No retailers attached to this brand yet.",
+                "db_brand.subtitle_combined",
+                "Social ads & leads across every retailer in your brand.",
               )}
             </p>
           </div>
-        ) : (
-          <>
-            <div className="relative max-w-md">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-              <input
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                placeholder={t(
-                  "db_brand.search_placeholder",
-                  "Search retailers…",
+        </div>
+        {retailers.length > 0 && (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                type="button"
+                variant="outline"
+                disabled={exportingAll}
+                className="gap-2 self-stretch sm:self-auto"
+              >
+                {exportingAll ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <Download className="w-4 h-4" />
                 )}
-                className="w-full rounded-xl border bg-card pl-10 pr-3 py-2.5 text-sm placeholder:text-muted-foreground outline-none focus:border-foreground/40 focus:ring-2 focus:ring-ring"
-              />
-            </div>
-            {filteredRetailers.length === 0 ? (
-              <div className="rounded-xl border bg-card p-8 text-center">
-                <p className="text-muted-foreground text-sm">
-                  {t("common.noResults", "No matches")}
-                </p>
-              </div>
-            ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                {filteredRetailers.map((r) => {
-                  const tag = lastIdSegment(r.retailer_id);
-                  return (
-                    <button
-                      key={r.retailer_id}
-                      onClick={() =>
-                        navigate(
-                          `/db-brand/retailers/${r.retailer_id}/social-ads`,
-                        )
-                      }
-                      className="group flex items-center gap-3 rounded-xl border bg-card p-4 text-left transition-all hover:-translate-y-0.5 hover:border-amber-400/40 hover:bg-amber-400/[0.04] hover:shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                    >
-                      <span className="grid place-items-center w-10 h-10 shrink-0 rounded-lg bg-amber-400/10 text-amber-500 transition-transform group-hover:scale-105">
-                        <Store className="w-5 h-5" />
-                      </span>
-                      <div className="min-w-0 flex-1">
-                        <div className="font-semibold truncate">
-                          {r.retailer_name || tag}
-                        </div>
-                        <div className="text-[11px] font-mono text-muted-foreground/70 mt-0.5">
-                          #{tag}
-                        </div>
-                      </div>
-                      <ChevronRight className="w-4 h-4 shrink-0 text-muted-foreground/40 transition-all group-hover:translate-x-0.5 group-hover:text-foreground/70" />
-                    </button>
-                  );
-                })}
-              </div>
-            )}
-          </>
+                {t("db_brand.export.button", "Export")}
+                <ChevronDown className="w-3.5 h-3.5 opacity-70" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="min-w-[200px]">
+              <DropdownMenuItem
+                onSelect={(e) => {
+                  e.preventDefault();
+                  void handleExportAll();
+                }}
+                disabled={exportingAll}
+              >
+                <Download className="w-4 h-4" />
+                {t("db_brand.export.all", "Export All Leads")}
+              </DropdownMenuItem>
+              <DropdownMenuItem onSelect={() => setBulkExportOpen(true)}>
+                <Download className="w-4 h-4" />
+                {t("db_brand.export.selected", "Export Selected")}
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         )}
       </div>
+
+      <section className="mt-8">
+        <CampaignsBasePathContext.Provider value={campaignsCtx}>
+          <CampaignAnalyticsDashboard
+            title={t("db_brand.tabs.social_ads", "Social Ads")}
+          />
+        </CampaignsBasePathContext.Provider>
+      </section>
+
+      <section id="leads" className="mt-12 scroll-mt-24">
+        <div className="mb-4 flex items-center gap-2">
+          <span className="grid place-items-center w-9 h-9 rounded-lg bg-amber-400/10 text-amber-400">
+            <Users className="w-5 h-5" />
+          </span>
+          <div>
+            <h2 className="text-xl font-bold tracking-tight">
+              {t("db_brand.tabs.leads", "Leads")}
+            </h2>
+            <p className="text-xs text-muted-foreground">
+              {t(
+                "db_brand.leads.subtitle_combined",
+                "All retailers — filter by retailer, campaign, status or source.",
+              )}
+            </p>
+          </div>
+        </div>
+        <BrandLeadsTable />
+      </section>
 
       <BulkLeadsExportModal
         open={bulkExportOpen}
