@@ -25,6 +25,7 @@ function isDoorboostBrandPath(path: string): boolean {
   return (
     path.startsWith("/db-brand") ||
     path.startsWith("/brand-retailers") ||
+    path.startsWith("/brand-campaigns") ||
     path.startsWith("/brand-leads")
   );
 }

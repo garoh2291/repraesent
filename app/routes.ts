@@ -59,6 +59,7 @@ export default [
       route("instructions", "routes/instructions.tsx"),
       route("db-brand", "routes/db-brand._index.tsx"),
       route("brand-retailers", "routes/brand-retailers.tsx"),
+      route("brand-campaigns", "routes/brand-campaigns.tsx"),
       route("brand-leads", "routes/brand-leads.tsx"),
       route(
         "db-brand/retailers/:retailerId/social-ads",

@@ -9,6 +9,7 @@ import {
   HomeIcon,
   Info,
   LogOut,
+  Megaphone,
   Package,
   Settings,
   Store,
@@ -211,6 +212,14 @@ export function Sidebar({ onClose, className }: { onClose?: () => void; classNam
             >
               <Store className="h-4 w-4 shrink-0" />
               {t("nav.brand_retailers", "Retailers")}
+            </NavLink>
+            <NavLink
+              to="/brand-campaigns"
+              isActive={location.pathname.startsWith("/brand-campaigns")}
+              onClick={onClose}
+            >
+              <Megaphone className="h-4 w-4 shrink-0" />
+              {t("nav.brand_campaigns", "Campaigns")}
             </NavLink>
             <NavLink
               to="/brand-leads"

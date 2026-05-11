@@ -334,6 +334,43 @@ export async function listBrandCampaigns(
   return Array.isArray(r.data) ? r.data : (r.data?.data ?? []);
 }
 
+/** Full paginated envelope of brand-wide campaigns. */
+export interface BrandCampaignsPage {
+  data: BrandCampaign[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+  hasNext: boolean;
+  hasPrev: boolean;
+}
+
+export interface BrandCampaignFilters {
+  page?: number;
+  limit?: number;
+  platform?: string;
+  search?: string;
+  status?: "active" | "inactive";
+  /** ISO YYYY-MM-DD. campaign.start_date >= this. */
+  start_date_from?: string;
+  /** ISO YYYY-MM-DD. campaign.end_date <= this. */
+  end_date_to?: string;
+}
+
+/**
+ * Paginated brand-wide campaigns. Used by the dedicated /brand-campaigns
+ * page. Returns the full envelope so the table can drive server-side
+ * pagination directly off the response.
+ */
+export async function listBrandCampaignsPage(
+  opts: BrandCampaignFilters = {},
+): Promise<BrandCampaignsPage> {
+  const r = await apiClient.get<BrandCampaignsPage>(`${BASE}/campaigns`, {
+    params: opts,
+  });
+  return r.data;
+}
+
 export async function listBrandLeads(
   opts: BrandLeadFilters = {},
 ): Promise<RetailerLeadsResponse> {

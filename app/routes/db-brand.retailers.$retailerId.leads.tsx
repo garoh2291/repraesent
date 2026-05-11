@@ -42,8 +42,8 @@ function parsePage(v: string | null): number {
   return isNaN(n) || n < 1 ? 1 : n;
 }
 function parseLimit(v: string | null): number {
-  const n = parseInt(v ?? "10", 10);
-  return isNaN(n) || n < 1 ? 10 : Math.min(100, n);
+  const n = parseInt(v ?? "50", 10);
+  return isNaN(n) || n < 1 ? 50 : Math.min(100, n);
 }
 
 export default function DbBrandRetailerLeads() {
@@ -315,7 +315,8 @@ export default function DbBrandRetailerLeads() {
         }
         onPaginationChange={(p, l) => {
           const updates: Record<string, string> = { page: String(p) };
-          if (Number(l) !== 10) updates.limit = String(l);
+          if (Number(l) !== 50) updates.limit = String(l);
+          else updates.limit = "";
           onSelect(updates, true);
         }}
         emptyMessage={t("db_brand.leads.empty", "No leads match your filters.")}
