@@ -2,6 +2,10 @@ import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Boxes, ChevronDown, Download, Loader2, Users } from "lucide-react";
 import { useTranslation } from "react-i18next";
+
+export function meta() {
+  return [{ title: "Doorboost Brand Dashboard" }];
+}
 import { useAuthContext } from "~/providers/auth-provider";
 import {
   downloadBulkBrandLeadsXlsx,

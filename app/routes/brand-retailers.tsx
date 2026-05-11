@@ -4,6 +4,10 @@ import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import type { ColumnDef } from "@tanstack/react-table";
 import { Boxes } from "lucide-react";
+
+export function meta() {
+  return [{ title: "Doorboost Brand Dashboard" }];
+}
 import { DataTable } from "~/components/organism/data-table";
 import {
   listBrandRetailers,

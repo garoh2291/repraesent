@@ -3,6 +3,10 @@ import { Users } from "lucide-react";
 import { useAuthContext } from "~/providers/auth-provider";
 import { BrandLeadsTable } from "~/components/db-brand/brand-leads-table";
 
+export function meta() {
+  return [{ title: "Doorboost Brand Dashboard" }];
+}
+
 export default function BrandLeads() {
   const { currentWorkspace } = useAuthContext();
   const { t } = useTranslation();
