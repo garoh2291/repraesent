@@ -10,6 +10,11 @@ export interface ConnectedCampaign {
   platform: string;
   budget_daily: string | null;
   advertising_channel_type: string | null;
+  // Present only on brand-wide endpoints that aggregate every retailer's
+  // campaigns (e.g. /users/me/workspace/doorboost-brand/campaigns). Used to
+  // build per-retailer deep links from the brand dashboard.
+  retailer_id?: string;
+  retailer_name?: string;
 }
 
 export interface InsightTotals {

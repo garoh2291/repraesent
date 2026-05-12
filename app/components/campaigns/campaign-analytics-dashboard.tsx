@@ -357,7 +357,7 @@ function CampaignDrilldown({ campaign }: { campaign: ConnectedCampaign }) {
     ) ?? false);
 
   const buildLeadsLink = useCampaignsLeadsLink();
-  const leadsLink = buildLeadsLink(campaign.campaign_id);
+  const leadsLink = buildLeadsLink(campaign);
 
   const basePath = useCampaignsBasePath();
   const { data: adSets, isLoading: adSetsLoading } = useQuery({

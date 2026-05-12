@@ -24,9 +24,9 @@ export default function DbBrandRetailerSocialAds() {
   const ctx = useMemo<CampaignsContextValue>(
     () => ({
       basePath: `/users/me/workspace/doorboost-brand/retailers/${retailerId}/campaigns`,
-      buildLeadsLink: (campaignId) =>
+      buildLeadsLink: (campaign) =>
         retailerId
-          ? `/db-brand/retailers/${retailerId}/leads?platform_campaign_id=${encodeURIComponent(campaignId)}`
+          ? `/db-brand/retailers/${retailerId}/leads?platform_campaign_id=${encodeURIComponent(campaign.campaign_id)}`
           : null,
     }),
     [retailerId],
