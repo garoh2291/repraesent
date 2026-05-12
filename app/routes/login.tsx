@@ -6,6 +6,7 @@ import { useAuthContext } from "~/providers/auth-provider";
 
 import logoUrl from "~/components/icons/re_praesent-mark-brand-hor.svg?url";
 import { LegalFooter } from "~/components/molecule/legal-footer";
+import { LanguageSwitcher } from "~/components/language-switcher";
 
 export function meta() {
   return [
@@ -169,7 +170,10 @@ export default function Login() {
       </div>
 
       {/* Right form panel */}
-      <div className="flex-1 flex flex-col bg-stone-50">
+      <div className="flex-1 flex flex-col bg-stone-50 relative">
+        <div className="absolute top-4 right-4 sm:top-6 sm:right-6 z-10">
+          <LanguageSwitcher variant="light" />
+        </div>
         <div className="flex-1 flex items-center justify-center p-4 sm:p-8">
           <div className="w-full max-w-sm space-y-8 app-fade-up">
             {/* Mobile logo */}
