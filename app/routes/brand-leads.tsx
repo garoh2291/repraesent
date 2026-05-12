@@ -2,9 +2,10 @@ import { useTranslation } from "react-i18next";
 import { Users } from "lucide-react";
 import { useAuthContext } from "~/providers/auth-provider";
 import { BrandLeadsTable } from "~/components/db-brand/brand-leads-table";
+import i18n from "~/i18n";
 
 export function meta() {
-  return [{ title: "Doorboost Brand Dashboard" }];
+  return [{ title: i18n.t("db_brand.page_titles.brand_leads") }];
 }
 
 export default function BrandLeads() {

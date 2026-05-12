@@ -293,6 +293,21 @@ function FieldValue({
 const HIDDEN_META_KEYS = new Set(["misc"]);
 // Keys shown inline in the main section (not collapsed)
 const PROMOTED_META_KEYS = new Set(["message"]);
+// Metadata keys whose value is a ClickHouse-style timestamp; rendered with the
+// same local-date formatting we use for `lead.created_at` (e.g. "PPp").
+const DATETIME_META_KEYS = new Set(["platform_created_at"]);
+
+function formatMetaDateValue(raw: unknown): string {
+  if (raw == null || raw === "") return "—";
+  const str = String(raw);
+  // ClickHouse emits `YYYY-MM-DD HH:MM:SS` and may append a short tz like
+  // `+00`. JS `Date` needs `T` between date/time and a full `±HH:MM` offset.
+  const normalized = str
+    .replace(" ", "T")
+    .replace(/([+-]\d{2})$/, "$1:00");
+  const d = new Date(normalized);
+  return Number.isNaN(d.getTime()) ? str : formatDate(d, "PPp");
+}
 
 export function LeadInfoSection({
   lead,
@@ -405,9 +420,11 @@ export function LeadInfoSection({
           {promotedEntries.map(([key, value]) => (
             <FieldRow key={key} label={formatFieldKey(key)}>
               <FieldValue className="whitespace-pre-wrap">
-                {typeof value === "object"
-                  ? JSON.stringify(value)
-                  : String(value)}
+                {DATETIME_META_KEYS.has(key)
+                  ? formatMetaDateValue(value)
+                  : typeof value === "object"
+                    ? JSON.stringify(value)
+                    : String(value)}
               </FieldValue>
             </FieldRow>
           ))}
@@ -427,9 +444,11 @@ export function LeadInfoSection({
                 {collapsibleEntries.map(([key, value]) => (
                   <FieldRow key={key} label={formatFieldKey(key)}>
                     <FieldValue className="whitespace-pre-wrap">
-                      {typeof value === "object"
-                        ? JSON.stringify(value)
-                        : String(value)}
+                      {DATETIME_META_KEYS.has(key)
+                        ? formatMetaDateValue(value)
+                        : typeof value === "object"
+                          ? JSON.stringify(value)
+                          : String(value)}
                     </FieldValue>
                   </FieldRow>
                 ))}

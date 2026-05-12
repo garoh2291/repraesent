@@ -18,9 +18,10 @@ import {
   type BrandCampaignsPage,
 } from "~/lib/api/doorboost-brand";
 import { useAuthContext } from "~/providers/auth-provider";
+import i18n from "~/i18n";
 
 export function meta() {
-  return [{ title: "Doorboost Brand Dashboard" }];
+  return [{ title: i18n.t("db_brand.page_titles.brand_campaigns") }];
 }
 
 const lastIdSegment = (id: string) => id.split("-").pop() ?? id;
@@ -270,9 +271,15 @@ export default function BrandCampaigns() {
         onRowClick={(row) =>
           navigate(
             `/db-brand/retailers/${row.retailer_id}/social-ads/${row.campaign_id}`,
-            // Pass campaign name through route state so the filter chip on
-            // the destination page can render it without a second query.
-            { state: { campaign_name: row.campaign_name || row.campaign_id } },
+            // Pass campaign name + platform through route state so the
+            // destination page can render the filter chip without a second
+            // query and skip the platform tabs (single-campaign view).
+            {
+              state: {
+                campaign_name: row.campaign_name || row.campaign_id,
+                platform: row.platform,
+              },
+            },
           )
         }
         additionalElement={

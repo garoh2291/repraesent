@@ -4,9 +4,10 @@ import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import type { ColumnDef } from "@tanstack/react-table";
 import { Download, Loader2, X } from "lucide-react";
+import i18n from "~/i18n";
 
 export function meta() {
-  return [{ title: "Doorboost Brand Dashboard" }];
+  return [{ title: i18n.t("db_brand.page_titles.retailer_leads") }];
 }
 import { DataTable } from "~/components/organism/data-table";
 import FilterComponent from "~/components/molecule/filter-component";

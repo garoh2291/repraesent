@@ -2,9 +2,10 @@ import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Boxes, ChevronDown, Download, Loader2, Users } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import i18n from "~/i18n";
 
 export function meta() {
-  return [{ title: "Doorboost Brand Dashboard" }];
+  return [{ title: i18n.t("db_brand.page_titles.dashboard") }];
 }
 import { useAuthContext } from "~/providers/auth-provider";
 import {
@@ -56,13 +57,20 @@ export default function DbBrandIndex() {
   }
 
   // Re-point the embedded CampaignAnalyticsDashboard at the brand-wide API
-  // mount and rewrite the per-campaign "Show leads" link to filter the leads
-  // table on this same page (anchor scrolls to the section).
+  // mount and rewrite the per-campaign "Show leads" link to deep-link into
+  // the owning retailer's leads page filtered by that campaign. retailer_id
+  // is included on the brand-wide /campaigns response; if it's somehow
+  // missing we fall back to the in-page anchor filter.
   const campaignsCtx = useMemo<CampaignsContextValue>(
     () => ({
       basePath: `/users/me/workspace/doorboost-brand/campaigns`,
-      buildLeadsLink: (campaignId) =>
-        `/db-brand?platform_campaign_id=${encodeURIComponent(campaignId)}#leads`,
+      buildLeadsLink: (campaign) => {
+        const cid = encodeURIComponent(campaign.campaign_id);
+        if (campaign.retailer_id) {
+          return `/db-brand/retailers/${campaign.retailer_id}/leads?platform_campaign_id=${cid}`;
+        }
+        return `/db-brand?platform_campaign_id=${cid}#leads`;
+      },
     }),
     []
   );
