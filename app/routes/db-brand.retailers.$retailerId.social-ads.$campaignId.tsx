@@ -12,9 +12,10 @@ import {
   listBrandRetailerCampaigns,
   type BrandRetailerCampaign,
 } from "~/lib/api/doorboost-brand";
+import i18n from "~/i18n";
 
 export function meta() {
-  return [{ title: "Doorboost Brand Dashboard" }];
+  return [{ title: i18n.t("db_brand.page_titles.retailer_campaign") }];
 }
 
 /**
@@ -31,18 +32,26 @@ export default function DbBrandRetailerSocialAdsByCampaign() {
   const { t } = useTranslation();
   const location = useLocation();
 
-  // Click source can pass a friendly name via navigation state so the filter
-  // chip doesn't fall back to the raw id. When absent (deep-link), look it up
-  // from the retailer's campaign list — already cached by TanStack Query.
-  const stateName = (location.state as { campaign_name?: string } | null)
-    ?.campaign_name;
+  // Click source can pass a friendly name + platform via navigation state so
+  // the filter chip doesn't fall back to the raw id and the platform tabs
+  // can be hidden immediately. On a deep-link both are looked up from the
+  // retailer's campaign list (already cached by TanStack Query elsewhere).
+  const navState = location.state as
+    | { campaign_name?: string; platform?: string }
+    | null;
+  const stateName = navState?.campaign_name;
+  const statePlatform = navState?.platform;
 
   const { data: retailerCampaigns = [] } = useQuery<BrandRetailerCampaign[]>({
     queryKey: ["db-brand-retailer-campaigns-list", retailerId],
     queryFn: () => listBrandRetailerCampaigns(retailerId!),
-    enabled: !!retailerId && !stateName,
+    enabled: !!retailerId && (!stateName || !statePlatform),
     staleTime: 60_000,
   });
+
+  const campaignPlatform =
+    statePlatform ||
+    retailerCampaigns.find((c) => c.campaign_id === campaignId)?.platform;
 
   const initialCampaignIds = useMemo(
     () => (campaignId ? [campaignId] : []),
@@ -77,6 +86,7 @@ export default function DbBrandRetailerSocialAdsByCampaign() {
       <CampaignsBasePathContext.Provider value={ctx}>
         <CampaignAnalyticsDashboard
           title={t("db_brand.tabs.social_ads", "Social Ads")}
+          platform={campaignPlatform}
           initialCampaignIds={initialCampaignIds}
           initialCampaignNames={initialCampaignNames}
           lockCampaignFilter

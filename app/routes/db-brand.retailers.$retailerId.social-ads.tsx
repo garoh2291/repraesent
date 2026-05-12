@@ -1,9 +1,10 @@
 import { useMemo } from "react";
 import { useParams } from "react-router";
 import { useTranslation } from "react-i18next";
+import i18n from "~/i18n";
 
 export function meta() {
-  return [{ title: "Doorboost Brand Dashboard" }];
+  return [{ title: i18n.t("db_brand.page_titles.retailer_social_ads") }];
 }
 import {
   CampaignsBasePathContext,

@@ -49,6 +49,14 @@
   "db_brand": {
     "subtitle": "Wähle einen Händler in der Seitenleiste, um Social Ads & Leads zu sehen.",
     "no_retailers": "Diesem Brand sind noch keine Händler zugeordnet.",
+    "page_titles": {
+      "dashboard": "Marken-Dashboard — Repraesent",
+      "brand_leads": "Leads — Repraesent",
+      "brand_campaigns": "Kampagnen — Repraesent",
+      "retailer_leads": "Händler-Leads — Repraesent",
+      "retailer_social_ads": "Händler Social Ads — Repraesent",
+      "retailer_campaign": "Kampagne — Repraesent"
+    },
     "tabs": {
       "social_ads": "Social Ads",
       "leads": "Leads"
