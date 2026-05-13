@@ -68,9 +68,21 @@ export function RetailerTabsLayout({ children }: Props) {
     : `/db-brand/retailers/${retailerId}/social-ads`;
   const leadsHref = scopedCampaignId
     ? `/db-brand/retailers/${retailerId}/leads?platform_campaign_id=${encodeURIComponent(
-        scopedCampaignId,
+        scopedCampaignId
       )}`
     : `/db-brand/retailers/${retailerId}/leads`;
+
+  // When the view is campaign-scoped (path-param campaign or platform_campaign_id
+  // query), back goes to the same tab on the retailer page (drops the campaign).
+  // Otherwise it goes up one level to the brand overview.
+  const isOnLeadsTab = location.pathname.includes("/leads");
+  const retailerTabBaseHref = `/db-brand/retailers/${retailerId}/social-ads`;
+  const backHref = scopedCampaignId ? retailerTabBaseHref : "/db-brand";
+  const backLabel = scopedCampaignId
+    ? retailer?.retailer_name ||
+      retailerId?.split("-").pop() ||
+      t("db_brand.back_to_retailer", "Retailer")
+    : (currentWorkspace?.name ?? "Brand");
 
   const tabs: { to: string; label: string; Icon: typeof BarChart3 }[] = [
     {
@@ -89,10 +101,10 @@ export function RetailerTabsLayout({ children }: Props) {
     <div className="mx-auto w-full max-w-7xl p-4 sm:p-8">
       <div className="mb-6 flex items-center gap-3">
         <Link
-          to="/db-brand"
+          to={backHref}
           className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
         >
-          <ArrowLeft className="w-4 h-4" /> {currentWorkspace?.name ?? "Brand"}
+          <ArrowLeft className="w-4 h-4" /> {backLabel}
         </Link>
       </div>
 
@@ -137,7 +149,7 @@ export function RetailerTabsLayout({ children }: Props) {
                   "inline-flex items-center gap-2 px-4 py-2.5 text-sm font-medium border-b-2 transition-colors",
                   isActive
                     ? "border-foreground text-foreground"
-                    : "border-transparent text-muted-foreground hover:text-foreground/80",
+                    : "border-transparent text-muted-foreground hover:text-foreground/80"
                 )}
               >
                 <Icon className="w-4 h-4" />
