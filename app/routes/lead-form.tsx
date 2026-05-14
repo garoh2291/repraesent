@@ -32,6 +32,8 @@ import { useSearchParamsSelect } from "~/lib/hooks/useQueryParams";
 import { useLeadsViewMode } from "~/lib/hooks/useLocalStorage";
 import { useCanEditLeads } from "~/lib/hooks/useCanEditLeads";
 import { useUpdateLeadStatus } from "~/lib/hooks/useUpdateLeadStatus";
+import { getCustomerIdByLead } from "~/lib/api/customers";
+import { toast } from "sonner";
 import {
   ArrowRight,
   LayoutGrid,
@@ -116,6 +118,24 @@ export default function LeadForm() {
   );
 
   const updateStatusMutation = useUpdateLeadStatus({
+    onConvertedToSuccess: async (lead) => {
+      const customerId = await getCustomerIdByLead(lead.id);
+      if (customerId) {
+        toast.success(
+          t("leads.detail.customerCreatedToast", {
+            defaultValue: "Customer created from this lead.",
+          }),
+          {
+            action: {
+              label: t("customers.viewCustomer", {
+                defaultValue: "View customer",
+              }),
+              onClick: () => navigate(`/customers/${customerId}`),
+            },
+          },
+        );
+      }
+    },
     onMutate: async ({ id, status }) => {
       await queryClient.cancelQueries({ queryKey: ["leads"] });
       const prev = queryClient.getQueryData([

@@ -10,6 +10,7 @@
     "confirm": "Bestätigen",
     "back": "Zurück",
     "next": "Weiter",
+    "previous": "Zurück",
     "close": "Schließen",
     "search": "Suchen",
     "filter": "Filter",
@@ -40,11 +41,43 @@
     "leads": "Leads",
     "appointments": "Termine",
     "tasks": "Aufgaben",
+    "customers": "Kunden",
     "settings": "Einstellungen",
     "logout": "Abmelden",
     "subscriptions": "Abonnements",
     "brand_retailers": "Händler",
     "brand_retailers_empty": "Diesem Brand sind noch keine Händler zugeordnet."
+  },
+  "customers": {
+    "title": "Kunden",
+    "viewCustomer": "Kunde ansehen",
+    "noAccess": "Kunden sind für diesen Workspace nicht verfügbar.",
+    "searchPlaceholder": "Suche nach Name, Notizen oder ID…",
+    "filterStatus": "Status",
+    "allStatuses": "Alle Status",
+    "loadError": "Kunden konnten nicht geladen werden.",
+    "empty": "Noch keine Kunden.",
+    "pageOf": "Seite {{page}} von {{total}}",
+    "columns": {
+      "name": "Name",
+      "status": "Status",
+      "source": "Quelle",
+      "created": "Erstellt"
+    },
+    "section": {
+      "customer": "Kunde",
+      "contact": "Kontakt",
+      "company": "Unternehmen",
+      "contactInfo": "Kontaktdaten"
+    },
+    "lead": "Lead",
+    "created": "Erstellt",
+    "backToList": "Zurück zur Kundenliste",
+    "detailNotFound": "Kunde konnte nicht geladen werden.",
+    "unnamed": "Kunde",
+    "emails": "E-Mails",
+    "phones": "Telefone",
+    "addresses": "Adressen"
   },
   "db_brand": {
     "subtitle": "Wähle einen Händler in der Seitenleiste, um Social Ads & Leads zu sehen.",
@@ -277,7 +310,8 @@
       "historyStatusUpdated": "Status aktualisiert",
       "historyNoteAdded": "Notiz hinzugefügt",
       "historyNoteEdited": "Notiz bearbeitet",
-      "historyNoteDeleted": "Notiz gelöscht"
+      "historyNoteDeleted": "Notiz gelöscht",
+      "customerCreatedToast": "Aus diesem Lead wurde ein Kunde erstellt."
     },
     "empty": "Noch keine Leads vorhanden",
     "filters": {

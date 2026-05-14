@@ -15,6 +15,8 @@ import { getWorkspaceDetail } from "~/lib/api/workspaces";
 import type { WorkspaceMemberItem } from "~/components/organism/tasks/task-form-modal";
 import { useCanEditLeads } from "~/lib/hooks/useCanEditLeads";
 import { useUpdateLeadStatus } from "~/lib/hooks/useUpdateLeadStatus";
+import { getCustomerIdByLead } from "~/lib/api/customers";
+import { toast } from "sonner";
 import { ArrowLeft } from "lucide-react";
 
 export function meta() {
@@ -30,7 +32,26 @@ export default function LeadFormLeadId() {
   const navigate = useNavigate();
   const { currentWorkspace } = useAuthContext();
 
-  const updateStatusMutation = useUpdateLeadStatus();
+  const updateStatusMutation = useUpdateLeadStatus({
+    onConvertedToSuccess: async (lead) => {
+      const customerId = await getCustomerIdByLead(lead.id);
+      if (customerId) {
+        toast.success(
+          t("leads.detail.customerCreatedToast", {
+            defaultValue: "Customer created from this lead.",
+          }),
+          {
+            action: {
+              label: t("customers.viewCustomer", {
+                defaultValue: "View customer",
+              }),
+              onClick: () => navigate(`/customers/${customerId}`),
+            },
+          },
+        );
+      }
+    },
+  });
   const canEdit = useCanEditLeads();
 
   const workspaceQuery = useQuery({

@@ -19,6 +19,15 @@ export async function getNotes(leadId: string): Promise<Note[]> {
   return res.data;
 }
 
+export async function getNotesForCustomer(
+  customerId: string,
+): Promise<Note[]> {
+  const res = await apiClient.get<Note[]>(
+    `/customers/${customerId}/notes`,
+  );
+  return res.data;
+}
+
 export async function createNote(
   leadId: string,
   content: string
@@ -26,6 +35,17 @@ export async function createNote(
   const res = await apiClient.post<Note>(`/leads/${leadId}/notes`, {
     content,
   });
+  return res.data;
+}
+
+export async function createNoteForCustomer(
+  customerId: string,
+  content: string,
+): Promise<Note> {
+  const res = await apiClient.post<Note>(
+    `/customers/${customerId}/notes`,
+    { content },
+  );
   return res.data;
 }
 

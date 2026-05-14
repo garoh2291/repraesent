@@ -45,6 +45,8 @@ export default [
       route("lead-form", "routes/lead-form.tsx"),
       route("email/confirmation", "routes/lead-form.fallback.tsx"),
       route("lead-form/:leadId", "routes/lead-form.$leadId.tsx"),
+      route("customers", "routes/customers.tsx"),
+      route("customers/:customerId", "routes/customers.$customerId.tsx"),
       route("appointments", "routes/appointments.tsx"),
       route("analytics", "routes/analytics.tsx"),
       route("social-ads", "routes/social-ads.tsx"),

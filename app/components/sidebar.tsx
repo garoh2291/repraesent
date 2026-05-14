@@ -4,6 +4,7 @@ import { cn } from "~/lib/utils";
 import { useTranslation } from "react-i18next";
 import {
   Building2,
+  BookUser,
   CheckSquare,
   ChevronDown,
   HomeIcon,
@@ -313,14 +314,24 @@ export function Sidebar({ onClose, className }: { onClose?: () => void; classNam
               })}
 
             {hasLeadFormService && (
-              <NavLink
-                to="/tasks"
-                isActive={location.pathname === "/tasks"}
-                onClick={onClose}
-              >
-                <CheckSquare className="h-4 w-4 shrink-0" />
-                {t("nav.tasks")}
-              </NavLink>
+              <>
+                <NavLink
+                  to="/customers"
+                  isActive={location.pathname.startsWith("/customers")}
+                  onClick={onClose}
+                >
+                  <BookUser className="h-4 w-4 shrink-0" />
+                  {t("nav.customers")}
+                </NavLink>
+                <NavLink
+                  to="/tasks"
+                  isActive={location.pathname === "/tasks"}
+                  onClick={onClose}
+                >
+                  <CheckSquare className="h-4 w-4 shrink-0" />
+                  {t("nav.tasks")}
+                </NavLink>
+              </>
             )}
 
             <NavLink

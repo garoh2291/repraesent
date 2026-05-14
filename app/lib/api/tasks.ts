@@ -86,6 +86,26 @@ export async function createTask(
   return res.data;
 }
 
+export async function getTasksForCustomer(
+  customerId: string,
+): Promise<Task[]> {
+  const res = await apiClient.get<Task[]>(
+    `/customers/${customerId}/tasks`,
+  );
+  return res.data;
+}
+
+export async function createTaskForCustomer(
+  customerId: string,
+  payload: CreateTaskPayload,
+): Promise<Task> {
+  const res = await apiClient.post<Task>(
+    `/customers/${customerId}/tasks`,
+    payload,
+  );
+  return res.data;
+}
+
 export async function getAllTasks(
   params: GetTasksParams = {},
 ): Promise<PaginatedTasks> {

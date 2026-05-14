@@ -31,6 +31,7 @@ import { Calendar } from "~/components/ui/calendar";
 import { cn } from "~/lib/utils";
 import {
   createTask,
+  createTaskForCustomer,
   updateTask,
   type Task,
   type CreateTaskPayload,
@@ -51,7 +52,11 @@ interface TaskFormModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   leadId?: string;
+  /** When set, new tasks are created against the customer (not the lead). */
+  customerId?: string;
   leadName?: string;
+  /** Shown in the title when creating a task for a customer (no lead name). */
+  linkedContextLabel?: string;
   task?: Task | null;
   onSuccess?: (task: Task) => void;
   workspaceMembers: WorkspaceMemberItem[];
@@ -63,7 +68,9 @@ export function TaskFormModal({
   open,
   onOpenChange,
   leadId,
+  customerId,
   leadName,
+  linkedContextLabel,
   task,
   onSuccess,
   workspaceMembers,
@@ -114,7 +121,7 @@ export function TaskFormModal({
     queryKey: ["leads-picker", debouncedLeadSearch],
     queryFn: () =>
       getLeads({ search: debouncedLeadSearch || undefined, limit: 20 }),
-    enabled: !leadId && open && leadPickerOpen,
+    enabled: !leadId && !customerId && open && leadPickerOpen,
   });
 
   useEffect(() => {
@@ -150,20 +157,30 @@ export function TaskFormModal({
       if (isEdit) {
         return updateTask(task!.id, payload);
       }
+      if (customerId) {
+        return createTaskForCustomer(customerId, payload);
+      }
       return createTask(effectiveLeadId, payload);
     },
     onSuccess: (saved) => {
-      queryClient.invalidateQueries({
-        queryKey: ["lead-tasks", effectiveLeadId],
-      });
-      queryClient.invalidateQueries({ queryKey: ["tasks"] });
-      queryClient.invalidateQueries({ queryKey: ["leads"] });
-      queryClient.invalidateQueries({
-        queryKey: ["lead-detail", effectiveLeadId],
-      });
-      queryClient.invalidateQueries({
-        queryKey: ["lead-history", effectiveLeadId],
-      });
+      if (customerId) {
+        queryClient.invalidateQueries({
+          queryKey: ["customer-tasks", customerId],
+        });
+        queryClient.invalidateQueries({ queryKey: ["customer", customerId] });
+      } else {
+        queryClient.invalidateQueries({
+          queryKey: ["lead-tasks", effectiveLeadId],
+        });
+        queryClient.invalidateQueries({ queryKey: ["tasks"] });
+        queryClient.invalidateQueries({ queryKey: ["leads"] });
+        queryClient.invalidateQueries({
+          queryKey: ["lead-detail", effectiveLeadId],
+        });
+        queryClient.invalidateQueries({
+          queryKey: ["lead-history", effectiveLeadId],
+        });
+      }
       onOpenChange(false);
       onSuccess?.(saved);
     },
@@ -172,7 +189,7 @@ export function TaskFormModal({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!title.trim()) return;
-    if (!effectiveLeadId) return;
+    if (!isEdit && !customerId && !effectiveLeadId) return;
     mutation.mutate();
   };
 
@@ -183,6 +200,7 @@ export function TaskFormModal({
 
   const displayedLeadName =
     leadName ??
+    linkedContextLabel ??
     pickedLead?.full_name ??
     (pickedLead
       ? [pickedLead.first_name, pickedLead.last_name]
@@ -209,7 +227,7 @@ export function TaskFormModal({
 
         <form onSubmit={handleSubmit} className="space-y-4 pt-1">
           {/* Lead picker — only when leadId not pre-provided */}
-          {!leadId && !isEdit && (
+          {!leadId && !customerId && !isEdit && (
             <div className="space-y-1.5">
               <Label className="text-xs font-medium">
                 {t("tasks.fields.lead")}{" "}
@@ -457,7 +475,11 @@ export function TaskFormModal({
             <Button
               type="submit"
               size="sm"
-              disabled={!title.trim() || !effectiveLeadId || mutation.isPending}
+              disabled={
+                !title.trim() ||
+                mutation.isPending ||
+                (!isEdit && !customerId && !effectiveLeadId)
+              }
             >
               {mutation.isPending
                 ? t("common.saving")

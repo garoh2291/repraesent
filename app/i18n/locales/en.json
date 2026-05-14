@@ -10,6 +10,7 @@
     "confirm": "Confirm",
     "back": "Back",
     "next": "Next",
+    "previous": "Previous",
     "close": "Close",
     "search": "Search",
     "filter": "Filter",
@@ -40,11 +41,43 @@
     "leads": "Leads",
     "appointments": "Appointments",
     "tasks": "Tasks",
+    "customers": "Customers",
     "subscriptions": "Subscriptions",
     "settings": "Settings",
     "logout": "Log out",
     "brand_retailers": "Retailers",
     "brand_retailers_empty": "No retailers attached to this brand yet."
+  },
+  "customers": {
+    "title": "Customers",
+    "viewCustomer": "View customer",
+    "noAccess": "Customers are not available for this workspace.",
+    "searchPlaceholder": "Search by name, notes, or ID…",
+    "filterStatus": "Status",
+    "allStatuses": "All statuses",
+    "loadError": "Could not load customers.",
+    "empty": "No customers yet.",
+    "pageOf": "Page {{page}} of {{total}}",
+    "columns": {
+      "name": "Name",
+      "status": "Status",
+      "source": "Source",
+      "created": "Created"
+    },
+    "section": {
+      "customer": "Customer",
+      "contact": "Contact",
+      "company": "Company",
+      "contactInfo": "Contact information"
+    },
+    "lead": "Lead",
+    "created": "Created",
+    "backToList": "Back to customers",
+    "detailNotFound": "Customer could not be loaded.",
+    "unnamed": "Customer",
+    "emails": "Emails",
+    "phones": "Phones",
+    "addresses": "Addresses"
   },
   "db_brand": {
     "subtitle": "Pick a retailer from the sidebar to view its Social Ads & Leads.",
@@ -277,7 +310,8 @@
       "historyStatusUpdated": "Status updated",
       "historyNoteAdded": "Note added",
       "historyNoteEdited": "Note edited",
-      "historyNoteDeleted": "Note deleted"
+      "historyNoteDeleted": "Note deleted",
+      "customerCreatedToast": "Customer created from this lead."
     },
     "empty": "No leads yet",
     "filters": {

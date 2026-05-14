@@ -1,9 +1,11 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import {
   getNotes,
+  getNotesForCustomer,
   createNote,
+  createNoteForCustomer,
   updateNote,
   deleteNote,
   type Note,
@@ -71,7 +73,10 @@ function buildNoteUserLabel(note: Note, fallback: string): string {
 }
 
 interface LeadNotesSectionProps {
-  leadId: string;
+  /** Workspace lead notes (default timeline when present). */
+  leadId?: string;
+  /** Customer-scoped notes when there is no linked lead. */
+  customerId?: string;
   canEdit?: boolean;
   /**
    * Override the notes fetcher. Defaults to the workspace-scoped `getNotes`.
@@ -86,6 +91,7 @@ interface LeadNotesSectionProps {
 
 export function LeadNotesSection({
   leadId,
+  customerId,
   canEdit = true,
   fetchNotes,
   scopeKey,
@@ -99,27 +105,40 @@ export function LeadNotesSection({
   const [editingContent, setEditingContent] = useState("");
   const [noteIdToDelete, setNoteIdToDelete] = useState<string | null>(null);
 
-  // Default cache key matches the original shape so mutations below
-  // (which still target ["lead-notes", leadId]) stay in sync. Brand /
-  // read-only callers supply a `scopeKey` that yields a separate cache.
-  const notesQueryKey = scopeKey
-    ? ["lead-notes", scopeKey, leadId]
-    : ["lead-notes", leadId];
+  const notesQueryKey = useMemo((): readonly unknown[] => {
+    if (leadId) {
+      return scopeKey
+        ? (["lead-notes", scopeKey, leadId] as const)
+        : (["lead-notes", leadId] as const);
+    }
+    if (customerId) {
+      return ["customer-notes", customerId] as const;
+    }
+    return ["notes-disabled"] as const;
+  }, [leadId, customerId, scopeKey]);
 
   const { data: notes = [], isLoading } = useQuery({
     queryKey: notesQueryKey,
-    queryFn: () => (fetchNotes ?? getNotes)(leadId),
-    enabled: !!leadId,
+    queryFn: () => {
+      if (leadId) {
+        return (fetchNotes ?? getNotes)(leadId);
+      }
+      if (customerId) {
+        return getNotesForCustomer(customerId);
+      }
+      return Promise.resolve([]);
+    },
+    enabled: !!(leadId || customerId),
   });
 
   const createMutation = useMutation({
-    mutationFn: (content: string) => createNote(leadId, content),
+    mutationFn: (content: string) =>
+      leadId
+        ? createNote(leadId, content)
+        : createNoteForCustomer(customerId!, content),
     onMutate: async (content) => {
-      await queryClient.cancelQueries({ queryKey: ["lead-notes", leadId] });
-      const previousNotes = queryClient.getQueryData<Note[]>([
-        "lead-notes",
-        leadId,
-      ]);
+      await queryClient.cancelQueries({ queryKey: notesQueryKey });
+      const previousNotes = queryClient.getQueryData<Note[]>(notesQueryKey);
       const optimisticNote: Note = {
         id: `temp-${Date.now()}`,
         version: 1,
@@ -133,7 +152,7 @@ export function LeadNotesSection({
         user_email: user?.email ?? null,
         user_is_deleted: false,
       };
-      queryClient.setQueryData<Note[]>(["lead-notes", leadId], (old = []) => [
+      queryClient.setQueryData<Note[]>(notesQueryKey, (old = []) => [
         optimisticNote,
         ...old,
       ]);
@@ -143,14 +162,19 @@ export function LeadNotesSection({
     },
     onError: (_err, _content, context) => {
       if (context?.previousNotes != null) {
-        queryClient.setQueryData(["lead-notes", leadId], context.previousNotes);
+        queryClient.setQueryData(notesQueryKey, context.previousNotes);
       }
       setIsAddingNew(true);
       setNewNoteContent(_content);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["lead-notes", leadId] });
-      queryClient.invalidateQueries({ queryKey: ["lead-history", leadId] });
+      void queryClient.invalidateQueries({ queryKey: notesQueryKey });
+      if (leadId) {
+        void queryClient.invalidateQueries({ queryKey: ["lead-history", leadId] });
+      }
+      if (customerId) {
+        void queryClient.invalidateQueries({ queryKey: ["customer", customerId] });
+      }
     },
   });
 
@@ -158,11 +182,8 @@ export function LeadNotesSection({
     mutationFn: ({ noteId, content }: { noteId: string; content: string }) =>
       updateNote(noteId, content),
     onMutate: async ({ noteId, content }) => {
-      await queryClient.cancelQueries({ queryKey: ["lead-notes", leadId] });
-      const previousNotes = queryClient.getQueryData<Note[]>([
-        "lead-notes",
-        leadId,
-      ]);
+      await queryClient.cancelQueries({ queryKey: notesQueryKey });
+      const previousNotes = queryClient.getQueryData<Note[]>(notesQueryKey);
       const note = previousNotes?.find((n) => n.id === noteId);
       const optimisticNote: Note = note
         ? {
@@ -189,7 +210,7 @@ export function LeadNotesSection({
             user_email: user?.email ?? null,
             user_is_deleted: false,
           };
-      queryClient.setQueryData<Note[]>(["lead-notes", leadId], (old = []) =>
+      queryClient.setQueryData<Note[]>(notesQueryKey, (old = []) =>
         old.map((n) => (n.id === noteId ? optimisticNote : n))
       );
       setEditingNoteId(null);
@@ -198,26 +219,28 @@ export function LeadNotesSection({
     },
     onError: (_err, { noteId, content }, context) => {
       if (context?.previousNotes != null) {
-        queryClient.setQueryData(["lead-notes", leadId], context.previousNotes);
+        queryClient.setQueryData(notesQueryKey, context.previousNotes);
       }
       setEditingNoteId(noteId);
       setEditingContent(content);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["lead-notes", leadId] });
-      queryClient.invalidateQueries({ queryKey: ["lead-history", leadId] });
+      void queryClient.invalidateQueries({ queryKey: notesQueryKey });
+      if (leadId) {
+        void queryClient.invalidateQueries({ queryKey: ["lead-history", leadId] });
+      }
+      if (customerId) {
+        void queryClient.invalidateQueries({ queryKey: ["customer", customerId] });
+      }
     },
   });
 
   const deleteMutation = useMutation({
     mutationFn: (noteId: string) => deleteNote(noteId),
     onMutate: async (noteId) => {
-      await queryClient.cancelQueries({ queryKey: ["lead-notes", leadId] });
-      const previousNotes = queryClient.getQueryData<Note[]>([
-        "lead-notes",
-        leadId,
-      ]);
-      queryClient.setQueryData<Note[]>(["lead-notes", leadId], (old = []) =>
+      await queryClient.cancelQueries({ queryKey: notesQueryKey });
+      const previousNotes = queryClient.getQueryData<Note[]>(notesQueryKey);
+      queryClient.setQueryData<Note[]>(notesQueryKey, (old = []) =>
         old.filter((n) => n.id !== noteId)
       );
       setNoteIdToDelete(null);
@@ -225,13 +248,18 @@ export function LeadNotesSection({
     },
     onError: (_err, _noteId, context) => {
       if (context?.previousNotes != null) {
-        queryClient.setQueryData(["lead-notes", leadId], context.previousNotes);
+        queryClient.setQueryData(notesQueryKey, context.previousNotes);
       }
       setNoteIdToDelete(null);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["lead-notes", leadId] });
-      queryClient.invalidateQueries({ queryKey: ["lead-history", leadId] });
+      void queryClient.invalidateQueries({ queryKey: notesQueryKey });
+      if (leadId) {
+        void queryClient.invalidateQueries({ queryKey: ["lead-history", leadId] });
+      }
+      if (customerId) {
+        void queryClient.invalidateQueries({ queryKey: ["customer", customerId] });
+      }
     },
   });
 

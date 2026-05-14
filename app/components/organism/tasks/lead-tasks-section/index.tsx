@@ -20,6 +20,7 @@ import {
 } from "~/components/ui/alert-dialog";
 import {
   getTasksForLead,
+  getTasksForCustomer,
   updateTask,
   type Task,
 } from "~/lib/api/tasks";
@@ -41,13 +42,19 @@ function formatDueDate(dateStr: string): string {
 }
 
 interface LeadTasksSectionProps {
-  leadId: string;
+  /** Tasks for this lead (same list as the lead detail page). */
+  leadId?: string;
+  /** Tasks for this customer when there is no `leadId` (e.g. manual customer). */
+  customerId?: string;
+  linkedContextLabel?: string;
   canEdit?: boolean;
   workspaceMembers: WorkspaceMemberItem[];
 }
 
 export function LeadTasksSection({
   leadId,
+  customerId,
+  linkedContextLabel,
   canEdit = true,
   workspaceMembers,
 }: LeadTasksSectionProps) {
@@ -61,19 +68,26 @@ export function LeadTasksSection({
     isDone: boolean;
   } | null>(null);
 
+  const tasksQueryKey = leadId
+    ? (["lead-tasks", leadId] as const)
+    : (["customer-tasks", customerId!] as const);
+
   const { data: tasks = [], isLoading } = useQuery({
-    queryKey: ["lead-tasks", leadId],
-    queryFn: () => getTasksForLead(leadId),
-    enabled: !!leadId,
+    queryKey: tasksQueryKey,
+    queryFn: () =>
+      leadId
+        ? getTasksForLead(leadId)
+        : getTasksForCustomer(customerId!),
+    enabled: !!(leadId || customerId),
   });
 
   const toggleDoneMutation = useMutation({
     mutationFn: ({ taskId, isDone }: { taskId: string; isDone: boolean }) =>
       updateTask(taskId, { status: isDone ? "done" : "todo" }),
     onMutate: async ({ taskId, isDone }) => {
-      await queryClient.cancelQueries({ queryKey: ["lead-tasks", leadId] });
-      const prev = queryClient.getQueryData<Task[]>(["lead-tasks", leadId]);
-      queryClient.setQueryData<Task[]>(["lead-tasks", leadId], (old = []) =>
+      await queryClient.cancelQueries({ queryKey: tasksQueryKey });
+      const prev = queryClient.getQueryData<Task[]>(tasksQueryKey);
+      queryClient.setQueryData<Task[]>(tasksQueryKey, (old = []) =>
         old.map((t) =>
           t.id === taskId ? { ...t, status: isDone ? "done" : "todo" } : t,
         ),
@@ -82,18 +96,33 @@ export function LeadTasksSection({
     },
     onError: (_err, _vars, ctx) => {
       if (ctx?.prev) {
-        queryClient.setQueryData(["lead-tasks", leadId], ctx.prev);
+        queryClient.setQueryData(tasksQueryKey, ctx.prev);
       }
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["lead-tasks", leadId] });
+      queryClient.invalidateQueries({ queryKey: tasksQueryKey });
       queryClient.invalidateQueries({ queryKey: ["tasks"] });
-      queryClient.invalidateQueries({ queryKey: ["leads"] });
+      if (leadId) {
+        queryClient.invalidateQueries({ queryKey: ["leads"] });
+      }
+      if (customerId) {
+        queryClient.invalidateQueries({ queryKey: ["customer", customerId] });
+      }
     },
   });
 
   const openTasks = tasks.filter((t) => t.status !== "done");
   const doneTasks = tasks.filter((t) => t.status === "done");
+
+  if (!leadId && !customerId) {
+    return (
+      <p className="text-sm text-muted-foreground py-1">
+        {t("tasks.noEntityHint", {
+          defaultValue: "Tasks need a lead or customer context.",
+        })}
+      </p>
+    );
+  }
 
   if (isLoading) {
     return (
@@ -194,6 +223,8 @@ export function LeadTasksSection({
         open={formOpen}
         onOpenChange={setFormOpen}
         leadId={leadId}
+        customerId={customerId}
+        linkedContextLabel={linkedContextLabel}
         workspaceMembers={workspaceMembers}
       />
 
