@@ -1,7 +1,11 @@
 import { useNavigate } from "react-router";
 import { useTranslation } from "react-i18next";
 import { useAuthContext } from "~/providers/auth-provider";
-import { setStoredWorkspaceId } from "~/lib/api/axios-instance";
+import {
+  setStoredWorkspaceId,
+  setStoredSelectedView,
+  BRAND_VIEW,
+} from "~/lib/api/axios-instance";
 
 import logoUrl from "~/components/icons/re_praesent-mark-brand-hor.svg?url";
 
@@ -20,13 +24,15 @@ export default function WorkspacePicker() {
 
   const handleSelect = (workspaceId: string) => {
     setCurrentWorkspace(workspaceId);
-    if (workspaces.length > 1) {
-      setStoredWorkspaceId(workspaceId);
-    }
+    // Always set the workspace_id so axios sends the header on the very next
+    // request, even when there's only one workspace.
+    setStoredWorkspaceId(workspaceId);
+    setStoredSelectedView(workspaceId);
     navigate("/", { replace: true });
   };
 
   const handleSelectBrand = () => {
+    setStoredSelectedView(BRAND_VIEW);
     navigate("/brand", { replace: true });
   };
 

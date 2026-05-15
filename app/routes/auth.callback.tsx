@@ -14,6 +14,9 @@ import {
   clearStoredWorkspaceId,
   getStoredWorkspaceId,
   getStoredToken,
+  getStoredSelectedView,
+  setStoredSelectedView,
+  BRAND_VIEW,
 } from "~/lib/api/axios-instance";
 
 export function meta() {
@@ -57,45 +60,87 @@ export default function AuthCallback() {
       // Route based on context — shared between fresh auth and already-used-token recovery
       const routeAfterAuth = (context: UserContextResponse) => {
         const isBrand = context.user.user_type === "brand";
+        const workspaces = context.workspaces ?? [];
+        const hasBrand = !!context.brand;
 
-        // Brand users default to /brand. If they were sent here with a
-        // workspace deep-link param OR an explicit redirect to a non-/brand
-        // path, honour that; otherwise the brand dashboard is home base.
-        if (isBrand) {
-          if (
-            workspaceParam &&
-            (context.workspaces ?? []).some((w) => w.id === workspaceParam)
-          ) {
-            setStoredWorkspaceId(workspaceParam);
-            queryClient.removeQueries();
-            navigate(resolveDestination("/"), { replace: true });
-            return;
-          }
-          if (redirectParam && redirectParam.startsWith("/") && !redirectParam.startsWith("/brand")) {
-            navigate(redirectParam, { replace: true });
-            return;
-          }
-          navigate("/brand", { replace: true });
-          return;
-        }
-
-        if (!context.workspaces?.length) {
-          navigate("/onboarding/profile", { replace: true });
-          return;
-        }
-
-        // If workspace param is provided and valid, always use it (email deep link)
-        if (workspaceParam && context.workspaces.some((w) => w.id === workspaceParam)) {
+        // Email deep-link to a specific workspace — always wins, applies to both
+        // regular and brand users.
+        if (workspaceParam && workspaces.some((w) => w.id === workspaceParam)) {
           setStoredWorkspaceId(workspaceParam);
-          // Invalidate all queries so sidebar/data re-fetches with the correct workspace
+          setStoredSelectedView(workspaceParam);
           queryClient.removeQueries();
           navigate(resolveDestination("/"), { replace: true });
           return;
         }
 
-        if (context.workspaces.length === 1) {
-          const ws = context.workspaces[0];
+        // Explicit redirect param — honour any safe relative path.
+        if (redirectParam && redirectParam.startsWith("/")) {
+          if (redirectParam.startsWith("/brand")) {
+            if (isBrand && hasBrand) setStoredSelectedView(BRAND_VIEW);
+          }
+          navigate(redirectParam, { replace: true });
+          return;
+        }
+
+        // Brand user whose brand was revoked: no /brand access. If they have
+        // workspaces, let them pick one; otherwise drop them at /no-workspace.
+        if (isBrand && !hasBrand) {
+          if (workspaces.length === 0) {
+            navigate("/no-workspace", { replace: true });
+            return;
+          }
+          const stored = getStoredSelectedView();
+          if (stored && stored !== BRAND_VIEW && workspaces.some((w) => w.id === stored)) {
+            setStoredWorkspaceId(stored);
+            navigate(resolveDestination("/"), { replace: true });
+            return;
+          }
+          if (workspaces.length === 1) {
+            const ws = workspaces[0];
+            setStoredWorkspaceId(ws.id);
+            setStoredSelectedView(ws.id);
+            navigate(resolveDestination("/"), { replace: true });
+            return;
+          }
+          navigate("/auth/workspace-picker", { replace: true });
+          return;
+        }
+
+        // Brand user routing.
+        if (isBrand && hasBrand) {
+          // Brand-only (no workspace memberships) → /brand is the only option.
+          if (workspaces.length === 0) {
+            setStoredSelectedView(BRAND_VIEW);
+            navigate("/brand", { replace: true });
+            return;
+          }
+
+          const stored = getStoredSelectedView();
+          if (stored === BRAND_VIEW) {
+            navigate("/brand", { replace: true });
+            return;
+          }
+          if (stored && workspaces.some((w) => w.id === stored)) {
+            setStoredWorkspaceId(stored);
+            navigate(resolveDestination("/"), { replace: true });
+            return;
+          }
+          // First-time brand-user with workspaces, or stored view no longer
+          // valid → let them pick.
+          navigate("/auth/workspace-picker", { replace: true });
+          return;
+        }
+
+        // Regular user paths below.
+        if (!workspaces.length) {
+          navigate("/onboarding/profile", { replace: true });
+          return;
+        }
+
+        if (workspaces.length === 1) {
+          const ws = workspaces[0];
           setStoredWorkspaceId(ws.id);
+          setStoredSelectedView(ws.id);
           const status = ws.status ?? "active";
           const hasStripeCustomer = !!(ws as { stripe_customer_id?: string | null })
             ?.stripe_customer_id;
@@ -112,10 +157,11 @@ export default function AuthCallback() {
           return;
         }
 
-        if (context.workspaces.length > 1) {
-          const stored = getStoredWorkspaceId();
-          const hasValidStored = stored && context.workspaces.some((w) => w.id === stored);
+        if (workspaces.length > 1) {
+          const storedWs = getStoredWorkspaceId();
+          const hasValidStored = storedWs && workspaces.some((w) => w.id === storedWs);
           if (hasValidStored) {
+            setStoredSelectedView(storedWs);
             navigate(resolveDestination("/"), { replace: true });
             return;
           }

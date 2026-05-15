@@ -17,6 +17,8 @@ import {
   clearStoredWorkspaceId,
   getStoredWorkspaceId,
   setStoredWorkspaceId,
+  clearStoredSelectedView,
+  setStoredSelectedView,
 } from "~/lib/api/axios-instance";
 
 export interface AuthState {
@@ -34,6 +36,7 @@ export const clearStoredAuth = (): void => {
   if (typeof window === "undefined") return;
   clearStoredToken();
   clearStoredWorkspaceId();
+  clearStoredSelectedView();
 };
 
 export function useAuth() {
@@ -157,6 +160,7 @@ export function useAuth() {
     if (!workspace) return;
 
     setStoredWorkspaceId(workspaceId);
+    setStoredSelectedView(workspaceId);
 
     queryClient.setQueryData<AuthState>(["auth"], (prev) =>
       prev

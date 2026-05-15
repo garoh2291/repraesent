@@ -21,6 +21,10 @@ import { InstructionsModal } from "~/components/instructions-modal";
 
 import { getLocalizedServiceName } from "~/lib/api/auth";
 import { useAuthContext } from "~/providers/auth-provider";
+import {
+  setStoredSelectedView,
+  BRAND_VIEW,
+} from "~/lib/api/axios-instance";
 import { useAppointmentConfigs } from "~/lib/hooks/useAppointmentConfigs";
 import { LanguageSwitcher } from "~/components/language-switcher";
 import {
@@ -174,6 +178,7 @@ export function Sidebar({ onClose, className }: { onClose?: () => void; classNam
                     key="__brand__"
                     onClick={() => {
                       onClose?.();
+                      setStoredSelectedView(BRAND_VIEW);
                       navigate("/brand", { replace: true });
                     }}
                   >

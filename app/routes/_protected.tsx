@@ -3,7 +3,12 @@ import { Outlet, useNavigate, useLocation } from "react-router";
 import { useTranslation } from "react-i18next";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAuthContext } from "~/providers/auth-provider";
-import { getStoredWorkspaceId } from "~/lib/api/axios-instance";
+import {
+  getStoredWorkspaceId,
+  getStoredSelectedView,
+  clearStoredSelectedView,
+  BRAND_VIEW,
+} from "~/lib/api/axios-instance";
 import { getWorkspaceInvoices } from "~/lib/api/workspaces";
 import { clearStoredAuth } from "~/lib/hooks/use-auth";
 import {
@@ -32,7 +37,7 @@ function isDoorboostBrandPath(path: string): boolean {
 
 export default function ProtectedLayout() {
   const { t } = useTranslation();
-  const { isAuthenticated, isLoading, user, workspaces, currentWorkspace } =
+  const { isAuthenticated, isLoading, user, workspaces, currentWorkspace, brand } =
     useAuthContext();
   const navigate = useNavigate();
   const location = useLocation();
@@ -46,6 +51,10 @@ export default function ProtectedLayout() {
   // doorboost-brand workspace routes like /brand-retailers or /brand-leads.
   const isOnBrand = path === BRAND_PREFIX || path.startsWith(BRAND_PREFIX + "/");
   const isBrandUser = user?.user_type === "brand";
+  // Brand entity may have been revoked while the session was alive (user
+  // removed from the brand, or brand deleted). We treat them as a "regular"
+  // workspace-only user from this point on.
+  const brandRevoked = isBrandUser && !brand;
 
   const hasProfile = !!(user?.first_name?.trim() && user?.last_name?.trim());
   const noWorkspacesYet = (workspaces?.length ?? 0) === 0;
@@ -128,17 +137,38 @@ export default function ProtectedLayout() {
     // toggle between brand-view and workspace-view.
     if (isBrandUser) {
       const hasWorkspaces = (workspaces?.length ?? 0) > 0;
-      if (!hasWorkspaces) {
-        if (!isOnBrand) {
-          navigate("/brand", { replace: true });
+
+      // Brand access revoked mid-session (user removed from brand, or brand
+      // deleted). Drop the "brand" preference and route them to whatever
+      // they still have access to.
+      if (brandRevoked) {
+        if (getStoredSelectedView() === BRAND_VIEW) {
+          clearStoredSelectedView();
         }
-        return;
+        if (!hasWorkspaces) {
+          if (!isOnNoWorkspace) {
+            navigate("/no-workspace", { replace: true });
+          }
+          return;
+        }
+        if (isOnBrand) {
+          navigate("/auth/workspace-picker", { replace: true });
+          return;
+        }
+        // not on /brand and has workspaces → fall through to workspace gating
+      } else {
+        if (!hasWorkspaces) {
+          if (!isOnBrand) {
+            navigate("/brand", { replace: true });
+          }
+          return;
+        }
+        // Brand user IS on /brand → render brand layout, skip remaining gating.
+        if (isOnBrand) {
+          return;
+        }
+        // Otherwise fall through to the regular workspace gating below.
       }
-      // Brand user IS on /brand → render brand layout, skip remaining gating.
-      if (isOnBrand) {
-        return;
-      }
-      // Otherwise fall through to the regular workspace gating below.
     } else if (isOnBrand) {
       // Regular user: cannot access /brand
       navigate("/", { replace: true });
@@ -277,6 +307,7 @@ export default function ProtectedLayout() {
     isOnNoWorkspace,
     isOnWorkspacePicker,
     isBrandUser,
+    brandRevoked,
     isOnBrand,
     eligibilityProbeDone,
     eligibilityHint,
@@ -339,13 +370,23 @@ export default function ProtectedLayout() {
   // regular workspace gating below for workspace-scoped paths.
   if (isBrandUser) {
     const hasWorkspaces = (workspaces?.length ?? 0) > 0;
-    if (!hasWorkspaces) {
-      return isOnBrand ? <Outlet /> : null;
+    if (brandRevoked) {
+      // Brand was revoked — never render /brand. The effect above redirects;
+      // we just block until it completes.
+      if (isOnBrand) return null;
+      if (!hasWorkspaces) {
+        return isOnNoWorkspace ? <Outlet /> : null;
+      }
+      // has workspaces → fall through to workspace gating
+    } else {
+      if (!hasWorkspaces) {
+        return isOnBrand ? <Outlet /> : null;
+      }
+      if (isOnBrand) {
+        return <Outlet />;
+      }
+      // Fall through — brand user using workspace view.
     }
-    if (isOnBrand) {
-      return <Outlet />;
-    }
-    // Fall through — brand user using workspace view.
   } else if (isOnBrand) {
     // Regular user: block /brand
     return null;

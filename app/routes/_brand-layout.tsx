@@ -21,7 +21,11 @@ import {
 } from "~/components/ui/dropdown-menu";
 import { Sheet, SheetContent } from "~/components/ui/sheet";
 import { LanguageSwitcher } from "~/components/language-switcher";
-import { setStoredWorkspaceId } from "~/lib/api/axios-instance";
+import {
+  setStoredWorkspaceId,
+  setStoredSelectedView,
+  BRAND_VIEW,
+} from "~/lib/api/axios-instance";
 import { cn } from "~/lib/utils";
 import logoUrl from "~/components/icons/re_praesent-mark-brand-hor.svg?url";
 
@@ -222,6 +226,14 @@ export default function BrandLayout() {
     const maxAge = 60 * 60 * 24 * 365;
     document.cookie = `personal_lang=${locale}; path=/; max-age=${maxAge}; samesite=lax`;
   }, [user?.locale, i18n]);
+
+  // Brand view is the active selection while this layout is mounted. Persist
+  // it so a subsequent /login or /auth/callback brings the user back here.
+  useEffect(() => {
+    if (user?.user_type === "brand") {
+      setStoredSelectedView(BRAND_VIEW);
+    }
+  }, [user?.user_type]);
 
   return (
     <div className="flex h-screen overflow-hidden bg-[#0f0f11]">
