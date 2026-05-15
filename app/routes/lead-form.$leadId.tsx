@@ -16,16 +16,23 @@ import type { WorkspaceMemberItem } from "~/components/organism/tasks/task-form-
 import { useCanEditLeads } from "~/lib/hooks/useCanEditLeads";
 import { useUpdateLeadStatus } from "~/lib/hooks/useUpdateLeadStatus";
 import { ArrowLeft } from "lucide-react";
+import i18n from "~/i18n";
+import { useDocumentMeta } from "~/lib/hooks/use-document-meta";
 
 export function meta() {
   return [
-    { title: "Lead - Repraesent" },
-    { name: "description", content: "Lead details" },
+    { title: i18n.t("leads.detail.metaTitle") + " - Repraesent" },
+    { name: "description", content: i18n.t("leads.detail.metaDescription") },
   ];
 }
 
 export default function LeadFormLeadId() {
   const { t } = useTranslation();
+  useDocumentMeta({
+    titleKey: "leads.detail.metaTitle",
+    descriptionKey: "leads.detail.metaDescription",
+    titleSuffix: " - Repraesent",
+  });
   const { leadId } = useParams<{ leadId: string }>();
   const navigate = useNavigate();
   const { currentWorkspace } = useAuthContext();

@@ -18,16 +18,23 @@ import {
   setStoredSelectedView,
   BRAND_VIEW,
 } from "~/lib/api/axios-instance";
+import i18n from "~/i18n";
+import { useDocumentMeta } from "~/lib/hooks/use-document-meta";
 
 export function meta() {
   return [
-    { title: "Signing in - Repraesent" },
-    { name: "description", content: "Completing sign in" },
+    { title: i18n.t("auth.callback.metaTitle") + " - Repraesent" },
+    { name: "description", content: i18n.t("auth.callback.metaDescription") },
   ];
 }
 
 export default function AuthCallback() {
   const { t } = useTranslation();
+  useDocumentMeta({
+    titleKey: "auth.callback.metaTitle",
+    descriptionKey: "auth.callback.metaDescription",
+    titleSuffix: " - Repraesent",
+  });
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const queryClient = useQueryClient();

@@ -20,6 +20,8 @@ import {
 } from "lucide-react";
 import { Trans } from "react-i18next";
 import { Button } from "~/components/ui/button";
+import i18n from "~/i18n";
+import { useDocumentMeta } from "~/lib/hooks/use-document-meta";
 
 const FALLBACK_SUPPORT_EMAIL = "support@repraesent.com";
 function getSupportEmail(): string {
@@ -31,8 +33,8 @@ function getSupportEmail(): string {
 
 export function meta() {
   return [
-    { title: "Products - Repraesent" },
-    { name: "description", content: "Your subscriptions and invoices" },
+    { title: i18n.t("products.metaTitle") + " - Repraesent" },
+    { name: "description", content: i18n.t("products.metaDescription") },
   ];
 }
 
@@ -65,6 +67,11 @@ function StatusPill({ status }: { status: string }) {
 
 export default function Products() {
   const { t } = useTranslation();
+  useDocumentMeta({
+    titleKey: "products.metaTitle",
+    descriptionKey: "products.metaDescription",
+    titleSuffix: " - Repraesent",
+  });
   const { currentWorkspace, workspaces } = useAuthContext();
   const workspaceId =
     getStoredWorkspaceId() ?? currentWorkspace?.id ?? workspaces[0]?.id;

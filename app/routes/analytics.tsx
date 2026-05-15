@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 import i18n from "~/i18n";
 import { useAuthContext } from "~/providers/auth-provider";
 import { getServiceConfig } from "~/lib/api/workspaces";
+import { useDocumentMeta } from "~/lib/hooks/use-document-meta";
 
 export function meta() {
   return [
@@ -16,6 +17,10 @@ const PLAUSIBLE_SCRIPT = "https://plausible0.gagadomains.com/js/embed.host.js";
 
 export default function Analytics() {
   const { t } = useTranslation();
+  useDocumentMeta({
+    titleKey: "analytics.metaTitle",
+    descriptionKey: "analytics.metaDescription",
+  });
   const { currentWorkspace } = useAuthContext();
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const [isLoading, setIsLoading] = useState(true);

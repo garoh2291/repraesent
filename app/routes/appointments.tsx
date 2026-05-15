@@ -37,15 +37,25 @@ import {
   SelectTrigger,
   SelectValue,
 } from "~/components/ui/select";
+import i18n from "~/i18n";
+import { useDocumentMeta } from "~/lib/hooks/use-document-meta";
 
 export function meta() {
   return [
-    { title: "Appointments - Repraesent" },
-    { name: "description", content: "Manage appointments and booking" },
+    { title: i18n.t("appointments.metaTitle") + " - Repraesent" },
+    {
+      name: "description",
+      content: i18n.t("appointments.metaDescription"),
+    },
   ];
 }
 
 export default function Appointments() {
+  useDocumentMeta({
+    titleKey: "appointments.metaTitle",
+    descriptionKey: "appointments.metaDescription",
+    titleSuffix: " - Repraesent",
+  });
   const { currentWorkspace } = useAuthContext();
   const navigate = useNavigate();
   const hasAccess =

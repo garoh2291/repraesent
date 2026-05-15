@@ -15,6 +15,7 @@ import { useAuthContext } from "~/providers/auth-provider";
 import { useQueryClient } from "@tanstack/react-query";
 import { formatCurrencyFromCents } from "~/lib/utils/format";
 import { Check, Star, ChevronLeft, ChevronRight } from "lucide-react";
+import { useDocumentMeta } from "~/lib/hooks/use-document-meta";
 
 export function meta() {
   return [
@@ -161,6 +162,10 @@ function ProductCard({
 
 export default function OnboardingProducts() {
   const { t } = useTranslation();
+  useDocumentMeta({
+    titleKey: "onboarding.products.metaTitle",
+    descriptionKey: "onboarding.products.metaDescription",
+  });
   const { user, currentWorkspace, workspaces } = useAuthContext();
   const navigate = useNavigate();
   const queryClient = useQueryClient();

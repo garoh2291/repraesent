@@ -19,6 +19,7 @@ import {
   FormLabel,
   FormMessage,
 } from "~/components/ui/form";
+import { useDocumentMeta } from "~/lib/hooks/use-document-meta";
 
 export function meta() {
   return [
@@ -79,6 +80,11 @@ function createProfileSchema(t: (key: string) => string) {
 
 export default function SettingsProfile() {
   const { t } = useTranslation();
+  useDocumentMeta({
+    titleKey: "settings.profile.metaTitle",
+    descriptionKey: "settings.profile.metaDescription",
+    titleSuffix: " - Repraesent",
+  });
   const { user } = useAuthContext();
   const queryClient = useQueryClient();
 

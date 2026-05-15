@@ -27,6 +27,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "~/components/ui/select";
+import { useDocumentMeta } from "~/lib/hooks/use-document-meta";
 
 export function meta() {
   return [
@@ -281,6 +282,10 @@ function PasswordRow({
 
 export default function Emails() {
   const { t } = useTranslation();
+  useDocumentMeta({
+    titleKey: "email.metaTitle",
+    descriptionKey: "email.metaDescription",
+  });
   const { currentWorkspace } = useAuthContext();
 
   const emailService = currentWorkspace?.services?.find(

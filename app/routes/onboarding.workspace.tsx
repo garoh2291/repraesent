@@ -13,6 +13,7 @@ import {
 import { getWorkspaceDetail } from "~/lib/api/workspaces";
 import { setStoredWorkspaceId } from "~/lib/api/axios-instance";
 import { X } from "lucide-react";
+import { useDocumentMeta } from "~/lib/hooks/use-document-meta";
 
 export function meta() {
   return [
@@ -23,6 +24,10 @@ export function meta() {
 
 export default function OnboardingWorkspace() {
   const { t } = useTranslation();
+  useDocumentMeta({
+    titleKey: "onboarding.workspace.metaTitle",
+    descriptionKey: "onboarding.workspace.metaDescription",
+  });
   const { user, currentWorkspace, workspaces } = useAuthContext();
   const navigate = useNavigate();
   const queryClient = useQueryClient();

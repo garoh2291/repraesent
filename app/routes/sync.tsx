@@ -27,11 +27,13 @@ import {
 import type { FallbackNoteUser, DoorboostUser } from "~/lib/api/historical-data";
 import { getWorkspaceDetail } from "~/lib/api/workspaces";
 import { extractErrorMessage } from "~/lib/api/axios-instance";
+import i18n from "~/i18n";
+import { useDocumentMeta } from "~/lib/hooks/use-document-meta";
 
 export function meta() {
   return [
-    { title: "Data Migration - Repraesent" },
-    { name: "description", content: "Sync your Doorboost historical data" },
+    { title: i18n.t("sync.metaTitle") + " - Repraesent" },
+    { name: "description", content: i18n.t("sync.metaDescription") },
   ];
 }
 
@@ -836,6 +838,11 @@ function FallbackUserStep({
 /* ─── Main Sync Page ─── */
 
 export default function SyncPage() {
+  useDocumentMeta({
+    titleKey: "sync.metaTitle",
+    descriptionKey: "sync.metaDescription",
+    titleSuffix: " - Repraesent",
+  });
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { currentWorkspace, user } = useAuthContext();

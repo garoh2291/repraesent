@@ -7,6 +7,7 @@ import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
 import { updateOnboardingProfile } from "~/lib/api/onboarding";
 import { useQueryClient } from "@tanstack/react-query";
+import { useDocumentMeta } from "~/lib/hooks/use-document-meta";
 
 interface ProfileLocationState {
   hint?: { firstName?: string | null; lastName?: string | null };
@@ -21,6 +22,10 @@ export function meta() {
 
 export default function OnboardingProfile() {
   const { t } = useTranslation();
+  useDocumentMeta({
+    titleKey: "onboarding.profile.metaTitle",
+    descriptionKey: "onboarding.profile.metaDescription",
+  });
   const { user } = useAuthContext();
   const location = useLocation();
   const hint = (location.state as ProfileLocationState | null)?.hint;

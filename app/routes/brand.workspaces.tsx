@@ -15,9 +15,11 @@ import { FilterComponent } from "~/components/molecule/filter-component";
 import { cn } from "~/lib/utils";
 import { formatNumber, formatDateMedium } from "~/lib/utils/format";
 import TooltipContainer from "~/components/tooltip-container";
+import i18nInstance from "~/i18n";
+import { useDocumentMeta } from "~/lib/hooks/use-document-meta";
 
 export function meta() {
-  return [{ title: "Workspaces – Repraesent" }];
+  return [{ title: i18nInstance.t("brand.workspacesMetaTitle") + " – Repraesent" }];
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -342,6 +344,10 @@ function SkeletonRow() {
 
 export default function BrandWorkspaces() {
   const { t, i18n } = useTranslation();
+  useDocumentMeta({
+    titleKey: "brand.workspacesMetaTitle",
+    titleSuffix: " – Repraesent",
+  });
   const [searchParams] = useSearchParams();
   const [searchInput, setSearchInput] = useState("");
   const [page, setPage] = useState(1);

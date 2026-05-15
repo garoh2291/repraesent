@@ -43,6 +43,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "~/components/ui/alert-dialog";
+import { useDocumentMeta } from "~/lib/hooks/use-document-meta";
 
 export function meta() {
   return [
@@ -85,6 +86,11 @@ function SettingsSection({
 }
 
 export default function SettingsTeam() {
+  useDocumentMeta({
+    titleKey: "settings.team.metaTitle",
+    descriptionKey: "settings.team.metaDescription",
+    titleSuffix: " - Repraesent",
+  });
   const { user, currentWorkspace } = useAuthContext();
   const { t } = useTranslation();
   const queryClient = useQueryClient();
