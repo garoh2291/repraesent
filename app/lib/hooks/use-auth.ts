@@ -17,6 +17,8 @@ import {
   clearStoredWorkspaceId,
   getStoredWorkspaceId,
   setStoredWorkspaceId,
+  clearStoredSelectedView,
+  setStoredSelectedView,
 } from "~/lib/api/axios-instance";
 
 export interface AuthState {
@@ -34,6 +36,7 @@ export const clearStoredAuth = (): void => {
   if (typeof window === "undefined") return;
   clearStoredToken();
   clearStoredWorkspaceId();
+  clearStoredSelectedView();
 };
 
 export function useAuth() {
@@ -66,22 +69,13 @@ export function useAuth() {
       try {
         const context = await getUserContext();
 
-        // Brand user path — context includes brand + brandWorkspaces
-        if (context.user.user_type === "brand") {
-          return {
-            user: context.user,
-            workspaces: [],
-            currentWorkspace: null,
-            token,
-            isAuthenticated: true,
-            isLoading: false,
-            brand: context.brand ?? null,
-            brandWorkspaces: context.brandWorkspaces ?? [],
-          };
-        }
+        // Brand context (if user is brand) is returned alongside workspaces —
+        // brand users may also be workspace members and switch between views.
+        const brand = context.brand ?? null;
+        const brandWorkspaces = context.brandWorkspaces ?? [];
+        const workspaces = context.workspaces ?? [];
 
-        // Regular user path
-        if (!context.workspaces?.length) {
+        if (!workspaces.length) {
           return {
             user: context.user,
             workspaces: [],
@@ -89,31 +83,31 @@ export function useAuth() {
             token,
             isAuthenticated: true,
             isLoading: false,
-            brand: null,
-            brandWorkspaces: [],
+            brand,
+            brandWorkspaces,
           };
         }
 
         const storedWorkspaceId = getStoredWorkspaceId();
         let currentWorkspace: WorkspaceContext | null = null;
 
-        if (context.workspaces.length === 1) {
-          currentWorkspace = context.workspaces[0];
-          setStoredWorkspaceId(context.workspaces[0].id);
+        if (workspaces.length === 1) {
+          currentWorkspace = workspaces[0];
+          setStoredWorkspaceId(workspaces[0].id);
         } else if (storedWorkspaceId) {
           currentWorkspace =
-            context.workspaces.find((w) => w.id === storedWorkspaceId) ?? null;
+            workspaces.find((w) => w.id === storedWorkspaceId) ?? null;
         }
 
         return {
           user: context.user,
-          workspaces: context.workspaces,
+          workspaces,
           currentWorkspace,
           token,
           isAuthenticated: true,
           isLoading: false,
-          brand: null,
-          brandWorkspaces: [],
+          brand,
+          brandWorkspaces,
         };
       } catch {
         clearStoredAuth();
@@ -166,6 +160,7 @@ export function useAuth() {
     if (!workspace) return;
 
     setStoredWorkspaceId(workspaceId);
+    setStoredSelectedView(workspaceId);
 
     queryClient.setQueryData<AuthState>(["auth"], (prev) =>
       prev

@@ -3,6 +3,10 @@ import { useNavigate, useSearchParams, Link } from "react-router";
 import { useTranslation } from "react-i18next";
 import { Input } from "~/components/ui/input";
 import { useAuthContext } from "~/providers/auth-provider";
+import {
+  getStoredSelectedView,
+  BRAND_VIEW,
+} from "~/lib/api/axios-instance";
 
 import logoUrl from "~/components/icons/re_praesent-mark-brand-hor.svg?url";
 import { LegalFooter } from "~/components/molecule/legal-footer";
@@ -28,6 +32,8 @@ export default function Login() {
   const [success, setSuccess] = useState(false);
   const {
     user,
+    workspaces,
+    brand,
     requestMagicLinkAsync,
     isAuthenticated,
     isLoading: isAuthLoading,
@@ -40,15 +46,51 @@ export default function Login() {
   useEffect(() => {
     if (isAuthLoading) return;
     if (isAuthenticated) {
-      // Brand users always go to /brand regardless of returnUrl
+      const returnUrl = searchParams.get("returnUrl");
+      // Brand users: prefer explicit returnUrl, otherwise the last-selected
+      // view (brand vs. a workspace), otherwise fall through to picker / brand.
       if (user?.user_type === "brand") {
-        navigate("/brand", { replace: true });
+        const wsList = workspaces ?? [];
+        // Brand was revoked → /brand isn't an option anymore.
+        if (!brand) {
+          if (wsList.length === 0) {
+            navigate("/no-workspace", { replace: true });
+            return;
+          }
+          if (returnUrl && returnUrl.startsWith("/") && !returnUrl.startsWith("/brand")) {
+            navigate(returnUrl, { replace: true });
+            return;
+          }
+          if (wsList.length === 1) {
+            navigate("/", { replace: true });
+            return;
+          }
+          navigate("/auth/workspace-picker", { replace: true });
+          return;
+        }
+        if (returnUrl && returnUrl.startsWith("/")) {
+          navigate(returnUrl, { replace: true });
+          return;
+        }
+        const stored = getStoredSelectedView();
+        if (stored === BRAND_VIEW) {
+          navigate("/brand", { replace: true });
+          return;
+        }
+        if (stored && wsList.some((w) => w.id === stored)) {
+          navigate("/", { replace: true });
+          return;
+        }
+        if (wsList.length === 0) {
+          navigate("/brand", { replace: true });
+          return;
+        }
+        navigate("/auth/workspace-picker", { replace: true });
         return;
       }
-      const returnUrl = searchParams.get("returnUrl");
       navigate(returnUrl || "/", { replace: true });
     }
-  }, [isAuthenticated, isAuthLoading, navigate, searchParams, user]);
+  }, [isAuthenticated, isAuthLoading, navigate, searchParams, user, workspaces, brand]);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();

@@ -44,7 +44,8 @@
     "logout": "Abmelden",
     "billing": "Abrechnung",
     "brand_retailers": "Händler",
-    "brand_retailers_empty": "Diesem Brand sind noch keine Händler zugeordnet."
+    "brand_retailers_empty": "Diesem Brand sind noch keine Händler zugeordnet.",
+    "brand_label": "Brand"
   },
   "db_brand": {
     "subtitle": "Wähle einen Händler in der Seitenleiste, um Social Ads & Leads zu sehen.",

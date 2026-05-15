@@ -21,6 +21,10 @@ import { InstructionsModal } from "~/components/instructions-modal";
 
 import { getLocalizedServiceName } from "~/lib/api/auth";
 import { useAuthContext } from "~/providers/auth-provider";
+import {
+  setStoredSelectedView,
+  BRAND_VIEW,
+} from "~/lib/api/axios-instance";
 import { useAppointmentConfigs } from "~/lib/hooks/useAppointmentConfigs";
 import { LanguageSwitcher } from "~/components/language-switcher";
 import {
@@ -95,8 +99,10 @@ function NavLink({
 
 export function Sidebar({ onClose, className }: { onClose?: () => void; className?: string }) {
   const {
+    user,
     currentWorkspace,
     workspaces,
+    brand,
     setCurrentWorkspace,
     logout,
     isLoggingOut,
@@ -104,7 +110,11 @@ export function Sidebar({ onClose, className }: { onClose?: () => void; classNam
   const { t, i18n } = useTranslation();
   const location = useLocation();
   const navigate = useNavigate();
-  const hasMultipleWorkspaces = (workspaces?.length ?? 0) > 1;
+  // Brand users with a linked brand entity get a "Brand" entry in the switcher
+  // so they can hop back to their brand dashboard from a workspace view.
+  const showBrandSwitchEntry = user?.user_type === "brand" && !!brand;
+  const hasMultipleWorkspaces =
+    (workspaces?.length ?? 0) > 1 || (showBrandSwitchEntry && (workspaces?.length ?? 0) >= 1);
   const [instructionsMarkdown, setInstructionsMarkdown] = useState<
     string | null
   >(null);
@@ -163,13 +173,34 @@ export function Sidebar({ onClose, className }: { onClose?: () => void; classNam
                 </button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="start" className="min-w-48">
+                {showBrandSwitchEntry && brand && (
+                  <DropdownMenuItem
+                    key="__brand__"
+                    onClick={() => {
+                      onClose?.();
+                      setStoredSelectedView(BRAND_VIEW);
+                      navigate("/brand", { replace: true });
+                    }}
+                  >
+                    <Building2 className="h-4 w-4" />
+                    <span className="flex-1 truncate">{brand.name}</span>
+                    <span className="ml-2 rounded bg-amber-400/15 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-amber-300">
+                      {t("nav.brand_label", "Brand")}
+                    </span>
+                  </DropdownMenuItem>
+                )}
                 {workspaces.map((ws) => (
                   <DropdownMenuItem
                     key={ws.id}
                     onClick={() => handleWorkspaceChange(ws.id)}
                   >
                     <Building2 className="h-4 w-4" />
-                    {ws.name}
+                    <span className="flex-1 truncate">{ws.name}</span>
+                    {ws.type === "doorboost_brand" && (
+                      <span className="ml-2 rounded bg-amber-400/15 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-amber-300">
+                        {t("nav.brand_label", "Brand")}
+                      </span>
+                    )}
                   </DropdownMenuItem>
                 ))}
               </DropdownMenuContent>
