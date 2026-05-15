@@ -13,6 +13,7 @@ import {
 } from "~/lib/api/onboarding";
 import { getStoredWorkspaceId } from "~/lib/api/axios-instance";
 import { useAuthContext } from "~/providers/auth-provider";
+import { useDocumentMeta } from "~/lib/hooks/use-document-meta";
 
 export function meta() {
   return [
@@ -34,6 +35,10 @@ const selectCls =
 
 export default function OnboardingBilling() {
   const { t } = useTranslation();
+  useDocumentMeta({
+    titleKey: "onboarding.billing.metaTitle",
+    descriptionKey: "onboarding.billing.metaDescription",
+  });
   const { user, currentWorkspace, workspaces } = useAuthContext();
   const workspaceId =
     getStoredWorkspaceId() ?? currentWorkspace?.id ?? workspaces[0]?.id;

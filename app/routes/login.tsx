@@ -7,6 +7,8 @@ import {
   getStoredSelectedView,
   BRAND_VIEW,
 } from "~/lib/api/axios-instance";
+import i18n from "~/i18n";
+import { useDocumentMeta } from "~/lib/hooks/use-document-meta";
 
 import logoUrl from "~/components/icons/re_praesent-mark-brand-hor.svg?url";
 import { LegalFooter } from "~/components/molecule/legal-footer";
@@ -14,8 +16,8 @@ import { LanguageSwitcher } from "~/components/language-switcher";
 
 export function meta() {
   return [
-    { title: "Sign in - Repraesent" },
-    { name: "description", content: "Sign in to your account" },
+    { title: i18n.t("auth.login.metaTitle") + " - Repraesent" },
+    { name: "description", content: i18n.t("auth.login.metaDescription") },
   ];
 }
 
@@ -27,6 +29,11 @@ const FEATURE_KEYS = [
 
 export default function Login() {
   const { t } = useTranslation();
+  useDocumentMeta({
+    titleKey: "auth.login.metaTitle",
+    descriptionKey: "auth.login.metaDescription",
+    titleSuffix: " - Repraesent",
+  });
   const [email, setEmail] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);

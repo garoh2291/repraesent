@@ -45,11 +45,13 @@ import {
 import { cn } from "~/lib/utils";
 import { formatDate } from "~/lib/utils/format";
 import { LeadImportModal } from "~/components/organism/lead-import-modal";
+import i18n from "~/i18n";
+import { useDocumentMeta } from "~/lib/hooks/use-document-meta";
 
 export function meta() {
   return [
-    { title: "Leads - Repraesent" },
-    { name: "description", content: "Leads management" },
+    { title: i18n.t("leads.metaTitle") + " - Repraesent" },
+    { name: "description", content: i18n.t("leads.metaDescription") },
   ];
 }
 
@@ -65,6 +67,11 @@ function parseLimit(v: string | null): number {
 
 export default function LeadForm() {
   const { t } = useTranslation();
+  useDocumentMeta({
+    titleKey: "leads.metaTitle",
+    descriptionKey: "leads.metaDescription",
+    titleSuffix: " - Repraesent",
+  });
   const { currentWorkspace } = useAuthContext();
   const navigate = useNavigate();
   const queryClient = useQueryClient();

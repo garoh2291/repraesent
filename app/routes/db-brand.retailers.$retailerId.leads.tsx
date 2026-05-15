@@ -5,6 +5,7 @@ import { useTranslation } from "react-i18next";
 import type { ColumnDef } from "@tanstack/react-table";
 import { Download, Loader2, X } from "lucide-react";
 import i18n from "~/i18n";
+import { useDocumentMeta } from "~/lib/hooks/use-document-meta";
 
 export function meta() {
   return [{ title: i18n.t("db_brand.page_titles.retailer_leads") }];
@@ -48,6 +49,7 @@ function parseLimit(v: string | null): number {
 }
 
 export default function DbBrandRetailerLeads() {
+  useDocumentMeta({ titleKey: "db_brand.page_titles.retailer_leads" });
   const { retailerId, leadId: leadIdFromUrl } = useParams<{
     retailerId: string;
     leadId?: string;

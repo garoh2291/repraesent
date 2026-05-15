@@ -54,6 +54,7 @@
       "dashboard": "Marken-Dashboard — Repraesent",
       "brand_leads": "Leads — Repraesent",
       "brand_campaigns": "Kampagnen — Repraesent",
+      "brand_retailers": "Doorboost Brand Dashboard",
       "retailer_leads": "Händler-Leads — Repraesent",
       "retailer_social_ads": "Händler Social Ads — Repraesent",
       "retailer_campaign": "Kampagne — Repraesent"
@@ -106,6 +107,8 @@
       "tagline": "Die Plattform für moderne Vertriebsteams"
     },
     "login": {
+      "metaTitle": "Anmelden",
+      "metaDescription": "Bei deinem Konto anmelden",
       "title": "Anmelden",
       "subtitle": "Geben Sie Ihre E-Mail-Adresse ein, um einen Anmelde-Link zu erhalten",
       "emailLabel": "E-Mail-Adresse",
@@ -131,6 +134,8 @@
       "feature3": "Team-Zusammenarbeit"
     },
     "register": {
+      "metaTitle": "Konto erstellen",
+      "metaDescription": "Erstelle dein Repraesent-Konto",
       "title": "Konto erstellen",
       "subtitle": "Geben Sie Ihre E-Mail-Adresse ein, um einen Registrierungslink zu erhalten",
       "brandLine1": "Stark starten.",
@@ -149,6 +154,8 @@
       "somethingWrong": "Ein Fehler ist aufgetreten. Bitte versuchen Sie es erneut."
     },
     "callback": {
+      "metaTitle": "Anmelden",
+      "metaDescription": "Anmeldung wird abgeschlossen",
       "verifying": "Wird verifiziert...",
       "signingIn": "Sie werden angemeldet",
       "moment": "Einen Moment bitte…",
@@ -160,6 +167,8 @@
       "redirecting": "Sie werden weitergeleitet..."
     },
     "workspacePicker": {
+      "metaTitle": "Bereich wählen",
+      "metaDescription": "Wähle einen Bereich, um fortzufahren",
       "title": "Bereich auswählen",
       "subtitle": "Sie haben Zugriff auf {{count}} Bereich. Wählen Sie einen aus.",
       "subtitle_other": "Sie haben Zugriff auf {{count}} Bereiche. Wählen Sie einen aus.",
@@ -168,6 +177,8 @@
     }
   },
   "home": {
+    "metaTitle": "Startseite",
+    "metaDescription": "Dashboard-Übersicht",
     "title": "Dashboard",
     "statsLeads": "Leads gesamt",
     "statsThisMonth": "Diesen Monat",
@@ -208,6 +219,8 @@
     "plausibleVisitors_other": "{{count}} Besucher"
   },
   "leads": {
+    "metaTitle": "Leads",
+    "metaDescription": "Lead-Verwaltung",
     "title": "Leads",
     "manageHint": "Verwalten Sie Ihre eingehenden Leads",
     "tableView": "Tabelle",
@@ -247,6 +260,8 @@
       "stale": "Veraltet"
     },
     "detail": {
+      "metaTitle": "Lead",
+      "metaDescription": "Lead-Details",
       "title": "Lead-Details",
       "leadInformation": "Lead-Informationen",
       "fullPage": "Vollansicht",
@@ -318,6 +333,8 @@
     }
   },
   "appointments": {
+    "metaTitle": "Termine",
+    "metaDescription": "Termine und Buchungen verwalten",
     "title": "Termine",
     "manageHint": "Verwalten Sie Ihren Kalender, die Buchungsseite und die Planungsregeln",
     "tabCalendar": "Kalender",
@@ -553,6 +570,8 @@
     }
   },
   "products": {
+    "metaTitle": "Abrechnung",
+    "metaDescription": "Deine Abonnements und Rechnungen",
     "title": "Produkte",
     "subtitle": "Ihre aktiven Abonnements und Rechnungshistorie",
     "addProduct": "Produkt hinzufügen",
@@ -860,6 +879,8 @@
     }
   },
   "pending": {
+    "metaTitle": "Wird eingerichtet",
+    "metaDescription": "Dein Bereich wird eingerichtet",
     "title": "Bereich wird eingerichtet",
     "description": "Unser Team konfiguriert gerade Ihr Abonnement. Sie erhalten eine E-Mail, sobald Ihr Bereich bereit ist.",
     "inProgress": "In Bearbeitung",
@@ -916,6 +937,8 @@
     "signingOut": "Wird abgemeldet…"
   },
   "tasks": {
+    "metaTitle": "Aufgaben",
+    "metaDescription": "Aufgaben",
     "title": "Aufgaben",
     "pageHint": "Verwalten Sie die Teamaufgaben für alle Leads",
     "newTask": "Neue Aufgabe",
@@ -1030,6 +1053,8 @@
     "description": "Wählen Sie einen Bereich zum Wechseln."
   },
   "instructions": {
+    "metaTitle": "Kalender-Setup",
+    "metaDescription": "Anleitung zur Verknüpfung deines Kalenders",
     "title": "Anleitung"
   },
   "confirmModal": {
@@ -1097,6 +1122,8 @@
     }
   },
   "leadFallback": {
+    "metaTitle": "Bestätigungs-E-Mail",
+    "metaDescription": "Bestätigungs-E-Mails für neue Leads konfigurieren",
     "title": "Lead-Fallback-E-Mails",
     "subtitle": "Senden Sie automatisch eine E-Mail an neue Leads über Ihre Bereich-SMTP-Konfiguration",
     "backToLeads": "Zurück zu Leads",
@@ -1127,6 +1154,9 @@
     "selectForm": "Wählen Sie links ein Formular aus, um die E-Mail zu bearbeiten."
   },
   "brand": {
+    "metaTitle": "Startseite",
+    "metaDescription": "Marken-Dashboard",
+    "workspacesMetaTitle": "Partnerhäuser",
     "navHome": "Startseite",
     "navWorkspaces": "Händler-Partner",
     "navAnalytics": "Analytik",
@@ -1258,7 +1288,7 @@
     "title": "Kampagnen-Analyse",
     "titleGoogle": "Google Ads",
     "titleFacebook": "Facebook Ads",
-    "titleSocial": "Social Ads",
+    "titleSocial": "Ad Kampagnen",
     "platformAll": "Alle Plattformen",
     "spend": "Ausgaben",
     "impressions": "Impressionen",
@@ -1307,6 +1337,22 @@
     "allTime": "Gesamter Zeitraum",
     "startDate": "Startdatum",
     "endDate": "Enddatum"
+  },
+  "facebookAds": {
+    "metaTitle": "Facebook Ads",
+    "metaDescription": "Analytics für Facebook-Ads-Kampagnen"
+  },
+  "googleAds": {
+    "metaTitle": "Google Ads",
+    "metaDescription": "Analytics für Google-Ads-Kampagnen"
+  },
+  "socialAds": {
+    "metaTitle": "Ad Kampagnen",
+    "metaDescription": "Analytics für Ad Kampagnen"
+  },
+  "sync": {
+    "metaTitle": "Datenmigration",
+    "metaDescription": "Doorboost-Verlaufsdaten synchronisieren"
   },
   "historicalData": {
     "bannerTitle": "Historische Daten synchronisieren",

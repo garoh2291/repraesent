@@ -4,10 +4,6 @@ import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import type { ColumnDef } from "@tanstack/react-table";
 import { Boxes } from "lucide-react";
-
-export function meta() {
-  return [{ title: "Doorboost Brand Dashboard" }];
-}
 import { DataTable } from "~/components/organism/data-table";
 import {
   listBrandRetailers,
@@ -16,6 +12,12 @@ import {
 import { useAuthContext } from "~/providers/auth-provider";
 import { useDebounce } from "~/lib/hooks/useDebounce";
 import { useSearchParamsSelect } from "~/lib/hooks/useQueryParams";
+import i18n from "~/i18n";
+import { useDocumentMeta } from "~/lib/hooks/use-document-meta";
+
+export function meta() {
+  return [{ title: i18n.t("db_brand.page_titles.brand_retailers") }];
+}
 
 const lastIdSegment = (id: string) => id.split("-").pop() ?? id;
 
@@ -29,6 +31,7 @@ function parseLimit(v: string | null): number {
 }
 
 export default function BrandRetailers() {
+  useDocumentMeta({ titleKey: "db_brand.page_titles.brand_retailers" });
   const { currentWorkspace } = useAuthContext();
   const { t } = useTranslation();
   const navigate = useNavigate();

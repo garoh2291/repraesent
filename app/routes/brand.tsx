@@ -35,11 +35,13 @@ import {
   DialogFooter,
   DialogDescription,
 } from "~/components/ui/dialog";
+import i18n from "~/i18n";
+import { useDocumentMeta } from "~/lib/hooks/use-document-meta";
 
 export function meta() {
   return [
-    { title: "Home - Repraesent" },
-    { name: "description", content: "Brand dashboard" },
+    { title: i18n.t("brand.metaTitle") + " - Repraesent" },
+    { name: "description", content: i18n.t("brand.metaDescription") },
   ];
 }
 
@@ -1408,6 +1410,11 @@ function ExportReportModal({
 
 export default function BrandDashboard() {
   const { t } = useTranslation();
+  useDocumentMeta({
+    titleKey: "brand.metaTitle",
+    descriptionKey: "brand.metaDescription",
+    titleSuffix: " - Repraesent",
+  });
   const [bookingsPeriod, setBookingsPeriod] =
     useState<LeadAnalyticsPeriod>("7d");
   const [submissionsPeriod, setSubmissionsPeriod] =

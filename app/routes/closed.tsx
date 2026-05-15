@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 import i18n from "~/i18n";
 import { useAuthContext } from "~/providers/auth-provider";
 import { StatusPageHeader } from "~/components/status-page-header";
+import { useDocumentMeta } from "~/lib/hooks/use-document-meta";
 
 export function meta() {
   return [
@@ -27,6 +28,10 @@ const CLOSED_STYLES = `
 
 export default function Closed() {
   const { t } = useTranslation();
+  useDocumentMeta({
+    titleKey: "closed.metaTitle",
+    descriptionKey: "closed.metaDescription",
+  });
   const { currentWorkspace, workspaces } = useAuthContext();
   const navigate = useNavigate();
   const ws = currentWorkspace ?? workspaces[0];

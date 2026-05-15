@@ -15,11 +15,13 @@ import {
   decryptCalDavPassword,
   type CalDavConfig,
 } from "~/lib/api/workspaces";
+import i18n from "~/i18n";
+import { useDocumentMeta } from "~/lib/hooks/use-document-meta";
 
 export function meta() {
   return [
-    { title: "Calendar Setup — Repraesent" },
-    { name: "description", content: "Instructions to connect your calendar" },
+    { title: i18n.t("instructions.metaTitle") + " — Repraesent" },
+    { name: "description", content: i18n.t("instructions.metaDescription") },
   ];
 }
 
@@ -279,6 +281,11 @@ function ImagePlaceholder({ name }: { name: string }) {
 
 export default function InstructionsPage() {
   const { t } = useTranslation();
+  useDocumentMeta({
+    titleKey: "instructions.metaTitle",
+    descriptionKey: "instructions.metaDescription",
+    titleSuffix: " — Repraesent",
+  });
   const navigate = useNavigate();
 
   const { data: config, isLoading } = useQuery({

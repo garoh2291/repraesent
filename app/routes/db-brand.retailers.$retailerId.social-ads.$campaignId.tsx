@@ -13,6 +13,7 @@ import {
   type BrandRetailerCampaign,
 } from "~/lib/api/doorboost-brand";
 import i18n from "~/i18n";
+import { useDocumentMeta } from "~/lib/hooks/use-document-meta";
 
 export function meta() {
   return [{ title: i18n.t("db_brand.page_titles.retailer_campaign") }];
@@ -25,6 +26,7 @@ export function meta() {
  * `/brand-campaigns` or any other campaign-table view.
  */
 export default function DbBrandRetailerSocialAdsByCampaign() {
+  useDocumentMeta({ titleKey: "db_brand.page_titles.retailer_campaign" });
   const { retailerId, campaignId } = useParams<{
     retailerId: string;
     campaignId: string;

@@ -6,18 +6,28 @@ import {
   setStoredSelectedView,
   BRAND_VIEW,
 } from "~/lib/api/axios-instance";
+import i18n from "~/i18n";
+import { useDocumentMeta } from "~/lib/hooks/use-document-meta";
 
 import logoUrl from "~/components/icons/re_praesent-mark-brand-hor.svg?url";
 
 export function meta() {
   return [
-    { title: "Choose area - Repraesent" },
-    { name: "description", content: "Select an area to continue" },
+    { title: i18n.t("auth.workspacePicker.metaTitle") + " - Repraesent" },
+    {
+      name: "description",
+      content: i18n.t("auth.workspacePicker.metaDescription"),
+    },
   ];
 }
 
 export default function WorkspacePicker() {
   const { t } = useTranslation();
+  useDocumentMeta({
+    titleKey: "auth.workspacePicker.metaTitle",
+    descriptionKey: "auth.workspacePicker.metaDescription",
+    titleSuffix: " - Repraesent",
+  });
   const { user, workspaces, brand, setCurrentWorkspace } = useAuthContext();
   const navigate = useNavigate();
   const showBrandEntry = user?.user_type === "brand" && !!brand;

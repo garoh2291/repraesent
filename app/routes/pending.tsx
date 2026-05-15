@@ -13,11 +13,13 @@ import {
 } from "lucide-react";
 import { Button } from "~/components/ui/button";
 import { StatusPageHeader } from "~/components/status-page-header";
+import i18n from "~/i18n";
+import { useDocumentMeta } from "~/lib/hooks/use-document-meta";
 
 export function meta() {
   return [
-    { title: "Setting up - Repraesent" },
-    { name: "description", content: "Your area is being set up" },
+    { title: i18n.t("pending.metaTitle") + " - Repraesent" },
+    { name: "description", content: i18n.t("pending.metaDescription") },
   ];
 }
 
@@ -92,6 +94,11 @@ const STATUS_STYLES = `
 
 export default function Pending() {
   const { t } = useTranslation();
+  useDocumentMeta({
+    titleKey: "pending.metaTitle",
+    descriptionKey: "pending.metaDescription",
+    titleSuffix: " - Repraesent",
+  });
   const { currentWorkspace, workspaces } = useAuthContext();
   const workspaceId =
     getStoredWorkspaceId() ?? currentWorkspace?.id ?? workspaces[0]?.id;

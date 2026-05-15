@@ -3,6 +3,8 @@ import { Link } from "react-router";
 import { useTranslation } from "react-i18next";
 import { Input } from "~/components/ui/input";
 import { register } from "~/lib/api/auth";
+import i18n from "~/i18n";
+import { useDocumentMeta } from "~/lib/hooks/use-document-meta";
 
 import logoUrl from "~/components/icons/re_praesent-mark-brand-hor.svg?url";
 import { LegalFooter } from "~/components/molecule/legal-footer";
@@ -10,8 +12,8 @@ import { LanguageSwitcher } from "~/components/language-switcher";
 
 export function meta() {
   return [
-    { title: "Create account - Repraesent" },
-    { name: "description", content: "Create your Repraesent account" },
+    { title: i18n.t("auth.register.metaTitle") + " - Repraesent" },
+    { name: "description", content: i18n.t("auth.register.metaDescription") },
   ];
 }
 
@@ -23,6 +25,11 @@ const BENEFIT_KEYS = [
 
 export default function Register() {
   const { t } = useTranslation();
+  useDocumentMeta({
+    titleKey: "auth.register.metaTitle",
+    descriptionKey: "auth.register.metaDescription",
+    titleSuffix: " - Repraesent",
+  });
   const [email, setEmail] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
