@@ -56,8 +56,25 @@ export default function AuthCallback() {
 
       // Route based on context — shared between fresh auth and already-used-token recovery
       const routeAfterAuth = (context: UserContextResponse) => {
-        // Brand user → straight to /brand
-        if (context.user.user_type === "brand") {
+        const isBrand = context.user.user_type === "brand";
+
+        // Brand users default to /brand. If they were sent here with a
+        // workspace deep-link param OR an explicit redirect to a non-/brand
+        // path, honour that; otherwise the brand dashboard is home base.
+        if (isBrand) {
+          if (
+            workspaceParam &&
+            (context.workspaces ?? []).some((w) => w.id === workspaceParam)
+          ) {
+            setStoredWorkspaceId(workspaceParam);
+            queryClient.removeQueries();
+            navigate(resolveDestination("/"), { replace: true });
+            return;
+          }
+          if (redirectParam && redirectParam.startsWith("/") && !redirectParam.startsWith("/brand")) {
+            navigate(redirectParam, { replace: true });
+            return;
+          }
           navigate("/brand", { replace: true });
           return;
         }

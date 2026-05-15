@@ -122,16 +122,25 @@ export default function ProtectedLayout() {
       return;
     }
 
-    // Brand user routing: must stay on /brand, redirect if elsewhere
+    // Brand user with no workspace memberships → lock to /brand.
+    // Brand user with workspace memberships → may use BOTH /brand and the
+    // regular workspace dashboard; the switcher in the sidebar lets them
+    // toggle between brand-view and workspace-view.
     if (isBrandUser) {
-      if (!isOnBrand) {
-        navigate("/brand", { replace: true });
+      const hasWorkspaces = (workspaces?.length ?? 0) > 0;
+      if (!hasWorkspaces) {
+        if (!isOnBrand) {
+          navigate("/brand", { replace: true });
+        }
+        return;
       }
-      return;
-    }
-
-    // Regular user: cannot access /brand
-    if (isOnBrand) {
+      // Brand user IS on /brand → render brand layout, skip remaining gating.
+      if (isOnBrand) {
+        return;
+      }
+      // Otherwise fall through to the regular workspace gating below.
+    } else if (isOnBrand) {
+      // Regular user: cannot access /brand
       navigate("/", { replace: true });
       return;
     }
@@ -325,13 +334,20 @@ export default function ProtectedLayout() {
     return null;
   }
 
-  // Brand user: only render if on /brand
+  // Brand user with no workspaces: only render /brand.
+  // Brand user WITH workspaces: render /brand directly; fall through to the
+  // regular workspace gating below for workspace-scoped paths.
   if (isBrandUser) {
-    return isOnBrand ? <Outlet /> : null;
-  }
-
-  // Regular user: block /brand
-  if (isOnBrand) {
+    const hasWorkspaces = (workspaces?.length ?? 0) > 0;
+    if (!hasWorkspaces) {
+      return isOnBrand ? <Outlet /> : null;
+    }
+    if (isOnBrand) {
+      return <Outlet />;
+    }
+    // Fall through — brand user using workspace view.
+  } else if (isOnBrand) {
+    // Regular user: block /brand
     return null;
   }
 

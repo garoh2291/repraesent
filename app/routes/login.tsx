@@ -28,6 +28,7 @@ export default function Login() {
   const [success, setSuccess] = useState(false);
   const {
     user,
+    workspaces,
     requestMagicLinkAsync,
     isAuthenticated,
     isLoading: isAuthLoading,
@@ -40,15 +41,20 @@ export default function Login() {
   useEffect(() => {
     if (isAuthLoading) return;
     if (isAuthenticated) {
-      // Brand users always go to /brand regardless of returnUrl
+      const returnUrl = searchParams.get("returnUrl");
+      // Brand users default to /brand. If an explicit returnUrl points to a
+      // workspace route, honour it so they can use both views.
       if (user?.user_type === "brand") {
+        if (returnUrl && returnUrl.startsWith("/") && !returnUrl.startsWith("/brand")) {
+          navigate(returnUrl, { replace: true });
+          return;
+        }
         navigate("/brand", { replace: true });
         return;
       }
-      const returnUrl = searchParams.get("returnUrl");
       navigate(returnUrl || "/", { replace: true });
     }
-  }, [isAuthenticated, isAuthLoading, navigate, searchParams, user]);
+  }, [isAuthenticated, isAuthLoading, navigate, searchParams, user, workspaces]);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();

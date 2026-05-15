@@ -44,7 +44,8 @@
     "settings": "Settings",
     "logout": "Log out",
     "brand_retailers": "Retailers",
-    "brand_retailers_empty": "No retailers attached to this brand yet."
+    "brand_retailers_empty": "No retailers attached to this brand yet.",
+    "brand_label": "Brand"
   },
   "db_brand": {
     "subtitle": "Pick a retailer from the sidebar to view its Social Ads & Leads.",

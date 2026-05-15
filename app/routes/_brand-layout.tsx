@@ -1,9 +1,11 @@
 import { useEffect, useState } from "react";
-import { Link, Outlet, useLocation } from "react-router";
+import { Link, Outlet, useLocation, useNavigate } from "react-router";
 import { useTranslation } from "react-i18next";
 import { useAuthContext } from "~/providers/auth-provider";
 import {
   BarChart3,
+  Building2,
+  ChevronDown,
   Store,
   LineChart,
   ShoppingBag,
@@ -11,9 +13,17 @@ import {
   Menu,
   X,
 } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "~/components/ui/dropdown-menu";
 import { Sheet, SheetContent } from "~/components/ui/sheet";
 import { LanguageSwitcher } from "~/components/language-switcher";
+import { setStoredWorkspaceId } from "~/lib/api/axios-instance";
 import { cn } from "~/lib/utils";
+import logoUrl from "~/components/icons/re_praesent-mark-brand-hor.svg?url";
 
 const NAV_ITEMS = [
   { key: "navHome", path: "/brand", icon: BarChart3, exact: true },
@@ -33,37 +43,59 @@ const NAV_ITEMS = [
 ] as const;
 
 function BrandSidebar({ onClose }: { onClose?: () => void }) {
-  const { user, brand, logout, isLoggingOut } = useAuthContext();
+  const {
+    brand,
+    workspaces,
+    setCurrentWorkspace,
+    logout,
+    isLoggingOut,
+  } = useAuthContext();
   const { t } = useTranslation();
   const location = useLocation();
+  const navigate = useNavigate();
+  const hasWorkspaces = (workspaces?.length ?? 0) > 0;
+  // Reset when brand.logo changes (e.g. after upload), retry loading.
+  const [logoBroken, setLogoBroken] = useState(false);
+  useEffect(() => {
+    setLogoBroken(false);
+  }, [brand?.logo]);
 
   const BACKEND_IMG_URL =
     import.meta.env.VITE_API_URL?.replace(/\/api$/, "") ||
     "http://localhost:8001";
 
+  const goToWorkspace = (workspaceId: string) => {
+    onClose?.();
+    setStoredWorkspaceId(workspaceId);
+    setCurrentWorkspace(workspaceId);
+    navigate("/", { replace: true });
+  };
+
+  const showLogoImg = !!brand?.logo && !logoBroken;
+  const brandAvatar = showLogoImg ? (
+    <img
+      src={`${BACKEND_IMG_URL}${brand!.logo}`}
+      alt={brand!.name}
+      onError={() => setLogoBroken(true)}
+      className="h-6 w-6 rounded-md object-contain shrink-0 bg-white/5"
+    />
+  ) : (
+    <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-amber-500/20 text-amber-300 text-[10px] font-bold">
+      {brand?.name?.charAt(0)?.toUpperCase() ?? "B"}
+    </div>
+  );
+
   return (
     <aside className="flex h-full w-[220px] shrink-0 flex-col bg-[#111113] border-r border-white/5">
-      {/* Brand identity */}
-      <div className="flex h-14 shrink-0 items-center px-4 border-b border-white/5 gap-2.5">
-        {brand?.logo ? (
+      {/* Logo — matches workspace sidebar so the layout doesn't shift on view switch */}
+      <div className="flex h-14 shrink-0 items-center px-4 border-b border-white/5 gap-2">
+        <Link to="/brand" className="flex items-center flex-1 min-w-0" onClick={onClose}>
           <img
-            src={`${BACKEND_IMG_URL}${brand.logo}`}
-            alt={brand.name}
-            className="h-7 w-7 rounded-lg object-contain shrink-0"
+            src={logoUrl}
+            alt="Repraesent"
+            className="h-7 w-auto max-w-[120px] brightness-0 invert opacity-90"
           />
-        ) : (
-          <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-white/10 text-white text-[11px] font-bold">
-            {brand?.name?.charAt(0)?.toUpperCase() ?? "B"}
-          </div>
-        )}
-        <div className="flex-1 min-w-0">
-          <p className="text-[13px] font-semibold text-white/90 truncate leading-tight">
-            {brand?.name ?? "Brand"}
-          </p>
-          <p className="text-[11px] text-white/35 truncate leading-tight">
-            {user?.email}
-          </p>
-        </div>
+        </Link>
         {onClose && (
           <button
             onClick={onClose}
@@ -72,6 +104,59 @@ function BrandSidebar({ onClose }: { onClose?: () => void }) {
           >
             <X className="h-3.5 w-3.5" />
           </button>
+        )}
+      </div>
+
+      {/* Brand selector (mirrors workspace selector — same height, same compact layout, no email) */}
+      <div className="shrink-0 px-3 py-3 border-b border-white/5">
+        {hasWorkspaces ? (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button className="flex w-full items-center gap-2 rounded-lg px-2.5 py-2 text-left text-[13px] text-white/55 hover:bg-white/5 hover:text-white/80 transition-colors duration-150">
+                {brandAvatar}
+                <span className="flex-1 truncate font-medium text-white/70">
+                  {brand?.name ?? "Brand"}
+                </span>
+                <span className="rounded bg-amber-400/15 px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wide text-amber-300">
+                  {t("nav.brand_label", "Brand")}
+                </span>
+                <ChevronDown className="h-3.5 w-3.5 shrink-0 text-white/30" />
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="start" className="min-w-48">
+              <DropdownMenuItem disabled className="opacity-100">
+                <Building2 className="h-4 w-4" />
+                <span className="flex-1 truncate">{brand?.name}</span>
+                <span className="ml-2 rounded bg-amber-400/15 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-amber-700">
+                  {t("nav.brand_label", "Brand")}
+                </span>
+              </DropdownMenuItem>
+              {workspaces.map((ws) => (
+                <DropdownMenuItem
+                  key={ws.id}
+                  onClick={() => goToWorkspace(ws.id)}
+                >
+                  <Building2 className="h-4 w-4" />
+                  <span className="flex-1 truncate">{ws.name}</span>
+                  {ws.type === "doorboost_brand" && (
+                    <span className="ml-2 rounded bg-amber-400/15 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-amber-700">
+                      {t("nav.brand_label", "Brand")}
+                    </span>
+                  )}
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        ) : (
+          <div className="flex items-center gap-2 px-2.5 py-2">
+            {brandAvatar}
+            <span className="flex-1 truncate text-[13px] font-medium text-white/70">
+              {brand?.name ?? "Brand"}
+            </span>
+            <span className="rounded bg-amber-400/15 px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wide text-amber-300">
+              {t("nav.brand_label", "Brand")}
+            </span>
+          </div>
         )}
       </div>
 
