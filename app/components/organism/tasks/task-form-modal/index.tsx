@@ -31,7 +31,8 @@ import { Calendar } from "~/components/ui/calendar";
 import { cn } from "~/lib/utils";
 import {
   createTask,
-  createTaskForCustomer,
+  createTaskForContact,
+  createTaskForDeal,
   updateTask,
   type Task,
   type CreateTaskPayload,
@@ -52,14 +53,18 @@ interface TaskFormModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   leadId?: string;
-  /** When set, new tasks are created against the customer (not the lead). */
-  customerId?: string;
+  /** When set, new tasks are created against the contact (not the lead). */
+  contactId?: string;
+  /** When set, new tasks are created against a deal. */
+  dealId?: string;
   leadName?: string;
-  /** Shown in the title when creating a task for a customer (no lead name). */
+  /** Shown in the title when creating a task for a contact (no lead name). */
   linkedContextLabel?: string;
   task?: Task | null;
   onSuccess?: (task: Task) => void;
   workspaceMembers: WorkspaceMemberItem[];
+  /** Contact page route id: refreshes merged contact history after task writes tied to a lead. */
+  historyContactId?: string;
 }
 
 const today = startOfDay(new Date());
@@ -68,12 +73,14 @@ export function TaskFormModal({
   open,
   onOpenChange,
   leadId,
-  customerId,
+  contactId,
+  dealId,
   leadName,
   linkedContextLabel,
   task,
   onSuccess,
   workspaceMembers,
+  historyContactId,
 }: TaskFormModalProps) {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
@@ -121,7 +128,7 @@ export function TaskFormModal({
     queryKey: ["leads-picker", debouncedLeadSearch],
     queryFn: () =>
       getLeads({ search: debouncedLeadSearch || undefined, limit: 20 }),
-    enabled: !leadId && !customerId && open && leadPickerOpen,
+    enabled: !leadId && !contactId && !dealId && open && leadPickerOpen,
   });
 
   useEffect(() => {
@@ -157,17 +164,31 @@ export function TaskFormModal({
       if (isEdit) {
         return updateTask(task!.id, payload);
       }
-      if (customerId) {
-        return createTaskForCustomer(customerId, payload);
+      if (dealId) {
+        return createTaskForDeal(dealId, payload);
+      }
+      if (contactId) {
+        return createTaskForContact(contactId, payload);
       }
       return createTask(effectiveLeadId, payload);
     },
     onSuccess: (saved) => {
-      if (customerId) {
+      if (dealId) {
         queryClient.invalidateQueries({
-          queryKey: ["customer-tasks", customerId],
+          queryKey: ["deal-tasks", dealId],
         });
-        queryClient.invalidateQueries({ queryKey: ["customer", customerId] });
+        queryClient.invalidateQueries({ queryKey: ["deal", dealId] });
+        queryClient.invalidateQueries({
+          queryKey: ["deal-history", dealId],
+        });
+      } else if (contactId) {
+        queryClient.invalidateQueries({
+          queryKey: ["contact-tasks", contactId],
+        });
+        queryClient.invalidateQueries({ queryKey: ["contact", contactId] });
+        queryClient.invalidateQueries({
+          queryKey: ["contact-history", contactId],
+        });
       } else {
         queryClient.invalidateQueries({
           queryKey: ["lead-tasks", effectiveLeadId],
@@ -181,6 +202,33 @@ export function TaskFormModal({
           queryKey: ["lead-history", effectiveLeadId],
         });
       }
+      if (historyContactId) {
+        void queryClient.invalidateQueries({
+          queryKey: ["contact-history", historyContactId],
+        });
+      }
+      if (isEdit && task) {
+        if (task.entity_table === "contacts") {
+          void queryClient.invalidateQueries({
+            queryKey: ["contact-history"],
+            exact: false,
+          });
+        } else if (task.entity_table === "deals") {
+          void queryClient.invalidateQueries({
+            queryKey: ["deal-tasks", task.entity_id],
+          });
+          void queryClient.invalidateQueries({
+            queryKey: ["deal", task.entity_id],
+          });
+          void queryClient.invalidateQueries({
+            queryKey: ["deal-history", task.entity_id],
+          });
+        } else if (task.entity_table === "leads") {
+          void queryClient.invalidateQueries({
+            queryKey: ["lead-history", task.entity_id],
+          });
+        }
+      }
       onOpenChange(false);
       onSuccess?.(saved);
     },
@@ -189,7 +237,7 @@ export function TaskFormModal({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!title.trim()) return;
-    if (!isEdit && !customerId && !effectiveLeadId) return;
+    if (!isEdit && !contactId && !dealId && !effectiveLeadId) return;
     mutation.mutate();
   };
 
@@ -227,7 +275,7 @@ export function TaskFormModal({
 
         <form onSubmit={handleSubmit} className="space-y-4 pt-1">
           {/* Lead picker — only when leadId not pre-provided */}
-          {!leadId && !customerId && !isEdit && (
+          {!leadId && !contactId && !dealId && !isEdit && (
             <div className="space-y-1.5">
               <Label className="text-xs font-medium">
                 {t("tasks.fields.lead")}{" "}
@@ -271,7 +319,10 @@ export function TaskFormModal({
                     )}
                   </button>
                 </PopoverTrigger>
-                <PopoverContent className="w-[min(400px,calc(100vw-2rem))] p-0 flex flex-col overflow-hidden" align="start">
+                <PopoverContent
+                  className="w-[min(400px,calc(100vw-2rem))] p-0 flex flex-col overflow-hidden"
+                  align="start"
+                >
                   <div className="flex items-center gap-2 border-b border-border px-3 py-2 shrink-0">
                     <Search className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
                     <Input
@@ -444,10 +495,11 @@ export function TaskFormModal({
                 ) : (
                   sortedMembers.map((m) => {
                     const isMe = m.user_id === currentUser?.id;
-                    const name = [m.user_first_name, m.user_last_name]
-                      .filter(Boolean)
-                      .join(" ")
-                      .trim() || m.user_email;
+                    const name =
+                      [m.user_first_name, m.user_last_name]
+                        .filter(Boolean)
+                        .join(" ")
+                        .trim() || m.user_email;
                     const label = isMe
                       ? `${t("common.you", { defaultValue: "You" })} (${name})`
                       : name;
@@ -478,7 +530,7 @@ export function TaskFormModal({
               disabled={
                 !title.trim() ||
                 mutation.isPending ||
-                (!isEdit && !customerId && !effectiveLeadId)
+                (!isEdit && !contactId && !dealId && !effectiveLeadId)
               }
             >
               {mutation.isPending

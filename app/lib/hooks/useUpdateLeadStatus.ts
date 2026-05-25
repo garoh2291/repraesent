@@ -15,7 +15,7 @@ export interface UseUpdateLeadStatusOptions {
     variables: UpdateLeadStatusVariables,
     context: unknown
   ) => void;
-  /** Fires after cache invalidation when status becomes `success` (lead → customer conversion). */
+  /** Fires after cache invalidation when status becomes `success` (lead → contact conversion). */
   onConvertedToSuccess?: (lead: Lead) => void | Promise<void>;
 }
 
@@ -34,7 +34,7 @@ export function useUpdateLeadStatus(opts?: UseUpdateLeadStatusOptions) {
       queryClient.invalidateQueries({
         queryKey: ["lead-history", variables.id],
       });
-      queryClient.invalidateQueries({ queryKey: ["customers"] });
+      queryClient.invalidateQueries({ queryKey: ["contacts"] });
       if (variables.status === "success") {
         await opts?.onConvertedToSuccess?.(data);
       }

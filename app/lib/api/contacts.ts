@@ -1,13 +1,15 @@
 import { apiClient } from "./axios-instance";
+import type { ContactType } from "~/lib/contacts/contact-types";
+import type { Salutation } from "~/lib/contacts/contact-salutations";
 
 export interface PatchContactBody {
   first_name?: string | null;
   last_name?: string | null;
-  notes?: string | null;
   date_of_birth?: string | null;
-  gender?: string | null;
+  salutation?: Salutation | null;
   newsletter_opt_in?: boolean;
   newsletter_opt_in_at?: string | null;
+  contact_type?: ContactType;
 }
 
 export async function patchContact(
@@ -19,6 +21,10 @@ export async function patchContact(
     body,
   );
   return res.data;
+}
+
+export async function deleteContact(contactId: string): Promise<void> {
+  await apiClient.delete(`/contacts/${contactId}`);
 }
 
 export async function patchContactEmail(

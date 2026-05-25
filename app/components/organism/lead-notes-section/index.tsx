@@ -3,9 +3,11 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import {
   getNotes,
-  getNotesForCustomer,
+  getNotesForContact,
+  getNotesForDeal,
   createNote,
-  createNoteForCustomer,
+  createNoteForContact,
+  createNoteForDeal,
   updateNote,
   deleteNote,
   type Note,
@@ -75,8 +77,15 @@ function buildNoteUserLabel(note: Note, fallback: string): string {
 interface LeadNotesSectionProps {
   /** Workspace lead notes (default timeline when present). */
   leadId?: string;
-  /** Customer-scoped notes when there is no linked lead. */
-  customerId?: string;
+  /** Deal-scoped notes (pipeline deal detail). */
+  dealId?: string;
+  /** Contact-scoped notes when there is no linked lead. */
+  contactId?: string;
+  /**
+   * When notes are loaded via `leadId` but the UI is the contact page, pass
+   * the contact id so history cache invalidates alongside lead history.
+   */
+  linkedContactId?: string;
   canEdit?: boolean;
   /**
    * Override the notes fetcher. Defaults to the workspace-scoped `getNotes`.
@@ -91,7 +100,9 @@ interface LeadNotesSectionProps {
 
 export function LeadNotesSection({
   leadId,
-  customerId,
+  dealId,
+  contactId,
+  linkedContactId,
   canEdit = true,
   fetchNotes,
   scopeKey,
@@ -111,11 +122,14 @@ export function LeadNotesSection({
         ? (["lead-notes", scopeKey, leadId] as const)
         : (["lead-notes", leadId] as const);
     }
-    if (customerId) {
-      return ["customer-notes", customerId] as const;
+    if (dealId) {
+      return ["deal-notes", dealId] as const;
+    }
+    if (contactId) {
+      return ["customer-notes", contactId] as const;
     }
     return ["notes-disabled"] as const;
-  }, [leadId, customerId, scopeKey]);
+  }, [leadId, dealId, contactId, scopeKey]);
 
   const { data: notes = [], isLoading } = useQuery({
     queryKey: notesQueryKey,
@@ -123,19 +137,24 @@ export function LeadNotesSection({
       if (leadId) {
         return (fetchNotes ?? getNotes)(leadId);
       }
-      if (customerId) {
-        return getNotesForCustomer(customerId);
+      if (dealId) {
+        return getNotesForDeal(dealId);
+      }
+      if (contactId) {
+        return getNotesForContact(contactId);
       }
       return Promise.resolve([]);
     },
-    enabled: !!(leadId || customerId),
+    enabled: !!(leadId || dealId || contactId),
   });
 
   const createMutation = useMutation({
     mutationFn: (content: string) =>
       leadId
         ? createNote(leadId, content)
-        : createNoteForCustomer(customerId!, content),
+        : dealId
+          ? createNoteForDeal(dealId, content)
+          : createNoteForContact(contactId!, content),
     onMutate: async (content) => {
       await queryClient.cancelQueries({ queryKey: notesQueryKey });
       const previousNotes = queryClient.getQueryData<Note[]>(notesQueryKey);
@@ -170,10 +189,27 @@ export function LeadNotesSection({
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: notesQueryKey });
       if (leadId) {
-        void queryClient.invalidateQueries({ queryKey: ["lead-history", leadId] });
+        void queryClient.invalidateQueries({
+          queryKey: ["lead-history", leadId],
+        });
       }
-      if (customerId) {
-        void queryClient.invalidateQueries({ queryKey: ["customer", customerId] });
+      if (dealId) {
+        void queryClient.invalidateQueries({
+          queryKey: ["deal-history", dealId],
+        });
+      }
+      if (contactId) {
+        void queryClient.invalidateQueries({
+          queryKey: ["contact", contactId],
+        });
+        void queryClient.invalidateQueries({
+          queryKey: ["contact-history", contactId],
+        });
+      }
+      if (linkedContactId) {
+        void queryClient.invalidateQueries({
+          queryKey: ["contact-history", linkedContactId],
+        });
       }
     },
   });
@@ -227,10 +263,27 @@ export function LeadNotesSection({
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: notesQueryKey });
       if (leadId) {
-        void queryClient.invalidateQueries({ queryKey: ["lead-history", leadId] });
+        void queryClient.invalidateQueries({
+          queryKey: ["lead-history", leadId],
+        });
       }
-      if (customerId) {
-        void queryClient.invalidateQueries({ queryKey: ["customer", customerId] });
+      if (dealId) {
+        void queryClient.invalidateQueries({
+          queryKey: ["deal-history", dealId],
+        });
+      }
+      if (contactId) {
+        void queryClient.invalidateQueries({
+          queryKey: ["contact", contactId],
+        });
+        void queryClient.invalidateQueries({
+          queryKey: ["contact-history", contactId],
+        });
+      }
+      if (linkedContactId) {
+        void queryClient.invalidateQueries({
+          queryKey: ["contact-history", linkedContactId],
+        });
       }
     },
   });
@@ -255,28 +308,51 @@ export function LeadNotesSection({
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: notesQueryKey });
       if (leadId) {
-        void queryClient.invalidateQueries({ queryKey: ["lead-history", leadId] });
+        void queryClient.invalidateQueries({
+          queryKey: ["lead-history", leadId],
+        });
       }
-      if (customerId) {
-        void queryClient.invalidateQueries({ queryKey: ["customer", customerId] });
+      if (dealId) {
+        void queryClient.invalidateQueries({
+          queryKey: ["deal-history", dealId],
+        });
+      }
+      if (contactId) {
+        void queryClient.invalidateQueries({
+          queryKey: ["contact", contactId],
+        });
+        void queryClient.invalidateQueries({
+          queryKey: ["contact-history", contactId],
+        });
+      }
+      if (linkedContactId) {
+        void queryClient.invalidateQueries({
+          queryKey: ["contact-history", linkedContactId],
+        });
       }
     },
   });
 
-  const handleAddNoteBlur = useCallback(() => {
+  const handleCommitNewNote = useCallback(() => {
     const content = newNoteContent.trim();
-    if (content) {
-      createMutation.mutate(content);
-    } else {
-      setIsAddingNew(false);
-      setNewNoteContent("");
-    }
+    if (!content || createMutation.isPending) return;
+    createMutation.mutate(content);
   }, [newNoteContent, createMutation]);
 
-  const handleEditBlur = useCallback(
+  const handleAddNoteBlur = useCallback(() => {
+    if (!newNoteContent.trim()) {
+      setIsAddingNew(false);
+      setNewNoteContent("");
+    } else {
+      handleCommitNewNote();
+    }
+  }, [newNoteContent, handleCommitNewNote]);
+
+  const commitEditNote = useCallback(
     (note: Note) => {
       const content = editingContent.trim();
       if (content && content !== note.content) {
+        if (updateMutation.isPending) return;
         updateMutation.mutate({ noteId: note.id, content });
       } else {
         setEditingNoteId(null);
@@ -284,6 +360,13 @@ export function LeadNotesSection({
       }
     },
     [editingContent, updateMutation]
+  );
+
+  const handleEditBlur = useCallback(
+    (note: Note) => {
+      commitEditNote(note);
+    },
+    [commitEditNote]
   );
 
   const handleStartEdit = (note: Note) => {
@@ -348,8 +431,27 @@ export function LeadNotesSection({
               value={newNoteContent}
               onChange={(e) => setNewNoteContent(e.target.value)}
               onBlur={handleAddNoteBlur}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
+                  e.preventDefault();
+                  handleCommitNewNote();
+                }
+              }}
               className="min-h-[72px] resize-none border-border/60 bg-white text-sm focus-visible:ring-1 focus-visible:ring-primary/30"
             />
+            <div className="flex justify-end">
+              <Button
+                type="button"
+                size="sm"
+                onMouseDown={(e) => e.preventDefault()}
+                onClick={handleCommitNewNote}
+                disabled={!newNoteContent.trim() || createMutation.isPending}
+              >
+                {createMutation.isPending
+                  ? t("common.saving")
+                  : t("common.save")}
+              </Button>
+            </div>
           </div>
         )}
 
@@ -386,8 +488,31 @@ export function LeadNotesSection({
                   value={editingContent}
                   onChange={(e) => setEditingContent(e.target.value)}
                   onBlur={() => handleEditBlur(note)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
+                      e.preventDefault();
+                      commitEditNote(note);
+                    }
+                  }}
                   className="min-h-[72px] resize-none border-border/60 bg-white text-sm focus-visible:ring-1 focus-visible:ring-primary/30"
                 />
+                <div className="flex justify-end">
+                  <Button
+                    type="button"
+                    size="sm"
+                    onMouseDown={(e) => e.preventDefault()}
+                    onClick={() => commitEditNote(note)}
+                    disabled={
+                      !editingContent.trim() ||
+                      editingContent.trim() === note.content ||
+                      updateMutation.isPending
+                    }
+                  >
+                    {updateMutation.isPending
+                      ? t("common.saving")
+                      : t("common.save")}
+                  </Button>
+                </div>
               </div>
             ) : (
               /* Display state */

@@ -7,6 +7,7 @@ import {
   BookUser,
   CheckSquare,
   ChevronDown,
+  Columns3,
   HomeIcon,
   Info,
   LogOut,
@@ -316,12 +317,20 @@ export function Sidebar({ onClose, className }: { onClose?: () => void; classNam
             {hasLeadFormService && (
               <>
                 <NavLink
-                  to="/customers"
-                  isActive={location.pathname.startsWith("/customers")}
+                  to="/contacts"
+                  isActive={location.pathname.startsWith("/contacts")}
                   onClick={onClose}
                 >
                   <BookUser className="h-4 w-4 shrink-0" />
-                  {t("nav.customers")}
+                  {t("nav.contacts", { defaultValue: "Contacts" })}
+                </NavLink>
+                <NavLink
+                  to="/pipeline"
+                  isActive={location.pathname.startsWith("/pipeline")}
+                  onClick={onClose}
+                >
+                  <Columns3 className="h-4 w-4 shrink-0" />
+                  {t("nav.pipeline", { defaultValue: "Pipeline" })}
                 </NavLink>
                 <NavLink
                   to="/tasks"

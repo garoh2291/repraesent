@@ -38,6 +38,9 @@ const FILTER_LABEL_KEYS: Record<string, string> = {
   source: "leads.filters.source",
   form_name: "leads.columns.formName",
   campaigns: "leads.filters.campaigns",
+  contact_source: "contacts.filters.contactSource",
+  contact_type: "contacts.filters.contactType",
+  assignee: "contacts.filters.assignee",
 };
 
 export interface FilterComponentProps {
@@ -175,7 +178,7 @@ export function FilterComponent({
 
   const getSelectedFilterDisplay = () => {
     const isLoading = additionalFilters.some((filter) => filter.isLoading);
-    if (isLoading) return "Loading...";
+    if (isLoading) return t("common.loading");
 
     const allSelectedFilters = Object.entries(selectedFilters)
       .flatMap(([filterName, selectedKeys]) => {

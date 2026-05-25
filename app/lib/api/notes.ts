@@ -19,12 +19,17 @@ export async function getNotes(leadId: string): Promise<Note[]> {
   return res.data;
 }
 
-export async function getNotesForCustomer(
-  customerId: string,
+export async function getNotesForContact(
+  contactRouteId: string,
 ): Promise<Note[]> {
   const res = await apiClient.get<Note[]>(
-    `/customers/${customerId}/notes`,
+    `/contacts/${contactRouteId}/notes`,
   );
+  return res.data;
+}
+
+export async function getNotesForDeal(dealId: string): Promise<Note[]> {
+  const res = await apiClient.get<Note[]>(`/deals/${dealId}/notes`);
   return res.data;
 }
 
@@ -38,14 +43,24 @@ export async function createNote(
   return res.data;
 }
 
-export async function createNoteForCustomer(
-  customerId: string,
+export async function createNoteForContact(
+  contactRouteId: string,
   content: string,
 ): Promise<Note> {
   const res = await apiClient.post<Note>(
-    `/customers/${customerId}/notes`,
+    `/contacts/${contactRouteId}/notes`,
     { content },
   );
+  return res.data;
+}
+
+export async function createNoteForDeal(
+  dealId: string,
+  content: string,
+): Promise<Note> {
+  const res = await apiClient.post<Note>(`/deals/${dealId}/notes`, {
+    content,
+  });
   return res.data;
 }
 

@@ -2,24 +2,25 @@ import { useMemo, useState } from "react";
 import { Link } from "react-router";
 import { useTranslation } from "react-i18next";
 import {
-  ArrowLeft,
   Mail,
   Phone,
   MapPin,
   Copy,
   Check,
-  Building2,
   ExternalLink,
+  Send,
+  PhoneCall,
   CalendarClock,
+  Briefcase,
 } from "lucide-react";
-import { Badge } from "~/components/ui/badge";
 import { Avatar, AvatarFallback } from "~/components/ui/avatar";
+import { ContactSourceBadge } from "~/components/molecule/contact-badges";
 import { toast } from "sonner";
 import { cn } from "~/lib/utils";
 import { formatDate } from "~/lib/utils/format";
-import type { CustomerDetail } from "~/lib/api/customers";
+import type { ContactDetail } from "~/lib/api/contacts-crm";
 
-export type { CustomerDetail };
+export type { ContactDetail };
 
 function initials(displayName: string): string {
   const cleaned = displayName.trim();
@@ -28,22 +29,6 @@ function initials(displayName: string): string {
   if (parts.length === 0) return "?";
   if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
   return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
-}
-
-function statusBadgeVariant(
-  status: string,
-): "default" | "secondary" | "destructive" | "outline" {
-  if (status === "active" || status === "imported") return "secondary";
-  if (status === "completed") return "default";
-  if (status === "churned" || status === "lost") return "destructive";
-  return "outline";
-}
-
-function sourceBadgeVariant(
-  source: string,
-): "default" | "secondary" | "destructive" | "outline" {
-  if (source === "lead_conversion") return "default";
-  return "outline";
 }
 
 function formatAddressOneLine(row: Record<string, unknown>): string {
@@ -59,24 +44,41 @@ function formatAddressOneLine(row: Record<string, unknown>): string {
   return parts.join(", ");
 }
 
-function findPrimary(
+function findContactPrimary(
   rows: Record<string, unknown>[],
-  table: "contacts" | "companies",
-  entityId: string | null,
+  contactId: string | null,
 ): Record<string, unknown> | null {
-  if (!entityId) return null;
+  if (!contactId) return null;
   const scoped = rows.filter(
-    (r) => r.entity_table === table && String(r.entity_id) === entityId,
+    (r) =>
+      r.entity_table === "contacts" && String(r.entity_id) === contactId,
   );
   if (scoped.length === 0) return null;
   return scoped.find((r) => r.is_primary === true) ?? scoped[0];
+}
+
+function labelForRowType(
+  row: Record<string, unknown> | null,
+  t: ReturnType<typeof useTranslation>["t"],
+): string | undefined {
+  if (!row?.type) return undefined;
+  const raw = String(row.type).trim();
+  if (!raw) return undefined;
+  return t(`contacts.types.${raw}`, {
+    defaultValue: raw.charAt(0).toUpperCase() + raw.slice(1).toLowerCase(),
+  });
 }
 
 interface CopyChipProps {
   icon: React.ReactNode;
   label: string;
   value: string;
-  hrefAction?: { href: string; label: string };
+  hrefAction?: {
+    href: string;
+    label: string;
+    icon: React.ReactNode;
+    newTab?: boolean;
+  };
   secondary?: string;
   fallback?: string;
 }
@@ -99,11 +101,13 @@ function CopyChip({
       await navigator.clipboard.writeText(value);
       setCopied(true);
       toast.success(
-        t("customers.copied", { defaultValue: "Copied to clipboard" }),
+        t("contacts.copied", { defaultValue: "Copied to clipboard" })
       );
       setTimeout(() => setCopied(false), 1500);
     } catch {
-      toast.error(t("customers.copyFailed", { defaultValue: "Could not copy" }));
+      toast.error(
+        t("contacts.copyFailed", { defaultValue: "Could not copy" })
+      );
     }
   };
 
@@ -112,14 +116,14 @@ function CopyChip({
       className={cn(
         "group relative flex items-start gap-3 rounded-xl border border-border/70 bg-card/60 px-3.5 py-3 transition-all",
         "hover:border-border hover:bg-card hover:shadow-(--shadow-sm)",
-        isEmpty && "opacity-60",
+        isEmpty && "opacity-60"
       )}
     >
       <div
         className={cn(
           "flex h-8 w-8 shrink-0 items-center justify-center rounded-lg",
           "bg-primary/10 text-primary",
-          "[&>svg]:h-4 [&>svg]:w-4",
+          "[&>svg]:h-4 [&>svg]:w-4"
         )}
       >
         {icon}
@@ -131,7 +135,7 @@ function CopyChip({
         <p
           className={cn(
             "mt-0.5 truncate text-sm font-medium text-foreground",
-            isEmpty && "italic text-muted-foreground/80",
+            isEmpty && "italic text-muted-foreground/80"
           )}
           title={value || fallback}
         >
@@ -148,16 +152,18 @@ function CopyChip({
           {hrefAction ? (
             <a
               href={hrefAction.href}
+              target={hrefAction.newTab ? "_blank" : undefined}
+              rel={hrefAction.newTab ? "noreferrer" : undefined}
               aria-label={hrefAction.label}
-              className="inline-flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+              className="inline-flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground [&>svg]:h-3.5 [&>svg]:w-3.5"
             >
-              <ExternalLink className="h-3.5 w-3.5" />
+              {hrefAction.icon}
             </a>
           ) : null}
           <button
             type="button"
             onClick={copy}
-            aria-label={t("customers.copyValue", {
+            aria-label={t("contacts.copyValue", {
               defaultValue: "Copy {{label}}",
               label,
             })}
@@ -175,80 +181,65 @@ function CopyChip({
   );
 }
 
-interface CustomerHeroProps {
+interface ContactHeroProps {
   displayName: string;
-  customer: Record<string, unknown>;
+  crm: Record<string, unknown>;
   contact: Record<string, unknown> | null;
-  company: Record<string, unknown> | null;
   emails: Record<string, unknown>[];
   phones: Record<string, unknown>[];
   addresses: Record<string, unknown>[];
   leadId: string | null;
+  viewContactId?: string | null;
+  /** When set with `viewContactId`, shows a chip that opens the shared Create deal dialog. */
+  onOpenCreateDeal?: () => void;
 }
 
-export function CustomerHero({
+export function ContactHero({
   displayName,
-  customer,
+  crm,
   contact,
-  company,
   emails,
   phones,
   addresses,
   leadId,
-}: CustomerHeroProps) {
+  viewContactId,
+  onOpenCreateDeal,
+}: ContactHeroProps) {
   const { t } = useTranslation();
   const contactId = contact?.id ? String(contact.id) : null;
-  const companyId = company?.id ? String(company.id) : null;
 
   const primaryEmailRow = useMemo(() => {
-    return (
-      findPrimary(emails, "contacts", contactId) ??
-      findPrimary(emails, "companies", companyId)
-    );
-  }, [emails, contactId, companyId]);
+    return findContactPrimary(emails, contactId);
+  }, [emails, contactId]);
 
   const primaryPhoneRow = useMemo(() => {
-    return (
-      findPrimary(phones, "contacts", contactId) ??
-      findPrimary(phones, "companies", companyId)
-    );
-  }, [phones, contactId, companyId]);
+    return findContactPrimary(phones, contactId);
+  }, [phones, contactId]);
 
   const primaryAddressRow = useMemo(() => {
-    return (
-      findPrimary(addresses, "contacts", contactId) ??
-      findPrimary(addresses, "companies", companyId)
-    );
-  }, [addresses, contactId, companyId]);
+    return findContactPrimary(addresses, contactId);
+  }, [addresses, contactId]);
 
   const emailValue = primaryEmailRow
     ? String(primaryEmailRow.address ?? "")
     : "";
-  const emailScope =
-    primaryEmailRow?.entity_table === "companies"
-      ? t("customers.scopeCompany", { defaultValue: "Company" })
-      : t("customers.scopePersonal", { defaultValue: "Personal" });
+  const emailSecondary = labelForRowType(primaryEmailRow, t);
 
   const phoneValue = primaryPhoneRow
     ? String(primaryPhoneRow.number ?? "")
     : "";
-  const phoneScope =
-    primaryPhoneRow?.entity_table === "companies"
-      ? t("customers.scopeCompany", { defaultValue: "Company" })
-      : t("customers.scopePersonal", { defaultValue: "Personal" });
+  const phoneSecondary = labelForRowType(primaryPhoneRow, t);
 
   const addressValue = primaryAddressRow
     ? formatAddressOneLine(primaryAddressRow)
     : "";
-  const addressScope =
-    primaryAddressRow?.entity_table === "companies"
-      ? t("customers.scopeCompany", { defaultValue: "Company" })
-      : t("customers.scopePersonal", { defaultValue: "Personal" });
+  const addressSecondary = labelForRowType(primaryAddressRow, t);
 
-  const status = String(customer.status ?? "");
-  const source = String(customer.source ?? "");
-  const companyName = company ? String(company.name ?? "") : "";
-  const lastContactedRaw = customer.last_contacted_at as string | null | undefined;
+  const source = String(crm.source ?? "");
+  const lastContactedRaw = crm.last_contacted_at as
+    | string
+    | null
+    | undefined;
 
   return (
     <section className="app-fade-up overflow-hidden rounded-2xl border border-border bg-card shadow-(--shadow)">
@@ -258,7 +249,7 @@ export function CustomerHero({
       />
 
       <div className="px-4 pb-5 pt-0 sm:px-6">
-        <div className="-mt-10 flex flex-col gap-4 sm:flex-row sm:items-end sm:gap-5">
+        <div className="-mt-10 flex flex-col gap-4 sm:flex-row sm:items-center sm:gap-5">
           <Avatar
             size="lg"
             className="size-20 shrink-0 border-4 border-card bg-card shadow-(--shadow)"
@@ -268,59 +259,55 @@ export function CustomerHero({
             </AvatarFallback>
           </Avatar>
 
-          <div className="min-w-0 flex-1 pt-1 sm:pb-1">
-            <div className="flex flex-wrap items-center gap-2">
-              <Link
-                to="/customers"
-                className="inline-flex items-center gap-1 text-[11px] font-medium text-muted-foreground transition-colors hover:text-foreground"
-              >
-                <ArrowLeft className="h-3 w-3" />
-                {t("customers.backToList", { defaultValue: "Back to customers" })}
-              </Link>
-            </div>
-            <h1 className="mt-0.5 truncate text-2xl font-semibold tracking-tight text-foreground sm:text-[28px]">
+          <div className="min-w-0 flex-1">
+            <h1 className="truncate text-2xl font-semibold tracking-tight text-foreground sm:text-[28px]">
               {displayName}
             </h1>
             <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
-              {status ? (
-                <Badge
-                  variant={statusBadgeVariant(status)}
-                  className="capitalize"
-                >
-                  {status}
-                </Badge>
-              ) : null}
-              {source ? (
-                <Badge
-                  variant={sourceBadgeVariant(source)}
-                  className="capitalize"
-                >
-                  {source.replace(/_/g, " ")}
-                </Badge>
-              ) : null}
-              {companyName ? (
-                <span className="inline-flex items-center gap-1 text-muted-foreground">
-                  <Building2 className="h-3 w-3" />
-                  <span className="truncate">{companyName}</span>
-                </span>
-              ) : null}
+              {source ? <ContactSourceBadge source={source} /> : null}
               {lastContactedRaw ? (
                 <span className="inline-flex items-center gap-1 text-muted-foreground">
                   <CalendarClock className="h-3 w-3" />
-                  {t("customers.lastContactedAt", {
+                  {t("contacts.lastContactedAt", {
                     defaultValue: "Last contacted {{date}}",
                     date: formatDate(new Date(lastContactedRaw), "PP"),
                   })}
                 </span>
               ) : null}
-              {leadId ? (
+              {leadId && !viewContactId ? (
                 <Link
                   to={`/lead-form/${leadId}`}
                   className="inline-flex items-center gap-1 rounded-sm border border-border bg-muted/60 px-2 py-0.5 text-[11px] font-medium text-foreground transition-colors hover:bg-muted"
                 >
-                  {t("customers.openLead", { defaultValue: "Open lead" })}
+                  {t("contacts.openLead", { defaultValue: "Open lead" })}
                   <ExternalLink className="h-3 w-3" />
                 </Link>
+              ) : null}
+              {viewContactId ? (
+                <>
+                  <Link
+                    to={`/contacts/${viewContactId}`}
+                    state={{ from: "lead", leadId }}
+                    className="inline-flex items-center gap-1 rounded-sm border border-border bg-muted/60 px-2 py-0.5 text-[11px] font-medium text-foreground transition-colors hover:bg-muted"
+                  >
+                    {t("leads.detail.viewContact", {
+                      defaultValue: "View contact",
+                    })}
+                    <ExternalLink className="h-3 w-3" />
+                  </Link>
+                  {onOpenCreateDeal ? (
+                    <button
+                      type="button"
+                      onClick={onOpenCreateDeal}
+                      className="inline-flex items-center gap-1 rounded-sm border border-border bg-muted/60 px-2 py-0.5 text-[11px] font-medium text-foreground transition-colors hover:bg-muted"
+                    >
+                      {t("leads.detail.createDeal", {
+                        defaultValue: "Create deal",
+                      })}
+                      <Briefcase className="h-3 w-3" />
+                    </button>
+                  ) : null}
+                </>
               ) : null}
             </div>
           </div>
@@ -329,63 +316,67 @@ export function CustomerHero({
         <div className="mt-5 grid grid-cols-1 gap-2.5 sm:grid-cols-2 lg:grid-cols-3">
           <CopyChip
             icon={<Mail />}
-            label={t("customers.primaryEmailLabel", {
+            label={t("contacts.primaryEmailLabel", {
               defaultValue: "Primary email",
             })}
             value={emailValue}
-            secondary={emailValue ? emailScope : undefined}
-            fallback={t("customers.noPrimaryEmail", {
+            secondary={emailValue ? emailSecondary : undefined}
+            fallback={t("contacts.noPrimaryEmail", {
               defaultValue: "No email on file",
             })}
             hrefAction={
               emailValue
                 ? {
                     href: `mailto:${emailValue}`,
-                    label: t("customers.sendEmail", {
+                    label: t("contacts.sendEmail", {
                       defaultValue: "Send email",
                     }),
+                    icon: <Send />,
                   }
                 : undefined
             }
           />
           <CopyChip
             icon={<Phone />}
-            label={t("customers.primaryPhoneLabel", {
+            label={t("contacts.primaryPhoneLabel", {
               defaultValue: "Primary phone",
             })}
             value={phoneValue}
-            secondary={phoneValue ? phoneScope : undefined}
-            fallback={t("customers.noPrimaryPhone", {
+            secondary={phoneValue ? phoneSecondary : undefined}
+            fallback={t("contacts.noPrimaryPhone", {
               defaultValue: "No phone on file",
             })}
             hrefAction={
               phoneValue
                 ? {
                     href: `tel:${phoneValue.replace(/\s+/g, "")}`,
-                    label: t("customers.callPhone", {
+                    label: t("contacts.callPhone", {
                       defaultValue: "Call",
                     }),
+                    icon: <PhoneCall />,
                   }
                 : undefined
             }
           />
           <CopyChip
             icon={<MapPin />}
-            label={t("customers.primaryAddressLabel", {
+            label={t("contacts.primaryAddressLabel", {
               defaultValue: "Primary address",
             })}
             value={addressValue}
-            secondary={addressValue ? addressScope : undefined}
-            fallback={t("customers.noPrimaryAddress", {
+            secondary={addressValue ? addressSecondary : undefined}
+            fallback={t("contacts.noPrimaryAddress", {
               defaultValue: "No address on file",
             })}
             hrefAction={
               addressValue
                 ? {
                     href: `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(addressValue)}`,
-                    label: t("customers.openInMaps", {
+                    label: t("contacts.openInMaps", {
                       defaultValue: "Open in Maps",
                     }),
+                    icon: <ExternalLink />,
+                    newTab: true,
                   }
                 : undefined
             }

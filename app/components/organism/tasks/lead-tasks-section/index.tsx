@@ -20,7 +20,8 @@ import {
 } from "~/components/ui/alert-dialog";
 import {
   getTasksForLead,
-  getTasksForCustomer,
+  getTasksForContact,
+  getTasksForDeal,
   updateTask,
   type Task,
 } from "~/lib/api/tasks";
@@ -45,16 +46,22 @@ interface LeadTasksSectionProps {
   /** Tasks for this lead (same list as the lead detail page). */
   leadId?: string;
   /** Tasks for this customer when there is no `leadId` (e.g. manual customer). */
-  customerId?: string;
+  contactId?: string;
+  /** Tasks for a deal (pipeline detail). */
+  dealId?: string;
   linkedContextLabel?: string;
+  /** When tasks are shown on the customer page, pass the route customer id to refresh merged history. */
+  historyContactId?: string;
   canEdit?: boolean;
   workspaceMembers: WorkspaceMemberItem[];
 }
 
 export function LeadTasksSection({
   leadId,
-  customerId,
+  contactId,
+  dealId,
   linkedContextLabel,
+  historyContactId,
   canEdit = true,
   workspaceMembers,
 }: LeadTasksSectionProps) {
@@ -70,15 +77,19 @@ export function LeadTasksSection({
 
   const tasksQueryKey = leadId
     ? (["lead-tasks", leadId] as const)
-    : (["customer-tasks", customerId!] as const);
+    : dealId
+      ? (["deal-tasks", dealId] as const)
+      : (["contact-tasks", contactId!] as const);
 
   const { data: tasks = [], isLoading } = useQuery({
     queryKey: tasksQueryKey,
     queryFn: () =>
       leadId
         ? getTasksForLead(leadId)
-        : getTasksForCustomer(customerId!),
-    enabled: !!(leadId || customerId),
+        : dealId
+          ? getTasksForDeal(dealId)
+          : getTasksForContact(contactId!),
+    enabled: !!(leadId || contactId || dealId),
   });
 
   const toggleDoneMutation = useMutation({
@@ -104,9 +115,24 @@ export function LeadTasksSection({
       queryClient.invalidateQueries({ queryKey: ["tasks"] });
       if (leadId) {
         queryClient.invalidateQueries({ queryKey: ["leads"] });
+        queryClient.invalidateQueries({ queryKey: ["lead-history", leadId] });
       }
-      if (customerId) {
-        queryClient.invalidateQueries({ queryKey: ["customer", customerId] });
+      if (dealId) {
+        queryClient.invalidateQueries({ queryKey: ["deal", dealId] });
+        queryClient.invalidateQueries({
+          queryKey: ["deal-history", dealId],
+        });
+      }
+      if (contactId) {
+        queryClient.invalidateQueries({ queryKey: ["contact", contactId] });
+        queryClient.invalidateQueries({
+          queryKey: ["contact-history", contactId],
+        });
+      }
+      if (historyContactId) {
+        queryClient.invalidateQueries({
+          queryKey: ["contact-history", historyContactId],
+        });
       }
     },
   });
@@ -114,11 +140,11 @@ export function LeadTasksSection({
   const openTasks = tasks.filter((t) => t.status !== "done");
   const doneTasks = tasks.filter((t) => t.status === "done");
 
-  if (!leadId && !customerId) {
+  if (!leadId && !contactId && !dealId) {
     return (
       <p className="text-sm text-muted-foreground py-1">
         {t("tasks.noEntityHint", {
-          defaultValue: "Tasks need a lead or customer context.",
+          defaultValue: "Tasks need a lead, contact, or deal context.",
         })}
       </p>
     );
@@ -223,8 +249,10 @@ export function LeadTasksSection({
         open={formOpen}
         onOpenChange={setFormOpen}
         leadId={leadId}
-        customerId={customerId}
+        contactId={contactId}
+        dealId={dealId}
         linkedContextLabel={linkedContextLabel}
+        historyContactId={historyContactId}
         workspaceMembers={workspaceMembers}
       />
 
@@ -233,6 +261,7 @@ export function LeadTasksSection({
         onOpenChange={(open) => !open && setSelectedTaskId(null)}
         taskId={selectedTaskId}
         workspaceMembers={workspaceMembers}
+        historyContactId={historyContactId}
         canEdit={canEdit}
       />
 

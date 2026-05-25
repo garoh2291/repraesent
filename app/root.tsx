@@ -10,6 +10,7 @@ import { Toaster } from "./components/ui/sonner";
 
 import type { Route } from "./+types/root";
 import "./app.css";
+import "react-phone-number-input/style.css";
 import "./i18n"; // initialise i18next
 import { I18nextProvider } from "react-i18next";
 import i18n from "./i18n";
