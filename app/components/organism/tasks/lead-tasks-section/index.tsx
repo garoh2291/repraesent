@@ -20,6 +20,8 @@ import {
 } from "~/components/ui/alert-dialog";
 import {
   getTasksForLead,
+  getTasksForContact,
+  getTasksForDeal,
   updateTask,
   type Task,
 } from "~/lib/api/tasks";
@@ -41,13 +43,25 @@ function formatDueDate(dateStr: string): string {
 }
 
 interface LeadTasksSectionProps {
-  leadId: string;
+  /** Tasks for this lead (same list as the lead detail page). */
+  leadId?: string;
+  /** Tasks for this customer when there is no `leadId` (e.g. manual customer). */
+  contactId?: string;
+  /** Tasks for a deal (pipeline detail). */
+  dealId?: string;
+  linkedContextLabel?: string;
+  /** When tasks are shown on the customer page, pass the route customer id to refresh merged history. */
+  historyContactId?: string;
   canEdit?: boolean;
   workspaceMembers: WorkspaceMemberItem[];
 }
 
 export function LeadTasksSection({
   leadId,
+  contactId,
+  dealId,
+  linkedContextLabel,
+  historyContactId,
   canEdit = true,
   workspaceMembers,
 }: LeadTasksSectionProps) {
@@ -61,19 +75,30 @@ export function LeadTasksSection({
     isDone: boolean;
   } | null>(null);
 
+  const tasksQueryKey = leadId
+    ? (["lead-tasks", leadId] as const)
+    : dealId
+      ? (["deal-tasks", dealId] as const)
+      : (["contact-tasks", contactId!] as const);
+
   const { data: tasks = [], isLoading } = useQuery({
-    queryKey: ["lead-tasks", leadId],
-    queryFn: () => getTasksForLead(leadId),
-    enabled: !!leadId,
+    queryKey: tasksQueryKey,
+    queryFn: () =>
+      leadId
+        ? getTasksForLead(leadId)
+        : dealId
+          ? getTasksForDeal(dealId)
+          : getTasksForContact(contactId!),
+    enabled: !!(leadId || contactId || dealId),
   });
 
   const toggleDoneMutation = useMutation({
     mutationFn: ({ taskId, isDone }: { taskId: string; isDone: boolean }) =>
       updateTask(taskId, { status: isDone ? "done" : "todo" }),
     onMutate: async ({ taskId, isDone }) => {
-      await queryClient.cancelQueries({ queryKey: ["lead-tasks", leadId] });
-      const prev = queryClient.getQueryData<Task[]>(["lead-tasks", leadId]);
-      queryClient.setQueryData<Task[]>(["lead-tasks", leadId], (old = []) =>
+      await queryClient.cancelQueries({ queryKey: tasksQueryKey });
+      const prev = queryClient.getQueryData<Task[]>(tasksQueryKey);
+      queryClient.setQueryData<Task[]>(tasksQueryKey, (old = []) =>
         old.map((t) =>
           t.id === taskId ? { ...t, status: isDone ? "done" : "todo" } : t,
         ),
@@ -82,18 +107,48 @@ export function LeadTasksSection({
     },
     onError: (_err, _vars, ctx) => {
       if (ctx?.prev) {
-        queryClient.setQueryData(["lead-tasks", leadId], ctx.prev);
+        queryClient.setQueryData(tasksQueryKey, ctx.prev);
       }
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["lead-tasks", leadId] });
+      queryClient.invalidateQueries({ queryKey: tasksQueryKey });
       queryClient.invalidateQueries({ queryKey: ["tasks"] });
-      queryClient.invalidateQueries({ queryKey: ["leads"] });
+      if (leadId) {
+        queryClient.invalidateQueries({ queryKey: ["leads"] });
+        queryClient.invalidateQueries({ queryKey: ["lead-history", leadId] });
+      }
+      if (dealId) {
+        queryClient.invalidateQueries({ queryKey: ["deal", dealId] });
+        queryClient.invalidateQueries({
+          queryKey: ["deal-history", dealId],
+        });
+      }
+      if (contactId) {
+        queryClient.invalidateQueries({ queryKey: ["contact", contactId] });
+        queryClient.invalidateQueries({
+          queryKey: ["contact-history", contactId],
+        });
+      }
+      if (historyContactId) {
+        queryClient.invalidateQueries({
+          queryKey: ["contact-history", historyContactId],
+        });
+      }
     },
   });
 
   const openTasks = tasks.filter((t) => t.status !== "done");
   const doneTasks = tasks.filter((t) => t.status === "done");
+
+  if (!leadId && !contactId && !dealId) {
+    return (
+      <p className="text-sm text-muted-foreground py-1">
+        {t("tasks.noEntityHint", {
+          defaultValue: "Tasks need a lead, contact, or deal context.",
+        })}
+      </p>
+    );
+  }
 
   if (isLoading) {
     return (
@@ -194,6 +249,10 @@ export function LeadTasksSection({
         open={formOpen}
         onOpenChange={setFormOpen}
         leadId={leadId}
+        contactId={contactId}
+        dealId={dealId}
+        linkedContextLabel={linkedContextLabel}
+        historyContactId={historyContactId}
         workspaceMembers={workspaceMembers}
       />
 
@@ -202,6 +261,7 @@ export function LeadTasksSection({
         onOpenChange={(open) => !open && setSelectedTaskId(null)}
         taskId={selectedTaskId}
         workspaceMembers={workspaceMembers}
+        historyContactId={historyContactId}
         canEdit={canEdit}
       />
 

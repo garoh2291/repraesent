@@ -34,13 +34,13 @@ export function formatDecimal(value: number, decimals = 2): string {
 
 /**
  * Format a currency amount (in major units, e.g. 12.50 not 1250 cents).
- * Uses EUR for "de" and USD for "en" by default, but accepts override.
+ * Defaults to EUR; caller can override.
  */
 export function formatCurrency(
   amount: number,
   currency?: string,
 ): string {
-  const cur = currency?.toUpperCase() ?? (i18n.language === "de" ? "EUR" : "USD");
+  const cur = currency?.toUpperCase() ?? "EUR";
   return new Intl.NumberFormat(getIntlLocale(), {
     style: "currency",
     currency: cur,

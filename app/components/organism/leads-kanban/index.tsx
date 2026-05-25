@@ -21,6 +21,10 @@ import {
 } from "~/lib/api/leads";
 import { LeadSourceIcon } from "~/components/organism/lead-source-icon";
 import {
+  LeadSuccessConfirmModal,
+  type SuccessConfirmPhase,
+} from "~/components/organism/lead-success-confirm-modal";
+import {
   LEAD_STATUSES,
   LEAD_STATUS_COLORS,
   type LeadStatus,
@@ -38,9 +42,8 @@ interface KanbanFilters {
 
 interface LeadsKanbanProps {
   filters: KanbanFilters;
-  onStatusChange: (leadId: string, status: LeadStatus) => void;
+  onStatusChange: (leadId: string, status: LeadStatus) => void | Promise<unknown>;
   onLeadSelect: (leadId: string) => void;
-  isUpdating: boolean;
   canEdit?: boolean;
 }
 
@@ -73,10 +76,14 @@ export function LeadsKanban({
   filters,
   onStatusChange,
   onLeadSelect,
-  isUpdating,
   canEdit = true,
 }: LeadsKanbanProps) {
   const [activeId, setActiveId] = useState<string | null>(null);
+  // Confirmation dialog shown when a lead is dropped into the "Success" column.
+  const [successConfirm, setSuccessConfirm] = useState<{
+    lead: Lead;
+    phase: SuccessConfirmPhase;
+  } | null>(null);
   const undoStackRef = useRef<
     Array<{ leadId: string; previousStatus: LeadStatus }>
   >([]);
@@ -174,6 +181,13 @@ export function LeadsKanban({
       const lead = allLoadedLeads.find((l) => l.id === leadId);
       if (!lead || lead.status === newStatus) return;
 
+      // Dropping into "Success" is a deliberate action — confirm it first
+      // instead of mutating immediately.
+      if (newStatus === "success") {
+        setSuccessConfirm({ lead, phase: "confirm" });
+        return;
+      }
+
       const previousStatus = lead.status as LeadStatus;
       undoStackRef.current.push({ leadId, previousStatus });
       if (undoStackRef.current.length > 50) undoStackRef.current.shift();
@@ -182,6 +196,28 @@ export function LeadsKanban({
     },
     [allLoadedLeads, onStatusChange],
   );
+
+  const handleConfirmSuccess = useCallback(async () => {
+    setSuccessConfirm((curr) =>
+      curr ? { ...curr, phase: "saving" } : curr,
+    );
+    const lead = successConfirm?.lead;
+    if (!lead) return;
+    try {
+      await onStatusChange(lead.id, "success");
+      undoStackRef.current.push({
+        leadId: lead.id,
+        previousStatus: lead.status as LeadStatus,
+      });
+      if (undoStackRef.current.length > 50) undoStackRef.current.shift();
+      setSuccessConfirm((curr) =>
+        curr ? { ...curr, phase: "done" } : curr,
+      );
+    } catch {
+      // The mutation rolls the board back on error; just close the dialog.
+      setSuccessConfirm(null);
+    }
+  }, [successConfirm, onStatusChange]);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -245,7 +281,6 @@ export function LeadsKanban({
                   isFetchingMore={q.isFetchingNextPage}
                   onLoadMore={() => q.fetchNextPage()}
                   onLeadSelect={onLeadSelect}
-                  isUpdating={isUpdating}
                   canEdit={canEdit}
                 />
               );
@@ -262,6 +297,18 @@ export function LeadsKanban({
           </DragOverlay>
         </DndContext>
       </div>
+
+      <LeadSuccessConfirmModal
+        open={!!successConfirm}
+        phase={successConfirm?.phase ?? "confirm"}
+        leadName={
+          successConfirm?.lead.full_name ||
+          successConfirm?.lead.email ||
+          ""
+        }
+        onConfirm={handleConfirmSuccess}
+        onClose={() => setSuccessConfirm(null)}
+      />
     </>
   );
 }
@@ -274,7 +321,6 @@ function KanbanColumn({
   isFetchingMore,
   onLoadMore,
   onLeadSelect,
-  isUpdating,
   canEdit,
 }: {
   status: LeadStatus;
@@ -284,7 +330,6 @@ function KanbanColumn({
   isFetchingMore: boolean;
   onLoadMore: () => void;
   onLeadSelect: (id: string) => void;
-  isUpdating: boolean;
   canEdit: boolean;
 }) {
   const { t } = useTranslation();
@@ -318,7 +363,6 @@ function KanbanColumn({
             key={lead.id}
             lead={lead}
             onSelect={() => onLeadSelect(lead.id)}
-            disabled={isUpdating}
             canEdit={canEdit}
           />
         ))}

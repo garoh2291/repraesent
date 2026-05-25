@@ -121,7 +121,7 @@ export interface WorkspaceContext {
   created_at: string;
   updated_at: string;
   status?: "active" | "pending" | "past_due" | "canceled" | "trial";
-  stripe_customer_id?: string | null;
+  stripe_contact_id?: string | null;
   unpaid_invoice_due_date?: string | null;
   unpaid_invoice_url?: string | null;
   products?: WorkspaceProduct[];

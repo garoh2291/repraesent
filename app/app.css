@@ -366,6 +366,22 @@ body {
     transform: rotate(360deg);
   }
 }
+/* Plays on a kanban card right after it is dropped into a new column. */
+@keyframes app-card-land {
+  0% {
+    opacity: 0.35;
+    transform: scale(0.96);
+    box-shadow: 0 0 0 2px var(--color-primary);
+  }
+  60% {
+    opacity: 1;
+    transform: scale(1.02);
+  }
+  100% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 transparent;
+  }
+}
 
 .app-fade-up {
   animation: app-fade-up 0.45s cubic-bezier(0.16, 1, 0.3, 1) both;
@@ -393,6 +409,14 @@ body {
 }
 .app-spin {
   animation: app-spin 1.4s linear infinite;
+}
+.app-card-land {
+  animation: app-card-land 0.45s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+@media (prefers-reduced-motion: reduce) {
+  .app-card-land {
+    animation: none;
+  }
 }
 
 /* ── Mobile-first touch & interaction improvements ────────── */
@@ -665,4 +689,72 @@ body {
   .kanban-scroll-container > * {
     scroll-snap-align: start;
   }
+}
+
+/* ── react-phone-number-input — match shadcn Input look ────────────── */
+.crm-phone-input {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  height: 2.25rem; /* h-9 */
+  width: 100%;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  background: transparent;
+  padding: 0 0.625rem;
+  font-size: 0.875rem;
+  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.02);
+  transition: box-shadow 120ms, border-color 120ms;
+}
+.crm-phone-input:focus-within {
+  border-color: var(--ring);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--ring) 25%, transparent);
+}
+.crm-phone-input .PhoneInputCountry {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  margin: 0;
+  position: relative;
+}
+/* Apply globally — the popover-rendered options live outside .crm-phone-input. */
+.PhoneInputCountryIcon {
+  width: 1.4em;
+  height: 1em;
+  background: transparent;
+  box-shadow: none;
+  border-radius: 2px;
+  overflow: hidden;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.PhoneInputCountryIcon--border {
+  box-shadow: 0 0 0 1px var(--border);
+}
+.PhoneInputCountryIcon svg,
+.PhoneInputCountryIconImg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.crm-phone-input .PhoneInputCountrySelectArrow {
+  color: var(--muted-foreground);
+  opacity: 0.7;
+}
+.crm-phone-input .PhoneInputInput {
+  flex: 1;
+  min-width: 0;
+  height: 100%;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: inherit;
+  font: inherit;
+}
+.crm-phone-input .PhoneInputInput::placeholder {
+  color: var(--muted-foreground);
+  opacity: 0.7;
 }

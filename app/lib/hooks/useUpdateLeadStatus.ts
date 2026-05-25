@@ -1,7 +1,7 @@
 "use client";
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { updateLeadStatus, type LeadStatus } from "~/lib/api/leads";
+import { updateLeadStatus, type Lead, type LeadStatus } from "~/lib/api/leads";
 
 export interface UpdateLeadStatusVariables {
   id: string;
@@ -15,6 +15,8 @@ export interface UseUpdateLeadStatusOptions {
     variables: UpdateLeadStatusVariables,
     context: unknown
   ) => void;
+  /** Fires after cache invalidation when status becomes `success` (lead → contact conversion). */
+  onConvertedToSuccess?: (lead: Lead) => void | Promise<void>;
 }
 
 export function useUpdateLeadStatus(opts?: UseUpdateLeadStatusOptions) {
@@ -24,7 +26,7 @@ export function useUpdateLeadStatus(opts?: UseUpdateLeadStatusOptions) {
     mutationFn: ({ id, status }: UpdateLeadStatusVariables) =>
       updateLeadStatus(id, status),
     onMutate: opts?.onMutate,
-    onSuccess: (_data, variables) => {
+    onSuccess: async (data, variables) => {
       queryClient.invalidateQueries({ queryKey: ["leads"] });
       queryClient.invalidateQueries({ queryKey: ["leads-kanban-column"] });
       queryClient.invalidateQueries({ queryKey: ["leads-kanban-counts"] });
@@ -32,6 +34,10 @@ export function useUpdateLeadStatus(opts?: UseUpdateLeadStatusOptions) {
       queryClient.invalidateQueries({
         queryKey: ["lead-history", variables.id],
       });
+      queryClient.invalidateQueries({ queryKey: ["contacts"] });
+      if (variables.status === "success") {
+        await opts?.onConvertedToSuccess?.(data);
+      }
     },
     onError: opts?.onError,
   });

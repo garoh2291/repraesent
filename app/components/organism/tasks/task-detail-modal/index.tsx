@@ -109,6 +109,7 @@ interface TaskDetailModalProps {
   taskId: string | null;
   workspaceMembers: WorkspaceMemberItem[];
   canEdit?: boolean;
+  historyContactId?: string;
 }
 
 export function TaskDetailModal({
@@ -117,6 +118,7 @@ export function TaskDetailModal({
   taskId,
   workspaceMembers,
   canEdit = true,
+  historyContactId,
 }: TaskDetailModalProps) {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
@@ -157,14 +159,43 @@ export function TaskDetailModal({
   const invalidateTask = useCallback(() => {
     queryClient.invalidateQueries({ queryKey: ["task", taskId] });
     queryClient.invalidateQueries({ queryKey: ["task-history", taskId] });
-    if (task?.entity_id) {
+    if (task?.entity_table === "leads" && task.entity_id) {
       queryClient.invalidateQueries({
         queryKey: ["lead-tasks", task.entity_id],
+      });
+      queryClient.invalidateQueries({
+        queryKey: ["lead-history", task.entity_id],
+      });
+    }
+    if (task?.entity_table === "contacts") {
+      queryClient.invalidateQueries({
+        queryKey: ["contact-tasks"],
+        exact: false,
+      });
+      queryClient.invalidateQueries({
+        queryKey: ["contact-history"],
+        exact: false,
+      });
+    }
+    if (task?.entity_table === "deals" && task.entity_id) {
+      queryClient.invalidateQueries({
+        queryKey: ["deal-tasks", task.entity_id],
+      });
+      queryClient.invalidateQueries({
+        queryKey: ["deal", task.entity_id],
+      });
+      queryClient.invalidateQueries({
+        queryKey: ["deal-history", task.entity_id],
+      });
+    }
+    if (historyContactId) {
+      queryClient.invalidateQueries({
+        queryKey: ["contact-history", historyContactId],
       });
     }
     queryClient.invalidateQueries({ queryKey: ["tasks"] });
     queryClient.invalidateQueries({ queryKey: ["leads"] });
-  }, [queryClient, taskId, task]);
+  }, [queryClient, taskId, task, historyContactId]);
 
   const updateStatusMutation = useMutation({
     mutationFn: (status: string) =>
@@ -558,7 +589,11 @@ export function TaskDetailModal({
         <TaskFormModal
           open={editOpen}
           onOpenChange={setEditOpen}
-          leadId={task.entity_id}
+          leadId={task.entity_table === "leads" ? task.entity_id : undefined}
+          contactId={
+            task.entity_table === "contacts" ? task.entity_id : undefined
+          }
+          historyContactId={historyContactId}
           task={task}
           workspaceMembers={workspaceMembers}
           onSuccess={() => {

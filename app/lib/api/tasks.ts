@@ -86,6 +86,39 @@ export async function createTask(
   return res.data;
 }
 
+export async function getTasksForContact(
+  contactRouteId: string,
+): Promise<Task[]> {
+  const res = await apiClient.get<Task[]>(
+    `/contacts/${contactRouteId}/tasks`,
+  );
+  return res.data;
+}
+
+export async function createTaskForContact(
+  contactRouteId: string,
+  payload: CreateTaskPayload,
+): Promise<Task> {
+  const res = await apiClient.post<Task>(
+    `/contacts/${contactRouteId}/tasks`,
+    payload,
+  );
+  return res.data;
+}
+
+export async function getTasksForDeal(dealId: string): Promise<Task[]> {
+  const res = await apiClient.get<Task[]>(`/deals/${dealId}/tasks`);
+  return res.data;
+}
+
+export async function createTaskForDeal(
+  dealId: string,
+  payload: CreateTaskPayload,
+): Promise<Task> {
+  const res = await apiClient.post<Task>(`/deals/${dealId}/tasks`, payload);
+  return res.data;
+}
+
 export async function getAllTasks(
   params: GetTasksParams = {},
 ): Promise<PaginatedTasks> {

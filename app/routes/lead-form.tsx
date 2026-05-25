@@ -1,7 +1,11 @@
 import { useMemo, useEffect, useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router";
 import { useTranslation } from "react-i18next";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  useQuery,
+  useQueryClient,
+  type InfiniteData,
+} from "@tanstack/react-query";
 import type { ColumnDef } from "@tanstack/react-table";
 import { useAuthContext } from "~/providers/auth-provider";
 import { DataTable } from "~/components/organism/data-table";
@@ -21,6 +25,7 @@ import {
   getLeadFormNames,
   type Lead,
   type LeadStatus,
+  type PaginatedLeads,
 } from "~/lib/api/leads";
 import { getConnectedCampaigns } from "~/lib/api/campaigns";
 import { LeadTasksSummaryCell } from "~/components/organism/tasks/lead-tasks-summary-cell";
@@ -122,61 +127,116 @@ export default function LeadForm() {
     [workspaceData]
   );
 
+  // Optimistic status change: the card/row moves instantly, then the request
+  // reconciles in the background. Covers both the table and every kanban column.
   const updateStatusMutation = useUpdateLeadStatus({
     onMutate: async ({ id, status }) => {
-      await queryClient.cancelQueries({ queryKey: ["leads"] });
-      const prev = queryClient.getQueryData([
-        "leads",
-        page,
-        limit,
-        debouncedSearch,
-        statusFilter || undefined,
-        sourceFilter || undefined,
-        formNameFilter || undefined,
-        showHidden,
-        viewMode,
+      await Promise.all([
+        queryClient.cancelQueries({ queryKey: ["leads"] }),
+        queryClient.cancelQueries({ queryKey: ["leads-kanban-column"] }),
+        queryClient.cancelQueries({ queryKey: ["leads-kanban-counts"] }),
       ]);
-      queryClient.setQueryData(
-        [
-          "leads",
-          page,
-          limit,
-          debouncedSearch,
-          statusFilter || undefined,
-          sourceFilter || undefined,
-          formNameFilter || undefined,
-          showHidden,
-          viewMode,
-        ],
-        (old: Awaited<ReturnType<typeof getLeads>> | undefined) => {
-          if (!old) return old;
+
+      // Snapshot everything we touch so onError can roll the UI back.
+      const prevTable = queryClient.getQueriesData({ queryKey: ["leads"] });
+      const prevColumns = queryClient.getQueriesData({
+        queryKey: ["leads-kanban-column"],
+      });
+      const prevCounts = queryClient.getQueriesData({
+        queryKey: ["leads-kanban-counts"],
+      });
+
+      // Table view — patch the lead's status in place.
+      queryClient.setQueriesData(
+        { queryKey: ["leads"] },
+        (old: PaginatedLeads | undefined) => {
+          if (!old || !Array.isArray(old.data)) return old;
           return {
             ...old,
             data: old.data.map((l) => (l.id === id ? { ...l, status } : l)),
           };
         }
       );
-      return { prev } as { prev: unknown };
+
+      // Kanban view — locate the lead's current column from the cache.
+      type ColumnData = InfiniteData<PaginatedLeads>;
+      let movedLead: Lead | undefined;
+      let oldStatus: string | undefined;
+      for (const [, data] of prevColumns as [unknown, ColumnData | undefined][]) {
+        for (const pageData of data?.pages ?? []) {
+          const found = pageData.data.find((l) => l.id === id);
+          if (found) {
+            movedLead = found;
+            oldStatus = found.status;
+            break;
+          }
+        }
+        if (movedLead) break;
+      }
+
+      // Move the card out of its old column and into the new one.
+      if (movedLead && oldStatus !== status) {
+        const moved: Lead = { ...movedLead, status };
+        for (const [key] of prevColumns as [unknown[], ColumnData | undefined][]) {
+          const colStatus = key[1] as string;
+          if (colStatus === oldStatus) {
+            queryClient.setQueryData<ColumnData>(key as never, (old) =>
+              old
+                ? {
+                    ...old,
+                    pages: old.pages.map((p) => ({
+                      ...p,
+                      data: p.data.filter((l) => l.id !== id),
+                      total: Math.max(0, p.total - 1),
+                    })),
+                  }
+                : old
+            );
+          } else if (colStatus === status) {
+            queryClient.setQueryData<ColumnData>(key as never, (old) => {
+              if (!old) return old;
+              if (old.pages.some((p) => p.data.some((l) => l.id === id)))
+                return old;
+              return {
+                ...old,
+                pages: old.pages.map((p, i) =>
+                  i === 0
+                    ? { ...p, data: [moved, ...p.data], total: p.total + 1 }
+                    : p
+                ),
+              };
+            });
+          }
+        }
+
+        // Keep the column header counts in sync.
+        queryClient.setQueriesData(
+          { queryKey: ["leads-kanban-counts"] },
+          (old: Record<string, number> | undefined) => {
+            if (!old) return old;
+            const next = { ...old };
+            if (oldStatus && typeof next[oldStatus] === "number")
+              next[oldStatus] = Math.max(0, next[oldStatus] - 1);
+            next[status] =
+              (typeof next[status] === "number" ? next[status] : 0) + 1;
+            return next;
+          }
+        );
+      }
+
+      return { prevTable, prevColumns, prevCounts };
     },
     onError: (_err, _vars, ctx) => {
-      const prev =
-        ctx && typeof ctx === "object" && "prev" in ctx
-          ? (ctx as { prev: unknown }).prev
-          : undefined;
-      if (prev !== undefined) {
-        queryClient.setQueryData(
-          [
-            "leads",
-            page,
-            limit,
-            debouncedSearch,
-            statusFilter || undefined,
-            sourceFilter || undefined,
-            formNameFilter || undefined,
-            showHidden,
-            viewMode,
-          ],
-          prev
+      const c = ctx as
+        | {
+            prevTable?: [unknown, unknown][];
+            prevColumns?: [unknown, unknown][];
+            prevCounts?: [unknown, unknown][];
+          }
+        | undefined;
+      for (const group of [c?.prevTable, c?.prevColumns, c?.prevCounts]) {
+        group?.forEach(([key, data]) =>
+          queryClient.setQueryData(key as never, data as never)
         );
       }
     },
@@ -595,10 +655,9 @@ export default function LeadForm() {
               platform_campaign_id: campaignFilter || undefined,
             }}
             onStatusChange={(id, status) =>
-              updateStatusMutation.mutate({ id, status })
+              updateStatusMutation.mutateAsync({ id, status })
             }
             onLeadSelect={setSelectedLeadId}
-            isUpdating={updateStatusMutation.isPending}
             canEdit={canEdit}
           />
         </div>

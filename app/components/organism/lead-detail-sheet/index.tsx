@@ -43,6 +43,78 @@ function getHistoryItemInitials(item: LeadHistoryItem): string {
   return "S";
 }
 
+function abbrevHistoryId(id: unknown): string {
+  if (id == null || id === "") return "—";
+  const s = String(id);
+  return s.length > 14 ? `${s.slice(0, 8)}…` : s;
+}
+
+function formatDealHistoryScalar(
+  field: string,
+  value: unknown,
+  t: TFunction,
+): string {
+  if (value == null || value === "") return "—";
+  if (
+    field === "expected_close_date" ||
+    field === "won_at" ||
+    field === "lost_at"
+  ) {
+    const d = new Date(String(value));
+    return Number.isNaN(d.getTime()) ? String(value) : formatDate(d, "PP");
+  }
+  if (field === "stage" || field === "status") {
+    const s = String(value);
+    return t(`pipeline.stages.${s}`, { defaultValue: s });
+  }
+  if (field === "contact_id" || field === "assigned_to") {
+    return abbrevHistoryId(value);
+  }
+  return String(value);
+}
+
+function formatDealUpdatedAction(item: LeadHistoryItem, t: TFunction): string {
+  const raw = item.details?.changes as
+    | Record<string, { from?: unknown; to?: unknown }>
+    | undefined;
+  if (!raw || typeof raw !== "object" || Object.keys(raw).length === 0) {
+    return t("pipeline.history.dealUpdatedGeneric", {
+      defaultValue: "Deal updated",
+    });
+  }
+  const parts: string[] = [];
+  /**
+   * A column move is what users think of as the deal "status". The board mirrors
+   * `stage` into `status`, so render a single sentence off the stage change and
+   * skip the duplicate `status` line.
+   */
+  const movePair = raw.stage ?? raw.status;
+  if (movePair && typeof movePair === "object") {
+    const from = formatDealHistoryScalar("stage", movePair.from, t);
+    const to = formatDealHistoryScalar("stage", movePair.to, t);
+    parts.push(
+      t("pipeline.history.statusChanged", {
+        from,
+        to,
+        defaultValue: `Status changed from ${from} to ${to}`,
+      }),
+    );
+  }
+  for (const [key, pair] of Object.entries(raw)) {
+    if (key === "stage" || key === "status") continue;
+    if (!pair || typeof pair !== "object") continue;
+    const label = t(`pipeline.history.dealField.${key}`, {
+      defaultValue: key.replace(/_/g, " "),
+    });
+    const from = formatDealHistoryScalar(key, pair.from, t);
+    const to = formatDealHistoryScalar(key, pair.to, t);
+    parts.push(`${label}: ${from} → ${to}`);
+  }
+  return parts.length > 0
+    ? parts.join(" · ")
+    : t("pipeline.history.dealUpdatedGeneric", { defaultValue: "Deal updated" });
+}
+
 function formatHistoryAction(item: LeadHistoryItem, t: TFunction): string {
   if (item.action === "lead_created")
     return t("leads.detail.historyLeadCreated");
@@ -64,6 +136,18 @@ function formatHistoryAction(item: LeadHistoryItem, t: TFunction): string {
     if (newLabel) return t("leads.detail.historyStatusChangedTo", { newLabel });
     return t("leads.detail.historyStatusUpdated");
   }
+  if (item.action === "contact_created")
+    return t("leads.detail.historyContactCreated", {
+      defaultValue: "Contact created",
+    });
+  if (item.action === "contact_updated")
+    return t("leads.detail.historyContactUpdated", {
+      defaultValue: "Contact updated",
+    });
+  if (item.action === "contact_deleted")
+    return t("leads.detail.historyContactDeleted", {
+      defaultValue: "Contact deleted",
+    });
   if (item.action === "note_created") return t("leads.detail.historyNoteAdded");
   if (item.action === "note_updated")
     return t("leads.detail.historyNoteEdited");
@@ -73,6 +157,45 @@ function formatHistoryAction(item: LeadHistoryItem, t: TFunction): string {
     return t("leads.detail.historyTaskAssigneeRemoved", {
       defaultValue: "Task assignee removed",
     });
+  if (item.action === "task_created")
+    return t("tasks.detail.historyTaskCreated", { defaultValue: "Task created" });
+  if (item.action === "task_updated")
+    return t("tasks.detail.historyTaskUpdated", { defaultValue: "Task updated" });
+  if (item.action === "task_deleted")
+    return t("tasks.detail.historyTaskDeleted", { defaultValue: "Task deleted" });
+  if (item.action === "deal_created")
+    return t("pipeline.history.dealCreated", { defaultValue: "Deal created" });
+  if (item.action === "deal_updated") return formatDealUpdatedAction(item, t);
+  if (item.action === "deal_outcome_set") {
+    const o = item.details?.outcome as string | undefined;
+    const prev = item.details?.previous_stage as string | undefined;
+    if (o && prev) {
+      const from = formatDealHistoryScalar("stage", prev, t);
+      const to = formatDealHistoryScalar("stage", o, t);
+      return t("pipeline.history.statusChanged", {
+        from,
+        to,
+        defaultValue: `Status changed from ${from} to ${to}`,
+      });
+    }
+    if (o === "won")
+      return t("pipeline.history.dealOutcomeWon", {
+        defaultValue: "Deal marked as won",
+      });
+    if (o === "lost")
+      return t("pipeline.history.dealOutcomeLost", {
+        defaultValue: "Deal marked as lost",
+      });
+    return t("pipeline.history.dealOutcomeSet", {
+      defaultValue: "Deal outcome updated",
+    });
+  }
+  if (item.action === "deal_contact_updated")
+    return t("pipeline.history.dealContactUpdated", {
+      defaultValue: "Contact link updated",
+    });
+  if (item.action === "deal_deleted")
+    return t("pipeline.history.dealDeleted", { defaultValue: "Deal archived" });
   return item.action.replace(/_/g, " ");
 }
 

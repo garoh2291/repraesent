@@ -19,11 +19,46 @@ export async function getNotes(leadId: string): Promise<Note[]> {
   return res.data;
 }
 
+export async function getNotesForContact(
+  contactRouteId: string,
+): Promise<Note[]> {
+  const res = await apiClient.get<Note[]>(
+    `/contacts/${contactRouteId}/notes`,
+  );
+  return res.data;
+}
+
+export async function getNotesForDeal(dealId: string): Promise<Note[]> {
+  const res = await apiClient.get<Note[]>(`/deals/${dealId}/notes`);
+  return res.data;
+}
+
 export async function createNote(
   leadId: string,
   content: string
 ): Promise<Note> {
   const res = await apiClient.post<Note>(`/leads/${leadId}/notes`, {
+    content,
+  });
+  return res.data;
+}
+
+export async function createNoteForContact(
+  contactRouteId: string,
+  content: string,
+): Promise<Note> {
+  const res = await apiClient.post<Note>(
+    `/contacts/${contactRouteId}/notes`,
+    { content },
+  );
+  return res.data;
+}
+
+export async function createNoteForDeal(
+  dealId: string,
+  content: string,
+): Promise<Note> {
+  const res = await apiClient.post<Note>(`/deals/${dealId}/notes`, {
     content,
   });
   return res.data;

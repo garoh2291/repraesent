@@ -4,8 +4,10 @@ import { cn } from "~/lib/utils";
 import { useTranslation } from "react-i18next";
 import {
   Building2,
+  BookUser,
   CheckSquare,
   ChevronDown,
+  Columns3,
   HomeIcon,
   Info,
   LogOut,
@@ -21,10 +23,7 @@ import { InstructionsModal } from "~/components/instructions-modal";
 
 import { getLocalizedServiceName } from "~/lib/api/auth";
 import { useAuthContext } from "~/providers/auth-provider";
-import {
-  setStoredSelectedView,
-  BRAND_VIEW,
-} from "~/lib/api/axios-instance";
+import { setStoredSelectedView, BRAND_VIEW } from "~/lib/api/axios-instance";
 import { useAppointmentConfigs } from "~/lib/hooks/useAppointmentConfigs";
 import { LanguageSwitcher } from "~/components/language-switcher";
 import {
@@ -97,7 +96,13 @@ function NavLink({
   );
 }
 
-export function Sidebar({ onClose, className }: { onClose?: () => void; className?: string }) {
+export function Sidebar({
+  onClose,
+  className,
+}: {
+  onClose?: () => void;
+  className?: string;
+}) {
   const {
     user,
     currentWorkspace,
@@ -114,7 +119,8 @@ export function Sidebar({ onClose, className }: { onClose?: () => void; classNam
   // so they can hop back to their brand dashboard from a workspace view.
   const showBrandSwitchEntry = user?.user_type === "brand" && !!brand;
   const hasMultipleWorkspaces =
-    (workspaces?.length ?? 0) > 1 || (showBrandSwitchEntry && (workspaces?.length ?? 0) >= 1);
+    (workspaces?.length ?? 0) > 1 ||
+    (showBrandSwitchEntry && (workspaces?.length ?? 0) >= 1);
   const [instructionsMarkdown, setInstructionsMarkdown] = useState<
     string | null
   >(null);
@@ -135,10 +141,19 @@ export function Sidebar({ onClose, className }: { onClose?: () => void; classNam
   };
 
   return (
-    <aside className={cn("flex h-full w-[220px] shrink-0 flex-col bg-[#111113] border-r border-white/5", className)}>
+    <aside
+      className={cn(
+        "flex h-full w-[220px] shrink-0 flex-col bg-[#111113] border-r border-white/5",
+        className
+      )}
+    >
       {/* Logo */}
       <div className="flex h-14 shrink-0 items-center px-4 border-b border-white/5 gap-2">
-        <Link to="/" className="flex items-center flex-1 min-w-0" onClick={onClose}>
+        <Link
+          to="/"
+          className="flex items-center flex-1 min-w-0"
+          onClick={onClose}
+        >
           <img
             src={logoUrl}
             alt="Repraesent"
@@ -272,12 +287,10 @@ export function Sidebar({ onClose, className }: { onClose?: () => void; classNam
               ?.filter(
                 (service) =>
                   service.service_type !== "appointments" ||
-                  showAppointmentsInSidebar,
+                  showAppointmentsInSidebar
               )
               ?.slice()
-              ?.sort(
-                (a, b) => (a.service_order ?? 0) - (b.service_order ?? 0),
-              )
+              ?.sort((a, b) => (a.service_order ?? 0) - (b.service_order ?? 0))
               ?.map((service) => {
                 const href = service.service_slug
                   ? `/${service.service_slug}`
@@ -321,7 +334,7 @@ export function Sidebar({ onClose, className }: { onClose?: () => void; classNam
                         <span className="truncate">
                           {getLocalizedServiceName(
                             service,
-                            i18n.language ?? "de",
+                            i18n.language ?? "de"
                           )}
                         </span>
                       </NavLink>
@@ -342,14 +355,33 @@ export function Sidebar({ onClose, className }: { onClose?: () => void; classNam
                       )}
                     </div>
                     {isLeadFormService && (
-                      <NavLink
-                        to="/tasks"
-                        isActive={location.pathname === "/tasks"}
-                        onClick={onClose}
-                      >
-                        <CheckSquare className="h-4 w-4 shrink-0" />
-                        {t("nav.tasks")}
-                      </NavLink>
+                      <>
+                        {" "}
+                        <NavLink
+                          to="/contacts"
+                          isActive={location.pathname.startsWith("/contacts")}
+                          onClick={onClose}
+                        >
+                          <BookUser className="h-4 w-4 shrink-0" />
+                          {t("nav.contacts", { defaultValue: "Contacts" })}
+                        </NavLink>
+                        <NavLink
+                          to="/pipeline"
+                          isActive={location.pathname.startsWith("/pipeline")}
+                          onClick={onClose}
+                        >
+                          <Columns3 className="h-4 w-4 shrink-0" />
+                          {t("nav.pipeline", { defaultValue: "Pipeline" })}
+                        </NavLink>
+                        <NavLink
+                          to="/tasks"
+                          isActive={location.pathname === "/tasks"}
+                          onClick={onClose}
+                        >
+                          <CheckSquare className="h-4 w-4 shrink-0" />
+                          {t("nav.tasks")}
+                        </NavLink>
+                      </>
                     )}
                   </Fragment>
                 );
@@ -395,7 +427,9 @@ export function Sidebar({ onClose, className }: { onClose?: () => void; classNam
         {/* Legal links */}
         {(() => {
           const isEn = i18n.language === "en";
-          const base = isEn ? "https://repraesent.com/en" : "https://repraesent.com";
+          const base = isEn
+            ? "https://repraesent.com/en"
+            : "https://repraesent.com";
           return (
             <div className="flex items-center gap-3 px-3 pt-1">
               <a
