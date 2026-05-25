@@ -2,6 +2,7 @@ import { useMemo } from "react";
 import { useParams } from "react-router";
 import { useTranslation } from "react-i18next";
 import i18n from "~/i18n";
+import { useDocumentMeta } from "~/lib/hooks/use-document-meta";
 
 export function meta() {
   return [{ title: i18n.t("db_brand.page_titles.retailer_social_ads") }];
@@ -14,6 +15,7 @@ import { CampaignAnalyticsDashboard } from "~/components/campaigns/campaign-anal
 import { RetailerTabsLayout } from "~/components/db-brand/retailer-tabs";
 
 export default function DbBrandRetailerSocialAds() {
+  useDocumentMeta({ titleKey: "db_brand.page_titles.retailer_social_ads" });
   const { retailerId } = useParams<{ retailerId: string }>();
   const { t } = useTranslation();
 

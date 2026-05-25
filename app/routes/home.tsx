@@ -42,11 +42,13 @@ import {
   getWorkspacePlausibleStats,
   type PlausiblePeriod,
 } from "~/lib/api/workspaces";
+import i18n from "~/i18n";
+import { useDocumentMeta } from "~/lib/hooks/use-document-meta";
 
 export function meta() {
   return [
-    { title: "Home - Repraesent" },
-    { name: "description", content: "Dashboard home" },
+    { title: i18n.t("home.metaTitle") + " - Repraesent" },
+    { name: "description", content: i18n.t("home.metaDescription") },
   ];
 }
 
@@ -903,6 +905,11 @@ function WebAnalyticsSection() {
 export default function Home() {
   const { user, currentWorkspace } = useAuthContext();
   const { t } = useTranslation();
+  useDocumentMeta({
+    titleKey: "home.metaTitle",
+    descriptionKey: "home.metaDescription",
+    titleSuffix: " - Repraesent",
+  });
 
   const role = currentWorkspace?.member_role ?? "—";
   const displayName = [user?.first_name, user?.last_name]

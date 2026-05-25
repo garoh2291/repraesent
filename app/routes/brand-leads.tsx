@@ -3,12 +3,14 @@ import { Users } from "lucide-react";
 import { useAuthContext } from "~/providers/auth-provider";
 import { BrandLeadsTable } from "~/components/db-brand/brand-leads-table";
 import i18n from "~/i18n";
+import { useDocumentMeta } from "~/lib/hooks/use-document-meta";
 
 export function meta() {
   return [{ title: i18n.t("db_brand.page_titles.brand_leads") }];
 }
 
 export default function BrandLeads() {
+  useDocumentMeta({ titleKey: "db_brand.page_titles.brand_leads" });
   const { currentWorkspace } = useAuthContext();
   const { t } = useTranslation();
   const isBrandWs = currentWorkspace?.type === "doorboost_brand";

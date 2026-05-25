@@ -36,16 +36,23 @@ import {
 import { LeadContactConversionSuccessModal } from "~/components/organism/lead-contact-conversion-success-modal";
 import { ContactHero } from "~/components/organism/contact-detail/contact-hero";
 import { CreateDealDialog } from "~/components/organism/create-deal-dialog";
+import i18n from "~/i18n";
+import { useDocumentMeta } from "~/lib/hooks/use-document-meta";
 
 export function meta() {
   return [
-    { title: "Lead - Repraesent" },
-    { name: "description", content: "Lead details" },
+    { title: i18n.t("leads.detail.metaTitle") + " - Repraesent" },
+    { name: "description", content: i18n.t("leads.detail.metaDescription") },
   ];
 }
 
 export default function LeadFormLeadId() {
   const { t } = useTranslation();
+  useDocumentMeta({
+    titleKey: "leads.detail.metaTitle",
+    descriptionKey: "leads.detail.metaDescription",
+    titleSuffix: " - Repraesent",
+  });
   const { leadId } = useParams<{ leadId: string }>();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -55,8 +62,9 @@ export default function LeadFormLeadId() {
   >(null);
   const [convertConfirmOpen, setConvertConfirmOpen] = useState(false);
   const [createDealOpen, setCreateDealOpen] = useState(false);
-  const [createDealPrefillContactId, setCreateDealPrefillContactId] =
-    useState<string | null>(null);
+  const [createDealPrefillContactId, setCreateDealPrefillContactId] = useState<
+    string | null
+  >(null);
   const [dealModalPrefillContactLabel, setDealModalPrefillContactLabel] =
     useState<string | null>(null);
 
@@ -417,7 +425,10 @@ export default function LeadFormLeadId() {
           if (lead) {
             const name =
               lead.full_name?.trim() ||
-              [lead.first_name, lead.last_name].filter(Boolean).join(" ").trim() ||
+              [lead.first_name, lead.last_name]
+                .filter(Boolean)
+                .join(" ")
+                .trim() ||
               "";
             setDealModalPrefillContactLabel(name || null);
           }

@@ -35,6 +35,7 @@ import {
 } from "lucide-react";
 import { cn } from "~/lib/utils";
 import { formatDateLong, formatTime } from "~/lib/utils/format";
+import { useDocumentMeta } from "~/lib/hooks/use-document-meta";
 
 export function meta() {
   return [
@@ -103,6 +104,10 @@ const BOOKING_RADIUS_CARD = "rounded-lg";
 
 export default function BookAppointment() {
   const { t } = useTranslation();
+  useDocumentMeta({
+    titleKey: "booking.metaTitle",
+    descriptionKey: "booking.metaDescription",
+  });
   const { configId } = useParams<{ configId: string }>();
   const queryClient = useQueryClient();
   const [activeConfigId, setActiveConfigId] = useState<string | null>(

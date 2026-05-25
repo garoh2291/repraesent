@@ -9,6 +9,11 @@ const API_BASE_URL =
 const AUTH_TOKEN_KEY = "auth_token";
 const REFRESH_TOKEN_KEY = "refresh_token";
 const WORKSPACE_ID_KEY = "workspace_id";
+// Last entry the user chose at the picker / via the switcher. Distinct from
+// WORKSPACE_ID_KEY because brand users may pick "brand" (no workspace id).
+// Value: "brand" | <workspace_id>
+const SELECTED_VIEW_KEY = "selected_view";
+export const BRAND_VIEW = "brand" as const;
 
 /**
  * Get stored access token from localStorage
@@ -73,6 +78,25 @@ export const setStoredWorkspaceId = (workspaceId: string): void => {
 export const clearStoredWorkspaceId = (): void => {
   if (typeof window === "undefined") return;
   localStorage.removeItem(WORKSPACE_ID_KEY);
+};
+
+/**
+ * Last selected view — "brand" or a workspace UUID. Used by the entry-point
+ * router to bring brand users back to whichever view they were in last.
+ */
+export const getStoredSelectedView = (): string | null => {
+  if (typeof window === "undefined") return null;
+  return localStorage.getItem(SELECTED_VIEW_KEY);
+};
+
+export const setStoredSelectedView = (view: string): void => {
+  if (typeof window === "undefined") return;
+  localStorage.setItem(SELECTED_VIEW_KEY, view);
+};
+
+export const clearStoredSelectedView = (): void => {
+  if (typeof window === "undefined") return;
+  localStorage.removeItem(SELECTED_VIEW_KEY);
 };
 
 /**

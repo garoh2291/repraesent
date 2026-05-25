@@ -1,6 +1,7 @@
 import { useTranslation } from "react-i18next";
 import i18n from "~/i18n";
 import { useAuthContext } from "~/providers/auth-provider";
+import { useDocumentMeta } from "~/lib/hooks/use-document-meta";
 
 export function meta() {
   return [
@@ -14,6 +15,10 @@ export function meta() {
 
 export default function NoWorkspace() {
   const { t } = useTranslation();
+  useDocumentMeta({
+    titleKey: "noWorkspace.metaTitle",
+    descriptionKey: "noWorkspace.metaDescription",
+  });
   const { logout, isLoggingOut } = useAuthContext();
 
   return (

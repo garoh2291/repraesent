@@ -9,6 +9,7 @@ import {
 } from "~/lib/api/brand";
 import { cn } from "~/lib/utils";
 import i18n from "~/i18n";
+import { useDocumentMeta } from "~/lib/hooks/use-document-meta";
 
 export function meta() {
   return [
@@ -20,6 +21,10 @@ const PLAUSIBLE_SCRIPT = "https://plausible0.gagadomains.com/js/embed.host.js";
 
 export default function BrandAnalytics() {
   const { t } = useTranslation();
+  useDocumentMeta({
+    titleKey: "brand.analyticsTitle",
+    titleSuffix: " – Repraesent",
+  });
   const [searchParams, setSearchParams] = useSearchParams();
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const [isIframeLoading, setIsIframeLoading] = useState(true);

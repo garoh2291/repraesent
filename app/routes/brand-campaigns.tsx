@@ -19,6 +19,7 @@ import {
 } from "~/lib/api/doorboost-brand";
 import { useAuthContext } from "~/providers/auth-provider";
 import i18n from "~/i18n";
+import { useDocumentMeta } from "~/lib/hooks/use-document-meta";
 
 export function meta() {
   return [{ title: i18n.t("db_brand.page_titles.brand_campaigns") }];
@@ -45,6 +46,7 @@ function formatDateCell(raw: string | null | undefined): string {
 
 export default function BrandCampaigns() {
   const { t } = useTranslation();
+  useDocumentMeta({ titleKey: "db_brand.page_titles.brand_campaigns" });
   const { currentWorkspace } = useAuthContext();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();

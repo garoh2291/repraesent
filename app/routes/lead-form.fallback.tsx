@@ -40,13 +40,15 @@ import {
 import { cn } from "~/lib/utils";
 import TooltipContainer from "~/components/tooltip-container";
 import { EmailTabs } from "~/components/email-tabs";
+import i18n from "~/i18n";
+import { useDocumentMeta } from "~/lib/hooks/use-document-meta";
 
 export function meta() {
   return [
-    { title: "Confirmation Email — Repraesent" },
+    { title: i18n.t("leadFallback.metaTitle") + " — Repraesent" },
     {
       name: "description",
-      content: "Configure confirmation emails for new leads",
+      content: i18n.t("leadFallback.metaDescription"),
     },
   ];
 }
@@ -581,6 +583,11 @@ function AddFormInline({
 
 export default function LeadFallbackPage() {
   const { t } = useTranslation();
+  useDocumentMeta({
+    titleKey: "leadFallback.metaTitle",
+    descriptionKey: "leadFallback.metaDescription",
+    titleSuffix: " — Repraesent",
+  });
   const { currentWorkspace } = useAuthContext();
   const navigate = useNavigate();
   const queryClient = useQueryClient();

@@ -46,10 +46,12 @@
     "contacts": "Contacts",
     "pipeline": "Pipeline",
     "subscriptions": "Subscriptions",
+    "billing": "Billing",
     "settings": "Settings",
     "logout": "Log out",
     "brand_retailers": "Retailers",
-    "brand_retailers_empty": "No retailers attached to this brand yet."
+    "brand_retailers_empty": "No retailers attached to this brand yet.",
+    "brand_label": "Brand"
   },
   "db_brand": {
     "subtitle": "Pick a retailer from the sidebar to view its Social Ads & Leads.",
@@ -58,6 +60,7 @@
       "dashboard": "Brand Dashboard — Repraesent",
       "brand_leads": "Leads — Repraesent",
       "brand_campaigns": "Campaigns — Repraesent",
+      "brand_retailers": "Doorboost Brand Dashboard",
       "retailer_leads": "Retailer Leads — Repraesent",
       "retailer_social_ads": "Retailer Social Ads — Repraesent",
       "retailer_campaign": "Campaign — Repraesent"
@@ -110,6 +113,8 @@
       "tagline": "The platform for modern sales teams"
     },
     "login": {
+      "metaTitle": "Sign in",
+      "metaDescription": "Sign in to your account",
       "title": "Sign in",
       "subtitle": "Enter your email to receive a sign-in link",
       "emailLabel": "Email address",
@@ -135,6 +140,8 @@
       "feature3": "Team collaboration"
     },
     "register": {
+      "metaTitle": "Create account",
+      "metaDescription": "Create your Repraesent account",
       "title": "Create account",
       "subtitle": "Enter your email to receive a sign-up link",
       "brandLine1": "Start strong.",
@@ -153,6 +160,8 @@
       "somethingWrong": "Something went wrong. Please try again."
     },
     "callback": {
+      "metaTitle": "Signing in",
+      "metaDescription": "Completing sign in",
       "verifying": "Verifying...",
       "signingIn": "Signing you in",
       "moment": "Just a moment…",
@@ -164,6 +173,8 @@
       "redirecting": "Redirecting you now..."
     },
     "workspacePicker": {
+      "metaTitle": "Choose area",
+      "metaDescription": "Select an area to continue",
       "title": "Choose your area",
       "subtitle": "You have access to {{count}} area. Select one to continue.",
       "subtitle_other": "You have access to {{count}} areas. Select one to continue.",
@@ -172,6 +183,8 @@
     }
   },
   "home": {
+    "metaTitle": "Home",
+    "metaDescription": "Dashboard home",
     "title": "Dashboard",
     "statsLeads": "Total leads",
     "statsThisMonth": "This month",
@@ -212,6 +225,8 @@
     "plausibleVisitors_other": "{{count}} visitors"
   },
   "leads": {
+    "metaTitle": "Leads",
+    "metaDescription": "Leads management",
     "title": "Leads",
     "manageHint": "Manage and track your incoming leads",
     "tableView": "Table",
@@ -259,6 +274,8 @@
       "stale": "Stale"
     },
     "detail": {
+      "metaTitle": "Lead",
+      "metaDescription": "Lead details",
       "title": "Lead details",
       "leadInformation": "Lead Information",
       "fullPage": "Full page",
@@ -429,6 +446,8 @@
     }
   },
   "appointments": {
+    "metaTitle": "Appointments",
+    "metaDescription": "Manage appointments and booking",
     "title": "Appointments",
     "manageHint": "Manage your calendar, booking page, and scheduling rules",
     "tabCalendar": "Calendar",
@@ -664,6 +683,8 @@
     }
   },
   "products": {
+    "metaTitle": "Billing",
+    "metaDescription": "Your subscriptions and invoices",
     "title": "Products",
     "subtitle": "Your active subscriptions and invoice history",
     "addProduct": "Add product",
@@ -971,6 +992,8 @@
     }
   },
   "pending": {
+    "metaTitle": "Setting up",
+    "metaDescription": "Your area is being set up",
     "title": "Setting up your area",
     "description": "Our team is configuring your subscription. You'll receive an email once your area is ready.",
     "inProgress": "In progress",
@@ -1027,6 +1050,8 @@
     "signingOut": "Signing out…"
   },
   "tasks": {
+    "metaTitle": "Tasks",
+    "metaDescription": "Tasks",
     "title": "Tasks",
     "pageHint": "Manage your team's tasks across all leads",
     "newTask": "New task",
@@ -1143,6 +1168,8 @@
     "description": "Choose an area to switch to."
   },
   "instructions": {
+    "metaTitle": "Calendar Setup",
+    "metaDescription": "Instructions to connect your calendar",
     "title": "Instructions"
   },
   "confirmModal": {
@@ -1210,6 +1237,8 @@
     }
   },
   "leadFallback": {
+    "metaTitle": "Confirmation Email",
+    "metaDescription": "Configure confirmation emails for new leads",
     "title": "Lead Fallback Emails",
     "subtitle": "Automatically send a custom email to new leads using your area SMTP configuration",
     "backToLeads": "Back to Leads",
@@ -1240,6 +1269,9 @@
     "selectForm": "Select a form from the left to edit its email."
   },
   "brand": {
+    "metaTitle": "Home",
+    "metaDescription": "Brand dashboard",
+    "workspacesMetaTitle": "Workspaces",
     "navHome": "Home",
     "navWorkspaces": "Partner Houses",
     "navAnalytics": "Analytics",
@@ -1371,7 +1403,7 @@
     "title": "Campaign Analytics",
     "titleGoogle": "Google Ads",
     "titleFacebook": "Facebook Ads",
-    "titleSocial": "Social Ads",
+    "titleSocial": "Ad Campaigns",
     "platformAll": "All Platforms",
     "spend": "Spend",
     "impressions": "Impressions",
@@ -1420,6 +1452,22 @@
     "allTime": "All time",
     "startDate": "Start date",
     "endDate": "End date"
+  },
+  "facebookAds": {
+    "metaTitle": "Facebook Ads",
+    "metaDescription": "Facebook Ads campaign analytics"
+  },
+  "googleAds": {
+    "metaTitle": "Google Ads",
+    "metaDescription": "Google Ads campaign analytics"
+  },
+  "socialAds": {
+    "metaTitle": "Ad Campaigns",
+    "metaDescription": "Ad campaigns campaign analytics"
+  },
+  "sync": {
+    "metaTitle": "Data Migration",
+    "metaDescription": "Sync your Doorboost historical data"
   },
   "historicalData": {
     "bannerTitle": "Sync your historical data",

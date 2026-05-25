@@ -32,18 +32,26 @@ export default function DashboardLayout() {
     document.cookie = `personal_lang=${locale}; path=/; max-age=${maxAge}; samesite=lax`;
   }, [user?.locale, i18n]);
 
-  // Show onboarding tour for active-workspace users who haven't completed it yet
+  // Show onboarding tour for active-workspace users who haven't completed it yet.
+  // Doorboost-brand workspaces don't have the standard retailer onboarding flow,
+  // so the tour is suppressed there — it only runs for type="retailer" (default).
   useEffect(() => {
     if (
       user &&
       user.onboarding_completed_at == null &&
-      currentWorkspace?.status === "active"
+      currentWorkspace?.status === "active" &&
+      currentWorkspace?.type !== "doorboost_brand"
     ) {
       // Small delay so the dashboard renders first — feels more natural
       const timer = setTimeout(() => setShowTour(true), 600);
       return () => clearTimeout(timer);
     }
-  }, [user?.id, user?.onboarding_completed_at, currentWorkspace?.status]);
+  }, [
+    user?.id,
+    user?.onboarding_completed_at,
+    currentWorkspace?.status,
+    currentWorkspace?.type,
+  ]);
 
   const handleTourDone = useCallback(() => {
     setShowTour(false);

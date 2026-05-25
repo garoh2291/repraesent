@@ -1,5 +1,5 @@
 import { Link, useLocation, useNavigate } from "react-router";
-import { useState } from "react";
+import { Fragment, useState } from "react";
 import { cn } from "~/lib/utils";
 import { useTranslation } from "react-i18next";
 import {
@@ -23,6 +23,7 @@ import { InstructionsModal } from "~/components/instructions-modal";
 
 import { getLocalizedServiceName } from "~/lib/api/auth";
 import { useAuthContext } from "~/providers/auth-provider";
+import { setStoredSelectedView, BRAND_VIEW } from "~/lib/api/axios-instance";
 import { useAppointmentConfigs } from "~/lib/hooks/useAppointmentConfigs";
 import { LanguageSwitcher } from "~/components/language-switcher";
 import {
@@ -95,10 +96,18 @@ function NavLink({
   );
 }
 
-export function Sidebar({ onClose, className }: { onClose?: () => void; className?: string }) {
+export function Sidebar({
+  onClose,
+  className,
+}: {
+  onClose?: () => void;
+  className?: string;
+}) {
   const {
+    user,
     currentWorkspace,
     workspaces,
+    brand,
     setCurrentWorkspace,
     logout,
     isLoggingOut,
@@ -106,17 +115,18 @@ export function Sidebar({ onClose, className }: { onClose?: () => void; classNam
   const { t, i18n } = useTranslation();
   const location = useLocation();
   const navigate = useNavigate();
-  const hasMultipleWorkspaces = (workspaces?.length ?? 0) > 1;
+  // Brand users with a linked brand entity get a "Brand" entry in the switcher
+  // so they can hop back to their brand dashboard from a workspace view.
+  const showBrandSwitchEntry = user?.user_type === "brand" && !!brand;
+  const hasMultipleWorkspaces =
+    (workspaces?.length ?? 0) > 1 ||
+    (showBrandSwitchEntry && (workspaces?.length ?? 0) >= 1);
   const [instructionsMarkdown, setInstructionsMarkdown] = useState<
     string | null
   >(null);
   const hasAppointmentsService =
     currentWorkspace?.services?.some(
       (s) => s.service_type === "appointments"
-    ) ?? false;
-  const hasLeadFormService =
-    currentWorkspace?.services?.some(
-      (s) => s.service_type === "lead-form" || s.service_slug === "lead-form"
     ) ?? false;
   const { data: appointmentConfigs } = useAppointmentConfigs(
     hasAppointmentsService && !!currentWorkspace?.id
@@ -131,10 +141,19 @@ export function Sidebar({ onClose, className }: { onClose?: () => void; classNam
   };
 
   return (
-    <aside className={cn("flex h-full w-[220px] shrink-0 flex-col bg-[#111113] border-r border-white/5", className)}>
+    <aside
+      className={cn(
+        "flex h-full w-[220px] shrink-0 flex-col bg-[#111113] border-r border-white/5",
+        className
+      )}
+    >
       {/* Logo */}
       <div className="flex h-14 shrink-0 items-center px-4 border-b border-white/5 gap-2">
-        <Link to="/" className="flex items-center flex-1 min-w-0" onClick={onClose}>
+        <Link
+          to="/"
+          className="flex items-center flex-1 min-w-0"
+          onClick={onClose}
+        >
           <img
             src={logoUrl}
             alt="Repraesent"
@@ -169,13 +188,34 @@ export function Sidebar({ onClose, className }: { onClose?: () => void; classNam
                 </button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="start" className="min-w-48">
+                {showBrandSwitchEntry && brand && (
+                  <DropdownMenuItem
+                    key="__brand__"
+                    onClick={() => {
+                      onClose?.();
+                      setStoredSelectedView(BRAND_VIEW);
+                      navigate("/brand", { replace: true });
+                    }}
+                  >
+                    <Building2 className="h-4 w-4" />
+                    <span className="flex-1 truncate">{brand.name}</span>
+                    <span className="ml-2 rounded bg-amber-400/15 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-amber-300">
+                      {t("nav.brand_label", "Brand")}
+                    </span>
+                  </DropdownMenuItem>
+                )}
                 {workspaces.map((ws) => (
                   <DropdownMenuItem
                     key={ws.id}
                     onClick={() => handleWorkspaceChange(ws.id)}
                   >
                     <Building2 className="h-4 w-4" />
-                    {ws.name}
+                    <span className="flex-1 truncate">{ws.name}</span>
+                    {ws.type === "doorboost_brand" && (
+                      <span className="ml-2 rounded bg-amber-400/15 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-amber-300">
+                        {t("nav.brand_label", "Brand")}
+                      </span>
+                    )}
                   </DropdownMenuItem>
                 ))}
               </DropdownMenuContent>
@@ -247,8 +287,10 @@ export function Sidebar({ onClose, className }: { onClose?: () => void; classNam
               ?.filter(
                 (service) =>
                   service.service_type !== "appointments" ||
-                  showAppointmentsInSidebar,
+                  showAppointmentsInSidebar
               )
+              ?.slice()
+              ?.sort((a, b) => (a.service_order ?? 0) - (b.service_order ?? 0))
               ?.map((service) => {
                 const href = service.service_slug
                   ? `/${service.service_slug}`
@@ -267,82 +309,94 @@ export function Sidebar({ onClose, className }: { onClose?: () => void; classNam
                   service.service_config as Record<string, unknown> | null
                 )?.instructions as string | undefined;
                 const hasInstructions = !!instructions;
+                const isLeadFormService =
+                  service.service_type === "lead-form" ||
+                  service.service_slug === "lead-form";
                 return (
-                  <div
-                    key={service.service_id}
-                    className="flex items-center group/svc"
-                  >
-                    <NavLink
-                      to={href}
-                      isActive={isActive}
-                      disabled={!hasSlug}
-                      onClick={(e) => {
-                        if (!hasSlug) e.preventDefault();
-                        else onClose?.();
-                      }}
-                      className="flex-1 min-w-0"
-                    >
-                      {hasIcon && (
-                        <DynamicIcon
-                          name={iconName!}
-                          className="h-4 w-4 shrink-0"
-                        />
-                      )}
-                      <span className="truncate">
-                        {getLocalizedServiceName(
-                          service,
-                          i18n.language ?? "de",
+                  <Fragment key={service.service_id}>
+                    <div className="flex items-center group/svc">
+                      <NavLink
+                        to={href}
+                        isActive={isActive}
+                        disabled={!hasSlug}
+                        onClick={(e) => {
+                          if (!hasSlug) e.preventDefault();
+                          else onClose?.();
+                        }}
+                        className="flex-1 min-w-0"
+                      >
+                        {hasIcon && (
+                          <DynamicIcon
+                            name={iconName!}
+                            className="h-4 w-4 shrink-0"
+                          />
                         )}
-                      </span>
-                    </NavLink>
-                    {hasInstructions && (
-                      <button
-                        type="button"
-                        title="View instructions"
-                        onClick={() => setInstructionsMarkdown(instructions!)}
-                        className="
+                        <span className="truncate">
+                          {getLocalizedServiceName(
+                            service,
+                            i18n.language ?? "de"
+                          )}
+                        </span>
+                      </NavLink>
+                      {hasInstructions && (
+                        <button
+                          type="button"
+                          title="View instructions"
+                          onClick={() => setInstructionsMarkdown(instructions!)}
+                          className="
                       ml-0.5 mr-1 flex h-5 w-5 shrink-0 items-center justify-center
                       rounded opacity-0 group-hover/svc:opacity-100
                       text-white/25 hover:text-amber-400 hover:bg-amber-400/8
                       transition-all duration-150
                     "
-                      >
-                        <Info className="h-3 w-3" />
-                      </button>
+                        >
+                          <Info className="h-3 w-3" />
+                        </button>
+                      )}
+                    </div>
+                    {isLeadFormService && (
+                      <>
+                        {" "}
+                        <NavLink
+                          to="/contacts"
+                          isActive={location.pathname.startsWith("/contacts")}
+                          onClick={onClose}
+                        >
+                          <BookUser className="h-4 w-4 shrink-0" />
+                          {t("nav.contacts", { defaultValue: "Contacts" })}
+                        </NavLink>
+                        <NavLink
+                          to="/pipeline"
+                          isActive={location.pathname.startsWith("/pipeline")}
+                          onClick={onClose}
+                        >
+                          <Columns3 className="h-4 w-4 shrink-0" />
+                          {t("nav.pipeline", { defaultValue: "Pipeline" })}
+                        </NavLink>
+                        <NavLink
+                          to="/tasks"
+                          isActive={location.pathname === "/tasks"}
+                          onClick={onClose}
+                        >
+                          <CheckSquare className="h-4 w-4 shrink-0" />
+                          {t("nav.tasks")}
+                        </NavLink>
+                      </>
                     )}
-                  </div>
+                  </Fragment>
                 );
               })}
+          </>
+        )}
+      </nav>
 
-            {hasLeadFormService && (
-              <>
-                <NavLink
-                  to="/contacts"
-                  isActive={location.pathname.startsWith("/contacts")}
-                  onClick={onClose}
-                >
-                  <BookUser className="h-4 w-4 shrink-0" />
-                  {t("nav.contacts", { defaultValue: "Contacts" })}
-                </NavLink>
-                <NavLink
-                  to="/pipeline"
-                  isActive={location.pathname.startsWith("/pipeline")}
-                  onClick={onClose}
-                >
-                  <Columns3 className="h-4 w-4 shrink-0" />
-                  {t("nav.pipeline", { defaultValue: "Pipeline" })}
-                </NavLink>
-                <NavLink
-                  to="/tasks"
-                  isActive={location.pathname === "/tasks"}
-                  onClick={onClose}
-                >
-                  <CheckSquare className="h-4 w-4 shrink-0" />
-                  {t("nav.tasks")}
-                </NavLink>
-              </>
-            )}
-
+      {/* Bottom: language → settings/billing → logout */}
+      <div className="shrink-0 border-t border-white/5 p-3 space-y-0.5">
+        <div className="px-3 py-1 pb-2">
+          <LanguageSwitcher variant="dark" persistToDb />
+        </div>
+        {!isDoorboostBrandWs && (
+          <>
             <NavLink
               to="/settings/profile"
               isActive={location.pathname.startsWith("/settings")}
@@ -357,17 +411,10 @@ export function Sidebar({ onClose, className }: { onClose?: () => void; classNam
               onClick={onClose}
             >
               <Package className="h-4 w-4 shrink-0" />
-              {t("nav.subscriptions")}
+              {t("nav.billing")}
             </NavLink>
           </>
         )}
-      </nav>
-
-      {/* Bottom: language + logout */}
-      <div className="shrink-0 border-t border-white/5 p-3 space-y-1.5">
-        <div className="px-3 py-1">
-          <LanguageSwitcher variant="dark" persistToDb />
-        </div>
         <button
           onClick={() => logout()}
           disabled={isLoggingOut}
@@ -380,7 +427,9 @@ export function Sidebar({ onClose, className }: { onClose?: () => void; classNam
         {/* Legal links */}
         {(() => {
           const isEn = i18n.language === "en";
-          const base = isEn ? "https://repraesent.com/en" : "https://repraesent.com";
+          const base = isEn
+            ? "https://repraesent.com/en"
+            : "https://repraesent.com";
           return (
             <div className="flex items-center gap-3 px-3 pt-1">
               <a

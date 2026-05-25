@@ -30,16 +30,23 @@ import { getWorkspaceDetail } from "~/lib/api/workspaces";
 import { LayoutGrid, CalendarDays, Plus, X } from "lucide-react";
 import { cn } from "~/lib/utils";
 import { Input } from "~/components/ui/input";
+import i18n from "~/i18n";
+import { useDocumentMeta } from "~/lib/hooks/use-document-meta";
 
 export function meta() {
   return [
-    { title: "Tasks - Repraesent" },
-    { name: "description", content: "Tasks" },
+    { title: i18n.t("tasks.metaTitle") + " - Repraesent" },
+    { name: "description", content: i18n.t("tasks.metaDescription") },
   ];
 }
 
 export default function TasksPage() {
   const { t } = useTranslation();
+  useDocumentMeta({
+    titleKey: "tasks.metaTitle",
+    descriptionKey: "tasks.metaDescription",
+    titleSuffix: " - Repraesent",
+  });
   const { currentWorkspace } = useAuthContext();
   const navigate = useNavigate();
   const queryClient = useQueryClient();

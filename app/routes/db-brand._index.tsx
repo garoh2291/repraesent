@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Boxes, ChevronDown, Download, Loader2, Users } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import i18n from "~/i18n";
+import { useDocumentMeta } from "~/lib/hooks/use-document-meta";
 
 export function meta() {
   return [{ title: i18n.t("db_brand.page_titles.dashboard") }];
@@ -29,6 +30,7 @@ import { CampaignAnalyticsDashboard } from "~/components/campaigns/campaign-anal
 import { BrandLeadsTable } from "~/components/db-brand/brand-leads-table";
 
 export default function DbBrandIndex() {
+  useDocumentMeta({ titleKey: "db_brand.page_titles.dashboard" });
   const { currentWorkspace } = useAuthContext();
   const { t } = useTranslation();
   const isBrandWs = currentWorkspace?.type === "doorboost_brand";
