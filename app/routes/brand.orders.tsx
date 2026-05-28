@@ -62,8 +62,8 @@ const STATUS_CONFIG: Record<
   },
 };
 
-function formatPrice(amount: number, currency: string): string {
-  return formatCurrencyFromCents(amount, currency);
+function formatPrice(amount: number): string {
+  return formatCurrencyFromCents(amount);
 }
 
 function localizeServiceName(
@@ -422,7 +422,7 @@ export default function BrandOrdersPage() {
                         {price && (
                           <div className="mt-auto pt-3 border-t border-border/50">
                             <span className="text-xl font-bold text-foreground">
-                              {formatPrice(price.amount, price.currency)}
+                              {formatPrice(price.amount)}
                             </span>
                             <span className="text-sm text-muted-foreground ml-1">
                               {billing === "monthly"
@@ -646,10 +646,7 @@ export default function BrandOrdersPage() {
                           ? t("brand.orderBillingMonthly", "Monthly")
                           : t("brand.orderBillingYearly", "Yearly")}{" "}
                         &middot;{" "}
-                        {formatPrice(
-                          currentPrice.amount,
-                          currentPrice.currency
-                        )}
+                        {formatPrice(currentPrice.amount)}
                         {billing === "monthly"
                           ? t("brand.orderPerMonth", " / month")
                           : t("brand.orderPerYear", " / year")}

@@ -12,8 +12,16 @@ export type DealStatus = "new" | "won" | "lost";
 export function parseDealValue(input: string): number | null {
   const trimmed = input.trim();
   if (trimmed === "") return null;
-  const n = Number(trimmed.replace(",", "."));
+  const n = Number(trimmed.replace(/,/g, ""));
   return Number.isFinite(n) ? n : null;
+}
+
+export function formatDealValueInput(raw: string): string {
+  const stripped = raw.replace(/,/g, "");
+  if (stripped === "" || !/^\d*\.?\d*$/.test(stripped)) return raw;
+  const parts = stripped.split(".");
+  parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+  return parts.join(".");
 }
 
 export const DEAL_STAGE_KEYS = [
@@ -45,6 +53,7 @@ export interface DealListItem {
   contact_full_name: string | null;
   primary_email: string | null;
   primary_phone: string | null;
+  board_position: number | null;
 }
 
 export interface PaginatedDeals {
@@ -133,6 +142,18 @@ export async function patchDealStatus(
   const res = await apiClient.patch<DealDetailResponse>(
     `/deals/${dealId}/status`,
     { status },
+  );
+  return res.data;
+}
+
+export async function reorderDeal(
+  dealId: string,
+  stage: string,
+  position: number,
+): Promise<DealDetailResponse> {
+  const res = await apiClient.patch<DealDetailResponse>(
+    `/deals/${dealId}/reorder`,
+    { stage, position },
   );
   return res.data;
 }

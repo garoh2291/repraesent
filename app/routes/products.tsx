@@ -268,10 +268,7 @@ export default function Products() {
                       </span>
                       {hasPrice && (
                         <span className="text-sm font-medium text-foreground">
-                          {formatCurrencyFromCents(
-                            Number(product.unit_amount),
-                            product.currency ?? "EUR"
-                          )}
+                          {formatCurrencyFromCents(Number(product.unit_amount))}
                           {product.recurring_interval && (
                             <span className="text-xs text-muted-foreground font-normal">
                               /{product.recurring_interval}
@@ -356,10 +353,7 @@ export default function Products() {
                       </td>
                       <td className="px-5 py-3.5 text-right font-semibold text-foreground tabular-nums">
                         {inv.amount_due != null
-                          ? formatCurrencyFromCents(
-                              Number(inv.amount_due),
-                              inv.currency ?? "EUR"
-                            )
+                          ? formatCurrencyFromCents(Number(inv.amount_due))
                           : "—"}
                       </td>
                       <td className="px-5 py-3.5">

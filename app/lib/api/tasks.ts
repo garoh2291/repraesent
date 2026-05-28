@@ -24,6 +24,7 @@ export interface Task {
   creator_last_name: string | null;
   created_at: string;
   updated_at: string;
+  board_position: number | null;
 }
 
 export interface PaginatedTasks {
@@ -149,6 +150,18 @@ export async function updateTask(
   payload: UpdateTaskPayload,
 ): Promise<Task> {
   const res = await apiClient.patch<Task>(`/tasks/${taskId}`, payload);
+  return res.data;
+}
+
+export async function reorderTask(
+  taskId: string,
+  status: TaskStatus,
+  position: number,
+): Promise<Task> {
+  const res = await apiClient.patch<Task>(`/tasks/${taskId}/reorder`, {
+    status,
+    position,
+  });
   return res.data;
 }
 

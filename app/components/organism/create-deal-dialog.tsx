@@ -10,7 +10,11 @@ import {
   type ContactDetail,
   type ContactListItem,
 } from "~/lib/api/contacts-crm";
-import { createDeal, parseDealValue } from "~/lib/api/deals";
+import {
+  createDeal,
+  parseDealValue,
+  formatDealValueInput,
+} from "~/lib/api/deals";
 import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
 import { Label } from "~/components/ui/label";
@@ -250,13 +254,17 @@ export function CreateDealDialog({
           <div className="space-y-1.5">
             <Label>{t("pipeline.fields.value", { defaultValue: "Value (EUR)" })}</Label>
             <Input
-              type="text"
-              inputMode="decimal"
-              value={newValue}
-              onChange={(e) => setNewValue(e.target.value)}
-              placeholder="0"
-              aria-invalid={valueNegative}
-            />
+                type="text"
+                inputMode="decimal"
+                value={newValue}
+                onChange={(e) => {
+                  const raw = e.target.value.replace(/,/g, "");
+                  if (raw !== "" && !/^\d*\.?\d*$/.test(raw)) return;
+                  setNewValue(formatDealValueInput(e.target.value));
+                }}
+                placeholder="0"
+                aria-invalid={valueNegative}
+              />
             {valueNegative ? (
               <p className="text-[11px] text-destructive">
                 {t("pipeline.errors.valueNegative", {

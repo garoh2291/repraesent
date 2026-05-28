@@ -48,6 +48,7 @@ export interface DataTableProps<TData, TValue> {
   pageSizeOptions?: number[];
   additionalElement?: React.ReactNode;
   onRowClick?: (row: TData) => void;
+  enableSorting?: boolean;
 }
 
 export function DataTable<TData, TValue>({
@@ -63,6 +64,7 @@ export function DataTable<TData, TValue>({
   pageSizeOptions = [10, 20, 50, 100],
   additionalElement,
   onRowClick,
+  enableSorting = true,
 }: DataTableProps<TData, TValue>) {
   const { t } = useTranslation();
   const [sorting, setSorting] = React.useState<SortingState>([]);
@@ -74,11 +76,13 @@ export function DataTable<TData, TValue>({
     data,
     columns,
     getCoreRowModel: getCoreRowModel(),
-    getSortedRowModel: getSortedRowModel(),
-    onSortingChange: setSorting,
-    state: {
-      sorting,
-    },
+    ...(enableSorting
+      ? {
+          getSortedRowModel: getSortedRowModel(),
+          onSortingChange: setSorting,
+          state: { sorting },
+        }
+      : { enableSorting: false }),
     manualPagination: !!pagination,
   });
 
@@ -148,10 +152,15 @@ export function DataTable<TData, TValue>({
                       <div className="flex items-center gap-2">
                         <div
                           className={cn(
-                            header.column.getCanSort() &&
+                            enableSorting &&
+                              header.column.getCanSort() &&
                               "cursor-pointer select-none"
                           )}
-                          onClick={header.column.getToggleSortingHandler()}
+                          onClick={
+                            enableSorting
+                              ? header.column.getToggleSortingHandler()
+                              : undefined
+                          }
                         >
                           {flexRender(
                             header.column.columnDef.header,

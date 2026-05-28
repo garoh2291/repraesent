@@ -36,7 +36,10 @@ import { useDebounce } from "~/lib/hooks/useDebounce";
 import { useSearchParamsSelect } from "~/lib/hooks/useQueryParams";
 import { useLeadsViewMode } from "~/lib/hooks/useLocalStorage";
 import { useCanEditLeads } from "~/lib/hooks/useCanEditLeads";
-import { useUpdateLeadStatus } from "~/lib/hooks/useUpdateLeadStatus";
+import {
+  useReorderLead,
+  useUpdateLeadStatus,
+} from "~/lib/hooks/useUpdateLeadStatus";
 import {
   ArrowRight,
   LayoutGrid,
@@ -50,6 +53,7 @@ import {
 import { cn } from "~/lib/utils";
 import { formatDate } from "~/lib/utils/format";
 import { LeadImportModal } from "~/components/organism/lead-import-modal";
+import { CreateLeadDialog } from "~/components/organism/create-lead-dialog";
 import i18n from "~/i18n";
 import { useDocumentMeta } from "~/lib/hooks/use-document-meta";
 
@@ -100,6 +104,7 @@ export default function LeadForm() {
   const [viewMode, setViewMode] = useLeadsViewMode();
   const [selectedLeadId, setSelectedLeadId] = useState<string | null>(null);
   const [importModalOpen, setImportModalOpen] = useState(false);
+  const [createLeadOpen, setCreateLeadOpen] = useState(false);
   const [showHidden, setShowHidden] = useState(false);
 
   // Task create modal state
@@ -241,6 +246,8 @@ export default function LeadForm() {
       }
     },
   });
+
+  const reorderMutation = useReorderLead();
 
   useEffect(() => {
     if (!currentWorkspace) {
@@ -538,6 +545,16 @@ export default function LeadForm() {
               {t("leads.importLeads")}
             </Button>
           )}
+          {canEdit && (
+            <Button
+              size="sm"
+              onClick={() => setCreateLeadOpen(true)}
+              className="h-9 gap-1.5 text-xs"
+            >
+              <Plus className="h-3.5 w-3.5" />
+              {t("leads.createLead", { defaultValue: "Create lead" })}
+            </Button>
+          )}
           <div className="flex items-center rounded-lg border border-border bg-muted/50 p-0.5">
             <button
               onClick={() => {
@@ -577,6 +594,7 @@ export default function LeadForm() {
 
       {viewMode === "table" ? (
         <DataTable<Lead, unknown>
+          enableSorting={false}
           columns={columns}
           additionalElement={
             <div className="flex flex-wrap gap-3 items-center">
@@ -657,6 +675,9 @@ export default function LeadForm() {
             onStatusChange={(id, status) =>
               updateStatusMutation.mutateAsync({ id, status })
             }
+            onReorder={({ leadId, status, position }) =>
+              reorderMutation.mutateAsync({ id: leadId, status, position })
+            }
             onLeadSelect={setSelectedLeadId}
             canEdit={canEdit}
           />
@@ -679,6 +700,11 @@ export default function LeadForm() {
       <LeadImportModal
         open={importModalOpen}
         onOpenChange={setImportModalOpen}
+      />
+
+      <CreateLeadDialog
+        open={createLeadOpen}
+        onOpenChange={setCreateLeadOpen}
       />
 
       <TaskFormModal

@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef, useEffect } from "react";
+import { useState, useCallback, useRef, useEffect, useMemo } from "react";
 import {
   DndContext,
   DragOverlay,
@@ -10,6 +10,10 @@ import {
   type DragStartEvent,
 } from "@dnd-kit/core";
 import { useDroppable } from "@dnd-kit/core";
+import {
+  SortableContext,
+  verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
 import { useTranslation } from "react-i18next";
 import { ChevronDown } from "lucide-react";
 import { formatDate } from "~/lib/utils/format";
@@ -18,6 +22,10 @@ import { TaskCard } from "./task-card";
 import { TaskUrgencyBadge } from "~/components/organism/tasks/task-urgency-badge";
 import { type Task, type TaskStatus } from "~/lib/api/tasks";
 import type { WorkspaceMemberItem } from "~/components/organism/tasks/task-form-modal";
+import {
+  kanbanCollisionDetection,
+  positionForInsertion,
+} from "~/lib/kanban/board-position";
 
 const TASK_STATUS_COLUMNS: TaskStatus[] = ["todo", "in_progress", "done"];
 
@@ -27,10 +35,17 @@ const TASK_STATUS_COLORS: Record<TaskStatus, string> = {
   done: "bg-emerald-500",
 };
 
+interface ReorderArgs {
+  taskId: string;
+  status: TaskStatus;
+  position: number;
+}
+
 interface TasksKanbanProps {
   tasks: Task[];
   isLoading: boolean;
   onStatusChange: (taskId: string, status: TaskStatus) => void;
+  onReorder: (args: ReorderArgs) => void;
   isUpdating?: boolean;
   canEdit?: boolean;
   workspaceMembers: WorkspaceMemberItem[];
@@ -41,6 +56,7 @@ export function TasksKanban({
   tasks,
   isLoading,
   onStatusChange,
+  onReorder,
   isUpdating,
   canEdit = true,
   workspaceMembers,
@@ -48,6 +64,9 @@ export function TasksKanban({
 }: TasksKanbanProps) {
   const { t } = useTranslation();
   const [activeId, setActiveId] = useState<string | null>(null);
+  const [pending, setPending] = useState<
+    Record<string, { status: TaskStatus; board_position: number }>
+  >({});
   const undoStackRef = useRef<
     Array<{ taskId: string; previousStatus: TaskStatus }>
   >([]);
@@ -59,9 +78,78 @@ export function TasksKanban({
     }),
   );
 
+  const tasksByStatus = useMemo(() => {
+    const acc = {} as Record<TaskStatus, Task[]>;
+    for (const s of TASK_STATUS_COLUMNS) acc[s] = [];
+    for (const task of tasks) {
+      const override = pending[task.id];
+      const eff = override
+        ? {
+            ...task,
+            status: override.status,
+            board_position: override.board_position,
+          }
+        : task;
+      if (acc[eff.status as TaskStatus]) acc[eff.status as TaskStatus].push(eff);
+    }
+    for (const s of TASK_STATUS_COLUMNS) {
+      acc[s].sort((a, b) => {
+        const ap = a.board_position;
+        const bp = b.board_position;
+        if (ap == null && bp == null) {
+          // Keep parity with the legacy ordering (due date asc, created desc).
+          if (a.due_date && b.due_date) return a.due_date.localeCompare(b.due_date);
+          if (a.due_date) return -1;
+          if (b.due_date) return 1;
+          return (b.created_at ?? "").localeCompare(a.created_at ?? "");
+        }
+        if (ap == null) return 1;
+        if (bp == null) return -1;
+        return ap - bp;
+      });
+    }
+    return acc;
+  }, [tasks, pending]);
+
+  useEffect(() => {
+    if (Object.keys(pending).length === 0) return;
+    setPending((curr) => {
+      const next = { ...curr };
+      let changed = false;
+      for (const task of tasks) {
+        const ov = next[task.id];
+        if (!ov) continue;
+        if (
+          task.status === ov.status &&
+          task.board_position === ov.board_position
+        ) {
+          delete next[task.id];
+          changed = true;
+        }
+      }
+      return changed ? next : curr;
+    });
+  }, [tasks, pending]);
+
   const handleDragStart = useCallback((event: DragStartEvent) => {
     setActiveId(String(event.active.id));
   }, []);
+
+  const resolveDrop = useCallback(
+    (overId: string): { status: TaskStatus; insertionIndex: number } | null => {
+      if (TASK_STATUS_COLUMNS.includes(overId as TaskStatus)) {
+        const status = overId as TaskStatus;
+        return { status, insertionIndex: tasksByStatus[status]?.length ?? 0 };
+      }
+      const taskId = overId.replace(/^task-/, "");
+      for (const status of TASK_STATUS_COLUMNS) {
+        const idx = tasksByStatus[status].findIndex((t) => t.id === taskId);
+        if (idx !== -1) return { status, insertionIndex: idx };
+      }
+      return null;
+    },
+    [tasksByStatus],
+  );
 
   const handleDragEnd = useCallback(
     (event: DragEndEvent) => {
@@ -70,18 +158,41 @@ export function TasksKanban({
       if (!over) return;
 
       const taskId = String(active.id).replace(/^task-/, "");
-      const newStatus = String(over.id) as TaskStatus;
-
       const task = tasks.find((t) => t.id === taskId);
-      if (!task || task.status === newStatus) return;
+      if (!task) return;
 
-      undoStackRef.current.push({
+      const drop = resolveDrop(String(over.id));
+      if (!drop) return;
+
+      const currentIdx = tasksByStatus[task.status]?.findIndex(
+        (t) => t.id === taskId,
+      ) ?? -1;
+      // Real no-op only when dropped on itself; ±1 is a genuine reorder.
+      if (
+        task.status === drop.status &&
+        currentIdx === drop.insertionIndex
+      ) {
+        return;
+      }
+
+      const position = positionForInsertion(
+        tasksByStatus[drop.status],
+        drop.insertionIndex,
         taskId,
-        previousStatus: task.status,
-      });
-      onStatusChange(taskId, newStatus);
+      );
+
+      if (task.status !== drop.status) {
+        undoStackRef.current.push({ taskId, previousStatus: task.status });
+        if (undoStackRef.current.length > 50) undoStackRef.current.shift();
+      }
+
+      setPending((curr) => ({
+        ...curr,
+        [taskId]: { status: drop.status, board_position: position },
+      }));
+      onReorder({ taskId, status: drop.status, position });
     },
-    [tasks, onStatusChange],
+    [resolveDrop, tasks, tasksByStatus, onReorder],
   );
 
   // Undo with Cmd+Z
@@ -96,14 +207,6 @@ export function TasksKanban({
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [onStatusChange]);
-
-  const tasksByStatus = TASK_STATUS_COLUMNS.reduce(
-    (acc, status) => {
-      acc[status] = tasks.filter((t) => t.status === status);
-      return acc;
-    },
-    {} as Record<TaskStatus, Task[]>,
-  );
 
   const activeTask = activeId
     ? tasks.find((t) => t.id === String(activeId).replace(/^task-/, ""))
@@ -132,6 +235,7 @@ export function TasksKanban({
       <div className="hidden sm:block flex-1 min-h-0">
         <DndContext
           sensors={sensors}
+          collisionDetection={kanbanCollisionDetection}
           onDragStart={handleDragStart}
           onDragEnd={handleDragEnd}
         >
@@ -155,6 +259,7 @@ export function TasksKanban({
                 task={activeTask}
                 onSelect={() => {}}
                 isDragging
+                presentational
                 canEdit={canEdit}
               />
             ) : null}
@@ -183,6 +288,7 @@ function KanbanColumn({
   const { t } = useTranslation();
   const { setNodeRef, isOver } = useDroppable({ id: status });
   const isEmpty = tasks.length === 0;
+  const itemIds = useMemo(() => tasks.map((t) => `task-${t.id}`), [tasks]);
 
   return (
     <div
@@ -213,15 +319,17 @@ function KanbanColumn({
             —
           </div>
         ) : (
-          tasks.map((task) => (
-            <TaskCard
-              key={task.id}
-              task={task}
-              onSelect={() => onTaskSelect(task.id)}
-              disabled={isUpdating}
-              canEdit={canEdit}
-            />
-          ))
+          <SortableContext items={itemIds} strategy={verticalListSortingStrategy}>
+            {tasks.map((task) => (
+              <TaskCard
+                key={task.id}
+                task={task}
+                onSelect={() => onTaskSelect(task.id)}
+                disabled={isUpdating}
+                canEdit={canEdit}
+              />
+            ))}
+          </SortableContext>
         )}
       </div>
     </div>

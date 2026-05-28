@@ -37,6 +37,7 @@ export interface Lead {
   created_at: string;
   updated_at: string;
   tasks_summary: LeadTasksSummary;
+  board_position: number | null;
 }
 
 export interface LeadHistoryItem {
@@ -116,6 +117,20 @@ export async function getLeadsKanbanCounts(
   return res.data;
 }
 
+export interface CreateLeadBody {
+  first_name?: string | null;
+  last_name?: string | null;
+  email?: string | null;
+  phone?: string | null;
+}
+
+export async function createLead(
+  body: CreateLeadBody
+): Promise<{ id: string }> {
+  const res = await apiClient.post<{ id: string }>("/leads", body);
+  return res.data;
+}
+
 export async function getLead(id: string): Promise<Lead> {
   const res = await apiClient.get<Lead>(`/leads/${id}`);
   return res.data;
@@ -126,6 +141,18 @@ export async function updateLeadStatus(
   status: LeadStatus
 ): Promise<Lead> {
   const res = await apiClient.patch<Lead>(`/leads/${id}`, { status });
+  return res.data;
+}
+
+export async function reorderLead(
+  id: string,
+  status: LeadStatus,
+  position: number,
+): Promise<Lead> {
+  const res = await apiClient.patch<Lead>(`/leads/${id}/reorder`, {
+    status,
+    position,
+  });
   return res.data;
 }
 

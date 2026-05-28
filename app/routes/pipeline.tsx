@@ -10,6 +10,7 @@ import {
   getDeals,
   patchDeal,
   patchDealStatus,
+  reorderDeal,
   type DealListItem,
   type DealStageKey,
   type PaginatedDeals,
@@ -18,7 +19,6 @@ import { DealsPipelineKanban } from "~/components/organism/deals-pipeline-kanban
 import { CreateDealDialog } from "~/components/organism/create-deal-dialog";
 import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
-import { Label } from "~/components/ui/label";
 import {
   Select,
   SelectContent,
@@ -26,7 +26,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "~/components/ui/select";
-import { Plus } from "lucide-react";
+import { Plus, X } from "lucide-react";
 import { toast } from "sonner";
 
 export function meta() {
@@ -132,6 +132,30 @@ export default function PipelinePage() {
     },
   });
 
+  const reorderMutation = useMutation({
+    mutationFn: ({
+      dealId,
+      stage,
+      position,
+    }: {
+      dealId: string;
+      stage: DealStageKey;
+      position: number;
+      snapshots: Snapshots;
+    }) => reorderDeal(dealId, stage, position),
+    onError: (_err, vars) => {
+      rollbackSnapshots(vars.snapshots);
+      toast.error(
+        t("pipeline.errors.moveFailed", { defaultValue: "Could not move deal." }),
+      );
+    },
+    onSettled: () => {
+      void queryClient.invalidateQueries({ queryKey: ["deals-pipeline"] });
+      void queryClient.invalidateQueries({ queryKey: ["contact-deals"] });
+      void queryClient.invalidateQueries({ queryKey: ["deal"] });
+    },
+  });
+
   const terminalMutation = useMutation({
     mutationFn: ({
       dealId,
@@ -203,6 +227,8 @@ export default function PipelinePage() {
     [members],
   );
 
+  const hasFilters = !!(debouncedSearch || assignedTo);
+
   if (!hasAccess) {
     return (
       <div className="p-6 text-sm text-muted-foreground">
@@ -214,79 +240,113 @@ export default function PipelinePage() {
   }
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col p-4 sm:p-6 app-fade-in">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between shrink-0">
-        <h1 className="text-xl sm:text-2xl font-semibold tracking-tight">
-          {t("nav.pipeline", { defaultValue: "Pipeline" })}
-        </h1>
-        <div className="flex flex-wrap items-end gap-2">
-          <div className="space-y-1">
-            <Label className="text-[10px] uppercase text-muted-foreground">
-              {t("pipeline.search", { defaultValue: "Search" })}
-            </Label>
-            <Input
-              className="h-9 w-[200px]"
-              value={search}
-              onChange={(e) => setParam("search", e.target.value)}
-              placeholder={t("pipeline.searchPlaceholder", {
-                defaultValue: "Title or contact…",
-              })}
-            />
-          </div>
-          <div className="space-y-1">
-            <Label className="text-[10px] uppercase text-muted-foreground">
-              {t("contacts.assignedTo", { defaultValue: "Assigned to" })}
-            </Label>
-            <Select
-              value={assignedTo || "all"}
-              onValueChange={(v) =>
-                setParam("assigned_to", v === "all" ? undefined : v)
-              }
-            >
-              <SelectTrigger className="h-9 w-[180px]">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">
-                  {t("pipeline.anyAssignee", { defaultValue: "Anyone" })}
+    <div className="flex flex-col min-h-[calc(100vh-8rem)] p-4 sm:p-6 gap-4 sm:gap-6 app-fade-in">
+      {/* Header */}
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between shrink-0 app-fade-up">
+        <div>
+          <h1 className="text-xl sm:text-2xl font-semibold text-foreground tracking-tight">
+            {t("nav.pipeline", { defaultValue: "Pipeline" })}
+          </h1>
+          <p className="text-sm text-muted-foreground mt-0.5">
+            {t("pipeline.capHint", {
+              defaultValue:
+                "Showing up to 500 deals. Refine search or assignee if needed.",
+            })}
+          </p>
+        </div>
+
+        {canEdit ? (
+          <Button
+            type="button"
+            size="sm"
+            className="h-9 gap-1.5 text-xs"
+            onClick={() => {
+              setNewDealPrefillContactId(null);
+              setNewOpen(true);
+            }}
+          >
+            <Plus className="h-3.5 w-3.5" />
+            {t("pipeline.newDeal", { defaultValue: "New deal" })}
+          </Button>
+        ) : null}
+      </div>
+
+      <div className="border-t border-border shrink-0" />
+
+      {/* Filters */}
+      <div className="flex flex-col sm:flex-row sm:flex-wrap sm:items-center gap-2 sm:gap-3 shrink-0 app-fade-up app-fade-up-d1">
+        <div className="relative flex-1 sm:flex-none">
+          <Input
+            value={search}
+            onChange={(e) => setParam("search", e.target.value)}
+            placeholder={t("pipeline.searchPlaceholder", {
+              defaultValue: "Title or contact…",
+            })}
+            className="h-9 w-full sm:w-[220px] text-sm pr-3"
+          />
+        </div>
+
+        <div className="flex items-center gap-2 flex-wrap">
+          <Select
+            value={assignedTo || "all"}
+            onValueChange={(v) =>
+              setParam("assigned_to", v === "all" ? undefined : v)
+            }
+          >
+            <SelectTrigger className="h-9 w-[180px] text-xs">
+              <SelectValue
+                placeholder={t("contacts.assignedTo", {
+                  defaultValue: "Assigned to",
+                })}
+              />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all" className="text-xs">
+                {t("pipeline.anyAssignee", { defaultValue: "Anyone" })}
+              </SelectItem>
+              {membersForSelect.map((m) => (
+                <SelectItem key={m.id} value={m.id} className="text-xs">
+                  {m.label}
                 </SelectItem>
-                {membersForSelect.map((m) => (
-                  <SelectItem key={m.id} value={m.id}>
-                    {m.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          {canEdit ? (
-            <Button
+              ))}
+            </SelectContent>
+          </Select>
+
+          {hasFilters && (
+            <button
               type="button"
-              size="sm"
-              className="h-9"
+              className="inline-flex items-center gap-1 rounded-full border border-dashed border-border px-3 py-1 text-xs font-medium text-muted-foreground hover:text-foreground hover:border-border/80 transition-colors"
               onClick={() => {
-                setNewDealPrefillContactId(null);
-                setNewOpen(true);
+                const next = new URLSearchParams(searchParams);
+                next.delete("search");
+                next.delete("assigned_to");
+                setSearchParams(next);
               }}
             >
-              <Plus className="mr-1.5 h-4 w-4" />
-              {t("pipeline.newDeal", { defaultValue: "New deal" })}
-            </Button>
-          ) : null}
+              {t("tasks.clearFilters", { defaultValue: "Clear filters" })}{" "}
+              <X size={12} />
+            </button>
+          )}
         </div>
       </div>
 
-      <p className="mt-1 text-xs text-muted-foreground shrink-0">
-        {t("pipeline.capHint", {
-          defaultValue: "Showing up to 500 deals. Refine search or assignee if needed.",
-        })}
-      </p>
-
-      <div className="mt-4 min-h-0 flex-1 flex flex-col">
+      <div className="flex-1 min-h-0 flex flex-col">
         <DealsPipelineKanban
           deals={deals}
           isLoading={dealsQuery.isLoading}
           onStageChange={onStageChange}
           onTerminal={onTerminal}
+          onReorder={({ dealId, stage, position }) => {
+            queryClient.cancelQueries({ queryKey: ["deals-pipeline"] });
+            const snapshots = applyOptimisticDeal(dealId, {
+              stage,
+              board_position: position,
+              ...(stage === "won" || stage === "lost"
+                ? { status: stage }
+                : {}),
+            });
+            reorderMutation.mutate({ dealId, stage, position, snapshots });
+          }}
           isUpdating={false}
           canEdit={canEdit}
           onDealSelect={(id) => navigate(`/pipeline/${id}`)}

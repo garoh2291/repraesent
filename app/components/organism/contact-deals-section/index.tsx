@@ -112,7 +112,7 @@ export function ContactDealsSection({
                   t("contacts.dealsPanel.untitled", { defaultValue: "Untitled deal" });
                 const val =
                   d.value != null && d.value !== ""
-                    ? formatCurrency(Number(d.value), "EUR")
+                    ? formatCurrency(Number(d.value))
                     : null;
                 return (
                   <li key={d.id}>

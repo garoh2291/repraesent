@@ -1,13 +1,18 @@
 import { useMemo, useState } from "react";
 import { Link, useSearchParams } from "react-router";
 import { useTranslation } from "react-i18next";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAuthContext } from "~/providers/auth-provider";
 import {
   getContacts,
+  patchContactCrm,
   type ContactListItem,
   type PaginatedContacts,
 } from "~/lib/api/contacts-crm";
+import {
+  CONTACT_TYPES,
+  type ContactType,
+} from "~/lib/contacts/contact-types";
 import { getWorkspaceDetail } from "~/lib/api/workspaces";
 import { useDebounce } from "~/lib/hooks/useDebounce";
 import { CONTACT_TABLE_FILTERS_BASE } from "~/lib/contacts/filter-presets";
@@ -30,17 +35,17 @@ import {
 import { formatCurrency, formatDate } from "~/lib/utils/format";
 import {
   ArrowRight,
+  Check,
   ChevronDown,
   ChevronLeft,
   ChevronRight,
-  ChevronUp,
-  ChevronsUpDown,
   Mail,
   Phone,
   Search,
   Upload,
   IdCard,
   Info,
+  Plus,
   X,
 } from "lucide-react";
 import {
@@ -65,6 +70,7 @@ import {
 } from "~/components/ui/table";
 import { cn } from "~/lib/utils";
 import { ContactImportModal } from "~/components/organism/contact-import-modal";
+import { CreateContactDialog } from "~/components/organism/create-contact-dialog";
 
 export function meta() {
   return [
@@ -105,123 +111,6 @@ function contactInitials(name: string): string {
   return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
 }
 
-type SortKey =
-  | "name"
-  | "source"
-  | "contact_type"
-  | "ltv"
-  | "pipeline"
-  | "lost"
-  | "assignee"
-  | "last_contacted"
-  | "created";
-type SortDir = "asc" | "desc";
-type SortState = { key: SortKey; dir: SortDir };
-
-const NUMERIC_SORT_KEYS: SortKey[] = ["ltv", "pipeline", "lost"];
-const DATE_SORT_KEYS: SortKey[] = ["last_contacted", "created"];
-
-/** Numeric/date value for a numeric or date column, or null when unset. */
-function rowSortNumber(row: ContactListItem, key: SortKey): number | null {
-  switch (key) {
-    case "ltv":
-      return row.lifetime_value != null ? Number(row.lifetime_value) : null;
-    case "pipeline":
-      return row.pipeline_value != null ? Number(row.pipeline_value) : null;
-    case "lost":
-      return row.lost_value != null ? Number(row.lost_value) : null;
-    case "last_contacted":
-      return row.last_contacted_at
-        ? new Date(row.last_contacted_at).getTime()
-        : null;
-    case "created":
-      return row.created_at ? new Date(row.created_at).getTime() : null;
-    default:
-      return null;
-  }
-}
-
-/** Lowercased string value for a text column. */
-function rowSortText(row: ContactListItem, key: SortKey): string {
-  switch (key) {
-    case "name":
-      return (row.contact_full_name ?? "").trim().toLowerCase();
-    case "source":
-      return (row.source ?? "").toLowerCase();
-    case "contact_type":
-      return (row.contact_type ?? "").toLowerCase();
-    case "assignee":
-      return [row.assignee_first_name, row.assignee_last_name]
-        .filter(Boolean)
-        .join(" ")
-        .trim()
-        .toLowerCase();
-    default:
-      return "";
-  }
-}
-
-/** Compare two rows for a column. Empty/null values always sort last. */
-function compareRows(
-  a: ContactListItem,
-  b: ContactListItem,
-  sort: SortState,
-): number {
-  const mul = sort.dir === "asc" ? 1 : -1;
-  if (
-    NUMERIC_SORT_KEYS.includes(sort.key) ||
-    DATE_SORT_KEYS.includes(sort.key)
-  ) {
-    const av = rowSortNumber(a, sort.key);
-    const bv = rowSortNumber(b, sort.key);
-    if (av == null && bv == null) return 0;
-    if (av == null) return 1;
-    if (bv == null) return -1;
-    return (av - bv) * mul;
-  }
-  const av = rowSortText(a, sort.key);
-  const bv = rowSortText(b, sort.key);
-  if (!av && !bv) return 0;
-  if (!av) return 1;
-  if (!bv) return -1;
-  return av.localeCompare(bv) * mul;
-}
-
-/** Sortable header label: click cycles asc → desc → unsorted, like the leads table. */
-function SortButton({
-  sortKey,
-  sort,
-  onToggle,
-  children,
-}: {
-  sortKey: SortKey;
-  sort: SortState | null;
-  onToggle: (key: SortKey) => void;
-  children: React.ReactNode;
-}) {
-  const active = sort?.key === sortKey;
-  const Icon = !active
-    ? ChevronsUpDown
-    : sort!.dir === "asc"
-      ? ChevronUp
-      : ChevronDown;
-  return (
-    <button
-      type="button"
-      onClick={() => onToggle(sortKey)}
-      className="inline-flex select-none items-center gap-1 hover:text-foreground transition-colors"
-    >
-      {children}
-      <Icon
-        className={cn(
-          "h-3.5 w-3.5 shrink-0",
-          active ? "text-foreground" : "text-muted-foreground/50",
-        )}
-      />
-    </button>
-  );
-}
-
 export default function ContactsPage() {
   const { t } = useTranslation();
   const { currentWorkspace } = useAuthContext();
@@ -247,6 +136,7 @@ export default function ContactsPage() {
     open: boolean;
     mode: "csv" | "vcard" | "xlsx";
   }>({ open: false, mode: "csv" });
+  const [createOpen, setCreateOpen] = useState(false);
 
   const hasAccess =
     currentWorkspace?.services?.some(
@@ -287,19 +177,37 @@ export default function ContactsPage() {
   const isLoading = tableQuery.isLoading;
   const isError = tableQuery.isError;
 
-  const [sort, setSort] = useState<SortState | null>(null);
-  const toggleSort = (key: SortKey) => {
-    setSort((prev) => {
-      if (!prev || prev.key !== key) return { key, dir: "asc" };
-      if (prev.dir === "asc") return { key, dir: "desc" };
-      return null;
-    });
-  };
-  const sortedRows = useMemo(() => {
-    const rows = data?.data ?? [];
-    if (!sort) return rows;
-    return [...rows].sort((a, b) => compareRows(a, b, sort));
-  }, [data, sort]);
+  const queryClient = useQueryClient();
+  const contactTypeMutation = useMutation({
+    mutationFn: ({ id, type }: { id: string; type: ContactType }) =>
+      patchContactCrm(id, { contact_type: type }),
+    onMutate: async ({ id, type }) => {
+      await queryClient.cancelQueries({ queryKey: ["contacts", "table"] });
+      const prev = queryClient.getQueriesData<PaginatedContacts>({
+        queryKey: ["contacts", "table"],
+      });
+      for (const [key, value] of prev) {
+        if (!value) continue;
+        queryClient.setQueryData<PaginatedContacts>(key, {
+          ...value,
+          data: value.data.map((r) =>
+            r.id === id ? { ...r, contact_type: type } : r,
+          ),
+        });
+      }
+      return { prev };
+    },
+    onError: (_err, _vars, ctx) => {
+      if (!ctx?.prev) return;
+      for (const [key, value] of ctx.prev) {
+        queryClient.setQueryData(key, value);
+      }
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ["contacts", "table"] });
+    },
+  });
+
 
   const setParam = (updates: Record<string, string | undefined>) => {
     const next = new URLSearchParams(searchParams);
@@ -397,6 +305,14 @@ export default function ContactsPage() {
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
+          <Button
+            size="sm"
+            className="h-9 gap-1.5 text-xs"
+            onClick={() => setCreateOpen(true)}
+          >
+            <Plus className="h-3.5 w-3.5" />
+            {t("contacts.newContactButton", { defaultValue: "New contact" })}
+          </Button>
         </div>
       </div>
 
@@ -463,47 +379,25 @@ export default function ContactsPage() {
               <TableHeader>
                 <TableRow>
                   <TableHead className="h-auto min-h-10 whitespace-normal px-4 py-3 text-left align-middle font-medium">
-                    <div className="flex w-full justify-start items-center">
-                      <SortButton sortKey="name" sort={sort} onToggle={toggleSort}>
-                        {t("contacts.columns.customer", {
-                          defaultValue: "Contact",
-                        })}
-                      </SortButton>
-                    </div>
+                    {t("contacts.columns.customer", {
+                      defaultValue: "Contact",
+                    })}
                   </TableHead>
                   <TableHead className="h-auto min-h-10 whitespace-normal px-4 py-3 text-left align-middle font-medium">
-                    <div className="flex w-full justify-start items-center">
-                      <SortButton
-                        sortKey="source"
-                        sort={sort}
-                        onToggle={toggleSort}
-                      >
-                        {t("contacts.columns.source", {
-                          defaultValue: "Source",
-                        })}
-                      </SortButton>
-                    </div>
+                    {t("contacts.columns.source", {
+                      defaultValue: "Source",
+                    })}
                   </TableHead>
                   <TableHead className="h-auto min-h-10 whitespace-normal px-4 py-3 text-left align-middle font-medium">
-                    <div className="flex w-full justify-start items-center">
-                      <SortButton
-                        sortKey="contact_type"
-                        sort={sort}
-                        onToggle={toggleSort}
-                      >
-                        {t("contacts.columns.contactType", {
-                          defaultValue: "Contact type",
-                        })}
-                      </SortButton>
-                    </div>
+                    {t("contacts.columns.contactType", {
+                      defaultValue: "Contact type",
+                    })}
                   </TableHead>
                   <TableHead className="h-auto min-h-10 whitespace-normal px-4 py-3 text-left align-middle font-medium">
                     <div className="flex w-full justify-start items-center gap-1">
-                      <SortButton sortKey="ltv" sort={sort} onToggle={toggleSort}>
-                        {t("contacts.columns.lifetimeValue", {
-                          defaultValue: "LTV",
-                        })}
-                      </SortButton>
+                      {t("contacts.columns.lifetimeValue", {
+                        defaultValue: "LTV",
+                      })}
                       <Tooltip>
                         <TooltipTrigger asChild>
                           <Info className="h-3.5 w-3.5 text-muted-foreground/70 cursor-help" />
@@ -519,15 +413,9 @@ export default function ContactsPage() {
                   </TableHead>
                   <TableHead className="h-auto min-h-10 whitespace-normal px-4 py-3 text-left align-middle font-medium">
                     <div className="flex w-full justify-start items-center gap-1">
-                      <SortButton
-                        sortKey="pipeline"
-                        sort={sort}
-                        onToggle={toggleSort}
-                      >
-                        {t("contacts.columns.pipelineValue", {
-                          defaultValue: "Pipeline",
-                        })}
-                      </SortButton>
+                      {t("contacts.columns.pipelineValue", {
+                        defaultValue: "Pipeline",
+                      })}
                       <Tooltip>
                         <TooltipTrigger asChild>
                           <Info className="h-3.5 w-3.5 text-muted-foreground/70 cursor-help" />
@@ -543,11 +431,9 @@ export default function ContactsPage() {
                   </TableHead>
                   <TableHead className="h-auto min-h-10 whitespace-normal px-4 py-3 text-left align-middle font-medium">
                     <div className="flex w-full justify-start items-center gap-1">
-                      <SortButton sortKey="lost" sort={sort} onToggle={toggleSort}>
-                        {t("contacts.columns.lostValue", {
-                          defaultValue: "Lost",
-                        })}
-                      </SortButton>
+                      {t("contacts.columns.lostValue", {
+                        defaultValue: "Lost",
+                      })}
                       <Tooltip>
                         <TooltipTrigger asChild>
                           <Info className="h-3.5 w-3.5 text-muted-foreground/70 cursor-help" />
@@ -562,43 +448,19 @@ export default function ContactsPage() {
                     </div>
                   </TableHead>
                   <TableHead className="h-auto min-h-10 whitespace-normal px-4 py-3 text-left align-middle font-medium">
-                    <div className="flex w-full justify-start items-center">
-                      <SortButton
-                        sortKey="assignee"
-                        sort={sort}
-                        onToggle={toggleSort}
-                      >
-                        {t("contacts.columns.assignee", {
-                          defaultValue: "Assignee",
-                        })}
-                      </SortButton>
-                    </div>
+                    {t("contacts.columns.assignee", {
+                      defaultValue: "Assignee",
+                    })}
                   </TableHead>
                   <TableHead className="h-auto min-h-10 whitespace-normal px-4 py-3 text-left align-middle font-medium">
-                    <div className="flex w-full justify-start items-center">
-                      <SortButton
-                        sortKey="last_contacted"
-                        sort={sort}
-                        onToggle={toggleSort}
-                      >
-                        {t("contacts.columns.lastContacted", {
-                          defaultValue: "Last contacted",
-                        })}
-                      </SortButton>
-                    </div>
+                    {t("contacts.columns.lastContacted", {
+                      defaultValue: "Last contacted",
+                    })}
                   </TableHead>
                   <TableHead className="h-auto min-h-10 whitespace-normal px-4 py-3 text-left align-middle font-medium">
-                    <div className="flex w-full justify-start items-center">
-                      <SortButton
-                        sortKey="created"
-                        sort={sort}
-                        onToggle={toggleSort}
-                      >
-                        {t("contacts.columns.created", {
-                          defaultValue: "Created",
-                        })}
-                      </SortButton>
-                    </div>
+                    {t("contacts.columns.created", {
+                      defaultValue: "Created",
+                    })}
                   </TableHead>
                   <TableHead className="h-auto min-h-10 w-[80px] whitespace-normal px-4 py-3 text-left align-middle font-medium">
                     <div className="flex w-full justify-start items-center" />
@@ -630,7 +492,7 @@ export default function ContactsPage() {
                     </TableCell>
                   </TableRow>
                 ) : (
-                  sortedRows.map((row) => {
+                  (data?.data ?? []).map((row) => {
                     const name = row.contact_full_name?.trim() || "—";
                     const email = row.primary_email?.trim() ?? "";
                     const phone = row.primary_phone?.trim() ?? "";
@@ -696,7 +558,50 @@ export default function ContactsPage() {
                           <ContactSourceBadge source={row.source} />
                         </TableCell>
                         <TableCell className="whitespace-normal px-4 py-3 align-middle text-left">
-                          <ContactTypeBadge contactType={row.contact_type} />
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <button
+                                type="button"
+                                className="group inline-flex items-center rounded-full transition-opacity hover:opacity-80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+                                aria-label={t("contacts.columns.contactType", {
+                                  defaultValue: "Contact type",
+                                })}
+                              >
+                                <ContactTypeBadge
+                                  contactType={row.contact_type}
+                                  trailing={
+                                    <ChevronDown className="h-3 w-3 -mr-0.5 opacity-70 transition-transform group-data-[state=open]:rotate-180" />
+                                  }
+                                />
+                              </button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent
+                              align="start"
+                              className="w-48 p-1"
+                            >
+                              {CONTACT_TYPES.map((ct) => {
+                                const isActive = row.contact_type === ct;
+                                return (
+                                  <DropdownMenuItem
+                                    key={ct}
+                                    onSelect={() => {
+                                      if (isActive) return;
+                                      contactTypeMutation.mutate({
+                                        id: row.id,
+                                        type: ct,
+                                      });
+                                    }}
+                                    className="flex items-center justify-between gap-2 py-1.5 px-2"
+                                  >
+                                    <ContactTypeBadge contactType={ct} />
+                                    {isActive ? (
+                                      <Check className="h-3.5 w-3.5 text-muted-foreground" />
+                                    ) : null}
+                                  </DropdownMenuItem>
+                                );
+                              })}
+                            </DropdownMenuContent>
+                          </DropdownMenu>
                         </TableCell>
                         <TableCell className="whitespace-normal px-4 py-3 align-middle text-left tabular-nums">
                           {ltvNum != null && Number.isFinite(ltvNum) ? (
@@ -869,6 +774,7 @@ export default function ContactsPage() {
         importMode={importModal.mode}
         onOpenChange={(o) => setImportModal((s) => ({ ...s, open: o }))}
       />
+      <CreateContactDialog open={createOpen} onOpenChange={setCreateOpen} />
     </div>
   );
 }

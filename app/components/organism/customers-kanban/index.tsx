@@ -27,6 +27,7 @@ import type { ContactListItem } from "~/lib/api/contacts-crm";
 import { Avatar, AvatarFallback } from "~/components/ui/avatar";
 
 const TYPE_COLORS: Record<ContactType, string> = {
+  contact: "bg-slate-500",
   customer: "bg-emerald-500",
   trade_partner: "bg-blue-500",
   supplier: "bg-violet-500",
