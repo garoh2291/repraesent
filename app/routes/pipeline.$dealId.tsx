@@ -13,6 +13,7 @@ import {
   Tag,
   Trash2,
   User as UserIcon,
+  UserPlus,
 } from "lucide-react";
 import { toast } from "sonner";
 import { useAuthContext } from "~/providers/auth-provider";
@@ -26,6 +27,7 @@ import {
   patchDealStatus,
   DEAL_STAGE_KEYS,
   parseDealValue,
+  formatDealValueInput,
   type DealListItem,
   type DealStageKey,
   type PaginatedDeals,
@@ -62,6 +64,7 @@ import {
 import { LeadTasksSection } from "~/components/organism/tasks/lead-tasks-section";
 import { LeadHistorySection } from "~/components/organism/lead-detail-sheet";
 import { LeadNotesSection } from "~/components/organism/lead-notes-section";
+import { CreateContactDialog } from "~/components/organism/create-contact-dialog";
 import type { WorkspaceMemberItem } from "~/components/organism/tasks/task-form-modal";
 import {
   DatePickerPopover,
@@ -157,6 +160,7 @@ export default function PipelineDealDetailPage() {
   const [contactSelectValue, setContactSelectValue] = useState<string>("none");
   const [expectedClose, setExpectedClose] = useState("");
   const [deleteOpen, setDeleteOpen] = useState(false);
+  const [createContactOpen, setCreateContactOpen] = useState(false);
 
   const hasAccess =
     currentWorkspace?.services?.some(
@@ -207,7 +211,7 @@ export default function PipelineDealDetailPage() {
     if (!deal) return;
     setTitle(str(deal.title));
     const v = deal.value;
-    setValueStr(v != null && v !== "" ? String(v) : "");
+    setValueStr(v != null && v !== "" ? formatDealValueInput(String(v)) : "");
     setAssignee(deal.assigned_to ? String(deal.assigned_to) : "unassigned");
     const st = str(deal.stage) as DealStageKey;
     setStage(
@@ -497,7 +501,9 @@ export default function PipelineDealDetailPage() {
   // changes (and re-disables itself if the user reverts their edits).
   const baseTitle = str(deal.title);
   const baseValueStr =
-    deal.value != null && deal.value !== "" ? String(deal.value) : "";
+    deal.value != null && deal.value !== ""
+      ? formatDealValueInput(String(deal.value))
+      : "";
   const baseAssignee = deal.assigned_to ? String(deal.assigned_to) : "unassigned";
   const baseExpectedClose = apiDatetimeToIsoDateString(deal.expected_close_date);
 
@@ -520,7 +526,7 @@ export default function PipelineDealDetailPage() {
   const numericValue = parseDealValue(valueStr);
   const valueNegative = numericValue != null && numericValue < 0;
   const valueDisplay =
-    numericValue != null ? formatCurrency(numericValue, "EUR") : "—";
+    numericValue != null ? formatCurrency(numericValue) : "—";
 
   const assigneeMember = workspaceMembers.find((m) => m.user_id === assignee);
   const assigneeName = assigneeMember
@@ -561,8 +567,7 @@ export default function PipelineDealDetailPage() {
       </div>
 
       {/* HERO */}
-      <div className="relative">
-        <section className="app-fade-up overflow-hidden rounded-2xl border border-border bg-card shadow-(--shadow)">
+      <section className="app-fade-up overflow-hidden rounded-2xl border border-border bg-card shadow-(--shadow)">
           <div
             aria-hidden
             className={cn(
@@ -671,31 +676,6 @@ export default function PipelineDealDetailPage() {
         </div>
       </section>
 
-        {canEdit ? (
-          <TooltipProvider delayDuration={200}>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon"
-                  aria-label={t("pipeline.deleteDeal", {
-                    defaultValue: "Delete deal",
-                  })}
-                  className="absolute right-2 top-2 h-8 w-8 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
-                  onClick={() => setDeleteOpen(true)}
-                >
-                  <Trash2 className="h-4 w-4" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent side="left">
-                {t("pipeline.deleteDeal", { defaultValue: "Delete deal" })}
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
-        ) : null}
-      </div>
-
       <div className="grid grid-cols-1 gap-4 sm:gap-6 lg:grid-cols-5">
         {/* LEFT — main */}
         <div className="space-y-4 sm:space-y-6 lg:col-span-3">
@@ -750,7 +730,11 @@ export default function PipelineDealDetailPage() {
                 <Input
                   id="deal-detail-value"
                   value={valueStr}
-                  onChange={(e) => setValueStr(e.target.value)}
+                  onChange={(e) => {
+                    const raw = e.target.value.replace(/,/g, "");
+                    if (raw !== "" && !/^\d*\.?\d*$/.test(raw)) return;
+                    setValueStr(formatDealValueInput(e.target.value));
+                  }}
                   disabled={!canEdit}
                   inputMode="decimal"
                   aria-invalid={valueNegative}
@@ -976,52 +960,74 @@ export default function PipelineDealDetailPage() {
                 </div>
               ) : canEdit ? (
                 <div className="space-y-2">
-                  <Select
-                    value={contactSelectValue}
-                    onValueChange={(v) => {
-                      setContactSelectValue(v);
-                      if (v && v !== "none") contactMutation.mutate(v);
-                    }}
-                    disabled={
-                      contactMutation.isPending || contactsQuery.isLoading
-                    }
-                  >
-                    <SelectTrigger>
-                      <SelectValue
-                        placeholder={
-                          contactsQuery.isLoading
-                            ? t("common.loading")
-                            : t("pipeline.selectContact", {
-                                defaultValue: "Link a contact…",
-                              })
-                        }
-                      />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="none">
-                        {t("pipeline.noContactOption", {
-                          defaultValue: "No contact",
+                  <div className="flex items-center gap-2">
+                    <Select
+                      value={contactSelectValue}
+                      onValueChange={(v) => {
+                        setContactSelectValue(v);
+                        if (v && v !== "none") contactMutation.mutate(v);
+                      }}
+                      disabled={
+                        contactMutation.isPending || contactsQuery.isLoading
+                      }
+                    >
+                      <SelectTrigger className="flex-1">
+                        <SelectValue
+                          placeholder={
+                            contactsQuery.isLoading
+                              ? t("common.loading")
+                              : t("pipeline.selectContact", {
+                                  defaultValue: "Link a contact…",
+                                })
+                          }
+                        />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="none">
+                          {t("pipeline.noContactOption", {
+                            defaultValue: "Select a contact",
+                          })}
+                        </SelectItem>
+                        {contactOptions.map((c) => {
+                          const label =
+                            (c.contact_full_name || "").trim() ||
+                            c.primary_email ||
+                            c.primary_phone ||
+                            c.id;
+                          return (
+                            <SelectItem key={c.id} value={c.id}>
+                              {label}
+                            </SelectItem>
+                          );
                         })}
-                      </SelectItem>
-                      {contactOptions.map((c) => {
-                        const label =
-                          (c.contact_full_name || "").trim() ||
-                          c.primary_email ||
-                          c.primary_phone ||
-                          c.id;
-                        return (
-                          <SelectItem key={c.id} value={c.id}>
-                            {label}
-                          </SelectItem>
-                        );
-                      })}
-                    </SelectContent>
-                  </Select>
+                      </SelectContent>
+                    </Select>
+                    <TooltipProvider delayDuration={200}>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="icon"
+                            className="shrink-0"
+                            onClick={() => setCreateContactOpen(true)}
+                          >
+                            <UserPlus className="h-4 w-4" />
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent side="top">
+                          {t("contacts.newContactTitle", {
+                            defaultValue: "New contact",
+                          })}
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  </div>
                   {contactOptions.length === 0 && !contactsQuery.isLoading ? (
                     <p className="text-xs text-muted-foreground">
                       {t("pipeline.noContactsAvailable", {
                         defaultValue:
-                          "No contacts yet. Create one from the contacts page.",
+                          "No contacts yet. Create one with the button above.",
                       })}
                     </p>
                   ) : null}
@@ -1125,6 +1131,29 @@ export default function PipelineDealDetailPage() {
           </div>
         </div>
       </div>
+
+      <CreateContactDialog
+        open={createContactOpen}
+        onOpenChange={setCreateContactOpen}
+        onCreated={(newContactId) => {
+          contactMutation.mutate(newContactId);
+        }}
+      />
+
+      {canEdit ? (
+        <div className="flex justify-end">
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            className="text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+            onClick={() => setDeleteOpen(true)}
+          >
+            <Trash2 className="h-4 w-4 mr-1.5" />
+            {t("common.delete", { defaultValue: "Delete" })}
+          </Button>
+        </div>
+      ) : null}
 
       <AlertDialog open={deleteOpen} onOpenChange={setDeleteOpen}>
         <AlertDialogContent>

@@ -30,9 +30,9 @@ const CARD_WIDTH = 280;
 const CARD_GAP = 16;
 const CARD_STEP = CARD_WIDTH + CARD_GAP;
 
-function formatPrice(amount: string | null, currency: string | null): string {
+function formatPrice(amount: string | null): string {
   if (amount == null) return "—";
-  return formatCurrencyFromCents(Number(amount), currency ?? "EUR");
+  return formatCurrencyFromCents(Number(amount));
 }
 
 function getSavingPercent(product: VisibleStripeProduct): number {
@@ -126,7 +126,7 @@ function ProductCard({
           {price ? (
             <div className="flex items-end gap-2 flex-wrap">
               <span className="text-2xl font-bold text-foreground tracking-tight">
-                {formatPrice(price.unit_amount, price.currency)}
+                {formatPrice(price.unit_amount)}
               </span>
               <span className="text-sm text-muted-foreground pb-0.5">
                 /{interval === "month" ? t("onboarding.products.perMonthShort") : t("onboarding.products.perYearShort")}

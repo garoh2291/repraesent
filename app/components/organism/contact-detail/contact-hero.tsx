@@ -12,6 +12,7 @@ import {
   PhoneCall,
   CalendarClock,
   Briefcase,
+  Plus,
 } from "lucide-react";
 import { Avatar, AvatarFallback } from "~/components/ui/avatar";
 import { ContactSourceBadge } from "~/components/molecule/contact-badges";
@@ -19,6 +20,10 @@ import { toast } from "sonner";
 import { cn } from "~/lib/utils";
 import { formatDate } from "~/lib/utils/format";
 import type { ContactDetail } from "~/lib/api/contacts-crm";
+import {
+  CreateContactDialog,
+  type CreateContactInitialValues,
+} from "~/components/organism/create-contact-dialog";
 
 export type { ContactDetail };
 
@@ -81,6 +86,8 @@ interface CopyChipProps {
   };
   secondary?: string;
   fallback?: string;
+  onAdd?: () => void;
+  addLabel?: string;
 }
 
 function CopyChip({
@@ -90,10 +97,13 @@ function CopyChip({
   hrefAction,
   secondary,
   fallback,
+  onAdd,
+  addLabel,
 }: CopyChipProps) {
   const [copied, setCopied] = useState(false);
   const { t } = useTranslation();
   const isEmpty = !value;
+  const showAddAction = isEmpty && !!onAdd;
 
   const copy = async () => {
     if (isEmpty) return;
@@ -113,10 +123,25 @@ function CopyChip({
 
   return (
     <div
+      role={showAddAction ? "button" : undefined}
+      tabIndex={showAddAction ? 0 : undefined}
+      onClick={showAddAction ? onAdd : undefined}
+      onKeyDown={
+        showAddAction
+          ? (e) => {
+              if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault();
+                onAdd?.();
+              }
+            }
+          : undefined
+      }
       className={cn(
         "group relative flex items-start gap-3 rounded-xl border border-border/70 bg-card/60 px-3.5 py-3 transition-all",
         "hover:border-border hover:bg-card hover:shadow-(--shadow-sm)",
-        isEmpty && "opacity-60"
+        isEmpty && !showAddAction && "opacity-60",
+        showAddAction &&
+          "cursor-pointer border-dashed border-primary/30 hover:border-primary/50 hover:bg-primary/3"
       )}
     >
       <div
@@ -132,15 +157,22 @@ function CopyChip({
         <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">
           {label}
         </p>
-        <p
-          className={cn(
-            "mt-0.5 truncate text-sm font-medium text-foreground",
-            isEmpty && "italic text-muted-foreground/80"
-          )}
-          title={value || fallback}
-        >
-          {value || fallback || "—"}
-        </p>
+        {showAddAction ? (
+          <p className="mt-0.5 inline-flex items-center gap-1 text-sm font-medium text-primary">
+            <Plus className="h-3.5 w-3.5" />
+            {addLabel || fallback || "—"}
+          </p>
+        ) : (
+          <p
+            className={cn(
+              "mt-0.5 truncate text-sm font-medium text-foreground",
+              isEmpty && "italic text-muted-foreground/80"
+            )}
+            title={value || fallback}
+          >
+            {value || fallback || "—"}
+          </p>
+        )}
         {secondary ? (
           <p className="mt-0.5 truncate text-[11px] text-muted-foreground">
             {secondary}
@@ -192,6 +224,8 @@ interface ContactHeroProps {
   viewContactId?: string | null;
   /** When set with `viewContactId`, shows a chip that opens the shared Create deal dialog. */
   onOpenCreateDeal?: () => void;
+  canEdit?: boolean;
+  onInvalidate?: () => void;
 }
 
 export function ContactHero({
@@ -204,9 +238,12 @@ export function ContactHero({
   leadId,
   viewContactId,
   onOpenCreateDeal,
+  canEdit,
+  onInvalidate,
 }: ContactHeroProps) {
   const { t } = useTranslation();
   const contactId = contact?.id ? String(contact.id) : null;
+  const [addInfoOpen, setAddInfoOpen] = useState(false);
 
   const primaryEmailRow = useMemo(() => {
     return findContactPrimary(emails, contactId);
@@ -240,6 +277,22 @@ export function ContactHero({
     | string
     | null
     | undefined;
+
+  const initialValues = useMemo<CreateContactInitialValues>(
+    () => ({
+      firstName: contact?.first_name ? String(contact.first_name) : undefined,
+      lastName: contact?.last_name ? String(contact.last_name) : undefined,
+      email: emailValue || undefined,
+      phone: phoneValue || undefined,
+      contactType: contact?.contact_type
+        ? String(contact.contact_type)
+        : undefined,
+    }),
+    [contact, emailValue, phoneValue],
+  );
+
+  const showAddActions = canEdit && !!contactId;
+  const handleOpenAddInfo = () => setAddInfoOpen(true);
 
   return (
     <section className="app-fade-up overflow-hidden rounded-2xl border border-border bg-card shadow-(--shadow)">
@@ -335,6 +388,8 @@ export function ContactHero({
                   }
                 : undefined
             }
+            onAdd={showAddActions && !emailValue ? handleOpenAddInfo : undefined}
+            addLabel={t("contacts.addEmail", { defaultValue: "Add email" })}
           />
           <CopyChip
             icon={<Phone />}
@@ -357,6 +412,8 @@ export function ContactHero({
                   }
                 : undefined
             }
+            onAdd={showAddActions && !phoneValue ? handleOpenAddInfo : undefined}
+            addLabel={t("contacts.addPhone", { defaultValue: "Add phone number" })}
           />
           <CopyChip
             icon={<MapPin />}
@@ -380,9 +437,21 @@ export function ContactHero({
                   }
                 : undefined
             }
+            onAdd={showAddActions && !addressValue ? handleOpenAddInfo : undefined}
+            addLabel={t("contacts.addAddress", { defaultValue: "Add address" })}
           />
         </div>
       </div>
+
+      {showAddActions ? (
+        <CreateContactDialog
+          open={addInfoOpen}
+          onOpenChange={setAddInfoOpen}
+          editContactId={contactId!}
+          initialValues={initialValues}
+          onUpdated={onInvalidate}
+        />
+      ) : null}
     </section>
   );
 }

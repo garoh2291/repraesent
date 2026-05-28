@@ -1,7 +1,7 @@
 import { useState, useCallback, useEffect, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
-import { Link } from "react-router";
+import { useNavigate } from "react-router";
 import { formatDate, formatRelativeTime } from "~/lib/utils/format";
 import { Pencil, Trash2, ExternalLink, CalendarIcon, X } from "lucide-react";
 import {
@@ -121,6 +121,7 @@ export function TaskDetailModal({
   historyContactId,
 }: TaskDetailModalProps) {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { user: currentUser } = useAuthContext();
 
@@ -254,20 +255,42 @@ export function TaskDetailModal({
                       </DialogTitle>
                     </TooltipContainer>
 
-                    {/* Attached lead */}
-                    {task.lead_full_name && (
-                      <div className="mt-1 flex items-center gap-1 text-xs text-muted-foreground">
-                        <span>{t("tasks.detail.attachedLead")}:</span>
-                        <Link
-                          to={`/lead-form/${task.entity_id}`}
-                          className="font-medium text-foreground hover:underline inline-flex items-center gap-0.5"
-                          onClick={() => onOpenChange(false)}
-                        >
-                          {task.lead_full_name}
-                          <ExternalLink className="h-2.5 w-2.5" />
-                        </Link>
-                      </div>
-                    )}
+                    {/* Attached entity (lead, contact, or deal) */}
+                    {task.lead_full_name &&
+                      (() => {
+                        const entityRoute =
+                          task.entity_table === "leads"
+                            ? `/lead-form/${task.entity_id}`
+                            : task.entity_table === "contacts"
+                              ? `/contacts/${task.entity_id}`
+                              : task.entity_table === "deals"
+                                ? `/pipeline/${task.entity_id}`
+                                : null;
+                        const labelKey =
+                          task.entity_table === "contacts"
+                            ? "tasks.detail.attachedContact"
+                            : task.entity_table === "deals"
+                              ? "tasks.detail.attachedDeal"
+                              : "tasks.detail.attachedLead";
+                        if (!entityRoute) return null;
+                        return (
+                          <div className="mt-1 flex items-center gap-1 text-xs text-muted-foreground">
+                            <span>{t(labelKey)}:</span>
+                            <button
+                              type="button"
+                              className="font-medium text-foreground hover:underline inline-flex items-center gap-0.5 cursor-pointer"
+                              onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                navigate(entityRoute);
+                              }}
+                            >
+                              {task.lead_full_name}
+                              <ExternalLink className="h-2.5 w-2.5" />
+                            </button>
+                          </div>
+                        );
+                      })()}
                   </div>
 
                   {/* Action buttons — placed next to title, clear of the X button via pr-12 */}

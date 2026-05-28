@@ -105,7 +105,8 @@ export function LeadImportModal({ open, onOpenChange }: LeadImportModalProps) {
     onSuccess: (data) => {
       toast.success(t("leads.import.importedSuccess", { count: data.created }));
       queryClient.invalidateQueries({ queryKey: ["leads"] });
-      queryClient.invalidateQueries({ queryKey: ["leadStats"] });
+      queryClient.invalidateQueries({ queryKey: ["leads-kanban-column"] });
+      queryClient.invalidateQueries({ queryKey: ["leads-kanban-counts"] });
       handleClose();
     },
     onError: (error) => {

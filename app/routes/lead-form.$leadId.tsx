@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useParams, useNavigate } from "react-router";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { useAuthContext } from "~/providers/auth-provider";
 import {
@@ -15,25 +15,8 @@ import { getWorkspaceDetail } from "~/lib/api/workspaces";
 import type { WorkspaceMemberItem } from "~/components/organism/tasks/task-form-modal";
 import { useCanEditLeads } from "~/lib/hooks/useCanEditLeads";
 import { useUpdateLeadStatus } from "~/lib/hooks/useUpdateLeadStatus";
-import { ArrowLeft, UserPlus, UserCheck } from "lucide-react";
-import { toast } from "sonner";
-import { Button } from "~/components/ui/button";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "~/components/ui/alert-dialog";
-import {
-  getContactIdByLead,
-  convertLeadToContact,
-  getContact,
-} from "~/lib/api/contacts-crm";
-import { LeadContactConversionSuccessModal } from "~/components/organism/lead-contact-conversion-success-modal";
+import { ArrowLeft, UserCheck } from "lucide-react";
+import { getContactIdByLead, getContact } from "~/lib/api/contacts-crm";
 import { ContactHero } from "~/components/organism/contact-detail/contact-hero";
 import { CreateDealDialog } from "~/components/organism/create-deal-dialog";
 import i18n from "~/i18n";
@@ -55,12 +38,7 @@ export default function LeadFormLeadId() {
   });
   const { leadId } = useParams<{ leadId: string }>();
   const navigate = useNavigate();
-  const queryClient = useQueryClient();
   const { currentWorkspace } = useAuthContext();
-  const [conversionSuccessRouteId, setConversionSuccessRouteId] = useState<
-    string | null
-  >(null);
-  const [convertConfirmOpen, setConvertConfirmOpen] = useState(false);
   const [createDealOpen, setCreateDealOpen] = useState(false);
   const [createDealPrefillContactId, setCreateDealPrefillContactId] = useState<
     string | null
@@ -108,30 +86,8 @@ export default function LeadFormLeadId() {
     enabled: !!linkedContactId,
   });
 
-  const convertMutation = useMutation({
-    mutationFn: () => convertLeadToContact(leadId!),
-    onSuccess: (res) => {
-      void queryClient.invalidateQueries({
-        queryKey: ["contact-by-lead", leadId],
-      });
-      void queryClient.invalidateQueries({ queryKey: ["contacts"] });
-      void queryClient.invalidateQueries({ queryKey: ["lead", leadId] });
-      setConvertConfirmOpen(false);
-      setConversionSuccessRouteId(res.id);
-      toast.success(
-        t("leads.detail.convertToContactSuccess", {
-          defaultValue: "Contact created.",
-        })
-      );
-    },
-    onError: () => {
-      toast.error(
-        t("leads.detail.convertToContactError", {
-          defaultValue: "Could not create contact.",
-        })
-      );
-    },
-  });
+  const contactLinkLoading =
+    linkedContactLoading || (!!linkedContactId && !linkedContactData);
 
   const { data: history = [], isLoading: historyLoading } = useQuery({
     queryKey: ["lead-history", leadId],
@@ -283,72 +239,15 @@ export default function LeadFormLeadId() {
             }
           />
         </div>
+      ) : contactLinkLoading ? (
+        <div className="app-fade-up rounded-xl border border-border bg-muted/30 px-4 py-3 text-sm text-muted-foreground">
+          {t("common.loading")}
+        </div>
       ) : (
-        <div className="app-fade-up rounded-xl border border-border bg-muted/30 px-4 py-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-          <div className="text-sm text-muted-foreground">
-            {linkedContactLoading ? (
-              <span>{t("common.loading")}</span>
-            ) : (
-              <span>
-                {t("leads.detail.convertHint", {
-                  defaultValue: "Convert this lead to a contact",
-                })}
-              </span>
-            )}
-          </div>
-          {!linkedContactId && canEdit && !linkedContactLoading ? (
-            <Button
-              type="button"
-              size="sm"
-              variant="secondary"
-              className="shrink-0"
-              onClick={() => setConvertConfirmOpen(true)}
-            >
-              <UserPlus className="mr-1.5 h-4 w-4" />
-              {t("leads.detail.convertToContact", {
-                defaultValue: "Create as contact",
-              })}
-            </Button>
-          ) : null}
+        <div className="app-fade-up rounded-xl border border-border bg-muted/30 px-4 py-3 text-sm text-muted-foreground">
+          {t("leads.detail.noContactLinked")}
         </div>
       )}
-
-      <AlertDialog
-        open={convertConfirmOpen}
-        onOpenChange={setConvertConfirmOpen}
-      >
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>
-              {t("leads.detail.convertConfirmTitle", {
-                defaultValue: "Create contact from this lead?",
-              })}
-            </AlertDialogTitle>
-            <AlertDialogDescription>
-              {t("leads.detail.convertConfirmDescription", {
-                defaultValue:
-                  "A contact record will be created and linked to this lead. You can add pipeline deals afterward.",
-              })}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>{t("common.cancel")}</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={(e) => {
-                e.preventDefault();
-                convertMutation.mutate();
-              }}
-              disabled={convertMutation.isPending}
-            >
-              {convertMutation.isPending
-                ? t("common.loading")
-                : t("leads.detail.convertConfirmAction", {
-                    defaultValue: "Create contact",
-                  })}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
 
       {/* Content grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 app-fade-up app-fade-up-d1">
@@ -407,33 +306,6 @@ export default function LeadFormLeadId() {
         }
         prefillContactLabel={createDealDialogPrefillLabel}
         canCreate={canEdit}
-      />
-
-      <LeadContactConversionSuccessModal
-        open={conversionSuccessRouteId !== null}
-        onOpenChange={(open) => {
-          if (!open) setConversionSuccessRouteId(null);
-        }}
-        routeContactId={conversionSuccessRouteId}
-        onViewContact={(id) => {
-          navigate(`/contacts/${id}`);
-          setConversionSuccessRouteId(null);
-        }}
-        onCreateDeal={(id) => {
-          setConversionSuccessRouteId(null);
-          setCreateDealPrefillContactId(id);
-          if (lead) {
-            const name =
-              lead.full_name?.trim() ||
-              [lead.first_name, lead.last_name]
-                .filter(Boolean)
-                .join(" ")
-                .trim() ||
-              "";
-            setDealModalPrefillContactLabel(name || null);
-          }
-          setCreateDealOpen(true);
-        }}
       />
     </div>
   );

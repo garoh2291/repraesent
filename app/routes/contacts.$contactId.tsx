@@ -18,12 +18,6 @@ import { ContactInfoCard } from "~/components/organism/contact-detail/contact-in
 import { ContactDealsSection } from "~/components/organism/contact-deals-section";
 import { Button } from "~/components/ui/button";
 import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "~/components/ui/tooltip";
-import {
   AlertDialog,
   AlertDialogAction,
   AlertDialogCancel,
@@ -204,43 +198,17 @@ export default function ContactDetailPage() {
           : t("contacts.backToList", { defaultValue: "Back to contacts" })}
       </Link>
 
-      <div className="relative">
-        <ContactHero
-          displayName={displayName}
-          crm={crm}
-          contact={contact}
-          emails={emails}
-          phones={phones}
-          addresses={addresses}
-          leadId={leadId}
-        />
-
-        {canEdit ? (
-          <TooltipProvider delayDuration={200}>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon"
-                  aria-label={t("contacts.deleteContact", {
-                    defaultValue: "Delete contact",
-                  })}
-                  className="absolute right-2 top-2 h-8 w-8 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
-                  onClick={() => setDeleteConfirmOpen(true)}
-                >
-                  <Trash2 className="h-4 w-4" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent side="left">
-                {t("contacts.deleteContact", {
-                  defaultValue: "Delete contact",
-                })}
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
-        ) : null}
-      </div>
+      <ContactHero
+        displayName={displayName}
+        crm={crm}
+        contact={contact}
+        emails={emails}
+        phones={phones}
+        addresses={addresses}
+        leadId={leadId}
+        canEdit={canEdit}
+        onInvalidate={invalidateContact}
+      />
 
       <AlertDialog open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
         <AlertDialogContent>
@@ -333,6 +301,21 @@ export default function ContactDetailPage() {
           </div>
         </div>
       </div>
+
+      {canEdit ? (
+        <div className="flex justify-end">
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            className="text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+            onClick={() => setDeleteConfirmOpen(true)}
+          >
+            <Trash2 className="h-4 w-4 mr-1.5" />
+            {t("common.delete", { defaultValue: "Delete" })}
+          </Button>
+        </div>
+      ) : null}
     </div>
   );
 }

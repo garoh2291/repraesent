@@ -23,6 +23,7 @@ import { TaskDetailModal } from "~/components/organism/tasks/task-detail-modal";
 import {
   getAllTasks,
   updateTask,
+  reorderTask,
   type TaskStatus,
   type Task,
 } from "~/lib/api/tasks";
@@ -166,6 +167,54 @@ export default function TasksPage() {
           ],
           ctx.prev
         );
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["tasks"] });
+      queryClient.invalidateQueries({ queryKey: ["leads"] });
+    },
+  });
+
+  const reorderMutation = useMutation({
+    mutationFn: ({
+      taskId,
+      status,
+      position,
+    }: {
+      taskId: string;
+      status: TaskStatus;
+      position: number;
+    }) => reorderTask(taskId, status, position),
+    /**
+     * Optimistically patch the task's status + position in every cached
+     * `tasks` list so the card lands instantly. Background refetch on success
+     * reconciles any divergence.
+     */
+    onMutate: async ({ taskId, status, position }) => {
+      await queryClient.cancelQueries({ queryKey: ["tasks"] });
+      const snapshots = queryClient.getQueriesData({ queryKey: ["tasks"] });
+      queryClient.setQueriesData(
+        { queryKey: ["tasks"] },
+        (old: Awaited<ReturnType<typeof getAllTasks>> | undefined) => {
+          if (!old || !Array.isArray(old.data)) return old;
+          return {
+            ...old,
+            data: old.data.map((t) =>
+              t.id === taskId
+                ? { ...t, status, board_position: position }
+                : t,
+            ),
+          };
+        },
+      );
+      return { snapshots };
+    },
+    onError: (_err, _vars, ctx) => {
+      const snap = (ctx as { snapshots?: [readonly unknown[], unknown][] })
+        ?.snapshots;
+      if (!snap) return;
+      for (const [key, data] of snap) {
+        queryClient.setQueryData(key as never, data as never);
       }
     },
     onSuccess: () => {
@@ -320,6 +369,9 @@ export default function TasksPage() {
             isLoading={tasksQuery.isLoading}
             onStatusChange={(taskId, status) =>
               statusChangeMutation.mutate({ taskId, status })
+            }
+            onReorder={({ taskId, status, position }) =>
+              reorderMutation.mutate({ taskId, status, position })
             }
             isUpdating={statusChangeMutation.isPending}
             canEdit={true}

@@ -23,11 +23,13 @@ interface ContactSourceBadgeProps {
 interface ContactTypeBadgeProps {
   contactType: string | null | undefined;
   className?: string;
+  trailing?: React.ReactNode;
 }
 
 export function ContactTypeBadge({
   contactType,
   className,
+  trailing,
 }: ContactTypeBadgeProps) {
   const { t } = useTranslation();
   const raw = contactType?.trim() ?? "";
@@ -41,6 +43,7 @@ export function ContactTypeBadge({
         )}
       >
         —
+        {trailing}
       </span>
     );
   }
@@ -55,7 +58,10 @@ export function ContactTypeBadge({
     : raw.replace(/_/g, " ");
 
   return (
-    <span className={cn(PILL_BASE, pill, "capitalize", className)}>{label}</span>
+    <span className={cn(PILL_BASE, pill, "capitalize", className)}>
+      {label}
+      {trailing}
+    </span>
   );
 }
 

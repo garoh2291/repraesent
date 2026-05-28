@@ -7,12 +7,19 @@ import {
   TouchSensor,
   useSensor,
   useSensors,
-  useDraggable,
   useDroppable,
 } from "@dnd-kit/core";
 import type { DragEndEvent, DragStartEvent } from "@dnd-kit/core";
+import {
+  SortableContext,
+  useSortable,
+  verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 import { useTranslation } from "react-i18next";
 import { ChevronDown, Loader2 } from "lucide-react";
+// Loader2 is still used for the per-column "load more" inline spinner; the
+// initial-load state mirrors the pipeline kanban via the `app-spin` class.
 import { formatDate } from "~/lib/utils/format";
 import {
   getLeads,
@@ -30,6 +37,10 @@ import {
   type LeadStatus,
 } from "~/lib/leads/constants";
 import { cn } from "~/lib/utils";
+import {
+  kanbanCollisionDetection,
+  positionForInsertion,
+} from "~/lib/kanban/board-position";
 
 const COLUMN_PAGE_SIZE = 50;
 
@@ -40,17 +51,20 @@ interface KanbanFilters {
   platform_campaign_id?: string;
 }
 
+interface ReorderArgs {
+  leadId: string;
+  status: LeadStatus;
+  position: number;
+}
+
 interface LeadsKanbanProps {
   filters: KanbanFilters;
   onStatusChange: (leadId: string, status: LeadStatus) => void | Promise<unknown>;
+  onReorder: (args: ReorderArgs) => void | Promise<unknown>;
   onLeadSelect: (leadId: string) => void;
   canEdit?: boolean;
 }
 
-/**
- * Hook: fetches one status column's leads with infinite-scroll pagination.
- * Returns the full accumulated lead list for the column + load-more state.
- */
 function useColumnQuery(status: LeadStatus, filters: KanbanFilters) {
   return useInfiniteQuery({
     queryKey: ["leads-kanban-column", status, filters],
@@ -75,20 +89,30 @@ function useColumnQuery(status: LeadStatus, filters: KanbanFilters) {
 export function LeadsKanban({
   filters,
   onStatusChange,
+  onReorder,
   onLeadSelect,
   canEdit = true,
 }: LeadsKanbanProps) {
+  const { t } = useTranslation();
   const [activeId, setActiveId] = useState<string | null>(null);
   // Confirmation dialog shown when a lead is dropped into the "Success" column.
   const [successConfirm, setSuccessConfirm] = useState<{
     lead: Lead;
     phase: SuccessConfirmPhase;
   } | null>(null);
+  // Per-lead local override applied between drop and the cache refresh that
+  // confirms the move, so cards land in the right place without flicker.
+  const [pending, setPending] = useState<
+    Record<string, { status: LeadStatus; board_position: number }>
+  >({});
+  // Id of the card to play the "landed" animation on for ~500ms after a drop,
+  // matching the pipeline kanban.
+  const [justMovedId, setJustMovedId] = useState<string | null>(null);
+  const landTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const undoStackRef = useRef<
     Array<{ leadId: string; previousStatus: LeadStatus }>
   >([]);
 
-  // One infinite query per status column — fixed hook order (8 calls)
   const newLeadQ = useColumnQuery("new_lead", filters);
   const pendingQ = useColumnQuery("pending", filters);
   const inProgressQ = useColumnQuery("in_progress", filters);
@@ -122,7 +146,6 @@ export function LeadsKanban({
     ],
   );
 
-  // Totals (global counts — not affected by per-column pagination)
   const countsQuery = useQuery({
     queryKey: ["leads-kanban-counts", filters],
     queryFn: () =>
@@ -135,21 +158,88 @@ export function LeadsKanban({
     staleTime: 10_000,
   });
 
-  // Flatten all loaded leads by column for drag lookups
-  const leadsByStatus = useMemo(() => {
+  // Raw cache rows for every column, before applying any local pending
+  // overrides. Used both as the source for the rendered view (below) and as
+  // the truth against which we decide when a pending override can be cleared.
+  const rawLeadsByCache = useMemo(() => {
     const acc = {} as Record<LeadStatus, Lead[]>;
     for (const status of LEAD_STATUSES) {
-      const q = columnQueries[status];
-      acc[status] = q.data?.pages.flatMap((p) => p.data) ?? [];
+      acc[status] =
+        columnQueries[status].data?.pages.flatMap((p) => p.data) ?? [];
     }
     return acc;
   }, [columnQueries]);
 
-  // Flat array for drag overlay lookup
+  // Apply per-lead pending overrides on top of the raw cache, then
+  // bucket+sort by the resulting (status, board_position).
+  const leadsByStatus = useMemo(() => {
+    const all: Lead[] = [];
+    for (const status of LEAD_STATUSES) {
+      for (const r of rawLeadsByCache[status] ?? []) {
+        const override = pending[r.id];
+        all.push(
+          override
+            ? {
+                ...r,
+                status: override.status,
+                board_position: override.board_position,
+              }
+            : r,
+        );
+      }
+    }
+    const acc = {} as Record<LeadStatus, Lead[]>;
+    for (const status of LEAD_STATUSES) acc[status] = [];
+    for (const lead of all) {
+      const s = lead.status as LeadStatus;
+      if (acc[s]) acc[s].push(lead);
+    }
+    for (const status of LEAD_STATUSES) {
+      acc[status].sort((a, b) => {
+        const ap = a.board_position;
+        const bp = b.board_position;
+        if (ap == null && bp == null) {
+          return (b.created_at ?? "").localeCompare(a.created_at ?? "");
+        }
+        if (ap == null) return 1;
+        if (bp == null) return -1;
+        return ap - bp;
+      });
+    }
+    return acc;
+  }, [rawLeadsByCache, pending]);
+
   const allLoadedLeads = useMemo(
     () => Object.values(leadsByStatus).flat(),
     [leadsByStatus],
   );
+
+  // Clear a lead's pending override once the *raw cache* (not the
+  // pending-applied view) confirms it. Comparing against the pending-applied
+  // view is tautological — it would always match and clear the override on
+  // the very next render, before the cache has actually caught up, causing
+  // the card to flicker back to its old position for a frame.
+  useEffect(() => {
+    if (Object.keys(pending).length === 0) return;
+    setPending((curr) => {
+      const next = { ...curr };
+      let changed = false;
+      for (const status of LEAD_STATUSES) {
+        for (const lead of rawLeadsByCache[status] ?? []) {
+          const ov = next[lead.id];
+          if (!ov) continue;
+          if (
+            lead.status === ov.status &&
+            lead.board_position === ov.board_position
+          ) {
+            delete next[lead.id];
+            changed = true;
+          }
+        }
+      }
+      return changed ? next : curr;
+    });
+  }, [rawLeadsByCache, pending]);
 
   const isInitialLoading = LEAD_STATUSES.some(
     (s) => columnQueries[s].isLoading,
@@ -166,35 +256,98 @@ export function LeadsKanban({
     setActiveId(event.active.id as string);
   }, []);
 
+  /**
+   * Resolves the drop target into a (column, insertionIndex) pair. The
+   * over.id is either a column status (empty-column or end-of-column drop) or
+   * a `lead-<id>` (card drop — insert before that card).
+   */
+  const resolveDrop = useCallback(
+    (
+      activeLeadId: string,
+      overId: string,
+    ): { status: LeadStatus; insertionIndex: number } | null => {
+      if (LEAD_STATUSES.includes(overId as LeadStatus)) {
+        const status = overId as LeadStatus;
+        return { status, insertionIndex: leadsByStatus[status]?.length ?? 0 };
+      }
+      const overLeadId = overId.replace(/^lead-/, "");
+      for (const status of LEAD_STATUSES) {
+        const idx = leadsByStatus[status].findIndex(
+          (l) => l.id === overLeadId,
+        );
+        if (idx !== -1) {
+          // When reordering inside the same column and the moved card is
+          // currently above the drop target, the index shifts up by one after
+          // removal — handled by positionForInsertion which filters the moved
+          // card out before reading neighbors.
+          void activeLeadId;
+          return { status, insertionIndex: idx };
+        }
+      }
+      return null;
+    },
+    [leadsByStatus],
+  );
+
   const handleDragEnd = useCallback(
     (event: DragEndEvent) => {
       const { active, over } = event;
       setActiveId(null);
-
       if (!over) return;
 
       const leadId = String(active.id).replace(/^lead-/, "");
-      const newStatus = String(over.id);
-
-      if (!LEAD_STATUSES.includes(newStatus as LeadStatus)) return;
+      const drop = resolveDrop(leadId, String(over.id));
+      if (!drop) return;
 
       const lead = allLoadedLeads.find((l) => l.id === leadId);
-      if (!lead || lead.status === newStatus) return;
+      if (!lead) return;
 
-      // Dropping into "Success" is a deliberate action — confirm it first
-      // instead of mutating immediately.
-      if (newStatus === "success") {
+      // Dropping into "Success" is a deliberate action — confirm it first.
+      if (drop.status === "success" && lead.status !== "success") {
         setSuccessConfirm({ lead, phase: "confirm" });
         return;
       }
 
-      const previousStatus = lead.status as LeadStatus;
-      undoStackRef.current.push({ leadId, previousStatus });
-      if (undoStackRef.current.length > 50) undoStackRef.current.shift();
+      const position = positionForInsertion(
+        leadsByStatus[drop.status],
+        drop.insertionIndex,
+        leadId,
+      );
 
-      onStatusChange(leadId, newStatus as LeadStatus);
+      // Real no-op only if the card was released exactly where it started.
+      // `insertionIndex` is the index of the over-card in the unfiltered
+      // column list — equal to currentIdx means the user dropped on the
+      // card itself; any other value (incl. currentIdx ± 1) is a real move,
+      // so we must NOT short-circuit those.
+      const currentIdx = leadsByStatus[lead.status as LeadStatus].findIndex(
+        (l) => l.id === leadId,
+      );
+      if (
+        lead.status === drop.status &&
+        currentIdx === drop.insertionIndex
+      ) {
+        return;
+      }
+
+      if (lead.status !== drop.status) {
+        undoStackRef.current.push({
+          leadId,
+          previousStatus: lead.status as LeadStatus,
+        });
+        if (undoStackRef.current.length > 50) undoStackRef.current.shift();
+      }
+
+      setPending((curr) => ({
+        ...curr,
+        [leadId]: { status: drop.status, board_position: position },
+      }));
+      setJustMovedId(leadId);
+      if (landTimerRef.current) clearTimeout(landTimerRef.current);
+      landTimerRef.current = setTimeout(() => setJustMovedId(null), 500);
+
+      onReorder({ leadId, status: drop.status, position });
     },
-    [allLoadedLeads, onStatusChange],
+    [resolveDrop, allLoadedLeads, leadsByStatus, onReorder],
   );
 
   const handleConfirmSuccess = useCallback(async () => {
@@ -214,10 +367,16 @@ export function LeadsKanban({
         curr ? { ...curr, phase: "done" } : curr,
       );
     } catch {
-      // The mutation rolls the board back on error; just close the dialog.
       setSuccessConfirm(null);
     }
   }, [successConfirm, onStatusChange]);
+
+  useEffect(
+    () => () => {
+      if (landTimerRef.current) clearTimeout(landTimerRef.current);
+    },
+    [],
+  );
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -239,8 +398,9 @@ export function LeadsKanban({
 
   if (isInitialLoading) {
     return (
-      <div className="flex flex-1 min-h-0 items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      <div className="flex items-center justify-center py-16 gap-3">
+        <div className="h-5 w-5 app-spin rounded-full border-2 border-primary/20 border-t-primary" />
+        <p className="text-sm text-muted-foreground">{t("common.loading")}</p>
       </div>
     );
   }
@@ -261,6 +421,7 @@ export function LeadsKanban({
       <div className="hidden sm:block flex-1 min-h-0 h-full">
         <DndContext
           sensors={sensors}
+          collisionDetection={kanbanCollisionDetection}
           onDragStart={handleDragStart}
           onDragEnd={handleDragEnd}
         >
@@ -282,17 +443,15 @@ export function LeadsKanban({
                   onLoadMore={() => q.fetchNextPage()}
                   onLeadSelect={onLeadSelect}
                   canEdit={canEdit}
+                  justMovedId={justMovedId}
                 />
               );
             })}
           </div>
 
-          <DragOverlay>
+          <DragOverlay dropAnimation={null}>
             {activeLead ? (
-              <KanbanCard
-                lead={activeLead}
-                isDragging
-              />
+              <KanbanCardPresentational lead={activeLead} isDragging />
             ) : null}
           </DragOverlay>
         </DndContext>
@@ -322,6 +481,7 @@ function KanbanColumn({
   onLoadMore,
   onLeadSelect,
   canEdit,
+  justMovedId,
 }: {
   status: LeadStatus;
   leads: Lead[];
@@ -331,12 +491,14 @@ function KanbanColumn({
   onLoadMore: () => void;
   onLeadSelect: (id: string) => void;
   canEdit: boolean;
+  justMovedId: string | null;
 }) {
   const { t } = useTranslation();
   const { setNodeRef, isOver } = useDroppable({ id: status });
   const color = LEAD_STATUS_COLORS[status];
 
   const isEmpty = total === 0;
+  const itemIds = useMemo(() => leads.map((l) => `lead-${l.id}`), [leads]);
 
   return (
     <div
@@ -358,14 +520,20 @@ function KanbanColumn({
         </h3>
       </div>
       <div className="flex-1 min-h-0 overflow-y-auto p-2 space-y-2">
-        {leads.map((lead) => (
-          <KanbanCard
-            key={lead.id}
-            lead={lead}
-            onSelect={() => onLeadSelect(lead.id)}
-            canEdit={canEdit}
-          />
-        ))}
+        <SortableContext
+          items={itemIds}
+          strategy={verticalListSortingStrategy}
+        >
+          {leads.map((lead) => (
+            <KanbanCard
+              key={lead.id}
+              lead={lead}
+              onSelect={() => onLeadSelect(lead.id)}
+              canEdit={canEdit}
+              justLanded={justMovedId === lead.id}
+            />
+          ))}
+        </SortableContext>
         {hasNextPage && (
           <button
             type="button"
@@ -404,35 +572,32 @@ function KanbanCard({
   lead,
   onSelect,
   disabled,
-  isDragging,
   canEdit = true,
+  justLanded,
 }: {
   lead: Lead;
   onSelect?: () => void;
   disabled?: boolean;
-  isDragging?: boolean;
   canEdit?: boolean;
+  justLanded?: boolean;
 }) {
-  const { t } = useTranslation();
-  const status = lead.status as LeadStatus;
-  const color = LEAD_STATUS_COLORS[status] ?? "bg-muted";
-
   const {
     attributes,
     listeners,
     setNodeRef,
     transform,
-    isDragging: isDraggingState,
-  } = useDraggable({
+    transition,
+    isDragging,
+  } = useSortable({
     id: `lead-${lead.id}`,
     disabled: !canEdit || disabled,
   });
 
-  const style = transform
-    ? {
-        transform: `translate3d(${transform.x}px, ${transform.y}px, 0)`,
-      }
-    : undefined;
+  const style: React.CSSProperties = {
+    transform: CSS.Translate.toString(transform),
+    transition,
+    opacity: isDragging ? 0 : 1,
+  };
 
   return (
     <div
@@ -440,35 +605,69 @@ function KanbanCard({
       style={style}
       {...attributes}
       {...listeners}
-      className={cn(
-        "rounded-lg border border-border bg-card shadow-[var(--shadow)] overflow-hidden",
-        canEdit && !disabled && "cursor-grab active:cursor-grabbing",
-        "hover:shadow-md transition-shadow",
-        (isDragging || isDraggingState) && "opacity-90 shadow-lg",
-        disabled && "pointer-events-none opacity-60"
-      )}
       onClick={() => onSelect?.()}
+      className={cn(
+        "rounded-lg border border-border bg-card shadow-[var(--shadow)] overflow-hidden transition-shadow",
+        canEdit && !disabled && "cursor-grab active:cursor-grabbing",
+        "hover:shadow-md",
+        justLanded && "app-card-land",
+        disabled && "pointer-events-none opacity-60",
+      )}
     >
-      <div className="p-3 space-y-2">
-        <div className="flex items-start justify-between gap-2">
+      <KanbanCardInner lead={lead} />
+    </div>
+  );
+}
+
+function KanbanCardPresentational({
+  lead,
+  isDragging,
+}: {
+  lead: Lead;
+  isDragging?: boolean;
+}) {
+  return (
+    <div
+      className={cn(
+        "w-[280px] rounded-lg border bg-card overflow-hidden shadow-lg ring-1 ring-primary/20 cursor-grabbing",
+        isDragging && "opacity-95",
+      )}
+    >
+      <KanbanCardInner lead={lead} />
+    </div>
+  );
+}
+
+function KanbanCardInner({ lead }: { lead: Lead }) {
+  const { t } = useTranslation();
+  const status = lead.status as LeadStatus;
+  const color = LEAD_STATUS_COLORS[status] ?? "bg-muted";
+
+  return (
+    <div className="p-3 space-y-2">
+      <div className="flex items-start justify-between gap-2">
+        <span
+          className={cn(
+            "inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium shrink-0",
+            color,
+            color === "bg-muted" ? "text-foreground" : "text-white"
+          )}
+        >
           <span
             className={cn(
-              "inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium shrink-0",
-              color,
-              color === "bg-muted" ? "text-foreground" : "text-white"
+              "h-1 w-1 rounded-full",
+              color === "bg-muted" ? "bg-foreground/60" : "bg-white/80",
             )}
-          >
-            <span className={cn("h-1 w-1 rounded-full", color === "bg-muted" ? "bg-foreground/60" : "bg-white/80")} />
-            {t(`leads.statuses.${status}`)}
-          </span>
-        </div>
-        <p className="font-semibold text-sm truncate leading-tight">
-          {lead.full_name || lead.email || "—"}
-        </p>
-        <p className="text-xs text-muted-foreground truncate line-clamp-2">
-          {lead.email || lead.phone || "—"}
-        </p>
+          />
+          {t(`leads.statuses.${status}`)}
+        </span>
       </div>
+      <p className="font-semibold text-sm truncate leading-tight">
+        {lead.full_name || lead.email || "—"}
+      </p>
+      <p className="text-xs text-muted-foreground truncate line-clamp-2">
+        {lead.email || lead.phone || "—"}
+      </p>
     </div>
   );
 }
@@ -597,10 +796,7 @@ function LeadScheduleRow({
         "hover:bg-muted/60 active:bg-muted"
       )}
     >
-      {/* Color accent line */}
       <div className={cn("h-8 w-0.5 rounded-full shrink-0", colorClass)} />
-
-      {/* Content */}
       <div className="flex-1 min-w-0 space-y-0.5">
         <p className="text-sm font-medium leading-snug truncate">
           {displayName}
@@ -612,7 +808,6 @@ function LeadScheduleRow({
           </p>
         )}
 
-        {/* Meta: form name + date */}
         <div className="flex items-center gap-2 pt-0.5">
           {formName && (
             <span className="text-[10px] text-muted-foreground/70 truncate max-w-[120px]">
@@ -627,7 +822,6 @@ function LeadScheduleRow({
         </div>
       </div>
 
-      {/* Source indicator */}
       {(lead.source_label || lead.source_table) && (
         <LeadSourceIcon
           source={lead.source_label}

@@ -1,4 +1,5 @@
-import { useDraggable } from "@dnd-kit/core";
+import { useSortable } from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router";
 import { formatDate } from "~/lib/utils/format";
@@ -11,6 +12,8 @@ interface TaskCardProps {
   onSelect: () => void;
   disabled?: boolean;
   isDragging?: boolean;
+  /** When true, render without dnd hooks (used inside the DragOverlay). */
+  presentational?: boolean;
   canEdit?: boolean;
 }
 
@@ -27,37 +30,44 @@ export function TaskCard({
   onSelect,
   disabled,
   isDragging: isDraggingProp,
+  presentational,
   canEdit = true,
 }: TaskCardProps) {
   const { t } = useTranslation();
+  const sortable = useSortable({
+    id: `task-${task.id}`,
+    disabled: presentational || !canEdit || disabled,
+  });
   const {
     attributes,
     listeners,
     setNodeRef,
     transform,
+    transition,
     isDragging: isDraggingState,
-  } = useDraggable({
-    id: `task-${task.id}`,
-    disabled: !canEdit || disabled,
-  });
+  } = sortable;
 
   const isDragging = isDraggingProp || isDraggingState;
 
-  const style = transform
-    ? { transform: `translate3d(${transform.x}px, ${transform.y}px, 0)` }
-    : undefined;
+  const style: React.CSSProperties = presentational
+    ? {}
+    : {
+        transform: CSS.Translate.toString(transform),
+        transition,
+        opacity: isDraggingState ? 0 : 1,
+      };
 
   return (
     <div
-      ref={setNodeRef}
+      ref={presentational ? undefined : setNodeRef}
       style={style}
-      {...attributes}
-      {...listeners}
+      {...(presentational ? {} : attributes)}
+      {...(presentational ? {} : listeners)}
       className={cn(
         "rounded-lg border bg-card p-3 space-y-2 shadow-sm",
         canEdit && !disabled && "cursor-grab active:cursor-grabbing",
         "hover:shadow-md transition-shadow duration-150",
-        isDragging && "opacity-90 shadow-lg ring-1 ring-primary/20",
+        isDraggingProp && "opacity-90 shadow-lg ring-1 ring-primary/20",
       )}
       onClick={() => !isDragging && onSelect()}
     >

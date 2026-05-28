@@ -110,6 +110,7 @@ export interface CreateContactBody {
   email?: string | null;
   phone?: string | null;
   notes?: string | null;
+  contact_type?: ContactType | null;
 }
 
 export async function createContact(
@@ -119,11 +120,20 @@ export async function createContact(
   return res.data;
 }
 
-export async function convertLeadToContact(
-  leadId: string
-): Promise<{ id: string; contact_id: string }> {
-  const res = await apiClient.post<{ id: string; contact_id: string }>(
-    `/contacts/from-lead/${encodeURIComponent(leadId)}`
-  );
-  return res.data;
+export interface AddContactAddressBody {
+  type?: "work" | "home" | "billing" | "shipping" | "other";
+  line1?: string | null;
+  line2?: string | null;
+  city?: string | null;
+  state?: string | null;
+  postal_code?: string | null;
+  country?: string | null;
+  is_primary?: boolean;
+}
+
+export async function addContactAddress(
+  contactId: string,
+  body: AddContactAddressBody
+): Promise<void> {
+  await apiClient.post(`/contacts/${contactId}/addresses`, body);
 }

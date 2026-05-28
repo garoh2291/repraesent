@@ -33,30 +33,22 @@ export function formatDecimal(value: number, decimals = 2): string {
 // --------------- Currency ---------------
 
 /**
- * Format a currency amount (in major units, e.g. 12.50 not 1250 cents).
- * Defaults to EUR; caller can override.
+ * Format an amount in EUR (major units, e.g. 12.50 not 1250 cents).
  */
-export function formatCurrency(
-  amount: number,
-  currency?: string,
-): string {
-  const cur = currency?.toUpperCase() ?? "EUR";
+export function formatCurrency(amount: number): string {
   return new Intl.NumberFormat(getIntlLocale(), {
     style: "currency",
-    currency: cur,
+    currency: "EUR",
     minimumFractionDigits: 0,
     maximumFractionDigits: 2,
   }).format(amount);
 }
 
 /**
- * Format a Stripe-style amount (in cents) as currency.
+ * Format a Stripe-style amount (in cents) as EUR.
  */
-export function formatCurrencyFromCents(
-  amountCents: number,
-  currency?: string,
-): string {
-  return formatCurrency(amountCents / 100, currency);
+export function formatCurrencyFromCents(amountCents: number): string {
+  return formatCurrency(amountCents / 100);
 }
 
 // --------------- Dates ---------------

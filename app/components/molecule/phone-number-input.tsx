@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import PhoneInput, {
   type Country,
   type Value,
@@ -83,6 +83,22 @@ function CountrySelect({
   readOnly,
 }: CountrySelectProps) {
   const [open, setOpen] = useState(false);
+  const countryListScrollRef = useRef<HTMLDivElement | null>(null);
+
+  // Dialog RemoveScroll / nested scroll: wheel on portaled popovers often hits the
+  // dialog body instead of this list. Scroll manually and consume the event when possible.
+  const handleCountryListWheel = (e: React.WheelEvent<HTMLDivElement>) => {
+    const el = countryListScrollRef.current;
+    if (!el) return;
+    const { scrollTop, scrollHeight, clientHeight } = el;
+    const canScrollUp = scrollTop > 0;
+    const canScrollDown = scrollTop < scrollHeight - clientHeight;
+    if ((e.deltaY < 0 && canScrollUp) || (e.deltaY > 0 && canScrollDown)) {
+      e.preventDefault();
+      e.stopPropagation();
+      el.scrollTop += e.deltaY;
+    }
+  };
 
   const realOptions = useMemo(
     () => options.filter((o) => !o.divider && o.value),
@@ -114,6 +130,7 @@ function CountrySelect({
       <PopoverContent
         align="start"
         className="p-0 w-[280px]"
+        onPointerDown={(e) => e.stopPropagation()}
         onOpenAutoFocus={(e) => {
           // let cmdk autofocus its input
           e.preventDefault();
@@ -121,7 +138,11 @@ function CountrySelect({
       >
         <Command>
           <CommandInput placeholder="Search country…" />
-          <CommandList className="max-h-72">
+          <CommandList
+            ref={countryListScrollRef}
+            className="max-h-72 overscroll-contain"
+            onWheel={handleCountryListWheel}
+          >
             <CommandEmpty>No country found.</CommandEmpty>
             <CommandGroup>
               {realOptions.map((o) => {
