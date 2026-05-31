@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { Link, useSearchParams } from "react-router";
+import { Link, useNavigate, useSearchParams } from "react-router";
 import { useTranslation } from "react-i18next";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAuthContext } from "~/providers/auth-provider";
@@ -13,7 +13,6 @@ import {
   CONTACT_TYPES,
   type ContactType,
 } from "~/lib/contacts/contact-types";
-import { getWorkspaceDetail } from "~/lib/api/workspaces";
 import { useDebounce } from "~/lib/hooks/useDebounce";
 import { CONTACT_TABLE_FILTERS_BASE } from "~/lib/contacts/filter-presets";
 import type { Filter } from "~/components/molecule/filter-component/types";
@@ -89,21 +88,6 @@ function parseLimit(v: string | null): number {
   return isNaN(n) || n < 1 ? 10 : Math.min(100, n);
 }
 
-function formatAssigneeName(row: ContactListItem): string {
-  const first = row.assignee_first_name?.trim() ?? "";
-  const last = row.assignee_last_name?.trim() ?? "";
-  const full = [first, last].filter(Boolean).join(" ").trim();
-  return full || "—";
-}
-
-function assigneeInitials(row: ContactListItem): string {
-  const first = row.assignee_first_name?.trim() ?? "";
-  const last = row.assignee_last_name?.trim() ?? "";
-  const a = first ? first[0] : "";
-  const b = last ? last[0] : "";
-  return (a + b).toUpperCase() || "?";
-}
-
 function contactInitials(name: string): string {
   const parts = name.trim().split(/\s+/).filter(Boolean);
   if (parts.length === 0) return "?";
@@ -114,6 +98,7 @@ function contactInitials(name: string): string {
 export default function ContactsPage() {
   const { t } = useTranslation();
   const { currentWorkspace } = useAuthContext();
+  const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
 
   const page = useMemo(
@@ -125,7 +110,6 @@ export default function ContactsPage() {
     [searchParams]
   );
   const search = searchParams.get("search") ?? "";
-  const assignedTo = searchParams.get("assigned_to") ?? "";
   const sourceFilter = searchParams.get("source") ?? "";
   const contactTypeRaw = searchParams.get("contact_type") ?? "";
   const contactTypeFilter =
@@ -143,12 +127,6 @@ export default function ContactsPage() {
       (s) => s.service_type === "lead-form" || s.service_slug === "lead-form"
     ) ?? false;
 
-  const workspaceQuery = useQuery({
-    queryKey: ["workspace-detail"],
-    queryFn: () => getWorkspaceDetail(),
-    enabled: hasAccess && !!currentWorkspace,
-  });
-
   const tableQuery = useQuery({
     queryKey: [
       "contacts",
@@ -156,7 +134,6 @@ export default function ContactsPage() {
       page,
       limit,
       debouncedSearch,
-      assignedTo || undefined,
       sourceFilter || undefined,
       contactTypeFilter || undefined,
     ],
@@ -165,7 +142,6 @@ export default function ContactsPage() {
         page,
         limit,
         search: debouncedSearch || undefined,
-        assigned_to: assignedTo || undefined,
         source: sourceFilter || undefined,
         contact_type: contactTypeFilter || undefined,
       }),
@@ -218,32 +194,12 @@ export default function ContactsPage() {
     setSearchParams(next);
   };
 
-  const members = workspaceQuery.data?.members ?? [];
+  const contactListFilters = useMemo(
+    (): Filter[] => [...CONTACT_TABLE_FILTERS_BASE],
+    []
+  );
 
-  const contactListFilters = useMemo((): Filter[] => {
-    const assigneeOptions = members.map((m) => {
-      const name = [m.user_first_name, m.user_last_name]
-        .filter(Boolean)
-        .join(" ")
-        .trim();
-      return {
-        key: m.user_id,
-        label: name || m.user_email || m.user_id,
-      };
-    });
-    return [
-      ...CONTACT_TABLE_FILTERS_BASE,
-      {
-        name: "assignee",
-        paramKey: "assigned_to",
-        options: assigneeOptions,
-        single: true,
-      },
-    ];
-  }, [members]);
-
-  const hasTableFilters =
-    !!sourceFilter || !!contactTypeFilter || !!assignedTo;
+  const hasTableFilters = !!sourceFilter || !!contactTypeFilter;
 
   if (!hasAccess) {
     return (
@@ -352,7 +308,6 @@ export default function ContactsPage() {
                 setParam({
                   source: undefined,
                   contact_type: undefined,
-                  assigned_to: undefined,
                   page: "1",
                 })
               }
@@ -448,11 +403,6 @@ export default function ContactsPage() {
                     </div>
                   </TableHead>
                   <TableHead className="h-auto min-h-10 whitespace-normal px-4 py-3 text-left align-middle font-medium">
-                    {t("contacts.columns.assignee", {
-                      defaultValue: "Assignee",
-                    })}
-                  </TableHead>
-                  <TableHead className="h-auto min-h-10 whitespace-normal px-4 py-3 text-left align-middle font-medium">
                     {t("contacts.columns.lastContacted", {
                       defaultValue: "Last contacted",
                     })}
@@ -470,20 +420,20 @@ export default function ContactsPage() {
               <TableBody>
                 {isLoading ? (
                   <TableRow>
-                    <TableCell colSpan={10} className="h-24 text-center">
+                    <TableCell colSpan={9} className="h-24 text-center">
                       {t("common.loading")}
                     </TableCell>
                   </TableRow>
                 ) : !data ? (
                   <TableRow>
-                    <TableCell colSpan={10} className="h-24 text-center">
+                    <TableCell colSpan={9} className="h-24 text-center">
                       {t("common.loading")}
                     </TableCell>
                   </TableRow>
                 ) : data.data.length === 0 ? (
                   <TableRow>
                     <TableCell
-                      colSpan={10}
+                      colSpan={9}
                       className="h-24 text-center text-muted-foreground"
                     >
                       {t("contacts.empty", {
@@ -508,11 +458,12 @@ export default function ContactsPage() {
                       row.lost_value != null
                         ? Number(row.lost_value)
                         : null;
-                    const hasAssignee = !!(
-                      row.assignee_first_name || row.assignee_last_name
-                    );
                     return (
-                      <TableRow key={row.id}>
+                      <TableRow
+                        key={row.id}
+                        onClick={() => navigate(`/contacts/${row.id}`)}
+                        className="cursor-pointer"
+                      >
                         <TableCell className="whitespace-normal px-4 py-3 align-middle text-left">
                           <Link
                             to={`/contacts/${row.id}`}
@@ -557,7 +508,10 @@ export default function ContactsPage() {
                         <TableCell className="whitespace-normal px-4 py-3 align-middle text-left">
                           <ContactSourceBadge source={row.source} />
                         </TableCell>
-                        <TableCell className="whitespace-normal px-4 py-3 align-middle text-left">
+                        <TableCell
+                          className="whitespace-normal px-4 py-3 align-middle text-left"
+                          onClick={(e) => e.stopPropagation()}
+                        >
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
                               <button
@@ -625,22 +579,6 @@ export default function ContactsPage() {
                           {lostNum != null && Number.isFinite(lostNum) ? (
                             <span className="inline-flex items-center rounded-full bg-red-500/10 px-2 py-0.5 text-xs font-medium text-red-700 ring-1 ring-inset ring-red-500/20 dark:text-red-400">
                               {formatCurrency(lostNum)}
-                            </span>
-                          ) : (
-                            <span className="text-muted-foreground/60">—</span>
-                          )}
-                        </TableCell>
-                        <TableCell className="whitespace-normal px-4 py-3 align-middle text-left">
-                          {hasAssignee ? (
-                            <span className="inline-flex items-center gap-2">
-                              <Avatar className="size-6 shrink-0">
-                                <AvatarFallback className="bg-muted text-[9px] font-semibold text-foreground">
-                                  {assigneeInitials(row)}
-                                </AvatarFallback>
-                              </Avatar>
-                              <span className="truncate text-foreground">
-                                {formatAssigneeName(row)}
-                              </span>
                             </span>
                           ) : (
                             <span className="text-muted-foreground/60">—</span>

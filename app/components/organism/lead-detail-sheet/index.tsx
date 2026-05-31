@@ -1,7 +1,8 @@
 import { useMemo } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link } from "react-router";
 import { useTranslation } from "react-i18next";
+import { toast } from "sonner";
 import {
   Sheet,
   SheetContent,
@@ -23,10 +24,15 @@ import { LeadStatusSelect } from "~/components/molecule/lead-status-select";
 import type { LeadStatus as LeadStatusType } from "~/lib/leads/constants";
 import type { TFunction } from "i18next";
 import TooltipContainer from "~/components/tooltip-container";
-import { ChevronDown, ExternalLink } from "lucide-react";
+import { Button } from "~/components/ui/button";
+import { ChevronDown, ExternalLink, UserPlus } from "lucide-react";
 import { formatDate, formatRelativeTime } from "~/lib/utils/format";
 import { cn } from "~/lib/utils";
 import { getWorkspaceDetail } from "~/lib/api/workspaces";
+import {
+  getContactIdByLead,
+  convertLeadToContact,
+} from "~/lib/api/contacts-crm";
 import type { WorkspaceMemberItem } from "~/components/organism/tasks/task-form-modal";
 import {
   Collapsible,
@@ -268,6 +274,31 @@ export function LeadDetailSheet({
     enabled: !!leadId && open,
   });
 
+  const queryClient = useQueryClient();
+
+  const { data: linkedContactId, isLoading: linkedContactLoading } = useQuery({
+    queryKey: ["contact-by-lead", leadId],
+    queryFn: () => getContactIdByLead(leadId!),
+    enabled: !!leadId && open && !readOnly,
+  });
+
+  const convertMutation = useMutation({
+    mutationFn: () => convertLeadToContact(leadId!),
+    onSuccess: () => {
+      toast.success(t("leads.detail.convertToContactSuccess"));
+      void queryClient.invalidateQueries({
+        queryKey: ["contact-by-lead", leadId],
+      });
+      void queryClient.invalidateQueries({ queryKey: ["contacts"] });
+    },
+    onError: () => {
+      toast.error(t("leads.detail.convertToContactError"));
+    },
+  });
+
+  const showConvertButton =
+    !readOnly && !linkedContactLoading && !linkedContactId;
+
   // Skip the workspace-detail query in read-only mode — it powers task
   // assignment which is hidden in that mode.
   const { data: workspaceData } = useQuery({
@@ -333,6 +364,35 @@ export function LeadDetailSheet({
                   withoutLink={readOnly}
                 />
               </div>
+              {/* Convert to contact */}
+              {showConvertButton && (
+                <div className="px-5 py-4">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="w-full gap-2"
+                    disabled={convertMutation.isPending}
+                    onClick={() => convertMutation.mutate()}
+                  >
+                    <UserPlus className="h-4 w-4" />
+                    {convertMutation.isPending
+                      ? t("common.loading")
+                      : t("leads.detail.convertToContact")}
+                  </Button>
+                </div>
+              )}
+              {/* Linked contact link */}
+              {!readOnly && linkedContactId && (
+                <div className="px-5 py-4">
+                  <Link
+                    to={`/contacts/${linkedContactId}`}
+                    className="inline-flex items-center gap-2 text-sm font-medium text-primary hover:underline"
+                  >
+                    {t("leads.detail.viewContact")}
+                    <ExternalLink className="h-3.5 w-3.5" />
+                  </Link>
+                </div>
+              )}
               {/* Tasks (hidden in read-only / brand mode) */}
               {!readOnly && (
                 <div className="px-5 py-5">

@@ -107,6 +107,8 @@ export function LeadImportModal({ open, onOpenChange }: LeadImportModalProps) {
       queryClient.invalidateQueries({ queryKey: ["leads"] });
       queryClient.invalidateQueries({ queryKey: ["leads-kanban-column"] });
       queryClient.invalidateQueries({ queryKey: ["leads-kanban-counts"] });
+      queryClient.invalidateQueries({ queryKey: ["contacts"] });
+      queryClient.invalidateQueries({ queryKey: ["contacts-options"] });
       handleClose();
     },
     onError: (error) => {

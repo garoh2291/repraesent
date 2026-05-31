@@ -171,6 +171,8 @@ export default function TasksPage() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["tasks"] });
+      queryClient.invalidateQueries({ queryKey: ["home-tasks-upcoming"] });
+      queryClient.invalidateQueries({ queryKey: ["home-tasks-overdue"] });
       queryClient.invalidateQueries({ queryKey: ["leads"] });
     },
   });
@@ -219,6 +221,8 @@ export default function TasksPage() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["tasks"] });
+      queryClient.invalidateQueries({ queryKey: ["home-tasks-upcoming"] });
+      queryClient.invalidateQueries({ queryKey: ["home-tasks-overdue"] });
       queryClient.invalidateQueries({ queryKey: ["leads"] });
     },
   });

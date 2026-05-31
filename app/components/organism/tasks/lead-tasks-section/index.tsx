@@ -113,6 +113,8 @@ export function LeadTasksSection({
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: tasksQueryKey });
       queryClient.invalidateQueries({ queryKey: ["tasks"] });
+      queryClient.invalidateQueries({ queryKey: ["home-tasks-upcoming"] });
+      queryClient.invalidateQueries({ queryKey: ["home-tasks-overdue"] });
       if (leadId) {
         queryClient.invalidateQueries({ queryKey: ["leads"] });
         queryClient.invalidateQueries({ queryKey: ["lead-history", leadId] });

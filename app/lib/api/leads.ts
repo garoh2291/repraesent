@@ -60,6 +60,7 @@ export interface GetLeadsParams {
   form_name?: string;
   include_hidden?: boolean;
   platform_campaign_id?: string;
+  sort?: "board_position" | "created_at";
 }
 
 export interface PaginatedLeads {
@@ -85,6 +86,7 @@ export async function getLeads(
   if (params.include_hidden) searchParams.set("include_hidden", "true");
   if (params.platform_campaign_id)
     searchParams.set("platform_campaign_id", params.platform_campaign_id);
+  if (params.sort) searchParams.set("sort", params.sort);
 
   const res = await apiClient.get<PaginatedLeads>(
     `/leads?${searchParams.toString()}`

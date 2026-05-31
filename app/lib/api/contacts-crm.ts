@@ -7,9 +7,6 @@ export interface ContactListItem {
   id: string;
   source: string;
   lead_id: string | null;
-  assigned_to: string | null;
-  assignee_first_name: string | null;
-  assignee_last_name: string | null;
   created_at: string;
   updated_at: string;
   contact_full_name: string | null;
@@ -36,7 +33,6 @@ export interface GetContactsParams {
   page?: number;
   limit?: number;
   search?: string;
-  assigned_to?: string;
   source?: string;
   contact_type?: string;
 }
@@ -48,7 +44,6 @@ export async function getContacts(
   if (params.page != null) searchParams.set("page", String(params.page));
   if (params.limit != null) searchParams.set("limit", String(params.limit));
   if (params.search) searchParams.set("search", params.search);
-  if (params.assigned_to) searchParams.set("assigned_to", params.assigned_to);
   if (params.source) searchParams.set("source", params.source);
   if (params.contact_type)
     searchParams.set("contact_type", params.contact_type);
@@ -91,7 +86,6 @@ export async function getContactHistory(
 }
 
 export interface PatchContactCrmBody {
-  assigned_to?: string | null;
   last_contacted_at?: string | null;
   contact_type?: ContactType;
 }
@@ -136,4 +130,13 @@ export async function addContactAddress(
   body: AddContactAddressBody
 ): Promise<void> {
   await apiClient.post(`/contacts/${contactId}/addresses`, body);
+}
+
+export async function convertLeadToContact(
+  leadId: string
+): Promise<{ id: string; contact_id: string }> {
+  const res = await apiClient.post<{ id: string; contact_id: string }>(
+    `/contacts/from-lead/${encodeURIComponent(leadId)}`
+  );
+  return res.data;
 }

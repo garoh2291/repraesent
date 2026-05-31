@@ -5,7 +5,10 @@ import PhoneInput, {
 } from "react-phone-number-input";
 import flags from "react-phone-number-input/flags";
 import en from "react-phone-number-input/locale/en.json";
-import { getCountryCallingCode } from "libphonenumber-js";
+import {
+  getCountryCallingCode,
+  parsePhoneNumberFromString,
+} from "libphonenumber-js";
 import { Check, ChevronDown, Globe } from "lucide-react";
 import { cn } from "~/lib/utils";
 import {
@@ -41,6 +44,31 @@ export function PhoneNumberInput({
   disabled,
   autoFocus,
 }: PhoneNumberInputProps) {
+  // The locked country calling code (`countryCallingCodeEditable={false}`) prevents
+  // the underlying input from accepting a pasted international number that uses a
+  // different calling code. Intercept the paste, detect the country from the pasted
+  // text and set the full E.164 value directly so the country switches automatically.
+  const handlePaste = (e: React.ClipboardEvent<HTMLInputElement>) => {
+    const text = e.clipboardData.getData("text").trim();
+    if (!text) return;
+
+    // Normalise common international prefixes (e.g. "0044" -> "+44").
+    const cleaned = text.replace(/[^\d+]/g, "");
+    const normalized = cleaned.startsWith("00")
+      ? `+${cleaned.slice(2)}`
+      : cleaned;
+
+    // Only override the default behaviour for full international numbers.
+    // National-only numbers are handled fine by the input using the current country.
+    if (!normalized.startsWith("+")) return;
+
+    const parsed = parsePhoneNumberFromString(normalized);
+    if (parsed) {
+      e.preventDefault();
+      onChange(parsed.number);
+    }
+  };
+
   return (
     <PhoneInput
       className={cn("crm-phone-input", className)}
@@ -51,6 +79,7 @@ export function PhoneNumberInput({
       countrySelectComponent={CountrySelect}
       value={(value || undefined) as Value | undefined}
       onChange={(v) => onChange(v ?? "")}
+      onPaste={handlePaste}
       placeholder={placeholder}
       disabled={disabled}
       autoFocus={autoFocus}
@@ -84,6 +113,7 @@ function CountrySelect({
 }: CountrySelectProps) {
   const [open, setOpen] = useState(false);
   const countryListScrollRef = useRef<HTMLDivElement | null>(null);
+  const contentRef = useRef<HTMLDivElement | null>(null);
 
   // Dialog RemoveScroll / nested scroll: wheel on portaled popovers often hits the
   // dialog body instead of this list. Scroll manually and consume the event when possible.
@@ -128,12 +158,20 @@ function CountrySelect({
         <ChevronDown className="h-3 w-3 text-muted-foreground" />
       </PopoverTrigger>
       <PopoverContent
+        ref={contentRef}
         align="start"
         className="p-0 w-[280px]"
         onPointerDown={(e) => e.stopPropagation()}
         onOpenAutoFocus={(e) => {
-          // let cmdk autofocus its input
+          // cmdk's CommandInput doesn't autofocus on its own, and Radix's default
+          // focus target inside a Dialog is unreliable here. Focus the search input
+          // explicitly so typing filters the country list immediately.
           e.preventDefault();
+          requestAnimationFrame(() => {
+            contentRef.current
+              ?.querySelector<HTMLInputElement>('[data-slot="command-input"]')
+              ?.focus();
+          });
         }}
       >
         <Command>

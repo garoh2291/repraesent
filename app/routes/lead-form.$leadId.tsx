@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useParams, useNavigate } from "react-router";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
+import { toast } from "sonner";
 import { useAuthContext } from "~/providers/auth-provider";
 import {
   LeadInfoSection,
@@ -15,8 +16,13 @@ import { getWorkspaceDetail } from "~/lib/api/workspaces";
 import type { WorkspaceMemberItem } from "~/components/organism/tasks/task-form-modal";
 import { useCanEditLeads } from "~/lib/hooks/useCanEditLeads";
 import { useUpdateLeadStatus } from "~/lib/hooks/useUpdateLeadStatus";
-import { ArrowLeft, UserCheck } from "lucide-react";
-import { getContactIdByLead, getContact } from "~/lib/api/contacts-crm";
+import { Button } from "~/components/ui/button";
+import { ArrowLeft, UserCheck, UserPlus } from "lucide-react";
+import {
+  getContactIdByLead,
+  getContact,
+  convertLeadToContact,
+} from "~/lib/api/contacts-crm";
 import { ContactHero } from "~/components/organism/contact-detail/contact-hero";
 import { CreateDealDialog } from "~/components/organism/create-deal-dialog";
 import i18n from "~/i18n";
@@ -84,6 +90,22 @@ export default function LeadFormLeadId() {
     queryKey: ["contact", linkedContactId],
     queryFn: () => getContact(linkedContactId!),
     enabled: !!linkedContactId,
+  });
+
+  const queryClient = useQueryClient();
+
+  const convertMutation = useMutation({
+    mutationFn: () => convertLeadToContact(leadId!),
+    onSuccess: () => {
+      toast.success(t("leads.detail.convertToContactSuccess"));
+      void queryClient.invalidateQueries({
+        queryKey: ["contact-by-lead", leadId],
+      });
+      void queryClient.invalidateQueries({ queryKey: ["contacts"] });
+    },
+    onError: () => {
+      toast.error(t("leads.detail.convertToContactError"));
+    },
   });
 
   const contactLinkLoading =
@@ -244,8 +266,24 @@ export default function LeadFormLeadId() {
           {t("common.loading")}
         </div>
       ) : (
-        <div className="app-fade-up rounded-xl border border-border bg-muted/30 px-4 py-3 text-sm text-muted-foreground">
-          {t("leads.detail.noContactLinked")}
+        <div className="app-fade-up rounded-xl border border-border bg-muted/30 px-4 py-3 flex items-center justify-between gap-3">
+          <span className="text-sm text-muted-foreground">
+            {t("leads.detail.noContactLinked")}
+          </span>
+          {canEdit && (
+            <Button
+              variant="outline"
+              size="sm"
+              className="gap-2 shrink-0"
+              disabled={convertMutation.isPending}
+              onClick={() => convertMutation.mutate()}
+            >
+              <UserPlus className="h-4 w-4" />
+              {convertMutation.isPending
+                ? t("common.loading")
+                : t("leads.detail.convertToContact")}
+            </Button>
+          )}
         </div>
       )}
 

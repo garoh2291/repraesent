@@ -266,14 +266,22 @@ export function ContactProfileForm({
         });
       }
     },
+    onMutate: () => {
+      toast.loading(t("contacts.saving", { defaultValue: "Saving…" }), {
+        id: "contact-profile-save",
+      });
+    },
     onSuccess: () => {
       onSaved();
-      toast.success(t("contacts.saved", { defaultValue: "Saved." }));
+      toast.success(t("contacts.saved", { defaultValue: "Saved." }), {
+        id: "contact-profile-save",
+      });
       setDirty(false);
     },
     onError: () => {
       toast.error(
-        t("contacts.saveFailed", { defaultValue: "Could not save." })
+        t("contacts.saveFailed", { defaultValue: "Could not save." }),
+        { id: "contact-profile-save" }
       );
     },
   });
@@ -302,6 +310,29 @@ export function ContactProfileForm({
     });
   };
 
+  const nameEmpty = first.trim() === "" && last.trim() === "";
+
+  // Debounced autosave: fires ~800ms after the user stops editing, but only
+  // when something changed and a name is present. onSuccess clears `dirty`, so
+  // the post-save refetch doesn't loop back into another save.
+  useEffect(() => {
+    if (!canEdit || !dirty || nameEmpty || mutation.isPending) return;
+    const handle = setTimeout(() => save(), 800);
+    return () => clearTimeout(handle);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [
+    dirty,
+    nameEmpty,
+    canEdit,
+    mutation.isPending,
+    first,
+    last,
+    dob,
+    salutation,
+    contactType,
+    lastContacted,
+  ]);
+
   return (
     <>
       <div
@@ -321,6 +352,7 @@ export function ContactProfileForm({
             }}
             disabled={!canEdit}
             className="h-9"
+            aria-invalid={nameEmpty}
           />
         </FormField>
         <FormField
@@ -334,8 +366,16 @@ export function ContactProfileForm({
             }}
             disabled={!canEdit}
             className="h-9"
+            aria-invalid={nameEmpty}
           />
         </FormField>
+        {nameEmpty ? (
+          <p className="text-[11px] text-destructive sm:col-span-2">
+            {t("contacts.errors.nameRequired", {
+              defaultValue: "Name can't be blank.",
+            })}
+          </p>
+        ) : null}
         <FormField
           label={t("contacts.dateOfBirth", { defaultValue: "Birthdate" })}
         >
@@ -432,39 +472,6 @@ export function ContactProfileForm({
           </FormField>
         ) : null}
       </div>
-      {canEdit && withSectionFooter ? (
-        <PanelFooter
-          dirty={dirty}
-          saving={mutation.isPending}
-          onSave={save}
-          saveLabel={t("common.save", { defaultValue: "Save" })}
-        />
-      ) : null}
-      {canEdit && !withSectionFooter && saveSlot
-        ? createPortal(
-            <>
-              {dirty ? (
-                <span className="text-[11px] text-muted-foreground">
-                  {t("contacts.unsavedChanges", {
-                    defaultValue: "Unsaved changes",
-                  })}
-                </span>
-              ) : null}
-              <Button
-                type="button"
-                size="sm"
-                className="h-8 text-xs"
-                onClick={save}
-                disabled={mutation.isPending || !dirty}
-              >
-                {mutation.isPending
-                  ? t("contacts.saving", { defaultValue: "Saving…" })
-                  : t("common.save", { defaultValue: "Save" })}
-              </Button>
-            </>,
-            saveSlot,
-          )
-        : null}
     </>
   );
 }

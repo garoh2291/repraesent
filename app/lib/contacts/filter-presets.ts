@@ -24,7 +24,7 @@ export const CONTACT_TYPE_FILTER_OPTIONS = CONTACT_TYPES.map((key) => ({
   label: `contacts.contactTypes.${key}`,
 }));
 
-/** Base filters for the contacts list (assignee options are appended in the route). */
+/** Base filters for the contacts list. */
 export const CONTACT_TABLE_FILTERS_BASE: Filter[] = [
   {
     name: "contact_source",
