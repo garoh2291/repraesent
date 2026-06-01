@@ -48,14 +48,6 @@ function contactInitials(name: string): string {
   return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
 }
 
-function assigneeInitials(row: ContactListItem): string {
-  const first = row.assignee_first_name?.trim() ?? "";
-  const last = row.assignee_last_name?.trim() ?? "";
-  const a = first ? first[0] : "";
-  const b = last ? last[0] : "";
-  return (a + b).toUpperCase() || "?";
-}
-
 interface ContactsKanbanProps {
   contacts: ContactListItem[];
   isLoading: boolean;
@@ -265,9 +257,6 @@ function ContactKanbanCardInner({ contact }: { contact: ContactListItem }) {
   const phone = contact.primary_phone?.trim() ?? "";
   const ltvNum =
     contact.lifetime_value != null ? Number(contact.lifetime_value) : null;
-  const hasAssignee = !!(
-    contact.assignee_first_name || contact.assignee_last_name
-  );
 
   let lastContactLabel = "";
   if (contact.last_contacted_at) {
@@ -302,13 +291,6 @@ function ContactKanbanCardInner({ contact }: { contact: ContactListItem }) {
             ) : null}
           </div>
         </div>
-        {hasAssignee ? (
-          <Avatar className="size-6 shrink-0">
-            <AvatarFallback className="bg-muted text-[9px] font-semibold text-foreground">
-              {assigneeInitials(contact)}
-            </AvatarFallback>
-          </Avatar>
-        ) : null}
       </div>
 
       <div className="flex flex-wrap items-center justify-between gap-2 pt-0.5">

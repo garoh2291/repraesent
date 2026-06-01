@@ -52,6 +52,8 @@ export function CreateLeadDialog({
       queryClient.invalidateQueries({ queryKey: ["leads"] }),
       queryClient.invalidateQueries({ queryKey: ["leads-kanban-column"] }),
       queryClient.invalidateQueries({ queryKey: ["leads-kanban-counts"] }),
+      queryClient.invalidateQueries({ queryKey: ["contacts"] }),
+      queryClient.invalidateQueries({ queryKey: ["contacts-options"] }),
       ...(id
         ? [queryClient.invalidateQueries({ queryKey: ["lead", id] })]
         : []),

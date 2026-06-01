@@ -4,7 +4,6 @@ import { useTranslation } from "react-i18next";
 import { startOfDay } from "date-fns";
 import {
   Activity,
-  UserCog,
   Coins,
   CalendarClock,
   Users,
@@ -33,12 +32,10 @@ import {
   DatePickerPopover,
   apiDatetimeToIsoDateString,
 } from "~/components/molecule/date-picker-popover";
-import type { WorkspaceMemberOption } from "./contact-crm-panel";
 
 interface ContactPipelineCardProps {
   contactId: string;
   crm: Record<string, unknown>;
-  workspaceMembers: WorkspaceMemberOption[];
   canEdit: boolean;
   /** When set, contact type can be edited and saved with pipeline fields. */
   contactTypeInitial?: string | null;
@@ -48,7 +45,6 @@ interface ContactPipelineCardProps {
 export function ContactPipelineCard({
   contactId,
   crm,
-  workspaceMembers,
   canEdit,
   contactTypeInitial,
   hasContact = false,
@@ -56,9 +52,6 @@ export function ContactPipelineCard({
   const { t } = useTranslation();
   const queryClient = useQueryClient();
 
-  const [assignedTo, setAssignedTo] = useState<string>(
-    crm.assigned_to ? String(crm.assigned_to) : "unassigned"
-  );
   const [lastContacted, setLastContacted] = useState(
     apiDatetimeToIsoDateString(crm.last_contacted_at),
   );
@@ -71,9 +64,6 @@ export function ContactPipelineCard({
   const [dirty, setDirty] = useState(false);
 
   useEffect(() => {
-    setAssignedTo(
-      crm.assigned_to ? String(crm.assigned_to) : "unassigned"
-    );
     setLastContacted(
       apiDatetimeToIsoDateString(crm.last_contacted_at),
     );
@@ -106,7 +96,6 @@ export function ContactPipelineCard({
 
   const save = () => {
     const body: PatchContactCrmBody = {
-      assigned_to: assignedTo === "unassigned" ? null : assignedTo,
       last_contacted_at: lastContacted.trim()
         ? new Date(`${lastContacted.trim()}T12:00:00`).toISOString()
         : null,
@@ -167,36 +156,6 @@ export function ContactPipelineCard({
               </Select>
             </SidebarField>
           ) : null}
-
-          <SidebarField
-            icon={<UserCog className="h-3.5 w-3.5" />}
-            label={t("contacts.assignedTo", { defaultValue: "Assigned to" })}
-          >
-            <Select
-              value={assignedTo}
-              onValueChange={(v) => {
-                setAssignedTo(v);
-                markDirty();
-              }}
-              disabled={!canEdit}
-            >
-              <SelectTrigger className="h-9">
-                <SelectValue placeholder="—" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="unassigned">
-                  {t("contacts.unassigned", { defaultValue: "Unassigned" })}
-                </SelectItem>
-                {workspaceMembers.map((m) => (
-                  <SelectItem key={m.user_id} value={m.user_id}>
-                    {[m.user_first_name, m.user_last_name]
-                      .filter(Boolean)
-                      .join(" ") || m.user_email}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </SidebarField>
 
           <SidebarField
             icon={<Coins className="h-3.5 w-3.5" />}

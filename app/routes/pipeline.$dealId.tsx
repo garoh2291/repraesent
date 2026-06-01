@@ -1,19 +1,14 @@
-import { useEffect, useMemo, useState } from "react";
-import { getContacts } from "~/lib/api/contacts-crm";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router";
 import { useTranslation } from "react-i18next";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   ArrowLeft,
   CalendarClock,
-  Copy,
   ExternalLink,
-  Mail,
-  Phone,
   Tag,
   Trash2,
   User as UserIcon,
-  UserPlus,
 } from "lucide-react";
 import { toast } from "sonner";
 import { useAuthContext } from "~/providers/auth-provider";
@@ -23,7 +18,6 @@ import {
   getDeal,
   getDealHistory,
   patchDeal,
-  patchDealContact,
   patchDealStatus,
   DEAL_STAGE_KEYS,
   parseDealValue,
@@ -46,12 +40,6 @@ import {
 } from "~/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "~/components/ui/tabs";
 import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "~/components/ui/tooltip";
-import {
   AlertDialog,
   AlertDialogAction,
   AlertDialogCancel,
@@ -64,12 +52,16 @@ import {
 import { LeadTasksSection } from "~/components/organism/tasks/lead-tasks-section";
 import { LeadHistorySection } from "~/components/organism/lead-detail-sheet";
 import { LeadNotesSection } from "~/components/organism/lead-notes-section";
-import { CreateContactDialog } from "~/components/organism/create-contact-dialog";
+import { DealContactSection } from "~/components/organism/deal-contact-section";
 import type { WorkspaceMemberItem } from "~/components/organism/tasks/task-form-modal";
 import {
   DatePickerPopover,
   apiDatetimeToIsoDateString,
 } from "~/components/molecule/date-picker-popover";
+import {
+  STAGE_COLOR,
+  STAGE_TEXT,
+} from "~/components/molecule/deal-stage-badge";
 import { cn } from "~/lib/utils";
 import { formatCurrency, formatDate } from "~/lib/utils/format";
 
@@ -83,20 +75,6 @@ export function meta() {
 function str(v: unknown): string {
   return v == null ? "" : String(v);
 }
-
-const STAGE_COLOR: Record<DealStageKey, string> = {
-  new: "bg-slate-400",
-  in_progress: "bg-sky-500",
-  won: "bg-emerald-600",
-  lost: "bg-red-500",
-};
-
-const STAGE_TEXT: Record<DealStageKey, string> = {
-  new: "text-slate-600 dark:text-slate-300",
-  in_progress: "text-sky-700 dark:text-sky-300",
-  won: "text-emerald-700 dark:text-emerald-300",
-  lost: "text-red-700 dark:text-red-300",
-};
 
 const STAGE_RING: Record<DealStageKey, string> = {
   new: "ring-slate-400/30",
@@ -157,10 +135,19 @@ export default function PipelineDealDetailPage() {
   const [valueStr, setValueStr] = useState("");
   const [assignee, setAssignee] = useState("unassigned");
   const [stage, setStage] = useState<DealStageKey>("new");
-  const [contactSelectValue, setContactSelectValue] = useState<string>("none");
   const [expectedClose, setExpectedClose] = useState("");
   const [deleteOpen, setDeleteOpen] = useState(false);
-  const [createContactOpen, setCreateContactOpen] = useState(false);
+
+  // The form values as last persisted (server load or successful autosave).
+  // Autosave compares the live fields against this snapshot to decide whether
+  // there's an actual change to push, which also prevents the post-save refetch
+  // from re-triggering a save.
+  const lastSaved = useRef<{
+    title: string;
+    valueStr: string;
+    assignee: string;
+    expectedClose: string;
+  } | null>(null);
 
   const hasAccess =
     currentWorkspace?.services?.some(
@@ -200,24 +187,32 @@ export default function PipelineDealDetailPage() {
     enabled: !!dealId && hasAccess && !!deal,
   });
 
-  const contactsQuery = useQuery({
-    queryKey: ["contacts-options"],
-    queryFn: () => getContacts({ limit: 200 }),
-    enabled: hasAccess,
-  });
-  const contactOptions = contactsQuery.data?.data ?? [];
-
   useEffect(() => {
     if (!deal) return;
-    setTitle(str(deal.title));
+    const nextTitle = str(deal.title);
     const v = deal.value;
-    setValueStr(v != null && v !== "" ? formatDealValueInput(String(v)) : "");
-    setAssignee(deal.assigned_to ? String(deal.assigned_to) : "unassigned");
+    const nextValueStr =
+      v != null && v !== "" ? formatDealValueInput(String(v)) : "";
+    const nextAssignee = deal.assigned_to
+      ? String(deal.assigned_to)
+      : "unassigned";
+    const nextExpectedClose = apiDatetimeToIsoDateString(
+      deal.expected_close_date,
+    );
+    setTitle(nextTitle);
+    setValueStr(nextValueStr);
+    setAssignee(nextAssignee);
     const st = str(deal.stage) as DealStageKey;
     setStage(
       (DEAL_STAGE_KEYS as readonly string[]).includes(st) ? st : "new",
     );
-    setExpectedClose(apiDatetimeToIsoDateString(deal.expected_close_date));
+    setExpectedClose(nextExpectedClose);
+    lastSaved.current = {
+      title: nextTitle,
+      valueStr: nextValueStr,
+      assignee: nextAssignee,
+      expectedClose: nextExpectedClose,
+    };
   }, [deal]);
 
   const invalidate = () => {
@@ -306,6 +301,9 @@ export default function PipelineDealDetailPage() {
       const trimmedTitle = title.trim();
       // mutationFn rejects an empty title; don't optimistically blank the card.
       if (!trimmedTitle) return;
+      toast.loading(t("pipeline.dealSaving", { defaultValue: "Saving…" }), {
+        id: "deal-fields-save",
+      });
       await queryClient.cancelQueries({ queryKey: ["deals-pipeline"] });
       await queryClient.cancelQueries({ queryKey: ["contact-deals"] });
       const val = parseDealValue(valueStr);
@@ -320,7 +318,9 @@ export default function PipelineDealDetailPage() {
       return { snapshots: applyOptimisticDeal(patch) };
     },
     onSuccess: () => {
-      toast.success(t("pipeline.dealSaved", { defaultValue: "Deal saved." }));
+      toast.success(t("pipeline.dealSaved", { defaultValue: "Deal saved." }), {
+        id: "deal-fields-save",
+      });
     },
     onError: (error, _vars, ctx) => {
       if (ctx?.snapshots) rollbackSnapshots(ctx.snapshots);
@@ -328,12 +328,15 @@ export default function PipelineDealDetailPage() {
         error instanceof Error &&
         (error.message === "title required" ||
           error.message === "value negative")
-      )
+      ) {
+        toast.dismiss("deal-fields-save");
         return;
+      }
       toast.error(
         t("pipeline.errors.saveFailed", {
           defaultValue: "Could not save deal.",
         }),
+        { id: "deal-fields-save" },
       );
     },
     onSettled: () => {
@@ -372,46 +375,6 @@ export default function PipelineDealDetailPage() {
     },
   });
 
-  const contactMutation = useMutation({
-    mutationFn: (contact_id: string | null) => {
-      if (!dealId) throw new Error("missing deal");
-      return patchDealContact(dealId, contact_id);
-    },
-    onMutate: async (contact_id: string | null) => {
-      await queryClient.cancelQueries({ queryKey: ["deals-pipeline"] });
-      await queryClient.cancelQueries({ queryKey: ["contact-deals"] });
-      const opt = contact_id
-        ? contactOptions.find((c) => c.id === contact_id)
-        : undefined;
-      const patch: Partial<DealListItem> = {
-        contact_id: contact_id,
-        contact_full_name: opt?.contact_full_name ?? null,
-        primary_email: opt?.primary_email ?? null,
-        primary_phone: opt?.primary_phone ?? null,
-      };
-      return { snapshots: applyOptimisticDeal(patch) };
-    },
-    onSuccess: () => {
-      setContactSelectValue("none");
-      toast.success(
-        t("pipeline.contactUpdated", {
-          defaultValue: "Contact link updated.",
-        }),
-      );
-    },
-    onError: (_err, _vars, ctx) => {
-      if (ctx?.snapshots) rollbackSnapshots(ctx.snapshots);
-      toast.error(
-        t("pipeline.errors.contactFailed", {
-          defaultValue: "Could not update contact on deal.",
-        }),
-      );
-    },
-    onSettled: () => {
-      invalidate();
-    },
-  });
-
   const deleteMutation = useMutation({
     mutationFn: () => deleteDeal(dealId!),
     onSuccess: () => {
@@ -435,6 +398,39 @@ export default function PipelineDealDetailPage() {
   useEffect(() => {
     if (!currentWorkspace) navigate("/", { replace: true });
   }, [currentWorkspace, navigate]);
+
+  // Debounced autosave for the Deal details card. Fires ~800ms after the user
+  // stops editing, but only when the fields actually differ from the last
+  // persisted snapshot and pass validation (non-empty title, non-negative
+  // value). Updating the snapshot before mutating stops the post-save refetch
+  // from looping back into another save.
+  const saveFields = saveFieldsMutation.mutate;
+  useEffect(() => {
+    if (!canEdit || !deal || !lastSaved.current) return;
+    const trimmedTitle = title.trim();
+    if (!trimmedTitle) return;
+    const num = parseDealValue(valueStr);
+    if (num != null && num < 0) return;
+
+    const base = lastSaved.current;
+    const baseNum = parseDealValue(base.valueStr);
+    const valChanged =
+      num !== null && baseNum !== null
+        ? num !== baseNum
+        : num !== baseNum || valueStr.trim() !== base.valueStr.trim();
+    const dirty =
+      title !== base.title ||
+      valChanged ||
+      assignee !== base.assignee ||
+      expectedClose !== base.expectedClose;
+    if (!dirty) return;
+
+    const handle = setTimeout(() => {
+      lastSaved.current = { title, valueStr, assignee, expectedClose };
+      saveFields();
+    }, 800);
+    return () => clearTimeout(handle);
+  }, [title, valueStr, assignee, expectedClose, canEdit, deal, saveFields]);
 
   if (!hasAccess) {
     return (
@@ -491,38 +487,9 @@ export default function PipelineDealDetailPage() {
 
   const displayTitle =
     title.trim() ||
-    contactName ||
     t("pipeline.untitledDeal", { defaultValue: "Untitled deal" });
 
-  const titleValid = title.trim().length > 0;
-
-  // Baseline = the field values as last loaded from the server. Used to detect
-  // whether the form is "dirty" so Save stays disabled until something actually
-  // changes (and re-disables itself if the user reverts their edits).
-  const baseTitle = str(deal.title);
-  const baseValueStr =
-    deal.value != null && deal.value !== ""
-      ? formatDealValueInput(String(deal.value))
-      : "";
-  const baseAssignee = deal.assigned_to ? String(deal.assigned_to) : "unassigned";
-  const baseExpectedClose = apiDatetimeToIsoDateString(deal.expected_close_date);
-
-  // Compare value numerically so equivalent inputs (e.g. "1000", "1000.0",
-  // "1,000") aren't treated as a change. Falls back to a trimmed string compare
-  // when either side isn't a finite number.
-  const curValue = parseDealValue(valueStr);
-  const baseValue = parseDealValue(baseValueStr);
-  const valueChanged =
-    curValue !== null && baseValue !== null
-      ? curValue !== baseValue
-      : curValue !== baseValue || valueStr.trim() !== baseValueStr.trim();
-
-  const isDirty =
-    title !== baseTitle ||
-    valueChanged ||
-    assignee !== baseAssignee ||
-    expectedClose !== baseExpectedClose;
-
+  const titleEmpty = title.trim().length === 0;
   const numericValue = parseDealValue(valueStr);
   const valueNegative = numericValue != null && numericValue < 0;
   const valueDisplay =
@@ -539,20 +506,6 @@ export default function PipelineDealDetailPage() {
   const updatedAt = deal.updated_at as string | null | undefined;
 
   const stageLabel = t(`pipeline.stages.${stage}`, { defaultValue: stage });
-
-  const copy = async (value: string, label: string) => {
-    if (!value) return;
-    try {
-      await navigator.clipboard.writeText(value);
-      toast.success(
-        t("contacts.copied", { defaultValue: "Copied {{label}}", label }),
-      );
-    } catch {
-      toast.error(
-        t("contacts.copyFailed", { defaultValue: "Could not copy" }),
-      );
-    }
-  };
 
   return (
     <div className="p-4 sm:p-6 space-y-4 sm:space-y-6 app-fade-in">
@@ -679,32 +632,22 @@ export default function PipelineDealDetailPage() {
       <div className="grid grid-cols-1 gap-4 sm:gap-6 lg:grid-cols-5">
         {/* LEFT — main */}
         <div className="space-y-4 sm:space-y-6 lg:col-span-3">
-          <section className="rounded-2xl border border-border bg-card p-4 sm:p-6 space-y-5 shadow-(--shadow)">
-            <div className="flex items-center justify-between gap-2">
-              <h2 className="text-sm font-semibold">
+          <section className="app-fade-up app-fade-up-d1 rounded-2xl border border-border bg-card shadow-(--shadow)">
+            <header className="border-b border-border px-4 py-3.5 sm:px-5">
+              <h2 className="text-sm font-semibold tracking-tight text-foreground">
                 {t("pipeline.dealDetails", { defaultValue: "Deal details" })}
               </h2>
-              {canEdit ? (
-                <Button
-                  type="button"
-                  size="sm"
-                  onClick={() => saveFieldsMutation.mutate()}
-                  disabled={
-                    saveFieldsMutation.isPending ||
-                    !titleValid ||
-                    valueNegative ||
-                    !isDirty
-                  }
-                >
-                  {saveFieldsMutation.isPending
-                    ? t("common.saving")
-                    : t("common.save", { defaultValue: "Save" })}
-                </Button>
-              ) : null}
-            </div>
+              <p className="mt-0.5 text-[11px] text-muted-foreground">
+                {t("pipeline.dealDetailsHint", {
+                  defaultValue:
+                    "Title, value, owner and expected close for this deal.",
+                })}
+              </p>
+            </header>
 
-            <div className="grid gap-4 sm:grid-cols-2">
-              <div className="space-y-1.5 sm:col-span-2">
+            <div className="p-4 sm:p-5">
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div className="space-y-1.5 sm:col-span-2">
                 <Label htmlFor="deal-detail-title">
                   {t("pipeline.fields.titleRequired", {
                     defaultValue: "Title (required)",
@@ -720,7 +663,15 @@ export default function PipelineDealDetailPage() {
                   })}
                   required
                   aria-required
+                  aria-invalid={titleEmpty}
                 />
+                {titleEmpty ? (
+                  <p className="text-[11px] text-destructive">
+                    {t("pipeline.errors.titleRequired", {
+                      defaultValue: "Title can't be blank.",
+                    })}
+                  </p>
+                ) : null}
               </div>
 
               <div className="space-y-1.5">
@@ -793,15 +744,10 @@ export default function PipelineDealDetailPage() {
                     defaultValue: "Pick date",
                   })}
                 />
-                {canEdit ? (
-                  <p className="text-[11px] text-muted-foreground">
-                    {t("pipeline.fields.expectedCloseHint", {
-                      defaultValue: "Saved with Save above.",
-                    })}
-                  </p>
-                ) : null}
+                </div>
               </div>
             </div>
+
           </section>
 
           <section className="rounded-2xl border border-border bg-card p-4 sm:p-6 shadow-(--shadow)">
@@ -840,206 +786,15 @@ export default function PipelineDealDetailPage() {
         {/* RIGHT — sidebar */}
         <div className="space-y-4 sm:space-y-6 lg:col-span-2">
           <div className="lg:sticky lg:top-6 space-y-4 sm:space-y-6">
-            {/* Linked contact */}
-            <section className="rounded-2xl border border-border bg-card p-4 sm:p-5 shadow-(--shadow) space-y-4">
-              <div className="flex items-center justify-between gap-2">
-                <h2 className="text-sm font-semibold">
-                  {t("pipeline.linkedContact", { defaultValue: "Contact" })}
-                </h2>
-                {contactId && canEdit ? (
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => contactMutation.mutate(null)}
-                    disabled={contactMutation.isPending}
-                    className="h-7 text-xs text-muted-foreground hover:text-destructive"
-                  >
-                    {t("pipeline.detachContact", { defaultValue: "Detach" })}
-                  </Button>
-                ) : null}
-              </div>
-
-              {contactId && contact ? (
-                <div className="space-y-3">
-                  <Link
-                    to={`/contacts/${contactId}`}
-                    className="group flex items-center gap-3 rounded-xl border border-border/70 bg-card/60 p-3 transition-all hover:border-border hover:bg-card hover:shadow-(--shadow-sm)"
-                  >
-                    <Avatar className="size-10 shrink-0">
-                      <AvatarFallback className="bg-linear-to-br from-secondary/30 to-primary/10 text-sm font-semibold">
-                        {initials(contactName || "?")}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div className="min-w-0 flex-1">
-                      <p className="truncate text-sm font-semibold text-foreground group-hover:text-primary">
-                        {contactName || contactId}
-                      </p>
-                      <p className="text-[11px] text-muted-foreground">
-                        {t("pipeline.openContact", {
-                          defaultValue: "Open contact",
-                        })}
-                      </p>
-                    </div>
-                    <ExternalLink className="h-3.5 w-3.5 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100" />
-                  </Link>
-
-                  {contactEmail ? (
-                    <div className="group flex items-center gap-3 rounded-xl border border-border/70 bg-card/60 px-3 py-2.5">
-                      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
-                        <Mail className="h-4 w-4" />
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">
-                          {t("contacts.primaryEmailLabel", {
-                            defaultValue: "Email",
-                          })}
-                        </p>
-                        <p className="truncate text-sm font-medium">
-                          {contactEmail}
-                        </p>
-                      </div>
-                      <div className="flex shrink-0 items-center gap-1 opacity-0 transition-opacity group-hover:opacity-100">
-                        <a
-                          href={`mailto:${contactEmail}`}
-                          className="inline-flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground"
-                          aria-label={t("contacts.sendEmail", {
-                            defaultValue: "Send email",
-                          })}
-                        >
-                          <ExternalLink className="h-3.5 w-3.5" />
-                        </a>
-                        <button
-                          type="button"
-                          onClick={() => copy(contactEmail, "email")}
-                          className="inline-flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground"
-                          aria-label="Copy email"
-                        >
-                          <Copy className="h-3.5 w-3.5" />
-                        </button>
-                      </div>
-                    </div>
-                  ) : null}
-
-                  {contactPhone ? (
-                    <div className="group flex items-center gap-3 rounded-xl border border-border/70 bg-card/60 px-3 py-2.5">
-                      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
-                        <Phone className="h-4 w-4" />
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">
-                          {t("contacts.primaryPhoneLabel", {
-                            defaultValue: "Phone",
-                          })}
-                        </p>
-                        <p className="truncate text-sm font-medium">
-                          {contactPhone}
-                        </p>
-                      </div>
-                      <div className="flex shrink-0 items-center gap-1 opacity-0 transition-opacity group-hover:opacity-100">
-                        <a
-                          href={`tel:${contactPhone.replace(/\s+/g, "")}`}
-                          className="inline-flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground"
-                          aria-label={t("contacts.callPhone", {
-                            defaultValue: "Call",
-                          })}
-                        >
-                          <ExternalLink className="h-3.5 w-3.5" />
-                        </a>
-                        <button
-                          type="button"
-                          onClick={() => copy(contactPhone, "phone")}
-                          className="inline-flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground"
-                          aria-label="Copy phone"
-                        >
-                          <Copy className="h-3.5 w-3.5" />
-                        </button>
-                      </div>
-                    </div>
-                  ) : null}
-                </div>
-              ) : canEdit ? (
-                <div className="space-y-2">
-                  <div className="flex items-center gap-2">
-                    <Select
-                      value={contactSelectValue}
-                      onValueChange={(v) => {
-                        setContactSelectValue(v);
-                        if (v && v !== "none") contactMutation.mutate(v);
-                      }}
-                      disabled={
-                        contactMutation.isPending || contactsQuery.isLoading
-                      }
-                    >
-                      <SelectTrigger className="flex-1">
-                        <SelectValue
-                          placeholder={
-                            contactsQuery.isLoading
-                              ? t("common.loading")
-                              : t("pipeline.selectContact", {
-                                  defaultValue: "Link a contact…",
-                                })
-                          }
-                        />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="none">
-                          {t("pipeline.noContactOption", {
-                            defaultValue: "Select a contact",
-                          })}
-                        </SelectItem>
-                        {contactOptions.map((c) => {
-                          const label =
-                            (c.contact_full_name || "").trim() ||
-                            c.primary_email ||
-                            c.primary_phone ||
-                            c.id;
-                          return (
-                            <SelectItem key={c.id} value={c.id}>
-                              {label}
-                            </SelectItem>
-                          );
-                        })}
-                      </SelectContent>
-                    </Select>
-                    <TooltipProvider delayDuration={200}>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <Button
-                            type="button"
-                            variant="outline"
-                            size="icon"
-                            className="shrink-0"
-                            onClick={() => setCreateContactOpen(true)}
-                          >
-                            <UserPlus className="h-4 w-4" />
-                          </Button>
-                        </TooltipTrigger>
-                        <TooltipContent side="top">
-                          {t("contacts.newContactTitle", {
-                            defaultValue: "New contact",
-                          })}
-                        </TooltipContent>
-                      </Tooltip>
-                    </TooltipProvider>
-                  </div>
-                  {contactOptions.length === 0 && !contactsQuery.isLoading ? (
-                    <p className="text-xs text-muted-foreground">
-                      {t("pipeline.noContactsAvailable", {
-                        defaultValue:
-                          "No contacts yet. Create one with the button above.",
-                      })}
-                    </p>
-                  ) : null}
-                </div>
-              ) : (
-                <p className="text-xs text-muted-foreground italic">
-                  {t("pipeline.noContactAttached", {
-                    defaultValue: "No contact linked.",
-                  })}
-                </p>
-              )}
-            </section>
+            {/* Contact */}
+            <DealContactSection
+              dealId={dealId}
+              contactId={contactId}
+              contactName={contactName}
+              contactEmail={contactEmail}
+              contactPhone={contactPhone}
+              canEdit={canEdit}
+            />
 
             {/* Key facts */}
             <section className="rounded-2xl border border-border bg-card p-4 sm:p-5 shadow-(--shadow) space-y-4">
@@ -1131,14 +886,6 @@ export default function PipelineDealDetailPage() {
           </div>
         </div>
       </div>
-
-      <CreateContactDialog
-        open={createContactOpen}
-        onOpenChange={setCreateContactOpen}
-        onCreated={(newContactId) => {
-          contactMutation.mutate(newContactId);
-        }}
-      />
 
       {canEdit ? (
         <div className="flex justify-end">

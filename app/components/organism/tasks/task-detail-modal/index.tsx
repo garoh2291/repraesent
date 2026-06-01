@@ -195,6 +195,8 @@ export function TaskDetailModal({
       });
     }
     queryClient.invalidateQueries({ queryKey: ["tasks"] });
+    queryClient.invalidateQueries({ queryKey: ["home-tasks-upcoming"] });
+    queryClient.invalidateQueries({ queryKey: ["home-tasks-overdue"] });
     queryClient.invalidateQueries({ queryKey: ["leads"] });
   }, [queryClient, taskId, task, historyContactId]);
 

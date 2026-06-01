@@ -78,6 +78,7 @@ function useColumnQuery(status: LeadStatus, filters: KanbanFilters) {
         form_name: filters.form_name,
         platform_campaign_id: filters.platform_campaign_id,
         include_hidden: true,
+        sort: "board_position",
       }),
     initialPageParam: 1,
     getNextPageParam: (lastPage) =>

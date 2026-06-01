@@ -39,7 +39,11 @@ import {
   type UpdateTaskPayload,
 } from "~/lib/api/tasks";
 import { getLeads, type Lead } from "~/lib/api/leads";
+import { getContacts, type ContactListItem } from "~/lib/api/contacts-crm";
+import { getDeals, type DealListItem } from "~/lib/api/deals";
 import { useDebounce } from "~/lib/hooks/useDebounce";
+
+type EntityType = "lead" | "contact" | "deal";
 
 export interface WorkspaceMemberItem {
   user_id: string;
@@ -100,6 +104,9 @@ export function TaskFormModal({
   const [assigneeId, setAssigneeId] = useState<string>("unassigned");
   const [calendarOpen, setCalendarOpen] = useState(false);
 
+  // Entity type selector (only used when no entity pre-provided)
+  const [entityType, setEntityType] = useState<EntityType>("lead");
+
   // Lead picker state (only used when leadId not provided)
   const [pickedLead, setPickedLead] = useState<Lead | null>(null);
   const [leadSearch, setLeadSearch] = useState("");
@@ -107,10 +114,23 @@ export function TaskFormModal({
   const leadListScrollRef = useRef<HTMLDivElement>(null);
   const debouncedLeadSearch = useDebounce(leadSearch, 300);
 
+  // Contact picker state
+  const [pickedContact, setPickedContact] = useState<ContactListItem | null>(null);
+  const [contactSearch, setContactSearch] = useState("");
+  const [contactPickerOpen, setContactPickerOpen] = useState(false);
+  const contactListScrollRef = useRef<HTMLDivElement>(null);
+  const debouncedContactSearch = useDebounce(contactSearch, 300);
+
+  // Deal picker state
+  const [pickedDeal, setPickedDeal] = useState<DealListItem | null>(null);
+  const [dealSearch, setDealSearch] = useState("");
+  const [dealPickerOpen, setDealPickerOpen] = useState(false);
+  const dealListScrollRef = useRef<HTMLDivElement>(null);
+  const debouncedDealSearch = useDebounce(dealSearch, 300);
+
   // Manual wheel handler: Dialog's RemoveScroll blocks wheel events on portaled content.
-  // We scroll manually and consume the event so it works when hovering over the list.
-  const handleLeadListWheel = (e: React.WheelEvent) => {
-    const el = leadListScrollRef.current;
+  const handleListWheel = (ref: React.RefObject<HTMLDivElement | null>) => (e: React.WheelEvent) => {
+    const el = ref.current;
     if (!el) return;
     const { scrollTop, scrollHeight, clientHeight } = el;
     const canScrollUp = scrollTop > 0;
@@ -123,12 +143,30 @@ export function TaskFormModal({
   };
 
   const effectiveLeadId = leadId ?? pickedLead?.id ?? "";
+  const effectiveContactId = contactId ?? pickedContact?.id ?? "";
+  const effectiveDealId = dealId ?? pickedDeal?.id ?? "";
+
+  const showEntityPicker = !leadId && !contactId && !dealId && !isEdit;
 
   const leadsQuery = useQuery({
     queryKey: ["leads-picker", debouncedLeadSearch],
     queryFn: () =>
       getLeads({ search: debouncedLeadSearch || undefined, limit: 20 }),
-    enabled: !leadId && !contactId && !dealId && open && leadPickerOpen,
+    enabled: showEntityPicker && open && leadPickerOpen && entityType === "lead",
+  });
+
+  const contactsQuery = useQuery({
+    queryKey: ["contacts-picker", debouncedContactSearch],
+    queryFn: () =>
+      getContacts({ search: debouncedContactSearch || undefined, limit: 20 }),
+    enabled: showEntityPicker && open && contactPickerOpen && entityType === "contact",
+  });
+
+  const dealsQuery = useQuery({
+    queryKey: ["deals-picker", debouncedDealSearch],
+    queryFn: () =>
+      getDeals({ search: debouncedDealSearch || undefined, limit: 20 }),
+    enabled: showEntityPicker && open && dealPickerOpen && entityType === "deal",
   });
 
   useEffect(() => {
@@ -147,9 +185,16 @@ export function TaskFormModal({
 
   useEffect(() => {
     if (!open) {
+      setEntityType("lead");
       setPickedLead(null);
       setLeadSearch("");
       setLeadPickerOpen(false);
+      setPickedContact(null);
+      setContactSearch("");
+      setContactPickerOpen(false);
+      setPickedDeal(null);
+      setDealSearch("");
+      setDealPickerOpen(false);
     }
   }, [open]);
 
@@ -164,36 +209,41 @@ export function TaskFormModal({
       if (isEdit) {
         return updateTask(task!.id, payload);
       }
-      if (dealId) {
-        return createTaskForDeal(dealId, payload);
+      if (dealId || (!leadId && !contactId && entityType === "deal")) {
+        return createTaskForDeal(effectiveDealId, payload);
       }
-      if (contactId) {
-        return createTaskForContact(contactId, payload);
+      if (contactId || (!leadId && !dealId && entityType === "contact")) {
+        return createTaskForContact(effectiveContactId, payload);
       }
       return createTask(effectiveLeadId, payload);
     },
     onSuccess: (saved) => {
-      if (dealId) {
+      const usedDealId = dealId || (!leadId && !contactId && entityType === "deal" ? effectiveDealId : "");
+      const usedContactId = contactId || (!leadId && !dealId && entityType === "contact" ? effectiveContactId : "");
+
+      queryClient.invalidateQueries({ queryKey: ["tasks"] });
+      queryClient.invalidateQueries({ queryKey: ["home-tasks-upcoming"] });
+      queryClient.invalidateQueries({ queryKey: ["home-tasks-overdue"] });
+      if (usedDealId) {
         queryClient.invalidateQueries({
-          queryKey: ["deal-tasks", dealId],
+          queryKey: ["deal-tasks", usedDealId],
         });
-        queryClient.invalidateQueries({ queryKey: ["deal", dealId] });
+        queryClient.invalidateQueries({ queryKey: ["deal", usedDealId] });
         queryClient.invalidateQueries({
-          queryKey: ["deal-history", dealId],
+          queryKey: ["deal-history", usedDealId],
         });
-      } else if (contactId) {
+      } else if (usedContactId) {
         queryClient.invalidateQueries({
-          queryKey: ["contact-tasks", contactId],
+          queryKey: ["contact-tasks", usedContactId],
         });
-        queryClient.invalidateQueries({ queryKey: ["contact", contactId] });
+        queryClient.invalidateQueries({ queryKey: ["contact", usedContactId] });
         queryClient.invalidateQueries({
-          queryKey: ["contact-history", contactId],
+          queryKey: ["contact-history", usedContactId],
         });
       } else {
         queryClient.invalidateQueries({
           queryKey: ["lead-tasks", effectiveLeadId],
         });
-        queryClient.invalidateQueries({ queryKey: ["tasks"] });
         queryClient.invalidateQueries({ queryKey: ["leads"] });
         queryClient.invalidateQueries({
           queryKey: ["lead-detail", effectiveLeadId],
@@ -237,7 +287,12 @@ export function TaskFormModal({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!title.trim()) return;
-    if (!isEdit && !contactId && !dealId && !effectiveLeadId) return;
+    if (!isEdit) {
+      if (dealId || (entityType === "deal" && effectiveDealId)) { /* ok */ }
+      else if (contactId || (entityType === "contact" && effectiveContactId)) { /* ok */ }
+      else if (leadId || effectiveLeadId) { /* ok */ }
+      else return;
+    }
     mutation.mutate();
   };
 
@@ -246,18 +301,23 @@ export function TaskFormModal({
     setDueDate(undefined);
   };
 
-  const displayedLeadName =
-    leadName ??
-    linkedContextLabel ??
-    pickedLead?.full_name ??
-    (pickedLead
-      ? [pickedLead.first_name, pickedLead.last_name]
-          .filter(Boolean)
-          .join(" ")
-          .trim()
-      : "") ??
-    pickedLead?.email ??
-    "";
+  const displayedEntityName = (() => {
+    if (leadName || linkedContextLabel) return leadName ?? linkedContextLabel ?? "";
+    if (entityType === "lead") {
+      return pickedLead?.full_name ??
+        (pickedLead
+          ? [pickedLead.first_name, pickedLead.last_name].filter(Boolean).join(" ").trim()
+          : "") ??
+        pickedLead?.email ?? "";
+    }
+    if (entityType === "contact") {
+      return pickedContact?.contact_full_name ?? "";
+    }
+    if (entityType === "deal") {
+      return pickedDeal?.title ?? pickedDeal?.contact_full_name ?? "";
+    }
+    return "";
+  })();
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -265,123 +325,371 @@ export function TaskFormModal({
         <DialogHeader>
           <DialogTitle>
             {isEdit ? t("tasks.form.editTitle") : t("tasks.form.createTitle")}
-            {displayedLeadName && !isEdit && (
+            {displayedEntityName && !isEdit && (
               <span className="ml-2 text-sm font-normal text-muted-foreground">
-                — {displayedLeadName}
+                — {displayedEntityName}
               </span>
             )}
           </DialogTitle>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4 pt-1">
-          {/* Lead picker — only when leadId not pre-provided */}
-          {!leadId && !contactId && !dealId && !isEdit && (
-            <div className="space-y-1.5">
-              <Label className="text-xs font-medium">
-                {t("tasks.fields.lead")}{" "}
-                <span className="text-destructive">*</span>
-              </Label>
-              <Popover open={leadPickerOpen} onOpenChange={setLeadPickerOpen}>
-                <PopoverTrigger asChild>
-                  <button
-                    type="button"
-                    className={cn(
-                      "flex w-full items-center gap-2 rounded-lg border border-border bg-background px-3 py-2 text-sm transition-colors",
-                      "hover:bg-muted/50 focus:outline-none focus:ring-2 focus:ring-primary/20",
-                      !pickedLead && "text-muted-foreground"
-                    )}
-                  >
-                    <Search className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
-                    <span className="flex-1 text-left truncate">
-                      {pickedLead
-                        ? displayedLeadName
-                        : t("tasks.form.searchLead")}
-                    </span>
-                    {pickedLead ? (
-                      <span
-                        role="button"
-                        tabIndex={0}
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setPickedLead(null);
-                          setLeadSearch("");
-                        }}
-                        onKeyDown={(e) =>
-                          (e.key === "Enter" || e.key === " ") &&
-                          setPickedLead(null)
-                        }
-                        className="text-muted-foreground hover:text-foreground"
-                      >
-                        <X className="h-3.5 w-3.5" />
-                      </span>
-                    ) : (
-                      <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" />
-                    )}
-                  </button>
-                </PopoverTrigger>
-                <PopoverContent
-                  className="w-[min(400px,calc(100vw-2rem))] p-0 flex flex-col overflow-hidden"
-                  align="start"
+          {/* Entity picker — only when no entity pre-provided */}
+          {showEntityPicker && (
+            <>
+              <div className="space-y-1.5">
+                <Label className="text-xs font-medium">
+                  {t("tasks.fields.entityType", { defaultValue: "Task type" })}{" "}
+                  <span className="text-destructive">*</span>
+                </Label>
+                <Select
+                  value={entityType}
+                  onValueChange={(v) => {
+                    setEntityType(v as EntityType);
+                    setPickedLead(null);
+                    setLeadSearch("");
+                    setLeadPickerOpen(false);
+                    setPickedContact(null);
+                    setContactSearch("");
+                    setContactPickerOpen(false);
+                    setPickedDeal(null);
+                    setDealSearch("");
+                    setDealPickerOpen(false);
+                  }}
                 >
-                  <div className="flex items-center gap-2 border-b border-border px-3 py-2 shrink-0">
-                    <Search className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
-                    <Input
-                      autoFocus
-                      value={leadSearch}
-                      onChange={(e) => setLeadSearch(e.target.value)}
-                      placeholder={t("tasks.form.searchLead")}
-                      className="border-0 p-0 h-auto focus-visible:ring-0 text-sm"
-                    />
-                  </div>
-                  <div
-                    ref={leadListScrollRef}
-                    className="min-h-0 max-h-[200px] overflow-y-auto overscroll-contain"
-                    onWheel={handleLeadListWheel}
-                  >
-                    {leadsQuery.isFetching ? (
-                      <div className="flex items-center justify-center py-4">
-                        <div className="h-4 w-4 app-spin rounded-full border-2 border-primary/20 border-t-primary" />
-                      </div>
-                    ) : leadsQuery.data?.data.length === 0 ? (
-                      <div className="px-3 py-4 text-xs text-center text-muted-foreground">
-                        {t("common.noResults")}
-                      </div>
-                    ) : (
-                      (leadsQuery.data?.data ?? []).map((lead) => {
-                        const name =
-                          lead.full_name ||
-                          [lead.first_name, lead.last_name]
-                            .filter(Boolean)
-                            .join(" ")
-                            .trim() ||
-                          lead.email ||
-                          "—";
-                        return (
-                          <button
-                            key={lead.id}
-                            type="button"
-                            onClick={() => {
-                              setPickedLead(lead);
-                              setLeadPickerOpen(false);
+                  <SelectTrigger className="text-sm">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="lead">
+                      {t("tasks.entityTypes.lead", { defaultValue: "Lead task" })}
+                    </SelectItem>
+                    <SelectItem value="contact">
+                      {t("tasks.entityTypes.contact", { defaultValue: "Contact task" })}
+                    </SelectItem>
+                    <SelectItem value="deal">
+                      {t("tasks.entityTypes.deal", { defaultValue: "Deal task" })}
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Lead picker */}
+              {entityType === "lead" && (
+                <div className="space-y-1.5">
+                  <Label className="text-xs font-medium">
+                    {t("tasks.fields.lead")}{" "}
+                    <span className="text-destructive">*</span>
+                  </Label>
+                  <Popover open={leadPickerOpen} onOpenChange={setLeadPickerOpen}>
+                    <PopoverTrigger asChild>
+                      <button
+                        type="button"
+                        className={cn(
+                          "flex w-full items-center gap-2 rounded-lg border border-border bg-background px-3 py-2 text-sm transition-colors",
+                          "hover:bg-muted/50 focus:outline-none focus:ring-2 focus:ring-primary/20",
+                          !pickedLead && "text-muted-foreground"
+                        )}
+                      >
+                        <Search className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                        <span className="flex-1 text-left truncate">
+                          {pickedLead
+                            ? displayedEntityName
+                            : t("tasks.form.searchLead")}
+                        </span>
+                        {pickedLead ? (
+                          <span
+                            role="button"
+                            tabIndex={0}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setPickedLead(null);
+                              setLeadSearch("");
                             }}
-                            className="w-full text-left px-3 py-2.5 text-sm hover:bg-muted transition-colors flex items-center gap-2"
+                            onKeyDown={(e) =>
+                              (e.key === "Enter" || e.key === " ") &&
+                              setPickedLead(null)
+                            }
+                            className="text-muted-foreground hover:text-foreground"
                           >
-                            <span className="font-medium flex-1 truncate">
-                              {name}
-                            </span>
-                            {lead.email && (
-                              <span className="text-muted-foreground text-xs truncate max-w-[140px]">
-                                {lead.email}
-                              </span>
-                            )}
-                          </button>
-                        );
-                      })
-                    )}
-                  </div>
-                </PopoverContent>
-              </Popover>
-            </div>
+                            <X className="h-3.5 w-3.5" />
+                          </span>
+                        ) : (
+                          <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" />
+                        )}
+                      </button>
+                    </PopoverTrigger>
+                    <PopoverContent
+                      className="w-[min(400px,calc(100vw-2rem))] p-0 flex flex-col overflow-hidden"
+                      align="start"
+                    >
+                      <div className="flex items-center gap-2 border-b border-border px-3 py-2 shrink-0">
+                        <Search className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                        <Input
+                          autoFocus
+                          value={leadSearch}
+                          onChange={(e) => setLeadSearch(e.target.value)}
+                          placeholder={t("tasks.form.searchLead")}
+                          className="border-0 p-0 h-auto focus-visible:ring-0 text-sm"
+                        />
+                      </div>
+                      <div
+                        ref={leadListScrollRef}
+                        className="min-h-0 max-h-[200px] overflow-y-auto overscroll-contain"
+                        onWheel={handleListWheel(leadListScrollRef)}
+                      >
+                        {leadsQuery.isFetching ? (
+                          <div className="flex items-center justify-center py-4">
+                            <div className="h-4 w-4 app-spin rounded-full border-2 border-primary/20 border-t-primary" />
+                          </div>
+                        ) : leadsQuery.data?.data.length === 0 ? (
+                          <div className="px-3 py-4 text-xs text-center text-muted-foreground">
+                            {t("common.noResults")}
+                          </div>
+                        ) : (
+                          (leadsQuery.data?.data ?? []).map((lead) => {
+                            const name =
+                              lead.full_name ||
+                              [lead.first_name, lead.last_name]
+                                .filter(Boolean)
+                                .join(" ")
+                                .trim() ||
+                              lead.email ||
+                              "—";
+                            return (
+                              <button
+                                key={lead.id}
+                                type="button"
+                                onClick={() => {
+                                  setPickedLead(lead);
+                                  setLeadPickerOpen(false);
+                                }}
+                                className="w-full text-left px-3 py-2.5 text-sm hover:bg-muted transition-colors flex items-center gap-2"
+                              >
+                                <span className="font-medium flex-1 truncate">
+                                  {name}
+                                </span>
+                                {lead.email && (
+                                  <span className="text-muted-foreground text-xs truncate max-w-[140px]">
+                                    {lead.email}
+                                  </span>
+                                )}
+                              </button>
+                            );
+                          })
+                        )}
+                      </div>
+                    </PopoverContent>
+                  </Popover>
+                </div>
+              )}
+
+              {/* Contact picker */}
+              {entityType === "contact" && (
+                <div className="space-y-1.5">
+                  <Label className="text-xs font-medium">
+                    {t("tasks.fields.contact", { defaultValue: "Contact" })}{" "}
+                    <span className="text-destructive">*</span>
+                  </Label>
+                  <Popover open={contactPickerOpen} onOpenChange={setContactPickerOpen}>
+                    <PopoverTrigger asChild>
+                      <button
+                        type="button"
+                        className={cn(
+                          "flex w-full items-center gap-2 rounded-lg border border-border bg-background px-3 py-2 text-sm transition-colors",
+                          "hover:bg-muted/50 focus:outline-none focus:ring-2 focus:ring-primary/20",
+                          !pickedContact && "text-muted-foreground"
+                        )}
+                      >
+                        <Search className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                        <span className="flex-1 text-left truncate">
+                          {pickedContact
+                            ? pickedContact.contact_full_name || pickedContact.primary_email || "—"
+                            : t("tasks.form.searchContact", { defaultValue: "Search contacts…" })}
+                        </span>
+                        {pickedContact ? (
+                          <span
+                            role="button"
+                            tabIndex={0}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setPickedContact(null);
+                              setContactSearch("");
+                            }}
+                            onKeyDown={(e) =>
+                              (e.key === "Enter" || e.key === " ") &&
+                              setPickedContact(null)
+                            }
+                            className="text-muted-foreground hover:text-foreground"
+                          >
+                            <X className="h-3.5 w-3.5" />
+                          </span>
+                        ) : (
+                          <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" />
+                        )}
+                      </button>
+                    </PopoverTrigger>
+                    <PopoverContent
+                      className="w-[min(400px,calc(100vw-2rem))] p-0 flex flex-col overflow-hidden"
+                      align="start"
+                    >
+                      <div className="flex items-center gap-2 border-b border-border px-3 py-2 shrink-0">
+                        <Search className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                        <Input
+                          autoFocus
+                          value={contactSearch}
+                          onChange={(e) => setContactSearch(e.target.value)}
+                          placeholder={t("tasks.form.searchContact", { defaultValue: "Search contacts…" })}
+                          className="border-0 p-0 h-auto focus-visible:ring-0 text-sm"
+                        />
+                      </div>
+                      <div
+                        ref={contactListScrollRef}
+                        className="min-h-0 max-h-[200px] overflow-y-auto overscroll-contain"
+                        onWheel={handleListWheel(contactListScrollRef)}
+                      >
+                        {contactsQuery.isFetching ? (
+                          <div className="flex items-center justify-center py-4">
+                            <div className="h-4 w-4 app-spin rounded-full border-2 border-primary/20 border-t-primary" />
+                          </div>
+                        ) : contactsQuery.data?.data.length === 0 ? (
+                          <div className="px-3 py-4 text-xs text-center text-muted-foreground">
+                            {t("common.noResults")}
+                          </div>
+                        ) : (
+                          (contactsQuery.data?.data ?? []).map((c) => {
+                            const name = c.contact_full_name?.trim() || c.primary_email || "—";
+                            return (
+                              <button
+                                key={c.id}
+                                type="button"
+                                onClick={() => {
+                                  setPickedContact(c);
+                                  setContactPickerOpen(false);
+                                }}
+                                className="w-full text-left px-3 py-2.5 text-sm hover:bg-muted transition-colors flex items-center gap-2"
+                              >
+                                <span className="font-medium flex-1 truncate">
+                                  {name}
+                                </span>
+                                {c.primary_email && c.contact_full_name && (
+                                  <span className="text-muted-foreground text-xs truncate max-w-[140px]">
+                                    {c.primary_email}
+                                  </span>
+                                )}
+                              </button>
+                            );
+                          })
+                        )}
+                      </div>
+                    </PopoverContent>
+                  </Popover>
+                </div>
+              )}
+
+              {/* Deal picker */}
+              {entityType === "deal" && (
+                <div className="space-y-1.5">
+                  <Label className="text-xs font-medium">
+                    {t("tasks.fields.deal", { defaultValue: "Deal" })}{" "}
+                    <span className="text-destructive">*</span>
+                  </Label>
+                  <Popover open={dealPickerOpen} onOpenChange={setDealPickerOpen}>
+                    <PopoverTrigger asChild>
+                      <button
+                        type="button"
+                        className={cn(
+                          "flex w-full items-center gap-2 rounded-lg border border-border bg-background px-3 py-2 text-sm transition-colors",
+                          "hover:bg-muted/50 focus:outline-none focus:ring-2 focus:ring-primary/20",
+                          !pickedDeal && "text-muted-foreground"
+                        )}
+                      >
+                        <Search className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                        <span className="flex-1 text-left truncate">
+                          {pickedDeal
+                            ? pickedDeal.title || pickedDeal.contact_full_name || "—"
+                            : t("tasks.form.searchDeal", { defaultValue: "Search deals…" })}
+                        </span>
+                        {pickedDeal ? (
+                          <span
+                            role="button"
+                            tabIndex={0}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setPickedDeal(null);
+                              setDealSearch("");
+                            }}
+                            onKeyDown={(e) =>
+                              (e.key === "Enter" || e.key === " ") &&
+                              setPickedDeal(null)
+                            }
+                            className="text-muted-foreground hover:text-foreground"
+                          >
+                            <X className="h-3.5 w-3.5" />
+                          </span>
+                        ) : (
+                          <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" />
+                        )}
+                      </button>
+                    </PopoverTrigger>
+                    <PopoverContent
+                      className="w-[min(400px,calc(100vw-2rem))] p-0 flex flex-col overflow-hidden"
+                      align="start"
+                    >
+                      <div className="flex items-center gap-2 border-b border-border px-3 py-2 shrink-0">
+                        <Search className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                        <Input
+                          autoFocus
+                          value={dealSearch}
+                          onChange={(e) => setDealSearch(e.target.value)}
+                          placeholder={t("tasks.form.searchDeal", { defaultValue: "Search deals…" })}
+                          className="border-0 p-0 h-auto focus-visible:ring-0 text-sm"
+                        />
+                      </div>
+                      <div
+                        ref={dealListScrollRef}
+                        className="min-h-0 max-h-[200px] overflow-y-auto overscroll-contain"
+                        onWheel={handleListWheel(dealListScrollRef)}
+                      >
+                        {dealsQuery.isFetching ? (
+                          <div className="flex items-center justify-center py-4">
+                            <div className="h-4 w-4 app-spin rounded-full border-2 border-primary/20 border-t-primary" />
+                          </div>
+                        ) : dealsQuery.data?.data.length === 0 ? (
+                          <div className="px-3 py-4 text-xs text-center text-muted-foreground">
+                            {t("common.noResults")}
+                          </div>
+                        ) : (
+                          (dealsQuery.data?.data ?? []).map((d) => {
+                            const name = d.title?.trim() || d.contact_full_name || "—";
+                            return (
+                              <button
+                                key={d.id}
+                                type="button"
+                                onClick={() => {
+                                  setPickedDeal(d);
+                                  setDealPickerOpen(false);
+                                }}
+                                className="w-full text-left px-3 py-2.5 text-sm hover:bg-muted transition-colors flex items-center gap-2"
+                              >
+                                <span className="font-medium flex-1 truncate">
+                                  {name}
+                                </span>
+                                {d.contact_full_name && d.title && (
+                                  <span className="text-muted-foreground text-xs truncate max-w-[140px]">
+                                    {d.contact_full_name}
+                                  </span>
+                                )}
+                              </button>
+                            );
+                          })
+                        )}
+                      </div>
+                    </PopoverContent>
+                  </Popover>
+                </div>
+              )}
+            </>
           )}
 
           {/* Title */}
@@ -530,7 +838,13 @@ export function TaskFormModal({
               disabled={
                 !title.trim() ||
                 mutation.isPending ||
-                (!isEdit && !contactId && !dealId && !effectiveLeadId)
+                (!isEdit &&
+                  !contactId &&
+                  !dealId &&
+                  !leadId &&
+                  !(entityType === "lead" && effectiveLeadId) &&
+                  !(entityType === "contact" && effectiveContactId) &&
+                  !(entityType === "deal" && effectiveDealId))
               }
             >
               {mutation.isPending

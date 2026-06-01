@@ -9,6 +9,11 @@ import {
   AlertCircle,
   Clock,
   Globe,
+  Inbox,
+  TrendingUp,
+  Trophy,
+  Columns3,
+  ListChecks,
 } from "lucide-react";
 import {
   ResponsiveContainer,
@@ -35,9 +40,11 @@ import {
   formatRelativeTime,
   formatDateShort,
   formatNumber,
+  formatCurrency,
 } from "~/lib/utils/format";
 import { getLeadAnalytics, type LeadAnalyticsPeriod } from "~/lib/api/leads";
-import { getAllTasks, type Task } from "~/lib/api/tasks";
+import { getDeals, type DealListItem, type DealStageKey } from "~/lib/api/deals";
+import { getAllTasks, type Task, type TaskStatus } from "~/lib/api/tasks";
 import {
   getWorkspacePlausibleStats,
   type PlausiblePeriod,
@@ -460,6 +467,7 @@ function MyTasksSection({ userId }: { userId: string }) {
     queryFn: () =>
       getAllTasks({ assignee_id: userId, due_date_from: todayStr, limit: 10 }),
     enabled: !!userId && !!currentWorkspace,
+    staleTime: 0,
     refetchOnMount: "always",
   });
 
@@ -478,6 +486,7 @@ function MyTasksSection({ userId }: { userId: string }) {
         limit: 50,
       }),
     enabled: !!userId && !!currentWorkspace,
+    staleTime: 0,
     refetchOnMount: "always",
   });
 
@@ -902,6 +911,345 @@ function WebAnalyticsSection() {
   );
 }
 
+// ─── Deals Pipeline Summary Section ──────────────────────────────────────────
+
+type SummaryStage = Extract<DealStageKey, "new" | "in_progress" | "won">;
+
+const DEAL_SUMMARY_STAGES: {
+  stage: SummaryStage;
+  icon: typeof Inbox;
+  // Static Tailwind classes (no dynamic interpolation) so they survive purge.
+  iconWrap: string;
+  accent: string;
+  ring: string;
+}[] = [
+  {
+    stage: "new",
+    icon: Inbox,
+    iconWrap: "bg-slate-100 text-slate-600",
+    accent: "from-slate-400/15",
+    ring: "group-hover:ring-slate-300/60",
+  },
+  {
+    stage: "in_progress",
+    icon: TrendingUp,
+    iconWrap: "bg-sky-100 text-sky-600",
+    accent: "from-sky-400/20",
+    ring: "group-hover:ring-sky-300/60",
+  },
+  {
+    stage: "won",
+    icon: Trophy,
+    iconWrap: "bg-emerald-100 text-emerald-600",
+    accent: "from-emerald-400/20",
+    ring: "group-hover:ring-emerald-300/60",
+  },
+];
+
+function sumDealValue(deals: DealListItem[]): number {
+  let total = 0;
+  for (const d of deals) {
+    if (d.value == null || d.value === "") continue;
+    const n = Number(d.value);
+    if (Number.isFinite(n)) total += n;
+  }
+  return total;
+}
+
+function DealsSummarySection() {
+  const { t } = useTranslation();
+  const { currentWorkspace } = useAuthContext();
+
+  const hasAccess =
+    currentWorkspace?.services?.some(
+      (s) => s.service_type === "lead-form" || s.service_slug === "lead-form",
+    ) ?? false;
+
+  const { data, isLoading } = useQuery({
+    // Nested under the "deals-pipeline" prefix so every deal mutation
+    // (move, reorder, won/lost, create, edit) — which all invalidate
+    // ["deals-pipeline"] — also refreshes these summary counts.
+    queryKey: ["deals-pipeline", "home-summary", currentWorkspace?.id],
+    queryFn: () => getDeals({ page: 1, limit: 500 }),
+    enabled: hasAccess && !!currentWorkspace,
+    staleTime: 60_000,
+  });
+
+  const byStage = useMemo(() => {
+    const acc: Record<SummaryStage, DealListItem[]> = {
+      new: [],
+      in_progress: [],
+      won: [],
+    };
+    for (const d of data?.data ?? []) {
+      if (d.stage === "new" || d.stage === "in_progress" || d.stage === "won") {
+        acc[d.stage].push(d);
+      }
+    }
+    return acc;
+  }, [data?.data]);
+
+  if (!hasAccess) return null;
+
+  const totalDeals = byStage.new.length + byStage.in_progress.length + byStage.won.length;
+
+  return (
+    <div
+      className="app-fade-up rounded-2xl border border-border bg-card p-4 sm:p-6 space-y-4 sm:space-y-5"
+      style={{ animationDelay: "0.02s" }}
+    >
+      {/* Header */}
+      <div className="flex items-start justify-between gap-4">
+        <div className="space-y-1">
+          <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground flex items-center gap-1.5">
+            <Columns3 className="h-3 w-3" />
+            {t("home.dealsTitle", { defaultValue: "Pipeline" })}
+          </p>
+          {isLoading ? (
+            <div className="h-8 w-12 animate-pulse rounded-md bg-muted" />
+          ) : (
+            <p className="text-3xl font-bold tracking-tight text-foreground tabular-nums">
+              {formatNumber(totalDeals)}
+            </p>
+          )}
+        </div>
+
+        <Link
+          to="/pipeline"
+          className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-muted/50 px-3 py-1.5 text-xs font-medium text-foreground hover:bg-muted transition-colors shrink-0 mt-1"
+        >
+          {t("home.viewPipeline", { defaultValue: "View pipeline" })}
+          <ArrowRight className="h-3 w-3" />
+        </Link>
+      </div>
+
+      {/* Stage cards */}
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+        {DEAL_SUMMARY_STAGES.map(({ stage, icon: Icon, iconWrap, accent }) => {
+          const stageDeals = byStage[stage];
+          const count = stageDeals.length;
+          const total = sumDealValue(stageDeals);
+
+          return (
+            <Link
+              key={stage}
+              to="/pipeline"
+              className="group relative overflow-hidden rounded-xl border border-border bg-muted/30 p-4 transition-colors duration-150 hover:bg-muted/60 hover:border-border/80"
+            >
+              {/* Soft accent glow */}
+              <div
+                className={cn(
+                  "pointer-events-none absolute -right-8 -top-8 h-24 w-24 rounded-full bg-gradient-to-br to-transparent blur-2xl opacity-60 transition-opacity duration-200 group-hover:opacity-100",
+                  accent,
+                )}
+              />
+
+              <div className="relative flex items-start justify-between gap-3">
+                <div
+                  className={cn(
+                    "flex h-9 w-9 items-center justify-center rounded-xl",
+                    iconWrap,
+                  )}
+                >
+                  <Icon className="h-[18px] w-[18px]" />
+                </div>
+                <ArrowRight className="h-4 w-4 text-muted-foreground/30 transition-all duration-200 group-hover:translate-x-0.5 group-hover:text-muted-foreground" />
+              </div>
+
+              <div className="relative mt-4 space-y-1">
+                <p className="text-[12px] font-medium text-muted-foreground">
+                  {t(`pipeline.stages.${stage}`, { defaultValue: stage })}
+                </p>
+                {isLoading ? (
+                  <div className="h-8 w-14 animate-pulse rounded-md bg-muted" />
+                ) : (
+                  <p className="text-[28px] font-bold leading-none tracking-tight text-foreground tabular-nums">
+                    {formatNumber(count)}
+                  </p>
+                )}
+              </div>
+
+              <div className="relative mt-3 flex items-center justify-between gap-2 border-t border-border/60 pt-3">
+                <p className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground/70">
+                  {t("home.dealsTotalValue", { defaultValue: "Total value" })}
+                </p>
+                {isLoading ? (
+                  <div className="h-4 w-16 animate-pulse rounded bg-muted" />
+                ) : (
+                  <p className="text-[15px] font-semibold text-foreground tabular-nums leading-tight">
+                    {total > 0 ? formatCurrency(total) : "—"}
+                  </p>
+                )}
+              </div>
+            </Link>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+// ─── Tasks Summary Section ───────────────────────────────────────────────────
+
+type OpenTaskStatus = Extract<TaskStatus, "todo" | "in_progress">;
+
+const TASK_SUMMARY_COLUMNS: {
+  status: OpenTaskStatus;
+  dot: string;
+}[] = [
+  { status: "todo", dot: "bg-slate-400" },
+  { status: "in_progress", dot: "bg-amber-500" },
+];
+
+const TASKS_PER_COLUMN = 5;
+
+/** Sort by due date ascending (overdue first); tasks without a due date last. */
+function sortTasksByDue(tasks: Task[]): Task[] {
+  return [...tasks].sort((a, b) => {
+    const ad = a.due_date ?? "";
+    const bd = b.due_date ?? "";
+    if (!ad && !bd) return 0;
+    if (!ad) return 1;
+    if (!bd) return -1;
+    return ad.localeCompare(bd);
+  });
+}
+
+function TasksSummarySection({ userId }: { userId: string }) {
+  const { t } = useTranslation();
+  const { currentWorkspace } = useAuthContext();
+
+  const { data, isLoading } = useQuery({
+    // Nested under the "tasks" prefix so every task mutation — which all
+    // invalidate ["tasks"] — also refreshes these summary counts.
+    queryKey: ["tasks", "home-summary", userId, currentWorkspace?.id],
+    queryFn: () => getAllTasks({ assignee_id: userId, limit: 500 }),
+    enabled: !!userId && !!currentWorkspace,
+    staleTime: 0,
+    refetchOnMount: "always",
+  });
+
+  const byStatus = useMemo(() => {
+    const acc: Record<OpenTaskStatus, Task[]> = {
+      todo: [],
+      in_progress: [],
+    };
+    for (const task of data?.data ?? []) {
+      if (task.status === "todo" || task.status === "in_progress") {
+        acc[task.status].push(task);
+      }
+    }
+    acc.todo = sortTasksByDue(acc.todo);
+    acc.in_progress = sortTasksByDue(acc.in_progress);
+    return acc;
+  }, [data?.data]);
+
+  const totalTasks = byStatus.todo.length + byStatus.in_progress.length;
+
+  return (
+    <div
+      className="app-fade-up rounded-2xl border border-border bg-card p-4 sm:p-6 space-y-4 sm:space-y-5"
+      style={{ animationDelay: "0.06s" }}
+    >
+      {/* Header */}
+      <div className="flex items-start justify-between gap-4">
+        <div className="space-y-1">
+          <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground flex items-center gap-1.5">
+            <ListChecks className="h-3 w-3" />
+            {t("home.myTasks", { defaultValue: "Tasks" })}
+          </p>
+          {isLoading ? (
+            <div className="h-8 w-12 animate-pulse rounded-md bg-muted" />
+          ) : (
+            <div className="flex items-baseline gap-2">
+              <p className="text-3xl font-bold tracking-tight text-foreground tabular-nums">
+                {formatNumber(totalTasks)}
+              </p>
+              <span className="text-sm text-muted-foreground">
+                {t("home.myTasksOpen", { defaultValue: "open" })}
+              </span>
+            </div>
+          )}
+        </div>
+
+        <Link
+          to="/tasks"
+          className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-muted/50 px-3 py-1.5 text-xs font-medium text-foreground hover:bg-muted transition-colors shrink-0 mt-1"
+        >
+          {t("home.viewAllTasks", { defaultValue: "View all tasks" })}
+          <ArrowRight className="h-3 w-3" />
+        </Link>
+      </div>
+
+      {/* Status columns with actual tasks */}
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+        {TASK_SUMMARY_COLUMNS.map(({ status, dot }) => {
+          const statusTasks = byStatus[status];
+          const count = statusTasks.length;
+          const shown = statusTasks.slice(0, TASKS_PER_COLUMN);
+          const remaining = count - shown.length;
+
+          return (
+            <div
+              key={status}
+              className="flex flex-col rounded-xl border border-border bg-muted/30 p-3"
+            >
+              {/* Column header */}
+              <div className="flex items-center gap-2 px-1 pb-2.5">
+                <span className={cn("h-2 w-2 rounded-full shrink-0", dot)} />
+                <span className="text-sm font-medium text-foreground">
+                  {t(`tasks.statuses.${status}`, { defaultValue: status })}
+                </span>
+                <span className="inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-background px-1.5 text-xs font-medium text-muted-foreground">
+                  {count}
+                </span>
+              </div>
+
+              {/* Task list */}
+              {isLoading ? (
+                <div className="space-y-1.5">
+                  {[1, 2, 3].map((i) => (
+                    <div
+                      key={i}
+                      className="h-[58px] rounded-xl border border-border animate-pulse bg-muted/40"
+                    />
+                  ))}
+                </div>
+              ) : count === 0 ? (
+                <div className="flex flex-col items-center justify-center gap-2 py-8">
+                  <CheckCircle2 className="h-7 w-7 text-muted-foreground/25" />
+                  <p className="text-xs text-muted-foreground">
+                    {status === "todo"
+                      ? t("home.noTodoTasks", { defaultValue: "No to-do tasks" })
+                      : t("home.noInProgressTasks", {
+                          defaultValue: "No in progress tasks",
+                        })}
+                  </p>
+                </div>
+              ) : (
+                <div className="space-y-1.5">
+                  {shown.map((task) => (
+                    <MyTaskRow key={task.id} task={task} />
+                  ))}
+                  {remaining > 0 && (
+                    <Link
+                      to="/tasks"
+                      className="flex items-center justify-center gap-1.5 py-2 text-xs text-muted-foreground hover:text-foreground transition-colors"
+                    >
+                      +{remaining} {t("home.moreTasks", { defaultValue: "more" })}
+                      <ArrowRight className="h-3 w-3" />
+                    </Link>
+                  )}
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 export default function Home() {
   const { user, currentWorkspace } = useAuthContext();
   const { t } = useTranslation();
@@ -929,6 +1277,12 @@ export default function Home() {
         </p>
       </div>
 
+      {/* Deals pipeline summary */}
+      <DealsSummarySection />
+
+      {/* Tasks summary */}
+      {user?.id && <TasksSummarySection userId={user.id} />}
+
       <DoorboostHomeSection />
 
       {/* Web Analytics (Plausible) — shown if workspace has analytics service */}
@@ -936,9 +1290,6 @@ export default function Home() {
 
       {/* Analytics chart */}
       <LeadAnalyticsChart />
-
-      {/* My tasks */}
-      {user?.id && <MyTasksSection userId={user.id} />}
     </div>
   );
 }

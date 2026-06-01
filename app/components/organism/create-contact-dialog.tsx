@@ -131,7 +131,7 @@ export function CreateContactDialog({
       void queryClient.invalidateQueries({ queryKey: ["contacts-options"] });
       onOpenChange(false);
       toast.success(
-        t("contacts.created", { defaultValue: "Contact created." }),
+        t("contacts.createdSuccess", { defaultValue: "Contact created." }),
       );
       if (onCreated) {
         onCreated(res.id);
@@ -196,7 +196,7 @@ export function CreateContactDialog({
       void queryClient.invalidateQueries({ queryKey: ["contact"] });
       onOpenChange(false);
       toast.success(
-        t("contacts.updated", { defaultValue: "Contact updated." }),
+        t("contacts.updatedSuccess", { defaultValue: "Contact updated." }),
       );
       onUpdated?.();
     },
@@ -277,7 +277,7 @@ export function CreateContactDialog({
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="none">
-                  {t("contacts.contactType", { defaultValue: "Contact type" })}
+                  {t("contacts.contactTypeNone", { defaultValue: "Not set" })}
                 </SelectItem>
                 {CONTACT_TYPES.map((ct) => (
                   <SelectItem key={ct} value={ct}>
