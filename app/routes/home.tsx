@@ -972,7 +972,12 @@ function DealsSummarySection() {
     queryKey: ["deals-pipeline", "home-summary", currentWorkspace?.id],
     queryFn: () => getDeals({ page: 1, limit: 500 }),
     enabled: hasAccess && !!currentWorkspace,
-    staleTime: 60_000,
+    // The global default is refetchOnMount: false, so a query invalidated
+    // while this page is unmounted (e.g. after creating a deal from the
+    // pipeline) would serve stale cache on return and miss the new deal.
+    // Refetch on mount so navigating back to home always reflects mutations.
+    staleTime: 0,
+    refetchOnMount: "always",
   });
 
   const byStage = useMemo(() => {
@@ -991,7 +996,10 @@ function DealsSummarySection() {
 
   if (!hasAccess) return null;
 
-  const totalDeals = byStage.new.length + byStage.in_progress.length + byStage.won.length;
+  const masterTotalValue =
+    sumDealValue(byStage.new) +
+    sumDealValue(byStage.in_progress) +
+    sumDealValue(byStage.won);
 
   return (
     <div
@@ -1009,7 +1017,7 @@ function DealsSummarySection() {
             <div className="h-8 w-12 animate-pulse rounded-md bg-muted" />
           ) : (
             <p className="text-3xl font-bold tracking-tight text-foreground tabular-nums">
-              {formatNumber(totalDeals)}
+              {formatCurrency(masterTotalValue)}
             </p>
           )}
         </div>
@@ -1077,7 +1085,7 @@ function DealsSummarySection() {
                   <div className="h-4 w-16 animate-pulse rounded bg-muted" />
                 ) : (
                   <p className="text-[15px] font-semibold text-foreground tabular-nums leading-tight">
-                    {total > 0 ? formatCurrency(total) : "—"}
+                    {formatCurrency(total)}
                   </p>
                 )}
               </div>
