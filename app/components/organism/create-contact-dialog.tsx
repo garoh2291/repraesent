@@ -1,8 +1,14 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router";
 import { useTranslation } from "react-i18next";
+import type { TFunction } from "i18next";
+import { z } from "zod";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { addContactAddress, createContact } from "~/lib/api/contacts-crm";
+import {
+  addContactAddress,
+  createContact,
+  patchContactCrm,
+} from "~/lib/api/contacts-crm";
 import {
   addContactEmail,
   addContactPhone,
@@ -53,6 +59,24 @@ export interface CreateContactDialogProps {
   onUpdated?: () => void;
 }
 
+/**
+ * Validation schema for the *create* path only. Email is optional (a contact
+ * can be created with just a name/phone) but, when provided, must be a real
+ * email address.
+ */
+function createContactSchema(t: TFunction) {
+  return z.object({
+    email: z.union([
+      z.literal(""),
+      z.email({
+        message: t("contacts.errors.invalidEmail", {
+          defaultValue: "Please enter a valid email address.",
+        }),
+      }),
+    ]),
+  });
+}
+
 const EMPTY_ADDRESS = {
   line1: "",
   line2: "",
@@ -79,7 +103,7 @@ export function CreateContactDialog({
   const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
-  const [contactType, setContactType] = useState<ContactType | "none">("none");
+  const [contactType, setContactType] = useState<ContactType>("contact");
   const [address, setAddress] = useState(EMPTY_ADDRESS);
 
   useEffect(() => {
@@ -89,7 +113,7 @@ export function CreateContactDialog({
       setEmail(initialValues.email ?? "");
       setPhone(initialValues.phone ?? "");
       setContactType(
-        (initialValues.contactType as ContactType | undefined) ?? "none",
+        (initialValues.contactType as ContactType | undefined) ?? "contact",
       );
     }
     if (!open) {
@@ -97,7 +121,7 @@ export function CreateContactDialog({
       setLastName("");
       setEmail("");
       setPhone("");
-      setContactType("none");
+      setContactType("contact");
       setAddress(EMPTY_ADDRESS);
     }
   }, [open, initialValues]);
@@ -111,7 +135,7 @@ export function CreateContactDialog({
         last_name: lastName.trim() || null,
         email: email.trim() || null,
         phone: phone.trim() || null,
-        contact_type: contactType !== "none" ? contactType : null,
+        contact_type: contactType,
       });
       if (hasAddress) {
         await addContactAddress(res.id, {
@@ -157,6 +181,11 @@ export function CreateContactDialog({
       const hadPhone = !!initialValues?.phone;
 
       const promises: Promise<unknown>[] = [];
+      if (contactType !== (initialValues?.contactType ?? "contact")) {
+        promises.push(
+          patchContactCrm(editContactId, { contact_type: contactType }),
+        );
+      }
       if (newEmail && !hadEmail) {
         promises.push(
           addContactEmail(editContactId, {
@@ -215,6 +244,16 @@ export function CreateContactDialog({
     email.trim().length > 0 ||
     phone.trim().length > 0;
 
+  // Only validate the email format when creating a new contact.
+  const trimmedEmail = email.trim();
+  const emailParse = createContactSchema(t).shape.email.safeParse(trimmedEmail);
+  const isEmailValid = emailParse.success;
+  const showEmailError =
+    !isEditMode && trimmedEmail.length > 0 && !isEmailValid;
+  const emailError = emailParse.success
+    ? undefined
+    : emailParse.error.issues[0]?.message;
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-xl max-h-[90vh] flex flex-col overflow-hidden">
@@ -265,10 +304,9 @@ export function CreateContactDialog({
             </Label>
             <Select
               value={contactType}
-              onValueChange={(v) => setContactType(v as ContactType | "none")}
-              disabled={isEditMode}
+              onValueChange={(v) => setContactType(v as ContactType)}
             >
-              <SelectTrigger className={isEditMode ? "bg-muted/50" : undefined}>
+              <SelectTrigger>
                 <SelectValue
                   placeholder={t("contacts.contactType", {
                     defaultValue: "Contact type",
@@ -276,9 +314,6 @@ export function CreateContactDialog({
                 />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="none">
-                  {t("contacts.contactTypeNone", { defaultValue: "Not set" })}
-                </SelectItem>
                 {CONTACT_TYPES.map((ct) => (
                   <SelectItem key={ct} value={ct}>
                     {t(`contacts.contactTypes.${ct}`, { defaultValue: ct })}
@@ -299,10 +334,18 @@ export function CreateContactDialog({
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               readOnly={isEditMode && !!initialValues?.email}
+              aria-invalid={showEmailError}
               className={
-                isEditMode && !!initialValues?.email ? "bg-muted/50" : undefined
+                isEditMode && !!initialValues?.email
+                  ? "bg-muted/50"
+                  : showEmailError
+                    ? "border-destructive focus-visible:ring-destructive"
+                    : undefined
               }
             />
+            {showEmailError && emailError && (
+              <p className="text-sm text-destructive">{emailError}</p>
+            )}
           </div>
 
           {/* Phone */}
@@ -416,7 +459,7 @@ export function CreateContactDialog({
             disabled={
               isEditMode
                 ? editMutation.isPending
-                : createMutation.isPending || !hasIdentity
+                : createMutation.isPending || !hasIdentity || !isEmailValid
             }
           >
             {(isEditMode ? editMutation.isPending : createMutation.isPending)
