@@ -11,6 +11,8 @@ import {
   ArrowRight,
   Clock,
   Mail,
+  UserPlus,
+  Send,
 } from "lucide-react";
 import i18n from "~/i18n";
 import { useAuthContext } from "~/providers/auth-provider";
@@ -18,8 +20,10 @@ import {
   getWorkspaceDetail,
   updateWorkspaceMember,
   removeWorkspaceMember,
+  resendWorkspaceInvite,
   type WorkspaceDetail,
 } from "~/lib/api/workspaces";
+import { InviteMembersDialog } from "~/components/team/invite-members-dialog";
 import { extractErrorMessage } from "~/lib/api/axios-instance";
 import {
   getHistoricalData,
@@ -66,19 +70,24 @@ function SectionLabel({ children }: { children: React.ReactNode }) {
 function SettingsSection({
   label,
   description,
+  action,
   children,
 }: {
   label: string;
   description?: string;
+  action?: React.ReactNode;
   children: React.ReactNode;
 }) {
   return (
     <div className="space-y-4">
-      <div className="space-y-0.5">
-        <SectionLabel>{label}</SectionLabel>
-        {description && (
-          <p className="text-sm text-muted-foreground">{description}</p>
-        )}
+      <div className="flex items-start justify-between gap-4">
+        <div className="space-y-0.5">
+          <SectionLabel>{label}</SectionLabel>
+          {description && (
+            <p className="text-sm text-muted-foreground">{description}</p>
+          )}
+        </div>
+        {action}
       </div>
       {children}
     </div>
@@ -95,6 +104,11 @@ export default function SettingsTeam() {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
   const [memberToRemove, setMemberToRemove] = useState<{
+    userId: string;
+    name: string;
+  } | null>(null);
+  const [inviteOpen, setInviteOpen] = useState(false);
+  const [memberToResend, setMemberToResend] = useState<{
     userId: string;
     name: string;
   } | null>(null);
@@ -192,6 +206,18 @@ export default function SettingsTeam() {
     },
   });
 
+  const resendInviteMutation = useMutation({
+    mutationFn: (userId: string) => resendWorkspaceInvite(userId),
+    onSuccess: () => {
+      setMemberToResend(null);
+      toast.success(t("settings.members.inviteResent"));
+    },
+    onError: (error) => {
+      setMemberToResend(null);
+      toast.error(extractErrorMessage(error));
+    },
+  });
+
   const handleRemoveMember = () => {
     if (memberToRemove) {
       removeMemberMutation.mutate(memberToRemove.userId);
@@ -217,10 +243,22 @@ export default function SettingsTeam() {
         <SettingsSection
           label={t("settings.members.title")}
           description={t("settings.members.addHint")}
+          action={
+            isAdmin ? (
+              <Button
+                size="sm"
+                onClick={() => setInviteOpen(true)}
+                className="shrink-0 h-9 gap-1.5 bg-foreground text-background hover:bg-foreground/90 hover:text-background"
+              >
+                <UserPlus className="h-3.5 w-3.5" />
+                {t("settings.members.inviteMember")}
+              </Button>
+            ) : undefined
+          }
         >
           {members.length > 0 ? (
             <div className="rounded-2xl border border-border bg-card overflow-hidden">
-              <div className="hidden md:grid grid-cols-[1fr_180px_140px_100px_48px] gap-4 px-5 py-3 bg-muted/40 border-b border-border">
+              <div className="hidden md:grid grid-cols-[1fr_180px_140px_100px_88px] gap-4 px-5 py-3 bg-muted/40 border-b border-border">
                 {[
                   t("settings.members.headerMember"),
                   t("settings.members.headerEmail"),
@@ -241,10 +279,15 @@ export default function SettingsTeam() {
                   const isSelf = m.user_id === currentUserId;
                   const canChangeRole = isAdmin && !isSelf;
                   const canDelete = isAdmin && !isSelf;
-                  const displayName =
-                    `${m.user_first_name} ${m.user_last_name}`.trim() ||
-                    m.user_email;
-                  const initials = displayName
+                  const fullName =
+                    `${m.user_first_name} ${m.user_last_name}`.trim();
+                  // "Invited" / resend depend on whether the member has logged
+                  // in yet (api_logs activity); dashes depend on missing name.
+                  const loggedIn = m.has_logged_in === true;
+                  const pending = !loggedIn;
+                  const initials = (
+                    fullName ? fullName : m.user_email.slice(0, 2)
+                  )
                     .split(" ")
                     .slice(0, 2)
                     .map((w: string) => w[0])
@@ -254,18 +297,25 @@ export default function SettingsTeam() {
                   return (
                     <div
                       key={m.user_id}
-                      className="grid grid-cols-1 md:grid-cols-[1fr_180px_140px_100px_48px] gap-3 md:gap-4 px-5 py-3.5 items-center"
+                      className="grid grid-cols-1 md:grid-cols-[1fr_180px_140px_100px_88px] gap-3 md:gap-4 px-5 py-3.5 items-center"
                     >
                       <div className="flex items-center gap-3 min-w-0">
                         <div className="h-8 w-8 rounded-full bg-muted flex items-center justify-center shrink-0 text-[11px] font-bold text-muted-foreground">
                           {initials}
                         </div>
                         <div className="min-w-0">
-                          <p className="text-sm font-medium text-foreground truncate">
-                            {displayName}
+                          <p className="text-sm font-medium text-foreground truncate flex items-center gap-1.5">
+                            {fullName && (
+                              <span className="truncate">{fullName}</span>
+                            )}
                             {isSelf && (
-                              <span className="ml-1.5 text-[10px] font-medium text-muted-foreground/60 uppercase tracking-wider">
+                              <span className="text-[10px] font-medium text-muted-foreground/60 uppercase tracking-wider shrink-0">
                                 {t("settings.members.youBadge")}
+                              </span>
+                            )}
+                            {pending && (
+                              <span className="inline-flex items-center rounded-full bg-amber-500/12 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-amber-600 dark:text-amber-400 shrink-0">
+                                {t("settings.members.invited")}
                               </span>
                             )}
                           </p>
@@ -321,13 +371,30 @@ export default function SettingsTeam() {
                           }
                         />
                       </div>
-                      <div className="flex items-center justify-end md:justify-start">
+                      <div className="flex items-center justify-end md:justify-start gap-1">
+                        {isAdmin && !isSelf && !loggedIn && (
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setMemberToResend({
+                                userId: m.user_id,
+                                name: fullName || m.user_email,
+                              })
+                            }
+                            disabled={resendInviteMutation.isPending}
+                            aria-label={t("settings.members.inviteResend")}
+                            title={t("settings.members.inviteResend")}
+                            className="h-8 w-8 rounded-lg flex items-center justify-center text-amber-600 dark:text-amber-400 hover:bg-amber-500/10 transition-colors disabled:opacity-30 disabled:pointer-events-none"
+                          >
+                            <Send className="h-3.5 w-3.5" />
+                          </button>
+                        )}
                         <button
                           type="button"
                           onClick={() =>
                             setMemberToRemove({
                               userId: m.user_id,
-                              name: displayName,
+                              name: fullName || m.user_email,
                             })
                           }
                           disabled={!canDelete}
@@ -354,6 +421,12 @@ export default function SettingsTeam() {
 
       <DoorboostMigrationSection />
 
+      <InviteMembersDialog
+        open={inviteOpen}
+        onOpenChange={setInviteOpen}
+        workspaceId={currentWorkspace?.id}
+      />
+
       <AlertDialog
         open={!!memberToRemove}
         onOpenChange={(open) => !open && setMemberToRemove(null)}
@@ -379,6 +452,39 @@ export default function SettingsTeam() {
               {removeMemberMutation.isPending
                 ? t("settings.members.removing")
                 : t("settings.members.removeMember")}
+            </Button>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog
+        open={!!memberToResend}
+        onOpenChange={(open) => !open && setMemberToResend(null)}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              {t("settings.members.resendTitle")}
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              {t("settings.members.resendDescription", {
+                name: memberToResend?.name ?? "",
+              })}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>{t("common.cancel")}</AlertDialogCancel>
+            <Button
+              className="bg-foreground text-background hover:bg-foreground/90 hover:text-background transition-colors"
+              onClick={() =>
+                memberToResend &&
+                resendInviteMutation.mutate(memberToResend.userId)
+              }
+              disabled={resendInviteMutation.isPending}
+            >
+              {resendInviteMutation.isPending
+                ? t("settings.members.resending")
+                : t("settings.members.resendConfirm")}
             </Button>
           </AlertDialogFooter>
         </AlertDialogContent>

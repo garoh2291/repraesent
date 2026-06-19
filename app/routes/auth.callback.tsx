@@ -70,6 +70,25 @@ export default function AuthCallback() {
         const workspaces = context.workspaces ?? [];
         const hasBrand = !!context.brand;
 
+        // Invited members log in with an empty name (email-only invite). Send
+        // them to complete their profile first — even though they already belong
+        // to the workspace they were invited to — then they land in the app.
+        const needsProfile =
+          !isBrand &&
+          (!context.user.first_name?.trim() ||
+            !context.user.last_name?.trim());
+        if (needsProfile) {
+          if (workspaceParam && workspaces.some((w) => w.id === workspaceParam)) {
+            setStoredWorkspaceId(workspaceParam);
+            setStoredSelectedView(workspaceParam);
+          } else if (workspaces.length === 1) {
+            setStoredWorkspaceId(workspaces[0].id);
+            setStoredSelectedView(workspaces[0].id);
+          }
+          navigate("/onboarding/profile", { replace: true });
+          return;
+        }
+
         // Email deep-link to a specific workspace — always wins, applies to both
         // regular and brand users.
         if (workspaceParam && workspaces.some((w) => w.id === workspaceParam)) {

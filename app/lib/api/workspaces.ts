@@ -24,6 +24,8 @@ export interface WorkspaceDetail {
     user_last_name: string;
     role: string;
     lead_notification: boolean;
+    user_onboarding_completed_at?: string | null;
+    has_logged_in?: boolean;
   }>;
 }
 
@@ -60,6 +62,34 @@ export async function updateWorkspaceMember(
 
 export async function removeWorkspaceMember(userId: string): Promise<void> {
   await apiClient.delete(`/users/me/workspace/members/${userId}`);
+}
+
+export type InviteMemberStatus =
+  | "added"
+  | "invited"
+  | "already_member"
+  | "blocked"
+  | "error";
+
+export interface InviteMemberResult {
+  email: string;
+  status: InviteMemberStatus;
+  message?: string;
+}
+
+export async function inviteWorkspaceMembers(
+  emails: string[],
+  role: "admin" | "editor" | "viewer"
+): Promise<{ results: InviteMemberResult[] }> {
+  const response = await apiClient.post<{ results: InviteMemberResult[] }>(
+    "/users/me/workspace/members/invite",
+    { emails, role }
+  );
+  return response.data;
+}
+
+export async function resendWorkspaceInvite(userId: string): Promise<void> {
+  await apiClient.post(`/users/me/workspace/members/${userId}/resend-invite`);
 }
 
 export interface WorkspaceInvoice {

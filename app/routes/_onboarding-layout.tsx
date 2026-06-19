@@ -3,6 +3,7 @@ import { Check } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import logoUrl from "~/components/icons/re_praesent-mark-brand-hor.svg?url";
 import { LanguageSwitcher } from "~/components/language-switcher";
+import { useAuthContext } from "~/providers/auth-provider";
 
 const STEP_KEYS = [
   { path: "/onboarding/profile", key: "onboarding.steps.profile" },
@@ -14,8 +15,14 @@ const STEP_KEYS = [
 export default function OnboardingLayout() {
   const { t } = useTranslation();
   const location = useLocation();
+  const { workspaces } = useAuthContext();
   const currentIndex = STEP_KEYS.findIndex((s) => location.pathname === s.path);
   const activeIndex = currentIndex >= 0 ? currentIndex : 0;
+  // Invited members only complete their name at /onboarding/profile while
+  // already belonging to a workspace — the full signup stepper doesn't apply.
+  const hideStepper =
+    location.pathname === "/onboarding/profile" &&
+    (workspaces?.length ?? 0) > 0;
 
   return (
     <>
@@ -80,6 +87,7 @@ export default function OnboardingLayout() {
           </div>
 
           {/* Stepper */}
+          {!hideStepper && (
           <div className="pb-10 pt-2 ob-fade-up">
             <div className="flex items-center">
               {STEP_KEYS.map((step, i) => {
@@ -137,6 +145,7 @@ export default function OnboardingLayout() {
               })}
             </div>
           </div>
+          )}
 
           {/* Page content */}
           <div className="pb-20">

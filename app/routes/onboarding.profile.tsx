@@ -26,7 +26,7 @@ export default function OnboardingProfile() {
     titleKey: "onboarding.profile.metaTitle",
     descriptionKey: "onboarding.profile.metaDescription",
   });
-  const { user } = useAuthContext();
+  const { user, workspaces } = useAuthContext();
   const location = useLocation();
   const hint = (location.state as ProfileLocationState | null)?.hint;
   const [firstName, setFirstName] = useState(hint?.firstName?.trim() ?? "");
@@ -36,14 +36,17 @@ export default function OnboardingProfile() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
 
+  // Invited members already belong to a workspace — they just complete their
+  // name and go straight into the app. Fresh self-service signups (no workspace
+  // yet) continue through the workspace-creation onboarding flow.
+  const hasWorkspace = (workspaces?.length ?? 0) > 0;
+  const nextAfterProfile = hasWorkspace ? "/" : "/onboarding/doorboost-choice";
+
   useEffect(() => {
     if (user?.first_name?.trim() && user?.last_name?.trim()) {
-      // Always go through the doorboost-choice gate; that page checks
-      // eligibility and auto-redirects to /onboarding/workspace when the
-      // user isn't a returning Doorboost customer.
-      navigate("/onboarding/doorboost-choice", { replace: true });
+      navigate(nextAfterProfile, { replace: true });
     }
-  }, [user?.first_name, user?.last_name, navigate]);
+  }, [user?.first_name, user?.last_name, navigate, nextAfterProfile]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -59,10 +62,7 @@ export default function OnboardingProfile() {
         last_name: lastName.trim(),
       });
       queryClient.invalidateQueries({ queryKey: ["auth"] });
-      // Always go through the doorboost-choice gate; that page checks
-      // eligibility and auto-redirects to /onboarding/workspace when the
-      // user isn't a returning Doorboost customer.
-      navigate("/onboarding/doorboost-choice", { replace: true });
+      navigate(nextAfterProfile, { replace: true });
     } catch (err) {
       setError(err instanceof Error ? err.message : t("common.somethingWentWrong"));
     } finally {
