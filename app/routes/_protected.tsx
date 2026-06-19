@@ -392,8 +392,14 @@ export default function ProtectedLayout() {
     return null;
   }
 
-  if (!hasProfile && path !== "/onboarding/profile") {
-    return null;
+  if (!hasProfile) {
+    // The profile step (name capture) must always be reachable for anyone
+    // without a name — including invited members who already belong to an
+    // active workspace. Render it directly and bypass the workspace-status
+    // gating below (which would otherwise blank out onboarding paths for
+    // active/trial workspaces). When they lack a name but aren't on the
+    // profile page, the effect above redirects them there.
+    return path === "/onboarding/profile" ? <Outlet /> : null;
   }
 
   if (!workspaces?.length) {
