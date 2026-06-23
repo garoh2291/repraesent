@@ -1285,13 +1285,14 @@ export default function Home() {
         </p>
       </div>
 
+      {/* Doorboost migration — always above pipeline & tasks */}
+      <DoorboostHomeSection />
+
       {/* Deals pipeline summary */}
       <DealsSummarySection />
 
       {/* Tasks summary */}
       {user?.id && <TasksSummarySection userId={user.id} />}
-
-      <DoorboostHomeSection />
 
       {/* Web Analytics (Plausible) — shown if workspace has analytics service */}
       <WebAnalyticsSection />

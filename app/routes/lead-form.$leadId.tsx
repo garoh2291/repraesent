@@ -301,23 +301,23 @@ export default function LeadFormLeadId() {
 
         {/* Tasks + Notes + History panel */}
         <div className="rounded-2xl border border-border bg-card p-4 sm:p-6">
-          <Tabs defaultValue="tasks" className="w-full">
+          <Tabs defaultValue="notes" className="w-full">
             <TabsList variant="line" className="w-full mb-4 sm:mb-5">
-              <TabsTrigger value="tasks">{t("tasks.title")}</TabsTrigger>
               <TabsTrigger value="notes">{t("leads.detail.notes")}</TabsTrigger>
+              <TabsTrigger value="tasks">{t("tasks.title")}</TabsTrigger>
               <TabsTrigger value="history">
                 {t("leads.detail.history")}
               </TabsTrigger>
             </TabsList>
+            <TabsContent value="notes" className="mt-0">
+              <LeadNotesSection leadId={lead.id} canEdit={canEdit} />
+            </TabsContent>
             <TabsContent value="tasks" className="mt-0">
               <LeadTasksSection
                 leadId={lead.id}
                 canEdit={canEdit}
                 workspaceMembers={workspaceMembers}
               />
-            </TabsContent>
-            <TabsContent value="notes" className="mt-0">
-              <LeadNotesSection leadId={lead.id} canEdit={canEdit} />
             </TabsContent>
             <TabsContent value="history" className="mt-0">
               <LeadHistorySection

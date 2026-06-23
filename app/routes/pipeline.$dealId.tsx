@@ -31,6 +31,7 @@ import { Avatar, AvatarFallback } from "~/components/ui/avatar";
 import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
 import { Label } from "~/components/ui/label";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "~/components/ui/tabs";
 import {
   Select,
   SelectContent,
@@ -38,7 +39,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "~/components/ui/select";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "~/components/ui/tabs";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -751,12 +751,16 @@ export default function PipelineDealDetailPage() {
           </section>
 
           <section className="rounded-2xl border border-border bg-card p-4 sm:p-6 shadow-(--shadow)">
+            <h2 className="mb-4 text-sm font-semibold tracking-tight text-foreground">
+              {t("leads.detail.notes")}
+            </h2>
+            <LeadNotesSection dealId={dealId} canEdit={canEdit} />
+          </section>
+
+          <section className="rounded-2xl border border-border bg-card p-4 sm:p-6 shadow-(--shadow)">
             <Tabs defaultValue="tasks" className="w-full">
               <TabsList variant="line" className="w-full mb-4 sm:mb-5">
                 <TabsTrigger value="tasks">{t("tasks.title")}</TabsTrigger>
-                <TabsTrigger value="notes">
-                  {t("leads.detail.notes")}
-                </TabsTrigger>
                 <TabsTrigger value="history">
                   {t("leads.detail.history")}
                 </TabsTrigger>
@@ -768,9 +772,6 @@ export default function PipelineDealDetailPage() {
                   workspaceMembers={workspaceMembers}
                   linkedContextLabel={displayTitle}
                 />
-              </TabsContent>
-              <TabsContent value="notes" className="mt-0">
-                <LeadNotesSection dealId={dealId} canEdit={canEdit} />
               </TabsContent>
               <TabsContent value="history" className="mt-0">
                 <LeadHistorySection

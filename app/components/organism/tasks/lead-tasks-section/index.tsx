@@ -69,7 +69,6 @@ export function LeadTasksSection({
   const queryClient = useQueryClient();
   const [formOpen, setFormOpen] = useState(false);
   const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
-  const [showCompleted, setShowCompleted] = useState(false);
   const [pendingToggle, setPendingToggle] = useState<{
     taskId: string;
     isDone: boolean;
@@ -139,9 +138,6 @@ export function LeadTasksSection({
     },
   });
 
-  const openTasks = tasks.filter((t) => t.status !== "done");
-  const doneTasks = tasks.filter((t) => t.status === "done");
-
   if (!leadId && !contactId && !dealId) {
     return (
       <p className="text-sm text-muted-foreground py-1">
@@ -192,58 +188,28 @@ export function LeadTasksSection({
         </div>
 
         <div className="space-y-1.5">
-          {/* Open tasks */}
-          {openTasks.length === 0 && doneTasks.length === 0 && (
+          {tasks.length === 0 && (
             <p className="text-sm text-muted-foreground py-1">
               {t("tasks.noTasksHint")}
             </p>
           )}
 
-          {openTasks.map((task) => (
+          {tasks.map((task) => (
             <TaskRow
               key={task.id}
               task={task}
               canEdit={canEdit}
               onToggle={() =>
-                setPendingToggle({ taskId: task.id, isDone: true })
+                setPendingToggle({
+                  taskId: task.id,
+                  isDone: task.status !== "done",
+                })
               }
               onClick={() => setSelectedTaskId(task.id)}
               formatDueDate={formatDueDate}
               getAssigneeInitials={getAssigneeInitials}
             />
           ))}
-
-          {/* Done tasks (collapsible) */}
-          {doneTasks.length > 0 && (
-            <div className="pt-1">
-              <button
-                onClick={() => setShowCompleted((v) => !v)}
-                className="text-xs text-muted-foreground hover:text-foreground transition-colors"
-              >
-                {showCompleted
-                  ? t("tasks.hideCompleted")
-                  : t("tasks.showCompleted", { count: doneTasks.length })}
-              </button>
-
-              {showCompleted && (
-                <div className="mt-1.5 space-y-1.5">
-                  {doneTasks.map((task) => (
-                    <TaskRow
-                      key={task.id}
-                      task={task}
-                      canEdit={canEdit}
-                      onToggle={() =>
-                        setPendingToggle({ taskId: task.id, isDone: false })
-                      }
-                      onClick={() => setSelectedTaskId(task.id)}
-                      formatDueDate={formatDueDate}
-                      getAssigneeInitials={getAssigneeInitials}
-                    />
-                  ))}
-                </div>
-              )}
-            </div>
-          )}
         </div>
       </div>
 
@@ -360,12 +326,7 @@ function TaskRow({
         tabIndex={0}
         onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && onClick()}
       >
-        <p
-          className={cn(
-            "text-sm font-medium leading-snug truncate",
-            isDone && "line-through text-muted-foreground",
-          )}
-        >
+        <p className="text-sm font-medium leading-snug truncate">
           {task.title}
         </p>
 
