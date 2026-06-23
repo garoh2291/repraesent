@@ -80,6 +80,7 @@ export function DealsPipelineKanban({
 }: DealsPipelineKanbanProps) {
   const { t } = useTranslation();
   const [activeId, setActiveId] = useState<string | null>(null);
+  const [activeWidth, setActiveWidth] = useState<number | null>(null);
   // Local per-deal override applied between drop and the cache refresh so
   // cards don't snap back to their old position for a frame.
   const [pending, setPending] = useState<
@@ -149,6 +150,8 @@ export function DealsPipelineKanban({
 
   const handleDragStart = useCallback((event: DragStartEvent) => {
     setActiveId(String(event.active.id));
+    const width = event.active.rect.current.initial?.width;
+    setActiveWidth(width ?? null);
   }, []);
 
   const resolveDrop = useCallback(
@@ -170,6 +173,7 @@ export function DealsPipelineKanban({
   const handleDragEnd = useCallback(
     (event: DragEndEvent) => {
       setActiveId(null);
+      setActiveWidth(null);
       const { active, over } = event;
       if (!over) return;
       const dealId = String(active.id).replace(/^deal-/, "");
@@ -268,6 +272,10 @@ export function DealsPipelineKanban({
           collisionDetection={kanbanCollisionDetection}
           onDragStart={handleDragStart}
           onDragEnd={handleDragEnd}
+          onDragCancel={() => {
+            setActiveId(null);
+            setActiveWidth(null);
+          }}
         >
           <div className="flex gap-4 flex-1 min-h-0 pb-4 overflow-x-auto scrollbar-hide sm:grid sm:grid-cols-4">
             {DEAL_STAGE_KEYS.map((stage) => (
@@ -286,8 +294,9 @@ export function DealsPipelineKanban({
           <DragOverlay dropAnimation={null}>
             {activeDeal ? (
               <div
+                style={activeWidth ? { width: activeWidth } : undefined}
                 className={cn(
-                  "w-[min(100%,280px)] rounded-lg border bg-card p-3 space-y-2 shadow-lg ring-1 ring-primary/20 cursor-grabbing",
+                  "rounded-lg border bg-card p-3 space-y-2 shadow-lg ring-1 ring-primary/20 cursor-grabbing",
                 )}
               >
                 <DealCardInner deal={activeDeal} />

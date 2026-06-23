@@ -252,12 +252,20 @@ export default function ContactDetailPage() {
             onInvalidate={invalidateContact}
           />
           <div className="rounded-2xl border border-border bg-card p-4 sm:p-6">
+            <h2 className="mb-4 text-sm font-semibold tracking-tight text-foreground">
+              {t("leads.detail.notes")}
+            </h2>
+            <LeadNotesSection
+              leadId={leadId ?? undefined}
+              contactId={!leadId ? resolvedContactId : undefined}
+              linkedContactId={leadId ? resolvedContactId : undefined}
+              canEdit={canEdit}
+            />
+          </div>
+          <div className="rounded-2xl border border-border bg-card p-4 sm:p-6">
             <Tabs defaultValue="tasks" className="w-full">
               <TabsList variant="line" className="w-full mb-4 sm:mb-5">
                 <TabsTrigger value="tasks">{t("tasks.title")}</TabsTrigger>
-                <TabsTrigger value="notes">
-                  {t("leads.detail.notes")}
-                </TabsTrigger>
                 <TabsTrigger value="history">
                   {t("leads.detail.history")}
                 </TabsTrigger>
@@ -270,14 +278,6 @@ export default function ContactDetailPage() {
                   historyContactId={resolvedContactId}
                   canEdit={canEdit}
                   workspaceMembers={workspaceMembers}
-                />
-              </TabsContent>
-              <TabsContent value="notes" className="mt-0">
-                <LeadNotesSection
-                  leadId={leadId ?? undefined}
-                  contactId={!leadId ? resolvedContactId : undefined}
-                  linkedContactId={leadId ? resolvedContactId : undefined}
-                  canEdit={canEdit}
                 />
               </TabsContent>
               <TabsContent value="history" className="mt-0">
