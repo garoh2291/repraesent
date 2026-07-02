@@ -95,9 +95,20 @@ export async function getDeals(
   return res.data;
 }
 
+export interface DealContact {
+  id: string;
+  full_name: string | null;
+  is_primary: boolean;
+  primary_email: string | null;
+  primary_phone: string | null;
+}
+
 export type DealDetailResponse = {
   deal: Record<string, unknown>;
+  /** Primary contact (mirrors deals.contact_id); kept for backward compatibility. */
   contact: Record<string, unknown> | null;
+  /** All contacts attached to the deal, primary first. */
+  contacts: DealContact[];
 };
 
 export async function getDeal(dealId: string): Promise<DealDetailResponse> {
@@ -119,7 +130,6 @@ export interface PatchDealBody {
   stage?: string;
   status?: DealStatus;
   value?: number | null;
-  contact_id?: string | null;
   assigned_to?: string | null;
   expected_close_date?: string | null;
 }
@@ -158,13 +168,42 @@ export async function reorderDeal(
   return res.data;
 }
 
-export async function patchDealContact(
+export async function getDealContacts(
   dealId: string,
-  contact_id: string | null,
+): Promise<DealContact[]> {
+  const res = await apiClient.get<DealContact[]>(`/deals/${dealId}/contacts`);
+  return res.data;
+}
+
+export async function attachDealContact(
+  dealId: string,
+  contactId: string,
+  isPrimary = false,
+): Promise<DealDetailResponse> {
+  const res = await apiClient.post<DealDetailResponse>(
+    `/deals/${dealId}/contacts`,
+    { contact_id: contactId, is_primary: isPrimary },
+  );
+  return res.data;
+}
+
+export async function detachDealContact(
+  dealId: string,
+  contactId: string,
+): Promise<DealDetailResponse> {
+  const res = await apiClient.delete<DealDetailResponse>(
+    `/deals/${dealId}/contacts/${encodeURIComponent(contactId)}`,
+  );
+  return res.data;
+}
+
+export async function setDealPrimaryContact(
+  dealId: string,
+  contactId: string,
 ): Promise<DealDetailResponse> {
   const res = await apiClient.patch<DealDetailResponse>(
-    `/deals/${dealId}/contact`,
-    { contact_id },
+    `/deals/${dealId}/contacts/${encodeURIComponent(contactId)}/primary`,
+    {},
   );
   return res.data;
 }

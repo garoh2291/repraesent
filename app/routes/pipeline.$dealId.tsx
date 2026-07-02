@@ -180,6 +180,7 @@ export default function PipelineDealDetailPage() {
 
   const deal = dealQuery.data?.deal;
   const contact = dealQuery.data?.contact;
+  const dealContacts = dealQuery.data?.contacts ?? [];
 
   const dealHistoryQuery = useQuery({
     queryKey: ["deal-history", dealId],
@@ -481,9 +482,6 @@ export default function PipelineDealDetailPage() {
       .filter(Boolean)
       .join(" ")
       .trim();
-
-  const contactEmail = str(contact?.primary_email ?? contact?.email);
-  const contactPhone = str(contact?.primary_phone ?? contact?.phone);
 
   const displayTitle =
     title.trim() ||
@@ -787,13 +785,10 @@ export default function PipelineDealDetailPage() {
         {/* RIGHT — sidebar */}
         <div className="space-y-4 sm:space-y-6 lg:col-span-2">
           <div className="lg:sticky lg:top-6 space-y-4 sm:space-y-6">
-            {/* Contact */}
+            {/* Contacts */}
             <DealContactSection
               dealId={dealId}
-              contactId={contactId}
-              contactName={contactName}
-              contactEmail={contactEmail}
-              contactPhone={contactPhone}
+              contacts={dealContacts}
               canEdit={canEdit}
             />
 
