@@ -288,6 +288,7 @@
       "fullPage": "Full page",
       "notes": "Notes",
       "history": "History",
+      "emails": "Emails",
       "backToLeads": "Back to leads",
       "loading": "Loading lead…",
       "addNote": "Add note",
@@ -761,7 +762,42 @@
     "subtitle": "Your profile and team",
     "tabs": {
       "profile": "Profile",
-      "areaSettings": "Area Settings"
+      "areaSettings": "Area Settings",
+      "bcc": "Email Logging"
+    },
+    "bcc": {
+      "metaTitle": "Email logging",
+      "metaDescription": "Log emails to leads by BCC",
+      "sectionTitle": "Your BCC address",
+      "sectionDescription": "Add this hidden address to the BCC field when you email a customer. A copy is logged and attached to the matching lead automatically.",
+      "addressLabel": "Your BCC address",
+      "copy": "Copy",
+      "copied": "Address copied",
+      "howToTitle": "How it works",
+      "flowComposeTitle": "Your email app",
+      "flowFieldTo": "To",
+      "flowFieldToValue": "customer@email.com",
+      "flowBccLabel": "Bcc",
+      "flowBadge": "Auto-logged",
+      "flowContactName": "Anna Fischer",
+      "flowContactMeta": "Contact",
+      "flowTabInfo": "Info",
+      "flowTabEmails": "Emails",
+      "flowEmailSubject": "Your kitchen quote",
+      "flowEmailSnippet": "Hi Anna, attached is your quote…",
+      "flowCaptionCompose": "BCC this address when you email a customer.",
+      "flowCaptionArrive": "The email lands on that customer's contact.",
+      "whereTitle": "Where to find logged emails",
+      "whereBreadcrumbContacts": "Contacts",
+      "whereBreadcrumbContact": "Open a contact",
+      "whereBreadcrumbTab": "Emails tab",
+      "regenerate": "Regenerate address",
+      "regenerateConfirmTitle": "Regenerate BCC address?",
+      "regenerateConfirmDescription": "The current address will stop working immediately. Emails BCC'd to the old address will no longer be logged.",
+      "regenerateConfirm": "Regenerate",
+      "regenerated": "New address generated",
+      "cancel": "Cancel",
+      "loadError": "Could not load your BCC address."
     },
     "profile": {
       "metaTitle": "Profile settings",
@@ -1954,5 +1990,13 @@
       "billing": "Billing",
       "shipping": "Shipping"
     }
+  },
+  "leadEmails": {
+    "emptyTitle": "No emails logged yet",
+    "emptyDescription": "BCC your email logging address when you write to this customer and the messages will appear here.",
+    "loadError": "Could not load emails.",
+    "ambiguous": "Review match",
+    "ambiguousHint": "Several contacts share this email address. This message was attached to the best single match — please verify it landed on the right record.",
+    "emptyCta": "How to log emails here"
   }
 }

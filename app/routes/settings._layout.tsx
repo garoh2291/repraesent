@@ -6,8 +6,17 @@ export default function SettingsLayout() {
   const { t } = useTranslation();
   const location = useLocation();
   const navigate = useNavigate();
-  const tab =
-    location.pathname.includes("/settings/team") ? "team" : "profile";
+  const tab = location.pathname.includes("/settings/team")
+    ? "team"
+    : location.pathname.includes("/settings/bcc")
+      ? "bcc"
+      : "profile";
+
+  const tabToPath: Record<string, string> = {
+    team: "/settings/team",
+    bcc: "/settings/bcc",
+    profile: "/settings/profile",
+  };
 
   return (
     <div className="mx-auto w-full max-w-[1280px] p-4 sm:p-6 py-10! space-y-6 sm:space-y-8 app-fade-in">
@@ -24,9 +33,7 @@ export default function SettingsLayout() {
 
       <Tabs
         value={tab}
-        onValueChange={(v) =>
-          navigate(v === "team" ? "/settings/team" : "/settings/profile")
-        }
+        onValueChange={(v) => navigate(tabToPath[v] ?? "/settings/profile")}
         className="w-full app-fade-up app-fade-up-d1"
       >
         <div className="overflow-x-auto scrollbar-hide -mx-4 sm:mx-0 px-4 sm:px-0">
@@ -39,6 +46,9 @@ export default function SettingsLayout() {
             </TabsTrigger>
             <TabsTrigger value="team" className="cursor-pointer">
               {t("settings.tabs.areaSettings")}
+            </TabsTrigger>
+            <TabsTrigger value="bcc" className="cursor-pointer">
+              {t("settings.tabs.bcc")}
             </TabsTrigger>
           </TabsList>
         </div>
