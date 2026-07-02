@@ -6,7 +6,7 @@ import { ExternalLink, Link2, Link2Off, Plus } from "lucide-react";
 import { toast } from "sonner";
 import {
   getDealsForContact,
-  patchDealContact,
+  detachDealContact,
   type DealListItem,
 } from "~/lib/api/deals";
 import { formatCurrency } from "~/lib/utils/format";
@@ -143,7 +143,12 @@ export function ContactDealsSection({
             </header>
             <ul className="divide-y divide-border">
               {deals.map((d) => (
-                <DealRow key={d.id} deal={d} canEdit={canEdit} />
+                <DealRow
+                  key={d.id}
+                  deal={d}
+                  contactId={contactRouteId}
+                  canEdit={canEdit}
+                />
               ))}
             </ul>
           </>
@@ -155,10 +160,11 @@ export function ContactDealsSection({
 
 interface DealRowProps {
   deal: DealListItem;
+  contactId: string;
   canEdit: boolean;
 }
 
-function DealRow({ deal, canEdit }: DealRowProps) {
+function DealRow({ deal, contactId, canEdit }: DealRowProps) {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
   const [confirmOpen, setConfirmOpen] = useState(false);
@@ -173,7 +179,7 @@ function DealRow({ deal, canEdit }: DealRowProps) {
       : null;
 
   const detachMutation = useMutation({
-    mutationFn: () => patchDealContact(deal.id, null),
+    mutationFn: () => detachDealContact(deal.id, contactId),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ["deals"] });
       void queryClient.invalidateQueries({ queryKey: ["contact-deals"] });

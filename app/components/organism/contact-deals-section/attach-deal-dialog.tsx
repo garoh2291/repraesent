@@ -5,7 +5,9 @@ import { Check, Link2, Link2Off, Search, X } from "lucide-react";
 import { toast } from "sonner";
 import {
   getDeals,
-  patchDealContact,
+  getDealsForContact,
+  attachDealContact,
+  detachDealContact,
   type DealListItem,
 } from "~/lib/api/deals";
 import { formatCurrency } from "~/lib/utils/format";
@@ -62,8 +64,19 @@ export function AttachDealDialog({
 
   const deals = dealsQuery.data?.data ?? [];
 
+  // Which deals this contact is already attached to (as primary or secondary).
+  // Shares the cache key with the contact's deals list so both stay in sync.
+  const attachedDealsQuery = useQuery({
+    queryKey: ["contact-deals", contactId],
+    queryFn: () => getDealsForContact(contactId),
+    enabled: open,
+  });
+  const attachedDealIds = new Set(
+    (attachedDealsQuery.data ?? []).map((d) => d.id),
+  );
+
   const attachMutation = useMutation({
-    mutationFn: (dealId: string) => patchDealContact(dealId, contactId),
+    mutationFn: (dealId: string) => attachDealContact(dealId, contactId),
     onMutate: (dealId) => setAttachingId(dealId),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ["deals"] });
@@ -74,7 +87,6 @@ export function AttachDealDialog({
       toast.success(
         t("contacts.dealsPanel.attached", { defaultValue: "Deal attached." }),
       );
-      onOpenChange(false);
     },
     onError: () => {
       toast.error(
@@ -89,7 +101,7 @@ export function AttachDealDialog({
   // Unlinking a deal keeps the dialog open so the row updates to the
   // "not linked" state and can be re-attached right away.
   const detachMutation = useMutation({
-    mutationFn: (dealId: string) => patchDealContact(dealId, null),
+    mutationFn: (dealId: string) => detachDealContact(dealId, contactId),
     onMutate: (dealId) => setDetachingId(dealId),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ["deals"] });
@@ -128,9 +140,9 @@ export function AttachDealDialog({
             })}
           </DialogTitle>
           <DialogDescription>
-            {t("contacts.dealsPanel.attachDescription", {
+            {t("contacts.dealsPanel.attachDescriptionMulti", {
               defaultValue:
-                "Search for a deal and link it to this contact. Any contact previously linked to the deal will be replaced.",
+                "Search for deals and link them to this contact. A deal can be linked to several contacts.",
             })}
           </DialogDescription>
         </DialogHeader>
@@ -177,7 +189,7 @@ export function AttachDealDialog({
           ) : (
             <ul className="divide-y divide-border">
               {deals.map((d) => {
-                const alreadyLinked = d.contact_id === contactId;
+                const alreadyLinked = attachedDealIds.has(d.id);
                 const val =
                   d.value != null && d.value !== ""
                     ? formatCurrency(Number(d.value))

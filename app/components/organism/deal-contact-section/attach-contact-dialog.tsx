@@ -7,7 +7,7 @@ import {
   getContacts,
   type ContactListItem,
 } from "~/lib/api/contacts-crm";
-import { patchDealContact } from "~/lib/api/deals";
+import { attachDealContact, detachDealContact } from "~/lib/api/deals";
 import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
 import {
@@ -22,15 +22,15 @@ interface AttachContactDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   dealId: string;
-  /** Contact currently attached to the deal, if any. */
-  currentContactId?: string | null;
+  /** Contacts already attached to the deal. */
+  attachedContactIds: string[];
 }
 
 export function AttachContactDialog({
   open,
   onOpenChange,
   dealId,
-  currentContactId,
+  attachedContactIds,
 }: AttachContactDialogProps) {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
@@ -38,6 +38,8 @@ export function AttachContactDialog({
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [attachingId, setAttachingId] = useState<string | null>(null);
   const [detachingId, setDetachingId] = useState<string | null>(null);
+
+  const attachedSet = new Set(attachedContactIds);
 
   // Reset search each time the dialog opens.
   useEffect(() => {
@@ -70,15 +72,16 @@ export function AttachContactDialog({
     void queryClient.invalidateQueries({ queryKey: ["contact"] });
   };
 
+  // Attaching keeps the dialog open so several contacts can be added in a row;
+  // the row flips to its "attached" state immediately.
   const attachMutation = useMutation({
-    mutationFn: (contactId: string) => patchDealContact(dealId, contactId),
+    mutationFn: (contactId: string) => attachDealContact(dealId, contactId),
     onMutate: (contactId) => setAttachingId(contactId),
     onSuccess: () => {
       invalidate();
       toast.success(
         t("pipeline.contactAttached", { defaultValue: "Contact attached." }),
       );
-      onOpenChange(false);
     },
     onError: () => {
       toast.error(
@@ -90,10 +93,8 @@ export function AttachContactDialog({
     onSettled: () => setAttachingId(null),
   });
 
-  // Detaching keeps the dialog open so the row updates to the "not attached"
-  // state and can be re-attached right away.
   const detachMutation = useMutation({
-    mutationFn: (_contactId: string) => patchDealContact(dealId, null),
+    mutationFn: (contactId: string) => detachDealContact(dealId, contactId),
     onMutate: (contactId) => setDetachingId(contactId),
     onSuccess: () => {
       invalidate();
@@ -129,9 +130,9 @@ export function AttachContactDialog({
             })}
           </DialogTitle>
           <DialogDescription>
-            {t("pipeline.attachContactDescription", {
+            {t("pipeline.attachContactDescriptionMulti", {
               defaultValue:
-                "Search for a contact and attach it to this deal. Any contact previously attached to the deal will be replaced.",
+                "Search for contacts and attach them to this deal. You can attach several; the first one becomes the primary contact.",
             })}
           </DialogDescription>
         </DialogHeader>
@@ -178,7 +179,7 @@ export function AttachContactDialog({
           ) : (
             <ul className="divide-y divide-border">
               {contacts.map((c) => {
-                const alreadyAttached = c.id === currentContactId;
+                const alreadyAttached = attachedSet.has(c.id);
                 const subtitle =
                   c.primary_email?.trim() || c.primary_phone?.trim() || null;
                 const isAttaching = attachingId === c.id;
