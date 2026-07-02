@@ -287,6 +287,7 @@
       "fullPage": "Vollansicht",
       "notes": "Notizen",
       "history": "Verlauf",
+      "emails": "E-Mails",
       "backToLeads": "Zurück zu Leads",
       "loading": "Lead wird geladen…",
       "addNote": "Notiz hinzufügen",
@@ -761,7 +762,42 @@
     "subtitle": "Ihr Profil und Team",
     "tabs": {
       "profile": "Profil",
-      "areaSettings": "Bereich-Einstellungen"
+      "areaSettings": "Bereich-Einstellungen",
+      "bcc": "E-Mail-Protokoll"
+    },
+    "bcc": {
+      "metaTitle": "E-Mail-Protokollierung",
+      "metaDescription": "E-Mails per BCC zu Leads protokollieren",
+      "sectionTitle": "Ihre BCC-Adresse",
+      "sectionDescription": "Fügen Sie diese verborgene Adresse in das BCC-Feld ein, wenn Sie einem Kunden schreiben. Eine Kopie wird protokolliert und automatisch dem passenden Lead zugeordnet.",
+      "addressLabel": "Ihre BCC-Adresse",
+      "copy": "Kopieren",
+      "copied": "Adresse kopiert",
+      "howToTitle": "So funktioniert es",
+      "flowComposeTitle": "Ihr E-Mail-Programm",
+      "flowFieldTo": "An",
+      "flowFieldToValue": "kunde@email.com",
+      "flowBccLabel": "Bcc",
+      "flowBadge": "Automatisch protokolliert",
+      "flowContactName": "Anna Fischer",
+      "flowContactMeta": "Kontakt",
+      "flowTabInfo": "Info",
+      "flowTabEmails": "E-Mails",
+      "flowEmailSubject": "Ihr Küchen-Angebot",
+      "flowEmailSnippet": "Hallo Anna, anbei Ihr Angebot…",
+      "flowCaptionCompose": "Setzen Sie diese Adresse ins BCC, wenn Sie einem Kunden schreiben.",
+      "flowCaptionArrive": "Die E-Mail landet beim Kontakt dieses Kunden.",
+      "whereTitle": "Wo Sie protokollierte E-Mails finden",
+      "whereBreadcrumbContacts": "Kontakte",
+      "whereBreadcrumbContact": "Kontakt öffnen",
+      "whereBreadcrumbTab": "Reiter „E-Mails“",
+      "regenerate": "Adresse neu erzeugen",
+      "regenerateConfirmTitle": "BCC-Adresse neu erzeugen?",
+      "regenerateConfirmDescription": "Die aktuelle Adresse funktioniert sofort nicht mehr. An die alte Adresse gesendete E-Mails werden nicht mehr protokolliert.",
+      "regenerateConfirm": "Neu erzeugen",
+      "regenerated": "Neue Adresse erzeugt",
+      "cancel": "Abbrechen",
+      "loadError": "Ihre BCC-Adresse konnte nicht geladen werden."
     },
     "profile": {
       "metaTitle": "Profil-Einstellungen",
@@ -1954,5 +1990,13 @@
       "billing": "Rechnung",
       "shipping": "Versand"
     }
+  },
+  "leadEmails": {
+    "emptyTitle": "Noch keine E-Mails protokolliert",
+    "emptyDescription": "Setzen Sie Ihre Protokoll-Adresse ins BCC, wenn Sie diesem Kunden schreiben – die Nachrichten erscheinen dann hier.",
+    "loadError": "E-Mails konnten nicht geladen werden.",
+    "ambiguous": "Zuordnung prüfen",
+    "ambiguousHint": "Mehrere Kontakte teilen sich diese E-Mail-Adresse. Diese Nachricht wurde der besten Einzelübereinstimmung zugeordnet – bitte prüfen Sie, ob sie beim richtigen Datensatz gelandet ist.",
+    "emptyCta": "So protokollieren Sie E-Mails hier"
   }
 }

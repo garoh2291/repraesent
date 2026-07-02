@@ -10,6 +10,7 @@ import { getWorkspaceDetail } from "~/lib/api/workspaces";
 import { LeadHistorySection } from "~/components/organism/lead-detail-sheet";
 import { LeadNotesSection } from "~/components/organism/lead-notes-section";
 import { LeadTasksSection } from "~/components/organism/tasks/lead-tasks-section";
+import { ContactEmailsSection } from "~/components/organism/contact-emails-section";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "~/components/ui/tabs";
 import type { WorkspaceMemberItem } from "~/components/organism/tasks/task-form-modal";
 import { useCanEditLeads } from "~/lib/hooks/useCanEditLeads";
@@ -266,6 +267,9 @@ export default function ContactDetailPage() {
             <Tabs defaultValue="tasks" className="w-full">
               <TabsList variant="line" className="w-full mb-4 sm:mb-5">
                 <TabsTrigger value="tasks">{t("tasks.title")}</TabsTrigger>
+                <TabsTrigger value="emails">
+                  {t("leads.detail.emails")}
+                </TabsTrigger>
                 <TabsTrigger value="history">
                   {t("leads.detail.history")}
                 </TabsTrigger>
@@ -279,6 +283,9 @@ export default function ContactDetailPage() {
                   canEdit={canEdit}
                   workspaceMembers={workspaceMembers}
                 />
+              </TabsContent>
+              <TabsContent value="emails" className="mt-0">
+                <ContactEmailsSection contactId={resolvedContactId} />
               </TabsContent>
               <TabsContent value="history" className="mt-0">
                 <LeadHistorySection
