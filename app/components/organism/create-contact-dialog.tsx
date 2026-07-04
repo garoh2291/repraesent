@@ -9,15 +9,13 @@ import {
   createContact,
   patchContactCrm,
 } from "~/lib/api/contacts-crm";
+import { extractErrorMessage } from "~/lib/api/axios-instance";
 import {
   addContactEmail,
   addContactPhone,
   addContactAddress as addContactAddressAlt,
 } from "~/lib/api/contacts";
-import {
-  CONTACT_TYPES,
-  type ContactType,
-} from "~/lib/contacts/contact-types";
+import { CONTACT_TYPES, type ContactType } from "~/lib/contacts/contact-types";
 import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
 import { Label } from "~/components/ui/label";
@@ -163,11 +161,12 @@ export function CreateContactDialog({
         navigate(`/contacts/${res.id}`);
       }
     },
-    onError: () => {
+    onError: (error) => {
       toast.error(
         t("contacts.errors.createFailed", {
           defaultValue: "Could not create contact.",
         }),
+        { description: extractErrorMessage(error) },
       );
     },
   });
@@ -229,11 +228,12 @@ export function CreateContactDialog({
       );
       onUpdated?.();
     },
-    onError: () => {
+    onError: (error) => {
       toast.error(
         t("contacts.errors.updateFailed", {
           defaultValue: "Could not update contact.",
         }),
+        { description: extractErrorMessage(error) },
       );
     },
   });

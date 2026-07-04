@@ -20,6 +20,7 @@ import {
 } from "lucide-react";
 import { ContactProfileForm } from "~/components/organism/contact-detail/contact-crm-panel";
 import { toast } from "sonner";
+import { extractErrorMessage } from "~/lib/api/axios-instance";
 import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
 import { Label } from "~/components/ui/label";
@@ -91,7 +92,7 @@ function rollbackContactQueries(qc: QueryClient, snap: ContactSnapshot) {
 
 function applyToContactQueries(
   qc: QueryClient,
-  update: (data: ContactQueryData) => ContactQueryData
+  update: (data: ContactQueryData) => ContactQueryData,
 ): void {
   const queries = qc.getQueriesData<ContactQueryData>({
     queryKey: ["contact"],
@@ -104,12 +105,12 @@ function applyToContactQueries(
 
 function withSinglePrimary(
   rows: ContactRow[],
-  primaryId: unknown
+  primaryId: unknown,
 ): ContactRow[] {
   return rows.map((r) =>
     String(r.id) === String(primaryId)
       ? { ...r, is_primary: true }
-      : { ...r, is_primary: false }
+      : { ...r, is_primary: false },
   );
 }
 
@@ -134,11 +135,11 @@ interface ContactInfoCardProps {
 
 function filterContactRows(
   rows: Record<string, unknown>[],
-  contactId: string | null
+  contactId: string | null,
 ) {
   if (!contactId) return [] as Record<string, unknown>[];
   return rows.filter(
-    (r) => r.entity_table === "contacts" && String(r.entity_id) === contactId
+    (r) => r.entity_table === "contacts" && String(r.entity_id) === contactId,
   );
 }
 
@@ -193,15 +194,15 @@ export function ContactInfoCard({
 
   const emailsContact = useMemo(
     () => sortByPrimary(filterContactRows(emails, contactId)),
-    [emails, contactId]
+    [emails, contactId],
   );
   const phonesContact = useMemo(
     () => sortByPrimary(filterContactRows(phones, contactId)),
-    [phones, contactId]
+    [phones, contactId],
   );
   const addressesContact = useMemo(
     () => sortByPrimary(filterContactRows(addresses, contactId)),
-    [addresses, contactId]
+    [addresses, contactId],
   );
 
   const totalEmails = emailsContact.length;
@@ -369,7 +370,7 @@ function CountBadge({ n }: { n: number }) {
         "inline-flex h-4 min-w-[16px] items-center justify-center rounded-full px-1 text-[10px] font-semibold tabular-nums",
         n > 0
           ? "bg-foreground/10 text-foreground"
-          : "bg-muted text-muted-foreground"
+          : "bg-muted text-muted-foreground",
       )}
     >
       {n}
@@ -401,7 +402,7 @@ function KindPanel({
   const canAdd = hasContact;
   /** Among stacked "add" forms, only one may claim "primary" at a time (radio UX). */
   const [pendingPrimaryKey, setPendingPrimaryKey] = useState<number | null>(
-    null
+    null,
   );
 
   const labels = {
@@ -568,7 +569,7 @@ function RowCard({ kind, entityId, row, canEdit, onInvalidate }: RowCardProps) {
       await navigator.clipboard.writeText(primaryValue);
       setCopied(true);
       toast.success(
-        t("contacts.copied", { defaultValue: "Copied to clipboard" })
+        t("contacts.copied", { defaultValue: "Copied to clipboard" }),
       );
       setTimeout(() => setCopied(false), 1500);
     } catch {
@@ -605,14 +606,14 @@ function RowCard({ kind, entityId, row, canEdit, onInvalidate }: RowCardProps) {
       className={cn(
         "group relative flex items-start gap-3 rounded-xl border border-border/70 bg-card px-3.5 py-3 transition-all",
         "hover:border-border hover:shadow-(--shadow-sm)",
-        isPrimary && "ring-1 ring-primary/30 border-primary/40 bg-primary/2"
+        isPrimary && "ring-1 ring-primary/30 border-primary/40 bg-primary/2",
       )}
     >
       <div
         className={cn(
           "flex h-9 w-9 shrink-0 items-center justify-center rounded-lg",
           "bg-muted text-muted-foreground",
-          "[&>svg]:h-4 [&>svg]:w-4"
+          "[&>svg]:h-4 [&>svg]:w-4",
         )}
       >
         <KindIcon kind={kind} />
@@ -786,7 +787,7 @@ function RowEditorInline({
     const ak = arrayKey(kind);
     applyToContactQueries(queryClient, (v) => {
       let next = v[ak].map((r) =>
-        String(r.id) === id ? { ...r, ...patch } : r
+        String(r.id) === id ? { ...r, ...patch } : r,
       );
       if (primary) next = withSinglePrimary(next, id);
       return { ...v, [ak]: next };
@@ -798,18 +799,18 @@ function RowEditorInline({
         ? patchContactEmail(
             entityId,
             id,
-            body as Parameters<typeof patchContactEmail>[2]
+            body as Parameters<typeof patchContactEmail>[2],
           )
         : kind === "phone"
           ? patchContactPhone(
               entityId,
               id,
-              body as Parameters<typeof patchContactPhone>[2]
+              body as Parameters<typeof patchContactPhone>[2],
             )
           : patchContactAddress(
               entityId,
               id,
-              body as Parameters<typeof patchContactAddress>[2]
+              body as Parameters<typeof patchContactAddress>[2],
             );
 
     apiCall
@@ -817,10 +818,11 @@ function RowEditorInline({
         void queryClient.invalidateQueries({ queryKey: ["contact"] });
         void queryClient.invalidateQueries({ queryKey: ["contacts"] });
       })
-      .catch(() => {
+      .catch((err) => {
         rollbackContactQueries(queryClient, snap);
         toast.error(
-          t("contacts.saveFailed", { defaultValue: "Could not save." })
+          t("contacts.saveFailed", { defaultValue: "Could not save." }),
+          { description: extractErrorMessage(err) },
         );
       });
   };
@@ -850,7 +852,7 @@ function RowEditorInline({
       .catch(() => {
         rollbackContactQueries(queryClient, snap);
         toast.error(
-          t("contacts.removeFailed", { defaultValue: "Could not remove." })
+          t("contacts.removeFailed", { defaultValue: "Could not remove." }),
         );
       });
   };
@@ -1180,7 +1182,7 @@ function AddRowInline({
     if (kind === "email") {
       if (!address.trim()) {
         toast.error(
-          t("contacts.emailRequired", { defaultValue: "Email is required." })
+          t("contacts.emailRequired", { defaultValue: "Email is required." }),
         );
         return;
       }
@@ -1202,7 +1204,7 @@ function AddRowInline({
         toast.error(
           t("contacts.phoneRequired", {
             defaultValue: "Phone number is required.",
-          })
+          }),
         );
         return;
       }
@@ -1258,16 +1260,16 @@ function AddRowInline({
       kind === "email"
         ? addContactEmail(
             entityId,
-            body as Parameters<typeof addContactEmail>[1]
+            body as Parameters<typeof addContactEmail>[1],
           )
         : kind === "phone"
           ? addContactPhone(
               entityId,
-              body as Parameters<typeof addContactPhone>[1]
+              body as Parameters<typeof addContactPhone>[1],
             )
           : addContactAddress(
               entityId,
-              body as Parameters<typeof addContactAddress>[1]
+              body as Parameters<typeof addContactAddress>[1],
             );
 
     apiCall
@@ -1275,10 +1277,11 @@ function AddRowInline({
         void queryClient.invalidateQueries({ queryKey: ["contact"] });
         void queryClient.invalidateQueries({ queryKey: ["contacts"] });
       })
-      .catch(() => {
+      .catch((err) => {
         rollbackContactQueries(queryClient, snap);
         toast.error(
-          t("contacts.addFailed", { defaultValue: "Could not add." })
+          t("contacts.addFailed", { defaultValue: "Could not add." }),
+          { description: extractErrorMessage(err) },
         );
       });
   };

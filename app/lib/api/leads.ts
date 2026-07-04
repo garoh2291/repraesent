@@ -1,4 +1,5 @@
 import { apiClient } from "./axios-instance";
+import type { ContactEmailMatch } from "./contacts-crm";
 
 export const LEAD_STATUSES = [
   "new_lead",
@@ -38,6 +39,10 @@ export interface Lead {
   updated_at: string;
   tasks_summary: LeadTasksSummary;
   board_position: number | null;
+  /** Detail view only: the contact this lead was converted to, if any. */
+  linked_contact_id?: string | null;
+  /** Detail view only: an existing contact with this lead's email when unlinked. */
+  contact_email_match?: ContactEmailMatch | null;
 }
 
 export interface LeadHistoryItem {
@@ -74,7 +79,7 @@ export interface PaginatedLeads {
 }
 
 export async function getLeads(
-  params: GetLeadsParams = {}
+  params: GetLeadsParams = {},
 ): Promise<PaginatedLeads> {
   const searchParams = new URLSearchParams();
   if (params.page != null) searchParams.set("page", String(params.page));
@@ -89,7 +94,7 @@ export async function getLeads(
   if (params.sort) searchParams.set("sort", params.sort);
 
   const res = await apiClient.get<PaginatedLeads>(
-    `/leads?${searchParams.toString()}`
+    `/leads?${searchParams.toString()}`,
   );
   return res.data;
 }
@@ -127,7 +132,7 @@ export interface CreateLeadBody {
 }
 
 export async function createLead(
-  body: CreateLeadBody
+  body: CreateLeadBody,
 ): Promise<{ id: string }> {
   const res = await apiClient.post<{ id: string }>("/leads", body);
   return res.data;
@@ -140,7 +145,7 @@ export async function getLead(id: string): Promise<Lead> {
 
 export async function updateLeadStatus(
   id: string,
-  status: LeadStatus
+  status: LeadStatus,
 ): Promise<Lead> {
   const res = await apiClient.patch<Lead>(`/leads/${id}`, { status });
   return res.data;
@@ -178,11 +183,7 @@ export async function getLeadStats(): Promise<LeadStats> {
   return res.data;
 }
 
-export type LeadAnalyticsPeriod =
-  | "1d"
-  | "7d"
-  | "30d"
-  | "all_time";
+export type LeadAnalyticsPeriod = "1d" | "7d" | "30d" | "all_time";
 
 export interface LeadAnalytics {
   series: { date: string; count: number }[];
@@ -191,10 +192,10 @@ export interface LeadAnalytics {
 }
 
 export async function getLeadAnalytics(
-  period: LeadAnalyticsPeriod
+  period: LeadAnalyticsPeriod,
 ): Promise<LeadAnalytics> {
   const res = await apiClient.get<LeadAnalytics>(
-    `/leads/analytics?period=${period}`
+    `/leads/analytics?period=${period}`,
   );
   return res.data;
 }

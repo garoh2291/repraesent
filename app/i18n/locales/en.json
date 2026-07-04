@@ -1941,7 +1941,6 @@
     "copy": "Copy",
     "copyFailed": "Could not copy",
     "copyValue": "Copy {{label}}",
-    "country": "Country",
     "edit": "Edit",
     "editEntry": "Edit entry",
     "email": "Email",
@@ -1989,6 +1988,12 @@
       "fax": "Fax",
       "billing": "Billing",
       "shipping": "Shipping"
+    },
+    "suggestion": {
+      "title": "A contact with this email already exists",
+      "body": "{{email}} is already used by another contact. A lead can only link to one contact, so it can't be connected here — open the existing contact instead.",
+      "view": "View {{name}}",
+      "unnamed": "Existing contact"
     }
   },
   "leadEmails": {
