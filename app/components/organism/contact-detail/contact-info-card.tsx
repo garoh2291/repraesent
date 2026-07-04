@@ -234,24 +234,44 @@ export function ContactInfoCard({
         <div className="border-b border-border px-3 sm:px-4">
           <TabsList variant="line" className="h-10 gap-1">
             {contact ? (
-              <TabsTrigger value="profile" className="gap-2 px-3 text-xs">
-                <UserCircle className="h-3.5 w-3.5" />
-                {t("contacts.profile", { defaultValue: "Profile" })}
+              <TabsTrigger
+                value="profile"
+                className="gap-1.5 px-2 text-xs sm:gap-2 sm:px-3"
+              >
+                <UserCircle className="h-3.5 w-3.5 shrink-0" />
+                <span className="hidden sm:inline">
+                  {t("contacts.profile", { defaultValue: "Profile" })}
+                </span>
               </TabsTrigger>
             ) : null}
-            <TabsTrigger value="emails" className="gap-2 px-3 text-xs">
-              <Mail className="h-3.5 w-3.5" />
-              {t("contacts.emails", { defaultValue: "Emails" })}
+            <TabsTrigger
+              value="emails"
+              className="gap-1.5 px-2 text-xs sm:gap-2 sm:px-3"
+            >
+              <Mail className="h-3.5 w-3.5 shrink-0" />
+              <span className="hidden sm:inline">
+                {t("contacts.emails", { defaultValue: "Emails" })}
+              </span>
               <CountBadge n={totalEmails} />
             </TabsTrigger>
-            <TabsTrigger value="phones" className="gap-2 px-3 text-xs">
-              <Phone className="h-3.5 w-3.5" />
-              {t("contacts.phones", { defaultValue: "Phones" })}
+            <TabsTrigger
+              value="phones"
+              className="gap-1.5 px-2 text-xs sm:gap-2 sm:px-3"
+            >
+              <Phone className="h-3.5 w-3.5 shrink-0" />
+              <span className="hidden sm:inline">
+                {t("contacts.phones", { defaultValue: "Phones" })}
+              </span>
               <CountBadge n={totalPhones} />
             </TabsTrigger>
-            <TabsTrigger value="addresses" className="gap-2 px-3 text-xs">
-              <MapPin className="h-3.5 w-3.5" />
-              {t("contacts.addresses", { defaultValue: "Addresses" })}
+            <TabsTrigger
+              value="addresses"
+              className="gap-1.5 px-2 text-xs sm:gap-2 sm:px-3"
+            >
+              <MapPin className="h-3.5 w-3.5 shrink-0" />
+              <span className="hidden sm:inline">
+                {t("contacts.addresses", { defaultValue: "Addresses" })}
+              </span>
               <CountBadge n={totalAddresses} />
             </TabsTrigger>
           </TabsList>

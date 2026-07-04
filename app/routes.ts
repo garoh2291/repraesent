@@ -47,6 +47,7 @@ export default [
       route("lead-form/:leadId", "routes/lead-form.$leadId.tsx"),
       route("contacts", "routes/contacts.tsx"),
       route("contacts/:contactId", "routes/contacts.$contactId.tsx"),
+      route("mail", "routes/mail.tsx"),
       route("pipeline", "routes/pipeline.tsx"),
       route("pipeline/:dealId", "routes/pipeline.$dealId.tsx"),
       route("appointments", "routes/appointments.tsx"),

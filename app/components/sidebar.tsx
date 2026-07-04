@@ -11,6 +11,7 @@ import {
   HomeIcon,
   Info,
   LogOut,
+  Mail,
   Megaphone,
   Package,
   Settings,
@@ -36,7 +37,7 @@ import {
 import logoUrl from "~/components/icons/re_praesent-mark-brand-hor.svg?url";
 
 const lucideIconNames = new Set(
-  Object.keys(LucideIcons).filter((key) => /^[A-Z]/.test(key))
+  Object.keys(LucideIcons).filter((key) => /^[A-Z]/.test(key)),
 );
 
 function kebabToPascal(name: string) {
@@ -126,10 +127,10 @@ export function Sidebar({
   >(null);
   const hasAppointmentsService =
     currentWorkspace?.services?.some(
-      (s) => s.service_type === "appointments"
+      (s) => s.service_type === "appointments",
     ) ?? false;
   const { data: appointmentConfigs } = useAppointmentConfigs(
-    hasAppointmentsService && !!currentWorkspace?.id
+    hasAppointmentsService && !!currentWorkspace?.id,
   );
   const showAppointmentsInSidebar =
     hasAppointmentsService && !!appointmentConfigs?.length;
@@ -144,7 +145,7 @@ export function Sidebar({
     <aside
       className={cn(
         "flex h-full w-[220px] shrink-0 flex-col bg-[#111113] border-r border-white/5",
-        className
+        className,
       )}
     >
       {/* Logo */}
@@ -287,7 +288,7 @@ export function Sidebar({
               ?.filter(
                 (service) =>
                   service.service_type !== "appointments" ||
-                  showAppointmentsInSidebar
+                  showAppointmentsInSidebar,
               )
               ?.slice()
               ?.sort((a, b) => (a.service_order ?? 0) - (b.service_order ?? 0))
@@ -334,7 +335,7 @@ export function Sidebar({
                         <span className="truncate">
                           {getLocalizedServiceName(
                             service,
-                            i18n.language ?? "de"
+                            i18n.language ?? "de",
                           )}
                         </span>
                       </NavLink>
@@ -364,6 +365,14 @@ export function Sidebar({
                         >
                           <BookUser className="h-4 w-4 shrink-0" />
                           {t("nav.contacts", { defaultValue: "Contacts" })}
+                        </NavLink>
+                        <NavLink
+                          to="/mail"
+                          isActive={location.pathname.startsWith("/mail")}
+                          onClick={onClose}
+                        >
+                          <Mail className="h-4 w-4 shrink-0" />
+                          {t("nav.mail", { defaultValue: "Mail" })}
                         </NavLink>
                         <NavLink
                           to="/pipeline"

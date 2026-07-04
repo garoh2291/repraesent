@@ -7,20 +7,35 @@ export interface BccAddress {
   disabledAt: string | null;
 }
 
+/** An existing contact that owns a participant's email. */
+export interface BccContactMatch {
+  id: string;
+  full_name: string | null;
+}
+
 export interface BccMessageParticipant {
   id: string;
   bcc_log_message_id: string;
   kind: "from" | "to" | "cc" | "bcc";
   email: string | null;
   display_name: string | null;
+  /** Existing contact owning this participant's email (enriched by the list endpoint). */
+  contact_match?: BccContactMatch | null;
+  /** Whether that contact is already linked to this message. */
+  linked?: boolean;
+}
+
+/** A contact linked to a message via the M2M join. */
+export interface BccLinkedContact {
+  id: string;
+  full_name: string | null;
+  primary_email: string | null;
 }
 
 export interface BccMessage {
   id: string;
   bcc_log_address_id: string;
   workspace_id: string;
-  contact_id: string | null;
-  match_ambiguous: boolean;
   message_id_header: string | null;
   subject: string | null;
   from_address: string | null;
@@ -30,12 +45,17 @@ export interface BccMessage {
   html_body: string | null;
   ingested_at: string;
   participants: BccMessageParticipant[];
+  /** Customer email the matcher keys on (to → cc → from). */
+  counterpart_email?: string | null;
+  /** All contacts linked to this message (M2M), primary first. */
+  contacts?: BccLinkedContact[];
 }
 
 export interface PaginatedBccMessages {
   data: BccMessage[];
   page: number;
   pageSize: number;
+  total?: number;
 }
 
 export async function getBccAddress(): Promise<BccAddress> {
@@ -51,7 +71,9 @@ export async function regenerateBccAddress(): Promise<BccAddress> {
 export interface GetBccMessagesParams {
   contactId?: string;
   unlinked?: boolean;
+  linked?: boolean;
   page?: number;
+  pageSize?: number;
 }
 
 export async function getBccMessages(
@@ -60,7 +82,9 @@ export async function getBccMessages(
   const searchParams = new URLSearchParams();
   if (params.contactId) searchParams.set("contactId", params.contactId);
   if (params.unlinked) searchParams.set("unlinked", "true");
+  if (params.linked) searchParams.set("linked", "true");
   if (params.page) searchParams.set("page", String(params.page));
+  if (params.pageSize) searchParams.set("pageSize", String(params.pageSize));
   const query = searchParams.toString();
   const res = await apiClient.get<PaginatedBccMessages>(
     `/bcc-mail/messages${query ? `?${query}` : ""}`,
@@ -68,13 +92,39 @@ export async function getBccMessages(
   return res.data;
 }
 
-export async function linkBccMessage(
+/**
+ * Link a contact to a message. When `email` is passed and the contact doesn't
+ * own it, it's added to the contact (primary if it has none, else secondary).
+ * 409 if the email already belongs to another contact.
+ */
+export async function attachMessageContact(
   messageId: string,
-  contactId: string | null,
-): Promise<BccMessage> {
-  const res = await apiClient.patch<BccMessage>(
-    `/bcc-mail/messages/${messageId}/link`,
-    { contactId },
+  body: { contactId: string; email?: string | null },
+): Promise<{ ok: true }> {
+  const res = await apiClient.post<{ ok: true }>(
+    `/bcc-mail/messages/${messageId}/contacts`,
+    body,
+  );
+  return res.data;
+}
+
+export async function detachMessageContact(
+  messageId: string,
+  contactId: string,
+): Promise<{ ok: boolean }> {
+  const res = await apiClient.delete<{ ok: boolean }>(
+    `/bcc-mail/messages/${messageId}/contacts/${contactId}`,
+  );
+  return res.data;
+}
+
+export async function createMessageContactsBulk(
+  messageId: string,
+  items: { email: string; firstName?: string | null }[],
+): Promise<{ created: number; contactIds: string[] }> {
+  const res = await apiClient.post<{ created: number; contactIds: string[] }>(
+    `/bcc-mail/messages/${messageId}/contacts/bulk`,
+    { items },
   );
   return res.data;
 }
