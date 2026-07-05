@@ -2075,6 +2075,8 @@
     "empty": "No activity yet.",
     "labelNote": "Note",
     "labelTask": "Task",
-    "labelEvent": "Update"
+    "labelEvent": "Update",
+    "today": "Today",
+    "yesterday": "Yesterday"
   }
 }

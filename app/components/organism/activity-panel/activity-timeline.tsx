@@ -1,7 +1,13 @@
 import { useMemo, useState, type ReactNode } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
-import { StickyNote, CheckSquare, GitCommitHorizontal } from "lucide-react";
+import {
+  StickyNote,
+  CheckSquare,
+  GitCommitHorizontal,
+  Mail,
+} from "lucide-react";
+import { isToday, isYesterday } from "date-fns";
 import type { LeadHistoryItem } from "~/lib/api/leads";
 import { updateTask, type Task } from "~/lib/api/tasks";
 import type { Note } from "~/lib/api/notes";
@@ -16,7 +22,7 @@ import {
 } from "~/components/organism/lead-detail-sheet";
 import { Skeleton } from "~/components/ui/skeleton";
 import { Checkbox } from "~/components/ui/checkbox";
-import { formatRelativeTime } from "~/lib/utils/format";
+import { formatDate } from "~/lib/utils/format";
 import { cn } from "~/lib/utils";
 import TooltipContainer from "~/components/tooltip-container";
 import {
@@ -177,61 +183,95 @@ export function ActivityTimeline({
     );
   }
 
+  // Group by day (items are already newest-first), Pipedrive-style.
+  const groups: { key: string; label: string; items: Item[] }[] = [];
+  for (const it of items) {
+    const d = new Date(it.ts);
+    const key = `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
+    let g = groups[groups.length - 1];
+    if (!g || g.key !== key) {
+      g = {
+        key,
+        label: isToday(d)
+          ? t("activity.today", { defaultValue: "Today" })
+          : isYesterday(d)
+            ? t("activity.yesterday", { defaultValue: "Yesterday" })
+            : formatDate(d, "MMM d, yyyy"),
+        items: [],
+      };
+      groups.push(g);
+    }
+    g.items.push(it);
+  }
+
   return (
     <>
-      <div className="space-y-2.5">
-        {items.map((item, idx) => {
-          const stagger = idx < 4 ? `app-fade-up-d${idx + 1}` : "";
-          if (item.kind === "email") {
-            return (
-              <div key={item.id} className={cn("app-fade-up", stagger)}>
-                <EmailCard message={item.email} locale={i18n.language} />
-              </div>
-            );
-          }
-          const label =
-            item.kind === "note"
-              ? t("activity.labelNote", { defaultValue: "Note" })
-              : item.kind === "task"
-                ? t("activity.labelTask", { defaultValue: "Task" })
-                : t("activity.labelEvent", { defaultValue: "Update" });
-          const time =
-            item.kind === "note"
-              ? formatRelativeTime(
-                  item.note.version > 1
-                    ? item.note.updated_at
-                    : item.note.created_at,
-                )
-              : item.kind === "task"
-                ? formatRelativeTime(item.task.created_at)
-                : item.event.created_at
-                  ? formatRelativeTime(item.event.created_at)
-                  : "";
-          return (
-            <div key={item.id} className={cn("app-fade-up", stagger)}>
-              <ActivityCard kind={item.kind} label={label} time={time}>
-                {item.kind === "note" && <NoteBody note={item.note} />}
-                {item.kind === "task" && (
-                  <TaskBody
-                    task={item.task}
-                    canEdit={canEdit}
-                    onToggle={(isDone) =>
-                      toggleDone.mutate({ taskId: item.task.id, isDone })
-                    }
-                    onOpen={() => setOpenTaskId(item.task.id)}
-                  />
-                )}
-                {item.kind === "event" && (
-                  <EventBody
-                    event={item.event}
-                    label={formatHistoryAction(item.event, t)}
-                    userLabel={buildUserLabel(item.event, t)}
-                  />
-                )}
-              </ActivityCard>
+      <div>
+        {groups.map((g) => (
+          <div key={g.key} className="app-fade-up">
+            <div className="mb-1.5 pl-11 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/70">
+              {g.label}
             </div>
-          );
-        })}
+            <div>
+              {g.items.map((item, ii) => {
+                const isLast = ii === g.items.length - 1;
+                const m = MARKER[item.kind];
+                return (
+                  <div
+                    key={item.id}
+                    className="relative flex gap-3 pb-3 last:pb-1"
+                  >
+                    {/* rail marker */}
+                    <div className="relative flex w-8 shrink-0 justify-center">
+                      {!isLast && (
+                        <span className="absolute left-1/2 top-8 -bottom-3 w-px -translate-x-1/2 bg-border" />
+                      )}
+                      <span
+                        className={cn(
+                          "z-10 flex size-8 items-center justify-center rounded-full ring-4 ring-background",
+                          m.wrap,
+                        )}
+                      >
+                        {m.icon}
+                      </span>
+                    </div>
+                    {/* content */}
+                    <div className="min-w-0 flex-1">
+                      {item.kind === "email" && (
+                        <EmailCard
+                          message={item.email}
+                          locale={i18n.language}
+                        />
+                      )}
+                      {item.kind === "note" && (
+                        <NoteRow note={item.note} time={itemTime(item)} />
+                      )}
+                      {item.kind === "task" && (
+                        <TaskRow
+                          task={item.task}
+                          time={itemTime(item)}
+                          canEdit={canEdit}
+                          onToggle={(isDone) =>
+                            toggleDone.mutate({ taskId: item.task.id, isDone })
+                          }
+                          onOpen={() => setOpenTaskId(item.task.id)}
+                        />
+                      )}
+                      {item.kind === "event" && (
+                        <EventRow
+                          event={item.event}
+                          time={itemTime(item)}
+                          label={formatHistoryAction(item.event, t)}
+                          userLabel={buildUserLabel(item.event, t)}
+                        />
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        ))}
       </div>
 
       <TaskDetailModal
@@ -246,173 +286,168 @@ export function ActivityTimeline({
   );
 }
 
-const KIND_STYLE = {
-  note: {
-    card: "border-amber-300/60 bg-amber-50/70 dark:border-amber-500/25 dark:bg-amber-500/[0.07]",
-    chip: "bg-amber-400/25 text-amber-700 dark:text-amber-300",
-    Icon: StickyNote,
-  },
-  task: {
-    card: "border-sky-300/60 bg-sky-50/70 dark:border-sky-500/25 dark:bg-sky-500/[0.07]",
-    chip: "bg-sky-400/25 text-sky-700 dark:text-sky-300",
-    Icon: CheckSquare,
-  },
-  event: {
-    card: "border-violet-300/55 bg-violet-50/70 dark:border-violet-500/25 dark:bg-violet-500/[0.07]",
-    chip: "bg-violet-400/25 text-violet-700 dark:text-violet-300",
-    Icon: GitCommitHorizontal,
-  },
-} as const;
-
-/** Uniform tinted card (note=amber, task=blue, event=violet) with a type chip + time. */
-function ActivityCard({
-  kind,
-  label,
-  time,
-  children,
-}: {
-  kind: "note" | "task" | "event";
-  label: string;
-  time: string;
-  children: ReactNode;
-}) {
-  const s = KIND_STYLE[kind];
-  const Icon = s.Icon;
-  return (
-    <div className={cn("rounded-xl border p-3.5 transition-colors", s.card)}>
-      <div className="mb-2 flex items-center justify-between gap-2">
-        <span
-          className={cn(
-            "inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide",
-            s.chip,
-          )}
-        >
-          <Icon className="size-3" />
-          {label}
-        </span>
-        <time className="shrink-0 text-[11px] font-medium text-muted-foreground">
-          {time}
-        </time>
-      </div>
-      {children}
-    </div>
-  );
+/** Time-of-day shown on each row (day is in the group header). */
+function itemTime(item: Item): string {
+  return formatDate(new Date(item.ts), "p");
 }
 
-function AuthorLine({
+const MARKER: Record<Item["kind"], { wrap: string; icon: ReactNode }> = {
+  note: {
+    wrap: "bg-amber-100 text-amber-600 dark:bg-amber-500/15 dark:text-amber-400",
+    icon: <StickyNote className="size-4" />,
+  },
+  task: {
+    wrap: "bg-sky-100 text-sky-600 dark:bg-sky-500/15 dark:text-sky-400",
+    icon: <CheckSquare className="size-4" />,
+  },
+  email: {
+    wrap: "bg-indigo-100 text-indigo-600 dark:bg-indigo-500/15 dark:text-indigo-400",
+    icon: <Mail className="size-4" />,
+  },
+  event: {
+    wrap: "bg-slate-100 text-slate-500 dark:bg-slate-500/15 dark:text-slate-400",
+    icon: <GitCommitHorizontal className="size-4" />,
+  },
+};
+
+/** Small author chip + time; time can sit inline (events) or be omitted. */
+function MetaLine({
   first,
   last,
   deleted,
+  time,
   suffix,
 }: {
   first: string | null;
   last: string | null;
   deleted?: boolean;
+  time?: string;
   suffix?: ReactNode;
 }) {
   return (
-    <div className="mt-2 flex items-center gap-1.5 text-[11px] text-muted-foreground">
+    <div className="mt-1.5 flex items-center gap-1.5 text-[11px] text-muted-foreground">
       <span
         className={cn(
           "inline-flex size-5 items-center justify-center rounded-full text-[9px] font-bold",
-          deleted ? "bg-muted/50 text-muted-foreground/60" : "bg-background/60",
+          deleted ? "bg-muted/50 text-muted-foreground/60" : "bg-muted",
         )}
       >
         {initials(first, last)}
       </span>
       {suffix}
+      {time && (
+        <>
+          <span className="text-muted-foreground/40">·</span>
+          <span>{time}</span>
+        </>
+      )}
     </div>
   );
 }
 
-function NoteBody({ note }: { note: Note }) {
+const CARD =
+  "rounded-lg border border-border bg-card px-3.5 py-3 shadow-[0_1px_2px_rgba(16,24,40,0.04)] transition-colors hover:border-border/70";
+
+function NoteRow({ note, time }: { note: Note; time: string }) {
   return (
-    <>
+    <div className={cn(CARD, "border-l-2 border-l-amber-400")}>
       <p className="whitespace-pre-wrap break-words text-sm leading-relaxed text-foreground">
         {note.content}
       </p>
-      <AuthorLine
+      <MetaLine
         first={note.user_first_name}
         last={note.user_last_name}
         deleted={note.user_is_deleted}
+        time={time}
         suffix={
           note.version > 1 ? (
             <span className="text-muted-foreground/60">edited</span>
           ) : null
         }
       />
-    </>
+    </div>
   );
 }
 
-function TaskBody({
+function TaskRow({
   task,
+  time,
   canEdit,
   onToggle,
   onOpen,
 }: {
   task: Task;
+  time: string;
   canEdit: boolean;
   onToggle: (isDone: boolean) => void;
   onOpen: () => void;
 }) {
   const done = task.status === "done";
   return (
-    <div className="flex items-start gap-2.5">
-      <Checkbox
-        checked={done}
-        disabled={!canEdit}
-        onCheckedChange={(v) => onToggle(!!v)}
-        className="mt-0.5 border-sky-500/50 data-[state=checked]:border-sky-600 data-[state=checked]:bg-sky-600"
-        aria-label={task.title}
-      />
-      <button
-        type="button"
-        onClick={onOpen}
-        className="min-w-0 flex-1 text-left"
-      >
-        <p
-          className={cn(
-            "break-words text-sm font-medium",
-            done ? "text-muted-foreground line-through" : "text-foreground",
-          )}
+    <div className={CARD}>
+      <div className="flex items-start gap-2.5">
+        <Checkbox
+          checked={done}
+          disabled={!canEdit}
+          onCheckedChange={(v) => onToggle(!!v)}
+          className="mt-0.5 border-sky-500/50 data-[state=checked]:border-sky-600 data-[state=checked]:bg-sky-600"
+          aria-label={task.title}
+        />
+        <button
+          type="button"
+          onClick={onOpen}
+          className="min-w-0 flex-1 text-left"
         >
-          {task.title}
-        </p>
-        {task.urgency && (
-          <div className="mt-1">
-            <TaskUrgencyBadge urgency={task.urgency} />
+          <div className="flex items-start justify-between gap-2">
+            <p
+              className={cn(
+                "break-words text-sm font-medium",
+                done ? "text-muted-foreground line-through" : "text-foreground",
+              )}
+            >
+              {task.title}
+            </p>
+            <time className="mt-0.5 shrink-0 text-[11px] text-muted-foreground">
+              {time}
+            </time>
           </div>
-        )}
-      </button>
+          {task.urgency && (
+            <div className="mt-1.5">
+              <TaskUrgencyBadge urgency={task.urgency} />
+            </div>
+          )}
+        </button>
+      </div>
     </div>
   );
 }
 
-function EventBody({
+/** Events are low-emphasis system lines (no card), Pipedrive-style. */
+function EventRow({
   event,
+  time,
   label,
   userLabel,
 }: {
   event: LeadHistoryItem;
+  time: string;
   label: string;
   userLabel: string;
 }) {
   return (
-    <>
-      <p className="break-words text-sm text-foreground">{label}</p>
-      <AuthorLine
+    <div className="py-1">
+      <p className="break-words text-sm text-foreground/90">{label}</p>
+      <MetaLine
         first={event.user_first_name}
         last={event.user_last_name}
         deleted={event.user_is_deleted}
+        time={time}
         suffix={
           <TooltipContainer tooltipContent={userLabel} showCopyButton={false}>
-            <span className="cursor-help underline decoration-dotted decoration-muted-foreground/40 underline-offset-2">
-              {userLabel}
-            </span>
+            <span className="cursor-help">{userLabel}</span>
           </TooltipContainer>
         }
       />
-    </>
+    </div>
   );
 }
