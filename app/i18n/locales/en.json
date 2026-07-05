@@ -2060,5 +2060,21 @@
     "unlinkConfirmBody": "Remove the link between this email and {{name}}? The contact itself is not deleted.",
     "bulkProgress": "Creating contacts… {{done}}/{{total}}",
     "bulkPartial": "Created {{created}}, {{failed}} failed."
+  },
+  "activity": {
+    "title": "Activity",
+    "tabAll": "All",
+    "tabNotes": "Notes",
+    "tabTasks": "Tasks",
+    "tabEmails": "Emails",
+    "tabHistory": "History",
+    "add": "Add",
+    "addNote": "Add note",
+    "addTask": "Add task",
+    "emailsHint": "Emails arrive via BCC",
+    "empty": "No activity yet.",
+    "labelNote": "Note",
+    "labelTask": "Task",
+    "labelEvent": "Update"
   }
 }

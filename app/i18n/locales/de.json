@@ -2060,5 +2060,21 @@
     "unlinkConfirmBody": "Verknüpfung zwischen dieser E-Mail und {{name}} entfernen? Der Kontakt wird nicht gelöscht.",
     "bulkProgress": "Kontakte werden erstellt… {{done}}/{{total}}",
     "bulkPartial": "{{created}} erstellt, {{failed}} fehlgeschlagen."
+  },
+  "activity": {
+    "title": "Aktivität",
+    "tabAll": "Alle",
+    "tabNotes": "Notizen",
+    "tabTasks": "Aufgaben",
+    "tabEmails": "E-Mails",
+    "tabHistory": "Verlauf",
+    "add": "Hinzufügen",
+    "addNote": "Notiz hinzufügen",
+    "addTask": "Aufgabe hinzufügen",
+    "emailsHint": "E-Mails kommen per BCC",
+    "empty": "Noch keine Aktivität.",
+    "labelNote": "Notiz",
+    "labelTask": "Aufgabe",
+    "labelEvent": "Update"
   }
 }

@@ -39,7 +39,7 @@ import {
   CollapsibleTrigger,
 } from "~/components/ui/collapsible";
 
-function getHistoryItemInitials(item: LeadHistoryItem): string {
+export function getHistoryItemInitials(item: LeadHistoryItem): string {
   const first = item.user_first_name?.trim() ?? "";
   const last = item.user_last_name?.trim() ?? "";
   if (first && last) return `${first[0]}${last[0]}`.toUpperCase();
@@ -122,7 +122,10 @@ function formatDealUpdatedAction(item: LeadHistoryItem, t: TFunction): string {
       });
 }
 
-function formatHistoryAction(item: LeadHistoryItem, t: TFunction): string {
+export function formatHistoryAction(
+  item: LeadHistoryItem,
+  t: TFunction,
+): string {
   if (item.action === "lead_created")
     return t("leads.detail.historyLeadCreated");
   if (item.action === "lead_created_in_doorboost")
@@ -212,7 +215,7 @@ function formatHistoryAction(item: LeadHistoryItem, t: TFunction): string {
   return item.action.replace(/_/g, " ");
 }
 
-function buildUserLabel(item: LeadHistoryItem, t: TFunction): string {
+export function buildUserLabel(item: LeadHistoryItem, t: TFunction): string {
   const name =
     [item.user_first_name, item.user_last_name]
       .filter(Boolean)

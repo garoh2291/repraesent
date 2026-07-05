@@ -70,6 +70,7 @@ export async function regenerateBccAddress(): Promise<BccAddress> {
 
 export interface GetBccMessagesParams {
   contactId?: string;
+  dealId?: string;
   unlinked?: boolean;
   linked?: boolean;
   page?: number;
@@ -81,6 +82,7 @@ export async function getBccMessages(
 ): Promise<PaginatedBccMessages> {
   const searchParams = new URLSearchParams();
   if (params.contactId) searchParams.set("contactId", params.contactId);
+  if (params.dealId) searchParams.set("dealId", params.dealId);
   if (params.unlinked) searchParams.set("unlinked", "true");
   if (params.linked) searchParams.set("linked", "true");
   if (params.page) searchParams.set("page", String(params.page));

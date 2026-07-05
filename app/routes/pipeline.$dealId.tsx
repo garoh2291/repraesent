@@ -31,7 +31,7 @@ import { Avatar, AvatarFallback } from "~/components/ui/avatar";
 import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
 import { Label } from "~/components/ui/label";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "~/components/ui/tabs";
+import { ActivityPanel } from "~/components/organism/activity-panel";
 import {
   Select,
   SelectContent,
@@ -49,9 +49,6 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "~/components/ui/alert-dialog";
-import { LeadTasksSection } from "~/components/organism/tasks/lead-tasks-section";
-import { LeadHistorySection } from "~/components/organism/lead-detail-sheet";
-import { LeadNotesSection } from "~/components/organism/lead-notes-section";
 import { DealContactSection } from "~/components/organism/deal-contact-section";
 import type { WorkspaceMemberItem } from "~/components/organism/tasks/task-form-modal";
 import {
@@ -204,9 +201,7 @@ export default function PipelineDealDetailPage() {
     setValueStr(nextValueStr);
     setAssignee(nextAssignee);
     const st = str(deal.stage) as DealStageKey;
-    setStage(
-      (DEAL_STAGE_KEYS as readonly string[]).includes(st) ? st : "new",
-    );
+    setStage((DEAL_STAGE_KEYS as readonly string[]).includes(st) ? st : "new");
     setExpectedClose(nextExpectedClose);
     lastSaved.current = {
       title: nextTitle,
@@ -246,7 +241,10 @@ export default function PipelineDealDetailPage() {
       const nextData = value.data.map((d) =>
         d.id === dealId ? { ...d, ...patch, updated_at: now } : d,
       );
-      queryClient.setQueryData<PaginatedDeals>(key, { ...value, data: nextData });
+      queryClient.setQueryData<PaginatedDeals>(key, {
+        ...value,
+        data: nextData,
+      });
     }
 
     const contactQueries = queryClient.getQueriesData<DealListItem[]>({
@@ -478,10 +476,7 @@ export default function PipelineDealDetailPage() {
   const leadId = deal.lead_id ? String(deal.lead_id) : null;
   const contactName =
     (contact?.full_name as string)?.trim() ||
-    [contact?.first_name, contact?.last_name]
-      .filter(Boolean)
-      .join(" ")
-      .trim();
+    [contact?.first_name, contact?.last_name].filter(Boolean).join(" ").trim();
 
   const displayTitle =
     title.trim() ||
@@ -519,14 +514,14 @@ export default function PipelineDealDetailPage() {
 
       {/* HERO */}
       <section className="app-fade-up overflow-hidden rounded-2xl border border-border bg-card shadow-(--shadow)">
-          <div
-            aria-hidden
-            className={cn(
-              "relative h-20 bg-linear-to-r transition-colors duration-500",
-              STAGE_HERO_BG[stage],
-            )}
-          />
-          <div className="px-4 pb-5 pt-0 sm:px-6">
+        <div
+          aria-hidden
+          className={cn(
+            "relative h-20 bg-linear-to-r transition-colors duration-500",
+            STAGE_HERO_BG[stage],
+          )}
+        />
+        <div className="px-4 pb-5 pt-0 sm:px-6">
           <div className="-mt-10 flex flex-col gap-4 sm:flex-row sm:items-end sm:gap-5">
             <Avatar
               size="lg"
@@ -612,7 +607,8 @@ export default function PipelineDealDetailPage() {
                       className={cn(
                         "inline-block h-2 w-2 rounded-full transition-transform",
                         STAGE_COLOR[s],
-                        active && "scale-125 ring-2 ring-offset-1 ring-offset-card",
+                        active &&
+                          "scale-125 ring-2 ring-offset-1 ring-offset-card",
                         active && STAGE_RING[s],
                       )}
                     />
@@ -646,140 +642,120 @@ export default function PipelineDealDetailPage() {
             <div className="p-4 sm:p-5">
               <div className="grid gap-4 sm:grid-cols-2">
                 <div className="space-y-1.5 sm:col-span-2">
-                <Label htmlFor="deal-detail-title">
-                  {t("pipeline.fields.titleRequired", {
-                    defaultValue: "Title (required)",
-                  })}
-                </Label>
-                <Input
-                  id="deal-detail-title"
-                  value={title}
-                  onChange={(e) => setTitle(e.target.value)}
-                  disabled={!canEdit}
-                  placeholder={t("pipeline.fields.titlePlaceholder", {
-                    defaultValue: "Enter deal title",
-                  })}
-                  required
-                  aria-required
-                  aria-invalid={titleEmpty}
-                />
-                {titleEmpty ? (
-                  <p className="text-[11px] text-destructive">
-                    {t("pipeline.errors.titleRequired", {
-                      defaultValue: "Title can't be blank.",
+                  <Label htmlFor="deal-detail-title">
+                    {t("pipeline.fields.titleRequired", {
+                      defaultValue: "Title (required)",
                     })}
-                  </p>
-                ) : null}
-              </div>
-
-              <div className="space-y-1.5">
-                <Label htmlFor="deal-detail-value">
-                  {t("pipeline.fields.value", { defaultValue: "Value (EUR)" })}
-                </Label>
-                <Input
-                  id="deal-detail-value"
-                  value={valueStr}
-                  onChange={(e) => {
-                    const raw = e.target.value.replace(/,/g, "");
-                    if (raw !== "" && !/^\d*\.?\d*$/.test(raw)) return;
-                    setValueStr(formatDealValueInput(e.target.value));
-                  }}
-                  disabled={!canEdit}
-                  inputMode="decimal"
-                  aria-invalid={valueNegative}
-                  placeholder={t("pipeline.fields.valuePlaceholder", {
-                    defaultValue: "0",
-                  })}
-                />
-                {valueNegative ? (
-                  <p className="text-[11px] text-destructive">
-                    {t("pipeline.errors.valueNegative", {
-                      defaultValue: "Value cannot be negative.",
+                  </Label>
+                  <Input
+                    id="deal-detail-title"
+                    value={title}
+                    onChange={(e) => setTitle(e.target.value)}
+                    disabled={!canEdit}
+                    placeholder={t("pipeline.fields.titlePlaceholder", {
+                      defaultValue: "Enter deal title",
                     })}
-                  </p>
-                ) : null}
-              </div>
+                    required
+                    aria-required
+                    aria-invalid={titleEmpty}
+                  />
+                  {titleEmpty ? (
+                    <p className="text-[11px] text-destructive">
+                      {t("pipeline.errors.titleRequired", {
+                        defaultValue: "Title can't be blank.",
+                      })}
+                    </p>
+                  ) : null}
+                </div>
 
-              <div className="space-y-1.5">
-                <Label>
-                  {t("contacts.assignedTo", { defaultValue: "Assigned to" })}
-                </Label>
-                <Select
-                  value={assignee}
-                  onValueChange={setAssignee}
-                  disabled={!canEdit}
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="unassigned">
-                      {t("contacts.unassigned", { defaultValue: "Unassigned" })}
-                    </SelectItem>
-                    {workspaceMembers.map((m) => (
-                      <SelectItem key={m.user_id} value={m.user_id}>
-                        {[m.user_first_name, m.user_last_name]
-                          .filter(Boolean)
-                          .join(" ") || m.user_email}
+                <div className="space-y-1.5">
+                  <Label htmlFor="deal-detail-value">
+                    {t("pipeline.fields.value", {
+                      defaultValue: "Value (EUR)",
+                    })}
+                  </Label>
+                  <Input
+                    id="deal-detail-value"
+                    value={valueStr}
+                    onChange={(e) => {
+                      const raw = e.target.value.replace(/,/g, "");
+                      if (raw !== "" && !/^\d*\.?\d*$/.test(raw)) return;
+                      setValueStr(formatDealValueInput(e.target.value));
+                    }}
+                    disabled={!canEdit}
+                    inputMode="decimal"
+                    aria-invalid={valueNegative}
+                    placeholder={t("pipeline.fields.valuePlaceholder", {
+                      defaultValue: "0",
+                    })}
+                  />
+                  {valueNegative ? (
+                    <p className="text-[11px] text-destructive">
+                      {t("pipeline.errors.valueNegative", {
+                        defaultValue: "Value cannot be negative.",
+                      })}
+                    </p>
+                  ) : null}
+                </div>
+
+                <div className="space-y-1.5">
+                  <Label>
+                    {t("contacts.assignedTo", { defaultValue: "Assigned to" })}
+                  </Label>
+                  <Select
+                    value={assignee}
+                    onValueChange={setAssignee}
+                    disabled={!canEdit}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="unassigned">
+                        {t("contacts.unassigned", {
+                          defaultValue: "Unassigned",
+                        })}
                       </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+                      {workspaceMembers.map((m) => (
+                        <SelectItem key={m.user_id} value={m.user_id}>
+                          {[m.user_first_name, m.user_last_name]
+                            .filter(Boolean)
+                            .join(" ") || m.user_email}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
 
-              <div className="space-y-1.5 sm:col-span-2">
-                <Label>
-                  {t("pipeline.fields.expectedClose", {
-                    defaultValue: "Expected close",
-                  })}
-                </Label>
-                <DatePickerPopover
-                  valueIso={expectedClose || undefined}
-                  onChange={(iso) => setExpectedClose(iso ?? "")}
-                  disabled={!canEdit}
-                  allowClear
-                  placeholder={t("contacts.pickDate", {
-                    defaultValue: "Pick date",
-                  })}
-                />
+                <div className="space-y-1.5 sm:col-span-2">
+                  <Label>
+                    {t("pipeline.fields.expectedClose", {
+                      defaultValue: "Expected close",
+                    })}
+                  </Label>
+                  <DatePickerPopover
+                    valueIso={expectedClose || undefined}
+                    onChange={(iso) => setExpectedClose(iso ?? "")}
+                    disabled={!canEdit}
+                    allowClear
+                    placeholder={t("contacts.pickDate", {
+                      defaultValue: "Pick date",
+                    })}
+                  />
                 </div>
               </div>
             </div>
-
           </section>
 
-          <section className="rounded-2xl border border-border bg-card p-4 sm:p-6 shadow-(--shadow)">
-            <h2 className="mb-4 text-sm font-semibold tracking-tight text-foreground">
-              {t("leads.detail.notes")}
-            </h2>
-            <LeadNotesSection dealId={dealId} canEdit={canEdit} />
-          </section>
-
-          <section className="rounded-2xl border border-border bg-card p-4 sm:p-6 shadow-(--shadow)">
-            <Tabs defaultValue="tasks" className="w-full">
-              <TabsList variant="line" className="w-full mb-4 sm:mb-5">
-                <TabsTrigger value="tasks">{t("tasks.title")}</TabsTrigger>
-                <TabsTrigger value="history">
-                  {t("leads.detail.history")}
-                </TabsTrigger>
-              </TabsList>
-              <TabsContent value="tasks" className="mt-0">
-                <LeadTasksSection
-                  dealId={dealId}
-                  canEdit={canEdit}
-                  workspaceMembers={workspaceMembers}
-                  linkedContextLabel={displayTitle}
-                />
-              </TabsContent>
-              <TabsContent value="history" className="mt-0">
-                <LeadHistorySection
-                  history={dealHistoryQuery.data ?? []}
-                  isLoading={dealHistoryQuery.isLoading}
-                  withoutLink
-                />
-              </TabsContent>
-            </Tabs>
-          </section>
+          <ActivityPanel
+            variant="deal"
+            dealId={dealId}
+            contextLabel={displayTitle}
+            canEdit={canEdit}
+            workspaceMembers={workspaceMembers}
+            history={dealHistoryQuery.data ?? []}
+            historyLoading={dealHistoryQuery.isLoading}
+          />
         </div>
 
         {/* RIGHT — sidebar */}
