@@ -1,4 +1,6 @@
 import { useState, useCallback, useEffect } from "react";
+import { useTranslation } from "react-i18next";
+import type { TFunction } from "i18next";
 import { completeOnboarding } from "~/lib/api/auth";
 
 /* ─────────────────────────────────────────────────────────
@@ -98,166 +100,6 @@ const STEP_META: Array<{
 ];
 
 // Localised copy
-const STEP_CONTENT: Record<"en" | "de", StepContent[]> = {
-  en: [
-    {
-      badge: "Welcome",
-      title: "You're in.",
-      subtitle: "Let's get you started in 2 minutes.",
-      description:
-        "Repraesent is your all-in-one area for managing leads, booking appointments, and growing your business. This quick tour shows you everything you need to hit the ground running.",
-    },
-    {
-      badge: "01 — Dashboard",
-      title: "Your Mission\nControl Center",
-      subtitle: "Everything at a glance.",
-      description:
-        "The dashboard gives you a real-time pulse on your business. Track today's tasks, monitor lead activity over time, and jump straight into any area service from one clean screen.",
-    },
-    {
-      badge: "02 — Leads",
-      title: "Never Lose a\nLead Again",
-      subtitle: "Visual pipeline, instant updates.",
-      description:
-        "Manage every prospect through a drag-and-drop kanban board or a clean table view. Update statuses, add notes, and track the full journey from first contact to closed deal.",
-    },
-    {
-      badge: "03 — Fallback Email",
-      title: "Reply to Every\nLead Automatically",
-      subtitle: "Set it once, follow up on autopilot.",
-      description:
-        "When a new lead submits your form or books an appointment, Repraesent automatically sends them a personalized reply from your own email address. Configure a custom subject line and HTML body per source — no extra tools needed.",
-    },
-    {
-      badge: "04 — Lead Detail",
-      title: "Every Lead,\nFully Documented",
-      subtitle: "The full story in one place.",
-      description:
-        "Click any lead to open its detail view — see contact info, activity timeline, attached notes, and status history. Edit everything inline and never lose context on a conversation.",
-    },
-    {
-      badge: "04 — Appointments",
-      title: "Scheduling on\nAutopilot",
-      subtitle: "Let clients book themselves.",
-      description:
-        "Share your personalized booking link and let clients choose their own slot. Set your working hours, define break times, and let Repraesent handle confirmations automatically.",
-    },
-    {
-      badge: "05 — Tasks",
-      title: "Stay on Top\nof Every Action",
-      subtitle: "Your personal to-do, tied to leads.",
-      description:
-        "Create tasks linked directly to leads so nothing slips through the cracks. Filter by due date, priority, or assignee and always know exactly what needs your attention today.",
-    },
-    {
-      badge: "06 — Analytics",
-      title: "Know Who\nVisits Your Site",
-      subtitle: "Real website traffic, no guesswork.",
-      description:
-        "The analytics tab is powered by Plausible — a privacy-friendly tool that shows you your website visitors, traffic sources, top pages, and more. See exactly where your audience comes from, all in one clean view.",
-    },
-    {
-      badge: "07 — Email Setup",
-      title: "Your Email,\nReady Anywhere",
-      subtitle: "Connect your inbox in minutes.",
-      description:
-        "Find your personal email configuration here — server address, port, and login credentials — and follow the step-by-step guide to add your Repraesent mailbox to Outlook, Apple Mail, or any other email client.",
-    },
-    {
-      badge: "08 — Settings",
-      title: "Make It\nCompletely Yours",
-      subtitle: "Your area, your rules.",
-      description:
-        "Customize your area name, manage team members and their roles, and fine-tune your public booking page. Every detail can be tailored to match your brand and workflow.",
-    },
-    {
-      badge: "Migration",
-      title: "Bring Your\nDoorboost Data",
-      subtitle: "Campaigns, leads & team — one click.",
-      description:
-        "We detected your Doorboost account. Import all your historical campaigns, leads, notes, and team members into re:praesent with a single sync. Your data is safe and nothing will be lost.",
-    },
-  ],
-  de: [
-    {
-      badge: "Willkommen",
-      title: "Du bist dabei.",
-      subtitle: "Starte in 2 Minuten durch.",
-      description:
-        "Repraesent ist dein All-in-One-Bereich für Lead-Management, Terminbuchungen und Unternehmenswachstum. Diese kurze Tour zeigt dir alles, was du für einen erfolgreichen Start brauchst.",
-    },
-    {
-      badge: "01 — Dashboard",
-      title: "Dein persönliches\nKontrollzentrum",
-      subtitle: "Alles auf einen Blick.",
-      description:
-        "Das Dashboard zeigt dir in Echtzeit den Puls deines Unternehmens. Verfolge heutige Aufgaben, beobachte Lead-Aktivitäten im Zeitverlauf und springe direkt in jeden Bereich-Dienst.",
-    },
-    {
-      badge: "02 — Leads",
-      title: "Kein Lead geht\nmehr verloren",
-      subtitle: "Visuelle Pipeline, sofortige Updates.",
-      description:
-        "Verwalte jeden Interessenten über ein Drag-and-Drop-Kanban-Board oder eine übersichtliche Tabellenansicht. Aktualisiere Status, füge Notizen hinzu und verfolge den gesamten Weg vom Erstkontakt bis zum Abschluss.",
-    },
-    {
-      badge: "03 — Automatische Antwort",
-      title: "Automatisch auf\njeden Lead antworten",
-      subtitle: "Einmal einrichten, automatisch nachfassen.",
-      description:
-        "Wenn ein neuer Lead dein Formular ausfüllt oder einen Termin bucht, sendet Repraesent automatisch eine personalisierte Antwort von deiner eigenen E-Mail-Adresse. Lege Betreff und HTML-Inhalt je Quelle fest — keine zusätzlichen Tools nötig.",
-    },
-    {
-      badge: "04 — Lead-Detail",
-      title: "Jeder Lead,\nvollständig dokumentiert",
-      subtitle: "Die ganze Geschichte an einem Ort.",
-      description:
-        "Klicke auf einen Lead, um dessen Detailansicht zu öffnen — Kontaktdaten, Aktivitätsverlauf, Notizen und Statushistorie. Alles inline bearbeitbar, ohne den Überblick zu verlieren.",
-    },
-    {
-      badge: "04 — Termine",
-      title: "Terminplanung\nauf Autopilot",
-      subtitle: "Lass Kunden selbst buchen.",
-      description:
-        "Teile deinen persönlichen Buchungslink und lass Kunden ihren Slot selbst wählen. Lege deine Arbeitszeiten fest, definiere Pausenzeiten und lass Repraesent die Bestätigungen automatisch übernehmen.",
-    },
-    {
-      badge: "05 — Aufgaben",
-      title: "Behalte jeden\nSchritt im Blick",
-      subtitle: "Deine To-do-Liste, verknüpft mit Leads.",
-      description:
-        "Erstelle Aufgaben direkt verknüpft mit Leads, damit nichts durch den Rost fällt. Filtere nach Fälligkeitsdatum, Priorität oder Bearbeiter und wisse stets genau, was heute deine Aufmerksamkeit braucht.",
-    },
-    {
-      badge: "06 — Analytik",
-      title: "Sieh, wer deine\nWebsite besucht",
-      subtitle: "Echter Website-Traffic, keine Schätzungen.",
-      description:
-        "Der Analytik-Bereich wird von Plausible betrieben — einem datenschutzfreundlichen Tool, das dir Besucher, Traffic-Quellen, meistbesuchte Seiten und mehr anzeigt. Verstehe genau, woher dein Publikum kommt — alles in einer übersichtlichen Ansicht.",
-    },
-    {
-      badge: "07 — E-Mail-Einrichtung",
-      title: "Deine E-Mail,\nüberall einsatzbereit",
-      subtitle: "Postfach in Minuten verbinden.",
-      description:
-        "Finde hier deine persönlichen E-Mail-Konfigurationsdaten — Serveradresse, Port und Zugangsdaten — und folge der Schritt-für-Schritt-Anleitung, um dein Repraesent-Postfach mit Outlook, Apple Mail oder einem anderen E-Mail-Client zu verbinden.",
-    },
-    {
-      badge: "08 — Einstellungen",
-      title: "Mach es ganz\nzu deinem",
-      subtitle: "Dein Bereich, deine Regeln.",
-      description:
-        "Passe deinen Bereich-Namen an, verwalte Teammitglieder und deren Rollen und konfiguriere deine öffentliche Buchungsseite. Jedes Detail lässt sich an deine Marke und deinen Workflow anpassen.",
-    },
-    {
-      badge: "Migration",
-      title: "Deine Doorboost-\nDaten mitnehmen",
-      subtitle: "Kampagnen, Leads & Team — ein Klick.",
-      description:
-        "Wir haben dein Doorboost-Konto erkannt. Importiere alle historischen Kampagnen, Leads, Notizen und Teammitglieder mit einer einzigen Synchronisierung nach re:praesent. Deine Daten sind sicher und nichts geht verloren.",
-    },
-  ],
-};
 
 interface ActiveService {
   service_slug: string | null;
@@ -269,13 +111,10 @@ function hasService(services: ActiveService[], key: string): boolean {
 }
 
 function buildSteps(
-  locale: string,
+  t: TFunction,
   services: ActiveService[],
   isDoorboost = false,
 ): Step[] {
-  const lang: "en" | "de" = locale?.startsWith("de") ? "de" : "en";
-  const content = STEP_CONTENT[lang];
-
   // Re-number badges dynamically after filtering
   const filtered = STEP_META.filter((meta) => {
     if (meta.id === "doorboost-migration") return isDoorboost;
@@ -288,16 +127,21 @@ function buildSteps(
   // Renumber non-welcome steps sequentially
   let featureIndex = 0;
   return filtered.map((meta) => {
-    const base = content[STEP_META.indexOf(meta)];
-    if (meta.id === "welcome") return { ...meta, ...base };
-    if (meta.id === "doorboost-migration") return { ...meta, ...base };
+    const base: StepContent = {
+      badge: t(`onboarding.tour.steps.${meta.id}.badge`),
+      title: t(`onboarding.tour.steps.${meta.id}.title`),
+      subtitle: t(`onboarding.tour.steps.${meta.id}.subtitle`),
+      description: t(`onboarding.tour.steps.${meta.id}.description`),
+    };
+    const screenshotAlt = t(`onboarding.tour.alt.${meta.id}`);
+    if (meta.id === "welcome")
+      return { ...meta, ...base, screenshotAlt };
+    if (meta.id === "doorboost-migration")
+      return { ...meta, ...base, screenshotAlt };
     featureIndex += 1;
     const paddedNum = String(featureIndex).padStart(2, "0");
-    const badgeLabel =
-      lang === "de"
-        ? base.badge.replace(/^\d{2} — /, `${paddedNum} — `)
-        : base.badge.replace(/^\d{2} — /, `${paddedNum} — `);
-    return { ...meta, ...base, badge: badgeLabel };
+    const badgeLabel = base.badge.replace(/^\d{2} — /, `${paddedNum} — `);
+    return { ...meta, ...base, screenshotAlt, badge: badgeLabel };
   });
 }
 
@@ -313,28 +157,6 @@ interface OnboardingTourProps {
   onDoorboostIgnore?: () => void;
 }
 
-const UI_STRINGS = {
-  en: {
-    startTour: "Start Tour →",
-    skipForNow: "Skip for now",
-    skipTour: "Skip tour",
-    back: "← Back",
-    next: "Next →",
-    getStarted: "Get Started ✦",
-    syncData: "Sync My Data ✦",
-    skipSync: "Maybe later",
-  },
-  de: {
-    startTour: "Tour starten →",
-    skipForNow: "Jetzt überspringen",
-    skipTour: "Tour überspringen",
-    back: "← Zurück",
-    next: "Weiter →",
-    getStarted: "Loslegen ✦",
-    syncData: "Daten synchronisieren ✦",
-    skipSync: "Vielleicht später",
-  },
-} as const;
 
 /* ─────────────────────────────────────────────────────────
    Particle — tiny floating orb for the welcome screen
@@ -382,6 +204,7 @@ function LaptopMockup({
   alt: string;
   visible: boolean;
 }) {
+  const { t } = useTranslation();
   return (
     <div
       className="ot-laptop-scaler"
@@ -455,7 +278,7 @@ function LaptopMockup({
                 ph.style.cssText =
                   "width:100%;height:100%;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:10px;background:#131318;";
                 ph.innerHTML =
-                  '<div style="width:44px;height:44px;border-radius:10px;background:rgba(245,158,11,0.12);border:1px solid rgba(245,158,11,0.25);display:flex;align-items:center;justify-content:center;font-size:18px;">📸</div><span style="font-size:10px;color:rgba(255,255,255,0.28);font-family:Plus Jakarta Sans,sans-serif;text-align:center;">Screenshot coming soon</span>';
+                  `<div style="width:44px;height:44px;border-radius:10px;background:rgba(245,158,11,0.12);border:1px solid rgba(245,158,11,0.25);display:flex;align-items:center;justify-content:center;font-size:18px;">📸</div><span style="font-size:10px;color:rgba(255,255,255,0.28);font-family:Plus Jakarta Sans,sans-serif;text-align:center;">${t("onboarding.tour.ui.screenshotSoon")}</span>`;
                 parent.appendChild(ph);
               }
             }}
@@ -553,13 +376,14 @@ function StepDots({
   current: number;
   onGoto: (i: number) => void;
 }) {
+  const { t } = useTranslation();
   return (
     <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
       {Array.from({ length: total }).map((_, i) => (
         <button
           key={i}
           onClick={() => onGoto(i)}
-          aria-label={`Go to step ${i + 1}`}
+          aria-label={t("onboarding.tour.ui.goToStep", { n: i + 1 })}
           style={{
             width: i === current ? 24 : 6,
             height: 6,
@@ -592,8 +416,8 @@ export function OnboardingTour({
   onDoorboostSync,
   onDoorboostIgnore,
 }: OnboardingTourProps) {
-  const lang: "en" | "de" = locale?.startsWith("de") ? "de" : "en";
-  const steps = buildSteps(locale, services, isDoorboost);
+  const { t } = useTranslation();
+  const steps = buildSteps(t, services, isDoorboost);
   const [step, setStep] = useState(0);
   const [direction, setDirection] = useState<1 | -1>(1); // 1=forward, -1=backward
   const [animKey, setAnimKey] = useState(0);
@@ -792,7 +616,6 @@ export function OnboardingTour({
           {isWelcome ? (
             <WelcomeScreen
               step={current}
-              lang={lang}
               onNext={handleNext}
               onSkip={handleDone}
             />
@@ -806,7 +629,6 @@ export function OnboardingTour({
               isLast={isLast}
               isDoorboostStep={isDoorboostStep}
               imageVisible={imageVisible}
-              lang={lang}
               onNext={handleNext}
               onBack={handleBack}
               onSkip={isDoorboostStep ? () => { onDoorboostIgnore?.(); handleDone(); } : handleDone}
@@ -824,15 +646,14 @@ export function OnboardingTour({
 ───────────────────────────────────────────────────────── */
 function WelcomeScreen({
   step,
-  lang,
   onNext,
   onSkip,
 }: {
   step: Step;
-  lang: "en" | "de";
   onNext: () => void;
   onSkip: () => void;
 }) {
+  const { t } = useTranslation();
   const particles = [
     { x: 8, y: 20, delay: 0, size: 5, color: "rgba(245,158,11,0.7)" },
     { x: 88, y: 15, delay: 0.6, size: 4, color: "rgba(139,92,246,0.7)" },
@@ -884,7 +705,7 @@ function WelcomeScreen({
       {/* close button */}
       <button
         onClick={onSkip}
-        aria-label="Skip tour"
+        aria-label={t("onboarding.tour.ui.skipTour")}
         style={{
           position: "absolute",
           top: 16,
@@ -1037,7 +858,7 @@ function WelcomeScreen({
             "0 4px 20px rgba(245,158,11,0.35)";
         }}
       >
-        {UI_STRINGS[lang].startTour}
+        {t("onboarding.tour.ui.startTour")}
       </button>
 
       {/* skip link */}
@@ -1063,7 +884,7 @@ function WelcomeScreen({
             "rgba(255,255,255,0.25)")
         }
       >
-        {UI_STRINGS[lang].skipForNow}
+        {t("onboarding.tour.ui.skipForNow")}
       </button>
     </div>
   );
@@ -1080,7 +901,6 @@ function StepScreen({
   isLast,
   isDoorboostStep = false,
   imageVisible,
-  lang,
   onNext,
   onBack,
   onSkip,
@@ -1093,12 +913,12 @@ function StepScreen({
   isLast: boolean;
   isDoorboostStep?: boolean;
   imageVisible: boolean;
-  lang: "en" | "de";
   onNext: () => void;
   onBack: () => void;
   onSkip: () => void;
   onGoto: (i: number) => void;
 }) {
+  const { t } = useTranslation();
   const contentAnim =
     direction === 1 ? "ot-content-in-fwd" : "ot-content-in-bwd";
 
@@ -1252,7 +1072,7 @@ function StepScreen({
               fontFamily: "'Plus Jakarta Sans', sans-serif",
             }}
           >
-            Preview
+            {t("onboarding.tour.ui.preview")}
           </div>
         )}
       </div>
@@ -1367,7 +1187,7 @@ function StepScreen({
                     "rgba(255,255,255,0.6)";
                 }}
               >
-                {UI_STRINGS[lang].back}
+                {t("onboarding.tour.ui.back")}
               </button>
             )}
 
@@ -1403,10 +1223,10 @@ function StepScreen({
               }}
             >
               {isDoorboostStep
-                ? UI_STRINGS[lang].syncData
+                ? t("onboarding.tour.ui.syncData")
                 : isLast
-                  ? UI_STRINGS[lang].getStarted
-                  : UI_STRINGS[lang].next}
+                  ? t("onboarding.tour.ui.getStarted")
+                  : t("onboarding.tour.ui.next")}
             </button>
           </div>
         </div>
@@ -1436,7 +1256,9 @@ function StepScreen({
               "rgba(255,255,255,0.22)")
           }
         >
-          {isDoorboostStep ? UI_STRINGS[lang].skipSync : UI_STRINGS[lang].skipTour}
+          {isDoorboostStep
+            ? t("onboarding.tour.ui.skipSync")
+            : t("onboarding.tour.ui.skipTour")}
         </button>
       </div>
     </div>

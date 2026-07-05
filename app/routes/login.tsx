@@ -3,16 +3,13 @@ import { useNavigate, useSearchParams, Link } from "react-router";
 import { useTranslation } from "react-i18next";
 import { Input } from "~/components/ui/input";
 import { useAuthContext } from "~/providers/auth-provider";
-import {
-  getStoredSelectedView,
-  BRAND_VIEW,
-} from "~/lib/api/axios-instance";
+import { getStoredSelectedView, BRAND_VIEW } from "~/lib/api/axios-instance";
 import i18n from "~/i18n";
+import { normalizeLocale } from "~/i18n/locales";
 import { useDocumentMeta } from "~/lib/hooks/use-document-meta";
 
 import logoUrl from "~/components/icons/re_praesent-mark-brand-hor.svg?url";
 import { LegalFooter } from "~/components/molecule/legal-footer";
-import { LanguageSwitcher } from "~/components/language-switcher";
 
 export function meta() {
   return [
@@ -64,7 +61,11 @@ export default function Login() {
             navigate("/no-workspace", { replace: true });
             return;
           }
-          if (returnUrl && returnUrl.startsWith("/") && !returnUrl.startsWith("/brand")) {
+          if (
+            returnUrl &&
+            returnUrl.startsWith("/") &&
+            !returnUrl.startsWith("/brand")
+          ) {
             navigate(returnUrl, { replace: true });
             return;
           }
@@ -97,7 +98,15 @@ export default function Login() {
       }
       navigate(returnUrl || "/", { replace: true });
     }
-  }, [isAuthenticated, isAuthLoading, navigate, searchParams, user, workspaces, brand]);
+  }, [
+    isAuthenticated,
+    isAuthLoading,
+    navigate,
+    searchParams,
+    user,
+    workspaces,
+    brand,
+  ]);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -114,7 +123,12 @@ export default function Login() {
     }
 
     try {
-      await requestMagicLinkAsync(email);
+      // Send the visitor's current UI language so the magic-link email is in
+      // that language and their saved locale is synced to it.
+      await requestMagicLinkAsync({
+        email,
+        locale: normalizeLocale(i18n.language),
+      });
       setSuccess(true);
     } catch (err) {
       setError(
@@ -209,20 +223,19 @@ export default function Login() {
             </div>
           </div>
 
-          <p
-            className="app-fade-in text-[11px] text-white/15"
+          <div
+            className="app-fade-in flex items-center justify-between gap-3"
             style={{ animationDelay: "0.7s" }}
           >
-            © {new Date().getFullYear()} Repraesent
-          </p>
+            <p className="text-[11px] text-white/15">
+              © {new Date().getFullYear()} Repraesent
+            </p>
+          </div>
         </div>
       </div>
 
       {/* Right form panel */}
       <div className="flex-1 flex flex-col bg-stone-50 relative">
-        <div className="absolute top-4 right-4 sm:top-6 sm:right-6 z-10">
-          <LanguageSwitcher variant="light" />
-        </div>
         <div className="flex-1 flex items-center justify-center p-4 sm:p-8">
           <div className="w-full max-w-sm space-y-8 app-fade-up">
             {/* Mobile logo */}

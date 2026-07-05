@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
+import { normalizeLocale, type SupportedLocale } from "~/i18n/locales";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
 import {
@@ -67,12 +68,22 @@ function formatPrice(amount: number): string {
 }
 
 function localizeServiceName(
-  s: { name: string; name_en: string | null; name_de: string | null },
+  s: {
+    name: string;
+    name_en: string | null;
+    name_de: string | null;
+    name_fr?: string | null;
+    name_nl?: string | null;
+  },
   lang: string
 ): string {
-  if (lang === "de" && s.name_de) return s.name_de;
-  if (lang === "en" && s.name_en) return s.name_en;
-  return s.name_en || s.name;
+  const byLocale: Record<SupportedLocale, string | null | undefined> = {
+    de: s.name_de,
+    en: s.name_en,
+    fr: s.name_fr,
+    nl: s.name_nl,
+  };
+  return byLocale[normalizeLocale(lang)] ?? s.name_de ?? s.name_en ?? s.name;
 }
 
 export default function BrandOrdersPage() {

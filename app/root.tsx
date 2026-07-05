@@ -5,6 +5,7 @@ import {
   Outlet,
   Scripts,
   ScrollRestoration,
+  useRouteLoaderData,
 } from "react-router";
 import { Toaster } from "./components/ui/sonner";
 
@@ -14,6 +15,30 @@ import "react-phone-number-input/style.css";
 import "./i18n"; // initialise i18next
 import { I18nextProvider } from "react-i18next";
 import i18n from "./i18n";
+import {
+  DEFAULT_LOCALE,
+  detectLocaleFromHeaders,
+  type SupportedLocale,
+} from "./i18n/locales";
+
+// Detect the initial language server-side (cookie → Accept-Language) so the very
+// first paint is already in the right language — no German flash before hydration.
+export async function loader({ request }: Route.LoaderArgs) {
+  const lang: SupportedLocale =
+    detectLocaleFromHeaders({
+      cookie: request.headers.get("Cookie"),
+      acceptLanguage: request.headers.get("Accept-Language"),
+    }) ?? DEFAULT_LOCALE;
+
+  // On the server, i18next's cookie/localStorage/navigator detectors can't run,
+  // so seed the language for this request's render. On the client the detector
+  // already handles this, so we leave it alone.
+  if (typeof document === "undefined" && i18n.language !== lang) {
+    await i18n.changeLanguage(lang);
+  }
+
+  return { lang };
+}
 import { ReactQueryProvider } from "./providers/react-query-provider";
 import { AuthProvider } from "./providers/auth-provider";
 import ModalProvider from "./components/modal-provider";
@@ -40,8 +65,11 @@ export const links: Route.LinksFunction = () => [
 ];
 
 export function Layout({ children }: { children: React.ReactNode }) {
+  // Root loader data isn't available on the error path, so fall back safely.
+  const data = useRouteLoaderData<typeof loader>("root");
+  const lang = data?.lang ?? DEFAULT_LOCALE;
   return (
-    <html lang="en">
+    <html lang={lang}>
       <head>
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />

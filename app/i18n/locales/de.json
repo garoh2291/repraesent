@@ -886,8 +886,11 @@
     "language": {
       "title": "Meine Sprache",
       "hint": "Diese Einstellung gilt nur für Sie persönlich und überschreibt die Bereich-Sprache.",
+      "autoDetectHint": "Wir haben Ihre Sprache automatisch anhand Ihres Browsers und Betriebssystems ausgewählt. Sie können sie hier jederzeit ändern.",
       "en": "English",
-      "de": "Deutsch"
+      "de": "Deutsch",
+      "fr": "Français",
+      "nl": "Nederlands"
     },
     "invoices": {
       "title": "Rechnungen",
@@ -1083,6 +1086,102 @@
       "ariaPrevious": "Zurück",
       "ariaNext": "Weiter",
       "ariaGoToProduct": "Zu Produkt {{name}}"
+    },
+    "tour": {
+      "steps": {
+        "welcome": {
+          "badge": "Willkommen",
+          "title": "Du bist dabei.",
+          "subtitle": "Starte in 2 Minuten durch.",
+          "description": "Repraesent ist dein All-in-One-Bereich für Lead-Management, Terminbuchungen und Unternehmenswachstum. Diese kurze Tour zeigt dir alles, was du für einen erfolgreichen Start brauchst."
+        },
+        "dashboard": {
+          "badge": "01 — Dashboard",
+          "title": "Dein persönliches\nKontrollzentrum",
+          "subtitle": "Alles auf einen Blick.",
+          "description": "Das Dashboard zeigt dir in Echtzeit den Puls deines Unternehmens. Verfolge heutige Aufgaben, beobachte Lead-Aktivitäten im Zeitverlauf und springe direkt in jeden Bereich-Dienst."
+        },
+        "leads": {
+          "badge": "02 — Leads",
+          "title": "Kein Lead geht\nmehr verloren",
+          "subtitle": "Visuelle Pipeline, sofortige Updates.",
+          "description": "Verwalte jeden Interessenten über ein Drag-and-Drop-Kanban-Board oder eine übersichtliche Tabellenansicht. Aktualisiere Status, füge Notizen hinzu und verfolge den gesamten Weg vom Erstkontakt bis zum Abschluss."
+        },
+        "lead-fallback": {
+          "badge": "03 — Automatische Antwort",
+          "title": "Automatisch auf\njeden Lead antworten",
+          "subtitle": "Einmal einrichten, automatisch nachfassen.",
+          "description": "Wenn ein neuer Lead dein Formular ausfüllt oder einen Termin bucht, sendet Repraesent automatisch eine personalisierte Antwort von deiner eigenen E-Mail-Adresse. Lege Betreff und HTML-Inhalt je Quelle fest — keine zusätzlichen Tools nötig."
+        },
+        "lead-detail": {
+          "badge": "04 — Lead-Detail",
+          "title": "Jeder Lead,\nvollständig dokumentiert",
+          "subtitle": "Die ganze Geschichte an einem Ort.",
+          "description": "Klicke auf einen Lead, um dessen Detailansicht zu öffnen — Kontaktdaten, Aktivitätsverlauf, Notizen und Statushistorie. Alles inline bearbeitbar, ohne den Überblick zu verlieren."
+        },
+        "appointments": {
+          "badge": "04 — Termine",
+          "title": "Terminplanung\nauf Autopilot",
+          "subtitle": "Lass Kunden selbst buchen.",
+          "description": "Teile deinen personalisierten Buchungslink und lass Kunden ihren eigenen Slot wählen. Lege deine Arbeitszeiten und Pausen fest und überlasse Repraesent die Bestätigungen automatisch."
+        },
+        "tasks": {
+          "badge": "05 — Aufgaben",
+          "title": "Behalte jede\nAktion im Blick",
+          "subtitle": "Deine persönliche To-do-Liste, mit Leads verknüpft.",
+          "description": "Erstelle Aufgaben, die direkt mit Leads verknüpft sind, damit nichts durchrutscht. Filtere nach Fälligkeit, Priorität oder zugewiesener Person und weißt immer genau, was heute deine Aufmerksamkeit braucht."
+        },
+        "analytics": {
+          "badge": "06 — Analytik",
+          "title": "Erfahre, wer\ndeine Seite besucht",
+          "subtitle": "Echter Website-Traffic, kein Rätselraten.",
+          "description": "Der Analytik-Tab wird von Plausible betrieben — einem datenschutzfreundlichen Tool, das dir deine Website-Besucher, Traffic-Quellen, Top-Seiten und mehr zeigt. Sieh genau, woher dein Publikum kommt, alles in einer übersichtlichen Ansicht."
+        },
+        "email": {
+          "badge": "07 — E-Mail-Einrichtung",
+          "title": "Deine E-Mail,\nüberall bereit",
+          "subtitle": "Verbinde dein Postfach in Minuten.",
+          "description": "Finde hier deine persönliche E-Mail-Konfiguration — Serveradresse, Port und Zugangsdaten — und folge der Schritt-für-Schritt-Anleitung, um dein Repraesent-Postfach zu Outlook, Apple Mail oder einem anderen E-Mail-Client hinzuzufügen."
+        },
+        "settings": {
+          "badge": "08 — Einstellungen",
+          "title": "Mach es\nganz zu deinem",
+          "subtitle": "Dein Bereich, deine Regeln.",
+          "description": "Passe deinen Bereichsnamen an, verwalte Teammitglieder und ihre Rollen und optimiere deine öffentliche Buchungsseite. Jedes Detail lässt sich an deine Marke und deinen Workflow anpassen."
+        },
+        "doorboost-migration": {
+          "badge": "Migration",
+          "title": "Bring deine\nDoorboost-Daten mit",
+          "subtitle": "Kampagnen, Leads & Team — ein Klick.",
+          "description": "Wir haben dein Doorboost-Konto erkannt. Importiere all deine bisherigen Kampagnen, Leads, Notizen und Teammitglieder mit einer einzigen Synchronisierung in re:praesent. Deine Daten sind sicher und nichts geht verloren."
+        }
+      },
+      "alt": {
+        "welcome": "",
+        "dashboard": "Dashboard",
+        "leads": "Lead-Board",
+        "lead-fallback": "Fallback-E-Mail",
+        "lead-detail": "Lead-Detail",
+        "appointments": "Termine",
+        "tasks": "Aufgaben",
+        "analytics": "Analytik",
+        "email": "E-Mail-Einrichtung",
+        "settings": "Einstellungen",
+        "doorboost-migration": "Datenmigration"
+      },
+      "ui": {
+        "startTour": "Tour starten →",
+        "skipForNow": "Jetzt überspringen",
+        "skipTour": "Tour überspringen",
+        "back": "← Zurück",
+        "next": "Weiter →",
+        "getStarted": "Loslegen ✦",
+        "syncData": "Daten synchronisieren ✦",
+        "skipSync": "Vielleicht später",
+        "preview": "Vorschau",
+        "screenshotSoon": "Screenshot folgt bald",
+        "goToStep": "Zu Schritt {{n}}"
+      }
     }
   },
   "pending": {
@@ -1633,7 +1732,15 @@
     "modalUsers_other": "{{count}} Teammitglieder",
     "modalWarning": "Diese Aktion kann nicht rückgängig gemacht werden. Deine Doorboost-Daten werden nicht importiert.",
     "modalConfirm": "Ja, Migration überspringen",
-    "modalCancel": "Abbrechen"
+    "modalCancel": "Abbrechen",
+    "syncMessages": [
+      "Werbekampagnen werden verbunden...",
+      "Lead-Verlauf wird importiert...",
+      "Teammitglieder werden synchronisiert...",
+      "Kampagnenmetriken werden migriert...",
+      "Lead-Notizen werden übertragen...",
+      "Dein Workspace wird aufgebaut..."
+    ]
   },
   "workspace": {
     "trial_banner": {
@@ -2101,5 +2208,8 @@
     "addCondition": "Bedingung hinzufügen",
     "noConditions": "Keine Bedingungen — alle E-Mails erscheinen in Pipeline.",
     "segmentEmptyPipeline": "Keine E-Mail entspricht diesem Segment."
+  },
+  "legal": {
+    "privacy": "Datenschutz"
   }
 }
