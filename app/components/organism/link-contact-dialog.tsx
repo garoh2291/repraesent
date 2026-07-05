@@ -95,7 +95,7 @@ export function LinkContactDialog({
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder={t("mail.linkDialogSearchPlaceholder", {
-              defaultValue: "Search contacts by name or email…",
+              defaultValue: "Search by name, email, or phone…",
             })}
             className="pl-9 pr-9"
             autoFocus

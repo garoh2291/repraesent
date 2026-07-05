@@ -3,10 +3,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { Check, Link2, Link2Off, Search, X } from "lucide-react";
 import { toast } from "sonner";
-import {
-  getContacts,
-  type ContactListItem,
-} from "~/lib/api/contacts-crm";
+import { getContacts, type ContactListItem } from "~/lib/api/contacts-crm";
 import { attachDealContact, detachDealContact } from "~/lib/api/deals";
 import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
@@ -143,7 +140,7 @@ export function AttachContactDialog({
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder={t("pipeline.attachContactSearchPlaceholder", {
-              defaultValue: "Search contacts by name…",
+              defaultValue: "Search by name, email, or phone…",
             })}
             className="pl-9 pr-9"
             autoFocus
