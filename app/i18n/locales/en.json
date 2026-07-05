@@ -2078,5 +2078,28 @@
     "labelEvent": "Update",
     "today": "Today",
     "yesterday": "Yesterday"
+  },
+  "dealEmails": {
+    "pipeline": "Pipeline emails",
+    "hidden": "Hidden emails",
+    "hide": "Hide",
+    "unhide": "Unhide",
+    "hiddenByRule": "Excluded by segment",
+    "hiddenManually": "Hidden manually",
+    "segmentRules": "Segment",
+    "subjectContains": "Subject contains",
+    "bodyContains": "Body contains",
+    "ruleValuePlaceholder": "text to match…",
+    "hiddenToast": "Email hidden from deal.",
+    "shownToast": "Email restored.",
+    "updateFailed": "Could not update.",
+    "emptyPipeline": "All emails are hidden.",
+    "emptyHidden": "No hidden emails.",
+    "matchLabel": "Match",
+    "matchAll": "All",
+    "matchAny": "Any",
+    "addCondition": "Add condition",
+    "noConditions": "No conditions — all emails show in Pipeline.",
+    "segmentEmptyPipeline": "No emails match this segment."
   }
 }

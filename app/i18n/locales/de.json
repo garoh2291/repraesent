@@ -2078,5 +2078,28 @@
     "labelEvent": "Update",
     "today": "Heute",
     "yesterday": "Gestern"
+  },
+  "dealEmails": {
+    "pipeline": "Pipeline-E-Mails",
+    "hidden": "Ausgeblendete E-Mails",
+    "hide": "Ausblenden",
+    "unhide": "Einblenden",
+    "hiddenByRule": "Durch Segment ausgeschlossen",
+    "hiddenManually": "Manuell ausgeblendet",
+    "segmentRules": "Segment",
+    "subjectContains": "Betreff enthält",
+    "bodyContains": "Text enthält",
+    "ruleValuePlaceholder": "zu suchender Text…",
+    "hiddenToast": "E-Mail aus dem Deal ausgeblendet.",
+    "shownToast": "E-Mail wiederhergestellt.",
+    "updateFailed": "Aktualisierung fehlgeschlagen.",
+    "emptyPipeline": "Alle E-Mails sind ausgeblendet.",
+    "emptyHidden": "Keine ausgeblendeten E-Mails.",
+    "matchLabel": "Treffer",
+    "matchAll": "Alle",
+    "matchAny": "Beliebig",
+    "addCondition": "Bedingung hinzufügen",
+    "noConditions": "Keine Bedingungen — alle E-Mails erscheinen in Pipeline.",
+    "segmentEmptyPipeline": "Keine E-Mail entspricht diesem Segment."
   }
 }

@@ -13,6 +13,7 @@ import { updateTask, type Task } from "~/lib/api/tasks";
 import type { Note } from "~/lib/api/notes";
 import type { BccMessage } from "~/lib/api/bcc-logs";
 import { EmailCard } from "~/components/organism/email-card";
+import { DealEmailCardActions } from "./deal-email-card-actions";
 import { TaskDetailModal } from "~/components/organism/tasks/task-detail-modal";
 import { TaskUrgencyBadge } from "~/components/organism/tasks/task-urgency-badge";
 import type { WorkspaceMemberItem } from "~/components/organism/tasks/task-form-modal";
@@ -141,13 +142,16 @@ export function ActivityTimeline({
       out.push({ kind: "note", ts: noteTs(n), id: `note-${n.id}`, note: n });
     for (const tk of tasks.data ?? [])
       out.push({ kind: "task", ts: taskTs(tk), id: `task-${tk.id}`, task: tk });
-    for (const m of emails.data?.data ?? [])
+    for (const m of emails.data?.data ?? []) {
+      // Deal context: hidden emails are excluded from the All feed.
+      if (variant === "deal" && m.hidden) continue;
       out.push({
         kind: "email",
         ts: new Date(m.sent_at ?? m.ingested_at).getTime(),
         id: `email-${m.id}`,
         email: m,
       });
+    }
     history.forEach((ev, i) => {
       if (!isMeaningfulEvent(ev.action)) return;
       out.push({
@@ -158,7 +162,7 @@ export function ActivityTimeline({
       });
     });
     return out.sort((a, b) => b.ts - a.ts);
-  }, [notes.data, tasks.data, emails.data, history]);
+  }, [notes.data, tasks.data, emails.data, history, variant]);
 
   const loading =
     (enabledNT && (notes.isLoading || tasks.isLoading)) ||
@@ -241,6 +245,14 @@ export function ActivityTimeline({
                         <EmailCard
                           message={item.email}
                           locale={i18n.language}
+                          actions={
+                            variant === "deal" && ctx.dealId ? (
+                              <DealEmailCardActions
+                                dealId={ctx.dealId}
+                                message={item.email}
+                              />
+                            ) : undefined
+                          }
                         />
                       )}
                       {item.kind === "note" && (

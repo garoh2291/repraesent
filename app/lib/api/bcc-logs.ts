@@ -49,6 +49,10 @@ export interface BccMessage {
   counterpart_email?: string | null;
   /** All contacts linked to this message (M2M), primary first. */
   contacts?: BccLinkedContact[];
+  /** Deal context only: whether this email is hidden from the deal. */
+  hidden?: boolean;
+  /** Why it's hidden: a manual override or a segment rule. */
+  hidden_reason?: "manual" | "rule" | null;
 }
 
 export interface PaginatedBccMessages {
@@ -127,6 +131,62 @@ export async function createMessageContactsBulk(
   const res = await apiClient.post<{ created: number; contactIds: string[] }>(
     `/bcc-mail/messages/${messageId}/contacts/bulk`,
     { items },
+  );
+  return res.data;
+}
+
+// --- Deal-scoped email hiding + segment rules ------------------------------
+
+export interface SegmentCondition {
+  field: "subject" | "body";
+  value: string;
+}
+
+export interface DealEmailSegment {
+  match_mode: "all" | "any";
+  conditions: SegmentCondition[];
+}
+
+export async function getDealEmailSegment(
+  dealId: string,
+): Promise<DealEmailSegment> {
+  const res = await apiClient.get<DealEmailSegment>(
+    `/deals/${dealId}/email-segment`,
+  );
+  return res.data;
+}
+
+export async function putDealEmailSegment(
+  dealId: string,
+  segment: DealEmailSegment,
+): Promise<DealEmailSegment> {
+  const res = await apiClient.put<DealEmailSegment>(
+    `/deals/${dealId}/email-segment`,
+    segment,
+  );
+  return res.data;
+}
+
+/** Hide (true) or show (false) a specific email for this deal. */
+export async function setDealEmailVisibility(
+  dealId: string,
+  messageId: string,
+  hidden: boolean,
+): Promise<{ ok: boolean }> {
+  const res = await apiClient.put<{ ok: boolean }>(
+    `/deals/${dealId}/emails/${messageId}/visibility`,
+    { hidden },
+  );
+  return res.data;
+}
+
+/** Clear the manual override so the email reverts to rule/default visibility. */
+export async function resetDealEmailVisibility(
+  dealId: string,
+  messageId: string,
+): Promise<{ ok: boolean }> {
+  const res = await apiClient.delete<{ ok: boolean }>(
+    `/deals/${dealId}/emails/${messageId}/visibility`,
   );
   return res.data;
 }

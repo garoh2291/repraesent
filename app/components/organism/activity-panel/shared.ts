@@ -10,7 +10,12 @@ import {
   getTasksForDeal,
   type Task,
 } from "~/lib/api/tasks";
-import { getBccMessages, type PaginatedBccMessages } from "~/lib/api/bcc-logs";
+import {
+  getBccMessages,
+  getDealEmailSegment,
+  type PaginatedBccMessages,
+  type DealEmailSegment,
+} from "~/lib/api/bcc-logs";
 
 /** Entity context shared by the panel, timeline and emails list. */
 export interface ActivityContext {
@@ -77,8 +82,9 @@ export function emailsQuery(
 } {
   if (variant === "deal") {
     return {
+      // Fetch all deal emails so sub-tab counts + the timeline are complete.
       key: ["deal-emails", ctx.dealId!],
-      fn: () => getBccMessages({ dealId: ctx.dealId }),
+      fn: () => getBccMessages({ dealId: ctx.dealId, pageSize: 100 }),
       id: ctx.dealId,
     };
   }
@@ -91,6 +97,17 @@ export function emailsQuery(
 
 export function hasNotesTasksContext(ctx: ActivityContext): boolean {
   return !!(ctx.leadId || ctx.dealId || ctx.contactId);
+}
+
+/** Deal email segment (inclusion filter) — shared key so editor + lists sync. */
+export function dealEmailSegmentQuery(dealId: string): {
+  key: readonly unknown[];
+  fn: () => Promise<DealEmailSegment>;
+} {
+  return {
+    key: ["deal-email-segment", dealId],
+    fn: () => getDealEmailSegment(dealId),
+  };
 }
 
 /** Timestamp used to sort each entity in the merged timeline. */

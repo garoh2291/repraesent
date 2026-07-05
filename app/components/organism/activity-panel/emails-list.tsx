@@ -6,6 +6,7 @@ import { EmailCard } from "~/components/organism/email-card";
 import { Skeleton } from "~/components/ui/skeleton";
 import { Button } from "~/components/ui/button";
 import { emailsQuery, type ActivityContext, type Variant } from "./shared";
+import { DealEmailsPanel } from "./deal-emails-panel";
 
 export function ActivityEmailsList({
   ctx,
@@ -15,6 +16,12 @@ export function ActivityEmailsList({
   variant: Variant;
 }) {
   const { t, i18n } = useTranslation();
+
+  // Deal context gets the segment/hide UI (rules bar + Pipeline/Hidden sub-tabs).
+  if (variant === "deal") {
+    return <DealEmailsPanel ctx={ctx} />;
+  }
+
   const q = emailsQuery(ctx, variant);
 
   const { data, isLoading, isError } = useQuery({
