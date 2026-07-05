@@ -20,7 +20,6 @@ export function TrialBanner({ workspaceId: _workspaceId }: Props) {
       <p className="text-sm flex-1">
         <Trans
           i18nKey="workspace.trial_banner.message"
-          defaults="Every campaign, lead and note from your Doorboost account lives in re:praesent — yours to use, free forever. <0>See what else you can unlock →</0>"
           components={[
             <Link
               key="link"

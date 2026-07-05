@@ -886,8 +886,11 @@
     "language": {
       "title": "My language",
       "hint": "This setting applies to you personally and overrides the area language.",
+      "autoDetectHint": "We automatically selected your language based on your browser and operating system. You can change it here anytime.",
       "en": "English",
-      "de": "Deutsch"
+      "de": "Deutsch",
+      "fr": "Français",
+      "nl": "Nederlands"
     },
     "invoices": {
       "title": "Invoices",
@@ -1083,6 +1086,102 @@
       "ariaPrevious": "Previous",
       "ariaNext": "Next",
       "ariaGoToProduct": "Go to product {{name}}"
+    },
+    "tour": {
+      "steps": {
+        "welcome": {
+          "badge": "Welcome",
+          "title": "You're in.",
+          "subtitle": "Let's get you started in 2 minutes.",
+          "description": "Repraesent is your all-in-one area for managing leads, booking appointments, and growing your business. This quick tour shows you everything you need to hit the ground running."
+        },
+        "dashboard": {
+          "badge": "01 — Dashboard",
+          "title": "Your Mission\nControl Center",
+          "subtitle": "Everything at a glance.",
+          "description": "The dashboard gives you a real-time pulse on your business. Track today's tasks, monitor lead activity over time, and jump straight into any area service from one clean screen."
+        },
+        "leads": {
+          "badge": "02 — Leads",
+          "title": "Never Lose a\nLead Again",
+          "subtitle": "Visual pipeline, instant updates.",
+          "description": "Manage every prospect through a drag-and-drop kanban board or a clean table view. Update statuses, add notes, and track the full journey from first contact to closed deal."
+        },
+        "lead-fallback": {
+          "badge": "03 — Fallback Email",
+          "title": "Reply to Every\nLead Automatically",
+          "subtitle": "Set it once, follow up on autopilot.",
+          "description": "When a new lead submits your form or books an appointment, Repraesent automatically sends them a personalized reply from your own email address. Configure a custom subject line and HTML body per source — no extra tools needed."
+        },
+        "lead-detail": {
+          "badge": "04 — Lead Detail",
+          "title": "Every Lead,\nFully Documented",
+          "subtitle": "The full story in one place.",
+          "description": "Click any lead to open its detail view — see contact info, activity timeline, attached notes, and status history. Edit everything inline and never lose context on a conversation."
+        },
+        "appointments": {
+          "badge": "04 — Appointments",
+          "title": "Scheduling on\nAutopilot",
+          "subtitle": "Let clients book themselves.",
+          "description": "Share your personalized booking link and let clients choose their own slot. Set your working hours, define break times, and let Repraesent handle confirmations automatically."
+        },
+        "tasks": {
+          "badge": "05 — Tasks",
+          "title": "Stay on Top\nof Every Action",
+          "subtitle": "Your personal to-do, tied to leads.",
+          "description": "Create tasks linked directly to leads so nothing slips through the cracks. Filter by due date, priority, or assignee and always know exactly what needs your attention today."
+        },
+        "analytics": {
+          "badge": "06 — Analytics",
+          "title": "Know Who\nVisits Your Site",
+          "subtitle": "Real website traffic, no guesswork.",
+          "description": "The analytics tab is powered by Plausible — a privacy-friendly tool that shows you your website visitors, traffic sources, top pages, and more. See exactly where your audience comes from, all in one clean view."
+        },
+        "email": {
+          "badge": "07 — Email Setup",
+          "title": "Your Email,\nReady Anywhere",
+          "subtitle": "Connect your inbox in minutes.",
+          "description": "Find your personal email configuration here — server address, port, and login credentials — and follow the step-by-step guide to add your Repraesent mailbox to Outlook, Apple Mail, or any other email client."
+        },
+        "settings": {
+          "badge": "08 — Settings",
+          "title": "Make It\nCompletely Yours",
+          "subtitle": "Your area, your rules.",
+          "description": "Customize your area name, manage team members and their roles, and fine-tune your public booking page. Every detail can be tailored to match your brand and workflow."
+        },
+        "doorboost-migration": {
+          "badge": "Migration",
+          "title": "Bring Your\nDoorboost Data",
+          "subtitle": "Campaigns, leads & team — one click.",
+          "description": "We detected your Doorboost account. Import all your historical campaigns, leads, notes, and team members into re:praesent with a single sync. Your data is safe and nothing will be lost."
+        }
+      },
+      "alt": {
+        "welcome": "",
+        "dashboard": "Dashboard",
+        "leads": "Leads board",
+        "lead-fallback": "Lead fallback email",
+        "lead-detail": "Lead detail",
+        "appointments": "Appointments",
+        "tasks": "Tasks",
+        "analytics": "Analytics",
+        "email": "Email setup",
+        "settings": "Settings",
+        "doorboost-migration": "Data migration"
+      },
+      "ui": {
+        "startTour": "Start Tour →",
+        "skipForNow": "Skip for now",
+        "skipTour": "Skip tour",
+        "back": "← Back",
+        "next": "Next →",
+        "getStarted": "Get Started ✦",
+        "syncData": "Sync My Data ✦",
+        "skipSync": "Maybe later",
+        "preview": "Preview",
+        "screenshotSoon": "Screenshot coming soon",
+        "goToStep": "Go to step {{n}}"
+      }
     }
   },
   "pending": {
@@ -1633,7 +1732,15 @@
     "modalUsers_other": "{{count}} team members",
     "modalWarning": "This action cannot be undone. Your Doorboost data will not be imported.",
     "modalConfirm": "Yes, skip migration",
-    "modalCancel": "Cancel"
+    "modalCancel": "Cancel",
+    "syncMessages": [
+      "Connecting your ad campaigns...",
+      "Importing lead history...",
+      "Syncing team members...",
+      "Migrating campaign metrics...",
+      "Transferring lead notes...",
+      "Building your workspace..."
+    ]
   },
   "workspace": {
     "trial_banner": {
@@ -2101,5 +2208,8 @@
     "addCondition": "Add condition",
     "noConditions": "No conditions — all emails show in Pipeline.",
     "segmentEmptyPipeline": "No emails match this segment."
+  },
+  "legal": {
+    "privacy": "Privacy Policy"
   }
 }

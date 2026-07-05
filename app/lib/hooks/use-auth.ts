@@ -10,6 +10,7 @@ import {
   type BrandInfo,
   type BrandWorkspace,
 } from "~/lib/api/auth";
+import type { SupportedLocale } from "~/i18n/locales";
 import {
   getStoredToken,
   setStoredToken,
@@ -129,7 +130,8 @@ export function useAuth() {
   });
 
   const requestMagicLinkMutation = useMutation({
-    mutationFn: requestMagicLink,
+    mutationFn: (vars: { email: string; locale?: SupportedLocale }) =>
+      requestMagicLink(vars.email, vars.locale),
     onError: (error) => {
       console.error("Magic link request error:", error);
     },

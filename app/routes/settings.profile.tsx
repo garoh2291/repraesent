@@ -20,6 +20,7 @@ import {
   FormMessage,
 } from "~/components/ui/form";
 import { useDocumentMeta } from "~/lib/hooks/use-document-meta";
+import { LanguageSwitcher } from "~/components/language-switcher";
 
 export function meta() {
   return [
@@ -197,6 +198,18 @@ export default function SettingsProfile() {
             </div>
           </form>
         </Form>
+      </SettingsSection>
+
+      <SettingsSection
+        label={t("settings.language.title")}
+        description={t("settings.language.hint")}
+      >
+        <div className="rounded-2xl border border-border bg-card p-5 sm:p-6 space-y-4">
+          <p className="text-sm text-muted-foreground">
+            {t("settings.language.autoDetectHint")}
+          </p>
+          <LanguageSwitcher variant="light" persistToDb />
+        </div>
       </SettingsSection>
     </div>
   );

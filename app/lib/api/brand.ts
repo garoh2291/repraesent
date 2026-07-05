@@ -6,6 +6,8 @@ export interface BrandWorkspaceServiceItem {
   service_name: string;
   service_name_en: string | null;
   service_name_de: string | null;
+  service_name_fr: string | null;
+  service_name_nl: string | null;
   service_slug: string | null;
   service_type: string | null;
   service_icon: string | null;
@@ -52,6 +54,8 @@ export interface BrandService {
   name: string;
   name_en: string | null;
   name_de: string | null;
+  name_fr: string | null;
+  name_nl: string | null;
 }
 
 export interface BrandAnalyticsWorkspace {
@@ -170,6 +174,8 @@ export interface BrandOrderService {
   name: string;
   name_en: string | null;
   name_de: string | null;
+  name_fr: string | null;
+  name_nl: string | null;
   icon: string | null;
   type: string | null;
   already_active: boolean;

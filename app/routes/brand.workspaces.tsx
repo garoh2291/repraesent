@@ -16,6 +16,7 @@ import { cn } from "~/lib/utils";
 import { formatNumber, formatDateMedium } from "~/lib/utils/format";
 import TooltipContainer from "~/components/tooltip-container";
 import i18nInstance from "~/i18n";
+import { normalizeLocale, type SupportedLocale } from "~/i18n/locales";
 import { useDocumentMeta } from "~/lib/hooks/use-document-meta";
 
 export function meta() {
@@ -34,26 +35,47 @@ function localizeServiceName(
     service_name: string;
     service_name_en?: string | null;
     service_name_de?: string | null;
+    service_name_fr?: string | null;
+    service_name_nl?: string | null;
   },
   lang: string
 ): string {
-  const isDe = lang?.startsWith("de");
-  if (isDe)
-    return (
-      service.service_name_de ?? service.service_name_en ?? service.service_name
-    );
+  const byLocale: Record<SupportedLocale, string | null | undefined> = {
+    de: service.service_name_de,
+    en: service.service_name_en,
+    fr: service.service_name_fr,
+    nl: service.service_name_nl,
+  };
   return (
-    service.service_name_en ?? service.service_name_de ?? service.service_name
+    byLocale[normalizeLocale(lang)] ??
+    service.service_name_de ??
+    service.service_name_en ??
+    service.service_name
   );
 }
 
 function localizeFilterName(
-  service: { name: string; name_en?: string | null; name_de?: string | null },
+  service: {
+    name: string;
+    name_en?: string | null;
+    name_de?: string | null;
+    name_fr?: string | null;
+    name_nl?: string | null;
+  },
   lang: string
 ): string {
-  const isDe = lang?.startsWith("de");
-  if (isDe) return service.name_de ?? service.name_en ?? service.name;
-  return service.name_en ?? service.name_de ?? service.name;
+  const byLocale: Record<SupportedLocale, string | null | undefined> = {
+    de: service.name_de,
+    en: service.name_en,
+    fr: service.name_fr,
+    nl: service.name_nl,
+  };
+  return (
+    byLocale[normalizeLocale(lang)] ??
+    service.name_de ??
+    service.name_en ??
+    service.name
+  );
 }
 
 function formatRelative(iso: string | null | undefined, t: TFunction): string {

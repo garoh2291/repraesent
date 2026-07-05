@@ -15,27 +15,11 @@ import { DevSyncTrigger } from "~/components/dev-sync-trigger";
 
 /* ─── Floating sync status messages ─── */
 
-const SYNC_MESSAGES = {
-  en: [
-    "Connecting your ad campaigns...",
-    "Importing lead history...",
-    "Syncing team members...",
-    "Migrating campaign metrics...",
-    "Transferring lead notes...",
-    "Building your workspace...",
-  ],
-  de: [
-    "Werbekampagnen werden verbunden...",
-    "Lead-Verlauf wird importiert...",
-    "Teammitglieder werden synchronisiert...",
-    "Kampagnenmetriken werden migriert...",
-    "Lead-Notizen werden übertragen...",
-    "Dein Workspace wird aufgebaut...",
-  ],
-};
-
-function FloatingMessages({ lang }: { lang: "en" | "de" }) {
-  const messages = SYNC_MESSAGES[lang];
+function FloatingMessages() {
+  const { t } = useTranslation();
+  const messages = t("historicalData.syncMessages", {
+    returnObjects: true,
+  }) as string[];
   const [index, setIndex] = useState(0);
   const [animState, setAnimState] = useState<"enter" | "exit">("enter");
 
@@ -70,12 +54,11 @@ function FloatingMessages({ lang }: { lang: "en" | "de" }) {
 /* ─── Main Banner ─── */
 
 export function DoorboostMigrationBanner() {
-  const { t, i18n } = useTranslation();
+  const { t } = useTranslation();
   const { currentWorkspace } = useAuthContext();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { openModal } = useModal();
-  const lang: "en" | "de" = i18n.language?.startsWith("de") ? "de" : "en";
 
   const isDoorboost =
     currentWorkspace?.was_doorboost_client === true &&
@@ -136,7 +119,7 @@ export function DoorboostMigrationBanner() {
               <p className="text-sm font-semibold text-foreground tracking-tight">
                 {t("historicalData.bannerPending")}
               </p>
-              <FloatingMessages lang={lang} />
+              <FloatingMessages />
             </div>
 
             {/* Subtle spinning indicator */}

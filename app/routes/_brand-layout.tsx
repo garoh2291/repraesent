@@ -1,7 +1,10 @@
 import { useEffect, useState } from "react";
 import { Link, Outlet, useLocation, useNavigate } from "react-router";
 import { useTranslation } from "react-i18next";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuthContext } from "~/providers/auth-provider";
+import { updateUserLocale } from "~/lib/api/auth";
+import { normalizeLocale, type SupportedLocale } from "~/i18n/locales";
 import {
   BarChart3,
   Building2,
@@ -210,6 +213,11 @@ function BrandSidebar({ onClose }: { onClose?: () => void }) {
 export default function BrandLayout() {
   const { user } = useAuthContext();
   const { i18n, t } = useTranslation();
+  const queryClient = useQueryClient();
+  const localeSyncMutation = useMutation({
+    mutationFn: (locale: SupportedLocale) => updateUserLocale(locale),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["auth"] }),
+  });
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const location = useLocation();
 
@@ -218,14 +226,18 @@ export default function BrandLayout() {
       exact ? location.pathname === path : location.pathname.startsWith(path)
     ) ?? NAV_ITEMS[0];
 
+  // Browser/cookie language is the source of truth. Keep the DB locale in sync
+  // with what the user actually sees, so their emails follow their browser.
   useEffect(() => {
-    if (!user?.locale) return;
-    const locale =
-      user.locale === "en" || user.locale === "de" ? user.locale : "de";
-    i18n.changeLanguage(locale);
+    if (!user) return;
+    const effective = normalizeLocale(i18n.language);
     const maxAge = 60 * 60 * 24 * 365;
-    document.cookie = `personal_lang=${locale}; path=/; max-age=${maxAge}; samesite=lax`;
-  }, [user?.locale, i18n]);
+    document.cookie = `personal_lang=${effective}; path=/; max-age=${maxAge}; samesite=lax`;
+    if (effective !== user.locale && !localeSyncMutation.isPending) {
+      localeSyncMutation.mutate(effective);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.locale, i18n.language]);
 
   // Brand view is the active selection while this layout is mounted. Persist
   // it so a subsequent /login or /auth/callback brings the user back here.

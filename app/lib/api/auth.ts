@@ -5,6 +5,7 @@ import {
   type ApiError,
   setStoredRefreshToken,
 } from "./axios-instance";
+import { normalizeLocale, type SupportedLocale } from "~/i18n/locales";
 
 /**
  * User information from backend
@@ -74,6 +75,8 @@ export interface WorkspaceService {
   service_name: string;
   service_name_en: string | null;
   service_name_de: string | null;
+  service_name_fr: string | null;
+  service_name_nl: string | null;
   service_image: string | null;
   service_slug: string | null;
   service_type: string | null;
@@ -87,14 +90,29 @@ export interface WorkspaceService {
  * Uses personal language override, not workspace language.
  */
 export function getLocalizedServiceName(
-  service: Pick<WorkspaceService, "service_name" | "service_name_en" | "service_name_de">,
+  service: Pick<
+    WorkspaceService,
+    | "service_name"
+    | "service_name_en"
+    | "service_name_de"
+    | "service_name_fr"
+    | "service_name_nl"
+  >,
   lang: string
 ): string {
-  const isDe = lang?.startsWith("de");
-  if (isDe) {
-    return service.service_name_de ?? service.service_name_en ?? service.service_name;
-  }
-  return service.service_name_en ?? service.service_name_de ?? service.service_name;
+  const byLocale: Record<SupportedLocale, string | null | undefined> = {
+    de: service.service_name_de,
+    en: service.service_name_en,
+    fr: service.service_name_fr,
+    nl: service.service_name_nl,
+  };
+  // Chosen language → German → English → fallback name.
+  return (
+    byLocale[normalizeLocale(lang)] ??
+    service.service_name_de ??
+    service.service_name_en ??
+    service.service_name
+  );
 }
 
 /**
@@ -137,10 +155,14 @@ export interface WorkspaceContext {
 /**
  * Register for self-service (sends magic link)
  */
-export const register = async (email: string): Promise<{ status: string }> => {
+export const register = async (
+  email: string,
+  locale?: SupportedLocale
+): Promise<{ status: string }> => {
   try {
     const response = await apiClient.post<{ status: string }>("/auth/register", {
       email,
+      locale,
     });
     return response.data;
   } catch (error) {
@@ -167,9 +189,12 @@ export interface UserContextResponse {
 /**
  * Request a magic link to be sent to the given email
  */
-export const requestMagicLink = async (email: string): Promise<void> => {
+export const requestMagicLink = async (
+  email: string,
+  locale?: SupportedLocale
+): Promise<void> => {
   try {
-    await apiClient.post("/users/magic-link", { email });
+    await apiClient.post("/users/magic-link", { email, locale });
   } catch (error) {
     const apiError = createApiError(error);
     throw new Error(apiError.message || "Failed to send magic link");
@@ -221,7 +246,7 @@ export const getUserContext = async (): Promise<UserContextResponse> => {
  * Update current user's locale
  */
 export const updateUserLocale = async (
-  locale: "en" | "de"
+  locale: SupportedLocale
 ): Promise<void> => {
   await apiClient.patch("/users/me/locale", { locale });
 };

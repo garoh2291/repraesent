@@ -9,6 +9,8 @@ import { AlertTriangle, Menu } from "lucide-react";
 import { OnboardingTour } from "~/components/onboarding-tour/OnboardingTour";
 import { Sheet, SheetContent } from "~/components/ui/sheet";
 import { getWorkspaceInvoices } from "~/lib/api/workspaces";
+import { updateUserLocale } from "~/lib/api/auth";
+import { normalizeLocale, type SupportedLocale } from "~/i18n/locales";
 import { createHistoricalData } from "~/lib/api/historical-data";
 import { DoorboostMigrationBanner } from "~/components/doorboost-migration-banner";
 import { SyncCompleteModal } from "~/components/sync-complete-modal";
@@ -20,17 +22,26 @@ export default function DashboardLayout() {
   const isHomeOrSyncPage =
     location.pathname === "/" || location.pathname === "/sync";
   const { i18n, t } = useTranslation();
+  const queryClient = useQueryClient();
   const [showTour, setShowTour] = useState(false);
 
-  // Sync i18n and cookie from user's DB locale (source of truth for logged-in users)
+  const localeSyncMutation = useMutation({
+    mutationFn: (locale: SupportedLocale) => updateUserLocale(locale),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["auth"] }),
+  });
+
+  // Browser/cookie language is the source of truth. Keep the DB locale in sync
+  // with what the user actually sees, so their emails follow their browser.
   useEffect(() => {
-    if (!user?.locale) return;
-    const locale =
-      user.locale === "en" || user.locale === "de" ? user.locale : "de";
-    i18n.changeLanguage(locale);
+    if (!user) return;
+    const effective = normalizeLocale(i18n.language);
     const maxAge = 60 * 60 * 24 * 365;
-    document.cookie = `personal_lang=${locale}; path=/; max-age=${maxAge}; samesite=lax`;
-  }, [user?.locale, i18n]);
+    document.cookie = `personal_lang=${effective}; path=/; max-age=${maxAge}; samesite=lax`;
+    if (effective !== user.locale && !localeSyncMutation.isPending) {
+      localeSyncMutation.mutate(effective);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.locale, i18n.language]);
 
   // Show onboarding tour for active-workspace users who haven't completed it yet.
   // Doorboost-brand workspaces don't have the standard retailer onboarding flow,
@@ -80,7 +91,6 @@ export default function DashboardLayout() {
     !!currentWorkspace?.doorboost_partner_house_id;
 
   const navigate = useNavigate();
-  const queryClient = useQueryClient();
 
   const doorboostSyncMutation = useMutation({
     mutationFn: () => createHistoricalData("not_ready"),
