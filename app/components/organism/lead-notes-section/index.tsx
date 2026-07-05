@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo } from "react";
+import { useState, useCallback, useMemo, useEffect, useRef } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import {
@@ -47,7 +47,7 @@ function getInitials(note: Note): string {
 
 function getCurrentUserInitials(
   first: string | undefined,
-  last: string | undefined
+  last: string | undefined,
 ): string {
   const f = first?.trim() ?? "";
   const l = last?.trim() ?? "";
@@ -96,6 +96,10 @@ interface LeadNotesSectionProps {
   fetchNotes?: (leadId: string) => Promise<Note[]>;
   /** Stable identifier for the query cache when `fetchNotes` is overridden. */
   scopeKey?: string;
+  /** Hide the internal "+ Add note" button (the parent owns the add control). */
+  hideAddButton?: boolean;
+  /** Bump this counter to open the inline add composer from outside. */
+  openAddSignal?: number;
 }
 
 export function LeadNotesSection({
@@ -106,6 +110,8 @@ export function LeadNotesSection({
   canEdit = true,
   fetchNotes,
   scopeKey,
+  hideAddButton = false,
+  openAddSignal,
 }: LeadNotesSectionProps) {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
@@ -115,6 +121,16 @@ export function LeadNotesSection({
   const [editingNoteId, setEditingNoteId] = useState<string | null>(null);
   const [editingContent, setEditingContent] = useState("");
   const [noteIdToDelete, setNoteIdToDelete] = useState<string | null>(null);
+
+  // Let a parent (the Activity panel) open the inline composer via a signal.
+  const lastAddSignal = useRef(openAddSignal);
+  useEffect(() => {
+    if (openAddSignal === undefined) return;
+    if (openAddSignal !== lastAddSignal.current) {
+      lastAddSignal.current = openAddSignal;
+      if (canEdit) setIsAddingNew(true);
+    }
+  }, [openAddSignal, canEdit]);
 
   const notesQueryKey = useMemo((): readonly unknown[] => {
     if (leadId) {
@@ -247,7 +263,7 @@ export function LeadNotesSection({
             user_is_deleted: false,
           };
       queryClient.setQueryData<Note[]>(notesQueryKey, (old = []) =>
-        old.map((n) => (n.id === noteId ? optimisticNote : n))
+        old.map((n) => (n.id === noteId ? optimisticNote : n)),
       );
       setEditingNoteId(null);
       setEditingContent("");
@@ -294,7 +310,7 @@ export function LeadNotesSection({
       await queryClient.cancelQueries({ queryKey: notesQueryKey });
       const previousNotes = queryClient.getQueryData<Note[]>(notesQueryKey);
       queryClient.setQueryData<Note[]>(notesQueryKey, (old = []) =>
-        old.filter((n) => n.id !== noteId)
+        old.filter((n) => n.id !== noteId),
       );
       setNoteIdToDelete(null);
       return { previousNotes };
@@ -359,14 +375,14 @@ export function LeadNotesSection({
         setEditingContent("");
       }
     },
-    [editingContent, updateMutation]
+    [editingContent, updateMutation],
   );
 
   const handleEditBlur = useCallback(
     (note: Note) => {
       commitEditNote(note);
     },
-    [commitEditNote]
+    [commitEditNote],
   );
 
   const handleStartEdit = (note: Note) => {
@@ -392,26 +408,28 @@ export function LeadNotesSection({
 
   return (
     <div className="space-y-3">
-      <div className="flex items-center justify-between gap-2">
-        <h3 className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
-          {t("leads.detail.notes")}{" "}
-          {notes.length > 0 && (
-            <span className="ml-1 normal-case tracking-normal font-normal text-muted-foreground/60">
-              ({notes.length})
-            </span>
+      {!hideAddButton && (
+        <div className="flex items-center justify-between gap-2">
+          <h3 className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
+            {t("leads.detail.notes")}{" "}
+            {notes.length > 0 && (
+              <span className="ml-1 normal-case tracking-normal font-normal text-muted-foreground/60">
+                ({notes.length})
+              </span>
+            )}
+          </h3>
+          {canEdit && (
+            <button
+              onClick={() => setIsAddingNew(true)}
+              disabled={isAddingNew}
+              className="inline-flex items-center gap-1 rounded-md border border-border bg-muted/60 px-2.5 py-1 text-xs font-medium text-foreground hover:bg-muted transition-colors disabled:opacity-50"
+            >
+              <Plus className="h-3 w-3" />
+              {t("leads.detail.addNote")}
+            </button>
           )}
-        </h3>
-        {canEdit && (
-          <button
-            onClick={() => setIsAddingNew(true)}
-            disabled={isAddingNew}
-            className="inline-flex items-center gap-1 rounded-md border border-border bg-muted/60 px-2.5 py-1 text-xs font-medium text-foreground hover:bg-muted transition-colors disabled:opacity-50"
-          >
-            <Plus className="h-3 w-3" />
-            {t("leads.detail.addNote")}
-          </button>
-        )}
-      </div>
+        </div>
+      )}
 
       <div className="space-y-2">
         {/* New note input */}
@@ -471,7 +489,7 @@ export function LeadNotesSection({
                   <TooltipContainer
                     tooltipContent={buildNoteUserLabel(
                       note,
-                      t("leads.detail.deletedUser")
+                      t("leads.detail.deletedUser"),
                     )}
                     showCopyButton={false}
                   >
@@ -523,7 +541,7 @@ export function LeadNotesSection({
                 <p
                   className={cn(
                     "text-sm whitespace-pre-wrap text-foreground leading-relaxed",
-                    canEdit && "pr-14"
+                    canEdit && "pr-14",
                   )}
                 >
                   {note.content}
@@ -533,7 +551,7 @@ export function LeadNotesSection({
                     <TooltipContainer
                       tooltipContent={buildNoteUserLabel(
                         note,
-                        t("leads.detail.deletedUser")
+                        t("leads.detail.deletedUser"),
                       )}
                       showCopyButton={false}
                     >
@@ -622,7 +640,7 @@ export function LeadNotesSection({
                   </div>
                 )}
               </div>
-            )
+            ),
           )
         )}
       </div>

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { isToday, isTomorrow } from "date-fns";
@@ -6,7 +6,10 @@ import { Plus, Check } from "lucide-react";
 import { formatDate } from "~/lib/utils/format";
 import { cn } from "~/lib/utils";
 import { TaskUrgencyBadge } from "~/components/organism/tasks/task-urgency-badge";
-import { TaskFormModal, type WorkspaceMemberItem } from "~/components/organism/tasks/task-form-modal";
+import {
+  TaskFormModal,
+  type WorkspaceMemberItem,
+} from "~/components/organism/tasks/task-form-modal";
 import { TaskDetailModal } from "~/components/organism/tasks/task-detail-modal";
 import {
   AlertDialog,
@@ -54,6 +57,10 @@ interface LeadTasksSectionProps {
   historyContactId?: string;
   canEdit?: boolean;
   workspaceMembers: WorkspaceMemberItem[];
+  /** Hide the internal "+ Add task" button (the parent owns the add control). */
+  hideAddButton?: boolean;
+  /** Bump this counter to open the task form modal from outside. */
+  openAddSignal?: number;
 }
 
 export function LeadTasksSection({
@@ -64,10 +71,20 @@ export function LeadTasksSection({
   historyContactId,
   canEdit = true,
   workspaceMembers,
+  hideAddButton = false,
+  openAddSignal,
 }: LeadTasksSectionProps) {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
   const [formOpen, setFormOpen] = useState(false);
+  const lastAddSignal = useRef(openAddSignal);
+  useEffect(() => {
+    if (openAddSignal === undefined) return;
+    if (openAddSignal !== lastAddSignal.current) {
+      lastAddSignal.current = openAddSignal;
+      if (canEdit) setFormOpen(true);
+    }
+  }, [openAddSignal, canEdit]);
   const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
   const [pendingToggle, setPendingToggle] = useState<{
     taskId: string;
@@ -167,25 +184,27 @@ export function LeadTasksSection({
   return (
     <>
       <div className="space-y-3">
-        <div className="flex items-center justify-between gap-2">
-          <h3 className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
-            {t("tasks.title")}{" "}
-            {tasks.length > 0 && (
-              <span className="ml-1 normal-case tracking-normal font-normal text-muted-foreground/60">
-                ({tasks.length})
-              </span>
+        {!hideAddButton && (
+          <div className="flex items-center justify-between gap-2">
+            <h3 className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
+              {t("tasks.title")}{" "}
+              {tasks.length > 0 && (
+                <span className="ml-1 normal-case tracking-normal font-normal text-muted-foreground/60">
+                  ({tasks.length})
+                </span>
+              )}
+            </h3>
+            {canEdit && (
+              <button
+                onClick={() => setFormOpen(true)}
+                className="inline-flex items-center gap-1 rounded-md border border-border bg-muted/60 px-2.5 py-1 text-xs font-medium text-foreground hover:bg-muted transition-colors"
+              >
+                <Plus className="h-3 w-3" />
+                {t("tasks.actions.addTask")}
+              </button>
             )}
-          </h3>
-          {canEdit && (
-            <button
-              onClick={() => setFormOpen(true)}
-              className="inline-flex items-center gap-1 rounded-md border border-border bg-muted/60 px-2.5 py-1 text-xs font-medium text-foreground hover:bg-muted transition-colors"
-            >
-              <Plus className="h-3 w-3" />
-              {t("tasks.actions.addTask")}
-            </button>
-          )}
-        </div>
+          </div>
+        )}
 
         <div className="space-y-1.5">
           {tasks.length === 0 && (

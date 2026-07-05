@@ -38,7 +38,7 @@ export interface GetContactsParams {
 }
 
 export async function getContacts(
-  params: GetContactsParams = {}
+  params: GetContactsParams = {},
 ): Promise<PaginatedContacts> {
   const searchParams = new URLSearchParams();
   if (params.page != null) searchParams.set("page", String(params.page));
@@ -49,18 +49,9 @@ export async function getContacts(
     searchParams.set("contact_type", params.contact_type);
 
   const res = await apiClient.get<PaginatedContacts>(
-    `/contacts?${searchParams.toString()}`
+    `/contacts?${searchParams.toString()}`,
   );
   return res.data;
-}
-
-export async function getContactIdByLead(
-  leadId: string
-): Promise<string | null> {
-  const res = await apiClient.get<{ id: string | null }>(
-    `/contacts?leadId=${encodeURIComponent(leadId)}`
-  );
-  return res.data.id;
 }
 
 export type ContactDetail = {
@@ -77,10 +68,10 @@ export async function getContact(id: string): Promise<ContactDetail> {
 }
 
 export async function getContactHistory(
-  contactId: string
+  contactId: string,
 ): Promise<LeadHistoryItem[]> {
   const res = await apiClient.get<LeadHistoryItem[]>(
-    `/contacts/${contactId}/history`
+    `/contacts/${contactId}/history`,
   );
   return res.data;
 }
@@ -92,7 +83,7 @@ export interface PatchContactCrmBody {
 
 export async function patchContactCrm(
   id: string,
-  body: PatchContactCrmBody
+  body: PatchContactCrmBody,
 ): Promise<ContactDetail> {
   const res = await apiClient.patch<ContactDetail>(`/contacts/${id}/crm`, body);
   return res.data;
@@ -108,7 +99,7 @@ export interface CreateContactBody {
 }
 
 export async function createContact(
-  body: CreateContactBody
+  body: CreateContactBody,
 ): Promise<{ id: string }> {
   const res = await apiClient.post<{ id: string }>("/contacts", body);
   return res.data;
@@ -127,16 +118,23 @@ export interface AddContactAddressBody {
 
 export async function addContactAddress(
   contactId: string,
-  body: AddContactAddressBody
+  body: AddContactAddressBody,
 ): Promise<void> {
   await apiClient.post(`/contacts/${contactId}/addresses`, body);
 }
 
 export async function convertLeadToContact(
-  leadId: string
+  leadId: string,
 ): Promise<{ id: string; contact_id: string }> {
   const res = await apiClient.post<{ id: string; contact_id: string }>(
-    `/contacts/from-lead/${encodeURIComponent(leadId)}`
+    `/contacts/from-lead/${encodeURIComponent(leadId)}`,
   );
   return res.data;
+}
+
+export interface ContactEmailMatch {
+  id: string;
+  full_name: string | null;
+  primary_email: string | null;
+  lead_id: string | null;
 }

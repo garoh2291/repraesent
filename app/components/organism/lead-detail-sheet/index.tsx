@@ -29,10 +29,9 @@ import { ChevronDown, ExternalLink, UserPlus } from "lucide-react";
 import { formatDate, formatRelativeTime } from "~/lib/utils/format";
 import { cn } from "~/lib/utils";
 import { getWorkspaceDetail } from "~/lib/api/workspaces";
-import {
-  getContactIdByLead,
-  convertLeadToContact,
-} from "~/lib/api/contacts-crm";
+import { convertLeadToContact } from "~/lib/api/contacts-crm";
+import { ContactEmailSuggestion } from "~/components/organism/contact-email-suggestion";
+import { extractErrorMessage } from "~/lib/api/axios-instance";
 import type { WorkspaceMemberItem } from "~/components/organism/tasks/task-form-modal";
 import {
   Collapsible,
@@ -40,7 +39,7 @@ import {
   CollapsibleTrigger,
 } from "~/components/ui/collapsible";
 
-function getHistoryItemInitials(item: LeadHistoryItem): string {
+export function getHistoryItemInitials(item: LeadHistoryItem): string {
   const first = item.user_first_name?.trim() ?? "";
   const last = item.user_last_name?.trim() ?? "";
   if (first && last) return `${first[0]}${last[0]}`.toUpperCase();
@@ -118,10 +117,15 @@ function formatDealUpdatedAction(item: LeadHistoryItem, t: TFunction): string {
   }
   return parts.length > 0
     ? parts.join(" · ")
-    : t("pipeline.history.dealUpdatedGeneric", { defaultValue: "Deal updated" });
+    : t("pipeline.history.dealUpdatedGeneric", {
+        defaultValue: "Deal updated",
+      });
 }
 
-function formatHistoryAction(item: LeadHistoryItem, t: TFunction): string {
+export function formatHistoryAction(
+  item: LeadHistoryItem,
+  t: TFunction,
+): string {
   if (item.action === "lead_created")
     return t("leads.detail.historyLeadCreated");
   if (item.action === "lead_created_in_doorboost")
@@ -164,11 +168,17 @@ function formatHistoryAction(item: LeadHistoryItem, t: TFunction): string {
       defaultValue: "Task assignee removed",
     });
   if (item.action === "task_created")
-    return t("tasks.detail.historyTaskCreated", { defaultValue: "Task created" });
+    return t("tasks.detail.historyTaskCreated", {
+      defaultValue: "Task created",
+    });
   if (item.action === "task_updated")
-    return t("tasks.detail.historyTaskUpdated", { defaultValue: "Task updated" });
+    return t("tasks.detail.historyTaskUpdated", {
+      defaultValue: "Task updated",
+    });
   if (item.action === "task_deleted")
-    return t("tasks.detail.historyTaskDeleted", { defaultValue: "Task deleted" });
+    return t("tasks.detail.historyTaskDeleted", {
+      defaultValue: "Task deleted",
+    });
   if (item.action === "deal_created")
     return t("pipeline.history.dealCreated", { defaultValue: "Deal created" });
   if (item.action === "deal_updated") return formatDealUpdatedAction(item, t);
@@ -205,7 +215,7 @@ function formatHistoryAction(item: LeadHistoryItem, t: TFunction): string {
   return item.action.replace(/_/g, " ");
 }
 
-function buildUserLabel(item: LeadHistoryItem, t: TFunction): string {
+export function buildUserLabel(item: LeadHistoryItem, t: TFunction): string {
   const name =
     [item.user_first_name, item.user_last_name]
       .filter(Boolean)
@@ -276,28 +286,29 @@ export function LeadDetailSheet({
 
   const queryClient = useQueryClient();
 
-  const { data: linkedContactId, isLoading: linkedContactLoading } = useQuery({
-    queryKey: ["contact-by-lead", leadId],
-    queryFn: () => getContactIdByLead(leadId!),
-    enabled: !!leadId && open && !readOnly,
-  });
+  // The lead detail payload already carries the contact link + same-email match
+  // (only the default getLead path — brand/read-only sheets don't need them).
+  const linkedContactId = lead?.linked_contact_id ?? null;
+  const emailMatch = lead?.contact_email_match ?? null;
+  const leadEmail = lead?.email?.trim() ?? "";
 
   const convertMutation = useMutation({
     mutationFn: () => convertLeadToContact(leadId!),
     onSuccess: () => {
       toast.success(t("leads.detail.convertToContactSuccess"));
-      void queryClient.invalidateQueries({
-        queryKey: ["contact-by-lead", leadId],
-      });
+      void queryClient.invalidateQueries({ queryKey: leadQueryKey });
       void queryClient.invalidateQueries({ queryKey: ["contacts"] });
     },
-    onError: () => {
-      toast.error(t("leads.detail.convertToContactError"));
+    onError: (error) => {
+      void queryClient.invalidateQueries({ queryKey: leadQueryKey });
+      toast.error(t("leads.detail.convertToContactError"), {
+        description: extractErrorMessage(error),
+      });
     },
   });
 
   const showConvertButton =
-    !readOnly && !linkedContactLoading && !linkedContactId;
+    !readOnly && !leadLoading && !linkedContactId && !emailMatch;
 
   // Skip the workspace-detail query in read-only mode — it powers task
   // assignment which is hidden in that mode.
@@ -316,7 +327,7 @@ export function LeadDetailSheet({
         user_email: m.user_email,
         role: m.role,
       })),
-    [workspaceData]
+    [workspaceData],
   );
 
   // Read-only mode disables every write-affordance:
@@ -379,6 +390,15 @@ export function LeadDetailSheet({
                       ? t("common.loading")
                       : t("leads.detail.convertToContact")}
                   </Button>
+                </div>
+              )}
+              {/* Existing contact with the same email */}
+              {!readOnly && !linkedContactId && emailMatch && (
+                <div className="px-5 py-4">
+                  <ContactEmailSuggestion
+                    contact={emailMatch}
+                    email={leadEmail}
+                  />
                 </div>
               )}
               {/* Linked contact link */}
@@ -485,9 +505,7 @@ function formatMetaDateValue(raw: unknown): string {
   const str = String(raw);
   // ClickHouse emits `YYYY-MM-DD HH:MM:SS` and may append a short tz like
   // `+00`. JS `Date` needs `T` between date/time and a full `±HH:MM` offset.
-  const normalized = str
-    .replace(" ", "T")
-    .replace(/([+-]\d{2})$/, "$1:00");
+  const normalized = str.replace(" ", "T").replace(/([+-]\d{2})$/, "$1:00");
   const d = new Date(normalized);
   return Number.isNaN(d.getTime()) ? str : formatDate(d, "PPp");
 }
@@ -519,10 +537,10 @@ export function LeadInfoSection({
 
   // message → shown inline; misc/platform_campaign_id → hidden; rest → collapsible
   const promotedEntries = visibleMetadataEntries.filter(([key]) =>
-    PROMOTED_META_KEYS.has(key)
+    PROMOTED_META_KEYS.has(key),
   );
   const collapsibleEntries = visibleMetadataEntries.filter(
-    ([key]) => !PROMOTED_META_KEYS.has(key) && !HIDDEN_META_KEYS.has(key)
+    ([key]) => !PROMOTED_META_KEYS.has(key) && !HIDDEN_META_KEYS.has(key),
   );
 
   return (
@@ -679,7 +697,7 @@ export function LeadHistorySection({
             "pr-1",
             !withoutLink
               ? "overflow-y-hidden"
-              : "overflow-y-auto max-h-[calc(100vh-16rem)]"
+              : "overflow-y-auto max-h-[calc(100vh-16rem)]",
           )}
         >
           <div>

@@ -2,18 +2,32 @@ import { useTranslation } from "react-i18next";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router";
 import { Mail, Inbox, ArrowRight } from "lucide-react";
-import { getBccMessages } from "~/lib/api/bcc-logs";
+import { EmailCard } from "~/components/organism/email-card";
 import { Skeleton } from "~/components/ui/skeleton";
 import { Button } from "~/components/ui/button";
-import { EmailCard } from "~/components/organism/email-card";
+import { emailsQuery, type ActivityContext, type Variant } from "./shared";
+import { DealEmailsPanel } from "./deal-emails-panel";
 
-export function ContactEmailsSection({ contactId }: { contactId: string }) {
+export function ActivityEmailsList({
+  ctx,
+  variant,
+}: {
+  ctx: ActivityContext;
+  variant: Variant;
+}) {
   const { t, i18n } = useTranslation();
 
+  // Deal context gets the segment/hide UI (rules bar + Pipeline/Hidden sub-tabs).
+  if (variant === "deal") {
+    return <DealEmailsPanel ctx={ctx} />;
+  }
+
+  const q = emailsQuery(ctx, variant);
+
   const { data, isLoading, isError } = useQuery({
-    queryKey: ["contact-emails", contactId],
-    queryFn: () => getBccMessages({ contactId }),
-    enabled: !!contactId,
+    queryKey: q.key,
+    queryFn: q.fn,
+    enabled: !!q.id,
   });
 
   if (isLoading) {
@@ -24,7 +38,6 @@ export function ContactEmailsSection({ contactId }: { contactId: string }) {
       </div>
     );
   }
-
   if (isError) {
     return (
       <p className="text-sm text-destructive">{t("leadEmails.loadError")}</p>
@@ -32,7 +45,6 @@ export function ContactEmailsSection({ contactId }: { contactId: string }) {
   }
 
   const messages = data?.data ?? [];
-
   if (messages.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center gap-2.5 rounded-xl border border-dashed border-border py-12 text-center">

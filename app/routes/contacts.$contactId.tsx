@@ -7,11 +7,7 @@ import { toast } from "sonner";
 import { useAuthContext } from "~/providers/auth-provider";
 import { getContact, getContactHistory } from "~/lib/api/contacts-crm";
 import { getWorkspaceDetail } from "~/lib/api/workspaces";
-import { LeadHistorySection } from "~/components/organism/lead-detail-sheet";
-import { LeadNotesSection } from "~/components/organism/lead-notes-section";
-import { LeadTasksSection } from "~/components/organism/tasks/lead-tasks-section";
-import { ContactEmailsSection } from "~/components/organism/contact-emails-section";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "~/components/ui/tabs";
+import { ActivityPanel } from "~/components/organism/activity-panel";
 import type { WorkspaceMemberItem } from "~/components/organism/tasks/task-form-modal";
 import { useCanEditLeads } from "~/lib/hooks/useCanEditLeads";
 import { ContactHero } from "~/components/organism/contact-detail/contact-hero";
@@ -57,7 +53,7 @@ export default function ContactDetailPage() {
 
   const hasAccess =
     currentWorkspace?.services?.some(
-      (s) => s.service_type === "lead-form" || s.service_slug === "lead-form"
+      (s) => s.service_type === "lead-form" || s.service_slug === "lead-form",
     ) ?? false;
 
   const { data, isLoading, isError } = useQuery({
@@ -88,7 +84,7 @@ export default function ContactDetailPage() {
         user_email: m.user_email,
         role: m.role,
       })),
-    [workspaceQuery.data]
+    [workspaceQuery.data],
   );
 
   useEffect(() => {
@@ -117,7 +113,7 @@ export default function ContactDetailPage() {
       toast.success(
         t("contacts.deleteContactSuccess", {
           defaultValue: "Contact removed.",
-        })
+        }),
       );
       navigate("/contacts", { replace: true });
     },
@@ -125,7 +121,7 @@ export default function ContactDetailPage() {
       toast.error(
         t("contacts.deleteContactError", {
           defaultValue: "Could not delete contact.",
-        })
+        }),
       );
     },
   });
@@ -252,50 +248,19 @@ export default function ContactDetailPage() {
             canEdit={canEdit}
             onInvalidate={invalidateContact}
           />
-          <div className="rounded-2xl border border-border bg-card p-4 sm:p-6">
-            <h2 className="mb-4 text-sm font-semibold tracking-tight text-foreground">
-              {t("leads.detail.notes")}
-            </h2>
-            <LeadNotesSection
-              leadId={leadId ?? undefined}
-              contactId={!leadId ? resolvedContactId : undefined}
-              linkedContactId={leadId ? resolvedContactId : undefined}
-              canEdit={canEdit}
-            />
-          </div>
-          <div className="rounded-2xl border border-border bg-card p-4 sm:p-6">
-            <Tabs defaultValue="tasks" className="w-full">
-              <TabsList variant="line" className="w-full mb-4 sm:mb-5">
-                <TabsTrigger value="tasks">{t("tasks.title")}</TabsTrigger>
-                <TabsTrigger value="emails">
-                  {t("leads.detail.emails")}
-                </TabsTrigger>
-                <TabsTrigger value="history">
-                  {t("leads.detail.history")}
-                </TabsTrigger>
-              </TabsList>
-              <TabsContent value="tasks" className="mt-0">
-                <LeadTasksSection
-                  leadId={taskLeadId}
-                  contactId={taskContactId}
-                  linkedContextLabel={taskContextLabel}
-                  historyContactId={resolvedContactId}
-                  canEdit={canEdit}
-                  workspaceMembers={workspaceMembers}
-                />
-              </TabsContent>
-              <TabsContent value="emails" className="mt-0">
-                <ContactEmailsSection contactId={resolvedContactId} />
-              </TabsContent>
-              <TabsContent value="history" className="mt-0">
-                <LeadHistorySection
-                  history={contactHistory}
-                  isLoading={contactHistoryLoading}
-                  withoutLink
-                />
-              </TabsContent>
-            </Tabs>
-          </div>
+          <ActivityPanel
+            variant="contact"
+            leadId={taskLeadId}
+            contactId={taskContactId}
+            linkedContactId={leadId ? resolvedContactId : undefined}
+            historyContactId={resolvedContactId}
+            emailContactId={resolvedContactId}
+            contextLabel={taskContextLabel}
+            canEdit={canEdit}
+            workspaceMembers={workspaceMembers}
+            history={contactHistory}
+            historyLoading={contactHistoryLoading}
+          />
         </div>
 
         <div className="space-y-4 sm:space-y-6 lg:col-span-2">

@@ -18,12 +18,10 @@ import { useCanEditLeads } from "~/lib/hooks/useCanEditLeads";
 import { useUpdateLeadStatus } from "~/lib/hooks/useUpdateLeadStatus";
 import { Button } from "~/components/ui/button";
 import { ArrowLeft, UserCheck, UserPlus } from "lucide-react";
-import {
-  getContactIdByLead,
-  getContact,
-  convertLeadToContact,
-} from "~/lib/api/contacts-crm";
+import { getContact, convertLeadToContact } from "~/lib/api/contacts-crm";
 import { ContactHero } from "~/components/organism/contact-detail/contact-hero";
+import { ContactEmailSuggestion } from "~/components/organism/contact-email-suggestion";
+import { extractErrorMessage } from "~/lib/api/axios-instance";
 import { CreateDealDialog } from "~/components/organism/create-deal-dialog";
 import i18n from "~/i18n";
 import { useDocumentMeta } from "~/lib/hooks/use-document-meta";
@@ -70,7 +68,7 @@ export default function LeadFormLeadId() {
         user_email: m.user_email,
         role: m.role,
       })),
-    [workspaceQuery.data]
+    [workspaceQuery.data],
   );
 
   const { data: lead, isLoading: leadLoading } = useQuery({
@@ -79,12 +77,11 @@ export default function LeadFormLeadId() {
     enabled: !!leadId,
   });
 
-  const { data: linkedContactId = null, isLoading: linkedContactLoading } =
-    useQuery({
-      queryKey: ["contact-by-lead", leadId],
-      queryFn: () => getContactIdByLead(leadId!),
-      enabled: !!leadId,
-    });
+  // The lead detail payload already carries the contact link + same-email match,
+  // so no second request is needed.
+  const linkedContactId = lead?.linked_contact_id ?? null;
+  const emailMatch = lead?.contact_email_match ?? null;
+  const leadEmail = lead?.email?.trim() ?? "";
 
   const { data: linkedContactData } = useQuery({
     queryKey: ["contact", linkedContactId],
@@ -98,18 +95,19 @@ export default function LeadFormLeadId() {
     mutationFn: () => convertLeadToContact(leadId!),
     onSuccess: () => {
       toast.success(t("leads.detail.convertToContactSuccess"));
-      void queryClient.invalidateQueries({
-        queryKey: ["contact-by-lead", leadId],
-      });
+      void queryClient.invalidateQueries({ queryKey: ["lead", leadId] });
       void queryClient.invalidateQueries({ queryKey: ["contacts"] });
     },
-    onError: () => {
-      toast.error(t("leads.detail.convertToContactError"));
+    onError: (error) => {
+      void queryClient.invalidateQueries({ queryKey: ["lead", leadId] });
+      toast.error(t("leads.detail.convertToContactError"), {
+        description: extractErrorMessage(error),
+      });
     },
   });
 
   const contactLinkLoading =
-    linkedContactLoading || (!!linkedContactId && !linkedContactData);
+    leadLoading || (!!linkedContactId && !linkedContactData);
 
   const { data: history = [], isLoading: historyLoading } = useQuery({
     queryKey: ["lead-history", leadId],
@@ -152,7 +150,7 @@ export default function LeadFormLeadId() {
       return;
     }
     const hasLeadFormService = currentWorkspace.services?.some(
-      (s) => s.service_type === "lead-form"
+      (s) => s.service_type === "lead-form",
     );
     if (!hasLeadFormService) {
       navigate("/", { replace: true });
@@ -195,7 +193,7 @@ export default function LeadFormLeadId() {
 
   const handleStatusChange = (
     id: string,
-    status: import("~/lib/api/leads").LeadStatus
+    status: import("~/lib/api/leads").LeadStatus,
   ) => {
     updateStatusMutation.mutate({ id, status });
   };
@@ -265,6 +263,8 @@ export default function LeadFormLeadId() {
         <div className="app-fade-up rounded-xl border border-border bg-muted/30 px-4 py-3 text-sm text-muted-foreground">
           {t("common.loading")}
         </div>
+      ) : emailMatch ? (
+        <ContactEmailSuggestion contact={emailMatch} email={leadEmail} />
       ) : (
         <div className="app-fade-up rounded-xl border border-border bg-muted/30 px-4 py-3 flex items-center justify-between gap-3">
           <span className="text-sm text-muted-foreground">

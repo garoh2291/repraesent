@@ -9,10 +9,7 @@ import {
   type ContactListItem,
   type PaginatedContacts,
 } from "~/lib/api/contacts-crm";
-import {
-  CONTACT_TYPES,
-  type ContactType,
-} from "~/lib/contacts/contact-types";
+import { CONTACT_TYPES, type ContactType } from "~/lib/contacts/contact-types";
 import { useDebounce } from "~/lib/hooks/useDebounce";
 import { CONTACT_TABLE_FILTERS_BASE } from "~/lib/contacts/filter-presets";
 import type { Filter } from "~/components/molecule/filter-component/types";
@@ -103,11 +100,11 @@ export default function ContactsPage() {
 
   const page = useMemo(
     () => parsePage(searchParams.get("page")),
-    [searchParams]
+    [searchParams],
   );
   const limit = useMemo(
     () => parseLimit(searchParams.get("limit")),
-    [searchParams]
+    [searchParams],
   );
   const search = searchParams.get("search") ?? "";
   const sourceFilter = searchParams.get("source") ?? "";
@@ -124,7 +121,7 @@ export default function ContactsPage() {
 
   const hasAccess =
     currentWorkspace?.services?.some(
-      (s) => s.service_type === "lead-form" || s.service_slug === "lead-form"
+      (s) => s.service_type === "lead-form" || s.service_slug === "lead-form",
     ) ?? false;
 
   const tableQuery = useQuery({
@@ -184,7 +181,6 @@ export default function ContactsPage() {
     },
   });
 
-
   const setParam = (updates: Record<string, string | undefined>) => {
     const next = new URLSearchParams(searchParams);
     for (const [k, v] of Object.entries(updates)) {
@@ -196,7 +192,7 @@ export default function ContactsPage() {
 
   const contactListFilters = useMemo(
     (): Filter[] => [...CONTACT_TABLE_FILTERS_BASE],
-    []
+    [],
   );
 
   const hasTableFilters = !!sourceFilter || !!contactTypeFilter;
@@ -279,7 +275,7 @@ export default function ContactsPage() {
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground pointer-events-none" />
           <Input
             placeholder={t("contacts.searchPlaceholder", {
-              defaultValue: "Search…",
+              defaultValue: "Search by name, email, or phone…",
             })}
             value={search}
             onChange={(e) => setParam({ search: e.target.value, page: "1" })}
@@ -359,8 +355,7 @@ export default function ContactsPage() {
                         </TooltipTrigger>
                         <TooltipContent className="max-w-[240px]">
                           {t("contacts.columns.lifetimeValueHint", {
-                            defaultValue:
-                              "Total value of all won deals.",
+                            defaultValue: "Total value of all won deals.",
                           })}
                         </TooltipContent>
                       </Tooltip>
@@ -455,9 +450,7 @@ export default function ContactsPage() {
                         ? Number(row.pipeline_value)
                         : null;
                     const lostNum =
-                      row.lost_value != null
-                        ? Number(row.lost_value)
-                        : null;
+                      row.lost_value != null ? Number(row.lost_value) : null;
                     return (
                       <TableRow
                         key={row.id}
@@ -567,7 +560,8 @@ export default function ContactsPage() {
                           )}
                         </TableCell>
                         <TableCell className="whitespace-normal px-4 py-3 align-middle text-left tabular-nums">
-                          {pipelineNum != null && Number.isFinite(pipelineNum) ? (
+                          {pipelineNum != null &&
+                          Number.isFinite(pipelineNum) ? (
                             <span className="inline-flex items-center rounded-full bg-sky-500/10 px-2 py-0.5 text-xs font-medium text-sky-700 ring-1 ring-inset ring-sky-500/20 dark:text-sky-400">
                               {formatCurrency(pipelineNum)}
                             </span>
@@ -622,8 +616,7 @@ export default function ContactsPage() {
             <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:justify-between">
               <p className="text-sm text-muted-foreground order-2 sm:order-1">
                 {t("common.showingResults", {
-                  from:
-                    data.total > 0 ? (data.page - 1) * data.limit + 1 : 0,
+                  from: data.total > 0 ? (data.page - 1) * data.limit + 1 : 0,
                   to: Math.min(data.page * data.limit, data.total),
                   total: data.total,
                 })}
