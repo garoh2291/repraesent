@@ -56,6 +56,11 @@ export default [
       route("sync", "routes/sync.tsx"),
       route("email", "routes/email.tsx"),
       route("tasks", "routes/tasks.tsx"),
+      route("website", "routes/wordpress.tsx"),
+      route(
+        "website/settings/:settingsKind",
+        "routes/wordpress.settings.$settingsKind.tsx",
+      ),
       route("settings", "routes/settings._layout.tsx", [
         index("routes/settings._index.tsx"),
         route("profile", "routes/settings.profile.tsx"),

@@ -8,6 +8,7 @@ import {
   CheckSquare,
   ChevronDown,
   Columns3,
+  Globe,
   HomeIcon,
   Info,
   LogOut,
@@ -26,6 +27,7 @@ import { getLocalizedServiceName } from "~/lib/api/auth";
 import { useAuthContext } from "~/providers/auth-provider";
 import { setStoredSelectedView, BRAND_VIEW } from "~/lib/api/axios-instance";
 import { useAppointmentConfigs } from "~/lib/hooks/useAppointmentConfigs";
+import { useWorkspaceWpSite } from "~/lib/hooks/useWorkspaceWpSite";
 import { LanguageSwitcher } from "~/components/language-switcher";
 import {
   DropdownMenu,
@@ -135,6 +137,9 @@ export function Sidebar({
   const showAppointmentsInSidebar =
     hasAppointmentsService && !!appointmentConfigs?.length;
   const isDoorboostBrandWs = currentWorkspace?.type === "doorboost_brand";
+  const { data: wpSite } = useWorkspaceWpSite(
+    !!currentWorkspace?.id && !isDoorboostBrandWs,
+  );
 
   const handleWorkspaceChange = (workspaceId: string) => {
     setCurrentWorkspace(workspaceId);
@@ -283,6 +288,17 @@ export function Sidebar({
               <HomeIcon className="h-4 w-4 shrink-0" />
               {t("nav.home")}
             </NavLink>
+
+            {wpSite && (
+              <NavLink
+                to="/website"
+                isActive={location.pathname.startsWith("/website")}
+                onClick={onClose}
+              >
+                <Globe className="h-4 w-4 shrink-0" />
+                {t("nav.wordpress", "Website")}
+              </NavLink>
+            )}
 
             {currentWorkspace?.services
               ?.filter(

@@ -58,6 +58,12 @@ export const links: Route.LinksFunction = () => [
     rel: "stylesheet",
     href: "https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@100..900&display=swap",
   },
+  // Typefaces the re:cookie plugin admin ships with; loaded so the ported
+  // settings UI matches its wp-admin rendering exactly.
+  {
+    rel: "stylesheet",
+    href: "https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap",
+  },
   {
     rel: "stylesheet",
     href: "https://cdn.jsdelivr.net/npm/geist@1.3.1/dist/fonts/noto-sans-jp/css/noto-sans-jp.css",
