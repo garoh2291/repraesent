@@ -2683,6 +2683,7 @@
     "ssoNotConfigured": "La connexion admin n'est pas encore configurée pour ce site. Contactez votre représentant Repraesent.",
     "ssoPending": "Non connecté",
     "subtitle": "Gestion des plugins, paramètres de contenu et accès admin à votre site.",
-    "title": "Site web"
+    "title": "Site web",
+    "ssoLoginFailed": "Échec de la connexion à l’administration de votre site. Veuillez réessayer plus tard."
   }
 }

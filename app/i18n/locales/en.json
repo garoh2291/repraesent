@@ -2681,6 +2681,7 @@
     "ssoNotConfigured": "Admin sign-in isn't set up for this site yet. Contact your Repraesent representative.",
     "ssoPending": "Not connected",
     "subtitle": "Plugin management, content settings, and admin access for your site.",
-    "title": "Website"
+    "title": "Website",
+    "ssoLoginFailed": "Failed to sign in to your site admin. Please try again later."
   }
 }

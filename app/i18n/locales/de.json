@@ -2683,6 +2683,7 @@
     "ssoNotConfigured": "Admin-Anmeldung ist für diese Website noch nicht eingerichtet. Kontaktieren Sie Ihren Repraesent-Ansprechpartner.",
     "ssoPending": "Nicht verbunden",
     "subtitle": "Plugin-Verwaltung, Inhaltseinstellungen und Admin-Zugang für Ihre Website.",
-    "title": "Website"
+    "title": "Website",
+    "ssoLoginFailed": "Anmeldung bei Ihrer Website-Verwaltung fehlgeschlagen. Bitte versuchen Sie es später erneut."
   }
 }
