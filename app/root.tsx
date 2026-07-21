@@ -8,6 +8,7 @@ import {
   useRouteLoaderData,
 } from "react-router";
 import { Toaster } from "./components/ui/sonner";
+import { WpSsoErrorNotice } from "./components/wordpress/wp-sso-error-notice";
 
 import type { Route } from "./+types/root";
 import "./app.css";
@@ -88,6 +89,10 @@ export function Layout({ children }: { children: React.ReactNode }) {
             <AuthProvider>
               <ModalProvider>
                 {children}
+                {/* Outside `children` so it also covers the 404/error
+                    boundary, which is where a WordPress bounce to an unrouted
+                    path currently lands. */}
+                <WpSsoErrorNotice />
                 <Toaster />
 
                 <ScrollRestoration />

@@ -2681,6 +2681,7 @@
     "ssoNotConfigured": "Admin-aanmelding is nog niet ingesteld voor deze site. Neem contact op met uw Repraesent-contactpersoon.",
     "ssoPending": "Niet verbonden",
     "subtitle": "Pluginbeheer, contentinstellingen en admin-toegang voor uw website.",
-    "title": "Website"
+    "title": "Website",
+    "ssoLoginFailed": "Inloggen op het beheer van uw website is mislukt. Probeer het later opnieuw."
   }
 }
