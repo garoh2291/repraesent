@@ -18,14 +18,14 @@ import { pluginSettingsKey } from "./useWorkspacePluginSettings";
  * Only the `stats` slice is merged into the cache: reseeding the whole settings
  * object would blow away whatever the user has typed into the open form.
  */
-export function useWorkspaceReIndexRegenerateSitemap() {
+export function useWorkspaceReIndexRegenerateSitemap(pluginUuid: string) {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: regenerateWorkspaceReIndexSitemap,
+    mutationFn: () => regenerateWorkspaceReIndexSitemap(pluginUuid),
     onSuccess: (data) => {
       queryClient.setQueryData<WpPluginSettingsGetResponse>(
-        pluginSettingsKey("re-index"),
+        pluginSettingsKey(pluginUuid),
         (prev) => ({
           found: true,
           settings: {

@@ -1,3 +1,4 @@
+import { useParams } from "react-router";
 import { useTranslation } from "react-i18next";
 import {
   Clock,
@@ -44,6 +45,7 @@ import { cn } from "~/lib/utils";
  */
 export function ReReviewSettingsPage() {
   const { t } = useTranslation();
+  const { pluginUuid = "" } = useParams<{ pluginUuid: string }>();
   const {
     settings,
     setSettings,
@@ -56,12 +58,12 @@ export function ReReviewSettingsPage() {
     loadError,
     saveMutation,
   } = useWorkspacePluginSettingsForm<ReReviewSettings>(
-    "re-review",
+    pluginUuid,
     DEFAULT_SETTINGS,
   );
 
-  const testFetchMutation = useWorkspaceReReviewTestFetch();
-  const clearCacheMutation = useWorkspaceReReviewClearCache();
+  const testFetchMutation = useWorkspaceReReviewTestFetch(pluginUuid);
+  const clearCacheMutation = useWorkspaceReReviewClearCache(pluginUuid);
   const testing = testFetchMutation.isPending;
   const clearing = clearCacheMutation.isPending;
 

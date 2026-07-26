@@ -7,7 +7,7 @@ import { ReIndexSettingsPage } from "~/components/wordpress/re-index-settings-pa
 import { ReMaintenanceSettingsPage } from "~/components/wordpress/re-maintenance-settings-page";
 import { ReReviewSettingsPage } from "~/components/wordpress/re-review-settings-page";
 import { ReAppointmentSettingsPage } from "~/components/wordpress/re-appointment-settings-page";
-import { isPortedSettingsKind } from "~/lib/utils/wordpress-plugin-kind";
+import { useResolvePluginKind } from "~/lib/hooks/useWorkspaceWpPluginCatalog";
 
 export function meta() {
   return [
@@ -27,16 +27,16 @@ export function meta() {
 }
 
 /**
- * URL: /wordpress/settings/:settingsKind
+ * URL: /website/settings/:pluginUuid
  *
- * Renders a managed plugin's own admin screen against the workspace's
- * WordPress site. Only kinds whose admin has actually been ported render here;
- * everything else sends the user back to the plugin list rather than showing a
- * half-built page.
+ * The plugin is named by its opaque catalog UUID; we resolve it to a kind
+ * through the catalog to pick which admin screen to render against the
+ * workspace's WordPress site. An unknown UUID sends the user back to the plugin
+ * list rather than showing a half-built page.
  */
 export default function WordPressPluginSettingsRoute() {
   const { t } = useTranslation();
-  const { settingsKind } = useParams<{ settingsKind: string }>();
+  const { pluginUuid } = useParams<{ pluginUuid: string }>();
 
   useDocumentMeta({
     titleKey: "wordpress.pluginSettings.metaTitle",
@@ -44,7 +44,21 @@ export default function WordPressPluginSettingsRoute() {
     titleSuffix: " - Repraesent",
   });
 
-  if (!isPortedSettingsKind(settingsKind)) {
+  const { kind, isLoading } = useResolvePluginKind(pluginUuid);
+
+  if (isLoading || kind === undefined) {
+    return (
+      <div className="min-h-full w-full bg-background">
+        <div className="mx-auto w-full max-w-[1280px] p-4 py-10! sm:p-6">
+          <p className="text-sm text-muted-foreground">
+            {t("common.loading", "Loading…")}
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  if (kind === null) {
     return (
       <div className="min-h-full w-full bg-background">
         <div className="mx-auto w-full max-w-[1280px] space-y-3 p-4 py-10! sm:p-6">
@@ -65,7 +79,7 @@ export default function WordPressPluginSettingsRoute() {
     );
   }
 
-  switch (settingsKind) {
+  switch (kind) {
     case "re-cookie":
       return <ReCookieSettingsPage />;
     case "re-index":

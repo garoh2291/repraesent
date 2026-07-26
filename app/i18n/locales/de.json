@@ -2234,7 +2234,7 @@
       "empty": "Keine Plugins gefunden",
       "emptyHint": "Auf dieser Website wurden noch keine installierten Plugins erkannt.",
       "inactive": "Inaktiv",
-      "manage": "Verwalten",
+      "manage": "Einstellungen bearbeiten",
       "managed": "Verwaltet",
       "noMatch": "Keine passenden Plugins",
       "noMatchHint": "Versuchen Sie einen anderen Suchbegriff oder Filter.",
@@ -2676,10 +2676,10 @@
         "link": "Auf \"yes\" setzen, um das Widget mit einem Link zum Google-Eintrag zu umgeben."
       }
     },
-    "signIn": "Im Admin anmelden",
+    "signIn": "Bei Website anmelden",
     "signInError": "Die Admin-Anmeldung für die Website konnte nicht gestartet werden. Prüfen Sie Ihren Zugriff auf diese Website.",
-    "signingIn": "Website-Admin wird geöffnet…",
-    "ssoConnected": "Admin verbunden",
+    "signingIn": "Anmeldung läuft…",
+    "ssoConnected": "Anmelden, um Website-Inhalte zu bearbeiten",
     "ssoNotConfigured": "Admin-Anmeldung ist für diese Website noch nicht eingerichtet. Kontaktieren Sie Ihren Repraesent-Ansprechpartner.",
     "ssoPending": "Nicht verbunden",
     "subtitle": "Plugin-Verwaltung, Inhaltseinstellungen und Admin-Zugang für Ihre Website.",

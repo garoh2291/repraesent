@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { useParams } from "react-router";
 import { useTranslation } from "react-i18next";
 import { Loader2, MousePointerClick, Trash2 } from "lucide-react";
 import { useReAppointmentPickerUrl } from "~/lib/hooks/useWorkspaceReAppointment";
@@ -37,11 +38,12 @@ export function PlacementCard({
   buttonId: number | null;
 }) {
   const { t } = useTranslation();
+  const { pluginUuid } = useParams<{ pluginUuid: string }>();
 
   // The live picker loads the customer's own front end in an iframe via a
   // short-lived signed URL — no WordPress login. It falls back to the manual
   // list below when the site isn't SSO-connected (or the request fails).
-  const pickerQuery = useReAppointmentPickerUrl(buttonId ?? 0, true);
+  const pickerQuery = useReAppointmentPickerUrl(pluginUuid, buttonId ?? 0, true);
   const pickerUrl = pickerQuery.data?.picker_url ?? null;
   const [pickMode, setPickMode] = useState(false);
 

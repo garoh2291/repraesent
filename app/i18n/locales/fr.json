@@ -2234,7 +2234,7 @@
       "empty": "Aucun plugin trouvé",
       "emptyHint": "Nous n'avons pas encore détecté de plugins installés sur ce site.",
       "inactive": "Inactif",
-      "manage": "Gérer",
+      "manage": "Modifier les paramètres",
       "managed": "Géré",
       "noMatch": "Aucun plugin correspondant",
       "noMatchHint": "Essayez un autre terme de recherche ou filtre.",
@@ -2676,10 +2676,10 @@
         "link": "Mettre \"yes\" pour entourer le widget d'un lien vers la fiche Google."
       }
     },
-    "signIn": "Se connecter à l'admin",
+    "signIn": "Se connecter au site web",
     "signInError": "Impossible de démarrer la connexion à l'admin du site. Vérifiez votre accès à ce site.",
-    "signingIn": "Ouverture de l'admin du site…",
-    "ssoConnected": "Admin connecté",
+    "signingIn": "Connexion en cours…",
+    "ssoConnected": "Connectez-vous pour modifier le contenu du site web",
     "ssoNotConfigured": "La connexion admin n'est pas encore configurée pour ce site. Contactez votre représentant Repraesent.",
     "ssoPending": "Non connecté",
     "subtitle": "Gestion des plugins, paramètres de contenu et accès admin à votre site.",

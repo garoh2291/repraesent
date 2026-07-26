@@ -19,7 +19,11 @@ export function isPortedSettingsKind(
   );
 }
 
-/** Where a managed plugin's settings screen lives inside the dashboard. */
-export function wordpressPluginSettingsPath(kind: WpPluginSettingsKind): string {
-  return `/website/settings/${kind}`;
+/**
+ * Where a managed plugin's settings screen lives inside the dashboard.
+ * Addressed by the plugin's opaque catalog UUID, not its slug, so the
+ * human-readable kind never appears in the browser URL.
+ */
+export function wordpressPluginSettingsPath(pluginUuid: string): string {
+  return `/website/settings/${pluginUuid}`;
 }

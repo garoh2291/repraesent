@@ -2232,7 +2232,7 @@
       "empty": "Geen plugins gevonden",
       "emptyHint": "We hebben nog geen geïnstalleerde plugins op deze site gedetecteerd.",
       "inactive": "Inactief",
-      "manage": "Beheren",
+      "manage": "Instellingen bewerken",
       "managed": "Beheerd",
       "noMatch": "Geen overeenkomende plugins",
       "noMatchHint": "Probeer een andere zoekterm of filter.",
@@ -2674,10 +2674,10 @@
         "link": "Zet op \"yes\" om de widget te omhullen met een link naar de Google-vermelding."
       }
     },
-    "signIn": "Aanmelden bij admin",
+    "signIn": "Inloggen op website",
     "signInError": "Website-adminaanmelding kon niet worden gestart. Controleer uw toegang tot deze site.",
-    "signingIn": "Website-admin wordt geopend…",
-    "ssoConnected": "Admin verbonden",
+    "signingIn": "Bezig met inloggen…",
+    "ssoConnected": "Log in om website-inhoud te bewerken",
     "ssoNotConfigured": "Admin-aanmelding is nog niet ingesteld voor deze site. Neem contact op met uw Repraesent-contactpersoon.",
     "ssoPending": "Niet verbonden",
     "subtitle": "Pluginbeheer, contentinstellingen en admin-toegang voor uw website.",

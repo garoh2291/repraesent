@@ -139,7 +139,7 @@ export interface WorkspaceContext {
   created_at: string;
   updated_at: string;
   status?: "active" | "pending" | "past_due" | "canceled" | "trial";
-  stripe_contact_id?: string | null;
+  stripe_customer_id?: string | null;
   unpaid_invoice_due_date?: string | null;
   unpaid_invoice_url?: string | null;
   products?: WorkspaceProduct[];
@@ -160,15 +160,20 @@ export const register = async (
   locale?: SupportedLocale
 ): Promise<{ status: string }> => {
   try {
-    const response = await apiClient.post<{ status: string }>("/auth/register", {
-      email,
-      locale,
-    });
+    const response = await apiClient.post<{ status: string }>(
+      "/auth/register",
+      {
+        email,
+        locale,
+      }
+    );
     return response.data;
   } catch (error) {
     const apiError = createApiError(error);
     if (apiError.status === 409) {
-      throw new Error("This email is managed by an admin account. Use the login page.");
+      throw new Error(
+        "This email is managed by an admin account. Use the login page."
+      );
     }
     throw new Error(apiError.message || "Failed to register");
   }
@@ -204,9 +209,7 @@ export const requestMagicLink = async (
 /**
  * Verify magic link token and exchange for access + refresh tokens
  */
-export const verifyMagicLink = async (
-  token: string
-): Promise<AuthResponse> => {
+export const verifyMagicLink = async (token: string): Promise<AuthResponse> => {
   try {
     const response = await apiClient.post<AuthResponse>(
       "/users/magic-link/verify",
@@ -229,9 +232,8 @@ export const verifyMagicLink = async (
  */
 export const getUserContext = async (): Promise<UserContextResponse> => {
   try {
-    const response = await apiClient.get<UserContextResponse>(
-      "/users/me/context"
-    );
+    const response =
+      await apiClient.get<UserContextResponse>("/users/me/context");
     return response.data;
   } catch (error) {
     const apiError = createApiError(error);

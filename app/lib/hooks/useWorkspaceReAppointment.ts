@@ -21,11 +21,14 @@ const RE_APPOINTMENT_KEY = ["workspace-wp-re-appointment-buttons"] as const;
  * and slot options the editor needs. Gate this on the site query: the endpoint
  * 404s when the workspace has no site at all.
  */
-export function useWorkspaceReAppointmentButtons(enabled: boolean) {
+export function useWorkspaceReAppointmentButtons(
+  pluginUuid: string | undefined,
+  enabled: boolean,
+) {
   return useQuery({
     queryKey: RE_APPOINTMENT_KEY,
-    queryFn: getWorkspaceReAppointmentButtons,
-    enabled,
+    queryFn: () => getWorkspaceReAppointmentButtons(pluginUuid as string),
+    enabled: enabled && !!pluginUuid,
     // Reading the site's posts/postmeta goes over an SSH tunnel; don't refetch
     // on focus and never swap the list out from under someone mid-edit.
     staleTime: Infinity,
@@ -45,22 +48,38 @@ function useInvalidateOnSuccess() {
   return () => queryClient.invalidateQueries({ queryKey: RE_APPOINTMENT_KEY });
 }
 
-export function useCreateReAppointmentButton() {
+/** re:appointment must be resolved before any write can address it. */
+function requirePluginUuid(pluginUuid: string | undefined): string {
+  if (!pluginUuid) {
+    throw new Error("Missing plugin id");
+  }
+  return pluginUuid;
+}
+
+export function useCreateReAppointmentButton(pluginUuid: string | undefined) {
   const invalidate = useInvalidateOnSuccess();
   return useMutation({
     mutationFn: (config: Partial<ReAppointmentButtonConfig>) =>
-      createWorkspaceReAppointmentButton(config),
+      createWorkspaceReAppointmentButton(
+        requirePluginUuid(pluginUuid),
+        config,
+      ),
     onSuccess: invalidate,
   });
 }
 
-export function useUpdateReAppointmentButton() {
+export function useUpdateReAppointmentButton(pluginUuid: string | undefined) {
   const invalidate = useInvalidateOnSuccess();
   return useMutation({
     mutationFn: (vars: {
       id: number;
       config: Partial<ReAppointmentButtonConfig>;
-    }) => updateWorkspaceReAppointmentButton(vars.id, vars.config),
+    }) =>
+      updateWorkspaceReAppointmentButton(
+        requirePluginUuid(pluginUuid),
+        vars.id,
+        vars.config,
+      ),
     onSuccess: invalidate,
   });
 }
@@ -72,11 +91,15 @@ export function useUpdateReAppointmentButton() {
  * (unlike a full save) because status never changes slot ownership; on error we
  * roll the button back, and we still invalidate on settle to reconcile.
  */
-export function useToggleReAppointmentButtonStatus() {
+export function useToggleReAppointmentButtonStatus(
+  pluginUuid: string | undefined,
+) {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (vars: { id: number; status: ReAppointmentStatus }) =>
-      updateWorkspaceReAppointmentButton(vars.id, { status: vars.status }),
+      updateWorkspaceReAppointmentButton(requirePluginUuid(pluginUuid), vars.id, {
+        status: vars.status,
+      }),
     onMutate: async (vars) => {
       await queryClient.cancelQueries({ queryKey: RE_APPOINTMENT_KEY });
       const previous =
@@ -106,10 +129,11 @@ export function useToggleReAppointmentButtonStatus() {
   });
 }
 
-export function useDeleteReAppointmentButton() {
+export function useDeleteReAppointmentButton(pluginUuid: string | undefined) {
   const invalidate = useInvalidateOnSuccess();
   return useMutation({
-    mutationFn: (id: number) => deleteWorkspaceReAppointmentButton(id),
+    mutationFn: (id: number) =>
+      deleteWorkspaceReAppointmentButton(requirePluginUuid(pluginUuid), id),
     onSuccess: invalidate,
   });
 }
@@ -121,12 +145,20 @@ export function useDeleteReAppointmentButton() {
  * SSO answers `sso_required`, and the UI falls back to the manual picker rather
  * than spinning. The URL is button-scoped so the picker can preview the button.
  */
-export function useReAppointmentPickerUrl(buttonId: number, enabled: boolean) {
+export function useReAppointmentPickerUrl(
+  pluginUuid: string | undefined,
+  buttonId: number,
+  enabled: boolean,
+) {
   return useQuery({
     queryKey: ["workspace-wp-re-appointment-picker-url", buttonId],
     queryFn: () =>
-      getWorkspaceReAppointmentPickerUrl(window.location.origin, buttonId),
-    enabled: enabled && typeof window !== "undefined",
+      getWorkspaceReAppointmentPickerUrl(
+        pluginUuid as string,
+        window.location.origin,
+        buttonId,
+      ),
+    enabled: enabled && !!pluginUuid && typeof window !== "undefined",
     // The signed URL lives 15 minutes; refresh well before it expires.
     staleTime: 10 * 60 * 1000,
     gcTime: 10 * 60 * 1000,

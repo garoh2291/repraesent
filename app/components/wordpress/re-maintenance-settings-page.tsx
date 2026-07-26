@@ -1,3 +1,4 @@
+import { useParams } from "react-router";
 import { useTranslation } from "react-i18next";
 import { Eye, MessageSquareText, Power, Save } from "lucide-react";
 import { extractErrorMessage } from "~/lib/api/axios-instance";
@@ -31,6 +32,7 @@ import { cn } from "~/lib/utils";
  */
 export function ReMaintenanceSettingsPage() {
   const { t } = useTranslation();
+  const { pluginUuid = "" } = useParams<{ pluginUuid: string }>();
   const {
     settings,
     setSettings,
@@ -44,7 +46,7 @@ export function ReMaintenanceSettingsPage() {
     saveMutation,
     hasSite,
   } = useWorkspacePluginSettingsForm<ReMaintenanceSettings>(
-    "re-maintenance",
+    pluginUuid,
     DEFAULT_SETTINGS,
   );
 

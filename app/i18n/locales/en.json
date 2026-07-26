@@ -2232,7 +2232,7 @@
       "empty": "No plugins found",
       "emptyHint": "We couldn't detect any plugins installed on this site yet.",
       "inactive": "Inactive",
-      "manage": "Manage",
+      "manage": "Edit Settings",
       "managed": "Managed",
       "noMatch": "No matching plugins",
       "noMatchHint": "Try a different search term or filter.",
@@ -2674,10 +2674,10 @@
         "link": "Set to \"yes\" to wrap the widget in a link to the Google listing."
       }
     },
-    "signIn": "Sign in to admin",
+    "signIn": "Login to Website",
     "signInError": "Couldn't start site admin login. Check your access to this site.",
-    "signingIn": "Opening site admin…",
-    "ssoConnected": "Admin connected",
+    "signingIn": "Logging in…",
+    "ssoConnected": "Sign in to edit website content",
     "ssoNotConfigured": "Admin sign-in isn't set up for this site yet. Contact your Repraesent representative.",
     "ssoPending": "Not connected",
     "subtitle": "Plugin management, content settings, and admin access for your site.",
