@@ -55,6 +55,19 @@ export interface WpPlugin {
   active: boolean;
   /** Set when this is a Repraesent-managed plugin with its own settings. */
   settings_kind: WpPluginSettingsKind | null;
+  /**
+   * Catalog UUID (wp_plugins.id) for a managed plugin — the opaque reference
+   * used in settings URLs. Null for third-party plugins.
+   */
+  plugin_uuid: string | null;
+  /** Catalog display name for a managed plugin, otherwise null. */
+  display_name: string | null;
+  /** Catalog description for a managed plugin, otherwise null. */
+  description: string | null;
+  /** Raw inline SVG icon for a managed plugin, otherwise null. */
+  icon: string | null;
+  /** Catalog version for a managed plugin, otherwise null. */
+  version: string | null;
 }
 
 export interface WpPluginListResponse {
@@ -63,6 +76,30 @@ export interface WpPluginListResponse {
   candidates: number;
   /** True when the list was verified against an on-disk folder scan. */
   folder_scan_applied: boolean;
+}
+
+/** A row of the Repraesent plugin catalog (wp_plugins). */
+export interface WpPluginCatalogItem {
+  id: string;
+  name: WpPluginSettingsKind;
+  display_name: string;
+  description: string | null;
+  icon: string | null;
+  version: string | null;
+}
+
+/**
+ * The plugin catalog: id ↔ kind plus presentation. Lets the settings route
+ * resolve the opaque plugin UUID in the URL back to a kind. Global and
+ * effectively static.
+ */
+export async function getWorkspaceWpPluginCatalog(): Promise<
+  WpPluginCatalogItem[]
+> {
+  const res = await apiClient.get<WpPluginCatalogItem[]>(
+    "/wordpress/wp-plugins",
+  );
+  return res.data;
 }
 
 /**
@@ -124,10 +161,10 @@ export type WpSettingsPluginKind = Exclude<
  * supplies the defaults in that case.
  */
 export async function getWorkspacePluginSettings(
-  kind: WpSettingsPluginKind,
+  pluginUuid: string,
 ): Promise<WpPluginSettingsGetResponse> {
   const res = await apiClient.get<WpPluginSettingsGetResponse>(
-    `/wordpress/site/${kind}/settings`,
+    `/wordpress/site/plugins/${pluginUuid}/settings`,
   );
   return res.data;
 }
@@ -140,22 +177,24 @@ export async function getWorkspacePluginSettings(
  * than a partial patch. Returns the post-merge object, which is the new truth.
  */
 export async function putWorkspacePluginSettings(
-  kind: WpSettingsPluginKind,
+  pluginUuid: string,
   settings: Record<string, unknown>,
 ): Promise<WpPluginSettingsPutResponse> {
   const res = await apiClient.put<WpPluginSettingsPutResponse>(
-    `/wordpress/site/${kind}/settings`,
+    `/wordpress/site/plugins/${pluginUuid}/settings`,
     { settings },
   );
   return res.data;
 }
 
-/** `POST /wordpress/site/{kind}/{action}` — a plugin-defined operation. */
+/** `POST /wordpress/site/plugins/:pluginUuid/{action}` — a plugin-defined op. */
 async function pluginAction<T>(
-  kind: WpSettingsPluginKind,
+  pluginUuid: string,
   action: string,
 ): Promise<T> {
-  const res = await apiClient.post<T>(`/wordpress/site/${kind}/${action}`);
+  const res = await apiClient.post<T>(
+    `/wordpress/site/plugins/${pluginUuid}/${action}`,
+  );
   return res.data;
 }
 
@@ -163,27 +202,21 @@ async function pluginAction<T>(
  * Regenerate the XML sitemap on the workspace's site (clear cache, rebuild
  * from published pages, update stats, ping Google).
  */
-export function regenerateWorkspaceReIndexSitemap() {
+export function regenerateWorkspaceReIndexSitemap(pluginUuid: string) {
   return pluginAction<WpPluginSettingsPutResponse>(
-    "re-index",
+    pluginUuid,
     "regenerate-sitemap",
   );
 }
 
 /** Live Google Places fetch into the WordPress cache transient. */
-export function testFetchWorkspaceReReview() {
-  return pluginAction<WpPluginSettingsActionResponse>(
-    "re-review",
-    "test-fetch",
-  );
+export function testFetchWorkspaceReReview(pluginUuid: string) {
+  return pluginAction<WpPluginSettingsActionResponse>(pluginUuid, "test-fetch");
 }
 
 /** Wipe the re:reviews cache transient. */
-export function clearWorkspaceReReviewCache() {
-  return pluginAction<WpPluginSettingsActionResponse>(
-    "re-review",
-    "clear-cache",
-  );
+export function clearWorkspaceReReviewCache(pluginUuid: string) {
+  return pluginAction<WpPluginSettingsActionResponse>(pluginUuid, "clear-cache");
 }
 
 /* ── Media library ────────────────────────────────────────────────────── */
@@ -236,18 +269,21 @@ export interface ReAppointmentButtonsResponse {
  * the page and slot options the editor needs. A site with the plugin installed
  * but no buttons yet returns an empty `buttons` array — not an error.
  */
-export async function getWorkspaceReAppointmentButtons(): Promise<ReAppointmentButtonsResponse> {
+export async function getWorkspaceReAppointmentButtons(
+  pluginUuid: string,
+): Promise<ReAppointmentButtonsResponse> {
   const res = await apiClient.get<ReAppointmentButtonsResponse>(
-    "/wordpress/site/re-appointment/buttons",
+    `/wordpress/site/plugins/${pluginUuid}/buttons`,
   );
   return res.data;
 }
 
 export async function createWorkspaceReAppointmentButton(
+  pluginUuid: string,
   config: Partial<ReAppointmentButtonConfig>,
 ): Promise<ReAppointmentButton> {
   const res = await apiClient.post<ReAppointmentButton>(
-    "/wordpress/site/re-appointment/buttons",
+    `/wordpress/site/plugins/${pluginUuid}/buttons`,
     config,
   );
   return res.data;
@@ -258,21 +294,23 @@ export async function createWorkspaceReAppointmentButton(
  * config, so an omitted field keeps its current value.
  */
 export async function updateWorkspaceReAppointmentButton(
+  pluginUuid: string,
   buttonId: number,
   config: Partial<ReAppointmentButtonConfig>,
 ): Promise<ReAppointmentButton> {
   const res = await apiClient.put<ReAppointmentButton>(
-    `/wordpress/site/re-appointment/buttons/${buttonId}`,
+    `/wordpress/site/plugins/${pluginUuid}/buttons/${buttonId}`,
     config,
   );
   return res.data;
 }
 
 export async function deleteWorkspaceReAppointmentButton(
+  pluginUuid: string,
   buttonId: number,
 ): Promise<{ success: true; id: number }> {
   const res = await apiClient.delete<{ success: true; id: number }>(
-    `/wordpress/site/re-appointment/buttons/${buttonId}`,
+    `/wordpress/site/plugins/${pluginUuid}/buttons/${buttonId}`,
   );
   return res.data;
 }
@@ -294,11 +332,12 @@ export interface ReAppointmentPickerUrlResponse {
  * placement UI in that case.
  */
 export async function getWorkspaceReAppointmentPickerUrl(
+  pluginUuid: string,
   parentOrigin: string,
   buttonId: number,
 ): Promise<ReAppointmentPickerUrlResponse> {
   const res = await apiClient.get<ReAppointmentPickerUrlResponse>(
-    "/wordpress/site/re-appointment/picker-url",
+    `/wordpress/site/plugins/${pluginUuid}/picker-url`,
     { params: { parentOrigin, buttonId } },
   );
   return res.data;

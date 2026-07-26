@@ -16,30 +16,31 @@ import { pluginSettingsKey } from "./useWorkspacePluginSettings";
 
 function writeCache(
   queryClient: QueryClient,
+  pluginUuid: string,
   settings: Record<string, unknown>,
 ) {
   queryClient.setQueryData<WpPluginSettingsGetResponse>(
-    pluginSettingsKey("re-review"),
+    pluginSettingsKey(pluginUuid),
     { found: true, settings },
   );
 }
 
 /** Live Google Places fetch into the WordPress cache transient. */
-export function useWorkspaceReReviewTestFetch() {
+export function useWorkspaceReReviewTestFetch(pluginUuid: string) {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: testFetchWorkspaceReReview,
-    onSuccess: (data) => writeCache(queryClient, data.settings),
+    mutationFn: () => testFetchWorkspaceReReview(pluginUuid),
+    onSuccess: (data) => writeCache(queryClient, pluginUuid, data.settings),
   });
 }
 
 /** Wipe the re:reviews cache transient. */
-export function useWorkspaceReReviewClearCache() {
+export function useWorkspaceReReviewClearCache(pluginUuid: string) {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: clearWorkspaceReReviewCache,
-    onSuccess: (data) => writeCache(queryClient, data.settings),
+    mutationFn: () => clearWorkspaceReReviewCache(pluginUuid),
+    onSuccess: (data) => writeCache(queryClient, pluginUuid, data.settings),
   });
 }

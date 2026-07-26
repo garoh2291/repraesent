@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useParams } from "react-router";
 import { useTranslation } from "react-i18next";
 import {
   Check,
@@ -52,6 +53,7 @@ function settingsFromApi(raw: unknown): ReIndexSettings {
 
 export function ReIndexSettingsPage() {
   const { t } = useTranslation();
+  const { pluginUuid = "" } = useParams<{ pluginUuid: string }>();
   const [tab, setTab] = useState<TabId>("indexing");
   const {
     settings,
@@ -68,12 +70,12 @@ export function ReIndexSettingsPage() {
     loadError,
     saveMutation,
   } = useWorkspacePluginSettingsForm<ReIndexSettings>(
-    "re-index",
+    pluginUuid,
     DEFAULT_SETTINGS,
     { fromApi: settingsFromApi },
   );
 
-  const regenerateMutation = useWorkspaceReIndexRegenerateSitemap();
+  const regenerateMutation = useWorkspaceReIndexRegenerateSitemap(pluginUuid);
   const regenerating = regenerateMutation.isPending;
 
   const sitemapUrl = sitemapUrlFromSiteUrl(site?.url);

@@ -6,18 +6,18 @@ import {
   getWorkspacePluginSettings,
   putWorkspacePluginSettings,
   type WpPluginSettingsGetResponse,
-  type WpSettingsPluginKind,
 } from "~/lib/api/wordpress-hub";
 import { extractErrorMessage } from "~/lib/api/axios-instance";
 import { mergeRecordWithDefaults } from "~/lib/utils/deep-merge";
 import { useWorkspaceWpSite } from "./useWorkspaceWpSite";
 
 /**
- * Cache key for one plugin's settings blob. Exported because the plugin-specific
- * action hooks (sitemap regenerate, reviews cache) write into the same entry.
+ * Cache key for one plugin's settings blob, keyed by the plugin's opaque
+ * catalog UUID. Exported because the plugin-specific action hooks (sitemap
+ * regenerate, reviews cache) write into the same entry.
  */
-export function pluginSettingsKey(kind: WpSettingsPluginKind) {
-  return ["workspace-wp-plugin-settings", kind] as const;
+export function pluginSettingsKey(pluginUuid: string) {
+  return ["workspace-wp-plugin-settings", pluginUuid] as const;
 }
 
 /**
@@ -27,13 +27,13 @@ export function pluginSettingsKey(kind: WpSettingsPluginKind) {
  * has no WordPress site at all.
  */
 export function useWorkspacePluginSettings(
-  kind: WpSettingsPluginKind,
+  pluginUuid: string,
   enabled: boolean,
 ) {
   return useQuery({
-    queryKey: pluginSettingsKey(kind),
-    queryFn: () => getWorkspacePluginSettings(kind),
-    enabled,
+    queryKey: pluginSettingsKey(pluginUuid),
+    queryFn: () => getWorkspacePluginSettings(pluginUuid),
+    enabled: enabled && !!pluginUuid,
     // Reading wp_options goes over an SSH tunnel, and the form is uncontrolled
     // from the cache's point of view: never refetch behind someone who is typing.
     staleTime: Infinity,
@@ -45,15 +45,15 @@ export function useWorkspacePluginSettings(
  * Persist the full settings object. The server's post-merge response becomes the
  * new cache truth, so a later remount reflects exactly what is in wp_options.
  */
-export function useWorkspacePluginSettingsMutation(kind: WpSettingsPluginKind) {
+export function useWorkspacePluginSettingsMutation(pluginUuid: string) {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: (settings: Record<string, unknown>) =>
-      putWorkspacePluginSettings(kind, settings),
+      putWorkspacePluginSettings(pluginUuid, settings),
     onSuccess: (data) => {
       queryClient.setQueryData<WpPluginSettingsGetResponse>(
-        pluginSettingsKey(kind),
+        pluginSettingsKey(pluginUuid),
         { found: true, settings: data.settings },
       );
     },
@@ -74,7 +74,7 @@ export function useWorkspacePluginSettingsMutation(kind: WpSettingsPluginKind) {
  * at the cost of a knob per caller. They get the mutation and write their own.
  */
 export function useWorkspacePluginSettingsForm<T extends object>(
-  kind: WpSettingsPluginKind,
+  pluginUuid: string,
   defaults: T,
   options: {
     /** Transform the server payload on the way into the form. */
@@ -104,8 +104,8 @@ export function useWorkspacePluginSettingsForm<T extends object>(
 
   const siteQuery = useWorkspaceWpSite(true);
   const hasSite = !!siteQuery.data;
-  const settingsQuery = useWorkspacePluginSettings(kind, hasSite);
-  const saveMutation = useWorkspacePluginSettingsMutation(kind);
+  const settingsQuery = useWorkspacePluginSettings(pluginUuid, hasSite);
+  const saveMutation = useWorkspacePluginSettingsMutation(pluginUuid);
 
   const seededAt = useRef<number | null>(null);
   const skipNext = useRef(false);

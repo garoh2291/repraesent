@@ -58,7 +58,7 @@ export default [
       route("tasks", "routes/tasks.tsx"),
       route("website", "routes/wordpress.tsx"),
       route(
-        "website/settings/:settingsKind",
+        "website/settings/:pluginUuid",
         "routes/wordpress.settings.$settingsKind.tsx",
       ),
       route("settings", "routes/settings._layout.tsx", [

@@ -108,22 +108,16 @@ export default function WordPressPage() {
                   <Globe className="h-6 w-6" />
                 </div>
                 <div className="min-w-0">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <h2 className="truncate text-lg font-semibold tracking-tight">
-                      {siteHostname(site.url)}
-                    </h2>
-                    <span className="shrink-0 rounded-full border bg-muted/60 px-2 py-0.5 text-[11px] font-medium capitalize text-muted-foreground">
-                      {site.type}
-                    </span>
-                  </div>
                   <a
                     href={site.url}
                     target="_blank"
                     rel="noreferrer"
-                    className="mt-0.5 inline-flex max-w-full items-center gap-1 text-sm text-muted-foreground transition-colors hover:text-foreground"
+                    className="group inline-flex max-w-full items-center gap-1.5"
                   >
-                    <span className="truncate">{site.url}</span>
-                    <ExternalLink className="h-3 w-3 shrink-0" />
+                    <h2 className="truncate text-lg font-semibold tracking-tight transition-colors group-hover:text-primary">
+                      {siteHostname(site.url)}
+                    </h2>
+                    <ExternalLink className="h-3.5 w-3.5 shrink-0 text-muted-foreground transition-colors group-hover:text-primary" />
                   </a>
                 </div>
               </div>

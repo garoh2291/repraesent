@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { useParams } from "react-router";
 import { useTranslation } from "react-i18next";
 import { FileText, Palette, Save, Settings } from "lucide-react";
 import { extractErrorMessage } from "~/lib/api/axios-instance";
@@ -33,6 +34,7 @@ import { PageShell } from "~/components/wordpress/re-cookie/fields";
  */
 export function ReCookieSettingsPage() {
   const { t } = useTranslation();
+  const { pluginUuid = "" } = useParams<{ pluginUuid: string }>();
   const [tab, setTab] = useState<TabId>("design");
   const [activeLang, setActiveLang] = useState<ReCookieLang>("de");
   /** Last state known to be on the server, so "unsaved changes" is truthful. */
@@ -47,7 +49,7 @@ export function ReCookieSettingsPage() {
     saving,
     loadError,
     saveMutation,
-  } = useWorkspacePluginSettingsForm<ReCookieSettings>("re-cookie", DEFAULTS, {
+  } = useWorkspacePluginSettingsForm<ReCookieSettings>(pluginUuid, DEFAULTS, {
     // This screen tracks its own dirty state, and the language tabs follow
     // whatever the site has configured.
     onSeeded: (merged) => {

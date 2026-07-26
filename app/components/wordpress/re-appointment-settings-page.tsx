@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { useParams } from "react-router";
 import { useTranslation } from "react-i18next";
 import { extractErrorMessage } from "~/lib/api/axios-instance";
 import { useWorkspaceWpSite } from "~/lib/hooks/useWorkspaceWpSite";
@@ -42,15 +43,16 @@ import { PageShell } from "~/components/wordpress/fields";
  */
 export function ReAppointmentSettingsPage() {
   const { t } = useTranslation();
+  const { pluginUuid } = useParams<{ pluginUuid: string }>();
 
   const siteQuery = useWorkspaceWpSite(true);
   const hasSite = !!siteQuery.data;
-  const listQuery = useWorkspaceReAppointmentButtons(hasSite);
+  const listQuery = useWorkspaceReAppointmentButtons(pluginUuid, hasSite);
 
-  const createMutation = useCreateReAppointmentButton();
-  const updateMutation = useUpdateReAppointmentButton();
-  const deleteMutation = useDeleteReAppointmentButton();
-  const toggleStatusMutation = useToggleReAppointmentButtonStatus();
+  const createMutation = useCreateReAppointmentButton(pluginUuid);
+  const updateMutation = useUpdateReAppointmentButton(pluginUuid);
+  const deleteMutation = useDeleteReAppointmentButton(pluginUuid);
+  const toggleStatusMutation = useToggleReAppointmentButtonStatus(pluginUuid);
 
   const loading = siteQuery.isLoading || listQuery.isLoading;
   const buttons = useMemo(
