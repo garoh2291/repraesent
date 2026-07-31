@@ -1,4 +1,5 @@
 import { useMemo } from "react";
+import { useParams } from "react-router";
 import { useTranslation } from "react-i18next";
 import { Check, CircleSlash, Grid2x2, Pencil, Plus, Trash2 } from "lucide-react";
 import type {
@@ -7,6 +8,8 @@ import type {
   ReAppointmentSlot,
 } from "~/lib/wordpress/plugin-settings-types";
 import { cn } from "~/lib/utils";
+import { formatPluginSettingsTitle } from "~/lib/utils/wordpress-plugin-kind";
+import { useResolvePluginKind } from "~/lib/hooks/useWorkspaceWpPluginCatalog";
 import { PluginSettingsBackLink } from "~/components/wordpress/plugin-settings-chrome";
 import { Badge } from "~/components/ui/badge";
 import { Button } from "~/components/ui/button";
@@ -34,6 +37,12 @@ export function ButtonList({
   onCopied: () => void;
 }) {
   const { t } = useTranslation();
+  const { pluginUuid } = useParams<{ pluginUuid: string }>();
+  const { catalogItem } = useResolvePluginKind(pluginUuid);
+  const pageTitle = formatPluginSettingsTitle(
+    catalogItem?.display_name,
+    "re:appointment",
+  );
 
   const total = buttons.length;
   const active = buttons.filter((b) => b.status === "active").length;
@@ -60,7 +69,7 @@ export function ButtonList({
         <div className="flex flex-col gap-1">
           <div className="flex flex-wrap items-center gap-2">
             <h1 className="text-xl font-semibold tracking-tight text-foreground sm:text-2xl">
-              re:appointment
+              {pageTitle}
             </h1>
             <Badge variant="outline">v{PLUGIN_VERSION}</Badge>
           </div>

@@ -33,11 +33,11 @@ export {
   ToggleField,
 } from "~/components/wordpress/fields";
 
-/** re:cookie runs wider than the other settings screens and spaces its own sections. */
+/** Same shell width as every other plugin settings screen; sections own their spacing. */
 export function PageShell(
   props: Omit<React.ComponentProps<typeof SharedPageShell>, "width" | "spaced">,
 ) {
-  return <SharedPageShell {...props} width="lg" spaced={false} />;
+  return <SharedPageShell {...props} width="md" spaced={false} />;
 }
 
 export function FieldGroup({

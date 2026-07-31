@@ -4,11 +4,13 @@ import { useTranslation } from "react-i18next";
 import { FileText, Palette, Save, Settings } from "lucide-react";
 import { extractErrorMessage } from "~/lib/api/axios-instance";
 import { useWorkspacePluginSettingsForm } from "~/lib/hooks/useWorkspacePluginSettings";
+import { useResolvePluginKind } from "~/lib/hooks/useWorkspaceWpPluginCatalog";
 import type {
   ReCookieLang,
   ReCookieSettings,
 } from "~/lib/wordpress/plugin-settings-types";
-import { PluginSettingsBackLink } from "~/components/wordpress/plugin-settings-chrome";
+import { formatPluginSettingsTitle } from "~/lib/utils/wordpress-plugin-kind";
+import { PluginSettingsBackLink, PluginSettingsLoadingPage } from "~/components/wordpress/plugin-settings-chrome";
 import { Badge } from "~/components/ui/badge";
 import { Button } from "~/components/ui/button";
 import { Spinner } from "~/components/ui/spinner";
@@ -35,6 +37,11 @@ import { PageShell } from "~/components/wordpress/re-cookie/fields";
 export function ReCookieSettingsPage() {
   const { t } = useTranslation();
   const { pluginUuid = "" } = useParams<{ pluginUuid: string }>();
+  const { catalogItem } = useResolvePluginKind(pluginUuid);
+  const pageTitle = formatPluginSettingsTitle(
+    catalogItem?.display_name,
+    "re:cookie",
+  );
   const [tab, setTab] = useState<TabId>("design");
   const [activeLang, setActiveLang] = useState<ReCookieLang>("de");
   /** Last state known to be on the server, so "unsaved changes" is truthful. */
@@ -79,14 +86,7 @@ export function ReCookieSettingsPage() {
   }
 
   if (loading) {
-    return (
-      <PageShell>
-        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-          <Spinner className="size-4" />
-          {t("wordpress.reCookie.loading", "Loading settings…")}
-        </div>
-      </PageShell>
-    );
+    return <PluginSettingsLoadingPage />;
   }
 
   if (!hasSite) {
@@ -115,7 +115,7 @@ export function ReCookieSettingsPage() {
           <div className="flex min-w-0 flex-col gap-0.5">
             <div className="flex flex-wrap items-center gap-2">
               <h1 className="text-xl font-semibold tracking-tight text-foreground sm:text-2xl">
-                re:cookie
+                {pageTitle}
               </h1>
               <Badge variant="outline">v{PLUGIN_VERSION}</Badge>
               {dirty ? (

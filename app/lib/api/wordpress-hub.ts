@@ -4,6 +4,7 @@ import type {
   ReAppointmentButtonConfig,
   ReAppointmentPage,
   ReAppointmentSlot,
+  ReIndexPageSeoListResponse,
 } from "~/lib/wordpress/plugin-settings-types";
 
 /** The WordPress site the current workspace owns, or null if it has none. */
@@ -29,10 +30,16 @@ export async function getWorkspaceWpSite(): Promise<WorkspaceWpSite | null> {
  * site. Returns the redirect URL to full-navigate to — the browser must
  * actually navigate there so WordPress can set its auth cookie on its own
  * domain.
+ *
+ * Optional `redirect` is a `/wp-admin/…` path (or absolute admin URL) the
+ * gateway should land on after auth — used by Edit SEO and similar deep links.
  */
-export async function requestWpSsoLogin(): Promise<string> {
+export async function requestWpSsoLogin(opts?: {
+  redirect?: string;
+}): Promise<string> {
   const res = await apiClient.post<{ redirect_url: string }>(
     "/wordpress/site/login",
+    opts?.redirect ? { redirect: opts.redirect } : undefined,
   );
   return res.data.redirect_url;
 }
@@ -200,13 +207,23 @@ async function pluginAction<T>(
 
 /**
  * Regenerate the XML sitemap on the workspace's site (clear cache, rebuild
- * from published pages, update stats, ping Google).
+ * from published pages, update stats).
  */
 export function regenerateWorkspaceReIndexSitemap(pluginUuid: string) {
   return pluginAction<WpPluginSettingsPutResponse>(
     pluginUuid,
     "regenerate-sitemap",
   );
+}
+
+/** Per-page SEO overview (read-only; edits happen in WP admin). */
+export async function getWorkspaceReIndexPageSeo(
+  pluginUuid: string,
+): Promise<ReIndexPageSeoListResponse> {
+  const res = await apiClient.get<ReIndexPageSeoListResponse>(
+    `/wordpress/site/plugins/${pluginUuid}/page-seo`,
+  );
+  return res.data;
 }
 
 /** Live Google Places fetch into the WordPress cache transient. */

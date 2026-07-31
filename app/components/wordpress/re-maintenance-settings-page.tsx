@@ -3,8 +3,10 @@ import { useTranslation } from "react-i18next";
 import { Eye, MessageSquareText, Power, Save } from "lucide-react";
 import { extractErrorMessage } from "~/lib/api/axios-instance";
 import { useWorkspacePluginSettingsForm } from "~/lib/hooks/useWorkspacePluginSettings";
+import { useResolvePluginKind } from "~/lib/hooks/useWorkspaceWpPluginCatalog";
 import type { ReMaintenanceSettings } from "~/lib/wordpress/plugin-settings-types";
-import { PluginSettingsBackLink } from "~/components/wordpress/plugin-settings-chrome";
+import { formatPluginSettingsTitle } from "~/lib/utils/wordpress-plugin-kind";
+import { PluginSettingsBackLink, PluginSettingsLoadingPage } from "~/components/wordpress/plugin-settings-chrome";
 import { Badge } from "~/components/ui/badge";
 import { Button } from "~/components/ui/button";
 import { Label } from "~/components/ui/label";
@@ -33,6 +35,11 @@ import { cn } from "~/lib/utils";
 export function ReMaintenanceSettingsPage() {
   const { t } = useTranslation();
   const { pluginUuid = "" } = useParams<{ pluginUuid: string }>();
+  const { catalogItem } = useResolvePluginKind(pluginUuid);
+  const pageTitle = formatPluginSettingsTitle(
+    catalogItem?.display_name,
+    "re:maintenance",
+  );
   const {
     settings,
     setSettings,
@@ -69,13 +76,7 @@ export function ReMaintenanceSettingsPage() {
   }
 
   if (loading) {
-    return (
-      <PageShell>
-        <p className="text-sm text-muted-foreground">
-          {t("wordpress.reMaintenance.loading", "Loading…")}
-        </p>
-      </PageShell>
-    );
+    return <PluginSettingsLoadingPage />;
   }
 
   if (!hasSite) {
@@ -101,7 +102,7 @@ export function ReMaintenanceSettingsPage() {
         <div className="flex flex-col gap-1">
           <div className="flex flex-wrap items-center gap-2">
             <h1 className="text-xl font-semibold tracking-tight text-foreground sm:text-2xl">
-              re:maintenance
+              {pageTitle}
             </h1>
             <Badge variant="outline">v{PLUGIN_VERSION}</Badge>
             {dirty ? (

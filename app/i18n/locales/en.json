@@ -2561,6 +2561,7 @@
       "statPing": "Last Google ping",
       "subtitle": "Technical SEO — meta, sitemap & Search Console",
       "tabIndexing": "Indexing & Verification",
+      "tabPages": "Page SEO",
       "tabSeo": "SEO & Identity",
       "tabs": "re:index settings",
       "tagline": "Tagline",
@@ -2590,6 +2591,34 @@
           "label": "Date Archives",
           "description": "Monthly, yearly, and author archive pages."
         }
+      },
+      "pageSeo": {
+        "colActions": "Actions",
+        "colDesc": "Meta description",
+        "colPage": "Page",
+        "colTitle": "SEO title",
+        "customTitle": "Custom title",
+        "defaultTitle": "Default",
+        "edit": "Edit SEO",
+        "empty": "No pages or posts yet. Once you create one, it will show up here.",
+        "hiddenFromSearch": "Hidden from search",
+        "noDescription": "No description",
+        "noResults": "No pages match that search.",
+        "noindex": "Hidden",
+        "notSet": "Not set",
+        "note": "Values are edited in the \"SEO — re:index\" panel in the WordPress editor sidebar. Greyed titles are not set on the page itself — they are what your sitewide format or WordPress produces for it.",
+        "search": "Search by title or slug…",
+        "ssoFailed": "Couldn't sign in to WordPress admin. Connect SSO for this site first.",
+        "status": {
+          "draft": "Draft",
+          "future": "Scheduled",
+          "pending": "Pending Review",
+          "private": "Private"
+        },
+        "subtitle": "Overrides for individual posts and pages",
+        "title": "Per-page SEO",
+        "total": "Total",
+        "untitled": "(no title)"
       },
       "verify": {
         "google": "Google Search Console",

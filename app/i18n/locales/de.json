@@ -2563,6 +2563,7 @@
       "statPing": "Letzter Google-Ping",
       "subtitle": "Technisches SEO — Meta, Sitemap & Search Console",
       "tabIndexing": "Indexierung & Verifizierung",
+      "tabPages": "Seiten-SEO",
       "tabSeo": "SEO & Identität",
       "tabs": "re:index-Einstellungen",
       "tagline": "Slogan",
@@ -2592,6 +2593,34 @@
           "label": "Datumsarchive",
           "description": "Monats-, Jahres- und Autorenarchivseiten."
         }
+      },
+      "pageSeo": {
+        "colActions": "Aktionen",
+        "colDesc": "Meta-Beschreibung",
+        "colPage": "Seite",
+        "colTitle": "SEO-Titel",
+        "customTitle": "Eigener Titel",
+        "defaultTitle": "Standard",
+        "edit": "SEO bearbeiten",
+        "empty": "Noch keine Seiten oder Beiträge. Sobald Sie eine erstellen, erscheint sie hier.",
+        "hiddenFromSearch": "Aus der Suche ausgeblendet",
+        "noDescription": "Keine Beschreibung",
+        "noResults": "Keine Seiten entsprechen dieser Suche.",
+        "noindex": "Ausgeblendet",
+        "notSet": "Nicht gesetzt",
+        "note": "Werte werden im Panel „SEO — re:index“ in der Seitenleiste des WordPress-Editors bearbeitet. Ausgegraute Titel sind nicht auf der Seite selbst gesetzt — sie stammen aus Ihrem seitenweiten Format oder von WordPress.",
+        "search": "Nach Titel oder Slug suchen…",
+        "ssoFailed": "Anmeldung in der WordPress-Adminoberfläche fehlgeschlagen. Verbinden Sie zuerst SSO für diese Website.",
+        "status": {
+          "draft": "Entwurf",
+          "future": "Geplant",
+          "pending": "Ausstehende Überprüfung",
+          "private": "Privat"
+        },
+        "subtitle": "Überschreibungen für einzelne Beiträge und Seiten",
+        "title": "SEO pro Seite",
+        "total": "Gesamt",
+        "untitled": "(ohne Titel)"
       },
       "verify": {
         "google": "Google Search Console",

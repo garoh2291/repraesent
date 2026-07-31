@@ -31,6 +31,7 @@ import {
   flash,
   toConfig,
 } from "~/components/wordpress/re-appointment/constants";
+import { PluginSettingsLoadingPage } from "~/components/wordpress/plugin-settings-chrome";
 import { PageShell } from "~/components/wordpress/fields";
 
 /**
@@ -154,13 +155,7 @@ export function ReAppointmentSettingsPage() {
   }
 
   if (loading) {
-    return (
-      <PageShell>
-        <p className="text-sm text-muted-foreground">
-          {t("wordpress.reAppointment.loading", "Loading…")}
-        </p>
-      </PageShell>
-    );
+    return <PluginSettingsLoadingPage />;
   }
 
   if (!hasSite) {

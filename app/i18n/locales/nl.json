@@ -2561,6 +2561,7 @@
       "statPing": "Laatste Google-ping",
       "subtitle": "Technische SEO — meta, sitemap en Search Console",
       "tabIndexing": "Indexering en verificatie",
+      "tabPages": "Pagina-SEO",
       "tabSeo": "SEO en identiteit",
       "tabs": "re:index-instellingen",
       "tagline": "Slogan",
@@ -2590,6 +2591,34 @@
           "label": "Datumarchieven",
           "description": "Maandelijkse, jaarlijkse en auteursarchiefpagina's."
         }
+      },
+      "pageSeo": {
+        "colActions": "Acties",
+        "colDesc": "Meta-beschrijving",
+        "colPage": "Pagina",
+        "colTitle": "SEO-titel",
+        "customTitle": "Aangepaste titel",
+        "defaultTitle": "Standaard",
+        "edit": "SEO bewerken",
+        "empty": "Nog geen pagina's of berichten. Zodra u er een aanmaakt, verschijnt die hier.",
+        "hiddenFromSearch": "Verborgen voor zoeken",
+        "noDescription": "Geen beschrijving",
+        "noResults": "Geen pagina's komen overeen met die zoekopdracht.",
+        "noindex": "Verborgen",
+        "notSet": "Niet ingesteld",
+        "note": "Waarden worden bewerkt in het paneel „SEO — re:index” in de zijbalk van de WordPress-editor. Grijze titels zijn niet op de pagina zelf ingesteld — het zijn de titels die uw sitebrede formaat of WordPress produceert.",
+        "search": "Zoeken op titel of slug…",
+        "ssoFailed": "Kon niet inloggen op de WordPress-admin. Verbind eerst SSO voor deze site.",
+        "status": {
+          "draft": "Concept",
+          "future": "Gepland",
+          "pending": "In afwachting van controle",
+          "private": "Privé"
+        },
+        "subtitle": "Aanpassingen voor individuele berichten en pagina's",
+        "title": "SEO per pagina",
+        "total": "Totaal",
+        "untitled": "(geen titel)"
       },
       "verify": {
         "google": "Google Search Console",

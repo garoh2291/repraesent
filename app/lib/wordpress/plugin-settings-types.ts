@@ -97,7 +97,6 @@ export type ReIndexVerification = {
 export type ReIndexStats = {
   page_count: number;
   last_generated: string;
-  last_ping: string;
 };
 
 export type ReIndexSeoFormats = {
@@ -128,6 +127,35 @@ export type ReIndexSettings = {
     image_url: string;
     og_description: string;
     compressed_url: string;
+  };
+};
+
+/** One row of the re:index Page SEO overview (post meta, not settings). */
+export type ReIndexPageSeoRow = {
+  id: number;
+  title: string;
+  slug: string;
+  post_type: string;
+  post_status: string;
+  meta_title: string;
+  meta_description: string;
+  noindex: boolean;
+  edit_url?: string;
+  /** Public URL of the live page; absent for anything not published. */
+  view_url?: string;
+  /** The title a visitor gets, tokens resolved; absent for `theme`. */
+  effective_title?: string;
+  /** Which layer writes the title: this page, the sitewide format, or the theme. */
+  title_source: "override" | "sitewide" | "theme";
+};
+
+export type ReIndexPageSeoListResponse = {
+  pages: ReIndexPageSeoRow[];
+  summary: {
+    total: number;
+    with_title: number;
+    no_description: number;
+    hidden: number;
   };
 };
 
