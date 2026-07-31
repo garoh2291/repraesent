@@ -2563,6 +2563,7 @@
       "statPing": "Dernier ping Google",
       "subtitle": "SEO technique — meta, sitemap et Search Console",
       "tabIndexing": "Indexation et vérification",
+      "tabPages": "SEO des pages",
       "tabSeo": "SEO et identité",
       "tabs": "Paramètres re:index",
       "tagline": "Slogan",
@@ -2592,6 +2593,34 @@
           "label": "Archives par date",
           "description": "Pages d'archives mensuelles, annuelles et par auteur."
         }
+      },
+      "pageSeo": {
+        "colActions": "Actions",
+        "colDesc": "Meta description",
+        "colPage": "Page",
+        "colTitle": "Titre SEO",
+        "customTitle": "Titre personnalisé",
+        "defaultTitle": "Par défaut",
+        "edit": "Modifier le SEO",
+        "empty": "Aucune page ou article pour l'instant. Dès que vous en créez un, il apparaîtra ici.",
+        "hiddenFromSearch": "Masqué de la recherche",
+        "noDescription": "Sans description",
+        "noResults": "Aucune page ne correspond à cette recherche.",
+        "noindex": "Masqué",
+        "notSet": "Non défini",
+        "note": "Les valeurs se modifient dans le panneau « SEO — re:index » de la barre latérale de l'éditeur WordPress. Les titres grisés ne sont pas définis sur la page elle-même — ce sont ceux produits par votre format global ou par WordPress.",
+        "search": "Rechercher par titre ou slug…",
+        "ssoFailed": "Impossible de se connecter à l'administration WordPress. Connectez d'abord le SSO pour ce site.",
+        "status": {
+          "draft": "Brouillon",
+          "future": "Planifié",
+          "pending": "En attente de relecture",
+          "private": "Privé"
+        },
+        "subtitle": "Personnalisations pour les articles et pages individuels",
+        "title": "SEO par page",
+        "total": "Total",
+        "untitled": "(sans titre)"
       },
       "verify": {
         "google": "Google Search Console",

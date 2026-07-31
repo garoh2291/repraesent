@@ -16,12 +16,7 @@ import {
   StatTile,
 } from "~/components/wordpress/fields";
 
-const STATUS_LABELS: Record<string, string> = {
-  draft: "Draft",
-  pending: "Pending Review",
-  private: "Private",
-  future: "Scheduled",
-};
+const STATUS_KEYS = ["draft", "pending", "private", "future"] as const;
 
 function trimWords(text: string, count: number): string {
   const words = text.trim().split(/\s+/).filter(Boolean);
@@ -57,9 +52,12 @@ function PageRow({
   const title =
     row.title.trim() ||
     t("wordpress.reIndex.pageSeo.untitled", "(no title)");
+  const statusKey = STATUS_KEYS.find((k) => k === row.post_status);
   const statusLabel =
     row.post_status !== "publish"
-      ? STATUS_LABELS[row.post_status] ?? row.post_status
+      ? statusKey
+        ? t(`wordpress.reIndex.pageSeo.status.${statusKey}`)
+        : row.post_status
       : null;
 
   return (
