@@ -14,7 +14,7 @@ export const DEFAULT_SETTINGS: ReIndexSettings = {
     facebook: "",
     linkedin: "",
   },
-  stats: { page_count: 0, last_generated: "", last_ping: "" },
+  stats: { page_count: 0, last_generated: "" },
   seo: {
     enabled: false,
     formats: {
@@ -37,7 +37,7 @@ export const DEFAULT_SETTINGS: ReIndexSettings = {
 };
 
 /** Version badge — must track `RE_INDEX_VERSION` in re-index.php. */
-export const PLUGIN_VERSION = "1.0.0";
+export const PLUGIN_VERSION = "1.1.0";
 
 export const FORMAT_KEYS = [
   "front_page",
@@ -174,7 +174,18 @@ export const TITLE_TOKENS = [
   ["[sep]", "sep"],
 ] as const;
 
-export type TabId = "indexing" | "seo";
+export type TabId = "indexing" | "seo" | "pages";
+
+/** Query param carrying the open tab, so a refresh or a shared link reopens it. */
+export const TAB_PARAM = "tab";
+
+const TAB_IDS: readonly TabId[] = ["indexing", "seo", "pages"];
+
+/** The tab a `?tab=` value names, falling back to the first tab when it is
+ * missing or not one we have. */
+export function tabFromParam(value: string | null): TabId {
+  return TAB_IDS.includes(value as TabId) ? (value as TabId) : "indexing";
+}
 
 export type PatchSettings = (
   updater: (prev: ReIndexSettings) => ReIndexSettings,

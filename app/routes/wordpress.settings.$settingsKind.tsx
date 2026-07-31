@@ -2,6 +2,7 @@ import { Link, useParams } from "react-router";
 import { useTranslation } from "react-i18next";
 import i18n from "~/i18n";
 import { useDocumentMeta } from "~/lib/hooks/use-document-meta";
+import { PluginSettingsLoadingPage } from "~/components/wordpress/plugin-settings-chrome";
 import { ReCookieSettingsPage } from "~/components/wordpress/re-cookie-settings-page";
 import { ReIndexSettingsPage } from "~/components/wordpress/re-index-settings-page";
 import { ReMaintenanceSettingsPage } from "~/components/wordpress/re-maintenance-settings-page";
@@ -47,15 +48,7 @@ export default function WordPressPluginSettingsRoute() {
   const { kind, isLoading } = useResolvePluginKind(pluginUuid);
 
   if (isLoading || kind === undefined) {
-    return (
-      <div className="min-h-full w-full bg-background">
-        <div className="mx-auto w-full max-w-[1280px] p-4 py-10! sm:p-6">
-          <p className="text-sm text-muted-foreground">
-            {t("common.loading", "Loading…")}
-          </p>
-        </div>
-      </div>
-    );
+    return <PluginSettingsLoadingPage />;
   }
 
   if (kind === null) {

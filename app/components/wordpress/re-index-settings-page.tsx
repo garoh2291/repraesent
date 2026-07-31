@@ -1,5 +1,4 @@
-import { useState } from "react";
-import { useParams } from "react-router";
+import { useParams, useSearchParams } from "react-router";
 import { useTranslation } from "react-i18next";
 import {
   Check,
@@ -9,25 +8,27 @@ import {
   Layers,
   Save,
   Search,
-  Send,
 } from "lucide-react";
 import { extractErrorMessage } from "~/lib/api/axios-instance";
 import { useWorkspacePluginSettingsForm } from "~/lib/hooks/useWorkspacePluginSettings";
 import { useWorkspaceReIndexRegenerateSitemap } from "~/lib/hooks/useWorkspaceReIndexSettings";
+import { useResolvePluginKind } from "~/lib/hooks/useWorkspaceWpPluginCatalog";
 import type { ReIndexSettings } from "~/lib/wordpress/plugin-settings-types";
 import { mergeRecordWithDefaults } from "~/lib/utils/deep-merge";
-import { PluginSettingsBackLink } from "~/components/wordpress/plugin-settings-chrome";
+import { formatPluginSettingsTitle } from "~/lib/utils/wordpress-plugin-kind";
+import { PluginSettingsBackLink, PluginSettingsLoadingPage } from "~/components/wordpress/plugin-settings-chrome";
 import { Badge } from "~/components/ui/badge";
 import { Button } from "~/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "~/components/ui/tabs";
 import {
   DEFAULT_SETTINGS,
   PLUGIN_VERSION,
+  TAB_PARAM,
   flash,
   hasVerificationCode,
   sitemapUrlFromSiteUrl,
+  tabFromParam,
   verificationForForm,
-  type TabId,
 } from "~/components/wordpress/re-index/constants";
 import {
   InfoNote,
@@ -35,6 +36,7 @@ import {
   StatTile,
 } from "~/components/wordpress/fields";
 import { IndexingPanel } from "~/components/wordpress/re-index/indexing-panel";
+import { PageSeoPanel } from "~/components/wordpress/re-index/page-seo-panel";
 import { SeoPanel } from "~/components/wordpress/re-index/seo-panel";
 
 /**
@@ -54,7 +56,26 @@ function settingsFromApi(raw: unknown): ReIndexSettings {
 export function ReIndexSettingsPage() {
   const { t } = useTranslation();
   const { pluginUuid = "" } = useParams<{ pluginUuid: string }>();
-  const [tab, setTab] = useState<TabId>("indexing");
+  const { catalogItem } = useResolvePluginKind(pluginUuid);
+  const pageTitle = formatPluginSettingsTitle(
+    catalogItem?.display_name,
+    "re:index",
+  );
+  // The open tab lives in the URL, so a refresh (or a pasted link) reopens it.
+  const [searchParams, setSearchParams] = useSearchParams();
+  const tab = tabFromParam(searchParams.get(TAB_PARAM));
+
+  function selectTab(next: string) {
+    setSearchParams(
+      (prev) => {
+        const params = new URLSearchParams(prev);
+        params.set(TAB_PARAM, next);
+        return params;
+      },
+      // Replace, so switching tabs doesn't stack up history entries.
+      { replace: true, preventScrollReset: true },
+    );
+  }
   const {
     settings,
     setSettings,
@@ -127,13 +148,7 @@ export function ReIndexSettingsPage() {
   }
 
   if (loading) {
-    return (
-      <PageShell>
-        <p className="text-sm text-muted-foreground">
-          {t("wordpress.reIndex.loading", "Loading…")}
-        </p>
-      </PageShell>
-    );
+    return <PluginSettingsLoadingPage />;
   }
 
   if (!hasSite) {
@@ -159,7 +174,7 @@ export function ReIndexSettingsPage() {
         <div className="flex flex-col gap-1">
           <div className="flex flex-wrap items-center gap-2">
             <h1 className="text-xl font-semibold tracking-tight text-foreground sm:text-2xl">
-              re:index
+              {pageTitle}
             </h1>
             <Badge variant="outline">v{PLUGIN_VERSION}</Badge>
             {dirty ? (
@@ -207,7 +222,7 @@ export function ReIndexSettingsPage() {
         </InfoNote>
       ) : null}
 
-      <div className="grid grid-cols-2 gap-3 app-fade-up app-fade-up-d1 sm:grid-cols-4 sm:gap-4">
+      <div className="grid grid-cols-2 gap-3 app-fade-up app-fade-up-d1 sm:grid-cols-3 sm:gap-4">
         <StatTile
           icon={<FileText className="h-3.5 w-3.5" />}
           label={t("wordpress.reIndex.statPages", "Pages indexed")}
@@ -222,17 +237,6 @@ export function ReIndexSettingsPage() {
           value={
             <span className="text-sm font-medium sm:text-base">
               {settings.stats.last_generated ||
-                t("wordpress.reIndex.never", "Never")}
-            </span>
-          }
-          tone="muted"
-        />
-        <StatTile
-          icon={<Send className="h-3.5 w-3.5" />}
-          label={t("wordpress.reIndex.statPing", "Last Google ping")}
-          value={
-            <span className="text-sm font-medium sm:text-base">
-              {settings.stats.last_ping ||
                 t("wordpress.reIndex.never", "Never")}
             </span>
           }
@@ -267,7 +271,7 @@ export function ReIndexSettingsPage() {
 
       <Tabs
         value={tab}
-        onValueChange={(v) => setTab(v as TabId)}
+        onValueChange={selectTab}
         className="app-fade-up app-fade-up-d2 gap-4"
       >
         <TabsList
@@ -283,6 +287,10 @@ export function ReIndexSettingsPage() {
           <TabsTrigger value="seo" className="gap-1.5">
             <Search className="h-3.5 w-3.5" />
             {t("wordpress.reIndex.tabSeo", "SEO & Identity")}
+          </TabsTrigger>
+          <TabsTrigger value="pages" className="gap-1.5">
+            <FileText className="h-3.5 w-3.5" />
+            {t("wordpress.reIndex.tabPages", "Page SEO")}
           </TabsTrigger>
         </TabsList>
 
@@ -301,6 +309,10 @@ export function ReIndexSettingsPage() {
 
         <TabsContent value="seo" className="mt-0">
           <SeoPanel settings={settings} patchSettings={patchSettings} />
+        </TabsContent>
+
+        <TabsContent value="pages" className="mt-0">
+          <PageSeoPanel pluginUuid={pluginUuid} active={tab === "pages"} />
         </TabsContent>
       </Tabs>
     </PageShell>

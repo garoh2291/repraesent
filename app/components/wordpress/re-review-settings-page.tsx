@@ -15,8 +15,10 @@ import {
   useWorkspaceReReviewClearCache,
   useWorkspaceReReviewTestFetch,
 } from "~/lib/hooks/useWorkspaceReReviewSettings";
+import { useResolvePluginKind } from "~/lib/hooks/useWorkspaceWpPluginCatalog";
 import type { ReReviewSettings } from "~/lib/wordpress/plugin-settings-types";
-import { PluginSettingsBackLink } from "~/components/wordpress/plugin-settings-chrome";
+import { formatPluginSettingsTitle } from "~/lib/utils/wordpress-plugin-kind";
+import { PluginSettingsBackLink, PluginSettingsLoadingPage } from "~/components/wordpress/plugin-settings-chrome";
 import { Badge } from "~/components/ui/badge";
 import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
@@ -46,6 +48,11 @@ import { cn } from "~/lib/utils";
 export function ReReviewSettingsPage() {
   const { t } = useTranslation();
   const { pluginUuid = "" } = useParams<{ pluginUuid: string }>();
+  const { catalogItem } = useResolvePluginKind(pluginUuid);
+  const pageTitle = formatPluginSettingsTitle(
+    catalogItem?.display_name,
+    "re:reviews",
+  );
   const {
     settings,
     setSettings,
@@ -119,13 +126,7 @@ export function ReReviewSettingsPage() {
   }
 
   if (loading) {
-    return (
-      <PageShell>
-        <p className="text-sm text-muted-foreground">
-          {t("wordpress.reReview.loading", "Loading…")}
-        </p>
-      </PageShell>
-    );
+    return <PluginSettingsLoadingPage />;
   }
 
   if (!hasSite) {
@@ -162,7 +163,7 @@ export function ReReviewSettingsPage() {
         <div className="flex flex-col gap-1">
           <div className="flex flex-wrap items-center gap-2">
             <h1 className="text-xl font-semibold tracking-tight text-foreground sm:text-2xl">
-              re:reviews
+              {pageTitle}
             </h1>
             <Badge variant="outline">v{PLUGIN_VERSION}</Badge>
             <Badge

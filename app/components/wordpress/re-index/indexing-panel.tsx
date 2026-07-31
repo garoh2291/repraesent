@@ -97,7 +97,7 @@ export function IndexingPanel({
           <InfoNote>
             {t(
               "wordpress.reIndex.sitemapNote",
-              "The sitemap regenerates automatically when you publish, update, or trash a page. Google is pinged after every regeneration.",
+              "The sitemap regenerates automatically when you publish, update, or trash a page. Search engines pick it up on their own crawl schedule. To get a specific page looked at sooner, use URL Inspection in Google Search Console and request indexing.",
             )}
           </InfoNote>
         </div>

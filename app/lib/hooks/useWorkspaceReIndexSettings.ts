@@ -1,7 +1,8 @@
 "use client";
 
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
+  getWorkspaceReIndexPageSeo,
   regenerateWorkspaceReIndexSitemap,
   type WpPluginSettingsGetResponse,
 } from "~/lib/api/wordpress-hub";
@@ -35,6 +36,22 @@ export function useWorkspaceReIndexRegenerateSitemap(pluginUuid: string) {
         }),
       );
     },
+  });
+}
+
+export function pageSeoKey(pluginUuid: string) {
+  return ["wordpress", "re-index", "page-seo", pluginUuid] as const;
+}
+
+/** Read-only per-page SEO overview for the Page SEO tab. */
+export function useWorkspaceReIndexPageSeo(
+  pluginUuid: string,
+  enabled = true,
+) {
+  return useQuery({
+    queryKey: pageSeoKey(pluginUuid),
+    queryFn: () => getWorkspaceReIndexPageSeo(pluginUuid),
+    enabled: Boolean(pluginUuid) && enabled,
   });
 }
 
