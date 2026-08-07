@@ -11,6 +11,7 @@ export default [
   route("register", "routes/register.tsx"),
   route("auth/callback", "routes/auth.callback.tsx"),
   route("book/:configId", "routes/book.$configId.tsx"),
+  route("f/:formId", "routes/f.$formId.tsx"),
 
   layout("routes/_protected.tsx", [
     route("no-workspace", "routes/no-workspace.tsx"),
@@ -42,6 +43,8 @@ export default [
     layout("routes/_dashboard-layout.tsx", [
       index("routes/home.tsx"),
       route("products", "routes/products.tsx"),
+      route("forms", "routes/forms._index.tsx"),
+      route("forms/:formId", "routes/forms.$formId.tsx"),
       route("lead-form", "routes/lead-form.tsx"),
       route("email/confirmation", "routes/lead-form.fallback.tsx"),
       route("lead-form/:leadId", "routes/lead-form.$leadId.tsx"),

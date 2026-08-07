@@ -595,6 +595,7 @@ export function LeadInfoSection({
               <LeadSourceIcon
                 source={lead.source_label}
                 fallbackSource={lead.source_table}
+                sourceTable={lead.source_table}
                 platform={lead.source_platform}
                 size={16}
               />

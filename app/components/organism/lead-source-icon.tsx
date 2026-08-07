@@ -1,3 +1,4 @@
+import { ClipboardList } from "lucide-react";
 import TooltipContainer from "~/components/tooltip-container";
 import { cn } from "~/lib/utils";
 
@@ -14,6 +15,7 @@ type SourceKind =
   | "google"
   | "instagram"
   | "website"
+  | "form"
   | "unknown";
 
 /**
@@ -43,7 +45,7 @@ function resolveSourceKind(raw: string | null | undefined): SourceKind {
   return "unknown";
 }
 
-const ICON_MAP: Record<Exclude<SourceKind, "unknown">, string> = {
+const ICON_MAP: Record<Exclude<SourceKind, "unknown" | "form">, string> = {
   appointment: appointmentIcon,
   facebook: facebookIcon,
   google: googleIcon,
@@ -56,6 +58,12 @@ export interface LeadSourceIconProps {
   source: string | null | undefined;
   /** Optional second source used as fallback if first is null */
   fallbackSource?: string | null;
+  /**
+   * The lead's `source_table`. Takes precedence over string sniffing, which
+   * cannot tell a form apart from a website: a form named "Anfrage 2.0" would
+   * otherwise land in the website branch purely because it contains a dot.
+   */
+  sourceTable?: string | null;
   /**
    * Direct platform override (e.g. "facebook", "google").
    * When provided, skips string-based resolution and uses this directly.
@@ -73,14 +81,37 @@ export interface LeadSourceIconProps {
 export function LeadSourceIcon({
   source,
   fallbackSource,
+  sourceTable,
   platform,
   className,
   size = 18,
 }: LeadSourceIconProps) {
   const resolved = source ?? fallbackSource ?? null;
-  // platform prop takes precedence — used when source_label is a campaign name
-  const kind = platform ? resolveSourceKind(platform) : resolveSourceKind(resolved);
+  // source_table is authoritative where we have it; then platform (campaign
+  // leads, whose source_label is a campaign name); then string sniffing.
+  const kind: SourceKind =
+    sourceTable === "workspace_forms"
+      ? "form"
+      : platform
+        ? resolveSourceKind(platform)
+        : resolveSourceKind(resolved);
   const tooltipLabel = resolved ?? "—";
+
+  if (kind === "form") {
+    return (
+      <TooltipContainer tooltipContent={tooltipLabel} showCopyButton={false}>
+        <span
+          className={cn(
+            "inline-flex shrink-0 items-center justify-center text-muted-foreground",
+            className,
+          )}
+          style={{ width: size, height: size }}
+        >
+          <ClipboardList style={{ width: size - 2, height: size - 2 }} />
+        </span>
+      </TooltipContainer>
+    );
+  }
 
   if (kind === "unknown") {
     return (

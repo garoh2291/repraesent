@@ -130,6 +130,38 @@ apiClient.interceptors.request.use(
   }
 );
 
+/**
+ * Routes that must never bounce a visitor to /login.
+ *
+ * AuthProvider runs on every route, public ones included. A visitor carrying a
+ * stale token in localStorage therefore triggers an authenticated /users/me
+ * call even on a public page — and without this list, the resulting 401 would
+ * throw them out of a booking page or a form they were halfway through filling
+ * in. These pages have no authenticated content to protect.
+ */
+const PUBLIC_PATH_PREFIXES = [
+  "/login",
+  "/register",
+  "/auth/callback",
+  "/book/",
+  "/f/",
+];
+
+function isPublicPath(): boolean {
+  if (typeof window === "undefined") return true;
+  const path = window.location.pathname;
+  return PUBLIC_PATH_PREFIXES.some(
+    (prefix) => path === prefix || path.startsWith(prefix),
+  );
+}
+
+/** Send the user to the login page, unless they are on a public page. */
+function redirectToLogin(): void {
+  if (typeof window === "undefined") return;
+  if (isPublicPath()) return;
+  window.location.href = "/login";
+}
+
 // Flag to prevent multiple simultaneous refresh attempts
 let isRefreshing = false;
 let failedQueue: Array<{
@@ -191,13 +223,7 @@ apiClient.interceptors.response.use(
         processQueue(new Error("No refresh token available"), null);
         isRefreshing = false;
 
-        if (
-          typeof window !== "undefined" &&
-          !window.location.pathname.includes("/login") &&
-          !window.location.pathname.includes("/auth/callback")
-        ) {
-          window.location.href = "/login";
-        }
+        redirectToLogin();
 
         return Promise.reject(error);
       }
@@ -232,13 +258,7 @@ apiClient.interceptors.response.use(
         processQueue(refreshError as Error, null);
         isRefreshing = false;
 
-        if (
-          typeof window !== "undefined" &&
-          !window.location.pathname.includes("/login") &&
-          !window.location.pathname.includes("/auth/callback")
-        ) {
-          window.location.href = "/login";
-        }
+        redirectToLogin();
 
         return Promise.reject(refreshError);
       }
