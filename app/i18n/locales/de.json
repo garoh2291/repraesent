@@ -2776,7 +2776,8 @@
       "leaveTitle": "Ohne Speichern verlassen?",
       "leaveBody": "Sie haben nicht gespeicherte Änderungen an diesem Formular. Sie gehen verloren.",
       "leaveStay": "Weiter bearbeiten",
-      "leaveDiscard": "Änderungen verwerfen"
+      "leaveDiscard": "Änderungen verwerfen",
+      "previewTitle": "Vorschau"
     },
     "palette": {
       "title": "Feld hinzufügen",
@@ -2850,7 +2851,12 @@
       "submit": "Absenden-Button",
       "submitCaption": "Button-Text",
       "submitHint": "In jeder angebotenen Sprache erforderlich.",
-      "titleHiddenHint": "Der Titel ist im Formular ausgeblendet. Unter Design → Layout wieder einschalten."
+      "titleHiddenHint": "Der Titel ist im Formular ausgeblendet. Unter Design → Layout wieder einschalten.",
+      "noneHint": "Klicken Sie auf den Titel, ein Feld oder den Senden-Button.",
+      "sectionContent": "Inhalt",
+      "sectionData": "Daten",
+      "sectionLayout": "Layout",
+      "sectionRules": "Regeln"
     },
     "design": {
       "title": "Design",
@@ -2936,7 +2942,9 @@
       "code": "HTML",
       "preview": "Vorschau",
       "variables": "Wert einfügen",
-      "saved": "Bestätigungs-E-Mail gespeichert"
+      "saved": "Bestätigungs-E-Mail gespeichert",
+      "sectionDelivery": "Versand",
+      "sectionMessage": "Nachricht"
     },
     "share": {
       "publishFirst": "Veröffentlichen Sie das Formular, bevor Sie es teilen — Link und Einbettungen bleiben bis dahin inaktiv.",

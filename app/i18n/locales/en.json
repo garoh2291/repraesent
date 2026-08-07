@@ -2774,7 +2774,8 @@
       "leaveTitle": "Leave without saving?",
       "leaveBody": "You have unsaved changes to this form. They will be lost.",
       "leaveStay": "Keep editing",
-      "leaveDiscard": "Discard changes"
+      "leaveDiscard": "Discard changes",
+      "previewTitle": "Preview"
     },
     "palette": {
       "title": "Add a field",
@@ -2848,7 +2849,12 @@
       "submit": "Submit button",
       "submitCaption": "Button text",
       "submitHint": "Needed in every language you offer.",
-      "titleHiddenHint": "The title is hidden on the form. Turn it back on under Design → Layout."
+      "titleHiddenHint": "The title is hidden on the form. Turn it back on under Design → Layout.",
+      "noneHint": "Click the title, a field, or the send button on the canvas.",
+      "sectionContent": "Content",
+      "sectionData": "Data",
+      "sectionLayout": "Layout",
+      "sectionRules": "Rules"
     },
     "design": {
       "title": "Design",
@@ -2934,7 +2940,9 @@
       "code": "HTML",
       "preview": "Preview",
       "variables": "Insert a value",
-      "saved": "Confirmation email saved"
+      "saved": "Confirmation email saved",
+      "sectionDelivery": "Delivery",
+      "sectionMessage": "Message"
     },
     "share": {
       "publishFirst": "Publish this form before sharing it — the link and embeds stay inactive until you do.",

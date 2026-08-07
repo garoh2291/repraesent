@@ -14,7 +14,6 @@ import { FormStatusBadge } from "~/components/forms/FormStatusBadge";
 import { UnsavedChangesGuard } from "~/components/forms/UnsavedChangesGuard";
 import { SharePanel } from "~/components/forms/SharePanel";
 import { ThemePanel } from "~/components/forms/ThemePanel";
-import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
 import { Label } from "~/components/ui/label";
 import { Skeleton } from "~/components/ui/skeleton";
@@ -749,9 +748,14 @@ export default function FormBuilderRoute() {
 
   if (isLoading || !definition || !form) {
     return (
-      <div className="mx-auto w-full max-w-[1280px] space-y-6 p-4 py-10! sm:p-6">
-        <Skeleton className="h-10 w-64" />
-        <Skeleton className="h-96 w-full rounded-xl" />
+      <div className="mx-auto w-full max-w-[1280px] space-y-5 p-4 pb-10! pt-4! sm:p-6 sm:pt-6!">
+        <Skeleton className="h-[7.5rem] w-full rounded-2xl" />
+        <Skeleton className="h-9 w-72 rounded-lg" />
+        <div className="grid gap-4 sm:gap-5 lg:grid-cols-[210px_minmax(0,1fr)] xl:grid-cols-[220px_minmax(0,1fr)_340px]">
+          <Skeleton className="h-96 rounded-2xl" />
+          <Skeleton className="h-96 rounded-2xl" />
+          <Skeleton className="hidden h-96 rounded-2xl xl:block" />
+        </div>
       </div>
     );
   }
@@ -767,210 +771,240 @@ export default function FormBuilderRoute() {
   );
 
   return (
-    <div className="mx-auto w-full max-w-[1280px] space-y-6 p-4 py-10! sm:p-6 sm:space-y-8 app-fade-in">
+    <div
+      className="mx-auto w-full max-w-[1280px] space-y-5 p-4 pb-10! pt-0! sm:p-6 sm:pb-14! sm:pt-0! app-fade-in"
+      // One constant, two consumers: the sticky inspector and the sticky Design
+      // preview both offset by it so they clear the command bar instead of
+      // sliding under it. Roughly bar height + the sticky wrapper's padding.
+      style={{ "--fb-stick": "10.5rem" } as React.CSSProperties}
+    >
       <UnsavedChangesGuard when={canEdit && (dirty || emailDirty)} />
 
-      <div className="space-y-4">
-        <Link
-          to="/forms"
-          className="inline-flex items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground"
-        >
-          <ArrowLeft className="h-3.5 w-3.5" />
-          {t("forms.builder.back")}
-        </Link>
-
-        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-          <div className="flex min-w-0 flex-wrap items-center gap-3">
-            <Input
-              value={name}
-              disabled={!canEdit}
-              onChange={(e) => {
-                setName(e.target.value);
-                setDirty(true);
-              }}
-              className="h-10 w-full max-w-sm border-transparent bg-transparent px-0 text-xl font-semibold tracking-tight shadow-none focus-visible:border-input focus-visible:px-3"
-            />
-            <FormStatusBadge
-              status={form.status}
-              hasUnpublishedChanges={form.has_unpublished_changes || dirty}
-            />
-          </div>
-
-          <div className="flex flex-wrap items-center gap-2">
-            {isLive ? (
-              <a
-                href={buildPublicFormUrl(form.id)}
-                target="_blank"
-                rel="noreferrer"
-                className="inline-flex h-9 items-center gap-2 rounded-lg border px-3 text-sm transition-colors hover:bg-muted"
+      {/* The command bar. Dark chrome around light content is the app's
+          signature (shell #0f0f11, sidebar #111113) — the builder extends it
+          one level in so the form canvas below becomes the bright object.
+          Bleeds the page padding, or the sticky element leaves a transparent
+          gutter as content scrolls under it. */}
+      <div className="app-fade-down sticky top-0 z-30 -mx-4 bg-background/80 px-4 pb-3 pt-4 backdrop-blur sm:-mx-6 sm:px-6 sm:pt-6">
+        <div className="overflow-hidden rounded-2xl bg-[#111113] shadow-[0_8px_24px_-12px_rgba(0,0,0,0.35)]">
+          <div className="flex flex-col gap-3 px-4 py-3.5 sm:px-5 lg:flex-row lg:items-center lg:justify-between">
+            <div className="min-w-0">
+              <Link
+                to="/forms"
+                className="inline-flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-widest text-white/35 transition-colors hover:text-white/70"
               >
-                <Eye className="h-3.5 w-3.5" />
-                {t("forms.share.open")}
-              </a>
-            ) : null}
+                <ArrowLeft className="h-3 w-3" />
+                {t("forms.builder.back")}
+              </Link>
 
-            {canEdit ? (
-              // This ui/tooltip does not wrap its own provider, and nothing
-              // else in the app mounts one — so scope it here rather than
-              // adding a global provider to root.tsx for two tooltips.
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    {/* A disabled button has pointer-events:none, so the
-                        tooltip has to hang off a wrapper or it never fires —
-                        and the disabled state is exactly when the explanation
-                        matters. */}
-                    <span tabIndex={0}>
-                      <Button
-                        variant="outline"
-                        disabled={!dirty || busy || (isLive && hasIssues)}
-                        onClick={() => saveMutation.mutate()}
-                      >
-                        <Save className="h-4 w-4" />
-                        {saveMutation.isPending
-                          ? t("forms.builder.saving")
-                          : t("forms.builder.save")}
-                      </Button>
-                    </span>
-                  </TooltipTrigger>
-                  <TooltipContent>{saveTooltip}</TooltipContent>
-                </Tooltip>
+              <div className="mt-1 flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1.5">
+                <Input
+                  value={name}
+                  disabled={!canEdit}
+                  onChange={(e) => {
+                    setName(e.target.value);
+                    setDirty(true);
+                  }}
+                  className="h-9 w-full max-w-sm rounded-lg border-transparent bg-transparent px-0 text-[22px] font-semibold tracking-tight text-white shadow-none selection:bg-white/20 focus-visible:border-white/10 focus-visible:bg-white/5 focus-visible:px-2.5 disabled:opacity-100"
+                />
+                <FormStatusBadge
+                  tone="dark"
+                  status={form.status}
+                  hasUnpublishedChanges={form.has_unpublished_changes || dirty}
+                />
+              </div>
 
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <span
-                      tabIndex={0}
-                      className="inline-flex items-center gap-2 rounded-lg border px-3 py-1.5"
-                    >
-                      <Globe
-                        className={`h-3.5 w-3.5 ${isLive ? "text-emerald-600" : "text-muted-foreground"}`}
-                        aria-hidden="true"
-                      />
-                      <Label
-                        htmlFor="form-live-toggle"
-                        className="cursor-pointer text-sm font-medium"
-                      >
-                        {t("forms.builder.liveToggle")}
-                      </Label>
-                      <Switch
-                        id="form-live-toggle"
-                        checked={isLive}
-                        disabled={busy || (!isLive && hasIssues)}
-                        onCheckedChange={(next) =>
-                          next
-                            ? publishMutation.mutate()
-                            : unpublishMutation.mutate()
-                        }
-                        aria-label={t("forms.builder.liveToggle")}
-                      />
-                    </span>
-                  </TooltipTrigger>
-                  <TooltipContent>{liveTooltip}</TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
-            ) : null}
-          </div>
-        </div>
-
-        {!canEdit ? (
-          <p className="text-sm text-muted-foreground">
-            {t("forms.builder.readOnly")}
-          </p>
-        ) : null}
-
-        {visibleIssues.length > 0 || otherLocalesWithIssues.length > 0 ? (
-          <div
-            ref={bannerRef}
-            className="flex gap-2.5 rounded-xl border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900 dark:border-amber-500/40 dark:bg-amber-500/10 dark:text-amber-200"
-          >
-            <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
-            <div className="space-y-1">
-              <p className="font-medium">
-                {isLive
-                  ? t("forms.validation.cannotSaveLive")
-                  : t("forms.validation.cannotPublish")}
+              <p className="mt-0.5 truncate font-mono text-[11px] text-white/35">
+                {form.slug}
               </p>
-              <ul className="list-inside list-disc space-y-0.5">
-                {visibleIssues.map((issue, index) => (
-                  <li
-                    key={`${issue.code}:${issue.locale ?? ""}:${issue.fieldId ?? issue.contentKey ?? index}`}
-                  >
-                    {describeIssue(issue, t, defaultLocale)}
-                  </li>
-                ))}
-              </ul>
+            </div>
 
-              {/* Other languages are a jump target, not a dead end. */}
-              {otherLocalesWithIssues.length > 0 ? (
-                <p className="pt-0.5">
-                  {t("forms.validation.otherLocales", {
-                    count: otherLocalesWithIssues.reduce(
-                      (sum, l) => sum + (issuesByLocale.get(l) ?? 0),
-                      0,
-                    ),
-                  })}{" "}
-                  {otherLocalesWithIssues.map((locale) => (
-                    <button
-                      key={locale}
-                      type="button"
-                      onClick={() => setEditingLocale(locale)}
-                      className="mr-1 rounded bg-amber-200/60 px-1.5 py-0.5 font-mono text-xs uppercase underline-offset-2 hover:underline dark:bg-amber-500/20"
-                    >
-                      {locale}
-                    </button>
-                  ))}
-                </p>
+            <div className="flex flex-wrap items-center gap-2">
+              {isLive ? (
+                <a
+                  href={buildPublicFormUrl(form.id)}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex h-9 items-center gap-2 rounded-lg border border-white/10 bg-white/5 px-3 text-sm text-white/70 transition-colors hover:bg-white/10 hover:text-white"
+                >
+                  <Eye className="h-3.5 w-3.5" />
+                  {t("forms.share.open")}
+                </a>
+              ) : null}
+
+              {canEdit ? (
+                // This ui/tooltip does not wrap its own provider, and nothing
+                // else in the app mounts one — so scope it here rather than
+                // adding a global provider to root.tsx for two tooltips.
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      {/* A disabled button has pointer-events:none, so the
+                          tooltip has to hang off a wrapper or it never fires —
+                          and the disabled state is exactly when the explanation
+                          matters. */}
+                      <span tabIndex={0}>
+                        <button
+                          type="button"
+                          disabled={!dirty || busy || (isLive && hasIssues)}
+                          onClick={() => saveMutation.mutate()}
+                          className="inline-flex h-9 items-center gap-2 rounded-lg bg-white px-4 text-sm font-medium text-[#131515] transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-35"
+                        >
+                          <Save className="h-4 w-4" />
+                          {saveMutation.isPending
+                            ? t("forms.builder.saving")
+                            : t("forms.builder.save")}
+                        </button>
+                      </span>
+                    </TooltipTrigger>
+                    <TooltipContent>{saveTooltip}</TooltipContent>
+                  </Tooltip>
+
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <span
+                        tabIndex={0}
+                        className="inline-flex h-9 items-center gap-2 rounded-lg border border-white/10 bg-white/5 px-3"
+                      >
+                        <Globe
+                          className={`h-3.5 w-3.5 ${isLive ? "text-emerald-400" : "text-white/40"}`}
+                          aria-hidden="true"
+                        />
+                        <Label
+                          htmlFor="form-live-toggle"
+                          className="cursor-pointer text-sm font-medium text-white/70"
+                        >
+                          {t("forms.builder.liveToggle")}
+                        </Label>
+                        <Switch
+                          id="form-live-toggle"
+                          checked={isLive}
+                          disabled={busy || (!isLive && hasIssues)}
+                          onCheckedChange={(next) =>
+                            next
+                              ? publishMutation.mutate()
+                              : unpublishMutation.mutate()
+                          }
+                          aria-label={t("forms.builder.liveToggle")}
+                        />
+                      </span>
+                    </TooltipTrigger>
+                    <TooltipContent>{liveTooltip}</TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
               ) : null}
             </div>
           </div>
-        ) : null}
+
+          <div className="border-t border-white/5 px-4 py-2 sm:px-5">
+            <LanguageStrip
+              locales={locales}
+              defaultLocale={defaultLocale}
+              activeLocale={editingLocale}
+              onSelect={setEditingLocale}
+              issuesByLocale={issuesByLocale}
+              totalIssues={issues.length}
+              onFocusIssues={focusIssues}
+              translating={translating}
+              disabled={!canEdit}
+              onAddLocale={addLocale}
+              onRemoveLocale={removeLocale}
+              onMakeDefault={makeDefaultLocale}
+              onTranslateLocale={translateLocale}
+            />
+          </div>
+        </div>
       </div>
 
-      {/* Bleeds the page padding, or the sticky element leaves a transparent
-          gutter as content scrolls under it. */}
-      <div className="sticky top-0 z-30 -mx-4 border-y bg-background/95 px-4 backdrop-blur supports-[backdrop-filter]:bg-background/80 sm:-mx-6 sm:px-6">
-        <LanguageStrip
-          locales={locales}
-          defaultLocale={defaultLocale}
-          activeLocale={editingLocale}
-          onSelect={setEditingLocale}
-          issuesByLocale={issuesByLocale}
-          totalIssues={issues.length}
-          onFocusIssues={focusIssues}
-          translating={translating}
-          disabled={!canEdit}
-          onAddLocale={addLocale}
-          onRemoveLocale={removeLocale}
-          onMakeDefault={makeDefaultLocale}
-          onTranslateLocale={translateLocale}
-        />
-      </div>
+      {!canEdit ? (
+        <p className="text-sm text-muted-foreground">
+          {t("forms.builder.readOnly")}
+        </p>
+      ) : null}
+
+      {visibleIssues.length > 0 || otherLocalesWithIssues.length > 0 ? (
+        <div
+          ref={bannerRef}
+          className="app-fade-up flex gap-3 rounded-xl border border-amber-400/30 bg-amber-400/8 px-4 py-3 text-sm text-amber-900 dark:text-amber-200"
+        >
+          <span
+            aria-hidden
+            className="flex size-7 shrink-0 items-center justify-center rounded-lg bg-amber-400/20 text-amber-700 dark:text-amber-300"
+          >
+            <AlertTriangle className="h-4 w-4" />
+          </span>
+          <div className="space-y-1 pt-0.5">
+            <p className="font-medium">
+              {isLive
+                ? t("forms.validation.cannotSaveLive")
+                : t("forms.validation.cannotPublish")}
+            </p>
+            <ul className="list-inside list-disc space-y-0.5">
+              {visibleIssues.map((issue, index) => (
+                <li
+                  key={`${issue.code}:${issue.locale ?? ""}:${issue.fieldId ?? issue.contentKey ?? index}`}
+                >
+                  {describeIssue(issue, t, defaultLocale)}
+                </li>
+              ))}
+            </ul>
+
+            {/* Other languages are a jump target, not a dead end. */}
+            {otherLocalesWithIssues.length > 0 ? (
+              <p className="pt-0.5">
+                {t("forms.validation.otherLocales", {
+                  count: otherLocalesWithIssues.reduce(
+                    (sum, l) => sum + (issuesByLocale.get(l) ?? 0),
+                    0,
+                  ),
+                })}{" "}
+                {otherLocalesWithIssues.map((locale) => (
+                  <button
+                    key={locale}
+                    type="button"
+                    onClick={() => setEditingLocale(locale)}
+                    className="mr-1 rounded bg-amber-400/20 px-1.5 py-0.5 font-mono text-xs uppercase underline-offset-2 hover:underline"
+                  >
+                    {locale}
+                  </button>
+                ))}
+              </p>
+            ) : null}
+          </div>
+        </div>
+      ) : null}
 
       <Tabs value={tab} onValueChange={setTab}>
-        <TabsList variant="line">
-          <TabsTrigger value="build">
-            {t("forms.builder.tabBuild")}
-            <IssueBadge count={issuesByTab.build} />
-          </TabsTrigger>
-          <TabsTrigger value="design">
-            {t("forms.builder.tabDesign")}
-            <IssueBadge count={issuesByTab.design} />
-          </TabsTrigger>
-          {hasEmailConfig ? (
-            <TabsTrigger value="email">
-              {t("forms.builder.tabEmail")}
+        {/* The `line` variant only underlines the active trigger, so without a
+            wrapper rule the tab strip floats with no baseline. */}
+        <div className="app-fade-up app-fade-up-d1 border-b border-border">
+          <TabsList variant="line" className="-mb-px">
+            <TabsTrigger value="build">
+              {t("forms.builder.tabBuild")}
+              <IssueBadge count={issuesByTab.build} />
             </TabsTrigger>
-          ) : null}
-          <TabsTrigger value="share">{t("forms.builder.tabShare")}</TabsTrigger>
-        </TabsList>
+            <TabsTrigger value="design">
+              {t("forms.builder.tabDesign")}
+              <IssueBadge count={issuesByTab.design} />
+            </TabsTrigger>
+            {hasEmailConfig ? (
+              <TabsTrigger value="email">
+                {t("forms.builder.tabEmail")}
+              </TabsTrigger>
+            ) : null}
+            <TabsTrigger value="share">
+              {t("forms.builder.tabShare")}
+            </TabsTrigger>
+          </TabsList>
+        </div>
 
-        <TabsContent value="build" className="pt-6">
-          <div className="grid gap-6 xl:grid-cols-[220px_minmax(0,1fr)_320px]">
-            <aside className="order-2 xl:order-1">
+        <TabsContent value="build" className="pt-5">
+          <div className="grid gap-4 sm:gap-5 lg:grid-cols-[210px_minmax(0,1fr)] xl:grid-cols-[220px_minmax(0,1fr)_340px]">
+            <aside className="app-fade-up app-fade-up-d1 order-2 lg:order-1">
               <FieldPalette onAdd={addField} disabled={!canEdit} />
             </aside>
 
-            <div className="order-1 min-w-0 xl:order-2">
+            <div className="app-fade-up app-fade-up-d2 order-1 min-w-0 lg:order-2">
               <FormCanvas
                 definition={definition}
                 locale={editingLocale}
@@ -984,7 +1018,7 @@ export default function FormBuilderRoute() {
               />
             </div>
 
-            <aside className="order-3 xl:sticky xl:top-6 xl:self-start">
+            <aside className="app-fade-up app-fade-up-d3 order-3 lg:col-span-2 xl:col-span-1 xl:sticky xl:top-[var(--fb-stick)] xl:self-start">
               <FieldInspector
                 target={inspectorTarget}
                 otherKeys={otherKeys}
@@ -1002,7 +1036,7 @@ export default function FormBuilderRoute() {
           </div>
         </TabsContent>
 
-        <TabsContent value="design" className="pt-6">
+        <TabsContent value="design" className="app-fade-up pt-5">
           <ThemePanel
             definition={definition}
             locale={editingLocale}
@@ -1015,7 +1049,7 @@ export default function FormBuilderRoute() {
         </TabsContent>
 
         {hasEmailConfig ? (
-          <TabsContent value="email" className="space-y-4 pt-6">
+          <TabsContent value="email" className="app-fade-up pt-5">
             <ConfirmationEmailPanel
               definition={definition}
               locales={locales}
@@ -1023,24 +1057,19 @@ export default function FormBuilderRoute() {
               value={confirmationEmail}
               locale={editingLocale}
               disabled={!canEdit}
+              // The Save used to hang on the page background below the card
+              // with no footer or toolbar; it lives in the panel header now.
+              onSave={canEdit ? () => emailMutation.mutate() : undefined}
+              saveDisabled={!emailDirty || emailMutation.isPending}
               onChange={(next) => {
                 setConfirmationEmail(next);
                 setEmailDirty(true);
               }}
             />
-            {canEdit ? (
-              <Button
-                disabled={!emailDirty || emailMutation.isPending}
-                onClick={() => emailMutation.mutate()}
-              >
-                <Save className="h-4 w-4" />
-                {t("forms.builder.save")}
-              </Button>
-            ) : null}
           </TabsContent>
         ) : null}
 
-        <TabsContent value="share" className="pt-6">
+        <TabsContent value="share" className="app-fade-up pt-5">
           <SharePanel
             formId={form.id}
             status={form.status}

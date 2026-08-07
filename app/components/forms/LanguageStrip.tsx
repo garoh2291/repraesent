@@ -27,9 +27,41 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "~/components/ui/dropdown-menu";
+import flags from "react-phone-number-input/flags";
 import { Spinner } from "~/components/ui/spinner";
 import { cn } from "~/lib/utils";
 import { FORM_LOCALES, type FormLocale } from "~/lib/forms/schema";
+
+/**
+ * Locale -> country for the flag. A language is not a country (English least of
+ * all), so this is a pragmatic convention, not a fact: en shows the UK flag
+ * because that is what every language picker does.
+ *
+ * The flag set is `react-phone-number-input/flags`, already a dependency and
+ * already used by `molecule/phone-number-input.tsx` — real SVGs, so they render
+ * identically everywhere. Emoji flags would have been one line, but Windows
+ * ships no flag glyphs and would have shown bare "GB"/"DE" letter pairs.
+ */
+const LOCALE_COUNTRY: Record<FormLocale, "GB" | "DE" | "FR" | "NL"> = {
+  en: "GB",
+  de: "DE",
+  fr: "FR",
+  nl: "NL",
+};
+
+function LocaleFlag({ locale }: { locale: FormLocale }) {
+  const country = LOCALE_COUNTRY[locale];
+  const Flag = flags[country];
+  if (!Flag) return null;
+  return (
+    <span
+      aria-hidden
+      className="flex h-3.5 w-5 shrink-0 items-center justify-center overflow-hidden rounded-[2px] ring-1 ring-inset ring-black/10 [&>svg]:h-full [&>svg]:w-full [&>svg]:object-cover"
+    >
+      <Flag title={country} />
+    </span>
+  );
+}
 
 interface Props {
   /** Enabled locales. Rendered default-first whatever order they are stored in. */
@@ -65,6 +97,12 @@ interface Props {
  * directly below it, and nesting two tablists confuses assistive tech. This is
  * a button group with aria-pressed, the same pattern the inline locale pills
  * used before the strip replaced them.
+ *
+ * Styled for the builder's dark #111113 command bar and nothing else — it has
+ * exactly one consumer. The active pill reuses the amber-on-white/5 recipe from
+ * `components/language-switcher.tsx`, so the two locale pickers in the app look
+ * like the same control. The dropdowns stay light popovers, which is the
+ * convention everywhere else on dark chrome.
  */
 export function LanguageStrip({
   locales,
@@ -95,7 +133,7 @@ export function LanguageStrip({
   return (
     <>
       <div
-        className="flex flex-wrap items-center gap-1 py-1.5"
+        className="flex flex-wrap items-center gap-1"
         role="group"
         aria-label={t("forms.strip.groupLabel")}
       >
@@ -106,20 +144,39 @@ export function LanguageStrip({
           const count = issuesByLocale.get(locale) ?? 0;
 
           return (
-            <div key={locale} className="group/tab flex items-center">
+            // Every locale is a filled, bordered pill — not just the active
+            // one. Text-only tabs read as labels, and people could not tell the
+            // non-default languages were clickable at all. The ⋯ lives inside
+            // the same border so the pair reads as one control.
+            <div
+              key={locale}
+              className={cn(
+                "group/tab inline-flex h-8 items-center overflow-hidden rounded-lg border transition-colors",
+                active
+                  ? "border-amber-400/40 bg-amber-400/15"
+                  : "border-white/10 bg-white/[0.06] hover:border-white/20 hover:bg-white/10",
+              )}
+            >
               <button
                 type="button"
                 onClick={() => onSelect(locale)}
                 aria-pressed={active}
                 className={cn(
-                  "inline-flex h-8 items-center gap-1.5 rounded-md pl-2.5 pr-2 text-sm transition-colors",
+                  "inline-flex h-full items-center gap-1.5 pl-2 pr-1.5 text-sm transition-colors",
                   active
-                    ? "bg-muted font-medium text-foreground"
-                    : "text-muted-foreground hover:bg-muted/60 hover:text-foreground",
+                    ? "font-medium text-amber-400"
+                    : "text-white/60 hover:text-white",
                 )}
               >
+                <LocaleFlag locale={locale} />
+
                 {isDefault ? (
-                  <span className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground/70">
+                  <span
+                    className={cn(
+                      "text-[10px] font-medium uppercase tracking-wide",
+                      active ? "text-amber-400/60" : "text-white/30",
+                    )}
+                  >
                     {t("forms.strip.default")} ·
                   </span>
                 ) : null}
@@ -129,10 +186,10 @@ export function LanguageStrip({
                     is about to stop having issues. The empty span keeps the tab
                     width stable so the strip does not jitter. */}
                 {spinning ? (
-                  <Spinner className="h-3 w-3 text-muted-foreground" />
+                  <Spinner className="h-3 w-3 text-white/50" />
                 ) : count > 0 ? (
                   <span
-                    className="h-1.5 w-1.5 rounded-full bg-destructive"
+                    className="h-1.5 w-1.5 rounded-full bg-rose-400"
                     aria-label={t("forms.strip.hasIssues", { count })}
                   />
                 ) : (
@@ -148,12 +205,25 @@ export function LanguageStrip({
                       aria-label={t("forms.strip.localeMenu", {
                         locale: locale.toUpperCase(),
                       })}
-                      className="rounded p-1 text-muted-foreground opacity-0 transition-opacity hover:bg-muted focus-visible:opacity-100 group-hover/tab:opacity-100 data-[state=open]:opacity-100"
+                      className={cn(
+                        "flex h-full items-center border-l px-1.5 transition-colors",
+                        active
+                          ? "border-amber-400/25 text-amber-400/70 hover:bg-amber-400/15 hover:text-amber-400"
+                          : "border-white/10 text-white/35 hover:bg-white/10 hover:text-white/80",
+                      )}
                     >
                       <MoreHorizontal className="h-3.5 w-3.5" />
                     </button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="start" className="w-60">
+                    {/* Four near-identical menus on one strip, so name the one
+                        you actually opened. */}
+                    <DropdownMenuLabel className="flex items-center gap-2 text-xs font-normal text-muted-foreground">
+                      <LocaleFlag locale={locale} />
+                      {t(`settings.language.${locale}`)}
+                    </DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+
                     {!isDefault ? (
                       <DropdownMenuItem onSelect={() => onMakeDefault(locale)}>
                         <Star className="h-4 w-4" />
@@ -200,7 +270,7 @@ export function LanguageStrip({
             <DropdownMenuTrigger asChild>
               <button
                 type="button"
-                className="inline-flex h-8 items-center gap-1.5 rounded-md px-2.5 text-sm text-muted-foreground transition-colors hover:bg-muted/60 hover:text-foreground"
+                className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-dashed border-white/20 px-2.5 text-sm text-white/50 transition-colors hover:border-white/35 hover:bg-white/5 hover:text-white/80"
               >
                 <Plus className="h-3.5 w-3.5" />
                 {t("forms.strip.addLanguage")}
@@ -215,7 +285,12 @@ export function LanguageStrip({
                   key={locale}
                   onSelect={() => onAddLocale(locale)}
                 >
-                  <span className="font-mono text-xs uppercase">{locale}</span>
+                  <LocaleFlag locale={locale} />
+                  {/* Endonyms, already translated in all four locale files. */}
+                  <span>{t(`settings.language.${locale}`)}</span>
+                  <span className="ml-auto font-mono text-[11px] uppercase text-muted-foreground">
+                    {locale}
+                  </span>
                 </DropdownMenuItem>
               ))}
             </DropdownMenuContent>
@@ -224,7 +299,7 @@ export function LanguageStrip({
 
         <div className="ml-auto">
           {totalIssues === 0 ? (
-            <span className="inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-xs font-medium text-emerald-700 dark:text-emerald-400">
+            <span className="inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-xs font-medium text-emerald-400/90">
               <Check className="h-3.5 w-3.5" />
               {t("forms.strip.noErrors")}
             </span>
@@ -232,7 +307,7 @@ export function LanguageStrip({
             <button
               type="button"
               onClick={onFocusIssues}
-              className="inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-xs font-medium text-amber-700 transition-colors hover:bg-amber-50 dark:text-amber-400 dark:hover:bg-amber-500/10"
+              className="inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-xs font-medium text-amber-400 transition-colors hover:bg-amber-400/10"
             >
               <AlertTriangle className="h-3.5 w-3.5" />
               {t("forms.strip.issueCount", { count: totalIssues })}

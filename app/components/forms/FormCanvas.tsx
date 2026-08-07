@@ -29,10 +29,16 @@ import {
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { Copy, GripVertical, Trash2 } from "lucide-react";
+import { Copy, Eye, GripVertical, Trash2 } from "lucide-react";
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { FormRenderer } from "~/components/forms/FormRenderer";
+import {
+  Panel,
+  PanelBody,
+  PanelHeader,
+  PanelSection,
+} from "~/components/forms/chrome";
 import { FIELD_TYPE_META } from "~/lib/forms/field-types";
 import {
   contentKey,
@@ -100,21 +106,43 @@ export function FormCanvas({
     : null;
 
   return (
-    <div className="relative">
+    <Panel className="relative">
       {/* Preview-only chrome. Kept OUT of buildFormCss, which must stay
           byte-identical to the backend copy that renders the real form. */}
       <style
         dangerouslySetInnerHTML={{
           __html: `
+/* The design surface the form sits on. A dot grid reads as "canvas" the way a
+   flat panel never does, and it is purely builder chrome — the hosted page,
+   iframe, script embed and pasted HTML never see it. */
+.rf-stage {
+  border-radius: 12px;
+  border: 1px solid var(--color-border);
+  padding: 20px;
+  background-image: radial-gradient(circle, var(--color-border) 1px, transparent 1px);
+  background-size: 16px 16px;
+  background-position: -1px -1px;
+}
+@media (min-width: 640px) { .rf-stage { padding: 32px; } }
+
 .rf-canvas .rf-field,
 .rf-canvas .rf-head,
-.rf-canvas .rf-actions { position: relative; border-radius: 8px; outline-offset: 4px; cursor: pointer; }
+.rf-canvas .rf-actions {
+  position: relative; border-radius: 8px; outline-offset: 4px; cursor: pointer;
+  transition: outline-color .12s ease;
+  outline: 1px dashed transparent;
+}
 .rf-canvas .rf-field:hover,
 .rf-canvas .rf-head:hover,
-.rf-canvas .rf-actions:hover { outline: 1px dashed rgba(120,113,108,.5); }
+.rf-canvas .rf-actions:hover { outline-color: rgba(120,113,108,.45); }
+/* --color-primary, not a near-miss literal: the old #6366f1 was one shade off
+   the app's own #5265f3. */
 .rf-canvas .rf-field[data-selected],
 .rf-canvas .rf-head[data-selected],
-.rf-canvas .rf-actions[data-selected] { outline: 2px solid #6366f1; }
+.rf-canvas .rf-actions[data-selected] {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 4px;
+}
 /* The empty-title placeholder. Lives here, not in css.ts, and not via t() —
    FormRenderer imports zero i18next and css.ts must stay byte-identical to the
    backend's form-css.ts. */
@@ -124,6 +152,16 @@ export function FormCanvas({
 .rf-canvas .rf-lang-btn { pointer-events: auto; }
 `,
         }}
+      />
+
+      <PanelHeader
+        icon={<Eye className="h-3.5 w-3.5" />}
+        title={t("forms.builder.previewTitle")}
+        meta={
+          <span className="rounded bg-muted px-1.5 py-0.5 font-mono text-[11px] uppercase text-muted-foreground">
+            {locale}
+          </span>
+        }
       />
 
       <DndContext
@@ -137,7 +175,11 @@ export function FormCanvas({
           items={fields.map((f) => f.id)}
           strategy={verticalListSortingStrategy}
         >
-          <div className="rf-canvas" onClick={() => onSelect(null)}>
+          <PanelBody>
+            <div
+              className="rf-stage rf-canvas overflow-x-auto"
+              onClick={() => onSelect(null)}
+            >
             {/* The renderer draws the form; the overlay row below draws the
                 per-field handles on top of it, positioned by field order. */}
             <FormRenderer
@@ -149,44 +191,46 @@ export function FormCanvas({
               values={{}}
               errors={{}}
               onChange={() => undefined}
-              selection={selection}
-              onSelect={onSelect}
-            />
-          </div>
-
-          <div className="mt-6 space-y-1.5 border-t pt-5">
-            <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-              {t("forms.builder.dragHandle")}
-            </p>
-            {fields.length === 0 ? (
-              <p className="rounded-lg border border-dashed px-3 py-4 text-center text-sm text-muted-foreground">
-                {t("forms.builder.emptyCanvasHint")}
-              </p>
-            ) : null}
-            {fields.map((field) => (
-              <SortableFieldRow
-                key={field.id}
-                field={field}
-                label={
-                  getContent(
-                    definition,
-                    locale,
-                    field.type === "heading" || field.type === "paragraph"
-                      ? contentKey.fieldText(field.id)
-                      : contentKey.fieldLabel(field.id),
-                    fallbackLocale,
-                  ) || field.key
-                }
-                selected={selectedFieldId(selection) === field.id}
-                disabled={disabled}
-                onSelect={() => onSelect({ kind: "field", fieldId: field.id })}
-                onDuplicate={() => onDuplicateField(field.id)}
-                onDelete={() => onDeleteField(field.id)}
-                duplicateLabel={t("forms.builder.duplicateField")}
-                deleteLabel={t("forms.builder.deleteField")}
+                selection={selection}
+                onSelect={onSelect}
               />
-            ))}
-          </div>
+            </div>
+
+            <PanelSection title={t("forms.builder.dragHandle")}>
+              {fields.length === 0 ? (
+                <p className="rounded-lg border border-dashed px-3 py-4 text-center text-sm text-muted-foreground">
+                  {t("forms.builder.emptyCanvasHint")}
+                </p>
+              ) : null}
+              <div className="space-y-1.5">
+                {fields.map((field) => (
+                  <SortableFieldRow
+                    key={field.id}
+                    field={field}
+                    label={
+                      getContent(
+                        definition,
+                        locale,
+                        field.type === "heading" || field.type === "paragraph"
+                          ? contentKey.fieldText(field.id)
+                          : contentKey.fieldLabel(field.id),
+                        fallbackLocale,
+                      ) || field.key
+                    }
+                    selected={selectedFieldId(selection) === field.id}
+                    disabled={disabled}
+                    onSelect={() =>
+                      onSelect({ kind: "field", fieldId: field.id })
+                    }
+                    onDuplicate={() => onDuplicateField(field.id)}
+                    onDelete={() => onDeleteField(field.id)}
+                    duplicateLabel={t("forms.builder.duplicateField")}
+                    deleteLabel={t("forms.builder.deleteField")}
+                  />
+                ))}
+              </div>
+            </PanelSection>
+          </PanelBody>
         </SortableContext>
 
         <DragOverlay dropAnimation={null}>
@@ -198,7 +242,7 @@ export function FormCanvas({
           ) : null}
         </DragOverlay>
       </DndContext>
-    </div>
+    </Panel>
   );
 }
 
@@ -244,8 +288,8 @@ function SortableFieldRow({
       }}
       className={`flex items-center gap-2 rounded-lg border px-2 py-1.5 transition-colors ${
         selected
-          ? "border-indigo-400 bg-indigo-50/60 dark:bg-indigo-500/10"
-          : "bg-card"
+          ? "border-primary/40 bg-primary/5"
+          : "bg-muted/30 hover:border-border/80 hover:bg-muted/60"
       }`}
     >
       <button

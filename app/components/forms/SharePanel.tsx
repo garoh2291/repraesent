@@ -5,11 +5,12 @@ import { toast } from "sonner";
 import { Input } from "~/components/ui/input";
 import { Skeleton } from "~/components/ui/skeleton";
 import {
-  CardBody,
-  CardHeader,
-  InfoNote,
-  SectionCard,
-} from "~/components/wordpress/fields";
+  GhostAction,
+  Panel,
+  PanelBody,
+  PanelHeader,
+} from "~/components/forms/chrome";
+import { FieldHint, InfoNote } from "~/components/wordpress/fields";
 import { getFormSnippet, type SnippetMode } from "~/lib/api/forms";
 import { buildPublicFormUrl } from "~/lib/config";
 import type { FormLocale } from "~/lib/forms/schema";
@@ -41,19 +42,18 @@ export function SharePanel({
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-5">
       {hasUnpublishedChanges ? (
         <InfoNote>{t("forms.share.htmlWarning")}</InfoNote>
       ) : null}
 
-      <SectionCard>
-        <CardHeader
-          icon={<Link2 className="h-4 w-4" />}
+      <Panel>
+        <PanelHeader
+          icon={<Link2 className="h-3.5 w-3.5" />}
           title={t("forms.share.linkTitle")}
-          subtitle={t("forms.share.linkHint")}
-          muted
         />
-        <CardBody>
+        <PanelBody>
+          <FieldHint>{t("forms.share.linkHint")}</FieldHint>
           <div className="flex flex-col gap-2 sm:flex-row">
             <Input
               readOnly
@@ -62,14 +62,10 @@ export function SharePanel({
               onFocus={(e) => e.currentTarget.select()}
             />
             <div className="flex gap-2">
-              <button
-                type="button"
-                onClick={() => copy(publicUrl)}
-                className="inline-flex h-10 items-center gap-2 rounded-lg border border-border bg-muted/40 px-3 text-sm transition-colors hover:bg-muted"
-              >
+              <GhostAction className="h-10" onClick={() => copy(publicUrl)}>
                 <Copy className="h-3.5 w-3.5" />
                 {t("forms.share.copy")}
-              </button>
+              </GhostAction>
               <a
                 href={publicUrl}
                 target="_blank"
@@ -81,14 +77,14 @@ export function SharePanel({
               </a>
             </div>
           </div>
-        </CardBody>
-      </SectionCard>
+        </PanelBody>
+      </Panel>
 
       <SnippetCard
         formId={formId}
         mode="iframe"
         locale={defaultLocale}
-        icon={<MonitorPlay className="h-4 w-4" />}
+        icon={<MonitorPlay className="h-3.5 w-3.5" />}
         title={t("forms.share.iframeTitle")}
         subtitle={t("forms.share.iframeHint")}
         onCopy={copy}
@@ -98,7 +94,7 @@ export function SharePanel({
         formId={formId}
         mode="script"
         locale={defaultLocale}
-        icon={<Code2 className="h-4 w-4" />}
+        icon={<Code2 className="h-3.5 w-3.5" />}
         title={t("forms.share.scriptTitle")}
         subtitle={t("forms.share.scriptHint")}
         onCopy={copy}
@@ -108,7 +104,7 @@ export function SharePanel({
         formId={formId}
         mode="html"
         locale={defaultLocale}
-        icon={<Code2 className="h-4 w-4" />}
+        icon={<Code2 className="h-3.5 w-3.5" />}
         title={t("forms.share.htmlTitle")}
         subtitle={t("forms.share.htmlHint")}
         warning={t("forms.share.htmlWarning")}
@@ -147,25 +143,22 @@ function SnippetCard({
   });
 
   return (
-    <SectionCard>
-      <CardHeader
+    <Panel>
+      <PanelHeader
         icon={icon}
         title={title}
-        subtitle={subtitle}
-        muted
         action={
-          <button
-            type="button"
+          <GhostAction
             disabled={!snippet}
             onClick={() => snippet && onCopy(snippet)}
-            className="inline-flex h-9 items-center gap-2 rounded-lg border border-border bg-background px-3 text-sm transition-colors hover:bg-muted disabled:opacity-50"
           >
             <Copy className="h-3.5 w-3.5" />
             {t("forms.share.copy")}
-          </button>
+          </GhostAction>
         }
       />
-      <CardBody>
+      <PanelBody>
+        <FieldHint>{subtitle}</FieldHint>
         {warning ? (
           <p className="text-xs text-amber-700 dark:text-amber-400">
             {warning}
@@ -178,7 +171,7 @@ function SnippetCard({
             {snippet}
           </pre>
         )}
-      </CardBody>
-    </SectionCard>
+      </PanelBody>
+    </Panel>
   );
 }

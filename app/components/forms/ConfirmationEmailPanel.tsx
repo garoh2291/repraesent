@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { Code2, Eye } from "lucide-react";
+import { Code2, Eye, Mail, Save } from "lucide-react";
 import { useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Input } from "~/components/ui/input";
@@ -13,13 +13,15 @@ import {
 } from "~/components/ui/select";
 import { Textarea } from "~/components/ui/textarea";
 import {
-  CardBody,
-  CardHeader,
-  Field,
-  FieldHint,
-  SectionCard,
-  ToggleField,
-} from "~/components/wordpress/fields";
+  GhostAction,
+  Panel,
+  PanelBody,
+  PanelHeader,
+  PanelSection,
+  Segmented,
+  SegmentedButton,
+} from "~/components/forms/chrome";
+import { Field, FieldHint, ToggleField } from "~/components/wordpress/fields";
 import { listEmailAccounts } from "~/lib/api/workspaces";
 import {
   flattenFields,
@@ -52,6 +54,12 @@ interface Props {
    */
   locale: FormLocale;
   disabled?: boolean;
+  /**
+   * Rendered in the panel header. The Save used to sit on the page background
+   * below the card with no footer or toolbar attaching it to anything.
+   */
+  onSave?: () => void;
+  saveDisabled?: boolean;
   onChange: (value: FormConfirmationEmail) => void;
 }
 
@@ -62,6 +70,8 @@ export function ConfirmationEmailPanel({
   value,
   locale,
   disabled,
+  onSave,
+  saveDisabled,
   onChange,
 }: Props) {
   const { t } = useTranslation();
@@ -121,14 +131,23 @@ export function ConfirmationEmailPanel({
   };
 
   return (
-    <div className="space-y-6">
-      <SectionCard>
-        <CardHeader
-          title={t("forms.email.title")}
-          subtitle={t("forms.email.hint")}
-          muted
-        />
-        <CardBody>
+    <Panel>
+      <PanelHeader
+        icon={<Mail className="h-3.5 w-3.5" />}
+        title={t("forms.email.title")}
+        action={
+          onSave ? (
+            <GhostAction disabled={saveDisabled} onClick={onSave}>
+              <Save className="h-4 w-4" />
+              {t("forms.builder.save")}
+            </GhostAction>
+          ) : null
+        }
+      />
+      <PanelBody>
+        <PanelSection title={t("forms.email.sectionDelivery")}>
+          <FieldHint>{t("forms.email.hint")}</FieldHint>
+
           <ToggleField
             id="ce-enabled"
             label={t("forms.email.enabled")}
@@ -163,9 +182,9 @@ export function ConfirmationEmailPanel({
               </SelectContent>
             </Select>
           </Field>
+        </PanelSection>
 
-          <div className="border-t" />
-
+        <PanelSection title={t("forms.email.sectionMessage")}>
           <Field>
             <Label htmlFor="ce-subject">{t("forms.email.subject")}</Label>
             <Input
@@ -179,26 +198,22 @@ export function ConfirmationEmailPanel({
           <Field>
             <div className="flex items-center justify-between gap-3">
               <Label htmlFor="ce-body">{t("forms.email.body")}</Label>
-              <div className="flex gap-1 rounded-lg border p-0.5">
-                <button
-                  type="button"
+              <Segmented>
+                <SegmentedButton
+                  active={view === "code"}
                   onClick={() => setView("code")}
-                  aria-pressed={view === "code"}
-                  className={`rounded-md px-2 py-1 text-xs ${view === "code" ? "bg-muted" : "text-muted-foreground"}`}
                 >
                   <Code2 className="mr-1 inline h-3 w-3" />
                   {t("forms.email.code")}
-                </button>
-                <button
-                  type="button"
+                </SegmentedButton>
+                <SegmentedButton
+                  active={view === "preview"}
                   onClick={() => setView("preview")}
-                  aria-pressed={view === "preview"}
-                  className={`rounded-md px-2 py-1 text-xs ${view === "preview" ? "bg-muted" : "text-muted-foreground"}`}
                 >
                   <Eye className="mr-1 inline h-3 w-3" />
                   {t("forms.email.preview")}
-                </button>
-              </div>
+                </SegmentedButton>
+              </Segmented>
             </div>
 
             {view === "code" ? (
@@ -215,6 +230,8 @@ export function ConfirmationEmailPanel({
               <iframe
                 title={t("forms.email.preview")}
                 srcDoc={current.html}
+                // The preview renders the customer's own HTML, which assumes a
+                // white page — so this stays white in both themes.
                 className="h-72 w-full rounded-lg border bg-white"
                 sandbox=""
               />
@@ -237,8 +254,8 @@ export function ConfirmationEmailPanel({
               ))}
             </div>
           </Field>
-        </CardBody>
-      </SectionCard>
-    </div>
+        </PanelSection>
+      </PanelBody>
+    </Panel>
   );
 }

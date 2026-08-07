@@ -1,4 +1,4 @@
-import { ChevronDown, Monitor, Smartphone, Tablet } from "lucide-react";
+import { ChevronDown, Eye, Monitor, Smartphone, Tablet } from "lucide-react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { FormRenderer } from "~/components/forms/FormRenderer";
@@ -19,14 +19,18 @@ import {
   CollapsibleTrigger,
 } from "~/components/ui/collapsible";
 import {
-  CardBody,
-  CardHeader,
+  Cols,
+  Panel,
+  PanelBody,
+  PanelHeader,
+  Segmented,
+  SegmentedButton,
+} from "~/components/forms/chrome";
+import {
   ColorInput,
   Field,
   FieldHint,
-  SectionCard,
   ToggleField,
-  TwoCol,
 } from "~/components/wordpress/fields";
 import {
   DEFAULT_FORM_THEME,
@@ -95,11 +99,11 @@ export function ThemePanel({
     onChange({ success: { ...definition.success, ...patch } });
 
   return (
-    <div className="grid gap-6 xl:grid-cols-[minmax(0,380px)_minmax(0,1fr)]">
-      <div className="space-y-4">
-        <SectionCard>
-          <CardHeader title={t("forms.design.colors")} muted />
-          <CardBody>
+    <div className="grid gap-4 sm:gap-5 xl:grid-cols-[minmax(0,380px)_minmax(0,1fr)]">
+      <div className="space-y-4 sm:space-y-5">
+        <Panel>
+          <PanelHeader title={t("forms.design.colors")} />
+          <PanelBody>
             <Field>
               <Label>{t("forms.design.mode")}</Label>
               <Select
@@ -196,12 +200,12 @@ export function ThemePanel({
                 />
               </Field>
             ))}
-          </CardBody>
-        </SectionCard>
+          </PanelBody>
+        </Panel>
 
-        <SectionCard>
-          <CardHeader title={t("forms.design.layout")} muted />
-          <CardBody>
+        <Panel>
+          <PanelHeader title={t("forms.design.layout")} />
+          <PanelBody>
             <Field>
               <Label>
                 {t("forms.design.radius")} · {theme.radius}px
@@ -244,7 +248,7 @@ export function ThemePanel({
               </Select>
             </Field>
 
-            <TwoCol>
+            <Cols>
               <Field>
                 <Label>{t("forms.design.fieldStyle")}</Label>
                 <Select
@@ -292,9 +296,9 @@ export function ThemePanel({
                   </SelectContent>
                 </Select>
               </Field>
-            </TwoCol>
+            </Cols>
 
-            <TwoCol>
+            <Cols>
               <Field>
                 <Label>{t("forms.design.width")}</Label>
                 <Select
@@ -340,7 +344,7 @@ export function ThemePanel({
                   </SelectContent>
                 </Select>
               </Field>
-            </TwoCol>
+            </Cols>
 
             <ToggleField
               id="theme-fullwidth"
@@ -362,12 +366,12 @@ export function ThemePanel({
               onChange={(v) => onChange({ showLanguageSwitcher: v })}
             />
             <FieldHint>{t("forms.design.showLanguageSwitcherHint")}</FieldHint>
-          </CardBody>
-        </SectionCard>
+          </PanelBody>
+        </Panel>
 
-        <SectionCard>
-          <CardHeader title={t("forms.design.behaviour")} muted />
-          <CardBody>
+        <Panel>
+          <PanelHeader title={t("forms.design.behaviour")} />
+          <PanelBody>
             <Field>
               <Label>{t("forms.design.successMode")}</Label>
               <Select
@@ -482,32 +486,33 @@ export function ThemePanel({
                 </Field>
               </>
             ) : null}
-          </CardBody>
-        </SectionCard>
+          </PanelBody>
+        </Panel>
 
-        <SectionCard>
-          <Collapsible>
+        <Panel>
+          {/* The trigger IS the panel header — before this it was a hand-rolled
+              copy of CardHeader that had already drifted from the original. */}
+          <Collapsible className="group/errors">
             <CollapsibleTrigger asChild>
-              <button
-                type="button"
-                className="flex w-full items-center justify-between gap-3 border-b bg-muted/30 px-5 py-4 text-left sm:px-6"
-              >
-                <span>
-                  <span className="block text-sm font-semibold tracking-tight">
-                    {t("forms.design.errors")}
-                  </span>
-                  <span className="mt-0.5 block text-xs text-muted-foreground">
-                    {t("forms.design.errorsSummary", {
-                      total: ERROR_COPY_KEYS.length,
-                      blank: blankErrorCount,
-                    })}
-                  </span>
-                </span>
-                <ChevronDown className="h-4 w-4 shrink-0 text-muted-foreground" />
+              <button type="button" className="block w-full text-left">
+                <PanelHeader
+                  title={t("forms.design.errors")}
+                  meta={
+                    <span className="text-[11px] normal-case tracking-normal text-muted-foreground/70">
+                      {t("forms.design.errorsSummary", {
+                        total: ERROR_COPY_KEYS.length,
+                        blank: blankErrorCount,
+                      })}
+                    </span>
+                  }
+                  action={
+                    <ChevronDown className="h-4 w-4 shrink-0 text-muted-foreground transition-transform group-data-[state=open]/errors:rotate-180" />
+                  }
+                />
               </button>
             </CollapsibleTrigger>
             <CollapsibleContent>
-              <CardBody>
+              <PanelBody>
                 <FieldHint>{t("forms.design.errorsHint")}</FieldHint>
 
                 {/* error.generic first and full-width: it is the fallback for
@@ -527,7 +532,7 @@ export function ThemePanel({
                   />
                 </Field>
 
-                <TwoCol>
+                <Cols>
                   {FORM_ERROR_CODES.map((code) => (
                     <Field key={code}>
                       <Label htmlFor={`err-${code}`}>
@@ -543,46 +548,44 @@ export function ThemePanel({
                       />
                     </Field>
                   ))}
-                </TwoCol>
-              </CardBody>
+                </Cols>
+              </PanelBody>
             </CollapsibleContent>
           </Collapsible>
-        </SectionCard>
+        </Panel>
       </div>
 
-      <div className="space-y-3">
-        <div className="flex items-center justify-between">
-          <h2 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-            {t("forms.design.preview")}
-          </h2>
-          <div className="flex gap-1 rounded-lg border p-0.5">
-            {(
-              [
-                ["mobile", Smartphone],
-                ["tablet", Tablet],
-                ["desktop", Monitor],
-              ] as const
-            ).map(([key, Icon]) => (
-              <button
-                key={key}
-                type="button"
-                onClick={() => setDevice(key)}
-                aria-label={t(`forms.design.${key}`)}
-                aria-pressed={device === key}
-                className={`rounded-md p-1.5 transition-colors ${
-                  device === key
-                    ? "bg-muted text-foreground"
-                    : "text-muted-foreground hover:bg-muted/60"
-                }`}
-              >
-                <Icon className="h-4 w-4" />
-              </button>
-            ))}
-          </div>
-        </div>
-
+      {/* Sticky, or the preview scrolls away from the settings it reflects.
+          --fb-stick is declared on the builder shell and clears the command
+          bar; the fallback keeps this component usable on its own. */}
+      <Panel className="xl:sticky xl:top-[var(--fb-stick,1.5rem)] xl:self-start">
+        <PanelHeader
+          icon={<Eye className="h-3.5 w-3.5" />}
+          title={t("forms.design.preview")}
+          action={
+            <Segmented label={t("forms.design.preview")}>
+              {(
+                [
+                  ["mobile", Smartphone],
+                  ["tablet", Tablet],
+                  ["desktop", Monitor],
+                ] as const
+              ).map(([key, Icon]) => (
+                <SegmentedButton
+                  key={key}
+                  active={device === key}
+                  onClick={() => setDevice(key)}
+                  label={t(`forms.design.${key}`)}
+                  className="px-1.5 py-1.5"
+                >
+                  <Icon className="h-4 w-4" />
+                </SegmentedButton>
+              ))}
+            </Segmented>
+          }
+        />
         <div
-          className="overflow-x-auto rounded-xl border p-5"
+          className="overflow-x-auto p-5 sm:p-8"
           style={{ background: theme.background }}
         >
           <div
@@ -601,7 +604,7 @@ export function ThemePanel({
             />
           </div>
         </div>
-      </div>
+      </Panel>
     </div>
   );
 }

@@ -2774,7 +2774,8 @@
       "leaveTitle": "Weggaan zonder opslaan?",
       "leaveBody": "U hebt niet-opgeslagen wijzigingen aan dit formulier. Ze gaan verloren.",
       "leaveStay": "Verder bewerken",
-      "leaveDiscard": "Wijzigingen verwerpen"
+      "leaveDiscard": "Wijzigingen verwerpen",
+      "previewTitle": "Voorbeeld"
     },
     "palette": {
       "title": "Veld toevoegen",
@@ -2848,7 +2849,12 @@
       "submit": "Verzendknop",
       "submitCaption": "Knoptekst",
       "submitHint": "Nodig in elke taal die u aanbiedt.",
-      "titleHiddenHint": "De titel is verborgen op het formulier. Zet hem weer aan bij Ontwerp → Lay-out."
+      "titleHiddenHint": "De titel is verborgen op het formulier. Zet hem weer aan bij Ontwerp → Lay-out.",
+      "noneHint": "Klik op de titel, een veld of de verzendknop.",
+      "sectionContent": "Inhoud",
+      "sectionData": "Gegevens",
+      "sectionLayout": "Lay-out",
+      "sectionRules": "Regels"
     },
     "design": {
       "title": "Ontwerp",
@@ -2934,7 +2940,9 @@
       "code": "HTML",
       "preview": "Voorbeeld",
       "variables": "Waarde invoegen",
-      "saved": "Bevestigingsmail opgeslagen"
+      "saved": "Bevestigingsmail opgeslagen",
+      "sectionDelivery": "Verzending",
+      "sectionMessage": "Bericht"
     },
     "share": {
       "publishFirst": "Publiceer dit formulier voordat u het deelt — de link en insluitingen blijven tot dan inactief.",

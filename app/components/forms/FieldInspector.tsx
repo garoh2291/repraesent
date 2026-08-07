@@ -1,4 +1,13 @@
+import { Heading, MousePointerClick, SendHorizontal, Sliders } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import {
+  Cols,
+  EmptyPanelState,
+  Panel,
+  PanelBody,
+  PanelHeader,
+  PanelSection,
+} from "~/components/forms/chrome";
 import { Input } from "~/components/ui/input";
 import { Label } from "~/components/ui/label";
 import {
@@ -10,8 +19,8 @@ import {
 } from "~/components/ui/select";
 import { Switch } from "~/components/ui/switch";
 import { Textarea } from "~/components/ui/textarea";
-import { Field, FieldHint, TwoCol } from "~/components/wordpress/fields";
-import { snakeKey } from "~/lib/forms/field-types";
+import { Field, FieldHint } from "~/components/wordpress/fields";
+import { FIELD_TYPE_META, snakeKey } from "~/lib/forms/field-types";
 import type { InspectorTarget } from "~/lib/forms/selection";
 import {
   FORM_FIELD_MAPPINGS,
@@ -24,6 +33,24 @@ import {
 import { OptionsEditor } from "./OptionsEditor";
 
 const NO_MAPPING = "__none__";
+
+/**
+ * Field types for which `TypeSpecific` renders something. Kept in step with its
+ * switch by hand — the alternative is rendering the element and testing it for
+ * null, which JSX makes impossible (an element is always truthy), and an empty
+ * "Rules" section reads as a bug.
+ */
+const HAS_TYPE_RULES = new Set<FormField["type"]>([
+  "short_text",
+  "long_text",
+  "number",
+  "date",
+  "checkbox_group",
+  "rating",
+  "scale",
+  "address",
+  "hidden",
+]);
 
 interface Props {
   /** What is selected on the canvas: a field, the form header, or the submit button. */
@@ -52,9 +79,17 @@ export function FieldInspector({
 
   if (!target) {
     return (
-      <p className="p-1 text-sm text-muted-foreground">
-        {t("forms.inspector.none")}
-      </p>
+      <Panel>
+        <PanelHeader
+          icon={<Sliders className="h-3.5 w-3.5" />}
+          title={t("forms.inspector.title")}
+        />
+        <EmptyPanelState
+          icon={<MousePointerClick className="h-5 w-5" />}
+          title={t("forms.inspector.none")}
+          hint={t("forms.inspector.noneHint")}
+        />
+      </Panel>
     );
   }
 
@@ -64,69 +99,73 @@ export function FieldInspector({
   // locale-agnostic.
   if (target.kind === "header") {
     return (
-      <div className="space-y-5">
-        <h2 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-          {t("forms.inspector.header")}
-        </h2>
+      <Panel>
+        <PanelHeader
+          icon={<Heading className="h-3.5 w-3.5" />}
+          title={t("forms.inspector.header")}
+        />
+        <PanelBody>
+          <Field>
+            <Label htmlFor="fi-form-title">
+              {t("forms.inspector.formTitle")}
+            </Label>
+            <Input
+              id="fi-form-title"
+              disabled={disabled}
+              value={getText(contentKey.formTitle())}
+              onChange={(e) => setText(contentKey.formTitle(), e.target.value)}
+            />
+          </Field>
 
-        <Field>
-          <Label htmlFor="fi-form-title">
-            {t("forms.inspector.formTitle")}
-          </Label>
-          <Input
-            id="fi-form-title"
-            disabled={disabled}
-            value={getText(contentKey.formTitle())}
-            onChange={(e) => setText(contentKey.formTitle(), e.target.value)}
-          />
-        </Field>
+          <Field>
+            <Label htmlFor="fi-form-desc">
+              {t("forms.inspector.formDescription")}
+            </Label>
+            <Textarea
+              id="fi-form-desc"
+              rows={3}
+              disabled={disabled}
+              value={getText(contentKey.formDescription())}
+              onChange={(e) =>
+                setText(contentKey.formDescription(), e.target.value)
+              }
+            />
+          </Field>
 
-        <Field>
-          <Label htmlFor="fi-form-desc">
-            {t("forms.inspector.formDescription")}
-          </Label>
-          <Textarea
-            id="fi-form-desc"
-            rows={3}
-            disabled={disabled}
-            value={getText(contentKey.formDescription())}
-            onChange={(e) =>
-              setText(contentKey.formDescription(), e.target.value)
-            }
-          />
-        </Field>
-
-        {!target.showFormTitle ? (
-          <FieldHint>{t("forms.inspector.titleHiddenHint")}</FieldHint>
-        ) : (
-          <FieldHint>{t("forms.inspector.headerHint")}</FieldHint>
-        )}
-      </div>
+          {!target.showFormTitle ? (
+            <FieldHint>{t("forms.inspector.titleHiddenHint")}</FieldHint>
+          ) : (
+            <FieldHint>{t("forms.inspector.headerHint")}</FieldHint>
+          )}
+        </PanelBody>
+      </Panel>
     );
   }
 
   if (target.kind === "submit") {
     const caption = getText(contentKey.formSubmit());
     return (
-      <div className="space-y-5">
-        <h2 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-          {t("forms.inspector.submit")}
-        </h2>
-
-        <Field>
-          <Label htmlFor="fi-submit">
-            {t("forms.inspector.submitCaption")}
-          </Label>
-          <Input
-            id="fi-submit"
-            disabled={disabled}
-            value={caption}
-            aria-invalid={caption.trim() === "" || undefined}
-            onChange={(e) => setText(contentKey.formSubmit(), e.target.value)}
-          />
-          <FieldHint>{t("forms.inspector.submitHint")}</FieldHint>
-        </Field>
-      </div>
+      <Panel>
+        <PanelHeader
+          icon={<SendHorizontal className="h-3.5 w-3.5" />}
+          title={t("forms.inspector.submit")}
+        />
+        <PanelBody>
+          <Field>
+            <Label htmlFor="fi-submit">
+              {t("forms.inspector.submitCaption")}
+            </Label>
+            <Input
+              id="fi-submit"
+              disabled={disabled}
+              value={caption}
+              aria-invalid={caption.trim() === "" || undefined}
+              onChange={(e) => setText(contentKey.formSubmit(), e.target.value)}
+            />
+            <FieldHint>{t("forms.inspector.submitHint")}</FieldHint>
+          </Field>
+        </PanelBody>
+      </Panel>
     );
   }
 
@@ -140,195 +179,215 @@ export function FieldInspector({
   const keyCollides = otherKeys?.has(field.key) ?? false;
   const presentational = isPresentational(field.type);
 
+  const FieldIcon = FIELD_TYPE_META[field.type].icon;
+  const mappable = !presentational && field.type !== "hidden";
+
   return (
-    <div className="space-y-5">
-      <div className="flex items-center justify-between gap-2">
-        <h2 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-          {t("forms.inspector.title")}
-        </h2>
-        <span className="rounded bg-muted px-1.5 py-0.5 font-mono text-[11px] text-muted-foreground">
-          {t(`forms.palette.${field.type}`)}
-        </span>
-      </div>
-
-      {presentational ? (
-        <Field>
-          <Label htmlFor="fi-text">{t("forms.inspector.text")}</Label>
-          <Textarea
-            id="fi-text"
-            rows={3}
-            disabled={disabled}
-            value={getText(contentKey.fieldText(field.id))}
-            onChange={(e) =>
-              setText(contentKey.fieldText(field.id), e.target.value)
-            }
-          />
-        </Field>
-      ) : (
-        <>
-          <Field>
-            <Label htmlFor="fi-label">{t("forms.inspector.label")}</Label>
-            <Input
-              id="fi-label"
-              disabled={disabled}
-              value={getText(contentKey.fieldLabel(field.id))}
-              onChange={(e) =>
-                setText(contentKey.fieldLabel(field.id), e.target.value)
-              }
-            />
-          </Field>
-
-          {field.type !== "checkbox" ? (
+    <Panel>
+      <PanelHeader
+        icon={<FieldIcon className="h-3.5 w-3.5" />}
+        title={t("forms.inspector.title")}
+        action={
+          <span className="rounded bg-muted px-1.5 py-0.5 font-mono text-[11px] text-muted-foreground">
+            {t(`forms.palette.${field.type}`)}
+          </span>
+        }
+      />
+      <PanelBody>
+        <PanelSection title={t("forms.inspector.sectionContent")}>
+          {presentational ? (
             <Field>
-              <Label htmlFor="fi-ph">{t("forms.inspector.placeholder")}</Label>
-              <Input
-                id="fi-ph"
+              <Label htmlFor="fi-text">{t("forms.inspector.text")}</Label>
+              <Textarea
+                id="fi-text"
+                rows={3}
                 disabled={disabled}
-                value={getText(contentKey.fieldPlaceholder(field.id))}
+                value={getText(contentKey.fieldText(field.id))}
                 onChange={(e) =>
-                  setText(contentKey.fieldPlaceholder(field.id), e.target.value)
+                  setText(contentKey.fieldText(field.id), e.target.value)
                 }
               />
             </Field>
-          ) : null}
+          ) : (
+            <>
+              <Field>
+                <Label htmlFor="fi-label">{t("forms.inspector.label")}</Label>
+                <Input
+                  id="fi-label"
+                  disabled={disabled}
+                  value={getText(contentKey.fieldLabel(field.id))}
+                  onChange={(e) =>
+                    setText(contentKey.fieldLabel(field.id), e.target.value)
+                  }
+                />
+              </Field>
 
-          <Field>
-            <Label htmlFor="fi-help">{t("forms.inspector.help")}</Label>
-            <Input
-              id="fi-help"
-              disabled={disabled}
-              value={getText(contentKey.fieldHelp(field.id))}
-              onChange={(e) =>
-                setText(contentKey.fieldHelp(field.id), e.target.value)
-              }
-            />
-          </Field>
-        </>
-      )}
+              {field.type !== "checkbox" ? (
+                <Field>
+                  <Label htmlFor="fi-ph">
+                    {t("forms.inspector.placeholder")}
+                  </Label>
+                  <Input
+                    id="fi-ph"
+                    disabled={disabled}
+                    value={getText(contentKey.fieldPlaceholder(field.id))}
+                    onChange={(e) =>
+                      setText(
+                        contentKey.fieldPlaceholder(field.id),
+                        e.target.value,
+                      )
+                    }
+                  />
+                </Field>
+              ) : null}
 
-      <div className="border-t" />
+              <Field>
+                <Label htmlFor="fi-help">{t("forms.inspector.help")}</Label>
+                <Input
+                  id="fi-help"
+                  disabled={disabled}
+                  value={getText(contentKey.fieldHelp(field.id))}
+                  onChange={(e) =>
+                    setText(contentKey.fieldHelp(field.id), e.target.value)
+                  }
+                />
+              </Field>
+            </>
+          )}
 
-      <Field>
-        <Label htmlFor="fi-key">{t("forms.inspector.key")}</Label>
-        <Input
-          id="fi-key"
-          disabled={disabled}
-          value={field.key}
-          aria-invalid={keyCollides || undefined}
-          onChange={(e) => patchField({ key: snakeKey(e.target.value) })}
-          className="font-mono text-sm"
-        />
-        {keyCollides ? (
-          <p className="text-xs text-destructive">
-            {t("forms.inspector.keyInUse")}
-          </p>
-        ) : (
-          <FieldHint>{t("forms.inspector.keyHint")}</FieldHint>
-        )}
-      </Field>
-
-      <TwoCol>
-        <Field>
-          <Label>{t("forms.inspector.width")}</Label>
-          <Select
-            disabled={disabled}
-            value={field.width}
-            onValueChange={(v) =>
-              patchField({ width: v as FormField["width"] })
-            }
-          >
-            <SelectTrigger>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="full">
-                {t("forms.inspector.widthFull")}
-              </SelectItem>
-              <SelectItem value="half">
-                {t("forms.inspector.widthHalf")}
-              </SelectItem>
-            </SelectContent>
-          </Select>
-        </Field>
-
-        {!presentational && field.type !== "hidden" ? (
-          <Field>
-            <Label htmlFor="fi-required">{t("forms.inspector.required")}</Label>
-            <div className="flex h-9 items-center">
-              <Switch
-                id="fi-required"
+          {hasOptions(field.type) ? (
+            <Field>
+              <Label>{t("forms.inspector.options")}</Label>
+              <OptionsEditor
+                options={field.options ?? []}
                 disabled={disabled}
-                checked={validation.required === true}
-                onCheckedChange={(v) => patchValidation({ required: v })}
+                labelFor={(optionId) =>
+                  getText(contentKey.fieldOption(field.id, optionId))
+                }
+                onLabelChange={(optionId, label) =>
+                  setText(contentKey.fieldOption(field.id, optionId), label)
+                }
+                onChange={(options) => patchField({ options })}
               />
-            </div>
+            </Field>
+          ) : null}
+        </PanelSection>
+
+        <PanelSection title={t("forms.inspector.sectionData")}>
+          <Field>
+            <Label htmlFor="fi-key">{t("forms.inspector.key")}</Label>
+            <Input
+              id="fi-key"
+              disabled={disabled}
+              value={field.key}
+              aria-invalid={keyCollides || undefined}
+              onChange={(e) => patchField({ key: snakeKey(e.target.value) })}
+              className="font-mono text-sm"
+            />
+            {keyCollides ? (
+              <p className="text-xs text-destructive">
+                {t("forms.inspector.keyInUse")}
+              </p>
+            ) : (
+              <FieldHint>{t("forms.inspector.keyHint")}</FieldHint>
+            )}
           </Field>
+
+          {mappable ? (
+            <Field>
+              <Label>{t("forms.inspector.mapping")}</Label>
+              <Select
+                disabled={disabled}
+                value={field.mapping ?? NO_MAPPING}
+                onValueChange={(v) =>
+                  patchField({
+                    mapping: v === NO_MAPPING ? null : (v as FormFieldMapping),
+                  })
+                }
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value={NO_MAPPING}>
+                    {t("forms.inspector.mappingNone")}
+                  </SelectItem>
+                  {FORM_FIELD_MAPPINGS.map((mapping) => (
+                    <SelectItem
+                      key={mapping}
+                      value={mapping}
+                      // A lead column can only be filled once.
+                      disabled={otherMappings?.has(mapping) ?? false}
+                    >
+                      {t(`forms.mapping.${mapping}`, {
+                        defaultValue: mapping.replace(/_/g, " "),
+                      })}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <FieldHint>{t("forms.inspector.mappingHint")}</FieldHint>
+            </Field>
+          ) : null}
+        </PanelSection>
+
+        <PanelSection title={t("forms.inspector.sectionLayout")}>
+          <Cols>
+            <Field>
+              <Label>{t("forms.inspector.width")}</Label>
+              <Select
+                disabled={disabled}
+                value={field.width}
+                onValueChange={(v) =>
+                  patchField({ width: v as FormField["width"] })
+                }
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="full">
+                    {t("forms.inspector.widthFull")}
+                  </SelectItem>
+                  <SelectItem value="half">
+                    {t("forms.inspector.widthHalf")}
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+            </Field>
+
+            {mappable ? (
+              <Field>
+                <Label htmlFor="fi-required">
+                  {t("forms.inspector.required")}
+                </Label>
+                <div className="flex h-9 items-center">
+                  <Switch
+                    id="fi-required"
+                    disabled={disabled}
+                    checked={validation.required === true}
+                    onCheckedChange={(v) => patchValidation({ required: v })}
+                  />
+                </div>
+              </Field>
+            ) : null}
+          </Cols>
+        </PanelSection>
+
+        {HAS_TYPE_RULES.has(field.type) ? (
+          <PanelSection title={t("forms.inspector.sectionRules")}>
+            <TypeSpecific
+              field={field}
+              disabled={disabled}
+              onChange={patchField}
+              patchValidation={patchValidation}
+              getText={getText}
+              setText={setText}
+            />
+          </PanelSection>
         ) : null}
-      </TwoCol>
-
-      {!presentational && field.type !== "hidden" ? (
-        <Field>
-          <Label>{t("forms.inspector.mapping")}</Label>
-          <Select
-            disabled={disabled}
-            value={field.mapping ?? NO_MAPPING}
-            onValueChange={(v) =>
-              patchField({
-                mapping: v === NO_MAPPING ? null : (v as FormFieldMapping),
-              })
-            }
-          >
-            <SelectTrigger>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value={NO_MAPPING}>
-                {t("forms.inspector.mappingNone")}
-              </SelectItem>
-              {FORM_FIELD_MAPPINGS.map((mapping) => (
-                <SelectItem
-                  key={mapping}
-                  value={mapping}
-                  // A lead column can only be filled once.
-                  disabled={otherMappings?.has(mapping) ?? false}
-                >
-                  {t(`forms.mapping.${mapping}`, {
-                    defaultValue: mapping.replace(/_/g, " "),
-                  })}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <FieldHint>{t("forms.inspector.mappingHint")}</FieldHint>
-        </Field>
-      ) : null}
-
-      {hasOptions(field.type) ? (
-        <Field>
-          <Label>{t("forms.inspector.options")}</Label>
-          <OptionsEditor
-            options={field.options ?? []}
-            disabled={disabled}
-            labelFor={(optionId) =>
-              getText(contentKey.fieldOption(field.id, optionId))
-            }
-            onLabelChange={(optionId, label) =>
-              setText(contentKey.fieldOption(field.id, optionId), label)
-            }
-            onChange={(options) => patchField({ options })}
-          />
-        </Field>
-      ) : null}
-
-      <TypeSpecific
-        field={field}
-        disabled={disabled}
-        onChange={patchField}
-        patchValidation={patchValidation}
-        getText={getText}
-        setText={setText}
-      />
-    </div>
+      </PanelBody>
+    </Panel>
   );
 }
 
@@ -374,7 +433,7 @@ function TypeSpecific({
     case "short_text":
     case "long_text":
       return (
-        <TwoCol>
+        <Cols>
           {numberInput(
             "fi-minl",
             t("forms.inspector.minLength"),
@@ -387,24 +446,24 @@ function TypeSpecific({
             v.maxLength,
             (n) => patchValidation({ maxLength: n }),
           )}
-        </TwoCol>
+        </Cols>
       );
 
     case "number":
       return (
-        <TwoCol>
+        <Cols>
           {numberInput("fi-min", t("forms.inspector.min"), v.min, (n) =>
             patchValidation({ min: n }),
           )}
           {numberInput("fi-max", t("forms.inspector.max"), v.max, (n) =>
             patchValidation({ max: n }),
           )}
-        </TwoCol>
+        </Cols>
       );
 
     case "date":
       return (
-        <TwoCol>
+        <Cols>
           <Field>
             <Label htmlFor="fi-mind">{t("forms.inspector.minDate")}</Label>
             <Input
@@ -429,12 +488,12 @@ function TypeSpecific({
               }
             />
           </Field>
-        </TwoCol>
+        </Cols>
       );
 
     case "checkbox_group":
       return (
-        <TwoCol>
+        <Cols>
           {numberInput(
             "fi-mins",
             t("forms.inspector.minSelected"),
@@ -447,7 +506,7 @@ function TypeSpecific({
             v.maxSelected,
             (n) => patchValidation({ maxSelected: n }),
           )}
-        </TwoCol>
+        </Cols>
       );
 
     case "rating":
@@ -460,7 +519,7 @@ function TypeSpecific({
 
     case "scale":
       return (
-        <TwoCol>
+        <Cols>
           {numberInput(
             "fi-smin",
             t("forms.inspector.scaleMin"),
@@ -475,7 +534,7 @@ function TypeSpecific({
             (n) =>
               onChange({ scale: { min: field.scale?.min ?? 1, max: n ?? 10 } }),
           )}
-        </TwoCol>
+        </Cols>
       );
 
     case "address": {

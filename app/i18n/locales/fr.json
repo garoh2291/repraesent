@@ -2776,7 +2776,8 @@
       "leaveTitle": "Quitter sans enregistrer ?",
       "leaveBody": "Vous avez des modifications non enregistrées sur ce formulaire. Elles seront perdues.",
       "leaveStay": "Continuer l'édition",
-      "leaveDiscard": "Abandonner les modifications"
+      "leaveDiscard": "Abandonner les modifications",
+      "previewTitle": "Aperçu"
     },
     "palette": {
       "title": "Ajouter un champ",
@@ -2850,7 +2851,12 @@
       "submit": "Bouton d'envoi",
       "submitCaption": "Texte du bouton",
       "submitHint": "Requis dans chaque langue proposée.",
-      "titleHiddenHint": "Le titre est masqué sur le formulaire. Réactivez-le dans Design → Mise en page."
+      "titleHiddenHint": "Le titre est masqué sur le formulaire. Réactivez-le dans Design → Mise en page.",
+      "noneHint": "Cliquez sur le titre, un champ ou le bouton d’envoi.",
+      "sectionContent": "Contenu",
+      "sectionData": "Données",
+      "sectionLayout": "Mise en page",
+      "sectionRules": "Règles"
     },
     "design": {
       "title": "Design",
@@ -2936,7 +2942,9 @@
       "code": "HTML",
       "preview": "Aperçu",
       "variables": "Insérer une valeur",
-      "saved": "E-mail de confirmation enregistré"
+      "saved": "E-mail de confirmation enregistré",
+      "sectionDelivery": "Envoi",
+      "sectionMessage": "Message"
     },
     "share": {
       "publishFirst": "Publiez ce formulaire avant de le partager — le lien et les intégrations restent inactifs jusque-là.",
