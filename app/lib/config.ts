@@ -15,6 +15,15 @@ export function buildPublicBookingUrl(configId: string): string {
   return `${base}/book/${configId}`;
 }
 
+/**
+ * Build full public form URL: {baseUrl}/f/{formId}.
+ * Shares the booking base URL — both are public pages served by this app.
+ */
+export function buildPublicFormUrl(formId: string): string {
+  const base = getPublicBookingBaseUrl();
+  return `${base}/f/${formId}`;
+}
+
 /** API origin (e.g. http://localhost:8001) for static assets like logo */
 export function getApiOrigin(): string {
   const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:8001/api";

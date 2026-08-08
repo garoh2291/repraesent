@@ -7,6 +7,7 @@ import {
   BookUser,
   CheckSquare,
   ChevronDown,
+  ClipboardList,
   Columns3,
   Globe,
   HomeIcon,
@@ -299,6 +300,17 @@ export function Sidebar({
                 {t("nav.wordpress", "Website")}
               </NavLink>
             )}
+
+            {/* Forms is available to every workspace, so it sits outside the
+                services map rather than being gated on a service_type. */}
+            <NavLink
+              to="/forms"
+              isActive={location.pathname.startsWith("/forms")}
+              onClick={onClose}
+            >
+              <ClipboardList className="h-4 w-4 shrink-0" />
+              {t("nav.forms", "Forms")}
+            </NavLink>
 
             {currentWorkspace?.services
               ?.filter(
