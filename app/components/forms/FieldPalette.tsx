@@ -44,6 +44,9 @@ export function FieldPalette({ onAdd, disabled }: Props) {
                   <button
                     key={type}
                     type="button"
+                    // Lets anything address a palette row by what it is rather
+                    // than by position — used by the onboarding demo's cursor.
+                    data-field-type={type}
                     disabled={disabled}
                     onClick={() => onAdd(type)}
                     className="group flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-left text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-transparent"

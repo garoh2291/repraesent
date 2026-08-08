@@ -3016,6 +3016,37 @@
       "retranslateConfirmTitle": "Overwrite existing translations?",
       "retranslateConfirmBody": "Every string in this language is replaced, including any you wrote yourself.",
       "defaultLocaleSeeded": "Default language changed. Existing text was copied across as a starting point."
+    },
+    "intro": {
+      "title": "How Forms works",
+      "subtitle": "A short walkthrough of building and publishing a form.",
+      "stepOf": "Step {{step}} of {{total}}",
+      "goToStep": "Go to step {{step}}",
+      "replay": "How Forms works",
+      "replayShort": "Watch again",
+      "pause": "Pause",
+      "play": "Play",
+      "skip": "Skip",
+      "done": "Start building",
+      "finished": "That's it — your form is live and collecting leads.",
+      "chapter": {
+        "create": "Start with a new form.",
+        "name": "Give it a name.",
+        "fields": "Add the fields you need — click a type and it lands on the canvas.",
+        "language": "Add a language and the form is translated for you.",
+        "design": "Design controls the colours, fonts and spacing.",
+        "share": "Copy a link, an iframe, a script tag or a single HTML file.",
+        "publish": "Turn it Live and every submission arrives as a lead."
+      },
+      "demo": {
+        "formName": "Contact form",
+        "name": "Name",
+        "email": "E-mail",
+        "phone": "Phone",
+        "message": "Message",
+        "formTitle": "Get in touch",
+        "submit": "Send"
+      }
     }
   }
 }

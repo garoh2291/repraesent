@@ -2,15 +2,17 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   ClipboardList,
   Copy,
+  HelpCircle,
   Link2,
   MoreHorizontal,
   Plus,
   Trash2,
 } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router";
 import { toast } from "sonner";
+import { FormsIntroModal } from "~/components/forms/intro/FormsIntroModal";
 import { FormStatusBadge } from "~/components/forms/FormStatusBadge";
 import {
   AlertDialog,
@@ -53,6 +55,8 @@ import {
   type FormSummary,
 } from "~/lib/api/forms";
 import { buildPublicFormUrl } from "~/lib/config";
+import { useLocalStorageValue } from "~/lib/hooks/useLocalStorage";
+import { useAuthContext } from "~/providers/auth-provider";
 import {
   FORM_LOCALES,
   isFormLocale,
@@ -69,13 +73,48 @@ export function meta() {
   ];
 }
 
+/** Per-browser, by design — no migration, and nothing on `users` to hang it on. */
+const INTRO_SEEN_KEY = "forms-intro-seen";
+
 export default function FormsIndexRoute() {
   const { t, i18n: i18next } = useTranslation();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const canEdit = useCanEditForms();
+  const { user } = useAuthContext();
+  const userId = user?.id;
+  const onboardingDoneAt = user?.onboarding_completed_at;
 
   const { data: forms, isLoading } = useForms();
+
+  // --- first-visit intro ----------------------------------------------------
+  const { item: introSeen, setItem: setIntroSeen } =
+    useLocalStorageValue<boolean>(INTRO_SEEN_KEY);
+  const [introOpen, setIntroOpen] = useState(false);
+
+  useEffect(() => {
+    if (introSeen) return;
+    // Opening from an effect is required, not stylistic: useLocalStorageValue
+    // is useSyncExternalStore with a `""` server snapshot, so `introSeen` reads
+    // as null through SSR and hydration. Gating during render would flash the
+    // modal at every returning user before localStorage is legible.
+    //
+    // The null check on onboarding_completed_at keeps this off the screen while
+    // the global OnboardingTour is still pending — _dashboard-layout wraps
+    // /forms too, so a brand-new user would otherwise get both at once.
+    if (!userId || onboardingDoneAt == null) return;
+
+    const timer = setTimeout(() => setIntroOpen(true), 600);
+    return () => clearTimeout(timer);
+    // Scalars, not the `user` object: the auth context hands back a fresh
+    // reference on each render, which would re-arm the timeout every time and
+    // it would never fire. _dashboard-layout.tsx:62 does the same thing.
+  }, [introSeen, userId, onboardingDoneAt]);
+
+  const closeIntro = () => {
+    setIntroOpen(false);
+    setIntroSeen(true);
+  };
 
   const [search, setSearch] = useState("");
   const [createOpen, setCreateOpen] = useState(false);
@@ -176,13 +215,29 @@ export default function FormsIndexRoute() {
             {t("forms.list.hint")}
           </p>
         </div>
-        {canEdit ? (
-          <Button onClick={() => setCreateOpen(true)} className="shrink-0">
-            <Plus className="h-4 w-4" />
-            {t("forms.list.newForm")}
-          </Button>
-        ) : null}
+        <div className="flex shrink-0 items-center gap-2">
+          {/* Without a replay, whoever hits Skip can never get the explanation
+              back. Opens without touching the seen flag. */}
+          <button
+            type="button"
+            onClick={() => setIntroOpen(true)}
+            aria-label={t("forms.intro.replay")}
+            title={t("forms.intro.replay")}
+            className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-border bg-muted/40 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+          >
+            <HelpCircle className="h-4 w-4" />
+          </button>
+
+          {canEdit ? (
+            <Button onClick={() => setCreateOpen(true)}>
+              <Plus className="h-4 w-4" />
+              {t("forms.list.newForm")}
+            </Button>
+          ) : null}
+        </div>
       </div>
+
+      <FormsIntroModal open={introOpen} onClose={closeIntro} />
 
       <div className="border-t" />
 

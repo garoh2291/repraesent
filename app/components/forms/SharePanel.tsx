@@ -20,6 +20,12 @@ interface Props {
   status: "draft" | "published";
   hasUnpublishedChanges: boolean;
   defaultLocale: FormLocale;
+  /**
+   * Override the public address. Only the onboarding demo passes this, so the
+   * walkthrough shows the product's real domain instead of whatever
+   * VITE_PUBLIC_BOOKING_BASE_URL happens to be in that environment.
+   */
+  publicUrl?: string;
 }
 
 export function SharePanel({
@@ -27,10 +33,11 @@ export function SharePanel({
   status,
   hasUnpublishedChanges,
   defaultLocale,
+  publicUrl: publicUrlOverride,
 }: Props) {
   const { t } = useTranslation();
   const published = status === "published";
-  const publicUrl = buildPublicFormUrl(formId);
+  const publicUrl = publicUrlOverride ?? buildPublicFormUrl(formId);
 
   const copy = (text: string) => {
     void navigator.clipboard.writeText(text);

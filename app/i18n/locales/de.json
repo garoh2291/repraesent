@@ -3018,6 +3018,37 @@
       "retranslateConfirmTitle": "Vorhandene Übersetzungen überschreiben?",
       "retranslateConfirmBody": "Jeder Text in dieser Sprache wird ersetzt, auch selbst geschriebene.",
       "defaultLocaleSeeded": "Standardsprache geändert. Vorhandene Texte wurden als Ausgangspunkt übernommen."
+    },
+    "intro": {
+      "title": "So funktionieren Formulare",
+      "subtitle": "Ein kurzer Rundgang: Formular erstellen und veröffentlichen.",
+      "stepOf": "Schritt {{step}} von {{total}}",
+      "goToStep": "Zu Schritt {{step}}",
+      "replay": "So funktionieren Formulare",
+      "replayShort": "Nochmal ansehen",
+      "pause": "Pause",
+      "play": "Abspielen",
+      "skip": "Überspringen",
+      "done": "Loslegen",
+      "finished": "Fertig – Ihr Formular ist live und sammelt Leads.",
+      "chapter": {
+        "create": "Mit einem neuen Formular starten.",
+        "name": "Geben Sie ihm einen Namen.",
+        "fields": "Fügen Sie Felder hinzu – ein Klick genügt, und das Feld erscheint.",
+        "language": "Sprache hinzufügen – das Formular wird für Sie übersetzt.",
+        "design": "Unter „Design“ bestimmen Sie Farben, Schriften und Abstände.",
+        "share": "Kopieren Sie Link, iframe, Script-Tag oder eine HTML-Datei.",
+        "publish": "Schalten Sie es live – jede Einsendung wird zu einem Lead."
+      },
+      "demo": {
+        "formName": "Kontaktformular",
+        "name": "Name",
+        "email": "E-Mail",
+        "phone": "Telefon",
+        "message": "Nachricht",
+        "formTitle": "Kontakt aufnehmen",
+        "submit": "Absenden"
+      }
     }
   }
 }

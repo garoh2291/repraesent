@@ -3018,6 +3018,37 @@
       "retranslateConfirmTitle": "Écraser les traductions existantes ?",
       "retranslateConfirmBody": "Chaque texte de cette langue est remplacé, y compris ceux que vous avez écrits.",
       "defaultLocaleSeeded": "Langue par défaut modifiée. Les textes existants ont été copiés comme point de départ."
+    },
+    "intro": {
+      "title": "Comment fonctionnent les formulaires",
+      "subtitle": "Une courte visite : créer et publier un formulaire.",
+      "stepOf": "Étape {{step}} sur {{total}}",
+      "goToStep": "Aller à l’étape {{step}}",
+      "replay": "Comment fonctionnent les formulaires",
+      "replayShort": "Revoir",
+      "pause": "Pause",
+      "play": "Lecture",
+      "skip": "Passer",
+      "done": "Commencer",
+      "finished": "Voilà — votre formulaire est en ligne et collecte des prospects.",
+      "chapter": {
+        "create": "Commencez par un nouveau formulaire.",
+        "name": "Donnez-lui un nom.",
+        "fields": "Ajoutez vos champs — un clic et le champ apparaît.",
+        "language": "Ajoutez une langue : le formulaire est traduit pour vous.",
+        "design": "L’onglet Design gère les couleurs, les polices et les espacements.",
+        "share": "Copiez un lien, une iframe, une balise script ou un fichier HTML.",
+        "publish": "Passez-le en ligne : chaque envoi devient un prospect."
+      },
+      "demo": {
+        "formName": "Formulaire de contact",
+        "name": "Nom",
+        "email": "E-mail",
+        "phone": "Téléphone",
+        "message": "Message",
+        "formTitle": "Nous contacter",
+        "submit": "Envoyer"
+      }
     }
   }
 }

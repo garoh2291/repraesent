@@ -3016,6 +3016,37 @@
       "retranslateConfirmTitle": "Bestaande vertalingen overschrijven?",
       "retranslateConfirmBody": "Elke tekst in deze taal wordt vervangen, ook die u zelf hebt geschreven.",
       "defaultLocaleSeeded": "Standaardtaal gewijzigd. Bestaande teksten zijn als startpunt overgenomen."
+    },
+    "intro": {
+      "title": "Zo werken formulieren",
+      "subtitle": "Een korte rondleiding: een formulier bouwen en publiceren.",
+      "stepOf": "Stap {{step}} van {{total}}",
+      "goToStep": "Ga naar stap {{step}}",
+      "replay": "Zo werken formulieren",
+      "replayShort": "Opnieuw bekijken",
+      "pause": "Pauzeren",
+      "play": "Afspelen",
+      "skip": "Overslaan",
+      "done": "Aan de slag",
+      "finished": "Klaar — je formulier staat live en verzamelt leads.",
+      "chapter": {
+        "create": "Begin met een nieuw formulier.",
+        "name": "Geef het een naam.",
+        "fields": "Voeg je velden toe — één klik en het veld verschijnt.",
+        "language": "Voeg een taal toe en het formulier wordt voor je vertaald.",
+        "design": "Onder Ontwerp regel je kleuren, lettertypen en witruimte.",
+        "share": "Kopieer een link, een iframe, een scripttag of één HTML-bestand.",
+        "publish": "Zet het live en elke inzending komt binnen als lead."
+      },
+      "demo": {
+        "formName": "Contactformulier",
+        "name": "Naam",
+        "email": "E-mail",
+        "phone": "Telefoon",
+        "message": "Bericht",
+        "formTitle": "Neem contact op",
+        "submit": "Versturen"
+      }
     }
   }
 }
