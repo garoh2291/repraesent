@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { useMemo, useState } from "react";
+import { useLayoutEffect, useMemo, useState } from "react";
 import type { Camera, CursorPos } from "./useDirector";
 import { DEMO_ORIGIN, DEMO_PUBLIC_URL } from "./constants";
 import { DemoBuilder } from "./DemoBuilder";
@@ -7,6 +7,28 @@ import type { DemoState } from "./types";
 
 /** The builder is designed for a desktop width; the camera brings it closer. */
 export const STAGE_WIDTH = 1100;
+
+/**
+ * Below this the three-column builder cannot be shown at a legible size, so the
+ * stage switches to rendering it 1:1 in the app's own mobile layout instead.
+ */
+const COMPACT_BELOW = 900;
+
+/**
+ * Pick the width the builder lays out at.
+ *
+ * On a wide stage the builder renders at its desktop width and the camera
+ * scales it down slightly — 1100 into ~1024 is a 7% reduction nobody notices.
+ *
+ * On a phone that same trick is fatal: 1100 into 360 is a 0.33 scale, which
+ * renders the builder's 11px labels at under 4px. So instead the builder lays
+ * out at exactly the stage width, the zoom becomes 1, and every pixel is the
+ * size it would be in the real app on that phone.
+ */
+function layoutWidthFor(stageWidth: number): number {
+  if (stageWidth <= 0) return STAGE_WIDTH; // pre-measurement
+  return stageWidth < COMPACT_BELOW ? Math.max(320, stageWidth) : STAGE_WIDTH;
+}
 
 interface Props {
   state: DemoState;
@@ -36,16 +58,22 @@ export function DemoStage({
   innerRef,
 }: Props) {
   const client = useDemoQueryClient(demoId, state.defaultLocale);
+  const stageWidth = useStageWidth(viewportRef);
+  const layoutWidth = layoutWidthFor(stageWidth);
+  const compact = stageWidth > 0 && stageWidth < COMPACT_BELOW;
 
   return (
     <div
       ref={viewportRef}
-      className="relative h-[560px] w-full overflow-hidden bg-background text-foreground"
+      // Height follows the SCREEN (so the modal always fits), while the layout
+      // above follows the STAGE WIDTH. They are different questions: one is
+      // "will this fit on the phone", the other is "can this be read".
+      className="relative h-[58svh] min-h-[320px] w-full overflow-hidden bg-background text-foreground sm:h-[560px] sm:min-h-0"
     >
       <div
         ref={innerRef}
         style={{
-          width: STAGE_WIDTH,
+          width: layoutWidth,
           transform: `scale(${camera.zoom}) translate(${-camera.x}px, ${-camera.y}px)`,
           transformOrigin: "0 0",
           transition: camera.ms
@@ -54,7 +82,7 @@ export function DemoStage({
         }}
       >
         <QueryClientProvider client={client}>
-          <DemoBuilder state={state} demoId={demoId} />
+          <DemoBuilder state={state} demoId={demoId} compact={compact} />
         </QueryClientProvider>
       </div>
 
@@ -92,6 +120,37 @@ export function DemoStage({
       </div>
     </div>
   );
+}
+
+/**
+ * The stage's own width in CSS pixels, 0 until first measured.
+ *
+ * Measured rather than taken from a media query: the stage is a modal whose
+ * width is capped well below the viewport, so `window.innerWidth` would say
+ * "desktop" while the stage is actually 468px wide. Kept live with a
+ * ResizeObserver so rotating a phone re-lays-out instead of staying wrong.
+ */
+function useStageWidth(ref: React.RefObject<HTMLDivElement | null>): number {
+  const [width, setWidth] = useState(0);
+
+  useLayoutEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+
+    setWidth(el.clientWidth);
+
+    if (typeof ResizeObserver === "undefined") return;
+    const ro = new ResizeObserver(([entry]) => {
+      // Round: sub-pixel jitter would otherwise re-render on every frame of the
+      // dialog's open animation.
+      const next = Math.round(entry.contentRect.width);
+      setWidth((prev) => (prev === next ? prev : next));
+    });
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [ref]);
+
+  return width;
 }
 
 /**

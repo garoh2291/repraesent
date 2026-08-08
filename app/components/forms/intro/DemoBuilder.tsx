@@ -28,6 +28,14 @@ interface Props {
   state: DemoState;
   /** The demo's form id — also the seeded react-query key for SharePanel. */
   demoId: string;
+  /**
+   * Stage is too narrow for the desktop three-column build tab.
+   *
+   * A prop rather than a Tailwind breakpoint because breakpoints key off the
+   * viewport, and this renders into a fixed-width stage inside a modal — the
+   * two disagree constantly.
+   */
+  compact?: boolean;
 }
 
 /**
@@ -45,7 +53,7 @@ interface Props {
  * `forms._index.tsx` and `forms.$formId.tsx`, minus the sticky positioning and
  * negative margins, which assume page padding that does not exist in a modal.
  */
-export function DemoBuilder({ state, demoId }: Props) {
+export function DemoBuilder({ state, demoId, compact = false }: Props) {
   const { t } = useTranslation();
   const { definition, activeLocale, defaultLocale } = state;
 
@@ -67,25 +75,35 @@ export function DemoBuilder({ state, demoId }: Props) {
     getRawContent(definition, activeLocale, key);
 
   if (state.screen === "done") {
-    return <DemoCelebration />;
+    return <DemoCelebration compact={compact} />;
   }
 
   if (state.screen === "list" || state.screen === "dialog") {
-    return <DemoList state={state} />;
+    return <DemoList state={state} compact={compact} />;
   }
 
   return (
-    <div className="space-y-5 p-6">
+    <div className={compact ? "space-y-4 p-4" : "space-y-5 p-6"}>
       {/* --- command bar (replica of forms.$formId.tsx:786) ---------------- */}
       <div className="overflow-hidden rounded-2xl bg-[#111113] shadow-[0_8px_24px_-12px_rgba(0,0,0,0.35)]">
-        <div className="flex items-center justify-between gap-3 px-5 py-3.5">
+        <div
+          className={`gap-3 ${
+            compact
+              ? "flex flex-col items-stretch px-4 py-3"
+              : "flex items-center justify-between px-5 py-3.5"
+          }`}
+        >
           <div className="min-w-0">
             <span className="inline-flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-widest text-white/35">
               <ArrowLeft className="h-3 w-3" />
               {t("forms.builder.back")}
             </span>
             <div className="mt-1 flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1.5">
-              <span className="text-[22px] font-semibold tracking-tight text-white">
+              <span
+                className={`font-semibold tracking-tight text-white ${
+                  compact ? "text-lg" : "text-[22px]"
+                }`}
+              >
                 {state.name}
               </span>
               <FormStatusBadge
@@ -96,7 +114,7 @@ export function DemoBuilder({ state, demoId }: Props) {
             </div>
           </div>
 
-          <div className="flex shrink-0 items-center gap-2">
+          <div className="flex shrink-0 flex-wrap items-center gap-2">
             {state.live ? (
               <span className="inline-flex h-9 items-center gap-2 rounded-lg border border-white/10 bg-white/5 px-3 text-sm text-white/70">
                 <Eye className="h-3.5 w-3.5" />
@@ -151,14 +169,24 @@ export function DemoBuilder({ state, demoId }: Props) {
           </TabsList>
         </div>
 
-        <TabsContent value="build" className="pt-5">
+        <TabsContent value="build" className={compact ? "pt-4" : "pt-5"}>
           {/* Fixed columns, not the route's responsive grid: Tailwind
-              breakpoints key off the viewport, and this lives in a modal. */}
-          <div className="grid grid-cols-[220px_minmax(0,1fr)_340px] gap-5">
-            <aside>
+              breakpoints key off the viewport, and this lives in a modal — so
+              the switch is driven by the measured stage width instead.
+              The compact order (canvas, palette, inspector) is the same order
+              forms.$formId.tsx uses below `lg`, so a phone user sees the layout
+              they'd actually get. */}
+          <div
+            className={
+              compact
+                ? "flex flex-col gap-4"
+                : "grid grid-cols-[220px_minmax(0,1fr)_340px] gap-5"
+            }
+          >
+            <aside className={compact ? "order-2" : undefined}>
               <FieldPalette onAdd={noop} />
             </aside>
-            <div className="min-w-0">
+            <div className={`min-w-0 ${compact ? "order-1" : ""}`}>
               <FormCanvas
                 definition={definition}
                 locale={activeLocale}
@@ -170,7 +198,7 @@ export function DemoBuilder({ state, demoId }: Props) {
                 onDeleteField={noop}
               />
             </div>
-            <aside>
+            <aside className={compact ? "order-3" : undefined}>
               <FieldInspector
                 target={inspectorTarget}
                 otherKeys={new Set()}
@@ -183,7 +211,7 @@ export function DemoBuilder({ state, demoId }: Props) {
           </div>
         </TabsContent>
 
-        <TabsContent value="design" className="pt-5">
+        <TabsContent value="design" className={compact ? "pt-4" : "pt-5"}>
           <ThemePanel
             definition={definition}
             locale={activeLocale}
@@ -194,7 +222,7 @@ export function DemoBuilder({ state, demoId }: Props) {
           />
         </TabsContent>
 
-        <TabsContent value="share" className="pt-5">
+        <TabsContent value="share" className={compact ? "pt-4" : "pt-5"}>
           <div data-demo="share">
             <SharePanel
               formId={demoId}
@@ -211,7 +239,13 @@ export function DemoBuilder({ state, demoId }: Props) {
 }
 
 /** Replica of the Forms index header + create dialog (forms._index.tsx:170). */
-function DemoList({ state }: { state: DemoState }) {
+function DemoList({
+  state,
+  compact,
+}: {
+  state: DemoState;
+  compact: boolean;
+}) {
   const { t } = useTranslation();
 
   return (
@@ -219,10 +253,24 @@ function DemoList({ state }: { state: DemoState }) {
     // the stage is 560 screen px but the builder is scaled down to fit, so the
     // visible slice is ~600 layout px. At 560 the dialog's dim layer stopped
     // short and left a pale strip along the bottom of the stage.
-    <div className="relative min-h-[640px] space-y-6 p-6">
-      <div className="flex items-start justify-between gap-4">
+    <div
+      className={`relative min-h-[640px] ${
+        compact ? "space-y-5 p-4" : "space-y-6 p-6"
+      }`}
+    >
+      <div
+        className={`gap-4 ${
+          compact
+            ? "flex flex-col items-start"
+            : "flex items-start justify-between"
+        }`}
+      >
         <div className="space-y-1">
-          <h1 className="text-2xl font-semibold tracking-tight">
+          <h1
+            className={`font-semibold tracking-tight ${
+              compact ? "text-xl" : "text-2xl"
+            }`}
+          >
             {t("forms.list.title")}
           </h1>
           <p className="max-w-2xl text-sm text-muted-foreground">
@@ -248,7 +296,11 @@ function DemoList({ state }: { state: DemoState }) {
           renders at document.body, outside the camera's coordinate space, so
           the cursor could never be measured against it. */}
       {state.screen === "dialog" ? (
-        <div className="absolute inset-0 z-10 flex items-start justify-center bg-black/50 pt-20">
+        <div
+          className={`absolute inset-0 z-10 flex items-start justify-center bg-black/50 ${
+            compact ? "px-4 pt-10" : "pt-20"
+          }`}
+        >
           <div className="w-full max-w-md space-y-4 rounded-lg border bg-background p-6 text-foreground shadow-lg">
             <h2 className="text-lg font-semibold">{t("forms.list.newForm")}</h2>
             <div className="space-y-2">

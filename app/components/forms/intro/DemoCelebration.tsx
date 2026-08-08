@@ -34,7 +34,7 @@ function noise(i: number, seed: number) {
  * ring and an overshoot pop. The confetti is new — `scm-confetti` over there is
  * a misnomer, it is only a pop.
  */
-export function DemoCelebration() {
+export function DemoCelebration({ compact = false }: { compact?: boolean }) {
   const { t } = useTranslation();
 
   // A recap of what was just demonstrated — not artifacts of a real form.
@@ -47,7 +47,15 @@ export function DemoCelebration() {
   ];
 
   return (
-    <div className="relative flex min-h-[640px] flex-col items-center justify-center overflow-hidden bg-[#0e0e12] px-8 text-center">
+    <div
+      className={`relative flex flex-col items-center justify-center overflow-hidden bg-[#0e0e12] text-center ${
+        // Must never be shorter than the visible slice of the stage, or the
+        // stage's own light background shows as a pale strip under this dark
+        // panel. Compact renders at zoom 1, so the stage's own `58svh` is the
+        // right measure; the 420px floor covers very short viewports.
+        compact ? "min-h-[max(420px,58svh)] px-5" : "min-h-[640px] px-8"
+      }`}
+    >
       <CelebrationStyles />
 
       {/* Ambient glow behind the badge */}
@@ -94,16 +102,18 @@ export function DemoCelebration() {
       </div>
 
       <div className="relative flex flex-col items-center">
-        <div className="relative mb-6">
+        <div className={`relative ${compact ? "mb-4" : "mb-6"}`}>
           <div
-            className="fi-badge flex h-[72px] w-[72px] items-center justify-center rounded-[20px] border border-emerald-400/25 text-emerald-300"
+            className={`fi-badge flex items-center justify-center rounded-[20px] border border-emerald-400/25 text-emerald-300 ${
+              compact ? "h-[56px] w-[56px]" : "h-[72px] w-[72px]"
+            }`}
             style={{
               background:
                 "linear-gradient(135deg, rgba(16,185,129,0.22), rgba(245,158,11,0.16))",
               boxShadow: "0 0 40px rgba(16,185,129,0.14)",
             }}
           >
-            <Check className="h-8 w-8" strokeWidth={2.5} />
+            <Check className={compact ? "h-6 w-6" : "h-8 w-8"} strokeWidth={2.5} />
           </div>
           <span
             aria-hidden
@@ -117,14 +127,22 @@ export function DemoCelebration() {
           />
         </div>
 
-        <h2 className="fi-rise text-[28px] font-semibold leading-tight tracking-tight text-white">
+        <h2
+          className={`fi-rise font-semibold leading-tight tracking-tight text-white ${
+            compact ? "text-[21px]" : "text-[28px]"
+          }`}
+        >
           {t("forms.intro.celebrate.title")}
         </h2>
         <p className="fi-rise fi-d1 mt-2 max-w-md text-sm leading-relaxed text-white/55">
           {t("forms.intro.celebrate.body")}
         </p>
 
-        <div className="mt-6 flex flex-wrap items-center justify-center gap-2">
+        <div
+          className={`flex flex-wrap items-center justify-center gap-2 ${
+            compact ? "mt-4" : "mt-6"
+          }`}
+        >
           {chips.map((chip, i) => (
             <span
               key={chip.label}

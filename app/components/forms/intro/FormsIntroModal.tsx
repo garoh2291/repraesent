@@ -31,7 +31,7 @@ export function FormsIntroModal({ open, onClose }: Props) {
     <Dialog open={open} onOpenChange={(next) => !next && onClose()}>
       <DialogContent
         showCloseButton={false}
-        className="gap-0 overflow-hidden rounded-2xl border-white/10 bg-[#0e0e12] p-0 sm:max-w-5xl"
+        className="max-h-[calc(100svh-2rem)] gap-0 overflow-hidden rounded-2xl border-white/10 bg-[#0e0e12] p-0 sm:max-w-5xl"
       >
         {/* Title and description live out here, not in the lazy player: Radix
             errors if a DialogContent renders without a title, and during the
@@ -43,7 +43,7 @@ export function FormsIntroModal({ open, onClose }: Props) {
 
         <Suspense
           fallback={
-            <div className="grid h-[560px] place-items-center">
+            <div className="grid h-[58svh] min-h-[320px] place-items-center sm:h-[560px] sm:min-h-0">
               <Spinner className="h-5 w-5 text-white/40" />
             </div>
           }

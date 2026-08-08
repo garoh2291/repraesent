@@ -59,7 +59,15 @@ export function useDirector({
   // the state update has been applied.
   const cameraRef = useRef<Camera>({ x: 0, y: 0, zoom: 1, ms: 0 });
   const [cursor, setCursor] = useState<CursorPos>({ x: 0, y: 0, ms: 0 });
+  // Same trick as `cameraRef`: callbacks need to read where the pointer is
+  // before React has committed the last update.
+  const cursorRef = useRef<CursorPos>({ x: 0, y: 0, ms: 0 });
   const [clickAt, setClickAt] = useState(0);
+
+  const moveCursor = useCallback((pos: CursorPos) => {
+    cursorRef.current = pos;
+    setCursor(pos);
+  }, []);
 
   // A single scheduled continuation. Kept in a ref so pause/close can cancel it
   // and a stale timer can never resurrect a closed demo.
@@ -156,9 +164,50 @@ export function useDirector({
         if (m.y < top || m.y > bottom) frame(sel, ms);
       }
 
-      setCursor({ x: m.x, y: m.y, ms });
+      moveCursor({ x: m.x, y: m.y, ms });
     },
-    [measure, frame, viewportRef],
+    [measure, frame, viewportRef, moveCursor],
+  );
+
+  /**
+   * Keep the pointer with the camera.
+   *
+   * A `camera` step deliberately frames something the pointer is *not* on — the
+   * field chapter parks the cursor on the palette and then chases the submit
+   * row so you watch each field land. On a wide stage the palette is a side
+   * column and both stay on screen, so this never mattered.
+   *
+   * Stacked into one column for a phone, those two are over a thousand pixels
+   * apart and the pointer is left stranded far below the fold. When the camera
+   * and the pointer can no longer share a frame, the pointer travels to
+   * whatever was framed — which is where the viewer is being told to look.
+   */
+  const keepCursorInFrame = useCallback(
+    (sel: Sel | undefined, ms: number) => {
+      const viewport = viewportRef.current;
+      if (!viewport) return;
+
+      const cam = cameraRef.current;
+      const pad = 24;
+      const visibleH = viewport.clientHeight / cam.zoom;
+      const cur = cursorRef.current;
+
+      if (cur.y >= cam.y + pad && cur.y <= cam.y + visibleH - pad) return;
+
+      const m = sel ? measure(sel) : null;
+      if (m) {
+        moveCursor({ x: m.x, y: m.y, ms });
+        return;
+      }
+      // Nothing was framed (a reset to the top). Slide the pointer back to the
+      // nearest visible edge rather than letting it sit outside the stage.
+      moveCursor({
+        x: cur.x,
+        y: Math.min(Math.max(cur.y, cam.y + pad), cam.y + visibleH - pad),
+        ms,
+      });
+    },
+    [viewportRef, measure, moveCursor],
   );
 
   /**
@@ -178,6 +227,7 @@ export function useDirector({
         case "camera": {
           const ms = step.ms ?? DEFAULTS.camera;
           frame(step.at, fast ? 0 : ms);
+          keepCursorInFrame(step.at, fast ? 0 : ms);
           return fast ? cut : ms;
         }
         case "move": {
@@ -201,7 +251,7 @@ export function useDirector({
           return 0; // handled by the caller, which needs to iterate
       }
     },
-    [frame, pointAt, reducedMotion],
+    [frame, pointAt, keepCursorInFrame, reducedMotion],
   );
 
   /** Walk the steps of the current chapter, then advance. */
@@ -283,6 +333,7 @@ export function useDirector({
       cancelled.current = true;
       // Chapters are cumulative, so jumping means replaying state from a seed.
       setState(seed);
+      cursorRef.current = { ...cursorRef.current, ms: 0 };
       setCursor((c) => ({ ...c, ms: 0 }));
       setChapterIndex(index);
       setPlaying(true);

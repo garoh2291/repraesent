@@ -73,7 +73,7 @@ export function IntroPlayer({ onClose }: { onClose: () => void }) {
         innerRef={innerRef}
       />
 
-      <div className="space-y-4 border-t border-white/10 bg-[#0e0e12] px-6 py-5 text-white">
+      <div className="space-y-3 border-t border-white/10 bg-[#0e0e12] px-4 py-4 text-white sm:space-y-4 sm:px-6 sm:py-5">
         <div className="h-1 w-full overflow-hidden rounded-full bg-white/10">
           <div
             className="h-full rounded-full bg-amber-400 transition-[width] duration-500"
@@ -81,7 +81,7 @@ export function IntroPlayer({ onClose }: { onClose: () => void }) {
           />
         </div>
 
-        <div className="min-h-[3.25rem]">
+        <div className="min-h-[3.25rem] sm:min-h-[3.25rem]">
           <p className="text-[11px] font-semibold uppercase tracking-widest text-amber-400">
             {t("forms.intro.stepOf", {
               step: chapterIndex + 1,
@@ -95,8 +95,8 @@ export function IntroPlayer({ onClose }: { onClose: () => void }) {
           </p>
         </div>
 
-        <div className="flex items-center gap-3">
-          <div className="flex items-center gap-1.5">
+        <div className="flex flex-wrap items-center gap-3">
+          <div className="flex flex-wrap items-center gap-1.5">
             {chapters.map((c, i) => (
               <button
                 key={c.id}
