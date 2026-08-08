@@ -3028,7 +3028,7 @@
       "play": "Play",
       "skip": "Skip",
       "done": "Start building",
-      "finished": "That's it — your form is live and collecting leads.",
+      "finished": "Now make one of your own.",
       "chapter": {
         "create": "Start with a new form.",
         "name": "Give it a name.",
@@ -3036,7 +3036,8 @@
         "language": "Add a language and the form is translated for you.",
         "design": "Design controls the colours, fonts and spacing.",
         "share": "Copy a link, an iframe, a script tag or a single HTML file.",
-        "publish": "Turn it Live and every submission arrives as a lead."
+        "publish": "Turn it Live and every submission arrives as a lead.",
+        "celebrate": "And that's a live form."
       },
       "demo": {
         "formName": "Contact form",
@@ -3046,6 +3047,13 @@
         "message": "Message",
         "formTitle": "Get in touch",
         "submit": "Send"
+      },
+      "celebrate": {
+        "title": "That's how easy it is",
+        "body": "You just watched a form go from empty to live in a couple of minutes. Yours will be just as quick.",
+        "chipBuild": "Build",
+        "chipTranslate": "Translate",
+        "chipPublish": "Publish"
       }
     }
   }

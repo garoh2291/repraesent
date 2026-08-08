@@ -60,9 +60,12 @@ export function DemoStage({
 
       {/* Cursor lives outside the scaled container so it stays a constant size
           however far the camera is zoomed in; its position is converted from
-          layout space into viewport space by the same transform. */}
+          layout space into viewport space by the same transform. Hidden on the
+          celebration, which has nothing to point at. */}
       <div
-        className="pointer-events-none absolute left-0 top-0 z-10"
+        className={`pointer-events-none absolute left-0 top-0 z-10 ${
+          state.screen === "done" ? "opacity-0" : ""
+        }`}
         style={{
           transform: `translate(${(cursor.x - camera.x) * camera.zoom}px, ${
             (cursor.y - camera.y) * camera.zoom

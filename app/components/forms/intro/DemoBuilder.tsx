@@ -16,6 +16,7 @@ import { getRawContent } from "~/lib/forms/content";
 import { flattenFields } from "~/lib/forms/schema";
 import { selectedFieldId, type InspectorTarget } from "~/lib/forms/selection";
 import { DEMO_PUBLIC_URL } from "./constants";
+import { DemoCelebration } from "./DemoCelebration";
 import type { DemoState } from "./types";
 
 /** No-ops: the demo cursor is decorative, so nothing here is ever really clicked. */
@@ -64,6 +65,10 @@ export function DemoBuilder({ state, demoId }: Props) {
 
   const getText = (key: string) =>
     getRawContent(definition, activeLocale, key);
+
+  if (state.screen === "done") {
+    return <DemoCelebration />;
+  }
 
   if (state.screen === "list" || state.screen === "dialog") {
     return <DemoList state={state} />;

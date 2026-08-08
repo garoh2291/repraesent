@@ -3028,7 +3028,7 @@
       "play": "Afspelen",
       "skip": "Overslaan",
       "done": "Aan de slag",
-      "finished": "Klaar — je formulier staat live en verzamelt leads.",
+      "finished": "Nu is het jouw beurt.",
       "chapter": {
         "create": "Begin met een nieuw formulier.",
         "name": "Geef het een naam.",
@@ -3036,7 +3036,8 @@
         "language": "Voeg een taal toe en het formulier wordt voor je vertaald.",
         "design": "Onder Ontwerp regel je kleuren, lettertypen en witruimte.",
         "share": "Kopieer een link, een iframe, een scripttag of één HTML-bestand.",
-        "publish": "Zet het live en elke inzending komt binnen als lead."
+        "publish": "Zet het live en elke inzending komt binnen als lead.",
+        "celebrate": "En klaar — een live formulier."
       },
       "demo": {
         "formName": "Contactformulier",
@@ -3046,6 +3047,13 @@
         "message": "Bericht",
         "formTitle": "Neem contact op",
         "submit": "Versturen"
+      },
+      "celebrate": {
+        "title": "Zo eenvoudig is het",
+        "body": "Je zag zojuist een formulier in een paar minuten van leeg naar live gaan. Bij jou gaat het net zo snel.",
+        "chipBuild": "Bouwen",
+        "chipTranslate": "Vertalen",
+        "chipPublish": "Publiceren"
       }
     }
   }

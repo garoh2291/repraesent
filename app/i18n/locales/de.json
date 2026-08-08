@@ -3030,7 +3030,7 @@
       "play": "Abspielen",
       "skip": "Überspringen",
       "done": "Loslegen",
-      "finished": "Fertig – Ihr Formular ist live und sammelt Leads.",
+      "finished": "Jetzt sind Sie dran.",
       "chapter": {
         "create": "Mit einem neuen Formular starten.",
         "name": "Geben Sie ihm einen Namen.",
@@ -3038,7 +3038,8 @@
         "language": "Sprache hinzufügen – das Formular wird für Sie übersetzt.",
         "design": "Unter „Design“ bestimmen Sie Farben, Schriften und Abstände.",
         "share": "Kopieren Sie Link, iframe, Script-Tag oder eine HTML-Datei.",
-        "publish": "Schalten Sie es live – jede Einsendung wird zu einem Lead."
+        "publish": "Schalten Sie es live – jede Einsendung wird zu einem Lead.",
+        "celebrate": "Und fertig – das Formular ist live."
       },
       "demo": {
         "formName": "Kontaktformular",
@@ -3048,6 +3049,13 @@
         "message": "Nachricht",
         "formTitle": "Kontakt aufnehmen",
         "submit": "Absenden"
+      },
+      "celebrate": {
+        "title": "So einfach geht das",
+        "body": "Sie haben gerade gesehen, wie ein Formular in wenigen Minuten von leer zu live wird. Ihres geht genauso schnell.",
+        "chipBuild": "Aufbauen",
+        "chipTranslate": "Übersetzen",
+        "chipPublish": "Veröffentlichen"
       }
     }
   }

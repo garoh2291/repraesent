@@ -280,9 +280,19 @@ export function buildStoryboard(
         { kind: "move", at: '[data-demo="live"]' },
         { kind: "wait", ms: 250 },
         { kind: "click", run: (s) => ({ ...s, live: true }) },
-        { kind: "wait", ms: 1200 },
+        { kind: "wait", ms: 1400 },
+      ],
+    },
+    {
+      id: "celebrate",
+      key: "celebrate",
+      outcome: (s) => ({ ...s, screen: "done" }),
+      steps: [
         { kind: "camera" },
-        { kind: "wait", ms: 1200 },
+        // No cursor here — there is nothing to click, and a pointer hovering
+        // over a congratulations card looks like an unfinished thought.
+        { kind: "act", run: (s) => ({ ...s, screen: "done" }) },
+        { kind: "wait", ms: 4200 },
       ],
     },
   ];

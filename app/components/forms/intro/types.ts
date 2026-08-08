@@ -1,8 +1,11 @@
 import type { FormDefinition, FormLocale } from "~/lib/forms/schema";
 import type { BuilderSelection } from "~/lib/forms/selection";
 
-/** Which surface the demo is showing. Chapters 1-2 are the list, 3+ the builder. */
-export type DemoScreen = "list" | "dialog" | "builder";
+/**
+ * Which surface the demo is showing. Chapters 1-2 are the list, 3-7 the
+ * builder, and "done" is the celebration that closes the walkthrough.
+ */
+export type DemoScreen = "list" | "dialog" | "builder" | "done";
 
 export type DemoTab = "build" | "design" | "share";
 

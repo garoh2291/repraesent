@@ -3030,7 +3030,7 @@
       "play": "Lecture",
       "skip": "Passer",
       "done": "Commencer",
-      "finished": "Voilà — votre formulaire est en ligne et collecte des prospects.",
+      "finished": "À vous de jouer.",
       "chapter": {
         "create": "Commencez par un nouveau formulaire.",
         "name": "Donnez-lui un nom.",
@@ -3038,7 +3038,8 @@
         "language": "Ajoutez une langue : le formulaire est traduit pour vous.",
         "design": "L’onglet Design gère les couleurs, les polices et les espacements.",
         "share": "Copiez un lien, une iframe, une balise script ou un fichier HTML.",
-        "publish": "Passez-le en ligne : chaque envoi devient un prospect."
+        "publish": "Passez-le en ligne : chaque envoi devient un prospect.",
+        "celebrate": "Et voilà, un formulaire en ligne."
       },
       "demo": {
         "formName": "Formulaire de contact",
@@ -3048,6 +3049,13 @@
         "message": "Message",
         "formTitle": "Nous contacter",
         "submit": "Envoyer"
+      },
+      "celebrate": {
+        "title": "C’est aussi simple que ça",
+        "body": "Vous venez de voir un formulaire passer de vide à en ligne en quelques minutes. Le vôtre ira aussi vite.",
+        "chipBuild": "Créer",
+        "chipTranslate": "Traduire",
+        "chipPublish": "Publier"
       }
     }
   }
