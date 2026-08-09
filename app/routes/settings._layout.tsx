@@ -1,58 +1,50 @@
-import { Outlet, useLocation, useNavigate } from "react-router";
+import { Outlet, useLocation } from "react-router";
 import { useTranslation } from "react-i18next";
-import { Tabs, TabsList, TabsTrigger } from "~/components/ui/tabs";
 
+/**
+ * Which section is open, as an i18n key stem.
+ *
+ * Longest-first: `/settings/email-accounts` must be tested before any looser
+ * prefix. `profile` is the fallback, which also covers a bare `/settings` for
+ * the instant before `settings._index.tsx` redirects.
+ */
+const SECTIONS = [
+  { match: "/settings/email-accounts", key: "emailAccounts" },
+  { match: "/settings/team", key: "team" },
+  { match: "/settings/bcc", key: "bcc" },
+] as const;
+
+/**
+ * Chrome for the settings pages.
+ *
+ * Navigation used to be a tab strip here; it now lives in the sidebar, which
+ * swaps into a settings sub-mode for any `/settings` route. What remains is the
+ * heading — and it has to name the *section*, because none of the four child
+ * pages renders its own `<h1>`; without this they would all read "Settings".
+ *
+ * Titles reuse each page's existing `metaTitle`/`metaDescription`, already
+ * translated in every locale for `useDocumentMeta`.
+ */
 export default function SettingsLayout() {
   const { t } = useTranslation();
   const location = useLocation();
-  const navigate = useNavigate();
-  const tab = location.pathname.includes("/settings/team")
-    ? "team"
-    : location.pathname.includes("/settings/bcc")
-      ? "bcc"
-      : "profile";
 
-  const tabToPath: Record<string, string> = {
-    team: "/settings/team",
-    bcc: "/settings/bcc",
-    profile: "/settings/profile",
-  };
+  const key =
+    SECTIONS.find((s) => location.pathname.startsWith(s.match))?.key ??
+    "profile";
 
   return (
     <div className="mx-auto w-full max-w-[1280px] p-4 sm:p-6 py-10! space-y-6 sm:space-y-8 app-fade-in">
       <div className="app-fade-up">
         <h1 className="text-xl sm:text-2xl font-semibold text-foreground tracking-tight">
-          {t("settings.title")}
+          {t(`settings.${key}.metaTitle`)}
         </h1>
         <p className="text-sm text-muted-foreground mt-0.5">
-          {t("settings.subtitle")}
+          {t(`settings.${key}.metaDescription`)}
         </p>
       </div>
 
       <div className="border-t border-border" />
-
-      <Tabs
-        value={tab}
-        onValueChange={(v) => navigate(tabToPath[v] ?? "/settings/profile")}
-        className="w-full app-fade-up app-fade-up-d1"
-      >
-        <div className="overflow-x-auto scrollbar-hide -mx-4 sm:mx-0 px-4 sm:px-0">
-          <TabsList
-            variant="line"
-            className="w-full mb-4 sm:mb-6 min-w-max sm:min-w-0"
-          >
-            <TabsTrigger value="profile" className="cursor-pointer">
-              {t("settings.tabs.profile")}
-            </TabsTrigger>
-            <TabsTrigger value="team" className="cursor-pointer">
-              {t("settings.tabs.areaSettings")}
-            </TabsTrigger>
-            <TabsTrigger value="bcc" className="cursor-pointer">
-              {t("settings.tabs.bcc")}
-            </TabsTrigger>
-          </TabsList>
-        </div>
-      </Tabs>
 
       <Outlet />
     </div>

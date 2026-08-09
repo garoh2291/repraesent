@@ -68,6 +68,7 @@ export default [
         index("routes/settings._index.tsx"),
         route("profile", "routes/settings.profile.tsx"),
         route("team", "routes/settings.team.tsx"),
+        route("email-accounts", "routes/settings.email-accounts.tsx"),
         route("bcc", "routes/settings.bcc.tsx"),
       ]),
       route("instructions", "routes/instructions.tsx"),

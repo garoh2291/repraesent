@@ -7,7 +7,9 @@ import { Label } from "~/components/ui/label";
 import {
   Select,
   SelectContent,
+  SelectGroup,
   SelectItem,
+  SelectLabel,
   SelectTrigger,
   SelectValue,
 } from "~/components/ui/select";
@@ -93,6 +95,15 @@ export function ConfirmationEmailPanel({
     queryFn: listEmailAccounts,
   });
 
+  const userAccounts = useMemo(
+    () => (accounts ?? []).filter((a) => a.source === "user"),
+    [accounts],
+  );
+  const managedAccounts = useMemo(
+    () => (accounts ?? []).filter((a) => a.source !== "user"),
+    [accounts],
+  );
+
   /** Every value the confirmation email can interpolate, from this form. */
   const variables = useMemo(() => {
     const fieldKeys = flattenFields(definition)
@@ -174,11 +185,45 @@ export function ConfirmationEmailPanel({
                 <SelectItem value={DEFAULT_ACCOUNT}>
                   {t("forms.email.accountDefault")}
                 </SelectItem>
-                {(accounts ?? []).map((account) => (
-                  <SelectItem key={account.id} value={account.id}>
-                    {account.name} · {account.email}
-                  </SelectItem>
-                ))}
+                {/* Grouped by who owns the mailbox: a user's own connected
+                    account and one Repraesent provisioned for them are very
+                    different things to be sending customers mail from. */}
+                {userAccounts.length > 0 ? (
+                  <SelectGroup>
+                    <SelectLabel>
+                      {t("forms.email.accountGroupYours")}
+                    </SelectLabel>
+                    {userAccounts.map((account) => (
+                      <SelectItem
+                        key={account.id}
+                        value={account.id}
+                        // A revoked grant cannot send. Leaving it selectable
+                        // would let someone configure a form that silently
+                        // fails on every submission.
+                        disabled={!!account.auth_failed_at}
+                      >
+                        {account.name} · {account.email}
+                        {account.auth_failed_at
+                          ? ` — ${t("forms.email.accountNeedsReconnect")}`
+                          : account.provider === "google"
+                            ? " · Google"
+                            : " · IMAP/SMTP"}
+                      </SelectItem>
+                    ))}
+                  </SelectGroup>
+                ) : null}
+                {managedAccounts.length > 0 ? (
+                  <SelectGroup>
+                    <SelectLabel>
+                      {t("forms.email.accountGroupManaged")}
+                    </SelectLabel>
+                    {managedAccounts.map((account) => (
+                      <SelectItem key={account.id} value={account.id}>
+                        {account.name} · {account.email}
+                      </SelectItem>
+                    ))}
+                  </SelectGroup>
+                ) : null}
               </SelectContent>
             </Select>
           </Field>

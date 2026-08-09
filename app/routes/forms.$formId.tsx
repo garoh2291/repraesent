@@ -1,10 +1,11 @@
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { AlertTriangle, ArrowLeft, Eye, Globe, Save } from "lucide-react";
 import type { TFunction } from "i18next";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Link, useNavigate, useParams } from "react-router";
 import { toast } from "sonner";
+import { listEmailAccounts } from "~/lib/api/workspaces";
 import { ConfirmationEmailPanel } from "~/components/forms/ConfirmationEmailPanel";
 import { FieldInspector } from "~/components/forms/FieldInspector";
 import { FieldPalette } from "~/components/forms/FieldPalette";
@@ -78,11 +79,24 @@ export default function FormBuilderRoute() {
 
   const { data: form, isLoading } = useFormDefinition(formId);
 
-  const hasEmailConfig =
+  // Confirmation emails need something to send from. That used to mean the
+  // admin-provisioned email-config service and nothing else, which hid this
+  // whole tab from any workspace whose users had connected their own mailbox.
+  // Mirrors the backend gate in `leads.service.ts`.
+  const hasLegacyEmailService =
     currentWorkspace?.services?.some(
       (s) =>
         s.service_type === "email-config" || s.service_slug === "email-config",
     ) ?? false;
+
+  const { data: emailAccounts, isPending: emailAccountsPending } = useQuery({
+    queryKey: ["workspace-email-accounts"],
+    queryFn: listEmailAccounts,
+    enabled: !!currentWorkspace,
+  });
+
+  const hasEmailConfig =
+    hasLegacyEmailService || (emailAccounts?.length ?? 0) > 0;
 
   // --- local draft ---------------------------------------------------------
   // The builder edits a local copy and saves explicitly. The QueryClient runs
@@ -133,8 +147,12 @@ export default function FormBuilderRoute() {
   // A controlled <Tabs> pointing at a panel that no longer renders shows an
   // empty body, so follow hasEmailConfig in both directions.
   useEffect(() => {
+    // Wait for the account list before bouncing — otherwise deep-linking to
+    // ?tab=email kicks you to Build during the first fetch, even when the
+    // workspace does have an account.
+    if (emailAccountsPending) return;
     if (tab === "email" && !hasEmailConfig) setTab("build");
-  }, [tab, hasEmailConfig]);
+  }, [tab, hasEmailConfig, emailAccountsPending]);
 
   /**
    * Functional patch — mandatory for anything async.

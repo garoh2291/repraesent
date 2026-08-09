@@ -39,7 +39,8 @@
     "somethingWentWrong": "Something went wrong",
     "deleted": "Deleted",
     "you": "You",
-    "clear": "Clear"
+    "clear": "Clear",
+    "dismiss": "Dismiss"
   },
   "nav": {
     "home": "Home",
@@ -762,12 +763,11 @@
     }
   },
   "settings": {
-    "title": "Settings",
-    "subtitle": "Your profile and team",
     "tabs": {
       "profile": "Profile",
       "areaSettings": "Area Settings",
-      "bcc": "Email Logging"
+      "bcc": "Email Logging",
+      "emailAccounts": "Email accounts"
     },
     "bcc": {
       "metaTitle": "Email logging",
@@ -916,6 +916,50 @@
         "void": "Void",
         "uncollectible": "Uncollectible"
       }
+    },
+    "emailAccounts": {
+      "metaTitle": "Email accounts",
+      "metaDescription": "Connect a mailbox to send from",
+      "sectionTitle": "Sending accounts",
+      "sectionDescription": "Connect a mailbox and your forms can send confirmation emails from it.",
+      "emptyTitle": "No sending account yet",
+      "emptyHint": "Connect your own mailbox and confirmation emails will come from your address instead of a generic one.",
+      "connectSmtp": "Connect via IMAP/SMTP",
+      "connectSmtpHint": "We check these details against your mail server before saving them.",
+      "connectGoogle": "Connect with Google",
+      "googleRedirecting": "Opening Google…",
+      "googleConnected": "{{email}} is connected. Your forms can now send from it.",
+      "google_denied": "Google sign-in was cancelled, so nothing was connected.",
+      "google_expired": "That connection request timed out. Please try connecting again.",
+      "google_error": "Something went wrong connecting your Google account. Please try again.",
+      "google_failed": "Your Google account could not be connected. Please try again.",
+      "name": "Display name",
+      "email": "Email address",
+      "server": "SMTP server",
+      "port": "Port",
+      "security": "Encryption",
+      "securitySSL_TLS": "SSL/TLS",
+      "securitySTARTTLS": "STARTTLS",
+      "securityNONE": "None",
+      "username": "Username",
+      "usernamePlaceholder": "Same as email address",
+      "password": "Password",
+      "connect": "Connect",
+      "verifying": "Checking connection…",
+      "connected": "Mailbox connected",
+      "disconnected": "Mailbox disconnected",
+      "defaultSet": "Default sender updated",
+      "default": "Default",
+      "managed": "Provided by Repraesent",
+      "needsReconnect": "Needs reconnecting",
+      "reconnect": "Reconnect",
+      "makeDefault": "Make default",
+      "disconnect": "Disconnect",
+      "disconnectTitle": "Disconnect this mailbox?",
+      "disconnectBody": "Forms sending from {{email}} will fall back to the workspace default. Emails already sent are kept.",
+      "required": "This field is required",
+      "invalidEmail": "Enter a valid email address",
+      "invalidPort": "Enter a port between 1 and 65535"
     }
   },
   "booking": {
@@ -2935,6 +2979,9 @@
       "enabled": "Send a confirmation email",
       "account": "Send from",
       "accountDefault": "Workspace default",
+      "accountGroupYours": "Your accounts",
+      "accountGroupManaged": "Provided by Repraesent",
+      "accountNeedsReconnect": "needs reconnecting",
       "subject": "Subject",
       "body": "Message",
       "code": "HTML",

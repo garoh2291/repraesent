@@ -39,7 +39,8 @@
     "somethingWentWrong": "Er is iets misgegaan",
     "deleted": "Verwijderd",
     "you": "U",
-    "clear": "Wissen"
+    "clear": "Wissen",
+    "dismiss": "Sluiten"
   },
   "nav": {
     "home": "Startpagina",
@@ -762,12 +763,11 @@
     }
   },
   "settings": {
-    "title": "Instellingen",
-    "subtitle": "Uw profiel en team",
     "tabs": {
       "profile": "Profiel",
       "areaSettings": "Gebiedsinstellingen",
-      "bcc": "E-maillogging"
+      "bcc": "E-maillogging",
+      "emailAccounts": "E-mailaccounts"
     },
     "bcc": {
       "metaTitle": "E-maillogging",
@@ -916,6 +916,50 @@
         "void": "Vervallen",
         "uncollectible": "Oninbaar"
       }
+    },
+    "emailAccounts": {
+      "metaTitle": "E-mailaccounts",
+      "metaDescription": "Een mailbox koppelen om vanaf te versturen",
+      "sectionTitle": "Verzendaccounts",
+      "sectionDescription": "Koppel een mailbox en je formulieren versturen bevestigingen daarvandaan.",
+      "emptyTitle": "Nog geen verzendaccount",
+      "emptyHint": "Koppel je eigen mailbox — bevestigingsmails komen dan van jouw adres in plaats van een algemeen adres.",
+      "connectSmtp": "Koppelen via IMAP/SMTP",
+      "connectSmtpHint": "We controleren deze gegevens bij je mailserver voordat we ze opslaan.",
+      "connectGoogle": "Verbinden met Google",
+      "googleRedirecting": "Google wordt geopend…",
+      "googleConnected": "{{email}} is verbonden. Je formulieren kunnen nu vanaf dit adres versturen.",
+      "google_denied": "De Google-aanmelding is geannuleerd, er is niets verbonden.",
+      "google_expired": "Dit verbindingsverzoek is verlopen. Probeer het opnieuw.",
+      "google_error": "Er ging iets mis bij het verbinden van je Google-account. Probeer het opnieuw.",
+      "google_failed": "Je Google-account kon niet worden verbonden. Probeer het opnieuw.",
+      "name": "Weergavenaam",
+      "email": "E-mailadres",
+      "server": "SMTP-server",
+      "port": "Poort",
+      "security": "Versleuteling",
+      "securitySSL_TLS": "SSL/TLS",
+      "securitySTARTTLS": "STARTTLS",
+      "securityNONE": "Geen",
+      "username": "Gebruikersnaam",
+      "usernamePlaceholder": "Zelfde als e-mailadres",
+      "password": "Wachtwoord",
+      "connect": "Koppelen",
+      "verifying": "Verbinding controleren…",
+      "connected": "Mailbox gekoppeld",
+      "disconnected": "Mailbox ontkoppeld",
+      "defaultSet": "Standaardafzender bijgewerkt",
+      "default": "Standaard",
+      "managed": "Geleverd door Repraesent",
+      "needsReconnect": "Opnieuw koppelen nodig",
+      "reconnect": "Opnieuw verbinden",
+      "makeDefault": "Als standaard",
+      "disconnect": "Ontkoppelen",
+      "disconnectTitle": "Deze mailbox ontkoppelen?",
+      "disconnectBody": "Formulieren die vanaf {{email}} versturen vallen terug op de standaard van de werkruimte. Al verzonden e-mails blijven bewaard.",
+      "required": "Dit veld is verplicht",
+      "invalidEmail": "Voer een geldig e-mailadres in",
+      "invalidPort": "Voer een poort tussen 1 en 65535 in"
     }
   },
   "booking": {
@@ -2935,6 +2979,9 @@
       "enabled": "Bevestigingsmail versturen",
       "account": "Versturen vanaf",
       "accountDefault": "Standaard van de workspace",
+      "accountGroupYours": "Je accounts",
+      "accountGroupManaged": "Geleverd door Repraesent",
+      "accountNeedsReconnect": "moet opnieuw worden verbonden",
       "subject": "Onderwerp",
       "body": "Bericht",
       "code": "HTML",

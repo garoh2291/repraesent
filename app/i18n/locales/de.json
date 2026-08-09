@@ -39,7 +39,8 @@
     "somethingWentWrong": "Etwas ist schiefgelaufen",
     "deleted": "Gelöscht",
     "you": "Sie",
-    "clear": "Löschen"
+    "clear": "Löschen",
+    "dismiss": "Schließen"
   },
   "nav": {
     "home": "Startseite",
@@ -764,12 +765,11 @@
     }
   },
   "settings": {
-    "title": "Einstellungen",
-    "subtitle": "Ihr Profil und Team",
     "tabs": {
       "profile": "Profil",
       "areaSettings": "Bereich-Einstellungen",
-      "bcc": "E-Mail-Protokoll"
+      "bcc": "E-Mail-Protokoll",
+      "emailAccounts": "E-Mail-Konten"
     },
     "bcc": {
       "metaTitle": "E-Mail-Protokollierung",
@@ -918,6 +918,50 @@
         "void": "Storniert",
         "uncollectible": "Uneinbringlich"
       }
+    },
+    "emailAccounts": {
+      "metaTitle": "E-Mail-Konten",
+      "metaDescription": "Postfach zum Versenden verbinden",
+      "sectionTitle": "Absender-Konten",
+      "sectionDescription": "Verbinden Sie ein Postfach, und Ihre Formulare versenden Bestätigungen darüber.",
+      "emptyTitle": "Noch kein Absender-Konto",
+      "emptyHint": "Verbinden Sie Ihr eigenes Postfach – Bestätigungs-E-Mails kommen dann von Ihrer Adresse statt von einer allgemeinen.",
+      "connectSmtp": "Über IMAP/SMTP verbinden",
+      "connectSmtpHint": "Wir prüfen diese Angaben an Ihrem Mailserver, bevor wir sie speichern.",
+      "connectGoogle": "Mit Google verbinden",
+      "googleRedirecting": "Google wird geöffnet…",
+      "googleConnected": "{{email}} ist verbunden. Ihre Formulare können jetzt darüber senden.",
+      "google_denied": "Die Google-Anmeldung wurde abgebrochen, es wurde nichts verbunden.",
+      "google_expired": "Die Verbindungsanfrage ist abgelaufen. Bitte versuchen Sie es erneut.",
+      "google_error": "Beim Verbinden Ihres Google-Kontos ist ein Fehler aufgetreten. Bitte versuchen Sie es erneut.",
+      "google_failed": "Ihr Google-Konto konnte nicht verbunden werden. Bitte versuchen Sie es erneut.",
+      "name": "Anzeigename",
+      "email": "E-Mail-Adresse",
+      "server": "SMTP-Server",
+      "port": "Port",
+      "security": "Verschlüsselung",
+      "securitySSL_TLS": "SSL/TLS",
+      "securitySTARTTLS": "STARTTLS",
+      "securityNONE": "Keine",
+      "username": "Benutzername",
+      "usernamePlaceholder": "Wie die E-Mail-Adresse",
+      "password": "Passwort",
+      "connect": "Verbinden",
+      "verifying": "Verbindung wird geprüft…",
+      "connected": "Postfach verbunden",
+      "disconnected": "Postfach getrennt",
+      "defaultSet": "Standard-Absender aktualisiert",
+      "default": "Standard",
+      "managed": "Von Repraesent bereitgestellt",
+      "needsReconnect": "Neu verbinden nötig",
+      "reconnect": "Neu verbinden",
+      "makeDefault": "Als Standard",
+      "disconnect": "Trennen",
+      "disconnectTitle": "Dieses Postfach trennen?",
+      "disconnectBody": "Formulare, die über {{email}} versenden, nutzen künftig den Standard des Bereichs. Bereits gesendete E-Mails bleiben erhalten.",
+      "required": "Pflichtfeld",
+      "invalidEmail": "Bitte eine gültige E-Mail-Adresse eingeben",
+      "invalidPort": "Port zwischen 1 und 65535 eingeben"
     }
   },
   "booking": {
@@ -2937,6 +2981,9 @@
       "enabled": "Bestätigungs-E-Mail senden",
       "account": "Senden von",
       "accountDefault": "Workspace-Standard",
+      "accountGroupYours": "Ihre Konten",
+      "accountGroupManaged": "Von Repraesent bereitgestellt",
+      "accountNeedsReconnect": "muss neu verbunden werden",
       "subject": "Betreff",
       "body": "Nachricht",
       "code": "HTML",

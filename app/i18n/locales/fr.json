@@ -39,7 +39,8 @@
     "somethingWentWrong": "Une erreur s'est produite",
     "deleted": "Supprimé",
     "you": "Vous",
-    "clear": "Effacer"
+    "clear": "Effacer",
+    "dismiss": "Fermer"
   },
   "nav": {
     "home": "Accueil",
@@ -762,12 +763,11 @@
     }
   },
   "settings": {
-    "title": "Paramètres",
-    "subtitle": "Votre profil et votre équipe",
     "tabs": {
       "profile": "Profil",
       "areaSettings": "Paramètres de l'espace",
-      "bcc": "Journalisation des e-mails"
+      "bcc": "Journalisation",
+      "emailAccounts": "Comptes e-mail"
     },
     "bcc": {
       "metaTitle": "Journalisation des e-mails",
@@ -918,6 +918,50 @@
         "void": "Annulée",
         "uncollectible": "Irrécouvrable"
       }
+    },
+    "emailAccounts": {
+      "metaTitle": "Comptes e-mail",
+      "metaDescription": "Connecter une boîte mail pour l’envoi",
+      "sectionTitle": "Comptes d’envoi",
+      "sectionDescription": "Connectez une boîte mail et vos formulaires enverront leurs confirmations depuis celle-ci.",
+      "emptyTitle": "Aucun compte d’envoi",
+      "emptyHint": "Connectez votre propre boîte mail : les e-mails de confirmation partiront de votre adresse plutôt que d’une adresse générique.",
+      "connectSmtp": "Connecter via IMAP/SMTP",
+      "connectSmtpHint": "Nous vérifions ces informations auprès de votre serveur avant de les enregistrer.",
+      "connectGoogle": "Se connecter avec Google",
+      "googleRedirecting": "Ouverture de Google…",
+      "googleConnected": "{{email}} est connectée. Vos formulaires peuvent désormais envoyer depuis cette adresse.",
+      "google_denied": "La connexion Google a été annulée, rien n'a été connecté.",
+      "google_expired": "Cette demande de connexion a expiré. Veuillez réessayer.",
+      "google_error": "Une erreur s'est produite lors de la connexion de votre compte Google. Veuillez réessayer.",
+      "google_failed": "Votre compte Google n'a pas pu être connecté. Veuillez réessayer.",
+      "name": "Nom affiché",
+      "email": "Adresse e-mail",
+      "server": "Serveur SMTP",
+      "port": "Port",
+      "security": "Chiffrement",
+      "securitySSL_TLS": "SSL/TLS",
+      "securitySTARTTLS": "STARTTLS",
+      "securityNONE": "Aucun",
+      "username": "Nom d’utilisateur",
+      "usernamePlaceholder": "Identique à l’adresse e-mail",
+      "password": "Mot de passe",
+      "connect": "Connecter",
+      "verifying": "Vérification de la connexion…",
+      "connected": "Boîte mail connectée",
+      "disconnected": "Boîte mail déconnectée",
+      "defaultSet": "Expéditeur par défaut mis à jour",
+      "default": "Par défaut",
+      "managed": "Fourni par Repraesent",
+      "needsReconnect": "Reconnexion nécessaire",
+      "reconnect": "Reconnecter",
+      "makeDefault": "Définir par défaut",
+      "disconnect": "Déconnecter",
+      "disconnectTitle": "Déconnecter cette boîte mail ?",
+      "disconnectBody": "Les formulaires envoyant depuis {{email}} utiliseront l’expéditeur par défaut. Les e-mails déjà envoyés sont conservés.",
+      "required": "Ce champ est requis",
+      "invalidEmail": "Saisissez une adresse e-mail valide",
+      "invalidPort": "Saisissez un port entre 1 et 65535"
     }
   },
   "booking": {
@@ -2937,6 +2981,9 @@
       "enabled": "Envoyer un e-mail de confirmation",
       "account": "Envoyer depuis",
       "accountDefault": "Compte par défaut de l'espace",
+      "accountGroupYours": "Vos comptes",
+      "accountGroupManaged": "Fourni par Repraesent",
+      "accountNeedsReconnect": "doit être reconnecté",
       "subject": "Objet",
       "body": "Message",
       "code": "HTML",
