@@ -64,6 +64,8 @@ export default [
         "website/settings/:pluginUuid",
         "routes/wordpress.settings.$settingsKind.tsx",
       ),
+      route("workflows", "routes/workflows._index.tsx"),
+      route("workflows/:workflowId", "routes/workflows.$workflowId.tsx"),
       route("settings", "routes/settings._layout.tsx", [
         index("routes/settings._index.tsx"),
         route("profile", "routes/settings.profile.tsx"),

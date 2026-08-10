@@ -58,7 +58,8 @@
     "mail": "Mail",
     "wordpress": "Website",
     "subscriptions": "Abonnements",
-    "forms": "Formulare"
+    "forms": "Formulare",
+    "workflows": "Workflows"
   },
   "db_brand": {
     "subtitle": "Wähle einen Händler in der Seitenleiste, um Social Ads & Leads zu sehen.",
@@ -3104,6 +3105,284 @@
         "chipTranslate": "Übersetzen",
         "chipPublish": "Veröffentlichen"
       }
+    }
+  },
+  "workflows": {
+    "metaTitle": "Workflows",
+    "metaDescription": "Automatisieren, was nach einer Änderung passiert",
+    "title": "Workflows",
+    "subtitle": "Automatisch etwas ausführen, wenn sich ein Datensatz ändert – oder wenn längere Zeit nichts passiert.",
+    "new": "Neuer Workflow",
+    "newHint": "Vergeben Sie einen Namen. Alles Weitere lässt sich später ändern.",
+    "create": "Erstellen",
+    "nameLabel": "Name",
+    "namePlaceholder": "Inaktive Leads nachfassen",
+    "emptyTitle": "Noch keine Workflows",
+    "emptyHint": "Automatisieren Sie das Nachfassen: benachrichtigen, wenn ein Lead ruhig wird oder eine Aufgabe überfällig ist.",
+    "noTrigger": "Noch kein Auslöser",
+    "notFound": "Dieser Workflow existiert nicht mehr.",
+    "runsLast7": "{{count}} Läufe (7 T.)",
+    "failedLast7": "{{count}} fehlgeschlagen",
+    "lastRun": "Zuletzt {{when}}",
+    "unpublishedChanges": "Nicht veröffentlichte Änderungen",
+    "backToList": "Alle Workflows",
+    "save": "Speichern",
+    "saved": "Workflow gespeichert",
+    "publish": "Veröffentlichen",
+    "published": "Workflow veröffentlicht",
+    "deleted": "Workflow gelöscht",
+    "pause": "Pausieren",
+    "activate": "Aktivieren",
+    "test": "Testen",
+    "cannotPublish": "Veröffentlichen noch nicht möglich",
+    "tabBuild": "Aufbau",
+    "tabSettings": "Einstellungen",
+    "tabRuns": "Läufe",
+    "tabAnalytics": "Auswertung",
+    "stepsTitle": "Schritte",
+    "status": {
+      "draft": "Entwurf",
+      "active": "Aktiv",
+      "paused": "Pausiert",
+      "archived": "Archiviert"
+    },
+    "entity": {
+      "leads": "Leads",
+      "deals": "Deals",
+      "tasks": "Aufgaben",
+      "contacts": "Kontakte"
+    },
+    "node": {
+      "trigger": "Auslöser",
+      "condition": "Bedingung",
+      "delay": "Warten",
+      "send_internal_email": "Teammitglied benachrichtigen",
+      "send_customer_email": "Kontakt anschreiben"
+    },
+    "step": {
+      "trigger": "Wenn das passiert",
+      "add": "Schritt hinzufügen",
+      "remove": "Schritt entfernen",
+      "moveUp": "Nach oben",
+      "moveDown": "Nach unten",
+      "conditionCount": "{{count}} Bedingung(en)",
+      "recipientCount": "{{count}} Empfänger",
+      "delayDays": "{{count}} Tag(e)",
+      "delayHours": "{{count}} Stunde(n)",
+      "delayMinutes": "{{count}} Minute(n)"
+    },
+    "trigger": {
+      "entity": "Datensatztyp",
+      "when": "Wann",
+      "field": "Feld",
+      "newValue": "Neuer Wert",
+      "untouchedFor": "Unverändert seit",
+      "dateField": "Datumsfeld",
+      "offsetDays": "Versatz in Tagen",
+      "offsetHint": "Negativ löst vor dem Datum aus, positiv danach.",
+      "onlyIf": "Nur wenn",
+      "onlyIfHint": "Optional. Wird am Datensatz NACH der Änderung geprüft – für den vorherigen Wert „geändert von“ verwenden.",
+      "type_record_created": "Ein Datensatz wird erstellt",
+      "type_record_updated": "Ein Datensatz wird geändert",
+      "type_field_changed_to": "Ein Feld wechselt auf einen Wert",
+      "type_no_change_for": "Eine Zeit lang passiert nichts",
+      "type_date_field_relative": "Ein Datum wird erreicht",
+      "hint_record_created": "Löst einmal aus, wenn der Datensatz entsteht.",
+      "hint_record_updated": "Löst bei jeder Änderung aus.",
+      "hint_field_changed_to": "Löst nur beim Wechsel auf diesen Wert aus.",
+      "hint_no_change_for": "Wird regelmäßig geprüft. Löst erneut aus, wenn der Datensatz wieder ruhig wird.",
+      "hint_date_field_relative": "Wird regelmäßig geprüft, relativ zum gewählten Datum."
+    },
+    "condition": {
+      "matchLabel": "Treffer",
+      "matchAll": "Alle",
+      "matchAny": "Mindestens eine",
+      "add": "Bedingung hinzufügen",
+      "remove": "Bedingung entfernen",
+      "pickField": "Feld wählen",
+      "pickValue": "Wert wählen",
+      "valuePlaceholder": "Wert",
+      "groupFields": "Felder",
+      "groupMetadata": "Aus Metadaten",
+      "addGroup": "Gruppe hinzufügen",
+      "removeGroup": "Gruppe entfernen",
+      "pickDate": "Datum wählen",
+      "pickValues": "Werte wählen",
+      "nSelected": "{{count}} ausgewählt",
+      "compareToField": "Mit anderem Feld vergleichen"
+    },
+    "operator": {
+      "eq": "ist",
+      "neq": "ist nicht",
+      "in": "ist eines von",
+      "not_in": "ist keines von",
+      "contains": "enthält",
+      "starts_with": "beginnt mit",
+      "gt": "ist größer als",
+      "gte": "ist mindestens",
+      "lt": "ist kleiner als",
+      "lte": "ist höchstens",
+      "is_empty": "ist leer",
+      "is_not_empty": "ist nicht leer",
+      "changed": "hat sich geändert",
+      "changed_from": "geändert von",
+      "changed_to": "geändert zu",
+      "within_last_days": "liegt in den letzten",
+      "more_than_days_ago": "liegt mehr als",
+      "within_next_days": "liegt in den nächsten",
+      "more_than_days_from_now": "liegt mehr als … in der Zukunft"
+    },
+    "delay": {
+      "minutes": "Minuten",
+      "hours": "Stunden",
+      "days": "Tage"
+    },
+    "recipients": {
+      "label": "Senden an",
+      "add": "Person oder Rolle hinzufügen",
+      "addAddress": "Adresse hinzufügen",
+      "remove": "Entfernen",
+      "none": "Noch niemand – dieser Schritt wird übersprungen.",
+      "addressPlaceholder": "ops@firma.de",
+      "role_admin": "Alle Admins",
+      "role_editor": "Alle Bearbeiter",
+      "role_viewer": "Alle Betrachter"
+    },
+    "email": {
+      "subject": "Betreff",
+      "subjectPlaceholder": "Ein Lead braucht Aufmerksamkeit",
+      "body": "Nachricht",
+      "viewCode": "HTML",
+      "viewPreview": "Vorschau",
+      "variablesHint": "Zum Einfügen klicken. Die Werte stammen aus dem auslösenden Datensatz.",
+      "toPath": "Senden an",
+      "toPathHint": "Eine Variable, die eine E-Mail-Adresse ergibt.",
+      "sendFrom": "Senden von",
+      "sendFromDefault": "Standard des Workspace",
+      "accountBroken": "muss neu verbunden werden"
+    },
+    "outbound": {
+      "blockedTitle": "Kein Postfach verbunden",
+      "blockedBody": "Dieser Schritt schreibt Personen außerhalb Ihres Workspace an und benötigt dafür ein eigenes Postfach. Bis dahin wird der Schritt übersprungen – der restliche Workflow läuft weiter.",
+      "blockedCta": "Postfach verbinden",
+      "reconnectTitle": "Postfach muss neu verbunden werden",
+      "reconnectBody": "Das verbundene Postfach hat den Zugriff verloren. Der Schritt wird übersprungen, bis es neu verbunden ist."
+    },
+    "inspector": {
+      "title": "Schritt",
+      "emptyTitle": "Nichts ausgewählt",
+      "emptyHint": "Wählen Sie links einen Schritt aus.",
+      "conditionHint": "Der Lauf endet hier, wenn nicht alle Bedingungen zutreffen.",
+      "delayHint": "Pause vor dem nächsten Schritt. Der Lauf wird automatisch fortgesetzt.",
+      "internalHint": "Wird von Repraesent versendet – ohne eigenes Postfach nutzbar."
+    },
+    "settings": {
+      "description": "Beschreibung",
+      "reentry": "Wiederholte Läufe",
+      "reentryBlock": "Ein Lauf pro Datensatz",
+      "reentryAllow": "Parallele Läufe erlauben",
+      "reentryHint": "Blockieren verhindert, dass ein Datensatz erneut startet, solange ein Lauf noch wartet.",
+      "timezone": "Zeitzone",
+      "defaultLocale": "Standardsprache",
+      "defaultLocaleHint": "Wird verwendet, wenn eine Empfängerin keine eigene Sprache hat.",
+      "dangerTitle": "Diesen Workflow löschen",
+      "dangerHint": "Bereits erfasste Läufe bleiben erhalten.",
+      "delete": "Löschen",
+      "deleteTitle": "Diesen Workflow löschen?",
+      "deleteBody": "„{{name}}“ wird nicht mehr ausgeführt. Das lässt sich nicht rückgängig machen.",
+      "exitTitle": "Vorzeitig beenden, wenn",
+      "exitHint": "Bricht einen laufenden Lauf ab, sobald dies zutrifft – damit eine Sequenz niemanden weiter anschreibt, der bereits konvertiert ist.",
+      "windowTitle": "Nur senden während",
+      "windowHint": "Sendungen außerhalb dieser Zeiten werden bis zum nächsten Fenster zurückgehalten (Zeitzone des Workflows).",
+      "windowOn": "Sendezeiten begrenzen",
+      "from": "von",
+      "to": "bis"
+    },
+    "runs": {
+      "emptyTitle": "Noch keine Läufe",
+      "emptyHint": "Veröffentlichen Sie den Workflow oder testen Sie ihn an einem echten Datensatz.",
+      "noSteps": "Keine Schritte erfasst.",
+      "testBadge": "Test",
+      "conditionPassed": "Bedingungen erfüllt",
+      "conditionFailed": "Bedingungen nicht erfüllt",
+      "sentTo": "Gesendet an {{email}} ({{locale}})",
+      "wouldSend": "Würde senden an {{email}} ({{locale}})"
+    },
+    "runStatus": {
+      "running": "Läuft",
+      "waiting": "Wartet",
+      "completed": "Abgeschlossen",
+      "failed": "Fehlgeschlagen",
+      "cancelled": "Abgebrochen"
+    },
+    "stepStatus": {
+      "ok": "Erledigt",
+      "skipped": "Übersprungen",
+      "failed": "Fehlgeschlagen"
+    },
+    "skipReason": {
+      "no_recipients_resolved": "Keine Empfänger gefunden",
+      "no_template_for_locale": "Keine Nachricht hinterlegt",
+      "no_recipient_address": "Keine Adresse am Datensatz",
+      "invalid_recipient_address": "Adresse sieht ungültig aus",
+      "no_sending_account": "Kein Postfach verbunden",
+      "account_needs_reconnect": "Postfach muss neu verbunden werden"
+    },
+    "analytics": {
+      "total": "Läufe",
+      "perStep": "Pro Schritt",
+      "perDay": "Pro Tag",
+      "emptyTitle": "Noch nichts auszuwerten",
+      "emptyHint": "Auswertungen erscheinen, sobald der Workflow gelaufen ist."
+    },
+    "validation": {
+      "noTrigger": "Auslöser hinzufügen",
+      "noSteps": "Mindestens einen Schritt hinzufügen",
+      "noRecipients": "Ein E-Mail-Schritt hat keine Empfänger",
+      "noTemplate": "Ein E-Mail-Schritt hat keine Nachricht",
+      "noToPath": "Dem Kontakt-E-Mail-Schritt fehlt die Adresse",
+      "emptyCondition": "Ein Bedingungsschritt ist leer",
+      "filterContradiction": "„{{field}} ist {{value}}“ kann hier nie zutreffen: Der Auslöser greift, wenn {{field}} auf „{{target}}“ wechselt. Verwenden Sie „geändert von“ für den vorherigen Wert."
+    },
+    "testTitle": "Workflow testen",
+    "testHint": "Läuft gegen einen echten {{entity}}-Datensatz. Es wird nichts versendet.",
+    "testRecordId": "{{entity}}-Datensatz-ID",
+    "testSimulateHint": "Änderungsbedingungen werden so ausgewertet, als hätte der Datensatz seine aktuellen Werte gerade erreicht.",
+    "testRun": "Test starten",
+    "testRunning": "Läuft…",
+    "testDone": {
+      "plain": "Test abgeschlossen – siehe Läufe",
+      "simulated": "Test abgeschlossen (simuliert: {{fields}})"
+    },
+    "preview": {
+      "pick": "Vorschau als…",
+      "search": "Suchen…",
+      "noRecords": "Nichts gefunden",
+      "clear": "Vorschau-Datensatz entfernen",
+      "renderedAs": "Dargestellt als {{name}}",
+      "pickToRender": "Wählen Sie oben einen Datensatz, um echte Werte zu sehen.",
+      "unresolved": "Leer bei diesem Datensatz: {{paths}}",
+      "selected": "Vorschau: {{name}}",
+      "resolvesTo": "Ergibt {{value}}",
+      "resolvesEmpty": "Leer für {{name}}",
+      "resolvesNotEmail": "„{{value}}“ ist keine E-Mail-Adresse"
+    },
+    "weekday": {
+      "1": "Mo",
+      "2": "Di",
+      "3": "Mi",
+      "4": "Do",
+      "5": "Fr",
+      "6": "Sa",
+      "7": "So"
+    },
+    "runStatusReason": {
+      "exit_condition": "Vorzeitig beendet"
+    },
+    "branch": {
+      "yes": "Ja",
+      "no": "Nein",
+      "empty": "Nichts hier – der Lauf endet."
     }
   }
 }

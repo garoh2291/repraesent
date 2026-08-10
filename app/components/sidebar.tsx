@@ -23,6 +23,7 @@ import {
   Store,
   User,
   Users,
+  Workflow,
   X,
 } from "lucide-react";
 import * as LucideIcons from "lucide-react";
@@ -357,6 +358,15 @@ export function Sidebar({
             >
               <ClipboardList className="h-4 w-4 shrink-0" />
               {t("nav.forms", "Forms")}
+            </NavLink>
+
+            <NavLink
+              to="/workflows"
+              isActive={location.pathname.startsWith("/workflows")}
+              onClick={onClose}
+            >
+              <Workflow className="h-4 w-4 shrink-0" />
+              {t("nav.workflows", { defaultValue: "Workflows" })}
             </NavLink>
 
             {currentWorkspace?.services
