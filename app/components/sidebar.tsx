@@ -160,6 +160,15 @@ export function Sidebar({
   const showAppointmentsInSidebar =
     hasAppointmentsService && !!appointmentConfigs?.length;
   const isDoorboostBrandWs = currentWorkspace?.type === "doorboost_brand";
+  // TEMPORARY: Workflows is still being piloted, so in production only the
+  // pilot workspace sees the nav entry. Local development always shows it.
+  // Delete this and the `showWorkflows` guard on the NavLink when the feature
+  // ships to everyone. This hides the entry only — /workflows stays reachable
+  // by URL, and nothing here is a permission boundary.
+  const WORKFLOWS_PILOT_WORKSPACE_ID = "0941b49b-edaa-44bb-8d6f-8f6decd10502";
+  const showWorkflows =
+    import.meta.env.DEV ||
+    currentWorkspace?.id === WORKFLOWS_PILOT_WORKSPACE_ID;
   // Route-driven rather than stateful: deep links and refreshes land in the
   // right mode for free, and there is nothing to reset on the way out.
   const inSettings = location.pathname.startsWith("/settings");
@@ -360,14 +369,16 @@ export function Sidebar({
               {t("nav.forms", "Forms")}
             </NavLink>
 
-            <NavLink
-              to="/workflows"
-              isActive={location.pathname.startsWith("/workflows")}
-              onClick={onClose}
-            >
-              <Workflow className="h-4 w-4 shrink-0" />
-              {t("nav.workflows", { defaultValue: "Workflows" })}
-            </NavLink>
+            {showWorkflows && (
+              <NavLink
+                to="/workflows"
+                isActive={location.pathname.startsWith("/workflows")}
+                onClick={onClose}
+              >
+                <Workflow className="h-4 w-4 shrink-0" />
+                {t("nav.workflows", { defaultValue: "Workflows" })}
+              </NavLink>
+            )}
 
             {currentWorkspace?.services
               ?.filter(
