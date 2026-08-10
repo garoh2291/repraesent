@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Navigate } from "react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslation, Trans } from "react-i18next";
@@ -292,11 +292,21 @@ export default function Emails() {
     (s) => s.service_type === "email-config"
   );
 
-  const { data: accounts = [], isPending } = useQuery({
+  const { data: allAccounts = [], isPending } = useQuery({
     queryKey: ["workspace-email-accounts"],
     queryFn: listEmailAccounts,
     enabled: !!emailService,
   });
+
+  // This page exists to hand out IMAP/SMTP connection settings for a mailbox
+  // hosted on our server. Google accounts have no such settings — they send
+  // over the Gmail API and are managed in Settings → Email accounts — so
+  // listing one here would render an empty server and a password button that
+  // cannot work.
+  const accounts = useMemo(
+    () => allAccounts.filter((a) => a.provider !== "google"),
+    [allAccounts],
+  );
 
   const [selectedAccountId, setSelectedAccountId] = useState<string | null>(
     null

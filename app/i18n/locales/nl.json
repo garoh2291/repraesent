@@ -39,7 +39,8 @@
     "somethingWentWrong": "Er is iets misgegaan",
     "deleted": "Verwijderd",
     "you": "U",
-    "clear": "Wissen"
+    "clear": "Wissen",
+    "dismiss": "Sluiten"
   },
   "nav": {
     "home": "Startpagina",
@@ -57,7 +58,8 @@
     "brand_label": "Merk",
     "mail": "Mail",
     "wordpress": "Website",
-    "forms": "Formulieren"
+    "forms": "Formulieren",
+    "workflows": "Workflows"
   },
   "db_brand": {
     "subtitle": "Kies een retailer in de zijbalk om de Social Ads en Leads te bekijken.",
@@ -762,12 +764,11 @@
     }
   },
   "settings": {
-    "title": "Instellingen",
-    "subtitle": "Uw profiel en team",
     "tabs": {
       "profile": "Profiel",
       "areaSettings": "Gebiedsinstellingen",
-      "bcc": "E-maillogging"
+      "bcc": "E-maillogging",
+      "emailAccounts": "E-mailaccounts"
     },
     "bcc": {
       "metaTitle": "E-maillogging",
@@ -916,6 +917,50 @@
         "void": "Vervallen",
         "uncollectible": "Oninbaar"
       }
+    },
+    "emailAccounts": {
+      "metaTitle": "E-mailaccounts",
+      "metaDescription": "Een mailbox koppelen om vanaf te versturen",
+      "sectionTitle": "Verzendaccounts",
+      "sectionDescription": "Koppel een mailbox en je formulieren versturen bevestigingen daarvandaan.",
+      "emptyTitle": "Nog geen verzendaccount",
+      "emptyHint": "Koppel je eigen mailbox — bevestigingsmails komen dan van jouw adres in plaats van een algemeen adres.",
+      "connectSmtp": "Koppelen via IMAP/SMTP",
+      "connectSmtpHint": "We controleren deze gegevens bij je mailserver voordat we ze opslaan.",
+      "connectGoogle": "Verbinden met Google",
+      "googleRedirecting": "Google wordt geopend…",
+      "googleConnected": "{{email}} is verbonden. Je formulieren kunnen nu vanaf dit adres versturen.",
+      "google_denied": "De Google-aanmelding is geannuleerd, er is niets verbonden.",
+      "google_expired": "Dit verbindingsverzoek is verlopen. Probeer het opnieuw.",
+      "google_error": "Er ging iets mis bij het verbinden van je Google-account. Probeer het opnieuw.",
+      "google_failed": "Je Google-account kon niet worden verbonden. Probeer het opnieuw.",
+      "name": "Weergavenaam",
+      "email": "E-mailadres",
+      "server": "SMTP-server",
+      "port": "Poort",
+      "security": "Versleuteling",
+      "securitySSL_TLS": "SSL/TLS",
+      "securitySTARTTLS": "STARTTLS",
+      "securityNONE": "Geen",
+      "username": "Gebruikersnaam",
+      "usernamePlaceholder": "Zelfde als e-mailadres",
+      "password": "Wachtwoord",
+      "connect": "Koppelen",
+      "verifying": "Verbinding controleren…",
+      "connected": "Mailbox gekoppeld",
+      "disconnected": "Mailbox ontkoppeld",
+      "defaultSet": "Standaardafzender bijgewerkt",
+      "default": "Standaard",
+      "managed": "Geleverd door Repraesent",
+      "needsReconnect": "Opnieuw koppelen nodig",
+      "reconnect": "Opnieuw verbinden",
+      "makeDefault": "Als standaard",
+      "disconnect": "Ontkoppelen",
+      "disconnectTitle": "Deze mailbox ontkoppelen?",
+      "disconnectBody": "Formulieren die vanaf {{email}} versturen vallen terug op de standaard van de werkruimte. Al verzonden e-mails blijven bewaard.",
+      "required": "Dit veld is verplicht",
+      "invalidEmail": "Voer een geldig e-mailadres in",
+      "invalidPort": "Voer een poort tussen 1 en 65535 in"
     }
   },
   "booking": {
@@ -2935,6 +2980,9 @@
       "enabled": "Bevestigingsmail versturen",
       "account": "Versturen vanaf",
       "accountDefault": "Standaard van de workspace",
+      "accountGroupYours": "Je accounts",
+      "accountGroupManaged": "Geleverd door Repraesent",
+      "accountNeedsReconnect": "moet opnieuw worden verbonden",
       "subject": "Onderwerp",
       "body": "Bericht",
       "code": "HTML",
@@ -3059,6 +3107,284 @@
         "chipTranslate": "Vertalen",
         "chipPublish": "Publiceren"
       }
+    }
+  },
+  "workflows": {
+    "metaTitle": "Workflows",
+    "metaDescription": "Automate what happens after a lead, deal or task changes",
+    "title": "Workflows",
+    "subtitle": "Voer automatisch iets uit wanneer een record verandert, of wanneer er een tijd niets gebeurt.",
+    "new": "Nieuwe workflow",
+    "newHint": "Give it a name. You can change everything else afterwards.",
+    "create": "Aanmaken",
+    "nameLabel": "Naam",
+    "namePlaceholder": "Chase stale leads",
+    "emptyTitle": "Nog geen workflows",
+    "emptyHint": "Automate the follow-ups nobody remembers: notify someone when a lead goes quiet, or when a task is overdue.",
+    "noTrigger": "No trigger yet",
+    "notFound": "That workflow no longer exists.",
+    "runsLast7": "{{count}} runs (7d)",
+    "failedLast7": "{{count}} failed",
+    "lastRun": "Last run {{when}}",
+    "unpublishedChanges": "Unpublished changes",
+    "backToList": "Alle workflows",
+    "save": "Opslaan",
+    "saved": "Workflow opgeslagen",
+    "publish": "Publiceren",
+    "published": "Workflow gepubliceerd",
+    "deleted": "Workflow verwijderd",
+    "pause": "Pauzeren",
+    "activate": "Activeren",
+    "test": "Testen",
+    "cannotPublish": "Cannot publish yet",
+    "tabBuild": "Opbouw",
+    "tabSettings": "Instellingen",
+    "tabRuns": "Uitvoeringen",
+    "tabAnalytics": "Statistieken",
+    "stepsTitle": "Stappen",
+    "status": {
+      "draft": "Draft",
+      "active": "Active",
+      "paused": "Paused",
+      "archived": "Archived"
+    },
+    "entity": {
+      "leads": "Leads",
+      "deals": "Deals",
+      "tasks": "Tasks",
+      "contacts": "Contacts"
+    },
+    "node": {
+      "trigger": "Trigger",
+      "condition": "Condition",
+      "delay": "Wait",
+      "send_internal_email": "Email a team member",
+      "send_customer_email": "Email the contact"
+    },
+    "step": {
+      "trigger": "When this happens",
+      "add": "Add step",
+      "remove": "Remove step",
+      "moveUp": "Move up",
+      "moveDown": "Move down",
+      "conditionCount": "{{count}} condition(s)",
+      "recipientCount": "{{count}} recipient(s)",
+      "delayDays": "{{count}} day(s)",
+      "delayHours": "{{count}} hour(s)",
+      "delayMinutes": "{{count}} minute(s)"
+    },
+    "trigger": {
+      "entity": "Record type",
+      "when": "When",
+      "field": "Field",
+      "newValue": "New value",
+      "untouchedFor": "Untouched for",
+      "dateField": "Date field",
+      "offsetDays": "Offset in days",
+      "offsetHint": "Negative fires before the date, positive after.",
+      "onlyIf": "Only if",
+      "onlyIfHint": "Optioneel. Wordt gecontroleerd op het record NA de wijziging — gebruik \"gewijzigd van\" voor de vorige waarde.",
+      "type_record_created": "A record is created",
+      "type_record_updated": "A record is updated",
+      "type_field_changed_to": "A field changes to a value",
+      "type_no_change_for": "Nothing changes for a while",
+      "type_date_field_relative": "A date passes",
+      "hint_record_created": "Fires once, when the record first appears.",
+      "hint_record_updated": "Fires on every change to the record.",
+      "hint_field_changed_to": "Fires only on the transition into that value.",
+      "hint_no_change_for": "Checked on a schedule. Fires again if the record is touched and goes quiet again.",
+      "hint_date_field_relative": "Checked on a schedule, relative to the date you pick."
+    },
+    "condition": {
+      "matchLabel": "Match",
+      "matchAll": "All of",
+      "matchAny": "Any of",
+      "add": "Add condition",
+      "remove": "Remove condition",
+      "pickField": "Pick a field",
+      "pickValue": "Pick a value",
+      "valuePlaceholder": "Value",
+      "groupFields": "Fields",
+      "groupMetadata": "From metadata",
+      "addGroup": "Groep toevoegen",
+      "removeGroup": "Groep verwijderen",
+      "pickDate": "Kies een datum",
+      "pickValues": "Kies waarden",
+      "nSelected": "{{count}} geselecteerd",
+      "compareToField": "Vergelijk met ander veld"
+    },
+    "operator": {
+      "eq": "is",
+      "neq": "is not",
+      "in": "is one of",
+      "not_in": "is not one of",
+      "contains": "contains",
+      "starts_with": "starts with",
+      "gt": "is greater than",
+      "gte": "is at least",
+      "lt": "is less than",
+      "lte": "is at most",
+      "is_empty": "is empty",
+      "is_not_empty": "is not empty",
+      "changed": "changed",
+      "changed_from": "changed from",
+      "changed_to": "changed to",
+      "within_last_days": "valt binnen de laatste",
+      "more_than_days_ago": "is langer dan",
+      "within_next_days": "valt binnen de komende",
+      "more_than_days_from_now": "is meer dan … vanaf nu"
+    },
+    "delay": {
+      "minutes": "Minutes",
+      "hours": "Hours",
+      "days": "Days"
+    },
+    "recipients": {
+      "label": "Send to",
+      "add": "Add a person or role",
+      "addAddress": "Add address",
+      "remove": "Remove",
+      "none": "Nobody yet — this step will be skipped.",
+      "addressPlaceholder": "ops@company.com",
+      "role_admin": "All admins",
+      "role_editor": "All editors",
+      "role_viewer": "All viewers"
+    },
+    "email": {
+      "subject": "Subject",
+      "subjectPlaceholder": "A lead needs attention",
+      "body": "Message",
+      "viewCode": "HTML",
+      "viewPreview": "Preview",
+      "variablesHint": "Click to insert. Values come from the record that triggered the run.",
+      "toPath": "Send to",
+      "toPathHint": "A variable that resolves to an email address.",
+      "sendFrom": "Send from",
+      "sendFromDefault": "Workspace default",
+      "accountBroken": "needs reconnecting"
+    },
+    "outbound": {
+      "blockedTitle": "No sending mailbox connected",
+      "blockedBody": "This step emails people outside your workspace, which needs a mailbox of your own. Until one is connected the step is skipped — the rest of the workflow still runs.",
+      "blockedCta": "Connect a mailbox",
+      "reconnectTitle": "Mailbox needs reconnecting",
+      "reconnectBody": "The connected mailbox lost access, so this step will be skipped until it is reconnected."
+    },
+    "inspector": {
+      "title": "Step",
+      "emptyTitle": "Nothing selected",
+      "emptyHint": "Pick a step on the left to configure it.",
+      "conditionHint": "The run stops here unless every condition holds.",
+      "delayHint": "Pause before the next step. The run resumes on its own.",
+      "internalHint": "Sent from Repraesent, so this works without connecting a mailbox."
+    },
+    "settings": {
+      "description": "Description",
+      "reentry": "Repeat runs",
+      "reentryBlock": "One run at a time per record",
+      "reentryAllow": "Allow parallel runs",
+      "reentryHint": "Blocking prevents a record entering again while a run is still waiting.",
+      "timezone": "Timezone",
+      "defaultLocale": "Default language",
+      "defaultLocaleHint": "Used when a recipient has no language of their own.",
+      "dangerTitle": "Delete this workflow",
+      "dangerHint": "Runs already recorded are kept.",
+      "delete": "Delete",
+      "deleteTitle": "Delete this workflow?",
+      "deleteBody": "\"{{name}}\" will stop running. This cannot be undone.",
+      "exitTitle": "Eerder stoppen wanneer",
+      "exitHint": "Annuleert een lopende uitvoering zodra dit klopt — zo blijft een reeks niemand achtervolgen die al geconverteerd is.",
+      "windowTitle": "Alleen versturen tijdens",
+      "windowHint": "Verzendingen buiten deze uren worden vastgehouden tot het volgende venster, in de tijdzone van de workflow.",
+      "windowOn": "Verzenduren beperken",
+      "from": "van",
+      "to": "tot"
+    },
+    "runs": {
+      "emptyTitle": "No runs yet",
+      "emptyHint": "Publish the workflow, or use Test to try it against a real record.",
+      "noSteps": "No steps recorded.",
+      "testBadge": "Test",
+      "conditionPassed": "Conditions matched",
+      "conditionFailed": "Conditions did not match",
+      "sentTo": "Sent to {{email}} ({{locale}})",
+      "wouldSend": "Would send to {{email}} ({{locale}})"
+    },
+    "runStatus": {
+      "running": "Running",
+      "waiting": "Waiting",
+      "completed": "Completed",
+      "failed": "Failed",
+      "cancelled": "Cancelled"
+    },
+    "stepStatus": {
+      "ok": "Done",
+      "skipped": "Skipped",
+      "failed": "Failed"
+    },
+    "skipReason": {
+      "no_recipients_resolved": "No recipients resolved",
+      "no_template_for_locale": "No message written",
+      "no_recipient_address": "No address on the record",
+      "invalid_recipient_address": "Address looks invalid",
+      "no_sending_account": "No mailbox connected",
+      "account_needs_reconnect": "Mailbox needs reconnecting"
+    },
+    "analytics": {
+      "total": "Runs",
+      "perStep": "Per step",
+      "perDay": "Per day",
+      "emptyTitle": "Nothing to show yet",
+      "emptyHint": "Analytics appear once the workflow has run."
+    },
+    "validation": {
+      "noTrigger": "Add a trigger",
+      "noSteps": "Add at least one step",
+      "noRecipients": "An email step has no recipients",
+      "noTemplate": "An email step has no message",
+      "noToPath": "The customer email step has no address",
+      "emptyCondition": "A condition step is empty",
+      "filterContradiction": "\"{{field}} is {{value}}\" kan hier nooit waar zijn: de trigger vuurt wanneer {{field}} \"{{target}}\" wordt. Gebruik \"gewijzigd van\" voor de vorige waarde."
+    },
+    "testTitle": "Test this workflow",
+    "testHint": "Runs against a real {{entity}} record. Nothing is sent.",
+    "testRecordId": "{{entity}} record ID",
+    "testSimulateHint": "Change conditions are evaluated as if the record just reached its current values.",
+    "testRun": "Run test",
+    "testRunning": "Running…",
+    "testDone": {
+      "plain": "Test finished — see Runs",
+      "simulated": "Test finished (simulated: {{fields}})"
+    },
+    "preview": {
+      "pick": "Voorbeeld als…",
+      "search": "Zoeken…",
+      "noRecords": "Niets gevonden",
+      "clear": "Voorbeeldrecord wissen",
+      "renderedAs": "Weergegeven als {{name}}",
+      "pickToRender": "Kies hierboven een record om echte waarden te zien.",
+      "unresolved": "Leeg bij dit record: {{paths}}",
+      "selected": "Voorbeeld: {{name}}",
+      "resolvesTo": "Levert {{value}} op",
+      "resolvesEmpty": "Leeg voor {{name}}",
+      "resolvesNotEmail": "“{{value}}” is geen e-mailadres"
+    },
+    "weekday": {
+      "1": "Ma",
+      "2": "Di",
+      "3": "Wo",
+      "4": "Do",
+      "5": "Vr",
+      "6": "Za",
+      "7": "Zo"
+    },
+    "runStatusReason": {
+      "exit_condition": "Vroegtijdig beëindigd"
+    },
+    "branch": {
+      "yes": "Ja",
+      "no": "Nee",
+      "empty": "Niets hier — de uitvoering stopt."
     }
   }
 }
