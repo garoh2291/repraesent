@@ -3,6 +3,7 @@ import {
   Code2,
   Copy,
   ExternalLink,
+  FileCode2,
   Link2,
   MonitorPlay,
   ShieldCheck,
@@ -106,6 +107,17 @@ export function SharePanel({
 
       <SnippetCard
         formId={formId}
+        mode="html"
+        locale={defaultLocale}
+        icon={<FileCode2 className="h-3.5 w-3.5" />}
+        title={t("forms.share.htmlTitle")}
+        subtitle={t("forms.share.htmlHint")}
+        warning={t("forms.share.htmlWarning")}
+        onCopy={copy}
+      />
+
+      <SnippetCard
+        formId={formId}
         mode="iframe"
         locale={defaultLocale}
         icon={<MonitorPlay className="h-3.5 w-3.5" />}
@@ -194,6 +206,7 @@ function SnippetCard({
   icon,
   title,
   subtitle,
+  warning,
   onCopy,
 }: {
   formId: string;
@@ -202,6 +215,7 @@ function SnippetCard({
   icon: React.ReactNode;
   title: string;
   subtitle: string;
+  warning?: string;
   onCopy: (text: string) => void;
 }) {
   const { t } = useTranslation();
@@ -230,6 +244,11 @@ function SnippetCard({
       />
       <PanelBody>
         <FieldHint>{subtitle}</FieldHint>
+        {warning ? (
+          <p className="text-xs text-amber-700 dark:text-amber-400">
+            {warning}
+          </p>
+        ) : null}
         {isLoading ? (
           <Skeleton className="h-28 w-full rounded-lg" />
         ) : (

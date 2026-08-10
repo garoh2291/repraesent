@@ -40,7 +40,7 @@ export interface UpdateFormDto {
   default_locale?: FormLocale;
 }
 
-export type SnippetMode = "embed" | "iframe";
+export type SnippetMode = "embed" | "html" | "iframe";
 
 // --- Authenticated -----------------------------------------------------------
 
