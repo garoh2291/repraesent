@@ -16,12 +16,14 @@ import { FormRenderer } from "~/components/forms/FormRenderer";
 import i18n from "~/i18n";
 import { getPublicForm, submitPublicForm } from "~/lib/api/forms";
 import { getContent } from "~/lib/forms/content";
+import { onColor } from "~/lib/forms/css";
 import { normalizeDefinition } from "~/lib/forms/field-types";
 import {
   contentKey,
   isFormLocale,
   type FormErrorCode,
   type FormLocale,
+  type FormTheme,
 } from "~/lib/forms/schema";
 import { captureUtm } from "~/lib/forms/utm";
 import { emptyValues, validateValues } from "~/lib/forms/validate";
@@ -208,7 +210,7 @@ export default function PublicFormRoute() {
   }
 
   return (
-    <Shell embed={isEmbed}>
+    <Shell embed={isEmbed} theme={definition.theme}>
       <div ref={wrapperRef} className="w-full">
         <FormRenderer
           definition={definition}
@@ -254,21 +256,69 @@ export default function PublicFormRoute() {
 /**
  * Page chrome. Suppressed entirely under ?embed=1 so the iframe shows only the
  * form and inherits the host page's own background.
+ *
+ * "Inherits the host page's background" was a lie until the document itself was
+ * made transparent: app.css paints html and body `#0f0f11` for the dashboard,
+ * and an iframe document paints its own body over whatever is behind it. So the
+ * iframe came out near-black with the form's dark body text on top of it —
+ * unreadable, and unrelated to the visitor's OS setting, which is why it looked
+ * identical in light and dark mode.
+ *
+ * DocumentScheme below also pins the colour scheme to the form's own theme, so
+ * native widgets never follow the visitor's OS.
  */
 function Shell({
   embed,
+  theme,
   children,
 }: {
   embed: boolean;
+  theme?: FormTheme;
   children: React.ReactNode;
 }) {
   if (embed) {
-    return <div className="flex w-full justify-center p-2">{children}</div>;
+    return (
+      <>
+        <DocumentScheme theme={theme} background="transparent" />
+        <div className="flex w-full justify-center p-2">{children}</div>
+      </>
+    );
   }
   return (
-    <main className="flex min-h-dvh w-full items-center justify-center bg-[#eeeeee] p-4 sm:p-8">
-      <div className="flex w-full justify-center">{children}</div>
-    </main>
+    <>
+      <DocumentScheme theme={theme} background="#eeeeee" />
+      <main className="flex min-h-dvh w-full items-center justify-center bg-[#eeeeee] p-4 sm:p-8">
+        <div className="flex w-full justify-center">{children}</div>
+      </main>
+    </>
+  );
+}
+
+/**
+ * Overrides the dashboard's `html, body { background: #0f0f11; color-scheme:
+ * dark }` for this route only.
+ *
+ * A plain <style> element rather than a class, because the rules have to reach
+ * html and body, which this route does not render. It ships in the SSR HTML, so
+ * there is no flash of the dashboard's dark background before hydration.
+ *
+ * The scheme is derived exactly as buildFormCss derives it, from the theme's
+ * surface colour — the two must agree or the page chrome and the form would
+ * disagree about which scheme they are in. Defaults to light while the
+ * definition is still loading, which is what almost every form is.
+ */
+function DocumentScheme({
+  theme,
+  background,
+}: {
+  theme?: FormTheme;
+  background: string;
+}) {
+  const scheme =
+    theme && onColor(theme.surface) === "#ffffff" ? "dark" : "light";
+
+  return (
+    <style>{`html,body{background:${background};color-scheme:${scheme};}`}</style>
   );
 }
 

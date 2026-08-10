@@ -169,9 +169,12 @@ html,
 body {
   @apply bg-[#0f0f11] text-foreground;
 
-  @media (prefers-color-scheme: dark) {
-    color-scheme: dark;
-  }
+  /* The app has one look, so it declares one scheme. This used to be wrapped in
+     `@media (prefers-color-scheme: dark)`, which meant native widgets — the
+     caret, autofill, scrollbars, date pickers — followed the visitor's OS
+     instead of the page. The public form route overrides this with its own
+     theme's scheme; see routes/f.$formId.tsx. */
+  color-scheme: dark;
 }
 
 @theme inline {

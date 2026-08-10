@@ -67,15 +67,33 @@ export function onColor(hex: string): string {
 export function googleFontsHref(theme: FormTheme): string | null {
   const family = FORM_FONTS[theme.fontFamily]?.googleFamily;
   if (!family) return null;
-  return `https://fonts.googleapis.com/css2?family=${family}&display=swap`;
+  return `https://fonts.googleapis.com/css2?family=${family}`;
 }
+
+/**
+ * Scope for the embedded form, which lives in a shadow root: `:host` is the
+ * container div the customer pasted, and every other rule descends from it.
+ * The builder preview and the hosted /f/:id page stay in the light DOM and
+ * pass a generated class name instead.
+ */
+export const SHADOW_SCOPE = ":host";
 
 export function buildFormCss(theme: FormTheme, scopeClass: string): string {
   const d = DENSITY[theme.density] ?? DENSITY.cozy;
   const font = FORM_FONTS[theme.fontFamily]?.stack ?? FORM_FONTS.system.stack;
-  const s = `.${scopeClass}`;
+  // A bare word is a class name; anything starting with `:` or `.` is already
+  // a selector and is used verbatim.
+  const s = /^[.:]/.test(scopeClass) ? scopeClass : `.${scopeClass}`;
   const radius = `${theme.radius}px`;
   const accentText = onColor(theme.accent);
+
+  // The form renders in exactly ONE scheme — the one its theme defines — never
+  // the visitor's OS setting. Without this, a light form on a machine set to
+  // dark mode gets dark-painted native widgets: checkbox ticks, date pickers,
+  // autofill highlights, spinners and the caret all flip, on top of a white
+  // field. Derived from the surface colour, because that is what the native
+  // controls actually sit on.
+  const scheme = onColor(theme.surface) === "#ffffff" ? "dark" : "light";
 
   // Field chrome varies by style; everything else is shared.
   const fieldBase =
@@ -112,6 +130,7 @@ ${s} {
   --rf-danger: #dc2626;
   --rf-radius: ${radius};
   --rf-gap: ${d.gap};
+  color-scheme: ${scheme};
   font-family: ${font};
   font-size: ${d.font};
   line-height: 1.5;

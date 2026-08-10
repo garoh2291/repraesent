@@ -181,12 +181,8 @@ function useDemoQueryClient(demoId: string, locale: string) {
       `<iframe src="${url}?embed=1"\n        style="width:100%;border:0"\n        loading="lazy"\n        title="Form"></iframe>`,
     );
     client.setQueryData(
-      ["form-snippet", demoId, "script", locale],
-      `<div data-rf-form="${demoId}"></div>\n<script src="${origin}/api/public/forms/embed.js" async></script>`,
-    );
-    client.setQueryData(
-      ["form-snippet", demoId, "html", locale],
-      `<!-- Paste anywhere. Self-contained: styles and script included. -->\n<div class="rf-${demoId.slice(0, 6)}">\n  <style>/* … */</style>\n  <form class="rf-form"> … </form>\n  <script>/* … */</script>\n</div>`,
+      ["form-snippet", demoId, "embed", locale],
+      `<div data-rf-form="${demoId}" data-rf-locale="${locale}"></div>\n<script src="${origin}/api/public/forms/embed.js" async></script>`,
     );
   }, [client, demoId, locale]);
 
