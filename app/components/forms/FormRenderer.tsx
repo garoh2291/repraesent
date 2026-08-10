@@ -91,8 +91,8 @@ export function FormRenderer({
    * Click target + selection ring for the builder canvas.
    *
    * Returns {} in live mode — that is the single guarantee that the hosted
-   * page, the iframe, the script embed and the pasted static HTML all render
-   * byte-identically to before, and stay in step with
+   * page, the iframe and the script embed all render byte-identically to each
+   * other, and stay in step with
    * nestjs-monolith/src/modules/forms/form-render.service.ts, which generates
    * the same markup server-side and has no notion of a preview.
    *

@@ -2948,16 +2948,17 @@
       "publishFirst": "Publiceer dit formulier voordat u het deelt — de link en insluitingen blijven tot dan inactief.",
       "linkTitle": "Openbare link",
       "linkHint": "Altijd actueel. Ideaal voor e-mail, chat en QR-codes.",
+      "embedTitle": "Insluiten (script)",
+      "embedHint": "Werkt op elke site. Plak beide regels waar het formulier moet komen — het blijft actueel bij elke publicatie.",
       "iframeTitle": "Insluiten (iframe)",
       "iframeHint": "Blijft actueel op uw site en past de hoogte automatisch aan.",
-      "scriptTitle": "Insluiten (script)",
-      "scriptHint": "Blijft actueel en neemt de context van uw pagina over. Plak beide regels waar het formulier moet komen.",
-      "htmlTitle": "HTML kopiëren",
-      "htmlHint": "Eén op zichzelf staand blok — zonder afhankelijkheden, werkt overal.",
-      "htmlWarning": "Dit is een momentopname van de gepubliceerde versie. Kopieer opnieuw nadat u wijzigingen publiceert.",
       "open": "Openen",
       "copy": "Kopiëren",
-      "copied": "Naar klembord gekopieerd"
+      "copied": "Naar klembord gekopieerd",
+      "cspTitle": "Content-Security-Policy",
+      "cspHint": "Alleen nodig als uw site een Content-Security-Policy-header verstuurt. Zonder deze regels blokkeert de browser het formulier en ziet u niets. Vraag de beheerder van de site om ze toe te voegen.",
+      "localhostWarning": "Dit snippet verwijst naar {{origin}}, een adres dat alleen op de server zelf bestaat. Op een echte website laadt het formulier niet.",
+      "unpublishedWarning": "Er zijn niet-gepubliceerde wijzigingen. Ingesloten formulieren tonen de laatst gepubliceerde versie totdat u opnieuw publiceert."
     },
     "validation": {
       "needsEmailField": "Voeg een e-mailveld toe en koppel het aan E-mail.",

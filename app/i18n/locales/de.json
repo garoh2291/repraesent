@@ -2950,16 +2950,17 @@
       "publishFirst": "Veröffentlichen Sie das Formular, bevor Sie es teilen — Link und Einbettungen bleiben bis dahin inaktiv.",
       "linkTitle": "Öffentlicher Link",
       "linkHint": "Immer aktuell. Ideal für E-Mail, Chat und QR-Codes.",
+      "embedTitle": "Einbetten (Script)",
+      "embedHint": "Funktioniert auf jeder Website. Beide Zeilen dort einfügen, wo das Formular erscheinen soll — es bleibt bei jeder Veröffentlichung aktuell.",
       "iframeTitle": "Einbetten (iframe)",
       "iframeHint": "Bleibt auf Ihrer Website aktuell und passt seine Höhe automatisch an.",
-      "scriptTitle": "Einbetten (Script)",
-      "scriptHint": "Bleibt aktuell und übernimmt den Kontext Ihrer Seite. Beide Zeilen dort einfügen, wo das Formular erscheinen soll.",
-      "htmlTitle": "HTML kopieren",
-      "htmlHint": "Ein eigenständiger Block — ohne Abhängigkeiten, überall lauffähig.",
-      "htmlWarning": "Dies ist eine Momentaufnahme der veröffentlichten Fassung. Nach Änderungen bitte erneut kopieren.",
       "open": "Öffnen",
       "copy": "Kopieren",
-      "copied": "In die Zwischenablage kopiert"
+      "copied": "In die Zwischenablage kopiert",
+      "cspTitle": "Content-Security-Policy",
+      "cspHint": "Nur nötig, wenn Ihre Website einen Content-Security-Policy-Header sendet. Ohne diese Einträge blockiert der Browser das Formular und zeigt nichts an. Bitten Sie die Website-Betreuung, sie zu ergänzen.",
+      "localhostWarning": "Dieses Snippet verweist auf {{origin}} — diese Adresse existiert nur auf dem Server selbst. Auf einer echten Website lädt das Formular nicht.",
+      "unpublishedWarning": "Es gibt unveröffentlichte Änderungen. Eingebettete Formulare zeigen die zuletzt veröffentlichte Version, bis Sie erneut veröffentlichen."
     },
     "validation": {
       "needsEmailField": "Fügen Sie ein E-Mail-Feld hinzu und ordnen Sie es E-Mail zu.",

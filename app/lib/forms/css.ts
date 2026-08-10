@@ -70,10 +70,20 @@ export function googleFontsHref(theme: FormTheme): string | null {
   return `https://fonts.googleapis.com/css2?family=${family}&display=swap`;
 }
 
+/**
+ * Scope for the embedded form, which lives in a shadow root: `:host` is the
+ * container div the customer pasted, and every other rule descends from it.
+ * The builder preview and the hosted /f/:id page stay in the light DOM and
+ * pass a generated class name instead.
+ */
+export const SHADOW_SCOPE = ":host";
+
 export function buildFormCss(theme: FormTheme, scopeClass: string): string {
   const d = DENSITY[theme.density] ?? DENSITY.cozy;
   const font = FORM_FONTS[theme.fontFamily]?.stack ?? FORM_FONTS.system.stack;
-  const s = `.${scopeClass}`;
+  // A bare word is a class name; anything starting with `:` or `.` is already
+  // a selector and is used verbatim.
+  const s = /^[.:]/.test(scopeClass) ? scopeClass : `.${scopeClass}`;
   const radius = `${theme.radius}px`;
   const accentText = onColor(theme.accent);
 

@@ -2950,16 +2950,17 @@
       "publishFirst": "Publiez ce formulaire avant de le partager — le lien et les intégrations restent inactifs jusque-là.",
       "linkTitle": "Lien public",
       "linkHint": "Toujours à jour. Idéal pour l'e-mail, la messagerie et les QR codes.",
+      "embedTitle": "Intégrer (script)",
+      "embedHint": "Fonctionne sur n'importe quel site. Collez les deux lignes à l'endroit voulu — le formulaire reste à jour à chaque publication.",
       "iframeTitle": "Intégrer (iframe)",
       "iframeHint": "Reste à jour sur votre site et ajuste sa hauteur automatiquement.",
-      "scriptTitle": "Intégrer (script)",
-      "scriptHint": "Reste à jour et hérite du contexte de votre page. Collez les deux lignes à l'endroit voulu.",
-      "htmlTitle": "Copier le HTML",
-      "htmlHint": "Un bloc autonome — sans dépendances, fonctionne partout.",
-      "htmlWarning": "Ceci est un instantané de la version publiée. Recopiez-le après avoir publié des modifications.",
       "open": "Ouvrir",
       "copy": "Copier",
-      "copied": "Copié dans le presse-papiers"
+      "copied": "Copié dans le presse-papiers",
+      "cspTitle": "Content-Security-Policy",
+      "cspHint": "Nécessaire uniquement si votre site envoie un en-tête Content-Security-Policy. Sans ces directives, le navigateur bloque le formulaire et n'affiche rien. Demandez-les à la personne qui gère le site.",
+      "localhostWarning": "Ce snippet pointe vers {{origin}}, une adresse qui n'existe que sur la machine du serveur. Le formulaire ne se chargera sur aucun site réel.",
+      "unpublishedWarning": "Vous avez des modifications non publiées. Les formulaires intégrés affichent la dernière version publiée jusqu'à votre prochaine publication."
     },
     "validation": {
       "needsEmailField": "Ajoutez un champ e-mail et associez-le à E-mail.",

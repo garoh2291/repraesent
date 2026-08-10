@@ -1,5 +1,12 @@
 import { useQuery } from "@tanstack/react-query";
-import { Code2, Copy, ExternalLink, Link2, MonitorPlay } from "lucide-react";
+import {
+  Code2,
+  Copy,
+  ExternalLink,
+  Link2,
+  MonitorPlay,
+  ShieldCheck,
+} from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import { Input } from "~/components/ui/input";
@@ -51,7 +58,7 @@ export function SharePanel({
   return (
     <div className="space-y-5">
       {hasUnpublishedChanges ? (
-        <InfoNote>{t("forms.share.htmlWarning")}</InfoNote>
+        <InfoNote>{t("forms.share.unpublishedWarning")}</InfoNote>
       ) : null}
 
       <Panel>
@@ -89,6 +96,16 @@ export function SharePanel({
 
       <SnippetCard
         formId={formId}
+        mode="embed"
+        locale={defaultLocale}
+        icon={<Code2 className="h-3.5 w-3.5" />}
+        title={t("forms.share.embedTitle")}
+        subtitle={t("forms.share.embedHint")}
+        onCopy={copy}
+      />
+
+      <SnippetCard
+        formId={formId}
         mode="iframe"
         locale={defaultLocale}
         icon={<MonitorPlay className="h-3.5 w-3.5" />}
@@ -97,28 +114,77 @@ export function SharePanel({
         onCopy={copy}
       />
 
-      <SnippetCard
-        formId={formId}
-        mode="script"
-        locale={defaultLocale}
-        icon={<Code2 className="h-3.5 w-3.5" />}
-        title={t("forms.share.scriptTitle")}
-        subtitle={t("forms.share.scriptHint")}
-        onCopy={copy}
-      />
-
-      <SnippetCard
-        formId={formId}
-        mode="html"
-        locale={defaultLocale}
-        icon={<Code2 className="h-3.5 w-3.5" />}
-        title={t("forms.share.htmlTitle")}
-        subtitle={t("forms.share.htmlHint")}
-        warning={t("forms.share.htmlWarning")}
-        onCopy={copy}
-      />
+      <CspCard formId={formId} locale={defaultLocale} onCopy={copy} />
     </div>
   );
+}
+
+/**
+ * A Content-Security-Policy is enforced by the browser from the *host* page's
+ * headers — nothing we serve can satisfy it on the customer's behalf. Sites that
+ * send one see `embed.js (blocked:csp)` and an empty space where the form should
+ * be, with no clue why, so the exact directives they need are printed here.
+ */
+function CspCard({
+  formId,
+  locale,
+  onCopy,
+}: {
+  formId: string;
+  locale: FormLocale;
+  onCopy: (text: string) => void;
+}) {
+  const { t } = useTranslation();
+
+  // Same query key as the embed SnippetCard, so this is a cache read, not a
+  // second request. The origin is read back out of the snippet because only the
+  // server knows which host it decided to emit.
+  const { data: snippet } = useQuery({
+    queryKey: ["form-snippet", formId, "embed", locale],
+    queryFn: () => getFormSnippet(formId, "embed", locale),
+  });
+
+  const origin = originOfSnippet(snippet);
+  if (!origin) return null;
+
+  const local = /^https?:\/\/(localhost|127\.|\[?::1)/i.test(origin);
+  const directives = [
+    `script-src  ${origin};`,
+    `connect-src ${origin};`,
+    `font-src    ${origin};`,
+  ].join("\n");
+
+  return (
+    <Panel>
+      <PanelHeader
+        icon={<ShieldCheck className="h-3.5 w-3.5" />}
+        title={t("forms.share.cspTitle")}
+        action={
+          <GhostAction onClick={() => onCopy(directives)}>
+            <Copy className="h-3.5 w-3.5" />
+            {t("forms.share.copy")}
+          </GhostAction>
+        }
+      />
+      <PanelBody>
+        <FieldHint>{t("forms.share.cspHint")}</FieldHint>
+        {local ? (
+          <p className="text-xs font-medium text-red-600 dark:text-red-400">
+            {t("forms.share.localhostWarning", { origin })}
+          </p>
+        ) : null}
+        <pre className="overflow-auto rounded-lg border bg-muted/40 p-3 font-mono text-[11px] leading-relaxed">
+          {directives}
+        </pre>
+      </PanelBody>
+    </Panel>
+  );
+}
+
+/** The origin of the `<script src>` inside an embed snippet. */
+function originOfSnippet(snippet: string | undefined): string | null {
+  const match = snippet?.match(/src="(https?:\/\/[^/"]+)/);
+  return match ? match[1] : null;
 }
 
 function SnippetCard({
@@ -128,7 +194,6 @@ function SnippetCard({
   icon,
   title,
   subtitle,
-  warning,
   onCopy,
 }: {
   formId: string;
@@ -137,13 +202,12 @@ function SnippetCard({
   icon: React.ReactNode;
   title: string;
   subtitle: string;
-  warning?: string;
   onCopy: (text: string) => void;
 }) {
   const { t } = useTranslation();
 
-  // Fetched per mode and cached: the HTML snippet in particular is large, and
-  // regenerating it on every tab render would be wasteful.
+  // Cached per mode, and shared with CspCard, which reads the API origin back
+  // out of the embed snippet rather than issuing its own request.
   const { data: snippet, isLoading } = useQuery({
     queryKey: ["form-snippet", formId, mode, locale],
     queryFn: () => getFormSnippet(formId, mode, locale),
@@ -166,11 +230,6 @@ function SnippetCard({
       />
       <PanelBody>
         <FieldHint>{subtitle}</FieldHint>
-        {warning ? (
-          <p className="text-xs text-amber-700 dark:text-amber-400">
-            {warning}
-          </p>
-        ) : null}
         {isLoading ? (
           <Skeleton className="h-28 w-full rounded-lg" />
         ) : (

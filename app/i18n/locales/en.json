@@ -2948,16 +2948,17 @@
       "publishFirst": "Publish this form before sharing it — the link and embeds stay inactive until you do.",
       "linkTitle": "Public link",
       "linkHint": "Always up to date. Good for e-mail, chat and QR codes.",
+      "embedTitle": "Embed (script)",
+      "embedHint": "Works on any site. Paste both lines where the form should appear — it stays up to date when you publish changes.",
       "iframeTitle": "Embed (iframe)",
       "iframeHint": "Stays up to date on your site and resizes itself as the form grows.",
-      "scriptTitle": "Embed (script)",
-      "scriptHint": "Stays up to date and inherits your page's context. Paste both lines where the form should appear.",
-      "htmlTitle": "Copy HTML",
-      "htmlHint": "One self-contained block — no dependencies, works anywhere.",
-      "htmlWarning": "This is a snapshot of the published version. Copy it again after you publish changes.",
       "open": "Open",
       "copy": "Copy",
-      "copied": "Copied to clipboard"
+      "copied": "Copied to clipboard",
+      "cspTitle": "Content-Security-Policy",
+      "cspHint": "Only needed if your site sends a Content-Security-Policy header. Without these the browser blocks the form and shows nothing. Ask whoever runs the site to add them.",
+      "localhostWarning": "This snippet points at {{origin}}, which only exists on the server's own machine. The form will not load on any real website.",
+      "unpublishedWarning": "You have unpublished changes. Embedded forms show the last published version until you publish again."
     },
     "validation": {
       "needsEmailField": "Add an e-mail field and set it to save to E-mail.",
