@@ -95,16 +95,10 @@ export function SharePanel({
         </PanelBody>
       </Panel>
 
-      <SnippetCard
-        formId={formId}
-        mode="embed"
-        locale={defaultLocale}
-        icon={<Code2 className="h-3.5 w-3.5" />}
-        title={t("forms.share.embedTitle")}
-        subtitle={t("forms.share.embedHint")}
-        onCopy={copy}
-      />
-
+      {/* Ordered by how little the host site has to change to accept them.
+          Copy HTML needs nothing, the iframe needs one frame-src entry, and the
+          script embed needs an origin whitelisted in two directives — so it
+          comes last, next to the CSP card that explains what it needs. */}
       <SnippetCard
         formId={formId}
         mode="html"
@@ -123,6 +117,16 @@ export function SharePanel({
         icon={<MonitorPlay className="h-3.5 w-3.5" />}
         title={t("forms.share.iframeTitle")}
         subtitle={t("forms.share.iframeHint")}
+        onCopy={copy}
+      />
+
+      <SnippetCard
+        formId={formId}
+        mode="embed"
+        locale={defaultLocale}
+        icon={<Code2 className="h-3.5 w-3.5" />}
+        title={t("forms.share.embedTitle")}
+        subtitle={t("forms.share.embedHint")}
         onCopy={copy}
       />
 
@@ -252,7 +256,11 @@ function SnippetCard({
         {isLoading ? (
           <Skeleton className="h-28 w-full rounded-lg" />
         ) : (
-          <pre className="max-h-64 select-all overflow-auto rounded-lg border bg-muted/40 p-3 font-mono text-[11px] leading-relaxed">
+          // select-text, not select-all: `user-select: all` makes the browser
+          // treat the whole block as one atomic unit, so a click grabs
+          // everything and a drag cannot pick out a substring. The Copy button
+          // already covers the take-all case.
+          <pre className="max-h-64 select-text overflow-auto rounded-lg border bg-muted/40 p-3 font-mono text-[11px] leading-relaxed">
             {snippet}
           </pre>
         )}

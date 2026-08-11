@@ -9,6 +9,7 @@
 
 import {
   contentKey,
+  type FormConfirmationEmail,
   type FormDefinition,
   type FormDefinitionIssue,
   type FormErrorCode,
@@ -195,6 +196,16 @@ export function validateDefinition(
    * throwing; every real call site passes the stored `locales`.
    */
   locales?: FormLocale[],
+  /**
+   * The confirmation e-mail, which lives in its OWN column rather than inside
+   * the definition — so it has to be handed in or it cannot be checked at all.
+   *
+   * Optional for the same reason as `locales`: a caller that omits it simply
+   * does not get the e-mail rules, rather than crashing. Every real call site
+   * passes it, and the ones that forget are what the "four call sites" note in
+   * the round-two plan is about.
+   */
+  confirmationEmail?: FormConfirmationEmail | null,
 ): FormDefinitionIssue[] {
   // One issue PER offending field, in definition order — so the banner can name
   // the field and the tab badges have a stable count. Deduping into a Set (as
@@ -227,6 +238,19 @@ export function validateDefinition(
   const seenKeys = new Set<string>();
   const seenMappings = new Set<string>();
   for (const field of fields) {
+    // A cleared key. The key is what the submitted value is stored under, so a
+    // blank one silently drops the answer — the builder lets you empty the
+    // input (it used to substitute "field" behind your back) and this is what
+    // stops the form going live in that state.
+    if (field.key.trim() === "") {
+      issues.push({
+        code: "keyMissing",
+        tab: "build",
+        fieldId: field.id,
+        fieldKey: field.key,
+      });
+    }
+
     // Flag the SECOND occurrence — the first one is the incumbent, and it is
     // the duplicate the user needs to go rename.
     if (seenKeys.has(field.key)) {
@@ -280,7 +304,8 @@ export function validateDefinition(
   // The required set is deliberately narrow: only what a visitor cannot use the
   // form without.
   //     form.submit               the button would have no caption
-  //     field.<id>.label | .text  every visible field, per locale
+  //     field.<id>.text           heading and paragraph blocks ARE their text
+  //     field.<id>.label          consent checkboxes only
   // Title, description, placeholders, help text, success and error copy are NOT
   // required — each falls back to the default locale at render time and the
   // form still works. Requiring all ~40 strings would make adding a language a
@@ -292,9 +317,14 @@ export function validateDefinition(
 
   // Hoisted: the old code re-walked the tree inside the content block, which
   // with N locales would be N traversals for the same answer.
-  const renderedFields = flattenFields(definition).filter(
-    // A hidden field is never rendered, so it needs no label.
-    (f) => f.type !== "hidden",
+  //
+  // An ordinary input no longer needs a label. Leaving it blank is a real
+  // design — a placeholder-only field — and the renderer drops the empty label
+  // element and names the input from the placeholder instead. These three have
+  // nothing to fall back on: a heading with no text is a blank line, and a
+  // consent checkbox with no text is a bare box next to nothing.
+  const labelledFields = flattenFields(definition).filter(
+    (f) => isPresentational(f.type) || f.type === "checkbox",
   );
 
   for (const locale of checked) {
@@ -313,7 +343,7 @@ export function validateDefinition(
       });
     }
 
-    for (const field of renderedFields) {
+    for (const field of labelledFields) {
       const key = isPresentational(field.type)
         ? contentKey.fieldText(field.id)
         : contentKey.fieldLabel(field.id);
@@ -326,6 +356,27 @@ export function validateDefinition(
           contentKey: key,
           locale,
         });
+      }
+    }
+  }
+
+  // --- confirmation e-mail -------------------------------------------------
+  // Only when it is switched ON. Off, the fields are inert and demanding copy
+  // for them would block publishing a form that never sends one.
+  //
+  // Checked per locale, like every other content rule: an e-mail that is blank
+  // in French sends a blank e-mail to French submitters. There is no
+  // fall-back-to-default at send time, which is exactly why this is blocking
+  // rather than advisory.
+  if (confirmationEmail?.enabled) {
+    for (const locale of checked) {
+      const copy = confirmationEmail.by_locale?.[locale];
+
+      if (!copy?.subject || copy.subject.trim() === "") {
+        issues.push({ code: "emailSubjectMissing", tab: "email", locale });
+      }
+      if (!copy?.html || copy.html.trim() === "") {
+        issues.push({ code: "emailBodyMissing", tab: "email", locale });
       }
     }
   }

@@ -106,7 +106,10 @@ export function IntroPlayer({ onClose }: { onClose: () => void }) {
                   // Replay earlier chapters' outcomes so the jump lands in the
                   // right state — chapter 4 needs a built form to add a
                   // language to.
-                  goTo(i, stateAtChapter(chapters, i, initialState(safeLocale, t)));
+                  goTo(
+                    i,
+                    stateAtChapter(chapters, i, initialState(safeLocale, t)),
+                  );
                 }}
                 aria-label={t("forms.intro.goToStep", { step: i + 1 })}
                 aria-current={i === chapterIndex || undefined}

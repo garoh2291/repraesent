@@ -1,12 +1,4 @@
-import {
-  AlertTriangle,
-  Check,
-  MoreHorizontal,
-  Plus,
-  Sparkles,
-  Star,
-  Trash2,
-} from "lucide-react";
+import { MoreHorizontal, Plus, Sparkles, Star, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
@@ -72,9 +64,6 @@ interface Props {
 
   /** Blocking issues per locale — locale-scoped only, so a dot means that language. */
   issuesByLocale: ReadonlyMap<FormLocale, number>;
-  /** Grand total including language-agnostic issues; drives the right-hand pill. */
-  totalIssues: number;
-  onFocusIssues: () => void;
 
   /** Locales with at least one translate request in flight. */
   translating: ReadonlySet<FormLocale>;
@@ -98,11 +87,13 @@ interface Props {
  * a button group with aria-pressed, the same pattern the inline locale pills
  * used before the strip replaced them.
  *
- * Styled for the builder's dark #111113 command bar and nothing else — it has
- * exactly one consumer. The active pill reuses the amber-on-white/5 recipe from
- * `components/language-switcher.tsx`, so the two locale pickers in the app look
- * like the same control. The dropdowns stay light popovers, which is the
- * convention everywhere else on dark chrome.
+ * Styled on the app's own tokens, not on hard-coded whites. It used to live in
+ * the builder's dark #111113 command bar and was written for that surface only;
+ * it now renders inside each tab panel, on the light background, so every
+ * `white/…` value has been replaced by the token that means the same thing.
+ *
+ * Centred as one group — pills and the Add button together — so the row stays
+ * balanced whether the form has one language or four.
  */
 export function LanguageStrip({
   locales,
@@ -110,8 +101,6 @@ export function LanguageStrip({
   activeLocale,
   onSelect,
   issuesByLocale,
-  totalIssues,
-  onFocusIssues,
   translating,
   disabled,
   onAddLocale,
@@ -129,11 +118,20 @@ export function LanguageStrip({
     ...locales.filter((l) => l !== defaultLocale),
   ];
   const addable = FORM_LOCALES.filter((l) => !locales.includes(l));
+  /**
+   * One AI translation at a time, across the whole strip.
+   *
+   * Each run merges its result into `definition.content` — a single JSON blob —
+   * so two overlapping runs both patch the copy they read at start and whichever
+   * finishes second wins outright. The first language's strings vanish with no
+   * error anywhere.
+   */
+  const anyTranslating = translating.size > 0;
 
   return (
     <>
       <div
-        className="flex flex-wrap items-center gap-1"
+        className="flex flex-wrap items-center justify-center gap-1"
         role="group"
         aria-label={t("forms.strip.groupLabel")}
       >
@@ -153,8 +151,8 @@ export function LanguageStrip({
               className={cn(
                 "group/tab inline-flex h-8 items-center overflow-hidden rounded-lg border transition-colors",
                 active
-                  ? "border-amber-400/40 bg-amber-400/15"
-                  : "border-white/10 bg-white/[0.06] hover:border-white/20 hover:bg-white/10",
+                  ? "border-primary/40 bg-primary/10"
+                  : "bg-muted/40 hover:border-border/80 hover:bg-muted",
               )}
             >
               <button
@@ -164,8 +162,8 @@ export function LanguageStrip({
                 className={cn(
                   "inline-flex h-full items-center gap-1.5 pl-2 pr-1.5 text-sm transition-colors",
                   active
-                    ? "font-medium text-amber-400"
-                    : "text-white/60 hover:text-white",
+                    ? "font-medium text-primary"
+                    : "text-muted-foreground hover:text-foreground",
                 )}
               >
                 <LocaleFlag locale={locale} />
@@ -174,7 +172,7 @@ export function LanguageStrip({
                   <span
                     className={cn(
                       "text-[10px] font-medium uppercase tracking-wide",
-                      active ? "text-amber-400/60" : "text-white/30",
+                      active ? "text-primary/70" : "text-muted-foreground/60",
                     )}
                   >
                     {t("forms.strip.default")} ·
@@ -186,10 +184,10 @@ export function LanguageStrip({
                     is about to stop having issues. The empty span keeps the tab
                     width stable so the strip does not jitter. */}
                 {spinning ? (
-                  <Spinner className="h-3 w-3 text-white/50" />
+                  <Spinner className="h-3 w-3 text-muted-foreground" />
                 ) : count > 0 ? (
                   <span
-                    className="h-1.5 w-1.5 rounded-full bg-rose-400"
+                    className="h-1.5 w-1.5 rounded-full bg-destructive"
                     aria-label={t("forms.strip.hasIssues", { count })}
                   />
                 ) : (
@@ -208,8 +206,8 @@ export function LanguageStrip({
                       className={cn(
                         "flex h-full items-center border-l px-1.5 transition-colors",
                         active
-                          ? "border-amber-400/25 text-amber-400/70 hover:bg-amber-400/15 hover:text-amber-400"
-                          : "border-white/10 text-white/35 hover:bg-white/10 hover:text-white/80",
+                          ? "border-primary/25 text-primary/70 hover:bg-primary/10 hover:text-primary"
+                          : "border-border text-muted-foreground/70 hover:bg-muted hover:text-foreground",
                       )}
                     >
                       <MoreHorizontal className="h-3.5 w-3.5" />
@@ -231,15 +229,19 @@ export function LanguageStrip({
                       </DropdownMenuItem>
                     ) : null}
 
+                    {/* Gated on `anyTranslating`, not on this locale's own
+                        spinner: the AI call rewrites definition.content, so two
+                        in flight at once race to merge into the same blob and
+                        the loser's strings are silently dropped. */}
                     <DropdownMenuItem
-                      disabled={isDefault || spinning}
+                      disabled={isDefault || anyTranslating}
                       onSelect={() => onTranslateLocale(locale, false)}
                     >
                       <Sparkles className="h-4 w-4" />
                       {t("forms.strip.translateWithAi")}
                     </DropdownMenuItem>
                     <DropdownMenuItem
-                      disabled={isDefault || spinning}
+                      disabled={isDefault || anyTranslating}
                       onSelect={() => setConfirmRetranslate(locale)}
                     >
                       <Sparkles className="h-4 w-4" />
@@ -270,7 +272,11 @@ export function LanguageStrip({
             <DropdownMenuTrigger asChild>
               <button
                 type="button"
-                className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-dashed border-white/20 px-2.5 text-sm text-white/50 transition-colors hover:border-white/35 hover:bg-white/5 hover:text-white/80"
+                disabled={anyTranslating}
+                title={
+                  anyTranslating ? t("forms.strip.translationBusy") : undefined
+                }
+                className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-dashed px-2.5 text-sm text-muted-foreground transition-colors hover:border-foreground/30 hover:bg-muted hover:text-foreground disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:border-border disabled:hover:bg-transparent disabled:hover:text-muted-foreground"
               >
                 <Plus className="h-3.5 w-3.5" />
                 {t("forms.strip.addLanguage")}
@@ -297,23 +303,9 @@ export function LanguageStrip({
           </DropdownMenu>
         ) : null}
 
-        <div className="ml-auto">
-          {totalIssues === 0 ? (
-            <span className="inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-xs font-medium text-emerald-400/90">
-              <Check className="h-3.5 w-3.5" />
-              {t("forms.strip.noErrors")}
-            </span>
-          ) : (
-            <button
-              type="button"
-              onClick={onFocusIssues}
-              className="inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-xs font-medium text-amber-400 transition-colors hover:bg-amber-400/10"
-            >
-              <AlertTriangle className="h-3.5 w-3.5" />
-              {t("forms.strip.issueCount", { count: totalIssues })}
-            </button>
-          )}
-        </div>
+        {/* No issue summary here. The sticky validation banner sits directly
+            above this row and says the same thing with the detail to act on;
+            two counts of the same problem is one too many. */}
       </div>
 
       <AlertDialog

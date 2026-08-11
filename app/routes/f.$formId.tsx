@@ -244,7 +244,7 @@ export default function PublicFormRoute() {
             title={tContent(contentKey.successModalTitle())}
             body={tContent(contentKey.successModalBody())}
             cta={tContent(contentKey.successModalCta()) || "Close"}
-            accent={definition.theme.accent}
+            scope={`rf-${data.id.replace(/[^a-z0-9]/gi, "").slice(0, 12)}`}
             onClose={() => setModalOpen(false)}
           />
         ) : null}
@@ -322,17 +322,30 @@ function DocumentScheme({
   );
 }
 
+/**
+ * The success dialog, drawn with the form's own theme.
+ *
+ * It used to be hardcoded Tailwind — white card, stone text, only the accent
+ * themed — so a form designed dark popped a bright white box, and the hosted
+ * page disagreed with the embed and the standalone snippet, which have always
+ * rendered this through `.rf-modal-*` in buildFormCss.
+ *
+ * Reusing those class names is the whole point: one stylesheet, four delivery
+ * modes, no second definition of what a modal looks like. The stylesheet is
+ * already on the page — FormRenderer emits it for `scope`.
+ */
 function SuccessModal({
   title,
   body,
   cta,
-  accent,
+  scope,
   onClose,
 }: {
   title: string;
   body: string;
   cta: string;
-  accent: string;
+  /** The scope class FormRenderer used, so the same CSS applies. */
+  scope: string;
   onClose: () => void;
 }) {
   const closeRef = useRef<HTMLButtonElement | null>(null);
@@ -347,26 +360,27 @@ function SuccessModal({
   }, [onClose]);
 
   return (
-    <div
-      role="dialog"
-      aria-modal="true"
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/55 p-5"
-      onClick={(e) => {
-        if (e.target === e.currentTarget) onClose();
-      }}
-    >
-      <div className="w-full max-w-md rounded-2xl bg-white p-7 text-center shadow-2xl">
-        <h2 className="text-lg font-semibold text-stone-900">{title}</h2>
-        <p className="mt-2 text-sm text-stone-600">{body}</p>
-        <button
-          ref={closeRef}
-          type="button"
-          onClick={onClose}
-          className="mt-6 rounded-lg px-5 py-2.5 text-sm font-medium text-white"
-          style={{ backgroundColor: accent }}
-        >
-          {cta}
-        </button>
+    <div className={scope}>
+      <div
+        className="rf-modal"
+        role="dialog"
+        aria-modal="true"
+        onClick={(e) => {
+          if (e.target === e.currentTarget) onClose();
+        }}
+      >
+        <div className="rf-modal-card">
+          <h2 className="rf-modal-title">{title}</h2>
+          <p className="rf-modal-body">{body}</p>
+          <button
+            ref={closeRef}
+            type="button"
+            className="rf-modal-close"
+            onClick={onClose}
+          >
+            {cta}
+          </button>
+        </div>
       </div>
     </div>
   );

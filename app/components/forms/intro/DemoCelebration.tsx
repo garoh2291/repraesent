@@ -2,13 +2,7 @@ import { Check, Globe, Languages, LayoutGrid } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
 /** Brand palette — the same five the app's charts and status dots draw from. */
-const CONFETTI_COLORS = [
-  "#f59e0b",
-  "#5265f3",
-  "#f5d74f",
-  "#34d399",
-  "#e25f77",
-];
+const CONFETTI_COLORS = ["#f59e0b", "#5265f3", "#f5d74f", "#34d399", "#e25f77"];
 
 const PIECES = 26;
 
@@ -41,9 +35,18 @@ export function DemoCelebration({ compact = false }: { compact?: boolean }) {
   // An earlier version showed a public URL, which invited people to copy a link
   // to a form that does not exist.
   const chips = [
-    { icon: <LayoutGrid className="h-3.5 w-3.5" />, label: t("forms.intro.celebrate.chipBuild") },
-    { icon: <Languages className="h-3.5 w-3.5" />, label: t("forms.intro.celebrate.chipTranslate") },
-    { icon: <Globe className="h-3.5 w-3.5" />, label: t("forms.intro.celebrate.chipPublish") },
+    {
+      icon: <LayoutGrid className="h-3.5 w-3.5" />,
+      label: t("forms.intro.celebrate.chipBuild"),
+    },
+    {
+      icon: <Languages className="h-3.5 w-3.5" />,
+      label: t("forms.intro.celebrate.chipTranslate"),
+    },
+    {
+      icon: <Globe className="h-3.5 w-3.5" />,
+      label: t("forms.intro.celebrate.chipPublish"),
+    },
   ];
 
   return (
@@ -113,7 +116,10 @@ export function DemoCelebration({ compact = false }: { compact?: boolean }) {
               boxShadow: "0 0 40px rgba(16,185,129,0.14)",
             }}
           >
-            <Check className={compact ? "h-6 w-6" : "h-8 w-8"} strokeWidth={2.5} />
+            <Check
+              className={compact ? "h-6 w-6" : "h-8 w-8"}
+              strokeWidth={2.5}
+            />
           </div>
           <span
             aria-hidden

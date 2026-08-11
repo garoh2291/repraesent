@@ -1,4 +1,10 @@
-import { Heading, MousePointerClick, SendHorizontal, Sliders } from "lucide-react";
+import {
+  Heading,
+  MousePointerClick,
+  SendHorizontal,
+  Sliders,
+} from "lucide-react";
+import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import {
   Cols,
@@ -19,8 +25,13 @@ import {
 } from "~/components/ui/select";
 import { Switch } from "~/components/ui/switch";
 import { Textarea } from "~/components/ui/textarea";
+import { LabelEditor } from "~/components/forms/LabelEditor";
 import { Field, FieldHint } from "~/components/wordpress/fields";
-import { FIELD_TYPE_META, snakeKey } from "~/lib/forms/field-types";
+import {
+  FIELD_TYPE_META,
+  isFieldDeletable,
+  snakeKeyRaw,
+} from "~/lib/forms/field-types";
 import type { InspectorTarget } from "~/lib/forms/selection";
 import {
   FORM_FIELD_MAPPINGS,
@@ -76,6 +87,34 @@ export function FieldInspector({
   onChange,
 }: Props) {
   const { t } = useTranslation();
+
+  /**
+   * The e-mail address is the reply channel, so it is never optional.
+   *
+   * This has to sit ABOVE the early returns below. Three of the four branches
+   * of this component return before reaching the field editor, so a hook placed
+   * down there runs on some renders and not others — which is exactly the
+   * "rendered more hooks than during the previous render" crash you get by
+   * selecting the header and then a field.
+   *
+   * So it reads `target` defensively and no-ops for every non-field selection.
+   */
+  const emailField =
+    target?.kind === "field" &&
+    (target.field.type === "email" || target.field.mapping === "email")
+      ? target.field
+      : null;
+
+  // Correct the stored value as well as the control: a definition saved before
+  // this rule existed can carry required:false, and a switch that shows "on"
+  // while the form still accepts a blank e-mail would be a lie.
+  useEffect(() => {
+    if (!emailField || disabled || !onChange) return;
+    if (emailField.validation?.required === true) return;
+    onChange({
+      validation: { ...(emailField.validation ?? {}), required: true },
+    });
+  }, [emailField, disabled, onChange]);
 
   if (!target) {
     return (
@@ -177,10 +216,27 @@ export function FieldInspector({
     patchField({ validation: { ...validation, ...patch } });
 
   const keyCollides = otherKeys?.has(field.key) ?? false;
+  const keyBlank = field.key.trim() === "";
   const presentational = isPresentational(field.type);
+  /**
+   * Same rule as the delete guard: a field carrying the only `email` or name
+   * mapping is holding the publish requirement up, so it may be renamed and
+   * reordered but not repointed. `siblings` is reconstructed from otherKeys
+   * only for the mapping check, so isFieldDeletable sees the whole picture.
+   */
+  const mappingLocked =
+    !!field.mapping &&
+    !isFieldDeletable(field, [
+      field,
+      ...[...(otherMappings ?? [])].map(
+        (m) => ({ id: `other:${m}`, mapping: m }) as FormField,
+      ),
+    ]);
 
   const FieldIcon = FIELD_TYPE_META[field.type].icon;
   const mappable = !presentational && field.type !== "hidden";
+  /** Enforced by the effect at the top of the component; see the note there. */
+  const requiredLocked = emailField != null;
 
   return (
     <Panel>
@@ -194,7 +250,108 @@ export function FieldInspector({
         }
       />
       <PanelBody>
+        <PanelSection title={t("forms.inspector.sectionData")}>
+          {/* Save-to first: it is the decision, and the key is its consequence
+              — a field pointed at a lead column has its key largely settled. */}
+          {mappable ? (
+            <Field>
+              <Label>{t("forms.inspector.mapping")}</Label>
+              <Select
+                disabled={disabled || mappingLocked}
+                value={field.mapping ?? NO_MAPPING}
+                onValueChange={(v) =>
+                  patchField({
+                    mapping: v === NO_MAPPING ? null : (v as FormFieldMapping),
+                  })
+                }
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value={NO_MAPPING}>
+                    {t("forms.inspector.mappingNone")}
+                  </SelectItem>
+                  {FORM_FIELD_MAPPINGS.map((mapping) => (
+                    <SelectItem
+                      key={mapping}
+                      value={mapping}
+                      // A lead column can only be filled once.
+                      disabled={otherMappings?.has(mapping) ?? false}
+                    >
+                      {t(`forms.mapping.${mapping}`, {
+                        defaultValue: mapping.replace(/_/g, " "),
+                      })}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {/* Locked while this field is the only thing satisfying the
+                  e-mail or name requirement. Repointing it elsewhere would make
+                  the form unpublishable, discovered later and somewhere else —
+                  the same reasoning that disables its delete button. */}
+              <FieldHint>
+                {mappingLocked
+                  ? t("forms.inspector.mappingLocked")
+                  : t("forms.inspector.mappingHint")}
+              </FieldHint>
+            </Field>
+          ) : null}
+
+          <Field>
+            <Label htmlFor="fi-key">{t("forms.inspector.key")}</Label>
+            <Input
+              id="fi-key"
+              disabled={disabled}
+              value={field.key}
+              aria-invalid={keyCollides || keyBlank || undefined}
+              // snakeKeyRaw, not snakeKey: the fallback version substituted
+              // "field" for an empty box, so deleting the last character of a
+              // key silently renamed it and it could never be cleared.
+              onChange={(e) => patchField({ key: snakeKeyRaw(e.target.value) })}
+              className="font-mono text-sm"
+            />
+            {keyBlank ? (
+              <p className="text-xs text-destructive">
+                {t("forms.inspector.keyRequired")}
+              </p>
+            ) : keyCollides ? (
+              <p className="text-xs text-destructive">
+                {t("forms.inspector.keyInUse")}
+              </p>
+            ) : (
+              <FieldHint>{t("forms.inspector.keyHint")}</FieldHint>
+            )}
+          </Field>
+        </PanelSection>
+
         <PanelSection title={t("forms.inspector.sectionContent")}>
+          {/* First, and outside the two-column grid: whether an answer is
+              mandatory changes what the label means, so it is read before the
+              wording rather than after it. */}
+          {mappable ? (
+            <Field>
+              <Label htmlFor="fi-required">
+                {t("forms.inspector.required")}
+              </Label>
+              <div className="flex h-9 items-center">
+                <Switch
+                  id="fi-required"
+                  disabled={disabled || requiredLocked}
+                  checked={requiredLocked || validation.required === true}
+                  onCheckedChange={(v) => patchValidation({ required: v })}
+                />
+              </div>
+              {/* The address is the only way to answer a submission, and a lead
+                  with none is a dead record. Shown rather than silently forced,
+                  so an optional-looking switch that ignores you does not read
+                  as a bug. */}
+              {requiredLocked ? (
+                <FieldHint>{t("forms.inspector.requiredLocked")}</FieldHint>
+              ) : null}
+            </Field>
+          ) : null}
+
           {presentational ? (
             <Field>
               <Label htmlFor="fi-text">{t("forms.inspector.text")}</Label>
@@ -212,14 +369,18 @@ export function FieldInspector({
             <>
               <Field>
                 <Label htmlFor="fi-label">{t("forms.inspector.label")}</Label>
-                <Input
+                <LabelEditor
                   id="fi-label"
                   disabled={disabled}
+                  // Only the consent checkbox carries copy long enough to need
+                  // the room; every other label is a couple of words.
+                  multiline={field.type === "checkbox"}
                   value={getText(contentKey.fieldLabel(field.id))}
-                  onChange={(e) =>
-                    setText(contentKey.fieldLabel(field.id), e.target.value)
+                  onChange={(value) =>
+                    setText(contentKey.fieldLabel(field.id), value)
                   }
                 />
+                <FieldHint>{t("forms.inspector.labelHint")}</FieldHint>
               </Field>
 
               {field.type !== "checkbox" ? (
@@ -273,105 +434,29 @@ export function FieldInspector({
           ) : null}
         </PanelSection>
 
-        <PanelSection title={t("forms.inspector.sectionData")}>
-          <Field>
-            <Label htmlFor="fi-key">{t("forms.inspector.key")}</Label>
-            <Input
-              id="fi-key"
-              disabled={disabled}
-              value={field.key}
-              aria-invalid={keyCollides || undefined}
-              onChange={(e) => patchField({ key: snakeKey(e.target.value) })}
-              className="font-mono text-sm"
-            />
-            {keyCollides ? (
-              <p className="text-xs text-destructive">
-                {t("forms.inspector.keyInUse")}
-              </p>
-            ) : (
-              <FieldHint>{t("forms.inspector.keyHint")}</FieldHint>
-            )}
-          </Field>
-
-          {mappable ? (
-            <Field>
-              <Label>{t("forms.inspector.mapping")}</Label>
-              <Select
-                disabled={disabled}
-                value={field.mapping ?? NO_MAPPING}
-                onValueChange={(v) =>
-                  patchField({
-                    mapping: v === NO_MAPPING ? null : (v as FormFieldMapping),
-                  })
-                }
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value={NO_MAPPING}>
-                    {t("forms.inspector.mappingNone")}
-                  </SelectItem>
-                  {FORM_FIELD_MAPPINGS.map((mapping) => (
-                    <SelectItem
-                      key={mapping}
-                      value={mapping}
-                      // A lead column can only be filled once.
-                      disabled={otherMappings?.has(mapping) ?? false}
-                    >
-                      {t(`forms.mapping.${mapping}`, {
-                        defaultValue: mapping.replace(/_/g, " "),
-                      })}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <FieldHint>{t("forms.inspector.mappingHint")}</FieldHint>
-            </Field>
-          ) : null}
-        </PanelSection>
-
         <PanelSection title={t("forms.inspector.sectionLayout")}>
-          <Cols>
-            <Field>
-              <Label>{t("forms.inspector.width")}</Label>
-              <Select
-                disabled={disabled}
-                value={field.width}
-                onValueChange={(v) =>
-                  patchField({ width: v as FormField["width"] })
-                }
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="full">
-                    {t("forms.inspector.widthFull")}
-                  </SelectItem>
-                  <SelectItem value="half">
-                    {t("forms.inspector.widthHalf")}
-                  </SelectItem>
-                </SelectContent>
-              </Select>
-            </Field>
-
-            {mappable ? (
-              <Field>
-                <Label htmlFor="fi-required">
-                  {t("forms.inspector.required")}
-                </Label>
-                <div className="flex h-9 items-center">
-                  <Switch
-                    id="fi-required"
-                    disabled={disabled}
-                    checked={validation.required === true}
-                    onCheckedChange={(v) => patchValidation({ required: v })}
-                  />
-                </div>
-              </Field>
-            ) : null}
-          </Cols>
+          <Field>
+            <Label>{t("forms.inspector.width")}</Label>
+            <Select
+              disabled={disabled}
+              value={field.width}
+              onValueChange={(v) =>
+                patchField({ width: v as FormField["width"] })
+              }
+            >
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="full">
+                  {t("forms.inspector.widthFull")}
+                </SelectItem>
+                <SelectItem value="half">
+                  {t("forms.inspector.widthHalf")}
+                </SelectItem>
+              </SelectContent>
+            </Select>
+          </Field>
         </PanelSection>
 
         {HAS_TYPE_RULES.has(field.type) ? (
@@ -547,28 +632,47 @@ function TypeSpecific({
       return (
         <Field>
           <Label>{t("forms.inspector.addressParts")}</Label>
+          <FieldHint>{t("forms.inspector.addressPartsHint")}</FieldHint>
+
+          {/* One block per part rather than one cramped row. The label input
+              used to be a 10rem box wedged beside the switch, which is where
+              "address is bugged" came from: it was too narrow to read what you
+              had typed, and it vanished the moment the part was switched off,
+              taking the text with it visually even though the content key kept
+              it. Each part now gets a full-width input under its own toggle. */}
           <div className="space-y-2">
             {(["street", "zip", "city", "country"] as const).map((part) => (
-              <div key={part} className="flex items-center gap-3">
-                <Switch
-                  id={`fi-addr-${part}`}
-                  size="sm"
-                  disabled={disabled}
-                  checked={parts[part]}
-                  onCheckedChange={(checked) =>
-                    onChange({ addressParts: { ...parts, [part]: checked } })
-                  }
-                />
-                <Label
-                  htmlFor={`fi-addr-${part}`}
-                  className="flex-1 font-normal"
-                >
-                  {t(`forms.inspector.${part}`)}
-                </Label>
+              <div
+                key={part}
+                className={`rounded-lg border p-2.5 transition-colors ${
+                  parts[part] ? "bg-muted/20" : "bg-transparent"
+                }`}
+              >
+                <div className="flex items-center gap-3">
+                  <Switch
+                    id={`fi-addr-${part}`}
+                    size="sm"
+                    disabled={disabled}
+                    checked={parts[part]}
+                    onCheckedChange={(checked) =>
+                      onChange({ addressParts: { ...parts, [part]: checked } })
+                    }
+                  />
+                  <Label
+                    htmlFor={`fi-addr-${part}`}
+                    className="flex-1 font-normal"
+                  >
+                    {t(`forms.inspector.${part}`)}
+                  </Label>
+                </div>
+
                 {parts[part] ? (
                   <Input
-                    className="h-8 w-40 text-sm"
+                    className="mt-2 h-8 w-full text-sm"
                     disabled={disabled}
+                    aria-label={t("forms.inspector.addressPartLabel", {
+                      part: t(`forms.inspector.${part}`),
+                    })}
                     value={getText(contentKey.fieldAddressPart(field.id, part))}
                     placeholder={t(`forms.inspector.${part}`)}
                     onChange={(e) =>

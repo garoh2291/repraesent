@@ -98,7 +98,7 @@ export function buildFormCss(theme: FormTheme, scopeClass: string): string {
   // Field chrome varies by style; everything else is shared.
   const fieldBase =
     theme.fieldStyle === "filled"
-      ? `background: var(--rf-surface-2); border: 1px solid transparent; border-radius: ${radius};`
+      ? `background: var(--rf-field-bg); border: 1px solid transparent; border-radius: ${radius};`
       : theme.fieldStyle === "underline"
         ? `background: transparent; border: 0; border-bottom: 1px solid var(--rf-border); border-radius: 0; padding-left: 0; padding-right: 0;`
         : `background: var(--rf-surface); border: 1px solid var(--rf-border); border-radius: ${radius};`;
@@ -124,6 +124,7 @@ ${s} {
   --rf-bg: ${theme.background};
   --rf-surface: ${theme.surface};
   --rf-surface-2: ${withAlpha(theme.text, 0.05)};
+  --rf-field-bg: ${theme.fieldBackground ?? withAlpha(theme.text, 0.05)};
   --rf-text: ${theme.text};
   --rf-muted: ${theme.mutedText};
   --rf-border: ${theme.border};
@@ -148,7 +149,7 @@ ${s} .rf-form {
   flex-direction: column;
   gap: var(--rf-gap);
   background: var(--rf-bg);
-  padding: 0;
+  padding: ${theme.padding ?? 16}px;
 }
 
 /* The honeypot must stay in the accessibility tree's blind spot without using
@@ -196,16 +197,38 @@ ${s} .rf-field.rf-full { grid-column: 1 / -1; }
   ${s} .rf-field { grid-column: 1 / -1; }
 }
 
+/* Block, not inline-flex. A label used to be one text node, so a flex row with
+   a gap was a tidy way to space the required star. Now that labels carry inline
+   markup, every <b>/<i>/<a> the tokeniser emits becomes its own flex item and
+   picks up that gap — "no**thing**" rendered as "no thing". Normal flow keeps
+   the spans in the text they were written in; the star takes a margin instead. */
 ${s} .rf-label {
   font-size: ${d.label};
   font-weight: 500;
   color: var(--rf-text);
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
+  display: block;
 }
-${s} .rf-req { color: var(--rf-danger); }
+/* A label with no text at all is a legitimate choice — the placeholder names
+   the field instead. The element still has to exist so a language switch can
+   paint text into it, so collapse it rather than omitting it. */
+${s} .rf-label:empty { display: none; }
+${s} .rf-req { color: var(--rf-danger); margin-inline-start: 4px; }
 ${s} .rf-help { font-size: calc(${d.label} * 0.92); color: var(--rf-muted); margin: 0; }
+
+/* Links inside copy. Nothing else in this file styles an anchor, which left
+   link appearance up to whatever surrounded the form: Tailwind's preflight
+   resets it to invisible in the app, while the embed's shadow root falls
+   through to the UA's blue-and-underlined. Underline everywhere instead, in
+   the inherited colour — the theme has no link token, and the accent belongs
+   to the submit button. */
+${s} .rf-label a, ${s} .rf-consent a, ${s} .rf-help a {
+  color: inherit;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+${s} .rf-label a:hover, ${s} .rf-consent a:hover, ${s} .rf-help a:hover {
+  color: var(--rf-accent);
+}
 
 ${s} .rf-input,
 ${s} .rf-textarea,
@@ -345,7 +368,9 @@ ${s} .rf-lang-btn {
   text-transform: uppercase;
   letter-spacing: .04em;
   padding: 5px 10px;
-  border-radius: 999px;
+  /* The theme's radius, same as the submit button. A pill here next to a
+     square-cornered button read as two different design systems on one form. */
+  border-radius: ${radius};
   border: 1px solid var(--rf-border);
   background: transparent;
   color: var(--rf-muted);
@@ -374,6 +399,26 @@ ${s} .rf-submit {
 ${s} .rf-submit:hover { opacity: .9; }
 ${s} .rf-submit:active { transform: translateY(1px); }
 ${s} .rf-submit[disabled] { opacity: .55; cursor: not-allowed; }
+
+/* In-flight spinner. Disabling alone reads as "the button broke", especially on
+   a slow connection where nothing else on the page changes. currentColor, so it
+   works against every button style without a second token. */
+${s} .rf-submit[aria-busy="true"] {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+}
+${s} .rf-spin {
+  width: 1em; height: 1em; flex: none;
+  border: 2px solid currentColor;
+  border-right-color: transparent;
+  border-radius: 50%;
+  animation: rf-spin .6s linear infinite;
+}
+@keyframes rf-spin { to { transform: rotate(360deg); } }
+/* Respect the OS setting: a spinner is decoration, and the disabled state
+   already carries the meaning. */
+@media (prefers-reduced-motion: reduce) {
+  ${s} .rf-spin { animation-duration: 2.4s; }
+}
 
 /* Inline status */
 ${s} .rf-status { font-size: ${d.font}; }

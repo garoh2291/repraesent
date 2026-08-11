@@ -1,7 +1,8 @@
-import { ChevronDown, Eye, Monitor, Smartphone, Tablet } from "lucide-react";
+import { Eye, Monitor, Smartphone, Tablet } from "lucide-react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { FormRenderer } from "~/components/forms/FormRenderer";
+import { withAlpha } from "~/lib/forms/css";
 import { Input } from "~/components/ui/input";
 import { Label } from "~/components/ui/label";
 import {
@@ -12,12 +13,6 @@ import {
   SelectValue,
 } from "~/components/ui/select";
 import { Slider } from "~/components/ui/slider";
-import { Textarea } from "~/components/ui/textarea";
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from "~/components/ui/collapsible";
 import {
   Cols,
   Panel,
@@ -34,17 +29,12 @@ import {
 } from "~/components/wordpress/fields";
 import {
   DEFAULT_FORM_THEME,
-  FORM_ERROR_CODES,
   FORM_FONT_KEYS,
   TRANSPARENT,
-  contentKey,
   isTransparent,
   type FormDefinition,
   type FormLocale,
 } from "~/lib/forms/schema";
-
-/** error.generic plus the 13 coded messages — what the summary counts. */
-const ERROR_COPY_KEYS = ["generic", ...FORM_ERROR_CODES] as const;
 
 const RADII = [0, 4, 8, 12, 16] as const;
 const WIDTHS = [480, 560, 640, 720, 880] as const;
@@ -84,19 +74,10 @@ export function ThemePanel({
       : definition.theme.background,
   );
 
-  // Advisory only: a blank error string falls back to error.generic at render
-  // time, so it is not a validation issue — just worth surfacing on the trigger.
-  const blankErrorCount = [
-    contentKey.errorGeneric(),
-    ...FORM_ERROR_CODES.map((code) => contentKey.error(code)),
-  ].filter((key) => getText(key).trim() === "").length;
-
   const theme = definition.theme;
   const patchTheme = (patch: Partial<FormDefinition["theme"]>) =>
     onChange({ theme: { ...theme, ...patch } });
   const bgTransparent = isTransparent(theme.background);
-  const patchSuccess = (patch: Partial<FormDefinition["success"]>) =>
-    onChange({ success: { ...definition.success, ...patch } });
 
   return (
     <div className="grid gap-4 sm:gap-5 xl:grid-cols-[minmax(0,380px)_minmax(0,1fr)]">
@@ -104,46 +85,6 @@ export function ThemePanel({
         <Panel>
           <PanelHeader title={t("forms.design.colors")} />
           <PanelBody>
-            <Field>
-              <Label>{t("forms.design.mode")}</Label>
-              <Select
-                disabled={disabled}
-                value={theme.mode}
-                onValueChange={(v) => {
-                  // Swapping mode also swaps the neutral palette, otherwise
-                  // "dark" just means dark text on a light card.
-                  const dark = v === "dark";
-                  // Keep the remembered colour on the new palette, so turning
-                  // Transparent back off doesn't restore the old mode's grey.
-                  setLastBackground(dark ? "#0c0a09" : "#f5f5f4");
-                  patchTheme({
-                    mode: dark ? "dark" : "light",
-                    // Transparency is a deliberate choice about the host page,
-                    // not part of the neutral palette — swapping mode keeps it.
-                    background: bgTransparent
-                      ? TRANSPARENT
-                      : dark
-                        ? "#0c0a09"
-                        : "#f5f5f4",
-                    surface: dark ? "#1c1917" : "#ffffff",
-                    text: dark ? "#fafaf9" : "#131515",
-                    mutedText: dark ? "#a8a29e" : "#78716c",
-                    border: dark ? "#292524" : "#e7e5e4",
-                  });
-                }}
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="light">
-                    {t("forms.design.light")}
-                  </SelectItem>
-                  <SelectItem value="dark">{t("forms.design.dark")}</SelectItem>
-                </SelectContent>
-              </Select>
-            </Field>
-
             <Field>
               <Label htmlFor="theme-accent">{t("forms.design.accent")}</Label>
               <ColorInput
@@ -183,6 +124,23 @@ export function ThemePanel({
               )}
             </Field>
 
+            {/* Only the filled style paints a field, so the control appears
+                only when it can do anything. Defaults to the tint the style
+                used to hardcode, so an existing form looks unchanged until
+                someone deliberately picks a colour. */}
+            {theme.fieldStyle === "filled" ? (
+              <Field>
+                <Label htmlFor="theme-field-bg">
+                  {t("forms.design.fieldBackground")}
+                </Label>
+                <ColorInput
+                  id="theme-field-bg"
+                  value={theme.fieldBackground ?? withAlpha(theme.text, 0.05)}
+                  onChange={(value) => patchTheme({ fieldBackground: value })}
+                />
+              </Field>
+            ) : null}
+
             {(
               [
                 ["surface", t("forms.design.surface")],
@@ -217,6 +175,24 @@ export function ThemePanel({
                 step={1}
                 value={[RADII.indexOf(theme.radius)]}
                 onValueChange={([i]) => patchTheme({ radius: RADII[i] })}
+              />
+            </Field>
+
+            {/* Inside the form's own background, not around it — this is the gap
+                between the painted panel and the first field. Forms rendered
+                flush at 0 before it existed; the fallback matches the default so
+                an untouched definition picks it up. */}
+            <Field>
+              <Label>
+                {t("forms.design.padding")} · {theme.padding ?? 16}px
+              </Label>
+              <Slider
+                disabled={disabled}
+                min={0}
+                max={48}
+                step={4}
+                value={[theme.padding ?? 16]}
+                onValueChange={([v]) => patchTheme({ padding: v })}
               />
             </Field>
 
@@ -367,191 +343,6 @@ export function ThemePanel({
             />
             <FieldHint>{t("forms.design.showLanguageSwitcherHint")}</FieldHint>
           </PanelBody>
-        </Panel>
-
-        <Panel>
-          <PanelHeader title={t("forms.design.behaviour")} />
-          <PanelBody>
-            <Field>
-              <Label>{t("forms.design.successMode")}</Label>
-              <Select
-                disabled={disabled}
-                value={definition.success.mode}
-                onValueChange={(v) => patchSuccess({ mode: v as never })}
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="inline">
-                    {t("forms.design.successInline")}
-                  </SelectItem>
-                  <SelectItem value="modal">
-                    {t("forms.design.successModal")}
-                  </SelectItem>
-                  <SelectItem value="redirect">
-                    {t("forms.design.successRedirect")}
-                  </SelectItem>
-                </SelectContent>
-              </Select>
-            </Field>
-
-            {definition.success.mode === "redirect" ? (
-              <Field>
-                <Label htmlFor="success-url">
-                  {t("forms.design.redirectUrl")}
-                </Label>
-                <Input
-                  id="success-url"
-                  disabled={disabled}
-                  placeholder="https://example.com/thank-you"
-                  value={definition.success.redirectUrl ?? ""}
-                  onChange={(e) =>
-                    patchSuccess({ redirectUrl: e.target.value })
-                  }
-                />
-                <FieldHint>{t("forms.validation.invalidRedirect")}</FieldHint>
-              </Field>
-            ) : null}
-
-            {/* Copy shown per mode. The strings stay in definition.content
-                whichever mode is selected, so flipping to redirect and back
-                never loses them. */}
-            {definition.success.mode === "inline" ? (
-              <>
-                <Field>
-                  <Label htmlFor="success-inline">
-                    {t("forms.design.successInlineText")}
-                  </Label>
-                  <Textarea
-                    id="success-inline"
-                    rows={3}
-                    disabled={disabled}
-                    value={getText(contentKey.successInline())}
-                    onChange={(e) =>
-                      setText(contentKey.successInline(), e.target.value)
-                    }
-                  />
-                </Field>
-                <ToggleField
-                  id="success-reset"
-                  label={t("forms.design.resetAfterSubmit")}
-                  checked={definition.success.resetAfterSubmit}
-                  onChange={(v) => patchSuccess({ resetAfterSubmit: v })}
-                />
-              </>
-            ) : null}
-
-            {definition.success.mode === "modal" ? (
-              <>
-                <Field>
-                  <Label htmlFor="success-mt">
-                    {t("forms.design.successModalTitle")}
-                  </Label>
-                  <Input
-                    id="success-mt"
-                    disabled={disabled}
-                    value={getText(contentKey.successModalTitle())}
-                    onChange={(e) =>
-                      setText(contentKey.successModalTitle(), e.target.value)
-                    }
-                  />
-                </Field>
-                <Field>
-                  <Label htmlFor="success-mb">
-                    {t("forms.design.successModalBody")}
-                  </Label>
-                  <Textarea
-                    id="success-mb"
-                    rows={3}
-                    disabled={disabled}
-                    value={getText(contentKey.successModalBody())}
-                    onChange={(e) =>
-                      setText(contentKey.successModalBody(), e.target.value)
-                    }
-                  />
-                </Field>
-                <Field>
-                  <Label htmlFor="success-mc">
-                    {t("forms.design.successModalCta")}
-                  </Label>
-                  <Input
-                    id="success-mc"
-                    disabled={disabled}
-                    value={getText(contentKey.successModalCta())}
-                    onChange={(e) =>
-                      setText(contentKey.successModalCta(), e.target.value)
-                    }
-                  />
-                </Field>
-              </>
-            ) : null}
-          </PanelBody>
-        </Panel>
-
-        <Panel>
-          {/* The trigger IS the panel header — before this it was a hand-rolled
-              copy of CardHeader that had already drifted from the original. */}
-          <Collapsible className="group/errors">
-            <CollapsibleTrigger asChild>
-              <button type="button" className="block w-full text-left">
-                <PanelHeader
-                  title={t("forms.design.errors")}
-                  meta={
-                    <span className="text-[11px] normal-case tracking-normal text-muted-foreground/70">
-                      {t("forms.design.errorsSummary", {
-                        total: ERROR_COPY_KEYS.length,
-                        blank: blankErrorCount,
-                      })}
-                    </span>
-                  }
-                  action={
-                    <ChevronDown className="h-4 w-4 shrink-0 text-muted-foreground transition-transform group-data-[state=open]/errors:rotate-180" />
-                  }
-                />
-              </button>
-            </CollapsibleTrigger>
-            <CollapsibleContent>
-              <PanelBody>
-                <FieldHint>{t("forms.design.errorsHint")}</FieldHint>
-
-                {/* error.generic first and full-width: it is the fallback for
-                    any code with no copy, and the failure banner in every
-                    success mode, so it is the one a visitor is likeliest to see. */}
-                <Field>
-                  <Label htmlFor="err-generic">
-                    {t("forms.design.error.generic")}
-                  </Label>
-                  <Input
-                    id="err-generic"
-                    disabled={disabled}
-                    value={getText(contentKey.errorGeneric())}
-                    onChange={(e) =>
-                      setText(contentKey.errorGeneric(), e.target.value)
-                    }
-                  />
-                </Field>
-
-                <Cols>
-                  {FORM_ERROR_CODES.map((code) => (
-                    <Field key={code}>
-                      <Label htmlFor={`err-${code}`}>
-                        {t(`forms.design.error.${code}`)}
-                      </Label>
-                      <Input
-                        id={`err-${code}`}
-                        disabled={disabled}
-                        value={getText(contentKey.error(code))}
-                        onChange={(e) =>
-                          setText(contentKey.error(code), e.target.value)
-                        }
-                      />
-                    </Field>
-                  ))}
-                </Cols>
-              </PanelBody>
-            </CollapsibleContent>
-          </Collapsible>
         </Panel>
       </div>
 
