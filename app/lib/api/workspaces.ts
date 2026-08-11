@@ -146,7 +146,14 @@ export interface WorkspaceEmailAccountSummary {
   name: string;
   email: string;
   is_default: boolean;
-  smtp_server: string;
+  /** `smtp` accounts relay over SMTP; `google` accounts send via the Gmail API. */
+  provider: "smtp" | "google";
+  /** `admin` = provisioned by Repraesent; `user` = connected in Settings. */
+  source: "admin" | "user";
+  /** Non-null once a Google grant is revoked or expired — the account needs reconnecting. */
+  auth_failed_at: string | null;
+  /** Null on Google accounts, which have no SMTP endpoint. */
+  smtp_server: string | null;
   smtp_port_ssl: number | null;
   smtp_port_starttls: number | null;
   smtp_auth_required: boolean;

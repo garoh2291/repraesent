@@ -3,6 +3,8 @@ import { Fragment, useState } from "react";
 import { cn } from "~/lib/utils";
 import { useTranslation } from "react-i18next";
 import {
+  ArrowLeft,
+  AtSign,
   Building2,
   BookUser,
   CheckSquare,
@@ -11,6 +13,7 @@ import {
   Columns3,
   Globe,
   HomeIcon,
+  Inbox,
   Info,
   LogOut,
   Mail,
@@ -18,7 +21,9 @@ import {
   Package,
   Settings,
   Store,
+  User,
   Users,
+  Workflow,
   X,
 } from "lucide-react";
 import * as LucideIcons from "lucide-react";
@@ -63,6 +68,23 @@ function DynamicIcon({
   if (!Icon) return null;
   return <Icon className={className} />;
 }
+
+/**
+ * The settings sub-navigation.
+ *
+ * Labels reuse the keys the deleted tab strip used, so all four locales already
+ * have them. Order matches the old tabs.
+ */
+const SETTINGS_NAV = [
+  { to: "/settings/profile", labelKey: "settings.tabs.profile", Icon: User },
+  { to: "/settings/team", labelKey: "settings.tabs.areaSettings", Icon: Users },
+  {
+    to: "/settings/email-accounts",
+    labelKey: "settings.tabs.emailAccounts",
+    Icon: AtSign,
+  },
+  { to: "/settings/bcc", labelKey: "settings.tabs.bcc", Icon: Inbox },
+] as const;
 
 function NavLink({
   to,
@@ -138,6 +160,18 @@ export function Sidebar({
   const showAppointmentsInSidebar =
     hasAppointmentsService && !!appointmentConfigs?.length;
   const isDoorboostBrandWs = currentWorkspace?.type === "doorboost_brand";
+  // TEMPORARY: Workflows is still being piloted, so in production only the
+  // pilot workspace sees the nav entry. Local development always shows it.
+  // Delete this and the `showWorkflows` guard on the NavLink when the feature
+  // ships to everyone. This hides the entry only — /workflows stays reachable
+  // by URL, and nothing here is a permission boundary.
+  const WORKFLOWS_PILOT_WORKSPACE_ID = "0941b49b-edaa-44bb-8d6f-8f6decd10502";
+  const showWorkflows =
+    import.meta.env.DEV ||
+    currentWorkspace?.id === WORKFLOWS_PILOT_WORKSPACE_ID;
+  // Route-driven rather than stateful: deep links and refreshes land in the
+  // right mode for free, and there is nothing to reset on the way out.
+  const inSettings = location.pathname.startsWith("/settings");
   const { data: wpSite } = useWorkspaceWpSite(
     !!currentWorkspace?.id && !isDoorboostBrandWs,
   );
@@ -241,7 +275,30 @@ export function Sidebar({
 
       {/* Navigation */}
       <nav className="min-h-0 flex-1 overflow-y-auto p-3 space-y-0.5">
-        {isDoorboostBrandWs ? (
+        {inSettings ? (
+          <>
+            {/* Separated from the list below so it reads as a way out rather
+                than a fifth destination. */}
+            <div className="mb-2 border-b border-white/5 pb-2">
+              <NavLink to="/" isActive={false} onClick={onClose}>
+                <ArrowLeft className="h-4 w-4 shrink-0" />
+                {t("common.back")}
+              </NavLink>
+            </div>
+
+            {SETTINGS_NAV.map(({ to, labelKey, Icon }) => (
+              <NavLink
+                key={to}
+                to={to}
+                isActive={location.pathname.startsWith(to)}
+                onClick={onClose}
+              >
+                <Icon className="h-4 w-4 shrink-0" />
+                <span className="truncate">{t(labelKey)}</span>
+              </NavLink>
+            ))}
+          </>
+        ) : isDoorboostBrandWs ? (
           <>
             <NavLink
               to="/db-brand"
@@ -311,6 +368,17 @@ export function Sidebar({
               <ClipboardList className="h-4 w-4 shrink-0" />
               {t("nav.forms", "Forms")}
             </NavLink>
+
+            {showWorkflows && (
+              <NavLink
+                to="/workflows"
+                isActive={location.pathname.startsWith("/workflows")}
+                onClick={onClose}
+              >
+                <Workflow className="h-4 w-4 shrink-0" />
+                {t("nav.workflows", { defaultValue: "Workflows" })}
+              </NavLink>
+            )}
 
             {currentWorkspace?.services
               ?.filter(
@@ -434,14 +502,18 @@ export function Sidebar({
         </div>
         {!isDoorboostBrandWs && (
           <>
-            <NavLink
-              to="/settings/profile"
-              isActive={location.pathname.startsWith("/settings")}
-              onClick={onClose}
-            >
-              <Settings className="h-4 w-4 shrink-0" />
-              {t("nav.settings")}
-            </NavLink>
+            {/* Hidden inside settings: the nav above already lists every
+                section, so this would sit here permanently highlighted. */}
+            {!inSettings && (
+              <NavLink
+                to="/settings/profile"
+                isActive={false}
+                onClick={onClose}
+              >
+                <Settings className="h-4 w-4 shrink-0" />
+                {t("nav.settings")}
+              </NavLink>
+            )}
             <NavLink
               to="/products"
               isActive={location.pathname === "/products"}

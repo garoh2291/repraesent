@@ -39,7 +39,8 @@
     "somethingWentWrong": "Une erreur s'est produite",
     "deleted": "Supprimé",
     "you": "Vous",
-    "clear": "Effacer"
+    "clear": "Effacer",
+    "dismiss": "Fermer"
   },
   "nav": {
     "home": "Accueil",
@@ -57,7 +58,8 @@
     "brand_label": "Marque",
     "mail": "Courrier",
     "wordpress": "Site web",
-    "forms": "Formulaires"
+    "forms": "Formulaires",
+    "workflows": "Workflows"
   },
   "db_brand": {
     "subtitle": "Sélectionnez un revendeur dans la barre latérale pour afficher ses Social Ads et Leads.",
@@ -762,12 +764,11 @@
     }
   },
   "settings": {
-    "title": "Paramètres",
-    "subtitle": "Votre profil et votre équipe",
     "tabs": {
       "profile": "Profil",
       "areaSettings": "Paramètres de l'espace",
-      "bcc": "Journalisation des e-mails"
+      "bcc": "Journalisation",
+      "emailAccounts": "Comptes e-mail"
     },
     "bcc": {
       "metaTitle": "Journalisation des e-mails",
@@ -918,6 +919,50 @@
         "void": "Annulée",
         "uncollectible": "Irrécouvrable"
       }
+    },
+    "emailAccounts": {
+      "metaTitle": "Comptes e-mail",
+      "metaDescription": "Connecter une boîte mail pour l’envoi",
+      "sectionTitle": "Comptes d’envoi",
+      "sectionDescription": "Connectez une boîte mail et vos formulaires enverront leurs confirmations depuis celle-ci.",
+      "emptyTitle": "Aucun compte d’envoi",
+      "emptyHint": "Connectez votre propre boîte mail : les e-mails de confirmation partiront de votre adresse plutôt que d’une adresse générique.",
+      "connectSmtp": "Connecter via IMAP/SMTP",
+      "connectSmtpHint": "Nous vérifions ces informations auprès de votre serveur avant de les enregistrer.",
+      "connectGoogle": "Se connecter avec Google",
+      "googleRedirecting": "Ouverture de Google…",
+      "googleConnected": "{{email}} est connectée. Vos formulaires peuvent désormais envoyer depuis cette adresse.",
+      "google_denied": "La connexion Google a été annulée, rien n'a été connecté.",
+      "google_expired": "Cette demande de connexion a expiré. Veuillez réessayer.",
+      "google_error": "Une erreur s'est produite lors de la connexion de votre compte Google. Veuillez réessayer.",
+      "google_failed": "Votre compte Google n'a pas pu être connecté. Veuillez réessayer.",
+      "name": "Nom affiché",
+      "email": "Adresse e-mail",
+      "server": "Serveur SMTP",
+      "port": "Port",
+      "security": "Chiffrement",
+      "securitySSL_TLS": "SSL/TLS",
+      "securitySTARTTLS": "STARTTLS",
+      "securityNONE": "Aucun",
+      "username": "Nom d’utilisateur",
+      "usernamePlaceholder": "Identique à l’adresse e-mail",
+      "password": "Mot de passe",
+      "connect": "Connecter",
+      "verifying": "Vérification de la connexion…",
+      "connected": "Boîte mail connectée",
+      "disconnected": "Boîte mail déconnectée",
+      "defaultSet": "Expéditeur par défaut mis à jour",
+      "default": "Par défaut",
+      "managed": "Fourni par Repraesent",
+      "needsReconnect": "Reconnexion nécessaire",
+      "reconnect": "Reconnecter",
+      "makeDefault": "Définir par défaut",
+      "disconnect": "Déconnecter",
+      "disconnectTitle": "Déconnecter cette boîte mail ?",
+      "disconnectBody": "Les formulaires envoyant depuis {{email}} utiliseront l’expéditeur par défaut. Les e-mails déjà envoyés sont conservés.",
+      "required": "Ce champ est requis",
+      "invalidEmail": "Saisissez une adresse e-mail valide",
+      "invalidPort": "Saisissez un port entre 1 et 65535"
     }
   },
   "booking": {
@@ -3128,6 +3173,9 @@
       "enabled": "Envoyer un e-mail de confirmation",
       "account": "Envoyer depuis",
       "accountDefault": "Compte par défaut de l'espace",
+      "accountGroupYours": "Vos comptes",
+      "accountGroupManaged": "Fourni par Repraesent",
+      "accountNeedsReconnect": "doit être reconnecté",
       "subject": "Objet",
       "body": "Message",
       "code": "HTML",
@@ -3252,6 +3300,284 @@
         "chipTranslate": "Traduire",
         "chipPublish": "Publier"
       }
+    }
+  },
+  "workflows": {
+    "metaTitle": "Workflows",
+    "metaDescription": "Automate what happens after a lead, deal or task changes",
+    "title": "Workflows",
+    "subtitle": "Exécuter une action automatiquement quand un enregistrement change, ou quand rien ne bouge depuis un moment.",
+    "new": "Nouveau workflow",
+    "newHint": "Give it a name. You can change everything else afterwards.",
+    "create": "Créer",
+    "nameLabel": "Nom",
+    "namePlaceholder": "Chase stale leads",
+    "emptyTitle": "Aucun workflow",
+    "emptyHint": "Automate the follow-ups nobody remembers: notify someone when a lead goes quiet, or when a task is overdue.",
+    "noTrigger": "No trigger yet",
+    "notFound": "That workflow no longer exists.",
+    "runsLast7": "{{count}} runs (7d)",
+    "failedLast7": "{{count}} failed",
+    "lastRun": "Last run {{when}}",
+    "unpublishedChanges": "Unpublished changes",
+    "backToList": "Tous les workflows",
+    "save": "Enregistrer",
+    "saved": "Workflow enregistré",
+    "publish": "Publier",
+    "published": "Workflow publié",
+    "deleted": "Workflow supprimé",
+    "pause": "Suspendre",
+    "activate": "Activer",
+    "test": "Tester",
+    "cannotPublish": "Cannot publish yet",
+    "tabBuild": "Construction",
+    "tabSettings": "Paramètres",
+    "tabRuns": "Exécutions",
+    "tabAnalytics": "Statistiques",
+    "stepsTitle": "Étapes",
+    "status": {
+      "draft": "Draft",
+      "active": "Active",
+      "paused": "Paused",
+      "archived": "Archived"
+    },
+    "entity": {
+      "leads": "Leads",
+      "deals": "Deals",
+      "tasks": "Tasks",
+      "contacts": "Contacts"
+    },
+    "node": {
+      "trigger": "Trigger",
+      "condition": "Condition",
+      "delay": "Wait",
+      "send_internal_email": "Email a team member",
+      "send_customer_email": "Email the contact"
+    },
+    "step": {
+      "trigger": "When this happens",
+      "add": "Add step",
+      "remove": "Remove step",
+      "moveUp": "Move up",
+      "moveDown": "Move down",
+      "conditionCount": "{{count}} condition(s)",
+      "recipientCount": "{{count}} recipient(s)",
+      "delayDays": "{{count}} day(s)",
+      "delayHours": "{{count}} hour(s)",
+      "delayMinutes": "{{count}} minute(s)"
+    },
+    "trigger": {
+      "entity": "Record type",
+      "when": "When",
+      "field": "Field",
+      "newValue": "New value",
+      "untouchedFor": "Untouched for",
+      "dateField": "Date field",
+      "offsetDays": "Offset in days",
+      "offsetHint": "Negative fires before the date, positive after.",
+      "onlyIf": "Only if",
+      "onlyIfHint": "Facultatif. Évalué sur l'enregistrement APRÈS la modification — pour la valeur précédente, utilisez « changé de ».",
+      "type_record_created": "A record is created",
+      "type_record_updated": "A record is updated",
+      "type_field_changed_to": "A field changes to a value",
+      "type_no_change_for": "Nothing changes for a while",
+      "type_date_field_relative": "A date passes",
+      "hint_record_created": "Fires once, when the record first appears.",
+      "hint_record_updated": "Fires on every change to the record.",
+      "hint_field_changed_to": "Fires only on the transition into that value.",
+      "hint_no_change_for": "Checked on a schedule. Fires again if the record is touched and goes quiet again.",
+      "hint_date_field_relative": "Checked on a schedule, relative to the date you pick."
+    },
+    "condition": {
+      "matchLabel": "Match",
+      "matchAll": "All of",
+      "matchAny": "Any of",
+      "add": "Add condition",
+      "remove": "Remove condition",
+      "pickField": "Pick a field",
+      "pickValue": "Pick a value",
+      "valuePlaceholder": "Value",
+      "groupFields": "Fields",
+      "groupMetadata": "From metadata",
+      "addGroup": "Ajouter un groupe",
+      "removeGroup": "Supprimer le groupe",
+      "pickDate": "Choisir une date",
+      "pickValues": "Choisir des valeurs",
+      "nSelected": "{{count}} sélectionné(s)",
+      "compareToField": "Comparer à un autre champ"
+    },
+    "operator": {
+      "eq": "is",
+      "neq": "is not",
+      "in": "is one of",
+      "not_in": "is not one of",
+      "contains": "contains",
+      "starts_with": "starts with",
+      "gt": "is greater than",
+      "gte": "is at least",
+      "lt": "is less than",
+      "lte": "is at most",
+      "is_empty": "is empty",
+      "is_not_empty": "is not empty",
+      "changed": "changed",
+      "changed_from": "changed from",
+      "changed_to": "changed to",
+      "within_last_days": "est dans les derniers",
+      "more_than_days_ago": "remonte à plus de",
+      "within_next_days": "est dans les prochains",
+      "more_than_days_from_now": "est à plus de … d'ici"
+    },
+    "delay": {
+      "minutes": "Minutes",
+      "hours": "Hours",
+      "days": "Days"
+    },
+    "recipients": {
+      "label": "Send to",
+      "add": "Add a person or role",
+      "addAddress": "Add address",
+      "remove": "Remove",
+      "none": "Nobody yet — this step will be skipped.",
+      "addressPlaceholder": "ops@company.com",
+      "role_admin": "All admins",
+      "role_editor": "All editors",
+      "role_viewer": "All viewers"
+    },
+    "email": {
+      "subject": "Subject",
+      "subjectPlaceholder": "A lead needs attention",
+      "body": "Message",
+      "viewCode": "HTML",
+      "viewPreview": "Preview",
+      "variablesHint": "Click to insert. Values come from the record that triggered the run.",
+      "toPath": "Send to",
+      "toPathHint": "A variable that resolves to an email address.",
+      "sendFrom": "Send from",
+      "sendFromDefault": "Workspace default",
+      "accountBroken": "needs reconnecting"
+    },
+    "outbound": {
+      "blockedTitle": "No sending mailbox connected",
+      "blockedBody": "This step emails people outside your workspace, which needs a mailbox of your own. Until one is connected the step is skipped — the rest of the workflow still runs.",
+      "blockedCta": "Connect a mailbox",
+      "reconnectTitle": "Mailbox needs reconnecting",
+      "reconnectBody": "The connected mailbox lost access, so this step will be skipped until it is reconnected."
+    },
+    "inspector": {
+      "title": "Step",
+      "emptyTitle": "Nothing selected",
+      "emptyHint": "Pick a step on the left to configure it.",
+      "conditionHint": "The run stops here unless every condition holds.",
+      "delayHint": "Pause before the next step. The run resumes on its own.",
+      "internalHint": "Sent from Repraesent, so this works without connecting a mailbox."
+    },
+    "settings": {
+      "description": "Description",
+      "reentry": "Repeat runs",
+      "reentryBlock": "One run at a time per record",
+      "reentryAllow": "Allow parallel runs",
+      "reentryHint": "Blocking prevents a record entering again while a run is still waiting.",
+      "timezone": "Timezone",
+      "defaultLocale": "Default language",
+      "defaultLocaleHint": "Used when a recipient has no language of their own.",
+      "dangerTitle": "Delete this workflow",
+      "dangerHint": "Runs already recorded are kept.",
+      "delete": "Delete",
+      "deleteTitle": "Delete this workflow?",
+      "deleteBody": "\"{{name}}\" will stop running. This cannot be undone.",
+      "exitTitle": "Arrêter plus tôt si",
+      "exitHint": "Annule une exécution en cours dès que cela correspond — la séquence cesse de relancer quelqu'un déjà converti.",
+      "windowTitle": "Envoyer uniquement pendant",
+      "windowHint": "Les envois hors de ces heures sont reportés au prochain créneau, dans le fuseau du workflow.",
+      "windowOn": "Limiter les heures d'envoi",
+      "from": "de",
+      "to": "à"
+    },
+    "runs": {
+      "emptyTitle": "No runs yet",
+      "emptyHint": "Publish the workflow, or use Test to try it against a real record.",
+      "noSteps": "No steps recorded.",
+      "testBadge": "Test",
+      "conditionPassed": "Conditions matched",
+      "conditionFailed": "Conditions did not match",
+      "sentTo": "Sent to {{email}} ({{locale}})",
+      "wouldSend": "Would send to {{email}} ({{locale}})"
+    },
+    "runStatus": {
+      "running": "Running",
+      "waiting": "Waiting",
+      "completed": "Completed",
+      "failed": "Failed",
+      "cancelled": "Cancelled"
+    },
+    "stepStatus": {
+      "ok": "Done",
+      "skipped": "Skipped",
+      "failed": "Failed"
+    },
+    "skipReason": {
+      "no_recipients_resolved": "No recipients resolved",
+      "no_template_for_locale": "No message written",
+      "no_recipient_address": "No address on the record",
+      "invalid_recipient_address": "Address looks invalid",
+      "no_sending_account": "No mailbox connected",
+      "account_needs_reconnect": "Mailbox needs reconnecting"
+    },
+    "analytics": {
+      "total": "Runs",
+      "perStep": "Per step",
+      "perDay": "Per day",
+      "emptyTitle": "Nothing to show yet",
+      "emptyHint": "Analytics appear once the workflow has run."
+    },
+    "validation": {
+      "noTrigger": "Add a trigger",
+      "noSteps": "Add at least one step",
+      "noRecipients": "An email step has no recipients",
+      "noTemplate": "An email step has no message",
+      "noToPath": "The customer email step has no address",
+      "emptyCondition": "A condition step is empty",
+      "filterContradiction": "« {{field}} est {{value}} » ne peut jamais être vrai ici : le déclencheur s'active quand {{field}} devient « {{target}} ». Utilisez « changé de » pour la valeur précédente."
+    },
+    "testTitle": "Test this workflow",
+    "testHint": "Runs against a real {{entity}} record. Nothing is sent.",
+    "testRecordId": "{{entity}} record ID",
+    "testSimulateHint": "Change conditions are evaluated as if the record just reached its current values.",
+    "testRun": "Run test",
+    "testRunning": "Running…",
+    "testDone": {
+      "plain": "Test finished — see Runs",
+      "simulated": "Test finished (simulated: {{fields}})"
+    },
+    "preview": {
+      "pick": "Aperçu en tant que…",
+      "search": "Rechercher…",
+      "noRecords": "Aucun résultat",
+      "clear": "Effacer l'enregistrement d'aperçu",
+      "renderedAs": "Rendu en tant que {{name}}",
+      "pickToRender": "Choisissez un enregistrement ci-dessus pour voir les valeurs réelles.",
+      "unresolved": "Vide sur cet enregistrement : {{paths}}",
+      "selected": "Aperçu : {{name}}",
+      "resolvesTo": "Donne {{value}}",
+      "resolvesEmpty": "Vide pour {{name}}",
+      "resolvesNotEmail": "« {{value}} » n'est pas une adresse e-mail"
+    },
+    "weekday": {
+      "1": "Lun",
+      "2": "Mar",
+      "3": "Mer",
+      "4": "Jeu",
+      "5": "Ven",
+      "6": "Sam",
+      "7": "Dim"
+    },
+    "runStatusReason": {
+      "exit_condition": "Arrêté plus tôt"
+    },
+    "branch": {
+      "yes": "Oui",
+      "no": "Non",
+      "empty": "Rien ici — l'exécution s'arrête."
     }
   }
 }
