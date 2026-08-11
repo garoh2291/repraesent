@@ -22,6 +22,7 @@ import type { DemoState } from "./types";
 /** No-ops: the demo cursor is decorative, so nothing here is ever really clicked. */
 const noop = () => undefined;
 const NO_ISSUES = new Map();
+const NO_INVALID_FIELDS = new Set<string>();
 const NOT_TRANSLATING = new Set<never>();
 
 interface Props {
@@ -71,8 +72,7 @@ export function DemoBuilder({ state, demoId, compact = false }: Props) {
           ? { kind: "field", field: activeField }
           : null;
 
-  const getText = (key: string) =>
-    getRawContent(definition, activeLocale, key);
+  const getText = (key: string) => getRawContent(definition, activeLocale, key);
 
   if (state.screen === "done") {
     return <DemoCelebration compact={compact} />;
@@ -136,7 +136,10 @@ export function DemoBuilder({ state, demoId, compact = false }: Props) {
               <Label className="text-sm font-medium text-white/70">
                 {t("forms.builder.liveToggle")}
               </Label>
-              <Switch checked={state.live} aria-label={t("forms.builder.liveToggle")} />
+              <Switch
+                checked={state.live}
+                aria-label={t("forms.builder.liveToggle")}
+              />
             </span>
           </div>
         </div>
@@ -148,8 +151,6 @@ export function DemoBuilder({ state, demoId, compact = false }: Props) {
             activeLocale={activeLocale}
             onSelect={noop}
             issuesByLocale={NO_ISSUES}
-            totalIssues={0}
-            onFocusIssues={noop}
             translating={NOT_TRANSLATING}
             onAddLocale={noop}
             onRemoveLocale={noop}
@@ -163,9 +164,15 @@ export function DemoBuilder({ state, demoId, compact = false }: Props) {
       <Tabs value={state.tab}>
         <div className="border-b border-border">
           <TabsList variant="line" className="-mb-px">
-            <TabsTrigger value="build">{t("forms.builder.tabBuild")}</TabsTrigger>
-            <TabsTrigger value="design">{t("forms.builder.tabDesign")}</TabsTrigger>
-            <TabsTrigger value="share">{t("forms.builder.tabShare")}</TabsTrigger>
+            <TabsTrigger value="build">
+              {t("forms.builder.tabBuild")}
+            </TabsTrigger>
+            <TabsTrigger value="design">
+              {t("forms.builder.tabDesign")}
+            </TabsTrigger>
+            <TabsTrigger value="share">
+              {t("forms.builder.tabShare")}
+            </TabsTrigger>
           </TabsList>
         </div>
 
@@ -191,11 +198,15 @@ export function DemoBuilder({ state, demoId, compact = false }: Props) {
                 definition={definition}
                 locale={activeLocale}
                 fallbackLocale={defaultLocale}
+                offeredLocales={[defaultLocale]}
                 selection={state.selection}
                 onSelect={noop}
                 onReorder={noop}
                 onDuplicateField={noop}
                 onDeleteField={noop}
+                onLocaleChange={noop}
+                onRemoveTitle={noop}
+                invalidFieldIds={NO_INVALID_FIELDS}
               />
             </div>
             <aside className={compact ? "order-3" : undefined}>
@@ -239,13 +250,7 @@ export function DemoBuilder({ state, demoId, compact = false }: Props) {
 }
 
 /** Replica of the Forms index header + create dialog (forms._index.tsx:170). */
-function DemoList({
-  state,
-  compact,
-}: {
-  state: DemoState;
-  compact: boolean;
-}) {
+function DemoList({ state, compact }: { state: DemoState; compact: boolean }) {
   const { t } = useTranslation();
 
   return (

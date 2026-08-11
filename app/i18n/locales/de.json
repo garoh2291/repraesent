@@ -2804,7 +2804,7 @@
       "tabBuild": "Aufbau",
       "tabDesign": "Design",
       "tabEmail": "Bestätigungs-E-Mail",
-      "tabShare": "Teilen",
+      "tabShare": "Veröffentlichen",
       "emptyCanvasHint": "Fügen Sie ein Feld aus der Palette hinzu.",
       "duplicateField": "Duplizieren",
       "deleteField": "Löschen",
@@ -2822,7 +2822,14 @@
       "leaveBody": "Sie haben nicht gespeicherte Änderungen an diesem Formular. Sie gehen verloren.",
       "leaveStay": "Weiter bearbeiten",
       "leaveDiscard": "Änderungen verwerfen",
-      "previewTitle": "Vorschau"
+      "previewTitle": "Vorschau",
+      "tabAfterSubmit": "Nach dem Absenden",
+      "tabErrors": "Fehlermeldungen",
+      "undeletableField": "Dieses Feld kann nicht gelöscht werden — das Formular braucht es, um einen Lead zu identifizieren",
+      "noLabel": "Keine Beschriftung",
+      "removeTitle": "Titel entfernen",
+      "savingAuto": "Speichern…",
+      "savedAuto": "Gespeichert"
     },
     "palette": {
       "title": "Feld hinzufügen",
@@ -2901,7 +2908,16 @@
       "sectionContent": "Inhalt",
       "sectionData": "Daten",
       "sectionLayout": "Layout",
-      "sectionRules": "Regeln"
+      "sectionRules": "Regeln",
+      "requiredLocked": "Immer erforderlich — über die E-Mail-Adresse antworten Sie auf eine Einsendung.",
+      "labelHint": "Text markieren, um ihn fett, kursiv oder zu einem Link zu machen.",
+      "markBold": "Fett",
+      "markItalic": "Kursiv",
+      "markLink": "Link",
+      "addressPartsHint": "Einen Teil ausschalten, um ihn aus dem Formular zu entfernen. Der Text darunter ist das, was Besucher sehen.",
+      "addressPartLabel": "Bezeichnung für {{part}}",
+      "keyRequired": "Ein Schlüssel ist erforderlich — darunter werden Einsendungen gespeichert.",
+      "mappingLocked": "Gesperrt: Das Formular braucht dieses Feld, um einen Lead zu identifizieren."
     },
     "design": {
       "title": "Design",
@@ -2974,7 +2990,9 @@
         "min_selected": "Zu wenig ausgewählt",
         "max_selected": "Zu viel ausgewählt",
         "consent_required": "Zustimmung erforderlich"
-      }
+      },
+      "padding": "Innenabstand",
+      "fieldBackground": "Feldhintergrund"
     },
     "email": {
       "title": "Bestätigungs-E-Mail",
@@ -2999,10 +3017,10 @@
       "linkTitle": "Öffentlicher Link",
       "linkHint": "Immer aktuell. Ideal für E-Mail, Chat und QR-Codes.",
       "embedTitle": "Einbetten (Script)",
-      "embedHint": "Empfohlen. Beide Zeilen dort einfügen, wo das Formular erscheinen soll — es aktualisiert sich bei jeder Veröffentlichung. Sendet Ihre Website eine Content-Security-Policy, siehe unten.",
+      "embedHint": "Beide Zeilen dort einfügen, wo das Formular erscheinen soll — es aktualisiert sich bei jeder Veröffentlichung. Sendet Ihre Website eine Content-Security-Policy, siehe unten.",
       "htmlTitle": "HTML kopieren",
       "htmlHint": "Ein eigenständiger Block: Markup, Styles und Verhalten. Erfordert keine Änderung an einer Content-Security-Policy — ideal, wenn die Website-Betreuung ihre Richtlinie nicht anpassen will.",
-      "htmlWarning": "Dies ist eine Momentaufnahme der veröffentlichten Version. Nach dem Veröffentlichen von Änderungen erneut kopieren.",
+      "htmlWarning": "Beim Kopieren eingefroren: nach Änderungen am Formular erneut einfügen. Zeigt Ihren zuletzt gespeicherten Stand, veröffentlicht oder nicht.",
       "iframeTitle": "Einbetten (iframe)",
       "iframeHint": "Bleibt auf Ihrer Website aktuell und passt seine Höhe automatisch an.",
       "open": "Öffnen",
@@ -3032,7 +3050,10 @@
         "missingContent": "Feld '{{field}}' hat in der Standardsprache keine Beschriftung.",
         "missingContentLocale": "Feld '{{field}}' hat in {{locale}} keine Beschriftung."
       },
-      "otherLocales": "{{count}} weitere(s) Problem(e) in:"
+      "otherLocales": "{{count}} weitere(s) Problem(e) in:",
+      "keyMissing": "Ein Feld hat keinen Schlüssel — Einsendungen dafür gingen verloren",
+      "emailSubjectMissing": "Bestätigungs-E-Mail hat keinen Betreff ({{locale}})",
+      "emailBodyMissing": "Bestätigungs-E-Mail hat keinen Text ({{locale}})"
     },
     "public": {
       "notAvailable": "Dieses Formular ist nicht verfügbar",
@@ -3069,7 +3090,8 @@
       "allTranslated": "Es ist bereits alles übersetzt.",
       "retranslateConfirmTitle": "Vorhandene Übersetzungen überschreiben?",
       "retranslateConfirmBody": "Jeder Text in dieser Sprache wird ersetzt, auch selbst geschriebene.",
-      "defaultLocaleSeeded": "Standardsprache geändert. Vorhandene Texte wurden als Ausgangspunkt übernommen."
+      "defaultLocaleSeeded": "Standardsprache geändert. Vorhandene Texte wurden als Ausgangspunkt übernommen.",
+      "translationBusy": "Warten Sie, bis die laufende Übersetzung abgeschlossen ist"
     },
     "intro": {
       "title": "So funktionieren Formulare",

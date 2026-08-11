@@ -2804,7 +2804,7 @@
       "tabBuild": "Structure",
       "tabDesign": "Design",
       "tabEmail": "E-mail de confirmation",
-      "tabShare": "Partager",
+      "tabShare": "Publier",
       "emptyCanvasHint": "Ajoutez un champ depuis la palette pour commencer.",
       "duplicateField": "Dupliquer",
       "deleteField": "Supprimer",
@@ -2822,7 +2822,14 @@
       "leaveBody": "Vous avez des modifications non enregistrées sur ce formulaire. Elles seront perdues.",
       "leaveStay": "Continuer l'édition",
       "leaveDiscard": "Abandonner les modifications",
-      "previewTitle": "Aperçu"
+      "previewTitle": "Aperçu",
+      "tabAfterSubmit": "Après l'envoi",
+      "tabErrors": "Messages d'erreur",
+      "undeletableField": "Ce champ ne peut pas être supprimé — le formulaire en a besoin pour identifier un prospect",
+      "noLabel": "Sans libellé",
+      "removeTitle": "Supprimer le titre",
+      "savingAuto": "Enregistrement…",
+      "savedAuto": "Enregistré"
     },
     "palette": {
       "title": "Ajouter un champ",
@@ -2901,7 +2908,16 @@
       "sectionContent": "Contenu",
       "sectionData": "Données",
       "sectionLayout": "Mise en page",
-      "sectionRules": "Règles"
+      "sectionRules": "Règles",
+      "requiredLocked": "Toujours obligatoire — l'adresse e-mail est votre moyen de répondre.",
+      "labelHint": "Sélectionnez du texte pour le mettre en gras, en italique ou en lien.",
+      "markBold": "Gras",
+      "markItalic": "Italique",
+      "markLink": "Lien",
+      "addressPartsHint": "Désactivez une partie pour la retirer du formulaire. Le texte en dessous est ce que voit le visiteur.",
+      "addressPartLabel": "Libellé de {{part}}",
+      "keyRequired": "Une clé est obligatoire — c'est sous cette clé que les réponses sont stockées.",
+      "mappingLocked": "Verrouillé : le formulaire a besoin de ce champ pour identifier un prospect."
     },
     "design": {
       "title": "Design",
@@ -2974,7 +2990,9 @@
         "min_selected": "Pas assez de choix",
         "max_selected": "Trop de choix",
         "consent_required": "Consentement requis"
-      }
+      },
+      "padding": "Marge intérieure",
+      "fieldBackground": "Fond des champs"
     },
     "email": {
       "title": "E-mail de confirmation",
@@ -2999,10 +3017,10 @@
       "linkTitle": "Lien public",
       "linkHint": "Toujours à jour. Idéal pour l'e-mail, la messagerie et les QR codes.",
       "embedTitle": "Intégrer (script)",
-      "embedHint": "Recommandé. Collez les deux lignes à l'endroit voulu — le formulaire se met à jour à chaque publication. Si votre site envoie une Content-Security-Policy, voir ci-dessous.",
+      "embedHint": "Collez les deux lignes à l'endroit voulu — le formulaire se met à jour à chaque publication. Si votre site envoie une Content-Security-Policy, voir ci-dessous.",
       "htmlTitle": "Copier le HTML",
       "htmlHint": "Un bloc autonome : balisage, styles et comportement. N'exige aucune modification d'une Content-Security-Policy — à utiliser quand le responsable du site refuse de toucher à la sienne.",
-      "htmlWarning": "Ceci est un instantané de la version publiée. Recopiez-le après chaque publication.",
+      "htmlWarning": "Figé au moment de la copie : recollez-le après avoir modifié le formulaire. Reflète vos dernières modifications enregistrées, publiées ou non.",
       "iframeTitle": "Intégrer (iframe)",
       "iframeHint": "Reste à jour sur votre site et ajuste sa hauteur automatiquement.",
       "open": "Ouvrir",
@@ -3032,7 +3050,10 @@
         "missingContent": "Le champ '{{field}}' n'a pas de libellé dans la langue par défaut.",
         "missingContentLocale": "Le champ '{{field}}' n'a pas de libellé en {{locale}}."
       },
-      "otherLocales": "{{count}} autre(s) problème(s) dans :"
+      "otherLocales": "{{count}} autre(s) problème(s) dans :",
+      "keyMissing": "Un champ n'a pas de clé — les réponses seraient perdues",
+      "emailSubjectMissing": "L'e-mail de confirmation n'a pas d'objet ({{locale}})",
+      "emailBodyMissing": "L'e-mail de confirmation n'a pas de message ({{locale}})"
     },
     "public": {
       "notAvailable": "Ce formulaire n'est pas disponible",
@@ -3069,7 +3090,8 @@
       "allTranslated": "Tout est déjà traduit.",
       "retranslateConfirmTitle": "Écraser les traductions existantes ?",
       "retranslateConfirmBody": "Chaque texte de cette langue est remplacé, y compris ceux que vous avez écrits.",
-      "defaultLocaleSeeded": "Langue par défaut modifiée. Les textes existants ont été copiés comme point de départ."
+      "defaultLocaleSeeded": "Langue par défaut modifiée. Les textes existants ont été copiés comme point de départ.",
+      "translationBusy": "Attendez la fin de la traduction en cours"
     },
     "intro": {
       "title": "Comment fonctionnent les formulaires",

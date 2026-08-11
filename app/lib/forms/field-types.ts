@@ -91,6 +91,14 @@ export const FIELD_TYPE_META: Record<FormFieldType, FieldTypeMeta> = {
     keyStem: "website",
     mappable: false,
   },
+  /**
+   * Legacy as a *field*. Clicking this in the palette no longer creates an
+   * `address` field — it drops the four ordinary fields in ADDRESS_GROUP, so
+   * each part gets its own label, required flag, placeholder and width. The
+   * type itself stays fully alive across the schema, both validators, all
+   * three renderers and the browser runtime, because forms built before the
+   * split still use it.
+   */
   address: {
     type: "address",
     icon: MapPin,
@@ -200,19 +208,34 @@ export function newId(prefix: string): string {
   return `${prefix}_${Math.random().toString(36).slice(2, 9)}`;
 }
 
+/**
+ * snake_case, or "" when there is nothing left.
+ *
+ * Used by the key INPUT, where an empty result has to stay empty: substituting
+ * a placeholder meant deleting the last character of `full_name` silently
+ * produced `field`, and there was no way to clear the box at all. A blank key
+ * is caught by validateDefinition's `keyMissing` instead.
+ */
+export function snakeKeyRaw(value: string): string {
+  return value
+    .toLowerCase()
+    .normalize("NFKD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9\s_]/g, "")
+    .trim()
+    .replace(/\s+/g, "_")
+    .replace(/_+/g, "_")
+    .replace(/^_|_$/g, "")
+    .slice(0, 40);
+}
+
+/**
+ * snake_case with a fallback, for GENERATED keys — a new field or a duplicate
+ * always needs some key, and "field" is better than "". Never use this on user
+ * input; see snakeKeyRaw.
+ */
 export function snakeKey(value: string): string {
-  return (
-    value
-      .toLowerCase()
-      .normalize("NFKD")
-      .replace(/[\u0300-\u036f]/g, "")
-      .replace(/[^a-z0-9\s_]/g, "")
-      .trim()
-      .replace(/\s+/g, "_")
-      .replace(/_+/g, "_")
-      .replace(/^_|_$/g, "")
-      .slice(0, 40) || "field"
-  );
+  return snakeKeyRaw(value) || "field";
 }
 
 export function uniqueKey(stem: string, taken: Set<string>): string {
@@ -235,7 +258,10 @@ export function createField(
     id: newId("f"),
     type,
     key: uniqueKey(meta.keyStem, takenKeys),
-    width: type === "long_text" || type === "address" ? "full" : "half",
+    // Full width by default. Half-width is the exception a designer opts into
+    // for a pair of short fields, not the shape most fields want — and a new
+    // field landing at half width next to an unrelated one read as a bug.
+    width: "full",
     mapping: null,
     validation: {},
   };
@@ -244,7 +270,6 @@ export function createField(
     case "email":
       field.mapping = takenKeys.has("email") ? null : "email";
       field.validation = { required: true };
-      field.width = "full";
       break;
     case "phone":
       field.mapping = "phone";
@@ -256,17 +281,12 @@ export function createField(
         { id: newId("o"), value: "option_1" },
         { id: newId("o"), value: "option_2" },
       ];
-      field.width = "full";
-      break;
-    case "checkbox":
-      field.width = "full";
       break;
     case "rating":
       field.ratingMax = 5;
       break;
     case "scale":
       field.scale = { min: 1, max: 10 };
-      field.width = "full";
       break;
     case "address":
       field.addressParts = {
@@ -276,19 +296,106 @@ export function createField(
         country: false,
       };
       break;
-    case "heading":
-    case "paragraph":
-      field.width = "full";
-      break;
     case "hidden":
       field.hiddenValue = "{{utm_source}}";
-      field.width = "full";
       break;
     default:
       break;
   }
 
   return field;
+}
+
+/**
+ * The fields the palette's Address button drops.
+ *
+ * Four ordinary short-text fields rather than one `address` field. Everything
+ * an operator wanted per part — its own label, its own Required, its own
+ * placeholder, help and width, its own key and Save-to — is what a normal
+ * field already gives them, and the inspector already knows how to edit one.
+ * They can also delete Country, add a second line, or reorder them, none of
+ * which the single field allowed.
+ *
+ * Widths make the block read as an address: street and country span, zip and
+ * city pair up on one row.
+ *
+ * The label keys are the inspector's own part names — the same four words in
+ * the same four languages, already translated. A second copy under a new
+ * namespace would be four strings times four locales kept in sync by hand.
+ */
+export const ADDRESS_GROUP = [
+  { keyStem: "street", width: "full", labelKey: "forms.inspector.street" },
+  { keyStem: "zip", width: "half", labelKey: "forms.inspector.zip" },
+  { keyStem: "city", width: "half", labelKey: "forms.inspector.city" },
+  { keyStem: "country", width: "full", labelKey: "forms.inspector.country" },
+] as const satisfies ReadonlyArray<{
+  keyStem: string;
+  width: FormField["width"];
+  labelKey: string;
+}>;
+
+/**
+ * The fields for a group palette entry, keys already deduped against the form
+ * and against each other.
+ */
+export function createFieldGroup(
+  blueprint: typeof ADDRESS_GROUP,
+  takenKeys: Set<string>,
+): FormField[] {
+  // Copied, then grown as we go: uniqueKey has to see the siblings created a
+  // moment ago or four fields land on the same key.
+  const taken = new Set(takenKeys);
+
+  return blueprint.map((spec) => {
+    const field = createField("short_text", taken);
+    field.key = uniqueKey(spec.keyStem, taken);
+    field.width = spec.width;
+    taken.add(field.key);
+    return field;
+  });
+}
+
+/** The mappings that satisfy the "form must produce a named lead" rule. */
+const NAME_MAPPINGS = ["full_name", "first_name", "last_name"];
+
+/**
+ * True when deleting this field would leave the form unpublishable.
+ *
+ * `validateDefinition` requires every form to yield an identifiable lead: one
+ * field mapped to `email`, and either a `full_name` or a `first_name` +
+ * `last_name` pair. Deleting the last one that satisfies either rule used to be
+ * allowed, and the form only failed later, at publish, with an error pointing at
+ * a field the user had already removed.
+ *
+ * The builder hides the delete control instead. Reorder, rename and retype stay
+ * available — it is only removal that is refused, and only while the field is
+ * the one holding the rule up. Add a second email field and the first becomes
+ * deletable again, because by then it is no longer load-bearing.
+ *
+ * Deliberately not in validate.ts: that file is a byte-for-byte mirror of the
+ * backend validator, and this is a builder affordance, not a validation rule.
+ */
+export function isFieldDeletable(
+  field: FormField,
+  allFields: FormField[],
+): boolean {
+  if (!field.mapping) return true;
+
+  const survivors = allFields
+    .filter((f) => f.id !== field.id)
+    .map((f) => f.mapping)
+    .filter(Boolean) as string[];
+
+  if (field.mapping === "email") return survivors.includes("email");
+
+  if (NAME_MAPPINGS.includes(field.mapping)) {
+    return (
+      survivors.includes("full_name") ||
+      (survivors.includes("first_name") && survivors.includes("last_name"))
+    );
+  }
+
+  return true;
 }
 
 /** Used when a definition comes back empty or from an older shape. */

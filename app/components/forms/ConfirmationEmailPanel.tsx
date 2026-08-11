@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { Code2, Eye, Mail, Save } from "lucide-react";
+import { Check, Code2, Eye, Loader2, Mail, Save } from "lucide-react";
 import { useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Input } from "~/components/ui/input";
@@ -25,6 +25,10 @@ import {
 } from "~/components/forms/chrome";
 import { Field, FieldHint, ToggleField } from "~/components/wordpress/fields";
 import { listEmailAccounts } from "~/lib/api/workspaces";
+import {
+  defaultConfirmationEmail,
+  isEmptyConfirmationCopy,
+} from "~/lib/forms/email-template";
 import {
   flattenFields,
   isPresentational,
@@ -62,6 +66,10 @@ interface Props {
    */
   onSave?: () => void;
   saveDisabled?: boolean;
+  /** True while the save request is in flight. */
+  saving?: boolean;
+  /** True when there are unsaved edits. Drives the Save/Saved readout. */
+  dirty?: boolean;
   onChange: (value: FormConfirmationEmail) => void;
 }
 
@@ -74,6 +82,8 @@ export function ConfirmationEmailPanel({
   disabled,
   onSave,
   saveDisabled,
+  saving,
+  dirty,
   onChange,
 }: Props) {
   const { t } = useTranslation();
@@ -84,10 +94,32 @@ export function ConfirmationEmailPanel({
     by_locale: {},
   };
 
+  /**
+   * Switching the e-mail on seeds every language that has nothing written yet.
+   *
+   * Without this, turning the toggle on produced a form that validates as
+   * broken (subject and body are now required when enabled) and an operator
+   * facing four empty editors. Seeding gives them something to edit instead.
+   *
+   * Only ever fills blanks — someone who wrote copy, switched the feature off,
+   * and switched it back on keeps every word.
+   */
+  const enableWithDefaults = (
+    current: FormConfirmationEmail,
+  ): FormConfirmationEmail => {
+    const by_locale = { ...current.by_locale };
+    for (const loc of locales) {
+      if (isEmptyConfirmationCopy(by_locale[loc])) {
+        by_locale[loc] = defaultConfirmationEmail(loc);
+      }
+    }
+    return { ...current, enabled: true, by_locale };
+  };
+
   // Defensive: hydration sets editingLocale and locales in the same tick, and a
   // remove-locale race would otherwise index by_locale[undefined].
   const activeLocale = locales.includes(locale) ? locale : defaultLocale;
-  const [view, setView] = useState<"code" | "preview">("code");
+  const [view, setView] = useState<"code" | "preview">("preview");
   const bodyRef = useRef<HTMLTextAreaElement | null>(null);
 
   const { data: accounts } = useQuery({
@@ -148,9 +180,23 @@ export function ConfirmationEmailPanel({
         title={t("forms.email.title")}
         action={
           onSave ? (
+            // The same three states as the builder's own Save button. This is
+            // autosaved now, so a button that only ever says "Save" gave no
+            // sign anything had happened — you could not tell a saved e-mail
+            // from an unsaved one.
             <GhostAction disabled={saveDisabled} onClick={onSave}>
-              <Save className="h-4 w-4" />
-              {t("forms.builder.save")}
+              {saving ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : dirty ? (
+                <Save className="h-4 w-4" />
+              ) : (
+                <Check className="h-4 w-4" />
+              )}
+              {saving
+                ? t("forms.builder.savingAuto")
+                : dirty
+                  ? t("forms.builder.save")
+                  : t("forms.builder.savedAuto")}
             </GhostAction>
           ) : null
         }
@@ -163,7 +209,11 @@ export function ConfirmationEmailPanel({
             id="ce-enabled"
             label={t("forms.email.enabled")}
             checked={config.enabled}
-            onChange={(v) => onChange({ ...config, enabled: v })}
+            onChange={(v) =>
+              onChange(
+                v ? enableWithDefaults(config) : { ...config, enabled: false },
+              )
+            }
           />
 
           <Field>

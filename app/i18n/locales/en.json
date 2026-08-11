@@ -2802,7 +2802,7 @@
       "tabBuild": "Build",
       "tabDesign": "Design",
       "tabEmail": "Confirmation email",
-      "tabShare": "Share",
+      "tabShare": "Publish",
       "emptyCanvasHint": "Add a field from the palette to get started.",
       "duplicateField": "Duplicate",
       "deleteField": "Delete",
@@ -2820,7 +2820,14 @@
       "leaveBody": "You have unsaved changes to this form. They will be lost.",
       "leaveStay": "Keep editing",
       "leaveDiscard": "Discard changes",
-      "previewTitle": "Preview"
+      "previewTitle": "Preview",
+      "tabAfterSubmit": "After submission",
+      "tabErrors": "Error messages",
+      "undeletableField": "This field cannot be deleted — the form needs it to identify a lead",
+      "noLabel": "No label",
+      "removeTitle": "Remove title",
+      "savingAuto": "Saving…",
+      "savedAuto": "Saved"
     },
     "palette": {
       "title": "Add a field",
@@ -2899,7 +2906,16 @@
       "sectionContent": "Content",
       "sectionData": "Data",
       "sectionLayout": "Layout",
-      "sectionRules": "Rules"
+      "sectionRules": "Rules",
+      "requiredLocked": "Always required — the e-mail address is how you reply to a submission.",
+      "labelHint": "Select text to make it bold, italic, or a link.",
+      "markBold": "Bold",
+      "markItalic": "Italic",
+      "markLink": "Link",
+      "addressPartsHint": "Turn a part off to drop it from the form. The text under each one is what the visitor sees.",
+      "addressPartLabel": "{{part}} label",
+      "keyRequired": "A key is required — this is what submissions are stored under.",
+      "mappingLocked": "Locked: the form needs this field to identify a lead."
     },
     "design": {
       "title": "Design",
@@ -2972,7 +2988,9 @@
         "min_selected": "Too few selected",
         "max_selected": "Too many selected",
         "consent_required": "Consent required"
-      }
+      },
+      "padding": "Inner padding",
+      "fieldBackground": "Field background"
     },
     "email": {
       "title": "Confirmation email",
@@ -2997,10 +3015,10 @@
       "linkTitle": "Public link",
       "linkHint": "Always up to date. Good for e-mail, chat and QR codes.",
       "embedTitle": "Embed (script)",
-      "embedHint": "Recommended. Paste both lines where the form should appear — it updates itself whenever you publish. If your site sends a Content-Security-Policy, see below.",
+      "embedHint": "Paste both lines where the form should appear — it updates itself whenever you publish. If your site sends a Content-Security-Policy, see below.",
       "htmlTitle": "Copy HTML",
       "htmlHint": "One self-contained block: markup, styles and behaviour. Needs no changes to a Content-Security-Policy, so use it when the site owner will not edit theirs.",
-      "htmlWarning": "This is a snapshot of the published version. Copy it again after you publish changes.",
+      "htmlWarning": "Frozen when you copy it: paste it again after changing the form. Reflects your latest saved edits, published or not.",
       "iframeTitle": "Embed (iframe)",
       "iframeHint": "Stays up to date on your site and resizes itself as the form grows.",
       "open": "Open",
@@ -3030,7 +3048,10 @@
         "missingContent": "Field '{{field}}' has no label in the default language.",
         "missingContentLocale": "Field '{{field}}' has no label in {{locale}}."
       },
-      "otherLocales": "{{count}} more issue(s) in:"
+      "otherLocales": "{{count}} more issue(s) in:",
+      "keyMissing": "A field has no key — submissions to it would be lost",
+      "emailSubjectMissing": "Confirmation e-mail has no subject ({{locale}})",
+      "emailBodyMissing": "Confirmation e-mail has no message ({{locale}})"
     },
     "public": {
       "notAvailable": "This form is not available",
@@ -3067,7 +3088,8 @@
       "allTranslated": "Everything is already translated.",
       "retranslateConfirmTitle": "Overwrite existing translations?",
       "retranslateConfirmBody": "Every string in this language is replaced, including any you wrote yourself.",
-      "defaultLocaleSeeded": "Default language changed. Existing text was copied across as a starting point."
+      "defaultLocaleSeeded": "Default language changed. Existing text was copied across as a starting point.",
+      "translationBusy": "Wait for the current translation to finish"
     },
     "intro": {
       "title": "How Forms works",

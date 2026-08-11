@@ -12,6 +12,7 @@
  */
 
 import { Star } from "lucide-react";
+import { InlineText } from "~/components/forms/InlineText";
 import {
   contentKey,
   type FormField,
@@ -31,6 +32,8 @@ interface Props {
   value: unknown;
   invalid: boolean;
   disabled?: boolean;
+  /** False when the field's label is blank, so the control must name itself. */
+  labelled?: boolean;
   /** Resolves a content key for the active locale. */
   t: (key: string) => string;
   onChange: (value: unknown) => void;
@@ -42,6 +45,7 @@ export function FormFieldControl({
   value,
   invalid,
   disabled,
+  labelled = true,
   t,
   onChange,
 }: Props) {
@@ -51,6 +55,10 @@ export function FormFieldControl({
     id: inputId,
     "aria-invalid": invalid || undefined,
     "aria-required": required || undefined,
+    // With no label there is no <label for> to name the input, so it reaches a
+    // screen reader as an anonymous edit box. Borrow the placeholder, then the
+    // key.
+    "aria-label": labelled ? undefined : placeholder || field.key,
     disabled,
   };
 
@@ -143,7 +151,7 @@ export function FormFieldControl({
             onChange={(e) => onChange(e.target.checked)}
           />
           <span>
-            {t(contentKey.fieldLabel(field.id))}
+            <InlineText text={t(contentKey.fieldLabel(field.id))} />
             {required ? <span className="rf-req"> *</span> : null}
           </span>
         </label>

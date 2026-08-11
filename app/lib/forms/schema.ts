@@ -194,18 +194,35 @@ export function isTransparent(color: string): boolean {
 }
 
 export interface FormTheme {
-  mode: "light" | "dark";
+  /**
+   * Retired. Was a light/dark PRESET that rewrote five colours in one click,
+   * never a runtime switch — the emitted CSS only ever contains concrete
+   * values. Kept optional so stored definitions still parse; nothing reads it.
+   */
+  mode?: "light" | "dark";
   /** #rrggbb */
   accent: string;
   /** #rrggbb, or TRANSPARENT to let the host page show through. */
   background: string;
   /** #rrggbb */
   surface: string;
+  /**
+   * Fill behind an input when fieldStyle is "filled". Optional: definitions
+   * saved before it existed fall back to a tint derived from `text`, which is
+   * exactly what the filled style used to hardcode.
+   */
+  fieldBackground?: string;
   text: string;
   mutedText: string;
   border: string;
   /** px */
   radius: 0 | 4 | 8 | 12 | 16;
+  /**
+   * px of breathing room inside the form's own background. Optional for the
+   * same reason as fieldBackground — older definitions rendered flush at 0,
+   * and get the new default rather than a broken layout.
+   */
+  padding?: number;
   fontFamily: FormFontKey;
   fieldStyle: "outlined" | "filled" | "underline";
   buttonStyle: "solid" | "outline" | "soft";
@@ -304,6 +321,12 @@ export const FORM_DEFINITION_ISSUES = [
   "emptyOptions",
   "invalidRedirect",
   "missingContent",
+  /** A field whose key was cleared. Submissions are stored under the key. */
+  "keyMissing",
+  /** Confirmation e-mail is switched on but has no subject in some locale. */
+  "emailSubjectMissing",
+  /** Confirmation e-mail is switched on but has no body in some locale. */
+  "emailBodyMissing",
 ] as const;
 export type FormDefinitionIssueCode = (typeof FORM_DEFINITION_ISSUES)[number];
 
@@ -318,7 +341,7 @@ export type FormDefinitionIssueCode = (typeof FORM_DEFINITION_ISSUES)[number];
  * canvas (the header and the submit button are selectable regions with their
  * own inspector), so `form.submit` is fixable from `build` like everything else.
  */
-export const FORM_ISSUE_TABS = ["build", "design"] as const;
+export const FORM_ISSUE_TABS = ["build", "design", "email"] as const;
 export type FormIssueTab = (typeof FORM_ISSUE_TABS)[number];
 
 export interface FormDefinitionIssue {
@@ -372,7 +395,6 @@ export interface SubmitFormResult {
 // ---------------------------------------------------------------------------
 
 export const DEFAULT_FORM_THEME: FormTheme = {
-  mode: "light",
   accent: "#131515",
   background: "#f5f5f4",
   surface: "#ffffff",
@@ -380,6 +402,8 @@ export const DEFAULT_FORM_THEME: FormTheme = {
   mutedText: "#78716c",
   border: "#e7e5e4",
   radius: 8,
+  /** 1rem. A form flush against its own background reads as unfinished. */
+  padding: 16,
   fontFamily: "system",
   fieldStyle: "outlined",
   buttonStyle: "solid",

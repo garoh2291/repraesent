@@ -10,7 +10,7 @@ import {
 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { useNavigate } from "react-router";
+import { Link, useNavigate } from "react-router";
 import { toast } from "sonner";
 import { FormsIntroModal } from "~/components/forms/intro/FormsIntroModal";
 import { FormStatusBadge } from "~/components/forms/FormStatusBadge";
@@ -313,14 +313,38 @@ export default function FormsIndexRoute() {
               </div>
 
               <div className="flex items-center gap-4 sm:gap-6">
-                <div className="text-right">
-                  <div className="text-lg font-semibold tabular-nums leading-none">
-                    {form.submission_count}
+                {/* The count is the natural way in to the submissions it counts
+                    — the same destination the row menu offers, one click closer.
+                    stopPropagation because the whole row is itself a button
+                    that opens the builder, and a link inside it would otherwise
+                    navigate twice.
+
+                    Only a link when there is something to see: sending someone
+                    to an empty filtered list to prove a zero is a dead end. */}
+                {form.submission_count > 0 ? (
+                  <Link
+                    to={`/lead-form?form_name=${encodeURIComponent(form.slug)}`}
+                    onClick={(e) => e.stopPropagation()}
+                    title={t("forms.list.viewSubmissions")}
+                    className="rounded-lg px-2 py-1 text-right transition-colors hover:bg-muted"
+                  >
+                    <div className="text-lg font-semibold tabular-nums leading-none underline-offset-4 hover:underline">
+                      {form.submission_count}
+                    </div>
+                    <div className="text-xs text-muted-foreground">
+                      {t("forms.list.colSubmissions")}
+                    </div>
+                  </Link>
+                ) : (
+                  <div className="px-2 py-1 text-right">
+                    <div className="text-lg font-semibold tabular-nums leading-none text-muted-foreground">
+                      {form.submission_count}
+                    </div>
+                    <div className="text-xs text-muted-foreground">
+                      {t("forms.list.colSubmissions")}
+                    </div>
                   </div>
-                  <div className="text-xs text-muted-foreground">
-                    {t("forms.list.colSubmissions")}
-                  </div>
-                </div>
+                )}
 
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>

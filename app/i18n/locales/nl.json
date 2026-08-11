@@ -2802,7 +2802,7 @@
       "tabBuild": "Opbouw",
       "tabDesign": "Ontwerp",
       "tabEmail": "Bevestigingsmail",
-      "tabShare": "Delen",
+      "tabShare": "Publiceren",
       "emptyCanvasHint": "Voeg een veld toe uit het palet om te beginnen.",
       "duplicateField": "Dupliceren",
       "deleteField": "Verwijderen",
@@ -2820,7 +2820,14 @@
       "leaveBody": "U hebt niet-opgeslagen wijzigingen aan dit formulier. Ze gaan verloren.",
       "leaveStay": "Verder bewerken",
       "leaveDiscard": "Wijzigingen verwerpen",
-      "previewTitle": "Voorbeeld"
+      "previewTitle": "Voorbeeld",
+      "tabAfterSubmit": "Na verzending",
+      "tabErrors": "Foutmeldingen",
+      "undeletableField": "Dit veld kan niet worden verwijderd — het formulier heeft het nodig om een lead te identificeren",
+      "noLabel": "Geen label",
+      "removeTitle": "Titel verwijderen",
+      "savingAuto": "Opslaan…",
+      "savedAuto": "Opgeslagen"
     },
     "palette": {
       "title": "Veld toevoegen",
@@ -2899,7 +2906,16 @@
       "sectionContent": "Inhoud",
       "sectionData": "Gegevens",
       "sectionLayout": "Lay-out",
-      "sectionRules": "Regels"
+      "sectionRules": "Regels",
+      "requiredLocked": "Altijd verplicht — via het e-mailadres reageert u op een inzending.",
+      "labelHint": "Selecteer tekst om die vet, cursief of een link te maken.",
+      "markBold": "Vet",
+      "markItalic": "Cursief",
+      "markLink": "Link",
+      "addressPartsHint": "Zet een onderdeel uit om het uit het formulier te halen. De tekst eronder ziet de bezoeker.",
+      "addressPartLabel": "Label voor {{part}}",
+      "keyRequired": "Een sleutel is verplicht — inzendingen worden hieronder opgeslagen.",
+      "mappingLocked": "Vergrendeld: het formulier heeft dit veld nodig om een lead te identificeren."
     },
     "design": {
       "title": "Ontwerp",
@@ -2972,7 +2988,9 @@
         "min_selected": "Te weinig geselecteerd",
         "max_selected": "Te veel geselecteerd",
         "consent_required": "Toestemming vereist"
-      }
+      },
+      "padding": "Binnenmarge",
+      "fieldBackground": "Veldachtergrond"
     },
     "email": {
       "title": "Bevestigingsmail",
@@ -2997,10 +3015,10 @@
       "linkTitle": "Openbare link",
       "linkHint": "Altijd actueel. Ideaal voor e-mail, chat en QR-codes.",
       "embedTitle": "Insluiten (script)",
-      "embedHint": "Aanbevolen. Plak beide regels waar het formulier moet komen — het werkt zichzelf bij na elke publicatie. Verstuurt uw site een Content-Security-Policy, zie hieronder.",
+      "embedHint": "Plak beide regels waar het formulier moet komen — het werkt zichzelf bij na elke publicatie. Verstuurt uw site een Content-Security-Policy, zie hieronder.",
       "htmlTitle": "HTML kopiëren",
       "htmlHint": "Eén op zichzelf staand blok: markup, stijlen en gedrag. Vereist geen wijziging aan een Content-Security-Policy — handig als de sitebeheerder die niet wil aanpassen.",
-      "htmlWarning": "Dit is een momentopname van de gepubliceerde versie. Kopieer het opnieuw nadat u wijzigingen publiceert.",
+      "htmlWarning": "Bevroren op het moment van kopiëren: plak het opnieuw na een wijziging. Toont uw laatst opgeslagen versie, gepubliceerd of niet.",
       "iframeTitle": "Insluiten (iframe)",
       "iframeHint": "Blijft actueel op uw site en past de hoogte automatisch aan.",
       "open": "Openen",
@@ -3030,7 +3048,10 @@
         "missingContent": "Veld '{{field}}' heeft geen label in de standaardtaal.",
         "missingContentLocale": "Veld '{{field}}' heeft geen label in {{locale}}."
       },
-      "otherLocales": "{{count}} ander(e) probleem/problemen in:"
+      "otherLocales": "{{count}} ander(e) probleem/problemen in:",
+      "keyMissing": "Een veld heeft geen sleutel — inzendingen zouden verloren gaan",
+      "emailSubjectMissing": "Bevestigingsmail heeft geen onderwerp ({{locale}})",
+      "emailBodyMissing": "Bevestigingsmail heeft geen bericht ({{locale}})"
     },
     "public": {
       "notAvailable": "Dit formulier is niet beschikbaar",
@@ -3067,7 +3088,8 @@
       "allTranslated": "Alles is al vertaald.",
       "retranslateConfirmTitle": "Bestaande vertalingen overschrijven?",
       "retranslateConfirmBody": "Elke tekst in deze taal wordt vervangen, ook die u zelf hebt geschreven.",
-      "defaultLocaleSeeded": "Standaardtaal gewijzigd. Bestaande teksten zijn als startpunt overgenomen."
+      "defaultLocaleSeeded": "Standaardtaal gewijzigd. Bestaande teksten zijn als startpunt overgenomen.",
+      "translationBusy": "Wacht tot de huidige vertaling klaar is"
     },
     "intro": {
       "title": "Zo werken formulieren",

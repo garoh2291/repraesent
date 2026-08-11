@@ -19,6 +19,7 @@
 
 import { useMemo } from "react";
 import { buildFormCss, googleFontsHref } from "~/lib/forms/css";
+import { InlineText } from "~/components/forms/InlineText";
 import { getContent } from "~/lib/forms/content";
 import { isSameSelection, type BuilderSelection } from "~/lib/forms/selection";
 import {
@@ -55,6 +56,16 @@ export interface FormRendererProps {
   /** preview mode only */
   selection?: BuilderSelection | null;
   onSelect?: (selection: BuilderSelection) => void;
+  /** Hides the header block. Omit and the delete control is not rendered. */
+  onRemoveTitle?: () => void;
+  removeTitleLabel?: string;
+  /**
+   * Fields with a blocking issue in the language being edited. Marked with a
+   * data attribute and styled by the canvas, NOT by buildFormCss — the shared
+   * stylesheet renders real forms for visitors and must not learn about
+   * builder state.
+   */
+  invalidFieldIds?: ReadonlySet<string>;
 
   className?: string;
 }
@@ -75,6 +86,9 @@ export function FormRenderer({
   onLocaleChange,
   selection,
   onSelect,
+  onRemoveTitle,
+  removeTitleLabel,
+  invalidFieldIds,
   className,
 }: FormRendererProps) {
   const scope = `rf-${idPrefix.replace(/[^a-z0-9]/gi, "").slice(0, 12)}`;
@@ -110,10 +124,14 @@ export function FormRenderer({
         }
       : {};
 
+  // Preview does not require a handler: the builder shows the switcher to prove
+  // the toggle works, and clicking it just moves the editing locale if the
+  // canvas passed something to move. Live still needs the handler, since a
+  // switcher that changes nothing would be a dead control for a visitor.
   const showSwitcher =
     definition.showLanguageSwitcher &&
     (offeredLocales?.length ?? 0) > 1 &&
-    !!onLocaleChange;
+    (!!onLocaleChange || mode === "preview");
 
   const title = t(contentKey.formTitle());
   const description = t(contentKey.formDescription());
@@ -138,7 +156,10 @@ export function FormRenderer({
                 key={loc}
                 type="button"
                 className={`rf-lang-btn${loc === locale ? " rf-on" : ""}`}
-                onClick={() => onLocaleChange!(loc)}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onLocaleChange?.(loc);
+                }}
               >
                 {loc}
               </button>
@@ -158,6 +179,25 @@ export function FormRenderer({
               <h2 className="rf-title rf-ghost" aria-hidden="true" />
             ) : null}
             {description ? <p className="rf-desc">{description}</p> : null}
+
+            {/* Deleting the title means hiding the header, which the Design tab
+                also does via its Show-title switch — but nobody looks in Design
+                to remove something they are staring at on the canvas. Same
+                affordance the fields have, in the same place. */}
+            {mode === "preview" && onRemoveTitle ? (
+              <button
+                type="button"
+                className="rf-head-remove"
+                aria-label={removeTitleLabel}
+                title={removeTitleLabel}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onRemoveTitle();
+                }}
+              >
+                ×
+              </button>
+            ) : null}
           </div>
         ) : null}
 
@@ -187,6 +227,7 @@ export function FormRenderer({
                     t={t}
                     onChange={(v) => onChange(field.key, v)}
                     region={region}
+                    invalid={invalidFieldIds?.has(field.id) ?? false}
                   />
                 ))}
               </div>
@@ -195,12 +236,18 @@ export function FormRenderer({
         })}
 
         <div className="rf-actions" {...region({ kind: "submit" })}>
+          {/* The spinner is a sibling, not a replacement for the label: a
+              button whose text disappears mid-submit resizes, and the visitor
+              loses the only confirmation of what they pressed. */}
           <button
             type="submit"
             className="rf-submit"
             disabled={submitting || mode === "preview"}
             aria-busy={submitting || undefined}
           >
+            {submitting ? (
+              <span className="rf-spin" aria-hidden="true" />
+            ) : null}
             {t(contentKey.formSubmit()) || "Send"}
           </button>
         </div>
@@ -228,6 +275,8 @@ interface RenderedFieldProps {
   t: (key: string) => string;
   onChange: (value: unknown) => void;
   region: (target: BuilderSelection) => Record<string, unknown>;
+  /** Builder-only: this field has a blocking issue in the editing locale. */
+  invalid?: boolean;
 }
 
 function RenderedField({
@@ -239,6 +288,7 @@ function RenderedField({
   t,
   onChange,
   region,
+  invalid,
 }: RenderedFieldProps) {
   // Hidden fields are populated from the URL at submit time; there is nothing
   // for a visitor to see, and nothing useful to show in the preview either.
@@ -248,7 +298,10 @@ function RenderedField({
   const inputId = `${idPrefix}-${field.id}`;
   const required = field.validation?.required === true;
 
-  const previewProps = region({ kind: "field", fieldId: field.id });
+  const previewProps = {
+    ...region({ kind: "field", fieldId: field.id }),
+    ...(invalid && mode === "preview" ? { "data-rf-invalid": "" } : {}),
+  };
 
   if (isPresentational(field.type)) {
     const text = t(contentKey.fieldText(field.id));
@@ -275,12 +328,19 @@ function RenderedField({
 
   const help = t(contentKey.fieldHelp(field.id));
 
+  // A label is optional now. The element still renders so it keeps its place in
+  // the stack, but with no text it has no children and `.rf-label:empty`
+  // collapses it — and the star goes with the text, because a lone asterisk
+  // names nothing. FormFieldControl picks the accessible name up instead.
+  const label = t(contentKey.fieldLabel(field.id));
+  const labelled = label.trim() !== "";
+
   return (
     <div className={`rf-field ${widthClass}`} {...previewProps}>
       {field.type !== "checkbox" ? (
         <label className="rf-label" htmlFor={inputId}>
-          {t(contentKey.fieldLabel(field.id))}
-          {required ? (
+          <InlineText text={label} />
+          {required && labelled ? (
             <span className="rf-req" aria-hidden="true">
               *
             </span>
@@ -293,6 +353,7 @@ function RenderedField({
         inputId={inputId}
         value={value}
         invalid={!!error}
+        labelled={labelled}
         t={t}
         onChange={onChange}
       />
