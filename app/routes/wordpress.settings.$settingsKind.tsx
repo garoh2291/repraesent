@@ -8,6 +8,7 @@ import { ReIndexSettingsPage } from "~/components/wordpress/re-index-settings-pa
 import { ReMaintenanceSettingsPage } from "~/components/wordpress/re-maintenance-settings-page";
 import { ReReviewSettingsPage } from "~/components/wordpress/re-review-settings-page";
 import { ReAppointmentSettingsPage } from "~/components/wordpress/re-appointment-settings-page";
+import { ReTranslateSettingsPage } from "~/components/wordpress/re-translate-settings-page";
 import { useResolvePluginKind } from "~/lib/hooks/useWorkspaceWpPluginCatalog";
 
 export function meta() {
@@ -83,5 +84,7 @@ export default function WordPressPluginSettingsRoute() {
       return <ReReviewSettingsPage />;
     case "re-appointment":
       return <ReAppointmentSettingsPage />;
+    case "re-translate":
+      return <ReTranslateSettingsPage />;
   }
 }

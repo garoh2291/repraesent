@@ -275,5 +275,103 @@ export type ReAppointmentButton = ReAppointmentButtonConfig & {
 /** A published page on the site, for the "Go to WP Page" action. */
 export type ReAppointmentPage = { id: number; title: string };
 
+/**
+ * re:translate — multilingual content served under /<code>/ paths.
+ *
+ * Only part of this is writable. The plugin keeps its own string index, and the
+ * admin actions that touch it (adding a language, changing the source language,
+ * running a scan) re-key or populate those tables rather than just writing an
+ * option, so the API refuses to fake them from here: `source_language`,
+ * `languages`, `index` and `stats` are read-only, and the writable keys are
+ * `kill_switch`, `post_types`, `switcher` and `delete_on_uninstall`.
+ */
+
+export type ReTranslateSwitcherPosition =
+  | "bottom-right"
+  | "bottom-left"
+  | "top-right"
+  | "top-left";
+
+export type ReTranslateSwitcherLayout = "inline" | "dropdown";
+
+/** How each language is labelled in the switcher. */
+export type ReTranslateSwitcherShow =
+  | "label"
+  | "code"
+  | "flag"
+  | "flag_label"
+  | "flag_code";
+
+/** Empty means "inherit from the theme" for colours, "stylesheet default" for
+ *  lengths — which is why every one of these is a string, not a number. */
+export type ReTranslateSwitcher = {
+  position: ReTranslateSwitcherPosition;
+  layout: ReTranslateSwitcherLayout;
+  show: ReTranslateSwitcherShow;
+  hide_current: boolean;
+  /** Accessible name for the switcher landmark. */
+  label: string;
+  colors: {
+    text: string;
+    bg: string;
+    border: string;
+    active_text: string;
+    active_bg: string;
+  };
+  radius: string;
+  pad_y: string;
+  pad_x: string;
+  offset_y: string;
+  offset_x: string;
+};
+
+export type ReTranslateLanguage = {
+  code: string;
+  label: string;
+  locale: string;
+  /** Emoji flag, empty when the language was added without one. */
+  flag: string;
+  added_at: string;
+};
+
+export type ReTranslateIndexState = {
+  status: string;
+  total: number;
+  processed: number;
+  strings: number;
+  started_at: string;
+  updated_at: string;
+};
+
+export type ReTranslateLanguageStats = {
+  total: number;
+  translated: number;
+  /** Translated, but the source text has changed since. */
+  stale: number;
+  percent: number;
+};
+
+export type ReTranslateSettings = {
+  source_language: string;
+  /** WordPress locale (`WPLANG`), e.g. "de_DE". */
+  site_locale: string;
+  kill_switch: boolean;
+  delete_on_uninstall: boolean;
+  post_types: string[];
+  /** Post types with content on the site, derived server-side (read-only). */
+  available_post_types: { name: string; count: number }[];
+  languages: ReTranslateLanguage[];
+  switcher: ReTranslateSwitcher;
+  index: ReTranslateIndexState;
+  stats: {
+    source_strings: number;
+    languages: Record<string, ReTranslateLanguageStats>;
+  };
+  /** Whether the site has any indexed Repraesent Forms (rf_form objects). */
+  has_rf_forms?: boolean;
+  /** Machine-translate capability is available (plugin ships a default token). */
+  has_machine_translate?: boolean;
+};
+
 /** A theme slot the plugin can auto-place a button into. */
 export type ReAppointmentSlot = { key: string; label: string; group: string };

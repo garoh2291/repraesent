@@ -7,6 +7,7 @@ export const PORTED_SETTINGS_KINDS = [
   "re-maintenance",
   "re-review",
   "re-appointment",
+  "re-translate",
 ] as const;
 
 export type PortedSettingsKind = (typeof PORTED_SETTINGS_KINDS)[number];

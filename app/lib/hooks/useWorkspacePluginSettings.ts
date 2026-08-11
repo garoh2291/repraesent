@@ -179,7 +179,9 @@ export function useWorkspacePluginSettingsForm<T extends object>(
     site: siteQuery.data ?? null,
     hasSite,
     found: settingsQuery.data?.found ?? true,
-    loading: siteQuery.isLoading || settingsQuery.isLoading,
+    // Only the first paint — never swap the whole page for a background refetch
+  // after add/save, or the UI goes blank and pops back.
+  loading: siteQuery.isLoading || (settingsQuery.isLoading && !settingsQuery.data),
     saving: saveMutation.isPending,
     loadError,
     saveMutation,
