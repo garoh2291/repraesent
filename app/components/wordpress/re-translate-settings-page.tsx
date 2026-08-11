@@ -58,6 +58,7 @@ export function ReTranslateSettingsPage() {
     catalogItem?.display_name,
     "re:translate",
   );
+  const version = catalogItem?.version || PLUGIN_VERSION;
 
   const [searchParams, setSearchParams] = useSearchParams();
   const tab = tabFromParam(searchParams.get(TAB_PARAM));
@@ -143,7 +144,7 @@ export function ReTranslateSettingsPage() {
             <h1 className="text-xl font-semibold tracking-tight text-foreground sm:text-2xl">
               {pageTitle}
             </h1>
-            <Badge variant="outline">v{PLUGIN_VERSION}</Badge>
+            <Badge variant="outline">v{version}</Badge>
             {settings.kill_switch ? (
               <Badge
                 variant="outline"

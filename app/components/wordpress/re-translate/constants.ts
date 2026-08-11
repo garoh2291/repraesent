@@ -48,8 +48,8 @@ export const DEFAULT_SETTINGS: ReTranslateSettings = {
   stats: { source_strings: 0, languages: {} },
 };
 
-/** Version badge — must track `Version:` in re-translate.php. */
-export const PLUGIN_VERSION = "0.1.0";
+/** Version badge — must track `wp_plugins.version` / `Version:` in re-translate.php. */
+export const PLUGIN_VERSION = "1.0.0";
 
 export type TabId =
   | "overview"
