@@ -50,7 +50,8 @@ export type WpPluginSettingsKind =
   | "re-index"
   | "re-maintenance"
   | "re-review"
-  | "re-appointment";
+  | "re-appointment"
+  | "re-translate";
 
 /** A single plugin installed on the workspace's WordPress site. */
 export interface WpPlugin {
@@ -356,6 +357,182 @@ export async function getWorkspaceReAppointmentPickerUrl(
   const res = await apiClient.get<ReAppointmentPickerUrlResponse>(
     `/wordpress/site/plugins/${pluginUuid}/picker-url`,
     { params: { parentOrigin, buttonId } },
+  );
+  return res.data;
+}
+
+/* ── re:translate ────────────────────────────────────────────────────── */
+
+export type TranslateLanguageProgress = {
+  total: number;
+  translated: number;
+  stale: number;
+  percent: number;
+};
+
+export type TranslateContentItem = {
+  id: number | string;
+  object_type: string;
+  title: string;
+  post_type?: string;
+  type_label: string;
+  status: string;
+  strings: number;
+  languages: Record<string, TranslateLanguageProgress>;
+  /** Absolute wp-admin edit URL for posts. Absent for forms/chrome. */
+  edit_url?: string;
+};
+
+export type TranslateContentListResponse = {
+  items: TranslateContentItem[];
+  total: number;
+  has_rf_forms: boolean;
+};
+
+export type TranslateString = {
+  id: number;
+  field_key: string;
+  label: string;
+  source_text: string;
+  current_source_text?: string;
+  translated_text?: string;
+  status: string;
+  is_stale: boolean;
+  is_html: boolean;
+  updated_at?: string;
+};
+
+export type TranslateContentDetailResponse = {
+  item: TranslateContentItem;
+  language: string;
+  strings: TranslateString[];
+  progress: TranslateLanguageProgress;
+};
+
+function pluginUrl(pluginUuid: string, path: string) {
+  return `/wordpress/site/plugins/${encodeURIComponent(pluginUuid)}/${path}`;
+}
+
+export async function getTranslateContent(
+  pluginUuid: string,
+  params: {
+    page?: number;
+    per_page?: number;
+    search?: string;
+    post_type?: string;
+    object_type?: string;
+  },
+): Promise<TranslateContentListResponse> {
+  const res = await apiClient.get<TranslateContentListResponse>(
+    pluginUrl(pluginUuid, "translate-content"),
+    { params },
+  );
+  return res.data;
+}
+
+export async function getTranslateContentDetail(
+  pluginUuid: string,
+  id: number | string,
+  params: { language: string; object_type?: string },
+): Promise<TranslateContentDetailResponse> {
+  const res = await apiClient.get<TranslateContentDetailResponse>(
+    pluginUrl(pluginUuid, `translate-content/${encodeURIComponent(String(id))}`),
+    { params },
+  );
+  return res.data;
+}
+
+export async function addTranslateLanguage(
+  pluginUuid: string,
+  body: { code: string; label?: string; locale?: string; flag?: string },
+): Promise<Record<string, unknown>> {
+  const res = await apiClient.post<Record<string, unknown>>(
+    pluginUrl(pluginUuid, "translate-languages"),
+    body,
+  );
+  return res.data;
+}
+
+export async function removeTranslateLanguage(
+  pluginUuid: string,
+  code: string,
+  purge: boolean,
+): Promise<Record<string, unknown>> {
+  const res = await apiClient.delete<Record<string, unknown>>(
+    pluginUrl(pluginUuid, `translate-languages/${encodeURIComponent(code)}`),
+    { params: { purge } },
+  );
+  return res.data;
+}
+
+export async function saveTranslateStrings(
+  pluginUuid: string,
+  strings: { id: number; translated_text: string; status: string }[],
+): Promise<{ ok?: boolean; strings?: unknown[] }> {
+  const res = await apiClient.post<{ ok?: boolean; strings?: unknown[] }>(
+    pluginUrl(pluginUuid, "translate-strings/save"),
+    { strings },
+  );
+  return res.data;
+}
+
+export async function runTranslateIndex(
+  pluginUuid: string,
+  action: "start" | "batch" | "cancel",
+): Promise<{ ok?: boolean; index?: Record<string, unknown> }> {
+  const res = await apiClient.post<{ ok?: boolean; index?: Record<string, unknown> }>(
+    pluginUrl(pluginUuid, "translate-index"),
+    { action },
+  );
+  return res.data;
+}
+
+export async function setTranslateSourceLanguage(
+  pluginUuid: string,
+  code: string,
+  replaceTarget?: boolean,
+): Promise<Record<string, unknown>> {
+  const res = await apiClient.post<Record<string, unknown>>(
+    pluginUrl(pluginUuid, "translate-source-language"),
+    { code, replace_target: replaceTarget },
+  );
+  return res.data;
+}
+
+export async function machineTranslateContent(
+  pluginUuid: string,
+  id: number | string,
+  language: string,
+  objectType?: string,
+): Promise<Record<string, unknown>> {
+  const res = await apiClient.post<Record<string, unknown>>(
+    pluginUrl(
+      pluginUuid,
+      `translate-content/${encodeURIComponent(String(id))}/machine-translate`,
+    ),
+    { language, object_type: objectType },
+  );
+  return res.data;
+}
+
+export async function importTranslations(
+  pluginUuid: string,
+  csv: string,
+): Promise<Record<string, unknown>> {
+  const res = await apiClient.post<Record<string, unknown>>(
+    pluginUrl(pluginUuid, "translate-import"),
+    { csv },
+  );
+  return res.data;
+}
+
+export async function exportTranslations(
+  pluginUuid: string,
+  params: { language?: string; only?: string },
+): Promise<{ filename?: string; csv?: string }> {
+  const res = await apiClient.get<{ filename?: string; csv?: string }>(
+    pluginUrl(pluginUuid, "translate-export"),
+    { params },
   );
   return res.data;
 }
