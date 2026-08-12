@@ -9,7 +9,10 @@ import { toast } from "sonner";
 import {
   AtSign,
   CheckCircle2,
+  CornerDownRight,
+  ExternalLink,
   Mail,
+  Plus,
   Star,
   Trash2,
   TriangleAlert,
@@ -19,6 +22,7 @@ import i18n from "~/i18n";
 import { useAuthContext } from "~/providers/auth-provider";
 import { extractErrorMessage } from "~/lib/api/axios-instance";
 import {
+  addEmailAlias,
   connectSmtpAccount,
   disconnectEmailAccount,
   getGoogleAuthorizeUrl,
@@ -178,6 +182,65 @@ function createSmtpSchema(t: (key: string) => string) {
 
 type SmtpFormValues = z.infer<ReturnType<typeof createSmtpSchema>>;
 
+function createAliasSchema(t: (key: string) => string) {
+  return z.object({
+    email: z.string().trim().email(t("settings.emailAccounts.invalidEmail")),
+    name: z.string().trim().optional(),
+  });
+}
+
+type AliasFormValues = z.infer<ReturnType<typeof createAliasSchema>>;
+
+/** Where a user manages their Gmail send-as addresses. */
+const GMAIL_SEND_AS_SETTINGS_URL =
+  "https://mail.google.com/mail/u/0/#settings/accounts";
+
+/**
+ * A mailbox and the send-as aliases that borrow its grant.
+ *
+ * The API returns one flat list, ordered default-first then oldest-first, which
+ * would scatter an alias away from the mailbox it belongs to. Nesting them is
+ * what makes "these three addresses are one Google account" legible.
+ */
+interface AccountGroup {
+  parent: EmailAccount;
+  aliases: EmailAccount[];
+}
+
+function groupAccounts(accounts: EmailAccount[]): AccountGroup[] {
+  const aliasesByParent = new Map<string, EmailAccount[]>();
+  for (const account of accounts) {
+    if (!account.parent_account_id) continue;
+    const siblings = aliasesByParent.get(account.parent_account_id) ?? [];
+    siblings.push(account);
+    aliasesByParent.set(account.parent_account_id, siblings);
+  }
+
+  const groups = accounts
+    .filter((a) => !a.parent_account_id)
+    .map((parent) => ({
+      parent,
+      // Alphabetical rather than by creation: within one mailbox the order
+      // people scan for is the address itself.
+      aliases: (aliasesByParent.get(parent.id) ?? []).sort((a, b) =>
+        a.email.localeCompare(b.email),
+      ),
+    }));
+
+  // Disconnecting a mailbox soft-deletes its aliases with it, so an alias whose
+  // parent is absent should not exist. If one ever does, show it as its own row
+  // rather than dropping it — an address the workspace can still be sending
+  // from must not become invisible here.
+  const shown = new Set(groups.flatMap((g) => g.aliases.map((a) => a.id)));
+  for (const account of accounts) {
+    if (account.parent_account_id && !shown.has(account.id)) {
+      groups.push({ parent: account, aliases: [] });
+    }
+  }
+
+  return groups;
+}
+
 export default function SettingsEmailAccounts() {
   const { t } = useTranslation();
   useDocumentMeta({
@@ -199,6 +262,9 @@ export default function SettingsEmailAccounts() {
   } | null>(null);
   const [pendingDisconnect, setPendingDisconnect] =
     useState<EmailAccount | null>(null);
+  /** The mailbox an alias is being added to; null when the dialog is closed. */
+  const [aliasParent, setAliasParent] = useState<EmailAccount | null>(null);
+  const [aliasAdded, setAliasAdded] = useState<string | null>(null);
 
   const { data: accounts, isPending } = useQuery({
     queryKey: ["email-accounts"],
@@ -308,7 +374,48 @@ export default function SettingsEmailAccounts() {
     onError: (error) => toast.error(extractErrorMessage(error)),
   });
 
+  const aliasSchema = useMemo(() => createAliasSchema(t), [t]);
+  const aliasForm = useForm<AliasFormValues>({
+    resolver: zodResolver(aliasSchema),
+    defaultValues: { email: "", name: "" },
+    mode: "onSubmit",
+  });
+
+  const aliasMutation = useMutation({
+    mutationFn: ({
+      parentId,
+      values,
+    }: {
+      parentId: string;
+      values: AliasFormValues;
+    }) =>
+      addEmailAlias(parentId, {
+        email: values.email,
+        name: values.name?.trim() || undefined,
+      }),
+    onSuccess: async (created) => {
+      await invalidate();
+      // A banner, not a toast: the one thing that matters here is checking the
+      // From line on the test message, and a notice that fades in four seconds
+      // is gone before the mail has arrived.
+      setAliasAdded(created.email);
+      setAliasParent(null);
+      aliasForm.reset();
+    },
+    // The server only rejects after Google refused the send, so its message is
+    // specific and worth showing verbatim.
+    onError: (error) => toast.error(extractErrorMessage(error)),
+  });
+
   const connected = accounts ?? [];
+  const groups = useMemo(() => groupAccounts(connected), [connected]);
+
+  // Aliases the pending disconnect would take down with it. Zero when the
+  // pending row is itself an alias, which has no children.
+  const doomedAliasCount = pendingDisconnect
+    ? connected.filter((a) => a.parent_account_id === pendingDisconnect.id)
+        .length
+    : 0;
 
   return (
     <div className="space-y-6 sm:space-y-8 app-fade-up app-fade-up-d2">
@@ -316,6 +423,16 @@ export default function SettingsEmailAccounts() {
         <GoogleResultBanner
           result={googleResult}
           onDismiss={() => setGoogleResult(null)}
+        />
+      ) : null}
+
+      {aliasAdded ? (
+        <ResultBanner
+          ok
+          message={t("settings.emailAccounts.aliasAddedBanner", {
+            email: aliasAdded,
+          })}
+          onDismiss={() => setAliasAdded(null)}
         />
       ) : null}
 
@@ -346,21 +463,64 @@ export default function SettingsEmailAccounts() {
           />
         ) : (
           <div className="overflow-hidden rounded-2xl border border-border bg-card">
-            {connected.map((account, i) => (
-              <AccountRow
-                key={account.id}
-                account={account}
-                isFirst={i === 0}
-                canEdit={canEdit}
-                busy={defaultMutation.isPending || disconnectMutation.isPending}
-                onSetDefault={() => defaultMutation.mutate(account.id)}
-                onDisconnect={() => setPendingDisconnect(account)}
-                onReconnect={handleConnectGoogle}
-              />
-            ))}
+            {groups.map(({ parent, aliases }, i) => {
+              const busy =
+                defaultMutation.isPending || disconnectMutation.isPending;
+              // Only a Google mailbox the workspace connected itself can take
+              // aliases: SMTP servers decide their own From rules, and an
+              // admin-provisioned mailbox is not the member's to extend.
+              const canAddAlias =
+                canEdit &&
+                parent.provider === "google" &&
+                parent.source !== "admin";
+
+              return (
+                <div key={parent.id}>
+                  <AccountRow
+                    account={parent}
+                    isFirst={i === 0}
+                    canEdit={canEdit}
+                    busy={busy}
+                    onSetDefault={() => defaultMutation.mutate(parent.id)}
+                    onDisconnect={() => setPendingDisconnect(parent)}
+                    onReconnect={handleConnectGoogle}
+                  />
+                  {aliases.map((alias) => (
+                    <AliasRow
+                      key={alias.id}
+                      alias={alias}
+                      canEdit={canEdit}
+                      busy={busy}
+                      onSetDefault={() => defaultMutation.mutate(alias.id)}
+                      onRemove={() => setPendingDisconnect(alias)}
+                    />
+                  ))}
+                  {canAddAlias ? (
+                    <AddAliasRow onClick={() => setAliasParent(parent)} />
+                  ) : null}
+                </div>
+              );
+            })}
           </div>
         )}
       </SettingsSection>
+
+      <AddAliasDialog
+        parent={aliasParent}
+        onOpenChange={(open) => {
+          if (!open) {
+            aliasForm.reset();
+            setAliasParent(null);
+          }
+        }}
+        form={aliasForm}
+        pending={aliasMutation.isPending}
+        onSubmit={(values) => {
+          if (aliasParent) {
+            aliasMutation.mutate({ parentId: aliasParent.id, values });
+          }
+        }}
+      />
 
       <ConnectSmtpDialog
         open={connectOpen}
@@ -385,12 +545,26 @@ export default function SettingsEmailAccounts() {
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>
-              {t("settings.emailAccounts.disconnectTitle")}
+              {pendingDisconnect?.parent_account_id
+                ? t("settings.emailAccounts.removeAliasTitle")
+                : t("settings.emailAccounts.disconnectTitle")}
             </AlertDialogTitle>
             <AlertDialogDescription>
-              {t("settings.emailAccounts.disconnectBody", {
-                email: pendingDisconnect?.email ?? "",
-              })}
+              {pendingDisconnect?.parent_account_id
+                ? t("settings.emailAccounts.removeAliasBody", {
+                    email: pendingDisconnect.email,
+                  })
+                : t("settings.emailAccounts.disconnectBody", {
+                    email: pendingDisconnect?.email ?? "",
+                  })}
+              {/* Disconnecting a mailbox takes its aliases with it — they send
+                  with its grant and cannot outlive it. Saying so here is the
+                  only chance the user gets before the rows disappear. */}
+              {doomedAliasCount > 0
+                ? ` ${t("settings.emailAccounts.disconnectAliasWarning", {
+                    count: doomedAliasCount,
+                  })}`
+                : ""}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -404,7 +578,9 @@ export default function SettingsEmailAccounts() {
             >
               {disconnectMutation.isPending
                 ? t("common.saving")
-                : t("settings.emailAccounts.disconnect")}
+                : pendingDisconnect?.parent_account_id
+                  ? t("settings.emailAccounts.removeAlias")
+                  : t("settings.emailAccounts.disconnect")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -461,30 +637,24 @@ function ConnectActions({
 }
 
 /**
- * The outcome of a Google round trip.
+ * A dismissible outcome notice.
  *
- * A banner rather than a toast: the user has just been bounced through two
- * page loads on another site, and a notice that fades after four seconds is
- * easy to arrive too late for.
+ * A banner rather than a toast wherever the result is something the user has to
+ * act on — after a Google round trip they have just been bounced through two
+ * page loads on another site, and after adding an alias the thing to check has
+ * not even arrived in their inbox yet. Four seconds is not long enough for
+ * either.
  */
-function GoogleResultBanner({
-  result,
+function ResultBanner({
+  ok,
+  message,
   onDismiss,
 }: {
-  result: { outcome: GoogleOutcome; email?: string; reason?: string };
+  ok: boolean;
+  message: string;
   onDismiss: () => void;
 }) {
   const { t } = useTranslation();
-  const ok = result.outcome === "connected";
-
-  const message = ok
-    ? t("settings.emailAccounts.googleConnected", { email: result.email ?? "" })
-    : result.outcome === "failed" && result.reason
-      ? // The server's reason is already a user-facing sentence — it explains
-        // things a generic message cannot, like an unticked send permission.
-        result.reason
-      : t(`settings.emailAccounts.google_${result.outcome}`);
-
   return (
     <div
       role="status"
@@ -510,6 +680,28 @@ function GoogleResultBanner({
       </button>
     </div>
   );
+}
+
+/** The outcome of a Google round trip. */
+function GoogleResultBanner({
+  result,
+  onDismiss,
+}: {
+  result: { outcome: GoogleOutcome; email?: string; reason?: string };
+  onDismiss: () => void;
+}) {
+  const { t } = useTranslation();
+  const ok = result.outcome === "connected";
+
+  const message = ok
+    ? t("settings.emailAccounts.googleConnected", { email: result.email ?? "" })
+    : result.outcome === "failed" && result.reason
+      ? // The server's reason is already a user-facing sentence — it explains
+        // things a generic message cannot, like an unticked send permission.
+        result.reason
+      : t(`settings.emailAccounts.google_${result.outcome}`);
+
+  return <ResultBanner ok={ok} message={message} onDismiss={onDismiss} />;
 }
 
 function EmptyState({
@@ -668,6 +860,241 @@ function AccountRow({
         </div>
       ) : null}
     </div>
+  );
+}
+
+/**
+ * A Gmail send-as alias, nested under the mailbox it sends through.
+ *
+ * Indented to sit under the parent's text rather than its icon, so the visual
+ * line is "these addresses belong to that account" — the alias has no
+ * credentials of its own and disappears if the mailbox is disconnected.
+ *
+ * No Reconnect button: a dead grant belongs to the mailbox, and the parent row
+ * directly above already offers the one action that fixes it. The badge still
+ * shows here because `auth_failed_at` is inherited, and an alias that cannot
+ * send needs to say so.
+ */
+function AliasRow({
+  alias,
+  canEdit,
+  busy,
+  onSetDefault,
+  onRemove,
+}: {
+  alias: EmailAccount;
+  canEdit: boolean;
+  busy: boolean;
+  onSetDefault: () => void;
+  onRemove: () => void;
+}) {
+  const { t } = useTranslation();
+
+  return (
+    <div className="flex flex-col gap-3 border-t border-border bg-muted/20 px-4 py-3 sm:flex-row sm:items-center sm:px-5 sm:pl-14">
+      <div className="flex min-w-0 flex-1 items-center gap-3">
+        <CornerDownRight
+          aria-hidden
+          className="h-4 w-4 shrink-0 text-muted-foreground"
+        />
+        <div className="min-w-0 flex-1">
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="truncate text-sm font-medium">{alias.email}</span>
+            <span className="rounded-full border border-border bg-muted/50 px-2 py-0.5 text-[11px] font-medium text-muted-foreground">
+              {t("settings.emailAccounts.aliasLabel")}
+            </span>
+            {alias.is_default ? (
+              <span className="rounded-full border border-emerald-300 bg-emerald-50 px-2 py-0.5 text-[11px] font-medium text-emerald-800 dark:border-emerald-500/40 dark:bg-emerald-500/10 dark:text-emerald-300">
+                {t("settings.emailAccounts.default")}
+              </span>
+            ) : null}
+            {alias.auth_failed_at ? (
+              <span className="inline-flex items-center gap-1 rounded-full border border-amber-400/40 bg-amber-400/10 px-2 py-0.5 text-[11px] font-medium text-amber-700 dark:text-amber-300">
+                <TriangleAlert className="h-3 w-3" />
+                {t("settings.emailAccounts.needsReconnect")}
+              </span>
+            ) : null}
+          </div>
+          <p className="mt-0.5 truncate text-xs text-muted-foreground">
+            {alias.name}
+          </p>
+        </div>
+      </div>
+
+      {canEdit ? (
+        <div className="flex shrink-0 flex-wrap items-center gap-1.5">
+          {!alias.is_default ? (
+            <button
+              type="button"
+              onClick={onSetDefault}
+              disabled={busy}
+              title={t("settings.emailAccounts.makeDefault")}
+              aria-label={t("settings.emailAccounts.makeDefault")}
+              className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-border bg-muted/40 px-2.5 text-xs transition-colors hover:bg-muted disabled:opacity-50"
+            >
+              <Star className="h-3.5 w-3.5" />
+              {t("settings.emailAccounts.makeDefault")}
+            </button>
+          ) : null}
+          <button
+            type="button"
+            onClick={onRemove}
+            disabled={busy}
+            title={t("settings.emailAccounts.removeAlias")}
+            aria-label={t("settings.emailAccounts.removeAlias")}
+            className="rounded-lg p-2 text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive disabled:opacity-50"
+          >
+            <Trash2 className="h-4 w-4" />
+          </button>
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
+/**
+ * The add affordance, as the last child of a mailbox's alias list.
+ *
+ * Deliberately not another button in the parent row's action cluster: that
+ * already carries up to three and wraps onto a second line on a phone. Sitting
+ * here it also lands in the same place whether the mailbox has aliases or not.
+ */
+function AddAliasRow({ onClick }: { onClick: () => void }) {
+  const { t } = useTranslation();
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="flex w-full items-center gap-3 border-t border-border px-4 py-2.5 text-left text-xs font-medium text-muted-foreground transition-colors hover:bg-muted/40 hover:text-foreground sm:px-5 sm:pl-14"
+    >
+      <Plus aria-hidden className="h-4 w-4 shrink-0" />
+      {t("settings.emailAccounts.addAlias")}
+    </button>
+  );
+}
+
+/**
+ * Add a send-as alias to a Google mailbox.
+ *
+ * The address is typed rather than picked from a list because reading an
+ * account's send-as addresses out of Gmail needs a restricted OAuth scope. The
+ * hint below therefore carries real weight: if the address is not already set
+ * up in Gmail, nothing here can make it work.
+ */
+function AddAliasDialog({
+  parent,
+  onOpenChange,
+  form,
+  pending,
+  onSubmit,
+}: {
+  parent: EmailAccount | null;
+  onOpenChange: (open: boolean) => void;
+  form: UseFormReturn<AliasFormValues>;
+  pending: boolean;
+  onSubmit: (values: AliasFormValues) => void;
+}) {
+  const { t } = useTranslation();
+
+  return (
+    <Dialog open={parent !== null} onOpenChange={onOpenChange}>
+      <DialogContent className="max-h-[calc(100svh-2rem)] overflow-y-auto sm:max-w-lg">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <CornerDownRight className="h-4 w-4" />
+            {t("settings.emailAccounts.addAliasTitle")}
+          </DialogTitle>
+          <DialogDescription>
+            {t("settings.emailAccounts.addAliasDescription", {
+              email: parent?.email ?? "",
+            })}
+          </DialogDescription>
+        </DialogHeader>
+
+        <div className="rounded-xl border border-border bg-muted/40 p-3 text-xs text-muted-foreground">
+          <p>{t("settings.emailAccounts.aliasGmailHint")}</p>
+          <a
+            href={GMAIL_SEND_AS_SETTINGS_URL}
+            target="_blank"
+            rel="noreferrer"
+            className="mt-1.5 inline-flex items-center gap-1 font-medium text-foreground underline underline-offset-2"
+          >
+            {t("settings.emailAccounts.aliasGmailLink")}
+            <ExternalLink className="h-3 w-3" />
+          </a>
+        </div>
+
+        <Form {...form}>
+          <form
+            onSubmit={form.handleSubmit(onSubmit)}
+            className="space-y-4"
+            id="add-alias-form"
+          >
+            <FormField
+              control={form.control}
+              name="email"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>
+                    {t("settings.emailAccounts.aliasEmailLabel")}
+                  </FormLabel>
+                  <FormControl>
+                    <Input
+                      {...field}
+                      placeholder="sales@yourbrand.com"
+                      autoComplete="off"
+                      disabled={pending}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="name"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>
+                    {t("settings.emailAccounts.aliasNameLabel")}
+                  </FormLabel>
+                  <FormControl>
+                    <Input
+                      {...field}
+                      placeholder={parent?.name ?? ""}
+                      autoComplete="off"
+                      disabled={pending}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </form>
+        </Form>
+
+        <DialogFooter>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => onOpenChange(false)}
+            disabled={pending}
+          >
+            {t("common.cancel")}
+          </Button>
+          <Button
+            type="submit"
+            form="add-alias-form"
+            disabled={pending}
+            className="bg-foreground text-background hover:bg-foreground/90 hover:text-background"
+          >
+            {pending
+              ? t("settings.emailAccounts.aliasSending")
+              : t("settings.emailAccounts.addAliasSubmit")}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }
 

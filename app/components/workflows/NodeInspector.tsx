@@ -24,6 +24,7 @@ import type {
   TriggerConfig,
   WorkflowNode,
 } from "~/lib/api/workflows";
+import { sortAccountsWithAliases } from "~/lib/api/email-accounts";
 import { ConditionBuilder } from "./ConditionBuilder";
 import { ResolvedHint } from "./ResolvedHint";
 import { EmailTemplateEditor } from "./EmailTemplateEditor";
@@ -187,12 +188,14 @@ export function NodeInspector({
                   <SelectItem value="__default__">
                     {t("workflows.email.sendFromDefault")}
                   </SelectItem>
-                  {capability.accounts.map((a) => (
+                  {sortAccountsWithAliases(capability.accounts).map((a) => (
                     <SelectItem
                       key={a.id}
                       value={a.id}
                       disabled={!!a.auth_failed_at}
                     >
+                      {/* An alias sends through the mailbox above it. */}
+                      {a.parent_account_id ? "↳ " : ""}
                       {a.email}
                       {a.auth_failed_at
                         ? ` — ${t("workflows.email.accountBroken")}`
