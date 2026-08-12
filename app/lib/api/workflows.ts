@@ -246,7 +246,10 @@ export interface OutboundCapability {
     provider: string;
     source: string;
     is_default: boolean;
+    /** Inherited from the parent mailbox on a Gmail send-as alias. */
     auth_failed_at: string | null;
+    /** Set on a Gmail send-as alias: the mailbox whose grant it sends with. */
+    parent_account_id: string | null;
   }[];
   legacyOnly: boolean;
 }

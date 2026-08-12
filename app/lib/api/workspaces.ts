@@ -150,8 +150,16 @@ export interface WorkspaceEmailAccountSummary {
   provider: "smtp" | "google";
   /** `admin` = provisioned by Repraesent; `user` = connected in Settings. */
   source: "admin" | "user";
-  /** Non-null once a Google grant is revoked or expired — the account needs reconnecting. */
+  /**
+   * Non-null once a Google grant is revoked or expired — the account needs
+   * reconnecting. Inherited from the parent mailbox on a send-as alias.
+   */
   auth_failed_at: string | null;
+  /**
+   * Null on a real mailbox. On a Gmail send-as alias, the id of the mailbox it
+   * sends through — pickers use it to nest the alias under its mailbox.
+   */
+  parent_account_id: string | null;
   /** Null on Google accounts, which have no SMTP endpoint. */
   smtp_server: string | null;
   smtp_port_ssl: number | null;
