@@ -103,12 +103,34 @@ export interface DealContact {
   primary_phone: string | null;
 }
 
+/** A Stripe catalogue line item on a deal. */
+export interface DealProduct {
+  id: string;
+  stripe_product_id: string;
+  stripe_price_id: string;
+  quantity: number;
+  /** Live from Stripe when reachable, otherwise the attach-time snapshot. */
+  name: string;
+  unit_amount: number | null;
+  currency: string | null;
+  line_total: number | null;
+  /**
+   * Stripe could not confirm this line — archived, deleted, or the account is
+   * disconnected. Rendered from the snapshot rather than dropped.
+   */
+  stale: boolean;
+  price_active: boolean | null;
+  created_at: string;
+}
+
 export type DealDetailResponse = {
   deal: Record<string, unknown>;
   /** Primary contact (mirrors deals.contact_id); kept for backward compatibility. */
   contact: Record<string, unknown> | null;
   /** All contacts attached to the deal, primary first. */
   contacts: DealContact[];
+  /** Stripe catalogue line items. Empty when nothing is attached. */
+  products: DealProduct[];
 };
 
 export async function getDeal(dealId: string): Promise<DealDetailResponse> {
@@ -193,6 +215,47 @@ export async function detachDealContact(
 ): Promise<DealDetailResponse> {
   const res = await apiClient.delete<DealDetailResponse>(
     `/deals/${dealId}/contacts/${encodeURIComponent(contactId)}`,
+  );
+  return res.data;
+}
+
+/**
+ * Attach a Stripe price to a deal.
+ *
+ * Attaching a price already on the deal increases its quantity rather than
+ * failing, and the server recomputes `deals.value` from the resulting lines —
+ * which is why all four of these return the full refreshed detail payload.
+ */
+export async function attachDealProduct(
+  dealId: string,
+  stripePriceId: string,
+  quantity = 1,
+): Promise<DealDetailResponse> {
+  const res = await apiClient.post<DealDetailResponse>(
+    `/deals/${dealId}/products`,
+    { stripe_price_id: stripePriceId, quantity },
+  );
+  return res.data;
+}
+
+export async function setDealProductQuantity(
+  dealId: string,
+  lineId: string,
+  quantity: number,
+): Promise<DealDetailResponse> {
+  const res = await apiClient.patch<DealDetailResponse>(
+    `/deals/${dealId}/products/${encodeURIComponent(lineId)}`,
+    { quantity },
+  );
+  return res.data;
+}
+
+export async function detachDealProduct(
+  dealId: string,
+  lineId: string,
+): Promise<DealDetailResponse> {
+  const res = await apiClient.delete<DealDetailResponse>(
+    `/deals/${dealId}/products/${encodeURIComponent(lineId)}`,
   );
   return res.data;
 }

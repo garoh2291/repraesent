@@ -23,7 +23,7 @@ export function TrialBanner({ workspaceId: _workspaceId }: Props) {
           components={[
             <Link
               key="link"
-              to="/products"
+              to="/billing"
               className="underline font-semibold hover:no-underline"
             />,
           ]}

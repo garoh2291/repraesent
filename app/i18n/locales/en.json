@@ -59,7 +59,8 @@
     "mail": "Mail",
     "wordpress": "Website",
     "forms": "Forms",
-    "workflows": "Workflows"
+    "workflows": "Workflows",
+    "stripeProducts": "Products"
   },
   "db_brand": {
     "subtitle": "Pick a retailer from the sidebar to view its Social Ads & Leads.",
@@ -484,6 +485,24 @@
       "saveFailed": "Could not save deal.",
       "contactFailed": "Could not update contact on deal.",
       "deleteFailed": "Could not delete deal."
+    },
+    "products": {
+      "title": "Products",
+      "subtitle": "Line items from Stripe. The deal value follows their total.",
+      "add": "Add product",
+      "empty": "No products on this deal yet.",
+      "subtotal": "Subtotal",
+      "attached": "Product added.",
+      "removed": "Product removed.",
+      "remove": "Remove product",
+      "increase": "Increase quantity",
+      "decrease": "Decrease quantity",
+      "attachTitle": "Add a product",
+      "attachDescription": "Search your Stripe catalogue. Adding one recalculates the deal value.",
+      "nothingToAdd": "Nothing left to add. Products need a price before they can go on a deal.",
+      "notConnected": "No Stripe account is connected to this workspace yet.",
+      "staleHint": "Stripe could not confirm this line. Showing the price saved when it was added.",
+      "archivedHint": "This price is archived in Stripe."
     }
   },
   "appointments": {
@@ -768,7 +787,8 @@
       "profile": "Profile",
       "areaSettings": "Area Settings",
       "bcc": "Email Logging",
-      "emailAccounts": "Email accounts"
+      "emailAccounts": "Email accounts",
+      "integrations": "Integrations"
     },
     "bcc": {
       "metaTitle": "Email logging",
@@ -961,6 +981,29 @@
       "required": "This field is required",
       "invalidEmail": "Enter a valid email address",
       "invalidPort": "Enter a port between 1 and 65535"
+    },
+    "integrations": {
+      "metaTitle": "Integrations",
+      "metaDescription": "Connect third-party accounts to this workspace.",
+      "sectionLabel": "Connected apps",
+      "sectionDescription": "Connect a third-party account to this workspace. One account per app.",
+      "empty": "No integrations are available yet.",
+      "connect": "Connect",
+      "disconnect": "Disconnect",
+      "connected": "Connected",
+      "disconnected": "Account disconnected",
+      "testMode": "Test mode",
+      "needsReconnect": "Reconnect needed",
+      "notConfigured": "This integration is not fully set up yet. Contact support.",
+      "adminOnly": "Only workspace admins can change this.",
+      "disconnectTitle": "Disconnect account?",
+      "disconnectBody": "Your products will stay in {{name}} — this workspace just loses access to them. Products already attached to deals keep their saved name and price. You can reconnect at any time.",
+      "outcome": {
+        "connected": "Connected {{account}}.",
+        "denied": "You cancelled the connection.",
+        "expired": "That link expired. Please try connecting again.",
+        "failed": "Connection failed{{reason}}"
+      }
     }
   },
   "booking": {
@@ -3599,5 +3642,98 @@
       "no": "No",
       "empty": "Nothing here — the run ends."
     }
+  },
+  "stripeProducts": {
+    "metaTitle": "Products",
+    "metaDescription": "Manage the product catalogue in your connected Stripe account.",
+    "title": "Products",
+    "subtitle": "Your Stripe catalogue, live.",
+    "testMode": "Test mode",
+    "new": "New product",
+    "searchPlaceholder": "Search products…",
+    "filterActive": "Active",
+    "filterArchived": "Archived",
+    "filterAll": "All",
+    "empty": "No products yet.",
+    "noResults": "No products match that search.",
+    "noPrice": "No price",
+    "archived": "Archived",
+    "restore": "Restore",
+    "archive": "Archive",
+    "deleted": "Product deleted",
+    "archivedInstead": "Product had prices, so Stripe archived it instead of deleting.",
+    "deleteTitle": "Delete product?",
+    "deleteBody": "Stripe cannot delete a product that has prices — those get archived instead, staying on past invoices but no longer sellable. This happens in your Stripe account.",
+    "notConnectedTitle": "Connect Stripe to manage products",
+    "notConnectedBody": "This page reads your Stripe catalogue directly. Connect an account to get started.",
+    "goToIntegrations": "Go to Integrations",
+    "editTitle": "Edit product",
+    "newTitle": "New product",
+    "sheetDescription": "Saved straight to your Stripe account. Nothing is stored here.",
+    "general": "General",
+    "pricing": "Pricing",
+    "shipping": "Shipping & stock",
+    "advanced": "Advanced",
+    "name": "Name",
+    "nameRequired": "Name is required",
+    "description": "Description",
+    "kind": "Type",
+    "kinds": {
+      "physical": "Physical good",
+      "digital": "Digital good",
+      "service": "Service"
+    },
+    "category": "Category",
+    "categoryHint": "Your own label, for grouping.",
+    "images": "Images",
+    "imagesHint": "Up to 8. Uploaded to your Stripe account, which hosts them.",
+    "active": "Active",
+    "activeHint": "Inactive products stay on past invoices but cannot be sold.",
+    "inventory": "Stock on hand",
+    "inventoryHint": "Stripe has no inventory system — this is a note stored on the product and nothing decrements it.",
+    "inStock": "{{count}} in stock",
+    "dim": {
+      "length": "Length (in)",
+      "width": "Width (in)",
+      "height": "Height (in)",
+      "weight": "Weight (oz)"
+    },
+    "dimHint": "Stripe needs all four dimensions or none of them.",
+    "unitLabel": "Unit label",
+    "statementDescriptor": "Statement descriptor",
+    "statementHint": "Max 22 characters.",
+    "taxCode": "Tax category",
+    "taxCodeNone": "None",
+    "url": "Product URL",
+    "amount": "Amount",
+    "currency": "Currency",
+    "billing": "Billing",
+    "oneTime": "one-time",
+    "interval": {
+      "day": "per day",
+      "week": "per week",
+      "month": "per month",
+      "year": "per year"
+    },
+    "priceNickname": "Price label (optional)",
+    "setAsDefault": "Make this the default price",
+    "defaultPrice": "Default",
+    "makeDefault": "Make default",
+    "addPrice": "Add price",
+    "priceAdded": "Price added",
+    "noPrices": "No prices yet.",
+    "priceImmutable": "Stripe prices cannot be edited. To change an amount, add a new price and archive the old one.",
+    "invalidAmount": "Enter a valid amount",
+    "create": "Create product",
+    "created": "Product created",
+    "saved": "Product saved",
+    "chooseFile": "Choose file",
+    "uploading": "Uploading…",
+    "imageCount": "{{used}} of {{max}}",
+    "orPasteUrl": "…or paste an image URL",
+    "removeImage": "Remove image",
+    "mainImage": "Main",
+    "tooManyImages": "Stripe allows at most {{count}} images per product.",
+    "imageTooLarge": "{{name}} is larger than 5 MB."
   }
 }

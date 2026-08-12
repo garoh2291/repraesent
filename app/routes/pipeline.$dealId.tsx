@@ -50,6 +50,7 @@ import {
   AlertDialogTitle,
 } from "~/components/ui/alert-dialog";
 import { DealContactSection } from "~/components/organism/deal-contact-section";
+import { DealProductsSection } from "~/components/organism/deal-products-section";
 import type { WorkspaceMemberItem } from "~/components/organism/tasks/task-form-modal";
 import {
   DatePickerPopover,
@@ -178,6 +179,7 @@ export default function PipelineDealDetailPage() {
   const deal = dealQuery.data?.deal;
   const contact = dealQuery.data?.contact;
   const dealContacts = dealQuery.data?.contacts ?? [];
+  const dealProducts = dealQuery.data?.products ?? [];
 
   const dealHistoryQuery = useQuery({
     queryKey: ["deal-history", dealId],
@@ -765,6 +767,14 @@ export default function PipelineDealDetailPage() {
             <DealContactSection
               dealId={dealId}
               contacts={dealContacts}
+              canEdit={canEdit}
+            />
+
+            {/* Products — same attachment idiom as contacts, and the source of
+                the deal value once anything is on it. */}
+            <DealProductsSection
+              dealId={dealId}
+              products={dealProducts}
               canEdit={canEdit}
             />
 

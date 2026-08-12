@@ -59,7 +59,8 @@
     "mail": "Mail",
     "wordpress": "Website",
     "forms": "Formulieren",
-    "workflows": "Workflows"
+    "workflows": "Workflows",
+    "stripeProducts": "Producten"
   },
   "db_brand": {
     "subtitle": "Kies een retailer in de zijbalk om de Social Ads en Leads te bekijken.",
@@ -484,6 +485,24 @@
       "saveFailed": "Kon de deal niet opslaan.",
       "contactFailed": "Kon het contact op de deal niet bijwerken.",
       "deleteFailed": "Kon de deal niet verwijderen."
+    },
+    "products": {
+      "title": "Producten",
+      "subtitle": "Regels uit Stripe. De dealwaarde volgt hun totaal.",
+      "add": "Product toevoegen",
+      "empty": "Nog geen producten op deze deal.",
+      "subtotal": "Subtotaal",
+      "attached": "Product toegevoegd.",
+      "removed": "Product verwijderd.",
+      "remove": "Product verwijderen",
+      "increase": "Aantal verhogen",
+      "decrease": "Aantal verlagen",
+      "attachTitle": "Product toevoegen",
+      "attachDescription": "Doorzoek je Stripe-catalogus. Toevoegen herberekent de dealwaarde.",
+      "nothingToAdd": "Niets meer om toe te voegen. Producten hebben een prijs nodig voordat ze aan een deal kunnen.",
+      "notConnected": "Er is nog geen Stripe-account aan deze werkruimte gekoppeld.",
+      "staleHint": "Stripe kon deze regel niet bevestigen. De prijs van het moment van toevoegen wordt getoond.",
+      "archivedHint": "Deze prijs is gearchiveerd in Stripe."
     }
   },
   "appointments": {
@@ -768,7 +787,8 @@
       "profile": "Profiel",
       "areaSettings": "Gebiedsinstellingen",
       "bcc": "E-maillogging",
-      "emailAccounts": "E-mailaccounts"
+      "emailAccounts": "E-mailaccounts",
+      "integrations": "Integraties"
     },
     "bcc": {
       "metaTitle": "E-maillogging",
@@ -961,6 +981,29 @@
       "required": "Dit veld is verplicht",
       "invalidEmail": "Voer een geldig e-mailadres in",
       "invalidPort": "Voer een poort tussen 1 en 65535 in"
+    },
+    "integrations": {
+      "metaTitle": "Integraties",
+      "metaDescription": "Koppel externe accounts aan deze werkruimte.",
+      "sectionLabel": "Gekoppelde apps",
+      "sectionDescription": "Koppel een extern account aan deze werkruimte. Eén account per app.",
+      "empty": "Er zijn nog geen integraties beschikbaar.",
+      "connect": "Koppelen",
+      "disconnect": "Ontkoppelen",
+      "connected": "Gekoppeld",
+      "disconnected": "Account ontkoppeld",
+      "testMode": "Testmodus",
+      "needsReconnect": "Opnieuw koppelen nodig",
+      "notConfigured": "Deze integratie is nog niet volledig ingesteld. Neem contact op met support.",
+      "adminOnly": "Alleen beheerders van de werkruimte kunnen dit wijzigen.",
+      "disconnectTitle": "Account ontkoppelen?",
+      "disconnectBody": "Je producten blijven in {{name}} — deze werkruimte verliest alleen de toegang. Producten die al aan deals hangen behouden hun opgeslagen naam en prijs. Je kunt op elk moment opnieuw koppelen.",
+      "outcome": {
+        "connected": "{{account}} gekoppeld.",
+        "denied": "Je hebt de koppeling geannuleerd.",
+        "expired": "Die link is verlopen. Probeer het opnieuw.",
+        "failed": "Koppelen mislukt{{reason}}"
+      }
     }
   },
   "booking": {
@@ -3599,5 +3642,98 @@
       "no": "Nee",
       "empty": "Niets hier — de uitvoering stopt."
     }
+  },
+  "stripeProducts": {
+    "metaTitle": "Producten",
+    "metaDescription": "Beheer de productcatalogus in je gekoppelde Stripe-account.",
+    "title": "Producten",
+    "subtitle": "Je Stripe-catalogus, live.",
+    "testMode": "Testmodus",
+    "new": "Nieuw product",
+    "searchPlaceholder": "Producten zoeken…",
+    "filterActive": "Actief",
+    "filterArchived": "Gearchiveerd",
+    "filterAll": "Alles",
+    "empty": "Nog geen producten.",
+    "noResults": "Geen producten gevonden voor deze zoekopdracht.",
+    "noPrice": "Geen prijs",
+    "archived": "Gearchiveerd",
+    "restore": "Herstellen",
+    "archive": "Archiveren",
+    "deleted": "Product verwijderd",
+    "archivedInstead": "Het product had prijzen, dus Stripe heeft het gearchiveerd in plaats van verwijderd.",
+    "deleteTitle": "Product verwijderen?",
+    "deleteBody": "Stripe kan een product met prijzen niet verwijderen — het wordt in plaats daarvan gearchiveerd, blijft op oude facturen staan en is niet meer verkoopbaar. Dit gebeurt in je Stripe-account.",
+    "notConnectedTitle": "Koppel Stripe om producten te beheren",
+    "notConnectedBody": "Deze pagina leest je Stripe-catalogus rechtstreeks. Koppel een account om te beginnen.",
+    "goToIntegrations": "Naar integraties",
+    "editTitle": "Product bewerken",
+    "newTitle": "Nieuw product",
+    "sheetDescription": "Wordt direct in je Stripe-account opgeslagen. Hier wordt niets bewaard.",
+    "general": "Algemeen",
+    "pricing": "Prijzen",
+    "shipping": "Verzending & voorraad",
+    "advanced": "Geavanceerd",
+    "name": "Naam",
+    "nameRequired": "Naam is verplicht",
+    "description": "Omschrijving",
+    "kind": "Type",
+    "kinds": {
+      "physical": "Fysiek product",
+      "digital": "Digitaal product",
+      "service": "Dienst"
+    },
+    "category": "Categorie",
+    "categoryHint": "Je eigen label, om te groeperen.",
+    "images": "Afbeeldingen",
+    "imagesHint": "Maximaal 8. Geüpload naar je Stripe-account, dat ze host.",
+    "active": "Actief",
+    "activeHint": "Inactieve producten blijven op oude facturen staan maar kunnen niet worden verkocht.",
+    "inventory": "Voorraad",
+    "inventoryHint": "Stripe heeft geen voorraadbeheer — dit is een notitie bij het product en wordt nergens automatisch verlaagd.",
+    "inStock": "{{count}} op voorraad",
+    "dim": {
+      "length": "Lengte (in)",
+      "width": "Breedte (in)",
+      "height": "Hoogte (in)",
+      "weight": "Gewicht (oz)"
+    },
+    "dimHint": "Stripe heeft alle vier de maten nodig, of geen enkele.",
+    "unitLabel": "Eenheidslabel",
+    "statementDescriptor": "Omschrijving op afschrift",
+    "statementHint": "Maximaal 22 tekens.",
+    "taxCode": "Belastingcategorie",
+    "taxCodeNone": "Geen",
+    "url": "Product-URL",
+    "amount": "Bedrag",
+    "currency": "Valuta",
+    "billing": "Facturering",
+    "oneTime": "eenmalig",
+    "interval": {
+      "day": "per dag",
+      "week": "per week",
+      "month": "per maand",
+      "year": "per jaar"
+    },
+    "priceNickname": "Prijslabel (optioneel)",
+    "setAsDefault": "Instellen als standaardprijs",
+    "defaultPrice": "Standaard",
+    "makeDefault": "Als standaard instellen",
+    "addPrice": "Prijs toevoegen",
+    "priceAdded": "Prijs toegevoegd",
+    "noPrices": "Nog geen prijzen.",
+    "priceImmutable": "Stripe-prijzen kunnen niet worden bewerkt. Voeg een nieuwe prijs toe en archiveer de oude om een bedrag te wijzigen.",
+    "invalidAmount": "Voer een geldig bedrag in",
+    "create": "Product aanmaken",
+    "created": "Product aangemaakt",
+    "saved": "Product opgeslagen",
+    "chooseFile": "Bestand kiezen",
+    "uploading": "Uploaden…",
+    "imageCount": "{{used}} van {{max}}",
+    "orPasteUrl": "…of plak een afbeeldings-URL",
+    "removeImage": "Afbeelding verwijderen",
+    "mainImage": "Hoofd",
+    "tooManyImages": "Stripe staat maximaal {{count}} afbeeldingen per product toe.",
+    "imageTooLarge": "{{name}} is groter dan 5 MB."
   }
 }

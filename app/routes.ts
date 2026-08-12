@@ -42,6 +42,10 @@ export default [
     ]),
     layout("routes/_dashboard-layout.tsx", [
       index("routes/home.tsx"),
+      // Workspace subscription + invoices. Moved off /products so the Stripe
+      // catalogue can take that path; the sidebar already called it Billing.
+      route("billing", "routes/billing.tsx"),
+      // Live proxy over the workspace's connected Stripe catalogue.
       route("products", "routes/products.tsx"),
       route("forms", "routes/forms._index.tsx"),
       route("forms/:formId", "routes/forms.$formId.tsx"),
@@ -71,6 +75,7 @@ export default [
         route("profile", "routes/settings.profile.tsx"),
         route("team", "routes/settings.team.tsx"),
         route("email-accounts", "routes/settings.email-accounts.tsx"),
+        route("integrations", "routes/settings.integrations.tsx"),
         route("bcc", "routes/settings.bcc.tsx"),
       ]),
       route("instructions", "routes/instructions.tsx"),

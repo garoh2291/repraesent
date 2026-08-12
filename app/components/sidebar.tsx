@@ -19,7 +19,9 @@ import {
   Mail,
   Megaphone,
   Package,
+  Plug,
   Settings,
+  ShoppingBag,
   Store,
   User,
   Users,
@@ -34,6 +36,7 @@ import { useAuthContext } from "~/providers/auth-provider";
 import { setStoredSelectedView, BRAND_VIEW } from "~/lib/api/axios-instance";
 import { useAppointmentConfigs } from "~/lib/hooks/useAppointmentConfigs";
 import { useWorkspaceWpSite } from "~/lib/hooks/useWorkspaceWpSite";
+import { useStripeConnection } from "~/lib/hooks/useWorkspaceIntegrations";
 import { LanguageSwitcher } from "~/components/language-switcher";
 import {
   DropdownMenu,
@@ -84,6 +87,11 @@ const SETTINGS_NAV = [
     Icon: AtSign,
   },
   { to: "/settings/bcc", labelKey: "settings.tabs.bcc", Icon: Inbox },
+  {
+    to: "/settings/integrations",
+    labelKey: "settings.tabs.integrations",
+    Icon: Plug,
+  },
 ] as const;
 
 function NavLink({
@@ -173,6 +181,9 @@ export function Sidebar({
   // right mode for free, and there is nothing to reset on the way out.
   const inSettings = location.pathname.startsWith("/settings");
   const { data: wpSite } = useWorkspaceWpSite(
+    !!currentWorkspace?.id && !isDoorboostBrandWs,
+  );
+  const { isConnected: hasStripeConnection } = useStripeConnection(
     !!currentWorkspace?.id && !isDoorboostBrandWs,
   );
 
@@ -369,6 +380,20 @@ export function Sidebar({
               {t("nav.forms", "Forms")}
             </NavLink>
 
+            {/* Gated on the connection rather than a service entitlement: the
+                catalogue is a live proxy, so with no Stripe account there is
+                literally nothing for the page to show. */}
+            {hasStripeConnection && (
+              <NavLink
+                to="/products"
+                isActive={location.pathname.startsWith("/products")}
+                onClick={onClose}
+              >
+                <ShoppingBag className="h-4 w-4 shrink-0" />
+                {t("nav.stripeProducts", { defaultValue: "Products" })}
+              </NavLink>
+            )}
+
             {showWorkflows && (
               <NavLink
                 to="/workflows"
@@ -515,8 +540,8 @@ export function Sidebar({
               </NavLink>
             )}
             <NavLink
-              to="/products"
-              isActive={location.pathname === "/products"}
+              to="/billing"
+              isActive={location.pathname === "/billing"}
               onClick={onClose}
             >
               <Package className="h-4 w-4 shrink-0" />

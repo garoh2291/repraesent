@@ -1,418 +1,470 @@
-import { useQuery } from "@tanstack/react-query";
+import { useState } from "react";
+import { Link } from "react-router";
 import { useTranslation } from "react-i18next";
-import { useAuthContext } from "~/providers/auth-provider";
-import { getStoredWorkspaceId } from "~/lib/api/axios-instance";
-import { getWorkspaceInvoices } from "~/lib/api/workspaces";
-import { formatBillingInterval } from "~/lib/utils/stripe";
-import { formatDateMedium, formatCurrencyFromCents } from "~/lib/utils/format";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 import {
-  AlertTriangle,
-  ExternalLink,
-  FileText,
-  Receipt,
-  Package2,
-  Sparkles,
-  Calendar,
-  LineChart,
-  BarChart3,
-  Inbox,
-  Mail,
+  Archive,
+  ChevronDown,
+  Package,
+  Pencil,
+  Plus,
+  Search,
+  ShoppingBag,
+  Trash2,
 } from "lucide-react";
-import { Trans } from "react-i18next";
-import { Button } from "~/components/ui/button";
 import i18n from "~/i18n";
+import { useAuthContext } from "~/providers/auth-provider";
+import { extractErrorMessage } from "~/lib/api/axios-instance";
+import {
+  deleteCatalogProduct,
+  isStripeNotConnected,
+  type CatalogProduct,
+} from "~/lib/api/stripe-catalog";
+import {
+  useCatalogAccount,
+  useCatalogProducts,
+} from "~/lib/hooks/useStripeCatalog";
+import { useDebounce } from "~/lib/hooks/useDebounce";
 import { useDocumentMeta } from "~/lib/hooks/use-document-meta";
-
-const FALLBACK_SUPPORT_EMAIL = "support@repraesent.com";
-function getSupportEmail(): string {
-  return (
-    (import.meta.env.VITE_SUPPORT_EMAIL as string | undefined) ??
-    FALLBACK_SUPPORT_EMAIL
-  );
-}
+import { formatMoneyFromMinor } from "~/lib/utils/format";
+import { ProductSheet } from "~/components/organism/product-sheet";
+import { Button } from "~/components/ui/button";
+import { Input } from "~/components/ui/input";
+import { Skeleton } from "~/components/ui/skeleton";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "~/components/ui/select";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "~/components/ui/alert-dialog";
 
 export function meta() {
   return [
-    { title: i18n.t("products.metaTitle") + " - Repraesent" },
-    { name: "description", content: i18n.t("products.metaDescription") },
+    { title: `${i18n.t("stripeProducts.metaTitle")} - Repraesent` },
+    {
+      name: "description",
+      content: i18n.t("stripeProducts.metaDescription"),
+    },
   ];
-}
-
-function formatDate(ts: string | number | undefined | null): string {
-  if (ts == null) return "—";
-  const sec = typeof ts === "string" ? parseInt(ts, 10) : ts;
-  if (Number.isNaN(sec)) return "—";
-  return formatDateMedium(new Date(sec * 1000));
-}
-
-function StatusPill({ status }: { status: string }) {
-  const map: Record<string, string> = {
-    active: "bg-emerald-500/12 text-emerald-700 border-emerald-500/20",
-    trialing: "bg-blue-500/12 text-blue-700 border-blue-500/20",
-    past_due: "bg-red-500/12 text-red-700 border-red-500/20",
-    canceled: "bg-stone-100 text-stone-500 border-stone-200",
-    invoice_sent: "bg-amber-500/12 text-amber-700 border-amber-500/20",
-    pending: "bg-amber-500/12 text-amber-700 border-amber-500/20",
-    paid: "bg-emerald-500/12 text-emerald-700 border-emerald-500/20",
-  };
-  const cls = map[status] ?? "bg-stone-100 text-stone-500 border-stone-200";
-  return (
-    <span
-      className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-[11px] font-semibold uppercase tracking-wide ${cls}`}
-    >
-      {status.replace(/_/g, " ")}
-    </span>
-  );
 }
 
 export default function Products() {
   const { t } = useTranslation();
   useDocumentMeta({
-    titleKey: "products.metaTitle",
-    descriptionKey: "products.metaDescription",
+    titleKey: "stripeProducts.metaTitle",
+    descriptionKey: "stripeProducts.metaDescription",
     titleSuffix: " - Repraesent",
   });
-  const { currentWorkspace, workspaces } = useAuthContext();
-  const workspaceId =
-    getStoredWorkspaceId() ?? currentWorkspace?.id ?? workspaces[0]?.id;
-  const ws = currentWorkspace ?? workspaces[0];
-  const products = ws?.products ?? [];
 
-  const { data: invoices = [] } = useQuery({
-    queryKey: ["workspace-invoices", workspaceId],
-    queryFn: () => getWorkspaceInvoices(workspaceId!),
-    enabled: !!workspaceId,
+  const { currentWorkspace } = useAuthContext();
+  const queryClient = useQueryClient();
+  const canEdit = currentWorkspace?.member_role !== "viewer";
+
+  const [search, setSearch] = useState("");
+  const debouncedSearch = useDebounce(search, 400);
+  const [activeFilter, setActiveFilter] = useState<"all" | "true" | "false">(
+    "true",
+  );
+  // Stripe pages by cursor, so "previous" means remembering where we have been.
+  const [cursors, setCursors] = useState<string[]>([]);
+  const [sheetOpen, setSheetOpen] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [pendingDelete, setPendingDelete] = useState<CatalogProduct | null>(
+    null,
+  );
+
+  const accountQuery = useCatalogAccount(!!currentWorkspace);
+  const notConnected = isStripeNotConnected(accountQuery.error);
+
+  const productsQuery = useCatalogProducts(
+    {
+      search: debouncedSearch || undefined,
+      active: activeFilter === "all" ? undefined : activeFilter,
+      starting_after: cursors[cursors.length - 1],
+      limit: 20,
+    },
+    !!currentWorkspace && !notConnected,
+  );
+
+  const deleteMutation = useMutation({
+    mutationFn: (id: string) => deleteCatalogProduct(id),
+    onSuccess: async (result) => {
+      await queryClient.invalidateQueries({ queryKey: ["stripe-products"] });
+      setPendingDelete(null);
+      toast.success(
+        result.deleted
+          ? t("stripeProducts.deleted", { defaultValue: "Product deleted" })
+          : t("stripeProducts.archivedInstead", {
+              defaultValue:
+                "Product had prices, so Stripe archived it instead of deleting.",
+            }),
+      );
+    },
+    onError: (error) => toast.error(extractErrorMessage(error)),
   });
 
-  const hasPastDue = products.some((p) => p.status === "past_due");
-  const openInvoiceUrl = invoices.find(
-    (inv) => inv.status === "open" && inv.hosted_invoice_url
-  )?.hosted_invoice_url;
-  const isTrialWorkspace = ws?.status === "trial";
-  const supportEmail = getSupportEmail();
+  function resetPaging() {
+    setCursors([]);
+  }
+
+  if (notConnected) {
+    return <NotConnected />;
+  }
+
+  const account = accountQuery.data;
+  const products = productsQuery.data?.data ?? [];
+  const isLoading = productsQuery.isPending || accountQuery.isPending;
+  // Stripe's search index returns a single page; hide paging while searching.
+  const canPage = !debouncedSearch;
 
   return (
-    <div className="mx-auto w-full max-w-[1280px] p-4 sm:p-6 py-10! space-y-6 sm:space-y-8 app-fade-in">
-      {/* Heading */}
-      <div className="app-fade-up space-y-1">
-        <h1 className="text-xl sm:text-2xl font-semibold text-foreground tracking-tight">
-          {t("products.title")}
-        </h1>
-        <p className="text-sm text-muted-foreground">
-          {t("products.subtitle")}
-        </p>
-      </div>
-
-      {/* Trial workspace marketing card (Doorboost-restored) */}
-      {isTrialWorkspace && (
-        <section className="app-fade-up app-fade-up-d1 relative overflow-hidden rounded-2xl border border-amber-400/30 bg-gradient-to-br from-amber-50 via-white to-amber-50/40 dark:from-amber-500/[0.07] dark:via-transparent dark:to-amber-500/[0.04] p-6 sm:p-8">
-          <div className="pointer-events-none absolute -top-16 -right-16 h-56 w-56 rounded-full bg-amber-300/20 blur-3xl" />
-          <div className="pointer-events-none absolute -bottom-20 -left-10 h-48 w-48 rounded-full bg-amber-400/10 blur-3xl" />
-
-          <div className="relative space-y-5">
-            <div className="flex items-center gap-2.5">
-              <span className="inline-flex items-center gap-1.5 rounded-full border border-amber-400/40 bg-amber-400/15 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-amber-700 dark:text-amber-300">
-                <Sparkles className="h-3 w-3" />
-                {t("products.trial_card.eyebrow")}
-              </span>
-            </div>
-
-            <div className="space-y-2 max-w-2xl">
-              <h2 className="text-2xl sm:text-[28px] font-semibold tracking-tight text-foreground leading-tight">
-                {t("products.trial_card.title")}
-              </h2>
-              <p className="text-[15px] text-muted-foreground leading-relaxed">
-                {t("products.trial_card.body")}
-              </p>
-            </div>
-
-            <ul className="grid gap-2 sm:grid-cols-2 max-w-2xl pt-1">
-              {[
-                {
-                  Icon: Calendar,
-                  label: t("products.trial_card.feature_appointments"),
-                },
-                {
-                  Icon: LineChart,
-                  label: t("products.trial_card.feature_web_analytics"),
-                },
-                {
-                  Icon: BarChart3,
-                  label: t("products.trial_card.feature_ad_analytics"),
-                },
-                {
-                  Icon: Inbox,
-                  label: t("products.trial_card.feature_new_leads"),
-                },
-              ].map(({ Icon, label }) => (
-                <li
-                  key={label}
-                  className="flex items-start gap-2.5 rounded-xl bg-white/60 dark:bg-white/[0.03] border border-amber-400/15 px-3.5 py-2.5"
-                >
-                  <span className="grid place-items-center w-7 h-7 shrink-0 rounded-lg bg-amber-400/15 text-amber-700 dark:text-amber-300">
-                    <Icon className="w-3.5 h-3.5" />
+    <div className="p-4 sm:p-6 space-y-4 sm:space-y-6 app-fade-in">
+      <header className="app-fade-up flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+        <div>
+          <h1 className="text-xl font-semibold tracking-tight text-foreground sm:text-2xl">
+            {t("stripeProducts.title", { defaultValue: "Products" })}
+          </h1>
+          <p className="mt-0.5 flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
+            <span>
+              {t("stripeProducts.subtitle", {
+                defaultValue: "Your Stripe catalogue, live.",
+              })}
+            </span>
+            {account ? (
+              <>
+                <span className="text-muted-foreground/50">·</span>
+                <span>{account.name ?? account.id}</span>
+                {!account.livemode ? (
+                  <span className="rounded-full bg-amber-500/10 px-2 py-0.5 text-[11px] font-medium text-amber-600 dark:text-amber-400">
+                    {t("stripeProducts.testMode", { defaultValue: "Test mode" })}
                   </span>
-                  <span className="text-sm text-foreground/90 leading-snug pt-0.5">
-                    {label}
-                  </span>
-                </li>
-              ))}
-            </ul>
-
-            <div className="flex flex-col sm:flex-row sm:items-center gap-3 pt-2">
-              <Button
-                asChild
-                className="bg-amber-500 text-white hover:bg-amber-500/90 shadow-sm h-10 px-5"
-              >
-                <a href={`mailto:${supportEmail}`}>
-                  <Mail className="w-4 h-4 mr-2" />
-                  {t("products.trial_card.cta")}
-                </a>
-              </Button>
-              <p className="text-xs text-muted-foreground">
-                <Trans
-                  i18nKey="products.trial_card.contact"
-                  values={{ supportEmail }}
-                  defaults="Or write us directly at <0>{{supportEmail}}</0>"
-                  components={[
-                    <a
-                      key="link"
-                      href={`mailto:${supportEmail}`}
-                      className="font-semibold text-foreground underline-offset-2 hover:underline"
-                    />,
-                  ]}
-                />
-              </p>
-            </div>
-          </div>
-        </section>
-      )}
-
-      {/* Past-due warning */}
-      {hasPastDue && (
-        <div className="app-fade-up app-fade-up-d1 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 rounded-xl border border-red-300/40 bg-red-50 px-4 py-3.5">
-          <div className="flex items-center gap-2.5">
-            <AlertTriangle className="h-4 w-4 shrink-0 text-red-600" />
-            <p className="text-sm font-medium text-red-800">
-              {t("products.pastDueWarning")}
-            </p>
-          </div>
-          {openInvoiceUrl && (
-            <Button
-              variant="outline"
-              size="sm"
-              asChild
-              className="shrink-0 h-8 text-xs border-red-300 text-red-700 hover:bg-red-50 hover:text-red-700"
-            >
-              <a
-                href={openInvoiceUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                {t("products.payNow")}
-              </a>
-            </Button>
-          )}
-        </div>
-      )}
-
-      {/* Subscriptions */}
-      <div className="app-fade-up app-fade-up-d2 space-y-4">
-        <div className="flex items-center gap-2">
-          <Package2 className="h-4 w-4 text-muted-foreground" />
-          <h2 className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
-            {t("products.subscriptions")}
-          </h2>
+                ) : null}
+              </>
+            ) : null}
+          </p>
         </div>
 
-        {products.length > 0 ? (
-          <div className="space-y-2">
-            {products.map((p) => {
-              const product = p as {
-                stripe_product_name: string;
-                status: string;
-                current_period_end?: number | null;
-                recurring_interval?: string | null;
-                type?: string | null;
-                unit_amount?: string | null;
-                currency?: string | null;
-              };
-              const periodEnd = product.current_period_end;
-              const showDate =
-                periodEnd != null &&
-                !["invoice_sent", "pending"].includes(product.status);
-              const now = Math.floor(Date.now() / 1000);
-              const dateLabel =
-                product.status === "canceled"
-                  ? periodEnd != null && periodEnd < now
-                    ? t("products.dateEnded")
-                    : t("products.dateEnds")
-                  : product.status === "trialing"
-                    ? t("products.dateTrial")
-                    : product.status === "past_due"
-                      ? t("products.dateDue")
-                      : t("products.dateRenews");
+        {canEdit ? (
+          <Button
+            onClick={() => {
+              setEditingId(null);
+              setSheetOpen(true);
+            }}
+            className="sm:shrink-0"
+          >
+            <Plus className="mr-1.5 h-4 w-4" />
+            {t("stripeProducts.new", { defaultValue: "New product" })}
+          </Button>
+        ) : null}
+      </header>
 
-              const hasPrice =
-                product.unit_amount != null && Number(product.unit_amount) > 0;
-
-              return (
-                <div
-                  key={p.id}
-                  className="flex items-center justify-between rounded-xl border border-border bg-card px-5 py-4 gap-4"
-                >
-                  <div className="space-y-0.5 min-w-0">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <span className="font-semibold text-foreground">
-                        {product.stripe_product_name}
-                      </span>
-                      {hasPrice && (
-                        <span className="text-sm font-medium text-foreground">
-                          {formatCurrencyFromCents(Number(product.unit_amount))}
-                          {product.recurring_interval && (
-                            <span className="text-xs text-muted-foreground font-normal">
-                              /{product.recurring_interval}
-                            </span>
-                          )}
-                        </span>
-                      )}
-                      {(product.recurring_interval || product.type) && (
-                        <span className="text-xs text-muted-foreground bg-muted rounded-full px-2 py-0.5">
-                          {formatBillingInterval(
-                            product.recurring_interval,
-                            product.type
-                          )}
-                        </span>
-                      )}
-                    </div>
-                    {showDate && periodEnd != null && (
-                      <p className="text-xs text-muted-foreground">
-                        {dateLabel} {formatDate(periodEnd)}
-                      </p>
-                    )}
-                  </div>
-                  <StatusPill status={p.status} />
-                </div>
-              );
+      <div className="app-fade-up app-fade-up-d1 flex flex-col gap-2 sm:flex-row sm:items-center">
+        <div className="relative flex-1">
+          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            value={search}
+            onChange={(e) => {
+              setSearch(e.target.value);
+              resetPaging();
+            }}
+            placeholder={t("stripeProducts.searchPlaceholder", {
+              defaultValue: "Search products…",
             })}
+            className="pl-9"
+          />
+        </div>
+        <Select
+          value={activeFilter}
+          onValueChange={(v) => {
+            setActiveFilter(v as typeof activeFilter);
+            resetPaging();
+          }}
+        >
+          <SelectTrigger className="sm:w-44">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="true">
+              {t("stripeProducts.filterActive", { defaultValue: "Active" })}
+            </SelectItem>
+            <SelectItem value="false">
+              {t("stripeProducts.filterArchived", {
+                defaultValue: "Archived",
+              })}
+            </SelectItem>
+            <SelectItem value="all">
+              {t("stripeProducts.filterAll", { defaultValue: "All" })}
+            </SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+
+      <div className="app-fade-up app-fade-up-d2 overflow-hidden rounded-2xl border border-border bg-card">
+        {isLoading ? (
+          <div className="space-y-px">
+            {[0, 1, 2, 3].map((i) => (
+              <Skeleton key={i} className="h-[68px] w-full rounded-none" />
+            ))}
           </div>
-        ) : (
-          <div className="rounded-xl border border-dashed border-border bg-card px-5 py-8 text-center">
-            <p className="text-sm text-muted-foreground">
-              {t("products.noSubscriptions")}
+        ) : products.length === 0 ? (
+          <div className="p-12 text-center">
+            <Package className="mx-auto h-8 w-8 text-muted-foreground/40" />
+            <p className="mt-3 text-sm text-muted-foreground">
+              {debouncedSearch
+                ? t("stripeProducts.noResults", {
+                    defaultValue: "No products match that search.",
+                  })
+                : t("stripeProducts.empty", {
+                    defaultValue: "No products yet.",
+                  })}
             </p>
           </div>
+        ) : (
+          <ul className="divide-y divide-border">
+            {products.map((product) => (
+              <ProductRow
+                key={product.id}
+                product={product}
+                canEdit={canEdit}
+                onEdit={() => {
+                  setEditingId(product.id);
+                  setSheetOpen(true);
+                }}
+                onDelete={() => setPendingDelete(product)}
+              />
+            ))}
+          </ul>
         )}
       </div>
 
-      {/* Invoice history */}
-      <div className="app-fade-up app-fade-up-d3 space-y-4">
-        <h2 className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
-          {t("products.invoiceHistory")}
-        </h2>
+      {canPage && (cursors.length > 0 || productsQuery.data?.has_more) ? (
+        <div className="flex items-center justify-between">
+          <Button
+            variant="outline"
+            size="sm"
+            disabled={cursors.length === 0}
+            onClick={() => setCursors((c) => c.slice(0, -1))}
+          >
+            {t("common.previous", { defaultValue: "Previous" })}
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            disabled={!productsQuery.data?.next_cursor}
+            onClick={() =>
+              setCursors((c) => [...c, productsQuery.data!.next_cursor!])
+            }
+          >
+            {t("common.next", { defaultValue: "Next" })}
+            <ChevronDown className="ml-1 h-4 w-4 -rotate-90" />
+          </Button>
+        </div>
+      ) : null}
 
-        {invoices.length > 0 ? (
-          <div className="rounded-xl border border-border bg-card overflow-hidden">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-border bg-muted/40">
-                  <th className="text-left px-5 py-3 text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
-                    {t("settings.invoices.status")}
-                  </th>
-                  <th className="text-left px-5 py-3 text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
-                    {t("settings.invoices.dueDate")}
-                  </th>
-                  <th className="text-right px-5 py-3 text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
-                    {t("settings.invoices.amount")}
-                  </th>
-                  <th className="w-28 px-5 py-3" />
-                </tr>
-              </thead>
-              <tbody>
-                {invoices.map((inv) => {
-                  const isPaid = inv.status === "paid";
+      <ProductSheet
+        open={sheetOpen}
+        onOpenChange={setSheetOpen}
+        productId={editingId}
+        defaultCurrency={account?.default_currency ?? "eur"}
+      />
 
-                  return (
-                    <tr
-                      key={inv.id}
-                      className="border-b border-border/60 last:border-0 hover:bg-muted/30 transition-colors"
-                    >
-                      <td className="px-5 py-3.5">
-                        <StatusPill status={inv.status ?? "unknown"} />
-                      </td>
-                      <td className="px-5 py-3.5 text-sm text-muted-foreground">
-                        {isPaid && inv.paid_at
-                          ? t("products.datePaid", {
-                              date: formatDate(inv.paid_at),
-                            })
-                          : inv.due_date
-                            ? t("products.dateDueLabel", {
-                                date: formatDate(inv.due_date),
-                              })
-                            : "—"}
-                      </td>
-                      <td className="px-5 py-3.5 text-right font-semibold text-foreground tabular-nums">
-                        {inv.amount_due != null
-                          ? formatCurrencyFromCents(Number(inv.amount_due))
-                          : "—"}
-                      </td>
-                      <td className="px-5 py-3.5">
-                        <div className="flex items-center gap-2 justify-end">
-                          {isPaid ? (
-                            <>
-                              {inv.invoice_pdf && (
-                                <a
-                                  href={inv.invoice_pdf}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="inline-flex items-center gap-1 text-xs font-medium text-primary hover:underline"
-                                  title={t("products.downloadInvoice")}
-                                >
-                                  <FileText className="h-3 w-3" />
-                                  {t("products.invoice")}
-                                </a>
-                              )}
-                              {inv.hosted_invoice_url && (
-                                <a
-                                  href={inv.hosted_invoice_url}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="inline-flex items-center gap-1 text-xs font-medium text-primary hover:underline"
-                                  title={t("products.viewReceipt")}
-                                >
-                                  <Receipt className="h-3 w-3" />
-                                  {t("products.receipt")}
-                                </a>
-                              )}
-                            </>
-                          ) : (
-                            inv.hosted_invoice_url && (
-                              <a
-                                href={inv.hosted_invoice_url}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="inline-flex items-center gap-1 text-xs font-medium text-primary hover:underline"
-                              >
-                                {t("products.viewInvoice")}
-                                <ExternalLink className="h-3 w-3" />
-                              </a>
-                            )
-                          )}
-                        </div>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
+      <AlertDialog
+        open={!!pendingDelete}
+        onOpenChange={(open) => !open && setPendingDelete(null)}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              {t("stripeProducts.deleteTitle", {
+                defaultValue: "Delete product?",
+              })}
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              {t("stripeProducts.deleteBody", {
+                defaultValue:
+                  "Stripe cannot delete a product that has prices — those get archived instead, staying on past invoices but no longer sellable. This happens in your Stripe account.",
+              })}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={deleteMutation.isPending}>
+              {t("common.cancel", { defaultValue: "Cancel" })}
+            </AlertDialogCancel>
+            <AlertDialogAction
+              variant="destructive"
+              disabled={deleteMutation.isPending}
+              onClick={(e) => {
+                e.preventDefault();
+                if (pendingDelete) deleteMutation.mutate(pendingDelete.id);
+              }}
+            >
+              {deleteMutation.isPending
+                ? t("common.loading", { defaultValue: "Loading…" })
+                : t("common.delete", { defaultValue: "Delete" })}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </div>
+  );
+}
+
+function ProductRow({
+  product,
+  canEdit,
+  onEdit,
+  onDelete,
+}: {
+  product: CatalogProduct;
+  canEdit: boolean;
+  onEdit: () => void;
+  onDelete: () => void;
+}) {
+  const { t } = useTranslation();
+  const price = product.default_price;
+
+  return (
+    <li className="flex items-center gap-4 px-4 py-3 transition-colors hover:bg-muted/40 sm:px-5">
+      <div className="grid h-11 w-11 shrink-0 place-items-center overflow-hidden rounded-xl border border-border bg-background">
+        {product.images[0] ? (
+          <img
+            src={product.images[0]}
+            alt=""
+            className="h-full w-full object-cover"
+            onError={(e) => {
+              (e.target as HTMLImageElement).style.visibility = "hidden";
+            }}
+          />
         ) : (
-          <div className="rounded-xl border border-dashed border-border bg-card px-5 py-8 text-center">
-            <p className="text-sm text-muted-foreground">
-              {t("products.noInvoicesYet")}
-            </p>
-          </div>
+          <Package className="h-5 w-5 text-muted-foreground/60" />
         )}
+      </div>
+
+      <button
+        type="button"
+        onClick={onEdit}
+        className="min-w-0 flex-1 text-left"
+      >
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="truncate text-sm font-medium text-foreground">
+            {product.name}
+          </span>
+          {!product.active ? (
+            <span className="inline-flex items-center gap-1 rounded-full bg-muted px-2 py-0.5 text-[11px] text-muted-foreground">
+              <Archive className="h-3 w-3" />
+              {t("stripeProducts.archived", { defaultValue: "Archived" })}
+            </span>
+          ) : null}
+          {product.category ? (
+            <span className="rounded-full bg-muted px-2 py-0.5 text-[11px] text-muted-foreground">
+              {product.category}
+            </span>
+          ) : null}
+        </div>
+        <p className="truncate text-xs text-muted-foreground">
+          {[
+            t(`stripeProducts.kinds.${product.kind}`, {
+              defaultValue:
+                product.kind === "physical"
+                  ? "Physical good"
+                  : product.kind === "digital"
+                    ? "Digital good"
+                    : "Service",
+            }),
+            product.kind === "physical" && product.inventory_count !== null
+              ? t("stripeProducts.inStock", {
+                  defaultValue: "{{count}} in stock",
+                  count: product.inventory_count,
+                })
+              : null,
+            product.description,
+          ]
+            .filter(Boolean)
+            .join(" · ")}
+        </p>
+      </button>
+
+      <div className="hidden shrink-0 text-right sm:block">
+        {price ? (
+          <>
+            <p className="text-sm font-medium tabular-nums text-foreground">
+              {formatMoneyFromMinor(price.unit_amount, price.currency)}
+            </p>
+            <p className="text-xs text-muted-foreground">
+              {price.interval
+                ? t(`stripeProducts.interval.${price.interval}`, {
+                    defaultValue: `per ${price.interval}`,
+                  })
+                : t("stripeProducts.oneTime", { defaultValue: "one-time" })}
+            </p>
+          </>
+        ) : (
+          <p className="text-xs text-muted-foreground">
+            {t("stripeProducts.noPrice", { defaultValue: "No price" })}
+          </p>
+        )}
+      </div>
+
+      {canEdit ? (
+        <div className="flex shrink-0 items-center gap-1">
+          <Button variant="ghost" size="sm" onClick={onEdit} className="h-8 w-8 p-0">
+            <Pencil className="h-4 w-4" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={onDelete}
+            className="h-8 w-8 p-0 text-muted-foreground hover:text-destructive"
+          >
+            <Trash2 className="h-4 w-4" />
+          </Button>
+        </div>
+      ) : null}
+    </li>
+  );
+}
+
+/**
+ * The whole page is a live proxy, so with no connected account there is
+ * literally nothing to render — point at the one place that fixes it.
+ */
+function NotConnected() {
+  const { t } = useTranslation();
+
+  return (
+    <div className="p-4 sm:p-6 app-fade-in">
+      <div className="mx-auto max-w-md rounded-2xl border border-dashed border-border p-10 text-center">
+        <ShoppingBag className="mx-auto h-10 w-10 text-muted-foreground/40" />
+        <h2 className="mt-4 text-base font-semibold text-foreground">
+          {t("stripeProducts.notConnectedTitle", {
+            defaultValue: "Connect Stripe to manage products",
+          })}
+        </h2>
+        <p className="mt-1.5 text-sm text-muted-foreground">
+          {t("stripeProducts.notConnectedBody", {
+            defaultValue:
+              "This page reads your Stripe catalogue directly. Connect an account to get started.",
+          })}
+        </p>
+        <Button asChild className="mt-5">
+          <Link to="/settings/integrations">
+            {t("stripeProducts.goToIntegrations", {
+              defaultValue: "Go to Integrations",
+            })}
+          </Link>
+        </Button>
       </div>
     </div>
   );

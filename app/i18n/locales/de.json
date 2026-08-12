@@ -59,7 +59,8 @@
     "wordpress": "Website",
     "subscriptions": "Abonnements",
     "forms": "Formulare",
-    "workflows": "Workflows"
+    "workflows": "Workflows",
+    "stripeProducts": "Produkte"
   },
   "db_brand": {
     "subtitle": "Wähle einen Händler in der Seitenleiste, um Social Ads & Leads zu sehen.",
@@ -486,6 +487,24 @@
         "won_at": "Gewonnen am",
         "lost_at": "Verloren am"
       }
+    },
+    "products": {
+      "title": "Produkte",
+      "subtitle": "Positionen aus Stripe. Der Deal-Wert folgt ihrer Summe.",
+      "add": "Produkt hinzufügen",
+      "empty": "Noch keine Produkte an diesem Deal.",
+      "subtotal": "Zwischensumme",
+      "attached": "Produkt hinzugefügt.",
+      "removed": "Produkt entfernt.",
+      "remove": "Produkt entfernen",
+      "increase": "Menge erhöhen",
+      "decrease": "Menge verringern",
+      "attachTitle": "Produkt hinzufügen",
+      "attachDescription": "Durchsuche deinen Stripe-Katalog. Beim Hinzufügen wird der Deal-Wert neu berechnet.",
+      "nothingToAdd": "Nichts mehr hinzuzufügen. Produkte brauchen einen Preis, bevor sie an einen Deal können.",
+      "notConnected": "Mit diesem Arbeitsbereich ist noch kein Stripe-Konto verbunden.",
+      "staleHint": "Stripe konnte diese Position nicht bestätigen. Angezeigt wird der beim Hinzufügen gespeicherte Preis.",
+      "archivedHint": "Dieser Preis ist in Stripe archiviert."
     }
   },
   "appointments": {
@@ -770,7 +789,8 @@
       "profile": "Profil",
       "areaSettings": "Bereich-Einstellungen",
       "bcc": "E-Mail-Protokoll",
-      "emailAccounts": "E-Mail-Konten"
+      "emailAccounts": "E-Mail-Konten",
+      "integrations": "Integrationen"
     },
     "bcc": {
       "metaTitle": "E-Mail-Protokollierung",
@@ -963,6 +983,29 @@
       "required": "Pflichtfeld",
       "invalidEmail": "Bitte eine gültige E-Mail-Adresse eingeben",
       "invalidPort": "Port zwischen 1 und 65535 eingeben"
+    },
+    "integrations": {
+      "metaTitle": "Integrationen",
+      "metaDescription": "Verbinde externe Konten mit diesem Arbeitsbereich.",
+      "sectionLabel": "Verbundene Apps",
+      "sectionDescription": "Verbinde ein externes Konto mit diesem Arbeitsbereich. Ein Konto pro App.",
+      "empty": "Es sind noch keine Integrationen verfügbar.",
+      "connect": "Verbinden",
+      "disconnect": "Trennen",
+      "connected": "Verbunden",
+      "disconnected": "Konto getrennt",
+      "testMode": "Testmodus",
+      "needsReconnect": "Neu verbinden nötig",
+      "notConfigured": "Diese Integration ist noch nicht vollständig eingerichtet. Bitte wende dich an den Support.",
+      "adminOnly": "Nur Administratoren des Arbeitsbereichs können das ändern.",
+      "disconnectTitle": "Konto trennen?",
+      "disconnectBody": "Deine Produkte bleiben in {{name}} — dieser Arbeitsbereich verliert nur den Zugriff darauf. Bereits mit Deals verknüpfte Produkte behalten ihren gespeicherten Namen und Preis. Du kannst jederzeit wieder verbinden.",
+      "outcome": {
+        "connected": "{{account}} verbunden.",
+        "denied": "Du hast die Verbindung abgebrochen.",
+        "expired": "Der Link ist abgelaufen. Bitte versuche es erneut.",
+        "failed": "Verbindung fehlgeschlagen{{reason}}"
+      }
     }
   },
   "booking": {
@@ -3601,5 +3644,98 @@
       "no": "Nein",
       "empty": "Nichts hier – der Lauf endet."
     }
+  },
+  "stripeProducts": {
+    "metaTitle": "Produkte",
+    "metaDescription": "Verwalte den Produktkatalog in deinem verbundenen Stripe-Konto.",
+    "title": "Produkte",
+    "subtitle": "Dein Stripe-Katalog, live.",
+    "testMode": "Testmodus",
+    "new": "Neues Produkt",
+    "searchPlaceholder": "Produkte suchen…",
+    "filterActive": "Aktiv",
+    "filterArchived": "Archiviert",
+    "filterAll": "Alle",
+    "empty": "Noch keine Produkte.",
+    "noResults": "Keine Produkte passen zu dieser Suche.",
+    "noPrice": "Kein Preis",
+    "archived": "Archiviert",
+    "restore": "Wiederherstellen",
+    "archive": "Archivieren",
+    "deleted": "Produkt gelöscht",
+    "archivedInstead": "Das Produkt hatte Preise, daher hat Stripe es archiviert statt gelöscht.",
+    "deleteTitle": "Produkt löschen?",
+    "deleteBody": "Stripe kann ein Produkt mit Preisen nicht löschen — es wird stattdessen archiviert, bleibt auf alten Rechnungen erhalten und ist nicht mehr verkäuflich. Das passiert in deinem Stripe-Konto.",
+    "notConnectedTitle": "Stripe verbinden, um Produkte zu verwalten",
+    "notConnectedBody": "Diese Seite liest deinen Stripe-Katalog direkt. Verbinde ein Konto, um loszulegen.",
+    "goToIntegrations": "Zu den Integrationen",
+    "editTitle": "Produkt bearbeiten",
+    "newTitle": "Neues Produkt",
+    "sheetDescription": "Wird direkt in deinem Stripe-Konto gespeichert. Hier wird nichts abgelegt.",
+    "general": "Allgemein",
+    "pricing": "Preise",
+    "shipping": "Versand & Bestand",
+    "advanced": "Erweitert",
+    "name": "Name",
+    "nameRequired": "Name ist erforderlich",
+    "description": "Beschreibung",
+    "kind": "Typ",
+    "kinds": {
+      "physical": "Physisches Produkt",
+      "digital": "Digitales Produkt",
+      "service": "Dienstleistung"
+    },
+    "category": "Kategorie",
+    "categoryHint": "Deine eigene Bezeichnung zur Gruppierung.",
+    "images": "Bilder",
+    "imagesHint": "Maximal 8. Werden in dein Stripe-Konto hochgeladen und dort gehostet.",
+    "active": "Aktiv",
+    "activeHint": "Inaktive Produkte bleiben auf alten Rechnungen, können aber nicht verkauft werden.",
+    "inventory": "Lagerbestand",
+    "inventoryHint": "Stripe hat keine Bestandsverwaltung — das ist nur eine Notiz am Produkt und wird nicht automatisch reduziert.",
+    "inStock": "{{count}} auf Lager",
+    "dim": {
+      "length": "Länge (in)",
+      "width": "Breite (in)",
+      "height": "Höhe (in)",
+      "weight": "Gewicht (oz)"
+    },
+    "dimHint": "Stripe braucht alle vier Maße oder keines.",
+    "unitLabel": "Einheit",
+    "statementDescriptor": "Buchungstext",
+    "statementHint": "Maximal 22 Zeichen.",
+    "taxCode": "Steuerkategorie",
+    "taxCodeNone": "Keine",
+    "url": "Produkt-URL",
+    "amount": "Betrag",
+    "currency": "Währung",
+    "billing": "Abrechnung",
+    "oneTime": "einmalig",
+    "interval": {
+      "day": "pro Tag",
+      "week": "pro Woche",
+      "month": "pro Monat",
+      "year": "pro Jahr"
+    },
+    "priceNickname": "Preisbezeichnung (optional)",
+    "setAsDefault": "Als Standardpreis festlegen",
+    "defaultPrice": "Standard",
+    "makeDefault": "Als Standard festlegen",
+    "addPrice": "Preis hinzufügen",
+    "priceAdded": "Preis hinzugefügt",
+    "noPrices": "Noch keine Preise.",
+    "priceImmutable": "Stripe-Preise können nicht bearbeitet werden. Um einen Betrag zu ändern, füge einen neuen Preis hinzu und archiviere den alten.",
+    "invalidAmount": "Gib einen gültigen Betrag ein",
+    "create": "Produkt erstellen",
+    "created": "Produkt erstellt",
+    "saved": "Produkt gespeichert",
+    "chooseFile": "Datei wählen",
+    "uploading": "Wird hochgeladen…",
+    "imageCount": "{{used}} von {{max}}",
+    "orPasteUrl": "…oder Bild-URL einfügen",
+    "removeImage": "Bild entfernen",
+    "mainImage": "Haupt",
+    "tooManyImages": "Stripe erlaubt maximal {{count}} Bilder pro Produkt.",
+    "imageTooLarge": "{{name}} ist größer als 5 MB."
   }
 }
