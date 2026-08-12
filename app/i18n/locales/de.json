@@ -59,7 +59,24 @@
     "wordpress": "Website",
     "subscriptions": "Abonnements",
     "forms": "Formulare",
-    "workflows": "Workflows"
+    "workflows": "Workflows",
+    "calendar": "Kalender"
+  },
+  "calendar": {
+    "metaTitle": "Kalender",
+    "metaDescription": "Alle Kalender Ihres Teams in einer Ansicht",
+    "title": "Kalender",
+    "myCalendars": "Meine Kalender",
+    "teamCalendars": "Team-Kalender",
+    "bookingCalendars": "Buchungskalender",
+    "noEvents": "Keine Termine in diesem Zeitraum",
+    "sourceError": "Dieser Kalender konnte nicht geladen werden",
+    "sourceErrorBanner_one": "{{count}} Kalender konnte nicht geladen werden",
+    "sourceErrorBanner_other": "{{count}} Kalender konnten nicht geladen werden",
+    "joinMeet": "An Google Meet teilnehmen",
+    "allDay": "Ganztägig",
+    "calendars": "Kalender",
+    "timezone": "Zeitzone"
   },
   "db_brand": {
     "subtitle": "Wähle einen Händler in der Seitenleiste, um Social Ads & Leads zu sehen.",
@@ -770,7 +787,8 @@
       "profile": "Profil",
       "areaSettings": "Bereich-Einstellungen",
       "bcc": "E-Mail-Protokoll",
-      "emailAccounts": "E-Mail-Konten"
+      "emailAccounts": "E-Mail-Konten",
+      "calendars": "Kalender"
     },
     "bcc": {
       "metaTitle": "E-Mail-Protokollierung",
@@ -979,6 +997,37 @@
       "required": "Pflichtfeld",
       "invalidEmail": "Bitte eine gültige E-Mail-Adresse eingeben",
       "invalidPort": "Port zwischen 1 und 65535 eingeben"
+    },
+    "calendars": {
+      "metaTitle": "Kalender",
+      "metaDescription": "Kalender für die Terminplanung verbinden",
+      "googleSection": "Google-Kalender",
+      "googleSectionDescription": "Verbinden Sie Ihr Google-Konto, damit Termine Ihre Verfügbarkeit prüfen und Einträge in Ihrem Kalender anlegen können.",
+      "bookingSection": "Buchungskalender",
+      "bookingSectionDescription": "Von Repraesent bereitgestellte Buchungskalender für Ihre öffentlichen Buchungsseiten.",
+      "connectGoogle": "Google-Kalender verbinden",
+      "connecting": "Google wird geöffnet…",
+      "you": "Sie",
+      "managedByAdmin": "Vom Admin verwaltet",
+      "needsReconnect": "Neu verbinden nötig",
+      "reconnect": "Neu verbinden",
+      "refreshCalendars": "Kalenderliste aktualisieren",
+      "primary": "Hauptkalender",
+      "calendarsEmpty": "In diesem Konto wurden keine Kalender gefunden.",
+      "emptyGoogle": "Noch kein Google-Kalender verbunden. Verbinden Sie Ihr Konto, damit Termine Ihre Verfügbarkeit nutzen können.",
+      "emptyBooking": "Noch keine Buchungskalender. Diese werden von Repraesent für Sie eingerichtet.",
+      "disconnect": "Trennen",
+      "disconnectConfirmTitle": "Dieses Kalenderkonto trennen?",
+      "disconnectConfirmBody": "Termine sehen die Verfügbarkeit von {{email}} dann nicht mehr. Bereits erstellte Einträge bleiben erhalten.",
+      "disconnectSuccess": "Kalenderkonto getrennt",
+      "google": {
+        "connected": "{{email}} ist verbunden. Die Kalender stehen jetzt für die Terminplanung bereit.",
+        "denied": "Die Google-Anmeldung wurde abgebrochen, es wurde nichts verbunden.",
+        "expired": "Die Verbindungsanfrage ist abgelaufen. Bitte versuchen Sie es erneut.",
+        "error": "Beim Verbinden Ihres Google-Kontos ist ein Fehler aufgetreten. Bitte versuchen Sie es erneut.",
+        "failed": "Ihr Google-Konto konnte nicht verbunden werden: {{reason}}"
+      },
+      "dismiss": "Schließen"
     }
   },
   "booking": {
@@ -3061,7 +3110,8 @@
       "scale": "Skala",
       "heading": "Überschrift",
       "paragraph": "Absatz",
-      "hidden": "Verstecktes Feld"
+      "hidden": "Verstecktes Feld",
+      "appointment": "Termin"
     },
     "inspector": {
       "title": "Feldeinstellungen",
@@ -3124,7 +3174,27 @@
       "addressPartsHint": "Einen Teil ausschalten, um ihn aus dem Formular zu entfernen. Der Text darunter ist das, was Besucher sehen.",
       "addressPartLabel": "Bezeichnung für {{part}}",
       "keyRequired": "Ein Schlüssel ist erforderlich — darunter werden Einsendungen gespeichert.",
-      "mappingLocked": "Gesperrt: Das Formular braucht dieses Feld, um einen Lead zu identifizieren."
+      "mappingLocked": "Gesperrt: Das Formular braucht dieses Feld, um einen Lead zu identifizieren.",
+      "appointment": {
+        "targetAccount": "Zielkonto",
+        "targetAccountHelp": "Das verbundene Google-Konto, in dem der gebuchte Termin erstellt wird.",
+        "targetCalendar": "Zielkalender",
+        "busyCalendars": "Belegte Kalender",
+        "busyCalendarsHelp": "Zeiten, die in diesen Kalendern belegt sind, werden nicht angeboten.",
+        "allCalendars": "Alle Kalender",
+        "duration": "Termindauer",
+        "bookableWindow": "Buchbare Zeiten",
+        "windowStart": "Von",
+        "windowEnd": "Bis",
+        "weekdays": "Buchbare Tage",
+        "timezone": "Zeitzone",
+        "minNotice": "Vorlaufzeit (Stunden)",
+        "maxDaysAhead": "Buchbar im Voraus (Tage)",
+        "noAccounts": "Noch kein Kalender verbunden. Verbinden Sie einen Google-Kalender, um Termine anzubieten.",
+        "connectLink": "Kalender verbinden",
+        "accountNeedsReconnect": "muss neu verbunden werden",
+        "primary": "Hauptkalender"
+      }
     },
     "design": {
       "title": "Design",
@@ -3255,12 +3325,14 @@
         "duplicateMapping": "Feld '{{field}}' speichert in dieselbe Lead-Spalte wie ein anderes Feld.",
         "emptyOptions": "Feld '{{field}}' hat keine Optionen oder zwei Optionen mit demselben Wert.",
         "missingContent": "Feld '{{field}}' hat in der Standardsprache keine Beschriftung.",
-        "missingContentLocale": "Feld '{{field}}' hat in {{locale}} keine Beschriftung."
+        "missingContentLocale": "Feld '{{field}}' hat in {{locale}} keine Beschriftung.",
+        "appointmentMissingCalendar": "Feld '{{field}}' braucht einen Zielkalender."
       },
       "otherLocales": "{{count}} weitere(s) Problem(e) in:",
       "keyMissing": "Ein Feld hat keinen Schlüssel — Einsendungen dafür gingen verloren",
       "emailSubjectMissing": "Bestätigungs-E-Mail hat keinen Betreff ({{locale}})",
-      "emailBodyMissing": "Bestätigungs-E-Mail hat keinen Text ({{locale}})"
+      "emailBodyMissing": "Bestätigungs-E-Mail hat keinen Text ({{locale}})",
+      "appointmentMissingCalendar": "Ein Terminfeld braucht einen Zielkalender."
     },
     "public": {
       "notAvailable": "Dieses Formular ist nicht verfügbar",

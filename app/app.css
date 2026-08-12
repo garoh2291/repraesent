@@ -594,6 +594,21 @@ body {
 .appointments-calendar .rbc-day-slot .rbc-event-content {
   line-height: 1.25;
 }
+/* Team calendar (/calendar): every event carries its source calendar's color
+   as an inline `--cal-event-color`. The monochrome appointment override above
+   uses !important, which beats inline background-color in the week/day time
+   grid — but !important declarations still READ inline custom properties, so
+   the color survives through the variable. */
+.appointments-calendar.team-calendar .rbc-event,
+.appointments-calendar.team-calendar .rbc-day-slot .rbc-event,
+.appointments-calendar.team-calendar .rbc-day-slot .rbc-background-event {
+  background-color: var(--cal-event-color, var(--foreground)) !important;
+  color: #fff !important;
+}
+.appointments-calendar.team-calendar .rbc-event.rbc-selected {
+  background-color: var(--cal-event-color, var(--foreground)) !important;
+  opacity: 0.85;
+}
 /* Month events */
 .appointments-calendar .rbc-show-more {
   font-size: 0.6875rem;

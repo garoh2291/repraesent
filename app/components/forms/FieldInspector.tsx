@@ -1,4 +1,7 @@
+import { useQuery } from "@tanstack/react-query";
 import {
+  AlertTriangle,
+  CalendarPlus,
   Heading,
   MousePointerClick,
   SendHorizontal,
@@ -6,6 +9,10 @@ import {
 } from "lucide-react";
 import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
+import { Link } from "react-router";
+import TimezoneSelect from "react-timezone-select";
+import { listCalendarAccounts } from "~/lib/api/calendar";
+import { Checkbox } from "~/components/ui/checkbox";
 import {
   Cols,
   EmptyPanelState,
@@ -61,6 +68,7 @@ const HAS_TYPE_RULES = new Set<FormField["type"]>([
   "scale",
   "address",
   "hidden",
+  "appointment",
 ]);
 
 interface Props {
@@ -705,7 +713,370 @@ function TypeSpecific({
         </Field>
       );
 
+    case "appointment":
+      return (
+        <AppointmentConfig field={field} disabled={disabled} onChange={onChange} />
+      );
+
     default:
       return null;
   }
+}
+
+/** Weekday keys in strip order — Monday first, like the Business hours tab. */
+const APPT_DAY_KEYS = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"] as const;
+
+const APPT_DURATIONS = [15, 30, 45, 60] as const;
+
+/**
+ * The slot-picker configuration: which calendar receives the booking, which
+ * calendars block slots, and the bookable window. A separate component rather
+ * than a `case` body because it needs a query (the workspace's connected
+ * calendars) and hooks cannot live inside a switch.
+ */
+function AppointmentConfig({
+  field,
+  disabled,
+  onChange,
+}: {
+  field: FormField;
+  disabled?: boolean;
+  onChange: (patch: Partial<FormField>) => void;
+}) {
+  const { t } = useTranslation();
+
+  const { data, isLoading } = useQuery({
+    queryKey: ["calendar-accounts"],
+    queryFn: listCalendarAccounts,
+  });
+
+  const ap = field.appointment ?? {
+    accountId: "",
+    calendarId: "",
+    busyCalendarKeys: "all" as const,
+    durationMinutes: 30,
+    window: { start: "09:00", end: "17:00" },
+    weekdays: ["mon", "tue", "wed", "thu", "fri"],
+    timezone: "Europe/Berlin",
+    minNoticeHours: 2,
+    maxDaysAhead: 30,
+  };
+
+  const patch = (p: Partial<NonNullable<FormField["appointment"]>>) =>
+    onChange({ appointment: { ...ap, ...p } });
+
+  const accounts = data?.accounts ?? [];
+  const baikalConfigs = data?.baikal_configs ?? [];
+
+  if (!isLoading && accounts.length === 0) {
+    return (
+      <div className="space-y-2 rounded-lg border border-dashed p-3">
+        <p className="text-sm text-muted-foreground">
+          {t("forms.inspector.appointment.noAccounts")}
+        </p>
+        <Link
+          to="/settings/calendars"
+          className="inline-flex items-center gap-1.5 text-sm font-medium text-foreground underline underline-offset-2"
+        >
+          <CalendarPlus className="h-3.5 w-3.5" aria-hidden="true" />
+          {t("forms.inspector.appointment.connectLink")}
+        </Link>
+      </div>
+    );
+  }
+
+  const account = accounts.find((a) => a.id === ap.accountId);
+  // Only calendars we can create events in are valid booking targets.
+  const targetCalendars = (account?.calendars ?? []).filter(
+    (c) => c.accessRole === "owner" || c.accessRole === "writer",
+  );
+
+  const allBusy = ap.busyCalendarKeys === "all";
+  const busyKeys = Array.isArray(ap.busyCalendarKeys)
+    ? ap.busyCalendarKeys
+    : [];
+  const toggleBusyKey = (key: string, checked: boolean) =>
+    patch({
+      busyCalendarKeys: checked
+        ? [...busyKeys, key]
+        : busyKeys.filter((k) => k !== key),
+    });
+
+  const weekdays = ap.weekdays ?? [];
+  const toggleWeekday = (day: string) =>
+    patch({
+      weekdays: weekdays.includes(day)
+        ? weekdays.filter((d) => d !== day)
+        : APPT_DAY_KEYS.filter((d) => d === day || weekdays.includes(d)),
+    });
+
+  return (
+    <>
+      <Field>
+        <Label>{t("forms.inspector.appointment.targetAccount")}</Label>
+        <Select
+          disabled={disabled || isLoading}
+          value={ap.accountId || undefined}
+          onValueChange={(v) =>
+            // A new account invalidates the calendar choice with it.
+            patch({ accountId: v, calendarId: "" })
+          }
+        >
+          <SelectTrigger>
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {accounts.map((a) => (
+              <SelectItem key={a.id} value={a.id} disabled={a.auth_failed}>
+                {a.display_name}
+                {a.google_email ? ` (${a.google_email})` : ""}
+                {!a.is_own ? ` — ${a.user_name}` : ""}
+                {a.auth_failed
+                  ? ` — ${t("forms.inspector.appointment.accountNeedsReconnect")}`
+                  : ""}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <FieldHint>{t("forms.inspector.appointment.targetAccountHelp")}</FieldHint>
+      </Field>
+
+      {ap.accountId ? (
+        <Field>
+          <Label>{t("forms.inspector.appointment.targetCalendar")}</Label>
+          <Select
+            disabled={disabled}
+            value={ap.calendarId || undefined}
+            onValueChange={(v) => patch({ calendarId: v })}
+          >
+            <SelectTrigger>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {targetCalendars.map((c) => (
+                <SelectItem key={c.id} value={c.id}>
+                  {c.summary}
+                  {c.primary
+                    ? ` — ${t("forms.inspector.appointment.primary")}`
+                    : ""}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </Field>
+      ) : null}
+
+      <Field>
+        <Label htmlFor="fi-appt-allbusy">
+          {t("forms.inspector.appointment.busyCalendars")}
+        </Label>
+        <div className="flex h-9 items-center gap-3">
+          <Switch
+            id="fi-appt-allbusy"
+            disabled={disabled}
+            checked={allBusy}
+            onCheckedChange={(v) =>
+              patch({ busyCalendarKeys: v ? "all" : [] })
+            }
+          />
+          <span className="text-sm text-muted-foreground">
+            {t("forms.inspector.appointment.allCalendars")}
+          </span>
+        </div>
+        <FieldHint>{t("forms.inspector.appointment.busyCalendarsHelp")}</FieldHint>
+
+        {!allBusy ? (
+          <div className="space-y-1.5 pt-1">
+            {accounts.flatMap((a) =>
+              a.calendars.map((c) => {
+                const key = `google:${a.id}:${c.id}`;
+                return (
+                  <label
+                    key={key}
+                    className="flex items-center gap-2 text-sm text-foreground"
+                  >
+                    <Checkbox
+                      disabled={disabled}
+                      checked={busyKeys.includes(key)}
+                      onCheckedChange={(v) => toggleBusyKey(key, v === true)}
+                    />
+                    <span className="truncate">
+                      {a.user_name} · {c.summary}
+                    </span>
+                  </label>
+                );
+              }),
+            )}
+            {baikalConfigs.map((b) => {
+              const key = `baikal:${b.id}`;
+              return (
+                <label
+                  key={key}
+                  className="flex items-center gap-2 text-sm text-foreground"
+                >
+                  <Checkbox
+                    disabled={disabled}
+                    checked={busyKeys.includes(key)}
+                    onCheckedChange={(v) => toggleBusyKey(key, v === true)}
+                  />
+                  <span className="truncate">
+                    {b.provider_name ?? b.user_name}
+                  </span>
+                </label>
+              );
+            })}
+          </div>
+        ) : null}
+      </Field>
+
+      <Field>
+        <Label>{t("forms.inspector.appointment.duration")}</Label>
+        <Select
+          disabled={disabled}
+          value={String(ap.durationMinutes)}
+          onValueChange={(v) => patch({ durationMinutes: Number(v) })}
+        >
+          <SelectTrigger>
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {APPT_DURATIONS.map((m) => (
+              <SelectItem key={m} value={String(m)}>
+                {m} min
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </Field>
+
+      <Field>
+        <Label>{t("forms.inspector.appointment.bookableWindow")}</Label>
+        <Cols>
+          <Field>
+            <Label
+              htmlFor="fi-appt-ws"
+              className="text-xs font-normal text-muted-foreground"
+            >
+              {t("forms.inspector.appointment.windowStart")}
+            </Label>
+            <Input
+              id="fi-appt-ws"
+              type="time"
+              disabled={disabled}
+              value={ap.window?.start ?? "09:00"}
+              onChange={(e) =>
+                patch({
+                  window: { ...ap.window, start: e.target.value },
+                })
+              }
+            />
+          </Field>
+          <Field>
+            <Label
+              htmlFor="fi-appt-we"
+              className="text-xs font-normal text-muted-foreground"
+            >
+              {t("forms.inspector.appointment.windowEnd")}
+            </Label>
+            <Input
+              id="fi-appt-we"
+              type="time"
+              disabled={disabled}
+              value={ap.window?.end ?? "17:00"}
+              onChange={(e) =>
+                patch({
+                  window: { ...ap.window, end: e.target.value },
+                })
+              }
+            />
+          </Field>
+        </Cols>
+      </Field>
+
+      <Field>
+        <Label>{t("forms.inspector.appointment.weekdays")}</Label>
+        <div className="flex flex-wrap gap-1">
+          {APPT_DAY_KEYS.map((day) => {
+            const fullName = t(`appointments.businessLogic.days.${day}`);
+            const on = weekdays.includes(day);
+            return (
+              <button
+                key={day}
+                type="button"
+                disabled={disabled}
+                title={fullName}
+                aria-pressed={on}
+                onClick={() => toggleWeekday(day)}
+                className={`rounded-md border px-2 py-1 text-xs font-medium transition-colors ${
+                  on
+                    ? "border-foreground bg-foreground text-background"
+                    : "border-border bg-transparent text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                {fullName.slice(0, 2)}
+              </button>
+            );
+          })}
+        </div>
+      </Field>
+
+      <Field>
+        <Label>{t("forms.inspector.appointment.timezone")}</Label>
+        <TimezoneSelect
+          value={ap.timezone}
+          isDisabled={disabled}
+          onChange={(tz) =>
+            patch({ timezone: typeof tz === "string" ? tz : tz.value })
+          }
+          className="[&_.react-select__control]:min-h-9 [&_.react-select__control]:rounded-lg [&_.react-select__control]:border-border [&_.react-select__control]:text-sm"
+        />
+      </Field>
+
+      <Cols>
+        <Field>
+          <Label htmlFor="fi-appt-notice">
+            {t("forms.inspector.appointment.minNotice")}
+          </Label>
+          <Input
+            id="fi-appt-notice"
+            type="number"
+            min={0}
+            disabled={disabled}
+            value={ap.minNoticeHours ?? 2}
+            onChange={(e) =>
+              patch({
+                minNoticeHours:
+                  e.target.value === "" ? undefined : Number(e.target.value),
+              })
+            }
+          />
+        </Field>
+        <Field>
+          <Label htmlFor="fi-appt-ahead">
+            {t("forms.inspector.appointment.maxDaysAhead")}
+          </Label>
+          <Input
+            id="fi-appt-ahead"
+            type="number"
+            min={1}
+            disabled={disabled}
+            value={ap.maxDaysAhead ?? 30}
+            onChange={(e) =>
+              patch({
+                maxDaysAhead:
+                  e.target.value === "" ? undefined : Number(e.target.value),
+              })
+            }
+          />
+        </Field>
+      </Cols>
+
+      {account?.auth_failed ? (
+        <p className="flex items-center gap-1.5 text-xs text-destructive">
+          <AlertTriangle className="h-3.5 w-3.5" aria-hidden="true" />
+          {t("forms.inspector.appointment.accountNeedsReconnect")}
+        </p>
+      ) : null}
+    </>
+  );
 }

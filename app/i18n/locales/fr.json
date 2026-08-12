@@ -59,7 +59,24 @@
     "mail": "Courrier",
     "wordpress": "Site web",
     "forms": "Formulaires",
-    "workflows": "Workflows"
+    "workflows": "Workflows",
+    "calendar": "Calendrier"
+  },
+  "calendar": {
+    "metaTitle": "Calendrier",
+    "metaDescription": "Tous les calendriers de votre équipe en un seul aperçu",
+    "title": "Calendrier",
+    "myCalendars": "Mes calendriers",
+    "teamCalendars": "Calendriers de l'équipe",
+    "bookingCalendars": "Calendriers de réservation",
+    "noEvents": "Aucun événement sur cette période",
+    "sourceError": "Impossible de charger ce calendrier",
+    "sourceErrorBanner_one": "{{count}} calendrier n'a pas pu être chargé",
+    "sourceErrorBanner_other": "{{count}} calendriers n'ont pas pu être chargés",
+    "joinMeet": "Rejoindre Google Meet",
+    "allDay": "Toute la journée",
+    "calendars": "Calendriers",
+    "timezone": "Fuseau horaire"
   },
   "db_brand": {
     "subtitle": "Sélectionnez un revendeur dans la barre latérale pour afficher ses Social Ads et Leads.",
@@ -768,7 +785,8 @@
       "profile": "Profil",
       "areaSettings": "Paramètres de l'espace",
       "bcc": "Journalisation",
-      "emailAccounts": "Comptes e-mail"
+      "emailAccounts": "Comptes e-mail",
+      "calendars": "Calendriers"
     },
     "bcc": {
       "metaTitle": "Journalisation des e-mails",
@@ -979,6 +997,37 @@
       "required": "Ce champ est requis",
       "invalidEmail": "Saisissez une adresse e-mail valide",
       "invalidPort": "Saisissez un port entre 1 et 65535"
+    },
+    "calendars": {
+      "metaTitle": "Calendriers",
+      "metaDescription": "Connecter des calendriers pour la planification",
+      "googleSection": "Calendriers Google",
+      "googleSectionDescription": "Connectez votre compte Google pour que les rendez-vous vérifient vos disponibilités et créent des événements dans votre calendrier.",
+      "bookingSection": "Calendriers de réservation",
+      "bookingSectionDescription": "Calendriers de réservation fournis par Repraesent pour vos pages de réservation publiques.",
+      "connectGoogle": "Connecter un calendrier Google",
+      "connecting": "Ouverture de Google…",
+      "you": "Vous",
+      "managedByAdmin": "Géré par l'admin",
+      "needsReconnect": "Reconnexion nécessaire",
+      "reconnect": "Reconnecter",
+      "refreshCalendars": "Actualiser la liste des calendriers",
+      "primary": "Principal",
+      "calendarsEmpty": "Aucun calendrier trouvé dans ce compte.",
+      "emptyGoogle": "Aucun calendrier Google connecté pour l'instant. Connectez votre compte pour que les rendez-vous utilisent vos disponibilités.",
+      "emptyBooking": "Aucun calendrier de réservation pour l'instant. Ils sont configurés pour vous par Repraesent.",
+      "disconnect": "Déconnecter",
+      "disconnectConfirmTitle": "Déconnecter ce compte de calendrier ?",
+      "disconnectConfirmBody": "Les rendez-vous ne verront plus les disponibilités de {{email}}. Les événements déjà créés sont conservés.",
+      "disconnectSuccess": "Compte de calendrier déconnecté",
+      "google": {
+        "connected": "{{email}} est connecté. Ses calendriers sont désormais disponibles pour la planification.",
+        "denied": "La connexion Google a été annulée, rien n'a été connecté.",
+        "expired": "Cette demande de connexion a expiré. Veuillez réessayer.",
+        "error": "Une erreur s'est produite lors de la connexion de votre compte Google. Veuillez réessayer.",
+        "failed": "Votre compte Google n'a pas pu être connecté : {{reason}}"
+      },
+      "dismiss": "Fermer"
     }
   },
   "booking": {
@@ -3061,7 +3110,8 @@
       "scale": "Échelle",
       "heading": "Titre",
       "paragraph": "Paragraphe",
-      "hidden": "Champ masqué"
+      "hidden": "Champ masqué",
+      "appointment": "Rendez-vous"
     },
     "inspector": {
       "title": "Paramètres du champ",
@@ -3124,7 +3174,27 @@
       "addressPartsHint": "Désactivez une partie pour la retirer du formulaire. Le texte en dessous est ce que voit le visiteur.",
       "addressPartLabel": "Libellé de {{part}}",
       "keyRequired": "Une clé est obligatoire — c'est sous cette clé que les réponses sont stockées.",
-      "mappingLocked": "Verrouillé : le formulaire a besoin de ce champ pour identifier un prospect."
+      "mappingLocked": "Verrouillé : le formulaire a besoin de ce champ pour identifier un prospect.",
+      "appointment": {
+        "targetAccount": "Compte cible",
+        "targetAccountHelp": "Le compte Google connecté dans lequel le rendez-vous réservé est créé.",
+        "targetCalendar": "Calendrier cible",
+        "busyCalendars": "Calendriers occupés",
+        "busyCalendarsHelp": "Les créneaux occupés dans ces calendriers ne sont pas proposés.",
+        "allCalendars": "Tous les calendriers",
+        "duration": "Durée du créneau",
+        "bookableWindow": "Heures réservables",
+        "windowStart": "De",
+        "windowEnd": "À",
+        "weekdays": "Jours réservables",
+        "timezone": "Fuseau horaire",
+        "minNotice": "Préavis minimum (heures)",
+        "maxDaysAhead": "Réservation à l'avance (jours)",
+        "noAccounts": "Aucun calendrier connecté. Connectez un calendrier Google pour proposer des rendez-vous.",
+        "connectLink": "Connecter un calendrier",
+        "accountNeedsReconnect": "doit être reconnecté",
+        "primary": "Principal"
+      }
     },
     "design": {
       "title": "Design",
@@ -3255,12 +3325,14 @@
         "duplicateMapping": "Le champ '{{field}}' enregistre dans une colonne de lead déjà utilisée par un autre champ.",
         "emptyOptions": "Le champ '{{field}}' n'a aucune option, ou deux options ont la même valeur.",
         "missingContent": "Le champ '{{field}}' n'a pas de libellé dans la langue par défaut.",
-        "missingContentLocale": "Le champ '{{field}}' n'a pas de libellé en {{locale}}."
+        "missingContentLocale": "Le champ '{{field}}' n'a pas de libellé en {{locale}}.",
+        "appointmentMissingCalendar": "Le champ '{{field}}' a besoin d'un calendrier cible."
       },
       "otherLocales": "{{count}} autre(s) problème(s) dans :",
       "keyMissing": "Un champ n'a pas de clé — les réponses seraient perdues",
       "emailSubjectMissing": "L'e-mail de confirmation n'a pas d'objet ({{locale}})",
-      "emailBodyMissing": "L'e-mail de confirmation n'a pas de message ({{locale}})"
+      "emailBodyMissing": "L'e-mail de confirmation n'a pas de message ({{locale}})",
+      "appointmentMissingCalendar": "Un champ rendez-vous a besoin d'un calendrier cible."
     },
     "public": {
       "notAvailable": "Ce formulaire n'est pas disponible",

@@ -59,7 +59,24 @@
     "mail": "Mail",
     "wordpress": "Website",
     "forms": "Formulieren",
-    "workflows": "Workflows"
+    "workflows": "Workflows",
+    "calendar": "Agenda"
+  },
+  "calendar": {
+    "metaTitle": "Agenda",
+    "metaDescription": "Alle agenda's van uw team in één overzicht",
+    "title": "Agenda",
+    "myCalendars": "Mijn agenda's",
+    "teamCalendars": "Teamagenda's",
+    "bookingCalendars": "Boekingsagenda's",
+    "noEvents": "Geen afspraken in deze periode",
+    "sourceError": "Deze agenda kon niet worden geladen",
+    "sourceErrorBanner_one": "{{count}} agenda kon niet worden geladen",
+    "sourceErrorBanner_other": "{{count}} agenda's konden niet worden geladen",
+    "joinMeet": "Deelnemen aan Google Meet",
+    "allDay": "Hele dag",
+    "calendars": "Agenda's",
+    "timezone": "Tijdzone"
   },
   "db_brand": {
     "subtitle": "Kies een retailer in de zijbalk om de Social Ads en Leads te bekijken.",
@@ -768,7 +785,8 @@
       "profile": "Profiel",
       "areaSettings": "Gebiedsinstellingen",
       "bcc": "E-maillogging",
-      "emailAccounts": "E-mailaccounts"
+      "emailAccounts": "E-mailaccounts",
+      "calendars": "Agenda's"
     },
     "bcc": {
       "metaTitle": "E-maillogging",
@@ -977,6 +995,37 @@
       "required": "Dit veld is verplicht",
       "invalidEmail": "Voer een geldig e-mailadres in",
       "invalidPort": "Voer een poort tussen 1 en 65535 in"
+    },
+    "calendars": {
+      "metaTitle": "Agenda's",
+      "metaDescription": "Agenda's koppelen voor het plannen van afspraken",
+      "googleSection": "Google-agenda's",
+      "googleSectionDescription": "Koppel je Google-account zodat afspraken je beschikbaarheid kunnen controleren en items in je agenda kunnen aanmaken.",
+      "bookingSection": "Boekingsagenda's",
+      "bookingSectionDescription": "Door Repraesent geleverde boekingsagenda's voor je openbare boekingspagina's.",
+      "connectGoogle": "Google-agenda koppelen",
+      "connecting": "Google wordt geopend…",
+      "you": "Jij",
+      "managedByAdmin": "Beheerd door admin",
+      "needsReconnect": "Opnieuw koppelen nodig",
+      "reconnect": "Opnieuw verbinden",
+      "refreshCalendars": "Agendalijst vernieuwen",
+      "primary": "Hoofdagenda",
+      "calendarsEmpty": "Geen agenda's gevonden in dit account.",
+      "emptyGoogle": "Nog geen Google-agenda gekoppeld. Koppel je account zodat afspraken je beschikbaarheid kunnen gebruiken.",
+      "emptyBooking": "Nog geen boekingsagenda's. Deze worden door Repraesent voor je ingericht.",
+      "disconnect": "Ontkoppelen",
+      "disconnectConfirmTitle": "Dit agenda-account ontkoppelen?",
+      "disconnectConfirmBody": "Afspraken zien de beschikbaarheid van {{email}} dan niet meer. Al aangemaakte items blijven bewaard.",
+      "disconnectSuccess": "Agenda-account ontkoppeld",
+      "google": {
+        "connected": "{{email}} is verbonden. De agenda's zijn nu beschikbaar voor het plannen.",
+        "denied": "De Google-aanmelding is geannuleerd, er is niets verbonden.",
+        "expired": "Dit verbindingsverzoek is verlopen. Probeer het opnieuw.",
+        "error": "Er ging iets mis bij het verbinden van je Google-account. Probeer het opnieuw.",
+        "failed": "Je Google-account kon niet worden verbonden: {{reason}}"
+      },
+      "dismiss": "Sluiten"
     }
   },
   "booking": {
@@ -3059,7 +3108,8 @@
       "scale": "Schaal",
       "heading": "Kop",
       "paragraph": "Alinea",
-      "hidden": "Verborgen veld"
+      "hidden": "Verborgen veld",
+      "appointment": "Afspraak"
     },
     "inspector": {
       "title": "Veldinstellingen",
@@ -3122,7 +3172,27 @@
       "addressPartsHint": "Zet een onderdeel uit om het uit het formulier te halen. De tekst eronder ziet de bezoeker.",
       "addressPartLabel": "Label voor {{part}}",
       "keyRequired": "Een sleutel is verplicht — inzendingen worden hieronder opgeslagen.",
-      "mappingLocked": "Vergrendeld: het formulier heeft dit veld nodig om een lead te identificeren."
+      "mappingLocked": "Vergrendeld: het formulier heeft dit veld nodig om een lead te identificeren.",
+      "appointment": {
+        "targetAccount": "Doelaccount",
+        "targetAccountHelp": "Het gekoppelde Google-account waarin de geboekte afspraak wordt aangemaakt.",
+        "targetCalendar": "Doelagenda",
+        "busyCalendars": "Bezette agenda's",
+        "busyCalendarsHelp": "Tijden die in deze agenda's bezet zijn, worden niet aangeboden.",
+        "allCalendars": "Alle agenda's",
+        "duration": "Duur van het tijdslot",
+        "bookableWindow": "Boekbare uren",
+        "windowStart": "Van",
+        "windowEnd": "Tot",
+        "weekdays": "Boekbare dagen",
+        "timezone": "Tijdzone",
+        "minNotice": "Minimale aankondiging (uren)",
+        "maxDaysAhead": "Vooruit boeken (dagen)",
+        "noAccounts": "Nog geen agenda gekoppeld. Koppel een Google-agenda om afspraken aan te bieden.",
+        "connectLink": "Agenda koppelen",
+        "accountNeedsReconnect": "moet opnieuw worden gekoppeld",
+        "primary": "Primair"
+      }
     },
     "design": {
       "title": "Ontwerp",
@@ -3253,12 +3323,14 @@
         "duplicateMapping": "Veld '{{field}}' slaat op in dezelfde leadkolom als een ander veld.",
         "emptyOptions": "Veld '{{field}}' heeft geen opties, of twee opties hebben dezelfde waarde.",
         "missingContent": "Veld '{{field}}' heeft geen label in de standaardtaal.",
-        "missingContentLocale": "Veld '{{field}}' heeft geen label in {{locale}}."
+        "missingContentLocale": "Veld '{{field}}' heeft geen label in {{locale}}.",
+        "appointmentMissingCalendar": "Veld '{{field}}' heeft een doelagenda nodig."
       },
       "otherLocales": "{{count}} ander(e) probleem/problemen in:",
       "keyMissing": "Een veld heeft geen sleutel — inzendingen zouden verloren gaan",
       "emailSubjectMissing": "Bevestigingsmail heeft geen onderwerp ({{locale}})",
-      "emailBodyMissing": "Bevestigingsmail heeft geen bericht ({{locale}})"
+      "emailBodyMissing": "Bevestigingsmail heeft geen bericht ({{locale}})",
+      "appointmentMissingCalendar": "Een afspraakveld heeft een doelagenda nodig."
     },
     "public": {
       "notAvailable": "Dit formulier is niet beschikbaar",

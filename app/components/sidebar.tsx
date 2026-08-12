@@ -7,6 +7,8 @@ import {
   AtSign,
   Building2,
   BookUser,
+  CalendarDays,
+  CalendarRange,
   CheckSquare,
   ChevronDown,
   ClipboardList,
@@ -33,6 +35,7 @@ import { getLocalizedServiceName } from "~/lib/api/auth";
 import { useAuthContext } from "~/providers/auth-provider";
 import { setStoredSelectedView, BRAND_VIEW } from "~/lib/api/axios-instance";
 import { useAppointmentConfigs } from "~/lib/hooks/useAppointmentConfigs";
+import { useCalendarSummary } from "~/lib/hooks/useCalendarSummary";
 import { useWorkspaceWpSite } from "~/lib/hooks/useWorkspaceWpSite";
 import { LanguageSwitcher } from "~/components/language-switcher";
 import {
@@ -82,6 +85,11 @@ const SETTINGS_NAV = [
     to: "/settings/email-accounts",
     labelKey: "settings.tabs.emailAccounts",
     Icon: AtSign,
+  },
+  {
+    to: "/settings/calendars",
+    labelKey: "settings.tabs.calendars",
+    Icon: CalendarDays,
   },
   { to: "/settings/bcc", labelKey: "settings.tabs.bcc", Icon: Inbox },
 ] as const;
@@ -159,6 +167,13 @@ export function Sidebar({
   );
   const showAppointmentsInSidebar =
     hasAppointmentsService && !!appointmentConfigs?.length;
+  // The team Calendar page only exists once someone connected a source, so
+  // the nav entry follows the same summary the page itself redirects on.
+  const { data: calendarSummary } = useCalendarSummary(!!currentWorkspace?.id);
+  const showCalendarInSidebar =
+    (calendarSummary?.google_account_count ?? 0) +
+      (calendarSummary?.baikal_config_count ?? 0) >
+    0;
   const isDoorboostBrandWs = currentWorkspace?.type === "doorboost_brand";
   // TEMPORARY: Workflows is still being piloted, so in production only the
   // pilot workspace sees the nav entry. Local development always shows it.
@@ -491,6 +506,17 @@ export function Sidebar({
                   </Fragment>
                 );
               })}
+
+            {showCalendarInSidebar && (
+              <NavLink
+                to="/calendar"
+                isActive={location.pathname.startsWith("/calendar")}
+                onClick={onClose}
+              >
+                <CalendarRange className="h-4 w-4 shrink-0" />
+                {t("nav.calendar", { defaultValue: "Calendar" })}
+              </NavLink>
+            )}
           </>
         )}
       </nav>

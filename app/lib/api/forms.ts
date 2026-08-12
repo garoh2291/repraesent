@@ -205,3 +205,22 @@ export async function submitPublicForm(
   );
   return response.data;
 }
+
+export interface AppointmentAvailability {
+  /** Free slots as `"<startISO>--<endISO>"` — the submit wire format. */
+  slots: string[];
+  timezone: string;
+}
+
+/** Free appointment slots for one field on one day (`date` = YYYY-MM-DD). */
+export async function getAppointmentAvailability(
+  formId: string,
+  fieldId: string,
+  date: string,
+): Promise<AppointmentAvailability> {
+  const response = await publicClient.get<AppointmentAvailability>(
+    `/public/forms/${formId}/appointment-availability`,
+    { params: { fieldId, date } },
+  );
+  return response.data;
+}

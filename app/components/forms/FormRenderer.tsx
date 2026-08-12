@@ -49,6 +49,12 @@ export interface FormRendererProps {
 
   /** Stable prefix for input ids, so two forms on one page never collide. */
   idPrefix: string;
+  /**
+   * Live mode only: the public form id, so an appointment field can ask the
+   * availability endpoint for real slots. Omitted in preview, where a draft has
+   * no published availability and the slot picker renders placeholders.
+   */
+  formId?: string;
   /** Locales offered in the public switcher; omit to hide it. */
   offeredLocales?: FormLocale[];
   onLocaleChange?: (locale: FormLocale) => void;
@@ -82,6 +88,7 @@ export function FormRenderer({
   submitting,
   status,
   idPrefix,
+  formId,
   offeredLocales,
   onLocaleChange,
   selection,
@@ -222,6 +229,8 @@ export function FormRenderer({
                     field={field}
                     mode={mode}
                     idPrefix={idPrefix}
+                    formId={formId}
+                    locale={locale}
                     value={values[field.key]}
                     error={errors[field.key]}
                     t={t}
@@ -270,6 +279,9 @@ interface RenderedFieldProps {
   field: FormField;
   mode: "preview" | "live";
   idPrefix: string;
+  /** See FormRendererProps.formId — appointment availability, live mode only. */
+  formId?: string;
+  locale: FormLocale;
   value: unknown;
   error?: FormErrorCode;
   t: (key: string) => string;
@@ -283,6 +295,8 @@ function RenderedField({
   field,
   mode,
   idPrefix,
+  formId,
+  locale,
   value,
   error,
   t,
@@ -356,6 +370,9 @@ function RenderedField({
         labelled={labelled}
         t={t}
         onChange={onChange}
+        mode={mode}
+        formId={formId}
+        locale={locale}
       />
 
       {help ? <p className="rf-help">{help}</p> : null}

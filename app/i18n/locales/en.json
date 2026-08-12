@@ -59,7 +59,24 @@
     "mail": "Mail",
     "wordpress": "Website",
     "forms": "Forms",
-    "workflows": "Workflows"
+    "workflows": "Workflows",
+    "calendar": "Calendar"
+  },
+  "calendar": {
+    "metaTitle": "Calendar",
+    "metaDescription": "All your team's calendars in one view",
+    "title": "Calendar",
+    "myCalendars": "My calendars",
+    "teamCalendars": "Team calendars",
+    "bookingCalendars": "Booking calendars",
+    "noEvents": "No events in this period",
+    "sourceError": "This calendar could not be loaded",
+    "sourceErrorBanner_one": "{{count}} calendar could not be loaded",
+    "sourceErrorBanner_other": "{{count}} calendars could not be loaded",
+    "joinMeet": "Join Google Meet",
+    "allDay": "All day",
+    "calendars": "Calendars",
+    "timezone": "Timezone"
   },
   "db_brand": {
     "subtitle": "Pick a retailer from the sidebar to view its Social Ads & Leads.",
@@ -768,7 +785,8 @@
       "profile": "Profile",
       "areaSettings": "Area Settings",
       "bcc": "Email Logging",
-      "emailAccounts": "Email accounts"
+      "emailAccounts": "Email accounts",
+      "calendars": "Calendars"
     },
     "bcc": {
       "metaTitle": "Email logging",
@@ -977,6 +995,37 @@
       "required": "This field is required",
       "invalidEmail": "Enter a valid email address",
       "invalidPort": "Enter a port between 1 and 65535"
+    },
+    "calendars": {
+      "metaTitle": "Calendars",
+      "metaDescription": "Connect calendars for scheduling",
+      "googleSection": "Google calendars",
+      "googleSectionDescription": "Connect your Google account so appointments can check your availability and create events in your calendar.",
+      "bookingSection": "Booking calendars",
+      "bookingSectionDescription": "Booking calendars provided by Repraesent for your public booking pages.",
+      "connectGoogle": "Connect Google calendar",
+      "connecting": "Opening Google…",
+      "you": "You",
+      "managedByAdmin": "Managed by admin",
+      "needsReconnect": "Needs reconnecting",
+      "reconnect": "Reconnect",
+      "refreshCalendars": "Refresh calendar list",
+      "primary": "Primary",
+      "calendarsEmpty": "No calendars found in this account.",
+      "emptyGoogle": "No Google calendar connected yet. Connect your account and appointments can use your availability.",
+      "emptyBooking": "No booking calendars yet. These are set up for you by Repraesent.",
+      "disconnect": "Disconnect",
+      "disconnectConfirmTitle": "Disconnect this calendar account?",
+      "disconnectConfirmBody": "Appointments will no longer see availability from {{email}}. Events already created are kept.",
+      "disconnectSuccess": "Calendar account disconnected",
+      "google": {
+        "connected": "{{email}} is connected. Its calendars are now available for scheduling.",
+        "denied": "Google sign-in was cancelled, so nothing was connected.",
+        "expired": "That connection request timed out. Please try connecting again.",
+        "error": "Something went wrong connecting your Google account. Please try again.",
+        "failed": "Your Google account could not be connected: {{reason}}"
+      },
+      "dismiss": "Dismiss"
     }
   },
   "booking": {
@@ -3059,7 +3108,8 @@
       "scale": "Scale",
       "heading": "Heading",
       "paragraph": "Paragraph",
-      "hidden": "Hidden field"
+      "hidden": "Hidden field",
+      "appointment": "Appointment"
     },
     "inspector": {
       "title": "Field settings",
@@ -3122,7 +3172,27 @@
       "addressPartsHint": "Turn a part off to drop it from the form. The text under each one is what the visitor sees.",
       "addressPartLabel": "{{part}} label",
       "keyRequired": "A key is required — this is what submissions are stored under.",
-      "mappingLocked": "Locked: the form needs this field to identify a lead."
+      "mappingLocked": "Locked: the form needs this field to identify a lead.",
+      "appointment": {
+        "targetAccount": "Target account",
+        "targetAccountHelp": "The connected Google account the booked appointment is created in.",
+        "targetCalendar": "Target calendar",
+        "busyCalendars": "Busy calendars",
+        "busyCalendarsHelp": "Times that are busy in these calendars are not offered.",
+        "allCalendars": "All calendars",
+        "duration": "Slot length",
+        "bookableWindow": "Bookable hours",
+        "windowStart": "From",
+        "windowEnd": "Until",
+        "weekdays": "Bookable days",
+        "timezone": "Timezone",
+        "minNotice": "Minimum notice (hours)",
+        "maxDaysAhead": "Book ahead (days)",
+        "noAccounts": "No calendar connected yet. Connect a Google calendar to offer appointments.",
+        "connectLink": "Connect a calendar",
+        "accountNeedsReconnect": "needs reconnecting",
+        "primary": "Primary"
+      }
     },
     "design": {
       "title": "Design",
@@ -3253,12 +3323,14 @@
         "duplicateMapping": "Field '{{field}}' saves to a lead column another field already uses.",
         "emptyOptions": "Field '{{field}}' has no options, or two options share a value.",
         "missingContent": "Field '{{field}}' has no label in the default language.",
-        "missingContentLocale": "Field '{{field}}' has no label in {{locale}}."
+        "missingContentLocale": "Field '{{field}}' has no label in {{locale}}.",
+        "appointmentMissingCalendar": "Field '{{field}}' needs a target calendar."
       },
       "otherLocales": "{{count}} more issue(s) in:",
       "keyMissing": "A field has no key — submissions to it would be lost",
       "emailSubjectMissing": "Confirmation e-mail has no subject ({{locale}})",
-      "emailBodyMissing": "Confirmation e-mail has no message ({{locale}})"
+      "emailBodyMissing": "Confirmation e-mail has no message ({{locale}})",
+      "appointmentMissingCalendar": "Appointment field needs a target calendar."
     },
     "public": {
       "notAvailable": "This form is not available",

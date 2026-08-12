@@ -10,6 +10,7 @@ import { useTranslation } from "react-i18next";
  */
 const SECTIONS = [
   { match: "/settings/email-accounts", key: "emailAccounts" },
+  { match: "/settings/calendars", key: "calendars" },
   { match: "/settings/team", key: "team" },
   { match: "/settings/bcc", key: "bcc" },
 ] as const;

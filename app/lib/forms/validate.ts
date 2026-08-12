@@ -23,6 +23,8 @@ import {
 const EMAIL_RE = /^[^\s@]+@[^\s@.]+\.[^\s@]{2,}$/;
 const PHONE_RE = /^[+()\-\s\d]{5,24}$/;
 const ISO_DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
+/** Loose ISO pair `"<start>--<end>"` — the appointment slot wire format. */
+const SLOT_RE = /^\d{4}-\d{2}-\d{2}T[\d:.]+Z?--\d{4}-\d{2}-\d{2}T[\d:.]+Z?$/;
 
 export type FormErrors = Record<string, FormErrorCode>;
 
@@ -128,6 +130,11 @@ function checkField(field: FormField, raw: unknown): FormErrorCode | null {
         return "out_of_range";
       break;
     }
+    case "appointment": {
+      // Shape only — whether the slot is still free is the server's call.
+      if (!SLOT_RE.test(text)) return "slot_invalid";
+      break;
+    }
     default:
       break;
   }
@@ -181,7 +188,8 @@ export function emptyValues(
 //
 // Tab attribution (keep both copies in step):
 //   build  — needsEmailField, needsNameField, duplicateKey, duplicateMapping,
-//            emptyOptions, missingContent (form.submit AND field labels)
+//            emptyOptions, appointmentMissingCalendar,
+//            missingContent (form.submit AND field labels)
 //   design — invalidRedirect
 //
 // EVERY enabled locale is checked, not just the default — see the body.
@@ -281,6 +289,19 @@ export function validateDefinition(
       if (options.length === 0 || values.size !== options.length) {
         issues.push({
           code: "emptyOptions",
+          tab: "build",
+          fieldId: field.id,
+          fieldKey: field.key,
+        });
+      }
+    }
+
+    // An appointment field without a target calendar would render a working
+    // picker whose booking silently goes nowhere — block it like empty options.
+    if (field.type === "appointment") {
+      if (!field.appointment?.accountId || !field.appointment?.calendarId) {
+        issues.push({
+          code: "appointmentMissingCalendar",
           tab: "build",
           fieldId: field.id,
           fieldKey: field.key,

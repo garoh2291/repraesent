@@ -21,6 +21,7 @@ export const FORM_FIELD_TYPES = [
   "checkbox_group",
   "checkbox",
   "date",
+  "appointment",
   "url",
   "rating",
   "scale",
@@ -115,6 +116,33 @@ export interface FormField {
   ratingMax?: number;
   /** type "scale", default { min: 1, max: 10 } */
   scale?: { min: number; max: number };
+
+  /**
+   * Type "appointment": slot picker config. The calendar ids stay server-side —
+   * the public availability endpoint and the render config only ever expose the
+   * client-safe subset (weekdays, window, duration, timezone), never which
+   * account or calendar backs them. The submitted value is the slot string
+   * `"<startISO>--<endISO>"`, the same wire format the booking page uses.
+   */
+  appointment?: {
+    /** workspace_calendar_accounts row id the booked event is created under. */
+    accountId: string;
+    /** Google calendar id the booked event lands in. */
+    calendarId: string;
+    /** Busy sources, `"google:<accountId>:<calendarId>"` / `"baikal:<configId>"`, or "all". */
+    busyCalendarKeys: string[] | "all";
+    durationMinutes: number;
+    /** Local wall-clock bookable window, "HH:mm". */
+    window: { start: string; end: string };
+    /** Bookable weekdays, lowercase 3-letter keys ("mon".."sun"). */
+    weekdays: string[];
+    /** IANA timezone the window and weekdays are read in. */
+    timezone: string;
+    /** Hours of lead time before the first offered slot. Default 2. */
+    minNoticeHours?: number;
+    /** Booking horizon in days. Default 30. */
+    maxDaysAhead?: number;
+  };
 }
 
 export interface FormSection {
@@ -136,6 +164,7 @@ export interface FormSection {
  *   field.<fieldId>.part.street|city|zip|country
  *   success.inline | success.modal.title | success.modal.body | success.modal.cta
  *   error.generic | error.<FormErrorCode>
+ *   appointment.loading | appointment.empty     (slot picker runtime states)
  */
 export type FormContent = Record<string, string>;
 
@@ -309,6 +338,10 @@ export const FORM_ERROR_CODES = [
   "min_selected",
   "max_selected",
   "consent_required",
+  /** Appointment slot passed validation but was booked away in the meantime. */
+  "slot_unavailable",
+  /** Appointment value is not a well-formed future slot of the configured length. */
+  "slot_invalid",
 ] as const;
 export type FormErrorCode = (typeof FORM_ERROR_CODES)[number];
 
@@ -327,6 +360,8 @@ export const FORM_DEFINITION_ISSUES = [
   "emailSubjectMissing",
   /** Confirmation e-mail is switched on but has no body in some locale. */
   "emailBodyMissing",
+  /** An appointment field with no calendar picked. It could render, but never book. */
+  "appointmentMissingCalendar",
 ] as const;
 export type FormDefinitionIssueCode = (typeof FORM_DEFINITION_ISSUES)[number];
 
