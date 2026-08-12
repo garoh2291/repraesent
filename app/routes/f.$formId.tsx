@@ -16,6 +16,7 @@ import { FormRenderer } from "~/components/forms/FormRenderer";
 import i18n from "~/i18n";
 import { getPublicForm, submitPublicForm } from "~/lib/api/forms";
 import { getContent } from "~/lib/forms/content";
+import { readLangCookie } from "~/lib/forms/lang-cookie";
 import { onColor } from "~/lib/forms/css";
 import { normalizeDefinition } from "~/lib/forms/field-types";
 import {
@@ -74,9 +75,15 @@ export default function PublicFormRoute() {
   const wrapperRef = useRef<HTMLDivElement | null>(null);
 
   /**
-   * ?lang= wins, then the browser's language when the form offers it, then the
-   * form's own default. Note this is the VISITOR's language — deliberately not
-   * i18next's, which on a dashboard-shared bundle would be the operator's.
+   * ?lang= wins, then the site's `repraesent_lang` cookie, then the browser's
+   * language when the form offers it, then the form's own default. Note this is
+   * the VISITOR's language — deliberately not i18next's, which on a
+   * dashboard-shared bundle would be the operator's.
+   *
+   * The cookie sits above the browser because the two answer different
+   * questions: it is a choice made on the site, where `navigator.language` is
+   * only how the device is configured. It sits below `?lang=` because that is a
+   * choice being made right now, which must beat a stored one.
    */
   useEffect(() => {
     if (!data || locale) return;
@@ -84,6 +91,11 @@ export default function PublicFormRoute() {
 
     if (isFormLocale(langParam) && offered.includes(langParam)) {
       setLocale(langParam);
+      return;
+    }
+    const stored = readLangCookie();
+    if (isFormLocale(stored) && offered.includes(stored)) {
+      setLocale(stored);
       return;
     }
     const nav =
