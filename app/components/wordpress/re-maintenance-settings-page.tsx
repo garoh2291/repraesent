@@ -1,3 +1,4 @@
+import { useCallback, useEffect, useState } from "react";
 import { useParams } from "react-router";
 import { useTranslation } from "react-i18next";
 import { Eye, MessageSquareText, Power, Save } from "lucide-react";
@@ -14,7 +15,6 @@ import { Textarea } from "~/components/ui/textarea";
 import {
   DEFAULT_MESSAGE,
   DEFAULT_SETTINGS,
-  PLUGIN_VERSION,
   flash,
 } from "~/components/wordpress/re-maintenance/constants";
 import {
@@ -26,6 +26,14 @@ import {
   SectionCard,
   ToggleField,
 } from "~/components/wordpress/fields";
+import { PluginLangBar } from "~/components/wordpress/plugin-lang-bar";
+import { usePluginTranslateLanguages } from "~/lib/hooks/usePluginTranslateLanguages";
+import { usePluginOverlayPack } from "~/lib/hooks/usePluginOverlayPack";
+import {
+  maintenanceFromOverlay,
+  maintenanceToSavePayload,
+  type OverlayStringMap,
+} from "~/lib/wordpress/plugin-i18n";
 import { cn } from "~/lib/utils";
 
 /**
@@ -40,6 +48,17 @@ export function ReMaintenanceSettingsPage() {
     catalogItem?.display_name,
     "re:maintenance",
   );
+  const i18n = usePluginTranslateLanguages();
+  const overlays = usePluginOverlayPack(i18n.translatePluginUuid);
+  const [activeLang, setActiveLang] = useState("");
+  const [overlayMap, setOverlayMap] = useState<OverlayStringMap>({});
+  const [displayMessages, setDisplayMessages] = useState({
+    message: "",
+    sub_message: "",
+  });
+  const [overlayDirty, setOverlayDirty] = useState(false);
+  const [langLoading, setLangLoading] = useState(false);
+
   const {
     settings,
     setSettings,
@@ -58,6 +77,50 @@ export function ReMaintenanceSettingsPage() {
   );
 
   const { maintenance, site: wpSite } = settings;
+  const multilingual = i18n.enabled;
+  const isSource = !multilingual || activeLang === i18n.source;
+
+  useEffect(() => {
+    if (i18n.source && !activeLang) setActiveLang(i18n.source);
+  }, [i18n.source, activeLang]);
+
+  useEffect(() => {
+    if (isSource) {
+      setDisplayMessages({
+        message: maintenance.message,
+        sub_message: maintenance.sub_message,
+      });
+      setOverlayDirty(false);
+    }
+  }, [isSource, maintenance.message, maintenance.sub_message]);
+
+  const loadOverlay = overlays.load;
+
+  const loadTarget = useCallback(
+    async (language: string) => {
+      setLangLoading(true);
+      try {
+        const map = await loadOverlay("maintenance", 0, language);
+        setOverlayMap(map);
+        setDisplayMessages(
+          maintenanceFromOverlay(map, {
+            message: maintenance.message,
+            sub_message: maintenance.sub_message,
+          }),
+        );
+        setOverlayDirty(false);
+      } finally {
+        setLangLoading(false);
+      }
+    },
+    [loadOverlay, maintenance.message, maintenance.sub_message],
+  );
+
+  useEffect(() => {
+    if (multilingual && activeLang && activeLang !== i18n.source) {
+      void loadTarget(activeLang);
+    }
+  }, [multilingual, activeLang, i18n.source, loadTarget]);
 
   function patch(
     updater: (prev: ReMaintenanceSettings) => ReMaintenanceSettings,
@@ -65,14 +128,38 @@ export function ReMaintenanceSettingsPage() {
     setSettings(updater);
   }
 
-  function handleSave() {
-    saveMutation.mutate(settings as unknown as Record<string, unknown>, {
-      onSuccess: (data) => {
-        reseed(data.settings);
+  function setMessage(field: "message" | "sub_message", value: string) {
+    setDisplayMessages((prev) => ({ ...prev, [field]: value }));
+    if (isSource) {
+      patch((p) => ({
+        ...p,
+        maintenance: { ...p.maintenance, [field]: value },
+      }));
+    } else {
+      setOverlayDirty(true);
+    }
+  }
+
+  async function handleSave() {
+    try {
+      if (multilingual && !isSource) {
+        await overlays.save(
+          maintenanceToSavePayload(displayMessages, overlayMap),
+        );
+        setOverlayDirty(false);
         flash(t("wordpress.reMaintenance.saved", "Settings saved."));
-      },
-      onError: (err) => flash(extractErrorMessage(err), "error"),
-    });
+        return;
+      }
+      saveMutation.mutate(settings as unknown as Record<string, unknown>, {
+        onSuccess: (data) => {
+          reseed(data.settings);
+          flash(t("wordpress.reMaintenance.saved", "Settings saved."));
+        },
+        onError: (err) => flash(extractErrorMessage(err), "error"),
+      });
+    } catch (err) {
+      flash(extractErrorMessage(err), "error");
+    }
   }
 
   if (loading) {
@@ -104,8 +191,10 @@ export function ReMaintenanceSettingsPage() {
             <h1 className="text-xl font-semibold tracking-tight text-foreground sm:text-2xl">
               {pageTitle}
             </h1>
-            <Badge variant="outline">v{PLUGIN_VERSION}</Badge>
-            {dirty ? (
+            {catalogItem?.version ? (
+              <Badge variant="outline">v{catalogItem.version}</Badge>
+            ) : null}
+            {dirty || overlayDirty ? (
               <Badge
                 variant="secondary"
                 className="gap-1.5 font-normal text-muted-foreground"
@@ -124,9 +213,9 @@ export function ReMaintenanceSettingsPage() {
                 )}
           </p>
         </div>
-        <Button onClick={handleSave} disabled={saving} className="shrink-0">
+        <Button onClick={() => void handleSave()} disabled={saving || overlays.saving} className="shrink-0">
           <Save className="h-4 w-4" />
-          {saving
+          {saving || overlays.saving
             ? t("wordpress.reMaintenance.saving", "Saving…")
             : t("wordpress.reMaintenance.save", "Save settings")}
         </Button>
@@ -178,6 +267,7 @@ export function ReMaintenanceSettingsPage() {
               <ToggleField
                 id="re-maintenance-enabled"
                 checked={maintenance.enabled}
+                disabled={!isSource}
                 onChange={(checked) =>
                   patch((p) => ({
                     ...p,
@@ -228,11 +318,11 @@ export function ReMaintenanceSettingsPage() {
                 {wpSite.site_title || "—"}
               </p>
               <p className="mt-3 text-sm font-medium">
-                {maintenance.message || "—"}
+                {displayMessages.message || "—"}
               </p>
-              {maintenance.sub_message?.trim() ? (
+              {displayMessages.sub_message?.trim() ? (
                 <p className="mt-2 text-xs text-muted-foreground">
-                  {maintenance.sub_message}
+                  {displayMessages.sub_message}
                 </p>
               ) : null}
               {wpSite.tagline?.trim() ? (
@@ -255,6 +345,26 @@ export function ReMaintenanceSettingsPage() {
             "wordpress.reMaintenance.messageSubtitle",
             "Copy shown on the coming-soon page",
           )}
+          action={
+            multilingual ? (
+              <PluginLangBar
+                languages={i18n.languages}
+                active={activeLang || i18n.source}
+                source={i18n.source}
+                dirty={overlayDirty}
+                disabled={langLoading || overlays.loading}
+                unsavedMessage={t(
+                  "wordpress.reMaintenance.unsavedSwitch",
+                  "You have unsaved message changes. Switch language anyway?",
+                )}
+                ariaLabel={t(
+                  "wordpress.reMaintenance.messageLanguage",
+                  "Message language",
+                )}
+                onChange={setActiveLang}
+              />
+            ) : undefined
+          }
         />
         <div className="space-y-4 p-5 sm:p-6">
           <Field>
@@ -268,13 +378,9 @@ export function ReMaintenanceSettingsPage() {
               id="re-maintenance-message"
               rows={2}
               placeholder={DEFAULT_MESSAGE}
-              value={maintenance.message}
-              onChange={(e) =>
-                patch((p) => ({
-                  ...p,
-                  maintenance: { ...p.maintenance, message: e.target.value },
-                }))
-              }
+              disabled={langLoading}
+              value={displayMessages.message}
+              onChange={(e) => setMessage("message", e.target.value)}
             />
           </Field>
           <Field>
@@ -293,20 +399,13 @@ export function ReMaintenanceSettingsPage() {
             <Textarea
               id="re-maintenance-sub-message"
               rows={3}
+              disabled={langLoading}
               placeholder={t(
                 "wordpress.reMaintenance.secondaryPlaceholder",
                 "Entdecken Sie bald unsere Produkte...",
               )}
-              value={maintenance.sub_message}
-              onChange={(e) =>
-                patch((p) => ({
-                  ...p,
-                  maintenance: {
-                    ...p.maintenance,
-                    sub_message: e.target.value,
-                  },
-                }))
-              }
+              value={displayMessages.sub_message}
+              onChange={(e) => setMessage("sub_message", e.target.value)}
             />
           </Field>
           <InfoNote>

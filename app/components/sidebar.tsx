@@ -347,7 +347,7 @@ export function Sidebar({
               {t("nav.home")}
             </NavLink>
 
-            {wpSite && (
+            {wpSite?.sso_enabled && (
               <NavLink
                 to="/website"
                 isActive={location.pathname.startsWith("/website")}

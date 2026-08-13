@@ -387,6 +387,7 @@ export type TranslateContentListResponse = {
   items: TranslateContentItem[];
   total: number;
   has_rf_forms: boolean;
+  has_plugins: boolean;
 };
 
 export type TranslateString = {
@@ -487,6 +488,21 @@ export async function runTranslateIndex(
   return res.data;
 }
 
+export async function runTranslateBulk(
+  pluginUuid: string,
+  action: "start" | "batch" | "cancel",
+  languages?: string[],
+  mode?: "empty_or_stale" | "empty_only" | "overwrite",
+): Promise<{ bulk?: Record<string, unknown> }> {
+  const res = await apiClient.post<{ bulk?: Record<string, unknown> }>(
+    pluginUrl(pluginUuid, "translate-bulk"),
+    { action, languages, mode },
+    // start builds the queue over SQL; batch runs machine_translate over the bridge
+    { timeout: 120_000 },
+  );
+  return res.data;
+}
+
 export async function setTranslateSourceLanguage(
   pluginUuid: string,
   code: string,
@@ -504,13 +520,15 @@ export async function machineTranslateContent(
   id: number | string,
   language: string,
   objectType?: string,
+  mode?: "empty_or_stale" | "empty_only" | "overwrite",
 ): Promise<Record<string, unknown>> {
   const res = await apiClient.post<Record<string, unknown>>(
     pluginUrl(
       pluginUuid,
       `translate-content/${encodeURIComponent(String(id))}/machine-translate`,
     ),
-    { language, object_type: objectType },
+    { language, object_type: objectType, mode },
+    { timeout: 120_000 },
   );
   return res.data;
 }

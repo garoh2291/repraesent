@@ -151,17 +151,27 @@ export function ToggleField({
   onChange,
   label,
   id,
+  disabled,
 }: {
   checked: boolean;
   onChange: (v: boolean) => void;
   label: string;
   id?: string;
+  disabled?: boolean;
 }) {
   const switchId = id ?? `toggle-${label}`;
   return (
     <div className="flex items-center gap-3">
-      <Switch id={switchId} checked={checked} onCheckedChange={onChange} />
-      <Label htmlFor={switchId} className="font-normal">
+      <Switch
+        id={switchId}
+        checked={checked}
+        disabled={disabled}
+        onCheckedChange={onChange}
+      />
+      <Label
+        htmlFor={switchId}
+        className={cn("font-normal", disabled && "opacity-50")}
+      >
         {label}
       </Label>
     </div>

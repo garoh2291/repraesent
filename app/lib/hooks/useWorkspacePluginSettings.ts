@@ -103,7 +103,8 @@ export function useWorkspacePluginSettingsForm<T extends object>(
   const [savedSettings, setSavedSettings] = useState<T>(() => fromApi(null));
 
   const siteQuery = useWorkspaceWpSite(true);
-  const hasSite = !!siteQuery.data;
+  // Site management requires admin SSO — without it the Website surface is hidden.
+  const hasSite = !!siteQuery.data?.sso_enabled;
   const settingsQuery = useWorkspacePluginSettings(pluginUuid, hasSite);
   const saveMutation = useWorkspacePluginSettingsMutation(pluginUuid);
 

@@ -96,7 +96,7 @@ export default function WordPressPage() {
             )}
           </p>
         </div>
-      ) : !site ? (
+      ) : !site?.sso_enabled ? (
         <EmptyState />
       ) : (
         <>
@@ -123,11 +123,8 @@ export default function WordPressPage() {
               </div>
 
               <div className="flex items-center gap-3 sm:flex-col sm:items-end sm:gap-2.5">
-                <SsoBadge connected={site.sso_enabled} />
-                <Button
-                  onClick={handleSignIn}
-                  disabled={!site.sso_enabled || signingIn}
-                >
+                <SsoBadge connected />
+                <Button onClick={handleSignIn} disabled={signingIn}>
                   <LogIn className="h-4 w-4" />
                   {signingIn
                     ? t("wordpress.signingIn", "Opening site admin…")
@@ -135,18 +132,9 @@ export default function WordPressPage() {
                 </Button>
               </div>
             </div>
-
-            {!site.sso_enabled && (
-              <div className="border-t bg-muted/30 px-5 py-3 text-xs text-muted-foreground sm:px-6">
-                {t(
-                  "wordpress.ssoNotConfigured",
-                  "Admin sign-in isn't set up for this site yet. Contact your Repraesent representative.",
-                )}
-              </div>
-            )}
           </div>
 
-          <WordPressPluginsSection hasSite={!!site} />
+          <WordPressPluginsSection hasSite />
         </>
       )}
     </div>
