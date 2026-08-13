@@ -14,7 +14,7 @@ import { PluginSettingsBackLink } from "~/components/wordpress/plugin-settings-c
 import { Badge } from "~/components/ui/badge";
 import { Button } from "~/components/ui/button";
 import { Switch } from "~/components/ui/switch";
-import { ACTION_TYPES, ACTION_TYPE_I18N, PLUGIN_VERSION, shortcodeFor } from "./constants";
+import { ACTION_TYPES, ACTION_TYPE_I18N, shortcodeFor } from "./constants";
 import { PageShell, SectionCard, StatTile } from "~/components/wordpress/fields";
 
 export function ButtonList({
@@ -71,7 +71,9 @@ export function ButtonList({
             <h1 className="text-xl font-semibold tracking-tight text-foreground sm:text-2xl">
               {pageTitle}
             </h1>
-            <Badge variant="outline">v{PLUGIN_VERSION}</Badge>
+            {catalogItem?.version ? (
+              <Badge variant="outline">v{catalogItem.version}</Badge>
+            ) : null}
           </div>
           <p className="text-sm text-muted-foreground">
             {t(

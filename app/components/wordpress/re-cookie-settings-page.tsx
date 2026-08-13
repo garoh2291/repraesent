@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 import { useParams } from "react-router";
 import { useTranslation } from "react-i18next";
 import { FileText, Palette, Save, Settings } from "lucide-react";
@@ -8,9 +8,13 @@ import { useResolvePluginKind } from "~/lib/hooks/useWorkspaceWpPluginCatalog";
 import type {
   ReCookieLang,
   ReCookieSettings,
+  ReCookieTranslationLang,
 } from "~/lib/wordpress/plugin-settings-types";
 import { formatPluginSettingsTitle } from "~/lib/utils/wordpress-plugin-kind";
-import { PluginSettingsBackLink, PluginSettingsLoadingPage } from "~/components/wordpress/plugin-settings-chrome";
+import {
+  PluginSettingsBackLink,
+  PluginSettingsLoadingPage,
+} from "~/components/wordpress/plugin-settings-chrome";
 import { Badge } from "~/components/ui/badge";
 import { Button } from "~/components/ui/button";
 import { Spinner } from "~/components/ui/spinner";
@@ -18,11 +22,13 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "~/components/ui/tabs";
 import {
   DEFAULTS,
   flash,
-  PLUGIN_VERSION,
   type TabId,
 } from "~/components/wordpress/re-cookie/constants";
 import { BannerPreview } from "~/components/wordpress/re-cookie/banner-preview";
-import { ContentPanel } from "~/components/wordpress/re-cookie/content-panel";
+import {
+  ContentPanel,
+  type CookieOverlaySaveHandle,
+} from "~/components/wordpress/re-cookie/content-panel";
 import { DesignPanel } from "~/components/wordpress/re-cookie/design-panel";
 import { FunctionalityPanel } from "~/components/wordpress/re-cookie/functionality-panel";
 import { PageShell } from "~/components/wordpress/re-cookie/fields";
@@ -30,9 +36,6 @@ import { PageShell } from "~/components/wordpress/re-cookie/fields";
 /**
  * re:cookie settings inside Repraesent. Behavior matches the WordPress plugin
  * admin (design, functionality, content tabs); chrome matches the dashboard.
- *
- * Laid out as an editor rather than a form: controls on the left, a live
- * preview of the banner pinned on the right, and a single sticky save bar.
  */
 export function ReCookieSettingsPage() {
   const { t } = useTranslation();
@@ -44,8 +47,14 @@ export function ReCookieSettingsPage() {
   );
   const [tab, setTab] = useState<TabId>("design");
   const [activeLang, setActiveLang] = useState<ReCookieLang>("de");
-  /** Last state known to be on the server, so "unsaved changes" is truthful. */
   const [savedSnapshot, setSavedSnapshot] = useState<string | null>(null);
+  const [overlayDirty, setOverlayDirty] = useState(false);
+  // Copy for the language being edited on the Content tab, so the preview
+  // follows it — target-language copy lives in re:translate, not in settings.
+  const [previewCopy, setPreviewCopy] =
+    useState<ReCookieTranslationLang | null>(null);
+  const [savingOverlay, setSavingOverlay] = useState(false);
+  const overlayHandleRef = useRef<CookieOverlaySaveHandle | null>(null);
 
   const {
     settings,
@@ -57,8 +66,6 @@ export function ReCookieSettingsPage() {
     loadError,
     saveMutation,
   } = useWorkspacePluginSettingsForm<ReCookieSettings>(pluginUuid, DEFAULTS, {
-    // This screen tracks its own dirty state, and the language tabs follow
-    // whatever the site has configured.
     onSeeded: (merged) => {
       setSavedSnapshot(JSON.stringify(merged));
       setActiveLang(merged.default_language || "de");
@@ -66,23 +73,56 @@ export function ReCookieSettingsPage() {
   });
 
   const dirty = useMemo(
-    () => savedSnapshot !== null && JSON.stringify(settings) !== savedSnapshot,
-    [settings, savedSnapshot],
+    () =>
+      (savedSnapshot !== null && JSON.stringify(settings) !== savedSnapshot) ||
+      overlayDirty,
+    [settings, savedSnapshot, overlayDirty],
   );
+
+  const busy = saving || savingOverlay;
 
   function patch(updater: (prev: ReCookieSettings) => ReCookieSettings) {
     setSettings(updater);
   }
 
-  function handleSave() {
+  const onOverlayHandle = useCallback((h: CookieOverlaySaveHandle) => {
+    overlayHandleRef.current = h;
+    setOverlayDirty(h.dirty);
+    setPreviewCopy(h.copy);
+  }, []);
+
+  async function handleSave() {
     const submitted = settings;
-    saveMutation.mutate(submitted as unknown as Record<string, unknown>, {
-      onSuccess: () => {
-        setSavedSnapshot(JSON.stringify(submitted));
+    const overlay = overlayHandleRef.current;
+    const serialized = JSON.stringify(submitted);
+    const settingsChanged = savedSnapshot === null || serialized !== savedSnapshot;
+
+    try {
+      // Translations live in re:translate, the rest in the plugin settings —
+      // a save touching both has to push both.
+      if (overlay?.dirty) {
+        setSavingOverlay(true);
+        try {
+          await overlay.save();
+        } finally {
+          setSavingOverlay(false);
+        }
+        setOverlayDirty(false);
+      }
+      if (!settingsChanged) {
         flash(t("wordpress.reCookie.saved", "Settings saved successfully."));
-      },
-      onError: (err) => flash(extractErrorMessage(err), "error"),
-    });
+        return;
+      }
+      saveMutation.mutate(submitted as unknown as Record<string, unknown>, {
+        onSuccess: () => {
+          setSavedSnapshot(serialized);
+          flash(t("wordpress.reCookie.saved", "Settings saved successfully."));
+        },
+        onError: (err) => flash(extractErrorMessage(err), "error"),
+      });
+    } catch (err) {
+      flash(extractErrorMessage(err), "error");
+    }
   }
 
   if (loading) {
@@ -108,8 +148,6 @@ export function ReCookieSettingsPage() {
         label={t("wordpress.reCookie.back", "Back to plugins")}
       />
 
-      {/* Sticky action bar — replaces the duplicate save button that used to sit
-          at the bottom of a very long page. */}
       <div className="sticky top-0 z-20 -mx-4 mb-6 border-b bg-background/80 px-4 py-3 backdrop-blur-md sm:-mx-6 sm:px-6 app-fade-up">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="flex min-w-0 flex-col gap-0.5">
@@ -117,7 +155,9 @@ export function ReCookieSettingsPage() {
               <h1 className="text-xl font-semibold tracking-tight text-foreground sm:text-2xl">
                 {pageTitle}
               </h1>
-              <Badge variant="outline">v{PLUGIN_VERSION}</Badge>
+              {catalogItem?.version ? (
+                <Badge variant="outline">v{catalogItem.version}</Badge>
+              ) : null}
               {dirty ? (
                 <Badge
                   variant="secondary"
@@ -137,13 +177,17 @@ export function ReCookieSettingsPage() {
                   )}
             </p>
           </div>
-          <Button onClick={handleSave} disabled={saving} className="shrink-0">
-            {saving ? (
+          <Button
+            onClick={() => void handleSave()}
+            disabled={busy}
+            className="shrink-0"
+          >
+            {busy ? (
               <Spinner className="size-4" />
             ) : (
               <Save className="size-4" />
             )}
-            {saving
+            {busy
               ? t("wordpress.reCookie.saving", "Saving…")
               : t("wordpress.reCookie.save", "Save Settings")}
           </Button>
@@ -196,12 +240,17 @@ export function ReCookieSettingsPage() {
               activeLang={activeLang}
               onActiveLangChange={setActiveLang}
               patch={patch}
+              onOverlayHandle={onOverlayHandle}
             />
           </TabsContent>
         </Tabs>
 
         <div className="lg:sticky lg:top-24 app-fade-up app-fade-up-d2">
-          <BannerPreview settings={settings} lang={activeLang} />
+          <BannerPreview
+            settings={settings}
+            lang={activeLang}
+            copy={tab === "content" ? previewCopy : null}
+          />
         </div>
       </div>
     </PageShell>

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   FileStack,
@@ -35,7 +35,7 @@ import {
   LANGUAGE_CATALOG,
   languageName,
   normalizeLanguageCode,
-  postTypeLabel,
+  translatedPostTypeLabel,
   type PatchSettings,
 } from "./constants";
 import { cn } from "~/lib/utils";
@@ -49,10 +49,13 @@ export function GeneralPanel({
   settings,
   patchSettings,
   pluginUuid,
+  onCountersChanged,
 }: {
   settings: ReTranslateSettings;
   patchSettings: PatchSettings;
   pluginUuid: string;
+  /** Scan finished — re-read the server's translation counters. */
+  onCountersChanged?: () => void;
 }) {
   const { t } = useTranslation();
 
@@ -77,30 +80,84 @@ export function GeneralPanel({
   const sourceLanguageMutation = useSetTranslateSourceLanguage(pluginUuid);
   const indexMutation = useRunTranslateIndex(pluginUuid);
 
-  const batchTimer = useRef<ReturnType<typeof setInterval> | undefined>(undefined);
+  /*
+   * A failed batch halts the loop. Without this the panel retries a broken
+   * scan forever — silently, since the batch call has no UI of its own.
+   */
+  const [scanError, setScanError] = useState<string | null>(null);
 
-  const runBatch = useCallback(() => {
-    indexMutation.mutate("batch");
-  }, [indexMutation]);
+  // The mutation object is a new identity every render; the loop below needs a
+  // stable reference or its timer would be torn down and re-armed constantly.
+  const runBatch = useRef(indexMutation.mutateAsync);
+  runBatch.current = indexMutation.mutateAsync;
+  const onCountersRef = useRef(onCountersChanged);
+  onCountersRef.current = onCountersChanged;
 
+  /*
+   * A finished scan changes the string totals every counter on the page is
+   * derived from, so read them back once the loop settles. `sawScanning` keeps
+   * a cold load of an already-complete scan from firing a pointless fetch.
+   */
+  const sawScanning = useRef(false);
   useEffect(() => {
     if (scanning) {
-      batchTimer.current = setInterval(runBatch, 600);
+      sawScanning.current = true;
+      return;
     }
-    return () => clearInterval(batchTimer.current);
-  }, [scanning, runBatch]);
+    if (!sawScanning.current) return;
+    sawScanning.current = false;
+    onCountersRef.current?.();
+  }, [scanning]);
+
+  /*
+   * The scan is driven from here rather than from WP-Cron, which on a quiet
+   * site may not fire for minutes. One batch is in flight at a time: the next
+   * is scheduled only once the previous has returned and moved the index on
+   * (`updated_at` changes on every state write). A fixed interval would stack
+   * overlapping batches whenever the site is slower than the tick.
+   */
+  useEffect(() => {
+    if (!scanning || scanError) {
+      return undefined;
+    }
+
+    let cancelled = false;
+
+    const timer = setTimeout(() => {
+      runBatch.current("batch").catch((err: unknown) => {
+        if (cancelled) {
+          return;
+        }
+
+        const message = extractErrorMessage(err);
+        setScanError(message);
+        flash(message, "error");
+      });
+    }, 600);
+
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+    };
+  }, [scanning, scanError, index.processed, index.updated_at]);
 
   function handleStartScan() {
+    setScanError(null);
     indexMutation.mutate("start", {
-      onError: (err) => flash(extractErrorMessage(err), "error"),
+      onError: (err) => {
+        const message = extractErrorMessage(err);
+        setScanError(message);
+        flash(message, "error");
+      },
     });
   }
 
   function handleCancelScan() {
-    clearInterval(batchTimer.current);
     indexMutation.mutate("cancel", {
-      onSuccess: () =>
-        flash(t("wordpress.reTranslate.scanCancelled", "Scan cancelled.")),
+      onSuccess: () => {
+        setScanError(null);
+        flash(t("wordpress.reTranslate.scanCancelled", "Scan cancelled."));
+      },
       onError: (err) => flash(extractErrorMessage(err), "error"),
     });
   }
@@ -267,8 +324,23 @@ export function GeneralPanel({
               value={index.updated_at || "\u2014"}
             />
           </dl>
+          {scanError && (
+            <div
+              role="alert"
+              className="flex gap-2 rounded-xl border border-amber-500/30 bg-amber-500/10 px-3.5 py-3 text-xs leading-relaxed text-amber-800 dark:text-amber-300"
+            >
+              <TriangleAlert className="mt-0.5 size-3.5 shrink-0" aria-hidden />
+              <span>
+                {t(
+                  "wordpress.reTranslate.scanFailed",
+                  "The scan stopped: {{error}} Starting a new scan restarts it from the beginning.",
+                  { error: scanError },
+                )}
+              </span>
+            </div>
+          )}
           <div className="flex flex-wrap gap-2">
-            {scanning ? (
+            {scanning && (
               <Button
                 variant="outline"
                 size="sm"
@@ -277,7 +349,13 @@ export function GeneralPanel({
               >
                 {t("wordpress.reTranslate.stopScan", "Stop scan")}
               </Button>
-            ) : (
+            )}
+            {/*
+             * Offered alongside Stop while a scan is stalled: cancelling is
+             * itself a server call, so a site that cannot cancel would other-
+             * wise leave this panel with no way back to a runnable state.
+             */}
+            {(!scanning || scanError) && (
               <Button
                 variant="default"
                 size="sm"
@@ -290,7 +368,9 @@ export function GeneralPanel({
                 ) : (
                   <ScanLine className="size-3.5" />
                 )}
-                {t("wordpress.reTranslate.startScan", "Start scan")}
+                {scanning
+                  ? t("wordpress.reTranslate.restartScan", "Restart scan")
+                  : t("wordpress.reTranslate.startScan", "Start scan")}
               </Button>
             )}
           </div>
@@ -382,7 +462,7 @@ export function GeneralPanel({
                     />
                     <span className="min-w-0 flex-1">
                       <span className="block truncate text-sm font-medium">
-                        {postTypeLabel(type.name)}
+                        {translatedPostTypeLabel(type.name, t)}
                       </span>
                       <span className="block font-mono text-[11px] text-muted-foreground">
                         {type.name}

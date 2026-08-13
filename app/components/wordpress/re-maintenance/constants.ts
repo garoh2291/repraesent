@@ -16,9 +16,6 @@ export const DEFAULT_SETTINGS: ReMaintenanceSettings = {
   },
 };
 
-/** Version badge — must track `RE_MAINTENANCE_VERSION` in re-maintenance.php. */
-export const PLUGIN_VERSION = "1.0.0";
-
 export type PatchSettings = (
   updater: (prev: ReMaintenanceSettings) => ReMaintenanceSettings,
 ) => void;

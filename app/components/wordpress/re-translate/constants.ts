@@ -45,11 +45,20 @@ export const DEFAULT_SETTINGS: ReTranslateSettings = {
     started_at: "",
     updated_at: "",
   },
+  bulk: {
+    status: "idle",
+    languages: [],
+    total: 0,
+    processed: 0,
+    failed: 0,
+    current: null,
+    recent: [],
+    last_error: "",
+    started_at: "",
+    updated_at: "",
+  },
   stats: { source_strings: 0, languages: {} },
 };
-
-/** Version badge — must track `wp_plugins.version` / `Version:` in re-translate.php. */
-export const PLUGIN_VERSION = "1.0.0";
 
 export type TabId =
   | "overview"
@@ -59,6 +68,40 @@ export type TabId =
 
 /** Query param carrying the open tab, so a refresh or a shared link reopens it. */
 export const TAB_PARAM = "tab";
+
+/** Query param for the Translate content list page (survives back from the editor). */
+export const PAGE_PARAM = "page";
+
+/** Query param for the Translate type filter (`page`, `cookie`, `forms`, …). */
+export const TYPE_PARAM = "type";
+
+/** Plugin object types that are a single pack — open the field editor directly. */
+export const SINGLETON_PLUGIN_TYPES = new Set(["cookie", "maintenance"]);
+
+const PLUGIN_TYPE_FILTERS = new Set(["cookie", "maintenance", "reappt"]);
+
+/** True when the Translate type filter is a bridged plugin object_type. */
+export function isPluginTypeFilter(filter: string): boolean {
+  return PLUGIN_TYPE_FILTERS.has(filter);
+}
+
+/** Encode the in-app type filter for `?type=`. Returns null when it should be omitted. */
+export function typeToParam(filter: string): string | null {
+  if (!filter || filter === "all") return null;
+  if (filter === "_header_footer") return "header_footer";
+  if (filter === "_rf_forms") return "forms";
+  return filter;
+}
+
+/** Decode `?type=` into the in-app type filter. */
+export function typeFromParam(raw: string | null | undefined): string {
+  const value = (raw ?? "").trim();
+  if (!value || value === "all") return "all";
+  if (value === "header_footer" || value === "chrome") return "_header_footer";
+  if (value === "forms" || value === "rf_form") return "_rf_forms";
+  if (value === "plugin") return "all";
+  return value;
+}
 
 const TAB_IDS: readonly TabId[] = [
   "overview",
@@ -77,6 +120,11 @@ export function tabFromParam(value: string | null): TabId {
   if (!value) return "overview";
   if (TAB_IDS.includes(value as TabId)) return value as TabId;
   return TAB_ALIASES[value] ?? "overview";
+}
+
+export function pageFromParam(value: string | null): number {
+  const n = Number(value);
+  return Number.isFinite(n) && n >= 1 ? Math.floor(n) : 1;
 }
 
 export type PatchSettings = (
@@ -290,6 +338,28 @@ export function previewLanguage(
 export function postTypeLabel(name: string): string {
   const words = name.replace(/[-_]+/g, " ").trim();
   return words.charAt(0).toUpperCase() + words.slice(1);
+}
+
+type TranslateFn = (key: string, fallback: string) => string;
+
+/** Post type slug as a UI label, using locale strings when we have them. */
+export function translatedPostTypeLabel(
+  name: string,
+  t: TranslateFn,
+): string {
+  return t(`wordpress.reTranslate.postType.${name}`, postTypeLabel(name));
+}
+
+/** Bridged plugin object_type as a UI label (dropdown + list rows). */
+export function translatedPluginLabel(
+  objectType: string,
+  t: TranslateFn,
+  displayName?: string,
+): string {
+  return t(
+    `wordpress.reTranslate.pluginType.${objectType}`,
+    displayName?.trim() || postTypeLabel(objectType),
+  );
 }
 
 /**

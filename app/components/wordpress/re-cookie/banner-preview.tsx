@@ -6,6 +6,7 @@ import { CATEGORY_SLUGS } from "./constants";
 import type {
   ReCookieLang,
   ReCookieSettings,
+  ReCookieTranslationLang,
 } from "~/lib/wordpress/plugin-settings-types";
 
 /**
@@ -36,14 +37,27 @@ function readableOn(hex: string): string {
 export function BannerPreview({
   settings,
   lang,
+  copy: copyOverride,
 }: {
   settings: ReCookieSettings;
   lang: ReCookieLang;
+  /**
+   * Copy to render instead of `settings.translations[lang]` — the Content tab
+   * passes the language it is editing, whose text lives in re:translate rather
+   * than in the plugin settings.
+   */
+  copy?: ReCookieTranslationLang | null;
 }) {
   const { t } = useTranslation();
   const [mode, setMode] = useState<PreviewMode>("banner");
 
-  const copy = settings.translations[lang];
+  const copy =
+    copyOverride ??
+    settings.translations[lang] ??
+    settings.translations[settings.default_language] ??
+    settings.translations.de ??
+    settings.translations.en;
+  if (!copy) return null;
   const radius = Math.min(Math.max(settings.border_radius || 0, 0), 32);
   const centered = settings.banner_position === "center";
 

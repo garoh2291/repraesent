@@ -1,4 +1,5 @@
 import { useParams, useSearchParams } from "react-router";
+import { useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   Check,
@@ -22,7 +23,6 @@ import { Button } from "~/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "~/components/ui/tabs";
 import {
   DEFAULT_SETTINGS,
-  PLUGIN_VERSION,
   TAB_PARAM,
   flash,
   hasVerificationCode,
@@ -73,7 +73,8 @@ export function ReIndexSettingsPage() {
         return params;
       },
       // Replace, so switching tabs doesn't stack up history entries.
-      { replace: true, preventScrollReset: true },
+      // Tab is UI state only — don't revalidate the root locale loader.
+      { replace: true, preventScrollReset: true, unstable_defaultShouldRevalidate: false },
     );
   }
   const {
@@ -101,12 +102,24 @@ export function ReIndexSettingsPage() {
 
   const sitemapUrl = sitemapUrlFromSiteUrl(site?.url);
   const hasGsc = hasVerificationCode(settings.verification.google);
+  const overlaySaveRef = useRef<(() => Promise<void>) | null>(null);
+  const [overlayDirty, setOverlayDirty] = useState(false);
 
   function patchSettings(updater: (prev: ReIndexSettings) => ReIndexSettings) {
     setSettings(updater);
   }
 
-  function handleSave() {
+  async function handleSave() {
+    const overlaySave = overlaySaveRef.current;
+    if (overlaySave) {
+      try {
+        await overlaySave();
+        flash(t("wordpress.reIndex.saved", "Settings saved."));
+      } catch (err) {
+        flash(extractErrorMessage(err), "error");
+      }
+      return;
+    }
     saveMutation.mutate(settings as unknown as Record<string, unknown>, {
       onSuccess: (data) => {
         reseed(data.settings);
@@ -176,8 +189,10 @@ export function ReIndexSettingsPage() {
             <h1 className="text-xl font-semibold tracking-tight text-foreground sm:text-2xl">
               {pageTitle}
             </h1>
-            <Badge variant="outline">v{PLUGIN_VERSION}</Badge>
-            {dirty ? (
+            {catalogItem?.version ? (
+              <Badge variant="outline">v{catalogItem.version}</Badge>
+            ) : null}
+            {dirty || overlayDirty ? (
               <Badge
                 variant="secondary"
                 className="gap-1.5 font-normal text-muted-foreground"
@@ -196,7 +211,7 @@ export function ReIndexSettingsPage() {
                 )}
           </p>
         </div>
-        <Button onClick={handleSave} disabled={saving} className="shrink-0">
+        <Button onClick={() => void handleSave()} disabled={saving} className="shrink-0">
           <Save className="h-4 w-4" />
           {saving
             ? t("wordpress.reIndex.saving", "Saving…")
@@ -308,7 +323,14 @@ export function ReIndexSettingsPage() {
         </TabsContent>
 
         <TabsContent value="seo" className="mt-0">
-          <SeoPanel settings={settings} patchSettings={patchSettings} />
+          <SeoPanel
+            settings={settings}
+            patchSettings={patchSettings}
+            onOverlaySaveReady={(handle) => {
+              overlaySaveRef.current = handle?.save ?? null;
+              setOverlayDirty(handle?.dirty ?? false);
+            }}
+          />
         </TabsContent>
 
         <TabsContent value="pages" className="mt-0">

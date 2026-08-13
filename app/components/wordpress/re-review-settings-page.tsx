@@ -25,7 +25,6 @@ import { Input } from "~/components/ui/input";
 import { Label } from "~/components/ui/label";
 import {
   DEFAULT_SETTINGS,
-  PLUGIN_VERSION,
   SHORTCODE_ATTRS,
   SHORTCODE_EXAMPLES,
   flash,
@@ -165,7 +164,9 @@ export function ReReviewSettingsPage() {
             <h1 className="text-xl font-semibold tracking-tight text-foreground sm:text-2xl">
               {pageTitle}
             </h1>
-            <Badge variant="outline">v{PLUGIN_VERSION}</Badge>
+            {catalogItem?.version ? (
+              <Badge variant="outline">v{catalogItem.version}</Badge>
+            ) : null}
             <Badge
               variant="outline"
               className={cn(

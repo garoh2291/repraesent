@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { ArrowLeft, Copy, LayoutTemplate, Pencil, Save, Zap } from "lucide-react";
 import type {
@@ -31,6 +31,14 @@ import {
 } from "~/components/wordpress/fields";
 import { PlacementCard } from "./placement-card";
 import { PreviewButton } from "./preview-button";
+import { PluginLangBar } from "~/components/wordpress/plugin-lang-bar";
+import { usePluginTranslateLanguages } from "~/lib/hooks/usePluginTranslateLanguages";
+import { usePluginOverlayPack } from "~/lib/hooks/usePluginOverlayPack";
+import {
+  reapptLabelFromOverlay,
+  reapptLabelToSavePayload,
+  type OverlayStringMap,
+} from "~/lib/wordpress/plugin-i18n";
 
 type TabId = "action" | "design" | "placement";
 
@@ -42,6 +50,7 @@ export function ButtonEditor({
   saving,
   onSet,
   onSave,
+  onSaveWithLabelOverlay,
   onCancel,
   onCopied,
 }: {
@@ -51,18 +60,108 @@ export function ButtonEditor({
   slots: ReAppointmentSlot[];
   saving: boolean;
   onSet: SetConfig;
+  /** Source-language save (full button config). */
   onSave: () => void;
+  /**
+   * Target-language save: persist button without touching source label, then
+   * write the label overlay. Parent should keep `draft.label` as the source.
+   */
+  onSaveWithLabelOverlay?: (args: {
+    sourceLabel: string;
+    overlayLabel: string;
+    saveOverlay: () => Promise<void>;
+  }) => void;
   onCancel: () => void;
   onCopied: () => void;
 }) {
   const { t } = useTranslation();
   const [tab, setTab] = useState<TabId>("action");
+  const i18n = usePluginTranslateLanguages();
+  const overlays = usePluginOverlayPack(i18n.translatePluginUuid);
+
+  const showLang = i18n.enabled && buttonId > 0;
+  const [activeLang, setActiveLang] = useState(i18n.source || "");
+  const [overlayMap, setOverlayMap] = useState<OverlayStringMap>({});
+  const [displayLabel, setDisplayLabel] = useState(draft.label);
+  const [labelDirty, setLabelDirty] = useState(false);
+  const [langLoading, setLangLoading] = useState(false);
+  const sourceLabelRef = useRef(draft.label);
+
+  useEffect(() => {
+    if (i18n.source && !activeLang) setActiveLang(i18n.source);
+  }, [i18n.source, activeLang]);
+
+  // Keep source label in sync while editing source language.
+  useEffect(() => {
+    if (!showLang || activeLang === i18n.source) {
+      sourceLabelRef.current = draft.label;
+      setDisplayLabel(draft.label);
+    }
+  }, [draft.label, showLang, activeLang, i18n.source]);
+
+  const isSource = !showLang || activeLang === i18n.source;
+
+  const loadOverlay = overlays.load;
+
+  const loadTargetLabel = useCallback(
+    async (language: string) => {
+      setLangLoading(true);
+      try {
+        const map = await loadOverlay("reappt", buttonId, language);
+        setOverlayMap(map);
+        setDisplayLabel(reapptLabelFromOverlay(map, sourceLabelRef.current));
+        setLabelDirty(false);
+      } finally {
+        setLangLoading(false);
+      }
+    },
+    [loadOverlay, buttonId],
+  );
+
+  async function switchLanguage(code: string) {
+    if (code === activeLang) return;
+    if (code === i18n.source) {
+      setActiveLang(code);
+      setDisplayLabel(sourceLabelRef.current);
+      setLabelDirty(false);
+      setOverlayMap({});
+      return;
+    }
+    setActiveLang(code);
+    await loadTargetLabel(code);
+  }
+
+  function setLabel(value: string) {
+    setDisplayLabel(value);
+    if (isSource) {
+      onSet("label", value);
+    } else {
+      setLabelDirty(true);
+    }
+  }
+
+  async function handleSaveClick() {
+    if (showLang && !isSource && onSaveWithLabelOverlay) {
+      onSaveWithLabelOverlay({
+        sourceLabel: sourceLabelRef.current,
+        overlayLabel: displayLabel,
+        saveOverlay: async () => {
+          const payload = reapptLabelToSavePayload(displayLabel, overlayMap);
+          await overlays.save(payload);
+          setLabelDirty(false);
+        },
+      });
+      return;
+    }
+    onSave();
+  }
 
   const action = draft.action_type;
   const showUrl = action === "modal-iframe" || action === "url";
   const showModalSize = action === "modal-iframe" || action === "modal-html";
 
   const shortcode = buttonId ? shortcodeFor(buttonId) : "";
+  const previewDraft = { ...draft, label: displayLabel };
 
   async function copyShortcode() {
     try {
@@ -330,11 +429,31 @@ export function ButtonEditor({
                 <Label htmlFor="reappt-label">
                   {t("wordpress.reAppointment.labelText", "Label text")}
                 </Label>
+                {showLang ? (
+                  <PluginLangBar
+                    className="mb-2"
+                    languages={i18n.languages}
+                    active={activeLang || i18n.source}
+                    source={i18n.source}
+                    dirty={labelDirty}
+                    disabled={langLoading || overlays.loading}
+                    unsavedMessage={t(
+                      "wordpress.reAppointment.unsavedSwitch",
+                      "You have unsaved label changes. Switch language anyway?",
+                    )}
+                    ariaLabel={t(
+                      "wordpress.reAppointment.labelLanguage",
+                      "Label language",
+                    )}
+                    onChange={(code) => void switchLanguage(code)}
+                  />
+                ) : null}
                 <Input
                   type="text"
                   id="reappt-label"
-                  value={draft.label}
-                  onChange={(e) => onSet("label", e.target.value)}
+                  value={displayLabel}
+                  disabled={langLoading}
+                  onChange={(e) => setLabel(e.target.value)}
                 />
               </Field>
 
@@ -549,7 +668,7 @@ export function ButtonEditor({
           )}
         />
         <div className="flex min-h-[120px] items-center justify-center bg-muted/40 p-8">
-          <PreviewButton config={draft} />
+          <PreviewButton config={previewDraft} />
         </div>
       </SectionCard>
 
@@ -557,7 +676,11 @@ export function ButtonEditor({
         <Button type="button" variant="outline" onClick={onCancel}>
           {t("wordpress.reAppointment.cancel", "Cancel")}
         </Button>
-        <Button type="button" disabled={saving} onClick={onSave}>
+        <Button
+          type="button"
+          disabled={saving || langLoading || overlays.saving}
+          onClick={() => void handleSaveClick()}
+        >
           <Save className="h-4 w-4" />
           {saving
             ? t("wordpress.reAppointment.saving", "Saving…")
