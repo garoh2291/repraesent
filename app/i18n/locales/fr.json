@@ -76,7 +76,38 @@
     "joinMeet": "Rejoindre Google Meet",
     "allDay": "Toute la journée",
     "calendars": "Calendriers",
-    "timezone": "Fuseau horaire"
+    "timezone": "Fuseau horaire",
+    "rsvp": {
+      "accepted": "Vous avez accepté cette invitation",
+      "declined": "Vous avez décliné cette invitation",
+      "tentative": "Vous avez répondu peut-être",
+      "needsAction": "Invitation pas encore répondue"
+    },
+    "newMeeting": "Nouvelle réunion",
+    "create": {
+      "title": "Nouvelle réunion",
+      "target": "Calendrier",
+      "eventTitle": "Titre",
+      "date": "Date",
+      "startTime": "Heure de début",
+      "endTime": "Heure de fin",
+      "guests": "Invités",
+      "guestsHint": "Adresses e-mail séparées par des virgules — les invités reçoivent une invitation Google",
+      "addMeet": "Ajouter Google Meet",
+      "description": "Description",
+      "submit": "Créer la réunion",
+      "creating": "Création…",
+      "created": "Réunion créée",
+      "failed": "Impossible de créer la réunion",
+      "invalidTimes": "L'heure de fin doit être postérieure à l'heure de début",
+      "invalidGuests": "Veuillez saisir des adresses e-mail valides, séparées par des virgules",
+      "required": "Obligatoire",
+      "myCalendarsGroup": "Mes calendriers",
+      "bookingGroup": "Calendriers de réservation"
+    },
+    "targetGroup": {
+      "caldav": "CalDAV"
+    }
   },
   "db_brand": {
     "subtitle": "Sélectionnez un revendeur dans la barre latérale pour afficher ses Social Ads et Leads.",
@@ -1027,7 +1058,23 @@
         "error": "Une erreur s'est produite lors de la connexion de votre compte Google. Veuillez réessayer.",
         "failed": "Votre compte Google n'a pas pu être connecté : {{reason}}"
       },
-      "dismiss": "Fermer"
+      "dismiss": "Fermer",
+      "caldav": {
+        "section": "Calendriers CalDAV",
+        "sectionHint": "Connectez nimporte quel serveur CalDAV (Baikal, Nextcloud, ...) avec son adresse et vos identifiants.",
+        "connect": "Connecter un calendrier CalDAV",
+        "dialogTitle": "Connecter un calendrier CalDAV",
+        "dialogHint": "Saisissez ladresse de votre serveur CalDAV et vos identifiants. La connexion est vérifiée avant lenregistrement ; le mot de passe est stocké chiffré.",
+        "name": "Nom daffichage",
+        "serverUrl": "URL du serveur",
+        "username": "Nom dutilisateur",
+        "password": "Mot de passe",
+        "required": "Ce champ est obligatoire",
+        "invalidUrl": "Saisissez une URL valide commençant par http:// ou https://",
+        "verifying": "Vérification de la connexion...",
+        "connected": "Calendrier CalDAV connecté",
+        "empty": "Aucun calendrier CalDAV connecté pour le moment"
+      }
     }
   },
   "booking": {
@@ -3176,9 +3223,12 @@
       "keyRequired": "Une clé est obligatoire — c'est sous cette clé que les réponses sont stockées.",
       "mappingLocked": "Verrouillé : le formulaire a besoin de ce champ pour identifier un prospect.",
       "appointment": {
-        "targetAccount": "Compte cible",
-        "targetAccountHelp": "Le compte Google connecté dans lequel le rendez-vous réservé est créé.",
-        "targetCalendar": "Calendrier cible",
+        "target": "Calendrier cible",
+        "targetHelp": "Les réservations créent un événement dans ce calendrier. Les liens Google Meet et les invitations ne sont disponibles que pour les calendriers Google.",
+        "targetGroupMine": "Mes calendriers",
+        "targetGroupTeam": "Calendriers d'équipe",
+        "targetGroupBooking": "Calendriers de réservation",
+        "targetGroupCaldav": "CalDAV",
         "busyCalendars": "Calendriers occupés",
         "busyCalendarsHelp": "Les créneaux occupés dans ces calendriers ne sont pas proposés.",
         "allCalendars": "Tous les calendriers",
@@ -3190,10 +3240,9 @@
         "timezone": "Fuseau horaire",
         "minNotice": "Préavis minimum (heures)",
         "maxDaysAhead": "Réservation à l'avance (jours)",
-        "noAccounts": "Aucun calendrier connecté. Connectez un calendrier Google pour proposer des rendez-vous.",
+        "noTargets": "Connectez d'abord un calendrier dans les paramètres",
         "connectLink": "Connecter un calendrier",
-        "accountNeedsReconnect": "doit être reconnecté",
-        "primary": "Principal"
+        "accountNeedsReconnect": "doit être reconnecté"
       }
     },
     "design": {
@@ -3410,6 +3459,12 @@
         "chipTranslate": "Traduire",
         "chipPublish": "Publier"
       }
+    },
+    "appointmentContent": {
+      "loading": "Chargement des horaires...",
+      "empty": "Aucun créneau libre ce jour-là.",
+      "slotUnavailable": "Ce créneau vient d’être réservé. Veuillez en choisir un autre.",
+      "slotInvalid": "Veuillez choisir un créneau valide."
     }
   },
   "workflows": {

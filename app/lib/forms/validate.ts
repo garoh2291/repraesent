@@ -298,8 +298,11 @@ export function validateDefinition(
 
     // An appointment field without a target calendar would render a working
     // picker whose booking silently goes nowhere — block it like empty options.
+    // Target = `targetKey` when present, else the legacy Google pair — the
+    // same resolution rule the availability endpoint and booking apply.
     if (field.type === "appointment") {
-      if (!field.appointment?.accountId || !field.appointment?.calendarId) {
+      const ap = field.appointment;
+      if (!ap?.targetKey && !(ap?.accountId && ap?.calendarId)) {
         issues.push({
           code: "appointmentMissingCalendar",
           tab: "build",

@@ -11,8 +11,10 @@ import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router";
 import TimezoneSelect from "react-timezone-select";
-import { listCalendarAccounts } from "~/lib/api/calendar";
+import { calendarKeyFor, listCalendarAccounts } from "~/lib/api/calendar";
 import { Checkbox } from "~/components/ui/checkbox";
+import { CalDavIcon } from "~/components/icons/CalDavIcon";
+import { GoogleIcon } from "~/components/icons/GoogleIcon";
 import {
   Cols,
   EmptyPanelState,
@@ -26,7 +28,9 @@ import { Label } from "~/components/ui/label";
 import {
   Select,
   SelectContent,
+  SelectGroup,
   SelectItem,
+  SelectLabel,
   SelectTrigger,
   SelectValue,
 } from "~/components/ui/select";
@@ -246,6 +250,23 @@ export function FieldInspector({
   /** Enforced by the effect at the top of the component; see the note there. */
   const requiredLocked = emailField != null;
 
+  // For an appointment field the Rules section IS the field — target calendar,
+  // duration, window — while Data (key, label) is secondary. Everywhere else
+  // Rules stays last, in its historical place.
+  const rulesSection = HAS_TYPE_RULES.has(field.type) ? (
+    <PanelSection title={t("forms.inspector.sectionRules")}>
+      <TypeSpecific
+        field={field}
+        disabled={disabled}
+        onChange={patchField}
+        patchValidation={patchValidation}
+        getText={getText}
+        setText={setText}
+      />
+    </PanelSection>
+  ) : null;
+  const rulesFirst = field.type === "appointment";
+
   return (
     <Panel>
       <PanelHeader
@@ -258,6 +279,7 @@ export function FieldInspector({
         }
       />
       <PanelBody>
+        {rulesFirst ? rulesSection : null}
         <PanelSection title={t("forms.inspector.sectionData")}>
           {/* Save-to first: it is the decision, and the key is its consequence
               — a field pointed at a lead column has its key largely settled. */}
@@ -467,18 +489,7 @@ export function FieldInspector({
           </Field>
         </PanelSection>
 
-        {HAS_TYPE_RULES.has(field.type) ? (
-          <PanelSection title={t("forms.inspector.sectionRules")}>
-            <TypeSpecific
-              field={field}
-              disabled={disabled}
-              onChange={patchField}
-              patchValidation={patchValidation}
-              getText={getText}
-              setText={setText}
-            />
-          </PanelSection>
-        ) : null}
+        {rulesFirst ? null : rulesSection}
       </PanelBody>
     </Panel>
   );
@@ -768,11 +779,30 @@ function AppointmentConfig({
   const accounts = data?.accounts ?? [];
   const baikalConfigs = data?.baikal_configs ?? [];
 
-  if (!isLoading && accounts.length === 0) {
+  // Only calendars we can create events in are valid booking targets. CalDAV
+  // calendars are always "owner" — Basic-auth credentials are the owner's own.
+  const writableCalendars = (a: (typeof accounts)[number]) =>
+    a.calendars.filter(
+      (c) => c.accessRole === "owner" || c.accessRole === "writer",
+    );
+
+  const googleAccounts = accounts.filter((a) => a.provider === "google");
+  const caldavAccounts = accounts.filter((a) => a.provider === "caldav");
+  const myGoogle = googleAccounts.filter((a) => a.is_own);
+  const teamGoogle = googleAccounts.filter((a) => !a.is_own);
+
+  // Empty state only when NOTHING can receive a booking — a workspace with a
+  // Baikal config or a CalDAV calendar but no Google account still has targets.
+  const hasTargets =
+    googleAccounts.some((a) => writableCalendars(a).length > 0) ||
+    baikalConfigs.length > 0 ||
+    caldavAccounts.some((a) => a.calendars.length > 0);
+
+  if (!isLoading && !hasTargets) {
     return (
       <div className="space-y-2 rounded-lg border border-dashed p-3">
         <p className="text-sm text-muted-foreground">
-          {t("forms.inspector.appointment.noAccounts")}
+          {t("forms.inspector.appointment.noTargets")}
         </p>
         <Link
           to="/settings/calendars"
@@ -785,11 +815,70 @@ function AppointmentConfig({
     );
   }
 
-  const account = accounts.find((a) => a.id === ap.accountId);
-  // Only calendars we can create events in are valid booking targets.
-  const targetCalendars = (account?.calendars ?? []).filter(
-    (c) => c.accessRole === "owner" || c.accessRole === "writer",
-  );
+  // The selected target via the resolution rule: explicit key first, else the
+  // legacy Google pair every pre-targetKey definition stored.
+  const selectedTarget =
+    ap.targetKey ||
+    (ap.accountId && ap.calendarId
+      ? `google:${ap.accountId}:${ap.calendarId}`
+      : undefined);
+
+  const setTarget = (key: string) => {
+    if (key.startsWith("google:")) {
+      // DUAL-WRITE the legacy pair: a backend rolled back to before targetKey
+      // existed still books Google targets from accountId/calendarId.
+      const rest = key.slice("google:".length);
+      const sep = rest.indexOf(":");
+      patch({
+        targetKey: key,
+        accountId: rest.slice(0, sep),
+        calendarId: rest.slice(sep + 1),
+      });
+    } else {
+      patch({ targetKey: key, accountId: "", calendarId: "" });
+    }
+  };
+
+  // The account behind the selected target, for the reconnect warning below.
+  // Both `google:` and `caldav:` keys carry the account id as segment two.
+  const selectedAccountId =
+    selectedTarget && !selectedTarget.startsWith("baikal:")
+      ? selectedTarget.split(":")[1]
+      : null;
+  const account = accounts.find((a) => a.id === selectedAccountId);
+
+  const accountCalendarItems = (list: typeof accounts) =>
+    list.flatMap((a) =>
+      (a.provider === "caldav" ? a.calendars : writableCalendars(a)).map(
+        (c) => {
+          const key = calendarKeyFor(a, c.id);
+          return (
+            <SelectItem key={key} value={key} disabled={a.auth_failed}>
+              <span className="flex min-w-0 items-center gap-1.5">
+                {/* Provider marker: a calendar name + colour alone can't
+                    tell a Google calendar from a CalDAV one. */}
+                {a.provider === "google" && (
+                  <GoogleIcon className="h-3 w-3 shrink-0" />
+                )}
+                {a.provider === "caldav" && (
+                  <CalDavIcon className="h-3 w-3 shrink-0" />
+                )}
+                <span className="min-w-0 truncate">
+                  {c.summary}
+                  <span className="text-muted-foreground">
+                    {" "}
+                    · {a.google_email || a.user_name}
+                    {a.auth_failed
+                      ? ` — ${t("forms.inspector.appointment.accountNeedsReconnect")}`
+                      : ""}
+                  </span>
+                </span>
+              </span>
+            </SelectItem>
+          );
+        },
+      ),
+    );
 
   const allBusy = ap.busyCalendarKeys === "all";
   const busyKeys = Array.isArray(ap.busyCalendarKeys)
@@ -813,58 +902,72 @@ function AppointmentConfig({
   return (
     <>
       <Field>
-        <Label>{t("forms.inspector.appointment.targetAccount")}</Label>
+        <Label>{t("forms.inspector.appointment.target")}</Label>
         <Select
           disabled={disabled || isLoading}
-          value={ap.accountId || undefined}
-          onValueChange={(v) =>
-            // A new account invalidates the calendar choice with it.
-            patch({ accountId: v, calendarId: "" })
-          }
+          value={selectedTarget}
+          onValueChange={setTarget}
         >
-          <SelectTrigger>
+          {/* The base trigger is w-fit + nowrap, so a long
+              "calendar · email" label would push past the panel edge.
+              Full width + the trigger's own line-clamp keeps it inside. */}
+          <SelectTrigger className="w-full">
             <SelectValue />
           </SelectTrigger>
-          <SelectContent>
-            {accounts.map((a) => (
-              <SelectItem key={a.id} value={a.id} disabled={a.auth_failed}>
-                {a.display_name}
-                {a.google_email ? ` (${a.google_email})` : ""}
-                {!a.is_own ? ` — ${a.user_name}` : ""}
-                {a.auth_failed
-                  ? ` — ${t("forms.inspector.appointment.accountNeedsReconnect")}`
-                  : ""}
-              </SelectItem>
-            ))}
+          {/* popper + align=end: the inspector sits at the right screen edge,
+              so a dropdown wider than its trigger must grow LEFT — the
+              default item-aligned position pins it to the right and clips. */}
+          <SelectContent
+            position="popper"
+            align="end"
+            className="max-w-[min(24rem,90vw)]"
+          >
+            {myGoogle.length > 0 ? (
+              <SelectGroup>
+                <SelectLabel>
+                  {t("forms.inspector.appointment.targetGroupMine")}
+                </SelectLabel>
+                {accountCalendarItems(myGoogle)}
+              </SelectGroup>
+            ) : null}
+            {teamGoogle.length > 0 ? (
+              <SelectGroup>
+                <SelectLabel>
+                  {t("forms.inspector.appointment.targetGroupTeam")}
+                </SelectLabel>
+                {accountCalendarItems(teamGoogle)}
+              </SelectGroup>
+            ) : null}
+            {baikalConfigs.length > 0 ? (
+              <SelectGroup>
+                <SelectLabel>
+                  {t("forms.inspector.appointment.targetGroupBooking")}
+                </SelectLabel>
+                {baikalConfigs.map((b) => (
+                  <SelectItem key={b.id} value={`baikal:${b.id}`}>
+                    <span className="flex min-w-0 items-center gap-1.5">
+                      {/* Baikal is CalDAV under the hood — same mark. */}
+                      <CalDavIcon className="h-3 w-3 shrink-0" />
+                      <span className="min-w-0 truncate">
+                        {b.provider_name ?? b.user_name}
+                      </span>
+                    </span>
+                  </SelectItem>
+                ))}
+              </SelectGroup>
+            ) : null}
+            {caldavAccounts.some((a) => a.calendars.length > 0) ? (
+              <SelectGroup>
+                <SelectLabel>
+                  {t("forms.inspector.appointment.targetGroupCaldav")}
+                </SelectLabel>
+                {accountCalendarItems(caldavAccounts)}
+              </SelectGroup>
+            ) : null}
           </SelectContent>
         </Select>
-        <FieldHint>{t("forms.inspector.appointment.targetAccountHelp")}</FieldHint>
+        <FieldHint>{t("forms.inspector.appointment.targetHelp")}</FieldHint>
       </Field>
-
-      {ap.accountId ? (
-        <Field>
-          <Label>{t("forms.inspector.appointment.targetCalendar")}</Label>
-          <Select
-            disabled={disabled}
-            value={ap.calendarId || undefined}
-            onValueChange={(v) => patch({ calendarId: v })}
-          >
-            <SelectTrigger>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {targetCalendars.map((c) => (
-                <SelectItem key={c.id} value={c.id}>
-                  {c.summary}
-                  {c.primary
-                    ? ` — ${t("forms.inspector.appointment.primary")}`
-                    : ""}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </Field>
-      ) : null}
 
       <Field>
         <Label htmlFor="fi-appt-allbusy">
@@ -889,7 +992,9 @@ function AppointmentConfig({
           <div className="space-y-1.5 pt-1">
             {accounts.flatMap((a) =>
               a.calendars.map((c) => {
-                const key = `google:${a.id}:${c.id}`;
+                // calendarKeyFor percent-encodes caldav calendar URLs — these
+                // keys are stored in the form definition and parsed serverside.
+                const key = calendarKeyFor(a, c.id);
                 return (
                   <label
                     key={key}
@@ -936,7 +1041,7 @@ function AppointmentConfig({
           value={String(ap.durationMinutes)}
           onValueChange={(v) => patch({ durationMinutes: Number(v) })}
         >
-          <SelectTrigger>
+          <SelectTrigger className="w-full">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -1033,24 +1138,30 @@ function AppointmentConfig({
       </Field>
 
       <Cols>
-        <Field>
-          <Label htmlFor="fi-appt-notice">
-            {t("forms.inspector.appointment.minNotice")}
-          </Label>
-          <Input
-            id="fi-appt-notice"
-            type="number"
-            min={0}
-            disabled={disabled}
-            value={ap.minNoticeHours ?? 2}
-            onChange={(e) =>
-              patch({
-                minNoticeHours:
-                  e.target.value === "" ? undefined : Number(e.target.value),
-              })
-            }
-          />
-        </Field>
+        {/* Only Google targets expose the notice setting: Baikal/CalDAV
+            booking calendars carry their own scheduling rules on the server
+            side, so a second knob here would just fight them. The default
+            (2h) still applies to slot computation. */}
+        {selectedTarget?.startsWith("google:") ? (
+          <Field>
+            <Label htmlFor="fi-appt-notice">
+              {t("forms.inspector.appointment.minNotice")}
+            </Label>
+            <Input
+              id="fi-appt-notice"
+              type="number"
+              min={0}
+              disabled={disabled}
+              value={ap.minNoticeHours ?? 2}
+              onChange={(e) =>
+                patch({
+                  minNoticeHours:
+                    e.target.value === "" ? undefined : Number(e.target.value),
+                })
+              }
+            />
+          </Field>
+        ) : null}
         <Field>
           <Label htmlFor="fi-appt-ahead">
             {t("forms.inspector.appointment.maxDaysAhead")}

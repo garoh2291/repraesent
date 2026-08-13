@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import {
   ExternalLink,
   Globe,
+  Plus,
   SlidersHorizontal,
   TriangleAlert,
   X,
@@ -17,6 +18,7 @@ import { useAuthContext } from "~/providers/auth-provider";
 import { useCalendarSummary } from "~/lib/hooks/useCalendarSummary";
 import { useDocumentMeta } from "~/lib/hooks/use-document-meta";
 import {
+  calendarKeyFor,
   listCalendarAccounts,
   getCalendarEvents,
   getCalendarPreferences,
@@ -26,6 +28,7 @@ import {
 } from "~/lib/api/calendar";
 import { CalendarSourcesPanel } from "~/components/calendar/CalendarSourcesPanel";
 import { CalendarView } from "~/components/calendar/CalendarView";
+import { CreateEventDialog } from "~/components/calendar/CreateEventDialog";
 import { Button } from "~/components/ui/button";
 import {
   Dialog,
@@ -139,7 +142,9 @@ export default function CalendarPage() {
     const keys: string[] = [];
     for (const account of accounts) {
       for (const cal of account.calendars) {
-        keys.push(`google:${account.id}:${cal.id}`);
+        // calendarKeyFor percent-encodes caldav calendar URLs; these keys are
+        // comma-joined into the events query string.
+        keys.push(calendarKeyFor(account, cal.id));
       }
     }
     for (const config of baikalConfigs) {
@@ -159,7 +164,7 @@ export default function CalendarPage() {
     const names: Record<string, string> = {};
     for (const account of accounts) {
       for (const cal of account.calendars) {
-        const key = `google:${account.id}:${cal.id}`;
+        const key = calendarKeyFor(account, cal.id);
         if (cal.backgroundColor) colors[key] = cal.backgroundColor;
         names[key] = account.is_own
           ? cal.summary
@@ -253,6 +258,7 @@ export default function CalendarPage() {
   const [selectedEvent, setSelectedEvent] =
     useState<UnifiedCalendarEvent | null>(null);
   const [sheetOpen, setSheetOpen] = useState(false);
+  const [createOpen, setCreateOpen] = useState(false);
 
   // No sources connected: this page has nothing to show
   if (!summaryLoading && summary && totalSources === 0) {
@@ -272,7 +278,24 @@ export default function CalendarPage() {
     );
   }
 
-  const panel = (
+  // The accounts request can take a few seconds (it lazily refreshes stale
+  // calendar caches server-side) — an empty column reads as "no calendars",
+  // so hold the space with skeleton rows until the list arrives.
+  const panel = !accountsData ? (
+    <div className="space-y-2 px-2 pt-1" aria-busy>
+      <div className="h-3 w-24 rounded bg-muted animate-pulse" />
+      {Array.from({ length: 5 }, (_, i) => (
+        <div key={i} className="flex items-center gap-2.5 py-1.5">
+          <div className="h-4 w-4 shrink-0 rounded bg-muted animate-pulse" />
+          <div className="h-2.5 w-2.5 shrink-0 rounded-full bg-muted animate-pulse" />
+          <div
+            className="h-3.5 rounded bg-muted animate-pulse"
+            style={{ width: `${65 - i * 8}%` }}
+          />
+        </div>
+      ))}
+    </div>
+  ) : (
     <CalendarSourcesPanel
       accounts={accounts}
       baikalConfigs={baikalConfigs}
@@ -290,8 +313,21 @@ export default function CalendarPage() {
           {t("calendar.title")}
         </h1>
 
-        <div className="flex items-center gap-2">
-          {/* Display timezone: which wall clock the grid is drawn against */}
+        <div className="flex flex-wrap items-center gap-2">
+          <Button
+            size="sm"
+            className="gap-2"
+            onClick={() => setCreateOpen(true)}
+          >
+            <Plus className="w-3.5 h-3.5" />
+            {t("calendar.newMeeting")}
+          </Button>
+
+          {/* Display timezone: which wall clock the grid is drawn against.
+              The menu is PORTALED to <body>: the page header animates
+              (app-fade-up), which makes it a stacking context, so no z-index
+              inside it can beat the calendar section below — the dropdown was
+              sliding under the grid. A portal escapes the trap entirely. */}
           <div className="flex items-center gap-1.5">
             <Globe className="hidden sm:block w-3.5 h-3.5 text-muted-foreground" />
             <div className="w-56 sm:w-72">
@@ -301,6 +337,12 @@ export default function CalendarPage() {
                   handleTimezoneChange(typeof tz === "string" ? tz : tz.value)
                 }
                 aria-label={t("calendar.timezone")}
+                menuPortalTarget={
+                  typeof document !== "undefined" ? document.body : undefined
+                }
+                styles={{
+                  menuPortal: (base) => ({ ...base, zIndex: 60 }),
+                }}
                 className="text-sm [&_.react-select__control]:min-h-9 [&_.react-select__control]:rounded-lg [&_.react-select__control]:border-border [&_.react-select__control]:text-sm"
               />
             </div>
@@ -370,6 +412,19 @@ export default function CalendarPage() {
         </div>
       </div>
 
+      <CreateEventDialog
+        open={createOpen}
+        onOpenChange={setCreateOpen}
+        accounts={accounts}
+        baikalConfigs={baikalConfigs}
+        timezone={timezone}
+        defaultDate={date}
+        onCreated={() =>
+          // Prefix match: drops every cached range, not just the visible one
+          queryClient.invalidateQueries({ queryKey: ["calendar-events"] })
+        }
+      />
+
       {/* Event details */}
       <Dialog
         open={!!selectedEvent}
@@ -405,6 +460,19 @@ export default function CalendarPage() {
                 {nameByKey[selectedEvent.calendarKey] && (
                   <p className="text-muted-foreground">
                     {nameByKey[selectedEvent.calendarKey]}
+                  </p>
+                )}
+                {selectedEvent.rsvp && (
+                  <p
+                    className={
+                      selectedEvent.rsvp === "accepted"
+                        ? "text-emerald-600"
+                        : selectedEvent.rsvp === "declined"
+                          ? "text-red-500"
+                          : "text-amber-600"
+                    }
+                  >
+                    {t(`calendar.rsvp.${selectedEvent.rsvp}`)}
                   </p>
                 )}
                 {selectedEvent.meetLink && (

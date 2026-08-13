@@ -609,6 +609,23 @@ body {
   background-color: var(--cal-event-color, var(--foreground)) !important;
   opacity: 0.85;
 }
+/* RSVP looks (Google-style). Four classes out-specify every 3-class
+   !important rule above, so these win in month, week, day and agenda alike.
+   Inset shadow instead of border: rbc time-grid events size oddly with real
+   borders (base sets border: none). */
+.appointments-calendar.team-calendar .rbc-event.cal-rsvp-pending,
+.appointments-calendar.team-calendar .rbc-day-slot .rbc-event.cal-rsvp-pending {
+  background-color: var(--background) !important;
+  color: var(--cal-event-color, var(--foreground)) !important;
+  box-shadow: inset 0 0 0 1.5px var(--cal-event-color, var(--foreground));
+}
+.appointments-calendar.team-calendar .rbc-event.cal-rsvp-declined,
+.appointments-calendar.team-calendar .rbc-day-slot .rbc-event.cal-rsvp-declined {
+  opacity: 0.55;
+}
+.appointments-calendar.team-calendar .rbc-event.cal-rsvp-declined .rbc-event-content {
+  text-decoration: line-through;
+}
 /* Month events */
 .appointments-calendar .rbc-show-more {
   font-size: 0.6875rem;

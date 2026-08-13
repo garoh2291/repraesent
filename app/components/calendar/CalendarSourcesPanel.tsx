@@ -1,7 +1,13 @@
 import { useTranslation } from "react-i18next";
 import { TriangleAlert } from "lucide-react";
 import { Checkbox } from "~/components/ui/checkbox";
-import type { BaikalConfig, CalendarAccount } from "~/lib/api/calendar";
+import { CalDavIcon } from "~/components/icons/CalDavIcon";
+import { GoogleIcon } from "~/components/icons/GoogleIcon";
+import {
+  calendarKeyFor,
+  type BaikalConfig,
+  type CalendarAccount,
+} from "~/lib/api/calendar";
 
 const DEFAULT_DOT_COLOR = "#94a3b8";
 
@@ -12,6 +18,7 @@ function SourceRow({
   checked,
   hasError,
   errorTitle,
+  provider,
   onToggle,
 }: {
   calendarKey: string;
@@ -20,6 +27,8 @@ function SourceRow({
   checked: boolean;
   hasError: boolean;
   errorTitle: string;
+  /** Provider marker — a colour dot alone can't tell providers apart. */
+  provider?: "google" | "caldav";
   onToggle: (key: string) => void;
 }) {
   return (
@@ -36,6 +45,12 @@ function SourceRow({
       <span className="min-w-0 flex-1 truncate text-sm text-foreground">
         {label}
       </span>
+      {provider === "google" && (
+        <GoogleIcon className="h-3 w-3 shrink-0 opacity-80" />
+      )}
+      {provider === "caldav" && (
+        <CalDavIcon className="h-3 w-3 shrink-0 opacity-80" />
+      )}
       {hasError && (
         <TriangleAlert
           className="h-3.5 w-3.5 shrink-0 text-amber-500"
@@ -77,7 +92,9 @@ function AccountCalendars({
         {subLabel}
       </p>
       {account.calendars.map((cal) => {
-        const key = `google:${account.id}:${cal.id}`;
+        // calendarKeyFor percent-encodes caldav calendar URLs — the events
+        // endpoint receives keys comma-joined, so they must go through it.
+        const key = calendarKeyFor(account, cal.id);
         return (
           <SourceRow
             key={key}
@@ -87,6 +104,7 @@ function AccountCalendars({
             checked={!hiddenKeys.has(key)}
             hasError={errorKeys.has(key) || account.auth_failed}
             errorTitle={errorTitle}
+            provider={account.provider}
             onToggle={onToggle}
           />
         );
@@ -172,6 +190,8 @@ export function CalendarSourcesPanel({
                 checked={!hiddenKeys.has(key)}
                 hasError={errorKeys.has(key)}
                 errorTitle={errorTitle}
+                // Baikal IS a CalDAV server — same mark as caldav accounts.
+                provider="caldav"
                 onToggle={onToggle}
               />
             );

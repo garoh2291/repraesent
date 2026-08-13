@@ -1,12 +1,16 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useLocation } from "react-router";
 import { useTranslation } from "react-i18next";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useForm, type UseFormReturn } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
 import { toast } from "sonner";
 import {
   CalendarDays,
   CheckCircle2,
   RefreshCw,
+  Server,
   Trash2,
   TriangleAlert,
   X,
@@ -15,6 +19,7 @@ import i18n from "~/i18n";
 import { useAuthContext } from "~/providers/auth-provider";
 import { extractErrorMessage } from "~/lib/api/axios-instance";
 import {
+  connectCaldavAccount,
   disconnectCalendarAccount,
   getCalendarAuthorizeUrl,
   listCalendarAccounts,
@@ -33,6 +38,23 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "~/components/ui/alert-dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "~/components/ui/dialog";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "~/components/ui/form";
+import { Input } from "~/components/ui/input";
 import { Skeleton } from "~/components/ui/skeleton";
 import { useDocumentMeta } from "~/lib/hooks/use-document-meta";
 
@@ -107,6 +129,32 @@ function GoogleIcon({ className }: { className?: string }) {
     </svg>
   );
 }
+
+function createCaldavSchema(t: (key: string) => string) {
+  return z.object({
+    name: z
+      .string()
+      .trim()
+      .min(1, t("settings.calendars.caldav.required"))
+      .max(120, t("settings.calendars.caldav.required")),
+    server_url: z
+      .string()
+      .trim()
+      .min(1, t("settings.calendars.caldav.required"))
+      // Only the scheme is checked here — the server verifies the URL for
+      // real by connecting to it, and its message is more specific.
+      .regex(/^https?:\/\//i, t("settings.calendars.caldav.invalidUrl"))
+      .max(500, t("settings.calendars.caldav.invalidUrl")),
+    username: z
+      .string()
+      .trim()
+      .min(1, t("settings.calendars.caldav.required"))
+      .max(200, t("settings.calendars.caldav.required")),
+    password: z.string().min(1, t("settings.calendars.caldav.required")),
+  });
+}
+
+type CaldavFormValues = z.infer<ReturnType<typeof createCaldavSchema>>;
 
 /** Every result the OAuth callback can bounce back with. */
 type GoogleOutcome = "connected" | "denied" | "expired" | "error" | "failed";
@@ -205,6 +253,47 @@ export default function SettingsCalendars() {
     onError: (error) => toast.error(extractErrorMessage(error)),
   });
 
+  const [caldavOpen, setCaldavOpen] = useState(false);
+  const caldavSchema = useMemo(() => createCaldavSchema(t), [t]);
+  const caldavForm = useForm<CaldavFormValues>({
+    resolver: zodResolver(caldavSchema),
+    defaultValues: { name: "", server_url: "", username: "", password: "" },
+    mode: "onSubmit",
+  });
+
+  const caldavMutation = useMutation({
+    mutationFn: connectCaldavAccount,
+    onSuccess: async () => {
+      await invalidate();
+      toast.success(t("settings.calendars.caldav.connected"));
+      setCaldavOpen(false);
+      caldavForm.reset();
+    },
+    // The server only rejects after failing to reach the CalDAV server, so
+    // its message is specific and worth showing verbatim.
+    onError: (error) => toast.error(extractErrorMessage(error)),
+  });
+
+  /**
+   * Open the connect dialog, optionally seeded from an existing account —
+   * reconnecting after a password change should not mean retyping the server
+   * and username. The password is never prefilled; it is not stored readably.
+   */
+  function openCaldavDialog(prefill?: CalendarAccount) {
+    caldavForm.reset(
+      prefill
+        ? {
+            name: prefill.display_name,
+            server_url: prefill.caldav_server_url ?? "",
+            // For caldav rows google_email carries the username.
+            username: prefill.google_email,
+            password: "",
+          }
+        : { name: "", server_url: "", username: "", password: "" },
+    );
+    setCaldavOpen(true);
+  }
+
   const disconnectMutation = useMutation({
     mutationFn: disconnectCalendarAccount,
     onSuccess: async () => {
@@ -216,6 +305,8 @@ export default function SettingsCalendars() {
   });
 
   const accounts = data?.accounts ?? [];
+  const googleAccounts = accounts.filter((a) => a.provider === "google");
+  const caldavAccounts = accounts.filter((a) => a.provider === "caldav");
   const baikalConfigs = data?.baikal_configs ?? [];
 
   return (
@@ -231,7 +322,7 @@ export default function SettingsCalendars() {
         label={t("settings.calendars.googleSection")}
         description={t("settings.calendars.googleSectionDescription")}
         action={
-          accounts.length > 0 ? (
+          googleAccounts.length > 0 ? (
             <ConnectButton
               googleStarting={googleStarting}
               onConnect={handleConnect}
@@ -244,14 +335,14 @@ export default function SettingsCalendars() {
             <Skeleton className="h-16 w-full rounded-xl" />
             <Skeleton className="h-16 w-full rounded-xl" />
           </div>
-        ) : accounts.length === 0 ? (
+        ) : googleAccounts.length === 0 ? (
           <GoogleEmptyState
             googleStarting={googleStarting}
             onConnect={handleConnect}
           />
         ) : (
           <div className="overflow-hidden rounded-2xl border border-border bg-card">
-            {accounts.map((account, i) => (
+            {googleAccounts.map((account, i) => (
               <AccountRow
                 key={account.id}
                 account={account}
@@ -265,6 +356,70 @@ export default function SettingsCalendars() {
                 onRefresh={() => refreshMutation.mutate(account.id)}
                 onDisconnect={() => setPendingDisconnect(account)}
                 onReconnect={handleConnect}
+              />
+            ))}
+          </div>
+        )}
+      </SettingsSection>
+
+      <SettingsSection
+        label={t("settings.calendars.caldav.section")}
+        description={t("settings.calendars.caldav.sectionHint")}
+        action={
+          caldavAccounts.length > 0 ? (
+            <Button
+              onClick={() => openCaldavDialog()}
+              variant="outline"
+              className="h-10 w-full gap-2 px-4 sm:w-auto"
+            >
+              <Server className="h-4 w-4 shrink-0" />
+              {t("settings.calendars.caldav.connect")}
+            </Button>
+          ) : undefined
+        }
+      >
+        {isPending ? (
+          <Skeleton className="h-16 w-full rounded-xl" />
+        ) : caldavAccounts.length === 0 ? (
+          <div className="rounded-2xl border border-dashed border-border bg-card/40 p-8 text-center">
+            <span
+              aria-hidden
+              className="mx-auto mb-3 flex size-11 items-center justify-center rounded-2xl border border-border bg-muted/40 text-muted-foreground"
+            >
+              <Server className="h-5 w-5" />
+            </span>
+            <p className="mx-auto max-w-md text-sm text-muted-foreground">
+              {t("settings.calendars.caldav.empty")}
+            </p>
+            <div className="mt-5 flex flex-col items-stretch gap-2 sm:flex-row sm:items-center sm:justify-center">
+              <Button
+                onClick={() => openCaldavDialog()}
+                variant="outline"
+                className="h-10 w-full gap-2 px-4 sm:w-auto"
+              >
+                <Server className="h-4 w-4 shrink-0" />
+                {t("settings.calendars.caldav.connect")}
+              </Button>
+            </div>
+          </div>
+        ) : (
+          <div className="overflow-hidden rounded-2xl border border-border bg-card">
+            {caldavAccounts.map((account, i) => (
+              <AccountRow
+                key={account.id}
+                account={account}
+                isFirst={i === 0}
+                canDisconnect={account.is_own || isAdmin}
+                busy={disconnectMutation.isPending}
+                refreshing={
+                  refreshMutation.isPending &&
+                  refreshMutation.variables === account.id
+                }
+                onRefresh={() => refreshMutation.mutate(account.id)}
+                onDisconnect={() => setPendingDisconnect(account)}
+                // Reconnecting Basic auth means re-entering the password, not
+                // an OAuth round trip — reopen the dialog with the rest seeded.
+                onReconnect={() => openCaldavDialog(account)}
               />
             ))}
           </div>
@@ -297,6 +452,24 @@ export default function SettingsCalendars() {
           </div>
         )}
       </SettingsSection>
+
+      <ConnectCaldavDialog
+        open={caldavOpen}
+        onOpenChange={(open) => {
+          setCaldavOpen(open);
+          if (!open) caldavForm.reset();
+        }}
+        form={caldavForm}
+        pending={caldavMutation.isPending}
+        onSubmit={(values) =>
+          caldavMutation.mutate({
+            name: values.name,
+            server_url: values.server_url,
+            username: values.username,
+            password: values.password,
+          })
+        }
+      />
 
       <AlertDialog
         open={pendingDisconnect !== null}
@@ -490,6 +663,7 @@ function AccountRow({
   onReconnect: () => void;
 }) {
   const { t } = useTranslation();
+  const isCaldav = account.provider === "caldav";
 
   return (
     <div className={isFirst ? "" : "border-t border-border"}>
@@ -500,13 +674,19 @@ function AccountRow({
             aria-hidden
             className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-muted text-muted-foreground"
           >
-            <GoogleIcon className="h-4 w-4" />
+            {isCaldav ? (
+              <Server className="h-4 w-4" />
+            ) : (
+              <GoogleIcon className="h-4 w-4" />
+            )}
           </span>
 
           <div className="min-w-0 flex-1">
             <div className="flex flex-wrap items-center gap-2">
+              {/* A CalDAV username is rarely self-explanatory the way a Google
+                  address is, so lead with the name the user gave the account. */}
               <span className="truncate text-sm font-medium">
-                {account.google_email}
+                {isCaldav ? account.display_name : account.google_email}
               </span>
               {account.auth_failed ? (
                 <span className="inline-flex items-center gap-1 rounded-full border border-amber-400/40 bg-amber-400/10 px-2 py-0.5 text-[11px] font-medium text-amber-700 dark:text-amber-300">
@@ -516,17 +696,24 @@ function AccountRow({
               ) : null}
             </div>
             <p className="mt-0.5 truncate text-xs text-muted-foreground">
-              {account.display_name}
+              {/* For caldav rows google_email carries the username. */}
+              {isCaldav ? account.google_email : account.display_name}
               {" · "}
               {account.is_own ? t("settings.calendars.you") : account.user_name}
             </p>
+            {isCaldav && account.caldav_server_url ? (
+              <p className="mt-0.5 truncate text-xs text-muted-foreground">
+                {account.caldav_server_url}
+              </p>
+            ) : null}
           </div>
         </div>
 
         <div className="flex shrink-0 flex-wrap items-center gap-1.5">
-          {/* A dead grant is only fixable by consenting again, so put that
-              action on the row that is broken rather than making the user work
-              out that "Connect Google calendar" is also the repair. */}
+          {/* A dead grant is only fixable by consenting again (Google) or
+              re-entering the password (CalDAV), so put that action on the row
+              that is broken rather than making the user work out that the
+              section's connect button is also the repair. */}
           {account.auth_failed ? (
             <button
               type="button"
@@ -534,7 +721,11 @@ function AccountRow({
               disabled={busy}
               className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-amber-400/40 bg-amber-400/10 px-2.5 text-xs font-medium text-amber-800 transition-colors hover:bg-amber-400/20 disabled:opacity-50 dark:text-amber-200"
             >
-              <GoogleIcon className="h-3.5 w-3.5" />
+              {isCaldav ? (
+                <Server className="h-3.5 w-3.5" />
+              ) : (
+                <GoogleIcon className="h-3.5 w-3.5" />
+              )}
               {t("settings.calendars.reconnect")}
             </button>
           ) : null}
@@ -601,6 +792,140 @@ function AccountRow({
  * are created and maintained by Repraesent, and a member deleting one from here
  * would be removing something they cannot recreate.
  */
+/**
+ * Server URL + Basic auth for any CalDAV server (Nextcloud, Baikal, Fastmail).
+ * The page owns the form and mutation (same split as the SMTP dialog on the
+ * email accounts page) so the reconnect flow can seed the fields.
+ */
+function ConnectCaldavDialog({
+  open,
+  onOpenChange,
+  form,
+  pending,
+  onSubmit,
+}: {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  form: UseFormReturn<CaldavFormValues>;
+  pending: boolean;
+  onSubmit: (values: CaldavFormValues) => void;
+}) {
+  const { t } = useTranslation();
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-h-[calc(100svh-2rem)] overflow-y-auto sm:max-w-lg">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <Server className="h-4 w-4" />
+            {t("settings.calendars.caldav.dialogTitle")}
+          </DialogTitle>
+          <DialogDescription>
+            {t("settings.calendars.caldav.dialogHint")}
+          </DialogDescription>
+        </DialogHeader>
+
+        <Form {...form}>
+          <form
+            onSubmit={form.handleSubmit(onSubmit)}
+            className="space-y-4"
+            id="connect-caldav-form"
+          >
+            <FormField
+              control={form.control}
+              name="name"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>{t("settings.calendars.caldav.name")}</FormLabel>
+                  <FormControl>
+                    <Input {...field} placeholder="Nextcloud" disabled={pending} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="server_url"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>
+                    {t("settings.calendars.caldav.serverUrl")}
+                  </FormLabel>
+                  <FormControl>
+                    <Input
+                      {...field}
+                      placeholder="https://dav.example.com/dav.php"
+                      autoComplete="off"
+                      disabled={pending}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <FormField
+                control={form.control}
+                name="username"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>
+                      {t("settings.calendars.caldav.username")}
+                    </FormLabel>
+                    <FormControl>
+                      <Input {...field} autoComplete="off" disabled={pending} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="password"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>
+                      {t("settings.calendars.caldav.password")}
+                    </FormLabel>
+                    <FormControl>
+                      <Input
+                        {...field}
+                        type="password"
+                        autoComplete="new-password"
+                        disabled={pending}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+          </form>
+        </Form>
+
+        <DialogFooter>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => onOpenChange(false)}
+            disabled={pending}
+          >
+            {t("common.cancel")}
+          </Button>
+          <Button type="submit" form="connect-caldav-form" disabled={pending}>
+            {pending
+              ? t("settings.calendars.caldav.verifying")
+              : t("settings.calendars.caldav.connect")}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 function BaikalRow({
   config,
   isFirst,

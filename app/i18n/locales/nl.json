@@ -76,7 +76,38 @@
     "joinMeet": "Deelnemen aan Google Meet",
     "allDay": "Hele dag",
     "calendars": "Agenda's",
-    "timezone": "Tijdzone"
+    "timezone": "Tijdzone",
+    "rsvp": {
+      "accepted": "U hebt deze uitnodiging geaccepteerd",
+      "declined": "U hebt deze uitnodiging afgewezen",
+      "tentative": "U hebt misschien geantwoord",
+      "needsAction": "Uitnodiging nog niet beantwoord"
+    },
+    "newMeeting": "Nieuwe afspraak",
+    "create": {
+      "title": "Nieuwe afspraak",
+      "target": "Agenda",
+      "eventTitle": "Titel",
+      "date": "Datum",
+      "startTime": "Starttijd",
+      "endTime": "Eindtijd",
+      "guests": "Gasten",
+      "guestsHint": "E-mailadressen gescheiden door komma's — gasten ontvangen een Google-uitnodiging",
+      "addMeet": "Google Meet toevoegen",
+      "description": "Beschrijving",
+      "submit": "Afspraak aanmaken",
+      "creating": "Aanmaken…",
+      "created": "Afspraak aangemaakt",
+      "failed": "De afspraak kon niet worden aangemaakt",
+      "invalidTimes": "De eindtijd moet na de starttijd liggen",
+      "invalidGuests": "Voer geldige e-mailadressen in, gescheiden door komma's",
+      "required": "Verplicht",
+      "myCalendarsGroup": "Mijn agenda's",
+      "bookingGroup": "Boekingsagenda's"
+    },
+    "targetGroup": {
+      "caldav": "CalDAV"
+    }
   },
   "db_brand": {
     "subtitle": "Kies een retailer in de zijbalk om de Social Ads en Leads te bekijken.",
@@ -1025,7 +1056,23 @@
         "error": "Er ging iets mis bij het verbinden van je Google-account. Probeer het opnieuw.",
         "failed": "Je Google-account kon niet worden verbonden: {{reason}}"
       },
-      "dismiss": "Sluiten"
+      "dismiss": "Sluiten",
+      "caldav": {
+        "section": "CalDAV-agenda’s",
+        "sectionHint": "Verbind elke CalDAV-server (Baikal, Nextcloud, ...) met het adres en de inloggegevens.",
+        "connect": "CalDAV-agenda verbinden",
+        "dialogTitle": "CalDAV-agenda verbinden",
+        "dialogHint": "Voer het adres van uw CalDAV-server en uw inloggegevens in. De verbinding wordt vóór het opslaan gecontroleerd; het wachtwoord wordt versleuteld opgeslagen.",
+        "name": "Weergavenaam",
+        "serverUrl": "Server-URL",
+        "username": "Gebruikersnaam",
+        "password": "Wachtwoord",
+        "required": "Dit veld is verplicht",
+        "invalidUrl": "Voer een geldige URL in die begint met http:// of https://",
+        "verifying": "Verbinding wordt gecontroleerd...",
+        "connected": "CalDAV-agenda verbonden",
+        "empty": "Nog geen CalDAV-agenda’s verbonden"
+      }
     }
   },
   "booking": {
@@ -3174,9 +3221,12 @@
       "keyRequired": "Een sleutel is verplicht — inzendingen worden hieronder opgeslagen.",
       "mappingLocked": "Vergrendeld: het formulier heeft dit veld nodig om een lead te identificeren.",
       "appointment": {
-        "targetAccount": "Doelaccount",
-        "targetAccountHelp": "Het gekoppelde Google-account waarin de geboekte afspraak wordt aangemaakt.",
-        "targetCalendar": "Doelagenda",
+        "target": "Doelagenda",
+        "targetHelp": "Boekingen maken een afspraak aan in deze agenda. Google Meet-links en gastuitnodigingen zijn alleen beschikbaar voor Google-agenda's.",
+        "targetGroupMine": "Mijn agenda's",
+        "targetGroupTeam": "Teamagenda's",
+        "targetGroupBooking": "Boekingsagenda's",
+        "targetGroupCaldav": "CalDAV",
         "busyCalendars": "Bezette agenda's",
         "busyCalendarsHelp": "Tijden die in deze agenda's bezet zijn, worden niet aangeboden.",
         "allCalendars": "Alle agenda's",
@@ -3188,10 +3238,9 @@
         "timezone": "Tijdzone",
         "minNotice": "Minimale aankondiging (uren)",
         "maxDaysAhead": "Vooruit boeken (dagen)",
-        "noAccounts": "Nog geen agenda gekoppeld. Koppel een Google-agenda om afspraken aan te bieden.",
+        "noTargets": "Verbind eerst een agenda in de instellingen",
         "connectLink": "Agenda koppelen",
-        "accountNeedsReconnect": "moet opnieuw worden gekoppeld",
-        "primary": "Primair"
+        "accountNeedsReconnect": "moet opnieuw worden gekoppeld"
       }
     },
     "design": {
@@ -3408,6 +3457,12 @@
         "chipTranslate": "Vertalen",
         "chipPublish": "Publiceren"
       }
+    },
+    "appointmentContent": {
+      "loading": "Tijden worden geladen...",
+      "empty": "Geen vrije tijden op deze dag.",
+      "slotUnavailable": "Dit tijdslot is zojuist bezet. Kies een ander tijdstip.",
+      "slotInvalid": "Kies een geldig tijdslot."
     }
   },
   "workflows": {

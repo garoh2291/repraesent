@@ -76,7 +76,38 @@
     "joinMeet": "Join Google Meet",
     "allDay": "All day",
     "calendars": "Calendars",
-    "timezone": "Timezone"
+    "timezone": "Timezone",
+    "rsvp": {
+      "accepted": "You accepted this invitation",
+      "declined": "You declined this invitation",
+      "tentative": "You responded maybe",
+      "needsAction": "Invitation not answered yet"
+    },
+    "newMeeting": "New meeting",
+    "create": {
+      "title": "New meeting",
+      "target": "Calendar",
+      "eventTitle": "Title",
+      "date": "Date",
+      "startTime": "Start time",
+      "endTime": "End time",
+      "guests": "Guests",
+      "guestsHint": "Comma-separated email addresses — guests receive a Google invitation",
+      "addMeet": "Add Google Meet",
+      "description": "Description",
+      "submit": "Create meeting",
+      "creating": "Creating…",
+      "created": "Meeting created",
+      "failed": "Could not create the meeting",
+      "invalidTimes": "End time must be after the start time",
+      "invalidGuests": "Please enter valid email addresses, separated by commas",
+      "required": "Required",
+      "myCalendarsGroup": "My calendars",
+      "bookingGroup": "Booking calendars"
+    },
+    "targetGroup": {
+      "caldav": "CalDAV"
+    }
   },
   "db_brand": {
     "subtitle": "Pick a retailer from the sidebar to view its Social Ads & Leads.",
@@ -1025,7 +1056,23 @@
         "error": "Something went wrong connecting your Google account. Please try again.",
         "failed": "Your Google account could not be connected: {{reason}}"
       },
-      "dismiss": "Dismiss"
+      "dismiss": "Dismiss",
+      "caldav": {
+        "section": "CalDAV calendars",
+        "sectionHint": "Connect any CalDAV server (Baikal, Nextcloud, ...) with its address and credentials.",
+        "connect": "Connect CalDAV calendar",
+        "dialogTitle": "Connect CalDAV calendar",
+        "dialogHint": "Enter your CalDAV server address and login. The connection is verified before saving; the password is stored encrypted.",
+        "name": "Display name",
+        "serverUrl": "Server URL",
+        "username": "Username",
+        "password": "Password",
+        "required": "This field is required",
+        "invalidUrl": "Enter a valid URL starting with http:// or https://",
+        "verifying": "Verifying connection...",
+        "connected": "CalDAV calendar connected",
+        "empty": "No CalDAV calendars connected yet"
+      }
     }
   },
   "booking": {
@@ -3174,9 +3221,12 @@
       "keyRequired": "A key is required — this is what submissions are stored under.",
       "mappingLocked": "Locked: the form needs this field to identify a lead.",
       "appointment": {
-        "targetAccount": "Target account",
-        "targetAccountHelp": "The connected Google account the booked appointment is created in.",
-        "targetCalendar": "Target calendar",
+        "target": "Target calendar",
+        "targetHelp": "Bookings create an event in this calendar. Google Meet links and guest invitations are only available for Google calendars.",
+        "targetGroupMine": "My calendars",
+        "targetGroupTeam": "Team calendars",
+        "targetGroupBooking": "Booking calendars",
+        "targetGroupCaldav": "CalDAV",
         "busyCalendars": "Busy calendars",
         "busyCalendarsHelp": "Times that are busy in these calendars are not offered.",
         "allCalendars": "All calendars",
@@ -3188,10 +3238,9 @@
         "timezone": "Timezone",
         "minNotice": "Minimum notice (hours)",
         "maxDaysAhead": "Book ahead (days)",
-        "noAccounts": "No calendar connected yet. Connect a Google calendar to offer appointments.",
+        "noTargets": "Connect a calendar in Settings first",
         "connectLink": "Connect a calendar",
-        "accountNeedsReconnect": "needs reconnecting",
-        "primary": "Primary"
+        "accountNeedsReconnect": "needs reconnecting"
       }
     },
     "design": {
@@ -3408,6 +3457,12 @@
         "chipTranslate": "Translate",
         "chipPublish": "Publish"
       }
+    },
+    "appointmentContent": {
+      "loading": "Loading times...",
+      "empty": "No free times on this day.",
+      "slotUnavailable": "This time slot was just taken. Please pick another.",
+      "slotInvalid": "Please pick a valid time slot."
     }
   },
   "workflows": {

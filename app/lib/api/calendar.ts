@@ -17,19 +17,43 @@ export interface CalendarListEntry {
   timeZone: string | null;
 }
 
-/** A Google account a workspace member connected for calendar access. */
+export type CalendarProvider = "google" | "caldav";
+
+/** A Google or CalDAV account a workspace member connected for calendar access. */
 export interface CalendarAccount {
   id: string;
   user_id: string;
   /** Name of the member who connected it — accounts are personal, not shared. */
   user_name: string;
+  provider: CalendarProvider;
+  /** For caldav accounts this holds the CalDAV username instead. */
   google_email: string;
   display_name: string;
+  caldav_server_url: string | null;
   /** True once the grant is revoked or expired: the account needs reconnecting. */
   auth_failed: boolean;
   /** True when the account belongs to the requesting user. */
   is_own: boolean;
   calendars: CalendarListEntry[];
+}
+
+/**
+ * Build the cross-source key for one calendar in an account:
+ * `google:<accountId>:<calendarId>` or `caldav:<accountId>:<encoded URL>`.
+ *
+ * The caldav third segment is percent-encoded on purpose: keys travel
+ * comma-joined in query strings, and a calendar's id is its collection URL,
+ * which contains ':' and can contain ','. The backend's parseKey
+ * (calendar-events.service.ts) decodes that segment again — keep the two in
+ * sync. Every key built in the app must go through this helper.
+ */
+export function calendarKeyFor(
+  account: Pick<CalendarAccount, "id" | "provider">,
+  calendarId: string,
+): string {
+  return account.provider === "caldav"
+    ? `caldav:${account.id}:${encodeURIComponent(calendarId)}`
+    : `google:${account.id}:${calendarId}`;
 }
 
 /** An admin-provisioned Baikal booking calendar. Read-only on this page. */
@@ -82,8 +106,31 @@ export async function getCalendarAuthorizeUrl(): Promise<string> {
   return data.url;
 }
 
+export interface ConnectCaldavPayload {
+  /** Display name for the account row. */
+  name: string;
+  server_url: string;
+  username: string;
+  password: string;
+}
+
 /**
- * Re-fetch the account's calendar list from Google and store it.
+ * Connect a CalDAV account. The server verifies the credentials by fetching
+ * the calendar list before storing anything, so an error here means the
+ * server/username/password combination genuinely does not work.
+ */
+export async function connectCaldavAccount(
+  payload: ConnectCaldavPayload,
+): Promise<{ id: string }> {
+  const { data } = await apiClient.post<{ id: string }>(
+    "/calendar-accounts/caldav",
+    payload,
+  );
+  return data;
+}
+
+/**
+ * Re-fetch the account's calendar list from its provider and store it.
  *
  * The stored list only refreshes on demand — Google does not push changes to
  * us — so a calendar created after connecting won't appear until this runs.
@@ -113,6 +160,12 @@ export async function disconnectCalendarAccount(id: string): Promise<void> {
  * `calendarKey` identifies the source: `google:<accountId>:<calendarId>` or
  * `baikal:<configId>` — the same keys the preferences endpoint stores.
  */
+export type CalendarRsvpStatus =
+  | "accepted"
+  | "declined"
+  | "tentative"
+  | "needsAction";
+
 export interface UnifiedCalendarEvent {
   id: string;
   calendarKey: string;
@@ -121,6 +174,8 @@ export interface UnifiedCalendarEvent {
   end: string;
   allDay: boolean;
   meetLink: string | null;
+  /** The source account's own RSVP; null for Baikal and self-organized events. */
+  rsvp: CalendarRsvpStatus | null;
 }
 
 /** A source that failed while fetching events; the rest still came through. */
@@ -151,6 +206,38 @@ export async function getCalendarEvents(
   const { data } = await apiClient.get<CalendarEventsResponse>(
     "/calendar/events",
     { params: { start: startISO, end: endISO, keys: keys.join(",") } },
+  );
+  return data;
+}
+
+export interface CreateCalendarEventPayload {
+  /** Where to create the event: `google:<accountId>:<calendarId>` or `baikal:<configId>`. */
+  targetKey: string;
+  title: string;
+  description?: string;
+  startISO: string;
+  endISO: string;
+  /** IANA zone the times were entered in. */
+  timezone: string;
+  /** Guest emails — Google targets only; the server rejects them for Baikal. */
+  guests?: string[];
+  /** Attach a Google Meet link — Google targets only. */
+  withMeet?: boolean;
+}
+
+/**
+ * Create an event on one of the workspace's calendars.
+ *
+ * The server enforces the target rules: Google targets must be the caller's
+ * own account and a writable calendar; Baikal targets accept no guests or
+ * Meet link.
+ */
+export async function createCalendarEvent(
+  payload: CreateCalendarEventPayload,
+): Promise<UnifiedCalendarEvent> {
+  const { data } = await apiClient.post<UnifiedCalendarEvent>(
+    "/calendar/events",
+    payload,
   );
   return data;
 }

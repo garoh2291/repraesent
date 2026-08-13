@@ -76,7 +76,38 @@
     "joinMeet": "An Google Meet teilnehmen",
     "allDay": "Ganztägig",
     "calendars": "Kalender",
-    "timezone": "Zeitzone"
+    "timezone": "Zeitzone",
+    "rsvp": {
+      "accepted": "Sie haben diese Einladung angenommen",
+      "declined": "Sie haben diese Einladung abgelehnt",
+      "tentative": "Sie haben mit Vielleicht geantwortet",
+      "needsAction": "Einladung noch nicht beantwortet"
+    },
+    "newMeeting": "Neuer Termin",
+    "create": {
+      "title": "Neuer Termin",
+      "target": "Kalender",
+      "eventTitle": "Titel",
+      "date": "Datum",
+      "startTime": "Startzeit",
+      "endTime": "Endzeit",
+      "guests": "Gäste",
+      "guestsHint": "E-Mail-Adressen durch Kommas getrennt — Gäste erhalten eine Google-Einladung",
+      "addMeet": "Google Meet hinzufügen",
+      "description": "Beschreibung",
+      "submit": "Termin erstellen",
+      "creating": "Wird erstellt…",
+      "created": "Termin erstellt",
+      "failed": "Der Termin konnte nicht erstellt werden",
+      "invalidTimes": "Die Endzeit muss nach der Startzeit liegen",
+      "invalidGuests": "Bitte geben Sie gültige E-Mail-Adressen ein, durch Kommas getrennt",
+      "required": "Erforderlich",
+      "myCalendarsGroup": "Meine Kalender",
+      "bookingGroup": "Buchungskalender"
+    },
+    "targetGroup": {
+      "caldav": "CalDAV"
+    }
   },
   "db_brand": {
     "subtitle": "Wähle einen Händler in der Seitenleiste, um Social Ads & Leads zu sehen.",
@@ -1027,7 +1058,23 @@
         "error": "Beim Verbinden Ihres Google-Kontos ist ein Fehler aufgetreten. Bitte versuchen Sie es erneut.",
         "failed": "Ihr Google-Konto konnte nicht verbunden werden: {{reason}}"
       },
-      "dismiss": "Schließen"
+      "dismiss": "Schließen",
+      "caldav": {
+        "section": "CalDAV-Kalender",
+        "sectionHint": "Verbinden Sie einen beliebigen CalDAV-Server (Baikal, Nextcloud, ...) über Adresse und Zugangsdaten.",
+        "connect": "CalDAV-Kalender verbinden",
+        "dialogTitle": "CalDAV-Kalender verbinden",
+        "dialogHint": "Geben Sie die Adresse Ihres CalDAV-Servers und Ihre Zugangsdaten ein. Die Verbindung wird vor dem Speichern geprüft; das Passwort wird verschlüsselt gespeichert.",
+        "name": "Anzeigename",
+        "serverUrl": "Server-URL",
+        "username": "Benutzername",
+        "password": "Passwort",
+        "required": "Dieses Feld ist erforderlich",
+        "invalidUrl": "Geben Sie eine gültige URL ein, die mit http:// oder https:// beginnt",
+        "verifying": "Verbindung wird geprüft...",
+        "connected": "CalDAV-Kalender verbunden",
+        "empty": "Noch keine CalDAV-Kalender verbunden"
+      }
     }
   },
   "booking": {
@@ -3176,9 +3223,12 @@
       "keyRequired": "Ein Schlüssel ist erforderlich — darunter werden Einsendungen gespeichert.",
       "mappingLocked": "Gesperrt: Das Formular braucht dieses Feld, um einen Lead zu identifizieren.",
       "appointment": {
-        "targetAccount": "Zielkonto",
-        "targetAccountHelp": "Das verbundene Google-Konto, in dem der gebuchte Termin erstellt wird.",
-        "targetCalendar": "Zielkalender",
+        "target": "Zielkalender",
+        "targetHelp": "Buchungen erstellen einen Termin in diesem Kalender. Google-Meet-Links und Gästeeinladungen sind nur für Google-Kalender verfügbar.",
+        "targetGroupMine": "Meine Kalender",
+        "targetGroupTeam": "Team-Kalender",
+        "targetGroupBooking": "Buchungskalender",
+        "targetGroupCaldav": "CalDAV",
         "busyCalendars": "Belegte Kalender",
         "busyCalendarsHelp": "Zeiten, die in diesen Kalendern belegt sind, werden nicht angeboten.",
         "allCalendars": "Alle Kalender",
@@ -3190,10 +3240,9 @@
         "timezone": "Zeitzone",
         "minNotice": "Vorlaufzeit (Stunden)",
         "maxDaysAhead": "Buchbar im Voraus (Tage)",
-        "noAccounts": "Noch kein Kalender verbunden. Verbinden Sie einen Google-Kalender, um Termine anzubieten.",
+        "noTargets": "Verbinden Sie zuerst einen Kalender in den Einstellungen",
         "connectLink": "Kalender verbinden",
-        "accountNeedsReconnect": "muss neu verbunden werden",
-        "primary": "Hauptkalender"
+        "accountNeedsReconnect": "muss neu verbunden werden"
       }
     },
     "design": {
@@ -3410,6 +3459,12 @@
         "chipTranslate": "Übersetzen",
         "chipPublish": "Veröffentlichen"
       }
+    },
+    "appointmentContent": {
+      "loading": "Zeiten werden geladen...",
+      "empty": "An diesem Tag sind keine Zeiten frei.",
+      "slotUnavailable": "Dieser Termin wurde gerade vergeben. Bitte wählen Sie einen anderen.",
+      "slotInvalid": "Bitte wählen Sie einen gültigen Termin."
     }
   },
   "workflows": {

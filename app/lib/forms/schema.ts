@@ -123,12 +123,26 @@ export interface FormField {
    * client-safe subset (weekdays, window, duration, timezone), never which
    * account or calendar backs them. The submitted value is the slot string
    * `"<startISO>--<endISO>"`, the same wire format the booking page uses.
+   *
+   * Booking-target resolution (applied identically by the validator, the
+   * availability endpoint and createBookingEvent): parse `targetKey` when
+   * present; else, when both legacy `accountId` and `calendarId` are
+   * non-empty, the target is the Google calendar they name; else there is NO
+   * target — the field is unpublishable and availability 404s.
    */
   appointment?: {
-    /** workspace_calendar_accounts row id the booked event is created under. */
-    accountId: string;
-    /** Google calendar id the booked event lands in. */
-    calendarId: string;
+    /**
+     * The calendar the booked event is created in, as a cross-source key:
+     * `google:<accountId>:<calendarId>`, `baikal:<configId>` or
+     * `caldav:<accountId>:<encodeURIComponent(calendarUrl)>`. Absent on
+     * definitions saved before non-Google targets existed — those resolve
+     * through the legacy pair below, which always meant Google.
+     */
+    targetKey?: string;
+    /** Legacy (pre-targetKey): workspace_calendar_accounts row id. */
+    accountId?: string;
+    /** Legacy (pre-targetKey): Google calendar id the booked event lands in. */
+    calendarId?: string;
     /** Busy sources, `"google:<accountId>:<calendarId>"` / `"baikal:<configId>"`, or "all". */
     busyCalendarKeys: string[] | "all";
     durationMinutes: number;

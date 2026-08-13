@@ -3,6 +3,8 @@ import { useTranslation } from "react-i18next";
 import { Calendar, momentLocalizer } from "react-big-calendar";
 import type { Event, View } from "react-big-calendar";
 import moment from "moment-timezone";
+import { CalDavIcon } from "~/components/icons/CalDavIcon";
+import { GoogleIcon } from "~/components/icons/GoogleIcon";
 import type { UnifiedCalendarEvent } from "~/lib/api/calendar";
 import "react-big-calendar/lib/css/react-big-calendar.css";
 
@@ -10,6 +12,28 @@ import "react-big-calendar/lib/css/react-big-calendar.css";
 const FALLBACK_EVENT_COLOR = "#64748b";
 
 type RbcEvent = Event & { resource: UnifiedCalendarEvent };
+
+/**
+ * Event content with a provider marker: Google events carry the "G" and
+ * CalDAV events the CalDAV calendar mark, so same-coloured calendars from
+ * different providers stay tellable. One component serves month, week, day
+ * and agenda alike.
+ */
+function EventContent({ event }: { event: RbcEvent }) {
+  const key = event.resource.calendarKey;
+  return (
+    <span className="inline-flex max-w-full items-center gap-1 align-middle">
+      {key.startsWith("google:") && (
+        <GoogleIcon className="h-2.5 w-2.5 shrink-0 rounded-[2px] bg-white/90 p-px" />
+      )}
+      {/* Baikal is CalDAV under the hood — same mark for both. */}
+      {(key.startsWith("caldav:") || key.startsWith("baikal:")) && (
+        <CalDavIcon className="h-2.5 w-2.5 shrink-0 rounded-[2px] bg-white/90 p-px" />
+      )}
+      <span className="min-w-0 truncate">{event.title}</span>
+    </span>
+  );
+}
 
 interface CalendarViewProps {
   events: UnifiedCalendarEvent[];
@@ -95,20 +119,38 @@ export function CalendarView({
       eventPropGetter={(event: RbcEvent) => {
         const color =
           colorByKey[event.resource.calendarKey] ?? FALLBACK_EVENT_COLOR;
+        const rsvp = event.resource.rsvp;
+        const pending = rsvp === "needsAction" || rsvp === "tentative";
+
         return {
-          style: {
-            // The custom property is what actually colors the event: the
-            // `.team-calendar` css overrides read it with !important, which
-            // is the only way past the appointment theme's !important black
-            // in the week/day time grid. The plain properties cover month
-            // cells, which have no !important rule.
-            "--cal-event-color": color,
-            backgroundColor: color,
-            borderColor: color,
-            color: "#fff",
-          } as React.CSSProperties,
+          // Google-style RSVP looks, styled in app.css: pending = outlined,
+          // declined = faded + struck. Class-based so the 4-class selectors
+          // out-specify the theme's 3-class !important rules in every view.
+          className:
+            rsvp === "declined"
+              ? "cal-rsvp-declined"
+              : pending
+                ? "cal-rsvp-pending"
+                : undefined,
+          // The custom property is what actually colors the event: the
+          // `.team-calendar` css overrides read it with !important, which is
+          // the only way past the appointment theme's !important black in the
+          // week/day time grid. The plain properties cover month cells, which
+          // have no !important rule. Record type because CSSProperties has no
+          // index signature for custom properties.
+          style: Object.assign(
+            { "--cal-event-color": color, borderColor: color },
+            pending
+              ? {
+                  backgroundColor: "var(--background)",
+                  color,
+                  boxShadow: `inset 0 0 0 1.5px ${color}`,
+                }
+              : { backgroundColor: color, color: "#fff" },
+          ) as React.CSSProperties,
         };
       }}
+      components={{ event: EventContent }}
       scrollToTime={scrollToTime}
       messages={{ noEventsInRange: t("calendar.noEvents") }}
       popup
