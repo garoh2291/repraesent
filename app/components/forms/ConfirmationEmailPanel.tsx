@@ -24,6 +24,7 @@ import {
   SegmentedButton,
 } from "~/components/forms/chrome";
 import { Field, FieldHint, ToggleField } from "~/components/wordpress/fields";
+import { sortAccountsWithAliases } from "~/lib/api/email-accounts";
 import { listEmailAccounts } from "~/lib/api/workspaces";
 import {
   defaultConfirmationEmail,
@@ -128,7 +129,10 @@ export function ConfirmationEmailPanel({
   });
 
   const userAccounts = useMemo(
-    () => (accounts ?? []).filter((a) => a.source === "user"),
+    () =>
+      sortAccountsWithAliases(
+        (accounts ?? []).filter((a) => a.source === "user"),
+      ),
     [accounts],
   );
   const managedAccounts = useMemo(
@@ -252,6 +256,9 @@ export function ConfirmationEmailPanel({
                         // fails on every submission.
                         disabled={!!account.auth_failed_at}
                       >
+                        {/* A send-as alias sends through the mailbox listed
+                            above it; the arrow is what says so in a flat list. */}
+                        {account.parent_account_id ? "↳ " : ""}
                         {account.name} · {account.email}
                         {account.auth_failed_at
                           ? ` — ${t("forms.email.accountNeedsReconnect")}`

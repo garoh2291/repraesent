@@ -24,6 +24,7 @@ import {
   type LeadFallbackConfig,
   type EmailAnalyticsPeriod,
 } from "~/lib/api/workspaces";
+import { sortAccountsWithAliases } from "~/lib/api/email-accounts";
 import {
   Select,
   SelectContent,
@@ -142,10 +143,12 @@ export function CustomerEmailTab({ config }: CustomerEmailTabProps) {
     queryFn: getAppointmentsFallbackConfig,
   });
 
-  // Available email accounts for this workspace (for the "Send from" switcher)
+  // Available email accounts for this workspace (for the "Send from" switcher).
+  // Sorted so a Gmail send-as alias sits under the mailbox it sends through.
   const { data: emailAccounts = [] } = useQuery({
     queryKey: ["workspace-email-accounts"],
     queryFn: listEmailAccounts,
+    select: sortAccountsWithAliases,
   });
 
   // Fetch last appointment booking lead for preview variables
@@ -387,6 +390,8 @@ export function CustomerEmailTab({ config }: CustomerEmailTabProps) {
             <SelectContent>
               {emailAccounts.map((a) => (
                 <SelectItem key={a.id} value={a.id}>
+                  {/* An alias sends through the mailbox above it. */}
+                  {a.parent_account_id ? "↳ " : ""}
                   {a.email}
                   {a.is_default ? " (default)" : ""}
                 </SelectItem>

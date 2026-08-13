@@ -16,6 +16,7 @@ import {
   type LeadFallbackSourceConfig,
   type WorkspaceEmailAccountSummary,
 } from "~/lib/api/workspaces";
+import { sortAccountsWithAliases } from "~/lib/api/email-accounts";
 import {
   Select,
   SelectContent,
@@ -327,6 +328,8 @@ function EditorPanel({
                   <SelectContent>
                     {emailAccounts.map((a) => (
                       <SelectItem key={a.id} value={a.id}>
+                        {/* An alias sends through the mailbox above it. */}
+                        {a.parent_account_id ? "↳ " : ""}
                         {a.email}
                         {a.is_default ? " (default)" : ""}
                       </SelectItem>
@@ -633,6 +636,8 @@ export default function LeadFallbackPage() {
     queryKey: ["workspace-email-accounts"],
     queryFn: listEmailAccounts,
     enabled: !!currentWorkspace && hasLeadForm && hasEmailConfig,
+    // Keeps a Gmail send-as alias next to the mailbox it sends through.
+    select: sortAccountsWithAliases,
   });
 
   // ── Dynamic form keys from config ────────────────────────────────────────
