@@ -1,6 +1,6 @@
 "use client";
 
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient, type QueryClient } from "@tanstack/react-query";
 import type { InfiniteData } from "@tanstack/react-query";
 import {
   reorderLead,
@@ -9,6 +9,22 @@ import {
   type LeadStatus,
   type PaginatedLeads,
 } from "~/lib/api/leads";
+import type { PipelineStage } from "~/lib/api/pipeline-stages";
+import { getStoredWorkspaceId } from "~/lib/api/axios-instance";
+import { pipelineStagesKey } from "./usePipelineStages";
+
+/**
+ * Whether a status key is a won-category stage, read from the cached stage
+ * config (any screen offering a status change has it loaded). Falls back to
+ * the legacy literal so a cold cache can't swallow the conversion follow-up.
+ */
+function isWonLeadStage(queryClient: QueryClient, status: string): boolean {
+  const stages = queryClient.getQueryData<PipelineStage[]>(
+    pipelineStagesKey(getStoredWorkspaceId()),
+  );
+  const stage = stages?.find((s) => s.entity === "lead" && s.key === status);
+  return stage ? stage.category === "won" : status === "success";
+}
 
 export interface UpdateLeadStatusVariables {
   id: string;
@@ -42,7 +58,7 @@ export function useUpdateLeadStatus(opts?: UseUpdateLeadStatusOptions) {
         queryKey: ["lead-history", variables.id],
       });
       queryClient.invalidateQueries({ queryKey: ["contacts"] });
-      if (variables.status === "success") {
+      if (isWonLeadStage(queryClient, variables.status)) {
         await opts?.onConvertedToSuccess?.(data);
       }
     },
@@ -215,7 +231,7 @@ export function useReorderLead(opts?: {
         queryKey: ["lead-history", variables.id],
       });
       queryClient.invalidateQueries({ queryKey: ["contacts"] });
-      if (variables.status === "success") {
+      if (isWonLeadStage(queryClient, variables.status)) {
         await opts?.onConvertedToSuccess?.(data);
       }
     },

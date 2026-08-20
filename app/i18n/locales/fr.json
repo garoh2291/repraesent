@@ -283,7 +283,9 @@
     "viewFullAnalytics": "Analyse complète",
     "analyticsLoading": "Chargement des analyses…",
     "plausibleVisitors_one": "{{count}} visiteur",
-    "plausibleVisitors_other": "{{count}} visiteurs"
+    "plausibleVisitors_other": "{{count}} visiteurs",
+    "dealsOpen": "Affaires ouvertes",
+    "dealsWon": "Gagnées"
   },
   "leads": {
     "metaTitle": "Leads",
@@ -532,6 +534,12 @@
       "saveFailed": "Impossible d'enregistrer l'affaire.",
       "contactFailed": "Impossible de mettre à jour le contact de l'affaire.",
       "deleteFailed": "Impossible de supprimer l'affaire."
+    },
+    "sort": {
+      "dateDesc": "Plus récent d'abord",
+      "dateAsc": "Plus ancien d'abord",
+      "valueDesc": "Montant le plus élevé",
+      "valueAsc": "Montant le plus bas"
     }
   },
   "appointments": {
@@ -817,7 +825,8 @@
       "areaSettings": "Paramètres de l'espace",
       "bcc": "Journalisation",
       "emailAccounts": "Comptes e-mail",
-      "calendars": "Calendriers"
+      "calendars": "Calendriers",
+      "pipelines": "Étapes du pipeline"
     },
     "bcc": {
       "metaTitle": "Journalisation des e-mails",
@@ -1089,6 +1098,49 @@
         "connected": "Calendrier CalDAV connecté",
         "empty": "Aucun calendrier CalDAV connecté pour le moment"
       }
+    },
+    "pipelines": {
+      "leadStages": "Étapes des leads",
+      "leadStagesHint": "Les colonnes du tableau des leads, dans l'ordre. Renommez, colorez, réordonnez, masquez les étapes vides ou ajoutez-en de nouvelles.",
+      "dealStages": "Étapes des affaires",
+      "dealStagesHint": "Les colonnes du pipeline des affaires, dans l'ordre. Les étapes gagné/perdu clôturent les affaires et alimentent les statistiques de revenus.",
+      "addStage": "Ajouter une étape",
+      "nameLabel": "Nom",
+      "namePlaceholder": "p. ex. Négociation",
+      "categoryLabel": "Type",
+      "categoryHint": "Les étapes gagné et perdu clôturent les enregistrements et alimentent les statistiques. Le type ne peut pas être modifié ensuite.",
+      "colorLabel": "Couleur",
+      "category": {
+        "open": "Ouvert",
+        "won": "Gagné",
+        "lost": "Perdu",
+        "hidden": "Masqué"
+      },
+      "entryBadge": "Entrée",
+      "defaultBadge": "Par défaut",
+      "setEntry": "Définir comme étape d'entrée",
+      "entrySet": "Les nouveaux enregistrements commencent désormais dans cette étape.",
+      "dragHandle": "Glisser pour réordonner",
+      "moveUp": "Monter",
+      "moveDown": "Descendre",
+      "pickColor": "Choisir une couleur",
+      "visibilitySwitch": "Étape visible sur le tableau",
+      "hideTooltip": "Masquer cette étape du tableau.",
+      "unhideTooltip": "Réafficher cette étape sur le tableau.",
+      "hideEntryTooltip": "L'étape d'entrée ne peut pas être masquée.",
+      "hideNonEmptyTooltip": "Seules les étapes vides peuvent être masquées — déplacez d'abord ses enregistrements.",
+      "hideLastTooltip": "Au moins une étape visible de ce type doit rester.",
+      "rowMenu": "Actions de l'étape",
+      "deleteTitle": "Supprimer l'étape ?",
+      "deleteWarning": "« {{name}} » sera supprimée. Les workflows dont les conditions référencent cette étape ne correspondront plus.",
+      "stageCreated": "Étape ajoutée.",
+      "createFailed": "Impossible d'ajouter l'étape.",
+      "updateFailed": "Impossible de mettre à jour l'étape.",
+      "deleteFailed": "Impossible de supprimer l'étape.",
+      "reorderFailed": "Impossible de réordonner les étapes.",
+      "readOnlyHint": "Seuls les admins de l'espace de travail peuvent modifier les étapes du pipeline. Vous pouvez consulter la configuration ci-dessous.",
+      "metaTitle": "Étapes du pipeline",
+      "metaDescription": "Renommer, réordonner, colorer, masquer ou ajouter les étapes de vos pipelines de leads et d'affaires."
     }
   },
   "booking": {

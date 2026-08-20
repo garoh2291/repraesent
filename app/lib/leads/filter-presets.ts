@@ -1,9 +1,33 @@
+import { useMemo } from "react";
 import { LEAD_STATUSES, LEAD_SOURCES } from "~/lib/leads/constants";
 import type { FilterOption } from "~/components/molecule/filter-component/types";
+import { useLeadStages } from "~/lib/hooks/usePipelineStages";
 
+/**
+ * Legacy static status options. Only for the cross-workspace brand views,
+ * where per-workspace stage config doesn't apply — workspace-scoped screens
+ * use useLeadFilterStatusOptions() instead.
+ */
 export const LEAD_FILTER_STATUS_OPTIONS: FilterOption[] = LEAD_STATUSES.map(
   (s) => ({ key: s, label: `leads.statuses.${s}` })
 );
+
+/**
+ * The workspace's configured lead stages as filter options. `label` is either
+ * a literal admin-chosen name or an i18n key — FilterComponent renders
+ * options with t(label, { defaultValue: label }), which handles both.
+ */
+export function useLeadFilterStatusOptions(): FilterOption[] {
+  const { visible } = useLeadStages();
+  return useMemo(
+    () =>
+      visible.map((s) => ({
+        key: s.key,
+        label: s.label ?? `leads.statuses.${s.key}`,
+      })),
+    [visible],
+  );
+}
 
 const SOURCE_LABEL_KEYS: Record<string, string> = {
   urls: "leads.filters.websiteSource",

@@ -283,7 +283,9 @@
     "viewFullAnalytics": "Full analytics",
     "analyticsLoading": "Loading analytics…",
     "plausibleVisitors_one": "{{count}} visitor",
-    "plausibleVisitors_other": "{{count}} visitors"
+    "plausibleVisitors_other": "{{count}} visitors",
+    "dealsOpen": "Open deals",
+    "dealsWon": "Won"
   },
   "leads": {
     "metaTitle": "Leads",
@@ -532,6 +534,12 @@
       "saveFailed": "Could not save deal.",
       "contactFailed": "Could not update contact on deal.",
       "deleteFailed": "Could not delete deal."
+    },
+    "sort": {
+      "dateDesc": "Newest first",
+      "dateAsc": "Oldest first",
+      "valueDesc": "Highest amount",
+      "valueAsc": "Lowest amount"
     }
   },
   "appointments": {
@@ -817,7 +825,8 @@
       "areaSettings": "Area Settings",
       "bcc": "Email Logging",
       "emailAccounts": "Email accounts",
-      "calendars": "Calendars"
+      "calendars": "Calendars",
+      "pipelines": "Pipeline stages"
     },
     "bcc": {
       "metaTitle": "Email logging",
@@ -1087,6 +1096,49 @@
         "connected": "CalDAV calendar connected",
         "empty": "No CalDAV calendars connected yet"
       }
+    },
+    "pipelines": {
+      "leadStages": "Lead stages",
+      "leadStagesHint": "The columns of the leads board, in order. Rename, recolor, reorder, hide empty stages or add new ones.",
+      "dealStages": "Deal stages",
+      "dealStagesHint": "The columns of the deals pipeline, in order. Won/lost stages close deals and drive revenue stats.",
+      "addStage": "Add stage",
+      "nameLabel": "Name",
+      "namePlaceholder": "e.g. Negotiation",
+      "categoryLabel": "Type",
+      "categoryHint": "Won and lost stages close records and feed revenue stats. The type cannot be changed later.",
+      "colorLabel": "Color",
+      "category": {
+        "open": "Open",
+        "won": "Won",
+        "lost": "Lost",
+        "hidden": "Hidden"
+      },
+      "entryBadge": "Entry",
+      "defaultBadge": "Default",
+      "setEntry": "Make this the entry stage",
+      "entrySet": "New records now start in this stage.",
+      "dragHandle": "Drag to reorder",
+      "moveUp": "Move up",
+      "moveDown": "Move down",
+      "pickColor": "Pick a color",
+      "visibilitySwitch": "Stage visible on the board",
+      "hideTooltip": "Hide this stage from the board.",
+      "unhideTooltip": "Show this stage on the board again.",
+      "hideEntryTooltip": "The entry stage cannot be hidden.",
+      "hideNonEmptyTooltip": "Only empty stages can be hidden — move its records first.",
+      "hideLastTooltip": "At least one visible stage of this type must remain.",
+      "rowMenu": "Stage actions",
+      "deleteTitle": "Delete stage?",
+      "deleteWarning": "\"{{name}}\" will be removed. Workflows whose conditions reference this stage will stop matching it.",
+      "stageCreated": "Stage added.",
+      "createFailed": "Could not add the stage.",
+      "updateFailed": "Could not update the stage.",
+      "deleteFailed": "Could not delete the stage.",
+      "reorderFailed": "Could not reorder stages.",
+      "readOnlyHint": "Only workspace admins can change pipeline stages. You can view the configuration below.",
+      "metaTitle": "Pipeline stages",
+      "metaDescription": "Rename, reorder, recolor, hide or add the stages of your lead and deal pipelines."
     }
   },
   "booking": {

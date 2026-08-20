@@ -43,7 +43,8 @@ import {
   formatCurrency,
 } from "~/lib/utils/format";
 import { getLeadAnalytics, type LeadAnalyticsPeriod } from "~/lib/api/leads";
-import { getDeals, type DealListItem, type DealStageKey } from "~/lib/api/deals";
+import { getDeals, type DealListItem } from "~/lib/api/deals";
+import { useDealStages } from "~/lib/hooks/usePipelineStages";
 import { getAllTasks, type Task, type TaskStatus } from "~/lib/api/tasks";
 import {
   getWorkspacePlausibleStats,
@@ -913,32 +914,33 @@ function WebAnalyticsSection() {
 
 // ─── Deals Pipeline Summary Section ──────────────────────────────────────────
 
-type SummaryStage = Extract<DealStageKey, "new" | "in_progress" | "won">;
+type SummaryCategory = "open" | "won";
 
-const DEAL_SUMMARY_STAGES: {
-  stage: SummaryStage;
+// Stages are workspace-configurable now, so the summary aggregates by stage
+// CATEGORY instead of hardcoded stage keys. Static Tailwind classes (no
+// dynamic interpolation) so they survive purge.
+const DEAL_SUMMARY_CARDS: {
+  category: SummaryCategory;
+  labelKey: string;
+  labelDefault: string;
   icon: typeof Inbox;
-  // Static Tailwind classes (no dynamic interpolation) so they survive purge.
   iconWrap: string;
   accent: string;
   ring: string;
 }[] = [
   {
-    stage: "new",
-    icon: Inbox,
-    iconWrap: "bg-slate-100 text-slate-600",
-    accent: "from-slate-400/15",
-    ring: "group-hover:ring-slate-300/60",
-  },
-  {
-    stage: "in_progress",
+    category: "open",
+    labelKey: "home.dealsOpen",
+    labelDefault: "Open deals",
     icon: TrendingUp,
     iconWrap: "bg-sky-100 text-sky-600",
     accent: "from-sky-400/20",
     ring: "group-hover:ring-sky-300/60",
   },
   {
-    stage: "won",
+    category: "won",
+    labelKey: "home.dealsWon",
+    labelDefault: "Won",
     icon: Trophy,
     iconWrap: "bg-emerald-100 text-emerald-600",
     accent: "from-emerald-400/20",
@@ -959,6 +961,7 @@ function sumDealValue(deals: DealListItem[]): number {
 function DealsSummarySection() {
   const { t } = useTranslation();
   const { currentWorkspace } = useAuthContext();
+  const { byKey: dealStagesByKey } = useDealStages();
 
   const hasAccess =
     currentWorkspace?.services?.some(
@@ -980,26 +983,22 @@ function DealsSummarySection() {
     refetchOnMount: "always",
   });
 
-  const byStage = useMemo(() => {
-    const acc: Record<SummaryStage, DealListItem[]> = {
-      new: [],
-      in_progress: [],
-      won: [],
-    };
+  const byCategory = useMemo(() => {
+    const acc: Record<SummaryCategory, DealListItem[]> = { open: [], won: [] };
     for (const d of data?.data ?? []) {
-      if (d.stage === "new" || d.stage === "in_progress" || d.stage === "won") {
-        acc[d.stage].push(d);
-      }
+      // Unknown keys (stage deleted from config) count as open — better than
+      // vanishing from the summary.
+      const category = dealStagesByKey.get(d.stage)?.category ?? "open";
+      if (category === "open" || category === "won") acc[category].push(d);
     }
     return acc;
-  }, [data?.data]);
+  }, [data?.data, dealStagesByKey]);
 
   if (!hasAccess) return null;
 
+  // Lost deals stay excluded, matching the old hardcoded new+in_progress+won.
   const masterTotalValue =
-    sumDealValue(byStage.new) +
-    sumDealValue(byStage.in_progress) +
-    sumDealValue(byStage.won);
+    sumDealValue(byCategory.open) + sumDealValue(byCategory.won);
 
   return (
     <div
@@ -1032,15 +1031,16 @@ function DealsSummarySection() {
       </div>
 
       {/* Stage cards */}
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-        {DEAL_SUMMARY_STAGES.map(({ stage, icon: Icon, iconWrap, accent }) => {
-          const stageDeals = byStage[stage];
-          const count = stageDeals.length;
-          const total = sumDealValue(stageDeals);
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+        {DEAL_SUMMARY_CARDS.map(
+          ({ category, labelKey, labelDefault, icon: Icon, iconWrap, accent }) => {
+          const categoryDeals = byCategory[category];
+          const count = categoryDeals.length;
+          const total = sumDealValue(categoryDeals);
 
           return (
             <Link
-              key={stage}
+              key={category}
               to="/pipeline"
               className="group relative overflow-hidden rounded-xl border border-border bg-muted/30 p-4 transition-colors duration-150 hover:bg-muted/60 hover:border-border/80"
             >
@@ -1066,7 +1066,7 @@ function DealsSummarySection() {
 
               <div className="relative mt-4 space-y-1">
                 <p className="text-[12px] font-medium text-muted-foreground">
-                  {t(`pipeline.stages.${stage}`, { defaultValue: stage })}
+                  {t(labelKey, { defaultValue: labelDefault })}
                 </p>
                 {isLoading ? (
                   <div className="h-8 w-14 animate-pulse rounded-md bg-muted" />
@@ -1091,7 +1091,8 @@ function DealsSummarySection() {
               </div>
             </Link>
           );
-        })}
+        },
+        )}
       </div>
     </div>
   );

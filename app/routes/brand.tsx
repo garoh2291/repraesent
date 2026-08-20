@@ -37,6 +37,7 @@ import {
 } from "~/components/ui/dialog";
 import i18n from "~/i18n";
 import { useDocumentMeta } from "~/lib/hooks/use-document-meta";
+import { resolveStageColorsByKey } from "~/lib/pipeline-stages/colors";
 
 export function meta() {
   return [
@@ -65,15 +66,10 @@ const WORKSPACE_COLORS = [
   "#f87171",
 ];
 
-const STATUS_COLORS: Record<string, string> = {
-  new_lead: "#5265f3",
-  in_progress: "#f5d74f",
-  on_hold: "#fb923c",
-  pending: "#38bdf8",
-  success: "#34d399",
-  rejected: "#f87171",
-  stale: "#6b7280",
-};
+// Brand analytics is a cross-workspace view, so per-workspace stage config
+// doesn't apply here — colors come from the shared legacy-key palette.
+const statusColor = (status: string): string =>
+  resolveStageColorsByKey("lead", status).hex;
 
 const STATUS_LABEL_KEYS: Record<string, string> = {
   new_lead: "brand.statusNewLead",
@@ -465,7 +461,7 @@ function ChartSection({
             <div key={s} className="flex items-center gap-1.5 text-[11px]">
               <span
                 className="h-2 w-2 rounded-full shrink-0"
-                style={{ backgroundColor: STATUS_COLORS[s] }}
+                style={{ backgroundColor: statusColor(s) }}
               />
               <span className="text-muted-foreground">
                 {STATUS_LABEL_KEYS[s] ? t(STATUS_LABEL_KEYS[s]) : s}
@@ -605,7 +601,7 @@ function ChartSection({
                   key={s}
                   dataKey={s}
                   stackId="stack"
-                  fill={STATUS_COLORS[s]}
+                  fill={statusColor(s)}
                   name={STATUS_LABEL_KEYS[s] ? t(STATUS_LABEL_KEYS[s]) : s}
                   radius={
                     idx === VISIBLE_STATUSES.length - 1

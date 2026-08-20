@@ -283,7 +283,9 @@
     "viewFullAnalytics": "Vollständige Analyse",
     "analyticsLoading": "Analyse wird geladen…",
     "plausibleVisitors_one": "{{count}} Besucher",
-    "plausibleVisitors_other": "{{count}} Besucher"
+    "plausibleVisitors_other": "{{count}} Besucher",
+    "dealsOpen": "Offene Deals",
+    "dealsWon": "Gewonnen"
   },
   "leads": {
     "metaTitle": "Leads",
@@ -534,6 +536,12 @@
         "won_at": "Gewonnen am",
         "lost_at": "Verloren am"
       }
+    },
+    "sort": {
+      "dateDesc": "Neueste zuerst",
+      "dateAsc": "Älteste zuerst",
+      "valueDesc": "Höchster Betrag",
+      "valueAsc": "Niedrigster Betrag"
     }
   },
   "appointments": {
@@ -819,7 +827,8 @@
       "areaSettings": "Bereich-Einstellungen",
       "bcc": "E-Mail-Protokoll",
       "emailAccounts": "E-Mail-Konten",
-      "calendars": "Kalender"
+      "calendars": "Kalender",
+      "pipelines": "Pipeline-Phasen"
     },
     "bcc": {
       "metaTitle": "E-Mail-Protokollierung",
@@ -1089,6 +1098,49 @@
         "connected": "CalDAV-Kalender verbunden",
         "empty": "Noch keine CalDAV-Kalender verbunden"
       }
+    },
+    "pipelines": {
+      "leadStages": "Lead-Phasen",
+      "leadStagesHint": "Die Spalten des Lead-Boards in ihrer Reihenfolge. Umbenennen, einfärben, sortieren, leere Phasen ausblenden oder neue hinzufügen.",
+      "dealStages": "Deal-Phasen",
+      "dealStagesHint": "Die Spalten der Deal-Pipeline in ihrer Reihenfolge. Gewonnen/Verloren-Phasen schließen Deals ab und fließen in die Umsatzstatistik ein.",
+      "addStage": "Phase hinzufügen",
+      "nameLabel": "Name",
+      "namePlaceholder": "z. B. Verhandlung",
+      "categoryLabel": "Typ",
+      "categoryHint": "Gewonnen- und Verloren-Phasen schließen Einträge ab und fließen in die Umsatzstatistik ein. Der Typ kann später nicht geändert werden.",
+      "colorLabel": "Farbe",
+      "category": {
+        "open": "Offen",
+        "won": "Gewonnen",
+        "lost": "Verloren",
+        "hidden": "Ausgeblendet"
+      },
+      "entryBadge": "Eingang",
+      "defaultBadge": "Standard",
+      "setEntry": "Zur Eingangsphase machen",
+      "entrySet": "Neue Einträge starten jetzt in dieser Phase.",
+      "dragHandle": "Zum Sortieren ziehen",
+      "moveUp": "Nach oben",
+      "moveDown": "Nach unten",
+      "pickColor": "Farbe wählen",
+      "visibilitySwitch": "Phase auf dem Board sichtbar",
+      "hideTooltip": "Diese Phase vom Board ausblenden.",
+      "unhideTooltip": "Diese Phase wieder auf dem Board anzeigen.",
+      "hideEntryTooltip": "Die Eingangsphase kann nicht ausgeblendet werden.",
+      "hideNonEmptyTooltip": "Nur leere Phasen können ausgeblendet werden — verschiebe zuerst die Einträge.",
+      "hideLastTooltip": "Mindestens eine sichtbare Phase dieses Typs muss bestehen bleiben.",
+      "rowMenu": "Phasen-Aktionen",
+      "deleteTitle": "Phase löschen?",
+      "deleteWarning": "\"{{name}}\" wird entfernt. Workflows, deren Bedingungen auf diese Phase verweisen, greifen dann nicht mehr.",
+      "stageCreated": "Phase hinzugefügt.",
+      "createFailed": "Phase konnte nicht hinzugefügt werden.",
+      "updateFailed": "Phase konnte nicht aktualisiert werden.",
+      "deleteFailed": "Phase konnte nicht gelöscht werden.",
+      "reorderFailed": "Phasen konnten nicht sortiert werden.",
+      "readOnlyHint": "Nur Workspace-Admins können Pipeline-Phasen ändern. Du kannst die Konfiguration unten einsehen.",
+      "metaTitle": "Pipeline-Phasen",
+      "metaDescription": "Phasen deiner Lead- und Deal-Pipelines umbenennen, sortieren, einfärben, ausblenden oder hinzufügen."
     }
   },
   "booking": {

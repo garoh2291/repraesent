@@ -13,6 +13,7 @@ import {
   ChevronDown,
   ClipboardList,
   Columns3,
+  Kanban,
   Globe,
   HomeIcon,
   Inbox,
@@ -93,6 +94,11 @@ const SETTINGS_NAV = [
     Icon: CalendarDays,
   },
   { to: "/settings/bcc", labelKey: "settings.tabs.bcc", Icon: Inbox },
+  {
+    to: "/settings/pipelines",
+    labelKey: "settings.tabs.pipelines",
+    Icon: Kanban,
+  },
 ] as const;
 
 function NavLink({

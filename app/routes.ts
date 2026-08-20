@@ -75,6 +75,7 @@ export default [
         route("email-accounts", "routes/settings.email-accounts.tsx"),
         route("calendars", "routes/settings.calendars.tsx"),
         route("bcc", "routes/settings.bcc.tsx"),
+        route("pipelines", "routes/settings.pipelines.tsx"),
       ]),
       route("instructions", "routes/instructions.tsx"),
       route("db-brand", "routes/db-brand._index.tsx"),

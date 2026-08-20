@@ -283,7 +283,9 @@
     "viewFullAnalytics": "Volledige analyse",
     "analyticsLoading": "Analyse laden…",
     "plausibleVisitors_one": "{{count}} bezoeker",
-    "plausibleVisitors_other": "{{count}} bezoekers"
+    "plausibleVisitors_other": "{{count}} bezoekers",
+    "dealsOpen": "Open deals",
+    "dealsWon": "Gewonnen"
   },
   "leads": {
     "metaTitle": "Leads",
@@ -532,6 +534,12 @@
       "saveFailed": "Kon de deal niet opslaan.",
       "contactFailed": "Kon het contact op de deal niet bijwerken.",
       "deleteFailed": "Kon de deal niet verwijderen."
+    },
+    "sort": {
+      "dateDesc": "Nieuwste eerst",
+      "dateAsc": "Oudste eerst",
+      "valueDesc": "Hoogste bedrag",
+      "valueAsc": "Laagste bedrag"
     }
   },
   "appointments": {
@@ -817,7 +825,8 @@
       "areaSettings": "Gebiedsinstellingen",
       "bcc": "E-maillogging",
       "emailAccounts": "E-mailaccounts",
-      "calendars": "Agenda's"
+      "calendars": "Agenda's",
+      "pipelines": "Pipelinefasen"
     },
     "bcc": {
       "metaTitle": "E-maillogging",
@@ -1087,6 +1096,49 @@
         "connected": "CalDAV-agenda verbonden",
         "empty": "Nog geen CalDAV-agenda’s verbonden"
       }
+    },
+    "pipelines": {
+      "leadStages": "Leadfasen",
+      "leadStagesHint": "De kolommen van het leadbord, op volgorde. Hernoem, kleur, herschik, verberg lege fasen of voeg nieuwe toe.",
+      "dealStages": "Dealfasen",
+      "dealStagesHint": "De kolommen van de dealpipeline, op volgorde. Gewonnen/verloren-fasen sluiten deals af en voeden de omzetstatistieken.",
+      "addStage": "Fase toevoegen",
+      "nameLabel": "Naam",
+      "namePlaceholder": "bijv. Onderhandeling",
+      "categoryLabel": "Type",
+      "categoryHint": "Gewonnen- en verloren-fasen sluiten records af en voeden de omzetstatistieken. Het type kan later niet worden gewijzigd.",
+      "colorLabel": "Kleur",
+      "category": {
+        "open": "Open",
+        "won": "Gewonnen",
+        "lost": "Verloren",
+        "hidden": "Verborgen"
+      },
+      "entryBadge": "Start",
+      "defaultBadge": "Standaard",
+      "setEntry": "Instellen als startfase",
+      "entrySet": "Nieuwe records beginnen nu in deze fase.",
+      "dragHandle": "Sleep om te herschikken",
+      "moveUp": "Omhoog",
+      "moveDown": "Omlaag",
+      "pickColor": "Kies een kleur",
+      "visibilitySwitch": "Fase zichtbaar op het bord",
+      "hideTooltip": "Deze fase van het bord verbergen.",
+      "unhideTooltip": "Deze fase weer op het bord tonen.",
+      "hideEntryTooltip": "De startfase kan niet worden verborgen.",
+      "hideNonEmptyTooltip": "Alleen lege fasen kunnen worden verborgen — verplaats eerst de records.",
+      "hideLastTooltip": "Er moet minstens één zichtbare fase van dit type overblijven.",
+      "rowMenu": "Fase-acties",
+      "deleteTitle": "Fase verwijderen?",
+      "deleteWarning": "\"{{name}}\" wordt verwijderd. Workflows waarvan de voorwaarden naar deze fase verwijzen, matchen dan niet meer.",
+      "stageCreated": "Fase toegevoegd.",
+      "createFailed": "Kon de fase niet toevoegen.",
+      "updateFailed": "Kon de fase niet bijwerken.",
+      "deleteFailed": "Kon de fase niet verwijderen.",
+      "reorderFailed": "Kon de fasen niet herschikken.",
+      "readOnlyHint": "Alleen workspace-admins kunnen pipelinefasen wijzigen. Je kunt de configuratie hieronder bekijken.",
+      "metaTitle": "Pipelinefasen",
+      "metaDescription": "Fasen van je lead- en dealpipelines hernoemen, herschikken, kleuren, verbergen of toevoegen."
     }
   },
   "booking": {
