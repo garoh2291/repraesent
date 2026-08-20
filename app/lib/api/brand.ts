@@ -285,3 +285,94 @@ export async function exportBrandReport(
   document.body.removeChild(a);
   URL.revokeObjectURL(url);
 }
+
+// ─── Partner-house activity ─────────────────────────────────────────────────
+
+export interface BrandActivityMember {
+  user_id: string;
+  email: string;
+  first_name: string | null;
+  last_name: string | null;
+  role: string;
+  sessions: number;
+  active_days: number;
+  requests: number;
+  first_seen: string | null;
+  last_seen: string | null;
+}
+
+export interface BrandActivityHouse {
+  id: string;
+  name: string;
+  status: string;
+  users: number;
+  activeUsers: number;
+  sessions: number;
+  activeDays: number;
+  requests: number;
+  firstSeen: string | null;
+  lastSeen: string | null;
+  members: BrandActivityMember[];
+}
+
+export interface BrandActivityTotals {
+  houses: number;
+  users: number;
+  activeUsers: number;
+  sessions: number;
+  activeDays: number;
+  requests: number;
+}
+
+export interface BrandActivityResponse {
+  range: { start_date: string | null; end_date: string | null };
+  gap_minutes: number;
+  totals: BrandActivityTotals;
+  houses: BrandActivityHouse[];
+}
+
+export interface BrandActivityRange {
+  start_date?: string;
+  end_date?: string;
+}
+
+function activityParams(range: BrandActivityRange): Record<string, string> {
+  const params: Record<string, string> = {};
+  if (range.start_date) params.start_date = range.start_date;
+  if (range.end_date) params.end_date = range.end_date;
+  return params;
+}
+
+export async function getBrandActivity(
+  range: BrandActivityRange = {},
+): Promise<BrandActivityResponse> {
+  const res = await apiClient.get<BrandActivityResponse>(
+    "/brands/me/activity",
+    { params: activityParams(range) },
+  );
+  return res.data;
+}
+
+export async function exportBrandActivityXlsx(
+  range: BrandActivityRange,
+  brandName: string,
+): Promise<void> {
+  const res = await apiClient.get("/brands/me/activity/export", {
+    params: activityParams(range),
+    responseType: "blob",
+  });
+  const url = URL.createObjectURL(
+    new Blob([res.data], {
+      type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    }),
+  );
+  const a = document.createElement("a");
+  a.href = url;
+  const safe = brandName.replace(/[^a-z0-9]/gi, "_").toLowerCase() || "brand";
+  const today = new Date().toISOString().slice(0, 10);
+  a.download = `${safe}-activity-${range.start_date ?? "all"}-${range.end_date ?? today}.xlsx`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
