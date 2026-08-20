@@ -168,7 +168,12 @@ export default function PipelinePage() {
     // Mirror the backend's category-driven status coupling in the optimistic
     // patch so terminal moves render correctly before the refetch.
     const category = dealStagesByKey.get(stage)?.category;
-    const optimistic: Partial<DealListItem> = { stage };
+    // Stamp the move locally so "newest first" puts the card on top of its
+    // new column immediately — the refetch returns the server-derived stamp.
+    const optimistic: Partial<DealListItem> = {
+      stage,
+      stage_changed_at: new Date().toISOString(),
+    };
     if (category === "won") optimistic.status = "won";
     else if (category === "lost") optimistic.status = "lost";
     else optimistic.status = "new";

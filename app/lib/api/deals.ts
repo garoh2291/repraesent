@@ -48,6 +48,7 @@ export interface DealListItem {
   assignee_last_name: string | null;
   created_at: string;
   updated_at: string;
+  stage_changed_at: string | null;
   contact_full_name: string | null;
   primary_email: string | null;
   primary_phone: string | null;

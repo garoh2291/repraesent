@@ -716,7 +716,9 @@ export function LeadHistorySection({
                     {!isLast && <div className="mt-1 w-px flex-1 bg-border" />}
                   </div>
                   {/* Content */}
-                  <div className="min-w-0 flex-1 pb-4 last:pb-0">
+                  <div
+                    className={isLast ? "min-w-0 flex-1" : "min-w-0 flex-1 pb-4"}
+                  >
                     <TooltipContainer
                       tooltipContent={actionText}
                       showCopyButton={false}

@@ -71,7 +71,9 @@ export function DealsPipelineKanban({
   const [activeWidth, setActiveWidth] = useState<number | null>(null);
   // Local per-deal stage override applied between drop and the cache refresh
   // so cards don't snap back to their old column for a frame.
-  const [pending, setPending] = useState<Record<string, { stage: string }>>({});
+  const [pending, setPending] = useState<
+    Record<string, { stage: string; stage_changed_at: string }>
+  >({});
   const [justMovedId, setJustMovedId] = useState<string | null>(null);
   const landTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const undoRef = useRef<Array<{ dealId: string; prevStage: string }>>([]);
@@ -88,7 +90,15 @@ export function DealsPipelineKanban({
     for (const s of stages) acc[s.key] = [];
     for (const d of deals) {
       const override = pending[d.id];
-      const eff = override ? { ...d, stage: override.stage } : d;
+      // Stamp stage_changed_at locally too, so a just-dropped card sorts to
+      // the top of its new column before the server data catches up.
+      const eff = override
+        ? {
+            ...d,
+            stage: override.stage,
+            stage_changed_at: override.stage_changed_at,
+          }
+        : d;
       if (acc[eff.stage]) acc[eff.stage].push(eff);
     }
     const cmp = dealComparator(sortMode);
@@ -152,7 +162,13 @@ export function DealsPipelineKanban({
       undoRef.current.push({ dealId, prevStage: deal.stage });
       if (undoRef.current.length > 50) undoRef.current.shift();
 
-      setPending((prev) => ({ ...prev, [dealId]: { stage: targetStage } }));
+      setPending((prev) => ({
+        ...prev,
+        [dealId]: {
+          stage: targetStage,
+          stage_changed_at: new Date().toISOString(),
+        },
+      }));
       setJustMovedId(dealId);
       if (landTimerRef.current) clearTimeout(landTimerRef.current);
       landTimerRef.current = setTimeout(() => setJustMovedId(null), 500);

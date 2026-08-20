@@ -25,18 +25,27 @@ function dealValue(d: DealListItem): number {
   return Number.isFinite(n) ? n : 0;
 }
 
+/**
+ * "Newest" means the last stage/status change, not creation — a deal moved
+ * into a column yesterday outranks an older-moved one created today.
+ * Never-moved deals fall back to created_at (creation set the initial stage).
+ */
+function dealDate(d: DealListItem): string {
+  return d.stage_changed_at ?? d.created_at ?? "";
+}
+
 export function dealComparator(
   mode: DealSortMode,
 ): (a: DealListItem, b: DealListItem) => number {
   switch (mode) {
     case "date_asc":
-      return (a, b) => (a.created_at ?? "").localeCompare(b.created_at ?? "");
+      return (a, b) => dealDate(a).localeCompare(dealDate(b));
     case "value_desc":
       return (a, b) => dealValue(b) - dealValue(a);
     case "value_asc":
       return (a, b) => dealValue(a) - dealValue(b);
     case "date_desc":
     default:
-      return (a, b) => (b.created_at ?? "").localeCompare(a.created_at ?? "");
+      return (a, b) => dealDate(b).localeCompare(dealDate(a));
   }
 }
