@@ -8,6 +8,8 @@ import { useAuthContext } from "~/providers/auth-provider";
 import { getContact, getContactHistory } from "~/lib/api/contacts-crm";
 import { getWorkspaceDetail } from "~/lib/api/workspaces";
 import { ActivityPanel } from "~/components/organism/activity-panel";
+import { useComposeEmail } from "~/components/organism/compose-email/use-compose-email";
+import { composeInvalidateKeys } from "~/components/organism/activity-panel/shared";
 import type { WorkspaceMemberItem } from "~/components/organism/tasks/task-form-modal";
 import { useCanEditLeads } from "~/lib/hooks/useCanEditLeads";
 import { ContactHero } from "~/components/organism/contact-detail/contact-hero";
@@ -35,6 +37,7 @@ export function meta() {
 
 export default function ContactDetailPage() {
   const { t } = useTranslation();
+  const { openCompose } = useComposeEmail();
   const { contactId: contactRouteId } = useParams<{ contactId: string }>();
   const navigate = useNavigate();
   const location = useLocation();
@@ -183,6 +186,27 @@ export default function ContactDetailPage() {
   const taskContactId = !leadId ? resolvedContactId : undefined;
   const taskContextLabel = displayName;
 
+  // Prefilled recipient for a new email. Removable in the composer, so this is
+  // a starting point rather than a constraint.
+  const primaryEmail = emails.find((e) => e.is_primary) ?? emails[0];
+  const composeRecipients = primaryEmail?.address
+    ? [{ email: String(primaryEmail.address), name: displayName }]
+    : [];
+
+  const openComposer = () =>
+    openCompose({
+      to: composeRecipients,
+      contactId: resolvedContactId,
+      contextLabel: t("compose.contextContact", {
+        defaultValue: "To {{name}}",
+        name: displayName,
+      }),
+      invalidateKeys: composeInvalidateKeys(
+        { emailContactId: resolvedContactId },
+        "contact",
+      ),
+    });
+
   return (
     <div className="p-4 sm:p-6 space-y-4 sm:space-y-6 app-fade-in">
       <Link
@@ -204,6 +228,9 @@ export default function ContactDetailPage() {
         addresses={addresses}
         leadId={leadId}
         canEdit={canEdit}
+        onCompose={
+          canEdit && composeRecipients.length > 0 ? openComposer : undefined
+        }
         onInvalidate={invalidateContact}
       />
 
@@ -256,6 +283,7 @@ export default function ContactDetailPage() {
             historyContactId={resolvedContactId}
             emailContactId={resolvedContactId}
             contextLabel={taskContextLabel}
+            composeRecipients={composeRecipients}
             canEdit={canEdit}
             workspaceMembers={workspaceMembers}
             history={contactHistory}

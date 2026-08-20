@@ -17,6 +17,7 @@ import {
   Trash2,
   TriangleAlert,
   X,
+  PenLine,
 } from "lucide-react";
 import i18n from "~/i18n";
 import { useAuthContext } from "~/providers/auth-provider";
@@ -32,6 +33,8 @@ import {
   type EmailAccount,
   type SmtpConnectionSecurity,
 } from "~/lib/api/email-accounts";
+import { SignatureEditor } from "~/components/organism/signature-editor";
+import { usePilotFeatures } from "~/lib/feature-flags";
 import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
 import {
@@ -121,7 +124,12 @@ function SettingsSection({
 /** Google's four-colour mark. Their branding rules require the real logo. */
 function GoogleIcon({ className }: { className?: string }) {
   return (
-    <svg className={className} viewBox="0 0 48 48" aria-hidden focusable="false">
+    <svg
+      className={className}
+      viewBox="0 0 48 48"
+      aria-hidden
+      focusable="false"
+    >
       <path
         fill="#4285F4"
         d="M45.12 24.5c0-1.56-.14-3.06-.4-4.5H24v8.51h11.84c-.51 2.75-2.06 5.08-4.39 6.64v5.52h7.11c4.16-3.83 6.56-9.47 6.56-16.17z"
@@ -143,12 +151,7 @@ function GoogleIcon({ className }: { className?: string }) {
 }
 
 /** Every result the OAuth callback can bounce back with. */
-type GoogleOutcome =
-  | "connected"
-  | "denied"
-  | "expired"
-  | "error"
-  | "failed";
+type GoogleOutcome = "connected" | "denied" | "expired" | "error" | "failed";
 
 const GOOGLE_OUTCOMES: GoogleOutcome[] = [
   "connected",
@@ -263,6 +266,10 @@ export default function SettingsEmailAccounts() {
   const [pendingDisconnect, setPendingDisconnect] =
     useState<EmailAccount | null>(null);
   /** The mailbox an alias is being added to; null when the dialog is closed. */
+  // Only one signature editor open at a time: two half-edited signatures on
+  // screen invites saving the wrong one.
+  const [signatureFor, setSignatureFor] = useState<EmailAccount | null>(null);
+  const pilot = usePilotFeatures();
   const [aliasParent, setAliasParent] = useState<EmailAccount | null>(null);
   const [aliasAdded, setAliasAdded] = useState<string | null>(null);
 
@@ -484,16 +491,35 @@ export default function SettingsEmailAccounts() {
                     onSetDefault={() => defaultMutation.mutate(parent.id)}
                     onDisconnect={() => setPendingDisconnect(parent)}
                     onReconnect={handleConnectGoogle}
+                    canEditSignature={pilot.emailSignature}
+                    onEditSignature={() => setSignatureFor(parent)}
                   />
-                  {aliases.map((alias) => (
-                    <AliasRow
-                      key={alias.id}
-                      alias={alias}
-                      canEdit={canEdit}
-                      busy={busy}
-                      onSetDefault={() => defaultMutation.mutate(alias.id)}
-                      onRemove={() => setPendingDisconnect(alias)}
+                  {signatureFor?.id === parent.id ? (
+                    <SignatureEditor
+                      accountId={parent.id}
+                      accountEmail={parent.email}
+                      onClose={() => setSignatureFor(null)}
                     />
+                  ) : null}
+                  {aliases.map((alias) => (
+                    <div key={alias.id}>
+                      <AliasRow
+                        alias={alias}
+                        canEdit={canEdit}
+                        busy={busy}
+                        onSetDefault={() => defaultMutation.mutate(alias.id)}
+                        onRemove={() => setPendingDisconnect(alias)}
+                        canEditSignature={pilot.emailSignature}
+                        onEditSignature={() => setSignatureFor(alias)}
+                      />
+                      {signatureFor?.id === alias.id ? (
+                        <SignatureEditor
+                          accountId={alias.id}
+                          accountEmail={alias.email}
+                          onClose={() => setSignatureFor(null)}
+                        />
+                      ) : null}
+                    </div>
                   ))}
                   {canAddAlias ? (
                     <AddAliasRow onClick={() => setAliasParent(parent)} />
@@ -748,6 +774,8 @@ function AccountRow({
   onSetDefault,
   onDisconnect,
   onReconnect,
+  canEditSignature,
+  onEditSignature,
 }: {
   account: EmailAccount;
   isFirst: boolean;
@@ -756,6 +784,8 @@ function AccountRow({
   onSetDefault: () => void;
   onDisconnect: () => void;
   onReconnect: () => void;
+  canEditSignature: boolean;
+  onEditSignature: () => void;
 }) {
   const { t } = useTranslation();
   // Admin-provisioned accounts are managed by Repraesent; a member disconnecting
@@ -785,7 +815,9 @@ function AccountRow({
 
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">
-            <span className="truncate text-sm font-medium">{account.email}</span>
+            <span className="truncate text-sm font-medium">
+              {account.email}
+            </span>
             {account.is_default ? (
               <span className="rounded-full border border-emerald-300 bg-emerald-50 px-2 py-0.5 text-[11px] font-medium text-emerald-800 dark:border-emerald-500/40 dark:bg-emerald-500/10 dark:text-emerald-300">
                 {t("settings.emailAccounts.default")}
@@ -845,6 +877,29 @@ function AccountRow({
               {t("settings.emailAccounts.makeDefault")}
             </button>
           ) : null}
+          {canEditSignature ? (
+            <button
+              type="button"
+              onClick={onEditSignature}
+              disabled={busy}
+              title={t("settings.emailAccounts.signature", {
+                defaultValue: "Signature",
+              })}
+              aria-label={t("settings.emailAccounts.signature", {
+                defaultValue: "Signature",
+              })}
+              className={`inline-flex h-8 items-center gap-1.5 rounded-lg border px-2.5 text-xs transition-colors disabled:opacity-50 ${
+                account.has_signature
+                  ? "border-border bg-foreground/5 text-foreground hover:bg-foreground/10"
+                  : "border-border bg-muted/40 text-muted-foreground hover:bg-muted"
+              }`}
+            >
+              <PenLine className="h-3.5 w-3.5" />
+              {t("settings.emailAccounts.signature", {
+                defaultValue: "Signature",
+              })}
+            </button>
+          ) : null}
           {!isManaged ? (
             <button
               type="button"
@@ -881,12 +936,16 @@ function AliasRow({
   busy,
   onSetDefault,
   onRemove,
+  canEditSignature,
+  onEditSignature,
 }: {
   alias: EmailAccount;
   canEdit: boolean;
   busy: boolean;
   onSetDefault: () => void;
   onRemove: () => void;
+  canEditSignature: boolean;
+  onEditSignature: () => void;
 }) {
   const { t } = useTranslation();
 
@@ -934,6 +993,29 @@ function AliasRow({
             >
               <Star className="h-3.5 w-3.5" />
               {t("settings.emailAccounts.makeDefault")}
+            </button>
+          ) : null}
+          {canEditSignature ? (
+            <button
+              type="button"
+              onClick={onEditSignature}
+              disabled={busy}
+              title={t("settings.emailAccounts.signature", {
+                defaultValue: "Signature",
+              })}
+              aria-label={t("settings.emailAccounts.signature", {
+                defaultValue: "Signature",
+              })}
+              className={`inline-flex h-8 items-center gap-1.5 rounded-lg border px-2.5 text-xs transition-colors disabled:opacity-50 ${
+                alias.has_signature
+                  ? "border-border bg-foreground/5 text-foreground hover:bg-foreground/10"
+                  : "border-border bg-muted/40 text-muted-foreground hover:bg-muted"
+              }`}
+            >
+              <PenLine className="h-3.5 w-3.5" />
+              {t("settings.emailAccounts.signature", {
+                defaultValue: "Signature",
+              })}
             </button>
           ) : null}
           <button
@@ -1142,7 +1224,11 @@ function ConnectSmtpDialog({
                   <FormItem>
                     <FormLabel>{t("settings.emailAccounts.name")}</FormLabel>
                     <FormControl>
-                      <Input {...field} placeholder="Sales" disabled={pending} />
+                      <Input
+                        {...field}
+                        placeholder="Sales"
+                        disabled={pending}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>

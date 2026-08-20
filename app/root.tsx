@@ -43,6 +43,7 @@ export async function loader({ request }: Route.LoaderArgs) {
 import { ReactQueryProvider } from "./providers/react-query-provider";
 import { AuthProvider } from "./providers/auth-provider";
 import ModalProvider from "./components/modal-provider";
+import { ComposeEmailProvider } from "~/components/organism/compose-email/use-compose-email";
 
 export const links: Route.LinksFunction = () => [
   { rel: "preconnect", href: "https://fonts.googleapis.com" },
@@ -88,7 +89,10 @@ export function Layout({ children }: { children: React.ReactNode }) {
           <ReactQueryProvider>
             <AuthProvider>
               <ModalProvider>
-                {children}
+                {/* One composer for the whole app: the contact hero, the deal
+                    hero, the Emails tab and every Reply button share it, so two
+                    half-written drafts can never exist at once. */}
+                <ComposeEmailProvider>{children}</ComposeEmailProvider>
                 {/* Outside `children` so it also covers the 404/error
                     boundary, which is where a WordPress bounce to an unrouted
                     path currently lands. */}

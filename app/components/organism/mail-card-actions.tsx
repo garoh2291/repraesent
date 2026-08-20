@@ -17,6 +17,7 @@ import {
   AlertDialogTitle,
 } from "~/components/ui/alert-dialog";
 import { MailParticipantsDialog } from "~/components/organism/mail-participants-dialog";
+import { EmailReplyActions } from "~/components/organism/compose-email/email-reply-actions";
 import {
   emailParticipants,
   useMailInvalidate,
@@ -53,6 +54,9 @@ export function MailCardActions({ message }: { message: BccMessage }) {
 
   return (
     <>
+      {/* Replying from the inbox still routes through the composer, so the reply
+          is BCC-logged and lands back on the same contact and deal. */}
+      <EmailReplyActions message={message} invalidateKeys={[["mail-messages"]]} />
       <div className="flex flex-1 flex-wrap items-center gap-1.5">
         {/* Linked-contact chips */}
         {contacts.map((c) => (

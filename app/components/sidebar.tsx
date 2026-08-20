@@ -36,6 +36,7 @@ import { useAuthContext } from "~/providers/auth-provider";
 import { setStoredSelectedView, BRAND_VIEW } from "~/lib/api/axios-instance";
 import { useAppointmentConfigs } from "~/lib/hooks/useAppointmentConfigs";
 import { useCalendarSummary } from "~/lib/hooks/useCalendarSummary";
+import { usePilotFeatures } from "~/lib/feature-flags";
 import { useWorkspaceWpSite } from "~/lib/hooks/useWorkspaceWpSite";
 import { LanguageSwitcher } from "~/components/language-switcher";
 import {
@@ -177,13 +178,10 @@ export function Sidebar({
   const isDoorboostBrandWs = currentWorkspace?.type === "doorboost_brand";
   // TEMPORARY: Workflows is still being piloted, so in production only the
   // pilot workspace sees the nav entry. Local development always shows it.
-  // Delete this and the `showWorkflows` guard on the NavLink when the feature
-  // ships to everyone. This hides the entry only — /workflows stays reachable
-  // by URL, and nothing here is a permission boundary.
-  const WORKFLOWS_PILOT_WORKSPACE_ID = "0941b49b-edaa-44bb-8d6f-8f6decd10502";
-  const showWorkflows =
-    import.meta.env.DEV ||
-    currentWorkspace?.id === WORKFLOWS_PILOT_WORKSPACE_ID;
+  // Pilot gating lives in ~/lib/feature-flags. These hide entries only — the
+  // routes stay reachable by URL, and none of this is a permission boundary.
+  const pilot = usePilotFeatures();
+  const showWorkflows = pilot.workflows;
   // Route-driven rather than stateful: deep links and refreshes land in the
   // right mode for free, and there is nothing to reset on the way out.
   const inSettings = location.pathname.startsWith("/settings");
@@ -301,7 +299,9 @@ export function Sidebar({
               </NavLink>
             </div>
 
-            {SETTINGS_NAV.map(({ to, labelKey, Icon }) => (
+            {SETTINGS_NAV.filter(
+              (item) => item.to !== "/settings/calendars" || pilot.calendar,
+            ).map(({ to, labelKey, Icon }) => (
               <NavLink
                 key={to}
                 to={to}
@@ -507,7 +507,7 @@ export function Sidebar({
                 );
               })}
 
-            {showCalendarInSidebar && (
+            {showCalendarInSidebar && pilot.calendar && (
               <NavLink
                 to="/calendar"
                 isActive={location.pathname.startsWith("/calendar")}

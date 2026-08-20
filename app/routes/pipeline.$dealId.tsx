@@ -6,6 +6,7 @@ import {
   ArrowLeft,
   CalendarClock,
   ExternalLink,
+  Send,
   Tag,
   Trash2,
   User as UserIcon,
@@ -32,6 +33,8 @@ import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
 import { Label } from "~/components/ui/label";
 import { ActivityPanel } from "~/components/organism/activity-panel";
+import { useComposeEmail } from "~/components/organism/compose-email/use-compose-email";
+import { composeInvalidateKeys } from "~/components/organism/activity-panel/shared";
 import {
   Select,
   SelectContent,
@@ -122,6 +125,7 @@ function MetaRow({ icon, label, children }: MetaRowProps) {
 
 export default function PipelineDealDetailPage() {
   const { t } = useTranslation();
+  const { openCompose } = useComposeEmail();
   const { dealId } = useParams<{ dealId: string }>();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -482,6 +486,24 @@ export default function PipelineDealDetailPage() {
     title.trim() ||
     t("pipeline.untitledDeal", { defaultValue: "Untitled deal" });
 
+  // Every attached contact with an address is prefilled, each removable in the
+  // composer — a deal conversation usually involves all of them, and dropping
+  // one is cheaper than hunting for the missing person.
+  const composeRecipients = dealContacts
+    .filter((c) => !!c.primary_email)
+    .map((c) => ({ email: c.primary_email!, name: c.full_name }));
+
+  const openComposer = () =>
+    openCompose({
+      to: composeRecipients,
+      dealId,
+      contextLabel: t("compose.contextDeal", {
+        defaultValue: "Deal: {{title}}",
+        title: displayTitle,
+      }),
+      invalidateKeys: composeInvalidateKeys({ dealId }, "deal"),
+    });
+
   const titleEmpty = title.trim().length === 0;
   const numericValue = parseDealValue(valueStr);
   const valueNegative = numericValue != null && numericValue < 0;
@@ -567,13 +589,25 @@ export default function PipelineDealDetailPage() {
               </div>
             </div>
 
-            <div className="shrink-0 text-left sm:text-right">
-              <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">
-                {t("pipeline.fields.value", { defaultValue: "Value" })}
-              </p>
-              <p className="text-2xl font-semibold tabular-nums tracking-tight text-foreground sm:text-3xl">
-                {valueDisplay}
-              </p>
+            <div className="flex shrink-0 items-center gap-3 sm:flex-row-reverse">
+              <div className="text-left sm:text-right">
+                <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">
+                  {t("pipeline.fields.value", { defaultValue: "Value" })}
+                </p>
+                <p className="text-2xl font-semibold tabular-nums tracking-tight text-foreground sm:text-3xl">
+                  {valueDisplay}
+                </p>
+              </div>
+              {canEdit && composeRecipients.length > 0 ? (
+                <Button
+                  size="sm"
+                  className="h-8 gap-1.5 text-xs"
+                  onClick={openComposer}
+                >
+                  <Send className="h-3.5 w-3.5" />
+                  {t("compose.emailAction", { defaultValue: "Email" })}
+                </Button>
+              ) : null}
             </div>
           </div>
 
@@ -750,7 +784,11 @@ export default function PipelineDealDetailPage() {
           <ActivityPanel
             variant="deal"
             dealId={dealId}
-            contextLabel={displayTitle}
+            contextLabel={t("compose.contextDeal", {
+              defaultValue: "Deal: {{title}}",
+              title: displayTitle,
+            })}
+            composeRecipients={composeRecipients}
             canEdit={canEdit}
             workspaceMembers={workspaceMembers}
             history={dealHistoryQuery.data ?? []}

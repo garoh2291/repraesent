@@ -39,6 +39,12 @@ export interface EmailAccount {
    * sends through — the alias supplies only the From address.
    */
   parent_account_id: string | null;
+  /**
+   * Whether this address has a signature of its own — not whether it will send
+   * one, since an alias falls back to its parent mailbox. The markup itself is
+   * fetched per account, so a base64 logo never rides along with the list.
+   */
+  has_signature: boolean;
   created_at: string;
   updated_at: string;
 }
@@ -176,3 +182,30 @@ export const DEFAULT_PORT: Record<SmtpConnectionSecurity, number> = {
   STARTTLS: 587,
   NONE: 25,
 };
+
+export interface EmailAccountSignature {
+  signature_html: string | null;
+  /** Set when this alias is showing its parent mailbox's signature. */
+  inherited_from: string | null;
+}
+
+export async function getEmailAccountSignature(
+  id: string,
+): Promise<EmailAccountSignature> {
+  const res = await apiClient.get<EmailAccountSignature>(
+    `/email-accounts/${id}/signature`,
+  );
+  return res.data;
+}
+
+/** Pass an empty string to clear it and fall back to the parent mailbox. */
+export async function setEmailAccountSignature(
+  id: string,
+  signatureHtml: string,
+): Promise<{ signature_html: string | null }> {
+  const res = await apiClient.put<{ signature_html: string | null }>(
+    `/email-accounts/${id}/signature`,
+    { signature_html: signatureHtml },
+  );
+  return res.data;
+}

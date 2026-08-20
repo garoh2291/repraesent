@@ -8,6 +8,7 @@ import {
 } from "~/components/forms/chrome";
 import { FIELD_GROUPS, FIELD_TYPE_META } from "~/lib/forms/field-types";
 import type { FormFieldType } from "~/lib/forms/schema";
+import { usePilotFeatures } from "~/lib/feature-flags";
 
 interface Props {
   onAdd: (type: FormFieldType) => void;
@@ -21,6 +22,7 @@ interface Props {
  */
 export function FieldPalette({ onAdd, disabled }: Props) {
   const { t } = useTranslation();
+  const pilot = usePilotFeatures();
 
   return (
     <Panel>
@@ -38,29 +40,37 @@ export function FieldPalette({ onAdd, disabled }: Props) {
             className="space-y-2 pt-4"
           >
             <div className="grid grid-cols-1 gap-0.5">
-              {types.map((type) => {
-                const Icon = FIELD_TYPE_META[type].icon;
-                return (
-                  <button
-                    key={type}
-                    type="button"
-                    // Lets anything address a palette row by what it is rather
-                    // than by position — used by the onboarding demo's cursor.
-                    data-field-type={type}
-                    disabled={disabled}
-                    onClick={() => onAdd(type)}
-                    className="group flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-left text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-transparent"
-                  >
-                    <Icon
-                      className="h-4 w-4 shrink-0 text-muted-foreground/70 transition-colors group-hover:text-foreground"
-                      aria-hidden="true"
-                    />
-                    <span className="truncate">
-                      {t(`forms.palette.${type}`)}
-                    </span>
-                  </button>
-                );
-              })}
+              {types
+                .filter(
+                  // Hidden from the palette only. A form that already has an
+                  // appointment field keeps it, and keeps it editable — pulling
+                  // the inspector too would strand a live booking field.
+                  (type) =>
+                    type !== "appointment" || pilot.formsAppointmentField,
+                )
+                .map((type) => {
+                  const Icon = FIELD_TYPE_META[type].icon;
+                  return (
+                    <button
+                      key={type}
+                      type="button"
+                      // Lets anything address a palette row by what it is rather
+                      // than by position — used by the onboarding demo's cursor.
+                      data-field-type={type}
+                      disabled={disabled}
+                      onClick={() => onAdd(type)}
+                      className="group flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-left text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-transparent"
+                    >
+                      <Icon
+                        className="h-4 w-4 shrink-0 text-muted-foreground/70 transition-colors group-hover:text-foreground"
+                        aria-hidden="true"
+                      />
+                      <span className="truncate">
+                        {t(`forms.palette.${type}`)}
+                      </span>
+                    </button>
+                  );
+                })}
             </div>
           </PanelSection>
         ))}
