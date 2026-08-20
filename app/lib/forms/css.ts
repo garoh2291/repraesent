@@ -346,6 +346,89 @@ ${s} .rf-scale-btn.rf-on {
   color: var(--rf-accent-on);
 }
 
+/* Appointment slot picker. Day chips and slot buttons share the scale-button
+   language — bordered surface, accent when on — so a form with both reads as
+   one control set. The strip scrolls rather than wraps: seven chips at compact
+   density overflow a half-width column, and wrapping them makes the nav
+   arrows meaningless. */
+${s} .rf-appt { display: flex; flex-direction: column; gap: 10px; }
+${s} .rf-appt-nav { display: flex; align-items: center; gap: 6px; }
+${s} .rf-appt-days { display: flex; flex: 1; gap: 6px; min-width: 0; overflow-x: auto; }
+${s} .rf-appt-day {
+  display: flex;
+  flex: 1 1 0;
+  flex-direction: column;
+  align-items: center;
+  gap: 1px;
+  min-width: 44px;
+  padding: 6px 4px;
+  font: inherit;
+  font-size: calc(${d.font} * 0.82);
+  color: var(--rf-text);
+  background: var(--rf-surface);
+  border: 1px solid var(--rf-border);
+  border-radius: ${radius};
+  cursor: pointer;
+  transition: all .12s ease;
+}
+${s} .rf-appt-day-num { font-weight: 600; font-size: calc(${d.font} * 0.94); }
+${s} .rf-appt-day.rf-on {
+  background: var(--rf-accent);
+  border-color: var(--rf-accent);
+  color: var(--rf-accent-on);
+}
+${s} .rf-appt-day[disabled] {
+  color: var(--rf-muted);
+  text-decoration: line-through;
+  cursor: not-allowed;
+  opacity: .55;
+}
+${s} .rf-appt-prev, ${s} .rf-appt-next {
+  flex: none;
+  width: 26px;
+  padding: 4px 0;
+  font: inherit;
+  font-size: ${d.font};
+  line-height: 1;
+  color: var(--rf-muted);
+  background: transparent;
+  border: 0;
+  border-radius: ${radius};
+  cursor: pointer;
+  transition: color .12s ease;
+}
+${s} .rf-appt-prev:hover, ${s} .rf-appt-next:hover { color: var(--rf-accent); }
+${s} .rf-appt-prev[disabled], ${s} .rf-appt-next[disabled] {
+  opacity: .35;
+  cursor: not-allowed;
+}
+${s} .rf-appt-slots {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
+  gap: 6px;
+}
+${s} .rf-appt-slot {
+  padding: 8px 6px;
+  font: inherit;
+  font-size: calc(${d.font} * 0.94);
+  color: var(--rf-text);
+  background: var(--rf-surface);
+  border: 1px solid var(--rf-border);
+  border-radius: ${radius};
+  cursor: pointer;
+  transition: all .12s ease;
+}
+${s} .rf-appt-slot.rf-on {
+  background: var(--rf-accent);
+  border-color: var(--rf-accent);
+  color: var(--rf-accent-on);
+}
+${s} .rf-appt-empty, ${s} .rf-appt-loading {
+  grid-column: 1 / -1;
+  color: var(--rf-muted);
+  font-size: calc(${d.font} * 0.92);
+}
+
 /* Address */
 ${s} .rf-address { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
 ${s} .rf-address .rf-street { grid-column: 1 / -1; }

@@ -15,6 +15,7 @@ import {
   Plus,
 } from "lucide-react";
 import { Avatar, AvatarFallback } from "~/components/ui/avatar";
+import { Button } from "~/components/ui/button";
 import { ContactSourceBadge } from "~/components/molecule/contact-badges";
 import { toast } from "sonner";
 import { cn } from "~/lib/utils";
@@ -84,6 +85,15 @@ interface CopyChipProps {
     icon: React.ReactNode;
     newTab?: boolean;
   };
+  /**
+   * In-app alternative to `hrefAction`. Takes precedence when both are given:
+   * opening our own composer beats handing the address to the OS mail client.
+   */
+  onAction?: {
+    onClick: () => void;
+    label: string;
+    icon: React.ReactNode;
+  };
   secondary?: string;
   fallback?: string;
   onAdd?: () => void;
@@ -95,6 +105,7 @@ function CopyChip({
   label,
   value,
   hrefAction,
+  onAction,
   secondary,
   fallback,
   onAdd,
@@ -181,7 +192,17 @@ function CopyChip({
       </div>
       {!isEmpty ? (
         <div className="ml-1 flex shrink-0 items-center gap-1 opacity-0 transition-opacity group-hover:opacity-100 focus-within:opacity-100">
-          {hrefAction ? (
+          {onAction ? (
+            <button
+              type="button"
+              onClick={onAction.onClick}
+              aria-label={onAction.label}
+              title={onAction.label}
+              className="inline-flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none [&>svg]:h-3.5 [&>svg]:w-3.5"
+            >
+              {onAction.icon}
+            </button>
+          ) : hrefAction ? (
             <a
               href={hrefAction.href}
               target={hrefAction.newTab ? "_blank" : undefined}
@@ -224,6 +245,8 @@ interface ContactHeroProps {
   viewContactId?: string | null;
   /** When set with `viewContactId`, shows a chip that opens the shared Create deal dialog. */
   onOpenCreateDeal?: () => void;
+  /** Opens the email composer for this contact. Omitted hides the action. */
+  onCompose?: () => void;
   canEdit?: boolean;
   onInvalidate?: () => void;
 }
@@ -238,6 +261,7 @@ export function ContactHero({
   leadId,
   viewContactId,
   onOpenCreateDeal,
+  onCompose,
   canEdit,
   onInvalidate,
 }: ContactHeroProps) {
@@ -317,6 +341,16 @@ export function ContactHero({
               {displayName}
             </h1>
             <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+              {onCompose ? (
+                <Button
+                  size="sm"
+                  className="h-7 gap-1.5 px-2.5 text-[11px]"
+                  onClick={onCompose}
+                >
+                  <Send className="h-3 w-3" />
+                  {t("compose.emailAction", { defaultValue: "Email" })}
+                </Button>
+              ) : null}
               {source ? <ContactSourceBadge source={source} /> : null}
               {lastContactedRaw ? (
                 <span className="inline-flex items-center gap-1 text-muted-foreground">
@@ -377,6 +411,17 @@ export function ContactHero({
             fallback={t("contacts.noPrimaryEmail", {
               defaultValue: "No email on file",
             })}
+            onAction={
+              emailValue && onCompose
+                ? {
+                    onClick: onCompose,
+                    label: t("contacts.sendEmail", {
+                      defaultValue: "Send email",
+                    }),
+                    icon: <Send />,
+                  }
+                : undefined
+            }
             hrefAction={
               emailValue
                 ? {

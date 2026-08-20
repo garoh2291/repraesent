@@ -217,7 +217,8 @@ export function CreateDealDialog({
         contact_id:
           selectedContactId === CONTACT_NONE ? null : selectedContactId,
         assigned_to: newAssignee === "unassigned" ? null : newAssignee,
-        stage: "new",
+        // Omitted stage = the backend places the deal in the workspace's
+        // entry stage.
       }),
     onSuccess: (res) => {
       invalidateDeals();

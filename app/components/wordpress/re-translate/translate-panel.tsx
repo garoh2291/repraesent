@@ -52,6 +52,7 @@ import {
   DropdownMenuTrigger,
 } from "~/components/ui/dropdown-menu";
 import { Input } from "~/components/ui/input";
+import { useSearchShortcut } from "~/lib/hooks/useSearchShortcut";
 import { Label } from "~/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "~/components/ui/radio-group";
 import { Spinner } from "~/components/ui/spinner";
@@ -104,13 +105,15 @@ async function openEditViaSso(editUrl: string): Promise<void> {
   if (!tab) window.location.href = ssoUrl;
 }
 
-function itemKey(item: Pick<TranslateContentItem, "object_type" | "id">): string {
+function itemKey(
+  item: Pick<TranslateContentItem, "object_type" | "id">
+): string {
   return `${item.object_type}-${item.id}`;
 }
 
 function singletonPluginItem(
   objectType: string,
-  displayName: string,
+  displayName: string
 ): TranslateContentItem {
   return {
     id: 0,
@@ -142,11 +145,11 @@ export function TranslatePanel({
   const [searchParams, setSearchParams] = useSearchParams();
   const typeFilter = typeFromParam(searchParams.get(TYPE_PARAM));
   const [editingItem, setEditingItem] = useState<TranslateContentItem | null>(
-    null,
+    null
   );
   const [lastOpenedKey, setLastOpenedKey] = useState<string | null>(null);
   const [languageOverrides, setLanguageOverrides] = useState<LanguageOverrides>(
-    {},
+    {}
   );
   const clearHighlight = useCallback(() => setLastOpenedKey(null), []);
 
@@ -162,7 +165,7 @@ export function TranslatePanel({
   const applyLanguages = useCallback(
     (
       item: Pick<TranslateContentItem, "object_type" | "id">,
-      languages: Record<string, TranslateLanguageProgress>,
+      languages: Record<string, TranslateLanguageProgress>
     ) => {
       const key = itemKey(item);
       setLanguageOverrides((prev) => ({
@@ -170,14 +173,14 @@ export function TranslatePanel({
         [key]: { ...(prev[key] ?? {}), ...languages },
       }));
     },
-    [],
+    []
   );
 
   // Cookie / maintenance are one pack each — skip the redundant one-row list.
   useEffect(() => {
     if (!SINGLETON_PLUGIN_TYPES.has(typeFilter)) return;
     const plugin = (settings.available_plugins ?? []).find(
-      (entry) => entry.object_type === typeFilter,
+      (entry) => entry.object_type === typeFilter
     );
     const displayName = plugin?.display_name?.trim() || typeFilter;
     setEditingItem((current) => {
@@ -222,7 +225,7 @@ export function TranslatePanel({
           }
           onBack={() => {
             const singleton = SINGLETON_PLUGIN_TYPES.has(
-              editingItem.object_type,
+              editingItem.object_type
             );
             setLastOpenedKey(singleton ? null : itemKey(editingItem));
             setEditingItem(null);
@@ -259,12 +262,15 @@ function ContentList({
   const { t } = useTranslation();
   const [searchParams, setSearchParams] = useSearchParams();
   const [search, setSearch] = useState("");
+  const { ref: searchInputRef, withHint } = useSearchShortcut();
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const typeFilter = typeFromParam(searchParams.get(TYPE_PARAM));
-  const [highlightVisible, setHighlightVisible] = useState(
-    () => Boolean(highlightedKey),
+  const [highlightVisible, setHighlightVisible] = useState(() =>
+    Boolean(highlightedKey)
   );
-  const debounceRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | undefined>(
+    undefined
+  );
   const highlightedRowRef = useRef<HTMLButtonElement | null>(null);
 
   const page = pageFromParam(searchParams.get(PAGE_PARAM));
@@ -281,7 +287,7 @@ function ContentList({
         return params;
       }, SEARCH_PARAM_OPTS);
     },
-    [setSearchParams],
+    [setSearchParams]
   );
 
   const setTypeFilter = useCallback(
@@ -295,7 +301,7 @@ function ContentList({
         return params;
       }, SEARCH_PARAM_OPTS);
     },
-    [setSearchParams],
+    [setSearchParams]
   );
 
   const onSearchChange = useCallback(
@@ -307,7 +313,7 @@ function ContentList({
         setPage(1);
       }, DEBOUNCE_MS);
     },
-    [setPage],
+    [setPage]
   );
 
   useEffect(() => () => clearTimeout(debounceRef.current), []);
@@ -331,10 +337,8 @@ function ContentList({
     return p;
   }, [page, debouncedSearch, typeFilter]);
 
-  const { data, isLoading, isFetching, isPlaceholderData } = useTranslateContent(
-    pluginUuid,
-    params,
-  );
+  const { data, isLoading, isFetching, isPlaceholderData } =
+    useTranslateContent(pluginUuid, params);
   const totalPages = data ? Math.max(1, Math.ceil(data.total / PER_PAGE)) : 1;
   // Spinner on first load and when paging/filtering (placeholder = old page).
   // Same-key background refetch (back from editor) keeps rows visible.
@@ -356,11 +360,11 @@ function ContentList({
     });
     const fadeTimer = window.setTimeout(
       () => setHighlightVisible(false),
-      HIGHLIGHT_HOLD_MS,
+      HIGHLIGHT_HOLD_MS
     );
     const clearTimer = window.setTimeout(
       () => onHighlightClear(),
-      HIGHLIGHT_HOLD_MS + HIGHLIGHT_FADE_MS,
+      HIGHLIGHT_HOLD_MS + HIGHLIGHT_FADE_MS
     );
     return () => {
       window.clearTimeout(fadeTimer);
@@ -410,7 +414,7 @@ function ContentList({
     (value: string) => {
       setTypeFilter(value);
     },
-    [setTypeFilter],
+    [setTypeFilter]
   );
 
   return (
@@ -425,11 +429,11 @@ function ContentList({
         <div className="relative min-w-0 flex-1 basis-48">
           <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
           <Input
+            ref={searchInputRef}
             value={search}
             onChange={(e) => onSearchChange(e.target.value)}
-            placeholder={t(
-              "wordpress.reTranslate.searchPlaceholder",
-              "Search content...",
+            placeholder={withHint(
+              t("wordpress.reTranslate.searchPlaceholder", "Search content...")
             )}
             className="pl-9"
           />
@@ -468,13 +472,13 @@ function ContentList({
                       key={plugin.object_type}
                       onSelect={() => selectType(plugin.object_type)}
                       className={cn(
-                        typeFilter === plugin.object_type && "bg-accent",
+                        typeFilter === plugin.object_type && "bg-accent"
                       )}
                     >
                       {translatedPluginLabel(
                         plugin.object_type,
                         t,
-                        plugin.display_name,
+                        plugin.display_name
                       )}
                     </DropdownMenuItem>
                   ))}
@@ -490,17 +494,17 @@ function ContentList({
           <div className="flex items-center justify-center py-20">
             <Spinner className="size-6" />
           </div>
-        )         : !data || data.items.length === 0 ? (
+        ) : !data || data.items.length === 0 ? (
           <div className="py-16 text-center">
             <p className="text-sm text-muted-foreground">
               {isPluginTypeFilter(typeFilter)
                 ? t(
                     "wordpress.reTranslate.noPluginContent",
-                    "No translatable copy found for this plugin yet.",
+                    "No translatable copy found for this plugin yet."
                   )
                 : t(
                     "wordpress.reTranslate.noContent",
-                    "No content found. Run a scan from Settings to index your site.",
+                    "No content found. Run a scan from Settings to index your site."
                   )}
             </p>
           </div>
@@ -508,78 +512,78 @@ function ContentList({
           <div className="divide-y">
             {data.items.map((item) => {
               const key = itemKey(item);
-              const isHighlighted =
-                key === highlightedKey && highlightVisible;
+              const isHighlighted = key === highlightedKey && highlightVisible;
               const languages = {
                 ...item.languages,
                 ...(languageOverrides[key] ?? {}),
               };
               return (
-              <button
-                key={key}
-                ref={key === highlightedKey ? highlightedRowRef : undefined}
-                type="button"
-                onClick={() => onEdit(item)}
-                className={cn(
-                  "flex w-full cursor-pointer items-center gap-3 px-5 py-3.5 text-left transition-colors duration-700 hover:bg-muted/40",
-                  isHighlighted && "bg-muted",
-                )}
-              >
-                <span className="min-w-0 flex-1">
-                  <span className="block truncate text-sm font-medium">
-                    {item.title || `#${item.id}`}
+                <button
+                  key={key}
+                  ref={key === highlightedKey ? highlightedRowRef : undefined}
+                  type="button"
+                  onClick={() => onEdit(item)}
+                  className={cn(
+                    "flex w-full cursor-pointer items-center gap-3 px-5 py-3.5 text-left transition-colors duration-700 hover:bg-muted/40",
+                    isHighlighted && "bg-muted"
+                  )}
+                >
+                  <span className="min-w-0 flex-1">
+                    <span className="block truncate text-sm font-medium">
+                      {item.title || `#${item.id}`}
+                    </span>
+                    <span className="block text-[11px] text-muted-foreground">
+                      {item.object_type === "chrome"
+                        ? t(
+                            "wordpress.reTranslate.headerFooter",
+                            "Header & footer"
+                          )
+                        : item.object_type === "rf_form"
+                          ? t("wordpress.reTranslate.forms", "Forms")
+                          : isPluginTypeFilter(item.object_type)
+                            ? translatedPluginLabel(
+                                item.object_type,
+                                t,
+                                item.type_label
+                              )
+                            : translatedPostTypeLabel(
+                                item.post_type || item.object_type,
+                                t
+                              )}
+                      {item.strings
+                        ? ` · ${item.strings.toLocaleString()} strings`
+                        : ""}
+                    </span>
                   </span>
-                  <span className="block text-[11px] text-muted-foreground">
-                    {item.object_type === "chrome"
-                      ? t(
-                          "wordpress.reTranslate.headerFooter",
-                          "Header & footer",
-                        )
-                      : item.object_type === "rf_form"
-                        ? t("wordpress.reTranslate.forms", "Forms")
-                        : isPluginTypeFilter(item.object_type)
-                          ? translatedPluginLabel(
-                              item.object_type,
-                              t,
-                              item.type_label,
-                            )
-                          : translatedPostTypeLabel(
-                              item.post_type || item.object_type,
-                              t,
-                            )}
-                    {item.strings
-                      ? ` · ${item.strings.toLocaleString()} strings`
-                      : ""}
+                  <span className="flex shrink-0 flex-wrap items-center gap-1.5">
+                    {settings.languages.map((lang) => {
+                      const row = languages[lang.code];
+                      const status =
+                        !row || !row.total
+                          ? "untranslated"
+                          : row.stale > 0
+                            ? "stale"
+                            : row.translated >= row.total
+                              ? "translated"
+                              : row.translated > 0
+                                ? "partial"
+                                : "untranslated";
+                      return (
+                        <Badge
+                          key={lang.code}
+                          variant="outline"
+                          className={statusBadgeClass(status)}
+                          title={`${lang.label} — ${row?.percent ?? 0}%`}
+                        >
+                          {lang.code.toUpperCase()}
+                          {row?.total
+                            ? ` ${status === "stale" ? "!" : `${row.percent}%`}`
+                            : ""}
+                        </Badge>
+                      );
+                    })}
                   </span>
-                </span>
-                <span className="flex shrink-0 flex-wrap items-center gap-1.5">
-                  {settings.languages.map((lang) => {
-                    const row = languages[lang.code];
-                    const status = !row || !row.total
-                      ? "untranslated"
-                      : row.stale > 0
-                        ? "stale"
-                        : row.translated >= row.total
-                          ? "translated"
-                          : row.translated > 0
-                            ? "partial"
-                            : "untranslated";
-                    return (
-                      <Badge
-                        key={lang.code}
-                        variant="outline"
-                        className={statusBadgeClass(status)}
-                        title={`${lang.label} — ${row?.percent ?? 0}%`}
-                      >
-                        {lang.code.toUpperCase()}
-                        {row?.total
-                          ? ` ${status === "stale" ? "!" : `${row.percent}%`}`
-                          : ""}
-                      </Badge>
-                    );
-                  })}
-                </span>
-              </button>
+                </button>
               );
             })}
           </div>
@@ -645,7 +649,7 @@ function StringEditor({
   settings: ReTranslateSettings;
   pluginUuid: string;
   onLanguagesChange: (
-    languages: Record<string, TranslateLanguageProgress>,
+    languages: Record<string, TranslateLanguageProgress>
   ) => void;
   /** Strings changed — re-read the server's translation counters. */
   onCountersChanged?: () => void;
@@ -654,7 +658,7 @@ function StringEditor({
   const { t } = useTranslation();
   const queryClient = useQueryClient();
   const [language, setLanguage] = useState(
-    () => settings.languages[0]?.code ?? "",
+    () => settings.languages[0]?.code ?? ""
   );
   const [drafts, setDrafts] = useState<Record<number, string>>({});
   const [openingEditor, setOpeningEditor] = useState(false);
@@ -663,7 +667,7 @@ function StringEditor({
     pluginUuid,
     item.id,
     language,
-    item.object_type,
+    item.object_type
   );
 
   const saveMutation = useSaveTranslateStrings(pluginUuid);
@@ -692,7 +696,7 @@ function StringEditor({
 
   function publishLanguagesFromStrings(
     strings: TranslateString[],
-    baseLanguages?: Record<string, TranslateLanguageProgress>,
+    baseLanguages?: Record<string, TranslateLanguageProgress>
   ) {
     const progress = progressFromTranslateStrings(strings);
     onLanguagesChange({
@@ -711,9 +715,9 @@ function StringEditor({
         extractErrorMessage(err) ||
           t(
             "wordpress.reTranslate.openInEditorFailed",
-            "Couldn't open the WordPress editor. Connect SSO for this site first.",
+            "Couldn't open the WordPress editor. Connect SSO for this site first."
           ),
-        "error",
+        "error"
       );
     } finally {
       setOpeningEditor(false);
@@ -751,7 +755,7 @@ function StringEditor({
         flash(
           t("wordpress.reTranslate.savedStrings", "{{count}} strings saved.", {
             count: res.strings?.length ?? toSave.length,
-          }),
+          })
         );
       },
       onError: (err) => flash(extractErrorMessage(err), "error"),
@@ -794,12 +798,12 @@ function StringEditor({
           flash(
             t(
               "wordpress.reTranslate.machineTranslated",
-              "All fields translated.",
-            ),
+              "All fields translated."
+            )
           );
         },
         onError: (err) => flash(extractErrorMessage(err), "error"),
-      },
+      }
     );
   }
 
@@ -808,8 +812,8 @@ function StringEditor({
       const ok = window.confirm(
         t(
           "wordpress.reTranslate.unsavedConfirm",
-          "You have unsaved changes. Leave anyway?",
-        ),
+          "You have unsaved changes. Leave anyway?"
+        )
       );
       if (!ok) return;
     }
@@ -843,7 +847,8 @@ function StringEditor({
         >
           {settings.languages.map((lang) => (
             <NativeSelectOption key={lang.code} value={lang.code}>
-              {languageFlag(lang.code)} {languageDisplayName(lang.code, lang.label)}
+              {languageFlag(lang.code)}{" "}
+              {languageDisplayName(lang.code, lang.label)}
             </NativeSelectOption>
           ))}
         </NativeSelect>
@@ -893,7 +898,7 @@ function StringEditor({
             )}
             {t(
               "wordpress.reTranslate.machineTranslate",
-              "Translate all fields",
+              "Translate all fields"
             )}
           </Button>
         ) : null}
@@ -922,7 +927,7 @@ function StringEditor({
             <p className="text-sm text-muted-foreground">
               {t(
                 "wordpress.reTranslate.noStrings",
-                "No strings found for this item.",
+                "No strings found for this item."
               )}
             </p>
           </div>
@@ -949,13 +954,13 @@ function StringEditor({
               <Sparkles className="size-4" />
               {t(
                 "wordpress.reTranslate.machineTranslate",
-                "Translate all fields",
+                "Translate all fields"
               )}
             </DialogTitle>
             <DialogDescription>
               {t(
                 "wordpress.reTranslate.translateModeHelp",
-                "Choose whether to fill only blank fields or re-translate everything for this language.",
+                "Choose whether to fill only blank fields or re-translate everything for this language."
               )}
             </DialogDescription>
           </DialogHeader>
@@ -979,13 +984,13 @@ function StringEditor({
                 >
                   {t(
                     "wordpress.reTranslate.modeEmptyOnly",
-                    "Only empty fields",
+                    "Only empty fields"
                   )}
                 </Label>
                 <p className="text-xs text-muted-foreground">
                   {t(
                     "wordpress.reTranslate.modeEmptyOnlyHelp",
-                    "Fill fields that were left blank. Existing translations stay as they are.",
+                    "Fill fields that were left blank. Existing translations stay as they are."
                   )}
                 </p>
               </span>
@@ -1003,13 +1008,13 @@ function StringEditor({
                 >
                   {t(
                     "wordpress.reTranslate.modeOverwrite",
-                    "Re-translate everything",
+                    "Re-translate everything"
                   )}
                 </Label>
                 <p className="text-xs text-muted-foreground">
                   {t(
                     "wordpress.reTranslate.modeOverwriteHelp",
-                    "Overwrite existing translations too, not only empty fields.",
+                    "Overwrite existing translations too, not only empty fields."
                   )}
                 </p>
               </span>
@@ -1087,4 +1092,3 @@ function StringRow({
     </div>
   );
 }
-

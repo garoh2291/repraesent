@@ -894,6 +894,30 @@ export default function FormBuilderRoute() {
       return;
     }
 
+    // The slot picker's runtime strings (loading/empty states, slot-taken
+    // error) live in the FORM's content, not the app's — embeds have no
+    // i18next. Seed them in every enabled language the first time an
+    // appointment field is added, same reasoning as the address labels above;
+    // existing values are kept so a second field never overwrites edits.
+    if (type === "appointment") {
+      const APPT_CONTENT: Array<{ key: string; i18nKey: string }> = [
+        { key: "appointment.loading", i18nKey: "forms.appointmentContent.loading" },
+        { key: "appointment.empty", i18nKey: "forms.appointmentContent.empty" },
+        { key: "error.slot_unavailable", i18nKey: "forms.appointmentContent.slotUnavailable" },
+        { key: "error.slot_invalid", i18nKey: "forms.appointmentContent.slotInvalid" },
+      ];
+      const content = { ...definition.content };
+      for (const locale of locales) {
+        const strings = { ...(content[locale] ?? {}) };
+        for (const { key, i18nKey } of APPT_CONTENT) {
+          if (!strings[key]) strings[key] = t(i18nKey, { lng: locale });
+        }
+        content[locale] = strings;
+      }
+      appendFields([createField(type, taken)], content);
+      return;
+    }
+
     appendFields([createField(type, taken)]);
   };
 

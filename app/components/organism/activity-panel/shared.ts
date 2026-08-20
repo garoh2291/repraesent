@@ -16,6 +16,10 @@ import {
   type PaginatedBccMessages,
   type DealEmailSegment,
 } from "~/lib/api/bcc-logs";
+import {
+  getPendingOutboundEmails,
+  type PendingOutboundEmail,
+} from "~/lib/api/outbound-mail";
 
 /** Entity context shared by the panel, timeline and emails list. */
 export interface ActivityContext {
@@ -93,6 +97,49 @@ export function emailsQuery(
     fn: () => getBccMessages({ contactId: ctx.emailContactId }),
     id: ctx.emailContactId,
   };
+}
+
+/**
+ * Emails sent from the composer whose BCC copy has not been ingested yet.
+ *
+ * Separate from the message list on purpose: the server only returns
+ * unreconciled rows, so the placeholder card disappears by itself when the real
+ * message arrives and nothing has to de-duplicate the two.
+ */
+export function pendingOutboundQuery(
+  ctx: ActivityContext,
+  variant: Variant,
+): {
+  key: readonly unknown[];
+  fn: () => Promise<PendingOutboundEmail[]>;
+  id?: string;
+} {
+  if (variant === "deal") {
+    return {
+      key: ["outbound-pending", "deal", ctx.dealId!],
+      fn: () => getPendingOutboundEmails({ dealId: ctx.dealId }),
+      id: ctx.dealId,
+    };
+  }
+  return {
+    key: ["outbound-pending", "contact", ctx.emailContactId!],
+    fn: () => getPendingOutboundEmails({ contactId: ctx.emailContactId }),
+    id: ctx.emailContactId,
+  };
+}
+
+/** Query keys every send has to refresh, whichever surface opened the composer. */
+export function composeInvalidateKeys(
+  ctx: ActivityContext,
+  variant: Variant,
+): readonly (readonly unknown[])[] {
+  const keys: (readonly unknown[])[] = [
+    pendingOutboundQuery(ctx, variant).key,
+    ["mail-messages"],
+  ];
+  if (ctx.dealId) keys.push(["deal-emails", ctx.dealId]);
+  if (ctx.emailContactId) keys.push(["contact-emails", ctx.emailContactId]);
+  return keys;
 }
 
 export function hasNotesTasksContext(ctx: ActivityContext): boolean {

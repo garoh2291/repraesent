@@ -15,8 +15,8 @@ import { LeadSourceIcon } from "~/components/organism/lead-source-icon";
 import { LeadStatusSelect } from "~/components/molecule/lead-status-select";
 import FilterComponent from "~/components/molecule/filter-component";
 import {
-  LEAD_FILTER_STATUS_OPTIONS,
   LEAD_FILTER_SOURCE_OPTIONS,
+  useLeadFilterStatusOptions,
 } from "~/lib/leads/filter-presets";
 import { Button } from "~/components/ui/button";
 import TooltipContainer from "~/components/tooltip-container";
@@ -326,12 +326,13 @@ export default function LeadForm() {
     refetchOnMount: "always",
   });
 
+  const leadStatusFilterOptions = useLeadFilterStatusOptions();
   const leadsFilters = useMemo(
     () => [
       {
         name: "status",
         paramKey: "status",
-        options: LEAD_FILTER_STATUS_OPTIONS,
+        options: leadStatusFilterOptions,
         single: true,
       },
       {
@@ -353,7 +354,7 @@ export default function LeadForm() {
         single: true,
       },
     ],
-    [formNameFilterOptions, campaignFilterOptions]
+    [leadStatusFilterOptions, formNameFilterOptions, campaignFilterOptions]
   );
 
   const hasAccess =

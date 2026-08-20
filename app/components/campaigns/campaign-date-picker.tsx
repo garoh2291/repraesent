@@ -15,7 +15,7 @@ import {
   startOfDay,
 } from "date-fns";
 import type { Locale } from "date-fns";
-import { de, enUS } from "date-fns/locale";
+import { de, enUS, fr, nl } from "date-fns/locale";
 import { CalendarDays, ChevronLeft, ChevronRight } from "lucide-react";
 import {
   Popover,
@@ -30,7 +30,11 @@ function toYMD(d: Date): string {
 }
 
 function getLocale(lang: string) {
-  return lang === "de" ? de : enUS;
+  const base = lang.split("-")[0];
+  if (base === "de") return de;
+  if (base === "fr") return fr;
+  if (base === "nl") return nl;
+  return enUS;
 }
 
 interface Preset {

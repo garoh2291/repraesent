@@ -594,6 +594,38 @@ body {
 .appointments-calendar .rbc-day-slot .rbc-event-content {
   line-height: 1.25;
 }
+/* Team calendar (/calendar): every event carries its source calendar's color
+   as an inline `--cal-event-color`. The monochrome appointment override above
+   uses !important, which beats inline background-color in the week/day time
+   grid — but !important declarations still READ inline custom properties, so
+   the color survives through the variable. */
+.appointments-calendar.team-calendar .rbc-event,
+.appointments-calendar.team-calendar .rbc-day-slot .rbc-event,
+.appointments-calendar.team-calendar .rbc-day-slot .rbc-background-event {
+  background-color: var(--cal-event-color, var(--foreground)) !important;
+  color: #fff !important;
+}
+.appointments-calendar.team-calendar .rbc-event.rbc-selected {
+  background-color: var(--cal-event-color, var(--foreground)) !important;
+  opacity: 0.85;
+}
+/* RSVP looks (Google-style). Four classes out-specify every 3-class
+   !important rule above, so these win in month, week, day and agenda alike.
+   Inset shadow instead of border: rbc time-grid events size oddly with real
+   borders (base sets border: none). */
+.appointments-calendar.team-calendar .rbc-event.cal-rsvp-pending,
+.appointments-calendar.team-calendar .rbc-day-slot .rbc-event.cal-rsvp-pending {
+  background-color: var(--background) !important;
+  color: var(--cal-event-color, var(--foreground)) !important;
+  box-shadow: inset 0 0 0 1.5px var(--cal-event-color, var(--foreground));
+}
+.appointments-calendar.team-calendar .rbc-event.cal-rsvp-declined,
+.appointments-calendar.team-calendar .rbc-day-slot .rbc-event.cal-rsvp-declined {
+  opacity: 0.55;
+}
+.appointments-calendar.team-calendar .rbc-event.cal-rsvp-declined .rbc-event-content {
+  text-decoration: line-through;
+}
 /* Month events */
 .appointments-calendar .rbc-show-more {
   font-size: 0.6875rem;
@@ -760,4 +792,75 @@ body {
 .crm-phone-input .PhoneInputInput::placeholder {
   color: var(--muted-foreground);
   opacity: 0.7;
+}
+
+/* ── Email composer body (Tiptap) ─────────────────────────────
+   The editor writes the same HTML the recipient's mail client will render, so
+   the styling here deliberately mirrors HtmlEmailPreview's iframe stylesheet
+   rather than the app's own prose styles — what you type is what they get. */
+.compose-prose {
+  font-size: 0.875rem;
+  line-height: 1.6;
+  color: var(--foreground);
+}
+.compose-prose p {
+  margin: 0 0 0.75em;
+}
+.compose-prose p:last-child {
+  margin-bottom: 0;
+}
+.compose-prose h1,
+.compose-prose h2,
+.compose-prose h3 {
+  margin: 0 0 0.5em;
+  font-weight: 600;
+  line-height: 1.3;
+}
+.compose-prose h1 {
+  font-size: 1.25rem;
+}
+.compose-prose h2 {
+  font-size: 1.075rem;
+}
+.compose-prose h3 {
+  font-size: 0.95rem;
+}
+.compose-prose ul,
+.compose-prose ol {
+  margin: 0 0 0.75em;
+  padding-left: 1.35em;
+}
+.compose-prose ul {
+  list-style: disc;
+}
+.compose-prose ol {
+  list-style: decimal;
+}
+.compose-prose li {
+  margin: 0.15em 0;
+}
+.compose-prose a {
+  color: var(--primary);
+  text-decoration: underline;
+}
+.compose-prose blockquote {
+  margin: 0.75em 0;
+  padding-left: 0.9em;
+  border-left: 2px solid var(--border);
+  color: var(--muted-foreground);
+}
+.compose-prose code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.85em;
+  background: var(--muted);
+  border-radius: 4px;
+  padding: 0.1em 0.3em;
+}
+/* Tiptap's Placeholder extension marks the first empty node with this. */
+.compose-prose p.is-editor-empty:first-child::before {
+  content: attr(data-placeholder);
+  float: left;
+  height: 0;
+  pointer-events: none;
+  color: var(--muted-foreground);
 }

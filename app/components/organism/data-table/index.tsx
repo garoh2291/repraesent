@@ -27,6 +27,7 @@ import {
 } from "~/components/ui/select";
 import { ChevronLeft, ChevronRight, Search, X } from "lucide-react";
 import { cn } from "~/lib/utils";
+import { useSearchShortcut } from "~/lib/hooks/useSearchShortcut";
 
 export interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
@@ -67,6 +68,7 @@ export function DataTable<TData, TValue>({
   enableSorting = true,
 }: DataTableProps<TData, TValue>) {
   const { t } = useTranslation();
+  const { ref: searchInputRef, withHint } = useSearchShortcut();
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [internalSearchValue, setInternalSearchValue] = React.useState("");
 
@@ -120,7 +122,8 @@ export function DataTable<TData, TValue>({
         <div className="relative flex-1 sm:max-w-sm">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
-            placeholder={searchPlaceholder}
+            ref={searchInputRef}
+            placeholder={withHint(searchPlaceholder)}
             value={searchValue}
             onChange={(e) => handleSearchChange(e.target.value)}
             className="pl-9 pr-9"

@@ -230,6 +230,7 @@ export default function PublicFormRoute() {
           fallbackLocale={data.default_locale}
           mode="live"
           idPrefix={data.id}
+          formId={data.id}
           values={values}
           errors={errors}
           onChange={(key, value) => {

@@ -7,10 +7,13 @@ import {
   AtSign,
   Building2,
   BookUser,
+  CalendarDays,
+  CalendarRange,
   CheckSquare,
   ChevronDown,
   ClipboardList,
   Columns3,
+  Kanban,
   Globe,
   HomeIcon,
   Inbox,
@@ -33,6 +36,8 @@ import { getLocalizedServiceName } from "~/lib/api/auth";
 import { useAuthContext } from "~/providers/auth-provider";
 import { setStoredSelectedView, BRAND_VIEW } from "~/lib/api/axios-instance";
 import { useAppointmentConfigs } from "~/lib/hooks/useAppointmentConfigs";
+import { useCalendarSummary } from "~/lib/hooks/useCalendarSummary";
+import { usePilotFeatures } from "~/lib/feature-flags";
 import { useWorkspaceWpSite } from "~/lib/hooks/useWorkspaceWpSite";
 import { LanguageSwitcher } from "~/components/language-switcher";
 import {
@@ -83,7 +88,17 @@ const SETTINGS_NAV = [
     labelKey: "settings.tabs.emailAccounts",
     Icon: AtSign,
   },
+  {
+    to: "/settings/calendars",
+    labelKey: "settings.tabs.calendars",
+    Icon: CalendarDays,
+  },
   { to: "/settings/bcc", labelKey: "settings.tabs.bcc", Icon: Inbox },
+  {
+    to: "/settings/pipelines",
+    labelKey: "settings.tabs.pipelines",
+    Icon: Kanban,
+  },
 ] as const;
 
 function NavLink({
@@ -159,16 +174,20 @@ export function Sidebar({
   );
   const showAppointmentsInSidebar =
     hasAppointmentsService && !!appointmentConfigs?.length;
+  // The team Calendar page only exists once someone connected a source, so
+  // the nav entry follows the same summary the page itself redirects on.
+  const { data: calendarSummary } = useCalendarSummary(!!currentWorkspace?.id);
+  const showCalendarInSidebar =
+    (calendarSummary?.google_account_count ?? 0) +
+      (calendarSummary?.baikal_config_count ?? 0) >
+    0;
   const isDoorboostBrandWs = currentWorkspace?.type === "doorboost_brand";
   // TEMPORARY: Workflows is still being piloted, so in production only the
   // pilot workspace sees the nav entry. Local development always shows it.
-  // Delete this and the `showWorkflows` guard on the NavLink when the feature
-  // ships to everyone. This hides the entry only — /workflows stays reachable
-  // by URL, and nothing here is a permission boundary.
-  const WORKFLOWS_PILOT_WORKSPACE_ID = "0941b49b-edaa-44bb-8d6f-8f6decd10502";
-  const showWorkflows =
-    import.meta.env.DEV ||
-    currentWorkspace?.id === WORKFLOWS_PILOT_WORKSPACE_ID;
+  // Pilot gating lives in ~/lib/feature-flags. These hide entries only — the
+  // routes stay reachable by URL, and none of this is a permission boundary.
+  const pilot = usePilotFeatures();
+  const showWorkflows = pilot.workflows;
   // Route-driven rather than stateful: deep links and refreshes land in the
   // right mode for free, and there is nothing to reset on the way out.
   const inSettings = location.pathname.startsWith("/settings");
@@ -286,7 +305,9 @@ export function Sidebar({
               </NavLink>
             </div>
 
-            {SETTINGS_NAV.map(({ to, labelKey, Icon }) => (
+            {SETTINGS_NAV.filter(
+              (item) => item.to !== "/settings/calendars" || pilot.calendar,
+            ).map(({ to, labelKey, Icon }) => (
               <NavLink
                 key={to}
                 to={to}
@@ -491,6 +512,17 @@ export function Sidebar({
                   </Fragment>
                 );
               })}
+
+            {showCalendarInSidebar && pilot.calendar && (
+              <NavLink
+                to="/calendar"
+                isActive={location.pathname.startsWith("/calendar")}
+                onClick={onClose}
+              >
+                <CalendarRange className="h-4 w-4 shrink-0" />
+                {t("nav.calendar", { defaultValue: "Calendar" })}
+              </NavLink>
+            )}
           </>
         )}
       </nav>

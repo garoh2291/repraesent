@@ -21,19 +21,13 @@ import { ChevronDown, Mail, Phone } from "lucide-react";
 import { formatDate, formatCurrency } from "~/lib/utils/format";
 import { cn } from "~/lib/utils";
 import type { DealListItem } from "~/lib/api/deals";
-import { DEAL_STAGE_KEYS, type DealStageKey } from "~/lib/api/deals";
+import type { PipelineStage } from "~/lib/api/pipeline-stages";
+import { useDealStages } from "~/lib/hooks/usePipelineStages";
+import { resolveStageColors } from "~/lib/pipeline-stages/colors";
+import { resolveStageLabel } from "~/lib/pipeline-stages/labels";
+import { dealComparator, type DealSortMode } from "~/lib/deals/deal-sort";
 import { Avatar, AvatarFallback } from "~/components/ui/avatar";
-import {
-  kanbanCollisionDetection,
-  positionForInsertion,
-} from "~/lib/kanban/board-position";
-
-const STAGE_COLORS: Record<DealStageKey, string> = {
-  new: "bg-slate-400",
-  in_progress: "bg-sky-500",
-  won: "bg-emerald-600",
-  lost: "bg-red-500",
-};
+import { kanbanCollisionDetection } from "~/lib/kanban/board-position";
 
 function cardTitle(d: DealListItem): string {
   const t = d.title?.trim();
@@ -51,18 +45,12 @@ function assigneeInitials(row: DealListItem): string {
   return (a + b).toUpperCase() || "?";
 }
 
-interface ReorderArgs {
-  dealId: string;
-  stage: DealStageKey;
-  position: number;
-}
-
 interface DealsPipelineKanbanProps {
   deals: DealListItem[];
   isLoading: boolean;
-  onStageChange: (dealId: string, stage: DealStageKey) => void;
-  onTerminal: (dealId: string, status: "won" | "lost") => void;
-  onReorder: (args: ReorderArgs) => void;
+  onStageChange: (dealId: string, stage: string) => void;
+  /** Column ordering — manual drag ordering is gone, columns always sort by this. */
+  sortMode: DealSortMode;
   isUpdating?: boolean;
   canEdit?: boolean;
   onDealSelect: (dealId: string) => void;
@@ -72,19 +60,19 @@ export function DealsPipelineKanban({
   deals,
   isLoading,
   onStageChange,
-  onTerminal,
-  onReorder,
+  sortMode,
   isUpdating,
   canEdit = true,
   onDealSelect,
 }: DealsPipelineKanbanProps) {
   const { t } = useTranslation();
+  const { visible: stages, byKey } = useDealStages();
   const [activeId, setActiveId] = useState<string | null>(null);
   const [activeWidth, setActiveWidth] = useState<number | null>(null);
-  // Local per-deal override applied between drop and the cache refresh so
-  // cards don't snap back to their old position for a frame.
+  // Local per-deal stage override applied between drop and the cache refresh
+  // so cards don't snap back to their old column for a frame.
   const [pending, setPending] = useState<
-    Record<string, { stage: DealStageKey; board_position: number }>
+    Record<string, { stage: string; stage_changed_at: string }>
   >({});
   const [justMovedId, setJustMovedId] = useState<string | null>(null);
   const landTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -98,34 +86,25 @@ export function DealsPipelineKanban({
   );
 
   const byStage = useMemo(() => {
-    const acc = {} as Record<DealStageKey, DealListItem[]>;
-    for (const s of DEAL_STAGE_KEYS) acc[s] = [];
+    const acc: Record<string, DealListItem[]> = {};
+    for (const s of stages) acc[s.key] = [];
     for (const d of deals) {
       const override = pending[d.id];
+      // Stamp stage_changed_at locally too, so a just-dropped card sorts to
+      // the top of its new column before the server data catches up.
       const eff = override
         ? {
             ...d,
             stage: override.stage,
-            board_position: override.board_position,
+            stage_changed_at: override.stage_changed_at,
           }
         : d;
-      const st = eff.stage as DealStageKey;
-      if (acc[st]) acc[st].push(eff);
+      if (acc[eff.stage]) acc[eff.stage].push(eff);
     }
-    for (const s of DEAL_STAGE_KEYS) {
-      acc[s].sort((a, b) => {
-        const ap = a.board_position;
-        const bp = b.board_position;
-        if (ap == null && bp == null) {
-          return (b.updated_at ?? "").localeCompare(a.updated_at ?? "");
-        }
-        if (ap == null) return 1;
-        if (bp == null) return -1;
-        return ap - bp;
-      });
-    }
+    const cmp = dealComparator(sortMode);
+    for (const s of stages) acc[s.key].sort(cmp);
     return acc;
-  }, [deals, pending]);
+  }, [stages, deals, pending, sortMode]);
 
   // Clear pending overrides once the server-side data has caught up.
   useEffect(() => {
@@ -136,10 +115,7 @@ export function DealsPipelineKanban({
       for (const d of deals) {
         const ov = next[d.id];
         if (!ov) continue;
-        if (
-          d.stage === ov.stage &&
-          d.board_position === ov.board_position
-        ) {
+        if (d.stage === ov.stage) {
           delete next[d.id];
           changed = true;
         }
@@ -154,20 +130,17 @@ export function DealsPipelineKanban({
     setActiveWidth(width ?? null);
   }, []);
 
-  const resolveDrop = useCallback(
-    (overId: string): { stage: DealStageKey; insertionIndex: number } | null => {
-      if ((DEAL_STAGE_KEYS as readonly string[]).includes(overId)) {
-        const stage = overId as DealStageKey;
-        return { stage, insertionIndex: byStage[stage]?.length ?? 0 };
-      }
+  /** Resolve a drop target to its column's stage key. */
+  const resolveDropStage = useCallback(
+    (overId: string): string | null => {
+      if (byKey.has(overId)) return overId;
       const dealId = overId.replace(/^deal-/, "");
-      for (const stage of DEAL_STAGE_KEYS) {
-        const idx = byStage[stage].findIndex((d) => d.id === dealId);
-        if (idx !== -1) return { stage, insertionIndex: idx };
+      for (const s of stages) {
+        if (byStage[s.key]?.some((d) => d.id === dealId)) return s.key;
       }
       return null;
     },
-    [byStage],
+    [byKey, stages, byStage],
   );
 
   const handleDragEnd = useCallback(
@@ -179,42 +152,30 @@ export function DealsPipelineKanban({
       const dealId = String(active.id).replace(/^deal-/, "");
       const deal = deals.find((d) => d.id === dealId);
       if (!deal) return;
-      const drop = resolveDrop(String(over.id));
-      if (!drop) return;
+      const targetStage = resolveDropStage(String(over.id));
+      if (!targetStage) return;
 
-      const currentIdx = byStage[deal.stage as DealStageKey]?.findIndex(
-        (d) => d.id === dealId,
-      ) ?? -1;
-      // Real no-op only when dropped on itself; ±1 is a genuine reorder.
-      if (
-        deal.stage === drop.stage &&
-        currentIdx === drop.insertionIndex
-      ) {
-        return;
-      }
+      // In-column ordering is fixed (date/amount sort) — only cross-column
+      // drops mean anything now.
+      if (deal.stage === targetStage) return;
 
-      const position = positionForInsertion(
-        byStage[drop.stage],
-        drop.insertionIndex,
-        dealId,
-      );
-
-      if (deal.stage !== drop.stage) {
-        undoRef.current.push({ dealId, prevStage: deal.stage });
-        if (undoRef.current.length > 50) undoRef.current.shift();
-      }
+      undoRef.current.push({ dealId, prevStage: deal.stage });
+      if (undoRef.current.length > 50) undoRef.current.shift();
 
       setPending((prev) => ({
         ...prev,
-        [dealId]: { stage: drop.stage, board_position: position },
+        [dealId]: {
+          stage: targetStage,
+          stage_changed_at: new Date().toISOString(),
+        },
       }));
       setJustMovedId(dealId);
       if (landTimerRef.current) clearTimeout(landTimerRef.current);
       landTimerRef.current = setTimeout(() => setJustMovedId(null), 500);
 
-      onReorder({ dealId, stage: drop.stage, position });
+      onStageChange(dealId, targetStage);
     },
-    [resolveDrop, byStage, deals, onReorder],
+    [resolveDropStage, deals, onStageChange],
   );
 
   useEffect(
@@ -230,17 +191,15 @@ export function DealsPipelineKanban({
         e.preventDefault();
         const last = undoRef.current.pop();
         if (last) {
-          if (last.prevStage === "won" || last.prevStage === "lost") {
-            onTerminal(last.dealId, last.prevStage);
-          } else {
-            onStageChange(last.dealId, last.prevStage as DealStageKey);
-          }
+          // The backend derives status/timestamps from the stage's category,
+          // so restoring the stage is a full undo for terminal moves too.
+          onStageChange(last.dealId, last.prevStage);
         }
       }
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [onStageChange, onTerminal]);
+  }, [onStageChange]);
 
   const activeDeal = activeId
     ? deals.find((d) => d.id === String(activeId).replace(/^deal-/, ""))
@@ -260,6 +219,7 @@ export function DealsPipelineKanban({
       {/* Mobile: Schedule-style accordion list */}
       <div className="sm:hidden">
         <DealsMobileSchedule
+          stages={stages}
           dealsByStage={byStage}
           onDealSelect={onDealSelect}
         />
@@ -277,16 +237,20 @@ export function DealsPipelineKanban({
             setActiveWidth(null);
           }}
         >
-          <div className="flex gap-4 flex-1 min-h-0 pb-4 overflow-x-auto scrollbar-hide sm:grid sm:grid-cols-4">
-            {DEAL_STAGE_KEYS.map((stage) => (
+          <div
+            className="flex gap-4 flex-1 min-h-0 pb-4 overflow-x-auto scrollbar-hide sm:grid"
+            style={{
+              gridTemplateColumns: `repeat(${Math.max(stages.length, 1)}, minmax(0, 1fr))`,
+            }}
+          >
+            {stages.map((stage) => (
               <DealColumn
-                key={stage}
+                key={stage.id}
                 stage={stage}
-                deals={byStage[stage]}
+                deals={byStage[stage.key] ?? []}
                 onDealSelect={onDealSelect}
                 isUpdating={isUpdating}
                 canEdit={canEdit}
-                colorClass={STAGE_COLORS[stage]}
                 justMovedId={justMovedId}
               />
             ))}
@@ -315,19 +279,18 @@ function DealColumn({
   onDealSelect,
   isUpdating,
   canEdit,
-  colorClass,
   justMovedId,
 }: {
-  stage: DealStageKey;
+  stage: PipelineStage;
   deals: DealListItem[];
   onDealSelect: (id: string) => void;
   isUpdating?: boolean;
   canEdit?: boolean;
-  colorClass: string;
   justMovedId?: string | null;
 }) {
   const { t } = useTranslation();
-  const { setNodeRef, isOver } = useDroppable({ id: stage });
+  const { setNodeRef, isOver } = useDroppable({ id: stage.key });
+  const colorClass = resolveStageColors(stage).dot;
   const isEmpty = columnDeals.length === 0;
   const itemIds = useMemo(
     () => columnDeals.map((d) => `deal-${d.id}`),
@@ -350,11 +313,7 @@ function DealColumn({
       <div className="shrink-0 px-3 pt-3 pb-2">
         <h3 className="flex items-center gap-2 text-sm font-medium text-foreground">
           <span className={cn("inline-block h-2 w-2 rounded-full", colorClass)} />
-          <span>
-            {t(`pipeline.stages.${stage}`, {
-              defaultValue: stage,
-            })}
-          </span>
+          <span>{resolveStageLabel(stage, t)}</span>
           <span className="inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-background px-1.5 text-xs font-medium text-muted-foreground">
             {columnDeals.length}
           </span>
@@ -458,32 +417,34 @@ function stageDealTotal(deals: DealListItem[]): number {
 /* ─── Mobile Schedule List (Google Calendar-style) ─── */
 
 function DealsMobileSchedule({
+  stages,
   dealsByStage,
   onDealSelect,
 }: {
-  dealsByStage: Record<DealStageKey, DealListItem[]>;
+  stages: PipelineStage[];
+  dealsByStage: Record<string, DealListItem[]>;
   onDealSelect: (id: string) => void;
 }) {
   const { t } = useTranslation();
 
   return (
     <div className="space-y-2 pt-2 pb-6">
-      {DEAL_STAGE_KEYS.map((stage) => {
-        const deals = dealsByStage[stage];
-        const colorClass = STAGE_COLORS[stage];
+      {stages.map((stage) => {
+        const deals = dealsByStage[stage.key] ?? [];
+        const colorClass = resolveStageColors(stage).dot;
         const count = deals.length;
         const columnTotal = stageDealTotal(deals);
 
         return (
           <ScheduleSection
-            key={stage}
+            key={stage.id}
             defaultOpen={count > 0}
             header={
               <>
                 <div className={cn("h-8 w-1 rounded-full shrink-0", colorClass)} />
                 <div className="flex-1 min-w-0">
                   <span className="text-sm font-semibold text-foreground">
-                    {t(`pipeline.stages.${stage}`, { defaultValue: stage })}
+                    {resolveStageLabel(stage, t)}
                   </span>
                   {columnTotal > 0 ? (
                     <p className="text-xs font-medium text-muted-foreground mt-0.5">

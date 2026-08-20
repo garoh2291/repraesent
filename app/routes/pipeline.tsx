@@ -5,16 +5,20 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAuthContext } from "~/providers/auth-provider";
 import { getWorkspaceDetail } from "~/lib/api/workspaces";
 import { useDebounce } from "~/lib/hooks/useDebounce";
+import { useSearchShortcut } from "~/lib/hooks/useSearchShortcut";
 import { useCanEditLeads } from "~/lib/hooks/useCanEditLeads";
 import {
   getDeals,
   patchDeal,
-  patchDealStatus,
-  reorderDeal,
   type DealListItem,
-  type DealStageKey,
   type PaginatedDeals,
 } from "~/lib/api/deals";
+import { useDealStages } from "~/lib/hooks/usePipelineStages";
+import {
+  DEFAULT_DEAL_SORT,
+  isDealSortMode,
+  type DealSortMode,
+} from "~/lib/deals/deal-sort";
 import { DealsPipelineKanban } from "~/components/organism/deals-pipeline-kanban";
 import { CreateDealDialog } from "~/components/organism/create-deal-dialog";
 import { Button } from "~/components/ui/button";
@@ -26,7 +30,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "~/components/ui/select";
-import { Plus, X } from "lucide-react";
+import { ArrowUpDown, Plus, X } from "lucide-react";
 import { toast } from "sonner";
 
 export function meta() {
@@ -46,7 +50,13 @@ export default function PipelinePage() {
 
   const search = searchParams.get("search") ?? "";
   const assignedTo = searchParams.get("assigned_to") ?? "";
+  const sortParam = searchParams.get("sort");
+  const sortMode: DealSortMode = isDealSortMode(sortParam)
+    ? sortParam
+    : DEFAULT_DEAL_SORT;
   const debouncedSearch = useDebounce(search, 300);
+  const { ref: searchInputRef, withHint } = useSearchShortcut();
+  const { byKey: dealStagesByKey } = useDealStages();
 
   const [newOpen, setNewOpen] = useState(false);
   const [newDealPrefillContactId, setNewDealPrefillContactId] = useState<
@@ -116,61 +126,13 @@ export default function PipelinePage() {
       stage,
     }: {
       dealId: string;
-      stage: DealStageKey;
+      stage: string;
       snapshots: Snapshots;
     }) => patchDeal(dealId, { stage }),
     onError: (_err, vars) => {
       rollbackSnapshots(vars.snapshots);
       toast.error(
         t("pipeline.errors.moveFailed", { defaultValue: "Could not move deal." }),
-      );
-    },
-    onSettled: () => {
-      void queryClient.invalidateQueries({ queryKey: ["deals-pipeline"] });
-      void queryClient.invalidateQueries({ queryKey: ["contact-deals"] });
-      void queryClient.invalidateQueries({ queryKey: ["deal"] });
-    },
-  });
-
-  const reorderMutation = useMutation({
-    mutationFn: ({
-      dealId,
-      stage,
-      position,
-    }: {
-      dealId: string;
-      stage: DealStageKey;
-      position: number;
-      snapshots: Snapshots;
-    }) => reorderDeal(dealId, stage, position),
-    onError: (_err, vars) => {
-      rollbackSnapshots(vars.snapshots);
-      toast.error(
-        t("pipeline.errors.moveFailed", { defaultValue: "Could not move deal." }),
-      );
-    },
-    onSettled: () => {
-      void queryClient.invalidateQueries({ queryKey: ["deals-pipeline"] });
-      void queryClient.invalidateQueries({ queryKey: ["contact-deals"] });
-      void queryClient.invalidateQueries({ queryKey: ["deal"] });
-    },
-  });
-
-  const terminalMutation = useMutation({
-    mutationFn: ({
-      dealId,
-      status,
-    }: {
-      dealId: string;
-      status: "won" | "lost";
-      snapshots: Snapshots;
-    }) => patchDealStatus(dealId, status),
-    onError: (_err, vars) => {
-      rollbackSnapshots(vars.snapshots);
-      toast.error(
-        t("pipeline.errors.statusFailed", {
-          defaultValue: "Could not update deal outcome.",
-        }),
       );
     },
     onSettled: () => {
@@ -201,19 +163,22 @@ export default function PipelinePage() {
 
   const members = workspaceQuery.data?.members ?? [];
 
-  const onStageChange = (dealId: string, stage: DealStageKey) => {
+  const onStageChange = (dealId: string, stage: string) => {
     queryClient.cancelQueries({ queryKey: ["deals-pipeline"] });
-    const snapshots = applyOptimisticDeal(dealId, { stage });
+    // Mirror the backend's category-driven status coupling in the optimistic
+    // patch so terminal moves render correctly before the refetch.
+    const category = dealStagesByKey.get(stage)?.category;
+    // Stamp the move locally so "newest first" puts the card on top of its
+    // new column immediately — the refetch returns the server-derived stamp.
+    const optimistic: Partial<DealListItem> = {
+      stage,
+      stage_changed_at: new Date().toISOString(),
+    };
+    if (category === "won") optimistic.status = "won";
+    else if (category === "lost") optimistic.status = "lost";
+    else optimistic.status = "new";
+    const snapshots = applyOptimisticDeal(dealId, optimistic);
     patchStageMutation.mutate({ dealId, stage, snapshots });
-  };
-
-  const onTerminal = (dealId: string, status: "won" | "lost") => {
-    queryClient.cancelQueries({ queryKey: ["deals-pipeline"] });
-    const snapshots = applyOptimisticDeal(dealId, {
-      stage: status,
-      status,
-    });
-    terminalMutation.mutate({ dealId, status, snapshots });
   };
 
   const membersForSelect = useMemo(
@@ -277,11 +242,14 @@ export default function PipelinePage() {
       <div className="flex flex-col sm:flex-row sm:flex-wrap sm:items-center gap-2 sm:gap-3 shrink-0 app-fade-up app-fade-up-d1">
         <div className="relative flex-1 sm:flex-none">
           <Input
+            ref={searchInputRef}
             value={search}
             onChange={(e) => setParam("search", e.target.value)}
-            placeholder={t("pipeline.searchPlaceholder", {
-              defaultValue: "Title or contact…",
-            })}
+            placeholder={withHint(
+              t("pipeline.searchPlaceholder", {
+                defaultValue: "Title or contact…",
+              })
+            )}
             className="h-9 w-full sm:w-[220px] text-sm pr-3"
           />
         </div>
@@ -312,6 +280,36 @@ export default function PipelinePage() {
             </SelectContent>
           </Select>
 
+          <Select
+            value={sortMode}
+            onValueChange={(v) =>
+              setParam("sort", v === DEFAULT_DEAL_SORT ? undefined : v)
+            }
+          >
+            <SelectTrigger className="h-9 w-[180px] text-xs">
+              <span className="inline-flex items-center gap-1.5">
+                <ArrowUpDown className="h-3.5 w-3.5 opacity-60" />
+                <SelectValue />
+              </span>
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="date_desc" className="text-xs">
+                {t("pipeline.sort.dateDesc", { defaultValue: "Newest first" })}
+              </SelectItem>
+              <SelectItem value="date_asc" className="text-xs">
+                {t("pipeline.sort.dateAsc", { defaultValue: "Oldest first" })}
+              </SelectItem>
+              <SelectItem value="value_desc" className="text-xs">
+                {t("pipeline.sort.valueDesc", {
+                  defaultValue: "Highest amount",
+                })}
+              </SelectItem>
+              <SelectItem value="value_asc" className="text-xs">
+                {t("pipeline.sort.valueAsc", { defaultValue: "Lowest amount" })}
+              </SelectItem>
+            </SelectContent>
+          </Select>
+
           {hasFilters && (
             <button
               type="button"
@@ -335,18 +333,7 @@ export default function PipelinePage() {
           deals={deals}
           isLoading={dealsQuery.isLoading}
           onStageChange={onStageChange}
-          onTerminal={onTerminal}
-          onReorder={({ dealId, stage, position }) => {
-            queryClient.cancelQueries({ queryKey: ["deals-pipeline"] });
-            const snapshots = applyOptimisticDeal(dealId, {
-              stage,
-              board_position: position,
-              ...(stage === "won" || stage === "lost"
-                ? { status: stage }
-                : {}),
-            });
-            reorderMutation.mutate({ dealId, stage, position, snapshots });
-          }}
+          sortMode={sortMode}
           isUpdating={false}
           canEdit={canEdit}
           onDealSelect={(id) => navigate(`/pipeline/${id}`)}
