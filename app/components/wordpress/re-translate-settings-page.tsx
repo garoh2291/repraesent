@@ -11,8 +11,10 @@ import {
   TriangleAlert,
   Type,
 } from "lucide-react";
+import { useCallback } from "react";
 import { extractErrorMessage } from "~/lib/api/axios-instance";
 import { useWorkspacePluginSettingsForm } from "~/lib/hooks/useWorkspacePluginSettings";
+import { useRefreshTranslateCounters } from "~/lib/hooks/useWorkspaceReTranslate";
 import { useResolvePluginKind } from "~/lib/hooks/useWorkspaceWpPluginCatalog";
 import type { ReTranslateSettings } from "~/lib/wordpress/plugin-settings-types";
 import { formatPluginSettingsTitle } from "~/lib/utils/wordpress-plugin-kind";
@@ -31,8 +33,9 @@ import {
 } from "~/components/wordpress/fields";
 import {
   DEFAULT_SETTINGS,
-  PLUGIN_VERSION,
+  PAGE_PARAM,
   TAB_PARAM,
+  TYPE_PARAM,
   flash,
   summariseStats,
   tabFromParam,
@@ -58,8 +61,6 @@ export function ReTranslateSettingsPage() {
     catalogItem?.display_name,
     "re:translate",
   );
-  const version = catalogItem?.version || PLUGIN_VERSION;
-
   const [searchParams, setSearchParams] = useSearchParams();
   const tab = tabFromParam(searchParams.get(TAB_PARAM));
 
@@ -68,15 +69,23 @@ export function ReTranslateSettingsPage() {
       (prev) => {
         const params = new URLSearchParams(prev);
         params.set(TAB_PARAM, next);
+        // Translate list pagination / type filter only apply on that tab.
+        if (next !== "translate") {
+          params.delete(PAGE_PARAM);
+          params.delete(TYPE_PARAM);
+        }
         return params;
       },
-      { replace: true, preventScrollReset: true },
+      // Tab is UI state only — don't revalidate the root locale loader.
+      { replace: true, preventScrollReset: true, unstable_defaultShouldRevalidate: false },
     );
   }
 
   const {
     settings,
     setSettings,
+    setSavedSettings,
+    skipNextSeed,
     reseed,
     site,
     hasSite,
@@ -96,6 +105,34 @@ export function ReTranslateSettingsPage() {
   ) {
     setSettings(updater);
   }
+
+  const refreshCounters = useRefreshTranslateCounters(pluginUuid);
+
+  /**
+   * Pull the server's counters into the open form after a translate run, so the
+   * stat tiles and the overview move without a page refresh. Only the counters
+   * are taken — a half-edited Switcher or Settings tab has to survive — and the
+   * saved baseline moves with them so this never reads as an unsaved change.
+   */
+  const syncCounters = useCallback(async () => {
+    skipNextSeed();
+    try {
+      const counters = await refreshCounters();
+      if (!counters) return;
+      const merge = (prev: ReTranslateSettings): ReTranslateSettings => ({
+        ...prev,
+        stats: counters.stats ?? prev.stats,
+        index: counters.index ?? prev.index,
+        bulk: counters.bulk ?? prev.bulk,
+      });
+      setSettings(merge);
+      setSavedSettings(merge);
+    } catch {
+      // No refetch landed, so nothing will consume the armed skip — disarm it
+      // or the next genuine seed would be swallowed.
+      skipNextSeed(false);
+    }
+  }, [refreshCounters, setSettings, setSavedSettings, skipNextSeed]);
 
   function handleSave() {
     saveMutation.mutate(settings as unknown as Record<string, unknown>, {
@@ -144,7 +181,9 @@ export function ReTranslateSettingsPage() {
             <h1 className="text-xl font-semibold tracking-tight text-foreground sm:text-2xl">
               {pageTitle}
             </h1>
-            <Badge variant="outline">v{version}</Badge>
+            {catalogItem?.version ? (
+              <Badge variant="outline">v{catalogItem.version}</Badge>
+            ) : null}
             {settings.kill_switch ? (
               <Badge
                 variant="outline"
@@ -270,7 +309,11 @@ export function ReTranslateSettingsPage() {
         </TabsContent>
 
         <TabsContent value="translate" className="mt-0">
-          <TranslatePanel settings={settings} pluginUuid={pluginUuid} />
+          <TranslatePanel
+            settings={settings}
+            pluginUuid={pluginUuid}
+            onCountersChanged={syncCounters}
+          />
         </TabsContent>
 
         <TabsContent value="switcher" className="mt-0">
@@ -290,6 +333,7 @@ export function ReTranslateSettingsPage() {
             settings={settings}
             patchSettings={patchSettings}
             pluginUuid={pluginUuid}
+            onCountersChanged={syncCounters}
           />
         </TabsContent>
       </Tabs>

@@ -17,9 +17,6 @@ export const DEFAULT_SETTINGS: ReReviewSettings = {
   },
 };
 
-/** Version badge — must track `RE_REVIEWS_VERSION` in re-reviews.php. */
-export const PLUGIN_VERSION = "1.0.0";
-
 export const SHORTCODE_EXAMPLES = [
   "[gmb_stars]",
   '[gmb_stars show="stars,rating" color="#0a0a0a" size="20"]',

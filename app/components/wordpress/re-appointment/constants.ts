@@ -60,9 +60,6 @@ export const TARGET_POSITIONS: ReAppointmentTargetPosition[] = [
   "append",
 ];
 
-/** Version badge — must track `REAPPT_VERSION` in reappointment.php. */
-export const PLUGIN_VERSION = "1.3.0";
-
 /** Sets one key of the editor draft. */
 export type SetConfig = <K extends keyof ReAppointmentButtonConfig>(
   key: K,

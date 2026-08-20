@@ -14,7 +14,8 @@ export type ReCookieCategorySlug =
 /** Categories that can carry consent-gated named scripts (no external_media). */
 export type ReCookieScriptCategory = "functional" | "analytics" | "marketing";
 
-export type ReCookieLang = "en" | "de";
+/** Legacy blob keys when re:translate is off; dynamic codes when multilingual. */
+export type ReCookieLang = string;
 
 export type ReCookieTranslationLang = {
   banner: { title: string; description: string; privacyPolicy: string };
@@ -75,7 +76,7 @@ export type ReCookieSettings = {
     >;
     named_scripts: Record<ReCookieScriptCategory, ReCookieNamedScript[]>;
   };
-  translations: Record<ReCookieLang, ReCookieTranslationLang>;
+  translations: Record<string, ReCookieTranslationLang>;
 };
 
 /**
@@ -343,6 +344,29 @@ export type ReTranslateIndexState = {
   updated_at: string;
 };
 
+export type ReTranslateMode = "empty_or_stale" | "empty_only" | "overwrite";
+
+export type ReTranslateBulkCurrent = {
+  object_type: string;
+  id: string;
+  title: string;
+  language: string;
+};
+
+export type ReTranslateBulkState = {
+  status: string;
+  languages: string[];
+  mode?: ReTranslateMode;
+  total: number;
+  processed: number;
+  failed: number;
+  current: ReTranslateBulkCurrent | null;
+  recent: { title: string; language: string }[];
+  last_error: string;
+  started_at: string;
+  updated_at: string;
+};
+
 export type ReTranslateLanguageStats = {
   total: number;
   translated: number;
@@ -363,12 +387,24 @@ export type ReTranslateSettings = {
   languages: ReTranslateLanguage[];
   switcher: ReTranslateSwitcher;
   index: ReTranslateIndexState;
+  bulk?: ReTranslateBulkState;
   stats: {
     source_strings: number;
     languages: Record<string, ReTranslateLanguageStats>;
   };
   /** Whether the site has any indexed Repraesent Forms (rf_form objects). */
   has_rf_forms?: boolean;
+  /** Cookie / maintenance / appointment plugin copy available to translate. */
+  has_plugins?: boolean;
+  /**
+   * Installed bridged plugins for the Translate → Plugins submenu.
+   * `display_name` comes from the Repraesent `wp_plugins` catalog.
+   */
+  available_plugins?: Array<{
+    object_type: string;
+    slug: string;
+    display_name: string;
+  }>;
   /** Machine-translate capability is available (plugin ships a default token). */
   has_machine_translate?: boolean;
 };

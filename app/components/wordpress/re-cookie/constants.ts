@@ -167,9 +167,6 @@ export const DEFAULTS: ReCookieSettings = {
   translations: { en: DEFAULT_TRANSLATION_EN, de: DEFAULT_TRANSLATION_DE },
 };
 
-/** Version badge — must track `RE_COOKIE_VERSION` in re-cookie.php. */
-export const PLUGIN_VERSION = "1.0.0";
-
 export type TabId = "design" | "functionality" | "content";
 
 export const CATEGORY_SLUGS = [

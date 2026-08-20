@@ -47,7 +47,7 @@ export function ReAppointmentSettingsPage() {
   const { pluginUuid } = useParams<{ pluginUuid: string }>();
 
   const siteQuery = useWorkspaceWpSite(true);
-  const hasSite = !!siteQuery.data;
+  const hasSite = !!siteQuery.data?.sso_enabled;
   const listQuery = useWorkspaceReAppointmentButtons(pluginUuid, hasSite);
 
   const createMutation = useCreateReAppointmentButton(pluginUuid);
@@ -181,6 +181,25 @@ export function ReAppointmentSettingsPage() {
         saving={saving}
         onSet={set}
         onSave={handleSave}
+        onSaveWithLabelOverlay={({ sourceLabel, saveOverlay }) => {
+          if (editing === null || editing === "new") return;
+          const config = { ...draft, label: sourceLabel };
+          updateMutation.mutate(
+            { id: editing, config },
+            {
+              onSuccess: async (saved) => {
+                setDraft(toConfig(saved));
+                try {
+                  await saveOverlay();
+                  flash(t("wordpress.reAppointment.saved", "Button saved."));
+                } catch (err) {
+                  flash(extractErrorMessage(err), "error");
+                }
+              },
+              onError: (err) => flash(extractErrorMessage(err), "error"),
+            },
+          );
+        }}
         onCancel={() => setEditing(null)}
         onCopied={() => flash(t("wordpress.reAppointment.copied", "Copied."))}
       />

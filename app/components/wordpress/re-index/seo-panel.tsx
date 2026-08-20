@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { ImageIcon, Trash2 } from "lucide-react";
 import type { ReIndexSettings } from "~/lib/wordpress/plugin-settings-types";
@@ -24,36 +24,152 @@ import {
   ToggleField,
 } from "~/components/wordpress/fields";
 import { MediaLibraryPicker } from "./media-library-picker";
-
+import { PluginLangBar } from "~/components/wordpress/plugin-lang-bar";
+import { usePluginTranslateLanguages } from "~/lib/hooks/usePluginTranslateLanguages";
+import { usePluginOverlayPack } from "~/lib/hooks/usePluginOverlayPack";
+import {
+  siteSeoFromOverlay,
+  siteSeoToSavePayload,
+  type OverlayStringMap,
+  type SiteSeoOverlayValues,
+} from "~/lib/wordpress/plugin-i18n";
 export function SeoPanel({
   settings,
   patchSettings,
+  onOverlaySaveReady,
 }: {
   settings: ReIndexSettings;
   patchSettings: PatchSettings;
+  /** Parent calls this on Save when editing a target language. */
+  onOverlaySaveReady?: (
+    handle: { save: () => Promise<void>; dirty: boolean } | null,
+  ) => void;
 }) {
   const { t } = useTranslation();
   const [mediaOpen, setMediaOpen] = useState(false);
+  const i18n = usePluginTranslateLanguages();
+  const overlays = usePluginOverlayPack(i18n.translatePluginUuid);
+  const multilingual = i18n.enabled;
+  const [activeLang, setActiveLang] = useState("");
+  const [overlayMap, setOverlayMap] = useState<OverlayStringMap>({});
+  const [overlayDirty, setOverlayDirty] = useState(false);
+  const [langLoading, setLangLoading] = useState(false);
+
+  useEffect(() => {
+    if (i18n.source && !activeLang) setActiveLang(i18n.source);
+  }, [i18n.source, activeLang]);
+
+  const isSource = !multilingual || activeLang === i18n.source;
+
+  const sourceSeoValues = useMemo(
+    (): SiteSeoOverlayValues => ({
+      blogname: settings.identity.site_title,
+      blogdescription: settings.identity.tagline,
+      front_page_desc: settings.seo.front_page_description,
+      og_description: settings.og.og_description,
+      formats: { ...settings.seo.formats },
+    }),
+    [settings],
+  );
+
+  const [display, setDisplay] = useState<SiteSeoOverlayValues>(sourceSeoValues);
+
+  useEffect(() => {
+    if (isSource) {
+      setDisplay(sourceSeoValues);
+      setOverlayDirty(false);
+    }
+  }, [isSource, sourceSeoValues]);
+
+  const loadOverlay = overlays.load;
+  const saveOverlayPack = overlays.save;
+
+  const loadTarget = useCallback(
+    async (language: string) => {
+      setLangLoading(true);
+      try {
+        const map = await loadOverlay("site", 0, language);
+        setOverlayMap(map);
+        setDisplay(siteSeoFromOverlay(map, sourceSeoValues));
+        setOverlayDirty(false);
+      } finally {
+        setLangLoading(false);
+      }
+    },
+    [loadOverlay, sourceSeoValues],
+  );
+
+  useEffect(() => {
+    if (multilingual && activeLang && activeLang !== i18n.source) {
+      void loadTarget(activeLang);
+    }
+  }, [multilingual, activeLang, i18n.source, loadTarget]);
+
+  useEffect(() => {
+    if (!onOverlaySaveReady) return;
+    if (multilingual && !isSource) {
+      onOverlaySaveReady({
+        dirty: overlayDirty,
+        save: async () => {
+          await saveOverlayPack(siteSeoToSavePayload(display, overlayMap));
+          setOverlayDirty(false);
+        },
+      });
+    } else {
+      onOverlaySaveReady(null);
+    }
+  }, [
+    onOverlaySaveReady,
+    multilingual,
+    isSource,
+    overlayDirty,
+    display,
+    overlayMap,
+    saveOverlayPack,
+  ]);
+
+  function patchDisplay(updater: (prev: SiteSeoOverlayValues) => SiteSeoOverlayValues) {
+    setDisplay((prev) => {
+      const next = updater(prev);
+      if (isSource) {
+        patchSettings((p) => ({
+          ...p,
+          identity: {
+            ...p.identity,
+            site_title: next.blogname,
+            tagline: next.blogdescription,
+          },
+          seo: {
+            ...p.seo,
+            formats: next.formats,
+            front_page_description: next.front_page_desc,
+          },
+          og: {
+            ...p.og,
+            og_description: next.og_description,
+          },
+        }));
+      } else {
+        setOverlayDirty(true);
+      }
+      return next;
+    });
+  }
 
   const previews = useMemo(() => {
-    const siteName =
-      settings.identity.site_title || PREVIEW_PAGE_TITLE.front_page;
-    const tag = settings.identity.tagline;
+    const siteName = display.blogname || PREVIEW_PAGE_TITLE.front_page;
+    const tag = display.blogdescription;
     const out = {} as Record<FormatKey, string>;
     for (const k of FORMAT_KEYS) {
       out[k] = applyTitlePreview(
-        settings.seo.formats[k],
+        display.formats[k],
         siteName,
         tag,
         PREVIEW_PAGE_TITLE[k],
       );
     }
     return out;
-  }, [
-    settings.identity.site_title,
-    settings.identity.tagline,
-    settings.seo.formats,
-  ]);
+  }, [display]);
 
   function insertToken(key: FormatKey, token: string) {
     const el = document.getElementById(`fmt-${key}`) as HTMLInputElement | null;
@@ -61,12 +177,9 @@ export function SeoPanel({
     const start = el.selectionStart ?? el.value.length;
     const end = el.selectionEnd ?? el.value.length;
     const next = el.value.slice(0, start) + token + el.value.slice(end);
-    patchSettings((p) => ({
-      ...p,
-      seo: {
-        ...p.seo,
-        formats: { ...p.seo.formats, [key]: next },
-      },
+    patchDisplay((d) => ({
+      ...d,
+      formats: { ...d.formats, [key]: next },
     }));
     requestAnimationFrame(() => {
       el.focus();
@@ -86,6 +199,44 @@ export function SeoPanel({
 
   return (
     <div className="space-y-4">
+      {multilingual ? (
+        <div className="rounded-2xl border bg-card px-5 py-3">
+          <PluginLangBar
+            languages={i18n.languages}
+            active={activeLang || i18n.source}
+            source={i18n.source}
+            dirty={overlayDirty}
+            disabled={langLoading || overlays.loading}
+            unsavedMessage={t(
+              "wordpress.reIndex.unsavedSwitch",
+              "You have unsaved changes. Switch language anyway?",
+            )}
+            ariaLabel={t("wordpress.reIndex.seoLanguage", "SEO language")}
+            onChange={setActiveLang}
+          />
+          {!isSource ? (
+            <p className="mt-2 text-xs text-muted-foreground">
+              {t(
+                "wordpress.reIndex.editingTranslation",
+                "Editing {{lang}} SEO — saved as a translation in re:translate.",
+                {
+                  lang:
+                    i18n.languages.find((l) => l.code === activeLang)?.label ??
+                    activeLang,
+                },
+              )}
+            </p>
+          ) : (
+            <p className="mt-2 text-xs text-muted-foreground">
+              {t(
+                "wordpress.reIndex.editingSource",
+                "Editing source language SEO — changes update site options.",
+              )}
+            </p>
+          )}
+        </div>
+      ) : null}
+
       <SectionCard>
         <div className="flex flex-col gap-3 border-b px-5 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6">
           <div>
@@ -102,6 +253,7 @@ export function SeoPanel({
           <ToggleField
             id="re-index-seo-enabled"
             checked={settings.seo.enabled}
+            disabled={!isSource}
             onChange={(checked) =>
               patchSettings((p) => ({
                 ...p,
@@ -172,18 +324,13 @@ export function SeoPanel({
                     <Input
                       id={`fmt-${fk}`}
                       type="text"
-                      value={settings.seo.formats[fk]}
+                      disabled={langLoading}
+                      value={display.formats[fk]}
                       placeholder={DEFAULT_SETTINGS.seo.formats[fk]}
                       onChange={(e) =>
-                        patchSettings((p) => ({
-                          ...p,
-                          seo: {
-                            ...p.seo,
-                            formats: {
-                              ...p.seo.formats,
-                              [fk]: e.target.value,
-                            },
-                          },
+                        patchDisplay((d) => ({
+                          ...d,
+                          formats: { ...d.formats, [fk]: e.target.value },
                         }))
                       }
                     />
@@ -197,52 +344,34 @@ export function SeoPanel({
                 ))}
               </div>
               <Field className="mt-5">
-                  <div className="space-y-0.5">
-                    <Label htmlFor="re-index-front-desc">
-                      {t(
-                        "wordpress.reIndex.frontMetaDesc",
-                        "Front Page Meta Description",
-                      )}
-                    </Label>
-                    <FieldHint>
-                      {t(
-                        "wordpress.reIndex.frontMetaDescHint",
-                        "The meta description shown in search results for your homepage.",
-                      )}
-                    </FieldHint>
-                  </div>
-                  <Textarea
-                    id="re-index-front-desc"
-                    rows={3}
-                    placeholder={t(
-                      "wordpress.reIndex.frontMetaDescPlaceholder",
-                      "A brief description of your site for search engines...",
-                    )}
-                    value={settings.seo.front_page_description}
-                    onChange={(e) =>
-                      patchSettings((p) => ({
-                        ...p,
-                        seo: {
-                          ...p.seo,
-                          front_page_description: e.target.value,
-                        },
-                      }))
-                    }
-                  />
-                </Field>
+                <Label htmlFor="re-index-front-desc">
+                  {t(
+                    "wordpress.reIndex.frontPageDesc",
+                    "Front page meta description",
+                  )}
+                </Label>
+                <Textarea
+                  id="re-index-front-desc"
+                  rows={2}
+                  disabled={langLoading}
+                  value={display.front_page_desc}
+                  onChange={(e) =>
+                    patchDisplay((d) => ({
+                      ...d,
+                      front_page_desc: e.target.value,
+                    }))
+                  }
+                />
+              </Field>
             </>
-          ) : null}
-          <InfoNote>
-            {settings.seo.enabled
-              ? t(
-                  "wordpress.reIndex.seoNoteOn",
-                  "Custom title formats are active. Your theme's default title tags are overridden when re:index runs on the site.",
-                )
-              : t(
-                  "wordpress.reIndex.seoNoteOff",
-                  "Toggle on to override your theme's default title tags with custom formats per page type.",
-                )}
-          </InfoNote>
+          ) : (
+            <InfoNote>
+              {t(
+                "wordpress.reIndex.seoOffNote",
+                "Toggle on to override your theme's default title tags with custom formats per page type.",
+              )}
+            </InfoNote>
+          )}
         </div>
       </SectionCard>
 
@@ -262,6 +391,7 @@ export function SeoPanel({
           <ToggleField
             id="re-index-identity-enabled"
             checked={settings.identity.enabled}
+            disabled={!isSource}
             onChange={(checked) =>
               patchSettings((p) => ({
                 ...p,
@@ -285,18 +415,16 @@ export function SeoPanel({
                 <Input
                   id="re-index-site-title"
                   type="text"
+                  disabled={langLoading}
                   placeholder={t(
                     "wordpress.reIndex.siteTitlePlaceholder",
                     "Your site name",
                   )}
-                  value={settings.identity.site_title}
+                  value={display.blogname}
                   onChange={(e) =>
-                    patchSettings((p) => ({
-                      ...p,
-                      identity: {
-                        ...p.identity,
-                        site_title: e.target.value,
-                      },
+                    patchDisplay((d) => ({
+                      ...d,
+                      blogname: e.target.value,
                     }))
                   }
                 />
@@ -308,15 +436,16 @@ export function SeoPanel({
                 <Input
                   id="re-index-site-tagline"
                   type="text"
+                  disabled={langLoading}
                   placeholder={t(
                     "wordpress.reIndex.taglinePlaceholder",
                     "Just another WordPress site",
                   )}
-                  value={settings.identity.tagline}
+                  value={display.blogdescription}
                   onChange={(e) =>
-                    patchSettings((p) => ({
-                      ...p,
-                      identity: { ...p.identity, tagline: e.target.value },
+                    patchDisplay((d) => ({
+                      ...d,
+                      blogdescription: e.target.value,
                     }))
                   }
                 />
@@ -353,6 +482,7 @@ export function SeoPanel({
           <ToggleField
             id="re-index-og-enabled"
             checked={settings.og.enabled}
+            disabled={!isSource}
             onChange={(checked) =>
               patchSettings((p) => ({
                 ...p,
@@ -401,6 +531,7 @@ export function SeoPanel({
                       type="button"
                       variant="outline"
                       size="sm"
+                      disabled={!isSource}
                       onClick={() => setMediaOpen(true)}
                     >
                       <ImageIcon className="h-3.5 w-3.5" />
@@ -413,6 +544,7 @@ export function SeoPanel({
                         type="button"
                         variant="outline"
                         size="sm"
+                        disabled={!isSource}
                         onClick={() =>
                           patchSettings((p) => ({
                             ...p,
@@ -465,15 +597,16 @@ export function SeoPanel({
                 <Textarea
                   id="re-index-og-desc"
                   rows={3}
+                  disabled={langLoading}
                   placeholder={t(
                     "wordpress.reIndex.ogDescriptionPlaceholder",
                     "A brief description shown in social media previews...",
                   )}
-                  value={settings.og.og_description}
+                  value={display.og_description}
                   onChange={(e) =>
-                    patchSettings((p) => ({
-                      ...p,
-                      og: { ...p.og, og_description: e.target.value },
+                    patchDisplay((d) => ({
+                      ...d,
+                      og_description: e.target.value,
                     }))
                   }
                 />
@@ -500,11 +633,11 @@ export function SeoPanel({
                   </div>
                   <div className="space-y-1 px-3 py-2.5">
                     <p className="truncate text-sm font-semibold">
-                      {settings.identity.site_title ||
+                      {display.blogname ||
                         t("wordpress.reIndex.ogPreviewTitle", "Your site")}
                     </p>
                     <p className="line-clamp-2 text-xs text-muted-foreground">
-                      {settings.og.og_description ||
+                      {display.og_description ||
                         t(
                           "wordpress.reIndex.ogPreviewDesc",
                           "Your Open Graph description will appear here.",
