@@ -19,6 +19,7 @@ import {
 } from "~/lib/hooks/useWorkspaceWpPlugins";
 import { StatTile } from "~/components/wordpress/fields";
 import { useDebounce } from "~/lib/hooks/useDebounce";
+import { useSearchShortcut } from "~/lib/hooks/useSearchShortcut";
 import {
   isPortedSettingsKind,
   wordpressPluginSettingsPath,
@@ -45,6 +46,7 @@ export function WordPressPluginsSection({ hasSite }: { hasSite: boolean }) {
 
   const [search, setSearch] = useState("");
   const debouncedSearch = useDebounce(search, 200);
+  const { ref: searchInputRef, withHint } = useSearchShortcut();
   const [filter, setFilter] = useState<PluginFilter>("all");
 
   const plugins = pluginsQuery.data?.plugins ?? [];
@@ -139,11 +141,11 @@ export function WordPressPluginsSection({ hasSite }: { hasSite: boolean }) {
             <div className="relative min-w-0 flex-1 sm:w-56 sm:flex-none">
               <Search className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
               <Input
+                ref={searchInputRef}
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                placeholder={t(
-                  "wordpress.plugins.searchPlaceholder",
-                  "Search plugins…",
+                placeholder={withHint(
+                  t("wordpress.plugins.searchPlaceholder", "Search plugins…")
                 )}
                 className="h-9 pl-9 pr-8"
               />

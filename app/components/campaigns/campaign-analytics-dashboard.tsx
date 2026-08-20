@@ -55,6 +55,7 @@ import {
 import { CampaignDatePicker } from "./campaign-date-picker";
 import TooltipContainer from "~/components/tooltip-container";
 import { useDebounce } from "~/lib/hooks/useDebounce";
+import { useSearchShortcut } from "~/lib/hooks/useSearchShortcut";
 
 const ACCENT = {
   cost: "#f59e0b",
@@ -502,6 +503,7 @@ function CampaignListSection({
   const [tab, setTab] = useState<"active" | "inactive">("active");
   const [search, setSearch] = useState("");
   const debouncedSearch = useDebounce(search, 400);
+  const { ref: searchInputRef, withHint } = useSearchShortcut();
   const [page, setPage] = useState(1);
   const isRestricted = !!restrictToCampaignIds?.length;
 
@@ -635,10 +637,11 @@ function CampaignListSection({
           <div className="flex items-center gap-2 rounded-lg bg-muted/50 px-2.5 py-1.5">
             <Search className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
             <input
+              ref={searchInputRef}
               type="text"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder={t("campaigns.searchCampaigns")}
+              placeholder={withHint(t("campaigns.searchCampaigns"))}
               className="flex-1 bg-transparent text-xs text-foreground placeholder:text-muted-foreground/60 outline-none"
             />
             {search && (

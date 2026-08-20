@@ -26,6 +26,7 @@ import { extractErrorMessage } from "~/lib/api/axios-instance";
 import { Badge } from "~/components/ui/badge";
 import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
+import { useSearchShortcut } from "~/lib/hooks/useSearchShortcut";
 import { Spinner } from "~/components/ui/spinner";
 import { Textarea } from "~/components/ui/textarea";
 import {
@@ -101,6 +102,7 @@ function ContentList({
 }) {
   const { t } = useTranslation();
   const [search, setSearch] = useState("");
+  const { ref: searchInputRef, withHint } = useSearchShortcut();
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [page, setPage] = useState(1);
   const [typeFilter, setTypeFilter] = useState<FilterType>("all");
@@ -164,11 +166,11 @@ function ContentList({
         <div className="relative min-w-0 flex-1 basis-48">
           <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
           <Input
+            ref={searchInputRef}
             value={search}
             onChange={(e) => onSearchChange(e.target.value)}
-            placeholder={t(
-              "wordpress.reTranslate.searchPlaceholder",
-              "Search content...",
+            placeholder={withHint(
+              t("wordpress.reTranslate.searchPlaceholder", "Search content...")
             )}
             className="pl-9"
           />

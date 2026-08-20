@@ -5,6 +5,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuthContext } from "~/providers/auth-provider";
 import { useSearchParamsSelect } from "~/lib/hooks/useQueryParams";
 import { useDebounce } from "~/lib/hooks/useDebounce";
+import { useSearchShortcut } from "~/lib/hooks/useSearchShortcut";
 import { TasksKanban } from "~/components/organism/tasks/tasks-kanban";
 import { TasksCalendar } from "~/components/organism/tasks/tasks-calendar";
 import { Button } from "~/components/ui/button";
@@ -74,6 +75,7 @@ export default function TasksPage() {
   const statusFilter = (searchParams.get("status") ?? "") as TaskStatus | "";
   const search = searchParams.get("search") ?? "";
   const debouncedSearch = useDebounce(search, 300);
+  const { ref: searchInputRef, withHint } = useSearchShortcut();
 
   const selectedTaskId = searchParams.get("task_id") ?? null;
   const [formOpen, setFormOpen] = useState(false);
@@ -297,11 +299,12 @@ export default function TasksPage() {
         {/* Search */}
         <div className="relative flex-1 sm:flex-none">
           <Input
+            ref={searchInputRef}
             value={search}
             onChange={(e) =>
               onSelect({ search: e.target.value, page: "1" }, true)
             }
-            placeholder={t("tasks.searchPlaceholder")}
+            placeholder={withHint(t("tasks.searchPlaceholder"))}
             className="h-9 w-full sm:w-[220px] text-sm pr-3"
           />
         </div>

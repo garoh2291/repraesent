@@ -5,6 +5,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAuthContext } from "~/providers/auth-provider";
 import { getWorkspaceDetail } from "~/lib/api/workspaces";
 import { useDebounce } from "~/lib/hooks/useDebounce";
+import { useSearchShortcut } from "~/lib/hooks/useSearchShortcut";
 import { useCanEditLeads } from "~/lib/hooks/useCanEditLeads";
 import {
   getDeals,
@@ -54,6 +55,7 @@ export default function PipelinePage() {
     ? sortParam
     : DEFAULT_DEAL_SORT;
   const debouncedSearch = useDebounce(search, 300);
+  const { ref: searchInputRef, withHint } = useSearchShortcut();
   const { byKey: dealStagesByKey } = useDealStages();
 
   const [newOpen, setNewOpen] = useState(false);
@@ -235,11 +237,14 @@ export default function PipelinePage() {
       <div className="flex flex-col sm:flex-row sm:flex-wrap sm:items-center gap-2 sm:gap-3 shrink-0 app-fade-up app-fade-up-d1">
         <div className="relative flex-1 sm:flex-none">
           <Input
+            ref={searchInputRef}
             value={search}
             onChange={(e) => setParam("search", e.target.value)}
-            placeholder={t("pipeline.searchPlaceholder", {
-              defaultValue: "Title or contact…",
-            })}
+            placeholder={withHint(
+              t("pipeline.searchPlaceholder", {
+                defaultValue: "Title or contact…",
+              })
+            )}
             className="h-9 w-full sm:w-[220px] text-sm pr-3"
           />
         </div>
