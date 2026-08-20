@@ -38,6 +38,7 @@ export default [
       route("brand", "routes/brand.tsx"),
       route("brand/workspaces", "routes/brand.workspaces.tsx"),
       route("brand/analytics", "routes/brand.analytics.tsx"),
+      route("brand/social-ads", "routes/brand.social-ads.tsx"),
       route("brand/activity", "routes/brand.activity.tsx"),
       route("brand/orders", "routes/brand.orders.tsx"),
     ]),

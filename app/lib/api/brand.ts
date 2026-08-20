@@ -1,6 +1,27 @@
 import { apiClient } from "./axios-instance";
 import type { LeadAnalyticsPeriod } from "./leads";
 
+export interface BrandSocialAdsPartnerHouse {
+  id: string;
+  name: string;
+  socialAdsEnabled: boolean;
+  hasCampaigns: boolean;
+}
+
+/**
+ * Partner houses (workspaces) of the brand for the /brand/social-ads dropdown,
+ * each flagged with whether the social-ads service is activated and whether it
+ * has connected campaigns. Houses missing either flag are disabled in the UI.
+ */
+export async function getBrandSocialAdsPartnerHouses(): Promise<
+  BrandSocialAdsPartnerHouse[]
+> {
+  const res = await apiClient.get<BrandSocialAdsPartnerHouse[]>(
+    "/brands/me/social-ads/partner-houses",
+  );
+  return res.data;
+}
+
 export interface BrandWorkspaceServiceItem {
   service_id: string;
   service_name: string;

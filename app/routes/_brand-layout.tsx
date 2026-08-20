@@ -12,6 +12,7 @@ import {
   ChevronDown,
   Store,
   LineChart,
+  Megaphone,
   ShoppingBag,
   LogOut,
   Menu,
@@ -45,6 +46,12 @@ const NAV_ITEMS = [
     key: "navAnalytics",
     path: "/brand/analytics",
     icon: LineChart,
+    exact: false,
+  },
+  {
+    key: "navSocialAds",
+    path: "/brand/social-ads",
+    icon: Megaphone,
     exact: false,
   },
   {

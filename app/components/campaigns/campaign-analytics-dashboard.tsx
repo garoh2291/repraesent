@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useCallback } from "react";
+import { useState, useRef, useEffect, useCallback, type ReactNode } from "react";
 import { Link } from "react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
@@ -43,6 +43,7 @@ import {
   getConnectedCampaigns,
   getCampaignsOverview,
   getCampaignAdSets,
+  DEFAULT_CAMPAIGNS_BASE,
   type DateRange,
   type ConnectedCampaign,
   type AdSetInsight,
@@ -510,6 +511,8 @@ function CampaignListSection({
   }, [debouncedSearch, tab]);
 
   const basePath = useCampaignsBasePath();
+  // Brand / retailer views scope by basePath and have no `currentWorkspace`.
+  const scopeReady = !!currentWorkspace?.id || basePath !== DEFAULT_CAMPAIGNS_BASE;
   const { data, isLoading, isFetching } = useQuery({
     queryKey: [
       "campaign-list",
@@ -534,7 +537,7 @@ function CampaignListSection({
             },
         basePath,
       ),
-    enabled: !!currentWorkspace?.id,
+    enabled: scopeReady,
     placeholderData: (prev) => prev,
   });
 
@@ -551,7 +554,7 @@ function CampaignListSection({
         { platform, status: "active", limit: 1 },
         basePath,
       ),
-    enabled: !!currentWorkspace?.id,
+    enabled: scopeReady,
   });
   const { data: inactiveCount } = useQuery({
     queryKey: [
@@ -565,7 +568,7 @@ function CampaignListSection({
         { platform, status: "inactive", limit: 1 },
         basePath,
       ),
-    enabled: !!currentWorkspace?.id,
+    enabled: scopeReady,
   });
 
   const rawCampaigns = data?.data ?? [];
@@ -749,6 +752,8 @@ function CampaignFilterDropdown({
   }, [open]);
 
   const basePath = useCampaignsBasePath();
+  // Brand / retailer views scope by basePath and have no `currentWorkspace`.
+  const scopeReady = !!currentWorkspace?.id || basePath !== DEFAULT_CAMPAIGNS_BASE;
   // Backend search query
   const { data, isLoading: searchLoading } = useQuery({
     queryKey: [
@@ -767,7 +772,7 @@ function CampaignFilterDropdown({
         },
         basePath,
       ),
-    enabled: !!currentWorkspace?.id && open,
+    enabled: scopeReady && open,
   });
 
   const results = data?.data ?? [];
@@ -930,7 +935,9 @@ export function CampaignAnalyticsDashboard({
   initialCampaignNames,
   lockCampaignFilter = false,
 }: {
-  title: string;
+  /** Page heading. Accepts a node so callers can render a control (e.g. the
+   *  brand partner-house selector) in place of a plain title. */
+  title: ReactNode;
   platform?: string;
   /** Seed the campaign filter (e.g. when deep-linking to /social-ads/:campaignId). */
   initialCampaignIds?: string[];
@@ -971,12 +978,14 @@ export function CampaignAnalyticsDashboard({
   }, [platformTab]);
 
   const basePath = useCampaignsBasePath();
+  // Brand / retailer views scope by basePath and have no `currentWorkspace`.
+  const scopeReady = !!currentWorkspace?.id || basePath !== DEFAULT_CAMPAIGNS_BASE;
 
   // Unfiltered check: does workspace have ANY campaigns at all? (for true empty state)
   const { data: totalCheck, isLoading: totalCheckLoading } = useQuery({
     queryKey: ["campaign-total-check", basePath, currentWorkspace?.id],
     queryFn: () => getConnectedCampaigns({ limit: 1 }, basePath),
-    enabled: !!currentWorkspace?.id,
+    enabled: scopeReady,
   });
   const hasAnyCampaigns = (totalCheck?.total ?? 0) > 0;
 
@@ -993,7 +1002,7 @@ export function CampaignAnalyticsDashboard({
         { platform: platform ?? undefined, limit: 1 },
         basePath,
       ),
-    enabled: !!currentWorkspace?.id && hasAnyCampaigns,
+    enabled: scopeReady && hasAnyCampaigns,
   });
 
   const hasCampaigns = (anyCheck?.total ?? 0) > 0;
@@ -1019,7 +1028,7 @@ export function CampaignAnalyticsDashboard({
     ],
     queryFn: () =>
       getCampaignsOverview(dateRange, platform, filterIds, basePath),
-    enabled: !!currentWorkspace?.id && hasCampaigns,
+    enabled: scopeReady && hasCampaigns,
   });
 
   const isLoading = totalCheckLoading || anyCheckLoading || overviewLoading;
@@ -1070,10 +1079,10 @@ export function CampaignAnalyticsDashboard({
         style={{ animationDelay: "0s" }}
       >
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-          <h1 className="text-xl font-bold tracking-tight text-foreground">
+          <h1 className="text-xl font-bold tracking-tight text-foreground min-w-0 sm:shrink-0">
             {title}
           </h1>
-          <div className="flex items-center gap-2 flex-wrap">
+          <div className="flex items-center gap-2 flex-wrap sm:justify-end sm:min-w-0">
             {!lockCampaignFilter && (
               <CampaignFilterDropdown
                 platform={platform}
