@@ -190,8 +190,9 @@ export function Sidebar({
       (calendarSummary?.baikal_config_count ?? 0) >
     0;
   const isDoorboostBrandWs = currentWorkspace?.type === "doorboost_brand";
-  // TEMPORARY: Workflows is still being piloted, so in production only the
-  // pilot workspace sees the nav entry. Local development always shows it.
+  // TEMPORARY: Workflows and Settings → Integrations are still being piloted,
+  // so in production only the pilot workspace sees those nav entries. Local
+  // development always shows them.
   // Pilot gating lives in ~/lib/feature-flags. These hide entries only — the
   // routes stay reachable by URL, and none of this is a permission boundary.
   const pilot = usePilotFeatures();
@@ -317,7 +318,7 @@ export function Sidebar({
             </div>
 
             {SETTINGS_NAV.filter(
-              (item) => item.to !== "/settings/calendars" || pilot.calendar
+              (item) => item.to !== "/settings/integrations" || pilot.integrations
             ).map(({ to, labelKey, Icon }) => (
               <NavLink
                 key={to}
@@ -538,7 +539,7 @@ export function Sidebar({
                 );
               })}
 
-            {showCalendarInSidebar && pilot.calendar && (
+            {showCalendarInSidebar && (
               <NavLink
                 to="/calendar"
                 isActive={location.pathname.startsWith("/calendar")}
