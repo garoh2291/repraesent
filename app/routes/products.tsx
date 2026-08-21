@@ -1,54 +1,48 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Link } from "react-router";
 import { useTranslation } from "react-i18next";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import {
-  Archive,
-  ChevronDown,
-  Package,
-  Pencil,
-  Plus,
-  Search,
-  ShoppingBag,
-  Trash2,
-} from "lucide-react";
+import type { ColumnDef } from "@tanstack/react-table";
+import { ExternalLink, Package, RefreshCw, ShoppingBag } from "lucide-react";
 import i18n from "~/i18n";
 import { useAuthContext } from "~/providers/auth-provider";
 import { extractErrorMessage } from "~/lib/api/axios-instance";
 import {
-  deleteCatalogProduct,
+  CATALOG_TABS,
   isStripeNotConnected,
+  listCatalogProducts,
+  productMatchesSearch,
+  productMatchesTab,
+  stripeDashboardUrl,
+  type CatalogList,
   type CatalogProduct,
+  type CatalogTab,
 } from "~/lib/api/stripe-catalog";
 import {
   useCatalogAccount,
-  useCatalogProducts,
+  useStripeCatalog,
+  useStripeCatalogSearch,
 } from "~/lib/hooks/useStripeCatalog";
 import { useDebounce } from "~/lib/hooks/useDebounce";
 import { useDocumentMeta } from "~/lib/hooks/use-document-meta";
-import { formatMoneyFromMinor } from "~/lib/utils/format";
-import { ProductSheet } from "~/components/organism/product-sheet";
+import { formatDateShort, formatMoneyFromMinor } from "~/lib/utils/format";
+import { cn } from "~/lib/utils";
+import { DataTable } from "~/components/organism/data-table";
+import {
+  KindBadges,
+  ProductDetailsSheet,
+} from "~/components/organism/product-details-sheet";
 import { Button } from "~/components/ui/button";
-import { Input } from "~/components/ui/input";
-import { Skeleton } from "~/components/ui/skeleton";
+import { Label } from "~/components/ui/label";
+import { Switch } from "~/components/ui/switch";
+import { Tabs, TabsList, TabsTrigger } from "~/components/ui/tabs";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "~/components/ui/select";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "~/components/ui/alert-dialog";
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "~/components/ui/tooltip";
 
 export function meta() {
   return [
@@ -60,6 +54,14 @@ export function meta() {
   ];
 }
 
+const PAGE_SIZES = [20, 50, 100];
+
+/**
+ * The connected Stripe catalogue, read-only.
+ *
+ * One request loads everything; tabs, search and paging are all local, so the
+ * page answers at typing speed. Stripe's dashboard is where products change.
+ */
 export default function Products() {
   const { t } = useTranslation();
   useDocumentMeta({
@@ -70,369 +72,381 @@ export default function Products() {
 
   const { currentWorkspace } = useAuthContext();
   const queryClient = useQueryClient();
-  const canEdit = currentWorkspace?.member_role !== "viewer";
 
+  const [tab, setTab] = useState<CatalogTab>("all");
   const [search, setSearch] = useState("");
-  const debouncedSearch = useDebounce(search, 400);
-  const [activeFilter, setActiveFilter] = useState<"all" | "true" | "false">(
-    "true",
-  );
-  // Stripe pages by cursor, so "previous" means remembering where we have been.
-  const [cursors, setCursors] = useState<string[]>([]);
-  const [sheetOpen, setSheetOpen] = useState(false);
-  const [editingId, setEditingId] = useState<string | null>(null);
-  const [pendingDelete, setPendingDelete] = useState<CatalogProduct | null>(
-    null,
-  );
+  const debouncedSearch = useDebounce(search.trim(), 200);
+  const [includeArchived, setIncludeArchived] = useState(false);
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(20);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
 
   const accountQuery = useCatalogAccount(!!currentWorkspace);
   const notConnected = isStripeNotConnected(accountQuery.error);
 
-  const productsQuery = useCatalogProducts(
-    {
-      search: debouncedSearch || undefined,
-      active: activeFilter === "all" ? undefined : activeFilter,
-      starting_after: cursors[cursors.length - 1],
-      limit: 20,
-    },
+  const catalogQuery = useStripeCatalog(
+    { includeArchived },
     !!currentWorkspace && !notConnected,
   );
+  const truncated = catalogQuery.data?.truncated ?? false;
+  const serverSearch = useStripeCatalogSearch(
+    debouncedSearch,
+    !!currentWorkspace && !notConnected && truncated,
+  );
 
-  const deleteMutation = useMutation({
-    mutationFn: (id: string) => deleteCatalogProduct(id),
-    onSuccess: async (result) => {
-      await queryClient.invalidateQueries({ queryKey: ["stripe-products"] });
-      setPendingDelete(null);
+  const refreshMutation = useMutation({
+    mutationFn: () =>
+      listCatalogProducts({ include_archived: includeArchived, refresh: true }),
+    onSuccess: (data: CatalogList) => {
+      queryClient.setQueryData(["stripe-catalog", includeArchived], data);
       toast.success(
-        result.deleted
-          ? t("stripeProducts.deleted", { defaultValue: "Product deleted" })
-          : t("stripeProducts.archivedInstead", {
-              defaultValue:
-                "Product had prices, so Stripe archived it instead of deleting.",
-            }),
+        t("stripeProducts.refreshed", { defaultValue: "Catalogue refreshed" }),
       );
     },
-    onError: (error) => toast.error(extractErrorMessage(error)),
+    onError: (err) => toast.error(extractErrorMessage(err)),
   });
 
-  function resetPaging() {
-    setCursors([]);
-  }
+  const filtered = useMemo(() => {
+    const source =
+      truncated && debouncedSearch
+        ? (serverSearch.data?.data ?? [])
+        : (catalogQuery.data?.data ?? []);
+    return source
+      .filter((p) => productMatchesTab(p, tab))
+      .filter((p) => truncated || productMatchesSearch(p, debouncedSearch))
+      .sort((a, b) => a.name.localeCompare(b.name));
+  }, [catalogQuery.data, serverSearch.data, truncated, debouncedSearch, tab]);
+
+  const total = filtered.length;
+  const totalPages = Math.max(1, Math.ceil(total / limit));
+  const safePage = Math.min(page, totalPages);
+  const pageRows = filtered.slice((safePage - 1) * limit, safePage * limit);
+
+  const counts = catalogQuery.data?.counts;
+  const account = accountQuery.data ?? null;
+
+  const columns = useMemo<ColumnDef<CatalogProduct, unknown>[]>(() => {
+    const cols: ColumnDef<CatalogProduct, unknown>[] = [
+      {
+        id: "product",
+        header: t("stripeProducts.columns.product", { defaultValue: "Product" }),
+        cell: ({ row }) => {
+          const p = row.original;
+          return (
+            <div className="flex items-center gap-3">
+              <div className="grid h-10 w-10 shrink-0 place-items-center overflow-hidden rounded-lg border border-border bg-background">
+                {p.images[0] ? (
+                  <img
+                    src={p.images[0]}
+                    alt=""
+                    className="h-full w-full object-cover"
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).style.visibility = "hidden";
+                    }}
+                  />
+                ) : (
+                  <Package className="h-4 w-4 text-muted-foreground/60" />
+                )}
+              </div>
+              <div className="min-w-0">
+                <div className="flex items-center gap-1.5">
+                  <span className="truncate text-sm font-medium text-foreground">
+                    {p.name}
+                  </span>
+                  {!p.active ? (
+                    <span className="shrink-0 rounded-sm bg-muted px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+                      {t("stripeProducts.archived", { defaultValue: "Archived" })}
+                    </span>
+                  ) : null}
+                </div>
+                {p.description ? (
+                  <p className="max-w-[28rem] truncate text-xs text-muted-foreground">
+                    {p.description}
+                  </p>
+                ) : null}
+              </div>
+            </div>
+          );
+        },
+      },
+      {
+        id: "kind",
+        header: t("stripeProducts.columns.kind", { defaultValue: "Type" }),
+        cell: ({ row }) => (
+          <div className="flex flex-wrap gap-1">
+            <KindBadges product={row.original} />
+          </div>
+        ),
+      },
+      {
+        id: "price",
+        header: t("stripeProducts.columns.price", { defaultValue: "Price" }),
+        cell: ({ row }) => {
+          const p = row.original;
+          const price = p.default_price;
+          const activeCount = p.prices.filter((x) => x.active).length;
+          if (!price) {
+            return (
+              <span className="text-xs text-muted-foreground">
+                {t("stripeProducts.noPrice", { defaultValue: "No price" })}
+              </span>
+            );
+          }
+          return (
+            <div className="whitespace-nowrap">
+              <p className="text-sm font-medium tabular-nums text-foreground">
+                {price.billing_scheme === "tiered"
+                  ? t("stripeProducts.details.tiered", { defaultValue: "Tiered pricing" })
+                  : formatMoneyFromMinor(price.unit_amount, price.currency)}
+              </p>
+              <p className="text-xs text-muted-foreground">
+                {price.interval
+                  ? t(`stripeProducts.interval.${price.interval}`, {
+                      defaultValue: `per ${price.interval}`,
+                    })
+                  : t("stripeProducts.oneTime", { defaultValue: "one-time" })}
+                {activeCount > 1
+                  ? ` · ${t("stripeProducts.morePrices", {
+                      defaultValue: "+{{count}} more",
+                      count: activeCount - 1,
+                    })}`
+                  : ""}
+              </p>
+            </div>
+          );
+        },
+      },
+    ];
+
+    if (tab === "physical") {
+      cols.push({
+        id: "stock",
+        header: t("stripeProducts.columns.stock", { defaultValue: "Stock" }),
+        cell: ({ row }) => {
+          const p = row.original;
+          if (p.stock === null) {
+            return (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <span className="text-xs text-muted-foreground">—</span>
+                </TooltipTrigger>
+                <TooltipContent side="top">
+                  {t("stripeProducts.stockUnknown", { defaultValue: "No stock recorded" })}
+                </TooltipContent>
+              </Tooltip>
+            );
+          }
+          return (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <span
+                  className={cn(
+                    "text-sm font-medium tabular-nums",
+                    p.stock === 0 ? "text-destructive" : "text-foreground",
+                  )}
+                >
+                  {p.stock}
+                </span>
+              </TooltipTrigger>
+              <TooltipContent side="top">
+                {t("stripeProducts.stockSource", {
+                  defaultValue: 'From metadata key "{{key}}"',
+                  key: p.stock_key,
+                })}
+              </TooltipContent>
+            </Tooltip>
+          );
+        },
+      });
+    }
+
+    cols.push({
+      id: "updated",
+      header: t("stripeProducts.columns.updated", { defaultValue: "Updated" }),
+      cell: ({ row }) => (
+        <span className="whitespace-nowrap text-xs text-muted-foreground">
+          {formatDateShort(row.original.updated * 1000)}
+        </span>
+      ),
+    });
+
+    return cols;
+  }, [t, tab]);
 
   if (notConnected) {
     return <NotConnected />;
   }
 
-  const account = accountQuery.data;
-  const products = productsQuery.data?.data ?? [];
-  const isLoading = productsQuery.isPending || accountQuery.isPending;
-  // Stripe's search index returns a single page; hide paging while searching.
-  const canPage = !debouncedSearch;
+  const isLoading =
+    catalogQuery.isPending ||
+    accountQuery.isPending ||
+    (truncated && !!debouncedSearch && serverSearch.isPending);
 
   return (
-    <div className="p-4 sm:p-6 space-y-4 sm:space-y-6 app-fade-in">
-      <header className="app-fade-up flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-        <div>
-          <h1 className="text-xl font-semibold tracking-tight text-foreground sm:text-2xl">
-            {t("stripeProducts.title", { defaultValue: "Products" })}
-          </h1>
-          <p className="mt-0.5 flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
-            <span>
-              {t("stripeProducts.subtitle", {
-                defaultValue: "Your Stripe catalogue, live.",
-              })}
-            </span>
+    <TooltipProvider>
+      <div className="p-4 sm:p-6 space-y-4 sm:space-y-6 app-fade-in">
+        <header className="app-fade-up flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+          <div>
+            <h1 className="text-xl font-semibold tracking-tight text-foreground sm:text-2xl">
+              {t("stripeProducts.title", { defaultValue: "Products" })}
+            </h1>
+            <p className="mt-0.5 flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
+              <span>
+                {t("stripeProducts.readOnlyHint", {
+                  defaultValue:
+                    "Read-only. Products are edited in your Stripe dashboard.",
+                })}
+              </span>
+              {account ? (
+                <>
+                  <span className="text-muted-foreground/50">·</span>
+                  <span>{account.name ?? account.id}</span>
+                  {!account.livemode ? (
+                    <span className="rounded-full bg-amber-500/10 px-2 py-0.5 text-[11px] font-medium text-amber-600 dark:text-amber-400">
+                      {t("stripeProducts.testMode", { defaultValue: "Test mode" })}
+                    </span>
+                  ) : null}
+                </>
+              ) : null}
+            </p>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-2 sm:shrink-0">
+            <div className="flex items-center gap-2 rounded-lg border border-border bg-card px-3 py-1.5">
+              <Switch
+                id="show-archived"
+                checked={includeArchived}
+                onCheckedChange={(v) => {
+                  setIncludeArchived(v);
+                  setPage(1);
+                }}
+              />
+              <Label htmlFor="show-archived" className="text-xs font-medium">
+                {t("stripeProducts.showArchived", { defaultValue: "Show archived" })}
+              </Label>
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={refreshMutation.isPending}
+              onClick={() => refreshMutation.mutate()}
+            >
+              <RefreshCw
+                className={cn("h-4 w-4", refreshMutation.isPending && "app-spin")}
+              />
+              {t("stripeProducts.refresh", { defaultValue: "Refresh from Stripe" })}
+            </Button>
             {account ? (
-              <>
-                <span className="text-muted-foreground/50">·</span>
-                <span>{account.name ?? account.id}</span>
-                {!account.livemode ? (
-                  <span className="rounded-full bg-amber-500/10 px-2 py-0.5 text-[11px] font-medium text-amber-600 dark:text-amber-400">
-                    {t("stripeProducts.testMode", { defaultValue: "Test mode" })}
-                  </span>
-                ) : null}
-              </>
+              <Button asChild variant="ghost" size="sm">
+                <a
+                  href={stripeDashboardUrl(account.id, account.livemode, "products")}
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  <ExternalLink className="h-4 w-4" />
+                  {t("stripeProducts.openInStripe", { defaultValue: "Open in Stripe" })}
+                </a>
+              </Button>
             ) : null}
+          </div>
+        </header>
+
+        <Tabs
+          value={tab}
+          onValueChange={(v) => {
+            setTab(v as CatalogTab);
+            setPage(1);
+          }}
+          className="app-fade-up app-fade-up-d1"
+        >
+          <TabsList>
+            {CATALOG_TABS.map((key) => {
+              const count =
+                key === "all"
+                  ? counts?.all
+                  : key === "physical"
+                    ? counts?.physical
+                    : key === "subscriptions"
+                      ? counts?.subscriptions
+                      : counts?.one_time;
+              return (
+                <TabsTrigger key={key} value={key} className="gap-1.5">
+                  {t(`stripeProducts.tabs.${key === "one_time" ? "oneTime" : key}`, {
+                    defaultValue: {
+                      all: "All",
+                      physical: "Physical",
+                      subscriptions: "Subscriptions",
+                      one_time: "One-time",
+                    }[key],
+                  })}
+                  {count !== undefined ? (
+                    <span className="rounded-full bg-muted px-1.5 py-px text-[10px] tabular-nums text-muted-foreground">
+                      {count}
+                    </span>
+                  ) : null}
+                </TabsTrigger>
+              );
+            })}
+          </TabsList>
+        </Tabs>
+
+        {truncated ? (
+          <p className="rounded-xl border border-amber-500/30 bg-amber-500/5 px-4 py-2 text-xs text-amber-700 dark:text-amber-400">
+            {t("stripeProducts.truncatedHint", {
+              defaultValue:
+                "Large catalogue: showing the first 1000 products. Search runs on Stripe.",
+            })}
           </p>
-        </div>
-
-        {canEdit ? (
-          <Button
-            onClick={() => {
-              setEditingId(null);
-              setSheetOpen(true);
-            }}
-            className="sm:shrink-0"
-          >
-            <Plus className="mr-1.5 h-4 w-4" />
-            {t("stripeProducts.new", { defaultValue: "New product" })}
-          </Button>
         ) : null}
-      </header>
 
-      <div className="app-fade-up app-fade-up-d1 flex flex-col gap-2 sm:flex-row sm:items-center">
-        <div className="relative flex-1">
-          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <Input
-            value={search}
-            onChange={(e) => {
-              setSearch(e.target.value);
-              resetPaging();
+        <div className="app-fade-up app-fade-up-d2">
+          <DataTable
+            columns={columns}
+            data={pageRows}
+            isLoading={isLoading}
+            searchValue={search}
+            onSearchChange={(v) => {
+              setSearch(v);
+              setPage(1);
             }}
-            placeholder={t("stripeProducts.searchPlaceholder", {
+            searchPlaceholder={t("stripeProducts.searchPlaceholder", {
               defaultValue: "Search products…",
             })}
-            className="pl-9"
-          />
-        </div>
-        <Select
-          value={activeFilter}
-          onValueChange={(v) => {
-            setActiveFilter(v as typeof activeFilter);
-            resetPaging();
-          }}
-        >
-          <SelectTrigger className="sm:w-44">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="true">
-              {t("stripeProducts.filterActive", { defaultValue: "Active" })}
-            </SelectItem>
-            <SelectItem value="false">
-              {t("stripeProducts.filterArchived", {
-                defaultValue: "Archived",
-              })}
-            </SelectItem>
-            <SelectItem value="all">
-              {t("stripeProducts.filterAll", { defaultValue: "All" })}
-            </SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
-
-      <div className="app-fade-up app-fade-up-d2 overflow-hidden rounded-2xl border border-border bg-card">
-        {isLoading ? (
-          <div className="space-y-px">
-            {[0, 1, 2, 3].map((i) => (
-              <Skeleton key={i} className="h-[68px] w-full rounded-none" />
-            ))}
-          </div>
-        ) : products.length === 0 ? (
-          <div className="p-12 text-center">
-            <Package className="mx-auto h-8 w-8 text-muted-foreground/40" />
-            <p className="mt-3 text-sm text-muted-foreground">
-              {debouncedSearch
+            emptyMessage={
+              debouncedSearch
                 ? t("stripeProducts.noResults", {
                     defaultValue: "No products match that search.",
                   })
-                : t("stripeProducts.empty", {
-                    defaultValue: "No products yet.",
-                  })}
-            </p>
-          </div>
-        ) : (
-          <ul className="divide-y divide-border">
-            {products.map((product) => (
-              <ProductRow
-                key={product.id}
-                product={product}
-                canEdit={canEdit}
-                onEdit={() => {
-                  setEditingId(product.id);
-                  setSheetOpen(true);
-                }}
-                onDelete={() => setPendingDelete(product)}
-              />
-            ))}
-          </ul>
-        )}
-      </div>
-
-      {canPage && (cursors.length > 0 || productsQuery.data?.has_more) ? (
-        <div className="flex items-center justify-between">
-          <Button
-            variant="outline"
-            size="sm"
-            disabled={cursors.length === 0}
-            onClick={() => setCursors((c) => c.slice(0, -1))}
-          >
-            {t("common.previous", { defaultValue: "Previous" })}
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            disabled={!productsQuery.data?.next_cursor}
-            onClick={() =>
-              setCursors((c) => [...c, productsQuery.data!.next_cursor!])
+                : t("stripeProducts.empty", { defaultValue: "No products yet." })
             }
-          >
-            {t("common.next", { defaultValue: "Next" })}
-            <ChevronDown className="ml-1 h-4 w-4 -rotate-90" />
-          </Button>
-        </div>
-      ) : null}
-
-      <ProductSheet
-        open={sheetOpen}
-        onOpenChange={setSheetOpen}
-        productId={editingId}
-        defaultCurrency={account?.default_currency ?? "eur"}
-      />
-
-      <AlertDialog
-        open={!!pendingDelete}
-        onOpenChange={(open) => !open && setPendingDelete(null)}
-      >
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>
-              {t("stripeProducts.deleteTitle", {
-                defaultValue: "Delete product?",
-              })}
-            </AlertDialogTitle>
-            <AlertDialogDescription>
-              {t("stripeProducts.deleteBody", {
-                defaultValue:
-                  "Stripe cannot delete a product that has prices — those get archived instead, staying on past invoices but no longer sellable. This happens in your Stripe account.",
-              })}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel disabled={deleteMutation.isPending}>
-              {t("common.cancel", { defaultValue: "Cancel" })}
-            </AlertDialogCancel>
-            <AlertDialogAction
-              variant="destructive"
-              disabled={deleteMutation.isPending}
-              onClick={(e) => {
-                e.preventDefault();
-                if (pendingDelete) deleteMutation.mutate(pendingDelete.id);
-              }}
-            >
-              {deleteMutation.isPending
-                ? t("common.loading", { defaultValue: "Loading…" })
-                : t("common.delete", { defaultValue: "Delete" })}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-    </div>
-  );
-}
-
-function ProductRow({
-  product,
-  canEdit,
-  onEdit,
-  onDelete,
-}: {
-  product: CatalogProduct;
-  canEdit: boolean;
-  onEdit: () => void;
-  onDelete: () => void;
-}) {
-  const { t } = useTranslation();
-  const price = product.default_price;
-
-  return (
-    <li className="flex items-center gap-4 px-4 py-3 transition-colors hover:bg-muted/40 sm:px-5">
-      <div className="grid h-11 w-11 shrink-0 place-items-center overflow-hidden rounded-xl border border-border bg-background">
-        {product.images[0] ? (
-          <img
-            src={product.images[0]}
-            alt=""
-            className="h-full w-full object-cover"
-            onError={(e) => {
-              (e.target as HTMLImageElement).style.visibility = "hidden";
+            pagination={{
+              page: safePage,
+              limit,
+              total,
+              totalPages,
+              hasNext: safePage < totalPages,
+              hasPrev: safePage > 1,
             }}
+            onPaginationChange={(nextPage, nextLimit) => {
+              setPage(nextPage);
+              setLimit(nextLimit);
+            }}
+            pageSizeOptions={PAGE_SIZES}
+            onRowClick={(row) => setSelectedId(row.id)}
+            enableSorting={false}
           />
-        ) : (
-          <Package className="h-5 w-5 text-muted-foreground/60" />
-        )}
-      </div>
-
-      <button
-        type="button"
-        onClick={onEdit}
-        className="min-w-0 flex-1 text-left"
-      >
-        <div className="flex flex-wrap items-center gap-2">
-          <span className="truncate text-sm font-medium text-foreground">
-            {product.name}
-          </span>
-          {!product.active ? (
-            <span className="inline-flex items-center gap-1 rounded-full bg-muted px-2 py-0.5 text-[11px] text-muted-foreground">
-              <Archive className="h-3 w-3" />
-              {t("stripeProducts.archived", { defaultValue: "Archived" })}
-            </span>
-          ) : null}
-          {product.category ? (
-            <span className="rounded-full bg-muted px-2 py-0.5 text-[11px] text-muted-foreground">
-              {product.category}
-            </span>
-          ) : null}
         </div>
-        <p className="truncate text-xs text-muted-foreground">
-          {[
-            t(`stripeProducts.kinds.${product.kind}`, {
-              defaultValue:
-                product.kind === "physical"
-                  ? "Physical good"
-                  : product.kind === "digital"
-                    ? "Digital good"
-                    : "Service",
-            }),
-            product.kind === "physical" && product.inventory_count !== null
-              ? t("stripeProducts.inStock", {
-                  defaultValue: "{{count}} in stock",
-                  count: product.inventory_count,
-                })
-              : null,
-            product.description,
-          ]
-            .filter(Boolean)
-            .join(" · ")}
-        </p>
-      </button>
 
-      <div className="hidden shrink-0 text-right sm:block">
-        {price ? (
-          <>
-            <p className="text-sm font-medium tabular-nums text-foreground">
-              {formatMoneyFromMinor(price.unit_amount, price.currency)}
-            </p>
-            <p className="text-xs text-muted-foreground">
-              {price.interval
-                ? t(`stripeProducts.interval.${price.interval}`, {
-                    defaultValue: `per ${price.interval}`,
-                  })
-                : t("stripeProducts.oneTime", { defaultValue: "one-time" })}
-            </p>
-          </>
-        ) : (
-          <p className="text-xs text-muted-foreground">
-            {t("stripeProducts.noPrice", { defaultValue: "No price" })}
-          </p>
-        )}
+        <ProductDetailsSheet
+          productId={selectedId}
+          open={!!selectedId}
+          onOpenChange={(open) => {
+            if (!open) setSelectedId(null);
+          }}
+          account={account}
+        />
       </div>
-
-      {canEdit ? (
-        <div className="flex shrink-0 items-center gap-1">
-          <Button variant="ghost" size="sm" onClick={onEdit} className="h-8 w-8 p-0">
-            <Pencil className="h-4 w-4" />
-          </Button>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={onDelete}
-            className="h-8 w-8 p-0 text-muted-foreground hover:text-destructive"
-          >
-            <Trash2 className="h-4 w-4" />
-          </Button>
-        </div>
-      ) : null}
-    </li>
+    </TooltipProvider>
   );
 }
 
@@ -449,7 +463,7 @@ function NotConnected() {
         <ShoppingBag className="mx-auto h-10 w-10 text-muted-foreground/40" />
         <h2 className="mt-4 text-base font-semibold text-foreground">
           {t("stripeProducts.notConnectedTitle", {
-            defaultValue: "Connect Stripe to manage products",
+            defaultValue: "Connect Stripe to see products",
           })}
         </h2>
         <p className="mt-1.5 text-sm text-muted-foreground">

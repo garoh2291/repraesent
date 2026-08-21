@@ -132,7 +132,7 @@ export default function SettingsIntegrations() {
       // this list and the catalogue behind it — is stale.
       void invalidate();
       void queryClient.invalidateQueries({ queryKey: ["stripe-account"] });
-      void queryClient.invalidateQueries({ queryKey: ["stripe-products"] });
+      void queryClient.invalidateQueries({ queryKey: ["stripe-catalog"] });
     }
 
     const url = new URL(window.location.href);
@@ -160,7 +160,7 @@ export default function SettingsIntegrations() {
     onSuccess: async () => {
       await invalidate();
       await queryClient.invalidateQueries({ queryKey: ["stripe-account"] });
-      await queryClient.invalidateQueries({ queryKey: ["stripe-products"] });
+      await queryClient.invalidateQueries({ queryKey: ["stripe-catalog"] });
       setPendingDisconnect(null);
       toast.success(
         t("settings.integrations.disconnected", {

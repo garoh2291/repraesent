@@ -11,8 +11,12 @@ import {
   getDeals,
   patchDeal,
   type DealListItem,
-  type PaginatedDeals,
 } from "~/lib/api/deals";
+import {
+  patchDealInLists,
+  restoreSnapshots,
+  type ListSnapshots,
+} from "~/lib/deals/optimistic";
 import { useDealStages } from "~/lib/hooks/usePipelineStages";
 import {
   DEFAULT_DEAL_SORT,
@@ -89,36 +93,13 @@ export default function PipelinePage() {
 
   const deals: DealListItem[] = dealsQuery.data?.data ?? [];
 
-  const applyOptimisticDeal = (
-    dealId: string,
-    patch: Partial<DealListItem>,
-  ) => {
-    const snapshots: Array<[readonly unknown[], PaginatedDeals | undefined]> =
-      [];
-    const queries = queryClient.getQueriesData<PaginatedDeals>({
-      queryKey: ["deals-pipeline"],
-    });
-    for (const [key, value] of queries) {
-      snapshots.push([key, value]);
-      if (!value) continue;
-      const now = new Date().toISOString();
-      const nextData = value.data.map((d) =>
-        d.id === dealId ? { ...d, ...patch, updated_at: now } : d,
-      );
-      queryClient.setQueryData<PaginatedDeals>(key, { ...value, data: nextData });
-    }
-    return snapshots;
-  };
+  // Shared with the deal page and its side panels (lib/deals/optimistic).
+  const applyOptimisticDeal = (dealId: string, patch: Partial<DealListItem>) =>
+    patchDealInLists(queryClient, dealId, patch);
+  const rollbackSnapshots = (snapshots: ListSnapshots) =>
+    restoreSnapshots(queryClient, snapshots);
 
-  const rollbackSnapshots = (
-    snapshots: Array<[readonly unknown[], PaginatedDeals | undefined]>,
-  ) => {
-    for (const [key, value] of snapshots) {
-      queryClient.setQueryData(key, value);
-    }
-  };
-
-  type Snapshots = Array<[readonly unknown[], PaginatedDeals | undefined]>;
+  type Snapshots = ListSnapshots;
 
   const patchStageMutation = useMutation({
     mutationFn: ({

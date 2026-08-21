@@ -215,6 +215,72 @@ export function formatHistoryAction(
     });
   if (item.action === "deal_deleted")
     return t("pipeline.history.dealDeleted", { defaultValue: "Deal archived" });
+
+  // Stripe line items, customer and invoices on a deal.
+  const d = item.details ?? {};
+  const name = String(d.name ?? d.product ?? "");
+  const quantity = d.quantity as number | undefined;
+  const number = String(d.number ?? d.invoice_id ?? "");
+  if (item.action === "deal_product_attached")
+    return t("pipeline.history.dealProductAttached", {
+      defaultValue: "Added {{name}} (× {{quantity}})",
+      name,
+      quantity: quantity ?? 1,
+    });
+  if (item.action === "deal_product_quantity_changed")
+    return t("pipeline.history.dealProductQuantityChanged", {
+      defaultValue: "Set {{name}} to {{quantity}}",
+      name,
+      quantity: quantity ?? "",
+    });
+  if (item.action === "deal_product_detached")
+    return t("pipeline.history.dealProductDetached", {
+      defaultValue: "Removed {{name}}",
+      name,
+    });
+  if (item.action === "deal_customer_linked")
+    return t("pipeline.history.dealCustomerLinked", {
+      defaultValue: "Linked Stripe customer {{name}}",
+      name: name || String(d.email ?? d.stripe_customer_id ?? ""),
+    });
+  if (item.action === "deal_customer_created")
+    return t("pipeline.history.dealCustomerCreated", {
+      defaultValue: "Created Stripe customer {{name}}",
+      name: name || String(d.email ?? ""),
+    });
+  if (item.action === "deal_customer_unlinked")
+    return t("pipeline.history.dealCustomerUnlinked", {
+      defaultValue: "Unlinked Stripe customer",
+    });
+  if (item.action === "deal_invoice_created")
+    return t("pipeline.history.dealInvoiceCreated", {
+      defaultValue: "Created invoice {{number}}",
+      number,
+    });
+  if (item.action === "deal_subscription_created")
+    return t("pipeline.history.dealSubscriptionCreated", {
+      defaultValue: "Created subscription (invoice {{number}})",
+      number,
+    });
+  if (item.action === "deal_invoice_sent")
+    return t("pipeline.history.dealInvoiceSent", {
+      defaultValue: "Sent invoice {{number}}",
+      number,
+    });
+  if (item.action === "deal_invoice_voided")
+    return t("pipeline.history.dealInvoiceVoided", {
+      defaultValue: "Voided invoice {{number}}",
+      number,
+    });
+  if (item.action === "deal_invoice_marked_paid")
+    return t("pipeline.history.dealInvoiceMarkedPaid", {
+      defaultValue: "Marked invoice {{number}} as paid",
+      number,
+    });
+  if (item.action === "deal_subscription_canceled")
+    return t("pipeline.history.dealSubscriptionCanceled", {
+      defaultValue: "Canceled subscription",
+    });
   return item.action.replace(/_/g, " ");
 }
 

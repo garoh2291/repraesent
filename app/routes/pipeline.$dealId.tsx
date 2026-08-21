@@ -22,8 +22,12 @@ import {
   parseDealValue,
   formatDealValueInput,
   type DealListItem,
-  type PaginatedDeals,
 } from "~/lib/api/deals";
+import {
+  patchDealInLists,
+  restoreSnapshots,
+  type ListSnapshots,
+} from "~/lib/deals/optimistic";
 import { useDealStages } from "~/lib/hooks/usePipelineStages";
 import {
   resolveStageColors,
@@ -60,13 +64,19 @@ import {
 } from "~/components/ui/alert-dialog";
 import { DealContactSection } from "~/components/organism/deal-contact-section";
 import { DealProductsSection } from "~/components/organism/deal-products-section";
+import { DealCustomerSection } from "~/components/organism/deal-customer-section";
+import { DealInvoicesSection } from "~/components/organism/deal-invoices-section";
 import type { WorkspaceMemberItem } from "~/components/organism/tasks/task-form-modal";
 import {
   DatePickerPopover,
   apiDatetimeToIsoDateString,
 } from "~/components/molecule/date-picker-popover";
 import { cn } from "~/lib/utils";
-import { formatCurrency, formatDate } from "~/lib/utils/format";
+import {
+  formatCurrency,
+  formatDate,
+  formatMoneyFromMinor,
+} from "~/lib/utils/format";
 
 export function meta() {
   return [
@@ -211,55 +221,12 @@ export default function PipelineDealDetailPage() {
     void queryClient.invalidateQueries({ queryKey: ["deal-history", dealId] });
   };
 
-  type PipelineSnapshots = Array<[readonly unknown[], unknown]>;
-
-  /**
-   * Optimistically patch the deal inside every cached pipeline board and
-   * contact-deals list so both the Kanban and the contact page reflect edits
-   * made here the moment the user navigates back, without waiting for a
-   * refetch. Mirrors `applyOptimisticDeal` in pipeline.tsx.
-   */
-  const applyOptimisticDeal = (
-    patch: Partial<DealListItem>,
-  ): PipelineSnapshots => {
-    const snapshots: PipelineSnapshots = [];
-    const now = new Date().toISOString();
-
-    const pipelineQueries = queryClient.getQueriesData<PaginatedDeals>({
-      queryKey: ["deals-pipeline"],
-    });
-    for (const [key, value] of pipelineQueries) {
-      snapshots.push([key, value]);
-      if (!value) continue;
-      const nextData = value.data.map((d) =>
-        d.id === dealId ? { ...d, ...patch, updated_at: now } : d,
-      );
-      queryClient.setQueryData<PaginatedDeals>(key, {
-        ...value,
-        data: nextData,
-      });
-    }
-
-    const contactQueries = queryClient.getQueriesData<DealListItem[]>({
-      queryKey: ["contact-deals"],
-    });
-    for (const [key, value] of contactQueries) {
-      snapshots.push([key, value]);
-      if (!value) continue;
-      const nextData = value.map((d) =>
-        d.id === dealId ? { ...d, ...patch, updated_at: now } : d,
-      );
-      queryClient.setQueryData<DealListItem[]>(key, nextData);
-    }
-
-    return snapshots;
-  };
-
-  const rollbackSnapshots = (snapshots: PipelineSnapshots) => {
-    for (const [key, value] of snapshots) {
-      queryClient.setQueryData(key, value);
-    }
-  };
+  // Shared with the board and the side panels — one way to patch the cached
+  // lists, one way to roll them back.
+  const applyOptimisticDeal = (patch: Partial<DealListItem>): ListSnapshots =>
+    patchDealInLists(queryClient, dealId!, patch);
+  const rollbackSnapshots = (snapshots: ListSnapshots) =>
+    restoreSnapshots(queryClient, snapshots);
 
   const saveFieldsMutation = useMutation({
     mutationFn: async () => {
@@ -494,8 +461,15 @@ export default function PipelineDealDetailPage() {
   const titleEmpty = title.trim().length === 0;
   const numericValue = parseDealValue(valueStr);
   const valueNegative = numericValue != null && numericValue < 0;
+  // Lines carry their own currency; the legacy formatter assumes EUR and is
+  // only right for deals with no Stripe lines on them.
+  const linesCurrency = dealProducts.find((p) => p.currency)?.currency ?? null;
   const valueDisplay =
-    numericValue != null ? formatCurrency(numericValue) : "—";
+    numericValue == null
+      ? "—"
+      : linesCurrency
+        ? formatMoneyFromMinor(Math.round(numericValue * 100), linesCurrency)
+        : formatCurrency(numericValue);
 
   const assigneeMember = workspaceMembers.find((m) => m.user_id === assignee);
   const assigneeName = assigneeMember
@@ -792,11 +766,19 @@ export default function PipelineDealDetailPage() {
 
         {/* RIGHT — sidebar */}
         <div className="space-y-4 sm:space-y-6 lg:col-span-2">
-          <div className="lg:sticky lg:top-6 space-y-4 sm:space-y-6">
+          <div className="space-y-4 sm:space-y-6">
             {/* Contacts */}
             <DealContactSection
               dealId={dealId}
               contacts={dealContacts}
+              canEdit={canEdit}
+            />
+
+            {/* Stripe customer — who the deal is invoiced to. */}
+            <DealCustomerSection
+              dealId={dealId}
+              customer={dealQuery.data?.customer ?? null}
+              suggestion={dealQuery.data?.customer_suggestion ?? null}
               canEdit={canEdit}
             />
 
@@ -807,6 +789,27 @@ export default function PipelineDealDetailPage() {
               products={dealProducts}
               canEdit={canEdit}
             />
+
+            {/* Invoices & subscriptions raised from the lines above. */}
+            {dealQuery.data ? (
+              <DealInvoicesSection
+                dealId={dealId}
+                invoices={dealQuery.data.invoices ?? []}
+                readiness={
+                  dealQuery.data.invoice_readiness ?? {
+                    kind: null,
+                    blockers: ["no_customer"],
+                    currency: null,
+                    total: null,
+                    one_time_count: 0,
+                    recurring_count: 0,
+                  }
+                }
+                products={dealProducts}
+                customer={dealQuery.data.customer ?? null}
+                canEdit={canEdit}
+              />
+            ) : null}
 
             {/* Key facts */}
             <section className="rounded-2xl border border-border bg-card p-4 sm:p-5 shadow-(--shadow) space-y-4">

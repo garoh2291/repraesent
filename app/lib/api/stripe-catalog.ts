@@ -1,13 +1,13 @@
 import { apiClient } from "./axios-instance";
 
 /**
- * Live proxy over the workspace's connected Stripe catalogue.
+ * Read-only view of the workspace's connected Stripe catalogue.
  *
- * Nothing here is mirrored into our database — every call hits Stripe through
- * the backend, so the page always agrees with the Stripe dashboard.
+ * Nothing here is mirrored into our database and nothing here writes to
+ * Stripe. The backend loads the whole catalogue (products + every price) once
+ * per minute per account and classifies it; the page filters, sorts and
+ * searches that snapshot locally. Editing happens in the Stripe dashboard.
  */
-
-export type ProductKind = "physical" | "digital" | "service";
 
 export interface PackageDimensions {
   height: number;
@@ -18,14 +18,18 @@ export interface PackageDimensions {
 
 export interface CatalogPrice {
   id: string;
+  product_id: string;
   active: boolean;
   currency: string;
   unit_amount: number | null;
   nickname: string | null;
-  /** "one_time" | "recurring" */
-  type: string;
+  type: "one_time" | "recurring";
   interval: string | null;
   interval_count: number | null;
+  /** "per_unit" | "tiered" */
+  billing_scheme: string;
+  lookup_key: string | null;
+  trial_period_days: number | null;
   tax_behavior: string | null;
   is_default: boolean;
   created: number;
@@ -37,28 +41,47 @@ export interface CatalogProduct {
   description: string | null;
   images: string[];
   active: boolean;
-  kind: ProductKind;
-  category: string | null;
-  /** Stripe has no stock field — this lives in product metadata. */
-  inventory_count: number | null;
+  livemode: boolean;
+  shippable: boolean | null;
+  package_dimensions: PackageDimensions | null;
+  marketing_features: string[];
+  /** shippable, or has dimensions, or tagged physical in metadata. */
+  is_physical: boolean;
+  /** Has at least one active recurring price. */
+  has_recurring: boolean;
+  /** Has at least one active one-time price. */
+  has_one_time: boolean;
+  /** Stock read from metadata; null when no known key carries a number. */
+  stock: number | null;
+  /** Which metadata key the stock came from. */
+  stock_key: string | null;
   unit_label: string | null;
   statement_descriptor: string | null;
   tax_code: string | null;
   url: string | null;
-  package_dimensions: PackageDimensions | null;
   default_price_id: string | null;
   default_price: CatalogPrice | null;
-  /** Only present on the single-product endpoint. */
-  prices?: CatalogPrice[];
+  /** Every price (active only in the list; archived included on the single-product call). */
+  prices: CatalogPrice[];
   metadata: Record<string, string>;
   created: number;
   updated: number;
 }
 
+export interface CatalogCounts {
+  all: number;
+  physical: number;
+  subscriptions: number;
+  one_time: number;
+}
+
 export interface CatalogList {
   data: CatalogProduct[];
-  has_more: boolean;
-  next_cursor: string | null;
+  /** The account has more products than the load cap; use server search. */
+  truncated: boolean;
+  /** Unix ms when the backend fetched this snapshot from Stripe. */
+  fetched_at: number;
+  counts: CatalogCounts;
 }
 
 export interface CatalogAccount {
@@ -71,48 +94,69 @@ export interface CatalogAccount {
   details_submitted: boolean;
 }
 
-export interface TaxCode {
+export interface StripeCustomerSummary {
   id: string;
-  name: string;
-  description: string;
-}
-
-export interface CreatePriceBody {
-  unit_amount: number;
-  currency: string;
-  interval?: "day" | "week" | "month" | "year";
-  interval_count?: number;
-  nickname?: string | null;
-  tax_behavior?: "inclusive" | "exclusive" | "unspecified";
-  set_as_default?: boolean;
-}
-
-export interface ProductBody {
-  name: string;
-  description?: string | null;
-  images?: string[];
-  active?: boolean;
-  kind?: ProductKind;
-  category?: string | null;
-  inventory_count?: number | null;
-  package_dimensions?: PackageDimensions | null;
-  unit_label?: string | null;
-  statement_descriptor?: string | null;
-  tax_code?: string | null;
-  url?: string | null;
-  metadata?: Record<string, string>;
-}
-
-export interface CreateProductBody extends ProductBody {
-  price?: CreatePriceBody;
+  name: string | null;
+  email: string | null;
+  phone: string | null;
+  /** Fixed after the customer's first invoice; null before that. */
+  currency: string | null;
+  livemode: boolean;
+  created: number;
 }
 
 export interface ListProductsParams {
-  limit?: number;
-  starting_after?: string;
-  /** "true" | "false" | undefined for both */
-  active?: string;
+  include_archived?: boolean;
+  refresh?: boolean;
+  /** Server-side Stripe search — only when the catalogue is truncated. */
   search?: string;
+}
+
+export type CatalogTab = "all" | "physical" | "subscriptions" | "one_time";
+
+export const CATALOG_TABS: CatalogTab[] = [
+  "all",
+  "physical",
+  "subscriptions",
+  "one_time",
+];
+
+export function productMatchesTab(p: CatalogProduct, tab: CatalogTab): boolean {
+  switch (tab) {
+    case "physical":
+      return p.is_physical;
+    case "subscriptions":
+      return p.has_recurring;
+    case "one_time":
+      return p.has_one_time && !p.has_recurring;
+    default:
+      return true;
+  }
+}
+
+/** Case-insensitive match on name, description, id and metadata values. */
+export function productMatchesSearch(p: CatalogProduct, needle: string): boolean {
+  const q = needle.trim().toLowerCase();
+  if (!q) return true;
+  if (p.name.toLowerCase().includes(q)) return true;
+  if (p.description?.toLowerCase().includes(q)) return true;
+  if (p.id.toLowerCase().includes(q)) return true;
+  return Object.values(p.metadata).some((v) => v.toLowerCase().includes(q));
+}
+
+/**
+ * Deep link into the connected account's own dashboard. Standard accounts
+ * accept the `/{acct}/` prefix; test mode adds `/test/`.
+ */
+export function stripeDashboardUrl(
+  account: string | null | undefined,
+  livemode: boolean | null | undefined,
+  path: string,
+): string {
+  const base = "https://dashboard.stripe.com";
+  const acct = account ? `/${account}` : "";
+  const mode = livemode === false ? "/test" : "";
+  return `${base}${acct}${mode}/${path.replace(/^\//, "")}`;
 }
 
 /**
@@ -138,9 +182,8 @@ export async function listCatalogProducts(
 ): Promise<CatalogList> {
   const res = await apiClient.get<CatalogList>("/stripe-catalog/products", {
     params: {
-      limit: params.limit ?? 20,
-      ...(params.starting_after && { starting_after: params.starting_after }),
-      ...(params.active && { active: params.active }),
+      ...(params.include_archived && { include_archived: "true" }),
+      ...(params.refresh && { refresh: "1" }),
       ...(params.search && { search: params.search }),
     },
   });
@@ -156,100 +199,13 @@ export async function getCatalogProduct(
   return res.data;
 }
 
-export async function createCatalogProduct(
-  body: CreateProductBody,
-): Promise<CatalogProduct> {
-  const res = await apiClient.post<CatalogProduct>(
-    "/stripe-catalog/products",
-    body,
+export async function searchStripeCustomers(
+  search: string,
+  limit = 20,
+): Promise<StripeCustomerSummary[]> {
+  const res = await apiClient.get<StripeCustomerSummary[]>(
+    "/stripe-catalog/customers",
+    { params: { ...(search && { search }), limit } },
   );
-  return res.data;
-}
-
-export async function updateCatalogProduct(
-  productId: string,
-  body: Partial<ProductBody> & { default_price?: string },
-): Promise<CatalogProduct> {
-  const res = await apiClient.patch<CatalogProduct>(
-    `/stripe-catalog/products/${encodeURIComponent(productId)}`,
-    body,
-  );
-  return res.data;
-}
-
-/**
- * Stripe refuses to delete a product that has prices, so the backend archives
- * it instead. The flags say which happened — the user needs to know.
- */
-export async function deleteCatalogProduct(
-  productId: string,
-): Promise<{ deleted: boolean; archived: boolean }> {
-  const res = await apiClient.delete<{ deleted: boolean; archived: boolean }>(
-    `/stripe-catalog/products/${encodeURIComponent(productId)}`,
-  );
-  return res.data;
-}
-
-export async function createCatalogPrice(
-  productId: string,
-  body: CreatePriceBody,
-): Promise<CatalogProduct> {
-  const res = await apiClient.post<CatalogProduct>(
-    `/stripe-catalog/products/${encodeURIComponent(productId)}/prices`,
-    body,
-  );
-  return res.data;
-}
-
-/** Prices are immutable in Stripe: only these three fields can change. */
-export async function updateCatalogPrice(
-  priceId: string,
-  body: { active?: boolean; nickname?: string | null },
-): Promise<CatalogProduct> {
-  const res = await apiClient.patch<CatalogProduct>(
-    `/stripe-catalog/prices/${encodeURIComponent(priceId)}`,
-    body,
-  );
-  return res.data;
-}
-
-export async function setCatalogDefaultPrice(
-  productId: string,
-  priceId: string,
-): Promise<CatalogProduct> {
-  const res = await apiClient.post<CatalogProduct>(
-    `/stripe-catalog/products/${encodeURIComponent(productId)}/default-price/${encodeURIComponent(priceId)}`,
-  );
-  return res.data;
-}
-
-/**
- * Upload a product image and get a public URL back.
- *
- * Stripe's `product.images` takes URLs, not files, so the bytes go to Stripe's
- * own file store first and the returned `files.stripe.com/links/…` URL is what
- * gets saved on the product. We host nothing.
- */
-export async function uploadProductImage(
-  file: File,
-): Promise<{ url: string; file_id: string }> {
-  const form = new FormData();
-  form.append("file", file);
-
-  const res = await apiClient.post<{ url: string; file_id: string }>(
-    "/stripe-catalog/images",
-    form,
-    {
-      // Unset the client's JSON default so the browser writes the multipart
-      // boundary itself — same as the contacts and leads importers.
-      headers: { "Content-Type": undefined },
-      timeout: 60000,
-    },
-  );
-  return res.data;
-}
-
-export async function listTaxCodes(): Promise<TaxCode[]> {
-  const res = await apiClient.get<TaxCode[]>("/stripe-catalog/tax-codes");
   return res.data;
 }

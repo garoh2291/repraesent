@@ -110,9 +110,16 @@ export interface DealProduct {
   quantity: number;
   /** Live from Stripe when reachable, otherwise the attach-time snapshot. */
   name: string;
+  image: string | null;
   unit_amount: number | null;
   currency: string | null;
   line_total: number | null;
+  price_type: "one_time" | "recurring" | null;
+  recurring_interval: string | null;
+  recurring_interval_count: number | null;
+  /** From the server's warm catalogue cache only; null when it is cold. */
+  is_physical: boolean | null;
+  stock: number | null;
   /**
    * Stripe could not confirm this line — archived, deleted, or the account is
    * disconnected. Rendered from the snapshot rather than dropped.
@@ -120,6 +127,98 @@ export interface DealProduct {
   stale: boolean;
   price_active: boolean | null;
   created_at: string;
+}
+
+/** The Stripe customer a deal is invoiced to. */
+export interface DealCustomer {
+  stripe_customer_id: string;
+  stripe_account_id: string;
+  contact_id: string | null;
+  name: string | null;
+  email: string | null;
+  /** Fixed by Stripe after the first invoice; null before that. */
+  currency: string | null;
+  linked_at: string;
+  linked_by_name: string | null;
+  /** Stripe could not confirm the customer (deleted or unreachable). */
+  stale: boolean;
+  /** Linked on a different Stripe account than the one connected now. */
+  account_mismatch: boolean;
+}
+
+/** Offered when no customer is linked: the primary contact, maybe with a remembered customer. */
+export interface DealCustomerSuggestion {
+  contact_id: string;
+  name: string | null;
+  email: string | null;
+  stripe_customer_id: string | null;
+}
+
+export interface DealInvoiceLine {
+  price_id: string;
+  product_id: string;
+  name: string;
+  quantity: number;
+  unit_amount: number | null;
+  currency: string | null;
+  price_type: "one_time" | "recurring" | null;
+  interval: string | null;
+  interval_count: number | null;
+}
+
+export type DealInvoiceKind = "invoice" | "subscription" | "renewal";
+
+export interface DealInvoice {
+  id: string;
+  kind: DealInvoiceKind;
+  stripe_invoice_id: string;
+  stripe_subscription_id: string | null;
+  stripe_customer_id: string;
+  /** draft | open | paid | void | uncollectible */
+  status: string | null;
+  /** active | past_due | canceled | unpaid | incomplete | trialing */
+  subscription_status: string | null;
+  /** Minor units. */
+  total: number | null;
+  currency: string | null;
+  number: string | null;
+  hosted_invoice_url: string | null;
+  invoice_pdf: string | null;
+  days_until_due: number | null;
+  due_at: string | null;
+  paid_at: string | null;
+  voided_at: string | null;
+  /** When we first asked Stripe to email it. Drives the Send / Sent state. */
+  sent_at: string | null;
+  sent_count: number;
+  sent_by_name: string | null;
+  created_at: string;
+  created_by_name: string | null;
+  lines: DealInvoiceLine[];
+  /** Stripe could not be asked for a fresh status. */
+  stale: boolean;
+}
+
+export type InvoiceBlocker =
+  | "no_customer"
+  | "customer_account_mismatch"
+  | "stale_customer"
+  | "no_lines"
+  | "stale_line"
+  | "inactive_price"
+  | "mixed_currency"
+  | "customer_currency_mismatch"
+  | "mixed_intervals"
+  | "too_many_lines";
+
+export interface InvoiceReadiness {
+  kind: "invoice" | "subscription" | null;
+  blockers: InvoiceBlocker[];
+  currency: string | null;
+  /** Minor units, one period for recurring lines. */
+  total: number | null;
+  one_time_count: number;
+  recurring_count: number;
 }
 
 export type DealDetailResponse = {
@@ -130,6 +229,11 @@ export type DealDetailResponse = {
   contacts: DealContact[];
   /** Stripe catalogue line items. Empty when nothing is attached. */
   products: DealProduct[];
+  customer: DealCustomer | null;
+  customer_suggestion: DealCustomerSuggestion | null;
+  /** Newest first. */
+  invoices: DealInvoice[];
+  invoice_readiness: InvoiceReadiness;
 };
 
 export async function getDeal(dealId: string): Promise<DealDetailResponse> {
@@ -298,3 +402,88 @@ export async function getDealsForContact(
   );
   return res.data;
 }
+
+// ---------------------------------------------------------------------------
+// Stripe customer on a deal
+// ---------------------------------------------------------------------------
+
+export async function linkDealCustomer(
+  dealId: string,
+  stripeCustomerId: string,
+): Promise<DealDetailResponse> {
+  const res = await apiClient.put<DealDetailResponse>(
+    `/deals/${dealId}/customer`,
+    { stripe_customer_id: stripeCustomerId },
+  );
+  return res.data;
+}
+
+export async function createDealCustomer(
+  dealId: string,
+  body: { name: string; email: string; contact_id?: string },
+): Promise<DealDetailResponse> {
+  const res = await apiClient.post<DealDetailResponse>(
+    `/deals/${dealId}/customer`,
+    body,
+  );
+  return res.data;
+}
+
+export async function unlinkDealCustomer(
+  dealId: string,
+): Promise<DealDetailResponse> {
+  const res = await apiClient.delete<DealDetailResponse>(
+    `/deals/${dealId}/customer`,
+  );
+  return res.data;
+}
+
+// ---------------------------------------------------------------------------
+// Invoices & subscriptions raised from a deal
+// ---------------------------------------------------------------------------
+
+export async function getDealInvoices(dealId: string): Promise<DealInvoice[]> {
+  const res = await apiClient.get<DealInvoice[]>(`/deals/${dealId}/invoices`);
+  return res.data;
+}
+
+export interface CreateDealInvoiceBody {
+  days_until_due: number;
+  send_now: boolean;
+  memo?: string;
+  /** One per dialog open; a retry with the same key never creates a second document. */
+  idempotency_key: string;
+}
+
+export async function createDealInvoice(
+  dealId: string,
+  body: CreateDealInvoiceBody,
+): Promise<DealDetailResponse> {
+  const res = await apiClient.post<DealDetailResponse>(
+    `/deals/${dealId}/invoices`,
+    body,
+    // Building a subscription plus its first invoice is several Stripe calls.
+    { timeout: 60_000 },
+  );
+  return res.data;
+}
+
+async function invoiceAction(
+  dealId: string,
+  invoiceId: string,
+  action: "send" | "void" | "mark-paid" | "cancel-subscription",
+): Promise<DealDetailResponse> {
+  const res = await apiClient.post<DealDetailResponse>(
+    `/deals/${dealId}/invoices/${encodeURIComponent(invoiceId)}/${action}`,
+  );
+  return res.data;
+}
+
+export const sendDealInvoice = (dealId: string, invoiceId: string) =>
+  invoiceAction(dealId, invoiceId, "send");
+export const voidDealInvoice = (dealId: string, invoiceId: string) =>
+  invoiceAction(dealId, invoiceId, "void");
+export const markDealInvoicePaid = (dealId: string, invoiceId: string) =>
+  invoiceAction(dealId, invoiceId, "mark-paid");
+export const cancelDealSubscription = (dealId: string, invoiceId: string) =>
+  invoiceAction(dealId, invoiceId, "cancel-subscription");
