@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Plus, ChevronDown, StickyNote, CheckSquare } from "lucide-react";
+import { Plus, ChevronDown, StickyNote, CheckSquare, Send } from "lucide-react";
 import type { LeadHistoryItem } from "~/lib/api/leads";
 import { LeadNotesSection } from "~/components/organism/lead-notes-section";
 import { LeadTasksSection } from "~/components/organism/tasks/lead-tasks-section";
@@ -15,15 +15,22 @@ import {
   DropdownMenuTrigger,
 } from "~/components/ui/dropdown-menu";
 import { cn } from "~/lib/utils";
+import { useComposeEmail } from "~/components/organism/compose-email/use-compose-email";
+import type { Recipient } from "~/components/organism/compose-email/recipient-field";
 import { ActivityTimeline } from "./activity-timeline";
 import { ActivityEmailsList } from "./emails-list";
-import type { ActivityContext } from "./shared";
+import { composeInvalidateKeys, type ActivityContext } from "./shared";
 
 export interface ActivityPanelProps extends ActivityContext {
   variant: "contact" | "deal";
   canEdit: boolean;
   workspaceMembers: WorkspaceMemberItem[];
   contextLabel?: string;
+  /**
+   * Who a new email is addressed to by default — the contact on a contact page,
+   * every attached contact on a deal. All of them are removable in the composer.
+   */
+  composeRecipients?: Recipient[];
   history: LeadHistoryItem[];
   historyLoading: boolean;
 }
@@ -36,6 +43,7 @@ export function ActivityPanel(props: ActivityPanelProps) {
     canEdit,
     workspaceMembers,
     contextLabel,
+    composeRecipients,
     history,
     historyLoading,
     leadId,
@@ -46,6 +54,7 @@ export function ActivityPanel(props: ActivityPanelProps) {
     emailContactId,
   } = props;
   const { t } = useTranslation();
+  const { openCompose } = useComposeEmail();
   const [tab, setTab] = useState<Tab>("all");
   const [notesSignal, setNotesSignal] = useState(0);
   const [tasksSignal, setTasksSignal] = useState(0);
@@ -77,6 +86,14 @@ export function ActivityPanel(props: ActivityPanelProps) {
     setTab("tasks");
     setTasksSignal((n) => n + 1);
   };
+  const compose = () =>
+    openCompose({
+      to: composeRecipients,
+      dealId,
+      contactId: variant === "contact" ? emailContactId : undefined,
+      contextLabel,
+      invalidateKeys: composeInvalidateKeys(ctx, variant),
+    });
 
   const tabs: { key: Tab; label: string }[] = [
     { key: "all", label: t("activity.tabAll", { defaultValue: "All" }) },
@@ -104,7 +121,13 @@ export function ActivityPanel(props: ActivityPanelProps) {
           {t("activity.title", { defaultValue: "Activity" })}
         </h2>
         {canEdit && (
-          <AddControl tab={tab} onAddNote={addNote} onAddTask={addTask} />
+          <AddControl
+            tab={tab}
+            onAddNote={addNote}
+            onAddTask={addTask}
+            onCompose={compose}
+            canCompose={variant === "deal" ? !!dealId : !!emailContactId}
+          />
         )}
       </div>
 
@@ -168,7 +191,13 @@ export function ActivityPanel(props: ActivityPanelProps) {
         </TabsContent>
 
         <TabsContent value="emails" className="mt-0">
-          <ActivityEmailsList ctx={ctx} variant={variant} />
+          <ActivityEmailsList
+            ctx={ctx}
+            variant={variant}
+            contextLabel={contextLabel}
+            canEdit={canEdit}
+            composeRecipients={composeRecipients}
+          />
         </TabsContent>
 
         <TabsContent value="history" className="mt-0">
@@ -183,17 +212,40 @@ export function ActivityPanel(props: ActivityPanelProps) {
   );
 }
 
-/** "+ Add ▾" dropdown on All; single button on Notes/Tasks; nothing elsewhere. */
+/**
+ * "+ Add ▾" dropdown on All; a single button on Notes/Tasks and Emails.
+ *
+ * The Emails tab used to have no control at all, which is why sending meant
+ * leaving for a mail client — it is the natural home for Compose.
+ */
 function AddControl({
   tab,
   onAddNote,
   onAddTask,
+  onCompose,
+  canCompose,
 }: {
   tab: Tab;
   onAddNote: () => void;
   onAddTask: () => void;
+  onCompose: () => void;
+  canCompose: boolean;
 }) {
   const { t } = useTranslation();
+
+  if (tab === "emails") {
+    if (!canCompose) return null;
+    return (
+      <Button
+        size="sm"
+        className="h-8 gap-1.5 text-xs"
+        onClick={onCompose}
+      >
+        <Send className="size-3.5" />
+        {t("compose.newEmail", { defaultValue: "New email" })}
+      </Button>
+    );
+  }
 
   if (tab === "notes") {
     return (
@@ -240,6 +292,12 @@ function AddControl({
             <CheckSquare className="size-3.5" />
             {t("activity.addTask", { defaultValue: "Add task" })}
           </DropdownMenuItem>
+          {canCompose && (
+            <DropdownMenuItem onSelect={onCompose}>
+              <Send className="size-3.5" />
+              {t("compose.newEmail", { defaultValue: "New email" })}
+            </DropdownMenuItem>
+          )}
         </DropdownMenuContent>
       </DropdownMenu>
     );

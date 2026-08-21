@@ -11,6 +11,8 @@ import { useTranslation } from "react-i18next";
 const SECTIONS = [
   { match: "/settings/email-accounts", key: "emailAccounts" },
   { match: "/settings/integrations", key: "integrations" },
+  { match: "/settings/calendars", key: "calendars" },
+  { match: "/settings/pipelines", key: "pipelines" },
   { match: "/settings/team", key: "team" },
   { match: "/settings/bcc", key: "bcc" },
 ] as const;

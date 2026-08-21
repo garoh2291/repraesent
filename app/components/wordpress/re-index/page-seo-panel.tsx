@@ -5,6 +5,7 @@ import { ExternalLink, FileText, Loader2, Search } from "lucide-react";
 import { extractErrorMessage } from "~/lib/api/axios-instance";
 import { requestWpSsoLogin } from "~/lib/api/wordpress-hub";
 import { useWorkspaceReIndexPageSeo } from "~/lib/hooks/useWorkspaceReIndexSettings";
+import { useSearchShortcut } from "~/lib/hooks/useSearchShortcut";
 import type { ReIndexPageSeoRow } from "~/lib/wordpress/plugin-settings-types";
 import { Badge } from "~/components/ui/badge";
 import { Button } from "~/components/ui/button";
@@ -167,6 +168,7 @@ export function PageSeoPanel({
 }) {
   const { t } = useTranslation();
   const [search, setSearch] = useState("");
+  const { ref: searchInputRef, withHint } = useSearchShortcut();
   const [openingId, setOpeningId] = useState<number | null>(null);
   const { data, isLoading, isError, error } = useWorkspaceReIndexPageSeo(
     pluginUuid,
@@ -318,12 +320,12 @@ export function PageSeoPanel({
             <div className="relative">
               <Search className="pointer-events-none absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input
+                ref={searchInputRef}
                 type="search"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                placeholder={t(
-                  "wordpress.reIndex.pageSeo.search",
-                  "Search by title or slug…",
+                placeholder={withHint(
+                  t("wordpress.reIndex.pageSeo.search", "Search by title or slug…")
                 )}
                 className="pl-9"
               />

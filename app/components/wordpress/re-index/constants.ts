@@ -36,9 +36,6 @@ export const DEFAULT_SETTINGS: ReIndexSettings = {
   },
 };
 
-/** Version badge — must track `RE_INDEX_VERSION` in re-index.php. */
-export const PLUGIN_VERSION = "1.1.0";
-
 export const FORMAT_KEYS = [
   "front_page",
   "posts",

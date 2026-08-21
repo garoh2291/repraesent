@@ -3,9 +3,8 @@ import { useTranslation } from "react-i18next";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router";
 import {
-  Mail,
   Inbox,
-  ArrowRight,
+  Send,
   SlidersHorizontal,
   ChevronDown,
 } from "lucide-react";
@@ -14,19 +13,36 @@ import { Skeleton } from "~/components/ui/skeleton";
 import { Button } from "~/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "~/components/ui/tabs";
 import { cn } from "~/lib/utils";
+import { EmailReplyActions } from "~/components/organism/compose-email/email-reply-actions";
+import { useComposeEmail } from "~/components/organism/compose-email/use-compose-email";
+import type { Recipient } from "~/components/organism/compose-email/recipient-field";
 import { DealEmailCardActions } from "./deal-email-card-actions";
 import { DealEmailSegmentEditor } from "./deal-email-rules-editor";
+import { PendingEmailsList } from "./pending-email-card";
+import { PENDING_POLL_MS } from "./emails-list";
 import {
+  composeInvalidateKeys,
   emailsQuery,
   dealEmailSegmentQuery,
+  pendingOutboundQuery,
   type ActivityContext,
 } from "./shared";
 
-export function DealEmailsPanel({ ctx }: { ctx: ActivityContext }) {
+export function DealEmailsPanel({
+  ctx,
+  contextLabel,
+  composeRecipients,
+}: {
+  ctx: ActivityContext;
+  contextLabel?: string;
+  composeRecipients?: Recipient[];
+}) {
   const { t, i18n } = useTranslation();
+  const { openCompose } = useComposeEmail();
   const dealId = ctx.dealId!;
   const q = emailsQuery(ctx, "deal");
   const sq = dealEmailSegmentQuery(dealId);
+  const pq = pendingOutboundQuery(ctx, "deal");
   const [rulesOpen, setRulesOpen] = useState(false);
   const [sub, setSub] = useState<"pipeline" | "hidden">("pipeline");
 
@@ -36,9 +52,18 @@ export function DealEmailsPanel({ ctx }: { ctx: ActivityContext }) {
     enabled: !!q.id,
   });
   const { data: segment } = useQuery({ queryKey: sq.key, queryFn: sq.fn });
+  const { data: pending } = useQuery({
+    queryKey: pq.key,
+    queryFn: pq.fn,
+    enabled: !!pq.id,
+    refetchInterval: (query) =>
+      (query.state.data?.length ?? 0) > 0 ? PENDING_POLL_MS : false,
+  });
   const conditionCount = segment?.conditions.length ?? 0;
 
   const messages = data?.data ?? [];
+  const pendingList = pending ?? [];
+  const invalidateKeys = composeInvalidateKeys(ctx, "deal");
   const pipeline = messages.filter((m) => !m.hidden);
   const hiddenList = messages.filter((m) => m.hidden);
 
@@ -91,7 +116,7 @@ export function DealEmailsPanel({ ctx }: { ctx: ActivityContext }) {
     );
   }
 
-  if (messages.length === 0) {
+  if (messages.length === 0 && pendingList.length === 0) {
     return (
       <div className="space-y-3">
         {rulesBar}
@@ -105,13 +130,26 @@ export function DealEmailsPanel({ ctx }: { ctx: ActivityContext }) {
           <p className="max-w-xs text-xs leading-relaxed text-muted-foreground">
             {t("leadEmails.emptyDescription")}
           </p>
-          <Button asChild variant="outline" size="sm" className="mt-2 gap-1.5">
-            <Link to="/settings/bcc">
-              <Mail className="size-3.5" />
-              {t("leadEmails.emptyCta")}
-              <ArrowRight className="size-3.5" />
-            </Link>
-          </Button>
+          <div className="mt-2 flex flex-wrap items-center justify-center gap-2">
+            <Button
+              size="sm"
+              className="gap-1.5"
+              onClick={() =>
+                openCompose({
+                  to: composeRecipients,
+                  dealId,
+                  contextLabel,
+                  invalidateKeys,
+                })
+              }
+            >
+              <Send className="size-3.5" />
+              {t("compose.emptyCta", { defaultValue: "Send first email" })}
+            </Button>
+            <Button asChild variant="outline" size="sm" className="gap-1.5">
+              <Link to="/settings/bcc">{t("leadEmails.emptyCta")}</Link>
+            </Button>
+          </div>
         </div>
       </div>
     );
@@ -129,7 +167,17 @@ export function DealEmailsPanel({ ctx }: { ctx: ActivityContext }) {
             key={m.id}
             message={m}
             locale={i18n.language}
-            actions={<DealEmailCardActions dealId={dealId} message={m} />}
+            actions={
+              <>
+                <EmailReplyActions
+                  message={m}
+                  dealId={dealId}
+                  contextLabel={contextLabel}
+                  invalidateKeys={invalidateKeys}
+                />
+                <DealEmailCardActions dealId={dealId} message={m} />
+              </>
+            }
           />
         ))}
       </div>
@@ -138,6 +186,10 @@ export function DealEmailsPanel({ ctx }: { ctx: ActivityContext }) {
   return (
     <div className="space-y-3">
       {rulesBar}
+      {/* Above the sub-tabs on purpose: a send in flight has no `hidden` state
+          yet, so it belongs to neither tab — and burying it would defeat the
+          point of showing it at all. */}
+      <PendingEmailsList pending={pendingList} locale={i18n.language} />
       <Tabs
         value={sub}
         onValueChange={(v) => setSub(v as "pipeline" | "hidden")}

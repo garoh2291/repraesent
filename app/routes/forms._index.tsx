@@ -13,6 +13,7 @@ import { useTranslation } from "react-i18next";
 import { Link, useNavigate } from "react-router";
 import { toast } from "sonner";
 import { FormsIntroModal } from "~/components/forms/intro/FormsIntroModal";
+import { useSearchShortcut } from "~/lib/hooks/useSearchShortcut";
 import { FormStatusBadge } from "~/components/forms/FormStatusBadge";
 import {
   AlertDialog,
@@ -117,6 +118,7 @@ export default function FormsIndexRoute() {
   };
 
   const [search, setSearch] = useState("");
+  const { ref: searchInputRef, withHint } = useSearchShortcut();
   const [createOpen, setCreateOpen] = useState(false);
   const [newName, setNewName] = useState("");
   // Default to the operator's own dashboard language rather than always "de" —
@@ -243,9 +245,10 @@ export default function FormsIndexRoute() {
 
       {(forms?.length ?? 0) > 0 ? (
         <Input
+          ref={searchInputRef}
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          placeholder={t("forms.list.search")}
+          placeholder={withHint(t("forms.list.search"))}
           className="max-w-xs"
         />
       ) : null}

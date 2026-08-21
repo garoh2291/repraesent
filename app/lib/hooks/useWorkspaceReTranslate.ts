@@ -1,18 +1,26 @@
 "use client";
 
+import { useCallback } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import type { QueryClient } from "@tanstack/react-query";
 import {
   addTranslateLanguage,
+  getWorkspacePluginSettings,
   getTranslateContent,
   getTranslateContentDetail,
   machineTranslateContent,
   removeTranslateLanguage,
   runTranslateIndex,
+  runTranslateBulk,
   saveTranslateStrings,
   setTranslateSourceLanguage,
   type TranslateContentDetailResponse,
+  type TranslateContentListResponse,
+  type TranslateLanguageProgress,
+  type TranslateString,
   type WpPluginSettingsGetResponse,
 } from "~/lib/api/wordpress-hub";
+import type { ReTranslateSettings } from "~/lib/wordpress/plugin-settings-types";
 import { pluginSettingsKey } from "./useWorkspacePluginSettings";
 
 function translateContentKey(
@@ -37,6 +45,124 @@ function translateContentDetailKey(
     language,
     objectType ?? "post",
   ] as const;
+}
+
+const contentListPrefix = (pluginUuid: string) =>
+  ["wordpress", "re-translate", "content", pluginUuid] as const;
+
+const contentDetailPrefix = (pluginUuid: string) =>
+  ["wordpress", "re-translate", "content-detail", pluginUuid] as const;
+
+function progressFromStrings(strings: TranslateString[]): TranslateLanguageProgress {
+  const total = strings.length;
+  const translated = strings.filter(
+    (s) => s.translated_text != null && s.translated_text !== "",
+  ).length;
+  const stale = strings.filter((s) => s.is_stale).length;
+  return {
+    total,
+    translated,
+    stale,
+    percent: total > 0 ? Math.round((translated / total) * 100) : 0,
+  };
+}
+
+/** Push one object's language progress into every cached content-list page. */
+function syncListItemLanguages(
+  queryClient: QueryClient,
+  pluginUuid: string,
+  item: {
+    id: number | string;
+    object_type: string;
+    strings?: number;
+    languages: Record<string, TranslateLanguageProgress>;
+  },
+) {
+  queryClient.setQueriesData<TranslateContentListResponse>(
+    { queryKey: contentListPrefix(pluginUuid) },
+    (prev) => {
+      if (!prev?.items) return prev;
+      let changed = false;
+      const items = prev.items.map((row) => {
+        if (
+          String(row.id) !== String(item.id) ||
+          row.object_type !== item.object_type
+        ) {
+          return row;
+        }
+        changed = true;
+        return {
+          ...row,
+          strings: item.strings ?? row.strings,
+          languages: { ...row.languages, ...item.languages },
+        };
+      });
+      return changed ? { ...prev, items } : prev;
+    },
+  );
+}
+
+/** Soft refresh of every cached translate content list page. */
+export function refetchTranslateContentLists(
+  queryClient: QueryClient,
+  pluginUuid: string,
+) {
+  return queryClient.refetchQueries({
+    queryKey: contentListPrefix(pluginUuid),
+  });
+}
+
+export function progressFromTranslateStrings(
+  strings: TranslateString[],
+): TranslateLanguageProgress {
+  return progressFromStrings(strings);
+}
+
+/**
+ * Re-issue a machine-translate call while the site reports strings left.
+ * Bounded: a site that never reports progress must not spin here forever.
+ */
+async function resumeMachineTranslate(
+  call: () => Promise<Record<string, unknown>>,
+): Promise<Record<string, unknown>> {
+  let last: Record<string, unknown> = {};
+  for (let round = 0; round < 20; round += 1) {
+    last = await call();
+    if ((Number(last.remaining ?? 0) || 0) <= 0) break;
+  }
+  return last;
+}
+
+/** The server-owned counters a translate run moves. */
+export type TranslateCounters = Pick<
+  ReTranslateSettings,
+  "stats" | "index" | "bulk"
+>;
+
+/**
+ * Re-read the plugin's options and hand back only the counters.
+ *
+ * Translating changes `stats` (and a scan changes `index`) server-side, and the
+ * overview reads them straight off the settings form — so without this the
+ * numbers only move on a page refresh. Only the counters come back rather than
+ * the whole blob: the Switcher and Settings tabs may be half-edited, and
+ * reseeding the form wholesale would throw those edits away.
+ */
+export function useRefreshTranslateCounters(pluginUuid: string) {
+  const queryClient = useQueryClient();
+  return useCallback(async (): Promise<Partial<TranslateCounters> | null> => {
+    if (!pluginUuid) return null;
+    const res = await queryClient.fetchQuery({
+      queryKey: pluginSettingsKey(pluginUuid),
+      queryFn: () => getWorkspacePluginSettings(pluginUuid),
+      staleTime: 0,
+    });
+    if (!res?.found || !res.settings || typeof res.settings !== "object") {
+      return null;
+    }
+    const fresh = res.settings as Partial<ReTranslateSettings>;
+    return { stats: fresh.stats, index: fresh.index, bulk: fresh.bulk };
+  }, [queryClient, pluginUuid]);
 }
 
 type SettingsCache = WpPluginSettingsGetResponse & {
@@ -66,6 +192,8 @@ export function useTranslateContent(
     queryKey: translateContentKey(pluginUuid, params),
     queryFn: () => getTranslateContent(pluginUuid, params),
     enabled: Boolean(pluginUuid) && enabled,
+    // Remount after a tab switch should still pick up anything we missed.
+    refetchOnMount: "always",
     placeholderData: (prev) => prev,
   });
 }
@@ -101,28 +229,48 @@ export function useSaveTranslateStrings(pluginUuid: string) {
       // Patch the open editor from what we just wrote — do not invalidate the
       // detail query or it remounts into a loading spinner ("goes blank").
       const byId = new Map(saved.map((s) => [s.id, s]));
+      let patched: TranslateContentDetailResponse | undefined;
+
       queryClient.setQueriesData<TranslateContentDetailResponse>(
-        { queryKey: ["wordpress", "re-translate", "content-detail", pluginUuid] },
+        { queryKey: contentDetailPrefix(pluginUuid) },
         (prev) => {
           if (!prev?.strings) return prev;
-          return {
+          if (!saved.some((s) => prev.strings.some((row) => row.id === s.id))) {
+            return prev;
+          }
+          const strings = prev.strings.map((s) => {
+            const next = byId.get(s.id);
+            if (!next) return s;
+            return {
+              ...s,
+              translated_text: next.translated_text,
+              status: next.status,
+              is_stale: false,
+            };
+          });
+          const progress = progressFromStrings(strings);
+          const next: TranslateContentDetailResponse = {
             ...prev,
-            strings: prev.strings.map((s) => {
-              const next = byId.get(s.id);
-              if (!next) return s;
-              return {
-                ...s,
-                translated_text: next.translated_text,
-                status: next.status,
-                is_stale: false,
-              };
-            }),
+            strings,
+            progress,
+            item: {
+              ...prev.item,
+              strings: strings.length,
+              languages: {
+                ...prev.item.languages,
+                [prev.language]: progress,
+              },
+            },
           };
+          patched = next;
+          return next;
         },
       );
-      queryClient.invalidateQueries({
-        queryKey: ["wordpress", "re-translate", "content", pluginUuid],
-      });
+
+      // List badges update immediately — no waiting on a refetch.
+      if (patched) {
+        syncListItemLanguages(queryClient, pluginUuid, patched.item);
+      }
     },
   });
 }
@@ -237,6 +385,34 @@ export function useRunTranslateIndex(pluginUuid: string) {
   });
 }
 
+export function useRunTranslateBulk(pluginUuid: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      action,
+      languages,
+      mode,
+    }: {
+      action: "start" | "batch" | "cancel";
+      languages?: string[];
+      mode?: "empty_or_stale" | "empty_only" | "overwrite";
+    }) => runTranslateBulk(pluginUuid, action, languages, mode),
+    onSuccess: (data) => {
+      if (!data.bulk) return;
+      queryClient.setQueryData<WpPluginSettingsGetResponse>(
+        pluginSettingsKey(pluginUuid),
+        (prev) => ({
+          found: true,
+          settings: {
+            ...(prev?.settings as Record<string, unknown>),
+            bulk: data.bulk,
+          },
+        }),
+      );
+    },
+  });
+}
+
 export function useSetTranslateSourceLanguage(pluginUuid: string) {
   const queryClient = useQueryClient();
   return useMutation({
@@ -291,18 +467,32 @@ export function useMachineTranslateContent(pluginUuid: string) {
       id,
       language,
       objectType,
+      mode,
     }: {
       id: number | string;
       language: string;
       objectType?: string;
-    }) => machineTranslateContent(pluginUuid, id, language, objectType),
-    onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: ["wordpress", "re-translate", "content-detail", pluginUuid],
-      });
-      queryClient.invalidateQueries({
-        queryKey: pluginSettingsKey(pluginUuid),
-      });
+      mode?: "empty_or_stale" | "empty_only" | "overwrite";
+    }) =>
+      // The API chunks the object and stops at its own budget, so a very long
+      // page can come back with work left. Keep asking until it is done rather
+      // than leaving the page half translated.
+      resumeMachineTranslate(() =>
+        machineTranslateContent(pluginUuid, id, language, objectType, mode),
+      ),
+    onSuccess: async (_data, vars) => {
+      const detailKey = translateContentDetailKey(
+        pluginUuid,
+        vars.id,
+        vars.language,
+        vars.objectType,
+      );
+      await queryClient.refetchQueries({ queryKey: detailKey });
+      const detail =
+        queryClient.getQueryData<TranslateContentDetailResponse>(detailKey);
+      if (detail) {
+        syncListItemLanguages(queryClient, pluginUuid, detail.item);
+      }
     },
   });
 }

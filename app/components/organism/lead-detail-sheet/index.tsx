@@ -21,7 +21,11 @@ import { LeadNotesSection } from "~/components/organism/lead-notes-section";
 import { LeadTasksSection } from "~/components/organism/tasks/lead-tasks-section";
 import { LeadSourceIcon } from "~/components/organism/lead-source-icon";
 import { LeadStatusSelect } from "~/components/molecule/lead-status-select";
-import type { LeadStatus as LeadStatusType } from "~/lib/leads/constants";
+import { useLeadStages } from "~/lib/hooks/usePipelineStages";
+import {
+  resolveStageLabel,
+  resolveStageLabelByKey,
+} from "~/lib/pipeline-stages/labels";
 import type { TFunction } from "i18next";
 import TooltipContainer from "~/components/tooltip-container";
 import { Button } from "~/components/ui/button";
@@ -69,8 +73,7 @@ function formatDealHistoryScalar(
     return Number.isNaN(d.getTime()) ? String(value) : formatDate(d, "PP");
   }
   if (field === "stage" || field === "status") {
-    const s = String(value);
-    return t(`pipeline.stages.${s}`, { defaultValue: s });
+    return resolveStageLabelByKey("deal", String(value), t);
   }
   if (field === "contact_id" || field === "assigned_to") {
     return abbrevHistoryId(value);
@@ -136,10 +139,10 @@ export function formatHistoryAction(
     const oldStatus = item.details?.old_status as string | undefined;
     const newStatus = item.details?.new_status as string | undefined;
     const oldLabel = oldStatus
-      ? t(`leads.statuses.${oldStatus}`, { defaultValue: oldStatus })
+      ? resolveStageLabelByKey("lead", oldStatus, t)
       : "";
     const newLabel = newStatus
-      ? t(`leads.statuses.${newStatus}`, { defaultValue: newStatus })
+      ? resolveStageLabelByKey("lead", newStatus, t)
       : "";
     if (oldLabel && newLabel)
       return t("leads.detail.historyStatusChanged", { oldLabel, newLabel });
@@ -522,7 +525,6 @@ export function LeadInfoSection({
   withoutLink?: boolean;
 }) {
   const { t } = useTranslation();
-  const currentStatus = lead.status as LeadStatusType;
   const metadata = lead.metadata as Record<string, unknown> | null | undefined;
   const metadataEntries =
     metadata && typeof metadata === "object" ? Object.entries(metadata) : [];
@@ -571,9 +573,7 @@ export function LeadInfoSection({
               />
             ) : (
               <FieldValue>
-                {t(`leads.statuses.${currentStatus}`, {
-                  defaultValue: lead.status,
-                })}
+                <ReadOnlyLeadStageLabel statusKey={lead.status} />
               </FieldValue>
             )}
           </FieldRow>
@@ -716,7 +716,9 @@ export function LeadHistorySection({
                     {!isLast && <div className="mt-1 w-px flex-1 bg-border" />}
                   </div>
                   {/* Content */}
-                  <div className="min-w-0 flex-1 pb-4 last:pb-0">
+                  <div
+                    className={isLast ? "min-w-0 flex-1" : "min-w-0 flex-1 pb-4"}
+                  >
                     <TooltipContainer
                       tooltipContent={actionText}
                       showCopyButton={false}
@@ -751,5 +753,19 @@ export function LeadHistorySection({
         </div>
       )}
     </div>
+  );
+}
+
+/** Read-only stage name: custom label when configured, else the built-in translation. */
+function ReadOnlyLeadStageLabel({ statusKey }: { statusKey: string }) {
+  const { t } = useTranslation();
+  const { byKey } = useLeadStages();
+  const stage = byKey.get(statusKey);
+  return (
+    <>
+      {stage
+        ? resolveStageLabel(stage, t)
+        : resolveStageLabelByKey("lead", statusKey, t)}
+    </>
   );
 }

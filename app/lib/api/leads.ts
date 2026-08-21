@@ -1,18 +1,13 @@
 import { apiClient } from "./axios-instance";
 import type { ContactEmailMatch } from "./contacts-crm";
 
-export const LEAD_STATUSES = [
-  "new_lead",
-  "pending",
-  "in_progress",
-  "rejected",
-  "on_hold",
-  "stale",
-  "success",
-  "hidden",
-] as const;
-
-export type LeadStatus = (typeof LEAD_STATUSES)[number];
+/**
+ * Lead statuses are workspace-configurable pipeline-stage keys now — use
+ * `useLeadStages()` (app/lib/hooks/usePipelineStages.ts) for the actual set,
+ * order, labels and colors. The type stays as an alias so call sites read
+ * intentionally.
+ */
+export type LeadStatus = string;
 
 export interface LeadTasksSummary {
   open_count: number;

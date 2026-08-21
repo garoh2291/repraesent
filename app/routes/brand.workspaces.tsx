@@ -5,6 +5,7 @@ import type { TFunction } from "i18next";
 import { useSearchParams } from "react-router";
 import { ChevronDown, Search, X } from "lucide-react";
 import { useDebounce } from "~/lib/hooks/useDebounce";
+import { useSearchShortcut } from "~/lib/hooks/useSearchShortcut";
 import {
   getBrandWorkspacesOverview,
   getBrandServices,
@@ -376,6 +377,7 @@ export default function BrandWorkspaces() {
   const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
 
   const debouncedSearch = useDebounce(searchInput, 400);
+  const { ref: searchInputRef, withHint } = useSearchShortcut();
 
   // Read active service filter from URL (FilterComponent writes it automatically)
   const serviceIdParam = searchParams.get("service_id") ?? undefined;
@@ -451,8 +453,11 @@ export default function BrandWorkspaces() {
           <div className="relative flex-1 sm:w-56">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
             <input
+              ref={searchInputRef}
               type="text"
-              placeholder={t("brand.wsSearchPlaceholder", "Search workspaces…")}
+              placeholder={withHint(
+                t("brand.wsSearchPlaceholder", "Search workspaces…")
+              )}
               value={searchInput}
               onChange={(e) => handleSearch(e.target.value)}
               className="w-full rounded-lg border border-border bg-card pl-9 pr-8 py-2 text-sm text-foreground outline-none focus:ring-2 focus:ring-ring placeholder:text-muted-foreground"

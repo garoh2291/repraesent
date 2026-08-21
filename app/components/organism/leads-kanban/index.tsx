@@ -18,8 +18,6 @@ import {
 import { CSS } from "@dnd-kit/utilities";
 import { useTranslation } from "react-i18next";
 import { ChevronDown, Loader2 } from "lucide-react";
-// Loader2 is still used for the per-column "load more" inline spinner; the
-// initial-load state mirrors the pipeline kanban via the `app-spin` class.
 import { formatDate } from "~/lib/utils/format";
 import {
   getLeads,
@@ -31,11 +29,13 @@ import {
   LeadSuccessConfirmModal,
   type SuccessConfirmPhase,
 } from "~/components/organism/lead-success-confirm-modal";
+import type { PipelineStage } from "~/lib/api/pipeline-stages";
+import { useLeadStages } from "~/lib/hooks/usePipelineStages";
+import { resolveStageColors, resolveStageColorsByKey } from "~/lib/pipeline-stages/colors";
 import {
-  LEAD_STATUSES,
-  LEAD_STATUS_COLORS,
-  type LeadStatus,
-} from "~/lib/leads/constants";
+  resolveStageLabel,
+  resolveStageLabelByKey,
+} from "~/lib/pipeline-stages/labels";
 import { cn } from "~/lib/utils";
 import {
   kanbanCollisionDetection,
@@ -53,24 +53,30 @@ interface KanbanFilters {
 
 interface ReorderArgs {
   leadId: string;
-  status: LeadStatus;
+  status: string;
   position: number;
 }
 
 interface LeadsKanbanProps {
   filters: KanbanFilters;
-  onStatusChange: (leadId: string, status: LeadStatus) => void | Promise<unknown>;
+  onStatusChange: (leadId: string, status: string) => void | Promise<unknown>;
   onReorder: (args: ReorderArgs) => void | Promise<unknown>;
   onLeadSelect: (leadId: string) => void;
   canEdit?: boolean;
 }
 
-function useColumnQuery(status: LeadStatus, filters: KanbanFilters) {
+/**
+ * One column's infinite query. Lives in the per-column child components (one
+ * per configured stage — stages are workspace data now, so the columns can't
+ * be a fixed set of hook calls in the parent). Desktop column and mobile
+ * section share the cache entry via the query key.
+ */
+function useColumnQuery(stageKey: string, filters: KanbanFilters) {
   return useInfiniteQuery({
-    queryKey: ["leads-kanban-column", status, filters],
+    queryKey: ["leads-kanban-column", stageKey, filters],
     queryFn: ({ pageParam = 1 }) =>
       getLeads({
-        status,
+        status: stageKey,
         page: pageParam as number,
         limit: COLUMN_PAGE_SIZE,
         search: filters.search,
@@ -87,6 +93,11 @@ function useColumnQuery(status: LeadStatus, filters: KanbanFilters) {
   });
 }
 
+interface ColumnReport {
+  leads: Lead[];
+  isLoading: boolean;
+}
+
 export function LeadsKanban({
   filters,
   onStatusChange,
@@ -95,56 +106,42 @@ export function LeadsKanban({
   canEdit = true,
 }: LeadsKanbanProps) {
   const { t } = useTranslation();
+  const { visible: stages, byKey, isLoading: stagesLoading } = useLeadStages();
   const [activeId, setActiveId] = useState<string | null>(null);
-  // Confirmation dialog shown when a lead is dropped into the "Success" column.
+  // Confirmation dialog shown when a lead is dropped into a won-category column.
   const [successConfirm, setSuccessConfirm] = useState<{
     lead: Lead;
+    targetStage: PipelineStage;
     phase: SuccessConfirmPhase;
   } | null>(null);
   // Per-lead local override applied between drop and the cache refresh that
   // confirms the move, so cards land in the right place without flicker.
   const [pending, setPending] = useState<
-    Record<string, { status: LeadStatus; board_position: number }>
+    Record<string, { status: string; board_position: number }>
   >({});
   // Id of the card to play the "landed" animation on for ~500ms after a drop,
   // matching the pipeline kanban.
   const [justMovedId, setJustMovedId] = useState<string | null>(null);
   const landTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const undoStackRef = useRef<
-    Array<{ leadId: string; previousStatus: LeadStatus }>
-  >([]);
+  const undoStackRef = useRef<Array<{ leadId: string; previousStatus: string }>>(
+    [],
+  );
 
-  const newLeadQ = useColumnQuery("new_lead", filters);
-  const pendingQ = useColumnQuery("pending", filters);
-  const inProgressQ = useColumnQuery("in_progress", filters);
-  const rejectedQ = useColumnQuery("rejected", filters);
-  const onHoldQ = useColumnQuery("on_hold", filters);
-  const staleQ = useColumnQuery("stale", filters);
-  const successQ = useColumnQuery("success", filters);
-  const hiddenQ = useColumnQuery("hidden", filters);
-
-  const columnQueries = useMemo(
-    () =>
-      ({
-        new_lead: newLeadQ,
-        pending: pendingQ,
-        in_progress: inProgressQ,
-        rejected: rejectedQ,
-        on_hold: onHoldQ,
-        stale: staleQ,
-        success: successQ,
-        hidden: hiddenQ,
-      }) as const,
-    [
-      newLeadQ,
-      pendingQ,
-      inProgressQ,
-      rejectedQ,
-      onHoldQ,
-      staleQ,
-      successQ,
-      hiddenQ,
-    ],
+  // Raw cache rows per column, reported up by the per-stage children (the
+  // children own the infinite queries; the parent owns cross-column concerns:
+  // drag-and-drop, pending overrides, the undo stack). Keyed by stage key.
+  const [reports, setReports] = useState<Record<string, ColumnReport>>({});
+  const handleReport = useCallback(
+    (stageKey: string, leads: Lead[], isLoading: boolean) => {
+      setReports((prev) => {
+        const curr = prev[stageKey];
+        if (curr && curr.leads === leads && curr.isLoading === isLoading) {
+          return prev;
+        }
+        return { ...prev, [stageKey]: { leads, isLoading } };
+      });
+    },
+    [],
   );
 
   const countsQuery = useQuery({
@@ -163,20 +160,19 @@ export function LeadsKanban({
   // overrides. Used both as the source for the rendered view (below) and as
   // the truth against which we decide when a pending override can be cleared.
   const rawLeadsByCache = useMemo(() => {
-    const acc = {} as Record<LeadStatus, Lead[]>;
-    for (const status of LEAD_STATUSES) {
-      acc[status] =
-        columnQueries[status].data?.pages.flatMap((p) => p.data) ?? [];
+    const acc: Record<string, Lead[]> = {};
+    for (const stage of stages) {
+      acc[stage.key] = reports[stage.key]?.leads ?? [];
     }
     return acc;
-  }, [columnQueries]);
+  }, [stages, reports]);
 
   // Apply per-lead pending overrides on top of the raw cache, then
   // bucket+sort by the resulting (status, board_position).
   const leadsByStatus = useMemo(() => {
     const all: Lead[] = [];
-    for (const status of LEAD_STATUSES) {
-      for (const r of rawLeadsByCache[status] ?? []) {
+    for (const stage of stages) {
+      for (const r of rawLeadsByCache[stage.key] ?? []) {
         const override = pending[r.id];
         all.push(
           override
@@ -189,14 +185,13 @@ export function LeadsKanban({
         );
       }
     }
-    const acc = {} as Record<LeadStatus, Lead[]>;
-    for (const status of LEAD_STATUSES) acc[status] = [];
+    const acc: Record<string, Lead[]> = {};
+    for (const stage of stages) acc[stage.key] = [];
     for (const lead of all) {
-      const s = lead.status as LeadStatus;
-      if (acc[s]) acc[s].push(lead);
+      if (acc[lead.status]) acc[lead.status].push(lead);
     }
-    for (const status of LEAD_STATUSES) {
-      acc[status].sort((a, b) => {
+    for (const stage of stages) {
+      acc[stage.key].sort((a, b) => {
         const ap = a.board_position;
         const bp = b.board_position;
         if (ap == null && bp == null) {
@@ -208,7 +203,7 @@ export function LeadsKanban({
       });
     }
     return acc;
-  }, [rawLeadsByCache, pending]);
+  }, [stages, rawLeadsByCache, pending]);
 
   const allLoadedLeads = useMemo(
     () => Object.values(leadsByStatus).flat(),
@@ -225,8 +220,8 @@ export function LeadsKanban({
     setPending((curr) => {
       const next = { ...curr };
       let changed = false;
-      for (const status of LEAD_STATUSES) {
-        for (const lead of rawLeadsByCache[status] ?? []) {
+      for (const stage of stages) {
+        for (const lead of rawLeadsByCache[stage.key] ?? []) {
           const ov = next[lead.id];
           if (!ov) continue;
           if (
@@ -240,11 +235,12 @@ export function LeadsKanban({
       }
       return changed ? next : curr;
     });
-  }, [rawLeadsByCache, pending]);
+  }, [stages, rawLeadsByCache, pending]);
 
-  const isInitialLoading = LEAD_STATUSES.some(
-    (s) => columnQueries[s].isLoading,
-  );
+  const isInitialLoading =
+    stagesLoading ||
+    (stages.length > 0 &&
+      stages.every((s) => reports[s.key]?.isLoading !== false));
 
   const sensors = useSensors(
     useSensor(MouseSensor, { activationConstraint: { distance: 8 } }),
@@ -259,21 +255,20 @@ export function LeadsKanban({
 
   /**
    * Resolves the drop target into a (column, insertionIndex) pair. The
-   * over.id is either a column status (empty-column or end-of-column drop) or
-   * a `lead-<id>` (card drop — insert before that card).
+   * over.id is either a column stage key (empty-column or end-of-column drop)
+   * or a `lead-<id>` (card drop — insert before that card).
    */
   const resolveDrop = useCallback(
     (
       activeLeadId: string,
       overId: string,
-    ): { status: LeadStatus; insertionIndex: number } | null => {
-      if (LEAD_STATUSES.includes(overId as LeadStatus)) {
-        const status = overId as LeadStatus;
-        return { status, insertionIndex: leadsByStatus[status]?.length ?? 0 };
+    ): { status: string; insertionIndex: number } | null => {
+      if (byKey.has(overId)) {
+        return { status: overId, insertionIndex: leadsByStatus[overId]?.length ?? 0 };
       }
       const overLeadId = overId.replace(/^lead-/, "");
-      for (const status of LEAD_STATUSES) {
-        const idx = leadsByStatus[status].findIndex(
+      for (const stage of stages) {
+        const idx = (leadsByStatus[stage.key] ?? []).findIndex(
           (l) => l.id === overLeadId,
         );
         if (idx !== -1) {
@@ -282,12 +277,12 @@ export function LeadsKanban({
           // removal — handled by positionForInsertion which filters the moved
           // card out before reading neighbors.
           void activeLeadId;
-          return { status, insertionIndex: idx };
+          return { status: stage.key, insertionIndex: idx };
         }
       }
       return null;
     },
-    [leadsByStatus],
+    [byKey, stages, leadsByStatus],
   );
 
   const handleDragEnd = useCallback(
@@ -303,14 +298,22 @@ export function LeadsKanban({
       const lead = allLoadedLeads.find((l) => l.id === leadId);
       if (!lead) return;
 
-      // Dropping into "Success" is a deliberate action — confirm it first.
-      if (drop.status === "success" && lead.status !== "success") {
-        setSuccessConfirm({ lead, phase: "confirm" });
+      // Dropping into a won-category column is a deliberate action (it marks
+      // the lead as converted) — confirm it first.
+      const targetStage = byKey.get(drop.status);
+      const currentCategory = byKey.get(lead.status)?.category;
+      if (
+        targetStage &&
+        targetStage.category === "won" &&
+        currentCategory !== "won" &&
+        lead.status !== drop.status
+      ) {
+        setSuccessConfirm({ lead, targetStage, phase: "confirm" });
         return;
       }
 
       const position = positionForInsertion(
-        leadsByStatus[drop.status],
+        leadsByStatus[drop.status] ?? [],
         drop.insertionIndex,
         leadId,
       );
@@ -320,21 +323,15 @@ export function LeadsKanban({
       // column list — equal to currentIdx means the user dropped on the
       // card itself; any other value (incl. currentIdx ± 1) is a real move,
       // so we must NOT short-circuit those.
-      const currentIdx = leadsByStatus[lead.status as LeadStatus].findIndex(
+      const currentIdx = (leadsByStatus[lead.status] ?? []).findIndex(
         (l) => l.id === leadId,
       );
-      if (
-        lead.status === drop.status &&
-        currentIdx === drop.insertionIndex
-      ) {
+      if (lead.status === drop.status && currentIdx === drop.insertionIndex) {
         return;
       }
 
       if (lead.status !== drop.status) {
-        undoStackRef.current.push({
-          leadId,
-          previousStatus: lead.status as LeadStatus,
-        });
+        undoStackRef.current.push({ leadId, previousStatus: lead.status });
         if (undoStackRef.current.length > 50) undoStackRef.current.shift();
       }
 
@@ -348,25 +345,22 @@ export function LeadsKanban({
 
       onReorder({ leadId, status: drop.status, position });
     },
-    [resolveDrop, allLoadedLeads, leadsByStatus, onReorder],
+    [resolveDrop, allLoadedLeads, byKey, leadsByStatus, onReorder],
   );
 
   const handleConfirmSuccess = useCallback(async () => {
-    setSuccessConfirm((curr) =>
-      curr ? { ...curr, phase: "saving" } : curr,
-    );
+    setSuccessConfirm((curr) => (curr ? { ...curr, phase: "saving" } : curr));
     const lead = successConfirm?.lead;
-    if (!lead) return;
+    const targetStage = successConfirm?.targetStage;
+    if (!lead || !targetStage) return;
     try {
-      await onStatusChange(lead.id, "success");
+      await onStatusChange(lead.id, targetStage.key);
       undoStackRef.current.push({
         leadId: lead.id,
-        previousStatus: lead.status as LeadStatus,
+        previousStatus: lead.status,
       });
       if (undoStackRef.current.length > 50) undoStackRef.current.shift();
-      setSuccessConfirm((curr) =>
-        curr ? { ...curr, phase: "done" } : curr,
-      );
+      setSuccessConfirm((curr) => (curr ? { ...curr, phase: "done" } : curr));
     } catch {
       setSuccessConfirm(null);
     }
@@ -397,12 +391,27 @@ export function LeadsKanban({
     ? allLoadedLeads.find((l) => `lead-${l.id}` === activeId)
     : null;
 
-  if (isInitialLoading) {
+  if (stagesLoading || isInitialLoading) {
+    // The board container (and therefore the per-column children owning the
+    // queries) must render even while loading, or nothing would ever report
+    // back and the spinner would never clear. The spinner overlays it.
     return (
-      <div className="flex items-center justify-center py-16 gap-3">
-        <div className="h-5 w-5 app-spin rounded-full border-2 border-primary/20 border-t-primary" />
-        <p className="text-sm text-muted-foreground">{t("common.loading")}</p>
-      </div>
+      <>
+        <div className="flex items-center justify-center py-16 gap-3">
+          <div className="h-5 w-5 app-spin rounded-full border-2 border-primary/20 border-t-primary" />
+          <p className="text-sm text-muted-foreground">{t("common.loading")}</p>
+        </div>
+        <div className="hidden">
+          {stages.map((stage) => (
+            <ColumnQueryReporter
+              key={stage.id}
+              stage={stage}
+              filters={filters}
+              onReport={handleReport}
+            />
+          ))}
+        </div>
+      </>
     );
   }
 
@@ -411,9 +420,10 @@ export function LeadsKanban({
       {/* Mobile: Schedule-style accordion list */}
       <div className="sm:hidden">
         <LeadsMobileSchedule
+          stages={stages}
           leadsByStatus={leadsByStatus}
           totalsByStatus={countsQuery.data ?? {}}
-          columnQueries={columnQueries}
+          filters={filters}
           onLeadSelect={onLeadSelect}
         />
       </div>
@@ -431,23 +441,19 @@ export function LeadsKanban({
               "flex flex-1 min-h-0 h-full gap-4 overflow-x-auto overflow-y-hidden rounded-lg py-4 pl-0 pr-4 pt-5 scrollbar-hide"
             )}
           >
-            {LEAD_STATUSES.map((status) => {
-              const q = columnQueries[status];
-              return (
-                <KanbanColumn
-                  key={status}
-                  status={status}
-                  leads={leadsByStatus[status] ?? []}
-                  total={countsQuery.data?.[status] ?? 0}
-                  hasNextPage={q.hasNextPage ?? false}
-                  isFetchingMore={q.isFetchingNextPage}
-                  onLoadMore={() => q.fetchNextPage()}
-                  onLeadSelect={onLeadSelect}
-                  canEdit={canEdit}
-                  justMovedId={justMovedId}
-                />
-              );
-            })}
+            {stages.map((stage) => (
+              <KanbanColumn
+                key={stage.id}
+                stage={stage}
+                filters={filters}
+                leads={leadsByStatus[stage.key] ?? []}
+                total={countsQuery.data?.[stage.key] ?? 0}
+                onReport={handleReport}
+                onLeadSelect={onLeadSelect}
+                canEdit={canEdit}
+                justMovedId={justMovedId}
+              />
+            ))}
           </div>
 
           <DragOverlay dropAnimation={null}>
@@ -462,9 +468,7 @@ export function LeadsKanban({
         open={!!successConfirm}
         phase={successConfirm?.phase ?? "confirm"}
         leadName={
-          successConfirm?.lead.full_name ||
-          successConfirm?.lead.email ||
-          ""
+          successConfirm?.lead.full_name || successConfirm?.lead.email || ""
         }
         onConfirm={handleConfirmSuccess}
         onClose={() => setSuccessConfirm(null)}
@@ -473,30 +477,62 @@ export function LeadsKanban({
   );
 }
 
+/**
+ * Mounted while the parent shows the initial-load spinner: runs a column's
+ * query and reports it up so loading can actually finish. Renders nothing.
+ */
+function ColumnQueryReporter({
+  stage,
+  filters,
+  onReport,
+}: {
+  stage: PipelineStage;
+  filters: KanbanFilters;
+  onReport: (stageKey: string, leads: Lead[], isLoading: boolean) => void;
+}) {
+  const q = useColumnQuery(stage.key, filters);
+  const rawLeads = useMemo(
+    () => q.data?.pages.flatMap((p) => p.data) ?? [],
+    [q.data],
+  );
+  useEffect(() => {
+    onReport(stage.key, rawLeads, q.isLoading);
+  }, [stage.key, rawLeads, q.isLoading, onReport]);
+  return null;
+}
+
 function KanbanColumn({
-  status,
+  stage,
+  filters,
   leads,
   total,
-  hasNextPage,
-  isFetchingMore,
-  onLoadMore,
+  onReport,
   onLeadSelect,
   canEdit,
   justMovedId,
 }: {
-  status: LeadStatus;
+  stage: PipelineStage;
+  filters: KanbanFilters;
   leads: Lead[];
   total: number;
-  hasNextPage: boolean;
-  isFetchingMore: boolean;
-  onLoadMore: () => void;
+  onReport: (stageKey: string, leads: Lead[], isLoading: boolean) => void;
   onLeadSelect: (id: string) => void;
   canEdit: boolean;
   justMovedId: string | null;
 }) {
   const { t } = useTranslation();
-  const { setNodeRef, isOver } = useDroppable({ id: status });
-  const color = LEAD_STATUS_COLORS[status];
+  const q = useColumnQuery(stage.key, filters);
+  const rawLeads = useMemo(
+    () => q.data?.pages.flatMap((p) => p.data) ?? [],
+    [q.data],
+  );
+  useEffect(() => {
+    onReport(stage.key, rawLeads, q.isLoading);
+  }, [stage.key, rawLeads, q.isLoading, onReport]);
+
+  const { setNodeRef, isOver } = useDroppable({ id: stage.key });
+  const color = resolveStageColors(stage).dot;
+  const label = resolveStageLabel(stage, t);
 
   const isEmpty = total === 0;
   const itemIds = useMemo(() => leads.map((l) => `lead-${l.id}`), [leads]);
@@ -514,17 +550,14 @@ function KanbanColumn({
       <div className="shrink-0 p-3">
         <h3 className="font-medium text-sm flex items-center gap-2">
           <span className={cn("inline-block h-2 w-2 rounded-full shrink-0", color)} />
-          <span className="truncate">{t(`leads.statuses.${status}`)}</span>
+          <span className="truncate">{label}</span>
           <span className="inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-background px-1.5 text-xs font-medium text-muted-foreground">
             {total}
           </span>
         </h3>
       </div>
       <div className="flex-1 min-h-0 overflow-y-auto p-2 space-y-2">
-        <SortableContext
-          items={itemIds}
-          strategy={verticalListSortingStrategy}
-        >
+        <SortableContext items={itemIds} strategy={verticalListSortingStrategy}>
           {leads.map((lead) => (
             <KanbanCard
               key={lead.id}
@@ -535,11 +568,11 @@ function KanbanColumn({
             />
           ))}
         </SortableContext>
-        {hasNextPage && (
+        {q.hasNextPage && (
           <button
             type="button"
-            onClick={onLoadMore}
-            disabled={isFetchingMore}
+            onClick={() => q.fetchNextPage()}
+            disabled={q.isFetchingNextPage}
             className={cn(
               "w-full rounded-lg border border-dashed border-border bg-background/50 py-2 text-xs font-medium text-muted-foreground",
               "hover:bg-background hover:text-foreground transition-colors",
@@ -547,7 +580,7 @@ function KanbanColumn({
               "flex items-center justify-center gap-1.5",
             )}
           >
-            {isFetchingMore ? (
+            {q.isFetchingNextPage ? (
               <>
                 <Loader2 className="h-3 w-3 animate-spin" />
                 {t("common.loading")}
@@ -641,8 +674,14 @@ function KanbanCardPresentational({
 
 function KanbanCardInner({ lead }: { lead: Lead }) {
   const { t } = useTranslation();
-  const status = lead.status as LeadStatus;
-  const color = LEAD_STATUS_COLORS[status] ?? "bg-muted";
+  const { byKey } = useLeadStages();
+  const stage = byKey.get(lead.status);
+  const color = stage
+    ? resolveStageColors(stage).dot
+    : resolveStageColorsByKey("lead", lead.status).dot;
+  const label = stage
+    ? resolveStageLabel(stage, t)
+    : resolveStageLabelByKey("lead", lead.status, t);
 
   return (
     <div className="p-3 space-y-2">
@@ -660,7 +699,7 @@ function KanbanCardInner({ lead }: { lead: Lead }) {
               color === "bg-muted" ? "bg-foreground/60" : "bg-white/80",
             )}
           />
-          {t(`leads.statuses.${status}`)}
+          {label}
         </span>
       </div>
       <p className="font-semibold text-sm truncate leading-tight">
@@ -675,99 +714,115 @@ function KanbanCardInner({ lead }: { lead: Lead }) {
 
 /* ─── Mobile Schedule List (Google Calendar-style) ─── */
 
-type ColumnQueryLike = {
-  hasNextPage?: boolean;
-  isFetchingNextPage: boolean;
-  fetchNextPage: () => void;
-};
-
 function LeadsMobileSchedule({
+  stages,
   leadsByStatus,
   totalsByStatus,
-  columnQueries,
+  filters,
   onLeadSelect,
 }: {
-  leadsByStatus: Record<LeadStatus, Lead[]>;
+  stages: PipelineStage[];
+  leadsByStatus: Record<string, Lead[]>;
   totalsByStatus: Partial<Record<string, number>>;
-  columnQueries: Record<LeadStatus, ColumnQueryLike>;
+  filters: KanbanFilters;
+  onLeadSelect: (id: string) => void;
+}) {
+  return (
+    <div className="space-y-2 pt-4 pb-6">
+      {stages.map((stage) => (
+        <MobileStageSection
+          key={stage.id}
+          stage={stage}
+          leads={leadsByStatus[stage.key] ?? []}
+          total={totalsByStatus[stage.key] ?? 0}
+          filters={filters}
+          onLeadSelect={onLeadSelect}
+        />
+      ))}
+    </div>
+  );
+}
+
+function MobileStageSection({
+  stage,
+  leads,
+  total,
+  filters,
+  onLeadSelect,
+}: {
+  stage: PipelineStage;
+  leads: Lead[];
+  total: number;
+  filters: KanbanFilters;
   onLeadSelect: (id: string) => void;
 }) {
   const { t } = useTranslation();
+  // Shares the cache entry with the desktop column (same query key), so this
+  // costs no extra request — it exists for the load-more state and trigger.
+  const q = useColumnQuery(stage.key, filters);
+  const colorClass = resolveStageColors(stage).dot;
+  const label = resolveStageLabel(stage, t);
 
   return (
-    <div className="space-y-2 pt-4 pb-6">
-      {LEAD_STATUSES.map((status) => {
-        const leads = leadsByStatus[status] ?? [];
-        const colorClass = LEAD_STATUS_COLORS[status];
-        const total = totalsByStatus[status] ?? 0;
-        const q = columnQueries[status];
-
-        return (
-          <ScheduleSection
-            key={status}
-            defaultOpen={total > 0}
-            header={
-              <>
-                <div className={cn("h-8 w-1 rounded-full shrink-0", colorClass)} />
-                <div className="flex-1 min-w-0">
-                  <span className="text-sm font-semibold text-foreground">
-                    {t(`leads.statuses.${status}`)}
-                  </span>
-                </div>
-                <span
-                  className={cn(
-                    "inline-flex h-6 min-w-6 items-center justify-center rounded-full px-1.5 text-xs font-semibold",
-                    total > 0
-                      ? `${colorClass} ${colorClass === "bg-muted" ? "text-foreground" : "text-white"}`
-                      : "bg-muted text-muted-foreground"
-                  )}
-                >
-                  {total}
-                </span>
-              </>
-            }
-          >
-            {total === 0 ? (
-              <div className="px-4 pb-4 pt-1">
-                <p className="text-xs text-muted-foreground/50 text-center py-3">
-                  —
-                </p>
-              </div>
-            ) : (
-              <div className="px-3 pb-3 space-y-1">
-                {leads.map((lead) => (
-                  <LeadScheduleRow
-                    key={lead.id}
-                    lead={lead}
-                    colorClass={colorClass}
-                    onSelect={() => onLeadSelect(lead.id)}
-                  />
-                ))}
-                {q.hasNextPage && (
-                  <button
-                    type="button"
-                    onClick={() => q.fetchNextPage()}
-                    disabled={q.isFetchingNextPage}
-                    className="w-full rounded-lg border border-dashed border-border py-2 text-[11px] font-medium text-muted-foreground hover:text-foreground hover:bg-muted transition-colors flex items-center justify-center gap-1.5"
-                  >
-                    {q.isFetchingNextPage ? (
-                      <Loader2 className="h-3 w-3 animate-spin" />
-                    ) : (
-                      <>
-                        {t("leads.loadMore", { defaultValue: "Load more" })}
-                        <span className="text-muted-foreground/60">
-                          ({total - leads.length})
-                        </span>
-                      </>
-                    )}
-                  </button>
-                )}
-              </div>
+    <ScheduleSection
+      defaultOpen={total > 0}
+      header={
+        <>
+          <div className={cn("h-8 w-1 rounded-full shrink-0", colorClass)} />
+          <div className="flex-1 min-w-0">
+            <span className="text-sm font-semibold text-foreground">
+              {label}
+            </span>
+          </div>
+          <span
+            className={cn(
+              "inline-flex h-6 min-w-6 items-center justify-center rounded-full px-1.5 text-xs font-semibold",
+              total > 0
+                ? `${colorClass} ${colorClass === "bg-muted" ? "text-foreground" : "text-white"}`
+                : "bg-muted text-muted-foreground"
             )}
-          </ScheduleSection>
-        );
-      })}
-    </div>
+          >
+            {total}
+          </span>
+        </>
+      }
+    >
+      {total === 0 ? (
+        <div className="px-4 pb-4 pt-1">
+          <p className="text-xs text-muted-foreground/50 text-center py-3">—</p>
+        </div>
+      ) : (
+        <div className="px-3 pb-3 space-y-1">
+          {leads.map((lead) => (
+            <LeadScheduleRow
+              key={lead.id}
+              lead={lead}
+              colorClass={colorClass}
+              onSelect={() => onLeadSelect(lead.id)}
+            />
+          ))}
+          {q.hasNextPage && (
+            <button
+              type="button"
+              onClick={() => q.fetchNextPage()}
+              disabled={q.isFetchingNextPage}
+              className="w-full rounded-lg border border-dashed border-border py-2 text-[11px] font-medium text-muted-foreground hover:text-foreground hover:bg-muted transition-colors flex items-center justify-center gap-1.5"
+            >
+              {q.isFetchingNextPage ? (
+                <Loader2 className="h-3 w-3 animate-spin" />
+              ) : (
+                <>
+                  {t("leads.loadMore", { defaultValue: "Load more" })}
+                  <span className="text-muted-foreground/60">
+                    ({total - leads.length})
+                  </span>
+                </>
+              )}
+            </button>
+          )}
+        </div>
+      )}
+    </ScheduleSection>
   );
 }
 

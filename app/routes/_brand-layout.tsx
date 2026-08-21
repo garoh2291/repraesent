@@ -6,11 +6,13 @@ import { useAuthContext } from "~/providers/auth-provider";
 import { updateUserLocale } from "~/lib/api/auth";
 import { normalizeLocale, type SupportedLocale } from "~/i18n/locales";
 import {
+  Activity,
   BarChart3,
   Building2,
   ChevronDown,
   Store,
   LineChart,
+  Megaphone,
   ShoppingBag,
   LogOut,
   Menu,
@@ -44,6 +46,18 @@ const NAV_ITEMS = [
     key: "navAnalytics",
     path: "/brand/analytics",
     icon: LineChart,
+    exact: false,
+  },
+  {
+    key: "navSocialAds",
+    path: "/brand/social-ads",
+    icon: Megaphone,
+    exact: false,
+  },
+  {
+    key: "navActivity",
+    path: "/brand/activity",
+    icon: Activity,
     exact: false,
   },
   { key: "navOrders", path: "/brand/orders", icon: ShoppingBag, exact: false },

@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { createLead, updateLeadStatus } from "~/lib/api/leads";
-import { LEAD_STATUSES, type LeadStatus } from "~/lib/leads/constants";
+import { useLeadStages } from "~/lib/hooks/usePipelineStages";
 import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
 import { Label } from "~/components/ui/label";
@@ -22,20 +22,24 @@ export interface CreateLeadDialogProps {
   onOpenChange: (open: boolean) => void;
 }
 
-const DEFAULT_STATUS: LeadStatus = "new_lead";
-
 export function CreateLeadDialog({
   open,
   onOpenChange,
 }: CreateLeadDialogProps) {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
+  const { entry } = useLeadStages();
+  // The backend creates leads in the workspace's entry stage; an empty status
+  // state means "keep that default" and only an explicit pick issues the
+  // follow-up status update.
+  const defaultStatus = entry?.key ?? "new_lead";
 
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
-  const [status, setStatus] = useState<LeadStatus>(DEFAULT_STATUS);
+  const [status, setStatus] = useState("");
+  const effectiveStatus = status || defaultStatus;
 
   useEffect(() => {
     if (!open) {
@@ -43,7 +47,7 @@ export function CreateLeadDialog({
       setLastName("");
       setEmail("");
       setPhone("");
-      setStatus(DEFAULT_STATUS);
+      setStatus("");
     }
   }, [open]);
 
@@ -68,8 +72,8 @@ export function CreateLeadDialog({
         email: email.trim() || null,
         phone: phone.trim() || null,
       });
-      if (status !== DEFAULT_STATUS) {
-        await updateLeadStatus(res.id, status);
+      if (effectiveStatus !== defaultStatus) {
+        await updateLeadStatus(res.id, effectiveStatus);
       }
       return res;
     },
@@ -130,7 +134,7 @@ export function CreateLeadDialog({
             <Label>
               {t("leads.fields.status", { defaultValue: "Status" })}
             </Label>
-            <LeadStatusSelect value={status} onValueChange={setStatus} />
+            <LeadStatusSelect value={effectiveStatus} onValueChange={setStatus} />
           </div>
 
           <div className="space-y-1.5">

@@ -6,6 +6,7 @@ import {
   ArrowLeft,
   CalendarClock,
   ExternalLink,
+  Send,
   Tag,
   Trash2,
   User as UserIcon,
@@ -18,20 +19,28 @@ import {
   getDeal,
   getDealHistory,
   patchDeal,
-  patchDealStatus,
-  DEAL_STAGE_KEYS,
   parseDealValue,
   formatDealValueInput,
   type DealListItem,
-  type DealStageKey,
   type PaginatedDeals,
 } from "~/lib/api/deals";
+import { useDealStages } from "~/lib/hooks/usePipelineStages";
+import {
+  resolveStageColors,
+  resolveStageColorsByKey,
+} from "~/lib/pipeline-stages/colors";
+import {
+  resolveStageLabel,
+  resolveStageLabelByKey,
+} from "~/lib/pipeline-stages/labels";
 import { useCanEditLeads } from "~/lib/hooks/useCanEditLeads";
 import { Avatar, AvatarFallback } from "~/components/ui/avatar";
 import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
 import { Label } from "~/components/ui/label";
 import { ActivityPanel } from "~/components/organism/activity-panel";
+import { useComposeEmail } from "~/components/organism/compose-email/use-compose-email";
+import { composeInvalidateKeys } from "~/components/organism/activity-panel/shared";
 import {
   Select,
   SelectContent,
@@ -56,10 +65,6 @@ import {
   DatePickerPopover,
   apiDatetimeToIsoDateString,
 } from "~/components/molecule/date-picker-popover";
-import {
-  STAGE_COLOR,
-  STAGE_TEXT,
-} from "~/components/molecule/deal-stage-badge";
 import { cn } from "~/lib/utils";
 import { formatCurrency, formatDate } from "~/lib/utils/format";
 
@@ -73,21 +78,6 @@ export function meta() {
 function str(v: unknown): string {
   return v == null ? "" : String(v);
 }
-
-const STAGE_RING: Record<DealStageKey, string> = {
-  new: "ring-slate-400/30",
-  in_progress: "ring-sky-500/30",
-  won: "ring-emerald-600/30",
-  lost: "ring-red-500/30",
-};
-
-const STAGE_HERO_BG: Record<DealStageKey, string> = {
-  new: "from-slate-400/25 via-slate-400/10 to-primary/10 dark:from-slate-500/20 dark:via-slate-500/5 dark:to-primary/15",
-  in_progress:
-    "from-sky-500/25 via-sky-500/10 to-primary/10 dark:from-sky-500/20 dark:via-sky-500/5 dark:to-primary/15",
-  won: "from-emerald-500/25 via-emerald-500/10 to-primary/10 dark:from-emerald-500/20 dark:via-emerald-500/5 dark:to-primary/15",
-  lost: "from-red-500/25 via-red-500/10 to-primary/10 dark:from-red-500/20 dark:via-red-500/5 dark:to-primary/15",
-};
 
 function initials(name: string): string {
   const cleaned = name.trim();
@@ -123,16 +113,18 @@ function MetaRow({ icon, label, children }: MetaRowProps) {
 
 export default function PipelineDealDetailPage() {
   const { t } = useTranslation();
+  const { openCompose } = useComposeEmail();
   const { dealId } = useParams<{ dealId: string }>();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { currentWorkspace } = useAuthContext();
   const canEdit = useCanEditLeads();
+  const { visible: dealStages, byKey: dealStagesByKey } = useDealStages();
 
   const [title, setTitle] = useState("");
   const [valueStr, setValueStr] = useState("");
   const [assignee, setAssignee] = useState("unassigned");
-  const [stage, setStage] = useState<DealStageKey>("new");
+  const [stage, setStage] = useState<string>("new");
   const [expectedClose, setExpectedClose] = useState("");
   const [deleteOpen, setDeleteOpen] = useState(false);
 
@@ -202,8 +194,7 @@ export default function PipelineDealDetailPage() {
     setTitle(nextTitle);
     setValueStr(nextValueStr);
     setAssignee(nextAssignee);
-    const st = str(deal.stage) as DealStageKey;
-    setStage((DEAL_STAGE_KEYS as readonly string[]).includes(st) ? st : "new");
+    setStage(str(deal.stage) || "new");
     setExpectedClose(nextExpectedClose);
     lastSaved.current = {
       title: nextTitle,
@@ -346,21 +337,19 @@ export default function PipelineDealDetailPage() {
   });
 
   const stageMutation = useMutation({
-    mutationFn: async (next: DealStageKey) => {
+    mutationFn: async (next: string) => {
       if (!dealId) throw new Error("missing deal");
-      if (next === "won" || next === "lost") {
-        await patchDealStatus(dealId, next);
-      } else {
-        await patchDeal(dealId, { stage: next });
-      }
+      // The backend derives status + won_at/lost_at from the stage's category.
+      await patchDeal(dealId, { stage: next });
     },
-    onMutate: async (next: DealStageKey) => {
+    onMutate: async (next: string) => {
       await queryClient.cancelQueries({ queryKey: ["deals-pipeline"] });
       await queryClient.cancelQueries({ queryKey: ["contact-deals"] });
+      const category = dealStagesByKey.get(next)?.category;
       const patch: Partial<DealListItem> =
-        next === "won" || next === "lost"
-          ? { stage: next, status: next }
-          : { stage: next };
+        category === "won" || category === "lost"
+          ? { stage: next, status: category }
+          : { stage: next, status: "new" };
       return { snapshots: applyOptimisticDeal(patch) };
     },
     onError: (_err, _next, ctx) => {
@@ -484,6 +473,24 @@ export default function PipelineDealDetailPage() {
     title.trim() ||
     t("pipeline.untitledDeal", { defaultValue: "Untitled deal" });
 
+  // Every attached contact with an address is prefilled, each removable in the
+  // composer — a deal conversation usually involves all of them, and dropping
+  // one is cheaper than hunting for the missing person.
+  const composeRecipients = dealContacts
+    .filter((c) => !!c.primary_email)
+    .map((c) => ({ email: c.primary_email!, name: c.full_name }));
+
+  const openComposer = () =>
+    openCompose({
+      to: composeRecipients,
+      dealId,
+      contextLabel: t("compose.contextDeal", {
+        defaultValue: "Deal: {{title}}",
+        title: displayTitle,
+      }),
+      invalidateKeys: composeInvalidateKeys({ dealId }, "deal"),
+    });
+
   const titleEmpty = title.trim().length === 0;
   const numericValue = parseDealValue(valueStr);
   const valueNegative = numericValue != null && numericValue < 0;
@@ -500,7 +507,13 @@ export default function PipelineDealDetailPage() {
   const createdAt = deal.created_at as string | null | undefined;
   const updatedAt = deal.updated_at as string | null | undefined;
 
-  const stageLabel = t(`pipeline.stages.${stage}`, { defaultValue: stage });
+  const stageRow = dealStagesByKey.get(stage);
+  const stageFacets = stageRow
+    ? resolveStageColors(stageRow)
+    : resolveStageColorsByKey("deal", stage);
+  const stageLabel = stageRow
+    ? resolveStageLabel(stageRow, t)
+    : resolveStageLabelByKey("deal", stage, t);
 
   return (
     <div className="p-4 sm:p-6 space-y-4 sm:space-y-6 app-fade-in">
@@ -520,7 +533,7 @@ export default function PipelineDealDetailPage() {
           aria-hidden
           className={cn(
             "relative h-20 bg-linear-to-r transition-colors duration-500",
-            STAGE_HERO_BG[stage],
+            stageFacets.heroBg,
           )}
         />
         <div className="px-4 pb-5 pt-0 sm:px-6">
@@ -529,7 +542,7 @@ export default function PipelineDealDetailPage() {
               size="lg"
               className={cn(
                 "size-20 shrink-0 border-4 border-card bg-card shadow-(--shadow) ring-4",
-                STAGE_RING[stage],
+                stageFacets.ring,
               )}
             >
               <AvatarFallback className="bg-linear-to-br from-secondary/30 to-primary/10 text-lg font-semibold tracking-tight text-foreground">
@@ -569,30 +582,43 @@ export default function PipelineDealDetailPage() {
               </div>
             </div>
 
-            <div className="shrink-0 text-left sm:text-right">
-              <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">
-                {t("pipeline.fields.value", { defaultValue: "Value" })}
-              </p>
-              <p className="text-2xl font-semibold tabular-nums tracking-tight text-foreground sm:text-3xl">
-                {valueDisplay}
-              </p>
+            <div className="flex shrink-0 items-center gap-3 sm:flex-row-reverse">
+              <div className="text-left sm:text-right">
+                <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">
+                  {t("pipeline.fields.value", { defaultValue: "Value" })}
+                </p>
+                <p className="text-2xl font-semibold tabular-nums tracking-tight text-foreground sm:text-3xl">
+                  {valueDisplay}
+                </p>
+              </div>
+              {canEdit && composeRecipients.length > 0 ? (
+                <Button
+                  size="sm"
+                  className="h-8 gap-1.5 text-xs"
+                  onClick={openComposer}
+                >
+                  <Send className="h-3.5 w-3.5" />
+                  {t("compose.emailAction", { defaultValue: "Email" })}
+                </Button>
+              ) : null}
             </div>
           </div>
 
           {/* STAGE STEPPER */}
           <div className="mt-5">
             <div className="flex w-full overflow-hidden rounded-xl border border-border bg-background/40">
-              {DEAL_STAGE_KEYS.map((s, idx) => {
-                const active = s === stage;
-                const isLast = idx === DEAL_STAGE_KEYS.length - 1;
+              {dealStages.map((stageOption, idx) => {
+                const active = stageOption.key === stage;
+                const isLast = idx === dealStages.length - 1;
+                const facets = resolveStageColors(stageOption);
                 return (
                   <button
-                    key={s}
+                    key={stageOption.id}
                     type="button"
                     disabled={!canEdit || stageMutation.isPending || active}
                     onClick={() => {
-                      setStage(s);
-                      stageMutation.mutate(s);
+                      setStage(stageOption.key);
+                      stageMutation.mutate(stageOption.key);
                     }}
                     className={cn(
                       "group relative flex flex-1 items-center justify-center gap-2 px-3 py-2.5 text-xs font-medium transition-colors",
@@ -608,14 +634,14 @@ export default function PipelineDealDetailPage() {
                     <span
                       className={cn(
                         "inline-block h-2 w-2 rounded-full transition-transform",
-                        STAGE_COLOR[s],
+                        facets.dot,
                         active &&
                           "scale-125 ring-2 ring-offset-1 ring-offset-card",
-                        active && STAGE_RING[s],
+                        active && facets.ring,
                       )}
                     />
                     <span className="truncate">
-                      {t(`pipeline.stages.${s}`, { defaultValue: s })}
+                      {resolveStageLabel(stageOption, t)}
                     </span>
                   </button>
                 );
@@ -752,7 +778,11 @@ export default function PipelineDealDetailPage() {
           <ActivityPanel
             variant="deal"
             dealId={dealId}
-            contextLabel={displayTitle}
+            contextLabel={t("compose.contextDeal", {
+              defaultValue: "Deal: {{title}}",
+              title: displayTitle,
+            })}
+            composeRecipients={composeRecipients}
             canEdit={canEdit}
             workspaceMembers={workspaceMembers}
             history={dealHistoryQuery.data ?? []}
@@ -792,13 +822,13 @@ export default function PipelineDealDetailPage() {
                   <span
                     className={cn(
                       "inline-flex items-center gap-1.5",
-                      STAGE_TEXT[stage],
+                      stageFacets.text,
                     )}
                   >
                     <span
                       className={cn(
                         "inline-block h-2 w-2 rounded-full",
-                        STAGE_COLOR[stage],
+                        stageFacets.dot,
                       )}
                     />
                     {stageLabel}

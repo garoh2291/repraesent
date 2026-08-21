@@ -7,10 +7,13 @@ import {
   AtSign,
   Building2,
   BookUser,
+  CalendarDays,
+  CalendarRange,
   CheckSquare,
   ChevronDown,
   ClipboardList,
   Columns3,
+  Kanban,
   Globe,
   HomeIcon,
   Inbox,
@@ -35,6 +38,8 @@ import { getLocalizedServiceName } from "~/lib/api/auth";
 import { useAuthContext } from "~/providers/auth-provider";
 import { setStoredSelectedView, BRAND_VIEW } from "~/lib/api/axios-instance";
 import { useAppointmentConfigs } from "~/lib/hooks/useAppointmentConfigs";
+import { useCalendarSummary } from "~/lib/hooks/useCalendarSummary";
+import { usePilotFeatures } from "~/lib/feature-flags";
 import { useWorkspaceWpSite } from "~/lib/hooks/useWorkspaceWpSite";
 import { useStripeConnection } from "~/lib/hooks/useWorkspaceIntegrations";
 import { LanguageSwitcher } from "~/components/language-switcher";
@@ -48,7 +53,7 @@ import {
 import logoUrl from "~/components/icons/re_praesent-mark-brand-hor.svg?url";
 
 const lucideIconNames = new Set(
-  Object.keys(LucideIcons).filter((key) => /^[A-Z]/.test(key)),
+  Object.keys(LucideIcons).filter((key) => /^[A-Z]/.test(key))
 );
 
 function kebabToPascal(name: string) {
@@ -86,11 +91,21 @@ const SETTINGS_NAV = [
     labelKey: "settings.tabs.emailAccounts",
     Icon: AtSign,
   },
+  {
+    to: "/settings/calendars",
+    labelKey: "settings.tabs.calendars",
+    Icon: CalendarDays,
+  },
   { to: "/settings/bcc", labelKey: "settings.tabs.bcc", Icon: Inbox },
   {
     to: "/settings/integrations",
     labelKey: "settings.tabs.integrations",
     Icon: Plug,
+  },
+  {
+    to: "/settings/pipelines",
+    labelKey: "settings.tabs.pipelines",
+    Icon: Kanban,
   },
 ] as const;
 
@@ -160,31 +175,35 @@ export function Sidebar({
   >(null);
   const hasAppointmentsService =
     currentWorkspace?.services?.some(
-      (s) => s.service_type === "appointments",
+      (s) => s.service_type === "appointments"
     ) ?? false;
   const { data: appointmentConfigs } = useAppointmentConfigs(
-    hasAppointmentsService && !!currentWorkspace?.id,
+    hasAppointmentsService && !!currentWorkspace?.id
   );
   const showAppointmentsInSidebar =
     hasAppointmentsService && !!appointmentConfigs?.length;
+  // The team Calendar page only exists once someone connected a source, so
+  // the nav entry follows the same summary the page itself redirects on.
+  const { data: calendarSummary } = useCalendarSummary(!!currentWorkspace?.id);
+  const showCalendarInSidebar =
+    (calendarSummary?.google_account_count ?? 0) +
+      (calendarSummary?.baikal_config_count ?? 0) >
+    0;
   const isDoorboostBrandWs = currentWorkspace?.type === "doorboost_brand";
   // TEMPORARY: Workflows is still being piloted, so in production only the
   // pilot workspace sees the nav entry. Local development always shows it.
-  // Delete this and the `showWorkflows` guard on the NavLink when the feature
-  // ships to everyone. This hides the entry only — /workflows stays reachable
-  // by URL, and nothing here is a permission boundary.
-  const WORKFLOWS_PILOT_WORKSPACE_ID = "0941b49b-edaa-44bb-8d6f-8f6decd10502";
-  const showWorkflows =
-    import.meta.env.DEV ||
-    currentWorkspace?.id === WORKFLOWS_PILOT_WORKSPACE_ID;
+  // Pilot gating lives in ~/lib/feature-flags. These hide entries only — the
+  // routes stay reachable by URL, and none of this is a permission boundary.
+  const pilot = usePilotFeatures();
+  const showWorkflows = pilot.workflows;
   // Route-driven rather than stateful: deep links and refreshes land in the
   // right mode for free, and there is nothing to reset on the way out.
   const inSettings = location.pathname.startsWith("/settings");
   const { data: wpSite } = useWorkspaceWpSite(
-    !!currentWorkspace?.id && !isDoorboostBrandWs,
+    !!currentWorkspace?.id && !isDoorboostBrandWs
   );
   const { isConnected: hasStripeConnection } = useStripeConnection(
-    !!currentWorkspace?.id && !isDoorboostBrandWs,
+    !!currentWorkspace?.id && !isDoorboostBrandWs
   );
 
   const handleWorkspaceChange = (workspaceId: string) => {
@@ -196,7 +215,7 @@ export function Sidebar({
     <aside
       className={cn(
         "flex h-full w-[220px] shrink-0 flex-col bg-[#111113] border-r border-white/5",
-        className,
+        className
       )}
     >
       {/* Logo */}
@@ -297,7 +316,9 @@ export function Sidebar({
               </NavLink>
             </div>
 
-            {SETTINGS_NAV.map(({ to, labelKey, Icon }) => (
+            {SETTINGS_NAV.filter(
+              (item) => item.to !== "/settings/calendars" || pilot.calendar
+            ).map(({ to, labelKey, Icon }) => (
               <NavLink
                 key={to}
                 to={to}
@@ -358,7 +379,7 @@ export function Sidebar({
               {t("nav.home")}
             </NavLink>
 
-            {wpSite && (
+            {wpSite?.sso_enabled && (
               <NavLink
                 to="/website"
                 isActive={location.pathname.startsWith("/website")}
@@ -409,7 +430,7 @@ export function Sidebar({
               ?.filter(
                 (service) =>
                   service.service_type !== "appointments" ||
-                  showAppointmentsInSidebar,
+                  showAppointmentsInSidebar
               )
               ?.slice()
               ?.sort((a, b) => (a.service_order ?? 0) - (b.service_order ?? 0))
@@ -456,7 +477,7 @@ export function Sidebar({
                         <span className="truncate">
                           {getLocalizedServiceName(
                             service,
-                            i18n.language ?? "de",
+                            i18n.language ?? "de"
                           )}
                         </span>
                       </NavLink>
@@ -516,6 +537,17 @@ export function Sidebar({
                   </Fragment>
                 );
               })}
+
+            {showCalendarInSidebar && pilot.calendar && (
+              <NavLink
+                to="/calendar"
+                isActive={location.pathname.startsWith("/calendar")}
+                onClick={onClose}
+              >
+                <CalendarRange className="h-4 w-4 shrink-0" />
+                {t("nav.calendar", { defaultValue: "Calendar" })}
+              </NavLink>
+            )}
           </>
         )}
       </nav>

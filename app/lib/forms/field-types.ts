@@ -1,5 +1,5 @@
 /**
- * Builder-side metadata for the 17 field types: how each one is presented in the
+ * Builder-side metadata for the 18 field types: how each one is presented in the
  * palette, and what a freshly-added field of that type looks like.
  *
  * The `labelKey` values are APP strings (i18next, forms.palette.types.*) because
@@ -10,6 +10,7 @@
 import {
   AlignLeft,
   AtSign,
+  CalendarClock,
   CalendarDays,
   CheckSquare,
   ChevronDownSquare,
@@ -164,6 +165,13 @@ export const FIELD_TYPE_META: Record<FormFieldType, FieldTypeMeta> = {
     keyStem: "scale",
     mappable: false,
   },
+  appointment: {
+    type: "appointment",
+    icon: CalendarClock,
+    group: "dateNumber",
+    keyStem: "appointment",
+    mappable: false,
+  },
 
   heading: {
     type: "heading",
@@ -198,7 +206,10 @@ export const FIELD_GROUPS: { group: FieldGroup; types: FormFieldType[] }[] = [
     group: "choice",
     types: ["dropdown", "radio_group", "checkbox_group", "checkbox"],
   },
-  { group: "dateNumber", types: ["number", "date", "rating", "scale"] },
+  {
+    group: "dateNumber",
+    types: ["number", "date", "rating", "scale", "appointment"],
+  },
   { group: "layout", types: ["heading", "paragraph"] },
   { group: "advanced", types: ["hidden"] },
 ];
@@ -287,6 +298,23 @@ export function createField(
       break;
     case "scale":
       field.scale = { min: 1, max: 10 };
+      break;
+    case "appointment":
+      // Booking a slot that then isn't held is worse than being asked to pick
+      // one — required by default, unlike every other type.
+      field.validation = { required: true };
+      field.appointment = {
+        accountId: "",
+        calendarId: "",
+        busyCalendarKeys: "all",
+        durationMinutes: 30,
+        window: { start: "09:00", end: "17:00" },
+        weekdays: ["mon", "tue", "wed", "thu", "fri"],
+        timezone:
+          Intl.DateTimeFormat().resolvedOptions().timeZone || "Europe/Berlin",
+        minNoticeHours: 2,
+        maxDaysAhead: 30,
+      };
       break;
     case "address":
       field.addressParts = {

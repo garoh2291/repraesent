@@ -39,5 +39,8 @@ export function useMailInvalidate() {
     void queryClient.invalidateQueries({ queryKey: ["contact-emails"] });
     void queryClient.invalidateQueries({ queryKey: ["contacts"] });
     void queryClient.invalidateQueries({ queryKey: ["contact"] });
+    // Linking a message to a contact can make a pending send reconcilable from
+    // that contact's point of view, so the placeholder list has to re-read too.
+    void queryClient.invalidateQueries({ queryKey: ["outbound-pending"] });
   };
 }

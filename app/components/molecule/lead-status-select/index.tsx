@@ -6,30 +6,20 @@ import {
   SelectTrigger,
   SelectValue,
 } from "~/components/ui/select";
+import { useLeadStages } from "~/lib/hooks/usePipelineStages";
 import {
-  LEAD_STATUSES,
-  LEAD_STATUS_COLORS,
-  type LeadStatus,
-} from "~/lib/leads/constants";
+  resolveStageColors,
+  resolveStageColorsByKey,
+} from "~/lib/pipeline-stages/colors";
+import { resolveStageLabel } from "~/lib/pipeline-stages/labels";
 import { cn } from "~/lib/utils";
 
 interface LeadStatusSelectProps {
-  value: LeadStatus | string;
-  onValueChange: (value: LeadStatus) => void;
+  value: string;
+  onValueChange: (value: string) => void;
   disabled?: boolean;
   className?: string;
 }
-
-const STATUS_BORDER_CLASSES: Record<LeadStatus, string> = {
-  new_lead: "border-l-blue-500",
-  pending: "border-l-amber-500",
-  in_progress: "border-l-violet-500",
-  rejected: "border-l-red-500",
-  on_hold: "border-l-orange-500",
-  stale: "border-l-gray-500",
-  success: "border-l-emerald-500",
-  hidden: "border-l-muted",
-};
 
 export function LeadStatusSelect({
   value,
@@ -38,33 +28,35 @@ export function LeadStatusSelect({
   className,
 }: LeadStatusSelectProps) {
   const { t } = useTranslation();
-  const currentStatus = value as LeadStatus;
-  const borderClass =
-    STATUS_BORDER_CLASSES[currentStatus] ?? "border-l-transparent";
+  const { visible, byKey } = useLeadStages();
+  const current = byKey.get(value);
+  const borderClass = current
+    ? resolveStageColors(current).borderL
+    : (resolveStageColorsByKey("lead", value).borderL ?? "border-l-transparent");
+
+  // A record can sit in a stage that was since hidden — keep that stage in
+  // the list so the control never shows a blank value.
+  const options =
+    current && current.is_hidden ? [...visible, current] : visible;
 
   return (
-    <Select
-      value={value}
-      onValueChange={(v) => onValueChange(v as LeadStatus)}
-      disabled={disabled}
-    >
+    <Select value={value} onValueChange={onValueChange} disabled={disabled}>
       <SelectTrigger
-        className={cn(
-          "border-l-4 border-l-transparent ",
-          borderClass,
-          className
-        )}
+        className={cn("border-l-4 border-l-transparent ", borderClass, className)}
       >
         <SelectValue />
       </SelectTrigger>
       <SelectContent>
-        {LEAD_STATUSES.map((s) => (
-          <SelectItem key={s} value={s}>
+        {options.map((stage) => (
+          <SelectItem key={stage.id} value={stage.key}>
             <span className="flex items-center gap-1.5">
               <span
-                className={cn("w-2 h-2 rounded-full", LEAD_STATUS_COLORS[s])}
+                className={cn(
+                  "w-2 h-2 rounded-full",
+                  resolveStageColors(stage).dot,
+                )}
               />
-              {t(`leads.statuses.${s}`)}
+              {resolveStageLabel(stage, t)}
             </span>
           </SelectItem>
         ))}

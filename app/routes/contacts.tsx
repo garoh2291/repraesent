@@ -11,6 +11,7 @@ import {
 } from "~/lib/api/contacts-crm";
 import { CONTACT_TYPES, type ContactType } from "~/lib/contacts/contact-types";
 import { useDebounce } from "~/lib/hooks/useDebounce";
+import { useSearchShortcut } from "~/lib/hooks/useSearchShortcut";
 import { CONTACT_TABLE_FILTERS_BASE } from "~/lib/contacts/filter-presets";
 import type { Filter } from "~/components/molecule/filter-component/types";
 import FilterComponent from "~/components/molecule/filter-component";
@@ -112,6 +113,7 @@ export default function ContactsPage() {
   const contactTypeFilter =
     contactTypeRaw === "end_customer" ? "customer" : contactTypeRaw;
   const debouncedSearch = useDebounce(search, 300);
+  const { ref: searchInputRef, withHint } = useSearchShortcut();
 
   const [importModal, setImportModal] = useState<{
     open: boolean;
@@ -274,9 +276,12 @@ export default function ContactsPage() {
         <div className="relative flex-1 sm:max-w-sm">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground pointer-events-none" />
           <Input
-            placeholder={t("contacts.searchPlaceholder", {
-              defaultValue: "Search by name, email, or phone…",
-            })}
+            ref={searchInputRef}
+            placeholder={withHint(
+              t("contacts.searchPlaceholder", {
+                defaultValue: "Search by name, email, or phone…",
+              })
+            )}
             value={search}
             onChange={(e) => setParam({ search: e.target.value, page: "1" })}
             className="pl-9 pr-9"

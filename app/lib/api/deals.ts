@@ -24,14 +24,12 @@ export function formatDealValueInput(raw: string): string {
   return parts.join(".");
 }
 
-export const DEAL_STAGE_KEYS = [
-  "new",
-  "in_progress",
-  "won",
-  "lost",
-] as const;
-
-export type DealStageKey = (typeof DEAL_STAGE_KEYS)[number];
+/**
+ * Deal stages are workspace-configurable pipeline-stage keys now — use
+ * `useDealStages()` (app/lib/hooks/usePipelineStages.ts) for the actual set,
+ * order, labels and colors.
+ */
+export type DealStageKey = string;
 
 export interface DealListItem {
   id: string;
@@ -50,6 +48,7 @@ export interface DealListItem {
   assignee_last_name: string | null;
   created_at: string;
   updated_at: string;
+  stage_changed_at: string | null;
   contact_full_name: string | null;
   primary_email: string | null;
   primary_phone: string | null;
