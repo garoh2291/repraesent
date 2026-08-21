@@ -1138,11 +1138,12 @@ function AppointmentConfig({
       </Field>
 
       <Cols>
-        {/* Only Google targets expose the notice setting: Baikal/CalDAV
-            booking calendars carry their own scheduling rules on the server
-            side, so a second knob here would just fight them. The default
-            (2h) still applies to slot computation. */}
-        {selectedTarget?.startsWith("google:") ? (
+        {/* Only Google/Microsoft targets expose the notice setting:
+            Baikal/CalDAV booking calendars carry their own scheduling rules on
+            the server side, so a second knob here would just fight them. The
+            default (2h) still applies to slot computation. */}
+        {selectedTarget?.startsWith("google:") ||
+        selectedTarget?.startsWith("microsoft:") ? (
           <Field>
             <Label htmlFor="fi-appt-notice">
               {t("forms.inspector.appointment.minNotice")}

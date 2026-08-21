@@ -9,6 +9,7 @@ import { toast } from "sonner";
 import {
   CalendarDays,
   CheckCircle2,
+  Copy,
   RefreshCw,
   Server,
   Trash2,
@@ -16,12 +17,15 @@ import {
   X,
 } from "lucide-react";
 import i18n from "~/i18n";
+import { MicrosoftIcon } from "~/components/icons/MicrosoftIcon";
 import { useAuthContext } from "~/providers/auth-provider";
 import { extractErrorMessage } from "~/lib/api/axios-instance";
 import {
   connectCaldavAccount,
   disconnectCalendarAccount,
   getCalendarAuthorizeUrl,
+  getMicrosoftCalendarAdminConsentUrl,
+  getMicrosoftCalendarAuthorizeUrl,
   listCalendarAccounts,
   refreshAccountCalendars,
   type BaikalConfig,
@@ -156,16 +160,32 @@ function createCaldavSchema(t: (key: string) => string) {
 
 type CaldavFormValues = z.infer<ReturnType<typeof createCaldavSchema>>;
 
-/** Every result the OAuth callback can bounce back with. */
-type GoogleOutcome = "connected" | "denied" | "expired" | "error" | "failed";
+/**
+ * Every result an OAuth callback (Google or Microsoft) can bounce back with.
+ * The two admin_* outcomes are Microsoft-only: an unverified publisher's app
+ * hits the tenant's "Need admin approval" wall, and the admin-consent flow
+ * returns through the same callback.
+ */
+type OAuthOutcome =
+  | "connected"
+  | "denied"
+  | "expired"
+  | "error"
+  | "failed"
+  | "admin_required"
+  | "admin_granted";
 
-const GOOGLE_OUTCOMES: GoogleOutcome[] = [
+const OAUTH_OUTCOMES: OAuthOutcome[] = [
   "connected",
   "denied",
   "expired",
   "error",
   "failed",
+  "admin_required",
+  "admin_granted",
 ];
+
+type OAuthCalendarProvider = "google" | "microsoft";
 
 export default function SettingsCalendars() {
   const { t } = useTranslation();
@@ -180,8 +200,10 @@ export default function SettingsCalendars() {
   const isAdmin = currentWorkspace?.member_role === "admin";
 
   const [googleStarting, setGoogleStarting] = useState(false);
-  const [googleResult, setGoogleResult] = useState<{
-    outcome: GoogleOutcome;
+  const [microsoftStarting, setMicrosoftStarting] = useState(false);
+  const [oauthResult, setOauthResult] = useState<{
+    provider: OAuthCalendarProvider;
+    outcome: OAuthOutcome;
     email?: string;
     reason?: string;
   } | null>(null);
@@ -202,21 +224,28 @@ export default function SettingsCalendars() {
     ]);
   };
 
-  // Google sends the user back to this page with the result in the query
-  // string, because the callback is a plain browser redirect with nowhere else
-  // to put it. Read it once into state, then strip it from the address bar so a
-  // refresh doesn't resurrect a stale "connected!" the user has moved past.
+  // The OAuth callback sends the user back to this page with the result in
+  // the query string (?google= or ?microsoft=), because it is a plain browser
+  // redirect with nowhere else to put it. Read it once into state, then strip
+  // it from the address bar so a refresh doesn't resurrect a stale
+  // "connected!" the user has moved past.
   const location = useLocation();
   useEffect(() => {
     const params = new URLSearchParams(location.search);
-    const raw = params.get("google");
-    if (!raw) return;
+    const provider: OAuthCalendarProvider | null = params.get("google")
+      ? "google"
+      : params.get("microsoft")
+        ? "microsoft"
+        : null;
+    if (!provider) return;
+    const raw = params.get(provider)!;
 
-    const outcome = (GOOGLE_OUTCOMES as string[]).includes(raw)
-      ? (raw as GoogleOutcome)
+    const outcome = (OAUTH_OUTCOMES as string[]).includes(raw)
+      ? (raw as OAuthOutcome)
       : "error";
 
-    setGoogleResult({
+    setOauthResult({
+      provider,
       outcome,
       email: params.get("email") ?? undefined,
       reason: params.get("reason") ?? undefined,
@@ -226,7 +255,7 @@ export default function SettingsCalendars() {
     if (outcome === "connected") void invalidate();
 
     const url = new URL(window.location.href);
-    for (const key of ["google", "email", "reason"]) {
+    for (const key of ["google", "microsoft", "email", "reason"]) {
       url.searchParams.delete(key);
     }
     window.history.replaceState(window.history.state, "", url.toString());
@@ -245,6 +274,32 @@ export default function SettingsCalendars() {
     }
     // No `finally` — on success the page is already navigating away, and
     // clearing the flag would flash the button back to idle mid-unload.
+  }
+
+  async function handleConnectMicrosoft() {
+    setMicrosoftStarting(true);
+    try {
+      // Same full-page navigation stance as Google.
+      window.location.href = await getMicrosoftCalendarAuthorizeUrl();
+    } catch (error) {
+      toast.error(extractErrorMessage(error));
+      setMicrosoftStarting(false);
+    }
+  }
+
+  /**
+   * The escape hatch for the "Need admin approval" wall: hand the user a link
+   * their IT admin can open to approve the app for the whole tenant.
+   */
+  async function handleCopyAdminLink() {
+    try {
+      await navigator.clipboard.writeText(
+        await getMicrosoftCalendarAdminConsentUrl(),
+      );
+      toast.success(t("settings.calendars.adminLinkCopied"));
+    } catch (error) {
+      toast.error(extractErrorMessage(error));
+    }
   }
 
   const refreshMutation = useMutation({
@@ -306,15 +361,32 @@ export default function SettingsCalendars() {
 
   const accounts = data?.accounts ?? [];
   const googleAccounts = accounts.filter((a) => a.provider === "google");
+  const microsoftAccounts = accounts.filter((a) => a.provider === "microsoft");
   const caldavAccounts = accounts.filter((a) => a.provider === "caldav");
   const baikalConfigs = data?.baikal_configs ?? [];
 
   return (
     <div className="space-y-6 sm:space-y-8 app-fade-up app-fade-up-d2">
-      {googleResult ? (
-        <GoogleResultBanner
-          result={googleResult}
-          onDismiss={() => setGoogleResult(null)}
+      {oauthResult ? (
+        <OAuthResultBanner
+          result={oauthResult}
+          onDismiss={() => setOauthResult(null)}
+          action={
+            // Best-effort classification: a blocked tenant sometimes comes
+            // back as a plain denial, so the admin link rides on both.
+            oauthResult.provider === "microsoft" &&
+            (oauthResult.outcome === "admin_required" ||
+              oauthResult.outcome === "denied") ? (
+              <button
+                type="button"
+                onClick={handleCopyAdminLink}
+                className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-border bg-background px-2.5 text-xs font-medium transition-colors hover:bg-muted"
+              >
+                <Copy className="h-3.5 w-3.5" />
+                {t("settings.calendars.copyAdminLink")}
+              </button>
+            ) : undefined
+          }
         />
       ) : null}
 
@@ -324,7 +396,7 @@ export default function SettingsCalendars() {
         action={
           googleAccounts.length > 0 ? (
             <ConnectButton
-              googleStarting={googleStarting}
+              starting={googleStarting}
               onConnect={handleConnect}
             />
           ) : undefined
@@ -336,10 +408,7 @@ export default function SettingsCalendars() {
             <Skeleton className="h-16 w-full rounded-xl" />
           </div>
         ) : googleAccounts.length === 0 ? (
-          <GoogleEmptyState
-            googleStarting={googleStarting}
-            onConnect={handleConnect}
-          />
+          <OAuthEmptyState starting={googleStarting} onConnect={handleConnect} />
         ) : (
           <div className="overflow-hidden rounded-2xl border border-border bg-card">
             {googleAccounts.map((account, i) => (
@@ -356,6 +425,49 @@ export default function SettingsCalendars() {
                 onRefresh={() => refreshMutation.mutate(account.id)}
                 onDisconnect={() => setPendingDisconnect(account)}
                 onReconnect={handleConnect}
+              />
+            ))}
+          </div>
+        )}
+      </SettingsSection>
+
+      <SettingsSection
+        label={t("settings.calendars.microsoftSection")}
+        description={t("settings.calendars.microsoftSectionDescription")}
+        action={
+          microsoftAccounts.length > 0 ? (
+            <ConnectButton
+              provider="microsoft"
+              starting={microsoftStarting}
+              onConnect={handleConnectMicrosoft}
+            />
+          ) : undefined
+        }
+      >
+        {isPending ? (
+          <Skeleton className="h-16 w-full rounded-xl" />
+        ) : microsoftAccounts.length === 0 ? (
+          <OAuthEmptyState
+            provider="microsoft"
+            starting={microsoftStarting}
+            onConnect={handleConnectMicrosoft}
+          />
+        ) : (
+          <div className="overflow-hidden rounded-2xl border border-border bg-card">
+            {microsoftAccounts.map((account, i) => (
+              <AccountRow
+                key={account.id}
+                account={account}
+                isFirst={i === 0}
+                canDisconnect={account.is_own || isAdmin}
+                busy={disconnectMutation.isPending}
+                refreshing={
+                  refreshMutation.isPending &&
+                  refreshMutation.variables === account.id
+                }
+                onRefresh={() => refreshMutation.mutate(account.id)}
+                onDisconnect={() => setPendingDisconnect(account)}
+                onReconnect={handleConnectMicrosoft}
               />
             ))}
           </div>
@@ -506,17 +618,20 @@ export default function SettingsCalendars() {
   );
 }
 
-/** Every member may connect their own Google calendar — no role gating here. */
+/** Every member may connect their own calendar account — no role gating here. */
 function ConnectButton({
-  googleStarting,
+  provider = "google",
+  starting,
   onConnect,
   stacked = false,
 }: {
-  googleStarting: boolean;
+  provider?: OAuthCalendarProvider;
+  starting: boolean;
   onConnect: () => void;
   stacked?: boolean;
 }) {
   const { t } = useTranslation();
+  const isMicrosoft = provider === "microsoft";
   return (
     <div
       className={`flex flex-col items-stretch gap-2 sm:flex-row sm:items-center ${
@@ -525,14 +640,26 @@ function ConnectButton({
     >
       <Button
         onClick={onConnect}
-        disabled={googleStarting}
+        disabled={starting}
         variant="outline"
         className="h-10 w-full gap-2 px-4 sm:w-auto"
       >
-        <GoogleIcon className="h-4 w-4 shrink-0" />
-        {googleStarting
-          ? t("settings.calendars.connecting")
-          : t("settings.calendars.connectGoogle")}
+        {isMicrosoft ? (
+          <MicrosoftIcon className="h-4 w-4 shrink-0" />
+        ) : (
+          <GoogleIcon className="h-4 w-4 shrink-0" />
+        )}
+        {starting
+          ? t(
+              isMicrosoft
+                ? "settings.calendars.connectingMicrosoft"
+                : "settings.calendars.connecting",
+            )
+          : t(
+              isMicrosoft
+                ? "settings.calendars.connectMicrosoft"
+                : "settings.calendars.connectGoogle",
+            )}
       </Button>
     </div>
   );
@@ -547,10 +674,12 @@ function ResultBanner({
   ok,
   message,
   onDismiss,
+  action,
 }: {
   ok: boolean;
   message: string;
   onDismiss: () => void;
+  action?: React.ReactNode;
 }) {
   const { t } = useTranslation();
   return (
@@ -567,7 +696,10 @@ function ResultBanner({
       ) : (
         <TriangleAlert className="mt-0.5 h-4 w-4 shrink-0" />
       )}
-      <p className="min-w-0 flex-1 text-sm">{message}</p>
+      <div className="min-w-0 flex-1">
+        <p className="text-sm">{message}</p>
+        {action ? <div className="mt-2.5">{action}</div> : null}
+      </div>
       <button
         type="button"
         onClick={onDismiss}
@@ -580,35 +712,54 @@ function ResultBanner({
   );
 }
 
-/** The outcome of a Google round trip. */
-function GoogleResultBanner({
+/** The outcome of an OAuth round trip (Google or Microsoft). */
+function OAuthResultBanner({
   result,
   onDismiss,
+  action,
 }: {
-  result: { outcome: GoogleOutcome; email?: string; reason?: string };
+  result: {
+    provider: OAuthCalendarProvider;
+    outcome: OAuthOutcome;
+    email?: string;
+    reason?: string;
+  };
   onDismiss: () => void;
+  action?: React.ReactNode;
 }) {
   const { t } = useTranslation();
-  const ok = result.outcome === "connected";
+  // admin_granted is good news too: the tenant is unblocked, connect can now
+  // succeed.
+  const ok =
+    result.outcome === "connected" || result.outcome === "admin_granted";
+  const base = `settings.calendars.${result.provider}`;
 
-  const message = ok
-    ? t("settings.calendars.google.connected", { email: result.email ?? "" })
-    : result.outcome === "failed" && result.reason
-      ? t("settings.calendars.google.failed", { reason: result.reason })
-      : t(
-          `settings.calendars.google.${
-            result.outcome === "failed" ? "error" : result.outcome
-          }`,
-        );
+  const message =
+    result.outcome === "connected"
+      ? t(`${base}.connected`, { email: result.email ?? "" })
+      : result.outcome === "failed" && result.reason
+        ? t(`${base}.failed`, { reason: result.reason })
+        : t(
+            `${base}.${result.outcome === "failed" ? "error" : result.outcome}`,
+          );
 
-  return <ResultBanner ok={ok} message={message} onDismiss={onDismiss} />;
+  return (
+    <ResultBanner
+      ok={ok}
+      message={message}
+      onDismiss={onDismiss}
+      action={action}
+    />
+  );
 }
 
-function GoogleEmptyState({
-  googleStarting,
+function OAuthEmptyState({
+  provider = "google",
+  starting,
   onConnect,
 }: {
-  googleStarting: boolean;
+  provider?: OAuthCalendarProvider;
+  starting: boolean;
   onConnect: () => void;
 }) {
   const { t } = useTranslation();
@@ -621,11 +772,16 @@ function GoogleEmptyState({
         <CalendarDays className="h-5 w-5" />
       </span>
       <p className="mx-auto max-w-md text-sm text-muted-foreground">
-        {t("settings.calendars.emptyGoogle")}
+        {t(
+          provider === "microsoft"
+            ? "settings.calendars.emptyMicrosoft"
+            : "settings.calendars.emptyGoogle",
+        )}
       </p>
       <ConnectButton
         stacked
-        googleStarting={googleStarting}
+        provider={provider}
+        starting={starting}
         onConnect={onConnect}
       />
     </div>
@@ -664,6 +820,7 @@ function AccountRow({
 }) {
   const { t } = useTranslation();
   const isCaldav = account.provider === "caldav";
+  const isMicrosoft = account.provider === "microsoft";
 
   return (
     <div className={isFirst ? "" : "border-t border-border"}>
@@ -676,6 +833,8 @@ function AccountRow({
           >
             {isCaldav ? (
               <Server className="h-4 w-4" />
+            ) : isMicrosoft ? (
+              <MicrosoftIcon className="h-4 w-4" />
             ) : (
               <GoogleIcon className="h-4 w-4" />
             )}
@@ -723,6 +882,8 @@ function AccountRow({
             >
               {isCaldav ? (
                 <Server className="h-3.5 w-3.5" />
+              ) : isMicrosoft ? (
+                <MicrosoftIcon className="h-3.5 w-3.5" />
               ) : (
                 <GoogleIcon className="h-3.5 w-3.5" />
               )}

@@ -3,10 +3,11 @@ import { apiClient } from "./axios-instance";
 /**
  * How an account authenticates and sends.
  *
- * `google` accounts have no SMTP host and no password — the `gmail.send` scope
- * cannot authenticate to smtp.gmail.com, so they send over the Gmail REST API.
+ * `google` and `microsoft` accounts have no SMTP host and no password — their
+ * delegated OAuth scopes cannot authenticate an SMTP session, so they send
+ * over the provider's REST API (Gmail API / Microsoft Graph).
  */
-export type EmailAccountProvider = "smtp" | "google";
+export type EmailAccountProvider = "smtp" | "google" | "microsoft";
 
 /** `admin` = provisioned by Repraesent; `user` = connected here in Settings. */
 export type EmailAccountSource = "admin" | "user";
@@ -94,6 +95,24 @@ export async function connectSmtpAccount(
 export async function getGoogleAuthorizeUrl(): Promise<string> {
   const { data } = await apiClient.get<{ url: string }>(
     "/email-accounts/google/authorize-url",
+  );
+  return data.url;
+}
+
+export async function getMicrosoftAuthorizeUrl(): Promise<string> {
+  const { data } = await apiClient.get<{ url: string }>(
+    "/email-accounts/microsoft/authorize-url",
+  );
+  return data.url;
+}
+
+/**
+ * Tenant-wide approval link for a customer's Microsoft admin — the workaround
+ * for the "Need admin approval" wall while the app publisher is unverified.
+ */
+export async function getMicrosoftAdminConsentUrl(): Promise<string> {
+  const { data } = await apiClient.get<{ url: string }>(
+    "/email-accounts/microsoft/admin-consent-url",
   );
   return data.url;
 }

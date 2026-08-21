@@ -17,16 +17,16 @@ export interface CalendarListEntry {
   timeZone: string | null;
 }
 
-export type CalendarProvider = "google" | "caldav";
+export type CalendarProvider = "google" | "caldav" | "microsoft";
 
-/** A Google or CalDAV account a workspace member connected for calendar access. */
+/** An account a workspace member connected for calendar access. */
 export interface CalendarAccount {
   id: string;
   user_id: string;
   /** Name of the member who connected it — accounts are personal, not shared. */
   user_name: string;
   provider: CalendarProvider;
-  /** For caldav accounts this holds the CalDAV username instead. */
+  /** Provider identity: google/microsoft address; caldav username. */
   google_email: string;
   display_name: string;
   caldav_server_url: string | null;
@@ -39,21 +39,28 @@ export interface CalendarAccount {
 
 /**
  * Build the cross-source key for one calendar in an account:
- * `google:<accountId>:<calendarId>` or `caldav:<accountId>:<encoded URL>`.
+ * `google:<accountId>:<calendarId>`, `microsoft:<accountId>:<encoded id>` or
+ * `caldav:<accountId>:<encoded URL>`.
  *
- * The caldav third segment is percent-encoded on purpose: keys travel
- * comma-joined in query strings, and a calendar's id is its collection URL,
- * which contains ':' and can contain ','. The backend's parseKey
- * (calendar-events.service.ts) decodes that segment again — keep the two in
+ * The caldav and microsoft third segments are percent-encoded on purpose:
+ * keys travel comma-joined in query strings, a CalDAV calendar's id is its
+ * collection URL (contains ':' and can contain ','), and Graph calendar ids
+ * are long base64-ish blobs. The backend's parseKey
+ * (calendar-events.service.ts) decodes those segments again — keep the two in
  * sync. Every key built in the app must go through this helper.
  */
 export function calendarKeyFor(
   account: Pick<CalendarAccount, "id" | "provider">,
   calendarId: string,
 ): string {
-  return account.provider === "caldav"
-    ? `caldav:${account.id}:${encodeURIComponent(calendarId)}`
-    : `google:${account.id}:${calendarId}`;
+  switch (account.provider) {
+    case "caldav":
+      return `caldav:${account.id}:${encodeURIComponent(calendarId)}`;
+    case "microsoft":
+      return `microsoft:${account.id}:${encodeURIComponent(calendarId)}`;
+    default:
+      return `google:${account.id}:${calendarId}`;
+  }
 }
 
 /** An admin-provisioned Baikal booking calendar. Read-only on this page. */
@@ -102,6 +109,25 @@ export async function getCalendarSummary(): Promise<CalendarSummary> {
 export async function getCalendarAuthorizeUrl(): Promise<string> {
   const { data } = await apiClient.get<{ url: string }>(
     "/google-calendar/authorize-url",
+  );
+  return data.url;
+}
+
+/** Microsoft twin of getCalendarAuthorizeUrl — same JSON-then-navigate handoff. */
+export async function getMicrosoftCalendarAuthorizeUrl(): Promise<string> {
+  const { data } = await apiClient.get<{ url: string }>(
+    "/microsoft-calendar/authorize-url",
+  );
+  return data.url;
+}
+
+/**
+ * Tenant-wide approval link for a customer's Microsoft admin — the workaround
+ * for the "Need admin approval" wall while the app publisher is unverified.
+ */
+export async function getMicrosoftCalendarAdminConsentUrl(): Promise<string> {
+  const { data } = await apiClient.get<{ url: string }>(
+    "/microsoft-calendar/admin-consent-url",
   );
   return data.url;
 }
@@ -219,9 +245,9 @@ export interface CreateCalendarEventPayload {
   endISO: string;
   /** IANA zone the times were entered in. */
   timezone: string;
-  /** Guest emails — Google targets only; the server rejects them for Baikal. */
+  /** Guest emails — Google/Microsoft targets only; the server rejects them for Baikal. */
   guests?: string[];
-  /** Attach a Google Meet link — Google targets only. */
+  /** Attach a meeting link (Google Meet / Teams) — Google/Microsoft targets only. */
   withMeet?: boolean;
 }
 
