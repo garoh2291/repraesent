@@ -3,6 +3,7 @@ import { TriangleAlert } from "lucide-react";
 import { Checkbox } from "~/components/ui/checkbox";
 import { CalDavIcon } from "~/components/icons/CalDavIcon";
 import { GoogleIcon } from "~/components/icons/GoogleIcon";
+import { MicrosoftIcon } from "~/components/icons/MicrosoftIcon";
 import {
   calendarKeyFor,
   type BaikalConfig,
@@ -28,7 +29,7 @@ function SourceRow({
   hasError: boolean;
   errorTitle: string;
   /** Provider marker — a colour dot alone can't tell providers apart. */
-  provider?: "google" | "caldav";
+  provider?: "google" | "caldav" | "microsoft";
   onToggle: (key: string) => void;
 }) {
   return (
@@ -47,6 +48,9 @@ function SourceRow({
       </span>
       {provider === "google" && (
         <GoogleIcon className="h-3 w-3 shrink-0 opacity-80" />
+      )}
+      {provider === "microsoft" && (
+        <MicrosoftIcon className="h-3 w-3 shrink-0 opacity-80" />
       )}
       {provider === "caldav" && (
         <CalDavIcon className="h-3 w-3 shrink-0 opacity-80" />

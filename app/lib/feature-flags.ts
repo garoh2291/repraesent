@@ -20,10 +20,8 @@ export type PilotFeature =
   | "workflows"
   /** Per-mailbox signature editing in Settings, and its notice in the composer. */
   | "emailSignature"
-  /** The Calendar page and the Calendars settings section. */
-  | "calendar"
-  /** The appointment (booking) field in the forms builder palette. */
-  | "formsAppointmentField";
+  /** Settings → Integrations (Stripe Connect). Products/invoicing follow it, since connecting happens there. */
+  | "integrations";
 
 export function isPilotFeatureEnabled(
   workspaceId: string | null | undefined,
@@ -45,7 +43,6 @@ export function usePilotFeatures(): Record<PilotFeature, boolean> {
   return {
     workflows: enabled,
     emailSignature: enabled,
-    calendar: enabled,
-    formsAppointmentField: enabled,
+    integrations: enabled,
   };
 }

@@ -9,6 +9,7 @@ import { toast } from "sonner";
 import {
   AtSign,
   CheckCircle2,
+  Copy,
   CornerDownRight,
   ExternalLink,
   Mail,
@@ -27,12 +28,15 @@ import {
   connectSmtpAccount,
   disconnectEmailAccount,
   getGoogleAuthorizeUrl,
+  getMicrosoftAdminConsentUrl,
+  getMicrosoftAuthorizeUrl,
   listEmailAccountsForWorkspace,
   setDefaultEmailAccount,
   DEFAULT_PORT,
   type EmailAccount,
   type SmtpConnectionSecurity,
 } from "~/lib/api/email-accounts";
+import { MicrosoftIcon } from "~/components/icons/MicrosoftIcon";
 import { SignatureEditor } from "~/components/organism/signature-editor";
 import { usePilotFeatures } from "~/lib/feature-flags";
 import { Button } from "~/components/ui/button";
@@ -150,16 +154,32 @@ function GoogleIcon({ className }: { className?: string }) {
   );
 }
 
-/** Every result the OAuth callback can bounce back with. */
-type GoogleOutcome = "connected" | "denied" | "expired" | "error" | "failed";
+/**
+ * Every result an OAuth callback (Google or Microsoft) can bounce back with.
+ * The two admin_* outcomes are Microsoft-only: an unverified publisher's app
+ * hits the tenant's "Need admin approval" wall, and the admin-consent flow
+ * returns through the same callback.
+ */
+type OAuthOutcome =
+  | "connected"
+  | "denied"
+  | "expired"
+  | "error"
+  | "failed"
+  | "admin_required"
+  | "admin_granted";
 
-const GOOGLE_OUTCOMES: GoogleOutcome[] = [
+const OAUTH_OUTCOMES: OAuthOutcome[] = [
   "connected",
   "denied",
   "expired",
   "error",
   "failed",
+  "admin_required",
+  "admin_granted",
 ];
+
+type OAuthProvider = "google" | "microsoft";
 
 const SECURITY_OPTIONS: SmtpConnectionSecurity[] = [
   "SSL_TLS",
@@ -258,8 +278,10 @@ export default function SettingsEmailAccounts() {
 
   const [connectOpen, setConnectOpen] = useState(false);
   const [googleStarting, setGoogleStarting] = useState(false);
-  const [googleResult, setGoogleResult] = useState<{
-    outcome: GoogleOutcome;
+  const [microsoftStarting, setMicrosoftStarting] = useState(false);
+  const [oauthResult, setOauthResult] = useState<{
+    provider: OAuthProvider;
+    outcome: OAuthOutcome;
     email?: string;
     reason?: string;
   } | null>(null);
@@ -289,21 +311,28 @@ export default function SettingsEmailAccounts() {
     ]);
   };
 
-  // Google sends the user back to this page with the result in the query
-  // string, because the callback is a plain browser redirect with nowhere else
-  // to put it. Read it once into state, then strip it from the address bar so a
-  // refresh doesn't resurrect a stale "connected!" the user has moved past.
+  // The OAuth callback sends the user back to this page with the result in the
+  // query string (?google= or ?microsoft=), because it is a plain browser
+  // redirect with nowhere else to put it. Read it once into state, then strip
+  // it from the address bar so a refresh doesn't resurrect a stale
+  // "connected!" the user has moved past.
   const location = useLocation();
   useEffect(() => {
     const params = new URLSearchParams(location.search);
-    const raw = params.get("google");
-    if (!raw) return;
+    const provider: OAuthProvider | null = params.get("google")
+      ? "google"
+      : params.get("microsoft")
+        ? "microsoft"
+        : null;
+    if (!provider) return;
+    const raw = params.get(provider)!;
 
-    const outcome = (GOOGLE_OUTCOMES as string[]).includes(raw)
-      ? (raw as GoogleOutcome)
+    const outcome = (OAUTH_OUTCOMES as string[]).includes(raw)
+      ? (raw as OAuthOutcome)
       : "error";
 
-    setGoogleResult({
+    setOauthResult({
+      provider,
       outcome,
       email: params.get("email") ?? undefined,
       reason: params.get("reason") ?? undefined,
@@ -313,7 +342,7 @@ export default function SettingsEmailAccounts() {
     if (outcome === "connected") void invalidate();
 
     const url = new URL(window.location.href);
-    for (const key of ["google", "email", "reason"]) {
+    for (const key of ["google", "microsoft", "email", "reason"]) {
       url.searchParams.delete(key);
     }
     window.history.replaceState(window.history.state, "", url.toString());
@@ -332,6 +361,30 @@ export default function SettingsEmailAccounts() {
     }
     // No `finally` — on success the page is already navigating away, and
     // clearing the flag would flash the button back to idle mid-unload.
+  }
+
+  async function handleConnectMicrosoft() {
+    setMicrosoftStarting(true);
+    try {
+      // Same full-page navigation stance as Google.
+      window.location.href = await getMicrosoftAuthorizeUrl();
+    } catch (error) {
+      toast.error(extractErrorMessage(error));
+      setMicrosoftStarting(false);
+    }
+  }
+
+  /**
+   * The escape hatch for the "Need admin approval" wall: hand the user a link
+   * their IT admin can open to approve the app for the whole tenant.
+   */
+  async function handleCopyAdminLink() {
+    try {
+      await navigator.clipboard.writeText(await getMicrosoftAdminConsentUrl());
+      toast.success(t("settings.emailAccounts.adminLinkCopied"));
+    } catch (error) {
+      toast.error(extractErrorMessage(error));
+    }
   }
 
   const schema = useMemo(() => createSmtpSchema(t), [t]);
@@ -426,10 +479,26 @@ export default function SettingsEmailAccounts() {
 
   return (
     <div className="space-y-6 sm:space-y-8 app-fade-up app-fade-up-d2">
-      {googleResult ? (
-        <GoogleResultBanner
-          result={googleResult}
-          onDismiss={() => setGoogleResult(null)}
+      {oauthResult ? (
+        <OAuthResultBanner
+          result={oauthResult}
+          onDismiss={() => setOauthResult(null)}
+          action={
+            // Best-effort classification: a blocked tenant sometimes comes
+            // back as a plain denial, so the admin link rides on both.
+            oauthResult.provider === "microsoft" &&
+            (oauthResult.outcome === "admin_required" ||
+              oauthResult.outcome === "denied") ? (
+              <button
+                type="button"
+                onClick={handleCopyAdminLink}
+                className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-border bg-background px-2.5 text-xs font-medium transition-colors hover:bg-muted"
+              >
+                <Copy className="h-3.5 w-3.5" />
+                {t("settings.emailAccounts.copyAdminLink")}
+              </button>
+            ) : undefined
+          }
         />
       ) : null}
 
@@ -451,6 +520,8 @@ export default function SettingsEmailAccounts() {
             <ConnectActions
               googleStarting={googleStarting}
               onConnectGoogle={handleConnectGoogle}
+              microsoftStarting={microsoftStarting}
+              onConnectMicrosoft={handleConnectMicrosoft}
               onConnectSmtp={() => setConnectOpen(true)}
             />
           ) : undefined
@@ -466,6 +537,8 @@ export default function SettingsEmailAccounts() {
             canEdit={canEdit}
             googleStarting={googleStarting}
             onConnectGoogle={handleConnectGoogle}
+            microsoftStarting={microsoftStarting}
+            onConnectMicrosoft={handleConnectMicrosoft}
             onConnectSmtp={() => setConnectOpen(true)}
           />
         ) : (
@@ -490,7 +563,11 @@ export default function SettingsEmailAccounts() {
                     busy={busy}
                     onSetDefault={() => defaultMutation.mutate(parent.id)}
                     onDisconnect={() => setPendingDisconnect(parent)}
-                    onReconnect={handleConnectGoogle}
+                    onReconnect={
+                      parent.provider === "microsoft"
+                        ? handleConnectMicrosoft
+                        : handleConnectGoogle
+                    }
                     canEditSignature={pilot.emailSignature}
                     onEditSignature={() => setSignatureFor(parent)}
                   />
@@ -623,17 +700,21 @@ export default function SettingsEmailAccounts() {
 function ConnectActions({
   googleStarting,
   onConnectGoogle,
+  microsoftStarting,
+  onConnectMicrosoft,
   onConnectSmtp,
   stacked = false,
 }: {
   googleStarting: boolean;
   onConnectGoogle: () => void;
+  microsoftStarting: boolean;
+  onConnectMicrosoft: () => void;
   onConnectSmtp: () => void;
   stacked?: boolean;
 }) {
   const { t } = useTranslation();
   return (
-    // Full-width and stacked on a phone — both labels are long enough that
+    // Full-width and stacked on a phone — the labels are long enough that
     // side by side they ran off the screen.
     <div
       className={`flex flex-col items-stretch gap-2 sm:flex-row sm:items-center ${
@@ -650,6 +731,17 @@ function ConnectActions({
         {googleStarting
           ? t("settings.emailAccounts.googleRedirecting")
           : t("settings.emailAccounts.connectGoogle")}
+      </Button>
+      <Button
+        onClick={onConnectMicrosoft}
+        disabled={microsoftStarting}
+        variant="outline"
+        className="h-10 w-full gap-2 px-4 sm:w-auto"
+      >
+        <MicrosoftIcon className="h-4 w-4 shrink-0" />
+        {microsoftStarting
+          ? t("settings.emailAccounts.microsoftRedirecting")
+          : t("settings.emailAccounts.connectMicrosoft")}
       </Button>
       <Button
         onClick={onConnectSmtp}
@@ -675,10 +767,12 @@ function ResultBanner({
   ok,
   message,
   onDismiss,
+  action,
 }: {
   ok: boolean;
   message: string;
   onDismiss: () => void;
+  action?: React.ReactNode;
 }) {
   const { t } = useTranslation();
   return (
@@ -695,7 +789,10 @@ function ResultBanner({
       ) : (
         <TriangleAlert className="mt-0.5 h-4 w-4 shrink-0" />
       )}
-      <p className="min-w-0 flex-1 text-sm">{message}</p>
+      <div className="min-w-0 flex-1">
+        <p className="text-sm">{message}</p>
+        {action ? <div className="mt-2.5">{action}</div> : null}
+      </div>
       <button
         type="button"
         onClick={onDismiss}
@@ -708,37 +805,61 @@ function ResultBanner({
   );
 }
 
-/** The outcome of a Google round trip. */
-function GoogleResultBanner({
+/** The outcome of an OAuth round trip (Google or Microsoft). */
+function OAuthResultBanner({
   result,
   onDismiss,
+  action,
 }: {
-  result: { outcome: GoogleOutcome; email?: string; reason?: string };
+  result: {
+    provider: OAuthProvider;
+    outcome: OAuthOutcome;
+    email?: string;
+    reason?: string;
+  };
   onDismiss: () => void;
+  action?: React.ReactNode;
 }) {
   const { t } = useTranslation();
-  const ok = result.outcome === "connected";
+  // admin_granted is good news too: the tenant is unblocked, connect can now
+  // succeed.
+  const ok =
+    result.outcome === "connected" || result.outcome === "admin_granted";
 
-  const message = ok
-    ? t("settings.emailAccounts.googleConnected", { email: result.email ?? "" })
-    : result.outcome === "failed" && result.reason
-      ? // The server's reason is already a user-facing sentence — it explains
-        // things a generic message cannot, like an unticked send permission.
-        result.reason
-      : t(`settings.emailAccounts.google_${result.outcome}`);
+  const message =
+    result.outcome === "connected"
+      ? t(`settings.emailAccounts.${result.provider}Connected`, {
+          email: result.email ?? "",
+        })
+      : result.outcome === "failed" && result.reason
+        ? // The server's reason is already a user-facing sentence — it explains
+          // things a generic message cannot, like an unticked send permission.
+          result.reason
+        : t(`settings.emailAccounts.${result.provider}_${result.outcome}`);
 
-  return <ResultBanner ok={ok} message={message} onDismiss={onDismiss} />;
+  return (
+    <ResultBanner
+      ok={ok}
+      message={message}
+      onDismiss={onDismiss}
+      action={action}
+    />
+  );
 }
 
 function EmptyState({
   canEdit,
   googleStarting,
   onConnectGoogle,
+  microsoftStarting,
+  onConnectMicrosoft,
   onConnectSmtp,
 }: {
   canEdit: boolean;
   googleStarting: boolean;
   onConnectGoogle: () => void;
+  microsoftStarting: boolean;
+  onConnectMicrosoft: () => void;
   onConnectSmtp: () => void;
 }) {
   const { t } = useTranslation();
@@ -759,6 +880,8 @@ function EmptyState({
           stacked
           googleStarting={googleStarting}
           onConnectGoogle={onConnectGoogle}
+          microsoftStarting={microsoftStarting}
+          onConnectMicrosoft={onConnectMicrosoft}
           onConnectSmtp={onConnectSmtp}
         />
       ) : null}
@@ -808,6 +931,8 @@ function AccountRow({
         >
           {account.provider === "google" ? (
             <GoogleIcon className="h-4 w-4" />
+          ) : account.provider === "microsoft" ? (
+            <MicrosoftIcon className="h-4 w-4" />
           ) : (
             <AtSign className="h-4 w-4" />
           )}
@@ -840,7 +965,9 @@ function AccountRow({
             {" · "}
             {account.provider === "google"
               ? "Google"
-              : (account.smtp_server ?? "SMTP")}
+              : account.provider === "microsoft"
+                ? "Microsoft 365"
+                : (account.smtp_server ?? "SMTP")}
           </p>
         </div>
       </div>
@@ -850,17 +977,23 @@ function AccountRow({
         // address cost the ~44px that lets Reconnect, Make default and
         // Disconnect share one line instead of orphaning the bin icon.
         <div className="flex shrink-0 flex-wrap items-center gap-1.5">
-          {/* A dead Google grant is only fixable by consenting again, so put
+          {/* A dead OAuth grant is only fixable by consenting again, so put
               that action on the row that is broken rather than making the user
-              work out that "Connect with Google" is also the repair. */}
-          {account.auth_failed_at && account.provider === "google" ? (
+              work out that "Connect with Google/Microsoft" is also the repair. */}
+          {account.auth_failed_at &&
+          (account.provider === "google" ||
+            account.provider === "microsoft") ? (
             <button
               type="button"
               onClick={onReconnect}
               disabled={busy}
               className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-amber-400/40 bg-amber-400/10 px-2.5 text-xs font-medium text-amber-800 transition-colors hover:bg-amber-400/20 disabled:opacity-50 dark:text-amber-200"
             >
-              <GoogleIcon className="h-3.5 w-3.5" />
+              {account.provider === "microsoft" ? (
+                <MicrosoftIcon className="h-3.5 w-3.5" />
+              ) : (
+                <GoogleIcon className="h-3.5 w-3.5" />
+              )}
               {t("settings.emailAccounts.reconnect")}
             </button>
           ) : null}

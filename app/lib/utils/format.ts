@@ -51,6 +51,44 @@ export function formatCurrencyFromCents(amountCents: number): string {
   return formatCurrency(amountCents / 100);
 }
 
+/**
+ * Format a minor-unit amount in an arbitrary currency.
+ *
+ * Separate from `formatCurrency`, which hardcodes EUR: a connected Stripe
+ * account sets its own currency per price, and rendering a USD product with a
+ * € sign is a wrong number, not a cosmetic slip.
+ *
+ * Zero-decimal currencies (JPY, KRW, …) do not multiply by 100 in Stripe, so
+ * they must not be divided by 100 here either.
+ */
+const ZERO_DECIMAL_CURRENCIES = new Set([
+  "bif", "clp", "djf", "gnf", "jpy", "kmf", "krw", "mga",
+  "pyg", "rwf", "ugx", "vnd", "vuv", "xaf", "xof", "xpf",
+]);
+
+export function formatMoneyFromMinor(
+  amountMinor: number | null | undefined,
+  currency: string | null | undefined,
+): string {
+  if (amountMinor === null || amountMinor === undefined) return "—";
+
+  const code = (currency || "eur").toLowerCase();
+  const isZeroDecimal = ZERO_DECIMAL_CURRENCIES.has(code);
+  const value = isZeroDecimal ? amountMinor : amountMinor / 100;
+
+  try {
+    return new Intl.NumberFormat(getIntlLocale(), {
+      style: "currency",
+      currency: code.toUpperCase(),
+      minimumFractionDigits: isZeroDecimal ? 0 : 2,
+      maximumFractionDigits: isZeroDecimal ? 0 : 2,
+    }).format(value);
+  } catch {
+    // Intl throws on an unknown currency code rather than degrading.
+    return `${formatDecimal(value, isZeroDecimal ? 0 : 2)} ${code.toUpperCase()}`;
+  }
+}
+
 // --------------- Dates ---------------
 
 /**

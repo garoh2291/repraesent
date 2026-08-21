@@ -264,7 +264,9 @@ export function ConfirmationEmailPanel({
                           ? ` — ${t("forms.email.accountNeedsReconnect")}`
                           : account.provider === "google"
                             ? " · Google"
-                            : " · IMAP/SMTP"}
+                            : account.provider === "microsoft"
+                              ? " · Microsoft 365"
+                              : " · IMAP/SMTP"}
                       </SelectItem>
                     ))}
                   </SelectGroup>

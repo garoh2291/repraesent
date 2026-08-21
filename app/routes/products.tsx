@@ -1,418 +1,484 @@
-import { useQuery } from "@tanstack/react-query";
+import { useMemo, useState } from "react";
+import { Link } from "react-router";
 import { useTranslation } from "react-i18next";
-import { useAuthContext } from "~/providers/auth-provider";
-import { getStoredWorkspaceId } from "~/lib/api/axios-instance";
-import { getWorkspaceInvoices } from "~/lib/api/workspaces";
-import { formatBillingInterval } from "~/lib/utils/stripe";
-import { formatDateMedium, formatCurrencyFromCents } from "~/lib/utils/format";
-import {
-  AlertTriangle,
-  ExternalLink,
-  FileText,
-  Receipt,
-  Package2,
-  Sparkles,
-  Calendar,
-  LineChart,
-  BarChart3,
-  Inbox,
-  Mail,
-} from "lucide-react";
-import { Trans } from "react-i18next";
-import { Button } from "~/components/ui/button";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
+import type { ColumnDef } from "@tanstack/react-table";
+import { ExternalLink, Package, RefreshCw, ShoppingBag } from "lucide-react";
 import i18n from "~/i18n";
+import { useAuthContext } from "~/providers/auth-provider";
+import { extractErrorMessage } from "~/lib/api/axios-instance";
+import {
+  CATALOG_TABS,
+  isStripeNotConnected,
+  listCatalogProducts,
+  productMatchesSearch,
+  productMatchesTab,
+  stripeDashboardUrl,
+  type CatalogList,
+  type CatalogProduct,
+  type CatalogTab,
+} from "~/lib/api/stripe-catalog";
+import {
+  useCatalogAccount,
+  useStripeCatalog,
+  useStripeCatalogSearch,
+} from "~/lib/hooks/useStripeCatalog";
+import { useDebounce } from "~/lib/hooks/useDebounce";
 import { useDocumentMeta } from "~/lib/hooks/use-document-meta";
-
-const FALLBACK_SUPPORT_EMAIL = "support@repraesent.com";
-function getSupportEmail(): string {
-  return (
-    (import.meta.env.VITE_SUPPORT_EMAIL as string | undefined) ??
-    FALLBACK_SUPPORT_EMAIL
-  );
-}
+import { formatDateShort, formatMoneyFromMinor } from "~/lib/utils/format";
+import { cn } from "~/lib/utils";
+import { DataTable } from "~/components/organism/data-table";
+import {
+  KindBadges,
+  ProductDetailsSheet,
+} from "~/components/organism/product-details-sheet";
+import { Button } from "~/components/ui/button";
+import { Label } from "~/components/ui/label";
+import { Switch } from "~/components/ui/switch";
+import { Tabs, TabsList, TabsTrigger } from "~/components/ui/tabs";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "~/components/ui/tooltip";
 
 export function meta() {
   return [
-    { title: i18n.t("products.metaTitle") + " - Repraesent" },
-    { name: "description", content: i18n.t("products.metaDescription") },
+    { title: `${i18n.t("stripeProducts.metaTitle")} - Repraesent` },
+    {
+      name: "description",
+      content: i18n.t("stripeProducts.metaDescription"),
+    },
   ];
 }
 
-function formatDate(ts: string | number | undefined | null): string {
-  if (ts == null) return "—";
-  const sec = typeof ts === "string" ? parseInt(ts, 10) : ts;
-  if (Number.isNaN(sec)) return "—";
-  return formatDateMedium(new Date(sec * 1000));
-}
+const PAGE_SIZES = [20, 50, 100];
 
-function StatusPill({ status }: { status: string }) {
-  const map: Record<string, string> = {
-    active: "bg-emerald-500/12 text-emerald-700 border-emerald-500/20",
-    trialing: "bg-blue-500/12 text-blue-700 border-blue-500/20",
-    past_due: "bg-red-500/12 text-red-700 border-red-500/20",
-    canceled: "bg-stone-100 text-stone-500 border-stone-200",
-    invoice_sent: "bg-amber-500/12 text-amber-700 border-amber-500/20",
-    pending: "bg-amber-500/12 text-amber-700 border-amber-500/20",
-    paid: "bg-emerald-500/12 text-emerald-700 border-emerald-500/20",
-  };
-  const cls = map[status] ?? "bg-stone-100 text-stone-500 border-stone-200";
-  return (
-    <span
-      className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-[11px] font-semibold uppercase tracking-wide ${cls}`}
-    >
-      {status.replace(/_/g, " ")}
-    </span>
-  );
-}
-
+/**
+ * The connected Stripe catalogue, read-only.
+ *
+ * One request loads everything; tabs, search and paging are all local, so the
+ * page answers at typing speed. Stripe's dashboard is where products change.
+ */
 export default function Products() {
   const { t } = useTranslation();
   useDocumentMeta({
-    titleKey: "products.metaTitle",
-    descriptionKey: "products.metaDescription",
+    titleKey: "stripeProducts.metaTitle",
+    descriptionKey: "stripeProducts.metaDescription",
     titleSuffix: " - Repraesent",
   });
-  const { currentWorkspace, workspaces } = useAuthContext();
-  const workspaceId =
-    getStoredWorkspaceId() ?? currentWorkspace?.id ?? workspaces[0]?.id;
-  const ws = currentWorkspace ?? workspaces[0];
-  const products = ws?.products ?? [];
 
-  const { data: invoices = [] } = useQuery({
-    queryKey: ["workspace-invoices", workspaceId],
-    queryFn: () => getWorkspaceInvoices(workspaceId!),
-    enabled: !!workspaceId,
+  const { currentWorkspace } = useAuthContext();
+  const queryClient = useQueryClient();
+
+  const [tab, setTab] = useState<CatalogTab>("all");
+  const [search, setSearch] = useState("");
+  const debouncedSearch = useDebounce(search.trim(), 200);
+  const [includeArchived, setIncludeArchived] = useState(false);
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(20);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+
+  const accountQuery = useCatalogAccount(!!currentWorkspace);
+  const notConnected = isStripeNotConnected(accountQuery.error);
+
+  const catalogQuery = useStripeCatalog(
+    { includeArchived },
+    !!currentWorkspace && !notConnected,
+  );
+  const truncated = catalogQuery.data?.truncated ?? false;
+  const serverSearch = useStripeCatalogSearch(
+    debouncedSearch,
+    !!currentWorkspace && !notConnected && truncated,
+  );
+
+  const refreshMutation = useMutation({
+    mutationFn: () =>
+      listCatalogProducts({ include_archived: includeArchived, refresh: true }),
+    onSuccess: (data: CatalogList) => {
+      queryClient.setQueryData(["stripe-catalog", includeArchived], data);
+      toast.success(
+        t("stripeProducts.refreshed", { defaultValue: "Catalogue refreshed" }),
+      );
+    },
+    onError: (err) => toast.error(extractErrorMessage(err)),
   });
 
-  const hasPastDue = products.some((p) => p.status === "past_due");
-  const openInvoiceUrl = invoices.find(
-    (inv) => inv.status === "open" && inv.hosted_invoice_url
-  )?.hosted_invoice_url;
-  const isTrialWorkspace = ws?.status === "trial";
-  const supportEmail = getSupportEmail();
+  const filtered = useMemo(() => {
+    const source =
+      truncated && debouncedSearch
+        ? (serverSearch.data?.data ?? [])
+        : (catalogQuery.data?.data ?? []);
+    return source
+      .filter((p) => productMatchesTab(p, tab))
+      .filter((p) => truncated || productMatchesSearch(p, debouncedSearch))
+      .sort((a, b) => a.name.localeCompare(b.name));
+  }, [catalogQuery.data, serverSearch.data, truncated, debouncedSearch, tab]);
+
+  const total = filtered.length;
+  const totalPages = Math.max(1, Math.ceil(total / limit));
+  const safePage = Math.min(page, totalPages);
+  const pageRows = filtered.slice((safePage - 1) * limit, safePage * limit);
+
+  const counts = catalogQuery.data?.counts;
+  const account = accountQuery.data ?? null;
+
+  const columns = useMemo<ColumnDef<CatalogProduct, unknown>[]>(() => {
+    const cols: ColumnDef<CatalogProduct, unknown>[] = [
+      {
+        id: "product",
+        header: t("stripeProducts.columns.product", { defaultValue: "Product" }),
+        cell: ({ row }) => {
+          const p = row.original;
+          return (
+            <div className="flex items-center gap-3">
+              <div className="grid h-10 w-10 shrink-0 place-items-center overflow-hidden rounded-lg border border-border bg-background">
+                {p.images[0] ? (
+                  <img
+                    src={p.images[0]}
+                    alt=""
+                    className="h-full w-full object-cover"
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).style.visibility = "hidden";
+                    }}
+                  />
+                ) : (
+                  <Package className="h-4 w-4 text-muted-foreground/60" />
+                )}
+              </div>
+              <div className="min-w-0">
+                <div className="flex items-center gap-1.5">
+                  <span className="truncate text-sm font-medium text-foreground">
+                    {p.name}
+                  </span>
+                  {!p.active ? (
+                    <span className="shrink-0 rounded-sm bg-muted px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+                      {t("stripeProducts.archived", { defaultValue: "Archived" })}
+                    </span>
+                  ) : null}
+                </div>
+                {p.description ? (
+                  <p className="max-w-[28rem] truncate text-xs text-muted-foreground">
+                    {p.description}
+                  </p>
+                ) : null}
+              </div>
+            </div>
+          );
+        },
+      },
+      {
+        id: "kind",
+        header: t("stripeProducts.columns.kind", { defaultValue: "Type" }),
+        cell: ({ row }) => (
+          <div className="flex flex-wrap gap-1">
+            <KindBadges product={row.original} />
+          </div>
+        ),
+      },
+      {
+        id: "price",
+        header: t("stripeProducts.columns.price", { defaultValue: "Price" }),
+        cell: ({ row }) => {
+          const p = row.original;
+          const price = p.default_price;
+          const activeCount = p.prices.filter((x) => x.active).length;
+          if (!price) {
+            return (
+              <span className="text-xs text-muted-foreground">
+                {t("stripeProducts.noPrice", { defaultValue: "No price" })}
+              </span>
+            );
+          }
+          return (
+            <div className="whitespace-nowrap">
+              <p className="text-sm font-medium tabular-nums text-foreground">
+                {price.billing_scheme === "tiered"
+                  ? t("stripeProducts.details.tiered", { defaultValue: "Tiered pricing" })
+                  : formatMoneyFromMinor(price.unit_amount, price.currency)}
+              </p>
+              <p className="text-xs text-muted-foreground">
+                {price.interval
+                  ? t(`stripeProducts.interval.${price.interval}`, {
+                      defaultValue: `per ${price.interval}`,
+                    })
+                  : t("stripeProducts.oneTime", { defaultValue: "one-time" })}
+                {activeCount > 1
+                  ? ` · ${t("stripeProducts.morePrices", {
+                      defaultValue: "+{{count}} more",
+                      count: activeCount - 1,
+                    })}`
+                  : ""}
+              </p>
+            </div>
+          );
+        },
+      },
+    ];
+
+    if (tab === "physical") {
+      cols.push({
+        id: "stock",
+        header: t("stripeProducts.columns.stock", { defaultValue: "Stock" }),
+        cell: ({ row }) => {
+          const p = row.original;
+          if (p.stock === null) {
+            return (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <span className="text-xs text-muted-foreground">—</span>
+                </TooltipTrigger>
+                <TooltipContent side="top">
+                  {t("stripeProducts.stockUnknown", { defaultValue: "No stock recorded" })}
+                </TooltipContent>
+              </Tooltip>
+            );
+          }
+          return (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <span
+                  className={cn(
+                    "text-sm font-medium tabular-nums",
+                    p.stock === 0 ? "text-destructive" : "text-foreground",
+                  )}
+                >
+                  {p.stock}
+                </span>
+              </TooltipTrigger>
+              <TooltipContent side="top">
+                {t("stripeProducts.stockSource", {
+                  defaultValue: 'From metadata key "{{key}}"',
+                  key: p.stock_key,
+                })}
+              </TooltipContent>
+            </Tooltip>
+          );
+        },
+      });
+    }
+
+    cols.push({
+      id: "updated",
+      header: t("stripeProducts.columns.updated", { defaultValue: "Updated" }),
+      cell: ({ row }) => (
+        <span className="whitespace-nowrap text-xs text-muted-foreground">
+          {formatDateShort(row.original.updated * 1000)}
+        </span>
+      ),
+    });
+
+    return cols;
+  }, [t, tab]);
+
+  if (notConnected) {
+    return <NotConnected />;
+  }
+
+  const isLoading =
+    catalogQuery.isPending ||
+    accountQuery.isPending ||
+    (truncated && !!debouncedSearch && serverSearch.isPending);
 
   return (
-    <div className="mx-auto w-full max-w-[1280px] p-4 sm:p-6 py-10! space-y-6 sm:space-y-8 app-fade-in">
-      {/* Heading */}
-      <div className="app-fade-up space-y-1">
-        <h1 className="text-xl sm:text-2xl font-semibold text-foreground tracking-tight">
-          {t("products.title")}
-        </h1>
-        <p className="text-sm text-muted-foreground">
-          {t("products.subtitle")}
-        </p>
-      </div>
-
-      {/* Trial workspace marketing card (Doorboost-restored) */}
-      {isTrialWorkspace && (
-        <section className="app-fade-up app-fade-up-d1 relative overflow-hidden rounded-2xl border border-amber-400/30 bg-gradient-to-br from-amber-50 via-white to-amber-50/40 dark:from-amber-500/[0.07] dark:via-transparent dark:to-amber-500/[0.04] p-6 sm:p-8">
-          <div className="pointer-events-none absolute -top-16 -right-16 h-56 w-56 rounded-full bg-amber-300/20 blur-3xl" />
-          <div className="pointer-events-none absolute -bottom-20 -left-10 h-48 w-48 rounded-full bg-amber-400/10 blur-3xl" />
-
-          <div className="relative space-y-5">
-            <div className="flex items-center gap-2.5">
-              <span className="inline-flex items-center gap-1.5 rounded-full border border-amber-400/40 bg-amber-400/15 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-amber-700 dark:text-amber-300">
-                <Sparkles className="h-3 w-3" />
-                {t("products.trial_card.eyebrow")}
+    <TooltipProvider>
+      <div className="p-4 sm:p-6 space-y-4 sm:space-y-6 app-fade-in">
+        <header className="app-fade-up flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+          <div>
+            <h1 className="text-xl font-semibold tracking-tight text-foreground sm:text-2xl">
+              {t("stripeProducts.title", { defaultValue: "Products" })}
+            </h1>
+            <p className="mt-0.5 flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
+              <span>
+                {t("stripeProducts.readOnlyHint", {
+                  defaultValue:
+                    "Read-only. Products are edited in your Stripe dashboard.",
+                })}
               </span>
-            </div>
-
-            <div className="space-y-2 max-w-2xl">
-              <h2 className="text-2xl sm:text-[28px] font-semibold tracking-tight text-foreground leading-tight">
-                {t("products.trial_card.title")}
-              </h2>
-              <p className="text-[15px] text-muted-foreground leading-relaxed">
-                {t("products.trial_card.body")}
-              </p>
-            </div>
-
-            <ul className="grid gap-2 sm:grid-cols-2 max-w-2xl pt-1">
-              {[
-                {
-                  Icon: Calendar,
-                  label: t("products.trial_card.feature_appointments"),
-                },
-                {
-                  Icon: LineChart,
-                  label: t("products.trial_card.feature_web_analytics"),
-                },
-                {
-                  Icon: BarChart3,
-                  label: t("products.trial_card.feature_ad_analytics"),
-                },
-                {
-                  Icon: Inbox,
-                  label: t("products.trial_card.feature_new_leads"),
-                },
-              ].map(({ Icon, label }) => (
-                <li
-                  key={label}
-                  className="flex items-start gap-2.5 rounded-xl bg-white/60 dark:bg-white/[0.03] border border-amber-400/15 px-3.5 py-2.5"
-                >
-                  <span className="grid place-items-center w-7 h-7 shrink-0 rounded-lg bg-amber-400/15 text-amber-700 dark:text-amber-300">
-                    <Icon className="w-3.5 h-3.5" />
-                  </span>
-                  <span className="text-sm text-foreground/90 leading-snug pt-0.5">
-                    {label}
-                  </span>
-                </li>
-              ))}
-            </ul>
-
-            <div className="flex flex-col sm:flex-row sm:items-center gap-3 pt-2">
-              <Button
-                asChild
-                className="bg-amber-500 text-white hover:bg-amber-500/90 shadow-sm h-10 px-5"
-              >
-                <a href={`mailto:${supportEmail}`}>
-                  <Mail className="w-4 h-4 mr-2" />
-                  {t("products.trial_card.cta")}
-                </a>
-              </Button>
-              <p className="text-xs text-muted-foreground">
-                <Trans
-                  i18nKey="products.trial_card.contact"
-                  values={{ supportEmail }}
-                  defaults="Or write us directly at <0>{{supportEmail}}</0>"
-                  components={[
-                    <a
-                      key="link"
-                      href={`mailto:${supportEmail}`}
-                      className="font-semibold text-foreground underline-offset-2 hover:underline"
-                    />,
-                  ]}
-                />
-              </p>
-            </div>
-          </div>
-        </section>
-      )}
-
-      {/* Past-due warning */}
-      {hasPastDue && (
-        <div className="app-fade-up app-fade-up-d1 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 rounded-xl border border-red-300/40 bg-red-50 px-4 py-3.5">
-          <div className="flex items-center gap-2.5">
-            <AlertTriangle className="h-4 w-4 shrink-0 text-red-600" />
-            <p className="text-sm font-medium text-red-800">
-              {t("products.pastDueWarning")}
+              {account ? (
+                <>
+                  <span className="text-muted-foreground/50">·</span>
+                  <span>{account.name ?? account.id}</span>
+                  {!account.livemode ? (
+                    <span className="rounded-full bg-amber-500/10 px-2 py-0.5 text-[11px] font-medium text-amber-600 dark:text-amber-400">
+                      {t("stripeProducts.testMode", { defaultValue: "Test mode" })}
+                    </span>
+                  ) : null}
+                </>
+              ) : null}
             </p>
           </div>
-          {openInvoiceUrl && (
+
+          <div className="flex flex-wrap items-center gap-2 sm:shrink-0">
+            <div className="flex items-center gap-2 rounded-lg border border-border bg-card px-3 py-1.5">
+              <Switch
+                id="show-archived"
+                checked={includeArchived}
+                onCheckedChange={(v) => {
+                  setIncludeArchived(v);
+                  setPage(1);
+                }}
+              />
+              <Label htmlFor="show-archived" className="text-xs font-medium">
+                {t("stripeProducts.showArchived", { defaultValue: "Show archived" })}
+              </Label>
+            </div>
             <Button
               variant="outline"
               size="sm"
-              asChild
-              className="shrink-0 h-8 text-xs border-red-300 text-red-700 hover:bg-red-50 hover:text-red-700"
+              disabled={refreshMutation.isPending}
+              onClick={() => refreshMutation.mutate()}
             >
-              <a
-                href={openInvoiceUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                {t("products.payNow")}
-              </a>
+              <RefreshCw
+                className={cn("h-4 w-4", refreshMutation.isPending && "app-spin")}
+              />
+              {t("stripeProducts.refresh", { defaultValue: "Refresh from Stripe" })}
             </Button>
-          )}
-        </div>
-      )}
-
-      {/* Subscriptions */}
-      <div className="app-fade-up app-fade-up-d2 space-y-4">
-        <div className="flex items-center gap-2">
-          <Package2 className="h-4 w-4 text-muted-foreground" />
-          <h2 className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
-            {t("products.subscriptions")}
-          </h2>
-        </div>
-
-        {products.length > 0 ? (
-          <div className="space-y-2">
-            {products.map((p) => {
-              const product = p as {
-                stripe_product_name: string;
-                status: string;
-                current_period_end?: number | null;
-                recurring_interval?: string | null;
-                type?: string | null;
-                unit_amount?: string | null;
-                currency?: string | null;
-              };
-              const periodEnd = product.current_period_end;
-              const showDate =
-                periodEnd != null &&
-                !["invoice_sent", "pending"].includes(product.status);
-              const now = Math.floor(Date.now() / 1000);
-              const dateLabel =
-                product.status === "canceled"
-                  ? periodEnd != null && periodEnd < now
-                    ? t("products.dateEnded")
-                    : t("products.dateEnds")
-                  : product.status === "trialing"
-                    ? t("products.dateTrial")
-                    : product.status === "past_due"
-                      ? t("products.dateDue")
-                      : t("products.dateRenews");
-
-              const hasPrice =
-                product.unit_amount != null && Number(product.unit_amount) > 0;
-
-              return (
-                <div
-                  key={p.id}
-                  className="flex items-center justify-between rounded-xl border border-border bg-card px-5 py-4 gap-4"
+            {account ? (
+              <Button asChild variant="ghost" size="sm">
+                <a
+                  href={stripeDashboardUrl(account.id, account.livemode, "products")}
+                  target="_blank"
+                  rel="noreferrer"
                 >
-                  <div className="space-y-0.5 min-w-0">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <span className="font-semibold text-foreground">
-                        {product.stripe_product_name}
-                      </span>
-                      {hasPrice && (
-                        <span className="text-sm font-medium text-foreground">
-                          {formatCurrencyFromCents(Number(product.unit_amount))}
-                          {product.recurring_interval && (
-                            <span className="text-xs text-muted-foreground font-normal">
-                              /{product.recurring_interval}
-                            </span>
-                          )}
-                        </span>
-                      )}
-                      {(product.recurring_interval || product.type) && (
-                        <span className="text-xs text-muted-foreground bg-muted rounded-full px-2 py-0.5">
-                          {formatBillingInterval(
-                            product.recurring_interval,
-                            product.type
-                          )}
-                        </span>
-                      )}
-                    </div>
-                    {showDate && periodEnd != null && (
-                      <p className="text-xs text-muted-foreground">
-                        {dateLabel} {formatDate(periodEnd)}
-                      </p>
-                    )}
-                  </div>
-                  <StatusPill status={p.status} />
-                </div>
+                  <ExternalLink className="h-4 w-4" />
+                  {t("stripeProducts.openInStripe", { defaultValue: "Open in Stripe" })}
+                </a>
+              </Button>
+            ) : null}
+          </div>
+        </header>
+
+        <Tabs
+          value={tab}
+          onValueChange={(v) => {
+            setTab(v as CatalogTab);
+            setPage(1);
+          }}
+          className="app-fade-up app-fade-up-d1"
+        >
+          <TabsList>
+            {CATALOG_TABS.map((key) => {
+              const count =
+                key === "all"
+                  ? counts?.all
+                  : key === "physical"
+                    ? counts?.physical
+                    : key === "subscriptions"
+                      ? counts?.subscriptions
+                      : counts?.one_time;
+              return (
+                <TabsTrigger key={key} value={key} className="gap-1.5">
+                  {t(`stripeProducts.tabs.${key === "one_time" ? "oneTime" : key}`, {
+                    defaultValue: {
+                      all: "All",
+                      physical: "Physical",
+                      subscriptions: "Subscriptions",
+                      one_time: "One-time",
+                    }[key],
+                  })}
+                  {count !== undefined ? (
+                    <span className="rounded-full bg-muted px-1.5 py-px text-[10px] tabular-nums text-muted-foreground">
+                      {count}
+                    </span>
+                  ) : null}
+                </TabsTrigger>
               );
             })}
-          </div>
-        ) : (
-          <div className="rounded-xl border border-dashed border-border bg-card px-5 py-8 text-center">
-            <p className="text-sm text-muted-foreground">
-              {t("products.noSubscriptions")}
-            </p>
-          </div>
-        )}
+          </TabsList>
+        </Tabs>
+
+        {truncated ? (
+          <p className="rounded-xl border border-amber-500/30 bg-amber-500/5 px-4 py-2 text-xs text-amber-700 dark:text-amber-400">
+            {t("stripeProducts.truncatedHint", {
+              defaultValue:
+                "Large catalogue: showing the first 1000 products. Search runs on Stripe.",
+            })}
+          </p>
+        ) : null}
+
+        <div className="app-fade-up app-fade-up-d2">
+          <DataTable
+            columns={columns}
+            data={pageRows}
+            isLoading={isLoading}
+            searchValue={search}
+            onSearchChange={(v) => {
+              setSearch(v);
+              setPage(1);
+            }}
+            searchPlaceholder={t("stripeProducts.searchPlaceholder", {
+              defaultValue: "Search products…",
+            })}
+            emptyMessage={
+              debouncedSearch
+                ? t("stripeProducts.noResults", {
+                    defaultValue: "No products match that search.",
+                  })
+                : t("stripeProducts.empty", { defaultValue: "No products yet." })
+            }
+            pagination={{
+              page: safePage,
+              limit,
+              total,
+              totalPages,
+              hasNext: safePage < totalPages,
+              hasPrev: safePage > 1,
+            }}
+            onPaginationChange={(nextPage, nextLimit) => {
+              setPage(nextPage);
+              setLimit(nextLimit);
+            }}
+            pageSizeOptions={PAGE_SIZES}
+            onRowClick={(row) => setSelectedId(row.id)}
+            enableSorting={false}
+          />
+        </div>
+
+        <ProductDetailsSheet
+          productId={selectedId}
+          open={!!selectedId}
+          onOpenChange={(open) => {
+            if (!open) setSelectedId(null);
+          }}
+          account={account}
+        />
       </div>
+    </TooltipProvider>
+  );
+}
 
-      {/* Invoice history */}
-      <div className="app-fade-up app-fade-up-d3 space-y-4">
-        <h2 className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
-          {t("products.invoiceHistory")}
+/**
+ * The whole page is a live proxy, so with no connected account there is
+ * literally nothing to render — point at the one place that fixes it.
+ */
+function NotConnected() {
+  const { t } = useTranslation();
+
+  return (
+    <div className="p-4 sm:p-6 app-fade-in">
+      <div className="mx-auto max-w-md rounded-2xl border border-dashed border-border p-10 text-center">
+        <ShoppingBag className="mx-auto h-10 w-10 text-muted-foreground/40" />
+        <h2 className="mt-4 text-base font-semibold text-foreground">
+          {t("stripeProducts.notConnectedTitle", {
+            defaultValue: "Connect Stripe to see products",
+          })}
         </h2>
-
-        {invoices.length > 0 ? (
-          <div className="rounded-xl border border-border bg-card overflow-hidden">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-border bg-muted/40">
-                  <th className="text-left px-5 py-3 text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
-                    {t("settings.invoices.status")}
-                  </th>
-                  <th className="text-left px-5 py-3 text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
-                    {t("settings.invoices.dueDate")}
-                  </th>
-                  <th className="text-right px-5 py-3 text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
-                    {t("settings.invoices.amount")}
-                  </th>
-                  <th className="w-28 px-5 py-3" />
-                </tr>
-              </thead>
-              <tbody>
-                {invoices.map((inv) => {
-                  const isPaid = inv.status === "paid";
-
-                  return (
-                    <tr
-                      key={inv.id}
-                      className="border-b border-border/60 last:border-0 hover:bg-muted/30 transition-colors"
-                    >
-                      <td className="px-5 py-3.5">
-                        <StatusPill status={inv.status ?? "unknown"} />
-                      </td>
-                      <td className="px-5 py-3.5 text-sm text-muted-foreground">
-                        {isPaid && inv.paid_at
-                          ? t("products.datePaid", {
-                              date: formatDate(inv.paid_at),
-                            })
-                          : inv.due_date
-                            ? t("products.dateDueLabel", {
-                                date: formatDate(inv.due_date),
-                              })
-                            : "—"}
-                      </td>
-                      <td className="px-5 py-3.5 text-right font-semibold text-foreground tabular-nums">
-                        {inv.amount_due != null
-                          ? formatCurrencyFromCents(Number(inv.amount_due))
-                          : "—"}
-                      </td>
-                      <td className="px-5 py-3.5">
-                        <div className="flex items-center gap-2 justify-end">
-                          {isPaid ? (
-                            <>
-                              {inv.invoice_pdf && (
-                                <a
-                                  href={inv.invoice_pdf}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="inline-flex items-center gap-1 text-xs font-medium text-primary hover:underline"
-                                  title={t("products.downloadInvoice")}
-                                >
-                                  <FileText className="h-3 w-3" />
-                                  {t("products.invoice")}
-                                </a>
-                              )}
-                              {inv.hosted_invoice_url && (
-                                <a
-                                  href={inv.hosted_invoice_url}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="inline-flex items-center gap-1 text-xs font-medium text-primary hover:underline"
-                                  title={t("products.viewReceipt")}
-                                >
-                                  <Receipt className="h-3 w-3" />
-                                  {t("products.receipt")}
-                                </a>
-                              )}
-                            </>
-                          ) : (
-                            inv.hosted_invoice_url && (
-                              <a
-                                href={inv.hosted_invoice_url}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="inline-flex items-center gap-1 text-xs font-medium text-primary hover:underline"
-                              >
-                                {t("products.viewInvoice")}
-                                <ExternalLink className="h-3 w-3" />
-                              </a>
-                            )
-                          )}
-                        </div>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-        ) : (
-          <div className="rounded-xl border border-dashed border-border bg-card px-5 py-8 text-center">
-            <p className="text-sm text-muted-foreground">
-              {t("products.noInvoicesYet")}
-            </p>
-          </div>
-        )}
+        <p className="mt-1.5 text-sm text-muted-foreground">
+          {t("stripeProducts.notConnectedBody", {
+            defaultValue:
+              "This page reads your Stripe catalogue directly. Connect an account to get started.",
+          })}
+        </p>
+        <Button asChild className="mt-5">
+          <Link to="/settings/integrations">
+            {t("stripeProducts.goToIntegrations", {
+              defaultValue: "Go to Integrations",
+            })}
+          </Link>
+        </Button>
       </div>
     </div>
   );

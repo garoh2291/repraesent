@@ -22,7 +22,9 @@ import {
   Mail,
   Megaphone,
   Package,
+  Plug,
   Settings,
+  ShoppingBag,
   Store,
   User,
   Users,
@@ -39,6 +41,7 @@ import { useAppointmentConfigs } from "~/lib/hooks/useAppointmentConfigs";
 import { useCalendarSummary } from "~/lib/hooks/useCalendarSummary";
 import { usePilotFeatures } from "~/lib/feature-flags";
 import { useWorkspaceWpSite } from "~/lib/hooks/useWorkspaceWpSite";
+import { useStripeConnection } from "~/lib/hooks/useWorkspaceIntegrations";
 import { LanguageSwitcher } from "~/components/language-switcher";
 import {
   DropdownMenu,
@@ -50,7 +53,7 @@ import {
 import logoUrl from "~/components/icons/re_praesent-mark-brand-hor.svg?url";
 
 const lucideIconNames = new Set(
-  Object.keys(LucideIcons).filter((key) => /^[A-Z]/.test(key)),
+  Object.keys(LucideIcons).filter((key) => /^[A-Z]/.test(key))
 );
 
 function kebabToPascal(name: string) {
@@ -94,6 +97,11 @@ const SETTINGS_NAV = [
     Icon: CalendarDays,
   },
   { to: "/settings/bcc", labelKey: "settings.tabs.bcc", Icon: Inbox },
+  {
+    to: "/settings/integrations",
+    labelKey: "settings.tabs.integrations",
+    Icon: Plug,
+  },
   {
     to: "/settings/pipelines",
     labelKey: "settings.tabs.pipelines",
@@ -167,10 +175,10 @@ export function Sidebar({
   >(null);
   const hasAppointmentsService =
     currentWorkspace?.services?.some(
-      (s) => s.service_type === "appointments",
+      (s) => s.service_type === "appointments"
     ) ?? false;
   const { data: appointmentConfigs } = useAppointmentConfigs(
-    hasAppointmentsService && !!currentWorkspace?.id,
+    hasAppointmentsService && !!currentWorkspace?.id
   );
   const showAppointmentsInSidebar =
     hasAppointmentsService && !!appointmentConfigs?.length;
@@ -182,8 +190,9 @@ export function Sidebar({
       (calendarSummary?.baikal_config_count ?? 0) >
     0;
   const isDoorboostBrandWs = currentWorkspace?.type === "doorboost_brand";
-  // TEMPORARY: Workflows is still being piloted, so in production only the
-  // pilot workspace sees the nav entry. Local development always shows it.
+  // TEMPORARY: Workflows and Settings → Integrations are still being piloted,
+  // so in production only the pilot workspace sees those nav entries. Local
+  // development always shows them.
   // Pilot gating lives in ~/lib/feature-flags. These hide entries only — the
   // routes stay reachable by URL, and none of this is a permission boundary.
   const pilot = usePilotFeatures();
@@ -192,7 +201,10 @@ export function Sidebar({
   // right mode for free, and there is nothing to reset on the way out.
   const inSettings = location.pathname.startsWith("/settings");
   const { data: wpSite } = useWorkspaceWpSite(
-    !!currentWorkspace?.id && !isDoorboostBrandWs,
+    !!currentWorkspace?.id && !isDoorboostBrandWs
+  );
+  const { isConnected: hasStripeConnection } = useStripeConnection(
+    !!currentWorkspace?.id && !isDoorboostBrandWs
   );
 
   const handleWorkspaceChange = (workspaceId: string) => {
@@ -204,7 +216,7 @@ export function Sidebar({
     <aside
       className={cn(
         "flex h-full w-[220px] shrink-0 flex-col bg-[#111113] border-r border-white/5",
-        className,
+        className
       )}
     >
       {/* Logo */}
@@ -306,7 +318,7 @@ export function Sidebar({
             </div>
 
             {SETTINGS_NAV.filter(
-              (item) => item.to !== "/settings/calendars" || pilot.calendar,
+              (item) => item.to !== "/settings/integrations" || pilot.integrations
             ).map(({ to, labelKey, Icon }) => (
               <NavLink
                 key={to}
@@ -390,6 +402,20 @@ export function Sidebar({
               {t("nav.forms", "Forms")}
             </NavLink>
 
+            {/* Gated on the connection rather than a service entitlement: the
+                catalogue is a live proxy, so with no Stripe account there is
+                literally nothing for the page to show. */}
+            {hasStripeConnection && (
+              <NavLink
+                to="/products"
+                isActive={location.pathname.startsWith("/products")}
+                onClick={onClose}
+              >
+                <ShoppingBag className="h-4 w-4 shrink-0" />
+                {t("nav.stripeProducts", { defaultValue: "Products" })}
+              </NavLink>
+            )}
+
             {showWorkflows && (
               <NavLink
                 to="/workflows"
@@ -405,7 +431,7 @@ export function Sidebar({
               ?.filter(
                 (service) =>
                   service.service_type !== "appointments" ||
-                  showAppointmentsInSidebar,
+                  showAppointmentsInSidebar
               )
               ?.slice()
               ?.sort((a, b) => (a.service_order ?? 0) - (b.service_order ?? 0))
@@ -452,7 +478,7 @@ export function Sidebar({
                         <span className="truncate">
                           {getLocalizedServiceName(
                             service,
-                            i18n.language ?? "de",
+                            i18n.language ?? "de"
                           )}
                         </span>
                       </NavLink>
@@ -513,7 +539,7 @@ export function Sidebar({
                 );
               })}
 
-            {showCalendarInSidebar && pilot.calendar && (
+            {showCalendarInSidebar && (
               <NavLink
                 to="/calendar"
                 isActive={location.pathname.startsWith("/calendar")}
@@ -547,8 +573,8 @@ export function Sidebar({
               </NavLink>
             )}
             <NavLink
-              to="/products"
-              isActive={location.pathname === "/products"}
+              to="/billing"
+              isActive={location.pathname === "/billing"}
               onClick={onClose}
             >
               <Package className="h-4 w-4 shrink-0" />

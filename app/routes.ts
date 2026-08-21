@@ -26,11 +26,11 @@ export default [
       route("onboarding/billing", "routes/onboarding.billing.tsx"),
       route(
         "onboarding/doorboost-choice",
-        "routes/onboarding.doorboost-choice.tsx",
+        "routes/onboarding.doorboost-choice.tsx"
       ),
       route(
         "onboarding/doorboost-restore",
-        "routes/onboarding.doorboost-restore.tsx",
+        "routes/onboarding.doorboost-restore.tsx"
       ),
       route("onboarding/sync-pending", "routes/onboarding.sync-pending.tsx"),
     ]),
@@ -44,6 +44,10 @@ export default [
     ]),
     layout("routes/_dashboard-layout.tsx", [
       index("routes/home.tsx"),
+      // Workspace subscription + invoices. Moved off /products so the Stripe
+      // catalogue can take that path; the sidebar already called it Billing.
+      route("billing", "routes/billing.tsx"),
+      // Live proxy over the workspace's connected Stripe catalogue.
       route("products", "routes/products.tsx"),
       route("forms", "routes/forms._index.tsx"),
       route("forms/:formId", "routes/forms.$formId.tsx"),
@@ -65,7 +69,7 @@ export default [
       route("website", "routes/wordpress.tsx"),
       route(
         "website/settings/:pluginUuid",
-        "routes/wordpress.settings.$settingsKind.tsx",
+        "routes/wordpress.settings.$settingsKind.tsx"
       ),
       route("workflows", "routes/workflows._index.tsx"),
       route("workflows/:workflowId", "routes/workflows.$workflowId.tsx"),
@@ -74,6 +78,7 @@ export default [
         route("profile", "routes/settings.profile.tsx"),
         route("team", "routes/settings.team.tsx"),
         route("email-accounts", "routes/settings.email-accounts.tsx"),
+        route("integrations", "routes/settings.integrations.tsx"),
         route("calendars", "routes/settings.calendars.tsx"),
         route("bcc", "routes/settings.bcc.tsx"),
         route("pipelines", "routes/settings.pipelines.tsx"),
@@ -85,19 +90,19 @@ export default [
       route("brand-leads", "routes/brand-leads.tsx"),
       route(
         "db-brand/retailers/:retailerId/social-ads",
-        "routes/db-brand.retailers.$retailerId.social-ads.tsx",
+        "routes/db-brand.retailers.$retailerId.social-ads.tsx"
       ),
       route(
         "db-brand/retailers/:retailerId/social-ads/:campaignId",
-        "routes/db-brand.retailers.$retailerId.social-ads.$campaignId.tsx",
+        "routes/db-brand.retailers.$retailerId.social-ads.$campaignId.tsx"
       ),
       route(
         "db-brand/retailers/:retailerId/leads",
-        "routes/db-brand.retailers.$retailerId.leads.tsx",
+        "routes/db-brand.retailers.$retailerId.leads.tsx"
       ),
       route(
         "db-brand/retailers/:retailerId/leads/:leadId",
-        "routes/db-brand.retailers.$retailerId.leads.$leadId.tsx",
+        "routes/db-brand.retailers.$retailerId.leads.$leadId.tsx"
       ),
     ]),
   ]),

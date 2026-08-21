@@ -299,12 +299,15 @@ export default function Emails() {
   });
 
   // This page exists to hand out IMAP/SMTP connection settings for a mailbox
-  // hosted on our server. Google accounts have no such settings — they send
-  // over the Gmail API and are managed in Settings → Email accounts — so
-  // listing one here would render an empty server and a password button that
-  // cannot work.
+  // hosted on our server. OAuth accounts (Google, Microsoft) have no such
+  // settings — they send over the provider's API and are managed in
+  // Settings → Email accounts — so listing one here would render an empty
+  // server and a password button that cannot work.
   const accounts = useMemo(
-    () => allAccounts.filter((a) => a.provider !== "google"),
+    () =>
+      allAccounts.filter(
+        (a) => a.provider !== "google" && a.provider !== "microsoft",
+      ),
     [allAccounts],
   );
 

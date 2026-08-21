@@ -147,7 +147,7 @@ export interface WorkspaceEmailAccountSummary {
   email: string;
   is_default: boolean;
   /** `smtp` accounts relay over SMTP; `google` accounts send via the Gmail API. */
-  provider: "smtp" | "google";
+  provider: "smtp" | "google" | "microsoft";
   /** `admin` = provisioned by Repraesent; `user` = connected in Settings. */
   source: "admin" | "user";
   /**

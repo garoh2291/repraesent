@@ -105,9 +105,9 @@ interface WritableCalendarOption {
 
 /**
  * Owns its form and mutation so the calendar page only wires open state and a
- * refetch callback. Guests and the Meet switch only exist for Google targets —
- * the server rejects both on Baikal and CalDAV, so the form hides them rather
- * than letting the user fill in fields that would 400.
+ * refetch callback. Guests and the meeting-link switch only exist for Google
+ * and Microsoft targets — the server rejects both on Baikal and CalDAV, so the
+ * form hides them rather than letting the user fill in fields that would 400.
  */
 export function CreateEventDialog({
   open,
@@ -196,7 +196,9 @@ export function CreateEventDialog({
   }, [open, defaultValues, form]);
 
   const targetKey = form.watch("targetKey");
-  const isGoogleTarget = targetKey.startsWith("google:");
+  const isMicrosoftTarget = targetKey.startsWith("microsoft:");
+  const supportsGuestsAndMeeting =
+    targetKey.startsWith("google:") || isMicrosoftTarget;
 
   const mutation = useMutation({
     mutationFn: createCalendarEvent,
@@ -213,8 +215,10 @@ export function CreateEventDialog({
   const pending = mutation.isPending;
 
   const onSubmit = (values: CreateEventFormValues) => {
-    const google = values.targetKey.startsWith("google:");
-    const guests = google ? parseGuests(values.guests) : [];
+    const supportsExtras =
+      values.targetKey.startsWith("google:") ||
+      values.targetKey.startsWith("microsoft:");
+    const guests = supportsExtras ? parseGuests(values.guests) : [];
     mutation.mutate({
       targetKey: values.targetKey,
       title: values.title.trim(),
@@ -227,7 +231,9 @@ export function CreateEventDialog({
         .toISOString(),
       timezone,
       guests: guests.length > 0 ? guests : undefined,
-      withMeet: google ? values.withMeet : undefined,
+      // Wire field stays `withMeet` for both providers; the server creates a
+      // Teams meeting for microsoft: targets.
+      withMeet: supportsExtras ? values.withMeet : undefined,
     });
   };
 
@@ -401,7 +407,7 @@ export function CreateEventDialog({
               />
             </div>
 
-            {isGoogleTarget && (
+            {supportsGuestsAndMeeting && (
               <>
                 <FormField
                   control={form.control}
@@ -431,7 +437,11 @@ export function CreateEventDialog({
                   render={({ field }) => (
                     <FormItem className="flex flex-row items-center justify-between rounded-lg border border-border px-3 py-2.5">
                       <FormLabel className="font-normal">
-                        {t("calendar.create.addMeet")}
+                        {t(
+                          isMicrosoftTarget
+                            ? "calendar.create.addTeams"
+                            : "calendar.create.addMeet",
+                        )}
                       </FormLabel>
                       <FormControl>
                         <Switch
