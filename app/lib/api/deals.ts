@@ -155,8 +155,9 @@ export interface DealCustomerSuggestion {
 }
 
 export interface DealInvoiceLine {
-  price_id: string;
-  product_id: string;
+  /** Null for custom (non-catalogue) lines of a linked invoice. */
+  price_id: string | null;
+  product_id: string | null;
   name: string;
   quantity: number;
   unit_amount: number | null;
@@ -487,3 +488,80 @@ export const markDealInvoicePaid = (dealId: string, invoiceId: string) =>
   invoiceAction(dealId, invoiceId, "mark-paid");
 export const cancelDealSubscription = (dealId: string, invoiceId: string) =>
   invoiceAction(dealId, invoiceId, "cancel-subscription");
+
+/** Removes the row only — Stripe, products, value and customer stay untouched. */
+export async function unlinkDealInvoice(
+  dealId: string,
+  invoiceId: string,
+): Promise<DealDetailResponse> {
+  const res = await apiClient.delete<DealDetailResponse>(
+    `/deals/${dealId}/invoices/${encodeURIComponent(invoiceId)}`,
+  );
+  return res.data;
+}
+
+// ---------------------------------------------------------------------------
+// Linking an existing Stripe invoice
+// ---------------------------------------------------------------------------
+
+export interface AvailableInvoiceLine {
+  description: string | null;
+  quantity: number | null;
+  price_id: string | null;
+  product_id: string | null;
+}
+
+export interface AvailableInvoiceCustomer {
+  id: string;
+  name: string | null;
+  email: string | null;
+  deleted: boolean;
+}
+
+export type AvailableInvoiceScope = "customer" | "all";
+
+/** A Stripe invoice as the "link existing" picker sees it. */
+export interface AvailableInvoice {
+  id: string;
+  number: string | null;
+  status: string | null;
+  /** Minor units. */
+  total: number;
+  currency: string;
+  /** Unix seconds. */
+  created: number;
+  due_at: string | null;
+  hosted_invoice_url: string | null;
+  customer: AvailableInvoiceCustomer | null;
+  subscription_id: string | null;
+  /** First page of lines — enough for the confirm panel. */
+  lines: AvailableInvoiceLine[];
+  lines_truncated: boolean;
+  linked_deal_id: string | null;
+  linked_deal_title: string | null;
+  linked_via: "invoice" | "subscription" | null;
+}
+
+export async function getAvailableDealInvoices(
+  dealId: string,
+  scope: AvailableInvoiceScope,
+): Promise<AvailableInvoice[]> {
+  const res = await apiClient.get<AvailableInvoice[]>(
+    `/deals/${dealId}/invoices/available`,
+    { params: { scope } },
+  );
+  return res.data;
+}
+
+export async function linkDealInvoice(
+  dealId: string,
+  body: { stripe_invoice_id: string; sync_products: boolean },
+): Promise<DealDetailResponse> {
+  const res = await apiClient.post<DealDetailResponse>(
+    `/deals/${dealId}/invoices/link`,
+    body,
+    // Line paging + price lookups on the Stripe side.
+    { timeout: 60_000 },
+  );
+  return res.data;
+}

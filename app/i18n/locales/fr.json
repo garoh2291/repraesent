@@ -463,7 +463,10 @@
       "dealInvoiceSent": "Facture {{number}} envoyée",
       "dealInvoiceVoided": "Facture {{number}} annulée",
       "dealInvoiceMarkedPaid": "Facture {{number}} marquée comme payée",
-      "dealSubscriptionCanceled": "Abonnement résilié"
+      "dealSubscriptionCanceled": "Abonnement résilié",
+      "dealInvoiceLinked": "Facture Stripe {{number}} liée",
+      "dealProductsReplaced": "Produits remplacés depuis la facture {{number}} ({{count}} lignes)",
+      "dealInvoiceUnlinked": "Facture {{number}} dissociée"
     },
     "saveCloseDate": "Enregistrer la date de clôture",
     "saveNotes": "Enregistrer les notes",
@@ -531,7 +534,9 @@
       "currencyMismatch": "Devise différente des lignes déjà sur le deal",
       "priceCount": "{{count}} prix",
       "stockHint": "seulement {{count}} en stock",
-      "summary": "{{oneTime}} ponctuel(s) · {{recurring}} récurrent(s) (une période)"
+      "summary": "{{oneTime}} ponctuel(s) · {{recurring}} récurrent(s) (une période)",
+      "removeConfirmTitle": "Retirer ce produit ?",
+      "removeConfirmBody": "« {{name}} » est retiré de ce deal uniquement — rien ne change dans Stripe. La valeur du deal est recalculée à partir des lignes restantes."
     },
     "sort": {
       "dateDesc": "Plus récent d'abord",
@@ -571,7 +576,9 @@
         "email": "E-mail",
         "createAction": "Créer et lier",
         "linkAction": "Lier"
-      }
+      },
+      "unlinkConfirmTitle": "Dissocier ce client Stripe ?",
+      "unlinkConfirmBody": "« {{name}} » est dissocié de ce deal uniquement — rien ne change dans Stripe, et les factures déjà sur le deal restent. Les nouvelles factures nécessitent à nouveau un client."
     },
     "invoices": {
       "title": "Factures et abonnements",
@@ -661,7 +668,39 @@
         "confirmSend": "Créer et envoyer",
         "confirmSubscription": "Créer l'abonnement",
         "confirmSubscriptionSend": "Créer et envoyer"
-      }
+      },
+      "link": {
+        "button": "Lier une existante",
+        "title": "Lier une facture existante",
+        "description": "Adopte une facture de votre compte Stripe : elle apparaît sur ce deal, son client est lié, et les produits du deal peuvent suivre ses lignes.",
+        "notConnected": "Aucun compte Stripe n'est encore connecté à cet espace de travail.",
+        "searchPlaceholder": "Numéro, client ou e-mail…",
+        "scopeAll": "Tous les clients",
+        "noResults": "Aucune facture ne correspond à cette recherche.",
+        "empty": "Aucune facture sur ce compte Stripe pour l'instant.",
+        "alreadyOnDeal": "Déjà sur ce deal",
+        "linkedTo": "Liée à {{title}}",
+        "customerDeleted": "Ce client a été supprimé dans Stripe — le client du deal reste inchangé.",
+        "customerWillReplace": "{{name}} remplacera {{current}} comme client de ce deal.",
+        "customerWillLink": "{{name}} sera lié comme client de ce deal.",
+        "renewalNote": "Ce deal suit déjà l'abonnement derrière cette facture — elle sera ajoutée comme renouvellement.",
+        "draft": "Facture brouillon — Stripe ne peut pas l'envoyer avant sa finalisation.",
+        "linesTitle": "Produits",
+        "linesReplace": "Ils remplacent les {{count}} produits actuels du deal.",
+        "customLinesNote": "{{count}} lignes libres ne deviendront pas des produits — la valeur du deal suivra le total de la facture.",
+        "noProductLines": "Aucun produit du catalogue sur cette facture — les produits actuels restent ; la valeur du deal sera fixée à {{total}}.",
+        "noProductLinesNoValue": "Aucun produit du catalogue sur cette facture — produits et valeur du deal restent inchangés.",
+        "linesTruncated": "Affichage des {{count}} premières lignes ; toutes les lignes sont synchronisées.",
+        "sendStateUnknown": "État d'envoi inconnu — Stripe a peut-être déjà envoyé cette facture.",
+        "syncProducts": "Synchroniser les produits depuis la facture",
+        "confirm": "Lier la facture",
+        "linked": "Facture liée."
+      },
+      "unlink": "Dissocier du deal",
+      "unlinked": "Facture dissociée de ce deal.",
+      "unlinkConfirmTitle": "Dissocier cette facture ?",
+      "unlinkConfirmBody": "La retire uniquement de ce deal. Rien ne change dans Stripe ; les produits, la valeur et le client du deal restent tels quels.",
+      "unlinkConfirmBodySubscription": "Retire l'abonnement et ses renouvellements uniquement de ce deal. Rien ne change dans Stripe ; les produits, la valeur et le client du deal restent tels quels."
     }
   },
   "appointments": {

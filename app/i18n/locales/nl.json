@@ -463,7 +463,10 @@
       "dealInvoiceSent": "Factuur {{number}} verstuurd",
       "dealInvoiceVoided": "Factuur {{number}} geannuleerd",
       "dealInvoiceMarkedPaid": "Factuur {{number}} gemarkeerd als betaald",
-      "dealSubscriptionCanceled": "Abonnement opgezegd"
+      "dealSubscriptionCanceled": "Abonnement opgezegd",
+      "dealInvoiceLinked": "Stripe-factuur {{number}} gekoppeld",
+      "dealProductsReplaced": "Producten vervangen vanuit factuur {{number}} ({{count}} regels)",
+      "dealInvoiceUnlinked": "Factuur {{number}} losgekoppeld"
     },
     "saveCloseDate": "Afsluitdatum opslaan",
     "saveNotes": "Notities opslaan",
@@ -531,7 +534,9 @@
       "currencyMismatch": "Andere valuta dan de bestaande regels",
       "priceCount": "{{count}} prijzen",
       "stockHint": "slechts {{count}} op voorraad",
-      "summary": "{{oneTime}} eenmalig · {{recurring}} terugkerend (één periode)"
+      "summary": "{{oneTime}} eenmalig · {{recurring}} terugkerend (één periode)",
+      "removeConfirmTitle": "Dit product verwijderen?",
+      "removeConfirmBody": "\"{{name}}\" wordt alleen van deze deal verwijderd — in Stripe verandert niets. De dealwaarde wordt herberekend op basis van de overige regels."
     },
     "sort": {
       "dateDesc": "Nieuwste eerst",
@@ -571,7 +576,9 @@
         "email": "E-mail",
         "createAction": "Maken & koppelen",
         "linkAction": "Koppelen"
-      }
+      },
+      "unlinkConfirmTitle": "Deze Stripe-klant loskoppelen?",
+      "unlinkConfirmBody": "\"{{name}}\" wordt alleen van deze deal losgekoppeld — in Stripe verandert niets, en facturen die al op de deal staan blijven. Nieuwe facturen hebben weer een klant nodig."
     },
     "invoices": {
       "title": "Facturen & abonnementen",
@@ -661,7 +668,39 @@
         "confirmSend": "Maken & versturen",
         "confirmSubscription": "Abonnement maken",
         "confirmSubscriptionSend": "Maken & versturen"
-      }
+      },
+      "link": {
+        "button": "Bestaande koppelen",
+        "title": "Bestaande factuur koppelen",
+        "description": "Neemt een factuur uit je Stripe-account over: hij verschijnt op deze deal, de klant wordt gekoppeld en de producten van de deal kunnen de regels volgen.",
+        "notConnected": "Er is nog geen Stripe-account aan deze workspace gekoppeld.",
+        "searchPlaceholder": "Nummer, klant of e-mail…",
+        "scopeAll": "Alle klanten",
+        "noResults": "Geen facturen gevonden voor deze zoekopdracht.",
+        "empty": "Nog geen facturen in dit Stripe-account.",
+        "alreadyOnDeal": "Al op deze deal",
+        "linkedTo": "Gekoppeld aan {{title}}",
+        "customerDeleted": "Deze klant is in Stripe verwijderd — de klant van de deal blijft ongewijzigd.",
+        "customerWillReplace": "{{name}} vervangt {{current}} als klant van deze deal.",
+        "customerWillLink": "{{name}} wordt gekoppeld als klant van deze deal.",
+        "renewalNote": "Deze deal volgt het abonnement achter deze factuur al — hij wordt toegevoegd als verlenging.",
+        "draft": "Conceptfactuur — Stripe kan hem pas mailen na finalisering.",
+        "linesTitle": "Producten",
+        "linesReplace": "Deze vervangen de {{count}} huidige producten van de deal.",
+        "customLinesNote": "{{count}} vrije regels worden geen producten — de dealwaarde volgt het factuurtotaal.",
+        "noProductLines": "Geen catalogusproducten op deze factuur — de huidige producten blijven; de dealwaarde wordt {{total}}.",
+        "noProductLinesNoValue": "Geen catalogusproducten op deze factuur — producten en dealwaarde blijven ongewijzigd.",
+        "linesTruncated": "De eerste {{count}} regels worden getoond; alle regels worden gesynchroniseerd.",
+        "sendStateUnknown": "Verzendstatus onbekend — Stripe heeft deze factuur mogelijk al gemaild.",
+        "syncProducts": "Producten uit de factuur synchroniseren",
+        "confirm": "Factuur koppelen",
+        "linked": "Factuur gekoppeld."
+      },
+      "unlink": "Loskoppelen van deal",
+      "unlinked": "Factuur losgekoppeld van deze deal.",
+      "unlinkConfirmTitle": "Deze factuur loskoppelen?",
+      "unlinkConfirmBody": "Verwijdert hem alleen van deze deal. In Stripe verandert niets; producten, waarde en klant van de deal blijven zoals ze zijn.",
+      "unlinkConfirmBodySubscription": "Verwijdert het abonnement en zijn verlengingen alleen van deze deal. In Stripe verandert niets; producten, waarde en klant van de deal blijven zoals ze zijn."
     }
   },
   "appointments": {

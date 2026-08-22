@@ -1,5 +1,9 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
+  getAvailableDealInvoices,
+  type AvailableInvoiceScope,
+} from "~/lib/api/deals";
+import {
   getCatalogAccount,
   getCatalogProduct,
   listCatalogProducts,
@@ -87,5 +91,20 @@ export function useStripeCustomerSearch(search: string, enabled: boolean) {
     enabled,
     retry: false,
     staleTime: 30_000,
+  });
+}
+
+/** Stripe invoices the deal could adopt — for the "Link existing" picker. */
+export function useAvailableDealInvoices(
+  dealId: string,
+  scope: AvailableInvoiceScope,
+  enabled: boolean,
+) {
+  return useQuery({
+    queryKey: ["deal-available-invoices", dealId, scope],
+    queryFn: () => getAvailableDealInvoices(dealId, scope),
+    enabled,
+    retry: false,
+    staleTime: 15_000,
   });
 }

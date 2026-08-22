@@ -463,7 +463,10 @@
       "dealInvoiceSent": "Sent invoice {{number}}",
       "dealInvoiceVoided": "Voided invoice {{number}}",
       "dealInvoiceMarkedPaid": "Marked invoice {{number}} as paid",
-      "dealSubscriptionCanceled": "Canceled subscription"
+      "dealSubscriptionCanceled": "Canceled subscription",
+      "dealInvoiceLinked": "Linked Stripe invoice {{number}}",
+      "dealProductsReplaced": "Replaced products from invoice {{number}} ({{count}} lines)",
+      "dealInvoiceUnlinked": "Unlinked invoice {{number}}"
     },
     "saveCloseDate": "Save close date",
     "saveNotes": "Save notes",
@@ -531,7 +534,9 @@
       "currencyMismatch": "Different currency than the lines already on the deal",
       "priceCount": "{{count}} prices",
       "stockHint": "only {{count}} in stock",
-      "summary": "{{oneTime}} one-time · {{recurring}} recurring (one period)"
+      "summary": "{{oneTime}} one-time · {{recurring}} recurring (one period)",
+      "removeConfirmTitle": "Remove this product?",
+      "removeConfirmBody": "\"{{name}}\" is removed from this deal only — nothing changes in Stripe. The deal value recalculates from the remaining lines."
     },
     "sort": {
       "dateDesc": "Newest first",
@@ -571,7 +576,9 @@
         "email": "Email",
         "createAction": "Create & link",
         "linkAction": "Link"
-      }
+      },
+      "unlinkConfirmTitle": "Unlink this Stripe customer?",
+      "unlinkConfirmBody": "\"{{name}}\" is unlinked from this deal only — nothing changes in Stripe, and invoices already on the deal stay. New invoices need a customer again."
     },
     "invoices": {
       "title": "Invoices & subscriptions",
@@ -661,7 +668,39 @@
         "confirmSend": "Create & send",
         "confirmSubscription": "Create subscription",
         "confirmSubscriptionSend": "Create & send"
-      }
+      },
+      "link": {
+        "button": "Link existing",
+        "title": "Link an existing invoice",
+        "description": "Adopt an invoice from your Stripe account: it appears on this deal, its customer gets linked, and the deal's products can follow its lines.",
+        "notConnected": "No Stripe account is connected to this workspace yet.",
+        "searchPlaceholder": "Number, customer or email…",
+        "scopeAll": "All customers",
+        "noResults": "No invoices match that search.",
+        "empty": "No invoices on this Stripe account yet.",
+        "alreadyOnDeal": "Already on this deal",
+        "linkedTo": "Linked to {{title}}",
+        "customerDeleted": "This customer was deleted in Stripe — the deal's customer stays as it is.",
+        "customerWillReplace": "{{name}} will replace {{current}} as this deal's customer.",
+        "customerWillLink": "{{name}} will be linked as this deal's customer.",
+        "renewalNote": "This deal already tracks the subscription behind this invoice — it will be added as a renewal.",
+        "draft": "Draft invoice — Stripe cannot email it until it is finalized.",
+        "linesTitle": "Products",
+        "linesReplace": "These replace the {{count}} products currently on the deal.",
+        "customLinesNote": "{{count}} custom lines won't become products — the deal value will follow the invoice total.",
+        "noProductLines": "No catalogue products on this invoice — current products stay; the deal value will be set to {{total}}.",
+        "noProductLinesNoValue": "No catalogue products on this invoice — products and deal value stay unchanged.",
+        "linesTruncated": "Showing the first {{count}} lines; every line is synced.",
+        "sendStateUnknown": "Send state unknown — Stripe may already have emailed this invoice.",
+        "syncProducts": "Sync products from invoice",
+        "confirm": "Link invoice",
+        "linked": "Invoice linked."
+      },
+      "unlink": "Unlink from deal",
+      "unlinked": "Invoice unlinked from this deal.",
+      "unlinkConfirmTitle": "Unlink this invoice?",
+      "unlinkConfirmBody": "Removes it from this deal only. Nothing changes in Stripe; the deal's products, value and customer stay as they are.",
+      "unlinkConfirmBodySubscription": "Removes the subscription and its renewals from this deal only. Nothing changes in Stripe; the deal's products, value and customer stay as they are."
     }
   },
   "appointments": {

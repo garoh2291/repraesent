@@ -501,7 +501,10 @@
       "dealInvoiceSent": "Rechnung {{number}} gesendet",
       "dealInvoiceVoided": "Rechnung {{number}} storniert",
       "dealInvoiceMarkedPaid": "Rechnung {{number}} als bezahlt markiert",
-      "dealSubscriptionCanceled": "Abo gekündigt"
+      "dealSubscriptionCanceled": "Abo gekündigt",
+      "dealInvoiceLinked": "Stripe-Rechnung {{number}} verknüpft",
+      "dealProductsReplaced": "Produkte aus Rechnung {{number}} übernommen ({{count}} Positionen)",
+      "dealInvoiceUnlinked": "Rechnung {{number}} getrennt"
     },
     "products": {
       "title": "Produkte",
@@ -533,7 +536,9 @@
       "currencyMismatch": "Andere Währung als die vorhandenen Positionen",
       "priceCount": "{{count}} Preise",
       "stockHint": "nur {{count}} auf Lager",
-      "summary": "{{oneTime}} einmalig · {{recurring}} wiederkehrend (eine Periode)"
+      "summary": "{{oneTime}} einmalig · {{recurring}} wiederkehrend (eine Periode)",
+      "removeConfirmTitle": "Dieses Produkt entfernen?",
+      "removeConfirmBody": "„{{name}}“ wird nur aus diesem Deal entfernt — in Stripe ändert sich nichts. Der Deal-Wert wird aus den verbleibenden Positionen neu berechnet."
     },
     "sort": {
       "dateDesc": "Neueste zuerst",
@@ -573,7 +578,9 @@
         "email": "E-Mail",
         "createAction": "Erstellen & verknüpfen",
         "linkAction": "Verknüpfen"
-      }
+      },
+      "unlinkConfirmTitle": "Diesen Stripe-Kunden trennen?",
+      "unlinkConfirmBody": "„{{name}}“ wird nur von diesem Deal getrennt — in Stripe ändert sich nichts, und vorhandene Rechnungen bleiben im Deal. Neue Rechnungen brauchen wieder einen Kunden."
     },
     "invoices": {
       "title": "Rechnungen & Abos",
@@ -663,7 +670,39 @@
         "confirmSend": "Erstellen & senden",
         "confirmSubscription": "Abo erstellen",
         "confirmSubscriptionSend": "Erstellen & senden"
-      }
+      },
+      "link": {
+        "button": "Vorhandene verknüpfen",
+        "title": "Vorhandene Rechnung verknüpfen",
+        "description": "Übernimmt eine Rechnung aus Ihrem Stripe-Konto: Sie erscheint in diesem Deal, ihr Kunde wird verknüpft, und die Produkte des Deals können ihren Positionen folgen.",
+        "notConnected": "Mit diesem Workspace ist noch kein Stripe-Konto verbunden.",
+        "searchPlaceholder": "Nummer, Kunde oder E-Mail…",
+        "scopeAll": "Alle Kunden",
+        "noResults": "Keine Rechnungen passen zu dieser Suche.",
+        "empty": "Noch keine Rechnungen in diesem Stripe-Konto.",
+        "alreadyOnDeal": "Bereits in diesem Deal",
+        "linkedTo": "Verknüpft mit {{title}}",
+        "customerDeleted": "Dieser Kunde wurde in Stripe gelöscht — der Kunde des Deals bleibt unverändert.",
+        "customerWillReplace": "{{name}} ersetzt {{current}} als Kunden dieses Deals.",
+        "customerWillLink": "{{name}} wird als Kunde dieses Deals verknüpft.",
+        "renewalNote": "Dieser Deal verfolgt das Abo hinter dieser Rechnung bereits — sie wird als Verlängerung hinzugefügt.",
+        "draft": "Rechnungsentwurf — Stripe kann sie erst nach der Finalisierung versenden.",
+        "linesTitle": "Produkte",
+        "linesReplace": "Diese ersetzen die {{count}} aktuellen Produkte des Deals.",
+        "customLinesNote": "{{count}} freie Positionen werden keine Produkte — der Deal-Wert folgt dem Rechnungsbetrag.",
+        "noProductLines": "Keine Katalogprodukte auf dieser Rechnung — die aktuellen Produkte bleiben; der Deal-Wert wird auf {{total}} gesetzt.",
+        "noProductLinesNoValue": "Keine Katalogprodukte auf dieser Rechnung — Produkte und Deal-Wert bleiben unverändert.",
+        "linesTruncated": "Die ersten {{count}} Positionen werden angezeigt; synchronisiert werden alle.",
+        "sendStateUnknown": "Versandstatus unbekannt — Stripe hat diese Rechnung möglicherweise bereits versendet.",
+        "syncProducts": "Produkte aus der Rechnung übernehmen",
+        "confirm": "Rechnung verknüpfen",
+        "linked": "Rechnung verknüpft."
+      },
+      "unlink": "Vom Deal trennen",
+      "unlinked": "Rechnung vom Deal getrennt.",
+      "unlinkConfirmTitle": "Diese Rechnung trennen?",
+      "unlinkConfirmBody": "Entfernt sie nur aus diesem Deal. In Stripe ändert sich nichts; Produkte, Wert und Kunde des Deals bleiben unverändert.",
+      "unlinkConfirmBodySubscription": "Entfernt das Abo und seine Verlängerungen nur aus diesem Deal. In Stripe ändert sich nichts; Produkte, Wert und Kunde des Deals bleiben unverändert."
     }
   },
   "appointments": {
