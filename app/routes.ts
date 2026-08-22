@@ -79,6 +79,7 @@ export default [
         route("team", "routes/settings.team.tsx"),
         route("email-accounts", "routes/settings.email-accounts.tsx"),
         route("integrations", "routes/settings.integrations.tsx"),
+        route("notifications", "routes/settings.notifications.tsx"),
         route("calendars", "routes/settings.calendars.tsx"),
         route("bcc", "routes/settings.bcc.tsx"),
         route("pipelines", "routes/settings.pipelines.tsx"),

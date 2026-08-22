@@ -988,7 +988,8 @@
       "emailAccounts": "E-mailaccounts",
       "integrations": "Integraties",
       "calendars": "Agenda's",
-      "pipelines": "Pipelinefasen"
+      "pipelines": "Pipelinefasen",
+      "notifications": "Meldingen"
     },
     "bcc": {
       "metaTitle": "E-maillogging",
@@ -1244,6 +1245,61 @@
         "denied": "Je hebt de koppeling geannuleerd.",
         "expired": "Die link is verlopen. Probeer het opnieuw.",
         "failed": "Koppelen mislukt{{reason}}"
+      }
+    },
+    "notifications": {
+      "metaTitle": "Meldingen",
+      "metaDescription": "Workspace-gebeurtenissen naar Slack of Microsoft Teams sturen.",
+      "sectionLabel": "Kanalen",
+      "sectionDescription": "Workspace-gebeurtenissen direct naar Slack of Microsoft Teams posten.",
+      "addChannel": "Kanaal toevoegen",
+      "addChannelDescription": "Plak een incoming-webhook-URL. Gebeurtenissen worden er direct geplaatst.",
+      "emptyTitle": "Nog geen meldingskanalen",
+      "emptyDescription": "Koppel een Slack- of Teams-kanaal om direct op de hoogte te zijn van nieuwe leads en deal-updates.",
+      "provider": "Provider",
+      "providerSlack": "Slack",
+      "providerTeams": "Microsoft Teams",
+      "nameLabel": "Kanaalnaam",
+      "namePlaceholder": "bijv. #sales-alerts",
+      "nameRequired": "Voer een kanaalnaam in.",
+      "webhookUrlLabel": "Webhook-URL",
+      "webhookUrlHelpSlack": "Plak een Slack incoming-webhook-URL (hooks.slack.com).",
+      "webhookUrlHelpTeams": "Plak een Microsoft Teams Workflows-webhook-URL.",
+      "webhookUrlInvalid": "Voer een geldige https://-webhook-URL in.",
+      "webhookUrlSuspicious": "Dit lijkt niet op een typische webhook-URL van deze provider.",
+      "eventsLabel": "Melden bij",
+      "events": {
+        "new_lead": "Nieuwe lead",
+        "deal_stage_changed": "Dealfase gewijzigd",
+        "form_submission": "Formulierinzending",
+        "appointment_booked": "Afspraak geboekt"
+      },
+      "active": "Actief",
+      "sendTest": "Test versturen",
+      "testSent": "Testbericht verzonden",
+      "testFailed": "Test mislukt: {{error}}",
+      "created": "Kanaal toegevoegd",
+      "deleted": "Kanaal verwijderd",
+      "deleteTitle": "Dit kanaal verwijderen?",
+      "deleteDescription": "Meldingen worden niet meer naar {{name}} gepost. De webhook zelf wordt niet verwijderd.",
+      "deleteConfirm": "Verwijderen",
+      "save": "Opslaan",
+      "lastError": "Laatste bezorging mislukt: {{error}}",
+      "adminOnly": "Alleen workspace-admins kunnen meldingskanalen beheren.",
+      "howToTitle": "Zo krijgt u een webhook-URL",
+      "howTo": {
+        "slack": {
+          "step1": "Open api.slack.com/apps en maak een app (“From scratch”).",
+          "step2": "Schakel in de app-instellingen “Incoming Webhooks” in.",
+          "step3": "Klik op “Add New Webhook to Workspace” en kies een kanaal.",
+          "step4": "Kopieer de webhook-URL en plak deze hier."
+        },
+        "teams": {
+          "step1": "Open in Teams het kanaalmenu (⋯) en kies “Workflows”.",
+          "step2": "Kies de sjabloon “Post to a channel when a webhook request is received”.",
+          "step3": "Maak de workflow aan en kopieer de getoonde URL.",
+          "step4": "Plak de URL hier."
+        }
       }
     },
     "calendars": {

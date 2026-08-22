@@ -990,7 +990,8 @@
       "emailAccounts": "E-Mail-Konten",
       "integrations": "Integrationen",
       "calendars": "Kalender",
-      "pipelines": "Pipeline-Phasen"
+      "pipelines": "Pipeline-Phasen",
+      "notifications": "Benachrichtigungen"
     },
     "bcc": {
       "metaTitle": "E-Mail-Protokollierung",
@@ -1246,6 +1247,61 @@
         "denied": "Du hast die Verbindung abgebrochen.",
         "expired": "Der Link ist abgelaufen. Bitte versuche es erneut.",
         "failed": "Verbindung fehlgeschlagen{{reason}}"
+      }
+    },
+    "notifications": {
+      "metaTitle": "Benachrichtigungen",
+      "metaDescription": "Workspace-Ereignisse an Slack oder Microsoft Teams senden.",
+      "sectionLabel": "Kanäle",
+      "sectionDescription": "Workspace-Ereignisse sofort an Slack oder Microsoft Teams senden.",
+      "addChannel": "Kanal hinzufügen",
+      "addChannelDescription": "Incoming-Webhook-URL einfügen. Ereignisse werden sofort dorthin gesendet.",
+      "emptyTitle": "Noch keine Benachrichtigungskanäle",
+      "emptyDescription": "Verbinden Sie einen Slack- oder Teams-Kanal, um über neue Leads und Deal-Updates informiert zu werden.",
+      "provider": "Anbieter",
+      "providerSlack": "Slack",
+      "providerTeams": "Microsoft Teams",
+      "nameLabel": "Kanalname",
+      "namePlaceholder": "z. B. #sales-alerts",
+      "nameRequired": "Bitte einen Kanalnamen eingeben.",
+      "webhookUrlLabel": "Webhook-URL",
+      "webhookUrlHelpSlack": "Slack Incoming-Webhook-URL einfügen (hooks.slack.com).",
+      "webhookUrlHelpTeams": "Microsoft Teams Workflows-Webhook-URL einfügen.",
+      "webhookUrlInvalid": "Bitte eine gültige https://-Webhook-URL eingeben.",
+      "webhookUrlSuspicious": "Das sieht nicht nach einer typischen Webhook-URL dieses Anbieters aus.",
+      "eventsLabel": "Benachrichtigen bei",
+      "events": {
+        "new_lead": "Neuer Lead",
+        "deal_stage_changed": "Deal-Phase geändert",
+        "form_submission": "Formular-Eingang",
+        "appointment_booked": "Termin gebucht"
+      },
+      "active": "Aktiv",
+      "sendTest": "Test senden",
+      "testSent": "Testnachricht gesendet",
+      "testFailed": "Test fehlgeschlagen: {{error}}",
+      "created": "Kanal hinzugefügt",
+      "deleted": "Kanal entfernt",
+      "deleteTitle": "Diesen Kanal entfernen?",
+      "deleteDescription": "Es werden keine Benachrichtigungen mehr an {{name}} gesendet. Der Webhook selbst wird nicht gelöscht.",
+      "deleteConfirm": "Entfernen",
+      "save": "Speichern",
+      "lastError": "Letzte Zustellung fehlgeschlagen: {{error}}",
+      "adminOnly": "Nur Workspace-Admins können Benachrichtigungskanäle verwalten.",
+      "howToTitle": "So erhalten Sie eine Webhook-URL",
+      "howTo": {
+        "slack": {
+          "step1": "Öffnen Sie api.slack.com/apps und erstellen Sie eine App („From scratch“).",
+          "step2": "Aktivieren Sie in den App-Einstellungen „Incoming Webhooks“.",
+          "step3": "Klicken Sie auf „Add New Webhook to Workspace“ und wählen Sie einen Kanal.",
+          "step4": "Kopieren Sie die Webhook-URL und fügen Sie sie hier ein."
+        },
+        "teams": {
+          "step1": "Öffnen Sie in Teams das Kanalmenü (⋯) und wählen Sie „Workflows“.",
+          "step2": "Wählen Sie die Vorlage „In einem Kanal posten, wenn eine Webhookanforderung empfangen wird“.",
+          "step3": "Erstellen Sie den Workflow und kopieren Sie die angezeigte URL.",
+          "step4": "Fügen Sie die URL hier ein."
+        }
       }
     },
     "calendars": {
