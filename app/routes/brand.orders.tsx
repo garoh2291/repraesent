@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
+import { useClientTypeWording } from "~/lib/hooks/useClientTypeWording";
 import { normalizeLocale, type SupportedLocale } from "~/i18n/locales";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
@@ -88,6 +89,7 @@ function localizeServiceName(
 
 export default function BrandOrdersPage() {
   const { t, i18n } = useTranslation();
+  const ctw = useClientTypeWording();
   const queryClient = useQueryClient();
 
   // Wizard state
@@ -196,7 +198,7 @@ export default function BrandOrdersPage() {
           {t("brand.navOrders", "Orders")}
         </h1>
         <p className="text-sm text-muted-foreground mt-1">
-          {t("brand.ordersSubtitle", "Request new partner houses or services")}
+          {t("brand.ordersSubtitle", ctw)}
         </p>
       </div>
 
@@ -277,7 +279,7 @@ export default function BrandOrdersPage() {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <OrderTypeCard
                   icon={Building2}
-                  title={t("brand.orderNewWorkspace", "New Partner House")}
+                  title={t("brand.orderNewWorkspace", ctw)}
                   description={t(
                     "brand.orderNewWorkspaceDesc",
                     "Request a new workspace with a subscription plan"
@@ -288,10 +290,7 @@ export default function BrandOrdersPage() {
                 <OrderTypeCard
                   icon={Plus}
                   title={t("brand.orderAddService", "Add Service")}
-                  description={t(
-                    "brand.orderAddServiceDesc",
-                    "Add a service to an existing partner house"
-                  )}
+                  description={t("brand.orderAddServiceDesc", ctw)}
                   selected={orderType === "service"}
                   onClick={() => setOrderType("service")}
                 />
@@ -478,17 +477,14 @@ export default function BrandOrdersPage() {
                 </button>
                 <div>
                   <h2 className="text-lg font-semibold">
-                    {t(
-                      "brand.orderStep2ServiceTitle",
-                      "Select Partner House & Services"
-                    )}
+                    {t("brand.orderStep2ServiceTitle", ctw)}
                   </h2>
                 </div>
               </div>
 
               {/* Workspace picker */}
               <label className="block text-[13px] font-medium text-foreground mb-2">
-                {t("brand.orderSelectWorkspace", "Select partner house")}
+                {t("brand.orderSelectWorkspace", ctw)}
               </label>
               <select
                 value={selectedWorkspaceId ?? ""}
@@ -499,10 +495,7 @@ export default function BrandOrdersPage() {
                 className="w-full sm:w-80 rounded-xl border border-border bg-card px-3 py-2.5 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-foreground/20 mb-6"
               >
                 <option value="">
-                  {t(
-                    "brand.orderSelectWorkspacePlaceholder",
-                    "Choose a partner house..."
-                  )}
+                  {t("brand.orderSelectWorkspacePlaceholder", ctw)}
                 </option>
                 {workspaces.map((ws) => (
                   <option key={ws.id} value={ws.id}>
@@ -635,7 +628,7 @@ export default function BrandOrdersPage() {
                   {orderType === "workspace" ? (
                     <>
                       <Building2 className="h-4 w-4" />
-                      {t("brand.orderTypeWorkspace", "New Partner House")}
+                      {t("brand.orderTypeWorkspace", ctw)}
                     </>
                   ) : (
                     <>
@@ -669,7 +662,7 @@ export default function BrandOrdersPage() {
                   <div className="space-y-2">
                     <p className="text-sm">
                       <span className="text-muted-foreground">
-                        {t("brand.orderSelectWorkspace", "Partner House")}:
+                        {t("brand.orderSelectWorkspace", ctw)}:
                       </span>{" "}
                       <span className="font-medium text-foreground">
                         {selectedWorkspace.name}
@@ -820,7 +813,7 @@ export default function BrandOrdersPage() {
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium text-foreground truncate">
                         {order.order_type === "workspace"
-                          ? t("brand.orderTypeWorkspace", "New Partner House")
+                          ? t("brand.orderTypeWorkspace", ctw)
                           : t("brand.orderTypeService", "Add Service")}
                         {order.workspace_name && (
                           <span className="text-muted-foreground font-normal">

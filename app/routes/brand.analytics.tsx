@@ -10,6 +10,7 @@ import {
 import { cn } from "~/lib/utils";
 import i18n from "~/i18n";
 import { useDocumentMeta } from "~/lib/hooks/use-document-meta";
+import { useClientTypeWording } from "~/lib/hooks/useClientTypeWording";
 
 export function meta() {
   return [
@@ -21,6 +22,7 @@ const PLAUSIBLE_SCRIPT = "https://plausible0.gagadomains.com/js/embed.host.js";
 
 export default function BrandAnalytics() {
   const { t } = useTranslation();
+  const ctw = useClientTypeWording();
   useDocumentMeta({
     titleKey: "brand.analyticsTitle",
     titleSuffix: " – Repraesent",
@@ -218,7 +220,7 @@ export default function BrandAnalytics() {
             </div>
             <div className="space-y-1">
               <p className="text-sm font-semibold text-foreground">
-                {t("brand.analyticsSelectPrompt")}
+                {t("brand.analyticsSelectPrompt", ctw)}
               </p>
               <p className="text-xs text-muted-foreground">
                 {t("brand.analyticsSelectHint")}
@@ -233,7 +235,7 @@ export default function BrandAnalytics() {
             <AlertCircle className="h-10 w-10 text-muted-foreground/30" />
             <div className="space-y-1">
               <p className="text-sm font-semibold text-foreground">
-                {t("brand.analyticsNotConfigured")}
+                {t("brand.analyticsNotConfigured", ctw)}
               </p>
               <p className="text-xs text-muted-foreground">{selected.name}</p>
             </div>

@@ -6,6 +6,7 @@ import {
   setStoredRefreshToken,
 } from "./axios-instance";
 import { normalizeLocale, type SupportedLocale } from "~/i18n/locales";
+import type { ClientType } from "~/lib/client-types";
 
 /**
  * User information from backend
@@ -30,6 +31,8 @@ export interface BrandInfo {
   id: string;
   name: string;
   logo: string | null;
+  /** What the brand calls its connected workspaces; optional for deploy skew. */
+  client_type?: ClientType;
 }
 
 /**

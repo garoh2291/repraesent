@@ -37,6 +37,7 @@ import {
 } from "~/components/ui/dialog";
 import i18n from "~/i18n";
 import { useDocumentMeta } from "~/lib/hooks/use-document-meta";
+import { useClientTypeWording } from "~/lib/hooks/useClientTypeWording";
 import { resolveStageColorsByKey } from "~/lib/pipeline-stages/colors";
 
 export function meta() {
@@ -750,6 +751,7 @@ function AnalyticsChartSection({
   colorMap: Record<string, string>;
 }) {
   const { t } = useTranslation();
+  const ctw = useClientTypeWording();
   const [hoveredWorkspace, setHoveredWorkspace] = useState<string | null>(null);
   const hoverTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -822,7 +824,7 @@ function AnalyticsChartSection({
             </p>
           )}
           <p className="text-xs text-muted-foreground">
-            {t("brand.webAnalyticsDescription", "Website visitor data across all partner houses")}
+            {t("brand.webAnalyticsDescription", ctw)}
           </p>
         </div>
 
@@ -1111,6 +1113,7 @@ function WorkspaceLeaderboard({
   onPeriodChange: (p: LeadAnalyticsPeriod) => void;
 }) {
   const { t } = useTranslation();
+  const ctw = useClientTypeWording();
   if (isLoading) return <LeaderboardSkeleton />;
   if (!workspaces.length) return null;
 
@@ -1122,7 +1125,7 @@ function WorkspaceLeaderboard({
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div className="space-y-0.5">
           <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
-            {t("brand.leaderboardTitle", "Top Partner Houses")}
+            {t("brand.leaderboardTitle", ctw)}
           </p>
           <p className="text-2xl font-bold tracking-tight text-foreground tabular-nums">
             {formatNumber(total)}
@@ -1406,6 +1409,7 @@ function ExportReportModal({
 
 export default function BrandDashboard() {
   const { t } = useTranslation();
+  const ctw = useClientTypeWording();
   useDocumentMeta({
     titleKey: "brand.metaTitle",
     descriptionKey: "brand.metaDescription",
@@ -1486,10 +1490,7 @@ export default function BrandDashboard() {
             {t("brand.greeting", "Good to see you.")}
           </h1>
           <p className="text-sm text-muted-foreground">
-            {t(
-              "brand.greetingSubtitle",
-              "Here's how your partner houses are performing."
-            )}
+            {t("brand.greetingSubtitle", ctw)}
           </p>
         </div>
         <Button
