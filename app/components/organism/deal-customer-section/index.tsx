@@ -23,6 +23,16 @@ import { stripeDashboardUrl } from "~/lib/api/stripe-catalog";
 import { useStripeConnection } from "~/lib/hooks/useWorkspaceIntegrations";
 import { Button } from "~/components/ui/button";
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "~/components/ui/alert-dialog";
+import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
@@ -52,6 +62,7 @@ export function DealCustomerSection({
   const queryClient = useQueryClient();
   const { stripe } = useStripeConnection();
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [confirmUnlinkOpen, setConfirmUnlinkOpen] = useState(false);
   const dealKey = ["deal", dealId] as const;
 
   const applyDetail = (detail: DealDetailResponse) => {
@@ -250,7 +261,7 @@ export function DealCustomerSection({
                   size="icon-xs"
                   className="h-7 w-7 shrink-0 text-muted-foreground hover:text-destructive"
                   disabled={busy}
-                  onClick={() => unlinkMutation.mutate()}
+                  onClick={() => setConfirmUnlinkOpen(true)}
                   aria-label={t("pipeline.customer.unlink", {
                     defaultValue: "Unlink customer",
                   })}
@@ -291,6 +302,46 @@ export function DealCustomerSection({
           </div>
         )}
       </section>
+
+      <AlertDialog open={confirmUnlinkOpen} onOpenChange={setConfirmUnlinkOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              {t("pipeline.customer.unlinkConfirmTitle", {
+                defaultValue: "Unlink this Stripe customer?",
+              })}
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              {t("pipeline.customer.unlinkConfirmBody", {
+                name:
+                  customer?.name ??
+                  customer?.email ??
+                  customer?.stripe_customer_id ??
+                  "",
+                defaultValue:
+                  '"{{name}}" is unlinked from this deal only — nothing changes in Stripe, and invoices already on the deal stay. New invoices need a customer again.',
+              })}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={busy}>
+              {t("common.cancel", { defaultValue: "Cancel" })}
+            </AlertDialogCancel>
+            <AlertDialogAction
+              variant="destructive"
+              disabled={busy}
+              onClick={() => {
+                setConfirmUnlinkOpen(false);
+                unlinkMutation.mutate();
+              }}
+            >
+              {t("pipeline.customer.unlink", {
+                defaultValue: "Unlink customer",
+              })}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   );
 }

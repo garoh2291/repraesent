@@ -7,6 +7,8 @@ import {
   Download,
   ExternalLink,
   FileText,
+  Link2,
+  Link2Off,
   MoreHorizontal,
   Plus,
   RefreshCw,
@@ -19,6 +21,7 @@ import {
   getDealInvoices,
   markDealInvoicePaid,
   sendDealInvoice,
+  unlinkDealInvoice,
   voidDealInvoice,
   type DealCustomer,
   type DealDetailResponse,
@@ -56,6 +59,7 @@ import {
   TooltipTrigger,
 } from "~/components/ui/tooltip";
 import { CreateInvoiceDialog } from "./create-invoice-dialog";
+import { LinkInvoiceDialog } from "./link-invoice-dialog";
 
 interface DealInvoicesSectionProps {
   dealId: string;
@@ -66,7 +70,7 @@ interface DealInvoicesSectionProps {
   canEdit?: boolean;
 }
 
-type Action = "send" | "void" | "mark-paid" | "cancel-subscription";
+type Action = "send" | "void" | "mark-paid" | "cancel-subscription" | "unlink";
 
 const ACTION_FN: Record<
   Action,
@@ -76,6 +80,7 @@ const ACTION_FN: Record<
   void: voidDealInvoice,
   "mark-paid": markDealInvoicePaid,
   "cancel-subscription": cancelDealSubscription,
+  unlink: unlinkDealInvoice,
 };
 
 /** The colour rail on the left of each row: status at a glance, no reading. */
@@ -98,7 +103,7 @@ function railClass(invoice: DealInvoice): string {
   }
 }
 
-function StatusPill({ status, kind }: { status: string | null; kind: "invoice" | "subscription" }) {
+export function StatusPill({ status, kind }: { status: string | null; kind: "invoice" | "subscription" }) {
   const { t } = useTranslation();
   if (!status) return null;
   const tone: Record<string, string> = {
@@ -147,6 +152,7 @@ export function DealInvoicesSection({
   const queryClient = useQueryClient();
   const { stripe } = useStripeConnection();
   const [createOpen, setCreateOpen] = useState(false);
+  const [linkOpen, setLinkOpen] = useState(false);
   const [pending, setPending] = useState<{ action: Action; invoice: DealInvoice } | null>(null);
   const dealKey = ["deal", dealId] as const;
   const testMode = stripe?.livemode === false;
@@ -155,6 +161,10 @@ export function DealInvoicesSection({
     queryClient.setQueryData(dealKey, detail);
     void queryClient.invalidateQueries({
       queryKey: ["deal-history", dealId],
+      refetchType: "none",
+    });
+    void queryClient.invalidateQueries({
+      queryKey: ["deal-available-invoices", dealId],
       refetchType: "none",
     });
   };
@@ -192,6 +202,9 @@ export function DealInvoicesSection({
         }),
         "cancel-subscription": t("pipeline.invoices.subscriptionCanceled", {
           defaultValue: "Subscription canceled.",
+        }),
+        unlink: t("pipeline.invoices.unlinked", {
+          defaultValue: "Invoice unlinked from this deal.",
         }),
       };
       toast.success(messages[action]);
@@ -249,6 +262,13 @@ export function DealInvoicesSection({
         readiness={readiness}
         customer={customer}
       />
+      <LinkInvoiceDialog
+        open={linkOpen}
+        onOpenChange={setLinkOpen}
+        dealId={dealId}
+        customer={customer}
+        currentLines={products}
+      />
 
       <section className="overflow-hidden rounded-2xl border border-border bg-card shadow-(--shadow)">
         <TooltipProvider>
@@ -266,6 +286,20 @@ export function DealInvoicesSection({
               </p>
             </div>
             <div className="flex shrink-0 items-center gap-1.5">
+              {canEdit ? (
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  className="h-8 shrink-0 gap-1.5 text-xs"
+                  onClick={() => setLinkOpen(true)}
+                >
+                  <Link2 className="h-3.5 w-3.5" />
+                  {t("pipeline.invoices.link.button", {
+                    defaultValue: "Link existing",
+                  })}
+                </Button>
+              ) : null}
               {invoices.length ? (
                 <Button
                   type="button"
@@ -348,9 +382,13 @@ export function DealInvoicesSection({
                 ? t("pipeline.invoices.voidConfirmTitle", { defaultValue: "Void this invoice?" })
                 : pending?.action === "mark-paid"
                   ? t("pipeline.invoices.markPaidConfirmTitle", { defaultValue: "Mark as paid?" })
-                  : t("pipeline.invoices.cancelConfirmTitle", {
-                      defaultValue: "Cancel this subscription?",
-                    })}
+                  : pending?.action === "unlink"
+                    ? t("pipeline.invoices.unlinkConfirmTitle", {
+                        defaultValue: "Unlink this invoice?",
+                      })
+                    : t("pipeline.invoices.cancelConfirmTitle", {
+                        defaultValue: "Cancel this subscription?",
+                      })}
             </AlertDialogTitle>
             <AlertDialogDescription>
               {pending?.action === "void"
@@ -363,10 +401,20 @@ export function DealInvoicesSection({
                       defaultValue:
                         "Use this when the customer paid outside Stripe, for example by bank transfer.",
                     })
-                  : t("pipeline.invoices.cancelConfirmBody", {
-                      defaultValue:
-                        "It ends immediately. No further invoices will be generated.",
-                    })}
+                  : pending?.action === "unlink"
+                    ? pending.invoice.kind === "subscription"
+                      ? t("pipeline.invoices.unlinkConfirmBodySubscription", {
+                          defaultValue:
+                            "Removes the subscription and its renewals from this deal only. Nothing changes in Stripe; the deal's products, value and customer stay as they are.",
+                        })
+                      : t("pipeline.invoices.unlinkConfirmBody", {
+                          defaultValue:
+                            "Removes it from this deal only. Nothing changes in Stripe; the deal's products, value and customer stay as they are.",
+                        })
+                    : t("pipeline.invoices.cancelConfirmBody", {
+                        defaultValue:
+                          "It ends immediately. No further invoices will be generated.",
+                      })}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -386,9 +434,13 @@ export function DealInvoicesSection({
                 ? t("pipeline.invoices.void", { defaultValue: "Void invoice" })
                 : pending?.action === "mark-paid"
                   ? t("pipeline.invoices.markPaid", { defaultValue: "Mark as paid" })
-                  : t("pipeline.invoices.cancelSubscription", {
-                      defaultValue: "Cancel subscription",
-                    })}
+                  : pending?.action === "unlink"
+                    ? t("pipeline.invoices.unlink", {
+                        defaultValue: "Unlink from deal",
+                      })
+                    : t("pipeline.invoices.cancelSubscription", {
+                        defaultValue: "Cancel subscription",
+                      })}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -415,7 +467,8 @@ function InvoiceRow({
   const { t } = useTranslation();
   const isSubscription = invoice.kind === "subscription";
   const subscriptionCanceled = invoice.subscription_status === "canceled";
-  const canSend = invoice.status === "open" || invoice.status === "draft";
+  // Linked drafts exist now; Stripe refuses to email an unfinalized invoice.
+  const canSend = invoice.status === "open";
   const sent = !!invoice.sent_at;
   const hosted = invoice.hosted_invoice_url;
   const Icon = invoice.kind === "subscription" ? Repeat : invoice.kind === "renewal" ? RefreshCw : FileText;
@@ -601,6 +654,16 @@ function InvoiceRow({
                   })}
                 </DropdownMenuItem>
               ) : null}
+              <DropdownMenuItem
+                disabled={busy}
+                variant="destructive"
+                onClick={() => onAction("unlink")}
+              >
+                <Link2Off className="h-4 w-4" />
+                {t("pipeline.invoices.unlink", {
+                  defaultValue: "Unlink from deal",
+                })}
+              </DropdownMenuItem>
             </>
           ) : null}
         </DropdownMenuContent>

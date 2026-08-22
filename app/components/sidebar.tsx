@@ -5,6 +5,7 @@ import { useTranslation } from "react-i18next";
 import {
   ArrowLeft,
   AtSign,
+  BellRing,
   Building2,
   BookUser,
   CalendarDays,
@@ -97,6 +98,11 @@ const SETTINGS_NAV = [
     Icon: CalendarDays,
   },
   { to: "/settings/bcc", labelKey: "settings.tabs.bcc", Icon: Inbox },
+  {
+    to: "/settings/notifications",
+    labelKey: "settings.tabs.notifications",
+    Icon: BellRing,
+  },
   {
     to: "/settings/integrations",
     labelKey: "settings.tabs.integrations",

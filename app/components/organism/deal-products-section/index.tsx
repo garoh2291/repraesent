@@ -10,6 +10,16 @@ import { formatMoneyFromMinor } from "~/lib/utils/format";
 import { cn } from "~/lib/utils";
 import { Button } from "~/components/ui/button";
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "~/components/ui/alert-dialog";
+import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
@@ -56,6 +66,7 @@ export function DealProductsSection({
 }: DealProductsSectionProps) {
   const { t } = useTranslation();
   const [attachOpen, setAttachOpen] = useState(false);
+  const [pendingRemove, setPendingRemove] = useState<DealProduct | null>(null);
   const { setQuantity, attach, detach } = useDealProductMutations(dealId);
 
   const hasProducts = products.length > 0;
@@ -119,16 +130,7 @@ export function DealProductsSection({
                   product={product}
                   canEdit={canEdit}
                   onQuantity={(qty) => setQuantity(product, qty)}
-                  onRemove={() => {
-                    detach.mutate(product, {
-                      onSuccess: () =>
-                        toast.success(
-                          t("pipeline.products.removed", {
-                            defaultValue: "Product removed.",
-                          }),
-                        ),
-                    });
-                  }}
+                  onRemove={() => setPendingRemove(product)}
                 />
               ))}
             </ul>
@@ -163,6 +165,51 @@ export function DealProductsSection({
           </div>
         )}
       </section>
+
+      <AlertDialog
+        open={!!pendingRemove}
+        onOpenChange={(o) => !o && setPendingRemove(null)}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              {t("pipeline.products.removeConfirmTitle", {
+                defaultValue: "Remove this product?",
+              })}
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              {t("pipeline.products.removeConfirmBody", {
+                name: pendingRemove?.name ?? "",
+                defaultValue:
+                  '"{{name}}" is removed from this deal only — nothing changes in Stripe. The deal value recalculates from the remaining lines.',
+              })}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>
+              {t("common.cancel", { defaultValue: "Cancel" })}
+            </AlertDialogCancel>
+            <AlertDialogAction
+              variant="destructive"
+              onClick={() => {
+                const product = pendingRemove;
+                setPendingRemove(null);
+                if (!product) return;
+                detach.mutate(product, {
+                  onSuccess: () =>
+                    toast.success(
+                      t("pipeline.products.removed", {
+                        defaultValue: "Product removed.",
+                      }),
+                    ),
+                });
+              }}
+            >
+              {t("pipeline.products.remove", { defaultValue: "Remove product" })}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   );
 }
