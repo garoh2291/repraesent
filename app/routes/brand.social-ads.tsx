@@ -5,6 +5,7 @@ import { Check, ChevronDown, Search, Store } from "lucide-react";
 import i18n from "~/i18n";
 import { cn } from "~/lib/utils";
 import { useDocumentMeta } from "~/lib/hooks/use-document-meta";
+import { useClientTypeWording } from "~/lib/hooks/useClientTypeWording";
 import {
   CampaignsBasePathContext,
   type CampaignsContextValue,
@@ -80,6 +81,7 @@ function PartnerHouseSelector({
   isLoading: boolean;
 }) {
   const { t } = useTranslation();
+  const ctw = useClientTypeWording();
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState("");
   const containerRef = useRef<HTMLDivElement>(null);
@@ -110,9 +112,9 @@ function PartnerHouseSelector({
 
   const selectedName =
     value === ALL_HOUSES
-      ? t("brand.socialAdsSelectAllHouses")
+      ? t("brand.socialAdsSelectAllHouses", ctw)
       : (houses.find((h) => h.id === value)?.name ??
-        t("brand.socialAdsSelectAllHouses"));
+        t("brand.socialAdsSelectAllHouses", ctw));
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
@@ -159,7 +161,7 @@ function PartnerHouseSelector({
               ref={inputRef}
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder={t("brand.socialAdsSelectPlaceholder")}
+              placeholder={t("brand.socialAdsSelectPlaceholder", ctw)}
               className="w-full bg-transparent text-sm text-foreground placeholder:text-muted-foreground focus:outline-none"
             />
           </div>
@@ -168,7 +170,7 @@ function PartnerHouseSelector({
           <div className="max-h-72 overflow-y-auto p-1">
             {/* All partner houses (aggregate) */}
             <OptionRow
-              label={t("brand.socialAdsSelectAllHouses")}
+              label={t("brand.socialAdsSelectAllHouses", ctw)}
               selected={value === ALL_HOUSES}
               onClick={() => select(ALL_HOUSES)}
             />
@@ -177,7 +179,7 @@ function PartnerHouseSelector({
 
             {filtered.length === 0 ? (
               <p className="px-2 py-6 text-center text-xs text-muted-foreground">
-                {t("brand.socialAdsNoHouses")}
+                {t("brand.socialAdsNoHouses", ctw)}
               </p>
             ) : (
               filtered.map((h) => {

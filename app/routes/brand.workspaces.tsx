@@ -19,9 +19,17 @@ import TooltipContainer from "~/components/tooltip-container";
 import i18nInstance from "~/i18n";
 import { normalizeLocale, type SupportedLocale } from "~/i18n/locales";
 import { useDocumentMeta } from "~/lib/hooks/use-document-meta";
+import {
+  resolveClientTypeWording,
+  useClientTypeWording,
+} from "~/lib/hooks/useClientTypeWording";
 
 export function meta() {
-  return [{ title: i18nInstance.t("brand.workspacesMetaTitle") + " – Repraesent" }];
+  // Module scope: no auth context, falls back to partner-house wording.
+  const ctw = resolveClientTypeWording(i18nInstance.t, i18nInstance.language);
+  return [
+    { title: i18nInstance.t("brand.workspacesMetaTitle", ctw) + " – Repraesent" },
+  ];
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -367,9 +375,11 @@ function SkeletonRow() {
 
 export default function BrandWorkspaces() {
   const { t, i18n } = useTranslation();
+  const ctw = useClientTypeWording();
   useDocumentMeta({
     titleKey: "brand.workspacesMetaTitle",
     titleSuffix: " – Repraesent",
+    titleVars: ctw,
   });
   const [searchParams] = useSearchParams();
   const [searchInput, setSearchInput] = useState("");
@@ -439,12 +449,12 @@ export default function BrandWorkspaces() {
       <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3">
         <div>
           <h1 className="text-xl sm:text-2xl font-semibold text-foreground tracking-tight">
-            {t("brand.workspacesTitle", "Workspaces")}
+            {t("brand.workspacesTitle", ctw)}
           </h1>
           <p className="text-sm text-muted-foreground mt-0.5">
             {total > 0
-              ? t("brand.wsWorkspacesCount", { count: total })
-              : t("brand.workspacesSubtitle")}
+              ? t("brand.wsWorkspacesCount", { count: total, ...ctw })
+              : t("brand.workspacesSubtitle", ctw)}
           </p>
         </div>
 
@@ -456,7 +466,7 @@ export default function BrandWorkspaces() {
               ref={searchInputRef}
               type="text"
               placeholder={withHint(
-                t("brand.wsSearchPlaceholder", "Search workspaces…")
+                t("brand.wsSearchPlaceholder", ctw)
               )}
               value={searchInput}
               onChange={(e) => handleSearch(e.target.value)}
@@ -493,7 +503,7 @@ export default function BrandWorkspaces() {
         {/* Column headers — hidden on mobile */}
         <div className="hidden sm:grid grid-cols-[1fr_130px_80px_40px] lg:grid-cols-[1fr_180px_140px_80px_40px] gap-x-6 items-center bg-[#dddbd7] border-b border-[#cccac6] px-5 py-2.5">
           <span className="text-[10px] font-bold uppercase tracking-[0.12em] text-muted-foreground">
-            {t("brand.wsColWorkspace", "Partner House")}
+            {t("brand.wsColWorkspace", ctw)}
           </span>
           <span className="hidden lg:block text-[10px] font-bold uppercase tracking-[0.12em] text-muted-foreground">
             {t("brand.wsColProducts", "Products")}
@@ -513,8 +523,8 @@ export default function BrandWorkspaces() {
         ) : workspaces.length === 0 ? (
           <div className="py-20 text-center text-sm text-muted-foreground">
             {debouncedSearch
-              ? t("brand.wsNoWorkspacesSearch")
-              : t("brand.wsNoWorkspaces")}
+              ? t("brand.wsNoWorkspacesSearch", ctw)
+              : t("brand.wsNoWorkspaces", ctw)}
           </div>
         ) : (
           workspaces.map((ws) => {

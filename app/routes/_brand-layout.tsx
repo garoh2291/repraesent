@@ -32,6 +32,7 @@ import {
   BRAND_VIEW,
 } from "~/lib/api/axios-instance";
 import { cn } from "~/lib/utils";
+import { useClientTypeWording } from "~/lib/hooks/useClientTypeWording";
 import logoUrl from "~/components/icons/re_praesent-mark-brand-hor.svg?url";
 
 const NAV_ITEMS = [
@@ -72,6 +73,7 @@ function BrandSidebar({ onClose }: { onClose?: () => void }) {
     isLoggingOut,
   } = useAuthContext();
   const { t } = useTranslation();
+  const ctw = useClientTypeWording();
   const location = useLocation();
   const navigate = useNavigate();
   const hasWorkspaces = (workspaces?.length ?? 0) > 0;
@@ -200,7 +202,7 @@ function BrandSidebar({ onClose }: { onClose?: () => void }) {
               )}
             >
               <Icon className="h-4 w-4 shrink-0" />
-              {t(`brand.${key}`, key)}
+              {t(`brand.${key}`, { defaultValue: key, ...ctw })}
             </Link>
           );
         })}
@@ -227,6 +229,7 @@ function BrandSidebar({ onClose }: { onClose?: () => void }) {
 export default function BrandLayout() {
   const { user } = useAuthContext();
   const { i18n, t } = useTranslation();
+  const ctw = useClientTypeWording();
   const queryClient = useQueryClient();
   const localeSyncMutation = useMutation({
     mutationFn: (locale: SupportedLocale) => updateUserLocale(locale),
@@ -291,7 +294,7 @@ export default function BrandLayout() {
           </button>
           <div className="flex-1 flex justify-center">
             <span className="text-sm font-semibold text-foreground">
-              {t(`brand.${activeNav.key}`, activeNav.key)}
+              {t(`brand.${activeNav.key}`, { defaultValue: activeNav.key, ...ctw })}
             </span>
           </div>
           <div className="w-9" />

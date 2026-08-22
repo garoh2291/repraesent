@@ -25,14 +25,16 @@ import {
 import { useAuthContext } from "~/providers/auth-provider";
 import i18n from "~/i18n";
 import { useDocumentMeta } from "~/lib/hooks/use-document-meta";
+import {
+  resolveClientTypeWording,
+  useClientTypeWording,
+} from "~/lib/hooks/useClientTypeWording";
 
 export function meta() {
+  // Module scope: no auth context, falls back to partner-house wording.
+  const ctw = resolveClientTypeWording(i18n.t, i18n.language);
   return [
-    {
-      title:
-        i18n.t("brandActivity.title", "Partner House Activity") +
-        " – Repraesent",
-    },
+    { title: i18n.t("brandActivity.title", ctw) + " – Repraesent" },
   ];
 }
 
@@ -94,6 +96,7 @@ function HouseCard({
   fmtDateTime: (iso: string | null) => string;
 }) {
   const { t } = useTranslation();
+  const ctw = useClientTypeWording();
   return (
     <div
       className="app-fade-up rounded-2xl border border-border bg-card overflow-hidden"
@@ -165,7 +168,7 @@ function HouseCard({
         <div className="border-t border-border overflow-x-auto">
           {house.members.length === 0 ? (
             <p className="p-4 text-sm text-muted-foreground">
-              {t("brandActivity.noMembers")}
+              {t("brandActivity.noMembers", ctw)}
             </p>
           ) : (
             <table className="w-full min-w-[720px] text-sm">
@@ -248,9 +251,11 @@ function HouseCard({
 
 export default function BrandActivityPage() {
   const { t, i18n: i18next } = useTranslation();
+  const ctw = useClientTypeWording();
   useDocumentMeta({
     titleKey: "brandActivity.title",
     titleSuffix: " – Repraesent",
+    titleVars: ctw,
   });
   const { brand } = useAuthContext();
   const [dateRange, setDateRange] = useState<DateRange>(defaultRange);
@@ -323,10 +328,10 @@ export default function BrandActivityPage() {
             {t("brand.navActivity")}
           </div>
           <h1 className="mt-1 text-2xl font-semibold tracking-tight text-foreground">
-            {t("brandActivity.title")}
+            {t("brandActivity.title", ctw)}
           </h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            {t("brandActivity.subtitle")}
+            {t("brandActivity.subtitle", ctw)}
           </p>
         </div>
         <div className="flex items-center gap-2 shrink-0">
@@ -364,7 +369,7 @@ export default function BrandActivityPage() {
               >
                 <div className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
                   <Icon className="h-3 w-3" />
-                  {t(`brandActivity.${key}`)}
+                  {t(`brandActivity.${key}`, ctw)}
                 </div>
                 <div className="mt-2 text-3xl font-bold tracking-tight text-foreground tabular-nums">
                   {formatNumber(value ?? 0)}
@@ -392,10 +397,10 @@ export default function BrandActivityPage() {
             <Store className="h-5 w-5" />
           </div>
           <h2 className="mt-4 text-base font-semibold text-foreground">
-            {t("brandActivity.empty")}
+            {t("brandActivity.empty", ctw)}
           </h2>
           <p className="mt-1 text-sm text-muted-foreground">
-            {t("brandActivity.emptyDesc")}
+            {t("brandActivity.emptyDesc", ctw)}
           </p>
         </div>
       ) : (

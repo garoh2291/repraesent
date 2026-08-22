@@ -5,6 +5,8 @@ interface UseDocumentMetaOptions {
   titleKey: string;
   descriptionKey?: string;
   titleSuffix?: string;
+  /** Interpolation variables for titleKey/descriptionKey (e.g. client-type wording). */
+  titleVars?: Record<string, string>;
 }
 
 /**
@@ -17,11 +19,11 @@ interface UseDocumentMetaOptions {
  */
 export function useDocumentMeta(opts: UseDocumentMetaOptions) {
   const { t, i18n } = useTranslation();
-  const { titleKey, descriptionKey, titleSuffix } = opts;
+  const { titleKey, descriptionKey, titleSuffix, titleVars } = opts;
 
   useEffect(() => {
     if (typeof document === "undefined") return;
-    document.title = t(titleKey) + (titleSuffix ?? "");
+    document.title = t(titleKey, titleVars) + (titleSuffix ?? "");
     if (descriptionKey) {
       let tag = document.querySelector<HTMLMetaElement>(
         'meta[name="description"]',
@@ -31,7 +33,7 @@ export function useDocumentMeta(opts: UseDocumentMetaOptions) {
         tag.name = "description";
         document.head.appendChild(tag);
       }
-      tag.content = t(descriptionKey);
+      tag.content = t(descriptionKey, titleVars);
     }
-  }, [t, i18n.language, titleKey, descriptionKey, titleSuffix]);
+  }, [t, i18n.language, titleKey, descriptionKey, titleSuffix, titleVars]);
 }
