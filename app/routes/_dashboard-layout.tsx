@@ -15,6 +15,7 @@ import { createHistoricalData } from "~/lib/api/historical-data";
 import { DoorboostMigrationBanner } from "~/components/doorboost-migration-banner";
 import { SyncCompleteModal } from "~/components/sync-complete-modal";
 import { TrialBanner } from "~/components/trial-banner";
+import { DemoBanner } from "~/components/demo-banner";
 import logoUrl from "~/components/icons/re_praesent-mark-brand-hor.svg?url";
 export default function DashboardLayout() {
   const { user, currentWorkspace } = useAuthContext();
@@ -167,8 +168,14 @@ export default function DashboardLayout() {
             </Button>
           </div>
         )}
-        {currentWorkspace?.status === "trial" && currentWorkspace?.id && (
-          <TrialBanner workspaceId={currentWorkspace.id} />
+        {/* Demo workspaces are status "trial" too — DemoBanner wins. */}
+        {currentWorkspace?.is_demo ? (
+          <DemoBanner expiresAt={currentWorkspace.demo_expires_at} />
+        ) : (
+          currentWorkspace?.status === "trial" &&
+          currentWorkspace?.id && (
+            <TrialBanner workspaceId={currentWorkspace.id} />
+          )
         )}
         {!isHomeOrSyncPage && currentWorkspace?.type !== "doorboost_brand" && (
           <DoorboostMigrationBanner />

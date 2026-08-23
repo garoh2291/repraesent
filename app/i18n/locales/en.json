@@ -139,6 +139,8 @@
       "tryAgain": "Try again",
       "noAccount": "No account?",
       "createOne": "Create one",
+      "tryDemo": "Just looking?",
+      "tryDemoLink": "Try a live demo",
       "emailRequired": "Please enter your email address",
       "emailInvalid": "Please enter a valid email address",
       "somethingWrong": "Something went wrong. Please try again.",
@@ -387,6 +389,15 @@
     }
   },
   "pipeline": {
+    "stripeNotConnected": {
+      "cta": "Connect Stripe",
+      "customerTitle": "Connect Stripe to link customers",
+      "customerBody": "Link this deal to a Stripe customer once your account is connected.",
+      "productsTitle": "Connect Stripe to add products",
+      "productsBody": "Deal line items come straight from your Stripe catalogue. Connect an account to attach products.",
+      "invoicesTitle": "Connect Stripe to invoice this deal",
+      "invoicesBody": "Create and send invoices or subscriptions from this deal once your account is connected."
+    },
     "search": "Search",
     "searchPlaceholder": "Title or contact…",
     "anyAssignee": "Anyone",
@@ -4341,6 +4352,45 @@
     "to": "To",
     "underline": "Underline",
     "yourAccounts": "Your accounts"
+  },
+  "demo": {
+    "metaTitle": "Live demo",
+    "metaDescription": "Try Repraesent with a prefilled demo workspace — no signup needed",
+    "title": "See Repraesent in action",
+    "subtitle": "Pick your industry and we'll build a demo workspace full of sample contacts, leads and deals — no signup, no email.",
+    "industryLabel": "Your industry",
+    "submitButton": "Start live demo →",
+    "submittingButton": "Building your demo…",
+    "error": "Something went wrong. Please try again.",
+    "rateLimited": "Too many demo accounts right now. Please try again later.",
+    "haveAccount": "Already have an account?",
+    "signIn": "Sign in",
+    "industrySearch": "Search industry…",
+    "industryEmpty": "No industry found.",
+    "industryOverrides": {
+      "partner_house": "Kitchen partner house"
+    },
+    "loading": {
+      "title": "Building your live demo",
+      "hint": "We're filling your workspace with real sample data — one moment.",
+      "step1": "Spinning up your workspace…",
+      "step2": "Importing 35 contacts with emails and phone numbers…",
+      "step3": "Filling your pipeline with live deals…",
+      "step4": "Capturing fresh leads from your contact form…",
+      "step5": "Scheduling today's tasks and follow-ups…",
+      "step6": "Adding notes and finishing touches…"
+    },
+    "brandLine1": "Test drive",
+    "brandLine2": "before you buy.",
+    "feature1": "Prefilled contacts, leads & deals",
+    "feature2": "No signup, no email required",
+    "feature3": "Deleted automatically after 2 hours",
+    "banner": {
+      "message": "This is a temporary demo account — it expires in {{time}}. <0>Create your free account</0>",
+      "expired": "This demo has expired. <0>Create your free account</0>",
+      "minutes": "{{minutes}} min",
+      "hoursMinutes": "{{hours}} h {{minutes}} min"
+    }
   },
   "clientTypes": {
     "partner_house_one": "partner house",

@@ -139,6 +139,8 @@
       "tryAgain": "Erneut versuchen",
       "noAccount": "Noch kein Konto?",
       "createOne": "Jetzt erstellen",
+      "tryDemo": "Nur mal schauen?",
+      "tryDemoLink": "Live-Demo testen",
       "emailRequired": "Bitte geben Sie Ihre E-Mail-Adresse ein",
       "emailInvalid": "Bitte geben Sie eine gültige E-Mail-Adresse ein",
       "somethingWrong": "Ein Fehler ist aufgetreten. Bitte versuchen Sie es erneut.",
@@ -387,6 +389,15 @@
     }
   },
   "pipeline": {
+    "stripeNotConnected": {
+      "cta": "Stripe verbinden",
+      "customerTitle": "Stripe verbinden, um Kunden zu verknüpfen",
+      "customerBody": "Verknüpfen Sie diesen Deal mit einem Stripe-Kunden, sobald Ihr Konto verbunden ist.",
+      "productsTitle": "Stripe verbinden, um Produkte hinzuzufügen",
+      "productsBody": "Die Positionen eines Deals stammen direkt aus Ihrem Stripe-Katalog. Verbinden Sie ein Konto, um Produkte hinzuzufügen.",
+      "invoicesTitle": "Stripe verbinden, um diesen Deal abzurechnen",
+      "invoicesBody": "Erstellen und versenden Sie Rechnungen oder Abonnements aus diesem Deal, sobald Ihr Konto verbunden ist."
+    },
     "search": "Suche",
     "searchPlaceholder": "Titel oder Kontakt…",
     "anyAssignee": "Alle",
@@ -4343,6 +4354,45 @@
     "to": "An",
     "underline": "Unterstrichen",
     "yourAccounts": "Ihre Konten"
+  },
+  "demo": {
+    "metaTitle": "Live-Demo",
+    "metaDescription": "Repraesent mit einem vorbefüllten Demo-Workspace testen — ohne Registrierung",
+    "title": "Repraesent in Aktion erleben",
+    "subtitle": "Wählen Sie Ihre Branche und wir erstellen einen Demo-Workspace voller Beispielkontakte, Leads und Deals — ohne Registrierung, ohne E-Mail.",
+    "industryLabel": "Ihre Branche",
+    "submitButton": "Live-Demo starten →",
+    "submittingButton": "Demo wird erstellt…",
+    "error": "Etwas ist schiefgelaufen. Bitte versuchen Sie es erneut.",
+    "rateLimited": "Im Moment werden zu viele Demo-Konten erstellt. Bitte versuchen Sie es später erneut.",
+    "haveAccount": "Sie haben bereits ein Konto?",
+    "signIn": "Anmelden",
+    "industrySearch": "Branche suchen…",
+    "industryEmpty": "Keine Branche gefunden.",
+    "industryOverrides": {
+      "partner_house": "Küchen-Partnerhaus"
+    },
+    "loading": {
+      "title": "Ihre Live-Demo wird erstellt",
+      "hint": "Wir befüllen Ihren Workspace mit echten Beispieldaten — einen Moment bitte.",
+      "step1": "Ihr Workspace wird eingerichtet…",
+      "step2": "35 Kontakte mit E-Mails und Telefonnummern werden importiert…",
+      "step3": "Ihre Pipeline wird mit laufenden Deals gefüllt…",
+      "step4": "Neue Leads treffen über Ihr Kontaktformular ein…",
+      "step5": "Die Aufgaben für heute werden geplant…",
+      "step6": "Notizen und letzter Feinschliff…"
+    },
+    "brandLine1": "Erst testen,",
+    "brandLine2": "dann entscheiden.",
+    "feature1": "Vorbefüllte Kontakte, Leads & Deals",
+    "feature2": "Keine Registrierung, keine E-Mail nötig",
+    "feature3": "Wird nach 2 Stunden automatisch gelöscht",
+    "banner": {
+      "message": "Dies ist ein temporäres Demo-Konto — es läuft in {{time}} ab. <0>Kostenloses Konto erstellen</0>",
+      "expired": "Diese Demo ist abgelaufen. <0>Kostenloses Konto erstellen</0>",
+      "minutes": "{{minutes}} Min.",
+      "hoursMinutes": "{{hours}} Std. {{minutes}} Min."
+    }
   },
   "clientTypes": {
     "partner_house_one": "Partnerhaus",

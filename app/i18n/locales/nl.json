@@ -139,6 +139,8 @@
       "tryAgain": "Opnieuw proberen",
       "noAccount": "Nog geen account?",
       "createOne": "Maak er een aan",
+      "tryDemo": "Gewoon even kijken?",
+      "tryDemoLink": "Probeer de live demo",
       "emailRequired": "Voer uw e-mailadres in",
       "emailInvalid": "Voer een geldig e-mailadres in",
       "somethingWrong": "Er is iets misgegaan. Probeer het opnieuw.",
@@ -387,6 +389,15 @@
     }
   },
   "pipeline": {
+    "stripeNotConnected": {
+      "cta": "Stripe koppelen",
+      "customerTitle": "Koppel Stripe om klanten te koppelen",
+      "customerBody": "Koppel deze deal aan een Stripe-klant zodra uw account verbonden is.",
+      "productsTitle": "Koppel Stripe om producten toe te voegen",
+      "productsBody": "Dealregels komen rechtstreeks uit uw Stripe-catalogus. Koppel een account om producten toe te voegen.",
+      "invoicesTitle": "Koppel Stripe om deze deal te factureren",
+      "invoicesBody": "Maak en verstuur facturen of abonnementen vanuit deze deal zodra uw account verbonden is."
+    },
     "search": "Zoeken",
     "searchPlaceholder": "Titel of contact…",
     "anyAssignee": "Iedereen",
@@ -4341,6 +4352,45 @@
     "to": "Aan",
     "underline": "Onderstrepen",
     "yourAccounts": "Jouw accounts"
+  },
+  "demo": {
+    "metaTitle": "Live demo",
+    "metaDescription": "Probeer Repraesent met een vooraf gevulde demo-workspace — zonder registratie",
+    "title": "Zie Repraesent in actie",
+    "subtitle": "Kies uw branche en wij bouwen een demo-workspace vol voorbeeldcontacten, leads en deals — zonder registratie, zonder e-mail.",
+    "industryLabel": "Uw branche",
+    "submitButton": "Live demo starten →",
+    "submittingButton": "Uw demo wordt gebouwd…",
+    "error": "Er is iets misgegaan. Probeer het opnieuw.",
+    "rateLimited": "Er worden momenteel te veel demo-accounts aangemaakt. Probeer het later opnieuw.",
+    "haveAccount": "Heeft u al een account?",
+    "signIn": "Inloggen",
+    "industrySearch": "Zoek een branche…",
+    "industryEmpty": "Geen branche gevonden.",
+    "industryOverrides": {
+      "partner_house": "keukenpartnerhuis"
+    },
+    "loading": {
+      "title": "Uw live demo wordt gebouwd",
+      "hint": "We vullen uw workspace met echte voorbeelddata — een ogenblik.",
+      "step1": "Uw workspace wordt ingericht…",
+      "step2": "35 contacten met e-mails en telefoonnummers worden geïmporteerd…",
+      "step3": "Uw pipeline wordt gevuld met lopende deals…",
+      "step4": "Nieuwe leads komen binnen via uw contactformulier…",
+      "step5": "De taken voor vandaag worden ingepland…",
+      "step6": "Notities en de laatste details…"
+    },
+    "brandLine1": "Eerst proberen,",
+    "brandLine2": "dan beslissen.",
+    "feature1": "Vooraf gevulde contacten, leads & deals",
+    "feature2": "Geen registratie, geen e-mail nodig",
+    "feature3": "Wordt na 2 uur automatisch verwijderd",
+    "banner": {
+      "message": "Dit is een tijdelijk demo-account — het verloopt over {{time}}. <0>Maak uw gratis account aan</0>",
+      "expired": "Deze demo is verlopen. <0>Maak uw gratis account aan</0>",
+      "minutes": "{{minutes}} min",
+      "hoursMinutes": "{{hours}} u {{minutes}} min"
+    }
   },
   "clientTypes": {
     "partner_house_one": "partnerhuis",

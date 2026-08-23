@@ -32,6 +32,7 @@ import {
 import { extractErrorMessage } from "~/lib/api/axios-instance";
 import { stripeDashboardUrl } from "~/lib/api/stripe-catalog";
 import { useStripeConnection } from "~/lib/hooks/useWorkspaceIntegrations";
+import { StripeNotConnected } from "~/components/organism/stripe-not-connected";
 import { formatDateMedium, formatMoneyFromMinor } from "~/lib/utils/format";
 import { cn } from "~/lib/utils";
 import { Button } from "~/components/ui/button";
@@ -150,7 +151,11 @@ export function DealInvoicesSection({
 }: DealInvoicesSectionProps) {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
-  const { stripe } = useStripeConnection();
+  const {
+    stripe,
+    isConnected: stripeConnected,
+    isLoading: stripeLoading,
+  } = useStripeConnection();
   const [createOpen, setCreateOpen] = useState(false);
   const [linkOpen, setLinkOpen] = useState(false);
   const [pending, setPending] = useState<{ action: Action; invoice: DealInvoice } | null>(null);
@@ -251,6 +256,34 @@ export function DealInvoicesSection({
       {createLabel}
     </Button>
   );
+
+  // No Stripe integration: invoices and subscriptions are Stripe documents,
+  // so the body becomes a "connect first" pointer at /settings/integrations.
+  if (!stripeLoading && !stripeConnected) {
+    return (
+      <section className="overflow-hidden rounded-2xl border border-border bg-card shadow-(--shadow)">
+        <header className="border-b border-border px-4 py-3.5 sm:px-5">
+          <h2 className="text-sm font-semibold tracking-tight text-foreground">
+            {t("pipeline.invoices.title", {
+              defaultValue: "Invoices & subscriptions",
+            })}
+          </h2>
+        </header>
+        <div className="p-4 sm:p-5">
+          <StripeNotConnected
+            icon={FileText}
+            title={t("pipeline.stripeNotConnected.invoicesTitle", {
+              defaultValue: "Connect Stripe to invoice this deal",
+            })}
+            body={t("pipeline.stripeNotConnected.invoicesBody", {
+              defaultValue:
+                "Create and send invoices or subscriptions from this deal once your account is connected.",
+            })}
+          />
+        </div>
+      </section>
+    );
+  }
 
   return (
     <>
