@@ -9,6 +9,7 @@ export default [
   route("health", "routes/health.ts"),
   route("login", "routes/login.tsx"),
   route("register", "routes/register.tsx"),
+  route("demo", "routes/demo.tsx"),
   route("auth/callback", "routes/auth.callback.tsx"),
   route("book/:configId", "routes/book.$configId.tsx"),
   route("f/:formId", "routes/f.$formId.tsx"),

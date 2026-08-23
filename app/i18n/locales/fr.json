@@ -139,6 +139,8 @@
       "tryAgain": "Réessayer",
       "noAccount": "Pas de compte ?",
       "createOne": "Créer un compte",
+      "tryDemo": "Juste curieux ?",
+      "tryDemoLink": "Essayer la démo live",
       "emailRequired": "Veuillez saisir votre adresse e-mail",
       "emailInvalid": "Veuillez saisir une adresse e-mail valide",
       "somethingWrong": "Une erreur s'est produite. Veuillez réessayer.",
@@ -387,6 +389,15 @@
     }
   },
   "pipeline": {
+    "stripeNotConnected": {
+      "cta": "Connecter Stripe",
+      "customerTitle": "Connectez Stripe pour lier des clients",
+      "customerBody": "Liez ce deal à un client Stripe une fois votre compte connecté.",
+      "productsTitle": "Connectez Stripe pour ajouter des produits",
+      "productsBody": "Les lignes d'un deal proviennent directement de votre catalogue Stripe. Connectez un compte pour ajouter des produits.",
+      "invoicesTitle": "Connectez Stripe pour facturer ce deal",
+      "invoicesBody": "Créez et envoyez des factures ou des abonnements depuis ce deal une fois votre compte connecté."
+    },
     "search": "Rechercher",
     "searchPlaceholder": "Titre ou contact…",
     "anyAssignee": "Tout le monde",
@@ -4343,6 +4354,45 @@
     "to": "À",
     "underline": "Souligné",
     "yourAccounts": "Vos comptes"
+  },
+  "demo": {
+    "metaTitle": "Démo live",
+    "metaDescription": "Essayez Repraesent avec un espace de démo prérempli — sans inscription",
+    "title": "Découvrez Repraesent en action",
+    "subtitle": "Choisissez votre secteur et nous créons un espace de démo rempli de contacts, leads et deals d'exemple — sans inscription, sans e-mail.",
+    "industryLabel": "Votre secteur",
+    "submitButton": "Lancer la démo live →",
+    "submittingButton": "Création de votre démo…",
+    "error": "Une erreur est survenue. Veuillez réessayer.",
+    "rateLimited": "Trop de comptes de démo créés en ce moment. Veuillez réessayer plus tard.",
+    "haveAccount": "Vous avez déjà un compte ?",
+    "signIn": "Se connecter",
+    "industrySearch": "Rechercher un secteur…",
+    "industryEmpty": "Aucun secteur trouvé.",
+    "industryOverrides": {
+      "partner_house": "maison partenaire cuisine"
+    },
+    "loading": {
+      "title": "Création de votre démo live",
+      "hint": "Nous remplissons votre espace avec de vraies données d'exemple — un instant.",
+      "step1": "Mise en place de votre espace de travail…",
+      "step2": "Import de 35 contacts avec e-mails et téléphones…",
+      "step3": "Remplissage de votre pipeline avec des deals en cours…",
+      "step4": "Réception de nouveaux leads depuis votre formulaire…",
+      "step5": "Planification des tâches du jour…",
+      "step6": "Ajout des notes et dernières finitions…"
+    },
+    "brandLine1": "Essayez d'abord,",
+    "brandLine2": "décidez ensuite.",
+    "feature1": "Contacts, leads & deals préremplis",
+    "feature2": "Sans inscription, sans e-mail",
+    "feature3": "Supprimé automatiquement après 2 heures",
+    "banner": {
+      "message": "Ceci est un compte de démo temporaire — il expire dans {{time}}. <0>Créer votre compte gratuit</0>",
+      "expired": "Cette démo a expiré. <0>Créer votre compte gratuit</0>",
+      "minutes": "{{minutes}} min",
+      "hoursMinutes": "{{hours}} h {{minutes}} min"
+    }
   },
   "clientTypes": {
     "partner_house_one": "maison partenaire",

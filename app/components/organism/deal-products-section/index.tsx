@@ -2,7 +2,15 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { TFunction } from "i18next";
 import { toast } from "sonner";
-import { Minus, Package, Plus, Repeat, TriangleAlert, X } from "lucide-react";
+import {
+  Minus,
+  Package,
+  Plus,
+  Repeat,
+  ShoppingBag,
+  TriangleAlert,
+  X,
+} from "lucide-react";
 import type { DealProduct } from "~/lib/api/deals";
 import { useDealProductMutations } from "~/lib/hooks/useDealProducts";
 import { subtotalOf } from "~/lib/deals/optimistic";
@@ -26,6 +34,8 @@ import {
   TooltipTrigger,
 } from "~/components/ui/tooltip";
 import { AttachProductDialog } from "./attach-product-dialog";
+import { useStripeConnection } from "~/lib/hooks/useWorkspaceIntegrations";
+import { StripeNotConnected } from "~/components/organism/stripe-not-connected";
 
 interface DealProductsSectionProps {
   dealId: string;
@@ -68,6 +78,8 @@ export function DealProductsSection({
   const [attachOpen, setAttachOpen] = useState(false);
   const [pendingRemove, setPendingRemove] = useState<DealProduct | null>(null);
   const { setQuantity, attach, detach } = useDealProductMutations(dealId);
+  const { isConnected: stripeConnected, isLoading: stripeLoading } =
+    useStripeConnection();
 
   const hasProducts = products.length > 0;
   const currency = products.find((p) => p.currency)?.currency ?? null;
@@ -78,6 +90,32 @@ export function DealProductsSection({
     (p) => p.price_type === "recurring",
   ).length;
   const oneTimeCount = products.length - recurringCount;
+
+  // No Stripe integration: attaching products needs the connected catalogue,
+  // so the body becomes a "connect first" pointer at /settings/integrations.
+  if (!stripeLoading && !stripeConnected) {
+    return (
+      <section className="overflow-hidden rounded-2xl border border-border bg-card shadow-(--shadow)">
+        <header className="border-b border-border px-4 py-3.5 sm:px-5">
+          <h2 className="text-sm font-semibold tracking-tight text-foreground">
+            {t("pipeline.products.title", { defaultValue: "Products" })}
+          </h2>
+        </header>
+        <div className="p-4 sm:p-5">
+          <StripeNotConnected
+            icon={ShoppingBag}
+            title={t("pipeline.stripeNotConnected.productsTitle", {
+              defaultValue: "Connect Stripe to add products",
+            })}
+            body={t("pipeline.stripeNotConnected.productsBody", {
+              defaultValue:
+                "Deal line items come straight from your Stripe catalogue. Connect an account to attach products.",
+            })}
+          />
+        </div>
+      </section>
+    );
+  }
 
   return (
     <>

@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link } from "react-router";
 import { useTranslation } from "react-i18next";
+import { FlaskConical } from "lucide-react";
 import { Input } from "~/components/ui/input";
 import { register } from "~/lib/api/auth";
 import i18n from "~/i18n";
@@ -248,6 +249,23 @@ export default function Register() {
                     {t("auth.register.signIn")}
                   </Link>
                 </p>
+
+                <div className="space-y-3 pt-1">
+                  <div className="flex items-center gap-3">
+                    <span className="h-px flex-1 bg-stone-200" />
+                    <span className="text-[11px] font-medium uppercase tracking-widest text-muted-foreground">
+                      {t("auth.login.tryDemo")}
+                    </span>
+                    <span className="h-px flex-1 bg-stone-200" />
+                  </div>
+                  <Link
+                    to="/demo"
+                    className="w-full h-11 rounded-lg border border-stone-300 bg-white text-foreground text-sm font-medium transition-colors duration-150 hover:bg-stone-100 flex items-center justify-center gap-2"
+                  >
+                    <FlaskConical className="h-4 w-4 text-amber-500" />
+                    {t("auth.login.tryDemoLink")}
+                  </Link>
+                </div>
               </form>
             )}
           </div>

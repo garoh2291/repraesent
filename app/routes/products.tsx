@@ -29,6 +29,7 @@ import { useDocumentMeta } from "~/lib/hooks/use-document-meta";
 import { formatDateShort, formatMoneyFromMinor } from "~/lib/utils/format";
 import { cn } from "~/lib/utils";
 import { DataTable } from "~/components/organism/data-table";
+import { StripeNotConnected } from "~/components/organism/stripe-not-connected";
 import {
   KindBadges,
   ProductDetailsSheet,
@@ -459,27 +460,20 @@ function NotConnected() {
 
   return (
     <div className="p-4 sm:p-6 app-fade-in">
-      <div className="mx-auto max-w-md rounded-2xl border border-dashed border-border p-10 text-center">
-        <ShoppingBag className="mx-auto h-10 w-10 text-muted-foreground/40" />
-        <h2 className="mt-4 text-base font-semibold text-foreground">
-          {t("stripeProducts.notConnectedTitle", {
-            defaultValue: "Connect Stripe to see products",
-          })}
-        </h2>
-        <p className="mt-1.5 text-sm text-muted-foreground">
-          {t("stripeProducts.notConnectedBody", {
-            defaultValue:
-              "This page reads your Stripe catalogue directly. Connect an account to get started.",
-          })}
-        </p>
-        <Button asChild className="mt-5">
-          <Link to="/settings/integrations">
-            {t("stripeProducts.goToIntegrations", {
-              defaultValue: "Go to Integrations",
-            })}
-          </Link>
-        </Button>
-      </div>
+      <StripeNotConnected
+        className="mx-auto max-w-md rounded-2xl p-10"
+        icon={ShoppingBag}
+        title={t("stripeProducts.notConnectedTitle", {
+          defaultValue: "Connect Stripe to see products",
+        })}
+        body={t("stripeProducts.notConnectedBody", {
+          defaultValue:
+            "This page reads your Stripe catalogue directly. Connect an account to get started.",
+        })}
+        ctaLabel={t("stripeProducts.goToIntegrations", {
+          defaultValue: "Go to Integrations",
+        })}
+      />
     </div>
   );
 }

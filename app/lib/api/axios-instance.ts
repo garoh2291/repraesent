@@ -145,6 +145,7 @@ const PUBLIC_PATH_PREFIXES = [
   "/auth/callback",
   "/book/",
   "/f/",
+  "/demo",
 ];
 
 function isPublicPath(): boolean {
