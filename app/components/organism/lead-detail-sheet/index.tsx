@@ -277,6 +277,22 @@ export function formatHistoryAction(
       defaultValue: "Marked invoice {{number}} as paid",
       number,
     });
+  if (item.action === "deal_invoice_linked")
+    return t("pipeline.history.dealInvoiceLinked", {
+      defaultValue: "Linked Stripe invoice {{number}}",
+      number: number || String(d.stripe_invoice_id ?? ""),
+    });
+  if (item.action === "deal_invoice_unlinked")
+    return t("pipeline.history.dealInvoiceUnlinked", {
+      defaultValue: "Unlinked invoice {{number}}",
+      number: number || String(d.invoice_id ?? ""),
+    });
+  if (item.action === "deal_products_replaced")
+    return t("pipeline.history.dealProductsReplaced", {
+      defaultValue: "Replaced products from invoice {{number}} ({{count}} lines)",
+      number: number || String(d.stripe_invoice_id ?? ""),
+      count: (d.inserted as number | undefined) ?? (d.line_count as number | undefined) ?? 0,
+    });
   if (item.action === "deal_subscription_canceled")
     return t("pipeline.history.dealSubscriptionCanceled", {
       defaultValue: "Canceled subscription",

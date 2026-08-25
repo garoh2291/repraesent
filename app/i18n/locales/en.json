@@ -140,6 +140,8 @@
       "tryAgain": "Try again",
       "noAccount": "No account?",
       "createOne": "Create one",
+      "tryDemo": "Just looking?",
+      "tryDemoLink": "Try a live demo",
       "emailRequired": "Please enter your email address",
       "emailInvalid": "Please enter a valid email address",
       "somethingWrong": "Something went wrong. Please try again.",
@@ -388,6 +390,15 @@
     }
   },
   "pipeline": {
+    "stripeNotConnected": {
+      "cta": "Connect Stripe",
+      "customerTitle": "Connect Stripe to link customers",
+      "customerBody": "Link this deal to a Stripe customer once your account is connected.",
+      "productsTitle": "Connect Stripe to add products",
+      "productsBody": "Deal line items come straight from your Stripe catalogue. Connect an account to attach products.",
+      "invoicesTitle": "Connect Stripe to invoice this deal",
+      "invoicesBody": "Create and send invoices or subscriptions from this deal once your account is connected."
+    },
     "search": "Search",
     "searchPlaceholder": "Title or contact…",
     "anyAssignee": "Anyone",
@@ -464,7 +475,10 @@
       "dealInvoiceSent": "Sent invoice {{number}}",
       "dealInvoiceVoided": "Voided invoice {{number}}",
       "dealInvoiceMarkedPaid": "Marked invoice {{number}} as paid",
-      "dealSubscriptionCanceled": "Canceled subscription"
+      "dealSubscriptionCanceled": "Canceled subscription",
+      "dealInvoiceLinked": "Linked Stripe invoice {{number}}",
+      "dealProductsReplaced": "Replaced products from invoice {{number}} ({{count}} lines)",
+      "dealInvoiceUnlinked": "Unlinked invoice {{number}}"
     },
     "saveCloseDate": "Save close date",
     "saveNotes": "Save notes",
@@ -536,7 +550,9 @@
       "currencyMismatch": "Different currency than the lines already on the deal",
       "priceCount": "{{count}} prices",
       "stockHint": "only {{count}} in stock",
-      "summary": "{{oneTime}} one-time · {{recurring}} recurring (one period)"
+      "summary": "{{oneTime}} one-time · {{recurring}} recurring (one period)",
+      "removeConfirmTitle": "Remove this product?",
+      "removeConfirmBody": "\"{{name}}\" is removed from this deal only — nothing changes in Stripe. The deal value recalculates from the remaining lines."
     },
     "sort": {
       "dateDesc": "Newest first",
@@ -576,7 +592,9 @@
         "email": "Email",
         "createAction": "Create & link",
         "linkAction": "Link"
-      }
+      },
+      "unlinkConfirmTitle": "Unlink this Stripe customer?",
+      "unlinkConfirmBody": "\"{{name}}\" is unlinked from this deal only — nothing changes in Stripe, and invoices already on the deal stay. New invoices need a customer again."
     },
     "invoices": {
       "title": "Invoices & subscriptions",
@@ -666,7 +684,39 @@
         "confirmSend": "Create & send",
         "confirmSubscription": "Create subscription",
         "confirmSubscriptionSend": "Create & send"
-      }
+      },
+      "link": {
+        "button": "Link existing",
+        "title": "Link an existing invoice",
+        "description": "Adopt an invoice from your Stripe account: it appears on this deal, its customer gets linked, and the deal's products can follow its lines.",
+        "notConnected": "No Stripe account is connected to this workspace yet.",
+        "searchPlaceholder": "Number, customer or email…",
+        "scopeAll": "All customers",
+        "noResults": "No invoices match that search.",
+        "empty": "No invoices on this Stripe account yet.",
+        "alreadyOnDeal": "Already on this deal",
+        "linkedTo": "Linked to {{title}}",
+        "customerDeleted": "This customer was deleted in Stripe — the deal's customer stays as it is.",
+        "customerWillReplace": "{{name}} will replace {{current}} as this deal's customer.",
+        "customerWillLink": "{{name}} will be linked as this deal's customer.",
+        "renewalNote": "This deal already tracks the subscription behind this invoice — it will be added as a renewal.",
+        "draft": "Draft invoice — Stripe cannot email it until it is finalized.",
+        "linesTitle": "Products",
+        "linesReplace": "These replace the {{count}} products currently on the deal.",
+        "customLinesNote": "{{count}} custom lines won't become products — the deal value will follow the invoice total.",
+        "noProductLines": "No catalogue products on this invoice — current products stay; the deal value will be set to {{total}}.",
+        "noProductLinesNoValue": "No catalogue products on this invoice — products and deal value stay unchanged.",
+        "linesTruncated": "Showing the first {{count}} lines; every line is synced.",
+        "sendStateUnknown": "Send state unknown — Stripe may already have emailed this invoice.",
+        "syncProducts": "Sync products from invoice",
+        "confirm": "Link invoice",
+        "linked": "Invoice linked."
+      },
+      "unlink": "Unlink from deal",
+      "unlinked": "Invoice unlinked from this deal.",
+      "unlinkConfirmTitle": "Unlink this invoice?",
+      "unlinkConfirmBody": "Removes it from this deal only. Nothing changes in Stripe; the deal's products, value and customer stay as they are.",
+      "unlinkConfirmBodySubscription": "Removes the subscription and its renewals from this deal only. Nothing changes in Stripe; the deal's products, value and customer stay as they are."
     },
     "createPipelineTitle": "New pipeline",
     "pipelineNameLabel": "Name",
@@ -973,7 +1023,8 @@
       "emailAccounts": "Email accounts",
       "integrations": "Integrations",
       "calendars": "Calendars",
-      "pipelines": "Pipeline stages"
+      "pipelines": "Pipeline stages",
+      "notifications": "Notifications"
     },
     "bcc": {
       "metaTitle": "Email logging",
@@ -1229,6 +1280,61 @@
         "denied": "You cancelled the connection.",
         "expired": "That link expired. Please try connecting again.",
         "failed": "Connection failed{{reason}}"
+      }
+    },
+    "notifications": {
+      "metaTitle": "Notifications",
+      "metaDescription": "Send workspace events to Slack or Microsoft Teams.",
+      "sectionLabel": "Channels",
+      "sectionDescription": "Post workspace events to Slack or Microsoft Teams the moment they happen.",
+      "addChannel": "Add channel",
+      "addChannelDescription": "Paste an incoming-webhook URL. Events post there instantly.",
+      "emptyTitle": "No notification channels yet",
+      "emptyDescription": "Connect a Slack or Teams channel to get pinged about new leads and deal updates.",
+      "provider": "Provider",
+      "providerSlack": "Slack",
+      "providerTeams": "Microsoft Teams",
+      "nameLabel": "Channel name",
+      "namePlaceholder": "e.g. #sales-alerts",
+      "nameRequired": "Enter a channel name.",
+      "webhookUrlLabel": "Webhook URL",
+      "webhookUrlHelpSlack": "Paste a Slack incoming-webhook URL (hooks.slack.com).",
+      "webhookUrlHelpTeams": "Paste a Microsoft Teams Workflows webhook URL.",
+      "webhookUrlInvalid": "Enter a valid https:// webhook URL.",
+      "webhookUrlSuspicious": "This does not look like a typical webhook URL for this provider.",
+      "eventsLabel": "Notify about",
+      "events": {
+        "new_lead": "New lead",
+        "deal_stage_changed": "Deal stage changed",
+        "form_submission": "Form submission",
+        "appointment_booked": "Appointment booked"
+      },
+      "active": "Active",
+      "sendTest": "Send test",
+      "testSent": "Test message sent",
+      "testFailed": "Test failed: {{error}}",
+      "created": "Channel added",
+      "deleted": "Channel removed",
+      "deleteTitle": "Remove this channel?",
+      "deleteDescription": "Notifications will stop posting to {{name}}. The webhook itself is not deleted.",
+      "deleteConfirm": "Remove",
+      "save": "Save",
+      "lastError": "Last delivery failed: {{error}}",
+      "adminOnly": "Only workspace admins can manage notification channels.",
+      "howToTitle": "How to get a webhook URL",
+      "howTo": {
+        "slack": {
+          "step1": "Open api.slack.com/apps and create an app (“From scratch”).",
+          "step2": "In the app settings, enable “Incoming Webhooks”.",
+          "step3": "Click “Add New Webhook to Workspace” and pick a channel.",
+          "step4": "Copy the webhook URL and paste it here."
+        },
+        "teams": {
+          "step1": "In Teams, open the channel menu (⋯) and choose “Workflows”.",
+          "step2": "Pick the template “Post to a channel when a webhook request is received”.",
+          "step3": "Add the workflow and copy the URL it shows.",
+          "step4": "Paste the URL here."
+        }
       }
     },
     "calendars": {
@@ -4272,6 +4378,45 @@
     "to": "To",
     "underline": "Underline",
     "yourAccounts": "Your accounts"
+  },
+  "demo": {
+    "metaTitle": "Live demo",
+    "metaDescription": "Try Repraesent with a prefilled demo workspace — no signup needed",
+    "title": "See Repraesent in action",
+    "subtitle": "Pick your industry and we'll build a demo workspace full of sample contacts, leads and deals — no signup, no email.",
+    "industryLabel": "Your industry",
+    "submitButton": "Start live demo →",
+    "submittingButton": "Building your demo…",
+    "error": "Something went wrong. Please try again.",
+    "rateLimited": "Too many demo accounts right now. Please try again later.",
+    "haveAccount": "Already have an account?",
+    "signIn": "Sign in",
+    "industrySearch": "Search industry…",
+    "industryEmpty": "No industry found.",
+    "industryOverrides": {
+      "partner_house": "Kitchen partner house"
+    },
+    "loading": {
+      "title": "Building your live demo",
+      "hint": "We're filling your workspace with real sample data — one moment.",
+      "step1": "Spinning up your workspace…",
+      "step2": "Importing 35 contacts with emails and phone numbers…",
+      "step3": "Filling your pipeline with live deals…",
+      "step4": "Capturing fresh leads from your contact form…",
+      "step5": "Scheduling today's tasks and follow-ups…",
+      "step6": "Adding notes and finishing touches…"
+    },
+    "brandLine1": "Test drive",
+    "brandLine2": "before you buy.",
+    "feature1": "Prefilled contacts, leads & deals",
+    "feature2": "No signup, no email required",
+    "feature3": "Deleted automatically after 2 hours",
+    "banner": {
+      "message": "This is a temporary demo account — it expires in {{time}}. <0>Create your free account</0>",
+      "expired": "This demo has expired. <0>Create your free account</0>",
+      "minutes": "{{minutes}} min",
+      "hoursMinutes": "{{hours}} h {{minutes}} min"
+    }
   },
   "clientTypes": {
     "partner_house_one": "partner house",

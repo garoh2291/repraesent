@@ -153,6 +153,9 @@ export interface WorkspaceContext {
   doorboost_partner_house_id?: string | null;
   type?: WorkspaceType;
   doorboost_brand_id?: string | null;
+  /** "Try a live demo" throwaway workspace (migration 126). */
+  is_demo?: boolean;
+  demo_expires_at?: string | null;
 }
 
 /**

@@ -140,6 +140,8 @@
       "tryAgain": "Erneut versuchen",
       "noAccount": "Noch kein Konto?",
       "createOne": "Jetzt erstellen",
+      "tryDemo": "Nur mal schauen?",
+      "tryDemoLink": "Live-Demo testen",
       "emailRequired": "Bitte geben Sie Ihre E-Mail-Adresse ein",
       "emailInvalid": "Bitte geben Sie eine gültige E-Mail-Adresse ein",
       "somethingWrong": "Ein Fehler ist aufgetreten. Bitte versuchen Sie es erneut.",
@@ -388,6 +390,15 @@
     }
   },
   "pipeline": {
+    "stripeNotConnected": {
+      "cta": "Stripe verbinden",
+      "customerTitle": "Stripe verbinden, um Kunden zu verknüpfen",
+      "customerBody": "Verknüpfen Sie diesen Deal mit einem Stripe-Kunden, sobald Ihr Konto verbunden ist.",
+      "productsTitle": "Stripe verbinden, um Produkte hinzuzufügen",
+      "productsBody": "Die Positionen eines Deals stammen direkt aus Ihrem Stripe-Katalog. Verbinden Sie ein Konto, um Produkte hinzuzufügen.",
+      "invoicesTitle": "Stripe verbinden, um diesen Deal abzurechnen",
+      "invoicesBody": "Erstellen und versenden Sie Rechnungen oder Abonnements aus diesem Deal, sobald Ihr Konto verbunden ist."
+    },
     "search": "Suche",
     "searchPlaceholder": "Titel oder Kontakt…",
     "anyAssignee": "Alle",
@@ -506,7 +517,10 @@
       "dealInvoiceSent": "Rechnung {{number}} gesendet",
       "dealInvoiceVoided": "Rechnung {{number}} storniert",
       "dealInvoiceMarkedPaid": "Rechnung {{number}} als bezahlt markiert",
-      "dealSubscriptionCanceled": "Abo gekündigt"
+      "dealSubscriptionCanceled": "Abo gekündigt",
+      "dealInvoiceLinked": "Stripe-Rechnung {{number}} verknüpft",
+      "dealProductsReplaced": "Produkte aus Rechnung {{number}} übernommen ({{count}} Positionen)",
+      "dealInvoiceUnlinked": "Rechnung {{number}} getrennt"
     },
     "products": {
       "title": "Produkte",
@@ -538,7 +552,9 @@
       "currencyMismatch": "Andere Währung als die vorhandenen Positionen",
       "priceCount": "{{count}} Preise",
       "stockHint": "nur {{count}} auf Lager",
-      "summary": "{{oneTime}} einmalig · {{recurring}} wiederkehrend (eine Periode)"
+      "summary": "{{oneTime}} einmalig · {{recurring}} wiederkehrend (eine Periode)",
+      "removeConfirmTitle": "Dieses Produkt entfernen?",
+      "removeConfirmBody": "„{{name}}“ wird nur aus diesem Deal entfernt — in Stripe ändert sich nichts. Der Deal-Wert wird aus den verbleibenden Positionen neu berechnet."
     },
     "sort": {
       "dateDesc": "Neueste zuerst",
@@ -578,7 +594,9 @@
         "email": "E-Mail",
         "createAction": "Erstellen & verknüpfen",
         "linkAction": "Verknüpfen"
-      }
+      },
+      "unlinkConfirmTitle": "Diesen Stripe-Kunden trennen?",
+      "unlinkConfirmBody": "„{{name}}“ wird nur von diesem Deal getrennt — in Stripe ändert sich nichts, und vorhandene Rechnungen bleiben im Deal. Neue Rechnungen brauchen wieder einen Kunden."
     },
     "invoices": {
       "title": "Rechnungen & Abos",
@@ -668,7 +686,39 @@
         "confirmSend": "Erstellen & senden",
         "confirmSubscription": "Abo erstellen",
         "confirmSubscriptionSend": "Erstellen & senden"
-      }
+      },
+      "link": {
+        "button": "Vorhandene verknüpfen",
+        "title": "Vorhandene Rechnung verknüpfen",
+        "description": "Übernimmt eine Rechnung aus Ihrem Stripe-Konto: Sie erscheint in diesem Deal, ihr Kunde wird verknüpft, und die Produkte des Deals können ihren Positionen folgen.",
+        "notConnected": "Mit diesem Workspace ist noch kein Stripe-Konto verbunden.",
+        "searchPlaceholder": "Nummer, Kunde oder E-Mail…",
+        "scopeAll": "Alle Kunden",
+        "noResults": "Keine Rechnungen passen zu dieser Suche.",
+        "empty": "Noch keine Rechnungen in diesem Stripe-Konto.",
+        "alreadyOnDeal": "Bereits in diesem Deal",
+        "linkedTo": "Verknüpft mit {{title}}",
+        "customerDeleted": "Dieser Kunde wurde in Stripe gelöscht — der Kunde des Deals bleibt unverändert.",
+        "customerWillReplace": "{{name}} ersetzt {{current}} als Kunden dieses Deals.",
+        "customerWillLink": "{{name}} wird als Kunde dieses Deals verknüpft.",
+        "renewalNote": "Dieser Deal verfolgt das Abo hinter dieser Rechnung bereits — sie wird als Verlängerung hinzugefügt.",
+        "draft": "Rechnungsentwurf — Stripe kann sie erst nach der Finalisierung versenden.",
+        "linesTitle": "Produkte",
+        "linesReplace": "Diese ersetzen die {{count}} aktuellen Produkte des Deals.",
+        "customLinesNote": "{{count}} freie Positionen werden keine Produkte — der Deal-Wert folgt dem Rechnungsbetrag.",
+        "noProductLines": "Keine Katalogprodukte auf dieser Rechnung — die aktuellen Produkte bleiben; der Deal-Wert wird auf {{total}} gesetzt.",
+        "noProductLinesNoValue": "Keine Katalogprodukte auf dieser Rechnung — Produkte und Deal-Wert bleiben unverändert.",
+        "linesTruncated": "Die ersten {{count}} Positionen werden angezeigt; synchronisiert werden alle.",
+        "sendStateUnknown": "Versandstatus unbekannt — Stripe hat diese Rechnung möglicherweise bereits versendet.",
+        "syncProducts": "Produkte aus der Rechnung übernehmen",
+        "confirm": "Rechnung verknüpfen",
+        "linked": "Rechnung verknüpft."
+      },
+      "unlink": "Vom Deal trennen",
+      "unlinked": "Rechnung vom Deal getrennt.",
+      "unlinkConfirmTitle": "Diese Rechnung trennen?",
+      "unlinkConfirmBody": "Entfernt sie nur aus diesem Deal. In Stripe ändert sich nichts; Produkte, Wert und Kunde des Deals bleiben unverändert.",
+      "unlinkConfirmBodySubscription": "Entfernt das Abo und seine Verlängerungen nur aus diesem Deal. In Stripe ändert sich nichts; Produkte, Wert und Kunde des Deals bleiben unverändert."
     },
     "createPipelineTitle": "Neue Pipeline",
     "pipelineNameLabel": "Name",
@@ -975,7 +1025,8 @@
       "emailAccounts": "E-Mail-Konten",
       "integrations": "Integrationen",
       "calendars": "Kalender",
-      "pipelines": "Pipeline-Phasen"
+      "pipelines": "Pipeline-Phasen",
+      "notifications": "Benachrichtigungen"
     },
     "bcc": {
       "metaTitle": "E-Mail-Protokollierung",
@@ -1231,6 +1282,61 @@
         "denied": "Du hast die Verbindung abgebrochen.",
         "expired": "Der Link ist abgelaufen. Bitte versuche es erneut.",
         "failed": "Verbindung fehlgeschlagen{{reason}}"
+      }
+    },
+    "notifications": {
+      "metaTitle": "Benachrichtigungen",
+      "metaDescription": "Workspace-Ereignisse an Slack oder Microsoft Teams senden.",
+      "sectionLabel": "Kanäle",
+      "sectionDescription": "Workspace-Ereignisse sofort an Slack oder Microsoft Teams senden.",
+      "addChannel": "Kanal hinzufügen",
+      "addChannelDescription": "Incoming-Webhook-URL einfügen. Ereignisse werden sofort dorthin gesendet.",
+      "emptyTitle": "Noch keine Benachrichtigungskanäle",
+      "emptyDescription": "Verbinden Sie einen Slack- oder Teams-Kanal, um über neue Leads und Deal-Updates informiert zu werden.",
+      "provider": "Anbieter",
+      "providerSlack": "Slack",
+      "providerTeams": "Microsoft Teams",
+      "nameLabel": "Kanalname",
+      "namePlaceholder": "z. B. #sales-alerts",
+      "nameRequired": "Bitte einen Kanalnamen eingeben.",
+      "webhookUrlLabel": "Webhook-URL",
+      "webhookUrlHelpSlack": "Slack Incoming-Webhook-URL einfügen (hooks.slack.com).",
+      "webhookUrlHelpTeams": "Microsoft Teams Workflows-Webhook-URL einfügen.",
+      "webhookUrlInvalid": "Bitte eine gültige https://-Webhook-URL eingeben.",
+      "webhookUrlSuspicious": "Das sieht nicht nach einer typischen Webhook-URL dieses Anbieters aus.",
+      "eventsLabel": "Benachrichtigen bei",
+      "events": {
+        "new_lead": "Neuer Lead",
+        "deal_stage_changed": "Deal-Phase geändert",
+        "form_submission": "Formular-Eingang",
+        "appointment_booked": "Termin gebucht"
+      },
+      "active": "Aktiv",
+      "sendTest": "Test senden",
+      "testSent": "Testnachricht gesendet",
+      "testFailed": "Test fehlgeschlagen: {{error}}",
+      "created": "Kanal hinzugefügt",
+      "deleted": "Kanal entfernt",
+      "deleteTitle": "Diesen Kanal entfernen?",
+      "deleteDescription": "Es werden keine Benachrichtigungen mehr an {{name}} gesendet. Der Webhook selbst wird nicht gelöscht.",
+      "deleteConfirm": "Entfernen",
+      "save": "Speichern",
+      "lastError": "Letzte Zustellung fehlgeschlagen: {{error}}",
+      "adminOnly": "Nur Workspace-Admins können Benachrichtigungskanäle verwalten.",
+      "howToTitle": "So erhalten Sie eine Webhook-URL",
+      "howTo": {
+        "slack": {
+          "step1": "Öffnen Sie api.slack.com/apps und erstellen Sie eine App („From scratch“).",
+          "step2": "Aktivieren Sie in den App-Einstellungen „Incoming Webhooks“.",
+          "step3": "Klicken Sie auf „Add New Webhook to Workspace“ und wählen Sie einen Kanal.",
+          "step4": "Kopieren Sie die Webhook-URL und fügen Sie sie hier ein."
+        },
+        "teams": {
+          "step1": "Öffnen Sie in Teams das Kanalmenü (⋯) und wählen Sie „Workflows“.",
+          "step2": "Wählen Sie die Vorlage „In einem Kanal posten, wenn eine Webhookanforderung empfangen wird“.",
+          "step3": "Erstellen Sie den Workflow und kopieren Sie die angezeigte URL.",
+          "step4": "Fügen Sie die URL hier ein."
+        }
       }
     },
     "calendars": {
@@ -4274,6 +4380,45 @@
     "to": "An",
     "underline": "Unterstrichen",
     "yourAccounts": "Ihre Konten"
+  },
+  "demo": {
+    "metaTitle": "Live-Demo",
+    "metaDescription": "Repraesent mit einem vorbefüllten Demo-Workspace testen — ohne Registrierung",
+    "title": "Repraesent in Aktion erleben",
+    "subtitle": "Wählen Sie Ihre Branche und wir erstellen einen Demo-Workspace voller Beispielkontakte, Leads und Deals — ohne Registrierung, ohne E-Mail.",
+    "industryLabel": "Ihre Branche",
+    "submitButton": "Live-Demo starten →",
+    "submittingButton": "Demo wird erstellt…",
+    "error": "Etwas ist schiefgelaufen. Bitte versuchen Sie es erneut.",
+    "rateLimited": "Im Moment werden zu viele Demo-Konten erstellt. Bitte versuchen Sie es später erneut.",
+    "haveAccount": "Sie haben bereits ein Konto?",
+    "signIn": "Anmelden",
+    "industrySearch": "Branche suchen…",
+    "industryEmpty": "Keine Branche gefunden.",
+    "industryOverrides": {
+      "partner_house": "Küchen-Partnerhaus"
+    },
+    "loading": {
+      "title": "Ihre Live-Demo wird erstellt",
+      "hint": "Wir befüllen Ihren Workspace mit echten Beispieldaten — einen Moment bitte.",
+      "step1": "Ihr Workspace wird eingerichtet…",
+      "step2": "35 Kontakte mit E-Mails und Telefonnummern werden importiert…",
+      "step3": "Ihre Pipeline wird mit laufenden Deals gefüllt…",
+      "step4": "Neue Leads treffen über Ihr Kontaktformular ein…",
+      "step5": "Die Aufgaben für heute werden geplant…",
+      "step6": "Notizen und letzter Feinschliff…"
+    },
+    "brandLine1": "Erst testen,",
+    "brandLine2": "dann entscheiden.",
+    "feature1": "Vorbefüllte Kontakte, Leads & Deals",
+    "feature2": "Keine Registrierung, keine E-Mail nötig",
+    "feature3": "Wird nach 2 Stunden automatisch gelöscht",
+    "banner": {
+      "message": "Dies ist ein temporäres Demo-Konto — es läuft in {{time}} ab. <0>Kostenloses Konto erstellen</0>",
+      "expired": "Diese Demo ist abgelaufen. <0>Kostenloses Konto erstellen</0>",
+      "minutes": "{{minutes}} Min.",
+      "hoursMinutes": "{{hours}} Std. {{minutes}} Min."
+    }
   },
   "clientTypes": {
     "partner_house_one": "Partnerhaus",

@@ -386,6 +386,37 @@ body {
   }
 }
 
+/* "Try a live demo" building show: 3×3 puzzle tiles popping into place,
+   holding as the assembled grid, then dissolving and re-assembling. */
+@keyframes app-puzzle-pop {
+  0% {
+    opacity: 0;
+    transform: scale(0.3) rotate(-10deg);
+  }
+  10%,
+  72% {
+    opacity: 1;
+    transform: scale(1) rotate(0deg);
+  }
+  84%,
+  100% {
+    opacity: 0;
+    transform: scale(0.3) rotate(8deg);
+  }
+}
+
+.app-puzzle-tile {
+  animation: app-puzzle-pop 4.2s cubic-bezier(0.16, 1, 0.3, 1) infinite both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .app-puzzle-tile {
+    animation: none;
+    opacity: 1;
+    transform: none;
+  }
+}
+
 .app-fade-up {
   animation: app-fade-up 0.45s cubic-bezier(0.16, 1, 0.3, 1) both;
 }

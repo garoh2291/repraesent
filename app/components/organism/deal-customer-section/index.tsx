@@ -21,7 +21,18 @@ import {
 import { extractErrorMessage } from "~/lib/api/axios-instance";
 import { stripeDashboardUrl } from "~/lib/api/stripe-catalog";
 import { useStripeConnection } from "~/lib/hooks/useWorkspaceIntegrations";
+import { StripeNotConnected } from "~/components/organism/stripe-not-connected";
 import { Button } from "~/components/ui/button";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "~/components/ui/alert-dialog";
 import {
   Tooltip,
   TooltipContent,
@@ -50,8 +61,13 @@ export function DealCustomerSection({
 }: DealCustomerSectionProps) {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
-  const { stripe } = useStripeConnection();
+  const {
+    stripe,
+    isConnected: stripeConnected,
+    isLoading: stripeLoading,
+  } = useStripeConnection();
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [confirmUnlinkOpen, setConfirmUnlinkOpen] = useState(false);
   const dealKey = ["deal", dealId] as const;
 
   const applyDetail = (detail: DealDetailResponse) => {
@@ -130,6 +146,31 @@ export function DealCustomerSection({
         `customers/${customer.stripe_customer_id}`,
       )
     : null;
+
+  // No Stripe integration: the dialogs below would only dead-end, so the
+  // whole body becomes a "connect first" pointer at /settings/integrations.
+  if (!stripeLoading && !stripeConnected) {
+    return (
+      <section className="overflow-hidden rounded-2xl border border-border bg-card shadow-(--shadow)">
+        <header className="border-b border-border px-4 py-3.5 sm:px-5">
+          <h2 className="text-sm font-semibold tracking-tight text-foreground">
+            {t("pipeline.customer.title", { defaultValue: "Stripe customer" })}
+          </h2>
+        </header>
+        <div className="p-4 sm:p-5">
+          <StripeNotConnected
+            title={t("pipeline.stripeNotConnected.customerTitle", {
+              defaultValue: "Connect Stripe to link customers",
+            })}
+            body={t("pipeline.stripeNotConnected.customerBody", {
+              defaultValue:
+                "Link this deal to a Stripe customer once your account is connected.",
+            })}
+          />
+        </div>
+      </section>
+    );
+  }
 
   return (
     <>
@@ -250,7 +291,7 @@ export function DealCustomerSection({
                   size="icon-xs"
                   className="h-7 w-7 shrink-0 text-muted-foreground hover:text-destructive"
                   disabled={busy}
-                  onClick={() => unlinkMutation.mutate()}
+                  onClick={() => setConfirmUnlinkOpen(true)}
                   aria-label={t("pipeline.customer.unlink", {
                     defaultValue: "Unlink customer",
                   })}
@@ -291,6 +332,46 @@ export function DealCustomerSection({
           </div>
         )}
       </section>
+
+      <AlertDialog open={confirmUnlinkOpen} onOpenChange={setConfirmUnlinkOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              {t("pipeline.customer.unlinkConfirmTitle", {
+                defaultValue: "Unlink this Stripe customer?",
+              })}
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              {t("pipeline.customer.unlinkConfirmBody", {
+                name:
+                  customer?.name ??
+                  customer?.email ??
+                  customer?.stripe_customer_id ??
+                  "",
+                defaultValue:
+                  '"{{name}}" is unlinked from this deal only — nothing changes in Stripe, and invoices already on the deal stay. New invoices need a customer again.',
+              })}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={busy}>
+              {t("common.cancel", { defaultValue: "Cancel" })}
+            </AlertDialogCancel>
+            <AlertDialogAction
+              variant="destructive"
+              disabled={busy}
+              onClick={() => {
+                setConfirmUnlinkOpen(false);
+                unlinkMutation.mutate();
+              }}
+            >
+              {t("pipeline.customer.unlink", {
+                defaultValue: "Unlink customer",
+              })}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   );
 }
