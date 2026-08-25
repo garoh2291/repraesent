@@ -59,6 +59,104 @@ export function patchDealInLists(
   return snapshots;
 }
 
+/**
+ * Remove one deal from every cached board and contact-deals list — the
+ * optimistic shape of a delete. Returns snapshots for `restoreSnapshots`.
+ */
+export function removeDealFromLists(
+  queryClient: QueryClient,
+  dealId: string,
+): ListSnapshots {
+  const snapshots: ListSnapshots = [];
+
+  const boards = queryClient.getQueriesData<PaginatedDeals>({
+    queryKey: ["deals-pipeline"],
+  });
+  for (const [key, value] of boards) {
+    snapshots.push([key, value]);
+    if (!value?.data?.some((d) => d.id === dealId)) continue;
+    queryClient.setQueryData<PaginatedDeals>(key, {
+      ...value,
+      data: value.data.filter((d) => d.id !== dealId),
+      total: Math.max(0, value.total - 1),
+    });
+  }
+
+  const contactLists = queryClient.getQueriesData<DealListItem[]>({
+    queryKey: ["contact-deals"],
+  });
+  for (const [key, value] of contactLists) {
+    snapshots.push([key, value]);
+    if (!value) continue;
+    queryClient.setQueryData<DealListItem[]>(
+      key,
+      value.filter((d) => d.id !== dealId),
+    );
+  }
+
+  return snapshots;
+}
+
+/**
+ * The optimistic shape of a cross-pipeline move: the deal disappears from the
+ * source pipeline's board caches (keyed ["deals-pipeline", <pipelineId>, …])
+ * and gets its pipeline_id patched everywhere else — other boards, the
+ * home-summary cache and contact-deals lists all keep showing it. One pass, so
+ * every cache key is snapshotted exactly once for `restoreSnapshots`.
+ */
+export function moveDealBetweenPipelinesInLists(
+  queryClient: QueryClient,
+  dealId: string,
+  fromPipelineId: string,
+  targetPipelineId: string,
+): ListSnapshots {
+  const snapshots: ListSnapshots = [];
+  const now = new Date().toISOString();
+
+  const boards = queryClient.getQueriesData<PaginatedDeals>({
+    queryKey: ["deals-pipeline"],
+  });
+  for (const [key, value] of boards) {
+    snapshots.push([key, value]);
+    if (!value) continue;
+    if (key[1] === fromPipelineId) {
+      if (!value.data?.some((d) => d.id === dealId)) continue;
+      queryClient.setQueryData<PaginatedDeals>(key, {
+        ...value,
+        data: value.data.filter((d) => d.id !== dealId),
+        total: Math.max(0, value.total - 1),
+      });
+    } else {
+      queryClient.setQueryData<PaginatedDeals>(key, {
+        ...value,
+        data: value.data.map((d) =>
+          d.id === dealId
+            ? { ...d, pipeline_id: targetPipelineId, updated_at: now }
+            : d,
+        ),
+      });
+    }
+  }
+
+  const contactLists = queryClient.getQueriesData<DealListItem[]>({
+    queryKey: ["contact-deals"],
+  });
+  for (const [key, value] of contactLists) {
+    snapshots.push([key, value]);
+    if (!value) continue;
+    queryClient.setQueryData<DealListItem[]>(
+      key,
+      value.map((d) =>
+        d.id === dealId
+          ? { ...d, pipeline_id: targetPipelineId, updated_at: now }
+          : d,
+      ),
+    );
+  }
+
+  return snapshots;
+}
+
 export function restoreSnapshots(
   queryClient: QueryClient,
   snapshots: ListSnapshots,

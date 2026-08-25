@@ -209,7 +209,11 @@ function DealRow({ deal, contactId, canEdit }: DealRowProps) {
       >
         <div className="min-w-0 flex-1">
           <p className="truncate font-medium text-foreground">{title}</p>
-          <DealStageBadge stage={deal.stage} className="mt-0.5 text-[11px]" />
+          <DealStageBadge
+            stage={deal.stage}
+            pipelineId={deal.pipeline_id}
+            className="mt-0.5 text-[11px]"
+          />
         </div>
         <div className="flex shrink-0 items-center gap-2">
           {val ? (

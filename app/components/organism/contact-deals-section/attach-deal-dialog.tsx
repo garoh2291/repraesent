@@ -199,7 +199,7 @@ export function AttachDealDialog({
 
                 const meta = (
                   <p className="mt-0.5 flex flex-wrap items-center gap-x-1.5 text-[11px] text-muted-foreground">
-                    <DealStageBadge stage={d.stage} />
+                    <DealStageBadge stage={d.stage} pipelineId={d.pipeline_id} />
                     {d.contact_full_name && !alreadyLinked ? (
                       <>
                         <span className="text-muted-foreground/40">·</span>

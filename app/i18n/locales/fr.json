@@ -61,7 +61,8 @@
     "forms": "Formulaires",
     "workflows": "Workflows",
     "stripeProducts": "Produits",
-    "calendar": "Calendrier"
+    "calendar": "Calendrier",
+    "newPipeline": "Nouveau pipeline"
   },
   "db_brand": {
     "subtitle": "Sélectionnez un revendeur dans la barre latérale pour afficher ses Social Ads et Leads.",
@@ -499,7 +500,11 @@
       "valueNegative": "La valeur ne peut pas être négative.",
       "saveFailed": "Impossible d'enregistrer l'affaire.",
       "contactFailed": "Impossible de mettre à jour le contact de l'affaire.",
-      "deleteFailed": "Impossible de supprimer l'affaire."
+      "deleteFailed": "Impossible de supprimer l'affaire.",
+      "pipelineCreateFailed": "Impossible de créer le pipeline.",
+      "pipelineSaveFailed": "Impossible d’enregistrer le pipeline.",
+      "pipelineDeleteFailed": "Impossible de supprimer le pipeline.",
+      "moveToPipelineFailed": "Impossible de déplacer l’affaire."
     },
     "products": {
       "title": "Produits",
@@ -662,7 +667,26 @@
         "confirmSubscription": "Créer l'abonnement",
         "confirmSubscriptionSend": "Créer et envoyer"
       }
-    }
+    },
+    "createPipelineTitle": "Nouveau pipeline",
+    "pipelineNameLabel": "Nom",
+    "pipelineNamePlaceholder": "p. ex. Ventes entreprises",
+    "pipelineDescriptionLabel": "Description (optionnelle)",
+    "pipelineDescriptionPlaceholder": "Que passe-t-il par ce pipeline ?",
+    "addDescription": "Ajouter une description…",
+    "pipelineCreated": "Pipeline créé.",
+    "pipelineDeleted": "Pipeline supprimé.",
+    "renamePipeline": "Renommer",
+    "deletePipeline": "Supprimer le pipeline",
+    "deletePipelineTitle": "Supprimer « {{name}} » ?",
+    "deletePipelineWarning": "{{count}} affaires seront déplacées vers « {{target}} ». Les étapes de ce pipeline seront supprimées.",
+    "defaultPipelineBadge": "Par défaut",
+    "pipelineMenu": "Actions du pipeline",
+    "movePipelineLabel": "Pipeline",
+    "movedToPipeline": "Déplacé vers « {{name}} ».",
+    "contextOpen": "Ouvrir l’affaire",
+    "contextChangeStage": "Changer d’étape",
+    "contextMovePipeline": "Déplacer vers un pipeline"
   },
   "appointments": {
     "metaTitle": "Rendez-vous",
@@ -1313,7 +1337,9 @@
       "reorderFailed": "Impossible de réordonner les étapes.",
       "readOnlyHint": "Seuls les admins de l'espace de travail peuvent modifier les étapes du pipeline. Vous pouvez consulter la configuration ci-dessous.",
       "metaTitle": "Étapes du pipeline",
-      "metaDescription": "Renommer, réordonner, colorer, masquer ou ajouter les étapes de vos pipelines de leads et d'affaires."
+      "metaDescription": "Renommer, réordonner, colorer, masquer ou ajouter les étapes de vos pipelines de leads et d'affaires.",
+      "pipelinePickerLabel": "Pipeline",
+      "pipelinePickerHint": "Chaque pipeline a ses propres étapes d’affaires."
     }
   },
   "booking": {

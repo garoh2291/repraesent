@@ -17,16 +17,46 @@ import {
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { useTranslation } from "react-i18next";
-import { ChevronDown, Mail, Phone } from "lucide-react";
+import {
+  ArrowRightLeft,
+  Check,
+  ChevronDown,
+  ExternalLink,
+  Kanban,
+  Mail,
+  Phone,
+  Trash2,
+} from "lucide-react";
 import { formatDate, formatCurrency } from "~/lib/utils/format";
 import { cn } from "~/lib/utils";
 import type { DealListItem } from "~/lib/api/deals";
 import type { PipelineStage } from "~/lib/api/pipeline-stages";
+import type { Pipeline } from "~/lib/api/pipelines";
 import { useDealStages } from "~/lib/hooks/usePipelineStages";
 import { resolveStageColors } from "~/lib/pipeline-stages/colors";
 import { resolveStageLabel } from "~/lib/pipeline-stages/labels";
 import { dealComparator, type DealSortMode } from "~/lib/deals/deal-sort";
 import { Avatar, AvatarFallback } from "~/components/ui/avatar";
+import {
+  ContextMenu,
+  ContextMenuContent,
+  ContextMenuItem,
+  ContextMenuSeparator,
+  ContextMenuSub,
+  ContextMenuSubContent,
+  ContextMenuSubTrigger,
+  ContextMenuTrigger,
+} from "~/components/ui/context-menu";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "~/components/ui/alert-dialog";
 import { kanbanCollisionDetection } from "~/lib/kanban/board-position";
 
 function cardTitle(d: DealListItem): string {
@@ -53,6 +83,14 @@ interface DealsPipelineKanbanProps {
   sortMode: DealSortMode;
   isUpdating?: boolean;
   canEdit?: boolean;
+  /** Which pipeline's stage set forms the columns; omitted = Default. */
+  pipelineId?: string;
+  /** All workspace pipelines — powers the card context menu's move submenu. */
+  pipelines?: Pipeline[];
+  /** Right-click → Move to pipeline. Optimistic handling lives in the caller. */
+  onMoveToPipeline?: (dealId: string, targetPipelineId: string) => void;
+  /** Right-click → Delete, after the confirm dialog. Optimistic in the caller. */
+  onDeleteDeal?: (dealId: string) => void;
   onDealSelect: (dealId: string) => void;
 }
 
@@ -63,10 +101,14 @@ export function DealsPipelineKanban({
   sortMode,
   isUpdating,
   canEdit = true,
+  pipelineId,
+  pipelines,
+  onMoveToPipeline,
+  onDeleteDeal,
   onDealSelect,
 }: DealsPipelineKanbanProps) {
   const { t } = useTranslation();
-  const { visible: stages, byKey } = useDealStages();
+  const { visible: stages, byKey } = useDealStages(pipelineId);
   const [activeId, setActiveId] = useState<string | null>(null);
   const [activeWidth, setActiveWidth] = useState<number | null>(null);
   // Local per-deal stage override applied between drop and the cache refresh
@@ -77,6 +119,12 @@ export function DealsPipelineKanban({
   const [justMovedId, setJustMovedId] = useState<string | null>(null);
   const landTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const undoRef = useRef<Array<{ dealId: string; prevStage: string }>>([]);
+
+  // Undo entries reference the columns of one board — a stale entry after a
+  // pipeline switch would 400 (its stage key belongs to another pipeline).
+  useEffect(() => {
+    undoRef.current = [];
+  }, [pipelineId]);
 
   const sensors = useSensors(
     useSensor(MouseSensor, { activationConstraint: { distance: 8 } }),
@@ -143,6 +191,31 @@ export function DealsPipelineKanban({
     [byKey, stages, byStage],
   );
 
+  /** Shared by drag-drop and the card context menu: undo entry, local pending
+   * override, land animation, then the caller's optimistic mutation. */
+  const moveDealToStage = useCallback(
+    (deal: DealListItem, targetStage: string) => {
+      if (deal.stage === targetStage) return;
+
+      undoRef.current.push({ dealId: deal.id, prevStage: deal.stage });
+      if (undoRef.current.length > 50) undoRef.current.shift();
+
+      setPending((prev) => ({
+        ...prev,
+        [deal.id]: {
+          stage: targetStage,
+          stage_changed_at: new Date().toISOString(),
+        },
+      }));
+      setJustMovedId(deal.id);
+      if (landTimerRef.current) clearTimeout(landTimerRef.current);
+      landTimerRef.current = setTimeout(() => setJustMovedId(null), 500);
+
+      onStageChange(deal.id, targetStage);
+    },
+    [onStageChange],
+  );
+
   const handleDragEnd = useCallback(
     (event: DragEndEvent) => {
       setActiveId(null);
@@ -157,25 +230,17 @@ export function DealsPipelineKanban({
 
       // In-column ordering is fixed (date/amount sort) — only cross-column
       // drops mean anything now.
-      if (deal.stage === targetStage) return;
-
-      undoRef.current.push({ dealId, prevStage: deal.stage });
-      if (undoRef.current.length > 50) undoRef.current.shift();
-
-      setPending((prev) => ({
-        ...prev,
-        [dealId]: {
-          stage: targetStage,
-          stage_changed_at: new Date().toISOString(),
-        },
-      }));
-      setJustMovedId(dealId);
-      if (landTimerRef.current) clearTimeout(landTimerRef.current);
-      landTimerRef.current = setTimeout(() => setJustMovedId(null), 500);
-
-      onStageChange(dealId, targetStage);
+      moveDealToStage(deal, targetStage);
     },
-    [resolveDropStage, deals, onStageChange],
+    [resolveDropStage, deals, moveDealToStage],
+  );
+
+  // Right-click → Delete goes through one confirm dialog for the whole board.
+  const [deleteTarget, setDeleteTarget] = useState<DealListItem | null>(null);
+
+  const otherPipelines = useMemo(
+    () => (pipelines ?? []).filter((p) => p.id !== pipelineId),
+    [pipelines, pipelineId],
   );
 
   useEffect(
@@ -252,6 +317,11 @@ export function DealsPipelineKanban({
                 isUpdating={isUpdating}
                 canEdit={canEdit}
                 justMovedId={justMovedId}
+                allStages={stages}
+                otherPipelines={otherPipelines}
+                onMoveToStage={moveDealToStage}
+                onMoveToPipeline={onMoveToPipeline}
+                onRequestDelete={onDeleteDeal ? setDeleteTarget : undefined}
               />
             ))}
           </div>
@@ -269,6 +339,42 @@ export function DealsPipelineKanban({
           </DragOverlay>
         </DndContext>
       </div>
+
+      <AlertDialog
+        open={!!deleteTarget}
+        onOpenChange={(open) => !open && setDeleteTarget(null)}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              {t("pipeline.deleteDealConfirmTitle", {
+                defaultValue: "Delete this deal?",
+              })}
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              {t("pipeline.deleteDealConfirmDescription", {
+                defaultValue:
+                  '"{{title}}" will be permanently removed from your pipeline.',
+                title: deleteTarget ? cardTitle(deleteTarget) : "",
+              })}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>
+              {t("common.cancel", { defaultValue: "Cancel" })}
+            </AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={() => {
+                if (deleteTarget) onDeleteDeal?.(deleteTarget.id);
+                setDeleteTarget(null);
+              }}
+            >
+              {t("common.delete", { defaultValue: "Delete" })}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   );
 }
@@ -280,6 +386,11 @@ function DealColumn({
   isUpdating,
   canEdit,
   justMovedId,
+  allStages,
+  otherPipelines,
+  onMoveToStage,
+  onMoveToPipeline,
+  onRequestDelete,
 }: {
   stage: PipelineStage;
   deals: DealListItem[];
@@ -287,6 +398,11 @@ function DealColumn({
   isUpdating?: boolean;
   canEdit?: boolean;
   justMovedId?: string | null;
+  allStages: PipelineStage[];
+  otherPipelines: Pipeline[];
+  onMoveToStage: (deal: DealListItem, targetStage: string) => void;
+  onMoveToPipeline?: (dealId: string, targetPipelineId: string) => void;
+  onRequestDelete?: (deal: DealListItem) => void;
 }) {
   const { t } = useTranslation();
   const { setNodeRef, isOver } = useDroppable({ id: stage.key });
@@ -339,6 +455,11 @@ function DealColumn({
                 disabled={isUpdating}
                 canEdit={canEdit}
                 justLanded={justMovedId === d.id}
+                allStages={allStages}
+                otherPipelines={otherPipelines}
+                onMoveToStage={onMoveToStage}
+                onMoveToPipeline={onMoveToPipeline}
+                onRequestDelete={onRequestDelete}
               />
             ))}
           </SortableContext>
@@ -610,13 +731,24 @@ function DealKanbanCard({
   disabled,
   canEdit,
   justLanded,
+  allStages,
+  otherPipelines,
+  onMoveToStage,
+  onMoveToPipeline,
+  onRequestDelete,
 }: {
   deal: DealListItem;
   onSelect: () => void;
   disabled?: boolean;
   canEdit?: boolean;
   justLanded?: boolean;
+  allStages: PipelineStage[];
+  otherPipelines: Pipeline[];
+  onMoveToStage: (deal: DealListItem, targetStage: string) => void;
+  onMoveToPipeline?: (dealId: string, targetPipelineId: string) => void;
+  onRequestDelete?: (deal: DealListItem) => void;
 }) {
+  const { t } = useTranslation();
   const {
     attributes,
     listeners,
@@ -634,7 +766,7 @@ function DealKanbanCard({
     opacity: isDragging ? 0 : 1,
   };
 
-  return (
+  const card = (
     <button
       type="button"
       ref={setNodeRef}
@@ -650,5 +782,80 @@ function DealKanbanCard({
     >
       <DealCardInner deal={deal} />
     </button>
+  );
+
+  // Viewers get the plain card — every menu action is a write.
+  if (!canEdit) return card;
+
+  return (
+    <ContextMenu>
+      <ContextMenuTrigger asChild>{card}</ContextMenuTrigger>
+      <ContextMenuContent className="w-52">
+        <ContextMenuItem onSelect={onSelect}>
+          <ExternalLink />
+          {t("pipeline.contextOpen", { defaultValue: "Open deal" })}
+        </ContextMenuItem>
+        <ContextMenuSeparator />
+        <ContextMenuSub>
+          <ContextMenuSubTrigger>
+            <Kanban />
+            {t("pipeline.contextChangeStage", { defaultValue: "Change stage" })}
+          </ContextMenuSubTrigger>
+          <ContextMenuSubContent className="w-48">
+            {allStages.map((s) => {
+              const current = s.key === deal.stage;
+              return (
+                <ContextMenuItem
+                  key={s.id}
+                  disabled={current}
+                  onSelect={() => onMoveToStage(deal, s.key)}
+                >
+                  <span
+                    className={cn(
+                      "inline-block h-2 w-2 rounded-full",
+                      resolveStageColors(s).dot,
+                    )}
+                  />
+                  <span className="truncate">{resolveStageLabel(s, t)}</span>
+                  {current ? <Check className="ml-auto" /> : null}
+                </ContextMenuItem>
+              );
+            })}
+          </ContextMenuSubContent>
+        </ContextMenuSub>
+        {otherPipelines.length > 0 && onMoveToPipeline ? (
+          <ContextMenuSub>
+            <ContextMenuSubTrigger>
+              <ArrowRightLeft />
+              {t("pipeline.contextMovePipeline", {
+                defaultValue: "Move to pipeline",
+              })}
+            </ContextMenuSubTrigger>
+            <ContextMenuSubContent className="w-48">
+              {otherPipelines.map((p) => (
+                <ContextMenuItem
+                  key={p.id}
+                  onSelect={() => onMoveToPipeline(deal.id, p.id)}
+                >
+                  <span className="truncate">{p.name}</span>
+                </ContextMenuItem>
+              ))}
+            </ContextMenuSubContent>
+          </ContextMenuSub>
+        ) : null}
+        {onRequestDelete ? (
+          <>
+            <ContextMenuSeparator />
+            <ContextMenuItem
+              variant="destructive"
+              onSelect={() => onRequestDelete(deal)}
+            >
+              <Trash2 />
+              {t("common.delete", { defaultValue: "Delete" })}
+            </ContextMenuItem>
+          </>
+        ) : null}
+      </ContextMenuContent>
+    </ContextMenu>
   );
 }

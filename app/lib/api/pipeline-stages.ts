@@ -14,6 +14,8 @@ export interface PipelineStage {
   id: string;
   workspace_id: string;
   entity: StageEntity;
+  /** The deal pipeline this stage belongs to; null for lead stages. */
+  pipeline_id: string | null;
   key: string;
   label: string | null;
   category: StageCategory;
@@ -34,6 +36,8 @@ export interface CreatePipelineStagePayload {
   label: string;
   category: Exclude<StageCategory, "hidden">;
   color?: string;
+  /** Deal pipeline to add the stage to (entity=deal only); omitted = Default. */
+  pipeline_id?: string;
 }
 
 export async function createPipelineStage(
@@ -64,10 +68,12 @@ export async function patchPipelineStage(
 export async function reorderPipelineStages(
   entity: StageEntity,
   orderedIds: string[],
+  pipelineId?: string,
 ): Promise<PipelineStage[]> {
   const res = await apiClient.put<PipelineStage[]>("/pipeline-stages/reorder", {
     entity,
     ordered_ids: orderedIds,
+    ...(pipelineId ? { pipeline_id: pipelineId } : {}),
   });
   return res.data;
 }

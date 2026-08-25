@@ -1,6 +1,6 @@
 import { useTranslation } from "react-i18next";
 import { cn } from "~/lib/utils";
-import { useDealStages } from "~/lib/hooks/usePipelineStages";
+import { useDealStageLookup } from "~/lib/hooks/usePipelineStages";
 import {
   resolveStageColors,
   resolveStageColorsByKey,
@@ -12,16 +12,22 @@ import {
 
 interface DealStageBadgeProps {
   stage: string;
+  /** The deal's pipeline — stage keys are only unique within one. */
+  pipelineId?: string | null;
   className?: string;
 }
 
 /** Colored dot + stage label, matching the deal page. Unknown keys (a stage
  * that was deleted) render humanized with neutral colors instead of being
  * silently coerced to another stage. */
-export function DealStageBadge({ stage, className }: DealStageBadgeProps) {
+export function DealStageBadge({
+  stage,
+  pipelineId,
+  className,
+}: DealStageBadgeProps) {
   const { t } = useTranslation();
-  const { byKey } = useDealStages();
-  const row = byKey.get(stage);
+  const { resolve } = useDealStageLookup();
+  const row = resolve(pipelineId, stage);
   const facets = row
     ? resolveStageColors(row)
     : resolveStageColorsByKey("deal", stage);

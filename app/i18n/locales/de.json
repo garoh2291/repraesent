@@ -61,7 +61,8 @@
     "forms": "Formulare",
     "workflows": "Workflows",
     "stripeProducts": "Produkte",
-    "calendar": "Kalender"
+    "calendar": "Kalender",
+    "newPipeline": "Neue Pipeline"
   },
   "db_brand": {
     "subtitle": "Wähle einen Händler in der Seitenleiste, um Social Ads & Leads zu sehen.",
@@ -468,7 +469,11 @@
       "valueNegative": "Der Wert darf nicht negativ sein.",
       "saveFailed": "Deal konnte nicht gespeichert werden.",
       "contactFailed": "Kontakt am Deal konnte nicht aktualisiert werden.",
-      "deleteFailed": "Deal konnte nicht gelöscht werden."
+      "deleteFailed": "Deal konnte nicht gelöscht werden.",
+      "pipelineCreateFailed": "Pipeline konnte nicht erstellt werden.",
+      "pipelineSaveFailed": "Pipeline konnte nicht gespeichert werden.",
+      "pipelineDeleteFailed": "Pipeline konnte nicht gelöscht werden.",
+      "moveToPipelineFailed": "Deal konnte nicht verschoben werden."
     },
     "history": {
       "statusChanged": "Status von {{from}} zu {{to}} geändert",
@@ -664,7 +669,26 @@
         "confirmSubscription": "Abo erstellen",
         "confirmSubscriptionSend": "Erstellen & senden"
       }
-    }
+    },
+    "createPipelineTitle": "Neue Pipeline",
+    "pipelineNameLabel": "Name",
+    "pipelineNamePlaceholder": "z. B. Enterprise-Vertrieb",
+    "pipelineDescriptionLabel": "Beschreibung (optional)",
+    "pipelineDescriptionPlaceholder": "Was läuft durch diese Pipeline?",
+    "addDescription": "Beschreibung hinzufügen…",
+    "pipelineCreated": "Pipeline erstellt.",
+    "pipelineDeleted": "Pipeline gelöscht.",
+    "renamePipeline": "Umbenennen",
+    "deletePipeline": "Pipeline löschen",
+    "deletePipelineTitle": "„{{name}}“ löschen?",
+    "deletePipelineWarning": "{{count}} Deals werden nach „{{target}}“ verschoben. Die Phasen dieser Pipeline werden gelöscht.",
+    "defaultPipelineBadge": "Standard",
+    "pipelineMenu": "Pipeline-Aktionen",
+    "movePipelineLabel": "Pipeline",
+    "movedToPipeline": "Nach „{{name}}“ verschoben.",
+    "contextOpen": "Deal öffnen",
+    "contextChangeStage": "Phase ändern",
+    "contextMovePipeline": "In Pipeline verschieben"
   },
   "appointments": {
     "metaTitle": "Termine",
@@ -1313,7 +1337,9 @@
       "reorderFailed": "Phasen konnten nicht sortiert werden.",
       "readOnlyHint": "Nur Workspace-Admins können Pipeline-Phasen ändern. Du kannst die Konfiguration unten einsehen.",
       "metaTitle": "Pipeline-Phasen",
-      "metaDescription": "Phasen deiner Lead- und Deal-Pipelines umbenennen, sortieren, einfärben, ausblenden oder hinzufügen."
+      "metaDescription": "Phasen deiner Lead- und Deal-Pipelines umbenennen, sortieren, einfärben, ausblenden oder hinzufügen.",
+      "pipelinePickerLabel": "Pipeline",
+      "pipelinePickerHint": "Jede Pipeline hat ihre eigenen Deal-Phasen."
     }
   },
   "booking": {

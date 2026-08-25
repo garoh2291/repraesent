@@ -61,7 +61,8 @@
     "forms": "Formulieren",
     "workflows": "Workflows",
     "stripeProducts": "Producten",
-    "calendar": "Agenda"
+    "calendar": "Agenda",
+    "newPipeline": "Nieuwe pijplijn"
   },
   "db_brand": {
     "subtitle": "Kies een retailer in de zijbalk om de Social Ads en Leads te bekijken.",
@@ -499,7 +500,11 @@
       "valueNegative": "De waarde mag niet negatief zijn.",
       "saveFailed": "Kon de deal niet opslaan.",
       "contactFailed": "Kon het contact op de deal niet bijwerken.",
-      "deleteFailed": "Kon de deal niet verwijderen."
+      "deleteFailed": "Kon de deal niet verwijderen.",
+      "pipelineCreateFailed": "Kon pijplijn niet aanmaken.",
+      "pipelineSaveFailed": "Kon pijplijn niet opslaan.",
+      "pipelineDeleteFailed": "Kon pijplijn niet verwijderen.",
+      "moveToPipelineFailed": "Kon deal niet verplaatsen."
     },
     "products": {
       "title": "Producten",
@@ -662,7 +667,26 @@
         "confirmSubscription": "Abonnement maken",
         "confirmSubscriptionSend": "Maken & versturen"
       }
-    }
+    },
+    "createPipelineTitle": "Nieuwe pijplijn",
+    "pipelineNameLabel": "Naam",
+    "pipelineNamePlaceholder": "bijv. Enterprise-verkoop",
+    "pipelineDescriptionLabel": "Beschrijving (optioneel)",
+    "pipelineDescriptionPlaceholder": "Wat loopt er door deze pijplijn?",
+    "addDescription": "Beschrijving toevoegen…",
+    "pipelineCreated": "Pijplijn aangemaakt.",
+    "pipelineDeleted": "Pijplijn verwijderd.",
+    "renamePipeline": "Hernoemen",
+    "deletePipeline": "Pijplijn verwijderen",
+    "deletePipelineTitle": "‘{{name}}’ verwijderen?",
+    "deletePipelineWarning": "{{count}} deals verhuizen naar ‘{{target}}’. De fasen van deze pijplijn worden verwijderd.",
+    "defaultPipelineBadge": "Standaard",
+    "pipelineMenu": "Pijplijn-acties",
+    "movePipelineLabel": "Pijplijn",
+    "movedToPipeline": "Verplaatst naar ‘{{name}}’.",
+    "contextOpen": "Deal openen",
+    "contextChangeStage": "Fase wijzigen",
+    "contextMovePipeline": "Naar pijplijn verplaatsen"
   },
   "appointments": {
     "metaTitle": "Afspraken",
@@ -1311,7 +1335,9 @@
       "reorderFailed": "Kon de fasen niet herschikken.",
       "readOnlyHint": "Alleen workspace-admins kunnen pipelinefasen wijzigen. Je kunt de configuratie hieronder bekijken.",
       "metaTitle": "Pipelinefasen",
-      "metaDescription": "Fasen van je lead- en dealpipelines hernoemen, herschikken, kleuren, verbergen of toevoegen."
+      "metaDescription": "Fasen van je lead- en dealpipelines hernoemen, herschikken, kleuren, verbergen of toevoegen.",
+      "pipelinePickerLabel": "Pijplijn",
+      "pipelinePickerHint": "Elke pijplijn heeft zijn eigen dealfasen."
     }
   },
   "booking": {

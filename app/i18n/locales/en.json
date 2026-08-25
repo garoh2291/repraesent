@@ -61,7 +61,8 @@
     "forms": "Forms",
     "workflows": "Workflows",
     "stripeProducts": "Products",
-    "calendar": "Calendar"
+    "calendar": "Calendar",
+    "newPipeline": "New pipeline"
   },
   "db_brand": {
     "subtitle": "Pick a retailer from the sidebar to view its Social Ads & Leads.",
@@ -499,7 +500,11 @@
       "valueNegative": "Value cannot be negative.",
       "saveFailed": "Could not save deal.",
       "contactFailed": "Could not update contact on deal.",
-      "deleteFailed": "Could not delete deal."
+      "deleteFailed": "Could not delete deal.",
+      "pipelineCreateFailed": "Could not create pipeline.",
+      "pipelineSaveFailed": "Could not save pipeline.",
+      "pipelineDeleteFailed": "Could not delete pipeline.",
+      "moveToPipelineFailed": "Could not move deal."
     },
     "products": {
       "title": "Products",
@@ -662,7 +667,26 @@
         "confirmSubscription": "Create subscription",
         "confirmSubscriptionSend": "Create & send"
       }
-    }
+    },
+    "createPipelineTitle": "New pipeline",
+    "pipelineNameLabel": "Name",
+    "pipelineNamePlaceholder": "e.g. Enterprise sales",
+    "pipelineDescriptionLabel": "Description (optional)",
+    "pipelineDescriptionPlaceholder": "What runs through this pipeline?",
+    "addDescription": "Add a description…",
+    "pipelineCreated": "Pipeline created.",
+    "pipelineDeleted": "Pipeline deleted.",
+    "renamePipeline": "Rename",
+    "deletePipeline": "Delete pipeline",
+    "deletePipelineTitle": "Delete “{{name}}”?",
+    "deletePipelineWarning": "{{count}} deals will move to “{{target}}”. This pipeline’s stages are deleted.",
+    "defaultPipelineBadge": "Default",
+    "pipelineMenu": "Pipeline actions",
+    "movePipelineLabel": "Pipeline",
+    "movedToPipeline": "Moved to “{{name}}”.",
+    "contextOpen": "Open deal",
+    "contextChangeStage": "Change stage",
+    "contextMovePipeline": "Move to pipeline"
   },
   "appointments": {
     "metaTitle": "Appointments",
@@ -1311,7 +1335,9 @@
       "reorderFailed": "Could not reorder stages.",
       "readOnlyHint": "Only workspace admins can change pipeline stages. You can view the configuration below.",
       "metaTitle": "Pipeline stages",
-      "metaDescription": "Rename, reorder, recolor, hide or add the stages of your lead and deal pipelines."
+      "metaDescription": "Rename, reorder, recolor, hide or add the stages of your lead and deal pipelines.",
+      "pipelinePickerLabel": "Pipeline",
+      "pipelinePickerHint": "Each pipeline has its own deal stages."
     }
   },
   "booking": {

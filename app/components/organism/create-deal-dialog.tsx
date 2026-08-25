@@ -6,6 +6,7 @@ import { Search, X } from "lucide-react";
 import { useDebounce } from "~/lib/hooks/useDebounce";
 import { useAuthContext } from "~/providers/auth-provider";
 import { getWorkspaceDetail } from "~/lib/api/workspaces";
+import { usePipelinesQuery } from "~/lib/hooks/usePipelines";
 import {
   getContacts,
   getContact,
@@ -80,6 +81,12 @@ export interface CreateDealDialogProps {
    */
   prefillContactLabel?: string | null;
   canCreate?: boolean;
+  /**
+   * Pipeline to create the deal in. Passed by the pipeline page (the board
+   * being viewed); when omitted (contact/lead flows) a picker is shown if the
+   * workspace has more than one pipeline, defaulting to Default.
+   */
+  pipelineId?: string | null;
 }
 
 export function CreateDealDialog({
@@ -88,6 +95,7 @@ export function CreateDealDialog({
   prefillContactId,
   prefillContactLabel,
   canCreate = true,
+  pipelineId,
 }: CreateDealDialogProps) {
   const { t } = useTranslation();
   const navigate = useNavigate();
@@ -96,6 +104,18 @@ export function CreateDealDialog({
 
   const [newTitle, setNewTitle] = useState("");
   const [newValue, setNewValue] = useState("");
+
+  // Pipeline picker — only when the caller didn't pin one and there is a
+  // choice to make.
+  const pipelinesQuery = usePipelinesQuery();
+  const pipelines = pipelinesQuery.data ?? [];
+  const showPipelinePicker = !pipelineId && pipelines.length > 1;
+  const [selectedPipelineId, setSelectedPipelineId] = useState<string>("");
+  useEffect(() => {
+    if (!open) setSelectedPipelineId("");
+  }, [open]);
+  const effectivePipelineId =
+    pipelineId ?? (selectedPipelineId || undefined);
   const [selectedContactId, setSelectedContactId] = useState(CONTACT_NONE);
   const [selectedContactLabel, setSelectedContactLabel] = useState<
     string | null
@@ -217,8 +237,9 @@ export function CreateDealDialog({
         contact_id:
           selectedContactId === CONTACT_NONE ? null : selectedContactId,
         assigned_to: newAssignee === "unassigned" ? null : newAssignee,
-        // Omitted stage = the backend places the deal in the workspace's
-        // entry stage.
+        // Omitted pipeline_id = the Default pipeline; omitted stage = the
+        // backend places the deal in that pipeline's entry stage.
+        pipeline_id: effectivePipelineId,
       }),
     onSuccess: (res) => {
       invalidateDeals();
@@ -416,6 +437,32 @@ export function CreateDealDialog({
               </PopoverContent>
             </Popover>
           </div>
+          {showPipelinePicker && (
+            <div className="space-y-1.5">
+              <Label>
+                {t("pipeline.movePipelineLabel", { defaultValue: "Pipeline" })}
+              </Label>
+              <Select
+                value={
+                  selectedPipelineId ||
+                  pipelines.find((p) => p.is_default)?.id ||
+                  pipelines[0]?.id
+                }
+                onValueChange={setSelectedPipelineId}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {pipelines.map((p) => (
+                    <SelectItem key={p.id} value={p.id}>
+                      {p.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
           <div className="space-y-1.5">
             <Label>{t("contacts.assignedTo", { defaultValue: "Assigned to" })}</Label>
             <Select value={newAssignee} onValueChange={setNewAssignee}>
