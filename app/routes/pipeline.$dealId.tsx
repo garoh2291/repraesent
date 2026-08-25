@@ -18,11 +18,13 @@ import {
   deleteDeal,
   getDeal,
   getDealHistory,
+  moveDealPipeline,
   patchDeal,
   parseDealValue,
   formatDealValueInput,
   type DealListItem,
 } from "~/lib/api/deals";
+import { usePipelinesQuery } from "~/lib/hooks/usePipelines";
 import {
   patchDealInLists,
   restoreSnapshots,
@@ -129,7 +131,6 @@ export default function PipelineDealDetailPage() {
   const queryClient = useQueryClient();
   const { currentWorkspace } = useAuthContext();
   const canEdit = useCanEditLeads();
-  const { visible: dealStages, byKey: dealStagesByKey } = useDealStages();
 
   const [title, setTitle] = useState("");
   const [valueStr, setValueStr] = useState("");
@@ -179,6 +180,15 @@ export default function PipelineDealDetailPage() {
   });
 
   const deal = dealQuery.data?.deal;
+
+  // The stepper renders the DEAL's pipeline's stages (undefined = Default
+  // while loading — replaced as soon as the deal arrives).
+  const dealPipelineId = (deal?.pipeline_id as string | undefined) ?? undefined;
+  const { visible: dealStages, byKey: dealStagesByKey } =
+    useDealStages(dealPipelineId);
+  const pipelinesQuery = usePipelinesQuery();
+  const pipelines = pipelinesQuery.data ?? [];
+
   const contact = dealQuery.data?.contact;
   const dealContacts = dealQuery.data?.contacts ?? [];
   const dealProducts = dealQuery.data?.products ?? [];
@@ -324,6 +334,31 @@ export default function PipelineDealDetailPage() {
       toast.error(
         t("pipeline.errors.saveFailed", {
           defaultValue: "Could not save deal.",
+        }),
+      );
+    },
+    onSettled: () => {
+      invalidate();
+    },
+  });
+
+  // No optimistic patch: the server computes the stage remap by category.
+  const movePipelineMutation = useMutation({
+    mutationFn: (targetPipelineId: string) =>
+      moveDealPipeline(dealId!, targetPipelineId),
+    onSuccess: (_res, targetPipelineId) => {
+      const target = pipelines.find((p) => p.id === targetPipelineId);
+      toast.success(
+        t("pipeline.movedToPipeline", {
+          defaultValue: "Moved to “{{name}}”.",
+          name: target?.name ?? "",
+        }),
+      );
+    },
+    onError: () => {
+      toast.error(
+        t("pipeline.errors.moveToPipelineFailed", {
+          defaultValue: "Could not move deal.",
         }),
       );
     },
@@ -580,6 +615,33 @@ export default function PipelineDealDetailPage() {
 
           {/* STAGE STEPPER */}
           <div className="mt-5">
+            {pipelines.length > 1 && dealPipelineId ? (
+              <div className="mb-2 flex items-center gap-2">
+                <span className="text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">
+                  {t("pipeline.movePipelineLabel", {
+                    defaultValue: "Pipeline",
+                  })}
+                </span>
+                <Select
+                  value={dealPipelineId}
+                  onValueChange={(v) => {
+                    if (v !== dealPipelineId) movePipelineMutation.mutate(v);
+                  }}
+                  disabled={!canEdit || movePipelineMutation.isPending}
+                >
+                  <SelectTrigger className="h-7 w-[180px] text-xs">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {pipelines.map((p) => (
+                      <SelectItem key={p.id} value={p.id} className="text-xs">
+                        {p.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            ) : null}
             <div className="flex w-full overflow-hidden rounded-xl border border-border bg-background/40">
               {dealStages.map((stageOption, idx) => {
                 const active = stageOption.key === stage;

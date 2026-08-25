@@ -40,6 +40,7 @@ import {
   usePipelineStagesQuery,
   useReorderPipelineStages,
 } from "~/lib/hooks/usePipelineStages";
+import { usePipelinesQuery } from "~/lib/hooks/usePipelines";
 import {
   STAGE_COLOR_TOKENS,
   TOKEN_FACETS,
@@ -166,6 +167,14 @@ export default function PipelinesSettingsPage() {
   const stagesQuery = usePipelineStagesQuery();
   const stages = stagesQuery.data ?? [];
 
+  // Deal stages are per-pipeline — the picker chooses whose set is edited.
+  const pipelinesQuery = usePipelinesQuery();
+  const pipelines = pipelinesQuery.data ?? [];
+  const defaultPipeline = pipelines.find((p) => p.is_default) ?? pipelines[0];
+  const [pickedPipelineId, setPickedPipelineId] = useState<string | null>(null);
+  const selectedPipeline =
+    pipelines.find((p) => p.id === pickedPipelineId) ?? defaultPipeline;
+
   return (
     <div className="space-y-10">
       {!isAdmin && (
@@ -189,19 +198,55 @@ export default function PipelinesSettingsPage() {
         isLoading={stagesQuery.isLoading}
         isAdmin={isAdmin}
       />
-      <EntityStagesSection
-        entity="deal"
-        label={t("settings.pipelines.dealStages", {
-          defaultValue: "Deal stages",
-        })}
-        description={t("settings.pipelines.dealStagesHint", {
-          defaultValue:
-            "The columns of the deals pipeline, in order. Won/lost stages close deals and drive revenue stats.",
-        })}
-        stages={stages.filter((s) => s.entity === "deal")}
-        isLoading={stagesQuery.isLoading}
-        isAdmin={isAdmin}
-      />
+      <div className="space-y-4">
+        {pipelines.length > 1 && (
+          <div className="flex flex-col gap-1.5 sm:flex-row sm:items-center sm:gap-3">
+            <Label className="text-xs text-muted-foreground shrink-0">
+              {t("settings.pipelines.pipelinePickerLabel", {
+                defaultValue: "Pipeline",
+              })}
+            </Label>
+            <Select
+              value={selectedPipeline?.id}
+              onValueChange={(v) => setPickedPipelineId(v)}
+            >
+              <SelectTrigger className="h-9 w-full sm:w-[240px] text-sm">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {pipelines.map((p) => (
+                  <SelectItem key={p.id} value={p.id}>
+                    {p.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <p className="text-[11px] text-muted-foreground">
+              {t("settings.pipelines.pipelinePickerHint", {
+                defaultValue: "Each pipeline has its own deal stages.",
+              })}
+            </p>
+          </div>
+        )}
+        <EntityStagesSection
+          entity="deal"
+          label={t("settings.pipelines.dealStages", {
+            defaultValue: "Deal stages",
+          })}
+          description={t("settings.pipelines.dealStagesHint", {
+            defaultValue:
+              "The columns of the deals pipeline, in order. Won/lost stages close deals and drive revenue stats.",
+          })}
+          stages={stages.filter(
+            (s) =>
+              s.entity === "deal" &&
+              (!selectedPipeline || s.pipeline_id === selectedPipeline.id),
+          )}
+          isLoading={stagesQuery.isLoading || pipelinesQuery.isLoading}
+          isAdmin={isAdmin}
+          pipelineId={selectedPipeline?.id}
+        />
+      </div>
     </div>
   );
 }
@@ -213,6 +258,7 @@ function EntityStagesSection({
   stages,
   isLoading,
   isAdmin,
+  pipelineId,
 }: {
   entity: StageEntity;
   label: string;
@@ -220,6 +266,8 @@ function EntityStagesSection({
   stages: PipelineStage[];
   isLoading: boolean;
   isAdmin: boolean;
+  /** Deal sections only: the pipeline whose stages are being edited. */
+  pipelineId?: string;
 }) {
   const { t } = useTranslation();
   const [addOpen, setAddOpen] = useState(false);
@@ -239,7 +287,7 @@ function EntityStagesSection({
 
   const applyOrder = (orderedIds: string[]) => {
     reorderMutation.mutate(
-      { entity, orderedIds },
+      { entity, orderedIds, pipelineId },
       {
         onError: (err) =>
           toast.error(
@@ -330,6 +378,7 @@ function EntityStagesSection({
 
       <AddStageDialog
         entity={entity}
+        pipelineId={pipelineId}
         open={addOpen}
         onOpenChange={setAddOpen}
       />
@@ -688,10 +737,13 @@ function StageRow({
 
 function AddStageDialog({
   entity,
+  pipelineId,
   open,
   onOpenChange,
 }: {
   entity: StageEntity;
+  /** Deal stages only: the pipeline the new stage is added to. */
+  pipelineId?: string;
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }) {
@@ -713,7 +765,13 @@ function AddStageDialog({
     const trimmed = label.trim();
     if (!trimmed) return;
     createMutation.mutate(
-      { entity, label: trimmed, category, color },
+      {
+        entity,
+        label: trimmed,
+        category,
+        color,
+        ...(entity === "deal" && pipelineId ? { pipeline_id: pipelineId } : {}),
+      },
       {
         onSuccess: () => {
           onOpenChange(false);

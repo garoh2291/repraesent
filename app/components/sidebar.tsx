@@ -1,5 +1,5 @@
 import { Link, useLocation, useNavigate } from "react-router";
-import { Fragment, useState } from "react";
+import { Fragment, useEffect, useState } from "react";
 import { cn } from "~/lib/utils";
 import { useTranslation } from "react-i18next";
 import {
@@ -24,6 +24,7 @@ import {
   Megaphone,
   Package,
   Plug,
+  Plus,
   Settings,
   ShoppingBag,
   Store,
@@ -44,6 +45,13 @@ import { usePilotFeatures } from "~/lib/feature-flags";
 import { useWorkspaceWpSite } from "~/lib/hooks/useWorkspaceWpSite";
 import { useStripeConnection } from "~/lib/hooks/useWorkspaceIntegrations";
 import { LanguageSwitcher } from "~/components/language-switcher";
+import { usePipelinesQuery } from "~/lib/hooks/usePipelines";
+import { CreatePipelineDialog } from "~/components/organism/create-pipeline-dialog";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "~/components/ui/collapsible";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -148,6 +156,105 @@ function NavLink({
     >
       {children}
     </Link>
+  );
+}
+
+/**
+ * The "Pipeline" nav entry: a collapsible listing every deal pipeline
+ * (Default first) plus an admin-only "New pipeline" row. Falls back to the
+ * old flat link while the pipelines query has nothing to show.
+ */
+function PipelineNav({ onClose }: { onClose?: () => void }) {
+  const { t } = useTranslation();
+  const location = useLocation();
+  const { currentWorkspace } = useAuthContext();
+  const isAdmin = currentWorkspace?.member_role === "admin";
+  const onPipeline = location.pathname.startsWith("/pipeline");
+  const [open, setOpen] = useState(onPipeline);
+  const [newOpen, setNewOpen] = useState(false);
+  const pipelinesQuery = usePipelinesQuery();
+  const pipelines = pipelinesQuery.data ?? [];
+
+  // Landing anywhere under /pipeline reveals the list.
+  useEffect(() => {
+    if (onPipeline) setOpen(true);
+  }, [onPipeline]);
+
+  if (!pipelinesQuery.isSuccess || pipelines.length === 0) {
+    return (
+      <NavLink to="/pipeline" isActive={onPipeline} onClick={onClose}>
+        <Columns3 className="h-4 w-4 shrink-0" />
+        {t("nav.pipeline", { defaultValue: "Pipeline" })}
+      </NavLink>
+    );
+  }
+
+  const defaultPipeline = pipelines.find((p) => p.is_default) ?? pipelines[0];
+  const activeParam =
+    location.pathname === "/pipeline"
+      ? new URLSearchParams(location.search).get("p")
+      : undefined;
+
+  return (
+    <Collapsible open={open} onOpenChange={setOpen}>
+      {/* Toggles only — never closes the mobile sheet and never navigates. */}
+      <CollapsibleTrigger asChild>
+        <button
+          type="button"
+          className={cn(
+            "group flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-[13px] font-medium",
+            "border-l-2 transition-all duration-150",
+            onPipeline && !open
+              ? "border-amber-400 bg-amber-400/10 text-amber-300"
+              : onPipeline
+                ? "border-transparent text-amber-300/90 hover:bg-white/5"
+                : "border-transparent text-white/45 hover:bg-white/5 hover:text-white/75",
+          )}
+        >
+          <Columns3 className="h-4 w-4 shrink-0" />
+          <span className="flex-1 text-left">
+            {t("nav.pipeline", { defaultValue: "Pipeline" })}
+          </span>
+          <ChevronDown className="h-3.5 w-3.5 shrink-0 text-white/30 transition-transform duration-200 group-data-[state=open]:rotate-180" />
+        </button>
+      </CollapsibleTrigger>
+      <CollapsibleContent className="space-y-0.5 pt-0.5">
+        {pipelines.map((p) => {
+          const isDefault = p.id === defaultPipeline?.id;
+          const isActive =
+            activeParam !== undefined &&
+            (activeParam ?? null) === (isDefault ? null : p.id);
+          return (
+            <NavLink
+              key={p.id}
+              to={isDefault ? "/pipeline" : `/pipeline?p=${p.id}`}
+              isActive={isActive}
+              onClick={onClose}
+              className="ml-5"
+            >
+              <span className="truncate">{p.name}</span>
+              <span className="ml-auto text-[10px] tabular-nums text-white/25">
+                {p.deal_count}
+              </span>
+            </NavLink>
+          );
+        })}
+        {isAdmin && (
+          <button
+            type="button"
+            onClick={() => setNewOpen(true)}
+            className={cn(
+              "ml-5 flex w-[calc(100%-1.25rem)] items-center gap-2.5 rounded-lg px-3 py-2 text-[13px] font-medium",
+              "border-l-2 border-transparent text-white/45 transition-all duration-150 hover:bg-white/5 hover:text-white/75",
+            )}
+          >
+            <Plus className="h-3.5 w-3.5 shrink-0" />
+            {t("nav.newPipeline", { defaultValue: "New pipeline" })}
+          </button>
+        )}
+      </CollapsibleContent>
+      <CreatePipelineDialog open={newOpen} onOpenChange={setNewOpen} />
+    </Collapsible>
   );
 }
 
@@ -523,14 +630,7 @@ export function Sidebar({
                           <Mail className="h-4 w-4 shrink-0" />
                           {t("nav.mail", { defaultValue: "Mail" })}
                         </NavLink>
-                        <NavLink
-                          to="/pipeline"
-                          isActive={location.pathname.startsWith("/pipeline")}
-                          onClick={onClose}
-                        >
-                          <Columns3 className="h-4 w-4 shrink-0" />
-                          {t("nav.pipeline", { defaultValue: "Pipeline" })}
-                        </NavLink>
+                        <PipelineNav onClose={onClose} />
                         <NavLink
                           to="/tasks"
                           isActive={location.pathname === "/tasks"}

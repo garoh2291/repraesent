@@ -44,7 +44,7 @@ import {
 } from "~/lib/utils/format";
 import { getLeadAnalytics, type LeadAnalyticsPeriod } from "~/lib/api/leads";
 import { getDeals, type DealListItem } from "~/lib/api/deals";
-import { useDealStages } from "~/lib/hooks/usePipelineStages";
+import { useDealStageLookup } from "~/lib/hooks/usePipelineStages";
 import { getAllTasks, type Task, type TaskStatus } from "~/lib/api/tasks";
 import {
   getWorkspacePlausibleStats,
@@ -961,7 +961,8 @@ function sumDealValue(deals: DealListItem[]): number {
 function DealsSummarySection() {
   const { t } = useTranslation();
   const { currentWorkspace } = useAuthContext();
-  const { byKey: dealStagesByKey } = useDealStages();
+  // Deals here span every pipeline, so the lookup resolves per deal.
+  const { resolve: resolveDealStage } = useDealStageLookup();
 
   const hasAccess =
     currentWorkspace?.services?.some(
@@ -988,11 +989,11 @@ function DealsSummarySection() {
     for (const d of data?.data ?? []) {
       // Unknown keys (stage deleted from config) count as open — better than
       // vanishing from the summary.
-      const category = dealStagesByKey.get(d.stage)?.category ?? "open";
+      const category = resolveDealStage(d.pipeline_id, d.stage)?.category ?? "open";
       if (category === "open" || category === "won") acc[category].push(d);
     }
     return acc;
-  }, [data?.data, dealStagesByKey]);
+  }, [data?.data, resolveDealStage]);
 
   if (!hasAccess) return null;
 

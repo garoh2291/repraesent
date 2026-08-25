@@ -8,23 +8,34 @@ import { useDebounce } from "~/lib/hooks/useDebounce";
 import { useSearchShortcut } from "~/lib/hooks/useSearchShortcut";
 import { useCanEditLeads } from "~/lib/hooks/useCanEditLeads";
 import {
+  deleteDeal,
   getDeals,
+  moveDealPipeline,
   patchDeal,
   type DealListItem,
 } from "~/lib/api/deals";
 import {
+  moveDealBetweenPipelinesInLists,
   patchDealInLists,
+  removeDealFromLists,
   restoreSnapshots,
   type ListSnapshots,
 } from "~/lib/deals/optimistic";
 import { useDealStages } from "~/lib/hooks/usePipelineStages";
 import {
+  useDeletePipeline,
+  usePipelinesQuery,
+  useUpdatePipeline,
+} from "~/lib/hooks/usePipelines";
+import {
   DEFAULT_DEAL_SORT,
   isDealSortMode,
   type DealSortMode,
 } from "~/lib/deals/deal-sort";
+import { extractErrorMessage } from "~/lib/api/axios-instance";
 import { DealsPipelineKanban } from "~/components/organism/deals-pipeline-kanban";
 import { CreateDealDialog } from "~/components/organism/create-deal-dialog";
+import { Badge } from "~/components/ui/badge";
 import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
 import {
@@ -34,7 +45,23 @@ import {
   SelectTrigger,
   SelectValue,
 } from "~/components/ui/select";
-import { ArrowUpDown, Plus, X } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "~/components/ui/dropdown-menu";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "~/components/ui/alert-dialog";
+import { ArrowUpDown, MoreHorizontal, Plus, Trash2, X } from "lucide-react";
 import { toast } from "sonner";
 
 export function meta() {
@@ -60,7 +87,6 @@ export default function PipelinePage() {
     : DEFAULT_DEAL_SORT;
   const debouncedSearch = useDebounce(search, 300);
   const { ref: searchInputRef, withHint } = useSearchShortcut();
-  const { byKey: dealStagesByKey } = useDealStages();
 
   const [newOpen, setNewOpen] = useState(false);
   const [newDealPrefillContactId, setNewDealPrefillContactId] = useState<
@@ -72,6 +98,46 @@ export default function PipelinePage() {
       (s) => s.service_type === "lead-form" || s.service_slug === "lead-form",
     ) ?? false;
 
+  const isAdmin = currentWorkspace?.member_role === "admin";
+
+  // Which pipeline's board this is: ?p=<id>, or the Default pipeline.
+  const pipelineParam = searchParams.get("p");
+  const pipelinesQuery = usePipelinesQuery();
+  const pipelines = useMemo(
+    () => pipelinesQuery.data ?? [],
+    [pipelinesQuery.data],
+  );
+  const defaultPipeline = pipelines.find((p) => p.is_default) ?? pipelines[0];
+  const currentPipeline = pipelineParam
+    ? pipelines.find((p) => p.id === pipelineParam)
+    : defaultPipeline;
+
+  // A stale/deleted ?p= falls back to the Default board. Only once the list
+  // is settled — right after creating a pipeline we navigate to its id while
+  // the invalidated query is still refetching, and stripping then would
+  // bounce the user back to Default.
+  useEffect(() => {
+    if (
+      pipelinesQuery.isSuccess &&
+      !pipelinesQuery.isFetching &&
+      pipelineParam &&
+      !currentPipeline
+    ) {
+      const next = new URLSearchParams(searchParams);
+      next.delete("p");
+      setSearchParams(next, { replace: true });
+    }
+  }, [
+    pipelinesQuery.isSuccess,
+    pipelinesQuery.isFetching,
+    pipelineParam,
+    currentPipeline,
+    searchParams,
+    setSearchParams,
+  ]);
+
+  const { byKey: dealStagesByKey } = useDealStages(currentPipeline?.id);
+
   const workspaceQuery = useQuery({
     queryKey: ["workspace-detail"],
     queryFn: () => getWorkspaceDetail(),
@@ -79,15 +145,21 @@ export default function PipelinePage() {
   });
 
   const dealsQuery = useQuery({
-    queryKey: ["deals-pipeline", debouncedSearch, assignedTo || undefined],
+    queryKey: [
+      "deals-pipeline",
+      currentPipeline?.id,
+      debouncedSearch,
+      assignedTo || undefined,
+    ],
     queryFn: () =>
       getDeals({
         page: 1,
         limit: 500,
         search: debouncedSearch || undefined,
         assigned_to: assignedTo || undefined,
+        pipeline_id: currentPipeline?.id,
       }),
-    enabled: hasAccess && !!currentWorkspace,
+    enabled: hasAccess && !!currentWorkspace && !!currentPipeline,
     refetchOnMount: true,
   });
 
@@ -122,6 +194,84 @@ export default function PipelinePage() {
       void queryClient.invalidateQueries({ queryKey: ["deal"] });
     },
   });
+
+  // Right-click card actions — both fully optimistic against every cached
+  // list, mirroring the drag-to-stage path.
+  const movePipelineMutation = useMutation({
+    mutationFn: ({
+      dealId,
+      targetPipelineId,
+    }: {
+      dealId: string;
+      targetPipelineId: string;
+      snapshots: Snapshots;
+    }) => moveDealPipeline(dealId, targetPipelineId),
+    onError: (_err, vars) => {
+      rollbackSnapshots(vars.snapshots);
+      toast.error(
+        t("pipeline.errors.moveToPipelineFailed", {
+          defaultValue: "Could not move deal.",
+        }),
+      );
+    },
+    onSuccess: (_res, vars) => {
+      const target = pipelines.find((p) => p.id === vars.targetPipelineId);
+      toast.success(
+        t("pipeline.movedToPipeline", {
+          defaultValue: "Moved to “{{name}}”.",
+          name: target?.name ?? "",
+        }),
+      );
+    },
+    onSettled: () => {
+      void queryClient.invalidateQueries({ queryKey: ["deals-pipeline"] });
+      void queryClient.invalidateQueries({ queryKey: ["contact-deals"] });
+      void queryClient.invalidateQueries({ queryKey: ["deal"] });
+      void queryClient.invalidateQueries({ queryKey: ["pipelines"] });
+    },
+  });
+
+  const onMoveToPipeline = (dealId: string, targetPipelineId: string) => {
+    if (!currentPipeline || targetPipelineId === currentPipeline.id) return;
+    void queryClient.cancelQueries({ queryKey: ["deals-pipeline"] });
+    const snapshots = moveDealBetweenPipelinesInLists(
+      queryClient,
+      dealId,
+      currentPipeline.id,
+      targetPipelineId,
+    );
+    movePipelineMutation.mutate({ dealId, targetPipelineId, snapshots });
+  };
+
+  const deleteDealMutation = useMutation({
+    mutationFn: ({ dealId }: { dealId: string; snapshots: Snapshots }) =>
+      deleteDeal(dealId),
+    onError: (_err, vars) => {
+      rollbackSnapshots(vars.snapshots);
+      toast.error(
+        t("pipeline.errors.deleteFailed", {
+          defaultValue: "Could not delete deal.",
+        }),
+      );
+    },
+    onSuccess: () => {
+      toast.success(
+        t("pipeline.dealDeleted", { defaultValue: "Deal removed." }),
+      );
+    },
+    onSettled: () => {
+      void queryClient.invalidateQueries({ queryKey: ["deals-pipeline"] });
+      void queryClient.invalidateQueries({ queryKey: ["contact-deals"] });
+      void queryClient.invalidateQueries({ queryKey: ["deal"] });
+      void queryClient.invalidateQueries({ queryKey: ["pipelines"] });
+    },
+  });
+
+  const onDeleteDeal = (dealId: string) => {
+    void queryClient.cancelQueries({ queryKey: ["deals-pipeline"] });
+    const snapshots = removeDealFromLists(queryClient, dealId);
+    deleteDealMutation.mutate({ dealId, snapshots });
+  };
 
   useEffect(() => {
     if (searchParams.get("newDeal") === "1") {
@@ -162,6 +312,76 @@ export default function PipelinePage() {
     patchStageMutation.mutate({ dealId, stage, snapshots });
   };
 
+  // Pipeline rename / description / delete (admins).
+  const updatePipelineMutation = useUpdatePipeline();
+  const deletePipelineMutation = useDeletePipeline();
+  const [renaming, setRenaming] = useState(false);
+  const [draftName, setDraftName] = useState("");
+  const [draftDescription, setDraftDescription] = useState("");
+  const [deleteOpen, setDeleteOpen] = useState(false);
+
+  useEffect(() => {
+    setRenaming(false);
+    setDraftName(currentPipeline?.name ?? "");
+    setDraftDescription(currentPipeline?.description ?? "");
+  }, [currentPipeline?.id, currentPipeline?.name, currentPipeline?.description]);
+
+  const savePipeline = (payload: {
+    name?: string;
+    description?: string | null;
+  }) => {
+    if (!currentPipeline) return;
+    updatePipelineMutation.mutate(
+      { pipelineId: currentPipeline.id, payload },
+      {
+        onError: (err) =>
+          toast.error(
+            extractErrorMessage(err) ||
+              t("pipeline.errors.pipelineSaveFailed", {
+                defaultValue: "Could not save pipeline.",
+              }),
+          ),
+      },
+    );
+  };
+
+  const commitRename = () => {
+    setRenaming(false);
+    const trimmed = draftName.trim();
+    if (!currentPipeline || !trimmed || trimmed === currentPipeline.name) {
+      setDraftName(currentPipeline?.name ?? "");
+      return;
+    }
+    savePipeline({ name: trimmed });
+  };
+
+  const commitDescription = () => {
+    if (!currentPipeline) return;
+    const trimmed = draftDescription.trim();
+    if (trimmed === (currentPipeline.description ?? "")) return;
+    savePipeline({ description: trimmed === "" ? null : trimmed });
+  };
+
+  const confirmDelete = () => {
+    if (!currentPipeline || currentPipeline.is_default) return;
+    deletePipelineMutation.mutate(currentPipeline.id, {
+      onSuccess: () => {
+        setDeleteOpen(false);
+        toast.success(
+          t("pipeline.pipelineDeleted", { defaultValue: "Pipeline deleted." }),
+        );
+        void navigate("/pipeline");
+      },
+      onError: (err) =>
+        toast.error(
+          extractErrorMessage(err) ||
+            t("pipeline.errors.pipelineDeleteFailed", {
+              defaultValue: "Could not delete pipeline.",
+            }),
+        ),
+    });
+  };
+
   const membersForSelect = useMemo(
     () =>
       members.map((m) => ({
@@ -189,16 +409,107 @@ export default function PipelinePage() {
     <div className="flex flex-col min-h-[calc(100vh-8rem)] p-4 sm:p-6 gap-4 sm:gap-6 app-fade-in">
       {/* Header */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between shrink-0 app-fade-up">
-        <div>
-          <h1 className="text-xl sm:text-2xl font-semibold text-foreground tracking-tight">
-            {t("nav.pipeline", { defaultValue: "Pipeline" })}
-          </h1>
-          <p className="text-sm text-muted-foreground mt-0.5">
-            {t("pipeline.capHint", {
-              defaultValue:
-                "Showing up to 500 deals. Refine search or assignee if needed.",
-            })}
-          </p>
+        <div className="min-w-0">
+          <div className="flex items-center gap-2">
+            {renaming && currentPipeline ? (
+              <Input
+                value={draftName}
+                onChange={(e) => setDraftName(e.target.value)}
+                onBlur={commitRename}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") (e.target as HTMLInputElement).blur();
+                  if (e.key === "Escape") {
+                    setDraftName(currentPipeline.name);
+                    setRenaming(false);
+                  }
+                }}
+                maxLength={80}
+                autoFocus
+                className="h-9 w-[240px] text-xl sm:text-2xl font-semibold tracking-tight px-2"
+              />
+            ) : (
+              <h1 className="text-xl sm:text-2xl font-semibold text-foreground tracking-tight truncate">
+                {currentPipeline?.name ??
+                  t("nav.pipeline", { defaultValue: "Pipeline" })}
+              </h1>
+            )}
+            {currentPipeline?.is_default && (
+              <Badge
+                variant="outline"
+                className="text-[10px] font-medium text-muted-foreground shrink-0"
+              >
+                {t("pipeline.defaultPipelineBadge", {
+                  defaultValue: "Default",
+                })}
+              </Badge>
+            )}
+            {isAdmin && currentPipeline && !renaming && (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="h-8 w-8 p-0 shrink-0 text-muted-foreground"
+                    aria-label={t("pipeline.pipelineMenu", {
+                      defaultValue: "Pipeline actions",
+                    })}
+                  >
+                    <MoreHorizontal className="h-4 w-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="start">
+                  <DropdownMenuItem
+                    onClick={() => {
+                      setDraftName(currentPipeline.name);
+                      setRenaming(true);
+                    }}
+                  >
+                    {t("pipeline.renamePipeline", { defaultValue: "Rename" })}
+                  </DropdownMenuItem>
+                  {!currentPipeline.is_default && (
+                    <DropdownMenuItem
+                      className="text-destructive focus:text-destructive"
+                      onClick={() => setDeleteOpen(true)}
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                      {t("pipeline.deletePipeline", {
+                        defaultValue: "Delete pipeline",
+                      })}
+                    </DropdownMenuItem>
+                  )}
+                </DropdownMenuContent>
+              </DropdownMenu>
+            )}
+          </div>
+          {isAdmin && currentPipeline ? (
+            <Input
+              value={draftDescription}
+              onChange={(e) => setDraftDescription(e.target.value)}
+              onBlur={commitDescription}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") (e.target as HTMLInputElement).blur();
+                if (e.key === "Escape")
+                  setDraftDescription(currentPipeline.description ?? "");
+              }}
+              maxLength={500}
+              placeholder={t("pipeline.addDescription", {
+                defaultValue: "Add a description…",
+              })}
+              className="mt-0.5 h-7 w-full max-w-md border-transparent bg-transparent px-0 text-sm text-muted-foreground shadow-none hover:border-border focus-visible:border-border focus-visible:px-2 transition-all"
+            />
+          ) : currentPipeline?.description ? (
+            <p className="text-sm text-muted-foreground mt-0.5">
+              {currentPipeline.description}
+            </p>
+          ) : (
+            <p className="text-sm text-muted-foreground mt-0.5">
+              {t("pipeline.capHint", {
+                defaultValue:
+                  "Showing up to 500 deals. Refine search or assignee if needed.",
+              })}
+            </p>
+          )}
         </div>
 
         {canEdit ? (
@@ -312,11 +623,15 @@ export default function PipelinePage() {
       <div className="flex-1 min-h-0 flex flex-col">
         <DealsPipelineKanban
           deals={deals}
-          isLoading={dealsQuery.isLoading}
+          isLoading={!currentPipeline || dealsQuery.isLoading}
           onStageChange={onStageChange}
           sortMode={sortMode}
           isUpdating={false}
           canEdit={canEdit}
+          pipelineId={currentPipeline?.id}
+          pipelines={pipelines}
+          onMoveToPipeline={onMoveToPipeline}
+          onDeleteDeal={onDeleteDeal}
           onDealSelect={(id) => navigate(`/pipeline/${id}`)}
         />
       </div>
@@ -326,7 +641,46 @@ export default function PipelinePage() {
         onOpenChange={setNewOpen}
         prefillContactId={newDealPrefillContactId}
         canCreate={canEdit}
+        pipelineId={currentPipeline?.id}
       />
+
+      <AlertDialog open={deleteOpen} onOpenChange={setDeleteOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              {t("pipeline.deletePipelineTitle", {
+                defaultValue: "Delete “{{name}}”?",
+                name: currentPipeline?.name ?? "",
+              })}
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              {t("pipeline.deletePipelineWarning", {
+                defaultValue:
+                  "{{count}} deals will move to “{{target}}”. This pipeline’s stages are deleted.",
+                count: currentPipeline?.deal_count ?? 0,
+                target: defaultPipeline?.name ?? "Default",
+              })}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>
+              {t("common.cancel", { defaultValue: "Cancel" })}
+            </AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              disabled={deletePipelineMutation.isPending}
+              onClick={(e) => {
+                e.preventDefault();
+                confirmDelete();
+              }}
+            >
+              {t("pipeline.deletePipeline", {
+                defaultValue: "Delete pipeline",
+              })}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

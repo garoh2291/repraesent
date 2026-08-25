@@ -46,11 +46,21 @@ export interface EntityStages {
   isLoading: boolean;
 }
 
-function useEntityStages(entity: StageEntity): EntityStages {
+function useEntityStages(
+  entity: StageEntity,
+  pipelineId?: string | null,
+): EntityStages {
   const query = usePipelineStagesQuery();
   const data = query.data;
   return useMemo(() => {
-    const all = (data ?? []).filter((s) => s.entity === entity);
+    let all = (data ?? []).filter((s) => s.entity === entity);
+    if (entity === "deal") {
+      // Deal stages arrive for every pipeline, Default pipeline's first —
+      // scope to one board. Omitted pipelineId = the Default pipeline, read
+      // off the first row (no extra pipelines fetch needed).
+      const targetPipelineId = pipelineId ?? all[0]?.pipeline_id ?? null;
+      all = all.filter((s) => s.pipeline_id === targetPipelineId);
+    }
     return {
       all,
       visible: all.filter((s) => !s.is_hidden),
@@ -58,15 +68,57 @@ function useEntityStages(entity: StageEntity): EntityStages {
       byKey: new Map(all.map((s) => [s.key, s])),
       isLoading: query.isLoading,
     };
-  }, [data, entity, query.isLoading]);
+  }, [data, entity, pipelineId, query.isLoading]);
 }
 
 export function useLeadStages(): EntityStages {
   return useEntityStages("lead");
 }
 
-export function useDealStages(): EntityStages {
-  return useEntityStages("deal");
+/**
+ * One pipeline's deal stages. Omitted pipelineId = the Default pipeline.
+ */
+export function useDealStages(pipelineId?: string | null): EntityStages {
+  return useEntityStages("deal", pipelineId);
+}
+
+export interface DealStageLookup {
+  /** All deal stages of every pipeline, keyed `${pipeline_id}:${key}`. */
+  byPipelineKey: Map<string, PipelineStage>;
+  /**
+   * Resolve a deal's stage row. Falls back to any pipeline's stage with the
+   * same key (labels usually agree for the seeded keys), then undefined —
+   * callers keep their existing humanize/color fallbacks.
+   */
+  resolve: (
+    pipelineId: string | null | undefined,
+    key: string,
+  ) => PipelineStage | undefined;
+  isLoading: boolean;
+}
+
+/**
+ * Cross-pipeline stage lookup for surfaces that render deals from several
+ * pipelines at once (badges on contact pages, the home summary).
+ */
+export function useDealStageLookup(): DealStageLookup {
+  const query = usePipelineStagesQuery();
+  const data = query.data;
+  return useMemo(() => {
+    const deals = (data ?? []).filter((s) => s.entity === "deal");
+    const byPipelineKey = new Map(
+      deals.map((s) => [`${s.pipeline_id}:${s.key}`, s]),
+    );
+    const byKey = new Map<string, PipelineStage>();
+    for (const s of deals) if (!byKey.has(s.key)) byKey.set(s.key, s);
+    return {
+      byPipelineKey,
+      resolve: (pipelineId, key) =>
+        (pipelineId ? byPipelineKey.get(`${pipelineId}:${key}`) : undefined) ??
+        byKey.get(key),
+      isLoading: query.isLoading,
+    };
+  }, [data, query.isLoading]);
 }
 
 /**
@@ -111,8 +163,11 @@ export function useReorderPipelineStages() {
   const workspaceId = getStoredWorkspaceId();
   const invalidate = useInvalidatePipelineStages();
   return useMutation({
-    mutationFn: (args: { entity: StageEntity; orderedIds: string[] }) =>
-      reorderPipelineStages(args.entity, args.orderedIds),
+    mutationFn: (args: {
+      entity: StageEntity;
+      orderedIds: string[];
+      pipelineId?: string;
+    }) => reorderPipelineStages(args.entity, args.orderedIds, args.pipelineId),
     // Optimistic column order — the settings list should not snap back while
     // the request is in flight.
     onMutate: async (args) => {

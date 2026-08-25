@@ -40,6 +40,8 @@ export interface DealListItem {
   status: DealStatus;
   value: string | null;
   stage: string;
+  /** The deal pipeline this deal's board belongs to. */
+  pipeline_id: string;
   won_at: string | null;
   lost_at: string | null;
   expected_close_date: string | null;
@@ -71,6 +73,8 @@ export interface GetDealsParams {
   search?: string;
   status?: DealStatus;
   stage?: string;
+  /** Scope to one deal pipeline; omitted = deals of every pipeline. */
+  pipeline_id?: string;
   assigned_to?: string;
   contact_id?: string;
 }
@@ -84,6 +88,7 @@ export async function getDeals(
   if (params.search) searchParams.set("search", params.search);
   if (params.status) searchParams.set("status", params.status);
   if (params.stage) searchParams.set("stage", params.stage);
+  if (params.pipeline_id) searchParams.set("pipeline_id", params.pipeline_id);
   if (params.assigned_to)
     searchParams.set("assigned_to", params.assigned_to);
   if (params.contact_id) searchParams.set("contact_id", params.contact_id);
@@ -294,6 +299,21 @@ export async function reorderDeal(
   return res.data;
 }
 
+/**
+ * Move a deal to another pipeline. The server remaps the stage by category
+ * (won→won, lost→lost, everything else→entry), so lifecycle status survives.
+ */
+export async function moveDealPipeline(
+  dealId: string,
+  pipelineId: string,
+): Promise<DealDetailResponse> {
+  const res = await apiClient.patch<DealDetailResponse>(
+    `/deals/${dealId}/pipeline`,
+    { pipeline_id: pipelineId },
+  );
+  return res.data;
+}
+
 export async function getDealContacts(
   dealId: string,
 ): Promise<DealContact[]> {
@@ -378,6 +398,8 @@ export async function setDealPrimaryContact(
 export interface CreateDealBody {
   title: string;
   stage?: string;
+  /** Pipeline to create the deal in; omitted = the Default pipeline. */
+  pipeline_id?: string;
   value?: number | null;
   contact_id?: string | null;
   assigned_to?: string | null;
