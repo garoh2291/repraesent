@@ -62,7 +62,9 @@
     "workflows": "Workflows",
     "stripeProducts": "Producten",
     "calendar": "Agenda",
-    "newPipeline": "Nieuwe pijplijn"
+    "newPipeline": "Nieuwe pijplijn",
+    "openaiAds": "OpenAI Ads",
+    "newBadge": "Nieuw"
   },
   "db_brand": {
     "subtitle": "Kies een retailer in de zijbalk om de Social Ads en Leads te bekijken.",
@@ -387,6 +389,9 @@
       "dropCsvError": "Sleep een CSV-bestand hierheen",
       "importedSuccess_one": "{{count}} lead succesvol geïmporteerd",
       "importedSuccess_other": "{{count}} leads succesvol geïmporteerd"
+    },
+    "source": {
+      "openaiAds": "OpenAI Ads"
     }
   },
   "pipeline": {
@@ -973,7 +978,10 @@
       "oneCalImg2": "caldav-onecal-form.png — Voer de server-URL, gebruikersnaam en wachtwoord in",
       "oneCalImg3": "caldav-onecal-configure.png — Zet uw agenda aan en klik op Gereed",
       "oneCalImg4": "caldav-onecal-result.png — Uw afspraken verschijnen nu in OneCalendar"
-    }
+    },
+    "notConfiguredTitle": "Een boekingsagenda instellen",
+    "notConfiguredBody": "Met afspraken boeken klanten u via een openbare pagina. Koppel een agenda om dit te activeren.",
+    "notConfiguredCta": "Naar de agenda's"
   },
   "products": {
     "metaTitle": "Facturatie",
@@ -1024,7 +1032,8 @@
       "integrations": "Integraties",
       "calendars": "Agenda's",
       "pipelines": "Pipelinefasen",
-      "notifications": "Meldingen"
+      "notifications": "Meldingen",
+      "openaiAds": "OpenAI Ads"
     },
     "bcc": {
       "metaTitle": "E-maillogging",
@@ -1444,6 +1453,60 @@
       "metaDescription": "Fasen van je lead- en dealpipelines hernoemen, herschikken, kleuren, verbergen of toevoegen.",
       "pipelinePickerLabel": "Pijplijn",
       "pipelinePickerHint": "Elke pijplijn heeft zijn eigen dealfasen."
+    },
+    "openaiAds": {
+      "metaTitle": "OpenAI Ads",
+      "metaDescription": "Verbind je OpenAI Ads-account en zet conversietracking aan.",
+      "sectionLabel": "Advertentieaccount",
+      "sectionDescription": "Verbind je OpenAI Ads-account met de API-sleutel uit ads.openai.com → Settings.",
+      "cardTitle": "OpenAI Ads",
+      "statusConnected": "Verbonden",
+      "statusRevoked": "Sleutel geweigerd",
+      "notConnectedHint": "Maak een API-sleutel aan in de instellingen van je Ads Manager en plak die hier.",
+      "lastError": "Laatste aanroep mislukt: {{error}}",
+      "keyLabel": "Ads-API-sleutel",
+      "rotateLabel": "API-sleutel vervangen",
+      "keyPlaceholder": "Plak de sleutel uit ads.openai.com → Settings",
+      "keyHelp": "De sleutel wordt vóór het opslaan gecontroleerd tegen je advertentieaccount en versleuteld opgeslagen.",
+      "connect": "Verbinden",
+      "rotate": "Vervangen",
+      "test": "Sleutel testen",
+      "testOk": "Sleutel werkt — account {{name}}",
+      "connected": "Verbonden met {{name}}",
+      "disconnected": "OpenAI Ads losgekoppeld",
+      "disconnect": "Loskoppelen",
+      "disconnectTitle": "OpenAI Ads loskoppelen?",
+      "disconnectDescription": "Het dashboard werkt dan niet meer en er worden geen conversie-events meer verzonden. De sleutel zelf blijft geldig bij OpenAI totdat je hem in de Ads Manager rouleert.",
+      "adminOnly": "Alleen workspace-admins kunnen de OpenAI Ads-verbinding beheren.",
+      "conversions": {
+        "sectionLabel": "Conversietracking",
+        "sectionDescription": "Stuur leads en boekingen terug naar OpenAI zodat je campagnes erop kunnen optimaliseren.",
+        "enableTitle": "Conversietracking aanzetten",
+        "enableBody": "Maakt een meetpixel en conversie-events (lead aangemaakt, afspraak geboekt) aan op je advertentieaccount. Je gehoste formulieren en boekingspagina's rapporteren automatisch.",
+        "enable": "Aanzetten",
+        "setupDone": "Conversietracking staat aan",
+        "active": "Actief",
+        "pixelId": "Pixel",
+        "pending": "Wacht op verzending",
+        "sent": "Verzonden",
+        "failed": "Mislukt of verlopen",
+        "snippetTitle": "Pixel voor je eigen website",
+        "snippetBody": "Repraesent-formulieren en boekingspagina's rapporteren automatisch. Plak dit in de <head> van externe landingspagina's zodat ook die bezoeken worden gemeten.",
+        "copy": "Kopiëren",
+        "snippetCopied": "Snippet gekopieerd",
+        "debugShow": "Recente events controleren",
+        "debugHide": "Recente events verbergen",
+        "debugEmpty": "OpenAI heeft de afgelopen 15 minuten geen events ontvangen. Verstuur een testformulier en controleer opnieuw.",
+        "snippetCsp": "Stuurt je site een Content-Security-Policy-header, sta dan de OpenAI-hosts toe — voeg bzrcdn.openai.com toe aan script-src en bzr.openai.com aan connect-src — anders blokkeert de browser de pixel. Gebruik je een cookiebanner? Voeg het snippet daar toe als marketingscript in plaats van het direct te plakken."
+      },
+      "howTo": {
+        "title": "Zo krijg je een API-sleutel",
+        "step1": "Log in op ads.openai.com en registreer je als adverteerder (OpenAI beoordeelt nieuwe accounts).",
+        "step2": "Rond de accountinstelling af in de Ads Manager: betaalgegevens en merklogo.",
+        "step3": "Open Settings → API keys in de Ads Manager en maak een sleutel — hij wordt maar één keer getoond.",
+        "step4": "Plak hem hierboven en klik op Verbinden.",
+        "helpLink": "Ads Manager-overzicht (OpenAI Help Center)"
+      }
     }
   },
   "booking": {
@@ -4394,7 +4457,8 @@
     "industrySearch": "Zoek een branche…",
     "industryEmpty": "Geen branche gevonden.",
     "industryOverrides": {
-      "partner_house": "keukenpartnerhuis"
+      "partner_house": "keukenpartnerhuis",
+      "electrician": "elektricien"
     },
     "loading": {
       "title": "Uw live demo wordt gebouwd",
@@ -4477,5 +4541,157 @@
     "florist_other": "bloemisten",
     "plumber_one": "loodgieter",
     "plumber_other": "loodgieters"
+  },
+  "openaiAds": {
+    "metaTitle": "OpenAI Ads",
+    "metaDescription": "Campagnes, uitgaven en conversies uit je OpenAI Ads-account.",
+    "accountSubtitle": "Verbonden account: {{name}}",
+    "newCampaign": "Nieuwe campagne",
+    "revokedBanner": "OpenAI heeft de opgeslagen API-sleutel geweigerd. Verbind opnieuw met een verse sleutel uit je Ads Manager.",
+    "revokedBannerCta": "Instellingen openen",
+    "rangeDays": "{{count}} dagen",
+    "spendOverTime": "Uitgaven in de tijd",
+    "noData": "Nog geen leveringsdata voor deze periode.",
+    "campaignsTitle": "Campagnes",
+    "searchPlaceholder": "Campagnes zoeken…",
+    "truncated": "Dit account heeft meer campagnes dan er in één keer getoond kunnen worden — de eerste pagina's worden getoond.",
+    "noSearchResults": "Geen campagnes gevonden voor deze zoekopdracht.",
+    "noCampaigns": "Nog geen campagnes. Maak de eerste aan om advertenties te tonen.",
+    "noAdGroups": "Nog geen advertentiegroepen in deze campagne.",
+    "noAds": "Nog geen advertenties in deze groep.",
+    "maxBid": "max. bod",
+    "budgetUpdated": "Budget bijgewerkt",
+    "editBudgetTitle": "Looptijdbudget bewerken",
+    "editBudgetDescription": "Het totaal dat deze campagne over haar hele looptijd mag uitgeven. Huidig: {{current}}",
+    "budgetLabel": "Bedrag",
+    "budgetInvalid": "Voer een bedrag van minimaal 1 in.",
+    "archiveTitle": "'{{name}}' archiveren?",
+    "archiveDescription": "Gearchiveerde items worden niet meer getoond en kunnen hier niet opnieuw worden geactiveerd.",
+    "metrics": {
+      "spend": "Uitgaven",
+      "impressions": "Vertoningen",
+      "clicks": "Klikken",
+      "ctr": "CTR",
+      "cpc": "CPC",
+      "conversions": "Conversies"
+    },
+    "table": {
+      "name": "Campagne",
+      "status": "Status",
+      "bidding": "Biedtype",
+      "budget": "Looptijdbudget",
+      "expand": "Advertentiegroepen tonen",
+      "expandAds": "Advertenties tonen"
+    },
+    "status": {
+      "active": "Actief",
+      "paused": "Gepauzeerd",
+      "archived": "Gearchiveerd"
+    },
+    "bidding": {
+      "impressions": "Vertoningen",
+      "clicks": "Klikken",
+      "conversions": "Conversies"
+    },
+    "billing": {
+      "impression": "Vertoning",
+      "click": "Klik"
+    },
+    "review": {
+      "in_review": "In beoordeling",
+      "rejected": "Afgekeurd",
+      "approved": "Goedgekeurd"
+    },
+    "actions": {
+      "menu": "Acties",
+      "activate": "Activeren",
+      "pause": "Pauzeren",
+      "archive": "Archiveren",
+      "editBudget": "Budget bewerken",
+      "activateDone": "Geactiveerd",
+      "pauseDone": "Gepauzeerd",
+      "archiveDone": "Gearchiveerd"
+    },
+    "create": {
+      "metaTitle": "Nieuwe campagne",
+      "title": "Nieuwe campagne",
+      "back": "Terug naar campagnes",
+      "adminOnly": "Alleen workspace-admins kunnen campagnes aanmaken.",
+      "steps": {
+        "campaign": "Campagne",
+        "adGroup": "Advertentiegroep",
+        "ad": "Advertentie"
+      },
+      "campaignName": "Campagnenaam",
+      "campaignNamePlaceholder": "bijv. Herfst-leadcampagne",
+      "budget": "Looptijdbudget",
+      "budgetHelp": "Het totaal dat de campagne over haar hele looptijd mag uitgeven. Je kunt het later verhogen.",
+      "bidding": "Optimaliseren voor",
+      "biddingImmutable": "Kan na het aanmaken van de campagne niet meer worden gewijzigd. Bieden op conversies vereist eerst conversietracking in de instellingen.",
+      "next": "Doorgaan",
+      "adGroupName": "Naam advertentiegroep",
+      "adGroupDefaultName": "{{campaign}} — advertentiegroep 1",
+      "billingEvent": "Betalen per",
+      "maxBid": "Maximaal bod",
+      "maxBidHelpImpression": "Het maximum dat je per vertoning betaalt.",
+      "maxBidHelpClick": "Het maximum dat je per klik betaalt.",
+      "hints": "Doelgroephints (optioneel)",
+      "hintsPlaceholder": "Vrije tekst, één hint per regel — bijv. eigenaren van kleine bedrijven in Duitsland",
+      "adName": "Advertentienaam (intern)",
+      "adTitle": "Titel",
+      "adTitlePlaceholder": "Wordt als kaartkop in ChatGPT getoond",
+      "adBody": "Beschrijving",
+      "targetUrl": "Landingspagina-URL",
+      "targetUrlHelp": "OpenAI voegt ?oppref=… toe aan deze URL. Met conversietracking aan worden leads van deze pagina automatisch toegewezen.",
+      "image": "Afbeelding (optioneel)",
+      "imageChoose": "Kies PNG of JPEG",
+      "price": "Prijstekst (optioneel)",
+      "pricePlaceholder": "bijv. vanaf € 29/maand",
+      "createAd": "Advertentie aanmaken",
+      "doneTitle": "'{{name}}' is klaar",
+      "doneBody": "Alles is gepauzeerd aangemaakt, en de advertentie gaat eerst door de beoordeling van OpenAI. Activeer nu, of laat gepauzeerd en activeer later vanuit de campagnelijst.",
+      "keepPaused": "Gepauzeerd laten",
+      "activateNow": "Nu activeren",
+      "activated": "Campagne geactiveerd — hij loopt zodra de advertentie de beoordeling doorstaat"
+    },
+    "onboarding": {
+      "heroTitle": "Adverteer in ChatGPT",
+      "heroBody": "OpenAI Ads plaatst je campagnes in ChatGPT-antwoorden. Verbind je advertentieaccount en deze pagina wordt je dashboard — en elke lead uit je formulieren wordt automatisch teruggemeld aan OpenAI, zodat je campagnes leren wat werkt.",
+      "connectCta": "OpenAI Ads verbinden",
+      "adminOnly": "Vraag een workspace-admin om het account te verbinden via Instellingen → OpenAI Ads.",
+      "stepsTitle": "Zo stel je het in",
+      "pasteCta": "Instellingen openen",
+      "steps": {
+        "createAccount": {
+          "title": "Maak een adverteerdersaccount",
+          "body": "Log in op ads.openai.com met je OpenAI-account en registreer je als adverteerder. OpenAI beoordeelt nieuwe accounts voordat er advertenties getoond kunnen worden."
+        },
+        "setup": {
+          "title": "Rond de accountinstelling af",
+          "body": "Voeg in de Ads Manager betaalgegevens toe en upload je merklogo — zonder beide worden er geen advertenties getoond."
+        },
+        "issueKey": {
+          "title": "Maak een API-sleutel aan",
+          "body": "Open in de Ads Manager Settings → API keys en maak een sleutel aan. Hij hoort bij dit ene advertentieaccount en wordt maar één keer getoond — kopieer hem direct."
+        },
+        "paste": {
+          "title": "Plak de sleutel in Repraesent",
+          "body": "Voeg de sleutel toe via Instellingen → OpenAI Ads. Hij wordt vóór het opslaan gecontroleerd tegen je account en versleuteld opgeslagen."
+        }
+      },
+      "featuresTitle": "Dit krijg je na het verbinden",
+      "features": {
+        "metrics": "Uitgaven, klikken en conversies van elke campagne live, gewoon hier.",
+        "control": "Pauzeer, activeer en pas budgetten aan zonder de Ads Manager te openen.",
+        "create": "Maak campagnes, advertentiegroepen en advertenties via een begeleide flow.",
+        "conversions": "Leads en boekingen worden automatisch teruggemeld, zodat OpenAI erop optimaliseert."
+      },
+      "resourcesTitle": "Van OpenAI",
+      "resources": {
+        "adsManager": "OpenAI Ads Manager",
+        "helpCenter": "Ads Manager-overzicht (Help Center)",
+        "devDocs": "API-quickstart (OpenAI Developers)"
+      }
+    }
   }
 }

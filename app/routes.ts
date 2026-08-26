@@ -64,6 +64,9 @@ export default [
       route("calendar", "routes/calendar.tsx"),
       route("analytics", "routes/analytics.tsx"),
       route("social-ads", "routes/social-ads.tsx"),
+      // Live proxy over the workspace's connected OpenAI Ads account.
+      route("openai-ads", "routes/openai-ads.tsx"),
+      route("openai-ads/new", "routes/openai-ads.new.tsx"),
       route("sync", "routes/sync.tsx"),
       route("email", "routes/email.tsx"),
       route("tasks", "routes/tasks.tsx"),
@@ -80,6 +83,7 @@ export default [
         route("team", "routes/settings.team.tsx"),
         route("email-accounts", "routes/settings.email-accounts.tsx"),
         route("integrations", "routes/settings.integrations.tsx"),
+        route("openai-ads", "routes/settings.openai-ads.tsx"),
         route("notifications", "routes/settings.notifications.tsx"),
         route("calendars", "routes/settings.calendars.tsx"),
         route("bcc", "routes/settings.bcc.tsx"),

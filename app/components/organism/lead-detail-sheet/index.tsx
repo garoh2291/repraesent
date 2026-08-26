@@ -684,6 +684,11 @@ export function LeadInfoSection({
               <span className="text-xs text-muted-foreground">
                 {lead.source_label || lead.source_table || "—"}
               </span>
+              {metadata?.ad_platform === "openai" ? (
+                <span className="inline-flex items-center rounded-full border border-border bg-muted px-2 py-0.5 text-[10px] font-medium text-muted-foreground">
+                  {t("leads.source.openaiAds", { defaultValue: "OpenAI Ads" })}
+                </span>
+              ) : null}
             </FieldValue>
           </FieldRow>
 

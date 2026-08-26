@@ -62,7 +62,9 @@
     "workflows": "Workflows",
     "stripeProducts": "Produits",
     "calendar": "Calendrier",
-    "newPipeline": "Nouveau pipeline"
+    "newPipeline": "Nouveau pipeline",
+    "openaiAds": "OpenAI Ads",
+    "newBadge": "Nouveau"
   },
   "db_brand": {
     "subtitle": "Sélectionnez un revendeur dans la barre latérale pour afficher ses Social Ads et Leads.",
@@ -387,6 +389,9 @@
       "dropCsvError": "Veuillez déposer un fichier CSV",
       "importedSuccess_one": "{{count}} lead importé avec succès",
       "importedSuccess_other": "{{count}} leads importés avec succès"
+    },
+    "source": {
+      "openaiAds": "OpenAI Ads"
     }
   },
   "pipeline": {
@@ -973,7 +978,10 @@
       "oneCalImg2": "caldav-onecal-form.png — Saisissez l'URL du serveur, le nom d'utilisateur et le mot de passe",
       "oneCalImg3": "caldav-onecal-configure.png — Activez votre calendrier et cliquez sur Terminé",
       "oneCalImg4": "caldav-onecal-result.png — Vos rendez-vous apparaissent maintenant dans OneCalendar"
-    }
+    },
+    "notConfiguredTitle": "Configurer un calendrier de réservation",
+    "notConfiguredBody": "Les rendez-vous permettent à vos clients de réserver depuis une page publique. Connectez un calendrier pour l'activer.",
+    "notConfiguredCta": "Aller aux calendriers"
   },
   "products": {
     "metaTitle": "Facturation",
@@ -1024,7 +1032,8 @@
       "integrations": "Intégrations",
       "calendars": "Calendriers",
       "pipelines": "Étapes du pipeline",
-      "notifications": "Notifications"
+      "notifications": "Notifications",
+      "openaiAds": "OpenAI Ads"
     },
     "bcc": {
       "metaTitle": "Journalisation des e-mails",
@@ -1446,6 +1455,60 @@
       "metaDescription": "Renommer, réordonner, colorer, masquer ou ajouter les étapes de vos pipelines de leads et d'affaires.",
       "pipelinePickerLabel": "Pipeline",
       "pipelinePickerHint": "Chaque pipeline a ses propres étapes d’affaires."
+    },
+    "openaiAds": {
+      "metaTitle": "OpenAI Ads",
+      "metaDescription": "Connectez votre compte OpenAI Ads et activez le suivi des conversions.",
+      "sectionLabel": "Compte publicitaire",
+      "sectionDescription": "Connectez votre compte OpenAI Ads avec la clé API depuis ads.openai.com → Settings.",
+      "cardTitle": "OpenAI Ads",
+      "statusConnected": "Connecté",
+      "statusRevoked": "Clé refusée",
+      "notConnectedHint": "Générez une clé API dans les réglages de votre Ads Manager, puis collez-la ici.",
+      "lastError": "Dernier appel échoué : {{error}}",
+      "keyLabel": "Clé API Ads",
+      "rotateLabel": "Remplacer la clé API",
+      "keyPlaceholder": "Collez la clé depuis ads.openai.com → Settings",
+      "keyHelp": "La clé est vérifiée auprès de votre compte publicitaire avant d'être enregistrée, et elle est stockée chiffrée.",
+      "connect": "Connecter",
+      "rotate": "Remplacer",
+      "test": "Tester la clé",
+      "testOk": "La clé fonctionne — compte {{name}}",
+      "connected": "Connecté à {{name}}",
+      "disconnected": "OpenAI Ads déconnecté",
+      "disconnect": "Déconnecter",
+      "disconnectTitle": "Déconnecter OpenAI Ads ?",
+      "disconnectDescription": "Le tableau de bord cesse de fonctionner et les événements de conversion ne sont plus envoyés. La clé reste valide chez OpenAI jusqu'à sa rotation dans l'Ads Manager.",
+      "adminOnly": "Seuls les admins du workspace peuvent gérer la connexion OpenAI Ads.",
+      "conversions": {
+        "sectionLabel": "Suivi des conversions",
+        "sectionDescription": "Renvoyez les leads et les réservations à OpenAI pour que vos campagnes puissent s'optimiser dessus.",
+        "enableTitle": "Activer le suivi des conversions",
+        "enableBody": "Crée un pixel de mesure et des événements de conversion (lead créé, rendez-vous pris) sur votre compte publicitaire. Vos formulaires hébergés et pages de réservation remontent automatiquement.",
+        "enable": "Activer",
+        "setupDone": "Le suivi des conversions est actif",
+        "active": "Actif",
+        "pixelId": "Pixel",
+        "pending": "En attente d'envoi",
+        "sent": "Envoyés",
+        "failed": "Échoués ou expirés",
+        "snippetTitle": "Pixel pour votre propre site",
+        "snippetBody": "Les formulaires et pages de réservation Repraesent remontent automatiquement. Collez ceci dans le <head> de vos landing pages externes pour mesurer aussi ces visites.",
+        "copy": "Copier",
+        "snippetCopied": "Snippet copié",
+        "debugShow": "Vérifier les événements récents",
+        "debugHide": "Masquer les événements récents",
+        "debugEmpty": "Aucun événement reçu par OpenAI ces 15 dernières minutes. Envoyez un formulaire de test et vérifiez à nouveau.",
+        "snippetCsp": "Si votre site envoie un en-tête Content-Security-Policy, autorisez les hôtes OpenAI — ajoutez bzrcdn.openai.com à script-src et bzr.openai.com à connect-src — sinon le navigateur bloque le pixel. Vous utilisez une bannière cookies ? Ajoutez-y le snippet comme script marketing au lieu de le coller directement."
+      },
+      "howTo": {
+        "title": "Comment obtenir une clé API",
+        "step1": "Connectez-vous sur ads.openai.com et inscrivez-vous comme annonceur (OpenAI examine les nouveaux comptes).",
+        "step2": "Terminez la configuration dans l'Ads Manager : facturation et logo de marque.",
+        "step3": "Ouvrez Settings → API keys dans l'Ads Manager et créez une clé — elle ne s'affiche qu'une fois.",
+        "step4": "Collez-la ci-dessus et cliquez sur Connecter.",
+        "helpLink": "Présentation de l'Ads Manager (Help Center OpenAI)"
+      }
     }
   },
   "booking": {
@@ -4396,7 +4459,8 @@
     "industrySearch": "Rechercher un secteur…",
     "industryEmpty": "Aucun secteur trouvé.",
     "industryOverrides": {
-      "partner_house": "maison partenaire cuisine"
+      "partner_house": "maison partenaire cuisine",
+      "electrician": "électricien"
     },
     "loading": {
       "title": "Création de votre démo live",
@@ -4479,5 +4543,157 @@
     "florist_other": "fleuristes",
     "plumber_one": "plombier",
     "plumber_other": "plombiers"
+  },
+  "openaiAds": {
+    "metaTitle": "OpenAI Ads",
+    "metaDescription": "Campagnes, dépenses et conversions de votre compte OpenAI Ads.",
+    "accountSubtitle": "Compte connecté : {{name}}",
+    "newCampaign": "Nouvelle campagne",
+    "revokedBanner": "OpenAI a refusé la clé API enregistrée. Reconnectez-vous avec une nouvelle clé depuis votre Ads Manager.",
+    "revokedBannerCta": "Ouvrir les réglages",
+    "rangeDays": "{{count}} jours",
+    "spendOverTime": "Dépenses dans le temps",
+    "noData": "Pas encore de données de diffusion sur cette période.",
+    "campaignsTitle": "Campagnes",
+    "searchPlaceholder": "Rechercher des campagnes…",
+    "truncated": "Ce compte a plus de campagnes qu'il n'est possible d'en lister d'un coup — les premières pages sont affichées.",
+    "noSearchResults": "Aucune campagne ne correspond à cette recherche.",
+    "noCampaigns": "Pas encore de campagne. Créez la première pour commencer à diffuser.",
+    "noAdGroups": "Pas encore de groupe d'annonces dans cette campagne.",
+    "noAds": "Pas encore d'annonce dans ce groupe.",
+    "maxBid": "enchère max",
+    "budgetUpdated": "Budget mis à jour",
+    "editBudgetTitle": "Modifier le budget total",
+    "editBudgetDescription": "Le total que cette campagne peut dépenser sur toute sa durée. Actuel : {{current}}",
+    "budgetLabel": "Montant",
+    "budgetInvalid": "Saisissez un montant d'au moins 1.",
+    "archiveTitle": "Archiver « {{name}} » ?",
+    "archiveDescription": "Les éléments archivés cessent d'être diffusés et ne peuvent pas être réactivés ici.",
+    "metrics": {
+      "spend": "Dépenses",
+      "impressions": "Impressions",
+      "clicks": "Clics",
+      "ctr": "CTR",
+      "cpc": "CPC",
+      "conversions": "Conversions"
+    },
+    "table": {
+      "name": "Campagne",
+      "status": "Statut",
+      "bidding": "Enchère",
+      "budget": "Budget total",
+      "expand": "Afficher les groupes d'annonces",
+      "expandAds": "Afficher les annonces"
+    },
+    "status": {
+      "active": "Active",
+      "paused": "En pause",
+      "archived": "Archivée"
+    },
+    "bidding": {
+      "impressions": "Impressions",
+      "clicks": "Clics",
+      "conversions": "Conversions"
+    },
+    "billing": {
+      "impression": "Impression",
+      "click": "Clic"
+    },
+    "review": {
+      "in_review": "En cours d'examen",
+      "rejected": "Refusée",
+      "approved": "Approuvée"
+    },
+    "actions": {
+      "menu": "Actions",
+      "activate": "Activer",
+      "pause": "Mettre en pause",
+      "archive": "Archiver",
+      "editBudget": "Modifier le budget",
+      "activateDone": "Activée",
+      "pauseDone": "Mise en pause",
+      "archiveDone": "Archivée"
+    },
+    "create": {
+      "metaTitle": "Nouvelle campagne",
+      "title": "Nouvelle campagne",
+      "back": "Retour aux campagnes",
+      "adminOnly": "Seuls les admins du workspace peuvent créer des campagnes.",
+      "steps": {
+        "campaign": "Campagne",
+        "adGroup": "Groupe d'annonces",
+        "ad": "Annonce"
+      },
+      "campaignName": "Nom de la campagne",
+      "campaignNamePlaceholder": "ex. Campagne leads d'automne",
+      "budget": "Budget total",
+      "budgetHelp": "Le total que la campagne peut dépenser sur toute sa durée. Vous pourrez l'augmenter plus tard.",
+      "bidding": "Optimiser pour",
+      "biddingImmutable": "Impossible à changer après la création de la campagne. L'enchère aux conversions nécessite d'abord d'activer le suivi des conversions dans les réglages.",
+      "next": "Continuer",
+      "adGroupName": "Nom du groupe d'annonces",
+      "adGroupDefaultName": "{{campaign}} — groupe d'annonces 1",
+      "billingEvent": "Facturation par",
+      "maxBid": "Enchère maximale",
+      "maxBidHelpImpression": "Le maximum payé par impression.",
+      "maxBidHelpClick": "Le maximum payé par clic.",
+      "hints": "Indications d'audience (optionnel)",
+      "hintsPlaceholder": "Texte libre, une indication par ligne — ex. dirigeants de PME en Allemagne",
+      "adName": "Nom de l'annonce (interne)",
+      "adTitle": "Titre",
+      "adTitlePlaceholder": "Affiché comme titre de la carte dans ChatGPT",
+      "adBody": "Description",
+      "targetUrl": "URL de la landing page",
+      "targetUrlHelp": "OpenAI ajoute ?oppref=… à cette URL. Avec le suivi des conversions actif, les leads de cette page sont attribués automatiquement.",
+      "image": "Image (optionnel)",
+      "imageChoose": "Choisir un PNG ou JPEG",
+      "price": "Texte de prix (optionnel)",
+      "pricePlaceholder": "ex. à partir de 29 €/mois",
+      "createAd": "Créer l'annonce",
+      "doneTitle": "« {{name}} » est prête",
+      "doneBody": "Tout a été créé en pause, et l'annonce passe d'abord par l'examen d'OpenAI. Activez maintenant, ou laissez en pause et activez plus tard depuis la liste des campagnes.",
+      "keepPaused": "Laisser en pause",
+      "activateNow": "Activer maintenant",
+      "activated": "Campagne activée — elle diffusera dès que l'annonce aura passé l'examen"
+    },
+    "onboarding": {
+      "heroTitle": "Faites de la publicité dans ChatGPT",
+      "heroBody": "OpenAI Ads place vos campagnes dans les réponses de ChatGPT. Connectez votre compte publicitaire et cette page devient votre tableau de bord — chaque lead capté par vos formulaires est renvoyé automatiquement à OpenAI pour que vos campagnes apprennent ce qui fonctionne.",
+      "connectCta": "Connecter OpenAI Ads",
+      "adminOnly": "Demandez à un admin du workspace de connecter le compte dans Réglages → OpenAI Ads.",
+      "stepsTitle": "Comment démarrer",
+      "pasteCta": "Ouvrir les réglages",
+      "steps": {
+        "createAccount": {
+          "title": "Créez un compte annonceur",
+          "body": "Connectez-vous sur ads.openai.com avec votre compte OpenAI et inscrivez-vous comme annonceur. OpenAI examine les nouveaux comptes avant qu'ils puissent diffuser."
+        },
+        "setup": {
+          "title": "Terminez la configuration du compte",
+          "body": "Dans l'Ads Manager, ajoutez la facturation et téléchargez le logo de votre marque — sans les deux, aucune annonce ne diffuse."
+        },
+        "issueKey": {
+          "title": "Générez une clé API",
+          "body": "Dans l'Ads Manager, ouvrez Settings → API keys et créez une clé. Elle appartient à ce seul compte publicitaire et ne s'affiche qu'une fois — copiez-la aussitôt."
+        },
+        "paste": {
+          "title": "Collez la clé dans Repraesent",
+          "body": "Ajoutez la clé dans Réglages → OpenAI Ads. Elle est vérifiée auprès de votre compte avant enregistrement et stockée chiffrée."
+        }
+      },
+      "featuresTitle": "Ce que vous obtenez une fois connecté",
+      "features": {
+        "metrics": "Dépenses, clics et conversions de chaque campagne en direct, ici même.",
+        "control": "Mettez en pause, activez et ajustez les budgets sans ouvrir l'Ads Manager.",
+        "create": "Créez campagnes, groupes d'annonces et annonces via un parcours guidé.",
+        "conversions": "Les leads et réservations remontent automatiquement pour qu'OpenAI optimise dessus."
+      },
+      "resourcesTitle": "Chez OpenAI",
+      "resources": {
+        "adsManager": "OpenAI Ads Manager",
+        "helpCenter": "Présentation de l'Ads Manager (Help Center)",
+        "devDocs": "Démarrage rapide API (OpenAI Developers)"
+      }
+    }
   }
 }

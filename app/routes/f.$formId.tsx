@@ -27,6 +27,7 @@ import {
   type FormTheme,
 } from "~/lib/forms/schema";
 import { captureUtm } from "~/lib/forms/utm";
+import { injectOpenaiPixel, readOppref } from "~/lib/openai-pixel";
 import { emptyValues, validateValues } from "~/lib/forms/validate";
 
 export function meta() {
@@ -112,8 +113,23 @@ export default function PublicFormRoute() {
   }, [definition]);
 
   useEffect(() => {
-    if (definition) metaRef.current = captureUtm(definition.utm);
+    if (!definition) return;
+    metaRef.current = captureUtm(definition.utm);
+    // OpenAI Ads click id rides along outside the UTM config — the server
+    // whitelists it separately and uses it for conversion attribution.
+    const oppref = readOppref();
+    if (oppref) {
+      metaRef.current.oppref = oppref;
+      if (!metaRef.current.page_url) {
+        metaRef.current.page_url = window.location.href;
+      }
+    }
   }, [definition]);
+
+  // Measurement pixel — only when the form's workspace turned conversions on.
+  useEffect(() => {
+    if (data?.openai_pixel_id) injectOpenaiPixel(data.openai_pixel_id);
+  }, [data?.openai_pixel_id]);
 
   /**
    * The other half of the iframe snippet: report our height to the parent so the

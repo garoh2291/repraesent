@@ -117,6 +117,11 @@ const SETTINGS_NAV = [
     Icon: Plug,
   },
   {
+    to: "/settings/openai-ads",
+    labelKey: "settings.tabs.openaiAds",
+    Icon: Megaphone,
+  },
+  {
     to: "/settings/pipelines",
     labelKey: "settings.tabs.pipelines",
     Icon: Kanban,
@@ -286,6 +291,10 @@ export function Sidebar({
   const [instructionsMarkdown, setInstructionsMarkdown] = useState<
     string | null
   >(null);
+  // A live demo is a product tour: every destination stays visible even with
+  // nothing connected, so the visitor can see what the app does. The pages
+  // show their own empty states. Real workspaces keep the gates below.
+  const isDemoWorkspace = currentWorkspace?.is_demo === true;
   const hasAppointmentsService =
     currentWorkspace?.services?.some(
       (s) => s.service_type === "appointments"
@@ -294,14 +303,14 @@ export function Sidebar({
     hasAppointmentsService && !!currentWorkspace?.id
   );
   const showAppointmentsInSidebar =
-    hasAppointmentsService && !!appointmentConfigs?.length;
+    (hasAppointmentsService && !!appointmentConfigs?.length) || isDemoWorkspace;
   // The team Calendar page only exists once someone connected a source, so
   // the nav entry follows the same summary the page itself redirects on.
   const { data: calendarSummary } = useCalendarSummary(!!currentWorkspace?.id);
   const showCalendarInSidebar =
     (calendarSummary?.google_account_count ?? 0) +
       (calendarSummary?.baikal_config_count ?? 0) >
-    0;
+      0 || isDemoWorkspace;
   const isDoorboostBrandWs = currentWorkspace?.type === "doorboost_brand";
   // TEMPORARY: Workflows and Settings → Integrations are still being piloted,
   // so in production only the pilot workspace sees those nav entries. Local
@@ -309,7 +318,7 @@ export function Sidebar({
   // Pilot gating lives in ~/lib/feature-flags. These hide entries only — the
   // routes stay reachable by URL, and none of this is a permission boundary.
   const pilot = usePilotFeatures();
-  const showWorkflows = pilot.workflows;
+  const showWorkflows = pilot.workflows || isDemoWorkspace;
   // Route-driven rather than stateful: deep links and refreshes land in the
   // right mode for free, and there is nothing to reset on the way out.
   const inSettings = location.pathname.startsWith("/settings");
@@ -431,7 +440,10 @@ export function Sidebar({
             </div>
 
             {SETTINGS_NAV.filter(
-              (item) => item.to !== "/settings/integrations" || pilot.integrations
+              (item) =>
+                item.to !== "/settings/integrations" ||
+                pilot.integrations ||
+                isDemoWorkspace
             ).map(({ to, labelKey, Icon }) => (
               <NavLink
                 key={to}
@@ -493,7 +505,7 @@ export function Sidebar({
               {t("nav.home")}
             </NavLink>
 
-            {wpSite?.sso_enabled && (
+            {(wpSite?.sso_enabled || isDemoWorkspace) && (
               <NavLink
                 to="/website"
                 isActive={location.pathname.startsWith("/website")}
@@ -517,8 +529,9 @@ export function Sidebar({
 
             {/* Gated on the connection rather than a service entitlement: the
                 catalogue is a live proxy, so with no Stripe account there is
-                literally nothing for the page to show. */}
-            {hasStripeConnection && (
+                literally nothing for the page to show — except in a demo,
+                where the page's own connect-Stripe card is the point. */}
+            {(hasStripeConnection || isDemoWorkspace) && (
               <NavLink
                 to="/products"
                 isActive={location.pathname.startsWith("/products")}
@@ -528,6 +541,26 @@ export function Sidebar({
                 {t("nav.stripeProducts", { defaultValue: "Products" })}
               </NavLink>
             )}
+
+            {/* Always visible — the feature is self-serve (any workspace admin
+                pastes their own API key), so the entry point has to exist
+                before a connection does. Unconnected workspaces land on the
+                onboarding state of /openai-ads. The "New" pill stays for
+                everyone while the feature is fresh; drop it here when it no
+                longer is. */}
+            <NavLink
+              to="/openai-ads"
+              isActive={location.pathname.startsWith("/openai-ads")}
+              onClick={onClose}
+            >
+              <Megaphone className="h-4 w-4 shrink-0" />
+              <span className="truncate">
+                {t("nav.openaiAds", { defaultValue: "OpenAI Ads" })}
+              </span>
+              <span className="ml-auto rounded-full bg-amber-400/15 px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wider text-amber-300">
+                {t("nav.newBadge", { defaultValue: "New" })}
+              </span>
+            </NavLink>
 
             {showWorkflows && (
               <NavLink

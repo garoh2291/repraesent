@@ -62,7 +62,9 @@
     "workflows": "Workflows",
     "stripeProducts": "Products",
     "calendar": "Calendar",
-    "newPipeline": "New pipeline"
+    "newPipeline": "New pipeline",
+    "openaiAds": "OpenAI Ads",
+    "newBadge": "New"
   },
   "db_brand": {
     "subtitle": "Pick a retailer from the sidebar to view its Social Ads & Leads.",
@@ -387,6 +389,9 @@
       "dropCsvError": "Please drop a CSV file",
       "importedSuccess_one": "{{count}} lead imported successfully",
       "importedSuccess_other": "{{count}} leads imported successfully"
+    },
+    "source": {
+      "openaiAds": "OpenAI Ads"
     }
   },
   "pipeline": {
@@ -973,7 +978,10 @@
       "oneCalImg2": "caldav-onecal-form.png — Enter the server URL, username, and password",
       "oneCalImg3": "caldav-onecal-configure.png — Toggle your calendar on and click Done",
       "oneCalImg4": "caldav-onecal-result.png — Your appointments now appear in OneCalendar"
-    }
+    },
+    "notConfiguredTitle": "Set up a booking calendar",
+    "notConfiguredBody": "Appointments let clients book you from a public page. Connect a calendar to switch it on.",
+    "notConfiguredCta": "Go to Calendars"
   },
   "products": {
     "metaTitle": "Billing",
@@ -1024,7 +1032,8 @@
       "integrations": "Integrations",
       "calendars": "Calendars",
       "pipelines": "Pipeline stages",
-      "notifications": "Notifications"
+      "notifications": "Notifications",
+      "openaiAds": "OpenAI Ads"
     },
     "bcc": {
       "metaTitle": "Email logging",
@@ -1444,6 +1453,60 @@
       "metaDescription": "Rename, reorder, recolor, hide or add the stages of your lead and deal pipelines.",
       "pipelinePickerLabel": "Pipeline",
       "pipelinePickerHint": "Each pipeline has its own deal stages."
+    },
+    "openaiAds": {
+      "metaTitle": "OpenAI Ads",
+      "metaDescription": "Connect your OpenAI Ads account and turn on conversion tracking.",
+      "sectionLabel": "Ad account",
+      "sectionDescription": "Connect your OpenAI Ads account with the API key from ads.openai.com → Settings.",
+      "cardTitle": "OpenAI Ads",
+      "statusConnected": "Connected",
+      "statusRevoked": "Key rejected",
+      "notConnectedHint": "Issue an API key in your Ads Manager settings, then paste it here.",
+      "lastError": "Last call failed: {{error}}",
+      "keyLabel": "Ads API key",
+      "rotateLabel": "Replace API key",
+      "keyPlaceholder": "Paste the key from ads.openai.com → Settings",
+      "keyHelp": "The key is verified against your ad account before it is stored, and it is stored encrypted.",
+      "connect": "Connect",
+      "rotate": "Replace",
+      "test": "Test key",
+      "testOk": "Key works — account {{name}}",
+      "connected": "Connected to {{name}}",
+      "disconnected": "OpenAI Ads disconnected",
+      "disconnect": "Disconnect",
+      "disconnectTitle": "Disconnect OpenAI Ads?",
+      "disconnectDescription": "The dashboard stops working and conversion events stop sending. The key itself stays valid at OpenAI until you rotate it in Ads Manager.",
+      "adminOnly": "Only workspace admins can manage the OpenAI Ads connection.",
+      "conversions": {
+        "sectionLabel": "Conversion tracking",
+        "sectionDescription": "Send leads and bookings back to OpenAI so your campaigns can optimize for them.",
+        "enableTitle": "Turn on conversion tracking",
+        "enableBody": "Creates a measurement pixel and conversion events (lead created, appointment scheduled) on your ad account. Your hosted forms and booking pages start reporting automatically.",
+        "enable": "Turn on",
+        "setupDone": "Conversion tracking is on",
+        "active": "Active",
+        "pixelId": "Pixel",
+        "pending": "Waiting to send",
+        "sent": "Sent",
+        "failed": "Failed or expired",
+        "snippetTitle": "Pixel for your own website",
+        "snippetBody": "Repraesent forms and booking pages report automatically. Paste this into the <head> of external landing pages so visits there are measured too.",
+        "copy": "Copy",
+        "snippetCopied": "Snippet copied",
+        "debugShow": "Check recent events",
+        "debugHide": "Hide recent events",
+        "debugEmpty": "No events received by OpenAI in the last 15 minutes. Submit a test form and check again.",
+        "snippetCsp": "If your site sends a Content-Security-Policy header, allow the OpenAI hosts — add bzrcdn.openai.com to script-src and bzr.openai.com to connect-src — otherwise the browser blocks the pixel. Using a cookie banner? Add the snippet there as a marketing script instead of pasting it directly."
+      },
+      "howTo": {
+        "title": "How to get an API key",
+        "step1": "Sign in at ads.openai.com and register as an advertiser (OpenAI reviews new accounts).",
+        "step2": "Finish account setup in Ads Manager: billing details and brand logo.",
+        "step3": "Open Settings → API keys in Ads Manager and create a key — it is shown only once.",
+        "step4": "Paste it above and press Connect.",
+        "helpLink": "Ads Manager overview (OpenAI Help Center)"
+      }
     }
   },
   "booking": {
@@ -4394,7 +4457,8 @@
     "industrySearch": "Search industry…",
     "industryEmpty": "No industry found.",
     "industryOverrides": {
-      "partner_house": "Kitchen partner house"
+      "partner_house": "Kitchen partner house",
+      "electrician": "Electrician"
     },
     "loading": {
       "title": "Building your live demo",
@@ -4477,5 +4541,157 @@
     "florist_other": "florists",
     "plumber_one": "plumber",
     "plumber_other": "plumbers"
+  },
+  "openaiAds": {
+    "metaTitle": "OpenAI Ads",
+    "metaDescription": "Campaigns, spend and conversions from your OpenAI Ads account.",
+    "accountSubtitle": "Connected account: {{name}}",
+    "newCampaign": "New campaign",
+    "revokedBanner": "OpenAI rejected the stored API key. Reconnect with a fresh key from your Ads Manager.",
+    "revokedBannerCta": "Open settings",
+    "rangeDays": "{{count}} days",
+    "spendOverTime": "Spend over time",
+    "noData": "No delivery data for this period yet.",
+    "campaignsTitle": "Campaigns",
+    "searchPlaceholder": "Search campaigns…",
+    "truncated": "This account has more campaigns than can be listed at once — showing the first pages.",
+    "noSearchResults": "No campaigns match this search.",
+    "noCampaigns": "No campaigns yet. Create your first one to start serving ads.",
+    "noAdGroups": "No ad groups in this campaign yet.",
+    "noAds": "No ads in this ad group yet.",
+    "maxBid": "max bid",
+    "budgetUpdated": "Budget updated",
+    "editBudgetTitle": "Edit lifetime budget",
+    "editBudgetDescription": "The total this campaign may spend over its lifetime. Current: {{current}}",
+    "budgetLabel": "Amount",
+    "budgetInvalid": "Enter an amount of at least 1.",
+    "archiveTitle": "Archive “{{name}}”?",
+    "archiveDescription": "Archived items stop serving and cannot be reactivated from here.",
+    "metrics": {
+      "spend": "Spend",
+      "impressions": "Impressions",
+      "clicks": "Clicks",
+      "ctr": "CTR",
+      "cpc": "CPC",
+      "conversions": "Conversions"
+    },
+    "table": {
+      "name": "Campaign",
+      "status": "Status",
+      "bidding": "Bidding",
+      "budget": "Lifetime budget",
+      "expand": "Show ad groups",
+      "expandAds": "Show ads"
+    },
+    "status": {
+      "active": "Active",
+      "paused": "Paused",
+      "archived": "Archived"
+    },
+    "bidding": {
+      "impressions": "Impressions",
+      "clicks": "Clicks",
+      "conversions": "Conversions"
+    },
+    "billing": {
+      "impression": "Impression",
+      "click": "Click"
+    },
+    "review": {
+      "in_review": "In review",
+      "rejected": "Rejected",
+      "approved": "Approved"
+    },
+    "actions": {
+      "menu": "Actions",
+      "activate": "Activate",
+      "pause": "Pause",
+      "archive": "Archive",
+      "editBudget": "Edit budget",
+      "activateDone": "Activated",
+      "pauseDone": "Paused",
+      "archiveDone": "Archived"
+    },
+    "create": {
+      "metaTitle": "New campaign",
+      "title": "New campaign",
+      "back": "Back to campaigns",
+      "adminOnly": "Only workspace admins can create campaigns.",
+      "steps": {
+        "campaign": "Campaign",
+        "adGroup": "Ad group",
+        "ad": "Ad"
+      },
+      "campaignName": "Campaign name",
+      "campaignNamePlaceholder": "e.g. Autumn lead push",
+      "budget": "Lifetime budget",
+      "budgetHelp": "The total the campaign may spend across its whole life. You can raise it later.",
+      "bidding": "Optimize for",
+      "biddingImmutable": "This cannot be changed after the campaign is created. Conversions bidding needs conversion tracking turned on in settings first.",
+      "next": "Continue",
+      "adGroupName": "Ad group name",
+      "adGroupDefaultName": "{{campaign}} — ad group 1",
+      "billingEvent": "Pay per",
+      "maxBid": "Maximum bid",
+      "maxBidHelpImpression": "The most you pay per single impression.",
+      "maxBidHelpClick": "The most you pay per click.",
+      "hints": "Audience hints (optional)",
+      "hintsPlaceholder": "Free text, one hint per line — e.g. small business owners in Germany",
+      "adName": "Ad name (internal)",
+      "adTitle": "Title",
+      "adTitlePlaceholder": "Shown as the card headline in ChatGPT",
+      "adBody": "Description",
+      "targetUrl": "Landing page URL",
+      "targetUrlHelp": "OpenAI adds ?oppref=… to this URL. With conversion tracking on, leads from this page are attributed automatically.",
+      "image": "Image (optional)",
+      "imageChoose": "Choose PNG or JPEG",
+      "price": "Price text (optional)",
+      "pricePlaceholder": "e.g. from €29/month",
+      "createAd": "Create ad",
+      "doneTitle": "“{{name}}” is ready",
+      "doneBody": "Everything was created paused, and the ad goes through OpenAI's review first. Activate now, or keep it paused and activate later from the campaign list.",
+      "keepPaused": "Keep paused",
+      "activateNow": "Activate now",
+      "activated": "Campaign activated — it serves once the ad passes review"
+    },
+    "onboarding": {
+      "heroTitle": "Advertise inside ChatGPT",
+      "heroBody": "OpenAI Ads places your campaigns in ChatGPT answers. Connect your ad account and this page becomes your dashboard — and every lead your forms capture is reported back to OpenAI automatically, so your campaigns learn what works.",
+      "connectCta": "Connect OpenAI Ads",
+      "adminOnly": "Ask a workspace admin to connect the account in Settings → OpenAI Ads.",
+      "stepsTitle": "How to get set up",
+      "pasteCta": "Open settings",
+      "steps": {
+        "createAccount": {
+          "title": "Create an advertiser account",
+          "body": "Sign in at ads.openai.com with your OpenAI account and register as an advertiser. OpenAI reviews new advertiser accounts before they can serve ads."
+        },
+        "setup": {
+          "title": "Finish account setup",
+          "body": "In Ads Manager, add billing details and upload your brand logo — ads cannot serve until both are done."
+        },
+        "issueKey": {
+          "title": "Issue an API key",
+          "body": "In Ads Manager, open Settings → API keys and create a key. It belongs to this one ad account and is shown only once — copy it right away."
+        },
+        "paste": {
+          "title": "Paste the key in Repraesent",
+          "body": "Add the key under Settings → OpenAI Ads. It is checked against your ad account before saving and stored encrypted."
+        }
+      },
+      "featuresTitle": "What you get once connected",
+      "features": {
+        "metrics": "Live spend, clicks and conversions for every campaign, right here.",
+        "control": "Pause, activate and adjust budgets without opening Ads Manager.",
+        "create": "Create campaigns, ad groups and ads from a guided flow.",
+        "conversions": "Leads and bookings report back automatically, so OpenAI optimizes toward them."
+      },
+      "resourcesTitle": "From OpenAI",
+      "resources": {
+        "adsManager": "OpenAI Ads Manager",
+        "helpCenter": "Ads Manager overview (Help Center)",
+        "devDocs": "API quickstart (OpenAI Developers)"
+      }
+    }
   }
 }

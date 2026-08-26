@@ -428,6 +428,11 @@ export interface PublicFormPayload {
   locales: FormLocale[];
   /** HMAC time-trap token. Echo back as `rt` on submit. */
   render_token: string;
+  /**
+   * OpenAI Ads measurement pixel id, present only when the workspace finished
+   * conversions setup. The hosted page injects the pixel off this.
+   */
+  openai_pixel_id?: string | null;
 }
 
 export interface SubmitFormResult {
