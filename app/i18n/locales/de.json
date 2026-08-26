@@ -975,7 +975,10 @@
       "oneCalImg2": "caldav-onecal-form.png — Server-URL, Benutzername und Passwort eingeben",
       "oneCalImg3": "caldav-onecal-configure.png — Kalender aktivieren und auf Fertig klicken",
       "oneCalImg4": "caldav-onecal-result.png — Ihre Termine erscheinen jetzt in OneCalendar"
-    }
+    },
+    "notConfiguredTitle": "Buchungskalender einrichten",
+    "notConfiguredBody": "Mit Terminen buchen Ihre Kunden direkt über eine öffentliche Seite. Verbinden Sie einen Kalender, um die Funktion zu aktivieren.",
+    "notConfiguredCta": "Zu den Kalendern"
   },
   "products": {
     "metaTitle": "Abrechnung",
@@ -4396,7 +4399,8 @@
     "industrySearch": "Branche suchen…",
     "industryEmpty": "Keine Branche gefunden.",
     "industryOverrides": {
-      "partner_house": "Küchen-Partnerhaus"
+      "partner_house": "Küchen-Partnerhaus",
+      "electrician": "Elektrobetrieb"
     },
     "loading": {
       "title": "Ihre Live-Demo wird erstellt",

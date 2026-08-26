@@ -973,7 +973,10 @@
       "oneCalImg2": "caldav-onecal-form.png — Voer de server-URL, gebruikersnaam en wachtwoord in",
       "oneCalImg3": "caldav-onecal-configure.png — Zet uw agenda aan en klik op Gereed",
       "oneCalImg4": "caldav-onecal-result.png — Uw afspraken verschijnen nu in OneCalendar"
-    }
+    },
+    "notConfiguredTitle": "Een boekingsagenda instellen",
+    "notConfiguredBody": "Met afspraken boeken klanten u via een openbare pagina. Koppel een agenda om dit te activeren.",
+    "notConfiguredCta": "Naar de agenda's"
   },
   "products": {
     "metaTitle": "Facturatie",
@@ -4394,7 +4397,8 @@
     "industrySearch": "Zoek een branche…",
     "industryEmpty": "Geen branche gevonden.",
     "industryOverrides": {
-      "partner_house": "keukenpartnerhuis"
+      "partner_house": "keukenpartnerhuis",
+      "electrician": "elektricien"
     },
     "loading": {
       "title": "Uw live demo wordt gebouwd",

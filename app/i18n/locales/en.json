@@ -973,7 +973,10 @@
       "oneCalImg2": "caldav-onecal-form.png — Enter the server URL, username, and password",
       "oneCalImg3": "caldav-onecal-configure.png — Toggle your calendar on and click Done",
       "oneCalImg4": "caldav-onecal-result.png — Your appointments now appear in OneCalendar"
-    }
+    },
+    "notConfiguredTitle": "Set up a booking calendar",
+    "notConfiguredBody": "Appointments let clients book you from a public page. Connect a calendar to switch it on.",
+    "notConfiguredCta": "Go to Calendars"
   },
   "products": {
     "metaTitle": "Billing",
@@ -4394,7 +4397,8 @@
     "industrySearch": "Search industry…",
     "industryEmpty": "No industry found.",
     "industryOverrides": {
-      "partner_house": "Kitchen partner house"
+      "partner_house": "Kitchen partner house",
+      "electrician": "Electrician"
     },
     "loading": {
       "title": "Building your live demo",

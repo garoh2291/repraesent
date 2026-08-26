@@ -973,7 +973,10 @@
       "oneCalImg2": "caldav-onecal-form.png — Saisissez l'URL du serveur, le nom d'utilisateur et le mot de passe",
       "oneCalImg3": "caldav-onecal-configure.png — Activez votre calendrier et cliquez sur Terminé",
       "oneCalImg4": "caldav-onecal-result.png — Vos rendez-vous apparaissent maintenant dans OneCalendar"
-    }
+    },
+    "notConfiguredTitle": "Configurer un calendrier de réservation",
+    "notConfiguredBody": "Les rendez-vous permettent à vos clients de réserver depuis une page publique. Connectez un calendrier pour l'activer.",
+    "notConfiguredCta": "Aller aux calendriers"
   },
   "products": {
     "metaTitle": "Facturation",
@@ -4396,7 +4399,8 @@
     "industrySearch": "Rechercher un secteur…",
     "industryEmpty": "Aucun secteur trouvé.",
     "industryOverrides": {
-      "partner_house": "maison partenaire cuisine"
+      "partner_house": "maison partenaire cuisine",
+      "electrician": "électricien"
     },
     "loading": {
       "title": "Création de votre démo live",

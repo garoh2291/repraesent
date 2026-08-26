@@ -5,8 +5,8 @@ import { AxiosError } from "axios";
 import { Check, ChevronsUpDown, Loader2 } from "lucide-react";
 import i18n from "~/i18n";
 import { normalizeLocale } from "~/i18n/locales";
-import { CLIENT_TYPES, type ClientType } from "~/lib/client-types";
-import { createDemo } from "~/lib/api/demo";
+import { CLIENT_TYPES } from "~/lib/client-types";
+import { createDemo, type DemoIndustry } from "~/lib/api/demo";
 import { useDocumentMeta } from "~/lib/hooks/use-document-meta";
 import { cn } from "~/lib/utils";
 import {
@@ -49,17 +49,26 @@ const LOADING_STEP_KEYS = [
 ] as const;
 
 /**
- * /demo-only presentation: plumber ranks second, and partner_house reads
- * "Kitchen partner house" (demo.industryOverrides.*) — the global
- * clientTypes.* wording stays untouched everywhere else.
+ * /demo-only presentation: the trades rank first, and the keys listed in
+ * INDUSTRY_LABEL_OVERRIDES read differently here than everywhere else
+ * (partner_house → "Kitchen partner house", plus the demo-only industries
+ * that have no clientTypes.* entry at all). The global clientTypes.* wording
+ * stays untouched.
  */
-const DEMO_INDUSTRY_ORDER: ClientType[] = [
+const DEMO_INDUSTRY_ORDER: DemoIndustry[] = [
   "partner_house",
   "plumber",
+  "electrician",
   ...CLIENT_TYPES.filter(
     (type) => type !== "partner_house" && type !== "plumber",
   ),
 ];
+
+/** demo.industryOverrides.* keys, by industry. */
+const INDUSTRY_LABEL_OVERRIDES: Partial<Record<DemoIndustry, string>> = {
+  partner_house: "demo.industryOverrides.partner_house",
+  electrician: "demo.industryOverrides.electrician",
+};
 
 /** One staged step every ~2.8s → ~17s show before the redirect. */
 const STEP_MS = 2800;
@@ -79,7 +88,7 @@ export default function Demo() {
     descriptionKey: "demo.metaDescription",
     titleSuffix: " - Repraesent",
   });
-  const [industry, setIndustry] = useState<ClientType>("partner_house");
+  const [industry, setIndustry] = useState<DemoIndustry>("partner_house");
   const [pickerOpen, setPickerOpen] = useState(false);
   // Honeypot — hidden from real visitors, bots fill it.
   const [website, setWebsite] = useState("");
@@ -126,10 +135,10 @@ export default function Demo() {
     }
   };
 
-  const industryLabel = (type: ClientType): string =>
-    type === "partner_house"
-      ? t("demo.industryOverrides.partner_house")
-      : t(`clientTypes.${type}_one`);
+  const industryLabel = (type: DemoIndustry): string => {
+    const override = INDUSTRY_LABEL_OVERRIDES[type];
+    return override ? t(override) : t(`clientTypes.${type}_one`);
+  };
 
   const currentStep = Math.min(
     Math.floor(elapsed / STEP_MS),
