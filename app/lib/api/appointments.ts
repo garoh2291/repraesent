@@ -91,6 +91,8 @@ export interface PublicConfig {
   provider_email?: string | null;
   booking_fields?: Record<string, BookingFieldConfig> | null;
   services?: AppointmentService[] | null;
+  /** Present only when the workspace turned on OpenAI Ads conversions. */
+  openai_pixel_id?: string | null;
 }
 
 export interface ProviderPublic {
@@ -114,6 +116,8 @@ export interface CreateBookingDto {
   notes?: string;
   service_id?: string;
   service_name?: string;
+  /** OpenAI Ads click id (?oppref=…) — attribution only, never displayed. */
+  oppref?: string;
 }
 
 export async function getAppointmentConfig(): Promise<AppointmentConfig | null> {

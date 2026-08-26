@@ -117,6 +117,11 @@ const SETTINGS_NAV = [
     Icon: Plug,
   },
   {
+    to: "/settings/openai-ads",
+    labelKey: "settings.tabs.openaiAds",
+    Icon: Megaphone,
+  },
+  {
     to: "/settings/pipelines",
     labelKey: "settings.tabs.pipelines",
     Icon: Kanban,
@@ -536,6 +541,26 @@ export function Sidebar({
                 {t("nav.stripeProducts", { defaultValue: "Products" })}
               </NavLink>
             )}
+
+            {/* Always visible — the feature is self-serve (any workspace admin
+                pastes their own API key), so the entry point has to exist
+                before a connection does. Unconnected workspaces land on the
+                onboarding state of /openai-ads. The "New" pill stays for
+                everyone while the feature is fresh; drop it here when it no
+                longer is. */}
+            <NavLink
+              to="/openai-ads"
+              isActive={location.pathname.startsWith("/openai-ads")}
+              onClick={onClose}
+            >
+              <Megaphone className="h-4 w-4 shrink-0" />
+              <span className="truncate">
+                {t("nav.openaiAds", { defaultValue: "OpenAI Ads" })}
+              </span>
+              <span className="ml-auto rounded-full bg-amber-400/15 px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wider text-amber-300">
+                {t("nav.newBadge", { defaultValue: "New" })}
+              </span>
+            </NavLink>
 
             {showWorkflows && (
               <NavLink
