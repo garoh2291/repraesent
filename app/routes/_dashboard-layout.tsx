@@ -111,7 +111,7 @@ export default function DashboardLayout() {
   return (
     <div className="flex h-screen overflow-hidden bg-[#0f0f11]">
       {/* Desktop sidebar */}
-      <Sidebar className="hidden lg:flex" />
+      <Sidebar className="hidden lg:flex" collapsible />
 
       {/* Mobile sidebar (Sheet) */}
       <Sheet open={mobileNavOpen} onOpenChange={setMobileNavOpen}>

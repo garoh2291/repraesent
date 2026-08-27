@@ -12,6 +12,7 @@ const SECTIONS = [
   { match: "/settings/email-accounts", key: "emailAccounts" },
   { match: "/settings/notifications", key: "notifications" },
   { match: "/settings/integrations", key: "integrations" },
+  { match: "/settings/openai-ads", key: "openaiAds" },
   { match: "/settings/calendars", key: "calendars" },
   { match: "/settings/pipelines", key: "pipelines" },
   { match: "/settings/team", key: "team" },

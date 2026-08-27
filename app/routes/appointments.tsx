@@ -7,6 +7,7 @@ import {
   Loader2,
   CheckCircle2,
   XCircle,
+  CalendarClock,
   CalendarCog,
   Info,
 } from "lucide-react";
@@ -30,6 +31,7 @@ import { ServicesTab } from "~/components/appointments/ServicesTab";
 import { ProviderTab } from "~/components/appointments/ProviderTab";
 import { CustomerEmailTab } from "~/components/appointments/CustomerEmailTab";
 import { useCalDavConfig } from "~/components/appointments/CalDavInstructionsModal";
+import { NotConfiguredCard } from "~/components/organism/not-configured-card";
 import {
   Select,
   SelectContent,
@@ -56,6 +58,7 @@ export default function Appointments() {
     descriptionKey: "appointments.metaDescription",
     titleSuffix: " - Repraesent",
   });
+  const { t } = useTranslation();
   const { currentWorkspace } = useAuthContext();
   const navigate = useNavigate();
   const hasAccess =
@@ -75,8 +78,13 @@ export default function Appointments() {
     }
   }, [configs, selectedConfigId]);
 
-  const shouldRedirect =
+  // Demo workspaces keep every destination reachable so the visitor can see
+  // the feature; booking needs a CalDAV connection that a throwaway demo
+  // cannot have, so it gets an explanatory panel instead of a redirect.
+  const isDemoWorkspace = currentWorkspace?.is_demo === true;
+  const missingConfig =
     !hasAccess || (!configsLoading && (!configs || configs.length === 0));
+  const shouldRedirect = missingConfig && !isDemoWorkspace;
 
   useEffect(() => {
     if (shouldRedirect) {
@@ -86,6 +94,28 @@ export default function Appointments() {
 
   if (shouldRedirect) {
     return null;
+  }
+
+  if (missingConfig && isDemoWorkspace) {
+    return (
+      <div className="p-4 sm:p-6 app-fade-in">
+        <NotConfiguredCard
+          className="mx-auto max-w-md rounded-2xl p-10"
+          icon={CalendarClock}
+          to="/settings/calendars"
+          title={t("appointments.notConfiguredTitle", {
+            defaultValue: "Set up a booking calendar",
+          })}
+          body={t("appointments.notConfiguredBody", {
+            defaultValue:
+              "Appointments let clients book you from a public page. Connect a calendar to switch it on.",
+          })}
+          ctaLabel={t("appointments.notConfiguredCta", {
+            defaultValue: "Go to Calendars",
+          })}
+        />
+      </div>
+    );
   }
 
   if (configsLoading || !configs) {

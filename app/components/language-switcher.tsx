@@ -21,7 +21,7 @@ const LANGUAGE_NAMES: Record<SupportedLocale, string> = {
 
 interface LanguageSwitcherProps {
   /** "dark"/"light" = button group; "dropdown" = compact NativeSelect with full names */
-  variant?: "dark" | "light" | "dropdown";
+  variant?: "dark" | "light" | "dropdown" | "grid-dark";
   /** When true, persists locale to user profile (fire-and-forget, does not block UI) */
   persistToDb?: boolean;
   /** Extra classes applied to the root element. */
@@ -56,6 +56,28 @@ export function LanguageSwitcher({
 
   const btnBase =
     "px-2.5 py-1 rounded-md  text-[11px] font-semibold uppercase tracking-widest transition-all duration-150";
+
+  // 2x2 grid of two-letter buttons — fits the collapsed sidebar's 64px rail.
+  if (variant === "grid-dark") {
+    return (
+      <div className={"grid grid-cols-2 gap-1 " + (className ?? "")}>
+        {SUPPORTED_LOCALES.map((lang) => (
+          <button
+            key={lang}
+            onClick={() => handleChange(lang)}
+            className={
+              "rounded-md py-1 text-[10px] font-semibold uppercase tracking-wider transition-all duration-150 " +
+              (current === lang
+                ? "bg-amber-400/15 text-amber-300"
+                : "text-white/30 hover:bg-white/5 hover:text-white/60")
+            }
+          >
+            {lang}
+          </button>
+        ))}
+      </div>
+    );
+  }
 
   if (variant === "dropdown") {
     return (

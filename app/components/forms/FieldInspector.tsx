@@ -15,6 +15,7 @@ import { calendarKeyFor, listCalendarAccounts } from "~/lib/api/calendar";
 import { Checkbox } from "~/components/ui/checkbox";
 import { CalDavIcon } from "~/components/icons/CalDavIcon";
 import { GoogleIcon } from "~/components/icons/GoogleIcon";
+import { MicrosoftIcon } from "~/components/icons/MicrosoftIcon";
 import {
   Cols,
   EmptyPanelState,
@@ -786,15 +787,20 @@ function AppointmentConfig({
       (c) => c.accessRole === "owner" || c.accessRole === "writer",
     );
 
-  const googleAccounts = accounts.filter((a) => a.provider === "google");
+  // Google and Microsoft behave identically here (OAuth account, writable
+  // calendar list) — they share the Mine/Team groups, told apart by the
+  // per-item provider marker.
+  const oauthAccounts = accounts.filter(
+    (a) => a.provider === "google" || a.provider === "microsoft",
+  );
   const caldavAccounts = accounts.filter((a) => a.provider === "caldav");
-  const myGoogle = googleAccounts.filter((a) => a.is_own);
-  const teamGoogle = googleAccounts.filter((a) => !a.is_own);
+  const myOauth = oauthAccounts.filter((a) => a.is_own);
+  const teamOauth = oauthAccounts.filter((a) => !a.is_own);
 
   // Empty state only when NOTHING can receive a booking — a workspace with a
-  // Baikal config or a CalDAV calendar but no Google account still has targets.
+  // Baikal config or a CalDAV calendar but no OAuth account still has targets.
   const hasTargets =
-    googleAccounts.some((a) => writableCalendars(a).length > 0) ||
+    oauthAccounts.some((a) => writableCalendars(a).length > 0) ||
     baikalConfigs.length > 0 ||
     caldavAccounts.some((a) => a.calendars.length > 0);
 
@@ -860,6 +866,9 @@ function AppointmentConfig({
                 {a.provider === "google" && (
                   <GoogleIcon className="h-3 w-3 shrink-0" />
                 )}
+                {a.provider === "microsoft" && (
+                  <MicrosoftIcon className="h-3 w-3 shrink-0" />
+                )}
                 {a.provider === "caldav" && (
                   <CalDavIcon className="h-3 w-3 shrink-0" />
                 )}
@@ -922,20 +931,20 @@ function AppointmentConfig({
             align="end"
             className="max-w-[min(24rem,90vw)]"
           >
-            {myGoogle.length > 0 ? (
+            {myOauth.length > 0 ? (
               <SelectGroup>
                 <SelectLabel>
                   {t("forms.inspector.appointment.targetGroupMine")}
                 </SelectLabel>
-                {accountCalendarItems(myGoogle)}
+                {accountCalendarItems(myOauth)}
               </SelectGroup>
             ) : null}
-            {teamGoogle.length > 0 ? (
+            {teamOauth.length > 0 ? (
               <SelectGroup>
                 <SelectLabel>
                   {t("forms.inspector.appointment.targetGroupTeam")}
                 </SelectLabel>
-                {accountCalendarItems(teamGoogle)}
+                {accountCalendarItems(teamOauth)}
               </SelectGroup>
             ) : null}
             {baikalConfigs.length > 0 ? (

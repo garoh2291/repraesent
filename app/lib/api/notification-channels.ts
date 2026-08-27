@@ -8,7 +8,7 @@ export const NOTIFICATION_EVENTS = [
 ] as const;
 
 export type NotificationEvent = (typeof NOTIFICATION_EVENTS)[number];
-export type NotificationProvider = "slack" | "teams";
+export type NotificationProvider = "slack" | "teams" | "google_chat";
 
 /** One card on Settings → Notifications. */
 export interface NotificationChannel {

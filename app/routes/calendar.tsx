@@ -260,8 +260,14 @@ export default function CalendarPage() {
   const [sheetOpen, setSheetOpen] = useState(false);
   const [createOpen, setCreateOpen] = useState(false);
 
-  // No sources connected: this page has nothing to show
-  if (!summaryLoading && summary && totalSources === 0) {
+  // No sources connected: this page has nothing to show — except in a demo,
+  // where every destination stays reachable so the visitor sees the feature.
+  if (
+    !summaryLoading &&
+    summary &&
+    totalSources === 0 &&
+    !currentWorkspace?.is_demo
+  ) {
     return <Navigate to="/" replace />;
   }
 

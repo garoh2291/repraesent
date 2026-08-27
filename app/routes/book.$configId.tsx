@@ -36,6 +36,7 @@ import {
 import { cn } from "~/lib/utils";
 import { formatDateLong, formatTime } from "~/lib/utils/format";
 import { useDocumentMeta } from "~/lib/hooks/use-document-meta";
+import { injectOpenaiPixel, readOppref } from "~/lib/openai-pixel";
 
 export function meta() {
   return [
@@ -229,6 +230,11 @@ export default function BookAppointment() {
     }
   }, [providers, selectedProvider]);
 
+  // OpenAI Ads measurement pixel — only when the workspace turned conversions on.
+  useEffect(() => {
+    if (config?.openai_pixel_id) injectOpenaiPixel(config.openai_pixel_id);
+  }, [config?.openai_pixel_id]);
+
   // Auto-select service: if only one service exists, skip service selection step
   const services = config?.services ?? null;
   const hasMultipleServices = services && services.length > 1;
@@ -309,6 +315,7 @@ export default function BookAppointment() {
       customerEmail: formFields.email || undefined,
       service_id: selectedService?.id,
       service_name: selectedService?.name,
+      oppref: readOppref() ?? undefined,
     };
 
     bookMutation.mutate(dto);

@@ -72,6 +72,44 @@ function SectionLabel({ children }: { children: React.ReactNode }) {
 const PROVIDER_HOST_HINTS: Record<NotificationProvider, string[]> = {
   slack: ["hooks.slack.com"],
   teams: ["logic.azure.com", "webhook.office.com", "powerautomate.com"],
+  google_chat: ["chat.googleapis.com"],
+};
+
+const PROVIDERS = ["slack", "teams", "google_chat"] as const;
+
+/** i18n key + fallback per provider, shared by the badge and the picker. */
+const PROVIDER_LABELS: Record<
+  NotificationProvider,
+  { key: string; defaultValue: string }
+> = {
+  slack: { key: "settings.notifications.providerSlack", defaultValue: "Slack" },
+  teams: {
+    key: "settings.notifications.providerTeams",
+    defaultValue: "Microsoft Teams",
+  },
+  google_chat: {
+    key: "settings.notifications.providerGoogleChat",
+    defaultValue: "Google Chat",
+  },
+};
+
+const PROVIDER_URL_HELP: Record<
+  NotificationProvider,
+  { key: string; defaultValue: string }
+> = {
+  slack: {
+    key: "settings.notifications.webhookUrlHelpSlack",
+    defaultValue: "Paste a Slack incoming-webhook URL (hooks.slack.com).",
+  },
+  teams: {
+    key: "settings.notifications.webhookUrlHelpTeams",
+    defaultValue: "Paste a Microsoft Teams Workflows webhook URL.",
+  },
+  google_chat: {
+    key: "settings.notifications.webhookUrlHelpGoogleChat",
+    defaultValue:
+      "Paste a Google Chat incoming-webhook URL (chat.googleapis.com). Webhooks need a space on a Google Workspace account.",
+  },
 };
 
 function looksLikeProviderUrl(
@@ -313,13 +351,9 @@ function ChannelCard({
               </h3>
               <span className="inline-flex items-center gap-1.5 rounded-full bg-muted px-2 py-0.5 text-[11px] font-medium text-muted-foreground">
                 <ProviderMark provider={channel.provider} className="h-3 w-3" />
-                {channel.provider === "slack"
-                  ? t("settings.notifications.providerSlack", {
-                      defaultValue: "Slack",
-                    })
-                  : t("settings.notifications.providerTeams", {
-                      defaultValue: "Microsoft Teams",
-                    })}
+                {t(PROVIDER_LABELS[channel.provider].key, {
+                  defaultValue: PROVIDER_LABELS[channel.provider].defaultValue,
+                })}
               </span>
             </div>
             <p className="truncate text-xs text-muted-foreground">
@@ -525,27 +559,25 @@ function AddChannelDialog({
                 defaultValue: "Provider",
               })}
             </Label>
-            <div className="grid grid-cols-2 gap-2">
-              {(["slack", "teams"] as const).map((p) => (
+            <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
+              {PROVIDERS.map((p) => (
                 <button
                   key={p}
                   type="button"
                   onClick={() => setProvider(p)}
-                  className={`rounded-lg border px-3 py-2 text-sm font-medium transition ${
+                  className={`rounded-lg border px-2 py-2 text-sm font-medium transition ${
                     provider === p
                       ? "border-primary bg-primary/5 text-foreground"
                       : "border-border text-muted-foreground hover:border-border/80"
                   }`}
                 >
-                  <span className="flex items-center justify-center gap-2">
+                  <span className="flex items-center justify-center gap-1.5">
                     <ProviderMark provider={p} className="h-4 w-4" />
-                    {p === "slack"
-                      ? t("settings.notifications.providerSlack", {
-                          defaultValue: "Slack",
-                        })
-                      : t("settings.notifications.providerTeams", {
-                          defaultValue: "Microsoft Teams",
-                        })}
+                    <span className="truncate">
+                      {t(PROVIDER_LABELS[p].key, {
+                        defaultValue: PROVIDER_LABELS[p].defaultValue,
+                      })}
+                    </span>
                   </span>
                 </button>
               ))}
@@ -582,15 +614,9 @@ function AddChannelDialog({
               onChange={(e) => setWebhookUrl(e.target.value)}
             />
             <p className="text-xs text-muted-foreground">
-              {provider === "slack"
-                ? t("settings.notifications.webhookUrlHelpSlack", {
-                    defaultValue:
-                      "Paste a Slack incoming-webhook URL (hooks.slack.com).",
-                  })
-                : t("settings.notifications.webhookUrlHelpTeams", {
-                    defaultValue:
-                      "Paste a Microsoft Teams Workflows webhook URL.",
-                  })}
+              {t(PROVIDER_URL_HELP[provider].key, {
+                defaultValue: PROVIDER_URL_HELP[provider].defaultValue,
+              })}
             </p>
             {urlLooksOff ? (
               <p className="text-xs text-amber-600 dark:text-amber-400">
