@@ -42,6 +42,7 @@ import {
 } from "~/lib/hooks/useUpdateLeadStatus";
 import {
   ArrowRight,
+  CalendarClock,
   LayoutGrid,
   Table2,
   Upload,
@@ -52,6 +53,11 @@ import {
 } from "lucide-react";
 import { cn } from "~/lib/utils";
 import { formatDate } from "~/lib/utils/format";
+import {
+  formatAppointmentRange,
+  isAppointmentPast,
+  nextLeadAppointment,
+} from "~/lib/leads/appointment";
 import { LeadImportModal } from "~/components/organism/lead-import-modal";
 import { CreateLeadDialog } from "~/components/organism/create-lead-dialog";
 import i18n from "~/i18n";
@@ -434,12 +440,31 @@ export default function LeadForm() {
       header: t("leads.columns.fullName"),
       cell: ({ row }) => {
         const name = row.original.full_name ?? "—";
+        const appointment = nextLeadAppointment(row.original);
         return (
-          <TooltipContainer tooltipContent={name}>
-            <span className="truncate max-w-[180px] block font-medium text-foreground">
-              {name}
-            </span>
-          </TooltipContainer>
+          <span className="flex items-center gap-1.5 max-w-[180px]">
+            <TooltipContainer tooltipContent={name}>
+              <span className="truncate block font-medium text-foreground">
+                {name}
+              </span>
+            </TooltipContainer>
+            {appointment && (
+              <TooltipContainer
+                tooltipContent={formatAppointmentRange(appointment)}
+              >
+                <span className="inline-flex shrink-0">
+                  <CalendarClock
+                    className={cn(
+                      "h-3.5 w-3.5",
+                      isAppointmentPast(appointment)
+                        ? "text-muted-foreground/50"
+                        : "text-foreground",
+                    )}
+                  />
+                </span>
+              </TooltipContainer>
+            )}
+          </span>
         );
       },
     },

@@ -295,11 +295,25 @@
       "hidden": "Masqué",
       "stale": "Obsolète"
     },
+    "appointment": {
+      "title": "Rendez-vous",
+      "join": "Rejoindre la réunion",
+      "past": "Passé",
+      "notBooked": "Non confirmé dans le calendrier",
+      "provider": {
+        "google": "Google Agenda",
+        "microsoft": "Microsoft",
+        "caldav": "CalDAV",
+        "baikal": "Baikal",
+        "unknown": "Calendrier"
+      }
+    },
     "detail": {
       "metaTitle": "Lead",
       "metaDescription": "Détails du lead",
       "title": "Détails du lead",
       "leadInformation": "Informations sur le lead",
+      "additionalInfo": "Infos supplémentaires",
       "fullPage": "Page complète",
       "notes": "Notes",
       "history": "Historique",
@@ -3719,7 +3733,7 @@
       "mappingLocked": "Verrouillé : le formulaire a besoin de ce champ pour identifier un prospect.",
       "appointment": {
         "target": "Calendrier cible",
-        "targetHelp": "Les réservations créent un événement dans ce calendrier. Les liens Google Meet et les invitations ne sont disponibles que pour les calendriers Google.",
+        "targetHelp": "Les réservations créent un événement dans ce calendrier. Les liens de réunion (Google Meet / Microsoft Teams) et les invitations sont disponibles pour les calendriers Google et Microsoft.",
         "targetGroupMine": "Mes calendriers",
         "targetGroupTeam": "Calendriers d'équipe",
         "targetGroupBooking": "Calendriers de réservation",

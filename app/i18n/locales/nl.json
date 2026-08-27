@@ -295,11 +295,25 @@
       "hidden": "Verborgen",
       "stale": "Verouderd"
     },
+    "appointment": {
+      "title": "Afspraak",
+      "join": "Deelnemen aan meeting",
+      "past": "Verlopen",
+      "notBooked": "Niet bevestigd in agenda",
+      "provider": {
+        "google": "Google Agenda",
+        "microsoft": "Microsoft",
+        "caldav": "CalDAV",
+        "baikal": "Baikal",
+        "unknown": "Agenda"
+      }
+    },
     "detail": {
       "metaTitle": "Lead",
       "metaDescription": "Leaddetails",
       "title": "Leaddetails",
       "leadInformation": "Leadinformatie",
+      "additionalInfo": "Aanvullende info",
       "fullPage": "Volledige pagina",
       "notes": "Notities",
       "history": "Geschiedenis",
@@ -3717,7 +3731,7 @@
       "mappingLocked": "Vergrendeld: het formulier heeft dit veld nodig om een lead te identificeren.",
       "appointment": {
         "target": "Doelagenda",
-        "targetHelp": "Boekingen maken een afspraak aan in deze agenda. Google Meet-links en gastuitnodigingen zijn alleen beschikbaar voor Google-agenda's.",
+        "targetHelp": "Boekingen maken een afspraak aan in deze agenda. Meetinglinks (Google Meet / Microsoft Teams) en gastuitnodigingen zijn beschikbaar voor Google- en Microsoft-agenda's.",
         "targetGroupMine": "Mijn agenda's",
         "targetGroupTeam": "Teamagenda's",
         "targetGroupBooking": "Boekingsagenda's",

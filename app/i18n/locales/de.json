@@ -295,11 +295,25 @@
       "hidden": "Versteckt",
       "stale": "Veraltet"
     },
+    "appointment": {
+      "title": "Termin",
+      "join": "Meeting beitreten",
+      "past": "Vergangen",
+      "notBooked": "Nicht im Kalender bestätigt",
+      "provider": {
+        "google": "Google Kalender",
+        "microsoft": "Microsoft",
+        "caldav": "CalDAV",
+        "baikal": "Baikal",
+        "unknown": "Kalender"
+      }
+    },
     "detail": {
       "metaTitle": "Lead",
       "metaDescription": "Lead-Details",
       "title": "Lead-Details",
       "leadInformation": "Lead-Informationen",
+      "additionalInfo": "Weitere Infos",
       "fullPage": "Vollansicht",
       "notes": "Notizen",
       "history": "Verlauf",
@@ -3719,7 +3733,7 @@
       "mappingLocked": "Gesperrt: Das Formular braucht dieses Feld, um einen Lead zu identifizieren.",
       "appointment": {
         "target": "Zielkalender",
-        "targetHelp": "Buchungen erstellen einen Termin in diesem Kalender. Google-Meet-Links und Gästeeinladungen sind nur für Google-Kalender verfügbar.",
+        "targetHelp": "Buchungen erstellen einen Termin in diesem Kalender. Meeting-Links (Google Meet / Microsoft Teams) und Gästeeinladungen sind für Google- und Microsoft-Kalender verfügbar.",
         "targetGroupMine": "Meine Kalender",
         "targetGroupTeam": "Team-Kalender",
         "targetGroupBooking": "Buchungskalender",

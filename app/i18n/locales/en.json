@@ -295,11 +295,25 @@
       "hidden": "Hidden",
       "stale": "Stale"
     },
+    "appointment": {
+      "title": "Appointment",
+      "join": "Join meeting",
+      "past": "Past",
+      "notBooked": "Not confirmed in calendar",
+      "provider": {
+        "google": "Google Calendar",
+        "microsoft": "Microsoft",
+        "caldav": "CalDAV",
+        "baikal": "Baikal",
+        "unknown": "Calendar"
+      }
+    },
     "detail": {
       "metaTitle": "Lead",
       "metaDescription": "Lead details",
       "title": "Lead details",
       "leadInformation": "Lead Information",
+      "additionalInfo": "Additional info",
       "fullPage": "Full page",
       "notes": "Notes",
       "history": "History",
@@ -3717,7 +3731,7 @@
       "mappingLocked": "Locked: the form needs this field to identify a lead.",
       "appointment": {
         "target": "Target calendar",
-        "targetHelp": "Bookings create an event in this calendar. Google Meet links and guest invitations are only available for Google calendars.",
+        "targetHelp": "Bookings create an event in this calendar. Meeting links (Google Meet / Microsoft Teams) and guest invitations are available for Google and Microsoft calendars.",
         "targetGroupMine": "My calendars",
         "targetGroupTeam": "Team calendars",
         "targetGroupBooking": "Booking calendars",
