@@ -17,8 +17,12 @@ import {
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { useTranslation } from "react-i18next";
-import { ChevronDown, Loader2 } from "lucide-react";
-import { formatDate } from "~/lib/utils/format";
+import { CalendarClock, ChevronDown, Loader2 } from "lucide-react";
+import { formatDate, formatDateIntl } from "~/lib/utils/format";
+import {
+  isAppointmentPast,
+  nextLeadAppointment,
+} from "~/lib/leads/appointment";
 import {
   getLeads,
   getLeadsKanbanCounts,
@@ -682,6 +686,8 @@ function KanbanCardInner({ lead }: { lead: Lead }) {
   const label = stage
     ? resolveStageLabel(stage, t)
     : resolveStageLabelByKey("lead", lead.status, t);
+  const appointment = nextLeadAppointment(lead);
+  const appointmentPast = appointment ? isAppointmentPast(appointment) : false;
 
   return (
     <div className="p-3 space-y-2">
@@ -701,6 +707,22 @@ function KanbanCardInner({ lead }: { lead: Lead }) {
           />
           {label}
         </span>
+        {appointment && (
+          <span
+            className={cn(
+              "inline-flex items-center gap-1 rounded-full border border-border bg-muted px-1.5 py-0.5 text-[10px] font-medium shrink-0 tabular-nums",
+              appointmentPast ? "text-muted-foreground/60" : "text-foreground",
+            )}
+          >
+            <CalendarClock className="h-3 w-3 shrink-0" />
+            {formatDateIntl(appointment.start, {
+              month: "short",
+              day: "numeric",
+              hour: "2-digit",
+              minute: "2-digit",
+            })}
+          </span>
+        )}
       </div>
       <p className="font-semibold text-sm truncate leading-tight">
         {lead.full_name || lead.email || "—"}
@@ -842,6 +864,7 @@ function LeadScheduleRow({
         .replace(/_/g, " ")
         .replace(/\b\w/g, (c) => c.toUpperCase())
     : null;
+  const appointment = nextLeadAppointment(lead);
 
   return (
     <button
@@ -873,6 +896,17 @@ function LeadScheduleRow({
           {lead.created_at && (
             <span className="text-[10px] text-muted-foreground/50">
               {formatDate(new Date(lead.created_at), "MMM d")}
+            </span>
+          )}
+          {appointment && (
+            <span className="inline-flex items-center gap-1 text-[10px] text-muted-foreground tabular-nums">
+              <CalendarClock className="h-3 w-3 shrink-0" />
+              {formatDateIntl(appointment.start, {
+                month: "short",
+                day: "numeric",
+                hour: "2-digit",
+                minute: "2-digit",
+              })}
             </span>
           )}
         </div>

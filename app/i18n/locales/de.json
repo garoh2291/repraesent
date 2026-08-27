@@ -295,11 +295,25 @@
       "hidden": "Versteckt",
       "stale": "Veraltet"
     },
+    "appointment": {
+      "title": "Termin",
+      "join": "Meeting beitreten",
+      "past": "Vergangen",
+      "notBooked": "Nicht im Kalender bestätigt",
+      "provider": {
+        "google": "Google Kalender",
+        "microsoft": "Microsoft",
+        "caldav": "CalDAV",
+        "baikal": "Baikal",
+        "unknown": "Kalender"
+      }
+    },
     "detail": {
       "metaTitle": "Lead",
       "metaDescription": "Lead-Details",
       "title": "Lead-Details",
       "leadInformation": "Lead-Informationen",
+      "additionalInfo": "Weitere Infos",
       "fullPage": "Vollansicht",
       "notes": "Notizen",
       "history": "Verlauf",
@@ -1295,22 +1309,24 @@
     },
     "notifications": {
       "metaTitle": "Benachrichtigungen",
-      "metaDescription": "Workspace-Ereignisse an Slack oder Microsoft Teams senden.",
+      "metaDescription": "Workspace-Ereignisse an Slack, Microsoft Teams oder Google Chat senden.",
       "sectionLabel": "Kanäle",
-      "sectionDescription": "Workspace-Ereignisse sofort an Slack oder Microsoft Teams senden.",
+      "sectionDescription": "Workspace-Ereignisse sofort an Slack, Microsoft Teams oder Google Chat senden.",
       "addChannel": "Kanal hinzufügen",
       "addChannelDescription": "Incoming-Webhook-URL einfügen. Ereignisse werden sofort dorthin gesendet.",
       "emptyTitle": "Noch keine Benachrichtigungskanäle",
-      "emptyDescription": "Verbinden Sie einen Slack- oder Teams-Kanal, um über neue Leads und Deal-Updates informiert zu werden.",
+      "emptyDescription": "Verbinden Sie einen Slack-, Teams- oder Google Chat-Kanal, um über neue Leads und Deal-Updates informiert zu werden.",
       "provider": "Anbieter",
       "providerSlack": "Slack",
       "providerTeams": "Microsoft Teams",
+      "providerGoogleChat": "Google Chat",
       "nameLabel": "Kanalname",
       "namePlaceholder": "z. B. #sales-alerts",
       "nameRequired": "Bitte einen Kanalnamen eingeben.",
       "webhookUrlLabel": "Webhook-URL",
       "webhookUrlHelpSlack": "Slack Incoming-Webhook-URL einfügen (hooks.slack.com).",
       "webhookUrlHelpTeams": "Microsoft Teams Workflows-Webhook-URL einfügen.",
+      "webhookUrlHelpGoogleChat": "Google Chat Webhook-URL einfügen (chat.googleapis.com). Webhooks erfordern einen Bereich (Space) in einem Google Workspace-Konto.",
       "webhookUrlInvalid": "Bitte eine gültige https://-Webhook-URL eingeben.",
       "webhookUrlSuspicious": "Das sieht nicht nach einer typischen Webhook-URL dieses Anbieters aus.",
       "eventsLabel": "Benachrichtigen bei",
@@ -1345,6 +1361,12 @@
           "step2": "Wählen Sie die Vorlage „In einem Kanal posten, wenn eine Webhookanforderung empfangen wird“.",
           "step3": "Erstellen Sie den Workflow und kopieren Sie die angezeigte URL.",
           "step4": "Fügen Sie die URL hier ein."
+        },
+        "google_chat": {
+          "step1": "Öffnen Sie Google Chat und gehen Sie zum gewünschten Bereich (Space).",
+          "step2": "Klicken Sie auf den Namen des Bereichs und wählen Sie „Apps und Integrationen“.",
+          "step3": "Klicken Sie auf „Webhooks hinzufügen“, vergeben Sie einen Namen (z. B. Repraesent) und speichern Sie.",
+          "step4": "Kopieren Sie die Webhook-URL und fügen Sie sie hier ein."
         }
       }
     },
@@ -3719,7 +3741,7 @@
       "mappingLocked": "Gesperrt: Das Formular braucht dieses Feld, um einen Lead zu identifizieren.",
       "appointment": {
         "target": "Zielkalender",
-        "targetHelp": "Buchungen erstellen einen Termin in diesem Kalender. Google-Meet-Links und Gästeeinladungen sind nur für Google-Kalender verfügbar.",
+        "targetHelp": "Buchungen erstellen einen Termin in diesem Kalender. Meeting-Links (Google Meet / Microsoft Teams) und Gästeeinladungen sind für Google- und Microsoft-Kalender verfügbar.",
         "targetGroupMine": "Meine Kalender",
         "targetGroupTeam": "Team-Kalender",
         "targetGroupBooking": "Buchungskalender",

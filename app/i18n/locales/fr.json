@@ -295,11 +295,25 @@
       "hidden": "Masqué",
       "stale": "Obsolète"
     },
+    "appointment": {
+      "title": "Rendez-vous",
+      "join": "Rejoindre la réunion",
+      "past": "Passé",
+      "notBooked": "Non confirmé dans le calendrier",
+      "provider": {
+        "google": "Google Agenda",
+        "microsoft": "Microsoft",
+        "caldav": "CalDAV",
+        "baikal": "Baikal",
+        "unknown": "Calendrier"
+      }
+    },
     "detail": {
       "metaTitle": "Lead",
       "metaDescription": "Détails du lead",
       "title": "Détails du lead",
       "leadInformation": "Informations sur le lead",
+      "additionalInfo": "Infos supplémentaires",
       "fullPage": "Page complète",
       "notes": "Notes",
       "history": "Historique",
@@ -1295,22 +1309,24 @@
     },
     "notifications": {
       "metaTitle": "Notifications",
-      "metaDescription": "Envoyer les événements de l'espace de travail vers Slack ou Microsoft Teams.",
+      "metaDescription": "Envoyer les événements de l'espace de travail vers Slack, Microsoft Teams ou Google Chat.",
       "sectionLabel": "Canaux",
-      "sectionDescription": "Publier les événements de l'espace de travail sur Slack ou Microsoft Teams dès qu'ils se produisent.",
+      "sectionDescription": "Publier les événements de l'espace de travail sur Slack, Microsoft Teams ou Google Chat dès qu'ils se produisent.",
       "addChannel": "Ajouter un canal",
       "addChannelDescription": "Collez une URL de webhook entrant. Les événements y sont publiés instantanément.",
       "emptyTitle": "Aucun canal de notification pour l'instant",
-      "emptyDescription": "Connectez un canal Slack ou Teams pour être alerté des nouveaux leads et des mises à jour de deals.",
+      "emptyDescription": "Connectez un canal Slack, Teams ou Google Chat pour être alerté des nouveaux leads et des mises à jour de deals.",
       "provider": "Fournisseur",
       "providerSlack": "Slack",
       "providerTeams": "Microsoft Teams",
+      "providerGoogleChat": "Google Chat",
       "nameLabel": "Nom du canal",
       "namePlaceholder": "p. ex. #sales-alerts",
       "nameRequired": "Saisissez un nom de canal.",
       "webhookUrlLabel": "URL du webhook",
       "webhookUrlHelpSlack": "Collez une URL de webhook entrant Slack (hooks.slack.com).",
       "webhookUrlHelpTeams": "Collez une URL de webhook Microsoft Teams Workflows.",
+      "webhookUrlHelpGoogleChat": "Collez une URL de webhook entrant Google Chat (chat.googleapis.com). Les webhooks nécessitent un espace sur un compte Google Workspace.",
       "webhookUrlInvalid": "Saisissez une URL de webhook https:// valide.",
       "webhookUrlSuspicious": "Cela ne ressemble pas à une URL de webhook typique pour ce fournisseur.",
       "eventsLabel": "Notifier pour",
@@ -1345,6 +1361,12 @@
           "step2": "Choisissez le modèle « Publier dans un canal lorsqu'une demande de webhook est reçue ».",
           "step3": "Créez le workflow et copiez l'URL affichée.",
           "step4": "Collez l'URL ici."
+        },
+        "google_chat": {
+          "step1": "Ouvrez Google Chat et accédez à l’espace qui doit recevoir les notifications.",
+          "step2": "Cliquez sur le nom de l’espace et choisissez « Applications et intégrations ».",
+          "step3": "Cliquez sur « Ajouter des webhooks », donnez-lui un nom (p. ex. Repraesent) et enregistrez.",
+          "step4": "Copiez l’URL du webhook et collez-la ici."
         }
       }
     },
@@ -3719,7 +3741,7 @@
       "mappingLocked": "Verrouillé : le formulaire a besoin de ce champ pour identifier un prospect.",
       "appointment": {
         "target": "Calendrier cible",
-        "targetHelp": "Les réservations créent un événement dans ce calendrier. Les liens Google Meet et les invitations ne sont disponibles que pour les calendriers Google.",
+        "targetHelp": "Les réservations créent un événement dans ce calendrier. Les liens de réunion (Google Meet / Microsoft Teams) et les invitations sont disponibles pour les calendriers Google et Microsoft.",
         "targetGroupMine": "Mes calendriers",
         "targetGroupTeam": "Calendriers d'équipe",
         "targetGroupBooking": "Calendriers de réservation",
