@@ -745,9 +745,10 @@ function ConnectActions({
       </Button>
       <Button
         onClick={onConnectSmtp}
-        className="h-10 w-full gap-1.5 bg-foreground px-4 text-background hover:bg-foreground/90 hover:text-background sm:w-auto"
+        variant="outline"
+        className="h-10 w-full gap-2 px-4 sm:w-auto"
       >
-        <AtSign className="h-3.5 w-3.5 shrink-0" />
+        <AtSign className="h-4 w-4 shrink-0" />
         {t("settings.emailAccounts.connectSmtp")}
       </Button>
     </div>

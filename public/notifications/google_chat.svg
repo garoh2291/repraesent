@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96">
+  <!-- Google Chat mark: green speech bubble, dark-green tail (brand greens). -->
+  <path fill="#00832D" d="M20 66h22L20 90.6c-1.9 2.1-5.4.8-5.4-2V70a4 4 0 0 1 4-4z"/>
+  <path fill="#00AC47" d="M14.6 10h66.8A6.6 6.6 0 0 1 88 16.6v42.8a6.6 6.6 0 0 1-6.6 6.6H42L20.9 66H14.6A6.6 6.6 0 0 1 8 59.4V16.6A6.6 6.6 0 0 1 14.6 10z"/>
+  <path fill="#fff" d="M26 28h44v6H26zm0 14h32v6H26z" opacity=".92"/>
+</svg>

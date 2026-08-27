@@ -1307,22 +1307,24 @@
     },
     "notifications": {
       "metaTitle": "Notifications",
-      "metaDescription": "Send workspace events to Slack or Microsoft Teams.",
+      "metaDescription": "Send workspace events to Slack, Microsoft Teams or Google Chat.",
       "sectionLabel": "Channels",
-      "sectionDescription": "Post workspace events to Slack or Microsoft Teams the moment they happen.",
+      "sectionDescription": "Post workspace events to Slack, Microsoft Teams or Google Chat the moment they happen.",
       "addChannel": "Add channel",
       "addChannelDescription": "Paste an incoming-webhook URL. Events post there instantly.",
       "emptyTitle": "No notification channels yet",
-      "emptyDescription": "Connect a Slack or Teams channel to get pinged about new leads and deal updates.",
+      "emptyDescription": "Connect a Slack, Teams or Google Chat channel to get pinged about new leads and deal updates.",
       "provider": "Provider",
       "providerSlack": "Slack",
       "providerTeams": "Microsoft Teams",
+      "providerGoogleChat": "Google Chat",
       "nameLabel": "Channel name",
       "namePlaceholder": "e.g. #sales-alerts",
       "nameRequired": "Enter a channel name.",
       "webhookUrlLabel": "Webhook URL",
       "webhookUrlHelpSlack": "Paste a Slack incoming-webhook URL (hooks.slack.com).",
       "webhookUrlHelpTeams": "Paste a Microsoft Teams Workflows webhook URL.",
+      "webhookUrlHelpGoogleChat": "Paste a Google Chat incoming-webhook URL (chat.googleapis.com). Webhooks need a space on a Google Workspace account.",
       "webhookUrlInvalid": "Enter a valid https:// webhook URL.",
       "webhookUrlSuspicious": "This does not look like a typical webhook URL for this provider.",
       "eventsLabel": "Notify about",
@@ -1357,6 +1359,12 @@
           "step2": "Pick the template “Post to a channel when a webhook request is received”.",
           "step3": "Add the workflow and copy the URL it shows.",
           "step4": "Paste the URL here."
+        },
+        "google_chat": {
+          "step1": "Open Google Chat and go to the space that should receive notifications.",
+          "step2": "Click the space name and choose “Apps & integrations”.",
+          "step3": "Click “Add webhooks”, give it a name (e.g. Repraesent), and save.",
+          "step4": "Copy the webhook URL and paste it here."
         }
       }
     },

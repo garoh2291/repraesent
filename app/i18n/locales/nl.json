@@ -1307,22 +1307,24 @@
     },
     "notifications": {
       "metaTitle": "Meldingen",
-      "metaDescription": "Workspace-gebeurtenissen naar Slack of Microsoft Teams sturen.",
+      "metaDescription": "Workspace-gebeurtenissen naar Slack, Microsoft Teams of Google Chat sturen.",
       "sectionLabel": "Kanalen",
-      "sectionDescription": "Workspace-gebeurtenissen direct naar Slack of Microsoft Teams posten.",
+      "sectionDescription": "Workspace-gebeurtenissen direct naar Slack, Microsoft Teams of Google Chat posten.",
       "addChannel": "Kanaal toevoegen",
       "addChannelDescription": "Plak een incoming-webhook-URL. Gebeurtenissen worden er direct geplaatst.",
       "emptyTitle": "Nog geen meldingskanalen",
-      "emptyDescription": "Koppel een Slack- of Teams-kanaal om direct op de hoogte te zijn van nieuwe leads en deal-updates.",
+      "emptyDescription": "Koppel een Slack-, Teams- of Google Chat-kanaal om direct op de hoogte te zijn van nieuwe leads en deal-updates.",
       "provider": "Provider",
       "providerSlack": "Slack",
       "providerTeams": "Microsoft Teams",
+      "providerGoogleChat": "Google Chat",
       "nameLabel": "Kanaalnaam",
       "namePlaceholder": "bijv. #sales-alerts",
       "nameRequired": "Voer een kanaalnaam in.",
       "webhookUrlLabel": "Webhook-URL",
       "webhookUrlHelpSlack": "Plak een Slack incoming-webhook-URL (hooks.slack.com).",
       "webhookUrlHelpTeams": "Plak een Microsoft Teams Workflows-webhook-URL.",
+      "webhookUrlHelpGoogleChat": "Plak een Google Chat webhook-URL (chat.googleapis.com). Webhooks vereisen een ruimte in een Google Workspace-account.",
       "webhookUrlInvalid": "Voer een geldige https://-webhook-URL in.",
       "webhookUrlSuspicious": "Dit lijkt niet op een typische webhook-URL van deze provider.",
       "eventsLabel": "Melden bij",
@@ -1357,6 +1359,12 @@
           "step2": "Kies de sjabloon “Post to a channel when a webhook request is received”.",
           "step3": "Maak de workflow aan en kopieer de getoonde URL.",
           "step4": "Plak de URL hier."
+        },
+        "google_chat": {
+          "step1": "Open Google Chat en ga naar de ruimte die meldingen moet ontvangen.",
+          "step2": "Klik op de naam van de ruimte en kies “Apps en integraties”.",
+          "step3": "Klik op “Webhooks toevoegen”, geef een naam (bijv. Repraesent) en sla op.",
+          "step4": "Kopieer de webhook-URL en plak deze hier."
         }
       }
     },
