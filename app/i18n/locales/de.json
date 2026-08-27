@@ -1499,7 +1499,7 @@
         "debugShow": "Letzte Events prüfen",
         "debugHide": "Letzte Events ausblenden",
         "debugEmpty": "OpenAI hat in den letzten 15 Minuten keine Events empfangen. Testformular absenden und erneut prüfen.",
-        "snippetCsp": "Sendet Ihre Website einen Content-Security-Policy-Header, müssen die OpenAI-Hosts erlaubt sein — bzrcdn.openai.com in script-src und bzr.openai.com in connect-src — sonst blockiert der Browser das Pixel. Cookie-Banner im Einsatz? Fügen Sie das Snippet dort als Marketing-Skript hinzu, statt es direkt einzubauen."
+        "snippetCsp": "Sendet Ihre Website einen Content-Security-Policy-Header, müssen die OpenAI-Hosts erlaubt sein — bzrcdn.openai.com in script-src sowie bzrcdn.openai.com und bzr.openai.com beide in connect-src — sonst blockiert der Browser das Pixel. Cookie-Banner im Einsatz? Fügen Sie das Snippet dort als Marketing-Skript hinzu, statt es direkt einzubauen."
       },
       "howTo": {
         "title": "So erhalten Sie einen API-Schlüssel",
@@ -4552,8 +4552,6 @@
     "revokedBanner": "OpenAI hat den gespeicherten API-Schlüssel abgelehnt. Verbinden Sie sich neu mit einem frischen Schlüssel aus dem Ads Manager.",
     "revokedBannerCta": "Einstellungen öffnen",
     "rangeDays": "{{count}} Tage",
-    "spendOverTime": "Ausgaben im Zeitverlauf",
-    "noData": "Noch keine Auslieferungsdaten für diesen Zeitraum.",
     "campaignsTitle": "Kampagnen",
     "searchPlaceholder": "Kampagnen suchen…",
     "truncated": "Dieses Konto hat mehr Kampagnen, als auf einmal angezeigt werden können — die ersten Seiten werden gezeigt.",
@@ -4581,7 +4579,7 @@
       "name": "Kampagne",
       "status": "Status",
       "bidding": "Gebotsart",
-      "budget": "Laufzeitbudget",
+      "budget": "Budget",
       "expand": "Anzeigengruppen anzeigen",
       "expandAds": "Anzeigen anzeigen"
     },
@@ -4694,6 +4692,8 @@
         "helpCenter": "Ads-Manager-Überblick (Help Center)",
         "devDocs": "API-Quickstart (OpenAI Developers)"
       }
-    }
+    },
+    "performanceTrend": "Leistungsverlauf",
+    "perDay": "/Tag"
   }
 }

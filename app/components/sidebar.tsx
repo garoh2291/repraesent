@@ -1,5 +1,12 @@
 import { Link, useLocation, useNavigate } from "react-router";
-import { Fragment, useEffect, useState } from "react";
+import {
+  Children,
+  Fragment,
+  createContext,
+  useContext,
+  useEffect,
+  useState,
+} from "react";
 import { cn } from "~/lib/utils";
 import { useTranslation } from "react-i18next";
 import {
@@ -23,6 +30,8 @@ import {
   Mail,
   Megaphone,
   Package,
+  PanelLeftClose,
+  PanelLeftOpen,
   Plug,
   Plus,
   Settings,
@@ -35,6 +44,7 @@ import {
 } from "lucide-react";
 import * as LucideIcons from "lucide-react";
 import { InstructionsModal } from "~/components/instructions-modal";
+import { OpenAiMark } from "~/components/icons/openai-mark";
 
 import { getLocalizedServiceName } from "~/lib/api/auth";
 import { useAuthContext } from "~/providers/auth-provider";
@@ -62,7 +72,7 @@ import {
 import logoUrl from "~/components/icons/re_praesent-mark-brand-hor.svg?url";
 
 const lucideIconNames = new Set(
-  Object.keys(LucideIcons).filter((key) => /^[A-Z]/.test(key))
+  Object.keys(LucideIcons).filter((key) => /^[A-Z]/.test(key)),
 );
 
 function kebabToPascal(name: string) {
@@ -119,7 +129,7 @@ const SETTINGS_NAV = [
   {
     to: "/settings/openai-ads",
     labelKey: "settings.tabs.openaiAds",
-    Icon: Megaphone,
+    Icon: OpenAiMark,
   },
   {
     to: "/settings/pipelines",
@@ -127,6 +137,16 @@ const SETTINGS_NAV = [
     Icon: Kanban,
   },
 ] as const;
+
+/**
+ * True while the desktop sidebar is collapsed to its icon rail. NavLink and
+ * PipelineNav read it so every call site keeps its normal children — in
+ * collapsed mode only the leading icon is rendered, which also hides badges
+ * and bare text nodes without touching thirty call sites.
+ */
+const SidebarCollapsedContext = createContext(false);
+
+const COLLAPSE_STORAGE_KEY = "sidebar_collapsed";
 
 function NavLink({
   to,
@@ -143,13 +163,15 @@ function NavLink({
   onClick?: (e: React.MouseEvent) => void;
   className?: string;
 }) {
+  const collapsed = useContext(SidebarCollapsedContext);
   return (
     <Link
       to={to}
       onClick={onClick}
       aria-disabled={disabled}
       className={[
-        "flex items-center gap-2.5 rounded-lg px-3 py-2 text-[13px] font-medium",
+        "flex items-center rounded-lg py-2 text-[13px] font-medium",
+        collapsed ? "justify-center px-0" : "gap-2.5 px-3",
         "border-l-2 transition-all duration-150",
         disabled
           ? "cursor-not-allowed border-transparent text-white/25"
@@ -159,7 +181,7 @@ function NavLink({
         className ?? "",
       ].join(" ")}
     >
-      {children}
+      {collapsed ? Children.toArray(children)[0] : children}
     </Link>
   );
 }
@@ -179,11 +201,21 @@ function PipelineNav({ onClose }: { onClose?: () => void }) {
   const [newOpen, setNewOpen] = useState(false);
   const pipelinesQuery = usePipelinesQuery();
   const pipelines = pipelinesQuery.data ?? [];
+  const collapsed = useContext(SidebarCollapsedContext);
 
   // Landing anywhere under /pipeline reveals the list.
   useEffect(() => {
     if (onPipeline) setOpen(true);
   }, [onPipeline]);
+
+  // No room for a nested list on the icon rail — one link to the default view.
+  if (collapsed) {
+    return (
+      <NavLink to="/pipeline" isActive={onPipeline} onClick={onClose}>
+        <Columns3 className="h-4 w-4 shrink-0" />
+      </NavLink>
+    );
+  }
 
   if (!pipelinesQuery.isSuccess || pipelines.length === 0) {
     return (
@@ -266,9 +298,12 @@ function PipelineNav({ onClose }: { onClose?: () => void }) {
 export function Sidebar({
   onClose,
   className,
+  collapsible = false,
 }: {
   onClose?: () => void;
   className?: string;
+  /** Desktop instance only — the mobile sheet always renders expanded. */
+  collapsible?: boolean;
 }) {
   const {
     user,
@@ -297,10 +332,10 @@ export function Sidebar({
   const isDemoWorkspace = currentWorkspace?.is_demo === true;
   const hasAppointmentsService =
     currentWorkspace?.services?.some(
-      (s) => s.service_type === "appointments"
+      (s) => s.service_type === "appointments",
     ) ?? false;
   const { data: appointmentConfigs } = useAppointmentConfigs(
-    hasAppointmentsService && !!currentWorkspace?.id
+    hasAppointmentsService && !!currentWorkspace?.id,
   );
   const showAppointmentsInSidebar =
     (hasAppointmentsService && !!appointmentConfigs?.length) || isDemoWorkspace;
@@ -323,10 +358,10 @@ export function Sidebar({
   // right mode for free, and there is nothing to reset on the way out.
   const inSettings = location.pathname.startsWith("/settings");
   const { data: wpSite } = useWorkspaceWpSite(
-    !!currentWorkspace?.id && !isDoorboostBrandWs
+    !!currentWorkspace?.id && !isDoorboostBrandWs,
   );
   const { isConnected: hasStripeConnection } = useStripeConnection(
-    !!currentWorkspace?.id && !isDoorboostBrandWs
+    !!currentWorkspace?.id && !isDoorboostBrandWs,
   );
 
   const handleWorkspaceChange = (workspaceId: string) => {
@@ -334,440 +369,553 @@ export function Sidebar({
     navigate("/", { replace: true });
   };
 
-  return (
-    <aside
-      className={cn(
-        "flex h-full w-[220px] shrink-0 flex-col bg-[#111113] border-r border-white/5",
-        className
-      )}
-    >
-      {/* Logo */}
-      <div className="flex h-14 shrink-0 items-center px-4 border-b border-white/5 gap-2">
-        <Link
-          to="/"
-          className="flex items-center flex-1 min-w-0"
-          onClick={onClose}
-        >
-          <img
-            src={logoUrl}
-            alt="Repraesent"
-            className="h-7 w-auto max-w-[120px] brightness-0 invert opacity-90"
-          />
-        </Link>
-        {onClose && (
-          <button
-            onClick={onClose}
-            className="shrink-0 flex h-7 w-7 items-center justify-center rounded-md text-white/35 hover:text-white/70 hover:bg-white/5 transition-colors"
-            aria-label="Close navigation"
-          >
-            <X className="h-3.5 w-3.5" />
-          </button>
-        )}
-      </div>
+  // Collapsed = icon rail. Restored from localStorage AFTER mount so the SSR
+  // markup always matches the first client render (expanded) — a mismatch here
+  // would hydrate the whole shell wrong.
+  const [collapsed, setCollapsed] = useState(false);
+  useEffect(() => {
+    if (!collapsible) return;
+    try {
+      setCollapsed(localStorage.getItem(COLLAPSE_STORAGE_KEY) === "1");
+    } catch {
+      // storage blocked — stay expanded
+    }
+  }, [collapsible]);
+  const toggleCollapsed = () => {
+    setCollapsed((c) => {
+      const next = !c;
+      try {
+        localStorage.setItem(COLLAPSE_STORAGE_KEY, next ? "1" : "0");
+      } catch {
+        // storage blocked — the toggle still works for this session
+      }
+      return next;
+    });
+  };
 
-      {/* Workspace selector */}
-      <div className="shrink-0 px-3 py-3 border-b border-white/5">
-        {currentWorkspace &&
-          (hasMultipleWorkspaces ? (
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <button className="flex w-full items-center gap-2 rounded-lg px-2.5 py-2 text-left text-[13px] text-white/55 hover:bg-white/5 hover:text-white/80 transition-colors duration-150">
-                  <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-white/10 text-white text-[10px] font-bold">
-                    {currentWorkspace.name.charAt(0).toUpperCase()}
-                  </div>
-                  <span className="flex-1 truncate font-medium text-white/70">
-                    {currentWorkspace.name}
-                  </span>
-                  <ChevronDown className="h-3.5 w-3.5 shrink-0 text-white/30" />
-                </button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="start" className="min-w-48">
-                {showBrandSwitchEntry && brand && (
-                  <DropdownMenuItem
-                    key="__brand__"
-                    onClick={() => {
-                      onClose?.();
-                      setStoredSelectedView(BRAND_VIEW);
-                      navigate("/brand", { replace: true });
-                    }}
+  return (
+    <SidebarCollapsedContext.Provider value={collapsed}>
+      <aside
+        className={cn(
+          "flex h-full shrink-0 flex-col bg-[#111113] border-r border-white/5 transition-[width] duration-200",
+          collapsed ? "w-[64px]" : "w-[220px]",
+          className,
+        )}
+      >
+        {/* Logo */}
+        <div
+          className={cn(
+            "flex h-14 shrink-0 items-center border-b border-white/5 gap-2",
+            collapsed ? "justify-center px-0" : "px-4",
+          )}
+        >
+          <Link
+            to="/"
+            className={cn(
+              "flex items-center min-w-0",
+              collapsed ? "justify-center" : "flex-1",
+            )}
+            onClick={onClose}
+          >
+            {collapsed ? (
+              <img
+                src="/dend-mark-white-favicon.svg"
+                alt="Repraesent"
+                className="h-7 w-7 opacity-90"
+              />
+            ) : (
+              <img
+                src={logoUrl}
+                alt="Repraesent"
+                className="h-7 w-auto max-w-[120px] brightness-0 invert opacity-90"
+              />
+            )}
+          </Link>
+          {collapsible && !collapsed && (
+            <button
+              onClick={toggleCollapsed}
+              className="shrink-0 flex h-7 w-7 items-center justify-center rounded-md text-white/35 hover:text-white/70 hover:bg-white/5 transition-colors"
+              aria-label="Collapse sidebar"
+            >
+              <PanelLeftClose className="h-3.5 w-3.5" />
+            </button>
+          )}
+          {onClose && (
+            <button
+              onClick={onClose}
+              className="shrink-0 flex h-7 w-7 items-center justify-center rounded-md text-white/35 hover:text-white/70 hover:bg-white/5 transition-colors"
+              aria-label="Close navigation"
+            >
+              <X className="h-3.5 w-3.5" />
+            </button>
+          )}
+        </div>
+
+        {/* Expand control — the header only fits the mark when collapsed */}
+        {collapsible && collapsed && (
+          <div className="flex shrink-0 justify-center border-b border-white/5 py-1.5">
+            <button
+              onClick={toggleCollapsed}
+              className="flex h-7 w-7 items-center justify-center rounded-md text-white/35 hover:text-white/70 hover:bg-white/5 transition-colors"
+              aria-label="Expand sidebar"
+            >
+              <PanelLeftOpen className="h-3.5 w-3.5" />
+            </button>
+          </div>
+        )}
+
+        {/* Workspace selector */}
+        <div
+          className={cn(
+            "shrink-0 py-3 border-b border-white/5",
+            collapsed ? "px-1.5" : "px-3",
+          )}
+        >
+          {currentWorkspace &&
+            (hasMultipleWorkspaces ? (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button
+                    title={collapsed ? currentWorkspace.name : undefined}
+                    className={cn(
+                      "flex w-full items-center gap-2 rounded-lg py-2 text-left text-[13px] text-white/55 hover:bg-white/5 hover:text-white/80 transition-colors duration-150",
+                      collapsed ? "justify-center px-0" : "px-2.5",
+                    )}
                   >
-                    <Building2 className="h-4 w-4" />
-                    <span className="flex-1 truncate">{brand.name}</span>
-                    <span className="ml-2 rounded bg-amber-400/15 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-amber-300">
-                      {t("nav.brand_label", "Brand")}
-                    </span>
-                  </DropdownMenuItem>
-                )}
-                {workspaces.map((ws) => (
-                  <DropdownMenuItem
-                    key={ws.id}
-                    onClick={() => handleWorkspaceChange(ws.id)}
-                  >
-                    <Building2 className="h-4 w-4" />
-                    <span className="flex-1 truncate">{ws.name}</span>
-                    {ws.type === "doorboost_brand" && (
+                    <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-white/10 text-white text-[10px] font-bold">
+                      {currentWorkspace.name.charAt(0).toUpperCase()}
+                    </div>
+                    {!collapsed && (
+                      <>
+                        <span className="flex-1 truncate font-medium text-white/70">
+                          {currentWorkspace.name}
+                        </span>
+                        <ChevronDown className="h-3.5 w-3.5 shrink-0 text-white/30" />
+                      </>
+                    )}
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="start" className="min-w-48">
+                  {showBrandSwitchEntry && brand && (
+                    <DropdownMenuItem
+                      key="__brand__"
+                      onClick={() => {
+                        onClose?.();
+                        setStoredSelectedView(BRAND_VIEW);
+                        navigate("/brand", { replace: true });
+                      }}
+                    >
+                      <Building2 className="h-4 w-4" />
+                      <span className="flex-1 truncate">{brand.name}</span>
                       <span className="ml-2 rounded bg-amber-400/15 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-amber-300">
                         {t("nav.brand_label", "Brand")}
                       </span>
-                    )}
-                  </DropdownMenuItem>
-                ))}
-              </DropdownMenuContent>
-            </DropdownMenu>
-          ) : (
-            <div className="flex items-center gap-2 px-2.5 py-2">
-              <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-white/10 text-white text-[10px] font-bold">
-                {currentWorkspace.name.charAt(0).toUpperCase()}
+                    </DropdownMenuItem>
+                  )}
+                  {workspaces.map((ws) => (
+                    <DropdownMenuItem
+                      key={ws.id}
+                      onClick={() => handleWorkspaceChange(ws.id)}
+                    >
+                      <Building2 className="h-4 w-4" />
+                      <span className="flex-1 truncate">{ws.name}</span>
+                      {ws.type === "doorboost_brand" && (
+                        <span className="ml-2 rounded bg-amber-400/15 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-amber-300">
+                          {t("nav.brand_label", "Brand")}
+                        </span>
+                      )}
+                    </DropdownMenuItem>
+                  ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
+            ) : (
+              <div
+                title={collapsed ? currentWorkspace.name : undefined}
+                className={cn(
+                  "flex items-center gap-2 py-2",
+                  collapsed ? "justify-center px-0" : "px-2.5",
+                )}
+              >
+                <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-white/10 text-white text-[10px] font-bold">
+                  {currentWorkspace.name.charAt(0).toUpperCase()}
+                </div>
+                {!collapsed && (
+                  <span className="truncate text-[13px] font-medium text-white/70">
+                    {currentWorkspace.name}
+                  </span>
+                )}
               </div>
-              <span className="truncate text-[13px] font-medium text-white/70">
-                {currentWorkspace.name}
-              </span>
-            </div>
-          ))}
-      </div>
-
-      {/* Navigation */}
-      <nav className="min-h-0 flex-1 overflow-y-auto p-3 space-y-0.5">
-        {inSettings ? (
-          <>
-            {/* Separated from the list below so it reads as a way out rather
-                than a fifth destination. */}
-            <div className="mb-2 border-b border-white/5 pb-2">
-              <NavLink to="/" isActive={false} onClick={onClose}>
-                <ArrowLeft className="h-4 w-4 shrink-0" />
-                {t("common.back")}
-              </NavLink>
-            </div>
-
-            {SETTINGS_NAV.filter(
-              (item) =>
-                item.to !== "/settings/integrations" ||
-                pilot.integrations ||
-                isDemoWorkspace
-            ).map(({ to, labelKey, Icon }) => (
-              <NavLink
-                key={to}
-                to={to}
-                isActive={location.pathname.startsWith(to)}
-                onClick={onClose}
-              >
-                <Icon className="h-4 w-4 shrink-0" />
-                <span className="truncate">{t(labelKey)}</span>
-              </NavLink>
             ))}
-          </>
-        ) : isDoorboostBrandWs ? (
-          <>
-            <NavLink
-              to="/db-brand"
-              isActive={location.pathname === "/db-brand"}
-              onClick={onClose}
-            >
-              <HomeIcon className="h-4 w-4 shrink-0" />
-              {t("nav.home", "Home")}
-            </NavLink>
-            <NavLink
-              to="/brand-retailers"
-              isActive={
-                location.pathname.startsWith("/brand-retailers") ||
-                location.pathname.startsWith("/db-brand/retailers")
-              }
-              onClick={onClose}
-            >
-              <Store className="h-4 w-4 shrink-0" />
-              {t("nav.brand_retailers", "Retailers")}
-            </NavLink>
-            <NavLink
-              to="/brand-campaigns"
-              isActive={location.pathname.startsWith("/brand-campaigns")}
-              onClick={onClose}
-            >
-              <Megaphone className="h-4 w-4 shrink-0" />
-              {t("nav.brand_campaigns", "Campaigns")}
-            </NavLink>
-            <NavLink
-              to="/brand-leads"
-              isActive={location.pathname.startsWith("/brand-leads")}
-              onClick={onClose}
-            >
-              <Users className="h-4 w-4 shrink-0" />
-              {t("nav.brand_leads", "Leads")}
-            </NavLink>
-          </>
-        ) : (
-          <>
-            <NavLink
-              to="/"
-              isActive={location.pathname === "/"}
-              onClick={onClose}
-            >
-              <HomeIcon className="h-4 w-4 shrink-0" />
-              {t("nav.home")}
-            </NavLink>
+        </div>
 
-            {(wpSite?.sso_enabled || isDemoWorkspace) && (
+        {/* Navigation */}
+        <nav
+          className={cn(
+            "min-h-0 flex-1 overflow-y-auto space-y-0.5",
+            collapsed ? "p-1.5" : "p-3",
+          )}
+        >
+          {inSettings ? (
+            <>
+              {/* Separated from the list below so it reads as a way out rather
+                than a fifth destination. */}
+              <div className="mb-2 border-b border-white/5 pb-2">
+                <NavLink to="/" isActive={false} onClick={onClose}>
+                  <ArrowLeft className="h-4 w-4 shrink-0" />
+                  {t("common.back")}
+                </NavLink>
+              </div>
+
+              {SETTINGS_NAV.filter(
+                (item) =>
+                  item.to !== "/settings/integrations" ||
+                  pilot.integrations ||
+                  isDemoWorkspace,
+              ).map(({ to, labelKey, Icon }) => (
+                <NavLink
+                  key={to}
+                  to={to}
+                  isActive={location.pathname.startsWith(to)}
+                  onClick={onClose}
+                >
+                  <Icon className="h-4 w-4 shrink-0" />
+                  <span className="truncate">{t(labelKey)}</span>
+                </NavLink>
+              ))}
+            </>
+          ) : isDoorboostBrandWs ? (
+            <>
               <NavLink
-                to="/website"
-                isActive={location.pathname.startsWith("/website")}
+                to="/db-brand"
+                isActive={location.pathname === "/db-brand"}
                 onClick={onClose}
               >
-                <Globe className="h-4 w-4 shrink-0" />
-                {t("nav.wordpress", "Website")}
+                <HomeIcon className="h-4 w-4 shrink-0" />
+                {t("nav.home", "Home")}
               </NavLink>
-            )}
+              <NavLink
+                to="/brand-retailers"
+                isActive={
+                  location.pathname.startsWith("/brand-retailers") ||
+                  location.pathname.startsWith("/db-brand/retailers")
+                }
+                onClick={onClose}
+              >
+                <Store className="h-4 w-4 shrink-0" />
+                {t("nav.brand_retailers", "Retailers")}
+              </NavLink>
+              <NavLink
+                to="/brand-campaigns"
+                isActive={location.pathname.startsWith("/brand-campaigns")}
+                onClick={onClose}
+              >
+                <Megaphone className="h-4 w-4 shrink-0" />
+                {t("nav.brand_campaigns", "Campaigns")}
+              </NavLink>
+              <NavLink
+                to="/brand-leads"
+                isActive={location.pathname.startsWith("/brand-leads")}
+                onClick={onClose}
+              >
+                <Users className="h-4 w-4 shrink-0" />
+                {t("nav.brand_leads", "Leads")}
+              </NavLink>
+            </>
+          ) : (
+            <>
+              <NavLink
+                to="/"
+                isActive={location.pathname === "/"}
+                onClick={onClose}
+              >
+                <HomeIcon className="h-4 w-4 shrink-0" />
+                {t("nav.home")}
+              </NavLink>
 
-            {/* Forms is available to every workspace, so it sits outside the
+              {(wpSite?.sso_enabled || isDemoWorkspace) && (
+                <NavLink
+                  to="/website"
+                  isActive={location.pathname.startsWith("/website")}
+                  onClick={onClose}
+                >
+                  <Globe className="h-4 w-4 shrink-0" />
+                  {t("nav.wordpress", "Website")}
+                </NavLink>
+              )}
+
+              {/* Forms is available to every workspace, so it sits outside the
                 services map rather than being gated on a service_type. */}
-            <NavLink
-              to="/forms"
-              isActive={location.pathname.startsWith("/forms")}
-              onClick={onClose}
-            >
-              <ClipboardList className="h-4 w-4 shrink-0" />
-              {t("nav.forms", "Forms")}
-            </NavLink>
+              <NavLink
+                to="/forms"
+                isActive={location.pathname.startsWith("/forms")}
+                onClick={onClose}
+              >
+                <ClipboardList className="h-4 w-4 shrink-0" />
+                {t("nav.forms", "Forms")}
+              </NavLink>
 
-            {/* Gated on the connection rather than a service entitlement: the
+              {/* Gated on the connection rather than a service entitlement: the
                 catalogue is a live proxy, so with no Stripe account there is
                 literally nothing for the page to show — except in a demo,
                 where the page's own connect-Stripe card is the point. */}
-            {(hasStripeConnection || isDemoWorkspace) && (
-              <NavLink
-                to="/products"
-                isActive={location.pathname.startsWith("/products")}
-                onClick={onClose}
-              >
-                <ShoppingBag className="h-4 w-4 shrink-0" />
-                {t("nav.stripeProducts", { defaultValue: "Products" })}
-              </NavLink>
-            )}
+              {(hasStripeConnection || isDemoWorkspace) && (
+                <NavLink
+                  to="/products"
+                  isActive={location.pathname.startsWith("/products")}
+                  onClick={onClose}
+                >
+                  <ShoppingBag className="h-4 w-4 shrink-0" />
+                  {t("nav.stripeProducts", { defaultValue: "Products" })}
+                </NavLink>
+              )}
 
-            {/* Always visible — the feature is self-serve (any workspace admin
+              {/* Always visible — the feature is self-serve (any workspace admin
                 pastes their own API key), so the entry point has to exist
                 before a connection does. Unconnected workspaces land on the
                 onboarding state of /openai-ads. The "New" pill stays for
                 everyone while the feature is fresh; drop it here when it no
                 longer is. */}
-            <NavLink
-              to="/openai-ads"
-              isActive={location.pathname.startsWith("/openai-ads")}
-              onClick={onClose}
-            >
-              <Megaphone className="h-4 w-4 shrink-0" />
-              <span className="truncate">
-                {t("nav.openaiAds", { defaultValue: "OpenAI Ads" })}
-              </span>
-              <span className="ml-auto rounded-full bg-amber-400/15 px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wider text-amber-300">
-                {t("nav.newBadge", { defaultValue: "New" })}
-              </span>
-            </NavLink>
-
-            {showWorkflows && (
               <NavLink
-                to="/workflows"
-                isActive={location.pathname.startsWith("/workflows")}
+                to="/openai-ads"
+                isActive={location.pathname.startsWith("/openai-ads")}
                 onClick={onClose}
               >
-                <Workflow className="h-4 w-4 shrink-0" />
-                {t("nav.workflows", { defaultValue: "Workflows" })}
+                <OpenAiMark className="h-4 w-4 shrink-0" />
+                <span className="truncate">
+                  {t("nav.openaiAds", { defaultValue: "OpenAI Ads" })}
+                </span>
+                <span className="ml-auto rounded-full bg-amber-400/15 px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wider text-amber-300">
+                  {t("nav.newBadge", { defaultValue: "New" })}
+                </span>
               </NavLink>
-            )}
 
-            {currentWorkspace?.services
-              ?.filter(
-                (service) =>
-                  service.service_type !== "appointments" ||
-                  showAppointmentsInSidebar
-              )
-              ?.slice()
-              ?.sort((a, b) => (a.service_order ?? 0) - (b.service_order ?? 0))
-              ?.map((service) => {
-                const href = service.service_slug
-                  ? `/${service.service_slug}`
-                  : "#";
-                const isActive =
-                  !!service.service_slug &&
-                  (location.pathname === `/${service.service_slug}` ||
-                    location.pathname.startsWith(`/${service.service_slug}/`));
-                const hasSlug = !!service.service_slug;
-                const iconName = service.service_icon
-                  ? kebabToPascal(service.service_icon)
-                  : null;
-                const hasIcon = !!iconName && lucideIconNames.has(iconName);
+              {showWorkflows && (
+                <NavLink
+                  to="/workflows"
+                  isActive={location.pathname.startsWith("/workflows")}
+                  onClick={onClose}
+                >
+                  <Workflow className="h-4 w-4 shrink-0" />
+                  {t("nav.workflows", { defaultValue: "Workflows" })}
+                </NavLink>
+              )}
 
-                const instructions = (
-                  service.service_config as Record<string, unknown> | null
-                )?.instructions as string | undefined;
-                const hasInstructions = !!instructions;
-                const isLeadFormService =
-                  service.service_type === "lead-form" ||
-                  service.service_slug === "lead-form";
-                return (
-                  <Fragment key={service.service_id}>
-                    <div className="flex items-center group/svc">
-                      <NavLink
-                        to={href}
-                        isActive={isActive}
-                        disabled={!hasSlug}
-                        onClick={(e) => {
-                          if (!hasSlug) e.preventDefault();
-                          else onClose?.();
-                        }}
-                        className="flex-1 min-w-0"
-                      >
-                        {hasIcon && (
-                          <DynamicIcon
-                            name={iconName!}
-                            className="h-4 w-4 shrink-0"
-                          />
-                        )}
-                        <span className="truncate">
-                          {getLocalizedServiceName(
-                            service,
-                            i18n.language ?? "de"
+              {currentWorkspace?.services
+                ?.filter(
+                  (service) =>
+                    service.service_type !== "appointments" ||
+                    showAppointmentsInSidebar,
+                )
+                ?.slice()
+                ?.sort(
+                  (a, b) => (a.service_order ?? 0) - (b.service_order ?? 0),
+                )
+                ?.map((service) => {
+                  const href = service.service_slug
+                    ? `/${service.service_slug}`
+                    : "#";
+                  const isActive =
+                    !!service.service_slug &&
+                    (location.pathname === `/${service.service_slug}` ||
+                      location.pathname.startsWith(
+                        `/${service.service_slug}/`,
+                      ));
+                  const hasSlug = !!service.service_slug;
+                  const iconName = service.service_icon
+                    ? kebabToPascal(service.service_icon)
+                    : null;
+                  const hasIcon = !!iconName && lucideIconNames.has(iconName);
+
+                  const instructions = (
+                    service.service_config as Record<string, unknown> | null
+                  )?.instructions as string | undefined;
+                  const hasInstructions = !!instructions;
+                  const isLeadFormService =
+                    service.service_type === "lead-form" ||
+                    service.service_slug === "lead-form";
+                  return (
+                    <Fragment key={service.service_id}>
+                      <div className="flex items-center group/svc">
+                        <NavLink
+                          to={href}
+                          isActive={isActive}
+                          disabled={!hasSlug}
+                          onClick={(e) => {
+                            if (!hasSlug) e.preventDefault();
+                            else onClose?.();
+                          }}
+                          className="flex-1 min-w-0"
+                        >
+                          {hasIcon && (
+                            <DynamicIcon
+                              name={iconName!}
+                              className="h-4 w-4 shrink-0"
+                            />
                           )}
-                        </span>
-                      </NavLink>
-                      {hasInstructions && (
-                        <button
-                          type="button"
-                          title="View instructions"
-                          onClick={() => setInstructionsMarkdown(instructions!)}
-                          className="
+                          <span className="truncate">
+                            {getLocalizedServiceName(
+                              service,
+                              i18n.language ?? "de",
+                            )}
+                          </span>
+                        </NavLink>
+                        {hasInstructions && !collapsed && (
+                          <button
+                            type="button"
+                            title="View instructions"
+                            onClick={() =>
+                              setInstructionsMarkdown(instructions!)
+                            }
+                            className="
                       ml-0.5 mr-1 flex h-5 w-5 shrink-0 items-center justify-center
                       rounded opacity-0 group-hover/svc:opacity-100
                       text-white/25 hover:text-amber-400 hover:bg-amber-400/8
                       transition-all duration-150
                     "
-                        >
-                          <Info className="h-3 w-3" />
-                        </button>
+                          >
+                            <Info className="h-3 w-3" />
+                          </button>
+                        )}
+                      </div>
+                      {isLeadFormService && (
+                        <>
+                          {" "}
+                          <NavLink
+                            to="/contacts"
+                            isActive={location.pathname.startsWith("/contacts")}
+                            onClick={onClose}
+                          >
+                            <BookUser className="h-4 w-4 shrink-0" />
+                            {t("nav.contacts", { defaultValue: "Contacts" })}
+                          </NavLink>
+                          <NavLink
+                            to="/mail"
+                            isActive={location.pathname.startsWith("/mail")}
+                            onClick={onClose}
+                          >
+                            <Mail className="h-4 w-4 shrink-0" />
+                            {t("nav.mail", { defaultValue: "Mail" })}
+                          </NavLink>
+                          <PipelineNav onClose={onClose} />
+                          <NavLink
+                            to="/tasks"
+                            isActive={location.pathname === "/tasks"}
+                            onClick={onClose}
+                          >
+                            <CheckSquare className="h-4 w-4 shrink-0" />
+                            {t("nav.tasks")}
+                          </NavLink>
+                        </>
                       )}
-                    </div>
-                    {isLeadFormService && (
-                      <>
-                        {" "}
-                        <NavLink
-                          to="/contacts"
-                          isActive={location.pathname.startsWith("/contacts")}
-                          onClick={onClose}
-                        >
-                          <BookUser className="h-4 w-4 shrink-0" />
-                          {t("nav.contacts", { defaultValue: "Contacts" })}
-                        </NavLink>
-                        <NavLink
-                          to="/mail"
-                          isActive={location.pathname.startsWith("/mail")}
-                          onClick={onClose}
-                        >
-                          <Mail className="h-4 w-4 shrink-0" />
-                          {t("nav.mail", { defaultValue: "Mail" })}
-                        </NavLink>
-                        <PipelineNav onClose={onClose} />
-                        <NavLink
-                          to="/tasks"
-                          isActive={location.pathname === "/tasks"}
-                          onClick={onClose}
-                        >
-                          <CheckSquare className="h-4 w-4 shrink-0" />
-                          {t("nav.tasks")}
-                        </NavLink>
-                      </>
-                    )}
-                  </Fragment>
-                );
-              })}
+                    </Fragment>
+                  );
+                })}
 
-            {showCalendarInSidebar && (
-              <NavLink
-                to="/calendar"
-                isActive={location.pathname.startsWith("/calendar")}
-                onClick={onClose}
-              >
-                <CalendarRange className="h-4 w-4 shrink-0" />
-                {t("nav.calendar", { defaultValue: "Calendar" })}
-              </NavLink>
-            )}
-          </>
-        )}
-      </nav>
+              {showCalendarInSidebar && (
+                <NavLink
+                  to="/calendar"
+                  isActive={location.pathname.startsWith("/calendar")}
+                  onClick={onClose}
+                >
+                  <CalendarRange className="h-4 w-4 shrink-0" />
+                  {t("nav.calendar", { defaultValue: "Calendar" })}
+                </NavLink>
+              )}
+            </>
+          )}
+        </nav>
 
-      {/* Bottom: language → settings/billing → logout */}
-      <div className="shrink-0 border-t border-white/5 p-3 space-y-0.5">
-        <div className="px-3 py-1 pb-2">
-          <LanguageSwitcher variant="dark" persistToDb />
-        </div>
-        {!isDoorboostBrandWs && (
-          <>
-            {/* Hidden inside settings: the nav above already lists every
-                section, so this would sit here permanently highlighted. */}
-            {!inSettings && (
-              <NavLink
-                to="/settings/profile"
-                isActive={false}
-                onClick={onClose}
-              >
-                <Settings className="h-4 w-4 shrink-0" />
-                {t("nav.settings")}
-              </NavLink>
-            )}
-            <NavLink
-              to="/billing"
-              isActive={location.pathname === "/billing"}
-              onClick={onClose}
-            >
-              <Package className="h-4 w-4 shrink-0" />
-              {t("nav.billing")}
-            </NavLink>
-          </>
-        )}
-        <button
-          onClick={() => logout()}
-          disabled={isLoggingOut}
-          className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-[13px] font-medium text-white/35 hover:bg-white/5 hover:text-white/60 transition-all duration-150 disabled:opacity-50"
+        {/* Bottom: language → settings/billing → logout */}
+        <div
+          className={cn(
+            "shrink-0 border-t border-white/5 space-y-0.5",
+            collapsed ? "p-1.5" : "p-3",
+          )}
         >
-          <LogOut className="h-4 w-4 shrink-0" />
-          {isLoggingOut ? t("common.loading") : t("nav.logout")}
-        </button>
-
-        {/* Legal links */}
-        {(() => {
-          const isEn = i18n.language === "en";
-          const base = isEn
-            ? "https://repraesent.com/en"
-            : "https://repraesent.com";
-          return (
-            <div className="flex items-center gap-3 px-3 pt-1">
-              <a
-                href={`${base}/privacy.html`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-[10px] text-white/20 hover:text-white/45 transition-colors"
+          <div className={collapsed ? "px-0 py-1 pb-2" : "px-3 py-1 pb-2"}>
+            <LanguageSwitcher
+              variant={collapsed ? "grid-dark" : "dark"}
+              persistToDb
+            />
+          </div>
+          {!isDoorboostBrandWs && (
+            <>
+              {/* Hidden inside settings: the nav above already lists every
+                section, so this would sit here permanently highlighted. */}
+              {!inSettings && (
+                <NavLink
+                  to="/settings/profile"
+                  isActive={false}
+                  onClick={onClose}
+                >
+                  <Settings className="h-4 w-4 shrink-0" />
+                  {t("nav.settings")}
+                </NavLink>
+              )}
+              <NavLink
+                to="/billing"
+                isActive={location.pathname === "/billing"}
+                onClick={onClose}
               >
-                {isEn ? "Privacy" : "Datenschutz"}
-              </a>
-              <span className="text-white/10 text-[10px]">·</span>
-              <a
-                href={`${base}/impressum.html`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-[10px] text-white/20 hover:text-white/45 transition-colors"
-              >
-                Impressum
-              </a>
-            </div>
-          );
-        })()}
-      </div>
+                <Package className="h-4 w-4 shrink-0" />
+                {t("nav.billing")}
+              </NavLink>
+            </>
+          )}
+          <button
+            onClick={() => logout()}
+            disabled={isLoggingOut}
+            title={collapsed ? t("nav.logout") : undefined}
+            className={cn(
+              "flex w-full items-center rounded-lg py-2 text-[13px] font-medium text-white/35 hover:bg-white/5 hover:text-white/60 transition-all duration-150 disabled:opacity-50",
+              collapsed ? "justify-center px-0" : "gap-2.5 px-3",
+            )}
+          >
+            <LogOut className="h-4 w-4 shrink-0" />
+            {!collapsed &&
+              (isLoggingOut ? t("common.loading") : t("nav.logout"))}
+          </button>
 
-      {/* Instructions modal */}
-      {instructionsMarkdown !== null && (
-        <InstructionsModal
-          open
-          onClose={() => setInstructionsMarkdown(null)}
-          markdown={instructionsMarkdown}
-        />
-      )}
-    </aside>
+          {/* Legal links — no room on the rail */}
+          {(() => {
+            if (collapsed) return null;
+            const isEn = i18n.language === "en";
+            const base = isEn
+              ? "https://repraesent.com/en"
+              : "https://repraesent.com";
+            return (
+              <div className="flex items-center gap-3 px-3 pt-1">
+                <a
+                  href={`${base}/privacy.html`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-[10px] text-white/20 hover:text-white/45 transition-colors"
+                >
+                  {isEn ? "Privacy" : "Datenschutz"}
+                </a>
+                <span className="text-white/10 text-[10px]">·</span>
+                <a
+                  href={`${base}/impressum.html`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-[10px] text-white/20 hover:text-white/45 transition-colors"
+                >
+                  Impressum
+                </a>
+              </div>
+            );
+          })()}
+        </div>
+
+        {/* Instructions modal */}
+        {instructionsMarkdown !== null && (
+          <InstructionsModal
+            open
+            onClose={() => setInstructionsMarkdown(null)}
+            markdown={instructionsMarkdown}
+          />
+        )}
+      </aside>
+    </SidebarCollapsedContext.Provider>
   );
 }

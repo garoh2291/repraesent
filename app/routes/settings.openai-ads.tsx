@@ -7,7 +7,6 @@ import {
   Copy,
   ExternalLink,
   KeyRound,
-  Megaphone,
   Radio,
   Send,
   Trash2,
@@ -29,6 +28,7 @@ import {
   useOpenaiConversionsStatus,
 } from "~/lib/hooks/useOpenaiAds";
 import { useDocumentMeta } from "~/lib/hooks/use-document-meta";
+import { OpenAiMark } from "~/components/icons/openai-mark";
 import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
 import { Label } from "~/components/ui/label";
@@ -185,7 +185,7 @@ function ConnectionCard({ canManage }: { canManage: boolean }) {
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div className="flex min-w-0 items-start gap-4">
           <div className="grid h-11 w-11 shrink-0 place-items-center rounded-xl border border-border bg-background">
-            <Megaphone className="h-5 w-5 text-muted-foreground" />
+            <OpenAiMark className="h-5 w-5 text-muted-foreground" />
           </div>
           <div className="min-w-0 space-y-1">
             <div className="flex flex-wrap items-center gap-2">
@@ -587,7 +587,7 @@ function PixelSnippet({ pixelId }: { pixelId: string }) {
       <p className="mt-2 text-xs text-muted-foreground">
         {t("settings.openaiAds.conversions.snippetCsp", {
           defaultValue:
-            "If your site sends a Content-Security-Policy header, allow the OpenAI hosts — add bzrcdn.openai.com to script-src and bzr.openai.com to connect-src — otherwise the browser blocks the pixel. Using a cookie banner? Add the snippet there as a marketing script instead of pasting it directly.",
+            "If your site sends a Content-Security-Policy header, allow the OpenAI hosts — add bzrcdn.openai.com to script-src, and both bzrcdn.openai.com and bzr.openai.com to connect-src — otherwise the browser blocks the pixel. Using a cookie banner? Add the snippet there as a marketing script instead of pasting it directly.",
         })}
       </p>
     </div>

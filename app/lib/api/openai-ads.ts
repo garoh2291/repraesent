@@ -15,6 +15,8 @@ export interface OpenaiAdsConnectionStatus {
   pixel_id: string | null;
   conversions_enabled: boolean;
   connected_at: string | null;
+  /** ISO 4217 currency of the ad account — every micros value is in it. */
+  currency: string | null;
 }
 
 export async function getOpenaiAdsConnection(): Promise<OpenaiAdsConnectionStatus> {
@@ -69,7 +71,10 @@ export interface OpenaiCampaign {
   status: string;
   description?: string | null;
   bidding_type?: string;
-  budget?: { lifetime_spend_limit_micros?: number };
+  budget?: {
+    lifetime_spend_limit_micros?: number;
+    daily_spend_limit_micros?: number;
+  };
   start_time?: string | null;
   end_time?: string | null;
 }

@@ -1499,7 +1499,7 @@
         "debugShow": "Vérifier les événements récents",
         "debugHide": "Masquer les événements récents",
         "debugEmpty": "Aucun événement reçu par OpenAI ces 15 dernières minutes. Envoyez un formulaire de test et vérifiez à nouveau.",
-        "snippetCsp": "Si votre site envoie un en-tête Content-Security-Policy, autorisez les hôtes OpenAI — ajoutez bzrcdn.openai.com à script-src et bzr.openai.com à connect-src — sinon le navigateur bloque le pixel. Vous utilisez une bannière cookies ? Ajoutez-y le snippet comme script marketing au lieu de le coller directement."
+        "snippetCsp": "Si votre site envoie un en-tête Content-Security-Policy, autorisez les hôtes OpenAI — ajoutez bzrcdn.openai.com à script-src, et bzrcdn.openai.com ainsi que bzr.openai.com à connect-src — sinon le navigateur bloque le pixel. Vous utilisez une bannière cookies ? Ajoutez-y le snippet comme script marketing au lieu de le coller directement."
       },
       "howTo": {
         "title": "Comment obtenir une clé API",
@@ -4552,8 +4552,6 @@
     "revokedBanner": "OpenAI a refusé la clé API enregistrée. Reconnectez-vous avec une nouvelle clé depuis votre Ads Manager.",
     "revokedBannerCta": "Ouvrir les réglages",
     "rangeDays": "{{count}} jours",
-    "spendOverTime": "Dépenses dans le temps",
-    "noData": "Pas encore de données de diffusion sur cette période.",
     "campaignsTitle": "Campagnes",
     "searchPlaceholder": "Rechercher des campagnes…",
     "truncated": "Ce compte a plus de campagnes qu'il n'est possible d'en lister d'un coup — les premières pages sont affichées.",
@@ -4581,7 +4579,7 @@
       "name": "Campagne",
       "status": "Statut",
       "bidding": "Enchère",
-      "budget": "Budget total",
+      "budget": "Budget",
       "expand": "Afficher les groupes d'annonces",
       "expandAds": "Afficher les annonces"
     },
@@ -4694,6 +4692,8 @@
         "helpCenter": "Présentation de l'Ads Manager (Help Center)",
         "devDocs": "Démarrage rapide API (OpenAI Developers)"
       }
-    }
+    },
+    "performanceTrend": "Tendance des performances",
+    "perDay": "/jour"
   }
 }

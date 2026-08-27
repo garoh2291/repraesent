@@ -9,16 +9,15 @@ import {
   LineChart,
   Line,
   XAxis,
-  YAxis,
   CartesianGrid,
   Tooltip,
+  Legend,
 } from "recharts";
 import {
   Archive,
   ChevronDown,
   ChevronRight,
   Eye,
-  Megaphone,
   MoreHorizontal,
   MousePointerClick,
   Pause,
@@ -50,6 +49,7 @@ import {
   useOpenaiInsights,
 } from "~/lib/hooks/useOpenaiAds";
 import { useDocumentMeta } from "~/lib/hooks/use-document-meta";
+import { OpenAiMark } from "~/components/icons/openai-mark";
 import { useSearchShortcut } from "~/lib/hooks/useSearchShortcut";
 import {
   formatCount,
@@ -99,6 +99,8 @@ type RangeDays = (typeof RANGES)[number];
 
 const ACCENT = {
   spend: "#f59e0b",
+  impressions: "#6366f1",
+  clicks: "#10b981",
   conversions: "#ec4899",
 };
 
@@ -156,7 +158,7 @@ export default function OpenaiAdsPage() {
 
   return (
     <PageShell accountName={connection.data.ad_account_name}>
-      <Dashboard />
+      <Dashboard currency={connection.data.currency ?? "EUR"} />
     </PageShell>
   );
 }
@@ -176,7 +178,7 @@ function PageShell({
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="space-y-0.5">
           <h1 className="flex items-center gap-2 text-xl font-semibold text-foreground">
-            <Megaphone className="h-5 w-5 text-muted-foreground" />
+            <OpenAiMark className="h-5 w-5 text-muted-foreground" />
             {t("openaiAds.metaTitle", { defaultValue: "OpenAI Ads" })}
           </h1>
           <p className="text-sm text-muted-foreground">
@@ -227,7 +229,7 @@ function RevokedBanner() {
 // Dashboard
 // ---------------------------------------------------------------------------
 
-function Dashboard() {
+function Dashboard({ currency }: { currency: string }) {
   const { t } = useTranslation();
   const [rangeDays, setRangeDays] = useState<RangeDays>(30);
 
@@ -247,6 +249,51 @@ function Dashboard() {
   });
 
   const summary = insights.data?.summary;
+
+  // The chart spans the WHOLE selected range, Ads-Manager style: days without
+  // delivery plot as zero instead of being skipped, so a 3-day-old campaign on
+  // the 30-day view reads as a flat line with a spike — not a 3-point chart.
+  const chartData = useMemo(() => {
+    const byDate = new Map((insights.data?.rows ?? []).map((r) => [r.date, r]));
+    const out: Array<{
+      date: string;
+      spend: number;
+      impressions: number;
+      clicks: number;
+      conversions: number;
+    }> = [];
+    const start = new Date(since + "T00:00:00Z");
+    const end = new Date(until + "T00:00:00Z");
+    for (let d = new Date(start); d <= end; d.setUTCDate(d.getUTCDate() + 1)) {
+      const key = d.toISOString().slice(0, 10);
+      const row = byDate.get(key);
+      out.push({
+        date: key,
+        spend: row ? row.spend_micros / 1_000_000 : 0,
+        impressions: row?.impressions ?? 0,
+        clicks: row?.clicks ?? 0,
+        conversions: row?.conversions ?? 0,
+      });
+    }
+
+    // Each line is normalized to its own maximum, Ads-Manager style: spend in
+    // single currency units and impressions in the hundreds share one canvas,
+    // so every series shows its own SHAPE. The tooltip reports true values.
+    const max = { spend: 0, impressions: 0, clicks: 0, conversions: 0 };
+    for (const r of out) {
+      max.spend = Math.max(max.spend, r.spend);
+      max.impressions = Math.max(max.impressions, r.impressions);
+      max.clicks = Math.max(max.clicks, r.clicks);
+      max.conversions = Math.max(max.conversions, r.conversions);
+    }
+    return out.map((r) => ({
+      ...r,
+      spend_n: max.spend ? r.spend / max.spend : 0,
+      impressions_n: max.impressions ? r.impressions / max.impressions : 0,
+      clicks_n: max.clicks ? r.clicks / max.clicks : 0,
+      conversions_n: max.conversions ? r.conversions / max.conversions : 0,
+    }));
+  }, [insights.data, since, until]);
 
   return (
     <>
@@ -280,7 +327,7 @@ function Dashboard() {
         <Kpi
           icon={Wallet}
           label={t("openaiAds.metrics.spend", { defaultValue: "Spend" })}
-          value={summary ? formatMicros(summary.spend_micros) : null}
+          value={summary ? formatMicros(summary.spend_micros, currency) : null}
           pending={insights.isPending}
         />
         <Kpi
@@ -304,7 +351,7 @@ function Dashboard() {
         />
         <Kpi
           label={t("openaiAds.metrics.cpc", { defaultValue: "CPC" })}
-          value={summary ? formatMicros(summary.cpc_micros) : null}
+          value={summary ? formatMicros(summary.cpc_micros, currency) : null}
           pending={insights.isPending}
         />
         <Kpi
@@ -317,23 +364,19 @@ function Dashboard() {
         />
       </div>
 
-      {/* Spend over time */}
+      {/* Performance trend */}
       <div className="space-y-4 rounded-2xl border border-border bg-card p-4 sm:p-6">
         <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
-          {t("openaiAds.spendOverTime", { defaultValue: "Spend over time" })}
+          {t("openaiAds.performanceTrend", {
+            defaultValue: "Performance trend",
+          })}
         </p>
         {insights.isPending ? (
           <Skeleton className="h-[220px] w-full rounded-xl" />
-        ) : insights.data?.rows.length ? (
+        ) : (
           <div className="h-[220px] sm:h-[280px]">
             <ResponsiveContainer width="100%" height="100%">
-              <LineChart
-                data={insights.data.rows.map((r) => ({
-                  date: r.date ?? "",
-                  spend: r.spend_micros / 1_000_000,
-                  conversions: r.conversions,
-                }))}
-              >
+              <LineChart data={chartData}>
                 <CartesianGrid
                   strokeDasharray="3 3"
                   stroke="hsl(var(--border))"
@@ -347,23 +390,14 @@ function Dashboard() {
                   tickFormatter={(v: string) => v.slice(5)}
                   interval="preserveStartEnd"
                 />
-                <YAxis
-                  tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }}
-                  tickLine={false}
-                  axisLine={false}
-                  width={45}
-                />
-                <Tooltip
-                  contentStyle={{
-                    borderRadius: 8,
-                    border: "1px solid hsl(var(--border))",
-                    background: "hsl(var(--card))",
-                    fontSize: 13,
-                  }}
+                <Tooltip content={<TrendTooltip currency={currency} />} />
+                <Legend
+                  iconType="plainline"
+                  wrapperStyle={{ fontSize: 12, paddingTop: 8 }}
                 />
                 <Line
                   type="monotone"
-                  dataKey="spend"
+                  dataKey="spend_n"
                   name={t("openaiAds.metrics.spend", { defaultValue: "Spend" })}
                   stroke={ACCENT.spend}
                   strokeWidth={2.5}
@@ -372,7 +406,29 @@ function Dashboard() {
                 />
                 <Line
                   type="monotone"
-                  dataKey="conversions"
+                  dataKey="impressions_n"
+                  name={t("openaiAds.metrics.impressions", {
+                    defaultValue: "Impressions",
+                  })}
+                  stroke={ACCENT.impressions}
+                  strokeWidth={2}
+                  dot={false}
+                  activeDot={{ r: 4, strokeWidth: 0 }}
+                />
+                <Line
+                  type="monotone"
+                  dataKey="clicks_n"
+                  name={t("openaiAds.metrics.clicks", {
+                    defaultValue: "Clicks",
+                  })}
+                  stroke={ACCENT.clicks}
+                  strokeWidth={2}
+                  dot={false}
+                  activeDot={{ r: 4, strokeWidth: 0 }}
+                />
+                <Line
+                  type="monotone"
+                  dataKey="conversions_n"
                   name={t("openaiAds.metrics.conversions", {
                     defaultValue: "Conversions",
                   })}
@@ -384,17 +440,68 @@ function Dashboard() {
               </LineChart>
             </ResponsiveContainer>
           </div>
-        ) : (
-          <p className="py-12 text-center text-sm text-muted-foreground">
-            {t("openaiAds.noData", {
-              defaultValue: "No delivery data for this period yet.",
-            })}
-          </p>
         )}
       </div>
 
-      <CampaignsTable since={since} until={until} />
+      <CampaignsTable since={since} until={until} currency={currency} />
     </>
+  );
+}
+
+/**
+ * True values for the normalized trend lines: the plotted series are each
+ * scaled to their own maximum, so the tooltip reads from the row's raw fields
+ * instead of the plotted numbers.
+ */
+function TrendTooltip({
+  active,
+  payload,
+  label,
+  currency,
+}: {
+  active?: boolean;
+  payload?: Array<{ name: string; color: string; dataKey: string }>;
+  label?: string;
+  currency: string;
+}) {
+  const raw = (
+    payload?.[0] as unknown as
+      | {
+          payload: {
+            spend: number;
+            impressions: number;
+            clicks: number;
+            conversions: number;
+          };
+        }
+      | undefined
+  )?.payload;
+  if (!active || !payload?.length || !raw) return null;
+
+  const value = (dataKey: string) => {
+    if (dataKey === "spend_n")
+      return formatMicros(raw.spend * 1_000_000, currency);
+    if (dataKey === "impressions_n") return raw.impressions.toLocaleString();
+    if (dataKey === "clicks_n") return raw.clicks.toLocaleString();
+    return raw.conversions.toLocaleString();
+  };
+
+  return (
+    <div className="rounded-lg border border-border bg-card px-3 py-2 text-[13px] shadow-lg">
+      <p className="mb-1 text-xs text-muted-foreground">{label}</p>
+      {payload.map((p) => (
+        <div key={p.dataKey} className="flex items-center gap-2">
+          <span
+            className="h-2 w-2 shrink-0 rounded-full"
+            style={{ backgroundColor: p.color }}
+          />
+          <span className="text-muted-foreground">{p.name}:</span>
+          <span className="ml-auto pl-3 font-semibold tabular-nums text-foreground">
+            {value(p.dataKey)}
+          </span>
+        </div>
+      ))}
+    </div>
   );
 }
 
@@ -430,7 +537,15 @@ function Kpi({
 // Campaigns table with drill-down
 // ---------------------------------------------------------------------------
 
-function CampaignsTable({ since, until }: { since: string; until: string }) {
+function CampaignsTable({
+  since,
+  until,
+  currency,
+}: {
+  since: string;
+  until: string;
+  currency: string;
+}) {
   const { t } = useTranslation();
   const canManage = useCanManageOpenaiAds();
   const campaigns = useOpenaiCampaigns();
@@ -531,6 +646,7 @@ function CampaignsTable({ since, until }: { since: string; until: string }) {
             <tbody>
               {filtered.map((campaign) => (
                 <CampaignRow
+                  currency={currency}
                   key={campaign.id}
                   campaign={campaign}
                   since={since}
@@ -555,7 +671,11 @@ function CampaignsTable({ since, until }: { since: string; until: string }) {
         </div>
       )}
 
-      <BudgetDialog campaign={budgetEdit} onClose={() => setBudgetEdit(null)} />
+      <BudgetDialog
+        campaign={budgetEdit}
+        currency={currency}
+        onClose={() => setBudgetEdit(null)}
+      />
       <ArchiveDialog
         pending={pendingArchive}
         onClose={() => setPendingArchive(null)}
@@ -665,6 +785,7 @@ function EntityActionsMenu({
 
 function CampaignRow({
   campaign,
+  currency,
   since,
   until,
   canManage,
@@ -674,6 +795,7 @@ function CampaignRow({
   onArchive,
 }: {
   campaign: OpenaiCampaign;
+  currency: string;
   since: string;
   until: string;
   canManage: boolean;
@@ -731,13 +853,23 @@ function CampaignRow({
             : "—"}
         </td>
         <td className="py-2.5 pr-3 text-right tabular-nums">
-          {formatMicros(campaign.budget?.lifetime_spend_limit_micros)}
+          {campaign.budget?.lifetime_spend_limit_micros != null
+            ? formatMicros(
+                campaign.budget.lifetime_spend_limit_micros,
+                currency,
+              )
+            : campaign.budget?.daily_spend_limit_micros != null
+              ? `${formatMicros(campaign.budget.daily_spend_limit_micros, currency)}${t(
+                  "openaiAds.perDay",
+                  { defaultValue: "/day" },
+                )}`
+              : "—"}
         </td>
         <td className="py-2.5 pr-3 text-right tabular-nums">
           {insights.isPending ? (
             <Skeleton className="ml-auto h-4 w-14 rounded" />
           ) : (
-            formatMicros(summary?.spend_micros)
+            formatMicros(summary?.spend_micros, currency)
           )}
         </td>
         <td className="py-2.5 pr-3 text-right tabular-nums">
@@ -762,7 +894,11 @@ function CampaignRow({
       {expanded ? (
         <tr className="border-b border-border/60 last:border-0">
           <td colSpan={8} className="bg-muted/30 px-3 py-3 sm:px-6">
-            <AdGroups campaignId={campaign.id} canManage={canManage} />
+            <AdGroups
+              campaignId={campaign.id}
+              currency={currency}
+              canManage={canManage}
+            />
           </td>
         </tr>
       ) : null}
@@ -772,9 +908,11 @@ function CampaignRow({
 
 function AdGroups({
   campaignId,
+  currency,
   canManage,
 }: {
   campaignId: string;
+  currency: string;
   canManage: boolean;
 }) {
   const { t } = useTranslation();
@@ -803,6 +941,7 @@ function AdGroups({
     <div className="space-y-2">
       {adGroups.data.data.map((group) => (
         <AdGroupRow
+          currency={currency}
           key={group.id}
           group={group}
           canManage={canManage}
@@ -827,12 +966,14 @@ function AdGroups({
 
 function AdGroupRow({
   group,
+  currency,
   canManage,
   expanded,
   onToggle,
   onArchive,
 }: {
   group: OpenaiAdGroup;
+  currency: string;
   canManage: boolean;
   expanded: boolean;
   onToggle: () => void;
@@ -871,7 +1012,7 @@ function AdGroupRow({
               )
             : null}
           {group.bidding_config?.max_bid_micros
-            ? ` · ${t("openaiAds.maxBid", { defaultValue: "max bid" })} ${formatMicros(group.bidding_config.max_bid_micros)}`
+            ? ` · ${t("openaiAds.maxBid", { defaultValue: "max bid" })} ${formatMicros(group.bidding_config.max_bid_micros, currency)}`
             : null}
         </span>
         <StatusBadge status={group.status} />
@@ -992,9 +1133,11 @@ function AdLine({
 
 function BudgetDialog({
   campaign,
+  currency,
   onClose,
 }: {
   campaign: OpenaiCampaign | null;
+  currency: string;
   onClose: () => void;
 }) {
   const { t } = useTranslation();
@@ -1033,7 +1176,7 @@ function BudgetDialog({
             {t("openaiAds.editBudgetDescription", {
               defaultValue:
                 "The total this campaign may spend over its lifetime. Current: {{current}}",
-              current: formatMicros(current),
+              current: formatMicros(current, currency),
             })}
           </DialogDescription>
         </DialogHeader>

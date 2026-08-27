@@ -1497,7 +1497,7 @@
         "debugShow": "Check recent events",
         "debugHide": "Hide recent events",
         "debugEmpty": "No events received by OpenAI in the last 15 minutes. Submit a test form and check again.",
-        "snippetCsp": "If your site sends a Content-Security-Policy header, allow the OpenAI hosts — add bzrcdn.openai.com to script-src and bzr.openai.com to connect-src — otherwise the browser blocks the pixel. Using a cookie banner? Add the snippet there as a marketing script instead of pasting it directly."
+        "snippetCsp": "If your site sends a Content-Security-Policy header, allow the OpenAI hosts — add bzrcdn.openai.com to script-src, and both bzrcdn.openai.com and bzr.openai.com to connect-src — otherwise the browser blocks the pixel. Using a cookie banner? Add the snippet there as a marketing script instead of pasting it directly."
       },
       "howTo": {
         "title": "How to get an API key",
@@ -4550,8 +4550,6 @@
     "revokedBanner": "OpenAI rejected the stored API key. Reconnect with a fresh key from your Ads Manager.",
     "revokedBannerCta": "Open settings",
     "rangeDays": "{{count}} days",
-    "spendOverTime": "Spend over time",
-    "noData": "No delivery data for this period yet.",
     "campaignsTitle": "Campaigns",
     "searchPlaceholder": "Search campaigns…",
     "truncated": "This account has more campaigns than can be listed at once — showing the first pages.",
@@ -4579,7 +4577,7 @@
       "name": "Campaign",
       "status": "Status",
       "bidding": "Bidding",
-      "budget": "Lifetime budget",
+      "budget": "Budget",
       "expand": "Show ad groups",
       "expandAds": "Show ads"
     },
@@ -4692,6 +4690,8 @@
         "helpCenter": "Ads Manager overview (Help Center)",
         "devDocs": "API quickstart (OpenAI Developers)"
       }
-    }
+    },
+    "performanceTrend": "Performance trend",
+    "perDay": "/day"
   }
 }

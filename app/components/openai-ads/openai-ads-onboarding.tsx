@@ -4,12 +4,12 @@ import {
   BarChart3,
   ExternalLink,
   KeyRound,
-  Megaphone,
   PlusCircle,
   SlidersHorizontal,
   Target,
 } from "lucide-react";
 import { useCanManageOpenaiAds } from "~/lib/hooks/useOpenaiAds";
+import { OpenAiMark } from "~/components/icons/openai-mark";
 import { Button } from "~/components/ui/button";
 
 /**
@@ -52,7 +52,7 @@ export function OpenaiAdsOnboarding() {
       <div className="rounded-2xl border border-border bg-card p-6 sm:p-8">
         <div className="flex flex-col items-start gap-5 sm:flex-row">
           <div className="grid h-12 w-12 shrink-0 place-items-center rounded-xl border border-border bg-background">
-            <Megaphone className="h-6 w-6 text-muted-foreground" />
+            <OpenAiMark className="h-6 w-6 text-muted-foreground" />
           </div>
           <div className="min-w-0 space-y-2">
             <h2 className="text-lg font-semibold text-foreground">

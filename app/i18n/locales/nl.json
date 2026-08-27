@@ -1497,7 +1497,7 @@
         "debugShow": "Recente events controleren",
         "debugHide": "Recente events verbergen",
         "debugEmpty": "OpenAI heeft de afgelopen 15 minuten geen events ontvangen. Verstuur een testformulier en controleer opnieuw.",
-        "snippetCsp": "Stuurt je site een Content-Security-Policy-header, sta dan de OpenAI-hosts toe — voeg bzrcdn.openai.com toe aan script-src en bzr.openai.com aan connect-src — anders blokkeert de browser de pixel. Gebruik je een cookiebanner? Voeg het snippet daar toe als marketingscript in plaats van het direct te plakken."
+        "snippetCsp": "Stuurt je site een Content-Security-Policy-header, sta dan de OpenAI-hosts toe — voeg bzrcdn.openai.com toe aan script-src, en zowel bzrcdn.openai.com als bzr.openai.com aan connect-src — anders blokkeert de browser de pixel. Gebruik je een cookiebanner? Voeg het snippet daar toe als marketingscript in plaats van het direct te plakken."
       },
       "howTo": {
         "title": "Zo krijg je een API-sleutel",
@@ -4550,8 +4550,6 @@
     "revokedBanner": "OpenAI heeft de opgeslagen API-sleutel geweigerd. Verbind opnieuw met een verse sleutel uit je Ads Manager.",
     "revokedBannerCta": "Instellingen openen",
     "rangeDays": "{{count}} dagen",
-    "spendOverTime": "Uitgaven in de tijd",
-    "noData": "Nog geen leveringsdata voor deze periode.",
     "campaignsTitle": "Campagnes",
     "searchPlaceholder": "Campagnes zoeken…",
     "truncated": "Dit account heeft meer campagnes dan er in één keer getoond kunnen worden — de eerste pagina's worden getoond.",
@@ -4579,7 +4577,7 @@
       "name": "Campagne",
       "status": "Status",
       "bidding": "Biedtype",
-      "budget": "Looptijdbudget",
+      "budget": "Budget",
       "expand": "Advertentiegroepen tonen",
       "expandAds": "Advertenties tonen"
     },
@@ -4692,6 +4690,8 @@
         "helpCenter": "Ads Manager-overzicht (Help Center)",
         "devDocs": "API-quickstart (OpenAI Developers)"
       }
-    }
+    },
+    "performanceTrend": "Prestatietrend",
+    "perDay": "/dag"
   }
 }

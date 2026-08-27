@@ -8,7 +8,6 @@ import {
   Check,
   ImagePlus,
   Info,
-  Megaphone,
   Rocket,
 } from "lucide-react";
 import i18n from "~/i18n";
@@ -25,6 +24,7 @@ import {
 } from "~/lib/api/openai-ads";
 import { useCanManageOpenaiAds } from "~/lib/hooks/useOpenaiAds";
 import { useDocumentMeta } from "~/lib/hooks/use-document-meta";
+import { OpenAiMark } from "~/components/icons/openai-mark";
 import { toMicros } from "~/components/openai-ads/micros";
 import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
@@ -87,7 +87,7 @@ export default function OpenaiAdsNew() {
           {t("openaiAds.create.back", { defaultValue: "Back to campaigns" })}
         </Link>
         <h1 className="flex items-center gap-2 text-xl font-semibold text-foreground">
-          <Megaphone className="h-5 w-5 text-muted-foreground" />
+          <OpenAiMark className="h-5 w-5 text-muted-foreground" />
           {t("openaiAds.create.title", { defaultValue: "New campaign" })}
         </h1>
       </div>
