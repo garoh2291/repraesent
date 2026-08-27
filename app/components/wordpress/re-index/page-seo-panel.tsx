@@ -1,12 +1,18 @@
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
-import { ExternalLink, FileText, Loader2, Search } from "lucide-react";
+import { ExternalLink, FileText, Loader2, Search, Sparkles } from "lucide-react";
 import { extractErrorMessage } from "~/lib/api/axios-instance";
 import { requestWpSsoLogin } from "~/lib/api/wordpress-hub";
-import { useWorkspaceReIndexPageSeo } from "~/lib/hooks/useWorkspaceReIndexSettings";
+import {
+  useOptimizeSeoPage,
+  useWorkspaceReIndexPageSeo,
+} from "~/lib/hooks/useWorkspaceReIndexSettings";
 import { useSearchShortcut } from "~/lib/hooks/useSearchShortcut";
-import type { ReIndexPageSeoRow } from "~/lib/wordpress/plugin-settings-types";
+import type {
+  ReIndexPageSeoRow,
+  ReIndexSettings,
+} from "~/lib/wordpress/plugin-settings-types";
 import { Badge } from "~/components/ui/badge";
 import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
@@ -16,6 +22,7 @@ import {
   SectionCard,
   StatTile,
 } from "~/components/wordpress/fields";
+import { BulkSeoBar } from "~/components/wordpress/re-index/bulk-seo-bar";
 
 const STATUS_KEYS = ["draft", "pending", "private", "future"] as const;
 
@@ -24,6 +31,8 @@ function trimWords(text: string, count: number): string {
   if (words.length <= count) return text.trim();
   return `${words.slice(0, count).join(" ")}…`;
 }
+
+const META_DESC_PREVIEW_WORDS = 8;
 
 /**
  * Open the post editor in a new tab. The editor is the gateway's own landing
@@ -38,16 +47,24 @@ async function openEditSeoViaSso(editUrl: string): Promise<void> {
   if (!tab) window.location.href = ssoUrl;
 }
 
+function pageHasSeoCopy(row: ReIndexPageSeoRow): boolean {
+  return Boolean(row.meta_title.trim() || row.meta_description.trim());
+}
+
 function PageRow({
   row,
   showType,
   opening,
+  optimizing,
   onEdit,
+  onOptimize,
 }: {
   row: ReIndexPageSeoRow;
   showType: boolean;
   opening: boolean;
+  optimizing: boolean;
   onEdit: (editUrl: string) => void;
+  onOptimize: () => void;
 }) {
   const { t } = useTranslation();
   const title =
@@ -121,11 +138,14 @@ function PageRow({
           </span>
         )}
       </td>
-      <td className="py-3 pr-3 align-top">
+      <td className="max-w-48 py-3 pr-3 align-top">
         {row.meta_description ? (
           <div className="flex flex-col gap-0.5">
-            <span className="text-sm text-foreground">
-              {trimWords(row.meta_description, 14)}
+            <span
+              className="line-clamp-2 text-sm text-foreground"
+              title={row.meta_description}
+            >
+              {trimWords(row.meta_description, META_DESC_PREVIEW_WORDS)}
             </span>
             <span className="text-xs tabular-nums text-muted-foreground">
               {row.meta_description.length}
@@ -137,23 +157,39 @@ function PageRow({
           </span>
         )}
       </td>
-      <td className="py-3 align-top">
-        {row.edit_url ? (
+      <td className="w-px py-3 align-top whitespace-nowrap">
+        <div className="flex items-center justify-end gap-2">
           <Button
             type="button"
             variant="outline"
             size="sm"
-            disabled={opening}
-            onClick={() => onEdit(row.edit_url!)}
+            disabled={opening || optimizing}
+            onClick={onOptimize}
           >
-            {opening ? (
+            {optimizing ? (
               <Loader2 className="h-3.5 w-3.5 animate-spin" />
             ) : (
-              <ExternalLink className="h-3.5 w-3.5" />
+              <Sparkles className="h-3.5 w-3.5" />
             )}
-            {t("wordpress.reIndex.pageSeo.edit", "Edit SEO")}
+            {t("wordpress.reIndex.pageSeo.optimize", "Optimize SEO")}
           </Button>
-        ) : null}
+          {row.edit_url ? (
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              disabled={opening || optimizing}
+              onClick={() => onEdit(row.edit_url!)}
+            >
+              {opening ? (
+                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+              ) : (
+                <ExternalLink className="h-3.5 w-3.5" />
+              )}
+              {t("wordpress.reIndex.pageSeo.edit", "Edit SEO")}
+            </Button>
+          ) : null}
+        </div>
       </td>
     </tr>
   );
@@ -162,18 +198,22 @@ function PageRow({
 export function PageSeoPanel({
   pluginUuid,
   active,
+  settings,
 }: {
   pluginUuid: string;
   active: boolean;
+  settings: ReIndexSettings;
 }) {
   const { t } = useTranslation();
   const [search, setSearch] = useState("");
   const { ref: searchInputRef, withHint } = useSearchShortcut();
   const [openingId, setOpeningId] = useState<number | null>(null);
+  const [optimizingId, setOptimizingId] = useState<number | null>(null);
   const { data, isLoading, isError, error } = useWorkspaceReIndexPageSeo(
     pluginUuid,
     active,
   );
+  const optimizeMutation = useOptimizeSeoPage(pluginUuid);
 
   const showType = useMemo(() => {
     if (!data?.pages.length) return false;
@@ -205,6 +245,40 @@ export function PageSeoPanel({
     } finally {
       setOpeningId(null);
     }
+  }
+
+  function handleOptimize(row: ReIndexPageSeoRow) {
+    const overwrite = pageHasSeoCopy(row);
+    if (
+      overwrite &&
+      !window.confirm(
+        t(
+          "wordpress.reIndex.pageSeo.optimizeOverwriteConfirm",
+          "This page already has SEO copy. Replace it with generated text?",
+        ),
+      )
+    ) {
+      return;
+    }
+    setOptimizingId(row.id);
+    optimizeMutation.mutate(
+      { postId: row.id, mode: overwrite ? "overwrite" : "empty_only" },
+      {
+        onSuccess: () => {
+          toast.success(
+            t(
+              "wordpress.reIndex.pageSeo.optimizeDone",
+              "SEO generated for this page.",
+            ),
+          );
+          setOptimizingId(null);
+        },
+        onError: (err) => {
+          toast.error(extractErrorMessage(err));
+          setOptimizingId(null);
+        },
+      },
+    );
   }
 
   if (isLoading) {
@@ -254,6 +328,7 @@ export function PageSeoPanel({
         )}
       />
       <div className="space-y-4 p-5 sm:p-6">
+        <BulkSeoBar settings={settings} pluginUuid={pluginUuid} />
         {pages.length === 0 ? (
           <InfoNote>
             {t(
@@ -341,13 +416,13 @@ export function PageSeoPanel({
                     <th className="pb-2 pr-3 font-semibold">
                       {t("wordpress.reIndex.pageSeo.colTitle", "SEO title")}
                     </th>
-                    <th className="pb-2 pr-3 font-semibold">
+                    <th className="max-w-48 pb-2 pr-3 font-semibold">
                       {t(
                         "wordpress.reIndex.pageSeo.colDesc",
                         "Meta description",
                       )}
                     </th>
-                    <th className="pb-2 font-semibold">
+                    <th className="w-px pb-2 font-semibold whitespace-nowrap">
                       <span className="sr-only">
                         {t("wordpress.reIndex.pageSeo.colActions", "Actions")}
                       </span>
@@ -361,7 +436,9 @@ export function PageSeoPanel({
                       row={row}
                       showType={showType}
                       opening={openingId === row.id}
+                      optimizing={optimizingId === row.id}
                       onEdit={(url) => void handleEdit(row.id, url)}
+                      onOptimize={() => handleOptimize(row)}
                     />
                   ))}
                 </tbody>
@@ -379,7 +456,7 @@ export function PageSeoPanel({
             <InfoNote>
               {t(
                 "wordpress.reIndex.pageSeo.note",
-                'Values are edited in the "SEO — re:index" panel in the WordPress editor sidebar. Greyed titles are not set on the page itself — they are what your sitewide format or WordPress produces for it.',
+                "Values are edited in the SEO panel in the WordPress editor sidebar. Greyed titles are not set on the page itself — they are what your sitewide format or WordPress produces for it.",
               )}
             </InfoNote>
           </>

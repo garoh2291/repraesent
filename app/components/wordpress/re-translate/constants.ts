@@ -47,7 +47,7 @@ export const DEFAULT_SETTINGS: ReTranslateSettings = {
   },
   bulk: {
     status: "idle",
-    languages: [],
+    params: {},
     total: 0,
     processed: 0,
     failed: 0,
@@ -376,6 +376,10 @@ export function humanizeFieldKey(key: string): string {
     "form.description": "Form description",
     "form.submit": "Submit button",
     "form.submit_label": "Submit button",
+    "seo:site:blogname": "Site title",
+    "seo:site:blogdescription": "Tagline",
+    "seo:site:front_page_desc": "Front page description",
+    "seo:site:og_description": "Social description",
   };
   if (special[key]) return special[key];
 

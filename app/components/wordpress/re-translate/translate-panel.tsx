@@ -23,12 +23,14 @@ import type {
 } from "~/lib/api/wordpress-hub";
 import { requestWpSsoLogin } from "~/lib/api/wordpress-hub";
 import {
+  bumpLanguageStats,
   progressFromTranslateStrings,
   refetchTranslateContentLists,
   useTranslateContent,
   useTranslateContentDetail,
   useSaveTranslateStrings,
   useMachineTranslateContent,
+  type TranslateCounters,
 } from "~/lib/hooks/useWorkspaceReTranslate";
 import { useQueryClient } from "@tanstack/react-query";
 import { extractErrorMessage } from "~/lib/api/axios-instance";
@@ -138,8 +140,8 @@ export function TranslatePanel({
 }: {
   settings: ReTranslateSettings;
   pluginUuid: string;
-  /** Something translated — re-read the server's translation counters. */
-  onCountersChanged?: () => void;
+  /** Something translated — paint optimistic counters, then re-read the server. */
+  onCountersChanged?: (optimistic?: Partial<TranslateCounters>) => void;
 }) {
   const queryClient = useQueryClient();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -256,7 +258,7 @@ function ContentList({
   languageOverrides: LanguageOverrides;
   onHighlightClear: () => void;
   /** A bulk run finished — re-read the server's translation counters. */
-  onCountersChanged?: () => void;
+  onCountersChanged?: (optimistic?: Partial<TranslateCounters>) => void;
   onEdit: (item: TranslateContentItem) => void;
 }) {
   const { t } = useTranslation();
@@ -402,7 +404,7 @@ function ContentList({
       const plugin = availablePlugins.find((p) => p.object_type === typeFilter);
       return plugin
         ? translatedPluginLabel(plugin.object_type, t, plugin.display_name)
-        : t("wordpress.reTranslate.plugins", "Plugins");
+        : t("wordpress.reTranslate.plugins", "Services");
     }
     return (
       typeOptions.find((opt) => opt.value === typeFilter)?.label ??
@@ -464,7 +466,7 @@ function ContentList({
                 <DropdownMenuSubTrigger
                   className={cn(isPluginTypeFilter(typeFilter) && "bg-accent")}
                 >
-                  {t("wordpress.reTranslate.plugins", "Plugins")}
+                  {t("wordpress.reTranslate.plugins", "Services")}
                 </DropdownMenuSubTrigger>
                 <DropdownMenuSubContent className="min-w-44">
                   {availablePlugins.map((plugin) => (
@@ -500,7 +502,7 @@ function ContentList({
               {isPluginTypeFilter(typeFilter)
                 ? t(
                     "wordpress.reTranslate.noPluginContent",
-                    "No translatable copy found for this plugin yet."
+                    "No translatable copy found for this service yet."
                   )
                 : t(
                     "wordpress.reTranslate.noContent",
@@ -651,8 +653,8 @@ function StringEditor({
   onLanguagesChange: (
     languages: Record<string, TranslateLanguageProgress>
   ) => void;
-  /** Strings changed — re-read the server's translation counters. */
-  onCountersChanged?: () => void;
+  /** Strings changed — paint optimistic counters, then re-read the server. */
+  onCountersChanged?: (optimistic?: Partial<TranslateCounters>) => void;
   onBack: () => void;
 }) {
   const { t } = useTranslation();
@@ -751,7 +753,15 @@ function StringEditor({
           };
         });
         publishLanguagesFromStrings(nextStrings, data.item.languages);
-        onCountersChanged?.();
+        const next = progressFromTranslateStrings(nextStrings);
+        onCountersChanged?.({
+          stats: bumpLanguageStats(
+            settings.stats,
+            language,
+            item.languages[language],
+            next,
+          ),
+        });
         flash(
           t("wordpress.reTranslate.savedStrings", "{{count}} strings saved.", {
             count: res.strings?.length ?? toSave.length,
@@ -777,7 +787,7 @@ function StringEditor({
         mode: translateMode,
       },
       {
-        onSuccess: async () => {
+        onSuccess: () => {
           const detailKey = [
             "wordpress",
             "re-translate",
@@ -787,14 +797,28 @@ function StringEditor({
             language,
             item.object_type ?? "post",
           ] as const;
-          await queryClient.refetchQueries({ queryKey: [...detailKey] });
           const detail = queryClient.getQueryData<{
             item: TranslateContentItem;
           }>(detailKey);
-          if (detail?.item.languages) {
-            onLanguagesChange(detail.item.languages);
+          const languages = detail?.item.languages;
+          if (languages) {
+            onLanguagesChange(languages);
+            const next = languages[language];
+            if (next) {
+              onCountersChanged?.({
+                stats: bumpLanguageStats(
+                  settings.stats,
+                  language,
+                  item.languages[language],
+                  next,
+                ),
+              });
+            } else {
+              onCountersChanged?.();
+            }
+          } else {
+            onCountersChanged?.();
           }
-          onCountersChanged?.();
           flash(
             t(
               "wordpress.reTranslate.machineTranslated",

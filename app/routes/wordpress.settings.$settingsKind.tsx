@@ -2,7 +2,10 @@ import { Link, useParams } from "react-router";
 import { useTranslation } from "react-i18next";
 import i18n from "~/i18n";
 import { useDocumentMeta } from "~/lib/hooks/use-document-meta";
-import { PluginSettingsLoadingPage } from "~/components/wordpress/plugin-settings-chrome";
+import {
+  PluginSettingsLoadingPage,
+  ServiceInactiveGate,
+} from "~/components/wordpress/plugin-settings-chrome";
 import { ReCookieSettingsPage } from "~/components/wordpress/re-cookie-settings-page";
 import { ReIndexSettingsPage } from "~/components/wordpress/re-index-settings-page";
 import { ReMaintenanceSettingsPage } from "~/components/wordpress/re-maintenance-settings-page";
@@ -15,14 +18,14 @@ export function meta() {
   return [
     {
       title:
-        i18n.t("wordpress.pluginSettings.metaTitle", "Plugin settings") +
+        i18n.t("wordpress.pluginSettings.metaTitle", "Service settings") +
         " - Repraesent",
     },
     {
       name: "description",
       content: i18n.t(
         "wordpress.pluginSettings.metaDescription",
-        "Configure a Repraesent-managed plugin for your website.",
+        "Configure a Repraesent-managed service for your website.",
       ),
     },
   ];
@@ -46,7 +49,7 @@ export default function WordPressPluginSettingsRoute() {
     titleSuffix: " - Repraesent",
   });
 
-  const { kind, isLoading } = useResolvePluginKind(pluginUuid);
+  const { kind, catalogItem, isLoading } = useResolvePluginKind(pluginUuid);
 
   if (isLoading || kind === undefined) {
     return <PluginSettingsLoadingPage />;
@@ -59,32 +62,43 @@ export default function WordPressPluginSettingsRoute() {
           <p className="text-sm text-muted-foreground">
             {t(
               "wordpress.pluginSettings.unknownKind",
-              "This plugin can't be managed from Repraesent yet.",
+              "This service can't be managed from Repraesent yet.",
             )}
           </p>
           <Link
             to="/website"
             className="text-sm text-muted-foreground hover:text-foreground"
           >
-            ← {t("wordpress.reCookie.back", "Back to plugins")}
+            ← {t("wordpress.pluginSettings.back", "Back to website")}
           </Link>
         </div>
       </div>
     );
   }
 
-  switch (kind) {
-    case "re-cookie":
-      return <ReCookieSettingsPage />;
-    case "re-index":
-      return <ReIndexSettingsPage />;
-    case "re-maintenance":
-      return <ReMaintenanceSettingsPage />;
-    case "re-review":
-      return <ReReviewSettingsPage />;
-    case "re-appointment":
-      return <ReAppointmentSettingsPage />;
-    case "re-translate":
-      return <ReTranslateSettingsPage />;
-  }
+  const page = (() => {
+    switch (kind) {
+      case "re-cookie":
+        return <ReCookieSettingsPage />;
+      case "re-index":
+        return <ReIndexSettingsPage />;
+      case "re-maintenance":
+        return <ReMaintenanceSettingsPage />;
+      case "re-review":
+        return <ReReviewSettingsPage />;
+      case "re-appointment":
+        return <ReAppointmentSettingsPage />;
+      case "re-translate":
+        return <ReTranslateSettingsPage />;
+    }
+  })();
+
+  return (
+    <ServiceInactiveGate
+      pluginUuid={pluginUuid ?? ""}
+      name={catalogItem?.display_name}
+    >
+      {page}
+    </ServiceInactiveGate>
+  );
 }

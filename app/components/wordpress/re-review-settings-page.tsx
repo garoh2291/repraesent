@@ -18,7 +18,7 @@ import {
 import { useResolvePluginKind } from "~/lib/hooks/useWorkspaceWpPluginCatalog";
 import type { ReReviewSettings } from "~/lib/wordpress/plugin-settings-types";
 import { formatPluginSettingsTitle } from "~/lib/utils/wordpress-plugin-kind";
-import { PluginSettingsBackLink, PluginSettingsLoadingPage } from "~/components/wordpress/plugin-settings-chrome";
+import { PluginSettingsBackLink, PluginSettingsLoadingPage, ServiceActiveToggle } from "~/components/wordpress/plugin-settings-chrome";
 import { Badge } from "~/components/ui/badge";
 import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
@@ -50,7 +50,7 @@ export function ReReviewSettingsPage() {
   const { catalogItem } = useResolvePluginKind(pluginUuid);
   const pageTitle = formatPluginSettingsTitle(
     catalogItem?.display_name,
-    "re:reviews",
+    t("wordpress.reReview.titleFallback", "Google Reviews"),
   );
   const {
     settings,
@@ -155,7 +155,7 @@ export function ReReviewSettingsPage() {
   return (
     <PageShell>
       <PluginSettingsBackLink
-        label={t("wordpress.reReview.backToPlugins", "Back to plugins")}
+        label={t("wordpress.reReview.backToPlugins", "Back to website")}
       />
 
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between app-fade-up">
@@ -164,9 +164,6 @@ export function ReReviewSettingsPage() {
             <h1 className="text-xl font-semibold tracking-tight text-foreground sm:text-2xl">
               {pageTitle}
             </h1>
-            {catalogItem?.version ? (
-              <Badge variant="outline">v{catalogItem.version}</Badge>
-            ) : null}
             <Badge
               variant="outline"
               className={cn(
@@ -198,12 +195,15 @@ export function ReReviewSettingsPage() {
                 )}
           </p>
         </div>
-        <Button onClick={handleSave} disabled={saving} className="shrink-0">
-          <Save className="h-4 w-4" />
-          {saving
-            ? t("wordpress.reReview.saving", "Saving…")
-            : t("wordpress.reReview.save", "Save settings")}
-        </Button>
+        <div className="flex shrink-0 flex-wrap items-center gap-3">
+          <ServiceActiveToggle pluginUuid={pluginUuid} name={pageTitle} />
+          <Button onClick={handleSave} disabled={saving} className="shrink-0">
+            <Save className="h-4 w-4" />
+            {saving
+              ? t("wordpress.reReview.saving", "Saving…")
+              : t("wordpress.reReview.save", "Save settings")}
+          </Button>
+        </div>
       </div>
 
       {loadError ? (

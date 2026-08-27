@@ -10,7 +10,7 @@ import { requestWpSsoLogin } from "~/lib/api/wordpress-hub";
 import { extractErrorMessage } from "~/lib/api/axios-instance";
 import { cn } from "~/lib/utils";
 import { Button } from "~/components/ui/button";
-import { WordPressPluginsSection } from "~/components/wordpress/plugins-card";
+import { WebAnalyticsSection } from "~/components/wordpress/web-analytics-section";
 
 export function meta() {
   return [
@@ -19,7 +19,7 @@ export function meta() {
       name: "description",
       content: i18n.t(
         "wordpress.metaDescription",
-        "Manage your website, plugins, and content.",
+        "Manage your website, services, and content.",
       ),
     },
   ];
@@ -77,7 +77,7 @@ export default function WordPressPage() {
         <p className="text-sm text-muted-foreground">
           {t(
             "wordpress.subtitle",
-            "Plugin management, content settings, and admin access for your site.",
+            "Admin access for your site. Pick a service in the sidebar to edit its settings.",
           )}
         </p>
       </div>
@@ -99,44 +99,41 @@ export default function WordPressPage() {
       ) : !site?.sso_enabled ? (
         <EmptyState />
       ) : (
-        <>
-          {/* Site hero */}
-          <div className="overflow-hidden rounded-2xl border bg-card app-fade-up">
-            <div className="flex flex-col gap-5 p-5 sm:flex-row sm:items-center sm:justify-between sm:p-6">
-              <div className="flex min-w-0 items-center gap-4">
-                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary ring-1 ring-primary/20">
-                  <Globe className="h-6 w-6" />
-                </div>
-                <div className="min-w-0">
-                  <a
-                    href={site.url}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="group inline-flex max-w-full items-center gap-1.5"
-                  >
-                    <h2 className="truncate text-lg font-semibold tracking-tight transition-colors group-hover:text-primary">
-                      {siteHostname(site.url)}
-                    </h2>
-                    <ExternalLink className="h-3.5 w-3.5 shrink-0 text-muted-foreground transition-colors group-hover:text-primary" />
-                  </a>
-                </div>
+        <div className="overflow-hidden rounded-2xl border bg-card app-fade-up">
+          <div className="flex flex-col gap-5 p-5 sm:flex-row sm:items-center sm:justify-between sm:p-6">
+            <div className="flex min-w-0 items-center gap-4">
+              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary ring-1 ring-primary/20">
+                <Globe className="h-6 w-6" />
               </div>
-
-              <div className="flex items-center gap-3 sm:flex-col sm:items-end sm:gap-2.5">
-                <SsoBadge connected />
-                <Button onClick={handleSignIn} disabled={signingIn}>
-                  <LogIn className="h-4 w-4" />
-                  {signingIn
-                    ? t("wordpress.signingIn", "Opening site admin…")
-                    : t("wordpress.signIn", "Sign in to admin")}
-                </Button>
+              <div className="min-w-0">
+                <a
+                  href={site.url}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="group inline-flex max-w-full items-center gap-1.5"
+                >
+                  <h2 className="truncate text-lg font-semibold tracking-tight transition-colors group-hover:text-primary">
+                    {siteHostname(site.url)}
+                  </h2>
+                  <ExternalLink className="h-3.5 w-3.5 shrink-0 text-muted-foreground transition-colors group-hover:text-primary" />
+                </a>
               </div>
             </div>
-          </div>
 
-          <WordPressPluginsSection hasSite />
-        </>
+            <div className="flex items-center gap-3 sm:flex-col sm:items-end sm:gap-2.5">
+              <SsoBadge connected />
+              <Button onClick={handleSignIn} disabled={signingIn}>
+                <LogIn className="h-4 w-4" />
+                {signingIn
+                  ? t("wordpress.signingIn", "Opening site admin…")
+                  : t("wordpress.signIn", "Sign in to admin")}
+              </Button>
+            </div>
+          </div>
+        </div>
       )}
+
+      <WebAnalyticsSection />
     </div>
   );
 }
