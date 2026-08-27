@@ -217,7 +217,7 @@ export function PlacementCard({
               {pickerFailure
                 ? t(
                     "wordpress.reAppointment.pickerFailed",
-                    "The live preview loaded but never connected — this site is probably running an older re:appointment plugin. Choose positions from the list below.",
+                    "The live preview loaded but never connected — this site is probably running an older version of this service. Choose positions from the list below.",
                   )
                 : t(
                     "wordpress.reAppointment.pickerUnavailable",
@@ -271,7 +271,7 @@ export function PlacementCard({
               <FieldHint>
                 {t(
                   "wordpress.reAppointment.customHint",
-                  "No header/footer spots needed. Give a CSS selector from your site and the button is dropped next to it. Great when the plugin runs on a theme without built-in positions.",
+                  "No header/footer spots needed. Give a CSS selector from your site and the button is dropped next to it. Great when the service runs on a theme without built-in positions.",
                 )}
               </FieldHint>
             </div>

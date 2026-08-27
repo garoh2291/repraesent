@@ -30,14 +30,12 @@ export function wordpressPluginSettingsPath(pluginUuid: string): string {
 }
 
 /**
- * Settings-page header: catalog `display_name` from `wp_plugins`, then the
- * product brand (e.g. "SEO Optimization | re:index"). Falls back to the brand
- * alone while the catalog is still loading or the UUID is unknown.
+ * Settings-page header: catalog `display_name` from `wp_plugins`. Falls back
+ * to `fallback` while the catalog is still loading or the UUID is unknown.
  */
 export function formatPluginSettingsTitle(
   displayName: string | null | undefined,
-  brandName: string,
+  fallback: string,
 ): string {
-  const name = displayName?.trim();
-  return name ? `${name} | ${brandName}` : brandName;
+  return displayName?.trim() || fallback;
 }

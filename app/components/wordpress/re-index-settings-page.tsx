@@ -17,7 +17,7 @@ import { useResolvePluginKind } from "~/lib/hooks/useWorkspaceWpPluginCatalog";
 import type { ReIndexSettings } from "~/lib/wordpress/plugin-settings-types";
 import { mergeRecordWithDefaults } from "~/lib/utils/deep-merge";
 import { formatPluginSettingsTitle } from "~/lib/utils/wordpress-plugin-kind";
-import { PluginSettingsBackLink, PluginSettingsLoadingPage } from "~/components/wordpress/plugin-settings-chrome";
+import { PluginSettingsBackLink, PluginSettingsLoadingPage, ServiceActiveToggle } from "~/components/wordpress/plugin-settings-chrome";
 import { Badge } from "~/components/ui/badge";
 import { Button } from "~/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "~/components/ui/tabs";
@@ -35,6 +35,7 @@ import {
   PageShell,
   StatTile,
 } from "~/components/wordpress/fields";
+import { BulkSeoBar } from "~/components/wordpress/re-index/bulk-seo-bar";
 import { IndexingPanel } from "~/components/wordpress/re-index/indexing-panel";
 import { PageSeoPanel } from "~/components/wordpress/re-index/page-seo-panel";
 import { SeoPanel } from "~/components/wordpress/re-index/seo-panel";
@@ -59,7 +60,7 @@ export function ReIndexSettingsPage() {
   const { catalogItem } = useResolvePluginKind(pluginUuid);
   const pageTitle = formatPluginSettingsTitle(
     catalogItem?.display_name,
-    "re:index",
+    t("wordpress.reIndex.titleFallback", "SEO Optimization"),
   );
   // The open tab lives in the URL, so a refresh (or a pasted link) reopens it.
   const [searchParams, setSearchParams] = useSearchParams();
@@ -180,7 +181,7 @@ export function ReIndexSettingsPage() {
   return (
     <PageShell>
       <PluginSettingsBackLink
-        label={t("wordpress.reIndex.backToPlugins", "Back to plugins")}
+        label={t("wordpress.reIndex.backToPlugins", "Back to website")}
       />
 
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between app-fade-up">
@@ -189,9 +190,6 @@ export function ReIndexSettingsPage() {
             <h1 className="text-xl font-semibold tracking-tight text-foreground sm:text-2xl">
               {pageTitle}
             </h1>
-            {catalogItem?.version ? (
-              <Badge variant="outline">v{catalogItem.version}</Badge>
-            ) : null}
             {dirty || overlayDirty ? (
               <Badge
                 variant="secondary"
@@ -211,13 +209,20 @@ export function ReIndexSettingsPage() {
                 )}
           </p>
         </div>
-        <Button onClick={() => void handleSave()} disabled={saving} className="shrink-0">
-          <Save className="h-4 w-4" />
-          {saving
-            ? t("wordpress.reIndex.saving", "Saving…")
-            : t("wordpress.reIndex.save", "Save settings")}
-        </Button>
+        <div className="flex shrink-0 flex-wrap items-center gap-3">
+          <ServiceActiveToggle pluginUuid={pluginUuid} name={pageTitle} />
+          <Button onClick={() => void handleSave()} disabled={saving}>
+            <Save className="h-4 w-4" />
+            {saving
+              ? t("wordpress.reIndex.saving", "Saving…")
+              : t("wordpress.reIndex.save", "Save settings")}
+          </Button>
+        </div>
       </div>
+
+      {tab !== "pages" ? (
+        <BulkSeoBar settings={settings} pluginUuid={pluginUuid} />
+      ) : null}
 
       {loadError ? (
         <div
@@ -232,7 +237,7 @@ export function ReIndexSettingsPage() {
         <InfoNote>
           {t(
             "wordpress.reIndex.notConfigured",
-            "No re:index options in the database yet — saving will create them.",
+            "No settings saved yet — saving will create them.",
           )}
         </InfoNote>
       ) : null}
@@ -290,7 +295,7 @@ export function ReIndexSettingsPage() {
         className="app-fade-up app-fade-up-d2 gap-4"
       >
         <TabsList
-          aria-label={t("wordpress.reIndex.tabs", "re:index settings")}
+          aria-label={t("wordpress.reIndex.tabs", "SEO settings")}
         >
           <TabsTrigger value="indexing" className="gap-1.5">
             <Layers className="h-3.5 w-3.5" />
@@ -334,7 +339,11 @@ export function ReIndexSettingsPage() {
         </TabsContent>
 
         <TabsContent value="pages" className="mt-0">
-          <PageSeoPanel pluginUuid={pluginUuid} active={tab === "pages"} />
+          <PageSeoPanel
+            pluginUuid={pluginUuid}
+            active={tab === "pages"}
+            settings={settings}
+          />
         </TabsContent>
       </Tabs>
     </PageShell>

@@ -14,13 +14,18 @@ import {
 import { useCallback } from "react";
 import { extractErrorMessage } from "~/lib/api/axios-instance";
 import { useWorkspacePluginSettingsForm } from "~/lib/hooks/useWorkspacePluginSettings";
-import { useRefreshTranslateCounters } from "~/lib/hooks/useWorkspaceReTranslate";
+import {
+  useRefreshTranslateCounters,
+  useWatchTranslateBulkCompletion,
+  type TranslateCounters,
+} from "~/lib/hooks/useWorkspaceReTranslate";
 import { useResolvePluginKind } from "~/lib/hooks/useWorkspaceWpPluginCatalog";
 import type { ReTranslateSettings } from "~/lib/wordpress/plugin-settings-types";
 import { formatPluginSettingsTitle } from "~/lib/utils/wordpress-plugin-kind";
 import {
   PluginSettingsBackLink,
   PluginSettingsLoadingPage,
+  ServiceActiveToggle,
 } from "~/components/wordpress/plugin-settings-chrome";
 import { Badge } from "~/components/ui/badge";
 import { Button } from "~/components/ui/button";
@@ -59,7 +64,7 @@ export function ReTranslateSettingsPage() {
   const { catalogItem } = useResolvePluginKind(pluginUuid);
   const pageTitle = formatPluginSettingsTitle(
     catalogItem?.display_name,
-    "re:translate",
+    t("wordpress.reTranslate.titleFallback", "Translation"),
   );
   const [searchParams, setSearchParams] = useSearchParams();
   const tab = tabFromParam(searchParams.get(TAB_PARAM));
@@ -114,25 +119,47 @@ export function ReTranslateSettingsPage() {
    * are taken — a half-edited Switcher or Settings tab has to survive — and the
    * saved baseline moves with them so this never reads as an unsaved change.
    */
-  const syncCounters = useCallback(async () => {
-    skipNextSeed();
-    try {
-      const counters = await refreshCounters();
-      if (!counters) return;
-      const merge = (prev: ReTranslateSettings): ReTranslateSettings => ({
-        ...prev,
-        stats: counters.stats ?? prev.stats,
-        index: counters.index ?? prev.index,
-        bulk: counters.bulk ?? prev.bulk,
-      });
-      setSettings(merge);
-      setSavedSettings(merge);
-    } catch {
-      // No refetch landed, so nothing will consume the armed skip — disarm it
-      // or the next genuine seed would be swallowed.
-      skipNextSeed(false);
-    }
-  }, [refreshCounters, setSettings, setSavedSettings, skipNextSeed]);
+  const syncCounters = useCallback(
+    async (optimistic?: Partial<TranslateCounters>) => {
+      if (optimistic) {
+        const mergeOptimistic = (
+          prev: ReTranslateSettings,
+        ): ReTranslateSettings => ({
+          ...prev,
+          stats: optimistic.stats ?? prev.stats,
+          index: optimistic.index ?? prev.index,
+          bulk: optimistic.bulk ?? prev.bulk,
+        });
+        setSettings(mergeOptimistic);
+        setSavedSettings(mergeOptimistic);
+      }
+      skipNextSeed();
+      try {
+        const counters = await refreshCounters();
+        if (!counters) return;
+        const merge = (prev: ReTranslateSettings): ReTranslateSettings => ({
+          ...prev,
+          stats: counters.stats ?? prev.stats,
+          index: counters.index ?? prev.index,
+          bulk: counters.bulk ?? prev.bulk,
+        });
+        setSettings(merge);
+        setSavedSettings(merge);
+      } catch {
+        // No refetch landed, so nothing will consume the armed skip — disarm it
+        // or the next genuine seed would be swallowed.
+        skipNextSeed(false);
+      }
+    },
+    [refreshCounters, setSettings, setSavedSettings, skipNextSeed],
+  );
+
+  useWatchTranslateBulkCompletion(
+    pluginUuid,
+    settings.bulk,
+    syncCounters,
+    hasSite,
+  );
 
   function handleSave() {
     saveMutation.mutate(settings as unknown as Record<string, unknown>, {
@@ -172,7 +199,7 @@ export function ReTranslateSettingsPage() {
   return (
     <PageShell width="md">
       <PluginSettingsBackLink
-        label={t("wordpress.reTranslate.backToPlugins", "Back to plugins")}
+        label={t("wordpress.reTranslate.backToPlugins", "Back to website")}
       />
 
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between app-fade-up">
@@ -181,9 +208,6 @@ export function ReTranslateSettingsPage() {
             <h1 className="text-xl font-semibold tracking-tight text-foreground sm:text-2xl">
               {pageTitle}
             </h1>
-            {catalogItem?.version ? (
-              <Badge variant="outline">v{catalogItem.version}</Badge>
-            ) : null}
             {settings.kill_switch ? (
               <Badge
                 variant="outline"
@@ -211,18 +235,21 @@ export function ReTranslateSettingsPage() {
                 )}
           </p>
         </div>
-        {showSave ? (
-          <Button onClick={handleSave} disabled={saving} className="shrink-0">
-            {saving ? (
-              <Spinner className="size-4" />
-            ) : (
-              <Save className="size-4" />
-            )}
-            {saving
-              ? t("wordpress.reTranslate.saving", "Saving\u2026")
-              : t("wordpress.reTranslate.save", "Save settings")}
-          </Button>
-        ) : null}
+        <div className="flex shrink-0 flex-wrap items-center gap-3">
+          <ServiceActiveToggle pluginUuid={pluginUuid} name={pageTitle} />
+          {showSave ? (
+            <Button onClick={handleSave} disabled={saving} className="shrink-0">
+              {saving ? (
+                <Spinner className="size-4" />
+              ) : (
+                <Save className="size-4" />
+              )}
+              {saving
+                ? t("wordpress.reTranslate.saving", "Saving\u2026")
+                : t("wordpress.reTranslate.save", "Save settings")}
+            </Button>
+          ) : null}
+        </div>
       </div>
 
       {loadError ? (
@@ -238,7 +265,7 @@ export function ReTranslateSettingsPage() {
         <InfoNote>
           {t(
             "wordpress.reTranslate.notConfigured",
-            "No re:translate options in the database yet \u2014 saving will create them.",
+            "No settings saved yet — saving will create them.",
           )}
         </InfoNote>
       ) : null}
@@ -280,7 +307,7 @@ export function ReTranslateSettingsPage() {
         className="app-fade-up app-fade-up-d2 gap-4"
       >
         <TabsList
-          aria-label={t("wordpress.reTranslate.tabs", "re:translate settings")}
+          aria-label={t("wordpress.reTranslate.tabs", "Translation settings")}
         >
           <TabsTrigger value="overview" className="gap-1.5">
             <LayoutDashboard className="size-3.5" />

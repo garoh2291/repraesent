@@ -491,7 +491,7 @@ export function GeneralPanel({
           title={t("wordpress.reTranslate.uninstallTitle", "Uninstall")}
           subtitle={t(
             "wordpress.reTranslate.uninstallSubtitle",
-            "What happens to your translations if the plugin is deleted",
+            "What happens to your translations if the service is deleted",
           )}
         />
         <div className="space-y-3 p-5 sm:p-6">
@@ -506,13 +506,13 @@ export function GeneralPanel({
             }
             label={t(
               "wordpress.reTranslate.uninstallToggle",
-              "Delete all translation data when the plugin is deleted",
+              "Delete all translation data when the service is deleted",
             )}
           />
           <FieldHint>
             {t(
               "wordpress.reTranslate.uninstallHint",
-              "Off by default. While it is off, deleting the plugin leaves every translation in place, so reinstalling restores your work.",
+              "Off by default. While it is off, deleting the service leaves every translation in place, so reinstalling restores your work.",
             )}
           </FieldHint>
           {settings.delete_on_uninstall ? (
@@ -524,7 +524,7 @@ export function GeneralPanel({
               <span>
                 {t(
                   "wordpress.reTranslate.uninstallWarning",
-                  "Deleting the plugin will permanently delete every translation. Export them first if you might want them back.",
+                  "Deleting the service will permanently delete every translation. Export them first if you might want them back.",
                 )}
               </span>
             </div>

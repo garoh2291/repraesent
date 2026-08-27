@@ -11,6 +11,7 @@ import {
   ShieldCheck,
   SlidersHorizontal,
   Tag,
+  Target,
   Wrench,
 } from "lucide-react";
 import { Input } from "~/components/ui/input";
@@ -81,7 +82,7 @@ export function FunctionalityPanel({
   }
 
   function setIntegration(
-    provider: "gtm" | "ga4" | "meta",
+    provider: "gtm" | "google_ads" | "ga4" | "meta",
     field: string,
     val: unknown,
   ) {
@@ -233,7 +234,7 @@ export function FunctionalityPanel({
           title={t("wordpress.reCookie.integrationsTitle", "Integrations")}
           subtitle={t(
             "wordpress.reCookie.integrationsDesc",
-            "Set up tracking scripts and integrations (GTM, GA4, Meta Pixel, etc.).",
+            "Set up tracking scripts and integrations (GTM, Google Ads, GA4, Meta Pixel, etc.).",
           )}
         />
         <CardBody className="space-y-3">
@@ -258,6 +259,45 @@ export function FunctionalityPanel({
                   setIntegration("gtm", "container_id", e.target.value)
                 }
               />
+              <FieldHint>
+                {t(
+                  "wordpress.reCookie.gtmContainerIdHint",
+                  "GTM-XXXXXXX only. Do not put AW- or G- IDs here.",
+                )}
+              </FieldHint>
+            </Field>
+          </IntegrationCard>
+
+          <IntegrationCard
+            icon={<Target className="size-4" />}
+            name={t("wordpress.reCookie.googleAdsEnabled", "Google Ads")}
+            enabled={settings.integrations.google_ads.enabled}
+            onEnabledChange={(v) => setIntegration("google_ads", "enabled", v)}
+            switchId="re-cookie-google-ads-enabled"
+          >
+            <Field>
+              <Label htmlFor="re-cookie-google-ads-conversion-id">
+                {t(
+                  "wordpress.reCookie.googleAdsConversionId",
+                  "Google Ads conversion ID",
+                )}
+              </Label>
+              <Input
+                id="re-cookie-google-ads-conversion-id"
+                type="text"
+                className="max-w-xs bg-card font-mono"
+                value={settings.integrations.google_ads.conversion_id}
+                placeholder="AW-1234567890"
+                onChange={(e) =>
+                  setIntegration("google_ads", "conversion_id", e.target.value)
+                }
+              />
+              <FieldHint>
+                {t(
+                  "wordpress.reCookie.googleAdsConversionIdHint",
+                  "Loads after marketing consent. Do not also paste the same AW- snippet under Marketing scripts.",
+                )}
+              </FieldHint>
             </Field>
           </IntegrationCard>
 
