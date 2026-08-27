@@ -4470,7 +4470,15 @@
       "step3": "Ihre Pipeline wird mit laufenden Deals gefüllt…",
       "step4": "Neue Leads treffen über Ihr Kontaktformular ein…",
       "step5": "Die Aufgaben für heute werden geplant…",
-      "step6": "Notizen und letzter Feinschliff…"
+      "step6": "Notizen und letzter Feinschliff…",
+      "brand": {
+        "step1": "Ihre Marke wird erstellt…",
+        "step2": "6 Partnerstandorte werden eröffnet…",
+        "step3": "Leads und Buchungen werden importiert…",
+        "step4": "Teamaktivität wird erfasst…",
+        "step5": "Werbekampagnen werden synchronisiert…",
+        "step6": "Ihre Bestellhistorie wird vorbereitet…"
+      }
     },
     "brandLine1": "Erst testen,",
     "brandLine2": "dann entscheiden.",
@@ -4482,7 +4490,12 @@
       "expired": "Diese Demo ist abgelaufen. <0>Kostenloses Konto erstellen</0>",
       "minutes": "{{minutes}} Min.",
       "hoursMinutes": "{{hours}} Std. {{minutes}} Min."
-    }
+    },
+    "kindLabel": "Ich bin…",
+    "kindWorkspaceTitle": "Geschäftsinhaber",
+    "kindWorkspaceDescription": "Ein Geschäft führen: Leads, Kontakte, Deals und Aufgaben in einem CRM.",
+    "kindBrandTitle": "Marke",
+    "kindBrandDescription": "Ein Netzwerk von Partnerstandorten überblicken: Analysen, Aktivität und Bestellungen."
   },
   "clientTypes": {
     "partner_house_one": "Partnerhaus",

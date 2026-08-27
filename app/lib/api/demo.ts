@@ -9,9 +9,10 @@ import type { ClientType } from "~/lib/client-types";
  */
 export const DEMO_EXTRA_INDUSTRIES = ["electrician"] as const;
 
-export type DemoIndustry =
-  | ClientType
-  | (typeof DEMO_EXTRA_INDUSTRIES)[number];
+export type DemoIndustry = ClientType | (typeof DEMO_EXTRA_INDUSTRIES)[number];
+
+/** Which account experience to demo. */
+export type DemoKind = "workspace" | "brand";
 
 export interface CreateDemoResponse {
   redirect_url: string;
@@ -28,11 +29,13 @@ export const createDemo = async (
   industry: DemoIndustry,
   locale: SupportedLocale,
   website = "",
+  kind: DemoKind = "workspace",
 ): Promise<CreateDemoResponse> => {
   const response = await apiClient.post<CreateDemoResponse>("/public/demo", {
     industry,
     locale,
     website,
+    kind,
   });
   return response.data;
 };

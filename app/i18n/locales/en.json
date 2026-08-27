@@ -4468,7 +4468,15 @@
       "step3": "Filling your pipeline with live deals…",
       "step4": "Capturing fresh leads from your contact form…",
       "step5": "Scheduling today's tasks and follow-ups…",
-      "step6": "Adding notes and finishing touches…"
+      "step6": "Adding notes and finishing touches…",
+      "brand": {
+        "step1": "Creating your brand…",
+        "step2": "Opening 6 partner locations…",
+        "step3": "Importing leads and bookings…",
+        "step4": "Recording team activity…",
+        "step5": "Syncing ad campaigns…",
+        "step6": "Preparing your order history…"
+      }
     },
     "brandLine1": "Test drive",
     "brandLine2": "before you buy.",
@@ -4480,7 +4488,12 @@
       "expired": "This demo has expired. <0>Create your free account</0>",
       "minutes": "{{minutes}} min",
       "hoursMinutes": "{{hours}} h {{minutes}} min"
-    }
+    },
+    "kindLabel": "I am a…",
+    "kindWorkspaceTitle": "Business owner",
+    "kindWorkspaceDescription": "Run one business: leads, contacts, deals and tasks in one CRM.",
+    "kindBrandTitle": "Brand",
+    "kindBrandDescription": "Oversee a network of partner locations: analytics, activity and orders."
   },
   "clientTypes": {
     "partner_house_one": "partner house",

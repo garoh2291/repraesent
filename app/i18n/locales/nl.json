@@ -4468,7 +4468,15 @@
       "step3": "Uw pipeline wordt gevuld met lopende deals…",
       "step4": "Nieuwe leads komen binnen via uw contactformulier…",
       "step5": "De taken voor vandaag worden ingepland…",
-      "step6": "Notities en de laatste details…"
+      "step6": "Notities en de laatste details…",
+      "brand": {
+        "step1": "Je merk wordt aangemaakt…",
+        "step2": "6 partnerlocaties worden geopend…",
+        "step3": "Leads en boekingen worden geïmporteerd…",
+        "step4": "Teamactiviteit wordt vastgelegd…",
+        "step5": "Advertentiecampagnes worden gesynchroniseerd…",
+        "step6": "Je bestelgeschiedenis wordt voorbereid…"
+      }
     },
     "brandLine1": "Eerst proberen,",
     "brandLine2": "dan beslissen.",
@@ -4480,7 +4488,12 @@
       "expired": "Deze demo is verlopen. <0>Maak uw gratis account aan</0>",
       "minutes": "{{minutes}} min",
       "hoursMinutes": "{{hours}} u {{minutes}} min"
-    }
+    },
+    "kindLabel": "Ik ben…",
+    "kindWorkspaceTitle": "Ondernemer",
+    "kindWorkspaceDescription": "Eén bedrijf runnen: leads, contacten, deals en taken in één CRM.",
+    "kindBrandTitle": "Merk",
+    "kindBrandDescription": "Een netwerk van partnerlocaties overzien: analyses, activiteit en bestellingen."
   },
   "clientTypes": {
     "partner_house_one": "partnerhuis",

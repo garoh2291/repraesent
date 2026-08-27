@@ -4470,7 +4470,15 @@
       "step3": "Remplissage de votre pipeline avec des deals en cours…",
       "step4": "Réception de nouveaux leads depuis votre formulaire…",
       "step5": "Planification des tâches du jour…",
-      "step6": "Ajout des notes et dernières finitions…"
+      "step6": "Ajout des notes et dernières finitions…",
+      "brand": {
+        "step1": "Création de votre marque…",
+        "step2": "Ouverture de 6 points partenaires…",
+        "step3": "Import des leads et réservations…",
+        "step4": "Enregistrement de l'activité de l'équipe…",
+        "step5": "Synchronisation des campagnes publicitaires…",
+        "step6": "Préparation de votre historique de commandes…"
+      }
     },
     "brandLine1": "Essayez d'abord,",
     "brandLine2": "décidez ensuite.",
@@ -4482,7 +4490,12 @@
       "expired": "Cette démo a expiré. <0>Créer votre compte gratuit</0>",
       "minutes": "{{minutes}} min",
       "hoursMinutes": "{{hours}} h {{minutes}} min"
-    }
+    },
+    "kindLabel": "Je suis…",
+    "kindWorkspaceTitle": "Propriétaire d'entreprise",
+    "kindWorkspaceDescription": "Gérer une entreprise : leads, contacts, deals et tâches dans un seul CRM.",
+    "kindBrandTitle": "Marque",
+    "kindBrandDescription": "Superviser un réseau de points partenaires : analyses, activité et commandes."
   },
   "clientTypes": {
     "partner_house_one": "maison partenaire",

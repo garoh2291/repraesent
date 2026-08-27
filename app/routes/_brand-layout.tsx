@@ -3,6 +3,7 @@ import { Link, Outlet, useLocation, useNavigate } from "react-router";
 import { useTranslation } from "react-i18next";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuthContext } from "~/providers/auth-provider";
+import { DemoBanner } from "~/components/demo-banner";
 import { updateUserLocale } from "~/lib/api/auth";
 import { normalizeLocale, type SupportedLocale } from "~/i18n/locales";
 import {
@@ -65,13 +66,8 @@ const NAV_ITEMS = [
 ] as const;
 
 function BrandSidebar({ onClose }: { onClose?: () => void }) {
-  const {
-    brand,
-    workspaces,
-    setCurrentWorkspace,
-    logout,
-    isLoggingOut,
-  } = useAuthContext();
+  const { brand, workspaces, setCurrentWorkspace, logout, isLoggingOut } =
+    useAuthContext();
   const { t } = useTranslation();
   const ctw = useClientTypeWording();
   const location = useLocation();
@@ -112,7 +108,11 @@ function BrandSidebar({ onClose }: { onClose?: () => void }) {
     <aside className="flex h-full w-[220px] shrink-0 flex-col bg-[#111113] border-r border-white/5">
       {/* Logo — matches workspace sidebar so the layout doesn't shift on view switch */}
       <div className="flex h-14 shrink-0 items-center px-4 border-b border-white/5 gap-2">
-        <Link to="/brand" className="flex items-center flex-1 min-w-0" onClick={onClose}>
+        <Link
+          to="/brand"
+          className="flex items-center flex-1 min-w-0"
+          onClick={onClose}
+        >
           <img
             src={logoUrl}
             alt="Repraesent"
@@ -198,7 +198,7 @@ function BrandSidebar({ onClose }: { onClose?: () => void }) {
                 "flex items-center gap-2.5 rounded-lg px-3 py-2 text-[13px] font-medium border-l-2 transition-all duration-150",
                 isActive
                   ? "border-amber-400 bg-amber-400/10 text-amber-300"
-                  : "border-transparent text-white/45 hover:bg-white/5 hover:text-white/75"
+                  : "border-transparent text-white/45 hover:bg-white/5 hover:text-white/75",
               )}
             >
               <Icon className="h-4 w-4 shrink-0" />
@@ -227,7 +227,7 @@ function BrandSidebar({ onClose }: { onClose?: () => void }) {
 }
 
 export default function BrandLayout() {
-  const { user } = useAuthContext();
+  const { user, brand } = useAuthContext();
   const { i18n, t } = useTranslation();
   const ctw = useClientTypeWording();
   const queryClient = useQueryClient();
@@ -240,7 +240,7 @@ export default function BrandLayout() {
 
   const activeNav =
     NAV_ITEMS.find(({ path, exact }) =>
-      exact ? location.pathname === path : location.pathname.startsWith(path)
+      exact ? location.pathname === path : location.pathname.startsWith(path),
     ) ?? NAV_ITEMS[0];
 
   // Browser/cookie language is the source of truth. Keep the DB locale in sync
@@ -294,11 +294,18 @@ export default function BrandLayout() {
           </button>
           <div className="flex-1 flex justify-center">
             <span className="text-sm font-semibold text-foreground">
-              {t(`brand.${activeNav.key}`, { defaultValue: activeNav.key, ...ctw })}
+              {t(`brand.${activeNav.key}`, {
+                defaultValue: activeNav.key,
+                ...ctw,
+              })}
             </span>
           </div>
           <div className="w-9" />
         </div>
+
+        {brand?.is_demo ? (
+          <DemoBanner expiresAt={brand.demo_expires_at ?? null} />
+        ) : null}
 
         <Outlet />
       </main>

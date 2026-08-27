@@ -33,6 +33,9 @@ export interface BrandInfo {
   logo: string | null;
   /** What the brand calls its connected workspaces; optional for deploy skew. */
   client_type?: ClientType;
+  /** "Try a live demo" brand (demo_brands row); optional for deploy skew. */
+  is_demo?: boolean;
+  demo_expires_at?: string | null;
 }
 
 /**
@@ -101,7 +104,7 @@ export function getLocalizedServiceName(
     | "service_name_fr"
     | "service_name_nl"
   >,
-  lang: string
+  lang: string,
 ): string {
   const byLocale: Record<SupportedLocale, string | null | undefined> = {
     de: service.service_name_de,
@@ -163,7 +166,7 @@ export interface WorkspaceContext {
  */
 export const register = async (
   email: string,
-  locale?: SupportedLocale
+  locale?: SupportedLocale,
 ): Promise<{ status: string }> => {
   try {
     const response = await apiClient.post<{ status: string }>(
@@ -171,14 +174,14 @@ export const register = async (
       {
         email,
         locale,
-      }
+      },
     );
     return response.data;
   } catch (error) {
     const apiError = createApiError(error);
     if (apiError.status === 409) {
       throw new Error(
-        "This email is managed by an admin account. Use the login page."
+        "This email is managed by an admin account. Use the login page.",
       );
     }
     throw new Error(apiError.message || "Failed to register");
@@ -202,7 +205,7 @@ export interface UserContextResponse {
  */
 export const requestMagicLink = async (
   email: string,
-  locale?: SupportedLocale
+  locale?: SupportedLocale,
 ): Promise<void> => {
   try {
     await apiClient.post("/users/magic-link", { email, locale });
@@ -219,7 +222,7 @@ export const verifyMagicLink = async (token: string): Promise<AuthResponse> => {
   try {
     const response = await apiClient.post<AuthResponse>(
       "/users/magic-link/verify",
-      { token }
+      { token },
     );
 
     if (response.data.refresh_token) {
@@ -254,7 +257,7 @@ export const getUserContext = async (): Promise<UserContextResponse> => {
  * Update current user's locale
  */
 export const updateUserLocale = async (
-  locale: SupportedLocale
+  locale: SupportedLocale,
 ): Promise<void> => {
   await apiClient.patch("/users/me/locale", { locale });
 };

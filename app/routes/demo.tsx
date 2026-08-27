@@ -6,7 +6,7 @@ import { Check, ChevronsUpDown, Loader2 } from "lucide-react";
 import i18n from "~/i18n";
 import { normalizeLocale } from "~/i18n/locales";
 import { CLIENT_TYPES } from "~/lib/client-types";
-import { createDemo, type DemoIndustry } from "~/lib/api/demo";
+import { createDemo, type DemoIndustry, type DemoKind } from "~/lib/api/demo";
 import { useDocumentMeta } from "~/lib/hooks/use-document-meta";
 import { cn } from "~/lib/utils";
 import {
@@ -64,6 +64,15 @@ const DEMO_INDUSTRY_ORDER: DemoIndustry[] = [
   ),
 ];
 
+const BRAND_LOADING_STEP_KEYS = [
+  "demo.loading.brand.step1",
+  "demo.loading.brand.step2",
+  "demo.loading.brand.step3",
+  "demo.loading.brand.step4",
+  "demo.loading.brand.step5",
+  "demo.loading.brand.step6",
+];
+
 /** demo.industryOverrides.* keys, by industry. */
 const INDUSTRY_LABEL_OVERRIDES: Partial<Record<DemoIndustry, string>> = {
   partner_house: "demo.industryOverrides.partner_house",
@@ -88,6 +97,7 @@ export default function Demo() {
     descriptionKey: "demo.metaDescription",
     titleSuffix: " - Repraesent",
   });
+  const [kind, setKind] = useState<DemoKind>("workspace");
   const [industry, setIndustry] = useState<DemoIndustry>("partner_house");
   const [pickerOpen, setPickerOpen] = useState(false);
   // Honeypot — hidden from real visitors, bots fill it.
@@ -125,7 +135,8 @@ export default function Demo() {
       const { redirect_url } = await createDemo(
         industry,
         normalizeLocale(i18n.language),
-        website
+        website,
+        kind,
       );
       redirectUrlRef.current = redirect_url;
     } catch (err) {
@@ -140,9 +151,11 @@ export default function Demo() {
     return override ? t(override) : t(`clientTypes.${type}_one`);
   };
 
+  const stepKeys =
+    kind === "brand" ? BRAND_LOADING_STEP_KEYS : LOADING_STEP_KEYS;
   const currentStep = Math.min(
     Math.floor(elapsed / STEP_MS),
-    LOADING_STEP_KEYS.length - 1
+    stepKeys.length - 1,
   );
   const progress = Math.min((elapsed / TOTAL_MS) * 100, 100);
   const waitingForApi = elapsed >= TOTAL_MS && !redirectUrlRef.current;
@@ -199,6 +212,7 @@ export default function Demo() {
               currentStep={currentStep}
               progress={progress}
               waitingForApi={waitingForApi}
+              stepKeys={stepKeys}
             />
           ) : (
             <div className="w-full max-w-sm space-y-8 app-fade-up">
@@ -231,6 +245,55 @@ export default function Demo() {
                 )}
 
                 <div className="space-y-1.5">
+                  <span className="block text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
+                    {t("demo.kindLabel", { defaultValue: "I am a…" })}
+                  </span>
+                  <div className="grid gap-2 sm:grid-cols-2">
+                    {[
+                      {
+                        value: "workspace" as const,
+                        titleKey: "demo.kindWorkspaceTitle",
+                        titleDefault: "Business owner",
+                        descKey: "demo.kindWorkspaceDescription",
+                        descDefault:
+                          "Run one business: leads, contacts, deals and tasks in one CRM.",
+                      },
+                      {
+                        value: "brand" as const,
+                        titleKey: "demo.kindBrandTitle",
+                        titleDefault: "Brand",
+                        descKey: "demo.kindBrandDescription",
+                        descDefault:
+                          "Oversee a network of partner locations: analytics, activity and orders.",
+                      },
+                    ].map((option) => (
+                      <button
+                        key={option.value}
+                        type="button"
+                        aria-pressed={kind === option.value}
+                        onClick={() => setKind(option.value)}
+                        className={`rounded-lg border p-3 text-left transition-all ${
+                          kind === option.value
+                            ? "border-foreground/60 bg-white ring-1 ring-foreground/25 shadow-xs"
+                            : "border-stone-200 bg-white/60 hover:border-stone-300"
+                        }`}
+                      >
+                        <span className="block text-sm font-semibold text-foreground">
+                          {t(option.titleKey, {
+                            defaultValue: option.titleDefault,
+                          })}
+                        </span>
+                        <span className="mt-0.5 block text-xs leading-relaxed text-muted-foreground">
+                          {t(option.descKey, {
+                            defaultValue: option.descDefault,
+                          })}
+                        </span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="space-y-1.5">
                   <label
                     htmlFor="demo-industry"
                     className="block text-[11px] font-semibold uppercase tracking-widest text-muted-foreground"
@@ -245,7 +308,9 @@ export default function Demo() {
                       aria-expanded={pickerOpen}
                       className="capitalize flex h-11 w-full items-center justify-between rounded-md border border-stone-200 bg-white px-3 text-sm text-foreground shadow-xs transition-shadow focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-foreground/25"
                     >
-                      <span className="truncate">{industryLabel(industry)}</span>
+                      <span className="truncate">
+                        {industryLabel(industry)}
+                      </span>
                       <ChevronsUpDown className="h-4 w-4 shrink-0 text-muted-foreground" />
                     </PopoverTrigger>
                     <PopoverContent
@@ -260,7 +325,7 @@ export default function Demo() {
                         requestAnimationFrame(() => {
                           pickerContentRef.current
                             ?.querySelector<HTMLInputElement>(
-                              '[data-slot="command-input"]'
+                              '[data-slot="command-input"]',
                             )
                             ?.focus();
                         });
@@ -346,10 +411,12 @@ function BuildingShow({
   currentStep,
   progress,
   waitingForApi,
+  stepKeys,
 }: {
   currentStep: number;
   progress: number;
   waitingForApi: boolean;
+  stepKeys: readonly string[];
 }) {
   const { t } = useTranslation();
 
@@ -363,7 +430,7 @@ function BuildingShow({
             key={pos}
             className={cn(
               "app-puzzle-tile aspect-square rounded-md",
-              pos % 2 === 0 ? "bg-foreground/85" : "bg-amber-400"
+              pos % 2 === 0 ? "bg-foreground/85" : "bg-amber-400",
             )}
             style={{ animationDelay: `${TILE_ORDER.indexOf(pos) * 0.32}s` }}
           />
@@ -381,7 +448,7 @@ function BuildingShow({
 
       {/* Staged checklist */}
       <ul className="space-y-2.5">
-        {LOADING_STEP_KEYS.map((key, i) => {
+        {stepKeys.map((key, i) => {
           const done = i < currentStep || (!waitingForApi && progress >= 100);
           const active = i === currentStep && !done;
           return (
@@ -393,7 +460,7 @@ function BuildingShow({
                   ? "text-foreground"
                   : active
                     ? "text-foreground font-medium"
-                    : "text-muted-foreground/50"
+                    : "text-muted-foreground/50",
               )}
             >
               <span className="inline-grid h-5 w-5 shrink-0 place-items-center">
