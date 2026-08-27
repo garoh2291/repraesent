@@ -113,7 +113,7 @@ export async function getWorkspaceWpPluginCatalog(): Promise<
 
 /**
  * List catalog plugins installed on the current workspace's WordPress site.
- * Reads `wp_plugin_installs` only — no WordPress or jail scan.
+ * Reads `wp_plugin_installs` only (`deleted_at` IS NULL).
  * Throws (404) when the workspace has no WordPress site.
  */
 export async function getWorkspaceWpPluginInstalls(): Promise<WpPluginInstallList> {
@@ -147,7 +147,6 @@ export interface WpPluginInstall {
   icon: string | null;
   version: string | null;
   active: boolean;
-  last_seen_at: string;
 }
 
 export interface WpPluginInstallList {
