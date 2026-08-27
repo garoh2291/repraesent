@@ -299,14 +299,16 @@ function PipelineNav({ onClose }: { onClose?: () => void }) {
 }
 
 /**
- * The "Website" nav entry: a collapsible with Overview plus every managed
- * plugin, matching Pipeline. Parent already gates this on SSO.
+ * The website sub-navigation, rendered in place of the main nav list while the
+ * user is somewhere under /website — same drill-in shape as Settings, so the
+ * "Website" entry replaces the list rather than nesting one inside it.
+ *
+ * Route-driven like Settings: deep links and refreshes land in the right mode
+ * for free, and there is nothing to reset on the way out.
  */
-function WebsiteNav({ onClose }: { onClose?: () => void }) {
+function WebsiteSubNav({ onClose }: { onClose?: () => void }) {
   const { t } = useTranslation();
   const location = useLocation();
-  const onWebsite = location.pathname.startsWith("/website");
-  const [open, setOpen] = useState(onWebsite);
   const installsQuery = useWorkspaceWpPluginInstalls(true);
   const plugins = [...(installsQuery.data?.plugins ?? [])].sort((a, b) =>
     a.display_name.localeCompare(b.display_name, undefined, {
@@ -314,83 +316,55 @@ function WebsiteNav({ onClose }: { onClose?: () => void }) {
     }),
   );
   const waitingForPlugins = installsQuery.isPending && !installsQuery.data;
-  const collapsed = useContext(SidebarCollapsedContext);
-
-  useEffect(() => {
-    if (onWebsite) setOpen(true);
-  }, [onWebsite]);
-
-  // No room for a nested plugin list on the icon rail — one link to Overview.
-  if (collapsed) {
-    return (
-      <NavLink to="/website" isActive={onWebsite} onClick={onClose}>
-        <Globe className="h-4 w-4 shrink-0" />
-      </NavLink>
-    );
-  }
 
   return (
-    <Collapsible open={open} onOpenChange={setOpen}>
-      <CollapsibleTrigger asChild>
-        <button
-          type="button"
-          className={cn(
-            "group flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-[13px] font-medium",
-            "border-l-2 transition-all duration-150",
-            onWebsite && !open
-              ? "border-amber-400 bg-amber-400/10 text-amber-300"
-              : onWebsite
-                ? "border-transparent text-amber-300/90 hover:bg-white/5"
-                : "border-transparent text-white/45 hover:bg-white/5 hover:text-white/75",
-          )}
-        >
-          <Globe className="h-4 w-4 shrink-0" />
-          <span className="flex-1 text-left">
-            {t("nav.wordpress", "Website")}
-          </span>
-          <ChevronDown className="h-3.5 w-3.5 shrink-0 text-white/30 transition-transform duration-200 group-data-[state=open]:rotate-180" />
-        </button>
-      </CollapsibleTrigger>
-      <CollapsibleContent className="space-y-0.5 pt-0.5">
-        <NavLink
-          to="/website"
-          isActive={location.pathname === "/website"}
-          onClick={onClose}
-          className="ml-5"
-        >
-          <span className="truncate">
-            {t("nav.websiteOverview", "Overview")}
-          </span>
+    <>
+      {/* Separated from the list below so it reads as a way out rather than a
+        destination of its own. */}
+      <div className="mb-2 border-b border-white/5 pb-2">
+        <NavLink to="/" isActive={false} onClick={onClose}>
+          <ArrowLeft className="h-4 w-4 shrink-0" />
+          {t("common.back")}
         </NavLink>
-        {waitingForPlugins ? (
-          <div
-            className="ml-5 flex items-center gap-2.5 rounded-lg px-3 py-2 text-[13px] font-medium text-white/35"
-            aria-busy="true"
-            aria-live="polite"
-          >
-            <Loader2 className="h-3.5 w-3.5 shrink-0 animate-spin text-white/25" />
-            <span className="truncate">
-              {t("nav.loadingPlugins", "Loading services…")}
-            </span>
-          </div>
-        ) : (
-          plugins.map((p) => {
-            const path = wordpressPluginSettingsPath(p.plugin_uuid);
-            return (
-              <NavLink
-                key={p.plugin_uuid}
-                to={path}
-                isActive={location.pathname === path}
-                onClick={onClose}
-                className="ml-5"
-              >
-                <span className="truncate">{p.display_name}</span>
-              </NavLink>
-            );
-          })
-        )}
-      </CollapsibleContent>
-    </Collapsible>
+      </div>
+
+      <NavLink
+        to="/website"
+        isActive={location.pathname === "/website"}
+        onClick={onClose}
+      >
+        <Globe className="h-4 w-4 shrink-0" />
+        <span className="truncate">{t("nav.websiteOverview", "Overview")}</span>
+      </NavLink>
+
+      {waitingForPlugins ? (
+        <div
+          className="flex items-center gap-2.5 rounded-lg border-l-2 border-transparent px-3 py-2 text-[13px] font-medium text-white/35"
+          aria-busy="true"
+          aria-live="polite"
+        >
+          <Loader2 className="h-4 w-4 shrink-0 animate-spin text-white/25" />
+          <span className="truncate">
+            {t("nav.loadingPlugins", "Loading services…")}
+          </span>
+        </div>
+      ) : (
+        plugins.map((p) => {
+          const path = wordpressPluginSettingsPath(p.plugin_uuid);
+          return (
+            <NavLink
+              key={p.plugin_uuid}
+              to={path}
+              isActive={location.pathname === path}
+              onClick={onClose}
+            >
+              <Package className="h-4 w-4 shrink-0" />
+              <span className="truncate">{p.display_name}</span>
+            </NavLink>
+          );
+        })
+      )}
+    </>
   );
 }
 
@@ -462,6 +436,10 @@ export function Sidebar({
   const { isConnected: hasStripeConnection } = useStripeConnection(
     !!currentWorkspace?.id && !isDoorboostBrandWs,
   );
+  const showWebsite = !!wpSite?.sso_enabled || isDemoWorkspace;
+  // Same drill-in as Settings: /website replaces the nav list with Overview
+  // plus the workspace's services, and "Back" returns to the main list.
+  const inWebsite = showWebsite && location.pathname.startsWith("/website");
 
   const handleWorkspaceChange = (workspaceId: string) => {
     setCurrentWorkspace(workspaceId);
@@ -682,6 +660,8 @@ export function Sidebar({
                 </NavLink>
               ))}
             </>
+          ) : inWebsite ? (
+            <WebsiteSubNav onClose={onClose} />
           ) : isDoorboostBrandWs ? (
             <>
               <NavLink
@@ -731,8 +711,11 @@ export function Sidebar({
                 {t("nav.home")}
               </NavLink>
 
-              {(wpSite?.sso_enabled || isDemoWorkspace) && (
-                <WebsiteNav onClose={onClose} />
+              {showWebsite && (
+                <NavLink to="/website" isActive={false} onClick={onClose}>
+                  <Globe className="h-4 w-4 shrink-0" />
+                  {t("nav.wordpress", "Website")}
+                </NavLink>
               )}
 
               {/* Forms is available to every workspace, so it sits outside the
