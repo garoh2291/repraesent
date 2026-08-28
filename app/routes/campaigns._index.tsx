@@ -17,6 +17,8 @@ import {
 } from "~/lib/api/email-campaigns";
 import { useDebounce } from "~/lib/hooks/useDebounce";
 import { useDocumentMeta } from "~/lib/hooks/use-document-meta";
+import { formatDateTime } from "~/lib/utils/format";
+import { ConfirmDeleteDialog } from "~/components/molecule/confirm-delete-dialog";
 import { useSearchShortcut } from "~/lib/hooks/useSearchShortcut";
 
 export default function CampaignsIndex() {
@@ -33,6 +35,9 @@ export default function CampaignsIndex() {
   const debouncedSearch = useDebounce(search, 300);
   const { ref: searchInputRef, withHint } = useSearchShortcut();
   const status = searchParams.get("status") ?? undefined;
+  const [pendingDelete, setPendingDelete] = useState<CampaignSummary | null>(
+    null,
+  );
 
   const { data, isPending } = useQuery({
     queryKey: ["email-campaigns", debouncedSearch, status],
@@ -141,21 +146,26 @@ export default function CampaignsIndex() {
               campaign={campaign}
               index={index}
               fmt={fmt}
-              onDelete={() => {
-                if (
-                  window.confirm(
-                    t("emailCampaigns.list.deleteConfirm", {
-                      defaultValue: "Delete this campaign?",
-                    }),
-                  )
-                ) {
-                  remove.mutate(campaign.id);
-                }
-              }}
+              onDelete={() => setPendingDelete(campaign)}
             />
           ))}
         </div>
       )}
+
+      <ConfirmDeleteDialog
+        open={pendingDelete !== null}
+        onOpenChange={(next) => !next && setPendingDelete(null)}
+        name={pendingDelete?.name ?? null}
+        description={t("emailCampaigns.list.deleteConfirm", {
+          defaultValue:
+            "Its send history and open and click figures go with it. This cannot be undone.",
+        })}
+        busy={remove.isPending}
+        onConfirm={() => {
+          if (pendingDelete) remove.mutate(pendingDelete.id);
+          setPendingDelete(null);
+        }}
+      />
     </div>
   );
 }
@@ -177,42 +187,68 @@ function CampaignRow({
       ? Math.round((campaign.unique_open_count / campaign.sent_count) * 100)
       : null;
 
+  // One date per row, chosen by status: what happened, what is about to, or
+  // when it was last touched. A row with no date at all cannot be placed in
+  // time, which is how everyone reads a list of past sends.
+  const when =
+    campaign.status === "sent" && campaign.completed_at
+      ? formatDateTime(campaign.completed_at)
+      : campaign.status === "scheduled" && campaign.scheduled_at
+        ? t("emailCampaigns.list.scheduledFor", {
+            defaultValue: "Scheduled {{when}}",
+            when: formatDateTime(campaign.scheduled_at),
+          })
+        : campaign.status === "sending" && campaign.started_at
+          ? t("emailCampaigns.list.startedAt", {
+              defaultValue: "Started {{when}}",
+              when: formatDateTime(campaign.started_at),
+            })
+          : t("emailCampaigns.list.editedAt", {
+              defaultValue: "Edited {{when}}",
+              when: formatDateTime(campaign.updated_at),
+            });
+
   return (
     <div
       className={`app-fade-up app-fade-up-d${Math.min(index + 1, 4)} group flex items-center gap-4 rounded-2xl border border-border bg-card px-4 py-3 transition-colors hover:border-primary/40`}
     >
+      {/*
+        Fixed-width columns rather than free-flowing spans. As inline text of
+        varying length the numbers never lined up between rows, so the list
+        could not be scanned down a column — which is the only way anyone reads
+        a campaign history.
+      */}
       <Link
         to={`/campaigns/${campaign.id}`}
-        className="flex min-w-0 flex-1 flex-wrap items-center gap-x-4 gap-y-1"
+        className="grid min-w-0 flex-1 grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-1 sm:grid-cols-[minmax(0,1fr)_5.5rem_9rem_7.5rem_5.5rem]"
       >
-        <span className="min-w-0 flex-1 basis-48 truncate font-medium">
-          {campaign.name}
-        </span>
+        <span className="min-w-0 truncate font-medium">{campaign.name}</span>
         <CampaignStatusBadge status={campaign.status} />
-        <span className="hidden text-xs text-muted-foreground sm:block">
-          {campaign.segment_name ?? "—"}
+
+        {/* The date. Which one depends on where the campaign is in its life —
+            a draft has no send date yet, so it shows when you last touched it. */}
+        <span className="col-span-2 text-xs tabular-nums text-muted-foreground sm:col-span-1">
+          {when}
         </span>
-        <span className="text-xs tabular-nums text-muted-foreground">
+
+        <span className="hidden text-xs tabular-nums text-muted-foreground sm:block">
           {campaign.status === "draft"
-            ? campaign.scheduled_at
-              ? new Date(campaign.scheduled_at).toLocaleString()
-              : t("emailCampaigns.list.notScheduled", {
-                  defaultValue: "Not scheduled",
-                })
+            ? (campaign.segment_name ?? "—")
             : t("emailCampaigns.list.progress", {
                 defaultValue: "{{sent}} / {{total}} sent",
                 sent: fmt(campaign.sent_count),
                 total: fmt(campaign.total_recipients),
               })}
         </span>
-        {openRate !== null ? (
-          <span className="text-xs tabular-nums text-muted-foreground">
-            {t("emailCampaigns.list.openRate", {
-              defaultValue: "{{rate}}% opened",
-              rate: openRate,
-            })}
-          </span>
-        ) : null}
+
+        <span className="hidden text-xs tabular-nums text-muted-foreground sm:block">
+          {openRate !== null
+            ? t("emailCampaigns.list.openRate", {
+                defaultValue: "{{rate}}% opened",
+                rate: openRate,
+              })
+            : ""}
+        </span>
       </Link>
       {campaign.status !== "sending" && campaign.status !== "scheduled" ? (
         <button

@@ -3980,7 +3980,10 @@
       "retranslateConfirmTitle": "Vorhandene Übersetzungen überschreiben?",
       "retranslateConfirmBody": "Jeder Text in dieser Sprache wird ersetzt, auch selbst geschriebene.",
       "defaultLocaleSeeded": "Standardsprache geändert. Vorhandene Texte wurden als Ausgangspunkt übernommen.",
-      "translationBusy": "Warten Sie, bis die laufende Übersetzung abgeschlossen ist"
+      "translationBusy": "Warten Sie, bis die laufende Übersetzung abgeschlossen ist",
+      "structureDiffers": "Struktur weicht von {{locale}} ab",
+      "structureDiffersBody": "Die Blöcke hier weichen von {{locale}} ab – die beiden Sprachen versenden unterschiedliche E-Mails.",
+      "matchStructure": "Struktur angleichen"
     },
     "intro": {
       "title": "So funktionieren Formulare",
@@ -5036,7 +5039,11 @@
       "publishedSwitch": "Veröffentlicht",
       "publishedTip": "Jedes Speichern veröffentlicht automatisch",
       "publishTip": "Veröffentlichen Sie die Vorlage, damit Kampagnen sie versenden können",
-      "unsubscribeText": "Text des Abmeldelinks"
+      "unsubscribeText": "Text des Abmeldelinks",
+      "matchStructureTitle": "{{locale}} an {{source}} angleichen?",
+      "matchStructureKeeps": "{{locale}} wird auf den Blöcken von {{source}} neu aufgebaut. Bereits übersetzte Texte bleiben erhalten.",
+      "matchStructureRemoves_one": "Dabei wird 1 Block entfernt, den nur {{locale}} hat: {{names}}.",
+      "matchStructureRemoves_other": "Dabei werden {{count}} Blöcke entfernt, die nur {{locale}} hat: {{names}}."
     },
     "useTemplate": {
       "button": "Vorlage verwenden",

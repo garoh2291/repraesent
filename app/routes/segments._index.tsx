@@ -6,6 +6,7 @@ import { Link, useNavigate } from "react-router";
 import { toast } from "sonner";
 import { SegmentCountBadge } from "~/components/email-campaigns/segments/SegmentCountBadge";
 import { SuppressionsPanel } from "~/components/email-campaigns/segments/SuppressionsPanel";
+import { ConfirmDeleteDialog } from "~/components/molecule/confirm-delete-dialog";
 import { Button } from "~/components/ui/button";
 import {
   Dialog,
@@ -25,6 +26,7 @@ import {
   type SegmentSummary,
 } from "~/lib/api/segments";
 import { useDocumentMeta } from "~/lib/hooks/use-document-meta";
+import { formatDateMedium } from "~/lib/utils/format";
 
 export default function SegmentsIndex() {
   const { t } = useTranslation();
@@ -38,6 +40,10 @@ export default function SegmentsIndex() {
   const [createOpen, setCreateOpen] = useState(false);
   const [newName, setNewName] = useState("");
   const [newKind, setNewKind] = useState<"dynamic" | "manual">("dynamic");
+  const [pendingDelete, setPendingDelete] = useState<{
+    id: string;
+    name: string;
+  } | null>(null);
 
   const { data: segments, isPending } = useQuery({
     queryKey: ["segments"],
@@ -111,17 +117,7 @@ export default function SegmentsIndex() {
             <SegmentCard
               key={segment.id}
               segment={segment}
-              onDelete={() => {
-                if (
-                  window.confirm(
-                    t("emailCampaigns.segments.deleteConfirm", {
-                      defaultValue: "Delete this segment?",
-                    }),
-                  )
-                ) {
-                  remove.mutate(segment.id);
-                }
-              }}
+              onDelete={() => setPendingDelete(segment)}
             />
           ))}
         </div>
@@ -130,6 +126,21 @@ export default function SegmentsIndex() {
       <div className="app-fade-up app-fade-up-d2">
         <SuppressionsPanel />
       </div>
+
+      <ConfirmDeleteDialog
+        open={pendingDelete !== null}
+        onOpenChange={(next) => !next && setPendingDelete(null)}
+        name={pendingDelete?.name ?? null}
+        description={t("emailCampaigns.segments.deleteConfirm", {
+          defaultValue:
+            "Campaigns already sent to it are unaffected, but you cannot send to this audience again without rebuilding it. This cannot be undone.",
+        })}
+        busy={remove.isPending}
+        onConfirm={() => {
+          if (pendingDelete) remove.mutate(pendingDelete.id);
+          setPendingDelete(null);
+        }}
+      />
 
       <Dialog open={createOpen} onOpenChange={setCreateOpen}>
         <DialogContent className="max-w-sm">
@@ -229,11 +240,34 @@ function SegmentCard({
             {segment.description}
           </p>
         ) : null}
-        <SegmentCountBadge
-          matched={segment.matched_count}
-          sendable={segment.sendable_count}
-          loading={refresh.isPending}
-        />
+        {/*
+          `pr-16` keeps this row clear of the refresh and delete buttons, which
+          are pinned to the card's bottom-right corner and only appear on hover.
+          Without it they landed directly on top of the date — 52px of overlap,
+          both unreadable.
+        */}
+        <div className="flex flex-wrap items-center gap-x-2 gap-y-1 pr-16">
+          <SegmentCountBadge
+            matched={segment.matched_count}
+            sendable={segment.sendable_count}
+            loading={refresh.isPending}
+          />
+          {/* When the counts were taken. `counts_refreshed_at` rather than
+              `updated_at`: a count is only worth reading if you know how old it
+              is, and for a dynamic segment the definition can be untouched for
+              months while the numbers move every day.
+
+              Flows directly after the counts rather than being pushed to the
+              right edge — it describes them, so proximity is the point. */}
+          {segment.counts_refreshed_at ? (
+            <span className="text-[11px] tabular-nums text-muted-foreground">
+              {t("emailCampaigns.segments.countedAt", {
+                defaultValue: "Counted {{when}}",
+                when: formatDateMedium(segment.counts_refreshed_at),
+              })}
+            </span>
+          ) : null}
+        </div>
       </Link>
       <div className="absolute bottom-3 right-3 flex gap-1 opacity-0 transition-opacity group-hover:opacity-100">
         <button

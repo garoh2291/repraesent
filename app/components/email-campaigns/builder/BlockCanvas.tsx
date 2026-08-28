@@ -126,10 +126,19 @@ export function BlockCanvas({
             strategy={verticalListSortingStrategy}
           >
             <div
-              className="mx-auto w-full max-w-[600px] space-y-1 rounded-xl border border-border p-3"
-              style={{
-                backgroundColor: settings.content_background_color ?? "#ffffff",
-              }}
+              // `[&_a]` colours the author's links the way the compiled email
+              // does (`a { color: … }` in the MJML head). Without it the canvas
+              // ignored the document's "Links & buttons" colour entirely and
+              // showed every link in the app's default blue — so the preview
+              // disagreed with the email that actually went out.
+              className="mx-auto w-full max-w-[600px] space-y-1 rounded-xl border border-border p-3 [&_a]:[color:var(--tpl-link-color)]"
+              style={
+                {
+                  backgroundColor:
+                    settings.content_background_color ?? "#ffffff",
+                  "--tpl-link-color": settings.link_color ?? "#2563eb",
+                } as React.CSSProperties
+              }
               onClick={() => onSelect(null)}
             >
               {blocks.length === 0 ? (

@@ -21,6 +21,8 @@ import {
   type EmailTemplateSummary,
 } from "~/lib/api/email-templates";
 import { normalizeLocale } from "~/i18n/locales";
+import { formatDateMedium } from "~/lib/utils/format";
+import { ConfirmDeleteDialog } from "~/components/molecule/confirm-delete-dialog";
 import { useDocumentMeta } from "~/lib/hooks/use-document-meta";
 import { useDebounce } from "~/lib/hooks/useDebounce";
 import { useSearchShortcut } from "~/lib/hooks/useSearchShortcut";
@@ -39,6 +41,8 @@ export default function EmailTemplatesIndex() {
   const { ref: searchInputRef, withHint } = useSearchShortcut();
   const [createOpen, setCreateOpen] = useState(false);
   const [newName, setNewName] = useState("");
+  const [pendingDelete, setPendingDelete] =
+    useState<EmailTemplateSummary | null>(null);
 
   const { data, isPending } = useQuery({
     queryKey: ["email-templates", debouncedSearch],
@@ -139,21 +143,26 @@ export default function EmailTemplatesIndex() {
             <TemplateCard
               key={template.id}
               template={template}
-              onDelete={() => {
-                if (
-                  window.confirm(
-                    t("emailCampaigns.templates.deleteConfirm", {
-                      defaultValue: "Delete this template?",
-                    }),
-                  )
-                ) {
-                  remove.mutate(template.id);
-                }
-              }}
+              onDelete={() => setPendingDelete(template)}
             />
           ))}
         </div>
       )}
+
+      <ConfirmDeleteDialog
+        open={pendingDelete !== null}
+        onOpenChange={(next) => !next && setPendingDelete(null)}
+        name={pendingDelete?.name ?? null}
+        description={t("emailCampaigns.templates.deleteConfirm", {
+          defaultValue:
+            "Campaigns already sent keep the copy they were sent with, but anything still using this template will lose it. This cannot be undone.",
+        })}
+        busy={remove.isPending}
+        onConfirm={() => {
+          if (pendingDelete) remove.mutate(pendingDelete.id);
+          setPendingDelete(null);
+        }}
+      />
 
       <Dialog open={createOpen} onOpenChange={setCreateOpen}>
         <DialogContent className="max-w-sm">
@@ -222,7 +231,9 @@ function TemplateCard({
             {template.description}
           </p>
         ) : null}
-        <div className="flex items-center gap-1">
+        {/* `pr-10` clears the delete button pinned to the bottom-right corner,
+            which would otherwise land on top of the date on hover. */}
+        <div className="flex flex-wrap items-center gap-x-2 gap-y-1 pr-10">
           {template.complete_locales.map((locale) => (
             <span
               key={locale}
@@ -231,6 +242,15 @@ function TemplateCard({
               {locale}
             </span>
           ))}
+          {/* When it was last touched. Every other list in the app carries this
+              and the template library did not, which made it the one place you
+              could not tell a live asset from an abandoned one. */}
+          <span className="text-[11px] tabular-nums text-muted-foreground">
+            {t("emailCampaigns.templates.updatedAt", {
+              defaultValue: "Updated {{when}}",
+              when: formatDateMedium(template.updated_at),
+            })}
+          </span>
         </div>
       </Link>
       <button

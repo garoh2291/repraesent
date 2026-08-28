@@ -20,30 +20,50 @@ export interface TranslateEntry {
   format?: "text" | "html";
 }
 
+/**
+ * The block attributes that hold READING MATTER, per block type.
+ *
+ * One definition, used by three things that must never disagree: what gets
+ * sent to the translator, what an edit writes to a single language, and what
+ * counts as "still untranslated". A second copy of this list somewhere else is
+ * how a field ends up translated but not editable per-language, or restyled in
+ * one language only.
+ *
+ * Everything absent here is structure or styling — colours, alignment, `href`,
+ * `src`, corner radius, heading level, column ratio — and is shared by every
+ * language.
+ */
+export const TRANSLATABLE_ATTRS: Record<string, readonly string[]> = {
+  heading: ["html"],
+  text: ["html"],
+  html: ["html"],
+  button: ["label"],
+  image: ["alt"],
+};
+
+/** Is this attribute of this block type text that differs per language? */
+export function isTranslatableAttr(blockType: string, attr: string): boolean {
+  return (TRANSLATABLE_ATTRS[blockType] ?? []).includes(attr);
+}
+
 function blockEntries(block: Block): TranslateEntry[] {
   const attrs = block.attrs as Record<string, unknown>;
   const entries: TranslateEntry[] = [];
-  const push = (suffix: string, value: unknown, format?: "text" | "html") => {
-    if (typeof value === "string" && value.trim() !== "") {
-      entries.push({ key: `block.${block.id}.${suffix}`, value, format });
-    }
-  };
 
-  switch (block.type) {
-    case "heading":
-    case "text":
-    case "html":
-      push("html", attrs.html, "html");
-      break;
-    case "button":
-      push("label", attrs.label);
-      break;
-    case "image":
-      push("alt", attrs.alt);
-      break;
-    default:
-      break;
+  // Driven by TRANSLATABLE_ATTRS rather than its own switch, so the translator
+  // and the per-language edit rule cannot drift apart.
+  for (const attr of TRANSLATABLE_ATTRS[block.type] ?? []) {
+    const value = attrs[attr];
+    if (typeof value === "string" && value.trim() !== "") {
+      entries.push({
+        key: `block.${block.id}.${attr}`,
+        value,
+        // `html` is the only rich field; labels and alt text are plain.
+        format: attr === "html" ? "html" : undefined,
+      });
+    }
   }
+
   for (const column of block.columns ?? []) {
     for (const child of column) entries.push(...blockEntries(child));
   }
@@ -112,6 +132,28 @@ export function buildTranslateRequest(
     ),
     targets: [{ locale: targetLocale, keys }],
   };
+}
+
+/**
+ * How many strings in `targetLocale` are still verbatim copies of the source —
+ * i.e. text that arrived structurally but was never translated.
+ *
+ * Same predicate as `buildTranslateRequest(mode: "copies")`, by construction:
+ * this is the count of exactly what that request would send.
+ */
+export function countUntranslatedCopies(
+  doc: TemplateDocument,
+  sourceLocale: string,
+  targetLocale: string,
+): number {
+  if (targetLocale === sourceLocale) return 0;
+  const request = buildTranslateRequest(
+    doc,
+    sourceLocale,
+    targetLocale,
+    "copies",
+  );
+  return request?.targets[0]?.keys.length ?? 0;
 }
 
 function applyToBlock(block: Block, values: Record<string, string>): Block {

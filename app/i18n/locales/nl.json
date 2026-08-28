@@ -3978,7 +3978,10 @@
       "retranslateConfirmTitle": "Bestaande vertalingen overschrijven?",
       "retranslateConfirmBody": "Elke tekst in deze taal wordt vervangen, ook die u zelf hebt geschreven.",
       "defaultLocaleSeeded": "Standaardtaal gewijzigd. Bestaande teksten zijn als startpunt overgenomen.",
-      "translationBusy": "Wacht tot de huidige vertaling klaar is"
+      "translationBusy": "Wacht tot de huidige vertaling klaar is",
+      "structureDiffers": "Structuur wijkt af van {{locale}}",
+      "structureDiffersBody": "De blokken hier wijken af van {{locale}}; de twee talen versturen verschillende e-mails.",
+      "matchStructure": "Structuur gelijktrekken"
     },
     "intro": {
       "title": "Zo werken formulieren",
@@ -5034,7 +5037,11 @@
       "publishedSwitch": "Gepubliceerd",
       "publishedTip": "Elke opslag publiceert automatisch",
       "publishTip": "Publiceer dit sjabloon zodat campagnes het kunnen versturen",
-      "unsubscribeText": "Tekst van afmeldlink"
+      "unsubscribeText": "Tekst van afmeldlink",
+      "matchStructureTitle": "{{locale}} gelijktrekken met {{source}}?",
+      "matchStructureKeeps": "{{locale}} wordt opnieuw opgebouwd op de blokken van {{source}}. Al vertaalde tekst blijft behouden.",
+      "matchStructureRemoves_one": "Hierbij verdwijnt 1 blok dat alleen {{locale}} heeft: {{names}}.",
+      "matchStructureRemoves_other": "Hierbij verdwijnen {{count}} blokken die alleen {{locale}} heeft: {{names}}."
     },
     "useTemplate": {
       "button": "Sjabloon gebruiken",

@@ -1,5 +1,5 @@
 import { Bookmark, Settings2, SlidersHorizontal } from "lucide-react";
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import {
@@ -25,6 +25,7 @@ import { createSavedRow, type Block } from "~/lib/api/email-templates";
 import type { TemplateSettings } from "~/lib/api/email-templates";
 import { BLOCK_META, newBlock } from "~/lib/email-templates/blocks";
 import { VariableMenu } from "./VariableMenu";
+import { PromptDialog } from "~/components/molecule/prompt-dialog";
 
 /**
  * Right pane: settings for the selected block, or the document settings when
@@ -55,6 +56,7 @@ export function BlockInspector({
 }) {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
+  const [saveRowOpen, setSaveRowOpen] = useState(false);
 
   const saveRow = useMutation({
     mutationFn: createSavedRow,
@@ -121,15 +123,7 @@ export function BlockInspector({
           <button
             type="button"
             disabled={disabled || saveRow.isPending}
-            onClick={() => {
-              const name = window.prompt(
-                t("emailCampaigns.templates.savedRows.namePrompt", {
-                  defaultValue: "Name this row",
-                }),
-              );
-              if (!name?.trim()) return;
-              saveRow.mutate({ name: name.trim(), blocks: [block] });
-            }}
+            onClick={() => setSaveRowOpen(true)}
             className="inline-flex h-7 items-center gap-1 rounded-md border border-border px-2 text-[11px] text-muted-foreground transition-colors hover:bg-muted"
           >
             <Bookmark className="h-3 w-3" />
@@ -143,9 +137,32 @@ export function BlockInspector({
         <BlockFields
           block={block}
           onChange={onChangeBlock}
+          settings={settings}
           disabled={disabled}
         />
       </PanelBody>
+
+      <PromptDialog
+        open={saveRowOpen}
+        onOpenChange={setSaveRowOpen}
+        title={t("emailCampaigns.templates.savedRows.saveDialogTitle", {
+          defaultValue: "Save this row for reuse",
+        })}
+        label={t("emailCampaigns.templates.savedRows.nameLabel", {
+          defaultValue: "Name",
+        })}
+        placeholder={t("emailCampaigns.templates.savedRows.namePlaceholder", {
+          defaultValue: "Hero with button",
+        })}
+        submitLabel={t("emailCampaigns.templates.savedRows.save", {
+          defaultValue: "Save row",
+        })}
+        busy={saveRow.isPending}
+        onSubmit={(name) => {
+          saveRow.mutate({ name, blocks: [block] });
+          setSaveRowOpen(false);
+        }}
+      />
     </Panel>
   );
 }
@@ -352,10 +369,13 @@ function insertAtCaret(
 function BlockFields({
   block,
   onChange,
+  settings,
   disabled,
 }: {
   block: Block;
   onChange: (block: Block) => void;
+  /** Document-level values a block can fall back to (e.g. the button colour). */
+  settings: TemplateSettings;
   disabled?: boolean;
 }) {
   const { t } = useTranslation();
@@ -522,7 +542,12 @@ function BlockFields({
 
     case "button":
       return (
-        <ButtonFields attrs={attrs} setAttrs={setAttrs} disabled={disabled} />
+        <ButtonFields
+          attrs={attrs}
+          setAttrs={setAttrs}
+          settings={settings}
+          disabled={disabled}
+        />
       );
 
     case "divider":
@@ -563,7 +588,12 @@ function BlockFields({
 
     case "columns":
       return (
-        <ColumnsFields block={block} onChange={onChange} disabled={disabled} />
+        <ColumnsFields
+          block={block}
+          onChange={onChange}
+          settings={settings}
+          disabled={disabled}
+        />
       );
 
     case "html":
@@ -656,6 +686,7 @@ function AlignSection({
 function ButtonFields({
   attrs,
   setAttrs,
+  settings,
   disabled,
 }: {
   attrs: {
@@ -667,10 +698,22 @@ function ButtonFields({
     border_radius?: number;
   };
   setAttrs: (patch: Record<string, unknown>) => void;
+  /** Needed for the document colour a button falls back to. */
+  settings: TemplateSettings;
   disabled?: boolean;
 }) {
   const { t } = useTranslation();
   const labelRef = useRef<HTMLInputElement>(null);
+
+  /**
+   * A button with no colour of its own renders in the document's
+   * "Links & buttons" colour — both on the canvas and in the compiled email.
+   * The panel used to show a hardcoded `#2563eb` regardless, so a new button
+   * appeared pink on the canvas while the field claimed it was blue, and
+   * touching the picker snapped it to a colour nobody chose.
+   */
+  const inheritedColor = settings.link_color ?? "#2563eb";
+  const hasOwnColor = typeof attrs.background_color === "string";
   return (
     <>
       <PanelSection
@@ -725,11 +768,14 @@ function ButtonFields({
         })}
       >
         <Cols>
+          {/* Its OWN key. `inspector.backgroundColor` is already translated as
+              "Page background" for the document settings, so reusing it here
+              labelled the button's colour as the page's. */}
           <ColorField
-            label={t("emailCampaigns.templates.inspector.backgroundColor", {
-              defaultValue: "Background",
+            label={t("emailCampaigns.templates.inspector.buttonBackground", {
+              defaultValue: "Button colour",
             })}
-            value={attrs.background_color ?? "#2563eb"}
+            value={attrs.background_color ?? inheritedColor}
             onChange={(background_color) => setAttrs({ background_color })}
             disabled={disabled}
           />
@@ -742,6 +788,37 @@ function ButtonFields({
             disabled={disabled}
           />
         </Cols>
+
+        {/* Says which of the two states this button is in, and makes the
+            inherited one reachable again — otherwise picking a colour once is
+            a one-way door. */}
+        <p className="mt-1.5 text-[11px] leading-relaxed text-muted-foreground">
+          {hasOwnColor ? (
+            <>
+              {t("emailCampaigns.templates.inspector.buttonOwnColor", {
+                defaultValue: "This button uses its own colour.",
+              })}{" "}
+              <button
+                type="button"
+                disabled={disabled}
+                onClick={() => setAttrs({ background_color: undefined })}
+                className="underline underline-offset-2 hover:text-foreground"
+              >
+                {t(
+                  "emailCampaigns.templates.inspector.buttonUseDocumentColor",
+                  {
+                    defaultValue: "Use the document colour",
+                  },
+                )}
+              </button>
+            </>
+          ) : (
+            t("emailCampaigns.templates.inspector.buttonInheritsColor", {
+              defaultValue:
+                "Following the document’s “Links & buttons” colour.",
+            })
+          )}
+        </p>
         <div className="space-y-1.5">
           <Label className="text-xs">
             {t("emailCampaigns.templates.inspector.borderRadius", {
@@ -775,10 +852,13 @@ function ButtonFields({
 function ColumnsFields({
   block,
   onChange,
+  settings,
   disabled,
 }: {
   block: Block;
   onChange: (block: Block) => void;
+  /** Passed through to child blocks, which fall back to it (button colour). */
+  settings: TemplateSettings;
   disabled?: boolean;
 }) {
   const { t } = useTranslation();
@@ -909,6 +989,7 @@ function ColumnsFields({
                   </div>
                   <BlockFields
                     block={child}
+                    settings={settings}
                     disabled={disabled}
                     onChange={(updated) => {
                       const next = columns.map((c, i) =>

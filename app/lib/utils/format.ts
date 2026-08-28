@@ -1,5 +1,8 @@
 import i18n from "~/i18n";
-import { format as dateFnsFormat, formatDistanceToNow as dateFnsDistanceToNow } from "date-fns";
+import {
+  format as dateFnsFormat,
+  formatDistanceToNow as dateFnsDistanceToNow,
+} from "date-fns";
 import { de, enUS } from "date-fns/locale";
 
 /**
@@ -62,8 +65,22 @@ export function formatCurrencyFromCents(amountCents: number): string {
  * they must not be divided by 100 here either.
  */
 const ZERO_DECIMAL_CURRENCIES = new Set([
-  "bif", "clp", "djf", "gnf", "jpy", "kmf", "krw", "mga",
-  "pyg", "rwf", "ugx", "vnd", "vuv", "xaf", "xof", "xpf",
+  "bif",
+  "clp",
+  "djf",
+  "gnf",
+  "jpy",
+  "kmf",
+  "krw",
+  "mga",
+  "pyg",
+  "rwf",
+  "ugx",
+  "vnd",
+  "vuv",
+  "xaf",
+  "xof",
+  "xpf",
 ]);
 
 export function formatMoneyFromMinor(
@@ -142,14 +159,43 @@ export function formatDateShort(date: Date | number | string): string {
  * Format a date for display in locale-aware medium format (e.g. "31. Marz 2026" or "Mar 31, 2026").
  */
 export function formatDateMedium(date: Date | number | string): string {
-  return formatDateIntl(date, { year: "numeric", month: "short", day: "numeric" });
+  return formatDateIntl(date, {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+  });
 }
 
 /**
  * Format a date for display in locale-aware long format (e.g. "Montag, 31. Marz 2026" or "Monday, March 31, 2026").
  */
 export function formatDateLong(date: Date | number | string): string {
-  return formatDateIntl(date, { weekday: "long", year: "numeric", month: "long", day: "numeric" });
+  return formatDateIntl(date, {
+    weekday: "long",
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  });
+}
+
+/**
+ * Date and time together, locale-aware — "Aug 28, 2026, 12:59 PM".
+ *
+ * The pairing every "when did this happen" readout in the app wants. It exists
+ * because the alternative people reach for, a bare `toLocaleString()`, silently
+ * ignores the user's chosen language and formats to whatever the *browser* is
+ * set to — which is how the campaign pages ended up showing US-ordered
+ * `8/28/2026, 2:02:09 PM` while every other screen showed the European form.
+ * No seconds: nothing in this product is decided by them.
+ */
+export function formatDateTime(date: Date | number | string): string {
+  return formatDateIntl(date, {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
 }
 
 /**

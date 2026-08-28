@@ -34,6 +34,18 @@ import {
 } from "~/lib/api/email-campaigns";
 import { Skeleton } from "~/components/ui/skeleton";
 import { useDocumentMeta } from "~/lib/hooks/use-document-meta";
+import { formatDateTime, formatNumber } from "~/lib/utils/format";
+
+/**
+ * A rate against what was actually delivered.
+ *
+ * Denominator is `sent`, not the audience: a bounce never had the chance to be
+ * opened, so counting it against the open rate understates the campaign.
+ */
+function rate(value: number, of: number): string {
+  if (!of) return "—";
+  return `${Math.round((value / of) * 100)}%`;
+}
 
 export default function CampaignDetail() {
   const { t } = useTranslation();
@@ -99,6 +111,13 @@ export default function CampaignDetail() {
       ? Math.round((campaign.sent_count / campaign.total_recipients) * 100)
       : 0;
 
+  // Configuration while it is still being decided; results once it has gone out.
+  const hasSent =
+    campaign.status === "sending" ||
+    campaign.status === "sent" ||
+    campaign.status === "paused";
+  const defaultTab = hasSent ? "analytics" : "overview";
+
   return (
     <div className="mx-auto w-full max-w-[1280px] space-y-5 p-4 py-10! sm:p-6 app-fade-in">
       <div className="app-fade-up flex flex-wrap items-center gap-3">
@@ -134,6 +153,64 @@ export default function CampaignDetail() {
           }
         />
       </div>
+
+      {/*
+        The four numbers anyone opens a sent campaign to see, in the header so
+        they survive whichever tab you are on. Rates are shown against
+        *delivered*, not against the audience, because a bounce is not a
+        recipient who ignored you.
+      */}
+      {hasSent ? (
+        <dl className="app-fade-up grid grid-cols-2 gap-px overflow-hidden rounded-2xl border border-border bg-border sm:grid-cols-4">
+          {[
+            {
+              label: t("emailCampaigns.detail.kpiDelivered", {
+                defaultValue: "Delivered",
+              }),
+              value: formatNumber(campaign.sent_count),
+              sub: t("emailCampaigns.detail.kpiOf", {
+                defaultValue: "of {{total}}",
+                total: formatNumber(campaign.total_recipients),
+              }),
+            },
+            {
+              label: t("emailCampaigns.detail.kpiOpened", {
+                defaultValue: "Opened",
+              }),
+              value: rate(campaign.unique_open_count, campaign.sent_count),
+              sub: formatNumber(campaign.unique_open_count),
+            },
+            {
+              label: t("emailCampaigns.detail.kpiClicked", {
+                defaultValue: "Clicked",
+              }),
+              value: rate(campaign.unique_click_count, campaign.sent_count),
+              sub: formatNumber(campaign.unique_click_count),
+            },
+            {
+              label: t("emailCampaigns.detail.kpiUnsubscribed", {
+                defaultValue: "Unsubscribed",
+              }),
+              value: rate(campaign.unsubscribe_count, campaign.sent_count),
+              sub: formatNumber(campaign.unsubscribe_count),
+            },
+          ].map((kpi) => (
+            <div key={kpi.label} className="bg-card px-4 py-3">
+              <dt className="text-[11px] uppercase tracking-widest text-muted-foreground">
+                {kpi.label}
+              </dt>
+              <dd className="mt-1 flex items-baseline gap-1.5">
+                <span className="text-xl font-semibold tabular-nums">
+                  {kpi.value}
+                </span>
+                <span className="text-xs text-muted-foreground tabular-nums">
+                  {kpi.sub}
+                </span>
+              </dd>
+            </div>
+          ))}
+        </dl>
+      ) : null}
 
       {campaign.status === "sending" || campaign.status === "paused" ? (
         <div className="space-y-1 rounded-2xl border border-border bg-card p-4">
@@ -171,12 +248,23 @@ export default function CampaignDetail() {
           <CalendarClock className="h-4 w-4" />
           {t("emailCampaigns.detail.scheduledFor", {
             defaultValue: "Scheduled for {{when}}",
-            when: new Date(campaign.scheduled_at).toLocaleString(),
+            when: formatDateTime(campaign.scheduled_at),
           })}
         </p>
       ) : null}
 
-      <Tabs defaultValue="overview" className="app-fade-up app-fade-up-d1">
+      {/*
+        The landing tab follows the campaign's state. A draft is still being
+        configured, so its settings are the answer; a campaign that has sent is
+        only ever opened to find out how it did, and burying that behind a tab
+        made the page greet you with the half you were not asking about.
+        `key` forces the tab state to re-derive once the campaign loads.
+      */}
+      <Tabs
+        key={defaultTab}
+        defaultValue={defaultTab}
+        className="app-fade-up app-fade-up-d1"
+      >
         <TabsList variant="line">
           <TabsTrigger value="overview">
             {t("emailCampaigns.detail.tabOverview", {
@@ -188,9 +276,12 @@ export default function CampaignDetail() {
               defaultValue: "Recipients",
             })}
           </TabsTrigger>
+          {/* "Performance", not "Analytics" — the sidebar already has an
+              Analytics section meaning website traffic, and the collision sent
+              me to the wrong page while auditing this. */}
           <TabsTrigger value="analytics">
-            {t("emailCampaigns.detail.tabAnalytics", {
-              defaultValue: "Analytics",
+            {t("emailCampaigns.detail.tabPerformance", {
+              defaultValue: "Performance",
             })}
           </TabsTrigger>
         </TabsList>
@@ -294,9 +385,7 @@ function CampaignOverview({ campaign }: { campaign: CampaignSummary }) {
     ],
     [
       t("emailCampaigns.detail.completedAt", { defaultValue: "Completed" }),
-      campaign.completed_at
-        ? new Date(campaign.completed_at).toLocaleString()
-        : "—",
+      campaign.completed_at ? formatDateTime(campaign.completed_at) : "—",
     ],
   ];
 
@@ -418,7 +507,7 @@ function RecipientsTable({ campaignId }: { campaignId: string }) {
                   </span>
                 </TableCell>
                 <TableCell className="text-xs text-muted-foreground">
-                  {send.sent_at ? new Date(send.sent_at).toLocaleString() : "—"}
+                  {send.sent_at ? formatDateTime(send.sent_at) : "—"}
                 </TableCell>
                 <TableCell className="text-xs text-muted-foreground">
                   {[

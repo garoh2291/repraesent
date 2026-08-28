@@ -40,38 +40,30 @@ export function CampaignAnalytics({ campaign }: { campaign: CampaignSummary }) {
 
   return (
     <div className="space-y-4">
-      <div className="grid grid-cols-2 gap-3 lg:grid-cols-5">
-        <Stat
-          label={t("emailCampaigns.analytics.sent", { defaultValue: "Sent" })}
-          value={fmt(campaign.sent_count)}
-          sub={`${fmt(campaign.total_recipients)} ${t("emailCampaigns.analytics.recipients", { defaultValue: "recipients" })}`}
-        />
-        <Stat
-          label={t("emailCampaigns.analytics.opens", { defaultValue: "Opens" })}
-          value={fmt(campaign.unique_open_count)}
-          sub={rate(campaign.unique_open_count)}
-        />
-        <Stat
-          label={t("emailCampaigns.analytics.clicks", {
-            defaultValue: "Clicks",
-          })}
-          value={fmt(campaign.unique_click_count)}
-          sub={rate(campaign.unique_click_count)}
-        />
-        <Stat
-          label={t("emailCampaigns.analytics.unsubscribes", {
-            defaultValue: "Unsubscribes",
-          })}
-          value={fmt(campaign.unsubscribe_count)}
-          sub={rate(campaign.unsubscribe_count)}
-        />
-        <Stat
-          label={t("emailCampaigns.analytics.failures", {
-            defaultValue: "Failed / skipped",
-          })}
-          value={`${fmt(campaign.failed_count)} / ${fmt(campaign.skipped_count)}`}
-        />
-      </div>
+      {/*
+        Delivered / opened / clicked / unsubscribed now live in the page header,
+        where they are readable from every tab. Repeating them here said the
+        same thing twice on the one tab that needs the space least.
+        What stays is what the header genuinely cannot carry: the sends that did
+        NOT arrive, which is a different question from how the arrivals
+        performed and is the reason to come to this tab.
+      */}
+      {campaign.failed_count > 0 || campaign.skipped_count > 0 ? (
+        <div className="grid grid-cols-2 gap-3 sm:max-w-sm">
+          <Stat
+            label={t("emailCampaigns.analytics.failed", {
+              defaultValue: "Failed",
+            })}
+            value={fmt(campaign.failed_count)}
+          />
+          <Stat
+            label={t("emailCampaigns.analytics.skipped", {
+              defaultValue: "Skipped",
+            })}
+            value={fmt(campaign.skipped_count)}
+          />
+        </div>
+      ) : null}
 
       {series.length > 0 ? (
         <Panel>

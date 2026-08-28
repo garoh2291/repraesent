@@ -3980,7 +3980,10 @@
       "retranslateConfirmTitle": "Écraser les traductions existantes ?",
       "retranslateConfirmBody": "Chaque texte de cette langue est remplacé, y compris ceux que vous avez écrits.",
       "defaultLocaleSeeded": "Langue par défaut modifiée. Les textes existants ont été copiés comme point de départ.",
-      "translationBusy": "Attendez la fin de la traduction en cours"
+      "translationBusy": "Attendez la fin de la traduction en cours",
+      "structureDiffers": "La structure diffère de {{locale}}",
+      "structureDiffersBody": "Les blocs diffèrent de {{locale}} : les deux langues envoient des e-mails différents.",
+      "matchStructure": "Aligner la structure"
     },
     "intro": {
       "title": "Comment fonctionnent les formulaires",
@@ -5036,7 +5039,11 @@
       "publishedSwitch": "Publié",
       "publishedTip": "Chaque enregistrement publie automatiquement",
       "publishTip": "Publiez ce modèle pour que les campagnes puissent l'envoyer",
-      "unsubscribeText": "Texte du lien de désabonnement"
+      "unsubscribeText": "Texte du lien de désabonnement",
+      "matchStructureTitle": "Aligner {{locale}} sur {{source}} ?",
+      "matchStructureKeeps": "{{locale}} est reconstruit sur les blocs de {{source}}. Les textes déjà traduits sont conservés.",
+      "matchStructureRemoves_one": "1 bloc que seul {{locale}} possède sera supprimé : {{names}}.",
+      "matchStructureRemoves_other": "{{count}} blocs que seul {{locale}} possède seront supprimés : {{names}}."
     },
     "useTemplate": {
       "button": "Utiliser un modèle",

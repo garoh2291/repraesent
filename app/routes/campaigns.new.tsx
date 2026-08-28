@@ -110,12 +110,33 @@ export default function CampaignNew() {
   );
 
   const stepIndex = STEPS.indexOf(step);
-  const canNext =
+
+  /**
+   * Why this step cannot be left yet, in words, or null when it can.
+   *
+   * Replaces a bare `canNext` boolean. A disabled button that gives no reason
+   * is a dead end: the campaign name was the usual culprit and nothing on
+   * screen said so, nor was the field marked required.
+   */
+  const blocker: string | null =
     step === "audience"
-      ? !!segmentId && name.trim() !== ""
+      ? name.trim() === ""
+        ? t("emailCampaigns.wizard.needName", {
+            defaultValue: "Give the campaign a name",
+          })
+        : !segmentId
+          ? t("emailCampaigns.wizard.needSegment", {
+              defaultValue: "Choose who receives it",
+            })
+          : null
       : step === "template"
-        ? !!templateId
-        : true;
+        ? !templateId
+          ? t("emailCampaigns.wizard.needTemplate", {
+              defaultValue: "Choose a template",
+            })
+          : null
+        : null;
+  const canNext = blocker === null;
 
   const finish = useMutation({
     mutationFn: async (schedule: boolean) => {
@@ -221,9 +242,15 @@ export default function CampaignNew() {
                 {t("emailCampaigns.wizard.campaignName", {
                   defaultValue: "Campaign name",
                 })}
+                {/* Marked required because it is: leaving it empty is what
+                    silently disabled Next. */}
+                <span className="ml-0.5 text-destructive" aria-hidden>
+                  *
+                </span>
               </Label>
               <Input
                 autoFocus
+                required
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 placeholder={t("emailCampaigns.wizard.namePlaceholder", {
@@ -557,7 +584,11 @@ export default function CampaignNew() {
           }
         >
           <ArrowLeft className="mr-1.5 h-4 w-4" />
-          {t("common.back", { defaultValue: "Back" })}
+          {/* On the first step this leaves the wizard rather than stepping
+              back, so it says so. A control keeps the name of what it does. */}
+          {stepIndex === 0
+            ? t("common.cancel", { defaultValue: "Cancel" })
+            : t("common.back", { defaultValue: "Back" })}
         </Button>
         <div className="flex items-center gap-2">
           {step === "review" ? (
@@ -597,13 +628,21 @@ export default function CampaignNew() {
               </Button>
             </>
           ) : (
-            <Button
-              onClick={() => setStep(STEPS[stepIndex + 1])}
-              disabled={!canNext}
-            >
-              {t("common.next", { defaultValue: "Next" })}
-              <ArrowRight className="ml-1.5 h-4 w-4" />
-            </Button>
+            <div className="flex items-center gap-3">
+              {/* The reason, next to the control it disables — so it is read
+                  without hovering, and by anyone who cannot hover. */}
+              {blocker ? (
+                <span className="text-xs text-muted-foreground">{blocker}</span>
+              ) : null}
+              <Button
+                onClick={() => setStep(STEPS[stepIndex + 1])}
+                disabled={!canNext}
+                title={blocker ?? undefined}
+              >
+                {t("common.next", { defaultValue: "Next" })}
+                <ArrowRight className="ml-1.5 h-4 w-4" />
+              </Button>
+            </div>
           )}
         </div>
       </div>

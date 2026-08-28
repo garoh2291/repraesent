@@ -23,6 +23,7 @@ import {
   type TemplateSettings,
 } from "~/lib/api/email-templates";
 import {
+  BLOCK_META,
   cloneBlocks,
   emptyLocaleContent,
   FOOTER_SELECTION_ID,
@@ -33,8 +34,19 @@ import type { TemplateDocument as Doc } from "~/lib/api/email-templates";
 import {
   buildTranslateRequest,
   cloneLocaleContent,
+  countUntranslatedCopies,
   mergeTranslations,
 } from "~/lib/email-templates/translate-items";
+import {
+  applyToAllLocales,
+  describeRemovedBlocks,
+  localeDrift,
+  matchStructure,
+  mergeStructuralAttrs,
+  replaceBlockAcrossLocales,
+  type LocaleDrift,
+} from "~/lib/email-templates/locale-sync";
+import { ConfirmDeleteDialog } from "~/components/molecule/confirm-delete-dialog";
 import { BlockCanvas } from "./BlockCanvas";
 import { BlockInspector } from "./BlockInspector";
 import { BlockPalette } from "./BlockPalette";
@@ -71,6 +83,8 @@ export function TemplateBuilder({
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [dirty, setDirty] = useState(false);
   const [testOpen, setTestOpen] = useState(false);
+  /** Language awaiting confirmation of a structure repair (destructive). */
+  const [matchTarget, setMatchTarget] = useState<FormLocale | null>(null);
   /** Ref-counted like the forms builder — one locale can have two requests
    * in flight, and a Set would clear the spinner after the first returns. */
   const [translateCounts, setTranslateCounts] = useState<
@@ -336,16 +350,32 @@ export function TemplateBuilder({
     setDirty(true);
   };
 
+  /** Languages whose block structure no longer matches the default one. */
+  const driftByLocale = useMemo(() => {
+    const map = new Map<FormLocale, LocaleDrift>();
+    for (const locale of Object.keys(doc.locales)) {
+      const drift = localeDrift(doc, defaultLocale, locale);
+      if (drift) map.set(locale as FormLocale, drift);
+    }
+    return map;
+  }, [doc, defaultLocale]);
+
   const issuesByLocale = useMemo(() => {
     const map = new Map<FormLocale, number>();
     for (const [locale, entry] of Object.entries(doc.locales)) {
       let count = 0;
       if (!entry.subject.trim()) count += 1;
       if (entry.blocks.length === 0) count += 1;
+      // Structure that differs from the default language is an issue in its
+      // own right: the two languages are no longer the same e-mail.
+      if (driftByLocale.has(locale as FormLocale)) count += 1;
+      // Text that arrived by mirroring a structural edit and was never
+      // translated — one click from fixed, via the strip's Translate action.
+      count += countUntranslatedCopies(doc, defaultLocale, locale) > 0 ? 1 : 0;
       map.set(locale as FormLocale, count);
     }
     return map;
-  }, [doc]);
+  }, [doc, defaultLocale, driftByLocale]);
 
   // ---------------------------------------------------------------- blocks
 
@@ -357,43 +387,148 @@ export function TemplateBuilder({
     setDirty(true);
   };
 
-  const setBlocks = (blocks: Block[]) => setContent({ ...content, blocks });
+  /**
+   * Apply one block transform to EVERY language.
+   *
+   * Structure is shared: a block that exists in German must exist in French,
+   * under the same id, because translation addresses text by
+   * `block.<id>.<field>`. Writing a structural change to the active locale
+   * alone is what let the languages drift into different e-mails.
+   *
+   * Anything minted here — a new block, a duplicate — is created ONCE by the
+   * caller and the same id handed to every language. Minting per-locale would
+   * produce parallel blocks with different ids: identical on screen, and
+   * untranslatable.
+   */
+  const applyStructure = (transform: (blocks: Block[]) => Block[]) => {
+    // Returns the new document so a caller that must act on it — inserting a
+    // row then translating what it brought — works from the post-edit state
+    // rather than the render-time closure.
+    const next = applyToAllLocales(doc, transform);
+    setDoc(next);
+    setDirty(true);
+    return next;
+  };
 
   const selectedBlock = content.blocks.find((b) => b.id === selectedId) ?? null;
 
   const addBlock = (type: BlockType) => {
     const block = newBlock(type);
-    setBlocks([...content.blocks, block]);
+    applyStructure((blocks) => [...blocks, block]);
     setSelectedId(block.id);
   };
 
-  const insertRow = (blocks: Block[]) =>
-    setBlocks([...content.blocks, ...blocks]);
-
-  const reorder = (orderedIds: string[]) => {
-    const byId = new Map(content.blocks.map((b) => [b.id, b]));
-    setBlocks(
-      orderedIds.map((id) => byId.get(id)).filter((b): b is Block => !!b),
-    );
+  /**
+   * Saved rows arrive carrying text, so unlike a fresh block they land in the
+   * other languages already needing translation. Fill them in straight away —
+   * `mode: "copies"` touches only the strings still identical to the source.
+   */
+  const insertRow = (blocks: Block[]) => {
+    const next = applyStructure((current) => [...current, ...blocks]);
+    for (const locale of Object.keys(next.locales)) {
+      if (locale !== defaultLocale) {
+        void runTranslate(locale, "copies", { docOverride: next });
+      }
+    }
   };
 
+  const reorder = (orderedIds: string[]) =>
+    applyStructure((blocks) => {
+      const byId = new Map(blocks.map((b) => [b.id, b]));
+      const ordered = orderedIds
+        .map((id) => byId.get(id))
+        .filter((b): b is Block => !!b);
+      const placed = new Set(ordered.map((b) => b.id));
+      // A language that drifted may hold blocks the dragged list never
+      // mentioned; keep them rather than let a reorder silently delete them.
+      return [...ordered, ...blocks.filter((b) => !placed.has(b.id))];
+    });
+
   const duplicate = (id: string) => {
-    const index = content.blocks.findIndex((b) => b.id === id);
-    if (index < 0) return;
-    const copy = cloneBlocks([content.blocks[index]])[0];
-    const next = [...content.blocks];
-    next.splice(index + 1, 0, copy);
-    setBlocks(next);
+    const source = content.blocks.find((b) => b.id === id);
+    if (!source) return;
+    // Minted once, inserted everywhere under one id. `cloneBlocks` re-mints
+    // ids by design, so calling it per-locale would break the parallel.
+    const copy = cloneBlocks([source])[0];
+    applyStructure((blocks) => {
+      const index = blocks.findIndex((b) => b.id === id);
+      if (index < 0) return blocks;
+      const next = [...blocks];
+      // Each language duplicates ITS OWN text under the shared new id.
+      next.splice(index + 1, 0, mergeStructuralAttrs(copy, blocks[index]));
+      return next;
+    });
     setSelectedId(copy.id);
   };
 
   const removeBlock = (id: string) => {
-    setBlocks(content.blocks.filter((b) => b.id !== id));
+    applyStructure((blocks) => blocks.filter((b) => b.id !== id));
     if (selectedId === id) setSelectedId(null);
   };
 
-  const updateBlock = (updated: Block) =>
-    setBlocks(content.blocks.map((b) => (b.id === updated.id ? updated : b)));
+  /**
+   * An edit splits by what the field means, not by where it was made:
+   * reading matter (`html`, `label`, `alt`) stays in the language you are
+   * editing; everything else — colours, alignment, href, src, radius, level —
+   * is structure and applies to all of them. So restyling a button restyles it
+   * everywhere, while rewriting its label touches only this language.
+   */
+  const updateBlock = (updated: Block) => {
+    setDoc((previous) =>
+      replaceBlockAcrossLocales(previous, activeLocale, updated),
+    );
+    setDirty(true);
+  };
+
+  const driftedLocales = useMemo(
+    () => new Set(driftByLocale.keys()),
+    [driftByLocale],
+  );
+
+  /**
+   * What the repair will do, in the two terms that matter: the blocks it
+   * removes, named by type, and the fact that translated text survives.
+   */
+  const matchDescription = useMemo(() => {
+    if (!matchTarget) return "";
+    const target = doc.locales[matchTarget];
+    const removed = target
+      ? describeRemovedBlocks(target, driftByLocale.get(matchTarget)?.extra ?? [])
+      : [];
+    const kept = t("emailCampaigns.templates.matchStructureKeeps", {
+      defaultValue:
+        "{{locale}} is rebuilt on {{source}}'s blocks. Text already translated is kept.",
+      locale: matchTarget.toUpperCase(),
+      source: defaultLocale.toUpperCase(),
+    });
+    if (removed.length === 0) return kept;
+    const names = removed
+      .map((type) =>
+        t(BLOCK_META[type as BlockType]?.labelKey ?? "", {
+          defaultValue: BLOCK_META[type as BlockType]?.defaultLabel ?? type,
+        }),
+      )
+      .join(", ");
+    return `${kept} ${t("emailCampaigns.templates.matchStructureRemoves", {
+      defaultValue_one: "This removes 1 block only {{locale}} has: {{names}}.",
+      defaultValue_other:
+        "This removes {{count}} blocks only {{locale}} has: {{names}}.",
+      count: removed.length,
+      locale: matchTarget.toUpperCase(),
+      names,
+    })}`;
+  }, [matchTarget, doc, driftByLocale, defaultLocale, t]);
+
+  /** Rebuild one language on the default's structure (destructive; confirmed). */
+  const runMatchStructure = (locale: FormLocale) => {
+    const next = matchStructure(doc, defaultLocale, locale);
+    setDoc(next);
+    setDirty(true);
+    setSelectedId(null);
+    setMatchTarget(null);
+    // Blocks that just arrived carry the default language's words.
+    void runTranslate(locale, "copies", { docOverride: next });
+  };
 
   const subjectRef = useRef<HTMLInputElement>(null);
   const insertIntoSubject = (snippet: string) => {
@@ -465,6 +600,8 @@ export function TemplateBuilder({
           onTranslateLocale={(locale, overwrite) =>
             void runTranslate(locale, overwrite ? "all" : "copies")
           }
+          driftedLocales={driftedLocales}
+          onMatchStructure={setMatchTarget}
         />
       </div>
 
@@ -648,6 +785,25 @@ export function TemplateBuilder({
         onOpenChange={setTestOpen}
         templateId={template.id}
         locale={activeLocale}
+      />
+
+      {/* Naming what disappears is the whole point of this confirmation: the
+          repair keeps translated text but drops blocks the default language
+          does not have, and those are content someone wrote. */}
+      <ConfirmDeleteDialog
+        open={matchTarget !== null}
+        onOpenChange={(open) => !open && setMatchTarget(null)}
+        name={matchTarget}
+        title={t("emailCampaigns.templates.matchStructureTitle", {
+          defaultValue: "Match {{locale}} to {{source}}?",
+          locale: (matchTarget ?? "").toUpperCase(),
+          source: defaultLocale.toUpperCase(),
+        })}
+        description={matchDescription}
+        confirmLabel={t("forms.strip.matchStructure", {
+          defaultValue: "Match structure",
+        })}
+        onConfirm={() => matchTarget && runMatchStructure(matchTarget)}
       />
     </div>
   );

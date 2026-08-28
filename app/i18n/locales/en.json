@@ -3978,7 +3978,10 @@
       "retranslateConfirmTitle": "Overwrite existing translations?",
       "retranslateConfirmBody": "Every string in this language is replaced, including any you wrote yourself.",
       "defaultLocaleSeeded": "Default language changed. Existing text was copied across as a starting point.",
-      "translationBusy": "Wait for the current translation to finish"
+      "translationBusy": "Wait for the current translation to finish",
+      "structureDiffers": "Structure differs from {{locale}}",
+      "structureDiffersBody": "The blocks here differ from {{locale}}, so the two languages send different emails.",
+      "matchStructure": "Match structure"
     },
     "intro": {
       "title": "How Forms works",
@@ -5034,7 +5037,11 @@
       "publishedSwitch": "Published",
       "publishedTip": "Every save publishes automatically",
       "publishTip": "Publish this template so campaigns can send it",
-      "unsubscribeText": "Unsubscribe link text"
+      "unsubscribeText": "Unsubscribe link text",
+      "matchStructureTitle": "Match {{locale}} to {{source}}?",
+      "matchStructureKeeps": "{{locale}} is rebuilt on {{source}}'s blocks. Text already translated is kept.",
+      "matchStructureRemoves_one": "This removes 1 block only {{locale}} has: {{names}}.",
+      "matchStructureRemoves_other": "This removes {{count}} blocks only {{locale}} has: {{names}}."
     },
     "useTemplate": {
       "button": "Use template",
