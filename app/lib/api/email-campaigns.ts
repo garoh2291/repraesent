@@ -6,20 +6,10 @@ import type { SendWindow } from "./workflows";
  */
 
 export type CampaignStatus =
-  | "draft"
-  | "scheduled"
-  | "sending"
-  | "paused"
-  | "sent"
-  | "cancelled";
+  "draft" | "scheduled" | "sending" | "paused" | "sent" | "cancelled";
 
 export type CampaignSendStatus =
-  | "pending"
-  | "sending"
-  | "sent"
-  | "failed"
-  | "skipped"
-  | "cancelled";
+  "pending" | "sending" | "sent" | "failed" | "skipped" | "cancelled";
 
 export interface CampaignSummary {
   id: string;
@@ -144,9 +134,16 @@ export async function updateCampaign(
 export async function scheduleCampaign(
   id: string,
   scheduledAt: string | null,
+  /**
+   * IANA zone the schedule was expressed in. `scheduledAt` is already absolute,
+   * so this does not move the send — the send-window hour-of-day maths runs in
+   * it, and it is how the campaign is shown back in the zone it was set for.
+   */
+  timezone?: string,
 ): Promise<CampaignSummary> {
   const { data } = await apiClient.post(`/email-campaigns/${id}/schedule`, {
     scheduled_at: scheduledAt,
+    ...(timezone ? { timezone } : {}),
   });
   return data;
 }

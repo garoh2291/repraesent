@@ -36,6 +36,12 @@ import { listEmailTemplates } from "~/lib/api/email-templates";
 import { listSegments } from "~/lib/api/segments";
 import { getWorkflowCapabilities } from "~/lib/api/workflows";
 import { useDocumentMeta } from "~/lib/hooks/use-document-meta";
+import { formatInTimeZone } from "date-fns-tz";
+import {
+  browserTimeZone,
+  resolveScheduledInstant,
+  ScheduleFields,
+} from "~/components/email-campaigns/ScheduleFields";
 
 /**
  * Four steps — audience, template, settings, review — with an explicit step
@@ -64,7 +70,18 @@ export default function CampaignNew() {
   const [accountId, setAccountId] = useState<string>("default");
   const [replyTo, setReplyTo] = useState("");
   const [when, setWhen] = useState<"now" | "later">("now");
-  const [scheduledAt, setScheduledAt] = useState("");
+  // Kept as three fields rather than one datetime string: the zone is a real
+  // choice here, not whatever the author's laptop is set to, and the absolute
+  // instant is derived from all three at submit.
+  const [scheduleDate, setScheduleDate] = useState("");
+  const [scheduleTime, setScheduleTime] = useState("09:00");
+  const [scheduleZone, setScheduleZone] = useState(browserTimeZone());
+
+  const scheduledInstant = resolveScheduledInstant(
+    scheduleDate,
+    scheduleTime,
+    scheduleZone,
+  );
 
   const { data: segments } = useQuery({
     queryKey: ["segments"],
@@ -114,9 +131,12 @@ export default function CampaignNew() {
       if (schedule) {
         await scheduleCampaign(
           campaign.id,
-          when === "later" && scheduledAt
-            ? new Date(scheduledAt).toISOString()
+          when === "later" && scheduledInstant
+            ? scheduledInstant.toISOString()
             : null,
+          // Sent even for "now": the send window and the schedule readout both
+          // work in it, and the author's zone is the honest default.
+          scheduleZone,
         );
       }
       return campaign;
@@ -413,10 +433,16 @@ export default function CampaignNew() {
                 </button>
               </div>
               {when === "later" ? (
-                <Input
-                  type="datetime-local"
-                  value={scheduledAt}
-                  onChange={(e) => setScheduledAt(e.target.value)}
+                <ScheduleFields
+                  date={scheduleDate}
+                  time={scheduleTime}
+                  timeZone={scheduleZone}
+                  onChange={(patch) => {
+                    if (patch.date !== undefined) setScheduleDate(patch.date);
+                    if (patch.time !== undefined) setScheduleTime(patch.time);
+                    if (patch.timeZone !== undefined)
+                      setScheduleZone(patch.timeZone);
+                  }}
                 />
               ) : null}
             </div>
@@ -490,8 +516,10 @@ export default function CampaignNew() {
                     ? t("emailCampaigns.wizard.sendNow", {
                         defaultValue: "Send now",
                       })
-                    : scheduledAt
-                      ? new Date(scheduledAt).toLocaleString()
+                    : scheduledInstant
+                      ? // Shown in the zone it was scheduled for, not the
+                        // reviewer's — that is the decision being confirmed.
+                        `${formatInTimeZone(scheduledInstant, scheduleZone, "EEEE d MMMM yyyy, HH:mm")} (${scheduleZone})`
                       : "—"
                 }
               />
@@ -546,7 +574,12 @@ export default function CampaignNew() {
               <Button
                 onClick={() => finish.mutate(true)}
                 disabled={
-                  finish.isPending || (when === "later" && !scheduledAt)
+                  finish.isPending ||
+                  // Incomplete, or a time already gone — the server would
+                  // reject the second one, so do not offer it.
+                  (when === "later" &&
+                    (!scheduledInstant ||
+                      scheduledInstant.getTime() <= Date.now()))
                 }
               >
                 <Send className="mr-1.5 h-4 w-4" />
