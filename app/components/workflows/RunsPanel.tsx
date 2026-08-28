@@ -10,6 +10,7 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Skeleton } from "~/components/ui/skeleton";
 import { EmptyPanelState } from "~/components/forms/chrome";
+import { EmailHtmlFrame } from "~/components/email-campaigns/EmailHtmlFrame";
 import {
   getWorkflowRun,
   listWorkflowRuns,
@@ -128,7 +129,9 @@ function StepTrace({ steps }: { steps: WorkflowRunStep[] | undefined }) {
   if (!steps) return <Skeleton className="h-16 w-full rounded-lg" />;
   if (steps.length === 0) {
     return (
-      <p className="text-xs text-muted-foreground">{t("workflows.runs.noSteps")}</p>
+      <p className="text-xs text-muted-foreground">
+        {t("workflows.runs.noSteps")}
+      </p>
     );
   }
 
@@ -215,9 +218,14 @@ function StepOutcome({ step }: { step: WorkflowRunStep }) {
       ))}
 
       {skipped.map((s, i) => (
-        <p key={`skip-${i}`} className="text-xs text-amber-700 dark:text-amber-300">
+        <p
+          key={`skip-${i}`}
+          className="text-xs text-amber-700 dark:text-amber-300"
+        >
           {s.email || s.to ? `${s.email ?? s.to} — ` : ""}
-          {t(`workflows.skipReason.${s.reason}`, { defaultValue: s.reason ?? "" })}
+          {t(`workflows.skipReason.${s.reason}`, {
+            defaultValue: s.reason ?? "",
+          })}
         </p>
       ))}
 
@@ -233,9 +241,12 @@ function StepOutcome({ step }: { step: WorkflowRunStep }) {
             })}
           </p>
           <p className="mt-1 text-xs font-medium">{p.subject}</p>
-          <div
-            className="mt-1 border-t border-border pt-1.5 text-xs text-muted-foreground [&_p]:my-0.5"
-            dangerouslySetInnerHTML={{ __html: p.html ?? "" }}
+          {/* Framed for the same reason as the step preview: this is a whole
+              email document whose global CSS would otherwise restyle the app. */}
+          <EmailHtmlFrame
+            title={p.subject || "Email"}
+            html={p.html ?? ""}
+            className="mt-1.5 block h-[220px] w-full rounded-lg border border-border bg-white"
           />
         </div>
       ))}

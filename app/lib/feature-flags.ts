@@ -21,7 +21,9 @@ export type PilotFeature =
   /** Per-mailbox signature editing in Settings, and its notice in the composer. */
   | "emailSignature"
   /** Settings → Integrations (Stripe Connect). Products/invoicing follow it, since connecting happens there. */
-  | "integrations";
+  | "integrations"
+  /** Email marketing: /campaigns, /segments, /email-templates. */
+  | "emailCampaigns";
 
 export function isPilotFeatureEnabled(
   workspaceId: string | null | undefined,
@@ -44,5 +46,6 @@ export function usePilotFeatures(): Record<PilotFeature, boolean> {
     workflows: enabled,
     emailSignature: enabled,
     integrations: enabled,
+    emailCampaigns: enabled,
   };
 }

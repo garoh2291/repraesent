@@ -23,6 +23,7 @@ import {
   Segmented,
   SegmentedButton,
 } from "~/components/forms/chrome";
+import { UseTemplatePicker } from "~/components/email-campaigns/UseTemplatePicker";
 import { Field, FieldHint, ToggleField } from "~/components/wordpress/fields";
 import { sortAccountsWithAliases } from "~/lib/api/email-accounts";
 import { listEmailAccounts } from "~/lib/api/workspaces";
@@ -302,22 +303,37 @@ export function ConfirmationEmailPanel({
           <Field>
             <div className="flex items-center justify-between gap-3">
               <Label htmlFor="ce-body">{t("forms.email.body")}</Label>
-              <Segmented>
-                <SegmentedButton
-                  active={view === "code"}
-                  onClick={() => setView("code")}
-                >
-                  <Code2 className="mr-1 inline h-3 w-3" />
-                  {t("forms.email.code")}
-                </SegmentedButton>
-                <SegmentedButton
-                  active={view === "preview"}
-                  onClick={() => setView("preview")}
-                >
-                  <Eye className="mr-1 inline h-3 w-3" />
-                  {t("forms.email.preview")}
-                </SegmentedButton>
-              </Segmented>
+              <div className="flex items-center gap-2">
+                <UseTemplatePicker
+                  locale={activeLocale}
+                  disabled={disabled}
+                  // A form confirmation answers a submission the person just
+                  // made, so it ships without an unsubscribe footer.
+                  purpose="transactional"
+                  onInsert={({ subject, html }) =>
+                    patchLocale({ subject, html })
+                  }
+                  buttonClassName={
+                    "inline-flex h-9 items-center gap-2 rounded-lg border border-border bg-muted/40 px-3 text-sm transition-colors hover:bg-muted disabled:cursor-not-allowed disabled:opacity-50"
+                  }
+                />
+                <Segmented>
+                  <SegmentedButton
+                    active={view === "code"}
+                    onClick={() => setView("code")}
+                  >
+                    <Code2 className="mr-1 inline h-3 w-3" />
+                    {t("forms.email.code")}
+                  </SegmentedButton>
+                  <SegmentedButton
+                    active={view === "preview"}
+                    onClick={() => setView("preview")}
+                  >
+                    <Eye className="mr-1 inline h-3 w-3" />
+                    {t("forms.email.preview")}
+                  </SegmentedButton>
+                </Segmented>
+              </div>
             </div>
 
             {view === "code" ? (

@@ -21,6 +21,16 @@ import { cn } from "~/lib/utils";
 
 export interface RichTextEditorHandle {
   focus: () => void;
+  /**
+   * Insert literal text where the caret is, replacing any selection.
+   *
+   * Needed because this editor is deliberately NOT re-seeded from `value` while
+   * you are typing (see the effect below) — so a caller that wants to add
+   * something has to go through the editor rather than through its own copy of
+   * the HTML. Writing to that copy instead leaves the two out of sync, and the
+   * next keystroke overwrites whatever was added.
+   */
+  insertText: (text: string) => void;
 }
 
 export function RichTextEditor({
@@ -110,9 +120,24 @@ export function RichTextEditor({
     onUpdate: ({ editor: e }) => onChange(e.getHTML()),
   });
 
-  useImperativeHandle(ref, () => ({ focus: () => editor?.commands.focus() }), [
-    editor,
-  ]);
+  useImperativeHandle(
+    ref,
+    () => ({
+      focus: () => editor?.commands.focus(),
+      insertText: (text: string) => {
+        // `focus()` first: reaching for a menu moves DOM focus out of the
+        // editor, and without this the insert lands at the start of the
+        // document instead of where the author actually was. Tiptap remembers
+        // the selection, so focusing restores it.
+        //
+        // Inserted as an explicit text node, not parsed as HTML — a variable
+        // like {{contact.first_name | default: "there"}} must survive exactly
+        // as typed.
+        editor?.chain().focus().insertContent({ type: "text", text }).run();
+      },
+    }),
+    [editor],
+  );
 
   useEffect(() => {
     toolbarRef?.(editor);

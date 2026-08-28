@@ -23,6 +23,7 @@ import {
   listWorkflows,
   type WorkflowSummary,
 } from "~/lib/api/workflows";
+import { normalizeLocale } from "~/i18n/locales";
 import { starterGraph } from "~/lib/workflows/graph";
 import { useCanEditForms } from "~/lib/hooks/useCanEditForms";
 import { useDocumentMeta } from "~/lib/hooks/use-document-meta";
@@ -55,7 +56,14 @@ export default function WorkflowsIndex() {
 
   const createMutation = useMutation({
     mutationFn: () =>
-      createWorkflow({ name: name.trim(), graph: starterGraph("leads") }),
+      createWorkflow({
+        name: name.trim(),
+        graph: starterGraph("leads"),
+        // The language the author is working in, not the column default of
+        // German — a new workflow's email steps should open in the language
+        // they are about to write.
+        default_locale: normalizeLocale(i18next.language),
+      }),
     onSuccess: async (created) => {
       await queryClient.invalidateQueries({ queryKey: ["workflows"] });
       setCreateOpen(false);
@@ -164,7 +172,9 @@ export default function WorkflowsIndex() {
               disabled={!name.trim() || createMutation.isPending}
               className="bg-foreground text-background hover:bg-foreground/90 hover:text-background"
             >
-              {createMutation.isPending ? t("common.saving") : t("workflows.create")}
+              {createMutation.isPending
+                ? t("common.saving")
+                : t("workflows.create")}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -202,7 +212,7 @@ function WorkflowCard({
               : ""}
           </p>
         </div>
-        <StatusBadge status={workflow.status} unpublished={workflow.has_unpublished_changes} />
+        <StatusBadge status={workflow.status} />
       </div>
 
       <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground">
@@ -230,13 +240,7 @@ function WorkflowCard({
   );
 }
 
-function StatusBadge({
-  status,
-  unpublished,
-}: {
-  status: WorkflowSummary["status"];
-  unpublished: boolean;
-}) {
+function StatusBadge({ status }: { status: WorkflowSummary["status"] }) {
   const { t } = useTranslation();
 
   const tone =
@@ -248,14 +252,17 @@ function StatusBadge({
 
   return (
     <span className="flex shrink-0 flex-col items-end gap-1">
-      <span className={`rounded-full border px-2 py-0.5 text-[11px] font-medium ${tone}`}>
+      <span
+        className={`rounded-full border px-2 py-0.5 text-[11px] font-medium ${tone}`}
+      >
         {t(`workflows.status.${status}`)}
       </span>
-      {unpublished ? (
-        <span className="text-[10px] text-muted-foreground">
-          {t("workflows.unpublishedChanges")}
-        </span>
-      ) : null}
+      {/*
+        No "unpublished changes" caption: saving publishes, so it no longer
+        describes anything an author can act on. The only remaining case is a
+        workflow too incomplete to run, which the builder explains far better
+        than a caption here could.
+      */}
     </span>
   );
 }

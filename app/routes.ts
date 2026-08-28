@@ -13,6 +13,9 @@ export default [
   route("auth/callback", "routes/auth.callback.tsx"),
   route("book/:configId", "routes/book.$configId.tsx"),
   route("f/:formId", "routes/f.$formId.tsx"),
+  // Campaign-email unsubscribe landing. Public: the token in the path is the
+  // capability, and recipients are rarely logged-in users.
+  route("unsubscribe/:token", "routes/unsubscribe.$token.tsx"),
 
   layout("routes/_protected.tsx", [
     route("no-workspace", "routes/no-workspace.tsx"),
@@ -77,6 +80,18 @@ export default [
       ),
       route("workflows", "routes/workflows._index.tsx"),
       route("workflows/:workflowId", "routes/workflows.$workflowId.tsx"),
+      // Email marketing (pilot flag `emailCampaigns`). `/campaigns` is free —
+      // the ad-analytics feature lives at /brand-campaigns and /social-ads.
+      route("campaigns", "routes/campaigns._index.tsx"),
+      route("campaigns/new", "routes/campaigns.new.tsx"),
+      route("campaigns/:campaignId", "routes/campaigns.$campaignId.tsx"),
+      route("segments", "routes/segments._index.tsx"),
+      route("segments/:segmentId", "routes/segments.$segmentId.tsx"),
+      route("email-templates", "routes/email-templates._index.tsx"),
+      route(
+        "email-templates/:templateId",
+        "routes/email-templates.$templateId.tsx"
+      ),
       route("settings", "routes/settings._layout.tsx", [
         index("routes/settings._index.tsx"),
         route("profile", "routes/settings.profile.tsx"),

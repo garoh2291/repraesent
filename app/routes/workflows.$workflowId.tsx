@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, FlaskConical, Pause, Play, Save, Upload } from "lucide-react";
+import { ArrowLeft, FlaskConical, Pause, Play, Save } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Link, useNavigate, useParams } from "react-router";
@@ -27,7 +27,6 @@ import {
   getFieldCatalog,
   getWorkflow,
   getWorkflowCapabilities,
-  publishWorkflow,
   setWorkflowStatus,
   updateWorkflow,
   type NodeType,
@@ -36,7 +35,11 @@ import {
   type WorkflowGraph,
 } from "~/lib/api/workflows";
 import { getWorkspaceDetail } from "~/lib/api/workspaces";
-import { publishBlockers, starterGraph, triggerOf } from "~/lib/workflows/graph";
+import {
+  publishBlockers,
+  starterGraph,
+  triggerOf,
+} from "~/lib/workflows/graph";
 import {
   addToLane,
   allSteps,
@@ -156,7 +159,8 @@ export default function WorkflowBuilder() {
   const memberOptions = useMemo(
     () =>
       (workspaceDetail?.members ?? []).map((m) => {
-        const full = `${m.user_first_name ?? ""} ${m.user_last_name ?? ""}`.trim();
+        const full =
+          `${m.user_first_name ?? ""} ${m.user_last_name ?? ""}`.trim();
         return {
           userId: m.user_id,
           label: full ? `${full} (${m.user_email})` : m.user_email,
@@ -175,27 +179,22 @@ export default function WorkflowBuilder() {
   const saveMutation = useMutation({
     mutationFn: () =>
       updateWorkflow(workflowId!, { name: name.trim(), graph: graph! }),
-    onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: ["workflow", workflowId] });
+    onSuccess: async (saved) => {
+      await queryClient.invalidateQueries({
+        queryKey: ["workflow", workflowId],
+      });
       await queryClient.invalidateQueries({ queryKey: ["workflows"] });
       setDirty(false);
-      toast.success(t("workflows.saved"));
-    },
-    onError: (error) => toast.error(extractErrorMessage(error)),
-  });
-
-  const publishMutation = useMutation({
-    mutationFn: async () => {
-      // Publish always reads the server's draft, so an unsaved edit would be
-      // silently left behind.
-      if (dirty) await updateWorkflow(workflowId!, { name: name.trim(), graph: graph! });
-      return publishWorkflow(workflowId!);
-    },
-    onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: ["workflow", workflowId] });
-      await queryClient.invalidateQueries({ queryKey: ["workflows"] });
-      setDirty(false);
-      toast.success(t("workflows.published"));
+      // Saving publishes, so say whether it actually went live. An incomplete
+      // workflow still saves but cannot run yet, and silently implying
+      // otherwise is the confusion this whole change exists to remove.
+      toast.success(
+        saved.published_version_id && !saved.has_unpublished_changes
+          ? t("workflows.savedLive", {
+              defaultValue: "Saved — your changes are live",
+            })
+          : t("workflows.saved"),
+      );
     },
     onError: (error) => toast.error(extractErrorMessage(error)),
   });
@@ -204,7 +203,9 @@ export default function WorkflowBuilder() {
     mutationFn: (status: "active" | "paused") =>
       setWorkflowStatus(workflowId!, status),
     onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: ["workflow", workflowId] });
+      await queryClient.invalidateQueries({
+        queryKey: ["workflow", workflowId],
+      });
       await queryClient.invalidateQueries({ queryKey: ["workflows"] });
     },
     onError: (error) => toast.error(extractErrorMessage(error)),
@@ -227,7 +228,9 @@ export default function WorkflowBuilder() {
   if (!workflow) {
     return (
       <div className="mx-auto w-full max-w-[1280px] p-6">
-        <p className="text-sm text-muted-foreground">{t("workflows.notFound")}</p>
+        <p className="text-sm text-muted-foreground">
+          {t("workflows.notFound")}
+        </p>
       </div>
     );
   }
@@ -278,6 +281,13 @@ export default function WorkflowBuilder() {
               <button
                 type="button"
                 onClick={() => setTestOpen(true)}
+                // A test run executes the DRAFT, never the published version.
+                // Saying so matters: a green test on a corrected draft reads as
+                // proof the live workflow is fixed, and it is not.
+                title={t("workflows.testRunsDraft", {
+                  defaultValue:
+                    "Runs the draft you are editing, not the published version",
+                })}
                 className="inline-flex h-9 items-center gap-2 rounded-lg border border-white/10 bg-white/5 px-3 text-sm text-white/70 transition-colors hover:bg-white/10 hover:text-white"
               >
                 <FlaskConical className="h-3.5 w-3.5" />
@@ -317,21 +327,18 @@ export default function WorkflowBuilder() {
                 <Save className="h-4 w-4" />
                 {t("workflows.save")}
               </button>
-
-              <button
-                type="button"
-                disabled={blockers.length > 0 || publishMutation.isPending}
-                title={blockers[0]}
-                onClick={() => publishMutation.mutate()}
-                className="inline-flex h-9 items-center gap-2 rounded-lg bg-amber-400 px-4 text-sm font-medium text-[#131515] transition-opacity hover:opacity-90 disabled:opacity-40"
-              >
-                <Upload className="h-4 w-4" />
-                {t("workflows.publish")}
-              </button>
             </div>
           ) : null}
         </div>
 
+        {/*
+          No Publish button: saving applies the change. Publishing used to be a
+          separate act, which meant a corrected workflow could sit unapplied
+          while the live one kept sending the old version — including swallowing
+          a whole condition branch. The draft/published split still exists
+          underneath so in-flight runs finish on the shape they started, but it
+          is no longer something anyone has to think about.
+        */}
         {blockers.length > 0 && canEdit ? (
           <div className="border-t border-white/5 px-4 py-2 text-xs text-amber-300/90 sm:px-5">
             {t("workflows.cannotPublish")}: {blockers.join(" · ")}
@@ -340,13 +347,21 @@ export default function WorkflowBuilder() {
       </div>
 
       {/* --- tabs -------------------------------------------------------- */}
-      <Tabs value={tab} onValueChange={setTab} className="app-fade-up app-fade-up-d1">
+      <Tabs
+        value={tab}
+        onValueChange={setTab}
+        className="app-fade-up app-fade-up-d1"
+      >
         <div className="border-b border-border">
           <TabsList variant="line" className="-mb-px">
             <TabsTrigger value="build">{t("workflows.tabBuild")}</TabsTrigger>
-            <TabsTrigger value="settings">{t("workflows.tabSettings")}</TabsTrigger>
+            <TabsTrigger value="settings">
+              {t("workflows.tabSettings")}
+            </TabsTrigger>
             <TabsTrigger value="runs">{t("workflows.tabRuns")}</TabsTrigger>
-            <TabsTrigger value="analytics">{t("workflows.tabAnalytics")}</TabsTrigger>
+            <TabsTrigger value="analytics">
+              {t("workflows.tabAnalytics")}
+            </TabsTrigger>
           </TabsList>
         </div>
 
@@ -360,7 +375,10 @@ export default function WorkflowBuilder() {
                   selectedId={selectedId}
                   disabled={!canEdit}
                   onSelect={setSelectedId}
-                  onAdd={(type: Exclude<NodeType, "trigger">, lane: LaneRef) => {
+                  onAdd={(
+                    type: Exclude<NodeType, "trigger">,
+                    lane: LaneRef,
+                  ) => {
                     const result = addToLane(
                       graph,
                       lane,
@@ -429,7 +447,9 @@ export default function WorkflowBuilder() {
             fields={fields}
             disabled={!canEdit}
             onSaved={async () => {
-              await queryClient.invalidateQueries({ queryKey: ["workflow", workflowId] });
+              await queryClient.invalidateQueries({
+                queryKey: ["workflow", workflowId],
+              });
               await queryClient.invalidateQueries({ queryKey: ["workflows"] });
             }}
             onDeleted={() => navigate("/workflows")}

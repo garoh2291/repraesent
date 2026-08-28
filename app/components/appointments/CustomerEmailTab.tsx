@@ -13,7 +13,11 @@ import {
 } from "recharts";
 import { Save, Eye, Code, Mail, Paperclip, Info, Activity } from "lucide-react";
 import { Switch } from "~/components/ui/switch";
-import { formatDateLong, formatTime, formatDateShort } from "~/lib/utils/format";
+import {
+  formatDateLong,
+  formatTime,
+  formatDateShort,
+} from "~/lib/utils/format";
 import { Input } from "~/components/ui/input";
 import { Label } from "~/components/ui/label";
 import {
@@ -35,6 +39,7 @@ import {
 import { getLeads } from "~/lib/api/leads";
 import { type AppointmentConfig } from "~/lib/api/appointments";
 import { extractErrorMessage } from "~/lib/api/axios-instance";
+import { UseTemplatePicker } from "~/components/email-campaigns/UseTemplatePicker";
 
 const FORM_KEY = "appointment_booking";
 
@@ -163,16 +168,22 @@ export function CustomerEmailTab({ config }: CustomerEmailTabProps) {
   // Build preview variables from real data or dummy
   const previewVars: Record<string, string> = hasRealData
     ? {
-        customer_name: lastLead.full_name || [lastLead.first_name, lastLead.last_name].filter(Boolean).join(" ") || DUMMY_VARIABLES.customer_name,
+        customer_name:
+          lastLead.full_name ||
+          [lastLead.first_name, lastLead.last_name].filter(Boolean).join(" ") ||
+          DUMMY_VARIABLES.customer_name,
         customer_email: lastLead.email || DUMMY_VARIABLES.customer_email,
         customer_phone: lastLead.phone || DUMMY_VARIABLES.customer_phone,
-        appointment_date: (lastLead.metadata?.start
+        appointment_date: lastLead.metadata?.start
           ? formatDateLong(lastLead.metadata.start as string)
-          : DUMMY_VARIABLES.appointment_date),
-        appointment_time: (lastLead.metadata?.start && lastLead.metadata?.end
-          ? `${formatTime(lastLead.metadata.start as string)} \u2013 ${formatTime(lastLead.metadata.end as string)}`
-          : DUMMY_VARIABLES.appointment_time),
-        service_name: (lastLead.metadata?.service_name as string) || DUMMY_VARIABLES.service_name,
+          : DUMMY_VARIABLES.appointment_date,
+        appointment_time:
+          lastLead.metadata?.start && lastLead.metadata?.end
+            ? `${formatTime(lastLead.metadata.start as string)} \u2013 ${formatTime(lastLead.metadata.end as string)}`
+            : DUMMY_VARIABLES.appointment_time,
+        service_name:
+          (lastLead.metadata?.service_name as string) ||
+          DUMMY_VARIABLES.service_name,
         provider_name: config.provider_name || DUMMY_VARIABLES.provider_name,
         company_name: config.company_name || DUMMY_VARIABLES.company_name,
         notes: (lastLead.metadata?.notes as string) || DUMMY_VARIABLES.notes,
@@ -219,7 +230,9 @@ export function CustomerEmailTab({ config }: CustomerEmailTabProps) {
     mutationFn: (updated: LeadFallbackConfig) =>
       updateAppointmentsFallbackConfig(updated),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["appointments-fallback-config"] });
+      queryClient.invalidateQueries({
+        queryKey: ["appointments-fallback-config"],
+      });
       setDirty(false);
       toast.success(t("appointments.customerEmail.saved", "Saved"));
     },
@@ -309,10 +322,7 @@ export function CustomerEmailTab({ config }: CustomerEmailTabProps) {
   const replacePreview = (src: string) => {
     let out = src;
     for (const [key, value] of Object.entries(previewVars)) {
-      out = out.replace(
-        new RegExp(`\\{\\{\\s*${key}\\s*\\}\\}`, "g"),
-        value,
-      );
+      out = out.replace(new RegExp(`\\{\\{\\s*${key}\\s*\\}\\}`, "g"), value);
     }
     return out;
   };
@@ -336,7 +346,10 @@ export function CustomerEmailTab({ config }: CustomerEmailTabProps) {
           </div>
           <div>
             <p className="text-sm font-semibold text-foreground">
-              {t("appointments.customerEmail.title", "Customer Confirmation Email")}
+              {t(
+                "appointments.customerEmail.title",
+                "Customer Confirmation Email",
+              )}
             </p>
             <p className="text-xs text-muted-foreground">
               {t(
@@ -356,7 +369,10 @@ export function CustomerEmailTab({ config }: CustomerEmailTabProps) {
         </div>
         <div>
           <p className="text-xs font-medium text-neutral-700">
-            {t("appointments.customerEmail.icsInfo", "Calendar invite (.ics) is automatically attached")}
+            {t(
+              "appointments.customerEmail.icsInfo",
+              "Calendar invite (.ics) is automatically attached",
+            )}
           </p>
           <p className="mt-0.5 text-[11px] text-neutral-500">
             {t(
@@ -403,9 +419,24 @@ export function CustomerEmailTab({ config }: CustomerEmailTabProps) {
 
       {/* Subject */}
       <div className="space-y-2">
-        <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-          {t("appointments.customerEmail.subject", "Subject")}
-        </Label>
+        <div className="flex items-center justify-between gap-2">
+          <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+            {t("appointments.customerEmail.subject", "Subject")}
+          </Label>
+          <UseTemplatePicker
+            // An appointment confirmation is transactional — no unsubscribe
+            // footer, and the send ignores the suppression list on purpose.
+            purpose="transactional"
+            onInsert={({ subject: renderedSubject, html: renderedHtml }) => {
+              setSubject(renderedSubject);
+              setHtml(renderedHtml);
+              setDirty(true);
+            }}
+            buttonClassName={
+              "inline-flex h-9 items-center gap-2 rounded-lg border border-border bg-muted/40 px-3 text-sm transition-colors hover:bg-muted disabled:cursor-not-allowed disabled:opacity-50"
+            }
+          />
+        </div>
         <Input
           value={subject}
           onChange={(e) => {
@@ -416,7 +447,10 @@ export function CustomerEmailTab({ config }: CustomerEmailTabProps) {
           className="h-10 font-mono text-sm"
         />
         <p className="text-[11px] text-muted-foreground">
-          {t("appointments.customerEmail.subjectHint", "You can use {{variables}} in the subject line too.")}
+          {t(
+            "appointments.customerEmail.subjectHint",
+            "You can use {{variables}} in the subject line too.",
+          )}
         </p>
       </div>
 
@@ -511,7 +545,9 @@ export function CustomerEmailTab({ config }: CustomerEmailTabProps) {
             <div className="rounded-xl border border-border bg-white p-1">
               <div className="flex items-center gap-2 border-b border-border px-3 py-2">
                 <Mail className="h-3.5 w-3.5 text-muted-foreground" />
-                <span className="text-[11px] text-muted-foreground">{replacePreview(subject)}</span>
+                <span className="text-[11px] text-muted-foreground">
+                  {replacePreview(subject)}
+                </span>
               </div>
               <iframe
                 key={html + subject}
@@ -529,7 +565,10 @@ export function CustomerEmailTab({ config }: CustomerEmailTabProps) {
       <div className="flex items-center justify-between border-t border-border pt-4">
         <p className="text-[11px] text-muted-foreground">
           {dirty
-            ? t("appointments.customerEmail.unsaved", "You have unsaved changes")
+            ? t(
+                "appointments.customerEmail.unsaved",
+                "You have unsaved changes",
+              )
             : t("appointments.customerEmail.allSaved", "All changes saved")}
         </p>
         <button
@@ -560,7 +599,7 @@ const PERIODS: { key: EmailAnalyticsPeriod; labelKey: string }[] = [
 
 function fillEmailSeriesGaps(
   series: { date: string; success: number; error: number }[],
-  period: EmailAnalyticsPeriod
+  period: EmailAnalyticsPeriod,
 ): { date: string; success: number; error: number }[] {
   const now = new Date();
   const map = new Map(series.map((p) => [p.date, p]));
@@ -572,7 +611,7 @@ function fillEmailSeriesGaps(
       const d = new Date(today);
       d.setHours(h);
       slots.push(
-        `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}T${String(h).padStart(2, "0")}:00:00`
+        `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}T${String(h).padStart(2, "0")}:00:00`,
       );
     }
   } else if (period === "7d") {
@@ -580,7 +619,7 @@ function fillEmailSeriesGaps(
       const d = new Date(now);
       d.setDate(d.getDate() - i);
       slots.push(
-        `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`
+        `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`,
       );
     }
   } else if (period === "30d") {
@@ -588,7 +627,7 @@ function fillEmailSeriesGaps(
       const d = new Date(now);
       d.setDate(d.getDate() - i);
       slots.push(
-        `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`
+        `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`,
       );
     }
   } else {
@@ -597,7 +636,7 @@ function fillEmailSeriesGaps(
     const end = new Date(now.getFullYear(), now.getMonth(), now.getDate());
     for (const d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
       slots.push(
-        `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`
+        `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`,
       );
     }
   }
@@ -619,7 +658,7 @@ function EmailActivityChart() {
 
   const series = useMemo(
     () => fillEmailSeriesGaps(data?.series ?? [], period),
-    [data?.series, period]
+    [data?.series, period],
   );
   const totalSuccess = data?.total_success ?? 0;
   const totalError = data?.total_error ?? 0;
@@ -648,8 +687,15 @@ function EmailActivityChart() {
             </p>
             <p className="text-xs text-muted-foreground">
               {total > 0
-                ? t("appointments.customerEmail.activityCount", "{{count}} emails sent", { count: total })
-                : t("appointments.customerEmail.activityNone", "No emails sent yet")}
+                ? t(
+                    "appointments.customerEmail.activityCount",
+                    "{{count}} emails sent",
+                    { count: total },
+                  )
+                : t(
+                    "appointments.customerEmail.activityNone",
+                    "No emails sent yet",
+                  )}
             </p>
           </div>
         </div>
@@ -679,7 +725,9 @@ function EmailActivityChart() {
             <span className="text-muted-foreground">
               {t("appointments.customerEmail.sent", "Sent")}
             </span>
-            <span className="font-semibold text-foreground">{totalSuccess}</span>
+            <span className="font-semibold text-foreground">
+              {totalSuccess}
+            </span>
           </div>
           {totalError > 0 && (
             <div className="flex items-center gap-1.5 text-xs">
@@ -687,7 +735,9 @@ function EmailActivityChart() {
               <span className="text-muted-foreground">
                 {t("appointments.customerEmail.failed", "Failed")}
               </span>
-              <span className="font-semibold text-foreground">{totalError}</span>
+              <span className="font-semibold text-foreground">
+                {totalError}
+              </span>
             </div>
           )}
         </div>
@@ -697,7 +747,10 @@ function EmailActivityChart() {
       {series.length > 0 ? (
         <div className="h-48">
           <ResponsiveContainer width="100%" height="100%">
-            <LineChart data={series} margin={{ top: 4, right: 4, bottom: 0, left: -20 }}>
+            <LineChart
+              data={series}
+              margin={{ top: 4, right: 4, bottom: 0, left: -20 }}
+            >
               <CartesianGrid
                 strokeDasharray="3 3"
                 stroke="var(--color-border, #e5e5e5)"
@@ -729,7 +782,7 @@ function EmailActivityChart() {
                 }}
                 labelFormatter={(label: string) =>
                   period === "1d"
-                    ? label.split("T")[1]?.slice(0, 5) ?? label
+                    ? (label.split("T")[1]?.slice(0, 5) ?? label)
                     : formatDateShort(label)
                 }
                 formatter={(value: number, name: string) => [
@@ -745,7 +798,12 @@ function EmailActivityChart() {
                 stroke="#10b981"
                 strokeWidth={2}
                 dot={false}
-                activeDot={{ r: 4, fill: "#10b981", stroke: "var(--card)", strokeWidth: 2 }}
+                activeDot={{
+                  r: 4,
+                  fill: "#10b981",
+                  stroke: "var(--card)",
+                  strokeWidth: 2,
+                }}
               />
               <Line
                 type="monotone"

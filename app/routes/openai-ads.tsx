@@ -3,7 +3,7 @@ import { Link } from "react-router";
 import { useTranslation } from "react-i18next";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { format, subDays } from "date-fns";
+import { subDays } from "date-fns";
 import {
   ResponsiveContainer,
   LineChart,
@@ -234,10 +234,15 @@ function Dashboard({ currency }: { currency: string }) {
   const [rangeDays, setRangeDays] = useState<RangeDays>(30);
 
   const { since, until } = useMemo(() => {
+    // UTC, not local. date-fns `format` renders the browser's local date, so anyone
+    // east of UTC asks for tomorrow for the first hours after local midnight
+    // — and OpenAI rejects a range ending in the future outright (400), so
+    // the whole dashboard failed overnight for UTC+4 users.
     const now = new Date();
+    const utcDay = (date: Date) => date.toISOString().slice(0, 10);
     return {
-      since: format(subDays(now, rangeDays - 1), "yyyy-MM-dd"),
-      until: format(now, "yyyy-MM-dd"),
+      since: utcDay(subDays(now, rangeDays - 1)),
+      until: utcDay(now),
     };
   }, [rangeDays]);
 
