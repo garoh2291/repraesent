@@ -1,4 +1,4 @@
-import { useEffect, useImperativeHandle, type Ref } from "react";
+import { useEffect, useImperativeHandle, useState, type Ref } from "react";
 import { useTranslation } from "react-i18next";
 import { EditorContent, useEditor, type Editor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
@@ -18,9 +18,20 @@ import {
 } from "lucide-react";
 import { Button } from "~/components/ui/button";
 import { cn } from "~/lib/utils";
+import { PromptDialog } from "~/components/molecule/prompt-dialog";
 
 export interface RichTextEditorHandle {
   focus: () => void;
+  /**
+   * Insert literal text where the caret is, replacing any selection.
+   *
+   * Needed because this editor is deliberately NOT re-seeded from `value` while
+   * you are typing (see the effect below) — so a caller that wants to add
+   * something has to go through the editor rather than through its own copy of
+   * the HTML. Writing to that copy instead leaves the two out of sync, and the
+   * next keystroke overwrites whatever was added.
+   */
+  insertText: (text: string) => void;
 }
 
 export function RichTextEditor({
@@ -110,9 +121,24 @@ export function RichTextEditor({
     onUpdate: ({ editor: e }) => onChange(e.getHTML()),
   });
 
-  useImperativeHandle(ref, () => ({ focus: () => editor?.commands.focus() }), [
-    editor,
-  ]);
+  useImperativeHandle(
+    ref,
+    () => ({
+      focus: () => editor?.commands.focus(),
+      insertText: (text: string) => {
+        // `focus()` first: reaching for a menu moves DOM focus out of the
+        // editor, and without this the insert lands at the start of the
+        // document instead of where the author actually was. Tiptap remembers
+        // the selection, so focusing restores it.
+        //
+        // Inserted as an explicit text node, not parsed as HTML — a variable
+        // like {{contact.first_name | default: "there"}} must survive exactly
+        // as typed.
+        editor?.chain().focus().insertContent({ type: "text", text }).run();
+      },
+    }),
+    [editor],
+  );
 
   useEffect(() => {
     toolbarRef?.(editor);
@@ -150,25 +176,20 @@ export function RichTextToolbar({
   className?: string;
 }) {
   const { t } = useTranslation();
+  // Declared above the early return — hooks cannot sit behind a conditional.
+  const [linkOpen, setLinkOpen] = useState(false);
   if (!editor) return null;
 
-  const setLink = () => {
-    const previous = editor.getAttributes("link").href as string | undefined;
-    const url = window.prompt(
-      t("compose.linkPrompt", { defaultValue: "Link URL" }),
-      previous ?? "https://",
-    );
-    if (url === null) return;
-    if (url.trim() === "") {
-      editor.chain().focus().extendMarkRange("link").unsetLink().run();
-      return;
-    }
-    editor
-      .chain()
-      .focus()
-      .extendMarkRange("link")
-      .setLink({ href: url.trim() })
-      .run();
+  const existingHref = (editor.getAttributes("link").href as string) || "";
+
+  const applyLink = (url: string) => {
+    editor.chain().focus().extendMarkRange("link").setLink({ href: url }).run();
+    setLinkOpen(false);
+  };
+
+  const removeLink = () => {
+    editor.chain().focus().extendMarkRange("link").unsetLink().run();
+    setLinkOpen(false);
   };
 
   return (
@@ -221,7 +242,7 @@ export function RichTextToolbar({
             : t("compose.addLink", { defaultValue: "Add link" })
         }
         active={editor.isActive("link")}
-        onClick={setLink}
+        onClick={() => setLinkOpen(true)}
       >
         {editor.isActive("link") ? (
           <Link2Off className="size-3.5" />
@@ -239,6 +260,35 @@ export function RichTextToolbar({
       >
         <RemoveFormatting className="size-3.5" />
       </ToolbarButton>
+
+      {/*
+        Removing a link used to mean clearing the prompt's text and pressing OK
+        — a behaviour with nowhere to be documented. It is a button now, shown
+        only when there is a link to remove.
+      */}
+      <PromptDialog
+        open={linkOpen}
+        onOpenChange={setLinkOpen}
+        title={
+          existingHref
+            ? t("compose.editLink", { defaultValue: "Edit link" })
+            : t("compose.addLink", { defaultValue: "Add link" })
+        }
+        label={t("compose.linkPrompt", { defaultValue: "Link URL" })}
+        placeholder="https://example.com"
+        defaultValue={existingHref || "https://"}
+        inputType="url"
+        submitLabel={t("common.apply", { defaultValue: "Apply" })}
+        onSubmit={applyLink}
+        secondaryAction={
+          existingHref
+            ? {
+                label: t("compose.removeLink", { defaultValue: "Remove link" }),
+                onClick: removeLink,
+              }
+            : undefined
+        }
+      />
     </div>
   );
 }

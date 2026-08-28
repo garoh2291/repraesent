@@ -27,6 +27,7 @@ import {
   Loader2,
   Inbox,
   Info,
+  LayoutTemplate,
   LogOut,
   Mail,
   Megaphone,
@@ -35,11 +36,13 @@ import {
   PanelLeftOpen,
   Plug,
   Plus,
+  Send,
   Settings,
   ShoppingBag,
   Store,
   User,
   Users,
+  UsersRound,
   Workflow,
   X,
 } from "lucide-react";
@@ -427,6 +430,7 @@ export function Sidebar({
   // routes stay reachable by URL, and none of this is a permission boundary.
   const pilot = usePilotFeatures();
   const showWorkflows = pilot.workflows || isDemoWorkspace;
+  const showEmailCampaigns = pilot.emailCampaigns;
   // Route-driven rather than stateful: deep links and refreshes land in the
   // right mode for free, and there is nothing to reset on the way out.
   const inSettings = location.pathname.startsWith("/settings");
@@ -773,6 +777,35 @@ export function Sidebar({
                   <Workflow className="h-4 w-4 shrink-0" />
                   {t("nav.workflows", { defaultValue: "Workflows" })}
                 </NavLink>
+              )}
+
+              {showEmailCampaigns && (
+                <>
+                  <NavLink
+                    to="/campaigns"
+                    isActive={location.pathname.startsWith("/campaigns")}
+                    onClick={onClose}
+                  >
+                    <Send className="h-4 w-4 shrink-0" />
+                    {t("nav.emailCampaigns", { defaultValue: "Campaigns" })}
+                  </NavLink>
+                  <NavLink
+                    to="/segments"
+                    isActive={location.pathname.startsWith("/segments")}
+                    onClick={onClose}
+                  >
+                    <UsersRound className="h-4 w-4 shrink-0" />
+                    {t("nav.segments", { defaultValue: "Segments" })}
+                  </NavLink>
+                  <NavLink
+                    to="/email-templates"
+                    isActive={location.pathname.startsWith("/email-templates")}
+                    onClick={onClose}
+                  >
+                    <LayoutTemplate className="h-4 w-4 shrink-0" />
+                    {t("nav.emailTemplates", { defaultValue: "Templates" })}
+                  </NavLink>
+                </>
               )}
 
               {currentWorkspace?.services

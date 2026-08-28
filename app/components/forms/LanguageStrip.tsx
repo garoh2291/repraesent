@@ -1,4 +1,11 @@
-import { MoreHorizontal, Plus, Sparkles, Star, Trash2 } from "lucide-react";
+import {
+  MoreHorizontal,
+  Plus,
+  Sparkles,
+  Star,
+  Trash2,
+  TriangleAlert,
+} from "lucide-react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
@@ -74,6 +81,17 @@ interface Props {
   onRemoveLocale: (locale: FormLocale) => void;
   onMakeDefault: (locale: FormLocale) => void;
   onTranslateLocale: (locale: FormLocale, overwrite: boolean) => void;
+
+  /**
+   * Languages whose STRUCTURE no longer matches the default one.
+   *
+   * Templates only. Forms keep one shared `sections[]` across every language,
+   * so their structure cannot drift and they pass neither of these; the strip
+   * renders exactly as before when they are omitted.
+   */
+  driftedLocales?: ReadonlySet<FormLocale>;
+  /** Offer to rebuild a drifted language on the default's structure. */
+  onMatchStructure?: (locale: FormLocale) => void;
 }
 
 /**
@@ -107,6 +125,8 @@ export function LanguageStrip({
   onRemoveLocale,
   onMakeDefault,
   onTranslateLocale,
+  driftedLocales,
+  onMatchStructure,
 }: Props) {
   const { t } = useTranslation();
   const [confirmRemove, setConfirmRemove] = useState<FormLocale | null>(null);
@@ -140,6 +160,7 @@ export function LanguageStrip({
           const active = locale === activeLocale;
           const spinning = translating.has(locale);
           const count = issuesByLocale.get(locale) ?? 0;
+          const drifted = !isDefault && !!driftedLocales?.has(locale);
 
           return (
             // Every locale is a filled, bordered pill — not just the active
@@ -180,11 +201,20 @@ export function LanguageStrip({
                 ) : null}
                 <span className="font-mono text-xs uppercase">{locale}</span>
 
-                {/* Exactly one glyph, spinner wins: a language mid-translation
-                    is about to stop having issues. The empty span keeps the tab
-                    width stable so the strip does not jitter. */}
+                {/* Exactly one glyph, most specific wins: a language
+                    mid-translation is about to stop having issues, and drift
+                    says something a plain issue dot cannot. The empty span
+                    keeps the tab width stable so the strip does not jitter. */}
                 {spinning ? (
                   <Spinner className="h-3 w-3 text-muted-foreground" />
+                ) : drifted ? (
+                  <TriangleAlert
+                    className="h-3 w-3 text-amber-600 dark:text-amber-500"
+                    aria-label={t("forms.strip.structureDiffers", {
+                      defaultValue: "Structure differs from {{locale}}",
+                      locale: defaultLocale.toUpperCase(),
+                    })}
+                  />
                 ) : count > 0 ? (
                   <span
                     className="h-1.5 w-1.5 rounded-full bg-destructive"
@@ -221,6 +251,30 @@ export function LanguageStrip({
                       {t(`settings.language.${locale}`)}
                     </DropdownMenuLabel>
                     <DropdownMenuSeparator />
+
+                    {/* Drift is the most urgent thing about this language, so
+                        it leads — and says what it will do before you pick it,
+                        because it removes blocks. */}
+                    {drifted && onMatchStructure ? (
+                      <>
+                        <div className="px-2 pb-1.5 pt-0.5 text-xs leading-snug text-muted-foreground">
+                          {t("forms.strip.structureDiffersBody", {
+                            defaultValue:
+                              "The blocks here differ from {{locale}}, so the two languages send different emails.",
+                            locale: defaultLocale.toUpperCase(),
+                          })}
+                        </div>
+                        <DropdownMenuItem
+                          onSelect={() => onMatchStructure(locale)}
+                        >
+                          <TriangleAlert className="h-4 w-4" />
+                          {t("forms.strip.matchStructure", {
+                            defaultValue: "Match structure",
+                          })}
+                        </DropdownMenuItem>
+                        <DropdownMenuSeparator />
+                      </>
+                    ) : null}
 
                     {!isDefault ? (
                       <DropdownMenuItem onSelect={() => onMakeDefault(locale)}>

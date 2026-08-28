@@ -5,10 +5,9 @@ import { useTranslation } from "react-i18next";
 import { Input } from "~/components/ui/input";
 import { Label } from "~/components/ui/label";
 import { Textarea } from "~/components/ui/textarea";
-import {
-  Segmented,
-  SegmentedButton,
-} from "~/components/forms/chrome";
+import { Segmented, SegmentedButton } from "~/components/forms/chrome";
+import { EmailHtmlFrame } from "~/components/email-campaigns/EmailHtmlFrame";
+import { UseTemplatePicker } from "~/components/email-campaigns/UseTemplatePicker";
 import { Field, FieldHint } from "~/components/wordpress/fields";
 import { ResolvedHint } from "./ResolvedHint";
 import {
@@ -102,7 +101,9 @@ export function EmailTemplateEditor({
     }
     const start = el.selectionStart ?? current.html.length;
     const end = el.selectionEnd ?? start;
-    patch({ html: current.html.slice(0, start) + token + current.html.slice(end) });
+    patch({
+      html: current.html.slice(0, start) + token + current.html.slice(end),
+    });
     requestAnimationFrame(() => {
       el.focus();
       el.setSelectionRange(start + token.length, start + token.length);
@@ -114,7 +115,8 @@ export function EmailTemplateEditor({
       {locales.length > 1 ? (
         <div className="flex flex-wrap items-center gap-1.5">
           {locales.map((locale) => {
-            const filled = !!byLocale[locale]?.subject && !!byLocale[locale]?.html;
+            const filled =
+              !!byLocale[locale]?.subject && !!byLocale[locale]?.html;
             return (
               <button
                 key={locale}
@@ -160,22 +162,34 @@ export function EmailTemplateEditor({
       <Field>
         <div className="flex items-center justify-between gap-2">
           <Label htmlFor="wf-body">{t("workflows.email.body")}</Label>
-          <Segmented>
-            <SegmentedButton
-              active={view === "code"}
-              onClick={() => setView("code")}
-            >
-              <Code2 className="h-3.5 w-3.5" />
-              {t("workflows.email.viewCode")}
-            </SegmentedButton>
-            <SegmentedButton
-              active={view === "preview"}
-              onClick={() => setView("preview")}
-            >
-              <Eye className="h-3.5 w-3.5" />
-              {t("workflows.email.viewPreview")}
-            </SegmentedButton>
-          </Segmented>
+          <div className="flex items-center gap-2">
+            {/* Fills subject + body of the ACTIVE locale from the shared
+                template library. Additive — the editor stays the editor. */}
+            <UseTemplatePicker
+              locale={activeLocale}
+              disabled={disabled}
+              onInsert={({ subject, html }) => patch({ subject, html })}
+              buttonClassName={
+                "inline-flex h-9 items-center gap-2 rounded-lg border border-border bg-muted/40 px-3 text-sm transition-colors hover:bg-muted disabled:cursor-not-allowed disabled:opacity-50"
+              }
+            />
+            <Segmented>
+              <SegmentedButton
+                active={view === "code"}
+                onClick={() => setView("code")}
+              >
+                <Code2 className="h-3.5 w-3.5" />
+                {t("workflows.email.viewCode")}
+              </SegmentedButton>
+              <SegmentedButton
+                active={view === "preview"}
+                onClick={() => setView("preview")}
+              >
+                <Eye className="h-3.5 w-3.5" />
+                {t("workflows.email.viewPreview")}
+              </SegmentedButton>
+            </Segmented>
+          </div>
         </div>
 
         {view === "code" ? (
@@ -192,7 +206,9 @@ export function EmailTemplateEditor({
           <div className="space-y-2">
             {previewRecord ? (
               <p className="text-[11px] uppercase tracking-widest text-muted-foreground">
-                {t("workflows.preview.renderedAs", { name: previewRecord.label })}
+                {t("workflows.preview.renderedAs", {
+                  name: previewRecord.label,
+                })}
               </p>
             ) : (
               <p className="text-xs text-muted-foreground">
@@ -206,14 +222,16 @@ export function EmailTemplateEditor({
               </p>
             ) : null}
 
-            <div
-              className="min-h-[160px] rounded-xl border border-border bg-card p-4 text-sm"
-              // Author-written HTML from an editor in this workspace, shown to
-              // its own author. When a record is selected this is the server's
-              // rendered output, with variable values already escaped.
-              dangerouslySetInnerHTML={{
-                __html: preview?.html ?? current.html,
-              }}
+            {/* Framed, not inlined. This is a whole email document — MJML's
+                <head> carries global CSS (`a { color:#2563eb }`, `body`, `p`,
+                `table`) which, injected into the app's DOM, restyled the entire
+                page and turned every link in the UI blue. */}
+            <EmailHtmlFrame
+              title={t("workflows.preview.title", {
+                defaultValue: "Email preview",
+              })}
+              html={preview?.html ?? current.html}
+              className="block h-[360px] w-full rounded-xl border border-border bg-white"
             />
 
             {preview?.unresolved.length ? (

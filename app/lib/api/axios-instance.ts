@@ -146,6 +146,7 @@ const PUBLIC_PATH_PREFIXES = [
   "/book/",
   "/f/",
   "/demo",
+  "/unsubscribe/",
 ];
 
 function isPublicPath(): boolean {

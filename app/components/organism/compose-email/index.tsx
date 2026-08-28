@@ -51,6 +51,7 @@ import {
 } from "~/components/ui/select";
 import { usePilotFeatures } from "~/lib/feature-flags";
 import { cn } from "~/lib/utils";
+import { UseTemplatePicker } from "~/components/email-campaigns/UseTemplatePicker";
 import { RichTextEditor, RichTextToolbar } from "./rich-text-editor";
 import { RecipientField, type Recipient } from "./recipient-field";
 import type { ComposeRequest } from "./use-compose-email";
@@ -283,7 +284,7 @@ export function ComposeEmailDialog({
                 disabled={mutation.isPending}
               />
 
-              <div className="border-b border-border/70 px-1 py-1.5">
+              <div className="flex items-center gap-2 border-b border-border/70 px-1 py-1.5">
                 <label htmlFor="compose-subject" className="sr-only">
                   {t("compose.subject", { defaultValue: "Subject" })}
                 </label>
@@ -295,7 +296,23 @@ export function ComposeEmailDialog({
                   placeholder={t("compose.subject", {
                     defaultValue: "Subject",
                   })}
-                  className="h-9 w-full bg-transparent px-1 text-sm font-medium text-foreground placeholder:font-normal placeholder:text-muted-foreground focus:outline-none"
+                  className="h-9 w-full min-w-0 flex-1 bg-transparent px-1 text-sm font-medium text-foreground placeholder:font-normal placeholder:text-muted-foreground focus:outline-none"
+                />
+                {/* Note: Tiptap normalises the template's table markup on
+                    insert — fine for a 1:1 mail, and the user can still edit. */}
+                <UseTemplatePicker
+                  disabled={mutation.isPending}
+                  // A one-off email written to one person is not a broadcast;
+                  // appending an unsubscribe footer to it would be strange.
+                  purpose="transactional"
+                  onInsert={({
+                    subject: renderedSubject,
+                    html: renderedHtml,
+                  }) => {
+                    if (renderedSubject && !subject.trim())
+                      setSubject(renderedSubject);
+                    setHtml(renderedHtml);
+                  }}
                 />
               </div>
 

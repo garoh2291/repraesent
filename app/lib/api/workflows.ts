@@ -8,17 +8,16 @@ import { apiClient } from "./axios-instance";
  * change the other.
  */
 
-export const WORKFLOW_ENTITIES = ["leads", "deals", "tasks", "contacts"] as const;
+export const WORKFLOW_ENTITIES = [
+  "leads",
+  "deals",
+  "tasks",
+  "contacts",
+] as const;
 export type WorkflowEntity = (typeof WORKFLOW_ENTITIES)[number];
 
 export type FieldKind =
-  | "string"
-  | "number"
-  | "boolean"
-  | "date"
-  | "enum"
-  | "uuid"
-  | "json";
+  "string" | "number" | "boolean" | "date" | "enum" | "uuid" | "json";
 
 export type ConditionOperator =
   | "eq"
@@ -198,7 +197,10 @@ export interface WorkflowSummary {
   updated_at: string;
 }
 
-export interface WorkflowDetail extends Omit<WorkflowSummary, "entity" | "trigger_type" | "runs_7d" | "failed_7d" | "last_run_at"> {
+export interface WorkflowDetail extends Omit<
+  WorkflowSummary,
+  "entity" | "trigger_type" | "runs_7d" | "failed_7d" | "last_run_at"
+> {
   graph: WorkflowGraph;
   draft_version_id: string | null;
   published_version_id: string | null;
@@ -256,7 +258,12 @@ export interface OutboundCapability {
 
 export interface WorkflowAnalytics {
   runs_by_status: { status: string; count: number }[];
-  nodes: { node_id: string; node_type: string; status: string; count: number }[];
+  nodes: {
+    node_id: string;
+    node_type: string;
+    status: string;
+    count: number;
+  }[];
   daily: { day: string; count: number }[];
 }
 
@@ -276,6 +283,9 @@ export async function createWorkflow(payload: {
   name: string;
   description?: string;
   graph?: WorkflowGraph;
+  /** Language new email steps start in. Send the author's current language —
+   * the server otherwise falls back to the column default (German). */
+  default_locale?: string;
 }): Promise<WorkflowDetail> {
   const { data } = await apiClient.post<WorkflowDetail>("/workflows", payload);
   return data;
@@ -294,12 +304,17 @@ export async function updateWorkflow(
     send_window?: SendWindow | null;
   },
 ): Promise<WorkflowDetail> {
-  const { data } = await apiClient.patch<WorkflowDetail>(`/workflows/${id}`, payload);
+  const { data } = await apiClient.patch<WorkflowDetail>(
+    `/workflows/${id}`,
+    payload,
+  );
   return data;
 }
 
 export async function publishWorkflow(id: string): Promise<WorkflowDetail> {
-  const { data } = await apiClient.post<WorkflowDetail>(`/workflows/${id}/publish`);
+  const { data } = await apiClient.post<WorkflowDetail>(
+    `/workflows/${id}/publish`,
+  );
   return data;
 }
 
@@ -307,9 +322,12 @@ export async function setWorkflowStatus(
   id: string,
   status: "active" | "paused",
 ): Promise<WorkflowDetail> {
-  const { data } = await apiClient.patch<WorkflowDetail>(`/workflows/${id}/status`, {
-    status,
-  });
+  const { data } = await apiClient.patch<WorkflowDetail>(
+    `/workflows/${id}/status`,
+    {
+      status,
+    },
+  );
   return data;
 }
 
@@ -336,10 +354,10 @@ export async function testWorkflow(
   id: string,
   payload: { entity_id: string; simulate_previous?: Record<string, unknown> },
 ): Promise<{ runId: string; simulatedPaths: string[] }> {
-  const { data } = await apiClient.post<{ runId: string; simulatedPaths: string[] }>(
-    `/workflows/${id}/test`,
-    payload,
-  );
+  const { data } = await apiClient.post<{
+    runId: string;
+    simulatedPaths: string[];
+  }>(`/workflows/${id}/test`, payload);
   return data;
 }
 
@@ -347,9 +365,12 @@ export async function getRecentRecords(
   entity: WorkflowEntity,
   search?: string,
 ): Promise<RecentRecord[]> {
-  const { data } = await apiClient.get<RecentRecord[]>("/workflows/recent-records", {
-    params: { entity, search: search || undefined, limit: 10 },
-  });
+  const { data } = await apiClient.get<RecentRecord[]>(
+    "/workflows/recent-records",
+    {
+      params: { entity, search: search || undefined, limit: 10 },
+    },
+  );
   return data;
 }
 
@@ -358,24 +379,30 @@ export async function previewTemplate(
   workflowId: string,
   payload: { entity_id: string; template: string; escape?: boolean },
 ): Promise<{ rendered: string; unresolved: string[] }> {
-  const { data } = await apiClient.post<{ rendered: string; unresolved: string[] }>(
-    `/workflows/${workflowId}/preview`,
-    payload,
-  );
+  const { data } = await apiClient.post<{
+    rendered: string;
+    unresolved: string[];
+  }>(`/workflows/${workflowId}/preview`, payload);
   return data;
 }
 
 export async function getFieldCatalog(): Promise<EntityCatalog[]> {
-  const { data } = await apiClient.get<EntityCatalog[]>("/workflows/field-catalog");
+  const { data } = await apiClient.get<EntityCatalog[]>(
+    "/workflows/field-catalog",
+  );
   return data;
 }
 
 export async function getWorkflowCapabilities(): Promise<OutboundCapability> {
-  const { data } = await apiClient.get<OutboundCapability>("/workflows/capabilities");
+  const { data } = await apiClient.get<OutboundCapability>(
+    "/workflows/capabilities",
+  );
   return data;
 }
 
-export async function getWorkflowAnalytics(id: string): Promise<WorkflowAnalytics> {
+export async function getWorkflowAnalytics(
+  id: string,
+): Promise<WorkflowAnalytics> {
   const { data } = await apiClient.get<WorkflowAnalytics>(
     `/workflows/${id}/analytics`,
   );
