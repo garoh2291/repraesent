@@ -34,6 +34,17 @@ export interface TemplateLocaleContent {
   blocks: Block[];
   /** Unsubscribe wording in this language; falls back to the template default. */
   unsubscribe_text?: string;
+  /**
+   * Which source string each translation here came from, and what was written —
+   * two hashes per key. Lets an edit in another language update this one
+   * WITHOUT overwriting copy a person has since rewritten by hand. See
+   * `lib/email-templates/translation-sync.ts`.
+   *
+   * Optional and additive: the server validates only `subject` and `blocks`
+   * (`isTemplateDocument`) and stores the document verbatim, so older templates
+   * simply have none and are treated as unlinked until someone links them.
+   */
+  translated?: Record<string, { src: string; out: string }>;
 }
 
 export interface TemplateDocument {

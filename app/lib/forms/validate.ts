@@ -388,10 +388,11 @@ export function validateDefinition(
   // Only when it is switched ON. Off, the fields are inert and demanding copy
   // for them would block publishing a form that never sends one.
   //
-  // Checked per locale, like every other content rule: an e-mail that is blank
-  // in French sends a blank e-mail to French submitters. There is no
-  // fall-back-to-default at send time, which is exactly why this is blocking
-  // rather than advisory.
+  // Checked per locale, like every other content rule. Blocking rather than
+  // advisory because a French submitter should get French: the send path does
+  // fall back to the form's default language when this one is blank
+  // (`resolveConfirmationCopy`), so the failure mode is a German e-mail to a
+  // French person rather than a blank one — quieter, and still wrong.
   if (confirmationEmail?.enabled) {
     for (const locale of checked) {
       const copy = confirmationEmail.by_locale?.[locale];

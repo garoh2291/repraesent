@@ -3895,7 +3895,9 @@
       "variables": "Waarde invoegen",
       "saved": "Bevestigingsmail opgeslagen",
       "sectionDelivery": "Verzending",
-      "sectionMessage": "Bericht"
+      "sectionMessage": "Bericht",
+      "templateApplied": "Sjabloon toegepast op {{locales}}",
+      "blankLocales": "Geen e-mail in {{locales}} — een inzending in die taal krijgt in plaats daarvan de standaardtaal."
     },
     "share": {
       "publishFirst": "Publiceer dit formulier voordat u het deelt — de link en insluitingen blijven tot dan inactief.",
@@ -3981,7 +3983,11 @@
       "translationBusy": "Wacht tot de huidige vertaling klaar is",
       "structureDiffers": "Structuur wijkt af van {{locale}}",
       "structureDiffersBody": "De blokken hier wijken af van {{locale}}; de twee talen versturen verschillende e-mails.",
-      "matchStructure": "Structuur gelijktrekken"
+      "matchStructure": "Structuur gelijktrekken",
+      "linkTranslations": "Vertalingen koppelen",
+      "linkedTranslations": "Talen gekoppeld — wijzigingen worden voortaan overgenomen",
+      "notLinked": "Niet gekoppeld aan {{locale}} — wijzigingen worden niet overgenomen",
+      "notLinkedBody": "Deze tekst is geschreven voordat talen konden synchroniseren. Koppel hem en wijzigingen in {{locale}} worden voortaan overgenomen — er wordt niets herschreven."
     },
     "intro": {
       "title": "Zo werken formulieren",
@@ -5041,14 +5047,23 @@
       "matchStructureTitle": "{{locale}} gelijktrekken met {{source}}?",
       "matchStructureKeeps": "{{locale}} wordt opnieuw opgebouwd op de blokken van {{source}}. Al vertaalde tekst blijft behouden.",
       "matchStructureRemoves_one": "Hierbij verdwijnt 1 blok dat alleen {{locale}} heeft: {{names}}.",
-      "matchStructureRemoves_other": "Hierbij verdwijnen {{count}} blokken die alleen {{locale}} heeft: {{names}}."
+      "matchStructureRemoves_other": "Hierbij verdwijnen {{count}} blokken die alleen {{locale}} heeft: {{names}}.",
+      "syncNeedsLink": "De andere talen zijn nog niet gekoppeld, dus deze wijziging bleef hier."
     },
     "useTemplate": {
       "button": "Sjabloon gebruiken",
       "title": "Sjabloon invoegen",
       "empty": "Nog geen sjablonen — maak er een onder Sjablonen in de zijbalk.",
-      "hint": "Het gerenderde ontwerp vervangt de huidige inhoud van de editor.",
-      "insert": "Invoegen"
+      "hint": "Vervangt wat in de editor staat. Variabelen blijven behouden en worden bij verzending ingevuld.",
+      "insert": "Invoegen",
+      "emptyForLocale": "Nog geen gepubliceerde sjabloon in deze taal. Voeg de taal toe in de sjabloon of kies een andere.",
+      "willReplace": "Vervangt de tekst in {{locales}}.",
+      "coversNothing": "Deze sjabloon bevat geen van uw talen.",
+      "missingLocales": "Er zit geen {{locales}} in, dus die taal blijft ongewijzigd.",
+      "otherTemplateFor": "Een andere sjabloon gebruiken voor {{locale}}",
+      "addLocaleTo": "{{locale}} aan deze sjabloon toevoegen",
+      "backToAll": "Terug naar alle talen",
+      "wentBlank": "Deze sjabloon bevat {{locales}} niet meer. Er is niets vervangen — open opnieuw en kies nog een keer."
     },
     "unsubscribe": {
       "loading": "Een ogenblik…",

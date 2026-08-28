@@ -1366,6 +1366,7 @@ export default function FormBuilderRoute() {
               defaultLocale={defaultLocale}
               value={confirmationEmail}
               locale={editingLocale}
+              onSelectLocale={setEditingLocale}
               disabled={!canEdit}
               // The Save used to hang on the page background below the card
               // with no footer or toolbar; it lives in the panel header now.

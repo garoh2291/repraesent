@@ -167,8 +167,13 @@ export function EmailTemplateEditor({
                 template library. Additive — the editor stays the editor. */}
             <UseTemplatePicker
               locale={activeLocale}
+              locales={locales}
               disabled={disabled}
               onInsert={({ subject, html }) => patch({ subject, html })}
+              onInsertLocales={(byLocaleCopy) =>
+                onChange({ ...byLocale, ...byLocaleCopy })
+              }
+              templateHref={(id) => `/email-templates/${id}`}
               buttonClassName={
                 "inline-flex h-9 items-center gap-2 rounded-lg border border-border bg-muted/40 px-3 text-sm transition-colors hover:bg-muted disabled:cursor-not-allowed disabled:opacity-50"
               }

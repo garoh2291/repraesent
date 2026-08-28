@@ -38,14 +38,32 @@ import {
  */
 export function UseTemplatePicker({
   locale,
+  locales,
   onInsert,
+  onInsertLocales,
+  templateHref,
   disabled,
   buttonClassName,
   purpose = "marketing",
 }: {
   /** Locale to render; falls back through the template's chain server-side. */
   locale?: string;
+  /**
+   * Every language the host stores copy for.
+   *
+   * When given (with `onInsertLocales`), the picker fills them ALL in one go
+   * and says which ones the template cannot cover. A form offered in DE, FR and
+   * NL used to get whichever single language you happened to be looking at,
+   * silently leaving the other two on whatever was there before.
+   */
+  locales?: string[];
   onInsert: (template: { subject: string; html: string }) => void;
+  /** Receives one entry per language the template could actually cover. */
+  onInsertLocales?: (
+    byLocale: Record<string, { subject: string; html: string }>,
+  ) => void;
+  /** Where "add this language to the template" should send the user. */
+  templateHref?: (templateId: string) => string;
   disabled?: boolean;
   buttonClassName?: string;
   /**
@@ -72,12 +90,78 @@ export function UseTemplatePicker({
     enabled: open,
   });
 
+  /**
+   * Set while resolving ONE language of a multi-language host — the "use a
+   * different template for French" path. Null means "all of them".
+   */
+  const [focusLocale, setFocusLocale] = useState<string | null>(null);
+
+  /** Languages this insert is responsible for. */
+  const wantedLocales = focusLocale
+    ? [focusLocale]
+    : (locales?.length ? locales : [pickedLocale]);
+
+  const selected = (templates?.data ?? []).find((x) => x.id === templateId);
+  const covered = wantedLocales.filter((code) =>
+    selected?.complete_locales.includes(code),
+  );
+  const uncovered = wantedLocales.filter(
+    (code) => !selected?.complete_locales.includes(code),
+  );
+
+  const multi = !!locales?.length && !!onInsertLocales;
+
   const insert = useMutation({
-    mutationFn: () =>
-      renderEmailTemplate(templateId!, { locale: pickedLocale, purpose }),
-    onSuccess: (template) => {
-      onInsert({ subject: template.subject, html: template.html });
+    mutationFn: async () => {
+      const targets = multi ? covered : [focusLocale ?? pickedLocale];
+      const rendered = await Promise.all(
+        targets.map(async (code) => ({
+          locale: code,
+          result: await renderEmailTemplate(templateId!, {
+            locale: code,
+            purpose,
+          }),
+        })),
+      );
+
+      /**
+       * Refuse rather than blank. `contentForInsert` answers a locale the
+       * template does not define with empty strings and `locale_complete:
+       * false` — which, inserted, silently wipes the subject and body the
+       * operator already had. The picker's own filter usually prevents it, but
+       * not against a cached list or a template unpublished mid-dialog. The
+       * test-send path already refuses this; so does this now.
+       */
+      const blank = rendered.filter(({ result }) => !result.locale_complete);
+      if (blank.length > 0) {
+        throw new Error(
+          t("emailCampaigns.useTemplate.wentBlank", {
+            defaultValue:
+              "This template no longer has {{locales}}. Nothing was replaced — reopen and pick again.",
+            locales: blank.map((x) => x.locale.toUpperCase()).join(", "),
+          }),
+        );
+      }
+      return rendered;
+    },
+    onSuccess: (rendered) => {
+      if (multi && onInsertLocales) {
+        onInsertLocales(
+          Object.fromEntries(
+            rendered.map(({ locale: code, result }) => [
+              code,
+              { subject: result.subject, html: result.html },
+            ]),
+          ),
+        );
+      } else {
+        const only = rendered[0];
+        if (only) {
+          onInsert({ subject: only.result.subject, html: only.result.html });
+        }
+      }
       setOpen(false);
+      setFocusLocale(null);
     },
     onError: (error) => toast.error(extractErrorMessage(error)),
   });
@@ -95,11 +179,17 @@ export function UseTemplatePicker({
    *   define returns an empty subject and body, so offering it can only ever
    *   produce a blank insert.
    */
-  const usable = (templates?.data ?? []).filter(
-    (template) =>
-      template.current_version > 0 &&
-      template.complete_locales.includes(pickedLocale),
-  );
+  const usable = (templates?.data ?? []).filter((template) => {
+    if (template.current_version <= 0) return false;
+    // Filling several languages at once: anything covering at least one of them
+    // is worth offering, and the gap is named before you commit. Requiring full
+    // coverage would hide the template AND the reason it was hidden.
+    if (focusLocale) return template.complete_locales.includes(focusLocale);
+    if (multi) {
+      return locales!.some((code) => template.complete_locales.includes(code));
+    }
+    return template.complete_locales.includes(pickedLocale);
+  });
 
   // Selecting a template and then switching locale could otherwise leave a
   // selection that is no longer offered, and Insert would render nothing.
@@ -123,6 +213,8 @@ export function UseTemplatePicker({
         disabled={disabled}
         onClick={() => {
           setPickedLocale(locale ?? "de");
+          setFocusLocale(null);
+          setTemplateId(null);
           setOpen(true);
         }}
         className={
@@ -175,31 +267,132 @@ export function UseTemplatePicker({
                     }`}
                   >
                     <span className="truncate">{template.name}</span>
+                    {/* Against the languages THIS host needs, not the
+                        template's own list — so a gap is visible before you
+                        pick, not after. */}
                     <span className="flex shrink-0 gap-1">
-                      {template.complete_locales.map((code) => (
-                        <span
-                          key={code}
-                          className="rounded bg-muted px-1 py-0.5 font-mono text-[10px] uppercase text-muted-foreground"
-                        >
-                          {code}
-                        </span>
-                      ))}
+                      {(multi || focusLocale
+                        ? wantedLocales
+                        : template.complete_locales
+                      ).map((code) => {
+                        const has = template.complete_locales.includes(code);
+                        return (
+                          <span
+                            key={code}
+                            className={
+                              has
+                                ? "rounded bg-muted px-1 py-0.5 font-mono text-[10px] uppercase text-muted-foreground"
+                                : "rounded px-1 py-0.5 font-mono text-[10px] uppercase text-muted-foreground/40 line-through"
+                            }
+                          >
+                            {code}
+                          </span>
+                        );
+                      })}
                     </span>
                   </button>
                 ))}
               </div>
-              <Select value={pickedLocale} onValueChange={setPickedLocale}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {SUPPORTED_LOCALES.map((code) => (
-                    <SelectItem key={code} value={code}>
-                      {code.toUpperCase()}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+
+              {/* One language at a time only where that is the actual model.
+                  Constrained to the host's languages — it used to offer all
+                  four, so you could stand in the Dutch tab and paste French
+                  into it. */}
+              {!multi || focusLocale ? (
+                <Select
+                  value={focusLocale ?? pickedLocale}
+                  onValueChange={focusLocale ? setFocusLocale : setPickedLocale}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {(locales?.length ? locales : SUPPORTED_LOCALES).map(
+                      (code) => (
+                        <SelectItem key={code} value={code}>
+                          {code.toUpperCase()}
+                        </SelectItem>
+                      ),
+                    )}
+                  </SelectContent>
+                </Select>
+              ) : null}
+
+              {/* Say what Insert will do, and to which languages, before it
+                  does it. */}
+              {selected && multi ? (
+                <div className="space-y-2 rounded-lg border bg-muted/30 px-3 py-2.5 text-xs">
+                  <p className="text-foreground">
+                    {covered.length > 0
+                      ? t("emailCampaigns.useTemplate.willReplace", {
+                          defaultValue: "Replaces the copy in {{locales}}.",
+                          locales: covered
+                            .map((code) => code.toUpperCase())
+                            .join(", "),
+                        })
+                      : t("emailCampaigns.useTemplate.coversNothing", {
+                          defaultValue:
+                            "This template has none of your languages.",
+                        })}
+                  </p>
+
+                  {uncovered.length > 0 ? (
+                    <>
+                      <p className="text-amber-700 dark:text-amber-500">
+                        {t("emailCampaigns.useTemplate.missingLocales", {
+                          defaultValue:
+                            "It has no {{locales}}, so that language is left as it is.",
+                          locales: uncovered
+                            .map((code) => code.toUpperCase())
+                            .join(", "),
+                        })}
+                      </p>
+                      <div className="flex flex-wrap gap-2 pt-0.5">
+                        <button
+                          type="button"
+                          onClick={() => setFocusLocale(uncovered[0])}
+                          className="rounded-md border border-border bg-background px-2 py-1 font-medium transition-colors hover:bg-muted"
+                        >
+                          {t("emailCampaigns.useTemplate.otherTemplateFor", {
+                            defaultValue:
+                              "Use a different template for {{locale}}",
+                            locale: uncovered[0].toUpperCase(),
+                          })}
+                        </button>
+                        {templateHref ? (
+                          <a
+                            href={templateHref(selected.id)}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="rounded-md border border-border bg-background px-2 py-1 font-medium transition-colors hover:bg-muted"
+                          >
+                            {t("emailCampaigns.useTemplate.addLocaleTo", {
+                              defaultValue: "Add {{locale}} to this template",
+                              locale: uncovered[0].toUpperCase(),
+                            })}
+                          </a>
+                        ) : null}
+                      </div>
+                    </>
+                  ) : null}
+                </div>
+              ) : null}
+
+              {focusLocale ? (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setFocusLocale(null);
+                    setTemplateId(null);
+                  }}
+                  className="text-xs font-medium text-muted-foreground underline-offset-2 hover:underline"
+                >
+                  {t("emailCampaigns.useTemplate.backToAll", {
+                    defaultValue: "Back to all languages",
+                  })}
+                </button>
+              ) : null}
+
               <p className="text-xs text-muted-foreground">
                 {t("emailCampaigns.useTemplate.hint", {
                   defaultValue:
@@ -212,7 +405,13 @@ export function UseTemplatePicker({
           <DialogFooter>
             <Button
               onClick={() => insert.mutate()}
-              disabled={!templateId || insert.isPending}
+              // Nothing to write is not a valid Insert — it would close the
+              // dialog having done nothing at all.
+              disabled={
+                !templateId ||
+                insert.isPending ||
+                (multi && covered.length === 0)
+              }
             >
               {insert.isPending
                 ? t("common.loading", { defaultValue: "Loading…" })

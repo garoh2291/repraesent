@@ -3895,7 +3895,9 @@
       "variables": "Insert a value",
       "saved": "Confirmation email saved",
       "sectionDelivery": "Delivery",
-      "sectionMessage": "Message"
+      "sectionMessage": "Message",
+      "templateApplied": "Template applied to {{locales}}",
+      "blankLocales": "No email to send in {{locales}} — a submission in that language gets the default one instead."
     },
     "share": {
       "publishFirst": "Publish this form before sharing it — the link and embeds stay inactive until you do.",
@@ -3981,7 +3983,11 @@
       "translationBusy": "Wait for the current translation to finish",
       "structureDiffers": "Structure differs from {{locale}}",
       "structureDiffersBody": "The blocks here differ from {{locale}}, so the two languages send different emails.",
-      "matchStructure": "Match structure"
+      "matchStructure": "Match structure",
+      "linkTranslations": "Link translations",
+      "linkedTranslations": "Languages linked — edits will now sync",
+      "notLinked": "Not linked to {{locale}} — edits will not sync",
+      "notLinkedBody": "This text was written before languages could sync. Link it and edits to {{locale}} will carry over from now on — nothing is rewritten."
     },
     "intro": {
       "title": "How Forms works",
@@ -5041,14 +5047,23 @@
       "matchStructureTitle": "Match {{locale}} to {{source}}?",
       "matchStructureKeeps": "{{locale}} is rebuilt on {{source}}'s blocks. Text already translated is kept.",
       "matchStructureRemoves_one": "This removes 1 block only {{locale}} has: {{names}}.",
-      "matchStructureRemoves_other": "This removes {{count}} blocks only {{locale}} has: {{names}}."
+      "matchStructureRemoves_other": "This removes {{count}} blocks only {{locale}} has: {{names}}.",
+      "syncNeedsLink": "The other languages are not linked yet, so this edit stayed here."
     },
     "useTemplate": {
       "button": "Use template",
       "title": "Insert a template",
       "empty": "No templates yet — build one under Templates in the sidebar.",
-      "hint": "The rendered design replaces what is currently in the editor.",
-      "insert": "Insert"
+      "hint": "Replaces what is in the editor. Variables stay intact and fill in when the email is sent.",
+      "insert": "Insert",
+      "emptyForLocale": "No published template has this language yet. Add it in the template, or pick another language.",
+      "willReplace": "Replaces the copy in {{locales}}.",
+      "coversNothing": "This template has none of your languages.",
+      "missingLocales": "It has no {{locales}}, so that language is left as it is.",
+      "otherTemplateFor": "Use a different template for {{locale}}",
+      "addLocaleTo": "Add {{locale}} to this template",
+      "backToAll": "Back to all languages",
+      "wentBlank": "This template no longer has {{locales}}. Nothing was replaced — reopen and pick again."
     },
     "unsubscribe": {
       "loading": "One moment…",

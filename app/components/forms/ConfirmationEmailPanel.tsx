@@ -2,6 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Check, Code2, Eye, Loader2, Mail, Save } from "lucide-react";
 import { useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { toast } from "sonner";
 import { Input } from "~/components/ui/input";
 import { Label } from "~/components/ui/label";
 import {
@@ -61,6 +62,8 @@ interface Props {
    * panel follows the rest of the editor instead of having its own idea.
    */
   locale: FormLocale;
+  /** Switch the builder's language, for the jump-to-empty-language buttons. */
+  onSelectLocale?: (locale: FormLocale) => void;
   disabled?: boolean;
   /**
    * Rendered in the panel header. The Save used to sit on the page background
@@ -81,6 +84,7 @@ export function ConfirmationEmailPanel({
   defaultLocale,
   value,
   locale,
+  onSelectLocale,
   disabled,
   onSave,
   saveDisabled,
@@ -159,6 +163,40 @@ export function ConfirmationEmailPanel({
         [activeLocale]: { ...current, ...patch },
       },
     });
+
+  /** Write a template into several languages at once. */
+  const patchLocales = (
+    byLocale: Record<string, { subject: string; html: string }>,
+  ) => {
+    const next = { ...config.by_locale };
+    for (const [code, copy] of Object.entries(byLocale)) {
+      next[code as FormLocale] = copy;
+    }
+    onChange({ ...config, by_locale: next });
+    const written = Object.keys(byLocale)
+      .map((code) => code.toUpperCase())
+      .join(", ");
+    toast.success(
+      t("forms.email.templateApplied", {
+        defaultValue: "Template applied to {{locales}}",
+        locales: written,
+      }),
+    );
+  };
+
+  /**
+   * Languages the e-mail is switched on for but has nothing to send in.
+   *
+   * A standing statement rather than a one-off message at insert time: adding a
+   * language later, or clearing a body, produces exactly this state, and the
+   * only other sign of it is the publish gate refusing to let the form go live.
+   */
+  const blankLocales = config.enabled
+    ? locales.filter((code) => {
+        const copy = config.by_locale?.[code];
+        return !copy?.subject?.trim() || !copy?.html?.trim();
+      })
+    : [];
 
   /** Insert at the caret, which is what makes the chips worth clicking. */
   const insertVariable = (name: string) => {
@@ -290,6 +328,37 @@ export function ConfirmationEmailPanel({
         </PanelSection>
 
         <PanelSection title={t("forms.email.sectionMessage")}>
+          {/* Named languages, from every tab, because the whole point is that
+              you cannot see the empty one from the tab you are standing on. */}
+          {blankLocales.length > 0 ? (
+            <div className="mb-3 rounded-lg border border-amber-500/40 bg-amber-500/5 px-3 py-2.5 text-xs">
+              <p className="font-medium text-amber-800 dark:text-amber-400">
+                {t("forms.email.blankLocales", {
+                  defaultValue:
+                    "No email to send in {{locales}} — a submission in that language gets the default one instead.",
+                  locales: blankLocales
+                    .map((code) => code.toUpperCase())
+                    .join(", "),
+                })}
+              </p>
+              <div className="mt-1.5 flex flex-wrap gap-1.5">
+                {blankLocales
+                  .filter((code) => code !== activeLocale)
+                  .map((code) => (
+                    <button
+                      key={code}
+                      type="button"
+                      onClick={() => onSelectLocale?.(code)}
+                      disabled={!onSelectLocale}
+                      className="rounded-md border border-amber-500/40 bg-background px-2 py-1 font-mono text-[11px] uppercase transition-colors hover:bg-muted disabled:cursor-default disabled:opacity-60"
+                    >
+                      {code}
+                    </button>
+                  ))}
+              </div>
+            </div>
+          ) : null}
+
           <Field>
             <Label htmlFor="ce-subject">{t("forms.email.subject")}</Label>
             <Input
@@ -306,6 +375,9 @@ export function ConfirmationEmailPanel({
               <div className="flex items-center gap-2">
                 <UseTemplatePicker
                   locale={activeLocale}
+                  // The form's languages, so one insert fills them all and any
+                  // the template cannot cover is named rather than skipped.
+                  locales={locales}
                   disabled={disabled}
                   // A form confirmation answers a submission the person just
                   // made, so it ships without an unsubscribe footer.
@@ -313,6 +385,8 @@ export function ConfirmationEmailPanel({
                   onInsert={({ subject, html }) =>
                     patchLocale({ subject, html })
                   }
+                  onInsertLocales={patchLocales}
+                  templateHref={(id) => `/email-templates/${id}`}
                   buttonClassName={
                     "inline-flex h-9 items-center gap-2 rounded-lg border border-border bg-muted/40 px-3 text-sm transition-colors hover:bg-muted disabled:cursor-not-allowed disabled:opacity-50"
                   }

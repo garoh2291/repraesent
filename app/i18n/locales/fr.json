@@ -3897,7 +3897,9 @@
       "variables": "Insérer une valeur",
       "saved": "E-mail de confirmation enregistré",
       "sectionDelivery": "Envoi",
-      "sectionMessage": "Message"
+      "sectionMessage": "Message",
+      "templateApplied": "Modèle appliqué à {{locales}}",
+      "blankLocales": "Aucun e-mail en {{locales}} — un envoi dans cette langue recevra celui de la langue par défaut."
     },
     "share": {
       "publishFirst": "Publiez ce formulaire avant de le partager — le lien et les intégrations restent inactifs jusque-là.",
@@ -3983,7 +3985,11 @@
       "translationBusy": "Attendez la fin de la traduction en cours",
       "structureDiffers": "La structure diffère de {{locale}}",
       "structureDiffersBody": "Les blocs diffèrent de {{locale}} : les deux langues envoient des e-mails différents.",
-      "matchStructure": "Aligner la structure"
+      "matchStructure": "Aligner la structure",
+      "linkTranslations": "Lier les traductions",
+      "linkedTranslations": "Langues liées — les modifications seront désormais répercutées",
+      "notLinked": "Non lié à {{locale}} — les modifications ne seront pas répercutées",
+      "notLinkedBody": "Ce texte a été écrit avant que les langues puissent se synchroniser. Liez-le et les modifications de {{locale}} seront répercutées à partir de maintenant — rien n'est réécrit."
     },
     "intro": {
       "title": "Comment fonctionnent les formulaires",
@@ -5043,14 +5049,23 @@
       "matchStructureTitle": "Aligner {{locale}} sur {{source}} ?",
       "matchStructureKeeps": "{{locale}} est reconstruit sur les blocs de {{source}}. Les textes déjà traduits sont conservés.",
       "matchStructureRemoves_one": "1 bloc que seul {{locale}} possède sera supprimé : {{names}}.",
-      "matchStructureRemoves_other": "{{count}} blocs que seul {{locale}} possède seront supprimés : {{names}}."
+      "matchStructureRemoves_other": "{{count}} blocs que seul {{locale}} possède seront supprimés : {{names}}.",
+      "syncNeedsLink": "Les autres langues ne sont pas encore liées : cette modification est restée ici."
     },
     "useTemplate": {
       "button": "Utiliser un modèle",
       "title": "Insérer un modèle",
       "empty": "Pas encore de modèles — créez-en un sous Modèles dans la barre latérale.",
-      "hint": "Le design rendu remplace le contenu actuel de l'éditeur.",
-      "insert": "Insérer"
+      "hint": "Remplace le contenu de l'éditeur. Les variables sont conservées et renseignées à l'envoi.",
+      "insert": "Insérer",
+      "emptyForLocale": "Aucun modèle publié dans cette langue. Ajoutez-la dans le modèle ou choisissez une autre langue.",
+      "willReplace": "Remplace le texte en {{locales}}.",
+      "coversNothing": "Ce modèle ne contient aucune de vos langues.",
+      "missingLocales": "Il ne contient pas {{locales}} : cette langue reste inchangée.",
+      "otherTemplateFor": "Utiliser un autre modèle pour {{locale}}",
+      "addLocaleTo": "Ajouter {{locale}} à ce modèle",
+      "backToAll": "Revenir à toutes les langues",
+      "wentBlank": "Ce modèle ne contient plus {{locales}}. Rien n'a été remplacé — rouvrez et choisissez à nouveau."
     },
     "unsubscribe": {
       "loading": "Un instant…",

@@ -1,4 +1,5 @@
 import {
+  Link2,
   MoreHorizontal,
   Plus,
   Sparkles,
@@ -92,6 +93,24 @@ interface Props {
   driftedLocales?: ReadonlySet<FormLocale>;
   /** Offer to rebuild a drifted language on the default's structure. */
   onMatchStructure?: (locale: FormLocale) => void;
+
+  /**
+   * Languages whose text is not yet known to have come from the translator, so
+   * edits in another language cannot safely be carried into them.
+   *
+   * Templates only, and additive like the pair above — forms translate on
+   * demand and have nothing to link.
+   */
+  unlinkedLocales?: ReadonlySet<FormLocale>;
+  /** Adopt the current text as the translation. No AI call, nothing rewritten. */
+  onLinkTranslations?: () => void;
+  /**
+   * Languages with a background sync in flight.
+   *
+   * Deliberately separate from `translating`: that one gates Save and the whole
+   * menu, which would be wrong for something that fires while you type.
+   */
+  syncing?: ReadonlySet<string>;
 }
 
 /**
@@ -127,6 +146,9 @@ export function LanguageStrip({
   onTranslateLocale,
   driftedLocales,
   onMatchStructure,
+  unlinkedLocales,
+  onLinkTranslations,
+  syncing,
 }: Props) {
   const { t } = useTranslation();
   const [confirmRemove, setConfirmRemove] = useState<FormLocale | null>(null);
@@ -161,6 +183,8 @@ export function LanguageStrip({
           const spinning = translating.has(locale);
           const count = issuesByLocale.get(locale) ?? 0;
           const drifted = !isDefault && !!driftedLocales?.has(locale);
+          const unlinked = !isDefault && !!unlinkedLocales?.has(locale);
+          const autoSyncing = syncing?.has(locale) ?? false;
 
           return (
             // Every locale is a filled, bordered pill — not just the active
@@ -205,13 +229,23 @@ export function LanguageStrip({
                     mid-translation is about to stop having issues, and drift
                     says something a plain issue dot cannot. The empty span
                     keeps the tab width stable so the strip does not jitter. */}
-                {spinning ? (
+                {spinning || autoSyncing ? (
                   <Spinner className="h-3 w-3 text-muted-foreground" />
                 ) : drifted ? (
                   <TriangleAlert
                     className="h-3 w-3 text-amber-600 dark:text-amber-500"
                     aria-label={t("forms.strip.structureDiffers", {
                       defaultValue: "Structure differs from {{locale}}",
+                      locale: defaultLocale.toUpperCase(),
+                    })}
+                  />
+                ) : unlinked ? (
+                  // Not an error — the language is fine, it just will not
+                  // follow edits yet. Quiet, and never a red dot.
+                  <Link2
+                    className="h-3 w-3 text-muted-foreground/60"
+                    aria-label={t("forms.strip.notLinked", {
+                      defaultValue: "Not linked to {{locale}} — edits will not sync",
                       locale: defaultLocale.toUpperCase(),
                     })}
                   />
@@ -301,6 +335,30 @@ export function LanguageStrip({
                       <Sparkles className="h-4 w-4" />
                       {t("forms.strip.retranslate")}
                     </DropdownMenuItem>
+
+                    {/* Only where it changes something. Neither AI action can
+                        get a language out of the unlinked state: "Translate
+                        with AI" skips any string that already differs from the
+                        source, and "Retranslate" would link it by overwriting
+                        the very copy we are protecting. This one just records
+                        that the two correspond. */}
+                    {unlinked && onLinkTranslations ? (
+                      <>
+                        <div className="px-2 pb-1.5 pt-1 text-xs leading-snug text-muted-foreground">
+                          {t("forms.strip.notLinkedBody", {
+                            defaultValue:
+                              "This text was written before languages could sync. Link it and edits to {{locale}} will carry over from now on — nothing is rewritten.",
+                            locale: defaultLocale.toUpperCase(),
+                          })}
+                        </div>
+                        <DropdownMenuItem onSelect={onLinkTranslations}>
+                          <Link2 className="h-4 w-4" />
+                          {t("forms.strip.linkTranslations", {
+                            defaultValue: "Link translations",
+                          })}
+                        </DropdownMenuItem>
+                      </>
+                    ) : null}
 
                     {!isDefault ? (
                       <>

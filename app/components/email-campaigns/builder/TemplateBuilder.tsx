@@ -32,11 +32,24 @@ import {
 } from "~/lib/email-templates/blocks";
 import type { TemplateDocument as Doc } from "~/lib/api/email-templates";
 import {
+  buildKeyedRequest,
+  buildMultiTargetRequest,
   buildTranslateRequest,
   cloneLocaleContent,
   countUntranslatedCopies,
   mergeTranslations,
 } from "~/lib/email-templates/translate-items";
+import {
+  applyClears,
+  changedKeysBetween,
+  linkTranslations,
+  mergeSyncResult,
+  needsLinking,
+  outOfDateCount,
+  planSync,
+  stamp,
+  type TranslationProvenance,
+} from "~/lib/email-templates/translation-sync";
 import {
   applyToAllLocales,
   describeRemovedBlocks,
@@ -149,6 +162,38 @@ export function TemplateBuilder({
       [locale]: Math.max(0, (previous[locale] ?? 0) + delta),
     }));
 
+  /**
+   * The automatic sync runs on its OWN counter, deliberately.
+   *
+   * `busy` below folds `anyTranslating` into autosave, Save, Test and the whole
+   * language strip. Routing a sync that fires while you are still typing
+   * through the same counter would suspend the autosave and grey out the
+   * controls every few seconds. This one drives a quiet indicator and nothing
+   * else.
+   */
+  const [syncing, setSyncing] = useState<ReadonlySet<string>>(new Set());
+  /** Text keys edited since the last sync — `subject`, `preheader`, `block.<id>.<attr>`. */
+  const pendingKeys = useRef(new Set<string>());
+  /** The language those pending keys were edited in. */
+  const pendingSource = useRef(activeLocale);
+  const syncInFlight = useRef(false);
+  /** The "not linked yet" nudge is worth saying once, not every edit. */
+  const linkPromptShown = useRef(false);
+  /** Bumped by every text edit; the sync effect waits for it to stop moving. */
+  const [editTick, setEditTick] = useState(0);
+
+  const markEdited = (keys: string[]) => {
+    if (keys.length === 0) return;
+    // Switching language mid-edit: the queued keys belong to the language they
+    // were typed in, so flush rather than attribute them to the new one.
+    if (pendingSource.current !== activeLocale) {
+      pendingKeys.current = new Set();
+      pendingSource.current = activeLocale;
+    }
+    for (const key of keys) pendingKeys.current.add(key);
+    setEditTick((tick) => tick + 1);
+  };
+
   // ------------------------------------------------------------- mutations
 
   const invalidate = () => {
@@ -234,41 +279,48 @@ export function TemplateBuilder({
   // ------------------------------------------------------------ translate
 
   /**
-   * Translate `target` from the default locale. mode "all" overwrites; mode
-   * "copies" only fills strings still identical to the default locale's.
-   * `fallbackIsCopy` marks the add-language path, where a failure still
-   * leaves usable (copied) content and deserves a different toast.
+   * Translate one or more languages from the default one, in a SINGLE request.
+   *
+   * mode "all" overwrites; mode "copies" only fills strings still identical to
+   * the default language's. `fallbackIsCopy` marks the add-language path, where
+   * a failure still leaves usable (copied) content and deserves a different
+   * toast.
+   *
+   * Every merge stamps provenance, so a language translated here is afterwards
+   * known to be ours and follows later edits automatically.
    */
-  const runTranslate = async (
-    target: string,
+  const runTranslateMany = async (
+    targets: string[],
     mode: "all" | "copies",
     options?: { fallbackIsCopy?: boolean; docOverride?: TemplateDocument },
   ) => {
-    const request = buildTranslateRequest(
-      options?.docOverride ?? doc,
-      defaultLocale,
-      target,
-      mode,
-    );
+    const source = options?.docOverride ?? doc;
+    const request = buildMultiTargetRequest(source, defaultLocale, targets, mode);
     if (!request) return;
 
-    bumpTranslating(target, 1);
+    const wanted = request.targets.map((entry) => entry.locale);
+    for (const locale of wanted) bumpTranslating(locale, 1);
     try {
       const response = await translateEmailTemplate(template.id, request);
-      const result = response.results.find((entry) => entry.locale === target);
-      if (result?.ok && Object.keys(result.values).length > 0) {
+      const merged = response.results.filter(
+        (result) => result.ok && Object.keys(result.values).length > 0,
+      );
+
+      if (merged.length > 0) {
         // Functional update — a closure over `doc` would drop edits made
         // while the request was in flight (forms lesson).
         setDoc((previous) => {
-          const current = previous.locales[target];
-          if (!current) return previous;
-          return {
-            ...previous,
-            locales: {
-              ...previous.locales,
-              [target]: mergeTranslations(current, result.values),
-            },
-          };
+          const sourceContent = previous.locales[defaultLocale];
+          const locales = { ...previous.locales };
+          for (const result of merged) {
+            const current = locales[result.locale];
+            if (!current) continue;
+            const next = mergeTranslations(current, result.values);
+            locales[result.locale] = sourceContent
+              ? stamp(next, sourceContent, Object.keys(result.values))
+              : next;
+          }
+          return { ...previous, locales };
         });
         setDirty(true);
         toast.success(
@@ -302,8 +354,161 @@ export function TemplateBuilder({
         toast.error(extractErrorMessage(error));
       }
     } finally {
-      bumpTranslating(target, -1);
+      for (const locale of wanted) bumpTranslating(locale, -1);
     }
+  };
+
+  const runTranslate = (
+    target: string,
+    mode: "all" | "copies",
+    options?: { fallbackIsCopy?: boolean; docOverride?: TemplateDocument },
+  ) => runTranslateMany([target], mode, options);
+
+  // ------------------------------------------------------------- text sync
+
+  /**
+   * Carry an edit into every other language.
+   *
+   * Runs on the keys the author just touched, skips anything a person has
+   * rewritten in the target language, and blanks rather than translates when
+   * the source string was emptied. One request covers all the languages —
+   * the endpoint has always taken up to three targets.
+   *
+   * Failure is deliberately silent. Nothing is lost: the strings stay stale,
+   * the strip counts them, and the next edit retries. A toast every time the
+   * network hiccups while someone is typing is worse than no toast.
+   */
+  const runAutoSync = async () => {
+    if (syncInFlight.current) return;
+    const keys = [...pendingKeys.current];
+    const sourceLocale = pendingSource.current;
+    if (keys.length === 0) return;
+    pendingKeys.current = new Set();
+
+    const sourceContent = doc.locales[sourceLocale];
+    if (!sourceContent) return;
+    const plan = planSync(doc, sourceLocale, keys);
+
+    /**
+     * The one place this can look broken: you edit German on a template written
+     * before any of this, nothing happens in French, and there is no reason
+     * given. Say it out loud, once, at the moment it matters — and put the fix
+     * on the toast rather than making them find the menu.
+     */
+    if (
+      plan.targets.length === 0 &&
+      plan.clears.length === 0 &&
+      !linkPromptShown.current &&
+      Object.keys(doc.locales).some(
+        (locale) => locale !== defaultLocale && needsLinking(doc, defaultLocale, locale),
+      )
+    ) {
+      linkPromptShown.current = true;
+      toast.info(
+        t("emailCampaigns.templates.syncNeedsLink", {
+          defaultValue:
+            "The other languages are not linked yet, so this edit stayed here.",
+        }),
+        {
+          duration: 10_000,
+          action: {
+            label: t("forms.strip.linkTranslations", {
+              defaultValue: "Link translations",
+            }),
+            onClick: linkAll,
+          },
+        },
+      );
+    }
+
+    // Emptying a string needs no translator.
+    if (plan.clears.length > 0) {
+      setDoc((previous) => {
+        const source = previous.locales[sourceLocale];
+        if (!source) return previous;
+        const locales = { ...previous.locales };
+        for (const entry of plan.clears) {
+          const current = locales[entry.locale];
+          if (current) {
+            locales[entry.locale] = applyClears(current, source, entry.keys);
+          }
+        }
+        return { ...previous, locales };
+      });
+      setDirty(true);
+    }
+
+    const request = buildKeyedRequest(doc, sourceLocale, plan.targets);
+    if (!request) return;
+
+    // Snapshot the provenance the decision was made against, so the merge can
+    // re-check it against whatever the document looks like when it lands.
+    const guards: Record<string, TranslationProvenance> = {};
+    for (const entry of request.targets) {
+      guards[entry.locale] = doc.locales[entry.locale]?.translated ?? {};
+    }
+
+    syncInFlight.current = true;
+    setSyncing(new Set(request.targets.map((entry) => entry.locale)));
+    try {
+      const response = await translateEmailTemplate(template.id, request);
+      const usable = response.results.filter(
+        (result) => result.ok && Object.keys(result.values).length > 0,
+      );
+      if (usable.length === 0) return;
+
+      // The updater stays pure — React may invoke it twice in development, and
+      // deciding "did anything change" inside it would be a side effect.
+      setDoc((previous) => {
+        const source = previous.locales[sourceLocale];
+        if (!source) return previous;
+        const locales = { ...previous.locales };
+        for (const result of usable) {
+          const current = locales[result.locale];
+          if (!current) continue;
+          locales[result.locale] = mergeSyncResult(
+            current,
+            source,
+            result.values,
+            guards[result.locale] ?? {},
+          );
+        }
+        return { ...previous, locales };
+      });
+      setDirty(true);
+    } catch {
+      // Put them back so the next edit sweeps them up with its own.
+      for (const key of keys) pendingKeys.current.add(key);
+    } finally {
+      syncInFlight.current = false;
+      setSyncing(new Set());
+    }
+  };
+
+  /**
+   * Fire once the typing stops. Much longer than the 1.2 s autosave: this
+   * spends money on an AI call, and the server has no rate limit of its own.
+   */
+  useEffect(() => {
+    if (editTick === 0) return;
+    // A manual Translate/Retranslate owns the document while it runs.
+    if (anyTranslating) return;
+    const id = window.setTimeout(() => void runAutoSync(), 2500);
+    return () => window.clearTimeout(id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [editTick, anyTranslating]);
+
+  /** Adopt the current text as the translation — no AI call, nothing rewritten. */
+  const linkAll = () => {
+    // Against the DEFAULT language, not whichever tab you happen to be on, so
+    // the recorded relationship is the same however you reached the action.
+    setDoc((previous) => linkTranslations(previous, defaultLocale));
+    setDirty(true);
+    toast.success(
+      t("forms.strip.linkedTranslations", {
+        defaultValue: "Languages linked — edits will now sync",
+      }),
+    );
   };
 
   // --------------------------------------------------------------- locales
@@ -372,14 +577,33 @@ export function TemplateBuilder({
       // Text that arrived by mirroring a structural edit and was never
       // translated — one click from fixed, via the strip's Translate action.
       count += countUntranslatedCopies(doc, defaultLocale, locale) > 0 ? 1 : 0;
+      // Copy someone rewrote here, whose source has since moved on. Left alone
+      // on purpose: overwriting it is what we are avoiding.
+      count += outOfDateCount(doc, defaultLocale, locale) > 0 ? 1 : 0;
       map.set(locale as FormLocale, count);
     }
     return map;
   }, [doc, defaultLocale, driftByLocale]);
 
+  /**
+   * Languages holding text we cannot prove came from the translator — every
+   * template written before this existed. Nothing is auto-updated there until
+   * someone links them, so the strip offers the action.
+   */
+  const unlinkedLocales = useMemo(() => {
+    const set = new Set<FormLocale>();
+    for (const locale of Object.keys(doc.locales)) {
+      if (needsLinking(doc, defaultLocale, locale)) set.add(locale as FormLocale);
+    }
+    return set;
+  }, [doc, defaultLocale]);
+
   // ---------------------------------------------------------------- blocks
 
   const setContent = (next: TemplateLocaleContent) => {
+    // Subject and preheader are text like any other, so an edit here queues for
+    // the same sync a block edit does.
+    markEdited(changedKeysBetween(doc.locales[activeLocale], next));
     setDoc((previous) => ({
       ...previous,
       locales: { ...previous.locales, [activeLocale]: next },
@@ -422,14 +646,16 @@ export function TemplateBuilder({
    * Saved rows arrive carrying text, so unlike a fresh block they land in the
    * other languages already needing translation. Fill them in straight away —
    * `mode: "copies"` touches only the strings still identical to the source.
+   *
+   * One request for every language, not one per language: the endpoint takes up
+   * to three targets and runs them concurrently.
    */
   const insertRow = (blocks: Block[]) => {
     const next = applyStructure((current) => [...current, ...blocks]);
-    for (const locale of Object.keys(next.locales)) {
-      if (locale !== defaultLocale) {
-        void runTranslate(locale, "copies", { docOverride: next });
-      }
-    }
+    const others = Object.keys(next.locales).filter(
+      (locale) => locale !== defaultLocale,
+    );
+    void runTranslateMany(others, "copies", { docOverride: next });
   };
 
   const reorder = (orderedIds: string[]) =>
@@ -468,15 +694,21 @@ export function TemplateBuilder({
 
   /**
    * An edit splits by what the field means, not by where it was made:
-   * reading matter (`html`, `label`, `alt`) stays in the language you are
+   * reading matter (`html`, `label`, `alt`) is written to the language you are
    * editing; everything else — colours, alignment, href, src, radius, level —
-   * is structure and applies to all of them. So restyling a button restyles it
-   * everywhere, while rewriting its label touches only this language.
+   * is structure and applies to all of them immediately. So restyling a button
+   * restyles it everywhere at once.
+   *
+   * The text then follows too, but through the translator rather than by
+   * copying: the changed strings are queued here and synced once you stop
+   * typing.
    */
   const updateBlock = (updated: Block) => {
-    setDoc((previous) =>
-      replaceBlockAcrossLocales(previous, activeLocale, updated),
+    const next = replaceBlockAcrossLocales(doc, activeLocale, updated);
+    markEdited(
+      changedKeysBetween(doc.locales[activeLocale], next.locales[activeLocale]),
     );
+    setDoc(next);
     setDirty(true);
   };
 
@@ -602,6 +834,9 @@ export function TemplateBuilder({
           }
           driftedLocales={driftedLocales}
           onMatchStructure={setMatchTarget}
+          unlinkedLocales={unlinkedLocales}
+          onLinkTranslations={linkAll}
+          syncing={syncing}
         />
       </div>
 

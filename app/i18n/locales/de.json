@@ -3897,7 +3897,9 @@
       "variables": "Wert einfügen",
       "saved": "Bestätigungs-E-Mail gespeichert",
       "sectionDelivery": "Versand",
-      "sectionMessage": "Nachricht"
+      "sectionMessage": "Nachricht",
+      "templateApplied": "Vorlage auf {{locales}} angewendet",
+      "blankLocales": "Keine E-Mail für {{locales}} — eine Einsendung in dieser Sprache erhält stattdessen die Standardsprache."
     },
     "share": {
       "publishFirst": "Veröffentlichen Sie das Formular, bevor Sie es teilen — Link und Einbettungen bleiben bis dahin inaktiv.",
@@ -3983,7 +3985,11 @@
       "translationBusy": "Warten Sie, bis die laufende Übersetzung abgeschlossen ist",
       "structureDiffers": "Struktur weicht von {{locale}} ab",
       "structureDiffersBody": "Die Blöcke hier weichen von {{locale}} ab – die beiden Sprachen versenden unterschiedliche E-Mails.",
-      "matchStructure": "Struktur angleichen"
+      "matchStructure": "Struktur angleichen",
+      "linkTranslations": "Übersetzungen verknüpfen",
+      "linkedTranslations": "Sprachen verknüpft – Änderungen werden ab jetzt übernommen",
+      "notLinked": "Nicht mit {{locale}} verknüpft – Änderungen werden nicht übernommen",
+      "notLinkedBody": "Dieser Text entstand, bevor Sprachen abgeglichen werden konnten. Verknüpfen Sie ihn, und Änderungen an {{locale}} werden ab jetzt übernommen – es wird nichts überschrieben."
     },
     "intro": {
       "title": "So funktionieren Formulare",
@@ -5043,14 +5049,23 @@
       "matchStructureTitle": "{{locale}} an {{source}} angleichen?",
       "matchStructureKeeps": "{{locale}} wird auf den Blöcken von {{source}} neu aufgebaut. Bereits übersetzte Texte bleiben erhalten.",
       "matchStructureRemoves_one": "Dabei wird 1 Block entfernt, den nur {{locale}} hat: {{names}}.",
-      "matchStructureRemoves_other": "Dabei werden {{count}} Blöcke entfernt, die nur {{locale}} hat: {{names}}."
+      "matchStructureRemoves_other": "Dabei werden {{count}} Blöcke entfernt, die nur {{locale}} hat: {{names}}.",
+      "syncNeedsLink": "Die anderen Sprachen sind noch nicht verknüpft – diese Änderung bleibt hier."
     },
     "useTemplate": {
       "button": "Vorlage verwenden",
       "title": "Vorlage einfügen",
       "empty": "Noch keine Vorlagen – erstellen Sie eine unter „Vorlagen“ in der Seitenleiste.",
-      "hint": "Das gerenderte Design ersetzt den aktuellen Inhalt des Editors.",
-      "insert": "Einfügen"
+      "hint": "Ersetzt den Inhalt des Editors. Variablen bleiben erhalten und werden beim Versand eingesetzt.",
+      "insert": "Einfügen",
+      "emptyForLocale": "Noch keine veröffentlichte Vorlage in dieser Sprache. Fügen Sie die Sprache in der Vorlage hinzu oder wählen Sie eine andere.",
+      "willReplace": "Ersetzt den Text in {{locales}}.",
+      "coversNothing": "Diese Vorlage enthält keine Ihrer Sprachen.",
+      "missingLocales": "Sie enthält kein {{locales}} – diese Sprache bleibt unverändert.",
+      "otherTemplateFor": "Andere Vorlage für {{locale}} verwenden",
+      "addLocaleTo": "{{locale}} zu dieser Vorlage hinzufügen",
+      "backToAll": "Zurück zu allen Sprachen",
+      "wentBlank": "Diese Vorlage enthält {{locales}} nicht mehr. Es wurde nichts ersetzt – bitte erneut öffnen und auswählen."
     },
     "unsubscribe": {
       "loading": "Einen Moment…",

@@ -20,6 +20,29 @@ export interface TranslateEntry {
   format?: "text" | "html";
 }
 
+export interface TranslateRequestBody {
+  source_locale: string;
+  items: Record<string, { value: string; format?: "text" | "html" }>;
+  targets: { locale: string; keys: string[] }[];
+}
+
+/**
+ * FNV-1a, 32-bit, hex — a change detector, not a security primitive.
+ *
+ * Used to record which source string a translation came from and what we wrote,
+ * so an edit can tell "still exactly what the translator produced" from "the
+ * author has since rewritten this by hand". Storing the strings themselves
+ * would work identically and cost far more room in every saved document.
+ */
+export function hashText(value: string): string {
+  let hash = 0x811c9dc5;
+  for (let index = 0; index < value.length; index += 1) {
+    hash ^= value.charCodeAt(index);
+    hash = Math.imul(hash, 0x01000193);
+  }
+  return (hash >>> 0).toString(16);
+}
+
 /**
  * The block attributes that hold READING MATTER, per block type.
  *
@@ -68,6 +91,14 @@ function blockEntries(block: Block): TranslateEntry[] {
     for (const child of column) entries.push(...blockEntries(child));
   }
   return entries;
+}
+
+/** Every translatable string of one locale, keyed. */
+export function entriesByKey(
+  content: TemplateLocaleContent | undefined,
+): Map<string, string> {
+  if (!content) return new Map();
+  return new Map(collectEntries(content).map((entry) => [entry.key, entry.value]));
 }
 
 /** Every translatable string of one locale, in render order. */
@@ -132,6 +163,73 @@ export function buildTranslateRequest(
     ),
     targets: [{ locale: targetLocale, keys }],
   };
+}
+
+/**
+ * A request carrying an explicit key list per language.
+ *
+ * The `"copies"` predicate cannot express "the source changed": once a string
+ * has been translated it is no longer byte-identical to its source, so it is
+ * invisible to that filter forever after. Syncing an edit therefore has to name
+ * the keys outright.
+ *
+ * Unlike `buildTranslateRequest`, `items` carries ONLY the referenced keys. The
+ * server counts items against `MAX_ITEMS_PER_REQUEST` (400) *before* discarding
+ * the unreferenced ones, so sending the whole document to translate two strings
+ * is how a large template starts 400-ing.
+ */
+export function buildKeyedRequest(
+  doc: TemplateDocument,
+  sourceLocale: string,
+  targets: { locale: string; keys: string[] }[],
+): TranslateRequestBody | null {
+  const source = doc.locales[sourceLocale];
+  if (!source) return null;
+
+  const wanted = targets.filter((target) => target.keys.length > 0);
+  if (wanted.length === 0) return null;
+
+  const referenced = new Set(wanted.flatMap((target) => target.keys));
+  const items: TranslateRequestBody["items"] = {};
+  for (const entry of collectEntries(source)) {
+    if (referenced.has(entry.key)) {
+      items[entry.key] = { value: entry.value, format: entry.format };
+    }
+  }
+
+  // A key with no source entry (blank source) has nothing to translate; drop it
+  // rather than let the server answer for a string it was never given.
+  const cleaned = wanted
+    .map((target) => ({
+      locale: target.locale,
+      keys: target.keys.filter((key) => key in items),
+    }))
+    .filter((target) => target.keys.length > 0);
+  if (cleaned.length === 0) return null;
+
+  return { source_locale: sourceLocale, items, targets: cleaned };
+}
+
+/**
+ * One request covering several languages at once.
+ *
+ * The endpoint has always accepted up to three targets and fans them out
+ * concurrently; the client just never used it, so anything touching every other
+ * language fired a separate HTTP call per language.
+ */
+export function buildMultiTargetRequest(
+  doc: TemplateDocument,
+  sourceLocale: string,
+  targetLocales: string[],
+  mode: "all" | "copies",
+): TranslateRequestBody | null {
+  const targets = targetLocales
+    .filter((locale) => locale !== sourceLocale && doc.locales[locale])
+    .map((locale) => {
+      const single = buildTranslateRequest(doc, sourceLocale, locale, mode);
+      return { locale, keys: single?.targets[0]?.keys ?? [] };
+    });
+  return buildKeyedRequest(doc, sourceLocale, targets);
 }
 
 /**
