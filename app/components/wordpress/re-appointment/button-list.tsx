@@ -10,7 +10,7 @@ import type {
 import { cn } from "~/lib/utils";
 import { formatPluginSettingsTitle } from "~/lib/utils/wordpress-plugin-kind";
 import { useResolvePluginKind } from "~/lib/hooks/useWorkspaceWpPluginCatalog";
-import { PluginSettingsBackLink } from "~/components/wordpress/plugin-settings-chrome";
+import { PluginSettingsBackLink, ServiceActiveToggle } from "~/components/wordpress/plugin-settings-chrome";
 import { Badge } from "~/components/ui/badge";
 import { Button } from "~/components/ui/button";
 import { Switch } from "~/components/ui/switch";
@@ -41,7 +41,7 @@ export function ButtonList({
   const { catalogItem } = useResolvePluginKind(pluginUuid);
   const pageTitle = formatPluginSettingsTitle(
     catalogItem?.display_name,
-    "re:appointment",
+    t("wordpress.reAppointment.titleFallback", "Calendar Appointments"),
   );
 
   const total = buttons.length;
@@ -62,7 +62,7 @@ export function ButtonList({
   return (
     <PageShell>
       <PluginSettingsBackLink
-        label={t("wordpress.reAppointment.backToPlugins", "Back to plugins")}
+        label={t("wordpress.reAppointment.backToPlugins", "Back to website")}
       />
 
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between app-fade-up">
@@ -71,9 +71,6 @@ export function ButtonList({
             <h1 className="text-xl font-semibold tracking-tight text-foreground sm:text-2xl">
               {pageTitle}
             </h1>
-            {catalogItem?.version ? (
-              <Badge variant="outline">v{catalogItem.version}</Badge>
-            ) : null}
           </div>
           <p className="text-sm text-muted-foreground">
             {t(
@@ -82,10 +79,15 @@ export function ButtonList({
             )}
           </p>
         </div>
-        <Button onClick={onCreate} className="shrink-0">
-          <Plus className="h-4 w-4" />
-          {t("wordpress.reAppointment.addButton", "Add New Button")}
-        </Button>
+        <div className="flex shrink-0 flex-wrap items-center gap-3">
+          {pluginUuid ? (
+            <ServiceActiveToggle pluginUuid={pluginUuid} name={pageTitle} />
+          ) : null}
+          <Button onClick={onCreate} className="shrink-0">
+            <Plus className="h-4 w-4" />
+            {t("wordpress.reAppointment.addButton", "Add New Button")}
+          </Button>
+        </div>
       </div>
 
       {error ? (

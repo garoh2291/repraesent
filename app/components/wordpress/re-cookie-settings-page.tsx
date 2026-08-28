@@ -14,6 +14,7 @@ import { formatPluginSettingsTitle } from "~/lib/utils/wordpress-plugin-kind";
 import {
   PluginSettingsBackLink,
   PluginSettingsLoadingPage,
+  ServiceActiveToggle,
 } from "~/components/wordpress/plugin-settings-chrome";
 import { Badge } from "~/components/ui/badge";
 import { Button } from "~/components/ui/button";
@@ -43,7 +44,7 @@ export function ReCookieSettingsPage() {
   const { catalogItem } = useResolvePluginKind(pluginUuid);
   const pageTitle = formatPluginSettingsTitle(
     catalogItem?.display_name,
-    "re:cookie",
+    t("wordpress.reCookie.titleFallback", "GDPR Cookie Banner"),
   );
   const [tab, setTab] = useState<TabId>("design");
   const [activeLang, setActiveLang] = useState<ReCookieLang>("de");
@@ -145,7 +146,7 @@ export function ReCookieSettingsPage() {
   return (
     <PageShell>
       <PluginSettingsBackLink
-        label={t("wordpress.reCookie.back", "Back to plugins")}
+        label={t("wordpress.reCookie.back", "Back to website")}
       />
 
       <div className="sticky top-0 z-20 -mx-4 mb-6 border-b bg-background/80 px-4 py-3 backdrop-blur-md sm:-mx-6 sm:px-6 app-fade-up">
@@ -155,9 +156,6 @@ export function ReCookieSettingsPage() {
               <h1 className="text-xl font-semibold tracking-tight text-foreground sm:text-2xl">
                 {pageTitle}
               </h1>
-              {catalogItem?.version ? (
-                <Badge variant="outline">v{catalogItem.version}</Badge>
-              ) : null}
               {dirty ? (
                 <Badge
                   variant="secondary"
@@ -177,11 +175,13 @@ export function ReCookieSettingsPage() {
                   )}
             </p>
           </div>
-          <Button
-            onClick={() => void handleSave()}
-            disabled={busy}
-            className="shrink-0"
-          >
+          <div className="flex shrink-0 flex-wrap items-center gap-3">
+            <ServiceActiveToggle pluginUuid={pluginUuid} name={pageTitle} />
+            <Button
+              onClick={() => void handleSave()}
+              disabled={busy}
+              className="shrink-0"
+            >
             {busy ? (
               <Spinner className="size-4" />
             ) : (
@@ -190,7 +190,8 @@ export function ReCookieSettingsPage() {
             {busy
               ? t("wordpress.reCookie.saving", "Saving…")
               : t("wordpress.reCookie.save", "Save Settings")}
-          </Button>
+            </Button>
+          </div>
         </div>
       </div>
 
@@ -210,7 +211,7 @@ export function ReCookieSettingsPage() {
           className="min-w-0 gap-4 app-fade-up app-fade-up-d1"
         >
           <TabsList
-            aria-label={t("wordpress.reCookie.tabs", "re:cookie settings")}
+            aria-label={t("wordpress.reCookie.tabs", "Cookie settings")}
           >
             <TabsTrigger value="design" className="gap-1.5">
               <Palette className="size-3.5" />

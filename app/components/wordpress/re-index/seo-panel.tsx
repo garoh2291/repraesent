@@ -218,7 +218,7 @@ export function SeoPanel({
             <p className="mt-2 text-xs text-muted-foreground">
               {t(
                 "wordpress.reIndex.editingTranslation",
-                "Editing {{lang}} SEO — saved as a translation in re:translate.",
+                "Editing {{lang}} SEO — saved as a translation.",
                 {
                   lang:
                     i18n.languages.find((l) => l.code === activeLang)?.label ??

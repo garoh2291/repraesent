@@ -68,6 +68,7 @@ export type ReCookieSettings = {
   >;
   integrations: {
     gtm: { enabled: boolean; container_id: string };
+    google_ads: { enabled: boolean; conversion_id: string };
     ga4: { enabled: boolean; measurement_id: string; load_via: "gtag" | "gtm" };
     meta: { enabled: boolean; pixel_id: string };
     custom_scripts: Record<
@@ -129,6 +130,9 @@ export type ReIndexSettings = {
     og_description: string;
     compressed_url: string;
   };
+  /** Machine SEO generation is available (plugin ships a default token). */
+  /** Live or last finished site-wide Optimize SEO run. */
+  seo_bulk?: ReTranslateBulkState;
 };
 
 /** One row of the re:index Page SEO overview (post meta, not settings). */
@@ -350,22 +354,70 @@ export type ReTranslateBulkCurrent = {
   object_type: string;
   id: string;
   title: string;
-  language: string;
+  /**
+   * Per-kind identity extras. A translate item is a page *and a language*, so
+   * it carries `{ language }`; a SEO item is just the page, so it carries
+   * nothing. Read it through {@link bulkItemLanguage} rather than indexing.
+   */
+  params: Record<string, unknown>;
 };
 
+/**
+ * `queued` = accepted, the API is still working out what to translate;
+ * `running` = draining; `idle` = this site has never run one.
+ */
+export type ReTranslateBulkStatus =
+  | "idle"
+  | "queued"
+  | "running"
+  | "complete"
+  | "cancelled"
+  | "failed";
+
+export type WpAiJobKind = "translate" | "seo_optimize";
+
 export type ReTranslateBulkState = {
-  status: string;
-  languages: string[];
+  status: ReTranslateBulkStatus;
+  kind?: WpAiJobKind;
+  blocked_by?: WpAiJobKind | "";
+  /**
+   * Per-kind run settings: `{ languages }` for a translate run, empty for a
+   * SEO run. Read it through {@link bulkLanguages} rather than indexing.
+   */
+  params: Record<string, unknown>;
   mode?: ReTranslateMode;
   total: number;
   processed: number;
   failed: number;
+  /**
+   * Units of work saved across the run — strings for translate, SEO fields for
+   * seo_optimize. Not the same as `processed`, which counts objects.
+   */
+  written?: number;
   current: ReTranslateBulkCurrent | null;
-  recent: { title: string; language: string }[];
+  recent: { title: string }[];
   last_error: string;
   started_at: string;
   updated_at: string;
 };
+
+/**
+ * Target languages of a translate run, or `[]` for any other kind.
+ *
+ * The API keeps per-kind settings in `params` because a SEO run has no
+ * languages and used to carry an empty array purely to fit a translate-shaped
+ * row. These accessors are where that shape is decoded, so no component has to
+ * know the key.
+ */
+export function bulkLanguages(bulk: ReTranslateBulkState): string[] {
+  const value = bulk.params?.languages;
+  return Array.isArray(value) ? value.map((code) => String(code)) : [];
+}
+
+/** Target language of the item a run is on, or `""` when the kind has none. */
+export function bulkItemLanguage(item: ReTranslateBulkCurrent | null): string {
+  return String(item?.params?.language ?? "");
+}
 
 export type ReTranslateLanguageStats = {
   total: number;

@@ -155,6 +155,7 @@ export const DEFAULTS: ReCookieSettings = {
   },
   integrations: {
     gtm: { enabled: false, container_id: "" },
+    google_ads: { enabled: false, conversion_id: "" },
     ga4: { enabled: false, measurement_id: "", load_via: "gtag" },
     meta: { enabled: false, pixel_id: "" },
     custom_scripts: {

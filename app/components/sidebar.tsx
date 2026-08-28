@@ -24,6 +24,7 @@ import {
   Kanban,
   Globe,
   HomeIcon,
+  Loader2,
   Inbox,
   Info,
   LayoutTemplate,
@@ -56,10 +57,12 @@ import { useAppointmentConfigs } from "~/lib/hooks/useAppointmentConfigs";
 import { useCalendarSummary } from "~/lib/hooks/useCalendarSummary";
 import { usePilotFeatures } from "~/lib/feature-flags";
 import { useWorkspaceWpSite } from "~/lib/hooks/useWorkspaceWpSite";
+import { useWorkspaceWpPluginInstalls } from "~/lib/hooks/useWorkspaceWpPluginInstalls";
 import { useStripeConnection } from "~/lib/hooks/useWorkspaceIntegrations";
 import { LanguageSwitcher } from "~/components/language-switcher";
 import { usePipelinesQuery } from "~/lib/hooks/usePipelines";
 import { CreatePipelineDialog } from "~/components/organism/create-pipeline-dialog";
+import { wordpressPluginSettingsPath } from "~/lib/utils/wordpress-plugin-kind";
 import {
   Collapsible,
   CollapsibleContent,
@@ -298,6 +301,76 @@ function PipelineNav({ onClose }: { onClose?: () => void }) {
   );
 }
 
+/**
+ * The website sub-navigation, rendered in place of the main nav list while the
+ * user is somewhere under /website — same drill-in shape as Settings, so the
+ * "Website" entry replaces the list rather than nesting one inside it.
+ *
+ * Route-driven like Settings: deep links and refreshes land in the right mode
+ * for free, and there is nothing to reset on the way out.
+ */
+function WebsiteSubNav({ onClose }: { onClose?: () => void }) {
+  const { t } = useTranslation();
+  const location = useLocation();
+  const installsQuery = useWorkspaceWpPluginInstalls(true);
+  const plugins = [...(installsQuery.data?.plugins ?? [])].sort((a, b) =>
+    a.display_name.localeCompare(b.display_name, undefined, {
+      sensitivity: "base",
+    }),
+  );
+  const waitingForPlugins = installsQuery.isPending && !installsQuery.data;
+
+  return (
+    <>
+      {/* Separated from the list below so it reads as a way out rather than a
+        destination of its own. */}
+      <div className="mb-2 border-b border-white/5 pb-2">
+        <NavLink to="/" isActive={false} onClick={onClose}>
+          <ArrowLeft className="h-4 w-4 shrink-0" />
+          {t("common.back")}
+        </NavLink>
+      </div>
+
+      <NavLink
+        to="/website"
+        isActive={location.pathname === "/website"}
+        onClick={onClose}
+      >
+        <Globe className="h-4 w-4 shrink-0" />
+        <span className="truncate">{t("nav.websiteOverview", "Overview")}</span>
+      </NavLink>
+
+      {waitingForPlugins ? (
+        <div
+          className="flex items-center gap-2.5 rounded-lg border-l-2 border-transparent px-3 py-2 text-[13px] font-medium text-white/35"
+          aria-busy="true"
+          aria-live="polite"
+        >
+          <Loader2 className="h-4 w-4 shrink-0 animate-spin text-white/25" />
+          <span className="truncate">
+            {t("nav.loadingPlugins", "Loading services…")}
+          </span>
+        </div>
+      ) : (
+        plugins.map((p) => {
+          const path = wordpressPluginSettingsPath(p.plugin_uuid);
+          return (
+            <NavLink
+              key={p.plugin_uuid}
+              to={path}
+              isActive={location.pathname === path}
+              onClick={onClose}
+            >
+              <Package className="h-4 w-4 shrink-0" />
+              <span className="truncate">{p.display_name}</span>
+            </NavLink>
+          );
+        })
+      )}
+    </>
+  );
+}
+
 export function Sidebar({
   onClose,
   className,
@@ -367,6 +440,10 @@ export function Sidebar({
   const { isConnected: hasStripeConnection } = useStripeConnection(
     !!currentWorkspace?.id && !isDoorboostBrandWs,
   );
+  const showWebsite = !!wpSite?.sso_enabled || isDemoWorkspace;
+  // Same drill-in as Settings: /website replaces the nav list with Overview
+  // plus the workspace's services, and "Back" returns to the main list.
+  const inWebsite = showWebsite && location.pathname.startsWith("/website");
 
   const handleWorkspaceChange = (workspaceId: string) => {
     setCurrentWorkspace(workspaceId);
@@ -587,6 +664,8 @@ export function Sidebar({
                 </NavLink>
               ))}
             </>
+          ) : inWebsite ? (
+            <WebsiteSubNav onClose={onClose} />
           ) : isDoorboostBrandWs ? (
             <>
               <NavLink
@@ -636,12 +715,8 @@ export function Sidebar({
                 {t("nav.home")}
               </NavLink>
 
-              {(wpSite?.sso_enabled || isDemoWorkspace) && (
-                <NavLink
-                  to="/website"
-                  isActive={location.pathname.startsWith("/website")}
-                  onClick={onClose}
-                >
+              {showWebsite && (
+                <NavLink to="/website" isActive={false} onClick={onClose}>
                   <Globe className="h-4 w-4 shrink-0" />
                   {t("nav.wordpress", "Website")}
                 </NavLink>

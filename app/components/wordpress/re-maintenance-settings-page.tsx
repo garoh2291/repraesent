@@ -7,7 +7,7 @@ import { useWorkspacePluginSettingsForm } from "~/lib/hooks/useWorkspacePluginSe
 import { useResolvePluginKind } from "~/lib/hooks/useWorkspaceWpPluginCatalog";
 import type { ReMaintenanceSettings } from "~/lib/wordpress/plugin-settings-types";
 import { formatPluginSettingsTitle } from "~/lib/utils/wordpress-plugin-kind";
-import { PluginSettingsBackLink, PluginSettingsLoadingPage } from "~/components/wordpress/plugin-settings-chrome";
+import { PluginSettingsBackLink, PluginSettingsLoadingPage, ServiceActiveToggle } from "~/components/wordpress/plugin-settings-chrome";
 import { Badge } from "~/components/ui/badge";
 import { Button } from "~/components/ui/button";
 import { Label } from "~/components/ui/label";
@@ -46,7 +46,7 @@ export function ReMaintenanceSettingsPage() {
   const { catalogItem } = useResolvePluginKind(pluginUuid);
   const pageTitle = formatPluginSettingsTitle(
     catalogItem?.display_name,
-    "re:maintenance",
+    t("wordpress.reMaintenance.titleFallback", "Maintenance Mode"),
   );
   const i18n = usePluginTranslateLanguages();
   const overlays = usePluginOverlayPack(i18n.translatePluginUuid);
@@ -182,7 +182,7 @@ export function ReMaintenanceSettingsPage() {
   return (
     <PageShell>
       <PluginSettingsBackLink
-        label={t("wordpress.reMaintenance.backToPlugins", "Back to plugins")}
+        label={t("wordpress.reMaintenance.backToPlugins", "Back to website")}
       />
 
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between app-fade-up">
@@ -191,9 +191,6 @@ export function ReMaintenanceSettingsPage() {
             <h1 className="text-xl font-semibold tracking-tight text-foreground sm:text-2xl">
               {pageTitle}
             </h1>
-            {catalogItem?.version ? (
-              <Badge variant="outline">v{catalogItem.version}</Badge>
-            ) : null}
             {dirty || overlayDirty ? (
               <Badge
                 variant="secondary"
@@ -213,12 +210,15 @@ export function ReMaintenanceSettingsPage() {
                 )}
           </p>
         </div>
-        <Button onClick={() => void handleSave()} disabled={saving || overlays.saving} className="shrink-0">
-          <Save className="h-4 w-4" />
-          {saving || overlays.saving
-            ? t("wordpress.reMaintenance.saving", "Saving…")
-            : t("wordpress.reMaintenance.save", "Save settings")}
-        </Button>
+        <div className="flex shrink-0 flex-wrap items-center gap-3">
+          <ServiceActiveToggle pluginUuid={pluginUuid} name={pageTitle} />
+          <Button onClick={() => void handleSave()} disabled={saving || overlays.saving} className="shrink-0">
+            <Save className="h-4 w-4" />
+            {saving || overlays.saving
+              ? t("wordpress.reMaintenance.saving", "Saving…")
+              : t("wordpress.reMaintenance.save", "Save settings")}
+          </Button>
+        </div>
       </div>
 
       {loadError ? (
@@ -234,7 +234,7 @@ export function ReMaintenanceSettingsPage() {
         <InfoNote>
           {t(
             "wordpress.reMaintenance.notConfigured",
-            "No re:maintenance options in the database yet — saving will create them.",
+            "No settings saved yet — saving will create them.",
           )}
         </InfoNote>
       ) : null}

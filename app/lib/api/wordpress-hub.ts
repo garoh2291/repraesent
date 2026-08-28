@@ -5,6 +5,7 @@ import type {
   ReAppointmentPage,
   ReAppointmentSlot,
   ReIndexPageSeoListResponse,
+  ReTranslateBulkState,
 } from "~/lib/wordpress/plugin-settings-types";
 
 /** The WordPress site the current workspace owns, or null if it has none. */
@@ -111,6 +112,48 @@ export async function getWorkspaceWpPluginCatalog(): Promise<
 }
 
 /**
+ * List catalog plugins installed on the current workspace's WordPress site.
+ * Reads `wp_plugin_installs` only (`deleted_at` IS NULL).
+ * Throws (404) when the workspace has no WordPress site.
+ */
+export async function getWorkspaceWpPluginInstalls(): Promise<WpPluginInstallList> {
+  const res = await apiClient.get<WpPluginInstallList>(
+    "/wordpress/site/plugin-installs",
+  );
+  return res.data;
+}
+
+/**
+ * Activate or deactivate a catalog service on the workspace's WordPress site.
+ * Returns the refreshed install list so the sidebar and page toggle stay in sync.
+ */
+export async function setWorkspaceCatalogPluginActive(
+  pluginUuid: string,
+  active: boolean,
+): Promise<WpPluginInstallList> {
+  const action = active ? "activate" : "deactivate";
+  const res = await apiClient.post<WpPluginInstallList>(
+    `/wordpress/site/plugin-installs/${pluginUuid}/${action}`,
+  );
+  return res.data;
+}
+
+/** A catalog plugin known to be installed on the workspace's WordPress site. */
+export interface WpPluginInstall {
+  plugin_uuid: string;
+  name: WpPluginSettingsKind;
+  display_name: string;
+  description: string | null;
+  icon: string | null;
+  version: string | null;
+  active: boolean;
+}
+
+export interface WpPluginInstallList {
+  plugins: WpPluginInstall[];
+}
+
+/**
  * List the plugins installed on the current workspace's WordPress site.
  * Workspace-scoped on the server (X-Workspace-Id); never returns another
  * workspace's plugins. Throws (404) when the workspace has no WordPress site.
@@ -118,21 +161,6 @@ export async function getWorkspaceWpPluginCatalog(): Promise<
 export async function getWorkspaceWpPlugins(): Promise<WpPluginListResponse> {
   const res = await apiClient.get<WpPluginListResponse>(
     "/wordpress/site/plugins",
-  );
-  return res.data;
-}
-
-/**
- * Activate or deactivate a plugin on the current workspace's WordPress site.
- * Returns the freshly re-listed plugins so callers can update their cache.
- */
-export async function setWorkspaceWpPluginActive(
-  pluginId: string,
-  active: boolean,
-): Promise<WpPluginListResponse> {
-  const action = active ? "activate" : "deactivate";
-  const res = await apiClient.post<WpPluginListResponse>(
-    `/wordpress/site/plugins/${encodeURIComponent(pluginId)}/${action}`,
   );
   return res.data;
 }
@@ -148,8 +176,7 @@ export interface WpPluginSettingsPutResponse {
   settings: Record<string, unknown>;
 }
 
-export interface WpPluginSettingsActionResponse
-  extends WpPluginSettingsPutResponse {
+export interface WpPluginSettingsActionResponse extends WpPluginSettingsPutResponse {
   message: string;
 }
 
@@ -196,10 +223,7 @@ export async function putWorkspacePluginSettings(
 }
 
 /** `POST /wordpress/site/plugins/:pluginUuid/{action}` — a plugin-defined op. */
-async function pluginAction<T>(
-  pluginUuid: string,
-  action: string,
-): Promise<T> {
+async function pluginAction<T>(pluginUuid: string, action: string): Promise<T> {
   const res = await apiClient.post<T>(
     `/wordpress/site/plugins/${pluginUuid}/${action}`,
   );
@@ -227,6 +251,49 @@ export async function getWorkspaceReIndexPageSeo(
   return res.data;
 }
 
+/**
+ * Start or cancel a site-wide SEO optimize run.
+ *
+ * `start` only records the run — the API scheduler builds the queue and works
+ * through it, so this returns in milliseconds and the run keeps going after
+ * this tab is gone. Watch it with {@link getSeoOptimizeStatus}.
+ */
+export async function runSeoOptimize(
+  pluginUuid: string,
+  action: "start" | "cancel",
+  mode?: "empty_only" | "overwrite",
+): Promise<{ bulk?: ReTranslateBulkState }> {
+  const res = await apiClient.post<{ bulk?: ReTranslateBulkState }>(
+    pluginUrl(pluginUuid, "seo-optimize"),
+    { action, mode },
+  );
+  return res.data;
+}
+
+/** Progress of the site's live SEO optimize run, or the last one it finished. */
+export async function getSeoOptimizeStatus(
+  pluginUuid: string,
+): Promise<{ bulk?: ReTranslateBulkState }> {
+  const res = await apiClient.get<{ bulk?: ReTranslateBulkState }>(
+    pluginUrl(pluginUuid, "seo-optimize"),
+  );
+  return res.data;
+}
+
+/** Generate SEO copy for one page, outside the bulk queue. */
+export async function optimizeSeoPage(
+  pluginUuid: string,
+  postId: number,
+  mode?: "empty_only" | "overwrite",
+): Promise<Record<string, unknown>> {
+  const res = await apiClient.post<Record<string, unknown>>(
+    pluginUrl(pluginUuid, `seo-optimize/${postId}`),
+    { mode },
+    { timeout: 120_000 },
+  );
+  return res.data;
+}
+
 /** Live Google Places fetch into the WordPress cache transient. */
 export function testFetchWorkspaceReReview(pluginUuid: string) {
   return pluginAction<WpPluginSettingsActionResponse>(pluginUuid, "test-fetch");
@@ -234,7 +301,10 @@ export function testFetchWorkspaceReReview(pluginUuid: string) {
 
 /** Wipe the re:reviews cache transient. */
 export function clearWorkspaceReReviewCache(pluginUuid: string) {
-  return pluginAction<WpPluginSettingsActionResponse>(pluginUuid, "clear-cache");
+  return pluginAction<WpPluginSettingsActionResponse>(
+    pluginUuid,
+    "clear-cache",
+  );
 }
 
 /* ── Media library ────────────────────────────────────────────────────── */
@@ -262,13 +332,16 @@ export async function getWorkspaceWpMedia(opts?: {
   limit?: number;
   search?: string;
 }): Promise<WpMediaListResponse> {
-  const res = await apiClient.get<WpMediaListResponse>("/wordpress/site/media", {
-    params: {
-      page: opts?.page ?? 1,
-      limit: opts?.limit ?? 24,
-      search: opts?.search || undefined,
+  const res = await apiClient.get<WpMediaListResponse>(
+    "/wordpress/site/media",
+    {
+      params: {
+        page: opts?.page ?? 1,
+        limit: opts?.limit ?? 24,
+        search: opts?.search || undefined,
+      },
     },
-  });
+  );
   return res.data;
 }
 
@@ -437,7 +510,10 @@ export async function getTranslateContentDetail(
   params: { language: string; object_type?: string },
 ): Promise<TranslateContentDetailResponse> {
   const res = await apiClient.get<TranslateContentDetailResponse>(
-    pluginUrl(pluginUuid, `translate-content/${encodeURIComponent(String(id))}`),
+    pluginUrl(
+      pluginUuid,
+      `translate-content/${encodeURIComponent(String(id))}`,
+    ),
     { params },
   );
   return res.data;
@@ -481,24 +557,39 @@ export async function runTranslateIndex(
   pluginUuid: string,
   action: "start" | "batch" | "cancel",
 ): Promise<{ ok?: boolean; index?: Record<string, unknown> }> {
-  const res = await apiClient.post<{ ok?: boolean; index?: Record<string, unknown> }>(
-    pluginUrl(pluginUuid, "translate-index"),
-    { action },
+  const res = await apiClient.post<{
+    ok?: boolean;
+    index?: Record<string, unknown>;
+  }>(pluginUrl(pluginUuid, "translate-index"), { action });
+  return res.data;
+}
+
+/**
+ * Start or cancel a site-wide machine translation.
+ *
+ * `start` only records the run — the API scheduler builds the queue and works
+ * through it, so this returns in milliseconds and the run keeps going after
+ * this tab is gone. Watch it with {@link getTranslateBulkStatus}.
+ */
+export async function runTranslateBulk(
+  pluginUuid: string,
+  action: "start" | "cancel",
+  languages?: string[],
+  mode?: "empty_or_stale" | "empty_only" | "overwrite",
+): Promise<{ bulk?: ReTranslateBulkState }> {
+  const res = await apiClient.post<{ bulk?: ReTranslateBulkState }>(
+    pluginUrl(pluginUuid, "translate-bulk"),
+    { action, languages, mode },
   );
   return res.data;
 }
 
-export async function runTranslateBulk(
+/** Progress of the site's live run, or the last one it finished. */
+export async function getTranslateBulkStatus(
   pluginUuid: string,
-  action: "start" | "batch" | "cancel",
-  languages?: string[],
-  mode?: "empty_or_stale" | "empty_only" | "overwrite",
-): Promise<{ bulk?: Record<string, unknown> }> {
-  const res = await apiClient.post<{ bulk?: Record<string, unknown> }>(
+): Promise<{ bulk?: ReTranslateBulkState }> {
+  const res = await apiClient.get<{ bulk?: ReTranslateBulkState }>(
     pluginUrl(pluginUuid, "translate-bulk"),
-    { action, languages, mode },
-    // start builds the queue over SQL; batch runs machine_translate over the bridge
-    { timeout: 120_000 },
   );
   return res.data;
 }

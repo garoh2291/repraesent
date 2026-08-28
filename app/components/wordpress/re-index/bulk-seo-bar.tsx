@@ -1,23 +1,18 @@
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Languages, Sparkles, X } from "lucide-react";
+import { Sparkles, X } from "lucide-react";
 import type {
+  ReIndexSettings,
   ReTranslateBulkState,
-  ReTranslateMode,
-  ReTranslateSettings,
-} from "~/lib/wordpress/plugin-settings-types";
-import {
-  bulkItemLanguage,
-  bulkLanguages,
 } from "~/lib/wordpress/plugin-settings-types";
 import { extractErrorMessage } from "~/lib/api/axios-instance";
 import {
-  useRunTranslateBulk,
-  useTranslateBulkStatus,
-} from "~/lib/hooks/useWorkspaceReTranslate";
-import { Badge } from "~/components/ui/badge";
+  pageSeoKey,
+  useRunSeoOptimize,
+  useSeoOptimizeStatus,
+} from "~/lib/hooks/useWorkspaceReIndexSettings";
+import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "~/components/ui/button";
-import { Checkbox } from "~/components/ui/checkbox";
 import {
   Dialog,
   DialogContent,
@@ -30,13 +25,15 @@ import { Label } from "~/components/ui/label";
 import { Progress } from "~/components/ui/progress";
 import { RadioGroup, RadioGroupItem } from "~/components/ui/radio-group";
 import { Spinner } from "~/components/ui/spinner";
-import { flash, languageDisplayName, languageFlag } from "./constants";
+import { flash } from "./constants";
 
 /** How long the finished-run summary stays on screen before clearing itself. */
 const COMPLETE_NOTICE_MS = 8_000;
 
 const IDLE_BULK: ReTranslateBulkState = {
   status: "idle",
+  kind: "seo_optimize",
+  blocked_by: "",
   params: {},
   total: 0,
   processed: 0,
@@ -50,45 +47,45 @@ const IDLE_BULK: ReTranslateBulkState = {
 };
 
 /**
- * Start and watch a site-wide machine translation.
+ * Start and watch a site-wide SEO optimize run.
  *
- * This used to run the translation: an effect fired one batch, waited for it,
- * and fired the next, so the run existed only as long as the tab did. Closing
- * it, refreshing, or navigating away stopped the work halfway and left the job
- * marked running with nobody to finish it.
+ * Deliberately the same component as `BulkTranslateBar`, down to the button
+ * size and the shape of the progress panel: they are the same feature pointed
+ * at different work, they share one queue in the API, and only one of them can
+ * be live on a site at a time. Two different-looking bars for that was a way
+ * to make one product feel like two.
  *
- * The run now belongs to the API — it is queued in Postgres and drained by the
- * scheduler — and this component only starts it, cancels it, and polls for
- * progress. Come back an hour later on another machine and the bar shows the
- * same run, still moving.
+ * The run belongs to the API — queued in the shared `wp_ai_jobs` table with
+ * `kind=seo_optimize` and drained by the scheduler. This bar only starts it,
+ * cancels it, and polls for progress, so closing the tab does not stop it.
  */
-export function BulkTranslateBar({
+export function BulkSeoBar({
   settings,
   pluginUuid,
   onCountersChanged,
 }: {
-  settings: ReTranslateSettings;
+  settings: ReIndexSettings;
   pluginUuid: string;
-  /** Run finished — re-read the server's translation counters. */
+  /** Run finished — re-read anything showing per-page SEO counts. */
   onCountersChanged?: () => void;
 }) {
   const { t } = useTranslation();
-  const bulkQuery = useTranslateBulkStatus(pluginUuid, settings.bulk);
-  const bulk = bulkQuery.data ?? settings.bulk ?? IDLE_BULK;
-  /** Accepted, but the API is still working out what needs translating. */
+  const queryClient = useQueryClient();
+  const bulkQuery = useSeoOptimizeStatus(pluginUuid, settings.seo_bulk);
+  const bulk = bulkQuery.data ?? settings.seo_bulk ?? IDLE_BULK;
+  /** Accepted, but the API is still working out which pages need SEO. */
   const preparing = bulk.status === "queued";
   const running = preparing || bulk.status === "running";
   const progress =
     bulk.total > 0 ? Math.round((bulk.processed / bulk.total) * 100) : 0;
 
-  const bulkMutation = useRunTranslateBulk(pluginUuid);
+  const bulkMutation = useRunSeoOptimize(pluginUuid);
   // Held in a ref so a caller's inline closure cannot re-fire the effect below.
   const onCountersRef = useRef(onCountersChanged);
   onCountersRef.current = onCountersChanged;
 
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [selected, setSelected] = useState<string[]>([]);
-  const [mode, setMode] = useState<ReTranslateMode>("empty_only");
+  const [mode, setMode] = useState<"empty_only" | "overwrite">("empty_only");
   /** A failed start or cancel, or the last error the run itself recorded. */
   const [bulkError, setBulkError] = useState<string | null>(
     bulk.last_error || null,
@@ -105,13 +102,8 @@ export function BulkTranslateBar({
   const sawRunning = useRef(false);
   const completedToastFor = useRef<string | null>(null);
 
-  const blockedBySeo = bulk.blocked_by === "seo_optimize";
-  const canStart =
-    Boolean(settings.has_machine_translate) &&
-    !settings.kill_switch &&
-    settings.languages.length > 0 &&
-    !running &&
-    !blockedBySeo;
+  const blockedByTranslate = bulk.blocked_by === "translate";
+  const canStart = !running && !blockedByTranslate;
 
   useEffect(() => {
     if (running) sawRunning.current = true;
@@ -135,9 +127,15 @@ export function BulkTranslateBar({
       () => setShowComplete(false),
       COMPLETE_NOTICE_MS,
     );
-    // List badges and language % are refreshed by `useWatchTranslateBulkCompletion`
-    // on the settings page, which stays mounted across tabs.
-  }, [bulk.status, bulk.updated_at, bulk.started_at]);
+    void queryClient.invalidateQueries({ queryKey: pageSeoKey(pluginUuid) });
+    onCountersRef.current?.();
+  }, [
+    bulk.status,
+    bulk.updated_at,
+    bulk.started_at,
+    pluginUuid,
+    queryClient,
+  ]);
 
   useEffect(() => () => window.clearTimeout(hideTimer.current), []);
 
@@ -148,26 +146,18 @@ export function BulkTranslateBar({
   }, [bulk.last_error]);
 
   function openDialog() {
-    setSelected(settings.languages.map((l) => l.code));
     setMode("empty_only");
     setDialogOpen(true);
   }
 
-  function toggleLanguage(code: string, checked: boolean) {
-    setSelected((prev) =>
-      checked ? [...new Set([...prev, code])] : prev.filter((c) => c !== code),
-    );
-  }
-
   function handleStart() {
-    if (selected.length === 0) return;
     setBulkError(null);
     setShowComplete(false);
     setDialogOpen(false);
-    // Arm before mutate so an immediate empty-queue `complete` still toasts.
+    // Arm before mutate so an immediate empty-queue `complete` still notices.
     sawRunning.current = true;
     bulkMutation.mutate(
-      { action: "start", languages: selected, mode },
+      { action: "start", mode },
       {
         onError: (err) => {
           sawRunning.current = false;
@@ -187,8 +177,8 @@ export function BulkTranslateBar({
           setBulkError(null);
           flash(
             t(
-              "wordpress.reTranslate.bulkCancelled",
-              "Bulk translation cancelled.",
+              "wordpress.reIndex.seoOptimize.cancelled",
+              "Optimize SEO cancelled.",
             ),
           );
           // Whatever the run managed before the cancel still counts.
@@ -198,8 +188,6 @@ export function BulkTranslateBar({
       },
     );
   }
-
-  if (!settings.has_machine_translate) return null;
 
   return (
     <div className="space-y-3">
@@ -217,7 +205,7 @@ export function BulkTranslateBar({
           ) : (
             <Sparkles className="size-3.5" />
           )}
-          {t("wordpress.reTranslate.bulkTranslateSite", "Translate site")}
+          {t("wordpress.reIndex.seoOptimize.button", "Optimize SEO")}
         </Button>
         {running ? (
           <Button
@@ -228,16 +216,16 @@ export function BulkTranslateBar({
             onClick={handleCancel}
           >
             <X className="size-3.5" />
-            {t("wordpress.reTranslate.bulkCancel", "Cancel")}
+            {t("wordpress.reIndex.seoOptimize.cancel", "Cancel")}
           </Button>
         ) : null}
       </div>
 
-      {blockedBySeo && !running ? (
+      {blockedByTranslate && !running ? (
         <p className="text-xs text-muted-foreground">
           {t(
-            "wordpress.reTranslate.blockedBySeo",
-            "A site-wide SEO optimization is already running. Wait for it to finish, or cancel it from SEO Optimization.",
+            "wordpress.reIndex.seoOptimize.blockedByTranslate",
+            "A site-wide translation is already running. Wait for it to finish, or cancel it from Translations.",
           )}
         </p>
       ) : null}
@@ -248,27 +236,27 @@ export function BulkTranslateBar({
             <p className="text-sm font-medium">
               {preparing
                 ? t(
-                    "wordpress.reTranslate.bulkPreparing",
-                    "Working out what needs translating…",
+                    "wordpress.reIndex.seoOptimize.preparing",
+                    "Working out which pages need SEO…",
                   )
                 : running
                   ? t(
-                      "wordpress.reTranslate.bulkInProgress",
-                      "Translating the site…",
+                      "wordpress.reIndex.seoOptimize.inProgress",
+                      "Optimizing SEO…",
                     )
                   : bulk.total === 0
                     ? t(
-                        "wordpress.reTranslate.bulkNothingToTranslate",
-                        "Nothing needs translating — all selected fields are already filled.",
+                        "wordpress.reIndex.seoOptimize.nothingToDo",
+                        "Nothing to fill — every page already has SEO copy.",
                       )
                     : t(
-                        "wordpress.reTranslate.bulkFinished",
-                        "Bulk translation complete",
+                        "wordpress.reIndex.seoOptimize.finished",
+                        "Optimize SEO complete",
                       )}
             </p>
             <span className="text-xs tabular-nums text-muted-foreground">
               {t(
-                "wordpress.reTranslate.bulkProgressPages",
+                "wordpress.reIndex.seoOptimize.progressPages",
                 "{{done}} / {{total}} pages",
                 { done: bulk.processed, total: bulk.total },
               )}
@@ -277,30 +265,16 @@ export function BulkTranslateBar({
           <Progress value={progress} className="h-1.5" />
           <p className="text-xs text-muted-foreground">
             {t(
-              "wordpress.reTranslate.bulkRunsOnServer",
+              "wordpress.reIndex.seoOptimize.runsOnServer",
               "This runs on our servers — you can close this page and come back to it.",
             )}
           </p>
           {running && bulk.current ? (
             <p className="text-xs text-muted-foreground">
-              {t(
-                "wordpress.reTranslate.bulkCurrent",
-                "Translating: {{title}} · {{lang}}",
-                {
-                  title: bulk.current.title || `#${bulk.current.id}`,
-                  lang: bulkItemLanguage(bulk.current).toUpperCase(),
-                },
-              )}
+              {t("wordpress.reIndex.seoOptimize.current", "Writing: {{title}}", {
+                title: bulk.current.title || `#${bulk.current.id}`,
+              })}
             </p>
-          ) : null}
-          {bulkLanguages(bulk).length > 0 ? (
-            <div className="flex flex-wrap gap-1">
-              {bulkLanguages(bulk).map((code) => (
-                <Badge key={code} variant="secondary" className="font-normal">
-                  {code.toUpperCase()}
-                </Badge>
-              ))}
-            </div>
           ) : null}
           {bulkError ? (
             <p className="text-xs text-destructive">{bulkError}</p>
@@ -312,16 +286,13 @@ export function BulkTranslateBar({
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
-              <Languages className="size-4" />
-              {t(
-                "wordpress.reTranslate.bulkPickLanguages",
-                "Choose languages to translate",
-              )}
+              <Sparkles className="size-4" />
+              {t("wordpress.reIndex.seoOptimize.dialogTitle", "Optimize SEO")}
             </DialogTitle>
             <DialogDescription>
               {t(
-                "wordpress.reTranslate.bulkPickLanguagesHelp",
-                "Machine-translate content into the selected languages. This can take a while on large sites.",
+                "wordpress.reIndex.seoOptimize.dialogHelp",
+                "Fill SEO titles and descriptions for every page, plus the site tagline, homepage description, and social description. Does not change images, robots flags, or verification codes.",
               )}
             </DialogDescription>
           </DialogHeader>
@@ -329,35 +300,37 @@ export function BulkTranslateBar({
           <div className="space-y-2">
             <p className="text-sm font-medium">
               {t(
-                "wordpress.reTranslate.translateMode",
-                "What should we translate?",
+                "wordpress.reIndex.seoOptimize.whatToFill",
+                "What should we fill?",
               )}
             </p>
             <RadioGroup
               value={mode}
-              onValueChange={(value) => setMode(value as ReTranslateMode)}
+              onValueChange={(value) =>
+                setMode(value === "overwrite" ? "overwrite" : "empty_only")
+              }
               className="gap-2"
             >
               <label className="flex cursor-pointer items-start gap-3 rounded-md border px-3 py-2 hover:bg-muted/40">
                 <RadioGroupItem
                   value="empty_only"
-                  id="bulk-mode-empty"
+                  id="seo-opt-mode-empty"
                   className="mt-0.5"
                 />
                 <span className="min-w-0 flex-1">
                   <Label
-                    htmlFor="bulk-mode-empty"
+                    htmlFor="seo-opt-mode-empty"
                     className="cursor-pointer font-medium"
                   >
                     {t(
-                      "wordpress.reTranslate.modeEmptyOnly",
+                      "wordpress.reIndex.seoOptimize.modeEmptyOnly",
                       "Only empty fields",
                     )}
                   </Label>
                   <p className="text-xs text-muted-foreground">
                     {t(
-                      "wordpress.reTranslate.modeEmptyOnlyHelp",
-                      "Fill fields that were left blank. Existing translations stay as they are.",
+                      "wordpress.reIndex.seoOptimize.modeEmptyOnlyHelp",
+                      "Fill fields that were left blank. Existing copy stays as it is.",
                     )}
                   </p>
                 </span>
@@ -365,73 +338,28 @@ export function BulkTranslateBar({
               <label className="flex cursor-pointer items-start gap-3 rounded-md border px-3 py-2 hover:bg-muted/40">
                 <RadioGroupItem
                   value="overwrite"
-                  id="bulk-mode-overwrite"
+                  id="seo-opt-mode-overwrite"
                   className="mt-0.5"
                 />
                 <span className="min-w-0 flex-1">
                   <Label
-                    htmlFor="bulk-mode-overwrite"
+                    htmlFor="seo-opt-mode-overwrite"
                     className="cursor-pointer font-medium"
                   >
                     {t(
-                      "wordpress.reTranslate.modeOverwrite",
-                      "Re-translate everything",
+                      "wordpress.reIndex.seoOptimize.modeOverwrite",
+                      "Overwrite everything",
                     )}
                   </Label>
                   <p className="text-xs text-muted-foreground">
                     {t(
-                      "wordpress.reTranslate.modeOverwriteHelp",
-                      "Overwrite existing translations too, not only empty fields.",
+                      "wordpress.reIndex.seoOptimize.modeOverwriteHelp",
+                      "Replace existing SEO titles and descriptions too, not only empty fields.",
                     )}
                   </p>
                 </span>
               </label>
             </RadioGroup>
-          </div>
-
-          <div className="flex gap-2">
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              onClick={() => setSelected(settings.languages.map((l) => l.code))}
-            >
-              {t("wordpress.reTranslate.selectAll", "Select all")}
-            </Button>
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              onClick={() => setSelected([])}
-            >
-              {t("wordpress.reTranslate.clear", "Clear")}
-            </Button>
-          </div>
-
-          <div className="max-h-64 space-y-2 overflow-y-auto pr-1">
-            {settings.languages.map((lang) => {
-              const checked = selected.includes(lang.code);
-              return (
-                <label
-                  key={lang.code}
-                  className="flex cursor-pointer items-center gap-3 rounded-md border px-3 py-2 hover:bg-muted/40"
-                >
-                  <Checkbox
-                    checked={checked}
-                    onCheckedChange={(value) =>
-                      toggleLanguage(lang.code, value === true)
-                    }
-                  />
-                  <span className="min-w-0 flex-1 text-sm">
-                    {languageFlag(lang.code)}{" "}
-                    {languageDisplayName(lang.code, lang.label)}
-                  </span>
-                  <span className="text-xs text-muted-foreground">
-                    {lang.code.toUpperCase()}
-                  </span>
-                </label>
-              );
-            })}
           </div>
 
           <DialogFooter>
@@ -440,19 +368,15 @@ export function BulkTranslateBar({
               variant="outline"
               onClick={() => setDialogOpen(false)}
             >
-              {t("wordpress.reTranslate.cancel", "Cancel")}
+              {t("wordpress.reIndex.seoOptimize.dismiss", "Cancel")}
             </Button>
             <Button
               type="button"
-              disabled={selected.length === 0 || bulkMutation.isPending}
+              disabled={bulkMutation.isPending}
               onClick={handleStart}
             >
               {bulkMutation.isPending ? <Spinner className="size-3.5" /> : null}
-              {t(
-                "wordpress.reTranslate.bulkStart",
-                "Translate {{count}} language(s)",
-                { count: selected.length },
-              )}
+              {t("wordpress.reIndex.seoOptimize.start", "Optimize SEO")}
             </Button>
           </DialogFooter>
         </DialogContent>

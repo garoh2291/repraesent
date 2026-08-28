@@ -302,7 +302,7 @@ export function ContentPanel({
             multilingual
               ? t(
                   "wordpress.reCookie.defaultLanguageLocked",
-                  "Used as the cookie copy source when re:translate is off. While re:translate is active, the banner follows the site language.",
+                  "Used as the cookie copy source when translation is off. While translation is active, the banner follows the site language.",
                 )
               : t(
                   "wordpress.reCookie.defaultLanguageHint",
@@ -394,11 +394,11 @@ export function ContentPanel({
                 {isSource
                   ? t(
                       "wordpress.reCookie.editingSource",
-                      "Editing the source language — this copy is stored in the plugin settings.",
+                      "Editing the source language — this copy is stored in the service settings.",
                     )
                   : t(
                       "wordpress.reCookie.editingTranslation",
-                      "Editing {{lang}} — saved as a translation in re:translate.",
+                      "Editing {{lang}} — saved as a translation.",
                       { lang: activeLangLabel },
                     )}
               </FieldHint>
