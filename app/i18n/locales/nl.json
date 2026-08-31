@@ -1538,7 +1538,23 @@
         "step4": "Plak hem hierboven en klik op Verbinden.",
         "helpLink": "Ads Manager-overzicht (OpenAI Help Center)"
       }
-    }
+    },
+    "avatarSectionTitle": "Profielfoto",
+    "avatarSectionHint": "Zichtbaar voor je teamgenoten in de hele app.",
+    "avatarSaved": "Profielfoto bijgewerkt",
+    "avatarRemoved": "Profielfoto verwijderd",
+    "avatarChange": "Wijzigen",
+    "avatarUpload": "Uploaden",
+    "avatarRemove": "Verwijderen",
+    "avatarRemoveTitle": "Foto verwijderen?",
+    "avatarRemoveWarningUser": "Je foto wordt permanent verwijderd en in plaats daarvan worden je initialen getoond.",
+    "avatarRemoveWarningWorkspace": "De workspacefoto wordt permanent verwijderd en in plaats daarvan wordt de eerste letter getoond.",
+    "avatarWrongType": "Gebruik een JPEG-, PNG- of WebP-afbeelding.",
+    "avatarTooLarge": "Die afbeelding is te groot (max. 15 MB).",
+    "workspaceSectionTitle": "Workspace",
+    "workspaceAvatarHint": "De workspacefoto verschijnt in de zijbalk en de workspace-kiezer.",
+    "avatarSavedWorkspace": "Workspacefoto bijgewerkt",
+    "avatarRemovedWorkspace": "Workspacefoto verwijderd"
   },
   "booking": {
     "metaTitle": "Een afspraak boeken",
@@ -5140,6 +5156,16 @@
     "linkCopied": "Afbeeldingslink gekopieerd",
     "moveToBinTitle": "\"{{name}}\" naar de prullenbak verplaatsen?",
     "moveToBinWarning": "De afbeelding verlaat je bibliotheek maar blijft herstelbaar vanuit de prullenbak. Al verzonden e-mails blijven werken.",
-    "moveToBinConfirm": "Naar prullenbak"
+    "moveToBinConfirm": "Naar prullenbak",
+    "cropTitle": "Afbeelding bijsnijden",
+    "cropHint": "Sleep om te verplaatsen, zoom met de schuifregelaar.",
+    "cropTooSmall": "Het geselecteerde gebied is te klein.",
+    "cropError": "De afbeelding kon niet worden verwerkt.",
+    "cropFrameSize": "Kadergrootte",
+    "cropRatioOk": "Past bij de verhouding",
+    "cropRatioHint": "Pas het zichtbare gebied aan — de afbeelding wordt in de doelverhouding opgeslagen.",
+    "cropZoom": "Zoom",
+    "cropSaving": "Opslaan…",
+    "cropApply": "Afbeelding gebruiken"
   }
 }

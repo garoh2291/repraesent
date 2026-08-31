@@ -1540,7 +1540,23 @@
         "step4": "Oben einfügen und auf Verbinden klicken.",
         "helpLink": "Ads-Manager-Überblick (OpenAI Help Center)"
       }
-    }
+    },
+    "avatarSectionTitle": "Profilbild",
+    "avatarSectionHint": "Wird Ihren Teamkollegen in der ganzen App angezeigt.",
+    "avatarSaved": "Profilbild aktualisiert",
+    "avatarRemoved": "Profilbild entfernt",
+    "avatarChange": "Ändern",
+    "avatarUpload": "Hochladen",
+    "avatarRemove": "Entfernen",
+    "avatarRemoveTitle": "Bild entfernen?",
+    "avatarRemoveWarningUser": "Ihr Bild wird dauerhaft gelöscht und stattdessen werden Ihre Initialen angezeigt.",
+    "avatarRemoveWarningWorkspace": "Das Workspace-Bild wird dauerhaft gelöscht und stattdessen wird der Anfangsbuchstabe angezeigt.",
+    "avatarWrongType": "Verwenden Sie ein JPEG-, PNG- oder WebP-Bild.",
+    "avatarTooLarge": "Das Bild ist zu groß (max. 15 MB).",
+    "workspaceSectionTitle": "Workspace",
+    "workspaceAvatarHint": "Das Workspace-Bild erscheint in der Seitenleiste und im Workspace-Wechsler.",
+    "avatarSavedWorkspace": "Workspace-Bild aktualisiert",
+    "avatarRemovedWorkspace": "Workspace-Bild entfernt"
   },
   "booking": {
     "metaTitle": "Termin buchen",
@@ -5142,6 +5158,16 @@
     "linkCopied": "Bildlink kopiert",
     "moveToBinTitle": "\"{{name}}\" in den Papierkorb verschieben?",
     "moveToBinWarning": "Das Bild verlässt Ihre Bibliothek, bleibt aber im Papierkorb wiederherstellbar. Bereits versendete E-Mails funktionieren weiter.",
-    "moveToBinConfirm": "In den Papierkorb"
+    "moveToBinConfirm": "In den Papierkorb",
+    "cropTitle": "Bild zuschneiden",
+    "cropHint": "Ziehen zum Verschieben, Zoomen mit dem Regler.",
+    "cropTooSmall": "Der ausgewählte Bereich ist zu klein.",
+    "cropError": "Das Bild konnte nicht verarbeitet werden.",
+    "cropFrameSize": "Rahmengröße",
+    "cropRatioOk": "Passt zum Seitenverhältnis",
+    "cropRatioHint": "Sichtbaren Bereich anpassen — das Bild wird im Zielformat gespeichert.",
+    "cropZoom": "Zoom",
+    "cropSaving": "Speichern…",
+    "cropApply": "Bild verwenden"
   }
 }

@@ -1538,7 +1538,23 @@
         "step4": "Paste it above and press Connect.",
         "helpLink": "Ads Manager overview (OpenAI Help Center)"
       }
-    }
+    },
+    "avatarSectionTitle": "Profile picture",
+    "avatarSectionHint": "Shown to your teammates across the app.",
+    "avatarSaved": "Profile picture updated",
+    "avatarRemoved": "Profile picture removed",
+    "avatarChange": "Change",
+    "avatarUpload": "Upload",
+    "avatarRemove": "Remove",
+    "avatarRemoveTitle": "Remove picture?",
+    "avatarRemoveWarningUser": "Your picture is deleted permanently and your initials are shown instead.",
+    "avatarRemoveWarningWorkspace": "The workspace picture is deleted permanently and the initial is shown instead.",
+    "avatarWrongType": "Use a JPEG, PNG or WebP image.",
+    "avatarTooLarge": "That image is too large (max 15 MB).",
+    "workspaceSectionTitle": "Workspace",
+    "workspaceAvatarHint": "The workspace picture shows in the sidebar and the workspace switcher.",
+    "avatarSavedWorkspace": "Workspace picture updated",
+    "avatarRemovedWorkspace": "Workspace picture removed"
   },
   "booking": {
     "metaTitle": "Book an Appointment",
@@ -5140,6 +5156,16 @@
     "linkCopied": "Image link copied",
     "moveToBinTitle": "Move \"{{name}}\" to the recycle bin?",
     "moveToBinWarning": "The image leaves your library but stays restorable from the Recycle bin. Emails already sent keep working.",
-    "moveToBinConfirm": "Move to bin"
+    "moveToBinConfirm": "Move to bin",
+    "cropTitle": "Crop image",
+    "cropHint": "Drag to reposition, use the slider to zoom.",
+    "cropTooSmall": "The selected area is too small.",
+    "cropError": "The image could not be processed.",
+    "cropFrameSize": "Frame size",
+    "cropRatioOk": "Fits the ratio",
+    "cropRatioHint": "Adjust the visible area — the image will be saved in the target ratio.",
+    "cropZoom": "Zoom",
+    "cropSaving": "Saving…",
+    "cropApply": "Use image"
   }
 }

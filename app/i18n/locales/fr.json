@@ -1540,7 +1540,23 @@
         "step4": "Collez-la ci-dessus et cliquez sur Connecter.",
         "helpLink": "Présentation de l'Ads Manager (Help Center OpenAI)"
       }
-    }
+    },
+    "avatarSectionTitle": "Photo de profil",
+    "avatarSectionHint": "Visible par vos coéquipiers dans toute l'application.",
+    "avatarSaved": "Photo de profil mise à jour",
+    "avatarRemoved": "Photo de profil supprimée",
+    "avatarChange": "Modifier",
+    "avatarUpload": "Téléverser",
+    "avatarRemove": "Supprimer",
+    "avatarRemoveTitle": "Supprimer la photo ?",
+    "avatarRemoveWarningUser": "Votre photo est supprimée définitivement et vos initiales sont affichées à la place.",
+    "avatarRemoveWarningWorkspace": "La photo de l'espace de travail est supprimée définitivement et l'initiale est affichée à la place.",
+    "avatarWrongType": "Utilisez une image JPEG, PNG ou WebP.",
+    "avatarTooLarge": "Cette image est trop volumineuse (max 15 Mo).",
+    "workspaceSectionTitle": "Espace de travail",
+    "workspaceAvatarHint": "La photo de l'espace de travail apparaît dans la barre latérale et le sélecteur d'espaces.",
+    "avatarSavedWorkspace": "Photo de l'espace de travail mise à jour",
+    "avatarRemovedWorkspace": "Photo de l'espace de travail supprimée"
   },
   "booking": {
     "metaTitle": "Réserver un rendez-vous",
@@ -5142,6 +5158,16 @@
     "linkCopied": "Lien de l'image copié",
     "moveToBinTitle": "Déplacer « {{name}} » vers la corbeille ?",
     "moveToBinWarning": "L'image quitte votre bibliothèque mais reste restaurable depuis la corbeille. Les e-mails déjà envoyés continuent de fonctionner.",
-    "moveToBinConfirm": "Déplacer vers la corbeille"
+    "moveToBinConfirm": "Déplacer vers la corbeille",
+    "cropTitle": "Recadrer l'image",
+    "cropHint": "Faites glisser pour repositionner, zoomez avec le curseur.",
+    "cropTooSmall": "La zone sélectionnée est trop petite.",
+    "cropError": "L'image n'a pas pu être traitée.",
+    "cropFrameSize": "Taille du cadre",
+    "cropRatioOk": "Respecte le ratio",
+    "cropRatioHint": "Ajustez la zone visible — l'image sera enregistrée au ratio cible.",
+    "cropZoom": "Zoom",
+    "cropSaving": "Enregistrement…",
+    "cropApply": "Utiliser l'image"
   }
 }

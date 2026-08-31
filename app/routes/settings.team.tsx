@@ -25,6 +25,11 @@ import {
 } from "~/lib/api/workspaces";
 import { InviteMembersDialog } from "~/components/team/invite-members-dialog";
 import { extractErrorMessage } from "~/lib/api/axios-instance";
+import { AvatarUploader } from "~/components/media/AvatarUploader";
+import {
+  deleteWorkspaceAvatar,
+  uploadWorkspaceAvatar,
+} from "~/lib/api/avatars";
 import {
   getHistoricalData,
   createHistoricalData,
@@ -121,6 +126,41 @@ export default function SettingsTeam() {
   });
 
   const isAdmin = currentWorkspace?.member_role === "admin";
+
+  const invalidateAvatarQueries = async () => {
+    await Promise.all([
+      queryClient.invalidateQueries({
+        queryKey: ["workspaceDetail", currentWorkspace?.id],
+      }),
+      queryClient.invalidateQueries({ queryKey: ["auth"] }),
+    ]);
+  };
+
+  const wsAvatarUpload = useMutation({
+    mutationFn: uploadWorkspaceAvatar,
+    onSuccess: async () => {
+      await invalidateAvatarQueries();
+      toast.success(
+        t("settings.avatarSavedWorkspace", {
+          defaultValue: "Workspace picture updated",
+        }),
+      );
+    },
+    onError: (error) => toast.error(extractErrorMessage(error)),
+  });
+
+  const wsAvatarRemove = useMutation({
+    mutationFn: deleteWorkspaceAvatar,
+    onSuccess: async () => {
+      await invalidateAvatarQueries();
+      toast.success(
+        t("settings.avatarRemovedWorkspace", {
+          defaultValue: "Workspace picture removed",
+        }),
+      );
+    },
+    onError: (error) => toast.error(extractErrorMessage(error)),
+  });
   const currentUserRole = currentWorkspace?.member_role ?? "viewer";
   const currentUserId = user?.id;
 
@@ -241,6 +281,49 @@ export default function SettingsTeam() {
     <>
       <div className="space-y-6 sm:space-y-8 app-fade-up app-fade-up-d2">
         <SettingsSection
+          label={t("settings.workspaceSectionTitle", {
+            defaultValue: "Workspace",
+          })}
+          description={t("settings.workspaceAvatarHint", {
+            defaultValue:
+              "The workspace picture shows in the sidebar and the workspace switcher.",
+          })}
+        >
+          <div className="rounded-2xl border border-border bg-card p-5 sm:p-6">
+            <div className="flex flex-wrap items-center justify-between gap-4">
+              <AvatarUploader
+                imageUrl={workspace?.avatar_url}
+                fallbackText={
+                  workspace?.name?.charAt(0).toUpperCase() ??
+                  currentWorkspace?.name?.charAt(0).toUpperCase() ??
+                  "?"
+                }
+                shape="square"
+                crop={false}
+                disabled={!isAdmin}
+                busy={wsAvatarUpload.isPending || wsAvatarRemove.isPending}
+                onUpload={async (file) => {
+                  await wsAvatarUpload.mutateAsync(file);
+                }}
+                onRemove={async () => {
+                  await wsAvatarRemove.mutateAsync();
+                }}
+                removeConfirmDescription={t(
+                  "settings.avatarRemoveWarningWorkspace",
+                  {
+                    defaultValue:
+                      "The workspace picture is deleted permanently and the initial is shown instead.",
+                  },
+                )}
+              />
+              <p className="text-sm font-medium text-foreground">
+                {workspace?.name ?? currentWorkspace?.name ?? ""}
+              </p>
+            </div>
+          </div>
+        </SettingsSection>
+
+        <SettingsSection
           label={t("settings.members.title")}
           description={t("settings.members.addHint")}
           action={
@@ -300,9 +383,17 @@ export default function SettingsTeam() {
                       className="grid grid-cols-1 md:grid-cols-[1fr_180px_140px_100px_88px] gap-3 md:gap-4 px-5 py-3.5 items-center"
                     >
                       <div className="flex items-center gap-3 min-w-0">
-                        <div className="h-8 w-8 rounded-full bg-muted flex items-center justify-center shrink-0 text-[11px] font-bold text-muted-foreground">
-                          {initials}
-                        </div>
+                        {m.user_avatar_url ? (
+                          <img
+                            src={m.user_avatar_url}
+                            alt=""
+                            className="h-8 w-8 shrink-0 rounded-full border border-border object-cover"
+                          />
+                        ) : (
+                          <div className="h-8 w-8 rounded-full bg-muted flex items-center justify-center shrink-0 text-[11px] font-bold text-muted-foreground">
+                            {initials}
+                          </div>
+                        )}
                         <div className="min-w-0">
                           <p className="text-sm font-medium text-foreground truncate flex items-center gap-1.5">
                             {fullName && (

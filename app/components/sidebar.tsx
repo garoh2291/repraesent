@@ -658,9 +658,17 @@ export function Sidebar({
                       collapsed ? "justify-center px-0" : "px-2.5",
                     )}
                   >
-                    <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-white/10 text-white text-[10px] font-bold">
-                      {currentWorkspace.name.charAt(0).toUpperCase()}
-                    </div>
+                    {currentWorkspace.avatar_url ? (
+                      <img
+                        src={currentWorkspace.avatar_url}
+                        alt=""
+                        className="h-6 w-6 shrink-0 rounded-md bg-white/90 object-contain p-0.5"
+                      />
+                    ) : (
+                      <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-white/10 text-white text-[10px] font-bold">
+                        {currentWorkspace.name.charAt(0).toUpperCase()}
+                      </div>
+                    )}
                     {!collapsed && (
                       <>
                         <span className="flex-1 truncate font-medium text-white/70">
@@ -693,7 +701,15 @@ export function Sidebar({
                       key={ws.id}
                       onClick={() => handleWorkspaceChange(ws.id)}
                     >
-                      <Building2 className="h-4 w-4" />
+                      {ws.avatar_url ? (
+                        <img
+                          src={ws.avatar_url}
+                          alt=""
+                          className="h-4 w-4 shrink-0 rounded-sm bg-white object-contain"
+                        />
+                      ) : (
+                        <Building2 className="h-4 w-4" />
+                      )}
                       <span className="flex-1 truncate">{ws.name}</span>
                       {ws.type === "doorboost_brand" && (
                         <span className="ml-2 rounded bg-amber-400/15 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-amber-300">
@@ -712,9 +728,17 @@ export function Sidebar({
                   collapsed ? "justify-center px-0" : "px-2.5",
                 )}
               >
-                <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-white/10 text-white text-[10px] font-bold">
-                  {currentWorkspace.name.charAt(0).toUpperCase()}
-                </div>
+                {currentWorkspace.avatar_url ? (
+                  <img
+                    src={currentWorkspace.avatar_url}
+                    alt=""
+                    className="h-6 w-6 shrink-0 rounded-md bg-white/90 object-contain p-0.5"
+                  />
+                ) : (
+                  <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-white/10 text-white text-[10px] font-bold">
+                    {currentWorkspace.name.charAt(0).toUpperCase()}
+                  </div>
+                )}
                 {!collapsed && (
                   <span className="truncate text-[13px] font-medium text-white/70">
                     {currentWorkspace.name}

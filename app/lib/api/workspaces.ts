@@ -28,7 +28,10 @@ export interface WorkspaceDetail {
     lead_notification: boolean;
     user_onboarding_completed_at?: string | null;
     has_logged_in?: boolean;
+    user_avatar_url?: string | null;
   }>;
+  /** Optional: older backends don't send it (deploy skew). */
+  avatar_url?: string | null;
 }
 
 export async function getWorkspaceDetail(): Promise<WorkspaceDetail> {
