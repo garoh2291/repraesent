@@ -33,7 +33,11 @@ import {
   updateMediaAsset,
   type MediaAsset,
 } from "~/lib/api/media";
-import { uploadMediaFile, MediaUploadError } from "~/lib/media/upload";
+import { MediaUploadError } from "~/lib/media/upload";
+import {
+  enqueueMediaUpload,
+  uploadQueueBusyCount,
+} from "~/lib/media/upload-queue";
 import {
   useMediaAssetsInfinite,
   type MediaView,
@@ -163,6 +167,27 @@ export default function MediaLibraryPage() {
     void queryClient.invalidateQueries({ queryKey: ["media-count"] });
   }, [queryClient]);
 
+  // Bulk uploads: 100 completions must not trigger 100 grid refetches — a
+  // trailing debounce batches them, and the drain flush catches the tail.
+  const invalidateTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const scheduleInvalidate = useCallback(() => {
+    if (invalidateTimer.current) clearTimeout(invalidateTimer.current);
+    invalidateTimer.current = setTimeout(() => {
+      invalidateTimer.current = null;
+      invalidate();
+    }, 1500);
+  }, [invalidate]);
+  const flushInvalidate = useCallback(() => {
+    if (invalidateTimer.current) {
+      clearTimeout(invalidateTimer.current);
+      invalidateTimer.current = null;
+    }
+    invalidate();
+  }, [invalidate]);
+
+  /** Batch progress for the header chip ("Uploading 12 / 100"). */
+  const [batch, setBatch] = useState({ done: 0, total: 0 });
+
   // Load the next page when the sentinel scrolls into view.
   useEffect(() => {
     const sentinel = scrollSentinelRef.current;
@@ -197,26 +222,40 @@ export default function MediaLibraryPage() {
       if (list.length === 0) return;
       if (view === "bin") navigate("/media");
 
+      setBatch((b) =>
+        b.total === b.done
+          ? { done: 0, total: list.length }
+          : { ...b, total: b.total + list.length },
+      );
+
       list.forEach((file) => {
         const key = `${file.name}-${Date.now()}-${Math.random()}`;
         setUploading((prev) => [
           ...prev,
-          { key, name: file.name, stage: "validating", error: null },
+          { key, name: file.name, stage: "queued", error: null },
         ]);
 
-        void uploadMediaFile(file, (stage) => {
-          setUploading((prev) =>
-            prev.map((u) => (u.key === key ? { ...u, stage } : u)),
-          );
-        })
-          .then(() => {
-            setUploading((prev) => prev.filter((u) => u.key !== key));
-            invalidate();
-            toast.success(
-              t("media.uploadDone", { defaultValue: "Image uploaded" }),
+        enqueueMediaUpload({
+          file,
+          onStage: (stage) => {
+            setUploading((prev) =>
+              prev.map((u) => (u.key === key ? { ...u, stage } : u)),
             );
-          })
-          .catch((error) => {
+          },
+          onDone: () => {
+            setUploading((prev) => prev.filter((u) => u.key !== key));
+            setBatch((b) => ({ ...b, done: b.done + 1 }));
+            if (uploadQueueBusyCount() === 0) {
+              flushInvalidate();
+              toast.success(
+                t("media.uploadDone", { defaultValue: "Image uploaded" }),
+              );
+            } else {
+              scheduleInvalidate();
+            }
+          },
+          onError: (error) => {
+            setBatch((b) => ({ ...b, done: b.done + 1 }));
             const message =
               error instanceof MediaUploadError
                 ? error.message
@@ -224,10 +263,11 @@ export default function MediaLibraryPage() {
             setUploading((prev) =>
               prev.map((u) => (u.key === key ? { ...u, error: message } : u)),
             );
-          });
+          },
+        });
       });
     },
-    [invalidate, navigate, t, view],
+    [flushInvalidate, navigate, scheduleInvalidate, t, view],
   );
 
   const updateMutation = useMutation({
@@ -524,6 +564,16 @@ export default function MediaLibraryPage() {
           </p>
         </div>
         <div className="flex items-center gap-2">
+          {batch.total > 0 && batch.done < batch.total && (
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-primary/10 px-3 py-1 text-[12px] font-medium tabular-nums text-primary">
+              <Loader2 className="h-3 w-3 animate-spin" />
+              {t("media.uploadingProgress", {
+                defaultValue: "Uploading {{done}} / {{total}}…",
+                done: batch.done,
+                total: batch.total,
+              })}
+            </span>
+          )}
           {view === "bin" && assets.length > 0 && (
             <Button
               variant="outline"
@@ -676,6 +726,10 @@ export default function MediaLibraryPage() {
                             {t("common.dismiss", { defaultValue: "Dismiss" })}
                           </Button>
                         </>
+                      ) : u.stage === "queued" ? (
+                        <p className="text-xs text-muted-foreground/70">
+                          {t("media.queued", { defaultValue: "Waiting…" })}
+                        </p>
                       ) : (
                         <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
                       )}

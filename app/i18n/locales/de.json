@@ -5174,6 +5174,8 @@
     "cropRatioHint": "Sichtbaren Bereich anpassen — das Bild wird im Zielformat gespeichert.",
     "cropZoom": "Zoom",
     "cropSaving": "Speichern…",
-    "cropApply": "Bild verwenden"
+    "cropApply": "Bild verwenden",
+    "queued": "Wartet…",
+    "uploadingProgress": "{{done}} / {{total}} werden hochgeladen…"
   }
 }

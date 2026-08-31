@@ -16,7 +16,7 @@ export type MediaView = "library" | "favorites" | "bin";
  */
 export function useMediaAssetsInfinite(
   enabled: boolean,
-  opts: { view?: MediaView; search: string; limit?: number },
+  opts: { view?: MediaView; search: string; limit?: number }
 ) {
   const limit = opts.limit ?? PAGE_SIZE;
   const view = opts.view ?? "library";

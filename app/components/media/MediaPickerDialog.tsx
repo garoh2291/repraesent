@@ -4,7 +4,8 @@ import { useTranslation } from "react-i18next";
 import { Check, ImageIcon, Loader2, Search, Star, Upload } from "lucide-react";
 import { extractErrorMessage } from "~/lib/api/axios-instance";
 import type { MediaAsset } from "~/lib/api/media";
-import { uploadMediaFile, MediaUploadError } from "~/lib/media/upload";
+import { MediaUploadError } from "~/lib/media/upload";
+import { enqueueMediaUpload } from "~/lib/media/upload-queue";
 import { useMediaAssetsInfinite } from "~/lib/hooks/useMediaAssets";
 import { cn } from "~/lib/utils";
 import { Button } from "~/components/ui/button";
@@ -106,13 +107,18 @@ export function MediaPickerDialog({
   function startUploads(files: FileList) {
     Array.from(files).forEach((file) => {
       setUploadingCount((c) => c + 1);
-      void uploadMediaFile(file)
-        .then((asset) => {
+      // Shared pool with the /media page — bulk picks stay throttled even
+      // when both surfaces upload at once.
+      enqueueMediaUpload({
+        file,
+        onStage: () => {},
+        onDone: (asset) => {
           void queryClient.invalidateQueries({ queryKey: ["media-assets"] });
           // Auto-pick the fresh upload — that is almost always the intent.
           setPicked(asset);
-        })
-        .catch((error) => {
+          setUploadingCount((c) => c - 1);
+        },
+        onError: (error) => {
           toast.error(
             t("media.uploadFailed", { defaultValue: "Upload failed" }),
             {
@@ -122,8 +128,9 @@ export function MediaPickerDialog({
                   : extractErrorMessage(error),
             },
           );
-        })
-        .finally(() => setUploadingCount((c) => c - 1));
+          setUploadingCount((c) => c - 1);
+        },
+      });
     });
   }
 

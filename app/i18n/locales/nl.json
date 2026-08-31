@@ -5172,6 +5172,8 @@
     "cropRatioHint": "Pas het zichtbare gebied aan — de afbeelding wordt in de doelverhouding opgeslagen.",
     "cropZoom": "Zoom",
     "cropSaving": "Opslaan…",
-    "cropApply": "Afbeelding gebruiken"
+    "cropApply": "Afbeelding gebruiken",
+    "queued": "Wachten…",
+    "uploadingProgress": "Uploaden {{done}} / {{total}}…"
   }
 }

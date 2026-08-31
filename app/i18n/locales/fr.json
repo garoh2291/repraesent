@@ -5174,6 +5174,8 @@
     "cropRatioHint": "Ajustez la zone visible — l'image sera enregistrée au ratio cible.",
     "cropZoom": "Zoom",
     "cropSaving": "Enregistrement…",
-    "cropApply": "Utiliser l'image"
+    "cropApply": "Utiliser l'image",
+    "queued": "En attente…",
+    "uploadingProgress": "Téléversement {{done}} / {{total}}…"
   }
 }
