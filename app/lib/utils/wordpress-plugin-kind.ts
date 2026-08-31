@@ -1,3 +1,13 @@
+import {
+  CalendarCheck,
+  Cookie,
+  Languages,
+  Package,
+  Search,
+  Star,
+  Wrench,
+  type LucideIcon,
+} from "lucide-react";
 import type { WpPluginSettingsKind } from "~/lib/api/wordpress-hub";
 
 /** Managed plugins whose admin has been ported into Repraesent so far. */
@@ -38,4 +48,22 @@ export function formatPluginSettingsTitle(
   fallback: string,
 ): string {
   return displayName?.trim() || fallback;
+}
+
+/**
+ * Sidebar/nav icon per managed service. Keyed by the catalog kind so the icon
+ * follows the service rather than its display name, which is translated and
+ * editable in the catalog. Unknown kinds fall back to a generic package.
+ */
+export const PLUGIN_KIND_ICONS: Record<PortedSettingsKind, LucideIcon> = {
+  "re-translate": Languages,
+  "re-index": Search,
+  "re-review": Star,
+  "re-appointment": CalendarCheck,
+  "re-maintenance": Wrench,
+  "re-cookie": Cookie,
+};
+
+export function pluginKindIcon(kind: string | undefined): LucideIcon {
+  return isPortedSettingsKind(kind) ? PLUGIN_KIND_ICONS[kind] : Package;
 }

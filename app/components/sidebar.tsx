@@ -62,7 +62,10 @@ import { useStripeConnection } from "~/lib/hooks/useWorkspaceIntegrations";
 import { LanguageSwitcher } from "~/components/language-switcher";
 import { usePipelinesQuery } from "~/lib/hooks/usePipelines";
 import { CreatePipelineDialog } from "~/components/organism/create-pipeline-dialog";
-import { wordpressPluginSettingsPath } from "~/lib/utils/wordpress-plugin-kind";
+import {
+  pluginKindIcon,
+  wordpressPluginSettingsPath,
+} from "~/lib/utils/wordpress-plugin-kind";
 import {
   Collapsible,
   CollapsibleContent,
@@ -354,6 +357,7 @@ function WebsiteSubNav({ onClose }: { onClose?: () => void }) {
       ) : (
         plugins.map((p) => {
           const path = wordpressPluginSettingsPath(p.plugin_uuid);
+          const Icon = pluginKindIcon(p.name);
           return (
             <NavLink
               key={p.plugin_uuid}
@@ -361,7 +365,7 @@ function WebsiteSubNav({ onClose }: { onClose?: () => void }) {
               isActive={location.pathname === path}
               onClick={onClose}
             >
-              <Package className="h-4 w-4 shrink-0" />
+              <Icon className="h-4 w-4 shrink-0" />
               <span className="truncate">{p.display_name}</span>
             </NavLink>
           );
