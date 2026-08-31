@@ -323,6 +323,7 @@ export function ComposeEmailDialog({
                   onSubmit={() => canSend && mutation.mutate()}
                   disabled={mutation.isPending}
                   toolbarRef={setEditor}
+                  allowImages
                 />
               </div>
 

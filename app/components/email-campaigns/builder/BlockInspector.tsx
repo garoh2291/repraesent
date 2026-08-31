@@ -1,4 +1,4 @@
-import { Bookmark, Settings2, SlidersHorizontal } from "lucide-react";
+import { Bookmark, ImageIcon, Settings2, SlidersHorizontal } from "lucide-react";
 import { useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -26,6 +26,7 @@ import type { TemplateSettings } from "~/lib/api/email-templates";
 import { BLOCK_META, newBlock } from "~/lib/email-templates/blocks";
 import { VariableMenu } from "./VariableMenu";
 import { PromptDialog } from "~/components/molecule/prompt-dialog";
+import { MediaPickerDialog } from "~/components/media/MediaPickerDialog";
 
 /**
  * Right pane: settings for the selected block, or the document settings when
@@ -355,6 +356,61 @@ function ColorField({
 }
 
 /** Insert `snippet` into `value` at the input's caret. */
+/**
+ * Image-block src input paired with the media library picker. Own component
+ * so the picker's open state lives outside BlockFields' switch. Picking an
+ * asset fills src (and alt from the filename when alt is still empty).
+ */
+function ImageSrcField({
+  value,
+  disabled,
+  onChange,
+  onPick,
+}: {
+  value: string;
+  disabled?: boolean;
+  onChange: (src: string) => void;
+  onPick: (src: string, alt: string) => void;
+}) {
+  const { t } = useTranslation();
+  const [pickerOpen, setPickerOpen] = useState(false);
+
+  return (
+    <>
+      <div className="flex items-center gap-1.5">
+        <Input
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          placeholder="https://…"
+          disabled={disabled}
+        />
+        <button
+          type="button"
+          disabled={disabled}
+          onClick={() => setPickerOpen(true)}
+          className="inline-flex h-9 shrink-0 items-center gap-1.5 rounded-lg border border-border bg-muted/40 px-3 text-sm transition-colors hover:bg-muted disabled:cursor-not-allowed disabled:opacity-50"
+        >
+          <ImageIcon className="h-3.5 w-3.5" />
+          {t("media.chooseFromLibrary", { defaultValue: "Library" })}
+        </button>
+      </div>
+      <p className="text-[11px] leading-relaxed text-muted-foreground">
+        {t("emailCampaigns.templates.inspector.imageUrlHint", {
+          defaultValue:
+            "Pick an image from your media library, or paste any public image URL.",
+        })}
+      </p>
+      <MediaPickerDialog
+        open={pickerOpen}
+        onOpenChange={setPickerOpen}
+        onSelect={(asset) =>
+          onPick(asset.public_url, asset.original_filename.replace(/\.[^.]+$/, ""))
+        }
+      />
+    </>
+  );
+}
+
 function insertAtCaret(
   input: HTMLInputElement | HTMLTextAreaElement | null,
   value: string,
@@ -467,18 +523,14 @@ function BlockFields({
               defaultValue: "Image URL",
             })}
           >
-            <Input
+            <ImageSrcField
               value={attrs.src ?? ""}
-              onChange={(e) => setAttrs({ src: e.target.value })}
-              placeholder="https://…"
               disabled={disabled}
+              onChange={(src) => setAttrs({ src })}
+              onPick={(src, alt) =>
+                setAttrs(attrs.alt ? { src } : { src, alt })
+              }
             />
-            <p className="text-[11px] leading-relaxed text-muted-foreground">
-              {t("emailCampaigns.templates.inspector.imageUrlHint", {
-                defaultValue:
-                  "Paste a public image URL — images are linked, not uploaded.",
-              })}
-            </p>
           </PanelSection>
           <PanelSection>
             <Cols>

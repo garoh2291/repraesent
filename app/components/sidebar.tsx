@@ -24,6 +24,7 @@ import {
   Kanban,
   Globe,
   HomeIcon,
+  ImageIcon,
   Loader2,
   Inbox,
   Info,
@@ -39,7 +40,9 @@ import {
   Send,
   Settings,
   ShoppingBag,
+  Star,
   Store,
+  Trash2,
   User,
   Users,
   UsersRound,
@@ -300,6 +303,94 @@ function PipelineNav({ onClose }: { onClose?: () => void }) {
         )}
       </CollapsibleContent>
       <CreatePipelineDialog open={newOpen} onOpenChange={setNewOpen} />
+    </Collapsible>
+  );
+}
+
+/**
+ * The "Media" nav entry: a collapsible with Library / Favourites / Recycle
+ * bin views. Same behavior as PipelineNav — the trigger only toggles the
+ * group; navigation happens via the sub-items.
+ */
+function MediaNav({ onClose }: { onClose?: () => void }) {
+  const { t } = useTranslation();
+  const location = useLocation();
+  const onMedia = location.pathname.startsWith("/media");
+  const [open, setOpen] = useState(onMedia);
+  const collapsed = useContext(SidebarCollapsedContext);
+
+  // Landing anywhere under /media reveals the views.
+  useEffect(() => {
+    if (onMedia) setOpen(true);
+  }, [onMedia]);
+
+  // No room for a nested list on the icon rail — one link to the library.
+  if (collapsed) {
+    return (
+      <NavLink to="/media" isActive={onMedia} onClick={onClose}>
+        <ImageIcon className="h-4 w-4 shrink-0" />
+      </NavLink>
+    );
+  }
+
+  const views = [
+    {
+      to: "/media",
+      icon: <ImageIcon className="h-3.5 w-3.5 shrink-0" />,
+      label: t("nav.mediaLibrary", { defaultValue: "Library" }),
+      active: location.pathname === "/media",
+    },
+    {
+      to: "/media/favorites",
+      icon: <Star className="h-3.5 w-3.5 shrink-0" />,
+      label: t("nav.mediaFavorites", { defaultValue: "Favourites" }),
+      active: location.pathname === "/media/favorites",
+    },
+    {
+      to: "/media/bin",
+      icon: <Trash2 className="h-3.5 w-3.5 shrink-0" />,
+      label: t("nav.mediaBin", { defaultValue: "Recycle bin" }),
+      active: location.pathname === "/media/bin",
+    },
+  ];
+
+  return (
+    <Collapsible open={open} onOpenChange={setOpen}>
+      {/* Toggles only — never closes the mobile sheet and never navigates. */}
+      <CollapsibleTrigger asChild>
+        <button
+          type="button"
+          className={cn(
+            "group flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-[13px] font-medium",
+            "border-l-2 transition-all duration-150",
+            onMedia && !open
+              ? "border-amber-400 bg-amber-400/10 text-amber-300"
+              : onMedia
+                ? "border-transparent text-amber-300/90 hover:bg-white/5"
+                : "border-transparent text-white/45 hover:bg-white/5 hover:text-white/75",
+          )}
+        >
+          <ImageIcon className="h-4 w-4 shrink-0" />
+          <span className="flex-1 text-left">
+            {t("nav.media", { defaultValue: "Media" })}
+          </span>
+          <ChevronDown className="h-3.5 w-3.5 shrink-0 text-white/30 transition-transform duration-200 group-data-[state=open]:rotate-180" />
+        </button>
+      </CollapsibleTrigger>
+      <CollapsibleContent className="space-y-0.5 pt-0.5">
+        {views.map((v) => (
+          <NavLink
+            key={v.to}
+            to={v.to}
+            isActive={v.active}
+            onClick={onClose}
+            className="ml-5"
+          >
+            {v.icon}
+            <span className="truncate">{v.label}</span>
+          </NavLink>
+        ))}
+      </CollapsibleContent>
     </Collapsible>
   );
 }
@@ -809,6 +900,7 @@ export function Sidebar({
                     <LayoutTemplate className="h-4 w-4 shrink-0" />
                     {t("nav.emailTemplates", { defaultValue: "Templates" })}
                   </NavLink>
+                  <MediaNav onClose={onClose} />
                 </>
               )}
 
