@@ -24,6 +24,7 @@ import {
   type WorkspaceDetail,
 } from "~/lib/api/workspaces";
 import { InviteMembersDialog } from "~/components/team/invite-members-dialog";
+import { SafeImg } from "~/components/atom/safe-img";
 import { extractErrorMessage } from "~/lib/api/axios-instance";
 import { AvatarUploader } from "~/components/media/AvatarUploader";
 import {
@@ -385,10 +386,14 @@ export default function SettingsTeam() {
                     >
                       <div className="flex items-center gap-3 min-w-0">
                         {(m.user_avatar_thumb_url ?? m.user_avatar_url) ? (
-                          <img
+                          <SafeImg
                             src={(m.user_avatar_thumb_url ?? m.user_avatar_url)!}
-                            alt=""
                             className="h-8 w-8 shrink-0 rounded-full border border-border object-cover"
+                            fallback={
+                              <div className="h-8 w-8 rounded-full bg-muted flex items-center justify-center shrink-0 text-[11px] font-bold text-muted-foreground">
+                                {initials}
+                              </div>
+                            }
                           />
                         ) : (
                           <div className="h-8 w-8 rounded-full bg-muted flex items-center justify-center shrink-0 text-[11px] font-bold text-muted-foreground">

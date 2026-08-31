@@ -1,4 +1,5 @@
 import { useNavigate } from "react-router";
+import { SafeImg } from "~/components/atom/safe-img";
 import { useTranslation } from "react-i18next";
 import { useAuthContext } from "~/providers/auth-provider";
 import {
@@ -113,10 +114,14 @@ export default function WorkspacePicker() {
               {/* Workspace picture (1:1 box, image keeps its own ratio) or initial */}
               {(workspace.avatar_thumb_url ?? workspace.avatar_url) ? (
                 <div className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-stone-200 bg-white">
-                  <img
+                  <SafeImg
                     src={(workspace.avatar_thumb_url ?? workspace.avatar_url)!}
-                    alt=""
                     className="h-full w-full object-contain p-1"
+                    fallback={
+                      <span className="text-lg font-bold text-stone-800">
+                        {workspace.name.charAt(0).toUpperCase()}
+                      </span>
+                    }
                   />
                 </div>
               ) : (

@@ -51,6 +51,7 @@ import {
 } from "lucide-react";
 import * as LucideIcons from "lucide-react";
 import { InstructionsModal } from "~/components/instructions-modal";
+import { SafeImg } from "~/components/atom/safe-img";
 import { OpenAiMark } from "~/components/icons/openai-mark";
 
 import { getLocalizedServiceName } from "~/lib/api/auth";
@@ -659,10 +660,14 @@ export function Sidebar({
                     )}
                   >
                     {(currentWorkspace.avatar_thumb_url ?? currentWorkspace.avatar_url) ? (
-                      <img
+                      <SafeImg
                         src={(currentWorkspace.avatar_thumb_url ?? currentWorkspace.avatar_url)!}
-                        alt=""
                         className="h-6 w-6 shrink-0 rounded-md bg-white/90 object-contain p-0.5"
+                        fallback={
+                          <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-white/10 text-white text-[10px] font-bold">
+                        {currentWorkspace.name.charAt(0).toUpperCase()}
+                      </div>
+                        }
                       />
                     ) : (
                       <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-white/10 text-white text-[10px] font-bold">
@@ -702,10 +707,10 @@ export function Sidebar({
                       onClick={() => handleWorkspaceChange(ws.id)}
                     >
                       {(ws.avatar_thumb_url ?? ws.avatar_url) ? (
-                        <img
+                        <SafeImg
                           src={(ws.avatar_thumb_url ?? ws.avatar_url)!}
-                          alt=""
                           className="h-4 w-4 shrink-0 rounded-sm bg-white object-contain"
+                          fallback={<Building2 className="h-4 w-4" />}
                         />
                       ) : (
                         <Building2 className="h-4 w-4" />
@@ -729,10 +734,14 @@ export function Sidebar({
                 )}
               >
                 {(currentWorkspace.avatar_thumb_url ?? currentWorkspace.avatar_url) ? (
-                  <img
+                  <SafeImg
                     src={(currentWorkspace.avatar_thumb_url ?? currentWorkspace.avatar_url)!}
-                    alt=""
                     className="h-6 w-6 shrink-0 rounded-md bg-white/90 object-contain p-0.5"
+                    fallback={
+                      <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-white/10 text-white text-[10px] font-bold">
+                    {currentWorkspace.name.charAt(0).toUpperCase()}
+                  </div>
+                    }
                   />
                 ) : (
                   <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-white/10 text-white text-[10px] font-bold">

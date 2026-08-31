@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { cn } from "~/lib/utils";
 import { Button } from "~/components/ui/button";
 import { ConfirmDeleteDialog } from "~/components/molecule/confirm-delete-dialog";
+import { SafeImg } from "~/components/atom/safe-img";
 import { ImageCropModal } from "./ImageCropModal";
 import { generateThumbnail } from "~/lib/utils/image-resize";
 
@@ -107,15 +108,19 @@ export function AvatarUploader({
         )}
       >
         {imageUrl ? (
-          <img
+          <SafeImg
             src={imageUrl}
-            alt=""
             className={cn(
               "h-full w-full",
               shape === "square"
                 ? "object-contain p-1.5"
                 : "object-cover",
             )}
+            fallback={
+              <span className="text-sm font-bold text-muted-foreground">
+                {fallbackText}
+              </span>
+            }
           />
         ) : (
           <span className="text-sm font-bold text-muted-foreground">

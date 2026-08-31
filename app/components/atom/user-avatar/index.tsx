@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useAuthContext } from "~/providers/auth-provider";
 import { useMemberAvatarLookup } from "~/lib/hooks/useWorkspaceMembers";
 import { cn } from "~/lib/utils";
@@ -45,6 +46,9 @@ export function UserAvatar({
 }) {
   const { user } = useAuthContext();
   const lookup = useMemberAvatarLookup();
+  // Object gone from storage (deleted directly, legacy thumb, …) — never
+  // show the browser's broken-image glyph, fall back to initials.
+  const [failedSrc, setFailedSrc] = useState<string | null>(null);
 
   const avatarUrl =
     (userId ? lookup.byUserId.get(userId) : undefined) ??
@@ -52,12 +56,13 @@ export function UserAvatar({
     (userId && user?.id === userId ? (user?.avatar_url ?? undefined) : undefined) ??
     null;
 
-  if (avatarUrl) {
+  if (avatarUrl && failedSrc !== avatarUrl) {
     return (
       <img
         src={avatarUrl}
         alt=""
         title={title}
+        onError={() => setFailedSrc(avatarUrl)}
         className={cn(
           "shrink-0 rounded-full border border-border object-cover",
           BOX_CLASSES[size],
