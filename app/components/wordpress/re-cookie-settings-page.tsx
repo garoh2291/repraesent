@@ -26,6 +26,7 @@ import {
   type TabId,
 } from "~/components/wordpress/re-cookie/constants";
 import { BannerPreview } from "~/components/wordpress/re-cookie/banner-preview";
+import { describeRejectedIds } from "~/components/wordpress/re-cookie/tracking-ids";
 import {
   ContentPanel,
   type CookieOverlaySaveHandle,
@@ -60,6 +61,7 @@ export function ReCookieSettingsPage() {
   const {
     settings,
     setSettings,
+    reseed,
     site,
     hasSite,
     loading,
@@ -115,8 +117,19 @@ export function ReCookieSettingsPage() {
         return;
       }
       saveMutation.mutate(submitted as unknown as Record<string, unknown>, {
-        onSuccess: () => {
-          setSavedSnapshot(serialized);
+        onSuccess: (data) => {
+          // Re-seed from what WordPress reports it stored, not from what we
+          // sent. The plugin's sanitizer can reject a value and keep the old
+          // one (a malformed tracking ID does exactly that), and echoing our
+          // own payload back would show the rejected value as saved.
+          const applied = reseed(data.settings);
+          setSavedSnapshot(JSON.stringify(applied));
+
+          const rejected = describeRejectedIds(submitted, applied);
+          if (rejected.length > 0) {
+            flash(rejected.join(" "), "error");
+            return;
+          }
           flash(t("wordpress.reCookie.saved", "Settings saved successfully."));
         },
         onError: (err) => flash(extractErrorMessage(err), "error"),

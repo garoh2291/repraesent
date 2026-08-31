@@ -168,6 +168,9 @@ export function useWorkspacePluginSettingsForm<T extends object>(
         const next = fromApi(raw);
         setSettings(next);
         setSavedSettings(next);
+        // Returned so a caller keeping its own snapshot (re:cookie) can base it
+        // on the same merged value rather than re-deriving the transform.
+        return next;
       },
       [fromApi],
     ),

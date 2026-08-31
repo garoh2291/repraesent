@@ -34,6 +34,11 @@ import {
   type PatchSettings,
 } from "./constants";
 import {
+  PROVIDER_LABEL,
+  validateTrackingId,
+  type TrackingIdProvider,
+} from "./tracking-ids";
+import {
   CardBody,
   CardHeader,
   Field,
@@ -265,6 +270,11 @@ export function FunctionalityPanel({
                   "GTM-XXXXXXX only. Do not put AW- or G- IDs here.",
                 )}
               </FieldHint>
+              <TrackingIdNotice
+                provider="gtm"
+                value={settings.integrations.gtm.container_id}
+                enabled={settings.integrations.gtm.enabled}
+              />
             </Field>
           </IntegrationCard>
 
@@ -298,6 +308,11 @@ export function FunctionalityPanel({
                   "Loads after marketing consent. Do not also paste the same AW- snippet under Marketing scripts.",
                 )}
               </FieldHint>
+              <TrackingIdNotice
+                provider="google_ads"
+                value={settings.integrations.google_ads.conversion_id}
+                enabled={settings.integrations.google_ads.enabled}
+              />
             </Field>
           </IntegrationCard>
 
@@ -321,6 +336,11 @@ export function FunctionalityPanel({
                 onChange={(e) =>
                   setIntegration("ga4", "measurement_id", e.target.value)
                 }
+              />
+              <TrackingIdNotice
+                provider="ga4"
+                value={settings.integrations.ga4.measurement_id}
+                enabled={settings.integrations.ga4.enabled}
               />
             </Field>
             <Field>
@@ -366,6 +386,11 @@ export function FunctionalityPanel({
                 onChange={(e) =>
                   setIntegration("meta", "pixel_id", e.target.value)
                 }
+              />
+              <TrackingIdNotice
+                provider="meta"
+                value={settings.integrations.meta.pixel_id}
+                enabled={settings.integrations.meta.enabled}
               />
             </Field>
           </IntegrationCard>
@@ -535,6 +560,36 @@ function CategoryRow({
 }
 
 /** An integration: enable switch on the row, credentials underneath. */
+/**
+ * Why this tracking ID will not do what it looks like it does: either the shape
+ * is one WordPress will reject on save, or an ID is filled in while the
+ * integration is switched off — in which case the tag never loads and nothing
+ * anywhere says so.
+ */
+function TrackingIdNotice({
+  provider,
+  value,
+  enabled,
+}: {
+  provider: TrackingIdProvider;
+  value: string;
+  enabled: boolean;
+}) {
+  const invalid = validateTrackingId(provider, value);
+  if (invalid) {
+    return <p className="text-xs leading-relaxed text-destructive">{invalid}</p>;
+  }
+  if (value.trim() !== "" && !enabled) {
+    return (
+      <p className="text-xs leading-relaxed text-amber-700 dark:text-amber-300">
+        {PROVIDER_LABEL[provider]} is switched off, so this ID will not load on
+        the site. Turn it on above to activate the tag.
+      </p>
+    );
+  }
+  return null;
+}
+
 function IntegrationCard({
   icon,
   name,
