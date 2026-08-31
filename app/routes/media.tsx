@@ -8,6 +8,7 @@ import {
 import { useTranslation } from "react-i18next";
 import {
   Check,
+  CheckSquare,
   Copy,
   Download,
   Eye,
@@ -24,6 +25,8 @@ import {
 import { toast } from "sonner";
 import { extractErrorMessage } from "~/lib/api/axios-instance";
 import {
+  bulkMediaAction,
+  type BulkMediaAction,
   deleteMediaAsset,
   emptyMediaBin,
   hardDeleteMediaAsset,
@@ -132,6 +135,20 @@ export default function MediaLibraryPage() {
     null,
   );
   const [confirmEmptyBin, setConfirmEmptyBin] = useState(false);
+
+  // Apple-style selection mode: the Select button reveals checkboxes on
+  // every card; bulk actions run as ONE request (server-side queue).
+  const SELECT_LIMIT = 50;
+  const [selectMode, setSelectMode] = useState(false);
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [bulkConfirm, setBulkConfirm] = useState<"bin" | "hard_delete" | null>(
+    null,
+  );
+
+  useEffect(() => {
+    setSelectMode(false);
+    setSelected(new Set());
+  }, [view]);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const scrollSentinelRef = useRef<HTMLDivElement>(null);
@@ -392,6 +409,66 @@ export default function MediaLibraryPage() {
     [t],
   );
 
+  const toggleSelect = useCallback(
+    (id: string) => {
+      setSelected((prev) => {
+        const next = new Set(prev);
+        if (next.has(id)) {
+          next.delete(id);
+        } else {
+          if (next.size >= SELECT_LIMIT) {
+            toast.error(
+              t("media.selectLimit", {
+                defaultValue: "You can select up to {{max}} images",
+                max: SELECT_LIMIT,
+              }),
+            );
+            return prev;
+          }
+          next.add(id);
+        }
+        return next;
+      });
+    },
+    [t],
+  );
+
+  const bulkMutation = useMutation({
+    mutationFn: ({ ids, action }: { ids: string[]; action: BulkMediaAction }) =>
+      bulkMediaAction(ids, action),
+    onSuccess: (res, { action }) => {
+      invalidate();
+      setBulkConfirm(null);
+      setSelected(new Set());
+      if (action === "bin" || action === "hard_delete") setSelectMode(false);
+      const base = t(`media.bulkDone_${action}`, {
+        defaultValue: "{{count}} images updated",
+        count: res.processed,
+      });
+      toast.success(
+        res.failed > 0
+          ? `${base} · ${t("media.bulkFailed", {
+              defaultValue: "{{count}} failed",
+              count: res.failed,
+            })}`
+          : base,
+      );
+    },
+    onError: (error) =>
+      toast.error(
+        t("media.bulkError", { defaultValue: "Bulk action failed" }),
+        { description: extractErrorMessage(error) },
+      ),
+  });
+
+  const runBulk = useCallback(
+    (action: BulkMediaAction) => {
+      if (selected.size === 0) return;
+      bulkMutation.mutate({ ids: [...selected], action });
+    },
+    [bulkMutation, selected],
+  );
+
   const toggleFavorite = useCallback(
     (asset: MediaAsset) => {
       updateMutation.mutate({
@@ -584,6 +661,22 @@ export default function MediaLibraryPage() {
               {t("media.emptyBin", { defaultValue: "Empty bin" })}
             </Button>
           )}
+          {assets.length > 0 && (
+            <Button
+              variant="outline"
+              onClick={() => {
+                setSelectMode((m) => {
+                  if (m) setSelected(new Set());
+                  return !m;
+                });
+              }}
+            >
+              <CheckSquare className="mr-1.5 h-4 w-4" />
+              {selectMode
+                ? t("media.cancelSelection", { defaultValue: "Cancel" })
+                : t("media.select", { defaultValue: "Select" })}
+            </Button>
+          )}
           <Button onClick={() => fileInputRef.current?.click()}>
             <Upload className="mr-1.5 h-4 w-4" />
             {t("media.upload", { defaultValue: "Upload images" })}
@@ -646,6 +739,88 @@ export default function MediaLibraryPage() {
             )}
             className="max-w-sm"
           />
+
+          {selectMode && (
+            <div className="flex flex-wrap items-center gap-2 rounded-xl border border-primary/30 bg-primary/5 px-3 py-2">
+              <span className="text-[13px] font-medium tabular-nums text-primary">
+                {t("media.selectedCount", {
+                  defaultValue: "{{count}} selected",
+                  count: selected.size,
+                })}
+              </span>
+              <Button
+                variant="ghost"
+                size="sm"
+                disabled={bulkMutation.isPending}
+                onClick={() =>
+                  setSelected(new Set(assets.slice(0, SELECT_LIMIT).map((a) => a.id)))
+                }
+              >
+                {t("media.selectAll", { defaultValue: "Select all" })}
+              </Button>
+              <div className="ml-auto flex flex-wrap items-center gap-1.5">
+                {bulkMutation.isPending && (
+                  <Loader2 className="h-4 w-4 animate-spin text-primary" />
+                )}
+                {view === "bin" ? (
+                  <>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      disabled={selected.size === 0 || bulkMutation.isPending}
+                      onClick={() => runBulk("restore")}
+                    >
+                      <RotateCcw className="mr-1.5 h-3.5 w-3.5" />
+                      {t("media.restore", { defaultValue: "Restore" })}
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="text-destructive hover:bg-destructive/10 hover:text-destructive"
+                      disabled={selected.size === 0 || bulkMutation.isPending}
+                      onClick={() => setBulkConfirm("hard_delete")}
+                    >
+                      <Trash2 className="mr-1.5 h-3.5 w-3.5" />
+                      {t("media.deleteForever", { defaultValue: "Delete forever" })}
+                    </Button>
+                  </>
+                ) : (
+                  <>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      disabled={selected.size === 0 || bulkMutation.isPending}
+                      onClick={() => runBulk("favorite")}
+                    >
+                      <Star className="mr-1.5 h-3.5 w-3.5" />
+                      {t("media.favorite", { defaultValue: "Add to favourites" })}
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      disabled={selected.size === 0 || bulkMutation.isPending}
+                      onClick={() => runBulk("unfavorite")}
+                    >
+                      <Star className="mr-1.5 h-3.5 w-3.5 opacity-40" />
+                      {t("media.unfavorite", {
+                        defaultValue: "Remove from favourites",
+                      })}
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="text-destructive hover:bg-destructive/10 hover:text-destructive"
+                      disabled={selected.size === 0 || bulkMutation.isPending}
+                      onClick={() => setBulkConfirm("bin")}
+                    >
+                      <Trash2 className="mr-1.5 h-3.5 w-3.5" />
+                      {t("media.moveToBinConfirm", { defaultValue: "Move to bin" })}
+                    </Button>
+                  </>
+                )}
+              </div>
+            </div>
+          )}
 
           {loadError ? (
             <div
@@ -751,6 +926,9 @@ export default function MediaLibraryPage() {
                     actions={buildAssetActions(asset)}
                     copied={copiedId === asset.id}
                     onOpen={() => setPreview(asset)}
+                    selectMode={selectMode}
+                    isSelected={selected.has(asset.id)}
+                    onToggleSelect={() => toggleSelect(asset.id)}
                   />
                 ))}
               </div>
@@ -880,6 +1058,45 @@ export default function MediaLibraryPage() {
       />
 
       <ConfirmDeleteDialog
+        open={bulkConfirm != null}
+        onOpenChange={(open) => {
+          if (!open) setBulkConfirm(null);
+        }}
+        name={null}
+        title={
+          bulkConfirm === "hard_delete"
+            ? t("media.bulkHardDeleteTitle", {
+                defaultValue: "Permanently delete {{count}} images?",
+                count: selected.size,
+              })
+            : t("media.bulkBinTitle", {
+                defaultValue: "Move {{count}} images to the recycle bin?",
+                count: selected.size,
+              })
+        }
+        description={
+          bulkConfirm === "hard_delete"
+            ? t("media.hardDeleteWarning", {
+                defaultValue:
+                  "The image file is removed from storage. Emails that were already sent with this image will stop showing it.",
+              })
+            : t("media.moveToBinWarning", {
+                defaultValue:
+                  "The image leaves your library but stays restorable from the Recycle bin. Emails already sent keep working.",
+              })
+        }
+        confirmLabel={
+          bulkConfirm === "hard_delete"
+            ? t("media.deleteForever", { defaultValue: "Delete forever" })
+            : t("media.moveToBinConfirm", { defaultValue: "Move to bin" })
+        }
+        onConfirm={() => {
+          if (bulkConfirm) runBulk(bulkConfirm);
+        }}
+        busy={bulkMutation.isPending}
+      />
+
+      <ConfirmDeleteDialog
         open={confirmEmptyBin}
         onOpenChange={setConfirmEmptyBin}
         name={null}
@@ -907,6 +1124,9 @@ function AssetCard({
   actions,
   copied,
   onOpen,
+  selectMode,
+  isSelected,
+  onToggleSelect,
 }: {
   asset: MediaAsset;
   index: number;
@@ -914,24 +1134,27 @@ function AssetCard({
   actions: AssetAction[];
   copied: boolean;
   onOpen: () => void;
+  selectMode: boolean;
+  isSelected: boolean;
+  onToggleSelect: () => void;
 }) {
   const [loaded, setLoaded] = useState(false);
 
-  return (
-    <ContextMenu>
-      <ContextMenuTrigger asChild>
+  const card = (
         <div
           className={cn(
             `app-fade-up app-fade-up-d${Math.min(index + 1, 4)}`,
             "group relative overflow-hidden rounded-2xl border border-border bg-card transition-colors hover:border-primary/40",
             dimmed && "opacity-70 transition-opacity hover:opacity-100",
+            selectMode && isSelected && "border-primary ring-2 ring-primary/40",
           )}
         >
           <button
             type="button"
-            onClick={onOpen}
+            onClick={selectMode ? onToggleSelect : onOpen}
             className="block w-full cursor-pointer"
             title={asset.original_filename}
+            aria-pressed={selectMode ? isSelected : undefined}
           >
             <div className="relative aspect-[4/3] bg-muted">
               <img
@@ -942,12 +1165,30 @@ function AssetCard({
                 className={cn(
                   "h-full w-full object-cover transition-opacity duration-300",
                   loaded ? "opacity-100" : "opacity-0",
+                  selectMode && isSelected && "opacity-80",
                 )}
               />
             </div>
           </button>
 
-          {asset.is_favorite && (
+          {/* Selection checkbox — white background so it reads on any image. */}
+          {selectMode && (
+            <button
+              type="button"
+              onClick={onToggleSelect}
+              aria-pressed={isSelected}
+              className={cn(
+                "absolute top-2 left-2 flex h-6 w-6 cursor-pointer items-center justify-center rounded-full border shadow transition-colors",
+                isSelected
+                  ? "border-primary bg-primary text-primary-foreground"
+                  : "border-border bg-white text-transparent hover:border-primary/50",
+              )}
+            >
+              <Check className="h-3.5 w-3.5" strokeWidth={3} />
+            </button>
+          )}
+
+          {asset.is_favorite && !selectMode && (
             <span className="absolute top-2 left-2 flex h-6 w-6 items-center justify-center rounded-full bg-card/90 text-primary">
               <Star className="h-3.5 w-3.5" fill="currentColor" strokeWidth={0} />
             </span>
@@ -966,6 +1207,7 @@ function AssetCard({
               </p>
             </div>
             {copied && <Check className="h-3.5 w-3.5 shrink-0 text-primary" />}
+            {!selectMode && (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button
@@ -996,9 +1238,17 @@ function AssetCard({
                 ))}
               </DropdownMenuContent>
             </DropdownMenu>
+            )}
           </div>
         </div>
-      </ContextMenuTrigger>
+  );
+
+  // Right-click menu is a browsing affordance — off while selecting.
+  if (selectMode) return card;
+
+  return (
+    <ContextMenu>
+      <ContextMenuTrigger asChild>{card}</ContextMenuTrigger>
       <ContextMenuContent className="w-52">
         {actions.map((action) => (
           <div key={action.key}>

@@ -5174,6 +5174,20 @@
     "cropSaving": "Opslaan…",
     "cropApply": "Afbeelding gebruiken",
     "queued": "Wachten…",
-    "uploadingProgress": "Uploaden {{done}} / {{total}}…"
+    "uploadingProgress": "Uploaden {{done}} / {{total}}…",
+    "select": "Selecteren",
+    "cancelSelection": "Annuleren",
+    "selectedCount": "{{count}} geselecteerd",
+    "selectAll": "Alles selecteren",
+    "selectLimit": "Je kunt maximaal {{max}} afbeeldingen selecteren",
+    "bulkDone_bin": "{{count}} afbeeldingen naar de prullenbak verplaatst",
+    "bulkDone_restore": "{{count}} afbeeldingen hersteld",
+    "bulkDone_hard_delete": "{{count}} afbeeldingen definitief verwijderd",
+    "bulkDone_favorite": "{{count}} afbeeldingen aan favorieten toegevoegd",
+    "bulkDone_unfavorite": "{{count}} afbeeldingen uit favorieten verwijderd",
+    "bulkFailed": "{{count}} mislukt",
+    "bulkError": "Bulkactie mislukt",
+    "bulkBinTitle": "{{count}} afbeeldingen naar de prullenbak verplaatsen?",
+    "bulkHardDeleteTitle": "{{count}} afbeeldingen definitief verwijderen?"
   }
 }

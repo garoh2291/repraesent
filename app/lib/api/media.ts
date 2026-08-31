@@ -131,6 +131,25 @@ export async function emptyMediaBin(): Promise<{ deleted: number }> {
   return data;
 }
 
+export type BulkMediaAction =
+  | "bin"
+  | "restore"
+  | "hard_delete"
+  | "favorite"
+  | "unfavorite";
+
+/** One request for up to 50 ids — the server processes them sequentially. */
+export async function bulkMediaAction(
+  ids: string[],
+  action: BulkMediaAction,
+): Promise<{ processed: number; failed: number }> {
+  const { data } = await apiClient.post<{ processed: number; failed: number }>(
+    "/media-library/bulk",
+    { ids, action },
+  );
+  return data;
+}
+
 /** Direct-to-bucket PUT. Headers must match what the presign signed. */
 export async function putToBucket(
   uploadUrl: string,

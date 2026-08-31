@@ -5174,6 +5174,20 @@
     "cropSaving": "Saving…",
     "cropApply": "Use image",
     "queued": "Waiting…",
-    "uploadingProgress": "Uploading {{done}} / {{total}}…"
+    "uploadingProgress": "Uploading {{done}} / {{total}}…",
+    "select": "Select",
+    "cancelSelection": "Cancel",
+    "selectedCount": "{{count}} selected",
+    "selectAll": "Select all",
+    "selectLimit": "You can select up to {{max}} images",
+    "bulkDone_bin": "{{count}} images moved to the recycle bin",
+    "bulkDone_restore": "{{count}} images restored",
+    "bulkDone_hard_delete": "{{count}} images deleted forever",
+    "bulkDone_favorite": "{{count}} images added to favourites",
+    "bulkDone_unfavorite": "{{count}} images removed from favourites",
+    "bulkFailed": "{{count}} failed",
+    "bulkError": "Bulk action failed",
+    "bulkBinTitle": "Move {{count}} images to the recycle bin?",
+    "bulkHardDeleteTitle": "Permanently delete {{count}} images?"
   }
 }

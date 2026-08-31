@@ -5176,6 +5176,20 @@
     "cropSaving": "Enregistrement…",
     "cropApply": "Utiliser l'image",
     "queued": "En attente…",
-    "uploadingProgress": "Téléversement {{done}} / {{total}}…"
+    "uploadingProgress": "Téléversement {{done}} / {{total}}…",
+    "select": "Sélectionner",
+    "cancelSelection": "Annuler",
+    "selectedCount": "{{count}} sélectionnées",
+    "selectAll": "Tout sélectionner",
+    "selectLimit": "Vous pouvez sélectionner jusqu'à {{max}} images",
+    "bulkDone_bin": "{{count}} images déplacées vers la corbeille",
+    "bulkDone_restore": "{{count}} images restaurées",
+    "bulkDone_hard_delete": "{{count}} images supprimées définitivement",
+    "bulkDone_favorite": "{{count}} images ajoutées aux favoris",
+    "bulkDone_unfavorite": "{{count}} images retirées des favoris",
+    "bulkFailed": "{{count}} en échec",
+    "bulkError": "Échec de l'action groupée",
+    "bulkBinTitle": "Déplacer {{count}} images vers la corbeille ?",
+    "bulkHardDeleteTitle": "Supprimer définitivement {{count}} images ?"
   }
 }
