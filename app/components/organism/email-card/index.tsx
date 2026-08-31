@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import { ChevronDown } from "lucide-react";
 import type { BccMessage } from "~/lib/api/bcc-logs";
 import TooltipContainer from "~/components/tooltip-container";
+import { useMemberAvatarLookup } from "~/lib/hooks/useWorkspaceMembers";
 
 /**
  * Renders a name; when a display name hides a real email address, the name is
@@ -112,14 +113,28 @@ export function EmailCard({
   const preview = (message.text_body ?? "").trim().slice(0, 240);
   const when = formatEmailDate(message.sent_at ?? message.ingested_at, locale);
   const fromLabel = message.from_name || message.from_address || "—";
+  // Workspace-member senders get their real avatar; external senders keep
+  // the initials chip (BccMessage carries no user id — email match only).
+  const avatarLookup = useMemberAvatarLookup();
+  const senderAvatarUrl = message.from_address
+    ? (avatarLookup.byEmail.get(message.from_address.toLowerCase()) ?? null)
+    : null;
 
   return (
     <div className="rounded-xl border border-border bg-card transition-colors [&:has(details[open])]:border-primary/30 [&:has(details[open])]:shadow-[0_12px_30px_-22px_rgba(19,21,21,0.35)]">
       <details className="group">
         <summary className="flex cursor-pointer list-none items-start gap-3 p-4 hover:bg-muted/30">
-          <span className="mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-full bg-foreground text-[11px] font-semibold text-background">
-            {initialsOf(message.from_name || message.from_address, "@")}
-          </span>
+          {senderAvatarUrl ? (
+            <img
+              src={senderAvatarUrl}
+              alt=""
+              className="mt-0.5 size-9 shrink-0 rounded-full border border-border object-cover"
+            />
+          ) : (
+            <span className="mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-full bg-foreground text-[11px] font-semibold text-background">
+              {initialsOf(message.from_name || message.from_address, "@")}
+            </span>
+          )}
           <div className="min-w-0 flex-1">
             <div className="flex items-baseline justify-between gap-2">
               <p className="truncate text-sm font-semibold text-foreground">

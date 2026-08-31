@@ -92,8 +92,7 @@ export function EmailTemplateEditor({
     onChange({ ...byLocale, [activeLocale]: { ...current, ...next } });
 
   /** Insert at the caret — what makes the chips worth clicking. */
-  const insert = (path: string) => {
-    const token = `{{${path}}}`;
+  const spliceAtCaret = (token: string) => {
     const el = bodyRef.current;
     if (!el) {
       patch({ html: `${current.html}${token}` });
@@ -109,6 +108,8 @@ export function EmailTemplateEditor({
       el.setSelectionRange(start + token.length, start + token.length);
     });
   };
+
+  const insert = (path: string) => spliceAtCaret(`{{${path}}}`);
 
   return (
     <div className="space-y-4">

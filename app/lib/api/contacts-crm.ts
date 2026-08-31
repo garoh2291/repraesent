@@ -17,6 +17,9 @@ export interface ContactListItem {
   lost_value: string | null;
   pipeline_value: string | null;
   last_contacted_at: string | null;
+  /** Optional: older backends don't send it (deploy skew). */
+  avatar_url?: string | null;
+  avatar_thumb_url?: string | null;
 }
 
 export interface PaginatedContacts {

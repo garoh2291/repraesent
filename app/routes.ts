@@ -92,6 +92,7 @@ export default [
         "email-templates/:templateId",
         "routes/email-templates.$templateId.tsx"
       ),
+      route("media/:view?", "routes/media.tsx"),
       route("settings", "routes/settings._layout.tsx", [
         index("routes/settings._index.tsx"),
         route("profile", "routes/settings.profile.tsx"),

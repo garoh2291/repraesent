@@ -65,6 +65,71 @@ export function dataUrlBytes(dataUrl: string): number {
   return Math.ceil((payload.length * 3) / 4);
 }
 
+export interface GeneratedThumbnail {
+  blob: Blob;
+  mimeType: string;
+  width: number;
+  height: number;
+  /** Natural pixel size of the ORIGINAL image, measured while decoding. */
+  originalWidth: number;
+  originalHeight: number;
+}
+
+/**
+ * Media-library thumbnail: downscale to `maxDim` on the long edge and encode
+ * as WebP (Blob, not data URL — it gets PUT to object storage, not inlined).
+ * GIFs pass through untouched: a canvas keeps only the frame it drew, so
+ * thumbnailing an animated GIF would silently freeze it.
+ */
+export async function generateThumbnail(
+  file: File,
+  maxDim = 400,
+): Promise<GeneratedThumbnail> {
+  if (!ACCEPTED_IMAGE_TYPES.includes(file.type)) {
+    throw new Error("Use a PNG, JPEG, GIF or WebP image.");
+  }
+
+  const original = await readAsDataUrl(file);
+  const img = await loadImage(original);
+  const { naturalWidth, naturalHeight } = img;
+
+  if (file.type === "image/gif") {
+    return {
+      blob: file,
+      mimeType: "image/gif",
+      width: naturalWidth,
+      height: naturalHeight,
+      originalWidth: naturalWidth,
+      originalHeight: naturalHeight,
+    };
+  }
+
+  const scale = Math.min(1, maxDim / Math.max(naturalWidth, naturalHeight));
+  const targetWidth = Math.max(1, Math.round(naturalWidth * scale));
+  const targetHeight = Math.max(1, Math.round(naturalHeight * scale));
+
+  const canvas = document.createElement("canvas");
+  canvas.width = targetWidth;
+  canvas.height = targetHeight;
+  const ctx = canvas.getContext("2d");
+  if (!ctx) throw new Error("Could not process that image.");
+  ctx.drawImage(img, 0, 0, targetWidth, targetHeight);
+
+  const blob = await new Promise<Blob | null>((resolve) =>
+    canvas.toBlob(resolve, "image/webp", 0.82),
+  );
+  if (!blob) throw new Error("Could not process that image.");
+
+  return {
+    blob,
+    mimeType: "image/webp",
+    width: targetWidth,
+    height: targetHeight,
+    originalWidth: naturalWidth,
+    originalHeight: naturalHeight,
+  };
+}
+
 export async function resizeImageFile(
   file: File,
   preset: ImageSizePreset,

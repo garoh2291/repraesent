@@ -8,6 +8,7 @@ import Placeholder from "@tiptap/extension-placeholder";
 import Image from "@tiptap/extension-image";
 import {
   Bold,
+  ImageIcon,
   Italic,
   Link2,
   Link2Off,
@@ -19,6 +20,7 @@ import {
 import { Button } from "~/components/ui/button";
 import { cn } from "~/lib/utils";
 import { PromptDialog } from "~/components/molecule/prompt-dialog";
+import { MediaPickerDialog } from "~/components/media/MediaPickerDialog";
 
 export interface RichTextEditorHandle {
   focus: () => void;
@@ -50,9 +52,8 @@ export function RichTextEditor({
   onSubmit?: () => void;
   disabled?: boolean;
   /**
-   * Signature editing only. The composer stays image-free: an inline image in a
-   * one-off email has nowhere to live, while a signature image is stored once
-   * and reused.
+   * Signature editor (base64 data URLs) and the composer (hosted media-library
+   * URLs — the library finally gives an inline image somewhere to live).
    */
   allowImages?: boolean;
   minHeight?: string;
@@ -178,7 +179,13 @@ export function RichTextToolbar({
   const { t } = useTranslation();
   // Declared above the early return — hooks cannot sit behind a conditional.
   const [linkOpen, setLinkOpen] = useState(false);
+  const [mediaOpen, setMediaOpen] = useState(false);
   if (!editor) return null;
+
+  // Only editors created with `allowImages` load the Image extension.
+  const imagesEnabled = editor.extensionManager.extensions.some(
+    (e) => e.name === "image",
+  );
 
   const existingHref = (editor.getAttributes("link").href as string) || "";
 
@@ -250,6 +257,14 @@ export function RichTextToolbar({
           <Link2 className="size-3.5" />
         )}
       </ToolbarButton>
+      {imagesEnabled && (
+        <ToolbarButton
+          label={t("compose.insertImage", { defaultValue: "Insert image" })}
+          onClick={() => setMediaOpen(true)}
+        >
+          <ImageIcon className="size-3.5" />
+        </ToolbarButton>
+      )}
       <ToolbarButton
         label={t("compose.clearFormatting", {
           defaultValue: "Clear formatting",
@@ -260,6 +275,23 @@ export function RichTextToolbar({
       >
         <RemoveFormatting className="size-3.5" />
       </ToolbarButton>
+
+      {imagesEnabled && (
+        <MediaPickerDialog
+          open={mediaOpen}
+          onOpenChange={setMediaOpen}
+          onSelect={(asset) =>
+            editor
+              .chain()
+              .focus()
+              .setImage({
+                src: asset.public_url,
+                alt: asset.original_filename.replace(/\.[^.]+$/, ""),
+              })
+              .run()
+          }
+        />
+      )}
 
       {/*
         Removing a link used to mean clearing the prompt's text and pressing OK

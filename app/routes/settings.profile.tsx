@@ -21,6 +21,8 @@ import {
 } from "~/components/ui/form";
 import { useDocumentMeta } from "~/lib/hooks/use-document-meta";
 import { LanguageSwitcher } from "~/components/language-switcher";
+import { AvatarUploader } from "~/components/media/AvatarUploader";
+import { deleteMyAvatar, uploadMyAvatar } from "~/lib/api/avatars";
 
 export function meta() {
   return [
@@ -123,8 +125,62 @@ export default function SettingsProfile() {
     },
   });
 
+  const avatarUpload = useMutation({
+    mutationFn: ({ file, thumb }: { file: File; thumb?: Blob }) =>
+      uploadMyAvatar(file, thumb),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ["auth"] });
+      toast.success(
+        t("settings.avatarSaved", { defaultValue: "Profile picture updated" }),
+      );
+    },
+    onError: (error) => toast.error(extractErrorMessage(error)),
+  });
+
+  const avatarRemove = useMutation({
+    mutationFn: deleteMyAvatar,
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ["auth"] });
+      toast.success(
+        t("settings.avatarRemoved", { defaultValue: "Profile picture removed" }),
+      );
+    },
+    onError: (error) => toast.error(extractErrorMessage(error)),
+  });
+
+  const initials =
+    `${user?.first_name?.[0] ?? ""}${user?.last_name?.[0] ?? ""}`.toUpperCase() ||
+    (user?.email?.slice(0, 2).toUpperCase() ?? "?");
+
   return (
     <div className="space-y-6 sm:space-y-8 app-fade-up app-fade-up-d2">
+      <SettingsSection
+        label={t("settings.avatarSectionTitle", {
+          defaultValue: "Profile picture",
+        })}
+        description={t("settings.avatarSectionHint", {
+          defaultValue: "Shown to your teammates across the app.",
+        })}
+      >
+        <div className="rounded-2xl border border-border bg-card p-5 sm:p-6">
+          <AvatarUploader
+            imageUrl={user?.avatar_url}
+            fallbackText={initials}
+            busy={avatarUpload.isPending || avatarRemove.isPending}
+            onUpload={async (file, thumb) => {
+              await avatarUpload.mutateAsync({ file, thumb });
+            }}
+            onRemove={async () => {
+              await avatarRemove.mutateAsync();
+            }}
+            removeConfirmDescription={t("settings.avatarRemoveWarningUser", {
+              defaultValue:
+                "Your picture is deleted permanently and your initials are shown instead.",
+            })}
+          />
+        </div>
+      </SettingsSection>
+
       <SettingsSection
         label={t("settings.profile.sectionTitle")}
         description={t("settings.profile.sectionDescription")}

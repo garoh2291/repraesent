@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 import { Link } from "react-router";
 import { formatDate } from "~/lib/utils/format";
 import { cn } from "~/lib/utils";
+import { UserAvatar } from "~/components/atom/user-avatar";
 import { TaskUrgencyBadge } from "~/components/organism/tasks/task-urgency-badge";
 import type { Task } from "~/lib/api/tasks";
 
@@ -116,15 +117,18 @@ export function TaskCard({
         )}
 
         {task.assignee_id && (
-          <span
-            className={`inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[9px] font-bold ${task.assignee_is_deleted ? "bg-muted/50 text-muted-foreground/60" : "bg-muted"}`}
+          <UserAvatar
+            userId={task.assignee_id}
+            email={task.assignee_email}
+            firstName={task.assignee_first_name}
+            lastName={task.assignee_last_name}
+            deleted={task.assignee_is_deleted}
+            size="xs"
             title={[
               [task.assignee_first_name, task.assignee_last_name].filter(Boolean).join(" ").trim() || task.assignee_email || "",
               task.assignee_is_deleted ? "(Deleted)" : "",
             ].filter(Boolean).join(" ")}
-          >
-            {getAssigneeInitials(task)}
-          </span>
+          />
         )}
       </div>
     </div>

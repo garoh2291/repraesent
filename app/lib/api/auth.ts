@@ -20,6 +20,9 @@ export interface User {
   locale?: string;
   brand_id?: string | null;
   onboarding_completed_at?: string | null;
+  /** Optional: older backends don't send it (deploy skew). */
+  avatar_url?: string | null;
+  avatar_thumb_url?: string | null;
   created_at?: string;
   updated_at?: string;
 }
@@ -159,6 +162,9 @@ export interface WorkspaceContext {
   /** "Try a live demo" throwaway workspace (migration 126). */
   is_demo?: boolean;
   demo_expires_at?: string | null;
+  /** Optional: older backends don't send it (deploy skew). */
+  avatar_url?: string | null;
+  avatar_thumb_url?: string | null;
 }
 
 /**

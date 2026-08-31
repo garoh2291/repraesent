@@ -471,7 +471,7 @@ function BlockVisual({
         <div className="mx-2 my-1.5 flex items-center justify-center gap-2 rounded-lg border border-dashed py-8 text-xs text-muted-foreground">
           <ImageIcon className="h-4 w-4" />
           {t("emailCampaigns.templates.canvas.imagePlaceholder", {
-            defaultValue: "Paste an image URL in the inspector",
+            defaultValue: "Choose an image from the library in the inspector",
           })}
         </div>
       );

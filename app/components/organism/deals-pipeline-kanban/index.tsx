@@ -58,6 +58,7 @@ import {
   AlertDialogTitle,
 } from "~/components/ui/alert-dialog";
 import { kanbanCollisionDetection } from "~/lib/kanban/board-position";
+import { UserAvatar } from "~/components/atom/user-avatar";
 
 function cardTitle(d: DealListItem): string {
   const t = d.title?.trim();
@@ -491,11 +492,12 @@ function DealCardInner({ deal }: { deal: DealListItem }) {
           ) : null}
         </div>
         {hasAssignee ? (
-          <Avatar className="size-6 shrink-0">
-            <AvatarFallback className="bg-muted text-[9px] font-semibold text-foreground">
-              {assigneeInitials(deal)}
-            </AvatarFallback>
-          </Avatar>
+          <UserAvatar
+            userId={deal.assigned_to}
+            firstName={deal.assignee_first_name}
+            lastName={deal.assignee_last_name}
+            size="sm"
+          />
         ) : null}
       </div>
       {val ? (
@@ -672,11 +674,13 @@ function DealScheduleRow({
       </div>
 
       {hasAssignee ? (
-        <Avatar className="size-6 shrink-0 mt-0.5">
-          <AvatarFallback className="bg-muted text-[9px] font-semibold text-foreground">
-            {assigneeInitials(deal)}
-          </AvatarFallback>
-        </Avatar>
+        <UserAvatar
+          userId={deal.assigned_to}
+          firstName={deal.assignee_first_name}
+          lastName={deal.assignee_last_name}
+          size="sm"
+          className="mt-0.5"
+        />
       ) : null}
     </button>
   );

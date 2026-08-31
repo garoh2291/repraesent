@@ -17,7 +17,7 @@ import type { Filter } from "~/components/molecule/filter-component/types";
 import FilterComponent from "~/components/molecule/filter-component";
 import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
-import { Avatar, AvatarFallback } from "~/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "~/components/ui/avatar";
 import {
   Select,
   SelectContent,
@@ -468,6 +468,12 @@ export default function ContactsPage() {
                             className="flex items-center gap-3 group"
                           >
                             <Avatar className="size-9 shrink-0">
+                              {(row.avatar_thumb_url ?? row.avatar_url) ? (
+                                <AvatarImage
+                                  src={(row.avatar_thumb_url ?? row.avatar_url)!}
+                                  className="object-cover"
+                                />
+                              ) : null}
                               <AvatarFallback className="bg-linear-to-br from-secondary/30 to-primary/10 text-[11px] font-semibold text-foreground">
                                 {contactInitials(name)}
                               </AvatarFallback>

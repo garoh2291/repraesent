@@ -1,4 +1,5 @@
 import { useNavigate } from "react-router";
+import { SafeImg } from "~/components/atom/safe-img";
 import { useTranslation } from "react-i18next";
 import { useAuthContext } from "~/providers/auth-provider";
 import {
@@ -110,10 +111,24 @@ export default function WorkspacePicker() {
               className="group flex items-center gap-4 w-full rounded-xl border border-stone-200 bg-white p-4 text-left shadow-sm transition-all duration-200 hover:border-stone-300 hover:shadow-md active:scale-[0.99]"
               style={{ animationDelay: `${0.18 + (showBrandEntry ? i + 1 : i) * 0.06}s` }}
             >
-              {/* Workspace initial */}
-              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-[#111113] text-white text-lg font-bold">
-                {workspace.name.charAt(0).toUpperCase()}
-              </div>
+              {/* Workspace picture (1:1 box, image keeps its own ratio) or initial */}
+              {(workspace.avatar_thumb_url ?? workspace.avatar_url) ? (
+                <div className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-stone-200 bg-white">
+                  <SafeImg
+                    src={(workspace.avatar_thumb_url ?? workspace.avatar_url)!}
+                    className="h-full w-full object-contain p-1"
+                    fallback={
+                      <span className="text-lg font-bold text-stone-800">
+                        {workspace.name.charAt(0).toUpperCase()}
+                      </span>
+                    }
+                  />
+                </div>
+              ) : (
+                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-[#111113] text-white text-lg font-bold">
+                  {workspace.name.charAt(0).toUpperCase()}
+                </div>
+              )}
 
               {/* Name */}
               <div className="flex-1 min-w-0">

@@ -28,6 +28,7 @@ import {
   updateTask,
   type Task,
 } from "~/lib/api/tasks";
+import { UserAvatar } from "~/components/atom/user-avatar";
 
 function getAssigneeInitials(task: Task): string {
   const f = task.assignee_first_name?.trim() ?? "";
@@ -371,9 +372,14 @@ function TaskRow({
           className="shrink-0 mt-0.5"
           title={`${task.assignee_first_name ?? ""} ${task.assignee_last_name ?? ""}`.trim()}
         >
-          <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-muted text-[9px] font-bold">
-            {getAssigneeInitials(task)}
-          </span>
+          <UserAvatar
+            userId={task.assignee_id}
+            email={task.assignee_email}
+            firstName={task.assignee_first_name}
+            lastName={task.assignee_last_name}
+            deleted={task.assignee_is_deleted}
+            size="xs"
+          />
         </div>
       )}
     </div>
