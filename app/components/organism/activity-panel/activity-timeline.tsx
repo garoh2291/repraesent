@@ -36,6 +36,7 @@ import {
   type ActivityContext,
   type Variant,
 } from "./shared";
+import { UserAvatar } from "~/components/atom/user-avatar";
 
 type Item =
   | { kind: "note"; ts: number; id: string; note: Note }
@@ -329,23 +330,27 @@ function MetaLine({
   deleted,
   time,
   suffix,
+  userId,
+  email,
 }: {
   first: string | null;
   last: string | null;
   deleted?: boolean;
   time?: string;
   suffix?: ReactNode;
+  userId?: string | null;
+  email?: string | null;
 }) {
   return (
     <div className="mt-1.5 flex items-center gap-1.5 text-[11px] text-muted-foreground">
-      <span
-        className={cn(
-          "inline-flex size-5 items-center justify-center rounded-full text-[9px] font-bold",
-          deleted ? "bg-muted/50 text-muted-foreground/60" : "bg-muted",
-        )}
-      >
-        {initials(first, last)}
-      </span>
+      <UserAvatar
+        userId={userId}
+        email={email}
+        firstName={first}
+        lastName={last}
+        deleted={deleted}
+        size="xs"
+      />
       {suffix}
       {time && (
         <>
@@ -369,6 +374,8 @@ function NoteRow({ note, time }: { note: Note; time: string }) {
       <MetaLine
         first={note.user_first_name}
         last={note.user_last_name}
+        userId={note.updated_by ?? note.created_by}
+        email={note.user_email}
         deleted={note.user_is_deleted}
         time={time}
         suffix={
@@ -452,6 +459,8 @@ function EventRow({
       <MetaLine
         first={event.user_first_name}
         last={event.user_last_name}
+        userId={event.user_id}
+        email={event.user_email}
         deleted={event.user_is_deleted}
         time={time}
         suffix={

@@ -2754,7 +2754,13 @@
       "body": "{{email}} wird bereits von einem anderen Kontakt verwendet. Ein Lead kann nur mit einem Kontakt verknüpft werden, daher ist eine Verbindung hier nicht möglich – öffne stattdessen den vorhandenen Kontakt.",
       "view": "{{name}} öffnen",
       "unnamed": "Vorhandener Kontakt"
-    }
+    },
+    "avatarSaved": "Kontaktbild aktualisiert",
+    "avatarRemoved": "Kontaktbild entfernt",
+    "avatarUpload": "Kontaktbild hochladen",
+    "avatarRemoveWarning": "Das Bild des Kontakts wird dauerhaft gelöscht und stattdessen werden die Initialen angezeigt.",
+    "historyAvatarUpdated": "Kontaktbild aktualisiert",
+    "historyAvatarRemoved": "Kontaktbild entfernt"
   },
   "leadEmails": {
     "emptyTitle": "Noch keine E-Mails protokolliert",

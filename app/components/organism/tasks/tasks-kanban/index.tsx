@@ -18,6 +18,7 @@ import { useTranslation } from "react-i18next";
 import { ChevronDown } from "lucide-react";
 import { formatDate } from "~/lib/utils/format";
 import { cn } from "~/lib/utils";
+import { UserAvatar } from "~/components/atom/user-avatar";
 import { TaskCard } from "./task-card";
 import { TaskUrgencyBadge } from "~/components/organism/tasks/task-urgency-badge";
 import { type Task, type TaskStatus } from "~/lib/api/tasks";
@@ -460,18 +461,16 @@ function TaskScheduleRow({
 
       {/* Assignee avatar */}
       {task.assignee_id && (
-        <span
-          className="mt-0.5 inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-muted text-[10px] font-bold text-muted-foreground"
+        <UserAvatar
+          userId={task.assignee_id}
+          email={task.assignee_email}
+          firstName={task.assignee_first_name}
+          lastName={task.assignee_last_name}
+          deleted={task.assignee_is_deleted}
+          size="sm"
+          className="mt-0.5"
           title={`${task.assignee_first_name ?? ""} ${task.assignee_last_name ?? ""}`.trim()}
-        >
-          {(() => {
-            const f = task.assignee_first_name?.trim() ?? "";
-            const l = task.assignee_last_name?.trim() ?? "";
-            if (f && l) return `${f[0]}${l[0]}`.toUpperCase();
-            if (f) return f.slice(0, 2).toUpperCase();
-            return "?";
-          })()}
-        </span>
+        />
       )}
     </button>
   );

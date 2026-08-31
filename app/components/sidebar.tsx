@@ -658,9 +658,9 @@ export function Sidebar({
                       collapsed ? "justify-center px-0" : "px-2.5",
                     )}
                   >
-                    {currentWorkspace.avatar_url ? (
+                    {(currentWorkspace.avatar_thumb_url ?? currentWorkspace.avatar_url) ? (
                       <img
-                        src={currentWorkspace.avatar_url}
+                        src={(currentWorkspace.avatar_thumb_url ?? currentWorkspace.avatar_url)!}
                         alt=""
                         className="h-6 w-6 shrink-0 rounded-md bg-white/90 object-contain p-0.5"
                       />
@@ -701,9 +701,9 @@ export function Sidebar({
                       key={ws.id}
                       onClick={() => handleWorkspaceChange(ws.id)}
                     >
-                      {ws.avatar_url ? (
+                      {(ws.avatar_thumb_url ?? ws.avatar_url) ? (
                         <img
-                          src={ws.avatar_url}
+                          src={(ws.avatar_thumb_url ?? ws.avatar_url)!}
                           alt=""
                           className="h-4 w-4 shrink-0 rounded-sm bg-white object-contain"
                         />
@@ -728,9 +728,9 @@ export function Sidebar({
                   collapsed ? "justify-center px-0" : "px-2.5",
                 )}
               >
-                {currentWorkspace.avatar_url ? (
+                {(currentWorkspace.avatar_thumb_url ?? currentWorkspace.avatar_url) ? (
                   <img
-                    src={currentWorkspace.avatar_url}
+                    src={(currentWorkspace.avatar_thumb_url ?? currentWorkspace.avatar_url)!}
                     alt=""
                     className="h-6 w-6 shrink-0 rounded-md bg-white/90 object-contain p-0.5"
                   />

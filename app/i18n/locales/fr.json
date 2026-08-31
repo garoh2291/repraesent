@@ -2754,7 +2754,13 @@
       "body": "{{email}} est déjà utilisé par un autre contact. Un lead ne peut être lié qu'à un seul contact, il ne peut donc pas être connecté ici — ouvrez plutôt le contact existant.",
       "view": "Voir {{name}}",
       "unnamed": "Contact existant"
-    }
+    },
+    "avatarSaved": "Photo du contact mise à jour",
+    "avatarRemoved": "Photo du contact supprimée",
+    "avatarUpload": "Téléverser la photo du contact",
+    "avatarRemoveWarning": "La photo du contact est supprimée définitivement et les initiales sont affichées à la place.",
+    "historyAvatarUpdated": "Photo du contact mise à jour",
+    "historyAvatarRemoved": "Photo du contact supprimée"
   },
   "leadEmails": {
     "emptyTitle": "Aucun e-mail journalisé pour le moment",

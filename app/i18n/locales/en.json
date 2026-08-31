@@ -2752,7 +2752,13 @@
       "body": "{{email}} is already used by another contact. A lead can only link to one contact, so it can't be connected here — open the existing contact instead.",
       "view": "View {{name}}",
       "unnamed": "Existing contact"
-    }
+    },
+    "avatarSaved": "Contact picture updated",
+    "avatarRemoved": "Contact picture removed",
+    "avatarUpload": "Upload contact picture",
+    "avatarRemoveWarning": "The contact's picture is deleted permanently and the initials are shown instead.",
+    "historyAvatarUpdated": "Contact picture updated",
+    "historyAvatarRemoved": "Contact picture removed"
   },
   "leadEmails": {
     "emptyTitle": "No emails logged yet",

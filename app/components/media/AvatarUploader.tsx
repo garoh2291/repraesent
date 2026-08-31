@@ -29,7 +29,7 @@ export function AvatarUploader({
 }: {
   imageUrl: string | null | undefined;
   fallbackText: string;
-  onUpload: (file: File) => Promise<void>;
+  onUpload: (file: File, thumb?: Blob) => Promise<void>;
   onRemove: () => Promise<void>;
   busy?: boolean;
   /** Controls hidden entirely (e.g. non-admin viewing workspace picture). */
@@ -68,15 +68,19 @@ export function AvatarUploader({
     }
     if (!crop) {
       // No crop flow: downscale in the browser (keeps it under the API's
-      // 2MB cap) and upload straight away.
-      void generateThumbnail(file, 1024)
-        .then((resized) =>
+      // 2MB cap), plus a 128px thumb for chips, and upload straight away.
+      void Promise.all([
+        generateThumbnail(file, 1024),
+        generateThumbnail(file, 128),
+      ])
+        .then(([resized, thumb]) =>
           onUpload(
             new File(
               [resized.blob],
               file.name.replace(/\.[^.]+$/, "") + ".webp",
               { type: resized.mimeType },
             ),
+            thumb.blob,
           ),
         )
         .catch(() =>
@@ -175,7 +179,9 @@ export function AvatarUploader({
         minCropPx={128}
         allowShrink
         onCropped={async (cropped) => {
-          await onUpload(cropped);
+          // 128px thumb for chips/lists, generated from the cropped result.
+          const thumb = await generateThumbnail(cropped, 128).catch(() => null);
+          await onUpload(cropped, thumb?.blob);
           setCropOpen(false);
           setPickedFile(null);
         }}

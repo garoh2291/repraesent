@@ -9,9 +9,11 @@ import { apiClient } from "./axios-instance";
 
 export async function uploadMyAvatar(
   file: File,
-): Promise<{ avatar_url: string }> {
+  thumb?: File | Blob,
+): Promise<{ avatar_url: string; avatar_thumb_url?: string }> {
   const form = new FormData();
   form.append("file", file);
+  if (thumb) form.append("thumb", thumb, "thumb.webp");
   const { data } = await apiClient.post<{ avatar_url: string }>(
     "/users/me/avatar",
     form,
@@ -26,9 +28,11 @@ export async function deleteMyAvatar(): Promise<void> {
 
 export async function uploadWorkspaceAvatar(
   file: File,
-): Promise<{ avatar_url: string }> {
+  thumb?: File | Blob,
+): Promise<{ avatar_url: string; avatar_thumb_url?: string }> {
   const form = new FormData();
   form.append("file", file);
+  if (thumb) form.append("thumb", thumb, "thumb.webp");
   const { data } = await apiClient.post<{ avatar_url: string }>(
     "/users/me/workspace/avatar",
     form,
@@ -39,4 +43,24 @@ export async function uploadWorkspaceAvatar(
 
 export async function deleteWorkspaceAvatar(): Promise<void> {
   await apiClient.delete("/users/me/workspace/avatar");
+}
+
+export async function uploadContactAvatar(
+  contactId: string,
+  file: File,
+  thumb?: File | Blob,
+): Promise<{ avatar_url: string; avatar_thumb_url?: string }> {
+  const form = new FormData();
+  form.append("file", file);
+  if (thumb) form.append("thumb", thumb, "thumb.webp");
+  const { data } = await apiClient.post<{ avatar_url: string }>(
+    `/contacts/${contactId}/avatar`,
+    form,
+    { headers: { "Content-Type": "multipart/form-data" } },
+  );
+  return data;
+}
+
+export async function deleteContactAvatar(contactId: string): Promise<void> {
+  await apiClient.delete(`/contacts/${contactId}/avatar`);
 }

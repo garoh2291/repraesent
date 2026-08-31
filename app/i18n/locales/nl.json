@@ -2752,7 +2752,13 @@
       "body": "{{email}} wordt al gebruikt door een ander contact. Een lead kan maar aan één contact worden gekoppeld, dus deze kan hier niet worden verbonden — open in plaats daarvan het bestaande contact.",
       "view": "{{name}} bekijken",
       "unnamed": "Bestaand contact"
-    }
+    },
+    "avatarSaved": "Contactfoto bijgewerkt",
+    "avatarRemoved": "Contactfoto verwijderd",
+    "avatarUpload": "Contactfoto uploaden",
+    "avatarRemoveWarning": "De foto van het contact wordt permanent verwijderd en in plaats daarvan worden de initialen getoond.",
+    "historyAvatarUpdated": "Contactfoto bijgewerkt",
+    "historyAvatarRemoved": "Contactfoto verwijderd"
   },
   "leadEmails": {
     "emptyTitle": "Nog geen e-mails gelogd",

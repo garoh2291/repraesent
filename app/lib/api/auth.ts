@@ -22,6 +22,7 @@ export interface User {
   onboarding_completed_at?: string | null;
   /** Optional: older backends don't send it (deploy skew). */
   avatar_url?: string | null;
+  avatar_thumb_url?: string | null;
   created_at?: string;
   updated_at?: string;
 }
@@ -163,6 +164,7 @@ export interface WorkspaceContext {
   demo_expires_at?: string | null;
   /** Optional: older backends don't send it (deploy skew). */
   avatar_url?: string | null;
+  avatar_thumb_url?: string | null;
 }
 
 /**

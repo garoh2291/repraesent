@@ -137,7 +137,8 @@ export default function SettingsTeam() {
   };
 
   const wsAvatarUpload = useMutation({
-    mutationFn: uploadWorkspaceAvatar,
+    mutationFn: ({ file, thumb }: { file: File; thumb?: Blob }) =>
+      uploadWorkspaceAvatar(file, thumb),
     onSuccess: async () => {
       await invalidateAvatarQueries();
       toast.success(
@@ -302,8 +303,8 @@ export default function SettingsTeam() {
                 crop={false}
                 disabled={!isAdmin}
                 busy={wsAvatarUpload.isPending || wsAvatarRemove.isPending}
-                onUpload={async (file) => {
-                  await wsAvatarUpload.mutateAsync(file);
+                onUpload={async (file, thumb) => {
+                  await wsAvatarUpload.mutateAsync({ file, thumb });
                 }}
                 onRemove={async () => {
                   await wsAvatarRemove.mutateAsync();
@@ -383,9 +384,9 @@ export default function SettingsTeam() {
                       className="grid grid-cols-1 md:grid-cols-[1fr_180px_140px_100px_88px] gap-3 md:gap-4 px-5 py-3.5 items-center"
                     >
                       <div className="flex items-center gap-3 min-w-0">
-                        {m.user_avatar_url ? (
+                        {(m.user_avatar_thumb_url ?? m.user_avatar_url) ? (
                           <img
-                            src={m.user_avatar_url}
+                            src={(m.user_avatar_thumb_url ?? m.user_avatar_url)!}
                             alt=""
                             className="h-8 w-8 shrink-0 rounded-full border border-border object-cover"
                           />

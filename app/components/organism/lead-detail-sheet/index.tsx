@@ -49,6 +49,7 @@ import {
   isAppointmentPast,
 } from "~/lib/leads/appointment";
 import { AppointmentProviderIcon } from "~/components/molecule/appointment-provider-icon";
+import { UserAvatar } from "~/components/atom/user-avatar";
 
 export function getHistoryItemInitials(item: LeadHistoryItem): string {
   const first = item.user_first_name?.trim() ?? "";
@@ -159,6 +160,14 @@ export function formatHistoryAction(
   if (item.action === "contact_created")
     return t("leads.detail.historyContactCreated", {
       defaultValue: "Contact created",
+    });
+  if (item.action === "contact_avatar_updated")
+    return t("contacts.historyAvatarUpdated", {
+      defaultValue: "Contact picture updated",
+    });
+  if (item.action === "contact_avatar_removed")
+    return t("contacts.historyAvatarRemoved", {
+      defaultValue: "Contact picture removed",
     });
   if (item.action === "contact_updated")
     return t("leads.detail.historyContactUpdated", {
@@ -904,11 +913,14 @@ export function LeadHistorySection({
                         tooltipContent={buildUserLabel(item, t)}
                         showCopyButton={false}
                       >
-                        <span
-                          className={`inline-flex h-5 w-5 items-center justify-center rounded-full text-[9px] font-bold ${item.user_is_deleted ? "bg-muted/50 text-muted-foreground/60" : "bg-muted"}`}
-                        >
-                          {getHistoryItemInitials(item)}
-                        </span>
+                        <UserAvatar
+                          userId={item.user_id}
+                          email={item.user_email}
+                          firstName={item.user_first_name}
+                          lastName={item.user_last_name}
+                          deleted={item.user_is_deleted}
+                          size="xs"
+                        />
                       </TooltipContainer>
                       {item.user_is_deleted && (
                         <span className="text-[10px] text-muted-foreground/60">

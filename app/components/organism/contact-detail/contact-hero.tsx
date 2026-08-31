@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { Link } from "react-router";
 import { useTranslation } from "react-i18next";
 import {
@@ -14,7 +14,17 @@ import {
   Briefcase,
   Plus,
 } from "lucide-react";
-import { Avatar, AvatarFallback } from "~/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "~/components/ui/avatar";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { Camera, Trash2 } from "lucide-react";
+import { ImageCropModal } from "~/components/media/ImageCropModal";
+import { ConfirmDeleteDialog } from "~/components/molecule/confirm-delete-dialog";
+import { extractErrorMessage } from "~/lib/api/axios-instance";
+import {
+  deleteContactAvatar,
+  uploadContactAvatar,
+} from "~/lib/api/avatars";
+import { generateThumbnail } from "~/lib/utils/image-resize";
 import { Button } from "~/components/ui/button";
 import { ContactSourceBadge } from "~/components/molecule/contact-badges";
 import { toast } from "sonner";
@@ -327,14 +337,11 @@ export function ContactHero({
 
       <div className="px-4 pb-5 pt-0 sm:px-6">
         <div className="-mt-10 flex flex-col gap-4 sm:flex-row sm:items-center sm:gap-5">
-          <Avatar
-            size="lg"
-            className="size-20 shrink-0 border-4 border-card bg-card shadow-(--shadow)"
-          >
-            <AvatarFallback className="bg-linear-to-br from-secondary/30 to-primary/10 text-lg font-semibold tracking-tight text-foreground">
-              {initials(displayName)}
-            </AvatarFallback>
-          </Avatar>
+          <ContactHeroAvatar
+            contactId={contactId}
+            avatarUrl={(contact as { avatar_url?: string | null } | null)?.avatar_url ?? null}
+            fallbackInitials={initials(displayName)}
+          />
 
           <div className="min-w-0 flex-1">
             <h1 className="truncate text-2xl font-semibold tracking-tight text-foreground sm:text-[28px]">
@@ -498,5 +505,163 @@ export function ContactHero({
         />
       ) : null}
     </section>
+  );
+}
+
+
+/**
+ * The hero avatar with picture management: hover reveals a camera overlay,
+ * picking a file opens the crop modal (round, zoom-out allowed), and an
+ * existing picture gets a remove control. Same pipeline as user avatars —
+ * the old object is hard-deleted server-side on replace/remove.
+ */
+function ContactHeroAvatar({
+  contactId,
+  avatarUrl,
+  fallbackInitials,
+}: {
+  contactId: string | null;
+  avatarUrl: string | null;
+  fallbackInitials: string;
+}) {
+  const { t } = useTranslation();
+  const queryClient = useQueryClient();
+  const inputRef = useRef<HTMLInputElement>(null);
+  const [pickedFile, setPickedFile] = useState<File | null>(null);
+  const [cropOpen, setCropOpen] = useState(false);
+  const [confirmRemove, setConfirmRemove] = useState(false);
+
+  const invalidate = () =>
+    Promise.all([
+      queryClient.invalidateQueries({ queryKey: ["contact"] }),
+      // The history timeline lists the picture change (contact_avatar_*).
+      queryClient.invalidateQueries({ queryKey: ["contact-history"] }),
+      queryClient.invalidateQueries({ queryKey: ["contacts"] }),
+    ]);
+
+  const uploadMutation = useMutation({
+    mutationFn: ({ file, thumb }: { file: File; thumb?: Blob }) =>
+      uploadContactAvatar(contactId!, file, thumb),
+    onSuccess: async () => {
+      await invalidate();
+      setCropOpen(false);
+      setPickedFile(null);
+      toast.success(
+        t("contacts.avatarSaved", { defaultValue: "Contact picture updated" }),
+      );
+    },
+    onError: (error) => toast.error(extractErrorMessage(error)),
+  });
+
+  const removeMutation = useMutation({
+    mutationFn: () => deleteContactAvatar(contactId!),
+    onSuccess: async () => {
+      await invalidate();
+      setConfirmRemove(false);
+      toast.success(
+        t("contacts.avatarRemoved", {
+          defaultValue: "Contact picture removed",
+        }),
+      );
+    },
+    onError: (error) => toast.error(extractErrorMessage(error)),
+  });
+
+  return (
+    <div className="group/avatar relative size-20 shrink-0">
+      {/* No size="lg": its data-[size=lg]:size-10 variant class beats the
+          size-20 override (tailwind-merge can't merge across variants) and
+          shrinks the circle inside the 80px wrapper. */}
+      <Avatar className="size-20 border-4 border-card bg-card shadow-(--shadow)">
+        {avatarUrl ? (
+          <AvatarImage src={avatarUrl} className="object-cover" />
+        ) : null}
+        <AvatarFallback className="bg-linear-to-br from-secondary/30 to-primary/10 text-lg font-semibold tracking-tight text-foreground">
+          {fallbackInitials}
+        </AvatarFallback>
+      </Avatar>
+
+      {contactId && (
+        <>
+          {/* Small corner badge — the standard "change photo" affordance. */}
+          <button
+            type="button"
+            onClick={() => inputRef.current?.click()}
+            aria-label={t("contacts.avatarUpload", {
+              defaultValue: "Upload contact picture",
+            })}
+            className="absolute -right-0.5 -bottom-0.5 flex h-7 w-7 cursor-pointer items-center justify-center rounded-full border border-border bg-card text-muted-foreground opacity-0 shadow transition-opacity hover:bg-muted hover:text-foreground focus-visible:opacity-100 group-hover/avatar:opacity-100"
+          >
+            <Camera className="h-3.5 w-3.5" />
+          </button>
+          {avatarUrl && (
+            <button
+              type="button"
+              onClick={() => setConfirmRemove(true)}
+              aria-label={t("settings.avatarRemove", {
+                defaultValue: "Remove",
+              })}
+              className="absolute -top-0.5 -right-0.5 flex h-6 w-6 cursor-pointer items-center justify-center rounded-full border border-border bg-card text-muted-foreground opacity-0 shadow transition-opacity hover:text-destructive focus-visible:opacity-100 group-hover/avatar:opacity-100"
+            >
+              <Trash2 className="h-3 w-3" />
+            </button>
+          )}
+          <input
+            ref={inputRef}
+            type="file"
+            accept="image/jpeg,image/png,image/webp"
+            className="hidden"
+            onChange={(e) => {
+              const file = e.target.files?.[0];
+              e.target.value = "";
+              if (!file) return;
+              setPickedFile(file);
+              setCropOpen(true);
+            }}
+          />
+
+          <ImageCropModal
+            open={cropOpen}
+            onOpenChange={(open) => {
+              setCropOpen(open);
+              if (!open) setPickedFile(null);
+            }}
+            file={pickedFile}
+            busy={uploadMutation.isPending}
+            aspect={1}
+            cropShape="round"
+            outputWidth={512}
+            outputHeight={512}
+            minCropPx={96}
+            allowShrink
+            onCropped={async (cropped) => {
+              const thumb = await generateThumbnail(cropped, 128).catch(
+                () => null,
+              );
+              await uploadMutation.mutateAsync({
+                file: cropped,
+                thumb: thumb?.blob,
+              });
+            }}
+          />
+
+          <ConfirmDeleteDialog
+            open={confirmRemove}
+            onOpenChange={setConfirmRemove}
+            name={null}
+            title={t("settings.avatarRemoveTitle", {
+              defaultValue: "Remove picture?",
+            })}
+            description={t("contacts.avatarRemoveWarning", {
+              defaultValue:
+                "The contact's picture is deleted permanently and the initials are shown instead.",
+            })}
+            confirmLabel={t("settings.avatarRemove", { defaultValue: "Remove" })}
+            onConfirm={() => removeMutation.mutate()}
+            busy={removeMutation.isPending}
+          />
+        </>
+      )}
+    </div>
   );
 }

@@ -35,6 +35,7 @@ import { MoreHorizontal, Pencil, Trash2, Plus } from "lucide-react";
 import { formatRelativeTime } from "~/lib/utils/format";
 import { cn } from "~/lib/utils";
 import TooltipContainer from "~/components/tooltip-container";
+import { UserAvatar } from "~/components/atom/user-avatar";
 
 function getInitials(note: Note): string {
   const first = note.user_first_name?.trim() ?? "";
@@ -436,9 +437,14 @@ export function LeadNotesSection({
         {isAddingNew && (
           <div className="rounded-xl border border-primary/30 bg-primary/4 p-3 space-y-2.5 shadow-sm">
             <div className="flex items-center gap-2 text-xs text-muted-foreground">
-              <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-primary/10 text-primary text-[9px] font-bold">
-                {getCurrentUserInitials(user?.first_name, user?.last_name)}
-              </span>
+              <UserAvatar
+                userId={user?.id}
+                email={user?.email}
+                firstName={user?.first_name}
+                lastName={user?.last_name}
+                size="xs"
+                fallbackClassName="bg-primary/10 text-primary"
+              />
               <span className="font-medium text-muted-foreground/70">
                 {t("leads.detail.newNote")}
               </span>
@@ -493,11 +499,14 @@ export function LeadNotesSection({
                     )}
                     showCopyButton={false}
                   >
-                    <span
-                      className={`inline-flex h-5 w-5 items-center justify-center rounded-full text-[9px] font-bold ${note.user_is_deleted ? "bg-muted/50 text-muted-foreground/60" : "bg-muted"}`}
-                    >
-                      {getInitials(note)}
-                    </span>
+                    <UserAvatar
+                      userId={note.updated_by ?? note.created_by}
+                      email={note.user_email}
+                      firstName={note.user_first_name}
+                      lastName={note.user_last_name}
+                      deleted={note.user_is_deleted}
+                      size="xs"
+                    />
                   </TooltipContainer>
                   <span>{t("leads.detail.editing")}</span>
                 </div>
@@ -555,11 +564,14 @@ export function LeadNotesSection({
                       )}
                       showCopyButton={false}
                     >
-                      <span
-                        className={`inline-flex h-5 w-5 items-center justify-center rounded-full text-[9px] font-bold ${note.user_is_deleted ? "bg-muted/50 text-muted-foreground/60" : "bg-muted"}`}
-                      >
-                        {getInitials(note)}
-                      </span>
+                      <UserAvatar
+                        userId={note.updated_by ?? note.created_by}
+                        email={note.user_email}
+                        firstName={note.user_first_name}
+                        lastName={note.user_last_name}
+                        deleted={note.user_is_deleted}
+                        size="xs"
+                      />
                     </TooltipContainer>
                     {note.user_is_deleted && (
                       <span className="text-[10px] text-muted-foreground/60">

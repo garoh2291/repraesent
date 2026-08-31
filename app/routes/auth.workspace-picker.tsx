@@ -111,10 +111,10 @@ export default function WorkspacePicker() {
               style={{ animationDelay: `${0.18 + (showBrandEntry ? i + 1 : i) * 0.06}s` }}
             >
               {/* Workspace picture (1:1 box, image keeps its own ratio) or initial */}
-              {workspace.avatar_url ? (
+              {(workspace.avatar_thumb_url ?? workspace.avatar_url) ? (
                 <div className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-stone-200 bg-white">
                   <img
-                    src={workspace.avatar_url}
+                    src={(workspace.avatar_thumb_url ?? workspace.avatar_url)!}
                     alt=""
                     className="h-full w-full object-contain p-1"
                   />

@@ -50,6 +50,7 @@ import {
   deleteTask,
   type TaskHistoryItem,
 } from "~/lib/api/tasks";
+import { UserAvatar } from "~/components/atom/user-avatar";
 
 function formatHistoryAction(
   item: TaskHistoryItem,
@@ -489,12 +490,14 @@ export function TaskDetailModal({
                           )}
                           showCopyButton={false}
                         >
-                          <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-muted text-[9px] font-bold">
-                            {getInitials(
-                              task.assignee_first_name,
-                              task.assignee_last_name
-                            )}
-                          </span>
+                          <UserAvatar
+                            userId={task.assignee_id}
+                            email={task.assignee_email}
+                            firstName={task.assignee_first_name}
+                            lastName={task.assignee_last_name}
+                            deleted={task.assignee_is_deleted}
+                            size="xs"
+                          />
                         </TooltipContainer>
                         <span>
                           {[task.assignee_first_name, task.assignee_last_name]
@@ -517,12 +520,12 @@ export function TaskDetailModal({
                     {t("tasks.fields.createdBy")}
                   </span>
                   <div className="flex items-center gap-1.5 text-xs text-muted-foreground pt-1">
-                    <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-muted text-[9px] font-bold">
-                      {getInitials(
-                        task.creator_first_name,
-                        task.creator_last_name
-                      )}
-                    </span>
+                    <UserAvatar
+                      userId={task.created_by}
+                      firstName={task.creator_first_name}
+                      lastName={task.creator_last_name}
+                      size="xs"
+                    />
                     <span>
                       {task.creator_first_name} {task.creator_last_name}
                     </span>
@@ -584,14 +587,14 @@ export function TaskDetailModal({
                                     )}
                                     showCopyButton={false}
                                   >
-                                    <span
-                                      className={`inline-flex h-5 w-5 items-center justify-center rounded-full text-[9px] font-bold ${item.user_is_deleted ? "bg-muted/50 text-muted-foreground/60" : "bg-muted"}`}
-                                    >
-                                      {getInitials(
-                                        item.user_first_name,
-                                        item.user_last_name
-                                      )}
-                                    </span>
+                                    <UserAvatar
+                                      userId={item.user_id}
+                                      email={item.user_email}
+                                      firstName={item.user_first_name}
+                                      lastName={item.user_last_name}
+                                      deleted={item.user_is_deleted}
+                                      size="xs"
+                                    />
                                   </TooltipContainer>
                                   {item.user_is_deleted && (
                                     <span className="text-[10px] text-muted-foreground/60">

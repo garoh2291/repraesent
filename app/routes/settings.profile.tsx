@@ -126,7 +126,8 @@ export default function SettingsProfile() {
   });
 
   const avatarUpload = useMutation({
-    mutationFn: uploadMyAvatar,
+    mutationFn: ({ file, thumb }: { file: File; thumb?: Blob }) =>
+      uploadMyAvatar(file, thumb),
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ["auth"] });
       toast.success(
@@ -166,8 +167,8 @@ export default function SettingsProfile() {
             imageUrl={user?.avatar_url}
             fallbackText={initials}
             busy={avatarUpload.isPending || avatarRemove.isPending}
-            onUpload={async (file) => {
-              await avatarUpload.mutateAsync(file);
+            onUpload={async (file, thumb) => {
+              await avatarUpload.mutateAsync({ file, thumb });
             }}
             onRemove={async () => {
               await avatarRemove.mutateAsync();

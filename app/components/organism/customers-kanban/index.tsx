@@ -24,7 +24,7 @@ import {
   ContactTypeBadge,
 } from "~/components/molecule/contact-badges";
 import type { ContactListItem } from "~/lib/api/contacts-crm";
-import { Avatar, AvatarFallback } from "~/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "~/components/ui/avatar";
 
 const TYPE_COLORS: Record<ContactType, string> = {
   contact: "bg-slate-500",
@@ -39,6 +39,11 @@ function normalizeContactType(raw: string): ContactType {
   return CONTACT_TYPES.includes(raw as ContactType)
     ? (raw as ContactType)
     : "other";
+}
+
+function avatarSrc(c: unknown): string | null {
+  const x = c as { avatar_thumb_url?: string | null; avatar_url?: string | null };
+  return x.avatar_thumb_url ?? x.avatar_url ?? null;
 }
 
 function contactInitials(name: string): string {
@@ -270,6 +275,12 @@ function ContactKanbanCardInner({ contact }: { contact: ContactListItem }) {
     <>
       <div className="flex items-start gap-2">
         <Avatar className="size-8 shrink-0">
+          {avatarSrc(contact) ? (
+            <AvatarImage
+              src={avatarSrc(contact)!}
+              className="object-cover"
+            />
+          ) : null}
           <AvatarFallback className="bg-linear-to-br from-secondary/30 to-primary/10 text-[10px] font-semibold text-foreground">
             {contactInitials(name)}
           </AvatarFallback>
@@ -463,6 +474,12 @@ function ContactScheduleRow({
         </div>
       </div>
       <Avatar className="size-7 shrink-0 mt-0.5">
+        {avatarSrc(contact) ? (
+          <AvatarImage
+            src={avatarSrc(contact)!}
+            className="object-cover"
+          />
+        ) : null}
         <AvatarFallback className="bg-linear-to-br from-secondary/30 to-primary/10 text-[10px] font-semibold">
           {contactInitials(name)}
         </AvatarFallback>

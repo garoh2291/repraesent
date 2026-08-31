@@ -29,9 +29,11 @@ export interface WorkspaceDetail {
     user_onboarding_completed_at?: string | null;
     has_logged_in?: boolean;
     user_avatar_url?: string | null;
+    user_avatar_thumb_url?: string | null;
   }>;
   /** Optional: older backends don't send it (deploy skew). */
   avatar_url?: string | null;
+  avatar_thumb_url?: string | null;
 }
 
 export async function getWorkspaceDetail(): Promise<WorkspaceDetail> {
