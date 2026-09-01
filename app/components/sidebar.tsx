@@ -933,9 +933,12 @@ export function Sidebar({
                     <LayoutTemplate className="h-4 w-4 shrink-0" />
                     {t("nav.emailTemplates", { defaultValue: "Templates" })}
                   </NavLink>
-                  <MediaNav onClose={onClose} />
                 </>
               )}
+
+              {/* Media hub is generally available — deliberately NOT behind
+                  the emailCampaigns pilot flag. */}
+              <MediaNav onClose={onClose} />
 
               {currentWorkspace?.services
                 ?.filter(
