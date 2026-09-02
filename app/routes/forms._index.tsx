@@ -3,9 +3,11 @@ import {
   ClipboardList,
   Copy,
   HelpCircle,
+  Layers,
   Link2,
   MoreHorizontal,
   Plus,
+  ShoppingBag,
   Trash2,
 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
@@ -13,6 +15,11 @@ import { useTranslation } from "react-i18next";
 import { Link, useNavigate } from "react-router";
 import { toast } from "sonner";
 import { FormsIntroModal } from "~/components/forms/intro/FormsIntroModal";
+import {
+  CreateFormDialog,
+  type FormType,
+  formTypeToPayload,
+} from "~/components/forms/CreateFormDialog";
 import { useSearchShortcut } from "~/lib/hooks/useSearchShortcut";
 import { FormStatusBadge } from "~/components/forms/FormStatusBadge";
 import {
@@ -27,26 +34,12 @@ import {
 } from "~/components/ui/alert-dialog";
 import { Button } from "~/components/ui/button";
 import {
-  Dialog,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "~/components/ui/dialog";
-import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "~/components/ui/dropdown-menu";
 import { Input } from "~/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "~/components/ui/select";
 import { Skeleton } from "~/components/ui/skeleton";
 import { extractErrorMessage } from "~/lib/api/axios-instance";
 import {
@@ -58,11 +51,7 @@ import {
 import { buildPublicFormUrl } from "~/lib/config";
 import { useLocalStorageValue } from "~/lib/hooks/useLocalStorage";
 import { useAuthContext } from "~/providers/auth-provider";
-import {
-  FORM_LOCALES,
-  isFormLocale,
-  type FormLocale,
-} from "~/lib/forms/schema";
+import { isFormLocale, type FormLocale } from "~/lib/forms/schema";
 import { useCanEditForms } from "~/lib/hooks/useCanEditForms";
 import { useForms } from "~/lib/hooks/useForms";
 import i18n from "~/i18n";
@@ -120,10 +109,9 @@ export default function FormsIndexRoute() {
   const [search, setSearch] = useState("");
   const { ref: searchInputRef, withHint } = useSearchShortcut();
   const [createOpen, setCreateOpen] = useState(false);
-  const [newName, setNewName] = useState("");
   // Default to the operator's own dashboard language rather than always "de" —
   // the form's default locale is otherwise very hard to change later.
-  const [newLocale, setNewLocale] = useState<FormLocale>(() =>
+  const [newLocale] = useState<FormLocale>(() =>
     isFormLocale(i18n.language) ? i18n.language : "de",
   );
   const [pendingArchive, setPendingArchive] = useState<FormSummary | null>(
@@ -140,23 +128,42 @@ export default function FormsIndexRoute() {
     queryClient.invalidateQueries({ queryKey: ["forms"] });
 
   const createMutation = useMutation({
-    mutationFn: (name: string) =>
-      createForm({ name, default_locale: newLocale }),
-    onSuccess: async (form) => {
+    mutationFn: (input: {
+      name: string;
+      type: FormType;
+      default_locale: FormLocale;
+    }) =>
+      createForm({
+        name: input.name,
+        default_locale: input.default_locale,
+        ...formTypeToPayload(input.type),
+      }),
+    onSuccess: async (form, input) => {
       await invalidate();
       toast.success(t("forms.list.created"));
       setCreateOpen(false);
-      setNewName("");
       navigate(`/forms/${form.id}`);
     },
     onError: (error: unknown) => {
-      const status = (error as { response?: { status?: number } })?.response
-        ?.status;
+      const response = (
+        error as { response?: { status?: number; data?: { code?: string } } }
+      )?.response;
+      const status = response?.status;
+      const code = response?.data?.code;
+      // A 409 used to mean "name taken" and nothing else. A product form
+      // without Stripe is also a 409 (stripe_not_connected), and calling that
+      // a duplicate name sent people renaming a form that was never the issue.
+      if (status === 409 && code === "stripe_not_connected") {
+        toast.error(t("forms.create.type.product.disabled"), {
+          description: extractErrorMessage(error),
+        });
+        return;
+      }
       toast.error(
-        status === 409
+        status === 409 && !code
           ? t("forms.list.nameExists")
           : t("common.failedToSave", { defaultValue: "Could not save" }),
-        status === 409
+        status === 409 && !code
           ? undefined
           : { description: extractErrorMessage(error) },
       );
@@ -305,6 +312,19 @@ export default function FormsIndexRoute() {
                     status={form.status}
                     hasUnpublishedChanges={form.has_unpublished_changes}
                   />
+                  {/* What kind of thing this is, only when it is not the plain
+                      kind — a chip on every row would say nothing. */}
+                  {form.kind === "product" ? (
+                    <span className="inline-flex items-center gap-1 rounded-md border border-border bg-muted/40 px-1.5 py-0.5 text-[11px] font-medium text-muted-foreground">
+                      <ShoppingBag className="h-3 w-3" aria-hidden />
+                      {t("forms.list.kindProduct")}
+                    </span>
+                  ) : form.layout_mode === "multi_step" ? (
+                    <span className="inline-flex items-center gap-1 rounded-md border border-border bg-muted/40 px-1.5 py-0.5 text-[11px] font-medium text-muted-foreground">
+                      <Layers className="h-3 w-3" aria-hidden />
+                      {t("forms.list.kindMulti")}
+                    </span>
+                  ) : null}
                 </div>
                 <p className="text-xs text-muted-foreground">
                   <span className="font-mono">{form.slug}</span>
@@ -408,64 +428,13 @@ export default function FormsIndexRoute() {
       )}
 
       {/* Create */}
-      <Dialog open={createOpen} onOpenChange={setCreateOpen}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>{t("forms.list.newForm")}</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <label className="text-sm font-medium" htmlFor="new-form-name">
-                {t("forms.list.nameLabel")}
-              </label>
-              <Input
-                id="new-form-name"
-                autoFocus
-                value={newName}
-                placeholder={t("forms.list.namePlaceholder")}
-                onChange={(e) => setNewName(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" && newName.trim()) {
-                    createMutation.mutate(newName.trim());
-                  }
-                }}
-              />
-            </div>
-
-            <div className="space-y-2">
-              <label className="text-sm font-medium">
-                {t("forms.list.languageLabel")}
-              </label>
-              <Select
-                value={newLocale}
-                onValueChange={(v) => setNewLocale(v as FormLocale)}
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {FORM_LOCALES.map((locale) => (
-                    <SelectItem key={locale} value={locale}>
-                      {locale.toUpperCase()}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setCreateOpen(false)}>
-              {t("common.cancel", { defaultValue: "Cancel" })}
-            </Button>
-            <Button
-              disabled={!newName.trim() || createMutation.isPending}
-              onClick={() => createMutation.mutate(newName.trim())}
-            >
-              {t("forms.list.newForm")}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <CreateFormDialog
+        open={createOpen}
+        onOpenChange={setCreateOpen}
+        defaultLocale={newLocale}
+        pending={createMutation.isPending}
+        onCreate={(input) => createMutation.mutate(input)}
+      />
 
       {/* Archive */}
       <AlertDialog

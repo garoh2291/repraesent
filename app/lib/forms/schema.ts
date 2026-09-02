@@ -29,11 +29,24 @@ export const FORM_FIELD_TYPES = [
   "hidden",
   "heading",
   "paragraph",
+  /**
+   * Product forms only: the order summary's place among the fields. Exactly
+   * one per form. It collects no value of its own — quantities travel as
+   * `quantities` — and everything it shows comes from `definition.commerce`.
+   */
+  "product",
 ] as const;
 export type FormFieldType = (typeof FORM_FIELD_TYPES)[number];
 
 /** Types that collect no value — skipped by the validator and by lead mapping. */
 export const PRESENTATIONAL_TYPES = ["heading", "paragraph"] as const;
+
+/**
+ * Types that never produce a submitted value: the presentational ones plus
+ * the product slot. Every reader of a field's value filters on this, so a
+ * product field can never reach lead metadata or a webhook's `data`.
+ */
+export const VALUELESS_TYPES = ["heading", "paragraph", "product"] as const;
 
 /** Types that carry an `options` array. */
 export const OPTION_TYPES = [
@@ -179,6 +192,17 @@ export interface FormSection {
  *   success.inline | success.modal.title | success.modal.body | success.modal.cta
  *   error.generic | error.<FormErrorCode>
  *   appointment.loading | appointment.empty     (slot picker runtime states)
+ *   nav.back | nav.next | nav.stepOf            (multi-step navigation)
+ *   commerce.*                                  (product forms: order summary)
+ *   checkout.*                                  (product forms: after payment)
+ *
+ * Placeholders inside runtime strings use double braces — `{{n}}`, `{{total}}`,
+ * `{{amount}}`, `{{per}}` — the same shape as the hidden-field capture tokens.
+ * They are filled by `fillTemplate` with a plain split/join, never a regex.
+ *
+ * Keys under nav / commerce / checkout / error.checkout_unavailable have
+ * shipped defaults in FORM_RUNTIME_CONTENT, so a form saved before they existed
+ * never renders a blank "Next" button.
  */
 export type FormContent = Record<string, string>;
 
@@ -310,6 +334,146 @@ export interface FormUtmCapture {
   keys: string[];
 }
 
+/**
+ * What the form DOES on submit. Stored on the row (workspace_forms.kind), not
+ * in the definition, and immutable after creation.
+ *
+ *   standard — creates a lead and finishes.
+ *   product  — creates the lead, then opens a Stripe Checkout Session on the
+ *              workspace's connected account for the bundle in `commerce`.
+ *
+ * Single-step vs multi-step is NOT a kind — it is `layout.mode`.
+ */
+export const FORM_KINDS = ["standard", "product"] as const;
+export type FormKind = (typeof FORM_KINDS)[number];
+
+/**
+ * How the sections are presented. `single` renders every section on one page
+ * (the only behaviour before this existed, so an absent layout means single).
+ * `multi_step` renders one section per step with Back / Next navigation, and
+ * only counts as active when the form has more than one section.
+ */
+export interface FormLayout {
+  mode: "single" | "multi_step";
+  /** multi_step only. `bar` = thin accent bar; `steps` = numbered dots with titles. */
+  progress: "bar" | "steps" | "none";
+  /** multi_step + `steps` progress: print each section's title next to its dot. */
+  showStepTitles: boolean;
+}
+
+export const DEFAULT_FORM_LAYOUT: FormLayout = {
+  mode: "single",
+  progress: "bar",
+  showStepTitles: true,
+};
+
+export type FormCommerceInterval = "day" | "week" | "month" | "year";
+
+/**
+ * One line of a product form's bundle. `priceId` is the source of truth — the
+ * server re-reads the live price at checkout time and never charges the
+ * snapshot. The snapshot exists so every renderer (React, embed runtime, the
+ * frozen html snippet) can paint the order summary without a Stripe call.
+ */
+export interface FormCommerceItem {
+  priceId: string;
+  productId: string;
+  /**
+   * Buyer-adjustable quantity, one-time prices only. A recurring price is
+   * always one subscription: normalizeCommerce forces adjustable=false and
+   * min=max=default=1 for it regardless of what was stored.
+   */
+  quantity: { adjustable: boolean; min: number; max: number; default: number };
+  /**
+   * Ticked when the form loads. Every line has a checkbox and the buyer
+   * chooses what to pay for — Checkout is built from the ticked lines only,
+   * and at least one must be ticked to continue.
+   */
+  preselected: boolean;
+  snapshot: {
+    name: string;
+    image: string | null;
+    /** Minor units (cents). Stripe's unit_amount. */
+    unitAmount: number;
+    /** Lowercase ISO 4217. */
+    currency: string;
+    type: "one_time" | "recurring";
+    interval: FormCommerceInterval | null;
+    intervalCount: number | null;
+  };
+}
+
+export interface FormCommerce {
+  /** The menu of lines the buyer picks from. */
+  items: FormCommerceItem[];
+  /** Stripe Checkout's own billing-address collection. */
+  billingAddress: "auto" | "required";
+  /** Stripe Checkout's own shipping-address collection. Empty list = every country Stripe ships to. */
+  shipping: { enabled: boolean; allowedCountries: string[] };
+  phone: boolean;
+  promotionCodes: boolean;
+  /** Wording of Stripe's pay button. Payment mode only — subscriptions always read "Subscribe". */
+  submitType: "pay" | "book" | "donate";
+  /** Custom landing pages. Absent = the hosted thank-you page / back to the form. http(s), ≤ 2048 chars. */
+  successUrl?: string;
+  cancelUrl?: string;
+  /**
+   * Retired: the order summary now sits where the `product` field is placed.
+   * Kept so stored definitions parse; nothing reads it.
+   */
+  position: "top" | "bottom";
+}
+
+export const DEFAULT_FORM_COMMERCE: FormCommerce = {
+  items: [],
+  billingAddress: "auto",
+  shipping: { enabled: false, allowedCountries: [] },
+  phone: false,
+  promotionCodes: false,
+  submitType: "pay",
+  position: "top",
+};
+
+/** Shipping-country presets. "Worldwide" is the empty list. */
+export const COMMERCE_COUNTRY_PRESETS: Record<
+  "eu" | "dach",
+  readonly string[]
+> = {
+  eu: [
+    "AT",
+    "BE",
+    "BG",
+    "HR",
+    "CY",
+    "CZ",
+    "DK",
+    "EE",
+    "FI",
+    "FR",
+    "DE",
+    "GR",
+    "HU",
+    "IE",
+    "IT",
+    "LV",
+    "LT",
+    "LU",
+    "MT",
+    "NL",
+    "PL",
+    "PT",
+    "RO",
+    "SK",
+    "SI",
+    "ES",
+    "SE",
+  ],
+  dach: ["DE", "AT", "CH"],
+};
+
+/** Bounds for a buyer-adjustable quantity. */
+export const COMMERCE_QUANTITY_MAX = 999;
+
 export interface FormDefinition {
   version: 1;
   sections: FormSection[];
@@ -319,6 +483,10 @@ export interface FormDefinition {
   antiSpam: FormAntiSpam;
   utm: FormUtmCapture;
   showLanguageSwitcher: boolean;
+  /** Absent on definitions saved before multi-step existed — read as single. */
+  layout?: FormLayout;
+  /** Product forms only. Seeded from DEFAULT_FORM_COMMERCE when the kind is product. */
+  commerce?: FormCommerce;
 }
 
 export interface FormConfirmationEmailLocale {
@@ -356,6 +524,14 @@ export const FORM_ERROR_CODES = [
   "slot_unavailable",
   /** Appointment value is not a well-formed future slot of the configured length. */
   "slot_invalid",
+  /**
+   * Product forms: the lead was saved but no Checkout Session could be opened
+   * (Stripe disconnected, a price archived, rate limit). Returned under the
+   * pseudo-key `_form`, since it belongs to no field.
+   */
+  "checkout_unavailable",
+  /** Product forms: nothing was ticked in the order summary. Returned under the product field's key. */
+  "product_required",
 ] as const;
 export type FormErrorCode = (typeof FORM_ERROR_CODES)[number];
 
@@ -376,6 +552,28 @@ export const FORM_DEFINITION_ISSUES = [
   "emailBodyMissing",
   /** An appointment field with no calendar picked. It could render, but never book. */
   "appointmentMissingCalendar",
+  /** multi_step: a step with nothing but hidden fields is a blank page with a Next button. */
+  "emptyStep",
+  /** Product form with an empty bundle. */
+  "commerceNoItems",
+  /** Bundle lines priced in more than one currency — one Checkout Session, one currency. */
+  "commerceMixedCurrency",
+  /** Recurring lines with different billing intervals — Stripe needs one interval per subscription. */
+  "commerceMixedInterval",
+  /** A bundled price is archived or gone in Stripe (server-side check, needs the connection). */
+  "commerceInactivePrice",
+  /** The workspace disconnected Stripe after the form was built (server-side check). */
+  "commerceStripeDisconnected",
+  /** commerce.successUrl set but not http(s) / too long. */
+  "invalidSuccessUrl",
+  /** commerce.cancelUrl set but not http(s) / too long. */
+  "invalidCancelUrl",
+  /** Product form with no product field: nothing would show what is sold. */
+  "needsProductField",
+  /** A second product field — one form, one order summary. */
+  "duplicateProductField",
+  /** A product field on a standard form, which can never open a checkout. */
+  "productFieldOnStandardForm",
 ] as const;
 export type FormDefinitionIssueCode = (typeof FORM_DEFINITION_ISSUES)[number];
 
@@ -389,6 +587,9 @@ export type FormDefinitionIssueCode = (typeof FORM_DEFINITION_ISSUES)[number];
  * There is no "languages" tab any more. Form-level copy moved into the Build
  * canvas (the header and the submit button are selectable regions with their
  * own inspector), so `form.submit` is fixable from `build` like everything else.
+ *
+ * The product field's bundle and checkout options live in its inspector on
+ * the Build tab, so every commerce issue is a `build` issue too.
  */
 export const FORM_ISSUE_TABS = ["build", "design", "email"] as const;
 export type FormIssueTab = (typeof FORM_ISSUE_TABS)[number];
@@ -402,6 +603,10 @@ export interface FormDefinitionIssue {
   fieldKey?: string;
   /** Set for content issues, e.g. "form.submit" or "field.<id>.label". */
   contentKey?: string;
+  /** Set for step issues (emptyStep) — the section that is the step. */
+  sectionId?: string;
+  /** Set for commerceInactivePrice — which bundle line. */
+  priceId?: string;
   /**
    * Which enabled locale this issue belongs to.
    *
@@ -428,6 +633,14 @@ export interface PublicFormPayload {
   locales: FormLocale[];
   /** HMAC time-trap token. Echo back as `rt` on submit. */
   render_token: string;
+  kind: FormKind;
+  /**
+   * Product forms: true when the workspace's Stripe connection is live and the
+   * bundle is non-empty, i.e. a submit can actually open a Checkout Session.
+   * Always true for standard forms. Lets the hosted page render an honest
+   * "unavailable" state instead of failing at the last click.
+   */
+  checkout_available: boolean;
   /**
    * OpenAI Ads measurement pixel id, present only when the workspace finished
    * conversions setup. The hosted page injects the pixel off this.
@@ -437,10 +650,15 @@ export interface PublicFormPayload {
 
 export interface SubmitFormResult {
   success: boolean;
-  /** Echoes definition.success so the static snippet need not embed it. */
-  mode?: FormSuccessBehavior["mode"];
+  /**
+   * Echoes definition.success so the static snippet need not embed it.
+   * `checkout` is the product-form outcome: leave the page for `checkout_url`.
+   */
+  mode?: FormSuccessBehavior["mode"] | "checkout";
   redirect_url?: string | null;
-  /** Keyed by field.key. Absent on success. */
+  /** Stripe-hosted Checkout page. Present only with mode "checkout". */
+  checkout_url?: string | null;
+  /** Keyed by field.key, or `_form` for a form-level code. Absent on success. */
   errors?: Record<string, FormErrorCode>;
 }
 
@@ -505,11 +723,237 @@ export const contentKey = {
   successModalCta: () => "success.modal.cta",
   errorGeneric: () => "error.generic",
   error: (code: FormErrorCode) => `error.${code}`,
+  navBack: () => "nav.back",
+  navNext: () => "nav.next",
+  /** "Step {{n}} of {{total}}" */
+  navStepOf: () => "nav.stepOf",
+  commerce: (key: string) => `commerce.${key}`,
+  checkout: (key: string) => `checkout.${key}`,
 };
 
 /**
- * Resolve a content string for a locale, falling back to the form's default
- * locale. Never falls back to the key name — an unset string renders as empty.
+ * Shipped defaults for the runtime strings a visitor cannot do without, in
+ * every supported locale. Three consumers, one table:
+ *
+ *   - seeded into `definition.content` when a form is created as multi-step /
+ *     product or switched to multi-step — fills blanks only, never overwrites,
+ *     so the operator can edit or translate them like any other string;
+ *   - the last-resort fallback of every renderer (getFormContent / the embed
+ *     runtime's t()), so a form published before these keys existed still
+ *     shows "Next" rather than an empty button;
+ *   - the starter content of product forms on the server.
+ *
+ * Deliberately terse. No exclamation marks — this is a visitor's checkout, not
+ * a celebration.
+ */
+export const FORM_RUNTIME_CONTENT: Record<
+  FormLocale,
+  Record<string, string>
+> = {
+  en: {
+    "nav.back": "Back",
+    "nav.next": "Next",
+    "nav.stepOf": "Step {{n}} of {{total}}",
+    "step.title.contact": "Contact",
+    "step.title.details": "Details",
+    "step.title.new": "Step {{n}}",
+    "commerce.title": "Order summary",
+    "commerce.quantity": "Quantity",
+    "commerce.subtotal": "Subtotal",
+    "commerce.total": "Total today",
+    "commerce.then": "then {{amount}} {{per}}",
+    "commerce.per.day": "per day",
+    "commerce.per.week": "per week",
+    "commerce.per.month": "per month",
+    "commerce.per.year": "per year",
+    "commerce.every": "every {{n}} {{unit}}",
+    "commerce.unit.day": "days",
+    "commerce.unit.week": "weeks",
+    "commerce.unit.month": "months",
+    "commerce.unit.year": "years",
+    "commerce.oneTime": "one-time",
+    "commerce.secure": "Secure checkout by Stripe",
+    "commerce.decrease": "Decrease quantity",
+    "commerce.increase": "Increase quantity",
+    "commerce.continue": "Continue to payment",
+    "commerce.select": "Select",
+    "error.product_required": "Choose at least one product.",
+    "checkout.paid.title": "Payment received",
+    "checkout.paid.body": "Thank you. A receipt is on its way to your inbox.",
+    "checkout.processing.title": "Confirming your payment",
+    "checkout.processing.body":
+      "This usually takes a few seconds. You can keep this page open.",
+    "checkout.failed.title": "Payment did not go through",
+    "checkout.failed.body":
+      "Nothing was charged. You can try again with another payment method.",
+    "checkout.failed.retry": "Try again",
+    "checkout.canceled": "Checkout canceled. Your answers are still here.",
+    "checkout.canceled.dismiss": "Dismiss",
+    "error.checkout_unavailable":
+      "Checkout is unavailable right now. Please try again in a moment.",
+  },
+  de: {
+    "nav.back": "Zurück",
+    "nav.next": "Weiter",
+    "nav.stepOf": "Schritt {{n}} von {{total}}",
+    "step.title.contact": "Kontakt",
+    "step.title.details": "Details",
+    "step.title.new": "Schritt {{n}}",
+    "commerce.title": "Bestellübersicht",
+    "commerce.quantity": "Menge",
+    "commerce.subtotal": "Zwischensumme",
+    "commerce.total": "Heute fällig",
+    "commerce.then": "danach {{amount}} {{per}}",
+    "commerce.per.day": "pro Tag",
+    "commerce.per.week": "pro Woche",
+    "commerce.per.month": "pro Monat",
+    "commerce.per.year": "pro Jahr",
+    "commerce.every": "alle {{n}} {{unit}}",
+    "commerce.unit.day": "Tage",
+    "commerce.unit.week": "Wochen",
+    "commerce.unit.month": "Monate",
+    "commerce.unit.year": "Jahre",
+    "commerce.oneTime": "einmalig",
+    "commerce.secure": "Sichere Zahlung über Stripe",
+    "commerce.decrease": "Menge verringern",
+    "commerce.increase": "Menge erhöhen",
+    "commerce.continue": "Weiter zur Zahlung",
+    "commerce.select": "Auswählen",
+    "error.product_required": "Wählen Sie mindestens ein Produkt.",
+    "checkout.paid.title": "Zahlung erhalten",
+    "checkout.paid.body":
+      "Vielen Dank. Die Quittung ist auf dem Weg in Ihr Postfach.",
+    "checkout.processing.title": "Zahlung wird bestätigt",
+    "checkout.processing.body":
+      "Das dauert meist nur wenige Sekunden. Sie können die Seite geöffnet lassen.",
+    "checkout.failed.title": "Zahlung fehlgeschlagen",
+    "checkout.failed.body":
+      "Es wurde nichts abgebucht. Versuchen Sie es mit einer anderen Zahlungsmethode.",
+    "checkout.failed.retry": "Erneut versuchen",
+    "checkout.canceled": "Zahlung abgebrochen. Ihre Angaben sind noch da.",
+    "checkout.canceled.dismiss": "Ausblenden",
+    "error.checkout_unavailable":
+      "Die Zahlung ist derzeit nicht verfügbar. Bitte versuchen Sie es gleich noch einmal.",
+  },
+  fr: {
+    "nav.back": "Retour",
+    "nav.next": "Suivant",
+    "nav.stepOf": "Étape {{n}} sur {{total}}",
+    "step.title.contact": "Contact",
+    "step.title.details": "Détails",
+    "step.title.new": "Étape {{n}}",
+    "commerce.title": "Récapitulatif",
+    "commerce.quantity": "Quantité",
+    "commerce.subtotal": "Sous-total",
+    "commerce.total": "Total aujourd'hui",
+    "commerce.then": "puis {{amount}} {{per}}",
+    "commerce.per.day": "par jour",
+    "commerce.per.week": "par semaine",
+    "commerce.per.month": "par mois",
+    "commerce.per.year": "par an",
+    "commerce.every": "tous les {{n}} {{unit}}",
+    "commerce.unit.day": "jours",
+    "commerce.unit.week": "semaines",
+    "commerce.unit.month": "mois",
+    "commerce.unit.year": "ans",
+    "commerce.oneTime": "paiement unique",
+    "commerce.secure": "Paiement sécurisé par Stripe",
+    "commerce.decrease": "Diminuer la quantité",
+    "commerce.increase": "Augmenter la quantité",
+    "commerce.continue": "Continuer vers le paiement",
+    "commerce.select": "Sélectionner",
+    "error.product_required": "Choisissez au moins un produit.",
+    "checkout.paid.title": "Paiement reçu",
+    "checkout.paid.body": "Merci. Votre reçu arrive dans votre boîte mail.",
+    "checkout.processing.title": "Confirmation du paiement",
+    "checkout.processing.body":
+      "Cela ne prend généralement que quelques secondes. Vous pouvez laisser cette page ouverte.",
+    "checkout.failed.title": "Le paiement n'a pas abouti",
+    "checkout.failed.body":
+      "Aucun montant n'a été débité. Réessayez avec un autre moyen de paiement.",
+    "checkout.failed.retry": "Réessayer",
+    "checkout.canceled": "Paiement annulé. Vos réponses sont conservées.",
+    "checkout.canceled.dismiss": "Fermer",
+    "error.checkout_unavailable":
+      "Le paiement est indisponible pour le moment. Réessayez dans un instant.",
+  },
+  nl: {
+    "nav.back": "Terug",
+    "nav.next": "Volgende",
+    "nav.stepOf": "Stap {{n}} van {{total}}",
+    "step.title.contact": "Contact",
+    "step.title.details": "Details",
+    "step.title.new": "Stap {{n}}",
+    "commerce.title": "Overzicht bestelling",
+    "commerce.quantity": "Aantal",
+    "commerce.subtotal": "Subtotaal",
+    "commerce.total": "Totaal vandaag",
+    "commerce.then": "daarna {{amount}} {{per}}",
+    "commerce.per.day": "per dag",
+    "commerce.per.week": "per week",
+    "commerce.per.month": "per maand",
+    "commerce.per.year": "per jaar",
+    "commerce.every": "elke {{n}} {{unit}}",
+    "commerce.unit.day": "dagen",
+    "commerce.unit.week": "weken",
+    "commerce.unit.month": "maanden",
+    "commerce.unit.year": "jaar",
+    "commerce.oneTime": "eenmalig",
+    "commerce.secure": "Veilig betalen via Stripe",
+    "commerce.decrease": "Aantal verlagen",
+    "commerce.increase": "Aantal verhogen",
+    "commerce.continue": "Doorgaan naar betaling",
+    "commerce.select": "Selecteren",
+    "error.product_required": "Kies minstens één product.",
+    "checkout.paid.title": "Betaling ontvangen",
+    "checkout.paid.body":
+      "Bedankt. De betalingsbevestiging is onderweg naar uw inbox.",
+    "checkout.processing.title": "Betaling wordt bevestigd",
+    "checkout.processing.body":
+      "Dit duurt meestal een paar seconden. U kunt deze pagina open laten.",
+    "checkout.failed.title": "Betaling niet gelukt",
+    "checkout.failed.body":
+      "Er is niets afgeschreven. Probeer het opnieuw met een andere betaalmethode.",
+    "checkout.failed.retry": "Opnieuw proberen",
+    "checkout.canceled": "Afrekenen geannuleerd. Uw antwoorden staan er nog.",
+    "checkout.canceled.dismiss": "Sluiten",
+    "error.checkout_unavailable":
+      "Betalen is op dit moment niet beschikbaar. Probeer het zo opnieuw.",
+  },
+};
+
+/** The runtime keys that belong to multi-step navigation. */
+export const STEP_CONTENT_KEYS = [
+  "nav.back",
+  "nav.next",
+  "nav.stepOf",
+] as const;
+
+/** The runtime keys a product form needs (everything under commerce/checkout + the unavailable error). */
+export const COMMERCE_CONTENT_KEYS: readonly string[] = Object.keys(
+  FORM_RUNTIME_CONTENT.en,
+).filter((key) => !key.startsWith("nav.") && !key.startsWith("step."));
+
+/**
+ * Default step titles, seeded into `section.<id>.title` when a form is
+ * created multi-step or a step is added — a step needs a name of its own, or
+ * every step shows the same form title and nothing else.
+ */
+export function defaultStepTitle(
+  locale: FormLocale,
+  which: "contact" | "details" | number,
+): string {
+  const table = FORM_RUNTIME_CONTENT[locale] ?? FORM_RUNTIME_CONTENT.en;
+  if (typeof which === "number") {
+    return fillTemplate(table["step.title.new"] ?? "Step {{n}}", { n: which });
+  }
+  return table[`step.title.${which}`] ?? "";
+}
+
+/**
+ * Resolve a content string for a locale: the locale itself, then the form's
+ * default locale, then the shipped runtime default (nav/commerce/checkout only).
+ * Never falls back to the key name — any other unset string renders as empty.
  */
 export function getFormContent(
   definition: Pick<FormDefinition, "content">,
@@ -520,7 +964,182 @@ export function getFormContent(
   const direct = definition.content?.[locale]?.[key];
   if (direct != null && direct !== "") return direct;
   const fallback = definition.content?.[fallbackLocale]?.[key];
-  return fallback ?? "";
+  if (fallback != null && fallback !== "") return fallback;
+  return (
+    FORM_RUNTIME_CONTENT[locale]?.[key] ??
+    FORM_RUNTIME_CONTENT[fallbackLocale]?.[key] ??
+    ""
+  );
+}
+
+/**
+ * Fill `{{name}}` placeholders. Split/join rather than a regex so the same
+ * code can live verbatim in the embed runtime (which may not contain `&`, and
+ * whose regex escaping rules differ from a template literal's).
+ */
+export function fillTemplate(
+  text: string,
+  vars: Record<string, string | number>,
+): string {
+  let out = text;
+  for (const key of Object.keys(vars)) {
+    out = out.split(`{{${key}}}`).join(String(vars[key]));
+  }
+  return out;
+}
+
+/**
+ * Currencies Stripe quotes in whole units. Mirror of ZERO_DECIMAL_CURRENCIES in
+ * repraesent/app/lib/utils/format.ts and of the runtime's own list — the render
+ * spec pins all three together.
+ */
+export const ZERO_DECIMAL_CURRENCIES: readonly string[] = [
+  "bif",
+  "clp",
+  "djf",
+  "gnf",
+  "jpy",
+  "kmf",
+  "krw",
+  "mga",
+  "pyg",
+  "rwf",
+  "ugx",
+  "vnd",
+  "vuv",
+  "xaf",
+  "xof",
+  "xpf",
+];
+
+/** Format a Stripe minor-unit amount for a locale. Never throws. */
+export function formatMinor(
+  amountMinor: number,
+  currency: string,
+  locale: string,
+): string {
+  const code = (currency || "eur").toLowerCase();
+  const zero = ZERO_DECIMAL_CURRENCIES.includes(code);
+  const value = zero ? amountMinor : amountMinor / 100;
+  try {
+    return new Intl.NumberFormat(locale, {
+      style: "currency",
+      currency: code.toUpperCase(),
+      minimumFractionDigits: zero ? 0 : 2,
+      maximumFractionDigits: zero ? 0 : 2,
+    }).format(value);
+  } catch {
+    return `${zero ? String(value) : value.toFixed(2)} ${code.toUpperCase()}`;
+  }
+}
+
+/** Multi-step only counts when there is more than one step to move between. */
+export function isMultiStep(
+  definition: Pick<FormDefinition, "layout" | "sections">,
+): boolean {
+  return (
+    definition.layout?.mode === "multi_step" &&
+    (definition.sections?.length ?? 0) > 1
+  );
+}
+
+/** Fill in a stored layout, tolerating anything older definitions lack. */
+export function normalizeLayout(raw: unknown): FormLayout {
+  const value = (raw ?? {}) as Partial<FormLayout>;
+  return {
+    mode: value.mode === "multi_step" ? "multi_step" : "single",
+    progress:
+      value.progress === "steps" || value.progress === "none"
+        ? value.progress
+        : "bar",
+    showStepTitles: value.showStepTitles !== false,
+  };
+}
+
+function clampInt(value: unknown, min: number, max: number, fallback: number) {
+  const n = typeof value === "number" ? Math.floor(value) : Number.NaN;
+  if (!Number.isFinite(n)) return fallback;
+  return Math.min(max, Math.max(min, n));
+}
+
+/**
+ * Fill in a stored commerce block. Returns undefined for standard forms so a
+ * stray `commerce` key can never turn a lead form into a checkout — the kind
+ * on the row decides, and it is immutable.
+ */
+export function normalizeCommerce(
+  raw: unknown,
+  kind: FormKind,
+): FormCommerce | undefined {
+  if (kind !== "product") return undefined;
+  const value = (raw ?? {}) as Partial<FormCommerce>;
+  const items = (Array.isArray(value.items) ? value.items : [])
+    .filter(
+      (item): item is FormCommerceItem =>
+        !!item &&
+        typeof item.priceId === "string" &&
+        item.priceId !== "" &&
+        !!item.snapshot,
+    )
+    .map((item): FormCommerceItem => {
+      const recurring = item.snapshot.type === "recurring";
+      const q = item.quantity ?? {
+        adjustable: false,
+        min: 1,
+        max: 1,
+        default: 1,
+      };
+      const min = recurring ? 1 : clampInt(q.min, 1, COMMERCE_QUANTITY_MAX, 1);
+      const max = recurring
+        ? 1
+        : clampInt(q.max, min, COMMERCE_QUANTITY_MAX, Math.max(min, 1));
+      const def = recurring ? 1 : clampInt(q.default, min, max, min);
+      return {
+        priceId: item.priceId,
+        productId: item.productId ?? "",
+        preselected: item.preselected === true,
+        quantity: {
+          adjustable: recurring ? false : q.adjustable === true,
+          min,
+          max,
+          default: def,
+        },
+        snapshot: {
+          name: item.snapshot.name ?? "",
+          image: item.snapshot.image ?? null,
+          unitAmount:
+            typeof item.snapshot.unitAmount === "number"
+              ? item.snapshot.unitAmount
+              : 0,
+          currency: (item.snapshot.currency ?? "eur").toLowerCase(),
+          type: recurring ? "recurring" : "one_time",
+          interval: recurring ? (item.snapshot.interval ?? "month") : null,
+          intervalCount: recurring ? (item.snapshot.intervalCount ?? 1) : null,
+        },
+      };
+    });
+
+  return {
+    items,
+    billingAddress: value.billingAddress === "required" ? "required" : "auto",
+    shipping: {
+      enabled: value.shipping?.enabled === true,
+      allowedCountries: Array.isArray(value.shipping?.allowedCountries)
+        ? value.shipping.allowedCountries.filter(
+            (c): c is string => typeof c === "string" && /^[A-Z]{2}$/.test(c),
+          )
+        : [],
+    },
+    phone: value.phone === true,
+    promotionCodes: value.promotionCodes === true,
+    submitType:
+      value.submitType === "book" || value.submitType === "donate"
+        ? value.submitType
+        : "pay",
+    successUrl: value.successUrl || undefined,
+    cancelUrl: value.cancelUrl || undefined,
+    position: value.position === "bottom" ? "bottom" : "top",
+  };
 }
 
 /** Flatten every field across every section, in render order. */
@@ -530,6 +1149,22 @@ export function flattenFields(definition: FormDefinition): FormField[] {
 
 export function isPresentational(type: FormFieldType): boolean {
   return (PRESENTATIONAL_TYPES as readonly string[]).includes(type);
+}
+
+export function isValueless(type: FormFieldType): boolean {
+  return (VALUELESS_TYPES as readonly string[]).includes(type);
+}
+
+/** The product form's one product field, if placed. */
+export function productField(
+  definition: Pick<FormDefinition, "sections">,
+): FormField | null {
+  for (const section of definition.sections ?? []) {
+    for (const field of section.fields ?? []) {
+      if (field.type === "product") return field;
+    }
+  }
+  return null;
 }
 
 export function hasOptions(type: FormFieldType): boolean {

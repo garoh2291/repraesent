@@ -13,6 +13,8 @@ export default [
   route("auth/callback", "routes/auth.callback.tsx"),
   route("book/:configId", "routes/book.$configId.tsx"),
   route("f/:formId", "routes/f.$formId.tsx"),
+  // Product forms: where Stripe Checkout sends the buyer back.
+  route("f/:formId/thanks", "routes/f.$formId.thanks.tsx"),
   // Campaign-email unsubscribe landing. Public: the token in the path is the
   // capability, and recipients are rarely logged-in users.
   route("unsubscribe/:token", "routes/unsubscribe.$token.tsx"),
@@ -30,11 +32,11 @@ export default [
       route("onboarding/billing", "routes/onboarding.billing.tsx"),
       route(
         "onboarding/doorboost-choice",
-        "routes/onboarding.doorboost-choice.tsx"
+        "routes/onboarding.doorboost-choice.tsx",
       ),
       route(
         "onboarding/doorboost-restore",
-        "routes/onboarding.doorboost-restore.tsx"
+        "routes/onboarding.doorboost-restore.tsx",
       ),
       route("onboarding/sync-pending", "routes/onboarding.sync-pending.tsx"),
     ]),
@@ -76,7 +78,7 @@ export default [
       route("website", "routes/wordpress.tsx"),
       route(
         "website/settings/:pluginUuid",
-        "routes/wordpress.settings.$settingsKind.tsx"
+        "routes/wordpress.settings.$settingsKind.tsx",
       ),
       route("workflows", "routes/workflows._index.tsx"),
       route("workflows/:workflowId", "routes/workflows.$workflowId.tsx"),
@@ -90,7 +92,7 @@ export default [
       route("email-templates", "routes/email-templates._index.tsx"),
       route(
         "email-templates/:templateId",
-        "routes/email-templates.$templateId.tsx"
+        "routes/email-templates.$templateId.tsx",
       ),
       route("media/:view?", "routes/media.tsx"),
       route("settings", "routes/settings._layout.tsx", [
@@ -112,19 +114,19 @@ export default [
       route("brand-leads", "routes/brand-leads.tsx"),
       route(
         "db-brand/retailers/:retailerId/social-ads",
-        "routes/db-brand.retailers.$retailerId.social-ads.tsx"
+        "routes/db-brand.retailers.$retailerId.social-ads.tsx",
       ),
       route(
         "db-brand/retailers/:retailerId/social-ads/:campaignId",
-        "routes/db-brand.retailers.$retailerId.social-ads.$campaignId.tsx"
+        "routes/db-brand.retailers.$retailerId.social-ads.$campaignId.tsx",
       ),
       route(
         "db-brand/retailers/:retailerId/leads",
-        "routes/db-brand.retailers.$retailerId.leads.tsx"
+        "routes/db-brand.retailers.$retailerId.leads.tsx",
       ),
       route(
         "db-brand/retailers/:retailerId/leads/:leadId",
-        "routes/db-brand.retailers.$retailerId.leads.$leadId.tsx"
+        "routes/db-brand.retailers.$retailerId.leads.$leadId.tsx",
       ),
     ]),
   ]),

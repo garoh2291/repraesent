@@ -375,7 +375,10 @@
       "contactConversionModalDescription": "This lead is now linked to a contact. Open the contact record to add deals or follow up.",
       "createDeal": "Create deal",
       "backToLead": "Back to lead",
-      "historyTaskAssigneeRemoved": "Task assignee removed"
+      "historyTaskAssigneeRemoved": "Task assignee removed",
+      "historyCheckoutPaid": "Paid {{amount}} via checkout",
+      "historyCheckoutFailed": "Checkout payment failed",
+      "historyCheckoutExpired": "Checkout expired without payment"
     },
     "empty": "No leads yet",
     "filters": {
@@ -415,6 +418,41 @@
     },
     "source": {
       "openaiAds": "OpenAI Ads"
+    },
+    "payment": {
+      "title": "Payment",
+      "status": {
+        "paid": "Paid",
+        "processing": "Processing",
+        "pending": "Awaiting payment",
+        "failed": "Failed",
+        "expired": "Expired"
+      },
+      "mode": {
+        "payment": "One-time payment",
+        "subscription": "Subscription"
+      },
+      "testMode": "Test mode",
+      "notCompleted": "Checkout was opened but not completed.",
+      "expiresAt": "Expires {{date}}",
+      "expiredHint": "The visitor left checkout without paying.",
+      "failedHint": "The payment was declined.",
+      "items": "Items",
+      "subtotal": "Subtotal",
+      "total": "Total",
+      "noItems": "No line items recorded",
+      "customer": "Customer",
+      "billing": "Billing",
+      "shipping": "Shipping",
+      "stripe": {
+        "payment": "Payment",
+        "subscription": "Subscription",
+        "customer": "Customer",
+        "session": "Session"
+      },
+      "attempts": "Earlier attempts",
+      "loadError": "Checkout details could not be loaded.",
+      "more": "+{{count}}"
     }
   },
   "pipeline": {
@@ -3674,7 +3712,9 @@
       "duplicated": "Form duplicated",
       "archived": "Form archived",
       "nameExists": "A form with this name already exists",
-      "languageLabel": "Language"
+      "languageLabel": "Language",
+      "kindProduct": "Product",
+      "kindMulti": "Multi-step"
     },
     "status": {
       "draft": "Draft",
@@ -3717,7 +3757,12 @@
       "noLabel": "No label",
       "removeTitle": "Remove title",
       "savingAuto": "Saving…",
-      "savedAuto": "Saved"
+      "savedAuto": "Saved",
+      "goToProducts": "Open the Products tab",
+      "tabWebhooks": "Webhooks",
+      "tabProducts": "Products",
+      "productEmptyTitle": "No products yet",
+      "productEmptyHint": "Select this block, then add the Stripe products buyers can choose from."
     },
     "palette": {
       "title": "Add a field",
@@ -3743,7 +3788,8 @@
       "heading": "Heading",
       "paragraph": "Paragraph",
       "hidden": "Hidden field",
-      "appointment": "Appointment"
+      "appointment": "Appointment",
+      "product": "Product"
     },
     "inspector": {
       "title": "Field settings",
@@ -3828,7 +3874,14 @@
         "noTargets": "Connect a calendar in Settings first",
         "connectLink": "Connect a calendar",
         "accountNeedsReconnect": "needs reconnecting"
-      }
+      },
+      "stepTitle": "Step title",
+      "stepDescription": "Step description",
+      "stepHint": "Shown at the top of this step and, with the Steps progress style, next to its marker.",
+      "stepLayoutHint": "Fields move between steps by dragging them onto a step, or from a field's Layout settings.",
+      "commerce": "Order summary",
+      "commerceHint": "Products, quantities and checkout options are set on the Products tab.",
+      "product": "Product"
     },
     "design": {
       "title": "Design",
@@ -3903,7 +3956,14 @@
         "consent_required": "Consent required"
       },
       "padding": "Inner padding",
-      "fieldBackground": "Field background"
+      "fieldBackground": "Field background",
+      "steps": "Steps",
+      "progressStyle": "Progress",
+      "progressBar": "Bar",
+      "progressSteps": "Steps",
+      "progressNone": "None",
+      "showStepTitles": "Show step names in the progress indicator",
+      "stepsHint": "How visitors see where they are. Each step’s title replaces the form title while that step is shown; edit them on the Build tab."
     },
     "email": {
       "title": "Confirmation email",
@@ -3923,7 +3983,8 @@
       "sectionDelivery": "Delivery",
       "sectionMessage": "Message",
       "templateApplied": "Template applied to {{locales}}",
-      "blankLocales": "No email to send in {{locales}} — a submission in that language gets the default one instead."
+      "blankLocales": "No email to send in {{locales}} — a submission in that language gets the default one instead.",
+      "disabledHint": "Turn this on to send visitors a confirmation from one of your mailboxes."
     },
     "share": {
       "publishFirst": "Publish this form before sharing it — the link and embeds stay inactive until you do.",
@@ -3962,17 +4023,32 @@
         "emptyOptions": "Field '{{field}}' has no options, or two options share a value.",
         "missingContent": "Field '{{field}}' has no label in the default language.",
         "missingContentLocale": "Field '{{field}}' has no label in {{locale}}.",
-        "appointmentMissingCalendar": "Field '{{field}}' needs a target calendar."
+        "appointmentMissingCalendar": "Field '{{field}}' needs a target calendar.",
+        "duplicateProductField": "Field '{{field}}' is a second Product field — a form can have only one.",
+        "productFieldOnStandardForm": "Field '{{field}}' is a Product field on a form that cannot take payments.",
+        "commerceNoItems": "Add at least one product to the bundle."
       },
       "otherLocales": "{{count}} more issue(s) in:",
       "keyMissing": "A field has no key — submissions to it would be lost",
       "emailSubjectMissing": "Confirmation e-mail has no subject ({{locale}})",
       "emailBodyMissing": "Confirmation e-mail has no message ({{locale}})",
-      "appointmentMissingCalendar": "Appointment field needs a target calendar."
+      "appointmentMissingCalendar": "Appointment field needs a target calendar.",
+      "emptyStep": "A step has no fields — visitors would see an empty page.",
+      "commerceNoItems": "Add at least one product to the bundle.",
+      "commerceMixedCurrency": "All prices in the bundle must use one currency.",
+      "commerceMixedInterval": "Recurring prices must share one billing interval.",
+      "commerceInactivePrice": "A price in the bundle is archived in Stripe.",
+      "commerceStripeDisconnected": "Stripe is disconnected — reconnect it in Settings → Integrations.",
+      "invalidSuccessUrl": "The success URL must start with https://.",
+      "invalidCancelUrl": "The cancel URL must start with https://.",
+      "needsProductField": "Add the Product field so visitors see what they are buying.",
+      "duplicateProductField": "A form can have only one Product field.",
+      "productFieldOnStandardForm": "The Product field only works on a product form."
     },
     "public": {
       "notAvailable": "This form is not available",
-      "notAvailableHint": "The link may have expired, or the form has been taken offline."
+      "notAvailableHint": "The link may have expired, or the form has been taken offline.",
+      "thanksMetaTitle": "Thank you"
     },
     "mapping": {
       "first_name": "First name",
@@ -4059,6 +4135,231 @@
       "empty": "No free times on this day.",
       "slotUnavailable": "This time slot was just taken. Please pick another.",
       "slotInvalid": "Please pick a valid time slot."
+    },
+    "steps": {
+      "title": "Steps",
+      "stepN": "Step {{n}}",
+      "add": "Add step",
+      "rename": "Rename",
+      "duplicate": "Duplicate step",
+      "moveLeft": "Move left",
+      "moveRight": "Move right",
+      "delete": "Delete step",
+      "deleteLast": "A form needs at least one step",
+      "menu": "Step {{n}} options",
+      "deleteTitle": "Delete step {{n}}?",
+      "deleteBody": "It has {{count}} field(s). Move them to the previous step, or delete them with it.",
+      "deleteMove": "Move fields to previous step",
+      "deleteAll": "Delete fields too",
+      "split": "Split into steps",
+      "merge": "One page",
+      "mergeTitle": "Merge {{count}} steps into one page?",
+      "mergeBody": "Fields keep their order. The first step’s title becomes the form title; the other step titles are dropped.",
+      "fieldsIn": "Fields in step {{n}}",
+      "moveTo": "Step",
+      "dropHint": "Drag a field onto a step above to move it there, or use the arrows on a row.",
+      "emptyStepHint": "This step is empty. Add a field from the palette or drag one here.",
+      "moveFieldsHere": "Move fields here",
+      "moveFieldsTitle": "Move fields to “{{step}}”",
+      "moveFieldsHint": "Tick the fields to bring over from the other steps.",
+      "moveSelected": "Move selected ({{count}})",
+      "moveField": "Move to another step"
+    },
+    "create": {
+      "title": "New form",
+      "typeLabel": "What kind of form?",
+      "create": "Create form",
+      "type": {
+        "single": {
+          "title": "Single page",
+          "body": "Every field on one screen. The fastest way to ask a few questions."
+        },
+        "multi": {
+          "title": "Multi-step",
+          "body": "One screen per step, with a progress indicator. Better for longer forms."
+        },
+        "product": {
+          "title": "Product",
+          "body": "Let visitors pick from your Stripe products, fill in the form, then pay on Stripe.",
+          "disabled": "Connect Stripe to take payments with a form.",
+          "connect": "Connect Stripe"
+        }
+      }
+    },
+    "webhooks": {
+      "title": "Webhooks",
+      "add": "Add webhook",
+      "editTitle": "Edit webhook",
+      "sheetHint": "We POST JSON to your endpoint when the selected events happen, and retry on failure.",
+      "empty": "No webhooks yet",
+      "emptyHint": "Send every submission to your own systems the moment it lands: a CRM, an automation, your backend. You choose exactly which keys go out.",
+      "name": "Name",
+      "url": "Endpoint URL",
+      "urlHint": "Must be https:// on a public host. We retry failed deliveries for about two hours.",
+      "urlLocal": "Localhost and private addresses cannot be reached from our servers.",
+      "endpoint": "Endpoint",
+      "events": "Events",
+      "eventsStandardHint": "Checkout events become available on product forms.",
+      "event": {
+        "form_submitted": "A visitor submitted the form and a lead was created.",
+        "checkout_completed": "The payment succeeded and the lead was stamped.",
+        "checkout_failed": "The payment was declined or failed.",
+        "checkout_expired": "The visitor never finished paying and the checkout expired."
+      },
+      "payload": "Payload",
+      "payloadHint": "Choose which keys go out and what they are called. The preview is exactly what we POST.",
+      "paneKeys": "Keys",
+      "panePreview": "Preview",
+      "include": "Include",
+      "ourKey": "Key",
+      "targetKey": "Sent as",
+      "type": "Type",
+      "example": "Example",
+      "search": "Filter keys…",
+      "all": "All",
+      "none": "None",
+      "reset": "Reset name",
+      "collision": "Two keys would collide in data.",
+      "invalidName": "Use letters, numbers, _ . and -, up to 64 characters.",
+      "hidden": "{{count}} key(s) hidden",
+      "was": "was {{key}}",
+      "previewEvent": "Preview",
+      "copyJson": "Copy JSON",
+      "copy": "Copy",
+      "copied": "Copied",
+      "group": {
+        "fields": "Fields",
+        "contact": "Contact",
+        "submission": "Submission",
+        "checkout": "Checkout"
+      },
+      "verify": "Verify the signature",
+      "verifyHint": "Every request carries X-Repraesent-Signature: t=<unix seconds>,v1=<hex>. Recompute the HMAC-SHA256 of \"<t>.<raw body>\" with your secret and compare. Reject timestamps older than five minutes.",
+      "secret": "Signing secret",
+      "secretHint": "Shown in full once at creation and here on request. Revealing is recorded.",
+      "reveal": "Reveal",
+      "hideIn": "Hides in {{s}} s",
+      "rotate": "Rotate…",
+      "rotateTitle": "Rotate the signing secret?",
+      "rotateBody": "Deliveries signed with the old secret will fail verification on your side until you update it.",
+      "rotated": "Secret rotated",
+      "adminOnly": "Only workspace admins can reveal or rotate the secret.",
+      "secretOnce": "Your signing secret — copy it now, it is shown in full only this once.",
+      "secretDismiss": "I have copied it",
+      "sendTest": "Send test",
+      "testOk": "Test sent · {{code}} in {{ms}} ms",
+      "testFailed": "Test failed · {{code}}",
+      "response": "Response",
+      "request": "Request",
+      "deliveries": "Deliveries",
+      "deliveriesHint": "The last 50 deliveries, newest first. Failed ones retry automatically with growing delays.",
+      "deliveriesEmpty": "Nothing delivered yet — send a test from the card.",
+      "redeliver": "Redeliver",
+      "redelivered": "Redelivery sent",
+      "attempts": "{{count}}×",
+      "timeout": "timeout",
+      "nextAttempt": "Next attempt {{when}}",
+      "status": {
+        "never": "Never delivered",
+        "ok": "Delivered {{when}}",
+        "failing": "Failing · {{count}} failure(s)",
+        "autoDisabled": "Paused after {{count}} failures"
+      },
+      "edit": "Edit",
+      "view": "View",
+      "more": "More",
+      "delete": "Remove",
+      "deleteTitle": "Remove this webhook?",
+      "deleteBody": "{{name}} stops receiving events. Nothing else changes.",
+      "saved": "Webhook saved",
+      "created": "Webhook added",
+      "deleted": "Webhook removed",
+      "save": "Save changes",
+      "receiverHelp": {
+        "title": "What your endpoint has to do",
+        "receive": "Accept a POST with a JSON body and answer with any 2xx status. That is all — no API key, no registration, no handshake.",
+        "nothingElse": "Works out of the box with Zapier and Make catch hooks, n8n, a CRM inbound URL or your own backend.",
+        "https": "The URL must be https:// on a public host. localhost and private networks are refused.",
+        "signature": "Optional: check the X-Repraesent-Signature header with the signing secret shown once when the webhook is created. Only needed if you want proof the call came from us.",
+        "retries": "Failed deliveries are retried for about two hours; every attempt appears under Deliveries."
+      }
+    },
+    "products": {
+      "title": "Bundle",
+      "add": "Add product",
+      "remove": "Remove from bundle",
+      "empty": "No products yet",
+      "emptyHint": "Pick one or more Stripe prices. Buyers tick the ones they want and pay for those in one checkout.",
+      "notConnectedTitle": "Connect Stripe to add products",
+      "notConnectedBody": "A product form sells your Stripe products through Stripe Checkout. Connect the account that should receive the payments.",
+      "qty": "Quantity",
+      "fixed": "Fixed",
+      "adjustable": "Buyer chooses",
+      "min": "Min",
+      "default": "Default",
+      "max": "Max",
+      "perCheckout": "One subscription per checkout.",
+      "stale": "Changed in Stripe",
+      "archived": "Price archived",
+      "refreshAll": "Refresh prices",
+      "picker": {
+        "title": "Add a product",
+        "hint": "Search your Stripe catalogue. The buyer pays for every line in the bundle.",
+        "pickPrice": "Pick a price.",
+        "search": "Search products…",
+        "inBundle": "Already in the bundle",
+        "currencyMismatch": "Different currency than the bundle",
+        "intervalMismatch": "Different billing interval — one checkout needs one interval",
+        "addToBundle": "Add to bundle",
+        "nothingToAdd": "Nothing to add. Products need an active price.",
+        "priceCount": "{{count}} price(s)"
+      },
+      "checkout": "Checkout",
+      "customer": "Customer details",
+      "billing": "Billing address",
+      "billingAuto": "Auto",
+      "billingRequired": "Required",
+      "billingHint": "Auto lets Stripe ask only when the payment method needs it.",
+      "phone": "Ask for a phone number",
+      "promo": "Allow promotion codes",
+      "shipping": "Shipping",
+      "shippingEnabled": "Collect a shipping address",
+      "worldwide": "Worldwide",
+      "eu": "EU",
+      "dach": "DACH",
+      "custom": "Custom",
+      "countries": "{{count}} countries",
+      "searchCountries": "Search countries…",
+      "customHint": "Pick the countries you ship to. Empty means everywhere Stripe ships.",
+      "button": "Button & placement",
+      "submitType": "Stripe button",
+      "pay": "Pay",
+      "book": "Book",
+      "donate": "Donate",
+      "submitTypeHint": "Changes the wording on Stripe's payment page.",
+      "position": "Summary position",
+      "top": "Top",
+      "bottom": "Bottom",
+      "caption": "Form button caption",
+      "captionHint": "What the form's own button says before Stripe. Per language.",
+      "after": "After payment",
+      "successUrl": "Success URL",
+      "successUrlHint": "Default: the hosted thank-you page, styled like this form.",
+      "cancelUrl": "Cancel URL",
+      "cancelUrlHint": "Default: back to this form with the answers kept.",
+      "invalidUrl": "Enter a full https:// URL.",
+      "fixedQty": "Quantity",
+      "pagesPaidTitle": "Paid — title",
+      "pagesPaidBody": "Paid — message",
+      "pagesFailedTitle": "Failed — title",
+      "pagesFailedBody": "Failed — message",
+      "pagesRetry": "Try-again button",
+      "pagesCanceled": "Back-from-Stripe notice",
+      "pagesHint": "Shown on the hosted pages the buyer lands on after Stripe. Per language.",
+      "preselected": "Ticked when the form loads",
+      "selectHint": "Every line has a checkbox. Buyers tick what they want and pay for exactly that; at least one is required.",
+      "titleLabel": "Summary title",
+      "secureLabel": "Trust line"
     }
   },
   "workflows": {

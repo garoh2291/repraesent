@@ -10,18 +10,29 @@
  */
 
 import {
+  COMMERCE_CONTENT_KEYS,
+  FORM_RUNTIME_CONTENT,
+  STEP_CONTENT_KEYS,
   type FormDefinition,
   type FormField,
+  type FormKind,
   type FormLocale,
   contentKey,
+  fillTemplate,
   flattenFields,
+  getFormContent,
   hasOptions,
+  isMultiStep,
   isPresentational,
 } from "./schema";
 
+export { fillTemplate };
+
 /**
- * Resolve a content string, falling back to the form's default locale.
- * Never falls back to the key name — an unset string renders as empty.
+ * Resolve a content string: the locale, then the form's default locale, then
+ * — for the runtime keys under nav / commerce / checkout only — the shipped
+ * default. Never falls back to the key name; any other unset string renders
+ * as empty.
  */
 export function getContent(
   definition: Pick<FormDefinition, "content">,
@@ -29,9 +40,40 @@ export function getContent(
   key: string,
   fallbackLocale: FormLocale,
 ): string {
-  const direct = definition.content?.[locale]?.[key];
-  if (direct != null && direct !== "") return direct;
-  return definition.content?.[fallbackLocale]?.[key] ?? "";
+  return getFormContent(definition, locale, key, fallbackLocale);
+}
+
+/**
+ * Write the shipped runtime strings into every listed locale — blanks only,
+ * never overwriting what an operator typed. Called when a form is created as
+ * multi-step / product and when a single-page form is split into steps, so the
+ * strings show up in the editor and get translated with everything else.
+ */
+export function seedRuntimeContent(
+  definition: FormDefinition,
+  locales: FormLocale[],
+  keys: readonly string[],
+): FormDefinition {
+  let content = definition.content ?? {};
+  let changed = false;
+  for (const locale of locales) {
+    const table = FORM_RUNTIME_CONTENT[locale] ?? FORM_RUNTIME_CONTENT.en;
+    const current = content[locale] ?? {};
+    let next: Record<string, string> | null = null;
+    for (const key of keys) {
+      const existing = current[key];
+      if (existing != null && existing.trim() !== "") continue;
+      const value = table[key];
+      if (value == null) continue;
+      if (!next) next = { ...current };
+      next[key] = value;
+    }
+    if (next) {
+      content = { ...content, [locale]: next };
+      changed = true;
+    }
+  }
+  return changed ? { ...definition, content } : definition;
 }
 
 /** Read a string for editing — no fallback, so an empty field looks empty. */
@@ -59,6 +101,12 @@ export function setContent(
   };
 }
 
+const STEP_KEY_LABELS: Record<string, string> = {
+  "nav.back": "Back button",
+  "nav.next": "Next button",
+  "nav.stepOf": "Step counter",
+};
+
 export interface ContentKeyDescriptor {
   key: string;
   /** What the Languages tab shows in its left-hand column. */
@@ -73,6 +121,8 @@ export interface ContentKeyDescriptor {
  */
 export function collectContentKeys(
   definition: FormDefinition,
+  /** The row's kind — product forms carry the commerce and checkout strings. */
+  kind: FormKind = "standard",
 ): ContentKeyDescriptor[] {
   const keys: ContentKeyDescriptor[] = [
     { key: contentKey.formTitle(), label: "Title", group: "Form" },
@@ -84,6 +134,23 @@ export function collectContentKeys(
     },
     { key: contentKey.formSubmit(), label: "Submit button", group: "Form" },
   ];
+
+  if (isMultiStep(definition)) {
+    for (const key of STEP_CONTENT_KEYS) {
+      keys.push({ key, label: STEP_KEY_LABELS[key] ?? key, group: "Steps" });
+    }
+  }
+
+  if (kind === "product") {
+    for (const key of COMMERCE_CONTENT_KEYS) {
+      keys.push({
+        key,
+        label: key.replace(/^(commerce|checkout|error)\./, ""),
+        group: "Checkout",
+        multiline: key.endsWith(".body"),
+      });
+    }
+  }
 
   for (const section of definition.sections ?? []) {
     if (section.fields?.length) {
@@ -201,7 +268,7 @@ function fieldContentKeys(field: FormField): ContentKeyDescriptor[] {
     ];
   }
 
-  if (field.type === "hidden") return [];
+  if (field.type === "hidden" || field.type === "product") return [];
 
   const keys: ContentKeyDescriptor[] = [
     { key: contentKey.fieldLabel(field.id), label: field.key, group },
@@ -251,12 +318,20 @@ function fieldContentKeys(field: FormField): ContentKeyDescriptor[] {
  * Share of a locale's keys that are filled in. Only keys that exist in the
  * default locale count, so blank optional strings never drag the number down.
  */
+/**
+ * A definition with a commerce block belongs to a product form: its commerce
+ * and checkout strings are visitor copy that must be translated and counted.
+ */
+function kindOf(definition: FormDefinition): FormKind {
+  return definition.commerce ? "product" : "standard";
+}
+
 export function localeCompleteness(
   definition: FormDefinition,
   locale: FormLocale,
   defaultLocale: FormLocale,
 ): { filled: number; total: number; percent: number } {
-  const keys = collectContentKeys(definition);
+  const keys = collectContentKeys(definition, kindOf(definition));
   const source = definition.content?.[defaultLocale] ?? {};
   const target = definition.content?.[locale] ?? {};
 
@@ -299,7 +374,7 @@ export function buildTranslateItems(
   const items: Record<string, TranslateItemPayload> = {};
   const keys: string[] = [];
 
-  for (const descriptor of collectContentKeys(definition)) {
+  for (const descriptor of collectContentKeys(definition, kindOf(definition))) {
     const value = (source[descriptor.key] ?? "").trim();
     if (value === "") continue;
     if (options.onlyEmpty && (target[descriptor.key] ?? "").trim() !== "") {

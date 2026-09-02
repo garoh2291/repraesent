@@ -13,22 +13,28 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useParams, useSearchParams } from "react-router";
 import { FormRenderer } from "~/components/forms/FormRenderer";
+import { PublicShell, navigateTop } from "~/components/forms/PublicShell";
 import i18n from "~/i18n";
 import { getPublicForm, submitPublicForm } from "~/lib/api/forms";
 import { getContent } from "~/lib/forms/content";
 import { readLangCookie } from "~/lib/forms/lang-cookie";
-import { onColor } from "~/lib/forms/css";
+import { defaultQuantities, defaultSelection } from "~/lib/forms/commerce";
 import { normalizeDefinition } from "~/lib/forms/field-types";
 import {
   contentKey,
   isFormLocale,
+  isMultiStep,
   type FormErrorCode,
   type FormLocale,
-  type FormTheme,
 } from "~/lib/forms/schema";
 import { captureUtm } from "~/lib/forms/utm";
 import { injectOpenaiPixel, readOppref } from "~/lib/openai-pixel";
-import { emptyValues, validateValues } from "~/lib/forms/validate";
+import {
+  emptyValues,
+  firstErrorStep,
+  validateStepValues,
+  validateValues,
+} from "~/lib/forms/validate";
 
 export function meta() {
   return [
@@ -41,11 +47,12 @@ export function meta() {
 
 export default function PublicFormRoute() {
   const { formId } = useParams();
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { t } = useTranslation();
 
   const isEmbed = searchParams.get("embed") === "1";
   const langParam = searchParams.get("lang");
+  const canceled = searchParams.get("canceled") === "1";
 
   const { data, isLoading } = useQuery({
     queryKey: ["public-form", formId],
@@ -57,7 +64,7 @@ export default function PublicFormRoute() {
   const definition = useMemo(
     () =>
       data?.definition
-        ? normalizeDefinition(data.definition, data.default_locale)
+        ? normalizeDefinition(data.definition, data.default_locale, data.kind)
         : null,
     [data],
   );
@@ -70,6 +77,15 @@ export default function PublicFormRoute() {
     tone: "ok" | "bad";
   } | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
+  // Multi-step: which step is on screen and which way the last change went.
+  const [step, setStep] = useState(0);
+  const [stepDirection, setStepDirection] = useState<"forward" | "back">(
+    "forward",
+  );
+  // Product forms: chosen quantity per price id.
+  const [quantities, setQuantities] = useState<Record<string, number>>({});
+  const [selection, setSelection] = useState<ReadonlySet<string>>(new Set());
+  const [noticeDismissed, setNoticeDismissed] = useState(false);
 
   const renderedAt = useRef(Date.now());
   const metaRef = useRef<Record<string, string>>({});
@@ -109,7 +125,19 @@ export default function PublicFormRoute() {
   }, [data, langParam, locale]);
 
   useEffect(() => {
-    if (definition) setValues(emptyValues(definition));
+    if (!definition) return;
+    // Back from a cancelled checkout: the answers were parked in
+    // sessionStorage on the way out, so nothing has to be typed twice.
+    const draft = canceled ? readDraft(formId) : null;
+    setValues(draft?.values ?? emptyValues(definition));
+    setQuantities(draft?.quantities ?? defaultQuantities(definition.commerce));
+    setSelection(
+      draft?.selection
+        ? new Set(draft.selection)
+        : defaultSelection(definition.commerce),
+    );
+    if (draft && typeof draft.step === "number") setStep(draft.step);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [definition]);
 
   useEffect(() => {
@@ -155,7 +183,9 @@ export default function PublicFormRoute() {
     const observer = new ResizeObserver(post);
     observer.observe(el);
     return () => observer.disconnect();
-  }, [isEmbed, formId, definition, status, errors]);
+    // `step` is here so a step change posts immediately, before the observer
+    // catches the animated frames.
+  }, [isEmbed, formId, definition, status, errors, step]);
 
   const submitMutation = useMutation({
     mutationFn: () =>
@@ -166,17 +196,50 @@ export default function PublicFormRoute() {
         hp: "",
         rt: data?.render_token,
         elapsed_ms: Date.now() - renderedAt.current,
+        ...(definition?.commerce
+          ? { quantities, selection: [...selection] }
+          : {}),
       }),
     onSuccess: (result) => {
       if (!result.success) {
         // The server re-validated and disagreed with the client mirror.
-        setErrors(result.errors ?? {});
+        const found = result.errors ?? {};
+        setErrors(found);
+        // A form-level code owns no field; it goes in the status line.
+        if (typeof found._form === "string") {
+          setStatus({
+            text:
+              tContent(contentKey.error(found._form as FormErrorCode)) ||
+              tContent(contentKey.errorGeneric()),
+            tone: "bad",
+          });
+        }
+        jumpToErrorStep(found);
         return;
       }
       setErrors({});
 
+      if (result.mode === "checkout") {
+        if (!result.checkout_url) {
+          setStatus({
+            text: tContent(contentKey.error("checkout_unavailable")),
+            tone: "bad",
+          });
+          return;
+        }
+        // Park the answers so a cancelled checkout comes back to a filled form.
+        writeDraft(formId, {
+          values,
+          quantities,
+          selection: [...selection],
+          step,
+        });
+        navigateTop(result.checkout_url, isEmbed);
+        return;
+      }
+
       if (result.mode === "redirect" && result.redirect_url) {
-        window.location.href = result.redirect_url;
+        navigateTop(result.redirect_url, isEmbed);
         return;
       }
       if (result.mode === "modal") {
@@ -188,6 +251,7 @@ export default function PublicFormRoute() {
       setStatus({ text: tContent(contentKey.successInline()), tone: "ok" });
       if (definition?.success.resetAfterSubmit) {
         setValues(emptyValues(definition));
+        goToStep(0);
       }
     },
     onError: () => {
@@ -200,12 +264,53 @@ export default function PublicFormRoute() {
     return getContent(definition, locale, key, data.default_locale);
   }
 
-  const handleSubmit = () => {
+  /** Move to a step; the direction is derived so the slide goes the right way. */
+  const goToStep = (index: number) => {
+    setStepDirection(index < step ? "back" : "forward");
+    setStep(index);
+  };
+
+  /** Server-side errors on a multi-step form: show the step that owns the first one. */
+  const jumpToErrorStep = (found: Record<string, unknown>) => {
+    if (!definition || !isMultiStep(definition)) return;
+    const target = firstErrorStep(definition, found);
+    if (target >= 0 && target !== step) goToStep(target);
+  };
+
+  const handleNext = () => {
     if (!definition) return;
-    const found = validateValues(definition, values);
+    const found = validateStepValues(definition, step, values);
     setErrors(found);
     setStatus(null);
     if (Object.keys(found).length > 0) return;
+    goToStep(Math.min(step + 1, definition.sections.length - 1));
+  };
+
+  const handleBack = () => {
+    setStatus(null);
+    goToStep(Math.max(step - 1, 0));
+  };
+
+  /** Product forms: something has to be ticked, or the summary says so. */
+  const productError = (): Record<string, FormErrorCode> => {
+    if (!definition?.commerce) return {};
+    const product = definition.sections
+      .flatMap((s) => s.fields)
+      .find((f) => f.type === "product");
+    if (!product || selection.size > 0) return {};
+    return { [product.key]: "product_required" };
+  };
+
+  const handleSubmit = () => {
+    if (!definition) return;
+    const found = { ...validateValues(definition, values), ...productError() };
+    setErrors(found);
+    setStatus(null);
+    if (Object.keys(found).length > 0) {
+      // On the last step, an error two steps back has to be shown, not hidden.
+      jumpToErrorStep(found);
+      return;
+    }
     submitMutation.mutate();
   };
 
@@ -213,18 +318,18 @@ export default function PublicFormRoute() {
 
   if (isLoading || (data && !locale)) {
     return (
-      <Shell embed={isEmbed}>
+      <PublicShell embed={isEmbed}>
         <div
           className="h-64 w-full max-w-xl animate-pulse rounded-xl bg-stone-200"
           aria-hidden="true"
         />
-      </Shell>
+      </PublicShell>
     );
   }
 
   if (!data || !data.available || !definition || !locale) {
     return (
-      <Shell embed={isEmbed}>
+      <PublicShell embed={isEmbed}>
         <div className="max-w-md space-y-2 text-center">
           <h1 className="text-xl font-semibold text-stone-900">
             {t("forms.public.notAvailable")}
@@ -233,12 +338,12 @@ export default function PublicFormRoute() {
             {t("forms.public.notAvailableHint")}
           </p>
         </div>
-      </Shell>
+      </PublicShell>
     );
   }
 
   return (
-    <Shell embed={isEmbed} theme={definition.theme}>
+    <PublicShell embed={isEmbed} theme={definition.theme}>
       <div ref={wrapperRef} className="w-full">
         <FormRenderer
           definition={definition}
@@ -261,6 +366,65 @@ export default function PublicFormRoute() {
           onSubmit={handleSubmit}
           submitting={submitMutation.isPending}
           status={status}
+          step={isMultiStep(definition) ? step : undefined}
+          stepDirection={stepDirection}
+          onNext={handleNext}
+          onBack={handleBack}
+          onStepChange={goToStep}
+          quantities={quantities}
+          onQuantityChange={(priceId, quantity) =>
+            setQuantities((prev) => ({ ...prev, [priceId]: quantity }))
+          }
+          productSelection={selection}
+          onProductSelectionChange={(priceId, on) => {
+            setSelection((prev) => {
+              const next = new Set(prev);
+
+              if (on) next.add(priceId);
+              else next.delete(priceId);
+
+              return next;
+            });
+
+            // Ticking something clears the "choose a product" error.
+
+            setErrors((prev) => {
+              const product = definition.sections
+
+                .flatMap((s) => s.fields)
+
+                .find((f) => f.type === "product");
+
+              if (!product || !prev[product.key]) return prev;
+
+              const next = { ...prev };
+
+              delete next[product.key];
+
+              return next;
+            });
+          }}
+          notice={
+            canceled && !noticeDismissed
+              ? {
+                  text: tContent(contentKey.checkout("canceled")),
+                  dismissLabel: tContent(
+                    contentKey.checkout("canceled.dismiss"),
+                  ),
+                  onDismiss: () => {
+                    setNoticeDismissed(true);
+                    setSearchParams(
+                      (prev) => {
+                        const next = new URLSearchParams(prev);
+                        next.delete("canceled");
+                        return next;
+                      },
+                      { replace: true },
+                    );
+                  },
+                }
+              : null
+          }
           offeredLocales={data.locales}
           onLocaleChange={(next) => {
             setLocale(next);
@@ -278,77 +442,37 @@ export default function PublicFormRoute() {
           />
         ) : null}
       </div>
-    </Shell>
+    </PublicShell>
   );
 }
 
-/**
- * Page chrome. Suppressed entirely under ?embed=1 so the iframe shows only the
- * form and inherits the host page's own background.
- *
- * "Inherits the host page's background" was a lie until the document itself was
- * made transparent: app.css paints html and body `#0f0f11` for the dashboard,
- * and an iframe document paints its own body over whatever is behind it. So the
- * iframe came out near-black with the form's dark body text on top of it —
- * unreadable, and unrelated to the visitor's OS setting, which is why it looked
- * identical in light and dark mode.
- *
- * DocumentScheme below also pins the colour scheme to the form's own theme, so
- * native widgets never follow the visitor's OS.
- */
-function Shell({
-  embed,
-  theme,
-  children,
-}: {
-  embed: boolean;
-  theme?: FormTheme;
-  children: React.ReactNode;
-}) {
-  if (embed) {
-    return (
-      <>
-        <DocumentScheme theme={theme} background="transparent" />
-        <div className="flex w-full justify-center p-2">{children}</div>
-      </>
-    );
+/** The parked answers of a form that left for Stripe Checkout. */
+interface CheckoutDraft {
+  values: Record<string, unknown>;
+  quantities: Record<string, number>;
+  selection?: string[];
+  step: number;
+}
+
+function draftKey(formId: string | undefined): string {
+  return `rf:${formId ?? ""}:draft`;
+}
+
+function writeDraft(formId: string | undefined, draft: CheckoutDraft): void {
+  try {
+    sessionStorage.setItem(draftKey(formId), JSON.stringify(draft));
+  } catch {
+    /* storage denied — the visitor retypes, nothing worse */
   }
-  return (
-    <>
-      <DocumentScheme theme={theme} background="#eeeeee" />
-      <main className="flex min-h-dvh w-full items-center justify-center bg-[#eeeeee] p-4 sm:p-8">
-        <div className="flex w-full justify-center">{children}</div>
-      </main>
-    </>
-  );
 }
 
-/**
- * Overrides the dashboard's `html, body { background: #0f0f11; color-scheme:
- * dark }` for this route only.
- *
- * A plain <style> element rather than a class, because the rules have to reach
- * html and body, which this route does not render. It ships in the SSR HTML, so
- * there is no flash of the dashboard's dark background before hydration.
- *
- * The scheme is derived exactly as buildFormCss derives it, from the theme's
- * surface colour — the two must agree or the page chrome and the form would
- * disagree about which scheme they are in. Defaults to light while the
- * definition is still loading, which is what almost every form is.
- */
-function DocumentScheme({
-  theme,
-  background,
-}: {
-  theme?: FormTheme;
-  background: string;
-}) {
-  const scheme =
-    theme && onColor(theme.surface) === "#ffffff" ? "dark" : "light";
-
-  return (
-    <style>{`html,body{background:${background};color-scheme:${scheme};}`}</style>
-  );
+function readDraft(formId: string | undefined): CheckoutDraft | null {
+  try {
+    const raw = sessionStorage.getItem(draftKey(formId));
+    return raw ? (JSON.parse(raw) as CheckoutDraft) : null;
+  } catch {
+    return null;
+  }
 }
 
 /**

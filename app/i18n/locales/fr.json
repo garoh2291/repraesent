@@ -375,7 +375,10 @@
       "contactConversionModalDescription": "Ce lead est désormais lié à un contact. Ouvrez la fiche du contact pour ajouter des affaires ou assurer le suivi.",
       "createDeal": "Créer une affaire",
       "backToLead": "Retour au lead",
-      "historyTaskAssigneeRemoved": "Responsable de la tâche retiré"
+      "historyTaskAssigneeRemoved": "Responsable de la tâche retiré",
+      "historyCheckoutPaid": "A payé {{amount}} via le paiement",
+      "historyCheckoutFailed": "Paiement refusé lors du checkout",
+      "historyCheckoutExpired": "Checkout expiré sans paiement"
     },
     "empty": "Aucun lead pour le moment",
     "filters": {
@@ -415,6 +418,41 @@
     },
     "source": {
       "openaiAds": "OpenAI Ads"
+    },
+    "payment": {
+      "title": "Paiement",
+      "status": {
+        "paid": "Payé",
+        "processing": "En cours",
+        "pending": "En attente de paiement",
+        "failed": "Échoué",
+        "expired": "Expiré"
+      },
+      "mode": {
+        "payment": "Paiement unique",
+        "subscription": "Abonnement"
+      },
+      "testMode": "Mode test",
+      "notCompleted": "Le paiement a été ouvert mais pas finalisé.",
+      "expiresAt": "Expire le {{date}}",
+      "expiredHint": "Le visiteur a quitté le paiement sans payer.",
+      "failedHint": "Le paiement a été refusé.",
+      "items": "Articles",
+      "subtotal": "Sous-total",
+      "total": "Total",
+      "noItems": "Aucun article enregistré",
+      "customer": "Client",
+      "billing": "Facturation",
+      "shipping": "Livraison",
+      "stripe": {
+        "payment": "Paiement",
+        "subscription": "Abonnement",
+        "customer": "Client",
+        "session": "Session"
+      },
+      "attempts": "Tentatives précédentes",
+      "loadError": "Les détails du paiement n’ont pas pu être chargés.",
+      "more": "+{{count}}"
     }
   },
   "pipeline": {
@@ -3676,7 +3714,9 @@
       "duplicated": "Formulaire dupliqué",
       "archived": "Formulaire archivé",
       "nameExists": "Un formulaire portant ce nom existe déjà",
-      "languageLabel": "Langue"
+      "languageLabel": "Langue",
+      "kindProduct": "Produit",
+      "kindMulti": "Multi-étapes"
     },
     "status": {
       "draft": "Brouillon",
@@ -3719,7 +3759,12 @@
       "noLabel": "Sans libellé",
       "removeTitle": "Supprimer le titre",
       "savingAuto": "Enregistrement…",
-      "savedAuto": "Enregistré"
+      "savedAuto": "Enregistré",
+      "goToProducts": "Ouvrir l'onglet Produits",
+      "tabWebhooks": "Webhooks",
+      "tabProducts": "Produits",
+      "productEmptyTitle": "Aucun produit pour l’instant",
+      "productEmptyHint": "Sélectionnez ce bloc, puis ajoutez les produits Stripe parmi lesquels les acheteurs choisiront."
     },
     "palette": {
       "title": "Ajouter un champ",
@@ -3745,7 +3790,8 @@
       "heading": "Titre",
       "paragraph": "Paragraphe",
       "hidden": "Champ masqué",
-      "appointment": "Rendez-vous"
+      "appointment": "Rendez-vous",
+      "product": "Produit"
     },
     "inspector": {
       "title": "Paramètres du champ",
@@ -3769,7 +3815,7 @@
       "optionLabel": "Libellé",
       "min": "Min",
       "max": "Max",
-      "step": "Pas",
+      "step": "Étape",
       "minLength": "Longueur min",
       "maxLength": "Longueur max",
       "minSelected": "Min. sélectionné",
@@ -3830,7 +3876,14 @@
         "noTargets": "Connectez d'abord un calendrier dans les paramètres",
         "connectLink": "Connecter un calendrier",
         "accountNeedsReconnect": "doit être reconnecté"
-      }
+      },
+      "stepTitle": "Titre de l'étape",
+      "stepDescription": "Description de l'étape",
+      "stepHint": "Affiché en haut de l'étape et, avec le style de progression Étapes, à côté de son repère.",
+      "stepLayoutHint": "Un champ change d'étape en le glissant sur une étape, ou depuis ses réglages de disposition.",
+      "commerce": "Récapitulatif de commande",
+      "commerceHint": "Produits, quantités et options de paiement se règlent dans l'onglet Produits.",
+      "product": "Produit"
     },
     "design": {
       "title": "Design",
@@ -3905,7 +3958,14 @@
         "consent_required": "Consentement requis"
       },
       "padding": "Marge intérieure",
-      "fieldBackground": "Fond des champs"
+      "fieldBackground": "Fond des champs",
+      "steps": "Étapes",
+      "progressStyle": "Progression",
+      "progressBar": "Barre",
+      "progressSteps": "Étapes",
+      "progressNone": "Aucune",
+      "showStepTitles": "Afficher les noms des étapes dans la progression",
+      "stepsHint": "Ce que voient les visiteurs pour se situer. Le titre de l’étape en cours remplace celui du formulaire ; modifiez-le dans l’onglet Construction."
     },
     "email": {
       "title": "E-mail de confirmation",
@@ -3925,7 +3985,8 @@
       "sectionDelivery": "Envoi",
       "sectionMessage": "Message",
       "templateApplied": "Modèle appliqué à {{locales}}",
-      "blankLocales": "Aucun e-mail en {{locales}} — un envoi dans cette langue recevra celui de la langue par défaut."
+      "blankLocales": "Aucun e-mail en {{locales}} — un envoi dans cette langue recevra celui de la langue par défaut.",
+      "disabledHint": "Activez cette option pour envoyer aux visiteurs une confirmation depuis l'une de vos boîtes mail."
     },
     "share": {
       "publishFirst": "Publiez ce formulaire avant de le partager — le lien et les intégrations restent inactifs jusque-là.",
@@ -3964,17 +4025,32 @@
         "emptyOptions": "Le champ '{{field}}' n'a aucune option, ou deux options ont la même valeur.",
         "missingContent": "Le champ '{{field}}' n'a pas de libellé dans la langue par défaut.",
         "missingContentLocale": "Le champ '{{field}}' n'a pas de libellé en {{locale}}.",
-        "appointmentMissingCalendar": "Le champ '{{field}}' a besoin d'un calendrier cible."
+        "appointmentMissingCalendar": "Le champ '{{field}}' a besoin d'un calendrier cible.",
+        "duplicateProductField": "Le champ '{{field}}' est un second champ Produit — un seul est possible.",
+        "productFieldOnStandardForm": "Le champ '{{field}}' est un champ Produit sur un formulaire sans paiement.",
+        "commerceNoItems": "Ajoutez au moins un produit au lot."
       },
       "otherLocales": "{{count}} autre(s) problème(s) dans :",
       "keyMissing": "Un champ n'a pas de clé — les réponses seraient perdues",
       "emailSubjectMissing": "L'e-mail de confirmation n'a pas d'objet ({{locale}})",
       "emailBodyMissing": "L'e-mail de confirmation n'a pas de message ({{locale}})",
-      "appointmentMissingCalendar": "Un champ rendez-vous a besoin d'un calendrier cible."
+      "appointmentMissingCalendar": "Un champ rendez-vous a besoin d'un calendrier cible.",
+      "emptyStep": "Une étape n'a aucun champ — les visiteurs verraient une page vide.",
+      "commerceNoItems": "Ajoutez au moins un produit au lot.",
+      "commerceMixedCurrency": "Tous les prix du lot doivent être dans la même devise.",
+      "commerceMixedInterval": "Les prix récurrents doivent partager le même intervalle de facturation.",
+      "commerceInactivePrice": "Un prix du lot est archivé dans Stripe.",
+      "commerceStripeDisconnected": "Stripe est déconnecté — reconnectez-le dans Paramètres → Intégrations.",
+      "invalidSuccessUrl": "L'URL de succès doit commencer par https://.",
+      "invalidCancelUrl": "L'URL d'annulation doit commencer par https://.",
+      "needsProductField": "Ajoutez le champ Produit pour que les visiteurs voient ce qu'ils achètent.",
+      "duplicateProductField": "Un formulaire ne peut avoir qu'un champ Produit.",
+      "productFieldOnStandardForm": "Le champ Produit ne fonctionne que sur un formulaire produit."
     },
     "public": {
       "notAvailable": "Ce formulaire n'est pas disponible",
-      "notAvailableHint": "Le lien a peut-être expiré, ou le formulaire a été mis hors ligne."
+      "notAvailableHint": "Le lien a peut-être expiré, ou le formulaire a été mis hors ligne.",
+      "thanksMetaTitle": "Merci"
     },
     "mapping": {
       "first_name": "Prénom",
@@ -4061,6 +4137,231 @@
       "empty": "Aucun créneau libre ce jour-là.",
       "slotUnavailable": "Ce créneau vient d’être réservé. Veuillez en choisir un autre.",
       "slotInvalid": "Veuillez choisir un créneau valide."
+    },
+    "steps": {
+      "title": "Étapes",
+      "stepN": "Étape {{n}}",
+      "add": "Ajouter une étape",
+      "rename": "Renommer",
+      "duplicate": "Dupliquer l'étape",
+      "moveLeft": "Déplacer à gauche",
+      "moveRight": "Déplacer à droite",
+      "delete": "Supprimer l'étape",
+      "deleteLast": "Un formulaire a besoin d'au moins une étape",
+      "menu": "Options de l'étape {{n}}",
+      "deleteTitle": "Supprimer l'étape {{n}} ?",
+      "deleteBody": "Elle contient {{count}} champ(s). Déplacez-les vers l'étape précédente ou supprimez-les avec elle.",
+      "deleteMove": "Déplacer les champs vers l'étape précédente",
+      "deleteAll": "Supprimer aussi les champs",
+      "split": "Diviser en étapes",
+      "merge": "Une seule page",
+      "mergeTitle": "Fusionner {{count}} étapes en une page ?",
+      "mergeBody": "Les champs gardent leur ordre. Le titre de la première étape devient le titre du formulaire ; les autres titres d’étape sont supprimés.",
+      "fieldsIn": "Champs de l'étape {{n}}",
+      "moveTo": "Étape",
+      "dropHint": "Glissez un champ sur une étape ci-dessus, ou utilisez les flèches de la ligne.",
+      "emptyStepHint": "Cette étape est vide. Ajoutez un champ depuis la palette ou glissez-en un ici.",
+      "moveFieldsHere": "Déplacer des champs ici",
+      "moveFieldsTitle": "Déplacer des champs vers « {{step}} »",
+      "moveFieldsHint": "Cochez les champs à rapatrier depuis les autres étapes.",
+      "moveSelected": "Déplacer la sélection ({{count}})",
+      "moveField": "Déplacer vers une autre étape"
+    },
+    "create": {
+      "title": "Nouveau formulaire",
+      "typeLabel": "Quel type de formulaire ?",
+      "create": "Créer le formulaire",
+      "type": {
+        "single": {
+          "title": "Une page",
+          "body": "Tous les champs sur un écran. Le plus rapide pour quelques questions."
+        },
+        "multi": {
+          "title": "Plusieurs étapes",
+          "body": "Un écran par étape, avec indicateur de progression. Mieux pour les formulaires longs."
+        },
+        "product": {
+          "title": "Produit",
+          "body": "Les visiteurs choisissent parmi vos produits Stripe, remplissent le formulaire, puis paient sur Stripe.",
+          "disabled": "Connectez Stripe pour accepter des paiements avec un formulaire.",
+          "connect": "Connecter Stripe"
+        }
+      }
+    },
+    "webhooks": {
+      "title": "Webhooks",
+      "add": "Ajouter un webhook",
+      "editTitle": "Modifier le webhook",
+      "sheetHint": "Nous envoyons du JSON en POST à votre point de terminaison quand les événements choisis se produisent, avec nouvelles tentatives en cas d'échec.",
+      "empty": "Aucun webhook",
+      "emptyHint": "Envoyez chaque soumission à vos propres systèmes dès qu'elle arrive : un CRM, une automatisation, votre backend. Vous choisissez exactement quelles clés partent.",
+      "name": "Nom",
+      "url": "URL du point de terminaison",
+      "urlHint": "Doit être en https:// sur un hôte public. Les envois échoués sont retentés pendant environ deux heures.",
+      "urlLocal": "Localhost et les adresses privées ne sont pas joignables depuis nos serveurs.",
+      "endpoint": "Point de terminaison",
+      "events": "Événements",
+      "eventsStandardHint": "Les événements de paiement existent sur les formulaires produit.",
+      "event": {
+        "form_submitted": "Un visiteur a envoyé le formulaire et un lead a été créé.",
+        "checkout_completed": "Le paiement a réussi et le lead a été marqué.",
+        "checkout_failed": "Le paiement a été refusé ou a échoué.",
+        "checkout_expired": "Le visiteur n'a jamais payé et le paiement a expiré."
+      },
+      "payload": "Charge utile",
+      "payloadHint": "Choisissez les clés envoyées et leur nom. L'aperçu est exactement ce que nous envoyons.",
+      "paneKeys": "Clés",
+      "panePreview": "Aperçu",
+      "include": "Inclure",
+      "ourKey": "Clé",
+      "targetKey": "Envoyée comme",
+      "type": "Type",
+      "example": "Exemple",
+      "search": "Filtrer les clés…",
+      "all": "Toutes",
+      "none": "Aucune",
+      "reset": "Réinitialiser le nom",
+      "collision": "Deux clés entreraient en collision dans data.",
+      "invalidName": "Lettres, chiffres, _ . et -, 64 caractères max.",
+      "hidden": "{{count}} clé(s) masquée(s)",
+      "was": "était {{key}}",
+      "previewEvent": "Aperçu",
+      "copyJson": "Copier le JSON",
+      "copy": "Copier",
+      "copied": "Copié",
+      "group": {
+        "fields": "Champs",
+        "contact": "Contact",
+        "submission": "Soumission",
+        "checkout": "Paiement"
+      },
+      "verify": "Vérifier la signature",
+      "verifyHint": "Chaque requête porte X-Repraesent-Signature : t=<secondes Unix>,v1=<hex>. Recalculez le HMAC-SHA256 de \"<t>.<corps brut>\" avec votre secret et comparez. Rejetez les horodatages de plus de cinq minutes.",
+      "secret": "Secret de signature",
+      "secretHint": "Affiché en entier une fois à la création et ici sur demande. L'affichage est journalisé.",
+      "reveal": "Afficher",
+      "hideIn": "Masqué dans {{s}} s",
+      "rotate": "Renouveler…",
+      "rotateTitle": "Renouveler le secret de signature ?",
+      "rotateBody": "Les envois signés avec l'ancien secret échoueront à la vérification de votre côté jusqu'à sa mise à jour.",
+      "rotated": "Secret renouvelé",
+      "adminOnly": "Seuls les administrateurs de l'espace peuvent afficher ou renouveler le secret.",
+      "secretOnce": "Votre secret de signature — copiez-le maintenant, il n'est affiché en entier que cette fois.",
+      "secretDismiss": "Je l'ai copié",
+      "sendTest": "Envoyer un test",
+      "testOk": "Test envoyé · {{code}} en {{ms}} ms",
+      "testFailed": "Échec du test · {{code}}",
+      "response": "Réponse",
+      "request": "Requête",
+      "deliveries": "Envois",
+      "deliveriesHint": "Les 50 derniers envois, du plus récent au plus ancien. Les échecs sont retentés automatiquement à intervalles croissants.",
+      "deliveriesEmpty": "Rien d'envoyé pour l'instant — envoyez un test depuis la carte.",
+      "redeliver": "Renvoyer",
+      "redelivered": "Renvoyé",
+      "attempts": "{{count}}×",
+      "timeout": "délai dépassé",
+      "nextAttempt": "Prochaine tentative {{when}}",
+      "status": {
+        "never": "Jamais envoyé",
+        "ok": "Envoyé {{when}}",
+        "failing": "En échec · {{count}} échec(s)",
+        "autoDisabled": "En pause après {{count}} échecs"
+      },
+      "edit": "Modifier",
+      "view": "Voir",
+      "more": "Plus",
+      "delete": "Supprimer",
+      "deleteTitle": "Supprimer ce webhook ?",
+      "deleteBody": "{{name}} ne recevra plus d'événements. Rien d'autre ne change.",
+      "saved": "Webhook enregistré",
+      "created": "Webhook ajouté",
+      "deleted": "Webhook supprimé",
+      "save": "Enregistrer",
+      "receiverHelp": {
+        "title": "Ce que votre endpoint doit faire",
+        "receive": "Accepter un POST avec un corps JSON et répondre par n’importe quel statut 2xx. C’est tout : pas de clé API, pas d’inscription, pas de handshake.",
+        "nothingElse": "Fonctionne directement avec les catch hooks Zapier et Make, n8n, une URL entrante de CRM ou votre propre backend.",
+        "https": "L’URL doit être en https:// sur un hôte public. localhost et les réseaux privés sont refusés.",
+        "signature": "Facultatif : vérifiez l’en-tête X-Repraesent-Signature avec le secret de signature affiché une seule fois à la création. Utile seulement si vous voulez la preuve que l’appel vient de nous.",
+        "retries": "Les livraisons échouées sont réessayées pendant environ deux heures ; chaque tentative apparaît dans « Livraisons »."
+      }
+    },
+    "products": {
+      "title": "Lot",
+      "add": "Ajouter un produit",
+      "remove": "Retirer du lot",
+      "empty": "Aucun produit",
+      "emptyHint": "Choisissez un ou plusieurs tarifs Stripe. Les acheteurs cochent ce qu’ils veulent et paient cela en un seul passage en caisse.",
+      "notConnectedTitle": "Connectez Stripe pour ajouter des produits",
+      "notConnectedBody": "Un formulaire produit vend vos produits Stripe via Stripe Checkout. Connectez le compte qui doit recevoir les paiements.",
+      "qty": "Quantité",
+      "fixed": "Fixe",
+      "adjustable": "Au choix de l'acheteur",
+      "min": "Min",
+      "default": "Par défaut",
+      "max": "Max",
+      "perCheckout": "Un abonnement par paiement.",
+      "stale": "Modifié dans Stripe",
+      "archived": "Prix archivé",
+      "refreshAll": "Actualiser les prix",
+      "picker": {
+        "title": "Ajouter un produit",
+        "hint": "Cherchez dans votre catalogue Stripe. L'acheteur paie chaque ligne du lot.",
+        "pickPrice": "Choisissez un prix.",
+        "search": "Rechercher des produits…",
+        "inBundle": "Déjà dans le lot",
+        "currencyMismatch": "Devise différente de celle du lot",
+        "intervalMismatch": "Intervalle de facturation différent — un paiement, un intervalle",
+        "addToBundle": "Ajouter au lot",
+        "nothingToAdd": "Rien à ajouter. Les produits ont besoin d'un prix actif.",
+        "priceCount": "{{count}} prix"
+      },
+      "checkout": "Paiement",
+      "customer": "Coordonnées client",
+      "billing": "Adresse de facturation",
+      "billingAuto": "Auto",
+      "billingRequired": "Obligatoire",
+      "billingHint": "En auto, Stripe ne la demande que si le moyen de paiement l'exige.",
+      "phone": "Demander un numéro de téléphone",
+      "promo": "Autoriser les codes promo",
+      "shipping": "Livraison",
+      "shippingEnabled": "Demander une adresse de livraison",
+      "worldwide": "Monde entier",
+      "eu": "UE",
+      "dach": "DACH",
+      "custom": "Personnalisé",
+      "countries": "{{count}} pays",
+      "searchCountries": "Rechercher des pays…",
+      "customHint": "Choisissez les pays où vous livrez. Vide signifie partout où Stripe livre.",
+      "button": "Bouton et position",
+      "submitType": "Bouton Stripe",
+      "pay": "Payer",
+      "book": "Réserver",
+      "donate": "Faire un don",
+      "submitTypeHint": "Change le libellé sur la page de paiement Stripe.",
+      "position": "Position du récapitulatif",
+      "top": "Haut",
+      "bottom": "Bas",
+      "caption": "Libellé du bouton du formulaire",
+      "captionHint": "Ce que dit le bouton du formulaire avant Stripe. Par langue.",
+      "after": "Après le paiement",
+      "successUrl": "URL de succès",
+      "successUrlHint": "Par défaut : la page de remerciement hébergée, au style de ce formulaire.",
+      "cancelUrl": "URL d'annulation",
+      "cancelUrlHint": "Par défaut : retour à ce formulaire, réponses conservées.",
+      "invalidUrl": "Saisissez une URL https:// complète.",
+      "fixedQty": "Quantité",
+      "pagesPaidTitle": "Payé — titre",
+      "pagesPaidBody": "Payé — message",
+      "pagesFailedTitle": "Échec — titre",
+      "pagesFailedBody": "Échec — message",
+      "pagesRetry": "Bouton « Réessayer »",
+      "pagesCanceled": "Avis au retour de Stripe",
+      "pagesHint": "Affiché sur les pages hébergées où l'acheteur arrive après Stripe. Par langue.",
+      "preselected": "Coché au chargement",
+      "selectHint": "Chaque ligne a une case. Les acheteurs cochent ce qu'ils veulent et paient exactement cela ; au moins une est requise.",
+      "titleLabel": "Titre du récapitulatif",
+      "secureLabel": "Ligne de confiance"
     }
   },
   "workflows": {

@@ -30,7 +30,11 @@ import type { TFunction } from "i18next";
 import TooltipContainer from "~/components/tooltip-container";
 import { Button } from "~/components/ui/button";
 import { ChevronDown, ExternalLink, UserPlus } from "lucide-react";
-import { formatDate, formatRelativeTime } from "~/lib/utils/format";
+import {
+  formatDate,
+  formatMoneyFromMinor,
+  formatRelativeTime,
+} from "~/lib/utils/format";
 import { cn } from "~/lib/utils";
 import { getWorkspaceDetail } from "~/lib/api/workspaces";
 import { convertLeadToContact } from "~/lib/api/contacts-crm";
@@ -48,6 +52,11 @@ import {
   formatAppointmentRange,
   isAppointmentPast,
 } from "~/lib/leads/appointment";
+import {
+  checkoutClaimedMetaKeys,
+  extractLeadCheckout,
+} from "~/lib/leads/checkout";
+import { LeadPaymentSection } from "~/components/organism/lead-payment-section";
 import { AppointmentProviderIcon } from "~/components/molecule/appointment-provider-icon";
 import { UserAvatar } from "~/components/atom/user-avatar";
 
@@ -143,6 +152,25 @@ export function formatHistoryAction(
     return t("leads.detail.historyLeadCreatedInDoorboost");
   if (item.action === "lead_historical_synced")
     return t("leads.detail.historyLeadHistoricalSynced");
+  if (item.action === "lead_checkout_paid") {
+    const amount = item.details?.amount_total as number | null | undefined;
+    const currency = item.details?.currency as string | null | undefined;
+    return t("leads.detail.historyCheckoutPaid", {
+      defaultValue: "Paid {{amount}} via checkout",
+      amount:
+        amount != null && currency
+          ? formatMoneyFromMinor(amount, currency)
+          : "",
+    });
+  }
+  if (item.action === "lead_checkout_failed")
+    return t("leads.detail.historyCheckoutFailed", {
+      defaultValue: "Checkout payment failed",
+    });
+  if (item.action === "lead_checkout_expired")
+    return t("leads.detail.historyCheckoutExpired", {
+      defaultValue: "Checkout expired without payment",
+    });
   if (item.action === "lead_status_updated") {
     const oldStatus = item.details?.old_status as string | undefined;
     const newStatus = item.details?.new_status as string | undefined;
@@ -305,9 +333,13 @@ export function formatHistoryAction(
     });
   if (item.action === "deal_products_replaced")
     return t("pipeline.history.dealProductsReplaced", {
-      defaultValue: "Replaced products from invoice {{number}} ({{count}} lines)",
+      defaultValue:
+        "Replaced products from invoice {{number}} ({{count}} lines)",
       number: number || String(d.stripe_invoice_id ?? ""),
-      count: (d.inserted as number | undefined) ?? (d.line_count as number | undefined) ?? 0,
+      count:
+        (d.inserted as number | undefined) ??
+        (d.line_count as number | undefined) ??
+        0,
     });
   if (item.action === "deal_subscription_canceled")
     return t("pipeline.history.dealSubscriptionCanceled", {
@@ -476,6 +508,16 @@ export function LeadDetailSheet({
                   withoutLink={readOnly}
                 />
               </div>
+              {/* Payment (product-form leads only) */}
+              {extractLeadCheckout(lead) && (
+                <div className="px-5 py-5">
+                  <LeadPaymentSection
+                    lead={lead}
+                    variant="embedded"
+                    sessionsEnabled={!readOnly}
+                  />
+                </div>
+              )}
               {/* Convert to contact */}
               {showConvertButton && (
                 <div className="px-5 py-4">
@@ -637,6 +679,8 @@ export function LeadInfoSection({
 
   const appointments = extractLeadAppointments(lead);
   const appointmentClaimedKeys = appointmentClaimedMetaKeys(lead);
+  // The payment block owns the checkout stamps — no raw rows for them.
+  const checkoutClaimedKeys = checkoutClaimedMetaKeys(lead);
 
   // message → shown inline; misc/platform_campaign_id → hidden;
   // appointment keys → promoted banner; rest → collapsible
@@ -647,7 +691,8 @@ export function LeadInfoSection({
     ([key]) =>
       !PROMOTED_META_KEYS.has(key) &&
       !HIDDEN_META_KEYS.has(key) &&
-      !appointmentClaimedKeys.has(key),
+      !appointmentClaimedKeys.has(key) &&
+      !checkoutClaimedKeys.has(key),
   );
 
   return (
@@ -898,7 +943,9 @@ export function LeadHistorySection({
                   </div>
                   {/* Content */}
                   <div
-                    className={isLast ? "min-w-0 flex-1" : "min-w-0 flex-1 pb-4"}
+                    className={
+                      isLast ? "min-w-0 flex-1" : "min-w-0 flex-1 pb-4"
+                    }
                   >
                     <TooltipContainer
                       tooltipContent={actionText}

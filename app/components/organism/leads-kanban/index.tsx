@@ -23,11 +23,8 @@ import {
   isAppointmentPast,
   nextLeadAppointment,
 } from "~/lib/leads/appointment";
-import {
-  getLeads,
-  getLeadsKanbanCounts,
-  type Lead,
-} from "~/lib/api/leads";
+import { LeadPaymentPill } from "~/components/molecule/lead-payment-pill";
+import { getLeads, getLeadsKanbanCounts, type Lead } from "~/lib/api/leads";
 import { LeadSourceIcon } from "~/components/organism/lead-source-icon";
 import {
   LeadSuccessConfirmModal,
@@ -35,7 +32,10 @@ import {
 } from "~/components/organism/lead-success-confirm-modal";
 import type { PipelineStage } from "~/lib/api/pipeline-stages";
 import { useLeadStages } from "~/lib/hooks/usePipelineStages";
-import { resolveStageColors, resolveStageColorsByKey } from "~/lib/pipeline-stages/colors";
+import {
+  resolveStageColors,
+  resolveStageColorsByKey,
+} from "~/lib/pipeline-stages/colors";
 import {
   resolveStageLabel,
   resolveStageLabelByKey,
@@ -127,9 +127,9 @@ export function LeadsKanban({
   // matching the pipeline kanban.
   const [justMovedId, setJustMovedId] = useState<string | null>(null);
   const landTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const undoStackRef = useRef<Array<{ leadId: string; previousStatus: string }>>(
-    [],
-  );
+  const undoStackRef = useRef<
+    Array<{ leadId: string; previousStatus: string }>
+  >([]);
 
   // Raw cache rows per column, reported up by the per-stage children (the
   // children own the infinite queries; the parent owns cross-column concerns:
@@ -268,7 +268,10 @@ export function LeadsKanban({
       overId: string,
     ): { status: string; insertionIndex: number } | null => {
       if (byKey.has(overId)) {
-        return { status: overId, insertionIndex: leadsByStatus[overId]?.length ?? 0 };
+        return {
+          status: overId,
+          insertionIndex: leadsByStatus[overId]?.length ?? 0,
+        };
       }
       const overLeadId = overId.replace(/^lead-/, "");
       for (const stage of stages) {
@@ -442,7 +445,7 @@ export function LeadsKanban({
         >
           <div
             className={cn(
-              "flex flex-1 min-h-0 h-full gap-4 overflow-x-auto overflow-y-hidden rounded-lg py-4 pl-0 pr-4 pt-5 scrollbar-hide"
+              "flex flex-1 min-h-0 h-full gap-4 overflow-x-auto overflow-y-hidden rounded-lg py-4 pl-0 pr-4 pt-5 scrollbar-hide",
             )}
           >
             {stages.map((stage) => (
@@ -546,14 +549,18 @@ function KanbanColumn({
       ref={setNodeRef}
       className={cn(
         "flex h-full shrink-0 flex-col rounded-lg border border-border bg-muted shadow-[var(--shadow)] transition-colors overflow-hidden",
-        isEmpty ? "min-w-[140px] w-[140px]" : "w-[280px] min-h-[calc(100vh-10rem)]",
-        isOver && "ring-2 ring-primary/50"
+        isEmpty
+          ? "min-w-[140px] w-[140px]"
+          : "w-[280px] min-h-[calc(100vh-10rem)]",
+        isOver && "ring-2 ring-primary/50",
       )}
     >
       <div className={cn("h-1 shrink-0", color)} />
       <div className="shrink-0 p-3">
         <h3 className="font-medium text-sm flex items-center gap-2">
-          <span className={cn("inline-block h-2 w-2 rounded-full shrink-0", color)} />
+          <span
+            className={cn("inline-block h-2 w-2 rounded-full shrink-0", color)}
+          />
           <span className="truncate">{label}</span>
           <span className="inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-background px-1.5 text-xs font-medium text-muted-foreground">
             {total}
@@ -694,35 +701,40 @@ function KanbanCardInner({ lead }: { lead: Lead }) {
       <div className="flex items-start justify-between gap-2">
         <span
           className={cn(
-            "inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium shrink-0",
+            "inline-flex min-w-0 items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium",
             color,
-            color === "bg-muted" ? "text-foreground" : "text-white"
+            color === "bg-muted" ? "text-foreground" : "text-white",
           )}
         >
           <span
             className={cn(
-              "h-1 w-1 rounded-full",
+              "h-1 w-1 shrink-0 rounded-full",
               color === "bg-muted" ? "bg-foreground/60" : "bg-white/80",
             )}
           />
-          {label}
+          <span className="truncate">{label}</span>
         </span>
-        {appointment && (
-          <span
-            className={cn(
-              "inline-flex items-center gap-1 rounded-full border border-border bg-muted px-1.5 py-0.5 text-[10px] font-medium shrink-0 tabular-nums",
-              appointmentPast ? "text-muted-foreground/60" : "text-foreground",
-            )}
-          >
-            <CalendarClock className="h-3 w-3 shrink-0" />
-            {formatDateIntl(appointment.start, {
-              month: "short",
-              day: "numeric",
-              hour: "2-digit",
-              minute: "2-digit",
-            })}
-          </span>
-        )}
+        <div className="flex min-w-0 shrink-0 items-center gap-1">
+          <LeadPaymentPill lead={lead} />
+          {appointment && (
+            <span
+              className={cn(
+                "inline-flex items-center gap-1 rounded-full border border-border bg-muted px-1.5 py-0.5 text-[10px] font-medium shrink-0 tabular-nums",
+                appointmentPast
+                  ? "text-muted-foreground/60"
+                  : "text-foreground",
+              )}
+            >
+              <CalendarClock className="h-3 w-3 shrink-0" />
+              {formatDateIntl(appointment.start, {
+                month: "short",
+                day: "numeric",
+                hour: "2-digit",
+                minute: "2-digit",
+              })}
+            </span>
+          )}
+        </div>
       </div>
       <p className="font-semibold text-sm truncate leading-tight">
         {lead.full_name || lead.email || "—"}
@@ -801,7 +813,7 @@ function MobileStageSection({
               "inline-flex h-6 min-w-6 items-center justify-center rounded-full px-1.5 text-xs font-semibold",
               total > 0
                 ? `${colorClass} ${colorClass === "bg-muted" ? "text-foreground" : "text-white"}`
-                : "bg-muted text-muted-foreground"
+                : "bg-muted text-muted-foreground",
             )}
           >
             {total}
@@ -860,9 +872,7 @@ function LeadScheduleRow({
   const displayName = lead.full_name || lead.email || "—";
   const subtitle = lead.email || lead.phone || null;
   const formName = lead.form_name
-    ? lead.form_name
-        .replace(/_/g, " ")
-        .replace(/\b\w/g, (c) => c.toUpperCase())
+    ? lead.form_name.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase())
     : null;
   const appointment = nextLeadAppointment(lead);
 
@@ -872,7 +882,7 @@ function LeadScheduleRow({
       onClick={onSelect}
       className={cn(
         "flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left transition-colors",
-        "hover:bg-muted/60 active:bg-muted"
+        "hover:bg-muted/60 active:bg-muted",
       )}
     >
       <div className={cn("h-8 w-0.5 rounded-full shrink-0", colorClass)} />
@@ -882,9 +892,7 @@ function LeadScheduleRow({
         </p>
 
         {subtitle && subtitle !== displayName && (
-          <p className="text-xs text-muted-foreground truncate">
-            {subtitle}
-          </p>
+          <p className="text-xs text-muted-foreground truncate">{subtitle}</p>
         )}
 
         <div className="flex items-center gap-2 pt-0.5">
@@ -909,6 +917,7 @@ function LeadScheduleRow({
               })}
             </span>
           )}
+          <LeadPaymentPill lead={lead} variant="text" />
         </div>
       </div>
 
@@ -916,7 +925,7 @@ function LeadScheduleRow({
         <LeadSourceIcon
           source={lead.source_label}
           fallbackSource={lead.source_table}
-            sourceTable={lead.source_table}
+          sourceTable={lead.source_table}
           platform={lead.source_platform}
           size={16}
           className="shrink-0"
@@ -943,7 +952,7 @@ function ScheduleSection({
     <div
       className={cn(
         "rounded-xl border border-border bg-card overflow-hidden",
-        "shadow-[0_1px_2px_0_rgba(0,0,0,0.04)]"
+        "shadow-[0_1px_2px_0_rgba(0,0,0,0.04)]",
       )}
     >
       <button
@@ -955,7 +964,7 @@ function ScheduleSection({
         <ChevronDown
           className={cn(
             "h-4 w-4 shrink-0 text-muted-foreground transition-transform duration-200",
-            open && "rotate-180"
+            open && "rotate-180",
           )}
         />
       </button>

@@ -23,6 +23,7 @@ import {
   ListChecks,
   MapPin,
   Phone,
+  ShoppingBag,
   Star,
   Text,
   Type,
@@ -36,7 +37,10 @@ import {
   type FormDefinition,
   type FormField,
   type FormFieldType,
+  type FormKind,
   type FormLocale,
+  normalizeCommerce,
+  normalizeLayout,
 } from "./schema";
 
 export type FieldGroup =
@@ -195,6 +199,13 @@ export const FIELD_TYPE_META: Record<FormFieldType, FieldTypeMeta> = {
     keyStem: "hidden",
     mappable: false,
   },
+  product: {
+    type: "product",
+    icon: ShoppingBag,
+    group: "advanced",
+    keyStem: "product",
+    mappable: false,
+  },
 };
 
 export const FIELD_GROUPS: { group: FieldGroup; types: FormFieldType[] }[] = [
@@ -211,7 +222,7 @@ export const FIELD_GROUPS: { group: FieldGroup; types: FormFieldType[] }[] = [
     types: ["number", "date", "rating", "scale", "appointment"],
   },
   { group: "layout", types: ["heading", "paragraph"] },
-  { group: "advanced", types: ["hidden"] },
+  { group: "advanced", types: ["hidden", "product"] },
 ];
 
 /** Short, collision-resistant, and readable in the JSON blob. */
@@ -450,9 +461,16 @@ export function emptyDefinition(locale: FormLocale): FormDefinition {
 export function normalizeDefinition(
   raw: Partial<FormDefinition> | null | undefined,
   locale: FormLocale,
+  /**
+   * The row's kind. Decides whether `commerce` is seeded (product) or dropped
+   * (standard) — a definition can never turn a lead form into a checkout on
+   * its own. Defaults to standard for the callers that only care about layout.
+   */
+  kind: FormKind = "standard",
 ): FormDefinition {
   const base = emptyDefinition(locale);
-  if (!raw) return base;
+  const commerce = normalizeCommerce(raw?.commerce, kind);
+  if (!raw) return commerce ? { ...base, commerce } : base;
 
   return {
     version: 1,
@@ -466,5 +484,7 @@ export function normalizeDefinition(
     antiSpam: { ...base.antiSpam, ...(raw.antiSpam ?? {}) },
     utm: { ...base.utm, ...(raw.utm ?? {}) },
     showLanguageSwitcher: raw.showLanguageSwitcher ?? false,
+    layout: normalizeLayout(raw.layout),
+    ...(commerce ? { commerce } : {}),
   };
 }

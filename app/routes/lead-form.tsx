@@ -58,6 +58,11 @@ import {
   isAppointmentPast,
   nextLeadAppointment,
 } from "~/lib/leads/appointment";
+import { extractLeadCheckout } from "~/lib/leads/checkout";
+import {
+  LeadPaymentPill,
+  formatCheckoutSummary,
+} from "~/components/molecule/lead-payment-pill";
 import { LeadImportModal } from "~/components/organism/lead-import-modal";
 import { CreateLeadDialog } from "~/components/organism/create-lead-dialog";
 import i18n from "~/i18n";
@@ -95,11 +100,11 @@ export default function LeadForm() {
 
   const page = useMemo(
     () => parsePage(searchParams.get("page")),
-    [searchParams]
+    [searchParams],
   );
   const limit = useMemo(
     () => parseLimit(searchParams.get("limit")),
-    [searchParams]
+    [searchParams],
   );
   const search = searchParams.get("search") ?? "";
   const statusFilter = searchParams.get("status") ?? "";
@@ -135,7 +140,7 @@ export default function LeadForm() {
         user_email: m.user_email,
         role: m.role,
       })),
-    [workspaceData]
+    [workspaceData],
   );
 
   // Optimistic status change: the card/row moves instantly, then the request
@@ -166,14 +171,17 @@ export default function LeadForm() {
             ...old,
             data: old.data.map((l) => (l.id === id ? { ...l, status } : l)),
           };
-        }
+        },
       );
 
       // Kanban view — locate the lead's current column from the cache.
       type ColumnData = InfiniteData<PaginatedLeads>;
       let movedLead: Lead | undefined;
       let oldStatus: string | undefined;
-      for (const [, data] of prevColumns as [unknown, ColumnData | undefined][]) {
+      for (const [, data] of prevColumns as [
+        unknown,
+        ColumnData | undefined,
+      ][]) {
         for (const pageData of data?.pages ?? []) {
           const found = pageData.data.find((l) => l.id === id);
           if (found) {
@@ -188,7 +196,10 @@ export default function LeadForm() {
       // Move the card out of its old column and into the new one.
       if (movedLead && oldStatus !== status) {
         const moved: Lead = { ...movedLead, status };
-        for (const [key] of prevColumns as [unknown[], ColumnData | undefined][]) {
+        for (const [key] of prevColumns as [
+          unknown[],
+          ColumnData | undefined,
+        ][]) {
           const colStatus = key[1] as string;
           if (colStatus === oldStatus) {
             queryClient.setQueryData<ColumnData>(key as never, (old) =>
@@ -201,7 +212,7 @@ export default function LeadForm() {
                       total: Math.max(0, p.total - 1),
                     })),
                   }
-                : old
+                : old,
             );
           } else if (colStatus === status) {
             queryClient.setQueryData<ColumnData>(key as never, (old) => {
@@ -213,7 +224,7 @@ export default function LeadForm() {
                 pages: old.pages.map((p, i) =>
                   i === 0
                     ? { ...p, data: [moved, ...p.data], total: p.total + 1 }
-                    : p
+                    : p,
                 ),
               };
             });
@@ -231,7 +242,7 @@ export default function LeadForm() {
             next[status] =
               (typeof next[status] === "number" ? next[status] : 0) + 1;
             return next;
-          }
+          },
         );
       }
 
@@ -247,7 +258,7 @@ export default function LeadForm() {
         | undefined;
       for (const group of [c?.prevTable, c?.prevColumns, c?.prevCounts]) {
         group?.forEach(([key, data]) =>
-          queryClient.setQueryData(key as never, data as never)
+          queryClient.setQueryData(key as never, data as never),
         );
       }
     },
@@ -262,7 +273,7 @@ export default function LeadForm() {
     }
 
     const hasLeadFormService = currentWorkspace.services?.some(
-      (s) => s.service_type === "lead-form"
+      (s) => s.service_type === "lead-form",
     );
 
     if (!hasLeadFormService) {
@@ -281,11 +292,9 @@ export default function LeadForm() {
     () =>
       (formNamesQuery.data ?? []).map((name) => ({
         key: name,
-        label: name
-          .replace(/_/g, " ")
-          .replace(/\b\w/g, (c) => c.toUpperCase()),
+        label: name.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase()),
       })),
-    [formNamesQuery.data]
+    [formNamesQuery.data],
   );
 
   // Connected campaigns for the campaigns filter
@@ -302,7 +311,7 @@ export default function LeadForm() {
         key: c.campaign_id,
         label: c.campaign_name ?? c.campaign_id,
       })),
-    [campaignsQuery.data]
+    [campaignsQuery.data],
   );
 
   const leadsQuery = useQuery({
@@ -360,7 +369,7 @@ export default function LeadForm() {
         single: true,
       },
     ],
-    [leadStatusFilterOptions, formNameFilterOptions, campaignFilterOptions]
+    [leadStatusFilterOptions, formNameFilterOptions, campaignFilterOptions],
   );
 
   const hasAccess =
@@ -441,8 +450,9 @@ export default function LeadForm() {
       cell: ({ row }) => {
         const name = row.original.full_name ?? "—";
         const appointment = nextLeadAppointment(row.original);
+        const checkout = extractLeadCheckout(row.original);
         return (
-          <span className="flex items-center gap-1.5 max-w-[180px]">
+          <span className="flex items-center gap-1.5 max-w-[260px]">
             <TooltipContainer tooltipContent={name}>
               <span className="truncate block font-medium text-foreground">
                 {name}
@@ -462,6 +472,13 @@ export default function LeadForm() {
                     )}
                   />
                 </span>
+              </TooltipContainer>
+            )}
+            {checkout && (
+              <TooltipContainer
+                tooltipContent={formatCheckoutSummary(checkout, t)}
+              >
+                <LeadPaymentPill lead={row.original} />
               </TooltipContainer>
             )}
           </span>
@@ -489,7 +506,7 @@ export default function LeadForm() {
         <LeadSourceIcon
           source={row.original.source_label}
           fallbackSource={row.original.source_table}
-                sourceTable={row.original.source_table}
+          sourceTable={row.original.source_table}
           platform={row.original.source_platform}
           size={18}
         />
@@ -547,7 +564,7 @@ export default function LeadForm() {
         "app-fade-in",
         viewMode === "kanban"
           ? "flex flex-col min-h-[calc(100vh-8rem)] p-4 sm:p-6"
-          : "p-4 sm:p-6 space-y-4 sm:space-y-6"
+          : "p-4 sm:p-6 space-y-4 sm:space-y-6",
       )}
     >
       {/* Header */}
@@ -592,7 +609,7 @@ export default function LeadForm() {
                 "flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition-all duration-150",
                 viewMode === "table"
                   ? "bg-white shadow-sm text-foreground"
-                  : "text-muted-foreground hover:text-foreground"
+                  : "text-muted-foreground hover:text-foreground",
               )}
             >
               <Table2 className="h-3.5 w-3.5" />
@@ -607,7 +624,7 @@ export default function LeadForm() {
                 "flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition-all duration-150",
                 viewMode === "kanban"
                   ? "bg-white shadow-sm text-foreground"
-                  : "text-muted-foreground hover:text-foreground"
+                  : "text-muted-foreground hover:text-foreground",
               )}
             >
               <LayoutGrid className="h-3.5 w-3.5" />
@@ -631,7 +648,7 @@ export default function LeadForm() {
                   "inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-medium transition-colors",
                   showHidden
                     ? "border-amber-300 bg-amber-50 text-amber-700 hover:bg-amber-100"
-                    : "border-border bg-muted/50 text-muted-foreground hover:text-foreground hover:bg-muted"
+                    : "border-border bg-muted/50 text-muted-foreground hover:text-foreground hover:bg-muted",
                 )}
               >
                 {showHidden ? (
@@ -639,9 +656,7 @@ export default function LeadForm() {
                 ) : (
                   <EyeOff className="h-3.5 w-3.5" />
                 )}
-                {showHidden
-                  ? t("leads.hideHidden")
-                  : t("leads.showHidden")}
+                {showHidden ? t("leads.hideHidden") : t("leads.showHidden")}
               </button>
               <FilterComponent filters={leadsFilters} />
               {(statusFilter || sourceFilter || formNameFilter) && (
@@ -655,7 +670,7 @@ export default function LeadForm() {
                         form_name: "",
                         page: "1",
                       },
-                      true
+                      true,
                     )
                   }
                 >

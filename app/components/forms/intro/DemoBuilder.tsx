@@ -23,6 +23,7 @@ import type { DemoState } from "./types";
 const noop = () => undefined;
 const NO_ISSUES = new Map();
 const NO_INVALID_FIELDS = new Set<string>();
+const NO_SECTION_ISSUES: ReadonlyMap<string, number> = new Map();
 const NOT_TRANSLATING = new Set<never>();
 
 interface Props {
@@ -204,6 +205,18 @@ export function DemoBuilder({ state, demoId, compact = false }: Props) {
                 onReorder={noop}
                 onDuplicateField={noop}
                 onDeleteField={noop}
+                activeStep={0}
+                onActiveStepChange={noop}
+                onReorderInStep={noop}
+                onMoveFieldToStep={noop}
+                onMoveFieldsToStep={() => undefined}
+                onReorderSteps={noop}
+                onAddStep={noop}
+                onDuplicateStep={noop}
+                onDeleteStep={noop}
+                onSplitIntoSteps={noop}
+                onMergeSteps={noop}
+                issuesBySection={NO_SECTION_ISSUES}
                 onLocaleChange={noop}
                 onRemoveTitle={noop}
                 invalidFieldIds={NO_INVALID_FIELDS}
