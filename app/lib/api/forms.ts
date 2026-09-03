@@ -1,6 +1,7 @@
 import axios from "axios";
 import { apiClient } from "./axios-instance";
 import type {
+  FormKind,
   FormConfirmationEmail,
   FormDefinition,
   FormDefinitionIssue,
@@ -14,6 +15,10 @@ export interface FormSummary {
   name: string;
   slug: string;
   status: "draft" | "published";
+  /** standard | product — immutable, decides what a submission does. */
+  kind: FormKind;
+  /** definition.layout.mode of the working draft. */
+  layout_mode: "single" | "multi_step";
   has_unpublished_changes: boolean;
   locales: FormLocale[];
   default_locale: FormLocale;
@@ -57,6 +62,8 @@ export async function getForm(formId: string): Promise<FormRecord> {
 export async function createForm(payload: {
   name: string;
   default_locale?: FormLocale;
+  kind?: FormKind;
+  layout_mode?: "single" | "multi_step";
 }): Promise<FormRecord> {
   const response = await apiClient.post<FormRecord>("/forms", payload);
   return response.data;
@@ -193,6 +200,8 @@ export interface SubmitPublicFormPayload {
   hp?: string;
   rt?: string;
   elapsed_ms?: number;
+  /** Product forms: chosen quantity per price id. */
+  quantities?: Record<string, number>;
 }
 
 export async function submitPublicForm(
@@ -221,6 +230,38 @@ export async function getAppointmentAvailability(
   const response = await publicClient.get<AppointmentAvailability>(
     `/public/forms/${formId}/appointment-availability`,
     { params: { fieldId, date } },
+  );
+  return response.data;
+}
+
+export interface PublicCheckoutStatus {
+  outcome: "pending" | "processing" | "paid" | "failed" | "expired";
+  status: string;
+  payment_status: string;
+  amount_total: number | null;
+  currency: string | null;
+  mode: string;
+  livemode: boolean;
+  customer_email_masked: string | null;
+}
+
+/** Thank-you page: what became of a Checkout Session. Also fulfils it server-side. */
+export async function getPublicCheckoutStatus(
+  formId: string,
+  sessionId: string,
+): Promise<PublicCheckoutStatus> {
+  const response = await publicClient.get<PublicCheckoutStatus>(
+    `/public/forms/${formId}/checkout/${encodeURIComponent(sessionId)}`,
+  );
+  return response.data;
+}
+
+/** Products tab: the Stripe-dependent bundle checks (disconnected, archived prices). */
+export async function verifyFormCommerce(
+  formId: string,
+): Promise<FormDefinitionIssue[]> {
+  const response = await apiClient.get<FormDefinitionIssue[]>(
+    `/forms/${formId}/commerce/verify`,
   );
   return response.data;
 }

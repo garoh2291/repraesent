@@ -375,7 +375,10 @@
       "contactConversionModalDescription": "Deze lead is nu gekoppeld aan een contact. Open het contactrecord om deals toe te voegen of op te volgen.",
       "createDeal": "Deal aanmaken",
       "backToLead": "Terug naar lead",
-      "historyTaskAssigneeRemoved": "Toegewezen persoon van taak verwijderd"
+      "historyTaskAssigneeRemoved": "Toegewezen persoon van taak verwijderd",
+      "historyCheckoutPaid": "{{amount}} betaald via checkout",
+      "historyCheckoutFailed": "Checkout-betaling mislukt",
+      "historyCheckoutExpired": "Checkout verlopen zonder betaling"
     },
     "empty": "Nog geen leads",
     "filters": {
@@ -415,6 +418,46 @@
     },
     "source": {
       "openaiAds": "OpenAI Ads"
+    },
+    "payment": {
+      "title": "Betaling",
+      "status": {
+        "paid": "Betaald",
+        "processing": "In verwerking",
+        "pending": "Wacht op betaling",
+        "failed": "Mislukt",
+        "expired": "Verlopen"
+      },
+      "mode": {
+        "payment": "Eenmalige betaling",
+        "subscription": "Abonnement"
+      },
+      "testMode": "Testmodus",
+      "notCompleted": "De checkout is geopend maar niet afgerond.",
+      "expiresAt": "Verloopt {{date}}",
+      "expiredHint": "De bezoeker heeft de checkout zonder te betalen verlaten.",
+      "failedHint": "De betaling is geweigerd.",
+      "items": "Regels",
+      "subtotal": "Subtotaal",
+      "total": "Totaal",
+      "noItems": "Geen regels vastgelegd",
+      "customer": "Klant",
+      "billing": "Facturering",
+      "shipping": "Verzending",
+      "stripe": {
+        "payment": "Betaling",
+        "subscription": "Abonnement",
+        "customer": "Klant",
+        "session": "Sessie"
+      },
+      "attempts": "Eerdere pogingen",
+      "loadError": "Checkout-details konden niet worden geladen.",
+      "more": "+{{count}}"
+    },
+    "sort": {
+      "manual": "Handmatige volgorde",
+      "dateDesc": "Nieuwste eerst",
+      "dateAsc": "Oudste eerst"
     }
   },
   "pipeline": {
@@ -3674,7 +3717,9 @@
       "duplicated": "Formulier gedupliceerd",
       "archived": "Formulier gearchiveerd",
       "nameExists": "Er bestaat al een formulier met deze naam",
-      "languageLabel": "Taal"
+      "languageLabel": "Taal",
+      "kindProduct": "Product",
+      "kindMulti": "Meerstaps"
     },
     "status": {
       "draft": "Concept",
@@ -3717,7 +3762,13 @@
       "noLabel": "Geen label",
       "removeTitle": "Titel verwijderen",
       "savingAuto": "Opslaan…",
-      "savedAuto": "Opgeslagen"
+      "savedAuto": "Opgeslagen",
+      "goToProducts": "Tabblad Producten openen",
+      "tabWebhooks": "Webhooks",
+      "tabProducts": "Producten",
+      "productEmptyTitle": "Nog geen producten",
+      "productEmptyHint": "Selecteer dit blok en voeg daarna de Stripe-producten toe waaruit kopers kunnen kiezen.",
+      "tabDeal": "Deal"
     },
     "palette": {
       "title": "Veld toevoegen",
@@ -3743,7 +3794,8 @@
       "heading": "Kop",
       "paragraph": "Alinea",
       "hidden": "Verborgen veld",
-      "appointment": "Afspraak"
+      "appointment": "Afspraak",
+      "product": "Product"
     },
     "inspector": {
       "title": "Veldinstellingen",
@@ -3828,7 +3880,14 @@
         "noTargets": "Verbind eerst een agenda in de instellingen",
         "connectLink": "Agenda koppelen",
         "accountNeedsReconnect": "moet opnieuw worden gekoppeld"
-      }
+      },
+      "stepTitle": "Titel van de stap",
+      "stepDescription": "Beschrijving van de stap",
+      "stepHint": "Staat bovenaan deze stap en, bij de voortgangsstijl Stappen, naast de markering.",
+      "stepLayoutHint": "Velden wisselen van stap door ze op een stap te slepen, of via de lay-outinstellingen van een veld.",
+      "commerce": "Overzicht bestelling",
+      "commerceHint": "Producten, aantallen en afrekenopties stelt u in op het tabblad Producten.",
+      "product": "Product"
     },
     "design": {
       "title": "Ontwerp",
@@ -3903,7 +3962,14 @@
         "consent_required": "Toestemming vereist"
       },
       "padding": "Binnenmarge",
-      "fieldBackground": "Veldachtergrond"
+      "fieldBackground": "Veldachtergrond",
+      "steps": "Stappen",
+      "progressStyle": "Voortgang",
+      "progressBar": "Balk",
+      "progressSteps": "Stappen",
+      "progressNone": "Geen",
+      "showStepTitles": "Stapnamen in de voortgangsindicator tonen",
+      "stepsHint": "Zo zien bezoekers waar ze zijn. De titel van de huidige stap vervangt de formuliertitel; bewerk die op het tabblad Bouwen."
     },
     "email": {
       "title": "Bevestigingsmail",
@@ -3923,7 +3989,8 @@
       "sectionDelivery": "Verzending",
       "sectionMessage": "Bericht",
       "templateApplied": "Sjabloon toegepast op {{locales}}",
-      "blankLocales": "Geen e-mail in {{locales}} — een inzending in die taal krijgt in plaats daarvan de standaardtaal."
+      "blankLocales": "Geen e-mail in {{locales}} — een inzending in die taal krijgt in plaats daarvan de standaardtaal.",
+      "disabledHint": "Zet dit aan om bezoekers een bevestiging te sturen vanuit een van uw mailboxen."
     },
     "share": {
       "publishFirst": "Publiceer dit formulier voordat u het deelt — de link en insluitingen blijven tot dan inactief.",
@@ -3962,17 +4029,32 @@
         "emptyOptions": "Veld '{{field}}' heeft geen opties, of twee opties hebben dezelfde waarde.",
         "missingContent": "Veld '{{field}}' heeft geen label in de standaardtaal.",
         "missingContentLocale": "Veld '{{field}}' heeft geen label in {{locale}}.",
-        "appointmentMissingCalendar": "Veld '{{field}}' heeft een doelagenda nodig."
+        "appointmentMissingCalendar": "Veld '{{field}}' heeft een doelagenda nodig.",
+        "duplicateProductField": "Veld '{{field}}' is een tweede Product-veld — er kan er maar één zijn.",
+        "productFieldOnStandardForm": "Veld '{{field}}' is een Product-veld op een formulier zonder betaling.",
+        "commerceNoItems": "Voeg minstens één product toe aan de bundel."
       },
       "otherLocales": "{{count}} ander(e) probleem/problemen in:",
       "keyMissing": "Een veld heeft geen sleutel — inzendingen zouden verloren gaan",
       "emailSubjectMissing": "Bevestigingsmail heeft geen onderwerp ({{locale}})",
       "emailBodyMissing": "Bevestigingsmail heeft geen bericht ({{locale}})",
-      "appointmentMissingCalendar": "Een afspraakveld heeft een doelagenda nodig."
+      "appointmentMissingCalendar": "Een afspraakveld heeft een doelagenda nodig.",
+      "emptyStep": "Een stap heeft geen velden — bezoekers zouden een lege pagina zien.",
+      "commerceNoItems": "Voeg minstens één product toe aan de bundel.",
+      "commerceMixedCurrency": "Alle prijzen in de bundel moeten dezelfde valuta hebben.",
+      "commerceMixedInterval": "Terugkerende prijzen moeten hetzelfde factureringsinterval hebben.",
+      "commerceInactivePrice": "Een prijs in de bundel is gearchiveerd in Stripe.",
+      "commerceStripeDisconnected": "Stripe is losgekoppeld — koppel het opnieuw in Instellingen → Integraties.",
+      "invalidSuccessUrl": "De succes-URL moet met https:// beginnen.",
+      "invalidCancelUrl": "De annuleer-URL moet met https:// beginnen.",
+      "needsProductField": "Voeg het veld Product toe zodat bezoekers zien wat ze kopen.",
+      "duplicateProductField": "Een formulier kan maar één Product-veld hebben.",
+      "productFieldOnStandardForm": "Het Product-veld werkt alleen op een productformulier."
     },
     "public": {
       "notAvailable": "Dit formulier is niet beschikbaar",
-      "notAvailableHint": "De link is mogelijk verlopen, of het formulier is offline gehaald."
+      "notAvailableHint": "De link is mogelijk verlopen, of het formulier is offline gehaald.",
+      "thanksMetaTitle": "Bedankt"
     },
     "mapping": {
       "first_name": "Voornaam",
@@ -4059,6 +4141,245 @@
       "empty": "Geen vrije tijden op deze dag.",
       "slotUnavailable": "Dit tijdslot is zojuist bezet. Kies een ander tijdstip.",
       "slotInvalid": "Kies een geldig tijdslot."
+    },
+    "steps": {
+      "title": "Stappen",
+      "stepN": "Stap {{n}}",
+      "add": "Stap toevoegen",
+      "rename": "Hernoemen",
+      "duplicate": "Stap dupliceren",
+      "moveLeft": "Naar links",
+      "moveRight": "Naar rechts",
+      "delete": "Stap verwijderen",
+      "deleteLast": "Een formulier heeft minstens één stap nodig",
+      "menu": "Opties voor stap {{n}}",
+      "deleteTitle": "Stap {{n}} verwijderen?",
+      "deleteBody": "Deze bevat {{count}} veld(en). Verplaats ze naar de vorige stap of verwijder ze mee.",
+      "deleteMove": "Velden naar vorige stap",
+      "deleteAll": "Velden ook verwijderen",
+      "split": "Opsplitsen in stappen",
+      "merge": "Eén pagina",
+      "mergeTitle": "{{count}} stappen samenvoegen tot één pagina?",
+      "mergeBody": "Velden behouden hun volgorde. De titel van de eerste stap wordt de formuliertitel; de overige staptitels vervallen.",
+      "fieldsIn": "Velden in stap {{n}}",
+      "moveTo": "Stap",
+      "dropHint": "Sleep een veld naar een stap hierboven, of gebruik de pijlen op een rij.",
+      "emptyStepHint": "Deze stap is leeg. Voeg een veld toe uit het palet of sleep er een hierheen.",
+      "moveFieldsHere": "Velden hierheen verplaatsen",
+      "moveFieldsTitle": "Velden verplaatsen naar “{{step}}”",
+      "moveFieldsHint": "Vink de velden aan die je uit de andere stappen wilt overnemen.",
+      "moveSelected": "Selectie verplaatsen ({{count}})",
+      "moveField": "Naar een andere stap verplaatsen"
+    },
+    "create": {
+      "title": "Nieuw formulier",
+      "typeLabel": "Wat voor formulier?",
+      "create": "Formulier maken",
+      "type": {
+        "single": {
+          "title": "Eén pagina",
+          "body": "Alle velden op één scherm. De snelste manier om een paar vragen te stellen."
+        },
+        "multi": {
+          "title": "Meerdere stappen",
+          "body": "Eén scherm per stap, met voortgangsindicator. Beter voor langere formulieren."
+        },
+        "product": {
+          "title": "Product",
+          "body": "Bezoekers kiezen uit je Stripe-producten, vullen het formulier in en betalen via Stripe.",
+          "disabled": "Koppel Stripe om met een formulier betalingen te ontvangen.",
+          "connect": "Stripe koppelen"
+        }
+      }
+    },
+    "webhooks": {
+      "title": "Webhooks",
+      "add": "Webhook toevoegen",
+      "editTitle": "Webhook bewerken",
+      "sheetHint": "We POSTen JSON naar uw endpoint wanneer de gekozen gebeurtenissen plaatsvinden, en proberen het opnieuw bij fouten.",
+      "empty": "Nog geen webhooks",
+      "emptyHint": "Stuur elke inzending direct naar uw eigen systemen: een CRM, een automatisering, uw backend. U kiest precies welke sleutels worden verstuurd.",
+      "name": "Naam",
+      "url": "Endpoint-URL",
+      "urlHint": "Moet https:// op een publieke host zijn. Mislukte leveringen proberen we ongeveer twee uur opnieuw.",
+      "urlLocal": "Localhost en privé-adressen zijn vanaf onze servers niet bereikbaar.",
+      "endpoint": "Endpoint",
+      "events": "Gebeurtenissen",
+      "eventsStandardHint": "Afreken-gebeurtenissen zijn beschikbaar bij productformulieren.",
+      "event": {
+        "form_submitted": "Een bezoeker heeft het formulier verzonden en er is een lead aangemaakt.",
+        "checkout_completed": "De betaling is gelukt en de lead is bijgewerkt.",
+        "checkout_failed": "De betaling is geweigerd of mislukt.",
+        "checkout_expired": "De bezoeker heeft nooit betaald en het afrekenen is verlopen."
+      },
+      "payload": "Payload",
+      "payloadHint": "Kies welke sleutels worden verstuurd en hoe ze heten. De voorvertoning is precies wat we versturen.",
+      "paneKeys": "Sleutels",
+      "panePreview": "Voorvertoning",
+      "include": "Meesturen",
+      "ourKey": "Sleutel",
+      "targetKey": "Verstuurd als",
+      "type": "Type",
+      "example": "Voorbeeld",
+      "search": "Sleutels filteren…",
+      "all": "Alle",
+      "none": "Geen",
+      "reset": "Naam herstellen",
+      "collision": "Twee sleutels zouden botsen in data.",
+      "invalidName": "Letters, cijfers, _ . en -, maximaal 64 tekens.",
+      "hidden": "{{count}} sleutel(s) verborgen",
+      "was": "was {{key}}",
+      "previewEvent": "Voorvertoning",
+      "copyJson": "JSON kopiëren",
+      "copy": "Kopiëren",
+      "copied": "Gekopieerd",
+      "group": {
+        "fields": "Velden",
+        "contact": "Contact",
+        "submission": "Inzending",
+        "checkout": "Afrekenen"
+      },
+      "verify": "Handtekening controleren",
+      "verifyHint": "Elk verzoek draagt X-Repraesent-Signature: t=<Unix-seconden>,v1=<hex>. Bereken de HMAC-SHA256 van \"<t>.<ruwe body>\" met uw secret en vergelijk. Wijs tijdstempels ouder dan vijf minuten af.",
+      "secret": "Ondertekeningssecret",
+      "secretHint": "Wordt eenmalig volledig getoond bij het aanmaken en hier op verzoek. Tonen wordt gelogd.",
+      "reveal": "Tonen",
+      "hideIn": "Verbergt in {{s}} s",
+      "rotate": "Vernieuwen…",
+      "rotateTitle": "Ondertekeningssecret vernieuwen?",
+      "rotateBody": "Leveringen die met het oude secret zijn ondertekend falen bij uw controle totdat u het bijwerkt.",
+      "rotated": "Secret vernieuwd",
+      "adminOnly": "Alleen workspace-beheerders kunnen het secret tonen of vernieuwen.",
+      "secretOnce": "Uw ondertekeningssecret — kopieer het nu, het wordt maar één keer volledig getoond.",
+      "secretDismiss": "Ik heb het gekopieerd",
+      "sendTest": "Test versturen",
+      "testOk": "Test verstuurd · {{code}} in {{ms}} ms",
+      "testFailed": "Test mislukt · {{code}}",
+      "response": "Antwoord",
+      "request": "Verzoek",
+      "deliveries": "Leveringen",
+      "deliveriesHint": "De laatste 50 leveringen, nieuwste eerst. Mislukte worden automatisch met toenemende tussenpozen herhaald.",
+      "deliveriesEmpty": "Nog niets geleverd — verstuur een test vanaf de kaart.",
+      "redeliver": "Opnieuw versturen",
+      "redelivered": "Opnieuw verstuurd",
+      "attempts": "{{count}}×",
+      "timeout": "time-out",
+      "nextAttempt": "Volgende poging {{when}}",
+      "status": {
+        "never": "Nooit geleverd",
+        "ok": "Geleverd {{when}}",
+        "failing": "Mislukt · {{count}} fout(en)",
+        "autoDisabled": "Gepauzeerd na {{count}} fouten"
+      },
+      "edit": "Bewerken",
+      "view": "Bekijken",
+      "more": "Meer",
+      "delete": "Verwijderen",
+      "deleteTitle": "Deze webhook verwijderen?",
+      "deleteBody": "{{name}} ontvangt geen gebeurtenissen meer. Verder verandert er niets.",
+      "saved": "Webhook opgeslagen",
+      "created": "Webhook toegevoegd",
+      "deleted": "Webhook verwijderd",
+      "save": "Wijzigingen opslaan",
+      "receiverHelp": {
+        "title": "Wat je endpoint moet doen",
+        "receive": "Een POST met JSON-body accepteren en met een willekeurige 2xx-status antwoorden. Dat is alles: geen API-sleutel, geen registratie, geen handshake.",
+        "nothingElse": "Werkt direct met Zapier- en Make-catch hooks, n8n, een inkomende CRM-URL of je eigen backend.",
+        "https": "De URL moet https:// op een openbare host zijn. localhost en privénetwerken worden geweigerd.",
+        "signature": "Optioneel: controleer de header X-Repraesent-Signature met het ondertekeningsgeheim dat eenmalig wordt getoond bij het aanmaken. Alleen nodig als je bewijs wilt dat de aanroep van ons komt.",
+        "retries": "Mislukte leveringen worden ongeveer twee uur lang opnieuw geprobeerd; elke poging staat onder „Leveringen”."
+      }
+    },
+    "products": {
+      "title": "Bundel",
+      "add": "Product toevoegen",
+      "remove": "Uit bundel verwijderen",
+      "empty": "Nog geen producten",
+      "emptyHint": "Kies één of meer Stripe-prijzen. Kopers vinken aan wat ze willen en betalen dat in één checkout.",
+      "notConnectedTitle": "Koppel Stripe om producten toe te voegen",
+      "notConnectedBody": "Een productformulier verkoopt je Stripe-producten via Stripe Checkout. Koppel het account dat de betalingen moet ontvangen.",
+      "qty": "Aantal",
+      "fixed": "Vast",
+      "adjustable": "Koper kiest",
+      "min": "Min",
+      "default": "Standaard",
+      "max": "Max",
+      "perCheckout": "Eén abonnement per afrekening.",
+      "stale": "Gewijzigd in Stripe",
+      "archived": "Prijs gearchiveerd",
+      "refreshAll": "Prijzen vernieuwen",
+      "picker": {
+        "title": "Product toevoegen",
+        "hint": "Zoek in uw Stripe-catalogus. De koper betaalt elke regel in de bundel.",
+        "pickPrice": "Kies een prijs.",
+        "search": "Producten zoeken…",
+        "inBundle": "Al in de bundel",
+        "currencyMismatch": "Andere valuta dan de bundel",
+        "intervalMismatch": "Ander factureringsinterval — één afrekening, één interval",
+        "addToBundle": "Aan bundel toevoegen",
+        "nothingToAdd": "Niets toe te voegen. Producten hebben een actieve prijs nodig.",
+        "priceCount": "{{count}} prijs/prijzen"
+      },
+      "checkout": "Afrekenen",
+      "customer": "Klantgegevens",
+      "billing": "Factuuradres",
+      "billingAuto": "Automatisch",
+      "billingRequired": "Verplicht",
+      "billingHint": "Automatisch vraagt Stripe er alleen om als de betaalmethode het nodig heeft.",
+      "phone": "Telefoonnummer vragen",
+      "promo": "Promotiecodes toestaan",
+      "shipping": "Verzending",
+      "shippingEnabled": "Verzendadres vragen",
+      "worldwide": "Wereldwijd",
+      "eu": "EU",
+      "dach": "DACH",
+      "custom": "Aangepast",
+      "countries": "{{count}} landen",
+      "searchCountries": "Landen zoeken…",
+      "customHint": "Kies de landen waarnaar u verzendt. Leeg betekent overal waar Stripe verzendt.",
+      "button": "Knop en positie",
+      "submitType": "Stripe-knop",
+      "pay": "Betalen",
+      "book": "Boeken",
+      "donate": "Doneren",
+      "submitTypeHint": "Wijzigt de tekst op de betaalpagina van Stripe.",
+      "position": "Positie van het overzicht",
+      "top": "Boven",
+      "bottom": "Onder",
+      "caption": "Tekst van de formulierknop",
+      "captionHint": "Wat de eigen knop van het formulier zegt vóór Stripe. Per taal.",
+      "after": "Na betaling",
+      "successUrl": "Succes-URL",
+      "successUrlHint": "Standaard: de gehoste bedankpagina in de stijl van dit formulier.",
+      "cancelUrl": "Annuleer-URL",
+      "cancelUrlHint": "Standaard: terug naar dit formulier, antwoorden bewaard.",
+      "invalidUrl": "Voer een volledige https://-URL in.",
+      "fixedQty": "Aantal",
+      "pagesPaidTitle": "Betaald — titel",
+      "pagesPaidBody": "Betaald — tekst",
+      "pagesFailedTitle": "Mislukt — titel",
+      "pagesFailedBody": "Mislukt — tekst",
+      "pagesRetry": "Knop „Opnieuw proberen”",
+      "pagesCanceled": "Melding na terugkeer van Stripe",
+      "pagesHint": "Getoond op de gehoste pagina's waar de koper na Stripe terechtkomt. Per taal.",
+      "preselected": "Aangevinkt bij laden",
+      "selectHint": "Elke regel heeft een selectievakje. Kopers vinken aan wat ze willen en betalen precies dat; minstens één is vereist.",
+      "titleLabel": "Titel van het overzicht",
+      "secureLabel": "Vertrouwensregel"
+    },
+    "deal": {
+      "title": "Deal",
+      "enable": "Van elke inzending een deal maken",
+      "enableHint": "De deal ontstaat zodra Stripe de betaling afrondt — niet bij het versturen van het formulier, zodat een afgebroken checkout nooit op je bord komt. Contact, Stripe-klant, factuur en gekochte producten worden eraan gekoppeld.",
+      "whereTitle": "Waar hij terechtkomt",
+      "pipeline": "Pipeline",
+      "wonStage": "Als de betaling slaagt",
+      "lostStage": "Als de betaling mislukt of verloopt",
+      "noLost": "Geen deal aanmaken",
+      "pickStage": "Kies een fase",
+      "titleSection": "Dealtitel",
+      "titleHint": "Laat leeg voor ‘Koper — Producten’. Beschikbaar: {buyer}, {products}, {form}, {amount}.",
+      "invoiceNotice": "Hiermee vraagt Stripe ook voor eenmalige betalingen een factuur aan, zodat de deal altijd een echte factuur met pdf draagt. Afhankelijk van je Stripe-instellingen ontvangen kopers die factuur per e-mail. Abonnementen factureert Stripe sowieso."
     }
   },
   "workflows": {

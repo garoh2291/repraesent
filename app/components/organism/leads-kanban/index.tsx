@@ -23,11 +23,8 @@ import {
   isAppointmentPast,
   nextLeadAppointment,
 } from "~/lib/leads/appointment";
-import {
-  getLeads,
-  getLeadsKanbanCounts,
-  type Lead,
-} from "~/lib/api/leads";
+import { LeadPaymentPill } from "~/components/molecule/lead-payment-pill";
+import { getLeads, getLeadsKanbanCounts, type Lead } from "~/lib/api/leads";
 import { LeadSourceIcon } from "~/components/organism/lead-source-icon";
 import {
   LeadSuccessConfirmModal,
@@ -35,7 +32,10 @@ import {
 } from "~/components/organism/lead-success-confirm-modal";
 import type { PipelineStage } from "~/lib/api/pipeline-stages";
 import { useLeadStages } from "~/lib/hooks/usePipelineStages";
-import { resolveStageColors, resolveStageColorsByKey } from "~/lib/pipeline-stages/colors";
+import {
+  resolveStageColors,
+  resolveStageColorsByKey,
+} from "~/lib/pipeline-stages/colors";
 import {
   resolveStageLabel,
   resolveStageLabelByKey,
@@ -45,6 +45,12 @@ import {
   kanbanCollisionDetection,
   positionForInsertion,
 } from "~/lib/kanban/board-position";
+import {
+  DEFAULT_LEAD_SORT,
+  isManualOrder,
+  leadSortToApi,
+  type LeadSortMode,
+} from "~/lib/leads/lead-sort";
 
 const COLUMN_PAGE_SIZE = 50;
 
@@ -67,6 +73,8 @@ interface LeadsKanbanProps {
   onReorder: (args: ReorderArgs) => void | Promise<unknown>;
   onLeadSelect: (leadId: string) => void;
   canEdit?: boolean;
+  /** Column order. Defaults to manual so an existing board keeps its shape. */
+  sortMode?: LeadSortMode;
 }
 
 /**
@@ -74,10 +82,20 @@ interface LeadsKanbanProps {
  * per configured stage — stages are workspace data now, so the columns can't
  * be a fixed set of hook calls in the parent). Desktop column and mobile
  * section share the cache entry via the query key.
+ *
+ * `sortMode` is part of the key AND of the request: a column is paginated, so
+ * the order has to come from the server — re-sorting the loaded pages here
+ * would only rearrange the first 50 cards. The optimistic reorder helper in
+ * `useUpdateLeadStatus` matches on the ["leads-kanban-column"] prefix and
+ * reads the stage key at index 1, so appending this stays compatible.
  */
-function useColumnQuery(stageKey: string, filters: KanbanFilters) {
+function useColumnQuery(
+  stageKey: string,
+  filters: KanbanFilters,
+  sortMode: LeadSortMode,
+) {
   return useInfiniteQuery({
-    queryKey: ["leads-kanban-column", stageKey, filters],
+    queryKey: ["leads-kanban-column", stageKey, filters, sortMode],
     queryFn: ({ pageParam = 1 }) =>
       getLeads({
         status: stageKey,
@@ -88,7 +106,7 @@ function useColumnQuery(stageKey: string, filters: KanbanFilters) {
         form_name: filters.form_name,
         platform_campaign_id: filters.platform_campaign_id,
         include_hidden: true,
-        sort: "board_position",
+        sort: leadSortToApi(sortMode),
       }),
     initialPageParam: 1,
     getNextPageParam: (lastPage) =>
@@ -108,8 +126,10 @@ export function LeadsKanban({
   onReorder,
   onLeadSelect,
   canEdit = true,
+  sortMode = DEFAULT_LEAD_SORT,
 }: LeadsKanbanProps) {
   const { t } = useTranslation();
+  const manualOrder = isManualOrder(sortMode);
   const { visible: stages, byKey, isLoading: stagesLoading } = useLeadStages();
   const [activeId, setActiveId] = useState<string | null>(null);
   // Confirmation dialog shown when a lead is dropped into a won-category column.
@@ -127,9 +147,9 @@ export function LeadsKanban({
   // matching the pipeline kanban.
   const [justMovedId, setJustMovedId] = useState<string | null>(null);
   const landTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const undoStackRef = useRef<Array<{ leadId: string; previousStatus: string }>>(
-    [],
-  );
+  const undoStackRef = useRef<
+    Array<{ leadId: string; previousStatus: string }>
+  >([]);
 
   // Raw cache rows per column, reported up by the per-stage children (the
   // children own the infinite queries; the parent owns cross-column concerns:
@@ -194,8 +214,16 @@ export function LeadsKanban({
     for (const lead of all) {
       if (acc[lead.status]) acc[lead.status].push(lead);
     }
+    // Mirror the server's ORDER BY for the active mode. Bucketing alone would
+    // append a card carrying a pending override to the end of its new column,
+    // so it has to be re-sorted here or it visibly jumps when the refetch
+    // lands. `board_position` is only meaningful in manual mode.
     for (const stage of stages) {
       acc[stage.key].sort((a, b) => {
+        if (!manualOrder) {
+          const cmp = (a.created_at ?? "").localeCompare(b.created_at ?? "");
+          return sortMode === "date_asc" ? cmp : -cmp;
+        }
         const ap = a.board_position;
         const bp = b.board_position;
         if (ap == null && bp == null) {
@@ -207,7 +235,7 @@ export function LeadsKanban({
       });
     }
     return acc;
-  }, [stages, rawLeadsByCache, pending]);
+  }, [stages, rawLeadsByCache, pending, manualOrder, sortMode]);
 
   const allLoadedLeads = useMemo(
     () => Object.values(leadsByStatus).flat(),
@@ -228,10 +256,15 @@ export function LeadsKanban({
         for (const lead of rawLeadsByCache[stage.key] ?? []) {
           const ov = next[lead.id];
           if (!ov) continue;
-          if (
-            lead.status === ov.status &&
-            lead.board_position === ov.board_position
-          ) {
+          // In a sorted mode the override only ever carried the status — the
+          // board_position in it is a placeholder nothing reads, so requiring
+          // it to match would strand the override forever on a lead whose
+          // position is null.
+          const settled = manualOrder
+            ? lead.status === ov.status &&
+              lead.board_position === ov.board_position
+            : lead.status === ov.status;
+          if (settled) {
             delete next[lead.id];
             changed = true;
           }
@@ -239,7 +272,7 @@ export function LeadsKanban({
       }
       return changed ? next : curr;
     });
-  }, [stages, rawLeadsByCache, pending]);
+  }, [stages, rawLeadsByCache, pending, manualOrder]);
 
   const isInitialLoading =
     stagesLoading ||
@@ -268,7 +301,10 @@ export function LeadsKanban({
       overId: string,
     ): { status: string; insertionIndex: number } | null => {
       if (byKey.has(overId)) {
-        return { status: overId, insertionIndex: leadsByStatus[overId]?.length ?? 0 };
+        return {
+          status: overId,
+          insertionIndex: leadsByStatus[overId]?.length ?? 0,
+        };
       }
       const overLeadId = overId.replace(/^lead-/, "");
       for (const stage of stages) {
@@ -316,6 +352,31 @@ export function LeadsKanban({
         return;
       }
 
+      // Sorted modes: the column order is the server's, so an in-column drag
+      // means nothing and must not write a board_position that manual mode
+      // would later honour. A drop into another column is still a real status
+      // change — same split the deals board makes.
+      if (!manualOrder) {
+        if (lead.status === drop.status) return;
+
+        undoStackRef.current.push({ leadId, previousStatus: lead.status });
+        if (undoStackRef.current.length > 50) undoStackRef.current.shift();
+
+        setPending((curr) => ({
+          ...curr,
+          [leadId]: {
+            status: drop.status,
+            board_position: lead.board_position ?? 0,
+          },
+        }));
+        setJustMovedId(leadId);
+        if (landTimerRef.current) clearTimeout(landTimerRef.current);
+        landTimerRef.current = setTimeout(() => setJustMovedId(null), 500);
+
+        onStatusChange(leadId, drop.status);
+        return;
+      }
+
       const position = positionForInsertion(
         leadsByStatus[drop.status] ?? [],
         drop.insertionIndex,
@@ -349,7 +410,15 @@ export function LeadsKanban({
 
       onReorder({ leadId, status: drop.status, position });
     },
-    [resolveDrop, allLoadedLeads, byKey, leadsByStatus, onReorder],
+    [
+      resolveDrop,
+      allLoadedLeads,
+      byKey,
+      leadsByStatus,
+      onReorder,
+      onStatusChange,
+      manualOrder,
+    ],
   );
 
   const handleConfirmSuccess = useCallback(async () => {
@@ -411,6 +480,7 @@ export function LeadsKanban({
               key={stage.id}
               stage={stage}
               filters={filters}
+              sortMode={sortMode}
               onReport={handleReport}
             />
           ))}
@@ -428,6 +498,7 @@ export function LeadsKanban({
           leadsByStatus={leadsByStatus}
           totalsByStatus={countsQuery.data ?? {}}
           filters={filters}
+          sortMode={sortMode}
           onLeadSelect={onLeadSelect}
         />
       </div>
@@ -442,7 +513,7 @@ export function LeadsKanban({
         >
           <div
             className={cn(
-              "flex flex-1 min-h-0 h-full gap-4 overflow-x-auto overflow-y-hidden rounded-lg py-4 pl-0 pr-4 pt-5 scrollbar-hide"
+              "flex flex-1 min-h-0 h-full gap-4 overflow-x-auto overflow-y-hidden rounded-lg py-4 pl-0 pr-4 pt-5 scrollbar-hide",
             )}
           >
             {stages.map((stage) => (
@@ -450,6 +521,7 @@ export function LeadsKanban({
                 key={stage.id}
                 stage={stage}
                 filters={filters}
+                sortMode={sortMode}
                 leads={leadsByStatus[stage.key] ?? []}
                 total={countsQuery.data?.[stage.key] ?? 0}
                 onReport={handleReport}
@@ -488,13 +560,15 @@ export function LeadsKanban({
 function ColumnQueryReporter({
   stage,
   filters,
+  sortMode,
   onReport,
 }: {
   stage: PipelineStage;
   filters: KanbanFilters;
+  sortMode: LeadSortMode;
   onReport: (stageKey: string, leads: Lead[], isLoading: boolean) => void;
 }) {
-  const q = useColumnQuery(stage.key, filters);
+  const q = useColumnQuery(stage.key, filters, sortMode);
   const rawLeads = useMemo(
     () => q.data?.pages.flatMap((p) => p.data) ?? [],
     [q.data],
@@ -508,6 +582,7 @@ function ColumnQueryReporter({
 function KanbanColumn({
   stage,
   filters,
+  sortMode,
   leads,
   total,
   onReport,
@@ -517,6 +592,7 @@ function KanbanColumn({
 }: {
   stage: PipelineStage;
   filters: KanbanFilters;
+  sortMode: LeadSortMode;
   leads: Lead[];
   total: number;
   onReport: (stageKey: string, leads: Lead[], isLoading: boolean) => void;
@@ -525,7 +601,7 @@ function KanbanColumn({
   justMovedId: string | null;
 }) {
   const { t } = useTranslation();
-  const q = useColumnQuery(stage.key, filters);
+  const q = useColumnQuery(stage.key, filters, sortMode);
   const rawLeads = useMemo(
     () => q.data?.pages.flatMap((p) => p.data) ?? [],
     [q.data],
@@ -546,14 +622,18 @@ function KanbanColumn({
       ref={setNodeRef}
       className={cn(
         "flex h-full shrink-0 flex-col rounded-lg border border-border bg-muted shadow-[var(--shadow)] transition-colors overflow-hidden",
-        isEmpty ? "min-w-[140px] w-[140px]" : "w-[280px] min-h-[calc(100vh-10rem)]",
-        isOver && "ring-2 ring-primary/50"
+        isEmpty
+          ? "min-w-[140px] w-[140px]"
+          : "w-[280px] min-h-[calc(100vh-10rem)]",
+        isOver && "ring-2 ring-primary/50",
       )}
     >
       <div className={cn("h-1 shrink-0", color)} />
       <div className="shrink-0 p-3">
         <h3 className="font-medium text-sm flex items-center gap-2">
-          <span className={cn("inline-block h-2 w-2 rounded-full shrink-0", color)} />
+          <span
+            className={cn("inline-block h-2 w-2 rounded-full shrink-0", color)}
+          />
           <span className="truncate">{label}</span>
           <span className="inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-background px-1.5 text-xs font-medium text-muted-foreground">
             {total}
@@ -694,35 +774,40 @@ function KanbanCardInner({ lead }: { lead: Lead }) {
       <div className="flex items-start justify-between gap-2">
         <span
           className={cn(
-            "inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium shrink-0",
+            "inline-flex min-w-0 items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium",
             color,
-            color === "bg-muted" ? "text-foreground" : "text-white"
+            color === "bg-muted" ? "text-foreground" : "text-white",
           )}
         >
           <span
             className={cn(
-              "h-1 w-1 rounded-full",
+              "h-1 w-1 shrink-0 rounded-full",
               color === "bg-muted" ? "bg-foreground/60" : "bg-white/80",
             )}
           />
-          {label}
+          <span className="truncate">{label}</span>
         </span>
-        {appointment && (
-          <span
-            className={cn(
-              "inline-flex items-center gap-1 rounded-full border border-border bg-muted px-1.5 py-0.5 text-[10px] font-medium shrink-0 tabular-nums",
-              appointmentPast ? "text-muted-foreground/60" : "text-foreground",
-            )}
-          >
-            <CalendarClock className="h-3 w-3 shrink-0" />
-            {formatDateIntl(appointment.start, {
-              month: "short",
-              day: "numeric",
-              hour: "2-digit",
-              minute: "2-digit",
-            })}
-          </span>
-        )}
+        <div className="flex min-w-0 shrink-0 items-center gap-1">
+          <LeadPaymentPill lead={lead} />
+          {appointment && (
+            <span
+              className={cn(
+                "inline-flex items-center gap-1 rounded-full border border-border bg-muted px-1.5 py-0.5 text-[10px] font-medium shrink-0 tabular-nums",
+                appointmentPast
+                  ? "text-muted-foreground/60"
+                  : "text-foreground",
+              )}
+            >
+              <CalendarClock className="h-3 w-3 shrink-0" />
+              {formatDateIntl(appointment.start, {
+                month: "short",
+                day: "numeric",
+                hour: "2-digit",
+                minute: "2-digit",
+              })}
+            </span>
+          )}
+        </div>
       </div>
       <p className="font-semibold text-sm truncate leading-tight">
         {lead.full_name || lead.email || "—"}
@@ -741,12 +826,14 @@ function LeadsMobileSchedule({
   leadsByStatus,
   totalsByStatus,
   filters,
+  sortMode,
   onLeadSelect,
 }: {
   stages: PipelineStage[];
   leadsByStatus: Record<string, Lead[]>;
   totalsByStatus: Partial<Record<string, number>>;
   filters: KanbanFilters;
+  sortMode: LeadSortMode;
   onLeadSelect: (id: string) => void;
 }) {
   return (
@@ -758,6 +845,7 @@ function LeadsMobileSchedule({
           leads={leadsByStatus[stage.key] ?? []}
           total={totalsByStatus[stage.key] ?? 0}
           filters={filters}
+          sortMode={sortMode}
           onLeadSelect={onLeadSelect}
         />
       ))}
@@ -770,18 +858,20 @@ function MobileStageSection({
   leads,
   total,
   filters,
+  sortMode,
   onLeadSelect,
 }: {
   stage: PipelineStage;
   leads: Lead[];
   total: number;
   filters: KanbanFilters;
+  sortMode: LeadSortMode;
   onLeadSelect: (id: string) => void;
 }) {
   const { t } = useTranslation();
   // Shares the cache entry with the desktop column (same query key), so this
   // costs no extra request — it exists for the load-more state and trigger.
-  const q = useColumnQuery(stage.key, filters);
+  const q = useColumnQuery(stage.key, filters, sortMode);
   const colorClass = resolveStageColors(stage).dot;
   const label = resolveStageLabel(stage, t);
 
@@ -801,7 +891,7 @@ function MobileStageSection({
               "inline-flex h-6 min-w-6 items-center justify-center rounded-full px-1.5 text-xs font-semibold",
               total > 0
                 ? `${colorClass} ${colorClass === "bg-muted" ? "text-foreground" : "text-white"}`
-                : "bg-muted text-muted-foreground"
+                : "bg-muted text-muted-foreground",
             )}
           >
             {total}
@@ -860,9 +950,7 @@ function LeadScheduleRow({
   const displayName = lead.full_name || lead.email || "—";
   const subtitle = lead.email || lead.phone || null;
   const formName = lead.form_name
-    ? lead.form_name
-        .replace(/_/g, " ")
-        .replace(/\b\w/g, (c) => c.toUpperCase())
+    ? lead.form_name.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase())
     : null;
   const appointment = nextLeadAppointment(lead);
 
@@ -872,7 +960,7 @@ function LeadScheduleRow({
       onClick={onSelect}
       className={cn(
         "flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left transition-colors",
-        "hover:bg-muted/60 active:bg-muted"
+        "hover:bg-muted/60 active:bg-muted",
       )}
     >
       <div className={cn("h-8 w-0.5 rounded-full shrink-0", colorClass)} />
@@ -882,9 +970,7 @@ function LeadScheduleRow({
         </p>
 
         {subtitle && subtitle !== displayName && (
-          <p className="text-xs text-muted-foreground truncate">
-            {subtitle}
-          </p>
+          <p className="text-xs text-muted-foreground truncate">{subtitle}</p>
         )}
 
         <div className="flex items-center gap-2 pt-0.5">
@@ -909,6 +995,7 @@ function LeadScheduleRow({
               })}
             </span>
           )}
+          <LeadPaymentPill lead={lead} variant="text" />
         </div>
       </div>
 
@@ -916,7 +1003,7 @@ function LeadScheduleRow({
         <LeadSourceIcon
           source={lead.source_label}
           fallbackSource={lead.source_table}
-            sourceTable={lead.source_table}
+          sourceTable={lead.source_table}
           platform={lead.source_platform}
           size={16}
           className="shrink-0"
@@ -943,7 +1030,7 @@ function ScheduleSection({
     <div
       className={cn(
         "rounded-xl border border-border bg-card overflow-hidden",
-        "shadow-[0_1px_2px_0_rgba(0,0,0,0.04)]"
+        "shadow-[0_1px_2px_0_rgba(0,0,0,0.04)]",
       )}
     >
       <button
@@ -955,7 +1042,7 @@ function ScheduleSection({
         <ChevronDown
           className={cn(
             "h-4 w-4 shrink-0 text-muted-foreground transition-transform duration-200",
-            open && "rotate-180"
+            open && "rotate-180",
           )}
         />
       </button>

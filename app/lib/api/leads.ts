@@ -60,7 +60,8 @@ export interface GetLeadsParams {
   form_name?: string;
   include_hidden?: boolean;
   platform_campaign_id?: string;
-  sort?: "board_position" | "created_at";
+  /** Kanban manual order / newest first / oldest first. See `~/lib/leads/lead-sort`. */
+  sort?: "board_position" | "created_at" | "created_asc";
 }
 
 export interface PaginatedLeads {
