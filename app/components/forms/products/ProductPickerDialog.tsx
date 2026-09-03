@@ -137,7 +137,7 @@ export function ProductPickerDialog({
             {t("forms.products.notConnectedTitle")}
           </p>
         ) : selected ? (
-          <div className="space-y-4">
+          <div className="min-w-0 space-y-4">
             <button
               type="button"
               onClick={() => setSelected(null)}
@@ -228,7 +228,14 @@ export function ProductPickerDialog({
             </div>
           </div>
         ) : (
-          <div className="space-y-3">
+          <div className="min-w-0 space-y-3">
+            {/* min-w-0 above: DialogContent is `display: grid`, so this child
+                is a grid item with the default `min-width: auto` and refuses
+                to shrink below its max-content width. One long Stripe product
+                description stretched this column to ~1270px inside a 512px
+                dialog and spilled across the page, and the `truncate` on the
+                rows never fired because their ancestor was never actually
+                constrained. */}
             <div className="relative">
               <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input
