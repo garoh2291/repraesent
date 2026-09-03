@@ -13,6 +13,7 @@ import {
   ArrowLeft,
   AtSign,
   BellRing,
+  Bot,
   Building2,
   BookUser,
   CalendarDays,
@@ -39,6 +40,7 @@ import {
   Plus,
   Send,
   Settings,
+  Sparkles,
   ShoppingBag,
   Star,
   Store,
@@ -143,6 +145,11 @@ const SETTINGS_NAV = [
     to: "/settings/openai-ads",
     labelKey: "settings.tabs.openaiAds",
     Icon: OpenAiMark,
+  },
+  {
+    to: "/settings/ai",
+    labelKey: "settings.tabs.ai",
+    Icon: Sparkles,
   },
   {
     to: "/settings/pipelines",
@@ -527,6 +534,7 @@ export function Sidebar({
   const pilot = usePilotFeatures();
   const showWorkflows = pilot.workflows || isDemoWorkspace;
   const showEmailCampaigns = pilot.emailCampaigns;
+  const showAiAssistant = pilot.aiAssistant;
   // Route-driven rather than stateful: deep links and refreshes land in the
   // right mode for free, and there is nothing to reset on the way out.
   const inSettings = location.pathname.startsWith("/settings");
@@ -775,11 +783,12 @@ export function Sidebar({
                 </NavLink>
               </div>
 
-              {SETTINGS_NAV.filter(
-                (item) =>
-                  item.to !== "/settings/integrations" ||
-                  pilot.integrations ||
-                  isDemoWorkspace,
+              {SETTINGS_NAV.filter((item) =>
+                item.to === "/settings/integrations"
+                  ? pilot.integrations || isDemoWorkspace
+                  : item.to === "/settings/ai"
+                    ? showAiAssistant
+                    : true,
               ).map(({ to, labelKey, Icon }) => (
                 <NavLink
                   key={to}
@@ -860,6 +869,17 @@ export function Sidebar({
                 <ClipboardList className="h-4 w-4 shrink-0" />
                 {t("nav.forms", "Forms")}
               </NavLink>
+
+              {showAiAssistant && (
+                <NavLink
+                  to="/ai-assistants"
+                  isActive={location.pathname.startsWith("/ai-assistants")}
+                  onClick={onClose}
+                >
+                  <Bot className="h-4 w-4 shrink-0" />
+                  {t("nav.aiAssistants", { defaultValue: "AI assistants" })}
+                </NavLink>
+              )}
 
               {/* Gated on the connection rather than a service entitlement: the
                 catalogue is a live proxy, so with no Stripe account there is

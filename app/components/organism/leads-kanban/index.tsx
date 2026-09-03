@@ -1,3 +1,4 @@
+import type { LeadSourceValue } from "~/lib/leads/constants";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
 import {
@@ -56,7 +57,7 @@ const COLUMN_PAGE_SIZE = 50;
 
 interface KanbanFilters {
   search?: string;
-  source?: "website";
+  source?: LeadSourceValue;
   form_name?: string;
   platform_campaign_id?: string;
 }

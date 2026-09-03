@@ -13,6 +13,8 @@ export default [
   route("auth/callback", "routes/auth.callback.tsx"),
   route("book/:configId", "routes/book.$configId.tsx"),
   route("f/:formId", "routes/f.$formId.tsx"),
+  // Hosted AI assistant page (widget_type "page"). Public, noindex.
+  route("a/:assistantId", "routes/a.$assistantId.tsx"),
   // Product forms: where Stripe Checkout sends the buyer back.
   route("f/:formId/thanks", "routes/f.$formId.thanks.tsx"),
   // Campaign-email unsubscribe landing. Public: the token in the path is the
@@ -57,6 +59,12 @@ export default [
       route("products", "routes/products.tsx"),
       route("forms", "routes/forms._index.tsx"),
       route("forms/:formId", "routes/forms.$formId.tsx"),
+      // Website AI assistant (pilot flag `aiAssistant`).
+      route("ai-assistants", "routes/ai-assistants._index.tsx"),
+      route(
+        "ai-assistants/:assistantId",
+        "routes/ai-assistants.$assistantId.tsx",
+      ),
       route("lead-form", "routes/lead-form.tsx"),
       route("email/confirmation", "routes/lead-form.fallback.tsx"),
       route("lead-form/:leadId", "routes/lead-form.$leadId.tsx"),
@@ -102,6 +110,7 @@ export default [
         route("email-accounts", "routes/settings.email-accounts.tsx"),
         route("integrations", "routes/settings.integrations.tsx"),
         route("openai-ads", "routes/settings.openai-ads.tsx"),
+        route("ai", "routes/settings.ai.tsx"),
         route("notifications", "routes/settings.notifications.tsx"),
         route("calendars", "routes/settings.calendars.tsx"),
         route("bcc", "routes/settings.bcc.tsx"),

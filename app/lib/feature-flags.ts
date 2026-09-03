@@ -23,7 +23,9 @@ export type PilotFeature =
   /** Settings → Integrations (Stripe Connect). Products/invoicing follow it, since connecting happens there. */
   | "integrations"
   /** Email marketing: /campaigns, /segments, /email-templates. */
-  | "emailCampaigns";
+  | "emailCampaigns"
+  /** Website AI assistant: /ai-assistants. */
+  | "aiAssistant";
 
 export function isPilotFeatureEnabled(
   workspaceId: string | null | undefined,
@@ -47,5 +49,6 @@ export function usePilotFeatures(): Record<PilotFeature, boolean> {
     emailSignature: enabled,
     integrations: enabled,
     emailCampaigns: enabled,
+    aiAssistant: enabled,
   };
 }

@@ -73,7 +73,8 @@
     "media": "Media",
     "mediaLibrary": "Bibliotheek",
     "mediaFavorites": "Favorieten",
-    "mediaBin": "Prullenbak"
+    "mediaBin": "Prullenbak",
+    "aiAssistants": "AI-assistenten"
   },
   "db_brand": {
     "subtitle": "Kies een retailer in de zijbalk om de Social Ads en Leads te bekijken.",
@@ -393,7 +394,8 @@
       "searchOptions": "Opties zoeken...",
       "pickADate": "Kies een datum",
       "selectOnly": "Alleen selecteren",
-      "noFilterGroups": "Geen filtergroepen gevonden"
+      "noFilterGroups": "Geen filtergroepen gevonden",
+      "aiAssistantSource": "AI-assistent"
     },
     "deleteConfirm": "Weet u zeker dat u deze lead wilt verwijderen?",
     "deleted": "Lead verwijderd",
@@ -458,7 +460,8 @@
       "manual": "Handmatige volgorde",
       "dateDesc": "Nieuwste eerst",
       "dateAsc": "Oudste eerst"
-    }
+    },
+    "sourceLabelAiAssistant": "AI-assistent"
   },
   "pipeline": {
     "stripeNotConnected": {
@@ -1099,7 +1102,8 @@
       "calendars": "Agenda's",
       "pipelines": "Pipelinefasen",
       "notifications": "Meldingen",
-      "openaiAds": "OpenAI Ads"
+      "openaiAds": "OpenAI Ads",
+      "ai": "AI"
     },
     "bcc": {
       "metaTitle": "E-maillogging",
@@ -1597,7 +1601,44 @@
     "workspaceSectionTitle": "Workspace",
     "workspaceAvatarHint": "De workspacefoto verschijnt in de zijbalk en de workspace-kiezer.",
     "avatarSavedWorkspace": "Workspacefoto bijgewerkt",
-    "avatarRemovedWorkspace": "Workspacefoto verwijderd"
+    "avatarRemovedWorkspace": "Workspacefoto verwijderd",
+    "ai": {
+      "metaTitle": "AI",
+      "metaDescription": "Koppel de OpenRouter-sleutel waarop je AI-assistenten draaien en kies het standaardmodel.",
+      "sectionLabel": "OpenRouter-sleutel",
+      "sectionDescription": "AI-assistenten draaien op je eigen OpenRouter-account. Chat, classificatie en embeddings worden op deze sleutel afgerekend.",
+      "cardTitle": "OpenRouter",
+      "statusConnected": "Verbonden",
+      "statusRevoked": "Sleutel afgewezen",
+      "notConnectedHint": "Maak een sleutel op openrouter.ai/keys en plak die hier. Zonder sleutel kunnen assistenten niet worden gepubliceerd.",
+      "lastError": "Laatste aanroep mislukt: {{error}}",
+      "keyLabel": "API-sleutel",
+      "rotateLabel": "API-sleutel vervangen",
+      "keyPlaceholder": "sk-or-v1-…",
+      "keyHelp": "De sleutel wordt bij OpenRouter gecontroleerd voordat hij wordt opgeslagen, en versleuteld bewaard.",
+      "connect": "Verbinden",
+      "rotate": "Vervangen",
+      "test": "Sleutel testen",
+      "testOk": "Sleutel werkt — {{name}}, {{usage}} gebruikt",
+      "connected": "Verbonden — {{name}}",
+      "disconnected": "OpenRouter-sleutel verwijderd",
+      "disconnect": "Sleutel verwijderen",
+      "disconnectTitle": "OpenRouter-sleutel verwijderen?",
+      "disconnectDescription": "Gepubliceerde assistenten stoppen direct met antwoorden en nieuwe bronnen worden niet geïndexeerd tot er weer een sleutel is gekoppeld. De sleutel zelf blijft geldig bij OpenRouter.",
+      "adminOnly": "Alleen workspace-admins kunnen de OpenRouter-sleutel beheren.",
+      "defaultModel": "Standaard chatmodel",
+      "defaultModelHint": "Voor nieuwe assistenten. Elke assistent kan nog steeds een eigen model kiezen.",
+      "modelSaved": "Standaardmodel opgeslagen",
+      "howTo": {
+        "title": "Zo krijg je een sleutel",
+        "step1": "Maak een account op openrouter.ai.",
+        "step2": "Open „Keys” in het accountmenu.",
+        "step3": "Maak een sleutel en kopieer die — hij wordt maar één keer getoond.",
+        "step4": "Voeg tegoed toe, plak de sleutel hierboven en klik op Verbinden.",
+        "billing": "Chat, classificatie en embeddings van alle assistenten in deze workspace worden op deze sleutel afgerekend.",
+        "link": "openrouter.ai/keys openen"
+      }
+    }
   },
   "booking": {
     "metaTitle": "Een afspraak boeken",
@@ -5510,5 +5551,559 @@
     "bulkError": "Bulkactie mislukt",
     "bulkBinTitle": "{{count}} afbeeldingen naar de prullenbak verplaatsen?",
     "bulkHardDeleteTitle": "{{count}} afbeeldingen definitief verwijderen?"
+  },
+  "aiAssistants": {
+    "list": {
+      "title": "AI-assistenten",
+      "hint": "Een chatassistent getraind op uw website en documenten. Hij beantwoordt vragen van bezoekers en geeft door wie met u wil praten.",
+      "new": "Nieuwe assistent",
+      "search": "Assistenten zoeken",
+      "empty": "Nog geen assistenten",
+      "emptyHint": "Wijs naar uw website, upload een paar pdf’s, en hij beantwoordt vragen zoals u dat zou doen — met een lead zodra iemand wil kopen.",
+      "kb": "{{ready}}/{{total}} bronnen",
+      "kbTitle": "Kennisbronnen gereed",
+      "conversations30d": "Chats · 30 d",
+      "leads30d": "Leads · 30 d",
+      "updated": "Bijgewerkt",
+      "open": "Openen",
+      "viewConversations": "Gesprekken bekijken",
+      "created": "Assistent aangemaakt",
+      "deleted": "Assistent verwijderd",
+      "deleteTitle": "Deze assistent verwijderen?",
+      "deleteBody": "De widget op uw website stopt direct; kennis en gesprekken worden verwijderd. Al verzamelde leads blijven bewaard."
+    },
+    "status": {
+      "draft": "Concept",
+      "published": "Live",
+      "unpublishedChanges": "Niet-gepubliceerde wijzigingen"
+    },
+    "widgetType": {
+      "bubble": "Chatballon",
+      "bubbleHint": "Een knop in de hoek van elke pagina.",
+      "section": "Paginasectie",
+      "sectionHint": "Een chatblok in de pagina-inhoud.",
+      "page": "Gehoste pagina",
+      "pageHint": "Een losse pagina die wij hosten — deel de link overal.",
+      "bar": "Zoekbalk",
+      "barHint": "Één invoerveld dat bij gebruik uitklapt tot een chat."
+    },
+    "create": {
+      "title": "Nieuwe assistent",
+      "hint": "Kies een naam en hoe hij op uw site verschijnt. Beide kunt u later wijzigen.",
+      "nameLabel": "Naam",
+      "namePlaceholder": "bijv. Website-assistent",
+      "typeLabel": "Widgettype",
+      "submit": "Assistent aanmaken"
+    },
+    "tabs": {
+      "knowledge": "Kennis",
+      "behaviour": "Gedrag",
+      "appearance": "Uiterlijk",
+      "leads": "Leadregistratie",
+      "share": "Publiceren",
+      "conversations": "Gesprekken",
+      "playground": "Speeltuin",
+      "actions": "Acties & leads",
+      "tests": "Tests",
+      "publish": "Publiceren"
+    },
+    "detail": {
+      "back": "Alle assistenten",
+      "save": "Opslaan",
+      "saved": "Opgeslagen",
+      "publish": "Publiceren",
+      "republish": "Wijzigingen publiceren",
+      "unpublish": "Offline halen",
+      "delete": "Assistent verwijderen",
+      "readOnly": "U heeft alleen leesrechten voor deze assistent.",
+      "publishedToast": "Assistent gepubliceerd",
+      "unpublishedToast": "Assistent offline gehaald"
+    },
+    "locales": {
+      "en": "Engels",
+      "de": "Duits",
+      "fr": "Frans",
+      "nl": "Nederlands"
+    },
+    "sourceType": {
+      "website": "Websites",
+      "document": "Documenten",
+      "text": "Tekst",
+      "description": "Beschrijving"
+    },
+    "sourceStatus": {
+      "pending": "In afwachting",
+      "uploading": "Uploaden",
+      "queued": "In wachtrij",
+      "crawling": "Crawlen",
+      "parsing": "Lezen",
+      "embedding": "Indexeren",
+      "ready": "Gereed",
+      "failed": "Mislukt"
+    },
+    "knowledge": {
+      "descriptionTitle": "Over uw bedrijf",
+      "descriptionHint": "Twee of drie zinnen: wie u bent, wat u aanbiedt en voor wie. De assistent leest dit vóór elk antwoord. Wordt automatisch opgeslagen.",
+      "descriptionPlaceholder": "Wij zijn een familiebedrijf in meubelmakerij in Hamburg. We maken keukens en inbouwkasten op maat voor particulieren en offreren binnen 48 uur…",
+      "saving": "Opslaan…",
+      "saved": "Opgeslagen",
+      "sourcesTitle": "Kennisbronnen",
+      "readyCount": "{{ready}} van {{total}} gereed",
+      "empty": "Nog geen bronnen. Crawl uw website, upload documenten of plak tekst.",
+      "progressPages": "{{done}} van {{total}} pagina’s",
+      "progressChunks": "{{done}} fragmenten geïndexeerd",
+      "pages": {
+        "title": "Gecrawlde pagina’s",
+        "view": "Pagina’s bekijken",
+        "count": "{{count}} pagina’s",
+        "empty": "Nog geen pagina’s opgeslagen voor deze bron.",
+        "chars": "{{count}} tekens",
+        "viewText": "Tekst bekijken",
+        "noContent": "Geen tekst opgeslagen voor deze pagina."
+      },
+      "chunks": "{{count}} fragmenten",
+      "synced": "gesynchroniseerd {{when}}",
+      "resync": "Opnieuw synchroniseren",
+      "crawl": {
+        "action": "Website crawlen",
+        "title": "Een website crawlen",
+        "hint": "Pagina’s worden opgehaald, opgeschoond en geïndexeerd. Synchroniseer later opnieuw om wijzigingen op te halen.",
+        "url": "Start-URL",
+        "limit": "Paginalimiet",
+        "pages": "{{count}} pagina’s",
+        "limitHint": "Dit is alleen een plafond. Een site met 10 pagina’s gebruikt 10 credits. Crawls lopen bewust langzaam om je Firecrawl-credits te sparen. Hercrawls indexeren alleen gewijzigde pagina’s opnieuw.",
+        "submit": "Crawl starten",
+        "started": "Crawl gestart"
+      },
+      "upload": {
+        "title": "Documenten uploaden",
+        "drop": "Sleep bestanden hierheen of klik om te kiezen",
+        "types": "PDF, DOCX, TXT of Markdown · max. 20 MB per bestand",
+        "rejectedType": "{{name}}: bestandstype niet ondersteund",
+        "rejectedSize": "{{name}}: groter dan 20 MB"
+      },
+      "text": {
+        "action": "Tekst toevoegen",
+        "title": "Tekst toevoegen",
+        "editTitle": "Tekst bewerken",
+        "hint": "Alles wat niet op uw website staat: openingstijden, FAQ, prijsregels, bereikbaarheid.",
+        "name": "Titel",
+        "namePlaceholder": "bijv. Veelgestelde vragen",
+        "body": "Tekst",
+        "bodyPlaceholder": "V: Leveren jullie ook buiten Hamburg?\nA: Ja, binnen 150 km tegen een vast tarief van…",
+        "bodyHint": "FAQ-stijl werkt het best — een vraag, dan het antwoord.",
+        "submit": "Tekst toevoegen"
+      },
+      "enabled": "Actief",
+      "disabled": "Uit",
+      "lastCrawled": "Laatst gecrawld:",
+      "never": "Nooit",
+      "recrawl": {
+        "label": "Opnieuw crawlen",
+        "off": "Niet opnieuw crawlen",
+        "weekly": "Wekelijks",
+        "monthly": "Maandelijks",
+        "next": "volgende {{when}}"
+      }
+    },
+    "behaviour": {
+      "modelTitle": "Model",
+      "model": "Chatmodel",
+      "modelHint": "Kleinere modellen antwoorden sneller en kosten minder; grotere volgen instructies nauwkeuriger.",
+      "temperature": "Creativiteit",
+      "temperatureHint": "Laag blijft dicht bij uw bronnen. Hoog staat meer variatie in formulering toe.",
+      "maxTokens": "Maximale antwoordlengte",
+      "maxTokensHint": "In tokens (ongeveer ¾ woord). 100–1500.",
+      "budget": "Dagelijks tokenbudget",
+      "budgetUnlimited": "Onbeperkt",
+      "budgetHint": "Eenmaal bereikt weigert de assistent beleefd tot middernacht UTC. Leeg laten voor geen limiet.",
+      "personaTitle": "Persona",
+      "tone": "Toon",
+      "tones": {
+        "friendly": "Vriendelijk",
+        "formal": "Formeel",
+        "concise": "Beknopt"
+      },
+      "languageTitle": "Taal",
+      "languageVisitor": "Taal van de bezoeker",
+      "languageVisitorHint": "Antwoordt in de taal van de vraag — Engels, Duits, Frans of Nederlands.",
+      "languageFixed": "Altijd antwoorden in",
+      "instructionsTitle": "Eigen instructies",
+      "instructionsPlaceholder": "Noem nooit prijzen voor zakelijke projecten — vraag om een offerteaanvraag.",
+      "instructionsHint": "Regels die de assistent in elk antwoord volgt. Kort en concreet houden.",
+      "domainsTitle": "Toegestane domeinen",
+      "domainsHint": "Alleen pagina’s op deze hostnamen kunnen de widget laden. Gebruik *.example.com voor subdomeinen.",
+      "domainsPlaceholder": "example.com",
+      "domainsInvalid": "Dat ziet er niet uit als een hostnaam.",
+      "domainsEmpty": "Leeg betekent: elke website mag hem insluiten.",
+      "answerLength": {
+        "label": "Antwoordlengte",
+        "short": "Kort",
+        "medium": "Gemiddeld",
+        "long": "Lang",
+        "hint": "Beperkt antwoorden tot ongeveer {{tokens}} tokens. De geavanceerde limiet hieronder blijft gelden."
+      }
+    },
+    "appearance": {
+      "widgetTitle": "Widget",
+      "displayName": "Naam van de assistent",
+      "headerSubtitle": "Ondertitel in de kop",
+      "avatar": "Avatar",
+      "avatarInitial": "Initiaal",
+      "avatarImage": "Afbeelding",
+      "primaryColor": "Accentkleur",
+      "presets": "Voorinstellingen",
+      "theme": "Thema",
+      "themes": {
+        "auto": "Auto",
+        "light": "Licht",
+        "dark": "Donker"
+      },
+      "position": "Positie",
+      "positions": {
+        "left": "Links",
+        "right": "Rechts"
+      },
+      "launcherLabel": "Knoptekst",
+      "showPoweredBy": "“Mogelijk gemaakt door re:praesent” tonen",
+      "conversationTitle": "Gesprek",
+      "greeting": "Begroeting",
+      "greetingHint": "Het eerste bericht dat bezoekers zien. Leeg laten voor de standaard per taal.",
+      "questionsTitle": "Voorgestelde vragen",
+      "questionPlaceholder": "Wat zijn jullie openingstijden?",
+      "questionsHint": "{{count}} van {{max}}. Getoond als chips onder de begroeting.",
+      "stringsTitle": "Teksten per taal",
+      "stringsHint": "Overschrijf elk ingebouwd label. Lege velden behouden de standaard die als placeholder wordt getoond.",
+      "strings": {
+        "greeting": "Begroeting",
+        "placeholder": "Invoer-placeholder",
+        "launcher_label": "Knoptekst",
+        "header_subtitle": "Ondertitel in de kop",
+        "send": "Verstuurknop",
+        "powered_by": "Mogelijk gemaakt door",
+        "lead_intro": "Leadformulier intro",
+        "lead_thanks": "Leadformulier bedankt",
+        "lead_submit": "Leadformulier versturen",
+        "lead_skip": "Leadformulier overslaan",
+        "error_generic": "Algemene fout",
+        "section_title": "Sectietitel",
+        "section_subtitle": "Sectie-ondertitel",
+        "nudge_text": "Hinttekst",
+        "bar_placeholder": "Placeholder zoekbalk",
+        "feedback_thanks": "Bedankt voor feedback"
+      },
+      "preview": "Voorbeeld",
+      "previewLocale": "Voorbeeldtaal",
+      "previewLabel": "Widgetvoorbeeld",
+      "chooseFromLibrary": "Kies uit mediabibliotheek",
+      "barExpands": "Klapt uit bij focus",
+      "delaySeconds": "Vertraging (seconden)",
+      "style": "Stijl",
+      "font": {
+        "label": "Lettertype",
+        "system": "Systeem",
+        "inherit": "Van de site",
+        "geist": "Geist",
+        "hint": "„Van de site” gebruikt het lettertype van de hostpagina. Geist wordt van Google Fonts geladen."
+      },
+      "radius": {
+        "label": "Hoeken",
+        "sm": "Scherp",
+        "md": "Zacht",
+        "lg": "Rond",
+        "pill": "Pil"
+      },
+      "density": {
+        "label": "Dichtheid",
+        "comfortable": "Ruim",
+        "compact": "Compact"
+      },
+      "headerStyle": {
+        "label": "Koptekst",
+        "solid": "Effen",
+        "gradient": "Verloop",
+        "minimal": "Minimaal"
+      },
+      "launcher": {
+        "title": "Launcher",
+        "icon": "Icoon",
+        "icons": {
+          "chat": "Chat",
+          "sparkle": "Sprankel",
+          "question": "Vraagteken",
+          "image": "Afbeelding"
+        },
+        "size": "Grootte",
+        "sizes": {
+          "sm": "Klein",
+          "md": "Middel",
+          "lg": "Groot"
+        },
+        "offsetX": "Afstand tot zijkant (px)",
+        "offsetY": "Afstand tot onderkant (px)",
+        "offsetsHint": "Zet de launcher weg van cookiebanners of andere zwevende knoppen."
+      },
+      "onPage": {
+        "title": "Op de pagina"
+      },
+      "autoOpen": {
+        "title": "Automatisch openen",
+        "enabled": "Chat na een vertraging openen",
+        "once": "Eén keer per bezoeker"
+      },
+      "nudge": {
+        "title": "Hint",
+        "enabled": "Kort bericht naast de launcher tonen",
+        "text": "Bericht",
+        "placeholder": "Stel ons een vraag…",
+        "hint": "Eén keer per bezoek; verdwijnt als de chat opent."
+      },
+      "hideOnMobile": "Verbergen op kleine schermen",
+      "pageRules": {
+        "title": "Waar het verschijnt",
+        "mode": "Pagina’s",
+        "modes": {
+          "all": "Alle pagina’s",
+          "include": "Alleen deze",
+          "exclude": "Alles behalve"
+        },
+        "hint": "Eén pad per regel, bv. /prijzen, /blog/*, /nl/**. * is één segment, ** alles eronder."
+      }
+    },
+    "leads": {
+      "title": "Leadregistratie",
+      "on": "Aan",
+      "off": "Uit",
+      "fieldsTitle": "Velden",
+      "required": "Verplicht",
+      "fields": {
+        "name": "Naam",
+        "email": "E-mail",
+        "phone": "Telefoon",
+        "company": "Bedrijf",
+        "message": "Bericht"
+      },
+      "triggersTitle": "Wanneer vragen",
+      "onIntent": "Als de bezoeker interesse toont",
+      "onIntentHint": "Vraagt om een offerte, terugbelverzoek, afspraak of om iemand te spreken.",
+      "afterTurns": "Na een aantal antwoorden",
+      "afterTurnsHint": "Terugval: het formulier aanbieden na dit aantal antwoorden van de assistent.",
+      "copyTitle": "Formulering",
+      "intro": "Intro",
+      "thanks": "Bedankbericht",
+      "copyHint": "Leeg laten om de ingebouwde tekst per taal te gebruiken.",
+      "howTitle": "Zo werkt het",
+      "how1": "De assistent blijft gewoon antwoorden. Als een trigger afgaat, toont hij een kleine kaart met de gekozen velden, vooraf ingevuld met wat de bezoeker al noemde.",
+      "how2": "Een verzonden kaart wordt een lead met bron “AI-assistent”, het gesprek als bijlage en uw gebruikelijke meldingen.",
+      "how3": "Bezoekers kunnen de kaart sluiten; hij verschijnt in dat gesprek niet opnieuw.",
+      "note": "Leads komen in Leads terecht zoals elke formulierinzending — pipelinefases, taken en workflows gelden."
+    },
+    "share": {
+      "publishFirst": "Publiceer deze assistent voordat u hem insluit — de snippet blijft tot dan inactief.",
+      "unpublishedWarning": "U heeft niet-gepubliceerde wijzigingen. De widget op uw website toont de laatst gepubliceerde versie tot u opnieuw publiceert.",
+      "copy": "Kopiëren",
+      "copied": "Gekopieerd naar klembord",
+      "configured": "Geconfigureerd",
+      "bubbleTitle": "Chatballon",
+      "bubbleHint": "Plak dit vóór de sluitende </body>-tag op elke pagina waar de knop moet verschijnen.",
+      "sectionTitle": "Paginasectie",
+      "sectionHint": "Plak dit waar het chatblok in de pagina moet staan. Het script past de hoogte aan de inhoud aan.",
+      "cspTitle": "Content-Security-Policy",
+      "cspHint": "Alleen als uw site een Content-Security-Policy-header stuurt. Zonder deze regels blokkeert de browser de widget en toont niets.",
+      "localhostWarning": "Deze snippet wijst naar {{origin}}, dat alleen op de server zelf bestaat. De widget laadt op geen enkele echte website.",
+      "apiOrigin": "API-origin:",
+      "testTitle": "Testpagina",
+      "testHint": "Plak de snippet in een leeg HTML-bestand en open het in een browser — geen server nodig. Voeg de origin van het bestand toe aan de toegestane domeinen als u die heeft ingesteld.",
+      "pageTitle": "Gehoste pagina",
+      "pageHint": "Een pagina die wij voor je hosten. Link ernaar vanuit menu’s, e-mails of QR-codes.",
+      "pageUrl": "Paginalink",
+      "pageUrlOpen": "Openen",
+      "barTitle": "Zoekbalk",
+      "barHint": "Plak waar de balk moet staan. De chat klapt eronder uit zodra een bezoeker typt."
+    },
+    "conversations": {
+      "search": "Gesprekken zoeken",
+      "leadOnly": "Alleen met lead",
+      "empty": "Nog geen gesprekken",
+      "emptyHint": "Zodra de widget live is, verschijnt elke chat hier met transcript.",
+      "noMessage": "Geen bericht",
+      "turns": "{{count}} antwoorden",
+      "lead": "Lead",
+      "openLead": "Lead openen",
+      "transcript": "Transcript",
+      "pageOf": "Pagina {{page}} van {{pages}} · {{total}} gesprekken",
+      "feedbackUp": "Als nuttig gemarkeerd",
+      "feedbackDown": "Als niet nuttig gemarkeerd",
+      "unanswered": "Onbeantwoord",
+      "actionsShown": "Acties getoond",
+      "export": ".txt exporteren"
+    },
+    "playground": {
+      "title": "Speeltuin",
+      "debug": "Zoeken debuggen",
+      "reset": "Opnieuw",
+      "empty": "Vraag de assistent iets wat een bezoeker zou vragen.",
+      "placeholder": "Typ een bericht…",
+      "send": "Versturen",
+      "stop": "Stoppen",
+      "thinking": "Denkt na",
+      "draftNote": "De speeltuin gebruikt uw huidige concept — inclusief niet-opgeslagen kennis en niet-gepubliceerde instellingen. Niets hier telt als bezoekersgesprek.",
+      "debugNote": "“Zoeken debuggen” toont welke fragmenten hoe zijn gevonden, zodat u een ontbrekende bron kunt onderscheiden van een formuleringsprobleem.",
+      "leadSent": "Testlead verzonden — zie Leads.",
+      "leadSubmit": "Gegevens versturen",
+      "chunk": "fragment"
+    },
+    "usage": {
+      "title": "Gebruik",
+      "today": "vandaag",
+      "messages": "Berichten",
+      "tokens": "Tokens",
+      "blocked": "Geblokkeerd",
+      "leads": "Leads",
+      "cost": "Gesch. kosten",
+      "last30": "Laatste 30 dagen",
+      "messagesCount": "{{count}} berichten",
+      "byModel": "Per model · 30 d",
+      "thumbsUp": "Nuttig",
+      "thumbsDown": "Niet nuttig",
+      "unanswered": "{{count}} onbeantwoord"
+    },
+    "guardFamily": {
+      "llm": "Antwoord",
+      "canned": "Standaard",
+      "blocked": "Geblokkeerd",
+      "gate": "Filter",
+      "lead": "Lead",
+      "limit": "Limiet"
+    },
+    "guard": {
+      "llm": "Beantwoord vanuit bronnen",
+      "canned_greeting": "Standaardbegroeting",
+      "canned_thanks": "Standaardbedankje",
+      "canned_goodbye": "Standaardafscheid",
+      "heuristic_block": "Geblokkeerd door heuristiek",
+      "retrieval_gate": "Niets relevants gevonden",
+      "classifier_off_topic": "Geclassificeerd als off-topic",
+      "classifier_smalltalk": "Geclassificeerd als smalltalk",
+      "budget": "Dagbudget opgebruikt",
+      "rate_limited": "Limiet bereikt",
+      "lead_form": "Leadformulier getoond"
+    },
+    "banner": {
+      "title": "Koppel je OpenRouter-sleutel om assistenten te activeren",
+      "body": "Assistenten antwoorden via je eigen OpenRouter-account. Tot er een sleutel is gekoppeld, staan publiceren en indexeren stil.",
+      "revokedTitle": "Je OpenRouter-sleutel is afgewezen",
+      "revokedBody": "De assistenten antwoorden niet meer. Vervang de sleutel in de instellingen. {{error}}",
+      "cta": "AI-instellingen openen",
+      "openSettings": "Instellingen openen",
+      "publishDisabled": "Koppel eerst een OpenRouter-sleutel onder Instellingen → AI."
+    },
+    "actions": {
+      "title": "Acties",
+      "add": "Actie toevoegen",
+      "hint": "Knoppen die de assistent naast een antwoord aanbiedt — afspraak boeken, bellen, mailen of een pagina openen. Maximaal zes.",
+      "empty": "Nog geen acties. Voeg er een toe om bezoekers een volgende stap te geven.",
+      "untitled": "Naamloze actie",
+      "type": "Type",
+      "types": {
+        "link": "Link",
+        "book": "Boeken",
+        "call": "Bellen",
+        "email": "E-mail"
+      },
+      "label": "Knoptekst",
+      "labelPlaceholder": {
+        "link": "Bekijk prijzen",
+        "book": "Afspraak boeken",
+        "call": "Bel ons",
+        "email": "Mail ons"
+      },
+      "url": "URL",
+      "bookingPage": "Boekingspagina",
+      "bookingPick": "Kies een boekingspagina",
+      "bookingNone": "Nog geen boekingspagina’s.",
+      "manageBooking": "Boekingspagina’s beheren",
+      "phone": "Telefoonnummer",
+      "email": "E-mailadres",
+      "show": "Tonen",
+      "showOptions": {
+        "on_lead_intent": "Als de bezoeker interesse toont",
+        "always": "Na elk antwoord",
+        "after_first_answer": "Na het eerste antwoord"
+      },
+      "perLocale": "Tekst per taal",
+      "moveUp": "Omhoog",
+      "moveDown": "Omlaag"
+    },
+    "fallback": {
+      "title": "Als er geen antwoord is",
+      "hint": "Aangeboden wanneer de assistent niets relevants weet, zodat de bezoeker je altijd kan bereiken.",
+      "phone": "Telefoon",
+      "email": "E-mail",
+      "text": "Bericht",
+      "textPlaceholder": "Bel ons op werkdagen tussen 9 en 17 uur of laat hieronder je gegevens achter."
+    },
+    "gaps": {
+      "title": "Kennishiaten (30 d)",
+      "hint": "Vragen van bezoekers die de assistent niet kon beantwoorden, gegroepeerd op formulering. Voeg het antwoord als tekst toe; binnen een minuut geïndexeerd.",
+      "total": "{{count}} onbeantwoord",
+      "empty": "Geen onbeantwoorde vragen in de laatste 30 dagen.",
+      "lastSeen": "laatst {{when}}",
+      "reasons": {
+        "gate": "niets gevonden",
+        "offTopic": "buiten onderwerp",
+        "dontKnow": "geen antwoord"
+      },
+      "addAnswer": "Antwoord toevoegen",
+      "viewConversation": "Gesprek bekijken",
+      "answerAdded": "Antwoord toegevoegd — wordt geïndexeerd"
+    },
+    "tests": {
+      "title": "Testvragen",
+      "summary": "{{passed}} van {{total}} geslaagd",
+      "questionPlaceholder": "Wat zijn jullie openingstijden?",
+      "keywordsPlaceholder": "Verwachte trefwoorden, kommagescheiden",
+      "add": "Toevoegen",
+      "empty": "Nog geen testvragen. Voeg vragen toe die bezoekers waarschijnlijk stellen.",
+      "runAll": "Alles uitvoeren",
+      "runLlm": "Uitvoeren met LLM",
+      "run": "Uitvoeren",
+      "ranToast": "{{passed}} geslaagd, {{failed}} mislukt",
+      "state": {
+        "pass": "Geslaagd",
+        "fail": "Mislukt",
+        "never": "Nooit uitgevoerd"
+      },
+      "similarity": "gelijkenis",
+      "withLlm": "met LLM",
+      "llmTitle": "Uitvoeren met het taalmodel?",
+      "llmBody": "Elk van de {{count}} vragen wordt door het model beantwoord en beoordeeld op de verwachte trefwoorden. Dit gebruikt tokens op je OpenRouter-sleutel.",
+      "note1": "„Alles uitvoeren” controleert alleen het zoeken: komt het juiste fragment terug? Gratis.",
+      "note2": "„Uitvoeren met LLM” beoordeelt ook de formulering van het antwoord. Doe dit na grotere kenniswijzigingen."
+    },
+    "wizard": {
+      "title": "Nieuwe assistent",
+      "progress": "Stappen",
+      "step1": "Widget",
+      "step2": "Kennis",
+      "step3": "Klaar",
+      "step1Hint": "Kies een naam en hoe hij op je site verschijnt. Beide zijn later te wijzigen.",
+      "step2Hint": "Vertel iets over je bedrijf en wijs naar je website.",
+      "step3Hint": "De assistent bestaat. Probeer hem, publiceer hem of bewerk verder.",
+      "next": "Volgende",
+      "back": "Terug",
+      "descriptionHint": "Twee of drie zinnen. De assistent leest dit voor elk antwoord.",
+      "website": "Website (optioneel)",
+      "websiteHint": "Om te beginnen worden tot 25 pagina’s gecrawld; verhoog de limiet later onder Kennis.",
+      "createdTitle": "„{{name}}” is klaar",
+      "createdBody": "Bronnen worden op de achtergrond geïndexeerd. Je kunt nu publiceren; de widget neemt nieuwe kennis automatisch op.",
+      "openEditor": "Editor openen",
+      "testIt": "Uitproberen"
+    }
+  },
+  "publicAssistant": {
+    "metaTitle": "Assistent",
+    "unavailable": "Deze assistent is niet beschikbaar",
+    "unavailableHint": "De link klopt mogelijk niet, of de assistent is offline gehaald."
   }
 }

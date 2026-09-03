@@ -12,6 +12,7 @@ import { DataTable } from "~/components/organism/data-table";
 import { LeadDetailSheet } from "~/components/organism/lead-detail-sheet";
 import { LeadsKanban } from "~/components/organism/leads-kanban";
 import { LeadSourceIcon } from "~/components/organism/lead-source-icon";
+import type { LeadSourceValue } from "~/lib/leads/constants";
 import { LeadStatusSelect } from "~/components/molecule/lead-status-select";
 import FilterComponent from "~/components/molecule/filter-component";
 import {
@@ -121,7 +122,9 @@ export default function LeadForm() {
   );
   const search = searchParams.get("search") ?? "";
   const statusFilter = searchParams.get("status") ?? "";
-  const sourceFilter = (searchParams.get("source") ?? "") as "" | "website";
+  const sourceFilter = (searchParams.get("source") ?? "") as
+    | ""
+    | LeadSourceValue;
   const formNameFilter = searchParams.get("form_name") ?? "";
   const campaignFilter = searchParams.get("platform_campaign_id") ?? "";
   // Kanban column order. Lives in the URL like the pipeline board's, so a

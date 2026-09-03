@@ -24,4 +24,12 @@ export const LEAD_SOURCES = {
     label: "Appointment",
     sourceTable: "appointment_booking",
   },
+  assistant: {
+    value: "ai_assistants" as const,
+    label: "AI assistant",
+    sourceTable: "ai_assistants",
+  },
 } as const;
+
+export type LeadSourceValue =
+  (typeof LEAD_SOURCES)[keyof typeof LEAD_SOURCES]["value"];
