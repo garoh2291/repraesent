@@ -103,6 +103,16 @@ export function buildFormCss(theme: FormTheme, scopeClass: string): string {
         ? `background: transparent; border: 0; border-bottom: 1px solid var(--rf-border); border-radius: 0; padding-left: 0; padding-right: 0;`
         : `background: var(--rf-surface); border: 1px solid var(--rf-border); border-radius: ${radius};`;
 
+  // The paint actually behind an input, whichever style is in play. Only the
+  // filled style has a token for it, and Chrome's autofill rule below has to
+  // repaint the real one.
+  const fieldFill =
+    theme.fieldStyle === "filled"
+      ? "var(--rf-field-bg)"
+      : theme.fieldStyle === "underline"
+        ? "var(--rf-bg)"
+        : "var(--rf-surface)";
+
   const fieldFocus =
     theme.fieldStyle === "underline"
       ? `border-bottom-color: var(--rf-accent); box-shadow: 0 1px 0 0 var(--rf-accent);`
@@ -125,6 +135,7 @@ ${s} {
   --rf-surface: ${theme.surface};
   --rf-surface-2: ${withAlpha(theme.text, 0.05)};
   --rf-field-bg: ${theme.fieldBackground ?? withAlpha(theme.text, 0.05)};
+  --rf-field-text: ${theme.fieldText ?? theme.text};
   --rf-text: ${theme.text};
   --rf-muted: ${theme.mutedText};
   --rf-border: ${theme.border};
@@ -249,7 +260,7 @@ ${s} .rf-select {
   width: 100%;
   font: inherit;
   font-size: ${d.font};
-  color: var(--rf-text);
+  color: var(--rf-field-text);
   padding: ${d.padY} ${d.padX};
   ${fieldBase}
   transition: border-color .15s ease, box-shadow .15s ease, background-color .15s ease;
@@ -264,6 +275,19 @@ ${s} .rf-select {
   padding-right: calc(${d.padX} * 2 + 12px);
 }
 ${s} .rf-input::placeholder, ${s} .rf-textarea::placeholder { color: var(--rf-muted); opacity: .75; }
+/* Autofill. Chrome paints its own fill and text on an autofilled field, which
+   undoes the theme and can hide the value exactly the way a light input text on
+   a light field does. background-color is ignored there, so the fill is faked
+   with an inset shadow and the text forced with -webkit-text-fill-color; the
+   absurd transition delay keeps Chrome's own fade from painting over it. */
+${s} .rf-input:-webkit-autofill,
+${s} .rf-textarea:-webkit-autofill,
+${s} .rf-select:-webkit-autofill {
+  -webkit-text-fill-color: var(--rf-field-text);
+  caret-color: var(--rf-field-text);
+  box-shadow: 0 0 0 1000px ${fieldFill} inset;
+  transition: background-color 5000s ease-in-out 0s;
+}
 ${s} .rf-input:focus, ${s} .rf-textarea:focus, ${s} .rf-select:focus {
   outline: none;
   ${fieldFocus}
@@ -708,7 +732,7 @@ ${s} .rf-qty-input {
   font: inherit;
   font-size: calc(${d.font} * 0.94);
   font-variant-numeric: tabular-nums;
-  color: var(--rf-text);
+  color: var(--rf-field-text);
   border: 0;
   border-left: 1px solid var(--rf-border);
   border-right: 1px solid var(--rf-border);

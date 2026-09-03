@@ -3965,6 +3965,8 @@
       },
       "padding": "Marge intérieure",
       "fieldBackground": "Fond des champs",
+      "fieldText": "Texte des champs",
+      "fieldTextHint": "Couleur de ce que les visiteurs saisissent dans un champ. Par défaut, la couleur du texte.",
       "steps": "Étapes",
       "progressStyle": "Progression",
       "progressBar": "Barre",

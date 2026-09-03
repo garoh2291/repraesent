@@ -3965,6 +3965,8 @@
       },
       "padding": "Innenabstand",
       "fieldBackground": "Feldhintergrund",
+      "fieldText": "Feldtext",
+      "fieldTextHint": "Farbe der Eingaben, die Besucher in ein Feld tippen. Standardmäßig die Textfarbe.",
       "steps": "Schritte",
       "progressStyle": "Fortschritt",
       "progressBar": "Balken",

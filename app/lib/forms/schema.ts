@@ -279,6 +279,14 @@ export interface FormTheme {
    * exactly what the filled style used to hardcode.
    */
   fieldBackground?: string;
+  /**
+   * Colour of the text the visitor types into a field. Optional: definitions
+   * saved before it existed fall back to `text`, which is what inputs used to
+   * inherit. It is a token of its own because a light `text` — right for labels
+   * on a dark page — is invisible inside a light field, and the two are not
+   * always meant to be the same colour.
+   */
+  fieldText?: string;
   text: string;
   mutedText: string;
   border: string;

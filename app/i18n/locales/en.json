@@ -3963,6 +3963,8 @@
       },
       "padding": "Inner padding",
       "fieldBackground": "Field background",
+      "fieldText": "Input text",
+      "fieldTextHint": "Colour of what visitors type into a field. Defaults to the text colour.",
       "steps": "Steps",
       "progressStyle": "Progress",
       "progressBar": "Bar",

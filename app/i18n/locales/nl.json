@@ -3963,6 +3963,8 @@
       },
       "padding": "Binnenmarge",
       "fieldBackground": "Veldachtergrond",
+      "fieldText": "Veldtekst",
+      "fieldTextHint": "Kleur van wat bezoekers in een veld typen. Standaard de tekstkleur.",
       "steps": "Stappen",
       "progressStyle": "Voortgang",
       "progressBar": "Balk",
