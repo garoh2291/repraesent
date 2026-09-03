@@ -152,6 +152,23 @@ export function ThemePanel({
               </Field>
             ) : null}
 
+            {/* Unlike the fill above, this one is always offered: an input's
+                text is unreadable on a pale field in every field style, and the
+                general text colour cannot be lightened for a dark page without
+                taking the typed value with it. Shows the inherited colour until
+                someone picks one, so the control never looks empty. */}
+            <Field>
+              <Label htmlFor="theme-field-text">
+                {t("forms.design.fieldText")}
+              </Label>
+              <ColorInput
+                id="theme-field-text"
+                value={theme.fieldText ?? theme.text}
+                onChange={(value) => patchTheme({ fieldText: value })}
+              />
+              <FieldHint>{t("forms.design.fieldTextHint")}</FieldHint>
+            </Field>
+
             {(
               [
                 ["surface", t("forms.design.surface")],
