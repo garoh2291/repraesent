@@ -45,6 +45,12 @@ import {
   kanbanCollisionDetection,
   positionForInsertion,
 } from "~/lib/kanban/board-position";
+import {
+  DEFAULT_LEAD_SORT,
+  isManualOrder,
+  leadSortToApi,
+  type LeadSortMode,
+} from "~/lib/leads/lead-sort";
 
 const COLUMN_PAGE_SIZE = 50;
 
@@ -67,6 +73,8 @@ interface LeadsKanbanProps {
   onReorder: (args: ReorderArgs) => void | Promise<unknown>;
   onLeadSelect: (leadId: string) => void;
   canEdit?: boolean;
+  /** Column order. Defaults to manual so an existing board keeps its shape. */
+  sortMode?: LeadSortMode;
 }
 
 /**
@@ -74,10 +82,20 @@ interface LeadsKanbanProps {
  * per configured stage — stages are workspace data now, so the columns can't
  * be a fixed set of hook calls in the parent). Desktop column and mobile
  * section share the cache entry via the query key.
+ *
+ * `sortMode` is part of the key AND of the request: a column is paginated, so
+ * the order has to come from the server — re-sorting the loaded pages here
+ * would only rearrange the first 50 cards. The optimistic reorder helper in
+ * `useUpdateLeadStatus` matches on the ["leads-kanban-column"] prefix and
+ * reads the stage key at index 1, so appending this stays compatible.
  */
-function useColumnQuery(stageKey: string, filters: KanbanFilters) {
+function useColumnQuery(
+  stageKey: string,
+  filters: KanbanFilters,
+  sortMode: LeadSortMode,
+) {
   return useInfiniteQuery({
-    queryKey: ["leads-kanban-column", stageKey, filters],
+    queryKey: ["leads-kanban-column", stageKey, filters, sortMode],
     queryFn: ({ pageParam = 1 }) =>
       getLeads({
         status: stageKey,
@@ -88,7 +106,7 @@ function useColumnQuery(stageKey: string, filters: KanbanFilters) {
         form_name: filters.form_name,
         platform_campaign_id: filters.platform_campaign_id,
         include_hidden: true,
-        sort: "board_position",
+        sort: leadSortToApi(sortMode),
       }),
     initialPageParam: 1,
     getNextPageParam: (lastPage) =>
@@ -108,8 +126,10 @@ export function LeadsKanban({
   onReorder,
   onLeadSelect,
   canEdit = true,
+  sortMode = DEFAULT_LEAD_SORT,
 }: LeadsKanbanProps) {
   const { t } = useTranslation();
+  const manualOrder = isManualOrder(sortMode);
   const { visible: stages, byKey, isLoading: stagesLoading } = useLeadStages();
   const [activeId, setActiveId] = useState<string | null>(null);
   // Confirmation dialog shown when a lead is dropped into a won-category column.
@@ -194,8 +214,16 @@ export function LeadsKanban({
     for (const lead of all) {
       if (acc[lead.status]) acc[lead.status].push(lead);
     }
+    // Mirror the server's ORDER BY for the active mode. Bucketing alone would
+    // append a card carrying a pending override to the end of its new column,
+    // so it has to be re-sorted here or it visibly jumps when the refetch
+    // lands. `board_position` is only meaningful in manual mode.
     for (const stage of stages) {
       acc[stage.key].sort((a, b) => {
+        if (!manualOrder) {
+          const cmp = (a.created_at ?? "").localeCompare(b.created_at ?? "");
+          return sortMode === "date_asc" ? cmp : -cmp;
+        }
         const ap = a.board_position;
         const bp = b.board_position;
         if (ap == null && bp == null) {
@@ -207,7 +235,7 @@ export function LeadsKanban({
       });
     }
     return acc;
-  }, [stages, rawLeadsByCache, pending]);
+  }, [stages, rawLeadsByCache, pending, manualOrder, sortMode]);
 
   const allLoadedLeads = useMemo(
     () => Object.values(leadsByStatus).flat(),
@@ -228,10 +256,15 @@ export function LeadsKanban({
         for (const lead of rawLeadsByCache[stage.key] ?? []) {
           const ov = next[lead.id];
           if (!ov) continue;
-          if (
-            lead.status === ov.status &&
-            lead.board_position === ov.board_position
-          ) {
+          // In a sorted mode the override only ever carried the status — the
+          // board_position in it is a placeholder nothing reads, so requiring
+          // it to match would strand the override forever on a lead whose
+          // position is null.
+          const settled = manualOrder
+            ? lead.status === ov.status &&
+              lead.board_position === ov.board_position
+            : lead.status === ov.status;
+          if (settled) {
             delete next[lead.id];
             changed = true;
           }
@@ -239,7 +272,7 @@ export function LeadsKanban({
       }
       return changed ? next : curr;
     });
-  }, [stages, rawLeadsByCache, pending]);
+  }, [stages, rawLeadsByCache, pending, manualOrder]);
 
   const isInitialLoading =
     stagesLoading ||
@@ -319,6 +352,31 @@ export function LeadsKanban({
         return;
       }
 
+      // Sorted modes: the column order is the server's, so an in-column drag
+      // means nothing and must not write a board_position that manual mode
+      // would later honour. A drop into another column is still a real status
+      // change — same split the deals board makes.
+      if (!manualOrder) {
+        if (lead.status === drop.status) return;
+
+        undoStackRef.current.push({ leadId, previousStatus: lead.status });
+        if (undoStackRef.current.length > 50) undoStackRef.current.shift();
+
+        setPending((curr) => ({
+          ...curr,
+          [leadId]: {
+            status: drop.status,
+            board_position: lead.board_position ?? 0,
+          },
+        }));
+        setJustMovedId(leadId);
+        if (landTimerRef.current) clearTimeout(landTimerRef.current);
+        landTimerRef.current = setTimeout(() => setJustMovedId(null), 500);
+
+        onStatusChange(leadId, drop.status);
+        return;
+      }
+
       const position = positionForInsertion(
         leadsByStatus[drop.status] ?? [],
         drop.insertionIndex,
@@ -352,7 +410,15 @@ export function LeadsKanban({
 
       onReorder({ leadId, status: drop.status, position });
     },
-    [resolveDrop, allLoadedLeads, byKey, leadsByStatus, onReorder],
+    [
+      resolveDrop,
+      allLoadedLeads,
+      byKey,
+      leadsByStatus,
+      onReorder,
+      onStatusChange,
+      manualOrder,
+    ],
   );
 
   const handleConfirmSuccess = useCallback(async () => {
@@ -414,6 +480,7 @@ export function LeadsKanban({
               key={stage.id}
               stage={stage}
               filters={filters}
+              sortMode={sortMode}
               onReport={handleReport}
             />
           ))}
@@ -431,6 +498,7 @@ export function LeadsKanban({
           leadsByStatus={leadsByStatus}
           totalsByStatus={countsQuery.data ?? {}}
           filters={filters}
+          sortMode={sortMode}
           onLeadSelect={onLeadSelect}
         />
       </div>
@@ -453,6 +521,7 @@ export function LeadsKanban({
                 key={stage.id}
                 stage={stage}
                 filters={filters}
+                sortMode={sortMode}
                 leads={leadsByStatus[stage.key] ?? []}
                 total={countsQuery.data?.[stage.key] ?? 0}
                 onReport={handleReport}
@@ -491,13 +560,15 @@ export function LeadsKanban({
 function ColumnQueryReporter({
   stage,
   filters,
+  sortMode,
   onReport,
 }: {
   stage: PipelineStage;
   filters: KanbanFilters;
+  sortMode: LeadSortMode;
   onReport: (stageKey: string, leads: Lead[], isLoading: boolean) => void;
 }) {
-  const q = useColumnQuery(stage.key, filters);
+  const q = useColumnQuery(stage.key, filters, sortMode);
   const rawLeads = useMemo(
     () => q.data?.pages.flatMap((p) => p.data) ?? [],
     [q.data],
@@ -511,6 +582,7 @@ function ColumnQueryReporter({
 function KanbanColumn({
   stage,
   filters,
+  sortMode,
   leads,
   total,
   onReport,
@@ -520,6 +592,7 @@ function KanbanColumn({
 }: {
   stage: PipelineStage;
   filters: KanbanFilters;
+  sortMode: LeadSortMode;
   leads: Lead[];
   total: number;
   onReport: (stageKey: string, leads: Lead[], isLoading: boolean) => void;
@@ -528,7 +601,7 @@ function KanbanColumn({
   justMovedId: string | null;
 }) {
   const { t } = useTranslation();
-  const q = useColumnQuery(stage.key, filters);
+  const q = useColumnQuery(stage.key, filters, sortMode);
   const rawLeads = useMemo(
     () => q.data?.pages.flatMap((p) => p.data) ?? [],
     [q.data],
@@ -753,12 +826,14 @@ function LeadsMobileSchedule({
   leadsByStatus,
   totalsByStatus,
   filters,
+  sortMode,
   onLeadSelect,
 }: {
   stages: PipelineStage[];
   leadsByStatus: Record<string, Lead[]>;
   totalsByStatus: Partial<Record<string, number>>;
   filters: KanbanFilters;
+  sortMode: LeadSortMode;
   onLeadSelect: (id: string) => void;
 }) {
   return (
@@ -770,6 +845,7 @@ function LeadsMobileSchedule({
           leads={leadsByStatus[stage.key] ?? []}
           total={totalsByStatus[stage.key] ?? 0}
           filters={filters}
+          sortMode={sortMode}
           onLeadSelect={onLeadSelect}
         />
       ))}
@@ -782,18 +858,20 @@ function MobileStageSection({
   leads,
   total,
   filters,
+  sortMode,
   onLeadSelect,
 }: {
   stage: PipelineStage;
   leads: Lead[];
   total: number;
   filters: KanbanFilters;
+  sortMode: LeadSortMode;
   onLeadSelect: (id: string) => void;
 }) {
   const { t } = useTranslation();
   // Shares the cache entry with the desktop column (same query key), so this
   // costs no extra request — it exists for the load-more state and trigger.
-  const q = useColumnQuery(stage.key, filters);
+  const q = useColumnQuery(stage.key, filters, sortMode);
   const colorClass = resolveStageColors(stage).dot;
   const label = resolveStageLabel(stage, t);
 

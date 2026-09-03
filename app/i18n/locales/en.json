@@ -453,6 +453,11 @@
       "attempts": "Earlier attempts",
       "loadError": "Checkout details could not be loaded.",
       "more": "+{{count}}"
+    },
+    "sort": {
+      "manual": "Manual order",
+      "dateDesc": "Newest first",
+      "dateAsc": "Oldest first"
     }
   },
   "pipeline": {
@@ -3762,7 +3767,8 @@
       "tabWebhooks": "Webhooks",
       "tabProducts": "Products",
       "productEmptyTitle": "No products yet",
-      "productEmptyHint": "Select this block, then add the Stripe products buyers can choose from."
+      "productEmptyHint": "Select this block, then add the Stripe products buyers can choose from.",
+      "tabDeal": "Deal"
     },
     "palette": {
       "title": "Add a field",
@@ -4360,6 +4366,20 @@
       "selectHint": "Every line has a checkbox. Buyers tick what they want and pay for exactly that; at least one is required.",
       "titleLabel": "Summary title",
       "secureLabel": "Trust line"
+    },
+    "deal": {
+      "title": "Deal",
+      "enable": "Create a deal from each submission",
+      "enableHint": "A deal is created once Stripe resolves the payment — not when the form is submitted, so an abandoned checkout never reaches your board. The buyer's contact, Stripe customer, invoice and purchased products are attached to it.",
+      "whereTitle": "Where it lands",
+      "pipeline": "Pipeline",
+      "wonStage": "When the payment succeeds",
+      "lostStage": "When the payment fails or expires",
+      "noLost": "Don't create a deal",
+      "pickStage": "Pick a stage",
+      "titleSection": "Deal title",
+      "titleHint": "Leave empty for “Buyer — Products”. Available: {buyer}, {products}, {form}, {amount}.",
+      "invoiceNotice": "Turning this on also asks Stripe to issue an invoice for one-off payments, so the deal always carries a real invoice with a PDF. Buyers may receive that invoice by email, depending on your Stripe settings. Subscriptions are invoiced by Stripe either way."
     }
   },
   "workflows": {

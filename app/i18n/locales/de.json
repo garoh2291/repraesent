@@ -453,6 +453,11 @@
       "attempts": "Frühere Versuche",
       "loadError": "Checkout-Details konnten nicht geladen werden.",
       "more": "+{{count}}"
+    },
+    "sort": {
+      "manual": "Manuelle Reihenfolge",
+      "dateDesc": "Neueste zuerst",
+      "dateAsc": "Älteste zuerst"
     }
   },
   "pipeline": {
@@ -3764,7 +3769,8 @@
       "tabWebhooks": "Webhooks",
       "tabProducts": "Produkte",
       "productEmptyTitle": "Noch keine Produkte",
-      "productEmptyHint": "Diesen Block auswählen und dann die Stripe-Produkte hinzufügen, aus denen Käufer wählen können."
+      "productEmptyHint": "Diesen Block auswählen und dann die Stripe-Produkte hinzufügen, aus denen Käufer wählen können.",
+      "tabDeal": "Deal"
     },
     "palette": {
       "title": "Feld hinzufügen",
@@ -4362,6 +4368,20 @@
       "selectHint": "Jede Zeile hat eine Checkbox. Käufer wählen, was sie möchten, und zahlen genau dafür; mindestens eine ist nötig.",
       "titleLabel": "Titel der Übersicht",
       "secureLabel": "Vertrauenszeile"
+    },
+    "deal": {
+      "title": "Deal",
+      "enable": "Aus jeder Einsendung einen Deal erstellen",
+      "enableHint": "Der Deal entsteht, sobald Stripe die Zahlung abschließt — nicht beim Absenden des Formulars, damit ein abgebrochener Checkout nie auf dem Board landet. Kontakt, Stripe-Kunde, Rechnung und gekaufte Produkte werden angehängt.",
+      "whereTitle": "Wo er landet",
+      "pipeline": "Pipeline",
+      "wonStage": "Wenn die Zahlung erfolgreich ist",
+      "lostStage": "Wenn die Zahlung fehlschlägt oder abläuft",
+      "noLost": "Keinen Deal erstellen",
+      "pickStage": "Phase wählen",
+      "titleSection": "Deal-Titel",
+      "titleHint": "Leer lassen für „Käufer — Produkte“. Verfügbar: {buyer}, {products}, {form}, {amount}.",
+      "invoiceNotice": "Damit fordert Stripe auch für Einmalzahlungen eine Rechnung an, sodass der Deal immer eine echte Rechnung mit PDF trägt. Je nach Stripe-Einstellungen erhalten Käufer diese Rechnung per E-Mail. Abonnements werden ohnehin von Stripe in Rechnung gestellt."
     }
   },
   "workflows": {

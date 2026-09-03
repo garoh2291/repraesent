@@ -25,6 +25,7 @@ import { AfterSubmitPanel } from "~/components/forms/AfterSubmitPanel";
 import { ErrorMessagesPanel } from "~/components/forms/ErrorMessagesPanel";
 import { SharePanel } from "~/components/forms/SharePanel";
 import { ThemePanel } from "~/components/forms/ThemePanel";
+import { DealPanel } from "~/components/forms/DealPanel";
 import { WebhooksPanel } from "~/components/forms/webhooks/WebhooksPanel";
 import { Input } from "~/components/ui/input";
 import { Label } from "~/components/ui/label";
@@ -132,9 +133,9 @@ export default function FormBuilderRoute() {
     hasLegacyEmailService || (emailAccounts?.length ?? 0) > 0;
 
   // --- local draft ---------------------------------------------------------
-  // The builder edits a local copy and saves explicitly. The QueryClient runs
-  // with refetchOnMount:false and a 5-minute staleTime, so nothing yanks the
-  // draft out from under an in-progress edit.
+  // The builder edits a local copy and saves explicitly. The hydration effect
+  // below is keyed on the form ID alone, so a refetch — on mount or after a
+  // mutation — never yanks the draft out from under an in-progress edit.
   const [name, setName] = useState("");
   const [definition, setDefinition] = useState<FormDefinition | null>(null);
   const [locales, setLocales] = useState<FormLocale[]>([]);
@@ -227,7 +228,11 @@ export default function FormBuilderRoute() {
     ) {
       setTab("build");
     }
-  }, [tab, form?.kind]);
+    // The mirror case: only product forms have a checkout to build a deal from.
+    if (form && form.kind !== "product" && tab === "deal") {
+      setTab("build");
+    }
+  }, [tab, form, form?.kind]);
 
   useEffect(() => {
     // Wait for the account list before bouncing — otherwise deep-linking to
@@ -1675,6 +1680,11 @@ export default function FormBuilderRoute() {
                 <IssueBadge count={issuesByTab.email} />
               </TabsTrigger>
             ) : null}
+            {form.kind === "product" ? (
+              <TabsTrigger value="deal">
+                {t("forms.builder.tabDeal", { defaultValue: "Deal" })}
+              </TabsTrigger>
+            ) : null}
             <TabsTrigger value="webhooks">
               {t("forms.builder.tabWebhooks")}
             </TabsTrigger>
@@ -2001,6 +2011,10 @@ export default function FormBuilderRoute() {
           </TabsContent>
         ) : null}
 
+        <TabsContent value="deal" className="app-fade-up pt-5">
+          <DealPanel formId={form.id} canEdit={canEdit} />
+        </TabsContent>
+
         <TabsContent value="webhooks" className="app-fade-up pt-5">
           <WebhooksPanel formId={form.id} kind={form.kind} canEdit={canEdit} />
         </TabsContent>
@@ -2025,6 +2039,9 @@ const BUILDER_TABS = [
   "afterSubmit",
   "errors",
   "email",
+  // Product forms only — the bounce effect above sends it back to Build on a
+  // standard form, the same way afterSubmit is handled for product forms.
+  "deal",
   "webhooks",
   "share",
 ];

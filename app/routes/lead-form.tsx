@@ -42,6 +42,7 @@ import {
 } from "~/lib/hooks/useUpdateLeadStatus";
 import {
   ArrowRight,
+  ArrowUpDown,
   CalendarClock,
   LayoutGrid,
   Table2,
@@ -51,6 +52,18 @@ import {
   EyeOff,
   Eye,
 } from "lucide-react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "~/components/ui/select";
+import {
+  DEFAULT_LEAD_SORT,
+  isLeadSortMode,
+  type LeadSortMode,
+} from "~/lib/leads/lead-sort";
 import { cn } from "~/lib/utils";
 import { formatDate } from "~/lib/utils/format";
 import {
@@ -111,6 +124,13 @@ export default function LeadForm() {
   const sourceFilter = (searchParams.get("source") ?? "") as "" | "website";
   const formNameFilter = searchParams.get("form_name") ?? "";
   const campaignFilter = searchParams.get("platform_campaign_id") ?? "";
+  // Kanban column order. Lives in the URL like the pipeline board's, so a
+  // sorted view is shareable and survives a reload. Manual is the default and
+  // is left out of the URL entirely.
+  const sortParam = searchParams.get("sort");
+  const sortMode: LeadSortMode = isLeadSortMode(sortParam)
+    ? sortParam
+    : DEFAULT_LEAD_SORT;
 
   const [viewMode, setViewMode] = useLeadsViewMode();
   const [selectedLeadId, setSelectedLeadId] = useState<string | null>(null);
@@ -599,6 +619,32 @@ export default function LeadForm() {
               {t("leads.createLead", { defaultValue: "Create lead" })}
             </Button>
           )}
+          {viewMode === "kanban" && (
+            <Select
+              value={sortMode}
+              onValueChange={(v) =>
+                onSelect({ sort: v === DEFAULT_LEAD_SORT ? "" : v })
+              }
+            >
+              <SelectTrigger className="h-9 w-[180px] text-xs">
+                <span className="inline-flex items-center gap-1.5">
+                  <ArrowUpDown className="h-3.5 w-3.5 opacity-60" />
+                  <SelectValue />
+                </span>
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="manual" className="text-xs">
+                  {t("leads.sort.manual", { defaultValue: "Manual order" })}
+                </SelectItem>
+                <SelectItem value="date_desc" className="text-xs">
+                  {t("leads.sort.dateDesc", { defaultValue: "Newest first" })}
+                </SelectItem>
+                <SelectItem value="date_asc" className="text-xs">
+                  {t("leads.sort.dateAsc", { defaultValue: "Oldest first" })}
+                </SelectItem>
+              </SelectContent>
+            </Select>
+          )}
           <div className="flex items-center rounded-lg border border-border bg-muted/50 p-0.5">
             <button
               onClick={() => {
@@ -722,6 +768,7 @@ export default function LeadForm() {
             }
             onLeadSelect={setSelectedLeadId}
             canEdit={canEdit}
+            sortMode={sortMode}
           />
         </div>
       )}

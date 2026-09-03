@@ -140,7 +140,11 @@ export function CreateFormDialog({
           <DialogDescription>{t("forms.create.typeLabel")}</DialogDescription>
         </DialogHeader>
 
-        <div className="-mx-6 min-h-0 flex-1 space-y-5 overflow-y-auto px-6">
+        {/* pb-1.5 is not decoration: overflow-y-auto clips on both axes, and the
+            focus ring is a 3px box-shadow (ink overflow, which does not extend
+            the scroll area). Without bottom padding the last row's ring is cut
+            in half by the scroll edge. px-6 does the same job horizontally. */}
+        <div className="-mx-6 min-h-0 flex-1 space-y-5 overflow-y-auto px-6 pb-1.5">
           <div
             role="radiogroup"
             aria-label={t("forms.create.typeLabel")}
@@ -248,7 +252,9 @@ export function CreateFormDialog({
                 value={locale}
                 onValueChange={(v) => setLocale(v as FormLocale)}
               >
-                <SelectTrigger id="new-form-locale">
+                {/* The shared trigger is w-fit, so it would not fill the 140px
+                    grid column next to the full-width name input. */}
+                <SelectTrigger id="new-form-locale" className="w-full">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>

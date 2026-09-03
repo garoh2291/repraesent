@@ -453,6 +453,11 @@
       "attempts": "Eerdere pogingen",
       "loadError": "Checkout-details konden niet worden geladen.",
       "more": "+{{count}}"
+    },
+    "sort": {
+      "manual": "Handmatige volgorde",
+      "dateDesc": "Nieuwste eerst",
+      "dateAsc": "Oudste eerst"
     }
   },
   "pipeline": {
@@ -3762,7 +3767,8 @@
       "tabWebhooks": "Webhooks",
       "tabProducts": "Producten",
       "productEmptyTitle": "Nog geen producten",
-      "productEmptyHint": "Selecteer dit blok en voeg daarna de Stripe-producten toe waaruit kopers kunnen kiezen."
+      "productEmptyHint": "Selecteer dit blok en voeg daarna de Stripe-producten toe waaruit kopers kunnen kiezen.",
+      "tabDeal": "Deal"
     },
     "palette": {
       "title": "Veld toevoegen",
@@ -4360,6 +4366,20 @@
       "selectHint": "Elke regel heeft een selectievakje. Kopers vinken aan wat ze willen en betalen precies dat; minstens één is vereist.",
       "titleLabel": "Titel van het overzicht",
       "secureLabel": "Vertrouwensregel"
+    },
+    "deal": {
+      "title": "Deal",
+      "enable": "Van elke inzending een deal maken",
+      "enableHint": "De deal ontstaat zodra Stripe de betaling afrondt — niet bij het versturen van het formulier, zodat een afgebroken checkout nooit op je bord komt. Contact, Stripe-klant, factuur en gekochte producten worden eraan gekoppeld.",
+      "whereTitle": "Waar hij terechtkomt",
+      "pipeline": "Pipeline",
+      "wonStage": "Als de betaling slaagt",
+      "lostStage": "Als de betaling mislukt of verloopt",
+      "noLost": "Geen deal aanmaken",
+      "pickStage": "Kies een fase",
+      "titleSection": "Dealtitel",
+      "titleHint": "Laat leeg voor ‘Koper — Producten’. Beschikbaar: {buyer}, {products}, {form}, {amount}.",
+      "invoiceNotice": "Hiermee vraagt Stripe ook voor eenmalige betalingen een factuur aan, zodat de deal altijd een echte factuur met pdf draagt. Afhankelijk van je Stripe-instellingen ontvangen kopers die factuur per e-mail. Abonnementen factureert Stripe sowieso."
     }
   },
   "workflows": {

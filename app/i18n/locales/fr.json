@@ -453,6 +453,11 @@
       "attempts": "Tentatives précédentes",
       "loadError": "Les détails du paiement n’ont pas pu être chargés.",
       "more": "+{{count}}"
+    },
+    "sort": {
+      "manual": "Ordre manuel",
+      "dateDesc": "Plus récents d'abord",
+      "dateAsc": "Plus anciens d'abord"
     }
   },
   "pipeline": {
@@ -3764,7 +3769,8 @@
       "tabWebhooks": "Webhooks",
       "tabProducts": "Produits",
       "productEmptyTitle": "Aucun produit pour l’instant",
-      "productEmptyHint": "Sélectionnez ce bloc, puis ajoutez les produits Stripe parmi lesquels les acheteurs choisiront."
+      "productEmptyHint": "Sélectionnez ce bloc, puis ajoutez les produits Stripe parmi lesquels les acheteurs choisiront.",
+      "tabDeal": "Affaire"
     },
     "palette": {
       "title": "Ajouter un champ",
@@ -4362,6 +4368,20 @@
       "selectHint": "Chaque ligne a une case. Les acheteurs cochent ce qu'ils veulent et paient exactement cela ; au moins une est requise.",
       "titleLabel": "Titre du récapitulatif",
       "secureLabel": "Ligne de confiance"
+    },
+    "deal": {
+      "title": "Affaire",
+      "enable": "Créer une affaire à partir de chaque soumission",
+      "enableHint": "L'affaire est créée une fois le paiement confirmé par Stripe — pas à l'envoi du formulaire, afin qu'un paiement abandonné n'atteigne jamais votre tableau. Le contact, le client Stripe, la facture et les produits achetés y sont rattachés.",
+      "whereTitle": "Où elle arrive",
+      "pipeline": "Pipeline",
+      "wonStage": "Quand le paiement réussit",
+      "lostStage": "Quand le paiement échoue ou expire",
+      "noLost": "Ne pas créer d'affaire",
+      "pickStage": "Choisir une étape",
+      "titleSection": "Titre de l'affaire",
+      "titleHint": "Laissez vide pour « Acheteur — Produits ». Disponible : {buyer}, {products}, {form}, {amount}.",
+      "invoiceNotice": "Activer cette option demande aussi à Stripe d'émettre une facture pour les paiements uniques, afin que l'affaire porte toujours une vraie facture avec PDF. Selon vos réglages Stripe, les acheteurs peuvent la recevoir par e-mail. Les abonnements sont facturés par Stripe dans tous les cas."
     }
   },
   "workflows": {
