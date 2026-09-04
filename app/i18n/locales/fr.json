@@ -67,6 +67,8 @@
     "loadingPlugins": "Chargement des services…",
     "openaiAds": "OpenAI Ads",
     "newBadge": "Nouveau",
+    "betaVadge": "Beta",
+    "pilotUnavailable": "Cette fonctionnalité n’est pas encore activée pour votre espace de travail.",
     "emailCampaigns": "Campagnes",
     "segments": "Segments",
     "emailTemplates": "Modèles",
@@ -5861,7 +5863,11 @@
       "businessNameUse": "Utiliser",
       "advancedTitle": "Avancé",
       "rerank": "Reclasser les réponses (plus lent, plus précis)",
-      "rerankHint": "Une seconde passe réordonne les passages trouvés avant la rédaction de la réponse. Jusqu'à 1,5 s de plus par réponse."
+      "rerankHint": "Une seconde passe réordonne les passages trouvés avant la rédaction de la réponse. Jusqu'à 1,5 s de plus par réponse.",
+      "attachmentsEnabled": "Autoriser les visiteurs à joindre des fichiers",
+      "attachmentsHint": "Les fichiers sont conservés en privé pendant 30 jours et servent uniquement à répondre à la question de ce visiteur.",
+      "attachmentsImages": "Images",
+      "attachmentsDocuments": "Documents (PDF, Word, Excel, PowerPoint)"
     },
     "translate": {
       "withAi": "Traduire",
@@ -6055,7 +6061,13 @@
       "pageUrl": "Lien de la page",
       "pageUrlOpen": "Ouvrir",
       "barTitle": "Barre de recherche",
-      "barHint": "Collez où la barre doit se trouver. Le chat s’ouvre en dessous quand le visiteur écrit."
+      "barHint": "Collez où la barre doit se trouver. Le chat s’ouvre en dessous quand le visiteur écrit.",
+      "htmlTitle": "Copier le HTML",
+      "htmlHint": "Un bloc autonome : élément hôte et code du widget intégrés — fonctionne là où les scripts externes sont bloqués. Les réponses passent par l’API.",
+      "htmlWarning": "Figé au moment de la copie : recopiez après une mise à jour du widget. Réponses, apparence et connaissances restent à jour en direct.",
+      "htmlSize": "{{size}}",
+      "htmlPreviewNote": "Affichage des {{lines}} premières lignes. La copie reprend tout le bloc.",
+      "cspHtmlNote": "Pour le bloc HTML, seul connect-src est nécessaire — le script et les polices sont inclus."
     },
     "conversations": {
       "search": "Rechercher des conversations",
@@ -6072,7 +6084,10 @@
       "feedbackDown": "Jugé pas utile",
       "unanswered": "Sans réponse",
       "actionsShown": "Actions proposées",
-      "export": "Exporter .txt"
+      "export": "Exporter .txt",
+      "attachmentDownload": "Télécharger",
+      "attachmentDownloadFailed": "Impossible de télécharger le fichier.",
+      "attachmentGone": "Plus conservé"
     },
     "playground": {
       "title": "Bac à sable",

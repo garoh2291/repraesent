@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import {
   Cpu,
   Languages,
+  Paperclip,
   MessageSquareText,
   Shield,
   SlidersHorizontal,
@@ -30,8 +31,10 @@ import {
   SelectValue,
 } from "~/components/ui/select";
 import { Slider } from "~/components/ui/slider";
+import { Checkbox } from "~/components/ui/checkbox";
 import { Switch } from "~/components/ui/switch";
 import { Textarea } from "~/components/ui/textarea";
+import { cn } from "~/lib/utils";
 import { useChatModels } from "~/lib/hooks/useAiAssistants";
 import { MAX_BUSINESS_NAME } from "~/lib/ai-assistants/validate";
 import {
@@ -40,7 +43,9 @@ import {
   ANSWER_LENGTH_TOKENS,
   type AiLocale,
   type AnswerLength,
+  DEFAULT_ATTACHMENTS,
   type AssistantDraft,
+  type AttachmentsConfig,
   type PersonaTone,
 } from "~/lib/api/ai-assistants";
 
@@ -63,6 +68,12 @@ export function BehaviourPanel({ draft, canEdit, onChange }: Props) {
   const detectedName =
     brand && brand !== draft.business_name.trim() ? brand : "";
   const rerank = draft.retrieval?.rerank ?? false;
+  const attachments: AttachmentsConfig = {
+    ...DEFAULT_ATTACHMENTS,
+    ...(draft.attachments ?? {}),
+  };
+  const setAttachments = (p: Partial<AttachmentsConfig>) =>
+    onChange({ attachments: { ...attachments, ...p } });
 
   return (
     <div className="grid gap-5 lg:grid-cols-2">
@@ -381,6 +392,56 @@ export function BehaviourPanel({ draft, canEdit, onChange }: Props) {
                 className="mt-0.5"
               />
             </label>
+          </FieldAnchor>
+
+          <FieldAnchor path="attachments.enabled">
+            <div className="rounded-lg border border-border">
+              <label className="flex cursor-pointer items-start justify-between gap-4 px-3 py-2.5">
+                <span className="space-y-0.5">
+                  <span className="flex items-center gap-1.5 text-sm">
+                    <Paperclip className="h-3.5 w-3.5 text-muted-foreground" />
+                    {t("aiAssistants.behaviour.attachmentsEnabled")}
+                  </span>
+                  <span className="block text-xs text-muted-foreground">
+                    {t("aiAssistants.behaviour.attachmentsHint")}
+                  </span>
+                </span>
+                <Switch
+                  checked={attachments.enabled}
+                  disabled={!canEdit}
+                  onCheckedChange={(v) => setAttachments({ enabled: v })}
+                  aria-label={t("aiAssistants.behaviour.attachmentsEnabled")}
+                  className="mt-0.5"
+                />
+              </label>
+              <div
+                className={cn(
+                  "grid gap-2 border-t border-border px-3 py-2.5 sm:grid-cols-2",
+                  !attachments.enabled && "opacity-50",
+                )}
+              >
+                <label className="flex items-center gap-2 text-sm">
+                  <Checkbox
+                    checked={attachments.images}
+                    disabled={!canEdit || !attachments.enabled}
+                    onCheckedChange={(v) =>
+                      setAttachments({ images: v === true })
+                    }
+                  />
+                  {t("aiAssistants.behaviour.attachmentsImages")}
+                </label>
+                <label className="flex items-center gap-2 text-sm">
+                  <Checkbox
+                    checked={attachments.documents}
+                    disabled={!canEdit || !attachments.enabled}
+                    onCheckedChange={(v) =>
+                      setAttachments({ documents: v === true })
+                    }
+                  />
+                  {t("aiAssistants.behaviour.attachmentsDocuments")}
+                </label>
+              </div>
+            </div>
           </FieldAnchor>
         </PanelBody>
       </Panel>

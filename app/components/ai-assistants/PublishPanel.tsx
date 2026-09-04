@@ -3,6 +3,7 @@ import {
   Code2,
   Copy,
   ExternalLink,
+  FileCode2,
   ShieldCheck,
 } from "lucide-react";
 import { toast } from "sonner";
@@ -19,8 +20,16 @@ import { useAiSnippet } from "~/lib/hooks/useAiAssistants";
 import {
   WIDGET_TYPES,
   type AssistantStatus,
+  type SnippetMode,
   type WidgetType,
 } from "~/lib/api/ai-assistants";
+
+/** Lines of the inlined bundle shown before the preview is cut off. */
+const HTML_PREVIEW_LINES = 40;
+
+function formatKb(bytes: number): string {
+  return `~${Math.max(1, Math.round(bytes / 1024))} KB`;
+}
 
 interface Props {
   assistantId: string;
@@ -47,10 +56,12 @@ export function PublishPanel({
     return <InfoNote>{t("aiAssistants.share.publishFirst")}</InfoNote>;
   }
 
-  // The configured type first; the others are still offered — a bubble site
-  // may want the section on its contact page or the hosted page in an email.
-  const modes: WidgetType[] = [
+  // The configured type first, then the self-contained HTML block for the
+  // same type; the other types are still offered — a bubble site may want the
+  // section on its contact page or the hosted page in an email.
+  const modes: SnippetMode[] = [
     widgetType,
+    "html",
     ...WIDGET_TYPES.filter((m) => m !== widgetType),
   ];
 
@@ -83,24 +94,49 @@ function SnippetCard({
   onCopy,
 }: {
   assistantId: string;
-  mode: WidgetType;
+  mode: SnippetMode;
   primary: boolean;
   onCopy: (text: string) => void;
 }) {
   const { t } = useTranslation();
   const { data, isLoading } = useAiSnippet(assistantId, mode);
   const isPage = mode === "page";
+  const isHtml = mode === "html";
   const text = isPage ? data?.page_url : data?.snippet;
+
+  // The HTML block carries the whole widget bundle (~80 KB): copy all of it,
+  // but only put the first lines in the DOM.
+  const preview = (() => {
+    if (!isHtml || !data?.snippet) return { text: data?.snippet, cut: false };
+    const lines = data.snippet.split("\n");
+    if (lines.length <= HTML_PREVIEW_LINES) return { text: data.snippet, cut: false };
+    const head = lines.slice(0, HTML_PREVIEW_LINES).map((l) =>
+      l.length > 400 ? `${l.slice(0, 400)}…` : l,
+    );
+    return { text: `${head.join("\n")}\n…`, cut: true };
+  })();
 
   return (
     <Panel>
       <PanelHeader
-        icon={<WidgetTypeIcon type={mode} className="h-3.5 w-3.5" />}
+        icon={
+          isHtml ? (
+            <FileCode2 className="h-3.5 w-3.5" />
+          ) : (
+            <WidgetTypeIcon type={mode} className="h-3.5 w-3.5" />
+          )
+        }
         title={t(`aiAssistants.share.${mode}Title`)}
         meta={
           primary ? (
             <span className="rounded-md bg-muted px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
               {t("aiAssistants.share.configured")}
+            </span>
+          ) : isHtml && data?.bytes ? (
+            <span className="rounded-md bg-muted px-1.5 py-0.5 font-mono text-[10px] text-muted-foreground">
+              {t("aiAssistants.share.htmlSize", {
+                size: formatKb(data.bytes),
+              })}
             </span>
           ) : null
         }
@@ -126,6 +162,11 @@ function SnippetCard({
       />
       <PanelBody>
         <FieldHint>{t(`aiAssistants.share.${mode}Hint`)}</FieldHint>
+        {isHtml ? (
+          <p className="text-xs font-medium text-amber-700 dark:text-amber-300">
+            {t("aiAssistants.share.htmlWarning")}
+          </p>
+        ) : null}
         {isLoading ? (
           <Skeleton className="h-24 w-full rounded-lg" />
         ) : isPage ? (
@@ -138,9 +179,18 @@ function SnippetCard({
             </p>
           </div>
         ) : (
-          <pre className="max-h-64 select-text overflow-auto rounded-lg border bg-muted/40 p-3 font-mono text-[11px] leading-relaxed">
-            {data?.snippet}
-          </pre>
+          <>
+            <pre className="max-h-64 select-text overflow-auto rounded-lg border bg-muted/40 p-3 font-mono text-[11px] leading-relaxed">
+              {preview.text}
+            </pre>
+            {preview.cut ? (
+              <p className="text-[11px] text-muted-foreground">
+                {t("aiAssistants.share.htmlPreviewNote", {
+                  lines: HTML_PREVIEW_LINES,
+                })}
+              </p>
+            ) : null}
+          </>
         )}
       </PanelBody>
     </Panel>
@@ -192,6 +242,9 @@ function CspCard({
           <Code2 className="h-3 w-3" aria-hidden />
           {t("aiAssistants.share.apiOrigin")}{" "}
           <span className="font-mono">{origin}</span>
+        </p>
+        <p className="text-[11px] text-muted-foreground">
+          {t("aiAssistants.share.cspHtmlNote")}
         </p>
       </PanelBody>
     </Panel>

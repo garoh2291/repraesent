@@ -67,6 +67,8 @@
     "loadingPlugins": "Loading services…",
     "openaiAds": "OpenAI Ads",
     "newBadge": "New",
+    "betaVadge": "Beta",
+    "pilotUnavailable": "This feature is not enabled for your workspace yet.",
     "emailCampaigns": "Campaigns",
     "segments": "Segments",
     "emailTemplates": "Templates",
@@ -5859,7 +5861,11 @@
       "businessNameUse": "Use it",
       "advancedTitle": "Advanced",
       "rerank": "Re-rank answers (slower, more precise)",
-      "rerankHint": "A second pass re-orders the retrieved passages before the answer is written. Adds up to 1.5 s per reply."
+      "rerankHint": "A second pass re-orders the retrieved passages before the answer is written. Adds up to 1.5 s per reply.",
+      "attachmentsEnabled": "Let visitors attach files",
+      "attachmentsHint": "Files are stored privately for 30 days and only used to answer that visitor's question.",
+      "attachmentsImages": "Images",
+      "attachmentsDocuments": "Documents (PDF, Word, Excel, PowerPoint)"
     },
     "translate": {
       "withAi": "Translate",
@@ -6053,7 +6059,13 @@
       "pageUrl": "Page link",
       "pageUrlOpen": "Open",
       "barTitle": "Search bar",
-      "barHint": "Paste where the bar should sit. It expands into the chat below itself when a visitor types."
+      "barHint": "Paste where the bar should sit. It expands into the chat below itself when a visitor types.",
+      "htmlTitle": "Copy HTML",
+      "htmlHint": "One self-contained block: host element and the widget's code inlined — works where external scripts are blocked. Talks to the API for answers.",
+      "htmlWarning": "Frozen when you copy it: re-copy after widget updates. Answers, appearance and knowledge still update live.",
+      "htmlSize": "{{size}}",
+      "htmlPreviewNote": "Showing the first {{lines}} lines. Copy gets the whole block.",
+      "cspHtmlNote": "For the Copy HTML block only connect-src is needed — the script and fonts ship inside it."
     },
     "conversations": {
       "search": "Search conversations",
@@ -6070,7 +6082,10 @@
       "feedbackDown": "Marked not helpful",
       "unanswered": "Unanswered",
       "actionsShown": "Actions shown",
-      "export": "Export .txt"
+      "export": "Export .txt",
+      "attachmentDownload": "Download",
+      "attachmentDownloadFailed": "Could not download the file.",
+      "attachmentGone": "No longer stored"
     },
     "playground": {
       "title": "Playground",

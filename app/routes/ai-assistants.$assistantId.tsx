@@ -67,6 +67,7 @@ import {
   type AssistantIssue,
 } from "~/lib/ai-assistants/validate";
 import {
+  DEFAULT_ATTACHMENTS,
   EMPTY_FALLBACK_CONTACT,
   updateAssistant,
   withProfileDefaults,
@@ -109,6 +110,7 @@ function toDraft(a: AssistantRecord): AssistantDraft {
     business_description: a.business_description,
     business_profile: withProfileDefaults(a.business_profile),
     retrieval: { rerank: a.retrieval?.rerank ?? false },
+    attachments: { ...DEFAULT_ATTACHMENTS, ...(a.attachments ?? {}) },
     chat_model: a.chat_model,
     temperature: a.temperature,
     max_output_tokens: a.max_output_tokens,

@@ -34,6 +34,7 @@ import {
   type ListConversationsParams,
   type UpdateAssistantDto,
   type UpdateSourceDto,
+  type SnippetMode,
   type WidgetType,
 } from "~/lib/api/ai-assistants";
 import { useAuthContext } from "~/providers/auth-provider";
@@ -44,7 +45,7 @@ export const aiKeys = {
   detail: (id: string | undefined) => ["ai-assistant", id] as const,
   models: () => ["ai-assistant-models"] as const,
   sources: (id: string | undefined) => ["ai-assistant-sources", id] as const,
-  snippet: (id: string | undefined, mode: WidgetType) =>
+  snippet: (id: string | undefined, mode: SnippetMode) =>
     ["ai-assistant-snippet", id, mode] as const,
   conversations: (id: string | undefined, p: ListConversationsParams) =>
     ["ai-assistant-conversations", id, p] as const,
@@ -130,7 +131,7 @@ export function useAiSources(id: string | undefined) {
 
 export function useAiSnippet(
   id: string | undefined,
-  mode: WidgetType,
+  mode: SnippetMode,
   enabled = true,
 ) {
   return useQuery({

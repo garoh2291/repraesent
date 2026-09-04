@@ -6,6 +6,8 @@ import {
   ChevronRight,
   Contact,
   Download,
+  FileText,
+  Image as ImageIcon,
   MessagesSquare,
   ThumbsDown,
   ThumbsUp,
@@ -31,9 +33,12 @@ import {
 } from "~/lib/hooks/useAiAssistants";
 import {
   actionsFromToolCalls,
+  downloadMessageAttachment,
+  type MessageAttachment,
   type ConversationDetail,
   type ConversationSummary,
 } from "~/lib/api/ai-assistants";
+import { toast } from "sonner";
 import { cn } from "~/lib/utils";
 
 const LIMIT = 25;
@@ -397,6 +402,17 @@ function TranscriptSheet({
                     >
                       {m.content}
                     </div>
+                    {mine && m.attachments?.length ? (
+                      <div className="flex max-w-[85%] flex-wrap justify-end gap-1.5">
+                        {m.attachments.map((a) => (
+                          <AttachmentChip
+                            key={a.id}
+                            assistantId={assistantId}
+                            attachment={a}
+                          />
+                        ))}
+                      </div>
+                    ) : null}
                     {!mine ? (
                       <div className="flex max-w-[85%] flex-wrap items-center gap-1.5">
                         {m.guard_decision ? (
@@ -462,5 +478,64 @@ function TranscriptSheet({
         </div>
       </SheetContent>
     </Sheet>
+  );
+}
+
+function formatBytes(n: number): string {
+  if (n < 1024) return `${n} B`;
+  if (n < 1024 * 1024) return `${Math.round(n / 1024)} KB`;
+  return `${(n / (1024 * 1024)).toFixed(1)} MB`;
+}
+
+/**
+ * A file the visitor sent. Downloads through the auth'd route while the
+ * object still exists; after the 30-day sweep the chip stays as a record of
+ * what was sent, muted.
+ */
+function AttachmentChip({
+  assistantId,
+  attachment,
+}: {
+  assistantId: string;
+  attachment: MessageAttachment;
+}) {
+  const { t } = useTranslation();
+  const [busy, setBusy] = useState(false);
+  const Glyph = attachment.kind === "image" ? ImageIcon : FileText;
+  const label = `${attachment.filename} · ${formatBytes(attachment.size_bytes)}`;
+
+  if (!attachment.available) {
+    return (
+      <span
+        title={t("aiAssistants.conversations.attachmentGone")}
+        className="inline-flex max-w-full items-center gap-1.5 rounded-full border border-dashed border-border px-2.5 py-1 text-[11px] text-muted-foreground/60"
+      >
+        <Glyph className="h-3 w-3 shrink-0" aria-hidden />
+        <span className="truncate line-through">{label}</span>
+      </span>
+    );
+  }
+
+  return (
+    <button
+      type="button"
+      disabled={busy}
+      title={t("aiAssistants.conversations.attachmentDownload")}
+      onClick={async () => {
+        setBusy(true);
+        try {
+          await downloadMessageAttachment(assistantId, attachment);
+        } catch {
+          toast.error(t("aiAssistants.conversations.attachmentDownloadFailed"));
+        } finally {
+          setBusy(false);
+        }
+      }}
+      className="inline-flex max-w-full items-center gap-1.5 rounded-full border border-border bg-background px-2.5 py-1 text-[11px] text-foreground transition-colors hover:bg-muted disabled:opacity-60"
+    >
+      <Glyph className="h-3 w-3 shrink-0 text-muted-foreground" aria-hidden />
+      <span className="truncate">{label}</span>
+      <Download className="h-3 w-3 shrink-0 text-muted-foreground" aria-hidden />
+    </button>
   );
 }

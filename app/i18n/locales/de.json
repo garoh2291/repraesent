@@ -67,6 +67,8 @@
     "loadingPlugins": "Services werden geladen…",
     "openaiAds": "OpenAI Ads",
     "newBadge": "Neu",
+    "betaVadge": "Beta",
+    "pilotUnavailable": "Diese Funktion ist für Ihren Workspace noch nicht freigeschaltet.",
     "emailCampaigns": "Kampagnen",
     "segments": "Segmente",
     "emailTemplates": "Vorlagen",
@@ -5861,7 +5863,11 @@
       "businessNameUse": "Übernehmen",
       "advancedTitle": "Erweitert",
       "rerank": "Antworten neu sortieren (langsamer, präziser)",
-      "rerankHint": "Ein zweiter Durchlauf ordnet die gefundenen Textstellen neu, bevor die Antwort entsteht. Kostet bis zu 1,5 s pro Antwort."
+      "rerankHint": "Ein zweiter Durchlauf ordnet die gefundenen Textstellen neu, bevor die Antwort entsteht. Kostet bis zu 1,5 s pro Antwort.",
+      "attachmentsEnabled": "Besucher dürfen Dateien anhängen",
+      "attachmentsHint": "Dateien werden 30 Tage privat gespeichert und nur zur Beantwortung der Frage dieses Besuchers verwendet.",
+      "attachmentsImages": "Bilder",
+      "attachmentsDocuments": "Dokumente (PDF, Word, Excel, PowerPoint)"
     },
     "translate": {
       "withAi": "Übersetzen",
@@ -6055,7 +6061,13 @@
       "pageUrl": "Seitenlink",
       "pageUrlOpen": "Öffnen",
       "barTitle": "Suchleiste",
-      "barHint": "Dort einfügen, wo die Leiste stehen soll. Beim Tippen öffnet sich der Chat darunter."
+      "barHint": "Dort einfügen, wo die Leiste stehen soll. Beim Tippen öffnet sich der Chat darunter.",
+      "htmlTitle": "HTML kopieren",
+      "htmlHint": "Ein in sich geschlossener Block: Host-Element und Widget-Code eingebettet – funktioniert auch dort, wo externe Skripte blockiert sind. Antworten kommen über die API.",
+      "htmlWarning": "Beim Kopieren eingefroren: nach Widget-Updates erneut kopieren. Antworten, Aussehen und Wissen aktualisieren sich weiterhin live.",
+      "htmlSize": "{{size}}",
+      "htmlPreviewNote": "Die ersten {{lines}} Zeilen werden angezeigt. Kopieren übernimmt den gesamten Block.",
+      "cspHtmlNote": "Für den HTML-Block ist nur connect-src nötig – Skript und Schriften stecken darin."
     },
     "conversations": {
       "search": "Unterhaltungen suchen",
@@ -6072,7 +6084,10 @@
       "feedbackDown": "Als nicht hilfreich markiert",
       "unanswered": "Unbeantwortet",
       "actionsShown": "Aktionen gezeigt",
-      "export": ".txt exportieren"
+      "export": ".txt exportieren",
+      "attachmentDownload": "Herunterladen",
+      "attachmentDownloadFailed": "Die Datei konnte nicht heruntergeladen werden.",
+      "attachmentGone": "Nicht mehr gespeichert"
     },
     "playground": {
       "title": "Playground",

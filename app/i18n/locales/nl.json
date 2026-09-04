@@ -67,6 +67,8 @@
     "loadingPlugins": "Services laden…",
     "openaiAds": "OpenAI Ads",
     "newBadge": "Nieuw",
+    "betaVadge": "Beta",
+    "pilotUnavailable": "Deze functie is nog niet ingeschakeld voor uw werkruimte.",
     "emailCampaigns": "Campagnes",
     "segments": "Segmenten",
     "emailTemplates": "Sjablonen",
@@ -5859,7 +5861,11 @@
       "businessNameUse": "Gebruiken",
       "advancedTitle": "Geavanceerd",
       "rerank": "Antwoorden herordenen (trager, preciezer)",
-      "rerankHint": "Een tweede ronde herordent de gevonden passages voordat het antwoord wordt geschreven. Tot 1,5 s extra per antwoord."
+      "rerankHint": "Een tweede ronde herordent de gevonden passages voordat het antwoord wordt geschreven. Tot 1,5 s extra per antwoord.",
+      "attachmentsEnabled": "Bezoekers mogen bestanden bijvoegen",
+      "attachmentsHint": "Bestanden worden 30 dagen privé bewaard en alleen gebruikt om de vraag van die bezoeker te beantwoorden.",
+      "attachmentsImages": "Afbeeldingen",
+      "attachmentsDocuments": "Documenten (PDF, Word, Excel, PowerPoint)"
     },
     "translate": {
       "withAi": "Vertalen",
@@ -6053,7 +6059,13 @@
       "pageUrl": "Paginalink",
       "pageUrlOpen": "Openen",
       "barTitle": "Zoekbalk",
-      "barHint": "Plak waar de balk moet staan. De chat klapt eronder uit zodra een bezoeker typt."
+      "barHint": "Plak waar de balk moet staan. De chat klapt eronder uit zodra een bezoeker typt.",
+      "htmlTitle": "HTML kopiëren",
+      "htmlHint": "Eén op zichzelf staand blok: hostelement en widgetcode ingebed — werkt ook waar externe scripts geblokkeerd zijn. Antwoorden komen via de API.",
+      "htmlWarning": "Bevroren bij het kopiëren: kopieer opnieuw na widget-updates. Antwoorden, uiterlijk en kennis blijven live bijwerken.",
+      "htmlSize": "{{size}}",
+      "htmlPreviewNote": "De eerste {{lines}} regels worden getoond. Kopiëren neemt het hele blok mee.",
+      "cspHtmlNote": "Voor het HTML-blok is alleen connect-src nodig — script en lettertypen zitten erin."
     },
     "conversations": {
       "search": "Gesprekken zoeken",
@@ -6070,7 +6082,10 @@
       "feedbackDown": "Als niet nuttig gemarkeerd",
       "unanswered": "Onbeantwoord",
       "actionsShown": "Acties getoond",
-      "export": ".txt exporteren"
+      "export": ".txt exporteren",
+      "attachmentDownload": "Downloaden",
+      "attachmentDownloadFailed": "Het bestand kon niet worden gedownload.",
+      "attachmentGone": "Niet meer opgeslagen"
     },
     "playground": {
       "title": "Speeltuin",

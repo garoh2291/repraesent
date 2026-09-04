@@ -79,10 +79,19 @@ function Button({
       aria-busy={showSpinner || undefined}
       {...props}
     >
-      {showSpinner ? (
-        <Loader2 className="animate-spin motion-reduce:animate-none" aria-hidden />
-      ) : null}
-      {children}
+      {asChild ? (
+        // Slot requires exactly one child; even a `null` sibling makes
+        // React.Children.only throw ("expected to receive a single React
+        // element child"). The child owns its own content anyway.
+        children
+      ) : (
+        <>
+          {showSpinner ? (
+            <Loader2 className="animate-spin motion-reduce:animate-none" aria-hidden />
+          ) : null}
+          {children}
+        </>
+      )}
     </Comp>
   );
 }

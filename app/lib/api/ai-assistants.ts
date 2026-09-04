@@ -363,6 +363,19 @@ export interface RetrievalConfig {
   rerank: boolean;
 }
 
+/** What visitors may attach in the public chat. */
+export interface AttachmentsConfig {
+  enabled: boolean;
+  images: boolean;
+  documents: boolean;
+}
+
+export const DEFAULT_ATTACHMENTS: AttachmentsConfig = {
+  enabled: true,
+  images: true,
+  documents: true,
+};
+
 export interface AssistantRecord {
   id: string;
   workspace_id: string;
@@ -376,6 +389,7 @@ export interface AssistantRecord {
   business_profile_mode: BusinessProfileMode;
   business_profile_updated_at: string | null;
   retrieval: RetrievalConfig;
+  attachments: AttachmentsConfig;
   chat_model: string;
   temperature: number;
   max_output_tokens: number;
@@ -403,6 +417,7 @@ export type AssistantDraft = Pick<
   | "business_description"
   | "business_profile"
   | "retrieval"
+  | "attachments"
   | "chat_model"
   | "temperature"
   | "max_output_tokens"
@@ -585,10 +600,22 @@ export interface SourceRef {
   url: string | null;
 }
 
+/** A file the visitor sent with a message. `available` is false once the
+ *  30-day sweeper removed the object; the row keeps name and size. */
+export interface MessageAttachment {
+  id: string;
+  kind: "image" | "document";
+  mime: string;
+  size_bytes: number;
+  filename: string;
+  available: boolean;
+}
+
 export interface ConversationMessage {
   id: string;
   role: "user" | "assistant" | "system";
   content: string;
+  attachments?: MessageAttachment[];
   sources: SourceRef[] | null;
   guard_decision: GuardDecision | null;
   tool_calls: unknown;
@@ -646,12 +673,17 @@ export interface UsageResponse {
   models: UsageModelRow[];
 }
 
+/** Widget types plus "html": the bundle inlined into one self-contained block. */
+export type SnippetMode = WidgetType | "html";
+
 export interface SnippetResponse {
-  mode: WidgetType;
+  mode: SnippetMode;
   snippet: string;
   api_origin: string;
   /** mode=page only — the hosted /a/:id URL. */
   page_url?: string;
+  /** mode=html only — size of the block in bytes. */
+  bytes?: number;
 }
 
 // SSE ------------------------------------------------------------------------
@@ -891,7 +923,7 @@ export async function unpublishAssistant(id: string): Promise<AssistantRecord> {
 
 export async function getAssistantSnippet(
   id: string,
-  mode: WidgetType,
+  mode: SnippetMode,
 ): Promise<SnippetResponse> {
   const r = await apiClient.get<SnippetResponse>(
     `${BASE}/${id}/snippet?mode=${mode}`,
@@ -1269,4 +1301,29 @@ export async function streamAssistantChat(
       handlers.onError?.({ code: "network", message: (err as Error).message });
     }
   }
+}
+
+/**
+ * Streams a visitor attachment through the auth'd route and hands it to the
+ * browser as a download — the object itself is private, so there is no URL
+ * to link to.
+ */
+export async function downloadMessageAttachment(
+  assistantId: string,
+  attachment: Pick<MessageAttachment, "id" | "mime" | "filename">,
+): Promise<void> {
+  const res = await apiClient.get(
+    `${BASE}/${assistantId}/attachments/${attachment.id}`,
+    { responseType: "blob" },
+  );
+  const url = URL.createObjectURL(
+    new Blob([res.data], { type: attachment.mime || "application/octet-stream" }),
+  );
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = attachment.filename || attachment.id;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
 }
