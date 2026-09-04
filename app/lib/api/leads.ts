@@ -1,3 +1,4 @@
+import type { LeadSourceValue } from "~/lib/leads/constants";
 import { apiClient } from "./axios-instance";
 import type { ContactEmailMatch } from "./contacts-crm";
 
@@ -56,7 +57,7 @@ export interface GetLeadsParams {
   limit?: number;
   search?: string;
   status?: LeadStatus;
-  source?: "website";
+  source?: LeadSourceValue;
   form_name?: string;
   include_hidden?: boolean;
   platform_campaign_id?: string;
@@ -97,7 +98,7 @@ export async function getLeads(
 
 export interface GetKanbanCountsParams {
   search?: string;
-  source?: "website";
+  source?: LeadSourceValue;
   form_name?: string;
   platform_campaign_id?: string;
 }

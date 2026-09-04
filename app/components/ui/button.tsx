@@ -1,5 +1,6 @@
 import * as React from "react";
 import { cva, type VariantProps } from "class-variance-authority";
+import { Loader2 } from "lucide-react";
 import { Slot } from "radix-ui";
 
 import { cn } from "~/lib/utils";
@@ -42,17 +43,31 @@ const buttonVariants = cva(
   },
 );
 
+/**
+ * `loading` is the one async affordance every button in the app shares: it
+ * disables the button, marks it `aria-busy` and puts a spinner where the
+ * leading icon sits. The label stays, so the button does not change width and
+ * the row does not reflow mid-click — swapping the text to "Loading…" (which
+ * several call sites used to do by hand) does exactly that.
+ *
+ * Ignored with `asChild`, where the child owns its own content.
+ */
 function Button({
   className,
   variant = "default",
   size = "default",
   asChild = false,
+  loading = false,
+  disabled,
+  children,
   ...props
 }: React.ComponentProps<"button"> &
   VariantProps<typeof buttonVariants> & {
     asChild?: boolean;
+    loading?: boolean;
   }) {
   const Comp = asChild ? Slot.Root : "button";
+  const showSpinner = loading && !asChild;
 
   return (
     <Comp
@@ -60,8 +75,24 @@ function Button({
       data-variant={variant}
       data-size={size}
       className={cn(buttonVariants({ variant, size, className }))}
+      disabled={disabled || (loading && !asChild)}
+      aria-busy={showSpinner || undefined}
       {...props}
-    />
+    >
+      {asChild ? (
+        // Slot requires exactly one child; even a `null` sibling makes
+        // React.Children.only throw ("expected to receive a single React
+        // element child"). The child owns its own content anyway.
+        children
+      ) : (
+        <>
+          {showSpinner ? (
+            <Loader2 className="animate-spin motion-reduce:animate-none" aria-hidden />
+          ) : null}
+          {children}
+        </>
+      )}
+    </Comp>
   );
 }
 

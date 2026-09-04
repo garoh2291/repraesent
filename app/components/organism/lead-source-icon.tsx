@@ -1,4 +1,4 @@
-import { ClipboardList } from "lucide-react";
+import { Bot, ClipboardList } from "lucide-react";
 import TooltipContainer from "~/components/tooltip-container";
 import { cn } from "~/lib/utils";
 
@@ -16,6 +16,7 @@ type SourceKind =
   | "instagram"
   | "website"
   | "form"
+  | "assistant"
   | "unknown";
 
 /**
@@ -26,6 +27,9 @@ function resolveSourceKind(raw: string | null | undefined): SourceKind {
   if (!raw) return "unknown";
   const s = raw.toLowerCase();
 
+  if (s === "ai_assistants" || s === "assistant" || s === "ai_assistant") {
+    return "assistant";
+  }
   if (s === "appointment_booking" || s.includes("appointment")) {
     return "appointment";
   }
@@ -45,7 +49,10 @@ function resolveSourceKind(raw: string | null | undefined): SourceKind {
   return "unknown";
 }
 
-const ICON_MAP: Record<Exclude<SourceKind, "unknown" | "form">, string> = {
+const ICON_MAP: Record<
+  Exclude<SourceKind, "unknown" | "form" | "assistant">,
+  string
+> = {
   appointment: appointmentIcon,
   facebook: facebookIcon,
   google: googleIcon,
@@ -92,7 +99,9 @@ export function LeadSourceIcon({
   const kind: SourceKind =
     sourceTable === "workspace_forms"
       ? "form"
-      : platform
+      : sourceTable === "ai_assistants"
+        ? "assistant"
+        : platform
         ? resolveSourceKind(platform)
         : resolveSourceKind(resolved);
   const tooltipLabel = resolved ?? "—";
@@ -108,6 +117,22 @@ export function LeadSourceIcon({
           style={{ width: size, height: size }}
         >
           <ClipboardList style={{ width: size - 2, height: size - 2 }} />
+        </span>
+      </TooltipContainer>
+    );
+  }
+
+  if (kind === "assistant") {
+    return (
+      <TooltipContainer tooltipContent={tooltipLabel} showCopyButton={false}>
+        <span
+          className={cn(
+            "inline-flex shrink-0 items-center justify-center text-muted-foreground",
+            className,
+          )}
+          style={{ width: size, height: size }}
+        >
+          <Bot style={{ width: size - 2, height: size - 2 }} />
         </span>
       </TooltipContainer>
     );

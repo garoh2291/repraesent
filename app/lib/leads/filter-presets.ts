@@ -32,6 +32,7 @@ export function useLeadFilterStatusOptions(): FilterOption[] {
 const SOURCE_LABEL_KEYS: Record<string, string> = {
   urls: "leads.filters.websiteSource",
   appointment_booking: "leads.filters.appointmentSource",
+  ai_assistants: "leads.filters.aiAssistantSource",
 };
 
 export const LEAD_FILTER_SOURCE_OPTIONS: FilterOption[] = Object.values(

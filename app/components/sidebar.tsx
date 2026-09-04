@@ -13,6 +13,7 @@ import {
   ArrowLeft,
   AtSign,
   BellRing,
+  Bot,
   Building2,
   BookUser,
   CalendarDays,
@@ -39,6 +40,7 @@ import {
   Plus,
   Send,
   Settings,
+  Sparkles,
   ShoppingBag,
   Star,
   Store,
@@ -59,7 +61,7 @@ import { useAuthContext } from "~/providers/auth-provider";
 import { setStoredSelectedView, BRAND_VIEW } from "~/lib/api/axios-instance";
 import { useAppointmentConfigs } from "~/lib/hooks/useAppointmentConfigs";
 import { useCalendarSummary } from "~/lib/hooks/useCalendarSummary";
-import { usePilotFeatures } from "~/lib/feature-flags";
+import { PILOT_FEATURE_LABEL_KEY, usePilotFeatures } from "~/lib/feature-flags";
 import { useWorkspaceWpSite } from "~/lib/hooks/useWorkspaceWpSite";
 import { useWorkspaceWpPluginInstalls } from "~/lib/hooks/useWorkspaceWpPluginInstalls";
 import { useStripeConnection } from "~/lib/hooks/useWorkspaceIntegrations";
@@ -85,7 +87,7 @@ import {
 import logoUrl from "~/components/icons/re_praesent-mark-brand-hor.svg?url";
 
 const lucideIconNames = new Set(
-  Object.keys(LucideIcons).filter((key) => /^[A-Z]/.test(key)),
+  Object.keys(LucideIcons).filter((key) => /^[A-Z]/.test(key))
 );
 
 function kebabToPascal(name: string) {
@@ -145,6 +147,11 @@ const SETTINGS_NAV = [
     Icon: OpenAiMark,
   },
   {
+    to: "/settings/ai",
+    labelKey: "settings.tabs.ai",
+    Icon: Sparkles,
+  },
+  {
     to: "/settings/pipelines",
     labelKey: "settings.tabs.pipelines",
     Icon: Kanban,
@@ -196,6 +203,20 @@ function NavLink({
     >
       {collapsed ? Children.toArray(children)[0] : children}
     </Link>
+  );
+}
+
+/**
+ * "Demo" label on entries behind a pilot flag. Same build as the amber NEW
+ * pill, but neutral — it reads as a status, not a promotion. Never the first
+ * child of a NavLink, so the collapsed rail drops it with the label.
+ */
+function DemoPill() {
+  const { t } = useTranslation();
+  return (
+    <span className="ml-auto rounded-full bg-foreground/10 px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wider text-muted-foreground">
+      {t(PILOT_FEATURE_LABEL_KEY, { defaultValue: "Beta" })}
+    </span>
   );
 }
 
@@ -258,7 +279,7 @@ function PipelineNav({ onClose }: { onClose?: () => void }) {
               ? "border-amber-400 bg-amber-400/10 text-amber-300"
               : onPipeline
                 ? "border-transparent text-amber-300/90 hover:bg-white/5"
-                : "border-transparent text-white/45 hover:bg-white/5 hover:text-white/75",
+                : "border-transparent text-white/45 hover:bg-white/5 hover:text-white/75"
           )}
         >
           <Columns3 className="h-4 w-4 shrink-0" />
@@ -295,7 +316,7 @@ function PipelineNav({ onClose }: { onClose?: () => void }) {
             onClick={() => setNewOpen(true)}
             className={cn(
               "ml-5 flex w-[calc(100%-1.25rem)] items-center gap-2.5 rounded-lg px-3 py-2 text-[13px] font-medium",
-              "border-l-2 border-transparent text-white/45 transition-all duration-150 hover:bg-white/5 hover:text-white/75",
+              "border-l-2 border-transparent text-white/45 transition-all duration-150 hover:bg-white/5 hover:text-white/75"
             )}
           >
             <Plus className="h-3.5 w-3.5 shrink-0" />
@@ -368,7 +389,7 @@ function MediaNav({ onClose }: { onClose?: () => void }) {
               ? "border-amber-400 bg-amber-400/10 text-amber-300"
               : onMedia
                 ? "border-transparent text-amber-300/90 hover:bg-white/5"
-                : "border-transparent text-white/45 hover:bg-white/5 hover:text-white/75",
+                : "border-transparent text-white/45 hover:bg-white/5 hover:text-white/75"
           )}
         >
           <ImageIcon className="h-4 w-4 shrink-0" />
@@ -411,7 +432,7 @@ function WebsiteSubNav({ onClose }: { onClose?: () => void }) {
   const plugins = [...(installsQuery.data?.plugins ?? [])].sort((a, b) =>
     a.display_name.localeCompare(b.display_name, undefined, {
       sensitivity: "base",
-    }),
+    })
   );
   const waitingForPlugins = installsQuery.isPending && !installsQuery.data;
 
@@ -504,10 +525,10 @@ export function Sidebar({
   const isDemoWorkspace = currentWorkspace?.is_demo === true;
   const hasAppointmentsService =
     currentWorkspace?.services?.some(
-      (s) => s.service_type === "appointments",
+      (s) => s.service_type === "appointments"
     ) ?? false;
   const { data: appointmentConfigs } = useAppointmentConfigs(
-    hasAppointmentsService && !!currentWorkspace?.id,
+    hasAppointmentsService && !!currentWorkspace?.id
   );
   const showAppointmentsInSidebar =
     (hasAppointmentsService && !!appointmentConfigs?.length) || isDemoWorkspace;
@@ -522,19 +543,20 @@ export function Sidebar({
   // TEMPORARY: Workflows and Settings → Integrations are still being piloted,
   // so in production only the pilot workspace sees those nav entries. Local
   // development always shows them.
-  // Pilot gating lives in ~/lib/feature-flags. These hide entries only — the
-  // routes stay reachable by URL, and none of this is a permission boundary.
+  // Pilot gating lives in ~/lib/feature-flags. These hide entries; the routes
+  // themselves are bounced by PilotRouteGate in the dashboard layout.
   const pilot = usePilotFeatures();
   const showWorkflows = pilot.workflows || isDemoWorkspace;
   const showEmailCampaigns = pilot.emailCampaigns;
+  const showAiAssistant = pilot.aiAssistant;
   // Route-driven rather than stateful: deep links and refreshes land in the
   // right mode for free, and there is nothing to reset on the way out.
   const inSettings = location.pathname.startsWith("/settings");
   const { data: wpSite } = useWorkspaceWpSite(
-    !!currentWorkspace?.id && !isDoorboostBrandWs,
+    !!currentWorkspace?.id && !isDoorboostBrandWs
   );
   const { isConnected: hasStripeConnection } = useStripeConnection(
-    !!currentWorkspace?.id && !isDoorboostBrandWs,
+    !!currentWorkspace?.id && !isDoorboostBrandWs
   );
   const showWebsite = !!wpSite?.sso_enabled || isDemoWorkspace;
   // Same drill-in as Settings: /website replaces the nav list with Overview
@@ -576,21 +598,21 @@ export function Sidebar({
         className={cn(
           "flex h-full shrink-0 flex-col bg-[#111113] border-r border-white/5 transition-[width] duration-200",
           collapsed ? "w-[64px]" : "w-[220px]",
-          className,
+          className
         )}
       >
         {/* Logo */}
         <div
           className={cn(
             "flex h-14 shrink-0 items-center border-b border-white/5 gap-2",
-            collapsed ? "justify-center px-0" : "px-4",
+            collapsed ? "justify-center px-0" : "px-4"
           )}
         >
           <Link
             to="/"
             className={cn(
               "flex items-center min-w-0",
-              collapsed ? "justify-center" : "flex-1",
+              collapsed ? "justify-center" : "flex-1"
             )}
             onClick={onClose}
           >
@@ -645,7 +667,7 @@ export function Sidebar({
         <div
           className={cn(
             "shrink-0 py-3 border-b border-white/5",
-            collapsed ? "px-1.5" : "px-3",
+            collapsed ? "px-1.5" : "px-3"
           )}
         >
           {currentWorkspace &&
@@ -656,17 +678,21 @@ export function Sidebar({
                     title={collapsed ? currentWorkspace.name : undefined}
                     className={cn(
                       "flex w-full items-center gap-2 rounded-lg py-2 text-left text-[13px] text-white/55 hover:bg-white/5 hover:text-white/80 transition-colors duration-150",
-                      collapsed ? "justify-center px-0" : "px-2.5",
+                      collapsed ? "justify-center px-0" : "px-2.5"
                     )}
                   >
-                    {(currentWorkspace.avatar_thumb_url ?? currentWorkspace.avatar_url) ? (
+                    {(currentWorkspace.avatar_thumb_url ??
+                    currentWorkspace.avatar_url) ? (
                       <SafeImg
-                        src={(currentWorkspace.avatar_thumb_url ?? currentWorkspace.avatar_url)!}
+                        src={
+                          (currentWorkspace.avatar_thumb_url ??
+                            currentWorkspace.avatar_url)!
+                        }
                         className="h-6 w-6 shrink-0 rounded-md bg-white/90 object-contain p-0.5"
                         fallback={
                           <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-white/10 text-white text-[10px] font-bold">
-                        {currentWorkspace.name.charAt(0).toUpperCase()}
-                      </div>
+                            {currentWorkspace.name.charAt(0).toUpperCase()}
+                          </div>
                         }
                       />
                     ) : (
@@ -730,17 +756,21 @@ export function Sidebar({
                 title={collapsed ? currentWorkspace.name : undefined}
                 className={cn(
                   "flex items-center gap-2 py-2",
-                  collapsed ? "justify-center px-0" : "px-2.5",
+                  collapsed ? "justify-center px-0" : "px-2.5"
                 )}
               >
-                {(currentWorkspace.avatar_thumb_url ?? currentWorkspace.avatar_url) ? (
+                {(currentWorkspace.avatar_thumb_url ??
+                currentWorkspace.avatar_url) ? (
                   <SafeImg
-                    src={(currentWorkspace.avatar_thumb_url ?? currentWorkspace.avatar_url)!}
+                    src={
+                      (currentWorkspace.avatar_thumb_url ??
+                        currentWorkspace.avatar_url)!
+                    }
                     className="h-6 w-6 shrink-0 rounded-md bg-white/90 object-contain p-0.5"
                     fallback={
                       <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-white/10 text-white text-[10px] font-bold">
-                    {currentWorkspace.name.charAt(0).toUpperCase()}
-                  </div>
+                        {currentWorkspace.name.charAt(0).toUpperCase()}
+                      </div>
                     }
                   />
                 ) : (
@@ -761,7 +791,7 @@ export function Sidebar({
         <nav
           className={cn(
             "min-h-0 flex-1 overflow-y-auto space-y-0.5",
-            collapsed ? "p-1.5" : "p-3",
+            collapsed ? "p-1.5" : "p-3"
           )}
         >
           {inSettings ? (
@@ -775,11 +805,12 @@ export function Sidebar({
                 </NavLink>
               </div>
 
-              {SETTINGS_NAV.filter(
-                (item) =>
-                  item.to !== "/settings/integrations" ||
-                  pilot.integrations ||
-                  isDemoWorkspace,
+              {SETTINGS_NAV.filter((item) =>
+                item.to === "/settings/integrations"
+                  ? pilot.integrations || isDemoWorkspace
+                  : item.to === "/settings/ai"
+                    ? showAiAssistant
+                    : true
               ).map(({ to, labelKey, Icon }) => (
                 <NavLink
                   key={to}
@@ -789,6 +820,9 @@ export function Sidebar({
                 >
                   <Icon className="h-4 w-4 shrink-0" />
                   <span className="truncate">{t(labelKey)}</span>
+                  {to === "/settings/integrations" || to === "/settings/ai" ? (
+                    <DemoPill />
+                  ) : null}
                 </NavLink>
               ))}
             </>
@@ -861,6 +895,20 @@ export function Sidebar({
                 {t("nav.forms", "Forms")}
               </NavLink>
 
+              {showAiAssistant && (
+                <NavLink
+                  to="/ai-assistants"
+                  isActive={location.pathname.startsWith("/ai-assistants")}
+                  onClick={onClose}
+                >
+                  <Bot className="h-4 w-4 shrink-0" />
+                  <span className="truncate">
+                    {t("nav.aiAssistants", { defaultValue: "AI assistants" })}
+                  </span>
+                  <DemoPill />
+                </NavLink>
+              )}
+
               {/* Gated on the connection rather than a service entitlement: the
                 catalogue is a live proxy, so with no Stripe account there is
                 literally nothing for the page to show — except in a demo,
@@ -903,7 +951,10 @@ export function Sidebar({
                   onClick={onClose}
                 >
                   <Workflow className="h-4 w-4 shrink-0" />
-                  {t("nav.workflows", { defaultValue: "Workflows" })}
+                  <span className="truncate">
+                    {t("nav.workflows", { defaultValue: "Workflows" })}
+                  </span>
+                  <DemoPill />
                 </NavLink>
               )}
 
@@ -915,7 +966,10 @@ export function Sidebar({
                     onClick={onClose}
                   >
                     <Send className="h-4 w-4 shrink-0" />
-                    {t("nav.emailCampaigns", { defaultValue: "Campaigns" })}
+                    <span className="truncate">
+                      {t("nav.emailCampaigns", { defaultValue: "Campaigns" })}
+                    </span>
+                    <DemoPill />
                   </NavLink>
                   <NavLink
                     to="/segments"
@@ -923,7 +977,10 @@ export function Sidebar({
                     onClick={onClose}
                   >
                     <UsersRound className="h-4 w-4 shrink-0" />
-                    {t("nav.segments", { defaultValue: "Segments" })}
+                    <span className="truncate">
+                      {t("nav.segments", { defaultValue: "Segments" })}
+                    </span>
+                    <DemoPill />
                   </NavLink>
                   <NavLink
                     to="/email-templates"
@@ -931,7 +988,10 @@ export function Sidebar({
                     onClick={onClose}
                   >
                     <LayoutTemplate className="h-4 w-4 shrink-0" />
-                    {t("nav.emailTemplates", { defaultValue: "Templates" })}
+                    <span className="truncate">
+                      {t("nav.emailTemplates", { defaultValue: "Templates" })}
+                    </span>
+                    <DemoPill />
                   </NavLink>
                 </>
               )}
@@ -944,11 +1004,11 @@ export function Sidebar({
                 ?.filter(
                   (service) =>
                     service.service_type !== "appointments" ||
-                    showAppointmentsInSidebar,
+                    showAppointmentsInSidebar
                 )
                 ?.slice()
                 ?.sort(
-                  (a, b) => (a.service_order ?? 0) - (b.service_order ?? 0),
+                  (a, b) => (a.service_order ?? 0) - (b.service_order ?? 0)
                 )
                 ?.map((service) => {
                   const href = service.service_slug
@@ -958,7 +1018,7 @@ export function Sidebar({
                     !!service.service_slug &&
                     (location.pathname === `/${service.service_slug}` ||
                       location.pathname.startsWith(
-                        `/${service.service_slug}/`,
+                        `/${service.service_slug}/`
                       ));
                   const hasSlug = !!service.service_slug;
                   const iconName = service.service_icon
@@ -995,7 +1055,7 @@ export function Sidebar({
                           <span className="truncate">
                             {getLocalizedServiceName(
                               service,
-                              i18n.language ?? "de",
+                              i18n.language ?? "de"
                             )}
                           </span>
                         </NavLink>
@@ -1069,7 +1129,7 @@ export function Sidebar({
         <div
           className={cn(
             "shrink-0 border-t border-white/5 space-y-0.5",
-            collapsed ? "p-1.5" : "p-3",
+            collapsed ? "p-1.5" : "p-3"
           )}
         >
           <div className={collapsed ? "px-0 py-1 pb-2" : "px-3 py-1 pb-2"}>
@@ -1108,7 +1168,7 @@ export function Sidebar({
             title={collapsed ? t("nav.logout") : undefined}
             className={cn(
               "flex w-full items-center rounded-lg py-2 text-[13px] font-medium text-white/35 hover:bg-white/5 hover:text-white/60 transition-all duration-150 disabled:opacity-50",
-              collapsed ? "justify-center px-0" : "gap-2.5 px-3",
+              collapsed ? "justify-center px-0" : "gap-2.5 px-3"
             )}
           >
             <LogOut className="h-4 w-4 shrink-0" />
