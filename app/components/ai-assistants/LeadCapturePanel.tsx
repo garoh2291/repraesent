@@ -6,6 +6,7 @@ import {
   PanelHeader,
   PanelSection,
 } from "~/components/forms/chrome";
+import { FieldAnchor } from "~/components/ai-assistants/FieldAnchor";
 import { Field, FieldHint, InfoNote } from "~/components/wordpress/fields";
 import { Checkbox } from "~/components/ui/checkbox";
 import { Input } from "~/components/ui/input";
@@ -80,7 +81,11 @@ export function LeadCapturePanel({ draft, canEdit, onChange }: Props) {
         />
         <PanelBody>
           <PanelSection title={t("aiAssistants.leads.fieldsTitle")}>
-            <ul className="divide-y divide-border/70 rounded-xl border border-border">
+            <ul
+              id="ai-field-lead_capture.fields"
+              data-field-path="lead_capture.fields"
+              className="divide-y divide-border/70 rounded-xl border border-border scroll-mt-28 ring-offset-2 ring-offset-background data-[invalid]:ring-2 data-[invalid]:ring-destructive"
+            >
               {LEAD_FIELD_KEYS.map((key) => {
                 const state = fieldState(key);
                 const id = `lead-field-${key}`;
@@ -145,26 +150,28 @@ export function LeadCapturePanel({ draft, canEdit, onChange }: Props) {
                     })
                   }
                 />
-                <Input
-                  id="trigger-turns"
-                  type="number"
-                  min={1}
-                  max={20}
-                  disabled={disabled || lc.trigger.after_turns == null}
-                  value={lc.trigger.after_turns ?? ""}
-                  onChange={(e) =>
-                    set({
-                      trigger: {
-                        ...lc.trigger,
-                        after_turns: Math.min(
-                          20,
-                          Math.max(1, Number(e.target.value) || 1),
-                        ),
-                      },
-                    })
-                  }
-                  className="h-8 w-16 text-center tabular-nums"
-                />
+                <FieldAnchor path="lead_capture.trigger.after_turns">
+                  <Input
+                    id="trigger-turns"
+                    type="number"
+                    min={1}
+                    max={20}
+                    disabled={disabled || lc.trigger.after_turns == null}
+                    value={lc.trigger.after_turns ?? ""}
+                    onChange={(e) =>
+                      set({
+                        trigger: {
+                          ...lc.trigger,
+                          after_turns: Math.min(
+                            20,
+                            Math.max(1, Number(e.target.value) || 1),
+                          ),
+                        },
+                      })
+                    }
+                    className="h-8 w-16 text-center tabular-nums"
+                  />
+                </FieldAnchor>
               </div>
             </div>
           </PanelSection>
@@ -174,29 +181,33 @@ export function LeadCapturePanel({ draft, canEdit, onChange }: Props) {
               <Label htmlFor="lead-intro">
                 {t("aiAssistants.leads.intro")}
               </Label>
-              <Textarea
-                id="lead-intro"
-                disabled={disabled}
-                value={lc.intro_text}
-                maxLength={400}
-                onChange={(e) => set({ intro_text: e.target.value })}
-                placeholder={DEFAULT_STRINGS.en.lead_intro}
-                className="min-h-[72px]"
-              />
+              <FieldAnchor path="lead_capture.intro_text">
+                <Textarea
+                  id="lead-intro"
+                  disabled={disabled}
+                  value={lc.intro_text}
+                  maxLength={400}
+                  onChange={(e) => set({ intro_text: e.target.value })}
+                  placeholder={DEFAULT_STRINGS.en.lead_intro}
+                  className="min-h-[72px]"
+                />
+              </FieldAnchor>
             </Field>
             <Field>
               <Label htmlFor="lead-thanks">
                 {t("aiAssistants.leads.thanks")}
               </Label>
-              <Textarea
-                id="lead-thanks"
-                disabled={disabled}
-                value={lc.thank_you_text}
-                maxLength={400}
-                onChange={(e) => set({ thank_you_text: e.target.value })}
-                placeholder={DEFAULT_STRINGS.en.lead_thanks}
-                className="min-h-[72px]"
-              />
+              <FieldAnchor path="lead_capture.thank_you_text">
+                <Textarea
+                  id="lead-thanks"
+                  disabled={disabled}
+                  value={lc.thank_you_text}
+                  maxLength={400}
+                  onChange={(e) => set({ thank_you_text: e.target.value })}
+                  placeholder={DEFAULT_STRINGS.en.lead_thanks}
+                  className="min-h-[72px]"
+                />
+              </FieldAnchor>
             </Field>
             <FieldHint>{t("aiAssistants.leads.copyHint")}</FieldHint>
           </PanelSection>

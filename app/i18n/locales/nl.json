@@ -5555,6 +5555,44 @@
     "bulkHardDeleteTitle": "{{count}} afbeeldingen definitief verwijderen?"
   },
   "aiAssistants": {
+    "validation": {
+      "badgeLabel": "{{n}} problemen op dit tabblad",
+      "bannerTitle": "{{n}} op te lossen voor het opslaan",
+      "saveBlocked": "De assistent is niet opgeslagen",
+      "displayNameMissing": "De naam van de assistent is leeg — de widgetkop heeft er een nodig.",
+      "tooManyQuestions": "Maximaal 6 voorgestelde vragen.",
+      "blankQuestion": "Een voorgestelde vraag is leeg.",
+      "instructionsTooLong": "De eigen instructies zijn langer dan 1000 tekens.",
+      "invalidColor": "De primaire kleur moet een hexwaarde van 6 tekens zijn, bijv. #2563eb.",
+      "avatarUrlMissing": "De avatar staat op afbeelding, maar er is geen afbeeldings-URL.",
+      "avatarUrlInvalid": "De URL van de avatarafbeelding moet met http:// of https:// beginnen.",
+      "launcherImageMissing": "Het launcher-icoon staat op afbeelding, maar er is geen afbeeldings-URL.",
+      "launcherImageInvalid": "De URL van de launcher-afbeelding moet met http:// of https:// beginnen.",
+      "offsetOutOfRange": "De launcher-marge moet een geheel getal tussen 0 en 200 zijn.",
+      "delayOutOfRange": "De vertraging moet een geheel aantal seconden tussen 0 en 120 zijn.",
+      "tooManyPatterns": "Maximaal 20 paginaregels.",
+      "blankPattern": "Een paginaregel is leeg.",
+      "stringTooLong": "Deze {{locale}}-tekst is langer dan de widget toestaat.",
+      "tooManyLeadFields": "Maximaal 5 leadvelden.",
+      "leadFieldsEmpty": "Leadverzameling staat aan, maar er is geen veld aangevinkt.",
+      "afterTurnsOutOfRange": "„Vragen na” moet tussen 1 en 20 beurten liggen.",
+      "introTooLong": "De introtekst is langer dan 400 tekens.",
+      "thanksTooLong": "De bedanktekst is langer dan 400 tekens.",
+      "tooManyActions": "Maximaal 6 acties.",
+      "actionLabelMissing": "Deze actie heeft geen label.",
+      "actionUrlMissing": "Een link-actie heeft een URL nodig.",
+      "actionUrlInvalid": "De actie-URL moet met http:// of https:// beginnen.",
+      "actionAppointmentMissing": "Een boekingsactie heeft een agenda nodig om in te boeken.",
+      "actionPhoneMissing": "Een belactie heeft een telefoonnummer nodig.",
+      "actionEmailMissing": "Een e-mailactie heeft een adres nodig.",
+      "actionEmailInvalid": "Dit is geen geldig e-mailadres.",
+      "tooManyDomains": "Maximaal 20 toegestane domeinen.",
+      "invalidDomain": "Dit domein bevat tekens die niet in een hostnaam kunnen.",
+      "businessNameMissing": "De bedrijfsnaam is leeg — de assistent moet weten namens wie hij spreekt.",
+      "businessNameTooLong": "De bedrijfsnaam is langer dan 120 tekens.",
+      "profileEmailInvalid": "Het e-mailadres in de bedrijfsgegevens is ongeldig.",
+      "tooManyKeyPeople": "Maximaal 5 personen in de bedrijfsgegevens."
+    },
     "list": {
       "title": "AI-assistenten",
       "hint": "Een chatassistent getraind op uw website en documenten. Hij beantwoordt vragen van bezoekers en geeft door wie met u wil praten.",
@@ -5614,12 +5652,16 @@
       "save": "Opslaan",
       "saved": "Opgeslagen",
       "publish": "Publiceren",
-      "republish": "Wijzigingen publiceren",
       "unpublish": "Offline halen",
       "delete": "Assistent verwijderen",
       "readOnly": "U heeft alleen leesrechten voor deze assistent.",
       "publishedToast": "Assistent gepubliceerd",
-      "unpublishedToast": "Assistent offline gehaald"
+      "unpublishedToast": "Assistent offline gehaald",
+      "savingAuto": "Opslaan…",
+      "savedAuto": "Opgeslagen",
+      "liveToggle": "Live",
+      "liveTooltipOn": "Bezoekers kunnen deze assistent gebruiken. Uw wijzigingen worden opgeslagen en gaan direct live.",
+      "liveTooltipOff": "Zet aan om de assistent op uw site te publiceren. Tot dan blijft het een concept."
     },
     "locales": {
       "en": "Engels",
@@ -5675,7 +5717,16 @@
         "pages": "{{count}} pagina’s",
         "limitHint": "Dit is alleen een plafond. Een site met 10 pagina’s gebruikt 10 credits. Crawls lopen bewust langzaam om je Firecrawl-credits te sparen. Hercrawls indexeren alleen gewijzigde pagina’s opnieuw.",
         "submit": "Crawl starten",
-        "started": "Crawl gestart"
+        "started": "Crawl gestart",
+        "languages": {
+          "label": "Talen",
+          "primary": "Alleen hoofdtaal",
+          "all": "Alle talen",
+          "hint": "Slaat /de/-, /fr/-spiegelpagina's over; de assistent antwoordt toch in de taal van de bezoeker."
+        },
+        "advanced": "Geavanceerd",
+        "excludePaths": "Paden uitsluiten",
+        "excludePathsHint": "Eén padprefix per regel. Pagina's daaronder worden nooit gecrawld."
       },
       "upload": {
         "title": "Documenten uploaden",
@@ -5706,6 +5757,62 @@
         "weekly": "Wekelijks",
         "monthly": "Maandelijks",
         "next": "volgende {{when}}"
+      },
+      "crawlStats": {
+        "found": "{{count}} gevonden",
+        "crawled": "{{count}} gecrawld",
+        "skipped": "{{count}} overgeslagen (andere talen / uitgesloten)"
+      }
+    },
+    "facts": {
+      "title": "Bedrijfsgegevens",
+      "statusExtracted": "Overgenomen van uw website {{when}}",
+      "statusEdited": "Door u bewerkt",
+      "statusEmpty": "Nog niet uitgelezen — crawl een website of vul handmatig in",
+      "regenerate": "Opnieuw ophalen van website",
+      "regenerated": "Bedrijfsgegevens vernieuwd vanaf uw website",
+      "regenerateFailed": "Bedrijfsgegevens konden niet opnieuw worden opgehaald",
+      "noKnowledgeTitle": "Nog niets om uit te lezen",
+      "noKnowledgeBody": "Crawl eerst uw website — de gegevens worden uit die pagina's gelezen.",
+      "hint": "De assistent geeft dit door als feit: exact telefoonnummer, e-mail, adres en openingstijden, zonder voorbehoud. Wordt samen met de assistent opgeslagen.",
+      "emptyHint": "Zonder deze gegevens kan de assistent \"hoe bereik ik jullie\" of \"waar zitten jullie\" niet beantwoorden — crawl een website of vul ze hier in.",
+      "onePerLine": "Eén per regel.",
+      "addPerson": "Persoon toevoegen",
+      "noPeople": "Geen personen vermeld.",
+      "groups": {
+        "identity": "Identiteit",
+        "where": "Locatie",
+        "registration": "Registratie",
+        "contact": "Contact",
+        "offer": "Wat wij doen",
+        "people": "Personen",
+        "languages": "Talen",
+        "notes": "Notities"
+      },
+      "fields": {
+        "brand_name": "Merknaam",
+        "legal_name": "Juridische naam",
+        "tagline": "Slogan",
+        "founded": "Opgericht",
+        "address": "Adres",
+        "locations": "Vestigingen",
+        "opening_hours": "Openingstijden",
+        "court": "Registerrechtbank",
+        "number": "Registratienummer",
+        "vat_id": "Btw-nummer",
+        "ein": "EIN",
+        "phone": "Telefoon",
+        "email": "E-mail",
+        "services": "Diensten",
+        "pricing": "Prijzen",
+        "personName": "Naam",
+        "personRole": "Rol"
+      },
+      "placeholders": {
+        "locations": "Voeg een stad of regio toe, Enter om te bevestigen",
+        "languages": "Voeg een taal toe, Enter om te bevestigen",
+        "opening_hours": "Ma–vr 9:00–17:00",
+        "notes": "Alles wat de assistent verder zeker moet weten."
       }
     },
     "behaviour": {
@@ -5744,7 +5851,27 @@
         "medium": "Gemiddeld",
         "long": "Lang",
         "hint": "Beperkt antwoorden tot ongeveer {{tokens}} tokens. De geavanceerde limiet hieronder blijft gelden."
-      }
+      },
+      "businessName": "Bedrijfsnaam",
+      "businessNamePlaceholder": "bijv. Timmerbedrijf Müller",
+      "businessNameHint": "Zo noemt de assistent uw bedrijf. Standaard de naam van de werkruimte.",
+      "businessNameDetected": "Gevonden op de website:",
+      "businessNameUse": "Gebruiken",
+      "advancedTitle": "Geavanceerd",
+      "rerank": "Antwoorden herordenen (trager, preciezer)",
+      "rerankHint": "Een tweede ronde herordent de gevonden passages voordat het antwoord wordt geschreven. Tot 1,5 s extra per antwoord."
+    },
+    "translate": {
+      "withAi": "Vertalen",
+      "retranslate": "Opnieuw vertalen",
+      "allLanguages": "Alle talen vertalen",
+      "retranslateTitle": "Bestaande tekst overschrijven?",
+      "retranslateBody": "Alle teksten voor {{locale}} worden vervangen door een nieuwe AI-vertaling van de Engelse tekst. Wat je zelf hebt geschreven gaat verloren.",
+      "done": "Vertaald",
+      "partial": "Sommige talen zijn mislukt: {{locales}}",
+      "nothingToDo": "Er is niets meer te vertalen",
+      "unavailable": "AI-vertaling is niet beschikbaar",
+      "failed": "Vertalen mislukt"
     },
     "appearance": {
       "widgetTitle": "Widget",
@@ -5754,6 +5881,13 @@
       "avatarInitial": "Initiaal",
       "avatarImage": "Afbeelding",
       "primaryColor": "Accentkleur",
+      "accentForeground": "Pictogramkleur op accentkleur",
+      "accentForegroundHint": "Kleur van de verzendpijl en andere pictogrammen op de accentkleur. ‘Automatisch’ kiest zwart of wit met het beste contrast.",
+      "accentForegroundOption": {
+        "auto": "Automatisch",
+        "light": "Wit",
+        "dark": "Zwart"
+      },
       "presets": "Voorinstellingen",
       "theme": "Thema",
       "themes": {
@@ -5914,8 +6048,6 @@
       "cspHint": "Alleen als uw site een Content-Security-Policy-header stuurt. Zonder deze regels blokkeert de browser de widget en toont niets.",
       "localhostWarning": "Deze snippet wijst naar {{origin}}, dat alleen op de server zelf bestaat. De widget laadt op geen enkele echte website.",
       "apiOrigin": "API-origin:",
-      "testTitle": "Testpagina",
-      "testHint": "Plak de snippet in een leeg HTML-bestand en open het in een browser — geen server nodig. Voeg de origin van het bestand toe aan de toegestane domeinen als u die heeft ingesteld.",
       "pageTitle": "Gehoste pagina",
       "pageHint": "Een pagina die wij voor je hosten. Link ernaar vanuit menu’s, e-mails of QR-codes.",
       "pageUrl": "Paginalink",
@@ -5953,7 +6085,9 @@
       "debugNote": "“Zoeken debuggen” toont welke fragmenten hoe zijn gevonden, zodat u een ontbrekende bron kunt onderscheiden van een formuleringsprobleem.",
       "leadSent": "Testlead verzonden — zie Leads.",
       "leadSubmit": "Gegevens versturen",
-      "chunk": "fragment"
+      "chunk": "fragment",
+      "understoodAs": "Begrepen als:",
+      "reranked": "herordend"
     },
     "usage": {
       "title": "Gebruik",
@@ -6034,6 +6168,7 @@
         "after_first_answer": "Na het eerste antwoord"
       },
       "perLocale": "Tekst per taal",
+      "perLocaleHint": "Laat leeg om terug te vallen op het label hierboven. ‘Vertalen’ vult alleen lege velden.",
       "moveUp": "Omhoog",
       "moveDown": "Omlaag"
     },

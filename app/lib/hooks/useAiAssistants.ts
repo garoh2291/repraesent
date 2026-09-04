@@ -1,3 +1,4 @@
+import { useRef } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   confirmSourceUpload,
@@ -95,16 +96,34 @@ export function useChatModels() {
 
 const SETTLED: ReadonlySet<string> = new Set(["ready", "failed"]);
 
-/** Polls every 3s while anything is still being crawled/parsed/embedded. */
+/** How long a freshly opened, still-empty list keeps polling for a late job. */
+const EMPTY_GRACE_MS = 30_000;
+
+/**
+ * Polls every 3s while anything is still being crawled/parsed/embedded.
+ *
+ * `staleTime: 0` overrides the app-wide 5 minutes on purpose: this is a
+ * progress view, and a cached entry written a moment before a source was
+ * created would otherwise be served as fresh for the whole window. The grace
+ * period covers the same race from the other side — a list that is still empty
+ * right after mount keeps asking, so a job queued in another tab appears.
+ */
 export function useAiSources(id: string | undefined) {
+  const mountedAt = useRef(Date.now());
   return useQuery({
     queryKey: aiKeys.sources(id),
     queryFn: () => getSources(id!),
     enabled: !!id,
+    staleTime: 0,
     refetchInterval: (query) => {
       const data = query.state.data as KnowledgeSource[] | undefined;
       if (!data) return false;
-      return data.some((s) => !SETTLED.has(s.status)) ? 3000 : false;
+      if (data.some((s) => !SETTLED.has(s.status))) return 3000;
+      const own = data.filter((s) => s.type !== "description");
+      if (own.length === 0 && Date.now() - mountedAt.current < EMPTY_GRACE_MS) {
+        return 3000;
+      }
+      return false;
     },
   });
 }

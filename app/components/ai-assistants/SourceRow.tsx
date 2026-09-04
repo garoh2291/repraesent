@@ -6,6 +6,7 @@ import {
   Pencil,
   RefreshCw,
   Trash2,
+  Loader2,
 } from "lucide-react";
 import { Button } from "~/components/ui/button";
 import {
@@ -60,6 +61,7 @@ export function SourceRow({
   onToggle,
   onRecrawl,
   onViewPages,
+  busy = false,
 }: {
   source: KnowledgeSource;
   icon: React.ReactNode;
@@ -72,6 +74,8 @@ export function SourceRow({
   onToggle: (enabled: boolean) => void;
   onRecrawl: (interval: RecrawlInterval) => void;
   onViewPages?: () => void;
+  /** A resync/delete/toggle for THIS row is in flight. */
+  busy?: boolean;
 }) {
   const { t } = useTranslation();
   const p = source.progress;
@@ -85,10 +89,39 @@ export function SourceRow({
         total: p.pages_total,
       }),
     );
-  } else if (source.page_count != null && source.type !== "text") {
+  } else if (
+    source.page_count != null &&
+    source.type !== "text" &&
+    !isWebsite
+  ) {
     detail.push(
-      t("aiAssistants.knowledge.pages", { count: source.page_count }),
+      t("aiAssistants.knowledge.pages.count", { count: source.page_count }),
     );
+  }
+  // "14 found · 14 crawled · 8 skipped" — each part only when the server knows it.
+  const crawlStats: string[] = [];
+  if (isWebsite && p?.pages_total == null) {
+    if (source.discovered_count != null) {
+      crawlStats.push(
+        t("aiAssistants.knowledge.crawlStats.found", {
+          count: source.discovered_count,
+        }),
+      );
+    }
+    if (source.page_count != null) {
+      crawlStats.push(
+        t("aiAssistants.knowledge.crawlStats.crawled", {
+          count: source.page_count,
+        }),
+      );
+    }
+    if (source.skipped_count != null && source.skipped_count > 0) {
+      crawlStats.push(
+        t("aiAssistants.knowledge.crawlStats.skipped", {
+          count: source.skipped_count,
+        }),
+      );
+    }
   }
   if (source.status === "embedding" && p?.chunks_done != null) {
     detail.push(
@@ -137,15 +170,9 @@ export function SourceRow({
                 ? formatRelative(source.last_synced_at)
                 : t("aiAssistants.knowledge.never")}
             </span>
-            {source.page_count != null ? (
-              <>
-                {" "}
-                ·{" "}
-                {t("aiAssistants.knowledge.pages", {
-                  count: source.page_count,
-                })}
-              </>
-            ) : null}
+            {crawlStats.map((part) => (
+              <span key={part}> · {part}</span>
+            ))}
             {source.recrawl_interval && source.next_sync_at ? (
               <>
                 {" "}
@@ -225,8 +252,14 @@ export function SourceRow({
                 size="icon"
                 className="size-7"
                 aria-label={source.title}
+                aria-busy={busy || undefined}
+                disabled={busy}
               >
-                <MoreHorizontal className="h-4 w-4" />
+                {busy ? (
+                  <Loader2 className="h-4 w-4 animate-spin motion-reduce:animate-none" />
+                ) : (
+                  <MoreHorizontal className="h-4 w-4" />
+                )}
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">

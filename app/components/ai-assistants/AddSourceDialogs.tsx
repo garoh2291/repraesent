@@ -1,7 +1,13 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Loader2 } from "lucide-react";
+import { ChevronRight, Loader2 } from "lucide-react";
 import { Button } from "~/components/ui/button";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "~/components/ui/collapsible";
+import { Segmented, SegmentedButton } from "~/components/forms/chrome";
 import {
   Dialog,
   DialogContent,
@@ -15,6 +21,13 @@ import { Label } from "~/components/ui/label";
 import { Slider } from "~/components/ui/slider";
 import { Textarea } from "~/components/ui/textarea";
 import { FieldHint } from "~/components/wordpress/fields";
+import {
+  CRAWL_LIMIT_DEFAULT,
+  CRAWL_LIMIT_MAX,
+  CRAWL_LIMIT_MIN,
+  type CrawlLanguages,
+  type CrawlOptions,
+} from "~/lib/api/ai-assistants";
 
 export const TEXT_MAX = 60_000;
 
@@ -32,17 +45,24 @@ export function CrawlWebsiteDialog({
   onSubmit: (input: {
     url: string;
     crawl_limit: number;
+    crawl_options: CrawlOptions;
     title: string;
   }) => void;
 }) {
   const { t } = useTranslation();
   const [url, setUrl] = useState("");
-  const [limit, setLimit] = useState(25);
+  const [limit, setLimit] = useState(CRAWL_LIMIT_DEFAULT);
+  const [languages, setLanguages] = useState<CrawlLanguages>("primary");
+  const [excludeText, setExcludeText] = useState("");
+  const [advancedOpen, setAdvancedOpen] = useState(false);
 
   useEffect(() => {
     if (open) {
       setUrl("");
-      setLimit(25);
+      setLimit(CRAWL_LIMIT_DEFAULT);
+      setLanguages("primary");
+      setExcludeText("");
+      setAdvancedOpen(false);
     }
   }, [open]);
 
@@ -66,6 +86,10 @@ export function CrawlWebsiteDialog({
             onSubmit({
               url: normalized,
               crawl_limit: limit,
+              crawl_options: {
+                languages,
+                exclude_paths: parsePaths(excludeText),
+              },
               title: hostOf(normalized),
             });
           }}
@@ -94,14 +118,52 @@ export function CrawlWebsiteDialog({
             </div>
             <Slider
               id="crawl-limit"
-              min={5}
-              max={200}
-              step={5}
+              min={CRAWL_LIMIT_MIN}
+              max={CRAWL_LIMIT_MAX}
+              step={10}
               value={[limit]}
-              onValueChange={(v) => setLimit(v[0] ?? 25)}
+              onValueChange={(v) => setLimit(v[0] ?? CRAWL_LIMIT_DEFAULT)}
             />
             <FieldHint>{t("aiAssistants.knowledge.crawl.limitHint")}</FieldHint>
           </div>
+          <div className="space-y-2">
+            <Label>{t("aiAssistants.knowledge.crawl.languages.label")}</Label>
+            <Segmented label={t("aiAssistants.knowledge.crawl.languages.label")}>
+              {(["primary", "all"] as const).map((v) => (
+                <SegmentedButton
+                  key={v}
+                  active={languages === v}
+                  onClick={() => setLanguages(v)}
+                >
+                  {t(`aiAssistants.knowledge.crawl.languages.${v}`)}
+                </SegmentedButton>
+              ))}
+            </Segmented>
+            <FieldHint>
+              {t("aiAssistants.knowledge.crawl.languages.hint")}
+            </FieldHint>
+          </div>
+          <Collapsible open={advancedOpen} onOpenChange={setAdvancedOpen}>
+            <CollapsibleTrigger className="group inline-flex items-center gap-1 text-xs font-medium text-muted-foreground hover:text-foreground">
+              <ChevronRight className="h-3.5 w-3.5 transition-transform group-data-[state=open]:rotate-90 motion-reduce:transition-none" />
+              {t("aiAssistants.knowledge.crawl.advanced")}
+            </CollapsibleTrigger>
+            <CollapsibleContent className="space-y-2 pt-3">
+              <Label htmlFor="crawl-exclude">
+                {t("aiAssistants.knowledge.crawl.excludePaths")}
+              </Label>
+              <Textarea
+                id="crawl-exclude"
+                value={excludeText}
+                onChange={(e) => setExcludeText(e.target.value)}
+                placeholder={"/blog/\n/careers/"}
+                className="min-h-[72px] font-mono text-xs leading-relaxed"
+              />
+              <FieldHint>
+                {t("aiAssistants.knowledge.crawl.excludePathsHint")}
+              </FieldHint>
+            </CollapsibleContent>
+          </Collapsible>
           <DialogFooter>
             <Button
               type="button"
@@ -132,6 +194,18 @@ function normalizeUrl(raw: string): string | null {
   } catch {
     return null;
   }
+}
+
+/** One path per line; a bare word becomes a prefix (`blog` → `/blog`). */
+function parsePaths(text: string): string[] {
+  const out: string[] = [];
+  for (const raw of text.split("\n")) {
+    let p = raw.trim();
+    if (!p) continue;
+    if (!p.startsWith("/")) p = `/${p}`;
+    if (!out.includes(p)) out.push(p);
+  }
+  return out.slice(0, 50);
 }
 
 function hostOf(url: string): string {

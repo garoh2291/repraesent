@@ -8,7 +8,7 @@
  */
 
 import { useQuery } from "@tanstack/react-query";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { useParams } from "react-router";
 import { DocumentScheme } from "~/components/forms/PublicShell";
@@ -39,6 +39,11 @@ const apiBase = (apiClient.defaults.baseURL ?? "").replace(/\/$/, "");
 declare global {
   interface Window {
     __raAssistant?: Record<string, unknown>;
+    raAssistant?: {
+      mount?: (host: HTMLElement) => void;
+      unmount?: (host: HTMLElement) => void;
+      rescan?: () => void;
+    };
   }
 }
 
@@ -60,18 +65,34 @@ export default function PublicAssistantRoute() {
     retry: false,
   });
 
+  const hostRef = useRef<HTMLDivElement | null>(null);
+
   // The widget script is loaded once per assistant; it finds the host element
   // by data-ra-assistant and mounts the page variant into it.
+  //
+  // On a client-side navigation back to this route the script tag and the
+  // instance registry both survive, so nothing re-injects and the fresh host
+  // element would stay empty. Hence the explicit mount/unmount: the route owns
+  // its host, the script only bootstraps.
   useEffect(() => {
     if (!data || !assistantId) return;
-    if (window.__raAssistant?.[assistantId]) return;
-    if (document.querySelector(`script[data-ra-assistant="${assistantId}"]`))
-      return;
-    const s = document.createElement("script");
-    s.src = `${apiBase}/public/ai-assistants/widget.js`;
-    s.async = true;
-    s.dataset.raAssistant = assistantId;
-    document.body.appendChild(s);
+    const mount = () => window.raAssistant?.mount?.(hostRef.current!);
+
+    if (!document.querySelector(`script[data-ra-assistant="${assistantId}"]`)) {
+      const s = document.createElement("script");
+      s.src = `${apiBase}/public/ai-assistants/widget.js`;
+      s.async = true;
+      s.dataset.raAssistant = assistantId;
+      s.addEventListener("load", mount, { once: true });
+      document.body.appendChild(s);
+    } else {
+      mount();
+    }
+
+    const host = hostRef.current;
+    return () => {
+      if (host) window.raAssistant?.unmount?.(host);
+    };
   }, [data, assistantId]);
 
   const dark =
@@ -124,11 +145,11 @@ export default function PublicAssistantRoute() {
     <>
       <style>{`html,body{background:${bg};color-scheme:${dark ? "dark" : "light"};}`}</style>
       <main
-        className="mx-auto flex min-h-dvh w-full max-w-[760px] flex-col"
+        className="mx-auto flex h-dvh w-full max-w-[760px] flex-col overflow-hidden"
         style={{ color: fg }}
       >
         <header
-          className="flex items-center gap-3 px-5 py-4 sm:px-6"
+          className="flex shrink-0 items-center gap-3 px-5 py-3 sm:px-6"
           style={{ borderBottom: `1px solid ${line}` }}
         >
           <span
@@ -151,8 +172,16 @@ export default function PublicAssistantRoute() {
             {data.business_name}
           </h1>
         </header>
-        <div className="flex-1 px-3 py-4 sm:px-6">
-          <div data-ra-assistant={assistantId} data-ra-mode="page" />
+        {/* min-h-0 is what lets the widget's internal thread scroll instead of
+            growing the page: a flex child defaults to min-height:auto, which
+            refuses to shrink below its content. */}
+        <div className="flex min-h-0 flex-1 flex-col px-3 pb-3 pt-2 sm:px-6 sm:pb-4">
+          <div
+            ref={hostRef}
+            data-ra-assistant={assistantId}
+            data-ra-mode="page"
+            className="flex min-h-0 flex-1 flex-col"
+          />
         </div>
       </main>
     </>

@@ -193,13 +193,12 @@ function KeyCard({ canManage }: { canManage: boolean }) {
             <Button
               variant="outline"
               size="sm"
-              disabled={!canManage || m.test.isPending}
+              disabled={!canManage}
+              loading={m.test.isPending}
               onClick={test}
             >
-              <Send className="mr-1.5 h-4 w-4" />
-              {m.test.isPending
-                ? t("common.loading", { defaultValue: "Loading…" })
-                : t("settings.ai.test")}
+              {m.test.isPending ? null : <Send className="mr-1.5 h-4 w-4" />}
+              {t("settings.ai.test")}
             </Button>
             <Button
               variant="ghost"
@@ -236,15 +235,14 @@ function KeyCard({ canManage }: { canManage: boolean }) {
             />
           </div>
           <Button
-            disabled={!canManage || !apiKey.trim() || m.connect.isPending}
+            disabled={!canManage || !apiKey.trim()}
+            loading={m.connect.isPending}
             onClick={connect}
           >
-            <KeyRound className="mr-1.5 h-4 w-4" />
-            {m.connect.isPending
-              ? t("common.loading", { defaultValue: "Loading…" })
-              : isConnected
-                ? t("settings.ai.rotate")
-                : t("settings.ai.connect")}
+            {m.connect.isPending ? null : (
+              <KeyRound className="mr-1.5 h-4 w-4" />
+            )}
+            {isConnected ? t("settings.ai.rotate") : t("settings.ai.connect")}
           </Button>
         </div>
         <p className="mt-2 text-xs text-muted-foreground">
@@ -338,15 +336,13 @@ function KeyCard({ canManage }: { canManage: boolean }) {
             </AlertDialogCancel>
             <AlertDialogAction
               variant="destructive"
-              disabled={m.disconnect.isPending}
+              loading={m.disconnect.isPending}
               onClick={(e) => {
                 e.preventDefault();
                 disconnect();
               }}
             >
-              {m.disconnect.isPending
-                ? t("common.loading", { defaultValue: "Loading…" })
-                : t("settings.ai.disconnect")}
+              {t("settings.ai.disconnect")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

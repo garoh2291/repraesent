@@ -4,7 +4,6 @@ import {
   Copy,
   ExternalLink,
   ShieldCheck,
-  TestTube2,
 } from "lucide-react";
 import { toast } from "sonner";
 import {
@@ -73,15 +72,6 @@ export function PublishPanel({
 
       <CspCard assistantId={assistantId} onCopy={copy} />
 
-      <Panel>
-        <PanelHeader
-          icon={<TestTube2 className="h-3.5 w-3.5" />}
-          title={t("aiAssistants.share.testTitle")}
-        />
-        <PanelBody>
-          <FieldHint>{t("aiAssistants.share.testHint")}</FieldHint>
-        </PanelBody>
-      </Panel>
     </div>
   );
 }

@@ -34,6 +34,7 @@ import {
 } from "~/lib/api/ai-assistants";
 import { ActionChips } from "~/components/ai-assistants/ActionChips";
 import { cn } from "~/lib/utils";
+import { stripCitations } from "~/lib/ai-assistants/citations";
 
 interface Turn {
   id: string;
@@ -261,7 +262,7 @@ function TurnView({
             : "rounded-bl-md bg-muted",
         )}
       >
-        {turn.content}
+        {stripCitations(turn.content, turn.streaming)}
         {turn.streaming && !turn.content ? (
           <span
             className="inline-flex gap-1"

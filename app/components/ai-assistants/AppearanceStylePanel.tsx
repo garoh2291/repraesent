@@ -10,6 +10,7 @@ import {
   Segmented,
   SegmentedButton,
 } from "~/components/forms/chrome";
+import { FieldAnchor } from "~/components/ai-assistants/FieldAnchor";
 import { Field, FieldHint, ToggleField } from "~/components/wordpress/fields";
 import { Input } from "~/components/ui/input";
 import { Label } from "~/components/ui/label";
@@ -165,16 +166,18 @@ export function AppearanceStylePanel({
                       className="size-9 shrink-0 rounded-full border border-border object-cover"
                     />
                   ) : null}
-                  <Input
-                    disabled={!canEdit}
-                    inputMode="url"
-                    placeholder="https://…/icon.png"
-                    value={ap.launcher_image_url ?? ""}
-                    onChange={(e) =>
-                      set({ launcher_image_url: e.target.value || undefined })
-                    }
-                    className="flex-1"
-                  />
+                  <FieldAnchor path="appearance.launcher_image_url">
+                    <Input
+                      disabled={!canEdit}
+                      inputMode="url"
+                      placeholder="https://…/icon.png"
+                      value={ap.launcher_image_url ?? ""}
+                      onChange={(e) =>
+                        set({ launcher_image_url: e.target.value || undefined })
+                      }
+                      className="flex-1"
+                    />
+                  </FieldAnchor>
                   <button
                     type="button"
                     disabled={!canEdit}
@@ -201,37 +204,41 @@ export function AppearanceStylePanel({
                 <Label htmlFor="offset-x">
                   {t("aiAssistants.appearance.launcher.offsetX")}
                 </Label>
-                <Input
-                  id="offset-x"
-                  type="number"
-                  min={0}
-                  max={200}
-                  disabled={!canEdit}
-                  value={ap.offset_x}
-                  onChange={(e) =>
-                    set({
-                      offset_x: clamp(Number(e.target.value) || 0, 0, 200),
-                    })
-                  }
-                />
+                <FieldAnchor path="appearance.offset_x">
+                  <Input
+                    id="offset-x"
+                    type="number"
+                    min={0}
+                    max={200}
+                    disabled={!canEdit}
+                    value={ap.offset_x}
+                    onChange={(e) =>
+                      set({
+                        offset_x: clamp(Number(e.target.value) || 0, 0, 200),
+                      })
+                    }
+                  />
+                </FieldAnchor>
               </Field>
               <Field>
                 <Label htmlFor="offset-y">
                   {t("aiAssistants.appearance.launcher.offsetY")}
                 </Label>
-                <Input
-                  id="offset-y"
-                  type="number"
-                  min={0}
-                  max={200}
-                  disabled={!canEdit}
-                  value={ap.offset_y}
-                  onChange={(e) =>
-                    set({
-                      offset_y: clamp(Number(e.target.value) || 0, 0, 200),
-                    })
-                  }
-                />
+                <FieldAnchor path="appearance.offset_y">
+                  <Input
+                    id="offset-y"
+                    type="number"
+                    min={0}
+                    max={200}
+                    disabled={!canEdit}
+                    value={ap.offset_y}
+                    onChange={(e) =>
+                      set({
+                        offset_y: clamp(Number(e.target.value) || 0, 0, 200),
+                      })
+                    }
+                  />
+                </FieldAnchor>
               </Field>
             </Cols>
             <FieldHint>
@@ -264,26 +271,28 @@ export function AppearanceStylePanel({
                     <Label htmlFor="auto-open-delay">
                       {t("aiAssistants.appearance.delaySeconds")}
                     </Label>
-                    <Input
-                      id="auto-open-delay"
-                      type="number"
-                      min={0}
-                      max={120}
-                      disabled={!canEdit}
-                      value={ap.auto_open.delay_seconds}
-                      onChange={(e) =>
-                        set({
-                          auto_open: {
-                            ...ap.auto_open,
-                            delay_seconds: clamp(
-                              Number(e.target.value) || 0,
-                              0,
-                              120,
-                            ),
-                          },
-                        })
-                      }
-                    />
+                    <FieldAnchor path="appearance.auto_open.delay_seconds">
+                      <Input
+                        id="auto-open-delay"
+                        type="number"
+                        min={0}
+                        max={120}
+                        disabled={!canEdit}
+                        value={ap.auto_open.delay_seconds}
+                        onChange={(e) =>
+                          set({
+                            auto_open: {
+                              ...ap.auto_open,
+                              delay_seconds: clamp(
+                                Number(e.target.value) || 0,
+                                0,
+                                120,
+                              ),
+                            },
+                          })
+                        }
+                      />
+                    </FieldAnchor>
                   </Field>
                   <Field className="@sm:pt-7">
                     <ToggleField
@@ -333,26 +342,28 @@ export function AppearanceStylePanel({
                     <Label htmlFor="nudge-delay">
                       {t("aiAssistants.appearance.delaySeconds")}
                     </Label>
-                    <Input
-                      id="nudge-delay"
-                      type="number"
-                      min={0}
-                      max={120}
-                      disabled={!canEdit}
-                      value={ap.nudge.delay_seconds}
-                      onChange={(e) =>
-                        set({
-                          nudge: {
-                            ...ap.nudge,
-                            delay_seconds: clamp(
-                              Number(e.target.value) || 0,
-                              0,
-                              120,
-                            ),
-                          },
-                        })
-                      }
-                    />
+                    <FieldAnchor path="appearance.nudge.delay_seconds">
+                      <Input
+                        id="nudge-delay"
+                        type="number"
+                        min={0}
+                        max={120}
+                        disabled={!canEdit}
+                        value={ap.nudge.delay_seconds}
+                        onChange={(e) =>
+                          set({
+                            nudge: {
+                              ...ap.nudge,
+                              delay_seconds: clamp(
+                                Number(e.target.value) || 0,
+                                0,
+                                120,
+                              ),
+                            },
+                          })
+                        }
+                      />
+                    </FieldAnchor>
                   </Field>
                 </Cols>
               ) : null}
@@ -384,7 +395,10 @@ export function AppearanceStylePanel({
                 </Segmented>
               </Field>
               {ap.page_rules.mode !== "all" ? (
-                <div className="space-y-2">
+                <FieldAnchor
+                  path="appearance.page_rules.patterns"
+                  className="space-y-2"
+                >
                   {ap.page_rules.patterns.length > 0 ? (
                     <ul className="flex flex-wrap gap-1.5">
                       {ap.page_rules.patterns.map((p) => (
@@ -445,7 +459,7 @@ export function AppearanceStylePanel({
                   <FieldHint>
                     {t("aiAssistants.appearance.pageRules.hint")}
                   </FieldHint>
-                </div>
+                </FieldAnchor>
               ) : null}
             </PanelSection>
           </PanelBody>

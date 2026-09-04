@@ -150,11 +150,21 @@ export default function AiAssistantsIndexRoute() {
                     navigate(`/ai-assistants/${a.id}`);
                   }
                 }}
-                className={`app-fade-up app-fade-up-d${Math.min(index + 1, 4)} group flex cursor-pointer flex-col gap-3 rounded-xl border bg-card p-4 transition-colors hover:border-foreground/20 sm:flex-row sm:items-center sm:justify-between`}
+                className={cn(
+                  `app-fade-up app-fade-up-d${Math.min(index + 1, 4)}`,
+                  // Phones: a 2-column grid so the overflow menu is pinned to
+                  // the top-right corner (where a thumb reaches for it) and the
+                  // stats get a full-width row of their own instead of being
+                  // squeezed against it. sm+ keeps the original single row.
+                  "group grid cursor-pointer grid-cols-[minmax(0,1fr)_auto] items-start gap-x-2 gap-y-3 rounded-xl border bg-card p-4 transition-colors hover:border-foreground/20",
+                  "sm:flex sm:items-center sm:justify-between sm:gap-4",
+                )}
               >
-                <div className="min-w-0 space-y-1">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <span className="truncate font-medium">{a.name}</span>
+                <div className="min-w-0 space-y-1.5">
+                  {/* The name is the identity: it gets its own line rather than
+                      competing with three chips for the same wrap. */}
+                  <div className="truncate font-medium">{a.name}</div>
+                  <div className="flex flex-wrap items-center gap-1.5">
                     <AssistantStatusBadge status={a.status} />
                     <span className="inline-flex items-center gap-1 rounded-md border border-border bg-muted/40 px-1.5 py-0.5 text-[11px] font-medium text-muted-foreground">
                       <WidgetTypeIcon type={a.widget_type} />
@@ -177,22 +187,19 @@ export default function AiAssistantsIndexRoute() {
                       })}
                     </span>
                   </div>
-                  <p className="text-xs text-muted-foreground">
-                    <span className="font-mono">{a.slug}</span>
-                    {" · "}
-                    {t("aiAssistants.list.updated")} {formatDate(a.updated_at)}
+                  {/* One line on every width: the slug gives way, the date —
+                      the part that changes — always stays readable. */}
+                  <p className="flex items-baseline gap-1 text-xs text-muted-foreground">
+                    <span className="truncate font-mono">{a.slug}</span>
+                    <span aria-hidden>·</span>
+                    <span className="shrink-0">
+                      {t("aiAssistants.list.updated")}{" "}
+                      {formatDate(a.updated_at)}
+                    </span>
                   </p>
                 </div>
 
-                <div className="flex items-center gap-4 sm:gap-6">
-                  <Stat
-                    value={a.conversations_30d}
-                    label={t("aiAssistants.list.conversations30d")}
-                  />
-                  <Stat
-                    value={a.leads_30d}
-                    label={t("aiAssistants.list.leads30d")}
-                  />
+                <div className="sm:order-3">
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                       <Button
@@ -232,6 +239,19 @@ export default function AiAssistantsIndexRoute() {
                     </DropdownMenuContent>
                   </DropdownMenu>
                 </div>
+                {/* Phones: full-width footer under a hairline. sm+: back inline,
+                    before the menu (order-2/3 below). */}
+                <div className="col-span-2 flex items-center gap-6 border-t border-border/60 pt-3 sm:order-2 sm:col-span-1 sm:border-0 sm:pt-0">
+                  <Stat
+                    value={a.conversations_30d}
+                    label={t("aiAssistants.list.conversations30d")}
+                  />
+                  <Stat
+                    value={a.leads_30d}
+                    label={t("aiAssistants.list.leads30d")}
+                  />
+                </div>
+
               </div>
             );
           })}
@@ -280,7 +300,7 @@ export default function AiAssistantsIndexRoute() {
 
 function Stat({ value, label }: { value: number; label: string }) {
   return (
-    <div className="px-2 py-1 text-right">
+    <div className="py-0.5 text-left sm:px-2 sm:py-1 sm:text-right">
       <div
         className={cn(
           "text-lg font-semibold tabular-nums leading-none",

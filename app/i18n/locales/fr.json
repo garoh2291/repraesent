@@ -5557,6 +5557,44 @@
     "bulkHardDeleteTitle": "Supprimer définitivement {{count}} images ?"
   },
   "aiAssistants": {
+    "validation": {
+      "badgeLabel": "{{n}} problèmes dans cet onglet",
+      "bannerTitle": "{{n}} à corriger avant d’enregistrer",
+      "saveBlocked": "L’assistant n’a pas été enregistré",
+      "displayNameMissing": "Le nom de l’assistant est vide — l’en-tête du widget en a besoin.",
+      "tooManyQuestions": "6 questions suggérées au maximum.",
+      "blankQuestion": "Une question suggérée est vide.",
+      "instructionsTooLong": "Les instructions personnalisées dépassent 1000 caractères.",
+      "invalidColor": "La couleur principale doit être une valeur hexadécimale à 6 chiffres, par ex. #2563eb.",
+      "avatarUrlMissing": "L’avatar est réglé sur une image mais aucune URL n’est renseignée.",
+      "avatarUrlInvalid": "L’URL de l’image d’avatar doit commencer par http:// ou https://.",
+      "launcherImageMissing": "L’icône du lanceur est réglée sur une image mais aucune URL n’est renseignée.",
+      "launcherImageInvalid": "L’URL de l’image du lanceur doit commencer par http:// ou https://.",
+      "offsetOutOfRange": "Le décalage du lanceur doit être un entier entre 0 et 200.",
+      "delayOutOfRange": "Le délai doit être un nombre entier de secondes entre 0 et 120.",
+      "tooManyPatterns": "20 règles de page au maximum.",
+      "blankPattern": "Une règle de page est vide.",
+      "stringTooLong": "Ce texte {{locale}} dépasse la longueur autorisée par le widget.",
+      "tooManyLeadFields": "5 champs de lead au maximum.",
+      "leadFieldsEmpty": "La collecte de leads est activée mais aucun champ n’est coché.",
+      "afterTurnsOutOfRange": "« Demander après » doit être compris entre 1 et 20 échanges.",
+      "introTooLong": "Le texte d’introduction dépasse 400 caractères.",
+      "thanksTooLong": "Le texte de remerciement dépasse 400 caractères.",
+      "tooManyActions": "6 actions au maximum.",
+      "actionLabelMissing": "Cette action n’a pas de libellé.",
+      "actionUrlMissing": "Une action de type lien a besoin d’une URL.",
+      "actionUrlInvalid": "L’URL de l’action doit commencer par http:// ou https://.",
+      "actionAppointmentMissing": "Une action de réservation a besoin d’un agenda.",
+      "actionPhoneMissing": "Une action d’appel a besoin d’un numéro de téléphone.",
+      "actionEmailMissing": "Une action e-mail a besoin d’une adresse.",
+      "actionEmailInvalid": "Cette adresse e-mail n’est pas valide.",
+      "tooManyDomains": "20 domaines autorisés au maximum.",
+      "invalidDomain": "Ce domaine contient des caractères impossibles dans un nom d’hôte.",
+      "businessNameMissing": "Le nom de l'entreprise est vide — l'assistant doit savoir pour qui il parle.",
+      "businessNameTooLong": "Le nom de l'entreprise dépasse 120 caractères.",
+      "profileEmailInvalid": "L'e-mail dans les informations d'entreprise n'est pas une adresse valide.",
+      "tooManyKeyPeople": "Au plus 5 personnes dans les informations d'entreprise."
+    },
     "list": {
       "title": "Assistants IA",
       "hint": "Un assistant de chat entraîné sur votre site et vos documents. Il répond aux questions des visiteurs et vous transmet ceux qui veulent vous parler.",
@@ -5616,12 +5654,16 @@
       "save": "Enregistrer",
       "saved": "Enregistré",
       "publish": "Publier",
-      "republish": "Publier les modifications",
       "unpublish": "Mettre hors ligne",
       "delete": "Supprimer l’assistant",
       "readOnly": "Vous avez un accès en lecture seule à cet assistant.",
       "publishedToast": "Assistant publié",
-      "unpublishedToast": "Assistant mis hors ligne"
+      "unpublishedToast": "Assistant mis hors ligne",
+      "savingAuto": "Enregistrement…",
+      "savedAuto": "Enregistré",
+      "liveToggle": "En ligne",
+      "liveTooltipOn": "Les visiteurs peuvent utiliser cet assistant. Vos modifications sont enregistrées et mises en ligne immédiatement.",
+      "liveTooltipOff": "Activez pour publier l’assistant sur votre site. Il reste un brouillon jusque-là."
     },
     "locales": {
       "en": "Anglais",
@@ -5677,7 +5719,16 @@
         "pages": "{{count}} pages",
         "limitHint": "Ce n’est qu’un plafond. Un site de 10 pages consomme 10 crédits. Les explorations sont volontairement lentes pour préserver vos crédits Firecrawl. Les ré-explorations ne réindexent que les pages modifiées.",
         "submit": "Lancer l’exploration",
-        "started": "Exploration lancée"
+        "started": "Exploration lancée",
+        "languages": {
+          "label": "Langues",
+          "primary": "Langue principale uniquement",
+          "all": "Toutes les langues",
+          "hint": "Ignore les miroirs /de/, /fr/ ; l'assistant répond quand même dans la langue du visiteur."
+        },
+        "advanced": "Avancé",
+        "excludePaths": "Exclure des chemins",
+        "excludePathsHint": "Un préfixe de chemin par ligne. Les pages en dessous ne sont jamais explorées."
       },
       "upload": {
         "title": "Importer des documents",
@@ -5708,6 +5759,62 @@
         "weekly": "Chaque semaine",
         "monthly": "Chaque mois",
         "next": "prochaine {{when}}"
+      },
+      "crawlStats": {
+        "found": "{{count}} trouvées",
+        "crawled": "{{count}} explorées",
+        "skipped": "{{count}} ignorées (autres langues / exclues)"
+      }
+    },
+    "facts": {
+      "title": "Informations d'entreprise",
+      "statusExtracted": "Extrait de votre site {{when}}",
+      "statusEdited": "Modifié par vous",
+      "statusEmpty": "Pas encore extrait — explorez un site ou remplissez à la main",
+      "regenerate": "Régénérer depuis le site",
+      "regenerated": "Informations d'entreprise actualisées depuis votre site",
+      "regenerateFailed": "Impossible de régénérer les informations d'entreprise",
+      "noKnowledgeTitle": "Rien à extraire pour l'instant",
+      "noKnowledgeBody": "Explorez d'abord votre site — les informations sont lues dans ses pages.",
+      "hint": "L'assistant énonce ces données comme des faits : téléphone, e-mail, adresse et horaires exacts, sans réserve. Enregistré avec le reste de l'assistant.",
+      "emptyHint": "Sans ces données, l'assistant ne peut pas répondre à « comment vous joindre » ou « où êtes-vous » — explorez un site pour les remplir, ou saisissez-les ici.",
+      "onePerLine": "Un élément par ligne.",
+      "addPerson": "Ajouter une personne",
+      "noPeople": "Aucune personne indiquée.",
+      "groups": {
+        "identity": "Identité",
+        "where": "Localisation",
+        "registration": "Immatriculation",
+        "contact": "Contact",
+        "offer": "Ce que nous faisons",
+        "people": "Personnes",
+        "languages": "Langues",
+        "notes": "Notes"
+      },
+      "fields": {
+        "brand_name": "Nom de marque",
+        "legal_name": "Raison sociale",
+        "tagline": "Slogan",
+        "founded": "Fondée en",
+        "address": "Adresse",
+        "locations": "Sites",
+        "opening_hours": "Horaires d'ouverture",
+        "court": "Tribunal du registre",
+        "number": "Numéro d'immatriculation",
+        "vat_id": "N° de TVA",
+        "ein": "EIN",
+        "phone": "Téléphone",
+        "email": "E-mail",
+        "services": "Services",
+        "pricing": "Tarifs",
+        "personName": "Nom",
+        "personRole": "Rôle"
+      },
+      "placeholders": {
+        "locations": "Ajoutez une ville ou une région, Entrée pour valider",
+        "languages": "Ajoutez une langue, Entrée pour valider",
+        "opening_hours": "Lun–ven 9h00–17h00",
+        "notes": "Tout ce que l'assistant doit savoir avec certitude."
       }
     },
     "behaviour": {
@@ -5746,7 +5853,27 @@
         "medium": "Moyenne",
         "long": "Longue",
         "hint": "Limite les réponses à environ {{tokens}} tokens. La limite avancée ci-dessous s’applique toujours."
-      }
+      },
+      "businessName": "Nom de l'entreprise",
+      "businessNamePlaceholder": "p. ex. Menuiserie Müller",
+      "businessNameHint": "Comment l'assistant vous désigne. Par défaut, le nom de l'espace de travail.",
+      "businessNameDetected": "Détecté sur le site :",
+      "businessNameUse": "Utiliser",
+      "advancedTitle": "Avancé",
+      "rerank": "Reclasser les réponses (plus lent, plus précis)",
+      "rerankHint": "Une seconde passe réordonne les passages trouvés avant la rédaction de la réponse. Jusqu'à 1,5 s de plus par réponse."
+    },
+    "translate": {
+      "withAi": "Traduire",
+      "retranslate": "Retraduire",
+      "allLanguages": "Traduire toutes les langues",
+      "retranslateTitle": "Écraser le texte existant ?",
+      "retranslateBody": "Tous les textes en {{locale}} seront remplacés par une nouvelle traduction IA du texte anglais. Ce que vous avez écrit à la main sera perdu.",
+      "done": "Traduit",
+      "partial": "Certaines langues ont échoué : {{locales}}",
+      "nothingToDo": "Il n'y a plus rien à traduire",
+      "unavailable": "La traduction par IA n'est pas disponible",
+      "failed": "Échec de la traduction"
     },
     "appearance": {
       "widgetTitle": "Widget",
@@ -5756,6 +5883,13 @@
       "avatarInitial": "Initiale",
       "avatarImage": "Image",
       "primaryColor": "Couleur d’accent",
+      "accentForeground": "Couleur des icônes sur l’accent",
+      "accentForegroundHint": "Couleur de la flèche d’envoi et des autres icônes posées sur la couleur d’accent. « Automatique » choisit le noir ou le blanc le plus lisible.",
+      "accentForegroundOption": {
+        "auto": "Automatique",
+        "light": "Blanc",
+        "dark": "Noir"
+      },
       "presets": "Préréglages",
       "theme": "Thème",
       "themes": {
@@ -5916,8 +6050,6 @@
       "cspHint": "Seulement si votre site envoie un en-tête Content-Security-Policy. Sans ces directives, le navigateur bloque le widget et n’affiche rien.",
       "localhostWarning": "Cet extrait pointe vers {{origin}}, qui n’existe que sur la machine du serveur. Le widget ne se chargera sur aucun site réel.",
       "apiOrigin": "Origine de l’API :",
-      "testTitle": "Page de test",
-      "testHint": "Collez l’extrait dans un fichier HTML vide et ouvrez-le dans un navigateur — aucun serveur nécessaire. Ajoutez l’origine du fichier aux domaines autorisés si vous en avez définis.",
       "pageTitle": "Page hébergée",
       "pageHint": "Une page hébergée pour vous. Liez-la depuis vos menus, e-mails ou QR codes.",
       "pageUrl": "Lien de la page",
@@ -5955,7 +6087,9 @@
       "debugNote": "« Déboguer la recherche » montre quels segments ont été retenus et comment, pour distinguer une source manquante d’un problème de formulation.",
       "leadSent": "Lead de test envoyé — voir Leads.",
       "leadSubmit": "Envoyer",
-      "chunk": "segment"
+      "chunk": "segment",
+      "understoodAs": "Compris comme :",
+      "reranked": "reclassé"
     },
     "usage": {
       "title": "Utilisation",
@@ -6036,6 +6170,7 @@
         "after_first_answer": "Après la première réponse"
       },
       "perLocale": "Texte par langue",
+      "perLocaleHint": "Laissez vide pour utiliser le libellé ci-dessus. « Traduire » ne remplit que les champs vides.",
       "moveUp": "Monter",
       "moveDown": "Descendre"
     },

@@ -11,6 +11,7 @@ import {
 } from "~/components/forms/chrome";
 import { FieldHint } from "~/components/wordpress/fields";
 import { Textarea } from "~/components/ui/textarea";
+import { BusinessFactsCard } from "~/components/ai-assistants/BusinessFactsCard";
 import { GapsPanel } from "~/components/ai-assistants/GapsPanel";
 import { SourceDocumentsDrawer } from "~/components/ai-assistants/SourceDocumentsDrawer";
 import {
@@ -22,6 +23,9 @@ import { SourceRow, relativeTime } from "~/components/ai-assistants/SourceRow";
 import { extractErrorMessage } from "~/lib/api/axios-instance";
 import {
   getSourceText,
+  type AssistantDraft,
+  type AssistantRecord,
+  type BusinessProfileMode,
   type KnowledgeSource,
   type SourceType,
 } from "~/lib/api/ai-assistants";
@@ -34,6 +38,12 @@ interface Props {
   businessDescription: string;
   onDescriptionSaved: (value: string) => void;
   saveDescription: (value: string) => Promise<unknown>;
+  /** Main draft — the business facts ride the same autosave as every field. */
+  draft: AssistantDraft;
+  onChange: (patch: Partial<AssistantDraft>) => void;
+  profileMode: BusinessProfileMode;
+  profileUpdatedAt: string | null;
+  onProfileRegenerated: (record: AssistantRecord) => void;
 }
 
 const GROUP_ORDER: SourceType[] = ["website", "document", "text"];
@@ -50,6 +60,11 @@ export function KnowledgePanel({
   businessDescription,
   onDescriptionSaved,
   saveDescription,
+  draft,
+  onChange,
+  profileMode,
+  profileUpdatedAt,
+  onProfileRegenerated,
 }: Props) {
   const { t, i18n } = useTranslation();
   const { data: sources, isLoading } = useAiSources(assistantId);
@@ -230,6 +245,13 @@ export function KnowledgePanel({
                       canEdit={canEdit}
                       formatDate={formatDate}
                       formatRelative={formatRelative}
+                      busy={
+                        (m.resync.isPending && m.resync.variables === s.id) ||
+                        (m.remove.isPending && m.remove.variables === s.id) ||
+                        (m.update.isPending &&
+                          (m.update.variables as { sourceId?: string } | undefined)
+                            ?.sourceId === s.id)
+                      }
                       onResync={() => m.resync.mutate(s.id, { onError: fail })}
                       onDelete={() => m.remove.mutate(s.id, { onError: fail })}
                       onToggle={(enabled) =>
@@ -270,6 +292,16 @@ export function KnowledgePanel({
           )}
         </PanelBody>
       </Panel>
+
+      <BusinessFactsCard
+        assistantId={assistantId}
+        canEdit={canEdit}
+        draft={draft}
+        onChange={onChange}
+        mode={profileMode}
+        updatedAt={profileUpdatedAt}
+        onRegenerated={onProfileRegenerated}
+      />
 
       <GapsPanel assistantId={assistantId} canEdit={canEdit} />
 

@@ -93,6 +93,8 @@ export type PageRulesMode = "all" | "include" | "exclude";
 
 export interface AppearanceConfig {
   primary_color: string;
+  /** Icons/text drawn ON the accent colour. "auto" picks by luminance. */
+  accent_foreground: "auto" | "light" | "dark";
   theme: "auto" | "light" | "dark";
   position: "right" | "left";
   avatar_mode: "initial" | "image";
@@ -124,6 +126,7 @@ export interface AppearanceConfig {
 export const APPEARANCE_DEFAULTS: Omit<
   AppearanceConfig,
   | "primary_color"
+  | "accent_foreground"
   | "theme"
   | "position"
   | "avatar_mode"
@@ -149,6 +152,7 @@ export function withAppearanceDefaults(
 ): AppearanceConfig {
   return {
     primary_color: "#111111",
+    accent_foreground: "auto",
     theme: "auto",
     position: "right",
     avatar_mode: "initial",
@@ -173,24 +177,69 @@ export const ACTION_SHOW = [
 ] as const;
 export type ActionShow = (typeof ACTION_SHOW)[number];
 
+/**
+ * Booking rules on a `book` action — structurally identical to the forms
+ * appointment field (`lib/forms/schema.ts`), because both are served by the
+ * same backend availability/booking service.
+ */
+export interface ActionAppointmentSettings {
+  /** Cross-source booking target: `google:<acc>:<cal>` / `microsoft:` / `caldav:` / `baikal:<configId>`. */
+  targetKey?: string;
+  /** Legacy Google pair, dual-written alongside a `google:` targetKey. */
+  accountId?: string;
+  calendarId?: string;
+  /** Calendars that block slots, or "all" (resolved at request time). */
+  busyCalendarKeys: string[] | "all";
+  durationMinutes: number;
+  /** Wall-clock bookable window in `timezone`, "HH:mm". */
+  window: { start: string; end: string };
+  weekdays: string[];
+  timezone: string;
+  minNoticeHours?: number;
+  maxDaysAhead?: number;
+}
+
+export const ACTION_APPOINTMENT_DEFAULTS: ActionAppointmentSettings = {
+  busyCalendarKeys: "all",
+  durationMinutes: 30,
+  window: { start: "09:00", end: "17:00" },
+  weekdays: ["mon", "tue", "wed", "thu", "fri"],
+  timezone: "Europe/Berlin",
+  minNoticeHours: 2,
+  maxDaysAhead: 30,
+};
+
 export interface ActionConfig {
   id: string;
   type: ActionType;
   label: string;
   labels: Partial<Record<AiLocale, string>>;
   url?: string;
+  /**
+   * Legacy: the Baikal booking page a book action used to link out to. The
+   * backend migrates it to `appointment.targetKey` on read; nothing writes it.
+   */
   config_id?: string;
+  appointment?: ActionAppointmentSettings;
   phone?: string;
   email?: string;
   show: ActionShow;
 }
 
-/** Resolved CTA as the widget (and the SSE `actions` event) receives it. */
+/**
+ * Resolved CTA as the widget (and the SSE `actions` event) receives it.
+ * `mode: "link"` navigates to `href`; `mode: "inline_booking"` opens the slot
+ * picker inside the chat and carries only display metadata.
+ */
 export interface ActionItem {
   id: string;
   type: ActionType;
   label: string;
-  href: string;
+  mode?: "link" | "inline_booking";
+  href?: string;
+  action_id?: string;
+  timezone?: string;
+  duration_minutes?: number;
 }
 
 export interface FallbackContact {
@@ -249,6 +298,71 @@ export interface AssistantUsageToday {
   cost_micro_usd: number;
 }
 
+/** Facts the assistant may state as authoritative (`<business_facts>`). */
+export interface BusinessProfile {
+  legal_name: string;
+  brand_name: string;
+  tagline: string;
+  address: string;
+  registration: { court: string; number: string; vat_id: string; ein: string };
+  phone: string;
+  email: string;
+  opening_hours: string;
+  languages: string[];
+  locations: string[];
+  services: string[];
+  pricing: string[];
+  key_people: Array<{ name: string; role: string }>;
+  founded: string;
+  notes: string;
+}
+
+export const EMPTY_BUSINESS_PROFILE: BusinessProfile = {
+  legal_name: "",
+  brand_name: "",
+  tagline: "",
+  address: "",
+  registration: { court: "", number: "", vat_id: "", ein: "" },
+  phone: "",
+  email: "",
+  opening_hours: "",
+  languages: [],
+  locations: [],
+  services: [],
+  pricing: [],
+  key_people: [],
+  founded: "",
+  notes: "",
+};
+
+/** Fill in whatever an older record (or a partial server answer) left out. */
+export function withProfileDefaults(
+  p: Partial<BusinessProfile> | null | undefined,
+): BusinessProfile {
+  const base = p ?? {};
+  return {
+    ...EMPTY_BUSINESS_PROFILE,
+    ...base,
+    registration: {
+      ...EMPTY_BUSINESS_PROFILE.registration,
+      ...(base.registration ?? {}),
+    },
+    languages: base.languages ?? [],
+    locations: base.locations ?? [],
+    services: base.services ?? [],
+    pricing: base.pricing ?? [],
+    key_people: base.key_people ?? [],
+  };
+}
+
+/** `auto` = filled by the crawler; `edited` = hand-edited, recrawls leave it alone. */
+export type BusinessProfileMode = "auto" | "edited";
+
+export interface RetrievalConfig {
+  /** Listwise re-rank of the top hits — slower, more precise. Default off. */
+  rerank: boolean;
+}
+
 export interface AssistantRecord {
   id: string;
   workspace_id: string;
@@ -256,7 +370,12 @@ export interface AssistantRecord {
   slug: string;
   status: AssistantStatus;
   widget_type: WidgetType;
+  business_name: string;
   business_description: string;
+  business_profile: BusinessProfile;
+  business_profile_mode: BusinessProfileMode;
+  business_profile_updated_at: string | null;
+  retrieval: RetrievalConfig;
   chat_model: string;
   temperature: number;
   max_output_tokens: number;
@@ -280,7 +399,10 @@ export type AssistantDraft = Pick<
   AssistantRecord,
   | "name"
   | "widget_type"
+  | "business_name"
   | "business_description"
+  | "business_profile"
+  | "retrieval"
   | "chat_model"
   | "temperature"
   | "max_output_tokens"
@@ -308,6 +430,21 @@ export interface SourceProgress {
 
 export type RecrawlInterval = "weekly" | "monthly" | null;
 
+export type CrawlLanguages = "primary" | "all";
+export interface CrawlOptions {
+  /** `primary` skips /de/, /fr/ … mirrors of pages already taken. */
+  languages: CrawlLanguages;
+  /** Path prefixes never crawled, e.g. `/blog/`. */
+  exclude_paths: string[];
+}
+export const CRAWL_LIMIT_MIN = 10;
+export const CRAWL_LIMIT_MAX = 300;
+export const CRAWL_LIMIT_DEFAULT = 50;
+export const DEFAULT_CRAWL_OPTIONS: CrawlOptions = {
+  languages: "primary",
+  exclude_paths: [],
+};
+
 export interface KnowledgeSource {
   id: string;
   type: SourceType;
@@ -318,6 +455,11 @@ export interface KnowledgeSource {
   title: string;
   url: string | null;
   crawl_limit: number | null;
+  crawl_options: CrawlOptions | null;
+  /** URLs the crawler discovered before ranking; null for non-website sources. */
+  discovered_count: number | null;
+  /** Discovered pages left out (other languages / excluded paths). */
+  skipped_count: number | null;
   original_filename: string | null;
   mime_type: string | null;
   size_bytes: number | null;
@@ -335,6 +477,7 @@ export interface CreateSourceDto {
   title: string;
   url?: string;
   crawl_limit?: number;
+  crawl_options?: CrawlOptions;
   raw_text?: string;
 }
 
@@ -527,6 +670,9 @@ export interface RetrievalDebug {
   best_similarity: number | null;
   fts_hits: number;
   classifier: string | null;
+  /** The standalone/English query retrieval actually ran, when rewritten. */
+  retrieval_query?: string | null;
+  reranked?: boolean;
   chunks: Array<{
     title: string;
     heading_path: string;
@@ -710,6 +856,25 @@ export async function updateAssistant(
   return r.data;
 }
 
+/**
+ * Re-extract the business profile from the crawled website. 409
+ * `workspace_ai_not_configured` without a key; 422 `no_knowledge` when
+ * nothing has been crawled yet.
+ */
+export async function regenerateBusinessProfile(
+  id: string,
+): Promise<AssistantRecord> {
+  const r = await apiClient.post<AssistantRecord>(
+    `${BASE}/${id}/business-profile/regenerate`,
+  );
+  return r.data;
+}
+
+export function isNoKnowledgeError(error: unknown): boolean {
+  const e = error as { response?: { data?: { code?: string } } } | null;
+  return e?.response?.data?.code === "no_knowledge";
+}
+
 export async function deleteAssistant(id: string): Promise<void> {
   await apiClient.delete(`${BASE}/${id}`);
 }
@@ -814,6 +979,7 @@ export interface UpdateSourceDto {
   raw_text?: string;
   enabled?: boolean;
   recrawl_interval?: RecrawlInterval;
+  crawl_options?: CrawlOptions;
 }
 
 export async function updateSource(

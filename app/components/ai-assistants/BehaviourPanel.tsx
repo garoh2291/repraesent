@@ -1,6 +1,13 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Cpu, Languages, MessageSquareText, Shield, X } from "lucide-react";
+import {
+  Cpu,
+  Languages,
+  MessageSquareText,
+  Shield,
+  SlidersHorizontal,
+  X,
+} from "lucide-react";
 import {
   Cols,
   Panel,
@@ -10,6 +17,7 @@ import {
   Segmented,
   SegmentedButton,
 } from "~/components/forms/chrome";
+import { FieldAnchor } from "~/components/ai-assistants/FieldAnchor";
 import { Field, FieldHint } from "~/components/wordpress/fields";
 import { Input } from "~/components/ui/input";
 import { Label } from "~/components/ui/label";
@@ -22,8 +30,10 @@ import {
   SelectValue,
 } from "~/components/ui/select";
 import { Slider } from "~/components/ui/slider";
+import { Switch } from "~/components/ui/switch";
 import { Textarea } from "~/components/ui/textarea";
 import { useChatModels } from "~/lib/hooks/useAiAssistants";
+import { MAX_BUSINESS_NAME } from "~/lib/ai-assistants/validate";
 import {
   AI_LOCALES,
   ANSWER_LENGTHS,
@@ -49,6 +59,10 @@ export function BehaviourPanel({ draft, canEdit, onChange }: Props) {
   const persona = draft.persona;
   const setPersona = (p: Partial<AssistantDraft["persona"]>) =>
     onChange({ persona: { ...persona, ...p } });
+  const brand = draft.business_profile?.brand_name?.trim() ?? "";
+  const detectedName =
+    brand && brand !== draft.business_name.trim() ? brand : "";
+  const rerank = draft.retrieval?.rerank ?? false;
 
   return (
     <div className="grid gap-5 lg:grid-cols-2">
@@ -183,6 +197,43 @@ export function BehaviourPanel({ draft, canEdit, onChange }: Props) {
         />
         <PanelBody>
           <Field>
+            <Label htmlFor="business-name">
+              {t("aiAssistants.behaviour.businessName")}
+            </Label>
+            <FieldAnchor path="business_name">
+              <Input
+                id="business-name"
+                value={draft.business_name}
+                disabled={!canEdit}
+                maxLength={MAX_BUSINESS_NAME}
+                onChange={(e) => onChange({ business_name: e.target.value })}
+                placeholder={t("aiAssistants.behaviour.businessNamePlaceholder")}
+              />
+            </FieldAnchor>
+            {detectedName ? (
+              <p className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-muted-foreground">
+                <span>
+                  {t("aiAssistants.behaviour.businessNameDetected")}{" "}
+                  <span className="font-medium text-foreground">
+                    {detectedName}
+                  </span>
+                </span>
+                {canEdit ? (
+                  <button
+                    type="button"
+                    onClick={() => onChange({ business_name: detectedName })}
+                    className="font-medium text-foreground underline-offset-2 hover:underline"
+                  >
+                    {t("aiAssistants.behaviour.businessNameUse")}
+                  </button>
+                ) : null}
+              </p>
+            ) : (
+              <FieldHint>{t("aiAssistants.behaviour.businessNameHint")}</FieldHint>
+            )}
+          </Field>
+
+          <Field>
             <Label>{t("aiAssistants.behaviour.tone")}</Label>
             <RadioGroup
               value={persona.tone}
@@ -261,16 +312,20 @@ export function BehaviourPanel({ draft, canEdit, onChange }: Props) {
           </PanelSection>
 
           <PanelSection title={t("aiAssistants.behaviour.instructionsTitle")}>
-            <Textarea
-              value={persona.custom_instructions}
-              disabled={!canEdit}
-              maxLength={INSTRUCTIONS_MAX}
-              onChange={(e) =>
-                setPersona({ custom_instructions: e.target.value })
-              }
-              placeholder={t("aiAssistants.behaviour.instructionsPlaceholder")}
-              className="min-h-[120px] leading-relaxed"
-            />
+            <FieldAnchor path="persona.custom_instructions">
+              <Textarea
+                value={persona.custom_instructions}
+                disabled={!canEdit}
+                maxLength={INSTRUCTIONS_MAX}
+                onChange={(e) =>
+                  setPersona({ custom_instructions: e.target.value })
+                }
+                placeholder={t(
+                  "aiAssistants.behaviour.instructionsPlaceholder",
+                )}
+                className="min-h-[120px] leading-relaxed"
+              />
+            </FieldAnchor>
             <div className="flex items-baseline justify-between gap-3">
               <FieldHint>
                 {t("aiAssistants.behaviour.instructionsHint")}
@@ -290,11 +345,43 @@ export function BehaviourPanel({ draft, canEdit, onChange }: Props) {
         />
         <PanelBody>
           <FieldHint>{t("aiAssistants.behaviour.domainsHint")}</FieldHint>
-          <DomainTagInput
-            value={draft.allowed_domains}
-            disabled={!canEdit}
-            onChange={(allowed_domains) => onChange({ allowed_domains })}
-          />
+          <FieldAnchor path="allowed_domains">
+            <DomainTagInput
+              value={draft.allowed_domains}
+              disabled={!canEdit}
+              onChange={(allowed_domains) => onChange({ allowed_domains })}
+            />
+          </FieldAnchor>
+        </PanelBody>
+      </Panel>
+
+      <Panel className="lg:col-span-2">
+        <PanelHeader
+          icon={<SlidersHorizontal className="h-3.5 w-3.5" />}
+          title={t("aiAssistants.behaviour.advancedTitle")}
+        />
+        <PanelBody>
+          <FieldAnchor path="retrieval.rerank">
+            <label className="flex cursor-pointer items-start justify-between gap-4 rounded-lg border border-border px-3 py-2.5">
+              <span className="space-y-0.5">
+                <span className="block text-sm">
+                  {t("aiAssistants.behaviour.rerank")}
+                </span>
+                <span className="block text-xs text-muted-foreground">
+                  {t("aiAssistants.behaviour.rerankHint")}
+                </span>
+              </span>
+              <Switch
+                checked={rerank}
+                disabled={!canEdit}
+                onCheckedChange={(v) =>
+                  onChange({ retrieval: { ...draft.retrieval, rerank: v } })
+                }
+                aria-label={t("aiAssistants.behaviour.rerank")}
+                className="mt-0.5"
+              />
+            </label>
+          </FieldAnchor>
         </PanelBody>
       </Panel>
     </div>

@@ -135,10 +135,13 @@ export function TestsPanel({
                 <Button
                   variant="outline"
                   size="sm"
+                  loading={m.run.isPending && confirmLlm}
                   disabled={m.run.isPending}
                   onClick={() => setConfirmLlm(true)}
                 >
-                  <Sparkles className="h-3.5 w-3.5" />
+                  {m.run.isPending && confirmLlm ? null : (
+                    <Sparkles className="h-3.5 w-3.5" />
+                  )}
                   {t("aiAssistants.tests.runLlm")}
                 </Button>
               </div>
@@ -172,9 +175,10 @@ export function TestsPanel({
                 type="submit"
                 size="sm"
                 className="h-9"
-                disabled={!question.trim() || m.create.isPending}
+                loading={m.create.isPending}
+                disabled={!question.trim()}
               >
-                <Plus className="h-3.5 w-3.5" />
+                {m.create.isPending ? null : <Plus className="h-3.5 w-3.5" />}
                 {t("aiAssistants.tests.add")}
               </Button>
             </form>

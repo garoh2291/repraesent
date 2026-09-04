@@ -1,6 +1,7 @@
 "use client"
 
 import * as React from "react"
+import { Loader2 } from "lucide-react"
 import { AlertDialog as AlertDialogPrimitive } from "radix-ui"
 
 import { cn } from "~/lib/utils"
@@ -144,20 +145,41 @@ function AlertDialogMedia({
   )
 }
 
+/**
+ * The confirm button of a destructive dialog is almost always async, so it
+ * carries the same `loading` affordance as Button. It cannot delegate to
+ * Button's own spinner: this renders `asChild`, so the Action primitive owns
+ * the content and the spinner has to go inside it.
+ */
 function AlertDialogAction({
   className,
   variant = "default",
   size = "default",
+  loading = false,
+  disabled,
+  children,
   ...props
 }: React.ComponentProps<typeof AlertDialogPrimitive.Action> &
-  Pick<React.ComponentProps<typeof Button>, "variant" | "size">) {
+  Pick<React.ComponentProps<typeof Button>, "variant" | "size"> & {
+    loading?: boolean;
+  }) {
   return (
     <Button variant={variant} size={size} asChild>
       <AlertDialogPrimitive.Action
         data-slot="alert-dialog-action"
         className={cn(className)}
+        disabled={disabled || loading}
+        aria-busy={loading || undefined}
         {...props}
-      />
+      >
+        {loading ? (
+          <Loader2
+            className="size-4 animate-spin motion-reduce:animate-none"
+            aria-hidden
+          />
+        ) : null}
+        {children}
+      </AlertDialogPrimitive.Action>
     </Button>
   )
 }

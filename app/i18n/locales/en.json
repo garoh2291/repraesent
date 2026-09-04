@@ -5555,6 +5555,44 @@
     "bulkHardDeleteTitle": "Permanently delete {{count}} images?"
   },
   "aiAssistants": {
+    "validation": {
+      "badgeLabel": "{{n}} problems on this tab",
+      "bannerTitle": "{{n}} to fix before saving",
+      "saveBlocked": "The assistant was not saved",
+      "displayNameMissing": "Assistant name is empty — the widget header needs one.",
+      "tooManyQuestions": "At most 6 suggested questions.",
+      "blankQuestion": "A suggested question is empty.",
+      "instructionsTooLong": "Custom instructions are over 1000 characters.",
+      "invalidColor": "Primary colour must be a 6-digit hex value like #2563eb.",
+      "avatarUrlMissing": "Avatar is set to an image but no image URL is set.",
+      "avatarUrlInvalid": "Avatar image URL must start with http:// or https://.",
+      "launcherImageMissing": "Launcher icon is set to an image but no image URL is set.",
+      "launcherImageInvalid": "Launcher image URL must start with http:// or https://.",
+      "offsetOutOfRange": "Launcher offset must be a whole number between 0 and 200.",
+      "delayOutOfRange": "Delay must be a whole number of seconds between 0 and 120.",
+      "tooManyPatterns": "At most 20 page rules.",
+      "blankPattern": "A page rule is empty.",
+      "stringTooLong": "This {{locale}} text is longer than the widget allows.",
+      "tooManyLeadFields": "At most 5 lead fields.",
+      "leadFieldsEmpty": "Lead capture is on but no field is ticked.",
+      "afterTurnsOutOfRange": "Ask after must be between 1 and 20 turns.",
+      "introTooLong": "Lead intro text is over 400 characters.",
+      "thanksTooLong": "Thank-you text is over 400 characters.",
+      "tooManyActions": "At most 6 actions.",
+      "actionLabelMissing": "This action has no label.",
+      "actionUrlMissing": "A link action needs a URL.",
+      "actionUrlInvalid": "The action URL must start with http:// or https://.",
+      "actionAppointmentMissing": "A booking action needs a calendar to book into.",
+      "actionPhoneMissing": "A call action needs a phone number.",
+      "actionEmailMissing": "An e-mail action needs an address.",
+      "actionEmailInvalid": "This is not a valid e-mail address.",
+      "tooManyDomains": "At most 20 allowed domains.",
+      "invalidDomain": "This domain contains characters a host name cannot have.",
+      "businessNameMissing": "Business name is empty — the assistant needs to know who it speaks for.",
+      "businessNameTooLong": "Business name is over 120 characters.",
+      "profileEmailInvalid": "The business email in Business facts is not a valid address.",
+      "tooManyKeyPeople": "At most 5 people in Business facts."
+    },
     "list": {
       "title": "AI assistants",
       "hint": "A chat assistant trained on your website and documents. It answers visitors’ questions and hands you the ones who want to talk.",
@@ -5614,12 +5652,16 @@
       "save": "Save",
       "saved": "Saved",
       "publish": "Publish",
-      "republish": "Publish changes",
       "unpublish": "Take offline",
       "delete": "Delete assistant",
       "readOnly": "You have read-only access to this assistant.",
       "publishedToast": "Assistant published",
-      "unpublishedToast": "Assistant taken offline"
+      "unpublishedToast": "Assistant taken offline",
+      "savingAuto": "Saving…",
+      "savedAuto": "Saved",
+      "liveToggle": "Live",
+      "liveTooltipOn": "Visitors can use this assistant. Edits you make are saved and go live straight away.",
+      "liveTooltipOff": "Turn on to put the assistant on your site. It stays a draft until you do."
     },
     "locales": {
       "en": "English",
@@ -5675,7 +5717,16 @@
         "pages": "{{count}} pages",
         "limitHint": "This is only a cap. A site with 10 pages uses 10 credits. Crawls run slowly on purpose to protect your Firecrawl credits. Re-crawls only re-index pages that changed.",
         "submit": "Start crawl",
-        "started": "Crawl started"
+        "started": "Crawl started",
+        "languages": {
+          "label": "Languages",
+          "primary": "Primary language only",
+          "all": "All languages",
+          "hint": "Skips /de/, /fr/ mirrors; the assistant still answers in the visitor's language."
+        },
+        "advanced": "Advanced",
+        "excludePaths": "Exclude paths",
+        "excludePathsHint": "One path prefix per line. Pages under these are never crawled."
       },
       "upload": {
         "title": "Upload documents",
@@ -5706,6 +5757,62 @@
         "weekly": "Weekly",
         "monthly": "Monthly",
         "next": "next {{when}}"
+      },
+      "crawlStats": {
+        "found": "{{count}} found",
+        "crawled": "{{count}} crawled",
+        "skipped": "{{count}} skipped (other languages / excluded)"
+      }
+    },
+    "facts": {
+      "title": "Business facts",
+      "statusExtracted": "Extracted from your website {{when}}",
+      "statusEdited": "Edited by you",
+      "statusEmpty": "Not extracted yet — crawl a website or fill in by hand",
+      "regenerate": "Regenerate from website",
+      "regenerated": "Business facts refreshed from your website",
+      "regenerateFailed": "Could not regenerate business facts",
+      "noKnowledgeTitle": "Nothing to extract from yet",
+      "noKnowledgeBody": "Crawl your website first — the facts are read from its pages.",
+      "hint": "The assistant states these as fact: exact phone, email, address and hours, without hedging. Saves with the rest of the assistant.",
+      "emptyHint": "Without these the assistant cannot answer \"how do I reach you\" or \"where are you\" — crawl a website to fill them in, or type them here.",
+      "onePerLine": "One per line.",
+      "addPerson": "Add person",
+      "noPeople": "No people listed.",
+      "groups": {
+        "identity": "Identity",
+        "where": "Where",
+        "registration": "Registration",
+        "contact": "Contact",
+        "offer": "What we do",
+        "people": "People",
+        "languages": "Languages",
+        "notes": "Notes"
+      },
+      "fields": {
+        "brand_name": "Brand name",
+        "legal_name": "Legal name",
+        "tagline": "Tagline",
+        "founded": "Founded",
+        "address": "Address",
+        "locations": "Locations",
+        "opening_hours": "Opening hours",
+        "court": "Register court",
+        "number": "Registration number",
+        "vat_id": "VAT ID",
+        "ein": "EIN",
+        "phone": "Phone",
+        "email": "Email",
+        "services": "Services",
+        "pricing": "Pricing",
+        "personName": "Name",
+        "personRole": "Role"
+      },
+      "placeholders": {
+        "locations": "Add a city or region, Enter to confirm",
+        "languages": "Add a language, Enter to confirm",
+        "opening_hours": "Mon–Fri 9:00–17:00",
+        "notes": "Anything else the assistant should know for certain."
       }
     },
     "behaviour": {
@@ -5744,7 +5851,27 @@
         "medium": "Medium",
         "long": "Long",
         "hint": "Caps answers at about {{tokens}} tokens. The advanced limit below still applies."
-      }
+      },
+      "businessName": "Business name",
+      "businessNamePlaceholder": "e.g. Müller Joinery",
+      "businessNameHint": "How the assistant refers to you. Falls back to the workspace name.",
+      "businessNameDetected": "Detected from website:",
+      "businessNameUse": "Use it",
+      "advancedTitle": "Advanced",
+      "rerank": "Re-rank answers (slower, more precise)",
+      "rerankHint": "A second pass re-orders the retrieved passages before the answer is written. Adds up to 1.5 s per reply."
+    },
+    "translate": {
+      "withAi": "Translate",
+      "retranslate": "Retranslate",
+      "allLanguages": "Translate all languages",
+      "retranslateTitle": "Overwrite the existing text?",
+      "retranslateBody": "Every string for {{locale}} will be replaced with a fresh AI translation of the English text. Anything you wrote by hand is lost.",
+      "done": "Translated",
+      "partial": "Some languages failed: {{locales}}",
+      "nothingToDo": "Nothing left to translate",
+      "unavailable": "AI translation is not available",
+      "failed": "Translation failed"
     },
     "appearance": {
       "widgetTitle": "Widget",
@@ -5754,6 +5881,13 @@
       "avatarInitial": "Initial",
       "avatarImage": "Image",
       "primaryColor": "Accent colour",
+      "accentForeground": "Icon colour on accent",
+      "accentForegroundHint": "Colour of the send arrow and other glyphs drawn on the accent colour. Automatic picks black or white for the best contrast.",
+      "accentForegroundOption": {
+        "auto": "Automatic",
+        "light": "White",
+        "dark": "Black"
+      },
       "presets": "Presets",
       "theme": "Theme",
       "themes": {
@@ -5914,8 +6048,6 @@
       "cspHint": "Only if your site sends a Content-Security-Policy header. Without these the browser blocks the widget and shows nothing.",
       "localhostWarning": "This snippet points at {{origin}}, which only exists on the server’s own machine. The widget will not load on any real website.",
       "apiOrigin": "API origin:",
-      "testTitle": "Test page",
-      "testHint": "Paste the snippet into a blank HTML file and open it in a browser — no server needed. Add the file’s origin to the allowed domains if you have set any.",
       "pageTitle": "Hosted page",
       "pageHint": "A page we host for you. Link to it from menus, emails or QR codes.",
       "pageUrl": "Page link",
@@ -5953,7 +6085,9 @@
       "debugNote": "Debug retrieval shows which chunks were matched and how, so you can tell a missing source from a phrasing problem.",
       "leadSent": "Test lead sent — check Leads.",
       "leadSubmit": "Send details",
-      "chunk": "chunk"
+      "chunk": "chunk",
+      "understoodAs": "Understood as:",
+      "reranked": "re-ranked"
     },
     "usage": {
       "title": "Usage",
@@ -6034,6 +6168,7 @@
         "after_first_answer": "After the first answer"
       },
       "perLocale": "Label per language",
+      "perLocaleHint": "Leave a language empty to fall back to the label above. Translate fills only the empty ones.",
       "moveUp": "Move up",
       "moveDown": "Move down"
     },

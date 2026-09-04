@@ -23,6 +23,8 @@ import { extractErrorMessage } from "~/lib/api/axios-instance";
 import {
   WIDGET_TYPES,
   createAssistant,
+  CRAWL_LIMIT_DEFAULT,
+  DEFAULT_CRAWL_OPTIONS,
   createSource,
   publishAssistant,
   updateAssistant,
@@ -93,7 +95,6 @@ export function CreateAssistantWizard({ open, onOpenChange }: Props) {
         name: name.trim(),
         widget_type: type,
       });
-      setCreatedId(record.id);
       if (description.trim()) {
         await updateAssistant(record.id, {
           business_description: description.trim(),
@@ -104,7 +105,8 @@ export function CreateAssistantWizard({ open, onOpenChange }: Props) {
           await createSource(record.id, {
             type: "website",
             url: normalizedUrl,
-            crawl_limit: 25,
+            crawl_limit: CRAWL_LIMIT_DEFAULT,
+            crawl_options: DEFAULT_CRAWL_OPTIONS,
             title: new URL(normalizedUrl).hostname.replace(/^www\./, ""),
           });
         } catch (err) {
@@ -112,7 +114,15 @@ export function CreateAssistantWizard({ open, onOpenChange }: Props) {
           else toast.error(extractErrorMessage(err));
         }
       }
-      await qc.invalidateQueries({ queryKey: aiKeys.list() });
+      // Mount the polling query only now: setting it before the source exists
+      // caches a list that predates the crawl, and with the app's 5-minute
+      // staleTime the detail page then shows no website source until a reload.
+      setCreatedId(record.id);
+      await Promise.all([
+        qc.invalidateQueries({ queryKey: aiKeys.list() }),
+        qc.invalidateQueries({ queryKey: aiKeys.sources(record.id) }),
+        qc.invalidateQueries({ queryKey: aiKeys.detail(record.id) }),
+      ]);
       setStep(3);
     } catch (err) {
       toast.error(extractErrorMessage(err));
@@ -126,7 +136,10 @@ export function CreateAssistantWizard({ open, onOpenChange }: Props) {
     setPending(true);
     try {
       await publishAssistant(createdId);
-      await qc.invalidateQueries({ queryKey: aiKeys.list() });
+      await Promise.all([
+        qc.invalidateQueries({ queryKey: aiKeys.list() }),
+        qc.invalidateQueries({ queryKey: aiKeys.detail(createdId) }),
+      ]);
       setPublished(true);
       toast.success(t("aiAssistants.detail.publishedToast"));
     } catch (err) {

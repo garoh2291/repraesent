@@ -110,10 +110,23 @@ export function DebugTable({ debug }: { debug: RetrievalDebug }) {
   const { t } = useTranslation();
   return (
     <div className="w-full max-w-[85%] space-y-2 rounded-xl border border-border bg-muted/30 p-3 text-[11px]">
-      <p className="flex flex-wrap gap-x-3 gap-y-1 font-mono text-muted-foreground">
+      {debug.retrieval_query ? (
+        <p className="text-muted-foreground">
+          {t("aiAssistants.playground.understoodAs")}{" "}
+          <span className="text-foreground/90">
+            &ldquo;{debug.retrieval_query}&rdquo;
+          </span>
+        </p>
+      ) : null}
+      <p className="flex flex-wrap items-center gap-x-3 gap-y-1 font-mono text-muted-foreground">
         <span>best_sim={debug.best_similarity?.toFixed(3) ?? "—"}</span>
         <span>fts_hits={debug.fts_hits}</span>
         <span>classifier={debug.classifier ?? "—"}</span>
+        {debug.reranked ? (
+          <span className="rounded-full border border-border px-2 py-0.5 font-sans text-[10px] font-medium uppercase tracking-wider text-foreground/80">
+            {t("aiAssistants.playground.reranked")}
+          </span>
+        ) : null}
       </p>
       {debug.chunks.length > 0 ? (
         <div className="overflow-x-auto">
