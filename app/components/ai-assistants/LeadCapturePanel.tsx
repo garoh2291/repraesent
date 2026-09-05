@@ -116,6 +116,7 @@ export function LeadCapturePanel({ draft, canEdit, onChange }: Props) {
           </PanelSection>
 
           <PanelSection title={t("aiAssistants.leads.triggersTitle")}>
+            <FieldHint>{t("aiAssistants.leads.triggersHint")}</FieldHint>
             <div className="flex items-start justify-between gap-4 rounded-xl border border-border px-3 py-2.5">
               <div className="space-y-0.5">
                 <Label htmlFor="trigger-intent" className="font-normal">
@@ -129,6 +130,24 @@ export function LeadCapturePanel({ draft, canEdit, onChange }: Props) {
                 disabled={disabled}
                 onCheckedChange={(on_intent) =>
                   set({ trigger: { ...lc.trigger, on_intent } })
+                }
+              />
+            </div>
+            <div className="flex items-start justify-between gap-4 rounded-xl border border-border px-3 py-2.5">
+              <div className="space-y-0.5">
+                <Label htmlFor="trigger-farewell" className="font-normal">
+                  {t("aiAssistants.leads.onFarewell")}
+                </Label>
+                <FieldHint>{t("aiAssistants.leads.onFarewellHint")}</FieldHint>
+              </div>
+              <Switch
+                id="trigger-farewell"
+                // Snapshots written before this trigger existed have no value;
+                // the backend defaults it to on, so the switch must too.
+                checked={lc.trigger.on_farewell ?? true}
+                disabled={disabled}
+                onCheckedChange={(on_farewell) =>
+                  set({ trigger: { ...lc.trigger, on_farewell } })
                 }
               />
             </div>

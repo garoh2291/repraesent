@@ -88,7 +88,7 @@ export function CountryPresetPicker({ value, onChange, disabled }: Props) {
               </button>
             </PopoverTrigger>
             <PopoverContent
-              className="w-[--radix-popover-trigger-width] p-0"
+              className="w-(--radix-popover-trigger-width) p-0"
               align="start"
             >
               <Command>

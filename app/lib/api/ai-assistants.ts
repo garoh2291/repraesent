@@ -91,11 +91,64 @@ export type LauncherIcon = "chat" | "sparkle" | "question" | "image";
 export type LauncherSize = "sm" | "md" | "lg";
 export type PageRulesMode = "all" | "include" | "exclude";
 
+/**
+ * `page` derives the whole palette from the host page's own background and
+ * text colour; `auto` is the old behaviour and follows the *visitor's* OS,
+ * which is why a dark-mode visitor used to get a black slab on a cream site.
+ */
+export const WIDGET_THEMES = ["page", "auto", "light", "dark"] as const;
+export type WidgetTheme = (typeof WIDGET_THEMES)[number];
+
+export const WIDGET_SHADOWS = ["none", "soft", "strong"] as const;
+export type WidgetShadow = (typeof WIDGET_SHADOWS)[number];
+
+export const WIDGET_HEIGHTS = ["compact", "standard", "tall"] as const;
+export type WidgetHeight = (typeof WIDGET_HEIGHTS)[number];
+
+/** Optional hex overrides applied ON TOP of the resolved base palette. */
+export interface WidgetColors {
+  background?: string;
+  surface?: string;
+  text?: string;
+  muted?: string;
+  border?: string;
+  user_bubble?: string;
+  assistant_bubble?: string;
+}
+export const WIDGET_COLOR_KEYS = [
+  "background",
+  "surface",
+  "text",
+  "muted",
+  "border",
+  "user_bubble",
+  "assistant_bubble",
+] as const satisfies ReadonlyArray<keyof WidgetColors>;
+
+/** Shape/space limits — kept in lockstep with the zod schema. */
+export const RADIUS_PX_MIN = 0;
+export const RADIUS_PX_MAX = 32;
+export const BORDER_WIDTH_MAX = 3;
+export const MAX_WIDTH_MIN = 320;
+export const MAX_WIDTH_MAX = 1200;
+export const MARGIN_Y_MAX = 96;
+
 export interface AppearanceConfig {
   primary_color: string;
   /** Icons/text drawn ON the accent colour. "auto" picks by luminance. */
   accent_foreground: "auto" | "light" | "dark";
-  theme: "auto" | "light" | "dark";
+  theme: WidgetTheme;
+  /** Empty = follow the page (or the light/dark base for a fixed theme). */
+  colors: WidgetColors;
+  /** null = use the `radius` preset. 0 gives genuinely square corners. */
+  radius_px: number | null;
+  border_width: number;
+  shadow: WidgetShadow;
+  /** Embedded types only. null = the built-in per-type width. */
+  max_width: number | null;
+  /** Embedded types only — the fix for sitting flush against the page header. */
+  margin_y: number;
+  height: WidgetHeight;
   position: "right" | "left";
   avatar_mode: "initial" | "image";
   avatar_url?: string;
@@ -128,11 +181,18 @@ export const APPEARANCE_DEFAULTS: Omit<
   | "primary_color"
   | "accent_foreground"
   | "theme"
+  | "colors"
   | "position"
   | "avatar_mode"
   | "show_powered_by"
   | "strings"
 > = {
+  radius_px: null,
+  border_width: 1,
+  shadow: "soft",
+  max_width: null,
+  margin_y: 24,
+  height: "standard",
   font: "system",
   radius: "lg",
   density: "comfortable",
@@ -153,13 +213,24 @@ export function withAppearanceDefaults(
   return {
     primary_color: "#111111",
     accent_foreground: "auto",
-    theme: "auto",
+    // "page" is the recommended default: it matches the site the widget is
+    // embedded in instead of the visitor's operating system.
+    theme: "page",
     position: "right",
     avatar_mode: "initial",
     show_powered_by: true,
     strings: {},
     ...APPEARANCE_DEFAULTS,
     ...ap,
+    // Nullable/numeric shape fields: an older row omits them entirely, and a
+    // partial server answer can carry an explicit undefined. Both fall back.
+    colors: { ...(ap.colors ?? {}) },
+    radius_px: ap.radius_px ?? null,
+    max_width: ap.max_width ?? null,
+    border_width: ap.border_width ?? APPEARANCE_DEFAULTS.border_width,
+    margin_y: ap.margin_y ?? APPEARANCE_DEFAULTS.margin_y,
+    shadow: ap.shadow ?? APPEARANCE_DEFAULTS.shadow,
+    height: ap.height ?? APPEARANCE_DEFAULTS.height,
     auto_open: { ...APPEARANCE_DEFAULTS.auto_open, ...(ap.auto_open ?? {}) },
     nudge: { ...APPEARANCE_DEFAULTS.nudge, ...(ap.nudge ?? {}) },
     page_rules: { ...APPEARANCE_DEFAULTS.page_rules, ...(ap.page_rules ?? {}) },
@@ -197,6 +268,17 @@ export interface ActionAppointmentSettings {
   timezone: string;
   minNoticeHours?: number;
   maxDaysAhead?: number;
+  /**
+   * The person the visitor is booking with — shown on the booking card and
+   * added as an attendee on the created event. Denormalised on purpose: the
+   * public config must never expose a user id, so the backend strips
+   * `hostUserId` and forwards only the display fields.
+   */
+  hostUserId?: string;
+  hostName?: string;
+  hostAvatarUrl?: string;
+  hostEmail?: string;
+  hostRole?: string;
 }
 
 export const ACTION_APPOINTMENT_DEFAULTS: ActionAppointmentSettings = {
@@ -269,7 +351,16 @@ export interface LeadCaptureField {
 export interface LeadCaptureConfig {
   enabled: boolean;
   fields: LeadCaptureField[];
-  trigger: { on_intent: boolean; after_turns: number | null };
+  trigger: {
+    on_intent: boolean;
+    /**
+     * "thanks, bye" ends the conversation with the contact form. Optional
+     * because snapshots written before it exists have no value; every read
+     * defaults it to `true`.
+     */
+    on_farewell?: boolean;
+    after_turns: number | null;
+  };
   intro_text: string;
   thank_you_text: string;
 }

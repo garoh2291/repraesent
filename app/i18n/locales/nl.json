@@ -67,6 +67,7 @@
     "loadingPlugins": "Services laden…",
     "openaiAds": "OpenAI Ads",
     "newBadge": "Nieuw",
+    "demoBadge": "Demo",
     "betaVadge": "Beta",
     "pilotUnavailable": "Deze functie is nog niet ingeschakeld voor uw werkruimte.",
     "emailCampaigns": "Campagnes",
@@ -5593,7 +5594,12 @@
       "businessNameMissing": "De bedrijfsnaam is leeg — de assistent moet weten namens wie hij spreekt.",
       "businessNameTooLong": "De bedrijfsnaam is langer dan 120 tekens.",
       "profileEmailInvalid": "Het e-mailadres in de bedrijfsgegevens is ongeldig.",
-      "tooManyKeyPeople": "Maximaal 5 personen in de bedrijfsgegevens."
+      "tooManyKeyPeople": "Maximaal 5 personen in de bedrijfsgegevens.",
+      "invalidOverrideColor": "Een eigen kleur moet een hexwaarde van 6 tekens zijn, zoals #2563eb, of leeg blijven.",
+      "radiusOutOfRange": "De hoekradius moet een geheel getal tussen 0 en 32 zijn.",
+      "borderWidthOutOfRange": "De randbreedte moet tussen 0 en 3 pixels liggen.",
+      "maxWidthOutOfRange": "De maximale breedte moet tussen 320 en 1200 pixels liggen.",
+      "marginOutOfRange": "De buitenmarge moet tussen 0 en 96 pixels liggen."
     },
     "list": {
       "title": "AI-assistenten",
@@ -5899,7 +5905,8 @@
       "themes": {
         "auto": "Auto",
         "light": "Licht",
-        "dark": "Donker"
+        "dark": "Donker",
+        "page": "De pagina volgen"
       },
       "position": "Positie",
       "positions": {
@@ -5998,7 +6005,8 @@
         "enabled": "Kort bericht naast de launcher tonen",
         "text": "Bericht",
         "placeholder": "Stel ons een vraag…",
-        "hint": "Eén keer per bezoek; verdwijnt als de chat opent."
+        "hint": "Eén keer per bezoek; verdwijnt als de chat opent.",
+        "perLanguageHint": "De terugvaltekst voor alle talen. Vertaal hem onder “Gesprek”."
       },
       "hideOnMobile": "Verbergen op kleine schermen",
       "pageRules": {
@@ -6010,6 +6018,78 @@
           "exclude": "Alles behalve"
         },
         "hint": "Eén pad per regel, bv. /prijzen, /blog/*, /nl/**. * is één segment, ** alles eronder."
+      },
+      "typeScopeHint": "Het type bepaalt welke instellingen hieronder bestaan — een zwevende bubbel heeft een knop, een ingebedde widget een hero.",
+      "headerSubtitleLabel": "Koptekst (zichtbaar zodra het gesprek begint)",
+      "headerSubtitleHint": "De regel onder de naam van de assistent in de chatkop.",
+      "headerSubtitleHintEmbedded": "In deze lay-out is er geen kop tot de bezoeker het eerste bericht stuurt. Zet het voorbeeld op “In gesprek” om hem te zien.",
+      "previewStateLabel": "Voorbeeldstatus",
+      "previewState": {
+        "empty": "Leeg",
+        "conversation": "In gesprek"
+      },
+      "previewUserMessage": "Hebben jullie volgende week nog iets vrij?",
+      "previewAssistantMessage": "Ja — er zijn nog enkele momenten vrij. Zal ik ze laten zien?",
+      "previewSiteHeader": "Uw website",
+      "themeHints": {
+        "page": "Neemt achtergrond, tekst en lettertype over van de site waarin de widget is ingebed.",
+        "auto": "Volgt het besturingssysteem van de bezoeker, niet uw site.",
+        "light": "Altijd licht, wat de pagina eromheen ook doet.",
+        "dark": "Altijd donker, wat de pagina eromheen ook doet."
+      },
+      "colours": {
+        "title": "Kleuren",
+        "recommended": "Aanbevolen",
+        "customTitle": "Eigen kleuren",
+        "customHint": "Elk veld is optioneel. Laat er een leeg en die kleur volgt de pagina.",
+        "followsPage": "Volgt de pagina",
+        "keys": {
+          "background": "Achtergrond",
+          "surface": "Vlakken en velden",
+          "text": "Tekst",
+          "muted": "Secundaire tekst",
+          "border": "Randen",
+          "user_bubble": "Bezoekersbubbel",
+          "assistant_bubble": "Assistentbubbel"
+        }
+      },
+      "shape": {
+        "title": "Vorm en ruimte",
+        "usePreset": "Voorinstelling gebruiken",
+        "radiusHint": "Zet de voorinstelling uit om de hoekradius in pixels te bepalen. 0 geeft rechte hoeken.",
+        "borderWidth": "Rand",
+        "none": "Geen",
+        "shadow": "Schaduw",
+        "shadows": {
+          "none": "Geen",
+          "soft": "Zacht",
+          "strong": "Sterk"
+        },
+        "boxTitle": "Op de pagina",
+        "maxWidth": "Maximale breedte",
+        "maxWidthHint": "Laat leeg om de ingebouwde breedte te gebruiken.",
+        "height": "Hoogte",
+        "heights": {
+          "compact": "Compact",
+          "standard": "Standaard",
+          "tall": "Hoog"
+        },
+        "marginY": "Buitenmarge",
+        "marginYHint": "Ruimte boven en onder de widget. Verhoog deze als de widget strak tegen uw paginakop staat."
+      },
+      "promoted": {
+        "section_title": "Herotitel",
+        "section_subtitle": "Hero-ondertitel",
+        "bar_placeholder": "Tijdelijke tekst in de balk",
+        "launcher_label": "Knoptekst per taal",
+        "nudge_text": "Attentiebericht per taal"
+      },
+      "promotedHint": {
+        "section_title": "De kop die bezoekers lezen voordat ze typen — hij vervangt de begroeting in deze lay-out.",
+        "section_subtitle": "Eén regel onder de herotitel.",
+        "bar_placeholder": "De grijze tekst in de ingeklapte zoekbalk.",
+        "launcher_label": "De tekst naast de zwevende knop.",
+        "nudge_text": "Het korte bericht dat naast de knop verschijnt."
       }
     },
     "leads": {
@@ -6038,7 +6118,10 @@
       "how1": "De assistent blijft gewoon antwoorden. Als een trigger afgaat, toont hij een kleine kaart met de gekozen velden, vooraf ingevuld met wat de bezoeker al noemde.",
       "how2": "Een verzonden kaart wordt een lead met bron “AI-assistent”, het gesprek als bijlage en uw gebruikelijke meldingen.",
       "how3": "Bezoekers kunnen de kaart sluiten; hij verschijnt in dat gesprek niet opnieuw.",
-      "note": "Leads komen in Leads terecht zoals elke formulierinzending — pipelinefases, taken en workflows gelden."
+      "note": "Leads komen in Leads terecht zoals elke formulierinzending — pipelinefases, taken en workflows gelden.",
+      "triggersHint": "Het formulier verschijnt hoogstens één keer per gesprek, en nooit zolang er een boekingsknop zichtbaar is.",
+      "onFarewell": "Wanneer de bezoeker afscheid neemt",
+      "onFarewellHint": "“Bedankt, doei” eindigt dan met het contactformulier in plaats van met niets."
     },
     "share": {
       "publishFirst": "Publiceer deze assistent voordat u hem insluit — de snippet blijft tot dan inactief.",
@@ -6185,7 +6268,12 @@
       "perLocale": "Tekst per taal",
       "perLocaleHint": "Laat leeg om terug te vallen op het label hierboven. ‘Vertalen’ vult alleen lege velden.",
       "moveUp": "Omhoog",
-      "moveDown": "Omlaag"
+      "moveDown": "Omlaag",
+      "host": "Gastheer",
+      "hostNone": "Geen gastheer",
+      "hostSearch": "Leden zoeken…",
+      "hostEmpty": "Geen lid gevonden",
+      "hostHint": "Wordt op de boekingskaart getoond en voor de afspraak uitgenodigd."
     },
     "fallback": {
       "title": "Als er geen antwoord is",

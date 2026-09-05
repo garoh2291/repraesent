@@ -67,6 +67,7 @@
     "loadingPlugins": "Services werden geladen…",
     "openaiAds": "OpenAI Ads",
     "newBadge": "Neu",
+    "demoBadge": "Demo",
     "betaVadge": "Beta",
     "pilotUnavailable": "Diese Funktion ist für Ihren Workspace noch nicht freigeschaltet.",
     "emailCampaigns": "Kampagnen",
@@ -5595,7 +5596,12 @@
       "businessNameMissing": "Der Firmenname ist leer — der Assistent muss wissen, für wen er spricht.",
       "businessNameTooLong": "Der Firmenname ist länger als 120 Zeichen.",
       "profileEmailInvalid": "Die E-Mail-Adresse in den Unternehmensdaten ist ungültig.",
-      "tooManyKeyPeople": "Höchstens 5 Personen in den Unternehmensdaten."
+      "tooManyKeyPeople": "Höchstens 5 Personen in den Unternehmensdaten.",
+      "invalidOverrideColor": "Eine eigene Farbe muss ein 6-stelliger Hex-Wert wie #2563eb oder leer sein.",
+      "radiusOutOfRange": "Der Eckenradius muss eine ganze Zahl zwischen 0 und 32 sein.",
+      "borderWidthOutOfRange": "Die Rahmenbreite muss zwischen 0 und 3 Pixeln liegen.",
+      "maxWidthOutOfRange": "Die maximale Breite muss zwischen 320 und 1200 Pixeln liegen.",
+      "marginOutOfRange": "Der äußere Abstand muss zwischen 0 und 96 Pixeln liegen."
     },
     "list": {
       "title": "KI-Assistenten",
@@ -5901,7 +5907,8 @@
       "themes": {
         "auto": "Auto",
         "light": "Hell",
-        "dark": "Dunkel"
+        "dark": "Dunkel",
+        "page": "Der Seite folgen"
       },
       "position": "Position",
       "positions": {
@@ -6000,7 +6007,8 @@
         "enabled": "Kurze Nachricht neben dem Launcher zeigen",
         "text": "Nachricht",
         "placeholder": "Fragen Sie uns…",
-        "hint": "Einmal pro Besuch, verschwindet beim Öffnen des Chats."
+        "hint": "Einmal pro Besuch, verschwindet beim Öffnen des Chats.",
+        "perLanguageHint": "Der Rückfalltext für alle Sprachen. Übersetzen Sie ihn unter „Gespräch“."
       },
       "hideOnMobile": "Auf kleinen Bildschirmen ausblenden",
       "pageRules": {
@@ -6012,6 +6020,78 @@
           "exclude": "Alle außer"
         },
         "hint": "Ein Pfad pro Eintrag, z. B. /preise, /blog/*, /de/**. * steht für ein Segment, ** für alles darunter."
+      },
+      "typeScopeHint": "Der Typ bestimmt, welche Einstellungen unten überhaupt existieren — eine schwebende Blase hat einen Button, ein eingebettetes Widget einen Hero-Bereich.",
+      "headerSubtitleLabel": "Kopfzeile (erscheint, sobald das Gespräch beginnt)",
+      "headerSubtitleHint": "Die Zeile unter dem Namen des Assistenten in der Chat-Kopfzeile.",
+      "headerSubtitleHintEmbedded": "In diesem Layout gibt es keine Kopfzeile, bis die Besucherin oder der Besucher die erste Nachricht sendet. Stellen Sie die Vorschau auf „Im Gespräch“, um sie zu sehen.",
+      "previewStateLabel": "Vorschau-Zustand",
+      "previewState": {
+        "empty": "Leer",
+        "conversation": "Im Gespräch"
+      },
+      "previewUserMessage": "Haben Sie nächste Woche noch etwas frei?",
+      "previewAssistantMessage": "Ja — es sind noch Termine frei. Soll ich sie Ihnen zeigen?",
+      "previewSiteHeader": "Ihre Website",
+      "themeHints": {
+        "page": "Übernimmt Hintergrund, Text und Schrift der Seite, in die das Widget eingebettet ist.",
+        "auto": "Folgt dem Betriebssystem der Besucher, nicht Ihrer Seite.",
+        "light": "Immer hell, unabhängig von der umgebenden Seite.",
+        "dark": "Immer dunkel, unabhängig von der umgebenden Seite."
+      },
+      "colours": {
+        "title": "Farben",
+        "recommended": "Empfohlen",
+        "customTitle": "Eigene Farben",
+        "customHint": "Alle Felder sind optional. Bleibt eines leer, folgt diese Farbe der Seite.",
+        "followsPage": "Folgt der Seite",
+        "keys": {
+          "background": "Hintergrund",
+          "surface": "Flächen und Felder",
+          "text": "Text",
+          "muted": "Sekundärer Text",
+          "border": "Rahmen",
+          "user_bubble": "Besucher-Blase",
+          "assistant_bubble": "Assistenten-Blase"
+        }
+      },
+      "shape": {
+        "title": "Form und Abstand",
+        "usePreset": "Vorgabe verwenden",
+        "radiusHint": "Schalten Sie die Vorgabe aus, um den Eckenradius in Pixeln zu setzen. 0 ergibt eckige Ecken.",
+        "borderWidth": "Rahmen",
+        "none": "Kein",
+        "shadow": "Schatten",
+        "shadows": {
+          "none": "Kein",
+          "soft": "Weich",
+          "strong": "Stark"
+        },
+        "boxTitle": "Auf der Seite",
+        "maxWidth": "Maximale Breite",
+        "maxWidthHint": "Leer lassen, um die eingebaute Breite zu verwenden.",
+        "height": "Höhe",
+        "heights": {
+          "compact": "Kompakt",
+          "standard": "Standard",
+          "tall": "Hoch"
+        },
+        "marginY": "Äußerer Abstand",
+        "marginYHint": "Abstand über und unter dem Widget. Erhöhen Sie ihn, wenn das Widget direkt an Ihrer Kopfzeile klebt."
+      },
+      "promoted": {
+        "section_title": "Hero-Titel",
+        "section_subtitle": "Hero-Untertitel",
+        "bar_placeholder": "Platzhalter der Leiste",
+        "launcher_label": "Button-Text je Sprache",
+        "nudge_text": "Hinweistext je Sprache"
+      },
+      "promotedHint": {
+        "section_title": "Die Überschrift, die Besucher vor dem Tippen lesen — sie ersetzt in diesem Layout die Begrüßung.",
+        "section_subtitle": "Eine Zeile unter dem Hero-Titel.",
+        "bar_placeholder": "Der graue Text in der eingeklappten Suchleiste.",
+        "launcher_label": "Der Text neben dem schwebenden Button.",
+        "nudge_text": "Die kurze Nachricht, die neben dem Button eingeblendet wird."
       }
     },
     "leads": {
@@ -6040,7 +6120,10 @@
       "how1": "Der Assistent antwortet ganz normal weiter. Löst ein Trigger aus, zeigt er eine kleine Karte mit den gewählten Feldern – vorausgefüllt mit allem, was der Besucher bereits genannt hat.",
       "how2": "Eine abgeschickte Karte wird zum Lead mit der Quelle „KI-Assistent“, angehängter Unterhaltung und Ihren üblichen Benachrichtigungen.",
       "how3": "Besucher können die Karte schließen; sie wird in dieser Unterhaltung nicht erneut gezeigt.",
-      "note": "Leads landen wie jede Formularübermittlung unter Leads – Pipeline-Phasen, Aufgaben und Workflows greifen."
+      "note": "Leads landen wie jede Formularübermittlung unter Leads – Pipeline-Phasen, Aufgaben und Workflows greifen.",
+      "triggersHint": "Das Formular erscheint höchstens einmal pro Gespräch und nie, solange ein Buchungs-Button sichtbar ist.",
+      "onFarewell": "Wenn sich die Besucherin oder der Besucher verabschiedet",
+      "onFarewellHint": "„Danke, tschüss“ endet dann mit dem Kontaktformular statt mit nichts."
     },
     "share": {
       "publishFirst": "Veröffentlichen Sie den Assistenten, bevor Sie ihn einbetten – der Snippet bleibt bis dahin inaktiv.",
@@ -6187,7 +6270,12 @@
       "perLocale": "Text pro Sprache",
       "perLocaleHint": "Leer lassen, um auf die Bezeichnung oben zurückzufallen. „Übersetzen“ füllt nur leere Felder.",
       "moveUp": "Nach oben",
-      "moveDown": "Nach unten"
+      "moveDown": "Nach unten",
+      "host": "Gastgeber",
+      "hostNone": "Kein Gastgeber",
+      "hostSearch": "Mitglieder suchen…",
+      "hostEmpty": "Kein Mitglied gefunden",
+      "hostHint": "Wird auf der Buchungskarte gezeigt und zum Termin eingeladen."
     },
     "fallback": {
       "title": "Wenn keine Antwort möglich ist",

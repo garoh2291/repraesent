@@ -13,6 +13,7 @@ import { useTranslation } from "react-i18next";
 import { useParams } from "react-router";
 import { DocumentScheme } from "~/components/forms/PublicShell";
 import i18n from "~/i18n";
+import { isHex, mix } from "~/lib/ai-assistants/palette";
 import { apiClient } from "~/lib/api/axios-instance";
 
 export function meta() {
@@ -28,9 +29,15 @@ interface PublicAssistantConfig {
   persona: { display_name: string };
   appearance: {
     primary_color: string;
-    theme: "auto" | "light" | "dark";
+    /** "page" resolves against this route's own surface, which is the light base. */
+    theme: "page" | "auto" | "light" | "dark";
     avatar_mode: "initial" | "image";
     avatar_url?: string;
+    colors?: {
+      background?: string;
+      text?: string;
+      border?: string;
+    };
   };
 }
 
@@ -95,14 +102,29 @@ export default function PublicAssistantRoute() {
     };
   }, [data, assistantId]);
 
+  // The chrome around the widget uses the same resolution the widget itself
+  // does, so a manual background/text override paints the whole page, not just
+  // the conversation box. "page" has no host page here — this route IS the
+  // page — so it falls back to the light base.
   const dark =
     data?.appearance.theme === "dark" ||
     (data?.appearance.theme === "auto" &&
       typeof window !== "undefined" &&
       window.matchMedia?.("(prefers-color-scheme: dark)").matches);
-  const bg = dark ? "#0f0f11" : "#f7f7f8";
-  const fg = dark ? "#f4f4f5" : "#111111";
-  const line = dark ? "#27272a" : "#e5e7eb";
+  const overrides = data?.appearance.colors ?? {};
+  const bg = isHex(overrides.background)
+    ? overrides.background!
+    : dark
+      ? "#0f0f11"
+      : "#f7f7f8";
+  const fg = isHex(overrides.text)
+    ? overrides.text!
+    : dark
+      ? "#f4f4f5"
+      : "#111111";
+  const line = isHex(overrides.border)
+    ? overrides.border!
+    : mix(bg, fg, 0.12);
 
   if (isLoading) {
     return (

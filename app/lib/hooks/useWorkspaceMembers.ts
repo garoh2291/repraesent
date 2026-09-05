@@ -2,7 +2,10 @@
 
 import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { getWorkspaceDetail } from "~/lib/api/workspaces";
+import { getWorkspaceDetail, type WorkspaceDetail } from "~/lib/api/workspaces";
+
+/** One row of `WorkspaceDetail.members`, named so pickers can take it as a prop. */
+export type WorkspaceMemberOption = WorkspaceDetail["members"][number];
 
 /**
  * Workspace members, shared app-wide. Uses the exact query key the eleven

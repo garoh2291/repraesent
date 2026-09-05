@@ -67,6 +67,7 @@
     "loadingPlugins": "Loading services…",
     "openaiAds": "OpenAI Ads",
     "newBadge": "New",
+    "demoBadge": "Demo",
     "betaVadge": "Beta",
     "pilotUnavailable": "This feature is not enabled for your workspace yet.",
     "emailCampaigns": "Campaigns",
@@ -5593,7 +5594,12 @@
       "businessNameMissing": "Business name is empty — the assistant needs to know who it speaks for.",
       "businessNameTooLong": "Business name is over 120 characters.",
       "profileEmailInvalid": "The business email in Business facts is not a valid address.",
-      "tooManyKeyPeople": "At most 5 people in Business facts."
+      "tooManyKeyPeople": "At most 5 people in Business facts.",
+      "invalidOverrideColor": "A custom colour must be a 6-digit hex value like #2563eb, or empty.",
+      "radiusOutOfRange": "Corner radius must be a whole number between 0 and 32.",
+      "borderWidthOutOfRange": "Border width must be between 0 and 3 pixels.",
+      "maxWidthOutOfRange": "Maximum width must be between 320 and 1200 pixels.",
+      "marginOutOfRange": "Outer margin must be between 0 and 96 pixels."
     },
     "list": {
       "title": "AI assistants",
@@ -5899,7 +5905,8 @@
       "themes": {
         "auto": "Auto",
         "light": "Light",
-        "dark": "Dark"
+        "dark": "Dark",
+        "page": "Follow the page"
       },
       "position": "Position",
       "positions": {
@@ -5998,7 +6005,8 @@
         "enabled": "Show a short message next to the launcher",
         "text": "Message",
         "placeholder": "Ask us anything…",
-        "hint": "Shown once per visit, disappears when the chat opens."
+        "hint": "Shown once per visit, disappears when the chat opens.",
+        "perLanguageHint": "The fallback for every language. Translate it under Conversation."
       },
       "hideOnMobile": "Hide on small screens",
       "pageRules": {
@@ -6010,6 +6018,78 @@
           "exclude": "All except"
         },
         "hint": "One path per entry, e.g. /pricing, /blog/*, /de/**. * matches one segment, ** matches everything below."
+      },
+      "typeScopeHint": "The type decides which settings exist below — a floating bubble has a launcher, an embedded widget has a hero.",
+      "headerSubtitleLabel": "Header (shown once the conversation starts)",
+      "headerSubtitleHint": "The line under the assistant name in the chat header.",
+      "headerSubtitleHintEmbedded": "In this layout there is no header until the visitor sends their first message. Switch the preview to “In conversation” to see it.",
+      "previewStateLabel": "Preview state",
+      "previewState": {
+        "empty": "Empty",
+        "conversation": "In conversation"
+      },
+      "previewUserMessage": "Do you have anything free next week?",
+      "previewAssistantMessage": "Yes — a few slots are open. Shall I show you?",
+      "previewSiteHeader": "Your website",
+      "themeHints": {
+        "page": "Matches the site the widget is embedded in — background, text and font.",
+        "auto": "Follows the visitor’s operating system, not your site.",
+        "light": "Always light, whatever the page around it does.",
+        "dark": "Always dark, whatever the page around it does."
+      },
+      "colours": {
+        "title": "Colours",
+        "recommended": "Recommended",
+        "customTitle": "Custom colours",
+        "customHint": "Every field is optional. Leave one empty and that colour follows the page.",
+        "followsPage": "Follows the page",
+        "keys": {
+          "background": "Background",
+          "surface": "Panels and fields",
+          "text": "Text",
+          "muted": "Secondary text",
+          "border": "Borders",
+          "user_bubble": "Visitor bubble",
+          "assistant_bubble": "Assistant bubble"
+        }
+      },
+      "shape": {
+        "title": "Shape and space",
+        "usePreset": "Use preset",
+        "radiusHint": "Turn the preset off to set the corner radius in pixels. 0 gives square corners.",
+        "borderWidth": "Border",
+        "none": "None",
+        "shadow": "Shadow",
+        "shadows": {
+          "none": "None",
+          "soft": "Soft",
+          "strong": "Strong"
+        },
+        "boxTitle": "On the page",
+        "maxWidth": "Maximum width",
+        "maxWidthHint": "Leave empty to use the built-in width.",
+        "height": "Height",
+        "heights": {
+          "compact": "Compact",
+          "standard": "Standard",
+          "tall": "Tall"
+        },
+        "marginY": "Outer margin",
+        "marginYHint": "Space above and below the widget. Raise it when the widget sits flush against your page header."
+      },
+      "promoted": {
+        "section_title": "Hero title",
+        "section_subtitle": "Hero subtitle",
+        "bar_placeholder": "Bar placeholder",
+        "launcher_label": "Launcher label per language",
+        "nudge_text": "Nudge message per language"
+      },
+      "promotedHint": {
+        "section_title": "The headline visitors read before they type — it replaces the greeting in this layout.",
+        "section_subtitle": "One line under the hero title.",
+        "bar_placeholder": "The grey text inside the collapsed search bar.",
+        "launcher_label": "The text beside the floating button.",
+        "nudge_text": "The short message that pops up next to the launcher."
       }
     },
     "leads": {
@@ -6038,7 +6118,10 @@
       "how1": "The assistant keeps answering as normal. When a trigger fires it shows a small card with the fields you chose, pre-filled with anything the visitor already mentioned.",
       "how2": "A submitted card becomes a lead with the source “AI assistant”, the conversation attached, and your usual notifications.",
       "how3": "Visitors can dismiss the card; it is not shown again in that conversation.",
-      "note": "Leads land in Leads like any form submission — pipeline stages, tasks and workflows apply."
+      "note": "Leads land in Leads like any form submission — pipeline stages, tasks and workflows apply.",
+      "triggersHint": "The form is shown at most once per conversation, and never while a booking button is on screen.",
+      "onFarewell": "When the visitor says goodbye",
+      "onFarewellHint": "“Thanks, bye” then ends with the contact form instead of nothing."
     },
     "share": {
       "publishFirst": "Publish this assistant before embedding it — the snippet stays inactive until you do.",
@@ -6185,7 +6268,12 @@
       "perLocale": "Label per language",
       "perLocaleHint": "Leave a language empty to fall back to the label above. Translate fills only the empty ones.",
       "moveUp": "Move up",
-      "moveDown": "Move down"
+      "moveDown": "Move down",
+      "host": "Host",
+      "hostNone": "No host",
+      "hostSearch": "Search members…",
+      "hostEmpty": "No member found",
+      "hostHint": "Shown on the booking card and invited to the meeting."
     },
     "fallback": {
       "title": "When it cannot answer",

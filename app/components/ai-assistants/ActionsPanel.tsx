@@ -54,6 +54,21 @@ import { Switch } from "~/components/ui/switch";
 import { Textarea } from "~/components/ui/textarea";
 import { calendarKeyFor, listCalendarAccounts } from "~/lib/api/calendar";
 import { useAssistantTranslate } from "~/lib/hooks/useAssistantTranslate";
+import { Check, ChevronsUpDown } from "lucide-react";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "~/components/ui/command";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "~/components/ui/popover";
+import { useWorkspaceMembers, type WorkspaceMemberOption } from "~/lib/hooks/useWorkspaceMembers";
 import type { TranslateAssistantRequest } from "~/lib/api/assistant-translate";
 import {
   ACTION_APPOINTMENT_DEFAULTS,
@@ -565,6 +580,132 @@ const APPT_DAY_KEYS = [
   "sun",
 ] as const;
 const APPT_DURATIONS = [15, 30, 45, 60] as const;
+/**
+ * Searchable member picker for the booking host.
+ *
+ * A plain Select could not cope: workspace emails here run to
+ * `demo.sarah+819d0e5c@demo.repraesent.com`, which blew the menu past the
+ * trigger and clipped every row. A popover sized to the trigger with its own
+ * search box keeps the list readable and usable at twenty members, and the
+ * email truncates instead of pushing the layout apart.
+ */
+function HostPicker({
+  members,
+  value,
+  disabled,
+  onChange,
+}: {
+  members: WorkspaceMemberOption[];
+  value?: string;
+  disabled?: boolean;
+  onChange: (userId: string) => void;
+}) {
+  const { t } = useTranslation();
+  const [open, setOpen] = useState(false);
+  // Reset on close: cmdk keeps its own filter state, so without this the next
+  // open still shows the last search and an empty list.
+  const [query, setQuery] = useState("");
+  const selected = members.find((m) => m.user_id === value);
+  const label = (m: WorkspaceMemberOption): string =>
+    `${m.user_first_name ?? ""} ${m.user_last_name ?? ""}`.trim() || m.user_email;
+
+  return (
+    <Popover
+      open={open}
+      onOpenChange={(next) => {
+        setOpen(next);
+        if (!next) setQuery("");
+      }}
+    >
+      <PopoverTrigger asChild>
+        <button
+          type="button"
+          disabled={disabled}
+          className="flex h-9 w-full items-center justify-between gap-2 rounded-lg border bg-background px-3 text-sm disabled:opacity-50"
+        >
+          {selected ? (
+            <span className="flex min-w-0 items-center gap-2">
+              <MemberAvatar member={selected} />
+              <span className="min-w-0 truncate">{label(selected)}</span>
+            </span>
+          ) : (
+            <span className="text-muted-foreground">
+              {t("aiAssistants.actions.hostNone")}
+            </span>
+          )}
+          <ChevronsUpDown className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+        </button>
+      </PopoverTrigger>
+      <PopoverContent className="w-(--radix-popover-trigger-width) p-0" align="start">
+        <Command>
+          <CommandInput
+            value={query}
+            onValueChange={setQuery}
+            placeholder={t("aiAssistants.actions.hostSearch")}
+          />
+          <CommandList className="max-h-64">
+            <CommandEmpty>{t("aiAssistants.actions.hostEmpty")}</CommandEmpty>
+            <CommandGroup>
+              <CommandItem
+                value={t("aiAssistants.actions.hostNone")}
+                onSelect={() => {
+                  onChange(NO_HOST);
+                  setOpen(false);
+                }}
+              >
+                <span className="flex-1 truncate">
+                  {t("aiAssistants.actions.hostNone")}
+                </span>
+                {!selected ? <Check className="h-3.5 w-3.5" /> : null}
+              </CommandItem>
+              {members.map((m) => (
+                <CommandItem
+                  key={m.user_id}
+                  value={`${label(m)} ${m.user_email}`}
+                  onSelect={() => {
+                    onChange(m.user_id);
+                    setOpen(false);
+                  }}
+                >
+                  <MemberAvatar member={m} />
+                  <span className="flex min-w-0 flex-1 flex-col">
+                    <span className="truncate">{label(m)}</span>
+                    <span className="truncate text-[11px] text-muted-foreground">
+                      {m.user_email}
+                    </span>
+                  </span>
+                  {m.user_id === value ? <Check className="h-3.5 w-3.5 shrink-0" /> : null}
+                </CommandItem>
+              ))}
+            </CommandGroup>
+          </CommandList>
+        </Command>
+      </PopoverContent>
+    </Popover>
+  );
+}
+
+function MemberAvatar({ member }: { member: WorkspaceMemberOption }) {
+  const src = member.user_avatar_thumb_url ?? member.user_avatar_url;
+  const name =
+    `${member.user_first_name ?? ""} ${member.user_last_name ?? ""}`.trim() ||
+    member.user_email;
+  return (
+    <span
+      aria-hidden
+      className="flex size-6 shrink-0 items-center justify-center overflow-hidden rounded-full bg-muted text-[10px] font-semibold text-muted-foreground"
+    >
+      {src ? (
+        <img src={src} alt="" className="h-full w-full object-cover" />
+      ) : (
+        name.charAt(0).toUpperCase()
+      )}
+    </span>
+  );
+}
+
+/** Radix Select has no empty value, so "no host" needs a sentinel. */
+const NO_HOST = "__none__";
 
 /**
  * Booking rules for a `book` action. Deliberately the same control set as the
@@ -592,6 +733,10 @@ function BookingRules({
     queryKey: ["calendar-accounts"],
     queryFn: listCalendarAccounts,
   });
+  // Cache read on any CRM screen — the same query key eleven other call sites
+  // already use.
+  const { data: workspace } = useWorkspaceMembers();
+  const members = workspace?.members ?? [];
 
   const ap = action.appointment ?? ACTION_APPOINTMENT_DEFAULTS;
   const patch = (p: Partial<ActionAppointmentSettings>) =>
@@ -709,6 +854,33 @@ function BookingRules({
         : busyKeys.filter((k) => k !== key),
     });
 
+  /**
+   * The host is denormalised onto the action: the public config must never
+   * expose a user id, so the widget is handed the display fields directly and
+   * the id only survives server-side to resolve the attendee.
+   */
+  const setHost = (value: string) => {
+    if (value === NO_HOST) {
+      patch({
+        hostUserId: undefined,
+        hostName: undefined,
+        hostAvatarUrl: undefined,
+        hostEmail: undefined,
+        hostRole: undefined,
+      });
+      return;
+    }
+    const m = members.find((x) => x.user_id === value);
+    if (!m) return;
+    const name = `${m.user_first_name ?? ""} ${m.user_last_name ?? ""}`.trim();
+    patch({
+      hostUserId: m.user_id,
+      hostName: name || m.user_email,
+      hostAvatarUrl: m.user_avatar_thumb_url ?? m.user_avatar_url ?? undefined,
+      hostEmail: m.user_email,
+    });
+  };
+
   const weekdays = ap.weekdays ?? [];
   const toggleWeekday = (day: string) =>
     patch({
@@ -778,6 +950,17 @@ function BookingRules({
           </Select>
         </FieldAnchor>
         <FieldHint>{t("forms.inspector.appointment.targetHelp")}</FieldHint>
+      </Field>
+
+      <Field>
+        <Label>{t("aiAssistants.actions.host")}</Label>
+        <HostPicker
+          members={members}
+          value={ap.hostUserId}
+          disabled={disabled}
+          onChange={setHost}
+        />
+        <FieldHint>{t("aiAssistants.actions.hostHint")}</FieldHint>
       </Field>
 
       <Field>
