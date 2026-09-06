@@ -509,6 +509,9 @@ function ActionEditor({
             ))}
           </SelectContent>
         </Select>
+        <p className="text-xs text-muted-foreground">
+          {t("aiAssistants.actions.showAskedHint")}
+        </p>
       </Field>
 
       <PanelSection
@@ -961,6 +964,39 @@ function BookingRules({
           onChange={setHost}
         />
         <FieldHint>{t("aiAssistants.actions.hostHint")}</FieldHint>
+      </Field>
+
+      <Field>
+        <Label htmlFor={`appt-conv-${action.id}`}>
+          {t("aiAssistants.actions.conversational")}
+        </Label>
+        <div className="flex h-9 items-center gap-3">
+          <Switch
+            id={`appt-conv-${action.id}`}
+            disabled={disabled}
+            // Absent means on — the backend defaults it, and an action saved
+            // before this setting existed should behave like a new one.
+            checked={ap.conversational !== false}
+            onCheckedChange={(v) => patch({ conversational: v })}
+          />
+        </div>
+        <FieldHint>{t("aiAssistants.actions.conversationalHint")}</FieldHint>
+      </Field>
+
+      <Field>
+        <Label htmlFor={`appt-manage-${action.id}`}>
+          {t("aiAssistants.actions.manageable")}
+        </Label>
+        <div className="flex h-9 items-center gap-3">
+          <Switch
+            id={`appt-manage-${action.id}`}
+            disabled={disabled}
+            // Same "absent means on" rule as the switch above.
+            checked={ap.manageable !== false}
+            onCheckedChange={(v) => patch({ manageable: v })}
+          />
+        </div>
+        <FieldHint>{t("aiAssistants.actions.manageableHint")}</FieldHint>
       </Field>
 
       <Field>

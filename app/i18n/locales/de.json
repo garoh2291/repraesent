@@ -5831,11 +5831,13 @@
       "modelHint": "Kleinere Modelle antworten schneller und kosten weniger; größere halten sich genauer an Anweisungen.",
       "temperature": "Kreativität",
       "temperatureHint": "Niedrig bleibt nah an Ihren Quellen. Hoch erlaubt abwechslungsreichere Formulierungen.",
-      "maxTokens": "Maximale Antwortlänge",
-      "maxTokensHint": "In Tokens (etwa ¾ Wort). 100–1500.",
-      "budget": "Tägliches Token-Budget",
-      "budgetUnlimited": "Unbegrenzt",
-      "budgetHint": "Ist es erreicht, lehnt der Assistent bis Mitternacht UTC höflich ab. Leer lassen für kein Limit.",
+      "maxTokens": "Nie länger als",
+      "maxTokensHint": "Harte Grenze: Der Assistent bricht hier ab, auch mitten im Satz. Eine Länge oben zu wählen setzt diesen Wert automatisch.",
+      "budget": "Tagesbudget",
+      "budgetUnlimited": "Kein Limit",
+      "budgetHint": "Ist es erreicht, lehnt der Assistent bis Mitternacht UTC höflich ab.",
+      "budgetEstimate": "Etwa {{count}} Nachrichten pro Tag mit {{model}}.",
+      "budgetUnlimitedHint": "Kein Tageslimit — der Assistent antwortet weiter, egal wie viel los ist. Legen Sie einen Betrag fest, um die Ausgaben zu begrenzen.",
       "personaTitle": "Persona",
       "tone": "Tonfall",
       "tones": {
@@ -5846,7 +5848,8 @@
       "languageTitle": "Sprache",
       "languageVisitor": "Sprache des Besuchers",
       "languageVisitorHint": "Antwortet in der Sprache der Frage – Englisch, Deutsch, Französisch oder Niederländisch.",
-      "languageFixed": "Immer antworten auf",
+      "languageFixed": "Beginnen auf",
+      "languageFixedHint": "Gilt für die Begrüßung und so lange, bis die Sprache des Besuchers klar ist. Schreibt er in einer anderen Sprache, wechselt der Assistent dorthin.",
       "instructionsTitle": "Eigene Anweisungen",
       "instructionsPlaceholder": "Nenne keine Preise für Gewerbeprojekte – bitte stattdessen um eine Angebotsanfrage.",
       "instructionsHint": "Regeln, die der Assistent in jeder Antwort befolgt. Kurz und konkret halten.",
@@ -5860,7 +5863,9 @@
         "short": "Kurz",
         "medium": "Mittel",
         "long": "Lang",
-        "hint": "Begrenzt Antworten auf etwa {{tokens}} Token. Das erweiterte Limit unten gilt weiterhin."
+        "hint_short": "Der Assistent soll in 1–2 Sätzen antworten.",
+        "hint_medium": "Der Assistent soll in 2–5 Sätzen oder einer kurzen Liste antworten.",
+        "hint_long": "Der Assistent darf bis zu 8 Sätze verwenden, mit Zwischenüberschriften oder Aufzählungen."
       },
       "businessName": "Firmenname",
       "businessNamePlaceholder": "z. B. Tischlerei Müller",
@@ -5873,7 +5878,9 @@
       "attachmentsEnabled": "Besucher dürfen Dateien anhängen",
       "attachmentsHint": "Dateien werden 30 Tage privat gespeichert und nur zur Beantwortung der Frage dieses Besuchers verwendet.",
       "attachmentsImages": "Bilder",
-      "attachmentsDocuments": "Dokumente (PDF, Word, Excel, PowerPoint)"
+      "attachmentsDocuments": "Dokumente (PDF, Word, Excel, PowerPoint)",
+      "wordsUnit": "Wörter",
+      "maxTokensEffective": "Antworten enden tatsächlich bei etwa {{words}} Wörtern — der kleinere der beiden Werte gilt."
     },
     "translate": {
       "withAi": "Übersetzen",
@@ -6267,6 +6274,7 @@
         "always": "Nach jeder Antwort",
         "after_first_answer": "Nach der ersten Antwort"
       },
+      "showAskedHint": "Wird außerdem immer gezeigt, wenn ein Besucher danach fragt – anrufen, E-Mail schreiben, buchen oder die verlinkte Seite sehen.",
       "perLocale": "Text pro Sprache",
       "perLocaleHint": "Leer lassen, um auf die Bezeichnung oben zurückzufallen. „Übersetzen“ füllt nur leere Felder.",
       "moveUp": "Nach oben",
@@ -6275,7 +6283,11 @@
       "hostNone": "Kein Gastgeber",
       "hostSearch": "Mitglieder suchen…",
       "hostEmpty": "Kein Mitglied gefunden",
-      "hostHint": "Wird auf der Buchungskarte gezeigt und zum Termin eingeladen."
+      "hostHint": "Wird auf der Buchungskarte gezeigt und zum Termin eingeladen.",
+      "conversational": "Besucher per Chat buchen lassen",
+      "conversationalHint": "Der Assistent kann im Gespräch einen Termin finden, die Daten aufnehmen und bestätigen. Die Kalenderkarte bleibt verfügbar.",
+      "manageable": "Besucher dürfen ihren Termin ändern",
+      "manageableHint": "Besucher können einen bestehenden Termin im Chat verschieben oder absagen. Sie weisen sich mit einem Code aus, der an die hinterlegte E-Mail-Adresse geht. Ausgeschaltet beantwortet der Assistent nur Fragen zum Termin und verweist auf Ihre Kontaktdaten."
     },
     "fallback": {
       "title": "Wenn keine Antwort möglich ist",
@@ -6298,7 +6310,13 @@
       },
       "addAnswer": "Antwort hinzufügen",
       "viewConversation": "Unterhaltung ansehen",
-      "answerAdded": "Antwort hinzugefügt — wird indexiert"
+      "answerAdded": "Antwort hinzugefügt — wird indexiert",
+      "dismiss": "Ausblenden",
+      "dismissed": "Frage ausgeblendet",
+      "undo": "Rückgängig",
+      "unverified": "Antwort hinzugefügt, aber der Assistent kann die Frage weiterhin nicht beantworten —",
+      "improveAnswer": "Antwort verbessern",
+      "resolveFailed": "Die Antwort wurde gespeichert, die Wissenslücke konnte aber nicht geschlossen werden"
     },
     "tests": {
       "title": "Testfragen",

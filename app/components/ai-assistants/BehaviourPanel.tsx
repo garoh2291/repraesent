@@ -35,12 +35,15 @@ import { Checkbox } from "~/components/ui/checkbox";
 import { Switch } from "~/components/ui/switch";
 import { Textarea } from "~/components/ui/textarea";
 import { cn } from "~/lib/utils";
+import { estimateMessagesPerDay } from "~/lib/api/ai-assistants";
 import { useChatModels } from "~/lib/hooks/useAiAssistants";
 import { MAX_BUSINESS_NAME } from "~/lib/ai-assistants/validate";
 import {
   AI_LOCALES,
   ANSWER_LENGTHS,
   ANSWER_LENGTH_TOKENS,
+  tokensToWords,
+  wordsToTokens,
   type AiLocale,
   type AnswerLength,
   DEFAULT_ATTACHMENTS,
@@ -61,6 +64,22 @@ const INSTRUCTIONS_MAX = 1000;
 export function BehaviourPanel({ draft, canEdit, onChange }: Props) {
   const { t } = useTranslation();
   const { data: models } = useChatModels();
+  const modelList = models?.models ?? [];
+  // The estimate follows the Chat model select above, so switching to a
+  // pricier model visibly buys fewer messages for the same euro figure.
+  const selectedModel = modelList.find((m) => m.id === draft.chat_model);
+  // The model is capped at the SMALLER of the two, so either can win. Computed
+  // once here rather than reasoned about in the JSX.
+  const effectiveTokens = Math.min(
+    draft.max_output_tokens,
+    ANSWER_LENGTH_TOKENS[draft.answer_length ?? "medium"],
+  );
+  const budgetMessages = estimateMessagesPerDay(
+    draft.daily_budget_eur_cents,
+    selectedModel,
+    models?.avg_tokens_per_message ?? { in: 6066, out: 73 },
+    models?.usd_per_eur ?? 1.08,
+  );
   const persona = draft.persona;
   const setPersona = (p: Partial<AssistantDraft["persona"]>) =>
     onChange({ persona: { ...persona, ...p } });
@@ -96,8 +115,9 @@ export function BehaviourPanel({ draft, canEdit, onChange }: Props) {
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                {(
-                  models ?? [{ id: draft.chat_model, label: draft.chat_model }]
+                {(modelList.length
+                  ? modelList
+                  : [{ id: draft.chat_model, label: draft.chat_model }]
                 ).map((mo) => (
                   <SelectItem key={mo.id} value={mo.id}>
                     {mo.label}
@@ -136,16 +156,26 @@ export function BehaviourPanel({ draft, canEdit, onChange }: Props) {
                 <SegmentedButton
                   key={len}
                   active={(draft.answer_length ?? "medium") === len}
-                  onClick={() => canEdit && onChange({ answer_length: len })}
+                  onClick={() =>
+                    canEdit &&
+                    // Sets BOTH: the preset is what the model is TOLD, the
+                    // number is where it gets cut off. Setting only the first
+                    // let them silently disagree — picking Long while the
+                    // number sat at 600 quietly stayed medium-length.
+                    onChange({
+                      answer_length: len,
+                      max_output_tokens: ANSWER_LENGTH_TOKENS[len],
+                    })
+                  }
                 >
                   {t(`aiAssistants.behaviour.answerLength.${len}`)}
                 </SegmentedButton>
               ))}
             </Segmented>
             <FieldHint>
-              {t("aiAssistants.behaviour.answerLength.hint", {
-                tokens: ANSWER_LENGTH_TOKENS[draft.answer_length ?? "medium"],
-              })}
+              {t(
+                `aiAssistants.behaviour.answerLength.hint_${draft.answer_length ?? "medium"}`,
+              )}
             </FieldHint>
           </Field>
 
@@ -154,48 +184,102 @@ export function BehaviourPanel({ draft, canEdit, onChange }: Props) {
               <Label htmlFor="max-tokens">
                 {t("aiAssistants.behaviour.maxTokens")}
               </Label>
-              <Input
-                id="max-tokens"
-                type="number"
-                min={100}
-                max={1500}
-                step={50}
-                disabled={!canEdit}
-                value={draft.max_output_tokens}
-                onChange={(e) =>
-                  onChange({
-                    max_output_tokens: clamp(
-                      Number(e.target.value) || 0,
-                      100,
-                      1500,
-                    ),
-                  })
-                }
-              />
-              <FieldHint>{t("aiAssistants.behaviour.maxTokensHint")}</FieldHint>
+              <div className="relative">
+                <Input
+                  id="max-tokens"
+                  type="number"
+                  // Shown in words; the model is still capped in tokens.
+                  min={tokensToWords(100)}
+                  max={tokensToWords(1500)}
+                  step={25}
+                  className="pr-16"
+                  disabled={!canEdit}
+                  value={tokensToWords(draft.max_output_tokens)}
+                  onChange={(e) =>
+                    onChange({
+                      max_output_tokens: clamp(
+                        wordsToTokens(Number(e.target.value) || 0),
+                        100,
+                        1500,
+                      ),
+                    })
+                  }
+                />
+                <span
+                  aria-hidden
+                  className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground"
+                >
+                  {t("aiAssistants.behaviour.wordsUnit")}
+                </span>
+              </div>
+              <FieldHint>
+                {t("aiAssistants.behaviour.maxTokensHint")}
+                {effectiveTokens !== draft.max_output_tokens ? (
+                  // The old copy said "the advanced limit below still applies",
+                  // which is a confession rather than an explanation. The cap
+                  // is min(number, preset), so EITHER can silently win — say
+                  // plainly where answers actually stop.
+                  <>
+                    {" "}
+                    <span className="text-amber-600 dark:text-amber-500">
+                      {t("aiAssistants.behaviour.maxTokensEffective", {
+                        words: tokensToWords(effectiveTokens),
+                      })}
+                    </span>
+                  </>
+                ) : null}
+              </FieldHint>
             </Field>
             <Field>
               <Label htmlFor="budget">
                 {t("aiAssistants.behaviour.budget")}
               </Label>
-              <Input
-                id="budget"
-                type="number"
-                min={0}
-                step={1000}
-                disabled={!canEdit}
-                placeholder={t("aiAssistants.behaviour.budgetUnlimited")}
-                value={draft.daily_token_budget ?? ""}
-                onChange={(e) =>
-                  onChange({
-                    daily_token_budget:
-                      e.target.value === ""
-                        ? null
-                        : Math.max(0, Number(e.target.value) || 0),
-                  })
-                }
-              />
-              <FieldHint>{t("aiAssistants.behaviour.budgetHint")}</FieldHint>
+              <div className="relative">
+                <span
+                  aria-hidden
+                  className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground"
+                >
+                  €
+                </span>
+                <Input
+                  id="budget"
+                  type="number"
+                  // Mirrors the API's own bounds (€0.10–€1,000) so a value that
+                  // saves can never then be rejected with a generic error.
+                  min={0.1}
+                  max={1000}
+                  step={0.5}
+                  className="pl-7"
+                  disabled={!canEdit}
+                  placeholder={t("aiAssistants.behaviour.budgetUnlimited")}
+                  value={
+                    draft.daily_budget_eur_cents == null
+                      ? ""
+                      : draft.daily_budget_eur_cents / 100
+                  }
+                  onChange={(e) =>
+                    onChange({
+                      daily_budget_eur_cents:
+                        e.target.value === ""
+                          ? null
+                          : Math.min(
+                              100_000,
+                              Math.max(10, Math.round(Number(e.target.value) * 100) || 10),
+                            ),
+                    })
+                  }
+                />
+              </div>
+              <FieldHint>
+                {budgetMessages != null && selectedModel
+                  ? `${t("aiAssistants.behaviour.budgetEstimate", {
+                      count: budgetMessages,
+                      // "…a day with GPT-4o mini (default)." reads as though
+                      // "(default)" were part of the model's name mid-sentence.
+                      model: selectedModel.label.replace(/\s*\(default\)$/, ""),
+                    })} ${t("aiAssistants.behaviour.budgetHint")}`
+                  : t("aiAssistants.behaviour.budgetUnlimitedHint")}
+              </FieldHint>
             </Field>
           </Cols>
         </PanelBody>
@@ -295,6 +379,9 @@ export function BehaviourPanel({ draft, canEdit, onChange }: Props) {
                 <span className="flex-1 space-y-2">
                   <span className="block text-sm">
                     {t("aiAssistants.behaviour.languageFixed")}
+                  </span>
+                  <span className="block text-xs text-muted-foreground">
+                    {t("aiAssistants.behaviour.languageFixedHint")}
                   </span>
                   {persona.language_mode === "fixed" ? (
                     <Select

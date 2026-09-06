@@ -5829,11 +5829,13 @@
       "modelHint": "Kleinere modellen antwoorden sneller en kosten minder; grotere volgen instructies nauwkeuriger.",
       "temperature": "Creativiteit",
       "temperatureHint": "Laag blijft dicht bij uw bronnen. Hoog staat meer variatie in formulering toe.",
-      "maxTokens": "Maximale antwoordlengte",
-      "maxTokensHint": "In tokens (ongeveer ¾ woord). 100–1500.",
-      "budget": "Dagelijks tokenbudget",
-      "budgetUnlimited": "Onbeperkt",
-      "budgetHint": "Eenmaal bereikt weigert de assistent beleefd tot middernacht UTC. Leeg laten voor geen limiet.",
+      "maxTokens": "Nooit langer dan",
+      "maxTokensHint": "Harde grens: de assistent stopt hier, ook midden in een zin. Een lengte hierboven kiezen stelt deze waarde voor u in.",
+      "budget": "Dagbudget",
+      "budgetUnlimited": "Geen limiet",
+      "budgetHint": "Eenmaal bereikt weigert de assistent beleefd tot middernacht UTC.",
+      "budgetEstimate": "Ongeveer {{count}} berichten per dag met {{model}}.",
+      "budgetUnlimitedHint": "Geen daglimiet — de assistent blijft antwoorden hoe druk het ook wordt. Stel een bedrag in om de uitgaven te begrenzen.",
       "personaTitle": "Persona",
       "tone": "Toon",
       "tones": {
@@ -5844,7 +5846,8 @@
       "languageTitle": "Taal",
       "languageVisitor": "Taal van de bezoeker",
       "languageVisitorHint": "Antwoordt in de taal van de vraag — Engels, Duits, Frans of Nederlands.",
-      "languageFixed": "Altijd antwoorden in",
+      "languageFixed": "Beginnen in",
+      "languageFixedHint": "Geldt voor de begroeting en totdat de taal van de bezoeker duidelijk is. Schrijft hij in een andere taal, dan schakelt de assistent mee.",
       "instructionsTitle": "Eigen instructies",
       "instructionsPlaceholder": "Noem nooit prijzen voor zakelijke projecten — vraag om een offerteaanvraag.",
       "instructionsHint": "Regels die de assistent in elk antwoord volgt. Kort en concreet houden.",
@@ -5858,7 +5861,9 @@
         "short": "Kort",
         "medium": "Gemiddeld",
         "long": "Lang",
-        "hint": "Beperkt antwoorden tot ongeveer {{tokens}} tokens. De geavanceerde limiet hieronder blijft gelden."
+        "hint_short": "De assistent antwoordt in 1–2 zinnen.",
+        "hint_medium": "De assistent antwoordt in 2–5 zinnen, of een korte lijst.",
+        "hint_long": "De assistent mag tot 8 zinnen gebruiken, met kopjes of opsommingen."
       },
       "businessName": "Bedrijfsnaam",
       "businessNamePlaceholder": "bijv. Timmerbedrijf Müller",
@@ -5871,7 +5876,9 @@
       "attachmentsEnabled": "Bezoekers mogen bestanden bijvoegen",
       "attachmentsHint": "Bestanden worden 30 dagen privé bewaard en alleen gebruikt om de vraag van die bezoeker te beantwoorden.",
       "attachmentsImages": "Afbeeldingen",
-      "attachmentsDocuments": "Documenten (PDF, Word, Excel, PowerPoint)"
+      "attachmentsDocuments": "Documenten (PDF, Word, Excel, PowerPoint)",
+      "wordsUnit": "woorden",
+      "maxTokensEffective": "Antwoorden stoppen in werkelijkheid rond {{words}} woorden — de kleinste van deze twee instellingen geldt."
     },
     "translate": {
       "withAi": "Vertalen",
@@ -6265,6 +6272,7 @@
         "always": "Na elk antwoord",
         "after_first_answer": "Na het eerste antwoord"
       },
+      "showAskedHint": "Wordt ook altijd getoond wanneer een bezoeker erom vraagt – bellen, mailen, boeken of de gekoppelde pagina bekijken.",
       "perLocale": "Tekst per taal",
       "perLocaleHint": "Laat leeg om terug te vallen op het label hierboven. ‘Vertalen’ vult alleen lege velden.",
       "moveUp": "Omhoog",
@@ -6273,7 +6281,11 @@
       "hostNone": "Geen gastheer",
       "hostSearch": "Leden zoeken…",
       "hostEmpty": "Geen lid gevonden",
-      "hostHint": "Wordt op de boekingskaart getoond en voor de afspraak uitgenodigd."
+      "hostHint": "Wordt op de boekingskaart getoond en voor de afspraak uitgenodigd.",
+      "conversational": "Bezoekers laten boeken via de chat",
+      "conversationalHint": "De assistent kan in het gesprek een tijd vinden, de gegevens opnemen en bevestigen. De kalenderkaart blijft beschikbaar.",
+      "manageable": "Bezoekers hun afspraak laten wijzigen",
+      "manageableHint": "Bezoekers kunnen een bestaande afspraak in de chat verzetten of annuleren. Ze bewijzen dat het hun afspraak is met een code die naar het bijbehorende e-mailadres gaat. Uit betekent dat de assistent vragen beantwoordt maar voor wijzigingen naar uw contactgegevens verwijst."
     },
     "fallback": {
       "title": "Als er geen antwoord is",
@@ -6296,7 +6308,13 @@
       },
       "addAnswer": "Antwoord toevoegen",
       "viewConversation": "Gesprek bekijken",
-      "answerAdded": "Antwoord toegevoegd — wordt geïndexeerd"
+      "answerAdded": "Antwoord toegevoegd — wordt geïndexeerd",
+      "dismiss": "Negeren",
+      "dismissed": "Vraag genegeerd",
+      "undo": "Ongedaan maken",
+      "unverified": "Antwoord toegevoegd, maar de assistent kan dit nog steeds niet beantwoorden —",
+      "improveAnswer": "Antwoord verbeteren",
+      "resolveFailed": "Het antwoord is opgeslagen, maar de kennislacune kon niet worden gesloten"
     },
     "tests": {
       "title": "Testvragen",

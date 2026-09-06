@@ -5829,11 +5829,13 @@
       "modelHint": "Smaller models answer faster and cost less; larger ones follow instructions more closely.",
       "temperature": "Creativity",
       "temperatureHint": "Low keeps answers close to your sources. High allows more varied wording.",
-      "maxTokens": "Maximum answer length",
-      "maxTokensHint": "In tokens (roughly ¾ of a word). 100–1500.",
-      "budget": "Daily token budget",
-      "budgetUnlimited": "Unlimited",
-      "budgetHint": "Once reached, the assistant politely declines until midnight UTC. Leave empty for no limit.",
+      "maxTokens": "Never longer than",
+      "maxTokensHint": "A hard stop: the assistant is cut off here even mid-sentence. Picking a length above sets this for you.",
+      "budget": "Daily budget",
+      "budgetUnlimited": "No limit",
+      "budgetHint": "Once reached, the assistant politely declines until midnight UTC.",
+      "budgetEstimate": "About {{count}} messages a day with {{model}}.",
+      "budgetUnlimitedHint": "No daily limit — the assistant keeps answering however busy it gets. Set an amount to cap what it can spend.",
       "personaTitle": "Persona",
       "tone": "Tone",
       "tones": {
@@ -5844,7 +5846,8 @@
       "languageTitle": "Language",
       "languageVisitor": "Match the visitor",
       "languageVisitorHint": "Answers in the language of the question — English, German, French or Dutch.",
-      "languageFixed": "Always answer in",
+      "languageFixed": "Start in",
+      "languageFixedHint": "Used for the greeting, and until the visitor's own language is clear. If they write in another language, the assistant switches to it.",
       "instructionsTitle": "Custom instructions",
       "instructionsPlaceholder": "Never quote prices for commercial projects — ask them to request a quote instead.",
       "instructionsHint": "Rules the assistant follows in every answer. Keep them short and specific.",
@@ -5858,7 +5861,9 @@
         "short": "Short",
         "medium": "Medium",
         "long": "Long",
-        "hint": "Caps answers at about {{tokens}} tokens. The advanced limit below still applies."
+        "hint_short": "The assistant is told to answer in 1–2 sentences.",
+        "hint_medium": "The assistant is told to answer in 2–5 sentences, or a short list.",
+        "hint_long": "The assistant may use up to 8 sentences, with headings or bullets."
       },
       "businessName": "Business name",
       "businessNamePlaceholder": "e.g. Müller Joinery",
@@ -5871,7 +5876,9 @@
       "attachmentsEnabled": "Let visitors attach files",
       "attachmentsHint": "Files are stored privately for 30 days and only used to answer that visitor's question.",
       "attachmentsImages": "Images",
-      "attachmentsDocuments": "Documents (PDF, Word, Excel, PowerPoint)"
+      "attachmentsDocuments": "Documents (PDF, Word, Excel, PowerPoint)",
+      "wordsUnit": "words",
+      "maxTokensEffective": "Answers actually stop at about {{words}} words — the shorter of these two settings."
     },
     "translate": {
       "withAi": "Translate",
@@ -6265,6 +6272,7 @@
         "always": "After every answer",
         "after_first_answer": "After the first answer"
       },
+      "showAskedHint": "Also shown whenever a visitor asks for it — to call, to email, to book, or to see the page it opens.",
       "perLocale": "Label per language",
       "perLocaleHint": "Leave a language empty to fall back to the label above. Translate fills only the empty ones.",
       "moveUp": "Move up",
@@ -6273,7 +6281,11 @@
       "hostNone": "No host",
       "hostSearch": "Search members…",
       "hostEmpty": "No member found",
-      "hostHint": "Shown on the booking card and invited to the meeting."
+      "hostHint": "Shown on the booking card and invited to the meeting.",
+      "conversational": "Let visitors book by chatting",
+      "conversationalHint": "The assistant can find a time, take their details and confirm, all in the conversation. The calendar card stays available.",
+      "manageable": "Let visitors change their booking",
+      "manageableHint": "Visitors can move or cancel an appointment they already have, from the chat. They prove it is theirs with a code emailed to the address the booking is under. Off means the assistant answers questions about a booking but hands anyone who wants to change it to your contact details."
     },
     "fallback": {
       "title": "When it cannot answer",
@@ -6296,7 +6308,13 @@
       },
       "addAnswer": "Add answer",
       "viewConversation": "View conversation",
-      "answerAdded": "Answer added — indexing now"
+      "answerAdded": "Answer added — indexing now",
+      "dismiss": "Dismiss",
+      "dismissed": "Question dismissed",
+      "undo": "Undo",
+      "unverified": "Answer added, but the assistant still can't answer this —",
+      "improveAnswer": "Improve answer",
+      "resolveFailed": "The answer was saved, but the gap could not be cleared"
     },
     "tests": {
       "title": "Test questions",

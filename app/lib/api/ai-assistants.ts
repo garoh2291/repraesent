@@ -279,6 +279,15 @@ export interface ActionAppointmentSettings {
   hostAvatarUrl?: string;
   hostEmail?: string;
   hostRole?: string;
+  /**
+   * Let the visitor negotiate the whole booking in chat — pick a time, give
+   * their details, confirm in words — instead of only through the calendar
+   * card. Absent means on: the backend defaults it to true, and an action
+   * saved before the setting existed should behave like a new one.
+   */
+  conversational?: boolean;
+  /** Visitors may move or cancel an existing booking from the chat. Absent means on. */
+  manageable?: boolean;
 }
 
 export const ACTION_APPOINTMENT_DEFAULTS: ActionAppointmentSettings = {
@@ -337,6 +346,18 @@ export const EMPTY_FALLBACK_CONTACT: FallbackContact = {
 
 export const ANSWER_LENGTHS = ["short", "medium", "long"] as const;
 export type AnswerLength = (typeof ANSWER_LENGTHS)[number];
+/**
+ * A token is about three quarters of a word. Only ever used to SHOW a limit —
+ * the model is still capped in tokens, because that is the unit it counts in.
+ */
+export const WORDS_PER_TOKEN = 0.75;
+
+export const tokensToWords = (tokens: number): number =>
+  Math.round((tokens * WORDS_PER_TOKEN) / 5) * 5;
+
+export const wordsToTokens = (words: number): number =>
+  Math.round(words / WORDS_PER_TOKEN);
+
 export const ANSWER_LENGTH_TOKENS: Record<AnswerLength, number> = {
   short: 220,
   medium: 600,
@@ -484,7 +505,8 @@ export interface AssistantRecord {
   chat_model: string;
   temperature: number;
   max_output_tokens: number;
-  daily_token_budget: number | null;
+  /** Daily spend cap in euro cents. `null` = unlimited. */
+  daily_budget_eur_cents: number | null;
   allowed_domains: string[];
   persona: PersonaConfig;
   appearance: AppearanceConfig;
@@ -512,7 +534,7 @@ export type AssistantDraft = Pick<
   | "chat_model"
   | "temperature"
   | "max_output_tokens"
-  | "daily_token_budget"
+  | "daily_budget_eur_cents"
   | "allowed_domains"
   | "persona"
   | "appearance"
@@ -526,6 +548,41 @@ export type UpdateAssistantDto = Partial<AssistantDraft>;
 export interface ChatModelOption {
   id: string;
   label: string;
+  /** USD per 1M tokens, live from OpenRouter where available. */
+  in_usd_per_m: number;
+  out_usd_per_m: number;
+}
+
+/** What `GET /ai-assistants/models` returns, alongside the list. */
+export interface ChatModelsResponse {
+  models: ChatModelOption[];
+  /** Measured cost of one visitor message, for the budget estimate. */
+  avg_tokens_per_message: { in: number; out: number };
+  usd_per_eur: number;
+}
+
+/**
+ * Euro cents -> micro-USD. Mirrors `eurCentsToMicroUsd` on the server; the rate
+ * travels with the model list so the two cannot disagree.
+ */
+export function estimateMessagesPerDay(
+  cents: number | null,
+  model: ChatModelOption | undefined,
+  avg: { in: number; out: number },
+  usdPerEur: number,
+): number | null {
+  if (cents == null || !model) return null;
+  const perMessage = avg.in * model.in_usd_per_m + avg.out * model.out_usd_per_m;
+  if (perMessage <= 0) return null;
+  return Math.max(0, Math.floor(((cents / 100) * usdPerEur * 1_000_000) / perMessage));
+}
+
+/** Micro-USD -> a euro string, so spend reads in the same currency as the cap. */
+export function formatEurFromMicroUsd(micro: number, usdPerEur: number): string {
+  const eur = micro / 1_000_000 / usdPerEur;
+  if (eur === 0) return "€0.00";
+  if (eur < 0.01) return "<€0.01";
+  return `€${eur.toFixed(2)}`;
 }
 
 export interface SourceProgress {
@@ -630,6 +687,13 @@ export interface RunTestsResult {
   failed: number;
 }
 
+/**
+ * Only "unverified" ever reaches the client: resolved and dismissed gaps are
+ * filtered out server-side. An unverified row means the answer was added but
+ * the assistant still cannot answer the question.
+ */
+export type GapResolutionStatus = "unverified";
+
 export interface GapItem {
   normalized: string;
   question: string;
@@ -639,6 +703,8 @@ export interface GapItem {
   off_topic: number;
   dont_know: number;
   conversation_ids: string[];
+  resolution_status: GapResolutionStatus | null;
+  resolution_source_id: string | null;
 }
 
 export interface GapsResponse {
@@ -956,11 +1022,15 @@ export async function getAssistant(id: string): Promise<AssistantRecord> {
   return r.data;
 }
 
-export async function getChatModels(): Promise<ChatModelOption[]> {
-  const r = await apiClient.get<{ models: ChatModelOption[] }>(
-    `${BASE}/models`,
-  );
-  return r.data?.models ?? [];
+export async function getChatModels(): Promise<ChatModelsResponse> {
+  const r = await apiClient.get<ChatModelsResponse>(`${BASE}/models`);
+  return {
+    models: r.data?.models ?? [],
+    // Defaults matter: an older API returns only {id,label}, and the budget
+    // estimate must still render something sane rather than NaN.
+    avg_tokens_per_message: r.data?.avg_tokens_per_message ?? { in: 6066, out: 73 },
+    usd_per_eur: r.data?.usd_per_eur ?? 1.08,
+  };
 }
 
 export async function createAssistant(payload: {
@@ -1191,6 +1261,45 @@ export async function getGaps(
     `${BASE}/${id}/gaps?days=${days}&limit=${limit}`,
   );
   return r.data ?? { items: [], total_unanswered: 0 };
+}
+
+export interface GapResolution {
+  normalized: string;
+  status: "resolved" | "unverified" | "dismissed";
+  test_question_id: string | null;
+}
+
+/** Answered: the gap disappears now and the answer gets verified in the background. */
+export async function resolveGap(
+  id: string,
+  body: { question: string; source_id?: string },
+): Promise<GapResolution> {
+  const r = await apiClient.post<GapResolution>(
+    `${BASE}/${id}/gaps/resolve`,
+    body,
+  );
+  return r.data;
+}
+
+/** Not worth answering. */
+export async function dismissGap(
+  id: string,
+  question: string,
+): Promise<GapResolution> {
+  const r = await apiClient.post<GapResolution>(`${BASE}/${id}/gaps/dismiss`, {
+    question,
+  });
+  return r.data;
+}
+
+/** Undo a resolve or a dismiss; the key is the gap's normalised question. */
+export async function unresolveGap(
+  id: string,
+  normalized: string,
+): Promise<void> {
+  await apiClient.delete(
+    `${BASE}/${id}/gaps/resolutions/${encodeURIComponent(normalized)}`,
+  );
 }
 
 export async function postPlaygroundFeedback(

@@ -8,6 +8,7 @@ import {
   deleteAssistant,
   deleteSource,
   deleteTest,
+  dismissGap,
   getAssistant,
   getAssistantSnippet,
   getAssistants,
@@ -23,9 +24,11 @@ import {
   presignSourceUpload,
   publishAssistant,
   putToPresignedUrl,
+  resolveGap,
   resyncSource,
   runTests,
   unpublishAssistant,
+  unresolveGap,
   updateAssistant,
   updateSource,
   updateTest,
@@ -55,6 +58,8 @@ export const aiKeys = {
     ["ai-assistant-usage", id, days] as const,
   gaps: (id: string | undefined, days: number) =>
     ["ai-assistant-gaps", id, days] as const,
+  /** Prefix key: invalidates the gaps list whatever window it was fetched for. */
+  gapsAll: (id: string | undefined) => ["ai-assistant-gaps", id] as const,
   documents: (id: string | undefined, sourceId: string | undefined) =>
     ["ai-assistant-source-documents", id, sourceId] as const,
   documentContent: (
@@ -229,6 +234,9 @@ export function useSourceMutations(id: string | undefined) {
   const refresh = async () => {
     await qc.invalidateQueries({ queryKey: aiKeys.sources(id) });
     await qc.invalidateQueries({ queryKey: aiKeys.list() });
+    // Adding knowledge is the one thing that changes the gap list; without this
+    // the panel keeps serving its 60 s-stale copy and the gap looks stuck.
+    await qc.invalidateQueries({ queryKey: aiKeys.gapsAll(id) });
   };
 
   const create = useMutation({
@@ -287,6 +295,31 @@ export function useAiGaps(id: string | undefined, days = 30) {
     enabled: !!id,
     staleTime: 60_000,
   });
+}
+
+/**
+ * Resolve / dismiss / undo a gap. Every one of them changes what the list
+ * returns, so they all invalidate it — the panel is otherwise 60 s stale.
+ */
+export function useGapMutations(id: string | undefined) {
+  const qc = useQueryClient();
+  const refresh = () => qc.invalidateQueries({ queryKey: aiKeys.gapsAll(id) });
+
+  const resolve = useMutation({
+    mutationFn: (body: { question: string; source_id?: string }) =>
+      resolveGap(id!, body),
+    onSuccess: refresh,
+  });
+  const dismiss = useMutation({
+    mutationFn: (question: string) => dismissGap(id!, question),
+    onSuccess: refresh,
+  });
+  const undo = useMutation({
+    mutationFn: (normalized: string) => unresolveGap(id!, normalized),
+    onSuccess: refresh,
+  });
+
+  return { resolve, dismiss, undo };
 }
 
 export function useSourceDocuments(
