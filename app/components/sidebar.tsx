@@ -215,7 +215,7 @@ function DemoPill() {
   const { t } = useTranslation();
   return (
     <span className="ml-auto rounded-full bg-foreground/10 px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wider text-muted-foreground">
-      {t(PILOT_FEATURE_LABEL_KEY, { defaultValue: "Beta" })}
+      {t(PILOT_FEATURE_LABEL_KEY, { defaultValue: "Demo" })}
     </span>
   );
 }

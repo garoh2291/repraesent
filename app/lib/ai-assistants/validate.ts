@@ -14,6 +14,13 @@
  */
 import {
   AI_LOCALES,
+  BORDER_WIDTH_MAX,
+  MARGIN_Y_MAX,
+  MAX_WIDTH_MAX,
+  MAX_WIDTH_MIN,
+  RADIUS_PX_MAX,
+  RADIUS_PX_MIN,
+  WIDGET_COLOR_KEYS,
   WIDGET_STRING_KEYS,
   withAppearanceDefaults,
   type AiLocale,
@@ -120,7 +127,7 @@ const DOMAIN = /^[a-z0-9.-]+$/;
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 /** `z.string().max(n)` per key of `widgetStringsSchema`. */
-const STRING_MAX: Record<keyof WidgetStrings, number> = {
+export const STRING_MAX: Record<keyof WidgetStrings, number> = {
   greeting: 400,
   placeholder: 120,
   launcher_label: 60,
@@ -232,6 +239,64 @@ export function validateDraft(draft: AssistantDraft | null): AssistantIssue[] {
       code: "invalidColor",
       tab: "appearance",
       path: "appearance.primary_color",
+    });
+  }
+  for (const key of WIDGET_COLOR_KEYS) {
+    const value = (ap.colors?.[key] ?? "").trim();
+    // Empty is the default and means "follow the page" — only a filled field
+    // has to be a hex value.
+    if (value && !HEX_COLOR.test(value)) {
+      push({
+        code: "invalidOverrideColor",
+        tab: "appearance",
+        path: `appearance.colors.${key}`,
+      });
+    }
+  }
+  if (
+    ap.radius_px != null &&
+    (!Number.isInteger(ap.radius_px) ||
+      ap.radius_px < RADIUS_PX_MIN ||
+      ap.radius_px > RADIUS_PX_MAX)
+  ) {
+    push({
+      code: "radiusOutOfRange",
+      tab: "appearance",
+      path: "appearance.radius_px",
+    });
+  }
+  if (
+    !Number.isInteger(ap.border_width) ||
+    ap.border_width < 0 ||
+    ap.border_width > BORDER_WIDTH_MAX
+  ) {
+    push({
+      code: "borderWidthOutOfRange",
+      tab: "appearance",
+      path: "appearance.border_width",
+    });
+  }
+  if (
+    ap.max_width != null &&
+    (!Number.isInteger(ap.max_width) ||
+      ap.max_width < MAX_WIDTH_MIN ||
+      ap.max_width > MAX_WIDTH_MAX)
+  ) {
+    push({
+      code: "maxWidthOutOfRange",
+      tab: "appearance",
+      path: "appearance.max_width",
+    });
+  }
+  if (
+    !Number.isInteger(ap.margin_y) ||
+    ap.margin_y < 0 ||
+    ap.margin_y > MARGIN_Y_MAX
+  ) {
+    push({
+      code: "marginOutOfRange",
+      tab: "appearance",
+      path: "appearance.margin_y",
     });
   }
   if (ap.avatar_mode === "image") {

@@ -1,7 +1,16 @@
-import { useMemo } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { CircleHelp, MessageCircle, Send, Sparkles } from "lucide-react";
 import { cn } from "~/lib/utils";
+import {
+  HEIGHT_PX,
+  defaultMaxWidth,
+  readPageColors,
+  resolvePalette,
+  resolveRadii,
+  resolveShadow,
+  type PageColors,
+} from "~/lib/ai-assistants/palette";
 import {
   resolveWidgetStrings,
   withAppearanceDefaults,
@@ -17,30 +26,14 @@ interface Props {
   persona: PersonaConfig;
   appearance: AppearanceConfig;
   locale: AiLocale;
+  /**
+   * "empty" is what a visitor lands on; "conversation" is after the first
+   * exchange — the only state in which section/page/bar have a header at all.
+   */
+  state?: "empty" | "conversation";
   className?: string;
 }
 
-/** Perceived luminance → white or near-black text on the accent. */
-function onColor(hex: string): string {
-  const m = /^#([0-9a-f]{6})$/i.exec(hex);
-  if (!m) return "#ffffff";
-  const n = parseInt(m[1], 16);
-  const r = (n >> 16) & 255;
-  const g = (n >> 8) & 255;
-  const b = n & 255;
-  const l = (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255;
-  return l > 0.6 ? "#111111" : "#ffffff";
-}
-
-const RADIUS: Record<
-  AppearanceConfig["radius"],
-  { panel: number; bubble: number; field: number }
-> = {
-  sm: { panel: 6, bubble: 6, field: 6 },
-  md: { panel: 12, bubble: 10, field: 8 },
-  lg: { panel: 18, bubble: 16, field: 12 },
-  pill: { panel: 24, bubble: 20, field: 999 },
-};
 const FONT: Record<AppearanceConfig["font"], string> = {
   system:
     "-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif",
@@ -57,6 +50,11 @@ const LAUNCHER_PX: Record<AppearanceConfig["launcher_size"], number> = {
  * The widget, re-rendered in React from the draft. Not the real embed script
  * — the point is that every keystroke in the Appearance form shows up here
  * before it is saved, which the iframe/script embed cannot do.
+ *
+ * Colours come from the SAME resolver the widget uses
+ * (`lib/ai-assistants/palette.ts`), so `theme: "page"` really does follow the
+ * surface this preview is sitting on rather than a hardcoded white/near-black
+ * pair that used to disagree with the embed on every site.
  */
 export function WidgetPreview({
   widgetType,
@@ -64,6 +62,7 @@ export function WidgetPreview({
   persona,
   appearance: rawAppearance,
   locale,
+  state = "empty",
   className,
 }: Props) {
   const { t } = useTranslation();
@@ -75,36 +74,38 @@ export function WidgetPreview({
     () => resolveWidgetStrings(appearance, locale),
     [appearance, locale],
   );
-  const accent = /^#[0-9a-f]{6}$/i.test(appearance.primary_color)
-    ? appearance.primary_color
-    : "#111111";
-  const accentText = onColor(accent);
-  const dark =
-    appearance.theme === "dark" ||
-    (appearance.theme === "auto" &&
-      typeof window !== "undefined" &&
-      window.matchMedia?.("(prefers-color-scheme: dark)").matches);
 
-  const surface = dark
-    ? {
-        bg: "#141416",
-        fg: "#f4f4f5",
-        muted: "#a1a1aa",
-        line: "#27272a",
-        field: "#1c1c1f",
-      }
-    : {
-        bg: "#ffffff",
-        fg: "#111111",
-        muted: "#6b7280",
-        line: "#e5e7eb",
-        field: "#f5f5f7",
-      };
-  const r = RADIUS[appearance.radius];
+  // `theme: "page"` reads the surrounding surface, exactly like the widget
+  // reads the host page. Re-read when the app flips light/dark.
+  const hostRef = useRef<HTMLDivElement | null>(null);
+  const [pageColors, setPageColors] = useState<PageColors | null>(null);
+  useEffect(() => {
+    const read = () => setPageColors(readPageColors(hostRef.current));
+    read();
+    if (typeof MutationObserver === "undefined") return;
+    const mo = new MutationObserver(read);
+    mo.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ["class", "style", "data-theme"],
+    });
+    return () => mo.disconnect();
+  }, [appearance.theme]);
+
+  const p = useMemo(
+    () => resolvePalette(appearance, pageColors),
+    [appearance, pageColors],
+  );
+  const r = resolveRadii(appearance);
   const compact = appearance.density === "compact";
   const fontFamily = FONT[appearance.font];
   const textSize = compact ? "text-[11px]" : "text-xs";
   const pad = compact ? "px-3 py-2" : "px-3.5 py-3";
+  const border =
+    appearance.border_width > 0
+      ? `${appearance.border_width}px solid ${p.line}`
+      : "none";
+  const boxShadow = resolveShadow(appearance.shadow, p.dark);
+  const conversation = state === "conversation";
 
   const greeting = persona.greeting.trim() || strings.greeting;
   const launcher = appearance.launcher_label?.trim() || strings.launcher_label;
@@ -117,12 +118,11 @@ export function WidgetPreview({
 
   const headerBg =
     appearance.header_style === "gradient"
-      ? `linear-gradient(135deg, ${accent} 0%, ${accent}bb 100%)`
+      ? `linear-gradient(135deg, ${p.accent} 0%, ${p.accent}bb 100%)`
       : appearance.header_style === "minimal"
-        ? surface.bg
-        : accent;
-  const headerFg =
-    appearance.header_style === "minimal" ? surface.fg : accentText;
+        ? p.bg
+        : p.accent;
+  const headerFg = appearance.header_style === "minimal" ? p.fg : p.accentText;
 
   const avatarImg =
     appearance.avatar_mode === "image" && appearance.avatar_url ? (
@@ -139,7 +139,7 @@ export function WidgetPreview({
     <span
       aria-hidden
       className="flex size-8 shrink-0 items-center justify-center overflow-hidden rounded-full text-sm font-semibold"
-      style={{ background: accent, color: accentText }}
+      style={{ background: p.accent, color: p.accentText }}
     >
       {avatarImg}
     </span>
@@ -153,7 +153,7 @@ export function WidgetPreview({
         color: headerFg,
         borderBottom:
           appearance.header_style === "minimal"
-            ? `1px solid ${surface.line}`
+            ? `${Math.max(1, appearance.border_width)}px solid ${p.line}`
             : undefined,
       }}
     >
@@ -163,9 +163,9 @@ export function WidgetPreview({
         style={{
           background:
             appearance.header_style === "minimal"
-              ? accent
+              ? p.accent
               : "rgba(255,255,255,0.18)",
-          color: appearance.header_style === "minimal" ? accentText : undefined,
+          color: appearance.header_style === "minimal" ? p.accentText : undefined,
         }}
       >
         {avatarImg}
@@ -187,10 +187,10 @@ export function WidgetPreview({
         {persona.suggested_questions.map((q, i) => (
           <span
             key={`${q}-${i}`}
-            className={cn("border px-2.5 py-1 leading-none", textSize)}
+            className={cn("px-2.5 py-1 leading-none", textSize)}
             style={{
-              borderColor: surface.line,
-              color: surface.fg,
+              border: border === "none" ? `1px solid ${p.line}` : border,
+              color: p.fg,
               borderRadius: r.field,
             }}
           >
@@ -206,20 +206,17 @@ export function WidgetPreview({
         "flex items-center gap-2",
         compact ? "px-2.5 py-1.5" : "px-3 py-2",
       )}
-      style={{ background: surface.field, borderRadius: r.field }}
+      style={{ background: p.bg2, borderRadius: r.field }}
     >
-      <span
-        className={cn("flex-1 truncate", textSize)}
-        style={{ color: surface.muted }}
-      >
+      <span className={cn("flex-1 truncate", textSize)} style={{ color: p.fg2 }}>
         {placeholder}
       </span>
       <span
         aria-label={strings.send}
         className="flex size-6 items-center justify-center"
         style={{
-          background: accent,
-          color: accentText,
+          background: p.accent,
+          color: p.accentText,
           borderRadius: Math.min(r.field, 8),
         }}
       >
@@ -229,12 +226,12 @@ export function WidgetPreview({
   );
 
   const poweredBy = appearance.show_powered_by ? (
-    <p className="text-center text-[10px]" style={{ color: surface.muted }}>
+    <p className="text-center text-[10px]" style={{ color: p.fg2 }}>
       {strings.powered_by}
     </p>
   ) : null;
 
-  const assistantBubble = (
+  const assistantBubble = (text: string) => (
     <div className="flex items-end gap-2">
       {avatar}
       <div
@@ -244,19 +241,48 @@ export function WidgetPreview({
           compact ? "px-2.5 py-1.5" : "px-3 py-2",
         )}
         style={{
-          background: surface.field,
-          color: surface.fg,
+          background: p.assistantBubble,
+          color: p.fg,
           borderRadius: r.bubble,
           borderBottomLeftRadius: Math.min(r.bubble, 6),
         }}
       >
-        {greeting}
+        {text}
       </div>
     </div>
   );
 
+  const userBubble = (
+    <div className="flex justify-end">
+      <div
+        className={cn(
+          "max-w-[80%] leading-relaxed",
+          textSize,
+          compact ? "px-2.5 py-1.5" : "px-3 py-2",
+        )}
+        style={{
+          background: p.userBubble,
+          color: p.userBubbleText,
+          borderRadius: r.bubble,
+          borderBottomRightRadius: Math.min(r.bubble, 6),
+        }}
+      >
+        {t("aiAssistants.appearance.previewUserMessage")}
+      </div>
+    </div>
+  );
+
+  /** Messages for the "in conversation" state. */
+  const thread = (
+    <>
+      {userBubble}
+      {assistantBubble(t("aiAssistants.appearance.previewAssistantMessage"))}
+    </>
+  );
+
   const frame = (children: React.ReactNode, style?: React.CSSProperties) => (
     <div
+      ref={hostRef}
       className={cn(
         "overflow-hidden rounded-2xl border border-border",
         className,
@@ -292,7 +318,7 @@ export function WidgetPreview({
       <div
         className="relative"
         style={{
-          background: dark
+          background: p.dark
             ? "linear-gradient(180deg,#0f0f11 0%,#1a1a1d 100%)"
             : "linear-gradient(180deg,#f3f4f6 0%,#e9eaee 100%)",
           minHeight: 480,
@@ -302,18 +328,9 @@ export function WidgetPreview({
           aria-hidden
           className="absolute inset-x-6 top-6 space-y-2 opacity-40"
         >
-          <div
-            className="h-3 w-32 rounded"
-            style={{ background: surface.muted }}
-          />
-          <div
-            className="h-2 w-64 rounded"
-            style={{ background: surface.line }}
-          />
-          <div
-            className="h-2 w-52 rounded"
-            style={{ background: surface.line }}
-          />
+          <div className="h-3 w-32 rounded" style={{ background: p.fg2 }} />
+          <div className="h-2 w-64 rounded" style={{ background: p.line }} />
+          <div className="h-2 w-52 rounded" style={{ background: p.line }} />
         </div>
 
         <div
@@ -327,17 +344,20 @@ export function WidgetPreview({
           }}
         >
           <div
-            className="flex w-full flex-col overflow-hidden shadow-[0_24px_48px_-20px_rgba(0,0,0,0.5)]"
+            className="flex w-full flex-col overflow-hidden"
             style={{
-              background: surface.bg,
-              border: `1px solid ${surface.line}`,
+              background: p.bg,
+              border,
               borderRadius: r.panel,
+              boxShadow,
             }}
           >
             {header}
             <div className={cn("space-y-3", pad)}>
-              {assistantBubble}
-              {chips}
+              {/* The greeting is the bubble's welcome; embedded types use the
+                  hero instead and never render it. */}
+              {conversation ? thread : assistantBubble(greeting)}
+              {conversation ? null : chips}
             </div>
             <div className={cn("space-y-2 pb-3", compact ? "px-3" : "px-3.5")}>
               {composer()}
@@ -352,12 +372,13 @@ export function WidgetPreview({
             )}
           >
             <span
-              className="flex shrink-0 items-center justify-center overflow-hidden rounded-full shadow-lg"
+              className="flex shrink-0 items-center justify-center overflow-hidden rounded-full"
               style={{
-                background: accent,
-                color: accentText,
+                background: p.accent,
+                color: p.accentText,
                 width: size,
                 height: size,
+                boxShadow,
               }}
               title={launcher}
             >
@@ -365,21 +386,19 @@ export function WidgetPreview({
             </span>
             {appearance.nudge.enabled ? (
               <span
-                className={cn("max-w-[200px] px-3 py-2 shadow-md", textSize)}
+                className={cn("max-w-[200px] px-3 py-2", textSize)}
                 style={{
-                  background: surface.bg,
-                  color: surface.fg,
-                  border: `1px solid ${surface.line}`,
+                  background: p.bg,
+                  color: p.fg,
+                  border: border === "none" ? `1px solid ${p.line}` : border,
                   borderRadius: r.bubble,
+                  boxShadow,
                 }}
               >
                 {nudgeText}
               </span>
             ) : (
-              <span
-                className={cn("pb-1", textSize)}
-                style={{ color: surface.muted }}
-              >
+              <span className={cn("pb-1", textSize)} style={{ color: p.fg2 }}>
                 {launcher}
               </span>
             )}
@@ -389,118 +408,153 @@ export function WidgetPreview({
     );
   }
 
-  // --- bar ------------------------------------------------------------------
+  // --- embedded (section / page / bar) --------------------------------------
+  //
+  // The page mock keeps the surrounding page's own colour so `margin_y` and a
+  // mismatched theme are both visible: the widget card is drawn ON the page,
+  // not instead of it.
+  const pageBg = pageColors?.background ?? p.bg;
+  const pageFg = pageColors?.text ?? p.fg;
+  const maxWidth = appearance.max_width ?? defaultMaxWidth(widgetType);
+  const bodyHeight = HEIGHT_PX[appearance.height];
+
+  const pageHeader = (
+    <div
+      className="flex items-center justify-between px-5 py-3"
+      style={{ borderBottom: `1px solid ${p.line}`, color: pageFg }}
+      aria-hidden
+    >
+      <span className="text-xs font-semibold tracking-tight opacity-70">
+        {businessName || t("aiAssistants.appearance.previewSiteHeader")}
+      </span>
+      <span className="flex gap-3 text-[10px] opacity-40">
+        <span className="h-2 w-10 rounded-full bg-current" />
+        <span className="h-2 w-8 rounded-full bg-current" />
+        <span className="h-2 w-12 rounded-full bg-current" />
+      </span>
+    </div>
+  );
+
+  const hero = (
+    <div className="space-y-2 text-center">
+      <div className="mx-auto flex justify-center">{avatar}</div>
+      <h3
+        className="text-xl font-semibold tracking-tight"
+        style={{ color: p.fg }}
+      >
+        {strings.section_title}
+      </h3>
+      <p className="mx-auto max-w-[40ch] text-sm" style={{ color: p.fg2 }}>
+        {strings.section_subtitle}
+      </p>
+    </div>
+  );
+
   if (widgetType === "bar") {
     return frame(
-      <div
-        className="space-y-4 px-6 py-8"
-        style={{ background: surface.bg, minHeight: 300 }}
-      >
-        <div aria-hidden className="space-y-2 opacity-40">
-          <div
-            className="h-3 w-40 rounded"
-            style={{ background: surface.muted }}
-          />
-          <div
-            className="h-2 w-full rounded"
-            style={{ background: surface.line }}
-          />
-        </div>
+      <div style={{ background: pageBg, minHeight: 340 }}>
+        {pageHeader}
         <div
-          className={cn(
-            "flex items-center gap-2 shadow-sm",
-            compact ? "px-3 py-2" : "px-4 py-3",
-          )}
+          className="mx-auto px-5"
           style={{
-            border: `1px solid ${surface.line}`,
-            borderRadius: r.field,
-            background: surface.bg,
+            maxWidth,
+            marginTop: appearance.margin_y,
+            marginBottom: appearance.margin_y,
           }}
         >
-          <Sparkles
-            className="h-4 w-4 shrink-0"
-            style={{ color: accent }}
-            aria-hidden
-          />
-          <span
-            className="flex-1 truncate text-sm"
-            style={{ color: surface.muted }}
-          >
-            {strings.bar_placeholder}
-          </span>
-          <span
-            className="flex size-7 items-center justify-center"
+          <div
+            className={cn(
+              "flex items-center gap-2",
+              compact ? "px-3 py-2" : "px-4 py-3",
+            )}
             style={{
-              background: accent,
-              color: accentText,
-              borderRadius: Math.min(r.field, 8),
+              border,
+              borderRadius: r.field,
+              background: p.bg,
+              boxShadow,
             }}
           >
-            <Send className="h-3.5 w-3.5" />
-          </span>
-        </div>
-        <div
-          className="space-y-3 p-3"
-          style={{
-            border: `1px dashed ${surface.line}`,
-            borderRadius: r.panel,
-          }}
-        >
-          <p
-            className="text-[10px] uppercase tracking-widest"
-            style={{ color: surface.muted }}
+            <Sparkles
+              className="h-4 w-4 shrink-0"
+              style={{ color: p.accent }}
+              aria-hidden
+            />
+            <span className="flex-1 truncate text-sm" style={{ color: p.fg2 }}>
+              {strings.bar_placeholder}
+            </span>
+            <span
+              className="flex size-7 items-center justify-center"
+              style={{
+                background: p.accent,
+                color: p.accentText,
+                borderRadius: Math.min(r.field, 8),
+              }}
+            >
+              <Send className="h-3.5 w-3.5" />
+            </span>
+          </div>
+          <div
+            className="mt-2 overflow-hidden"
+            style={{ border, borderRadius: r.panel, background: p.bg, boxShadow }}
           >
-            {t("aiAssistants.appearance.barExpands")}
-          </p>
-          {assistantBubble}
-          {chips}
+            {conversation ? header : null}
+            <div
+              className="space-y-3 p-3"
+              style={{ minHeight: Math.round(bodyHeight * 0.5) }}
+            >
+              {conversation ? (
+                thread
+              ) : (
+                <>
+                  <p
+                    className="text-[10px] uppercase tracking-widest"
+                    style={{ color: p.fg2 }}
+                  >
+                    {t("aiAssistants.appearance.barExpands")}
+                  </p>
+                  {hero}
+                  {chips}
+                </>
+              )}
+            </div>
+            <div className="px-3 pb-3">{poweredBy}</div>
+          </div>
         </div>
-        {poweredBy}
       </div>,
     );
   }
 
-  // --- section / page -------------------------------------------------------
-  const page = widgetType === "page";
+  // section / page
   return frame(
-    <div style={{ background: surface.bg, minHeight: 460 }}>
-      {page ? (
+    <div style={{ background: pageBg, minHeight: 480 }}>
+      {pageHeader}
+      <div
+        className="mx-auto px-5"
+        style={{
+          maxWidth,
+          marginTop: appearance.margin_y,
+          marginBottom: appearance.margin_y,
+        }}
+      >
         <div
-          className="flex items-center gap-2 px-6 py-3"
-          style={{ borderBottom: `1px solid ${surface.line}` }}
+          className="overflow-hidden"
+          style={{ background: p.bg, border, borderRadius: r.panel, boxShadow }}
         >
-          {avatar}
-          <span className="text-sm font-semibold" style={{ color: surface.fg }}>
-            {businessName}
-          </span>
-        </div>
-      ) : null}
-      <div className="space-y-6 px-6 py-8 sm:px-8">
-        <div className="space-y-2 text-center">
-          {!page ? (
-            <div className="mx-auto flex justify-center">{avatar}</div>
-          ) : null}
-          <h3
-            className="text-xl font-semibold tracking-tight"
-            style={{ color: surface.fg }}
+          {conversation ? header : null}
+          <div
+            className="space-y-6 px-6 py-8 sm:px-8"
+            style={{ minHeight: bodyHeight }}
           >
-            {strings.section_title}
-          </h3>
-          <p
-            className="mx-auto max-w-[40ch] text-sm"
-            style={{ color: surface.muted }}
-          >
-            {strings.section_subtitle}
-          </p>
-        </div>
-        <div
-          className="mx-auto max-w-md space-y-3 p-4"
-          style={{ border: `1px solid ${surface.line}`, borderRadius: r.panel }}
-        >
-          {assistantBubble}
-          {chips}
-          {composer()}
-          {poweredBy}
+            {/* In section/page/bar the hero IS the welcome — no greeting
+                bubble is rendered, so nothing appears retroactively above the
+                first answer. */}
+            {conversation ? thread : hero}
+            <div className="space-y-3">
+              {conversation ? null : chips}
+              {composer()}
+              {poweredBy}
+            </div>
+          </div>
         </div>
       </div>
     </div>,

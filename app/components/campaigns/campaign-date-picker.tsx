@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import {
   format,
@@ -254,10 +254,17 @@ function MiniCalendar({
 
 export function CampaignDatePicker({
   value,
+  presetKey,
   onChange,
 }: {
   value: DateRange;
-  onChange: (range: DateRange) => void;
+  /**
+   * Which preset the current `value` came from, so a range restored from the
+   * URL highlights the same shortcut the picker showed when it was shared.
+   * `null`/undefined means a hand-picked custom range.
+   */
+  presetKey?: string | null;
+  onChange: (range: DateRange, presetKey?: string) => void;
 }) {
   const { t, i18n } = useTranslation();
   const locale = getLocale(i18n.language);
@@ -269,7 +276,14 @@ export function CampaignDatePicker({
   const [selEnd, setSelEnd] = useState<Date | null>(null);
   const [hoverDate, setHoverDate] = useState<Date | null>(null);
   const [calMonth, setCalMonth] = useState(new Date());
-  const [activePreset, setActivePreset] = useState<string | null>("all_time");
+  const [activePreset, setActivePreset] = useState<string | null>(
+    presetKey ?? null,
+  );
+
+  // Follow the controlled preset (e.g. when the URL changes under us).
+  useEffect(() => {
+    setActivePreset(presetKey ?? null);
+  }, [presetKey]);
 
   // Custom inputs
   const [customStartInput, setCustomStartInput] = useState("");
@@ -299,10 +313,13 @@ export function CampaignDatePicker({
         isBefore(start, end) || isSameDay(start, end)
           ? { start, end }
           : { start: end, end: start };
-      onChange({
-        startDate: toYMD(sorted.start),
-        endDate: toYMD(sorted.end),
-      });
+      onChange(
+        {
+          startDate: toYMD(sorted.start),
+          endDate: toYMD(sorted.end),
+        },
+        presetKey,
+      );
       setActivePreset(presetKey ?? null);
       setOpen(false);
     },

@@ -4,13 +4,7 @@ import { Panel, PanelBody, PanelHeader } from "~/components/forms/chrome";
 import { Activity, ThumbsDown, ThumbsUp } from "lucide-react";
 import { useAiUsage, useChatModels } from "~/lib/hooks/useAiAssistants";
 import type { AssistantUsageToday } from "~/lib/api/ai-assistants";
-
-function formatMicroUsd(micro: number): string {
-  const usd = micro / 1_000_000;
-  if (usd === 0) return "$0.00";
-  if (usd < 0.01) return "<$0.01";
-  return `$${usd.toFixed(2)}`;
-}
+import { formatEurFromMicroUsd } from "~/lib/api/ai-assistants";
 
 function compact(n: number): string {
   if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`;
@@ -55,7 +49,10 @@ export function UsageCard({
     0,
   );
   const modelLabel = (id: string) =>
-    models?.find((m) => m.id === id)?.label ?? id;
+    models?.models.find((m) => m.id === id)?.label ?? id;
+  // Spend is shown in the same currency as the budget field that caps it — a
+  // "€5/day" limit beside "$0.03 spent" reads as a bug.
+  const eur = (micro: number) => formatEurFromMicroUsd(micro, models?.usd_per_eur ?? 1.08);
 
   const stats: Array<{ label: string; value: string }> = [
     { label: t("aiAssistants.usage.messages"), value: compact(today.messages) },
@@ -67,7 +64,7 @@ export function UsageCard({
     { label: t("aiAssistants.usage.leads"), value: compact(today.leads) },
     {
       label: t("aiAssistants.usage.cost"),
-      value: formatMicroUsd(today.cost_micro_usd),
+      value: eur(today.cost_micro_usd),
     },
   ];
 
@@ -167,7 +164,7 @@ export function UsageCard({
                   <span className="shrink-0 tabular-nums text-muted-foreground">
                     {compact(m.messages)} ·{" "}
                     {compact(m.tokens_in + m.tokens_out)} tok ·{" "}
-                    {formatMicroUsd(m.cost_micro_usd)}
+                    {eur(m.cost_micro_usd)}
                   </span>
                 </li>
               ))}

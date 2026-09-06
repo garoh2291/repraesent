@@ -114,7 +114,7 @@ function toDraft(a: AssistantRecord): AssistantDraft {
     chat_model: a.chat_model,
     temperature: a.temperature,
     max_output_tokens: a.max_output_tokens,
-    daily_token_budget: a.daily_token_budget,
+    daily_budget_eur_cents: a.daily_budget_eur_cents,
     allowed_domains: a.allowed_domains ?? [],
     persona: a.persona,
     appearance: a.appearance,

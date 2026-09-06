@@ -67,6 +67,7 @@
     "loadingPlugins": "Chargement des services…",
     "openaiAds": "OpenAI Ads",
     "newBadge": "Nouveau",
+    "demoBadge": "Démo",
     "betaVadge": "Beta",
     "pilotUnavailable": "Cette fonctionnalité n’est pas encore activée pour votre espace de travail.",
     "emailCampaigns": "Campagnes",
@@ -5595,7 +5596,12 @@
       "businessNameMissing": "Le nom de l'entreprise est vide — l'assistant doit savoir pour qui il parle.",
       "businessNameTooLong": "Le nom de l'entreprise dépasse 120 caractères.",
       "profileEmailInvalid": "L'e-mail dans les informations d'entreprise n'est pas une adresse valide.",
-      "tooManyKeyPeople": "Au plus 5 personnes dans les informations d'entreprise."
+      "tooManyKeyPeople": "Au plus 5 personnes dans les informations d'entreprise.",
+      "invalidOverrideColor": "Une couleur personnalisée doit être une valeur hexadécimale à 6 chiffres comme #2563eb, ou rester vide.",
+      "radiusOutOfRange": "Le rayon des angles doit être un nombre entier entre 0 et 32.",
+      "borderWidthOutOfRange": "L’épaisseur de bordure doit être comprise entre 0 et 3 pixels.",
+      "maxWidthOutOfRange": "La largeur maximale doit être comprise entre 320 et 1200 pixels.",
+      "marginOutOfRange": "La marge extérieure doit être comprise entre 0 et 96 pixels."
     },
     "list": {
       "title": "Assistants IA",
@@ -5825,11 +5831,13 @@
       "modelHint": "Les petits modèles répondent plus vite et coûtent moins ; les grands suivent les consignes de plus près.",
       "temperature": "Créativité",
       "temperatureHint": "Bas : reste proche de vos sources. Haut : formulations plus variées.",
-      "maxTokens": "Longueur maximale de réponse",
-      "maxTokensHint": "En tokens (environ ¾ de mot). 100–1500.",
-      "budget": "Budget quotidien de tokens",
-      "budgetUnlimited": "Illimité",
-      "budgetHint": "Une fois atteint, l’assistant décline poliment jusqu’à minuit UTC. Laissez vide pour aucune limite.",
+      "maxTokens": "Jamais plus long que",
+      "maxTokensHint": "Limite stricte : l'assistant est coupé ici, même en milieu de phrase. Choisir une longueur ci-dessus règle cette valeur pour vous.",
+      "budget": "Budget quotidien",
+      "budgetUnlimited": "Sans limite",
+      "budgetHint": "Une fois atteint, l'assistant décline poliment jusqu'à minuit UTC.",
+      "budgetEstimate": "Environ {{count}} messages par jour avec {{model}}.",
+      "budgetUnlimitedHint": "Aucune limite quotidienne — l'assistant continue de répondre quelle que soit l'affluence. Indiquez un montant pour plafonner la dépense.",
       "personaTitle": "Personnalité",
       "tone": "Ton",
       "tones": {
@@ -5840,7 +5848,8 @@
       "languageTitle": "Langue",
       "languageVisitor": "Suivre le visiteur",
       "languageVisitorHint": "Répond dans la langue de la question — anglais, allemand, français ou néerlandais.",
-      "languageFixed": "Toujours répondre en",
+      "languageFixed": "Commencer en",
+      "languageFixedHint": "S'applique au message d'accueil, et jusqu'à ce que la langue du visiteur soit claire. S'il écrit dans une autre langue, l'assistant y passe.",
       "instructionsTitle": "Consignes personnalisées",
       "instructionsPlaceholder": "Ne jamais citer de prix pour les projets professionnels — inviter à demander un devis.",
       "instructionsHint": "Règles suivies dans chaque réponse. Courtes et précises.",
@@ -5854,7 +5863,9 @@
         "short": "Courte",
         "medium": "Moyenne",
         "long": "Longue",
-        "hint": "Limite les réponses à environ {{tokens}} tokens. La limite avancée ci-dessous s’applique toujours."
+        "hint_short": "L'assistant doit répondre en 1 à 2 phrases.",
+        "hint_medium": "L'assistant doit répondre en 2 à 5 phrases, ou une courte liste.",
+        "hint_long": "L'assistant peut utiliser jusqu'à 8 phrases, avec titres ou puces."
       },
       "businessName": "Nom de l'entreprise",
       "businessNamePlaceholder": "p. ex. Menuiserie Müller",
@@ -5867,7 +5878,9 @@
       "attachmentsEnabled": "Autoriser les visiteurs à joindre des fichiers",
       "attachmentsHint": "Les fichiers sont conservés en privé pendant 30 jours et servent uniquement à répondre à la question de ce visiteur.",
       "attachmentsImages": "Images",
-      "attachmentsDocuments": "Documents (PDF, Word, Excel, PowerPoint)"
+      "attachmentsDocuments": "Documents (PDF, Word, Excel, PowerPoint)",
+      "wordsUnit": "mots",
+      "maxTokensEffective": "Les réponses s'arrêtent en réalité vers {{words}} mots — la plus petite des deux valeurs s'applique."
     },
     "translate": {
       "withAi": "Traduire",
@@ -5901,7 +5914,8 @@
       "themes": {
         "auto": "Auto",
         "light": "Clair",
-        "dark": "Sombre"
+        "dark": "Sombre",
+        "page": "Suivre la page"
       },
       "position": "Position",
       "positions": {
@@ -6000,7 +6014,8 @@
         "enabled": "Afficher un court message près du lanceur",
         "text": "Message",
         "placeholder": "Posez-nous une question…",
-        "hint": "Une fois par visite ; disparaît à l’ouverture du chat."
+        "hint": "Une fois par visite ; disparaît à l’ouverture du chat.",
+        "perLanguageHint": "Le texte de repli pour toutes les langues. Traduisez-le dans « Conversation »."
       },
       "hideOnMobile": "Masquer sur petits écrans",
       "pageRules": {
@@ -6012,6 +6027,78 @@
           "exclude": "Toutes sauf"
         },
         "hint": "Un chemin par entrée, p. ex. /tarifs, /blog/*, /fr/**. * couvre un segment, ** tout ce qui suit."
+      },
+      "typeScopeHint": "Le type détermine les réglages disponibles ci-dessous : une bulle flottante a un bouton, un widget intégré a un en-tête d’accueil.",
+      "headerSubtitleLabel": "En-tête (visible dès que la conversation commence)",
+      "headerSubtitleHint": "La ligne sous le nom de l’assistant dans l’en-tête du chat.",
+      "headerSubtitleHintEmbedded": "Dans cette disposition, il n’y a pas d’en-tête tant que le visiteur n’a pas envoyé son premier message. Passez l’aperçu sur « En conversation » pour le voir.",
+      "previewStateLabel": "État de l’aperçu",
+      "previewState": {
+        "empty": "Vide",
+        "conversation": "En conversation"
+      },
+      "previewUserMessage": "Avez-vous des disponibilités la semaine prochaine ?",
+      "previewAssistantMessage": "Oui — il reste quelques créneaux. Je vous les montre ?",
+      "previewSiteHeader": "Votre site web",
+      "themeHints": {
+        "page": "Reprend le fond, le texte et la police du site où le widget est intégré.",
+        "auto": "Suit le système d’exploitation du visiteur, pas votre site.",
+        "light": "Toujours clair, quel que soit l’environnement de la page.",
+        "dark": "Toujours sombre, quel que soit l’environnement de la page."
+      },
+      "colours": {
+        "title": "Couleurs",
+        "recommended": "Recommandé",
+        "customTitle": "Couleurs personnalisées",
+        "customHint": "Tous les champs sont facultatifs. Un champ vide signifie que la couleur suit la page.",
+        "followsPage": "Suit la page",
+        "keys": {
+          "background": "Arrière-plan",
+          "surface": "Panneaux et champs",
+          "text": "Texte",
+          "muted": "Texte secondaire",
+          "border": "Bordures",
+          "user_bubble": "Bulle du visiteur",
+          "assistant_bubble": "Bulle de l’assistant"
+        }
+      },
+      "shape": {
+        "title": "Forme et espace",
+        "usePreset": "Utiliser le préréglage",
+        "radiusHint": "Désactivez le préréglage pour définir le rayon des angles en pixels. 0 donne des angles droits.",
+        "borderWidth": "Bordure",
+        "none": "Aucune",
+        "shadow": "Ombre",
+        "shadows": {
+          "none": "Aucune",
+          "soft": "Douce",
+          "strong": "Marquée"
+        },
+        "boxTitle": "Sur la page",
+        "maxWidth": "Largeur maximale",
+        "maxWidthHint": "Laissez vide pour utiliser la largeur intégrée.",
+        "height": "Hauteur",
+        "heights": {
+          "compact": "Compacte",
+          "standard": "Standard",
+          "tall": "Haute"
+        },
+        "marginY": "Marge extérieure",
+        "marginYHint": "Espace au-dessus et en dessous du widget. Augmentez-la si le widget est collé à l’en-tête de votre page."
+      },
+      "promoted": {
+        "section_title": "Titre d’accueil",
+        "section_subtitle": "Sous-titre d’accueil",
+        "bar_placeholder": "Texte indicatif de la barre",
+        "launcher_label": "Libellé du bouton par langue",
+        "nudge_text": "Message d’invite par langue"
+      },
+      "promotedHint": {
+        "section_title": "Le titre que les visiteurs lisent avant d’écrire — il remplace le message d’accueil dans cette disposition.",
+        "section_subtitle": "Une ligne sous le titre d’accueil.",
+        "bar_placeholder": "Le texte gris à l’intérieur de la barre repliée.",
+        "launcher_label": "Le texte à côté du bouton flottant.",
+        "nudge_text": "Le court message qui apparaît à côté du bouton."
       }
     },
     "leads": {
@@ -6040,7 +6127,10 @@
       "how1": "L’assistant continue de répondre normalement. Quand un déclencheur se produit, il affiche une petite carte avec les champs choisis, préremplie avec ce que le visiteur a déjà mentionné.",
       "how2": "Une carte envoyée devient un lead avec la source « Assistant IA », la conversation jointe et vos notifications habituelles.",
       "how3": "Les visiteurs peuvent fermer la carte ; elle ne réapparaît pas dans cette conversation.",
-      "note": "Les leads arrivent dans Leads comme n’importe quel formulaire — étapes de pipeline, tâches et workflows s’appliquent."
+      "note": "Les leads arrivent dans Leads comme n’importe quel formulaire — étapes de pipeline, tâches et workflows s’appliquent.",
+      "triggersHint": "Le formulaire s’affiche au plus une fois par conversation, et jamais lorsqu’un bouton de réservation est visible.",
+      "onFarewell": "Quand le visiteur dit au revoir",
+      "onFarewellHint": "« Merci, au revoir » se termine alors par le formulaire de contact plutôt que par rien."
     },
     "share": {
       "publishFirst": "Publiez cet assistant avant de l’intégrer — l’extrait reste inactif jusque-là.",
@@ -6184,10 +6274,20 @@
         "always": "Après chaque réponse",
         "after_first_answer": "Après la première réponse"
       },
+      "showAskedHint": "Affiché aussi chaque fois qu'un visiteur le demande — appeler, écrire, réserver ou voir la page qu'il ouvre.",
       "perLocale": "Texte par langue",
       "perLocaleHint": "Laissez vide pour utiliser le libellé ci-dessus. « Traduire » ne remplit que les champs vides.",
       "moveUp": "Monter",
-      "moveDown": "Descendre"
+      "moveDown": "Descendre",
+      "host": "Hôte",
+      "hostNone": "Aucun hôte",
+      "hostSearch": "Rechercher un membre…",
+      "hostEmpty": "Aucun membre trouvé",
+      "hostHint": "Affiché sur la carte de réservation et invité au rendez-vous.",
+      "conversational": "Laisser les visiteurs réserver en discutant",
+      "conversationalHint": "L’assistant peut trouver un horaire, recueillir leurs coordonnées et confirmer, le tout dans la conversation. La carte calendrier reste disponible.",
+      "manageable": "Autoriser les visiteurs à modifier leur rendez-vous",
+      "manageableHint": "Les visiteurs peuvent déplacer ou annuler un rendez-vous existant depuis le chat. Ils le prouvent avec un code envoyé à l'adresse liée au rendez-vous. Désactivé, l'assistant répond aux questions mais renvoie vers vos coordonnées pour toute modification."
     },
     "fallback": {
       "title": "Quand il ne sait pas répondre",
@@ -6210,7 +6310,13 @@
       },
       "addAnswer": "Ajouter une réponse",
       "viewConversation": "Voir la conversation",
-      "answerAdded": "Réponse ajoutée — indexation en cours"
+      "answerAdded": "Réponse ajoutée — indexation en cours",
+      "dismiss": "Ignorer",
+      "dismissed": "Question ignorée",
+      "undo": "Annuler",
+      "unverified": "Réponse ajoutée, mais l'assistant ne sait toujours pas y répondre —",
+      "improveAnswer": "Améliorer la réponse",
+      "resolveFailed": "La réponse a été enregistrée, mais la lacune n'a pas pu être fermée"
     },
     "tests": {
       "title": "Questions de test",

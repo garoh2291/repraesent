@@ -34,7 +34,7 @@ export type PilotFeature =
   | "aiAssistant";
 
 /** i18n key of the label the sidebar shows next to a piloted entry. */
-export const PILOT_FEATURE_LABEL_KEY = "nav.betaVadge";
+export const PILOT_FEATURE_LABEL_KEY = "nav.demoBadge";
 
 /**
  * Route prefixes that belong to a pilot feature. Matched on whole path

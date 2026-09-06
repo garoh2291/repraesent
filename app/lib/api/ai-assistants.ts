@@ -91,11 +91,64 @@ export type LauncherIcon = "chat" | "sparkle" | "question" | "image";
 export type LauncherSize = "sm" | "md" | "lg";
 export type PageRulesMode = "all" | "include" | "exclude";
 
+/**
+ * `page` derives the whole palette from the host page's own background and
+ * text colour; `auto` is the old behaviour and follows the *visitor's* OS,
+ * which is why a dark-mode visitor used to get a black slab on a cream site.
+ */
+export const WIDGET_THEMES = ["page", "auto", "light", "dark"] as const;
+export type WidgetTheme = (typeof WIDGET_THEMES)[number];
+
+export const WIDGET_SHADOWS = ["none", "soft", "strong"] as const;
+export type WidgetShadow = (typeof WIDGET_SHADOWS)[number];
+
+export const WIDGET_HEIGHTS = ["compact", "standard", "tall"] as const;
+export type WidgetHeight = (typeof WIDGET_HEIGHTS)[number];
+
+/** Optional hex overrides applied ON TOP of the resolved base palette. */
+export interface WidgetColors {
+  background?: string;
+  surface?: string;
+  text?: string;
+  muted?: string;
+  border?: string;
+  user_bubble?: string;
+  assistant_bubble?: string;
+}
+export const WIDGET_COLOR_KEYS = [
+  "background",
+  "surface",
+  "text",
+  "muted",
+  "border",
+  "user_bubble",
+  "assistant_bubble",
+] as const satisfies ReadonlyArray<keyof WidgetColors>;
+
+/** Shape/space limits — kept in lockstep with the zod schema. */
+export const RADIUS_PX_MIN = 0;
+export const RADIUS_PX_MAX = 32;
+export const BORDER_WIDTH_MAX = 3;
+export const MAX_WIDTH_MIN = 320;
+export const MAX_WIDTH_MAX = 1200;
+export const MARGIN_Y_MAX = 96;
+
 export interface AppearanceConfig {
   primary_color: string;
   /** Icons/text drawn ON the accent colour. "auto" picks by luminance. */
   accent_foreground: "auto" | "light" | "dark";
-  theme: "auto" | "light" | "dark";
+  theme: WidgetTheme;
+  /** Empty = follow the page (or the light/dark base for a fixed theme). */
+  colors: WidgetColors;
+  /** null = use the `radius` preset. 0 gives genuinely square corners. */
+  radius_px: number | null;
+  border_width: number;
+  shadow: WidgetShadow;
+  /** Embedded types only. null = the built-in per-type width. */
+  max_width: number | null;
+  /** Embedded types only — the fix for sitting flush against the page header. */
+  margin_y: number;
+  height: WidgetHeight;
   position: "right" | "left";
   avatar_mode: "initial" | "image";
   avatar_url?: string;
@@ -128,11 +181,18 @@ export const APPEARANCE_DEFAULTS: Omit<
   | "primary_color"
   | "accent_foreground"
   | "theme"
+  | "colors"
   | "position"
   | "avatar_mode"
   | "show_powered_by"
   | "strings"
 > = {
+  radius_px: null,
+  border_width: 1,
+  shadow: "soft",
+  max_width: null,
+  margin_y: 24,
+  height: "standard",
   font: "system",
   radius: "lg",
   density: "comfortable",
@@ -153,13 +213,24 @@ export function withAppearanceDefaults(
   return {
     primary_color: "#111111",
     accent_foreground: "auto",
-    theme: "auto",
+    // "page" is the recommended default: it matches the site the widget is
+    // embedded in instead of the visitor's operating system.
+    theme: "page",
     position: "right",
     avatar_mode: "initial",
     show_powered_by: true,
     strings: {},
     ...APPEARANCE_DEFAULTS,
     ...ap,
+    // Nullable/numeric shape fields: an older row omits them entirely, and a
+    // partial server answer can carry an explicit undefined. Both fall back.
+    colors: { ...(ap.colors ?? {}) },
+    radius_px: ap.radius_px ?? null,
+    max_width: ap.max_width ?? null,
+    border_width: ap.border_width ?? APPEARANCE_DEFAULTS.border_width,
+    margin_y: ap.margin_y ?? APPEARANCE_DEFAULTS.margin_y,
+    shadow: ap.shadow ?? APPEARANCE_DEFAULTS.shadow,
+    height: ap.height ?? APPEARANCE_DEFAULTS.height,
     auto_open: { ...APPEARANCE_DEFAULTS.auto_open, ...(ap.auto_open ?? {}) },
     nudge: { ...APPEARANCE_DEFAULTS.nudge, ...(ap.nudge ?? {}) },
     page_rules: { ...APPEARANCE_DEFAULTS.page_rules, ...(ap.page_rules ?? {}) },
@@ -197,6 +268,26 @@ export interface ActionAppointmentSettings {
   timezone: string;
   minNoticeHours?: number;
   maxDaysAhead?: number;
+  /**
+   * The person the visitor is booking with — shown on the booking card and
+   * added as an attendee on the created event. Denormalised on purpose: the
+   * public config must never expose a user id, so the backend strips
+   * `hostUserId` and forwards only the display fields.
+   */
+  hostUserId?: string;
+  hostName?: string;
+  hostAvatarUrl?: string;
+  hostEmail?: string;
+  hostRole?: string;
+  /**
+   * Let the visitor negotiate the whole booking in chat — pick a time, give
+   * their details, confirm in words — instead of only through the calendar
+   * card. Absent means on: the backend defaults it to true, and an action
+   * saved before the setting existed should behave like a new one.
+   */
+  conversational?: boolean;
+  /** Visitors may move or cancel an existing booking from the chat. Absent means on. */
+  manageable?: boolean;
 }
 
 export const ACTION_APPOINTMENT_DEFAULTS: ActionAppointmentSettings = {
@@ -255,6 +346,18 @@ export const EMPTY_FALLBACK_CONTACT: FallbackContact = {
 
 export const ANSWER_LENGTHS = ["short", "medium", "long"] as const;
 export type AnswerLength = (typeof ANSWER_LENGTHS)[number];
+/**
+ * A token is about three quarters of a word. Only ever used to SHOW a limit —
+ * the model is still capped in tokens, because that is the unit it counts in.
+ */
+export const WORDS_PER_TOKEN = 0.75;
+
+export const tokensToWords = (tokens: number): number =>
+  Math.round((tokens * WORDS_PER_TOKEN) / 5) * 5;
+
+export const wordsToTokens = (words: number): number =>
+  Math.round(words / WORDS_PER_TOKEN);
+
 export const ANSWER_LENGTH_TOKENS: Record<AnswerLength, number> = {
   short: 220,
   medium: 600,
@@ -269,7 +372,16 @@ export interface LeadCaptureField {
 export interface LeadCaptureConfig {
   enabled: boolean;
   fields: LeadCaptureField[];
-  trigger: { on_intent: boolean; after_turns: number | null };
+  trigger: {
+    on_intent: boolean;
+    /**
+     * "thanks, bye" ends the conversation with the contact form. Optional
+     * because snapshots written before it exists have no value; every read
+     * defaults it to `true`.
+     */
+    on_farewell?: boolean;
+    after_turns: number | null;
+  };
   intro_text: string;
   thank_you_text: string;
 }
@@ -393,7 +505,8 @@ export interface AssistantRecord {
   chat_model: string;
   temperature: number;
   max_output_tokens: number;
-  daily_token_budget: number | null;
+  /** Daily spend cap in euro cents. `null` = unlimited. */
+  daily_budget_eur_cents: number | null;
   allowed_domains: string[];
   persona: PersonaConfig;
   appearance: AppearanceConfig;
@@ -421,7 +534,7 @@ export type AssistantDraft = Pick<
   | "chat_model"
   | "temperature"
   | "max_output_tokens"
-  | "daily_token_budget"
+  | "daily_budget_eur_cents"
   | "allowed_domains"
   | "persona"
   | "appearance"
@@ -435,6 +548,41 @@ export type UpdateAssistantDto = Partial<AssistantDraft>;
 export interface ChatModelOption {
   id: string;
   label: string;
+  /** USD per 1M tokens, live from OpenRouter where available. */
+  in_usd_per_m: number;
+  out_usd_per_m: number;
+}
+
+/** What `GET /ai-assistants/models` returns, alongside the list. */
+export interface ChatModelsResponse {
+  models: ChatModelOption[];
+  /** Measured cost of one visitor message, for the budget estimate. */
+  avg_tokens_per_message: { in: number; out: number };
+  usd_per_eur: number;
+}
+
+/**
+ * Euro cents -> micro-USD. Mirrors `eurCentsToMicroUsd` on the server; the rate
+ * travels with the model list so the two cannot disagree.
+ */
+export function estimateMessagesPerDay(
+  cents: number | null,
+  model: ChatModelOption | undefined,
+  avg: { in: number; out: number },
+  usdPerEur: number,
+): number | null {
+  if (cents == null || !model) return null;
+  const perMessage = avg.in * model.in_usd_per_m + avg.out * model.out_usd_per_m;
+  if (perMessage <= 0) return null;
+  return Math.max(0, Math.floor(((cents / 100) * usdPerEur * 1_000_000) / perMessage));
+}
+
+/** Micro-USD -> a euro string, so spend reads in the same currency as the cap. */
+export function formatEurFromMicroUsd(micro: number, usdPerEur: number): string {
+  const eur = micro / 1_000_000 / usdPerEur;
+  if (eur === 0) return "€0.00";
+  if (eur < 0.01) return "<€0.01";
+  return `€${eur.toFixed(2)}`;
 }
 
 export interface SourceProgress {
@@ -539,6 +687,13 @@ export interface RunTestsResult {
   failed: number;
 }
 
+/**
+ * Only "unverified" ever reaches the client: resolved and dismissed gaps are
+ * filtered out server-side. An unverified row means the answer was added but
+ * the assistant still cannot answer the question.
+ */
+export type GapResolutionStatus = "unverified";
+
 export interface GapItem {
   normalized: string;
   question: string;
@@ -548,6 +703,8 @@ export interface GapItem {
   off_topic: number;
   dont_know: number;
   conversation_ids: string[];
+  resolution_status: GapResolutionStatus | null;
+  resolution_source_id: string | null;
 }
 
 export interface GapsResponse {
@@ -865,11 +1022,15 @@ export async function getAssistant(id: string): Promise<AssistantRecord> {
   return r.data;
 }
 
-export async function getChatModels(): Promise<ChatModelOption[]> {
-  const r = await apiClient.get<{ models: ChatModelOption[] }>(
-    `${BASE}/models`,
-  );
-  return r.data?.models ?? [];
+export async function getChatModels(): Promise<ChatModelsResponse> {
+  const r = await apiClient.get<ChatModelsResponse>(`${BASE}/models`);
+  return {
+    models: r.data?.models ?? [],
+    // Defaults matter: an older API returns only {id,label}, and the budget
+    // estimate must still render something sane rather than NaN.
+    avg_tokens_per_message: r.data?.avg_tokens_per_message ?? { in: 6066, out: 73 },
+    usd_per_eur: r.data?.usd_per_eur ?? 1.08,
+  };
 }
 
 export async function createAssistant(payload: {
@@ -1100,6 +1261,45 @@ export async function getGaps(
     `${BASE}/${id}/gaps?days=${days}&limit=${limit}`,
   );
   return r.data ?? { items: [], total_unanswered: 0 };
+}
+
+export interface GapResolution {
+  normalized: string;
+  status: "resolved" | "unverified" | "dismissed";
+  test_question_id: string | null;
+}
+
+/** Answered: the gap disappears now and the answer gets verified in the background. */
+export async function resolveGap(
+  id: string,
+  body: { question: string; source_id?: string },
+): Promise<GapResolution> {
+  const r = await apiClient.post<GapResolution>(
+    `${BASE}/${id}/gaps/resolve`,
+    body,
+  );
+  return r.data;
+}
+
+/** Not worth answering. */
+export async function dismissGap(
+  id: string,
+  question: string,
+): Promise<GapResolution> {
+  const r = await apiClient.post<GapResolution>(`${BASE}/${id}/gaps/dismiss`, {
+    question,
+  });
+  return r.data;
+}
+
+/** Undo a resolve or a dismiss; the key is the gap's normalised question. */
+export async function unresolveGap(
+  id: string,
+  normalized: string,
+): Promise<void> {
+  await apiClient.delete(
+    `${BASE}/${id}/gaps/resolutions/${encodeURIComponent(normalized)}`,
+  );
 }
 
 export async function postPlaygroundFeedback(
