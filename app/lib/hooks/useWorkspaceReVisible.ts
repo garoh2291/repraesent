@@ -239,16 +239,25 @@ export function useDeleteVisibilityPrompt(pluginUuid: string) {
   });
 }
 
-/** A run changes every rate on the page, so the whole root is invalidated. */
+/**
+ * Start a run.
+ *
+ * Resolving means the batch was CREATED, not finished. The caller streams
+ * progress and invalidates on completion — invalidating here would refetch
+ * rates that no run has produced yet.
+ */
 export function useRunVisibilityNow(pluginUuid: string) {
-  const queryClient = useQueryClient();
-
   return useMutation({
     mutationFn: () => runVisibilityNow(pluginUuid),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: reVisibleKeys.root(pluginUuid) });
-    },
   });
+}
+
+/** Refetch everything a finished run changed. */
+export function useInvalidateVisibility(pluginUuid: string) {
+  const queryClient = useQueryClient();
+
+  return () =>
+    queryClient.invalidateQueries({ queryKey: reVisibleKeys.root(pluginUuid) });
 }
 
 export function useRefreshVisibilitySite(pluginUuid: string) {

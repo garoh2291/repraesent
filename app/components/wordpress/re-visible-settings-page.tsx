@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useParams, useSearchParams } from "react-router";
 import { useTranslation } from "react-i18next";
 import { Save } from "lucide-react";
@@ -54,8 +54,15 @@ import {
   useVisibilitySources,
   useVisibilitySuggestions,
   useVisibilityTrend,
+  useInvalidateVisibility,
 } from "~/lib/hooks/useWorkspaceReVisible";
 import type { PromptCandidate, PromptIntent, Suggestion } from "~/lib/api/re-visible";
+import {
+  streamGeneratePrompts,
+  streamRunProgress,
+  type GenerateStage,
+  type RunProgress,
+} from "~/lib/api/re-visible-stream";
 
 /**
  * AI Analytics, inside Repraesent.
@@ -86,6 +93,18 @@ export function ReVisibleSettingsPage() {
   const tab = tabFromParam(searchParams.get(TAB_PARAM));
   const [openPromptId, setOpenPromptId] = useState<string | null>(null);
   const [fixingCheck, setFixingCheck] = useState<string | null>(null);
+
+  /*
+   * A run executes server-side, detached from any request. This is only the
+   * VIEW of it: closing the tab does not stop the batch, and reopening the page
+   * mid-run picks the progress back up from the batch id.
+   */
+  const [runProgress, setRunProgress] = useState<RunProgress | null>(null);
+  const [generateStage, setGenerateStage] = useState<GenerateStage | null>(null);
+  const streamAbort = useRef<AbortController | null>(null);
+
+  // Drop the stream if the page unmounts; the batch keeps going regardless.
+  useEffect(() => () => streamAbort.current?.abort(), []);
 
   function selectTab(next: string) {
     setSearchParams(
@@ -155,6 +174,7 @@ export function ReVisibleSettingsPage() {
   const updatePrompt = useUpdateVisibilityPrompt(pluginUuid);
   const deletePrompt = useDeleteVisibilityPrompt(pluginUuid);
   const runNow = useRunVisibilityNow(pluginUuid);
+  const invalidateAll = useInvalidateVisibility(pluginUuid);
   const refreshSite = useRefreshVisibilitySite(pluginUuid);
   const runFix = useRunVisibilityFix(pluginUuid);
   const setSuggestionStatus = useSetSuggestionStatus(pluginUuid);
@@ -204,42 +224,125 @@ export function ReVisibleSettingsPage() {
       onSuccess: (result) => {
         const reason = skipReason(result.skipped, t);
 
-        if (reason) {
+        if (reason || !result.batch_id) {
           // A spent budget is information, not a failure.
-          flash(reason);
+          flash(
+            reason ??
+              t("wordpress.reVisible.runNotStarted", "Nothing to run."),
+          );
           return;
         }
 
-        flash(
-          t(
-            "wordpress.reVisible.runComplete",
-            "Asked the engines {{count}} times.",
-            { count: result.runs_total },
-          ),
+        setRunProgress({
+          batch_id: result.batch_id,
+          done: 0,
+          planned: result.runs_planned,
+          failed: 0,
+          cost_micro_usd: 0,
+          finished: false,
+          error: null,
+          engines: [],
+        });
+
+        streamAbort.current?.abort();
+        const controller = new AbortController();
+        streamAbort.current = controller;
+
+        void streamRunProgress(
+          pluginUuid,
+          result.batch_id,
+          {
+            onProgress: setRunProgress,
+            onDone: (progress) => {
+              setRunProgress(progress);
+              invalidateAll();
+
+              if (progress.error) {
+                flash(progress.error, "error");
+                return;
+              }
+
+              flash(
+                t(
+                  "wordpress.reVisible.runComplete",
+                  "Asked the engines {{count}} times.",
+                  { count: progress.done },
+                ),
+              );
+            },
+            onError: (message) => {
+              // The batch is still running server-side — only the view of it
+              // stopped, so this is not reported as a failure.
+              setRunProgress(null);
+              flash(
+                t(
+                  "wordpress.reVisible.runDetached",
+                  "Lost the live view, but the check is still running. Reload in a minute to see the result.",
+                ) + ` (${message})`,
+              );
+            },
+          },
+          controller.signal,
         );
       },
       onError: (err) => flash(extractErrorMessage(err), "error"),
     });
   }
 
+  /**
+   * Generate candidates over SSE.
+   *
+   * Streamed rather than a plain POST because crawling the site and writing
+   * thirty questions takes minutes, and nginx closes a silent connection long
+   * before that. The heartbeat is what actually fixes it; the stage events are
+   * the bonus.
+   */
   async function handleGenerate(): Promise<PromptCandidate[]> {
-    try {
-      const result = await generatePrompts.mutateAsync();
+    streamAbort.current?.abort();
+    const controller = new AbortController();
+    streamAbort.current = controller;
 
-      if (!result.used_site_content) {
-        flash(
-          t(
-            "wordpress.reVisible.generatedWithoutSite",
-            "Suggested from your brand only — the site content could not be read.",
-          ),
-        );
-      }
+    setGenerateStage({ stage: "reading_site" });
 
-      return result.candidates;
-    } catch (err) {
-      flash(extractErrorMessage(err), "error");
-      return [];
-    }
+    return new Promise<PromptCandidate[]>((resolve) => {
+      let settled = false;
+
+      void streamGeneratePrompts(
+        pluginUuid,
+        {
+          onStage: setGenerateStage,
+          onResult: (result) => {
+            settled = true;
+            setGenerateStage(null);
+
+            if (!result.used_site_content) {
+              flash(
+                t(
+                  "wordpress.reVisible.generatedWithoutSite",
+                  "Suggested from your brand only — the site content could not be read.",
+                ),
+              );
+            }
+
+            resolve(result.candidates);
+          },
+          onError: (message) => {
+            settled = true;
+            setGenerateStage(null);
+            flash(message, "error");
+            resolve([]);
+          },
+        },
+        controller.signal,
+      ).then(() => {
+        // A stream that closes without a result or an error resolves empty
+        // rather than leaving the button spinning forever.
+        if (!settled) {
+          setGenerateStage(null);
+          resolve([]);
+        }
+      });
+    });
   }
 
   async function openWordPress(path: string) {
@@ -386,7 +489,8 @@ export function ReVisibleSettingsPage() {
               trend={trendQuery.data?.weeks ?? []}
               trendLoading={trendQuery.isPending}
               onRunNow={handleRunNow}
-              running={runNow.isPending}
+              running={runNow.isPending || (runProgress?.finished === false)}
+              progress={runProgress}
               canRun={overview.prompts_active > 0}
               onOpenPrompt={(promptId) => {
                 setOpenPromptId(promptId);
@@ -445,7 +549,8 @@ export function ReVisibleSettingsPage() {
                   onError: (err) => flash(extractErrorMessage(err), "error"),
                 })
               }
-              generating={generatePrompts.isPending}
+              generating={generateStage !== null}
+              generateStage={generateStage}
               saving={
                 addPrompts.isPending ||
                 acceptPrompts.isPending ||

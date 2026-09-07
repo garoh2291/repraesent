@@ -225,10 +225,17 @@ export interface PromptCandidate {
   intent: PromptIntent;
 }
 
+/**
+ * What starting a run returns.
+ *
+ * The batch is NOT finished when this resolves — it is executing server-side,
+ * detached from any request, because hundreds of live web searches take minutes
+ * and no HTTP request survives that. Follow `batch_id` with
+ * `streamRunProgress` for progress.
+ */
 export interface RunNowResult {
-  runs_total: number;
-  runs_failed: number;
-  cost_micro_usd: number;
+  batch_id: string | null;
+  runs_planned: number;
   /** A budget that is spent is information, not an error. */
   skipped:
     | "no_prompts"

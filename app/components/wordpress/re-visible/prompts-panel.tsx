@@ -33,8 +33,34 @@ import type {
   VisibilityPrompt,
 } from "~/lib/api/re-visible";
 import { PROMPT_INTENTS } from "~/lib/api/re-visible";
+import type { GenerateStage } from "~/lib/api/re-visible-stream";
 import { intentLabel } from "./constants";
 import { PromptRunsDetail } from "./prompt-runs-detail";
+
+/**
+ * What the generator is doing right now.
+ *
+ * Real stages, not a fake sequence: reading the site and writing the questions
+ * are genuinely separate steps, and the page count comes from the crawl itself.
+ */
+function stageLabel(
+  stage: GenerateStage | null | undefined,
+  t: (key: string, fallback: string, vars?: Record<string, unknown>) => string,
+): string {
+  if (stage?.stage === "scraping_pages") {
+    return t(
+      "wordpress.reVisible.stageScraping",
+      "Reading your pages ({{done}}/{{count}})…",
+      { done: stage.done ?? 0, count: stage.count ?? 0 },
+    );
+  }
+
+  if (stage?.stage === "writing_questions") {
+    return t("wordpress.reVisible.stageWriting", "Writing questions…");
+  }
+
+  return t("wordpress.reVisible.generating", "Reading your site…");
+}
 
 /**
  * The questions being tracked.
@@ -56,6 +82,7 @@ export function PromptsPanel({
   onGenerate,
   onAccept,
   generating,
+  generateStage,
   saving,
 }: {
   pluginUuid: string;
@@ -69,6 +96,8 @@ export function PromptsPanel({
   onGenerate: () => Promise<PromptCandidate[]>;
   onAccept: (candidates: PromptCandidate[]) => void;
   generating: boolean;
+  /** Which stage the generator is on, for a truthful button label. */
+  generateStage?: GenerateStage | null;
   saving: boolean;
 }) {
   const { t } = useTranslation();
@@ -122,7 +151,7 @@ export function PromptsPanel({
               {generating ? (
                 <>
                   <Spinner className="size-3.5" />
-                  {t("wordpress.reVisible.generating", "Reading your site…")}
+                  {stageLabel(generateStage, t)}
                 </>
               ) : (
                 <>

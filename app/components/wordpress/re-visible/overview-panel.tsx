@@ -31,6 +31,7 @@ import type {
   TrendPoint,
   VisibilityOverview,
 } from "~/lib/api/re-visible";
+import type { RunProgress } from "~/lib/api/re-visible-stream";
 import {
   engineColor,
   engineLabel,
@@ -52,6 +53,7 @@ export function OverviewPanel({
   trendLoading,
   onRunNow,
   running,
+  progress,
   canRun,
   onOpenPrompt,
   onGoToSources,
@@ -62,6 +64,8 @@ export function OverviewPanel({
   trendLoading: boolean;
   onRunNow: () => void;
   running: boolean;
+  /** Live batch progress while a run is in flight, else null. */
+  progress?: RunProgress | null;
   canRun: boolean;
   onOpenPrompt: (promptId: string) => void;
   onGoToSources: () => void;
@@ -115,30 +119,36 @@ export function OverviewPanel({
         />
       </div>
 
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <p className="text-xs text-muted-foreground">
-          {lastRun
-            ? t("wordpress.reVisible.lastRunAt", "Last checked {{date}}", {
-                date: lastRun.toLocaleString(),
-              })
-            : t(
-                "wordpress.reVisible.neverRun",
-                "The engines have not been asked yet.",
-              )}
-        </p>
-        <Button onClick={onRunNow} disabled={running || !canRun} size="sm">
-          {running ? (
-            <>
-              <Spinner className="size-3.5" />
-              {t("wordpress.reVisible.running", "Asking the engines…")}
-            </>
-          ) : (
-            <>
-              <Play className="size-3.5" aria-hidden />
-              {t("wordpress.reVisible.runNow", "Check now")}
-            </>
-          )}
-        </Button>
+      <div className="space-y-3">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <p className="text-xs text-muted-foreground">
+            {lastRun
+              ? t("wordpress.reVisible.lastRunAt", "Last checked {{date}}", {
+                  date: lastRun.toLocaleString(),
+                })
+              : t(
+                  "wordpress.reVisible.neverRun",
+                  "The engines have not been asked yet.",
+                )}
+          </p>
+          <Button onClick={onRunNow} disabled={running || !canRun} size="sm">
+            {running ? (
+              <>
+                <Spinner className="size-3.5" />
+                {t("wordpress.reVisible.running", "Asking the engines…")}
+              </>
+            ) : (
+              <>
+                <Play className="size-3.5" aria-hidden />
+                {t("wordpress.reVisible.runNow", "Check now")}
+              </>
+            )}
+          </Button>
+        </div>
+
+        {progress && !progress.finished ? (
+          <RunProgressBar progress={progress} />
+        ) : null}
       </div>
 
       {children}
@@ -238,6 +248,69 @@ export function OverviewPanel({
           )}
         </CardBody>
       </SectionCard>
+    </div>
+  );
+}
+
+/**
+ * Live progress for a run in flight.
+ *
+ * Counts, not a spinner: a batch is hundreds of engine calls over several
+ * minutes, and "asking the engines…" with no number reads as hung. Per-engine
+ * counts also make a silently failing engine visible while the run is still
+ * going, rather than at the end.
+ */
+function RunProgressBar({ progress }: { progress: RunProgress }) {
+  const { t } = useTranslation();
+  const pct =
+    progress.planned > 0
+      ? Math.min(100, Math.round((progress.done / progress.planned) * 100))
+      : 0;
+
+  return (
+    <div className="rounded-xl border bg-card p-3.5">
+      <div className="flex items-baseline justify-between gap-2 text-xs">
+        <span className="font-medium">
+          {t("wordpress.reVisible.runningProgress", "Asking the engines — {{done}} of {{planned}}", {
+            done: progress.done,
+            planned: progress.planned,
+          })}
+        </span>
+        <span className="tabular-nums text-muted-foreground">{pct}%</span>
+      </div>
+
+      <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-muted">
+        <div
+          className="h-full rounded-full bg-primary transition-[width] duration-500"
+          style={{ width: `${pct}%` }}
+        />
+      </div>
+
+      {progress.engines.length > 0 ? (
+        <div className="mt-2.5 flex flex-wrap gap-x-4 gap-y-1">
+          {progress.engines.map((engine) => (
+            <span
+              key={engine.engine}
+              className="inline-flex items-center gap-1.5 text-[11px] text-muted-foreground"
+            >
+              <span
+                aria-hidden
+                className="size-1.5 rounded-full"
+                style={{ background: engineColor(engine.engine) }}
+              />
+              {engineLabel(engine.engine)}
+              <span className="tabular-nums">{engine.done}</span>
+            </span>
+          ))}
+        </div>
+      ) : null}
+
+      <p className="mt-2 text-[11px] leading-relaxed text-muted-foreground">
+        {t(
+          "wordpress.reVisible.runningNote",
+          "This keeps running if you close the page — come back and the result will be here.",
+        )}
+      </p>
     </div>
   );
 }
