@@ -3,6 +3,7 @@ import {
   Cookie,
   Languages,
   Package,
+  Radar,
   Search,
   Star,
   Wrench,
@@ -18,6 +19,7 @@ export const PORTED_SETTINGS_KINDS = [
   "re-review",
   "re-appointment",
   "re-translate",
+  "re-visible",
 ] as const;
 
 export type PortedSettingsKind = (typeof PORTED_SETTINGS_KINDS)[number];
@@ -62,6 +64,7 @@ export const PLUGIN_KIND_ICONS: Record<PortedSettingsKind, LucideIcon> = {
   "re-appointment": CalendarCheck,
   "re-maintenance": Wrench,
   "re-cookie": Cookie,
+  "re-visible": Radar,
 };
 
 export function pluginKindIcon(kind: string | undefined): LucideIcon {

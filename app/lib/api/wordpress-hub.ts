@@ -52,7 +52,8 @@ export type WpPluginSettingsKind =
   | "re-maintenance"
   | "re-review"
   | "re-appointment"
-  | "re-translate";
+  | "re-translate"
+  | "re-visible";
 
 /** A single plugin installed on the workspace's WordPress site. */
 export interface WpPlugin {
