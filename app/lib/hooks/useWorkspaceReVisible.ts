@@ -3,6 +3,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   acceptVisibilityPrompts,
+  getVisibilityProject,
   addVisibilityPrompts,
   createVisibilityProject,
   deleteVisibilityPrompt,
@@ -37,6 +38,7 @@ import {
 export const reVisibleKeys = {
   root: (uuid: string) => ["re-visible", uuid] as const,
   overview: (uuid: string) => ["re-visible", uuid, "overview"] as const,
+  project: (uuid: string) => ["re-visible", uuid, "project"] as const,
   prompts: (uuid: string) => ["re-visible", uuid, "prompts"] as const,
   promptRuns: (uuid: string, promptId: string) =>
     ["re-visible", uuid, "prompt-runs", promptId] as const,
@@ -61,6 +63,26 @@ export function useVisibilityOverview(pluginUuid: string, enabled = true) {
     queryFn: () => getVisibilityOverview(pluginUuid),
     enabled: enabled && !!pluginUuid,
     staleTime: 60_000,
+  });
+}
+
+/**
+ * The tracking config itself.
+ *
+ * Separate from the overview on purpose: the overview returns a PRESENTATION
+ * subset (no aliases, no competitors, no samples-per-prompt), and the Settings
+ * form needs the real row. Synthesising it from the overview meant the
+ * competitor list was always `[]` — so every "Add" sent `[...[], one]` and
+ * silently replaced the previous entry.
+ */
+export function useVisibilityProject(pluginUuid: string, enabled = true) {
+  return useQuery({
+    queryKey: reVisibleKeys.project(pluginUuid),
+    queryFn: () => getVisibilityProject(pluginUuid),
+    enabled: enabled && !!pluginUuid,
+    // The form binds to this; never refetch behind someone who is editing.
+    staleTime: Infinity,
+    refetchOnWindowFocus: false,
   });
 }
 

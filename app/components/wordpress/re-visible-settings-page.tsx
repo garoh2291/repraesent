@@ -54,6 +54,7 @@ import {
   useVisibilitySources,
   useVisibilitySuggestions,
   useVisibilityTrend,
+  useVisibilityProject,
   useInvalidateVisibility,
 } from "~/lib/hooks/useWorkspaceReVisible";
 import type { PromptCandidate, PromptIntent, Suggestion } from "~/lib/api/re-visible";
@@ -143,6 +144,7 @@ export function ReVisibleSettingsPage() {
 
   /* --- Tracking ----------------------------------------------------- */
   const overviewQuery = useVisibilityOverview(pluginUuid, hasSite);
+  const projectQuery = useVisibilityProject(pluginUuid, hasSite);
   const promptsQuery = useVisibilityPrompts(
     pluginUuid,
     hasSite && !!overviewQuery.data,
@@ -180,24 +182,8 @@ export function ReVisibleSettingsPage() {
   const setSuggestionStatus = useSetSuggestionStatus(pluginUuid);
 
   const overview = overviewQuery.data ?? null;
-  const project = overview
-    ? {
-        id: overview.project.id,
-        brand_name: overview.project.brand_name,
-        brand_aliases: [] as string[],
-        competitors: [] as { name: string; domains: string[] }[],
-        site_domains: overview.project.site_domains,
-        locale: overview.project.locale,
-        country: overview.project.country,
-        engines: overview.project.engines,
-        runs_per_prompt: 3,
-        weekly_run_cap: overview.weekly_run_cap,
-        monthly_cost_cap_micro_usd: overview.monthly_cost_cap_micro_usd,
-        status: overview.project.status as "active" | "paused",
-        next_run_at: overview.project.next_run_at,
-        last_run_at: overview.project.last_run_at,
-      }
-    : null;
+  // The real row, not a projection of the overview — see useVisibilityProject.
+  const project = projectQuery.data ?? null;
 
   // Workspace admins own the fields that cost money.
   const isAdmin = currentWorkspace?.member_role === "admin";
