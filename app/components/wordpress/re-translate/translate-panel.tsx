@@ -676,7 +676,7 @@ function StringEditor({
   const machineTranslateMutation = useMachineTranslateContent(pluginUuid);
   const [modeDialogOpen, setModeDialogOpen] = useState(false);
   const [translateMode, setTranslateMode] =
-    useState<ReTranslateMode>("empty_only");
+    useState<ReTranslateMode>("empty_or_stale");
 
   const editUrl = data?.item.edit_url || item.edit_url;
 
@@ -773,7 +773,7 @@ function StringEditor({
   }
 
   function openMachineTranslateDialog() {
-    setTranslateMode("empty_only");
+    setTranslateMode("empty_or_stale");
     setModeDialogOpen(true);
   }
 
@@ -984,7 +984,7 @@ function StringEditor({
             <DialogDescription>
               {t(
                 "wordpress.reTranslate.translateModeHelp",
-                "Choose whether to fill only blank fields or re-translate everything for this language."
+                "Choose whether to fill only what is missing or outdated, or re-translate everything for this language."
               )}
             </DialogDescription>
           </DialogHeader>
@@ -997,7 +997,7 @@ function StringEditor({
           >
             <label className="flex cursor-pointer items-start gap-3 rounded-md border px-3 py-2 hover:bg-muted/40">
               <RadioGroupItem
-                value="empty_only"
+                value="empty_or_stale"
                 id="detail-mode-empty"
                 className="mt-0.5"
               />
@@ -1008,13 +1008,13 @@ function StringEditor({
                 >
                   {t(
                     "wordpress.reTranslate.modeEmptyOnly",
-                    "Only empty fields"
+                    "Empty and outdated fields"
                   )}
                 </Label>
                 <p className="text-xs text-muted-foreground">
                   {t(
                     "wordpress.reTranslate.modeEmptyOnlyHelp",
-                    "Fill fields that were left blank. Existing translations stay as they are."
+                    "Fill fields that were left blank, and refresh translations whose source text has changed since. Up-to-date translations stay as they are."
                   )}
                 </p>
               </span>

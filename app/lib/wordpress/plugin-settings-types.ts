@@ -307,12 +307,22 @@ export type ReTranslateSwitcherShow =
   | "flag_label"
   | "flag_code";
 
+/**
+ * What the switcher offers.
+ *
+ * "auto" is the default: language, plus regions once the site has two of them.
+ * With fewer than two it resolves to "language", which is the only value that
+ * produces the exact markup a site had before regions existed.
+ */
+export type ReTranslateSwitcherGroups = "auto" | "language" | "region" | "both";
+
 /** Empty means "inherit from the theme" for colours, "stylesheet default" for
  *  lengths — which is why every one of these is a string, not a number. */
 export type ReTranslateSwitcher = {
   position: ReTranslateSwitcherPosition;
   layout: ReTranslateSwitcherLayout;
   show: ReTranslateSwitcherShow;
+  groups: ReTranslateSwitcherGroups;
   hide_current: boolean;
   /** Accessible name for the switcher landmark. */
   label: string;
@@ -337,6 +347,222 @@ export type ReTranslateLanguage = {
   /** Emoji flag, empty when the language was added without one. */
   flag: string;
   added_at: string;
+};
+
+/*
+ * Regions and pricing.
+ *
+ * A second axis beside language. Language owns the URL prefix (`/de/…`); a
+ * region owns nothing in the URL and only decides which number a `[price]`
+ * token renders — so the two are independent, and a visitor can read German
+ * pages at Canadian prices.
+ *
+ * None of this rides in the settings blob. Amounts live in their own table with
+ * per-cell history, so every write goes through its own endpoint and the whole
+ * surface is fetched and saved separately from the Switcher/Settings form.
+ */
+
+export type ReTranslateCurrency = {
+  /** ISO 4217, uppercase. */
+  code: string;
+  name: string;
+  symbol: string;
+  /**
+   * Minor units per major unit as a power of ten — 2 almost everywhere, 0 for
+   * JPY and HUF, 3 for the Gulf dinars. Decides how a typed amount is stored.
+   */
+  exponent: number;
+  position: "before" | "after";
+  decimal: string;
+  thousands: string;
+};
+
+export type ReTranslateRegion = {
+  slug: string;
+  label: string;
+  /** Emoji flag, empty when the region was added without one. */
+  flag: string;
+  /** Ordered. The first entry is this region's default currency. */
+  currencies: string[];
+  /** ISO-3166 alpha-2 codes routed here when geo resolution is on. */
+  countries: string[];
+  added_at: string;
+  /** How much of this region's grid is filled — the "18 / 20" in the list. */
+  coverage: { filled: number; total: number };
+};
+
+/**
+ * A price by name.
+ *
+ * The slug is immutable by design: pages already contain `[price key="…"]`, and
+ * the plugin hashes each sentence to key its translations, so renaming would
+ * orphan every translation of every sentence quoting the price. The label is
+ * freely editable; Duplicate is offered where Rename would be.
+ */
+export type ReTranslatePriceKey = {
+  slug: string;
+  label: string;
+  note: string;
+  added_at: string;
+  /** The exact string to paste into the editor. */
+  shortcode: string;
+};
+
+export type ReTranslatePriceCell = {
+  key: string;
+  region: string;
+  currency: string;
+  /** Signed: a credit or a discount is legitimately negative. */
+  amount_minor: number;
+  /** Stored per cell, so a later catalogue correction cannot re-scale it. */
+  exponent: number;
+  /** How many decimal digits the owner typed. `1000` → 0, `10.0` → 1. */
+  display_places?: number;
+  /** Plain editable number, e.g. "19" or "10.0". */
+  input: string;
+  /** Rendered as the site renders it, e.g. "CA$19". */
+  formatted: string;
+};
+
+/** How a price decides which region it is showing. */
+export type ReTranslatePricingSettings = {
+  /**
+   * Off (the default) renders the default region for everyone and lets the
+   * script correct it in place — identical bytes, so a page cache cannot serve
+   * one visitor's prices to the next. On makes pricing pages uncacheable
+   * unless the CDN already segments on the `rt_region` cookie.
+   */
+  resolve_on_server: boolean;
+  /**
+   * Let the browser work out the visitor's region from its time zone, falling
+   * back to its locale. On by default, because unlike a CDN country header it
+   * costs the cache nothing: it happens after the HTML has been delivered, so
+   * every visitor is still served the same bytes.
+   */
+   detect_browser: boolean;
+  /** Read a CDN country header. Off by default: it varies every page by country. */
+  use_geo: boolean;
+  /** Ship every region's amounts so switching needs no reload. */
+  embed_all: boolean;
+  /**
+   * Rewrite amounts recognised in existing content from the grid.
+   *
+   * Safe to leave on: only an amount somebody explicitly bound to a price is
+   * ever touched, so a site that has bound nothing renders exactly what it
+   * rendered before.
+   */
+  adopt_found_prices: boolean;
+};
+
+/** One page an amount was found on. */
+export type ReTranslateFoundPlace = {
+  object_id: string;
+  title: string;
+  /** `?p=<id>`, which the site redirects to the real permalink. */
+  url: string;
+  /** The sentence it sits in, so it can be judged without opening the page. */
+  context: string;
+  hits: number;
+};
+
+/**
+ * An amount the site already publishes, and what has been decided about it.
+ *
+ * Grouped by currency-and-value rather than by spelling, so "€300" and a
+ * translator's "300 €" are one decision. A decision applies site-wide — the
+ * places list is there so the consequence is visible before it is made.
+ */
+export type ReTranslateFoundAmount = {
+  /** `spot:post:42:0`. One occurrence on one page. */
+  spot_id?: string;
+  fingerprint: string;
+  /** How it is written on the page, e.g. "€1,000". */
+  literal: string;
+  currency: string;
+  amount_minor: number;
+  exponent: number;
+  display_places?: number;
+  /** Plain editable number, e.g. "1000". */
+  input: string;
+  /**
+   * How the page will read once this is managed, e.g. "€1 000".
+   *
+   * Decimal digits follow what was typed, not the currency catalogue — so
+   * adopting `€1000` does not grow a `,00`.
+   */
+  formatted: string;
+  pages: number;
+  hits: number;
+  status: "new" | "bound" | "ignored";
+  price_key: string;
+  price_label: string;
+  places: ReTranslateFoundPlace[];
+};
+
+export type ReTranslateFound = {
+  summary: {
+    total: number;
+    pages: number;
+    unreviewed: number;
+    bound: number;
+    ignored: number;
+    /** False means nothing has been scanned yet, not that nothing was found. */
+    scanned: boolean;
+  };
+  amounts: ReTranslateFoundAmount[];
+};
+
+export type ReTranslatePricing = {
+  /**
+   * False when the site's re:translate predates the pricing tables. The tab
+   * offers a plugin update instead of a grid that would fail on save.
+   */
+  available: boolean;
+  regions: ReTranslateRegion[];
+  default_region: string;
+  price_keys: ReTranslatePriceKey[];
+  prices: ReTranslatePriceCell[];
+  currencies: ReTranslateCurrency[];
+  pricing: ReTranslatePricingSettings;
+  found: ReTranslateFound;
+};
+
+/** Progress of one slice of a site-wide scan. */
+export type ReTranslateScanResult = {
+  scanned: number;
+  found: number;
+  cursor: number;
+  done: boolean;
+};
+
+/** One cell in a grid save. `amount_minor: null` clears it. */
+export type ReTranslatePriceCellInput = {
+  key: string;
+  region: string;
+  currency: string;
+  amount_minor: number | null;
+  display_places?: number | null;
+};
+
+/**
+ * A write's answer: the site's own state after it, plus whether it was refused.
+ *
+ * `ok: false` is a refusal the person can act on — a duplicate slug, a currency
+ * the region does not offer — not a transport failure, so it arrives as data
+ * with the unchanged snapshot rather than as a thrown error.
+ */
+export type ReTranslatePricingResult = ReTranslatePricing & {
+  ok: boolean;
+  error?: string;
+  /** Per-cell outcome of a grid save. */
+  result?: {
+    saved: number;
+    deleted: number;
+    skipped: number;
+    errors: string[];
+  };
+  /** Present on a scan slice only. */
+  scan?: ReTranslateScanResult;
 };
 
 export type ReTranslateIndexState = {
@@ -399,7 +625,37 @@ export type ReTranslateBulkState = {
   last_error: string;
   started_at: string;
   updated_at: string;
+  /**
+   * One entry per job in the run.
+   *
+   * A translate run is a job per language, and every number above is their
+   * sum. Without this, a language that failed while another finished is
+   * invisible: the totals still look like a run that worked.
+   *
+   * Absent on responses from an API older than the split.
+   */
+  languages?: ReTranslateBulkLanguage[];
 };
+
+export type ReTranslateBulkLanguage = {
+  /** Empty for kinds with no language of their own. */
+  language: string;
+  status: ReTranslateBulkStatus;
+  total: number;
+  processed: number;
+  failed: number;
+  written: number;
+  last_error: string;
+};
+
+/** Per-language rows worth showing: a run that is not uniformly fine. */
+export function bulkTroubledLanguages(
+  bulk: ReTranslateBulkState,
+): ReTranslateBulkLanguage[] {
+  return (bulk.languages ?? []).filter(
+    (row) => row.status === "failed" || row.failed > 0 || row.last_error !== "",
+  );
+}
 
 /**
  * Target languages of a translate run, or `[]` for any other kind.

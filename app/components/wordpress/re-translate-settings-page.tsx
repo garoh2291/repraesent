@@ -6,6 +6,7 @@ import {
   LayoutDashboard,
   MousePointerClick,
   Percent,
+  Wallet,
   Save,
   Settings2,
   TriangleAlert,
@@ -51,6 +52,7 @@ import { TranslatePanel } from "~/components/wordpress/re-translate/translate-pa
 import { GeneralPanel } from "~/components/wordpress/re-translate/general-panel";
 import { SwitcherPanel } from "~/components/wordpress/re-translate/switcher-panel";
 import { SwitcherPreview } from "~/components/wordpress/re-translate/switcher-preview";
+import { RegionsPanel } from "~/components/wordpress/re-translate/regions-panel";
 import { previewLanguage } from "~/components/wordpress/re-translate/constants";
 
 /**
@@ -317,6 +319,10 @@ export function ReTranslateSettingsPage() {
             <Globe className="size-3.5" />
             {t("wordpress.reTranslate.tabTranslate", "Translate")}
           </TabsTrigger>
+          <TabsTrigger value="regions" className="gap-1.5">
+            <Wallet className="size-3.5" />
+            {t("wordpress.reTranslate.tabRegions", "Regions")}
+          </TabsTrigger>
           <TabsTrigger value="switcher" className="gap-1.5">
             <MousePointerClick className="size-3.5" />
             {t("wordpress.reTranslate.tabSwitcher", "Switcher")}
@@ -341,6 +347,10 @@ export function ReTranslateSettingsPage() {
             pluginUuid={pluginUuid}
             onCountersChanged={syncCounters}
           />
+        </TabsContent>
+
+        <TabsContent value="regions" className="mt-0">
+          <RegionsPanel pluginUuid={pluginUuid} />
         </TabsContent>
 
         <TabsContent value="switcher" className="mt-0">

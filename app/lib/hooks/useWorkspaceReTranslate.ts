@@ -74,7 +74,8 @@ function progressFromStrings(
 }
 
 function withPercent(
-  row: Pick<TranslateLanguageProgress, "total" | "translated" | "stale"> & {
+  row: Pick<TranslateLanguageProgress, "total" | "translated"> & {
+    stale?: number;
     percent?: number;
   },
 ): TranslateLanguageProgress {

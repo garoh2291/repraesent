@@ -1,11 +1,12 @@
 import { useTranslation } from "react-i18next";
-import { MapPin, Palette } from "lucide-react";
+import { List, MapPin, Palette } from "lucide-react";
 import type {
   ReTranslateSettings,
   ReTranslateSwitcher,
   ReTranslateSwitcherLayout,
   ReTranslateSwitcherPosition,
   ReTranslateSwitcherShow,
+  ReTranslateSwitcherGroups,
 } from "~/lib/wordpress/plugin-settings-types";
 import { Button } from "~/components/ui/button";
 import { Label } from "~/components/ui/label";
@@ -26,6 +27,7 @@ import {
   SWITCHER_LAYOUTS,
   SWITCHER_LENGTHS,
   SWITCHER_POSITIONS,
+  SWITCHER_GROUPS,
   SWITCHER_SHOW_MODES,
   offsetFallback,
   languageDisplayCode,
@@ -55,6 +57,28 @@ const POSITION_LABELS: Record<ReTranslateSwitcherPosition, string> = {
 const LAYOUT_LABELS: Record<ReTranslateSwitcherLayout, string> = {
   inline: "Side by side",
   dropdown: "Dropdown",
+};
+
+/**
+ * What the switcher offers.
+ *
+ * "language" is not merely the default — it is the *only* value that produces
+ * the exact markup a site had before regions existed. Anything else adds a
+ * grouped panel, so this is the one control on the tab that can change how an
+ * existing switcher renders rather than just how it looks.
+ */
+const GROUPS_LABELS: Record<ReTranslateSwitcherGroups, string> = {
+  auto: "Automatic",
+  language: "Languages only",
+  region: "Regions only",
+  both: "Both",
+};
+
+const GROUPS_HINTS: Record<ReTranslateSwitcherGroups, string> = {
+  auto: "Offers regions as soon as there are two.",
+  language: "What it has always shown.",
+  region: "Visitors pick their prices, not their language.",
+  both: "Two labelled sections in one panel.",
 };
 
 /** Colour wells, grouped as the plugin groups them. The fallback is only what
@@ -137,6 +161,57 @@ export function SwitcherPanel({
           )}
         </InfoNote>
       ) : null}
+
+      <SectionCard>
+        <CardHeader
+          icon={<List className="size-3.5" />}
+          title={t(
+            "wordpress.reTranslate.switcherShowsTitle",
+            "What it lets people change",
+          )}
+          subtitle={t(
+            "wordpress.reTranslate.switcherShowsSubtitle",
+            "Language, region, or both in one panel",
+          )}
+        />
+        <div className="space-y-4 p-5 sm:p-6">
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            {SWITCHER_GROUPS.map((value) => (
+              <button
+                key={value}
+                type="button"
+                aria-pressed={switcher.groups === value}
+                onClick={() => update({ groups: value })}
+                className={cn(
+                  "rounded-xl border px-3.5 py-3 text-left transition-colors",
+                  switcher.groups === value
+                    ? "border-primary bg-primary/5"
+                    : "hover:bg-muted/50",
+                )}
+              >
+                <span className="block text-sm font-medium">
+                  {t(
+                    `wordpress.reTranslate.switcherGroups.${value}`,
+                    GROUPS_LABELS[value],
+                  )}
+                </span>
+                <span className="mt-0.5 block text-xs leading-relaxed text-muted-foreground">
+                  {t(
+                    `wordpress.reTranslate.switcherGroupsDetail.${value}`,
+                    GROUPS_HINTS[value],
+                  )}
+                </span>
+              </button>
+            ))}
+          </div>
+          <FieldHint>
+            {t(
+              "wordpress.reTranslate.switcherGroupsHint",
+              "A section with only one choice is left out entirely — a switcher offering one option is decoration, not a control. So turning regions on before you have two of them changes nothing on the page.",
+            )}
+          </FieldHint>
+        </div>
+      </SectionCard>
 
       <SectionCard>
         <CardHeader

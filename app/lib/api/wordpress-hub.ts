@@ -6,6 +6,10 @@ import type {
   ReAppointmentSlot,
   ReIndexPageSeoListResponse,
   ReTranslateBulkState,
+  ReTranslatePriceCellInput,
+  ReTranslatePricing,
+  ReTranslatePricingResult,
+  ReTranslatePricingSettings,
 } from "~/lib/wordpress/plugin-settings-types";
 
 /** The WordPress site the current workspace owns, or null if it has none. */
@@ -643,6 +647,182 @@ export async function exportTranslations(
   const res = await apiClient.get<{ filename?: string; csv?: string }>(
     pluginUrl(pluginUuid, "translate-export"),
     { params },
+  );
+  return res.data;
+}
+
+/* ── regions and pricing ─────────────────────────────────────────────────── */
+
+/**
+ * One GET for the whole tab.
+ *
+ * Regions, prices, the amounts grid and the currency catalogue arrive together
+ * because a grid assembled from separately-fetched parts can disagree with
+ * itself — a region whose currency list has moved on from the amounts already
+ * drawn against it. Every write below answers with this same shape, taken
+ * after the write, so the UI never repaints from what it hoped it wrote.
+ */
+export async function getTranslatePricing(
+  pluginUuid: string,
+): Promise<ReTranslatePricing> {
+  const res = await apiClient.get<ReTranslatePricing>(
+    pluginUrl(pluginUuid, "translate-pricing"),
+  );
+  return res.data;
+}
+
+export async function saveTranslateRegion(
+  pluginUuid: string,
+  body: {
+    slug: string;
+    label?: string;
+    flag?: string;
+    currencies?: string[];
+    countries?: string[];
+  },
+): Promise<ReTranslatePricingResult> {
+  const res = await apiClient.post<ReTranslatePricingResult>(
+    pluginUrl(pluginUuid, "translate-regions"),
+    body,
+  );
+  return res.data;
+}
+
+export async function removeTranslateRegion(
+  pluginUuid: string,
+  slug: string,
+  purge: boolean,
+): Promise<ReTranslatePricingResult> {
+  const res = await apiClient.delete<ReTranslatePricingResult>(
+    pluginUrl(pluginUuid, `translate-regions/${encodeURIComponent(slug)}`),
+    { params: { purge } },
+  );
+  return res.data;
+}
+
+export async function setTranslateDefaultRegion(
+  pluginUuid: string,
+  slug: string,
+): Promise<ReTranslatePricingResult> {
+  const res = await apiClient.post<ReTranslatePricingResult>(
+    pluginUrl(pluginUuid, "translate-regions/default"),
+    { slug },
+  );
+  return res.data;
+}
+
+export async function saveTranslatePriceKey(
+  pluginUuid: string,
+  body: { slug: string; label?: string; note?: string },
+): Promise<ReTranslatePricingResult> {
+  const res = await apiClient.post<ReTranslatePricingResult>(
+    pluginUrl(pluginUuid, "translate-price-keys"),
+    body,
+  );
+  return res.data;
+}
+
+export async function removeTranslatePriceKey(
+  pluginUuid: string,
+  slug: string,
+  purge: boolean,
+): Promise<ReTranslatePricingResult> {
+  const res = await apiClient.delete<ReTranslatePricingResult>(
+    pluginUrl(pluginUuid, `translate-price-keys/${encodeURIComponent(slug)}`),
+    { params: { purge } },
+  );
+  return res.data;
+}
+
+export async function saveTranslatePrices(
+  pluginUuid: string,
+  cells: ReTranslatePriceCellInput[],
+): Promise<ReTranslatePricingResult> {
+  const res = await apiClient.post<ReTranslatePricingResult>(
+    pluginUrl(pluginUuid, "translate-prices"),
+    { cells },
+  );
+  return res.data;
+}
+
+export async function saveTranslatePricingSettings(
+  pluginUuid: string,
+  pricing: Partial<ReTranslatePricingSettings>,
+): Promise<ReTranslatePricingResult> {
+  const res = await apiClient.post<ReTranslatePricingResult>(
+    pluginUrl(pluginUuid, "translate-pricing-settings"),
+    pricing,
+  );
+  return res.data;
+}
+
+/* ── prices found in existing content ────────────────────────────────────── */
+
+/**
+ * Read one slice of the site's pages for amounts.
+ *
+ * One slice per call because the API is holding a bridge request open on a
+ * WordPress site; a thousand-page scan in a single call would time out with
+ * nothing to show. The caller loops while `scan.done` is false, passing back
+ * `scan.cursor`. Each slice is committed as it goes, so stopping halfway leaves
+ * a partial index rather than a broken one.
+ */
+export async function scanTranslatePrices(
+  pluginUuid: string,
+  body: { after?: number; limit?: number } = {},
+): Promise<ReTranslatePricingResult> {
+  const res = await apiClient.post<ReTranslatePricingResult>(
+    pluginUrl(pluginUuid, "translate-prices/scan"),
+    body,
+  );
+  return res.data;
+}
+
+/**
+ * Manage a found amount.
+ *
+ * `key` binds it to a price that exists; `label` creates the price, seeds this
+ * amount into the region's default currency, and binds it. One endpoint for
+ * both because from the panel's side it is one gesture — the person either
+ * picked an existing name or typed a new one.
+ */
+export async function bindTranslateFoundAmount(
+  pluginUuid: string,
+  body: {
+    fingerprint?: string;
+    spot_id?: string;
+    key?: string;
+    label?: string;
+    slug?: string;
+    region?: string;
+  },
+): Promise<ReTranslatePricingResult> {
+  const id = body.spot_id || body.fingerprint || "";
+  const res = await apiClient.post<ReTranslatePricingResult>(
+    pluginUrl(pluginUuid, "translate-prices/found/bind"),
+    { ...body, fingerprint: id, spot_id: id },
+  );
+  return res.data;
+}
+
+export async function ignoreTranslateFoundAmount(
+  pluginUuid: string,
+  id: string,
+): Promise<ReTranslatePricingResult> {
+  const res = await apiClient.post<ReTranslatePricingResult>(
+    pluginUrl(pluginUuid, "translate-prices/found/ignore"),
+    { fingerprint: id, spot_id: id },
+  );
+  return res.data;
+}
+
+export async function releaseTranslateFoundAmount(
+  pluginUuid: string,
+  id: string,
+): Promise<ReTranslatePricingResult> {
+  const res = await apiClient.post<ReTranslatePricingResult>(
+    pluginUrl(pluginUuid, "translate-prices/found/release"),
+    { fingerprint: id, spot_id: id },
   );
   return res.data;
 }
