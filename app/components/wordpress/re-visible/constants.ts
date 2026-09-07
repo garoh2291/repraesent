@@ -50,6 +50,8 @@ export interface ReVisibleSettings {
     site_title: string;
     tagline: string;
     site_url: string;
+    /** The site's own content language, from WPLANG. */
+    language: string;
   };
 }
 
@@ -68,7 +70,7 @@ export const DEFAULT_SETTINGS: ReVisibleSettings = {
   indexnow: { enabled: true, key: "" },
   telemetry: { enabled: true, sample_rate: 100 },
   answer_block: { position: "top" },
-  site: { site_title: "", tagline: "", site_url: "" },
+  site: { site_title: "", tagline: "", site_url: "", language: "en" },
 };
 
 /** Schema.org types the plugin offers, in the plugin's own order. */
@@ -82,6 +84,20 @@ export const ENTITY_TYPES = [
   "HomeAndConstructionBusiness",
   "AutomotiveBusiness",
 ] as const;
+
+/**
+ * Languages a project can be tracked in.
+ *
+ * The same four the platform itself speaks. The question language must match
+ * what a buyer would actually type: a German site tracked with English
+ * questions measures the wrong market.
+ */
+export const TRACKING_LOCALES: { value: string; label: string }[] = [
+  { value: "en", label: "English" },
+  { value: "de", label: "Deutsch" },
+  { value: "fr", label: "Français" },
+  { value: "nl", label: "Nederlands" },
+];
 
 export const TAB_IDS = [
   "overview",

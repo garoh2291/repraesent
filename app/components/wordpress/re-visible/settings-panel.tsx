@@ -27,6 +27,7 @@ import type { VisibilityProject } from "~/lib/api/re-visible";
 import { VISIBILITY_ENGINES } from "~/lib/api/re-visible";
 import {
   ENTITY_TYPES,
+  TRACKING_LOCALES,
   engineLabel,
   formatMicroUsd,
   type ReVisibleSettings,
@@ -196,6 +197,34 @@ export function SettingsPanel({
                 )}
               </FieldHint>
             </Field>
+
+            {isAdmin ? (
+              <Field>
+                <Label htmlFor="rv-samples">
+                  {t("wordpress.reVisible.samplesPerQuestion", "Samples per question, per engine")}
+                </Label>
+                <Input
+                  id="rv-samples"
+                  type="number"
+                  min={1}
+                  max={10}
+                  defaultValue={project.runs_per_prompt}
+                  onBlur={(event) => {
+                    const value = Number(event.target.value);
+                    if (value >= 1 && value !== project.runs_per_prompt) {
+                      onProjectChange({ runs_per_prompt: value });
+                    }
+                  }}
+                  className="sm:max-w-32"
+                />
+                <FieldHint>
+                  {t(
+                    "wordpress.reVisible.samplesHint",
+                    "The biggest cost lever: every question is asked this many times on every engine, each week. Three turns a coin flip into a rate; one is cheap but noisy.",
+                  )}
+                </FieldHint>
+              </Field>
+            ) : null}
 
             {isAdmin ? (
               <TwoCol>

@@ -363,7 +363,7 @@ export function ReVisibleSettingsPage() {
           ) : !overview ? (
             <SetupWizard
               defaultBrandName={settings.entity.name || settings.site.site_title}
-              defaultLocale={settings.site.site_url ? "en" : "en"}
+              defaultLocale={settings.site.language || "en"}
               creating={createProject.isPending}
               onCreate={(input) => {
                 createProject.mutate(input, {

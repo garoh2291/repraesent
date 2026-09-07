@@ -15,7 +15,14 @@ import {
   TwoCol,
 } from "~/components/wordpress/fields";
 import { VISIBILITY_ENGINES } from "~/lib/api/re-visible";
-import { engineLabel } from "./constants";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "~/components/ui/select";
+import { TRACKING_LOCALES, engineLabel } from "./constants";
 
 /**
  * First run.
@@ -45,6 +52,7 @@ export function SetupWizard({
   const [brandName, setBrandName] = useState(defaultBrandName);
   const [country, setCountry] = useState("");
   const [competitors, setCompetitors] = useState("");
+  const [locale, setLocale] = useState(defaultLocale);
 
   return (
     <SectionCard>
@@ -119,6 +127,30 @@ export function SetupWizard({
           </FieldHint>
         </Field>
 
+        <Field>
+          <Label htmlFor="rv-setup-locale">
+            {t("wordpress.reVisible.questionLanguage", "Question language")}
+          </Label>
+          <Select value={locale} onValueChange={setLocale}>
+            <SelectTrigger id="rv-setup-locale" className="sm:w-64">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {TRACKING_LOCALES.map((option) => (
+                <SelectItem key={option.value} value={option.value}>
+                  {option.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <FieldHint>
+            {t(
+              "wordpress.reVisible.questionLanguageHint",
+              "The language a buyer would actually type. Defaults to your site's own language — tracking English questions for a German market measures the wrong thing.",
+            )}
+          </FieldHint>
+        </Field>
+
         <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
           <span>{t("wordpress.reVisible.willAsk", "We will ask:")}</span>
           {VISIBILITY_ENGINES.map((engine) => (
@@ -135,7 +167,7 @@ export function SetupWizard({
               brand_name: brandName.trim(),
               country: country.trim(),
               competitors: splitNames(competitors),
-              locale: defaultLocale,
+              locale,
             })
           }
         >
