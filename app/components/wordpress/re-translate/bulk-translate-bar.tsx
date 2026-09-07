@@ -31,6 +31,21 @@ import { Progress } from "~/components/ui/progress";
 import { RadioGroup, RadioGroupItem } from "~/components/ui/radio-group";
 import { Spinner } from "~/components/ui/spinner";
 import { flash, languageDisplayName, languageFlag } from "./constants";
+import { cn } from "~/lib/utils";
+
+/** How one language's job ended, at a glance. */
+function languageBadgeClass(status: string): string {
+  switch (status) {
+    case "failed":
+      return "border-destructive/30 bg-destructive/10 text-destructive";
+    case "complete":
+      return "border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-400";
+    case "cancelled":
+      return "text-muted-foreground";
+    default:
+      return "border-sky-500/30 bg-sky-500/10 text-sky-800 dark:text-sky-300";
+  }
+}
 
 /** How long the finished-run summary stays on screen before clearing itself. */
 const COMPLETE_NOTICE_MS = 8_000;
@@ -77,7 +92,29 @@ export function BulkTranslateBar({
   const bulk = bulkQuery.data ?? settings.bulk ?? IDLE_BULK;
   /** Accepted, but the API is still working out what needs translating. */
   const preparing = bulk.status === "queued";
+  /*
+   * A run is accepted as `queued` and the API's scheduler moves it to
+   * `running` on its next tick, five seconds later. Still queued minutes on is
+   * therefore not a slow start — it is nobody picking it up, because no
+   * scheduler is running against this database.
+   *
+   * The server cannot report that: the watchdog that would notice lives inside
+   * the scheduler, so when the scheduler is the thing that is missing, so is
+   * the warning. Only the client can see time passing here.
+   */
+  const queuedSince = preparing ? Date.parse(bulk.updated_at || "") : NaN;
+  const unclaimed =
+    Number.isFinite(queuedSince) && Date.now() - queuedSince > 3 * 60 * 1000;
   const running = preparing || bulk.status === "running";
+  /*
+   * A finished run that saved nothing is not a finished run, whatever the
+   * progress bar says. It is the shape a site-wide failure takes once every
+   * page has been visited and every page has failed, and calling it "complete"
+   * is what sent someone looking at their site wondering why it was still in
+   * one language.
+   */
+  const wroteNothing =
+    !running && bulk.total > 0 && (bulk.written ?? 0) === 0;
   const progress =
     bulk.total > 0 ? Math.round((bulk.processed / bulk.total) * 100) : 0;
 
@@ -88,7 +125,7 @@ export function BulkTranslateBar({
 
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selected, setSelected] = useState<string[]>([]);
-  const [mode, setMode] = useState<ReTranslateMode>("empty_only");
+  const [mode, setMode] = useState<ReTranslateMode>("empty_or_stale");
   /** A failed start or cancel, or the last error the run itself recorded. */
   const [bulkError, setBulkError] = useState<string | null>(
     bulk.last_error || null,
@@ -124,7 +161,12 @@ export function BulkTranslateBar({
       setShowComplete(false);
       return;
     }
-    if (bulk.status !== "complete" || !sawRunning.current) return;
+    if (
+      (bulk.status !== "complete" && bulk.status !== "failed") ||
+      !sawRunning.current
+    ) {
+      return;
+    }
     const key = bulk.updated_at || bulk.started_at;
     if (!key || completedToastFor.current === key) return;
     completedToastFor.current = key;
@@ -149,7 +191,7 @@ export function BulkTranslateBar({
 
   function openDialog() {
     setSelected(settings.languages.map((l) => l.code));
-    setMode("empty_only");
+    setMode("empty_or_stale");
     setDialogOpen(true);
   }
 
@@ -242,29 +284,53 @@ export function BulkTranslateBar({
         </p>
       ) : null}
 
-      {running || (bulk.status === "complete" && showComplete) ? (
+      {running ||
+      ((bulk.status === "complete" || bulk.status === "failed") &&
+        showComplete) ? (
         <div className="rounded-lg border bg-muted/30 px-4 py-3 space-y-2">
           <div className="flex flex-wrap items-center justify-between gap-2">
             <p className="text-sm font-medium">
               {preparing
-                ? t(
-                    "wordpress.reTranslate.bulkPreparing",
-                    "Working out what needs translating…",
-                  )
+                ? unclaimed
+                  ? t(
+                      "wordpress.reTranslate.bulkUnclaimed",
+                      "Waiting — nothing has picked this run up yet. The translation worker may not be running.",
+                    )
+                  : t(
+                      "wordpress.reTranslate.bulkPreparing",
+                      "Working out what needs translating…",
+                    )
                 : running
                   ? t(
                       "wordpress.reTranslate.bulkInProgress",
                       "Translating the site…",
                     )
-                  : bulk.total === 0
+                  : /*
+                     * Order matters. A failed run also has `total === 0` when
+                     * it could not build a queue at all, and reading that as
+                     * "everything is already filled" is exactly the sentence
+                     * that was shown over an untranslated site.
+                     */
+                    bulk.status === "failed"
                     ? t(
-                        "wordpress.reTranslate.bulkNothingToTranslate",
-                        "Nothing needs translating — all selected fields are already filled.",
+                        "wordpress.reTranslate.bulkFailed",
+                        "The translation run could not finish.",
                       )
-                    : t(
-                        "wordpress.reTranslate.bulkFinished",
-                        "Bulk translation complete",
-                      )}
+                    : bulk.total === 0
+                      ? t(
+                          "wordpress.reTranslate.bulkNothingToTranslate",
+                          "Nothing needs translating — all selected fields are already filled.",
+                        )
+                      : wroteNothing
+                        ? t(
+                            "wordpress.reTranslate.bulkWroteNothing",
+                            "Finished without translating anything — see the error below.",
+                          )
+                        : t(
+                            "wordpress.reTranslate.bulkFinishedCount",
+                            "Bulk translation complete — {{written}} fields translated",
+                            { written: bulk.written ?? 0 },
+                          )}
             </p>
             <span className="text-xs tabular-nums text-muted-foreground">
               {t(
@@ -293,7 +359,30 @@ export function BulkTranslateBar({
               )}
             </p>
           ) : null}
-          {bulkLanguages(bulk).length > 0 ? (
+          {/*
+            * Each language is its own job, so each has its own outcome. A row
+            * of plain codes hid the case the split exists for: German
+            * finishing while French failed, summed into totals that look like
+            * a run that worked.
+            */}
+          {bulk.languages && bulk.languages.length > 0 ? (
+            <div className="flex flex-wrap gap-1">
+              {bulk.languages.map((row) => (
+                <Badge
+                  key={row.language || row.status}
+                  variant="outline"
+                  className={cn("font-normal", languageBadgeClass(row.status))}
+                  title={
+                    row.last_error ||
+                    `${row.processed}/${row.total}${row.failed ? ` · ${row.failed} failed` : ""}`
+                  }
+                >
+                  {(row.language || bulk.kind || "").toUpperCase()}
+                  {row.total > 0 ? ` ${row.processed}/${row.total}` : ""}
+                </Badge>
+              ))}
+            </div>
+          ) : bulkLanguages(bulk).length > 0 ? (
             <div className="flex flex-wrap gap-1">
               {bulkLanguages(bulk).map((code) => (
                 <Badge key={code} variant="secondary" className="font-normal">
@@ -340,7 +429,7 @@ export function BulkTranslateBar({
             >
               <label className="flex cursor-pointer items-start gap-3 rounded-md border px-3 py-2 hover:bg-muted/40">
                 <RadioGroupItem
-                  value="empty_only"
+                  value="empty_or_stale"
                   id="bulk-mode-empty"
                   className="mt-0.5"
                 />
@@ -351,13 +440,13 @@ export function BulkTranslateBar({
                   >
                     {t(
                       "wordpress.reTranslate.modeEmptyOnly",
-                      "Only empty fields",
+                      "Empty and outdated fields",
                     )}
                   </Label>
                   <p className="text-xs text-muted-foreground">
                     {t(
                       "wordpress.reTranslate.modeEmptyOnlyHelp",
-                      "Fill fields that were left blank. Existing translations stay as they are.",
+                      "Fill fields that were left blank, and refresh translations whose source text has changed since. Up-to-date translations stay as they are.",
                     )}
                   </p>
                 </span>

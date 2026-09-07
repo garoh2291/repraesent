@@ -1,10 +1,13 @@
 import { toast } from "sonner";
+import { extractErrorMessage } from "~/lib/api/axios-instance";
 import type {
   ReTranslateSettings,
   ReTranslateSwitcher,
   ReTranslateSwitcherLayout,
   ReTranslateSwitcherPosition,
   ReTranslateSwitcherShow,
+  ReTranslateSwitcherGroups,
+  ReTranslateCurrency,
 } from "~/lib/wordpress/plugin-settings-types";
 
 /** Mirrors `ReTranslate\Settings::switcher_defaults()`. */
@@ -12,6 +15,7 @@ export const DEFAULT_SWITCHER: ReTranslateSwitcher = {
   position: "bottom-right",
   layout: "inline",
   show: "label",
+  groups: "auto",
   hide_current: false,
   label: "",
   colors: {
@@ -63,6 +67,7 @@ export const DEFAULT_SETTINGS: ReTranslateSettings = {
 export type TabId =
   | "overview"
   | "translate"
+  | "regions"
   | "switcher"
   | "settings";
 
@@ -106,6 +111,7 @@ export function typeFromParam(raw: string | null | undefined): string {
 const TAB_IDS: readonly TabId[] = [
   "overview",
   "translate",
+  "regions",
   "switcher",
   "settings",
 ];
@@ -114,6 +120,8 @@ const TAB_IDS: readonly TabId[] = [
 const TAB_ALIASES: Record<string, TabId> = {
   general: "settings",
   languages: "overview",
+  regions: "regions",
+  pricing: "regions",
 };
 
 export function tabFromParam(value: string | null): TabId {
@@ -141,6 +149,13 @@ export const SWITCHER_POSITIONS: readonly ReTranslateSwitcherPosition[] = [
 export const SWITCHER_LAYOUTS: readonly ReTranslateSwitcherLayout[] = [
   "inline",
   "dropdown",
+];
+
+export const SWITCHER_GROUPS: readonly ReTranslateSwitcherGroups[] = [
+  "auto",
+  "language",
+  "region",
+  "both",
 ];
 
 export const SWITCHER_SHOW_MODES: readonly ReTranslateSwitcherShow[] = [
@@ -266,7 +281,7 @@ const FLAG_COUNTRY: Record<string, string> = {
 };
 
 /** Two-letter country code to its regional-indicator pair. */
-function countryFlag(country: string): string {
+export function countryFlag(country: string): string {
   if (!/^[A-Za-z]{2}$/.test(country)) return "";
   return [...country.toUpperCase()]
     .map((letter) => String.fromCodePoint(0x1f1e6 + letter.charCodeAt(0) - 65))
@@ -433,6 +448,33 @@ function humanizeWords(value: string): string {
 export function flash(text: string, type: "success" | "error" = "success") {
   if (type === "error") toast.error(text);
   else toast.success(text);
+}
+
+/**
+ * One toast for the length of one operation: "Saving…" that becomes "Saved".
+ *
+ * A second toast appearing under the first is how a save reads as two things
+ * happening, and a success toast that only shows up at the end reads, while you
+ * wait, as nothing happening at all. Sonner replaces a toast addressed by its
+ * own id, so the busy message is the one that turns into the answer.
+ *
+ * The promise is returned untouched, rejection included — the toast reports,
+ * it does not swallow.
+ */
+export async function flashWhile<T>(
+  work: Promise<T>,
+  message: { busy: string; done: string },
+): Promise<T> {
+  const id = toast.loading(message.busy);
+
+  try {
+    const result = await work;
+    toast.success(message.done, { id });
+    return result;
+  } catch (error) {
+    toast.error(extractErrorMessage(error), { id });
+    throw error;
+  }
 }
 
 /* ── Language catalog ────────────────────────────────────────────────── */
@@ -721,4 +763,211 @@ export function summariseStats(settings: ReTranslateSettings): TranslateStatsSum
     needsUpdating: totalStale,
     untranslated,
   };
+}
+
+/* ── Regions and money ───────────────────────────────────────────────── */
+
+/**
+ * Region slug rules — mirrors `ReTranslate\Regions::normalize_slug()`.
+ *
+ * Applied as you type so the slug shown under a region's name is the one the
+ * site will actually store, rather than something the server quietly rewrites
+ * after you save.
+ */
+export function normalizeRegionSlug(value: string): string {
+  return value
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9-]+/g, "-")
+    .replace(/-+/g, "-")
+    .replace(/^-|-$/g, "")
+    .slice(0, 32);
+}
+
+/**
+ * Price key rules — mirrors `ReTranslate\Price_Keys::normalize_slug()`.
+ *
+ * Digits-only slugs become `p-5000`. PHP stores numeric string array keys as
+ * integers, which later TypeErrors a `string $key` parameter in wp_footer.
+ */
+export function normalizePriceSlug(value: string): string {
+  let slug = value
+    .trim()
+    .toLowerCase()
+    .replace(/[\s_]+/g, "-")
+    .replace(/[^a-z0-9-]+/g, "")
+    .replace(/-+/g, "-")
+    .replace(/^-|-$/g, "")
+    .slice(0, 64);
+
+  if (/^\d+$/.test(slug)) {
+    slug = `p-${slug}`.slice(0, 64);
+  }
+
+  return slug;
+}
+
+/** The exact string to paste into the WordPress editor. */
+export function priceShortcode(slug: string): string {
+  return `[price key="${slug}"]`;
+}
+
+const DEFAULT_CURRENCY: ReTranslateCurrency = {
+  code: "",
+  name: "",
+  symbol: "",
+  exponent: 2,
+  position: "before",
+  decimal: ".",
+  thousands: ",",
+};
+
+/**
+ * A currency the site named that the catalogue does not carry still has to
+ * render. Same fallback the plugin takes: the code stands in for the symbol
+ * rather than the amount going missing.
+ */
+export function currencyOf(
+  currencies: ReTranslateCurrency[],
+  code: string,
+): ReTranslateCurrency {
+  const upper = String(code ?? "").toUpperCase();
+  return (
+    currencies.find((currency) => currency.code === upper) ?? {
+      ...DEFAULT_CURRENCY,
+      code: upper,
+      name: upper,
+      symbol: upper,
+    }
+  );
+}
+
+function clampExponent(exponent: number): number {
+  return Math.max(0, Math.min(4, Math.trunc(Number(exponent) || 0)));
+}
+
+function groupDigits(value: number, separator: string): string {
+  const digits = String(Math.abs(value));
+  if (separator === "") return digits;
+  return digits.replace(/\B(?=(\d{3})+(?!\d))/g, separator);
+}
+
+/**
+ * Render minor units the way the site renders them — mirrors
+ * `ReTranslate\Currencies::format()`, non-breaking space included.
+ *
+ * Deliberately not `Intl.NumberFormat`: its output moves with whatever ICU the
+ * browser ships, and a price previewed here has to be the price on the page.
+ */
+export function formatMoney(
+  amountMinor: number,
+  currency: ReTranslateCurrency,
+  exponent?: number,
+  displayPlaces?: number | null,
+): string {
+  const places = clampExponent(exponent ?? currency.exponent);
+  const negative = amountMinor < 0;
+  const absolute = Math.abs(Math.trunc(amountMinor));
+  const divisor = 10 ** places;
+  const minor = absolute % divisor;
+  const show = shownPlaces(minor, places, displayPlaces);
+
+  let number = groupDigits(Math.trunc(absolute / divisor), currency.thousands);
+  if (show > 0) {
+    const frac = String(minor)
+      .padStart(places, "0")
+      .padEnd(show, "0")
+      .slice(0, show);
+    number += currency.decimal + frac;
+  }
+
+  const body =
+    currency.position === "after"
+      ? `${number}\u00a0${currency.symbol}`
+      : `${currency.symbol}${number}`;
+
+  return `${negative ? "-" : ""}${body}`;
+}
+
+/** Minor units as a plain editable number, e.g. "19" or "10.0". */
+export function moneyToInput(
+  amountMinor: number,
+  exponent: number,
+  displayPlaces?: number | null,
+): string {
+  const places = clampExponent(exponent);
+  const negative = amountMinor < 0;
+  const absolute = Math.abs(Math.trunc(amountMinor));
+  const divisor = 10 ** places;
+  const major = Math.trunc(absolute / divisor);
+  const minor = absolute % divisor;
+  const show = shownPlaces(minor, places, displayPlaces);
+  const sign = negative ? "-" : "";
+
+  if (show === 0) return sign + String(major);
+
+  const frac = String(minor)
+    .padStart(places, "0")
+    .padEnd(show, "0")
+    .slice(0, show);
+
+  return `${sign}${major}.${frac}`;
+}
+
+export function parseMoneyParts(
+  input: string,
+  exponent: number,
+): { amount: number; places: number } | null {
+  const places = clampExponent(exponent);
+  const negative = input.includes("-");
+  const clean = input.replace(/[^0-9.,]/g, "");
+
+  if (clean === "") return null;
+
+  const split = Math.max(clean.lastIndexOf("."), clean.lastIndexOf(","));
+
+  let whole = clean;
+  let fraction = "";
+
+  if (split > -1) {
+    const tail = clean.slice(split + 1);
+    if (tail !== "" && tail.length <= Math.max(1, places)) {
+      whole = clean.slice(0, split);
+      fraction = tail;
+    }
+  }
+
+  whole = whole.replace(/[^0-9]/g, "");
+  fraction = fraction.replace(/[^0-9]/g, "");
+
+  if (whole === "" && fraction === "") return null;
+
+  const displayPlaces = Math.min(places, fraction.length);
+  fraction = fraction.padEnd(places, "0").slice(0, places);
+  const amount = Number(`${whole === "" ? "0" : whole}${fraction}`);
+
+  if (!Number.isFinite(amount)) return null;
+
+  return { amount: negative ? -amount : amount, places: displayPlaces };
+}
+
+export function parseMoney(input: string, exponent: number): number | null {
+  return parseMoneyParts(input, exponent)?.amount ?? null;
+}
+
+function shownPlaces(
+  minor: number,
+  storagePlaces: number,
+  displayPlaces: number | null | undefined,
+): number {
+  if (displayPlaces != null && Number.isFinite(displayPlaces)) {
+    return Math.max(0, Math.min(4, Math.trunc(displayPlaces)));
+  }
+  if (minor === 0 || storagePlaces === 0) return 0;
+  return String(minor).padStart(storagePlaces, "0").replace(/0+$/, "").length;
+}
+
+/** Grid cell address. One string so drafts can live in a flat map. */
+export function cellId(key: string, region: string, currency: string): string {
+  return `${key}|${region}|${currency}`;
 }
