@@ -31,7 +31,10 @@ import {
   DEFAULT_FORM_THEME,
   FORM_FONT_KEYS,
   TRANSPARENT,
+  type FormLayout,
+  isMultiStep,
   isTransparent,
+  normalizeLayout,
   type FormDefinition,
   type FormLocale,
 } from "~/lib/forms/schema";
@@ -78,6 +81,14 @@ export function ThemePanel({
   const patchTheme = (patch: Partial<FormDefinition["theme"]>) =>
     onChange({ theme: { ...theme, ...patch } });
   const bgTransparent = isTransparent(theme.background);
+
+  const layout = normalizeLayout(definition.layout);
+  const multi = isMultiStep(definition);
+  const patchLayout = (patch: Partial<FormLayout>) =>
+    onChange({ layout: { ...layout, ...patch } });
+  // The preview flips steps on its own so you can see the progress style on
+  // every step without leaving the tab.
+  const [previewStep, setPreviewStep] = useState(0);
 
   return (
     <div className="grid gap-4 sm:gap-5 xl:grid-cols-[minmax(0,380px)_minmax(0,1fr)]">
@@ -141,6 +152,23 @@ export function ThemePanel({
               </Field>
             ) : null}
 
+            {/* Unlike the fill above, this one is always offered: an input's
+                text is unreadable on a pale field in every field style, and the
+                general text colour cannot be lightened for a dark page without
+                taking the typed value with it. Shows the inherited colour until
+                someone picks one, so the control never looks empty. */}
+            <Field>
+              <Label htmlFor="theme-field-text">
+                {t("forms.design.fieldText")}
+              </Label>
+              <ColorInput
+                id="theme-field-text"
+                value={theme.fieldText ?? theme.text}
+                onChange={(value) => patchTheme({ fieldText: value })}
+              />
+              <FieldHint>{t("forms.design.fieldTextHint")}</FieldHint>
+            </Field>
+
             {(
               [
                 ["surface", t("forms.design.surface")],
@@ -160,6 +188,44 @@ export function ThemePanel({
             ))}
           </PanelBody>
         </Panel>
+
+        {multi ? (
+          <Panel>
+            <PanelHeader title={t("forms.design.steps")} />
+            <PanelBody>
+              <Field>
+                <Label>{t("forms.design.progressStyle")}</Label>
+                <Segmented label={t("forms.design.progressStyle")}>
+                  {(
+                    [
+                      ["bar", t("forms.design.progressBar")],
+                      ["steps", t("forms.design.progressSteps")],
+                      ["none", t("forms.design.progressNone")],
+                    ] as const
+                  ).map(([key, label]) => (
+                    <SegmentedButton
+                      key={key}
+                      active={layout.progress === key}
+                      onClick={() => patchLayout({ progress: key })}
+                      className="flex items-center gap-2 px-2.5"
+                    >
+                      <ProgressGlyph kind={key} />
+                      {label}
+                    </SegmentedButton>
+                  ))}
+                </Segmented>
+              </Field>
+              <ToggleField
+                id="theme-steptitles"
+                label={t("forms.design.showStepTitles")}
+                checked={layout.showStepTitles}
+                disabled={disabled}
+                onChange={(v) => patchLayout({ showStepTitles: v })}
+              />
+              <FieldHint>{t("forms.design.stepsHint")}</FieldHint>
+            </PanelBody>
+          </Panel>
+        ) : null}
 
         <Panel>
           <PanelHeader title={t("forms.design.layout")} />
@@ -383,19 +449,55 @@ export function ThemePanel({
             className="mx-auto transition-[max-width]"
             style={{ maxWidth: DEVICE_WIDTH[device] }}
           >
-            <FormRenderer
-              definition={definition}
-              locale={locale}
-              fallbackLocale={fallbackLocale}
-              mode="preview"
-              idPrefix="themepreview"
-              values={{}}
-              errors={{}}
-              onChange={() => undefined}
-            />
+            <div className="rf-canvas">
+              <FormRenderer
+                definition={definition}
+                locale={locale}
+                fallbackLocale={fallbackLocale}
+                mode="preview"
+                idPrefix="themepreview"
+                values={{}}
+                errors={{}}
+                onChange={() => undefined}
+                step={multi ? previewStep : undefined}
+                onStepChange={(i) =>
+                  setPreviewStep(
+                    Math.min(Math.max(i, 0), definition.sections.length - 1),
+                  )
+                }
+              />
+            </div>
           </div>
         </div>
       </Panel>
     </div>
+  );
+}
+
+/** Tiny 28×10 sketch of each progress style, so the choice needs no reading. */
+function ProgressGlyph({ kind }: { kind: FormLayout["progress"] }) {
+  if (kind === "bar") {
+    return (
+      <span
+        aria-hidden
+        className="inline-flex h-[10px] w-7 items-center rounded-full bg-current/15"
+      >
+        <span className="h-[3px] w-4 rounded-full bg-current" />
+      </span>
+    );
+  }
+  if (kind === "steps") {
+    return (
+      <span aria-hidden className="inline-flex w-7 items-center gap-0.5">
+        <span className="h-[3px] flex-1 rounded-full bg-current" />
+        <span className="h-[3px] flex-1 rounded-full bg-current" />
+        <span className="h-[3px] flex-1 rounded-full bg-current/25" />
+      </span>
+    );
+  }
+  return (
+    <span aria-hidden className="inline-flex w-7 items-center">
+      <span className="h-px w-full bg-current/40" />
+    </span>
   );
 }

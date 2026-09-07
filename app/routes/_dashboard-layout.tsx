@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuthContext } from "~/providers/auth-provider";
 import { Sidebar } from "~/components/sidebar";
+import { PilotRouteGate } from "~/components/PilotRouteGate";
 import { Button } from "~/components/ui/button";
 import { AlertTriangle, Menu } from "lucide-react";
 import { OnboardingTour } from "~/components/onboarding-tour/OnboardingTour";
@@ -110,6 +111,7 @@ export default function DashboardLayout() {
 
   return (
     <div className="flex h-screen overflow-hidden bg-[#0f0f11]">
+      <PilotRouteGate />
       {/* Desktop sidebar */}
       <Sidebar className="hidden lg:flex" collapsible />
 

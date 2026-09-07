@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { useSearchParams } from "react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { Check, ChevronDown, Search, Store } from "lucide-react";
@@ -6,6 +7,7 @@ import i18n from "~/i18n";
 import { cn } from "~/lib/utils";
 import { useDocumentMeta } from "~/lib/hooks/use-document-meta";
 import { useClientTypeWording } from "~/lib/hooks/useClientTypeWording";
+import { useSearchParamsSelect } from "~/lib/hooks/useQueryParams";
 import {
   CampaignsBasePathContext,
   type CampaignsContextValue,
@@ -21,14 +23,20 @@ export function meta() {
 }
 
 const ALL_HOUSES = "all";
+const HOUSE_PARAM = "house";
 
 export default function BrandSocialAdsPage() {
   useDocumentMeta({ titleKey: "brand.socialAdsMetaTitle" });
 
   // `ALL_HOUSES` (the default) aggregates every enabled partner house; any other
   // value scopes to a single house. A real house id is a uuid, so it never
-  // collides with the sentinel.
-  const [houseValue, setHouseValue] = useState<string>(ALL_HOUSES);
+  // collides with the sentinel. Lives in the URL alongside the dashboard's own
+  // filters so the whole view is shareable.
+  const [searchParams] = useSearchParams();
+  const [onSelect] = useSearchParamsSelect();
+  const houseValue = searchParams.get(HOUSE_PARAM) ?? ALL_HOUSES;
+  const setHouseValue = (v: string) =>
+    onSelect({ [HOUSE_PARAM]: v === ALL_HOUSES ? "" : v });
 
   const { data: houses = [], isLoading } = useQuery({
     queryKey: ["brand", "social-ads", "partner-houses"],

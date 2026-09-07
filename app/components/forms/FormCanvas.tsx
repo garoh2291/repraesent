@@ -1,11 +1,13 @@
 /**
  * The builder canvas: the live form preview, made selectable and reorderable.
  *
- * Reorder is a single flat vertical sortable list across all sections — the
- * two-column layout comes from each field's `width`, not from row containers,
- * so there is nothing to drag between. That makes closestCenter the right
- * collision strategy; kanbanCollisionDetection in app/lib/kanban/board-position
- * exists for the multi-column boards, where big column droppables steal hits.
+ * Single-page forms: one flat vertical sortable list — the two-column layout
+ * comes from each field's `width`, not from row containers, so there is
+ * nothing to drag between. Multi-step forms: the step rail (StepStrip) shows
+ * one step at a time; the list below is that step's fields, and a row dropped
+ * on another step's pill moves there. Steps themselves reorder by dragging
+ * their pill. One DndContext covers both, with closestCenter — the pills and
+ * the rows are far enough apart that nothing steals hits.
  *
  * Ordering is persisted as the whole `sections` array in one JSON blob, so
  * arrayMove is enough — no fractional board_position bookkeeping.
@@ -29,21 +31,44 @@ import {
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { Copy, Eye, GripVertical, Trash2 } from "lucide-react";
+import {
+  ArrowRightLeft,
+  Copy,
+  Eye,
+  GripVertical,
+  Layers,
+  SplitSquareVertical,
+  Trash2,
+} from "lucide-react";
+import { Button } from "~/components/ui/button";
+import { Checkbox } from "~/components/ui/checkbox";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "~/components/ui/popover";
 import { useMemo, useState } from "react";
 import { createPortal } from "react-dom";
 import { useTranslation } from "react-i18next";
 import { FormRenderer } from "~/components/forms/FormRenderer";
 import {
+  GhostAction,
   Panel,
   PanelBody,
   PanelHeader,
   PanelSection,
 } from "~/components/forms/chrome";
+import {
+  StepStrip,
+  isStepDndId,
+  sectionIdOf,
+  stepDndId,
+} from "~/components/forms/StepStrip";
 import { FIELD_TYPE_META, isFieldDeletable } from "~/lib/forms/field-types";
 import {
   contentKey,
   flattenFields,
+  isMultiStep,
   type FormDefinition,
   type FormField,
   type FormLocale,
@@ -64,9 +89,27 @@ interface Props {
   offeredLocales: FormLocale[];
   selection: BuilderSelection | null;
   onSelect: (selection: BuilderSelection | null) => void;
+  /** Single-page: the whole form's field order. */
   onReorder: (orderedFieldIds: string[]) => void;
   onDuplicateField: (fieldId: string) => void;
   onDeleteField: (fieldId: string) => void;
+  /** Multi-step: which step the canvas shows. Owned by the route. */
+  activeStep: number;
+  onActiveStepChange: (index: number) => void;
+  /** Multi-step: field order within one step. */
+  onReorderInStep: (sectionId: string, orderedFieldIds: string[]) => void;
+  onMoveFieldToStep: (fieldId: string, sectionId: string) => void;
+  /** Several fields at once (the empty-step "Move fields here" picker). */
+  onMoveFieldsToStep: (fieldIds: string[], sectionId: string) => void;
+  onReorderSteps: (orderedSectionIds: string[]) => void;
+  onAddStep: () => void;
+  onDuplicateStep: (sectionId: string) => void;
+  onDeleteStep: (sectionId: string) => void;
+  /** Toggle between one page and steps. */
+  onSplitIntoSteps: () => void;
+  onMergeSteps: () => void;
+  /** Blocking issues per section id, in the editing locale (step-rail dots). */
+  issuesBySection: ReadonlyMap<string, number>;
   /** Switches the locale being edited from the preview's own switcher. */
   onLocaleChange: (locale: FormLocale) => void;
   /** Hides the title block — the canvas-side equivalent of Design's toggle. */
@@ -90,11 +133,65 @@ export function FormCanvas({
   onRemoveTitle,
   invalidFieldIds,
   disabled,
+  activeStep,
+  onActiveStepChange,
+  onReorderInStep,
+  onMoveFieldToStep,
+  onMoveFieldsToStep,
+  onReorderSteps,
+  onAddStep,
+  onDuplicateStep,
+  onDeleteStep,
+  onSplitIntoSteps,
+  onMergeSteps,
+  issuesBySection,
 }: Props) {
   const { t } = useTranslation();
   const [activeId, setActiveId] = useState<string | null>(null);
 
-  const fields = useMemo(() => flattenFields(definition), [definition]);
+  const multi = isMultiStep(definition);
+
+  // Blank is passed through rather than falling back to the key: the row
+  // already prints the key in its own mono chip, and a label-less field is an
+  // ordinary thing to have, so the fallback printed "zip zip" on every one.
+  const fieldLabel = (field: FormField) =>
+    field.type === "product"
+      ? t("forms.palette.product")
+      : getContent(
+          definition,
+          locale,
+          field.type === "heading" || field.type === "paragraph"
+            ? contentKey.fieldText(field.id)
+            : contentKey.fieldLabel(field.id),
+          fallbackLocale,
+        );
+  const stepLabel = (sectionId: string, index: number) =>
+    getContent(
+      definition,
+      locale,
+      contentKey.sectionTitle(sectionId),
+      fallbackLocale,
+    ) || t("forms.steps.stepN", { n: index + 1 });
+  const sections = definition.sections ?? [];
+  const step = Math.min(activeStep, Math.max(sections.length - 1, 0));
+  const allFields = useMemo(() => flattenFields(definition), [definition]);
+  /** What the Rearrange list shows: the active step's fields, or everything. */
+  const fields = useMemo(
+    () => (multi ? (sections[step]?.fields ?? []) : allFields),
+    [multi, sections, step, allFields],
+  );
+  const stepTitles = useMemo(() => {
+    const out: Record<string, string> = {};
+    for (const section of sections) {
+      out[section.id] = getContent(
+        definition,
+        locale,
+        contentKey.sectionTitle(section.id),
+        fallbackLocale,
+      );
+    }
+    return out;
+  }, [sections, definition, locale, fallbackLocale]);
 
   const sensors = useSensors(
     useSensor(MouseSensor, { activationConstraint: { distance: 8 } }),
@@ -111,17 +208,40 @@ export function FormCanvas({
     const { active, over } = event;
     if (!over || active.id === over.id) return;
 
+    // Step pill dragged onto another pill: reorder the steps.
+    if (isStepDndId(active.id)) {
+      if (!isStepDndId(over.id)) return;
+      const ids = sections.map((s) => stepDndId(s.id));
+      const from = ids.indexOf(String(active.id));
+      const to = ids.indexOf(String(over.id));
+      if (from < 0 || to < 0) return;
+      onReorderSteps(arrayMove(ids, from, to).map(sectionIdOf));
+      return;
+    }
+
+    // Field row dropped on a step pill: move it there.
+    if (isStepDndId(over.id)) {
+      const target = sectionIdOf(String(over.id));
+      if (sections[step]?.id !== target) {
+        onMoveFieldToStep(String(active.id), target);
+      }
+      return;
+    }
+
     const ids = fields.map((f) => f.id);
     const from = ids.indexOf(String(active.id));
     const to = ids.indexOf(String(over.id));
     if (from < 0 || to < 0) return;
 
-    onReorder(arrayMove(ids, from, to));
+    const ordered = arrayMove(ids, from, to);
+    if (multi) onReorderInStep(sections[step].id, ordered);
+    else onReorder(ordered);
   };
 
-  const activeField = activeId
-    ? (fields.find((f) => f.id === activeId) ?? null)
-    : null;
+  const activeField =
+    activeId && !isStepDndId(activeId)
+      ? (allFields.find((f) => f.id === activeId) ?? null)
+      : null;
 
   return (
     <Panel className="relative">
@@ -166,6 +286,18 @@ export function FormCanvas({
 .rf-canvas .rf-form { pointer-events: auto; }
 .rf-canvas input, .rf-canvas textarea, .rf-canvas select, .rf-canvas button { pointer-events: none; }
 .rf-canvas .rf-lang-btn { pointer-events: auto; }
+/* Step navigation works in the preview so you can flip through what you are
+   building; the dots too. No validation here — preview has no values. */
+.rf-canvas .rf-back, .rf-canvas .rf-next, .rf-canvas .rf-step-dot { pointer-events: auto; }
+.rf-canvas .rf-step-dot { cursor: pointer; }
+.rf-canvas .rf-step[data-selected] {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 12px;
+  border-radius: 8px;
+}
+/* Step entry animation replays on every switch in the builder too, which is
+   what you want to preview — but the exit clone is noise while editing. */
+.rf-canvas .rf-step.rf-step-exit { display: none; }
 
 /* A field the validator is complaining about, in the language being edited.
    Solid red beats the dashed hover outline and the blue selection ring, because
@@ -176,6 +308,26 @@ export function FormCanvas({
   outline-offset: 4px;
 }
 .rf-canvas .rf-field[data-rf-invalid] .rf-label { color: var(--color-destructive); }
+
+/* An empty product field. Live it renders nothing; here it has to be a real,
+   clickable thing that explains itself, so it gets height, a dashed edge and
+   two lines of copy. Builder-only — css.ts is byte-mirrored by the backend. */
+.rf-canvas .rf-commerce-empty {
+  display: flex; flex-direction: column; align-items: center; gap: 4px;
+  min-height: 92px; padding: 18px 16px; text-align: center;
+  border: 1px dashed var(--rf-border, var(--color-border));
+  border-radius: var(--rf-radius, 12px);
+  background: color-mix(in srgb, var(--rf-surface, var(--color-card)) 60%, transparent);
+  color: var(--rf-muted, var(--color-muted-foreground));
+}
+.rf-canvas .rf-commerce-empty:hover { border-style: solid; }
+.rf-canvas .rf-commerce-empty-glyph {
+  display: inline-flex; width: 32px; height: 32px; align-items: center; justify-content: center;
+  border-radius: 8px; background: color-mix(in srgb, currentColor 10%, transparent);
+  margin-bottom: 2px;
+}
+.rf-canvas .rf-commerce-empty-title { font-size: 13px; font-weight: 600; color: var(--rf-text, var(--color-foreground)); }
+.rf-canvas .rf-commerce-empty-hint { font-size: 12px; line-height: 1.4; max-width: 34ch; }
 
 /* The header's delete affordance. Absolute so it cannot push the title around
    and change the very layout it is previewing; only visible on hover or when
@@ -210,6 +362,20 @@ export function FormCanvas({
             {locale}
           </span>
         }
+        action={
+          disabled ? null : multi ||
+            definition.layout?.mode === "multi_step" ? (
+            <GhostAction onClick={onMergeSteps} className="h-8 text-xs">
+              <Layers className="h-3.5 w-3.5" />
+              {t("forms.steps.merge")}
+            </GhostAction>
+          ) : (
+            <GhostAction onClick={onSplitIntoSteps} className="h-8 text-xs">
+              <SplitSquareVertical className="h-3.5 w-3.5" />
+              {t("forms.steps.split")}
+            </GhostAction>
+          )
+        }
       />
 
       <DndContext
@@ -219,6 +385,32 @@ export function FormCanvas({
         onDragEnd={handleDragEnd}
         onDragCancel={() => setActiveId(null)}
       >
+        {definition.layout?.mode === "multi_step" ? (
+          <StepStrip
+            sections={sections}
+            activeStep={step}
+            titles={stepTitles}
+            issuesBySection={issuesBySection}
+            fieldDragging={!!activeField}
+            disabled={disabled}
+            onSelectStep={onActiveStepChange}
+            onRenameStep={(id) => {
+              onActiveStepChange(sections.findIndex((s) => s.id === id));
+              onSelect({ kind: "step", stepId: id });
+            }}
+            onAddStep={onAddStep}
+            onDuplicateStep={onDuplicateStep}
+            onMoveStep={(id, dir) => {
+              const ids = sections.map((s) => s.id);
+              const from = ids.indexOf(id);
+              const to = from + dir;
+              if (from < 0 || to < 0 || to >= ids.length) return;
+              onReorderSteps(arrayMove(ids, from, to));
+            }}
+            onDeleteStep={onDeleteStep}
+          />
+        ) : null}
+
         <SortableContext
           items={fields.map((f) => f.id)}
           strategy={verticalListSortingStrategy}
@@ -246,13 +438,59 @@ export function FormCanvas({
                 onRemoveTitle={disabled ? undefined : onRemoveTitle}
                 removeTitleLabel={t("forms.builder.removeTitle")}
                 invalidFieldIds={invalidFieldIds}
+                emptyProductHint={{
+                  title: t("forms.builder.productEmptyTitle"),
+                  hint: t("forms.builder.productEmptyHint"),
+                }}
+                step={multi ? step : undefined}
+                onStepChange={onActiveStepChange}
               />
             </div>
 
-            <PanelSection title={t("forms.builder.dragHandle")}>
+            <PanelSection
+              title={
+                multi
+                  ? t("forms.steps.fieldsIn", { n: step + 1 })
+                  : t("forms.builder.dragHandle")
+              }
+            >
               {fields.length === 0 ? (
-                <p className="rounded-lg border border-dashed px-3 py-4 text-center text-sm text-muted-foreground">
-                  {t("forms.builder.emptyCanvasHint")}
+                <div className="space-y-3 rounded-lg border border-dashed px-3 py-4 text-center text-sm text-muted-foreground">
+                  <p>
+                    {multi
+                      ? t("forms.steps.emptyStepHint")
+                      : t("forms.builder.emptyCanvasHint")}
+                  </p>
+                  {/* The step you just created is empty and the fields you
+                      want are one step over: bring them here in one go
+                      instead of deleting and re-creating them. */}
+                  {multi &&
+                  !disabled &&
+                  sections.some(
+                    (sec, i) => i !== step && sec.fields.length > 0,
+                  ) ? (
+                    <MoveFieldsPicker
+                      targetLabel={stepLabel(sections[step].id, step)}
+                      groups={sections
+                        .map((sec, i) => ({
+                          id: sec.id,
+                          label: stepLabel(sec.id, i),
+                          fields: sec.fields.map((f) => ({
+                            id: f.id,
+                            label: fieldLabel(f) || f.key,
+                          })),
+                        }))
+                        .filter((g, i) => i !== step && g.fields.length > 0)}
+                      onMove={(ids) =>
+                        onMoveFieldsToStep(ids, sections[step].id)
+                      }
+                    />
+                  ) : null}
+                </div>
+              ) : null}
+              {multi && !disabled ? (
+                <p className="text-xs text-muted-foreground">
+                  {t("forms.steps.dropHint")}
                 </p>
               ) : null}
               <div className="space-y-1.5">
@@ -260,21 +498,10 @@ export function FormCanvas({
                   <SortableFieldRow
                     key={field.id}
                     field={field}
-                    // Blank is passed through rather than falling back to the
-                    // key: the row already prints the key in its own mono chip,
-                    // and a label-less field is now an ordinary thing to have,
-                    // so the fallback printed "zip zip" on every one of them.
-                    label={getContent(
-                      definition,
-                      locale,
-                      field.type === "heading" || field.type === "paragraph"
-                        ? contentKey.fieldText(field.id)
-                        : contentKey.fieldLabel(field.id),
-                      fallbackLocale,
-                    )}
+                    label={fieldLabel(field)}
                     selected={selectedFieldId(selection) === field.id}
                     disabled={disabled}
-                    deletable={isFieldDeletable(field, fields)}
+                    deletable={isFieldDeletable(field, allFields)}
                     invalid={invalidFieldIds.has(field.id)}
                     onSelect={() =>
                       onSelect({ kind: "field", fieldId: field.id })
@@ -282,6 +509,21 @@ export function FormCanvas({
                     onDuplicate={() => onDuplicateField(field.id)}
                     onDelete={() => onDeleteField(field.id)}
                     duplicateLabel={t("forms.builder.duplicateField")}
+                    moveLabel={t("forms.steps.moveField")}
+                    moveTargets={
+                      multi && sections.length > 1
+                        ? sections
+                            .map((sec, i) => ({
+                              id: sec.id,
+                              label: stepLabel(sec.id, i),
+                              index: i,
+                            }))
+                            .filter((sec) => sec.index !== step)
+                        : undefined
+                    }
+                    onMoveTo={(sectionId) =>
+                      onMoveFieldToStep(field.id, sectionId)
+                    }
                     deleteLabel={t("forms.builder.deleteField")}
                     undeletableLabel={t("forms.builder.undeletableField")}
                     noLabelText={t("forms.builder.noLabel")}
@@ -333,6 +575,9 @@ function SortableFieldRow({
   deleteLabel,
   undeletableLabel,
   noLabelText,
+  moveLabel,
+  moveTargets,
+  onMoveTo,
 }: {
   field: FormField;
   /** Empty when the field has no label — a legitimate, placeholder-only field. */
@@ -350,6 +595,10 @@ function SortableFieldRow({
   deleteLabel: string;
   undeletableLabel: string;
   noLabelText: string;
+  moveLabel: string;
+  /** Multi-step only: the OTHER steps this field can be sent to. */
+  moveTargets?: { id: string; label: string; index: number }[];
+  onMoveTo?: (sectionId: string) => void;
 }) {
   const {
     attributes,
@@ -416,6 +665,39 @@ function SortableFieldRow({
         ) : null}
       </button>
 
+      {moveTargets && moveTargets.length > 0 && onMoveTo ? (
+        <Popover>
+          <PopoverTrigger asChild>
+            <button
+              type="button"
+              disabled={disabled}
+              aria-label={moveLabel}
+              title={moveLabel}
+              className="rounded p-1.5 text-muted-foreground hover:bg-muted disabled:opacity-40"
+            >
+              <ArrowRightLeft className="h-3.5 w-3.5" />
+            </button>
+          </PopoverTrigger>
+          <PopoverContent align="end" className="w-56 p-1.5">
+            <p className="px-2 pb-1 pt-1 text-[11px] font-semibold uppercase tracking-widest text-muted-foreground/70">
+              {moveLabel}
+            </p>
+            {moveTargets.map((target) => (
+              <button
+                key={target.id}
+                type="button"
+                onClick={() => onMoveTo(target.id)}
+                className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-sm hover:bg-muted"
+              >
+                <span className="font-mono text-[11px] tabular-nums text-muted-foreground">
+                  {target.index + 1}
+                </span>
+                <span className="truncate">{target.label}</span>
+              </button>
+            ))}
+          </PopoverContent>
+        </Popover>
+      ) : null}
       <button
         type="button"
         disabled={disabled}
@@ -440,5 +722,96 @@ function SortableFieldRow({
         <Trash2 className="h-3.5 w-3.5" />
       </button>
     </div>
+  );
+}
+
+/**
+ * "Move fields here": tick fields from the other steps and bring them over in
+ * one patch. Lives in the empty-step hint, because that is the moment you
+ * want it — right after "Split into steps" or "Add step".
+ */
+function MoveFieldsPicker({
+  targetLabel,
+  groups,
+  onMove,
+}: {
+  targetLabel: string;
+  groups: {
+    id: string;
+    label: string;
+    fields: { id: string; label: string }[];
+  }[];
+  onMove: (fieldIds: string[]) => void;
+}) {
+  const { t } = useTranslation();
+  const [open, setOpen] = useState(false);
+  const [picked, setPicked] = useState<Set<string>>(new Set());
+  const toggle = (id: string, on: boolean) =>
+    setPicked((prev) => {
+      const next = new Set(prev);
+      if (on) next.add(id);
+      else next.delete(id);
+      return next;
+    });
+  return (
+    <Popover
+      open={open}
+      onOpenChange={(v) => {
+        setOpen(v);
+        if (!v) setPicked(new Set());
+      }}
+    >
+      <PopoverTrigger asChild>
+        <Button type="button" variant="outline" size="sm" className="gap-1.5">
+          <ArrowRightLeft className="h-3.5 w-3.5" />
+          {t("forms.steps.moveFieldsHere")}
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent align="center" className="w-72 p-0 text-left">
+        <div className="border-b border-border px-3 py-2.5">
+          <p className="text-sm font-semibold text-foreground">
+            {t("forms.steps.moveFieldsTitle", { step: targetLabel })}
+          </p>
+          <p className="text-[11px] text-muted-foreground">
+            {t("forms.steps.moveFieldsHint")}
+          </p>
+        </div>
+        <div className="max-h-64 overflow-y-auto px-1.5 py-1.5">
+          {groups.map((group) => (
+            <div key={group.id} className="py-1">
+              <p className="px-2 pb-1 text-[11px] font-semibold uppercase tracking-widest text-muted-foreground/70">
+                {group.label}
+              </p>
+              {group.fields.map((field) => (
+                <label
+                  key={field.id}
+                  className="flex cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 text-sm hover:bg-muted"
+                >
+                  <Checkbox
+                    checked={picked.has(field.id)}
+                    onCheckedChange={(v) => toggle(field.id, v === true)}
+                  />
+                  <span className="truncate">{field.label}</span>
+                </label>
+              ))}
+            </div>
+          ))}
+        </div>
+        <div className="flex justify-end border-t border-border px-3 py-2">
+          <Button
+            type="button"
+            size="sm"
+            disabled={picked.size === 0}
+            onClick={() => {
+              onMove([...picked]);
+              setOpen(false);
+              setPicked(new Set());
+            }}
+          >
+            {t("forms.steps.moveSelected", { count: picked.size })}
+          </Button>
+        </div>
+      </PopoverContent>
+    </Popover>
   );
 }

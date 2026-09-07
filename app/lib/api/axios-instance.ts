@@ -365,3 +365,44 @@ export const createApiError = (error: unknown): ApiError => {
     message: "An unexpected error occurred",
   };
 };
+
+/** One field-level problem returned by the API (`issues` on a 400 body). */
+export interface ApiIssue {
+  /** Dotted path into the payload, e.g. "actions.0.url". */
+  path: string;
+  message: string;
+}
+
+/**
+ * Every field-level problem the server reported, not just the first line.
+ *
+ * Two shapes reach us: our own `issues: [{path,message}]` (thrown by the
+ * assistants service and forwarded by the exception filter) and
+ * class-validator's `message: string[]`, whose entries are prefixed with the
+ * property name. `extractErrorMessage` collapses both to a single sentence,
+ * which is why a save failing three rules used to report one.
+ */
+export const extractIssues = (error: unknown): ApiIssue[] => {
+  if (!axios.isAxiosError(error)) return [];
+  const data = error.response?.data as
+    | { issues?: unknown; message?: unknown }
+    | undefined;
+  if (!data || typeof data !== "object") return [];
+
+  if (Array.isArray(data.issues)) {
+    return data.issues
+      .filter((i): i is ApiIssue => {
+        const o = i as Partial<ApiIssue>;
+        return typeof o?.path === "string" && typeof o?.message === "string";
+      })
+      .map((i) => ({ path: i.path, message: i.message }));
+  }
+
+  if (Array.isArray(data.message)) {
+    return (data.message as unknown[])
+      .filter((m): m is string => typeof m === "string")
+      .map((m) => ({ path: m.split(" ")[0] ?? "", message: m }));
+  }
+
+  return [];
+};

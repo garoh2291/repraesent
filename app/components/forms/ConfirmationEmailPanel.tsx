@@ -259,196 +259,207 @@ export function ConfirmationEmailPanel({
             }
           />
 
-          <Field>
-            <Label>{t("forms.email.account")}</Label>
-            <Select
-              disabled={disabled}
-              value={config.email_account_id ?? DEFAULT_ACCOUNT}
-              onValueChange={(v) =>
-                onChange({
-                  ...config,
-                  email_account_id: v === DEFAULT_ACCOUNT ? null : v,
-                })
-              }
-            >
-              <SelectTrigger className="max-w-sm">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value={DEFAULT_ACCOUNT}>
-                  {t("forms.email.accountDefault")}
-                </SelectItem>
-                {/* Grouped by who owns the mailbox: a user's own connected
-                    account and one Repraesent provisioned for them are very
-                    different things to be sending customers mail from. */}
-                {userAccounts.length > 0 ? (
-                  <SelectGroup>
-                    <SelectLabel>
-                      {t("forms.email.accountGroupYours")}
-                    </SelectLabel>
-                    {userAccounts.map((account) => (
-                      <SelectItem
-                        key={account.id}
-                        value={account.id}
-                        // A revoked grant cannot send. Leaving it selectable
-                        // would let someone configure a form that silently
-                        // fails on every submission.
-                        disabled={!!account.auth_failed_at}
-                      >
-                        {/* A send-as alias sends through the mailbox listed
-                            above it; the arrow is what says so in a flat list. */}
-                        {account.parent_account_id ? "↳ " : ""}
-                        {account.name} · {account.email}
-                        {account.auth_failed_at
-                          ? ` — ${t("forms.email.accountNeedsReconnect")}`
-                          : account.provider === "google"
-                            ? " · Google"
-                            : account.provider === "microsoft"
-                              ? " · Microsoft 365"
-                              : " · IMAP/SMTP"}
-                      </SelectItem>
-                    ))}
-                  </SelectGroup>
-                ) : null}
-                {managedAccounts.length > 0 ? (
-                  <SelectGroup>
-                    <SelectLabel>
-                      {t("forms.email.accountGroupManaged")}
-                    </SelectLabel>
-                    {managedAccounts.map((account) => (
-                      <SelectItem key={account.id} value={account.id}>
-                        {account.name} · {account.email}
-                      </SelectItem>
-                    ))}
-                  </SelectGroup>
-                ) : null}
-              </SelectContent>
-            </Select>
-          </Field>
-        </PanelSection>
-
-        <PanelSection title={t("forms.email.sectionMessage")}>
-          {/* Named languages, from every tab, because the whole point is that
-              you cannot see the empty one from the tab you are standing on. */}
-          {blankLocales.length > 0 ? (
-            <div className="mb-3 rounded-lg border border-amber-500/40 bg-amber-500/5 px-3 py-2.5 text-xs">
-              <p className="font-medium text-amber-800 dark:text-amber-400">
-                {t("forms.email.blankLocales", {
-                  defaultValue:
-                    "No email to send in {{locales}} — a submission in that language gets the default one instead.",
-                  locales: blankLocales
-                    .map((code) => code.toUpperCase())
-                    .join(", "),
-                })}
-              </p>
-              <div className="mt-1.5 flex flex-wrap gap-1.5">
-                {blankLocales
-                  .filter((code) => code !== activeLocale)
-                  .map((code) => (
-                    <button
-                      key={code}
-                      type="button"
-                      onClick={() => onSelectLocale?.(code)}
-                      disabled={!onSelectLocale}
-                      className="rounded-md border border-amber-500/40 bg-background px-2 py-1 font-mono text-[11px] uppercase transition-colors hover:bg-muted disabled:cursor-default disabled:opacity-60"
-                    >
-                      {code}
-                    </button>
-                  ))}
-              </div>
-            </div>
+          {/* Everything below the switch only matters once it is on. Off, the
+              sender picker and an empty message editor are dead weight the
+              operator has to scroll past. */}
+          {!config.enabled ? (
+            <FieldHint>{t("forms.email.disabledHint")}</FieldHint>
           ) : null}
 
-          <Field>
-            <Label htmlFor="ce-subject">{t("forms.email.subject")}</Label>
-            <Input
-              id="ce-subject"
-              disabled={disabled}
-              value={current.subject}
-              onChange={(e) => patchLocale({ subject: e.target.value })}
-            />
-          </Field>
-
-          <Field>
-            <div className="flex items-center justify-between gap-3">
-              <Label htmlFor="ce-body">{t("forms.email.body")}</Label>
-              <div className="flex items-center gap-2">
-                <UseTemplatePicker
-                  locale={activeLocale}
-                  // The form's languages, so one insert fills them all and any
-                  // the template cannot cover is named rather than skipped.
-                  locales={locales}
-                  disabled={disabled}
-                  // A form confirmation answers a submission the person just
-                  // made, so it ships without an unsubscribe footer.
-                  purpose="transactional"
-                  onInsert={({ subject, html }) =>
-                    patchLocale({ subject, html })
-                  }
-                  onInsertLocales={patchLocales}
-                  templateHref={(id) => `/email-templates/${id}`}
-                  buttonClassName={
-                    "inline-flex h-9 items-center gap-2 rounded-lg border border-border bg-muted/40 px-3 text-sm transition-colors hover:bg-muted disabled:cursor-not-allowed disabled:opacity-50"
-                  }
-                />
-                <Segmented>
-                  <SegmentedButton
-                    active={view === "code"}
-                    onClick={() => setView("code")}
-                  >
-                    <Code2 className="mr-1 inline h-3 w-3" />
-                    {t("forms.email.code")}
-                  </SegmentedButton>
-                  <SegmentedButton
-                    active={view === "preview"}
-                    onClick={() => setView("preview")}
-                  >
-                    <Eye className="mr-1 inline h-3 w-3" />
-                    {t("forms.email.preview")}
-                  </SegmentedButton>
-                </Segmented>
-              </div>
-            </div>
-
-            {view === "code" ? (
-              <Textarea
-                id="ce-body"
-                ref={bodyRef}
-                rows={12}
+          {config.enabled ? (
+            <Field>
+              <Label>{t("forms.email.account")}</Label>
+              <Select
                 disabled={disabled}
-                className="font-mono text-xs"
-                value={current.html}
-                onChange={(e) => patchLocale({ html: e.target.value })}
-              />
-            ) : (
-              <iframe
-                title={t("forms.email.preview")}
-                srcDoc={current.html}
-                // The preview renders the customer's own HTML, which assumes a
-                // white page — so this stays white in both themes.
-                className="h-72 w-full rounded-lg border bg-white"
-                sandbox=""
-              />
-            )}
-          </Field>
-
-          <Field>
-            <Label>{t("forms.email.variables")}</Label>
-            <div className="flex flex-wrap gap-1.5">
-              {variables.map((name) => (
-                <button
-                  key={name}
-                  type="button"
-                  disabled={disabled || view !== "code"}
-                  onClick={() => insertVariable(name)}
-                  className="rounded-md border bg-muted/40 px-2 py-1 font-mono text-[11px] transition-colors hover:border-foreground/25 hover:bg-muted disabled:opacity-40"
-                >
-                  {`{{${name}}}`}
-                </button>
-              ))}
-            </div>
-          </Field>
+                value={config.email_account_id ?? DEFAULT_ACCOUNT}
+                onValueChange={(v) =>
+                  onChange({
+                    ...config,
+                    email_account_id: v === DEFAULT_ACCOUNT ? null : v,
+                  })
+                }
+              >
+                <SelectTrigger className="max-w-sm">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value={DEFAULT_ACCOUNT}>
+                    {t("forms.email.accountDefault")}
+                  </SelectItem>
+                  {/* Grouped by who owns the mailbox: a user's own connected
+                    account and one Repraesent provisioned for them are very
+                    different things to be sending customers mail from. */}
+                  {userAccounts.length > 0 ? (
+                    <SelectGroup>
+                      <SelectLabel>
+                        {t("forms.email.accountGroupYours")}
+                      </SelectLabel>
+                      {userAccounts.map((account) => (
+                        <SelectItem
+                          key={account.id}
+                          value={account.id}
+                          // A revoked grant cannot send. Leaving it selectable
+                          // would let someone configure a form that silently
+                          // fails on every submission.
+                          disabled={!!account.auth_failed_at}
+                        >
+                          {/* A send-as alias sends through the mailbox listed
+                            above it; the arrow is what says so in a flat list. */}
+                          {account.parent_account_id ? "↳ " : ""}
+                          {account.name} · {account.email}
+                          {account.auth_failed_at
+                            ? ` — ${t("forms.email.accountNeedsReconnect")}`
+                            : account.provider === "google"
+                              ? " · Google"
+                              : account.provider === "microsoft"
+                                ? " · Microsoft 365"
+                                : " · IMAP/SMTP"}
+                        </SelectItem>
+                      ))}
+                    </SelectGroup>
+                  ) : null}
+                  {managedAccounts.length > 0 ? (
+                    <SelectGroup>
+                      <SelectLabel>
+                        {t("forms.email.accountGroupManaged")}
+                      </SelectLabel>
+                      {managedAccounts.map((account) => (
+                        <SelectItem key={account.id} value={account.id}>
+                          {account.name} · {account.email}
+                        </SelectItem>
+                      ))}
+                    </SelectGroup>
+                  ) : null}
+                </SelectContent>
+              </Select>
+            </Field>
+          ) : null}
         </PanelSection>
+
+        {config.enabled ? (
+          <PanelSection title={t("forms.email.sectionMessage")}>
+            {/* Named languages, from every tab, because the whole point is that
+              you cannot see the empty one from the tab you are standing on. */}
+            {blankLocales.length > 0 ? (
+              <div className="mb-3 rounded-lg border border-amber-500/40 bg-amber-500/5 px-3 py-2.5 text-xs">
+                <p className="font-medium text-amber-800 dark:text-amber-400">
+                  {t("forms.email.blankLocales", {
+                    defaultValue:
+                      "No email to send in {{locales}} — a submission in that language gets the default one instead.",
+                    locales: blankLocales
+                      .map((code) => code.toUpperCase())
+                      .join(", "),
+                  })}
+                </p>
+                <div className="mt-1.5 flex flex-wrap gap-1.5">
+                  {blankLocales
+                    .filter((code) => code !== activeLocale)
+                    .map((code) => (
+                      <button
+                        key={code}
+                        type="button"
+                        onClick={() => onSelectLocale?.(code)}
+                        disabled={!onSelectLocale}
+                        className="rounded-md border border-amber-500/40 bg-background px-2 py-1 font-mono text-[11px] uppercase transition-colors hover:bg-muted disabled:cursor-default disabled:opacity-60"
+                      >
+                        {code}
+                      </button>
+                    ))}
+                </div>
+              </div>
+            ) : null}
+
+            <Field>
+              <Label htmlFor="ce-subject">{t("forms.email.subject")}</Label>
+              <Input
+                id="ce-subject"
+                disabled={disabled}
+                value={current.subject}
+                onChange={(e) => patchLocale({ subject: e.target.value })}
+              />
+            </Field>
+
+            <Field>
+              <div className="flex items-center justify-between gap-3">
+                <Label htmlFor="ce-body">{t("forms.email.body")}</Label>
+                <div className="flex items-center gap-2">
+                  <UseTemplatePicker
+                    locale={activeLocale}
+                    // The form's languages, so one insert fills them all and any
+                    // the template cannot cover is named rather than skipped.
+                    locales={locales}
+                    disabled={disabled}
+                    // A form confirmation answers a submission the person just
+                    // made, so it ships without an unsubscribe footer.
+                    purpose="transactional"
+                    onInsert={({ subject, html }) =>
+                      patchLocale({ subject, html })
+                    }
+                    onInsertLocales={patchLocales}
+                    templateHref={(id) => `/email-templates/${id}`}
+                    buttonClassName={
+                      "inline-flex h-9 items-center gap-2 rounded-lg border border-border bg-muted/40 px-3 text-sm transition-colors hover:bg-muted disabled:cursor-not-allowed disabled:opacity-50"
+                    }
+                  />
+                  <Segmented>
+                    <SegmentedButton
+                      active={view === "code"}
+                      onClick={() => setView("code")}
+                    >
+                      <Code2 className="mr-1 inline h-3 w-3" />
+                      {t("forms.email.code")}
+                    </SegmentedButton>
+                    <SegmentedButton
+                      active={view === "preview"}
+                      onClick={() => setView("preview")}
+                    >
+                      <Eye className="mr-1 inline h-3 w-3" />
+                      {t("forms.email.preview")}
+                    </SegmentedButton>
+                  </Segmented>
+                </div>
+              </div>
+
+              {view === "code" ? (
+                <Textarea
+                  id="ce-body"
+                  ref={bodyRef}
+                  rows={12}
+                  disabled={disabled}
+                  className="font-mono text-xs"
+                  value={current.html}
+                  onChange={(e) => patchLocale({ html: e.target.value })}
+                />
+              ) : (
+                <iframe
+                  title={t("forms.email.preview")}
+                  srcDoc={current.html}
+                  // The preview renders the customer's own HTML, which assumes a
+                  // white page — so this stays white in both themes.
+                  className="h-72 w-full rounded-lg border bg-white"
+                  sandbox=""
+                />
+              )}
+            </Field>
+
+            <Field>
+              <Label>{t("forms.email.variables")}</Label>
+              <div className="flex flex-wrap gap-1.5">
+                {variables.map((name) => (
+                  <button
+                    key={name}
+                    type="button"
+                    disabled={disabled || view !== "code"}
+                    onClick={() => insertVariable(name)}
+                    className="rounded-md border bg-muted/40 px-2 py-1 font-mono text-[11px] transition-colors hover:border-foreground/25 hover:bg-muted disabled:opacity-40"
+                  >
+                    {`{{${name}}}`}
+                  </button>
+                ))}
+              </div>
+            </Field>
+          </PanelSection>
+        ) : null}
       </PanelBody>
     </Panel>
   );

@@ -170,9 +170,26 @@ export function useAuth() {
         : prev
     );
 
-    queryClient.invalidateQueries({
-      predicate: (query) => query.queryKey[0] !== "auth",
-    });
+    // Invalidating is not enough here. Almost no query key in the app carries
+    // a workspace id — ["forms"], ["leads", page, …], ["deals-pipeline", …] —
+    // so every cache entry is a slot SHARED between tenants. Invalidation only
+    // marks entries stale and refetches the active ones, which left every
+    // inactive entry holding the previous workspace's rows, ready to be
+    // repainted the moment its route remounted.
+    //
+    // Cancel first: a request issued before the switch went out with the old
+    // X-Workspace-Id and would otherwise resolve into the new workspace's slot.
+    // Then drop the data outright, so components paint their loading state
+    // rather than someone else's data. Removing an observed query makes its
+    // observer refetch immediately, so the callers' navigate() still lands on
+    // fresh data with no reload.
+    //
+    // ["auth"] survives — it is the query holding the workspace list we just
+    // read `workspace` out of.
+    const notAuth = (query: { queryKey: readonly unknown[] }) =>
+      query.queryKey[0] !== "auth";
+    queryClient.cancelQueries({ predicate: notAuth });
+    queryClient.removeQueries({ predicate: notAuth });
   };
 
   const currentToken = getStoredToken();

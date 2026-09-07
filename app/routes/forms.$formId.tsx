@@ -11,7 +11,7 @@ import {
 import type { TFunction } from "i18next";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Link, useNavigate, useParams } from "react-router";
+import { Link, useNavigate, useParams, useSearchParams } from "react-router";
 import { toast } from "sonner";
 import { listEmailAccounts } from "~/lib/api/workspaces";
 import { ConfirmationEmailPanel } from "~/components/forms/ConfirmationEmailPanel";
@@ -25,10 +25,22 @@ import { AfterSubmitPanel } from "~/components/forms/AfterSubmitPanel";
 import { ErrorMessagesPanel } from "~/components/forms/ErrorMessagesPanel";
 import { SharePanel } from "~/components/forms/SharePanel";
 import { ThemePanel } from "~/components/forms/ThemePanel";
+import { DealPanel } from "~/components/forms/DealPanel";
+import { WebhooksPanel } from "~/components/forms/webhooks/WebhooksPanel";
 import { Input } from "~/components/ui/input";
 import { Label } from "~/components/ui/label";
 import { Skeleton } from "~/components/ui/skeleton";
 import { Switch } from "~/components/ui/switch";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "~/components/ui/alert-dialog";
 import {
   Tooltip,
   TooltipContent,
@@ -37,6 +49,7 @@ import {
 } from "~/components/ui/tooltip";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "~/components/ui/tabs";
 import { extractErrorMessage } from "~/lib/api/axios-instance";
+import { verifyFormCommerce } from "~/lib/api/forms";
 import {
   EMAIL_BODY_KEY,
   EMAIL_SUBJECT_KEY,
@@ -54,6 +67,7 @@ import {
   copyFromDefault,
   getRawContent,
   mergeTranslations,
+  seedRuntimeContent,
 } from "~/lib/forms/content";
 import {
   type BuilderSelection,
@@ -68,14 +82,20 @@ import {
   normalizeDefinition,
 } from "~/lib/forms/field-types";
 import {
+  DEFAULT_FORM_COMMERCE,
+  DEFAULT_FORM_LAYOUT,
+  STEP_CONTENT_KEYS,
   contentKey,
+  defaultStepTitle,
   flattenFields,
+  isMultiStep,
   type FormConfirmationEmail,
   type FormDefinition,
   type FormDefinitionIssue,
   type FormField,
   type FormFieldType,
   type FormLocale,
+  type FormSection,
 } from "~/lib/forms/schema";
 import { validateDefinition } from "~/lib/forms/validate";
 import { useAuthContext } from "~/providers/auth-provider";
@@ -84,6 +104,7 @@ import { useFormDefinition } from "~/lib/hooks/useForms";
 
 export default function FormBuilderRoute() {
   const { formId } = useParams();
+  const [searchParams] = useSearchParams();
   const { t } = useTranslation();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -112,9 +133,9 @@ export default function FormBuilderRoute() {
     hasLegacyEmailService || (emailAccounts?.length ?? 0) > 0;
 
   // --- local draft ---------------------------------------------------------
-  // The builder edits a local copy and saves explicitly. The QueryClient runs
-  // with refetchOnMount:false and a 5-minute staleTime, so nothing yanks the
-  // draft out from under an in-progress edit.
+  // The builder edits a local copy and saves explicitly. The hydration effect
+  // below is keyed on the form ID alone, so a refetch — on mount or after a
+  // mutation — never yanks the draft out from under an in-progress edit.
   const [name, setName] = useState("");
   const [definition, setDefinition] = useState<FormDefinition | null>(null);
   const [locales, setLocales] = useState<FormLocale[]>([]);
@@ -123,7 +144,46 @@ export default function FormBuilderRoute() {
     useState<FormConfirmationEmail | null>(null);
   const [editingLocale, setEditingLocale] = useState<FormLocale>("de");
   const [selection, setSelection] = useState<BuilderSelection | null>(null);
-  const [tab, setTab] = useState("build");
+  // `?tab=` lets the create dialog land a product form on its Products tab.
+  const [tab, setTab] = useState(() => {
+    const wanted = searchParams.get("tab");
+    return wanted && BUILDER_TABS.includes(wanted) ? wanted : "build";
+  });
+  /** Multi-step: the step the Build canvas shows. Builder UI state, never saved. */
+  const [activeStep, setActiveStep] = useState(0);
+  const [pendingStepDelete, setPendingStepDelete] = useState<string | null>(
+    null,
+  );
+  /**
+   * Stripe-side bundle checks (archived price, disconnected account) — the
+   * server appends these at publish, so the builder asks for them too.
+   * Keyed by the bundle's price ids: re-checked when a line is added or
+   * removed, not on every keystroke.
+   */
+  const bundleKey = (definition?.commerce?.items ?? [])
+    .map((i) => i.priceId)
+    .join(",");
+  const commerceVerify = useQuery({
+    queryKey: ["form-commerce-verify", formId, bundleKey],
+    queryFn: () => verifyFormCommerce(formId!),
+    enabled: !!formId && form?.kind === "product",
+    staleTime: 30_000,
+    retry: false,
+  });
+  const commerceIssues = useMemo<FormDefinitionIssue[]>(
+    () => commerceVerify.data ?? [],
+    [commerceVerify.data],
+  );
+  const archivedPriceIds = useMemo(
+    () =>
+      new Set(
+        commerceIssues
+          .filter((i) => i.code === "commerceInactivePrice" && i.priceId)
+          .map((i) => i.priceId as string),
+      ),
+    [commerceIssues],
+  );
+  const [mergeOpen, setMergeOpen] = useState(false);
   /**
    * Ref-counted, not a Set: "Translate with AI" fires TWO requests for one
    * locale (content + confirmation e-mail), and the first to settle would
@@ -138,7 +198,9 @@ export default function FormBuilderRoute() {
   useEffect(() => {
     if (!form) return;
     setName(form.name);
-    setDefinition(normalizeDefinition(form.definition, form.default_locale));
+    setDefinition(
+      normalizeDefinition(form.definition, form.default_locale, form.kind),
+    );
     setLocales(form.locales);
     setDefaultLocale(form.default_locale);
     setEditingLocale(form.default_locale);
@@ -159,6 +221,19 @@ export default function FormBuilderRoute() {
 
   // A controlled <Tabs> pointing at a panel that no longer renders shows an
   // empty body, so follow hasEmailConfig in both directions.
+  useEffect(() => {
+    if (
+      form?.kind === "product" &&
+      (tab === "afterSubmit" || tab === "products")
+    ) {
+      setTab("build");
+    }
+    // The mirror case: only product forms have a checkout to build a deal from.
+    if (form && form.kind !== "product" && tab === "deal") {
+      setTab("build");
+    }
+  }, [tab, form, form?.kind]);
+
   useEffect(() => {
     // Wait for the account list before bouncing — otherwise deep-linking to
     // ?tab=email kicks you to Build during the first fetch, even when the
@@ -215,6 +290,10 @@ export default function FormBuilderRoute() {
     await queryClient.invalidateQueries({ queryKey: ["forms"] });
     await queryClient.invalidateQueries({ queryKey: ["form", formId] });
     await queryClient.invalidateQueries({ queryKey: ["form-snippet", formId] });
+    // The webhook payload keys are derived from the draft's fields.
+    await queryClient.invalidateQueries({
+      queryKey: ["form-webhook-payload-keys", formId],
+    });
   };
 
   const saveMutation = useMutation({
@@ -615,7 +694,13 @@ export default function FormBuilderRoute() {
     [definition, defaultLocale, locales, confirmationEmail],
   );
 
-  const hasIssues = issues.length > 0;
+  // Stripe-dependent checks come from the server; they block publish there too,
+  // so they belong in the verdict, not just the banner.
+  const allIssues = useMemo(
+    () => (form?.kind === "product" ? [...issues, ...commerceIssues] : issues),
+    [issues, commerceIssues, form?.kind],
+  );
+  const hasIssues = allIssues.length > 0;
 
   /**
    * The same list with in-flight translations hidden, for DISPLAY only.
@@ -634,11 +719,11 @@ export default function FormBuilderRoute() {
   const shownIssues = useMemo(
     () =>
       translating.size === 0
-        ? issues
-        : issues.filter(
+        ? allIssues
+        : allIssues.filter(
             (i) => i.locale === undefined || !translating.has(i.locale),
           ),
-    [issues, translating],
+    [allIssues, translating],
   );
 
   /**
@@ -691,6 +776,24 @@ export default function FormBuilderRoute() {
     [visibleIssues],
   );
 
+  /** Per step: its own issues plus those of the fields it holds (step-rail dots). */
+  const issuesBySection = useMemo(() => {
+    const map = new Map<string, number>();
+    if (!definition) return map;
+    const owner = new Map<string, string>();
+    for (const section of definition.sections) {
+      map.set(section.id, 0);
+      for (const field of section.fields) owner.set(field.id, section.id);
+    }
+    for (const issue of visibleIssues) {
+      const sectionId =
+        issue.sectionId ??
+        (issue.fieldId ? owner.get(issue.fieldId) : undefined);
+      if (sectionId) map.set(sectionId, (map.get(sectionId) ?? 0) + 1);
+    }
+    return map;
+  }, [definition, visibleIssues]);
+
   /** Locale-scoped only — drives the red dots in the language strip. */
   const issuesByLocale = useMemo(() => {
     const map = new Map<FormLocale, number>();
@@ -724,7 +827,7 @@ export default function FormBuilderRoute() {
   const saveTooltip = !dirty
     ? t("forms.builder.saveTipNoChanges")
     : isLive && hasIssues
-      ? t("forms.builder.saveTipLiveInvalid", { count: issues.length })
+      ? t("forms.builder.saveTipLiveInvalid", { count: allIssues.length })
       : isLive
         ? t("forms.builder.saveTipUpdatesLive")
         : t("forms.builder.save");
@@ -796,7 +899,7 @@ export default function FormBuilderRoute() {
       ? `${t("forms.builder.liveTipTakeOffline")} ${t("forms.builder.liveTipKeepsEdits")}`
       : t("forms.builder.liveTipTakeOffline")
     : hasIssues
-      ? t("forms.builder.liveTipBlocked", { count: issues.length })
+      ? t("forms.builder.liveTipBlocked", { count: allIssues.length })
       : dirty
         ? t("forms.builder.liveTipGoLiveSaves")
         : t("forms.builder.liveTipGoLive");
@@ -810,7 +913,13 @@ export default function FormBuilderRoute() {
   const selectedField =
     fields.find((f) => f.id === selectedFieldId(selection)) ?? null;
 
-  /** What the inspector edits: a field, the form header, or the submit button. */
+  const multi = definition ? isMultiStep(definition) : false;
+  const selectedStepIndex =
+    selection?.kind === "step" && definition
+      ? definition.sections.findIndex((s) => s.id === selection.stepId)
+      : -1;
+
+  /** What the inspector edits: a field, the header, the submit button, a step or the order summary. */
   const inspectorTarget: InspectorTarget | null =
     selection?.kind === "header"
       ? {
@@ -819,9 +928,41 @@ export default function FormBuilderRoute() {
         }
       : selection?.kind === "submit"
         ? { kind: "submit" }
-        : selectedField
-          ? { kind: "field", field: selectedField }
-          : null;
+        : selection?.kind === "step" && definition && selectedStepIndex >= 0
+          ? {
+              kind: "step",
+              section: definition.sections[selectedStepIndex],
+              index: selectedStepIndex,
+              total: definition.sections.length,
+            }
+          : selectedField
+            ? {
+                kind: "field",
+                field: selectedField,
+                steps: multi ? definition?.sections : undefined,
+                stepId: definition?.sections.find((s) =>
+                  s.fields.some((f) => f.id === selectedField.id),
+                )?.id,
+              }
+            : null;
+
+  // Selecting a field that lives on another step (from the banner, say) has to
+  // bring that step on screen, or the selection ring points at nothing.
+  useEffect(() => {
+    if (!definition || !multi || !selectedField) return;
+    const index = definition.sections.findIndex((s) =>
+      s.fields.some((f) => f.id === selectedField.id),
+    );
+    if (index >= 0 && index !== activeStep) setActiveStep(index);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedField?.id]);
+
+  // A deleted or merged step can leave the index past the end.
+  useEffect(() => {
+    if (!definition) return;
+    const max = Math.max(definition.sections.length - 1, 0);
+    if (activeStep > max) setActiveStep(max);
+  }, [definition, activeStep]);
 
   const mapFields = (fn: (field: FormField) => FormField | null) => {
     if (!definition) return;
@@ -852,12 +993,15 @@ export default function FormBuilderRoute() {
     const sections = definition.sections.length
       ? definition.sections
       : [{ id: newId("s"), fields: [] }];
-    const lastIndex = sections.length - 1;
+    // Multi-step: the step you are looking at. Single page: the end.
+    const targetIndex = isMultiStep(definition)
+      ? Math.min(activeStep, sections.length - 1)
+      : sections.length - 1;
 
     patchDefinition({
       ...definition,
       sections: sections.map((section, i) =>
-        i === lastIndex
+        i === targetIndex
           ? { ...section, fields: [...section.fields, ...added] }
           : section,
       ),
@@ -901,10 +1045,19 @@ export default function FormBuilderRoute() {
     // existing values are kept so a second field never overwrites edits.
     if (type === "appointment") {
       const APPT_CONTENT: Array<{ key: string; i18nKey: string }> = [
-        { key: "appointment.loading", i18nKey: "forms.appointmentContent.loading" },
+        {
+          key: "appointment.loading",
+          i18nKey: "forms.appointmentContent.loading",
+        },
         { key: "appointment.empty", i18nKey: "forms.appointmentContent.empty" },
-        { key: "error.slot_unavailable", i18nKey: "forms.appointmentContent.slotUnavailable" },
-        { key: "error.slot_invalid", i18nKey: "forms.appointmentContent.slotInvalid" },
+        {
+          key: "error.slot_unavailable",
+          i18nKey: "forms.appointmentContent.slotUnavailable",
+        },
+        {
+          key: "error.slot_invalid",
+          i18nKey: "forms.appointmentContent.slotInvalid",
+        },
       ];
       const content = { ...definition.content };
       for (const locale of locales) {
@@ -972,6 +1125,11 @@ export default function FormBuilderRoute() {
     if (selectedFieldId(selection) === fieldId) setSelection(null);
   };
 
+  /**
+   * Single-page reorder is flat across the whole form, so it collapses into one
+   * section — sections are a grouping device for headings there, not an order.
+   * Multi-step forms never reach this: their canvas reorders within a step.
+   */
   const reorderFields = (orderedIds: string[]) => {
     if (!definition) return;
     const byId = new Map(fields.map((f) => [f.id, f]));
@@ -979,14 +1137,263 @@ export default function FormBuilderRoute() {
       .map((id) => byId.get(id))
       .filter((f): f is FormField => !!f);
 
-    // Reorder is flat across the whole form, so it collapses into one section.
-    // Sections remain a grouping device for headings, not for ordering.
     patchDefinition({
       ...definition,
       sections: [
         { id: definition.sections[0]?.id ?? newId("s"), fields: ordered },
       ],
     });
+  };
+
+  // --- steps ---------------------------------------------------------------
+
+  const reorderInStep = (sectionId: string, orderedIds: string[]) => {
+    if (!definition) return;
+    patchDefinition({
+      ...definition,
+      sections: definition.sections.map((section) => {
+        if (section.id !== sectionId) return section;
+        const byId = new Map(section.fields.map((f) => [f.id, f]));
+        return {
+          ...section,
+          fields: orderedIds
+            .map((id) => byId.get(id))
+            .filter((f): f is FormField => !!f),
+        };
+      }),
+    });
+  };
+
+  /** Send fields to another step in one patch; they keep their relative order. */
+  const moveFieldsToStep = (fieldIds: string[], sectionId: string) => {
+    if (!definition) return;
+    const wanted = new Set(fieldIds);
+    const moving = fields.filter((f) => wanted.has(f.id));
+    if (moving.length === 0) return;
+    patchDefinition({
+      ...definition,
+      sections: definition.sections.map((section) => {
+        const without = section.fields.filter((f) => !wanted.has(f.id));
+        if (section.id === sectionId) {
+          return { ...section, fields: [...without, ...moving] };
+        }
+        return without.length === section.fields.length
+          ? section
+          : { ...section, fields: without };
+      }),
+    });
+    const index = definition.sections.findIndex((s) => s.id === sectionId);
+    if (index >= 0) setActiveStep(index);
+  };
+  const moveFieldToStep = (fieldId: string, sectionId: string) =>
+    moveFieldsToStep([fieldId], sectionId);
+
+  const reorderSteps = (orderedIds: string[]) => {
+    if (!definition) return;
+    const byId = new Map(definition.sections.map((s) => [s.id, s]));
+    const activeId = definition.sections[activeStep]?.id;
+    const sections = orderedIds
+      .map((id) => byId.get(id))
+      .filter((s): s is FormSection => !!s);
+    patchDefinition({ ...definition, sections });
+    const next = sections.findIndex((s) => s.id === activeId);
+    if (next >= 0) setActiveStep(next);
+  };
+
+  const addStep = () => {
+    if (!definition) return;
+    const section: FormSection = { id: newId("s"), fields: [] };
+    const index = Math.min(activeStep + 1, definition.sections.length);
+    const sections = [...definition.sections];
+    sections.splice(index, 0, section);
+    // Every step gets a name of its own from the start — "Step 3" in each
+    // language — because a titled step 1 next to an untitled step 2 reads as
+    // the same page twice.
+    const content = { ...definition.content };
+    for (const l of locales) {
+      content[l] = {
+        ...(content[l] ?? {}),
+        [contentKey.sectionTitle(section.id)]: defaultStepTitle(l, index + 1),
+      };
+    }
+    patchDefinition({ ...definition, sections, content });
+    setActiveStep(index);
+    setSelection({ kind: "step", stepId: section.id });
+  };
+
+  const duplicateStep = (sectionId: string) => {
+    if (!definition) return;
+    const index = definition.sections.findIndex((s) => s.id === sectionId);
+    const source = definition.sections[index];
+    if (!source) return;
+    const taken = new Set(fields.map((f) => f.key));
+    const idMap = new Map<string, string>();
+    const copyFields = source.fields.map((f) => {
+      let key = `${f.key}_copy`;
+      let n = 2;
+      while (taken.has(key)) key = `${f.key}_copy_${n++}`;
+      taken.add(key);
+      const id = newId("f");
+      idMap.set(f.id, id);
+      return {
+        ...f,
+        id,
+        key,
+        // A lead column can only be filled once.
+        mapping: null,
+        options: f.options?.map((o) => ({ ...o, id: newId("o") })),
+      };
+    });
+    const copy: FormSection = { id: newId("s"), fields: copyFields };
+
+    // Carry the step's own title/description and every field label across.
+    const content = { ...definition.content };
+    for (const [locale, strings] of Object.entries(content)) {
+      if (!strings) continue;
+      const next = { ...strings };
+      for (const [k, v] of Object.entries(strings)) {
+        if (k.startsWith(`section.${source.id}.`)) {
+          next[k.replace(`section.${source.id}.`, `section.${copy.id}.`)] = v;
+        }
+        for (const [oldId, newFieldId] of idMap) {
+          if (k.startsWith(`field.${oldId}.`)) {
+            next[k.replace(`field.${oldId}.`, `field.${newFieldId}.`)] = v;
+          }
+        }
+      }
+      content[locale as FormLocale] = next;
+    }
+
+    const sections = [...definition.sections];
+    sections.splice(index + 1, 0, copy);
+    patchDefinition({ ...definition, sections, content });
+    setActiveStep(index + 1);
+    setSelection({ kind: "step", stepId: copy.id });
+  };
+
+  /** Delete a step. `keepFields` moves its fields to the neighbouring step. */
+  const deleteStep = (sectionId: string, keepFields: boolean) => {
+    if (!definition || definition.sections.length <= 1) return;
+    const index = definition.sections.findIndex((s) => s.id === sectionId);
+    if (index < 0) return;
+    const removed = definition.sections[index];
+    const sections = definition.sections.filter((s) => s.id !== sectionId);
+    if (keepFields && removed.fields.length) {
+      const target = Math.max(index - 1, 0);
+      sections[target] = {
+        ...sections[target],
+        fields: [...sections[target].fields, ...removed.fields],
+      };
+    }
+    patchDefinition({ ...definition, sections });
+    setActiveStep(Math.min(Math.max(index - 1, 0), sections.length - 1));
+    if (selection?.kind === "step" && selection.stepId === sectionId) {
+      setSelection(null);
+    }
+    if (
+      !keepFields &&
+      selectedFieldId(selection) &&
+      removed.fields.some((f) => f.id === selectedFieldId(selection))
+    ) {
+      setSelection(null);
+    }
+    setPendingStepDelete(null);
+  };
+
+  const requestDeleteStep = (sectionId: string) => {
+    if (!definition) return;
+    const section = definition.sections.find((s) => s.id === sectionId);
+    if (!section) return;
+    // Nothing to lose — no dialog.
+    if (section.fields.length === 0) deleteStep(sectionId, false);
+    else setPendingStepDelete(sectionId);
+  };
+
+  /**
+   * One page → steps. Nothing is lost: the one section becomes step 1 and the
+   * Back / Next strings are seeded in every enabled language.
+   */
+  const splitIntoSteps = () => {
+    if (!definition) return;
+    const seeded = seedRuntimeContent(definition, locales, STEP_CONTENT_KEYS);
+    const second: FormSection = { id: newId("s"), fields: [] };
+    const sections =
+      seeded.sections.length > 1
+        ? seeded.sections
+        : [...seeded.sections, second];
+    // Name the steps where they have no name yet, in every language. The
+    // header shows the current step's title, so step 1 inherits the form's
+    // title (and description) — the visitor sees the same opening words.
+    const content = { ...seeded.content };
+    for (const l of locales) {
+      const strings = { ...(content[l] ?? {}) };
+      sections.forEach((section, i) => {
+        const key = contentKey.sectionTitle(section.id);
+        if ((strings[key] ?? "").trim() === "") {
+          const formTitle = (strings[contentKey.formTitle()] ?? "").trim();
+          strings[key] =
+            i === 0 && formTitle
+              ? formTitle
+              : defaultStepTitle(
+                  l,
+                  i === 0 ? "contact" : i === 1 ? "details" : i + 1,
+                );
+        }
+        if (i === 0) {
+          const descKey = contentKey.sectionDescription(section.id);
+          const formDesc = strings[contentKey.formDescription()] ?? "";
+          if ((strings[descKey] ?? "").trim() === "" && formDesc.trim()) {
+            strings[descKey] = formDesc;
+          }
+        }
+      });
+      content[l] = strings;
+    }
+    patchDefinition({
+      ...seeded,
+      sections,
+      content,
+      layout: { ...(seeded.layout ?? DEFAULT_FORM_LAYOUT), mode: "multi_step" },
+    });
+    setActiveStep(0);
+  };
+
+  /**
+   * Steps → one page. Fields keep their order. Only the first step's title
+   * survives: it becomes the form title (the header showed it while the form
+   * was multi-step, so nothing the visitor saw first changes); the other
+   * steps' titles are dropped rather than turned into headings.
+   */
+  const mergeSteps = () => {
+    if (!definition) return;
+    const merged: FormField[] = definition.sections.flatMap((s) => s.fields);
+    const content = { ...definition.content };
+    const first = definition.sections[0];
+    for (const l of locales) {
+      const strings = { ...(content[l] ?? {}) };
+      const titleKey = contentKey.sectionTitle(first.id);
+      const descKey = contentKey.sectionDescription(first.id);
+      if ((strings[titleKey] ?? "").trim()) {
+        strings[contentKey.formTitle()] = strings[titleKey];
+      }
+      if ((strings[descKey] ?? "").trim()) {
+        strings[contentKey.formDescription()] = strings[descKey];
+      }
+      // A single-step section renders its own title under the header, which
+      // would now repeat the form title — so the step keys are cleared.
+      delete strings[titleKey];
+      delete strings[descKey];
+      content[l] = strings;
+    }
+    patchDefinition({
+      ...definition,
+      content,
+      sections: [{ id: definition.sections[0].id, fields: merged }],
+      layout: { ...(definition.layout ?? DEFAULT_FORM_LAYOUT), mode: "single" },
+    });
+    setActiveStep(0);
+    setMergeOpen(false);
+    if (selection?.kind === "step") setSelection(null);
   };
 
   const setText = (key: string, value: string) => {
@@ -1001,7 +1408,88 @@ export default function FormBuilderRoute() {
         },
       },
     });
+    // Editing the default language re-translates that string into the other
+    // languages once typing stops — the other way round it stays put, since
+    // a translation is where a person writes exactly what a language needs.
+    if (editingLocale === defaultLocale && locales.length > 1) {
+      pendingSync.current.add(key);
+      setSyncTick((n) => n + 1);
+    }
   };
+
+  // --- default-language edits follow into the other languages ---------------
+  const pendingSync = useRef<Set<string>>(new Set());
+  const syncInFlight = useRef(false);
+  const [syncTick, setSyncTick] = useState(0);
+  const [syncing, setSyncing] = useState<ReadonlySet<FormLocale>>(new Set());
+
+  const runAutoSync = async () => {
+    if (!definition || syncInFlight.current) return;
+    const keys = [...pendingSync.current];
+    pendingSync.current = new Set();
+    const targets = locales.filter((l) => l !== defaultLocale);
+    if (keys.length === 0 || targets.length === 0) return;
+
+    const source = definition.content?.[defaultLocale] ?? {};
+    const items: TranslateFormRequest["items"] = {};
+    const clears: string[] = [];
+    for (const key of keys) {
+      const value = source[key] ?? "";
+      if (value.trim() === "") clears.push(key);
+      else items[key] = { value };
+    }
+    // An emptied string needs no translator: clear it everywhere.
+    if (clears.length > 0) {
+      patchDefinitionFn((current) => {
+        const content = { ...current.content };
+        for (const l of targets) {
+          const strings = { ...(content[l] ?? {}) };
+          for (const key of clears) delete strings[key];
+          content[l] = strings;
+        }
+        return { ...current, content };
+      });
+    }
+    const translateKeys = Object.keys(items);
+    if (translateKeys.length === 0) return;
+
+    syncInFlight.current = true;
+    setSyncing(new Set(targets));
+    try {
+      const response = await translateMutation.mutateAsync({
+        source_locale: defaultLocale,
+        items,
+        targets: targets.map((locale) => ({ locale, keys: translateKeys })),
+      });
+      patchDefinitionFn((current) => {
+        let next = current;
+        for (const result of response.results) {
+          if (!result.ok) continue;
+          next = mergeTranslations(next, result.locale, result.values);
+        }
+        return next;
+      });
+    } catch {
+      // Put them back so the next edit sweeps them up with its own; a missing
+      // AI key stays quiet here — the strip's own Translate action reports it.
+      for (const key of keys) pendingSync.current.add(key);
+    } finally {
+      syncInFlight.current = false;
+      setSyncing(new Set());
+    }
+  };
+
+  /**
+   * Fire once typing stops. Longer than the 1.2 s autosave on purpose: this
+   * spends an AI call, and a half-typed label translated three times is waste.
+   */
+  useEffect(() => {
+    if (syncTick === 0) return;
+    if (translating.size > 0) return;
+    const id = window.setTimeout(() => void runAutoSync(), 2500);
+    return () => window.clearTimeout(id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [syncTick, translating.size]);
 
   /**
    * The language strip renders at the top of every locale-dependent tab rather
@@ -1018,6 +1506,7 @@ export default function FormBuilderRoute() {
     onSelect: setEditingLocale,
     issuesByLocale,
     translating,
+    syncing,
     disabled: !canEdit,
     onAddLocale: addLocale,
     onRemoveLocale: removeLocale,
@@ -1174,10 +1663,14 @@ export default function FormBuilderRoute() {
               {t("forms.builder.tabDesign")}
               <IssueBadge count={issuesByTab.design} />
             </TabsTrigger>
-            <TabsTrigger value="afterSubmit">
-              {t("forms.builder.tabAfterSubmit")}
-              <IssueBadge count={issuesByTab.afterSubmit} />
-            </TabsTrigger>
+            {/* A product form hands the visitor to Stripe; what comes after is
+                the checkout's outcome pages, configured on the product field. */}
+            {form.kind !== "product" ? (
+              <TabsTrigger value="afterSubmit">
+                {t("forms.builder.tabAfterSubmit")}
+                <IssueBadge count={issuesByTab.afterSubmit} />
+              </TabsTrigger>
+            ) : null}
             <TabsTrigger value="errors">
               {t("forms.builder.tabErrors")}
             </TabsTrigger>
@@ -1187,6 +1680,14 @@ export default function FormBuilderRoute() {
                 <IssueBadge count={issuesByTab.email} />
               </TabsTrigger>
             ) : null}
+            {form.kind === "product" ? (
+              <TabsTrigger value="deal">
+                {t("forms.builder.tabDeal", { defaultValue: "Deal" })}
+              </TabsTrigger>
+            ) : null}
+            <TabsTrigger value="webhooks">
+              {t("forms.builder.tabWebhooks")}
+            </TabsTrigger>
             <TabsTrigger value="share">
               {t("forms.builder.tabShare")}
             </TabsTrigger>
@@ -1280,7 +1781,12 @@ export default function FormBuilderRoute() {
           <TabLanguages {...stripProps} />
           <div className="grid gap-4 sm:gap-5 lg:grid-cols-[210px_minmax(0,1fr)] xl:grid-cols-[220px_minmax(0,1fr)_340px]">
             <aside className="app-fade-up app-fade-up-d1 order-2 lg:order-1">
-              <FieldPalette onAdd={addField} disabled={!canEdit} />
+              <FieldPalette
+                onAdd={addField}
+                disabled={!canEdit}
+                kind={form.kind}
+                hasProduct={fields.some((f) => f.type === "product")}
+              />
             </aside>
 
             <div className="app-fade-up app-fade-up-d2 order-1 min-w-0 lg:order-2">
@@ -1294,6 +1800,22 @@ export default function FormBuilderRoute() {
                 onReorder={reorderFields}
                 onDuplicateField={duplicateField}
                 onDeleteField={deleteField}
+                activeStep={activeStep}
+                onActiveStepChange={setActiveStep}
+                onReorderInStep={reorderInStep}
+                onMoveFieldToStep={moveFieldToStep}
+                onMoveFieldsToStep={moveFieldsToStep}
+                onReorderSteps={reorderSteps}
+                onAddStep={addStep}
+                onDuplicateStep={duplicateStep}
+                onDeleteStep={requestDeleteStep}
+                onSplitIntoSteps={splitIntoSteps}
+                onMergeSteps={() =>
+                  definition.sections.length > 1
+                    ? setMergeOpen(true)
+                    : mergeSteps()
+                }
+                issuesBySection={issuesBySection}
                 onLocaleChange={setEditingLocale}
                 invalidFieldIds={invalidFieldIds}
                 onRemoveTitle={() =>
@@ -1319,9 +1841,114 @@ export default function FormBuilderRoute() {
                     f.id === activeFieldId ? { ...f, ...patch } : f,
                   )
                 }
+                onMoveToStep={
+                  activeFieldId
+                    ? (stepId) => moveFieldToStep(activeFieldId, stepId)
+                    : undefined
+                }
+                onMoveStep={
+                  selection?.kind === "step"
+                    ? (dir) => {
+                        const ids = definition.sections.map((s) => s.id);
+                        const from = ids.indexOf(selection.stepId);
+                        const to = from + dir;
+                        if (from < 0 || to < 0 || to >= ids.length) return;
+                        const next = [...ids];
+                        next.splice(from, 1);
+                        next.splice(to, 0, selection.stepId);
+                        reorderSteps(next);
+                      }
+                    : undefined
+                }
+                onDeleteStep={
+                  selection?.kind === "step"
+                    ? () => requestDeleteStep(selection.stepId)
+                    : undefined
+                }
+                commerce={definition.commerce}
+                onCommerceChange={(patch) =>
+                  patchDefinition({
+                    ...definition,
+                    commerce: {
+                      ...(definition.commerce ?? DEFAULT_FORM_COMMERCE),
+                      ...patch,
+                    },
+                  })
+                }
+                archivedPriceIds={archivedPriceIds}
+                onDeleteField={
+                  activeFieldId ? () => deleteField(activeFieldId) : undefined
+                }
               />
             </aside>
           </div>
+
+          <AlertDialog
+            open={pendingStepDelete != null}
+            onOpenChange={(open) => {
+              if (!open) setPendingStepDelete(null);
+            }}
+          >
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>
+                  {t("forms.steps.deleteTitle", {
+                    n:
+                      definition.sections.findIndex(
+                        (s) => s.id === pendingStepDelete,
+                      ) + 1,
+                  })}
+                </AlertDialogTitle>
+                <AlertDialogDescription>
+                  {t("forms.steps.deleteBody", {
+                    count:
+                      definition.sections.find(
+                        (s) => s.id === pendingStepDelete,
+                      )?.fields.length ?? 0,
+                  })}
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>{t("common.cancel")}</AlertDialogCancel>
+                <AlertDialogAction
+                  onClick={() =>
+                    pendingStepDelete && deleteStep(pendingStepDelete, true)
+                  }
+                >
+                  {t("forms.steps.deleteMove")}
+                </AlertDialogAction>
+                <AlertDialogAction
+                  className="bg-destructive text-white hover:bg-destructive/90"
+                  onClick={() =>
+                    pendingStepDelete && deleteStep(pendingStepDelete, false)
+                  }
+                >
+                  {t("forms.steps.deleteAll")}
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+
+          <AlertDialog open={mergeOpen} onOpenChange={setMergeOpen}>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>
+                  {t("forms.steps.mergeTitle", {
+                    count: definition.sections.length,
+                  })}
+                </AlertDialogTitle>
+                <AlertDialogDescription>
+                  {t("forms.steps.mergeBody")}
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>{t("common.cancel")}</AlertDialogCancel>
+                <AlertDialogAction onClick={mergeSteps}>
+                  {t("forms.steps.merge")}
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
         </TabsContent>
 
         <TabsContent value="design" className="app-fade-up pt-5">
@@ -1337,16 +1964,18 @@ export default function FormBuilderRoute() {
           />
         </TabsContent>
 
-        <TabsContent value="afterSubmit" className="app-fade-up pt-5">
-          <TabLanguages {...stripProps} />
-          <AfterSubmitPanel
-            definition={definition}
-            disabled={!canEdit}
-            getText={(key) => getRawContent(definition, editingLocale, key)}
-            setText={setText}
-            onChange={(patch) => patchDefinition({ ...definition, ...patch })}
-          />
-        </TabsContent>
+        {form.kind !== "product" ? (
+          <TabsContent value="afterSubmit" className="app-fade-up pt-5">
+            <TabLanguages {...stripProps} />
+            <AfterSubmitPanel
+              definition={definition}
+              disabled={!canEdit}
+              getText={(key) => getRawContent(definition, editingLocale, key)}
+              setText={setText}
+              onChange={(patch) => patchDefinition({ ...definition, ...patch })}
+            />
+          </TabsContent>
+        ) : null}
 
         <TabsContent value="errors" className="app-fade-up pt-5">
           <TabLanguages {...stripProps} />
@@ -1382,6 +2011,14 @@ export default function FormBuilderRoute() {
           </TabsContent>
         ) : null}
 
+        <TabsContent value="deal" className="app-fade-up pt-5">
+          <DealPanel formId={form.id} canEdit={canEdit} />
+        </TabsContent>
+
+        <TabsContent value="webhooks" className="app-fade-up pt-5">
+          <WebhooksPanel formId={form.id} kind={form.kind} canEdit={canEdit} />
+        </TabsContent>
+
         <TabsContent value="share" className="app-fade-up pt-5">
           <SharePanel
             formId={form.id}
@@ -1395,7 +2032,20 @@ export default function FormBuilderRoute() {
   );
 }
 
-/** Red count on a tab, so a problem is findable instead of hidden in a banner. */
+/** Every tab value, so `?tab=` cannot point at a panel that does not exist. */
+const BUILDER_TABS = [
+  "build",
+  "design",
+  "afterSubmit",
+  "errors",
+  "email",
+  // Product forms only — the bounce effect above sends it back to Build on a
+  // standard form, the same way afterSubmit is handled for product forms.
+  "deal",
+  "webhooks",
+  "share",
+];
+
 /**
  * The language strip, wrapped for use inside a tab panel.
  *
@@ -1448,6 +2098,13 @@ function describeIssue(
     return t(`forms.validation.${issue.code}`, {
       locale: (issue.locale ?? defaultLocale).toUpperCase(),
     });
+  }
+
+  if (issue.code === "emptyStep") {
+    return t("forms.validation.emptyStep");
+  }
+  if (issue.code === "commerceInactivePrice" && issue.priceId) {
+    return `${t("forms.validation.commerceInactivePrice")} (${issue.priceId})`;
   }
 
   // A blank key has no key to name it by, so fall through to the generic copy

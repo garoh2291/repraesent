@@ -84,6 +84,10 @@ interface UploadingItem {
   name: string;
   stage: string;
   error: string | null;
+  /** Local object URL — the card shows the real image while it uploads. */
+  previewUrl: string;
+  /** Set on completion; the card stays until the refetched grid has it. */
+  asset: MediaAsset | null;
 }
 
 /** One menu entry; rendered identically by the kebab and the context menu. */
@@ -144,10 +148,13 @@ export default function MediaLibraryPage() {
   const [bulkConfirm, setBulkConfirm] = useState<"bin" | "hard_delete" | null>(
     null,
   );
+  /** Range-select anchor: the last card the user clicked in select mode. */
+  const lastAnchorRef = useRef<string | null>(null);
 
   useEffect(() => {
     setSelectMode(false);
     setSelected(new Set());
+    lastAnchorRef.current = null;
   }, [view]);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -158,6 +165,20 @@ export default function MediaLibraryPage() {
     () => assetsQuery.data?.pages.flatMap((p) => p.data) ?? [],
     [assetsQuery.data],
   );
+
+  const assetIds = useMemo(() => new Set(assets.map((a) => a.id)), [assets]);
+
+  // Drop upload cards whose asset arrived in the fetched grid; revoke the
+  // local object URL at that moment (and never earlier — the card uses it).
+  useEffect(() => {
+    const ids = new Set(assets.map((a) => a.id));
+    setUploading((prev) => {
+      const stale = prev.filter((u) => u.asset && ids.has(u.asset.id));
+      if (stale.length === 0) return prev;
+      stale.forEach((u) => URL.revokeObjectURL(u.previewUrl));
+      return prev.filter((u) => !(u.asset && ids.has(u.asset.id)));
+    });
+  }, [assets]);
 
   // Lightweight totals for the view menu badges.
   const libraryCount = useQuery({
@@ -247,9 +268,17 @@ export default function MediaLibraryPage() {
 
       list.forEach((file) => {
         const key = `${file.name}-${Date.now()}-${Math.random()}`;
+        const previewUrl = URL.createObjectURL(file);
         setUploading((prev) => [
           ...prev,
-          { key, name: file.name, stage: "queued", error: null },
+          {
+            key,
+            name: file.name,
+            stage: "queued",
+            error: null,
+            previewUrl,
+            asset: null,
+          },
         ]);
 
         enqueueMediaUpload({
@@ -259,8 +288,12 @@ export default function MediaLibraryPage() {
               prev.map((u) => (u.key === key ? { ...u, stage } : u)),
             );
           },
-          onDone: () => {
-            setUploading((prev) => prev.filter((u) => u.key !== key));
+          onDone: (asset) => {
+            // Keep the card (now showing the image at full opacity) until
+            // the refetched grid contains the asset — no flicker gap.
+            setUploading((prev) =>
+              prev.map((u) => (u.key === key ? { ...u, asset } : u)),
+            );
             setBatch((b) => ({ ...b, done: b.done + 1 }));
             if (uploadQueueBusyCount() === 0) {
               flushInvalidate();
@@ -373,6 +406,7 @@ export default function MediaLibraryPage() {
       ),
   });
 
+
   const copyUrl = useCallback(
     (asset: MediaAsset) => {
       navigator.clipboard
@@ -409,20 +443,53 @@ export default function MediaLibraryPage() {
     [t],
   );
 
+  const limitToast = useCallback(() => {
+    toast.error(
+      t("media.selectLimit", {
+        defaultValue: "You can select up to {{max}} images",
+        max: SELECT_LIMIT,
+      }),
+    );
+  }, [t]);
+
   const toggleSelect = useCallback(
-    (id: string) => {
+    (id: string, shiftKey = false) => {
+      // Shift+click: select the whole span between the last-clicked card and
+      // this one (either direction), like Finder/Photos. Additive — items
+      // outside the span stay selected.
+      const anchor = lastAnchorRef.current;
+      if (shiftKey && anchor && anchor !== id) {
+        const ids = assets.map((a) => a.id);
+        const from = ids.indexOf(anchor);
+        const to = ids.indexOf(id);
+        if (from !== -1 && to !== -1) {
+          const [start, end] = from < to ? [from, to] : [to, from];
+          setSelected((prev) => {
+            const next = new Set(prev);
+            let truncated = false;
+            for (let i = start; i <= end; i++) {
+              if (next.size >= SELECT_LIMIT && !next.has(ids[i])) {
+                truncated = true;
+                break;
+              }
+              next.add(ids[i]);
+            }
+            if (truncated) limitToast();
+            return next;
+          });
+          lastAnchorRef.current = id;
+          return;
+        }
+      }
+
+      lastAnchorRef.current = id;
       setSelected((prev) => {
         const next = new Set(prev);
         if (next.has(id)) {
           next.delete(id);
         } else {
           if (next.size >= SELECT_LIMIT) {
-            toast.error(
-              t("media.selectLimit", {
-                defaultValue: "You can select up to {{max}} images",
-                max: SELECT_LIMIT,
-              }),
-            );
+            limitToast();
             return prev;
           }
           next.add(id);
@@ -430,7 +497,7 @@ export default function MediaLibraryPage() {
         return next;
       });
     },
-    [t],
+    [assets, limitToast],
   );
 
   const bulkMutation = useMutation({
@@ -478,6 +545,49 @@ export default function MediaLibraryPage() {
     },
     [updateMutation],
   );
+
+  /**
+   * Cards affected by an in-flight destructive mutation show a spinner
+   * overlay; while ANY of these runs, all card interactions are disabled.
+   */
+  const busyIds = useMemo(() => {
+    const ids = new Set<string>();
+    if (bulkMutation.isPending && bulkMutation.variables) {
+      bulkMutation.variables.ids.forEach((id) => ids.add(id));
+    }
+    if (softDeleteMutation.isPending && softDeleteMutation.variables) {
+      ids.add(softDeleteMutation.variables);
+    }
+    if (restoreMutation.isPending && restoreMutation.variables) {
+      ids.add(restoreMutation.variables);
+    }
+    if (hardDeleteMutation.isPending && hardDeleteMutation.variables) {
+      ids.add(hardDeleteMutation.variables);
+    }
+    if (emptyBinMutation.isPending && view === "bin") {
+      assets.forEach((a) => ids.add(a.id));
+    }
+    return ids;
+  }, [
+    assets,
+    bulkMutation.isPending,
+    bulkMutation.variables,
+    softDeleteMutation.isPending,
+    softDeleteMutation.variables,
+    restoreMutation.isPending,
+    restoreMutation.variables,
+    hardDeleteMutation.isPending,
+    hardDeleteMutation.variables,
+    emptyBinMutation.isPending,
+    view,
+  ]);
+
+  const anyCardMutationPending =
+    bulkMutation.isPending ||
+    softDeleteMutation.isPending ||
+    restoreMutation.isPending ||
+    hardDeleteMutation.isPending ||
+    emptyBinMutation.isPending;
 
   /** Single source of truth for asset actions — kebab, right-click, preview. */
   const buildAssetActions = useCallback(
@@ -872,19 +982,46 @@ export default function MediaLibraryPage() {
           ) : (
             <>
               <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
-                {uploading.map((u) => (
+                {uploading
+                  .filter((u) => !(u.asset && assetIds.has(u.asset.id)))
+                  .map((u) => (
                   <div
                     key={u.key}
                     className={cn(
-                      "overflow-hidden rounded-2xl border",
+                      "overflow-hidden rounded-2xl border bg-card",
                       u.error
                         ? "border-destructive/40 bg-destructive/5"
-                        : "border-dashed border-border bg-card",
+                        : u.asset
+                          ? "border-border"
+                          : "border-dashed border-border",
                     )}
                   >
-                    <div className="flex aspect-[4/3] flex-col items-center justify-center gap-2 px-3 text-center">
-                      {u.error ? (
-                        <>
+                    <div className="relative aspect-[4/3] bg-muted">
+                      {/* The file is already local — show it immediately;
+                          it solidifies in place once uploaded. */}
+                      <img
+                        src={u.previewUrl}
+                        alt={u.name}
+                        className={cn(
+                          "h-full w-full object-cover transition-opacity duration-300",
+                          u.error
+                            ? "opacity-30"
+                            : u.asset
+                              ? "opacity-100"
+                              : "opacity-60",
+                        )}
+                      />
+                      {!u.asset && !u.error && (
+                        <span className="absolute right-2 bottom-2 flex h-6 w-6 items-center justify-center rounded-full bg-white/90 shadow">
+                          {u.stage === "queued" ? (
+                            <span className="h-2 w-2 rounded-full bg-muted-foreground/50" />
+                          ) : (
+                            <Loader2 className="h-3.5 w-3.5 animate-spin text-primary" />
+                          )}
+                        </span>
+                      )}
+                      {u.error && (
+                        <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 px-3 text-center">
                           <p className="line-clamp-3 text-xs text-destructive">
                             {u.error}
                           </p>
@@ -892,26 +1029,24 @@ export default function MediaLibraryPage() {
                             variant="ghost"
                             size="sm"
                             onClick={() =>
-                              setUploading((prev) =>
-                                prev.filter((x) => x.key !== u.key),
-                              )
+                              setUploading((prev) => {
+                                URL.revokeObjectURL(u.previewUrl);
+                                return prev.filter((x) => x.key !== u.key);
+                              })
                             }
                           >
                             <X className="mr-1 h-3.5 w-3.5" />
                             {t("common.dismiss", { defaultValue: "Dismiss" })}
                           </Button>
-                        </>
-                      ) : u.stage === "queued" ? (
-                        <p className="text-xs text-muted-foreground/70">
-                          {t("media.queued", { defaultValue: "Waiting…" })}
-                        </p>
-                      ) : (
-                        <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+                        </div>
                       )}
                     </div>
                     <div className="border-t border-border/60 p-3">
                       <p className="truncate text-[11px] font-medium text-muted-foreground">
                         {u.name}
+                        {!u.asset && !u.error && u.stage === "queued"
+                          ? ` · ${t("media.queued", { defaultValue: "Waiting…" })}`
+                          : ""}
                       </p>
                     </div>
                   </div>
@@ -928,7 +1063,11 @@ export default function MediaLibraryPage() {
                     onOpen={() => setPreview(asset)}
                     selectMode={selectMode}
                     isSelected={selected.has(asset.id)}
-                    onToggleSelect={() => toggleSelect(asset.id)}
+                    onToggleSelect={(shiftKey) =>
+                      toggleSelect(asset.id, shiftKey)
+                    }
+                    busy={busyIds.has(asset.id)}
+                    interactionsDisabled={anyCardMutationPending}
                   />
                 ))}
               </div>
@@ -1127,6 +1266,8 @@ function AssetCard({
   selectMode,
   isSelected,
   onToggleSelect,
+  busy,
+  interactionsDisabled,
 }: {
   asset: MediaAsset;
   index: number;
@@ -1136,7 +1277,9 @@ function AssetCard({
   onOpen: () => void;
   selectMode: boolean;
   isSelected: boolean;
-  onToggleSelect: () => void;
+  onToggleSelect: (shiftKey: boolean) => void;
+  busy: boolean;
+  interactionsDisabled: boolean;
 }) {
   const [loaded, setLoaded] = useState(false);
 
@@ -1147,12 +1290,16 @@ function AssetCard({
             "group relative overflow-hidden rounded-2xl border border-border bg-card transition-colors hover:border-primary/40",
             dimmed && "opacity-70 transition-opacity hover:opacity-100",
             selectMode && isSelected && "border-primary ring-2 ring-primary/40",
+            busy && "pointer-events-none",
           )}
         >
           <button
             type="button"
-            onClick={selectMode ? onToggleSelect : onOpen}
-            className="block w-full cursor-pointer"
+            disabled={interactionsDisabled}
+            onClick={(e) =>
+              selectMode ? onToggleSelect(e.shiftKey) : onOpen()
+            }
+            className="block w-full cursor-pointer select-none disabled:cursor-default"
             title={asset.original_filename}
             aria-pressed={selectMode ? isSelected : undefined}
           >
@@ -1175,7 +1322,8 @@ function AssetCard({
           {selectMode && (
             <button
               type="button"
-              onClick={onToggleSelect}
+              disabled={interactionsDisabled}
+              onClick={(e) => onToggleSelect(e.shiftKey)}
               aria-pressed={isSelected}
               className={cn(
                 "absolute top-2 left-2 flex h-6 w-6 cursor-pointer items-center justify-center rounded-full border shadow transition-colors",
@@ -1192,6 +1340,12 @@ function AssetCard({
             <span className="absolute top-2 left-2 flex h-6 w-6 items-center justify-center rounded-full bg-card/90 text-primary">
               <Star className="h-3.5 w-3.5" fill="currentColor" strokeWidth={0} />
             </span>
+          )}
+
+          {busy && (
+            <div className="absolute inset-0 z-10 flex items-center justify-center rounded-2xl bg-background/60">
+              <Loader2 className="h-5 w-5 animate-spin text-primary" />
+            </div>
           )}
 
           <div className="flex items-center gap-2 border-t border-border/60 p-3">
@@ -1213,6 +1367,7 @@ function AssetCard({
                 <Button
                   variant="ghost"
                   size="icon"
+                  disabled={interactionsDisabled}
                   className="h-8 w-8 shrink-0 opacity-100 transition-opacity sm:opacity-0 sm:group-focus-within:opacity-100 sm:group-hover:opacity-100"
                   onClick={(e) => e.stopPropagation()}
                   aria-label={asset.original_filename}
@@ -1243,8 +1398,9 @@ function AssetCard({
         </div>
   );
 
-  // Right-click menu is a browsing affordance — off while selecting.
-  if (selectMode) return card;
+  // Right-click menu is a browsing affordance — off while selecting or
+  // while a destructive mutation is running.
+  if (selectMode || interactionsDisabled) return card;
 
   return (
     <ContextMenu>

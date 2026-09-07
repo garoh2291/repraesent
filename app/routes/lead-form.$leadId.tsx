@@ -9,6 +9,8 @@ import {
   LeadHistorySection,
 } from "~/components/organism/lead-detail-sheet";
 import { LeadNotesSection } from "~/components/organism/lead-notes-section";
+import { LeadPaymentSection } from "~/components/organism/lead-payment-section";
+import { extractLeadCheckout } from "~/lib/leads/checkout";
 import { LeadTasksSection } from "~/components/organism/tasks/lead-tasks-section";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "~/components/ui/tabs";
 import { getLead, getLeadHistory } from "~/lib/api/leads";
@@ -289,14 +291,19 @@ export default function LeadFormLeadId() {
 
       {/* Content grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 app-fade-up app-fade-up-d1">
-        {/* Lead info panel */}
-        <div className="rounded-2xl border border-border bg-card p-4 sm:p-6">
-          <LeadInfoSection
-            lead={lead}
-            onStatusChange={canEdit ? handleStatusChange : undefined}
-            isStatusUpdating={updateStatusMutation.isPending}
-            withoutLink
-          />
+        {/* Lead info panel (+ payment card for product-form leads) */}
+        <div className="space-y-4 sm:space-y-6">
+          <div className="rounded-2xl border border-border bg-card p-4 sm:p-6">
+            <LeadInfoSection
+              lead={lead}
+              onStatusChange={canEdit ? handleStatusChange : undefined}
+              isStatusUpdating={updateStatusMutation.isPending}
+              withoutLink
+            />
+          </div>
+          {extractLeadCheckout(lead) && (
+            <LeadPaymentSection lead={lead} variant="card" />
+          )}
         </div>
 
         {/* Tasks + Notes + History panel */}

@@ -17,7 +17,9 @@ import {
   type FormLocale,
   flattenFields,
   hasOptions,
+  isMultiStep,
   isPresentational,
+  isValueless,
 } from "./schema";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@.]+\.[^\s@]{2,}$/;
@@ -33,9 +35,7 @@ export function validateValues(
   values: Record<string, unknown>,
 ): FormErrors {
   const errors: FormErrors = {};
-  const fields = flattenFields(definition).filter(
-    (f) => !isPresentational(f.type),
-  );
+  const fields = flattenFields(definition).filter((f) => !isValueless(f.type));
 
   for (const field of fields) {
     const code = checkField(field, values[field.key]);
@@ -148,6 +148,48 @@ function checkField(field: FormField, raw: unknown): FormErrorCode | null {
   return null;
 }
 
+/**
+ * Client-side check of ONE step of a multi-step form — the gate on Next.
+ * Hidden fields belong to a step but never block it; they are filled from the
+ * URL at submit time.
+ */
+export function validateStepValues(
+  definition: FormDefinition,
+  stepIndex: number,
+  values: Record<string, unknown>,
+): FormErrors {
+  const errors: FormErrors = {};
+  const section = definition.sections?.[stepIndex];
+  if (!section) return errors;
+  for (const field of section.fields ?? []) {
+    if (isValueless(field.type) || field.type === "hidden") continue;
+    const code = checkField(field, values[field.key]);
+    if (code) errors[field.key] = code;
+  }
+  return errors;
+}
+
+/**
+ * The lowest step that owns one of the erroring keys, or -1 when none does
+ * (e.g. only the `_form` pseudo-key). Used to jump back to the right step when
+ * the server rejects a submission from the last one.
+ */
+export function firstErrorStep(
+  definition: FormDefinition,
+  errors: Record<string, unknown>,
+): number {
+  let best = -1;
+  const sections = definition.sections ?? [];
+  for (let i = 0; i < sections.length; i++) {
+    for (const field of sections[i].fields ?? []) {
+      if (errors[field.key] !== undefined) {
+        if (best === -1 || i < best) best = i;
+      }
+    }
+  }
+  return best;
+}
+
 /** Blank starting values, so every control is controlled from first render. */
 export function emptyValues(
   definition: FormDefinition,
@@ -155,7 +197,7 @@ export function emptyValues(
   const values: Record<string, unknown> = {};
 
   for (const field of flattenFields(definition)) {
-    if (isPresentational(field.type)) continue;
+    if (isValueless(field.type)) continue;
     switch (field.type) {
       case "checkbox":
         values[field.key] = field.defaultValue === true;
@@ -191,6 +233,10 @@ export function emptyValues(
 //            emptyOptions, appointmentMissingCalendar,
 //            missingContent (form.submit AND field labels)
 //   design — invalidRedirect
+//   build  — emptyStep (multi-step)
+//   build  — needsProductField, duplicateProductField, productFieldOnStandardForm,
+//            commerceNoItems, commerceMixedCurrency, commerceMixedInterval,
+//            invalidSuccessUrl, invalidCancelUrl
 //
 // EVERY enabled locale is checked, not just the default — see the body.
 // ---------------------------------------------------------------------------
@@ -227,9 +273,7 @@ export function validateDefinition(
     ];
   }
 
-  const fields = flattenFields(definition).filter(
-    (f) => !isPresentational(f.type),
-  );
+  const fields = flattenFields(definition).filter((f) => !isValueless(f.type));
 
   // Requirement: every form must be able to produce an identifiable lead.
   const mappings = fields.map((f) => f.mapping).filter(Boolean);
@@ -316,6 +360,86 @@ export function validateDefinition(
   const success = definition.success;
   if (success?.mode === "redirect" && !isHttpUrl(success.redirectUrl)) {
     issues.push({ code: "invalidRedirect", tab: "design" });
+  }
+
+  // ── layout ────────────────────────────────────────────────────────────────
+  // A step whose only fields are hidden ones is a blank page with a Next
+  // button. Only checked when multi-step is actually active — a single-section
+  // form with the mode switched on renders as one page and is fine.
+  if (isMultiStep(definition)) {
+    for (const section of definition.sections) {
+      const visible = (section.fields ?? []).filter((f) => f.type !== "hidden");
+      if (visible.length === 0) {
+        issues.push({ code: "emptyStep", tab: "build", sectionId: section.id });
+      }
+    }
+  }
+
+  // ── commerce ──────────────────────────────────────────────────────────────
+  // Present only on product forms (normalizeCommerce drops it for standard
+  // ones), so its presence is the switch. These are the rules that need no
+  // Stripe call; whether a price is still live is checked server-side.
+  //
+  // The product FIELD is where the order summary renders. A product form
+  // needs exactly one; a standard form may have none.
+  const productFields = flattenFields(definition).filter(
+    (f) => f.type === "product",
+  );
+  const commerce = definition.commerce;
+  if (commerce) {
+    if (productFields.length === 0) {
+      issues.push({ code: "needsProductField", tab: "build" });
+    }
+    if (!Array.isArray(commerce.items) || commerce.items.length === 0) {
+      issues.push({
+        code: "commerceNoItems",
+        tab: "build",
+        fieldId: productFields[0]?.id,
+        fieldKey: productFields[0]?.key,
+      });
+    } else {
+      const currencies = new Set(
+        commerce.items.map((i) => i.snapshot.currency.toLowerCase()),
+      );
+      if (currencies.size > 1) {
+        issues.push({ code: "commerceMixedCurrency", tab: "build" });
+      }
+      // One Checkout Session carries one billing interval.
+      const intervals = new Set(
+        commerce.items
+          .filter((i) => i.snapshot.type === "recurring")
+          .map(
+            (i) => `${i.snapshot.interval}:${i.snapshot.intervalCount ?? 1}`,
+          ),
+      );
+      if (intervals.size > 1) {
+        issues.push({ code: "commerceMixedInterval", tab: "build" });
+      }
+    }
+    if (commerce.successUrl && !isSafeRedirectUrl(commerce.successUrl)) {
+      issues.push({ code: "invalidSuccessUrl", tab: "build" });
+    }
+    if (commerce.cancelUrl && !isSafeRedirectUrl(commerce.cancelUrl)) {
+      issues.push({ code: "invalidCancelUrl", tab: "build" });
+    }
+  } else {
+    for (const field of productFields) {
+      issues.push({
+        code: "productFieldOnStandardForm",
+        tab: "build",
+        fieldId: field.id,
+        fieldKey: field.key,
+      });
+    }
+  }
+  // Flag the second and later product fields, like duplicate keys.
+  for (const field of productFields.slice(1)) {
+    issues.push({
+      code: "duplicateProductField",
+      tab: "build",
+      fieldId: field.id,
+      fieldKey: field.key,
+    });
   }
 
   // ── per-locale content ────────────────────────────────────────────────────
@@ -417,4 +541,9 @@ function isHttpUrl(value: string | undefined | null): boolean {
   } catch {
     return false;
   }
+}
+
+/** Stripe accepts success/cancel URLs up to 2048 characters. */
+function isSafeRedirectUrl(value: string): boolean {
+  return value.length <= 2048 && isHttpUrl(value);
 }

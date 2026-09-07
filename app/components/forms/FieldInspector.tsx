@@ -2,10 +2,14 @@ import { useQuery } from "@tanstack/react-query";
 import {
   AlertTriangle,
   CalendarPlus,
+  ChevronLeft,
+  ChevronRight,
   Heading,
+  ListOrdered,
   MousePointerClick,
   SendHorizontal,
   Sliders,
+  Trash2,
 } from "lucide-react";
 import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
@@ -50,10 +54,12 @@ import {
   contentKey,
   hasOptions,
   isPresentational,
+  type FormCommerce,
   type FormField,
   type FormFieldMapping,
 } from "~/lib/forms/schema";
 import { OptionsEditor } from "./OptionsEditor";
+import { ProductFieldInspector } from "./products/ProductFieldInspector";
 
 const NO_MAPPING = "__none__";
 
@@ -88,7 +94,21 @@ interface Props {
   getText: (key: string) => string;
   setText: (key: string, value: string) => void;
   onChange?: (patch: Partial<FormField>) => void;
+  /** Multi-step: move the selected field into another step. */
+  onMoveToStep?: (stepId: string) => void;
+  /** Step target: reorder / delete the step. */
+  onMoveStep?: (direction: -1 | 1) => void;
+  onDeleteStep?: () => void;
+  /** Product field: the bundle + checkout options it edits (definition.commerce). */
+  commerce?: FormCommerce;
+  onCommerceChange?: (patch: Partial<FormCommerce>) => void;
+  /** Price ids the server reports as archived in Stripe. */
+  archivedPriceIds?: ReadonlySet<string>;
+  /** Delete the selected field (product inspector's header action). */
+  onDeleteField?: () => void;
 }
+
+const EMPTY_IDS: ReadonlySet<string> = new Set();
 
 export function FieldInspector({
   target,
@@ -98,6 +118,13 @@ export function FieldInspector({
   getText,
   setText,
   onChange,
+  onMoveToStep,
+  onMoveStep,
+  onDeleteStep,
+  commerce,
+  onCommerceChange,
+  archivedPriceIds,
+  onDeleteField,
 }: Props) {
   const { t } = useTranslation();
 
@@ -221,7 +248,116 @@ export function FieldInspector({
     );
   }
 
+  // A step is a section with a title and a description — the same content keys
+  // sections always had, now with somewhere to edit them.
+  if (target.kind === "step") {
+    const { section, index, total } = target;
+    return (
+      <Panel>
+        <PanelHeader
+          icon={<ListOrdered className="h-3.5 w-3.5" />}
+          title={t("forms.inspector.step")}
+          meta={
+            <span className="rounded bg-muted px-1.5 py-0.5 font-mono text-[11px] tabular-nums text-muted-foreground">
+              {index + 1}/{total}
+            </span>
+          }
+        />
+        <PanelBody>
+          <PanelSection title={t("forms.inspector.sectionContent")}>
+            <Field>
+              <Label htmlFor="fi-step-title">
+                {t("forms.inspector.stepTitle")}
+              </Label>
+              <Input
+                id="fi-step-title"
+                disabled={disabled}
+                value={getText(contentKey.sectionTitle(section.id))}
+                onChange={(e) =>
+                  setText(contentKey.sectionTitle(section.id), e.target.value)
+                }
+              />
+            </Field>
+            <Field>
+              <Label htmlFor="fi-step-desc">
+                {t("forms.inspector.stepDescription")}
+              </Label>
+              <Textarea
+                id="fi-step-desc"
+                rows={3}
+                disabled={disabled}
+                value={getText(contentKey.sectionDescription(section.id))}
+                onChange={(e) =>
+                  setText(
+                    contentKey.sectionDescription(section.id),
+                    e.target.value,
+                  )
+                }
+              />
+            </Field>
+            <FieldHint>{t("forms.inspector.stepHint")}</FieldHint>
+          </PanelSection>
+
+          <PanelSection title={t("forms.inspector.sectionLayout")}>
+            <div className="flex flex-wrap items-center gap-2">
+              <button
+                type="button"
+                disabled={disabled || index === 0 || !onMoveStep}
+                onClick={() => onMoveStep?.(-1)}
+                className="inline-flex h-8 items-center gap-1.5 rounded-lg border px-2.5 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:cursor-not-allowed disabled:opacity-40"
+              >
+                <ChevronLeft className="h-3.5 w-3.5" />
+                {t("forms.steps.moveLeft")}
+              </button>
+              <button
+                type="button"
+                disabled={disabled || index === total - 1 || !onMoveStep}
+                onClick={() => onMoveStep?.(1)}
+                className="inline-flex h-8 items-center gap-1.5 rounded-lg border px-2.5 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:cursor-not-allowed disabled:opacity-40"
+              >
+                {t("forms.steps.moveRight")}
+                <ChevronRight className="h-3.5 w-3.5" />
+              </button>
+              <button
+                type="button"
+                disabled={disabled || total <= 1 || !onDeleteStep}
+                onClick={() => onDeleteStep?.()}
+                title={
+                  total <= 1
+                    ? t("forms.steps.deleteLast")
+                    : t("forms.steps.delete")
+                }
+                className="ml-auto inline-flex h-8 items-center gap-1.5 rounded-lg border px-2.5 text-sm text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive disabled:cursor-not-allowed disabled:opacity-40"
+              >
+                <Trash2 className="h-3.5 w-3.5" />
+                {t("forms.steps.delete")}
+              </button>
+            </div>
+            <FieldHint>{t("forms.inspector.stepLayoutHint")}</FieldHint>
+          </PanelSection>
+        </PanelBody>
+      </Panel>
+    );
+  }
+
+  // The product field carries the whole bundle + checkout configuration, the
+  // way an appointment field carries its calendar. Its own component.
+  if (target.kind === "field" && target.field.type === "product") {
+    return (
+      <ProductFieldInspector
+        commerce={commerce}
+        onChange={(patch) => onCommerceChange?.(patch)}
+        archivedPriceIds={archivedPriceIds ?? EMPTY_IDS}
+        disabled={disabled}
+        getText={getText}
+        setText={setText}
+        onDelete={onDeleteField}
+      />
+    );
+  }
+
   const field = target.field;
+  const steps = target.steps ?? [];
 
   const patchField = onChange ?? (() => undefined);
   const validation = field.validation ?? {};
@@ -488,6 +624,36 @@ export function FieldInspector({
               </SelectContent>
             </Select>
           </Field>
+
+          {/* Multi-step only: which step this field lives on. Dragging the row
+              onto a step pill does the same; this is the keyboard-friendly way. */}
+          {steps.length > 1 && onMoveToStep ? (
+            <Field>
+              <Label>{t("forms.steps.moveTo")}</Label>
+              <Select
+                disabled={disabled}
+                value={target.stepId ?? steps[0]?.id}
+                onValueChange={(v) => onMoveToStep(v)}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {steps.map((section, i) => {
+                    const title = getText(contentKey.sectionTitle(section.id));
+                    return (
+                      <SelectItem key={section.id} value={section.id}>
+                        <span className="font-mono text-[11px] tabular-nums text-muted-foreground">
+                          {i + 1}
+                        </span>{" "}
+                        {title || t("forms.steps.stepN", { n: i + 1 })}
+                      </SelectItem>
+                    );
+                  })}
+                </SelectContent>
+              </Select>
+            </Field>
+          ) : null}
         </PanelSection>
 
         {rulesFirst ? null : rulesSection}
@@ -727,7 +893,11 @@ function TypeSpecific({
 
     case "appointment":
       return (
-        <AppointmentConfig field={field} disabled={disabled} onChange={onChange} />
+        <AppointmentConfig
+          field={field}
+          disabled={disabled}
+          onChange={onChange}
+        />
       );
 
     default:
@@ -736,7 +906,15 @@ function TypeSpecific({
 }
 
 /** Weekday keys in strip order — Monday first, like the Business hours tab. */
-const APPT_DAY_KEYS = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"] as const;
+const APPT_DAY_KEYS = [
+  "mon",
+  "tue",
+  "wed",
+  "thu",
+  "fri",
+  "sat",
+  "sun",
+] as const;
 
 const APPT_DURATIONS = [15, 30, 45, 60] as const;
 
@@ -987,15 +1165,15 @@ function AppointmentConfig({
             id="fi-appt-allbusy"
             disabled={disabled}
             checked={allBusy}
-            onCheckedChange={(v) =>
-              patch({ busyCalendarKeys: v ? "all" : [] })
-            }
+            onCheckedChange={(v) => patch({ busyCalendarKeys: v ? "all" : [] })}
           />
           <span className="text-sm text-muted-foreground">
             {t("forms.inspector.appointment.allCalendars")}
           </span>
         </div>
-        <FieldHint>{t("forms.inspector.appointment.busyCalendarsHelp")}</FieldHint>
+        <FieldHint>
+          {t("forms.inspector.appointment.busyCalendarsHelp")}
+        </FieldHint>
 
         {!allBusy ? (
           <div className="space-y-1.5 pt-1">

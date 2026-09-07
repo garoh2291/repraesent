@@ -1,5 +1,12 @@
-import { useState, useRef, useEffect, useCallback, type ReactNode } from "react";
-import { Link } from "react-router";
+import {
+  useState,
+  useRef,
+  useEffect,
+  useCallback,
+  useMemo,
+  type ReactNode,
+} from "react";
+import { Link, useSearchParams } from "react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { format } from "date-fns";
@@ -56,6 +63,7 @@ import { CampaignDatePicker } from "./campaign-date-picker";
 import TooltipContainer from "~/components/tooltip-container";
 import { useDebounce } from "~/lib/hooks/useDebounce";
 import { useSearchShortcut } from "~/lib/hooks/useSearchShortcut";
+import { useSearchParamsSelect } from "~/lib/hooks/useQueryParams";
 
 const ACCENT = {
   cost: "#f59e0b",
@@ -72,6 +80,49 @@ function defaultRange(): DateRange {
     startDate: format(new Date(2020, 0, 1), "yyyy-MM-dd"),
     endDate: format(today, "yyyy-MM-dd"),
   };
+}
+
+/**
+ * Every filter on this dashboard lives in the URL, so the exact view a user is
+ * looking at can be copied out of the address bar and shared as-is.
+ *
+ * Keys are prefixed: the dashboard is embedded next to other query-driven
+ * tables (e.g. /db-brand, which owns `page` / `search` / `status` for its leads
+ * table), and unprefixed keys would clobber each other.
+ */
+const QP = {
+  from: "ads_from",
+  to: "ads_to",
+  preset: "ads_preset",
+  campaigns: "ads_campaigns",
+  platform: "ads_platform",
+  status: "ads_status",
+  search: "ads_q",
+  page: "ads_page",
+} as const;
+
+const PLATFORM_TABS = ["all", "google", "facebook"] as const;
+const YMD_RE = /^\d{4}-\d{2}-\d{2}$/;
+
+/** Both ends must be present and well-formed, else fall back to the default. */
+function parseRange(params: URLSearchParams): DateRange | null {
+  const from = params.get(QP.from);
+  const to = params.get(QP.to);
+  if (!from || !to || !YMD_RE.test(from) || !YMD_RE.test(to)) return null;
+  return { startDate: from, endDate: to };
+}
+
+function parseIds(raw: string | null): string[] {
+  if (!raw) return [];
+  return raw
+    .split(",")
+    .map((s) => s.trim())
+    .filter(Boolean);
+}
+
+function parsePage(raw: string | null): number {
+  const n = Number(raw);
+  return Number.isFinite(n) && n >= 1 ? Math.floor(n) : 1;
 }
 
 /* ─── Skeleton Components ─── */
@@ -500,17 +551,17 @@ function CampaignListSection({
 }) {
   const { t } = useTranslation();
   const { currentWorkspace } = useAuthContext();
-  const [tab, setTab] = useState<"active" | "inactive">("active");
-  const [search, setSearch] = useState("");
+  const [searchParams] = useSearchParams();
+  const [onSelect] = useSearchParamsSelect();
+  // Tab / search / page live in the URL so the list state travels with a
+  // shared link. "active" is the default and stays out of the query string.
+  const tab: "active" | "inactive" =
+    searchParams.get(QP.status) === "inactive" ? "inactive" : "active";
+  const search = searchParams.get(QP.search) ?? "";
   const debouncedSearch = useDebounce(search, 400);
   const { ref: searchInputRef, withHint } = useSearchShortcut();
-  const [page, setPage] = useState(1);
+  const page = parsePage(searchParams.get(QP.page));
   const isRestricted = !!restrictToCampaignIds?.length;
-
-  // Reset page when search or tab changes
-  useEffect(() => {
-    setPage(1);
-  }, [debouncedSearch, tab]);
 
   const basePath = useCampaignsBasePath();
   // Brand / retailer views scope by basePath and have no `currentWorkspace`.
@@ -596,7 +647,7 @@ function CampaignListSection({
           </p>
           <div className="flex gap-0.5 rounded-lg bg-muted/50 p-0.5 self-start sm:self-auto">
             <button
-              onClick={() => setTab("active")}
+              onClick={() => onSelect({ [QP.status]: "", [QP.page]: "" })}
               className={cn(
                 "rounded-md px-2 sm:px-2.5 py-1 text-[10px] sm:text-[11px] font-medium transition-all whitespace-nowrap",
                 tab === "active"
@@ -612,7 +663,9 @@ function CampaignListSection({
               )}
             </button>
             <button
-              onClick={() => setTab("inactive")}
+              onClick={() =>
+                onSelect({ [QP.status]: "inactive", [QP.page]: "" })
+              }
               className={cn(
                 "rounded-md px-2 sm:px-2.5 py-1 text-[10px] sm:text-[11px] font-medium transition-all whitespace-nowrap",
                 tab === "inactive"
@@ -640,12 +693,16 @@ function CampaignListSection({
               ref={searchInputRef}
               type="text"
               value={search}
-              onChange={(e) => setSearch(e.target.value)}
+              onChange={(e) =>
+                onSelect({ [QP.search]: e.target.value, [QP.page]: "" })
+              }
               placeholder={withHint(t("campaigns.searchCampaigns"))}
               className="flex-1 bg-transparent text-xs text-foreground placeholder:text-muted-foreground/60 outline-none"
             />
             {search && (
-              <button onClick={() => setSearch("")}>
+              <button
+                onClick={() => onSelect({ [QP.search]: "", [QP.page]: "" })}
+              >
                 <X className="h-3 w-3 text-muted-foreground" />
               </button>
             )}
@@ -675,7 +732,9 @@ function CampaignListSection({
               </p>
               <div className="flex items-center gap-1">
                 <button
-                  onClick={() => setPage((p) => Math.max(1, p - 1))}
+                  onClick={() =>
+                    onSelect({ [QP.page]: String(Math.max(1, page - 1)) })
+                  }
                   disabled={page <= 1}
                   className="rounded-md px-2 py-1 text-[10px] sm:text-[11px] font-medium text-muted-foreground hover:text-foreground hover:bg-muted disabled:opacity-30 disabled:pointer-events-none transition-colors"
                 >
@@ -685,7 +744,11 @@ function CampaignListSection({
                   {page} / {totalPages}
                 </span>
                 <button
-                  onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                  onClick={() =>
+                    onSelect({
+                      [QP.page]: String(Math.min(totalPages, page + 1)),
+                    })
+                  }
                   disabled={page >= totalPages}
                   className="rounded-md px-2 py-1 text-[10px] sm:text-[11px] font-medium text-muted-foreground hover:text-foreground hover:bg-muted disabled:opacity-30 disabled:pointer-events-none transition-colors"
                 >
@@ -954,31 +1017,44 @@ export function CampaignAnalyticsDashboard({
 }) {
   const { t } = useTranslation();
   const { currentWorkspace } = useAuthContext();
-  const [dateRange, setDateRange] = useState<DateRange>(defaultRange);
-  const [selectedCampaignIds, setSelectedCampaignIds] = useState<string[]>(
-    initialCampaignIds ?? [],
+  const [searchParams] = useSearchParams();
+  const [onSelect] = useSearchParamsSelect();
+
+  // ── Filters, all read from the URL ────────────────────────────────────
+  // The default (all-time, every campaign, every platform) writes nothing, so
+  // an untouched dashboard keeps a clean URL; anything the user picks lands in
+  // the query string and is reproduced verbatim for whoever opens the link.
+  const fallbackRange = useRef<DateRange>(defaultRange()).current;
+  const urlRange = useMemo(() => parseRange(searchParams), [searchParams]);
+  const dateRange = urlRange ?? fallbackRange;
+  const datePreset = urlRange ? searchParams.get(QP.preset) : "all_time";
+
+  // `null` (key absent) means "never touched" — only then does the caller's
+  // seed apply. An explicit empty value is the user clearing the filter.
+  const campaignsParam = searchParams.get(QP.campaigns);
+  const selectedCampaignIds = useMemo(
+    () =>
+      campaignsParam === null
+        ? (initialCampaignIds ?? [])
+        : parseIds(campaignsParam),
+    [campaignsParam, initialCampaignIds],
   );
-  const [selectedCampaignNames, setSelectedCampaignNames] = useState<
-    Map<string, string>
-  >(initialCampaignNames ?? new Map());
-  const [platformTab, setPlatformTab] = useState<string>("all");
+
+  const platformParam = searchParams.get(QP.platform) ?? "all";
+  const platformTab = (
+    PLATFORM_TABS as readonly string[]
+  ).includes(platformParam)
+    ? platformParam
+    : "all";
+
+  // Display names for the selected campaigns. Ids are all the URL carries, so
+  // names are collected as the user picks them and back-filled from the API
+  // for links opened in a fresh session (see the lookup query below).
+  const [nameCache, setNameCache] = useState<Map<string, string>>(new Map());
 
   // When a fixed platform is provided, use it directly; otherwise use the tab
   const platform =
     fixedPlatform ?? (platformTab === "all" ? undefined : platformTab);
-
-  // Reset campaign filter when the platform tab CHANGES — but never on the
-  // initial mount, otherwise an `initialCampaignIds` prop passed in by a
-  // parent (e.g. /social-ads/:campaignId pre-filter) gets wiped immediately.
-  const firstPlatformTabRender = useRef(true);
-  useEffect(() => {
-    if (firstPlatformTabRender.current) {
-      firstPlatformTabRender.current = false;
-      return;
-    }
-    setSelectedCampaignIds([]);
-    setSelectedCampaignNames(new Map());
-  }, [platformTab]);
 
   const basePath = useCampaignsBasePath();
   // Brand / retailer views scope by basePath and have no `currentWorkspace`.
@@ -1020,6 +1096,33 @@ export function CampaignAnalyticsDashboard({
   const filterIds =
     effectiveSelectedIds.length > 0 ? effectiveSelectedIds : undefined;
 
+  // Back-fill names for ids that arrived via the URL rather than the picker
+  // (a shared link). One cached page of campaigns covers any realistic
+  // selection; anything beyond it falls back to showing the raw id.
+  const needsNameLookup = effectiveSelectedIds.some(
+    (id) => !nameCache.has(id) && !initialCampaignNames?.has(id),
+  );
+  const { data: nameLookup } = useQuery({
+    queryKey: [
+      "campaign-name-lookup",
+      basePath,
+      currentWorkspace?.id,
+      platform,
+    ],
+    queryFn: () => getConnectedCampaigns({ platform, limit: 100 }, basePath),
+    enabled: scopeReady && needsNameLookup,
+  });
+
+  const selectedCampaignNames = useMemo(() => {
+    const names = new Map<string, string>(initialCampaignNames ?? []);
+    for (const c of nameLookup?.data ?? []) {
+      names.set(c.campaign_id, c.campaign_name ?? c.campaign_id);
+    }
+    // Picker-supplied names win — they are what the user actually clicked.
+    nameCache.forEach((v, k) => names.set(k, v));
+    return names;
+  }, [initialCampaignNames, nameLookup, nameCache]);
+
   const { data: overview, isLoading: overviewLoading } = useQuery({
     queryKey: [
       "campaign-overview",
@@ -1046,10 +1149,16 @@ export function CampaignAnalyticsDashboard({
 
   const handleFilterChange = useCallback(
     (ids: string[], names: Map<string, string>) => {
-      setSelectedCampaignIds(ids);
-      setSelectedCampaignNames(names);
+      setNameCache((prev) => {
+        const next = new Map(prev);
+        names.forEach((v, k) => next.set(k, v));
+        return next;
+      });
+      // Empty string deletes the key, which is also how the picker's
+      // "All campaigns" option clears the filter.
+      onSelect({ [QP.campaigns]: ids.join(","), [QP.page]: "" });
     },
-    []
+    [onSelect],
   );
 
   // True empty state — no campaigns connected AT ALL (not just filtered)
@@ -1094,7 +1203,17 @@ export function CampaignAnalyticsDashboard({
                 onChange={handleFilterChange}
               />
             )}
-            <CampaignDatePicker value={dateRange} onChange={setDateRange} />
+            <CampaignDatePicker
+              value={dateRange}
+              presetKey={datePreset}
+              onChange={(range, preset) =>
+                onSelect({
+                  [QP.from]: range.startDate,
+                  [QP.to]: range.endDate,
+                  [QP.preset]: preset ?? "",
+                })
+              }
+            />
           </div>
         </div>
         {/* Platform tabs — only when no fixed platform */}
@@ -1109,7 +1228,13 @@ export function CampaignAnalyticsDashboard({
             ).map((tab) => (
               <button
                 key={tab.key}
-                onClick={() => setPlatformTab(tab.key)}
+                onClick={() =>
+                  onSelect({
+                    [QP.platform]: tab.key === "all" ? "" : tab.key,
+                    [QP.campaigns]: "",
+                    [QP.page]: "",
+                  })
+                }
                 className={cn(
                   "rounded-md px-3 py-1 text-[11px] font-medium transition-all whitespace-nowrap",
                   platformTab === tab.key
