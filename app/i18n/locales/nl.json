@@ -6071,7 +6071,7 @@
       "upload": {
         "title": "Documenten uploaden",
         "drop": "Sleep bestanden hierheen of klik om te kiezen",
-        "types": "PDF, DOCX, TXT of Markdown · max. 20 MB per bestand",
+        "types": "PDF, DOCX, TXT, Markdown, CSV of Excel · max. 20 MB per bestand",
         "rejectedType": "{{name}}: bestandstype niet ondersteund",
         "rejectedSize": "{{name}}: groter dan 20 MB"
       },

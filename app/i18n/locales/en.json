@@ -6071,7 +6071,7 @@
       "upload": {
         "title": "Upload documents",
         "drop": "Drop files here, or click to choose",
-        "types": "PDF, DOCX, TXT or Markdown · up to 20 MB each",
+        "types": "PDF, DOCX, TXT, Markdown, CSV or Excel · up to 20 MB each",
         "rejectedType": "{{name}}: unsupported file type",
         "rejectedSize": "{{name}}: larger than 20 MB"
       },

@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { formatBytes } from "~/lib/ai-assistants/format";
 import { useTranslation } from "react-i18next";
 import { Link, useSearchParams } from "react-router";
 import {
@@ -481,11 +482,6 @@ function TranscriptSheet({
   );
 }
 
-function formatBytes(n: number): string {
-  if (n < 1024) return `${n} B`;
-  if (n < 1024 * 1024) return `${Math.round(n / 1024)} KB`;
-  return `${(n / (1024 * 1024)).toFixed(1)} MB`;
-}
 
 /**
  * A file the visitor sent. Downloads through the auth'd route while the

@@ -6073,7 +6073,7 @@
       "upload": {
         "title": "Importer des documents",
         "drop": "Déposez les fichiers ici, ou cliquez pour choisir",
-        "types": "PDF, DOCX, TXT ou Markdown · 20 Mo max par fichier",
+        "types": "PDF, DOCX, TXT, Markdown, CSV ou Excel · 20 Mo max par fichier",
         "rejectedType": "{{name}} : type de fichier non pris en charge",
         "rejectedSize": "{{name}} : plus de 20 Mo"
       },

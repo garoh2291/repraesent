@@ -6073,7 +6073,7 @@
       "upload": {
         "title": "Dokumente hochladen",
         "drop": "Dateien hier ablegen oder klicken zum Auswählen",
-        "types": "PDF, DOCX, TXT oder Markdown · bis 20 MB pro Datei",
+        "types": "PDF, DOCX, TXT, Markdown, CSV oder Excel · bis 20 MB pro Datei",
         "rejectedType": "{{name}}: Dateityp nicht unterstützt",
         "rejectedSize": "{{name}}: größer als 20 MB"
       },
