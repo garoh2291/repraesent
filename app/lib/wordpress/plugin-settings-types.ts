@@ -719,3 +719,64 @@ export type ReTranslateSettings = {
 
 /** A theme slot the plugin can auto-place a button into. */
 export type ReAppointmentSlot = { key: string; label: string; group: string };
+
+/**
+ * re:banner — temporary, scheduled site banners.
+ *
+ * Dates are wall-clock strings ('YYYY-MM-DD HH:MM') in the SITE's timezone,
+ * not ISO instants: the editor types a local time and means it locally, and
+ * converting through the browser's timezone would move every banner by an hour
+ * twice a year. `state` is derived server-side from the epochs the plugin
+ * stored when it saved — render it rather than recomputing from the dates, so
+ * the dashboard and wp-admin can never disagree about whether a banner is on.
+ */
+export type ReBannerVariant = "bar" | "card" | "hero" | "floating";
+export type ReBannerPosition = "top" | "bottom";
+export type ReBannerCtaType = "url" | "post";
+export type ReBannerVisibility = "all" | "include" | "exclude";
+export type ReBannerStatus = "active" | "inactive";
+export type ReBannerState = "live" | "scheduled" | "expired" | "paused";
+
+/** Everything the editor edits. `id`/`name`/`state` are server-assigned. */
+export type ReBannerConfig = {
+  title: string;
+  description: string;
+  image_id: number;
+  cta_label: string;
+  cta_type: ReBannerCtaType;
+  cta_url: string;
+  cta_post_id: number;
+  cta_new_tab: boolean;
+  variant: ReBannerVariant;
+  position: ReBannerPosition;
+  accent_color: string;
+  text_color: string;
+  bg_color: string;
+  dismissible: boolean;
+  /** 'YYYY-MM-DD HH:MM' in site time, or '' for open-ended. */
+  starts_at: string;
+  /** 'YYYY-MM-DD HH:MM' in site time, or '' for open-ended. */
+  ends_at: string;
+  visibility: ReBannerVisibility;
+  page_ids: number[];
+  status: ReBannerStatus;
+  /** Highest priority wins within one position. */
+  priority: number;
+};
+
+export type ReBanner = ReBannerConfig & {
+  /** WordPress post ID — this is the `id` in `[re_banner id="N"]`. */
+  id: number;
+  name: string;
+  /** Resolved thumbnail, or null when unset or the attachment is gone. */
+  image_url: string | null;
+  state: ReBannerState;
+};
+
+/** A published page or post the CTA can point at. */
+export type ReBannerLinkTarget = {
+  id: number;
+  title: string;
+  type: "page" | "post";
+  url: string;
+};
