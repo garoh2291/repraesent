@@ -6209,6 +6209,19 @@
       "attachmentsHint": "Bestanden worden 30 dagen privé bewaard en alleen gebruikt om de vraag van die bezoeker te beantwoorden.",
       "attachmentsImages": "Afbeeldingen",
       "attachmentsDocuments": "Documenten (PDF, Word, Excel, PowerPoint)",
+      "webSearchEnabled": "Goedgekeurde websites doorzoeken",
+      "webSearchHint": "Als uw eigen documenten een vraag niet dekken, mag de assistent kijken op sites die u goedkeurt en linken wat hij vindt. Antwoorden komen altijd eerst uit uw eigen materiaal.",
+      "webSearchDomains": "Goedgekeurde websites",
+      "webSearchDomainsHint": "Eén domein per regel, bijv. lg.com. Laat leeg om zoeken uit te laten — de assistent kan nergens anders zoeken.",
+      "webSearchLimit": "Zoekopdrachten per dag",
+      "webSearchLimitHint": "Elke zoekopdracht kost ongeveer € 0,005 en maakt het antwoord iets trager. 0 betekent geen daglimiet.",
+      "webSearchMode": {
+        "label": "Wanneer zoeken",
+        "ask": "Eerst aan de bezoeker vragen",
+        "direct": "Direct op het web zoeken",
+        "askHint": "De assistent antwoordt eerst uit uw eigen materiaal en biedt daarna aan om op de goedgekeurde sites te kijken. Hij zoekt alleen als de bezoeker ja zegt of erom vraagt.",
+        "directHint": "De assistent zoekt op de goedgekeurde sites zodra uw eigen materiaal de vraag niet dekt. Verbruikt vaker een zoekkrediet."
+      },
       "wordsUnit": "woorden",
       "maxTokensEffective": "Antwoorden stoppen in werkelijkheid rond {{words}} woorden — de kleinste van deze twee instellingen geldt."
     },

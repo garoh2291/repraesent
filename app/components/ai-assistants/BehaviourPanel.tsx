@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import {
+import { Globe,
   Cpu,
   Languages,
   Paperclip,
@@ -47,8 +47,10 @@ import {
   type AiLocale,
   type AnswerLength,
   DEFAULT_ATTACHMENTS,
+  DEFAULT_WEB_SEARCH,
   type AssistantDraft,
   type AttachmentsConfig,
+  type WebSearchConfig,
   type PersonaTone,
 } from "~/lib/api/ai-assistants";
 
@@ -93,6 +95,12 @@ export function BehaviourPanel({ draft, canEdit, onChange }: Props) {
   };
   const setAttachments = (p: Partial<AttachmentsConfig>) =>
     onChange({ attachments: { ...attachments, ...p } });
+  const webSearch: WebSearchConfig = {
+    ...DEFAULT_WEB_SEARCH,
+    ...(draft.web_search ?? {}),
+  };
+  const setWebSearch = (p: Partial<WebSearchConfig>) =>
+    onChange({ web_search: { ...webSearch, ...p } });
 
   return (
     <div className="grid gap-5 lg:grid-cols-2">
@@ -527,6 +535,103 @@ export function BehaviourPanel({ draft, canEdit, onChange }: Props) {
                   />
                   {t("aiAssistants.behaviour.attachmentsDocuments")}
                 </label>
+              </div>
+            </div>
+          </FieldAnchor>
+
+          <FieldAnchor path="web_search.enabled">
+            <div className="rounded-lg border border-border">
+              <label className="flex cursor-pointer items-start justify-between gap-4 px-3 py-2.5">
+                <span className="space-y-0.5">
+                  <span className="flex items-center gap-1.5 text-sm">
+                    <Globe className="h-3.5 w-3.5 text-muted-foreground" />
+                    {t("aiAssistants.behaviour.webSearchEnabled")}
+                  </span>
+                  <span className="block text-xs text-muted-foreground">
+                    {t("aiAssistants.behaviour.webSearchHint")}
+                  </span>
+                </span>
+                <Switch
+                  checked={webSearch.enabled}
+                  disabled={!canEdit}
+                  onCheckedChange={(v) => setWebSearch({ enabled: v })}
+                  aria-label={t("aiAssistants.behaviour.webSearchEnabled")}
+                  className="mt-0.5"
+                />
+              </label>
+              <div
+                className={cn(
+                  "space-y-2 border-t border-border px-3 py-2.5",
+                  !webSearch.enabled && "opacity-50",
+                )}
+              >
+                <Field>
+                  <Label htmlFor="ws-domains">
+                    {t("aiAssistants.behaviour.webSearchDomains")}
+                  </Label>
+                  <Textarea
+                    id="ws-domains"
+                    rows={3}
+                    className="font-mono text-xs"
+                    placeholder={"lg.com\nbosch-home.com\nyoutube.com"}
+                    value={webSearch.domains.join("\n")}
+                    disabled={!canEdit || !webSearch.enabled}
+                    onChange={(e) =>
+                      setWebSearch({
+                        domains: e.target.value
+                          .split(/[\n,]/)
+                          .map((d) => d.trim())
+                          .filter(Boolean),
+                      })
+                    }
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    {t("aiAssistants.behaviour.webSearchDomainsHint")}
+                  </p>
+                </Field>
+                <Field>
+                  <Label>{t("aiAssistants.behaviour.webSearchMode.label")}</Label>
+                  <Segmented label={t("aiAssistants.behaviour.webSearchMode.label")}>
+                    {(["ask", "direct"] as const).map((m) => (
+                      <SegmentedButton
+                        key={m}
+                        active={(webSearch.mode ?? "ask") === m}
+                        onClick={() =>
+                          canEdit && webSearch.enabled && setWebSearch({ mode: m })
+                        }
+                      >
+                        {t(`aiAssistants.behaviour.webSearchMode.${m}`)}
+                      </SegmentedButton>
+                    ))}
+                  </Segmented>
+                  <p className="text-xs text-muted-foreground">
+                    {t(
+                      `aiAssistants.behaviour.webSearchMode.${webSearch.mode ?? "ask"}Hint`,
+                    )}
+                  </p>
+                </Field>
+                <Field>
+                  <Label htmlFor="ws-limit">
+                    {t("aiAssistants.behaviour.webSearchLimit")}
+                  </Label>
+                  <Input
+                    id="ws-limit"
+                    type="number"
+                    min={0}
+                    max={500}
+                    className="w-32"
+                    value={webSearch.daily_limit}
+                    disabled={!canEdit || !webSearch.enabled}
+                    onChange={(e) =>
+                      setWebSearch({
+                        daily_limit: Math.max(0, Math.min(500, Number(e.target.value) || 0)),
+                      })
+                    }
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    {t("aiAssistants.behaviour.webSearchLimitHint")}
+                  </p>
+                </Field>
               </div>
             </div>
           </FieldAnchor>

@@ -68,6 +68,7 @@ import {
 } from "~/lib/ai-assistants/validate";
 import {
   DEFAULT_ATTACHMENTS,
+  DEFAULT_WEB_SEARCH,
   EMPTY_FALLBACK_CONTACT,
   updateAssistant,
   withProfileDefaults,
@@ -111,6 +112,7 @@ function toDraft(a: AssistantRecord): AssistantDraft {
     business_profile: withProfileDefaults(a.business_profile),
     retrieval: { rerank: a.retrieval?.rerank ?? false },
     attachments: { ...DEFAULT_ATTACHMENTS, ...(a.attachments ?? {}) },
+    web_search: { ...DEFAULT_WEB_SEARCH, ...(a.web_search ?? {}) },
     chat_model: a.chat_model,
     temperature: a.temperature,
     max_output_tokens: a.max_output_tokens,

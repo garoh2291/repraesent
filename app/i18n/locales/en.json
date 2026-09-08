@@ -6209,6 +6209,19 @@
       "attachmentsHint": "Files are stored privately for 30 days and only used to answer that visitor's question.",
       "attachmentsImages": "Images",
       "attachmentsDocuments": "Documents (PDF, Word, Excel, PowerPoint)",
+      "webSearchEnabled": "Search approved websites",
+      "webSearchHint": "When your own documents don't cover a question, the assistant may look on sites you approve and link what it finds. Answers always come from your material first.",
+      "webSearchDomains": "Approved websites",
+      "webSearchDomainsHint": "One domain per line, e.g. lg.com. Leave empty to keep search off — the assistant can never search anywhere you have not listed here.",
+      "webSearchLimit": "Searches per day",
+      "webSearchLimitHint": "Each search costs about €0.005 and makes the reply a little slower. 0 means no daily cap.",
+      "webSearchMode": {
+        "label": "When to search",
+        "ask": "Ask the visitor first",
+        "direct": "Search the web directly",
+        "askHint": "The assistant answers from your own material first, then offers to look on the approved sites. It searches only if the visitor says yes, or asks for it.",
+        "directHint": "The assistant searches the approved sites whenever your own material does not cover the question. Uses a search credit more often."
+      },
       "wordsUnit": "words",
       "maxTokensEffective": "Answers actually stop at about {{words}} words — the shorter of these two settings."
     },

@@ -6211,6 +6211,19 @@
       "attachmentsHint": "Les fichiers sont conservés en privé pendant 30 jours et servent uniquement à répondre à la question de ce visiteur.",
       "attachmentsImages": "Images",
       "attachmentsDocuments": "Documents (PDF, Word, Excel, PowerPoint)",
+      "webSearchEnabled": "Rechercher sur les sites approuvés",
+      "webSearchHint": "Quand vos propres documents ne couvrent pas une question, l'assistant peut chercher sur les sites que vous approuvez et lier ce qu'il trouve. Les réponses viennent toujours d'abord de votre matériel.",
+      "webSearchDomains": "Sites approuvés",
+      "webSearchDomainsHint": "Un domaine par ligne, par ex. lg.com. Laissez vide pour désactiver la recherche — l'assistant ne peut chercher nulle part ailleurs.",
+      "webSearchLimit": "Recherches par jour",
+      "webSearchLimitHint": "Chaque recherche coûte environ 0,005 € et ralentit un peu la réponse. 0 signifie aucune limite quotidienne.",
+      "webSearchMode": {
+        "label": "Quand chercher",
+        "ask": "Demander d’abord au visiteur",
+        "direct": "Chercher directement sur le web",
+        "askHint": "L’assistant répond d’abord à partir de vos propres contenus, puis propose de regarder sur les sites approuvés. Il ne cherche que si le visiteur accepte ou le demande.",
+        "directHint": "L’assistant cherche sur les sites approuvés dès que vos contenus ne couvrent pas la question. Consomme un crédit de recherche plus souvent."
+      },
       "wordsUnit": "mots",
       "maxTokensEffective": "Les réponses s'arrêtent en réalité vers {{words}} mots — la plus petite des deux valeurs s'applique."
     },

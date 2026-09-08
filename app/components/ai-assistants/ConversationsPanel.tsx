@@ -34,6 +34,7 @@ import {
 } from "~/lib/hooks/useAiAssistants";
 import {
   actionsFromToolCalls,
+  cardsFromToolCalls,
   downloadMessageAttachment,
   type MessageAttachment,
   type ConversationDetail,
@@ -385,6 +386,7 @@ function TranscriptSheet({
               .map((m) => {
                 const mine = m.role === "user";
                 const actions = actionsFromToolCalls(m.tool_calls);
+                const cards = cardsFromToolCalls(m.tool_calls);
                 return (
                   <div
                     key={m.id}
@@ -403,6 +405,30 @@ function TranscriptSheet({
                     >
                       {m.content}
                     </div>
+                    {!mine && cards.length ? (
+                      // What the visitor was actually shown. Without it this
+                      // panel repeats the bare caption they complained about.
+                      <div className="flex max-w-[85%] flex-col gap-1 rounded-xl border border-border bg-card p-2">
+                        {cards.map((c) => (
+                          <div key={c.id} className="rounded-md bg-muted/50 px-2 py-1.5">
+                            <div className="flex items-baseline justify-between gap-2">
+                              <span className="text-sm font-medium">{c.title}</span>
+                              {c.value ? (
+                                <span className="shrink-0 text-xs tabular-nums">{c.value}</span>
+                              ) : null}
+                            </div>
+                            {c.subtitle ? (
+                              <p className="text-xs text-muted-foreground">{c.subtitle}</p>
+                            ) : null}
+                            {c.facts?.length ? (
+                              <p className="text-xs text-muted-foreground/80">
+                                {c.facts.map((f) => `${f.label}: ${f.value}`).join(" · ")}
+                              </p>
+                            ) : null}
+                          </div>
+                        ))}
+                      </div>
+                    ) : null}
                     {mine && m.attachments?.length ? (
                       <div className="flex max-w-[85%] flex-wrap justify-end gap-1.5">
                         {m.attachments.map((a) => (
