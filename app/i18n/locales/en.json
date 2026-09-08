@@ -6211,6 +6211,7 @@
       "attachmentsDocuments": "Documents (PDF, Word, Excel, PowerPoint)",
       "webSearchEnabled": "Search approved websites",
       "webSearchHint": "When your own documents don't cover a question, the assistant may look on sites you approve and link what it finds. Answers always come from your material first.",
+      "webSearchNotConfigured": "Not available on this server — FIRECRAWL_API_KEY is not set, so the assistant cannot search these sites. Ask whoever runs your server to add it.",
       "webSearchDomains": "Approved websites",
       "webSearchDomainsHint": "One domain per line, e.g. lg.com. Leave empty to keep search off — the assistant can never search anywhere you have not listed here.",
       "webSearchLimit": "Searches per day",

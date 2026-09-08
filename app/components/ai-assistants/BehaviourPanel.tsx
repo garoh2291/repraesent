@@ -58,12 +58,18 @@ interface Props {
   draft: AssistantDraft;
   canEdit: boolean;
   onChange: (patch: Partial<AssistantDraft>) => void;
+  /**
+   * Whether the SERVER can search at all. Undefined means unknown (an older
+   * API); only an explicit `false` shows the warning, so a stale client never
+   * cries wolf.
+   */
+  searchConfigured?: boolean;
 }
 
 const TONES: PersonaTone[] = ["friendly", "formal", "concise"];
 const INSTRUCTIONS_MAX = 1000;
 
-export function BehaviourPanel({ draft, canEdit, onChange }: Props) {
+export function BehaviourPanel({ draft, canEdit, onChange, searchConfigured }: Props) {
   const { t } = useTranslation();
   const { data: models } = useChatModels();
   const modelList = models?.models ?? [];
@@ -559,6 +565,14 @@ export function BehaviourPanel({ draft, canEdit, onChange }: Props) {
                   className="mt-0.5"
                 />
               </label>
+              {webSearch.enabled && searchConfigured === false ? (
+                // The toggle used to read "on" whatever the server could do, so
+                // an operator with search switched on got an assistant telling
+                // visitors it could not browse, with nothing to explain it.
+                <p className="border-t border-amber-500/30 bg-amber-500/10 px-3 py-2 text-xs text-amber-800 dark:text-amber-300">
+                  {t("aiAssistants.behaviour.webSearchNotConfigured")}
+                </p>
+              ) : null}
               <div
                 className={cn(
                   "space-y-2 border-t border-border px-3 py-2.5",

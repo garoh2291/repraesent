@@ -6213,6 +6213,7 @@
       "attachmentsDocuments": "Dokumente (PDF, Word, Excel, PowerPoint)",
       "webSearchEnabled": "Freigegebene Websites durchsuchen",
       "webSearchHint": "Wenn Ihre eigenen Dokumente eine Frage nicht abdecken, darf der Assistent auf von Ihnen freigegebenen Seiten nachsehen und Gefundenes verlinken. Antworten kommen immer zuerst aus Ihrem Material.",
+      "webSearchNotConfigured": "Auf diesem Server nicht verfügbar — FIRECRAWL_API_KEY ist nicht gesetzt, der Assistent kann diese Seiten also nicht durchsuchen. Bitten Sie Ihren Serverbetreuer, den Schlüssel zu hinterlegen.",
       "webSearchDomains": "Freigegebene Websites",
       "webSearchDomainsHint": "Eine Domain pro Zeile, z. B. lg.com. Leer lassen, um die Suche aus zu lassen – der Assistent kann nirgendwo suchen, was hier nicht steht.",
       "webSearchLimit": "Suchen pro Tag",

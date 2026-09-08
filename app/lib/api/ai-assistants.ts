@@ -513,6 +513,13 @@ export const DEFAULT_WEB_SEARCH: WebSearchConfig = {
 };
 
 export interface AssistantRecord {
+  /**
+   * Whether this SERVER can search at all (`FIRECRAWL_API_KEY`). Distinct from
+   * `web_search.enabled`, which is what the operator asked for — the two used
+   * to be indistinguishable here, so the toggle read "on" while the assistant
+   * told visitors it could not browse. Detail responses only.
+   */
+  search_configured?: boolean;
   id: string;
   workspace_id: string;
   name: string;

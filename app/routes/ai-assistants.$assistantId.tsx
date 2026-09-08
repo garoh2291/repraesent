@@ -607,7 +607,12 @@ export default function AiAssistantDetailRoute() {
           </div>
         </TabsContent>
         <TabsContent value="behaviour" className="app-fade-up pt-5">
-          <BehaviourPanel draft={draft} canEdit={canEdit} onChange={patch} />
+          <BehaviourPanel
+            draft={draft}
+            canEdit={canEdit}
+            onChange={patch}
+            searchConfigured={assistant?.search_configured}
+          />
         </TabsContent>
         <TabsContent value="appearance" className="app-fade-up pt-5">
           <AppearancePanel draft={draft} canEdit={canEdit} onChange={patch} />
