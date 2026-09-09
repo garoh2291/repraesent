@@ -13,22 +13,16 @@ import {
 } from "lucide-react";
 import type {
   ReTranslateCurrency,
-  ReTranslateFoundAmount,
+  ReTranslatePriceCell,
   ReTranslatePriceCellInput,
   ReTranslatePriceKey,
   ReTranslatePricing,
-  ReTranslatePricingResult,
-  ReTranslatePricingSettings,
   ReTranslateRegion,
 } from "~/lib/wordpress/plugin-settings-types";
 import { extractErrorMessage } from "~/lib/api/axios-instance";
 import {
-  useBindTranslateFoundAmount,
-  useRemoveTranslatePriceKey,
   useRemoveTranslateRegion,
-  useSaveTranslatePriceKey,
   useSaveTranslatePrices,
-  useSaveTranslatePricingSettings,
   useSaveTranslateRegion,
   useScanTranslatePrices,
   useSetTranslateDefaultRegion,
@@ -76,6 +70,7 @@ import {
   moneyToInput,
   normalizePriceSlug,
   normalizeRegionSlug,
+  parseAutoPriceSlug,
   parseMoneyParts,
 } from "./constants";
 import { cn } from "~/lib/utils";
@@ -102,8 +97,10 @@ import { cn } from "~/lib/utils";
  * is answered. Shortcodes stay on the row that owns them, not in the empty
  * state.
  *
- * The currency picker, the one-box adopt flow, and the three delivery modes
- * are unchanged.
+ * There is no delivery section under the table any more. It held one switch —
+ * whether picking a region repainted the page or reloaded it — and picking a
+ * region now always reloads: the server prices the page for the region it was
+ * asked for, so a page never carries another region's amounts to swap in.
  */
 
 export function RegionsPanel({ pluginUuid }: { pluginUuid: string }) {
@@ -151,34 +148,18 @@ function RegionsBody({
   pluginUuid: string;
   data: ReTranslatePricing;
 }) {
-  return (
-    <div className="space-y-4">
-      <PricesCard pluginUuid={pluginUuid} data={data} />
-      <DeliveryCard pluginUuid={pluginUuid} pricing={data.pricing} />
-    </div>
-  );
+  return <PricesCard pluginUuid={pluginUuid} data={data} />;
 }
 
-/* ── 1 · pick a region, then price what the pages already say ────────────── */
+/* ── pick a region, then price what the pages already say ────────────────── */
 
 /** What the single region dialog is currently doing. */
 type RegionDialogState =
   | { mode: "add" }
   | { mode: "edit"; region: ReTranslateRegion };
 
-type StartPath = "scan" | "type" | null;
-
 /** The dropdown's last entry is a door, not a region. */
 const ADD_REGION = "__add-region";
-
-function occurrenceSubtitle(amount: ReTranslateFoundAmount): string {
-  const place = amount.places[0];
-  const bits: string[] = [];
-  const context = (place?.context ?? "").replace(/\s+/g, " ").trim();
-  if (context) bits.push(context);
-  if (place?.title) bits.push(place.title);
-  return bits.join(" · ");
-}
 
 /**
  * How much of one region is priced, drafts included, so the dropdown describes
@@ -194,7 +175,7 @@ function pricedCount(
   let done = 0;
 
   for (const key of priceKeys) {
-    for (const code of region.currencies) {
+    for (const code of region.currencies ?? []) {
       total += 1;
       const id = cellId(key.slug, region.slug, code);
       if ((cells[id] ?? stored.get(id) ?? "").trim() !== "") done += 1;
@@ -212,7 +193,7 @@ function regionLabel(
   t: (key: string, fallback: string) => string,
 ): string {
   const bits = [
-    region.currencies.join(" · ") ||
+    (region.currencies ?? []).join(" · ") ||
       t("wordpress.reTranslate.noCurrencies", "no currency"),
   ];
 
@@ -254,16 +235,19 @@ function PricesCard({
 
   const savePrices = useSaveTranslatePrices(pluginUuid);
   const saveRegion = useSaveTranslateRegion(pluginUuid);
-  const removeKey = useRemoveTranslatePriceKey(pluginUuid);
   const removeRegion = useRemoveTranslateRegion(pluginUuid);
   const setDefault = useSetTranslateDefaultRegion(pluginUuid);
   const scan = useScanTranslatePrices(pluginUuid);
 
   const [dialog, setDialog] = useState<RegionDialogState | null>(null);
   const [removing, setRemoving] = useState<ReTranslateRegion | null>(null);
-  const [start, setStart] = useState<StartPath>(null);
   const [selected, setSelected] = useState("");
   const [scanning, setScanning] = useState(0);
+
+  const regions = Array.isArray(data.regions) ? data.regions : [];
+  const priceKeys = Array.isArray(data.price_keys) ? data.price_keys : [];
+  const priceRows = Array.isArray(data.prices) ? data.prices : [];
+  const currencies = Array.isArray(data.currencies) ? data.currencies : [];
 
   /*
    * The region on screen. Held as a slug rather than an object so it survives a
@@ -271,26 +255,26 @@ function PricesCard({
    * removed, or not having arrived yet on the first render.
    */
   const active =
-    data.regions.find((region) => region.slug === selected) ??
-    data.regions.find((region) => region.slug === data.default_region) ??
-    data.regions[0] ??
+    regions.find((region) => region.slug === selected) ??
+    regions.find((region) => region.slug === data.default_region) ??
+    regions[0] ??
     null;
 
   const columns = useMemo(
     () =>
       active
-        ? active.currencies.map((code) => currencyOf(data.currencies, code))
+        ? (active.currencies ?? []).map((code) => currencyOf(currencies, code))
         : [],
-    [active, data.currencies],
+    [active, currencies],
   );
 
   /** Currencies another region has already claimed, so the form can hide them. */
   function claimedBy(exclude?: string) {
     const out = new Set<string>();
 
-    for (const region of data.regions) {
+    for (const region of regions) {
       if (region.slug === exclude) continue;
-      for (const code of region.currencies) out.add(code);
+      for (const code of region.currencies ?? []) out.add(code);
     }
 
     return [...out];
@@ -299,11 +283,11 @@ function PricesCard({
   /** cellId → what the site has. The baseline every draft is diffed against. */
   const stored = useMemo(() => {
     const map = new Map<string, string>();
-    for (const cell of data.prices) {
+    for (const cell of priceRows) {
       map.set(cellId(cell.key, cell.region, cell.currency), cell.input);
     }
     return map;
-  }, [data.prices]);
+  }, [priceRows]);
 
   const [cells, setCells] = useState<Record<string, string>>({});
 
@@ -323,8 +307,8 @@ function PricesCard({
         .sort()
         .join("&") +
       "|" +
-      data.price_keys.map((key) => key.slug).join("&"),
-    [stored, data.price_keys],
+      priceKeys.map((key) => key.slug).join("&"),
+    [stored, priceKeys],
   );
 
   useEffect(() => {
@@ -339,31 +323,62 @@ function PricesCard({
   const busy = savePrices.isPending;
   const regionBusy = setDefault.isPending || removeRegion.isPending;
 
-  const found = data.found ?? {
-    summary: {
-      total: 0,
-      pages: 0,
-      unreviewed: 0,
-      bound: 0,
-      ignored: 0,
-      scanned: false,
-    },
-    amounts: [],
-  };
+  const found = data.found;
+  const pageCurrency =
+    data.pricing.base_currency || found?.summary.currency || "";
 
-  const hasPrices = data.price_keys.length > 0;
-  const scanned = found.summary.scanned;
+  const hasPrices = priceKeys.length > 0;
+  const scanned = Boolean(found?.summary.scanned);
 
-  /** The page amount a row came from, so the row can lead with it. */
-  const originOf = useMemo(() => {
-    const map = new Map<string, ReTranslateFoundAmount>();
-    for (const amount of found.amounts) {
-      if (amount.status === "bound" && amount.price_key) {
-        map.set(amount.price_key, amount);
+  /*
+   * The amount the page itself carries, keyed by price. The default region's
+   * matching currency is whatever the page already says, so that cell is not
+   * typed — and the row can lead with the formatted figure.
+   */
+  const written = useMemo(() => {
+    const map = new Map<string, ReTranslatePriceCell>();
+
+    for (const row of priceRows) {
+      if (
+        row.region === data.default_region &&
+        (!pageCurrency || row.currency === pageCurrency)
+      ) {
+        map.set(row.key, row);
       }
     }
+
     return map;
-  }, [found.amounts]);
+  }, [priceRows, data.default_region, pageCurrency]);
+
+  /*
+   * Biggest first, with equal amounts together.
+   *
+   * The site sends rows in the order it read them — page by page, down each
+   * page — which scatters the three places a site quotes €1000 across the
+   * grid. Those are exactly the rows somebody is comparing when they price a
+   * region, so they belong next to each other. Within one amount the reading
+   * order is kept, so a row still sits where its page put it.
+   */
+  const rows = useMemo(() => {
+    const amountOf = (key: ReTranslatePriceKey) =>
+      written.get(key.slug)?.amount_minor ??
+      parseAutoPriceSlug(key.slug)?.amount_minor ??
+      0;
+
+    return priceKeys
+      .map((key, index) => ({ key, index }))
+      .sort((a, b) => amountOf(b.key) - amountOf(a.key) || a.index - b.index)
+      .map((row) => row.key);
+  }, [priceKeys, written]);
+
+  /*
+   * Which page a row came from, but only when the grid holds more than one.
+   * On a site whose prices are all on /pricing it is the same word against
+   * every row, and a column of "Pricing ·" is noise in front of the thing that
+   * actually tells two rows apart.
+   */
+  const manyPages =
+    new Set(priceKeys.map((key) => key.note.trim()).filter(Boolean)).size > 1;
 
   /**
    * Write every changed amount, in one request, under one toast.
@@ -465,7 +480,6 @@ function PricesCard({
       disabled={scan.isPending}
       onClick={async () => {
         setScanning(0);
-        setStart("scan");
         try {
           const res = await scan.mutateAsync({ onProgress: setScanning });
           if (!res.ok) {
@@ -475,7 +489,7 @@ function PricesCard({
           flash(
             t(
               "wordpress.reTranslate.scanDone",
-              "Read {{pages}} pages and found {{count}} amounts",
+              "Scanned {{pages}} pages and found {{count}} amounts",
               {
                 pages: res.found?.summary.pages ?? 0,
                 count: res.found?.summary.total ?? 0,
@@ -493,12 +507,12 @@ function PricesCard({
         <Radar className="size-3.5" />
       )}
       {scan.isPending
-        ? t("wordpress.reTranslate.scanning", "Reading {{count}} pages…", {
+        ? t("wordpress.reTranslate.scanning", "Scanning {{count}} pages…", {
             count: scanning,
           })
         : scanned
-          ? t("wordpress.reTranslate.scanAgain", "Read again")
-          : t("wordpress.reTranslate.scanSite", "Read my pages")}
+          ? t("wordpress.reTranslate.scanAgain", "Scan again")
+          : t("wordpress.reTranslate.scanSite", "Scan my pages")}
     </Button>
   );
 
@@ -518,11 +532,11 @@ function PricesCard({
   ): string | null {
     if (active == null || active.slug !== data.default_region) return null;
 
-    const origin = originOf.get(slug);
+    const page = written.get(slug);
 
-    if (!origin || origin.currency !== currency.code) return null;
+    if (!page || page.currency !== currency.code) return null;
 
-    return origin.formatted || origin.literal;
+    return page.input || page.formatted;
   }
 
   /**
@@ -533,36 +547,20 @@ function PricesCard({
    * else. Worth offering to fix rather than leaving to be worked out.
    */
   const orphanCurrency = useMemo(() => {
-    const tally = new Map<string, number>();
+    if (pageCurrency === "") return "";
 
-    for (const amount of found.amounts) {
-      if (amount.status === "ignored") continue;
-      tally.set(amount.currency, (tally.get(amount.currency) ?? 0) + 1);
-    }
-
-    let best = "";
-    let most = 0;
-
-    for (const [code, count] of tally) {
-      if (count > most) {
-        best = code;
-        most = count;
-      }
-    }
-
-    if (best === "") return "";
-
-    const quoted = data.regions.some((region) =>
-      region.currencies.includes(best),
+    const quoted = regions.some((region) =>
+      (region.currencies ?? []).includes(pageCurrency),
     );
 
-    return quoted ? "" : best;
-  }, [found.amounts, data.regions]);
+    return quoted ? "" : pageCurrency;
+  }, [pageCurrency, regions]);
 
   /** How many cells in the current view the page decides. */
-  const pageOwned = data.price_keys.reduce(
+  const pageOwned = priceKeys.reduce(
     (total, key) =>
-      total + columns.filter((currency) => pageValue(key.slug, currency)).length,
+      total +
+      columns.filter((currency) => pageValue(key.slug, currency)).length,
     0,
   );
 
@@ -575,10 +573,10 @@ function PricesCard({
           "wordpress.reTranslate.priceListHint",
           "Your pages set the default region's prices. Add a region for anywhere you quote different numbers.",
         )}
-        action={data.regions.length > 0 ? scanButton : null}
+        action={regions.length > 0 ? scanButton : null}
       />
 
-      {data.regions.length === 0 || active == null ? (
+      {regions.length === 0 || active == null ? (
         <FirstRun
           pluginUuid={pluginUuid}
           data={data}
@@ -589,11 +587,11 @@ function PricesCard({
       ) : (
         <>
           {/*
-            * The pages speak a currency no region here quotes, so nothing can
-            * be read off them and the whole grid is hand-typed. That is the
-            * state this screen exists to prevent, so it says so where it is
-            * happening rather than waiting to be discovered.
-            */}
+           * The pages speak a currency no region here quotes, so nothing can
+           * be read off them and the whole grid is hand-typed. That is the
+           * state this screen exists to prevent, so it says so where it is
+           * happening rather than waiting to be discovered.
+           */}
           {orphanCurrency ? (
             <FirstRun
               pluginUuid={pluginUuid}
@@ -626,12 +624,12 @@ function PricesCard({
                 setSelected(event.target.value);
               }}
             >
-              {data.regions.map((region) => (
+              {regions.map((region) => (
                 <NativeSelectOption key={region.slug} value={region.slug}>
                   {regionLabel(
                     region,
                     region.slug === data.default_region,
-                    pricedCount(region, data.price_keys, stored, cells),
+                    pricedCount(region, priceKeys, stored, cells),
                     t,
                   )}
                 </NativeSelectOption>
@@ -728,13 +726,6 @@ function PricesCard({
                 )}
               </InfoNote>
             </div>
-          ) : !hasPrices && start == null && !scanned ? (
-            <div className="p-5 sm:p-6">
-              <StartChoice
-                onScan={() => setStart("scan")}
-                onType={() => setStart("type")}
-              />
-            </div>
           ) : (
             <>
               <div className="overflow-x-auto">
@@ -771,13 +762,14 @@ function PricesCard({
                   </thead>
 
                   <tbody>
-                    {data.price_keys.map((key) => (
+                    {rows.map((key) => (
                       <PriceRow
                         key={key.slug}
                         priceKey={key}
                         region={active}
                         columns={columns}
-                        origin={originOf.get(key.slug)}
+                        page={manyPages ? key.note.trim() : ""}
+                        origin={written.get(key.slug)}
                         valueFor={(currency) => {
                           const id = cellId(
                             key.slug,
@@ -805,27 +797,6 @@ function PricesCard({
                           })
                         }
                         fromPage={(currency) => pageValue(key.slug, currency)}
-                        removing={removeKey.isPending}
-                        onRemove={async (purge) => {
-                          try {
-                            const res = await removeKey.mutateAsync({
-                              slug: key.slug,
-                              purge,
-                            });
-                            if (!res.ok) {
-                              flash(res.error ?? "", "error");
-                              return;
-                            }
-                            flash(
-                              t(
-                                "wordpress.reTranslate.priceRemoved",
-                                "Price removed",
-                              ),
-                            );
-                          } catch (err) {
-                            flash(extractErrorMessage(err), "error");
-                          }
-                        }}
                       />
                     ))}
 
@@ -838,25 +809,17 @@ function PricesCard({
                           {scanned
                             ? t(
                                 "wordpress.reTranslate.foundNothing",
-                                "Nothing found. An amount written as a plain number with no currency symbol is not recognised — on purpose, because a bare number is as likely to be a year as a price.",
+                                "Nothing found. An amount needs its currency beside it — “€300”, not “300” — so a year or a phone number is never read as a price.",
                               )
                             : t(
-                                "wordpress.reTranslate.typeFirstRow",
-                                "Name the first row below, then fill in what it costs.",
+                                "wordpress.reTranslate.scanPagesFirst",
+                                "Scan your pages and every price on them becomes a row here.",
                               )}
                         </td>
                       </tr>
                     ) : null}
                   </tbody>
                 </table>
-              </div>
-
-              <div className="space-y-4 p-5 sm:p-6">
-                <NewPriceRow pluginUuid={pluginUuid} data={data} />
-
-                {scanned ? (
-                  <AdoptToggle pluginUuid={pluginUuid} pricing={data.pricing} />
-                ) : null}
               </div>
             </>
           )}
@@ -980,40 +943,31 @@ function FirstRun({
   onChoose: (slug: string) => void;
   onSetUpByHand: () => void;
 }) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
 
   const saveRegion = useSaveTranslateRegion(pluginUuid);
   const setDefault = useSetTranslateDefaultRegion(pluginUuid);
   const savePrices = useSaveTranslatePrices(pluginUuid);
-  const adopt = useBindTranslateFoundAmount(pluginUuid);
 
   const found = data.found;
   const scanned = Boolean(found?.summary.scanned);
 
   /*
-   * The currency the site actually prices in, which is simply the one it uses
-   * most. Guessing from the site locale would be guessing; this is counted.
+   * The currency the site's pages are written in. The scan records it; without
+   * the old occurrence list there is nothing to tally.
    */
   const guess = useMemo(() => {
-    const tally = new Map<string, number>();
+    const currency =
+      data.pricing.base_currency || found?.summary.currency || "";
+    const count = found?.summary.total || data.price_keys.length;
 
-    for (const amount of found?.amounts ?? []) {
-      if (amount.status === "ignored") continue;
-      tally.set(amount.currency, (tally.get(amount.currency) ?? 0) + 1);
-    }
-
-    let best = "";
-    let most = 0;
-
-    for (const [code, count] of tally) {
-      if (count > most) {
-        best = code;
-        most = count;
-      }
-    }
-
-    return { currency: best, count: most };
-  }, [found?.amounts]);
+    return { currency, count };
+  }, [
+    data.pricing.base_currency,
+    data.price_keys.length,
+    found?.summary.currency,
+    found?.summary.total,
+  ]);
 
   const [label, setLabel] = useState("");
   const [flag, setFlag] = useState("");
@@ -1029,16 +983,17 @@ function FirstRun({
 
     const home = HOME_REGION[guess.currency];
 
-    setLabel(home?.label ?? guess.currency);
+    setLabel(
+      home
+        ? t(`wordpress.reTranslate.homeRegion.${guess.currency}`, home.label)
+        : guess.currency,
+    );
     setFlag(home?.flag ?? "");
-  }, [guess.currency, touched]);
+  }, [guess.currency, touched, t, i18n.language]);
 
   const slug = normalizeRegionSlug(label);
   const busy =
-    saveRegion.isPending ||
-    setDefault.isPending ||
-    savePrices.isPending ||
-    adopt.isPending;
+    saveRegion.isPending || setDefault.isPending || savePrices.isPending;
   const ready = guess.currency !== "" && slug !== "";
 
   async function create() {
@@ -1053,7 +1008,9 @@ function FirstRun({
       });
 
       if (!made.ok) {
-        throw new Error(made.error ?? t("common.error", "Something went wrong"));
+        throw new Error(
+          made.error ?? t("common.error", "Something went wrong"),
+        );
       }
 
       /*
@@ -1063,25 +1020,24 @@ function FirstRun({
        */
       await setDefault.mutateAsync(slug);
 
-      const mine = (found?.amounts ?? []).filter(
-        (amount) => amount.currency === currency && amount.status !== "ignored",
-      );
-
       /*
-       * An occurrence that already has a row only needs an amount filed against
-       * it for the new region — one request for all of them, not one each. This
-       * is the common case on a site that has been set up once already and is
-       * only now being told which region its pages speak for.
+       * File the page amounts under the new default. The scan already named
+       * each row after the figure (`amount-eur-30000`); without the old
+       * occurrence list that slug is how we know what to write.
        */
-      const cells: ReTranslatePriceCellInput[] = mine
-        .filter((amount) => amount.status === "bound" && amount.price_key)
-        .map((amount) => ({
-          key: amount.price_key,
+      const cells: ReTranslatePriceCellInput[] = [];
+
+      for (const key of data.price_keys) {
+        const parsed = parseAutoPriceSlug(key.slug);
+        if (!parsed || parsed.currency !== currency) continue;
+        cells.push({
+          key: key.slug,
           region: slug,
           currency,
-          amount_minor: amount.amount_minor,
-          display_places: amount.display_places ?? 0,
-        }));
+          amount_minor: parsed.amount_minor,
+          display_places: 0,
+        });
+      }
 
       if (cells.length > 0) {
         const written = await savePrices.mutateAsync(cells);
@@ -1091,39 +1047,6 @@ function FirstRun({
             written.error ?? t("common.error", "Something went wrong"),
           );
         }
-      }
-
-      /*
-       * An occurrence with no row yet needs one made before an amount can be
-       * filed against it, and the site seeds the amount as it does so. These
-       * are one request each because that is the API, but they are independent,
-       * so they go together rather than in a queue you watch.
-       */
-      const fresh = mine.filter((amount) => amount.status === "new");
-
-      const results = await Promise.all(
-        fresh.map((amount) =>
-          adopt
-            .mutateAsync({
-              fingerprint: amount.spot_id || amount.fingerprint,
-              spot_id: amount.spot_id || amount.fingerprint,
-              label: amount.literal,
-              region: slug,
-            })
-            .then((res: ReTranslatePricingResult) => res.ok)
-            .catch(() => false),
-        ),
-      );
-
-      const failed = results.filter((ok: boolean) => !ok).length;
-
-      if (failed > 0 && failed === results.length && cells.length === 0) {
-        throw new Error(
-          t(
-            "wordpress.reTranslate.adoptAllFailed",
-            "The region was created but none of its prices could be read in.",
-          ),
-        );
       }
     };
 
@@ -1165,7 +1088,7 @@ function FirstRun({
                 )
               : t(
                   "wordpress.reTranslate.firstRunUnreadHint",
-                  "Reading them tells us which currency your site quotes in, and fills this list in for you. Your pages are never edited.",
+                  "Scanning them tells us which currency your site quotes in, and fills this list in for you. Your pages are never edited.",
                 )}
           </p>
           <div className="mt-4 flex flex-wrap items-center justify-center gap-3">
@@ -1291,67 +1214,53 @@ function FirstRun({
 }
 
 /**
- * Two doors, not a form. Naming a row and reading the pages are different
- * jobs; showing both at once made neither obvious.
+ * Characters the scanner keeps in front of an amount when it records the
+ * sentence around it — `Extract\HTML_Fragment::context_around()`. Read here to
+ * know where in that sentence this row's own amount is; if the plugin ever
+ * changes it, the fallback below still lands on something sensible.
  */
-function StartChoice({
-  onScan,
-  onType,
-}: {
-  onScan: () => void;
-  onType: () => void;
-}) {
-  const { t } = useTranslation();
+const CONTEXT_LEAD = 48;
+
+/**
+ * A sentence off the page with this row's own amount picked out of it.
+ *
+ * Which occurrence to bold is a real question, because a line can quote the
+ * same figure twice — "€250 setup, then €250 a month" is two rows sharing one
+ * sentence. The sentence is a window cut around this row's amount, so the
+ * amount sits at CONTEXT_LEAD unless the window ran into the start of the
+ * block; that position is the answer when it is available, and the occurrence
+ * nearest the middle is the guess when it is not. Both beat taking the first,
+ * which is wrong for the second of any such pair.
+ *
+ * Rendered as text nodes, never as markup — this string is page content, and
+ * the one thing it must not be able to do is bring its own HTML.
+ */
+function PriceSentence({ text, amount }: { text: string; amount: string }) {
+  const needle = amount.trim();
+
+  if (needle === "") return <>{text}</>;
+
+  const hits: number[] = [];
+
+  for (let at = text.indexOf(needle); at !== -1; at = text.indexOf(needle, at + needle.length)) {
+    hits.push(at);
+  }
+
+  if (hits.length === 0) return <>{text}</>;
+
+  const middle = (text.length - needle.length) / 2;
+  const start = hits.includes(CONTEXT_LEAD)
+    ? CONTEXT_LEAD
+    : hits.reduce((best, at) =>
+        Math.abs(at - middle) < Math.abs(best - middle) ? at : best,
+      );
 
   return (
-    <div className="mx-auto max-w-lg space-y-3">
-      <p className="text-center text-sm font-medium">
-        {t(
-          "wordpress.reTranslate.howToFillList",
-          "How do you want to fill this list?",
-        )}
-      </p>
-      <div className="grid gap-2 sm:grid-cols-2">
-        <button
-          type="button"
-          onClick={onScan}
-          className="rounded-xl border px-4 py-3 text-left transition-colors hover:border-primary/50 hover:bg-muted/40"
-        >
-          <span className="flex items-center gap-2 text-sm font-medium">
-            <Radar className="size-3.5 text-muted-foreground" />
-            {t(
-              "wordpress.reTranslate.startFromPages",
-              "Prices are already on my pages",
-            )}
-          </span>
-          <span className="mt-1 block text-xs leading-relaxed text-muted-foreground">
-            {t(
-              "wordpress.reTranslate.startFromPagesHint",
-              "We’ll read them. You just name each amount — the pages themselves are not edited.",
-            )}
-          </span>
-        </button>
-        <button
-          type="button"
-          onClick={onType}
-          className="rounded-xl border px-4 py-3 text-left transition-colors hover:border-primary/50 hover:bg-muted/40"
-        >
-          <span className="flex items-center gap-2 text-sm font-medium">
-            <Pencil className="size-3.5 text-muted-foreground" />
-            {t(
-              "wordpress.reTranslate.startByTyping",
-              "I’ll type the amounts here",
-            )}
-          </span>
-          <span className="mt-1 block text-xs leading-relaxed text-muted-foreground">
-            {t(
-              "wordpress.reTranslate.startByTypingHint",
-              "Add a row, then fill in what it costs in each region.",
-            )}
-          </span>
-        </button>
-      </div>
-    </div>
+    <>
+      {text.slice(0, start)}
+      <strong className="font-semibold text-foreground">{needle}</strong>
+      {text.slice(start + needle.length)}
+    </>
   );
 }
 
@@ -1366,27 +1275,28 @@ function PriceRow({
   priceKey,
   region,
   columns,
+  page,
   origin,
   valueFor,
   changedFor,
   onValue,
   fromPage,
-  removing,
-  onRemove,
 }: {
   priceKey: ReTranslatePriceKey;
   region: ReTranslateRegion;
   columns: ReTranslateCurrency[];
-  origin?: ReTranslateFoundAmount;
+  /** The page this amount sits on, when the grid spans more than one. */
+  page: string;
+  origin?: ReTranslatePriceCell;
   valueFor: (currency: ReTranslateCurrency) => string;
   changedFor: (currency: ReTranslateCurrency) => boolean;
   onValue: (currency: ReTranslateCurrency, next: string) => void;
   /** What the page itself says here, when the page is what decides it. */
   fromPage: (currency: ReTranslateCurrency) => string | null;
-  removing: boolean;
-  onRemove: (purge: boolean) => Promise<void>;
 }) {
   const { t } = useTranslation();
+  const fromScan = parseAutoPriceSlug(priceKey.slug) != null;
+  const sentence = (priceKey.context ?? "").trim();
 
   return (
     <tr className="group">
@@ -1395,13 +1305,32 @@ function PriceRow({
         className="sticky left-0 z-10 border-b bg-card px-5 py-3 text-left font-normal group-hover:bg-muted/30 sm:px-6"
       >
         <span className="block font-mono text-sm font-semibold tabular-nums">
-          {origin ? origin.formatted || origin.literal : priceKey.label}
+          {origin ? origin.formatted : priceKey.label}
         </span>
 
-        <span className="mt-0.5 block truncate text-[11px] text-muted-foreground">
-          {origin ? (
-            occurrenceSubtitle(origin) ||
-            t("wordpress.reTranslate.onPage", "on 1 page")
+        {/*
+         * Where the amount comes from, in the page's own words, with this
+         * row's figure bolded inside it.
+         *
+         * The bold is the point rather than decoration. "€750 2nd site · €500
+         * 3rd · €250 each additional" is one line and three rows, and without
+         * it every one of them reads identically — the reader has the row's
+         * own amount at the top and no way to see which figure in the sentence
+         * it is. The page name goes in front only when the grid spans several.
+         */}
+        <span
+          className="mt-0.5 block truncate text-[11px] text-muted-foreground"
+          title={sentence ? [page, sentence].filter(Boolean).join(" · ") : undefined}
+        >
+          {sentence ? (
+            <>
+              {page ? <span className="opacity-70">{page} · </span> : null}
+              <PriceSentence text={sentence} amount={priceKey.literal ?? ""} />
+            </>
+          ) : origin ? (
+            [page, priceKey.label].filter(Boolean).join(" · ")
+          ) : fromScan ? (
+            t("wordpress.reTranslate.onPage", "on your pages")
           ) : (
             t("wordpress.reTranslate.typedByHand", "added by hand")
           )}
@@ -1444,16 +1373,6 @@ function PriceRow({
           </td>
         );
       })}
-
-      <td className="border-b px-2 py-3 group-hover:bg-muted/30">
-        <div className="flex items-center justify-end gap-0.5 opacity-0 transition-opacity group-focus-within:opacity-100 group-hover:opacity-100">
-          <RemovePriceButton
-            priceKey={priceKey}
-            busy={removing}
-            onRemove={onRemove}
-          />
-        </div>
-      </td>
     </tr>
   );
 }
@@ -1493,7 +1412,7 @@ function RegionDialog({
   const [label, setLabel] = useState(region?.label ?? "");
   const [flag, setFlag] = useState(region?.flag ?? "");
   const [picked, setPicked] = useState<string[]>(
-    region && region.currencies.length > 0 ? region.currencies : [""],
+    region && (region.currencies ?? []).length > 0 ? region.currencies : [""],
   );
   const slug = region ? region.slug : normalizeRegionSlug(label);
   const chosen = picked.filter((code) => code !== "");
@@ -1541,7 +1460,10 @@ function RegionDialog({
                 id="rt-region-label"
                 value={label}
                 autoFocus
-                placeholder="Canada"
+                placeholder={t(
+                  "wordpress.reTranslate.regionNamePlaceholder",
+                  "Canada",
+                )}
                 onChange={(event) => setLabel(event.target.value)}
               />
             </Field>
@@ -1685,7 +1607,11 @@ function RegionDialog({
           <Button type="button" variant="ghost" onClick={onClose}>
             {t("common.cancel", "Cancel")}
           </Button>
-          <Button type="submit" form="rt-region-form" disabled={!valid || saving}>
+          <Button
+            type="submit"
+            form="rt-region-form"
+            disabled={!valid || saving}
+          >
             {saving ? <Loader2 className="size-3.5 animate-spin" /> : null}
             {editing
               ? t("wordpress.reTranslate.saveRegion", "Save region")
@@ -1773,88 +1699,6 @@ function RemoveRegionDialog({
   );
 }
 
-function RemovePriceButton({
-  priceKey,
-  busy,
-  onRemove,
-}: {
-  priceKey: ReTranslatePriceKey;
-  busy: boolean;
-  onRemove: (purge: boolean) => Promise<void>;
-}) {
-  const { t } = useTranslation();
-  const [open, setOpen] = useState(false);
-  const [purge, setPurge] = useState(false);
-
-  return (
-    <>
-      <Button
-        size="icon"
-        variant="ghost"
-        className="size-8 text-muted-foreground hover:text-destructive"
-        disabled={busy}
-        onClick={() => setOpen(true)}
-        aria-label={t("wordpress.reTranslate.removePrice", "Remove")}
-      >
-        <Trash2 className="size-3.5" />
-      </Button>
-
-      <AlertDialog
-        open={open}
-        onOpenChange={(next) => {
-          setOpen(next);
-          if (!next) setPurge(false);
-        }}
-      >
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>
-              {t("wordpress.reTranslate.removePriceTitle", "Remove {{name}}?", {
-                name: priceKey.label,
-              })}
-            </AlertDialogTitle>
-            <AlertDialogDescription>
-              {t(
-                "wordpress.reTranslate.removePriceBody",
-                "Adopted amounts go back to whatever is written on the page. Pages that still paste this price by hand will stop showing a number.",
-              )}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-
-          <PurgeCheck
-            id="rt-purge-price"
-            checked={purge}
-            onChange={setPurge}
-            label={t(
-              "wordpress.reTranslate.alsoDeletePriceAmounts",
-              "Also delete its amounts",
-            )}
-            hint={t(
-              "wordpress.reTranslate.alsoDeletePriceAmountsHint",
-              "Left unticked they are kept, so recreating the price restores them.",
-            )}
-          />
-
-          <AlertDialogFooter>
-            <AlertDialogCancel>{t("common.cancel", "Cancel")}</AlertDialogCancel>
-            <Button
-              variant="destructive"
-              disabled={busy}
-              onClick={async () => {
-                await onRemove(purge);
-                setOpen(false);
-              }}
-            >
-              {busy ? <Loader2 className="size-3.5 animate-spin" /> : null}
-              {t("wordpress.reTranslate.removePrice", "Remove")}
-            </Button>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-    </>
-  );
-}
-
 /** The one opt-in shared by both removal dialogs. */
 function PurgeCheck({
   id,
@@ -1924,7 +1768,9 @@ function MoneyInput({
           if (value.trim() === "") return;
           const parsed = parseMoneyParts(value, currency.exponent);
           if (parsed !== null) {
-            onChange(moneyToInput(parsed.amount, currency.exponent, parsed.places));
+            onChange(
+              moneyToInput(parsed.amount, currency.exponent, parsed.places),
+            );
           }
         }}
         className={cn(
@@ -1937,188 +1783,3 @@ function MoneyInput({
   );
 }
 
-function NewPriceRow({
-  pluginUuid,
-  data,
-}: {
-  pluginUuid: string;
-  data: ReTranslatePricing;
-}) {
-  const { t } = useTranslation();
-  const [label, setLabel] = useState("");
-  const saveKey = useSaveTranslatePriceKey(pluginUuid);
-
-  const slug = normalizePriceSlug(label);
-  const taken = data.price_keys.some((key) => key.slug === slug);
-
-  return (
-    <form
-      className="flex flex-wrap items-center gap-2"
-      onSubmit={async (event) => {
-        event.preventDefault();
-        if (slug === "" || taken || saveKey.isPending) return;
-
-        try {
-          const res = await saveKey.mutateAsync({ slug, label: label.trim() });
-          if (!res.ok) {
-            flash(res.error ?? "", "error");
-            return;
-          }
-          setLabel("");
-          flash(t("wordpress.reTranslate.priceAdded", "Price added"));
-        } catch (err) {
-          flash(extractErrorMessage(err), "error");
-        }
-      }}
-    >
-      <Plus aria-hidden className="size-3.5 shrink-0 text-muted-foreground" />
-      <Input
-        value={label}
-        placeholder={t(
-          "wordpress.reTranslate.newPricePlaceholder",
-          "Name a row — “Yearly plan”",
-        )}
-        aria-label={t("wordpress.reTranslate.newPriceLabel", "New price name")}
-        onChange={(event) => setLabel(event.target.value)}
-        className="h-9 min-w-56 flex-1"
-      />
-      <Button
-        type="submit"
-        size="sm"
-        variant="outline"
-        className="h-9"
-        disabled={slug === "" || taken || saveKey.isPending}
-      >
-        {saveKey.isPending ? (
-          <Loader2 className="size-3.5 animate-spin" />
-        ) : null}
-        {t("common.add", "Add")}
-      </Button>
-      {slug !== "" && taken ? (
-        <span className="text-xs text-destructive">
-          {t(
-            "wordpress.reTranslate.priceSlugTaken",
-            "There is already a price called that.",
-          )}
-        </span>
-      ) : null}
-    </form>
-  );
-}
-
-/**
- * The one setting that belongs to this list rather than to delivery.
- *
- * A footer, under everything it governs — it decides whether the amounts you
- * named up there keep following the region once they are named.
- */
-function AdoptToggle({
-  pluginUuid,
-  pricing,
-}: {
-  pluginUuid: string;
-  pricing: ReTranslatePricingSettings;
-}) {
-  const { t } = useTranslation();
-  const saveSettings = useSaveTranslatePricingSettings(pluginUuid);
-
-  return (
-    <div className="flex items-center gap-4 border-t pt-4">
-      <div className="min-w-0 flex-1">
-        <Label
-          htmlFor="rt-pricing-adopt_found_prices"
-          className="text-sm font-normal"
-        >
-          {t(
-            "wordpress.reTranslate.adoptFoundPrices",
-            "Keep these amounts up to date",
-          )}
-        </Label>
-        <FieldHint className="mt-0.5">
-          {t(
-            "wordpress.reTranslate.adoptFoundPricesHint",
-            "Only amounts you named are ever touched. Off, those pages go back to showing whatever is typed in them.",
-          )}
-        </FieldHint>
-      </div>
-      <Switch
-        id="rt-pricing-adopt_found_prices"
-        checked={pricing.adopt_found_prices}
-        disabled={saveSettings.isPending}
-        onCheckedChange={async (next) => {
-          try {
-            const res = await saveSettings.mutateAsync({
-              adopt_found_prices: next,
-            });
-            if (!res.ok) flash(res.error ?? "", "error");
-          } catch (err) {
-            flash(extractErrorMessage(err), "error");
-          }
-        }}
-      />
-    </div>
-  );
-}
-
-/* ── 3 · delivery ────────────────────────────────────────────────────────── */
-
-/**
- * The one delivery choice left.
- *
- * This was a fold holding three "how a visitor's region is decided" modes. Two
- * of them resolved a region through a per-region list of country codes, and
- * when that list stopped being something a site could enter, both could only
- * ever answer "the default region" — silently, for ever, while the screen went
- * on showing the option as selected. An option that cannot do what it says is
- * worse than no option, so the modes and the fold around them are gone.
- *
- * What is left is a real choice with a visible consequence: a visitor gets the
- * default region until they pick one from the switcher, and this decides
- * whether picking one repaints the page or reloads it.
- */
-function DeliveryCard({
-  pluginUuid,
-  pricing,
-}: {
-  pluginUuid: string;
-  pricing: ReTranslatePricingSettings;
-}) {
-  const { t } = useTranslation();
-  const save = useSaveTranslatePricingSettings(pluginUuid);
-
-  async function patch(change: Partial<ReTranslatePricingSettings>) {
-    try {
-      const res = await save.mutateAsync(change);
-      if (!res.ok) flash(res.error ?? "", "error");
-    } catch (err) {
-      flash(extractErrorMessage(err), "error");
-    }
-  }
-
-  return (
-    <SectionCard>
-      <div className="flex items-center gap-4 px-5 py-4 sm:px-6">
-        <div className="min-w-0 flex-1">
-          <Label htmlFor="rt-pricing-embed_all" className="text-sm font-normal">
-            {t(
-              "wordpress.reTranslate.embedAll",
-              "Switch regions without reloading",
-            )}
-          </Label>
-          <FieldHint className="mt-0.5">
-            {t(
-              "wordpress.reTranslate.embedAllHint",
-              "Sends every region's amounts with the page. Off, switching reloads it.",
-            )}
-          </FieldHint>
-        </div>
-        <Switch
-          id="rt-pricing-embed_all"
-          checked={pricing.embed_all}
-          disabled={save.isPending}
-          onCheckedChange={(next) => patch({ embed_all: next })}
-        />
-      </div>
-    </SectionCard>
-  );
-}
