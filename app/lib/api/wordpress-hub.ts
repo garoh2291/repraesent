@@ -711,29 +711,6 @@ export async function setTranslateDefaultRegion(
   return res.data;
 }
 
-export async function saveTranslatePriceKey(
-  pluginUuid: string,
-  body: { slug: string; label?: string; note?: string },
-): Promise<ReTranslatePricingResult> {
-  const res = await apiClient.post<ReTranslatePricingResult>(
-    pluginUrl(pluginUuid, "translate-price-keys"),
-    body,
-  );
-  return res.data;
-}
-
-export async function removeTranslatePriceKey(
-  pluginUuid: string,
-  slug: string,
-  purge: boolean,
-): Promise<ReTranslatePricingResult> {
-  const res = await apiClient.delete<ReTranslatePricingResult>(
-    pluginUrl(pluginUuid, `translate-price-keys/${encodeURIComponent(slug)}`),
-    { params: { purge } },
-  );
-  return res.data;
-}
-
 export async function saveTranslatePrices(
   pluginUuid: string,
   cells: ReTranslatePriceCellInput[],
@@ -774,55 +751,6 @@ export async function scanTranslatePrices(
   const res = await apiClient.post<ReTranslatePricingResult>(
     pluginUrl(pluginUuid, "translate-prices/scan"),
     body,
-  );
-  return res.data;
-}
-
-/**
- * Manage a found amount.
- *
- * `key` binds it to a price that exists; `label` creates the price, seeds this
- * amount into the region's default currency, and binds it. One endpoint for
- * both because from the panel's side it is one gesture — the person either
- * picked an existing name or typed a new one.
- */
-export async function bindTranslateFoundAmount(
-  pluginUuid: string,
-  body: {
-    fingerprint?: string;
-    spot_id?: string;
-    key?: string;
-    label?: string;
-    slug?: string;
-    region?: string;
-  },
-): Promise<ReTranslatePricingResult> {
-  const id = body.spot_id || body.fingerprint || "";
-  const res = await apiClient.post<ReTranslatePricingResult>(
-    pluginUrl(pluginUuid, "translate-prices/found/bind"),
-    { ...body, fingerprint: id, spot_id: id },
-  );
-  return res.data;
-}
-
-export async function ignoreTranslateFoundAmount(
-  pluginUuid: string,
-  id: string,
-): Promise<ReTranslatePricingResult> {
-  const res = await apiClient.post<ReTranslatePricingResult>(
-    pluginUrl(pluginUuid, "translate-prices/found/ignore"),
-    { fingerprint: id, spot_id: id },
-  );
-  return res.data;
-}
-
-export async function releaseTranslateFoundAmount(
-  pluginUuid: string,
-  id: string,
-): Promise<ReTranslatePricingResult> {
-  const res = await apiClient.post<ReTranslatePricingResult>(
-    pluginUrl(pluginUuid, "translate-prices/found/release"),
-    { fingerprint: id, spot_id: id },
   );
   return res.data;
 }
