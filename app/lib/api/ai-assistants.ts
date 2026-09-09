@@ -488,7 +488,38 @@ export const DEFAULT_ATTACHMENTS: AttachmentsConfig = {
   documents: true,
 };
 
+/**
+ * Optional search over sites the workspace approves. An empty `domains` list
+ * keeps it off whatever `enabled` says — there is no setting here that reaches
+ * the open web.
+ */
+export interface WebSearchConfig {
+  enabled: boolean;
+  domains: string[];
+  daily_limit: number;
+  /**
+   * `ask`: answer from your own material first, then offer — "shall I look on
+   * lg.com for a guide?" — and search only once the visitor agrees or asks.
+   * `direct`: search whenever the assistant judges its own material short.
+   */
+  mode: "ask" | "direct";
+}
+
+export const DEFAULT_WEB_SEARCH: WebSearchConfig = {
+  enabled: false,
+  domains: [],
+  daily_limit: 50,
+  mode: "ask",
+};
+
 export interface AssistantRecord {
+  /**
+   * Whether this SERVER can search at all (`FIRECRAWL_API_KEY`). Distinct from
+   * `web_search.enabled`, which is what the operator asked for — the two used
+   * to be indistinguishable here, so the toggle read "on" while the assistant
+   * told visitors it could not browse. Detail responses only.
+   */
+  search_configured?: boolean;
   id: string;
   workspace_id: string;
   name: string;
@@ -502,6 +533,7 @@ export interface AssistantRecord {
   business_profile_updated_at: string | null;
   retrieval: RetrievalConfig;
   attachments: AttachmentsConfig;
+  web_search: WebSearchConfig;
   chat_model: string;
   temperature: number;
   max_output_tokens: number;
@@ -531,6 +563,7 @@ export type AssistantDraft = Pick<
   | "business_profile"
   | "retrieval"
   | "attachments"
+  | "web_search"
   | "chat_model"
   | "temperature"
   | "max_output_tokens"
@@ -786,6 +819,21 @@ export interface ConversationMessage {
   created_at: string;
 }
 
+/**
+ * Pulls the option cards the widget rendered out of a stored `tool_calls` blob.
+ *
+ * Without this, whoever opens a conversation to see what went wrong reads the
+ * bare caption and nothing else — the same view the visitor complained about.
+ */
+export function cardsFromToolCalls(toolCalls: unknown): SseCardItem[] {
+  if (!Array.isArray(toolCalls)) return [];
+  for (const call of toolCalls) {
+    const c = call as { name?: string; args?: { items?: SseCardItem[] } };
+    if (c?.name === "show_cards" && Array.isArray(c.args?.items)) return c.args.items;
+  }
+  return [];
+}
+
 /** Pulls the CTA chips the widget rendered out of a stored `tool_calls` blob. */
 export function actionsFromToolCalls(toolCalls: unknown): ActionItem[] {
   if (!Array.isArray(toolCalls)) return [];
@@ -893,10 +941,27 @@ export interface SseDone {
   debug?: RetrievalDebug;
 }
 
+/** `cards` — the option cards the widget draws; mirrored from the server's SseEvents. */
+export interface SseCardItem {
+  id: string;
+  title: string;
+  subtitle?: string;
+  facts?: Array<{ label: string; value: string }>;
+  value?: string;
+  choose_label: string;
+}
+
 export interface StreamHandlers {
   onMeta?: (e: { conversation_id: string; message_id: string }) => void;
   onToken?: (t: string) => void;
+  /**
+   * The server rewrote the answer in place — a card caption is always its own,
+   * and a card-only turn has no streamed text at all. Without this the
+   * playground showed an EMPTY bubble where the widget shows a sentence.
+   */
+  onTextReplace?: (t: string) => void;
   onSources?: (items: SourceRef[]) => void;
+  onCards?: (items: SseCardItem[]) => void;
   onLeadForm?: (form: SseLeadForm) => void;
   onActions?: (actions: SseActions) => void;
   onDone?: (done: SseDone) => void;
@@ -1453,8 +1518,14 @@ export async function streamAssistantChat(
       case "token":
         handlers.onToken?.((parsed as { t: string }).t ?? "");
         break;
+      case "text_replace":
+        handlers.onTextReplace?.((parsed as { t: string }).t ?? "");
+        break;
       case "sources":
         handlers.onSources?.((parsed as { items: SourceRef[] }).items ?? []);
+        break;
+      case "cards":
+        handlers.onCards?.((parsed as { items: SseCardItem[] }).items ?? []);
         break;
       case "lead_form":
         handlers.onLeadForm?.(parsed as SseLeadForm);
