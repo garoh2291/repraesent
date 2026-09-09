@@ -1,4 +1,5 @@
 import { useRef } from "react";
+import { uploadMimeOf } from "~/lib/ai-assistants/upload";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   confirmSourceUpload,
@@ -268,7 +269,7 @@ export function useSourceMutations(id: string | undefined) {
   ): Promise<KnowledgeSource> => {
     const presigned = await presignSourceUpload(id!, {
       filename: file.name,
-      mime_type: file.type || "application/octet-stream",
+      mime_type: uploadMimeOf(file) || "application/octet-stream",
       size_bytes: file.size,
     });
     await putToPresignedUrl(

@@ -360,10 +360,7 @@ export function postTypeLabel(name: string): string {
 type TranslateFn = (key: string, fallback: string) => string;
 
 /** Post type slug as a UI label, using locale strings when we have them. */
-export function translatedPostTypeLabel(
-  name: string,
-  t: TranslateFn,
-): string {
+export function translatedPostTypeLabel(name: string, t: TranslateFn): string {
   return t(`wordpress.reTranslate.postType.${name}`, postTypeLabel(name));
 }
 
@@ -735,12 +732,19 @@ export type TranslateStatsSummary = {
   untranslated: number;
 };
 
-export function summariseStats(settings: ReTranslateSettings): TranslateStatsSummary {
+export function summariseStats(
+  settings: ReTranslateSettings,
+): TranslateStatsSummary {
   const langs = Object.values(settings.stats.languages);
   const languageCount = settings.languages.length;
 
   if (langs.length === 0) {
-    return { languageCount, translatedPercent: 0, needsUpdating: 0, untranslated: 0 };
+    return {
+      languageCount,
+      translatedPercent: 0,
+      needsUpdating: 0,
+      untranslated: 0,
+    };
   }
 
   let totalStrings = 0;
@@ -807,9 +811,26 @@ export function normalizePriceSlug(value: string): string {
   return slug;
 }
 
-/** The exact string to paste into the WordPress editor. */
-export function priceShortcode(slug: string): string {
-  return `[price key="${slug}"]`;
+/**
+ * Slugs the scanner mints, e.g. `amount-eur-100000-2f3ceb22`.
+ *
+ * The trailing hash is the place the amount was found in — the page plus the
+ * words around it — so €1000 written in two cards is two rows that can be
+ * priced apart. Optional, because a site last scanned by an older plugin still
+ * has amount-level slugs until it is read again.
+ */
+export const AUTO_PRICE_SLUG = /^amount-([a-z]{3})-(n?)(\d+)(?:-[0-9a-f]{8})?$/;
+
+export function parseAutoPriceSlug(
+  slug: string,
+): { currency: string; amount_minor: number } | null {
+  const match = AUTO_PRICE_SLUG.exec(slug);
+  if (!match) return null;
+  const amount = Number(match[3]);
+  return {
+    currency: match[1].toUpperCase(),
+    amount_minor: match[2] === "n" ? -amount : amount,
+  };
 }
 
 const DEFAULT_CURRENCY: ReTranslateCurrency = {
@@ -819,7 +840,7 @@ const DEFAULT_CURRENCY: ReTranslateCurrency = {
   exponent: 2,
   position: "before",
   decimal: ".",
-  thousands: ",",
+  thousands: " ",
 };
 
 /**

@@ -30,6 +30,7 @@ import {
   type RetrievalDebug,
   type SourceRef,
   type SseDone,
+  type SseCardItem,
   type SseLeadForm,
 } from "~/lib/api/ai-assistants";
 import { ActionChips } from "~/components/ai-assistants/ActionChips";
@@ -43,6 +44,7 @@ interface Turn {
   streaming?: boolean;
   sources?: SourceRef[];
   done?: SseDone;
+  cards?: SseCardItem[];
   leadForm?: SseLeadForm;
   leadSubmitted?: boolean;
   actions?: ActionItem[];
@@ -99,7 +101,12 @@ export function PlaygroundPanel({ assistantId }: { assistantId: string }) {
         },
         onToken: (tok) =>
           patch(botId, (x) => ({ ...x, content: x.content + tok })),
+        // A card caption is always the server's, and a card-only turn streams no
+        // text at all — without this the bubble stayed empty here while the
+        // widget showed a sentence.
+        onTextReplace: (t) => patch(botId, (x) => ({ ...x, content: t })),
         onSources: (items) => patch(botId, (x) => ({ ...x, sources: items })),
+        onCards: (items) => patch(botId, (x) => ({ ...x, cards: items })),
         onLeadForm: (form) => patch(botId, (x) => ({ ...x, leadForm: form })),
         onActions: (a) => patch(botId, (x) => ({ ...x, actions: a.items })),
         onDone: (done) =>
@@ -276,6 +283,28 @@ function TurnView({
       </div>
       {turn.error ? (
         <p className="text-xs text-red-600 dark:text-red-400">{turn.error}</p>
+      ) : null}
+      {!mine && turn.cards?.length ? (
+        <div className="flex max-w-[85%] flex-col gap-1 rounded-lg border border-border bg-card p-2">
+          {turn.cards.map((c) => (
+            <div key={c.id} className="rounded-md bg-muted/50 px-2 py-1.5">
+              <div className="flex items-baseline justify-between gap-2">
+                <span className="text-sm font-medium">{c.title}</span>
+                {c.value ? (
+                  <span className="shrink-0 text-xs tabular-nums">{c.value}</span>
+                ) : null}
+              </div>
+              {c.subtitle ? (
+                <p className="text-xs text-muted-foreground">{c.subtitle}</p>
+              ) : null}
+              {c.facts?.length ? (
+                <p className="text-xs text-muted-foreground/80">
+                  {c.facts.map((f) => `${f.label}: ${f.value}`).join(" · ")}
+                </p>
+              ) : null}
+            </div>
+          ))}
+        </div>
       ) : null}
       {!mine && (turn.done || turn.sources?.length) ? (
         <div className="flex max-w-[85%] flex-wrap items-center gap-1.5">

@@ -402,10 +402,20 @@ export type ReTranslateRegion = {
 export type ReTranslatePriceKey = {
   slug: string;
   label: string;
+  /** The page the amount was read from. */
   note: string;
+  /**
+   * The sentence it was found in, e.g. "€750 2nd site · €500 3rd". Shown under
+   * the row with `literal` bolded inside it, so a line quoting three figures
+   * shows which of them this row is. Empty on a row typed by hand, and on a
+   * site last scanned by a plugin older than this field.
+   */
+  context?: string;
+  /** The amount exactly as that sentence writes it, e.g. "€750". */
+  literal?: string;
   added_at: string;
-  /** The exact string to paste into the editor. */
-  shortcode: string;
+  /** Present on older plugin builds that still paste a token into pages. */
+  shortcode?: string;
 };
 
 export type ReTranslatePriceCell = {
@@ -424,34 +434,25 @@ export type ReTranslatePriceCell = {
   formatted: string;
 };
 
-/** How a price decides which region it is showing. */
+/**
+ * Mirrors `ReTranslate\Settings::pricing_defaults()`.
+ *
+ * One value, because delivery has nothing left to configure. Five switches have
+ * been retired from the plugin — `resolve_on_server`, `detect_browser` and
+ * `use_geo` (all three could only ever answer "the default region" once
+ * per-region country lists stopped being enterable), `adopt_found_prices`
+ * (turning it off turned prices off), and `embed_all` (every region's amounts
+ * shipped with every page so switching could repaint instead of reload).
+ * Switching region always reloads now.
+ */
 export type ReTranslatePricingSettings = {
   /**
-   * Off (the default) renders the default region for everyone and lets the
-   * script correct it in place — identical bytes, so a page cache cannot serve
-   * one visitor's prices to the next. On makes pricing pages uncacheable
-   * unless the CDN already segments on the `rt_region` cookie.
-   */
-  resolve_on_server: boolean;
-  /**
-   * Let the browser work out the visitor's region from its time zone, falling
-   * back to its locale. On by default, because unlike a CDN country header it
-   * costs the cache nothing: it happens after the HTML has been delivered, so
-   * every visitor is still served the same bytes.
-   */
-   detect_browser: boolean;
-  /** Read a CDN country header. Off by default: it varies every page by country. */
-  use_geo: boolean;
-  /** Ship every region's amounts so switching needs no reload. */
-  embed_all: boolean;
-  /**
-   * Rewrite amounts recognised in existing content from the grid.
+   * The currency the site's own pages are written in.
    *
-   * Safe to leave on: only an amount somebody explicitly bound to a price is
-   * ever touched, so a site that has bound nothing renders exactly what it
-   * rendered before.
+   * Empty until the first scan works it out. It is what the scanner reads
+   * pages through, so it is also what every found amount is quoted in.
    */
-  adopt_found_prices: boolean;
+  base_currency: string;
 };
 
 /** One page an amount was found on. */
@@ -503,13 +504,23 @@ export type ReTranslateFound = {
   summary: {
     total: number;
     pages: number;
-    unreviewed: number;
-    bound: number;
-    ignored: number;
+    /** Distinct prices, i.e. rows on the screen. */
+    rows?: number;
+    /** The currency those amounts are in. Empty before the first scan. */
+    currency?: string;
     /** False means nothing has been scanned yet, not that nothing was found. */
     scanned: boolean;
+    /** The currency scope moved since the last full read. */
+    stale?: boolean;
+    unreviewed?: number;
+    bound?: number;
+    ignored?: number;
   };
-  amounts: ReTranslateFoundAmount[];
+  /**
+   * Removed: an amount the scanner finds *is* a price row now, so the list
+   * arrives in `price_keys` / `prices`. Older payloads may still send this.
+   */
+  amounts?: ReTranslateFoundAmount[];
 };
 
 export type ReTranslatePricing = {

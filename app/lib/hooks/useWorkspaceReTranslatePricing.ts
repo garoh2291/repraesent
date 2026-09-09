@@ -2,13 +2,8 @@
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
-  bindTranslateFoundAmount,
   getTranslatePricing,
-  ignoreTranslateFoundAmount,
-  releaseTranslateFoundAmount,
-  removeTranslatePriceKey,
   removeTranslateRegion,
-  saveTranslatePriceKey,
   saveTranslatePrices,
   saveTranslatePricingSettings,
   saveTranslateRegion,
@@ -119,22 +114,6 @@ export function useSetTranslateDefaultRegion(pluginUuid: string) {
   );
 }
 
-export function useSaveTranslatePriceKey(pluginUuid: string) {
-  return usePricingMutation(
-    pluginUuid,
-    (body: { slug: string; label?: string; note?: string }) =>
-      saveTranslatePriceKey(pluginUuid, body),
-  );
-}
-
-export function useRemoveTranslatePriceKey(pluginUuid: string) {
-  return usePricingMutation(
-    pluginUuid,
-    ({ slug, purge }: { slug: string; purge: boolean }) =>
-      removeTranslatePriceKey(pluginUuid, slug, purge),
-  );
-}
-
 export function useSaveTranslatePrices(pluginUuid: string) {
   return usePricingMutation(pluginUuid, (cells: ReTranslatePriceCellInput[]) =>
     saveTranslatePrices(pluginUuid, cells),
@@ -146,34 +125,6 @@ export function useSaveTranslatePricingSettings(pluginUuid: string) {
     pluginUuid,
     (pricing: Partial<ReTranslatePricingSettings>) =>
       saveTranslatePricingSettings(pluginUuid, pricing),
-  );
-}
-
-export function useBindTranslateFoundAmount(pluginUuid: string) {
-  return usePricingMutation(
-    pluginUuid,
-    (body: {
-      fingerprint?: string;
-      spot_id?: string;
-      key?: string;
-      label?: string;
-      /* The endpoint has always taken one; the caller may pick the slug so it
-         can file amounts against the row in the same save. */
-      slug?: string;
-      region?: string;
-    }) => bindTranslateFoundAmount(pluginUuid, body),
-  );
-}
-
-export function useIgnoreTranslateFoundAmount(pluginUuid: string) {
-  return usePricingMutation(pluginUuid, (fingerprint: string) =>
-    ignoreTranslateFoundAmount(pluginUuid, fingerprint),
-  );
-}
-
-export function useReleaseTranslateFoundAmount(pluginUuid: string) {
-  return usePricingMutation(pluginUuid, (fingerprint: string) =>
-    releaseTranslateFoundAmount(pluginUuid, fingerprint),
   );
 }
 

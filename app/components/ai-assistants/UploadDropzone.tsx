@@ -1,4 +1,6 @@
 import { useRef, useState } from "react";
+import { uploadMimeOf } from "~/lib/ai-assistants/upload";
+import { formatBytes } from "~/lib/ai-assistants/format";
 import { useTranslation } from "react-i18next";
 import { Check, FileUp, Loader2, X } from "lucide-react";
 import { toast } from "sonner";
@@ -6,12 +8,14 @@ import { cn } from "~/lib/utils";
 import { extractErrorMessage } from "~/lib/api/axios-instance";
 
 export const UPLOAD_MAX_BYTES = 20 * 1024 * 1024;
-const ACCEPT = ".pdf,.docx,.txt,.md";
+const ACCEPT = ".pdf,.docx,.txt,.md,.csv,.xlsx";
 const ACCEPT_MIME: ReadonlySet<string> = new Set([
   "application/pdf",
   "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+  "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
   "text/plain",
   "text/markdown",
+  "text/csv",
 ]);
 
 interface Item {
@@ -23,7 +27,7 @@ interface Item {
 }
 
 function accepted(file: File): boolean {
-  if (ACCEPT_MIME.has(file.type)) return true;
+  if (ACCEPT_MIME.has(uploadMimeOf(file))) return true;
   return /\.(pdf|docx|txt|md)$/i.test(file.name);
 }
 
@@ -180,7 +184,7 @@ export function UploadDropzone({
                 )}
               </div>
               <span className="shrink-0 text-xs tabular-nums text-muted-foreground">
-                {(item.file.size / 1024 / 1024).toFixed(1)} MB
+                {formatBytes(item.file.size)}
               </span>
             </li>
           ))}

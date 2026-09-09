@@ -1,4 +1,5 @@
 import { useTranslation } from "react-i18next";
+import { formatBytes } from "~/lib/ai-assistants/format";
 import {
   AlertCircle,
   List,
@@ -133,7 +134,7 @@ export function SourceRow({
     );
   }
   if (source.size_bytes != null && source.type === "document") {
-    detail.push(`${(source.size_bytes / 1024 / 1024).toFixed(1)} MB`);
+    detail.push(formatBytes(source.size_bytes));
   }
   const synced = formatDate(source.last_synced_at);
   if (synced && !isWebsite)
