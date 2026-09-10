@@ -1051,6 +1051,14 @@ export default function FormBuilderRoute() {
         },
         { key: "appointment.empty", i18nKey: "forms.appointmentContent.empty" },
         {
+          // Co-hosts only, but seeded for every appointment field: a form can
+          // gain a second host later, and this string is what the visitor sees
+          // instead of a false "no free times" when a host's calendar cannot
+          // be read.
+          key: "appointment.unavailable",
+          i18nKey: "forms.appointmentContent.unavailable",
+        },
+        {
           key: "error.slot_unavailable",
           i18nKey: "forms.appointmentContent.slotUnavailable",
         },

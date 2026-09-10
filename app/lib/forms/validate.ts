@@ -342,11 +342,27 @@ export function validateDefinition(
 
     // An appointment field without a target calendar would render a working
     // picker whose booking silently goes nowhere — block it like empty options.
-    // Target = `targetKey` when present, else the legacy Google pair — the
-    // same resolution rule the availability endpoint and booking apply.
+    //
+    // Deliberately a SHAPE check, not a parse: this function's text is asserted
+    // byte-equal against its twin in the other package, so anything it calls
+    // would have to exist identically on both sides. Importing the real
+    // resolver would mean shipping a second copy of the key parser to the
+    // browser — two parsers that can disagree, which is the exact drift the
+    // shared resolver was created to end. Presence is all publishing needs to
+    // know; the resolver still has the last word at request time.
+    //
+    // Order mirrors the resolver: non-empty hosts wins, else targetKey, else
+    // the legacy Google pair.
     if (field.type === "appointment") {
       const ap = field.appointment;
-      if (!ap?.targetKey && !(ap?.accountId && ap?.calendarId)) {
+      const hostKeys = (ap?.hosts ?? [])
+        .map((h) => (h?.targetKey ?? "").trim())
+        .filter((k) => k.length > 0);
+      const named =
+        hostKeys.length > 0 ||
+        !!ap?.targetKey ||
+        !!(ap?.accountId && ap?.calendarId);
+      if (!named) {
         issues.push({
           code: "appointmentMissingCalendar",
           tab: "build",

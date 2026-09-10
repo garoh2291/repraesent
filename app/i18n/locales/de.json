@@ -4327,7 +4327,20 @@
         "maxDaysAhead": "Buchbar im Voraus (Tage)",
         "noTargets": "Verbinden Sie zuerst einen Kalender in den Einstellungen",
         "connectLink": "Kalender verbinden",
-        "accountNeedsReconnect": "muss neu verbunden werden"
+        "accountNeedsReconnect": "muss neu verbunden werden",
+        "hosts": "Gastgeber",
+        "hostsHelpMulti": "Ein Termin wird nur angeboten, wenn alle Gastgeber frei sind. Eine Buchung, die nicht alle erreicht, wird vollständig storniert.",
+        "addHost": "Gastgeber hinzufügen",
+        "primaryHost": "Haupt",
+        "removeHost": "Gastgeber entfernen",
+        "reorderHost": "Gastgeber neu anordnen",
+        "coHostDisconnected": "Solange dieser Kalender getrennt ist, werden überhaupt keine Zeiten angeboten.",
+        "openCalendarSettings": "Kalendereinstellungen",
+        "hostNone": "Kein Gastgeber – für Besucher nicht sichtbar",
+        "hostSearch": "Mitglieder suchen…",
+        "hostEmpty": "Keine Mitglieder gefunden.",
+        "alreadyAHost": "bereits Gastgeber",
+        "hostAlwaysBusy": "immer belegt"
       },
       "stepTitle": "Titel des Schritts",
       "stepDescription": "Beschreibung des Schritts",
@@ -4590,7 +4603,8 @@
       "loading": "Zeiten werden geladen...",
       "empty": "An diesem Tag sind keine Zeiten frei.",
       "slotUnavailable": "Dieser Termin wurde gerade vergeben. Bitte wählen Sie einen anderen.",
-      "slotInvalid": "Bitte wählen Sie einen gültigen Termin."
+      "slotInvalid": "Bitte wählen Sie einen gültigen Termin.",
+      "unavailable": "Zeiten können gerade nicht geprüft werden. Bitte versuchen Sie es gleich noch einmal."
     },
     "steps": {
       "title": "Schritte",

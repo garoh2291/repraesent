@@ -4327,7 +4327,20 @@
         "maxDaysAhead": "Réservation à l'avance (jours)",
         "noTargets": "Connectez d'abord un calendrier dans les paramètres",
         "connectLink": "Connecter un calendrier",
-        "accountNeedsReconnect": "doit être reconnecté"
+        "accountNeedsReconnect": "doit être reconnecté",
+        "hosts": "Hôtes",
+        "hostsHelpMulti": "Un créneau n'est proposé que si tous les hôtes sont libres, et une réservation qui ne les atteint pas tous est entièrement annulée.",
+        "addHost": "Ajouter un hôte",
+        "primaryHost": "Principal",
+        "removeHost": "Retirer l'hôte",
+        "reorderHost": "Réordonner l'hôte",
+        "coHostDisconnected": "Tant que ce calendrier est déconnecté, aucun créneau ne sera proposé.",
+        "openCalendarSettings": "Paramètres du calendrier",
+        "hostNone": "Aucun hôte — non visible par les visiteurs",
+        "hostSearch": "Rechercher des membres…",
+        "hostEmpty": "Aucun membre trouvé.",
+        "alreadyAHost": "déjà hôte",
+        "hostAlwaysBusy": "toujours occupé"
       },
       "stepTitle": "Titre de l'étape",
       "stepDescription": "Description de l'étape",
@@ -4590,7 +4603,8 @@
       "loading": "Chargement des horaires...",
       "empty": "Aucun créneau libre ce jour-là.",
       "slotUnavailable": "Ce créneau vient d’être réservé. Veuillez en choisir un autre.",
-      "slotInvalid": "Veuillez choisir un créneau valide."
+      "slotInvalid": "Veuillez choisir un créneau valide.",
+      "unavailable": "Les créneaux ne peuvent pas être vérifiés pour le moment. Réessayez dans un instant."
     },
     "steps": {
       "title": "Étapes",

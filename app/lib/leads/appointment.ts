@@ -19,16 +19,31 @@ export type AppointmentProvider =
   | "baikal"
   | "unknown";
 
+/** One co-host of a co-booked appointment. */
+export interface LeadAppointmentHost {
+  label: string | null;
+  eventId: string | null;
+}
+
 export interface LeadAppointment {
   /** Metadata key carrying the slot ("appointment", "appointment_2", …). */
   key: string;
   start: Date;
   end: Date | null;
   provider: AppointmentProvider;
+  /** The PRIMARY event. Co-hosts, when there are any, are in `hosts`. */
   eventId: string | null;
+  /** The one meeting link, shared by every host's event. */
   meetLink: string | null;
   /** false = slot string exists but no calendar event was confirmed. */
   booked: boolean;
+  /**
+   * Every host's event when this was co-booked, else null. Co-booking is
+   * all-or-nothing, so this is either complete or absent — never partial.
+   */
+  hosts: LeadAppointmentHost[] | null;
+  /** A co-booking that was rolled back: the lead is real, no event exists. */
+  bookingFailed: boolean;
   /** Metadata keys this appointment accounts for — hidden from "Additional info". */
   claimedKeys: string[];
 }
@@ -43,7 +58,18 @@ const PROVIDERS: readonly AppointmentProvider[] = [
   "baikal",
 ];
 
-const COMPANION_SUFFIXES = ["_event_id", "_meet_link", "_provider"] as const;
+const COMPANION_SUFFIXES = [
+  "_event_id",
+  "_meet_link",
+  "_provider",
+  // Co-booking. `_hosts` is a JSON array of every host's event refs; the three
+  // keys above keep meaning the PRIMARY, which is why nothing downstream had to
+  // change. `_booking_failed` / `_orphaned_events` mark a co-booking that was
+  // rolled back — the lead is real and kept, but nothing was put in a calendar.
+  "_hosts",
+  "_booking_failed",
+  "_orphaned_events",
+] as const;
 
 function parseIso(value: unknown): Date | null {
   if (typeof value !== "string" || !/^\d{4}-\d{2}-\d{2}T/.test(value)) {
@@ -55,6 +81,29 @@ function parseIso(value: unknown): Date | null {
 
 function asString(value: unknown): string | null {
   return typeof value === "string" && value !== "" ? value : null;
+}
+
+/**
+ * The co-host list, or null for a single-host booking.
+ *
+ * Tolerant on purpose: this is stored JSON written by an older or newer build,
+ * and a lead's appointment badge must never be the thing that throws.
+ */
+function parseHosts(raw: unknown): LeadAppointmentHost[] | null {
+  if (typeof raw !== "string" || raw === "") return null;
+  try {
+    const parsed: unknown = JSON.parse(raw);
+    if (!Array.isArray(parsed)) return null;
+    const hosts = parsed
+      .filter((h): h is Record<string, unknown> => !!h && typeof h === "object")
+      .map((h) => ({
+        label: asString(h.label),
+        eventId: asString(h.eventId),
+      }));
+    return hosts.length > 0 ? hosts : null;
+  } catch {
+    return null;
+  }
 }
 
 function inferProvider(
@@ -102,6 +151,9 @@ export function extractLeadAppointments(
         eventId: asString(meta.appointment_uid),
         meetLink: null,
         booked: asString(meta.appointment_uid) != null,
+        // The standalone booking page has always been one calendar.
+        hosts: null,
+        bookingFailed: false,
         claimedKeys: ["appointment_uid", "start", "end", "config_id"],
       });
     }
@@ -121,6 +173,7 @@ export function extractLeadAppointments(
 
     const eventId = asString(meta[`${key}_event_id`]);
     const meetLink = asString(meta[`${key}_meet_link`]);
+    const hosts = parseHosts(meta[`${key}_hosts`]);
     appointments.push({
       key,
       start,
@@ -128,8 +181,21 @@ export function extractLeadAppointments(
       provider: inferProvider(lead, asString(meta[`${key}_provider`]), meetLink, eventId),
       eventId,
       meetLink,
+      // Still "is there a primary event", NOT "did every host get one":
+      // co-booking is all-or-nothing, so a primary event existing means every
+      // host got theirs. A rolled-back co-booking leaves no _event_id at all.
       booked: eventId != null,
-      claimedKeys: [key, `${key}_event_id`, `${key}_meet_link`, `${key}_provider`],
+      hosts,
+      bookingFailed: asString(meta[`${key}_booking_failed`]) === "1",
+      claimedKeys: [
+        key,
+        `${key}_event_id`,
+        `${key}_meet_link`,
+        `${key}_provider`,
+        `${key}_hosts`,
+        `${key}_booking_failed`,
+        `${key}_orphaned_events`,
+      ],
     });
   }
 

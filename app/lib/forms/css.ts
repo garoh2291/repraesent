@@ -465,6 +465,43 @@ ${s} .rf-appt-empty, ${s} .rf-appt-loading {
   color: var(--rf-muted);
   font-size: calc(${d.font} * 0.92);
 }
+/* Co-hosts. Wraps rather than scrolls: this sits above the day strip, and a
+   second horizontal scroller next to that one is a trap on a phone. */
+${s} .rf-appt-hosts {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 12px;
+}
+${s} .rf-appt-hosts:empty { display: none; }
+${s} .rf-appt-host {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+${s} .rf-appt-host-av {
+  width: 26px;
+  height: 26px;
+  flex: 0 0 auto;
+  border-radius: 50%;
+  object-fit: cover;
+  background: var(--rf-surface);
+  border: 1px solid var(--rf-border);
+}
+${s} .rf-appt-host-ini {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--rf-muted);
+  font-size: calc(${d.font} * 0.78);
+  line-height: 1;
+}
+${s} .rf-appt-host-nm {
+  min-width: 0;
+  font-size: calc(${d.font} * 0.92);
+  color: var(--rf-text);
+}
 
 /* Address */
 ${s} .rf-address { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }

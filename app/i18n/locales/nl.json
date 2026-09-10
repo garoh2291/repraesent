@@ -4325,7 +4325,20 @@
         "maxDaysAhead": "Vooruit boeken (dagen)",
         "noTargets": "Verbind eerst een agenda in de instellingen",
         "connectLink": "Agenda koppelen",
-        "accountNeedsReconnect": "moet opnieuw worden gekoppeld"
+        "accountNeedsReconnect": "moet opnieuw worden gekoppeld",
+        "hosts": "Gastheren",
+        "hostsHelpMulti": "Een tijd wordt alleen aangeboden als iedere gastheer vrij is, en een boeking die hen niet allemaal bereikt wordt volledig geannuleerd.",
+        "addHost": "Gastheer toevoegen",
+        "primaryHost": "Primair",
+        "removeHost": "Gastheer verwijderen",
+        "reorderHost": "Gastheer herordenen",
+        "coHostDisconnected": "Zolang deze agenda niet is verbonden, worden er helemaal geen tijden aangeboden.",
+        "openCalendarSettings": "Agenda-instellingen",
+        "hostNone": "Geen gastheer — niet zichtbaar voor bezoekers",
+        "hostSearch": "Leden zoeken…",
+        "hostEmpty": "Geen leden gevonden.",
+        "alreadyAHost": "al gastheer",
+        "hostAlwaysBusy": "altijd bezet"
       },
       "stepTitle": "Titel van de stap",
       "stepDescription": "Beschrijving van de stap",
@@ -4588,7 +4601,8 @@
       "loading": "Tijden worden geladen...",
       "empty": "Geen vrije tijden op deze dag.",
       "slotUnavailable": "Dit tijdslot is zojuist bezet. Kies een ander tijdstip.",
-      "slotInvalid": "Kies een geldig tijdslot."
+      "slotInvalid": "Kies een geldig tijdslot.",
+      "unavailable": "Tijden kunnen nu niet worden gecontroleerd. Probeer het zo opnieuw."
     },
     "steps": {
       "title": "Stappen",

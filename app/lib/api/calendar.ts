@@ -25,6 +25,9 @@ export interface CalendarAccount {
   user_id: string;
   /** Name of the member who connected it — accounts are personal, not shared. */
   user_name: string;
+  /** Owner's avatar, for showing who a co-host is in the form builder. */
+  user_avatar_url: string | null;
+  user_avatar_thumb_url: string | null;
   provider: CalendarProvider;
   /** Provider identity: google/microsoft address; caldav username. */
   google_email: string;
@@ -68,6 +71,8 @@ export interface BaikalConfig {
   id: string;
   user_id: string;
   user_name: string;
+  user_avatar_url: string | null;
+  user_avatar_thumb_url: string | null;
   provider_name: string | null;
   provider_email: string | null;
   timezone: string;

@@ -271,6 +271,37 @@ export function uniqueKey(stem: string, taken: Set<string>): string {
 }
 
 /** A newly added field of the given type, with type-appropriate defaults. */
+/**
+ * Everything a new appointment field starts with.
+ *
+ * `busyCalendarKeys: []` is NOT "block nothing". The availability engine unions
+ * the calendars a field books into its busy sources unconditionally, so an
+ * empty list means "block exactly the calendars we write to" — the right
+ * default whether a workspace has connected two calendars or a hundred. The old
+ * `"all"` treated every calendar in the workspace as busy, which stops being a
+ * sensible guess the moment there are more than a handful.
+ *
+ * `timezone` is the static fallback; creation paths override it with the
+ * browser's zone (see `createField`). It has to be static here so a render-time
+ * fallback cannot desync between server and client.
+ */
+export function appointmentDefaults(): NonNullable<FormField["appointment"]> {
+  // A function, not a shared const: the nested window object and the two arrays
+  // would otherwise be the SAME objects on every field ever created, so one
+  // in-place edit anywhere would reach all of them.
+  return {
+    accountId: "",
+    calendarId: "",
+    busyCalendarKeys: [],
+    durationMinutes: 30,
+    window: { start: "09:00", end: "17:00" },
+    weekdays: ["mon", "tue", "wed", "thu", "fri"],
+    timezone: "Europe/Berlin",
+    minNoticeHours: 2,
+    maxDaysAhead: 30,
+  };
+}
+
 export function createField(
   type: FormFieldType,
   takenKeys: Set<string>,
@@ -315,16 +346,12 @@ export function createField(
       // one — required by default, unlike every other type.
       field.validation = { required: true };
       field.appointment = {
-        accountId: "",
-        calendarId: "",
-        busyCalendarKeys: "all",
-        durationMinutes: 30,
-        window: { start: "09:00", end: "17:00" },
-        weekdays: ["mon", "tue", "wed", "thu", "fri"],
+        ...appointmentDefaults(),
+        // Only in a CREATION path. Resolving the browser zone during a render
+        // would give the server's zone on the server and the visitor's in the
+        // browser — a hydration mismatch on a controlled input.
         timezone:
           Intl.DateTimeFormat().resolvedOptions().timeZone || "Europe/Berlin",
-        minNoticeHours: 2,
-        maxDaysAhead: 30,
       };
       break;
     case "address":

@@ -1,6 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
 import {
-  AlertTriangle,
   CalendarPlus,
   ChevronLeft,
   ChevronRight,
@@ -16,7 +15,6 @@ import { useTranslation } from "react-i18next";
 import { Link } from "react-router";
 import TimezoneSelect from "react-timezone-select";
 import { calendarKeyFor, listCalendarAccounts } from "~/lib/api/calendar";
-import { Checkbox } from "~/components/ui/checkbox";
 import { CalDavIcon } from "~/components/icons/CalDavIcon";
 import { GoogleIcon } from "~/components/icons/GoogleIcon";
 import { MicrosoftIcon } from "~/components/icons/MicrosoftIcon";
@@ -44,6 +42,7 @@ import { Textarea } from "~/components/ui/textarea";
 import { LabelEditor } from "~/components/forms/LabelEditor";
 import { Field, FieldHint } from "~/components/wordpress/fields";
 import {
+  appointmentDefaults,
   FIELD_TYPE_META,
   isFieldDeletable,
   snakeKeyRaw,
@@ -54,10 +53,19 @@ import {
   contentKey,
   hasOptions,
   isPresentational,
+  type AppointmentHost,
   type FormCommerce,
   type FormField,
   type FormFieldMapping,
 } from "~/lib/forms/schema";
+import {
+  derivedHosts,
+  hostsPatch,
+  primaryTargetKeyOf,
+} from "~/lib/forms/appointment-hosts";
+import { useWorkspaceMembers } from "~/lib/hooks/useWorkspaceMembers";
+import { BusyCalendarPicker } from "./BusyCalendarPicker";
+import { AppointmentHostList } from "./AppointmentHostList";
 import { OptionsEditor } from "./OptionsEditor";
 import { ProductFieldInspector } from "./products/ProductFieldInspector";
 
@@ -939,18 +947,13 @@ function AppointmentConfig({
     queryKey: ["calendar-accounts"],
     queryFn: listCalendarAccounts,
   });
+  // Cache read on any CRM screen — same query key the rest of the app uses.
+  const members = useWorkspaceMembers().data?.members ?? [];
 
-  const ap = field.appointment ?? {
-    accountId: "",
-    calendarId: "",
-    busyCalendarKeys: "all" as const,
-    durationMinutes: 30,
-    window: { start: "09:00", end: "17:00" },
-    weekdays: ["mon", "tue", "wed", "thu", "fri"],
-    timezone: "Europe/Berlin",
-    minNoticeHours: 2,
-    maxDaysAhead: 30,
-  };
+  // Shared with createField so the two cannot disagree. Static timezone on
+  // purpose: this is a render path, and resolving the browser zone here would
+  // hydrate differently on server and client.
+  const ap = field.appointment ?? appointmentDefaults();
 
   const patch = (p: Partial<NonNullable<FormField["appointment"]>>) =>
     onChange({ appointment: { ...ap, ...p } });
@@ -999,45 +1002,28 @@ function AppointmentConfig({
     );
   }
 
-  // The selected target via the resolution rule: explicit key first, else the
-  // legacy Google pair every pre-targetKey definition stored.
-  const selectedTarget =
-    ap.targetKey ||
-    (ap.accountId && ap.calendarId
-      ? `google:${ap.accountId}:${ap.calendarId}`
-      : undefined);
+  const hosts = derivedHosts(ap);
+  const primaryTargetKey = primaryTargetKeyOf(ap);
+  /** THE only way to write hosts — see lib/forms/appointment-hosts.ts. */
+  const patchHosts = (next: AppointmentHost[]) => patch(hostsPatch(next));
 
-  const setTarget = (key: string) => {
-    if (key.startsWith("google:")) {
-      // DUAL-WRITE the legacy pair: a backend rolled back to before targetKey
-      // existed still books Google targets from accountId/calendarId.
-      const rest = key.slice("google:".length);
-      const sep = rest.indexOf(":");
-      patch({
-        targetKey: key,
-        accountId: rest.slice(0, sep),
-        calendarId: rest.slice(sep + 1),
-      });
-    } else {
-      patch({ targetKey: key, accountId: "", calendarId: "" });
-    }
-  };
-
-  // The account behind the selected target, for the reconnect warning below.
-  // Both `google:` and `caldav:` keys carry the account id as segment two.
-  const selectedAccountId =
-    selectedTarget && !selectedTarget.startsWith("baikal:")
-      ? selectedTarget.split(":")[1]
-      : null;
-  const account = accounts.find((a) => a.id === selectedAccountId);
-
-  const accountCalendarItems = (list: typeof accounts) =>
+  const accountCalendarItems = (
+    list: typeof accounts,
+    takenKeys: Set<string>,
+  ) =>
     list.flatMap((a) =>
       (a.provider === "caldav" ? a.calendars : writableCalendars(a)).map(
         (c) => {
           const key = calendarKeyFor(a, c.id);
+          // A calendar another host row already uses is greyed out rather than
+          // silently ignored on click.
+          const taken = takenKeys.has(key);
           return (
-            <SelectItem key={key} value={key} disabled={a.auth_failed}>
+            <SelectItem
+              key={key}
+              value={key}
+              disabled={a.auth_failed || taken}
+            >
               <span className="flex min-w-0 items-center gap-1.5">
                 {/* Provider marker: a calendar name + colour alone can't
                     tell a Google calendar from a CalDAV one. */}
@@ -1057,7 +1043,9 @@ function AppointmentConfig({
                     · {a.google_email || a.user_name}
                     {a.auth_failed
                       ? ` — ${t("forms.inspector.appointment.accountNeedsReconnect")}`
-                      : ""}
+                      : taken
+                        ? ` — ${t("forms.inspector.appointment.alreadyAHost")}`
+                        : ""}
                   </span>
                 </span>
               </span>
@@ -1071,50 +1059,28 @@ function AppointmentConfig({
   const busyKeys = Array.isArray(ap.busyCalendarKeys)
     ? ap.busyCalendarKeys
     : [];
+  // The calendars this field BOOKS. Always busy — the engine unions them into
+  // the busy sources itself — so they are shown ticked and locked rather than
+  // written into busyCalendarKeys, where they would go stale on a host swap.
+  const lockedBusyKeys = new Set(hosts.map((h) => h.targetKey));
   const toggleBusyKey = (key: string, checked: boolean) =>
     patch({
       busyCalendarKeys: checked
-        ? [...busyKeys, key]
+        ? [...new Set([...busyKeys, key])]
         : busyKeys.filter((k) => k !== key),
     });
 
-  const weekdays = ap.weekdays ?? [];
-  const toggleWeekday = (day: string) =>
-    patch({
-      weekdays: weekdays.includes(day)
-        ? weekdays.filter((d) => d !== day)
-        : APPT_DAY_KEYS.filter((d) => d === day || weekdays.includes(d)),
-    });
-
-  return (
+  // One list of calendars for every host row, so a change to the grouping
+  // cannot apply to only some of the pickers. A function because each row hides
+  // the calendars the others already use.
+  const calendarGroups = (takenKeys: Set<string>) => (
     <>
-      <Field>
-        <Label>{t("forms.inspector.appointment.target")}</Label>
-        <Select
-          disabled={disabled || isLoading}
-          value={selectedTarget}
-          onValueChange={setTarget}
-        >
-          {/* The base trigger is w-fit + nowrap, so a long
-              "calendar · email" label would push past the panel edge.
-              Full width + the trigger's own line-clamp keeps it inside. */}
-          <SelectTrigger className="w-full">
-            <SelectValue />
-          </SelectTrigger>
-          {/* popper + align=end: the inspector sits at the right screen edge,
-              so a dropdown wider than its trigger must grow LEFT — the
-              default item-aligned position pins it to the right and clips. */}
-          <SelectContent
-            position="popper"
-            align="end"
-            className="max-w-[min(24rem,90vw)]"
-          >
             {myOauth.length > 0 ? (
               <SelectGroup>
                 <SelectLabel>
                   {t("forms.inspector.appointment.targetGroupMine")}
                 </SelectLabel>
-                {accountCalendarItems(myOauth)}
+                {accountCalendarItems(myOauth, takenKeys)}
               </SelectGroup>
             ) : null}
             {teamOauth.length > 0 ? (
@@ -1122,7 +1088,7 @@ function AppointmentConfig({
                 <SelectLabel>
                   {t("forms.inspector.appointment.targetGroupTeam")}
                 </SelectLabel>
-                {accountCalendarItems(teamOauth)}
+                {accountCalendarItems(teamOauth, takenKeys)}
               </SelectGroup>
             ) : null}
             {baikalConfigs.length > 0 ? (
@@ -1131,7 +1097,11 @@ function AppointmentConfig({
                   {t("forms.inspector.appointment.targetGroupBooking")}
                 </SelectLabel>
                 {baikalConfigs.map((b) => (
-                  <SelectItem key={b.id} value={`baikal:${b.id}`}>
+                  <SelectItem
+                    key={b.id}
+                    value={`baikal:${b.id}`}
+                    disabled={takenKeys.has(`baikal:${b.id}`)}
+                  >
                     <span className="flex min-w-0 items-center gap-1.5">
                       {/* Baikal is CalDAV under the hood — same mark. */}
                       <CalDavIcon className="h-3 w-3 shrink-0" />
@@ -1148,12 +1118,38 @@ function AppointmentConfig({
                 <SelectLabel>
                   {t("forms.inspector.appointment.targetGroupCaldav")}
                 </SelectLabel>
-                {accountCalendarItems(caldavAccounts)}
+                {accountCalendarItems(caldavAccounts, takenKeys)}
               </SelectGroup>
             ) : null}
-          </SelectContent>
-        </Select>
-        <FieldHint>{t("forms.inspector.appointment.targetHelp")}</FieldHint>
+    </>
+  );
+
+  const weekdays = ap.weekdays ?? [];
+  const toggleWeekday = (day: string) =>
+    patch({
+      weekdays: weekdays.includes(day)
+        ? weekdays.filter((d) => d !== day)
+        : APPT_DAY_KEYS.filter((d) => d === day || weekdays.includes(d)),
+    });
+
+  return (
+    <>
+      <Field>
+        <Label>{t("forms.inspector.appointment.hosts")}</Label>
+        <AppointmentHostList
+          hosts={hosts}
+          accounts={accounts}
+          baikalConfigs={baikalConfigs}
+          members={members}
+          calendarItems={calendarGroups}
+          disabled={disabled || isLoading}
+          onChange={patchHosts}
+        />
+        <FieldHint>
+          {hosts.length > 1
+            ? t("forms.inspector.appointment.hostsHelpMulti")
+            : t("forms.inspector.appointment.targetHelp")}
+        </FieldHint>
       </Field>
 
       <Field>
@@ -1176,48 +1172,14 @@ function AppointmentConfig({
         </FieldHint>
 
         {!allBusy ? (
-          <div className="space-y-1.5 pt-1">
-            {accounts.flatMap((a) =>
-              a.calendars.map((c) => {
-                // calendarKeyFor percent-encodes caldav calendar URLs — these
-                // keys are stored in the form definition and parsed serverside.
-                const key = calendarKeyFor(a, c.id);
-                return (
-                  <label
-                    key={key}
-                    className="flex items-center gap-2 text-sm text-foreground"
-                  >
-                    <Checkbox
-                      disabled={disabled}
-                      checked={busyKeys.includes(key)}
-                      onCheckedChange={(v) => toggleBusyKey(key, v === true)}
-                    />
-                    <span className="truncate">
-                      {a.user_name} · {c.summary}
-                    </span>
-                  </label>
-                );
-              }),
-            )}
-            {baikalConfigs.map((b) => {
-              const key = `baikal:${b.id}`;
-              return (
-                <label
-                  key={key}
-                  className="flex items-center gap-2 text-sm text-foreground"
-                >
-                  <Checkbox
-                    disabled={disabled}
-                    checked={busyKeys.includes(key)}
-                    onCheckedChange={(v) => toggleBusyKey(key, v === true)}
-                  />
-                  <span className="truncate">
-                    {b.provider_name ?? b.user_name}
-                  </span>
-                </label>
-              );
-            })}
-          </div>
+          <BusyCalendarPicker
+            accounts={accounts}
+            baikalConfigs={baikalConfigs}
+            busyKeys={busyKeys}
+            lockedKeys={lockedBusyKeys}
+            disabled={disabled}
+            onToggle={toggleBusyKey}
+          />
         ) : null}
       </Field>
 
@@ -1329,8 +1291,8 @@ function AppointmentConfig({
             Baikal/CalDAV booking calendars carry their own scheduling rules on
             the server side, so a second knob here would just fight them. The
             default (2h) still applies to slot computation. */}
-        {selectedTarget?.startsWith("google:") ||
-        selectedTarget?.startsWith("microsoft:") ? (
+        {primaryTargetKey?.startsWith("google:") ||
+        primaryTargetKey?.startsWith("microsoft:") ? (
           <Field>
             <Label htmlFor="fi-appt-notice">
               {t("forms.inspector.appointment.minNotice")}
@@ -1370,12 +1332,6 @@ function AppointmentConfig({
         </Field>
       </Cols>
 
-      {account?.auth_failed ? (
-        <p className="flex items-center gap-1.5 text-xs text-destructive">
-          <AlertTriangle className="h-3.5 w-3.5" aria-hidden="true" />
-          {t("forms.inspector.appointment.accountNeedsReconnect")}
-        </p>
-      ) : null}
     </>
   );
 }

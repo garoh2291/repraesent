@@ -138,8 +138,8 @@ export interface FormField {
    * `"<startISO>--<endISO>"`, the same wire format the booking page uses.
    *
    * Booking-target resolution (applied identically by the validator, the
-   * availability endpoint and createBookingEvent): parse `targetKey` when
-   * present; else, when both legacy `accountId` and `calendarId` are
+   * availability endpoint and createBookingEvent): non-empty `hosts` wins;
+   * else `targetKey`; else, when both legacy `accountId` and `calendarId` are
    * non-empty, the target is the Google calendar they name; else there is NO
    * target — the field is unpublishable and availability 404s.
    */
@@ -156,6 +156,20 @@ export interface FormField {
     accountId?: string;
     /** Legacy (pre-targetKey): Google calendar id the booked event lands in. */
     calendarId?: string;
+    /**
+     * Co-hosts. When present and non-empty these are THE calendars to book, in
+     * order; `hosts[0]` is the primary and organises the meeting. A slot is
+     * only offered when every host is free, and a booking that cannot reach
+     * every host is rolled back entirely.
+     *
+     * The builder keeps `targetKey` mirroring `hosts[0].targetKey` (see
+     * `patchHosts` in FieldInspector), so a reader that predates co-booking
+     * still books the primary rather than nothing. Never write `hosts` without
+     * updating `targetKey` in the same patch.
+     */
+    hosts?: AppointmentHost[];
+    /** Only `"all"` exists: every host must be free, every host gets an event. */
+    hostPolicy?: "all";
     /** Busy sources, `"google:<accountId>:<calendarId>"` / `"baikal:<configId>"`, or "all". */
     busyCalendarKeys: string[] | "all";
     durationMinutes: number;
@@ -170,6 +184,31 @@ export interface FormField {
     /** Booking horizon in days. Default 30. */
     maxDaysAhead?: number;
   };
+}
+
+/**
+ * One host of an appointment field: a CALENDAR, plus optionally a PERSON.
+ *
+ * A row with no person is still booked and still blocks time — it is a meeting
+ * room, a shared inbox, a calendar that exists to hold the slot — but the
+ * visitor is never told about it. Only rows with a name are shown.
+ *
+ * `label` / `avatarUrl` / `email` are denormalised from the workspace member at
+ * pick time rather than resolved from `userId` at render time, because the
+ * published definition is public and is read by the form renderer, which has no
+ * access to workspace data. Denormalising also means a member leaving does not
+ * blank a live form.
+ */
+export interface AppointmentHost {
+  /** Cross-source calendar key, built by `calendarKeyFor`. */
+  targetKey: string;
+  /** Workspace member hosting this calendar. Absent = booked but never shown. */
+  userId?: string;
+  /** Their name, falling back to their e-mail. Absent = not shown. */
+  label?: string;
+  avatarUrl?: string;
+  /** Invited as an attendee on the primary's event where the provider allows it. */
+  email?: string;
 }
 
 export interface FormSection {
@@ -191,7 +230,8 @@ export interface FormSection {
  *   field.<fieldId>.part.street|city|zip|country
  *   success.inline | success.modal.title | success.modal.body | success.modal.cta
  *   error.generic | error.<FormErrorCode>
- *   appointment.loading | appointment.empty     (slot picker runtime states)
+ *   appointment.loading | appointment.empty | appointment.unavailable
+ *                                               (slot picker runtime states)
  *   nav.back | nav.next | nav.stepOf            (multi-step navigation)
  *   commerce.*                                  (product forms: order summary)
  *   checkout.*                                  (product forms: after payment)

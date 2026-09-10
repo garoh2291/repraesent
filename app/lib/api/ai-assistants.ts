@@ -1,3 +1,4 @@
+import type { AppointmentHost } from "~/lib/forms/schema";
 import {
   apiClient,
   getStoredToken,
@@ -280,6 +281,13 @@ export interface ActionAppointmentSettings {
   hostEmail?: string;
   hostRole?: string;
   /**
+   * Co-hosts. The five singular `host*` fields above stay as `hosts[0]`, so an
+   * older widget bundle and every existing reader keep working.
+   */
+  hosts?: AppointmentHost[];
+  /** Only `"all"` exists: every host free, every host booked. */
+  hostPolicy?: "all";
+  /**
    * Let the visitor negotiate the whole booking in chat — pick a time, give
    * their details, confirm in words — instead of only through the calendar
    * card. Absent means on: the backend defaults it to true, and an action
@@ -290,8 +298,20 @@ export interface ActionAppointmentSettings {
   manageable?: boolean;
 }
 
+/**
+ * What a new `book` action starts with.
+ *
+ * `busyCalendarKeys: []` means "block exactly the calendars we book into" —
+ * the engine unions the write targets in unconditionally — not "block nothing".
+ * See APPOINTMENT_DEFAULTS in lib/forms/field-types.ts for the same reasoning.
+ *
+ * Note the backend zod schema still defaults this field to `"all"`. That is a
+ * READ-time fallback for a stored action that omits the key entirely; changing
+ * it would silently re-interpret existing data, which is the opposite of what a
+ * creation default does.
+ */
 export const ACTION_APPOINTMENT_DEFAULTS: ActionAppointmentSettings = {
-  busyCalendarKeys: "all",
+  busyCalendarKeys: [],
   durationMinutes: 30,
   window: { start: "09:00", end: "17:00" },
   weekdays: ["mon", "tue", "wed", "thu", "fri"],

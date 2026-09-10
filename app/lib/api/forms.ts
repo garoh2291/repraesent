@@ -219,6 +219,12 @@ export interface AppointmentAvailability {
   /** Free slots as `"<startISO>--<endISO>"` — the submit wire format. */
   slots: string[];
   timezone: string;
+  /**
+   * Co-hosts only: a calendar this field books could not be read, so `slots`
+   * is empty because the answer is UNKNOWN, not because the day is full.
+   * Absent on every single-host response.
+   */
+  unavailable?: true;
 }
 
 /** Free appointment slots for one field on one day (`date` = YYYY-MM-DD). */

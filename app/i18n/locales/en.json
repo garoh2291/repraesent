@@ -4325,7 +4325,20 @@
         "maxDaysAhead": "Book ahead (days)",
         "noTargets": "Connect a calendar in Settings first",
         "connectLink": "Connect a calendar",
-        "accountNeedsReconnect": "needs reconnecting"
+        "accountNeedsReconnect": "needs reconnecting",
+        "hosts": "Hosts",
+        "hostsHelpMulti": "A time is only offered when every host is free, and a booking that cannot reach all of them is cancelled entirely.",
+        "addHost": "Add host",
+        "primaryHost": "Primary",
+        "removeHost": "Remove host",
+        "reorderHost": "Reorder host",
+        "coHostDisconnected": "While this calendar is disconnected, no times will be offered at all.",
+        "openCalendarSettings": "Calendar settings",
+        "hostNone": "No host — not shown to visitors",
+        "hostSearch": "Search members…",
+        "hostEmpty": "No members found.",
+        "alreadyAHost": "already a host",
+        "hostAlwaysBusy": "always busy"
       },
       "stepTitle": "Step title",
       "stepDescription": "Step description",
@@ -4588,7 +4601,8 @@
       "loading": "Loading times...",
       "empty": "No free times on this day.",
       "slotUnavailable": "This time slot was just taken. Please pick another.",
-      "slotInvalid": "Please pick a valid time slot."
+      "slotInvalid": "Please pick a valid time slot.",
+      "unavailable": "Times cannot be checked right now. Please try again shortly."
     },
     "steps": {
       "title": "Steps",
