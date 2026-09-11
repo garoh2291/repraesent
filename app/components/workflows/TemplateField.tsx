@@ -1,9 +1,10 @@
 import { useRef } from "react";
-import { useTranslation } from "react-i18next";
 import { Input } from "~/components/ui/input";
 import { Label } from "~/components/ui/label";
 import { Textarea } from "~/components/ui/textarea";
 import { Field, FieldHint } from "~/components/wordpress/fields";
+import type { CatalogField } from "~/lib/api/workflows";
+import { VariablePicker } from "./VariablePicker";
 
 /**
  * A one-line or multi-line template with clickable variable chips.
@@ -19,7 +20,7 @@ export function TemplateField({
   label,
   hint,
   value,
-  variables,
+  fields,
   placeholder,
   multiline,
   rows = 3,
@@ -30,15 +31,14 @@ export function TemplateField({
   label: string;
   hint?: string;
   value: string;
-  /** Dotted paths, without the braces. Empty hides the chip row entirely. */
-  variables: string[];
+  /** The trigger entity's catalogue. Empty hides the picker entirely. */
+  fields: CatalogField[];
   placeholder?: string;
   multiline?: boolean;
   rows?: number;
   disabled?: boolean;
   onChange: (next: string) => void;
 }) {
-  const { t } = useTranslation();
   const ref = useRef<HTMLTextAreaElement | HTMLInputElement | null>(null);
 
   const insert = (path: string) => {
@@ -85,24 +85,7 @@ export function TemplateField({
       )}
       {hint ? <FieldHint>{hint}</FieldHint> : null}
 
-      {variables.length > 0 ? (
-        <div className="space-y-1.5 pt-0.5">
-          <FieldHint>{t("workflows.email.variablesHint")}</FieldHint>
-          <div className="flex flex-wrap gap-1.5">
-            {variables.map((path) => (
-              <button
-                key={path}
-                type="button"
-                disabled={disabled}
-                onClick={() => insert(path)}
-                className="rounded-md border border-border bg-muted/40 px-2 py-1 font-mono text-[11px] text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:opacity-50"
-              >
-                {`{{${path}}}`}
-              </button>
-            ))}
-          </div>
-        </div>
-      ) : null}
+      <VariablePicker fields={fields} disabled={disabled} onInsert={insert} />
     </Field>
   );
 }

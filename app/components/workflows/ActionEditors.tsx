@@ -86,13 +86,13 @@ function TargetPicker({
 export function AddNoteEditor({
   config,
   entity,
-  variables,
+  fields,
   disabled,
   onChange,
 }: {
   config: AddNoteConfig;
   entity: WorkflowEntity;
-  variables: string[];
+  fields: CatalogField[];
   disabled?: boolean;
   onChange: (next: AddNoteConfig) => void;
 }) {
@@ -111,7 +111,7 @@ export function AddNoteEditor({
         id="wf-note-body"
         label={t("workflows.note.body")}
         value={config.body ?? ""}
-        variables={variables}
+        fields={fields}
         multiline
         rows={4}
         disabled={disabled}
@@ -130,14 +130,14 @@ export function CreateTaskEditor({
   config,
   entity,
   members,
-  variables,
+  fields,
   disabled,
   onChange,
 }: {
   config: CreateTaskConfig;
   entity: WorkflowEntity;
   members: WorkspaceMemberOption[];
-  variables: string[];
+  fields: CatalogField[];
   disabled?: boolean;
   onChange: (next: CreateTaskConfig) => void;
 }) {
@@ -166,7 +166,7 @@ export function CreateTaskEditor({
         id="wf-task-title"
         label={t("workflows.task.title")}
         value={config.title ?? ""}
-        variables={variables}
+        fields={fields}
         disabled={disabled}
         onChange={(title) => onChange({ ...config, title })}
       />
@@ -176,7 +176,7 @@ export function CreateTaskEditor({
         label={t("workflows.task.description")}
         hint={t("workflows.task.descriptionHint")}
         value={config.description ?? ""}
-        variables={[]}
+        fields={[]}
         multiline
         disabled={disabled}
         onChange={(description) => onChange({ ...config, description })}
@@ -263,12 +263,12 @@ export function CreateTaskEditor({
 
 export function NotifyTeamEditor({
   config,
-  variables,
+  fields,
   disabled,
   onChange,
 }: {
   config: NotifyTeamConfig;
-  variables: string[];
+  fields: CatalogField[];
   disabled?: boolean;
   onChange: (next: NotifyTeamConfig) => void;
 }) {
@@ -282,7 +282,7 @@ export function NotifyTeamEditor({
         label={t("workflows.notify.message")}
         hint={t("workflows.notify.messageHint")}
         value={config.message ?? ""}
-        variables={variables}
+        fields={fields}
         multiline
         rows={3}
         disabled={disabled}
@@ -300,7 +300,6 @@ export function UpdateRecordEditor({
   fields,
   members,
   pipelineScope,
-  variables,
   disabled,
   onChange,
 }: {
@@ -310,7 +309,6 @@ export function UpdateRecordEditor({
   members: WorkspaceMemberOption[];
   /** A pipeline id, when the trigger names one — narrows the stage list. */
   pipelineScope?: string;
-  variables: string[];
   disabled?: boolean;
   onChange: (next: UpdateRecordConfig) => void;
 }) {
@@ -378,7 +376,6 @@ export function UpdateRecordEditor({
                 fields={fields}
                 members={members}
                 pipelineScope={pipelineScope}
-                variables={variables}
                 disabled={disabled}
                 onChange={(v) => setField(field, v)}
               />
@@ -425,7 +422,6 @@ function ValueEditor({
   fields,
   members,
   pipelineScope,
-  variables,
   disabled,
   onChange,
 }: {
@@ -434,7 +430,6 @@ function ValueEditor({
   fields: CatalogField[];
   members: WorkspaceMemberOption[];
   pipelineScope?: string;
-  variables: string[];
   disabled?: boolean;
   onChange: (next: string) => void;
 }) {
@@ -511,7 +506,7 @@ function ValueEditor({
       id={`wf-update-${field}`}
       label=""
       value={value}
-      variables={variables}
+      fields={fields}
       disabled={disabled}
       onChange={onChange}
     />

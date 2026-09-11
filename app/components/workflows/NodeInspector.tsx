@@ -29,8 +29,10 @@ import type {
   WorkflowEntity,
   WorkflowNode,
 } from "~/lib/api/workflows";
+import { audienceOf } from "~/lib/api/workflows";
 import { sortAccountsWithAliases } from "~/lib/api/email-accounts";
 import { ConditionBuilder } from "./ConditionBuilder";
+import { RecipientPicker } from "./RecipientPicker";
 import { ResolvedHint } from "./ResolvedHint";
 import { EmailTemplateEditor } from "./EmailTemplateEditor";
 import { TriggerEditor } from "./TriggerEditor";
@@ -61,7 +63,6 @@ export function NodeInspector({
   dateFields,
   locales,
   activeLocale,
-  variables,
   members,
   capability,
   disabled,
@@ -79,7 +80,6 @@ export function NodeInspector({
   dateFields: string[];
   locales: string[];
   activeLocale: string;
-  variables: string[];
   members: WorkspaceMemberOption[];
   capability: OutboundCapability | undefined;
   disabled?: boolean;
@@ -137,7 +137,7 @@ export function NodeInspector({
       return (
         <div className="space-y-5">
           <FieldHint>{t("workflows.inspector.internalHint")}</FieldHint>
-          <RecipientPicker
+          <InternalRecipientPicker
             recipients={cfg.recipients ?? []}
             members={members}
             disabled={disabled}
@@ -147,7 +147,7 @@ export function NodeInspector({
             byLocale={cfg.by_locale ?? {}}
             locales={locales}
             activeLocale={activeLocale}
-            variables={variables}
+            fields={fields}
             disabled={disabled}
             workflowId={workflowId}
             previewRecord={previewRecord}
@@ -166,24 +166,20 @@ export function NodeInspector({
         <div className="space-y-5">
           {blocked ? <OutboundBlockedNotice capability={capability} /> : null}
 
-          <Field>
-            <Label htmlFor="wf-to">{t("workflows.email.toPath")}</Label>
-            <Input
-              id="wf-to"
-              disabled={disabled}
-              value={cfg.to_path ?? ""}
-              onChange={(e) => onChange({ ...cfg, to_path: e.target.value })}
-              placeholder="{{trigger.record.email}}"
-              className="font-mono text-xs"
-            />
-            <FieldHint>{t("workflows.email.toPathHint")}</FieldHint>
-            <ResolvedHint
-              workflowId={workflowId}
-              record={previewRecord}
-              template={cfg.to_path ?? ""}
-              tone="address"
-            />
-          </Field>
+          <RecipientPicker
+            audience={audienceOf(cfg)}
+            entity={entity}
+            fields={fields}
+            workflowId={workflowId}
+            previewRecord={previewRecord}
+            disabled={disabled}
+            onChange={(audience) =>
+              // `to_path` is dropped the moment the picker is used: keeping
+              // both would leave two answers to "who gets this" on one step,
+              // and the resolver prefers `audience` anyway.
+              onChange({ ...cfg, audience, to_path: undefined })
+            }
+          />
 
           {capability && capability.accounts.length > 0 ? (
             <Field>
@@ -228,7 +224,7 @@ export function NodeInspector({
             byLocale={cfg.by_locale ?? {}}
             locales={locales}
             activeLocale={activeLocale}
-            variables={variables}
+            fields={fields}
             disabled={disabled}
             workflowId={workflowId}
             previewRecord={previewRecord}
@@ -244,7 +240,7 @@ export function NodeInspector({
         <AddNoteEditor
           config={node.config as AddNoteConfig}
           entity={entity}
-          variables={variables}
+          fields={fields}
           disabled={disabled}
           onChange={onChange}
         />
@@ -256,7 +252,7 @@ export function NodeInspector({
           config={node.config as CreateTaskConfig}
           entity={entity}
           members={members}
-          variables={variables}
+          fields={fields}
           disabled={disabled}
           onChange={onChange}
         />
@@ -266,7 +262,7 @@ export function NodeInspector({
       return (
         <NotifyTeamEditor
           config={node.config as NotifyTeamConfig}
-          variables={variables}
+          fields={fields}
           disabled={disabled}
           onChange={onChange}
         />
@@ -280,7 +276,6 @@ export function NodeInspector({
           fields={fields}
           members={members}
           pipelineScope={pipelineScope}
-          variables={variables}
           disabled={disabled}
           onChange={onChange}
         />
@@ -388,7 +383,7 @@ function DelayEditor({
   );
 }
 
-function RecipientPicker({
+function InternalRecipientPicker({
   recipients,
   members,
   disabled,

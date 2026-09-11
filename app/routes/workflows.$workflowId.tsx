@@ -157,23 +157,6 @@ export default function WorkflowBuilder() {
     return match && "value" in match ? (match.value as string) : undefined;
   }, [triggerConfig]);
 
-  /**
-   * What a template can interpolate: the record, its previous values, and
-   * anything an earlier step returned. Built from the same catalogue the
-   * conditions use, so the two never disagree about what a field is called.
-   */
-  const variables = useMemo(() => {
-    const paths = fields.map((f) => `trigger.record.${f.path}`);
-    // `trigger.old` is the raw row snapshot the DB trigger captured, and
-    // nothing enriches it — so a RESOLVED field (a deal's contact email, its
-    // tracking link) is always empty there. Offering it as a chip is offering
-    // a variable that renders to nothing, which is worse than not offering it.
-    const previous = fields
-      .filter((f) => !f.dynamic && !f.resolved)
-      .map((f) => `trigger.old.${f.path}`);
-    return [...paths, ...previous];
-  }, [fields]);
-
   const selectedNode = useMemo(() => {
     if (!graph || !selectedId) return null;
     return graph.nodes.find((n) => n.id === selectedId) ?? null;
@@ -449,7 +432,6 @@ export default function WorkflowBuilder() {
                   dateFields={dateFields}
                   locales={[...SUPPORTED_LOCALES]}
                   activeLocale={activeLocale}
-                  variables={variables}
                   members={memberOptions}
                   capability={capability}
                   disabled={!canEdit}

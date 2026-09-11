@@ -162,7 +162,69 @@ export interface SendInternalEmailConfig {
   by_locale: LocalizedTemplate;
 }
 
+/**
+ * Who a customer email goes to.
+ *
+ * A named choice, not a template path. `path` is still here as the escape
+ * hatch for an address stashed somewhere odd — a metadata key, say — but it
+ * lives one level down in the picker and nothing defaults to it.
+ */
+export type EmailAudience =
+  /** The one obvious person: the lead, the contact, the deal's main contact. */
+  | { kind: "primary" }
+  /** Deals: every contact attached, primary first. One email each. */
+  | { kind: "all_contacts" }
+  /** Deals: the address on the lead this deal came from. */
+  | { kind: "source_lead" }
+  /** Leads: the contact this lead was converted into. */
+  | { kind: "linked_contact" }
+  | { kind: "address"; email: string }
+  | { kind: "path"; path: string };
+
+/** What each trigger entity can sensibly be asked for. Mirrors the backend. */
+export const AUDIENCES_BY_ENTITY: Record<
+  WorkflowEntity,
+  EmailAudience["kind"][]
+> = {
+  deals: ["primary", "all_contacts", "source_lead", "address", "path"],
+  leads: ["primary", "linked_contact", "address", "path"],
+  contacts: ["primary", "address", "path"],
+  tasks: ["primary", "address", "path"],
+};
+
+/**
+ * What an older step meant.
+ *
+ * `to_path` was free text and every step in existence holds the same default,
+ * so this is a rename for all of them rather than a migration.
+ */
+export function audienceOf(config: {
+  audience?: EmailAudience;
+  to_path?: string;
+}): EmailAudience {
+  if (config.audience) return config.audience;
+  const path = config.to_path?.trim();
+  if (!path || path === "{{trigger.record.email}}") return { kind: "primary" };
+  return { kind: "path", path };
+}
+
+export interface ResolvedRecipient {
+  email: string;
+  contactId: string | null;
+  name: string | null;
+  /** A key, not prose — the client translates it. */
+  why:
+    | "primary_contact"
+    | "also_on_deal"
+    | "the_lead"
+    | "linked_contact"
+    | "literal_address"
+    | "custom_variable";
+}
+
 export interface SendCustomerEmailConfig {
+  audience?: EmailAudience;
+  /** Legacy free-text path; superseded by `audience`, still executed. */
   to_path?: string;
   locale_path?: string;
   email_account_id?: string | null;
@@ -456,6 +518,23 @@ export async function previewTemplate(
     rendered: string;
     unresolved: string[];
   }>(`/workflows/${workflowId}/preview`, payload);
+  return data;
+}
+
+/**
+ * Who a step would actually email, for one real record.
+ *
+ * Calls the same resolver the send step calls, so the builder cannot promise
+ * something different from what the run does.
+ */
+export async function resolveRecipients(
+  workflowId: string,
+  payload: { entity_id: string; audience: EmailAudience },
+): Promise<{ recipients: ResolvedRecipient[] }> {
+  const { data } = await apiClient.post<{ recipients: ResolvedRecipient[] }>(
+    `/workflows/${workflowId}/resolve-recipients`,
+    payload,
+  );
   return data;
 }
 

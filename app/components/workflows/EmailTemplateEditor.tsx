@@ -10,8 +10,10 @@ import { EmailHtmlFrame } from "~/components/email-campaigns/EmailHtmlFrame";
 import { UseTemplatePicker } from "~/components/email-campaigns/UseTemplatePicker";
 import { Field, FieldHint } from "~/components/wordpress/fields";
 import { ResolvedHint } from "./ResolvedHint";
+import { VariablePicker } from "./VariablePicker";
 import {
   previewTemplate,
+  type CatalogField,
   type LocalizedTemplate,
   type RecentRecord,
 } from "~/lib/api/workflows";
@@ -28,7 +30,7 @@ export function EmailTemplateEditor({
   byLocale,
   locales,
   activeLocale,
-  variables,
+  fields,
   disabled,
   workflowId,
   previewRecord,
@@ -38,7 +40,7 @@ export function EmailTemplateEditor({
   byLocale: LocalizedTemplate;
   locales: string[];
   activeLocale: string;
-  variables: string[];
+  fields: CatalogField[];
   disabled?: boolean;
   workflowId: string;
   previewRecord: RecentRecord | null;
@@ -48,6 +50,15 @@ export function EmailTemplateEditor({
   const { t } = useTranslation();
   const [view, setView] = useState<"code" | "preview">("code");
   const bodyRef = useRef<HTMLTextAreaElement | null>(null);
+  const subjectRef = useRef<HTMLInputElement | null>(null);
+  /**
+   * Which box the author was last typing in.
+   *
+   * The picker used to splice into the body unconditionally, so clicking a
+   * variable while the caret sat in the Subject silently appended it to the
+   * body instead — the value went somewhere the author was not looking.
+   */
+  const [focused, setFocused] = useState<"subject" | "html">("html");
 
   const current = byLocale[activeLocale] ?? { subject: "", html: "" };
 
@@ -91,18 +102,21 @@ export function EmailTemplateEditor({
   const patch = (next: Partial<{ subject: string; html: string }>) =>
     onChange({ ...byLocale, [activeLocale]: { ...current, ...next } });
 
-  /** Insert at the caret — what makes the chips worth clicking. */
+  /** Insert at the caret, into whichever field the author was last in. */
   const spliceAtCaret = (token: string) => {
-    const el = bodyRef.current;
+    const field = focused;
+    const el = field === "subject" ? subjectRef.current : bodyRef.current;
+    const value = field === "subject" ? current.subject : current.html;
+
     if (!el) {
-      patch({ html: `${current.html}${token}` });
+      patch({ [field]: `${value}${token}` } as Partial<typeof current>);
       return;
     }
-    const start = el.selectionStart ?? current.html.length;
+    const start = el.selectionStart ?? value.length;
     const end = el.selectionEnd ?? start;
     patch({
-      html: current.html.slice(0, start) + token + current.html.slice(end),
-    });
+      [field]: value.slice(0, start) + token + value.slice(end),
+    } as Partial<typeof current>);
     requestAnimationFrame(() => {
       el.focus();
       el.setSelectionRange(start + token.length, start + token.length);
@@ -148,8 +162,10 @@ export function EmailTemplateEditor({
         <Label htmlFor="wf-subject">{t("workflows.email.subject")}</Label>
         <Input
           id="wf-subject"
+          ref={subjectRef}
           disabled={disabled}
           value={current.subject}
+          onFocus={() => setFocused("subject")}
           onChange={(e) => patch({ subject: e.target.value })}
           placeholder={t("workflows.email.subjectPlaceholder")}
         />
@@ -204,6 +220,7 @@ export function EmailTemplateEditor({
             ref={bodyRef}
             rows={10}
             disabled={disabled}
+            onFocus={() => setFocused("html")}
             className="font-mono text-xs"
             value={current.html}
             onChange={(e) => patch({ html: e.target.value })}
@@ -252,24 +269,22 @@ export function EmailTemplateEditor({
         )}
       </Field>
 
-      {variables.length > 0 ? (
-        <div className="space-y-1.5">
-          <FieldHint>{t("workflows.email.variablesHint")}</FieldHint>
-          <div className="flex flex-wrap gap-1.5">
-            {variables.map((path) => (
-              <button
-                key={path}
-                type="button"
-                disabled={disabled || view === "preview"}
-                onClick={() => insert(path)}
-                className="rounded-md border border-border bg-muted/40 px-2 py-1 font-mono text-[11px] text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:opacity-50"
-              >
-                {`{{${path}}}`}
-              </button>
-            ))}
-          </div>
-        </div>
-      ) : null}
+      <div className="flex items-center gap-2">
+        <VariablePicker
+          fields={fields}
+          disabled={disabled || view === "preview"}
+          onInsert={insert}
+        />
+        <FieldHint>
+          {focused === "subject"
+            ? t("workflows.variables.intoSubject", {
+                defaultValue: "Inserts into the subject",
+              })
+            : t("workflows.variables.intoBody", {
+                defaultValue: "Inserts into the message",
+              })}
+        </FieldHint>
+      </div>
     </div>
   );
 }

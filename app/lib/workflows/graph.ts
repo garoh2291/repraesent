@@ -1,3 +1,4 @@
+import { audienceOf } from "~/lib/api/workflows";
 import type {
   AddNoteConfig,
   ConditionGroup,
@@ -159,7 +160,9 @@ export function defaultConfigFor(
       } satisfies SendInternalEmailConfig;
     case "send_customer_email":
       return {
-        to_path: "{{trigger.record.email}}",
+        // The record's own person — what every step in existence meant by
+        // `{{trigger.record.email}}`, said in words.
+        audience: { kind: "primary" },
         email_account_id: null,
         by_locale: {
           [defaultLocale]: {
@@ -228,7 +231,15 @@ export function publishBlockers(
     }
     if (step.type === "send_customer_email") {
       const cfg = step.config as SendCustomerEmailConfig;
-      if (!cfg.to_path?.trim()) problems.push(t("workflows.validation.noToPath"));
+      // An audience always resolves to *something* except in the two cases
+      // that still need the author to type: a literal address and a custom
+      // variable. Whether it resolves to a real person is the builder's live
+      // preview to answer — publish cannot know which record will trigger it.
+      const audience = audienceOf(cfg);
+      const blank =
+        (audience.kind === "address" && !audience.email.trim()) ||
+        (audience.kind === "path" && !audience.path.trim());
+      if (blank) problems.push(t("workflows.validation.noToPath"));
       if (!hasAnyTemplate(cfg.by_locale)) {
         problems.push(t("workflows.validation.noTemplate"));
       }
