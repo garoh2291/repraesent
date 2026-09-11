@@ -324,6 +324,11 @@ export interface WorkflowSummary {
   default_locale: string;
   entity: WorkflowEntity | null;
   trigger_type: TriggerType | null;
+  /**
+   * Whether a live version exists. Activating a workflow that has never been
+   * published is a 400, so the card needs this to know whether to offer it.
+   */
+  published_version_id: string | null;
   has_unpublished_changes: boolean;
   runs_7d: number;
   failed_7d: number;
@@ -338,7 +343,6 @@ export interface WorkflowDetail extends Omit<
 > {
   graph: WorkflowGraph;
   draft_version_id: string | null;
-  published_version_id: string | null;
   draft_version: number | null;
   exit_conditions: ConditionGroup | null;
   send_window: SendWindow | null;
@@ -453,9 +457,14 @@ export async function publishWorkflow(id: string): Promise<WorkflowDetail> {
   return data;
 }
 
+/**
+ * `draft` is a real destination, not just a starting state: it takes a live
+ * workflow off the air and labels it as being worked on. It keeps the
+ * published version, so activating again is one click.
+ */
 export async function setWorkflowStatus(
   id: string,
-  status: "active" | "paused",
+  status: "active" | "paused" | "draft",
 ): Promise<WorkflowDetail> {
   const { data } = await apiClient.patch<WorkflowDetail>(
     `/workflows/${id}/status`,
@@ -468,6 +477,14 @@ export async function setWorkflowStatus(
 
 export async function deleteWorkflow(id: string): Promise<void> {
   await apiClient.delete(`/workflows/${id}`);
+}
+
+/** Undo a delete. The workflow returns with the status it had. */
+export async function restoreWorkflow(id: string): Promise<WorkflowDetail> {
+  const { data } = await apiClient.post<WorkflowDetail>(
+    `/workflows/${id}/restore`,
+  );
+  return data;
 }
 
 export async function listWorkflowRuns(id: string): Promise<WorkflowRun[]> {

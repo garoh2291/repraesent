@@ -6,6 +6,7 @@ import {
   BellRing,
   Plus,
   Send,
+  ShieldCheck,
   Trash2,
   TriangleAlert,
 } from "lucide-react";
@@ -22,6 +23,12 @@ import {
   type NotificationEvent,
   type NotificationProvider,
 } from "~/lib/api/notification-channels";
+import {
+  createLeadAllowlistEntry,
+  deleteLeadAllowlistEntry,
+  listLeadAllowlist,
+  type LeadAllowlistEntry,
+} from "~/lib/api/lead-allowlist";
 import { useCanManageNotifications } from "~/lib/hooks/useCanManageNotifications";
 import { useDocumentMeta } from "~/lib/hooks/use-document-meta";
 import { Button } from "~/components/ui/button";
@@ -231,6 +238,8 @@ export default function SettingsNotifications() {
         ) : null}
       </div>
 
+      <AllowlistSection canManage={canManage} />
+
       <AddChannelDialog
         open={addOpen}
         onOpenChange={setAddOpen}
@@ -277,6 +286,160 @@ export default function SettingsNotifications() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+    </div>
+  );
+}
+
+/**
+ * The manual override on the spam filter.
+ *
+ * It lives here, beside the channels, because both answer the same question —
+ * what reaches you and what does not. The filter hid 293 leads in one
+ * workspace, 228 of them on the model's word alone, and until now there was
+ * nothing a person could do about a name it kept getting wrong.
+ */
+function AllowlistSection({ canManage }: { canManage: boolean }) {
+  const { t } = useTranslation();
+  const queryClient = useQueryClient();
+  const [pattern, setPattern] = useState("");
+  const [note, setNote] = useState("");
+
+  const { data: entries, isPending } = useQuery({
+    queryKey: ["lead-allowlist"],
+    queryFn: listLeadAllowlist,
+  });
+
+  const invalidate = () =>
+    queryClient.invalidateQueries({ queryKey: ["lead-allowlist"] });
+
+  const addMutation = useMutation({
+    mutationFn: () =>
+      createLeadAllowlistEntry({
+        pattern: pattern.trim(),
+        note: note.trim() || undefined,
+      }),
+    onSuccess: async () => {
+      await invalidate();
+      setPattern("");
+      setNote("");
+    },
+    onError: (error) => toast.error(extractErrorMessage(error)),
+  });
+
+  const removeMutation = useMutation({
+    mutationFn: (id: string) => deleteLeadAllowlistEntry(id),
+    onSuccess: invalidate,
+    onError: (error) => toast.error(extractErrorMessage(error)),
+  });
+
+  return (
+    <div className="space-y-4">
+      <div className="space-y-0.5">
+        <SectionLabel>
+          {t("settings.allowlist.sectionLabel", {
+            defaultValue: "Always accept",
+          })}
+        </SectionLabel>
+        <p className="text-sm text-muted-foreground">
+          {t("settings.allowlist.sectionDescription", {
+            defaultValue:
+              "Leads from these addresses and domains skip the spam check entirely. People you already have as contacts are trusted automatically — this is for the rest.",
+          })}
+        </p>
+      </div>
+
+      {canManage ? (
+        <form
+          className="flex flex-col gap-2 sm:flex-row"
+          onSubmit={(e) => {
+            e.preventDefault();
+            if (pattern.trim()) addMutation.mutate();
+          }}
+        >
+          <div className="flex-1 space-y-1.5">
+            <Label htmlFor="allowlist-pattern" className="sr-only">
+              {t("settings.allowlist.patternLabel", {
+                defaultValue: "Address or domain",
+              })}
+            </Label>
+            <Input
+              id="allowlist-pattern"
+              value={pattern}
+              placeholder={t("settings.allowlist.patternPlaceholder", {
+                defaultValue: "ada@example.com or @example.com",
+              })}
+              onChange={(e) => setPattern(e.target.value)}
+            />
+          </div>
+          <div className="flex-1 space-y-1.5">
+            <Label htmlFor="allowlist-note" className="sr-only">
+              {t("settings.allowlist.noteLabel", { defaultValue: "Note" })}
+            </Label>
+            <Input
+              id="allowlist-note"
+              value={note}
+              placeholder={t("settings.allowlist.notePlaceholder", {
+                defaultValue: "Why (optional)",
+              })}
+              onChange={(e) => setNote(e.target.value)}
+            />
+          </div>
+          <Button
+            type="submit"
+            disabled={!pattern.trim() || addMutation.isPending}
+          >
+            <Plus className="mr-1.5 h-4 w-4" />
+            {t("settings.allowlist.add", { defaultValue: "Add" })}
+          </Button>
+        </form>
+      ) : null}
+
+      {isPending ? (
+        <Skeleton className="h-[72px] w-full rounded-2xl" />
+      ) : !entries?.length ? (
+        <div className="rounded-2xl border border-dashed border-border p-6 text-center">
+          <ShieldCheck className="mx-auto h-7 w-7 text-muted-foreground/50" />
+          <p className="mt-2 text-sm text-muted-foreground">
+            {t("settings.allowlist.empty", {
+              defaultValue:
+                "Nothing here yet. Add an address when the spam check gets somebody wrong.",
+            })}
+          </p>
+        </div>
+      ) : (
+        <ul className="divide-y divide-border overflow-hidden rounded-2xl border border-border">
+          {entries.map((entry: LeadAllowlistEntry) => (
+            <li
+              key={entry.id}
+              className="flex items-center justify-between gap-3 px-4 py-3"
+            >
+              <div className="min-w-0">
+                <p className="truncate font-mono text-sm text-foreground">
+                  {entry.pattern}
+                </p>
+                {entry.note ? (
+                  <p className="truncate text-xs text-muted-foreground">
+                    {entry.note}
+                  </p>
+                ) : null}
+              </div>
+              {canManage ? (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  aria-label={t("settings.allowlist.remove", {
+                    defaultValue: "Remove",
+                  })}
+                  disabled={removeMutation.isPending}
+                  onClick={() => removeMutation.mutate(entry.id)}
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              ) : null}
+            </li>
+          ))}
+        </ul>
+      )}
     </div>
   );
 }

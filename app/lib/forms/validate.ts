@@ -14,6 +14,7 @@ import {
   type FormDefinitionIssue,
   type FormErrorCode,
   type FormField,
+  type FormKind,
   type FormLocale,
   flattenFields,
   hasOptions,
@@ -260,31 +261,43 @@ export function validateDefinition(
    * the round-two plan is about.
    */
   confirmationEmail?: FormConfirmationEmail | null,
+  /**
+   * The row's kind. Only `intake` changes the answer, and it changes it
+   * completely: an intake form is a URL, not a page — no sections, no fields,
+   * nothing a visitor reads — so there is nothing here to validate.
+   *
+   * Takes a parameter rather than letting each side special-case it. The
+   * backend skipped intake in `FormsService` while the builder called this
+   * function knowing nothing about kinds, so the server published the form
+   * happily and the builder sat there insisting on an e-mail field that the
+   * form has no way to contain.
+   */
+  kind: FormKind = "standard",
 ): FormDefinitionIssue[] {
+  if (kind === "intake") return [];
+
   // One issue PER offending field, in definition order — so the banner can name
   // the field and the tab badges have a stable count. Deduping into a Set (as
   // this used to) makes "a choice field has no options" unactionable.
   const issues: FormDefinitionIssue[] = [];
 
   if (!definition || !Array.isArray(definition.sections)) {
-    return [
-      { code: "needsEmailField", tab: "build" },
-      { code: "needsNameField", tab: "build" },
-    ];
+    return [{ code: "needsEmailField", tab: "build" }];
   }
 
   const fields = flattenFields(definition).filter((f) => !isValueless(f.type));
 
   // Requirement: every form must be able to produce an identifiable lead.
+  //
+  // An e-mail is identifiable; a name is not required and never was. The rule
+  // used to demand a name mapping too, which made a newsletter subscribe form —
+  // one field, one address — impossible to publish. Nothing downstream needs
+  // the name: leads.first_name/last_name/full_name are all nullable, every
+  // lead-creating DTO treats them as optional, and buildColumns already writes
+  // null for them without complaint.
   const mappings = fields.map((f) => f.mapping).filter(Boolean);
   if (!mappings.includes("email")) {
     issues.push({ code: "needsEmailField", tab: "build" });
-  }
-  if (
-    !mappings.includes("full_name") &&
-    !(mappings.includes("first_name") && mappings.includes("last_name"))
-  ) {
-    issues.push({ code: "needsNameField", tab: "build" });
   }
 
   const seenKeys = new Set<string>();

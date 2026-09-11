@@ -40,6 +40,8 @@ import {
   type FormKind,
   type FormLocale,
   normalizeCommerce,
+  FORM_FIELD_MAPPINGS,
+  type FormIntakeConfig,
   normalizeLayout,
 } from "./schema";
 
@@ -421,22 +423,23 @@ export function createFieldGroup(
   });
 }
 
-/** The mappings that satisfy the "form must produce a named lead" rule. */
-const NAME_MAPPINGS = ["full_name", "first_name", "last_name"];
-
 /**
  * True when deleting this field would leave the form unpublishable.
  *
  * `validateDefinition` requires every form to yield an identifiable lead: one
- * field mapped to `email`, and either a `full_name` or a `first_name` +
- * `last_name` pair. Deleting the last one that satisfies either rule used to be
- * allowed, and the form only failed later, at publish, with an error pointing at
- * a field the user had already removed.
+ * field mapped to `email`. Deleting the last one used to be allowed, and the
+ * form only failed later, at publish, with an error pointing at a field the
+ * user had already removed.
  *
  * The builder hides the delete control instead. Reorder, rename and retype stay
  * available — it is only removal that is refused, and only while the field is
  * the one holding the rule up. Add a second email field and the first becomes
  * deletable again, because by then it is no longer load-bearing.
+ *
+ * A NAME field is now freely deletable. The publish rule used to demand one,
+ * which made a newsletter form — one field, one address — impossible to build:
+ * the delete control on the last name field was hidden, so you could not even
+ * get there. An e-mail identifies a lead on its own.
  *
  * Deliberately not in validate.ts: that file is a byte-for-byte mirror of the
  * backend validator, and this is a builder affordance, not a validation rule.
@@ -445,23 +448,14 @@ export function isFieldDeletable(
   field: FormField,
   allFields: FormField[],
 ): boolean {
-  if (!field.mapping) return true;
+  if (field.mapping !== "email") return true;
 
   const survivors = allFields
     .filter((f) => f.id !== field.id)
     .map((f) => f.mapping)
     .filter(Boolean) as string[];
 
-  if (field.mapping === "email") return survivors.includes("email");
-
-  if (NAME_MAPPINGS.includes(field.mapping)) {
-    return (
-      survivors.includes("full_name") ||
-      (survivors.includes("first_name") && survivors.includes("last_name"))
-    );
-  }
-
-  return true;
+  return survivors.includes("email");
 }
 
 /** Used when a definition comes back empty or from an older shape. */
@@ -497,7 +491,14 @@ export function normalizeDefinition(
 ): FormDefinition {
   const base = emptyDefinition(locale);
   const commerce = normalizeCommerce(raw?.commerce, kind);
-  if (!raw) return commerce ? { ...base, commerce } : base;
+  const intake = normalizeIntake(raw?.intake, kind);
+  if (!raw) {
+    return {
+      ...base,
+      ...(commerce ? { commerce } : {}),
+      ...(intake ? { intake } : {}),
+    };
+  }
 
   return {
     version: 1,
@@ -513,5 +514,33 @@ export function normalizeDefinition(
     showLanguageSwitcher: raw.showLanguageSwitcher ?? false,
     layout: normalizeLayout(raw.layout),
     ...(commerce ? { commerce } : {}),
+    ...(intake ? { intake } : {}),
+  };
+}
+
+/**
+ * Fill in a stored intake block, and drop it on every other kind — the same
+ * rule `normalizeCommerce` follows, for the same reason: the kind on the row
+ * decides what a form is, and a stray key in the definition must not be able to
+ * turn a lead form into an open JSON endpoint.
+ */
+export function normalizeIntake(
+  raw: unknown,
+  kind: FormKind,
+): FormIntakeConfig | undefined {
+  if (kind !== "intake") return undefined;
+  const value = (raw ?? {}) as Partial<FormIntakeConfig>;
+
+  const mapping: Record<string, string> = {};
+  for (const [column, key] of Object.entries(value.mapping ?? {})) {
+    // Only the five columns a field may map onto; anything else would silently
+    // claim to write a column that does not exist.
+    if (!(FORM_FIELD_MAPPINGS as readonly string[]).includes(column)) continue;
+    if (typeof key === "string" && key.trim()) mapping[column] = key.trim();
+  }
+
+  return {
+    ...(Object.keys(mapping).length > 0 ? { mapping } : {}),
+    lastPayload: value.lastPayload ?? null,
   };
 }

@@ -17,6 +17,7 @@ import { listEmailAccounts } from "~/lib/api/workspaces";
 import { ConfirmationEmailPanel } from "~/components/forms/ConfirmationEmailPanel";
 import { FieldInspector } from "~/components/forms/FieldInspector";
 import { FieldPalette } from "~/components/forms/FieldPalette";
+import { IntakeSetupPanel } from "~/components/forms/IntakeSetupPanel";
 import { FormCanvas } from "~/components/forms/FormCanvas";
 import { LanguageStrip } from "~/components/forms/LanguageStrip";
 import { FormStatusBadge } from "~/components/forms/FormStatusBadge";
@@ -129,6 +130,8 @@ export default function FormBuilderRoute() {
     enabled: !!currentWorkspace,
   });
 
+  const isIntake = form?.kind === "intake";
+
   const hasEmailConfig =
     hasLegacyEmailService || (emailAccounts?.length ?? 0) > 0;
 
@@ -230,6 +233,13 @@ export default function FormBuilderRoute() {
     }
     // The mirror case: only product forms have a checkout to build a deal from.
     if (form && form.kind !== "product" && tab === "deal") {
+      setTab("build");
+    }
+    // An intake form has no canvas, so Build is not a place it can land.
+    if (form?.kind === "intake" && tab !== "webhooks" && tab !== "share") {
+      if (tab !== "setup") setTab("setup");
+    }
+    if (form && form.kind !== "intake" && tab === "setup") {
       setTab("build");
     }
   }, [tab, form, form?.kind]);
@@ -689,9 +699,13 @@ export default function FormBuilderRoute() {
             // of state, so it has to be handed in or the builder would show a
             // clean form while publish rejected it server-side.
             confirmationEmail,
+            // An intake form is a URL, not a page — the same rule the server
+            // applies. Without the kind the builder demands an e-mail field on
+            // a form that has no fields at all.
+            form?.kind,
           )
         : [],
-    [definition, defaultLocale, locales, confirmationEmail],
+    [definition, defaultLocale, locales, confirmationEmail, form?.kind],
   );
 
   // Stripe-dependent checks come from the server; they block publish there too,
@@ -1663,26 +1677,39 @@ export default function FormBuilderRoute() {
             read as part of the same control surface rather than floating. */}
         <div className="app-fade-up app-fade-up-d1 flex flex-wrap items-end justify-between gap-x-4 gap-y-2 border-b border-border">
           <TabsList variant="line" className="-mb-px">
-            <TabsTrigger value="build">
-              {t("forms.builder.tabBuild")}
-              <IssueBadge count={issuesByTab.build} />
-            </TabsTrigger>
-            <TabsTrigger value="design">
-              {t("forms.builder.tabDesign")}
-              <IssueBadge count={issuesByTab.design} />
-            </TabsTrigger>
+            {/* An intake form is a URL: no canvas to draw, no theme to style,
+                no copy a visitor ever reads. Showing those tabs would be
+                showing an editor for a page that does not exist. */}
+            {isIntake ? (
+              <TabsTrigger value="setup">
+                {t("forms.builder.tabSetup", { defaultValue: "Setup" })}
+              </TabsTrigger>
+            ) : (
+              <>
+                <TabsTrigger value="build">
+                  {t("forms.builder.tabBuild")}
+                  <IssueBadge count={issuesByTab.build} />
+                </TabsTrigger>
+                <TabsTrigger value="design">
+                  {t("forms.builder.tabDesign")}
+                  <IssueBadge count={issuesByTab.design} />
+                </TabsTrigger>
+              </>
+            )}
             {/* A product form hands the visitor to Stripe; what comes after is
                 the checkout's outcome pages, configured on the product field. */}
-            {form.kind !== "product" ? (
+            {form.kind !== "product" && !isIntake ? (
               <TabsTrigger value="afterSubmit">
                 {t("forms.builder.tabAfterSubmit")}
                 <IssueBadge count={issuesByTab.afterSubmit} />
               </TabsTrigger>
             ) : null}
-            <TabsTrigger value="errors">
-              {t("forms.builder.tabErrors")}
-            </TabsTrigger>
-            {hasEmailConfig ? (
+            {!isIntake ? (
+              <TabsTrigger value="errors">
+                {t("forms.builder.tabErrors")}
+              </TabsTrigger>
+            ) : null}
+            {hasEmailConfig && !isIntake ? (
               <TabsTrigger value="email">
                 {t("forms.builder.tabEmail")}
                 <IssueBadge count={issuesByTab.email} />
@@ -1784,6 +1811,12 @@ export default function FormBuilderRoute() {
             ) : null}
           </div>
         </div>
+
+        <TabsContent value="setup" className="app-fade-up pt-5">
+          <div className="mx-auto w-full max-w-2xl">
+            <IntakeSetupPanel formId={form.id} intake={definition.intake} />
+          </div>
+        </TabsContent>
 
         <TabsContent value="build" className="pt-5">
           <TabLanguages {...stripProps} />

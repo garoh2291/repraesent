@@ -14,6 +14,7 @@
     "copy": "Kopiëren",
     "created": "Aangemaakt",
     "delete": "Verwijderen",
+    "undo": "Ongedaan maken",
     "deleted": "Verwijderd",
     "discard": "Verwerpen",
     "dismiss": "Sluiten",
@@ -465,7 +466,16 @@
       "dateDesc": "Nieuwste eerst",
       "dateAsc": "Oudste eerst"
     },
-    "sourceLabelAiAssistant": "AI-assistent"
+    "sourceLabelAiAssistant": "AI-assistent",
+    "restoreFiltered": "Herstellen",
+    "filtered": {
+      "rule": {
+        "disposable": "Gefilterd: wegwerp- of ongeldig adres",
+        "suspicious_local": "Gefilterd: machinaal ogend adres",
+        "ai": "Gefilterd door de spamcontrole"
+      }
+    },
+    "restoreFilteredHint": "Zet deze lead terug naar de eerste fase"
   },
   "pipeline": {
     "stripeNotConnected": {
@@ -1675,6 +1685,17 @@
         "billing": "Chat, classificatie en embeddings van alle assistenten in deze workspace worden op deze sleutel afgerekend.",
         "link": "openrouter.ai/keys openen"
       }
+    },
+    "allowlist": {
+      "sectionLabel": "Altijd accepteren",
+      "sectionDescription": "Leads van deze adressen en domeinen slaan de spamcontrole helemaal over. Bestaande contacten worden automatisch vertrouwd — dit is voor de rest.",
+      "patternLabel": "Adres of domein",
+      "patternPlaceholder": "ada@example.com of @example.com",
+      "noteLabel": "Notitie",
+      "notePlaceholder": "Waarom (optioneel)",
+      "add": "Toevoegen",
+      "empty": "Nog niets. Voeg een adres toe wanneer de spamcontrole iemand verkeerd inschat.",
+      "remove": "Verwijderen"
     }
   },
   "booking": {
@@ -4199,7 +4220,8 @@
       "nameExists": "Er bestaat al een formulier met deze naam",
       "languageLabel": "Taal",
       "kindProduct": "Product",
-      "kindMulti": "Meerstaps"
+      "kindMulti": "Meerstaps",
+      "kindIntake": "Webhook"
     },
     "status": {
       "draft": "Concept",
@@ -4248,7 +4270,16 @@
       "tabProducts": "Producten",
       "productEmptyTitle": "Nog geen producten",
       "productEmptyHint": "Selecteer dit blok en voeg daarna de Stripe-producten toe waaruit kopers kunnen kiezen.",
-      "tabDeal": "Deal"
+      "tabDeal": "Deal",
+      "tabSetup": "Instellen",
+      "intakeUrlLabel": "Uw intake-URL",
+      "intakeUrlHint": "Iedereen met deze URL kan een lead aanmaken in deze werkruimte. Behandel hem als een wachtwoord.",
+      "intakeCurl": "Uitproberen",
+      "intakeMappingTitle": "Wat we doen met wat binnenkomt",
+      "intakeMappingHint": "Bekende sleutels worden vanzelf gekoppeld — email, first_name, last_name, name, phone. Al het andere blijft op de lead bewaard.",
+      "intakeLastPayloadTitle": "Laatst ontvangen",
+      "intakeLastPayloadEmpty": "Nog niets. Richt uw formulier op de URL en verstuur één keer — de verstuurde sleutels verschijnen dan hier.",
+      "intakeLastPayloadAt": "Ontvangen {{date}}"
     },
     "palette": {
       "title": "Veld toevoegen",
@@ -4408,6 +4439,14 @@
       "outline": "Omlijnd",
       "soft": "Zacht",
       "buttonFullWidth": "Knop over volledige breedte",
+      "submitPlacement": "Verzendknop",
+      "submitAuto": "Automatisch",
+      "submitInline": "Naast het veld",
+      "submitBelow": "Eronder",
+      "submitPlacementHint": "Waar de knop staat. Op smalle schermen staat hij altijd eronder.",
+      "submitAutoInlineHint": "Eén veld op één pagina, dus de knop staat ernaast.",
+      "submitAutoBelowHint": "Meer dan één veld, dus de knop staat eronder.",
+      "buttonFullWidthInline": "Niet beschikbaar zolang de knop naast het veld staat.",
       "labelPosition": "Labelpositie",
       "top": "Boven",
       "inline": "Ernaast",
@@ -4685,6 +4724,10 @@
           "body": "Bezoekers kiezen uit je Stripe-producten, vullen het formulier in en betalen via Stripe.",
           "disabled": "Koppel Stripe om met een formulier betalingen te ontvangen.",
           "connect": "Stripe koppelen"
+        },
+        "intake": {
+          "title": "Van elders ontvangen",
+          "body": "Een URL, geen pagina. Plak hem in Typeform, Webflow of Zapier — alles wat kan POSTen — en wat binnenkomt wordt een lead."
         }
       }
     },
@@ -4973,7 +5016,13 @@
       "watchedColumns": "Velden om te volgen",
       "anyField": "Elk veld",
       "watchedColumnsAll": "Elke wijziging aan dit record start de workflow. Kies velden om dit te beperken.",
-      "watchedColumnsHint": "Alleen een wijziging in een van deze velden start de workflow."
+      "watchedColumnsHint": "Alleen een wijziging in een van deze velden start de workflow.",
+      "pipeline": "Pipeline",
+      "allPipelines": "Alle pipelines",
+      "pipelineCustom": "Eigen regel",
+      "pipelineHint": "Alleen deals van één bord. Laat op alle pipelines staan om elke deal te volgen.",
+      "pipelineCustomHint": "Deze trigger heeft een pipelineregel met meer dan één keuze. Pas die aan onder ‘Alleen als’.",
+      "stageNotInPipeline": "De fase {{stages}} bestaat niet in deze pipeline, dus deze trigger kan nooit afgaan. Wijzig de fase of de pipeline."
     },
     "condition": {
       "matchLabel": "Match",
@@ -5249,7 +5298,9 @@
       "group_previous": "Vóór de wijziging",
       "intoSubject": "Wordt in het onderwerp ingevoegd",
       "intoBody": "Wordt in het bericht ingevoegd"
-    }
+    },
+    "contextOpen": "Workflow openen",
+    "backToDraft": "Terug naar concept"
   },
   "stripeProducts": {
     "metaTitle": "Producten",

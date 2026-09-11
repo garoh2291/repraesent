@@ -25,6 +25,13 @@ import {
   type WorkflowEntity,
 } from "~/lib/api/workflows";
 import { filterWarnings } from "~/lib/workflows/graph";
+import {
+  ALL_PIPELINES,
+  PIPELINE_PATH,
+  pipelineScopeOf,
+  unreachableStages,
+  withPipelineScope,
+} from "~/lib/workflows/pipeline-scope";
 import { ConditionBuilder } from "./ConditionBuilder";
 
 const TRIGGER_TYPES: TriggerType[] = [
@@ -70,6 +77,22 @@ export function TriggerEditor({
   const warnings = filterWarnings(
     { nodes: [{ id: "t", type: "trigger", config }], edges: [] },
     t,
+  );
+
+  /**
+   * A deal belongs to exactly one pipeline, and an automation almost always
+   * belongs to one board — "when a deal is won in Sales", not in Partners. That
+   * was always expressible as a condition on `pipeline_id`; it was never
+   * visible. Here it is a control on the trigger, reading and writing that same
+   * condition, so nothing about what gets stored changes.
+   */
+  const isDeals = config.entity === "deals";
+  const pipelineField = fields.find((f) => f.path === PIPELINE_PATH);
+  const pipelineScope = pipelineScopeOf(config.filter);
+  const stranded = unreachableStages(
+    config.filter,
+    pipelineScope,
+    fields.find((f) => f.path === "stage"),
   );
 
   return (
@@ -127,7 +150,65 @@ export function TriggerEditor({
           </Select>
           <FieldHint>{t(`workflows.trigger.hint_${config.type}`)}</FieldHint>
         </Field>
+
+        {/* Beside the entity, because that is what it narrows — a control that
+            changes what "a deal" means belongs next to the word "deals", not
+            three sections down inside a generic condition list. */}
+        {isDeals && pipelineField?.options?.length ? (
+          <Field>
+            <Label>{t("workflows.trigger.pipeline")}</Label>
+            <Select
+              value={pipelineScope}
+              disabled={disabled || pipelineScope === "custom"}
+              onValueChange={(v) =>
+                patch({ filter: withPipelineScope(config.filter, v) })
+              }
+            >
+              <SelectTrigger className="w-full">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value={ALL_PIPELINES}>
+                  {t("workflows.trigger.allPipelines")}
+                </SelectItem>
+                {pipelineField.options.map((option) => (
+                  <SelectItem key={option.value} value={option.value}>
+                    {option.label}
+                  </SelectItem>
+                ))}
+                {/* Only reachable for a filter written by hand — `is any of`,
+                    `is not`, or two pipeline rules at once. The selector shows
+                    it rather than flattening it to one choice. */}
+                {pipelineScope === "custom" ? (
+                  <SelectItem value="custom">
+                    {t("workflows.trigger.pipelineCustom")}
+                  </SelectItem>
+                ) : null}
+              </SelectContent>
+            </Select>
+            <FieldHint>
+              {pipelineScope === "custom"
+                ? t("workflows.trigger.pipelineCustomHint")
+                : t("workflows.trigger.pipelineHint")}
+            </FieldHint>
+          </Field>
+        ) : null}
       </div>
+
+      {stranded.length > 0 ? (
+        // Switching pipelines is one click now, so this trap is one click away:
+        // the stage picker hides options from other boards, so a stage that does
+        // not exist here goes invisible rather than wrong, and the rule can
+        // never match. Say so instead.
+        <div className="flex items-start gap-2 rounded-lg border border-amber-400/40 bg-amber-400/10 p-2.5 text-xs text-amber-900 dark:text-amber-200">
+          <TriangleAlert className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+          <span>
+            {t("workflows.trigger.stageNotInPipeline", {
+              stages: stranded.join(", "),
+            })}
+          </span>
+        </div>
+      ) : null}
 
       {/* Which columns wake the workflow. Without this, "when a record is
           updated" means EVERY field — a deal rule ran on every note, value
@@ -273,6 +354,11 @@ export function TriggerEditor({
           group={config.filter ?? { match: "all", conditions: [] }}
           fields={fields}
           disabled={disabled}
+          // The Pipeline control above owns this row. Two controls editing one
+          // value is how you get a rule that disagrees with itself on screen.
+          hidePaths={
+            isDeals && pipelineScope !== "custom" ? [PIPELINE_PATH] : undefined
+          }
           onChange={(filter) => patch({ filter })}
         />
       </div>

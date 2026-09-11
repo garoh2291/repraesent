@@ -34,6 +34,12 @@ import {
   type TriggerConfig,
   type WorkflowGraph,
 } from "~/lib/api/workflows";
+import {
+  markWorkflowsStale,
+  patchWorkflowInLists,
+  restoreSnapshots,
+  type ListSnapshots,
+} from "~/lib/workflows/optimistic";
 import { getWorkspaceDetail } from "~/lib/api/workspaces";
 import {
   publishBlockers,
@@ -205,17 +211,32 @@ export default function WorkflowBuilder() {
     onError: (error) => toast.error(extractErrorMessage(error)),
   });
 
+  /**
+   * Optimistic, like the card menu on the list: the badge and this button's own
+   * label both read the cache, so they flip in the same frame as the click
+   * rather than a round trip later.
+   */
   const statusMutation = useMutation({
-    mutationFn: (status: "active" | "paused") =>
-      setWorkflowStatus(workflowId!, status),
-    onSuccess: async () => {
-      await queryClient.invalidateQueries({
-        queryKey: ["workflow", workflowId],
-      });
-      await queryClient.invalidateQueries({ queryKey: ["workflows"] });
+    mutationFn: ({
+      status,
+    }: {
+      status: "active" | "paused" | "draft";
+      snapshots: ListSnapshots;
+    }) => setWorkflowStatus(workflowId!, status),
+    onSuccess: (detail) =>
+      queryClient.setQueryData(["workflow", workflowId], detail),
+    onError: (error, vars) => {
+      restoreSnapshots(queryClient, vars.snapshots);
+      toast.error(extractErrorMessage(error));
     },
-    onError: (error) => toast.error(extractErrorMessage(error)),
+    onSettled: () => markWorkflowsStale(queryClient, workflowId),
   });
+
+  const changeStatus = (status: "active" | "paused" | "draft") => {
+    void queryClient.cancelQueries({ queryKey: ["workflow", workflowId] });
+    const snapshots = patchWorkflowInLists(queryClient, workflowId!, { status });
+    statusMutation.mutate({ status, snapshots });
+  };
 
   const patchGraph = (next: WorkflowGraph) => {
     setGraph(next);
@@ -304,7 +325,7 @@ export default function WorkflowBuilder() {
                 <button
                   type="button"
                   onClick={() =>
-                    statusMutation.mutate(
+                    changeStatus(
                       workflow.status === "active" ? "paused" : "active",
                     )
                   }

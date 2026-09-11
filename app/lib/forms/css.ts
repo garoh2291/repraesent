@@ -220,6 +220,26 @@ ${s} .rf-field.rf-full { grid-column: 1 / -1; }
   ${s} .rf-field { grid-column: 1 / -1; }
 }
 
+/* Inline submit: one input, one button, one row.
+
+   The button is a grid child of .rf-row rather than a block underneath, so the
+   row becomes "everything, then the button" and the auto column takes exactly
+   the button's width. align-items: end lines the button's bottom up with the
+   input's, whether or not the field carries a label above it.
+
+   Below the breakpoint it stacks like everything else — a full-width input and
+   a full-width button read better than two squeezed halves on a phone. */
+${s} .rf-inline .rf-row {
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: end;
+}
+${s} .rf-inline .rf-field.rf-full { grid-column: auto; }
+${s} .rf-inline .rf-submit-cell { justify-content: flex-end; }
+@media (max-width: 560px) {
+  ${s} .rf-inline .rf-row { grid-template-columns: minmax(0, 1fr); }
+  ${s} .rf-inline .rf-field.rf-full { grid-column: 1 / -1; }
+}
+
 /* Block, not inline-flex. A label used to be one text node, so a flex row with
    a gap was a tidy way to space the required star. Now that labels carry inline
    markup, every <b>/<i>/<a> the tokeniser emits becomes its own flex item and

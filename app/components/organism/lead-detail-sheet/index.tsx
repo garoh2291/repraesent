@@ -36,6 +36,7 @@ import {
   formatRelativeTime,
 } from "~/lib/utils/format";
 import { cn } from "~/lib/utils";
+import { personNameOr } from "~/lib/contacts/display-name";
 import { getWorkspaceDetail } from "~/lib/api/workspaces";
 import { convertLeadToContact } from "~/lib/api/contacts-crm";
 import { ContactEmailSuggestion } from "~/components/organism/contact-email-suggestion";
@@ -56,6 +57,10 @@ import {
   checkoutClaimedMetaKeys,
   extractLeadCheckout,
 } from "~/lib/leads/checkout";
+import {
+  FILTERED_CLAIMED_META_KEYS,
+  extractLeadFilterVerdict,
+} from "~/lib/leads/filtered";
 import { LeadPaymentSection } from "~/components/organism/lead-payment-section";
 import { AppointmentProviderIcon } from "~/components/molecule/appointment-provider-icon";
 import { UserAvatar } from "~/components/atom/user-avatar";
@@ -471,11 +476,10 @@ export function LeadDetailSheet({
   const effectiveOnStatusChange = readOnly ? undefined : onStatusChange;
   const effectiveCanEdit = readOnly ? false : canEdit;
 
-  const displayName = lead
-    ? lead.full_name ||
-      [lead.first_name, lead.last_name].filter(Boolean).join(" ").trim() ||
-      "Lead"
-    : "Lead Details";
+  // Falls back to the address before the generic word. A newsletter signup has
+  // no name at all, and a sheet titled "Lead" tells the reader nothing they did
+  // not already know from having opened it.
+  const displayName = lead ? personNameOr(lead, "Lead") : "Lead Details";
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
@@ -681,6 +685,7 @@ export function LeadInfoSection({
   const appointmentClaimedKeys = appointmentClaimedMetaKeys(lead);
   // The payment block owns the checkout stamps — no raw rows for them.
   const checkoutClaimedKeys = checkoutClaimedMetaKeys(lead);
+  const filterVerdict = extractLeadFilterVerdict(lead);
 
   // message → shown inline; misc/platform_campaign_id → hidden;
   // appointment keys → promoted banner; rest → collapsible
@@ -692,7 +697,8 @@ export function LeadInfoSection({
       !PROMOTED_META_KEYS.has(key) &&
       !HIDDEN_META_KEYS.has(key) &&
       !appointmentClaimedKeys.has(key) &&
-      !checkoutClaimedKeys.has(key),
+      !checkoutClaimedKeys.has(key) &&
+      !FILTERED_CLAIMED_META_KEYS.has(key),
   );
 
   return (
@@ -710,6 +716,30 @@ export function LeadInfoSection({
           </Link>
         )}
       </div>
+
+      {filterVerdict ? (
+        /* Why this lead was put away. It sits above the record rather than
+           inside "Additional info" because it is the first question anybody
+           opening a filtered lead has, and the answer used to be nowhere. */
+        <div className="rounded-lg border border-amber-300/70 bg-amber-50/60 px-3 py-2.5 dark:border-amber-500/30 dark:bg-amber-500/10">
+          <p className="text-[11px] font-medium text-amber-800 dark:text-amber-400">
+            {t(`leads.filtered.rule.${filterVerdict.rule}`, {
+              defaultValue: "Filtered by the spam check",
+            })}
+            {filterVerdict.confidence > 0
+              ? ` · ${filterVerdict.confidence}%`
+              : null}
+            {filterVerdict.at
+              ? ` · ${formatDate(filterVerdict.at, "PPp")}`
+              : null}
+          </p>
+          {filterVerdict.reason ? (
+            <p className="mt-0.5 text-sm leading-5 text-amber-900 dark:text-amber-200">
+              {filterVerdict.reason}
+            </p>
+          ) : null}
+        </div>
+      ) : null}
 
       <div className="rounded-lg border border-border/50 bg-card overflow-hidden">
         {appointments.length > 0 && (

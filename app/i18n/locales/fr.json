@@ -14,6 +14,7 @@
     "copy": "Copier",
     "created": "Créé",
     "delete": "Supprimer",
+    "undo": "Annuler",
     "deleted": "Supprimé",
     "discard": "Abandonner",
     "dismiss": "Fermer",
@@ -465,7 +466,16 @@
       "dateDesc": "Plus récents d'abord",
       "dateAsc": "Plus anciens d'abord"
     },
-    "sourceLabelAiAssistant": "Assistant IA"
+    "sourceLabelAiAssistant": "Assistant IA",
+    "restoreFiltered": "Restaurer",
+    "filtered": {
+      "rule": {
+        "disposable": "Filtré : adresse jetable ou invalide",
+        "suspicious_local": "Filtré : adresse d'apparence automatique",
+        "ai": "Filtré par le contrôle anti-spam"
+      }
+    },
+    "restoreFilteredHint": "Remettre ce lead à la première étape"
   },
   "pipeline": {
     "stripeNotConnected": {
@@ -1677,6 +1687,17 @@
         "billing": "Chat, classification et embeddings de tous les assistants de cet espace sont facturés à cette clé.",
         "link": "Ouvrir openrouter.ai/keys"
       }
+    },
+    "allowlist": {
+      "sectionLabel": "Toujours accepter",
+      "sectionDescription": "Les leads de ces adresses et domaines contournent entièrement le contrôle anti-spam. Vos contacts existants sont approuvés automatiquement — ceci concerne les autres.",
+      "patternLabel": "Adresse ou domaine",
+      "patternPlaceholder": "ada@example.com ou @example.com",
+      "noteLabel": "Note",
+      "notePlaceholder": "Pourquoi (facultatif)",
+      "add": "Ajouter",
+      "empty": "Rien pour l'instant. Ajoutez une adresse quand le contrôle anti-spam se trompe.",
+      "remove": "Supprimer"
     }
   },
   "booking": {
@@ -4201,7 +4222,8 @@
       "nameExists": "Un formulaire portant ce nom existe déjà",
       "languageLabel": "Langue",
       "kindProduct": "Produit",
-      "kindMulti": "Multi-étapes"
+      "kindMulti": "Multi-étapes",
+      "kindIntake": "Webhook"
     },
     "status": {
       "draft": "Brouillon",
@@ -4250,7 +4272,16 @@
       "tabProducts": "Produits",
       "productEmptyTitle": "Aucun produit pour l’instant",
       "productEmptyHint": "Sélectionnez ce bloc, puis ajoutez les produits Stripe parmi lesquels les acheteurs choisiront.",
-      "tabDeal": "Affaire"
+      "tabDeal": "Affaire",
+      "tabSetup": "Configuration",
+      "intakeUrlLabel": "Votre URL de réception",
+      "intakeUrlHint": "Quiconque a cette URL peut créer un lead dans cet espace. Traitez-la comme un mot de passe.",
+      "intakeCurl": "Essayer",
+      "intakeMappingTitle": "Ce que nous faisons des données reçues",
+      "intakeMappingHint": "Les clés reconnues se mappent seules — email, first_name, last_name, name, phone. Tout le reste est conservé sur le lead.",
+      "intakeLastPayloadTitle": "Dernière réception",
+      "intakeLastPayloadEmpty": "Rien pour l'instant. Pointez votre formulaire vers l'URL et envoyez une fois — les clés envoyées apparaîtront ici.",
+      "intakeLastPayloadAt": "Reçu {{date}}"
     },
     "palette": {
       "title": "Ajouter un champ",
@@ -4410,6 +4441,14 @@
       "outline": "Contour",
       "soft": "Doux",
       "buttonFullWidth": "Bouton pleine largeur",
+      "submitPlacement": "Bouton d'envoi",
+      "submitAuto": "Auto",
+      "submitInline": "À côté du champ",
+      "submitBelow": "En dessous",
+      "submitPlacementHint": "Où se place le bouton. Sur petit écran, il passe toujours en dessous.",
+      "submitAutoInlineHint": "Un seul champ sur une page : le bouton se place à côté.",
+      "submitAutoBelowHint": "Plusieurs champs : le bouton se place en dessous.",
+      "buttonFullWidthInline": "Indisponible tant que le bouton est à côté du champ.",
       "labelPosition": "Position du libellé",
       "top": "Au-dessus",
       "inline": "En ligne",
@@ -4687,6 +4726,10 @@
           "body": "Les visiteurs choisissent parmi vos produits Stripe, remplissent le formulaire, puis paient sur Stripe.",
           "disabled": "Connectez Stripe pour accepter des paiements avec un formulaire.",
           "connect": "Connecter Stripe"
+        },
+        "intake": {
+          "title": "Recevoir d'ailleurs",
+          "body": "Une URL, pas une page. Collez-la dans Typeform, Webflow, Zapier — tout ce qui peut faire un POST — et ce qui arrive devient un lead."
         }
       }
     },
@@ -4975,7 +5018,13 @@
       "watchedColumns": "Champs à surveiller",
       "anyField": "N'importe quel champ",
       "watchedColumnsAll": "Toute modification de cet enregistrement déclenche le workflow. Choisissez des champs pour le restreindre.",
-      "watchedColumnsHint": "Seule une modification de l'un de ces champs déclenche le workflow."
+      "watchedColumnsHint": "Seule une modification de l'un de ces champs déclenche le workflow.",
+      "pipeline": "Pipeline",
+      "allPipelines": "Tous les pipelines",
+      "pipelineCustom": "Règle personnalisée",
+      "pipelineHint": "Les deals d'un seul tableau. Laissez sur tous les pipelines pour suivre chaque deal.",
+      "pipelineCustomHint": "Ce déclencheur a une règle de pipeline à plusieurs choix. Modifiez-la sous « Seulement si ».",
+      "stageNotInPipeline": "L'étape {{stages}} n'existe pas dans ce pipeline : le déclencheur ne peut jamais se produire. Changez l'étape ou le pipeline."
     },
     "condition": {
       "matchLabel": "Match",
@@ -5251,7 +5300,9 @@
       "group_previous": "Avant la modification",
       "intoSubject": "S'insère dans l'objet",
       "intoBody": "S'insère dans le message"
-    }
+    },
+    "contextOpen": "Ouvrir le workflow",
+    "backToDraft": "Repasser en brouillon"
   },
   "stripeProducts": {
     "metaTitle": "Produits",

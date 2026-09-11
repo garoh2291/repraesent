@@ -389,11 +389,32 @@ export interface FormUtmCapture {
  *   standard — creates a lead and finishes.
  *   product  — creates the lead, then opens a Stripe Checkout Session on the
  *              workspace's connected account for the bundle in `commerce`.
+ *   intake   — has no fields and renders nothing. It is a URL you point an
+ *              external form at; whatever JSON arrives becomes a lead. The form
+ *              id in the path is the capability, exactly as it already is for
+ *              the public submit endpoint.
  *
  * Single-step vs multi-step is NOT a kind — it is `layout.mode`.
  */
-export const FORM_KINDS = ["standard", "product"] as const;
+export const FORM_KINDS = ["standard", "product", "intake"] as const;
 export type FormKind = (typeof FORM_KINDS)[number];
+
+/**
+ * How an intake form maps the JSON it receives onto lead columns.
+ *
+ * Absent means "auto": the recognised keys (first_name, last_name, full_name,
+ * name, email, phone) map themselves and everything else is kept in metadata.
+ * A value here overrides that for one column — `{ email: "your_email" }` reads
+ * the address out of a key called `your_email`.
+ *
+ * Dotted paths are supported, because most form builders nest: Typeform sends
+ * `{ form_response: { answers: [...] } }` and Webflow sends `{ data: {...} }`.
+ */
+export interface FormIntakeConfig {
+  mapping?: Partial<Record<FormFieldMapping & string, string>>;
+  /** The last body this URL received, so the builder can show real keys. */
+  lastPayload?: { at: string; body: unknown } | null;
+}
 
 /**
  * How the sections are presented. `single` renders every section on one page
@@ -407,12 +428,25 @@ export interface FormLayout {
   progress: "bar" | "steps" | "none";
   /** multi_step + `steps` progress: print each section's title next to its dot. */
   showStepTitles: boolean;
+  /**
+   * Where the submit button sits.
+   *
+   * `auto` is the honest default: a subscribe box — one page, one input — reads
+   * as one control, so the button belongs beside the input, and everything else
+   * keeps the button on its own row underneath. `on` and `off` are the escape
+   * hatches for when the automatic answer is wrong.
+   *
+   * Absent in every definition written before this existed, which normalizes to
+   * `auto` and changes nothing: those forms have more than one field.
+   */
+  inlineSubmit: "auto" | "on" | "off";
 }
 
 export const DEFAULT_FORM_LAYOUT: FormLayout = {
   mode: "single",
   progress: "bar",
   showStepTitles: true,
+  inlineSubmit: "auto",
 };
 
 export type FormCommerceInterval = "day" | "week" | "month" | "year";
@@ -535,6 +569,8 @@ export interface FormDefinition {
   layout?: FormLayout;
   /** Product forms only. Seeded from DEFAULT_FORM_COMMERCE when the kind is product. */
   commerce?: FormCommerce;
+  /** Intake forms only. Ignored — and stripped — on every other kind. */
+  intake?: FormIntakeConfig;
 }
 
 export interface FormConfirmationEmailLocale {
@@ -1091,6 +1127,31 @@ export function isMultiStep(
   );
 }
 
+/**
+ * Does the submit button sit beside the input rather than under it?
+ *
+ * `on` and `off` are the author's word and are taken literally. `auto` asks the
+ * form what it is: one page holding exactly one thing to fill in is a subscribe
+ * box, and a subscribe box is an input with a button next to it. Two fields is
+ * a form, and a form's button goes underneath.
+ *
+ * Counts value-collecting fields only — a heading above the input does not turn
+ * a subscribe box into a form.
+ */
+export function isInlineSubmit(
+  definition: Pick<FormDefinition, "layout" | "sections">,
+): boolean {
+  const setting = definition.layout?.inlineSubmit ?? "auto";
+  if (setting === "off") return false;
+  if (setting === "on") return true;
+  if (isMultiStep(definition)) return false;
+  const fields = (definition.sections ?? []).flatMap((s) => s.fields ?? []);
+  const collecting = fields.filter(
+    (f) => !(VALUELESS_TYPES as readonly string[]).includes(f.type),
+  );
+  return collecting.length === 1;
+}
+
 /** Fill in a stored layout, tolerating anything older definitions lack. */
 export function normalizeLayout(raw: unknown): FormLayout {
   const value = (raw ?? {}) as Partial<FormLayout>;
@@ -1101,6 +1162,10 @@ export function normalizeLayout(raw: unknown): FormLayout {
         ? value.progress
         : "bar",
     showStepTitles: value.showStepTitles !== false,
+    inlineSubmit:
+      value.inlineSubmit === "on" || value.inlineSubmit === "off"
+        ? value.inlineSubmit
+        : "auto",
   };
 }
 

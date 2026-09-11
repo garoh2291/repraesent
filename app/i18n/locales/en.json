@@ -14,6 +14,7 @@
     "copy": "Copy",
     "created": "Created",
     "delete": "Delete",
+    "undo": "Undo",
     "deleted": "Deleted",
     "discard": "Discard",
     "dismiss": "Dismiss",
@@ -465,7 +466,16 @@
       "dateDesc": "Newest first",
       "dateAsc": "Oldest first"
     },
-    "sourceLabelAiAssistant": "AI assistant"
+    "sourceLabelAiAssistant": "AI assistant",
+    "restoreFiltered": "Restore",
+    "filtered": {
+      "rule": {
+        "disposable": "Filtered: disposable or malformed address",
+        "suspicious_local": "Filtered: machine-looking address",
+        "ai": "Filtered by the spam check"
+      }
+    },
+    "restoreFilteredHint": "Move this lead back to the first stage"
   },
   "pipeline": {
     "stripeNotConnected": {
@@ -1675,6 +1685,17 @@
         "billing": "Chat, classification and embeddings for every assistant in this workspace are billed to this key.",
         "link": "Open openrouter.ai/keys"
       }
+    },
+    "allowlist": {
+      "sectionLabel": "Always accept",
+      "sectionDescription": "Leads from these addresses and domains skip the spam check entirely. People you already have as contacts are trusted automatically — this is for the rest.",
+      "patternLabel": "Address or domain",
+      "patternPlaceholder": "ada@example.com or @example.com",
+      "noteLabel": "Note",
+      "notePlaceholder": "Why (optional)",
+      "add": "Add",
+      "empty": "Nothing here yet. Add an address when the spam check gets somebody wrong.",
+      "remove": "Remove"
     }
   },
   "booking": {
@@ -4199,7 +4220,8 @@
       "nameExists": "A form with this name already exists",
       "languageLabel": "Language",
       "kindProduct": "Product",
-      "kindMulti": "Multi-step"
+      "kindMulti": "Multi-step",
+      "kindIntake": "Webhook"
     },
     "status": {
       "draft": "Draft",
@@ -4248,7 +4270,16 @@
       "tabProducts": "Products",
       "productEmptyTitle": "No products yet",
       "productEmptyHint": "Select this block, then add the Stripe products buyers can choose from.",
-      "tabDeal": "Deal"
+      "tabDeal": "Deal",
+      "tabSetup": "Setup",
+      "intakeUrlLabel": "Your intake URL",
+      "intakeUrlHint": "Anyone with this URL can create a lead in this workspace. Treat it like a password.",
+      "intakeCurl": "Try it",
+      "intakeMappingTitle": "What we do with what arrives",
+      "intakeMappingHint": "Recognised keys map themselves — email, first_name, last_name, name, phone. Everything else is kept on the lead.",
+      "intakeLastPayloadTitle": "Last received",
+      "intakeLastPayloadEmpty": "Nothing yet. Point your form at the URL and submit once — the keys it sends will show up here.",
+      "intakeLastPayloadAt": "Received {{date}}"
     },
     "palette": {
       "title": "Add a field",
@@ -4408,6 +4439,14 @@
       "outline": "Outline",
       "soft": "Soft",
       "buttonFullWidth": "Full-width button",
+      "submitPlacement": "Submit button",
+      "submitAuto": "Auto",
+      "submitInline": "Beside the field",
+      "submitBelow": "Below",
+      "submitPlacementHint": "Where the button sits. Below the breakpoint it always stacks.",
+      "submitAutoInlineHint": "One field on one page, so the button sits beside it.",
+      "submitAutoBelowHint": "More than one field, so the button sits underneath.",
+      "buttonFullWidthInline": "Not available while the button sits beside the field.",
       "labelPosition": "Label position",
       "top": "Above",
       "inline": "Inline",
@@ -4685,6 +4724,10 @@
           "body": "Let visitors pick from your Stripe products, fill in the form, then pay on Stripe.",
           "disabled": "Connect Stripe to take payments with a form.",
           "connect": "Connect Stripe"
+        },
+        "intake": {
+          "title": "Receive from elsewhere",
+          "body": "A URL, not a page. Paste it into Typeform, Webflow, Zapier — anything that can POST — and whatever it sends becomes a lead."
         }
       }
     },
@@ -4973,7 +5016,13 @@
       "watchedColumns": "Fields to watch",
       "anyField": "Any field",
       "watchedColumnsAll": "Any change to this record starts the workflow. Pick fields to narrow it.",
-      "watchedColumnsHint": "Only a change to one of these fields starts the workflow."
+      "watchedColumnsHint": "Only a change to one of these fields starts the workflow.",
+      "pipeline": "Pipeline",
+      "allPipelines": "All pipelines",
+      "pipelineHint": "Deals from one board only. Leave on all pipelines to watch every deal.",
+      "pipelineCustom": "Custom rule",
+      "pipelineCustomHint": "This trigger has a pipeline rule that is more than one choice. Edit it under Only if.",
+      "stageNotInPipeline": "The stage {{stages}} does not exist in this pipeline, so this trigger can never fire. Change the stage or the pipeline."
     },
     "condition": {
       "matchLabel": "Match",
@@ -5249,7 +5298,9 @@
       "group_previous": "Before the change",
       "intoSubject": "Inserts into the subject",
       "intoBody": "Inserts into the message"
-    }
+    },
+    "contextOpen": "Open workflow",
+    "backToDraft": "Back to draft"
   },
   "stripeProducts": {
     "metaTitle": "Products",

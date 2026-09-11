@@ -14,6 +14,7 @@
     "copy": "Kopieren",
     "created": "Erstellt",
     "delete": "Löschen",
+    "undo": "Rückgängig",
     "deleted": "Gelöscht",
     "discard": "Verwerfen",
     "dismiss": "Schließen",
@@ -465,7 +466,16 @@
       "dateDesc": "Neueste zuerst",
       "dateAsc": "Älteste zuerst"
     },
-    "sourceLabelAiAssistant": "KI-Assistent"
+    "sourceLabelAiAssistant": "KI-Assistent",
+    "restoreFiltered": "Wiederherstellen",
+    "filtered": {
+      "rule": {
+        "disposable": "Gefiltert: Wegwerf- oder ungültige Adresse",
+        "suspicious_local": "Gefiltert: maschinell wirkende Adresse",
+        "ai": "Von der Spam-Prüfung gefiltert"
+      }
+    },
+    "restoreFilteredHint": "Diesen Lead zurück in die erste Phase verschieben"
   },
   "pipeline": {
     "stripeNotConnected": {
@@ -1677,6 +1687,17 @@
         "billing": "Chat, Klassifizierung und Embeddings aller Assistenten in diesem Workspace werden diesem Schlüssel berechnet.",
         "link": "openrouter.ai/keys öffnen"
       }
+    },
+    "allowlist": {
+      "sectionLabel": "Immer akzeptieren",
+      "sectionDescription": "Leads von diesen Adressen und Domains überspringen die Spam-Prüfung vollständig. Bestehenden Kontakten wird automatisch vertraut – das hier ist für alle anderen.",
+      "patternLabel": "Adresse oder Domain",
+      "patternPlaceholder": "ada@example.com oder @example.com",
+      "noteLabel": "Notiz",
+      "notePlaceholder": "Grund (optional)",
+      "add": "Hinzufügen",
+      "empty": "Noch nichts hier. Adresse hinzufügen, wenn die Spam-Prüfung jemanden falsch einschätzt.",
+      "remove": "Entfernen"
     }
   },
   "booking": {
@@ -4201,7 +4222,8 @@
       "nameExists": "Ein Formular mit diesem Namen existiert bereits",
       "languageLabel": "Sprache",
       "kindProduct": "Produkt",
-      "kindMulti": "Mehrstufig"
+      "kindMulti": "Mehrstufig",
+      "kindIntake": "Webhook"
     },
     "status": {
       "draft": "Entwurf",
@@ -4250,7 +4272,16 @@
       "tabProducts": "Produkte",
       "productEmptyTitle": "Noch keine Produkte",
       "productEmptyHint": "Diesen Block auswählen und dann die Stripe-Produkte hinzufügen, aus denen Käufer wählen können.",
-      "tabDeal": "Deal"
+      "tabDeal": "Deal",
+      "tabSetup": "Einrichtung",
+      "intakeUrlLabel": "Ihre Intake-URL",
+      "intakeUrlHint": "Wer diese URL hat, kann in diesem Workspace einen Lead anlegen. Behandeln Sie sie wie ein Passwort.",
+      "intakeCurl": "Ausprobieren",
+      "intakeMappingTitle": "Was mit den eingehenden Daten passiert",
+      "intakeMappingHint": "Bekannte Schlüssel werden automatisch zugeordnet — email, first_name, last_name, name, phone. Alles Übrige bleibt am Lead erhalten.",
+      "intakeLastPayloadTitle": "Zuletzt empfangen",
+      "intakeLastPayloadEmpty": "Noch nichts. Richten Sie Ihr Formular auf die URL und senden Sie einmal ab — die gesendeten Schlüssel erscheinen dann hier.",
+      "intakeLastPayloadAt": "Empfangen {{date}}"
     },
     "palette": {
       "title": "Feld hinzufügen",
@@ -4410,6 +4441,14 @@
       "outline": "Umrandet",
       "soft": "Weich",
       "buttonFullWidth": "Button über volle Breite",
+      "submitPlacement": "Senden-Button",
+      "submitAuto": "Automatisch",
+      "submitInline": "Neben dem Feld",
+      "submitBelow": "Darunter",
+      "submitPlacementHint": "Wo der Button steht. Auf schmalen Bildschirmen steht er immer darunter.",
+      "submitAutoInlineHint": "Ein Feld auf einer Seite – der Button steht daneben.",
+      "submitAutoBelowHint": "Mehr als ein Feld – der Button steht darunter.",
+      "buttonFullWidthInline": "Nicht verfügbar, solange der Button neben dem Feld steht.",
       "labelPosition": "Position der Beschriftung",
       "top": "Oben",
       "inline": "Daneben",
@@ -4687,6 +4726,10 @@
           "body": "Besucher wählen aus Ihren Stripe-Produkten, füllen das Formular aus und zahlen bei Stripe.",
           "disabled": "Verbinden Sie Stripe, um mit einem Formular Zahlungen anzunehmen.",
           "connect": "Stripe verbinden"
+        },
+        "intake": {
+          "title": "Von woanders empfangen",
+          "body": "Eine URL, keine Seite. Fügen Sie sie in Typeform, Webflow oder Zapier ein — alles, was POSTen kann — und was gesendet wird, wird zum Lead."
         }
       }
     },
@@ -4975,7 +5018,13 @@
       "watchedColumns": "Zu überwachende Felder",
       "anyField": "Beliebiges Feld",
       "watchedColumnsAll": "Jede Änderung an diesem Datensatz startet den Workflow. Wählen Sie Felder aus, um das einzugrenzen.",
-      "watchedColumnsHint": "Nur eine Änderung an einem dieser Felder startet den Workflow."
+      "watchedColumnsHint": "Nur eine Änderung an einem dieser Felder startet den Workflow.",
+      "pipeline": "Pipeline",
+      "allPipelines": "Alle Pipelines",
+      "pipelineHint": "Nur Deals aus einem Board. Bei „Alle Pipelines“ zählt jeder Deal.",
+      "pipelineCustom": "Eigene Regel",
+      "pipelineCustomHint": "Dieser Trigger hat eine Pipeline-Regel mit mehr als einer Auswahl. Bearbeite sie unter „Nur wenn“.",
+      "stageNotInPipeline": "Die Phase {{stages}} gibt es in dieser Pipeline nicht – der Trigger kann nie auslösen. Ändere die Phase oder die Pipeline."
     },
     "condition": {
       "matchLabel": "Treffer",
@@ -5251,7 +5300,9 @@
       "group_previous": "Vor der Änderung",
       "intoSubject": "Wird in den Betreff eingefügt",
       "intoBody": "Wird in die Nachricht eingefügt"
-    }
+    },
+    "contextOpen": "Workflow öffnen",
+    "backToDraft": "Zurück zum Entwurf"
   },
   "stripeProducts": {
     "metaTitle": "Produkte",

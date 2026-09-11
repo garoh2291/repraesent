@@ -19,6 +19,7 @@ import {
   LEAD_FILTER_SOURCE_OPTIONS,
   useLeadFilterStatusOptions,
 } from "~/lib/leads/filter-presets";
+import { useLeadStages } from "~/lib/hooks/usePipelineStages";
 import { Button } from "~/components/ui/button";
 import TooltipContainer from "~/components/tooltip-container";
 import {
@@ -73,6 +74,7 @@ import {
   nextLeadAppointment,
 } from "~/lib/leads/appointment";
 import { extractLeadCheckout } from "~/lib/leads/checkout";
+import { extractLeadFilterVerdict } from "~/lib/leads/filtered";
 import {
   LeadPaymentPill,
   formatCheckoutSummary,
@@ -364,6 +366,34 @@ export default function LeadForm() {
     refetchOnMount: "always",
   });
 
+  /**
+   * How many leads the filter is currently holding back.
+   *
+   * A separate count query rather than a number derived from the page: the
+   * hidden ones are excluded from the list by default, so there is nothing on
+   * screen to count. One cheap request, cached, and only to put a number on the
+   * button — without it "Show hidden" reads as a display preference rather than
+   * as "there are leads here you have not seen".
+   */
+  const hiddenCountQuery = useQuery({
+    queryKey: ["leads-hidden-count", currentWorkspace?.id],
+    queryFn: async () => {
+      // The difference between the two totals. There is no `only_hidden`
+      // parameter and adding one to the API for a badge would be the tail
+      // wagging the dog — two `limit: 1` counts are a rounding error.
+      const [all, visible] = await Promise.all([
+        getLeads({ page: 1, limit: 1, include_hidden: true }),
+        getLeads({ page: 1, limit: 1 }),
+      ]);
+      return Math.max(0, (all.total ?? 0) - (visible.total ?? 0));
+    },
+    enabled: !!currentWorkspace,
+    staleTime: 60_000,
+  });
+  const hiddenCount = hiddenCountQuery.data ?? 0;
+
+  const leadStages = useLeadStages();
+
   const leadStatusFilterOptions = useLeadFilterStatusOptions();
   const leadsFilters = useMemo(
     () => [
@@ -540,15 +570,56 @@ export default function LeadForm() {
       header: t("leads.columns.status"),
       cell: ({ row }) => {
         const lead = row.original;
+        // A lead the spam filter put away. The status select can already move
+        // it, but only if you know which of your stages is the entry one —
+        // which is a thing about your pipeline config, not about this lead.
+        const filteredOut =
+          leadStages.byKey.get(lead.status)?.category === "hidden";
+        // The filter's own words, so "Restore" is a decision and not a guess.
+        // Leads filtered before the reason was recorded have none, and the
+        // button falls back to saying what it does.
+        const verdict = filteredOut ? extractLeadFilterVerdict(lead) : null;
+
         return (
-          <LeadStatusSelect
-            value={lead.status}
-            onValueChange={(status) =>
-              updateStatusMutation.mutate({ id: lead.id, status })
-            }
-            disabled={!canEdit || updateStatusMutation.isPending}
-            className="w-[140px]"
-          />
+          <div className="flex items-center gap-1.5">
+            <LeadStatusSelect
+              value={lead.status}
+              onValueChange={(status) =>
+                updateStatusMutation.mutate({ id: lead.id, status })
+              }
+              disabled={!canEdit || updateStatusMutation.isPending}
+              className="w-[140px]"
+            />
+            {filteredOut && canEdit && leadStages.entry ? (
+              <TooltipContainer
+                showCopyButton={false}
+                tooltipContent={
+                  verdict?.reason
+                    ? `${t(`leads.filtered.rule.${verdict.rule}`, {
+                        defaultValue: "Filtered by the spam check",
+                      })} — ${verdict.reason}`
+                    : t("leads.restoreFilteredHint", {
+                        defaultValue: "Move this lead back to the first stage",
+                      })
+                }
+              >
+                <button
+                  type="button"
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    updateStatusMutation.mutate({
+                      id: lead.id,
+                      status: leadStages.entry!.key as LeadStatus,
+                    });
+                  }}
+                  disabled={updateStatusMutation.isPending}
+                  className="shrink-0 rounded-lg border border-amber-300 bg-amber-50 px-2 py-1 text-[11px] font-medium text-amber-800 transition-colors hover:bg-amber-100 disabled:opacity-50"
+                >
+                  {t("leads.restoreFiltered", { defaultValue: "Restore" })}
+                </button>
+              </TooltipContainer>
+            ) : null}
+          </div>
         );
       },
     },
@@ -691,6 +762,9 @@ export default function LeadForm() {
           columns={columns}
           additionalElement={
             <div className="flex flex-wrap gap-3 items-center">
+              {/* The count is the point. "Show hidden" on its own gives no
+                  reason to press it; "Filtered out (293)" says the spam check
+                  has been holding things back and invites a look. */}
               <button
                 onClick={() => setShowHidden((prev) => !prev)}
                 className={cn(
@@ -706,6 +780,11 @@ export default function LeadForm() {
                   <EyeOff className="h-3.5 w-3.5" />
                 )}
                 {showHidden ? t("leads.hideHidden") : t("leads.showHidden")}
+                {!showHidden && hiddenCount > 0 ? (
+                  <span className="rounded-full bg-amber-100 px-1.5 text-[10px] font-semibold text-amber-800">
+                    {hiddenCount}
+                  </span>
+                ) : null}
               </button>
               <FilterComponent filters={leadsFilters} />
               {(statusFilter || sourceFilter || formNameFilter) && (

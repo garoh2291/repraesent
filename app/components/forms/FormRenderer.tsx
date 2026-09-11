@@ -24,6 +24,7 @@ import { fillTemplate, getContent } from "~/lib/forms/content";
 import { isSameSelection, type BuilderSelection } from "~/lib/forms/selection";
 import {
   contentKey,
+  isInlineSubmit,
   isMultiStep,
   isPresentational,
   type FormDefinition,
@@ -146,6 +147,9 @@ export function FormRenderer({
   const formRef = useRef<HTMLFormElement | null>(null);
 
   const multi = isMultiStep(definition);
+  // Mirrors form-render.service.ts: the emitted form and this one must agree
+  // about where the button lives, or the builder preview lies about the page.
+  const inline = !multi && isInlineSubmit(definition);
   const sections = definition.sections ?? [];
   const stepCount = sections.length;
   const step = multi
@@ -326,6 +330,11 @@ export function FormRenderer({
               onProductSelectionChange={onProductSelectionChange}
             />
           ))}
+          {inline && index === sections.length - 1 ? (
+            <div className="rf-field rf-submit-cell" {...region({ kind: "submit" })}>
+              {submitButton}
+            </div>
+          ) : null}
         </div>
       </div>
     );
@@ -354,7 +363,7 @@ export function FormRenderer({
 
       <form
         ref={formRef}
-        className={`rf-form${multi ? " rf-multi" : ""}`}
+        className={`rf-form${multi ? " rf-multi" : ""}${inline ? " rf-inline" : ""}`}
         noValidate
         data-rf-steps={multi ? stepCount : undefined}
         style={
@@ -529,7 +538,7 @@ export function FormRenderer({
             </button>
             {submitButton}
           </div>
-        ) : (
+        ) : inline ? null : (
           <div className="rf-actions" {...region({ kind: "submit" })}>
             {submitButton}
           </div>

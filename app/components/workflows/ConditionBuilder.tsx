@@ -34,18 +34,30 @@ export function ConditionBuilder({
   fields,
   disabled,
   depth = 0,
+  hidePaths,
   onChange,
 }: {
   group: ConditionGroup;
   fields: CatalogField[];
   disabled?: boolean;
   depth?: number;
+  /**
+   * Paths a dedicated control above already owns — the deals trigger's Pipeline
+   * selector, today. The condition stays in the group and still counts for
+   * everything that reads it (the stage picker narrows by it either way); it
+   * just is not drawn twice.
+   */
+  hidePaths?: string[];
   onChange: (next: ConditionGroup) => void;
 }) {
   const { t } = useTranslation();
   const conditions = group?.conditions ?? [];
   const groups = group?.groups ?? [];
-  const rowCount = conditions.length + groups.length;
+  const hidden = new Set(hidePaths ?? []);
+  const visible = conditions.filter((c) => !hidden.has(c.path));
+  // Counted on what is drawn: an all/any toggle over one visible row governs
+  // nothing and reads as a question nobody asked.
+  const rowCount = visible.length + groups.length;
 
   const patch = (index: number, next: Partial<Condition>) =>
     onChange({
@@ -54,6 +66,8 @@ export function ConditionBuilder({
     });
 
   const columns = fields.filter((f) => !f.dynamic);
+  /** What a new row may start as. See the Add button. */
+  const addable = fields.filter((f) => !hidden.has(f.path));
   const dynamic = fields.filter((f) => f.dynamic);
 
   /**
@@ -86,6 +100,7 @@ export function ConditionBuilder({
         }
       >
         {conditions.map((condition, index) => {
+          if (hidden.has(condition.path)) return null;
           const field = fields.find((f) => f.path === condition.path);
           const needsValue = !NULLARY_OPERATORS.includes(condition.operator);
 
@@ -238,9 +253,11 @@ export function ConditionBuilder({
               groups,
               conditions: [
                 ...conditions,
+                // Never default to a path a dedicated control owns — the new
+                // row would be added and then immediately not drawn.
                 {
-                  path: fields[0]?.path ?? "",
-                  operator: fields[0]?.operators[0] ?? "eq",
+                  path: addable[0]?.path ?? "",
+                  operator: addable[0]?.operators[0] ?? "eq",
                 },
               ],
             })
