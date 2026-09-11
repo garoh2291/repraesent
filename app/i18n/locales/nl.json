@@ -488,7 +488,7 @@
     "dealNotFound": "Deal kon niet worden geladen.",
     "backToPipeline": "Terug naar pijplijn",
     "dealDetails": "Deal",
-    "untitledDeal": "Naamloze deal",
+    "untitledDeal": "Deze deal",
     "capHint": "Er worden maximaal 500 deals weergegeven. Verfijn indien nodig de zoekopdracht of toegewezen persoon.",
     "linkedContact": "Contact",
     "detachContact": "Verwijderen",
@@ -801,10 +801,8 @@
     "pipelineNamePlaceholder": "bijv. Enterprise-verkoop",
     "pipelineDescriptionLabel": "Beschrijving (optioneel)",
     "pipelineDescriptionPlaceholder": "Wat loopt er door deze pijplijn?",
-    "addDescription": "Beschrijving toevoegen…",
     "pipelineCreated": "Pijplijn aangemaakt.",
     "pipelineDeleted": "Pijplijn verwijderd.",
-    "renamePipeline": "Hernoemen",
     "deletePipeline": "Pijplijn verwijderen",
     "deletePipelineTitle": "‘{{name}}’ verwijderen?",
     "deletePipelineWarning": "{{count}} deals verhuizen naar ‘{{target}}’. De fasen van deze pijplijn worden verwijderd.",
@@ -814,7 +812,42 @@
     "movedToPipeline": "Verplaatst naar ‘{{name}}’.",
     "contextOpen": "Deal openen",
     "contextChangeStage": "Fase wijzigen",
-    "contextMovePipeline": "Naar pijplijn verplaatsen"
+    "contextMovePipeline": "Naar pijplijn verplaatsen",
+    "reopenDeal": {
+      "titleWon": "Deze gewonnen deal heropenen?",
+      "titleLost": "Deze verloren deal heropenen?",
+      "description": "{{name}} gaat terug naar “{{stage}}” en telt weer als open.",
+      "clearsWonAt": "De windatum ({{date}}) wordt gewist en kan niet worden hersteld.",
+      "clearsLostAt": "De verliesdatum ({{date}}) wordt gewist en kan niet worden hersteld.",
+      "confirm": "Deal heropenen"
+    },
+    "tracking": {
+      "share": "Klantlink",
+      "title": "Trackinglink voor deze deal",
+      "hint": "Iedereen met deze link ziet de fasenamen en wat er is besteld. Geen waarde, geen eigenaar, geen contactgegevens, geen inloggen.",
+      "preview": "Bekijk wat zij zien",
+      "regenerate": "Nieuwe link",
+      "regenerateTitle": "Nieuwe link uitgeven?",
+      "regenerateBody": "De al verstuurde link werkt direct niet meer, en de klant krijgt daar geen bericht van. Doe dit alleen als de huidige link bij de verkeerde persoon terecht is gekomen.",
+      "regenerateConfirm": "Nieuwe link uitgeven",
+      "rotated": "Er is een nieuwe link. De oude werkt niet meer.",
+      "rotateFailed": "Kon geen nieuwe link uitgeven.",
+      "copyFailed": "Kopiëren lukte niet. Selecteer de link en kopieer hem handmatig."
+    },
+    "editPipelineTitle": "Pipeline bewerken",
+    "pipelineSaved": "Pipeline opgeslagen.",
+    "pipelineDialogHint": "Geef dit bord een naam, beschrijf wat erdoorheen loopt en kies of klanten hun deals kunnen volgen.",
+    "visibility": {
+      "label": "Klanttracking",
+      "private": "Privé",
+      "privateHint": "Deals op dit bord blijven binnen de werkruimte.",
+      "public": "Openbaar",
+      "publicHint": "Elke deal krijgt een privélink waarmee een klant zijn order kan volgen.",
+      "revokeWarning": "Elke al verstuurde trackinglink stopt met werken zodra u opslaat.",
+      "revokeTitle": "Deze pipeline privé maken?",
+      "revokeBody": "Elke trackinglink die al naar een klant is verstuurd werkt direct niet meer, en niemand krijgt daar bericht van. Weer openbaar maken geeft dezelfde links vrij, geen nieuwe.",
+      "revokeConfirm": "Privé maken"
+    }
   },
   "appointments": {
     "metaTitle": "Afspraken",
@@ -2928,7 +2961,8 @@
     "labelTask": "Taak",
     "labelEvent": "Update",
     "today": "Vandaag",
-    "yesterday": "Gisteren"
+    "yesterday": "Gisteren",
+    "automation": "Automatisering"
   },
   "dealEmails": {
     "pipeline": "Pijplijn-e-mails",
@@ -4894,7 +4928,14 @@
       "condition": "Condition",
       "delay": "Wait",
       "send_internal_email": "Email a team member",
-      "send_customer_email": "Email the contact"
+      "send_customer_email": "Email the contact",
+      "create_task": "Taak aanmaken",
+      "add_note": "Notitie toevoegen",
+      "update_record": "Record bijwerken",
+      "notify_team": "Team op de hoogte brengen",
+      "group_communicate": "Iemand op de hoogte brengen",
+      "group_act": "Record wijzigen",
+      "group_flow": "Verloop sturen"
     },
     "step": {
       "trigger": "When this happens",
@@ -4928,7 +4969,11 @@
       "hint_record_updated": "Fires on every change to the record.",
       "hint_field_changed_to": "Fires only on the transition into that value.",
       "hint_no_change_for": "Checked on a schedule. Fires again if the record is touched and goes quiet again.",
-      "hint_date_field_relative": "Checked on a schedule, relative to the date you pick."
+      "hint_date_field_relative": "Checked on a schedule, relative to the date you pick.",
+      "watchedColumns": "Velden om te volgen",
+      "anyField": "Elk veld",
+      "watchedColumnsAll": "Elke wijziging aan dit record start de workflow. Kies velden om dit te beperken.",
+      "watchedColumnsHint": "Alleen een wijziging in een van deze velden start de workflow."
     },
     "condition": {
       "matchLabel": "Match",
@@ -5011,7 +5056,11 @@
       "emptyHint": "Pick a step on the left to configure it.",
       "conditionHint": "The run stops here unless every condition holds.",
       "delayHint": "Pause before the next step. The run resumes on its own.",
-      "internalHint": "Sent from Repraesent, so this works without connecting a mailbox."
+      "internalHint": "Sent from Repraesent, so this works without connecting a mailbox.",
+      "noteHint": "Schrijft een notitie op het record. Niemand krijgt bericht.",
+      "taskHint": "Maakt een taak op het record zodat iemand die oppakt.",
+      "notifyHint": "Plaatst een bericht in elk gekoppeld Slack-, Teams- of Google Chat-kanaal.",
+      "updateHint": "Wijzigt het record dat deze run startte. Start deze workflow niet opnieuw."
     },
     "settings": {
       "description": "Description",
@@ -5079,7 +5128,11 @@
       "noTemplate": "An email step has no message",
       "noToPath": "The customer email step has no address",
       "emptyCondition": "A condition step is empty",
-      "filterContradiction": "\"{{field}} is {{value}}\" kan hier nooit waar zijn: de trigger vuurt wanneer {{field}} \"{{target}}\" wordt. Gebruik \"gewijzigd van\" voor de vorige waarde."
+      "filterContradiction": "\"{{field}} is {{value}}\" kan hier nooit waar zijn: de trigger vuurt wanneer {{field}} \"{{target}}\" wordt. Gebruik \"gewijzigd van\" voor de vorige waarde.",
+      "noTaskTitle": "Een taakstap heeft geen titel",
+      "noNoteBody": "Een notitiestap is leeg",
+      "noNotifyMessage": "Een notificatiestap heeft geen bericht",
+      "noUpdateFields": "Een wijzigingsstap zet geen velden"
     },
     "testTitle": "Test this workflow",
     "testHint": "Runs against a real {{entity}} record. Nothing is sent.",
@@ -5121,7 +5174,50 @@
       "no": "Nee",
       "empty": "Niets hier — de uitvoering stopt."
     },
-    "publishedUpToDate": "Gepubliceerd en actueel"
+    "publishedUpToDate": "Gepubliceerd en actueel",
+    "action": {
+      "targetLabel": "Koppelen aan",
+      "target_deals": "De deal",
+      "target_leads": "De lead",
+      "target_tasks": "Het record van de taak",
+      "target_contacts": "Het contact",
+      "target_contact": "Het contact",
+      "targetTriggerHint": "Opgeslagen op het record dat deze run startte.",
+      "targetContactHint": "Opgeslagen op het gekoppelde contact. Overgeslagen als dat er niet is."
+    },
+    "note": {
+      "body": "Notitie"
+    },
+    "task": {
+      "title": "Taak",
+      "description": "Details",
+      "descriptionHint": "Optioneel. Zichtbaar als de taak wordt geopend.",
+      "due": "Deadline",
+      "dueNone": "Geen deadline",
+      "dueToday": "Vandaag",
+      "dueInDays_one": "Over {{count}} dag",
+      "dueInDays_other": "Over {{count}} dagen",
+      "assignee": "Toewijzen aan",
+      "assigneeNone": "Niemand",
+      "assigneeOwner": "Wie het record beheert"
+    },
+    "notify": {
+      "message": "Bericht",
+      "messageHint": "Platte tekst. Een link naar het record wordt automatisch toegevoegd."
+    },
+    "update": {
+      "addField": "Veld toevoegen om te zetten",
+      "removeField": "Dit veld verwijderen",
+      "pickValue": "Kies een waarde",
+      "noFields": "Nog geen velden ingesteld",
+      "unsupportedEntity": "Records van het type {{entity}} kunnen nog niet door een workflow worden gewijzigd.",
+      "field_title": "Titel",
+      "field_stage": "Fase",
+      "field_status": "Status",
+      "field_value": "Waarde",
+      "field_assigned_to": "Eigenaar",
+      "field_expected_close_date": "Verwachte sluitingsdatum"
+    }
   },
   "stripeProducts": {
     "metaTitle": "Producten",
@@ -6793,5 +6889,23 @@
     "metaTitle": "Assistent",
     "unavailable": "Deze assistent is niet beschikbaar",
     "unavailableHint": "De link klopt mogelijk niet, of de assistent is offline gehaald."
+  },
+  "tracking": {
+    "metaTitle": "Orderstatus",
+    "statusLabel": "Status",
+    "itemsLabel": "Wat er is besteld",
+    "progressLabel": "Voortgang",
+    "reference": "Referentie {{reference}}",
+    "lastUpdated": "Laatst bijgewerkt {{date}}",
+    "currentMarker": "Hier bent u nu",
+    "unknownStage": "In behandeling",
+    "unnamedItem": "Artikel",
+    "quantity_one": "Aantal {{count}}",
+    "quantity_other": "Aantal {{count}}",
+    "outcomeWon": "Deze order is afgerond.",
+    "outcomeLost": "Deze order is gesloten.",
+    "invalidTitle": "Deze link is niet meer actief",
+    "invalidBody": "Kijk in de laatste e-mail die u hebt ontvangen, of beantwoord die en vraag om een nieuwe link.",
+    "footer": "Mogelijk gemaakt door Repraesent"
   }
 }

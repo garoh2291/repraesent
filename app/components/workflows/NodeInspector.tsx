@@ -13,15 +13,20 @@ import {
 import { EmptyPanelState } from "~/components/forms/chrome";
 import { Field, FieldHint } from "~/components/wordpress/fields";
 import type {
+  AddNoteConfig,
   CatalogField,
   ConditionGroup,
+  CreateTaskConfig,
   DelayConfig,
   EmailRecipient,
+  NotifyTeamConfig,
   OutboundCapability,
   RecentRecord,
   SendCustomerEmailConfig,
   SendInternalEmailConfig,
   TriggerConfig,
+  UpdateRecordConfig,
+  WorkflowEntity,
   WorkflowNode,
 } from "~/lib/api/workflows";
 import { sortAccountsWithAliases } from "~/lib/api/email-accounts";
@@ -29,6 +34,12 @@ import { ConditionBuilder } from "./ConditionBuilder";
 import { ResolvedHint } from "./ResolvedHint";
 import { EmailTemplateEditor } from "./EmailTemplateEditor";
 import { TriggerEditor } from "./TriggerEditor";
+import {
+  AddNoteEditor,
+  CreateTaskEditor,
+  NotifyTeamEditor,
+  UpdateRecordEditor,
+} from "./ActionEditors";
 
 export interface WorkspaceMemberOption {
   userId: string;
@@ -44,6 +55,8 @@ export interface WorkspaceMemberOption {
  */
 export function NodeInspector({
   node,
+  entity,
+  pipelineScope,
   fields,
   dateFields,
   locales,
@@ -58,6 +71,10 @@ export function NodeInspector({
   onLocaleChange,
 }: {
   node: WorkflowNode | null;
+  /** The trigger's entity — decides what an action can attach to or set. */
+  entity: WorkflowEntity;
+  /** A pipeline id when the trigger names one, so stage lists can narrow. */
+  pipelineScope?: string;
   fields: CatalogField[];
   dateFields: string[];
   locales: string[];
@@ -221,6 +238,53 @@ export function NodeInspector({
         </div>
       );
     }
+
+    case "add_note":
+      return (
+        <AddNoteEditor
+          config={node.config as AddNoteConfig}
+          entity={entity}
+          variables={variables}
+          disabled={disabled}
+          onChange={onChange}
+        />
+      );
+
+    case "create_task":
+      return (
+        <CreateTaskEditor
+          config={node.config as CreateTaskConfig}
+          entity={entity}
+          members={members}
+          variables={variables}
+          disabled={disabled}
+          onChange={onChange}
+        />
+      );
+
+    case "notify_team":
+      return (
+        <NotifyTeamEditor
+          config={node.config as NotifyTeamConfig}
+          variables={variables}
+          disabled={disabled}
+          onChange={onChange}
+        />
+      );
+
+    case "update_record":
+      return (
+        <UpdateRecordEditor
+          config={node.config as UpdateRecordConfig}
+          entity={entity}
+          fields={fields}
+          members={members}
+          pipelineScope={pipelineScope}
+          variables={variables}
+          disabled={disabled}
+          onChange={onChange}
+        />
+      );
 
     default:
       return null;

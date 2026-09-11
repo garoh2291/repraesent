@@ -488,7 +488,7 @@
     "dealNotFound": "Deal could not be loaded.",
     "backToPipeline": "Back to pipeline",
     "dealDetails": "Deal",
-    "untitledDeal": "Untitled deal",
+    "untitledDeal": "This deal",
     "capHint": "Showing up to 500 deals. Refine search or assignee if needed.",
     "linkedContact": "Contact",
     "detachContact": "Remove",
@@ -801,10 +801,8 @@
     "pipelineNamePlaceholder": "e.g. Enterprise sales",
     "pipelineDescriptionLabel": "Description (optional)",
     "pipelineDescriptionPlaceholder": "What runs through this pipeline?",
-    "addDescription": "Add a description…",
     "pipelineCreated": "Pipeline created.",
     "pipelineDeleted": "Pipeline deleted.",
-    "renamePipeline": "Rename",
     "deletePipeline": "Delete pipeline",
     "deletePipelineTitle": "Delete “{{name}}”?",
     "deletePipelineWarning": "{{count}} deals will move to “{{target}}”. This pipeline’s stages are deleted.",
@@ -814,7 +812,42 @@
     "movedToPipeline": "Moved to “{{name}}”.",
     "contextOpen": "Open deal",
     "contextChangeStage": "Change stage",
-    "contextMovePipeline": "Move to pipeline"
+    "contextMovePipeline": "Move to pipeline",
+    "reopenDeal": {
+      "titleWon": "Reopen this won deal?",
+      "titleLost": "Reopen this lost deal?",
+      "description": "{{name}} moves back to “{{stage}}” and counts as open again.",
+      "clearsWonAt": "The won date ({{date}}) will be cleared and cannot be restored.",
+      "clearsLostAt": "The lost date ({{date}}) will be cleared and cannot be restored.",
+      "confirm": "Reopen deal"
+    },
+    "tracking": {
+      "share": "Customer link",
+      "title": "Tracking link for this deal",
+      "hint": "Anyone with this link sees the stage names and what was ordered. No value, no owner, no contact details, no sign-in.",
+      "preview": "Open what they see",
+      "regenerate": "New link",
+      "regenerateTitle": "Issue a new link?",
+      "regenerateBody": "The link you already sent stops working immediately, and the customer is not told. Only do this if the current link reached the wrong person.",
+      "regenerateConfirm": "Issue a new link",
+      "rotated": "A new link is ready. The old one no longer works.",
+      "rotateFailed": "Could not issue a new link.",
+      "copyFailed": "Could not copy. Select the link and copy it manually."
+    },
+    "editPipelineTitle": "Edit pipeline",
+    "pipelineSaved": "Pipeline saved.",
+    "pipelineDialogHint": "Name this board, describe what runs through it, and choose whether customers can track their deals.",
+    "visibility": {
+      "label": "Customer tracking",
+      "private": "Private",
+      "privateHint": "Deals on this board stay inside the workspace.",
+      "public": "Public",
+      "publicHint": "Each deal gets a private link a customer can open to track their order.",
+      "revokeWarning": "Every tracking link already sent will stop working as soon as you save.",
+      "revokeTitle": "Make this pipeline private?",
+      "revokeBody": "Every tracking link already sent to a customer stops working immediately, and nobody is told. Turning it public again issues the same links, not new ones.",
+      "revokeConfirm": "Make private"
+    }
   },
   "appointments": {
     "metaTitle": "Appointments",
@@ -2928,7 +2961,8 @@
     "labelTask": "Task",
     "labelEvent": "Update",
     "today": "Today",
-    "yesterday": "Yesterday"
+    "yesterday": "Yesterday",
+    "automation": "Automation"
   },
   "dealEmails": {
     "pipeline": "Pipeline emails",
@@ -4894,7 +4928,14 @@
       "condition": "Condition",
       "delay": "Wait",
       "send_internal_email": "Email a team member",
-      "send_customer_email": "Email the contact"
+      "send_customer_email": "Email the contact",
+      "create_task": "Create a task",
+      "add_note": "Add a note",
+      "update_record": "Update the record",
+      "notify_team": "Notify the team",
+      "group_communicate": "Tell someone",
+      "group_act": "Change the record",
+      "group_flow": "Control the flow"
     },
     "step": {
       "trigger": "When this happens",
@@ -4928,7 +4969,11 @@
       "hint_record_updated": "Fires on every change to the record.",
       "hint_field_changed_to": "Fires only on the transition into that value.",
       "hint_no_change_for": "Checked on a schedule. Fires again if the record is touched and goes quiet again.",
-      "hint_date_field_relative": "Checked on a schedule, relative to the date you pick."
+      "hint_date_field_relative": "Checked on a schedule, relative to the date you pick.",
+      "watchedColumns": "Fields to watch",
+      "anyField": "Any field",
+      "watchedColumnsAll": "Any change to this record starts the workflow. Pick fields to narrow it.",
+      "watchedColumnsHint": "Only a change to one of these fields starts the workflow."
     },
     "condition": {
       "matchLabel": "Match",
@@ -5011,7 +5056,11 @@
       "emptyHint": "Pick a step on the left to configure it.",
       "conditionHint": "The run stops here unless every condition holds.",
       "delayHint": "Pause before the next step. The run resumes on its own.",
-      "internalHint": "Sent from Repraesent, so this works without connecting a mailbox."
+      "internalHint": "Sent from Repraesent, so this works without connecting a mailbox.",
+      "noteHint": "Writes a note on the record. Nobody is notified.",
+      "taskHint": "Creates a to-do on the record so somebody picks it up.",
+      "notifyHint": "Posts to every Slack, Teams or Google Chat channel this workspace has connected.",
+      "updateHint": "Changes the record that triggered this run. It will not start this workflow again."
     },
     "settings": {
       "description": "Description",
@@ -5079,7 +5128,11 @@
       "noTemplate": "An email step has no message",
       "noToPath": "The customer email step has no address",
       "emptyCondition": "A condition step is empty",
-      "filterContradiction": "\"{{field}} is {{value}}\" can never be true here: the trigger fires when {{field}} becomes \"{{target}}\". Use \"changed from\" to match the previous value."
+      "filterContradiction": "\"{{field}} is {{value}}\" can never be true here: the trigger fires when {{field}} becomes \"{{target}}\". Use \"changed from\" to match the previous value.",
+      "noTaskTitle": "A task step has no title",
+      "noNoteBody": "A note step is empty",
+      "noNotifyMessage": "A notify step has no message",
+      "noUpdateFields": "An update step sets no fields"
     },
     "testTitle": "Test this workflow",
     "testHint": "Runs against a real {{entity}} record. Nothing is sent.",
@@ -5121,7 +5174,50 @@
       "no": "No",
       "empty": "Nothing here — the run ends."
     },
-    "publishedUpToDate": "Published and up to date"
+    "publishedUpToDate": "Published and up to date",
+    "action": {
+      "targetLabel": "Attach it to",
+      "target_deals": "The deal",
+      "target_leads": "The lead",
+      "target_tasks": "The task's record",
+      "target_contacts": "The contact",
+      "target_contact": "The contact",
+      "targetTriggerHint": "Filed on the record that triggered this run.",
+      "targetContactHint": "Filed on the linked contact. Skipped when the record has none."
+    },
+    "note": {
+      "body": "Note"
+    },
+    "task": {
+      "title": "Task",
+      "description": "Details",
+      "descriptionHint": "Optional. Shown when the task is opened.",
+      "due": "Due",
+      "dueNone": "No due date",
+      "dueToday": "Today",
+      "dueInDays_one": "In {{count}} day",
+      "dueInDays_other": "In {{count}} days",
+      "assignee": "Assign to",
+      "assigneeNone": "Nobody",
+      "assigneeOwner": "Whoever owns the record"
+    },
+    "notify": {
+      "message": "Message",
+      "messageHint": "Plain text. A link back to the record is added automatically."
+    },
+    "update": {
+      "addField": "Add a field to set",
+      "removeField": "Remove this field",
+      "pickValue": "Pick a value",
+      "noFields": "No fields set yet",
+      "unsupportedEntity": "Records of type {{entity}} cannot be updated by a workflow yet.",
+      "field_title": "Title",
+      "field_stage": "Stage",
+      "field_status": "Status",
+      "field_value": "Value",
+      "field_assigned_to": "Owner",
+      "field_expected_close_date": "Expected close date"
+    }
   },
   "stripeProducts": {
     "metaTitle": "Products",
@@ -6793,5 +6889,23 @@
     "metaTitle": "Assistant",
     "unavailable": "This assistant is not available",
     "unavailableHint": "The link may be wrong, or the assistant has been taken offline."
+  },
+  "tracking": {
+    "metaTitle": "Order status",
+    "statusLabel": "Status",
+    "itemsLabel": "What was ordered",
+    "progressLabel": "Progress",
+    "reference": "Reference {{reference}}",
+    "lastUpdated": "Last updated {{date}}",
+    "currentMarker": "You are here",
+    "unknownStage": "In progress",
+    "unnamedItem": "Item",
+    "quantity_one": "Quantity {{count}}",
+    "quantity_other": "Quantity {{count}}",
+    "outcomeWon": "This order is complete.",
+    "outcomeLost": "This order was closed.",
+    "invalidTitle": "This link is no longer active",
+    "invalidBody": "Check the most recent email you received, or reply to it and ask for a new link.",
+    "footer": "Powered by Repraesent"
   }
 }

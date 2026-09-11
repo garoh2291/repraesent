@@ -29,6 +29,7 @@ import {
 } from "lucide-react";
 import { formatDate, formatCurrency } from "~/lib/utils/format";
 import { cn } from "~/lib/utils";
+import { useTerminalStageGuard } from "~/lib/deals/use-terminal-stage-guard";
 import type { DealListItem } from "~/lib/api/deals";
 import type { PipelineStage } from "~/lib/api/pipeline-stages";
 import type { Pipeline } from "~/lib/api/pipelines";
@@ -193,8 +194,12 @@ export function DealsPipelineKanban({
   );
 
   /** Shared by drag-drop and the card context menu: undo entry, local pending
-   * override, land animation, then the caller's optimistic mutation. */
-  const moveDealToStage = useCallback(
+   * override, land animation, then the caller's optimistic mutation.
+   *
+   * Only reached AFTER the terminal-stage guard has allowed the move, so the
+   * card never paints into its new column and then snaps back if the user
+   * cancels. */
+  const applyStageMove = useCallback(
     (deal: DealListItem, targetStage: string) => {
       if (deal.stage === targetStage) return;
 
@@ -215,6 +220,21 @@ export function DealsPipelineKanban({
       onStageChange(deal.id, targetStage);
     },
     [onStageChange],
+  );
+
+  // Leaving a won or lost stage clears the deal's outcome date, so it asks
+  // first. Entering one, or moving won <-> lost, goes straight through.
+  const { requestStageChange, guardModal } = useTerminalStageGuard({
+    byKey,
+    onProceed: (dealId, stage) => {
+      const deal = deals.find((d) => d.id === dealId);
+      if (deal) applyStageMove(deal, stage);
+    },
+  });
+
+  const moveDealToStage = useCallback(
+    (deal: DealListItem, targetStage: string) => requestStageChange(deal, targetStage),
+    [requestStageChange],
   );
 
   const handleDragEnd = useCallback(
@@ -340,6 +360,8 @@ export function DealsPipelineKanban({
           </DragOverlay>
         </DndContext>
       </div>
+
+      {guardModal}
 
       <AlertDialog
         open={!!deleteTarget}

@@ -488,7 +488,7 @@
     "dealNotFound": "Impossible de charger l'affaire.",
     "backToPipeline": "Retour au pipeline",
     "dealDetails": "Affaire",
-    "untitledDeal": "Affaire sans titre",
+    "untitledDeal": "Cette affaire",
     "capHint": "Affichage jusqu'à 500 affaires. Affinez la recherche ou le responsable si nécessaire.",
     "linkedContact": "Contact",
     "detachContact": "Retirer",
@@ -801,10 +801,8 @@
     "pipelineNamePlaceholder": "p. ex. Ventes entreprises",
     "pipelineDescriptionLabel": "Description (optionnelle)",
     "pipelineDescriptionPlaceholder": "Que passe-t-il par ce pipeline ?",
-    "addDescription": "Ajouter une description…",
     "pipelineCreated": "Pipeline créé.",
     "pipelineDeleted": "Pipeline supprimé.",
-    "renamePipeline": "Renommer",
     "deletePipeline": "Supprimer le pipeline",
     "deletePipelineTitle": "Supprimer « {{name}} » ?",
     "deletePipelineWarning": "{{count}} affaires seront déplacées vers « {{target}} ». Les étapes de ce pipeline seront supprimées.",
@@ -814,7 +812,42 @@
     "movedToPipeline": "Déplacé vers « {{name}} ».",
     "contextOpen": "Ouvrir l’affaire",
     "contextChangeStage": "Changer d’étape",
-    "contextMovePipeline": "Déplacer vers un pipeline"
+    "contextMovePipeline": "Déplacer vers un pipeline",
+    "reopenDeal": {
+      "titleWon": "Rouvrir cette affaire gagnée ?",
+      "titleLost": "Rouvrir cette affaire perdue ?",
+      "description": "{{name}} revient à « {{stage}} » et redevient ouverte.",
+      "clearsWonAt": "La date de gain ({{date}}) sera effacée et ne pourra pas être restaurée.",
+      "clearsLostAt": "La date de perte ({{date}}) sera effacée et ne pourra pas être restaurée.",
+      "confirm": "Rouvrir l'affaire"
+    },
+    "tracking": {
+      "share": "Lien client",
+      "title": "Lien de suivi pour cette affaire",
+      "hint": "Quiconque a ce lien voit les noms des étapes et ce qui a été commandé. Ni montant, ni responsable, ni coordonnées, sans connexion.",
+      "preview": "Voir ce qu'ils voient",
+      "regenerate": "Nouveau lien",
+      "regenerateTitle": "Émettre un nouveau lien ?",
+      "regenerateBody": "Le lien déjà envoyé cesse de fonctionner immédiatement, et le client n'en est pas informé. À faire uniquement si le lien actuel est arrivé à la mauvaise personne.",
+      "regenerateConfirm": "Émettre un nouveau lien",
+      "rotated": "Un nouveau lien est prêt. L'ancien ne fonctionne plus.",
+      "rotateFailed": "Impossible d'émettre un nouveau lien.",
+      "copyFailed": "Copie impossible. Sélectionnez le lien et copiez-le manuellement."
+    },
+    "editPipelineTitle": "Modifier le pipeline",
+    "pipelineSaved": "Pipeline enregistré.",
+    "pipelineDialogHint": "Nommez ce tableau, décrivez ce qui y passe et choisissez si les clients peuvent suivre leurs affaires.",
+    "visibility": {
+      "label": "Suivi client",
+      "private": "Privé",
+      "privateHint": "Les affaires de ce tableau restent dans l'espace de travail.",
+      "public": "Public",
+      "publicHint": "Chaque affaire reçoit un lien privé que le client peut ouvrir pour suivre sa commande.",
+      "revokeWarning": "Tous les liens de suivi déjà envoyés cesseront de fonctionner dès l'enregistrement.",
+      "revokeTitle": "Rendre ce pipeline privé ?",
+      "revokeBody": "Tous les liens de suivi déjà envoyés à un client cessent immédiatement de fonctionner, et personne n'en est informé. Le repasser en public réactive les mêmes liens, pas de nouveaux.",
+      "revokeConfirm": "Rendre privé"
+    }
   },
   "appointments": {
     "metaTitle": "Rendez-vous",
@@ -2930,7 +2963,8 @@
     "labelTask": "Tâche",
     "labelEvent": "Mise à jour",
     "today": "Aujourd'hui",
-    "yesterday": "Hier"
+    "yesterday": "Hier",
+    "automation": "Automatisation"
   },
   "dealEmails": {
     "pipeline": "E-mails du pipeline",
@@ -4896,7 +4930,14 @@
       "condition": "Condition",
       "delay": "Wait",
       "send_internal_email": "Email a team member",
-      "send_customer_email": "Email the contact"
+      "send_customer_email": "Email the contact",
+      "create_task": "Créer une tâche",
+      "add_note": "Ajouter une note",
+      "update_record": "Modifier la fiche",
+      "notify_team": "Prévenir l'équipe",
+      "group_communicate": "Prévenir quelqu'un",
+      "group_act": "Modifier la fiche",
+      "group_flow": "Contrôler le déroulement"
     },
     "step": {
       "trigger": "When this happens",
@@ -4930,7 +4971,11 @@
       "hint_record_updated": "Fires on every change to the record.",
       "hint_field_changed_to": "Fires only on the transition into that value.",
       "hint_no_change_for": "Checked on a schedule. Fires again if the record is touched and goes quiet again.",
-      "hint_date_field_relative": "Checked on a schedule, relative to the date you pick."
+      "hint_date_field_relative": "Checked on a schedule, relative to the date you pick.",
+      "watchedColumns": "Champs à surveiller",
+      "anyField": "N'importe quel champ",
+      "watchedColumnsAll": "Toute modification de cet enregistrement déclenche le workflow. Choisissez des champs pour le restreindre.",
+      "watchedColumnsHint": "Seule une modification de l'un de ces champs déclenche le workflow."
     },
     "condition": {
       "matchLabel": "Match",
@@ -5013,7 +5058,11 @@
       "emptyHint": "Pick a step on the left to configure it.",
       "conditionHint": "The run stops here unless every condition holds.",
       "delayHint": "Pause before the next step. The run resumes on its own.",
-      "internalHint": "Sent from Repraesent, so this works without connecting a mailbox."
+      "internalHint": "Sent from Repraesent, so this works without connecting a mailbox.",
+      "noteHint": "Écrit une note sur la fiche. Personne n'est prévenu.",
+      "taskHint": "Crée une tâche sur la fiche pour que quelqu'un la prenne en charge.",
+      "notifyHint": "Publie dans tous les canaux Slack, Teams ou Google Chat connectés à cet espace.",
+      "updateHint": "Modifie la fiche qui a déclenché ce lancement. Ne relancera pas ce workflow."
     },
     "settings": {
       "description": "Description",
@@ -5081,7 +5130,11 @@
       "noTemplate": "An email step has no message",
       "noToPath": "The customer email step has no address",
       "emptyCondition": "A condition step is empty",
-      "filterContradiction": "« {{field}} est {{value}} » ne peut jamais être vrai ici : le déclencheur s'active quand {{field}} devient « {{target}} ». Utilisez « changé de » pour la valeur précédente."
+      "filterContradiction": "« {{field}} est {{value}} » ne peut jamais être vrai ici : le déclencheur s'active quand {{field}} devient « {{target}} ». Utilisez « changé de » pour la valeur précédente.",
+      "noTaskTitle": "Une étape tâche n'a pas de titre",
+      "noNoteBody": "Une étape note est vide",
+      "noNotifyMessage": "Une étape notification n'a pas de message",
+      "noUpdateFields": "Une étape de modification ne définit aucun champ"
     },
     "testTitle": "Test this workflow",
     "testHint": "Runs against a real {{entity}} record. Nothing is sent.",
@@ -5123,7 +5176,50 @@
       "no": "Non",
       "empty": "Rien ici — l'exécution s'arrête."
     },
-    "publishedUpToDate": "Publié et à jour"
+    "publishedUpToDate": "Publié et à jour",
+    "action": {
+      "targetLabel": "Rattacher à",
+      "target_deals": "L'affaire",
+      "target_leads": "Le lead",
+      "target_tasks": "La fiche de la tâche",
+      "target_contacts": "Le contact",
+      "target_contact": "Le contact",
+      "targetTriggerHint": "Enregistré sur la fiche qui a déclenché ce lancement.",
+      "targetContactHint": "Enregistré sur le contact lié. Ignoré si la fiche n'en a pas."
+    },
+    "note": {
+      "body": "Note"
+    },
+    "task": {
+      "title": "Tâche",
+      "description": "Détails",
+      "descriptionHint": "Facultatif. Affiché à l'ouverture de la tâche.",
+      "due": "Échéance",
+      "dueNone": "Sans échéance",
+      "dueToday": "Aujourd'hui",
+      "dueInDays_one": "Dans {{count}} jour",
+      "dueInDays_other": "Dans {{count}} jours",
+      "assignee": "Attribuer à",
+      "assigneeNone": "Personne",
+      "assigneeOwner": "Le responsable de la fiche"
+    },
+    "notify": {
+      "message": "Message",
+      "messageHint": "Texte brut. Un lien vers la fiche est ajouté automatiquement."
+    },
+    "update": {
+      "addField": "Ajouter un champ à définir",
+      "removeField": "Retirer ce champ",
+      "pickValue": "Choisir une valeur",
+      "noFields": "Aucun champ défini",
+      "unsupportedEntity": "Les fiches de type {{entity}} ne peuvent pas encore être modifiées par un workflow.",
+      "field_title": "Titre",
+      "field_stage": "Étape",
+      "field_status": "Statut",
+      "field_value": "Montant",
+      "field_assigned_to": "Responsable",
+      "field_expected_close_date": "Date de clôture prévue"
+    }
   },
   "stripeProducts": {
     "metaTitle": "Produits",
@@ -6795,5 +6891,23 @@
     "metaTitle": "Assistant",
     "unavailable": "Cet assistant n’est pas disponible",
     "unavailableHint": "Le lien est peut-être incorrect, ou l’assistant a été mis hors ligne."
+  },
+  "tracking": {
+    "metaTitle": "Statut de la commande",
+    "statusLabel": "Statut",
+    "itemsLabel": "Ce qui a été commandé",
+    "progressLabel": "Avancement",
+    "reference": "Référence {{reference}}",
+    "lastUpdated": "Dernière mise à jour {{date}}",
+    "currentMarker": "Vous êtes ici",
+    "unknownStage": "En cours",
+    "unnamedItem": "Article",
+    "quantity_one": "Quantité {{count}}",
+    "quantity_other": "Quantité {{count}}",
+    "outcomeWon": "Cette commande est terminée.",
+    "outcomeLost": "Cette commande a été clôturée.",
+    "invalidTitle": "Ce lien n'est plus actif",
+    "invalidBody": "Consultez le dernier e-mail reçu, ou répondez-y pour demander un nouveau lien.",
+    "footer": "Propulsé par Repraesent"
   }
 }

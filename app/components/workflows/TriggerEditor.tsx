@@ -1,6 +1,13 @@
-import { TriangleAlert } from "lucide-react";
+import { ChevronsUpDown, TriangleAlert } from "lucide-react";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
+import { Checkbox } from "~/components/ui/checkbox";
 import { Input } from "~/components/ui/input";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "~/components/ui/popover";
 import { Label } from "~/components/ui/label";
 import {
   Select,
@@ -52,6 +59,9 @@ export function TriggerEditor({
   const patch = (next: Partial<TriggerConfig>) => onChange({ ...config, ...next });
 
   const enumFields = fields.filter((f) => f.kind === "enum");
+  // Real columns only: a derived field (a contact's email) is not something the
+  // change-capture trigger can watch, and a metadata key is not a column either.
+  const columnFields = fields.filter((f) => !f.resolved && !f.dynamic);
   const selected = fields.find((f) => f.path === config.path);
   const days = Math.round((config.offsetMinutes ?? 0) / 1440);
 
@@ -118,6 +128,36 @@ export function TriggerEditor({
           <FieldHint>{t(`workflows.trigger.hint_${config.type}`)}</FieldHint>
         </Field>
       </div>
+
+      {/* Which columns wake the workflow. Without this, "when a record is
+          updated" means EVERY field — a deal rule ran on every note, value
+          tweak and rename, then filtered afterwards. Naming the columns is the
+          difference between "when the stage changes" and "whenever anything
+          changes and the stage happens to look right". */}
+      {config.type === "record_updated" ? (
+        <Field>
+          <Label>{t("workflows.trigger.watchedColumns")}</Label>
+          <ColumnPicker
+            fields={columnFields}
+            value={config.columns ?? []}
+            disabled={disabled}
+            onChange={(columns) =>
+              patch({ columns: columns.length > 0 ? columns : undefined })
+            }
+          />
+          <FieldHint>
+            {(config.columns?.length ?? 0) === 0
+              ? t("workflows.trigger.watchedColumnsAll", {
+                  defaultValue:
+                    "Any change to this record starts the workflow. Pick fields to narrow it.",
+                })
+              : t("workflows.trigger.watchedColumnsHint", {
+                  defaultValue:
+                    "Only a change to one of these fields starts the workflow.",
+                })}
+          </FieldHint>
+        </Field>
+      ) : null}
 
       {config.type === "field_changed_to" ? (
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -237,5 +277,79 @@ export function TriggerEditor({
         />
       </div>
     </div>
+  );
+}
+
+/**
+ * Which columns a `record_updated` trigger watches.
+ *
+ * A popover of checkboxes rather than a multi-select: the list is the whole
+ * field catalog, and the trigger reads better as "…when any of these change"
+ * than as a row of chips.
+ */
+function ColumnPicker({
+  fields,
+  value,
+  disabled,
+  onChange,
+}: {
+  fields: CatalogField[];
+  value: string[];
+  disabled?: boolean;
+  onChange: (columns: string[]) => void;
+}) {
+  const { t } = useTranslation();
+  const [open, setOpen] = useState(false);
+  const picked = new Set(value);
+  const labels = fields
+    .filter((f) => picked.has(f.path))
+    .map((f) => f.label);
+
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <button
+          type="button"
+          disabled={disabled}
+          className="flex h-9 w-full items-center justify-between gap-2 rounded-lg border bg-background px-3 text-sm disabled:opacity-50"
+        >
+          <span className="min-w-0 truncate">
+            {labels.length === 0 ? (
+              <span className="text-muted-foreground">
+                {t("workflows.trigger.anyField", { defaultValue: "Any field" })}
+              </span>
+            ) : (
+              labels.join(", ")
+            )}
+          </span>
+          <ChevronsUpDown className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+        </button>
+      </PopoverTrigger>
+      <PopoverContent
+        className="w-(--radix-popover-trigger-width) p-2"
+        align="start"
+      >
+        <div className="max-h-64 space-y-1 overflow-y-auto">
+          {fields.map((f) => (
+            <label
+              key={f.path}
+              className="flex items-center gap-2 rounded-md px-1.5 py-1 text-sm hover:bg-muted/60"
+            >
+              <Checkbox
+                checked={picked.has(f.path)}
+                onCheckedChange={(next) =>
+                  onChange(
+                    next === true
+                      ? [...value, f.path]
+                      : value.filter((p) => p !== f.path),
+                  )
+                }
+              />
+              <span className="min-w-0 truncate">{f.label}</span>
+            </label>
+          ))}
+        </div>
+      </PopoverContent>
+    </Popover>
   );
 }

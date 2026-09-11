@@ -147,6 +147,12 @@ const PUBLIC_PATH_PREFIXES = [
   "/f/",
   "/demo",
   "/unsubscribe/",
+  // Hosted AI assistant page — public since it shipped, but never listed here,
+  // so a visitor with a stale token was bounced to /login mid-conversation.
+  "/a/",
+  // Public deal tracking. The token in the path is the capability, and the
+  // reader is a customer who has no account at all.
+  "/t/",
 ];
 
 function isPublicPath(): boolean {

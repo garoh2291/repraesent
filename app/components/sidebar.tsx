@@ -67,7 +67,7 @@ import { useWorkspaceWpPluginInstalls } from "~/lib/hooks/useWorkspaceWpPluginIn
 import { useStripeConnection } from "~/lib/hooks/useWorkspaceIntegrations";
 import { LanguageSwitcher } from "~/components/language-switcher";
 import { usePipelinesQuery } from "~/lib/hooks/usePipelines";
-import { CreatePipelineDialog } from "~/components/organism/create-pipeline-dialog";
+import { PipelineDialog } from "~/components/organism/pipeline-dialog";
 import {
   pluginKindIcon,
   wordpressPluginSettingsPath,
@@ -324,7 +324,7 @@ function PipelineNav({ onClose }: { onClose?: () => void }) {
           </button>
         )}
       </CollapsibleContent>
-      <CreatePipelineDialog open={newOpen} onOpenChange={setNewOpen} />
+      <PipelineDialog open={newOpen} onOpenChange={setNewOpen} />
     </Collapsible>
   );
 }

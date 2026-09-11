@@ -56,6 +56,18 @@ export function ConditionBuilder({
   const columns = fields.filter((f) => !f.dynamic);
   const dynamic = fields.filter((f) => f.dynamic);
 
+  /**
+   * The pipeline this group has already been pinned to, if any.
+   *
+   * Read from a sibling `pipeline_id = <id>` condition in the same group, so
+   * "pipeline is Shop orders AND stage is Won" narrows the stage picker to that
+   * board. Only an `eq` counts — `in` with several pipelines does not identify
+   * one set of stages.
+   */
+  const pipelineScope = group.conditions.find(
+    (c) => c.path === "pipeline_id" && c.operator === "eq" && typeof c.value === "string",
+  )?.value as string | undefined;
+
   return (
     <div className="space-y-2">
       {rowCount > 1 ? (
@@ -163,6 +175,7 @@ export function ConditionBuilder({
                   condition={condition}
                   field={field}
                   fields={fields}
+                  scope={pipelineScope}
                   disabled={disabled}
                   onChange={(next) => patch(index, next)}
                 />

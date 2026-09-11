@@ -20,6 +20,9 @@ export default [
   // Campaign-email unsubscribe landing. Public: the token in the path is the
   // capability, and recipients are rarely logged-in users.
   route("unsubscribe/:token", "routes/unsubscribe.$token.tsx"),
+  // Public order tracking. Above _protected on purpose: a customer following
+  // this link from an email has no session and must never meet the login page.
+  route("t/:token", "routes/t.$token.tsx"),
 
   layout("routes/_protected.tsx", [
     route("no-workspace", "routes/no-workspace.tsx"),

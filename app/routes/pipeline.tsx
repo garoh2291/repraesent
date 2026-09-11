@@ -3,6 +3,7 @@ import { useNavigate, useSearchParams } from "react-router";
 import { useTranslation } from "react-i18next";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAuthContext } from "~/providers/auth-provider";
+import { PipelineDialog } from "~/components/organism/pipeline-dialog";
 import { getWorkspaceDetail } from "~/lib/api/workspaces";
 import { useDebounce } from "~/lib/hooks/useDebounce";
 import { useSearchShortcut } from "~/lib/hooks/useSearchShortcut";
@@ -25,7 +26,6 @@ import { useDealStages } from "~/lib/hooks/usePipelineStages";
 import {
   useDeletePipeline,
   usePipelinesQuery,
-  useUpdatePipeline,
 } from "~/lib/hooks/usePipelines";
 import {
   DEFAULT_DEAL_SORT,
@@ -61,7 +61,15 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "~/components/ui/alert-dialog";
-import { ArrowUpDown, MoreHorizontal, Plus, Trash2, X } from "lucide-react";
+import {
+  ArrowUpDown,
+  Globe,
+  MoreHorizontal,
+  Pencil,
+  Plus,
+  Trash2,
+  X,
+} from "lucide-react";
 import { toast } from "sonner";
 
 export function meta() {
@@ -313,54 +321,13 @@ export default function PipelinePage() {
   };
 
   // Pipeline rename / description / delete (admins).
-  const updatePipelineMutation = useUpdatePipeline();
   const deletePipelineMutation = useDeletePipeline();
-  const [renaming, setRenaming] = useState(false);
-  const [draftName, setDraftName] = useState("");
-  const [draftDescription, setDraftDescription] = useState("");
+  // Name, description and visibility are all edited in one dialog — see
+  // `PipelineDialog`. They used to be three separate surfaces (an inline
+  // title, a borderless description input, a switch on /settings/pipelines),
+  // and no single screen showed you what a pipeline actually was.
+  const [editOpen, setEditOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
-
-  useEffect(() => {
-    setRenaming(false);
-    setDraftName(currentPipeline?.name ?? "");
-    setDraftDescription(currentPipeline?.description ?? "");
-  }, [currentPipeline?.id, currentPipeline?.name, currentPipeline?.description]);
-
-  const savePipeline = (payload: {
-    name?: string;
-    description?: string | null;
-  }) => {
-    if (!currentPipeline) return;
-    updatePipelineMutation.mutate(
-      { pipelineId: currentPipeline.id, payload },
-      {
-        onError: (err) =>
-          toast.error(
-            extractErrorMessage(err) ||
-              t("pipeline.errors.pipelineSaveFailed", {
-                defaultValue: "Could not save pipeline.",
-              }),
-          ),
-      },
-    );
-  };
-
-  const commitRename = () => {
-    setRenaming(false);
-    const trimmed = draftName.trim();
-    if (!currentPipeline || !trimmed || trimmed === currentPipeline.name) {
-      setDraftName(currentPipeline?.name ?? "");
-      return;
-    }
-    savePipeline({ name: trimmed });
-  };
-
-  const commitDescription = () => {
-    if (!currentPipeline) return;
-    const trimmed = draftDescription.trim();
-    if (trimmed === (currentPipeline.description ?? "")) return;
-    savePipeline({ description: trimmed === "" ? null : trimmed });
-  };
 
   const confirmDelete = () => {
     if (!currentPipeline || currentPipeline.is_default) return;
@@ -411,28 +378,10 @@ export default function PipelinePage() {
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between shrink-0 app-fade-up">
         <div className="min-w-0">
           <div className="flex items-center gap-2">
-            {renaming && currentPipeline ? (
-              <Input
-                value={draftName}
-                onChange={(e) => setDraftName(e.target.value)}
-                onBlur={commitRename}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") (e.target as HTMLInputElement).blur();
-                  if (e.key === "Escape") {
-                    setDraftName(currentPipeline.name);
-                    setRenaming(false);
-                  }
-                }}
-                maxLength={80}
-                autoFocus
-                className="h-9 w-[240px] text-xl sm:text-2xl font-semibold tracking-tight px-2"
-              />
-            ) : (
-              <h1 className="text-xl sm:text-2xl font-semibold text-foreground tracking-tight truncate">
-                {currentPipeline?.name ??
-                  t("nav.pipeline", { defaultValue: "Pipeline" })}
-              </h1>
-            )}
+            <h1 className="text-xl sm:text-2xl font-semibold text-foreground tracking-tight truncate">
+              {currentPipeline?.name ??
+                t("nav.pipeline", { defaultValue: "Pipeline" })}
+            </h1>
             {currentPipeline?.is_default && (
               <Badge
                 variant="outline"
@@ -443,7 +392,20 @@ export default function PipelinePage() {
                 })}
               </Badge>
             )}
-            {isAdmin && currentPipeline && !renaming && (
+            {/* Says who can open this board's deals, at a glance and without
+                opening anything. Only shown when it is public: "private" is
+                the default and the unremarkable case, and badging every board
+                that behaves normally is noise. */}
+            {currentPipeline?.public_tracking_enabled && (
+              <Badge
+                variant="outline"
+                className="gap-1 text-[10px] font-medium text-muted-foreground shrink-0"
+              >
+                <Globe className="h-2.5 w-2.5" aria-hidden />
+                {t("pipeline.visibility.public", { defaultValue: "Public" })}
+              </Badge>
+            )}
+            {isAdmin && currentPipeline && (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button
@@ -459,13 +421,11 @@ export default function PipelinePage() {
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="start">
-                  <DropdownMenuItem
-                    onClick={() => {
-                      setDraftName(currentPipeline.name);
-                      setRenaming(true);
-                    }}
-                  >
-                    {t("pipeline.renamePipeline", { defaultValue: "Rename" })}
+                  <DropdownMenuItem onClick={() => setEditOpen(true)}>
+                    <Pencil className="h-3.5 w-3.5" />
+                    {t("pipeline.editPipelineTitle", {
+                      defaultValue: "Edit pipeline",
+                    })}
                   </DropdownMenuItem>
                   {!currentPipeline.is_default && (
                     <DropdownMenuItem
@@ -482,34 +442,17 @@ export default function PipelinePage() {
               </DropdownMenu>
             )}
           </div>
-          {isAdmin && currentPipeline ? (
-            <Input
-              value={draftDescription}
-              onChange={(e) => setDraftDescription(e.target.value)}
-              onBlur={commitDescription}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") (e.target as HTMLInputElement).blur();
-                if (e.key === "Escape")
-                  setDraftDescription(currentPipeline.description ?? "");
-              }}
-              maxLength={500}
-              placeholder={t("pipeline.addDescription", {
-                defaultValue: "Add a description…",
-              })}
-              className="mt-0.5 h-7 w-full max-w-md border-transparent bg-transparent px-0 text-sm text-muted-foreground shadow-none hover:border-border focus-visible:border-border focus-visible:px-2 transition-all"
-            />
-          ) : currentPipeline?.description ? (
-            <p className="text-sm text-muted-foreground mt-0.5">
-              {currentPipeline.description}
-            </p>
-          ) : (
-            <p className="text-sm text-muted-foreground mt-0.5">
-              {t("pipeline.capHint", {
+          {/* The description is edited in the dialog now, so this is read-only.
+              Falls back to the deal-cap hint rather than leaving the line
+              empty — the header would jump by a row on every board without a
+              description. */}
+          <p className="text-sm text-muted-foreground mt-0.5">
+            {currentPipeline?.description ||
+              t("pipeline.capHint", {
                 defaultValue:
                   "Showing up to 500 deals. Refine search or assignee if needed.",
               })}
-            </p>
-          )}
+          </p>
         </div>
 
         {canEdit ? (
@@ -643,6 +586,14 @@ export default function PipelinePage() {
         canCreate={canEdit}
         pipelineId={currentPipeline?.id}
       />
+
+      {currentPipeline ? (
+        <PipelineDialog
+          open={editOpen}
+          pipeline={currentPipeline}
+          onOpenChange={setEditOpen}
+        />
+      ) : null}
 
       <AlertDialog open={deleteOpen} onOpenChange={setDeleteOpen}>
         <AlertDialogContent>

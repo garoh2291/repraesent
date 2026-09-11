@@ -139,14 +139,37 @@ export default function WorkflowBuilder() {
   );
 
   /**
+   * The pipeline this workflow is limited to, when its trigger says so.
+   *
+   * A deal stage KEY can exist on several boards, so "set stage to won" is
+   * ambiguous until a pipeline is named. Read from the trigger filter rather
+   * than asked for again in the step: the author already answered it there,
+   * and asking twice invites the two answers to disagree.
+   */
+  const pipelineScope = useMemo(() => {
+    const match = triggerConfig?.filter?.conditions?.find(
+      (c) =>
+        "path" in c &&
+        c.path === "pipeline_id" &&
+        c.operator === "eq" &&
+        typeof c.value === "string",
+    );
+    return match && "value" in match ? (match.value as string) : undefined;
+  }, [triggerConfig]);
+
+  /**
    * What a template can interpolate: the record, its previous values, and
    * anything an earlier step returned. Built from the same catalogue the
    * conditions use, so the two never disagree about what a field is called.
    */
   const variables = useMemo(() => {
     const paths = fields.map((f) => `trigger.record.${f.path}`);
+    // `trigger.old` is the raw row snapshot the DB trigger captured, and
+    // nothing enriches it — so a RESOLVED field (a deal's contact email, its
+    // tracking link) is always empty there. Offering it as a chip is offering
+    // a variable that renders to nothing, which is worse than not offering it.
     const previous = fields
-      .filter((f) => !f.dynamic)
+      .filter((f) => !f.dynamic && !f.resolved)
       .map((f) => `trigger.old.${f.path}`);
     return [...paths, ...previous];
   }, [fields]);
@@ -420,6 +443,8 @@ export default function WorkflowBuilder() {
               <PanelBody>
                 <NodeInspector
                   node={selectedNode}
+                  entity={entity}
+                  pipelineScope={pipelineScope}
                   fields={fields}
                   dateFields={dateFields}
                   locales={[...SUPPORTED_LOCALES]}

@@ -55,12 +55,26 @@ export const NULLARY_OPERATORS: ConditionOperator[] = [
   "changed",
 ];
 
+export interface FieldOption {
+  value: string;
+  label: string;
+  /**
+   * Which pipelines a deal-stage key exists in.
+   *
+   * The value stored in a condition is the stage KEY, and two pipelines can
+   * both have one keyed `won` — so the list holds each key once and says where
+   * it lives, rather than offering two choices that write the same thing. The
+   * builder narrows on this once a `pipeline_id` condition names a pipeline.
+   */
+  scopes?: string[];
+}
+
 export interface CatalogField {
   path: string;
   label: string;
   kind: FieldKind;
   operators: ConditionOperator[];
-  options?: { value: string; label: string }[];
+  options?: FieldOption[];
   dynamic?: boolean;
   /** Resolved from a related table (a contact's email), not a column. */
   resolved?: boolean;
@@ -84,7 +98,15 @@ export type NodeType =
   | "condition"
   | "delay"
   | "send_internal_email"
-  | "send_customer_email";
+  | "send_customer_email"
+  // Actions that change the workspace's own data. Deliberately NOT held by the
+  // workflow's send window — a rule firing at 22:00 must still create its task
+  // then, or the follow-up is a day late.
+  | "create_task"
+  | "add_note"
+  | "update_record"
+  // Outbound, so this one DOES wait for the send window.
+  | "notify_team";
 
 export interface Condition {
   path: string;
@@ -151,6 +173,53 @@ export interface DelayConfig {
   minutes: number;
 }
 
+/**
+ * Which record an action attaches to. `contact` follows the trigger record's
+ * contact, which is what "call the customer about this deal" usually means.
+ */
+export type ActionTarget = "trigger" | "contact";
+
+export interface CreateTaskConfig {
+  title: string;
+  description?: string;
+  target?: ActionTarget;
+  /** Days from the moment the step runs. 0 = today. */
+  dueInDays?: number;
+  assignee?: { kind: "member"; userId: string } | { kind: "owner" };
+}
+
+export interface AddNoteConfig {
+  body: string;
+  target?: ActionTarget;
+}
+
+export interface UpdateRecordConfig {
+  /** Column → template. Only the entity's settable fields are offered. */
+  set: Record<string, string>;
+}
+
+export interface NotifyTeamConfig {
+  message: string;
+}
+
+/**
+ * What `update_record` may set, per entity — mirrors `SETTABLE` in
+ * `update-record.node.ts`. Kept here rather than fetched so the picker can be
+ * drawn before any request resolves; the backend allowlist is the one that
+ * actually enforces it.
+ */
+export const UPDATABLE_FIELDS: Partial<Record<WorkflowEntity, string[]>> = {
+  deals: [
+    "title",
+    "stage",
+    "status",
+    "value",
+    "assigned_to",
+    "expected_close_date",
+  ],
+  leads: ["status"],
+};
+
 export interface ConditionNodeConfig {
   group: ConditionGroup;
 }
@@ -160,7 +229,11 @@ export type NodeConfig =
   | ConditionNodeConfig
   | DelayConfig
   | SendInternalEmailConfig
-  | SendCustomerEmailConfig;
+  | SendCustomerEmailConfig
+  | CreateTaskConfig
+  | AddNoteConfig
+  | UpdateRecordConfig
+  | NotifyTeamConfig;
 
 export interface WorkflowNode {
   id: string;

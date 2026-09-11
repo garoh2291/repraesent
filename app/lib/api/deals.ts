@@ -587,3 +587,17 @@ export async function linkDealInvoice(
   );
   return res.data;
 }
+
+/**
+ * Issue a new public tracking token for this deal, breaking the link already
+ * sent to the customer. Does NOT switch tracking on or off — that belongs to
+ * the pipeline, in /settings/pipelines.
+ */
+export async function rotateDealTrackingToken(
+  dealId: string,
+): Promise<{ tracking_token: string }> {
+  const { data } = await apiClient.post<{ tracking_token: string }>(
+    `/deals/${dealId}/tracking-token`,
+  );
+  return data;
+}

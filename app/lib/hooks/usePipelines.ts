@@ -55,7 +55,11 @@ export function useInvalidatePipelines() {
 export function useCreatePipeline() {
   const invalidate = useInvalidatePipelines();
   return useMutation({
-    mutationFn: (payload: { name: string; description?: string }) =>
+    mutationFn: (payload: {
+      name: string;
+      description?: string;
+      public_tracking_enabled?: boolean;
+    }) =>
       createPipeline(payload),
     onSuccess: invalidate,
   });
@@ -66,7 +70,11 @@ export function useUpdatePipeline() {
   return useMutation({
     mutationFn: (args: {
       pipelineId: string;
-      payload: { name?: string; description?: string | null };
+      payload: {
+        name?: string;
+        description?: string | null;
+        public_tracking_enabled?: boolean;
+      };
     }) => updatePipeline(args.pipelineId, args.payload),
     onSuccess: invalidate,
   });

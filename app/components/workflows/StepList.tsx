@@ -2,10 +2,14 @@ import {
   ArrowDown,
   ArrowUp,
   AtSign,
+  CheckSquare,
   Clock,
   Filter,
   Mail,
+  MessageSquare,
+  PencilLine,
   Plus,
+  StickyNote,
   Trash2,
   Zap,
 } from "lucide-react";
@@ -13,7 +17,10 @@ import { useTranslation } from "react-i18next";
 import {
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuGroup,
   DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "~/components/ui/dropdown-menu";
 import type { NodeType, WorkflowGraph, WorkflowNode } from "~/lib/api/workflows";
@@ -26,13 +33,27 @@ const ICONS: Record<NodeType, React.ComponentType<{ className?: string }>> = {
   delay: Clock,
   send_internal_email: Mail,
   send_customer_email: AtSign,
+  create_task: CheckSquare,
+  add_note: StickyNote,
+  update_record: PencilLine,
+  notify_team: MessageSquare,
 };
 
-const ADDABLE: Exclude<NodeType, "trigger">[] = [
-  "condition",
-  "delay",
-  "send_internal_email",
-  "send_customer_email",
+/**
+ * The add menu, in groups.
+ *
+ * Ordered by what the step DOES rather than alphabetically: the two "tell
+ * somebody" steps, then the three "change the record" ones, then the two that
+ * control flow. Someone opening this menu knows the outcome they want, not the
+ * node type's name.
+ */
+const ADDABLE: { key: string; types: Exclude<NodeType, "trigger">[] }[] = [
+  {
+    key: "communicate",
+    types: ["send_customer_email", "send_internal_email", "notify_team"],
+  },
+  { key: "act", types: ["create_task", "add_note", "update_record"] },
+  { key: "flow", types: ["condition", "delay"] },
 ];
 
 /**
@@ -289,16 +310,24 @@ function AddStepMenu({
           {t("workflows.step.add")}
         </button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="center" className="w-56">
-        {ADDABLE.map((type) => {
-          const Icon = ICONS[type];
-          return (
-            <DropdownMenuItem key={type} onClick={() => onAdd(type)}>
-              <Icon className="h-4 w-4" />
-              {t(`workflows.node.${type}`)}
-            </DropdownMenuItem>
-          );
-        })}
+      <DropdownMenuContent align="center" className="w-64">
+        {ADDABLE.map((group, index) => (
+          <DropdownMenuGroup key={group.key}>
+            {index > 0 ? <DropdownMenuSeparator /> : null}
+            <DropdownMenuLabel className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+              {t(`workflows.node.group_${group.key}`)}
+            </DropdownMenuLabel>
+            {group.types.map((type) => {
+              const Icon = ICONS[type];
+              return (
+                <DropdownMenuItem key={type} onClick={() => onAdd(type)}>
+                  <Icon className="h-4 w-4" />
+                  {t(`workflows.node.${type}`)}
+                </DropdownMenuItem>
+              );
+            })}
+          </DropdownMenuGroup>
+        ))}
       </DropdownMenuContent>
     </DropdownMenu>
   );
@@ -415,6 +444,21 @@ function describe(
     }
     case "send_customer_email":
       return (node.config as { to_path?: string }).to_path ?? "";
+    case "create_task":
+      return (node.config as { title?: string }).title ?? "";
+    case "add_note":
+      return (node.config as { body?: string }).body ?? "";
+    case "notify_team":
+      return (node.config as { message?: string }).message ?? "";
+    case "update_record": {
+      // The fields, not the values: "Stage, Owner" says what the step does at
+      // a glance where "won, {{…}}" says nothing without opening it.
+      const set = (node.config as { set?: Record<string, string> }).set ?? {};
+      const fields = Object.keys(set);
+      return fields.length > 0
+        ? fields.map((f) => t(`workflows.update.field_${f}`, { defaultValue: f })).join(", ")
+        : t("workflows.update.noFields");
+    }
     default:
       return "";
   }

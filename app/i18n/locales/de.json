@@ -488,7 +488,7 @@
     "dealNotFound": "Deal konnte nicht geladen werden.",
     "backToPipeline": "Zurück zur Pipeline",
     "dealDetails": "Deal",
-    "untitledDeal": "Unbenannter Deal",
+    "untitledDeal": "Dieser Deal",
     "capHint": "Es werden bis zu 500 Deals angezeigt. Nutzen Sie Suche oder Zuständigkeit, um zu filtern.",
     "linkedContact": "Kontakt",
     "detachContact": "Entfernen",
@@ -803,10 +803,8 @@
     "pipelineNamePlaceholder": "z. B. Enterprise-Vertrieb",
     "pipelineDescriptionLabel": "Beschreibung (optional)",
     "pipelineDescriptionPlaceholder": "Was läuft durch diese Pipeline?",
-    "addDescription": "Beschreibung hinzufügen…",
     "pipelineCreated": "Pipeline erstellt.",
     "pipelineDeleted": "Pipeline gelöscht.",
-    "renamePipeline": "Umbenennen",
     "deletePipeline": "Pipeline löschen",
     "deletePipelineTitle": "„{{name}}“ löschen?",
     "deletePipelineWarning": "{{count}} Deals werden nach „{{target}}“ verschoben. Die Phasen dieser Pipeline werden gelöscht.",
@@ -816,7 +814,42 @@
     "movedToPipeline": "Nach „{{name}}“ verschoben.",
     "contextOpen": "Deal öffnen",
     "contextChangeStage": "Phase ändern",
-    "contextMovePipeline": "In Pipeline verschieben"
+    "contextMovePipeline": "In Pipeline verschieben",
+    "reopenDeal": {
+      "titleWon": "Diesen gewonnenen Deal wieder öffnen?",
+      "titleLost": "Diesen verlorenen Deal wieder öffnen?",
+      "description": "{{name}} kehrt zu „{{stage}}“ zurück und gilt wieder als offen.",
+      "clearsWonAt": "Das Gewinndatum ({{date}}) wird gelöscht und kann nicht wiederhergestellt werden.",
+      "clearsLostAt": "Das Verlustdatum ({{date}}) wird gelöscht und kann nicht wiederhergestellt werden.",
+      "confirm": "Deal wieder öffnen"
+    },
+    "tracking": {
+      "share": "Kundenlink",
+      "title": "Tracking-Link für diesen Deal",
+      "hint": "Wer diesen Link hat, sieht die Phasennamen und die bestellten Artikel. Kein Wert, kein Verantwortlicher, keine Kontaktdaten, keine Anmeldung.",
+      "preview": "Kundenansicht öffnen",
+      "regenerate": "Neuer Link",
+      "regenerateTitle": "Neuen Link ausstellen?",
+      "regenerateBody": "Der bereits gesendete Link funktioniert sofort nicht mehr, und der Kunde wird nicht informiert. Nur tun, wenn der aktuelle Link bei der falschen Person gelandet ist.",
+      "regenerateConfirm": "Neuen Link ausstellen",
+      "rotated": "Ein neuer Link ist bereit. Der alte funktioniert nicht mehr.",
+      "rotateFailed": "Neuer Link konnte nicht ausgestellt werden.",
+      "copyFailed": "Kopieren nicht möglich. Bitte den Link markieren und manuell kopieren."
+    },
+    "editPipelineTitle": "Pipeline bearbeiten",
+    "pipelineSaved": "Pipeline gespeichert.",
+    "pipelineDialogHint": "Benennen Sie dieses Board, beschreiben Sie, was darin läuft, und legen Sie fest, ob Kunden ihre Deals verfolgen können.",
+    "visibility": {
+      "label": "Kunden-Tracking",
+      "private": "Privat",
+      "privateHint": "Deals auf diesem Board bleiben im Workspace.",
+      "public": "Öffentlich",
+      "publicHint": "Jeder Deal erhält einen privaten Link, über den Kunden ihre Bestellung verfolgen können.",
+      "revokeWarning": "Alle bereits versendeten Tracking-Links funktionieren nach dem Speichern nicht mehr.",
+      "revokeTitle": "Diese Pipeline auf privat stellen?",
+      "revokeBody": "Alle bereits an Kunden versendeten Tracking-Links funktionieren sofort nicht mehr, und niemand wird informiert. Wieder auf öffentlich zu stellen gibt dieselben Links frei, keine neuen.",
+      "revokeConfirm": "Auf privat stellen"
+    }
   },
   "appointments": {
     "metaTitle": "Termine",
@@ -2930,7 +2963,8 @@
     "labelTask": "Aufgabe",
     "labelEvent": "Update",
     "today": "Heute",
-    "yesterday": "Gestern"
+    "yesterday": "Gestern",
+    "automation": "Automatisierung"
   },
   "dealEmails": {
     "pipeline": "Pipeline-E-Mails",
@@ -4896,7 +4930,14 @@
       "condition": "Bedingung",
       "delay": "Warten",
       "send_internal_email": "Teammitglied benachrichtigen",
-      "send_customer_email": "Kontakt anschreiben"
+      "send_customer_email": "Kontakt anschreiben",
+      "create_task": "Aufgabe erstellen",
+      "add_note": "Notiz hinzufügen",
+      "update_record": "Datensatz ändern",
+      "notify_team": "Team benachrichtigen",
+      "group_communicate": "Jemandem Bescheid geben",
+      "group_act": "Datensatz ändern",
+      "group_flow": "Ablauf steuern"
     },
     "step": {
       "trigger": "Wenn das passiert",
@@ -4930,7 +4971,11 @@
       "hint_record_updated": "Löst bei jeder Änderung aus.",
       "hint_field_changed_to": "Löst nur beim Wechsel auf diesen Wert aus.",
       "hint_no_change_for": "Wird regelmäßig geprüft. Löst erneut aus, wenn der Datensatz wieder ruhig wird.",
-      "hint_date_field_relative": "Wird regelmäßig geprüft, relativ zum gewählten Datum."
+      "hint_date_field_relative": "Wird regelmäßig geprüft, relativ zum gewählten Datum.",
+      "watchedColumns": "Zu überwachende Felder",
+      "anyField": "Beliebiges Feld",
+      "watchedColumnsAll": "Jede Änderung an diesem Datensatz startet den Workflow. Wählen Sie Felder aus, um das einzugrenzen.",
+      "watchedColumnsHint": "Nur eine Änderung an einem dieser Felder startet den Workflow."
     },
     "condition": {
       "matchLabel": "Treffer",
@@ -5013,7 +5058,11 @@
       "emptyHint": "Wählen Sie links einen Schritt aus.",
       "conditionHint": "Der Lauf endet hier, wenn nicht alle Bedingungen zutreffen.",
       "delayHint": "Pause vor dem nächsten Schritt. Der Lauf wird automatisch fortgesetzt.",
-      "internalHint": "Wird von Repraesent versendet – ohne eigenes Postfach nutzbar."
+      "internalHint": "Wird von Repraesent versendet – ohne eigenes Postfach nutzbar.",
+      "noteHint": "Schreibt eine Notiz auf den Datensatz. Niemand wird benachrichtigt.",
+      "taskHint": "Legt eine Aufgabe auf dem Datensatz an, damit sie jemand übernimmt.",
+      "notifyHint": "Postet in jeden verbundenen Slack-, Teams- oder Google-Chat-Kanal dieses Workspace.",
+      "updateHint": "Ändert den Datensatz, der diesen Lauf ausgelöst hat. Startet diesen Workflow nicht erneut."
     },
     "settings": {
       "description": "Beschreibung",
@@ -5081,7 +5130,11 @@
       "noTemplate": "Ein E-Mail-Schritt hat keine Nachricht",
       "noToPath": "Dem Kontakt-E-Mail-Schritt fehlt die Adresse",
       "emptyCondition": "Ein Bedingungsschritt ist leer",
-      "filterContradiction": "„{{field}} ist {{value}}“ kann hier nie zutreffen: Der Auslöser greift, wenn {{field}} auf „{{target}}“ wechselt. Verwenden Sie „geändert von“ für den vorherigen Wert."
+      "filterContradiction": "„{{field}} ist {{value}}“ kann hier nie zutreffen: Der Auslöser greift, wenn {{field}} auf „{{target}}“ wechselt. Verwenden Sie „geändert von“ für den vorherigen Wert.",
+      "noTaskTitle": "Ein Aufgabenschritt hat keinen Titel",
+      "noNoteBody": "Ein Notizschritt ist leer",
+      "noNotifyMessage": "Ein Benachrichtigungsschritt hat keine Nachricht",
+      "noUpdateFields": "Ein Änderungsschritt setzt keine Felder"
     },
     "testTitle": "Workflow testen",
     "testHint": "Läuft gegen einen echten {{entity}}-Datensatz. Es wird nichts versendet.",
@@ -5123,7 +5176,50 @@
       "no": "Nein",
       "empty": "Nichts hier – der Lauf endet."
     },
-    "publishedUpToDate": "Veröffentlicht und aktuell"
+    "publishedUpToDate": "Veröffentlicht und aktuell",
+    "action": {
+      "targetLabel": "Anhängen an",
+      "target_deals": "Den Deal",
+      "target_leads": "Den Lead",
+      "target_tasks": "Den Datensatz der Aufgabe",
+      "target_contacts": "Den Kontakt",
+      "target_contact": "Den Kontakt",
+      "targetTriggerHint": "Wird am auslösenden Datensatz abgelegt.",
+      "targetContactHint": "Wird am verknüpften Kontakt abgelegt. Übersprungen, wenn keiner vorhanden ist."
+    },
+    "note": {
+      "body": "Notiz"
+    },
+    "task": {
+      "title": "Aufgabe",
+      "description": "Details",
+      "descriptionHint": "Optional. Wird beim Öffnen der Aufgabe angezeigt.",
+      "due": "Fällig",
+      "dueNone": "Kein Fälligkeitsdatum",
+      "dueToday": "Heute",
+      "dueInDays_one": "In {{count}} Tag",
+      "dueInDays_other": "In {{count}} Tagen",
+      "assignee": "Zuweisen an",
+      "assigneeNone": "Niemand",
+      "assigneeOwner": "Wer den Datensatz betreut"
+    },
+    "notify": {
+      "message": "Nachricht",
+      "messageHint": "Nur Text. Ein Link zum Datensatz wird automatisch angehängt."
+    },
+    "update": {
+      "addField": "Feld zum Setzen hinzufügen",
+      "removeField": "Dieses Feld entfernen",
+      "pickValue": "Wert wählen",
+      "noFields": "Noch keine Felder gesetzt",
+      "unsupportedEntity": "Datensätze vom Typ {{entity}} können noch nicht per Workflow geändert werden.",
+      "field_title": "Titel",
+      "field_stage": "Phase",
+      "field_status": "Status",
+      "field_value": "Wert",
+      "field_assigned_to": "Verantwortlich",
+      "field_expected_close_date": "Erwarteter Abschluss"
+    }
   },
   "stripeProducts": {
     "metaTitle": "Produkte",
@@ -6795,5 +6891,23 @@
     "metaTitle": "Assistent",
     "unavailable": "Dieser Assistent ist nicht verfügbar",
     "unavailableHint": "Der Link ist möglicherweise falsch oder der Assistent wurde offline genommen."
+  },
+  "tracking": {
+    "metaTitle": "Auftragsstatus",
+    "statusLabel": "Status",
+    "itemsLabel": "Bestellte Artikel",
+    "progressLabel": "Fortschritt",
+    "reference": "Referenz {{reference}}",
+    "lastUpdated": "Zuletzt aktualisiert {{date}}",
+    "currentMarker": "Hier stehen Sie gerade",
+    "unknownStage": "In Bearbeitung",
+    "unnamedItem": "Artikel",
+    "quantity_one": "Menge {{count}}",
+    "quantity_other": "Menge {{count}}",
+    "outcomeWon": "Dieser Auftrag ist abgeschlossen.",
+    "outcomeLost": "Dieser Auftrag wurde geschlossen.",
+    "invalidTitle": "Dieser Link ist nicht mehr aktiv",
+    "invalidBody": "Sehen Sie in der zuletzt erhaltenen E-Mail nach oder antworten Sie darauf und bitten Sie um einen neuen Link.",
+    "footer": "Bereitgestellt von Repraesent"
   }
 }
