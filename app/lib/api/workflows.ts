@@ -270,6 +270,19 @@ export interface NotifyTeamConfig {
  * drawn before any request resolves; the backend allowlist is the one that
  * actually enforces it.
  */
+/**
+ * Can a workflow change a record of this type at all?
+ *
+ * Drives whether the "Update the record" step is even offered. It used to be
+ * offered everywhere and then, once added, explain that this entity "cannot be
+ * updated by a workflow yet" — a step you can add, name and save, that can
+ * never do anything. Offering nothing is a better answer than offering a door
+ * that is locked.
+ */
+export function canUpdateEntity(entity: WorkflowEntity): boolean {
+  return (UPDATABLE_FIELDS[entity]?.length ?? 0) > 0;
+}
+
 export const UPDATABLE_FIELDS: Partial<Record<WorkflowEntity, string[]>> = {
   deals: [
     "title",
@@ -529,7 +542,13 @@ export async function getRecentRecords(
 /** Render a template against a real record without running the workflow. */
 export async function previewTemplate(
   workflowId: string,
-  payload: { entity_id: string; template: string; escape?: boolean },
+  payload: {
+    entity_id: string;
+    template: string;
+    escape?: boolean;
+    /** The builder's live entity, which may differ from the saved trigger. */
+    entity?: string;
+  },
 ): Promise<{ rendered: string; unresolved: string[] }> {
   const { data } = await apiClient.post<{
     rendered: string;

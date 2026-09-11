@@ -23,7 +23,14 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "~/components/ui/dropdown-menu";
-import type { NodeType, WorkflowGraph, WorkflowNode } from "~/lib/api/workflows";
+import {
+  canUpdateEntity,
+  type NodeType,
+  type TriggerConfig,
+  type WorkflowEntity,
+  type WorkflowGraph,
+  type WorkflowNode,
+} from "~/lib/api/workflows";
 import { triggerOf } from "~/lib/workflows/graph";
 import { toTree, type LaneRef, type TreeNode } from "~/lib/workflows/tree";
 
@@ -87,6 +94,12 @@ export function StepList({
   const { t } = useTranslation();
   const trigger = triggerOf(graph);
   const tree = toTree(graph);
+  // Read off the graph rather than taken as a prop: the trigger is already
+  // here, and one source for "what kind of record is this about" is enough.
+  const entity =
+    ((trigger?.config as TriggerConfig | undefined)?.entity as
+      | WorkflowEntity
+      | undefined) ?? null;
 
   return (
     <div className="space-y-2">
@@ -103,6 +116,7 @@ export function StepList({
       ) : null}
 
       <Lane
+        entity={entity}
         lane={tree}
         laneRef={{ parentId: null, branch: "yes" }}
         selectedId={selectedId}
@@ -117,6 +131,7 @@ export function StepList({
 }
 
 function Lane({
+  entity,
   lane,
   laneRef,
   selectedId,
@@ -126,6 +141,7 @@ function Lane({
   onRemove,
   onMove,
 }: {
+  entity: WorkflowEntity | null;
   lane: TreeNode[];
   laneRef: LaneRef;
   selectedId: string | null;
@@ -180,6 +196,7 @@ function Lane({
           {entry.node.type === "condition" ? (
             <div className="space-y-3 pt-1">
               <BranchLane
+                entity={entity}
                 tone="yes"
                 nodes={entry.yes}
                 laneRef={{ parentId: entry.node.id, branch: "yes" }}
@@ -191,6 +208,7 @@ function Lane({
                 onMove={onMove}
               />
               <BranchLane
+                entity={entity}
                 tone="no"
                 nodes={entry.no}
                 laneRef={{ parentId: entry.node.id, branch: "no" }}
@@ -212,7 +230,7 @@ function Lane({
       {!disabled && !lane.some((e) => e.node.type === "condition") ? (
         <>
           <Connector />
-          <AddStepMenu onAdd={(type) => onAdd(type, laneRef)} />
+          <AddStepMenu entity={entity} onAdd={(type) => onAdd(type, laneRef)} />
         </>
       ) : null}
     </div>
@@ -221,6 +239,7 @@ function Lane({
 
 /** One side of a condition, with a coloured rail and a Yes/No cap. */
 function BranchLane({
+  entity,
   tone,
   nodes,
   laneRef,
@@ -231,6 +250,7 @@ function BranchLane({
   onRemove,
   onMove,
 }: {
+  entity: WorkflowEntity | null;
   tone: "yes" | "no";
   nodes: TreeNode[];
   laneRef: LaneRef;
@@ -267,12 +287,17 @@ function BranchLane({
           </p>
         ) : (
           <div className="mt-2">
-            <AddStepMenu compact onAdd={(type) => onAdd(type, laneRef)} />
+            <AddStepMenu
+              compact
+              entity={entity}
+              onAdd={(type) => onAdd(type, laneRef)}
+            />
           </div>
         )
       ) : (
         <div className="mt-1">
           <Lane
+            entity={entity}
             lane={nodes}
             laneRef={laneRef}
             selectedId={selectedId}
@@ -290,12 +315,26 @@ function BranchLane({
 
 function AddStepMenu({
   compact,
+  entity,
   onAdd,
 }: {
   compact?: boolean;
+  /** The trigger's record type — decides which steps can do anything here. */
+  entity: WorkflowEntity | null;
   onAdd: (type: Exclude<NodeType, "trigger">) => void;
 }) {
   const { t } = useTranslation();
+
+  // Hide what this entity cannot do rather than letting somebody add it and
+  // then telling them it does not work. A tasks or contacts workflow has no
+  // settable fields, so "Update the record" is not on its menu.
+  const groups = ADDABLE.map((group) => ({
+    ...group,
+    types: group.types.filter(
+      (type) =>
+        type !== "update_record" || (entity ? canUpdateEntity(entity) : true),
+    ),
+  })).filter((group) => group.types.length > 0);
 
   return (
     <DropdownMenu>
@@ -311,7 +350,7 @@ function AddStepMenu({
         </button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="center" className="w-64">
-        {ADDABLE.map((group, index) => (
+        {groups.map((group, index) => (
           <DropdownMenuGroup key={group.key}>
             {index > 0 ? <DropdownMenuSeparator /> : null}
             <DropdownMenuLabel className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">

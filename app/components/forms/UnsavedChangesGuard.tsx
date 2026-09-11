@@ -21,7 +21,19 @@ import {
  * the form back to Draft. Losing it to a stray click would be the worst
  * outcome of the whole save/publish design.
  */
-export function UnsavedChangesGuard({ when }: { when: boolean }) {
+export function UnsavedChangesGuard({
+  when,
+  titleKey = "forms.builder.leaveTitle",
+  bodyKey = "forms.builder.leaveBody",
+}: {
+  when: boolean;
+  /**
+   * The workflow builder reuses this guard, and "unsaved changes to this
+   * form" is the wrong noun there. Overridable rather than duplicated.
+   */
+  titleKey?: string;
+  bodyKey?: string;
+}) {
   const { t } = useTranslation();
 
   const blocker = useBlocker(
@@ -50,10 +62,8 @@ export function UnsavedChangesGuard({ when }: { when: boolean }) {
     >
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle>{t("forms.builder.leaveTitle")}</AlertDialogTitle>
-          <AlertDialogDescription>
-            {t("forms.builder.leaveBody")}
-          </AlertDialogDescription>
+          <AlertDialogTitle>{t(titleKey)}</AlertDialogTitle>
+          <AlertDialogDescription>{t(bodyKey)}</AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
           <AlertDialogCancel

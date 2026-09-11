@@ -5225,7 +5225,8 @@
       "selected": "Aperçu : {{name}}",
       "resolvesTo": "Donne {{value}}",
       "resolvesEmpty": "Vide pour {{name}}",
-      "resolvesNotEmail": "« {{value}} » n'est pas une adresse e-mail"
+      "resolvesNotEmail": "« {{value}} » n'est pas une adresse e-mail",
+      "rendering": "Rendu en cours…"
     },
     "weekday": {
       "1": "Lun",
@@ -5286,7 +5287,9 @@
       "field_status": "Statut",
       "field_value": "Montant",
       "field_assigned_to": "Responsable",
-      "field_expected_close_date": "Date de clôture prévue"
+      "field_expected_close_date": "Date de clôture prévue",
+      "noFieldsHint": "Choisissez un champ ci-dessous et donnez-lui une valeur. Rien n'est modifié avant cela.",
+      "noMembers": "Aucun membre à qui attribuer."
     },
     "audience": {
       "label": "Envoyer à",
@@ -5324,7 +5327,9 @@
       "intoBody": "S'insère dans le message"
     },
     "contextOpen": "Ouvrir le workflow",
-    "backToDraft": "Repasser en brouillon"
+    "backToDraft": "Repasser en brouillon",
+    "leaveTitle": "Quitter sans enregistrer ?",
+    "leaveBody": "Vous avez des modifications non enregistrées sur ce workflow. Elles seront perdues."
   },
   "stripeProducts": {
     "metaTitle": "Produits",

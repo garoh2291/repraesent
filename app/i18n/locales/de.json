@@ -5225,7 +5225,8 @@
       "selected": "Vorschau: {{name}}",
       "resolvesTo": "Ergibt {{value}}",
       "resolvesEmpty": "Leer für {{name}}",
-      "resolvesNotEmail": "„{{value}}“ ist keine E-Mail-Adresse"
+      "resolvesNotEmail": "„{{value}}“ ist keine E-Mail-Adresse",
+      "rendering": "Wird gerendert…"
     },
     "weekday": {
       "1": "Mo",
@@ -5286,7 +5287,9 @@
       "field_status": "Status",
       "field_value": "Wert",
       "field_assigned_to": "Verantwortlich",
-      "field_expected_close_date": "Erwarteter Abschluss"
+      "field_expected_close_date": "Erwarteter Abschluss",
+      "noFieldsHint": "Wähle unten ein Feld und gib ihm einen Wert. Bis dahin wird nichts geändert.",
+      "noMembers": "Keine Mitglieder zum Zuweisen."
     },
     "audience": {
       "label": "Senden an",
@@ -5324,7 +5327,9 @@
       "intoBody": "Wird in die Nachricht eingefügt"
     },
     "contextOpen": "Workflow öffnen",
-    "backToDraft": "Zurück zum Entwurf"
+    "backToDraft": "Zurück zum Entwurf",
+    "leaveTitle": "Ohne Speichern verlassen?",
+    "leaveBody": "Du hast ungespeicherte Änderungen an diesem Workflow. Sie gehen verloren."
   },
   "stripeProducts": {
     "metaTitle": "Produkte",

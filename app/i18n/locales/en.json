@@ -5223,7 +5223,8 @@
       "selected": "Preview: {{name}}",
       "resolvesTo": "Resolves to {{value}}",
       "resolvesEmpty": "Empty for {{name}}",
-      "resolvesNotEmail": "“{{value}}” is not an email address"
+      "resolvesNotEmail": "“{{value}}” is not an email address",
+      "rendering": "Rendering…"
     },
     "weekday": {
       "1": "Mon",
@@ -5284,7 +5285,9 @@
       "field_status": "Status",
       "field_value": "Value",
       "field_assigned_to": "Owner",
-      "field_expected_close_date": "Expected close date"
+      "field_expected_close_date": "Expected close date",
+      "noFieldsHint": "Pick a field below and give it a value. Nothing is changed until you do.",
+      "noMembers": "No members to assign to."
     },
     "audience": {
       "label": "Send to",
@@ -5322,7 +5325,9 @@
       "intoBody": "Inserts into the message"
     },
     "contextOpen": "Open workflow",
-    "backToDraft": "Back to draft"
+    "backToDraft": "Back to draft",
+    "leaveTitle": "Leave without saving?",
+    "leaveBody": "You have unsaved changes to this workflow. They will be lost."
   },
   "stripeProducts": {
     "metaTitle": "Products",

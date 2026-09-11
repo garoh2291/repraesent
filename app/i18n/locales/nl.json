@@ -5223,7 +5223,8 @@
       "selected": "Voorbeeld: {{name}}",
       "resolvesTo": "Levert {{value}} op",
       "resolvesEmpty": "Leeg voor {{name}}",
-      "resolvesNotEmail": "“{{value}}” is geen e-mailadres"
+      "resolvesNotEmail": "“{{value}}” is geen e-mailadres",
+      "rendering": "Bezig met renderen…"
     },
     "weekday": {
       "1": "Ma",
@@ -5284,7 +5285,9 @@
       "field_status": "Status",
       "field_value": "Waarde",
       "field_assigned_to": "Eigenaar",
-      "field_expected_close_date": "Verwachte sluitingsdatum"
+      "field_expected_close_date": "Verwachte sluitingsdatum",
+      "noFieldsHint": "Kies hieronder een veld en geef het een waarde. Tot die tijd verandert er niets.",
+      "noMembers": "Geen leden om aan toe te wijzen."
     },
     "audience": {
       "label": "Sturen naar",
@@ -5322,7 +5325,9 @@
       "intoBody": "Wordt in het bericht ingevoegd"
     },
     "contextOpen": "Workflow openen",
-    "backToDraft": "Terug naar concept"
+    "backToDraft": "Terug naar concept",
+    "leaveTitle": "Weggaan zonder opslaan?",
+    "leaveBody": "Je hebt niet-opgeslagen wijzigingen in deze workflow. Die gaan verloren."
   },
   "stripeProducts": {
     "metaTitle": "Producten",

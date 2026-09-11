@@ -5,6 +5,7 @@ import { useTranslation } from "react-i18next";
 import { Link, useNavigate, useParams } from "react-router";
 import { toast } from "sonner";
 import i18n from "~/i18n";
+import { UnsavedChangesGuard } from "~/components/forms/UnsavedChangesGuard";
 import { NodeInspector } from "~/components/workflows/NodeInspector";
 import { StepList } from "~/components/workflows/StepList";
 import { RunsPanel } from "~/components/workflows/RunsPanel";
@@ -13,7 +14,6 @@ import { PreviewAsPicker } from "~/components/workflows/PreviewAsPicker";
 import { TestRunDialog } from "~/components/workflows/TestRunDialog";
 import { WorkflowSettingsPanel } from "~/components/workflows/WorkflowSettingsPanel";
 import {
-  GhostAction,
   Panel,
   PanelBody,
   PanelHeader,
@@ -80,7 +80,7 @@ export default function WorkflowBuilder() {
     enabled: !!workflowId,
   });
 
-  const { data: catalog } = useQuery({
+  const { data: catalog, isLoading: catalogLoading } = useQuery({
     queryKey: ["workflow-field-catalog"],
     queryFn: getFieldCatalog,
   });
@@ -92,7 +92,7 @@ export default function WorkflowBuilder() {
 
   // Members come from the workspace detail endpoint; there is no dedicated
   // members list, and this key is already warm elsewhere in the app.
-  const { data: workspaceDetail } = useQuery({
+  const { data: workspaceDetail, isLoading: membersLoading } = useQuery({
     queryKey: ["workspace-detail"],
     queryFn: getWorkspaceDetail,
     enabled: !!currentWorkspace?.id,
@@ -264,6 +264,14 @@ export default function WorkflowBuilder() {
 
   return (
     <div className="mx-auto w-full max-w-[1280px] space-y-5 p-4 py-10! sm:p-6 app-fade-in">
+      {/* Saving is one button now, which makes losing the work to a stray
+          click the obvious next hazard. Same guard the forms builder uses. */}
+      <UnsavedChangesGuard
+        when={dirty}
+        titleKey="workflows.leaveTitle"
+        bodyKey="workflows.leaveBody"
+      />
+
       {/* --- command bar ----------------------------------------------- */}
       <div className="overflow-hidden rounded-2xl bg-[#111113] shadow-[0_8px_24px_-12px_rgba(0,0,0,0.35)] app-fade-up">
         <div className="flex flex-col gap-3 px-4 py-3.5 sm:flex-row sm:items-center sm:justify-between sm:px-5">
@@ -429,19 +437,17 @@ export default function WorkflowBuilder() {
             </Panel>
 
             <Panel>
+              {/* No Save here. There used to be one, calling the same mutation
+                  as the command bar's — two buttons for one action, and this
+                  one without the pending guard, so a double-click sent two
+                  concurrent writes. The inspector edits the graph in memory on
+                  every keystroke; saving is a single decision and belongs in
+                  one place. */}
               <PanelHeader
                 title={
                   selectedNode
                     ? t(`workflows.node.${selectedNode.type}`)
                     : t("workflows.inspector.title")
-                }
-                action={
-                  dirty ? (
-                    <GhostAction onClick={() => saveMutation.mutate()}>
-                      <Save className="h-4 w-4" />
-                      {t("workflows.save")}
-                    </GhostAction>
-                  ) : null
                 }
               />
               <PanelBody>
@@ -454,6 +460,7 @@ export default function WorkflowBuilder() {
                   locales={[...SUPPORTED_LOCALES]}
                   activeLocale={activeLocale}
                   members={memberOptions}
+                  catalogLoading={catalogLoading || membersLoading}
                   capability={capability}
                   disabled={!canEdit}
                   workflowId={workflowId!}

@@ -64,6 +64,7 @@ export function NodeInspector({
   locales,
   activeLocale,
   members,
+  catalogLoading,
   capability,
   disabled,
   workflowId,
@@ -81,6 +82,8 @@ export function NodeInspector({
   locales: string[];
   activeLocale: string;
   members: WorkspaceMemberOption[];
+  /** The field catalogue / member list are still loading. */
+  catalogLoading?: boolean;
   capability: OutboundCapability | undefined;
   disabled?: boolean;
   workflowId: string;
@@ -147,6 +150,7 @@ export function NodeInspector({
             byLocale={cfg.by_locale ?? {}}
             locales={locales}
             activeLocale={activeLocale}
+            entity={entity}
             fields={fields}
             disabled={disabled}
             workflowId={workflowId}
@@ -224,6 +228,7 @@ export function NodeInspector({
             byLocale={cfg.by_locale ?? {}}
             locales={locales}
             activeLocale={activeLocale}
+            entity={entity}
             fields={fields}
             disabled={disabled}
             workflowId={workflowId}

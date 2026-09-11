@@ -1,4 +1,4 @@
-import { Plus, X } from "lucide-react";
+import { Check, ChevronDown, Plus, X } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { Input } from "~/components/ui/input";
 import { Label } from "~/components/ui/label";
@@ -9,6 +9,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "~/components/ui/select";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "~/components/ui/dropdown-menu";
 import { Field, FieldHint } from "~/components/wordpress/fields";
 import {
   UPDATABLE_FIELDS,
@@ -20,6 +26,7 @@ import {
   type UpdateRecordConfig,
   type WorkflowEntity,
 } from "~/lib/api/workflows";
+import { cn } from "~/lib/utils";
 import { TemplateField } from "./TemplateField";
 import type { WorkspaceMemberOption } from "./NodeInspector";
 
@@ -44,7 +51,21 @@ function TargetPicker({
   onChange: (next: ActionTarget) => void;
 }) {
   const { t } = useTranslation();
-  if (entity === "contacts") return null;
+
+  // A contacts trigger has one possible answer, so there is nothing to choose.
+  // It still has to SAY the answer: a step that files something somewhere
+  // should never leave you guessing where.
+  if (entity === "contacts") {
+    return (
+      <Field>
+        <Label>{t("workflows.action.targetLabel")}</Label>
+        <p className="rounded-xl border border-border bg-muted/30 px-3 py-2 text-xs text-foreground">
+          {t("workflows.action.target_contacts")}
+        </p>
+        <FieldHint>{t("workflows.action.targetTriggerHint")}</FieldHint>
+      </Field>
+    );
+  }
 
   const options: { key: ActionTarget; label: string }[] = [
     { key: "trigger", label: t(`workflows.action.target_${entity}`) },
@@ -54,23 +75,39 @@ function TargetPicker({
   return (
     <Field>
       <Label>{t("workflows.action.targetLabel")}</Label>
-      <div className="grid grid-cols-2 gap-1.5 rounded-xl bg-muted/50 p-1">
-        {options.map((option) => (
-          <button
-            key={option.key}
-            type="button"
-            disabled={disabled}
-            aria-pressed={value === option.key}
-            onClick={() => onChange(option.key)}
-            className={`rounded-lg px-3 py-1.5 text-xs font-medium transition-colors disabled:opacity-50 ${
-              value === option.key
-                ? "bg-background text-foreground shadow-sm"
-                : "text-muted-foreground hover:text-foreground"
-            }`}
-          >
-            {option.label}
-          </button>
-        ))}
+      {/* The selected card carries a border, the accent colour and a tick.
+          It used to be a lighter background on a muted strip, which on a card
+          that is already near-white is a difference you have to hunt for —
+          people could not tell which of the two was chosen. */}
+      <div
+        role="radiogroup"
+        aria-label={t("workflows.action.targetLabel")}
+        className="grid grid-cols-2 gap-2"
+      >
+        {options.map((option) => {
+          const active = value === option.key;
+          return (
+            <button
+              key={option.key}
+              type="button"
+              role="radio"
+              disabled={disabled}
+              aria-checked={active}
+              onClick={() => onChange(option.key)}
+              className={cn(
+                "flex select-none items-center justify-between gap-2 rounded-xl border px-3 py-2.5 text-left text-xs font-medium transition-colors disabled:opacity-50",
+                active
+                  ? "border-primary bg-primary/10 text-foreground"
+                  : "border-border bg-card text-muted-foreground hover:border-foreground/25 hover:text-foreground",
+              )}
+            >
+              <span className="min-w-0 truncate">{option.label}</span>
+              {active ? (
+                <Check className="h-3.5 w-3.5 shrink-0 text-primary" aria-hidden />
+              ) : null}
+            </button>
+          );
+        })}
       </div>
       <FieldHint>
         {value === "contact"
@@ -300,6 +337,7 @@ export function UpdateRecordEditor({
   fields,
   members,
   pipelineScope,
+  loading,
   disabled,
   onChange,
 }: {
@@ -309,6 +347,14 @@ export function UpdateRecordEditor({
   members: WorkspaceMemberOption[];
   /** A pipeline id, when the trigger names one — narrows the stage list. */
   pipelineScope?: string;
+  /**
+   * The field catalogue and the member list are still in flight.
+   *
+   * It matters because without it an enum field whose options have not arrived
+   * falls through to a free-text box, and whatever gets typed there is stored
+   * as a literal — a stage set to the words somebody typed while waiting.
+   */
+  loading?: boolean;
   disabled?: boolean;
   onChange: (next: UpdateRecordConfig) => void;
 }) {
@@ -348,7 +394,22 @@ export function UpdateRecordEditor({
       <FieldHint>{t("workflows.inspector.updateHint")}</FieldHint>
 
       {chosen.length === 0 ? (
-        <FieldHint>{t("workflows.update.noFields")}</FieldHint>
+        /* This step does nothing until a field is picked, and it used to say so
+           in the same muted grey as the hint above it — two dim lines and a
+           select styled like a placeholder, which reads as an empty panel
+           rather than as "your move". A bordered prompt that names the choice
+           is the difference between blank and waiting. */
+        <div className="rounded-xl border border-dashed border-border p-4 text-center">
+          <p className="text-sm font-medium text-foreground">
+            {t("workflows.update.noFields")}
+          </p>
+          <p className="mt-1 text-xs text-muted-foreground">
+            {t("workflows.update.noFieldsHint", {
+              defaultValue:
+                "Pick a field below and give it a value. Nothing is changed until you do.",
+            })}
+          </p>
+        </div>
       ) : (
         <div className="space-y-4">
           {chosen.map((field) => (
@@ -376,6 +437,7 @@ export function UpdateRecordEditor({
                 fields={fields}
                 members={members}
                 pipelineScope={pipelineScope}
+                loading={loading}
                 disabled={disabled}
                 onChange={(v) => setField(field, v)}
               />
@@ -385,25 +447,42 @@ export function UpdateRecordEditor({
       )}
 
       {remaining.length > 0 ? (
-        <Select
-          disabled={disabled}
-          value=""
-          onValueChange={(field) => setField(field, "")}
-        >
-          <SelectTrigger className="w-full">
-            <span className="flex items-center gap-1.5 text-muted-foreground">
-              <Plus className="h-3.5 w-3.5" />
-              {t("workflows.update.addField")}
-            </span>
-          </SelectTrigger>
-          <SelectContent>
+        /*
+         * A menu, not a Select.
+         *
+         * This was a Radix `Select` held permanently at `value=""` and used as
+         * a button that adds a row — a select that never selects anything. It
+         * reported as working here and did nothing in the author's browser,
+         * and rather than keep guessing at why, this is the component the job
+         * actually calls for: "Add step" in the left panel is a DropdownMenu
+         * and has never had a problem. Same look, same outcome, a primitive
+         * whose whole contract is "click me, pick an action".
+         */
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <button
+              type="button"
+              disabled={disabled}
+              className="flex w-full cursor-pointer select-none items-center justify-between gap-2 rounded-lg border border-dashed border-border px-3 py-2 text-sm font-medium text-foreground transition-colors hover:bg-muted disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              <span className="flex items-center gap-1.5">
+                <Plus className="h-3.5 w-3.5" />
+                {t("workflows.update.addField")}
+              </span>
+              <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" />
+            </button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="start" className="w-[--radix-dropdown-menu-trigger-width]">
             {remaining.map((field) => (
-              <SelectItem key={field} value={field}>
+              <DropdownMenuItem
+                key={field}
+                onSelect={() => setField(field, "")}
+              >
                 {t(`workflows.update.field_${field}`, { defaultValue: field })}
-              </SelectItem>
+              </DropdownMenuItem>
             ))}
-          </SelectContent>
-        </Select>
+          </DropdownMenuContent>
+        </DropdownMenu>
       ) : null}
     </div>
   );
@@ -422,6 +501,7 @@ function ValueEditor({
   fields,
   members,
   pipelineScope,
+  loading,
   disabled,
   onChange,
 }: {
@@ -430,11 +510,22 @@ function ValueEditor({
   fields: CatalogField[];
   members: WorkspaceMemberOption[];
   pipelineScope?: string;
+  loading?: boolean;
   disabled?: boolean;
   onChange: (next: string) => void;
 }) {
   const { t } = useTranslation();
   const catalogField = fields.find((f) => f.path === field);
+
+  // Wait rather than guess. Before this, a `stage` whose options had not
+  // arrived rendered as a text box and accepted anything typed into it.
+  if (loading && !catalogField) {
+    return (
+      <div className="flex h-9 items-center rounded-lg border border-border bg-muted/30 px-3 text-xs text-muted-foreground">
+        {t("common.loading", { defaultValue: "Loading…" })}
+      </div>
+    );
+  }
 
   if (field === "assigned_to") {
     return (
@@ -443,11 +534,20 @@ function ValueEditor({
           <SelectValue placeholder={t("workflows.update.pickValue")} />
         </SelectTrigger>
         <SelectContent>
-          {members.map((m) => (
-            <SelectItem key={m.userId} value={m.userId}>
-              {m.label}
-            </SelectItem>
-          ))}
+          {members.length > 0 ? (
+            members.map((m) => (
+              <SelectItem key={m.userId} value={m.userId}>
+                {m.label}
+              </SelectItem>
+            ))
+          ) : (
+            /* An empty popover with no explanation is the worst answer. */
+            <div className="px-2 py-1.5 text-xs text-muted-foreground">
+              {t("workflows.update.noMembers", {
+                defaultValue: "No members to assign to.",
+              })}
+            </div>
+          )}
         </SelectContent>
       </Select>
     );
