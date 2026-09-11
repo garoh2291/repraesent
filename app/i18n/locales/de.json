@@ -200,7 +200,29 @@
       "linkExpired": "Link abgelaufen",
       "linkExpiredDetail": "Dieser Magic Link ist ungültig oder abgelaufen. Bitte fordern Sie einen neuen an.",
       "backToSignIn": "Zurück zur Anmeldung",
-      "redirecting": "Sie werden weitergeleitet..."
+      "redirecting": "Sie werden weitergeleitet...",
+      "failure": {
+        "MAGIC_LINK_EXPIRED": {
+          "title": "Link abgelaufen",
+          "detail": "Dieser Anmeldelink ist abgelaufen. Fordere einen neuen an – der funktioniert."
+        },
+        "MAGIC_LINK_USED": {
+          "title": "Link bereits verwendet",
+          "detail": "Mit diesem Link wurde bereits jemand angemeldet. Links funktionieren einmal – fordere einen neuen an."
+        },
+        "MAGIC_LINK_UNKNOWN": {
+          "title": "Link unbekannt",
+          "detail": "Wir erkennen diesen Link nicht. Manche E-Mail-Programme kürzen lange Links – kopiere die vollständige Adresse aus der E-Mail oder fordere einen neuen Link an."
+        },
+        "MAGIC_LINK_INELIGIBLE": {
+          "title": "Konto hier nicht verfügbar",
+          "detail": "Der Link war in Ordnung, aber dieses Konto kann sich hier nicht anmelden. Bitte wende dich an deine Administration."
+        },
+        "fallback": {
+          "title": "Link abgelaufen",
+          "detail": "Dieser Magic Link ist ungültig oder abgelaufen. Bitte fordere einen neuen an."
+        }
+      }
     },
     "workspacePicker": {
       "metaTitle": "Bereich wählen",

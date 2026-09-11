@@ -192,6 +192,26 @@ const processQueue = (error: Error | null, token: string | null = null) => {
 /**
  * Response interceptor - Handle token refresh and errors
  */
+/**
+ * Requests that must never be refreshed-and-retried.
+ *
+ * These ARE the authentication, so a 401 from one is the answer, not a stale
+ * access token to paper over. Retrying them caused three separate problems on
+ * the magic-link callback: the verify POST was sent twice for one click; a
+ * successful refresh wrote a session for the PREVIOUS account before the
+ * callback could react, so the visitor could be signed in as somebody else;
+ * and a failed refresh replaced the magic-link error with the refresh error,
+ * losing the reason the link did not work.
+ */
+const NEVER_RETRY = [
+  "/users/magic-link/verify",
+  "/users/refresh-token",
+  "/auth/",
+];
+
+const isAuthRequest = (url: string | undefined): boolean =>
+  !!url && NEVER_RETRY.some((path) => url.includes(path));
+
 apiClient.interceptors.response.use(
   (response: AxiosResponse) => {
     return response;
@@ -202,7 +222,11 @@ apiClient.interceptors.response.use(
     };
 
     // Handle 401 Unauthorized - Token expired or invalid
-    if (error.response?.status === 401 && !originalRequest._retry) {
+    if (
+      error.response?.status === 401 &&
+      !originalRequest._retry &&
+      !isAuthRequest(originalRequest?.url)
+    ) {
       if (isRefreshing) {
         // If already refreshing, queue this request
         return new Promise((resolve, reject) => {
@@ -350,6 +374,24 @@ export const extractErrorMessage = (error: unknown): string => {
 /**
  * Create API error object
  */
+/**
+ * The API's machine-readable error code, when the response carries one.
+ *
+ * The global exception filter puts `code` on the body whenever the thrower
+ * supplied it. Reading that is the only honest way to branch on WHY something
+ * failed — the alternative, which this codebase used for magic links, was
+ * substring-matching an English sentence inside a four-language app.
+ */
+export const extractErrorCode = (error: unknown): string | null => {
+  if (!axios.isAxiosError(error)) return null;
+  const data = (error as AxiosError).response?.data;
+  if (typeof data !== "object" || data === null || !("code" in data)) {
+    return null;
+  }
+  const code = (data as { code: unknown }).code;
+  return typeof code === "string" ? code : null;
+};
+
 export const createApiError = (error: unknown): ApiError => {
   if (axios.isAxiosError(error)) {
     const axiosError = error as AxiosError;

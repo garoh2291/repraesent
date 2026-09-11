@@ -200,7 +200,29 @@
       "linkExpired": "Link expired",
       "linkExpiredDetail": "This magic link is invalid or has expired. Please request a new one to sign in.",
       "backToSignIn": "Back to sign in",
-      "redirecting": "Redirecting you now..."
+      "redirecting": "Redirecting you now...",
+      "failure": {
+        "MAGIC_LINK_EXPIRED": {
+          "title": "Link expired",
+          "detail": "This sign-in link has passed its expiry. Request a new one and it will work."
+        },
+        "MAGIC_LINK_USED": {
+          "title": "Link already used",
+          "detail": "This link has already signed someone in. Links work once — request a new one."
+        },
+        "MAGIC_LINK_UNKNOWN": {
+          "title": "Link not recognised",
+          "detail": "We do not recognise this link. Some mail clients cut long links in half — try copying the whole address from the email, or request a new one."
+        },
+        "MAGIC_LINK_INELIGIBLE": {
+          "title": "Account not available here",
+          "detail": "The link was fine, but this account cannot sign in to this app. Please contact your administrator."
+        },
+        "fallback": {
+          "title": "Link expired",
+          "detail": "This magic link is invalid or has expired. Please request a new one to sign in."
+        }
+      }
     },
     "workspacePicker": {
       "metaTitle": "Choose area",

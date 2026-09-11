@@ -5,6 +5,8 @@ import { useTranslation } from "react-i18next";
 import {
   verifyMagicLink,
   getUserContext,
+  MagicLinkError,
+  MAGIC_LINK_USED,
   type UserContextResponse,
 } from "~/lib/api/auth";
 import {
@@ -39,6 +41,15 @@ export default function AuthCallback() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [status, setStatus] = useState<"loading" | "error">("loading");
+  /**
+   * Which thing went wrong, so the screen can say it.
+   *
+   * Every failure used to render "Link expired", including the two that were
+   * not expiry — which is why people reported being told a link had expired
+   * seconds after receiving it. They were reading the only sentence the page
+   * knew how to say.
+   */
+  const [failure, setFailure] = useState<string | null>(null);
   const hasAttemptedRef = useRef(false);
 
   useEffect(() => {
@@ -206,9 +217,10 @@ export default function AuthCallback() {
         const context: UserContextResponse = await getUserContext();
         routeAfterAuth(context);
       } catch (err) {
-        const message = err instanceof Error ? err.message : String(err);
-        const isAlreadyUsed =
-          message.toLowerCase().includes("already used") && !!getStoredToken();
+        // The code, not the sentence. Substring-matching English in a
+        // four-language app only ever worked by accident.
+        const code = err instanceof MagicLinkError ? err.code : null;
+        const isAlreadyUsed = code === MAGIC_LINK_USED && !!getStoredToken();
 
         if (isAlreadyUsed) {
           // Token was consumed by a prior render; user is already authenticated
@@ -217,6 +229,7 @@ export default function AuthCallback() {
             const context: UserContextResponse = await getUserContext();
             routeAfterAuth(context);
           } catch {
+            setFailure(code);
             setStatus("error");
             clearStoredToken();
             clearStoredWorkspaceId();
@@ -224,9 +237,23 @@ export default function AuthCallback() {
           return;
         }
 
+        setFailure(code);
         setStatus("error");
         clearStoredToken();
         clearStoredWorkspaceId();
+      } finally {
+        // Take the live credential out of the address bar, browser history and
+        // document.referrer. Done after the request settles, not before: a
+        // remount mid-flight would otherwise find no token and bounce to the
+        // login page. React Router does not observe replaceState, so this does
+        // not re-run the effect. Same pattern as settings.integrations.tsx.
+        if (typeof window !== "undefined") {
+          window.history.replaceState(
+            window.history.state,
+            "",
+            window.location.pathname,
+          );
+        }
       }
     };
 
@@ -244,10 +271,16 @@ export default function AuthCallback() {
           </div>
           <div className="space-y-2">
             <h1 className="text-xl font-semibold text-white">
-              {t("auth.callback.linkExpired")}
+              {t(
+                `auth.callback.failure.${failure ?? "fallback"}.title`,
+                { defaultValue: t("auth.callback.linkExpired") },
+              )}
             </h1>
             <p className="text-sm text-white/45 leading-relaxed">
-              {t("auth.callback.linkExpiredDetail")}
+              {t(
+                `auth.callback.failure.${failure ?? "fallback"}.detail`,
+                { defaultValue: t("auth.callback.linkExpiredDetail") },
+              )}
             </p>
           </div>
           <a

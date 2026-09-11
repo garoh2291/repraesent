@@ -200,7 +200,29 @@
       "linkExpired": "Lien expiré",
       "linkExpiredDetail": "Ce lien magique est invalide ou a expiré. Veuillez en demander un nouveau pour vous connecter.",
       "backToSignIn": "Retour à la connexion",
-      "redirecting": "Redirection en cours..."
+      "redirecting": "Redirection en cours...",
+      "failure": {
+        "MAGIC_LINK_EXPIRED": {
+          "title": "Lien expiré",
+          "detail": "Ce lien de connexion a expiré. Demandez-en un nouveau, il fonctionnera."
+        },
+        "MAGIC_LINK_USED": {
+          "title": "Lien déjà utilisé",
+          "detail": "Ce lien a déjà servi à une connexion. Les liens ne servent qu'une fois — demandez-en un nouveau."
+        },
+        "MAGIC_LINK_UNKNOWN": {
+          "title": "Lien non reconnu",
+          "detail": "Nous ne reconnaissons pas ce lien. Certains logiciels de messagerie coupent les liens longs — copiez l'adresse complète depuis l'e-mail, ou demandez un nouveau lien."
+        },
+        "MAGIC_LINK_INELIGIBLE": {
+          "title": "Compte indisponible ici",
+          "detail": "Le lien était valide, mais ce compte ne peut pas se connecter à cette application. Contactez votre administrateur."
+        },
+        "fallback": {
+          "title": "Lien expiré",
+          "detail": "Ce lien magique est invalide ou a expiré. Veuillez en demander un nouveau."
+        }
+      }
     },
     "workspacePicker": {
       "metaTitle": "Choisir un espace",

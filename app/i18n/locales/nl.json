@@ -200,7 +200,29 @@
       "linkExpired": "Link verlopen",
       "linkExpiredDetail": "Deze magic link is ongeldig of verlopen. Vraag een nieuwe aan om in te loggen.",
       "backToSignIn": "Terug naar inloggen",
-      "redirecting": "U wordt nu doorgestuurd..."
+      "redirecting": "U wordt nu doorgestuurd...",
+      "failure": {
+        "MAGIC_LINK_EXPIRED": {
+          "title": "Link verlopen",
+          "detail": "Deze inloglink is verlopen. Vraag een nieuwe aan, die werkt wel."
+        },
+        "MAGIC_LINK_USED": {
+          "title": "Link al gebruikt",
+          "detail": "Met deze link is al iemand ingelogd. Links werken één keer — vraag een nieuwe aan."
+        },
+        "MAGIC_LINK_UNKNOWN": {
+          "title": "Link niet herkend",
+          "detail": "We herkennen deze link niet. Sommige e-mailprogramma's knippen lange links doormidden — kopieer het volledige adres uit de e-mail of vraag een nieuwe link aan."
+        },
+        "MAGIC_LINK_INELIGIBLE": {
+          "title": "Account hier niet beschikbaar",
+          "detail": "De link was in orde, maar dit account kan hier niet inloggen. Neem contact op met je beheerder."
+        },
+        "fallback": {
+          "title": "Link verlopen",
+          "detail": "Deze magic link is ongeldig of verlopen. Vraag een nieuwe aan om in te loggen."
+        }
+      }
     },
     "workspacePicker": {
       "metaTitle": "Kies gebied",

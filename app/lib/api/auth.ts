@@ -1,5 +1,6 @@
 import {
   apiClient,
+  extractErrorCode,
   extractErrorMessage,
   createApiError,
   type ApiError,
@@ -224,6 +225,22 @@ export const requestMagicLink = async (
 /**
  * Verify magic link token and exchange for access + refresh tokens
  */
+/** The API's machine-readable causes for a link that did not work. */
+export const MAGIC_LINK_UNKNOWN = "MAGIC_LINK_UNKNOWN";
+export const MAGIC_LINK_USED = "MAGIC_LINK_USED";
+export const MAGIC_LINK_EXPIRED = "MAGIC_LINK_EXPIRED";
+
+/** Carries the API's `code` so the callback can say which thing went wrong. */
+export class MagicLinkError extends Error {
+  constructor(
+    message: string,
+    readonly code: string | null,
+  ) {
+    super(message);
+    this.name = "MagicLinkError";
+  }
+}
+
 export const verifyMagicLink = async (token: string): Promise<AuthResponse> => {
   try {
     const response = await apiClient.post<AuthResponse>(
@@ -237,8 +254,14 @@ export const verifyMagicLink = async (token: string): Promise<AuthResponse> => {
 
     return response.data;
   } catch (error) {
+    // Carry the code through. Flattening this to a bare Error is what forced
+    // the callback to substring-match an English sentence to work out whether
+    // a link was expired, already used, or simply unknown.
     const apiError = createApiError(error);
-    throw new Error(apiError.message || "Invalid or expired magic link");
+    throw new MagicLinkError(
+      apiError.message || "Invalid or expired magic link",
+      extractErrorCode(error),
+    );
   }
 };
 
