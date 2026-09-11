@@ -345,6 +345,14 @@
         "unknown": "Calendrier"
       }
     },
+    "conversation": {
+      "title": "Conversation",
+      "open": "Ouvrir",
+      "excerpt": "Extrait enregistré de cette conversation.",
+      "partial": "Extrait enregistré — la conversation complète n'est plus disponible.",
+      "messageCount_one": "{{count}} message",
+      "messageCount_other": "{{count}} messages"
+    },
     "detail": {
       "metaTitle": "Lead",
       "metaDescription": "Détails du lead",

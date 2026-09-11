@@ -345,6 +345,14 @@
         "unknown": "Kalender"
       }
     },
+    "conversation": {
+      "title": "Unterhaltung",
+      "open": "Öffnen",
+      "excerpt": "Gespeicherter Auszug dieser Unterhaltung.",
+      "partial": "Gespeicherter Auszug — die vollständige Unterhaltung ist nicht mehr verfügbar.",
+      "messageCount_one": "{{count}} Nachricht",
+      "messageCount_other": "{{count}} Nachrichten"
+    },
     "detail": {
       "metaTitle": "Lead",
       "metaDescription": "Lead-Details",

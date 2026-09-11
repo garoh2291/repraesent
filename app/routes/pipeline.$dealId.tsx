@@ -155,15 +155,10 @@ export default function PipelineDealDetailPage() {
     expectedClose: string;
   } | null>(null);
 
-  const hasAccess =
-    currentWorkspace?.services?.some(
-      (s) => s.service_type === "lead-form" || s.service_slug === "lead-form",
-    ) ?? false;
-
   const workspaceQuery = useQuery({
     queryKey: ["workspace-detail"],
     queryFn: () => getWorkspaceDetail(),
-    enabled: hasAccess && !!currentWorkspace,
+    enabled: !!currentWorkspace,
   });
 
   const workspaceMembers: WorkspaceMemberItem[] = useMemo(
@@ -181,7 +176,7 @@ export default function PipelineDealDetailPage() {
   const dealQuery = useQuery({
     queryKey: ["deal", dealId],
     queryFn: () => getDeal(dealId!),
-    enabled: !!dealId && hasAccess,
+    enabled: !!dealId,
   });
 
   const deal = dealQuery.data?.deal;
@@ -208,7 +203,7 @@ export default function PipelineDealDetailPage() {
   const dealHistoryQuery = useQuery({
     queryKey: ["deal-history", dealId],
     queryFn: () => getDealHistory(dealId!),
-    enabled: !!dealId && hasAccess && !!deal,
+    enabled: !!dealId && !!deal,
   });
 
   useEffect(() => {
@@ -454,16 +449,6 @@ export default function PipelineDealDetailPage() {
     }, 800);
     return () => clearTimeout(handle);
   }, [title, valueStr, assignee, expectedClose, canEdit, deal, saveFields]);
-
-  if (!hasAccess) {
-    return (
-      <div className="p-6 text-sm text-muted-foreground">
-        {t("contacts.noAccess", {
-          defaultValue: "This workspace does not include CRM access.",
-        })}
-      </div>
-    );
-  }
 
   if (!dealId) {
     navigate("/pipeline", { replace: true });

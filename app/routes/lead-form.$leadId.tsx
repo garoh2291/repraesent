@@ -8,6 +8,7 @@ import {
   LeadInfoSection,
   LeadHistorySection,
 } from "~/components/organism/lead-detail-sheet";
+import { LeadConversation } from "~/components/leads/lead-conversation";
 import { LeadNotesSection } from "~/components/organism/lead-notes-section";
 import { LeadPaymentSection } from "~/components/organism/lead-payment-section";
 import { extractLeadCheckout } from "~/lib/leads/checkout";
@@ -149,13 +150,6 @@ export default function LeadFormLeadId() {
   useEffect(() => {
     if (!currentWorkspace) {
       navigate("/", { replace: true });
-      return;
-    }
-    const hasLeadFormService = currentWorkspace.services?.some(
-      (s) => s.service_type === "lead-form",
-    );
-    if (!hasLeadFormService) {
-      navigate("/", { replace: true });
     }
   }, [currentWorkspace, navigate]);
 
@@ -168,12 +162,6 @@ export default function LeadFormLeadId() {
       document.title = `${name} - Repraesent`;
     }
   }, [lead]);
-
-  const hasAccess =
-    currentWorkspace?.services?.some((s) => s.service_type === "lead-form") ??
-    false;
-
-  if (!hasAccess) return null;
 
   if (!leadId) {
     navigate("/lead-form", { replace: true });
@@ -304,6 +292,10 @@ export default function LeadFormLeadId() {
           {extractLeadCheckout(lead) && (
             <LeadPaymentSection lead={lead} variant="card" />
           )}
+          <LeadConversation
+            lead={lead}
+            maxHeightClassName="max-h-[min(60vh,560px)]"
+          />
         </div>
 
         {/* Tasks + Notes + History panel */}

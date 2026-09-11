@@ -4,11 +4,14 @@ import { formatDateIntl } from "~/lib/utils/format";
 /**
  * Appointment info extracted from a lead's metadata.
  *
- * Two shapes exist in the wild:
+ * Three shapes exist in the wild:
  * - Form appointment fields: `metadata[key]` = "<startISO>--<endISO>" plus
  *   companion keys `${key}_event_id`, `${key}_meet_link`, `${key}_provider`
  *   merged in after the calendar event is created (best-effort — a failed
  *   booking leaves only the raw slot string).
+ * - AI-assistant booking actions: the slot lives at `${actionId}_appointment`
+ *   but the companions at `${actionId}_event_id` — one segment shorter than the
+ *   slot key. See `companionBases`.
  * - Standalone Baikal booking-page leads (source_table === "appointment_booking"):
  *   `metadata.appointment_uid` / `.start` / `.end` / `.config_id`.
  */
@@ -69,7 +72,28 @@ const COMPANION_SUFFIXES = [
   "_hosts",
   "_booking_failed",
   "_orphaned_events",
+  // AI-assistant bookings only (see companionBases below).
+  "_booking_id",
+  "_appointment_status",
 ] as const;
+
+/**
+ * The prefixes a slot key's companions may carry.
+ *
+ * A form appointment field stores the slot under the field key and its
+ * companions under `<fieldKey>_event_id`. An AI-assistant booking action stores
+ * the slot under `<actionId>_appointment` but its companions under
+ * `<actionId>_event_id` — one segment shorter. Claiming only the first shape is
+ * why `Abzju9jes Event Id` and friends used to leak into "Additional info".
+ */
+function companionBases(slotKey: string): string[] {
+  const bases = [slotKey];
+  const SUFFIX = "_appointment";
+  if (slotKey.endsWith(SUFFIX) && slotKey.length > SUFFIX.length) {
+    bases.push(slotKey.slice(0, -SUFFIX.length));
+  }
+  return bases;
+}
 
 function parseIso(value: unknown): Date | null {
   if (typeof value !== "string" || !/^\d{4}-\d{2}-\d{2}T/.test(value)) {
@@ -171,14 +195,23 @@ export function extractLeadAppointments(
     const end = parseIso(value.slice(idx + 2));
     if (!start || !end) continue;
 
-    const eventId = asString(meta[`${key}_event_id`]);
-    const meetLink = asString(meta[`${key}_meet_link`]);
-    const hosts = parseHosts(meta[`${key}_hosts`]);
+    const bases = companionBases(key);
+    const companion = (suffix: string): unknown => {
+      for (const base of bases) {
+        const found = meta[`${base}${suffix}`];
+        if (found !== undefined) return found;
+      }
+      return undefined;
+    };
+
+    const eventId = asString(companion("_event_id"));
+    const meetLink = asString(companion("_meet_link"));
+    const hosts = parseHosts(companion("_hosts"));
     appointments.push({
       key,
       start,
       end,
-      provider: inferProvider(lead, asString(meta[`${key}_provider`]), meetLink, eventId),
+      provider: inferProvider(lead, asString(companion("_provider")), meetLink, eventId),
       eventId,
       meetLink,
       // Still "is there a primary event", NOT "did every host get one":
@@ -186,15 +219,12 @@ export function extractLeadAppointments(
       // host got theirs. A rolled-back co-booking leaves no _event_id at all.
       booked: eventId != null,
       hosts,
-      bookingFailed: asString(meta[`${key}_booking_failed`]) === "1",
+      bookingFailed: asString(companion("_booking_failed")) === "1",
       claimedKeys: [
         key,
-        `${key}_event_id`,
-        `${key}_meet_link`,
-        `${key}_provider`,
-        `${key}_hosts`,
-        `${key}_booking_failed`,
-        `${key}_orphaned_events`,
+        ...bases.flatMap((base) =>
+          COMPANION_SUFFIXES.map((suffix) => `${base}${suffix}`),
+        ),
       ],
     });
   }

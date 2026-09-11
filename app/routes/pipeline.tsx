@@ -101,11 +101,6 @@ export default function PipelinePage() {
     string | null
   >(null);
 
-  const hasAccess =
-    currentWorkspace?.services?.some(
-      (s) => s.service_type === "lead-form" || s.service_slug === "lead-form",
-    ) ?? false;
-
   const isAdmin = currentWorkspace?.member_role === "admin";
 
   // Which pipeline's board this is: ?p=<id>, or the Default pipeline.
@@ -149,7 +144,7 @@ export default function PipelinePage() {
   const workspaceQuery = useQuery({
     queryKey: ["workspace-detail"],
     queryFn: () => getWorkspaceDetail(),
-    enabled: hasAccess && !!currentWorkspace,
+    enabled: !!currentWorkspace,
   });
 
   const dealsQuery = useQuery({
@@ -167,7 +162,7 @@ export default function PipelinePage() {
         assigned_to: assignedTo || undefined,
         pipeline_id: currentPipeline?.id,
       }),
-    enabled: hasAccess && !!currentWorkspace && !!currentPipeline,
+    enabled: !!currentWorkspace && !!currentPipeline,
     refetchOnMount: true,
   });
 
@@ -361,16 +356,6 @@ export default function PipelinePage() {
   );
 
   const hasFilters = !!(debouncedSearch || assignedTo);
-
-  if (!hasAccess) {
-    return (
-      <div className="p-6 text-sm text-muted-foreground">
-        {t("contacts.noAccess", {
-          defaultValue: "This workspace does not include CRM access.",
-        })}
-      </div>
-    );
-  }
 
   return (
     <div className="flex flex-col min-h-[calc(100vh-8rem)] p-4 sm:p-6 gap-4 sm:gap-6 app-fade-in">

@@ -53,6 +53,12 @@ import {
   formatAppointmentRange,
   isAppointmentPast,
 } from "~/lib/leads/appointment";
+import { LeadConversation } from "~/components/leads/lead-conversation";
+import {
+  aiActionPrefixes,
+  aiClaimedMetaKeys,
+  stripAiActionPrefix,
+} from "~/lib/leads/ai-assistant";
 import {
   checkoutClaimedMetaKeys,
   extractLeadCheckout,
@@ -512,6 +518,10 @@ export function LeadDetailSheet({
                   withoutLink={readOnly}
                 />
               </div>
+              {/* The AI chat this lead came out of (assistant leads only) */}
+              <div className="px-5 py-5 empty:hidden">
+                <LeadConversation lead={lead} />
+              </div>
               {/* Payment (product-form leads only) */}
               {extractLeadCheckout(lead) && (
                 <div className="px-5 py-5">
@@ -596,9 +606,14 @@ export function LeadDetailSheet({
 
 /* ── Field helpers ─────────────────────────────────────────── */
 
-/** Turn snake_case or camelCase keys into Title Case for display. */
-function formatFieldKey(key: string): string {
-  return key
+/**
+ * Turn snake_case or camelCase keys into Title Case for display.
+ *
+ * `aiPrefixes` strips an AI-assistant action id first, so `abzju9jes_region`
+ * reads "Region" rather than "Abzju9jes Region".
+ */
+function formatFieldKey(key: string, aiPrefixes: string[] = []): string {
+  return stripAiActionPrefix(key, aiPrefixes)
     .replace(/([a-z])([A-Z])/g, "$1 $2")
     .replace(/_/g, " ")
     .replace(/\b\w/g, (c) => c.toUpperCase());
@@ -683,6 +698,10 @@ export function LeadInfoSection({
 
   const appointments = extractLeadAppointments(lead);
   const appointmentClaimedKeys = appointmentClaimedMetaKeys(lead);
+  // AI-assistant leads: opaque booking ids and the transcript are hidden, and
+  // what survives loses its action-id prefix.
+  const aiPrefixes = aiActionPrefixes(lead);
+  const aiClaimedKeys = aiClaimedMetaKeys(lead);
   // The payment block owns the checkout stamps — no raw rows for them.
   const checkoutClaimedKeys = checkoutClaimedMetaKeys(lead);
   const filterVerdict = extractLeadFilterVerdict(lead);
@@ -697,6 +716,7 @@ export function LeadInfoSection({
       !PROMOTED_META_KEYS.has(key) &&
       !HIDDEN_META_KEYS.has(key) &&
       !appointmentClaimedKeys.has(key) &&
+      !aiClaimedKeys.has(key) &&
       !checkoutClaimedKeys.has(key) &&
       !FILTERED_CLAIMED_META_KEYS.has(key),
   );
@@ -874,7 +894,7 @@ export function LeadInfoSection({
           </FieldRow>
 
           {promotedEntries.map(([key, value]) => (
-            <FieldRow key={key} label={formatFieldKey(key)}>
+            <FieldRow key={key} label={formatFieldKey(key, aiPrefixes)}>
               <FieldValue className="whitespace-pre-wrap">
                 {DATETIME_META_KEYS.has(key)
                   ? formatMetaDateValue(value)
@@ -900,7 +920,7 @@ export function LeadInfoSection({
             <CollapsibleContent>
               <div className="px-3 border-t border-border/40">
                 {collapsibleEntries.map(([key, value]) => (
-                  <FieldRow key={key} label={formatFieldKey(key)}>
+                  <FieldRow key={key} label={formatFieldKey(key, aiPrefixes)}>
                     <FieldValue className="whitespace-pre-wrap">
                       {DATETIME_META_KEYS.has(key)
                         ? formatMetaDateValue(value)

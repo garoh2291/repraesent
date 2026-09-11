@@ -294,15 +294,6 @@ export default function LeadForm() {
   useEffect(() => {
     if (!currentWorkspace) {
       navigate("/", { replace: true });
-      return;
-    }
-
-    const hasLeadFormService = currentWorkspace.services?.some(
-      (s) => s.service_type === "lead-form",
-    );
-
-    if (!hasLeadFormService) {
-      navigate("/", { replace: true });
     }
   }, [currentWorkspace, navigate]);
 
@@ -424,14 +415,6 @@ export default function LeadForm() {
     ],
     [leadStatusFilterOptions, formNameFilterOptions, campaignFilterOptions],
   );
-
-  const hasAccess =
-    currentWorkspace?.services?.some((s) => s.service_type === "lead-form") ??
-    false;
-
-  if (!hasAccess) {
-    return null;
-  }
 
   const columns: ColumnDef<Lead>[] = [
     {

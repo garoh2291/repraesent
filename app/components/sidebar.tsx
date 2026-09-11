@@ -28,7 +28,6 @@ import {
   ImageIcon,
   Loader2,
   Inbox,
-  Info,
   LayoutTemplate,
   LogOut,
   Mail,
@@ -52,7 +51,6 @@ import {
   X,
 } from "lucide-react";
 import * as LucideIcons from "lucide-react";
-import { InstructionsModal } from "~/components/instructions-modal";
 import { SafeImg } from "~/components/atom/safe-img";
 import { OpenAiMark } from "~/components/icons/openai-mark";
 
@@ -516,9 +514,6 @@ export function Sidebar({
   const hasMultipleWorkspaces =
     (workspaces?.length ?? 0) > 1 ||
     (showBrandSwitchEntry && (workspaces?.length ?? 0) >= 1);
-  const [instructionsMarkdown, setInstructionsMarkdown] = useState<
-    string | null
-  >(null);
   // A live demo is a product tour: every destination stays visible even with
   // nothing connected, so the visitor can see what the app does. The pages
   // show their own empty states. Real workspaces keep the gates below.
@@ -895,6 +890,48 @@ export function Sidebar({
                 {t("nav.forms", "Forms")}
               </NavLink>
 
+              {/* The CRM. Leads and everything hanging off them used to be
+                rendered from a `lead-form` service row, so a workspace nobody
+                remembered to attach it to lost the whole section from the nav
+                while the pages underneath kept working. Every workspace has
+                leads; migration 174 retired the service. */}
+              <NavLink
+                to="/lead-form"
+                isActive={
+                  location.pathname === "/lead-form" ||
+                  location.pathname.startsWith("/lead-form/")
+                }
+                onClick={onClose}
+              >
+                <Users className="h-4 w-4 shrink-0" />
+                {t("nav.leads")}
+              </NavLink>
+              <NavLink
+                to="/contacts"
+                isActive={location.pathname.startsWith("/contacts")}
+                onClick={onClose}
+              >
+                <BookUser className="h-4 w-4 shrink-0" />
+                {t("nav.contacts", { defaultValue: "Contacts" })}
+              </NavLink>
+              <NavLink
+                to="/mail"
+                isActive={location.pathname.startsWith("/mail")}
+                onClick={onClose}
+              >
+                <Mail className="h-4 w-4 shrink-0" />
+                {t("nav.mail", { defaultValue: "Mail" })}
+              </NavLink>
+              <PipelineNav onClose={onClose} />
+              <NavLink
+                to="/tasks"
+                isActive={location.pathname === "/tasks"}
+                onClick={onClose}
+              >
+                <CheckSquare className="h-4 w-4 shrink-0" />
+                {t("nav.tasks")}
+              </NavLink>
+
               {showAiAssistant && (
                 <NavLink
                   to="/ai-assistants"
@@ -1026,13 +1063,6 @@ export function Sidebar({
                     : null;
                   const hasIcon = !!iconName && lucideIconNames.has(iconName);
 
-                  const instructions = (
-                    service.service_config as Record<string, unknown> | null
-                  )?.instructions as string | undefined;
-                  const hasInstructions = !!instructions;
-                  const isLeadFormService =
-                    service.service_type === "lead-form" ||
-                    service.service_slug === "lead-form";
                   return (
                     <Fragment key={service.service_id}>
                       <div className="flex items-center group/svc">
@@ -1059,54 +1089,7 @@ export function Sidebar({
                             )}
                           </span>
                         </NavLink>
-                        {hasInstructions && !collapsed && (
-                          <button
-                            type="button"
-                            title="View instructions"
-                            onClick={() =>
-                              setInstructionsMarkdown(instructions!)
-                            }
-                            className="
-                      ml-0.5 mr-1 flex h-5 w-5 shrink-0 items-center justify-center
-                      rounded opacity-0 group-hover/svc:opacity-100
-                      text-white/25 hover:text-amber-400 hover:bg-amber-400/8
-                      transition-all duration-150
-                    "
-                          >
-                            <Info className="h-3 w-3" />
-                          </button>
-                        )}
                       </div>
-                      {isLeadFormService && (
-                        <>
-                          {" "}
-                          <NavLink
-                            to="/contacts"
-                            isActive={location.pathname.startsWith("/contacts")}
-                            onClick={onClose}
-                          >
-                            <BookUser className="h-4 w-4 shrink-0" />
-                            {t("nav.contacts", { defaultValue: "Contacts" })}
-                          </NavLink>
-                          <NavLink
-                            to="/mail"
-                            isActive={location.pathname.startsWith("/mail")}
-                            onClick={onClose}
-                          >
-                            <Mail className="h-4 w-4 shrink-0" />
-                            {t("nav.mail", { defaultValue: "Mail" })}
-                          </NavLink>
-                          <PipelineNav onClose={onClose} />
-                          <NavLink
-                            to="/tasks"
-                            isActive={location.pathname === "/tasks"}
-                            onClick={onClose}
-                          >
-                            <CheckSquare className="h-4 w-4 shrink-0" />
-                            {t("nav.tasks")}
-                          </NavLink>
-                        </>
-                      )}
                     </Fragment>
                   );
                 })}
@@ -1206,15 +1189,6 @@ export function Sidebar({
             );
           })()}
         </div>
-
-        {/* Instructions modal */}
-        {instructionsMarkdown !== null && (
-          <InstructionsModal
-            open
-            onClose={() => setInstructionsMarkdown(null)}
-            markdown={instructionsMarkdown}
-          />
-        )}
       </aside>
     </SidebarCollapsedContext.Provider>
   );

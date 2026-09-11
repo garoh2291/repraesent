@@ -649,18 +649,13 @@ function DealsSummarySection() {
   // Deals here span every pipeline, so the lookup resolves per deal.
   const { resolve: resolveDealStage } = useDealStageLookup();
 
-  const hasAccess =
-    currentWorkspace?.services?.some(
-      (s) => s.service_type === "lead-form" || s.service_slug === "lead-form",
-    ) ?? false;
-
   const { data, isLoading } = useQuery({
     // Nested under the "deals-pipeline" prefix so every deal mutation
     // (move, reorder, won/lost, create, edit) — which all invalidate
     // ["deals-pipeline"] — also refreshes these summary counts.
     queryKey: ["deals-pipeline", "home-summary", currentWorkspace?.id],
     queryFn: () => getDeals({ page: 1, limit: 500 }),
-    enabled: hasAccess && !!currentWorkspace,
+    enabled: !!currentWorkspace,
     // The global default is refetchOnMount: false, so a query invalidated
     // while this page is unmounted (e.g. after creating a deal from the
     // pipeline) would serve stale cache on return and miss the new deal.
@@ -679,8 +674,6 @@ function DealsSummarySection() {
     }
     return acc;
   }, [data?.data, resolveDealStage]);
-
-  if (!hasAccess) return null;
 
   // Lost deals stay excluded, matching the old hardcoded new+in_progress+won.
   const masterTotalValue =

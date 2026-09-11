@@ -122,11 +122,6 @@ export default function ContactsPage() {
   }>({ open: false, mode: "csv" });
   const [createOpen, setCreateOpen] = useState(false);
 
-  const hasAccess =
-    currentWorkspace?.services?.some(
-      (s) => s.service_type === "lead-form" || s.service_slug === "lead-form",
-    ) ?? false;
-
   const tableQuery = useQuery({
     queryKey: [
       "contacts",
@@ -145,7 +140,7 @@ export default function ContactsPage() {
         source: sourceFilter || undefined,
         contact_type: contactTypeFilter || undefined,
       }),
-    enabled: hasAccess && !!currentWorkspace,
+    enabled: !!currentWorkspace,
     refetchOnMount: true,
   });
 
@@ -199,16 +194,6 @@ export default function ContactsPage() {
   );
 
   const hasTableFilters = !!sourceFilter || !!contactTypeFilter;
-
-  if (!hasAccess) {
-    return (
-      <div className="p-6 text-sm text-muted-foreground">
-        {t("contacts.noAccess", {
-          defaultValue: "Contacts are not available for this workspace.",
-        })}
-      </div>
-    );
-  }
 
   return (
     <div className="p-4 sm:p-6 space-y-4 sm:space-y-6 app-fade-in">

@@ -595,10 +595,7 @@ export default function LeadFallbackPage() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
 
-  // Gate
-  const hasLeadForm =
-    currentWorkspace?.services?.some((s) => s.service_type === "lead-form") ??
-    false;
+  // Gate: only the sending mailbox. Without one this page has nothing to do.
   const hasEmailConfig =
     currentWorkspace?.services?.some(
       (s) =>
@@ -621,21 +618,21 @@ export default function LeadFallbackPage() {
     (emailServiceConfig?.["email"] as string | undefined) ?? null;
 
   useEffect(() => {
-    if (currentWorkspace && (!hasLeadForm || !hasEmailConfig)) {
+    if (currentWorkspace && !hasEmailConfig) {
       navigate("/email", { replace: true });
     }
-  }, [currentWorkspace, hasLeadForm, hasEmailConfig, navigate]);
+  }, [currentWorkspace, hasEmailConfig, navigate]);
 
   const { data: remoteConfig, isLoading } = useQuery({
     queryKey: ["lead-fallback-config"],
     queryFn: getLeadFallbackConfig,
-    enabled: !!currentWorkspace && hasLeadForm && hasEmailConfig,
+    enabled: !!currentWorkspace && hasEmailConfig,
   });
 
   const { data: emailAccounts = [] } = useQuery({
     queryKey: ["workspace-email-accounts"],
     queryFn: listEmailAccounts,
-    enabled: !!currentWorkspace && hasLeadForm && hasEmailConfig,
+    enabled: !!currentWorkspace && hasEmailConfig,
     // Keeps a Gmail send-as alias next to the mailbox it sends through.
     select: sortAccountsWithAliases,
   });

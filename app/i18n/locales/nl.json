@@ -345,6 +345,14 @@
         "unknown": "Agenda"
       }
     },
+    "conversation": {
+      "title": "Gesprek",
+      "open": "Openen",
+      "excerpt": "Opgeslagen fragment van dit gesprek.",
+      "partial": "Opgeslagen fragment — het volledige gesprek is niet meer beschikbaar.",
+      "messageCount_one": "{{count}} bericht",
+      "messageCount_other": "{{count}} berichten"
+    },
     "detail": {
       "metaTitle": "Lead",
       "metaDescription": "Leaddetails",

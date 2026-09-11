@@ -55,28 +55,23 @@ export default function ContactDetailPage() {
   const canEdit = useCanEditLeads();
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
 
-  const hasAccess =
-    currentWorkspace?.services?.some(
-      (s) => s.service_type === "lead-form" || s.service_slug === "lead-form",
-    ) ?? false;
-
   const { data, isLoading, isError } = useQuery({
     queryKey: ["contact", contactRouteId],
     queryFn: () => getContact(contactRouteId!),
-    enabled: !!contactRouteId && hasAccess,
+    enabled: !!contactRouteId,
   });
 
   const { data: contactHistory = [], isLoading: contactHistoryLoading } =
     useQuery({
       queryKey: ["contact-history", contactRouteId],
       queryFn: () => getContactHistory(contactRouteId!),
-      enabled: !!contactRouteId && hasAccess && !!data,
+      enabled: !!contactRouteId && !!data,
     });
 
   const workspaceQuery = useQuery({
     queryKey: ["workspace-detail"],
     queryFn: () => getWorkspaceDetail(),
-    enabled: !!currentWorkspace && hasAccess,
+    enabled: !!currentWorkspace,
   });
 
   const workspaceMembers: WorkspaceMemberItem[] = useMemo(
@@ -129,16 +124,6 @@ export default function ContactDetailPage() {
       );
     },
   });
-
-  if (!hasAccess) {
-    return (
-      <div className="p-6 text-sm text-muted-foreground">
-        {t("contacts.noAccess", {
-          defaultValue: "Contacts are not available for this workspace.",
-        })}
-      </div>
-    );
-  }
 
   if (!contactRouteId) {
     navigate("/contacts", { replace: true });

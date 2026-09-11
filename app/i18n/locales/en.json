@@ -345,6 +345,14 @@
         "unknown": "Calendar"
       }
     },
+    "conversation": {
+      "title": "Conversation",
+      "open": "Open",
+      "excerpt": "Showing the saved excerpt of this conversation.",
+      "partial": "Showing the saved excerpt — the full conversation is no longer available.",
+      "messageCount_one": "{{count}} message",
+      "messageCount_other": "{{count}} messages"
+    },
     "detail": {
       "metaTitle": "Lead",
       "metaDescription": "Lead details",

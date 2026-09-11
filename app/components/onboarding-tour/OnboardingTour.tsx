@@ -47,19 +47,19 @@ const STEP_META: Array<{
     id: "leads",
     screenshot: "/onboarding/leads-board.png",
     screenshotAlt: "Leads board",
-    requiredServices: ["lead-form"],
+    requiredServices: null,
   },
   {
     id: "lead-fallback",
     screenshot: "/onboarding/lead-fallback-email.png",
     screenshotAlt: "Lead fallback email",
-    requiredServices: ["lead-form", "email-config"],
+    requiredServices: ["email-config"],
   },
   {
     id: "lead-detail",
     screenshot: "/onboarding/lead-detail.png",
     screenshotAlt: "Lead detail",
-    requiredServices: ["lead-form"],
+    requiredServices: null,
   },
   {
     id: "appointments",
@@ -71,7 +71,7 @@ const STEP_META: Array<{
     id: "tasks",
     screenshot: "/onboarding/tasks.png",
     screenshotAlt: "Tasks",
-    requiredServices: ["lead-form"],
+    requiredServices: null,
   },
   {
     id: "analytics",

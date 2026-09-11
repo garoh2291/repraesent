@@ -92,7 +92,6 @@ export interface WorkspaceService {
   service_type: string | null;
   service_icon: string | null;
   service_order: number;
-  service_config: Record<string, unknown> | null;
 }
 
 /**
