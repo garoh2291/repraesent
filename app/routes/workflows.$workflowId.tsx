@@ -5,6 +5,7 @@ import { useTranslation } from "react-i18next";
 import { Link, useNavigate, useParams } from "react-router";
 import { toast } from "sonner";
 import i18n from "~/i18n";
+import { UnsavedChangesGuard } from "~/components/forms/UnsavedChangesGuard";
 import { NodeInspector } from "~/components/workflows/NodeInspector";
 import { StepList } from "~/components/workflows/StepList";
 import { RunsPanel } from "~/components/workflows/RunsPanel";
@@ -13,7 +14,6 @@ import { PreviewAsPicker } from "~/components/workflows/PreviewAsPicker";
 import { TestRunDialog } from "~/components/workflows/TestRunDialog";
 import { WorkflowSettingsPanel } from "~/components/workflows/WorkflowSettingsPanel";
 import {
-  GhostAction,
   Panel,
   PanelBody,
   PanelHeader,
@@ -34,6 +34,12 @@ import {
   type TriggerConfig,
   type WorkflowGraph,
 } from "~/lib/api/workflows";
+import {
+  markWorkflowsStale,
+  patchWorkflowInLists,
+  restoreSnapshots,
+  type ListSnapshots,
+} from "~/lib/workflows/optimistic";
 import { getWorkspaceDetail } from "~/lib/api/workspaces";
 import {
   publishBlockers,
@@ -74,7 +80,7 @@ export default function WorkflowBuilder() {
     enabled: !!workflowId,
   });
 
-  const { data: catalog } = useQuery({
+  const { data: catalog, isLoading: catalogLoading } = useQuery({
     queryKey: ["workflow-field-catalog"],
     queryFn: getFieldCatalog,
   });
@@ -86,7 +92,7 @@ export default function WorkflowBuilder() {
 
   // Members come from the workspace detail endpoint; there is no dedicated
   // members list, and this key is already warm elsewhere in the app.
-  const { data: workspaceDetail } = useQuery({
+  const { data: workspaceDetail, isLoading: membersLoading } = useQuery({
     queryKey: ["workspace-detail"],
     queryFn: getWorkspaceDetail,
     enabled: !!currentWorkspace?.id,
@@ -139,17 +145,23 @@ export default function WorkflowBuilder() {
   );
 
   /**
-   * What a template can interpolate: the record, its previous values, and
-   * anything an earlier step returned. Built from the same catalogue the
-   * conditions use, so the two never disagree about what a field is called.
+   * The pipeline this workflow is limited to, when its trigger says so.
+   *
+   * A deal stage KEY can exist on several boards, so "set stage to won" is
+   * ambiguous until a pipeline is named. Read from the trigger filter rather
+   * than asked for again in the step: the author already answered it there,
+   * and asking twice invites the two answers to disagree.
    */
-  const variables = useMemo(() => {
-    const paths = fields.map((f) => `trigger.record.${f.path}`);
-    const previous = fields
-      .filter((f) => !f.dynamic)
-      .map((f) => `trigger.old.${f.path}`);
-    return [...paths, ...previous];
-  }, [fields]);
+  const pipelineScope = useMemo(() => {
+    const match = triggerConfig?.filter?.conditions?.find(
+      (c) =>
+        "path" in c &&
+        c.path === "pipeline_id" &&
+        c.operator === "eq" &&
+        typeof c.value === "string",
+    );
+    return match && "value" in match ? (match.value as string) : undefined;
+  }, [triggerConfig]);
 
   const selectedNode = useMemo(() => {
     if (!graph || !selectedId) return null;
@@ -199,17 +211,32 @@ export default function WorkflowBuilder() {
     onError: (error) => toast.error(extractErrorMessage(error)),
   });
 
+  /**
+   * Optimistic, like the card menu on the list: the badge and this button's own
+   * label both read the cache, so they flip in the same frame as the click
+   * rather than a round trip later.
+   */
   const statusMutation = useMutation({
-    mutationFn: (status: "active" | "paused") =>
-      setWorkflowStatus(workflowId!, status),
-    onSuccess: async () => {
-      await queryClient.invalidateQueries({
-        queryKey: ["workflow", workflowId],
-      });
-      await queryClient.invalidateQueries({ queryKey: ["workflows"] });
+    mutationFn: ({
+      status,
+    }: {
+      status: "active" | "paused" | "draft";
+      snapshots: ListSnapshots;
+    }) => setWorkflowStatus(workflowId!, status),
+    onSuccess: (detail) =>
+      queryClient.setQueryData(["workflow", workflowId], detail),
+    onError: (error, vars) => {
+      restoreSnapshots(queryClient, vars.snapshots);
+      toast.error(extractErrorMessage(error));
     },
-    onError: (error) => toast.error(extractErrorMessage(error)),
+    onSettled: () => markWorkflowsStale(queryClient, workflowId),
   });
+
+  const changeStatus = (status: "active" | "paused" | "draft") => {
+    void queryClient.cancelQueries({ queryKey: ["workflow", workflowId] });
+    const snapshots = patchWorkflowInLists(queryClient, workflowId!, { status });
+    statusMutation.mutate({ status, snapshots });
+  };
 
   const patchGraph = (next: WorkflowGraph) => {
     setGraph(next);
@@ -237,6 +264,14 @@ export default function WorkflowBuilder() {
 
   return (
     <div className="mx-auto w-full max-w-[1280px] space-y-5 p-4 py-10! sm:p-6 app-fade-in">
+      {/* Saving is one button now, which makes losing the work to a stray
+          click the obvious next hazard. Same guard the forms builder uses. */}
+      <UnsavedChangesGuard
+        when={dirty}
+        titleKey="workflows.leaveTitle"
+        bodyKey="workflows.leaveBody"
+      />
+
       {/* --- command bar ----------------------------------------------- */}
       <div className="overflow-hidden rounded-2xl bg-[#111113] shadow-[0_8px_24px_-12px_rgba(0,0,0,0.35)] app-fade-up">
         <div className="flex flex-col gap-3 px-4 py-3.5 sm:flex-row sm:items-center sm:justify-between sm:px-5">
@@ -298,7 +333,7 @@ export default function WorkflowBuilder() {
                 <button
                   type="button"
                   onClick={() =>
-                    statusMutation.mutate(
+                    changeStatus(
                       workflow.status === "active" ? "paused" : "active",
                     )
                   }
@@ -402,30 +437,30 @@ export default function WorkflowBuilder() {
             </Panel>
 
             <Panel>
+              {/* No Save here. There used to be one, calling the same mutation
+                  as the command bar's — two buttons for one action, and this
+                  one without the pending guard, so a double-click sent two
+                  concurrent writes. The inspector edits the graph in memory on
+                  every keystroke; saving is a single decision and belongs in
+                  one place. */}
               <PanelHeader
                 title={
                   selectedNode
                     ? t(`workflows.node.${selectedNode.type}`)
                     : t("workflows.inspector.title")
                 }
-                action={
-                  dirty ? (
-                    <GhostAction onClick={() => saveMutation.mutate()}>
-                      <Save className="h-4 w-4" />
-                      {t("workflows.save")}
-                    </GhostAction>
-                  ) : null
-                }
               />
               <PanelBody>
                 <NodeInspector
                   node={selectedNode}
+                  entity={entity}
+                  pipelineScope={pipelineScope}
                   fields={fields}
                   dateFields={dateFields}
                   locales={[...SUPPORTED_LOCALES]}
                   activeLocale={activeLocale}
-                  variables={variables}
                   members={memberOptions}
+                  catalogLoading={catalogLoading || membersLoading}
                   capability={capability}
                   disabled={!canEdit}
                   workflowId={workflowId!}

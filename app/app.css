@@ -895,3 +895,40 @@ body {
   pointer-events: none;
   color: var(--muted-foreground);
 }
+
+/* ── Lead conversation transcript ─────────────────────────────────────────── */
+
+/*
+ * Where the message list meets the card's header and footer, fade the content
+ * out instead of cutting it against a hard rule. A 1px divider says "the list
+ * ends here"; a fade says "it carries on past the edge", which is the truth and
+ * the thing that makes a scroll region read as scrollable before you touch it.
+ */
+.lead-conversation-scroll {
+  --edge: 14px;
+  -webkit-mask-image: linear-gradient(
+    to bottom,
+    transparent 0,
+    #000 var(--edge),
+    #000 calc(100% - var(--edge)),
+    transparent 100%
+  );
+  mask-image: linear-gradient(
+    to bottom,
+    transparent 0,
+    #000 var(--edge),
+    #000 calc(100% - var(--edge)),
+    transparent 100%
+  );
+}
+
+/*
+ * The mask costs a compositor layer and buys nothing when transparency is being
+ * reduced for legibility — drop it and let the borders do the work.
+ */
+@media (prefers-reduced-transparency: reduce) {
+  .lead-conversation-scroll {
+    -webkit-mask-image: none;
+    mask-image: none;
+  }
+}

@@ -1,3 +1,7 @@
+import {
+  useTerminalStageGuard,
+  type GuardableDeal,
+} from "~/lib/deals/use-terminal-stage-guard";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router";
 import { useTranslation } from "react-i18next";
@@ -25,6 +29,7 @@ import {
   type DealListItem,
 } from "~/lib/api/deals";
 import { usePipelinesQuery } from "~/lib/hooks/usePipelines";
+import { DealTrackingShare } from "~/components/organism/deal-tracking-share";
 import {
   patchDealInLists,
   restoreSnapshots,
@@ -150,15 +155,10 @@ export default function PipelineDealDetailPage() {
     expectedClose: string;
   } | null>(null);
 
-  const hasAccess =
-    currentWorkspace?.services?.some(
-      (s) => s.service_type === "lead-form" || s.service_slug === "lead-form",
-    ) ?? false;
-
   const workspaceQuery = useQuery({
     queryKey: ["workspace-detail"],
     queryFn: () => getWorkspaceDetail(),
-    enabled: hasAccess && !!currentWorkspace,
+    enabled: !!currentWorkspace,
   });
 
   const workspaceMembers: WorkspaceMemberItem[] = useMemo(
@@ -176,7 +176,7 @@ export default function PipelineDealDetailPage() {
   const dealQuery = useQuery({
     queryKey: ["deal", dealId],
     queryFn: () => getDeal(dealId!),
-    enabled: !!dealId && hasAccess,
+    enabled: !!dealId,
   });
 
   const deal = dealQuery.data?.deal;
@@ -189,6 +189,13 @@ export default function PipelineDealDetailPage() {
   const pipelinesQuery = usePipelinesQuery();
   const pipelines = pipelinesQuery.data ?? [];
 
+  // The link belongs to the deal, but permission to serve it belongs to the
+  // pipeline — both have to be true before the share control appears.
+  const trackingToken = (deal?.tracking_token as string | undefined) ?? undefined;
+  const trackingEnabled = !!pipelines.find(
+    (p) => p.id === dealPipelineId,
+  )?.public_tracking_enabled;
+
   const contact = dealQuery.data?.contact;
   const dealContacts = dealQuery.data?.contacts ?? [];
   const dealProducts = dealQuery.data?.products ?? [];
@@ -196,7 +203,7 @@ export default function PipelineDealDetailPage() {
   const dealHistoryQuery = useQuery({
     queryKey: ["deal-history", dealId],
     queryFn: () => getDealHistory(dealId!),
-    enabled: !!dealId && hasAccess && !!deal,
+    enabled: !!dealId && !!deal,
   });
 
   useEffect(() => {
@@ -343,6 +350,25 @@ export default function PipelineDealDetailPage() {
   });
 
   // No optimistic patch: the server computes the stage remap by category.
+  /**
+   * The stage stepper goes through the same guard as the kanban, so leaving a
+   * won or lost stage asks once wherever it is done from.
+   */
+  const guardableDeal: GuardableDeal = {
+    id: dealId ?? "",
+    title: (deal?.title as string | null | undefined) ?? null,
+    stage,
+    won_at: (deal?.won_at as string | null | undefined) ?? null,
+    lost_at: (deal?.lost_at as string | null | undefined) ?? null,
+  };
+  const { requestStageChange, guardModal } = useTerminalStageGuard({
+    byKey: dealStagesByKey,
+    onProceed: (_dealId, next) => {
+      setStage(next);
+      stageMutation.mutate(next);
+    },
+  });
+
   const movePipelineMutation = useMutation({
     mutationFn: (targetPipelineId: string) =>
       moveDealPipeline(dealId!, targetPipelineId),
@@ -423,16 +449,6 @@ export default function PipelineDealDetailPage() {
     }, 800);
     return () => clearTimeout(handle);
   }, [title, valueStr, assignee, expectedClose, canEdit, deal, saveFields]);
-
-  if (!hasAccess) {
-    return (
-      <div className="p-6 text-sm text-muted-foreground">
-        {t("contacts.noAccess", {
-          defaultValue: "This workspace does not include CRM access.",
-        })}
-      </div>
-    );
-  }
 
   if (!dealId) {
     navigate("/pipeline", { replace: true });
@@ -534,6 +550,11 @@ export default function PipelineDealDetailPage() {
           <ArrowLeft className="h-3.5 w-3.5" />
           {t("pipeline.backToPipeline", { defaultValue: "Back to pipeline" })}
         </Link>
+        {/* Only when this deal's pipeline actually serves tracking pages — a
+            copy button for a URL that 404s is worse than no button. */}
+        {trackingEnabled && trackingToken ? (
+          <DealTrackingShare dealId={dealId!} trackingToken={trackingToken} />
+        ) : null}
       </div>
 
       {/* HERO */}
@@ -652,10 +673,7 @@ export default function PipelineDealDetailPage() {
                     key={stageOption.id}
                     type="button"
                     disabled={!canEdit || stageMutation.isPending || active}
-                    onClick={() => {
-                      setStage(stageOption.key);
-                      stageMutation.mutate(stageOption.key);
-                    }}
+                    onClick={() => requestStageChange(guardableDeal, stageOption.key)}
                     className={cn(
                       "group relative flex flex-1 items-center justify-center gap-2 px-3 py-2.5 text-xs font-medium transition-colors",
                       !isLast && "border-r border-border",
@@ -978,6 +996,8 @@ export default function PipelineDealDetailPage() {
           </Button>
         </div>
       ) : null}
+
+      {guardModal}
 
       <AlertDialog open={deleteOpen} onOpenChange={setDeleteOpen}>
         <AlertDialogContent>

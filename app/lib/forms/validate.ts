@@ -14,6 +14,7 @@ import {
   type FormDefinitionIssue,
   type FormErrorCode,
   type FormField,
+  type FormKind,
   type FormLocale,
   flattenFields,
   hasOptions,
@@ -260,31 +261,43 @@ export function validateDefinition(
    * the round-two plan is about.
    */
   confirmationEmail?: FormConfirmationEmail | null,
+  /**
+   * The row's kind. Only `intake` changes the answer, and it changes it
+   * completely: an intake form is a URL, not a page — no sections, no fields,
+   * nothing a visitor reads — so there is nothing here to validate.
+   *
+   * Takes a parameter rather than letting each side special-case it. The
+   * backend skipped intake in `FormsService` while the builder called this
+   * function knowing nothing about kinds, so the server published the form
+   * happily and the builder sat there insisting on an e-mail field that the
+   * form has no way to contain.
+   */
+  kind: FormKind = "standard",
 ): FormDefinitionIssue[] {
+  if (kind === "intake") return [];
+
   // One issue PER offending field, in definition order — so the banner can name
   // the field and the tab badges have a stable count. Deduping into a Set (as
   // this used to) makes "a choice field has no options" unactionable.
   const issues: FormDefinitionIssue[] = [];
 
   if (!definition || !Array.isArray(definition.sections)) {
-    return [
-      { code: "needsEmailField", tab: "build" },
-      { code: "needsNameField", tab: "build" },
-    ];
+    return [{ code: "needsEmailField", tab: "build" }];
   }
 
   const fields = flattenFields(definition).filter((f) => !isValueless(f.type));
 
   // Requirement: every form must be able to produce an identifiable lead.
+  //
+  // An e-mail is identifiable; a name is not required and never was. The rule
+  // used to demand a name mapping too, which made a newsletter subscribe form —
+  // one field, one address — impossible to publish. Nothing downstream needs
+  // the name: leads.first_name/last_name/full_name are all nullable, every
+  // lead-creating DTO treats them as optional, and buildColumns already writes
+  // null for them without complaint.
   const mappings = fields.map((f) => f.mapping).filter(Boolean);
   if (!mappings.includes("email")) {
     issues.push({ code: "needsEmailField", tab: "build" });
-  }
-  if (
-    !mappings.includes("full_name") &&
-    !(mappings.includes("first_name") && mappings.includes("last_name"))
-  ) {
-    issues.push({ code: "needsNameField", tab: "build" });
   }
 
   const seenKeys = new Set<string>();
@@ -342,11 +355,27 @@ export function validateDefinition(
 
     // An appointment field without a target calendar would render a working
     // picker whose booking silently goes nowhere — block it like empty options.
-    // Target = `targetKey` when present, else the legacy Google pair — the
-    // same resolution rule the availability endpoint and booking apply.
+    //
+    // Deliberately a SHAPE check, not a parse: this function's text is asserted
+    // byte-equal against its twin in the other package, so anything it calls
+    // would have to exist identically on both sides. Importing the real
+    // resolver would mean shipping a second copy of the key parser to the
+    // browser — two parsers that can disagree, which is the exact drift the
+    // shared resolver was created to end. Presence is all publishing needs to
+    // know; the resolver still has the last word at request time.
+    //
+    // Order mirrors the resolver: non-empty hosts wins, else targetKey, else
+    // the legacy Google pair.
     if (field.type === "appointment") {
       const ap = field.appointment;
-      if (!ap?.targetKey && !(ap?.accountId && ap?.calendarId)) {
+      const hostKeys = (ap?.hosts ?? [])
+        .map((h) => (h?.targetKey ?? "").trim())
+        .filter((k) => k.length > 0);
+      const named =
+        hostKeys.length > 0 ||
+        !!ap?.targetKey ||
+        !!(ap?.accountId && ap?.calendarId);
+      if (!named) {
         issues.push({
           code: "appointmentMissingCalendar",
           tab: "build",

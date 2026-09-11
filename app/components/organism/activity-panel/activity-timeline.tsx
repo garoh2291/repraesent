@@ -6,6 +6,7 @@ import {
   CheckSquare,
   GitCommitHorizontal,
   Mail,
+  Zap,
 } from "lucide-react";
 import { isToday, isYesterday } from "date-fns";
 import type { LeadHistoryItem } from "~/lib/api/leads";
@@ -366,24 +367,39 @@ const CARD =
   "rounded-lg border border-border bg-card px-3.5 py-3 shadow-[0_1px_2px_rgba(16,24,40,0.04)] transition-colors hover:border-border/70";
 
 function NoteRow({ note, time }: { note: Note; time: string }) {
+  const { t } = useTranslation();
+  // A note with no author at all is one a workflow wrote — nobody typed it, so
+  // there is no person to attribute it to. Saying so beats the anonymous "?"
+  // avatar, which reads as a deleted user or a bug.
+  const automated = !note.created_by && !note.updated_by;
+
   return (
     <div className={cn(CARD, "border-l-2 border-l-amber-400")}>
       <p className="whitespace-pre-wrap break-words text-sm leading-relaxed text-foreground">
         {note.content}
       </p>
-      <MetaLine
-        first={note.user_first_name}
-        last={note.user_last_name}
-        userId={note.updated_by ?? note.created_by}
-        email={note.user_email}
-        deleted={note.user_is_deleted}
-        time={time}
-        suffix={
-          note.version > 1 ? (
-            <span className="text-muted-foreground/60">edited</span>
-          ) : null
-        }
-      />
+      {automated ? (
+        <div className="mt-1.5 flex items-center gap-1.5 text-[11px] text-muted-foreground">
+          <Zap className="h-3 w-3" aria-hidden />
+          <span>{t("activity.automation", { defaultValue: "Automation" })}</span>
+          <span className="text-muted-foreground/40">·</span>
+          <span>{time}</span>
+        </div>
+      ) : (
+        <MetaLine
+          first={note.user_first_name}
+          last={note.user_last_name}
+          userId={note.updated_by ?? note.created_by}
+          email={note.user_email}
+          deleted={note.user_is_deleted}
+          time={time}
+          suffix={
+            note.version > 1 ? (
+              <span className="text-muted-foreground/60">edited</span>
+            ) : null
+          }
+        />
+      )}
     </div>
   );
 }

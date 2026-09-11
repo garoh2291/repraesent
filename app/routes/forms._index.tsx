@@ -8,6 +8,7 @@ import {
   MoreHorizontal,
   Plus,
   ShoppingBag,
+  Webhook,
   Trash2,
 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
@@ -318,6 +319,11 @@ export default function FormsIndexRoute() {
                     <span className="inline-flex items-center gap-1 rounded-md border border-border bg-muted/40 px-1.5 py-0.5 text-[11px] font-medium text-muted-foreground">
                       <ShoppingBag className="h-3 w-3" aria-hidden />
                       {t("forms.list.kindProduct")}
+                    </span>
+                  ) : form.kind === "intake" ? (
+                    <span className="inline-flex items-center gap-1 rounded-md border border-border bg-muted/40 px-1.5 py-0.5 text-[11px] font-medium text-muted-foreground">
+                      <Webhook className="h-3 w-3" aria-hidden />
+                      {t("forms.list.kindIntake", { defaultValue: "Webhook" })}
                     </span>
                   ) : form.layout_mode === "multi_step" ? (
                     <span className="inline-flex items-center gap-1 rounded-md border border-border bg-muted/40 px-1.5 py-0.5 text-[11px] font-medium text-muted-foreground">

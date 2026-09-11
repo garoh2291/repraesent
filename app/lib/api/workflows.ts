@@ -55,12 +55,26 @@ export const NULLARY_OPERATORS: ConditionOperator[] = [
   "changed",
 ];
 
+export interface FieldOption {
+  value: string;
+  label: string;
+  /**
+   * Which pipelines a deal-stage key exists in.
+   *
+   * The value stored in a condition is the stage KEY, and two pipelines can
+   * both have one keyed `won` — so the list holds each key once and says where
+   * it lives, rather than offering two choices that write the same thing. The
+   * builder narrows on this once a `pipeline_id` condition names a pipeline.
+   */
+  scopes?: string[];
+}
+
 export interface CatalogField {
   path: string;
   label: string;
   kind: FieldKind;
   operators: ConditionOperator[];
-  options?: { value: string; label: string }[];
+  options?: FieldOption[];
   dynamic?: boolean;
   /** Resolved from a related table (a contact's email), not a column. */
   resolved?: boolean;
@@ -84,7 +98,15 @@ export type NodeType =
   | "condition"
   | "delay"
   | "send_internal_email"
-  | "send_customer_email";
+  | "send_customer_email"
+  // Actions that change the workspace's own data. Deliberately NOT held by the
+  // workflow's send window — a rule firing at 22:00 must still create its task
+  // then, or the follow-up is a day late.
+  | "create_task"
+  | "add_note"
+  | "update_record"
+  // Outbound, so this one DOES wait for the send window.
+  | "notify_team";
 
 export interface Condition {
   path: string;
@@ -140,7 +162,69 @@ export interface SendInternalEmailConfig {
   by_locale: LocalizedTemplate;
 }
 
+/**
+ * Who a customer email goes to.
+ *
+ * A named choice, not a template path. `path` is still here as the escape
+ * hatch for an address stashed somewhere odd — a metadata key, say — but it
+ * lives one level down in the picker and nothing defaults to it.
+ */
+export type EmailAudience =
+  /** The one obvious person: the lead, the contact, the deal's main contact. */
+  | { kind: "primary" }
+  /** Deals: every contact attached, primary first. One email each. */
+  | { kind: "all_contacts" }
+  /** Deals: the address on the lead this deal came from. */
+  | { kind: "source_lead" }
+  /** Leads: the contact this lead was converted into. */
+  | { kind: "linked_contact" }
+  | { kind: "address"; email: string }
+  | { kind: "path"; path: string };
+
+/** What each trigger entity can sensibly be asked for. Mirrors the backend. */
+export const AUDIENCES_BY_ENTITY: Record<
+  WorkflowEntity,
+  EmailAudience["kind"][]
+> = {
+  deals: ["primary", "all_contacts", "source_lead", "address", "path"],
+  leads: ["primary", "linked_contact", "address", "path"],
+  contacts: ["primary", "address", "path"],
+  tasks: ["primary", "address", "path"],
+};
+
+/**
+ * What an older step meant.
+ *
+ * `to_path` was free text and every step in existence holds the same default,
+ * so this is a rename for all of them rather than a migration.
+ */
+export function audienceOf(config: {
+  audience?: EmailAudience;
+  to_path?: string;
+}): EmailAudience {
+  if (config.audience) return config.audience;
+  const path = config.to_path?.trim();
+  if (!path || path === "{{trigger.record.email}}") return { kind: "primary" };
+  return { kind: "path", path };
+}
+
+export interface ResolvedRecipient {
+  email: string;
+  contactId: string | null;
+  name: string | null;
+  /** A key, not prose — the client translates it. */
+  why:
+    | "primary_contact"
+    | "also_on_deal"
+    | "the_lead"
+    | "linked_contact"
+    | "literal_address"
+    | "custom_variable";
+}
+
 export interface SendCustomerEmailConfig {
+  audience?: EmailAudience;
+  /** Legacy free-text path; superseded by `audience`, still executed. */
   to_path?: string;
   locale_path?: string;
   email_account_id?: string | null;
@@ -151,6 +235,66 @@ export interface DelayConfig {
   minutes: number;
 }
 
+/**
+ * Which record an action attaches to. `contact` follows the trigger record's
+ * contact, which is what "call the customer about this deal" usually means.
+ */
+export type ActionTarget = "trigger" | "contact";
+
+export interface CreateTaskConfig {
+  title: string;
+  description?: string;
+  target?: ActionTarget;
+  /** Days from the moment the step runs. 0 = today. */
+  dueInDays?: number;
+  assignee?: { kind: "member"; userId: string } | { kind: "owner" };
+}
+
+export interface AddNoteConfig {
+  body: string;
+  target?: ActionTarget;
+}
+
+export interface UpdateRecordConfig {
+  /** Column → template. Only the entity's settable fields are offered. */
+  set: Record<string, string>;
+}
+
+export interface NotifyTeamConfig {
+  message: string;
+}
+
+/**
+ * What `update_record` may set, per entity — mirrors `SETTABLE` in
+ * `update-record.node.ts`. Kept here rather than fetched so the picker can be
+ * drawn before any request resolves; the backend allowlist is the one that
+ * actually enforces it.
+ */
+/**
+ * Can a workflow change a record of this type at all?
+ *
+ * Drives whether the "Update the record" step is even offered. It used to be
+ * offered everywhere and then, once added, explain that this entity "cannot be
+ * updated by a workflow yet" — a step you can add, name and save, that can
+ * never do anything. Offering nothing is a better answer than offering a door
+ * that is locked.
+ */
+export function canUpdateEntity(entity: WorkflowEntity): boolean {
+  return (UPDATABLE_FIELDS[entity]?.length ?? 0) > 0;
+}
+
+export const UPDATABLE_FIELDS: Partial<Record<WorkflowEntity, string[]>> = {
+  deals: [
+    "title",
+    "stage",
+    "status",
+    "value",
+    "assigned_to",
+    "expected_close_date",
+  ],
+  leads: ["status"],
+};
+
 export interface ConditionNodeConfig {
   group: ConditionGroup;
 }
@@ -160,7 +304,11 @@ export type NodeConfig =
   | ConditionNodeConfig
   | DelayConfig
   | SendInternalEmailConfig
-  | SendCustomerEmailConfig;
+  | SendCustomerEmailConfig
+  | CreateTaskConfig
+  | AddNoteConfig
+  | UpdateRecordConfig
+  | NotifyTeamConfig;
 
 export interface WorkflowNode {
   id: string;
@@ -189,6 +337,11 @@ export interface WorkflowSummary {
   default_locale: string;
   entity: WorkflowEntity | null;
   trigger_type: TriggerType | null;
+  /**
+   * Whether a live version exists. Activating a workflow that has never been
+   * published is a 400, so the card needs this to know whether to offer it.
+   */
+  published_version_id: string | null;
   has_unpublished_changes: boolean;
   runs_7d: number;
   failed_7d: number;
@@ -203,7 +356,6 @@ export interface WorkflowDetail extends Omit<
 > {
   graph: WorkflowGraph;
   draft_version_id: string | null;
-  published_version_id: string | null;
   draft_version: number | null;
   exit_conditions: ConditionGroup | null;
   send_window: SendWindow | null;
@@ -318,9 +470,14 @@ export async function publishWorkflow(id: string): Promise<WorkflowDetail> {
   return data;
 }
 
+/**
+ * `draft` is a real destination, not just a starting state: it takes a live
+ * workflow off the air and labels it as being worked on. It keeps the
+ * published version, so activating again is one click.
+ */
 export async function setWorkflowStatus(
   id: string,
-  status: "active" | "paused",
+  status: "active" | "paused" | "draft",
 ): Promise<WorkflowDetail> {
   const { data } = await apiClient.patch<WorkflowDetail>(
     `/workflows/${id}/status`,
@@ -333,6 +490,14 @@ export async function setWorkflowStatus(
 
 export async function deleteWorkflow(id: string): Promise<void> {
   await apiClient.delete(`/workflows/${id}`);
+}
+
+/** Undo a delete. The workflow returns with the status it had. */
+export async function restoreWorkflow(id: string): Promise<WorkflowDetail> {
+  const { data } = await apiClient.post<WorkflowDetail>(
+    `/workflows/${id}/restore`,
+  );
+  return data;
 }
 
 export async function listWorkflowRuns(id: string): Promise<WorkflowRun[]> {
@@ -377,12 +542,35 @@ export async function getRecentRecords(
 /** Render a template against a real record without running the workflow. */
 export async function previewTemplate(
   workflowId: string,
-  payload: { entity_id: string; template: string; escape?: boolean },
+  payload: {
+    entity_id: string;
+    template: string;
+    escape?: boolean;
+    /** The builder's live entity, which may differ from the saved trigger. */
+    entity?: string;
+  },
 ): Promise<{ rendered: string; unresolved: string[] }> {
   const { data } = await apiClient.post<{
     rendered: string;
     unresolved: string[];
   }>(`/workflows/${workflowId}/preview`, payload);
+  return data;
+}
+
+/**
+ * Who a step would actually email, for one real record.
+ *
+ * Calls the same resolver the send step calls, so the builder cannot promise
+ * something different from what the run does.
+ */
+export async function resolveRecipients(
+  workflowId: string,
+  payload: { entity_id: string; audience: EmailAudience },
+): Promise<{ recipients: ResolvedRecipient[] }> {
+  const { data } = await apiClient.post<{ recipients: ResolvedRecipient[] }>(
+    `/workflows/${workflowId}/resolve-recipients`,
+    payload,
+  );
   return data;
 }
 

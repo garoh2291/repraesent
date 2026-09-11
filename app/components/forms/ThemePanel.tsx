@@ -32,6 +32,7 @@ import {
   FORM_FONT_KEYS,
   TRANSPARENT,
   type FormLayout,
+  isInlineSubmit,
   isMultiStep,
   isTransparent,
   normalizeLayout,
@@ -84,6 +85,9 @@ export function ThemePanel({
 
   const layout = normalizeLayout(definition.layout);
   const multi = isMultiStep(definition);
+  // What the form will actually do, not what the setting says — `auto` is the
+  // default and the hint has to tell you which way it landed.
+  const inline = !multi && isInlineSubmit(definition);
   const patchLayout = (patch: Partial<FormLayout>) =>
     onChange({ layout: { ...layout, ...patch } });
   // The preview flips steps on its own so you can see the progress style on
@@ -388,12 +392,50 @@ export function ThemePanel({
               </Field>
             </Cols>
 
+            {/* Multi-step forms end in Back / Next / Submit, so there is no
+                placement left to choose. */}
+            {multi ? null : (
+              <Field>
+                <Label>{t("forms.design.submitPlacement")}</Label>
+                <Segmented label={t("forms.design.submitPlacement")}>
+                  {(
+                    [
+                      ["auto", t("forms.design.submitAuto")],
+                      ["on", t("forms.design.submitInline")],
+                      ["off", t("forms.design.submitBelow")],
+                    ] as const
+                  ).map(([key, label]) => (
+                    <SegmentedButton
+                      key={key}
+                      active={layout.inlineSubmit === key}
+                      onClick={() => patchLayout({ inlineSubmit: key })}
+                    >
+                      {label}
+                    </SegmentedButton>
+                  ))}
+                </Segmented>
+                <FieldHint>
+                  {layout.inlineSubmit === "auto"
+                    ? t(
+                        inline
+                          ? "forms.design.submitAutoInlineHint"
+                          : "forms.design.submitAutoBelowHint",
+                      )
+                    : t("forms.design.submitPlacementHint")}
+                </FieldHint>
+              </Field>
+            )}
+
             <ToggleField
               id="theme-fullwidth"
               label={t("forms.design.buttonFullWidth")}
               checked={theme.buttonFullWidth}
+              disabled={disabled || inline}
               onChange={(v) => patchTheme({ buttonFullWidth: v })}
             />
+            {inline ? (
+              <FieldHint>{t("forms.design.buttonFullWidthInline")}</FieldHint>
+            ) : null}
             <ToggleField
               id="theme-title"
               label={t("forms.design.showTitle")}

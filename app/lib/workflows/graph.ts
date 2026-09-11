@@ -1,8 +1,13 @@
+import { audienceOf } from "~/lib/api/workflows";
 import type {
+  AddNoteConfig,
   ConditionGroup,
+  CreateTaskConfig,
   NodeType,
+  NotifyTeamConfig,
   SendCustomerEmailConfig,
   SendInternalEmailConfig,
+  UpdateRecordConfig,
   TriggerConfig,
   WorkflowEntity,
   WorkflowGraph,
@@ -155,7 +160,9 @@ export function defaultConfigFor(
       } satisfies SendInternalEmailConfig;
     case "send_customer_email":
       return {
-        to_path: "{{trigger.record.email}}",
+        // The record's own person — what every step in existence meant by
+        // `{{trigger.record.email}}`, said in words.
+        audience: { kind: "primary" },
         email_account_id: null,
         by_locale: {
           [defaultLocale]: {
@@ -164,6 +171,27 @@ export function defaultConfigFor(
           },
         },
       } satisfies SendCustomerEmailConfig;
+    case "create_task":
+      // Pre-filled with the record's own name, because a wall of tasks called
+      // "Follow up" is useless the moment there are two of them.
+      return {
+        title: "Follow up on {{trigger.record.title}}",
+        target: "trigger",
+        dueInDays: 1,
+      } satisfies CreateTaskConfig;
+    case "add_note":
+      return {
+        body: "Automatic note: this record changed.",
+        target: "trigger",
+      } satisfies AddNoteConfig;
+    case "update_record":
+      // Empty on purpose: which field to set is the whole decision, and a
+      // guessed default would be written to a real record on the first run.
+      return { set: {} } satisfies UpdateRecordConfig;
+    case "notify_team":
+      return {
+        message: "{{trigger.record.title}} needs attention.",
+      } satisfies NotifyTeamConfig;
   }
 }
 
@@ -203,7 +231,15 @@ export function publishBlockers(
     }
     if (step.type === "send_customer_email") {
       const cfg = step.config as SendCustomerEmailConfig;
-      if (!cfg.to_path?.trim()) problems.push(t("workflows.validation.noToPath"));
+      // An audience always resolves to *something* except in the two cases
+      // that still need the author to type: a literal address and a custom
+      // variable. Whether it resolves to a real person is the builder's live
+      // preview to answer — publish cannot know which record will trigger it.
+      const audience = audienceOf(cfg);
+      const blank =
+        (audience.kind === "address" && !audience.email.trim()) ||
+        (audience.kind === "path" && !audience.path.trim());
+      if (blank) problems.push(t("workflows.validation.noToPath"));
       if (!hasAnyTemplate(cfg.by_locale)) {
         problems.push(t("workflows.validation.noTemplate"));
       }
@@ -213,6 +249,27 @@ export function publishBlockers(
       if ((cfg.group?.conditions ?? []).length === 0) {
         problems.push(t("workflows.validation.emptyCondition"));
       }
+    }
+    if (step.type === "create_task") {
+      const cfg = step.config as CreateTaskConfig;
+      if (!cfg.title?.trim()) problems.push(t("workflows.validation.noTaskTitle"));
+    }
+    if (step.type === "add_note") {
+      const cfg = step.config as AddNoteConfig;
+      if (!cfg.body?.trim()) problems.push(t("workflows.validation.noNoteBody"));
+    }
+    if (step.type === "notify_team") {
+      const cfg = step.config as NotifyTeamConfig;
+      if (!cfg.message?.trim()) {
+        problems.push(t("workflows.validation.noNotifyMessage"));
+      }
+    }
+    if (step.type === "update_record") {
+      // An update step that sets nothing is not a half-built step, it is a
+      // no-op that will publish and quietly do nothing on every run.
+      const cfg = step.config as UpdateRecordConfig;
+      const set = Object.entries(cfg.set ?? {}).filter(([, v]) => v?.trim());
+      if (set.length === 0) problems.push(t("workflows.validation.noUpdateFields"));
     }
   }
 

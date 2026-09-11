@@ -37,14 +37,15 @@ import {
 } from "~/lib/forms/schema";
 import { cn } from "~/lib/utils";
 
-export type FormType = "single" | "multi" | "product";
+export type FormType = "single" | "multi" | "product" | "intake";
 
 export function formTypeToPayload(type: FormType): {
   kind: FormKind;
   layout_mode: "single" | "multi_step";
 } {
   return {
-    kind: type === "product" ? "product" : "standard",
+    kind:
+      type === "product" ? "product" : type === "intake" ? "intake" : "standard",
     layout_mode: type === "multi" ? "multi_step" : "single",
   };
 }
@@ -106,6 +107,9 @@ export function CreateFormDialog({
     { value: "single" },
     { value: "multi" },
     { value: "product", disabled: !stripeConnected },
+    // Last: it is the one that is not a form you draw, and offering it first
+    // would make the other three look like variations on it.
+    { value: "intake" },
   ];
 
   /** Roving focus across the cards: arrows move, Space/Enter pick. */
@@ -458,6 +462,85 @@ function TypeIllustration({
           <path
             d="M77 12.5h5a2 2 0 0 1 2 2V19a2 2 0 0 1-2 2h-5a2 2 0 0 1-2-2v-4.5a2 2 0 0 1 2-2zm1-1.5a1.5 1.5 0 0 1 3 0v1.5h-3V11z"
             className="fill-current"
+          />
+        </>
+      ) : null}
+      {/* The webhook form has no page to draw, so the picture is the thing you
+          actually get: somebody else's form, off the edge of the frame, posting
+          into a URL that lives here. */}
+      {type === "intake" ? (
+        <>
+          <rect
+            x="-8"
+            y="14"
+            width="30"
+            height="32"
+            rx="6"
+            className="stroke-current opacity-40"
+            strokeWidth="1.5"
+            strokeDasharray="3 3"
+          />
+          <rect
+            x="0"
+            y="22"
+            width="14"
+            height="5"
+            rx="2"
+            className="fill-current opacity-25"
+          />
+          <rect
+            x="0"
+            y="31"
+            width="14"
+            height="5"
+            rx="2"
+            className="fill-current opacity-25"
+          />
+          <path
+            d="M26 30h18"
+            className={cn("stroke-current", accent)}
+            strokeWidth="1.5"
+            strokeLinecap="round"
+          />
+          <path
+            d="m40 25.5 4.5 4.5-4.5 4.5"
+            className={cn("stroke-current", accent)}
+            strokeWidth="1.5"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+          <rect
+            x="50"
+            y="8"
+            width="42"
+            height="44"
+            rx="6"
+            className="fill-background stroke-current"
+            strokeWidth="1.5"
+          />
+          <rect
+            x="56"
+            y="16"
+            width="30"
+            height="8"
+            rx="4"
+            className={cn("fill-current", accent)}
+          />
+          <rect
+            x="56"
+            y="30"
+            width="30"
+            height="5"
+            rx="2"
+            className="fill-current opacity-30"
+          />
+          <rect
+            x="56"
+            y="39"
+            width="18"
+            height="5"
+            rx="2"
+            className="fill-current opacity-30"
           />
         </>
       ) : null}

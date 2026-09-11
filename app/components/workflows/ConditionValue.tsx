@@ -34,12 +34,21 @@ export function ConditionValue({
   condition,
   field,
   fields,
+  scope,
   disabled,
   onChange,
 }: {
   condition: Condition;
   field: CatalogField | undefined;
   fields: CatalogField[];
+  /**
+   * The pipeline a sibling condition has already narrowed this rule to, if any.
+   *
+   * Deal stage keys are shared across pipelines, so without this a rule reads
+   * "stage is Won" while quietly meaning "in any pipeline". Naming the pipeline
+   * first narrows the stage list to that board's stages.
+   */
+  scope?: string;
   disabled?: boolean;
   onChange: (patch: Partial<Condition>) => void;
 }) {
@@ -101,9 +110,15 @@ export function ConditionValue({
 
   if (field?.options?.length) {
     const multi = condition.operator === "in" || condition.operator === "not_in";
+    // An option with no `scopes` belongs everywhere (every field but deal
+    // stage). One with scopes is hidden when the rule is pinned to a pipeline
+    // it does not exist in.
+    const options = scope
+      ? field.options.filter((o) => !o.scopes?.length || o.scopes.includes(scope))
+      : field.options;
     return multi ? (
       <MultiEnumValue
-        options={field.options}
+        options={options}
         value={Array.isArray(condition.value) ? condition.value : []}
         disabled={disabled}
         onChange={(value) => onChange({ value })}
@@ -118,7 +133,7 @@ export function ConditionValue({
           <SelectValue placeholder={t("workflows.condition.pickValue")} />
         </SelectTrigger>
         <SelectContent>
-          {field.options.map((o) => (
+          {options.map((o) => (
             <SelectItem key={o.value} value={o.value}>
               {o.label}
             </SelectItem>

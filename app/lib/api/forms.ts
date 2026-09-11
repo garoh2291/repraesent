@@ -1,4 +1,4 @@
-import axios from "axios";
+import { publicClient } from "./public-client";
 import { apiClient } from "./axios-instance";
 import type {
   FormKind,
@@ -170,19 +170,8 @@ export async function translateForm(
 
 // --- Public (no auth) --------------------------------------------------------
 
-/**
- * A bare client for the unauthenticated endpoints.
- *
- * Deliberately NOT the shared apiClient: its response interceptor clears tokens
- * and redirects to /login on any 401. These endpoints never 401, but a visitor
- * carrying a stale token in localStorage should never be at risk of being
- * bounced out of a public form page.
- */
-const publicClient = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || "http://localhost:8001/api",
-  headers: { "Content-Type": "application/json" },
-  timeout: 30000,
-});
+// The shared unauthenticated client — see `public-client.ts` for why it is not
+// the app's apiClient.
 
 export async function getPublicForm(
   formId: string,
@@ -219,6 +208,12 @@ export interface AppointmentAvailability {
   /** Free slots as `"<startISO>--<endISO>"` — the submit wire format. */
   slots: string[];
   timezone: string;
+  /**
+   * Co-hosts only: a calendar this field books could not be read, so `slots`
+   * is empty because the answer is UNKNOWN, not because the day is full.
+   * Absent on every single-host response.
+   */
+  unavailable?: true;
 }
 
 /** Free appointment slots for one field on one day (`date` = YYYY-MM-DD). */

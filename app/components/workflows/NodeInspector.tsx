@@ -13,22 +13,35 @@ import {
 import { EmptyPanelState } from "~/components/forms/chrome";
 import { Field, FieldHint } from "~/components/wordpress/fields";
 import type {
+  AddNoteConfig,
   CatalogField,
   ConditionGroup,
+  CreateTaskConfig,
   DelayConfig,
   EmailRecipient,
+  NotifyTeamConfig,
   OutboundCapability,
   RecentRecord,
   SendCustomerEmailConfig,
   SendInternalEmailConfig,
   TriggerConfig,
+  UpdateRecordConfig,
+  WorkflowEntity,
   WorkflowNode,
 } from "~/lib/api/workflows";
+import { audienceOf } from "~/lib/api/workflows";
 import { sortAccountsWithAliases } from "~/lib/api/email-accounts";
 import { ConditionBuilder } from "./ConditionBuilder";
+import { RecipientPicker } from "./RecipientPicker";
 import { ResolvedHint } from "./ResolvedHint";
 import { EmailTemplateEditor } from "./EmailTemplateEditor";
 import { TriggerEditor } from "./TriggerEditor";
+import {
+  AddNoteEditor,
+  CreateTaskEditor,
+  NotifyTeamEditor,
+  UpdateRecordEditor,
+} from "./ActionEditors";
 
 export interface WorkspaceMemberOption {
   userId: string;
@@ -44,12 +57,14 @@ export interface WorkspaceMemberOption {
  */
 export function NodeInspector({
   node,
+  entity,
+  pipelineScope,
   fields,
   dateFields,
   locales,
   activeLocale,
-  variables,
   members,
+  catalogLoading,
   capability,
   disabled,
   workflowId,
@@ -58,12 +73,17 @@ export function NodeInspector({
   onLocaleChange,
 }: {
   node: WorkflowNode | null;
+  /** The trigger's entity — decides what an action can attach to or set. */
+  entity: WorkflowEntity;
+  /** A pipeline id when the trigger names one, so stage lists can narrow. */
+  pipelineScope?: string;
   fields: CatalogField[];
   dateFields: string[];
   locales: string[];
   activeLocale: string;
-  variables: string[];
   members: WorkspaceMemberOption[];
+  /** The field catalogue / member list are still loading. */
+  catalogLoading?: boolean;
   capability: OutboundCapability | undefined;
   disabled?: boolean;
   workflowId: string;
@@ -120,7 +140,7 @@ export function NodeInspector({
       return (
         <div className="space-y-5">
           <FieldHint>{t("workflows.inspector.internalHint")}</FieldHint>
-          <RecipientPicker
+          <InternalRecipientPicker
             recipients={cfg.recipients ?? []}
             members={members}
             disabled={disabled}
@@ -130,7 +150,8 @@ export function NodeInspector({
             byLocale={cfg.by_locale ?? {}}
             locales={locales}
             activeLocale={activeLocale}
-            variables={variables}
+            entity={entity}
+            fields={fields}
             disabled={disabled}
             workflowId={workflowId}
             previewRecord={previewRecord}
@@ -149,24 +170,20 @@ export function NodeInspector({
         <div className="space-y-5">
           {blocked ? <OutboundBlockedNotice capability={capability} /> : null}
 
-          <Field>
-            <Label htmlFor="wf-to">{t("workflows.email.toPath")}</Label>
-            <Input
-              id="wf-to"
-              disabled={disabled}
-              value={cfg.to_path ?? ""}
-              onChange={(e) => onChange({ ...cfg, to_path: e.target.value })}
-              placeholder="{{trigger.record.email}}"
-              className="font-mono text-xs"
-            />
-            <FieldHint>{t("workflows.email.toPathHint")}</FieldHint>
-            <ResolvedHint
-              workflowId={workflowId}
-              record={previewRecord}
-              template={cfg.to_path ?? ""}
-              tone="address"
-            />
-          </Field>
+          <RecipientPicker
+            audience={audienceOf(cfg)}
+            entity={entity}
+            fields={fields}
+            workflowId={workflowId}
+            previewRecord={previewRecord}
+            disabled={disabled}
+            onChange={(audience) =>
+              // `to_path` is dropped the moment the picker is used: keeping
+              // both would leave two answers to "who gets this" on one step,
+              // and the resolver prefers `audience` anyway.
+              onChange({ ...cfg, audience, to_path: undefined })
+            }
+          />
 
           {capability && capability.accounts.length > 0 ? (
             <Field>
@@ -211,7 +228,8 @@ export function NodeInspector({
             byLocale={cfg.by_locale ?? {}}
             locales={locales}
             activeLocale={activeLocale}
-            variables={variables}
+            entity={entity}
+            fields={fields}
             disabled={disabled}
             workflowId={workflowId}
             previewRecord={previewRecord}
@@ -221,6 +239,52 @@ export function NodeInspector({
         </div>
       );
     }
+
+    case "add_note":
+      return (
+        <AddNoteEditor
+          config={node.config as AddNoteConfig}
+          entity={entity}
+          fields={fields}
+          disabled={disabled}
+          onChange={onChange}
+        />
+      );
+
+    case "create_task":
+      return (
+        <CreateTaskEditor
+          config={node.config as CreateTaskConfig}
+          entity={entity}
+          members={members}
+          fields={fields}
+          disabled={disabled}
+          onChange={onChange}
+        />
+      );
+
+    case "notify_team":
+      return (
+        <NotifyTeamEditor
+          config={node.config as NotifyTeamConfig}
+          fields={fields}
+          disabled={disabled}
+          onChange={onChange}
+        />
+      );
+
+    case "update_record":
+      return (
+        <UpdateRecordEditor
+          config={node.config as UpdateRecordConfig}
+          entity={entity}
+          fields={fields}
+          members={members}
+          pipelineScope={pipelineScope}
+          disabled={disabled}
+          onChange={onChange}
+        />
+      );
 
     default:
       return null;
@@ -324,7 +388,7 @@ function DelayEditor({
   );
 }
 
-function RecipientPicker({
+function InternalRecipientPicker({
   recipients,
   members,
   disabled,
