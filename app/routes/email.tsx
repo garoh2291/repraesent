@@ -20,6 +20,7 @@ import {
   decryptEmailAccountPassword,
 } from "~/lib/api/workspaces";
 import { EmailTabs } from "~/components/email-tabs";
+import { CopyButton } from "~/components/molecule/copy-button";
 import {
   Select,
   SelectContent,
@@ -63,34 +64,6 @@ const OTHER_STEP_KEYS = [
   "email.steps.other.step6",
 ] as const;
 
-function CopyButton({
-  value,
-  t,
-}: {
-  value: string;
-  t: (key: string) => string;
-}) {
-  const [copied, setCopied] = useState(false);
-  const handleCopy = () => {
-    navigator.clipboard.writeText(value);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-  };
-  return (
-    <button
-      onClick={handleCopy}
-      className="flex items-center gap-1.5 rounded-md border border-border bg-muted/40 px-2.5 py-1 text-xs font-medium text-muted-foreground hover:bg-muted hover:text-foreground transition-colors shrink-0"
-    >
-      {copied ? (
-        <Check className="h-3 w-3 text-emerald-500" />
-      ) : (
-        <Copy className="h-3 w-3" />
-      )}
-      {copied ? t("common.copied") : t("common.copy")}
-    </button>
-  );
-}
-
 function CredentialRow({
   label,
   value,
@@ -108,7 +81,7 @@ function CredentialRow({
       <span className="flex-1 font-mono text-sm text-foreground break-all min-w-0">
         {value}
       </span>
-      <CopyButton value={value} t={t} />
+      <CopyButton value={value} />
     </div>
   );
 }
@@ -130,7 +103,7 @@ function ServerRow({
       <span className="flex-1 font-mono text-sm text-foreground break-all min-w-0">
         {value}
       </span>
-      <CopyButton value={value} t={t} />
+      <CopyButton value={value} />
     </div>
   );
 }
@@ -410,7 +383,7 @@ export default function Emails() {
                         {account.email}
                       </span>
                     )}
-                    <CopyButton value={account.email} t={t} />
+                    <CopyButton value={account.email} />
                   </div>
 
                   <PasswordRow

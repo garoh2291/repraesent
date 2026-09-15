@@ -8,7 +8,8 @@
     "build": "react-router build",
     "dev": "react-router dev",
     "start": "react-router-serve ./build/server/index.js",
-    "typecheck": "react-router typegen && tsc"
+    "typecheck": "react-router typegen && tsc",
+    "check:re-banner-styles": "vite-node scripts/check-re-banner-styles.ts"
   },
   "dependencies": {
     "@base-ui/react": "^1.2.0",

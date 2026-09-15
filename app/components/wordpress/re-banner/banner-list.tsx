@@ -9,12 +9,13 @@ import {
   STATE_I18N,
   STATE_TONE,
   scheduleLabel,
+  stripHtml,
   VARIANTS,
 } from "~/components/wordpress/re-banner/constants";
 
 /**
- * The banners on the site, ordered the way the plugin picks a winner — highest
- * priority first — so the list reads top-down as "this is the one that shows".
+ * The banners on the site, ordered the way the plugin picks a winner — newest
+ * first — so the list reads top-down as "this is the one that shows".
  */
 export function BannerList({
   banners,
@@ -67,7 +68,7 @@ export function BannerList({
         title={t("wordpress.reBanner.listTitle", "Banners")}
         subtitle={t(
           "wordpress.reBanner.listSubtitle",
-          "When several are live in the same position, the highest priority wins.",
+          "When several are live in the same position, the newest one shows.",
         )}
         action={
           <Button size="sm" onClick={onCreate}>
@@ -110,7 +111,8 @@ function BannerRow({
   const { t } = useTranslation();
   const state = STATE_I18N[banner.state];
   const variant = VARIANTS.find((v) => v.key === banner.variant);
-  const heading = banner.title.trim() || banner.name;
+  const heading = banner.name.trim() || t("wordpress.reBanner.untitled", "Untitled banner");
+  const excerpt = stripHtml(banner.body_html);
 
   return (
     <li className="flex flex-wrap items-center gap-4 px-5 py-4 sm:px-6">
@@ -140,6 +142,9 @@ function BannerRow({
             {t(state.i18n, state.fallback)}
           </span>
         </div>
+        {excerpt ? (
+          <p className="mt-0.5 truncate text-xs text-foreground/80">{excerpt}</p>
+        ) : null}
         <p className="mt-0.5 truncate text-xs text-muted-foreground">
           {scheduleLabel(banner)}
           {variant ? ` · ${t(variant.i18n, variant.fallback)}` : null}

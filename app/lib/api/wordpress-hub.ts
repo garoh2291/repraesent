@@ -451,6 +451,14 @@ export interface ReBannersResponse {
   link_targets: ReBannerLinkTarget[];
   /** The site's timezone, so the editor can say which clock the dates are on. */
   timezone: string;
+  /**
+   * The text-banner styles THIS site can render, key => label: the plugin's
+   * reference set plus whatever its theme registered. Sent rather than
+   * hard-coded here, because a copy in the dashboard would be wrong on the
+   * first site that adds one of its own — which is the case the variant exists
+   * for. Empty on a site whose plugin predates the text variant.
+   */
+  text_styles: Record<string, string>;
 }
 
 /**

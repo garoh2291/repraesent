@@ -62,8 +62,8 @@ import { setStoredSelectedView, BRAND_VIEW } from "~/lib/api/axios-instance";
 import { useAppointmentConfigs } from "~/lib/hooks/useAppointmentConfigs";
 import { useCalendarSummary } from "~/lib/hooks/useCalendarSummary";
 import { PILOT_FEATURE_LABEL_KEY, usePilotFeatures } from "~/lib/feature-flags";
-import { useWorkspaceWpSite } from "~/lib/hooks/useWorkspaceWpSite";
 import { useWorkspaceWpPluginInstalls } from "~/lib/hooks/useWorkspaceWpPluginInstalls";
+import { useWorkspaceWpSite } from "~/lib/hooks/useWorkspaceWpSite";
 import { useStripeConnection } from "~/lib/hooks/useWorkspaceIntegrations";
 import { LanguageSwitcher } from "~/components/language-switcher";
 import { usePipelinesQuery } from "~/lib/hooks/usePipelines";
@@ -553,7 +553,7 @@ export function Sidebar({
   // right mode for free, and there is nothing to reset on the way out.
   const inSettings = location.pathname.startsWith("/settings");
   const { data: wpSite } = useWorkspaceWpSite(
-    !!currentWorkspace?.id && !isDoorboostBrandWs
+    !!currentWorkspace?.id && !isDoorboostBrandWs,
   );
   const { isConnected: hasStripeConnection } = useStripeConnection(
     !!currentWorkspace?.id && !isDoorboostBrandWs
