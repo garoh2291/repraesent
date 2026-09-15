@@ -1,0 +1,128 @@
+[
+  {
+    "label": "empty input is empty output and no css",
+    "id": 3, "variant": "bar",
+    "input": {},
+    "expected": {},
+    "css": ""
+  },
+  {
+    "label": "unknown elements and properties are dropped",
+    "id": 3, "variant": "bar",
+    "input": { "p": { "font_size": 18, "bogus": 1, "background": "#ff0000" }, "table": { "font_size": 12 } },
+    "expected": { "p": { "font_size": 18 } },
+    "css": ".rebnr[data-banner=\"3\"] .rebnr__body p{font-size:18px}"
+  },
+  {
+    "label": "numbers are clamped and rounded",
+    "id": 3, "variant": "bar",
+    "input": { "p": { "font_size": 999, "line_height": 0.1, "letter_spacing": 0.123456 }, "h1": { "font_size": "17.6" } },
+    "expected": { "p": { "font_size": 120, "line_height": 0.8, "letter_spacing": 0.12 }, "h1": { "font_size": 18 } },
+    "css": ".rebnr[data-banner=\"3\"] .rebnr__body p{font-size:120px;line-height:0.8;letter-spacing:0.12em}.rebnr[data-banner=\"3\"] .rebnr__body h1{font-size:18px}"
+  },
+  {
+    "label": "bad enums and bad colours are dropped, hex is lower-cased",
+    "id": 3, "variant": "bar",
+    "input": { "h2": { "font_weight": 450, "text_transform": "blink", "text_align": "justify", "color": "red" }, "h3": { "font_weight": "700", "color": "#ABCDEF" } },
+    "expected": { "h3": { "font_weight": 700, "color": "#abcdef" } },
+    "css": ".rebnr[data-banner=\"3\"] .rebnr__body h3{font-weight:700;color:#abcdef}"
+  },
+  {
+    "label": "only set sides are emitted",
+    "id": 12, "variant": "card",
+    "input": { "p": { "margin": { "top": 4, "left": 250, "bottom": "x" }, "padding": { "right": 0 } } },
+    "expected": { "p": { "margin": { "top": 4, "left": 200 }, "padding": { "right": 0 } } },
+    "css": ".rebnr[data-banner=\"12\"] .rebnr__body p{margin-top:4px;margin-left:200px;padding-right:0px}"
+  },
+  {
+    "label": "box container splits between root and inner",
+    "id": 7, "variant": "bar",
+    "input": { "container": { "padding": { "top": 8, "bottom": 8 }, "max_width": 960, "border_radius": 12, "text_align": "center", "font_family": "serif" } },
+    "expected": { "container": { "font_family": "serif", "text_align": "center", "max_width": 960, "border_radius": 12, "padding": { "top": 8, "bottom": 8 } } },
+    "css": ".rebnr[data-banner=\"7\"]{font-family:Georgia,\"Times New Roman\",Times,serif;text-align:center;border-radius:12px}.rebnr[data-banner=\"7\"] .rebnr__inner{max-width:960px;padding-top:8px;padding-bottom:8px}"
+  },
+  {
+    "label": "card keeps max-width on the root and aligns with auto margins",
+    "id": 7, "variant": "card",
+    "input": { "container": { "max_width": 480, "align": "left" } },
+    "expected": { "container": { "max_width": 480, "align": "left" } },
+    "css": ".rebnr[data-banner=\"7\"]{max-width:480px;margin-left:0;margin-right:auto}"
+  },
+  {
+    "label": "floating aligns by corner",
+    "id": 7, "variant": "floating",
+    "input": { "container": { "align": "center" } },
+    "expected": { "container": { "align": "center" } },
+    "css": ".rebnr[data-banner=\"7\"]{left:50%;right:auto;transform:translateX(-50%)}"
+  },
+  {
+    "label": "cta aligns with align-self and takes a width",
+    "id": 7, "variant": "hero",
+    "input": { "cta": { "align": "right", "width": 200, "text_align": "center", "border_radius": 4 } },
+    "expected": { "cta": { "width": 200, "border_radius": 4, "align": "right" } },
+    "css": ".rebnr[data-banner=\"7\"] .rebnr__cta{width:200px;border-radius:4px;align-self:flex-end}"
+  },
+  {
+    "label": "image and link",
+    "id": 7, "variant": "card",
+    "input": { "image": { "width": 64, "height": 64, "border_radius": 100, "align": "center", "font_size": 20 }, "a": { "text_decoration": "none", "color": "#112233" } },
+    "expected": { "a": { "text_decoration": "none", "color": "#112233" }, "image": { "width": 64, "height": 64, "border_radius": 100, "align": "center" } },
+    "css": ".rebnr[data-banner=\"7\"] .rebnr__body a{text-decoration:none;color:#112233}.rebnr[data-banner=\"7\"] .rebnr__image{width:64px;height:64px;border-radius:100px;margin-left:auto;margin-right:auto}"
+  },
+  {
+    "label": "text variant: wrapper and children, no cta or image",
+    "id": 9, "variant": "text",
+    "input": { "container": { "font_size": 20, "text_align": "center", "padding": { "left": 12, "right": 12 } }, "body": { "max_width": 600 }, "p": { "line_height": 1.4 }, "cta": { "width": 100 }, "image": { "width": 40 } },
+    "expected": { "container": { "font_size": 20, "text_align": "center", "padding": { "left": 12, "right": 12 } }, "body": { "max_width": 600 }, "p": { "line_height": 1.4 }, "cta": { "width": 100 }, "image": { "width": 40 } },
+    "css": ".rebnr-text.rebnr-text-9{font-size:20px;text-align:center;padding-right:12px;padding-left:12px}.rebnr-text.rebnr-text-9{max-width:600px}p.rebnr-text.rebnr-text-9,.rebnr-text.rebnr-text-9 p{line-height:1.4}"
+  },
+  {
+    "label": "text layout align fills the column (past a theme's p max-width) and centres every tag",
+    "id": 3, "variant": "text", "align": "center",
+    "input": {},
+    "expected": {},
+    "css": ".rebnr-text.rebnr-text-3{display:block;width:100%;max-width:none;text-align:center}.rebnr-text.rebnr-text-3 p,.rebnr-text.rebnr-text-3 h1,.rebnr-text.rebnr-text-3 h2,.rebnr-text.rebnr-text-3 h3,.rebnr-text.rebnr-text-3 h4,.rebnr-text.rebnr-text-3 h5,.rebnr-text.rebnr-text-3 h6,.rebnr-text.rebnr-text-3 li{text-align:center}"
+  },
+  {
+    "label": "text variant: a heading override names the block itself, list items and links stay descendants",
+    "id": 5, "variant": "text",
+    "input": { "h2": { "font_size": 40, "text_transform": "uppercase" }, "li": { "font_size": 14 }, "a": { "text_decoration": "none" } },
+    "expected": { "h2": { "font_size": 40, "text_transform": "uppercase" }, "li": { "font_size": 14 }, "a": { "text_decoration": "none" } },
+    "css": "h2.rebnr-text.rebnr-text-5,.rebnr-text.rebnr-text-5 h2{font-size:40px;text-transform:uppercase}.rebnr-text.rebnr-text-5 li{font-size:14px}.rebnr-text.rebnr-text-5 a{text-decoration:none}"
+  },
+  {
+    "label": "text layout align: an explicit wrapper max width is emitted after the layout rule and wins",
+    "id": 4, "variant": "text", "align": "right",
+    "input": { "container": { "max_width": 600 } },
+    "expected": { "container": { "max_width": 600 } },
+    "css": ".rebnr-text.rebnr-text-4{display:block;width:100%;max-width:none;text-align:right}.rebnr-text.rebnr-text-4 p,.rebnr-text.rebnr-text-4 h1,.rebnr-text.rebnr-text-4 h2,.rebnr-text.rebnr-text-4 h3,.rebnr-text.rebnr-text-4 h4,.rebnr-text.rebnr-text-4 h5,.rebnr-text.rebnr-text-4 h6,.rebnr-text.rebnr-text-4 li{text-align:right}.rebnr-text.rebnr-text-4{max-width:600px}"
+  },
+  {
+    "label": "json string input is accepted",
+    "id": 2, "variant": "bar",
+    "input": "{\"h1\":{\"font_size\":30,\"text_transform\":\"uppercase\"}}",
+    "expected": { "h1": { "font_size": 30, "text_transform": "uppercase" } },
+    "css": ".rebnr[data-banner=\"2\"] .rebnr__body h1{font-size:30px;text-transform:uppercase}"
+  },
+  {
+    "label": "garbage input is empty",
+    "id": 2, "variant": "bar",
+    "input": "not json",
+    "expected": {},
+    "css": ""
+  },
+  {
+    "label": "an element with nothing valid is pruned",
+    "id": 2, "variant": "bar",
+    "input": { "p": { "font_size": "abc", "margin": { "top": "" } }, "h1": {} },
+    "expected": {},
+    "css": ""
+  },
+  {
+    "label": "line-height formats without trailing zeros",
+    "id": 2, "variant": "bar",
+    "input": { "p": { "line_height": 2, "letter_spacing": -0.05 }, "li": { "line_height": 1.25, "letter_spacing": 0 } },
+    "expected": { "p": { "line_height": 2, "letter_spacing": -0.05 }, "li": { "line_height": 1.25, "letter_spacing": 0 } },
+    "css": ".rebnr[data-banner=\"2\"] .rebnr__body p{line-height:2;letter-spacing:-0.05em}.rebnr[data-banner=\"2\"] .rebnr__body li{line-height:1.25;letter-spacing:0em}"
+  }
+]

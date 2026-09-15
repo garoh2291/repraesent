@@ -1,3 +1,7 @@
+import type { ReBannerStyles } from "./re-banner-styles";
+
+export type { ReBannerStyles } from "./re-banner-styles";
+
 /**
  * Shapes of the `re_cookie_settings` WordPress option, mirroring
  * `ReCookie\Config\ConfigRepository::defaults()` in the plugin. Keys stay in
@@ -730,3 +734,107 @@ export type ReTranslateSettings = {
 
 /** A theme slot the plugin can auto-place a button into. */
 export type ReAppointmentSlot = { key: string; label: string; group: string };
+
+/**
+ * re:banner — temporary, scheduled site banners.
+ *
+ * Dates are wall-clock strings ('YYYY-MM-DD HH:MM') in the SITE's timezone,
+ * not ISO instants: the editor types a local time and means it locally, and
+ * converting through the browser's timezone would move every banner by an hour
+ * twice a year. `state` is derived server-side from the epochs the plugin
+ * stored when it saved — render it rather than recomputing from the dates, so
+ * the dashboard and wp-admin can never disagree about whether a banner is on.
+ */
+/**
+ * `text` is the odd one out and deliberately so: a fragment of words with no
+ * box, no colours and no stylesheet of its own, placed by shortcode so it
+ * inherits whatever element it lands in. Position, the colour fields and
+ * `dismissible` do not apply to it.
+ */
+export type ReBannerVariant = "bar" | "card" | "hero" | "floating" | "text";
+
+export type ReBannerPosition = "top" | "bottom";
+/**
+ * How a box banner's content sits inside it. `auto` follows the variant —
+ * centred for the hero band, left for the rest — and is what a banner has
+ * until somebody aligns it. Rendered by the plugin as `data-align` with real
+ * flex rules, so it moves image, words and button together whatever element
+ * the words are in. Ignored by `text`.
+ */
+export type ReBannerAlign = "auto" | "left" | "center" | "right";
+export type ReBannerCtaType = "url" | "post";
+export type ReBannerVisibility = "all" | "include" | "exclude";
+/**
+ * How a box banner gets onto the page: pinned by the plugin at the top of the
+ * page (`auto`, on the pages `visibility` allows) or only where its shortcode
+ * is pasted (`shortcode`). A text banner is shortcode-only regardless.
+ */
+export type ReBannerPlacement = "auto" | "shortcode";
+export type ReBannerStatus = "active" | "inactive";
+export type ReBannerState = "live" | "scheduled" | "expired" | "paused";
+
+/** Everything the editor edits. `id`/`state` are server-assigned. */
+export type ReBannerConfig = {
+  /**
+   * Internal label — lists, the aria-label — never shown to visitors. The
+   * plugin derives one from the content when it is left empty.
+   */
+  name: string;
+  /**
+   * The banner's content, for every variant, as HTML. Sanitized by the plugin
+   * on write against its own allowlist — what comes back may be shorter than
+   * what was sent, which is why the editor re-seeds from the saved response.
+   */
+  body_html: string;
+  /**
+   * Per-element typography and spacing overrides. `{}` means the banner
+   * inherits — its theme for `text`, the plugin's stylesheet for the boxes —
+   * and emits no CSS at all. See `re-banner-styles.ts` for the schema.
+   */
+  styles: ReBannerStyles;
+  image_id: number;
+  cta_label: string;
+  cta_type: ReBannerCtaType;
+  cta_url: string;
+  cta_post_id: number;
+  cta_new_tab: boolean;
+  variant: ReBannerVariant;
+  position: ReBannerPosition;
+  align: ReBannerAlign;
+  /**
+   * `text` only. A key from the list response's `text_styles`, rendered as the
+   * class `rebnr-text--{key}`. The CSS behind it belongs to the site's theme,
+   * never to the plugin.
+   */
+  text_style: string;
+  accent_color: string;
+  text_color: string;
+  bg_color: string;
+  dismissible: boolean;
+  /** 'YYYY-MM-DD HH:MM' in site time, or '' for open-ended. */
+  starts_at: string;
+  /** 'YYYY-MM-DD HH:MM' in site time, or '' for open-ended. */
+  ends_at: string;
+  placement: ReBannerPlacement;
+  visibility: ReBannerVisibility;
+  page_ids: number[];
+  status: ReBannerStatus;
+  /** Highest priority wins within one position. */
+  priority: number;
+};
+
+export type ReBanner = ReBannerConfig & {
+  /** WordPress post ID — this is the `id` in `[re_banner id="N"]`. */
+  id: number;
+  /** Resolved thumbnail, or null when unset or the attachment is gone. */
+  image_url: string | null;
+  state: ReBannerState;
+};
+
+/** A published page or post the CTA can point at. */
+export type ReBannerLinkTarget = {
+  id: number;
+  title: string;
+  type: "page" | "post";
+  url: string;
+};

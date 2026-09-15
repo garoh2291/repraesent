@@ -13,6 +13,7 @@ import { ReReviewSettingsPage } from "~/components/wordpress/re-review-settings-
 import { ReAppointmentSettingsPage } from "~/components/wordpress/re-appointment-settings-page";
 import { ReTranslateSettingsPage } from "~/components/wordpress/re-translate-settings-page";
 import { ReVisibleSettingsPage } from "~/components/wordpress/re-visible-settings-page";
+import { ReBannerSettingsPage } from "~/components/wordpress/re-banner-settings-page";
 import { useResolvePluginKind } from "~/lib/hooks/useWorkspaceWpPluginCatalog";
 
 export function meta() {
@@ -93,6 +94,8 @@ export default function WordPressPluginSettingsRoute() {
         return <ReTranslateSettingsPage />;
       case "re-visible":
         return <ReVisibleSettingsPage />;
+      case "re-banner":
+        return <ReBannerSettingsPage />;
     }
   })();
 

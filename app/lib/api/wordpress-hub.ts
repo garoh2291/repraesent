@@ -4,6 +4,9 @@ import type {
   ReAppointmentButtonConfig,
   ReAppointmentPage,
   ReAppointmentSlot,
+  ReBanner,
+  ReBannerConfig,
+  ReBannerLinkTarget,
   ReIndexPageSeoListResponse,
   ReTranslateBulkState,
   ReTranslatePriceCellInput,
@@ -57,7 +60,8 @@ export type WpPluginSettingsKind =
   | "re-review"
   | "re-appointment"
   | "re-translate"
-  | "re-visible";
+  | "re-visible"
+  | "re-banner";
 
 /** A single plugin installed on the workspace's WordPress site. */
 export interface WpPlugin {
@@ -435,6 +439,78 @@ export async function getWorkspaceReAppointmentPickerUrl(
   const res = await apiClient.get<ReAppointmentPickerUrlResponse>(
     `/wordpress/site/plugins/${pluginUuid}/picker-url`,
     { params: { parentOrigin, buttonId } },
+  );
+  return res.data;
+}
+
+/* ── re:banner ────────────────────────────────────────────────────────── */
+
+export interface ReBannersResponse {
+  banners: ReBanner[];
+  /** Published pages and posts, for the CTA target and the page rules. */
+  link_targets: ReBannerLinkTarget[];
+  /** The site's timezone, so the editor can say which clock the dates are on. */
+  timezone: string;
+  /**
+   * The text-banner styles THIS site can render, key => label: the plugin's
+   * reference set plus whatever its theme registered. Sent rather than
+   * hard-coded here, because a copy in the dashboard would be wrong on the
+   * first site that adds one of its own — which is the case the variant exists
+   * for. Empty on a site whose plugin predates the text variant.
+   */
+  text_styles: Record<string, string>;
+}
+
+/**
+ * List the banners on the workspace's own site. A site with the plugin
+ * installed but no banners yet returns an empty `banners` array — not an error.
+ */
+export async function getWorkspaceReBanners(
+  pluginUuid: string,
+): Promise<ReBannersResponse> {
+  const res = await apiClient.get<ReBannersResponse>(
+    `/wordpress/site/plugins/${pluginUuid}/banners`,
+  );
+  return res.data;
+}
+
+export async function createWorkspaceReBanner(
+  pluginUuid: string,
+  config: Partial<ReBannerConfig>,
+): Promise<ReBanner> {
+  const res = await apiClient.post<ReBanner>(
+    `/wordpress/site/plugins/${pluginUuid}/banners`,
+    config,
+  );
+  return res.data;
+}
+
+/**
+ * Update one banner. The server merges the payload over the banner's stored
+ * config, so an omitted field keeps its current value.
+ *
+ * Responds 400 carrying the plugin's own wording when the schedule window is
+ * invalid (an end date before its start), so surface the message rather than a
+ * generic failure.
+ */
+export async function updateWorkspaceReBanner(
+  pluginUuid: string,
+  bannerId: number,
+  config: Partial<ReBannerConfig>,
+): Promise<ReBanner> {
+  const res = await apiClient.put<ReBanner>(
+    `/wordpress/site/plugins/${pluginUuid}/banners/${bannerId}`,
+    config,
+  );
+  return res.data;
+}
+
+export async function deleteWorkspaceReBanner(
+  pluginUuid: string,
+  bannerId: number,
+): Promise<{ success: true; id: number }> {
+  const res = await apiClient.delete<{ success: true; id: number }>(
+    `/wordpress/site/plugins/${pluginUuid}/banners/${bannerId}`,
   );
   return res.data;
 }
