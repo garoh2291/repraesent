@@ -64,6 +64,7 @@ import TooltipContainer from "~/components/tooltip-container";
 import { useDebounce } from "~/lib/hooks/useDebounce";
 import { useSearchShortcut } from "~/lib/hooks/useSearchShortcut";
 import { useSearchParamsSelect } from "~/lib/hooks/useQueryParams";
+import { DATA_CUTOFF_DATE, clampFromDate } from "~/lib/constants/data-cutoff";
 
 const ACCENT = {
   cost: "#f59e0b",
@@ -74,10 +75,11 @@ const ACCENT = {
   conversions_value: "#8b5cf6",
 };
 
+/** Default view is "all time", which starts at the data cutoff. */
 function defaultRange(): DateRange {
   const today = new Date();
   return {
-    startDate: format(new Date(2020, 0, 1), "yyyy-MM-dd"),
+    startDate: DATA_CUTOFF_DATE,
     endDate: format(today, "yyyy-MM-dd"),
   };
 }
@@ -109,7 +111,9 @@ function parseRange(params: URLSearchParams): DateRange | null {
   const from = params.get(QP.from);
   const to = params.get(QP.to);
   if (!from || !to || !YMD_RE.test(from) || !YMD_RE.test(to)) return null;
-  return { startDate: from, endDate: to };
+  // A shared/bookmarked link can carry a pre-cutoff start; raise it instead of
+  // requesting data that is never returned.
+  return { startDate: clampFromDate(from), endDate: to };
 }
 
 function parseIds(raw: string | null): string[] {

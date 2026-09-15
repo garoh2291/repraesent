@@ -28,6 +28,7 @@ import {
   type FilterOption,
 } from "./types";
 import { LEADS_FILTERS } from "~/lib/leads/filter-presets";
+import { DATA_CUTOFF } from "~/lib/constants/data-cutoff";
 
 const STATIC_FILTERS: Record<string, FilterType[]> = {
   leads: LEADS_FILTERS,
@@ -461,6 +462,10 @@ export function FilterComponent({
                         onSelect={(date) =>
                           handleDateSelect(activeFilter, date)
                         }
+                        // Nothing before the data cutoff is served, so it
+                        // cannot be picked either.
+                        disabled={{ before: DATA_CUTOFF }}
+                        startMonth={DATA_CUTOFF}
                         className="rounded-md border"
                       />
                     </div>

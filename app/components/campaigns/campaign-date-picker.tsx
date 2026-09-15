@@ -24,6 +24,7 @@ import {
 } from "~/components/ui/popover";
 import { cn } from "~/lib/utils";
 import type { DateRange } from "~/lib/api/campaigns";
+import { DATA_CUTOFF, clampDate } from "~/lib/constants/data-cutoff";
 
 function toYMD(d: Date): string {
   return format(d, "yyyy-MM-dd");
@@ -105,8 +106,9 @@ function usePresets(): Preset[] {
       },
       {
         key: "all_time",
+        // "All time" starts at the data cutoff — nothing older is served.
         labelKey: "datePicker.allTime",
-        getRange: () => ({ start: new Date(2020, 0, 1), end: today }),
+        getRange: () => ({ start: DATA_CUTOFF, end: today }),
       },
     ],
     [today, yesterday]
@@ -183,7 +185,8 @@ function MiniCalendar({
       <div className="flex items-center justify-between mb-2 px-1">
         <button
           onClick={() => onMonthChange(addMonths(month, -1))}
-          className="p-1 rounded hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
+          disabled={!isAfter(startOfMonth(month), startOfMonth(DATA_CUTOFF))}
+          className="p-1 rounded hover:bg-muted text-muted-foreground hover:text-foreground transition-colors disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:bg-transparent"
         >
           <ChevronLeft className="h-3.5 w-3.5" />
         </button>
@@ -218,7 +221,8 @@ function MiniCalendar({
               return <div key={di} className="h-7" />;
             }
             const isToday = isSameDay(day, today);
-            const isFuture = isAfter(day, today);
+            const isFuture =
+              isAfter(day, today) || isBefore(day, DATA_CUTOFF);
             const inRange = isInRange(day);
             const isStart = isRangeStart(day);
             const isEnd = isRangeEnd(day);
@@ -293,8 +297,8 @@ export function CampaignDatePicker({
     (isOpen: boolean) => {
       if (isOpen) {
         // Init from current value
-        const s = new Date(value.startDate + "T00:00:00");
-        const e = new Date(value.endDate + "T00:00:00");
+        const s = clampDate(new Date(value.startDate + "T00:00:00"));
+        const e = clampDate(new Date(value.endDate + "T00:00:00"));
         setSelStart(s);
         setSelEnd(e);
         setCalMonth(new Date(e.getFullYear(), e.getMonth(), 1));
@@ -309,10 +313,12 @@ export function CampaignDatePicker({
 
   const applyRange = useCallback(
     (start: Date, end: Date, presetKey?: string) => {
+      const clampedStart = clampDate(start);
+      const clampedEnd = clampDate(end);
       const sorted =
-        isBefore(start, end) || isSameDay(start, end)
-          ? { start, end }
-          : { start: end, end: start };
+        isBefore(clampedStart, clampedEnd) || isSameDay(clampedStart, clampedEnd)
+          ? { start: clampedStart, end: clampedEnd }
+          : { start: clampedEnd, end: clampedStart };
       onChange(
         {
           startDate: toYMD(sorted.start),

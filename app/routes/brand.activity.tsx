@@ -29,6 +29,7 @@ import {
   resolveClientTypeWording,
   useClientTypeWording,
 } from "~/lib/hooks/useClientTypeWording";
+import { DATA_CUTOFF_DATE } from "~/lib/constants/data-cutoff";
 
 export function meta() {
   // Module scope: no auth context, falls back to partner-house wording.
@@ -43,7 +44,7 @@ function defaultRange(): DateRange {
   const t = new Date();
   const pad = (n: number) => String(n).padStart(2, "0");
   return {
-    startDate: "2020-01-01",
+    startDate: DATA_CUTOFF_DATE,
     endDate: `${t.getFullYear()}-${pad(t.getMonth() + 1)}-${pad(t.getDate())}`,
   };
 }
