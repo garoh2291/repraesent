@@ -42,11 +42,6 @@ export default function MailPage() {
     titleSuffix: " - Repraesent",
   });
 
-  const hasAccess =
-    currentWorkspace?.services?.some(
-      (s) => s.service_type === "lead-form" || s.service_slug === "lead-form",
-    ) ?? false;
-
   const query = useInfiniteQuery({
     queryKey: ["mail-messages", filter],
     queryFn: ({ pageParam }) =>
@@ -61,7 +56,7 @@ export default function MailPage() {
       const loaded = lastPage.page * lastPage.pageSize;
       return (lastPage.total ?? 0) > loaded ? lastPage.page + 1 : undefined;
     },
-    enabled: hasAccess && !!currentWorkspace,
+    enabled: !!currentWorkspace,
   });
 
   const messages = query.data?.pages.flatMap((p) => p.data) ?? [];
@@ -78,16 +73,6 @@ export default function MailPage() {
       label: t("mail.filterLinked", { defaultValue: "Linked" }),
     },
   ];
-
-  if (!hasAccess) {
-    return (
-      <div className="p-6 text-sm text-muted-foreground">
-        {t("mail.noAccess", {
-          defaultValue: "Mail is not available for this workspace.",
-        })}
-      </div>
-    );
-  }
 
   return (
     <div className="mx-auto w-full max-w-[900px] space-y-6 p-4 sm:space-y-8 sm:p-6 app-fade-in">

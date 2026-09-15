@@ -220,6 +220,26 @@ ${s} .rf-field.rf-full { grid-column: 1 / -1; }
   ${s} .rf-field { grid-column: 1 / -1; }
 }
 
+/* Inline submit: one input, one button, one row.
+
+   The button is a grid child of .rf-row rather than a block underneath, so the
+   row becomes "everything, then the button" and the auto column takes exactly
+   the button's width. align-items: end lines the button's bottom up with the
+   input's, whether or not the field carries a label above it.
+
+   Below the breakpoint it stacks like everything else — a full-width input and
+   a full-width button read better than two squeezed halves on a phone. */
+${s} .rf-inline .rf-row {
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: end;
+}
+${s} .rf-inline .rf-field.rf-full { grid-column: auto; }
+${s} .rf-inline .rf-submit-cell { justify-content: flex-end; }
+@media (max-width: 560px) {
+  ${s} .rf-inline .rf-row { grid-template-columns: minmax(0, 1fr); }
+  ${s} .rf-inline .rf-field.rf-full { grid-column: 1 / -1; }
+}
+
 /* Block, not inline-flex. A label used to be one text node, so a flex row with
    a gap was a tidy way to space the required star. Now that labels carry inline
    markup, every <b>/<i>/<a> the tokeniser emits becomes its own flex item and
@@ -464,6 +484,43 @@ ${s} .rf-appt-empty, ${s} .rf-appt-loading {
   grid-column: 1 / -1;
   color: var(--rf-muted);
   font-size: calc(${d.font} * 0.92);
+}
+/* Co-hosts. Wraps rather than scrolls: this sits above the day strip, and a
+   second horizontal scroller next to that one is a trap on a phone. */
+${s} .rf-appt-hosts {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 12px;
+}
+${s} .rf-appt-hosts:empty { display: none; }
+${s} .rf-appt-host {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+${s} .rf-appt-host-av {
+  width: 26px;
+  height: 26px;
+  flex: 0 0 auto;
+  border-radius: 50%;
+  object-fit: cover;
+  background: var(--rf-surface);
+  border: 1px solid var(--rf-border);
+}
+${s} .rf-appt-host-ini {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--rf-muted);
+  font-size: calc(${d.font} * 0.78);
+  line-height: 1;
+}
+${s} .rf-appt-host-nm {
+  min-width: 0;
+  font-size: calc(${d.font} * 0.92);
+  color: var(--rf-text);
 }
 
 /* Address */

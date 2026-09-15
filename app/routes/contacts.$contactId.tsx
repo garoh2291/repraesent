@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Link, useParams, useNavigate, useLocation } from "react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
+import { personNameOr } from "~/lib/contacts/display-name";
 import { ArrowLeft, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { useAuthContext } from "~/providers/auth-provider";
@@ -54,28 +55,23 @@ export default function ContactDetailPage() {
   const canEdit = useCanEditLeads();
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
 
-  const hasAccess =
-    currentWorkspace?.services?.some(
-      (s) => s.service_type === "lead-form" || s.service_slug === "lead-form",
-    ) ?? false;
-
   const { data, isLoading, isError } = useQuery({
     queryKey: ["contact", contactRouteId],
     queryFn: () => getContact(contactRouteId!),
-    enabled: !!contactRouteId && hasAccess,
+    enabled: !!contactRouteId,
   });
 
   const { data: contactHistory = [], isLoading: contactHistoryLoading } =
     useQuery({
       queryKey: ["contact-history", contactRouteId],
       queryFn: () => getContactHistory(contactRouteId!),
-      enabled: !!contactRouteId && hasAccess && !!data,
+      enabled: !!contactRouteId && !!data,
     });
 
   const workspaceQuery = useQuery({
     queryKey: ["workspace-detail"],
     queryFn: () => getWorkspaceDetail(),
-    enabled: !!currentWorkspace && hasAccess,
+    enabled: !!currentWorkspace,
   });
 
   const workspaceMembers: WorkspaceMemberItem[] = useMemo(
@@ -129,16 +125,6 @@ export default function ContactDetailPage() {
     },
   });
 
-  if (!hasAccess) {
-    return (
-      <div className="p-6 text-sm text-muted-foreground">
-        {t("contacts.noAccess", {
-          defaultValue: "Contacts are not available for this workspace.",
-        })}
-      </div>
-    );
-  }
-
   if (!contactRouteId) {
     navigate("/contacts", { replace: true });
     return null;
@@ -174,21 +160,28 @@ export default function ContactDetailPage() {
   const resolvedContactId = contact?.id ? String(contact.id) : contactRouteId;
   const leadId = crm.lead_id ? String(crm.lead_id) : null;
 
-  const displayName =
-    (contact?.full_name as string)?.trim() ||
-    [contact?.first_name, contact?.last_name]
-      .filter(Boolean)
-      .join(" ")
-      .trim() ||
-    t("contacts.unnamed", { defaultValue: "Contact" });
+  // Prefilled recipient for a new email. Removable in the composer, so this is
+  // a starting point rather than a constraint. Resolved before the name,
+  // because the name falls back to it.
+  const primaryEmail = emails.find((e) => e.is_primary) ?? emails[0];
+
+  // The address before the generic word — "Contact" as a page title names the
+  // type of thing you are looking at, not the person. A newsletter contact has
+  // no name at all, and the address is what they actually gave you.
+  const displayName = personNameOr(
+    {
+      full_name: contact?.full_name as string | null | undefined,
+      first_name: contact?.first_name as string | null | undefined,
+      last_name: contact?.last_name as string | null | undefined,
+      email: primaryEmail?.address ? String(primaryEmail.address) : null,
+    },
+    t("contacts.unnamed", { defaultValue: "Contact" }),
+  );
 
   const taskLeadId = leadId ?? undefined;
   const taskContactId = !leadId ? resolvedContactId : undefined;
   const taskContextLabel = displayName;
 
-  // Prefilled recipient for a new email. Removable in the composer, so this is
-  // a starting point rather than a constraint.
-  const primaryEmail = emails.find((e) => e.is_primary) ?? emails[0];
   const composeRecipients = primaryEmail?.address
     ? [{ email: String(primaryEmail.address), name: displayName }]
     : [];

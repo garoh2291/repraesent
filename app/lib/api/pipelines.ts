@@ -13,6 +13,12 @@ export interface Pipeline {
   description: string | null;
   is_default: boolean;
   position: number;
+  /**
+   * Whether deals on this board have a working public tracking link. The
+   * capability belongs to the pipeline, not the deal: switching it off makes
+   * every outstanding link 404 at once, without changing a single token.
+   */
+  public_tracking_enabled: boolean;
   /** Live (non-deleted) deals on this pipeline's board. */
   deal_count: number;
 }
@@ -25,6 +31,8 @@ export async function listPipelines(): Promise<Pipeline[]> {
 export async function createPipeline(payload: {
   name: string;
   description?: string;
+  /** Omitted means private — the server defaults it rather than guessing. */
+  public_tracking_enabled?: boolean;
 }): Promise<Pipeline> {
   const { data } = await apiClient.post<Pipeline>("/pipelines", payload);
   return data;
@@ -35,6 +43,7 @@ export async function updatePipeline(
   payload: {
     name?: string;
     description?: string | null;
+    public_tracking_enabled?: boolean;
   },
 ): Promise<Pipeline> {
   const { data } = await apiClient.patch<Pipeline>(`/pipelines/${id}`, payload);

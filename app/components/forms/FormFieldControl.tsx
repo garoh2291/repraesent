@@ -16,11 +16,23 @@ import { Star } from "lucide-react";
 import { useState, type ReactNode } from "react";
 import { InlineText } from "~/components/forms/InlineText";
 import { getAppointmentAvailability } from "~/lib/api/forms";
+import { visibleHosts } from "~/lib/forms/appointment-hosts";
 import {
   contentKey,
   type FormField,
   type FormFieldAddressParts,
 } from "~/lib/forms/schema";
+
+/** Fallback avatar for a host with no picture. Mirrors the embed runtime's. */
+function initialsOf(name: string): string {
+  const parts = String(name || "").split(/\s+/);
+  let out = "";
+  for (const part of parts) {
+    if (out.length > 1) break;
+    if (part) out += part.charAt(0).toUpperCase();
+  }
+  return out || "?";
+}
 
 const ADDRESS_PARTS: (keyof FormFieldAddressParts)[] = [
   "street",
@@ -482,6 +494,14 @@ function AppointmentControl({
         {t(contentKey.errorGeneric()) || "Something went wrong."}
       </div>
     );
+  } else if (slotsQuery.data?.unavailable) {
+    // A co-host's calendar could not be read. Saying "no free times" would be
+    // a guess, and not guessing is the entire point of co-booking.
+    slotGrid = (
+      <div className="rf-appt-empty">
+        {t("appointment.unavailable") || "Times cannot be checked right now."}
+      </div>
+    );
   } else if ((slotsQuery.data?.slots.length ?? 0) === 0) {
     slotGrid = (
       <div className="rf-appt-empty">
@@ -505,6 +525,31 @@ function AppointmentControl({
 
   return (
     <div className="rf-appt" role="group" aria-labelledby={inputId}>
+      {/* Who the visitor will meet: the hosts with a person attached. Mirrors
+          the `hs` gate in form-render.service.ts — this file is a twin by
+          convention, not pinned by a spec, so it cannot break a test but it CAN
+          break WYSIWYG in the builder. */}
+      {visibleHosts(field.appointment?.hosts).length > 0 ? (
+        <div className="rf-appt-hosts">
+          {visibleHosts(field.appointment?.hosts).map((host) => (
+            <div key={host.targetKey} className="rf-appt-host">
+              {host.avatarUrl ? (
+                <img
+                  className="rf-appt-host-av"
+                  src={host.avatarUrl}
+                  alt=""
+                  loading="lazy"
+                />
+              ) : (
+                <span className="rf-appt-host-av rf-appt-host-ini">
+                  {initialsOf(host.label ?? "")}
+                </span>
+              )}
+              <span className="rf-appt-host-nm">{host.label}</span>
+            </div>
+          ))}
+        </div>
+      ) : null}
       <div className="rf-appt-nav">
         <button
           type="button"

@@ -462,7 +462,13 @@ export function validateDraft(draft: AssistantDraft | null): AssistantIssue[] {
         });
       }
     } else if (a.type === "book") {
-      if (!a.appointment?.targetKey?.trim()) {
+      // Same order as the resolver: hosts first, then targetKey. A shape check
+      // rather than a parse — publishing only needs to know a calendar was
+      // named, and the resolver has the last word at request time.
+      const hostNamed = (a.appointment?.hosts ?? []).some((h) =>
+        h?.targetKey?.trim(),
+      );
+      if (!hostNamed && !a.appointment?.targetKey?.trim()) {
         push({
           code: "actionAppointmentMissing",
           tab: "actions",

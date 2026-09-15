@@ -8,10 +8,13 @@ import { Textarea } from "~/components/ui/textarea";
 import { Segmented, SegmentedButton } from "~/components/forms/chrome";
 import { EmailHtmlFrame } from "~/components/email-campaigns/EmailHtmlFrame";
 import { UseTemplatePicker } from "~/components/email-campaigns/UseTemplatePicker";
+import { extractErrorMessage } from "~/lib/api/axios-instance";
 import { Field, FieldHint } from "~/components/wordpress/fields";
 import { ResolvedHint } from "./ResolvedHint";
+import { VariablePicker } from "./VariablePicker";
 import {
   previewTemplate,
+  type CatalogField,
   type LocalizedTemplate,
   type RecentRecord,
 } from "~/lib/api/workflows";
@@ -28,9 +31,10 @@ export function EmailTemplateEditor({
   byLocale,
   locales,
   activeLocale,
-  variables,
+  fields,
   disabled,
   workflowId,
+  entity,
   previewRecord,
   onChange,
   onLocaleChange,
@@ -38,9 +42,15 @@ export function EmailTemplateEditor({
   byLocale: LocalizedTemplate;
   locales: string[];
   activeLocale: string;
-  variables: string[];
+  fields: CatalogField[];
   disabled?: boolean;
   workflowId: string;
+  /**
+   * The record type the builder is showing right now, which is not always the
+   * one the saved draft names. Sent with the preview so switching the trigger
+   * does not break previews until you remember to save.
+   */
+  entity: string;
   previewRecord: RecentRecord | null;
   onChange: (next: LocalizedTemplate) => void;
   onLocaleChange: (locale: string) => void;
@@ -48,6 +58,15 @@ export function EmailTemplateEditor({
   const { t } = useTranslation();
   const [view, setView] = useState<"code" | "preview">("code");
   const bodyRef = useRef<HTMLTextAreaElement | null>(null);
+  const subjectRef = useRef<HTMLInputElement | null>(null);
+  /**
+   * Which box the author was last typing in.
+   *
+   * The picker used to splice into the body unconditionally, so clicking a
+   * variable while the caret sat in the Subject silently appended it to the
+   * body instead — the value went somewhere the author was not looking.
+   */
+  const [focused, setFocused] = useState<"subject" | "html">("html");
 
   const current = byLocale[activeLocale] ?? { subject: "", html: "" };
 
@@ -57,10 +76,15 @@ export function EmailTemplateEditor({
    * plus a stale window rather than a timer — typing changes the key, and
    * react-query coalesces the bursts.
    */
-  const { data: preview } = useQuery({
+  const {
+    data: preview,
+    isFetching: previewLoading,
+    error: previewError,
+  } = useQuery({
     queryKey: [
       "workflow-preview",
       workflowId,
+      entity,
       previewRecord?.id,
       current.subject,
       current.html,
@@ -71,11 +95,13 @@ export function EmailTemplateEditor({
           entity_id: previewRecord!.id,
           template: current.subject,
           escape: false,
+          entity,
         }),
         previewTemplate(workflowId, {
           entity_id: previewRecord!.id,
           template: current.html,
           escape: true,
+          entity,
         }),
       ]);
       return {
@@ -86,23 +112,28 @@ export function EmailTemplateEditor({
     },
     enabled: !!previewRecord && view === "preview",
     staleTime: 2000,
+    // A preview that failed must say so, not retry three times in silence.
+    retry: false,
   });
 
   const patch = (next: Partial<{ subject: string; html: string }>) =>
     onChange({ ...byLocale, [activeLocale]: { ...current, ...next } });
 
-  /** Insert at the caret — what makes the chips worth clicking. */
+  /** Insert at the caret, into whichever field the author was last in. */
   const spliceAtCaret = (token: string) => {
-    const el = bodyRef.current;
+    const field = focused;
+    const el = field === "subject" ? subjectRef.current : bodyRef.current;
+    const value = field === "subject" ? current.subject : current.html;
+
     if (!el) {
-      patch({ html: `${current.html}${token}` });
+      patch({ [field]: `${value}${token}` } as Partial<typeof current>);
       return;
     }
-    const start = el.selectionStart ?? current.html.length;
+    const start = el.selectionStart ?? value.length;
     const end = el.selectionEnd ?? start;
     patch({
-      html: current.html.slice(0, start) + token + current.html.slice(end),
-    });
+      [field]: value.slice(0, start) + token + value.slice(end),
+    } as Partial<typeof current>);
     requestAnimationFrame(() => {
       el.focus();
       el.setSelectionRange(start + token.length, start + token.length);
@@ -148,13 +179,16 @@ export function EmailTemplateEditor({
         <Label htmlFor="wf-subject">{t("workflows.email.subject")}</Label>
         <Input
           id="wf-subject"
+          ref={subjectRef}
           disabled={disabled}
           value={current.subject}
+          onFocus={() => setFocused("subject")}
           onChange={(e) => patch({ subject: e.target.value })}
           placeholder={t("workflows.email.subjectPlaceholder")}
         />
         <ResolvedHint
           workflowId={workflowId}
+          entity={entity}
           record={previewRecord}
           template={current.subject}
         />
@@ -204,6 +238,7 @@ export function EmailTemplateEditor({
             ref={bodyRef}
             rows={10}
             disabled={disabled}
+            onFocus={() => setFocused("html")}
             className="font-mono text-xs"
             value={current.html}
             onChange={(e) => patch({ html: e.target.value })}
@@ -222,6 +257,17 @@ export function EmailTemplateEditor({
               </p>
             )}
 
+            {previewError ? (
+              /* This is the whole reason "previews don't work" was the report
+                 rather than an error message: every failure used to fall
+                 through to rendering the unrendered source, which looks
+                 exactly like a preview of a template with no variables in it. */
+              <p className="flex items-start gap-1.5 rounded-lg border border-destructive/40 bg-destructive/10 px-3 py-2 text-xs text-destructive">
+                <TriangleAlert className="mt-0.5 h-3 w-3 shrink-0" />
+                <span>{extractErrorMessage(previewError)}</span>
+              </p>
+            ) : null}
+
             {preview?.subject ? (
               <p className="rounded-lg border border-border bg-muted/30 px-3 py-2 text-sm font-medium">
                 {preview.subject}
@@ -232,13 +278,25 @@ export function EmailTemplateEditor({
                 <head> carries global CSS (`a { color:#2563eb }`, `body`, `p`,
                 `table`) which, injected into the app's DOM, restyled the entire
                 page and turned every link in the UI blue. */}
-            <EmailHtmlFrame
-              title={t("workflows.preview.title", {
-                defaultValue: "Email preview",
-              })}
-              html={preview?.html ?? current.html}
-              className="block h-[360px] w-full rounded-xl border border-border bg-white"
-            />
+            <div className="relative">
+              <EmailHtmlFrame
+                title={t("workflows.preview.title", {
+                  defaultValue: "Email preview",
+                })}
+                /* Only ever the SERVER's render. Falling back to `current.html`
+                   showed raw {{paths}} and passed it off as the result. When
+                   there is nothing to show, show nothing and say why. */
+                html={preview?.html ?? ""}
+                className="block h-[360px] w-full rounded-xl border border-border bg-white"
+              />
+              {previewLoading ? (
+                <div className="absolute inset-0 flex items-center justify-center rounded-xl bg-background/60 text-xs text-muted-foreground backdrop-blur-[1px]">
+                  {t("workflows.preview.rendering", {
+                    defaultValue: "Rendering…",
+                  })}
+                </div>
+              ) : null}
+            </div>
 
             {preview?.unresolved.length ? (
               <p className="flex items-start gap-1.5 text-xs text-amber-700 dark:text-amber-300">
@@ -252,24 +310,22 @@ export function EmailTemplateEditor({
         )}
       </Field>
 
-      {variables.length > 0 ? (
-        <div className="space-y-1.5">
-          <FieldHint>{t("workflows.email.variablesHint")}</FieldHint>
-          <div className="flex flex-wrap gap-1.5">
-            {variables.map((path) => (
-              <button
-                key={path}
-                type="button"
-                disabled={disabled || view === "preview"}
-                onClick={() => insert(path)}
-                className="rounded-md border border-border bg-muted/40 px-2 py-1 font-mono text-[11px] text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:opacity-50"
-              >
-                {`{{${path}}}`}
-              </button>
-            ))}
-          </div>
-        </div>
-      ) : null}
+      <div className="flex items-center gap-2">
+        <VariablePicker
+          fields={fields}
+          disabled={disabled || view === "preview"}
+          onInsert={insert}
+        />
+        <FieldHint>
+          {focused === "subject"
+            ? t("workflows.variables.intoSubject", {
+                defaultValue: "Inserts into the subject",
+              })
+            : t("workflows.variables.intoBody", {
+                defaultValue: "Inserts into the message",
+              })}
+        </FieldHint>
+      </div>
     </div>
   );
 }

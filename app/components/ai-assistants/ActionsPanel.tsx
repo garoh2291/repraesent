@@ -6,7 +6,6 @@ import { toast } from "sonner";
 import { Link } from "react-router";
 import TimezoneSelect from "react-timezone-select";
 import {
-  AlertTriangle,
   ArrowDown,
   ArrowUp,
   CalendarPlus,
@@ -16,6 +15,15 @@ import {
   Trash2,
   Sparkles,
 } from "lucide-react";
+import { BusyCalendarPicker } from "~/components/forms/BusyCalendarPicker";
+import { AppointmentHostList } from "~/components/forms/AppointmentHostList";
+import {
+  derivedHosts,
+  hostsPatch,
+  primaryHostMirror,
+  primaryTargetKeyOf,
+} from "~/lib/forms/appointment-hosts";
+import type { AppointmentHost } from "~/lib/forms/schema";
 import { CalDavIcon } from "~/components/icons/CalDavIcon";
 import { GoogleIcon } from "~/components/icons/GoogleIcon";
 import { MicrosoftIcon } from "~/components/icons/MicrosoftIcon";
@@ -40,7 +48,6 @@ import {
   FieldAnchor,
   useRevealListener,
 } from "~/components/ai-assistants/FieldAnchor";
-import { Checkbox } from "~/components/ui/checkbox";
 import {
   Select,
   SelectContent,
@@ -54,20 +61,6 @@ import { Switch } from "~/components/ui/switch";
 import { Textarea } from "~/components/ui/textarea";
 import { calendarKeyFor, listCalendarAccounts } from "~/lib/api/calendar";
 import { useAssistantTranslate } from "~/lib/hooks/useAssistantTranslate";
-import { Check, ChevronsUpDown } from "lucide-react";
-import {
-  Command,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-  CommandList,
-} from "~/components/ui/command";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "~/components/ui/popover";
 import { useWorkspaceMembers, type WorkspaceMemberOption } from "~/lib/hooks/useWorkspaceMembers";
 import type { TranslateAssistantRequest } from "~/lib/api/assistant-translate";
 import {
@@ -100,6 +93,20 @@ function newAction(type: ActionType): ActionConfig {
     label: "",
     labels: {},
     show: "on_lead_intent",
+    // A book action carried NO appointment at all until the user touched a
+    // control, at which point the render-time fallback became the stored value
+    // — a default masquerading as a fallback. Seed it here, where it can also
+    // pick up the builder's own timezone instead of always saying Berlin.
+    ...(type === "book"
+      ? {
+          appointment: {
+            ...ACTION_APPOINTMENT_DEFAULTS,
+            timezone:
+              Intl.DateTimeFormat().resolvedOptions().timeZone ||
+              ACTION_APPOINTMENT_DEFAULTS.timezone,
+          },
+        }
+      : {}),
   };
 }
 
@@ -584,133 +591,6 @@ const APPT_DAY_KEYS = [
 ] as const;
 const APPT_DURATIONS = [15, 30, 45, 60] as const;
 /**
- * Searchable member picker for the booking host.
- *
- * A plain Select could not cope: workspace emails here run to
- * `demo.sarah+819d0e5c@demo.repraesent.com`, which blew the menu past the
- * trigger and clipped every row. A popover sized to the trigger with its own
- * search box keeps the list readable and usable at twenty members, and the
- * email truncates instead of pushing the layout apart.
- */
-function HostPicker({
-  members,
-  value,
-  disabled,
-  onChange,
-}: {
-  members: WorkspaceMemberOption[];
-  value?: string;
-  disabled?: boolean;
-  onChange: (userId: string) => void;
-}) {
-  const { t } = useTranslation();
-  const [open, setOpen] = useState(false);
-  // Reset on close: cmdk keeps its own filter state, so without this the next
-  // open still shows the last search and an empty list.
-  const [query, setQuery] = useState("");
-  const selected = members.find((m) => m.user_id === value);
-  const label = (m: WorkspaceMemberOption): string =>
-    `${m.user_first_name ?? ""} ${m.user_last_name ?? ""}`.trim() || m.user_email;
-
-  return (
-    <Popover
-      open={open}
-      onOpenChange={(next) => {
-        setOpen(next);
-        if (!next) setQuery("");
-      }}
-    >
-      <PopoverTrigger asChild>
-        <button
-          type="button"
-          disabled={disabled}
-          className="flex h-9 w-full items-center justify-between gap-2 rounded-lg border bg-background px-3 text-sm disabled:opacity-50"
-        >
-          {selected ? (
-            <span className="flex min-w-0 items-center gap-2">
-              <MemberAvatar member={selected} />
-              <span className="min-w-0 truncate">{label(selected)}</span>
-            </span>
-          ) : (
-            <span className="text-muted-foreground">
-              {t("aiAssistants.actions.hostNone")}
-            </span>
-          )}
-          <ChevronsUpDown className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
-        </button>
-      </PopoverTrigger>
-      <PopoverContent className="w-(--radix-popover-trigger-width) p-0" align="start">
-        <Command>
-          <CommandInput
-            value={query}
-            onValueChange={setQuery}
-            placeholder={t("aiAssistants.actions.hostSearch")}
-          />
-          <CommandList className="max-h-64">
-            <CommandEmpty>{t("aiAssistants.actions.hostEmpty")}</CommandEmpty>
-            <CommandGroup>
-              <CommandItem
-                value={t("aiAssistants.actions.hostNone")}
-                onSelect={() => {
-                  onChange(NO_HOST);
-                  setOpen(false);
-                }}
-              >
-                <span className="flex-1 truncate">
-                  {t("aiAssistants.actions.hostNone")}
-                </span>
-                {!selected ? <Check className="h-3.5 w-3.5" /> : null}
-              </CommandItem>
-              {members.map((m) => (
-                <CommandItem
-                  key={m.user_id}
-                  value={`${label(m)} ${m.user_email}`}
-                  onSelect={() => {
-                    onChange(m.user_id);
-                    setOpen(false);
-                  }}
-                >
-                  <MemberAvatar member={m} />
-                  <span className="flex min-w-0 flex-1 flex-col">
-                    <span className="truncate">{label(m)}</span>
-                    <span className="truncate text-[11px] text-muted-foreground">
-                      {m.user_email}
-                    </span>
-                  </span>
-                  {m.user_id === value ? <Check className="h-3.5 w-3.5 shrink-0" /> : null}
-                </CommandItem>
-              ))}
-            </CommandGroup>
-          </CommandList>
-        </Command>
-      </PopoverContent>
-    </Popover>
-  );
-}
-
-function MemberAvatar({ member }: { member: WorkspaceMemberOption }) {
-  const src = member.user_avatar_thumb_url ?? member.user_avatar_url;
-  const name =
-    `${member.user_first_name ?? ""} ${member.user_last_name ?? ""}`.trim() ||
-    member.user_email;
-  return (
-    <span
-      aria-hidden
-      className="flex size-6 shrink-0 items-center justify-center overflow-hidden rounded-full bg-muted text-[10px] font-semibold text-muted-foreground"
-    >
-      {src ? (
-        <img src={src} alt="" className="h-full w-full object-cover" />
-      ) : (
-        name.charAt(0).toUpperCase()
-      )}
-    </span>
-  );
-}
-
-/** Radix Select has no empty value, so "no host" needs a sentinel. */
-const NO_HOST = "__none__";
-
-/**
  * Booking rules for a `book` action. Deliberately the same control set as the
  * form builder's appointment field (`components/forms/FieldInspector.tsx`
  * `AppointmentConfig`) — both write the identical settings shape, which the
@@ -784,41 +664,35 @@ function BookingRules({
     );
   }
 
-  // Resolution rule: explicit key first, else the legacy Google pair.
-  const selectedTarget =
-    ap.targetKey ||
-    (ap.accountId && ap.calendarId
-      ? `google:${ap.accountId}:${ap.calendarId}`
-      : undefined);
+  const hosts = derivedHosts(ap);
+  const primaryTargetKey = primaryTargetKeyOf(ap);
 
-  const setTarget = (key: string) => {
-    if (key.startsWith("google:")) {
-      // DUAL-WRITE the legacy pair, exactly like the form builder does.
-      const rest = key.slice("google:".length);
-      const sep = rest.indexOf(":");
-      patch({
-        targetKey: key,
-        accountId: rest.slice(0, sep),
-        calendarId: rest.slice(sep + 1),
-      });
-    } else {
-      patch({ targetKey: key, accountId: "", calendarId: "" });
-    }
-  };
+  /**
+   * THE only way to write hosts.
+   *
+   * Also mirrors the singular host* fields from row 1, which is why this panel
+   * no longer needs a separate Host picker: the widget card, the invite mail
+   * and the prompt all read `hostName`/`hostEmail` and keep working untouched.
+   */
+  const patchHosts = (next: AppointmentHost[]) =>
+    patch({ ...hostsPatch(next), ...primaryHostMirror(next) });
 
-  const selectedAccountId =
-    selectedTarget && !selectedTarget.startsWith("baikal:")
-      ? selectedTarget.split(":")[1]
-      : null;
-  const account = accounts.find((a) => a.id === selectedAccountId);
-
-  const accountCalendarItems = (list: typeof accounts) =>
+  const accountCalendarItems = (
+    list: typeof accounts,
+    takenKeys: Set<string>,
+  ) =>
     list.flatMap((a) =>
       (a.provider === "caldav" ? a.calendars : writableCalendars(a)).map(
         (c) => {
           const key = calendarKeyFor(a, c.id);
+          // Greyed out rather than silently ignored on click.
+          const taken = takenKeys.has(key);
           return (
-            <SelectItem key={key} value={key} disabled={a.auth_failed}>
+            <SelectItem
+              key={key}
+              value={key}
+              disabled={a.auth_failed || taken}
+            >
               <span className="flex min-w-0 items-center gap-1.5">
                 {a.provider === "google" && (
                   <GoogleIcon className="h-3 w-3 shrink-0" />
@@ -836,7 +710,9 @@ function BookingRules({
                     · {a.google_email || a.user_name}
                     {a.auth_failed
                       ? ` — ${t("forms.inspector.appointment.accountNeedsReconnect")}`
-                      : ""}
+                      : taken
+                        ? ` — ${t("forms.inspector.appointment.alreadyAHost")}`
+                        : ""}
                   </span>
                 </span>
               </span>
@@ -850,70 +726,27 @@ function BookingRules({
   const busyKeys = Array.isArray(ap.busyCalendarKeys)
     ? ap.busyCalendarKeys
     : [];
+  // The calendars this field BOOKS. Always busy — the engine unions them into
+  // the busy sources itself — so they are shown ticked and locked rather than
+  // written into busyCalendarKeys, where they would go stale on a host swap.
+  const lockedBusyKeys = new Set(hosts.map((h) => h.targetKey));
   const toggleBusyKey = (key: string, checked: boolean) =>
     patch({
       busyCalendarKeys: checked
-        ? [...busyKeys, key]
+        ? [...new Set([...busyKeys, key])]
         : busyKeys.filter((k) => k !== key),
     });
 
-  /**
-   * The host is denormalised onto the action: the public config must never
-   * expose a user id, so the widget is handed the display fields directly and
-   * the id only survives server-side to resolve the attendee.
-   */
-  const setHost = (value: string) => {
-    if (value === NO_HOST) {
-      patch({
-        hostUserId: undefined,
-        hostName: undefined,
-        hostAvatarUrl: undefined,
-        hostEmail: undefined,
-        hostRole: undefined,
-      });
-      return;
-    }
-    const m = members.find((x) => x.user_id === value);
-    if (!m) return;
-    const name = `${m.user_first_name ?? ""} ${m.user_last_name ?? ""}`.trim();
-    patch({
-      hostUserId: m.user_id,
-      hostName: name || m.user_email,
-      hostAvatarUrl: m.user_avatar_thumb_url ?? m.user_avatar_url ?? undefined,
-      hostEmail: m.user_email,
-    });
-  };
-
-  const weekdays = ap.weekdays ?? [];
-  const toggleWeekday = (day: string) =>
-    patch({
-      weekdays: weekdays.includes(day)
-        ? weekdays.filter((d) => d !== day)
-        : APPT_DAY_KEYS.filter((d) => d === day || weekdays.includes(d)),
-    });
-
-  return (
-    <div className="space-y-4">
-      <Field>
-        <Label>{t("forms.inspector.appointment.target")}</Label>
-        <FieldAnchor path={`actions.${index}.appointment`}>
-          <Select
-            disabled={disabled || isLoading}
-            value={selectedTarget}
-            onValueChange={setTarget}
-          >
-            <SelectTrigger className="w-full">
-              <SelectValue
-                placeholder={t("aiAssistants.actions.bookingPick")}
-              />
-            </SelectTrigger>
-            <SelectContent className="max-w-[min(24rem,90vw)]">
+  // One list of calendars for every host row, same as the form builder. A
+  // function because each row hides the calendars the others already use.
+  const calendarGroups = (takenKeys: Set<string>) => (
+    <>
               {myOauth.length > 0 ? (
                 <SelectGroup>
                   <SelectLabel>
                     {t("forms.inspector.appointment.targetGroupMine")}
                   </SelectLabel>
-                  {accountCalendarItems(myOauth)}
+                  {accountCalendarItems(myOauth, takenKeys)}
                 </SelectGroup>
               ) : null}
               {teamOauth.length > 0 ? (
@@ -921,7 +754,7 @@ function BookingRules({
                   <SelectLabel>
                     {t("forms.inspector.appointment.targetGroupTeam")}
                   </SelectLabel>
-                  {accountCalendarItems(teamOauth)}
+                  {accountCalendarItems(teamOauth, takenKeys)}
                 </SelectGroup>
               ) : null}
               {baikalConfigs.length > 0 ? (
@@ -930,7 +763,11 @@ function BookingRules({
                     {t("forms.inspector.appointment.targetGroupBooking")}
                   </SelectLabel>
                   {baikalConfigs.map((b) => (
-                    <SelectItem key={b.id} value={`baikal:${b.id}`}>
+                    <SelectItem
+                      key={b.id}
+                      value={`baikal:${b.id}`}
+                      disabled={takenKeys.has(`baikal:${b.id}`)}
+                    >
                       <span className="flex min-w-0 items-center gap-1.5">
                         <CalDavIcon className="h-3 w-3 shrink-0" />
                         <span className="min-w-0 truncate">
@@ -946,24 +783,40 @@ function BookingRules({
                   <SelectLabel>
                     {t("forms.inspector.appointment.targetGroupCaldav")}
                   </SelectLabel>
-                  {accountCalendarItems(caldavAccounts)}
+                  {accountCalendarItems(caldavAccounts, takenKeys)}
                 </SelectGroup>
               ) : null}
-            </SelectContent>
-          </Select>
-        </FieldAnchor>
-        <FieldHint>{t("forms.inspector.appointment.targetHelp")}</FieldHint>
-      </Field>
+    </>
+  );
 
+  const weekdays = ap.weekdays ?? [];
+  const toggleWeekday = (day: string) =>
+    patch({
+      weekdays: weekdays.includes(day)
+        ? weekdays.filter((d) => d !== day)
+        : APPT_DAY_KEYS.filter((d) => d === day || weekdays.includes(d)),
+    });
+
+  return (
+    <div className="space-y-4">
       <Field>
-        <Label>{t("aiAssistants.actions.host")}</Label>
-        <HostPicker
-          members={members}
-          value={ap.hostUserId}
-          disabled={disabled}
-          onChange={setHost}
-        />
-        <FieldHint>{t("aiAssistants.actions.hostHint")}</FieldHint>
+        <Label>{t("forms.inspector.appointment.hosts")}</Label>
+        <FieldAnchor path={`actions.${index}.appointment`}>
+          <AppointmentHostList
+            hosts={hosts}
+            accounts={accounts}
+            baikalConfigs={baikalConfigs}
+            members={members}
+            calendarItems={calendarGroups}
+            disabled={disabled || isLoading}
+            onChange={patchHosts}
+          />
+        </FieldAnchor>
+        <FieldHint>
+          {hosts.length > 1
+            ? t("forms.inspector.appointment.hostsHelpMulti")
+            : t("forms.inspector.appointment.targetHelp")}
+        </FieldHint>
       </Field>
 
       <Field>
@@ -1019,46 +872,14 @@ function BookingRules({
         </FieldHint>
 
         {!allBusy ? (
-          <div className="space-y-1.5 pt-1">
-            {accounts.flatMap((a) =>
-              a.calendars.map((c) => {
-                const key = calendarKeyFor(a, c.id);
-                return (
-                  <label
-                    key={key}
-                    className="flex items-center gap-2 text-sm text-foreground"
-                  >
-                    <Checkbox
-                      disabled={disabled}
-                      checked={busyKeys.includes(key)}
-                      onCheckedChange={(v) => toggleBusyKey(key, v === true)}
-                    />
-                    <span className="truncate">
-                      {a.user_name} · {c.summary}
-                    </span>
-                  </label>
-                );
-              }),
-            )}
-            {baikalConfigs.map((b) => {
-              const key = `baikal:${b.id}`;
-              return (
-                <label
-                  key={key}
-                  className="flex items-center gap-2 text-sm text-foreground"
-                >
-                  <Checkbox
-                    disabled={disabled}
-                    checked={busyKeys.includes(key)}
-                    onCheckedChange={(v) => toggleBusyKey(key, v === true)}
-                  />
-                  <span className="truncate">
-                    {b.provider_name ?? b.user_name}
-                  </span>
-                </label>
-              );
-            })}
-          </div>
+          <BusyCalendarPicker
+            accounts={accounts}
+            baikalConfigs={baikalConfigs}
+            busyKeys={busyKeys}
+            lockedKeys={lockedBusyKeys}
+            disabled={disabled}
+            onToggle={toggleBusyKey}
+          />
         ) : null}
       </Field>
 
@@ -1165,8 +986,8 @@ function BookingRules({
       <Cols>
         {/* Baikal/CalDAV booking calendars carry their own scheduling rules
             server-side, so only OAuth targets expose the notice knob. */}
-        {selectedTarget?.startsWith("google:") ||
-        selectedTarget?.startsWith("microsoft:") ? (
+        {primaryTargetKey?.startsWith("google:") ||
+        primaryTargetKey?.startsWith("microsoft:") ? (
           <Field>
             <Label htmlFor={`appt-notice-${action.id}`}>
               {t("forms.inspector.appointment.minNotice")}
@@ -1206,12 +1027,7 @@ function BookingRules({
         </Field>
       </Cols>
 
-      {account?.auth_failed ? (
-        <p className="flex items-center gap-1.5 text-xs text-destructive">
-          <AlertTriangle className="h-3.5 w-3.5" aria-hidden="true" />
-          {t("forms.inspector.appointment.accountNeedsReconnect")}
-        </p>
-      ) : null}
+
     </div>
   );
 }

@@ -14,6 +14,7 @@
     "copy": "Kopieren",
     "created": "Erstellt",
     "delete": "Löschen",
+    "undo": "Rückgängig",
     "deleted": "Gelöscht",
     "discard": "Verwerfen",
     "dismiss": "Schließen",
@@ -200,7 +201,29 @@
       "linkExpired": "Link abgelaufen",
       "linkExpiredDetail": "Dieser Magic Link ist ungültig oder abgelaufen. Bitte fordern Sie einen neuen an.",
       "backToSignIn": "Zurück zur Anmeldung",
-      "redirecting": "Sie werden weitergeleitet..."
+      "redirecting": "Sie werden weitergeleitet...",
+      "failure": {
+        "MAGIC_LINK_EXPIRED": {
+          "title": "Link abgelaufen",
+          "detail": "Dieser Anmeldelink ist abgelaufen. Fordere einen neuen an – der funktioniert."
+        },
+        "MAGIC_LINK_USED": {
+          "title": "Link bereits verwendet",
+          "detail": "Mit diesem Link wurde bereits jemand angemeldet. Links funktionieren einmal – fordere einen neuen an."
+        },
+        "MAGIC_LINK_UNKNOWN": {
+          "title": "Link unbekannt",
+          "detail": "Wir erkennen diesen Link nicht. Manche E-Mail-Programme kürzen lange Links – kopiere die vollständige Adresse aus der E-Mail oder fordere einen neuen Link an."
+        },
+        "MAGIC_LINK_INELIGIBLE": {
+          "title": "Konto hier nicht verfügbar",
+          "detail": "Der Link war in Ordnung, aber dieses Konto kann sich hier nicht anmelden. Bitte wende dich an deine Administration."
+        },
+        "fallback": {
+          "title": "Link abgelaufen",
+          "detail": "Dieser Magic Link ist ungültig oder abgelaufen. Bitte fordere einen neuen an."
+        }
+      }
     },
     "workspacePicker": {
       "metaTitle": "Bereich wählen",
@@ -322,6 +345,14 @@
         "baikal": "Baikal",
         "unknown": "Kalender"
       }
+    },
+    "conversation": {
+      "title": "Unterhaltung",
+      "open": "Öffnen",
+      "excerpt": "Gespeicherter Auszug dieser Unterhaltung.",
+      "partial": "Gespeicherter Auszug — die vollständige Unterhaltung ist nicht mehr verfügbar.",
+      "messageCount_one": "{{count}} Nachricht",
+      "messageCount_other": "{{count}} Nachrichten"
     },
     "detail": {
       "metaTitle": "Lead",
@@ -466,7 +497,16 @@
       "dateDesc": "Neueste zuerst",
       "dateAsc": "Älteste zuerst"
     },
-    "sourceLabelAiAssistant": "KI-Assistent"
+    "sourceLabelAiAssistant": "KI-Assistent",
+    "restoreFiltered": "Wiederherstellen",
+    "filtered": {
+      "rule": {
+        "disposable": "Gefiltert: Wegwerf- oder ungültige Adresse",
+        "suspicious_local": "Gefiltert: maschinell wirkende Adresse",
+        "ai": "Von der Spam-Prüfung gefiltert"
+      }
+    },
+    "restoreFilteredHint": "Diesen Lead zurück in die erste Phase verschieben"
   },
   "pipeline": {
     "stripeNotConnected": {
@@ -489,7 +529,7 @@
     "dealNotFound": "Deal konnte nicht geladen werden.",
     "backToPipeline": "Zurück zur Pipeline",
     "dealDetails": "Deal",
-    "untitledDeal": "Unbenannter Deal",
+    "untitledDeal": "Dieser Deal",
     "capHint": "Es werden bis zu 500 Deals angezeigt. Nutzen Sie Suche oder Zuständigkeit, um zu filtern.",
     "linkedContact": "Kontakt",
     "detachContact": "Entfernen",
@@ -804,10 +844,8 @@
     "pipelineNamePlaceholder": "z. B. Enterprise-Vertrieb",
     "pipelineDescriptionLabel": "Beschreibung (optional)",
     "pipelineDescriptionPlaceholder": "Was läuft durch diese Pipeline?",
-    "addDescription": "Beschreibung hinzufügen…",
     "pipelineCreated": "Pipeline erstellt.",
     "pipelineDeleted": "Pipeline gelöscht.",
-    "renamePipeline": "Umbenennen",
     "deletePipeline": "Pipeline löschen",
     "deletePipelineTitle": "„{{name}}“ löschen?",
     "deletePipelineWarning": "{{count}} Deals werden nach „{{target}}“ verschoben. Die Phasen dieser Pipeline werden gelöscht.",
@@ -817,7 +855,42 @@
     "movedToPipeline": "Nach „{{name}}“ verschoben.",
     "contextOpen": "Deal öffnen",
     "contextChangeStage": "Phase ändern",
-    "contextMovePipeline": "In Pipeline verschieben"
+    "contextMovePipeline": "In Pipeline verschieben",
+    "reopenDeal": {
+      "titleWon": "Diesen gewonnenen Deal wieder öffnen?",
+      "titleLost": "Diesen verlorenen Deal wieder öffnen?",
+      "description": "{{name}} kehrt zu „{{stage}}“ zurück und gilt wieder als offen.",
+      "clearsWonAt": "Das Gewinndatum ({{date}}) wird gelöscht und kann nicht wiederhergestellt werden.",
+      "clearsLostAt": "Das Verlustdatum ({{date}}) wird gelöscht und kann nicht wiederhergestellt werden.",
+      "confirm": "Deal wieder öffnen"
+    },
+    "tracking": {
+      "share": "Kundenlink",
+      "title": "Tracking-Link für diesen Deal",
+      "hint": "Wer diesen Link hat, sieht die Phasennamen und die bestellten Artikel. Kein Wert, kein Verantwortlicher, keine Kontaktdaten, keine Anmeldung.",
+      "preview": "Kundenansicht öffnen",
+      "regenerate": "Neuer Link",
+      "regenerateTitle": "Neuen Link ausstellen?",
+      "regenerateBody": "Der bereits gesendete Link funktioniert sofort nicht mehr, und der Kunde wird nicht informiert. Nur tun, wenn der aktuelle Link bei der falschen Person gelandet ist.",
+      "regenerateConfirm": "Neuen Link ausstellen",
+      "rotated": "Ein neuer Link ist bereit. Der alte funktioniert nicht mehr.",
+      "rotateFailed": "Neuer Link konnte nicht ausgestellt werden.",
+      "copyFailed": "Kopieren nicht möglich. Bitte den Link markieren und manuell kopieren."
+    },
+    "editPipelineTitle": "Pipeline bearbeiten",
+    "pipelineSaved": "Pipeline gespeichert.",
+    "pipelineDialogHint": "Benennen Sie dieses Board, beschreiben Sie, was darin läuft, und legen Sie fest, ob Kunden ihre Deals verfolgen können.",
+    "visibility": {
+      "label": "Kunden-Tracking",
+      "private": "Privat",
+      "privateHint": "Deals auf diesem Board bleiben im Workspace.",
+      "public": "Öffentlich",
+      "publicHint": "Jeder Deal erhält einen privaten Link, über den Kunden ihre Bestellung verfolgen können.",
+      "revokeWarning": "Alle bereits versendeten Tracking-Links funktionieren nach dem Speichern nicht mehr.",
+      "revokeTitle": "Diese Pipeline auf privat stellen?",
+      "revokeBody": "Alle bereits an Kunden versendeten Tracking-Links funktionieren sofort nicht mehr, und niemand wird informiert. Wieder auf öffentlich zu stellen gibt dieselben Links frei, keine neuen.",
+      "revokeConfirm": "Auf privat stellen"
+    }
   },
   "appointments": {
     "metaTitle": "Termine",
@@ -1645,6 +1718,17 @@
         "billing": "Chat, Klassifizierung und Embeddings aller Assistenten in diesem Workspace werden diesem Schlüssel berechnet.",
         "link": "openrouter.ai/keys öffnen"
       }
+    },
+    "allowlist": {
+      "sectionLabel": "Immer akzeptieren",
+      "sectionDescription": "Leads von diesen Adressen und Domains überspringen die Spam-Prüfung vollständig. Bestehenden Kontakten wird automatisch vertraut – das hier ist für alle anderen.",
+      "patternLabel": "Adresse oder Domain",
+      "patternPlaceholder": "ada@example.com oder @example.com",
+      "noteLabel": "Notiz",
+      "notePlaceholder": "Grund (optional)",
+      "add": "Hinzufügen",
+      "empty": "Noch nichts hier. Adresse hinzufügen, wenn die Spam-Prüfung jemanden falsch einschätzt.",
+      "remove": "Entfernen"
     }
   },
   "booking": {
@@ -2931,7 +3015,8 @@
     "labelTask": "Aufgabe",
     "labelEvent": "Update",
     "today": "Heute",
-    "yesterday": "Gestern"
+    "yesterday": "Gestern",
+    "automation": "Automatisierung"
   },
   "dealEmails": {
     "pipeline": "Pipeline-E-Mails",
@@ -4440,7 +4525,8 @@
       "nameExists": "Ein Formular mit diesem Namen existiert bereits",
       "languageLabel": "Sprache",
       "kindProduct": "Produkt",
-      "kindMulti": "Mehrstufig"
+      "kindMulti": "Mehrstufig",
+      "kindIntake": "Webhook"
     },
     "status": {
       "draft": "Entwurf",
@@ -4489,7 +4575,16 @@
       "tabProducts": "Produkte",
       "productEmptyTitle": "Noch keine Produkte",
       "productEmptyHint": "Diesen Block auswählen und dann die Stripe-Produkte hinzufügen, aus denen Käufer wählen können.",
-      "tabDeal": "Deal"
+      "tabDeal": "Deal",
+      "tabSetup": "Einrichtung",
+      "intakeUrlLabel": "Ihre Intake-URL",
+      "intakeUrlHint": "Wer diese URL hat, kann in diesem Workspace einen Lead anlegen. Behandeln Sie sie wie ein Passwort.",
+      "intakeCurl": "Ausprobieren",
+      "intakeMappingTitle": "Was mit den eingehenden Daten passiert",
+      "intakeMappingHint": "Bekannte Schlüssel werden automatisch zugeordnet — email, first_name, last_name, name, phone. Alles Übrige bleibt am Lead erhalten.",
+      "intakeLastPayloadTitle": "Zuletzt empfangen",
+      "intakeLastPayloadEmpty": "Noch nichts. Richten Sie Ihr Formular auf die URL und senden Sie einmal ab — die gesendeten Schlüssel erscheinen dann hier.",
+      "intakeLastPayloadAt": "Empfangen {{date}}"
     },
     "palette": {
       "title": "Feld hinzufügen",
@@ -4600,7 +4695,20 @@
         "maxDaysAhead": "Buchbar im Voraus (Tage)",
         "noTargets": "Verbinden Sie zuerst einen Kalender in den Einstellungen",
         "connectLink": "Kalender verbinden",
-        "accountNeedsReconnect": "muss neu verbunden werden"
+        "accountNeedsReconnect": "muss neu verbunden werden",
+        "hosts": "Gastgeber",
+        "hostsHelpMulti": "Ein Termin wird nur angeboten, wenn alle Gastgeber frei sind. Eine Buchung, die nicht alle erreicht, wird vollständig storniert.",
+        "addHost": "Gastgeber hinzufügen",
+        "primaryHost": "Haupt",
+        "removeHost": "Gastgeber entfernen",
+        "reorderHost": "Gastgeber neu anordnen",
+        "coHostDisconnected": "Solange dieser Kalender getrennt ist, werden überhaupt keine Zeiten angeboten.",
+        "openCalendarSettings": "Kalendereinstellungen",
+        "hostNone": "Kein Gastgeber – für Besucher nicht sichtbar",
+        "hostSearch": "Mitglieder suchen…",
+        "hostEmpty": "Keine Mitglieder gefunden.",
+        "alreadyAHost": "bereits Gastgeber",
+        "hostAlwaysBusy": "immer belegt"
       },
       "stepTitle": "Titel des Schritts",
       "stepDescription": "Beschreibung des Schritts",
@@ -4636,6 +4744,14 @@
       "outline": "Umrandet",
       "soft": "Weich",
       "buttonFullWidth": "Button über volle Breite",
+      "submitPlacement": "Senden-Button",
+      "submitAuto": "Automatisch",
+      "submitInline": "Neben dem Feld",
+      "submitBelow": "Darunter",
+      "submitPlacementHint": "Wo der Button steht. Auf schmalen Bildschirmen steht er immer darunter.",
+      "submitAutoInlineHint": "Ein Feld auf einer Seite – der Button steht daneben.",
+      "submitAutoBelowHint": "Mehr als ein Feld – der Button steht darunter.",
+      "buttonFullWidthInline": "Nicht verfügbar, solange der Button neben dem Feld steht.",
       "labelPosition": "Position der Beschriftung",
       "top": "Oben",
       "inline": "Daneben",
@@ -4863,7 +4979,8 @@
       "loading": "Zeiten werden geladen...",
       "empty": "An diesem Tag sind keine Zeiten frei.",
       "slotUnavailable": "Dieser Termin wurde gerade vergeben. Bitte wählen Sie einen anderen.",
-      "slotInvalid": "Bitte wählen Sie einen gültigen Termin."
+      "slotInvalid": "Bitte wählen Sie einen gültigen Termin.",
+      "unavailable": "Zeiten können gerade nicht geprüft werden. Bitte versuchen Sie es gleich noch einmal."
     },
     "steps": {
       "title": "Schritte",
@@ -4912,6 +5029,10 @@
           "body": "Besucher wählen aus Ihren Stripe-Produkten, füllen das Formular aus und zahlen bei Stripe.",
           "disabled": "Verbinden Sie Stripe, um mit einem Formular Zahlungen anzunehmen.",
           "connect": "Stripe verbinden"
+        },
+        "intake": {
+          "title": "Von woanders empfangen",
+          "body": "Eine URL, keine Seite. Fügen Sie sie in Typeform, Webflow oder Zapier ein — alles, was POSTen kann — und was gesendet wird, wird zum Lead."
         }
       }
     },
@@ -5155,7 +5276,14 @@
       "condition": "Bedingung",
       "delay": "Warten",
       "send_internal_email": "Teammitglied benachrichtigen",
-      "send_customer_email": "Kontakt anschreiben"
+      "send_customer_email": "Kontakt anschreiben",
+      "create_task": "Aufgabe erstellen",
+      "add_note": "Notiz hinzufügen",
+      "update_record": "Datensatz ändern",
+      "notify_team": "Team benachrichtigen",
+      "group_communicate": "Jemandem Bescheid geben",
+      "group_act": "Datensatz ändern",
+      "group_flow": "Ablauf steuern"
     },
     "step": {
       "trigger": "Wenn das passiert",
@@ -5189,7 +5317,17 @@
       "hint_record_updated": "Löst bei jeder Änderung aus.",
       "hint_field_changed_to": "Löst nur beim Wechsel auf diesen Wert aus.",
       "hint_no_change_for": "Wird regelmäßig geprüft. Löst erneut aus, wenn der Datensatz wieder ruhig wird.",
-      "hint_date_field_relative": "Wird regelmäßig geprüft, relativ zum gewählten Datum."
+      "hint_date_field_relative": "Wird regelmäßig geprüft, relativ zum gewählten Datum.",
+      "watchedColumns": "Zu überwachende Felder",
+      "anyField": "Beliebiges Feld",
+      "watchedColumnsAll": "Jede Änderung an diesem Datensatz startet den Workflow. Wählen Sie Felder aus, um das einzugrenzen.",
+      "watchedColumnsHint": "Nur eine Änderung an einem dieser Felder startet den Workflow.",
+      "pipeline": "Pipeline",
+      "allPipelines": "Alle Pipelines",
+      "pipelineHint": "Nur Deals aus einem Board. Bei „Alle Pipelines“ zählt jeder Deal.",
+      "pipelineCustom": "Eigene Regel",
+      "pipelineCustomHint": "Dieser Trigger hat eine Pipeline-Regel mit mehr als einer Auswahl. Bearbeite sie unter „Nur wenn“.",
+      "stageNotInPipeline": "Die Phase {{stages}} gibt es in dieser Pipeline nicht – der Trigger kann nie auslösen. Ändere die Phase oder die Pipeline."
     },
     "condition": {
       "matchLabel": "Treffer",
@@ -5252,9 +5390,6 @@
       "body": "Nachricht",
       "viewCode": "HTML",
       "viewPreview": "Vorschau",
-      "variablesHint": "Zum Einfügen klicken. Die Werte stammen aus dem auslösenden Datensatz.",
-      "toPath": "Senden an",
-      "toPathHint": "Eine Variable, die eine E-Mail-Adresse ergibt.",
       "sendFrom": "Senden von",
       "sendFromDefault": "Standard des Workspace",
       "accountBroken": "muss neu verbunden werden"
@@ -5272,7 +5407,11 @@
       "emptyHint": "Wählen Sie links einen Schritt aus.",
       "conditionHint": "Der Lauf endet hier, wenn nicht alle Bedingungen zutreffen.",
       "delayHint": "Pause vor dem nächsten Schritt. Der Lauf wird automatisch fortgesetzt.",
-      "internalHint": "Wird von Repraesent versendet – ohne eigenes Postfach nutzbar."
+      "internalHint": "Wird von Repraesent versendet – ohne eigenes Postfach nutzbar.",
+      "noteHint": "Schreibt eine Notiz auf den Datensatz. Niemand wird benachrichtigt.",
+      "taskHint": "Legt eine Aufgabe auf dem Datensatz an, damit sie jemand übernimmt.",
+      "notifyHint": "Postet in jeden verbundenen Slack-, Teams- oder Google-Chat-Kanal dieses Workspace.",
+      "updateHint": "Ändert den Datensatz, der diesen Lauf ausgelöst hat. Startet diesen Workflow nicht erneut."
     },
     "settings": {
       "description": "Beschreibung",
@@ -5338,9 +5477,13 @@
       "noSteps": "Mindestens einen Schritt hinzufügen",
       "noRecipients": "Ein E-Mail-Schritt hat keine Empfänger",
       "noTemplate": "Ein E-Mail-Schritt hat keine Nachricht",
-      "noToPath": "Dem Kontakt-E-Mail-Schritt fehlt die Adresse",
+      "noToPath": "Ein E-Mail-Schritt hat keine Empfängeradresse",
       "emptyCondition": "Ein Bedingungsschritt ist leer",
-      "filterContradiction": "„{{field}} ist {{value}}“ kann hier nie zutreffen: Der Auslöser greift, wenn {{field}} auf „{{target}}“ wechselt. Verwenden Sie „geändert von“ für den vorherigen Wert."
+      "filterContradiction": "„{{field}} ist {{value}}“ kann hier nie zutreffen: Der Auslöser greift, wenn {{field}} auf „{{target}}“ wechselt. Verwenden Sie „geändert von“ für den vorherigen Wert.",
+      "noTaskTitle": "Ein Aufgabenschritt hat keinen Titel",
+      "noNoteBody": "Ein Notizschritt ist leer",
+      "noNotifyMessage": "Ein Benachrichtigungsschritt hat keine Nachricht",
+      "noUpdateFields": "Ein Änderungsschritt setzt keine Felder"
     },
     "testTitle": "Workflow testen",
     "testHint": "Läuft gegen einen echten {{entity}}-Datensatz. Es wird nichts versendet.",
@@ -5363,7 +5506,8 @@
       "selected": "Vorschau: {{name}}",
       "resolvesTo": "Ergibt {{value}}",
       "resolvesEmpty": "Leer für {{name}}",
-      "resolvesNotEmail": "„{{value}}“ ist keine E-Mail-Adresse"
+      "resolvesNotEmail": "„{{value}}“ ist keine E-Mail-Adresse",
+      "rendering": "Wird gerendert…"
     },
     "weekday": {
       "1": "Mo",
@@ -5382,7 +5526,91 @@
       "no": "Nein",
       "empty": "Nichts hier – der Lauf endet."
     },
-    "publishedUpToDate": "Veröffentlicht und aktuell"
+    "publishedUpToDate": "Veröffentlicht und aktuell",
+    "action": {
+      "targetLabel": "Anhängen an",
+      "target_deals": "Den Deal",
+      "target_leads": "Den Lead",
+      "target_tasks": "Den Datensatz der Aufgabe",
+      "target_contacts": "Den Kontakt",
+      "target_contact": "Den Kontakt",
+      "targetTriggerHint": "Wird am auslösenden Datensatz abgelegt.",
+      "targetContactHint": "Wird am verknüpften Kontakt abgelegt. Übersprungen, wenn keiner vorhanden ist."
+    },
+    "note": {
+      "body": "Notiz"
+    },
+    "task": {
+      "title": "Aufgabe",
+      "description": "Details",
+      "descriptionHint": "Optional. Wird beim Öffnen der Aufgabe angezeigt.",
+      "due": "Fällig",
+      "dueNone": "Kein Fälligkeitsdatum",
+      "dueToday": "Heute",
+      "dueInDays_one": "In {{count}} Tag",
+      "dueInDays_other": "In {{count}} Tagen",
+      "assignee": "Zuweisen an",
+      "assigneeNone": "Niemand",
+      "assigneeOwner": "Wer den Datensatz betreut"
+    },
+    "notify": {
+      "message": "Nachricht",
+      "messageHint": "Nur Text. Ein Link zum Datensatz wird automatisch angehängt."
+    },
+    "update": {
+      "addField": "Feld zum Setzen hinzufügen",
+      "removeField": "Dieses Feld entfernen",
+      "pickValue": "Wert wählen",
+      "noFields": "Noch keine Felder gesetzt",
+      "unsupportedEntity": "Datensätze vom Typ {{entity}} können noch nicht per Workflow geändert werden.",
+      "field_title": "Titel",
+      "field_stage": "Phase",
+      "field_status": "Status",
+      "field_value": "Wert",
+      "field_assigned_to": "Verantwortlich",
+      "field_expected_close_date": "Erwarteter Abschluss",
+      "noFieldsHint": "Wähle unten ein Feld und gib ihm einen Wert. Bis dahin wird nichts geändert.",
+      "noMembers": "Keine Mitglieder zum Zuweisen."
+    },
+    "audience": {
+      "label": "Senden an",
+      "deals_primary": "Hauptkontakt dieses Deals",
+      "deals_all_contacts": "Alle Kontakte dieses Deals",
+      "deals_source_lead": "Der Lead, aus dem dieser Deal entstand",
+      "leads_primary": "Der Lead",
+      "leads_linked_contact": "Der Kontakt, der aus diesem Lead wurde",
+      "contacts_primary": "Der Kontakt",
+      "tasks_primary": "Die Person, um die es in dieser Aufgabe geht",
+      "primary": "Der Kunde",
+      "address": "Eine bestimmte Adresse…",
+      "path": "Eine eigene Variable…",
+      "allContactsHint": "Je eine separate E-Mail, damit niemand die Adresse der anderen sieht.",
+      "pickPreview": "Wählen Sie oben einen Datensatz, um zu sehen, wen das erreicht.",
+      "nobody": "Für {{name}} gibt es niemanden — dieser Schritt würde übersprungen.",
+      "reaches_one": "Erreicht {{count}} Person",
+      "reaches_other": "Erreicht {{count}} Personen",
+      "why_primary_contact": "Hauptkontakt",
+      "why_also_on_deal": "ebenfalls an diesem Deal",
+      "why_the_lead": "der Lead",
+      "why_linked_contact": "verknüpfter Kontakt",
+      "why_literal_address": "",
+      "why_custom_variable": ""
+    },
+    "variables": {
+      "insert": "Wert einfügen",
+      "search": "Werte suchen…",
+      "noMatch": "Dazu passt nichts.",
+      "group_record": "Dieser Datensatz",
+      "group_person": "Die Person",
+      "group_workspace": "Ihr Workspace",
+      "group_previous": "Vor der Änderung",
+      "intoSubject": "Wird in den Betreff eingefügt",
+      "intoBody": "Wird in die Nachricht eingefügt"
+    },
+    "contextOpen": "Workflow öffnen",
+    "backToDraft": "Zurück zum Entwurf",
+    "leaveTitle": "Ohne Speichern verlassen?",
+    "leaveBody": "Du hast ungespeicherte Änderungen an diesem Workflow. Sie gehen verloren."
   },
   "stripeProducts": {
     "metaTitle": "Produkte",
@@ -7054,5 +7282,23 @@
     "metaTitle": "Assistent",
     "unavailable": "Dieser Assistent ist nicht verfügbar",
     "unavailableHint": "Der Link ist möglicherweise falsch oder der Assistent wurde offline genommen."
+  },
+  "tracking": {
+    "metaTitle": "Auftragsstatus",
+    "statusLabel": "Status",
+    "itemsLabel": "Bestellte Artikel",
+    "progressLabel": "Fortschritt",
+    "reference": "Referenz {{reference}}",
+    "lastUpdated": "Zuletzt aktualisiert {{date}}",
+    "currentMarker": "Hier stehen Sie gerade",
+    "unknownStage": "In Bearbeitung",
+    "unnamedItem": "Artikel",
+    "quantity_one": "Menge {{count}}",
+    "quantity_other": "Menge {{count}}",
+    "outcomeWon": "Dieser Auftrag ist abgeschlossen.",
+    "outcomeLost": "Dieser Auftrag wurde geschlossen.",
+    "invalidTitle": "Dieser Link ist nicht mehr aktiv",
+    "invalidBody": "Sehen Sie in der zuletzt erhaltenen E-Mail nach oder antworten Sie darauf und bitten Sie um einen neuen Link.",
+    "footer": "Bereitgestellt von Repraesent"
   }
 }

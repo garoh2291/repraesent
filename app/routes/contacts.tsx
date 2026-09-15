@@ -66,6 +66,7 @@ import {
   TableRow,
 } from "~/components/ui/table";
 import { cn } from "~/lib/utils";
+import { personName } from "~/lib/contacts/display-name";
 import { ContactImportModal } from "~/components/organism/contact-import-modal";
 import { CreateContactDialog } from "~/components/organism/create-contact-dialog";
 
@@ -121,11 +122,6 @@ export default function ContactsPage() {
   }>({ open: false, mode: "csv" });
   const [createOpen, setCreateOpen] = useState(false);
 
-  const hasAccess =
-    currentWorkspace?.services?.some(
-      (s) => s.service_type === "lead-form" || s.service_slug === "lead-form",
-    ) ?? false;
-
   const tableQuery = useQuery({
     queryKey: [
       "contacts",
@@ -144,7 +140,7 @@ export default function ContactsPage() {
         source: sourceFilter || undefined,
         contact_type: contactTypeFilter || undefined,
       }),
-    enabled: hasAccess && !!currentWorkspace,
+    enabled: !!currentWorkspace,
     refetchOnMount: true,
   });
 
@@ -198,16 +194,6 @@ export default function ContactsPage() {
   );
 
   const hasTableFilters = !!sourceFilter || !!contactTypeFilter;
-
-  if (!hasAccess) {
-    return (
-      <div className="p-6 text-sm text-muted-foreground">
-        {t("contacts.noAccess", {
-          defaultValue: "Contacts are not available for this workspace.",
-        })}
-      </div>
-    );
-  }
 
   return (
     <div className="p-4 sm:p-6 space-y-4 sm:space-y-6 app-fade-in">
@@ -443,8 +429,15 @@ export default function ContactsPage() {
                   </TableRow>
                 ) : (
                   (data?.data ?? []).map((row) => {
-                    const name = row.contact_full_name?.trim() || "—";
                     const email = row.primary_email?.trim() ?? "";
+                    // The address before the dash: a column of em-dashes (and
+                    // avatars containing one) is what a workspace full of
+                    // newsletter contacts used to look like.
+                    const name =
+                      personName({
+                        full_name: row.contact_full_name,
+                        email,
+                      }) ?? "—";
                     const phone = row.primary_phone?.trim() ?? "";
                     const ltvNum =
                       row.lifetime_value != null

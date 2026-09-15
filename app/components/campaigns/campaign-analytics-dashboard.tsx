@@ -402,13 +402,6 @@ function CampaignDrilldown({ campaign }: { campaign: ConnectedCampaign }) {
   const { t } = useTranslation();
   const { currentWorkspace } = useAuthContext();
   const [expanded, setExpanded] = useState(false);
-  const isBrandWs = currentWorkspace?.type === "doorboost_brand";
-  const hasLeadForm =
-    isBrandWs ||
-    (currentWorkspace?.services?.some(
-      (s) => s.service_type === "lead-form" || s.service_slug === "lead-form",
-    ) ?? false);
-
   const buildLeadsLink = useCampaignsLeadsLink();
   const leadsLink = buildLeadsLink(campaign);
 
@@ -494,7 +487,7 @@ function CampaignDrilldown({ campaign }: { campaign: ConnectedCampaign }) {
               {t("campaigns.noData")}
             </p>
           )}
-          {hasLeadForm && leadsLink && (
+          {leadsLink && (
             <div className="flex justify-end pt-1">
               <Button
                 asChild

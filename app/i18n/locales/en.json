@@ -14,6 +14,7 @@
     "copy": "Copy",
     "created": "Created",
     "delete": "Delete",
+    "undo": "Undo",
     "deleted": "Deleted",
     "discard": "Discard",
     "dismiss": "Dismiss",
@@ -200,7 +201,29 @@
       "linkExpired": "Link expired",
       "linkExpiredDetail": "This magic link is invalid or has expired. Please request a new one to sign in.",
       "backToSignIn": "Back to sign in",
-      "redirecting": "Redirecting you now..."
+      "redirecting": "Redirecting you now...",
+      "failure": {
+        "MAGIC_LINK_EXPIRED": {
+          "title": "Link expired",
+          "detail": "This sign-in link has passed its expiry. Request a new one and it will work."
+        },
+        "MAGIC_LINK_USED": {
+          "title": "Link already used",
+          "detail": "This link has already signed someone in. Links work once — request a new one."
+        },
+        "MAGIC_LINK_UNKNOWN": {
+          "title": "Link not recognised",
+          "detail": "We do not recognise this link. Some mail clients cut long links in half — try copying the whole address from the email, or request a new one."
+        },
+        "MAGIC_LINK_INELIGIBLE": {
+          "title": "Account not available here",
+          "detail": "The link was fine, but this account cannot sign in to this app. Please contact your administrator."
+        },
+        "fallback": {
+          "title": "Link expired",
+          "detail": "This magic link is invalid or has expired. Please request a new one to sign in."
+        }
+      }
     },
     "workspacePicker": {
       "metaTitle": "Choose area",
@@ -322,6 +345,14 @@
         "baikal": "Baikal",
         "unknown": "Calendar"
       }
+    },
+    "conversation": {
+      "title": "Conversation",
+      "open": "Open",
+      "excerpt": "Showing the saved excerpt of this conversation.",
+      "partial": "Showing the saved excerpt — the full conversation is no longer available.",
+      "messageCount_one": "{{count}} message",
+      "messageCount_other": "{{count}} messages"
     },
     "detail": {
       "metaTitle": "Lead",
@@ -466,7 +497,16 @@
       "dateDesc": "Newest first",
       "dateAsc": "Oldest first"
     },
-    "sourceLabelAiAssistant": "AI assistant"
+    "sourceLabelAiAssistant": "AI assistant",
+    "restoreFiltered": "Restore",
+    "filtered": {
+      "rule": {
+        "disposable": "Filtered: disposable or malformed address",
+        "suspicious_local": "Filtered: machine-looking address",
+        "ai": "Filtered by the spam check"
+      }
+    },
+    "restoreFilteredHint": "Move this lead back to the first stage"
   },
   "pipeline": {
     "stripeNotConnected": {
@@ -489,7 +529,7 @@
     "dealNotFound": "Deal could not be loaded.",
     "backToPipeline": "Back to pipeline",
     "dealDetails": "Deal",
-    "untitledDeal": "Untitled deal",
+    "untitledDeal": "This deal",
     "capHint": "Showing up to 500 deals. Refine search or assignee if needed.",
     "linkedContact": "Contact",
     "detachContact": "Remove",
@@ -802,10 +842,8 @@
     "pipelineNamePlaceholder": "e.g. Enterprise sales",
     "pipelineDescriptionLabel": "Description (optional)",
     "pipelineDescriptionPlaceholder": "What runs through this pipeline?",
-    "addDescription": "Add a description…",
     "pipelineCreated": "Pipeline created.",
     "pipelineDeleted": "Pipeline deleted.",
-    "renamePipeline": "Rename",
     "deletePipeline": "Delete pipeline",
     "deletePipelineTitle": "Delete “{{name}}”?",
     "deletePipelineWarning": "{{count}} deals will move to “{{target}}”. This pipeline’s stages are deleted.",
@@ -815,7 +853,42 @@
     "movedToPipeline": "Moved to “{{name}}”.",
     "contextOpen": "Open deal",
     "contextChangeStage": "Change stage",
-    "contextMovePipeline": "Move to pipeline"
+    "contextMovePipeline": "Move to pipeline",
+    "reopenDeal": {
+      "titleWon": "Reopen this won deal?",
+      "titleLost": "Reopen this lost deal?",
+      "description": "{{name}} moves back to “{{stage}}” and counts as open again.",
+      "clearsWonAt": "The won date ({{date}}) will be cleared and cannot be restored.",
+      "clearsLostAt": "The lost date ({{date}}) will be cleared and cannot be restored.",
+      "confirm": "Reopen deal"
+    },
+    "tracking": {
+      "share": "Customer link",
+      "title": "Tracking link for this deal",
+      "hint": "Anyone with this link sees the stage names and what was ordered. No value, no owner, no contact details, no sign-in.",
+      "preview": "Open what they see",
+      "regenerate": "New link",
+      "regenerateTitle": "Issue a new link?",
+      "regenerateBody": "The link you already sent stops working immediately, and the customer is not told. Only do this if the current link reached the wrong person.",
+      "regenerateConfirm": "Issue a new link",
+      "rotated": "A new link is ready. The old one no longer works.",
+      "rotateFailed": "Could not issue a new link.",
+      "copyFailed": "Could not copy. Select the link and copy it manually."
+    },
+    "editPipelineTitle": "Edit pipeline",
+    "pipelineSaved": "Pipeline saved.",
+    "pipelineDialogHint": "Name this board, describe what runs through it, and choose whether customers can track their deals.",
+    "visibility": {
+      "label": "Customer tracking",
+      "private": "Private",
+      "privateHint": "Deals on this board stay inside the workspace.",
+      "public": "Public",
+      "publicHint": "Each deal gets a private link a customer can open to track their order.",
+      "revokeWarning": "Every tracking link already sent will stop working as soon as you save.",
+      "revokeTitle": "Make this pipeline private?",
+      "revokeBody": "Every tracking link already sent to a customer stops working immediately, and nobody is told. Turning it public again issues the same links, not new ones.",
+      "revokeConfirm": "Make private"
+    }
   },
   "appointments": {
     "metaTitle": "Appointments",
@@ -1643,6 +1716,17 @@
         "billing": "Chat, classification and embeddings for every assistant in this workspace are billed to this key.",
         "link": "Open openrouter.ai/keys"
       }
+    },
+    "allowlist": {
+      "sectionLabel": "Always accept",
+      "sectionDescription": "Leads from these addresses and domains skip the spam check entirely. People you already have as contacts are trusted automatically — this is for the rest.",
+      "patternLabel": "Address or domain",
+      "patternPlaceholder": "ada@example.com or @example.com",
+      "noteLabel": "Note",
+      "notePlaceholder": "Why (optional)",
+      "add": "Add",
+      "empty": "Nothing here yet. Add an address when the spam check gets somebody wrong.",
+      "remove": "Remove"
     }
   },
   "booking": {
@@ -2929,7 +3013,8 @@
     "labelTask": "Task",
     "labelEvent": "Update",
     "today": "Today",
-    "yesterday": "Yesterday"
+    "yesterday": "Yesterday",
+    "automation": "Automation"
   },
   "dealEmails": {
     "pipeline": "Pipeline emails",
@@ -4438,7 +4523,8 @@
       "nameExists": "A form with this name already exists",
       "languageLabel": "Language",
       "kindProduct": "Product",
-      "kindMulti": "Multi-step"
+      "kindMulti": "Multi-step",
+      "kindIntake": "Webhook"
     },
     "status": {
       "draft": "Draft",
@@ -4487,7 +4573,16 @@
       "tabProducts": "Products",
       "productEmptyTitle": "No products yet",
       "productEmptyHint": "Select this block, then add the Stripe products buyers can choose from.",
-      "tabDeal": "Deal"
+      "tabDeal": "Deal",
+      "tabSetup": "Setup",
+      "intakeUrlLabel": "Your intake URL",
+      "intakeUrlHint": "Anyone with this URL can create a lead in this workspace. Treat it like a password.",
+      "intakeCurl": "Try it",
+      "intakeMappingTitle": "What we do with what arrives",
+      "intakeMappingHint": "Recognised keys map themselves — email, first_name, last_name, name, phone. Everything else is kept on the lead.",
+      "intakeLastPayloadTitle": "Last received",
+      "intakeLastPayloadEmpty": "Nothing yet. Point your form at the URL and submit once — the keys it sends will show up here.",
+      "intakeLastPayloadAt": "Received {{date}}"
     },
     "palette": {
       "title": "Add a field",
@@ -4598,7 +4693,20 @@
         "maxDaysAhead": "Book ahead (days)",
         "noTargets": "Connect a calendar in Settings first",
         "connectLink": "Connect a calendar",
-        "accountNeedsReconnect": "needs reconnecting"
+        "accountNeedsReconnect": "needs reconnecting",
+        "hosts": "Hosts",
+        "hostsHelpMulti": "A time is only offered when every host is free, and a booking that cannot reach all of them is cancelled entirely.",
+        "addHost": "Add host",
+        "primaryHost": "Primary",
+        "removeHost": "Remove host",
+        "reorderHost": "Reorder host",
+        "coHostDisconnected": "While this calendar is disconnected, no times will be offered at all.",
+        "openCalendarSettings": "Calendar settings",
+        "hostNone": "No host — not shown to visitors",
+        "hostSearch": "Search members…",
+        "hostEmpty": "No members found.",
+        "alreadyAHost": "already a host",
+        "hostAlwaysBusy": "always busy"
       },
       "stepTitle": "Step title",
       "stepDescription": "Step description",
@@ -4634,6 +4742,14 @@
       "outline": "Outline",
       "soft": "Soft",
       "buttonFullWidth": "Full-width button",
+      "submitPlacement": "Submit button",
+      "submitAuto": "Auto",
+      "submitInline": "Beside the field",
+      "submitBelow": "Below",
+      "submitPlacementHint": "Where the button sits. Below the breakpoint it always stacks.",
+      "submitAutoInlineHint": "One field on one page, so the button sits beside it.",
+      "submitAutoBelowHint": "More than one field, so the button sits underneath.",
+      "buttonFullWidthInline": "Not available while the button sits beside the field.",
       "labelPosition": "Label position",
       "top": "Above",
       "inline": "Inline",
@@ -4861,7 +4977,8 @@
       "loading": "Loading times...",
       "empty": "No free times on this day.",
       "slotUnavailable": "This time slot was just taken. Please pick another.",
-      "slotInvalid": "Please pick a valid time slot."
+      "slotInvalid": "Please pick a valid time slot.",
+      "unavailable": "Times cannot be checked right now. Please try again shortly."
     },
     "steps": {
       "title": "Steps",
@@ -4910,6 +5027,10 @@
           "body": "Let visitors pick from your Stripe products, fill in the form, then pay on Stripe.",
           "disabled": "Connect Stripe to take payments with a form.",
           "connect": "Connect Stripe"
+        },
+        "intake": {
+          "title": "Receive from elsewhere",
+          "body": "A URL, not a page. Paste it into Typeform, Webflow, Zapier — anything that can POST — and whatever it sends becomes a lead."
         }
       }
     },
@@ -5153,7 +5274,14 @@
       "condition": "Condition",
       "delay": "Wait",
       "send_internal_email": "Email a team member",
-      "send_customer_email": "Email the contact"
+      "send_customer_email": "Email the contact",
+      "create_task": "Create a task",
+      "add_note": "Add a note",
+      "update_record": "Update the record",
+      "notify_team": "Notify the team",
+      "group_communicate": "Tell someone",
+      "group_act": "Change the record",
+      "group_flow": "Control the flow"
     },
     "step": {
       "trigger": "When this happens",
@@ -5187,7 +5315,17 @@
       "hint_record_updated": "Fires on every change to the record.",
       "hint_field_changed_to": "Fires only on the transition into that value.",
       "hint_no_change_for": "Checked on a schedule. Fires again if the record is touched and goes quiet again.",
-      "hint_date_field_relative": "Checked on a schedule, relative to the date you pick."
+      "hint_date_field_relative": "Checked on a schedule, relative to the date you pick.",
+      "watchedColumns": "Fields to watch",
+      "anyField": "Any field",
+      "watchedColumnsAll": "Any change to this record starts the workflow. Pick fields to narrow it.",
+      "watchedColumnsHint": "Only a change to one of these fields starts the workflow.",
+      "pipeline": "Pipeline",
+      "allPipelines": "All pipelines",
+      "pipelineHint": "Deals from one board only. Leave on all pipelines to watch every deal.",
+      "pipelineCustom": "Custom rule",
+      "pipelineCustomHint": "This trigger has a pipeline rule that is more than one choice. Edit it under Only if.",
+      "stageNotInPipeline": "The stage {{stages}} does not exist in this pipeline, so this trigger can never fire. Change the stage or the pipeline."
     },
     "condition": {
       "matchLabel": "Match",
@@ -5250,9 +5388,6 @@
       "body": "Message",
       "viewCode": "HTML",
       "viewPreview": "Preview",
-      "variablesHint": "Click to insert. Values come from the record that triggered the run.",
-      "toPath": "Send to",
-      "toPathHint": "A variable that resolves to an email address.",
       "sendFrom": "Send from",
       "sendFromDefault": "Workspace default",
       "accountBroken": "needs reconnecting"
@@ -5270,7 +5405,11 @@
       "emptyHint": "Pick a step on the left to configure it.",
       "conditionHint": "The run stops here unless every condition holds.",
       "delayHint": "Pause before the next step. The run resumes on its own.",
-      "internalHint": "Sent from Repraesent, so this works without connecting a mailbox."
+      "internalHint": "Sent from Repraesent, so this works without connecting a mailbox.",
+      "noteHint": "Writes a note on the record. Nobody is notified.",
+      "taskHint": "Creates a to-do on the record so somebody picks it up.",
+      "notifyHint": "Posts to every Slack, Teams or Google Chat channel this workspace has connected.",
+      "updateHint": "Changes the record that triggered this run. It will not start this workflow again."
     },
     "settings": {
       "description": "Description",
@@ -5336,9 +5475,13 @@
       "noSteps": "Add at least one step",
       "noRecipients": "An email step has no recipients",
       "noTemplate": "An email step has no message",
-      "noToPath": "The customer email step has no address",
+      "noToPath": "An email step has no address to send to",
       "emptyCondition": "A condition step is empty",
-      "filterContradiction": "\"{{field}} is {{value}}\" can never be true here: the trigger fires when {{field}} becomes \"{{target}}\". Use \"changed from\" to match the previous value."
+      "filterContradiction": "\"{{field}} is {{value}}\" can never be true here: the trigger fires when {{field}} becomes \"{{target}}\". Use \"changed from\" to match the previous value.",
+      "noTaskTitle": "A task step has no title",
+      "noNoteBody": "A note step is empty",
+      "noNotifyMessage": "A notify step has no message",
+      "noUpdateFields": "An update step sets no fields"
     },
     "testTitle": "Test this workflow",
     "testHint": "Runs against a real {{entity}} record. Nothing is sent.",
@@ -5361,7 +5504,8 @@
       "selected": "Preview: {{name}}",
       "resolvesTo": "Resolves to {{value}}",
       "resolvesEmpty": "Empty for {{name}}",
-      "resolvesNotEmail": "“{{value}}” is not an email address"
+      "resolvesNotEmail": "“{{value}}” is not an email address",
+      "rendering": "Rendering…"
     },
     "weekday": {
       "1": "Mon",
@@ -5380,7 +5524,91 @@
       "no": "No",
       "empty": "Nothing here — the run ends."
     },
-    "publishedUpToDate": "Published and up to date"
+    "publishedUpToDate": "Published and up to date",
+    "action": {
+      "targetLabel": "Attach it to",
+      "target_deals": "The deal",
+      "target_leads": "The lead",
+      "target_tasks": "The task's record",
+      "target_contacts": "The contact",
+      "target_contact": "The contact",
+      "targetTriggerHint": "Filed on the record that triggered this run.",
+      "targetContactHint": "Filed on the linked contact. Skipped when the record has none."
+    },
+    "note": {
+      "body": "Note"
+    },
+    "task": {
+      "title": "Task",
+      "description": "Details",
+      "descriptionHint": "Optional. Shown when the task is opened.",
+      "due": "Due",
+      "dueNone": "No due date",
+      "dueToday": "Today",
+      "dueInDays_one": "In {{count}} day",
+      "dueInDays_other": "In {{count}} days",
+      "assignee": "Assign to",
+      "assigneeNone": "Nobody",
+      "assigneeOwner": "Whoever owns the record"
+    },
+    "notify": {
+      "message": "Message",
+      "messageHint": "Plain text. A link back to the record is added automatically."
+    },
+    "update": {
+      "addField": "Add a field to set",
+      "removeField": "Remove this field",
+      "pickValue": "Pick a value",
+      "noFields": "No fields set yet",
+      "unsupportedEntity": "Records of type {{entity}} cannot be updated by a workflow yet.",
+      "field_title": "Title",
+      "field_stage": "Stage",
+      "field_status": "Status",
+      "field_value": "Value",
+      "field_assigned_to": "Owner",
+      "field_expected_close_date": "Expected close date",
+      "noFieldsHint": "Pick a field below and give it a value. Nothing is changed until you do.",
+      "noMembers": "No members to assign to."
+    },
+    "audience": {
+      "label": "Send to",
+      "deals_primary": "The main contact on this deal",
+      "deals_all_contacts": "Everyone on this deal",
+      "deals_source_lead": "The lead this deal came from",
+      "leads_primary": "The lead",
+      "leads_linked_contact": "The contact this lead became",
+      "contacts_primary": "The contact",
+      "tasks_primary": "The person this task is about",
+      "primary": "The customer",
+      "address": "A specific address…",
+      "path": "A custom variable…",
+      "allContactsHint": "One separate email each, so nobody sees anyone else's address.",
+      "pickPreview": "Choose a record above to see who this reaches.",
+      "nobody": "Nobody to email for {{name}} — this step would skip.",
+      "reaches_one": "Reaches {{count}} person",
+      "reaches_other": "Reaches {{count}} people",
+      "why_primary_contact": "main contact",
+      "why_also_on_deal": "also on this deal",
+      "why_the_lead": "the lead",
+      "why_linked_contact": "linked contact",
+      "why_literal_address": "",
+      "why_custom_variable": ""
+    },
+    "variables": {
+      "insert": "Insert a value",
+      "search": "Search values…",
+      "noMatch": "Nothing matches that.",
+      "group_record": "This record",
+      "group_person": "The person",
+      "group_workspace": "Your workspace",
+      "group_previous": "Before the change",
+      "intoSubject": "Inserts into the subject",
+      "intoBody": "Inserts into the message"
+    },
+    "contextOpen": "Open workflow",
+    "backToDraft": "Back to draft",
+    "leaveTitle": "Leave without saving?",
+    "leaveBody": "You have unsaved changes to this workflow. They will be lost."
   },
   "stripeProducts": {
     "metaTitle": "Products",
@@ -7052,5 +7280,23 @@
     "metaTitle": "Assistant",
     "unavailable": "This assistant is not available",
     "unavailableHint": "The link may be wrong, or the assistant has been taken offline."
+  },
+  "tracking": {
+    "metaTitle": "Order status",
+    "statusLabel": "Status",
+    "itemsLabel": "What was ordered",
+    "progressLabel": "Progress",
+    "reference": "Reference {{reference}}",
+    "lastUpdated": "Last updated {{date}}",
+    "currentMarker": "You are here",
+    "unknownStage": "In progress",
+    "unnamedItem": "Item",
+    "quantity_one": "Quantity {{count}}",
+    "quantity_other": "Quantity {{count}}",
+    "outcomeWon": "This order is complete.",
+    "outcomeLost": "This order was closed.",
+    "invalidTitle": "This link is no longer active",
+    "invalidBody": "Check the most recent email you received, or reply to it and ask for a new link.",
+    "footer": "Powered by Repraesent"
   }
 }

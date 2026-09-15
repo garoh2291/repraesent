@@ -138,8 +138,8 @@ export interface FormField {
    * `"<startISO>--<endISO>"`, the same wire format the booking page uses.
    *
    * Booking-target resolution (applied identically by the validator, the
-   * availability endpoint and createBookingEvent): parse `targetKey` when
-   * present; else, when both legacy `accountId` and `calendarId` are
+   * availability endpoint and createBookingEvent): non-empty `hosts` wins;
+   * else `targetKey`; else, when both legacy `accountId` and `calendarId` are
    * non-empty, the target is the Google calendar they name; else there is NO
    * target — the field is unpublishable and availability 404s.
    */
@@ -156,6 +156,20 @@ export interface FormField {
     accountId?: string;
     /** Legacy (pre-targetKey): Google calendar id the booked event lands in. */
     calendarId?: string;
+    /**
+     * Co-hosts. When present and non-empty these are THE calendars to book, in
+     * order; `hosts[0]` is the primary and organises the meeting. A slot is
+     * only offered when every host is free, and a booking that cannot reach
+     * every host is rolled back entirely.
+     *
+     * The builder keeps `targetKey` mirroring `hosts[0].targetKey` (see
+     * `patchHosts` in FieldInspector), so a reader that predates co-booking
+     * still books the primary rather than nothing. Never write `hosts` without
+     * updating `targetKey` in the same patch.
+     */
+    hosts?: AppointmentHost[];
+    /** Only `"all"` exists: every host must be free, every host gets an event. */
+    hostPolicy?: "all";
     /** Busy sources, `"google:<accountId>:<calendarId>"` / `"baikal:<configId>"`, or "all". */
     busyCalendarKeys: string[] | "all";
     durationMinutes: number;
@@ -170,6 +184,31 @@ export interface FormField {
     /** Booking horizon in days. Default 30. */
     maxDaysAhead?: number;
   };
+}
+
+/**
+ * One host of an appointment field: a CALENDAR, plus optionally a PERSON.
+ *
+ * A row with no person is still booked and still blocks time — it is a meeting
+ * room, a shared inbox, a calendar that exists to hold the slot — but the
+ * visitor is never told about it. Only rows with a name are shown.
+ *
+ * `label` / `avatarUrl` / `email` are denormalised from the workspace member at
+ * pick time rather than resolved from `userId` at render time, because the
+ * published definition is public and is read by the form renderer, which has no
+ * access to workspace data. Denormalising also means a member leaving does not
+ * blank a live form.
+ */
+export interface AppointmentHost {
+  /** Cross-source calendar key, built by `calendarKeyFor`. */
+  targetKey: string;
+  /** Workspace member hosting this calendar. Absent = booked but never shown. */
+  userId?: string;
+  /** Their name, falling back to their e-mail. Absent = not shown. */
+  label?: string;
+  avatarUrl?: string;
+  /** Invited as an attendee on the primary's event where the provider allows it. */
+  email?: string;
 }
 
 export interface FormSection {
@@ -191,7 +230,8 @@ export interface FormSection {
  *   field.<fieldId>.part.street|city|zip|country
  *   success.inline | success.modal.title | success.modal.body | success.modal.cta
  *   error.generic | error.<FormErrorCode>
- *   appointment.loading | appointment.empty     (slot picker runtime states)
+ *   appointment.loading | appointment.empty | appointment.unavailable
+ *                                               (slot picker runtime states)
  *   nav.back | nav.next | nav.stepOf            (multi-step navigation)
  *   commerce.*                                  (product forms: order summary)
  *   checkout.*                                  (product forms: after payment)
@@ -349,11 +389,32 @@ export interface FormUtmCapture {
  *   standard — creates a lead and finishes.
  *   product  — creates the lead, then opens a Stripe Checkout Session on the
  *              workspace's connected account for the bundle in `commerce`.
+ *   intake   — has no fields and renders nothing. It is a URL you point an
+ *              external form at; whatever JSON arrives becomes a lead. The form
+ *              id in the path is the capability, exactly as it already is for
+ *              the public submit endpoint.
  *
  * Single-step vs multi-step is NOT a kind — it is `layout.mode`.
  */
-export const FORM_KINDS = ["standard", "product"] as const;
+export const FORM_KINDS = ["standard", "product", "intake"] as const;
 export type FormKind = (typeof FORM_KINDS)[number];
+
+/**
+ * How an intake form maps the JSON it receives onto lead columns.
+ *
+ * Absent means "auto": the recognised keys (first_name, last_name, full_name,
+ * name, email, phone) map themselves and everything else is kept in metadata.
+ * A value here overrides that for one column — `{ email: "your_email" }` reads
+ * the address out of a key called `your_email`.
+ *
+ * Dotted paths are supported, because most form builders nest: Typeform sends
+ * `{ form_response: { answers: [...] } }` and Webflow sends `{ data: {...} }`.
+ */
+export interface FormIntakeConfig {
+  mapping?: Partial<Record<FormFieldMapping & string, string>>;
+  /** The last body this URL received, so the builder can show real keys. */
+  lastPayload?: { at: string; body: unknown } | null;
+}
 
 /**
  * How the sections are presented. `single` renders every section on one page
@@ -367,12 +428,25 @@ export interface FormLayout {
   progress: "bar" | "steps" | "none";
   /** multi_step + `steps` progress: print each section's title next to its dot. */
   showStepTitles: boolean;
+  /**
+   * Where the submit button sits.
+   *
+   * `auto` is the honest default: a subscribe box — one page, one input — reads
+   * as one control, so the button belongs beside the input, and everything else
+   * keeps the button on its own row underneath. `on` and `off` are the escape
+   * hatches for when the automatic answer is wrong.
+   *
+   * Absent in every definition written before this existed, which normalizes to
+   * `auto` and changes nothing: those forms have more than one field.
+   */
+  inlineSubmit: "auto" | "on" | "off";
 }
 
 export const DEFAULT_FORM_LAYOUT: FormLayout = {
   mode: "single",
   progress: "bar",
   showStepTitles: true,
+  inlineSubmit: "auto",
 };
 
 export type FormCommerceInterval = "day" | "week" | "month" | "year";
@@ -495,6 +569,8 @@ export interface FormDefinition {
   layout?: FormLayout;
   /** Product forms only. Seeded from DEFAULT_FORM_COMMERCE when the kind is product. */
   commerce?: FormCommerce;
+  /** Intake forms only. Ignored — and stripped — on every other kind. */
+  intake?: FormIntakeConfig;
 }
 
 export interface FormConfirmationEmailLocale {
@@ -1051,6 +1127,31 @@ export function isMultiStep(
   );
 }
 
+/**
+ * Does the submit button sit beside the input rather than under it?
+ *
+ * `on` and `off` are the author's word and are taken literally. `auto` asks the
+ * form what it is: one page holding exactly one thing to fill in is a subscribe
+ * box, and a subscribe box is an input with a button next to it. Two fields is
+ * a form, and a form's button goes underneath.
+ *
+ * Counts value-collecting fields only — a heading above the input does not turn
+ * a subscribe box into a form.
+ */
+export function isInlineSubmit(
+  definition: Pick<FormDefinition, "layout" | "sections">,
+): boolean {
+  const setting = definition.layout?.inlineSubmit ?? "auto";
+  if (setting === "off") return false;
+  if (setting === "on") return true;
+  if (isMultiStep(definition)) return false;
+  const fields = (definition.sections ?? []).flatMap((s) => s.fields ?? []);
+  const collecting = fields.filter(
+    (f) => !(VALUELESS_TYPES as readonly string[]).includes(f.type),
+  );
+  return collecting.length === 1;
+}
+
 /** Fill in a stored layout, tolerating anything older definitions lack. */
 export function normalizeLayout(raw: unknown): FormLayout {
   const value = (raw ?? {}) as Partial<FormLayout>;
@@ -1061,6 +1162,10 @@ export function normalizeLayout(raw: unknown): FormLayout {
         ? value.progress
         : "bar",
     showStepTitles: value.showStepTitles !== false,
+    inlineSubmit:
+      value.inlineSubmit === "on" || value.inlineSubmit === "off"
+        ? value.inlineSubmit
+        : "auto",
   };
 }
 
