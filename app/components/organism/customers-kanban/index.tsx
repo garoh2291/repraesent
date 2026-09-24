@@ -13,7 +13,8 @@ import {
 } from "@dnd-kit/core";
 import { useTranslation } from "react-i18next";
 import { ChevronDown, Mail, Phone } from "lucide-react";
-import { formatDate, formatCurrency } from "~/lib/utils/format";
+import { formatDate, formatContactValue } from "~/lib/utils/format";
+import { useWorkspaceCurrency } from "~/lib/hooks/useWorkspaceCurrency";
 import { cn } from "~/lib/utils";
 import {
   CONTACT_TYPES,
@@ -262,6 +263,7 @@ function ContactKanbanCardInner({ contact }: { contact: ContactListItem }) {
   const phone = contact.primary_phone?.trim() ?? "";
   const ltvNum =
     contact.lifetime_value != null ? Number(contact.lifetime_value) : null;
+  const { currency: workspaceCurrency } = useWorkspaceCurrency();
 
   let lastContactLabel = "";
   if (contact.last_contacted_at) {
@@ -311,7 +313,7 @@ function ContactKanbanCardInner({ contact }: { contact: ContactListItem }) {
         </div>
         {ltvNum != null && Number.isFinite(ltvNum) ? (
           <span className="text-[11px] font-medium tabular-nums text-foreground">
-            {formatCurrency(ltvNum)}
+            {formatContactValue(contact, "won", ltvNum, workspaceCurrency)}
           </span>
         ) : (
           <span className="text-[10px] text-muted-foreground/60">

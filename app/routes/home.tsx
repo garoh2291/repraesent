@@ -33,6 +33,7 @@ import {
 } from "date-fns";
 import { useAuthContext } from "~/providers/auth-provider";
 import { DoorboostHomeSection } from "~/components/doorboost-home-section";
+import { IntroCallCard } from "~/components/onboarding-v2/intro-call-card";
 import { cn } from "~/lib/utils";
 import {
   formatDate as fmtDate,
@@ -40,7 +41,10 @@ import {
   formatDateShort,
   formatNumber,
   formatCurrency,
+  formatCurrencyTotals,
+  sumByCurrency,
 } from "~/lib/utils/format";
+import { useWorkspaceCurrency } from "~/lib/hooks/useWorkspaceCurrency";
 import { getLeadAnalytics, type LeadAnalyticsPeriod } from "~/lib/api/leads";
 import { getDeals, type DealListItem } from "~/lib/api/deals";
 import { useDealStageLookup } from "~/lib/hooks/usePipelineStages";
@@ -633,14 +637,14 @@ const DEAL_SUMMARY_CARDS: {
   },
 ];
 
-function sumDealValue(deals: DealListItem[]): number {
-  let total = 0;
-  for (const d of deals) {
-    if (d.value == null || d.value === "") continue;
-    const n = Number(d.value);
-    if (Number.isFinite(n)) total += n;
-  }
-  return total;
+function sumDealValue(deals: DealListItem[]): Map<string, number> {
+  return sumByCurrency(deals, (d) => ({ value: d.value, currency: d.currency }));
+}
+
+function mergeTotals(...maps: Array<Map<string, number>>): Map<string, number> {
+  const out = new Map<string, number>();
+  for (const m of maps) for (const [k, v] of m) out.set(k, (out.get(k) ?? 0) + v);
+  return out;
 }
 
 function DealsSummarySection() {
@@ -676,8 +680,12 @@ function DealsSummarySection() {
   }, [data?.data, resolveDealStage]);
 
   // Lost deals stay excluded, matching the old hardcoded new+in_progress+won.
-  const masterTotalValue =
-    sumDealValue(byCategory.open) + sumDealValue(byCategory.won);
+  const masterTotals = mergeTotals(sumDealValue(byCategory.open), sumDealValue(byCategory.won));
+  const { currency: workspaceCurrency } = useWorkspaceCurrency();
+  // The workspace currency is the headline; other currencies sit under it,
+  // never added in (no exchange rates).
+  const headline = masterTotals.get(workspaceCurrency) ?? 0;
+  const others = new Map([...masterTotals].filter(([cur, v]) => cur !== workspaceCurrency && v !== 0));
 
   return (
     <div
@@ -694,9 +702,16 @@ function DealsSummarySection() {
           {isLoading ? (
             <div className="h-8 w-12 animate-pulse rounded-md bg-muted" />
           ) : (
-            <p className="text-3xl font-bold tracking-tight text-foreground tabular-nums">
-              {formatCurrency(masterTotalValue)}
-            </p>
+            <>
+              <p className="text-3xl font-bold tracking-tight text-foreground tabular-nums">
+                {formatCurrency(headline, workspaceCurrency)}
+              </p>
+              {others.size > 0 ? (
+                <p className="text-sm font-semibold text-muted-foreground tabular-nums">
+                  + {formatCurrencyTotals(others, workspaceCurrency)}
+                </p>
+              ) : null}
+            </>
           )}
         </div>
 
@@ -764,7 +779,7 @@ function DealsSummarySection() {
                   <div className="h-4 w-16 animate-pulse rounded bg-muted" />
                 ) : (
                   <p className="text-[15px] font-semibold text-foreground tabular-nums leading-tight">
-                    {formatCurrency(total)}
+                    {formatCurrencyTotals(total, workspaceCurrency)}
                   </p>
                 )}
               </div>
@@ -964,6 +979,9 @@ export default function Home() {
           {currentWorkspace?.name} · <span className="capitalize">{role}</span>
         </p>
       </div>
+
+      {/* New customers who skipped booking their intro call */}
+      <IntroCallCard />
 
       {/* Doorboost migration — always above pipeline & tasks */}
       <DoorboostHomeSection />

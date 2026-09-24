@@ -29,7 +29,8 @@ import {
   ContactSourceBadge,
   ContactTypeBadge,
 } from "~/components/molecule/contact-badges";
-import { formatCurrency, formatDate } from "~/lib/utils/format";
+import { formatContactValue, formatDate } from "~/lib/utils/format";
+import { useWorkspaceCurrency } from "~/lib/hooks/useWorkspaceCurrency";
 import {
   ArrowRight,
   Check,
@@ -95,6 +96,7 @@ function contactInitials(name: string): string {
 }
 
 export default function ContactsPage() {
+  const { currency: workspaceCurrency } = useWorkspaceCurrency();
   const { t } = useTranslation();
   const { currentWorkspace } = useAuthContext();
   const navigate = useNavigate();
@@ -557,7 +559,7 @@ export default function ContactsPage() {
                         <TableCell className="whitespace-normal px-4 py-3 align-middle text-left tabular-nums">
                           {ltvNum != null && Number.isFinite(ltvNum) ? (
                             <span className="inline-flex items-center rounded-full bg-emerald-600/10 px-2 py-0.5 text-xs font-medium text-emerald-700 ring-1 ring-inset ring-emerald-600/20 dark:text-emerald-400">
-                              {formatCurrency(ltvNum)}
+                              {formatContactValue(row, "won", ltvNum, workspaceCurrency)}
                             </span>
                           ) : (
                             <span className="text-muted-foreground/60">—</span>
@@ -567,7 +569,7 @@ export default function ContactsPage() {
                           {pipelineNum != null &&
                           Number.isFinite(pipelineNum) ? (
                             <span className="inline-flex items-center rounded-full bg-sky-500/10 px-2 py-0.5 text-xs font-medium text-sky-700 ring-1 ring-inset ring-sky-500/20 dark:text-sky-400">
-                              {formatCurrency(pipelineNum)}
+                              {formatContactValue(row, "pipeline", pipelineNum, workspaceCurrency)}
                             </span>
                           ) : (
                             <span className="text-muted-foreground/60">—</span>
@@ -576,7 +578,7 @@ export default function ContactsPage() {
                         <TableCell className="whitespace-normal px-4 py-3 align-middle text-left tabular-nums">
                           {lostNum != null && Number.isFinite(lostNum) ? (
                             <span className="inline-flex items-center rounded-full bg-red-500/10 px-2 py-0.5 text-xs font-medium text-red-700 ring-1 ring-inset ring-red-500/20 dark:text-red-400">
-                              {formatCurrency(lostNum)}
+                              {formatContactValue(row, "lost", lostNum, workspaceCurrency)}
                             </span>
                           ) : (
                             <span className="text-muted-foreground/60">—</span>

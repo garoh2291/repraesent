@@ -36,15 +36,50 @@ export function formatDecimal(value: number, decimals = 2): string {
 // --------------- Currency ---------------
 
 /**
- * Format an amount in EUR (major units, e.g. 12.50 not 1250 cents).
+ * Format an amount (major units, e.g. 12.50 not 1250 cents). EUR unless the
+ * record says otherwise — deals carry their own currency since migration 187.
  */
-export function formatCurrency(amount: number): string {
-  return new Intl.NumberFormat(getIntlLocale(), {
-    style: "currency",
-    currency: "EUR",
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 2,
-  }).format(amount);
+export function formatCurrency(amount: number, currency: string = "EUR"): string {
+  const code = (currency || "EUR").toUpperCase();
+  try {
+    const text = new Intl.NumberFormat(getIntlLocale(), {
+      style: "currency",
+      currency: code,
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 2,
+    }).format(amount);
+    // English writes USD as a bare "$" — next to CA$ that reads as "which dollar?".
+    return code === "USD" ? text.replace(/(^|[\s\u00a0-])\$/, "$1US$") : text;
+  } catch {
+    return `${amount.toFixed(2)} ${code}`;
+  }
+}
+
+/** Sum per currency. Amounts in different currencies are never added together. */
+export function sumByCurrency<T>(
+  items: readonly T[],
+  pick: (item: T) => { value: number | string | null | undefined; currency?: string | null },
+): Map<string, number> {
+  const out = new Map<string, number>();
+  for (const item of items) {
+    const { value, currency } = pick(item);
+    const n = typeof value === "number" ? value : value == null || value === "" ? NaN : Number(value);
+    if (!Number.isFinite(n)) continue;
+    const code = (currency || "EUR").toUpperCase();
+    out.set(code, (out.get(code) ?? 0) + n);
+  }
+  return out;
+}
+
+/**
+ * "€12,000 · CA$4,500". The workspace currency first, then the rest A–Z.
+ * Empty map → the zero amount in the workspace currency.
+ */
+export function formatCurrencyTotals(totals: Map<string, number>, primary: string = "EUR"): string {
+  const entries = [...totals.entries()].filter(([, v]) => v !== 0);
+  if (!entries.length) return formatCurrency(0, primary);
+  entries.sort(([a], [b]) => (a === primary ? -1 : b === primary ? 1 : a.localeCompare(b)));
+  return entries.map(([cur, v]) => formatCurrency(v, cur)).join(" · ");
 }
 
 /**
@@ -211,4 +246,30 @@ export function formatTime(
     ...(options?.hour12 !== undefined ? { hour12: options.hour12 } : {}),
     ...(options?.timeZone ? { timeZone: options.timeZone } : {}),
   });
+}
+
+
+/** contacts.deal_values (migration 187): per-currency won / lost / pipeline sums. */
+export type ContactDealValues = Record<string, { won?: number | string; lost?: number | string; pipeline?: number | string }>;
+
+/**
+ * A contact's won / pipeline / lost total, in every currency it has deals in.
+ * Falls back to the single legacy column (workspace currency) before 187.
+ */
+export function formatContactValue(
+  contact: { deal_values?: ContactDealValues | null },
+  kind: "won" | "lost" | "pipeline",
+  legacy: number,
+  workspaceCurrency: string = "EUR",
+): string {
+  const dv = contact.deal_values;
+  if (dv && typeof dv === "object" && Object.keys(dv).length > 0) {
+    const totals = new Map<string, number>();
+    for (const [cur, t] of Object.entries(dv)) {
+      const n = Number(t?.[kind] ?? 0);
+      if (Number.isFinite(n) && n !== 0) totals.set(cur, n);
+    }
+    return formatCurrencyTotals(totals, workspaceCurrency);
+  }
+  return formatCurrency(legacy, workspaceCurrency);
 }

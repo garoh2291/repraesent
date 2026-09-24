@@ -148,6 +148,16 @@ export async function updateLeadStatus(
   return res.data;
 }
 
+/** Hide it and block the sender's future leads (email + phone). */
+export async function markLeadSpam(id: string): Promise<{ blocked: Array<"email" | "phone" | "domain">; alsoHidden: number }> {
+  return (await apiClient.post(`/leads/${id}/spam`)).data;
+}
+
+/** Back to the first stage, and lift every block on its sender. */
+export async function markLeadNotSpam(id: string): Promise<{ unblocked: number }> {
+  return (await apiClient.post(`/leads/${id}/not-spam`)).data;
+}
+
 export async function reorderLead(
   id: string,
   status: LeadStatus,

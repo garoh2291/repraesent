@@ -192,7 +192,7 @@ export function AttachDealDialog({
                 const alreadyLinked = attachedDealIds.has(d.id);
                 const val =
                   d.value != null && d.value !== ""
-                    ? formatCurrency(Number(d.value))
+                    ? formatCurrency(Number(d.value), d.currency)
                     : null;
                 const isAttaching = attachingId === d.id;
                 const isDetaching = detachingId === d.id;

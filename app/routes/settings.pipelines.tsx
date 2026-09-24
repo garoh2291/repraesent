@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   DndContext,
   MouseSensor,
@@ -26,6 +27,9 @@ import {
 } from "lucide-react";
 import i18n from "~/i18n";
 import { useAuthContext } from "~/providers/auth-provider";
+import { DealCurrencySelect } from "~/components/molecule/deal-currency-select";
+import { useWorkspaceCurrency } from "~/lib/hooks/useWorkspaceCurrency";
+import { setWorkspaceCurrency, type DealCurrency } from "~/lib/api/deals";
 import { useDocumentMeta } from "~/lib/hooks/use-document-meta";
 import { extractErrorMessage } from "~/lib/api/axios-instance";
 import type {
@@ -185,6 +189,7 @@ export default function PipelinesSettingsPage() {
           })}
         </p>
       )}
+      <DealCurrencySection isAdmin={isAdmin} />
       <EntityStagesSection
         entity="lead"
         label={t("settings.pipelines.leadStages", {
@@ -897,5 +902,38 @@ function AddStageDialog({
         </DialogFooter>
       </DialogContent>
     </Dialog>
+  );
+}
+
+/**
+ * Workspace currency: what new deals start in and the headline currency of
+ * totals. Deals in other currencies keep their own and are shown next to it,
+ * never converted.
+ */
+function DealCurrencySection({ isAdmin }: { isAdmin: boolean }) {
+  const { t } = useTranslation();
+  const queryClient = useQueryClient();
+  const { currentWorkspace } = useAuthContext();
+  const { currency, available } = useWorkspaceCurrency();
+  const mutation = useMutation({
+    mutationFn: (c: DealCurrency) => setWorkspaceCurrency(c),
+    onSuccess: (fresh) => {
+      queryClient.setQueryData(["workspace-currency", currentWorkspace?.id], fresh);
+      void queryClient.invalidateQueries({ queryKey: ["contacts"] });
+      toast.success(t("settings.currency.saved"));
+    },
+    onError: () => toast.error(t("settings.currency.error")),
+  });
+  if (!available) return null;
+  return (
+    <section className="space-y-3">
+      <div className="space-y-0.5">
+        <SectionLabel>{t("settings.currency.label")}</SectionLabel>
+        <p className="text-sm text-muted-foreground">{t("settings.currency.hint")}</p>
+      </div>
+      <div className="flex items-center gap-3">
+        <DealCurrencySelect value={currency} onChange={(c) => mutation.mutate(c)} disabled={!isAdmin || mutation.isPending} className="w-40" />
+      </div>
+    </section>
   );
 }

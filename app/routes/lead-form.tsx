@@ -2,10 +2,12 @@ import { useMemo, useEffect, useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router";
 import { useTranslation } from "react-i18next";
 import {
+  useMutation,
   useQuery,
   useQueryClient,
   type InfiniteData,
 } from "@tanstack/react-query";
+import { toast } from "sonner";
 import type { ColumnDef } from "@tanstack/react-table";
 import { useAuthContext } from "~/providers/auth-provider";
 import { DataTable } from "~/components/organism/data-table";
@@ -25,6 +27,7 @@ import TooltipContainer from "~/components/tooltip-container";
 import {
   getLeads,
   getLeadFormNames,
+  markLeadNotSpam,
   type Lead,
   type LeadStatus,
   type PaginatedLeads,
@@ -384,6 +387,14 @@ export default function LeadForm() {
   const hiddenCount = hiddenCountQuery.data ?? 0;
 
   const leadStages = useLeadStages();
+  const notSpamMutation = useMutation({
+    mutationFn: (id: string) => markLeadNotSpam(id),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ["leads"] });
+      toast.success(t("leads.spam.restored"));
+    },
+    onError: () => toast.error(t("leads.spam.error")),
+  });
 
   const leadStatusFilterOptions = useLeadFilterStatusOptions();
   const leadsFilters = useMemo(
@@ -590,12 +601,11 @@ export default function LeadForm() {
                   type="button"
                   onClick={(event) => {
                     event.stopPropagation();
-                    updateStatusMutation.mutate({
-                      id: lead.id,
-                      status: leadStages.entry!.key as LeadStatus,
-                    });
+                    // "Restore" = not spam: back to the first stage and the
+                    // sender's blocks lifted, so their next lead gets through.
+                    notSpamMutation.mutate(lead.id);
                   }}
-                  disabled={updateStatusMutation.isPending}
+                  disabled={notSpamMutation.isPending}
                   className="shrink-0 rounded-lg border border-amber-300 bg-amber-50 px-2 py-1 text-[11px] font-medium text-amber-800 transition-colors hover:bg-amber-100 disabled:opacity-50"
                 >
                   {t("leads.restoreFiltered", { defaultValue: "Restore" })}

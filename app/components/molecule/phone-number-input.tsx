@@ -33,6 +33,10 @@ interface PhoneNumberInputProps {
   className?: string;
   disabled?: boolean;
   autoFocus?: boolean;
+  /** Forwarded to the <input> so a <label htmlFor> and error text can point at it. */
+  id?: string;
+  "aria-describedby"?: string;
+  "aria-invalid"?: boolean;
 }
 
 export function PhoneNumberInput({
@@ -43,6 +47,9 @@ export function PhoneNumberInput({
   className,
   disabled,
   autoFocus,
+  id,
+  "aria-describedby": ariaDescribedBy,
+  "aria-invalid": ariaInvalid,
 }: PhoneNumberInputProps) {
   // The locked country calling code (`countryCallingCodeEditable={false}`) prevents
   // the underlying input from accepting a pasted international number that uses a
@@ -83,6 +90,9 @@ export function PhoneNumberInput({
       placeholder={placeholder}
       disabled={disabled}
       autoFocus={autoFocus}
+      id={id}
+      aria-describedby={ariaDescribedBy}
+      aria-invalid={ariaInvalid || undefined}
     />
   );
 }

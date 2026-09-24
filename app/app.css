@@ -824,6 +824,37 @@ body {
   color: var(--muted-foreground);
   opacity: 0.7;
 }
+/* Onboarding / business profile: the same 40 px control as every other field
+   there (components/onboarding-v2/primitives.tsx `controlCls`). */
+.crm-phone-input.crm-phone-input--control {
+  height: 2.5rem;
+  border-radius: 0.5rem;
+  background: var(--card);
+  padding: 0 0.75rem 0 0.5rem;
+  font-size: 1rem;
+  box-shadow: none;
+  transition: border-color 150ms, box-shadow 150ms;
+}
+@media (min-width: 40rem) {
+  .crm-phone-input.crm-phone-input--control {
+    font-size: 0.875rem;
+  }
+}
+.crm-phone-input.crm-phone-input--control:hover {
+  border-color: color-mix(in srgb, var(--foreground) 25%, transparent);
+}
+.crm-phone-input.crm-phone-input--control:focus-within {
+  border-color: color-mix(in srgb, var(--foreground) 45%, transparent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--foreground) 10%, transparent);
+}
+.crm-phone-input.crm-phone-input--control:has([aria-invalid="true"]) {
+  border-color: var(--destructive);
+}
+.crm-phone-input.crm-phone-input--control .PhoneInputCountry {
+  align-self: stretch;
+  padding-right: 0.5rem;
+  border-right: 1px solid var(--border);
+}
 
 /* ── Email composer body (Tiptap) ─────────────────────────────
    The editor writes the same HTML the recipient's mail client will render, so

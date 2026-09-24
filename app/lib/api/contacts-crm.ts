@@ -1,3 +1,4 @@
+import type { ContactDealValues } from "~/lib/utils/format";
 import { apiClient } from "./axios-instance";
 import type { LeadHistoryItem } from "./leads";
 
@@ -16,6 +17,8 @@ export interface ContactListItem {
   lifetime_value: string | null;
   lost_value: string | null;
   pipeline_value: string | null;
+  /** Per-currency won/lost/pipeline totals (migration 187). */
+  deal_values?: ContactDealValues | null;
   last_contacted_at: string | null;
   /** Optional: older backends don't send it (deploy skew). */
   avatar_url?: string | null;

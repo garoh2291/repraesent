@@ -13,6 +13,7 @@ import {
   ArrowLeft,
   AtSign,
   BellRing,
+  MailCheck,
   Bot,
   Building2,
   BookUser,
@@ -49,6 +50,8 @@ import {
   UsersRound,
   Workflow,
   X,
+  Rocket,
+  Headset,
 } from "lucide-react";
 import * as LucideIcons from "lucide-react";
 import { SafeImg } from "~/components/atom/safe-img";
@@ -64,6 +67,7 @@ import { useWorkspaceWpPluginInstalls } from "~/lib/hooks/useWorkspaceWpPluginIn
 import { useWorkspaceWpSite } from "~/lib/hooks/useWorkspaceWpSite";
 import { useStripeConnection } from "~/lib/hooks/useWorkspaceIntegrations";
 import { LanguageSwitcher } from "~/components/language-switcher";
+import { ContactSalesDialog } from "~/components/sales-contact/contact-sales-dialog";
 import { usePipelinesQuery } from "~/lib/hooks/usePipelines";
 import { PipelineDialog } from "~/components/organism/pipeline-dialog";
 import {
@@ -119,6 +123,11 @@ const SETTINGS_NAV = [
   { to: "/settings/profile", labelKey: "settings.tabs.profile", Icon: User },
   { to: "/settings/team", labelKey: "settings.tabs.areaSettings", Icon: Users },
   {
+    to: "/settings/business-profile",
+    labelKey: "settings.tabs.businessProfile",
+    Icon: Store,
+  },
+  {
     to: "/settings/email-accounts",
     labelKey: "settings.tabs.emailAccounts",
     Icon: AtSign,
@@ -129,6 +138,11 @@ const SETTINGS_NAV = [
     Icon: CalendarDays,
   },
   { to: "/settings/bcc", labelKey: "settings.tabs.bcc", Icon: Inbox },
+  {
+    to: "/settings/email-notifications",
+    labelKey: "settings.tabs.emailNotifications",
+    Icon: MailCheck,
+  },
   {
     to: "/settings/notifications",
     labelKey: "settings.tabs.notifications",
@@ -153,6 +167,11 @@ const SETTINGS_NAV = [
     to: "/settings/pipelines",
     labelKey: "settings.tabs.pipelines",
     Icon: Kanban,
+  },
+  {
+    to: "/settings/onboarding",
+    labelKey: "settings.tabs.onboarding",
+    Icon: Rocket,
   },
 ] as const;
 
@@ -518,6 +537,10 @@ export function Sidebar({
   // nothing connected, so the visitor can see what the app does. The pages
   // show their own empty states. Real workspaces keep the gates below.
   const isDemoWorkspace = currentWorkspace?.is_demo === true;
+  // Root workspace admins configure the new-customer onboarding.
+  const isRootAdmin =
+    currentWorkspace?.is_root === true &&
+    currentWorkspace.member_role === "admin";
   const hasAppointmentsService =
     currentWorkspace?.services?.some(
       (s) => s.service_type === "appointments"
@@ -535,6 +558,14 @@ export function Sidebar({
       (calendarSummary?.baikal_config_count ?? 0) >
       0 || isDemoWorkspace;
   const isDoorboostBrandWs = currentWorkspace?.type === "doorboost_brand";
+  // "Contact re:praesent": every customer workspace. Not the root (that's
+  // re:praesent itself), not demo workspaces (read-only), not DoorBoost brands.
+  const showContactSales =
+    !!currentWorkspace &&
+    currentWorkspace.is_root !== true &&
+    currentWorkspace.is_demo !== true &&
+    !isDoorboostBrandWs;
+  const [contactOpen, setContactOpen] = useState(false);
   // TEMPORARY: Workflows and Settings → Integrations are still being piloted,
   // so in production only the pilot workspace sees those nav entries. Local
   // development always shows them.
@@ -805,7 +836,9 @@ export function Sidebar({
                   ? pilot.integrations || isDemoWorkspace
                   : item.to === "/settings/ai"
                     ? showAiAssistant
-                    : true
+                    : item.to === "/settings/onboarding"
+                      ? isRootAdmin
+                      : true
               ).map(({ to, labelKey, Icon }) => (
                 <NavLink
                   key={to}
@@ -1121,6 +1154,24 @@ export function Sidebar({
               persistToDb
             />
           </div>
+          {showContactSales && (
+            <button
+              type="button"
+              onClick={() => setContactOpen(true)}
+              title={collapsed ? t("salesContact.nav") : undefined}
+              className={cn(
+                "flex w-full items-center rounded-lg border-l-2 border-transparent py-2 text-[13px] font-medium text-white/45 transition-all duration-150 hover:bg-white/5 hover:text-white/75 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-white/25",
+                collapsed ? "justify-center px-0" : "gap-2.5 px-3"
+              )}
+            >
+              <Headset className="h-4 w-4 shrink-0" aria-hidden />
+              {collapsed ? (
+                <span className="sr-only">{t("salesContact.nav")}</span>
+              ) : (
+                <span className="truncate">{t("salesContact.nav")}</span>
+              )}
+            </button>
+          )}
           {!isDoorboostBrandWs && (
             <>
               {/* Hidden inside settings: the nav above already lists every
@@ -1190,6 +1241,9 @@ export function Sidebar({
           })()}
         </div>
       </aside>
+      {showContactSales && (
+        <ContactSalesDialog open={contactOpen} onOpenChange={setContactOpen} />
+      )}
     </SidebarCollapsedContext.Provider>
   );
 }

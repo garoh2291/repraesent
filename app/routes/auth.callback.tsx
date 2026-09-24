@@ -22,6 +22,7 @@ import {
 } from "~/lib/api/axios-instance";
 import i18n from "~/i18n";
 import { useDocumentMeta } from "~/lib/hooks/use-document-meta";
+import { resolveWorkspaceRoute } from "~/lib/onboarding/resolve-route";
 
 export function meta() {
   return [
@@ -178,19 +179,10 @@ export default function AuthCallback() {
           const ws = workspaces[0];
           setStoredWorkspaceId(ws.id);
           setStoredSelectedView(ws.id);
-          const status = ws.status ?? "active";
-          const hasStripeCustomer = !!(ws as { stripe_customer_id?: string | null })
-            ?.stripe_customer_id;
-          const hasProducts = (ws.products?.length ?? 0) > 0;
-          if (status === "pending" && !hasStripeCustomer) {
-            navigate("/onboarding/billing", { replace: true });
-            return;
-          }
-          if (status === "pending" && hasStripeCustomer && !hasProducts) {
-            navigate("/onboarding/products", { replace: true });
-            return;
-          }
-          navigate(resolveDestination("/"), { replace: true });
+          // Same rules as the protected layout (onboarding, welcome, holds).
+          const wanted = resolveDestination("/");
+          const gate = resolveWorkspaceRoute(ws, wanted, context.user);
+          navigate(gate ?? wanted, { replace: true });
           return;
         }
 

@@ -22,6 +22,7 @@ import { LeadTasksSection } from "~/components/organism/tasks/lead-tasks-section
 import { LeadSourceIcon } from "~/components/organism/lead-source-icon";
 import { LeadStatusSelect } from "~/components/molecule/lead-status-select";
 import { useLeadStages } from "~/lib/hooks/usePipelineStages";
+import { LeadSpamButton } from "~/components/organism/lead-spam/lead-spam-button";
 import {
   resolveStageLabel,
   resolveStageLabelByKey,
@@ -53,6 +54,13 @@ import {
   formatAppointmentRange,
   isAppointmentPast,
 } from "~/lib/leads/appointment";
+import {
+  formatOnboardingValue,
+  humanizeField,
+  onboardingClaimedMetaKeys,
+  onboardingGroups,
+  translateOnboardingValue,
+} from "~/lib/leads/onboarding";
 import { LeadConversation } from "~/components/leads/lead-conversation";
 import {
   aiActionPrefixes,
@@ -549,6 +557,12 @@ export function LeadDetailSheet({
                   </Button>
                 </div>
               )}
+              {/* Spam: hide + block the sender, or undo it */}
+              {!readOnly && (
+                <div className="px-5 py-4">
+                  <LeadSpamButton lead={lead} className="w-full" />
+                </div>
+              )}
               {/* Existing contact with the same email */}
               {!readOnly && !linkedContactId && emailMatch && (
                 <div className="px-5 py-4">
@@ -705,6 +719,9 @@ export function LeadInfoSection({
   // The payment block owns the checkout stamps — no raw rows for them.
   const checkoutClaimedKeys = checkoutClaimedMetaKeys(lead);
   const filterVerdict = extractLeadFilterVerdict(lead);
+  // Onboarding intake leads (root workspace): ~60 answers, grouped below.
+  const onboardingClaimedKeys = onboardingClaimedMetaKeys(lead);
+  const onboarding = onboardingGroups(lead);
 
   // message → shown inline; misc/platform_campaign_id → hidden;
   // appointment keys → promoted banner; rest → collapsible
@@ -718,6 +735,7 @@ export function LeadInfoSection({
       !appointmentClaimedKeys.has(key) &&
       !aiClaimedKeys.has(key) &&
       !checkoutClaimedKeys.has(key) &&
+      !onboardingClaimedKeys.has(key) &&
       !FILTERED_CLAIMED_META_KEYS.has(key),
   );
 
@@ -737,7 +755,13 @@ export function LeadInfoSection({
         )}
       </div>
 
-      {filterVerdict ? (
+      {filterVerdict && filterVerdict.reverted ? (
+        <p className="rounded-lg border border-border/60 bg-muted/40 px-3 py-2 text-[11px] text-muted-foreground">
+          {t("leads.spam.revertedNote", {
+            rule: t(`leads.filtered.rule.${filterVerdict.rule}`, { defaultValue: "Filtered by the spam check" }),
+          })}
+        </p>
+      ) : filterVerdict ? (
         /* Why this lead was put away. It sits above the record rather than
            inside "Additional info" because it is the first question anybody
            opening a filtered lead has, and the answer used to be nowhere. */
@@ -905,6 +929,42 @@ export function LeadInfoSection({
             </FieldRow>
           ))}
         </div>
+
+        {onboarding.length > 0 && (
+          <Collapsible defaultOpen={false}>
+            <CollapsibleTrigger className="group flex w-full items-center gap-2 border-t border-border/40 px-3 py-2.5 text-xs font-medium text-muted-foreground transition-colors hover:text-foreground hover:bg-muted/30">
+              <ChevronDown className="h-3.5 w-3.5 shrink-0 transition-transform duration-200 group-data-[state=open]:rotate-180" />
+              {t("leads.onboarding.title", { defaultValue: "Onboarding answers" })}
+              <span className="ml-auto tabular-nums text-muted-foreground/50">
+                {onboarding.reduce((n, g) => n + g.rows.length, 0)}
+              </span>
+            </CollapsibleTrigger>
+            <CollapsibleContent>
+              <div className="px-3 border-t border-border/40">
+                {onboarding.map((group) => (
+                  <div key={group.section}>
+                    <p className="pt-3 pb-1 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/70">
+                      {t(`leads.onboarding.sections.${group.section}`, {
+                        defaultValue: humanizeField(group.section),
+                      })}
+                    </p>
+                    {group.rows.map((row) => (
+                      <FieldRow key={row.key} label={humanizeField(row.field)}>
+                        <FieldValue className="whitespace-pre-wrap">
+                          {formatOnboardingValue(
+                            translateOnboardingValue(group.section, row.field, row.value, t),
+                            t("leads.onboarding.yes", { defaultValue: "Yes" }),
+                            t("leads.onboarding.no", { defaultValue: "No" }),
+                          )}
+                        </FieldValue>
+                      </FieldRow>
+                    ))}
+                  </div>
+                ))}
+              </div>
+            </CollapsibleContent>
+          </Collapsible>
+        )}
 
         {collapsibleEntries.length > 0 && (
           <Collapsible defaultOpen={false}>

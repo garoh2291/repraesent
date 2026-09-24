@@ -175,7 +175,7 @@ function DealRow({ deal, contactId, canEdit }: DealRowProps) {
     t("contacts.dealsPanel.untitled", { defaultValue: "Untitled deal" });
   const val =
     deal.value != null && deal.value !== ""
-      ? formatCurrency(Number(deal.value))
+      ? formatCurrency(Number(deal.value), deal.currency)
       : null;
 
   const detachMutation = useMutation({

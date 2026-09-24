@@ -9,6 +9,8 @@ import { useTranslation } from "react-i18next";
  * the instant before `settings._index.tsx` redirects.
  */
 const SECTIONS = [
+  { match: "/settings/email-notifications", key: "emailNotifications" },
+  { match: "/settings/business-profile", key: "businessProfile" },
   { match: "/settings/email-accounts", key: "emailAccounts" },
   { match: "/settings/notifications", key: "notifications" },
   { match: "/settings/integrations", key: "integrations" },
@@ -16,6 +18,7 @@ const SECTIONS = [
   { match: "/settings/ai", key: "ai" },
   { match: "/settings/calendars", key: "calendars" },
   { match: "/settings/pipelines", key: "pipelines" },
+  { match: "/settings/onboarding", key: "onboarding" },
   { match: "/settings/team", key: "team" },
   { match: "/settings/bcc", key: "bcc" },
 ] as const;

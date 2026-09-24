@@ -26,6 +26,8 @@ export interface User {
   avatar_thumb_url?: string | null;
   created_at?: string;
   updated_at?: string;
+  /** Onboarding v2: finished, welcome screen (intro call) not closed yet. */
+  onboarding_welcome_workspace_id?: string | null;
 }
 
 /**
@@ -161,6 +163,10 @@ export interface WorkspaceContext {
   doorboost_brand_id?: string | null;
   /** "Try a live demo" throwaway workspace (migration 126). */
   is_demo?: boolean;
+  /** The platform's own workspace (migration 176): owns onboarding config. */
+  is_root?: boolean;
+  /** Onboarding v2 in progress for this workspace, and whether it's mine. */
+  onboarding?: { open: boolean; owner_is_me: boolean } | null;
   demo_expires_at?: string | null;
   /** Optional: older backends don't send it (deploy skew). */
   avatar_url?: string | null;

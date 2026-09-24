@@ -21,6 +21,7 @@ import { useCanEditLeads } from "~/lib/hooks/useCanEditLeads";
 import { useUpdateLeadStatus } from "~/lib/hooks/useUpdateLeadStatus";
 import { Button } from "~/components/ui/button";
 import { ArrowLeft, UserCheck, UserPlus } from "lucide-react";
+import { LeadSpamButton } from "~/components/organism/lead-spam/lead-spam-button";
 import { getContact, convertLeadToContact } from "~/lib/api/contacts-crm";
 import { ContactHero } from "~/components/organism/contact-detail/contact-hero";
 import { ContactEmailSuggestion } from "~/components/organism/contact-email-suggestion";
@@ -274,6 +275,12 @@ export default function LeadFormLeadId() {
                 : t("leads.detail.convertToContact")}
             </Button>
           )}
+        </div>
+      )}
+
+      {canEdit && (
+        <div className="flex justify-end">
+          <LeadSpamButton lead={lead} />
         </div>
       )}
 

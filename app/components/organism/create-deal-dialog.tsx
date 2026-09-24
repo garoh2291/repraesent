@@ -1,3 +1,5 @@
+import { DealCurrencySelect } from "~/components/molecule/deal-currency-select";
+import { useWorkspaceCurrency } from "~/lib/hooks/useWorkspaceCurrency";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router";
 import { useTranslation } from "react-i18next";
@@ -16,6 +18,7 @@ import {
 import {
   createDeal,
   parseDealValue,
+  type DealCurrency,
   formatDealValueInput,
 } from "~/lib/api/deals";
 import { Button } from "~/components/ui/button";
@@ -104,6 +107,9 @@ export function CreateDealDialog({
 
   const [newTitle, setNewTitle] = useState("");
   const [newValue, setNewValue] = useState("");
+  const { currency: workspaceCurrency, available: currencyAvailable } = useWorkspaceCurrency();
+  const [newCurrency, setNewCurrency] = useState<DealCurrency | null>(null);
+  const currency = newCurrency ?? workspaceCurrency;
 
   // Pipeline picker — only when the caller didn't pin one and there is a
   // choice to make.
@@ -234,6 +240,7 @@ export function CreateDealDialog({
       createDeal({
         title: newTitle.trim(),
         value: parseDealValue(newValue),
+        ...(currencyAvailable ? { currency } : {}),
         contact_id:
           selectedContactId === CONTACT_NONE ? null : selectedContactId,
         assigned_to: newAssignee === "unassigned" ? null : newAssignee,
@@ -246,6 +253,7 @@ export function CreateDealDialog({
       onOpenChange(false);
       setNewTitle("");
       setNewValue("");
+      setNewCurrency(null);
       setSelectedContactId(CONTACT_NONE);
       setSelectedContactLabel(null);
       setContactSearch("");
@@ -326,8 +334,11 @@ export function CreateDealDialog({
             />
           </div>
           <div className="space-y-1.5">
-            <Label>{t("pipeline.fields.value", { defaultValue: "Value (EUR)" })}</Label>
+            <Label htmlFor="create-deal-value">{t("pipeline.fields.value", { defaultValue: "Value" })}</Label>
+            <div className="flex gap-2">
             <Input
+                id="create-deal-value"
+                className="flex-1"
                 type="text"
                 inputMode="decimal"
                 value={newValue}
@@ -339,6 +350,8 @@ export function CreateDealDialog({
                 placeholder="0"
                 aria-invalid={valueNegative}
               />
+              <DealCurrencySelect value={currency} onChange={setNewCurrency} />
+            </div>
             {valueNegative ? (
               <p className="text-[11px] text-destructive">
                 {t("pipeline.errors.valueNegative", {

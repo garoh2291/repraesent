@@ -1,3 +1,5 @@
+import { DealCurrencySelect } from "~/components/molecule/deal-currency-select";
+import { extractErrorMessage } from "~/lib/api/axios-instance";
 import {
   useTerminalStageGuard,
   type GuardableDeal,
@@ -25,6 +27,7 @@ import {
   moveDealPipeline,
   patchDeal,
   parseDealValue,
+  type DealCurrency,
   formatDealValueInput,
   type DealListItem,
 } from "~/lib/api/deals";
@@ -73,6 +76,7 @@ import { DealContactSection } from "~/components/organism/deal-contact-section";
 import { DealProductsSection } from "~/components/organism/deal-products-section";
 import { DealCustomerSection } from "~/components/organism/deal-customer-section";
 import { DealInvoicesSection } from "~/components/organism/deal-invoices-section";
+import { OnboardingProfilePanel } from "~/components/organism/onboarding-profile-panel";
 import type { WorkspaceMemberItem } from "~/components/organism/tasks/task-form-modal";
 import {
   DatePickerPopover,
@@ -244,6 +248,15 @@ export default function PipelineDealDetailPage() {
     patchDealInLists(queryClient, dealId!, patch);
   const rollbackSnapshots = (snapshots: ListSnapshots) =>
     restoreSnapshots(queryClient, snapshots);
+
+  const currencyMutation = useMutation({
+    mutationFn: (currency: DealCurrency) => patchDeal(dealId!, { currency }),
+    onSuccess: () => {
+      invalidate();
+      toast.success(t("pipeline.dealSaved", { defaultValue: "Deal saved." }));
+    },
+    onError: (error) => toast.error(extractErrorMessage(error)),
+  });
 
   const saveFieldsMutation = useMutation({
     mutationFn: async () => {
@@ -515,12 +528,13 @@ export default function PipelineDealDetailPage() {
   // Lines carry their own currency; the legacy formatter assumes EUR and is
   // only right for deals with no Stripe lines on them.
   const linesCurrency = dealProducts.find((p) => p.currency)?.currency ?? null;
+  const dealCurrency = ((deal?.currency as string | undefined) ?? "EUR").toUpperCase() as DealCurrency;
   const valueDisplay =
     numericValue == null
       ? "—"
       : linesCurrency
         ? formatMoneyFromMinor(Math.round(numericValue * 100), linesCurrency)
-        : formatCurrency(numericValue);
+        : formatCurrency(numericValue, dealCurrency);
 
   const assigneeMember = workspaceMembers.find((m) => m.user_id === assignee);
   const assigneeName = assigneeMember
@@ -753,11 +767,13 @@ export default function PipelineDealDetailPage() {
                 <div className="space-y-1.5">
                   <Label htmlFor="deal-detail-value">
                     {t("pipeline.fields.value", {
-                      defaultValue: "Value (EUR)",
+                      defaultValue: "Value",
                     })}
                   </Label>
+                  <div className="flex gap-2">
                   <Input
                     id="deal-detail-value"
+                    className="flex-1"
                     value={valueStr}
                     onChange={(e) => {
                       const raw = e.target.value.replace(/,/g, "");
@@ -771,6 +787,13 @@ export default function PipelineDealDetailPage() {
                       defaultValue: "0",
                     })}
                   />
+                  <DealCurrencySelect
+                    value={dealCurrency}
+                    onChange={(c) => currencyMutation.mutate(c)}
+                    // Product lines decide the currency (their sum is the value).
+                    disabled={!canEdit || dealProducts.length > 0 || currencyMutation.isPending}
+                  />
+                  </div>
                   {valueNegative ? (
                     <p className="text-[11px] text-destructive">
                       {t("pipeline.errors.valueNegative", {
@@ -847,6 +870,9 @@ export default function PipelineDealDetailPage() {
         {/* RIGHT — sidebar */}
         <div className="space-y-4 sm:space-y-6 lg:col-span-2">
           <div className="space-y-4 sm:space-y-6">
+            {/* Root workspace: what the customer told us during onboarding. */}
+            {currentWorkspace?.is_root ? <OnboardingProfilePanel dealId={dealId} /> : null}
+
             {/* Contacts */}
             <DealContactSection
               dealId={dealId}

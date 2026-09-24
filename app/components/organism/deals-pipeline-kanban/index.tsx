@@ -27,7 +27,8 @@ import {
   Phone,
   Trash2,
 } from "lucide-react";
-import { formatDate, formatCurrency } from "~/lib/utils/format";
+import { formatDate, formatCurrency, formatCurrencyTotals, sumByCurrency } from "~/lib/utils/format";
+import { useWorkspaceCurrency } from "~/lib/hooks/useWorkspaceCurrency";
 import { cn } from "~/lib/utils";
 import { useTerminalStageGuard } from "~/lib/deals/use-terminal-stage-guard";
 import type { DealListItem } from "~/lib/api/deals";
@@ -435,8 +436,9 @@ function DealColumn({
     () => columnDeals.map((d) => `deal-${d.id}`),
     [columnDeals],
   );
-  const columnTotal = useMemo(
-    () => stageDealTotal(columnDeals),
+  const { currency: workspaceCurrency } = useWorkspaceCurrency();
+  const columnTotals = useMemo(
+    () => stageDealTotals(columnDeals),
     [columnDeals],
   );
 
@@ -457,9 +459,9 @@ function DealColumn({
             {columnDeals.length}
           </span>
         </h3>
-        {columnTotal > 0 ? (
+        {columnTotals.size > 0 ? (
           <p className="mt-1 text-xs font-semibold text-muted-foreground">
-            {formatCurrency(columnTotal)}
+            {formatCurrencyTotals(columnTotals, workspaceCurrency)}
           </p>
         ) : null}
       </div>
@@ -498,7 +500,7 @@ function DealCardInner({ deal }: { deal: DealListItem }) {
   const showSub = !!(sub && deal.title?.trim());
   const val =
     deal.value != null && deal.value !== ""
-      ? formatCurrency(Number(deal.value))
+      ? formatCurrency(Number(deal.value), deal.currency)
       : null;
   const hasAssignee = !!(
     deal.assignee_first_name || deal.assignee_last_name
@@ -548,15 +550,9 @@ function DealCardInner({ deal }: { deal: DealListItem }) {
   );
 }
 
-function stageDealTotal(deals: DealListItem[]): number {
-  let total = 0;
-  for (const d of deals) {
-    if (d.value == null || d.value === "") continue;
-    const n = Number(d.value);
-    if (!Number.isFinite(n)) continue;
-    total += n;
-  }
-  return total;
+/** Per-currency totals of a column — CAD and EUR are never added together. */
+function stageDealTotals(deals: DealListItem[]): Map<string, number> {
+  return sumByCurrency(deals, (d) => ({ value: d.value, currency: d.currency }));
 }
 
 /* ─── Mobile Schedule List (Google Calendar-style) ─── */
@@ -571,6 +567,7 @@ function DealsMobileSchedule({
   onDealSelect: (id: string) => void;
 }) {
   const { t } = useTranslation();
+  const { currency: workspaceCurrency } = useWorkspaceCurrency();
 
   return (
     <div className="space-y-2 pt-2 pb-6">
@@ -578,7 +575,7 @@ function DealsMobileSchedule({
         const deals = dealsByStage[stage.key] ?? [];
         const colorClass = resolveStageColors(stage).dot;
         const count = deals.length;
-        const columnTotal = stageDealTotal(deals);
+        const columnTotals = stageDealTotals(deals);
 
         return (
           <ScheduleSection
@@ -591,9 +588,9 @@ function DealsMobileSchedule({
                   <span className="text-sm font-semibold text-foreground">
                     {resolveStageLabel(stage, t)}
                   </span>
-                  {columnTotal > 0 ? (
+                  {columnTotals.size > 0 ? (
                     <p className="text-xs font-medium text-muted-foreground mt-0.5">
-                      {formatCurrency(columnTotal)}
+                      {formatCurrencyTotals(columnTotals, workspaceCurrency)}
                     </p>
                   ) : null}
                 </div>
@@ -649,7 +646,7 @@ function DealScheduleRow({
   const showSub = !!(sub && deal.title?.trim());
   const val =
     deal.value != null && deal.value !== ""
-      ? formatCurrency(Number(deal.value))
+      ? formatCurrency(Number(deal.value), deal.currency)
       : null;
   const hasAssignee = !!(
     deal.assignee_first_name || deal.assignee_last_name

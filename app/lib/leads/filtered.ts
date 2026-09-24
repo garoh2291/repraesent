@@ -8,7 +8,9 @@ import type { Lead } from "~/lib/api/leads";
 export const FILTERED_META_KEY = "__filtered";
 
 /** Which layer filtered the lead. Mirrors EmailFilterRule on the server. */
-export type LeadFilterRule = "disposable" | "suspicious_local" | "ai";
+export type LeadFilterRule = "disposable" | "suspicious_local" | "ai" | "blocked" | "heuristic" | "manual_spam";
+
+const RULES: ReadonlySet<string> = new Set(["disposable", "suspicious_local", "ai", "blocked", "heuristic", "manual_spam"]);
 
 export interface LeadFilterVerdict {
   rule: LeadFilterRule;
@@ -17,6 +19,8 @@ export interface LeadFilterVerdict {
   /** The filter's own words. Shown as written — never translated. */
   reason: string;
   at: Date | null;
+  /** Somebody said "Not spam" afterwards. The record stays; the lead is back. */
+  reverted: boolean;
 }
 
 type FilteredLeadLike = Pick<Lead, "metadata">;
@@ -37,9 +41,7 @@ export function extractLeadFilterVerdict(
 
   const value = raw as Record<string, unknown>;
   const rule = value.rule;
-  if (rule !== "disposable" && rule !== "suspicious_local" && rule !== "ai") {
-    return null;
-  }
+  if (typeof rule !== "string" || !RULES.has(rule)) return null;
 
   const at =
     typeof value.at === "string" && !Number.isNaN(Date.parse(value.at))
@@ -47,7 +49,8 @@ export function extractLeadFilterVerdict(
       : null;
 
   return {
-    rule,
+    rule: rule as LeadFilterRule,
+    reverted: typeof value.reverted_at === "string",
     confidence:
       typeof value.confidence === "number" && Number.isFinite(value.confidence)
         ? value.confidence

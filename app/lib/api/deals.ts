@@ -3,6 +3,25 @@ import type { LeadHistoryItem } from "./leads";
 
 export type DealStatus = "new" | "won" | "lost";
 
+/** Currencies a deal can be in (migration 187). Never converted into each other. */
+export const DEAL_CURRENCIES = ["EUR", "USD", "CAD"] as const;
+export type DealCurrency = (typeof DEAL_CURRENCIES)[number];
+
+export interface WorkspaceCurrency {
+  /** false until migration 187 is applied: EUR only. */
+  available: boolean;
+  currency: DealCurrency;
+  currencies: DealCurrency[];
+}
+
+export async function getWorkspaceCurrency(): Promise<WorkspaceCurrency> {
+  return (await apiClient.get<WorkspaceCurrency>("/workspace-currency")).data;
+}
+
+export async function setWorkspaceCurrency(currency: DealCurrency): Promise<WorkspaceCurrency> {
+  return (await apiClient.put<WorkspaceCurrency>("/workspace-currency", { currency })).data;
+}
+
 /**
  * Parse a user-entered deal value string into a number.
  * Accepts comma or dot as the decimal separator; returns null for empty or
@@ -39,6 +58,8 @@ export interface DealListItem {
   title: string | null;
   status: DealStatus;
   value: string | null;
+  /** EUR | USD | CAD. Absent/"EUR" before migration 187. */
+  currency?: string;
   stage: string;
   /** The deal pipeline this deal's board belongs to. */
   pipeline_id: string;
@@ -261,6 +282,7 @@ export interface PatchDealBody {
   stage?: string;
   status?: DealStatus;
   value?: number | null;
+  currency?: DealCurrency;
   assigned_to?: string | null;
   expected_close_date?: string | null;
 }
@@ -401,6 +423,7 @@ export interface CreateDealBody {
   /** Pipeline to create the deal in; omitted = the Default pipeline. */
   pipeline_id?: string;
   value?: number | null;
+  currency?: DealCurrency;
   contact_id?: string | null;
   assigned_to?: string | null;
   expected_close_date?: string | null;

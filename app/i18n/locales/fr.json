@@ -503,10 +503,54 @@
       "rule": {
         "disposable": "Filtré : adresse jetable ou invalide",
         "suspicious_local": "Filtré : adresse d'apparence automatique",
-        "ai": "Filtré par le contrôle anti-spam"
+        "ai": "Filtré par le contrôle anti-spam IA",
+        "blocked": "Filtré : expéditeur déjà signalé comme spam",
+        "heuristic": "Filtré : motif de robot certain",
+        "manual_spam": "Signalé comme spam"
       }
     },
-    "restoreFilteredHint": "Remettre ce lead à la première étape"
+    "restoreFilteredHint": "Remettre ce lead à la première étape",
+    "onboarding": {
+      "title": "Réponses de configuration",
+      "yes": "Oui",
+      "no": "Non",
+      "sections": {
+        "run": "Configuration",
+        "identity": "Entreprise",
+        "presence": "Type",
+        "location": "Emplacement",
+        "contact": "Contact",
+        "hours": "Heures d'ouverture",
+        "offer": "Offre",
+        "team": "Équipe",
+        "legal": "Informations légales",
+        "online": "En ligne",
+        "socials": "Réseaux sociaux",
+        "google_business": "Google",
+        "email_setup": "Courriel",
+        "goals": "Objectifs",
+        "interests": "Intérêts",
+        "domain": "Domaine et site",
+        "sales": "Signaux de vente"
+      }
+    },
+    "spam": {
+      "mark": "Signaler comme spam",
+      "notSpam": "Pas un spam — restaurer",
+      "marked": "Signalé comme spam",
+      "restored": "Restauré. L’expéditeur n’est plus bloqué.",
+      "undo": "Annuler",
+      "error": "Cela n’a pas fonctionné. Veuillez réessayer.",
+      "blockedWhat": "Ses prochaines demandes iront directement dans Masqués ({{what}}).",
+      "alsoHidden_one": "{{count}} autre nouvelle demande de cet expéditeur a été masquée.",
+      "alsoHidden_other": "{{count}} autres nouvelles demandes de cet expéditeur ont été masquées.",
+      "kind": {
+        "email": "courriel",
+        "phone": "téléphone",
+        "domain": "domaine"
+      },
+      "revertedNote": "{{rule}} — puis marqué comme pas un spam."
+    }
   },
   "pipeline": {
     "stripeNotConnected": {
@@ -617,7 +661,8 @@
       "expectedClose": "Clôture prévue",
       "expectedCloseHint": "Enregistré avec le bouton Enregistrer ci-dessus.",
       "notes": "Notes",
-      "notesPlaceholder": "Notes facultatives…"
+      "notesPlaceholder": "Notes facultatives…",
+      "currency": "Devise"
     },
     "stages": {
       "new": "Nouveau",
@@ -888,6 +933,32 @@
       "revokeTitle": "Rendre ce pipeline privé ?",
       "revokeBody": "Tous les liens de suivi déjà envoyés à un client cessent immédiatement de fonctionner, et personne n'en est informé. Le repasser en public réactive les mêmes liens, pas de nouveaux.",
       "revokeConfirm": "Rendre privé"
+    },
+    "onboardingPanel": {
+      "title": "Profil de démarrage",
+      "status": {
+        "completed": "Terminé",
+        "in_progress": "En configuration · {{step}}",
+        "abandoned": "Interrompu"
+      },
+      "join": "Rejoindre l'appel",
+      "presence": "Type",
+      "address": "Adresse",
+      "phone": "Téléphone",
+      "email": "Courriel",
+      "website": "Site web",
+      "goals": "Souhaite",
+      "channels": "Demandes actuelles via",
+      "volume": "Demandes par mois",
+      "websitePlan": "Projet de site",
+      "ai": "Visibilité IA",
+      "addons": "Intéressé par",
+      "emailProvider": "Courriel",
+      "locations": "Emplacements",
+      "pain": "Plus grand irritant",
+      "live": "En direct du profil du client · mis à jour le {{date}}",
+      "contactFirst": "Écrire d'abord par courriel; appeler seulement si la personne le souhaite.",
+      "legalName": "Raison sociale"
     }
   },
   "appointments": {
@@ -1144,7 +1215,7 @@
     "invoiceHistory": "Historique des factures",
     "pastDueWarning": "Certains abonnements sont en souffrance — payez maintenant pour éviter une suspension.",
     "payNow": "Payer maintenant →",
-    "noSubscriptions": "Aucun abonnement pour le moment. Ajoutez des produits lors de l'intégration.",
+    "noSubscriptions": "Aucun abonnement pour le moment. Notre équipe configure votre forfait avec vous, puis il apparaîtra ici.",
     "noInvoicesYet": "Aucune facture pour le moment.",
     "dateEnded": "Terminé le",
     "dateEnds": "Se termine le",
@@ -1181,7 +1252,10 @@
       "pipelines": "Étapes du pipeline",
       "notifications": "Notifications",
       "openaiAds": "OpenAI Ads",
-      "ai": "IA"
+      "ai": "IA",
+      "onboarding": "Onboarding",
+      "emailNotifications": "Notifications par courriel",
+      "businessProfile": "Profil de l'entreprise"
     },
     "bcc": {
       "metaTitle": "Journalisation des e-mails",
@@ -1729,6 +1803,230 @@
       "add": "Ajouter",
       "empty": "Rien pour l'instant. Ajoutez une adresse quand le contrôle anti-spam se trompe.",
       "remove": "Supprimer"
+    },
+    "onboarding": {
+      "metaTitle": "Onboarding",
+      "metaDescription": "Avec qui les nouveaux clients peuvent réserver un appel, et où leur affaire arrive dans votre pipeline.",
+      "statusLive_one": "Réservation activée — les nouveaux clients peuvent réserver un appel avec {{count}} personne",
+      "statusLive_other": "Réservation activée — les nouveaux clients peuvent réserver un appel avec {{count}} personnes",
+      "statusLiveHint": "À la fin de l'onboarding, ils choisissent un créneau ; l'appel va dans le calendrier de la personne disponible.",
+      "statusOff": "Réservation désactivée",
+      "statusOffHint": "Les nouveaux clients arrivent quand même ici comme lead et affaire. Ils voient « notre équipe commerciale vous contactera » sans calendrier.",
+      "bookingToggle": "Laisser les clients réserver un appel",
+      "teamTitle": "Équipe commerciale",
+      "teamHint": "Les personnes qu'un nouveau client peut rencontrer, chacune avec le calendrier où ses appels sont inscrits. Un créneau est proposé si au moins une personne est libre.",
+      "teamEmpty": "Personne pour l'instant. Ajoutez les personnes qui font les appels de découverte.",
+      "addPerson": "Ajouter une personne",
+      "removePerson": "Retirer la personne",
+      "pickPerson": "Choisir une personne",
+      "searchPeople": "Rechercher…",
+      "noPeople": "Aucun résultat.",
+      "nobody": "Personne",
+      "pickCalendar": "Choisir son calendrier",
+      "noCalendar": "Aucun calendrier connecté.",
+      "connectCalendar": "En connecter un",
+      "calendarBroken": "Ce calendrier doit être reconnecté — d'ici là, cette personne n'est pas proposée.",
+      "checkAllTitle": "Vérifier tous leurs calendriers",
+      "checkAllHint": "Un rendez-vous privé dans n'importe quel calendrier connecté bloque ce créneau, pas seulement celui des appels.",
+      "meetingTitle": "Appel",
+      "meetingHint": "Quand les appels peuvent avoir lieu. Le client voit les horaires dans son propre fuseau.",
+      "duration": "Durée",
+      "minutes_one": "{{count}} minute",
+      "minutes_other": "{{count}} minutes",
+      "hours": "Heures réservables",
+      "hoursFrom": "De",
+      "hoursTo": "À",
+      "hoursInvalid": "L'heure de fin doit être après l'heure de début.",
+      "days": "Jours",
+      "weekday": {
+        "mon": "Lun",
+        "tue": "Mar",
+        "wed": "Mer",
+        "thu": "Jeu",
+        "fri": "Ven",
+        "sat": "Sam",
+        "sun": "Dim"
+      },
+      "timezone": "Votre fuseau horaire",
+      "notice": "Réservation au plus tôt",
+      "horizon": "Réservable à l'avance",
+      "hoursUnit": "h",
+      "daysUnit": "jours",
+      "eventTitle": "Titre de l'événement",
+      "eventTitleHint": "{{business}} est remplacé par le nom de l'entreprise du client.",
+      "routingTitle": "Où arrivent les nouveaux clients",
+      "routingHint": "Chaque onboarding terminé crée un lead, un contact et une affaire dans cet espace, avec toutes les réponses sur l'affaire.",
+      "pipeline": "Pipeline",
+      "defaultPipeline": "Pipeline par défaut",
+      "stage": "Étape",
+      "entryStage": "Première étape ({{stage}})",
+      "assign": "Attribuer l'affaire à",
+      "assignBooked": "La personne qui prend l'appel",
+      "assignBookedHint": "Non attribuée tant que le client n'a pas réservé.",
+      "assignFixed": "Toujours la même personne",
+      "assignFixedHint": "Choisissez-la ci-dessous.",
+      "assignNone": "Personne",
+      "assignNoneHint": "Votre équipe la prend depuis le tableau.",
+      "previewTitle": "Ce que les clients verront",
+      "previewHint": "Les deux prochaines semaines, fusionnées depuis tous les calendriers. Chaque créneau montre qui est libre.",
+      "previewDraft": "Affiche vos modifications non enregistrées.",
+      "previewNoHosts": "Ajoutez une personne avec un calendrier pour voir les créneaux.",
+      "previewFailed": "Impossible de charger l'aperçu.",
+      "previewSomeFailed": "Impossible de lire le calendrier de {{names}} — non proposé(e) jusqu'à la reconnexion.",
+      "previewDayFull": "Plus de créneau libre ce jour-là.",
+      "previewNothing": "Aucun créneau libre dans les deux prochaines semaines. Élargissez les heures ou les jours ci-dessus.",
+      "testRun": "Lancer un test",
+      "testWithBooking": "Lancer un test et réserver ce créneau",
+      "testSaveFirst": "Enregistrez d'abord vos modifications",
+      "testHint": "Un test crée un lead, un contact et une affaire marqués [TEST], avec vous comme contact. Choisissez un créneau pour réserver aussi un vrai rendez-vous.",
+      "testHintSlot": "Le test réservera aussi ce créneau avec une personne libre — un vrai rendez-vous, l'invitation vous est envoyée.",
+      "testCreated": "Lead, contact et affaire de test créés",
+      "testBooked": "Test créé et appel réservé avec {{person}}",
+      "testFailed": "Le test n'a pas abouti.",
+      "openDeal": "Ouvrir l'affaire",
+      "unsaved": "Vous avez des modifications non enregistrées",
+      "discard": "Annuler",
+      "save": "Enregistrer",
+      "saving": "Enregistrement…",
+      "saved": "Modifications enregistrées",
+      "saveFailed": "Impossible d'enregistrer.",
+      "hostIncomplete": "Chaque personne a besoin d'un calendrier. Choisissez-en un ou retirez la ligne.",
+      "pricing": {
+        "title": "Prix",
+        "hint": "Ce que les nouveaux clients voient pendant la configuration, par région et devise. Hors taxes. La configuration ne facture rien.",
+        "sync": "Synchroniser depuis le site",
+        "syncing": "Lecture de la page des prix…",
+        "notEditable": "Ce sont les prix intégrés. Appliquez la migration 184 pour les modifier ou les synchroniser ici.",
+        "regions": "Régions de prix",
+        "fallbackDot": "Comme la région par défaut",
+        "source": {
+          "website": "Depuis le site · synchronisé le {{date}}",
+          "manual": "Modifié à la main · {{date}}",
+          "seed": "Prix intégrés (pas encore synchronisés)",
+          "fallback": "Comme {{region}} — le site n'affiche pas encore de prix en {{currency}}."
+        },
+        "plan": "Forfait",
+        "setup": "Mise en place et sites",
+        "addons": "Options",
+        "franchise": "Sites de franchise",
+        "franchiseTier": "Site {{n}}",
+        "addTier": "Ajouter un prix de site",
+        "removeTier": "Retirer",
+        "fields": {
+          "planMonthly": "Par mois",
+          "planYearly": "Par an",
+          "cmsTransfer": "Transfert CMS",
+          "newWebsite": "Nouveau site",
+          "adsMonthly": "Publicité / mois",
+          "adsSetup": "Mise en place publicité",
+          "contentMonthly": "Mises à jour / mois",
+          "contentYearly": "Mises à jour / an",
+          "socialMonthly": "Publications / mois",
+          "socialYearly": "Publications / an",
+          "hourly": "Travail sur mesure / heure"
+        },
+        "planLine": "12 × mensuel = {{twelve}} → annuel {{yearly}} · {{months}} mois offerts · ≈ {{perDay}} par jour",
+        "yearlyTooHigh": "L'annuel ne peut pas dépasser 12 paiements mensuels ({{twelve}}).",
+        "regionName": "Nom de la région",
+        "currency": "Devise",
+        "countries": "Pays de facturation",
+        "everyoneElse": "Tous les autres",
+        "unsaved": "Modifications non enregistrées pour {{region}}",
+        "reset": "Réinitialiser",
+        "save": "Enregistrer les prix",
+        "saved": "Prix enregistrés",
+        "applied": "Prix mis à jour depuis le site",
+        "urlLabel": "Page des prix",
+        "urlSave": "Enregistrer",
+        "urlSaved": "Page des prix enregistrée",
+        "previewTitle": "Ce que dit le site",
+        "previewSub": "Lu sur {{url}}. Rien n'est enregistré avant que vous appliquiez.",
+        "newRegion": "Nouvelle région",
+        "outcome": {
+          "priced_one": "{{count}} prix trouvé",
+          "priced_other": "{{count}} prix trouvés",
+          "not_priced_on_site": "Aucun prix dans cette devise",
+          "unreadable": "Illisible"
+        },
+        "fallbackExplain": "Le site n'affiche pas encore de prix en {{currency}}, les montants de {{region}} sont donc utilisés.",
+        "currencyChanged": "La devise passe de {{from}} à {{to}}.",
+        "noChanges": "Aucun changement de prix",
+        "unreadableExplain": "Impossible de lire les prix de cette région. Elle reste telle quelle.",
+        "rejected_one": "1 valeur suggérée par l'IA ne figure pas sur la page; elle a été ignorée.",
+        "rejected_other": "{{count}} valeurs suggérées par l'IA ne figurent pas sur la page; elles ont été ignorées.",
+        "missingOnSite": "Plus sur le site : {{regions}}. Conservées telles quelles.",
+        "cancel": "Annuler",
+        "apply": "Appliquer",
+        "applyNoChanges": "Marquer comme synchronisé"
+      }
+    },
+    "emailNotifications": {
+      "metaTitle": "Notifications par courriel",
+      "metaDescription": "De courts résumés par courriel : nouvelles demandes, tâches du jour, votre pipeline et plus.",
+      "sectionLabel": "Résumés par courriel",
+      "sectionDescription": "Envoyés le matin, heure locale ({{tz}}). Rien à signaler, pas de courriel.",
+      "test": "M'envoyer un test",
+      "testSent": "Test envoyé à {{email}}.",
+      "testEmpty": "Rien à signaler pour le moment : ce courriel serait donc ignoré. Ajoutez une demande ou une tâche et réessayez.",
+      "muteForMe": "Ne plus le recevoir",
+      "unmuteForMe": "Le recevoir à nouveau",
+      "mutedBadge": "Désactivé pour vous",
+      "mutedToast": "Vous ne recevrez plus ce courriel.",
+      "unmutedToast": "Vous recevrez à nouveau ce courriel.",
+      "saved": "Enregistré",
+      "adminOnly": "Seuls les administrateurs peuvent activer ou désactiver les résumés pour tout le monde. Vous pouvez toujours en arrêter un pour vous-même.",
+      "whoLabel": "Qui les reçoit",
+      "whoDescription": "Les personnes qui ne se sont jamais connectées les recevront après leur première connexion.",
+      "everyone": "Toute l'équipe",
+      "pick": "Choisir des personnes",
+      "you": "vous",
+      "neverSignedIn": "ne s'est pas encore connecté",
+      "pickOne": "Choisissez au moins une personne, ou envoyez à tout le monde.",
+      "instantNote": "Le courriel pour chaque nouvelle demande est un réglage séparé pour chaque personne.",
+      "instantLink": "Le régler sur la page de l'équipe"
+    },
+    "businessProfile": {
+      "metaTitle": "Profil de l'entreprise",
+      "metaDescription": "Votre entreprise telle que vos clients la voient : adresse, heures d'ouverture, offre et informations légales.",
+      "websiteLabel": "Site web",
+      "websiteDescription": "Nous lisons votre site pour remplir votre profil. Ce que vous avez confirmé n'est jamais remplacé.",
+      "reread": "Relire mon site",
+      "reading": "Lecture de votre site…",
+      "lastRead": "Dernière lecture le {{date}}",
+      "neverRead": "Pas encore lu",
+      "readFailed": "Nous n'avons pas pu lire votre site pour le moment. Veuillez réessayer plus tard.",
+      "addWebsiteLabel": "Adresse de votre site",
+      "addWebsite": "Ajouter et lire",
+      "addWebsiteHint": "Nous le lirons et remplirons ce que nous trouvons.",
+      "websiteAdded": "Site ajouté. Nous le lisons maintenant.",
+      "noWebsite": "Aucun site web pour l'instant.",
+      "googleLabel": "Profil Google",
+      "openMaps": "Ouvrir dans Google Maps",
+      "detailsLabel": "Informations",
+      "socialsLabel": "Réseaux sociaux",
+      "save": "Enregistrer",
+      "saved": "Profil enregistré",
+      "adminOnly": "Seuls les administrateurs peuvent modifier le profil de l'entreprise.",
+      "readUpdated_one": "{{count}} champ mis à jour depuis votre site. Ce que vous aviez confirmé reste inchangé.",
+      "readUpdated_other": "{{count}} champs mis à jour depuis votre site. Ce que vous aviez confirmé reste inchangé.",
+      "readNothingNew": "Rien de nouveau : votre profil correspond déjà à votre site.",
+      "readSkipped": "Votre site a changé pendant la lecture. Veuillez réessayer."
+    },
+    "blocklist": {
+      "sectionLabel": "Toujours bloquer",
+      "sectionDescription": "Les demandes de ces expéditeurs vont directement dans Masqués. « Signaler comme spam » ajoute ici le courriel et le téléphone ; un domaine d’entreprise après deux demandes spam. « Toujours accepter » a priorité.",
+      "patternLabel": "Courriel, domaine ou téléphone",
+      "patternPlaceholder": "spam@exemple.ca, @exemple.ca ou +1 …",
+      "empty": "Rien de bloqué pour l’instant. Utilisez « Signaler comme spam » sur une demande.",
+      "hits_one": "{{count}} demande interceptée",
+      "hits_other": "{{count}} demandes interceptées",
+      "addedOn": "ajouté le {{date}}"
+    },
+    "currency": {
+      "label": "Devise des affaires",
+      "hint": "Les nouvelles affaires démarrent dans cette devise et les totaux l’affichent en premier. Les affaires dans d’autres devises gardent la leur et sont listées à côté — jamais converties.",
+      "saved": "Devise enregistrée.",
+      "error": "Impossible d’enregistrer la devise."
     }
   },
   "booking": {
@@ -7300,5 +7598,793 @@
     "invalidTitle": "Ce lien n'est plus actif",
     "invalidBody": "Consultez le dernier e-mail reçu, ou répondez-y pour demander un nouveau lien.",
     "footer": "Propulsé par Repraesent"
+  },
+  "onb": {
+    "metaTitle": "Configurer votre entreprise",
+    "metaDescription": "Parlez-nous de votre entreprise. Nous remplissons l'essentiel à partir de votre site web.",
+    "continue": "Continuer",
+    "back": "Retour",
+    "skip": "Plus tard",
+    "optional": "facultatif",
+    "choose": "Choisir…",
+    "yes": "Oui",
+    "no": "Non",
+    "notSure": "Je ne sais pas",
+    "saved": "Enregistré",
+    "account": "Compte",
+    "switchWorkspace": "Changer d'espace",
+    "signOut": "Se déconnecter",
+    "remove": "Retirer {{item}}",
+    "didYouMean": "Vouliez-vous dire {{email}} ?",
+    "chapters": {
+      "business": "Entreprise",
+      "presence": "Présence",
+      "goals": "Objectifs",
+      "team": "Équipe",
+      "plan": "Forfait"
+    },
+    "progress": {
+      "label": "Progression de la configuration",
+      "left_one": "Encore 1 chapitre",
+      "left_other": "Encore {{count}} chapitres",
+      "last": "Dernier chapitre"
+    },
+    "source": {
+      "website": "de votre site web",
+      "google": "de Google",
+      "facebook": "de Facebook"
+    },
+    "errors": {
+      "generic": "Ça n'a pas fonctionné. Veuillez réessayer.",
+      "fixFields": "Quelques champs sont à vérifier.",
+      "lookup": "La recherche n'est pas possible pour le moment. Vous pouvez continuer sans.",
+      "RATE_LIMITED": "Trop de tentatives en peu de temps. Veuillez patienter une minute.",
+      "ENRICH_DAILY_CAP": "Les recherches automatiques sont en pause pour aujourd'hui. Veuillez remplir ceci vous-même.",
+      "ENRICH_USER_CAP": "Trop de recherches en peu de temps. Veuillez réessayer plus tard.",
+      "ENRICH_RUN_CAP": "Nous avons déjà cherché plusieurs fois. Veuillez le remplir vous-même.",
+      "NOT_A_CUSTOMER_ACCOUNT": "Ce compte ne peut pas créer d'entreprise. Veuillez vous connecter avec votre propre adresse courriel."
+    },
+    "fieldErrors": {
+      "required": "Veuillez remplir ce champ.",
+      "invalid": "Cela ne semble pas correct.",
+      "invalid_email": "Entrez une adresse courriel valide, par ex. nom@entreprise.ca.",
+      "invalid_phone": "Entrez un numéro où vous joindre, avec l'indicatif.",
+      "url": "Entrez le lien complet, par ex. https://instagram.com/votreentreprise.",
+      "hours": "L'heure d'ouverture doit précéder l'heure de fermeture.",
+      "invalid_country": "Choisissez un pays dans la liste.",
+      "out_of_range": "Ce nombre est hors limites.",
+      "not_allowed": "Choisissez l'une des options.",
+      "invalid_format": "Cela ne semble pas correct."
+    },
+    "name": {
+      "eyebrow": "Environ 8 minutes · 2 premiers mois gratuits",
+      "title": "Configurons votre entreprise. Comment s'appelle-t-elle ?",
+      "sub": "Nous lisons votre site web et remplissons l'essentiel pour vous.",
+      "label": "Nom de l'entreprise",
+      "hint": "Le nom que vos clients connaissent.",
+      "placeholder": "Le nom de votre entreprise",
+      "tooShort": "Entrez au moins 2 caractères."
+    },
+    "website": {
+      "title": "Avez-vous un site web ?",
+      "titleNamed": "Enchanté, {{name}}. Avez-vous un site web ?",
+      "sub": "Entrez simplement l'adresse. Nous le lisons et remplissons vos informations pour vous.",
+      "label": "Adresse du site web",
+      "placeholder": "votreentreprise.ca",
+      "preview": "Nous allons lire {{url}}",
+      "read": "Lire mon site",
+      "none": "Je n'ai pas encore de site",
+      "continueWithout": "Continuer sans site web",
+      "errors": {
+        "empty": "Entrez l'adresse de votre site web.",
+        "invalid": "Cela ne ressemble pas à une adresse de site web.",
+        "protocol": "Entrez une adresse web, par ex. votreentreprise.ca.",
+        "ip": "Entrez l'adresse utilisée par vos clients, pas une IP.",
+        "local": "Cette adresse ne fonctionne que dans votre réseau. Entrez votre site public.",
+        "no_tld": "Ajoutez la terminaison, par ex. .ca ou .com.",
+        "taken": "Ce site est déjà lié à un compte re:praesent. Continuez sans lui, ou demandez à un collègue de vous inviter."
+      }
+    },
+    "reading": {
+      "title": "Lecture de {{domain}}…",
+      "sub": "Cela prend environ trente secondes. Nous ne lisons que les pages publiques.",
+      "doneTitle_one": "Terminé. Nous avons trouvé 1 information.",
+      "doneTitle_other": "Terminé. Nous avons trouvé {{count}} informations.",
+      "doneSub": "Vérifiez-les à l'étape suivante. Cela prend une minute.",
+      "failedTitle": "Impossible d'ouvrir {{domain}} pour le moment.",
+      "failedSub": "Vérifiez l'adresse ou remplissez vos informations vous-même. Il n'y a que quelques champs.",
+      "working": "Lecture…",
+      "fillMyself": "Je remplis moi-même",
+      "retry": "Réessayer",
+      "retrying": "Nouvel essai…",
+      "review": "Vérifier les informations",
+      "carryOn": "Continuer, nous cherchons encore",
+      "lines": {
+        "started": "Nous regardons {{domain}}",
+        "pages_found_one": "1 page lue",
+        "pages_found_other": "{{count}} pages lues",
+        "found_address": "Adresse trouvée : {{value}}",
+        "found_contact": "Téléphone et courriel trouvés",
+        "found_hours": "Heures d'ouverture trouvées",
+        "found_legal": "Mentions légales trouvées",
+        "found_socials_one": "1 profil social trouvé",
+        "found_socials_other": "{{count}} profils sociaux trouvés",
+        "found_team": "Votre équipe trouvée",
+        "found_offer_one": "Votre offre trouvée",
+        "found_offer_other": "Votre offre et {{count}} marques trouvées",
+        "found_cms": "Votre site fonctionne avec {{value}}",
+        "understanding": "Mise en ordre de tout"
+      }
+    },
+    "details": {
+      "title": "Parlez-nous de votre entreprise.",
+      "sub": "Remplissez ce que vous voulez. Tout se modifie plus tard dans les paramètres.",
+      "titleFound": "Voici ce que nous avons trouvé. Quelque chose à corriger ?",
+      "subFound": "Les champs marqués « de votre site web » ont été remplis pour vous. Modifiez ce qui ne va pas.",
+      "about": "Votre entreprise",
+      "how": "Comment vos clients vous trouvent",
+      "where": "Où vous trouver",
+      "hours": "Heures d'ouverture",
+      "offer": "Votre offre",
+      "legal": "Informations légales",
+      "legalWhy": "Pour votre facture",
+      "looksRight": "C'est bon"
+    },
+    "presence": {
+      "physical": {
+        "title": "Salle d'exposition ou magasin",
+        "desc": "Les clients viennent chez vous"
+      },
+      "online": {
+        "title": "En ligne seulement",
+        "desc": "Aucun lieu à visiter"
+      },
+      "service_area": {
+        "title": "Nous allons chez eux",
+        "desc": "Vous travaillez chez le client"
+      },
+      "hybrid": {
+        "title": "Magasin et en ligne",
+        "desc": "Les deux"
+      }
+    },
+    "f": {
+      "display_name": "Nom de l'entreprise",
+      "legal_name": "Raison sociale sur les factures",
+      "legal_name_hint": "Exactement comme dans vos mentions légales.",
+      "legal_form": "Forme juridique",
+      "industry": "Secteur",
+      "brand_partner": "Marque partenaire",
+      "brand_partner_hint": "Seulement si vous êtes partenaire officiel d'une marque.",
+      "description": "Brève description",
+      "appointment_only": "Visites sur rendez-vous seulement",
+      "street": "Rue et numéro",
+      "postal_code": "Code postal",
+      "city": "Ville",
+      "country": "Pays",
+      "phone": "Téléphone de l'entreprise",
+      "email": "Courriel de l'entreprise",
+      "hours_notes": "Autre chose sur vos heures ?",
+      "hours_notes_placeholder": "par ex. le mercredi sur rendez-vous",
+      "product_categories": "Catégories de produits",
+      "product_categories_placeholder": "Cuisines, canapés, éclairage…",
+      "brands_carried": "Marques proposées",
+      "brands_carried_placeholder": "Tapez une marque et appuyez sur Entrée",
+      "services": "Services",
+      "services_suggestions": "Conception|Conseil|Livraison|Installation|Prise de mesures|Financement",
+      "usps": "Ce qui vous distingue",
+      "usps_hint": "par ex. garantie de 5 ans, entreprise familiale depuis 1986",
+      "price_segment": "Gamme de prix",
+      "customer_type": "Clientèle",
+      "register_court": "Registre",
+      "register_number": "Numéro d'entreprise",
+      "vat_id": "Numéro de TVA",
+      "first_name": "Prénom",
+      "last_name": "Nom",
+      "role": "Votre fonction",
+      "role_hint": "par ex. propriétaire, directrice, gérant",
+      "your_phone": "Votre numéro de téléphone"
+    },
+    "legalForms": {
+      "gmbh": "GmbH",
+      "ug": "UG (haftungsbeschränkt)",
+      "ag": "AG",
+      "ek": "e.K.",
+      "gbr": "GbR",
+      "kg": "KG",
+      "ohg": "OHG",
+      "gmbh_co_kg": "GmbH & Co. KG",
+      "einzelunternehmen": "Entreprise individuelle (DE)",
+      "sarl": "SARL",
+      "sas": "SAS",
+      "sa": "SA",
+      "ei": "Entreprise individuelle",
+      "bv": "B.V.",
+      "nv": "N.V.",
+      "vof": "V.O.F.",
+      "eenmanszaak": "Eenmanszaak",
+      "inc": "Inc.",
+      "ltd": "Ltée",
+      "llc": "LLC",
+      "corp": "Corp.",
+      "sole_proprietor": "Entreprise individuelle",
+      "partnership": "Société de personnes",
+      "other": "Autre"
+    },
+    "priceSegment": {
+      "budget": "Économique",
+      "mid": "Milieu de gamme",
+      "premium": "Haut de gamme",
+      "luxury": "Luxe"
+    },
+    "customerType": {
+      "b2c": "Particuliers",
+      "b2b": "Entreprises",
+      "both": "Les deux"
+    },
+    "days": {
+      "mon": "Lundi",
+      "tue": "Mardi",
+      "wed": "Mercredi",
+      "thu": "Jeudi",
+      "fri": "Vendredi",
+      "sat": "Samedi",
+      "sun": "Dimanche"
+    },
+    "daysShort": {
+      "mon": "Lun",
+      "tue": "Mar",
+      "wed": "Mer",
+      "thu": "Jeu",
+      "fri": "Ven",
+      "sat": "Sam",
+      "sun": "Dim"
+    },
+    "hours": {
+      "from": "Ouverture",
+      "to": "Fermeture",
+      "closed": "Fermé",
+      "addRange": "Ajouter une plage",
+      "removeRange": "Retirer cette plage",
+      "copyWeekdays": "Copier lundi sur mar–ven"
+    },
+    "country": {
+      "pick": "Choisir un pays",
+      "search": "Rechercher un pays…",
+      "none": "Aucun pays trouvé."
+    },
+    "you": {
+      "title": "Et vous ?",
+      "sub": "La personne à qui notre équipe parlera.",
+      "phoneWhy": "Nous envoyons l'invitation au rendez-vous par courriel. Nous n'appelons que si vous le souhaitez.",
+      "phoneRequired": "Veuillez indiquer un numéro où vous joindre.",
+      "phoneInvalid": "Entrez un numéro où vous joindre, avec l'indicatif régional.",
+      "emailNote": "Nous vous écrirons à {{email}}."
+    },
+    "google": {
+      "title": "Êtes-vous sur Google Maps ?",
+      "sub": "C'est souvent par votre profil Google que les clients vous trouvent en premier. Nous le lions à votre compte.",
+      "phoneLabel": "Numéro de téléphone de votre profil Google",
+      "phoneHint": "Le moyen le plus rapide de vous trouver. Nous avons repris celui de votre site.",
+      "find": "Trouver mon profil",
+      "searching": "Recherche sur Google…",
+      "isThisYou": "Est-ce vous ?",
+      "thisIsUs": "C'est nous",
+      "open": "Voir",
+      "nothing": "Aucune correspondance trouvée.",
+      "byName": "Chercher plutôt par nom",
+      "noneOfThese": "Aucun de ceux-ci",
+      "change": "Choisir un autre profil",
+      "reviews_one": "1 avis",
+      "reviews_other": "{{count}} avis",
+      "strong": "{{rating}} ★ sur {{count}} avis. C'est excellent. Nous l'afficherons sur votre site.",
+      "grow": "{{count}} avis jusqu'ici. Nous vous aiderons à en recueillir davantage.",
+      "unavailable": "La recherche Google n'est pas disponible pour le moment. Vous pouvez continuer.",
+      "badPhone": "Entrez le numéro tel qu'il apparaît sur Google."
+    },
+    "social": {
+      "title": "Où d'autre peut-on vous trouver ?",
+      "sub": "Ajoutez les profils que vous utilisez. Passez les autres.",
+      "subFound": "Nous les avons trouvés sur votre site. Ajoutez ou corrigez ce qui manque.",
+      "fbQuestion": "Avez-vous une page Facebook ?",
+      "searching": "Recherche de votre page…",
+      "nothing": "Aucune page trouvée. Ajoutez le lien ci-dessous si vous en avez une.",
+      "networks": {
+        "facebook": "Facebook",
+        "instagram": "Instagram",
+        "youtube": "YouTube",
+        "linkedin": "LinkedIn",
+        "tiktok": "TikTok",
+        "pinterest": "Pinterest"
+      }
+    },
+    "goals": {
+      "title": "En quoi re:praesent peut-il vous aider ?",
+      "sub": "Choisissez tout ce qui compte. Notre équipe saura par où commencer.",
+      "options": {
+        "more_enquiries": "Plus de demandes",
+        "more_appointments": "Plus de rendez-vous en salle d'exposition",
+        "google_presence": "Être trouvé sur Google",
+        "reviews": "De meilleurs avis",
+        "sell_online": "Vendre en ligne",
+        "save_time": "Moins de temps en administration",
+        "brand_awareness": "Se faire connaître dans la région"
+      },
+      "channels": "D'où viennent vos clients aujourd'hui ?",
+      "channelOptions": {
+        "walk_in": "Visites spontanées",
+        "google": "Google",
+        "website": "Notre site web",
+        "social": "Réseaux sociaux",
+        "referrals": "Bouche-à-oreille",
+        "ads": "Publicité",
+        "trade_fairs": "Salons",
+        "partners": "Marque partenaire",
+        "other": "Autre"
+      },
+      "volume": "Environ combien de demandes par mois ?",
+      "volumeOptions": {
+        "0-10": "Jusqu'à 10",
+        "11-30": "11–30",
+        "31-100": "31–100",
+        "100+": "Plus de 100",
+        "unknown": "Je ne sais pas"
+      },
+      "tools": "Vos outils actuels",
+      "toolsHint": "Pour que nous puissions reprendre vos données.",
+      "toolSuggestions": "Excel|Outlook|Gmail|Papier|HubSpot|Salesforce|Pipedrive",
+      "pain": "Qu'est-ce qui vous coûte le plus de temps ou d'énergie en ce moment ?",
+      "painPlaceholder": "En une ou deux phrases"
+    },
+    "growth": {
+      "title": "Parlons de votre site web.",
+      "sub": "Qu'est-ce qui aiderait le plus votre entreprise ?",
+      "subCms": "Votre site fonctionne avec {{cms}}. Qu'est-ce qui aiderait le plus votre entreprise ?",
+      "titleNoSite": "Vos clients doivent-ils vous trouver en ligne ?",
+      "subNoSite": "Un site web vous apporte des demandes même quand votre magasin est fermé.",
+      "plan": {
+        "keep": {
+          "title": "Garder mon site",
+          "desc": "Nous le transférons chez re:praesent pour {{price}}.",
+          "managed": "Il fonctionne déjà avec re:praesent."
+        },
+        "refresh": {
+          "title": "Le rafraîchir",
+          "desc": "Nouveau contenu et finitions, {{price}} l'heure de travail."
+        },
+        "rebuild": {
+          "title": "Le refaire sur WordPress",
+          "desc": "Un nouveau site, réalisé pour vous : {{price}} une fois."
+        },
+        "new": {
+          "title": "Créez-moi un site",
+          "desc": "Un nouveau site, réalisé pour vous : {{price}} une fois."
+        },
+        "later": {
+          "title": "Pas pour le moment"
+        }
+      },
+      "ai": {
+        "question": "ChatGPT et compagnie devraient-ils vous recommander ?",
+        "explain": "De plus en plus de gens demandent aux assistants IA où acheter une cuisine ou un canapé. Nous faisons en sorte que votre entreprise figure dans la réponse.",
+        "yes": "Oui, volontiers",
+        "more_info": "En savoir plus",
+        "no": "Pas maintenant"
+      },
+      "addonsTitle": "Autre chose pour laquelle vous aimeriez de l'aide ?",
+      "addons": {
+        "ads": {
+          "title": "Publicité gérée",
+          "desc": "Annonces Google et Facebook gérées par notre équipe"
+        },
+        "social": {
+          "title": "Publications hebdomadaires",
+          "desc": "Une publication par semaine sur vos réseaux"
+        },
+        "content": {
+          "title": "Mises à jour de contenu",
+          "desc": "Nous gardons vos nouvelles et offres à jour"
+        }
+      },
+      "perMonth": "{{price}}/mois",
+      "noCommitment": "Rien n'est réservé maintenant. Cela aide notre équipe à préparer votre appel.",
+      "locations": "Combien d'emplacements avez-vous ?"
+    },
+    "email": {
+      "title": "Comment envoyez-vous vos courriels aujourd'hui ?",
+      "sub": "Pour que les courriels envoyés depuis re:praesent partent de votre propre adresse.",
+      "google": "Gmail avec l'adresse de votre entreprise",
+      "microsoft": "Outlook avec l'adresse de votre entreprise",
+      "other": "Un autre fournisseur",
+      "otherDesc": "Hébergeur web, fournisseur Internet, votre informaticien…",
+      "none": "Pas encore de courriel d'entreprise",
+      "noneDesc": "Nous pouvons vous aider à en créer un",
+      "later": "Vous connecterez votre boîte plus tard dans les paramètres. Cela prend une minute."
+    },
+    "team": {
+      "title": "Qui fait partie de votre équipe ?",
+      "sub": "Invitez les personnes qui traiteront les demandes avec vous.",
+      "placeholder": "collegue@votreentreprise.ca",
+      "emailLabel": "Courriel de la personne {{n}}",
+      "roleLabel": "Rôle",
+      "roles": {
+        "editor": "Peut modifier",
+        "admin": "Administrateur",
+        "viewer": "Peut consulter"
+      },
+      "add": "Ajouter une personne",
+      "self": "C'est vous. Invitez quelqu'un d'autre.",
+      "whenSent": "Nous envoyons les invitations une fois terminé, pour que personne n'arrive dans un compte à moitié configuré.",
+      "alone": "Juste moi pour l'instant",
+      "later": "Inviter plus tard"
+    },
+    "notif": {
+      "title": "Sur quoi voulez-vous recevoir des courriels ?",
+      "sub": "De courts résumés, jamais de pourriel. Modifiables à tout moment dans les paramètres.",
+      "kinds": {
+        "weekly_leads_digest": {
+          "title": "Nouvelles demandes de la semaine",
+          "desc": "Le lundi : qui vous a contacté la semaine dernière, et d'où."
+        },
+        "daily_tasks_digest": {
+          "title": "Tâches du jour",
+          "desc": "Les matins de semaine : ce qui est dû aujourd'hui et ce qui est en retard."
+        },
+        "weekly_pipeline_summary": {
+          "title": "Votre pipeline de la semaine",
+          "desc": "Le lundi : affaires gagnées, perdues et en cours."
+        },
+        "stale_leads_reminder": {
+          "title": "Demandes en attente",
+          "desc": "Le jeudi : les demandes restées sans réponse depuis 7 jours."
+        },
+        "monthly_performance_report": {
+          "title": "Rapport mensuel",
+          "desc": "Le premier jour ouvrable du mois : demandes, affaires et rendez-vous comparés au mois précédent."
+        }
+      },
+      "instant": "Vous recevrez aussi un courriel dès qu'une nouvelle demande arrive. Vous pouvez le désactiver dans les paramètres.",
+      "who": "Qui doit les recevoir ?",
+      "everyone": "Toute l'équipe",
+      "pick": "Choisir des personnes",
+      "you": "vous"
+    },
+    "billing": {
+      "title": "Où envoyer la facture ?",
+      "sub": "Rien n'est facturé maintenant. Nous en avons besoin pour votre première facture.",
+      "subFound": "Nous avons repris ces informations de vos mentions légales. Veuillez les vérifier.",
+      "legalName": "Raison sociale",
+      "legalNameHint": "Exactement comme elle doit figurer sur la facture.",
+      "contact": "Personne-ressource",
+      "email": "Courriel de facturation",
+      "emailHint": "Les factures seront envoyées à cette adresse.",
+      "street": "Rue et numéro",
+      "street2": "Complément d'adresse",
+      "postal": "Code postal",
+      "city": "Ville",
+      "country": "Pays",
+      "vat": "Numéro de TVA",
+      "bn": "Numéro d'entreprise (NE)",
+      "taxId": "Numéro fiscal",
+      "vatHint": "Laissez vide si vous n'en avez pas.",
+      "vatFormat": "Cela ne correspond pas au format habituel, par ex. {{example}}.",
+      "phone": "Téléphone",
+      "nothingCharged": "Rien n'est facturé aujourd'hui. Notre équipe passe tout en revue avec vous d'abord."
+    },
+    "plan": {
+      "title": "Votre forfait : tout compris, un seul prix.",
+      "sub": "Un forfait avec tout ce dont votre entreprise a besoin. Aucuns frais par utilisateur.",
+      "name": "re:praesent complet",
+      "yearly": "Facturation annuelle",
+      "insteadOf": "au lieu de",
+      "perYear": "par an",
+      "included": [
+        "Site web, CMS et hébergement",
+        "Demandes et CRM au même endroit",
+        "Courriel et calendrier connectés",
+        "Statistiques et traductions",
+        "Outils marketing",
+        "Membres d'équipe illimités"
+      ],
+      "nothingToday": "Rien à payer aujourd'hui.",
+      "nothingTodaySub": "Notre équipe vous appelle d'abord et passe tout en revue avec vous. La facture vient ensuite.",
+      "talkAbout": "Nous parlerons aussi de : {{items}}.",
+      "talk": {
+        "website": "votre nouveau site",
+        "websiteRefresh": "la mise à jour de votre site",
+        "ai": "la visibilité dans les assistants IA",
+        "ads": "la publicité gérée",
+        "social": "les publications sociales",
+        "content": "les mises à jour de contenu"
+      },
+      "vat": "Prix hors taxes.",
+      "consentPre": "J'ai lu la",
+      "privacy": "politique de confidentialité",
+      "and": "et les",
+      "terms": "conditions",
+      "consentPost": ".",
+      "finish": "Terminer la configuration",
+      "incomplete": "Il manque encore quelques informations. Vérifiez votre numéro de téléphone et vos informations de facturation.",
+      "freeMonths_one": "Premier mois gratuit",
+      "freeMonths_other": "{{count}} premiers mois gratuits",
+      "trialTitle_one": "Votre premier mois est gratuit.",
+      "trialTitle_other": "Vos {{count}} premiers mois sont gratuits.",
+      "trialBody": "Votre première facture arrive au mois {{month}} : {{yearly}} par an, environ {{perDay}} par jour. Rien à payer aujourd’hui."
+    },
+    "card": {
+      "eyebrow": "Votre entreprise",
+      "namePlaceholder": "Nom de votre entreprise",
+      "address": "Adresse",
+      "phone": "Téléphone",
+      "hours": "Heures d'ouverture",
+      "openToday": "Ouvert aujourd'hui {{hours}}",
+      "closedToday": "Fermé aujourd'hui",
+      "rating_one": "{{rating}} sur Google · 1 avis",
+      "rating_other": "{{rating}} sur Google · {{count}} avis",
+      "complete": "Profil",
+      "completeShort": "Profil complété à {{pct}} %"
+    },
+    "inProgress": {
+      "title": "{{name}} est en cours de configuration",
+      "sub": "La personne qui a créé ce compte termine la configuration. Vous aurez accès dès que ce sera fait."
+    },
+    "welcome": {
+      "metaTitle": "Bienvenue",
+      "title": "Bienvenue chez re:praesent, {{name}}.",
+      "titleNoName": "Bienvenue chez re:praesent.",
+      "sub": "Votre compte pour {{workspace}} est prêt. Notre équipe vous écrira par courriel.",
+      "bookTitle": "Rencontrez votre équipe",
+      "bookSubNamed": "Choisissez l'heure d'un appel de présentation de {{minutes}} minutes avec {{names}}.",
+      "bookSub": "Choisissez l'heure d'un appel de présentation de {{minutes}} minutes.",
+      "bookedTitle": "Votre rendez-vous est confirmé.",
+      "with": "avec {{name}}",
+      "inviteSent": "L'invitation est en route vers {{email}}.",
+      "meetLink": "Lien de l'appel",
+      "contactTitle": "Notre équipe vous contactera",
+      "contactSub": "Nous vous écrirons à {{email}} d'ici un jour ouvrable pour planifier votre appel de présentation.",
+      "dashboard": "Aller au tableau de bord",
+      "later": "Vous pouvez aussi réserver l'appel plus tard depuis votre tableau de bord."
+    },
+    "book": {
+      "loading": "Recherche de disponibilités…",
+      "noTimes": "Aucune disponibilité dans les prochaines semaines. Notre équipe vous écrira plutôt par courriel.",
+      "pickDay": "Choisir un jour",
+      "pickTime": "Choisir une heure",
+      "dayFull": "Plus aucune disponibilité ce jour-là.",
+      "timesIn": "Heures dans votre fuseau horaire ({{tz}}). Les appels durent {{minutes}} minutes.",
+      "confirm": "Réserver {{day}} à {{time}}",
+      "taken": "Cette heure vient d'être prise. Veuillez en choisir une autre.",
+      "notReady": "Un instant, nous terminons la configuration. Réessayez dans une minute.",
+      "preparing": "Préparation du calendrier…",
+      "alreadyBooked": "Vous avez déjà un appel réservé."
+    },
+    "introCard": {
+      "title": "Réservez votre appel de démarrage",
+      "body": "{{name}} vous présente re:praesent en 30 minutes. Choisissez le moment qui vous convient.",
+      "bodyNoName": "Notre équipe vous présente re:praesent en 30 minutes. Choisissez le moment qui vous convient.",
+      "cta": "Choisir un moment",
+      "hide": "Masquer"
+    },
+    "sales": {
+      "title": "Quatre questions rapides pour notre équipe.",
+      "sub": "Un clic chacune, pour bien vous accompagner. « Je ne sais pas » est une bonne réponse.",
+      "goLive": {
+        "q": "Quand souhaitez-vous commencer ?",
+        "live_asap": "Dès que possible",
+        "live_month": "D’ici un mois",
+        "live_quarter": "Dans 1 à 3 mois",
+        "live_looking": "Je me renseigne",
+        "unknown": "Je ne sais pas"
+      },
+      "heard": {
+        "q": "Comment avez-vous entendu parler de nous ?",
+        "heard_google": "Google",
+        "heard_recommendation": "Recommandation",
+        "heard_brand": "Un partenaire de marque",
+        "heard_trade_fair": "Salon / événement",
+        "heard_social": "Réseaux sociaux",
+        "heard_ads": "Une publicité",
+        "heard_other": "Autre",
+        "unknown": "Je ne me souviens pas",
+        "whoLabel": "Qui nous a recommandés ?",
+        "otherLabel": "Où était-ce ?"
+      },
+      "ads": {
+        "q": "Faites-vous de la publicité en ligne actuellement ?",
+        "hint": "Annonces payantes sur Google, Facebook ou Instagram.",
+        "ads_google": "Google",
+        "ads_meta": "Facebook / Instagram",
+        "ads_both": "Les deux",
+        "ads_other": "Autre",
+        "ads_none": "Aucune publicité",
+        "unknown": "Je ne sais pas"
+      },
+      "budget": {
+        "q": "Environ combien par mois ?",
+        "budget_under_500": "Moins de 500 {{symbol}}",
+        "budget_500_1500": "500–1 500 {{symbol}}",
+        "budget_1500_5000": "1 500–5 000 {{symbol}}",
+        "budget_over_5000": "Plus de 5 000 {{symbol}}",
+        "unknown": "Je ne sais pas"
+      },
+      "handler": {
+        "q": "Qui répond aux nouvelles demandes ?",
+        "handler_owner": "Moi / le propriétaire",
+        "handler_team": "Une équipe de vente",
+        "handler_whoever": "Qui est disponible",
+        "handler_nobody": "Personne en particulier",
+        "unknown": "Je ne sais pas"
+      },
+      "reply": {
+        "q": "En combien de temps répondez-vous en général ?",
+        "reply_hour": "Dans l’heure",
+        "reply_day": "Le jour même",
+        "reply_days": "En quelques jours",
+        "unknown": "Je ne sais pas"
+      }
+    },
+    "domain": {
+      "title": "Votre domaine.",
+      "sub": "Pour planifier le déménagement de votre site sans surprise. Nous gérons la partie technique.",
+      "checking": "Nous vérifions où il est enregistré…",
+      "foundRegistrar": "Enregistré chez {{name}}.",
+      "foundDns": "Semble être chez {{name}} (d’après ses serveurs de noms).",
+      "foundDnsHost": "Son DNS est chez {{name}}. Le registre ne publie pas le bureau d’enregistrement.",
+      "foundNothing": "Impossible de le vérifier — choisissez ci-dessous, ou « Je ne sais pas ».",
+      "detected": "Détecté",
+      "nameLabel": "Votre domaine",
+      "nameHint": "L’adresse de votre site ou de votre courriel, par ex. votreentreprise.ca.",
+      "registrarQ": "Où votre domaine est-il enregistré ?",
+      "registryCalls": "Le registre indique « {{name}} ».",
+      "registrars": {
+        "ionos": "IONOS",
+        "strato": "Strato",
+        "godaddy": "GoDaddy",
+        "all_inkl": "All-Inkl",
+        "hetzner": "Hetzner",
+        "namecheap": "Namecheap",
+        "cloudflare": "Cloudflare",
+        "ovh": "OVH",
+        "one_com": "one.com",
+        "transip": "TransIP",
+        "netcup": "netcup",
+        "host_europe": "Host Europe",
+        "squarespace": "Squarespace (anciennement Google Domains)",
+        "wix": "Wix",
+        "agency_registrar": "Le compte de mon agence",
+        "other": "Ailleurs",
+        "unknown": "Je ne sais pas"
+      },
+      "transfer": {
+        "q": "Voulez-vous transférer votre domaine chez re:praesent ?",
+        "hint": "Une seule facture, et nous gérons les renouvellements et le DNS.",
+        "yes": "Oui, le transférer",
+        "more_info": "En savoir plus",
+        "no": "Non, le garder",
+        "unknown": "Je ne sais pas"
+      },
+      "login": {
+        "q": "Qui peut se connecter chez le bureau d’enregistrement ?",
+        "login_me": "Moi",
+        "login_agency": "Mon agence / mon informaticien",
+        "login_nobody": "Personne ne connaît l’accès",
+        "unknown": "Je ne sais pas"
+      },
+      "caretaker": {
+        "q": "Qui s’occupe de votre site aujourd’hui ?",
+        "care_me": "Moi ou mon équipe",
+        "care_agency": "Une agence ou un pigiste",
+        "care_nobody": "Personne",
+        "unknown": "Je ne sais pas"
+      },
+      "contract": {
+        "q": "Quand se termine votre contrat de site/hébergement actuel ?",
+        "hint": "Pour que le déménagement tombe au bon moment.",
+        "contract_under_3m": "D’ici 3 mois",
+        "contract_3_12m": "Dans 3 à 12 mois",
+        "contract_over_12m": "Dans plus d’un an",
+        "contract_none": "Pas de contrat",
+        "unknown": "Je ne sais pas"
+      }
+    },
+    "intro": {
+      "eyebrow": "Pour les salles d’exposition et détaillants",
+      "title1": "Plus qu’un site web.",
+      "titleHighlight": "Une seconde vie",
+      "title2": "pour votre entreprise, en ligne.",
+      "sub": "Votre site, votre profil Google, vos demandes et votre marketing au même endroit — mis en place avec vous par des gens qui connaissent les salles d’exposition. Pas seulement de l’hébergement. Pas seulement un CRM.",
+      "offer": {
+        "label": "Ce que ça coûte",
+        "free": {
+          "title_one": "Premier mois gratuit",
+          "title_other": "Les {{count}} premiers mois gratuits",
+          "sub": "Tout est inclus, dès le premier jour."
+        },
+        "today": {
+          "title": "Rien à payer aujourd’hui",
+          "sub": "Aucune carte requise."
+        },
+        "then": {
+          "title": "Ensuite {{price}} par an",
+          "titleNoPrice": "Ensuite un prix annuel",
+          "sub": "Environ {{perDay}} par jour, taxes en sus."
+        }
+      },
+      "cta": "Commencer gratuitement",
+      "ctaNote": "Environ 8 minutes · enregistré au fur et à mesure · arrêtez quand vous voulez",
+      "howTitle": "Comment ça marche",
+      "steps": {
+        "tell": {
+          "title": "Parlez-nous de votre entreprise",
+          "body": "Environ 8 minutes. Nous lisons votre site et remplissons presque tout pour vous."
+        },
+        "call": {
+          "title": "Une vraie personne vous appelle",
+          "body": "Quelqu’un de notre équipe passe tout en revue avec vous et le met en place. Pas de centre d’appels, pas de robot.",
+          "bodyNamed_one": "{{names}} passe tout en revue avec vous et le met en place. Pas de centre d’appels, pas de robot.",
+          "bodyNamed_other": "{{names}} passent tout en revue avec vous et le mettent en place. Pas de centre d’appels, pas de robot."
+        },
+        "live": {
+          "title": "Votre entreprise est en ligne",
+          "body_one": "Site, Google, demandes et marketing travaillent pour vous — pendant votre mois gratuit.",
+          "body_other": "Site, Google, demandes et marketing travaillent pour vous — pendant vos {{count}} mois gratuits."
+        }
+      },
+      "realPeople": "Votre équipe re:praesent",
+      "and": "et",
+      "whyEyebrow": "Pourquoi les questions comptent",
+      "whyTitle": "Vos réponses sont le brief de votre nouvelle présence en ligne.",
+      "whyBody_one": "Elles façonnent votre site, votre profil Google et votre premier appel. Plus nous en savons, plus nous en faisons pendant votre mois gratuit.",
+      "whyBody_other": "Elles façonnent votre site, votre profil Google et votre premier appel. Plus nous en savons, plus nous en faisons pendant vos {{count}} mois gratuits.",
+      "show": {
+        "url": "votresalle.ca",
+        "lead": {
+          "title": "Nouvelle demande",
+          "sub": "Maria · projet de cuisine"
+        },
+        "google": {
+          "title": "4,8 sur Google",
+          "sub": "12 nouveaux avis"
+        },
+        "booked": {
+          "title": "Rendez-vous réservé",
+          "sub": "Mar 10 h · visite en salle"
+        },
+        "ai": {
+          "title": "Recommandé par ChatGPT",
+          "sub": "« Meilleur magasin de canapés »"
+        }
+      }
+    }
+  },
+  "salesContact": {
+    "nav": "Contacter re:praesent",
+    "title": "Parler à l'équipe re:praesent",
+    "loading": "Un instant…",
+    "unavailable": "Impossible d’ouvrir ceci pour le moment. Veuillez réessayer dans un instant.",
+    "bookSub": "Choisissez un créneau pour un appel vidéo de {{minutes}} minutes.",
+    "bookSubNamed": "Choisissez un créneau pour un appel vidéo de {{minutes}} minutes avec {{names}}.",
+    "messageSub": "Écrivez-nous. Nous répondrons à {{email}}.",
+    "noteLabel": "De quoi souhaitez-vous parler ?",
+    "notePlaceholder": "Quelques mots nous aident à préparer l’appel.",
+    "noTimes": "Aucun créneau libre dans les prochaines semaines.",
+    "writeInstead": "Nous envoyer un message à la place",
+    "preferWrite": "Vous préférez écrire ? Envoyer un message",
+    "bookInstead": "Réserver un appel à la place",
+    "messageLabel": "Votre message",
+    "messagePlaceholder": "Comment pouvons-nous vous aider ?",
+    "messageRequired": "Écrivez un court message.",
+    "phoneLabel": "Téléphone",
+    "phoneHint": "Si vous préférez que nous vous appelions.",
+    "replyTo": "Nous répondrons à {{email}}.",
+    "send": "Envoyer le message",
+    "tooMany": "Vous avez déjà envoyé plusieurs messages aujourd’hui. Nous vous répondrons bientôt.",
+    "sentTitle": "Message envoyé",
+    "sentSub": "Merci ! Nous répondrons à {{email}} dans un délai d’un jour ouvrable.",
+    "bookedTitle": "Votre appel est réservé",
+    "done": "Terminé",
+    "bookedSub": "Votre prochain appel avec l'équipe re:praesent.",
+    "inviteAt": "L’invitation a été envoyée à {{email}}.",
+    "joinCall": "Rejoindre l’appel"
   }
 }

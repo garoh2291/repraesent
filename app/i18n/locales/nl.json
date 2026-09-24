@@ -503,10 +503,54 @@
       "rule": {
         "disposable": "Gefilterd: wegwerp- of ongeldig adres",
         "suspicious_local": "Gefilterd: machinaal ogend adres",
-        "ai": "Gefilterd door de spamcontrole"
+        "ai": "Gefilterd door de AI-spamcontrole",
+        "blocked": "Gefilterd: afzender eerder als spam gemarkeerd",
+        "heuristic": "Gefilterd: duidelijk botpatroon",
+        "manual_spam": "Als spam gemarkeerd"
       }
     },
-    "restoreFilteredHint": "Zet deze lead terug naar de eerste fase"
+    "restoreFilteredHint": "Zet deze lead terug naar de eerste fase",
+    "onboarding": {
+      "title": "Antwoorden uit de inrichting",
+      "yes": "Ja",
+      "no": "Nee",
+      "sections": {
+        "run": "Inrichting",
+        "identity": "Bedrijf",
+        "presence": "Soort",
+        "location": "Locatie",
+        "contact": "Contact",
+        "hours": "Openingstijden",
+        "offer": "Aanbod",
+        "team": "Team",
+        "legal": "Juridisch",
+        "online": "Online",
+        "socials": "Sociale profielen",
+        "google_business": "Google",
+        "email_setup": "E-mail",
+        "goals": "Doelen",
+        "interests": "Interesses",
+        "domain": "Domein & website",
+        "sales": "Verkoopsignalen"
+      }
+    },
+    "spam": {
+      "mark": "Markeren als spam",
+      "notSpam": "Geen spam — herstellen",
+      "marked": "Als spam gemarkeerd",
+      "restored": "Hersteld. De afzender is niet meer geblokkeerd.",
+      "undo": "Ongedaan maken",
+      "error": "Dat is niet gelukt. Probeer het opnieuw.",
+      "blockedWhat": "Volgende aanvragen gaan direct naar Verborgen ({{what}}).",
+      "alsoHidden_one": "{{count}} andere nieuwe aanvraag van deze afzender is verborgen.",
+      "alsoHidden_other": "{{count}} andere nieuwe aanvragen van deze afzender zijn verborgen.",
+      "kind": {
+        "email": "e-mail",
+        "phone": "telefoon",
+        "domain": "domein"
+      },
+      "revertedNote": "{{rule}} — daarna als geen spam gemarkeerd."
+    }
   },
   "pipeline": {
     "stripeNotConnected": {
@@ -617,7 +661,8 @@
       "expectedClose": "Verwachte afsluiting",
       "expectedCloseHint": "Wordt opgeslagen met Opslaan hierboven.",
       "notes": "Notities",
-      "notesPlaceholder": "Optionele notities…"
+      "notesPlaceholder": "Optionele notities…",
+      "currency": "Valuta"
     },
     "stages": {
       "new": "Nieuw",
@@ -888,6 +933,32 @@
       "revokeTitle": "Deze pipeline privé maken?",
       "revokeBody": "Elke trackinglink die al naar een klant is verstuurd werkt direct niet meer, en niemand krijgt daar bericht van. Weer openbaar maken geeft dezelfde links vrij, geen nieuwe.",
       "revokeConfirm": "Privé maken"
+    },
+    "onboardingPanel": {
+      "title": "Onboardingprofiel",
+      "status": {
+        "completed": "Afgerond",
+        "in_progress": "Bezig · {{step}}",
+        "abandoned": "Gestopt"
+      },
+      "join": "Deelnemen aan gesprek",
+      "presence": "Soort",
+      "address": "Adres",
+      "phone": "Telefoon",
+      "email": "E-mail",
+      "website": "Website",
+      "goals": "Wil",
+      "channels": "Aanvragen nu via",
+      "volume": "Aanvragen per maand",
+      "websitePlan": "Websiteplan",
+      "ai": "AI-zichtbaarheid",
+      "addons": "Interesse in",
+      "emailProvider": "E-mail",
+      "locations": "Vestigingen",
+      "pain": "Grootste knelpunt",
+      "live": "Live uit het klantprofiel · bijgewerkt {{date}}",
+      "contactFirst": "Eerst per e-mail contact opnemen; alleen bellen als dat gewenst is.",
+      "legalName": "Statutaire naam"
     }
   },
   "appointments": {
@@ -1144,7 +1215,7 @@
     "invoiceHistory": "Factuurgeschiedenis",
     "pastDueWarning": "Sommige abonnementen zijn achterstallig — betaal nu om opschorting te voorkomen.",
     "payNow": "Nu betalen →",
-    "noSubscriptions": "Nog geen abonnementen. Voeg producten toe tijdens de onboarding.",
+    "noSubscriptions": "Nog geen abonnementen. Ons team stelt uw pakket samen met u in, daarna ziet u het hier.",
     "noInvoicesYet": "Nog geen facturen.",
     "dateEnded": "Beëindigd op",
     "dateEnds": "Eindigt op",
@@ -1181,7 +1252,10 @@
       "pipelines": "Pipelinefasen",
       "notifications": "Meldingen",
       "openaiAds": "OpenAI Ads",
-      "ai": "AI"
+      "ai": "AI",
+      "onboarding": "Onboarding",
+      "emailNotifications": "E-mailmeldingen",
+      "businessProfile": "Bedrijfsprofiel"
     },
     "bcc": {
       "metaTitle": "E-maillogging",
@@ -1727,6 +1801,230 @@
       "add": "Toevoegen",
       "empty": "Nog niets. Voeg een adres toe wanneer de spamcontrole iemand verkeerd inschat.",
       "remove": "Verwijderen"
+    },
+    "onboarding": {
+      "metaTitle": "Onboarding",
+      "metaDescription": "Met wie nieuwe klanten een gesprek kunnen boeken, en waar hun deal in je pipeline terechtkomt.",
+      "statusLive_one": "Boeken staat aan — nieuwe klanten kunnen een gesprek boeken met {{count}} persoon",
+      "statusLive_other": "Boeken staat aan — nieuwe klanten kunnen een gesprek boeken met {{count}} personen",
+      "statusLiveHint": "Aan het einde van de onboarding kiezen ze een tijd; het gesprek komt in de agenda van wie vrij is.",
+      "statusOff": "Boeken staat uit",
+      "statusOffHint": "Nieuwe klanten komen hier nog steeds binnen als lead en deal. Ze zien \"ons salesteam neemt contact op\" zonder agenda.",
+      "bookingToggle": "Klanten een gesprek laten boeken",
+      "teamTitle": "Salesteam",
+      "teamHint": "De mensen die een nieuwe klant kan spreken, elk met de agenda waarin hun gesprekken komen. Een tijd wordt aangeboden als minstens één van hen vrij is.",
+      "teamEmpty": "Nog niemand. Voeg de mensen toe die kennismakingsgesprekken voeren.",
+      "addPerson": "Persoon toevoegen",
+      "removePerson": "Persoon verwijderen",
+      "pickPerson": "Kies een persoon",
+      "searchPeople": "Zoeken…",
+      "noPeople": "Geen resultaten.",
+      "nobody": "Niemand",
+      "pickCalendar": "Kies hun agenda",
+      "noCalendar": "Nog geen agenda gekoppeld.",
+      "connectCalendar": "Koppel er een",
+      "calendarBroken": "Deze agenda moet opnieuw gekoppeld worden — tot dan wordt deze persoon niet aangeboden.",
+      "checkAllTitle": "Al hun agenda's controleren op conflicten",
+      "checkAllHint": "Een privé-afspraak in een van hun gekoppelde agenda's blokkeert die tijd, niet alleen in de gespreksagenda.",
+      "meetingTitle": "Gesprek",
+      "meetingHint": "Wanneer gesprekken kunnen plaatsvinden. Klanten zien de tijden in hun eigen tijdzone.",
+      "duration": "Duur",
+      "minutes_one": "{{count}} minuut",
+      "minutes_other": "{{count}} minuten",
+      "hours": "Boekbare uren",
+      "hoursFrom": "Van",
+      "hoursTo": "Tot",
+      "hoursInvalid": "De eindtijd moet na de begintijd liggen.",
+      "days": "Dagen",
+      "weekday": {
+        "mon": "Ma",
+        "tue": "Di",
+        "wed": "Wo",
+        "thu": "Do",
+        "fri": "Vr",
+        "sat": "Za",
+        "sun": "Zo"
+      },
+      "timezone": "Jouw tijdzone",
+      "notice": "Vroegste boeking",
+      "horizon": "Vooruit boekbaar",
+      "hoursUnit": "uur",
+      "daysUnit": "dagen",
+      "eventTitle": "Titel van de afspraak",
+      "eventTitleHint": "{{business}} wordt vervangen door de bedrijfsnaam van de klant.",
+      "routingTitle": "Waar nieuwe klanten terechtkomen",
+      "routingHint": "Elke afgeronde onboarding maakt een lead, een contact en een deal in deze workspace, met al hun antwoorden op de deal.",
+      "pipeline": "Pipeline",
+      "defaultPipeline": "Standaardpipeline",
+      "stage": "Fase",
+      "entryStage": "Eerste fase ({{stage}})",
+      "assign": "Deal toewijzen aan",
+      "assignBooked": "Wie het gesprek voert",
+      "assignBookedHint": "Niet toegewezen tot de klant boekt.",
+      "assignFixed": "Altijd dezelfde persoon",
+      "assignFixedHint": "Kies hieronder.",
+      "assignNone": "Niemand",
+      "assignNoneHint": "Je team pakt hem op vanaf het bord.",
+      "previewTitle": "Wat klanten zien",
+      "previewHint": "De komende twee weken, samengevoegd uit ieders agenda. Elke tijd toont wie vrij is.",
+      "previewDraft": "Toont je niet-opgeslagen wijzigingen.",
+      "previewNoHosts": "Voeg een persoon met agenda toe om boekbare tijden te zien.",
+      "previewFailed": "Voorbeeld kon niet geladen worden.",
+      "previewSomeFailed": "De agenda van {{names}} kon niet gelezen worden — niet aangeboden tot die opnieuw gekoppeld is.",
+      "previewDayFull": "Geen vrije tijden meer op die dag.",
+      "previewNothing": "Geen vrije tijden in de komende twee weken. Verruim de uren of dagen hierboven.",
+      "testRun": "Test uitvoeren",
+      "testWithBooking": "Test uitvoeren en deze tijd boeken",
+      "testSaveFirst": "Sla eerst je wijzigingen op",
+      "testHint": "Een test maakt een lead, contact en deal met [TEST], met jou als contact. Kies een tijd om ook een echte afspraak te boeken.",
+      "testHintSlot": "De test boekt deze tijd ook met iemand die vrij is — een echte afspraak, de uitnodiging gaat naar jou.",
+      "testCreated": "Test-lead, contact en deal aangemaakt",
+      "testBooked": "Test aangemaakt en gesprek geboekt met {{person}}",
+      "testFailed": "De test is niet gelukt.",
+      "openDeal": "Deal openen",
+      "unsaved": "Je hebt niet-opgeslagen wijzigingen",
+      "discard": "Verwerpen",
+      "save": "Wijzigingen opslaan",
+      "saving": "Opslaan…",
+      "saved": "Wijzigingen opgeslagen",
+      "saveFailed": "Wijzigingen konden niet opgeslagen worden.",
+      "hostIncomplete": "Elke persoon heeft een agenda nodig. Kies er een of verwijder de rij.",
+      "pricing": {
+        "title": "Prijzen",
+        "hint": "Wat nieuwe klanten tijdens de inrichting zien, per regio en valuta. Excl. btw. De inrichting brengt niets in rekening.",
+        "sync": "Overnemen van de website",
+        "syncing": "Prijspagina wordt gelezen…",
+        "notEditable": "Dit zijn de ingebouwde prijzen. Voer migratie 184 uit om ze hier te bewerken of over te nemen.",
+        "regions": "Prijsregio's",
+        "fallbackDot": "Zelfde als de standaardregio",
+        "source": {
+          "website": "Van de website · overgenomen op {{date}}",
+          "manual": "Handmatig gewijzigd · {{date}}",
+          "seed": "Ingebouwde prijzen (nog niet overgenomen)",
+          "fallback": "Zelfde als {{region}} — de website toont nog geen prijzen in {{currency}}."
+        },
+        "plan": "Pakket",
+        "setup": "Inrichting & websites",
+        "addons": "Extra's",
+        "franchise": "Franchisevestigingen",
+        "franchiseTier": "Vestiging {{n}}",
+        "addTier": "Vestigingsprijs toevoegen",
+        "removeTier": "Verwijderen",
+        "fields": {
+          "planMonthly": "Per maand",
+          "planYearly": "Per jaar",
+          "cmsTransfer": "CMS-verhuizing",
+          "newWebsite": "Nieuwe website",
+          "adsMonthly": "Advertenties / maand",
+          "adsSetup": "Advertenties opzetten",
+          "contentMonthly": "Contentupdates / maand",
+          "contentYearly": "Contentupdates / jaar",
+          "socialMonthly": "Social posts / maand",
+          "socialYearly": "Social posts / jaar",
+          "hourly": "Maatwerk / uur"
+        },
+        "planLine": "12 × maandelijks = {{twelve}} → jaarlijks {{yearly}} · {{months}} maanden gratis · ≈ {{perDay}} per dag",
+        "yearlyTooHigh": "Jaarlijks mag niet meer zijn dan 12 maandbetalingen ({{twelve}}).",
+        "regionName": "Naam van de regio",
+        "currency": "Valuta",
+        "countries": "Factuurlanden",
+        "everyoneElse": "Alle anderen",
+        "unsaved": "Niet-opgeslagen wijzigingen aan {{region}}",
+        "reset": "Herstellen",
+        "save": "Prijzen opslaan",
+        "saved": "Prijzen opgeslagen",
+        "applied": "Prijzen overgenomen van de website",
+        "urlLabel": "Prijspagina",
+        "urlSave": "Opslaan",
+        "urlSaved": "Prijspagina opgeslagen",
+        "previewTitle": "Wat de website zegt",
+        "previewSub": "Gelezen van {{url}}. Er wordt pas iets opgeslagen als u toepast.",
+        "newRegion": "Nieuwe regio",
+        "outcome": {
+          "priced_one": "{{count}} prijs gevonden",
+          "priced_other": "{{count}} prijzen gevonden",
+          "not_priced_on_site": "Geen prijzen in deze valuta",
+          "unreadable": "Niet leesbaar"
+        },
+        "fallbackExplain": "De website toont nog geen prijzen in {{currency}}, dus gelden de bedragen van {{region}}.",
+        "currencyChanged": "Valuta wijzigt van {{from}} naar {{to}}.",
+        "noChanges": "Geen prijswijzigingen",
+        "unreadableExplain": "De prijzen van deze regio konden niet worden gelezen. Ze blijven zoals ze zijn.",
+        "rejected_one": "1 waarde die de AI voorstelde staat niet op de pagina en is genegeerd.",
+        "rejected_other": "{{count}} waarden die de AI voorstelde staan niet op de pagina en zijn genegeerd.",
+        "missingOnSite": "Niet meer op de website: {{regions}}. Blijven zoals ze zijn.",
+        "cancel": "Annuleren",
+        "apply": "Wijzigingen toepassen",
+        "applyNoChanges": "Markeren als overgenomen"
+      }
+    },
+    "emailNotifications": {
+      "metaTitle": "E-mailmeldingen",
+      "metaDescription": "Korte samenvattingen per e-mail: nieuwe aanvragen, taken voor vandaag, uw pipeline en meer.",
+      "sectionLabel": "Samenvattingen",
+      "sectionDescription": "'s Ochtends verstuurd, lokale tijd ({{tz}}). Niets te melden betekent geen e-mail.",
+      "test": "Stuur mij een test",
+      "testSent": "Test verstuurd naar {{email}}.",
+      "testEmpty": "Er is nu niets te melden, dus deze e-mail zou worden overgeslagen. Voeg een aanvraag of taak toe en probeer het opnieuw.",
+      "muteForMe": "Niet meer voor mij",
+      "unmuteForMe": "Weer ontvangen",
+      "mutedBadge": "Uit voor u",
+      "mutedToast": "U ontvangt deze e-mail niet meer.",
+      "unmutedToast": "U ontvangt deze e-mail weer.",
+      "saved": "Opgeslagen",
+      "adminOnly": "Alleen beheerders kunnen samenvattingen voor iedereen aan- of uitzetten. U kunt er wel een voor uzelf stoppen.",
+      "whoLabel": "Wie ze ontvangt",
+      "whoDescription": "Wie nog nooit heeft ingelogd, ontvangt ze na de eerste keer inloggen.",
+      "everyone": "Het hele team",
+      "pick": "Personen kiezen",
+      "you": "u",
+      "neverSignedIn": "nog niet ingelogd",
+      "pickOne": "Kies minstens één persoon, of stuur naar iedereen.",
+      "instantNote": "De e-mail bij elke nieuwe aanvraag is een aparte schakelaar per persoon.",
+      "instantLink": "Instellen op de teampagina"
+    },
+    "businessProfile": {
+      "metaTitle": "Bedrijfsprofiel",
+      "metaDescription": "Uw bedrijf zoals klanten het zien: adres, openingstijden, aanbod en juridische gegevens.",
+      "websiteLabel": "Website",
+      "websiteDescription": "We lezen uw website om uw profiel in te vullen. Wat u hebt bevestigd, wordt nooit overschreven.",
+      "reread": "Website opnieuw lezen",
+      "reading": "We lezen uw website…",
+      "lastRead": "Laatst gelezen op {{date}}",
+      "neverRead": "Nog niet gelezen",
+      "readFailed": "We konden uw website nu niet lezen. Probeer het later opnieuw.",
+      "addWebsiteLabel": "Adres van uw website",
+      "addWebsite": "Toevoegen en lezen",
+      "addWebsiteHint": "We lezen hem en vullen in wat we vinden.",
+      "websiteAdded": "Website toegevoegd. We lezen hem nu.",
+      "noWebsite": "Nog geen website toegevoegd.",
+      "googleLabel": "Google-profiel",
+      "openMaps": "Openen in Google Maps",
+      "detailsLabel": "Gegevens",
+      "socialsLabel": "Sociale profielen",
+      "save": "Wijzigingen opslaan",
+      "saved": "Profiel opgeslagen",
+      "adminOnly": "Alleen beheerders kunnen het bedrijfsprofiel wijzigen.",
+      "readUpdated_one": "{{count}} veld bijgewerkt vanaf uw website. Wat u had bevestigd, blijft zoals het was.",
+      "readUpdated_other": "{{count}} velden bijgewerkt vanaf uw website. Wat u had bevestigd, blijft zoals het was.",
+      "readNothingNew": "Niets nieuws: uw profiel komt al overeen met uw website.",
+      "readSkipped": "Uw website veranderde terwijl we hem lazen. Probeer het opnieuw."
+    },
+    "blocklist": {
+      "sectionLabel": "Altijd blokkeren",
+      "sectionDescription": "Aanvragen van deze afzenders gaan direct naar Verborgen. „Markeren als spam” voegt e-mail en telefoon hier toe; een bedrijfsdomein na twee spamaanvragen. „Altijd accepteren” gaat voor.",
+      "patternLabel": "E-mail, domein of telefoon",
+      "patternPlaceholder": "spam@voorbeeld.nl, @voorbeeld.nl of +31 …",
+      "empty": "Nog niets geblokkeerd. Gebruik „Markeren als spam” bij een aanvraag.",
+      "hits_one": "{{count}} aanvraag tegengehouden",
+      "hits_other": "{{count}} aanvragen tegengehouden",
+      "addedOn": "toegevoegd op {{date}}"
+    },
+    "currency": {
+      "label": "Valuta voor deals",
+      "hint": "Nieuwe deals starten in deze valuta en totalen tonen haar eerst. Deals in andere valuta houden hun eigen valuta en staan ernaast — nooit omgerekend.",
+      "saved": "Valuta opgeslagen.",
+      "error": "De valuta kon niet worden opgeslagen."
     }
   },
   "booking": {
@@ -7298,5 +7596,793 @@
     "invalidTitle": "Deze link is niet meer actief",
     "invalidBody": "Kijk in de laatste e-mail die u hebt ontvangen, of beantwoord die en vraag om een nieuwe link.",
     "footer": "Mogelijk gemaakt door Repraesent"
+  },
+  "onb": {
+    "metaTitle": "Uw bedrijf inrichten",
+    "metaDescription": "Vertel ons over uw bedrijf. Het meeste nemen we over van uw website.",
+    "continue": "Verder",
+    "back": "Terug",
+    "skip": "Later",
+    "optional": "optioneel",
+    "choose": "Kiezen…",
+    "yes": "Ja",
+    "no": "Nee",
+    "notSure": "Weet ik niet",
+    "saved": "Opgeslagen",
+    "account": "Account",
+    "switchWorkspace": "Ander gebied kiezen",
+    "signOut": "Afmelden",
+    "remove": "{{item}} verwijderen",
+    "didYouMean": "Bedoelde u {{email}}?",
+    "chapters": {
+      "business": "Bedrijf",
+      "presence": "Online",
+      "goals": "Doelen",
+      "team": "Team",
+      "plan": "Pakket"
+    },
+    "progress": {
+      "label": "Voortgang van de inrichting",
+      "left_one": "Nog 1 hoofdstuk",
+      "left_other": "Nog {{count}} hoofdstukken",
+      "last": "Laatste hoofdstuk"
+    },
+    "source": {
+      "website": "van uw website",
+      "google": "van Google",
+      "facebook": "van Facebook"
+    },
+    "errors": {
+      "generic": "Dat is niet gelukt. Probeer het opnieuw.",
+      "fixFields": "Een paar velden moeten nog worden nagekeken.",
+      "lookup": "Zoeken lukt nu niet. U kunt zonder verder.",
+      "RATE_LIMITED": "Te veel pogingen in korte tijd. Wacht even een minuut.",
+      "ENRICH_DAILY_CAP": "Automatisch zoeken is voor vandaag gepauzeerd. Vul dit zelf in.",
+      "ENRICH_USER_CAP": "Te veel zoekopdrachten in korte tijd. Probeer het later opnieuw.",
+      "ENRICH_RUN_CAP": "We hebben dit al een paar keer gezocht. Vul het zelf in.",
+      "NOT_A_CUSTOMER_ACCOUNT": "Met dit account kunt u geen bedrijf aanmaken. Meld u aan met uw eigen e-mailadres."
+    },
+    "fieldErrors": {
+      "required": "Vul dit in.",
+      "invalid": "Dit lijkt niet te kloppen.",
+      "invalid_email": "Vul een geldig e-mailadres in, bijv. naam@bedrijf.nl.",
+      "invalid_phone": "Vul een nummer in waarop we u bereiken, met netnummer.",
+      "url": "Vul de volledige link in, bijv. https://instagram.com/uwbedrijf.",
+      "hours": "De openingstijd moet vóór de sluitingstijd liggen.",
+      "invalid_country": "Kies een land uit de lijst.",
+      "out_of_range": "Dit getal valt buiten het bereik.",
+      "not_allowed": "Kies een van de opties.",
+      "invalid_format": "Dit lijkt niet te kloppen."
+    },
+    "name": {
+      "eyebrow": "Ongeveer 8 minuten · eerste 2 maanden gratis",
+      "title": "Laten we uw bedrijf inrichten. Hoe heet het?",
+      "sub": "We lezen uw website en vullen het meeste voor u in.",
+      "label": "Naam van het bedrijf",
+      "hint": "De naam die uw klanten kennen.",
+      "placeholder": "De naam van uw bedrijf",
+      "tooShort": "Vul minstens 2 tekens in."
+    },
+    "website": {
+      "title": "Heeft u een website?",
+      "titleNamed": "Leuk kennis te maken, {{name}}. Heeft u een website?",
+      "sub": "Typ gewoon het adres. Wij lezen de site en vullen uw gegevens voor u in.",
+      "label": "Adres van de website",
+      "placeholder": "uwbedrijf.nl",
+      "preview": "We lezen {{url}}",
+      "read": "Mijn website lezen",
+      "none": "Ik heb nog geen website",
+      "continueWithout": "Verder zonder website",
+      "errors": {
+        "empty": "Vul het adres van uw website in.",
+        "invalid": "Dit lijkt geen websiteadres.",
+        "protocol": "Vul een webadres in, bijv. uwbedrijf.nl.",
+        "ip": "Vul het adres in dat uw klanten gebruiken, geen IP.",
+        "local": "Dit adres werkt alleen in uw eigen netwerk. Vul uw openbare website in.",
+        "no_tld": "Voeg de extensie toe, bijv. .nl of .com.",
+        "taken": "Deze website is al gekoppeld aan een re:praesent-account. Ga zonder verder, of vraag een collega om u uit te nodigen."
+      }
+    },
+    "reading": {
+      "title": "We lezen {{domain}}…",
+      "sub": "Dit duurt ongeveer een halve minuut. We lezen alleen openbare pagina's.",
+      "doneTitle_one": "Klaar. We vonden 1 gegeven.",
+      "doneTitle_other": "Klaar. We vonden {{count}} gegevens.",
+      "doneSub": "Controleer ze in de volgende stap. Dat duurt een minuut.",
+      "failedTitle": "We kunnen {{domain}} nu niet openen.",
+      "failedSub": "Controleer het adres of vul uw gegevens zelf in. Het zijn maar een paar velden.",
+      "working": "Bezig met lezen…",
+      "fillMyself": "Zelf invullen",
+      "retry": "Opnieuw proberen",
+      "retrying": "Bezig…",
+      "review": "Gegevens controleren",
+      "carryOn": "Ga verder, we zoeken door",
+      "lines": {
+        "started": "We bekijken {{domain}}",
+        "pages_found_one": "1 pagina gelezen",
+        "pages_found_other": "{{count}} pagina's gelezen",
+        "found_address": "Adres gevonden: {{value}}",
+        "found_contact": "Telefoon en e-mail gevonden",
+        "found_hours": "Openingstijden gevonden",
+        "found_legal": "Bedrijfsgegevens gevonden",
+        "found_socials_one": "1 social-mediaprofiel gevonden",
+        "found_socials_other": "{{count}} social-mediaprofielen gevonden",
+        "found_team": "Uw team gevonden",
+        "found_offer_one": "Uw aanbod gevonden",
+        "found_offer_other": "Uw aanbod en {{count}} merken gevonden",
+        "found_cms": "Uw site draait op {{value}}",
+        "understanding": "Alles wordt samengevoegd"
+      }
+    },
+    "details": {
+      "title": "Vertel ons over uw bedrijf.",
+      "sub": "Vul in wat u wilt. Alles is later aan te passen in de instellingen.",
+      "titleFound": "Dit hebben we gevonden. Klopt alles?",
+      "subFound": "Velden met ‘van uw website’ hebben we voor u ingevuld. Pas aan wat niet klopt.",
+      "about": "Over uw bedrijf",
+      "how": "Zo bereiken klanten u",
+      "where": "Hier vinden klanten u",
+      "hours": "Openingstijden",
+      "offer": "Uw aanbod",
+      "legal": "Bedrijfsgegevens",
+      "legalWhy": "Voor uw factuur",
+      "looksRight": "Klopt zo"
+    },
+    "presence": {
+      "physical": {
+        "title": "Showroom of winkel",
+        "desc": "Klanten komen naar u toe"
+      },
+      "online": {
+        "title": "Alleen online",
+        "desc": "Geen plek om te bezoeken"
+      },
+      "service_area": {
+        "title": "Wij gaan naar de klant",
+        "desc": "U werkt bij de klant"
+      },
+      "hybrid": {
+        "title": "Winkel en online",
+        "desc": "Allebei"
+      }
+    },
+    "f": {
+      "display_name": "Naam van het bedrijf",
+      "legal_name": "Bedrijfsnaam op facturen",
+      "legal_name_hint": "Precies zoals in het handelsregister.",
+      "legal_form": "Rechtsvorm",
+      "industry": "Branche",
+      "brand_partner": "Merkpartner",
+      "brand_partner_hint": "Alleen als u officieel partner van één merk bent.",
+      "description": "Korte omschrijving",
+      "appointment_only": "Bezoek alleen op afspraak",
+      "street": "Straat en huisnummer",
+      "postal_code": "Postcode",
+      "city": "Plaats",
+      "country": "Land",
+      "phone": "Telefoon van het bedrijf",
+      "email": "E-mail van het bedrijf",
+      "hours_notes": "Nog iets over de openingstijden?",
+      "hours_notes_placeholder": "bijv. woensdag alleen op afspraak",
+      "product_categories": "Productgroepen",
+      "product_categories_placeholder": "Keukens, banken, verlichting…",
+      "brands_carried": "Merken in het assortiment",
+      "brands_carried_placeholder": "Typ een merk en druk op Enter",
+      "services": "Diensten",
+      "services_suggestions": "Ontwerp|Advies|Levering|Montage|Inmeten|Financiering",
+      "usps": "Wat u onderscheidt",
+      "usps_hint": "bijv. 5 jaar garantie, familiebedrijf sinds 1986",
+      "price_segment": "Prijsklasse",
+      "customer_type": "Klanten",
+      "register_court": "Register",
+      "register_number": "KvK-nummer",
+      "vat_id": "Btw-nummer",
+      "first_name": "Voornaam",
+      "last_name": "Achternaam",
+      "role": "Uw functie",
+      "role_hint": "bijv. eigenaar, directeur, filiaalmanager",
+      "your_phone": "Uw telefoonnummer"
+    },
+    "legalForms": {
+      "gmbh": "GmbH",
+      "ug": "UG (haftungsbeschränkt)",
+      "ag": "AG",
+      "ek": "e.K.",
+      "gbr": "GbR",
+      "kg": "KG",
+      "ohg": "OHG",
+      "gmbh_co_kg": "GmbH & Co. KG",
+      "einzelunternehmen": "Einzelunternehmen",
+      "sarl": "SARL",
+      "sas": "SAS",
+      "sa": "SA",
+      "ei": "Entreprise individuelle",
+      "bv": "B.V.",
+      "nv": "N.V.",
+      "vof": "V.O.F.",
+      "eenmanszaak": "Eenmanszaak",
+      "inc": "Inc.",
+      "ltd": "Ltd.",
+      "llc": "LLC",
+      "corp": "Corp.",
+      "sole_proprietor": "Eenmanszaak",
+      "partnership": "Maatschap",
+      "other": "Anders"
+    },
+    "priceSegment": {
+      "budget": "Voordelig",
+      "mid": "Middensegment",
+      "premium": "Premium",
+      "luxury": "Luxe"
+    },
+    "customerType": {
+      "b2c": "Particulier",
+      "b2b": "Zakelijk",
+      "both": "Allebei"
+    },
+    "days": {
+      "mon": "Maandag",
+      "tue": "Dinsdag",
+      "wed": "Woensdag",
+      "thu": "Donderdag",
+      "fri": "Vrijdag",
+      "sat": "Zaterdag",
+      "sun": "Zondag"
+    },
+    "daysShort": {
+      "mon": "Ma",
+      "tue": "Di",
+      "wed": "Wo",
+      "thu": "Do",
+      "fri": "Vr",
+      "sat": "Za",
+      "sun": "Zo"
+    },
+    "hours": {
+      "from": "Open",
+      "to": "Dicht",
+      "closed": "Gesloten",
+      "addRange": "Tijd toevoegen",
+      "removeRange": "Deze tijd verwijderen",
+      "copyWeekdays": "Maandag kopiëren naar di–vr"
+    },
+    "country": {
+      "pick": "Kies een land",
+      "search": "Land zoeken…",
+      "none": "Geen land gevonden."
+    },
+    "you": {
+      "title": "En u?",
+      "sub": "Met u spreekt ons team.",
+      "phoneWhy": "De uitnodiging voor de afspraak sturen we per e-mail. We bellen alleen als u dat wilt.",
+      "phoneRequired": "Vul een nummer in waarop we u kunnen bereiken.",
+      "phoneInvalid": "Vul een nummer in waarop we u kunnen bereiken, met netnummer.",
+      "emailNote": "We schrijven u op {{email}}."
+    },
+    "google": {
+      "title": "Staat u op Google Maps?",
+      "sub": "Via uw Google-profiel vinden de meeste klanten u als eerste. We koppelen het aan uw account.",
+      "phoneLabel": "Telefoonnummer in uw Google-profiel",
+      "phoneHint": "Zo vinden we u het snelst. Het nummer van uw website hebben we ingevuld.",
+      "find": "Mijn profiel zoeken",
+      "searching": "We zoeken u op Google…",
+      "isThisYou": "Bent u dit?",
+      "thisIsUs": "Dit zijn wij",
+      "open": "Bekijken",
+      "nothing": "We vonden geen overeenkomst.",
+      "byName": "Zoek liever op naam",
+      "noneOfThese": "Geen van deze",
+      "change": "Ander profiel kiezen",
+      "reviews_one": "1 review",
+      "reviews_other": "{{count}} reviews",
+      "strong": "{{rating}} ★ uit {{count}} reviews. Dat is sterk. We tonen het op uw website.",
+      "grow": "Tot nu toe {{count}} reviews. We helpen u er meer te verzamelen.",
+      "unavailable": "Zoeken op Google is nu niet beschikbaar. U kunt verder.",
+      "badPhone": "Vul het nummer in zoals het op Google staat."
+    },
+    "social": {
+      "title": "Waar vinden klanten u nog meer?",
+      "sub": "Voeg de profielen toe die u gebruikt. Sla de rest over.",
+      "subFound": "Deze vonden we op uw website. Vul aan of verbeter wat ontbreekt.",
+      "fbQuestion": "Heeft u een Facebook-pagina?",
+      "searching": "We zoeken uw pagina…",
+      "nothing": "We vonden geen pagina. Voeg hieronder de link toe als u er een heeft.",
+      "networks": {
+        "facebook": "Facebook",
+        "instagram": "Instagram",
+        "youtube": "YouTube",
+        "linkedin": "LinkedIn",
+        "tiktok": "TikTok",
+        "pinterest": "Pinterest"
+      }
+    },
+    "goals": {
+      "title": "Waarmee kan re:praesent u helpen?",
+      "sub": "Kies alles wat belangrijk is. Zo weet ons team waar het begint.",
+      "options": {
+        "more_enquiries": "Meer aanvragen",
+        "more_appointments": "Meer afspraken in de showroom",
+        "google_presence": "Gevonden worden op Google",
+        "reviews": "Betere reviews",
+        "sell_online": "Online verkopen",
+        "save_time": "Minder tijd aan administratie",
+        "brand_awareness": "Bekender worden in de regio"
+      },
+      "channels": "Waar komen uw klanten nu vandaan?",
+      "channelOptions": {
+        "walk_in": "Binnenlopers",
+        "google": "Google",
+        "website": "Onze website",
+        "social": "Social media",
+        "referrals": "Mond-tot-mond",
+        "ads": "Advertenties",
+        "trade_fairs": "Beurzen",
+        "partners": "Merkpartner",
+        "other": "Anders"
+      },
+      "volume": "Ongeveer hoeveel aanvragen per maand?",
+      "volumeOptions": {
+        "0-10": "Tot 10",
+        "11-30": "11–30",
+        "31-100": "31–100",
+        "100+": "Meer dan 100",
+        "unknown": "Weet ik niet"
+      },
+      "tools": "Waarmee werkt u nu?",
+      "toolsHint": "Zodat we uw gegevens kunnen overnemen.",
+      "toolSuggestions": "Excel|Outlook|Gmail|Papier|HubSpot|Salesforce|Pipedrive",
+      "pain": "Wat kost u nu de meeste tijd of energie?",
+      "painPlaceholder": "In een of twee zinnen"
+    },
+    "growth": {
+      "title": "Laten we het over uw website hebben.",
+      "sub": "Wat zou uw bedrijf het meest helpen?",
+      "subCms": "Uw site draait op {{cms}}. Wat zou uw bedrijf het meest helpen?",
+      "titleNoSite": "Moeten klanten u online vinden?",
+      "subNoSite": "Een website levert aanvragen op, ook als uw winkel dicht is.",
+      "plan": {
+        "keep": {
+          "title": "Mijn website houden",
+          "desc": "We verhuizen hem naar re:praesent voor {{price}}.",
+          "managed": "Hij draait al met re:praesent."
+        },
+        "refresh": {
+          "title": "Opfrissen",
+          "desc": "Nieuwe inhoud en afwerking, {{price}} per uur werk."
+        },
+        "rebuild": {
+          "title": "Opnieuw bouwen in WordPress",
+          "desc": "Een nieuwe site, door ons gemaakt: eenmalig {{price}}."
+        },
+        "new": {
+          "title": "Bouw een website voor mij",
+          "desc": "Een nieuwe site, door ons gemaakt: eenmalig {{price}}."
+        },
+        "later": {
+          "title": "Nu even niet"
+        }
+      },
+      "ai": {
+        "question": "Moeten ChatGPT en co. u aanbevelen?",
+        "explain": "Steeds meer mensen vragen AI-assistenten waar ze een keuken of bank kunnen kopen. Wij zorgen dat uw bedrijf in het antwoord staat.",
+        "yes": "Ja, graag",
+        "more_info": "Vertel meer",
+        "no": "Nu niet"
+      },
+      "addonsTitle": "Waar kunnen we u nog meer mee helpen?",
+      "addons": {
+        "ads": {
+          "title": "Beheerde advertenties",
+          "desc": "Google- en Facebook-advertenties, beheerd door ons team"
+        },
+        "social": {
+          "title": "Wekelijkse social posts",
+          "desc": "Eén bericht per week op uw kanalen"
+        },
+        "content": {
+          "title": "Inhoud bijhouden",
+          "desc": "We houden nieuws en aanbiedingen op uw site actueel"
+        }
+      },
+      "perMonth": "{{price}}/maand",
+      "noCommitment": "Er wordt nu niets geboekt. Het helpt ons team uw gesprek voor te bereiden.",
+      "locations": "Hoeveel vestigingen heeft u?"
+    },
+    "email": {
+      "title": "Hoe verstuurt u nu e-mail?",
+      "sub": "Zodat e-mails vanuit re:praesent van uw eigen adres komen.",
+      "google": "Gmail met uw bedrijfsadres",
+      "microsoft": "Outlook met uw bedrijfsadres",
+      "other": "Een andere aanbieder",
+      "otherDesc": "TransIP, KPN, uw hostingpartij…",
+      "none": "Nog geen zakelijk e-mailadres",
+      "noneDesc": "We helpen u graag er een op te zetten",
+      "later": "Uw mailbox koppelt u later in de instellingen. Dat duurt een minuut."
+    },
+    "team": {
+      "title": "Wie zit er in uw team?",
+      "sub": "Nodig de mensen uit die samen met u aanvragen afhandelen.",
+      "placeholder": "collega@uwbedrijf.nl",
+      "emailLabel": "E-mail van persoon {{n}}",
+      "roleLabel": "Rol",
+      "roles": {
+        "editor": "Mag bewerken",
+        "admin": "Beheerder",
+        "viewer": "Mag bekijken"
+      },
+      "add": "Nog iemand toevoegen",
+      "self": "Dat bent u. Nodig iemand anders uit.",
+      "whenSent": "We versturen de uitnodigingen zodra u klaar bent, zodat niemand in een half ingericht account terechtkomt.",
+      "alone": "Voorlopig alleen ik",
+      "later": "Later uitnodigen"
+    },
+    "notif": {
+      "title": "Waarover wilt u e-mails ontvangen?",
+      "sub": "Korte samenvattingen, geen spam. Altijd aan te passen in de instellingen.",
+      "kinds": {
+        "weekly_leads_digest": {
+          "title": "Nieuwe aanvragen van de week",
+          "desc": "Maandag: wie zich vorige week meldde, en via welk kanaal."
+        },
+        "daily_tasks_digest": {
+          "title": "Taken van vandaag",
+          "desc": "Werkdagen 's ochtends: wat vandaag moet en wat te laat is."
+        },
+        "weekly_pipeline_summary": {
+          "title": "Uw pipeline van de week",
+          "desc": "Maandag: gewonnen, verloren en openstaande deals."
+        },
+        "stale_leads_reminder": {
+          "title": "Aanvragen die te lang wachten",
+          "desc": "Donderdag: aanvragen die al 7 dagen onbeantwoord zijn."
+        },
+        "monthly_performance_report": {
+          "title": "Maandrapport",
+          "desc": "Eerste werkdag van de maand: aanvragen, deals en afspraken vergeleken met vorige maand."
+        }
+      },
+      "instant": "U krijgt ook direct een e-mail zodra er een nieuwe aanvraag binnenkomt. Dat kunt u uitzetten in de instellingen.",
+      "who": "Wie moet ze ontvangen?",
+      "everyone": "Het hele team",
+      "pick": "Personen kiezen",
+      "you": "u"
+    },
+    "billing": {
+      "title": "Waar mag de factuur naartoe?",
+      "sub": "Er wordt nu niets in rekening gebracht. We hebben dit nodig voor uw eerste factuur.",
+      "subFound": "Dit hebben we overgenomen van uw website. Controleer het even.",
+      "legalName": "Bedrijfsnaam",
+      "legalNameHint": "Precies zoals het op de factuur moet staan.",
+      "contact": "Contactpersoon",
+      "email": "E-mail voor facturen",
+      "emailHint": "Facturen sturen we naar dit adres.",
+      "street": "Straat en huisnummer",
+      "street2": "Adresregel 2",
+      "postal": "Postcode",
+      "city": "Plaats",
+      "country": "Land",
+      "vat": "Btw-nummer",
+      "bn": "Business Number (BN)",
+      "taxId": "Fiscaal nummer",
+      "vatHint": "Leeg laten als u er geen heeft.",
+      "vatFormat": "Dit komt niet overeen met het gebruikelijke formaat, bijv. {{example}}.",
+      "phone": "Telefoon",
+      "nothingCharged": "Er wordt vandaag niets in rekening gebracht. Ons team loopt eerst alles met u door."
+    },
+    "plan": {
+      "title": "Uw pakket: alles erin, één prijs.",
+      "sub": "Eén pakket met alles wat uw bedrijf nodig heeft. Geen kosten per gebruiker.",
+      "name": "re:praesent compleet",
+      "yearly": "Jaarlijks gefactureerd",
+      "insteadOf": "in plaats van",
+      "perYear": "per jaar",
+      "included": [
+        "Website, CMS en hosting",
+        "Aanvragen en CRM op één plek",
+        "E-mail en agenda gekoppeld",
+        "Statistieken en vertalingen",
+        "Marketingtools",
+        "Onbeperkt teamleden"
+      ],
+      "nothingToday": "Vandaag niets te betalen.",
+      "nothingTodaySub": "Ons team belt u eerst en loopt alles met u door. De factuur komt daarna.",
+      "talkAbout": "We bespreken ook: {{items}}.",
+      "talk": {
+        "website": "uw nieuwe website",
+        "websiteRefresh": "het opfrissen van uw website",
+        "ai": "zichtbaarheid in AI-assistenten",
+        "ads": "beheerde advertenties",
+        "social": "social posts",
+        "content": "inhoud bijhouden"
+      },
+      "vat": "Prijzen exclusief btw.",
+      "consentPre": "Ik heb het",
+      "privacy": "privacybeleid",
+      "and": "en de",
+      "terms": "voorwaarden",
+      "consentPost": " gelezen.",
+      "finish": "Inrichting afronden",
+      "incomplete": "Er ontbreken nog een paar gegevens. Controleer uw telefoonnummer en factuurgegevens.",
+      "freeMonths_one": "Eerste maand gratis",
+      "freeMonths_other": "Eerste {{count}} maanden gratis",
+      "trialTitle_one": "Uw eerste maand is gratis.",
+      "trialTitle_other": "Uw eerste {{count}} maanden zijn gratis.",
+      "trialBody": "Uw eerste factuur komt in maand {{month}}: {{yearly}} per jaar, ongeveer {{perDay}} per dag. Vandaag niets te betalen."
+    },
+    "card": {
+      "eyebrow": "Uw bedrijf",
+      "namePlaceholder": "Naam van uw bedrijf",
+      "address": "Adres",
+      "phone": "Telefoon",
+      "hours": "Openingstijden",
+      "openToday": "Vandaag open {{hours}}",
+      "closedToday": "Vandaag gesloten",
+      "rating_one": "{{rating}} op Google · 1 review",
+      "rating_other": "{{rating}} op Google · {{count}} reviews",
+      "complete": "Profiel",
+      "completeShort": "Profiel {{pct}}% compleet"
+    },
+    "inProgress": {
+      "title": "{{name}} wordt ingericht",
+      "sub": "De persoon die dit account heeft aangemaakt, rondt de inrichting nog af. Zodra dat klaar is, krijgt u toegang."
+    },
+    "welcome": {
+      "metaTitle": "Welkom",
+      "title": "Welkom bij re:praesent, {{name}}.",
+      "titleNoName": "Welkom bij re:praesent.",
+      "sub": "Uw account voor {{workspace}} staat klaar. Ons team neemt per e-mail contact met u op.",
+      "bookTitle": "Maak kennis met uw team",
+      "bookSubNamed": "Kies een tijd voor een kennismakingsgesprek van {{minutes}} minuten met {{names}}.",
+      "bookSub": "Kies een tijd voor een kennismakingsgesprek van {{minutes}} minuten.",
+      "bookedTitle": "Uw afspraak staat.",
+      "with": "met {{name}}",
+      "inviteSent": "De uitnodiging is onderweg naar {{email}}.",
+      "meetLink": "Link naar het gesprek",
+      "contactTitle": "Ons team neemt contact met u op",
+      "contactSub": "We schrijven u binnen één werkdag op {{email}} om een kennismakingsgesprek te plannen.",
+      "dashboard": "Naar uw dashboard",
+      "later": "U kunt het gesprek ook later vanuit uw dashboard boeken."
+    },
+    "book": {
+      "loading": "Vrije tijden zoeken…",
+      "noTimes": "De komende weken zijn er geen vrije tijden. Ons team neemt in plaats daarvan per e-mail contact op.",
+      "pickDay": "Kies een dag",
+      "pickTime": "Kies een tijd",
+      "dayFull": "Op die dag is niets meer vrij.",
+      "timesIn": "Tijden in uw tijdzone ({{tz}}). Gesprekken duren {{minutes}} minuten.",
+      "confirm": "{{day}} om {{time}} boeken",
+      "taken": "Die tijd is net vergeven. Kies een andere.",
+      "notReady": "Een moment, we zijn nog bezig met inrichten. Probeer het over een minuut opnieuw.",
+      "preparing": "Agenda wordt voorbereid…",
+      "alreadyBooked": "U heeft al een gesprek geboekt."
+    },
+    "introCard": {
+      "title": "Plan uw kennismakingsgesprek",
+      "body": "{{name}} laat u re:praesent in 30 minuten zien. Kies een moment dat u uitkomt.",
+      "bodyNoName": "Ons team laat u re:praesent in 30 minuten zien. Kies een moment dat u uitkomt.",
+      "cta": "Kies een moment",
+      "hide": "Verbergen"
+    },
+    "sales": {
+      "title": "Vier korte vragen voor ons team.",
+      "sub": "Eén klik per vraag, zodat we u goed kunnen helpen. „Weet ik niet” is een prima antwoord.",
+      "goLive": {
+        "q": "Wanneer wilt u beginnen?",
+        "live_asap": "Zo snel mogelijk",
+        "live_month": "Binnen een maand",
+        "live_quarter": "Over 1–3 maanden",
+        "live_looking": "Ik kijk alleen rond",
+        "unknown": "Weet ik niet"
+      },
+      "heard": {
+        "q": "Hoe heeft u over ons gehoord?",
+        "heard_google": "Google",
+        "heard_recommendation": "Aanbeveling",
+        "heard_brand": "Een merkpartner",
+        "heard_trade_fair": "Beurs / evenement",
+        "heard_social": "Social media",
+        "heard_ads": "Een advertentie",
+        "heard_other": "Anders",
+        "unknown": "Weet ik niet meer",
+        "whoLabel": "Wie heeft ons aanbevolen?",
+        "otherLabel": "Waar was dat?"
+      },
+      "ads": {
+        "q": "Adverteert u momenteel online?",
+        "hint": "Betaalde advertenties op Google, Facebook of Instagram.",
+        "ads_google": "Google",
+        "ads_meta": "Facebook / Instagram",
+        "ads_both": "Beide",
+        "ads_other": "Anders",
+        "ads_none": "Geen advertenties",
+        "unknown": "Weet ik niet"
+      },
+      "budget": {
+        "q": "Ongeveer hoeveel per maand?",
+        "budget_under_500": "Minder dan {{symbol}} 500",
+        "budget_500_1500": "{{symbol}} 500–1.500",
+        "budget_1500_5000": "{{symbol}} 1.500–5.000",
+        "budget_over_5000": "{{symbol}} 5.000+",
+        "unknown": "Weet ik niet"
+      },
+      "handler": {
+        "q": "Wie beantwoordt nieuwe aanvragen?",
+        "handler_owner": "Ik / de eigenaar",
+        "handler_team": "Een verkoopteam",
+        "handler_whoever": "Wie er tijd heeft",
+        "handler_nobody": "Niemand in het bijzonder",
+        "unknown": "Weet ik niet"
+      },
+      "reply": {
+        "q": "Hoe snel antwoordt u meestal?",
+        "reply_hour": "Binnen een uur",
+        "reply_day": "Dezelfde dag",
+        "reply_days": "Binnen een paar dagen",
+        "unknown": "Weet ik niet"
+      }
+    },
+    "domain": {
+      "title": "Uw domein.",
+      "sub": "Zodat we de verhuizing van uw website zonder verrassingen plannen. Het technische deel doen wij.",
+      "checking": "We kijken waar het geregistreerd is…",
+      "foundRegistrar": "Geregistreerd bij {{name}}.",
+      "foundDns": "Lijkt bij {{name}} te zitten (volgens de nameservers).",
+      "foundDnsHost": "De DNS draait bij {{name}}. Het register publiceert de registrar niet.",
+      "foundNothing": "We konden het niet opzoeken — kies hieronder, of „Weet ik niet”.",
+      "detected": "Gevonden",
+      "nameLabel": "Uw domein",
+      "nameHint": "Het adres van uw website of e-mail, bijv. uwbedrijf.nl.",
+      "registrarQ": "Waar is uw domein geregistreerd?",
+      "registryCalls": "Het register noemt „{{name}}”.",
+      "registrars": {
+        "ionos": "IONOS",
+        "strato": "Strato",
+        "godaddy": "GoDaddy",
+        "all_inkl": "All-Inkl",
+        "hetzner": "Hetzner",
+        "namecheap": "Namecheap",
+        "cloudflare": "Cloudflare",
+        "ovh": "OVH",
+        "one_com": "one.com",
+        "transip": "TransIP",
+        "netcup": "netcup",
+        "host_europe": "Host Europe",
+        "squarespace": "Squarespace (voorheen Google Domains)",
+        "wix": "Wix",
+        "agency_registrar": "Het account van mijn bureau",
+        "other": "Ergens anders",
+        "unknown": "Weet ik niet"
+      },
+      "transfer": {
+        "q": "Zullen we uw domein naar re:praesent verhuizen?",
+        "hint": "Eén factuur, en wij regelen verlengingen en DNS.",
+        "yes": "Ja, verhuizen",
+        "more_info": "Vertel me meer",
+        "no": "Nee, laten staan",
+        "unknown": "Weet ik niet"
+      },
+      "login": {
+        "q": "Wie kan inloggen waar het domein geregistreerd is?",
+        "login_me": "Ik",
+        "login_agency": "Mijn bureau / IT-persoon",
+        "login_nobody": "Niemand kent de login",
+        "unknown": "Weet ik niet"
+      },
+      "caretaker": {
+        "q": "Wie beheert uw website nu?",
+        "care_me": "Ik of mijn team",
+        "care_agency": "Een bureau of freelancer",
+        "care_nobody": "Niemand",
+        "unknown": "Weet ik niet"
+      },
+      "contract": {
+        "q": "Wanneer loopt uw huidige website-/hostingcontract af?",
+        "hint": "Zodat de verhuizing daarop aansluit.",
+        "contract_under_3m": "Binnen 3 maanden",
+        "contract_3_12m": "Over 3–12 maanden",
+        "contract_over_12m": "Over meer dan een jaar",
+        "contract_none": "Geen contract",
+        "unknown": "Weet ik niet"
+      }
+    },
+    "intro": {
+      "eyebrow": "Voor showrooms en retailers",
+      "title1": "Meer dan een website.",
+      "titleHighlight": "Een tweede leven",
+      "title2": "voor uw bedrijf, online.",
+      "sub": "Uw website, Google-profiel, aanvragen en marketing op één plek — samen met u ingericht door mensen die showrooms kennen. Niet alleen hosting. Niet alleen een CRM.",
+      "offer": {
+        "label": "Wat het kost",
+        "free": {
+          "title_one": "Eerste maand gratis",
+          "title_other": "De eerste {{count}} maanden gratis",
+          "sub": "Alles inbegrepen, vanaf dag één."
+        },
+        "today": {
+          "title": "Vandaag niets te betalen",
+          "sub": "Geen creditcard nodig."
+        },
+        "then": {
+          "title": "Daarna {{price}} per jaar",
+          "titleNoPrice": "Daarna één jaarprijs",
+          "sub": "Ongeveer {{perDay}} per dag, excl. btw."
+        }
+      },
+      "cta": "Gratis beginnen",
+      "ctaNote": "Ongeveer 8 minuten · wordt tussendoor opgeslagen · stop wanneer u wilt",
+      "howTitle": "Zo werkt het",
+      "steps": {
+        "tell": {
+          "title": "Vertel ons over uw bedrijf",
+          "body": "Ongeveer 8 minuten. We lezen uw website en vullen het meeste voor u in."
+        },
+        "call": {
+          "title": "Een echt mens belt u",
+          "body": "Iemand van ons team loopt alles met u door en richt het in. Geen callcenter, geen bot.",
+          "bodyNamed_one": "{{names}} loopt alles met u door en richt het in. Geen callcenter, geen bot.",
+          "bodyNamed_other": "{{names}} lopen alles met u door en richten het in. Geen callcenter, geen bot."
+        },
+        "live": {
+          "title": "Uw bedrijf gaat live",
+          "body_one": "Website, Google, aanvragen en marketing werken voor u — al in uw gratis maand.",
+          "body_other": "Website, Google, aanvragen en marketing werken voor u — al in uw {{count}} gratis maanden."
+        }
+      },
+      "realPeople": "Uw team bij re:praesent",
+      "and": "en",
+      "whyEyebrow": "Waarom de vragen ertoe doen",
+      "whyTitle": "Uw antwoorden zijn de briefing voor uw nieuwe online aanwezigheid.",
+      "whyBody_one": "Ze bepalen uw website, uw Google-profiel en uw eerste gesprek. Hoe meer we weten, hoe meer we doen in uw gratis maand.",
+      "whyBody_other": "Ze bepalen uw website, uw Google-profiel en uw eerste gesprek. Hoe meer we weten, hoe meer we doen in uw {{count}} gratis maanden.",
+      "show": {
+        "url": "uwshowroom.nl",
+        "lead": {
+          "title": "Nieuwe aanvraag",
+          "sub": "Maria · keukenontwerp"
+        },
+        "google": {
+          "title": "4,8 op Google",
+          "sub": "12 nieuwe reviews"
+        },
+        "booked": {
+          "title": "Afspraak geboekt",
+          "sub": "Di 10:00 · showroombezoek"
+        },
+        "ai": {
+          "title": "Aanbevolen door ChatGPT",
+          "sub": "„Beste bankenwinkel in de buurt”"
+        }
+      }
+    }
+  },
+  "salesContact": {
+    "nav": "Contact met re:praesent",
+    "title": "Praat met het re:praesent-team",
+    "loading": "Een moment…",
+    "unavailable": "Dit kan nu niet worden geopend. Probeer het zo opnieuw.",
+    "bookSub": "Kies een tijd voor een videogesprek van {{minutes}} minuten.",
+    "bookSubNamed": "Kies een tijd voor een videogesprek van {{minutes}} minuten met {{names}}.",
+    "messageSub": "Schrijf ons. We antwoorden naar {{email}}.",
+    "noteLabel": "Waarover wilt u praten?",
+    "notePlaceholder": "Een paar woorden helpen ons bij de voorbereiding.",
+    "noTimes": "Geen vrije tijden in de komende weken.",
+    "writeInstead": "Stuur ons liever een bericht",
+    "preferWrite": "Liever schrijven? Stuur een bericht",
+    "bookInstead": "Liever een gesprek boeken",
+    "messageLabel": "Uw bericht",
+    "messagePlaceholder": "Waarmee kunnen we helpen?",
+    "messageRequired": "Schrijf een kort bericht.",
+    "phoneLabel": "Telefoon",
+    "phoneHint": "Als u liever gebeld wordt.",
+    "replyTo": "We antwoorden naar {{email}}.",
+    "send": "Bericht versturen",
+    "tooMany": "U heeft vandaag al enkele berichten gestuurd. We nemen snel contact op.",
+    "sentTitle": "Bericht verstuurd",
+    "sentSub": "Bedankt! We antwoorden binnen één werkdag naar {{email}}.",
+    "bookedTitle": "Uw gesprek is geboekt",
+    "done": "Klaar",
+    "bookedSub": "Uw volgende gesprek met het re:praesent-team.",
+    "inviteAt": "De agenda-uitnodiging is verstuurd naar {{email}}.",
+    "joinCall": "Deelnemen aan gesprek"
   }
 }

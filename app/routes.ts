@@ -29,12 +29,18 @@ export default [
     route("auth/workspace-picker", "routes/auth.workspace-picker.tsx"),
     route("pending", "routes/pending.tsx"),
     route("closed", "routes/closed.tsx"),
+    // Onboarding v2 (ONBOARDING_V2_PLAN.md): own full-screen layout.
+    route("onboarding/start/:step?", "routes/onboarding.start.tsx"),
+    route("onboarding/in-progress", "routes/onboarding.in-progress.tsx"),
+    route("welcome", "routes/welcome.tsx"),
     layout("routes/_onboarding-layout.tsx", [
       route("onboarding/profile", "routes/onboarding.profile.tsx"),
-      route("onboarding/workspace", "routes/onboarding.workspace.tsx"),
-      route("onboarding/products", "routes/onboarding.products.tsx"),
-      route("onboarding/offers", "routes/onboarding.offers.tsx"),
-      route("onboarding/billing", "routes/onboarding.billing.tsx"),
+      // The old steps now lead into the wizard (bookmarks, emails, and the
+      // DoorBoost "start fresh" button, which stays untouched).
+      route("onboarding/workspace", "routes/onboarding.legacy-redirect.tsx", { id: "onboarding-legacy-workspace" }),
+      route("onboarding/products", "routes/onboarding.legacy-redirect.tsx", { id: "onboarding-legacy-products" }),
+      route("onboarding/offers", "routes/onboarding.legacy-redirect.tsx", { id: "onboarding-legacy-offers" }),
+      route("onboarding/billing", "routes/onboarding.legacy-redirect.tsx", { id: "onboarding-legacy-billing" }),
       route(
         "onboarding/doorboost-choice",
         "routes/onboarding.doorboost-choice.tsx",
@@ -115,9 +121,12 @@ export default [
         route("openai-ads", "routes/settings.openai-ads.tsx"),
         route("ai", "routes/settings.ai.tsx"),
         route("notifications", "routes/settings.notifications.tsx"),
+        route("email-notifications", "routes/settings.email-notifications.tsx"),
+        route("business-profile", "routes/settings.business-profile.tsx"),
         route("calendars", "routes/settings.calendars.tsx"),
         route("bcc", "routes/settings.bcc.tsx"),
         route("pipelines", "routes/settings.pipelines.tsx"),
+        route("onboarding", "routes/settings.onboarding.tsx"),
       ]),
       route("instructions", "routes/instructions.tsx"),
       route("db-brand", "routes/db-brand._index.tsx"),
