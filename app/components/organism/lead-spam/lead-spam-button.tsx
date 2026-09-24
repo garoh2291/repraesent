@@ -5,12 +5,14 @@ import { Loader2, ShieldAlert, ShieldCheck } from "lucide-react";
 import { Button } from "~/components/ui/button";
 import { markLeadNotSpam, markLeadSpam, type Lead } from "~/lib/api/leads";
 import { useLeadStages } from "~/lib/hooks/usePipelineStages";
+import { refreshLeadViews } from "~/lib/leads/hide-choice";
 import { cn } from "~/lib/utils";
 
 /**
  * "Mark as spam" / "Not spam" for one lead. Spam hides it AND blocks the
  * sender (email + phone) so their next lead goes straight to Hidden; plain
- * stage moves still just move. Reversible from the toast, so no confirm step.
+ * stage moves ask (see `useHideLeadGuard`). Reversible from the toast, so no
+ * confirm step here.
  */
 export function LeadSpamButton({ lead, className, size = "sm" }: { lead: Pick<Lead, "id" | "status">; className?: string; size?: "sm" | "default" }) {
   const { t } = useTranslation();
@@ -18,17 +20,15 @@ export function LeadSpamButton({ lead, className, size = "sm" }: { lead: Pick<Le
   const { byKey } = useLeadStages();
   const isHidden = byKey.get(lead.status)?.category === "hidden";
 
-  const refresh = () => {
-    void queryClient.invalidateQueries({ queryKey: ["leads"] });
-    void queryClient.invalidateQueries({ queryKey: ["lead", lead.id] });
-    void queryClient.invalidateQueries({ queryKey: ["lead-blocklist"] });
-  };
+  const refresh = () => refreshLeadViews(queryClient, lead.id);
 
   const notSpam = useMutation({
     mutationFn: () => markLeadNotSpam(lead.id),
-    onSuccess: () => {
+    onSuccess: (res) => {
       refresh();
-      toast.success(t("leads.spam.restored"));
+      toast.success(t("leads.spam.restored"), {
+          description: res.alsoRestored ? t("leads.spam.alsoRestored", { count: res.alsoRestored }) : undefined,
+        });
     },
     onError: () => toast.error(t("leads.spam.error")),
   });

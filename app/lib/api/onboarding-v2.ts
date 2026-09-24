@@ -121,6 +121,8 @@ export interface Invite {
 export interface OnboardingState {
   /** Who calls after setup (intro screen): names + photos of the sales hosts. */
   sales_team?: Array<{ label: string | null; avatar_url: string | null }>;
+  /** The AI onboarding assistant: offered only when the root switched it on (texts resolved for this customer). */
+  assistant?: { available: boolean; name: string | null; intro: { headline: string | null; sub: string | null } | null };
   user: { id: string; email: string; first_name: string | null; last_name: string | null; locale: string };
   run: {
     id: string;

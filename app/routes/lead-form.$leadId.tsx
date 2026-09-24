@@ -22,6 +22,7 @@ import { useUpdateLeadStatus } from "~/lib/hooks/useUpdateLeadStatus";
 import { Button } from "~/components/ui/button";
 import { ArrowLeft, UserCheck, UserPlus } from "lucide-react";
 import { LeadSpamButton } from "~/components/organism/lead-spam/lead-spam-button";
+import { useHideLeadGuard } from "~/lib/leads/use-hide-lead-guard";
 import { getContact, convertLeadToContact } from "~/lib/api/contacts-crm";
 import { ContactHero } from "~/components/organism/contact-detail/contact-hero";
 import { ContactEmailSuggestion } from "~/components/organism/contact-email-suggestion";
@@ -55,6 +56,7 @@ export default function LeadFormLeadId() {
     useState<string | null>(null);
 
   const updateStatusMutation = useUpdateLeadStatus();
+  const { requestStatusChange: requestHideGuarded, guardModal: hideGuardModal } = useHideLeadGuard();
   const canEdit = useCanEditLeads();
 
   const workspaceQuery = useQuery({
@@ -186,7 +188,7 @@ export default function LeadFormLeadId() {
     id: string,
     status: import("~/lib/api/leads").LeadStatus,
   ) => {
-    updateStatusMutation.mutate({ id, status });
+    requestHideGuarded(lead, status, () => updateStatusMutation.mutateAsync({ id, status }));
   };
 
   const displayName =
@@ -351,6 +353,7 @@ export default function LeadFormLeadId() {
         prefillContactLabel={createDealDialogPrefillLabel}
         canCreate={canEdit}
       />
+      {hideGuardModal}
     </div>
   );
 }

@@ -6,6 +6,7 @@ import { useTranslation } from "react-i18next";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { Check, LogOut, MoreHorizontal, Repeat } from "lucide-react";
 import logoUrl from "~/components/icons/re_praesent-mark-brand-hor.svg?url";
+import { Mascot } from "./chat/mascot";
 import { LanguageSwitcher } from "~/components/language-switcher";
 import {
   DropdownMenu,
@@ -146,6 +147,7 @@ export function AccountMenu() {
  * damped spring (interruptible); reduced motion gets a short cross-fade.
  */
 export function WizardShell({ children, hideCard = false }: { children: React.ReactNode; hideCard?: boolean }) {
+  const { t } = useTranslation();
   const { step, direction, state, draftName } = useWizard();
   const reduce = useReducedMotion();
   const name = state?.workspace?.name ?? draftName;
@@ -165,6 +167,16 @@ export function WizardShell({ children, hideCard = false }: { children: React.Re
           </div>
           <div className="ml-auto flex items-center gap-1 sm:gap-2 md:ml-0">
             <SavedTick />
+            {state?.assistant?.available ? (
+              <Link
+                to="/onboarding/chat"
+                className="inline-flex h-9 items-center gap-2 rounded-full border border-border bg-card p-1 text-[13px] sm:pr-3 font-medium text-foreground/85 transition-colors hover:border-foreground/40 hover:text-foreground"
+              >
+                <Mascot size={28} simple />
+                <span className="hidden sm:inline">{t("onb.chat.continueWith", { name: state.assistant.name })}</span>
+                <span className="sr-only sm:hidden">{t("onb.chat.continueWith", { name: state.assistant.name })}</span>
+              </Link>
+            ) : null}
             <OnbLanguageSwitcher />
             <AccountMenu />
           </div>

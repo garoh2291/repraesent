@@ -14,8 +14,14 @@ export interface SalesHost {
   email?: string;
 }
 
+/** Sales regions (backend common/sales-region.ts). Europe's team is `hosts`. */
+export const SALES_REGIONS = ["europe", "us", "canada", "australia"] as const;
+export type SalesRegion = (typeof SALES_REGIONS)[number];
+
 export interface RootBookingConfig {
   hosts: SalesHost[];
+  /** US / Canada / Australia teams; an empty list = that region uses Europe's team. */
+  regionHosts?: Partial<Record<Exclude<SalesRegion, "europe">, SalesHost[]>>;
   checkAllOwnerCalendars: boolean;
   durationMinutes: number;
   window: { start: string; end: string };

@@ -12,6 +12,7 @@ import {
   type RootBookingConfig,
   type RootOnboardingSettingsInput,
 } from "~/lib/api/root-onboarding";
+import { getAiOnboarding, saveAiOnboarding } from "~/lib/api/ai-onboarding";
 
 export function rootOnboardingKey(workspaceId: string | null | undefined) {
   return ["root-onboarding", workspaceId ?? null] as const;
@@ -97,5 +98,24 @@ export function useRootPreviewSlots(
 export function useRunRootTestIntake() {
   return useMutation({
     mutationFn: (slot?: string) => runRootTestIntake(slot),
+  });
+}
+
+/** Settings → Onboarding → AI assistant: settings + ordered question list. */
+export function useAiOnboarding() {
+  const { workspaceId, enabled } = useEnabled();
+  return useQuery({
+    queryKey: [...rootOnboardingKey(workspaceId), "ai"],
+    queryFn: getAiOnboarding,
+    enabled,
+  });
+}
+
+export function useSaveAiOnboarding() {
+  const qc = useQueryClient();
+  const { workspaceId } = useEnabled();
+  return useMutation({
+    mutationFn: saveAiOnboarding,
+    onSuccess: (data) => qc.setQueryData([...rootOnboardingKey(workspaceId), "ai"], data),
   });
 }

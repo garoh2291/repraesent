@@ -12,6 +12,7 @@ import {
   errorCodeOf,
   fieldErrorsOf,
   saveBilling,
+  type OnboardingState,
 } from "~/lib/api/onboarding-v2";
 import { EMAIL_RE, formatMoney, suggestEmail } from "~/lib/onboarding/helpers";
 import { CountryCombobox } from "../country-combobox";
@@ -24,6 +25,36 @@ const EU = new Set(["AT", "BE", "BG", "CY", "CZ", "DE", "DK", "EE", "ES", "FI", 
 export function StepBilling() {
   const { t } = useTranslation();
   const { state, back, goTo, setState, markSaved } = useWizard();
+  return (
+    <BillingForm
+      state={state}
+      onSaved={(s) => {
+        setState(s);
+        markSaved();
+        goTo("plan");
+      }}
+      header={(fromImpressum) => <StepHeading title={t("onb.billing.title")} sub={fromImpressum ? t("onb.billing.subFound") : t("onb.billing.sub")} />}
+      actions={(busy) => <ActionBar onBack={back} busy={busy} primaryLabel={t("onb.continue")} />}
+    />
+  );
+}
+
+/**
+ * The invoice details form (Stripe customer; nothing is charged). Shared by the
+ * wizard's billing step and the AI assistant's billing card.
+ */
+export function BillingForm({
+  state,
+  onSaved,
+  header,
+  actions,
+}: {
+  state: OnboardingState | undefined;
+  onSaved: (s: OnboardingState) => void;
+  header?: (fromImpressum: boolean) => React.ReactNode;
+  actions: (busy: boolean) => React.ReactNode;
+}) {
+  const { t } = useTranslation();
   const p = state?.billing_prefill ?? {};
   const [v, setV] = useState({
     legal_name: p.legal_name ?? "",
@@ -67,9 +98,7 @@ export function StepBilling() {
     setFormError(null);
     try {
       const s = await saveBilling({ ...v, phone: v.phone || null, line2: v.line2 || null, vat_id: v.vat_id || null });
-      setState(s);
-      markSaved();
-      goTo("plan");
+      onSaved(s);
     } catch (err) {
       const fe = fieldErrorsOf(err);
       const example = (err as { response?: { data?: { details?: { example?: string } } } })?.response?.data?.details?.example;
@@ -94,7 +123,7 @@ export function StepBilling() {
 
   return (
     <form onSubmit={submit} noValidate>
-      <StepHeading title={t("onb.billing.title")} sub={fromImpressum ? t("onb.billing.subFound") : t("onb.billing.sub")} />
+      {header?.(fromImpressum)}
       <FormError message={formError} />
       <div className="space-y-5">
         {input("legal_name", t("onb.billing.legalName"), { auto: "organization", hint: t("onb.billing.legalNameHint") })}
@@ -143,7 +172,7 @@ export function StepBilling() {
           <Lock className="size-3.5 shrink-0" /> {t("onb.billing.nothingCharged")}
         </p>
       </div>
-      <ActionBar onBack={back} busy={busy} primaryLabel={t("onb.continue")} />
+      {actions(busy)}
     </form>
   );
 }

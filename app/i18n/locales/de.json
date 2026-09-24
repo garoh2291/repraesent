@@ -509,7 +509,7 @@
         "manual_spam": "Als Spam markiert"
       }
     },
-    "restoreFilteredHint": "Diesen Lead zurück in die erste Phase verschieben",
+    "restoreFilteredHint": "Diesen Lead dorthin zurückverschieben, wo er war",
     "onboarding": {
       "title": "Angaben aus der Einrichtung",
       "yes": "Ja",
@@ -549,7 +549,20 @@
         "phone": "Telefon",
         "domain": "Domain"
       },
-      "revertedNote": "{{rule}} — danach als kein Spam markiert."
+      "revertedNote": "{{rule}} — danach als kein Spam markiert.",
+      "alsoRestored_one": "{{count}} weiterer Lead von ihnen ist wieder da.",
+      "alsoRestored_other": "{{count}} weitere Leads von ihnen sind wieder da."
+    },
+    "hide": {
+      "title": "„{{name}}“ ausblenden?",
+      "body": "Ist es Spam? Blockieren Sie auch den Absender – seine nächsten Anfragen landen dann direkt unter Ausgeblendet.",
+      "senderLabel": "Absender",
+      "justHide": "Nur ausblenden",
+      "hideAndBlock": "Ausblenden & blockieren",
+      "hidden": "Lead ausgeblendet",
+      "hiddenHint": "Der Absender kann Sie weiterhin erreichen.",
+      "blockSender": "Absender blockieren",
+      "thisLead": "diesen Lead"
     }
   },
   "pipeline": {
@@ -1257,7 +1270,8 @@
       "ai": "KI",
       "onboarding": "Onboarding",
       "emailNotifications": "E-Mail-Benachrichtigungen",
-      "businessProfile": "Unternehmensprofil"
+      "businessProfile": "Unternehmensprofil",
+      "support": "Support"
     },
     "bcc": {
       "metaTitle": "E-Mail-Protokollierung",
@@ -1806,7 +1820,7 @@
     },
     "onboarding": {
       "metaTitle": "Onboarding",
-      "metaDescription": "Mit wem neue Kunden ein Gespräch buchen können und wo ihr Deal in Ihrer Pipeline landet.",
+      "metaDescription": "Wie neue Kunden starten: Formular oder Assistent, mit wem sie sprechen und wo ihr Deal landet.",
       "statusLive_one": "Buchung ist an — neue Kunden können ein Gespräch mit {{count}} Person buchen",
       "statusLive_other": "Buchung ist an — neue Kunden können ein Gespräch mit {{count}} Personen buchen",
       "statusLiveHint": "Am Ende des Onboardings wählen sie einen Termin; das Gespräch landet im Kalender der freien Person.",
@@ -1958,6 +1972,148 @@
         "cancel": "Abbrechen",
         "apply": "Änderungen übernehmen",
         "applyNoChanges": "Als übernommen markieren"
+      },
+      "regions": {
+        "label": "Vertriebsregion",
+        "europe": "Europa",
+        "us": "USA",
+        "canada": "Kanada",
+        "australia": "Australien",
+        "fallback": "Noch niemand eingetragen – Kunden aus {{region}} sehen das Europa-Team."
+      },
+      "tabs": {
+        "general": "Allgemein",
+        "ai": "KI-Assistent"
+      },
+      "ai": {
+        "toggle": "Assistent anbieten",
+        "statusOn": "{{name}} hilft neuen Kunden beim Einrichten",
+        "statusOnHint_one": "Kunden wählen zwischen Formular und Gespräch. {{count}} Frage auf der Liste.",
+        "statusOnHint_other": "Kunden wählen zwischen Formular und Gespräch. {{count}} Fragen auf der Liste.",
+        "statusOff": "Vorerst nur das Formular",
+        "statusOffHint": "Einschalten, damit Kunden ihre Einrichtung im Gespräch erledigen können statt im Formular.",
+        "defaultName": "Lena",
+        "voiceTitle": "Stimme & Begrüßung",
+        "voiceHint": "Mit wem Kunden sprechen und was sie zuerst lesen. Europa ist der Standard; andere Regionen brauchen nur dort Text, wo sie anders klingen sollen.",
+        "regionInherit": "Leere Felder nutzen für {{region}} den Europa-Text.",
+        "personaName": "Name des Assistenten",
+        "personaStyle": "Wie er klingt",
+        "personaStylePlaceholder": "Herzlich und ruhig, wie gute Beratung im Laden. Kurze Sätze, kein Fachjargon.",
+        "welcome": "Begrüßung",
+        "welcomeHint": "Die erste Nachricht des Assistenten. Leer lassen für unseren Standardtext.",
+        "introHeadline": "Überschrift der Startseite",
+        "introSub": "Text der Startseite",
+        "introHint": "Erscheint auf dem Willkommensbildschirm vor dem Onboarding. Leer = Standard-Intro.",
+        "language": "Sprache",
+        "fillOthers_one": "{{count}} Sprache mit KI füllen",
+        "fillOthers_other": "{{count}} Sprachen mit KI füllen",
+        "translated": "Andere Sprachen ergänzt. Bitte kurz gegenlesen.",
+        "translateSome": "{{langs}} konnte nicht übersetzt werden. Erneut versuchen oder selbst eintragen.",
+        "translateFailed": "Übersetzung hat nicht geklappt. Bitte gleich noch einmal versuchen.",
+        "questionsTitle": "Was der Assistent fragt",
+        "questionsHint": "Alle Fragen aus dem Formular sind hier. Ziehen ändert die Reihenfolge, Häkchen weg lässt eine aus, aufklappen zum Umformulieren oder für Regeln.",
+        "askedCount": "{{count}} von {{total}} gefragt",
+        "addQuestion": "Eigene Frage hinzufügen",
+        "dragToReorder": "Zum Sortieren ziehen",
+        "moveUp": "Nach oben",
+        "moveDown": "Nach unten",
+        "pinned": "Feste Position",
+        "lockedHint": "Für den Abschluss nötig, wird immer gefragt",
+        "askThis": "„{{name}}“ fragen",
+        "yourQuestion": "Eigene Frage",
+        "required": "Pflicht",
+        "ownWording": "Eigener Text",
+        "ruleCount_one": "{{count}} Regel",
+        "ruleCount_other": "{{count}} Regeln",
+        "untitled": "Frage ohne Namen",
+        "stepName": "Name des Schritts",
+        "stepNamePlaceholder": "z. B. Größe der Ausstellung",
+        "customAnswerHint": "Die Antwort ist freier Text. Sie landet unter diesem Namen am Lead und in der Deal-Notiz.",
+        "questionText": "Frage",
+        "textHintBuiltin": "Leere Sprachen nutzen unseren Text (grau angezeigt). Der Assistent formuliert frei, immer eine Frage nach der anderen.",
+        "textHintCustom": "In einer Sprache schreiben, die anderen mit KI füllen.",
+        "textHintRegion": "Nur für Kunden in {{region}}. Leere Sprachen nutzen den Standardtext.",
+        "resetDefault": "Zurück zu unserem Text",
+        "resetRegion": "Regionstext entfernen",
+        "deleteQuestion": "Frage löschen",
+        "confirmDelete": "Zum Löschen erneut klicken",
+        "errors": {
+          "nameRequired": "Geben Sie Ihrer Frage zuerst einen Namen.",
+          "textRequired": "„{{name}}“ braucht einen Fragetext in mindestens einer Sprache."
+        },
+        "rules": {
+          "title": "Regeln",
+          "hint": "Sagen Sie dem Assistenten, was er bei bestimmten Antworten tun soll.",
+          "empty": "Keine Regeln. Der Assistent fragt einfach und macht weiter.",
+          "when": "Wenn",
+          "then": "Dann",
+          "always": "Immer",
+          "answerIs": "Die Antwort ist …",
+          "answerLike": "Die Antwort klingt nach …",
+          "answerLikePlaceholder": "z. B. ein Mitbewerber wird erwähnt",
+          "actions": {
+            "say": "Das sagen",
+            "skip": "Frage überspringen",
+            "flag": "Für den Vertrieb markieren",
+            "instruct": "Dem Assistenten sagen"
+          },
+          "placeholders": {
+            "say": "z. B. Super, diese Marken kennt unser Team sehr gut.",
+            "flag": "Notiz fürs Vertriebsgespräch, z. B. Nach der zweiten Filiale fragen",
+            "instruct": "z. B. Frag, welche Marken sie ergänzen möchten"
+          },
+          "skipWhich": "Welche Frage?",
+          "add": "Regel hinzufügen",
+          "remove": "Regel entfernen",
+          "errors": {
+            "pickAnswer": "Eine Regel bei „{{name}}“ braucht mindestens eine gewählte Antwort.",
+            "describeWhen": "Eine Regel bei „{{name}}“ muss sagen, wann sie gilt.",
+            "pickSkip": "Eine Regel bei „{{name}}“ braucht die Frage, die übersprungen wird.",
+            "needsText": "Einer Regel bei „{{name}}“ fehlt der Text."
+          }
+        },
+        "q": {
+          "business_name": "Firmenname",
+          "website": "Website",
+          "industry_brand": "Branche & Markenpartner",
+          "description": "Kurzbeschreibung",
+          "legal_company": "Firma & Register",
+          "presence": "Wie Kunden Sie erreichen",
+          "address": "Adresse",
+          "business_contact": "Telefon & E-Mail des Geschäfts",
+          "opening_hours": "Öffnungszeiten",
+          "offer": "Sortiment",
+          "price_customers": "Preisniveau & Kunden",
+          "you_name": "Name & Rolle",
+          "you_phone": "Eigene Telefonnummer",
+          "google": "Google Maps",
+          "socials": "Social Media",
+          "goals": "Ziele",
+          "lead_channels": "Woher Kunden kommen",
+          "monthly_inquiries": "Anfragen pro Monat",
+          "tools_pain": "Tools & größte Baustelle",
+          "website_plan": "Pläne für die Website",
+          "ai_visibility": "Sichtbarkeit in ChatGPT & Co.",
+          "extra_services": "Gewünschte Unterstützung",
+          "locations_count": "Anzahl Standorte",
+          "go_live": "Startzeitpunkt",
+          "heard_from": "Wie sie auf uns kamen",
+          "ads": "Online-Werbung heute",
+          "enquiries": "Wer Anfragen beantwortet",
+          "email_provider": "E-Mail-Anbieter",
+          "domain_registrar": "Domain & Registrar",
+          "domain_transfer": "Domain zu uns umziehen",
+          "domain_access": "Domain-Zugang",
+          "site_caretaker": "Wer die Website betreut",
+          "team_invites": "Team einladen",
+          "notifications": "E-Mail-Updates",
+          "billing": "Rechnungsdaten",
+          "consent": "AGB & Abschluss"
+        },
+        "model": "KI-Modell",
+        "modelCost": "{{cost}} pro Onboarding",
+        "noKey": "Der Assistent braucht einen KI-Schlüssel in diesem Workspace, bevor Kunden ihn sehen.",
+        "noKeyLink": "OpenRouter verbinden"
       }
     },
     "emailNotifications": {
@@ -2027,6 +2183,33 @@
       "hint": "Neue Deals starten in dieser Währung, Summen zeigen sie zuerst. Deals in anderen Währungen behalten ihre eigene und stehen daneben — ohne Umrechnung.",
       "saved": "Währung gespeichert.",
       "error": "Die Währung konnte nicht gespeichert werden."
+    },
+    "support": {
+      "metaTitle": "Support",
+      "metaDescription": "Legen Sie fest, welche Kunden-Workspaces „re:praesent kontaktieren“ sehen und wer antwortet.",
+      "searchPlaceholder": "Workspaces oder Inhaber-E-Mail suchen…",
+      "filterLabel": "Anzeigen",
+      "filter": {
+        "all": "Alle",
+        "on": "An",
+        "off": "Aus"
+      },
+      "empty": "Noch keine aktiven Kunden-Workspaces.",
+      "noMatch": "Kein Workspace passt zu dieser Suche.",
+      "noOwner": "Keine Inhaber-E-Mail",
+      "answeredBy": "betreut von {{name}}",
+      "pickFirst": "Wer betreut diesen Workspace? Wählen Sie eine Person, um ihn einzuschalten.",
+      "noCalendarMessagesOnly": "Kein Kalender: nur Nachrichten, keine Terminbuchung.",
+      "toggleLabel": "re:praesent kontaktieren für {{name}}",
+      "savedOn": "{{name}} sieht jetzt „re:praesent kontaktieren“",
+      "savedOff": "„re:praesent kontaktieren“ für {{name}} ausgeblendet",
+      "saveFailed": "Speichern fehlgeschlagen. Bitte erneut versuchen.",
+      "count_one": "{{count}} Workspace",
+      "count_other": "{{count}} Workspaces",
+      "status": {
+        "trial": "Testphase",
+        "pending": "Ausstehend"
+      }
     }
   },
   "booking": {
@@ -8354,7 +8537,46 @@
           "title": "Von ChatGPT empfohlen",
           "sub": "„Bestes Sofa-Studio in der Nähe“"
         }
+      },
+      "way": {
+        "label": "Wie möchten Sie Ihr Konto einrichten?",
+        "chatTitle": "Im Gespräch mit {{name}}",
+        "chatSub": "Wie ein kurzes Gespräch. Sie antworten, {{name}} trägt alles ein.",
+        "chatCta": "Mit {{name}} starten",
+        "formTitle": "Formular ausfüllen",
+        "formSub": "Etwa 8 Minuten, in Ihrem Tempo.",
+        "switch": "Sie können jederzeit wechseln. Es geht nichts verloren."
       }
+    },
+    "chat": {
+      "metaTitle": "Einrichtung im Gespräch",
+      "progress": "{{done}} von {{total}}",
+      "switchToForm": "Zum Formular wechseln",
+      "form": "Formular",
+      "continueWith": "Mit {{name}} weitermachen",
+      "role": "Begleitet Sie durch die Einrichtung bei re:praesent",
+      "thinking": "{{name}} schreibt …",
+      "typing": "Schreibt …",
+      "placeholder": "Antwort an {{name}} …",
+      "send": "Senden",
+      "pick": "Antwort wählen",
+      "thatsIt": "Das war's",
+      "noneOfThese": "Keiner davon sind wir",
+      "billingSaved": "Rechnungsdaten gespeichert",
+      "saveBilling": "Rechnungsdaten speichern",
+      "saved": "{{topic}} gespeichert",
+      "yourAnswer": "Antwort",
+      "retry": "Nochmal versuchen",
+      "errors": {
+        "upstream_failed": "Da habe ich kurz den Faden verloren.",
+        "turn_failed": "Bei uns ist etwas schiefgelaufen. Ihre Antworten sind gespeichert.",
+        "network": "Die Verbindung ist abgebrochen. Ihre Antworten sind gespeichert.",
+        "RATE_LIMITED": "Das waren viele Nachrichten in kurzer Zeit. Kurz durchatmen oder im Formular weitermachen.",
+        "BUSY": "Einen Moment, ich antworte noch.",
+        "unavailable": "Der Assistent ist gerade nicht verfügbar. Bitte machen Sie im Formular weiter, es geht nichts verloren.",
+        "invalid_request": "Das hat nicht geklappt."
+      },
+      "mascotLabel": "{{name}}, Ihre Begleitung bei der Einrichtung. Antippen zum Hallo-Sagen."
     }
   },
   "salesContact": {

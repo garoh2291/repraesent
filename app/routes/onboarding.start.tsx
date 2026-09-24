@@ -112,7 +112,13 @@ export default function OnboardingStartRoute() {
     return (
       <OnboardingIntro
         state={state}
-        onStart={() => {
+        onStart={(mode) => {
+          // Chat: leave the intro standing (and unmarked) until the chat route has loaded, or this
+          // route would redirect to the first form step on its next render. The chat marks it seen.
+          if (mode === "chat") {
+            navigate("/onboarding/chat");
+            return;
+          }
           try {
             window.sessionStorage.setItem("onb:intro-seen", "1");
           } catch {

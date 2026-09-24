@@ -1,6 +1,10 @@
 import { PricingSection } from "~/components/onboarding-settings/pricing-section";
+import { HostRow } from "~/components/onboarding-settings/host-picker";
+import { SaveBar, Section } from "~/components/onboarding-settings/settings-section";
+import { AiAssistantTab } from "~/components/onboarding-settings/ai/ai-assistant-tab";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "~/components/ui/tabs";
 import { useEffect, useMemo, useState } from "react";
-import { Link, Navigate, useNavigate } from "react-router";
+import { Link, Navigate, useNavigate, useSearchParams } from "react-router";
 import { useTranslation } from "react-i18next";
 import { useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -31,7 +35,9 @@ import type {
   RootOnboardingSettingsInput,
   RootPipelineOption,
   SalesHost,
+  SalesRegion,
 } from "~/lib/api/root-onboarding";
+import { SALES_REGIONS } from "~/lib/api/root-onboarding";
 import {
   useRootOnboardingSettings,
   useRootPipelines,
@@ -128,55 +134,12 @@ function timezones(): string[] {
   ];
 }
 
-/** Calendars a member connected that calls can be written to. */
-function calendarsOf(
-  userId: string | undefined,
-  accounts: CalendarAccount[],
-  baikal: BaikalConfig[],
-): Array<{ key: string; label: string; sub: string; broken: boolean }> {
-  if (!userId) return [];
-  const out: Array<{ key: string; label: string; sub: string; broken: boolean }> = [];
-  for (const account of accounts) {
-    if (account.user_id !== userId) continue;
-    const usable =
-      account.provider === "caldav"
-        ? account.calendars
-        : account.calendars.filter(
-            (c) => c.accessRole === "owner" || c.accessRole === "writer",
-          );
-    for (const c of usable) {
-      out.push({
-        key: calendarKeyFor(account, c.id),
-        label: c.summary || c.id,
-        sub: account.google_email || account.display_name,
-        broken: account.auth_failed,
-      });
-    }
-  }
-  for (const b of baikal) {
-    if (b.user_id !== userId) continue;
-    out.push({
-      key: `baikal:${b.id}`,
-      label: b.provider_name || "Booking calendar",
-      sub: b.provider_email ?? "Baikal",
-      broken: false,
-    });
-  }
-  return out;
-}
-
-export default function OnboardingSettingsPage() {
+function GeneralTab() {
   const { t } = useTranslation();
   const { currentWorkspace } = useAuthContext();
   const allowed =
     currentWorkspace?.is_root === true &&
     currentWorkspace.member_role === "admin";
-
-  useDocumentMeta({
-    titleKey: "settings.onboarding.metaTitle",
-    descriptionKey: "settings.onboarding.metaDescription",
-    titleSuffix: " - Repraesent",
-  });
 
   const settingsQuery = useRootOnboardingSettings();
   const pipelinesQuery = useRootPipelines();
@@ -189,6 +152,7 @@ export default function OnboardingSettingsPage() {
   const save = useSaveRootOnboardingSettings();
 
   const [draft, setDraft] = useState<RootOnboardingSettingsInput | null>(null);
+  const [teamRegion, setTeamRegion] = useState<SalesRegion>("europe");
   const saved = settingsQuery.data ? toInput(settingsQuery.data) : null;
 
   useEffect(() => {
@@ -225,7 +189,17 @@ export default function OnboardingSettingsPage() {
   const completeHosts = draft.booking.hosts.filter(
     (h) => h.userId && h.targetKey,
   );
-  const incompleteHosts = draft.booking.hosts.length - completeHosts.length;
+  const allHosts = [
+    ...draft.booking.hosts,
+    ...Object.values(draft.booking.regionHosts ?? {}).flat(),
+  ];
+  const incompleteHosts = allHosts.filter((h) => !h.userId || !h.targetKey).length;
+  const regionTeam = (r: SalesRegion): SalesHost[] =>
+    r === "europe" ? draft.booking.hosts : (draft.booking.regionHosts?.[r] ?? []);
+  const setRegionTeam = (r: SalesRegion, hosts: SalesHost[]) =>
+    r === "europe"
+      ? patchBooking({ hosts })
+      : patchBooking({ regionHosts: { ...(draft.booking.regionHosts ?? {}), [r]: hosts } });
 
   const onSave = () => {
     if (incompleteHosts > 0) {
@@ -255,13 +229,39 @@ export default function OnboardingSettingsPage() {
         title={t("settings.onboarding.teamTitle")}
         hint={t("settings.onboarding.teamHint")}
       >
+        {/* One team per sales region; a region without people uses Europe's. */}
+        <div role="tablist" aria-label={t("settings.onboarding.regions.label")} className="mb-3 inline-flex flex-wrap gap-1 rounded-lg border border-border bg-muted/40 p-1">
+          {SALES_REGIONS.map((r) => {
+            const count = regionTeam(r).length;
+            return (
+              <button
+                key={r}
+                type="button"
+                role="tab"
+                aria-selected={teamRegion === r}
+                onClick={() => setTeamRegion(r)}
+                className={cn(
+                  "inline-flex h-8 items-center gap-1.5 rounded-md px-3 text-[13px] font-medium transition-colors",
+                  teamRegion === r ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground",
+                )}
+              >
+                {t(`settings.onboarding.regions.${r}`)}
+                <span className="tabular-nums text-[11px] text-muted-foreground">{count}</span>
+              </button>
+            );
+          })}
+        </div>
+        {teamRegion !== "europe" && regionTeam(teamRegion).length === 0 ? (
+          <p className="mb-2 text-xs text-muted-foreground">{t("settings.onboarding.regions.fallback", { region: t(`settings.onboarding.regions.${teamRegion}`) })}</p>
+        ) : null}
         <SalesTeam
-          hosts={draft.booking.hosts}
+          key={teamRegion}
+          hosts={regionTeam(teamRegion)}
           members={members}
           accounts={accounts}
           baikal={baikal}
           loading={membersQuery.isLoading || calendarsQuery.isLoading}
-          onChange={(hosts) => patchBooking({ hosts })}
+          onChange={(hosts) => setRegionTeam(teamRegion, hosts)}
         />
         <label className="mt-4 flex items-start gap-3 rounded-lg border border-border bg-muted/30 px-3 py-2.5">
           <Switch
@@ -315,73 +315,64 @@ export default function OnboardingSettingsPage() {
         dirty={dirty}
       />
 
-      {/* Save bar: floats at the bottom of the content column (never over
-          the sidebar), and only while there is something to save. */}
-      <div
-        className={cn(
-          "pointer-events-none sticky bottom-4 z-30 transition-all duration-300 motion-reduce:transition-none",
-          dirty ? "translate-y-0 opacity-100" : "translate-y-4 opacity-0",
-        )}
-        aria-hidden={!dirty}
-      >
-        <div
-          className={cn(
-            "flex items-center justify-end gap-3 rounded-xl border border-border bg-background/90 px-4 py-3 shadow-lg backdrop-blur-md",
-            dirty && "pointer-events-auto",
-          )}
-        >
-          <span className="mr-auto hidden text-sm text-muted-foreground sm:inline">
-            {t("settings.onboarding.unsaved")}
-          </span>
-          <Button
-            variant="ghost"
-            onClick={() => saved && setDraft(saved)}
-            disabled={save.isPending || !dirty}
-            tabIndex={dirty ? 0 : -1}
-          >
-            {t("settings.onboarding.discard")}
-          </Button>
-          <Button
-            onClick={onSave}
-            disabled={save.isPending || !dirty}
-            tabIndex={dirty ? 0 : -1}
-          >
-            {save.isPending
-              ? t("settings.onboarding.saving")
-              : t("settings.onboarding.save")}
-          </Button>
-        </div>
-      </div>
+      <SaveBar
+        dirty={dirty}
+        saving={save.isPending}
+        onSave={onSave}
+        onDiscard={() => saved && setDraft(saved)}
+      />
     </div>
   );
 }
 
-function Section({
-  icon,
-  title,
-  hint,
-  children,
-}: {
-  icon: React.ReactNode;
-  title: string;
-  hint: string;
-  children: React.ReactNode;
-}) {
+const TABS = ["general", "ai"] as const;
+type Tab = (typeof TABS)[number];
+
+/** Settings → Onboarding (root admins): General | AI assistant, tab kept in `?tab=`. */
+export default function OnboardingSettingsPage() {
+  const { t } = useTranslation();
+  const { currentWorkspace } = useAuthContext();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const allowed =
+    currentWorkspace?.is_root === true &&
+    currentWorkspace.member_role === "admin";
+
+  useDocumentMeta({
+    titleKey: "settings.onboarding.metaTitle",
+    descriptionKey: "settings.onboarding.metaDescription",
+    titleSuffix: " - Repraesent",
+  });
+
+  if (!currentWorkspace) return null;
+  if (!allowed) return <Navigate to="/settings/profile" replace />;
+
+  const wanted = searchParams.get("tab");
+  const tab: Tab = wanted && (TABS as readonly string[]).includes(wanted) ? (wanted as Tab) : "general";
+  const setTab = (next: string) =>
+    setSearchParams(
+      (prev) => {
+        const p = new URLSearchParams(prev);
+        if (next === "general") p.delete("tab");
+        else p.set("tab", next);
+        return p;
+      },
+      { replace: true },
+    );
+
   return (
-    <section className="rounded-xl border border-border bg-card p-4 shadow-xs sm:p-6">
-      <div className="mb-5 flex items-start gap-3">
-        <span className="mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
-          {icon}
-        </span>
-        <div>
-          <h2 className="text-base font-semibold tracking-tight text-foreground">
-            {title}
-          </h2>
-          <p className="mt-0.5 max-w-2xl text-sm text-muted-foreground">{hint}</p>
-        </div>
-      </div>
-      {children}
-    </section>
+    <Tabs value={tab} onValueChange={setTab} className="gap-6">
+      <TabsList variant="line" className="-mb-px">
+        <TabsTrigger value="general">{t("settings.onboarding.tabs.general")}</TabsTrigger>
+        <TabsTrigger value="ai">{t("settings.onboarding.tabs.ai")}</TabsTrigger>
+      </TabsList>
+      {/* Both stay mounted so switching tabs never drops unsaved edits. */}
+      <TabsContent value="general" forceMount className="data-[state=inactive]:hidden">
+        <GeneralTab />
+      </TabsContent>
+      <TabsContent value="ai" forceMount className="data-[state=inactive]:hidden">
+        <AiAssistantTab />
+      </TabsContent>
+    </Tabs>
   );
 }
 
@@ -451,28 +442,6 @@ function SalesTeam({
 }) {
   const { t } = useTranslation();
   if (loading) return <Skeleton className="h-24 w-full" />;
-
-  const setMember = (index: number, userId: string) => {
-    const member =
-      userId === NO_MEMBER ? null : members.find((m) => m.user_id === userId);
-    onChange(
-      hosts.map((h, i) => {
-        if (i !== index) return h;
-        if (!member) return { targetKey: "", userId: "" };
-        // A new person means their calendars, not the previous one's: pick
-        // their first usable calendar so the row is valid right away.
-        const first = calendarsOf(member.user_id, accounts, baikal)[0];
-        return {
-          userId: member.user_id,
-          targetKey: first?.key ?? "",
-          label: memberLabel(member),
-          avatarUrl:
-            member.user_avatar_thumb_url ?? member.user_avatar_url ?? undefined,
-        };
-      }),
-    );
-  };
-
   const taken = new Set(hosts.map((h) => h.userId).filter(Boolean));
 
   return (
@@ -483,84 +452,17 @@ function SalesTeam({
         </p>
       ) : null}
 
-      {hosts.map((host, index) => {
-        const cals = calendarsOf(host.userId, accounts, baikal);
-        const selectable = members.filter(
-          (m) => m.user_id === host.userId || !taken.has(m.user_id),
-        );
-        const current = cals.find((c) => c.key === host.targetKey);
-        return (
-          <div
-            key={`${index}-${host.userId}`}
-            className="grid grid-cols-1 gap-2 rounded-lg border border-border bg-background p-2 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto] sm:items-center"
-          >
-            <MemberPicker
-              members={selectable}
-              value={host.userId || undefined}
-              placeholder={t("settings.onboarding.pickPerson")}
-              searchPlaceholder={t("settings.onboarding.searchPeople")}
-              emptyText={t("settings.onboarding.noPeople")}
-              noneLabel={t("settings.onboarding.nobody")}
-              onChange={(id) => setMember(index, id)}
-            />
-            {host.userId && cals.length === 0 ? (
-              <p className="flex items-center gap-1.5 px-1 text-xs text-destructive">
-                <AlertTriangle className="h-3.5 w-3.5 shrink-0" />
-                <span>
-                  {t("settings.onboarding.noCalendar")}{" "}
-                  <Link to="/settings/calendars" className="underline">
-                    {t("settings.onboarding.connectCalendar")}
-                  </Link>
-                </span>
-              </p>
-            ) : (
-              <Select
-                value={host.targetKey || undefined}
-                disabled={!host.userId}
-                onValueChange={(key) =>
-                  onChange(
-                    hosts.map((h, i) => (i === index ? { ...h, targetKey: key } : h)),
-                  )
-                }
-              >
-                <SelectTrigger className="h-9 w-full min-w-0 text-sm">
-                  <SelectValue placeholder={t("settings.onboarding.pickCalendar")} />
-                </SelectTrigger>
-                <SelectContent position="popper" className="max-w-[min(26rem,90vw)]">
-                  {cals.map((c) => (
-                    <SelectItem key={c.key} value={c.key}>
-                      <span className="flex min-w-0 flex-col">
-                        <span className="truncate">{c.label}</span>
-                        {c.sub && c.sub !== c.label ? (
-                          <span className="truncate text-[11px] text-muted-foreground">
-                            {c.sub}
-                          </span>
-                        ) : null}
-                      </span>
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            )}
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon"
-              className="justify-self-end"
-              aria-label={t("settings.onboarding.removePerson")}
-              onClick={() => onChange(hosts.filter((_, i) => i !== index))}
-            >
-              <X className="h-4 w-4" />
-            </Button>
-            {current?.broken ? (
-              <p className="flex items-center gap-1.5 px-1 text-xs text-destructive sm:col-span-3">
-                <AlertTriangle className="h-3.5 w-3.5" />
-                {t("settings.onboarding.calendarBroken")}
-              </p>
-            ) : null}
-          </div>
-        );
-      })}
+      {hosts.map((host, index) => (
+        <HostRow
+          key={`${index}-${host.userId}`}
+          host={host}
+          members={members.filter((m) => m.user_id === host.userId || !taken.has(m.user_id))}
+          accounts={accounts}
+          baikal={baikal}
+          onChange={(next) => onChange(hosts.map((h, i) => (i === index ? next : h)))}
+          onRemove={() => onChange(hosts.filter((_, i) => i !== index))}
+        />
+      ))}
 
       <Button
         type="button"

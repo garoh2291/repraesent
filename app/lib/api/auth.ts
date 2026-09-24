@@ -165,6 +165,8 @@ export interface WorkspaceContext {
   is_demo?: boolean;
   /** The platform's own workspace (migration 176): owns onboarding config. */
   is_root?: boolean;
+  /** Root's Settings → Support switched "Contact re:praesent" on for this workspace. */
+  support_contact_enabled?: boolean;
   /** Onboarding v2 in progress for this workspace, and whether it's mine. */
   onboarding?: { open: boolean; owner_is_me: boolean } | null;
   demo_expires_at?: string | null;

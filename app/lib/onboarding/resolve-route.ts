@@ -35,7 +35,9 @@ export function isDoorboostBrandPath(path: string): boolean {
   return DOORBOOST_BRAND_PATHS.some((p) => path.startsWith(p));
 }
 
-const isWizardPath = (path: string) => path === WIZARD_PATH || path.startsWith(`${WIZARD_PATH}/`);
+export const CHAT_PATH = "/onboarding/chat";
+/** The form wizard and its conversational twin (AI assistant) are the same onboarding. */
+const isWizardPath = (path: string) => path === WIZARD_PATH || path.startsWith(`${WIZARD_PATH}/`) || path === CHAT_PATH;
 
 /**
  * Which onboarding situation a pending workspace is in:

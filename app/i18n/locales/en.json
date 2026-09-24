@@ -509,7 +509,7 @@
         "manual_spam": "Marked as spam"
       }
     },
-    "restoreFilteredHint": "Move this lead back to the first stage",
+    "restoreFilteredHint": "Move this lead back to where it was",
     "onboarding": {
       "title": "Onboarding answers",
       "yes": "Yes",
@@ -549,7 +549,20 @@
         "phone": "phone",
         "domain": "domain"
       },
-      "revertedNote": "{{rule}} — then marked as not spam."
+      "revertedNote": "{{rule}} — then marked as not spam.",
+      "alsoRestored_one": "{{count}} more lead from them is back.",
+      "alsoRestored_other": "{{count}} more leads from them are back."
+    },
+    "hide": {
+      "title": "Hide “{{name}}”?",
+      "body": "Is it spam? Block the sender too, and their next enquiries go straight to Hidden.",
+      "senderLabel": "Sender",
+      "justHide": "Just hide",
+      "hideAndBlock": "Hide & block",
+      "hidden": "Lead hidden",
+      "hiddenHint": "The sender can still reach you.",
+      "blockSender": "Block sender",
+      "thisLead": "this lead"
     }
   },
   "pipeline": {
@@ -1255,7 +1268,8 @@
       "ai": "AI",
       "onboarding": "Onboarding",
       "emailNotifications": "Email notifications",
-      "businessProfile": "Business profile"
+      "businessProfile": "Business profile",
+      "support": "Support"
     },
     "bcc": {
       "metaTitle": "Email logging",
@@ -1804,7 +1818,7 @@
     },
     "onboarding": {
       "metaTitle": "Onboarding",
-      "metaDescription": "Who new customers can book a call with, and where their deal lands in your pipeline.",
+      "metaDescription": "How new customers get started: form or assistant, who they talk to, and where their deal lands.",
       "statusLive_one": "Booking is on — new customers can book a call with {{count}} person",
       "statusLive_other": "Booking is on — new customers can book a call with {{count}} people",
       "statusLiveHint": "At the end of onboarding they pick a time; the call goes into the free person's calendar.",
@@ -1956,6 +1970,148 @@
         "cancel": "Cancel",
         "apply": "Apply changes",
         "applyNoChanges": "Mark as synced"
+      },
+      "regions": {
+        "label": "Sales region",
+        "europe": "Europe",
+        "us": "US",
+        "canada": "Canada",
+        "australia": "Australia",
+        "fallback": "Nobody here yet, so {{region}} customers see the Europe team."
+      },
+      "tabs": {
+        "general": "General",
+        "ai": "AI assistant"
+      },
+      "ai": {
+        "toggle": "Offer the assistant",
+        "statusOn": "{{name}} is ready to help new customers",
+        "statusOnHint_one": "Customers can pick the form or a conversation. {{count}} question on the list.",
+        "statusOnHint_other": "Customers can pick the form or a conversation. {{count}} questions on the list.",
+        "statusOff": "Only the form for now",
+        "statusOffHint": "Switch it on to let customers talk their setup through instead of filling in the form.",
+        "defaultName": "Lena",
+        "voiceTitle": "Voice & welcome",
+        "voiceHint": "Who customers talk to and the first thing they read. Europe is the default; other regions only need text where they should sound different.",
+        "regionInherit": "Empty fields use Europe's text for {{region}}.",
+        "personaName": "Assistant name",
+        "personaStyle": "How it sounds",
+        "personaStylePlaceholder": "Warm and calm, like a good shop assistant. Short sentences, no jargon.",
+        "welcome": "Welcome message",
+        "welcomeHint": "The assistant's first message. Leave it empty for our default.",
+        "introHeadline": "Intro headline",
+        "introSub": "Intro text",
+        "introHint": "Shown on the welcome screen before onboarding starts. Empty = the standard intro.",
+        "language": "Language",
+        "fillOthers_one": "Fill {{count}} language with AI",
+        "fillOthers_other": "Fill {{count}} languages with AI",
+        "translated": "Other languages filled in. Give them a quick read.",
+        "translateSome": "Couldn't translate {{langs}}. Try again or type it in.",
+        "translateFailed": "Translation didn't work. Try again in a moment.",
+        "questionsTitle": "What the assistant asks",
+        "questionsHint": "Every question from the form is here. Drag to change the order, untick what it should skip, open one to reword it or add rules.",
+        "askedCount": "{{count}} of {{total}} asked",
+        "addQuestion": "Add your own question",
+        "dragToReorder": "Drag to reorder",
+        "moveUp": "Move up",
+        "moveDown": "Move down",
+        "pinned": "Fixed place",
+        "lockedHint": "Needed to finish setup, so it's always asked",
+        "askThis": "Ask “{{name}}”",
+        "yourQuestion": "Your question",
+        "required": "Required",
+        "ownWording": "Own wording",
+        "ruleCount_one": "{{count}} rule",
+        "ruleCount_other": "{{count}} rules",
+        "untitled": "Untitled question",
+        "stepName": "Step name",
+        "stepNamePlaceholder": "e.g. Showroom size",
+        "customAnswerHint": "The answer is free text. It lands on the lead and in the deal note under this name.",
+        "questionText": "Question",
+        "textHintBuiltin": "Empty languages use our wording (shown greyed out). The assistant says it in its own words, one question at a time.",
+        "textHintCustom": "Write it in one language and fill the others with AI.",
+        "textHintRegion": "Only for customers in {{region}}. Empty languages use the default wording.",
+        "resetDefault": "Back to our wording",
+        "resetRegion": "Remove region wording",
+        "deleteQuestion": "Delete question",
+        "confirmDelete": "Click again to delete",
+        "errors": {
+          "nameRequired": "Give your question a name first.",
+          "textRequired": "“{{name}}” needs a question text in at least one language."
+        },
+        "rules": {
+          "title": "Rules",
+          "hint": "Tell the assistant what to do with certain answers.",
+          "empty": "No rules. The assistant just asks and moves on.",
+          "when": "When",
+          "then": "Then",
+          "always": "Always",
+          "answerIs": "The answer is…",
+          "answerLike": "The answer sounds like…",
+          "answerLikePlaceholder": "e.g. they mention a competitor",
+          "actions": {
+            "say": "Say this",
+            "skip": "Skip a question",
+            "flag": "Flag for sales",
+            "instruct": "Tell the assistant"
+          },
+          "placeholders": {
+            "say": "e.g. Great, our team knows those brands well.",
+            "flag": "Note for the sales call, e.g. Ask about their second store",
+            "instruct": "e.g. Ask which brands they'd like to add"
+          },
+          "skipWhich": "Which question?",
+          "add": "Add a rule",
+          "remove": "Remove rule",
+          "errors": {
+            "pickAnswer": "A rule on “{{name}}” needs at least one answer picked.",
+            "describeWhen": "A rule on “{{name}}” needs to say when it applies.",
+            "pickSkip": "A rule on “{{name}}” needs the question to skip.",
+            "needsText": "A rule on “{{name}}” is missing its text."
+          }
+        },
+        "q": {
+          "business_name": "Business name",
+          "website": "Website",
+          "industry_brand": "Industry & brand partner",
+          "description": "Short description",
+          "legal_company": "Company & registration",
+          "presence": "How customers reach you",
+          "address": "Address",
+          "business_contact": "Business phone & email",
+          "opening_hours": "Opening hours",
+          "offer": "What you sell",
+          "price_customers": "Price range & customers",
+          "you_name": "Your name & role",
+          "you_phone": "Your phone number",
+          "google": "Google Maps",
+          "socials": "Social media",
+          "goals": "Goals",
+          "lead_channels": "Where customers come from",
+          "monthly_inquiries": "Enquiries per month",
+          "tools_pain": "Tools & biggest headache",
+          "website_plan": "Website plans",
+          "ai_visibility": "Visibility in ChatGPT & co.",
+          "extra_services": "Help they'd like",
+          "locations_count": "Number of locations",
+          "go_live": "When to start",
+          "heard_from": "How they heard about us",
+          "ads": "Online ads today",
+          "enquiries": "Who answers enquiries",
+          "email_provider": "Email provider",
+          "domain_registrar": "Domain & registrar",
+          "domain_transfer": "Move the domain to us",
+          "domain_access": "Domain login",
+          "site_caretaker": "Who looks after the website",
+          "team_invites": "Invite the team",
+          "notifications": "Email updates",
+          "billing": "Billing details",
+          "consent": "Terms & finish"
+        },
+        "model": "AI model",
+        "modelCost": "{{cost}} per onboarding",
+        "noKey": "The assistant needs an AI key in this workspace before customers can see it.",
+        "noKeyLink": "Connect OpenRouter"
       }
     },
     "emailNotifications": {
@@ -2025,6 +2181,33 @@
       "hint": "New deals start in this currency, and totals show it first. Deals in other currencies keep their own and are listed next to it — never converted.",
       "saved": "Currency saved.",
       "error": "Couldn't save the currency."
+    },
+    "support": {
+      "metaTitle": "Support",
+      "metaDescription": "Choose which customer workspaces see “Contact re:praesent” and who answers them.",
+      "searchPlaceholder": "Search workspaces or owner email…",
+      "filterLabel": "Show",
+      "filter": {
+        "all": "All",
+        "on": "On",
+        "off": "Off"
+      },
+      "empty": "No active customer workspaces yet.",
+      "noMatch": "No workspace matches that search.",
+      "noOwner": "No owner email",
+      "answeredBy": "answered by {{name}}",
+      "pickFirst": "Who answers this workspace? Pick a person to switch it on.",
+      "noCalendarMessagesOnly": "No calendar: they answer messages only, no call booking.",
+      "toggleLabel": "Contact re:praesent for {{name}}",
+      "savedOn": "{{name}} now sees Contact re:praesent",
+      "savedOff": "Contact re:praesent hidden for {{name}}",
+      "saveFailed": "Couldn't save. Please try again.",
+      "count_one": "{{count}} workspace",
+      "count_other": "{{count}} workspaces",
+      "status": {
+        "trial": "Trial",
+        "pending": "Pending"
+      }
     }
   },
   "booking": {
@@ -8352,7 +8535,46 @@
           "title": "Recommended by ChatGPT",
           "sub": "“Best sofa studio nearby”"
         }
+      },
+      "way": {
+        "label": "How would you like to set up?",
+        "chatTitle": "Talk it through with {{name}}",
+        "chatSub": "Like a chat with a colleague. You answer, {{name}} fills everything in.",
+        "chatCta": "Start with {{name}}",
+        "formTitle": "Fill in the form",
+        "formSub": "About 8 minutes, at your own pace.",
+        "switch": "You can switch at any point. Nothing gets lost."
       }
+    },
+    "chat": {
+      "metaTitle": "Set up with your guide",
+      "progress": "{{done}} of {{total}}",
+      "switchToForm": "Switch to the form",
+      "form": "Form",
+      "continueWith": "Continue with {{name}}",
+      "role": "Your setup guide at re:praesent",
+      "thinking": "{{name}} is writing…",
+      "typing": "Writing…",
+      "placeholder": "Reply to {{name}}…",
+      "send": "Send",
+      "pick": "Choose an answer",
+      "thatsIt": "That's all",
+      "noneOfThese": "None of these is us",
+      "billingSaved": "Invoice details saved",
+      "saveBilling": "Save invoice details",
+      "saved": "{{topic}} saved",
+      "yourAnswer": "Answer",
+      "retry": "Try again",
+      "errors": {
+        "upstream_failed": "I lost my train of thought for a second.",
+        "turn_failed": "Something went wrong on our side. Your answers are saved.",
+        "network": "The connection dropped. Your answers are saved.",
+        "RATE_LIMITED": "That's a lot of messages in a short time. Take a breather, or carry on in the form.",
+        "BUSY": "One moment, I'm still answering.",
+        "unavailable": "The assistant isn't available right now. Please continue in the form; nothing is lost.",
+        "invalid_request": "That didn't go through."
+      },
+      "mascotLabel": "{{name}}, your setup guide. Tap to say hi."
     }
   },
   "salesContact": {

@@ -509,7 +509,7 @@
         "manual_spam": "Als spam gemarkeerd"
       }
     },
-    "restoreFilteredHint": "Zet deze lead terug naar de eerste fase",
+    "restoreFilteredHint": "Zet deze lead terug waar hij stond",
     "onboarding": {
       "title": "Antwoorden uit de inrichting",
       "yes": "Ja",
@@ -549,7 +549,20 @@
         "phone": "telefoon",
         "domain": "domein"
       },
-      "revertedNote": "{{rule}} — daarna als geen spam gemarkeerd."
+      "revertedNote": "{{rule}} — daarna als geen spam gemarkeerd.",
+      "alsoRestored_one": "Nog {{count}} lead van hen is terug.",
+      "alsoRestored_other": "Nog {{count}} leads van hen zijn terug."
+    },
+    "hide": {
+      "title": "“{{name}}” verbergen?",
+      "body": "Is het spam? Blokkeer ook de afzender, dan gaan zijn volgende aanvragen direct naar Verborgen.",
+      "senderLabel": "Afzender",
+      "justHide": "Alleen verbergen",
+      "hideAndBlock": "Verbergen en blokkeren",
+      "hidden": "Lead verborgen",
+      "hiddenHint": "De afzender kan u nog steeds bereiken.",
+      "blockSender": "Afzender blokkeren",
+      "thisLead": "deze lead"
     }
   },
   "pipeline": {
@@ -1255,7 +1268,8 @@
       "ai": "AI",
       "onboarding": "Onboarding",
       "emailNotifications": "E-mailmeldingen",
-      "businessProfile": "Bedrijfsprofiel"
+      "businessProfile": "Bedrijfsprofiel",
+      "support": "Support"
     },
     "bcc": {
       "metaTitle": "E-maillogging",
@@ -1804,7 +1818,7 @@
     },
     "onboarding": {
       "metaTitle": "Onboarding",
-      "metaDescription": "Met wie nieuwe klanten een gesprek kunnen boeken, en waar hun deal in je pipeline terechtkomt.",
+      "metaDescription": "Hoe nieuwe klanten starten: formulier of assistent, met wie ze praten en waar hun deal terechtkomt.",
       "statusLive_one": "Boeken staat aan — nieuwe klanten kunnen een gesprek boeken met {{count}} persoon",
       "statusLive_other": "Boeken staat aan — nieuwe klanten kunnen een gesprek boeken met {{count}} personen",
       "statusLiveHint": "Aan het einde van de onboarding kiezen ze een tijd; het gesprek komt in de agenda van wie vrij is.",
@@ -1956,6 +1970,148 @@
         "cancel": "Annuleren",
         "apply": "Wijzigingen toepassen",
         "applyNoChanges": "Markeren als overgenomen"
+      },
+      "regions": {
+        "label": "Verkoopregio",
+        "europe": "Europa",
+        "us": "VS",
+        "canada": "Canada",
+        "australia": "Australië",
+        "fallback": "Nog niemand ingesteld, dus klanten uit {{region}} zien het Europa-team."
+      },
+      "tabs": {
+        "general": "Algemeen",
+        "ai": "AI-assistent"
+      },
+      "ai": {
+        "toggle": "Assistent aanbieden",
+        "statusOn": "{{name}} helpt nieuwe klanten op weg",
+        "statusOnHint_one": "Klanten kiezen tussen het formulier en een gesprek. {{count}} vraag op de lijst.",
+        "statusOnHint_other": "Klanten kiezen tussen het formulier en een gesprek. {{count}} vragen op de lijst.",
+        "statusOff": "Voorlopig alleen het formulier",
+        "statusOffHint": "Zet het aan zodat klanten hun inrichting in een gesprek kunnen doen in plaats van het formulier.",
+        "defaultName": "Lena",
+        "voiceTitle": "Stem & welkom",
+        "voiceHint": "Met wie klanten praten en wat ze als eerste lezen. Europa is de standaard; andere regio's hebben alleen tekst nodig waar ze anders moeten klinken.",
+        "regionInherit": "Lege velden gebruiken voor {{region}} de tekst van Europa.",
+        "personaName": "Naam van de assistent",
+        "personaStyle": "Hoe die klinkt",
+        "personaStylePlaceholder": "Warm en rustig, zoals een goede verkoper in de winkel. Korte zinnen, geen jargon.",
+        "welcome": "Welkomstbericht",
+        "welcomeHint": "Het eerste bericht van de assistent. Leeg laten voor onze standaardtekst.",
+        "introHeadline": "Kop van het welkomstscherm",
+        "introSub": "Tekst van het welkomstscherm",
+        "introHint": "Te zien op het welkomstscherm voor de onboarding begint. Leeg = de standaardintro.",
+        "language": "Taal",
+        "fillOthers_one": "{{count}} taal invullen met AI",
+        "fillOthers_other": "{{count}} talen invullen met AI",
+        "translated": "Andere talen ingevuld. Lees ze even na.",
+        "translateSome": "{{langs}} kon niet vertaald worden. Probeer opnieuw of typ het zelf.",
+        "translateFailed": "Vertalen lukte niet. Probeer het zo nog eens.",
+        "questionsTitle": "Wat de assistent vraagt",
+        "questionsHint": "Alle vragen uit het formulier staan hier. Sleep om de volgorde te wijzigen, vink uit wat overgeslagen moet worden, open een vraag om die anders te formuleren of regels toe te voegen.",
+        "askedCount": "{{count}} van {{total}} gevraagd",
+        "addQuestion": "Eigen vraag toevoegen",
+        "dragToReorder": "Sleep om te ordenen",
+        "moveUp": "Omhoog",
+        "moveDown": "Omlaag",
+        "pinned": "Vaste plek",
+        "lockedHint": "Nodig om af te ronden, wordt altijd gevraagd",
+        "askThis": "„{{name}}” vragen",
+        "yourQuestion": "Eigen vraag",
+        "required": "Verplicht",
+        "ownWording": "Eigen tekst",
+        "ruleCount_one": "{{count}} regel",
+        "ruleCount_other": "{{count}} regels",
+        "untitled": "Vraag zonder naam",
+        "stepName": "Naam van de stap",
+        "stepNamePlaceholder": "bijv. Grootte van de showroom",
+        "customAnswerHint": "Het antwoord is vrije tekst. Het komt onder deze naam op de lead en in de dealnotitie.",
+        "questionText": "Vraag",
+        "textHintBuiltin": "Lege talen gebruiken onze tekst (grijs). De assistent formuleert vrij, één vraag tegelijk.",
+        "textHintCustom": "Schrijf het in één taal en vul de andere in met AI.",
+        "textHintRegion": "Alleen voor klanten in {{region}}. Lege talen gebruiken de standaardtekst.",
+        "resetDefault": "Terug naar onze tekst",
+        "resetRegion": "Regiotekst verwijderen",
+        "deleteQuestion": "Vraag verwijderen",
+        "confirmDelete": "Klik nog eens om te verwijderen",
+        "errors": {
+          "nameRequired": "Geef uw vraag eerst een naam.",
+          "textRequired": "„{{name}}” heeft een vraagtekst nodig in minstens één taal."
+        },
+        "rules": {
+          "title": "Regels",
+          "hint": "Vertel de assistent wat te doen bij bepaalde antwoorden.",
+          "empty": "Geen regels. De assistent vraagt en gaat verder.",
+          "when": "Als",
+          "then": "Dan",
+          "always": "Altijd",
+          "answerIs": "Het antwoord is…",
+          "answerLike": "Het antwoord klinkt als…",
+          "answerLikePlaceholder": "bijv. ze noemen een concurrent",
+          "actions": {
+            "say": "Dit zeggen",
+            "skip": "Vraag overslaan",
+            "flag": "Markeren voor sales",
+            "instruct": "De assistent vertellen"
+          },
+          "placeholders": {
+            "say": "bijv. Mooi, die merken kent ons team goed.",
+            "flag": "Notitie voor het salesgesprek, bijv. Vraag naar de tweede winkel",
+            "instruct": "bijv. Vraag welke merken ze willen toevoegen"
+          },
+          "skipWhich": "Welke vraag?",
+          "add": "Regel toevoegen",
+          "remove": "Regel verwijderen",
+          "errors": {
+            "pickAnswer": "Een regel bij „{{name}}” heeft minstens één gekozen antwoord nodig.",
+            "describeWhen": "Een regel bij „{{name}}” moet zeggen wanneer die geldt.",
+            "pickSkip": "Een regel bij „{{name}}” heeft de over te slaan vraag nodig.",
+            "needsText": "Een regel bij „{{name}}” mist de tekst."
+          }
+        },
+        "q": {
+          "business_name": "Bedrijfsnaam",
+          "website": "Website",
+          "industry_brand": "Branche & merkpartner",
+          "description": "Korte omschrijving",
+          "legal_company": "Bedrijf & registratie",
+          "presence": "Hoe klanten u bereiken",
+          "address": "Adres",
+          "business_contact": "Telefoon & e-mail van het bedrijf",
+          "opening_hours": "Openingstijden",
+          "offer": "Wat u verkoopt",
+          "price_customers": "Prijsklasse & klanten",
+          "you_name": "Naam & functie",
+          "you_phone": "Eigen telefoonnummer",
+          "google": "Google Maps",
+          "socials": "Social media",
+          "goals": "Doelen",
+          "lead_channels": "Waar klanten vandaan komen",
+          "monthly_inquiries": "Aanvragen per maand",
+          "tools_pain": "Tools & grootste kopzorg",
+          "website_plan": "Plannen voor de website",
+          "ai_visibility": "Zichtbaarheid in ChatGPT & co.",
+          "extra_services": "Gewenste hulp",
+          "locations_count": "Aantal vestigingen",
+          "go_live": "Wanneer starten",
+          "heard_from": "Hoe ze ons vonden",
+          "ads": "Online advertenties nu",
+          "enquiries": "Wie aanvragen beantwoordt",
+          "email_provider": "E-mailprovider",
+          "domain_registrar": "Domein & registrar",
+          "domain_transfer": "Domein naar ons verhuizen",
+          "domain_access": "Toegang tot het domein",
+          "site_caretaker": "Wie de website onderhoudt",
+          "team_invites": "Team uitnodigen",
+          "notifications": "E-mailupdates",
+          "billing": "Factuurgegevens",
+          "consent": "Voorwaarden & afronden"
+        },
+        "model": "AI-model",
+        "modelCost": "{{cost}} per onboarding",
+        "noKey": "De assistent heeft een AI-sleutel in deze werkruimte nodig voordat klanten hem zien.",
+        "noKeyLink": "OpenRouter koppelen"
       }
     },
     "emailNotifications": {
@@ -2025,6 +2181,33 @@
       "hint": "Nieuwe deals starten in deze valuta en totalen tonen haar eerst. Deals in andere valuta houden hun eigen valuta en staan ernaast — nooit omgerekend.",
       "saved": "Valuta opgeslagen.",
       "error": "De valuta kon niet worden opgeslagen."
+    },
+    "support": {
+      "metaTitle": "Support",
+      "metaDescription": "Kies welke klantwerkruimtes „Contact met re:praesent” zien en wie hen antwoordt.",
+      "searchPlaceholder": "Zoek werkruimtes of e-mail van eigenaar…",
+      "filterLabel": "Tonen",
+      "filter": {
+        "all": "Alle",
+        "on": "Aan",
+        "off": "Uit"
+      },
+      "empty": "Nog geen actieve klantwerkruimtes.",
+      "noMatch": "Geen werkruimte past bij deze zoekopdracht.",
+      "noOwner": "Geen e-mail van eigenaar",
+      "answeredBy": "beantwoord door {{name}}",
+      "pickFirst": "Wie beantwoordt deze werkruimte? Kies een persoon om hem aan te zetten.",
+      "noCalendarMessagesOnly": "Geen agenda: alleen berichten, geen afspraken.",
+      "toggleLabel": "Contact met re:praesent voor {{name}}",
+      "savedOn": "{{name}} ziet nu „Contact met re:praesent”",
+      "savedOff": "„Contact met re:praesent” verborgen voor {{name}}",
+      "saveFailed": "Opslaan mislukt. Probeer het opnieuw.",
+      "count_one": "{{count}} werkruimte",
+      "count_other": "{{count}} werkruimtes",
+      "status": {
+        "trial": "Proefperiode",
+        "pending": "In afwachting"
+      }
     }
   },
   "booking": {
@@ -8352,7 +8535,46 @@
           "title": "Aanbevolen door ChatGPT",
           "sub": "„Beste bankenwinkel in de buurt”"
         }
+      },
+      "way": {
+        "label": "Hoe wilt u uw account inrichten?",
+        "chatTitle": "In gesprek met {{name}}",
+        "chatSub": "Zoals een chat met een collega. U antwoordt, {{name}} vult alles in.",
+        "chatCta": "Beginnen met {{name}}",
+        "formTitle": "Formulier invullen",
+        "formSub": "Ongeveer 8 minuten, in uw eigen tempo.",
+        "switch": "U kunt op elk moment wisselen. Er gaat niets verloren."
       }
+    },
+    "chat": {
+      "metaTitle": "Inrichten in gesprek",
+      "progress": "{{done}} van {{total}}",
+      "switchToForm": "Naar het formulier",
+      "form": "Formulier",
+      "continueWith": "Verder met {{name}}",
+      "role": "Uw begeleider bij het inrichten, re:praesent",
+      "thinking": "{{name}} typt…",
+      "typing": "Typt…",
+      "placeholder": "Antwoord aan {{name}}…",
+      "send": "Versturen",
+      "pick": "Kies een antwoord",
+      "thatsIt": "Dat is alles",
+      "noneOfThese": "Geen van deze is van ons",
+      "billingSaved": "Factuurgegevens opgeslagen",
+      "saveBilling": "Factuurgegevens opslaan",
+      "saved": "{{topic}} opgeslagen",
+      "yourAnswer": "Antwoord",
+      "retry": "Opnieuw proberen",
+      "errors": {
+        "upstream_failed": "Ik was even de draad kwijt.",
+        "turn_failed": "Er ging bij ons iets mis. Uw antwoorden zijn opgeslagen.",
+        "network": "De verbinding viel weg. Uw antwoorden zijn opgeslagen.",
+        "RATE_LIMITED": "Veel berichten in korte tijd. Neem even pauze of ga verder in het formulier.",
+        "BUSY": "Een moment, ik ben nog aan het antwoorden.",
+        "unavailable": "De assistent is nu niet beschikbaar. Ga verder in het formulier, er gaat niets verloren.",
+        "invalid_request": "Dat lukte niet."
+      },
+      "mascotLabel": "{{name}}, uw begeleider. Tik om hallo te zeggen."
     }
   },
   "salesContact": {

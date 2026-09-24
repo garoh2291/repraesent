@@ -22,6 +22,8 @@ import {
   useLeadFilterStatusOptions,
 } from "~/lib/leads/filter-presets";
 import { useLeadStages } from "~/lib/hooks/usePipelineStages";
+import { useHideLeadGuard } from "~/lib/leads/use-hide-lead-guard";
+import { refreshLeadViews } from "~/lib/leads/hide-choice";
 import { Button } from "~/components/ui/button";
 import TooltipContainer from "~/components/tooltip-container";
 import {
@@ -387,11 +389,14 @@ export default function LeadForm() {
   const hiddenCount = hiddenCountQuery.data ?? 0;
 
   const leadStages = useLeadStages();
+  const { requestStatusChange: requestHideGuarded, guardModal: hideGuardModal } = useHideLeadGuard();
   const notSpamMutation = useMutation({
     mutationFn: (id: string) => markLeadNotSpam(id),
-    onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: ["leads"] });
-      toast.success(t("leads.spam.restored"));
+    onSuccess: (res, id) => {
+      refreshLeadViews(queryClient, id);
+      toast.success(t("leads.spam.restored"), {
+          description: res.alsoRestored ? t("leads.spam.alsoRestored", { count: res.alsoRestored }) : undefined,
+        });
     },
     onError: () => toast.error(t("leads.spam.error")),
   });
@@ -579,7 +584,9 @@ export default function LeadForm() {
             <LeadStatusSelect
               value={lead.status}
               onValueChange={(status) =>
-                updateStatusMutation.mutate({ id: lead.id, status })
+                requestHideGuarded(lead, status, () =>
+                  updateStatusMutation.mutateAsync({ id: lead.id, status }),
+                )
               }
               disabled={!canEdit || updateStatusMutation.isPending}
               className="w-[140px]"
@@ -601,7 +608,7 @@ export default function LeadForm() {
                   type="button"
                   onClick={(event) => {
                     event.stopPropagation();
-                    // "Restore" = not spam: back to the first stage and the
+                    // "Restore" = not spam: back to the stage it was in and the
                     // sender's blocks lifted, so their next lead gets through.
                     notSpamMutation.mutate(lead.id);
                   }}
@@ -854,12 +861,14 @@ export default function LeadForm() {
         onOpenChange={(open) => !open && setSelectedLeadId(null)}
         onStatusChange={
           canEdit
-            ? (id, status) => updateStatusMutation.mutate({ id, status })
+            ? (id, status) => updateStatusMutation.mutateAsync({ id, status })
             : undefined
         }
         isStatusUpdating={updateStatusMutation.isPending}
         canEdit={canEdit}
       />
+
+      {hideGuardModal}
 
       <LeadImportModal
         open={importModalOpen}

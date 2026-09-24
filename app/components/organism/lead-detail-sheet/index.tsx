@@ -23,6 +23,7 @@ import { LeadSourceIcon } from "~/components/organism/lead-source-icon";
 import { LeadStatusSelect } from "~/components/molecule/lead-status-select";
 import { useLeadStages } from "~/lib/hooks/usePipelineStages";
 import { LeadSpamButton } from "~/components/organism/lead-spam/lead-spam-button";
+import { useHideLeadGuard } from "~/lib/leads/use-hide-lead-guard";
 import {
   resolveStageLabel,
   resolveStageLabelByKey,
@@ -384,7 +385,8 @@ interface LeadDetailSheetProps {
   leadId: string | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onStatusChange?: (id: string, status: LeadStatus) => void;
+  /** Return the save (e.g. `mutateAsync`) so "Hide & block" can wait for the move first. */
+  onStatusChange?: (id: string, status: LeadStatus) => void | Promise<unknown>;
   isStatusUpdating?: boolean;
   canEdit?: boolean;
   /**
@@ -487,7 +489,13 @@ export function LeadDetailSheet({
   //   a static badge inside <LeadInfoSection>)
   // - no Tasks section, no Add/Edit/Delete note controls (canEdit forced off)
   // - no "Full page" link (controlled via `withoutLink`)
-  const effectiveOnStatusChange = readOnly ? undefined : onStatusChange;
+  // Moving into Hidden asks "just hide, or block the sender too?" first.
+  const { requestStatusChange: requestHideGuarded, guardModal: hideGuardModal } = useHideLeadGuard();
+  const effectiveOnStatusChange =
+    readOnly || !onStatusChange || !lead
+      ? undefined
+      : (id: string, status: LeadStatus) =>
+          requestHideGuarded(lead, status, () => onStatusChange(id, status));
   const effectiveCanEdit = readOnly ? false : canEdit;
 
   // Falls back to the address before the generic word. A newsletter signup has
@@ -496,6 +504,7 @@ export function LeadDetailSheet({
   const displayName = lead ? personNameOr(lead, "Lead") : "Lead Details";
 
   return (
+    <>
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent
         side="right"
@@ -615,6 +624,8 @@ export function LeadDetailSheet({
         </div>
       </SheetContent>
     </Sheet>
+    {hideGuardModal}
+    </>
   );
 }
 

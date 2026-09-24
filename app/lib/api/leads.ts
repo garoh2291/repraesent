@@ -148,13 +148,19 @@ export async function updateLeadStatus(
   return res.data;
 }
 
-/** Hide it and block the sender's future leads (email + phone). */
-export async function markLeadSpam(id: string): Promise<{ blocked: Array<"email" | "phone" | "domain">; alsoHidden: number }> {
-  return (await apiClient.post(`/leads/${id}/spam`)).data;
+/**
+ * Hide it and block the sender's future leads (email + phone). `fromStatus`: the stage it
+ * was in before, when it was hidden a moment earlier — so Undo / Not spam puts it back there.
+ */
+export async function markLeadSpam(
+  id: string,
+  fromStatus?: string,
+): Promise<{ blocked: Array<"email" | "phone" | "domain">; alsoHidden: number }> {
+  return (await apiClient.post(`/leads/${id}/spam`, fromStatus ? { from_status: fromStatus } : {})).data;
 }
 
-/** Back to the first stage, and lift every block on its sender. */
-export async function markLeadNotSpam(id: string): Promise<{ unblocked: number }> {
+/** Back to the stage it was in before (first stage when unknown), and lift every block on its sender. */
+export async function markLeadNotSpam(id: string): Promise<{ unblocked: number; alsoRestored: number }> {
   return (await apiClient.post(`/leads/${id}/not-spam`)).data;
 }
 

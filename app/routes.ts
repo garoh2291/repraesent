@@ -31,6 +31,7 @@ export default [
     route("closed", "routes/closed.tsx"),
     // Onboarding v2 (ONBOARDING_V2_PLAN.md): own full-screen layout.
     route("onboarding/start/:step?", "routes/onboarding.start.tsx"),
+    route("onboarding/chat", "routes/onboarding.chat.tsx"),
     route("onboarding/in-progress", "routes/onboarding.in-progress.tsx"),
     route("welcome", "routes/welcome.tsx"),
     layout("routes/_onboarding-layout.tsx", [
@@ -127,6 +128,7 @@ export default [
         route("bcc", "routes/settings.bcc.tsx"),
         route("pipelines", "routes/settings.pipelines.tsx"),
         route("onboarding", "routes/settings.onboarding.tsx"),
+        route("support", "routes/settings.support.tsx"),
       ]),
       route("instructions", "routes/instructions.tsx"),
       route("db-brand", "routes/db-brand._index.tsx"),

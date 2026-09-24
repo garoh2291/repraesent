@@ -1,10 +1,12 @@
 "use client";
 
 import { useTranslation } from "react-i18next";
+import { useState } from "react";
 import { motion, useReducedMotion } from "motion/react";
 import {
   ArrowRight,
   CalendarCheck2,
+  ClipboardList,
   Gift,
   MessageSquareText,
   PhoneCall,
@@ -19,6 +21,7 @@ import type { OnboardingState } from "~/lib/api/onboarding-v2";
 import { formatMoney } from "~/lib/onboarding/helpers";
 import { cn } from "~/lib/utils";
 import { AccountMenu, OnbLanguageSwitcher, OnboardingStyles } from "./shell";
+import { Mascot } from "./chat/mascot";
 
 const EASE_OUT = [0.23, 1, 0.32, 1] as const;
 
@@ -31,13 +34,19 @@ const EASE_OUT = [0.23, 1, 0.32, 1] as const;
  * Not a wizard step: no chapter bar, not counted in progress. Shown once per
  * browser session to people who haven't started yet.
  */
-export function OnboardingIntro({ state, onStart }: { state: OnboardingState; onStart: () => void }) {
+export type OnboardingMode = "form" | "chat";
+
+export function OnboardingIntro({ state, onStart }: { state: OnboardingState; onStart: (mode: OnboardingMode) => void }) {
   const { t, i18n } = useTranslation();
   const reduce = useReducedMotion();
   const q = state.pricing;
   const free = q?.freeMonths ?? 2;
   const money = (c: number, d: "auto" | 0 | 2 = "auto") => (q ? formatMoney(c, q.currency, i18n.language, d) : "");
   const team = (state.sales_team ?? []).filter((h) => h.label || h.avatar_url);
+  const assistant = state.assistant?.available ? state.assistant : null;
+  // The root's own intro texts for this region + language, when set (Settings → Onboarding → AI assistant).
+  const ownHeadline = assistant?.intro?.headline ?? null;
+  const ownSub = assistant?.intro?.sub ?? null;
   const names = team.map((h) => h.label?.split(" ")[0]).filter((n): n is string => !!n);
   const namesText =
     names.length === 0 ? null : names.length === 1 ? names[0] : `${names.slice(0, -1).join(", ")} ${t("onb.intro.and")} ${names[names.length - 1]}`;
@@ -97,15 +106,19 @@ export function OnboardingIntro({ state, onStart }: { state: OnboardingState; on
               {...rise(1)}
               className="ob2-heading mt-4 max-w-[18ch] text-balance text-[2.25rem] leading-[1.06] tracking-[-0.02em] sm:text-[3.5rem]"
             >
-              {t("onb.intro.title1")}{" "}
-              <span className="relative whitespace-nowrap">
-                <span className="relative z-10">{t("onb.intro.titleHighlight")}</span>
-                <span aria-hidden className="absolute inset-x-0 bottom-[0.08em] z-0 h-[0.32em] rounded-sm bg-secondary" />
-              </span>{" "}
-              {t("onb.intro.title2")}
+              {ownHeadline ?? (
+                <>
+                  {t("onb.intro.title1")}{" "}
+                  <span className="relative whitespace-nowrap">
+                    <span className="relative z-10">{t("onb.intro.titleHighlight")}</span>
+                    <span aria-hidden className="absolute inset-x-0 bottom-[0.08em] z-0 h-[0.32em] rounded-sm bg-secondary" />
+                  </span>{" "}
+                  {t("onb.intro.title2")}
+                </>
+              )}
             </motion.h1>
             <motion.p {...rise(2)} className="mt-5 max-w-[46ch] text-[16px] leading-relaxed text-muted-foreground sm:text-[17px]">
-              {t("onb.intro.sub")}
+              {ownSub ?? t("onb.intro.sub")}
             </motion.p>
 
             {/* The offer: impossible to miss, before a single field. */}
@@ -131,10 +144,16 @@ export function OnboardingIntro({ state, onStart }: { state: OnboardingState; on
               ))}
             </motion.ul>
 
-            <motion.div {...rise(4)} className="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-5">
-              <StartButton onStart={onStart} label={t("onb.intro.cta")} />
-              <p className="text-[13px] text-muted-foreground">{t("onb.intro.ctaNote")}</p>
-            </motion.div>
+            {assistant ? (
+              <motion.div {...rise(4)} className="mt-8">
+                <WayChoice name={assistant.name ?? ""} onStart={onStart} />
+              </motion.div>
+            ) : (
+              <motion.div {...rise(4)} className="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-5">
+                <StartButton onStart={() => onStart("form")} label={t("onb.intro.cta")} />
+                <p className="text-[13px] text-muted-foreground">{t("onb.intro.ctaNote")}</p>
+              </motion.div>
+            )}
           </div>
 
           <Showcase />
@@ -189,7 +208,11 @@ export function OnboardingIntro({ state, onStart }: { state: OnboardingState; on
               </p>
               <p className="mt-3 max-w-[56ch] text-[15px] leading-relaxed text-background/70">{t("onb.intro.whyBody", { count: free })}</p>
             </div>
-            <StartButton onStart={onStart} label={t("onb.intro.cta")} inverted />
+            <StartButton
+              onStart={() => onStart(assistant ? "chat" : "form")}
+              label={assistant ? t("onb.intro.way.chatCta", { name: assistant.name }) : t("onb.intro.cta")}
+              inverted
+            />
           </div>
         </section>
       </main>
@@ -291,6 +314,55 @@ function Showcase() {
           </motion.div>
         </motion.div>
       ))}
+    </div>
+  );
+}
+
+/**
+ * Two ways through the same onboarding. Equal weight on purpose: the form is
+ * not the "boring" option, it is the in-control one.
+ */
+function WayChoice({ name, onStart }: { name: string; onStart: (mode: OnboardingMode) => void }) {
+  const { t } = useTranslation();
+  const [hover, setHover] = useState(false);
+  const card =
+    "group relative flex min-h-[132px] flex-col items-start gap-3 rounded-2xl border p-4 text-left transition-[transform,box-shadow,border-color] duration-200 active:scale-[0.985] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground/40 focus-visible:ring-offset-2 focus-visible:ring-offset-background sm:p-5";
+  return (
+    <div>
+      <p className="mb-3 text-[13px] font-medium text-foreground/70">{t("onb.intro.way.label")}</p>
+      <div className="grid gap-3 sm:grid-cols-2">
+        <button
+          type="button"
+          onClick={() => onStart("chat")}
+          onPointerEnter={() => setHover(true)}
+          onPointerLeave={() => setHover(false)}
+          className={cn(card, "border-foreground bg-foreground text-background shadow-[0_10px_30px_-14px_rgba(19,21,21,0.55)] hover:-translate-y-0.5")}
+        >
+          <span className="flex w-full items-center justify-between">
+            <span className="flex size-12 items-center justify-center rounded-2xl bg-background/10">
+              <Mascot mood={hover ? "speaking" : "idle"} size={44} />
+            </span>
+            <ArrowRight className="size-4 text-secondary transition-transform duration-200 group-hover:translate-x-0.5" aria-hidden />
+          </span>
+          <span>
+            <span className="block text-[15px] font-semibold">{t("onb.intro.way.chatTitle", { name })}</span>
+            <span className="mt-1 block text-[13px] leading-snug text-background/70">{t("onb.intro.way.chatSub", { name })}</span>
+          </span>
+        </button>
+        <button type="button" onClick={() => onStart("form")} className={cn(card, "border-border bg-card text-foreground hover:-translate-y-0.5 hover:border-foreground/40")}>
+          <span className="flex w-full items-center justify-between">
+            <span className="flex size-10 items-center justify-center rounded-full bg-muted" aria-hidden>
+              <ClipboardList className="size-5 text-foreground/80" />
+            </span>
+            <ArrowRight className="size-4 text-foreground/50 transition-transform duration-200 group-hover:translate-x-0.5" aria-hidden />
+          </span>
+          <span>
+            <span className="block text-[15px] font-semibold">{t("onb.intro.way.formTitle")}</span>
+            <span className="mt-1 block text-[13px] leading-snug text-muted-foreground">{t("onb.intro.way.formSub")}</span>
+          </span>
+        </button>
+      </div>
+      <p className="mt-3 text-[12.5px] text-muted-foreground">{t("onb.intro.way.switch")}</p>
     </div>
   );
 }

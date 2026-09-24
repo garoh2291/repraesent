@@ -19,6 +19,7 @@ const SECTIONS = [
   { match: "/settings/calendars", key: "calendars" },
   { match: "/settings/pipelines", key: "pipelines" },
   { match: "/settings/onboarding", key: "onboarding" },
+  { match: "/settings/support", key: "support" },
   { match: "/settings/team", key: "team" },
   { match: "/settings/bcc", key: "bcc" },
 ] as const;

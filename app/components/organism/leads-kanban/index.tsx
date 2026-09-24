@@ -33,6 +33,7 @@ import {
 } from "~/components/organism/lead-success-confirm-modal";
 import type { PipelineStage } from "~/lib/api/pipeline-stages";
 import { useLeadStages } from "~/lib/hooks/usePipelineStages";
+import { useHideLeadGuard } from "~/lib/leads/use-hide-lead-guard";
 import {
   resolveStageColors,
   resolveStageColorsByKey,
@@ -132,6 +133,7 @@ export function LeadsKanban({
   const { t } = useTranslation();
   const manualOrder = isManualOrder(sortMode);
   const { visible: stages, byKey, isLoading: stagesLoading } = useLeadStages();
+  const { requestStatusChange: requestHideGuarded, guardModal: hideGuardModal } = useHideLeadGuard();
   const [activeId, setActiveId] = useState<string | null>(null);
   // Confirmation dialog shown when a lead is dropped into a won-category column.
   const [successConfirm, setSuccessConfirm] = useState<{
@@ -326,33 +328,10 @@ export function LeadsKanban({
     [byKey, stages, leadsByStatus],
   );
 
-  const handleDragEnd = useCallback(
-    (event: DragEndEvent) => {
-      const { active, over } = event;
-      setActiveId(null);
-      if (!over) return;
-
-      const leadId = String(active.id).replace(/^lead-/, "");
-      const drop = resolveDrop(leadId, String(over.id));
-      if (!drop) return;
-
-      const lead = allLoadedLeads.find((l) => l.id === leadId);
-      if (!lead) return;
-
-      // Dropping into a won-category column is a deliberate action (it marks
-      // the lead as converted) — confirm it first.
-      const targetStage = byKey.get(drop.status);
-      const currentCategory = byKey.get(lead.status)?.category;
-      if (
-        targetStage &&
-        targetStage.category === "won" &&
-        currentCategory !== "won" &&
-        lead.status !== drop.status
-      ) {
-        setSuccessConfirm({ lead, targetStage, phase: "confirm" });
-        return;
-      }
-
+  /** The actual move, after any confirmation. Returns the save so the hide guard can wait for it. */
+  const commitMove = useCallback(
+    (lead: Lead, drop: { status: string; insertionIndex: number }) => {
+      const leadId = lead.id;
       // Sorted modes: the column order is the server's, so an in-column drag
       // means nothing and must not write a board_position that manual mode
       // would later honour. A drop into another column is still a real status
@@ -374,8 +353,7 @@ export function LeadsKanban({
         if (landTimerRef.current) clearTimeout(landTimerRef.current);
         landTimerRef.current = setTimeout(() => setJustMovedId(null), 500);
 
-        onStatusChange(leadId, drop.status);
-        return;
+        return onStatusChange(leadId, drop.status);
       }
 
       const position = positionForInsertion(
@@ -409,17 +387,43 @@ export function LeadsKanban({
       if (landTimerRef.current) clearTimeout(landTimerRef.current);
       landTimerRef.current = setTimeout(() => setJustMovedId(null), 500);
 
-      onReorder({ leadId, status: drop.status, position });
+      return onReorder({ leadId, status: drop.status, position });
     },
-    [
-      resolveDrop,
-      allLoadedLeads,
-      byKey,
-      leadsByStatus,
-      onReorder,
-      onStatusChange,
-      manualOrder,
-    ],
+    [leadsByStatus, onReorder, onStatusChange, manualOrder],
+  );
+
+  const handleDragEnd = useCallback(
+    (event: DragEndEvent) => {
+      const { active, over } = event;
+      setActiveId(null);
+      if (!over) return;
+
+      const leadId = String(active.id).replace(/^lead-/, "");
+      const drop = resolveDrop(leadId, String(over.id));
+      if (!drop) return;
+
+      const lead = allLoadedLeads.find((l) => l.id === leadId);
+      if (!lead) return;
+
+      // Dropping into a won-category column is a deliberate action (it marks
+      // the lead as converted) — confirm it first.
+      const targetStage = byKey.get(drop.status);
+      const currentCategory = byKey.get(lead.status)?.category;
+      if (
+        targetStage &&
+        targetStage.category === "won" &&
+        currentCategory !== "won" &&
+        lead.status !== drop.status
+      ) {
+        setSuccessConfirm({ lead, targetStage, phase: "confirm" });
+        return;
+      }
+
+      // Moving into Hidden asks first: just hide, or also block the sender.
+      // Like the won check, the card stays put until they choose.
+      requestHideGuarded(lead, drop.status, () => commitMove(lead, drop));
+    },
+    [resolveDrop, allLoadedLeads, byKey, commitMove, requestHideGuarded],
   );
 
   const handleConfirmSuccess = useCallback(async () => {
@@ -550,6 +554,7 @@ export function LeadsKanban({
         onConfirm={handleConfirmSuccess}
         onClose={() => setSuccessConfirm(null)}
       />
+      {hideGuardModal}
     </>
   );
 }

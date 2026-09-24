@@ -31,7 +31,7 @@ function YesNoUnsureCards({ value, onChange, label }: { value: YesNoUnsure | nul
   );
 }
 
-function Stars({ rating }: { rating: number }) {
+export function Stars({ rating }: { rating: number }) {
   return (
     <span className="inline-flex items-center gap-0.5" aria-hidden>
       {[1, 2, 3, 4, 5].map((i) => (
@@ -41,7 +41,7 @@ function Stars({ rating }: { rating: number }) {
   );
 }
 
-function PlaceCard({ place, onPick, busy }: { place: PlaceCandidate; onPick: () => void; busy?: boolean }) {
+export function PlaceCard({ place, onPick, busy }: { place: PlaceCandidate; onPick: () => void; busy?: boolean }) {
   const { t } = useTranslation();
   return (
     <div className="flex flex-col gap-3 rounded-2xl border border-border bg-card p-4 sm:flex-row sm:items-center">

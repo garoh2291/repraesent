@@ -173,6 +173,11 @@ const SETTINGS_NAV = [
     labelKey: "settings.tabs.onboarding",
     Icon: Rocket,
   },
+  {
+    to: "/settings/support",
+    labelKey: "settings.tabs.support",
+    Icon: Headset,
+  },
 ] as const;
 
 /**
@@ -564,7 +569,9 @@ export function Sidebar({
     !!currentWorkspace &&
     currentWorkspace.is_root !== true &&
     currentWorkspace.is_demo !== true &&
-    !isDoorboostBrandWs;
+    !isDoorboostBrandWs &&
+    // Switched on per workspace by re:praesent (root Settings → Support).
+    currentWorkspace.support_contact_enabled === true;
   const [contactOpen, setContactOpen] = useState(false);
   // TEMPORARY: Workflows and Settings → Integrations are still being piloted,
   // so in production only the pilot workspace sees those nav entries. Local
@@ -836,7 +843,7 @@ export function Sidebar({
                   ? pilot.integrations || isDemoWorkspace
                   : item.to === "/settings/ai"
                     ? showAiAssistant
-                    : item.to === "/settings/onboarding"
+                    : item.to === "/settings/onboarding" || item.to === "/settings/support"
                       ? isRootAdmin
                       : true
               ).map(({ to, labelKey, Icon }) => (
