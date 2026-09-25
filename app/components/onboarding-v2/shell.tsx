@@ -18,7 +18,8 @@ import {
 import { useAuthContext } from "~/providers/auth-provider";
 import { cn } from "~/lib/utils";
 import { BusinessCard, BusinessCardChip } from "./business-card";
-import { CHAPTERS, chapterOf, useWizard } from "./wizard-context";
+import { useWizard } from "./wizard-context";
+import { ProgressHeaderBar, ProgressRail, ProgressStrip } from "./progress";
 
 /** Lora for the questions; the app's Geist everywhere else. */
 export function OnboardingStyles() {
@@ -36,49 +37,6 @@ export function OnboardingStyles() {
 export function OnbLanguageSwitcher() {
   // One compact EN/DE/FR/NL switch on every width (the phone dropdown put its arrow far from the text).
   return <LanguageSwitcher variant="light" persistToDb />;
-}
-
-function ChapterBar() {
-  const { t } = useTranslation();
-  const { step, steps } = useWizard();
-  const current = chapterOf(step);
-  const left = CHAPTERS.length - current - 1;
-  return (
-    <nav aria-label={t("onb.progress.label")} className="w-full">
-      <ol className="grid grid-cols-5 gap-1.5">
-        {CHAPTERS.map((c, i) => {
-          const visible = c.steps.filter((s) => steps.includes(s));
-          const within = Math.max(0, visible.indexOf(step));
-          const fraction = i < current ? 1 : i > current ? 0 : (within + 0.5) / Math.max(1, visible.length);
-          return (
-            <li key={c.key} className="min-w-0 space-y-1.5" aria-current={i === current ? "step" : undefined}>
-              <div className="h-1 overflow-hidden rounded-full bg-foreground/10">
-                <motion.div
-                  className="h-full origin-left rounded-full bg-foreground"
-                  initial={false}
-                  animate={{ transform: `scaleX(${fraction})` }}
-                  transition={{ duration: 0.4, ease: [0.23, 1, 0.32, 1] }}
-                />
-              </div>
-              <span
-                className={cn(
-                  "hidden items-center gap-1 truncate text-[12px] sm:flex",
-                  i === current ? "font-semibold text-foreground" : "text-muted-foreground",
-                )}
-              >
-                {i < current ? <Check className="size-3 shrink-0" strokeWidth={3} aria-hidden /> : null}
-                {t(`onb.chapters.${c.key}`)}
-              </span>
-            </li>
-          );
-        })}
-      </ol>
-      <p className="mt-1.5 text-[12px] text-muted-foreground sm:hidden">
-        {t(`onb.chapters.${CHAPTERS[current]?.key ?? "business"}`)} ·{" "}
-        {left > 0 ? t("onb.progress.left", { count: left }) : t("onb.progress.last")}
-      </p>
-    </nav>
-  );
 }
 
 function SavedTick() {
@@ -161,19 +119,28 @@ export function WizardShell({ children, hideCard = false }: { children: React.Re
     <div className="min-h-dvh overflow-x-clip bg-background text-foreground">
       <OnboardingStyles />
       <header className="sticky top-0 z-20 border-b border-border/60 bg-background/80 backdrop-blur-md">
-        <div className="mx-auto flex h-16 max-w-6xl items-center gap-4 px-5">
-          <img src={logoUrl} alt="re:praesent" className="h-5 w-auto max-w-[120px] shrink-0 sm:h-6" />
-          <div className="hidden flex-1 px-6 md:block">
-            <ChapterBar />
+        <div className="mx-auto flex h-16 max-w-6xl items-center gap-2 px-4 sm:gap-4 sm:px-5 xl:max-w-7xl">
+          <img src={logoUrl} alt="re:praesent" className="h-4 w-auto max-w-[96px] shrink-0 sm:h-6 sm:max-w-[120px]" />
+          {/* Tablet: progress in the header. Desktop has the rail; phones the strip below. */}
+          <div className="hidden flex-1 px-6 md:block xl:invisible">
+            <ProgressHeaderBar />
           </div>
           <div className="ml-auto flex items-center gap-1 sm:gap-2 md:ml-0">
             <SavedTick />
             {state?.assistant?.available ? (
               <Link
                 to="/onboarding/chat"
-                className="inline-flex h-9 items-center gap-2 rounded-full border border-border bg-card p-1 text-[13px] sm:pr-3 font-medium text-foreground/85 transition-colors hover:border-foreground/40 hover:text-foreground"
+                className="inline-flex h-9 shrink-0 items-center gap-2 whitespace-nowrap rounded-full border border-border bg-card p-1 text-[13px] sm:pr-3 font-medium text-foreground/85 transition-colors hover:border-foreground/40 hover:text-foreground"
               >
-                {state.assistant.chosen ? <Portrait level={state.assistant.chosen} size={28} simple /> : <PortraitStack levels={ASSISTANT_LEVELS} size={24} />}
+                {state.assistant.chosen ? (
+                  <Portrait level={state.assistant.chosen} size={28} simple />
+                ) : (
+                  <>
+                    {/* Phones: one face keeps the header on one line; the three show from sm up. */}
+                    <Portrait level="assisted" size={28} simple className="sm:hidden" />
+                    <PortraitStack levels={ASSISTANT_LEVELS} size={24} className="hidden sm:inline-flex" />
+                  </>
+                )}
                 <span className="hidden sm:inline">{state.assistant.name ? t("onb.chat.continueWith", { name: state.assistant.name }) : t("onb.chat.continueChat")}</span>
                 <span className="sr-only sm:hidden">{state.assistant.name ? t("onb.chat.continueWith", { name: state.assistant.name }) : t("onb.chat.continueChat")}</span>
               </Link>
@@ -182,12 +149,15 @@ export function WizardShell({ children, hideCard = false }: { children: React.Re
             <AccountMenu />
           </div>
         </div>
-        <div className="px-5 pb-3 md:hidden">
-          <ChapterBar />
+        <div className="md:hidden">
+          <ProgressStrip />
         </div>
       </header>
 
-      <div className="mx-auto grid max-w-6xl gap-10 px-5 pb-16 pt-8 sm:pt-14 lg:grid-cols-[minmax(0,1fr)_360px] lg:gap-16">
+      <div className="mx-auto grid max-w-6xl gap-10 px-5 pb-16 pt-8 sm:pt-14 lg:grid-cols-[minmax(0,1fr)_360px] lg:gap-16 xl:max-w-7xl xl:grid-cols-[200px_minmax(0,1fr)_340px] xl:gap-14">
+        <aside className="hidden xl:block">
+          <ProgressRail />
+        </aside>
         <main className="min-w-0 max-w-[620px]">
           {/* Phones: no empty card above the very first question — it only pushes it down. */}
           {!hideCard && step !== "business" ? (

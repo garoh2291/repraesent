@@ -1569,7 +1569,7 @@ export default function FormBuilderRoute() {
       // preview and the validation banner all offset by it so they clear the
       // command bar instead of sliding under it. Retuned when the bar lost its
       // buttons and language strip — bar height plus the wrapper's padding.
-      style={{ "--fb-stick": "5.5rem" } as React.CSSProperties}
+      style={{ "--fb-stick": "calc(5.5rem + var(--section-tabs-h, 0px))" } as React.CSSProperties}
     >
       <UnsavedChangesGuard when={canEdit && (dirty || emailDirty)} />
 
@@ -1580,7 +1580,7 @@ export default function FormBuilderRoute() {
 
           Bleeds the page padding, or the sticky element leaves a transparent
           gutter as content scrolls under it. */}
-      <div className="app-fade-down sticky top-0 z-30 -mx-4 bg-background/80 px-4 pb-3 pt-4 backdrop-blur sm:-mx-6 sm:px-6 sm:pt-6">
+      <div className="app-fade-down sticky top-[var(--section-tabs-h,0px)] z-30 -mx-4 bg-background/80 px-4 pb-3 pt-4 backdrop-blur sm:-mx-6 sm:px-6 sm:pt-6">
         <div className="overflow-hidden rounded-2xl bg-[#111113] shadow-[0_8px_24px_-12px_rgba(0,0,0,0.35)]">
           <div className="flex min-w-0 items-center gap-3 px-4 py-2.5 sm:px-5">
             <Link

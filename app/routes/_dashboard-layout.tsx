@@ -25,6 +25,7 @@ import {
 } from "~/components/notebook/command-palette";
 import { LeadFlowProvider } from "~/components/notebook/lead-flow";
 import { DealFlowProvider } from "~/components/notebook/deal-flow";
+import { QuickCreateProvider } from "~/components/notebook/quick-create";
 export default function DashboardLayout() {
   const { user, currentWorkspace } = useAuthContext();
   const location = useLocation();
@@ -83,6 +84,7 @@ export default function DashboardLayout() {
   return (
     <LeadFlowProvider>
     <DealFlowProvider>
+    <QuickCreateProvider>
     <div className="flex h-dvh overflow-hidden bg-background">
       <PilotRouteGate />
       {/* Desktop sidebar — the ink column */}
@@ -99,6 +101,9 @@ export default function DashboardLayout() {
           "relative flex min-w-0 flex-1 flex-col overflow-y-auto overflow-x-hidden bg-background" +
           (sections ? " pb-[calc(4rem+env(safe-area-inset-bottom))] lg:pb-0" : "")
         }
+        // Height of the sticky section tabs, so pages' own sticky headers stop
+        // just below them instead of sliding underneath (0 when there are no tabs).
+        style={{ "--section-tabs-h": section && section.tabs.length > 1 ? "2.8125rem" : "0px" } as React.CSSProperties}
       >
         {/* Mobile top bar */}
         <div className="flex lg:hidden items-center h-14 px-4 border-b border-border bg-card shrink-0 gap-3">
@@ -183,6 +188,7 @@ export default function DashboardLayout() {
 
       <SyncCompleteModal />
     </div>
+    </QuickCreateProvider>
     </DealFlowProvider>
     </LeadFlowProvider>
   );

@@ -1291,7 +1291,7 @@
       "support": "Support"
     },
     "bcc": {
-      "metaTitle": "Journalisation des e-mails",
+      "metaTitle": "Copies d'e-mails (BCC)",
       "metaDescription": "Journaliser les e-mails vers les leads par BCC",
       "sectionTitle": "Votre adresse BCC",
       "sectionDescription": "Ajoutez cette adresse masquée dans le champ CCi lorsque vous écrivez à un client. Une copie est journalisée et automatiquement rattachée au lead correspondant.",
@@ -1325,7 +1325,7 @@
       "loadError": "Impossible de charger votre adresse BCC."
     },
     "profile": {
-      "metaTitle": "Paramètres du profil",
+      "metaTitle": "Votre profil",
       "metaDescription": "Mettre à jour votre nom",
       "sectionTitle": "Votre profil",
       "sectionDescription": "Ce nom apparaît auprès de votre équipe et dans les notifications.",
@@ -1336,7 +1336,7 @@
       "required": "Le prénom et le nom sont obligatoires."
     },
     "team": {
-      "metaTitle": "Paramètres de l'espace",
+      "metaTitle": "Équipe",
       "metaDescription": "Gérer les membres de l'équipe, les rôles et les notifications"
     },
     "workspace": {
@@ -1526,7 +1526,7 @@
       }
     },
     "integrations": {
-      "metaTitle": "Intégrations",
+      "metaTitle": "Applis connectées",
       "metaDescription": "Connectez des comptes tiers à cet espace de travail.",
       "sectionLabel": "Applications connectées",
       "sectionDescription": "Connectez un compte tiers à cet espace de travail. Un compte par application.",
@@ -1549,7 +1549,7 @@
       }
     },
     "notifications": {
-      "metaTitle": "Notifications",
+      "metaTitle": "Alertes chat d'équipe",
       "metaDescription": "Envoyer les événements de l'espace de travail vers Slack, Microsoft Teams ou Google Chat.",
       "sectionLabel": "Canaux",
       "sectionDescription": "Publier les événements de l'espace de travail sur Slack, Microsoft Teams ou Google Chat dès qu'ils se produisent.",
@@ -1714,7 +1714,7 @@
       "deleteFailed": "Impossible de supprimer l'étape.",
       "reorderFailed": "Impossible de réordonner les étapes.",
       "readOnlyHint": "Seuls les admins de l'espace de travail peuvent modifier les étapes du pipeline. Vous pouvez consulter la configuration ci-dessous.",
-      "metaTitle": "Étapes du pipeline",
+      "metaTitle": "Étapes des affaires",
       "metaDescription": "Renommer, réordonner, colorer, masquer ou ajouter les étapes de vos pipelines de leads et d'affaires.",
       "pipelinePickerLabel": "Pipeline",
       "pipelinePickerHint": "Chaque pipeline a ses propres étapes d’affaires."
@@ -1790,7 +1790,7 @@
     "avatarSavedWorkspace": "Photo de l'espace de travail mise à jour",
     "avatarRemovedWorkspace": "Photo de l'espace de travail supprimée",
     "ai": {
-      "metaTitle": "IA",
+      "metaTitle": "Clé IA",
       "metaDescription": "Connectez la clé OpenRouter de vos assistants IA et choisissez le modèle par défaut.",
       "sectionLabel": "Clé OpenRouter",
       "sectionDescription": "Les assistants IA fonctionnent sur votre propre compte OpenRouter. Chat, classification et embeddings sont facturés à cette clé.",
@@ -2144,7 +2144,7 @@
       }
     },
     "emailNotifications": {
-      "metaTitle": "Notifications par courriel",
+      "metaTitle": "Résumés par e-mail",
       "metaDescription": "De courts résumés par courriel : nouvelles demandes, tâches du jour, votre pipeline et plus.",
       "sectionLabel": "Résumés par courriel",
       "sectionDescription": "Envoyés le matin, heure locale ({{tz}}). Rien à signaler, pas de courriel.",
@@ -2169,7 +2169,7 @@
       "instantLink": "Le régler sur la page de l'équipe"
     },
     "businessProfile": {
-      "metaTitle": "Profil de l'entreprise",
+      "metaTitle": "Infos de l'entreprise",
       "metaDescription": "Votre entreprise telle que vos clients la voient : adresse, heures d'ouverture, offre et informations légales.",
       "websiteLabel": "Site web",
       "websiteDescription": "Nous lisons votre site pour remplir votre profil. Ce que vous avez confirmé n'est jamais remplacé.",
@@ -2237,6 +2237,17 @@
         "trial": "Essai",
         "pending": "En attente"
       }
+    },
+    "navLabels": {
+      "profile": "Votre profil",
+      "team": "Équipe",
+      "businessDetails": "Infos de l'entreprise",
+      "emailCopies": "Copies d'e-mails (BCC)",
+      "connectedApps": "Applis",
+      "aiKey": "Clé IA",
+      "emailSummaries": "Résumés par e-mail",
+      "teamChat": "Alertes chat d'équipe",
+      "dealStages": "Étapes des affaires"
     }
   },
   "booking": {
@@ -7838,7 +7849,16 @@
       "label": "Progression de la configuration",
       "left_one": "Encore 1 chapitre",
       "left_other": "Encore {{count}} chapitres",
-      "last": "Dernier chapitre"
+      "last": "Dernier chapitre",
+      "title": "Votre configuration",
+      "stepOf": "Étape {{n}} sur {{total}}",
+      "stepShort": "{{n}} sur {{total}}",
+      "minutesLeft_one": "Encore environ {{count}} minute",
+      "minutesLeft_other": "Encore environ {{count}} minutes",
+      "minutesShort_one": "~{{count}} min restante",
+      "minutesShort_other": "~{{count}} min restantes",
+      "lastStep": "Dernière étape",
+      "openList": "Voir toutes les étapes"
     },
     "source": {
       "website": "de votre site web",
@@ -8577,7 +8597,16 @@
         "chatTitleTeam": "En discutant avec l'un de nos guides",
         "chatSubTeam": "Comme une conversation avec un collègue. Choisissez la personne qui explique à votre façon.",
         "chatCtaTeam": "Démarrer le chat"
-      }
+      },
+      "promise": {
+        "free_one": "Premier mois offert",
+        "free_other": "{{count}} mois offerts",
+        "hidden": "Aucun coût caché",
+        "seats": "Aucun coût par membre d'équipe",
+        "cancel": "Résiliable à tout moment"
+      },
+      "finePrint": "Ensuite {{price}} par an, environ {{perDay}} par jour, HT. Rien à payer aujourd'hui, sans carte bancaire.",
+      "finePrintNoPrice": "Ensuite un prix annuel unique. Rien à payer aujourd'hui, sans carte bancaire."
     },
     "chat": {
       "metaTitle": "Configuration guidée",
@@ -8635,6 +8664,23 @@
           }
         }
       }
+    },
+    "stepNames": {
+      "business": "Nom de l'entreprise",
+      "website": "Site web",
+      "details": "Votre entreprise",
+      "you": "À propos de vous",
+      "google": "Google Maps",
+      "social": "Réseaux sociaux",
+      "goals": "Vos objectifs",
+      "growth": "Vos prochains projets",
+      "sales": "Vos clients",
+      "email": "E-mail",
+      "domain": "Adresse web",
+      "team": "Votre équipe",
+      "notifications": "Résumés par e-mail",
+      "billing": "Facturation",
+      "plan": "Votre offre"
     }
   },
   "salesContact": {
@@ -8689,10 +8735,10 @@
     },
     "settingsGroups": {
       "you": "Vous",
-      "workspace": "Espace",
+      "workspace": "Votre entreprise",
       "connections": "Connexions",
-      "alerts": "Alertes",
-      "sales": "Ventes",
+      "alerts": "Mises à jour",
+      "sales": "Affaires",
       "root": "re:praesent"
     }
   },

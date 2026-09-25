@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { useQuickCreate, type QuickCreateKind } from "~/components/notebook/quick-create";
 import { useNavigate } from "react-router";
 import { useTranslation } from "react-i18next";
 import { Command } from "cmdk";
@@ -28,6 +29,8 @@ type Item = {
   icon: React.ComponentType<{ className?: string }>;
   to: string;
   keywords?: string;
+  /** Opens a create dialog over the current page instead of navigating. */
+  create?: QuickCreateKind;
 };
 
 function norm(s: string) {
@@ -132,10 +135,10 @@ export function CommandPalette() {
     () =>
       sections
         ? [
-            { id: "new-lead", label: t("command.newInquiry", "New inquiry"), icon: Plus, to: "/lead-form?new=1" },
-            { id: "new-deal", label: t("command.newDeal", "New deal"), icon: Plus, to: "/pipeline?newDeal=1" },
-            { id: "new-task", label: t("command.newTask", "New task"), icon: Plus, to: "/tasks?new=1" },
-            { id: "new-contact", label: t("command.newContact", "New contact"), icon: Plus, to: "/contacts?new=1" },
+            { id: "new-lead", label: t("command.newInquiry", "New inquiry"), icon: Plus, to: "/lead-form?new=1", create: "lead" },
+            { id: "new-deal", label: t("command.newDeal", "New deal"), icon: Plus, to: "/pipeline?newDeal=1", create: "deal" },
+            { id: "new-task", label: t("command.newTask", "New task"), icon: Plus, to: "/tasks?new=1", create: "task" },
+            { id: "new-contact", label: t("command.newContact", "New contact"), icon: Plus, to: "/contacts?new=1", create: "contact" },
             { id: "new-form", label: t("command.newForm", "New form"), icon: Plus, to: "/forms" },
           ]
         : [],
@@ -149,6 +152,7 @@ export function CommandPalette() {
   const shownActions = actions.filter(match);
   const hits = search.data;
 
+  const quickCreate = useQuickCreate();
   const go = (to: string) => {
     setOpen(false);
     navigate(to);
@@ -198,7 +202,15 @@ export function CommandPalette() {
     <Command.Item
       key={i.id}
       value={i.id}
-      onSelect={() => go(i.to)}
+      onSelect={() => {
+        if (i.create) {
+          // Stay on this page: the palette closes, the dialog opens over it.
+          setOpen(false);
+          quickCreate.open(i.create);
+        } else {
+          go(i.to);
+        }
+      }}
       className="group flex cursor-pointer items-center gap-3 rounded-lg px-3 py-2.5 text-[14px] text-foreground aria-selected:bg-accent"
     >
       <i.icon className="size-4 shrink-0 text-muted-foreground" />

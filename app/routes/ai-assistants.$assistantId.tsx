@@ -367,12 +367,15 @@ export default function AiAssistantDetailRoute() {
 
   return (
     <div
-      className="mx-auto w-full max-w-[1280px] space-y-5 p-4 sm:p-6"
-      style={{ "--ai-stick": "5.5rem" } as React.CSSProperties}
+      // Same wrapper as the forms editor: app-fade-in makes this its own stacking
+      // context, so the sticky dark header can't slide over the section tabs, and
+      // the top padding lives in the header itself.
+      className="mx-auto w-full max-w-[1280px] space-y-5 p-4 pb-10! pt-0! sm:p-6 sm:pb-14! sm:pt-0! app-fade-in"
+      style={{ "--ai-stick": "calc(5.5rem + var(--section-tabs-h, 0px))" } as React.CSSProperties}
     >
       <UnsavedChangesGuard when={canEdit && dirty} />
 
-      <div className="app-fade-down sticky top-0 z-30 -mx-4 bg-background/80 px-4 pb-3 pt-4 backdrop-blur sm:-mx-6 sm:px-6 sm:pt-6">
+      <div className="app-fade-down sticky top-[var(--section-tabs-h,0px)] z-30 -mx-4 bg-background/80 px-4 pb-3 pt-4 backdrop-blur sm:-mx-6 sm:px-6 sm:pt-6">
         <div className="overflow-hidden rounded-2xl bg-[#111113] shadow-[0_8px_24px_-12px_rgba(0,0,0,0.35)]">
           <div className="flex min-w-0 flex-wrap items-center gap-2 px-4 py-2.5 sm:gap-3 sm:px-5">
             <Link

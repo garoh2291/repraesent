@@ -18,15 +18,16 @@ import { OpenAiMark } from "~/components/icons/openai-mark";
 /**
  * The settings sub-navigation.
  *
- * Labels reuse the keys the deleted tab strip used, so all four locales already
- * have them. Order matches the old tabs.
+ * Labels in the notebook voice (PRODUCT_DIRECTION.md): what the page is for, in
+ * the owner's words — "Team", "Deal stages", not "Area Settings". Order matches
+ * the old tabs.
  */
 export const SETTINGS_NAV = [
-  { to: "/settings/profile", labelKey: "settings.tabs.profile", Icon: User, group: "you" },
-  { to: "/settings/team", labelKey: "settings.tabs.areaSettings", Icon: Users, group: "workspace" },
+  { to: "/settings/profile", labelKey: "settings.navLabels.profile", Icon: User, group: "you" },
+  { to: "/settings/team", labelKey: "settings.navLabels.team", Icon: Users, group: "workspace" },
   {
     to: "/settings/business-profile",
-    labelKey: "settings.tabs.businessProfile",
+    labelKey: "settings.navLabels.businessDetails",
     Icon: Store,
     group: "workspace",
   },
@@ -42,10 +43,10 @@ export const SETTINGS_NAV = [
     Icon: CalendarDays,
     group: "connections",
   },
-  { to: "/settings/bcc", labelKey: "settings.tabs.bcc", Icon: Inbox, group: "connections" },
+  { to: "/settings/bcc", labelKey: "settings.navLabels.emailCopies", Icon: Inbox, group: "connections" },
   {
     to: "/settings/integrations",
-    labelKey: "settings.tabs.integrations",
+    labelKey: "settings.navLabels.connectedApps",
     Icon: Plug,
     group: "connections",
   },
@@ -57,25 +58,25 @@ export const SETTINGS_NAV = [
   },
   {
     to: "/settings/ai",
-    labelKey: "settings.tabs.ai",
+    labelKey: "settings.navLabels.aiKey",
     Icon: Sparkles,
     group: "connections",
   },
   {
     to: "/settings/email-notifications",
-    labelKey: "settings.tabs.emailNotifications",
+    labelKey: "settings.navLabels.emailSummaries",
     Icon: MailCheck,
     group: "alerts",
   },
   {
     to: "/settings/notifications",
-    labelKey: "settings.tabs.notifications",
+    labelKey: "settings.navLabels.teamChat",
     Icon: BellRing,
     group: "alerts",
   },
   {
     to: "/settings/pipelines",
-    labelKey: "settings.tabs.pipelines",
+    labelKey: "settings.navLabels.dealStages",
     Icon: Kanban,
     group: "sales",
   },
@@ -95,9 +96,9 @@ export const SETTINGS_NAV = [
 
 export const SETTINGS_GROUPS = [
   { key: "you", labelKey: "sections.settingsGroups.you", fallback: "You" },
-  { key: "workspace", labelKey: "sections.settingsGroups.workspace", fallback: "Workspace" },
+  { key: "workspace", labelKey: "sections.settingsGroups.workspace", fallback: "Your business" },
   { key: "connections", labelKey: "sections.settingsGroups.connections", fallback: "Connections" },
-  { key: "alerts", labelKey: "sections.settingsGroups.alerts", fallback: "Alerts" },
-  { key: "sales", labelKey: "sections.settingsGroups.sales", fallback: "Sales" },
+  { key: "alerts", labelKey: "sections.settingsGroups.alerts", fallback: "Updates" },
+  { key: "sales", labelKey: "sections.settingsGroups.sales", fallback: "Deals" },
   { key: "root", labelKey: "sections.settingsGroups.root", fallback: "re:praesent" },
 ] as const;

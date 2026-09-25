@@ -1293,7 +1293,7 @@
       "support": "Support"
     },
     "bcc": {
-      "metaTitle": "E-Mail-Protokollierung",
+      "metaTitle": "E-Mail-Kopien (BCC)",
       "metaDescription": "E-Mails per BCC zu Leads protokollieren",
       "sectionTitle": "Ihre BCC-Adresse",
       "sectionDescription": "Fügen Sie diese verborgene Adresse in das BCC-Feld ein, wenn Sie einem Kunden schreiben. Eine Kopie wird protokolliert und automatisch dem passenden Lead zugeordnet.",
@@ -1327,7 +1327,7 @@
       "loadError": "Ihre BCC-Adresse konnte nicht geladen werden."
     },
     "profile": {
-      "metaTitle": "Profil-Einstellungen",
+      "metaTitle": "Dein Profil",
       "metaDescription": "Namen aktualisieren",
       "sectionTitle": "Ihr Profil",
       "sectionDescription": "Dieser Name wird Ihrem Team und in Benachrichtigungen angezeigt.",
@@ -1338,7 +1338,7 @@
       "required": "Vor- und Nachname sind erforderlich."
     },
     "team": {
-      "metaTitle": "Bereich-Einstellungen",
+      "metaTitle": "Team",
       "metaDescription": "Team-Mitglieder, Rollen und Benachrichtigungen verwalten"
     },
     "workspace": {
@@ -1526,7 +1526,7 @@
       }
     },
     "integrations": {
-      "metaTitle": "Integrationen",
+      "metaTitle": "Verbundene Apps",
       "metaDescription": "Verbinde externe Konten mit diesem Arbeitsbereich.",
       "sectionLabel": "Verbundene Apps",
       "sectionDescription": "Verbinde ein externes Konto mit diesem Arbeitsbereich. Ein Konto pro App.",
@@ -1549,7 +1549,7 @@
       }
     },
     "notifications": {
-      "metaTitle": "Benachrichtigungen",
+      "metaTitle": "Team-Chat-Meldungen",
       "metaDescription": "Workspace-Ereignisse an Slack, Microsoft Teams oder Google Chat senden.",
       "sectionLabel": "Kanäle",
       "sectionDescription": "Workspace-Ereignisse sofort an Slack, Microsoft Teams oder Google Chat senden.",
@@ -1714,7 +1714,7 @@
       "deleteFailed": "Phase konnte nicht gelöscht werden.",
       "reorderFailed": "Phasen konnten nicht sortiert werden.",
       "readOnlyHint": "Nur Workspace-Admins können Pipeline-Phasen ändern. Du kannst die Konfiguration unten einsehen.",
-      "metaTitle": "Pipeline-Phasen",
+      "metaTitle": "Deal-Phasen",
       "metaDescription": "Phasen deiner Lead- und Deal-Pipelines umbenennen, sortieren, einfärben, ausblenden oder hinzufügen.",
       "pipelinePickerLabel": "Pipeline",
       "pipelinePickerHint": "Jede Pipeline hat ihre eigenen Deal-Phasen."
@@ -1790,7 +1790,7 @@
     "avatarSavedWorkspace": "Workspace-Bild aktualisiert",
     "avatarRemovedWorkspace": "Workspace-Bild entfernt",
     "ai": {
-      "metaTitle": "KI",
+      "metaTitle": "KI-Schlüssel",
       "metaDescription": "OpenRouter-Schlüssel für Ihre KI-Assistenten verbinden und Standardmodell wählen.",
       "sectionLabel": "OpenRouter-Schlüssel",
       "sectionDescription": "KI-Assistenten laufen über Ihr eigenes OpenRouter-Konto. Chat, Klassifizierung und Embeddings werden diesem Schlüssel berechnet.",
@@ -2144,7 +2144,7 @@
       }
     },
     "emailNotifications": {
-      "metaTitle": "E-Mail-Benachrichtigungen",
+      "metaTitle": "E-Mail-Zusammenfassungen",
       "metaDescription": "Kurze Zusammenfassungen per E-Mail: neue Anfragen, Aufgaben für heute, Ihre Pipeline und mehr.",
       "sectionLabel": "Zusammenfassungen",
       "sectionDescription": "Morgens nach Ortszeit ({{tz}}). Gibt es nichts zu berichten, kommt keine E-Mail.",
@@ -2169,7 +2169,7 @@
       "instantLink": "Auf der Team-Seite einstellen"
     },
     "businessProfile": {
-      "metaTitle": "Unternehmensprofil",
+      "metaTitle": "Unternehmensdaten",
       "metaDescription": "Ihr Unternehmen, wie Ihre Kunden es sehen: Adresse, Öffnungszeiten, Angebot und rechtliche Angaben.",
       "websiteLabel": "Website",
       "websiteDescription": "Wir lesen Ihre Website, um Ihr Profil auszufüllen. Was Sie bestätigt haben, wird nie überschrieben.",
@@ -2237,6 +2237,17 @@
         "trial": "Testphase",
         "pending": "Ausstehend"
       }
+    },
+    "navLabels": {
+      "profile": "Dein Profil",
+      "team": "Team",
+      "businessDetails": "Unternehmensdaten",
+      "emailCopies": "E-Mail-Kopien (BCC)",
+      "connectedApps": "Apps",
+      "aiKey": "KI-Schlüssel",
+      "emailSummaries": "E-Mail-Zusammenfassungen",
+      "teamChat": "Team-Chat-Meldungen",
+      "dealStages": "Deal-Phasen"
     }
   },
   "booking": {
@@ -7838,7 +7849,16 @@
       "label": "Fortschritt der Einrichtung",
       "left_one": "Noch 1 Kapitel",
       "left_other": "Noch {{count}} Kapitel",
-      "last": "Letztes Kapitel"
+      "last": "Letztes Kapitel",
+      "title": "Ihre Einrichtung",
+      "stepOf": "Schritt {{n}} von {{total}}",
+      "stepShort": "{{n}} von {{total}}",
+      "minutesLeft_one": "Noch etwa {{count}} Minute",
+      "minutesLeft_other": "Noch etwa {{count}} Minuten",
+      "minutesShort_one": "noch ~{{count}} Min.",
+      "minutesShort_other": "noch ~{{count}} Min.",
+      "lastStep": "Letzter Schritt",
+      "openList": "Alle Schritte anzeigen"
     },
     "source": {
       "website": "von Ihrer Website",
@@ -8577,7 +8597,16 @@
         "chatTitleTeam": "Im Gespräch mit einer unserer Begleitungen",
         "chatSubTeam": "Wie ein Chat mit einer Kollegin. Wählen Sie, wer Ihnen Dinge so erklärt, wie Sie es mögen.",
         "chatCtaTeam": "Chat starten"
-      }
+      },
+      "promise": {
+        "free_one": "Erster Monat kostenlos",
+        "free_other": "{{count}} Monate kostenlos",
+        "hidden": "Keine versteckten Kosten",
+        "seats": "Keine Kosten pro Teammitglied",
+        "cancel": "Jederzeit kündbar"
+      },
+      "finePrint": "Danach {{price}} pro Jahr, etwa {{perDay}} pro Tag, zzgl. MwSt. Heute zahlen Sie nichts, keine Karte nötig.",
+      "finePrintNoPrice": "Danach ein fester Jahrespreis. Heute zahlen Sie nichts, keine Karte nötig."
     },
     "chat": {
       "metaTitle": "Einrichtung im Gespräch",
@@ -8635,6 +8664,23 @@
           }
         }
       }
+    },
+    "stepNames": {
+      "business": "Name Ihres Unternehmens",
+      "website": "Website",
+      "details": "Ihr Unternehmen",
+      "you": "Über Sie",
+      "google": "Google Maps",
+      "social": "Social Media",
+      "goals": "Ihre Ziele",
+      "growth": "Ihre nächsten Pläne",
+      "sales": "Ihre Kunden",
+      "email": "E-Mail",
+      "domain": "Webadresse",
+      "team": "Ihr Team",
+      "notifications": "E-Mail-Zusammenfassungen",
+      "billing": "Rechnungsdaten",
+      "plan": "Ihr Paket"
     }
   },
   "salesContact": {
@@ -8689,10 +8735,10 @@
     },
     "settingsGroups": {
       "you": "Du",
-      "workspace": "Bereich",
+      "workspace": "Dein Unternehmen",
       "connections": "Verbindungen",
-      "alerts": "Benachrichtigungen",
-      "sales": "Vertrieb",
+      "alerts": "Updates",
+      "sales": "Deals",
       "root": "re:praesent"
     }
   },

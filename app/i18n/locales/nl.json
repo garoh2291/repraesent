@@ -1291,7 +1291,7 @@
       "support": "Support"
     },
     "bcc": {
-      "metaTitle": "E-maillogging",
+      "metaTitle": "E-mailkopieën (BCC)",
       "metaDescription": "E-mails via BCC aan leads loggen",
       "sectionTitle": "Uw BCC-adres",
       "sectionDescription": "Voeg dit verborgen adres toe aan het BCC-veld wanneer u een klant e-mailt. Er wordt automatisch een kopie gelogd en aan de bijbehorende lead gekoppeld.",
@@ -1325,7 +1325,7 @@
       "loadError": "Kon uw BCC-adres niet laden."
     },
     "profile": {
-      "metaTitle": "Profielinstellingen",
+      "metaTitle": "Je profiel",
       "metaDescription": "Uw naam bijwerken",
       "sectionTitle": "Uw profiel",
       "sectionDescription": "Deze naam wordt getoond aan uw team en in meldingen.",
@@ -1336,7 +1336,7 @@
       "required": "Voor- en achternaam zijn verplicht."
     },
     "team": {
-      "metaTitle": "Gebiedsinstellingen",
+      "metaTitle": "Team",
       "metaDescription": "Teamleden, rollen en meldingen beheren"
     },
     "workspace": {
@@ -1524,7 +1524,7 @@
       }
     },
     "integrations": {
-      "metaTitle": "Integraties",
+      "metaTitle": "Gekoppelde apps",
       "metaDescription": "Koppel externe accounts aan deze werkruimte.",
       "sectionLabel": "Gekoppelde apps",
       "sectionDescription": "Koppel een extern account aan deze werkruimte. Eén account per app.",
@@ -1547,7 +1547,7 @@
       }
     },
     "notifications": {
-      "metaTitle": "Meldingen",
+      "metaTitle": "Teamchatmeldingen",
       "metaDescription": "Workspace-gebeurtenissen naar Slack, Microsoft Teams of Google Chat sturen.",
       "sectionLabel": "Kanalen",
       "sectionDescription": "Workspace-gebeurtenissen direct naar Slack, Microsoft Teams of Google Chat posten.",
@@ -1712,7 +1712,7 @@
       "deleteFailed": "Kon de fase niet verwijderen.",
       "reorderFailed": "Kon de fasen niet herschikken.",
       "readOnlyHint": "Alleen workspace-admins kunnen pipelinefasen wijzigen. Je kunt de configuratie hieronder bekijken.",
-      "metaTitle": "Pipelinefasen",
+      "metaTitle": "Dealfasen",
       "metaDescription": "Fasen van je lead- en dealpipelines hernoemen, herschikken, kleuren, verbergen of toevoegen.",
       "pipelinePickerLabel": "Pijplijn",
       "pipelinePickerHint": "Elke pijplijn heeft zijn eigen dealfasen."
@@ -1788,7 +1788,7 @@
     "avatarSavedWorkspace": "Workspacefoto bijgewerkt",
     "avatarRemovedWorkspace": "Workspacefoto verwijderd",
     "ai": {
-      "metaTitle": "AI",
+      "metaTitle": "AI-sleutel",
       "metaDescription": "Koppel de OpenRouter-sleutel waarop je AI-assistenten draaien en kies het standaardmodel.",
       "sectionLabel": "OpenRouter-sleutel",
       "sectionDescription": "AI-assistenten draaien op je eigen OpenRouter-account. Chat, classificatie en embeddings worden op deze sleutel afgerekend.",
@@ -2142,7 +2142,7 @@
       }
     },
     "emailNotifications": {
-      "metaTitle": "E-mailmeldingen",
+      "metaTitle": "E-mailsamenvattingen",
       "metaDescription": "Korte samenvattingen per e-mail: nieuwe aanvragen, taken voor vandaag, uw pipeline en meer.",
       "sectionLabel": "Samenvattingen",
       "sectionDescription": "'s Ochtends verstuurd, lokale tijd ({{tz}}). Niets te melden betekent geen e-mail.",
@@ -2167,7 +2167,7 @@
       "instantLink": "Instellen op de teampagina"
     },
     "businessProfile": {
-      "metaTitle": "Bedrijfsprofiel",
+      "metaTitle": "Bedrijfsgegevens",
       "metaDescription": "Uw bedrijf zoals klanten het zien: adres, openingstijden, aanbod en juridische gegevens.",
       "websiteLabel": "Website",
       "websiteDescription": "We lezen uw website om uw profiel in te vullen. Wat u hebt bevestigd, wordt nooit overschreven.",
@@ -2235,6 +2235,17 @@
         "trial": "Proefperiode",
         "pending": "In afwachting"
       }
+    },
+    "navLabels": {
+      "profile": "Je profiel",
+      "team": "Team",
+      "businessDetails": "Bedrijfsgegevens",
+      "emailCopies": "E-mailkopieën (BCC)",
+      "connectedApps": "Apps",
+      "aiKey": "AI-sleutel",
+      "emailSummaries": "E-mailsamenvattingen",
+      "teamChat": "Teamchatmeldingen",
+      "dealStages": "Dealfasen"
     }
   },
   "booking": {
@@ -7836,7 +7847,16 @@
       "label": "Voortgang van de inrichting",
       "left_one": "Nog 1 hoofdstuk",
       "left_other": "Nog {{count}} hoofdstukken",
-      "last": "Laatste hoofdstuk"
+      "last": "Laatste hoofdstuk",
+      "title": "Uw inrichting",
+      "stepOf": "Stap {{n}} van {{total}}",
+      "stepShort": "{{n}} van {{total}}",
+      "minutesLeft_one": "Nog ongeveer {{count}} minuut",
+      "minutesLeft_other": "Nog ongeveer {{count}} minuten",
+      "minutesShort_one": "nog ~{{count}} min",
+      "minutesShort_other": "nog ~{{count}} min",
+      "lastStep": "Laatste stap",
+      "openList": "Alle stappen tonen"
     },
     "source": {
       "website": "van uw website",
@@ -8575,7 +8595,16 @@
         "chatTitleTeam": "In gesprek met een van onze begeleiders",
         "chatSubTeam": "Zoals een chat met een collega. Kies wie de dingen uitlegt zoals u dat prettig vindt.",
         "chatCtaTeam": "Chat starten"
-      }
+      },
+      "promise": {
+        "free_one": "Eerste maand gratis",
+        "free_other": "{{count}} maanden gratis",
+        "hidden": "Geen verborgen kosten",
+        "seats": "Geen kosten per teamlid",
+        "cancel": "Altijd opzegbaar"
+      },
+      "finePrint": "Daarna {{price}} per jaar, ongeveer {{perDay}} per dag, excl. btw. Vandaag betaalt u niets, geen kaart nodig.",
+      "finePrintNoPrice": "Daarna één vaste jaarprijs. Vandaag betaalt u niets, geen kaart nodig."
     },
     "chat": {
       "metaTitle": "Inrichten in gesprek",
@@ -8633,6 +8662,23 @@
           }
         }
       }
+    },
+    "stepNames": {
+      "business": "Bedrijfsnaam",
+      "website": "Website",
+      "details": "Uw bedrijf",
+      "you": "Over u",
+      "google": "Google Maps",
+      "social": "Social media",
+      "goals": "Uw doelen",
+      "growth": "Uw volgende plannen",
+      "sales": "Uw klanten",
+      "email": "E-mail",
+      "domain": "Webadres",
+      "team": "Uw team",
+      "notifications": "E-mailsamenvattingen",
+      "billing": "Factuurgegevens",
+      "plan": "Uw pakket"
     }
   },
   "salesContact": {
@@ -8687,10 +8733,10 @@
     },
     "settingsGroups": {
       "you": "Jij",
-      "workspace": "Werkruimte",
+      "workspace": "Je bedrijf",
       "connections": "Koppelingen",
-      "alerts": "Meldingen",
-      "sales": "Verkoop",
+      "alerts": "Updates",
+      "sales": "Deals",
       "root": "re:praesent"
     }
   },

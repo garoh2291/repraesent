@@ -1291,7 +1291,7 @@
       "support": "Support"
     },
     "bcc": {
-      "metaTitle": "Email logging",
+      "metaTitle": "Email copies (BCC)",
       "metaDescription": "Log emails to leads by BCC",
       "sectionTitle": "Your BCC address",
       "sectionDescription": "Add this hidden address to the BCC field when you email a customer. A copy is logged and attached to the matching lead automatically.",
@@ -1325,7 +1325,7 @@
       "loadError": "Could not load your BCC address."
     },
     "profile": {
-      "metaTitle": "Profile settings",
+      "metaTitle": "Your profile",
       "metaDescription": "Update your name",
       "sectionTitle": "Your profile",
       "sectionDescription": "This name appears to your team and in notifications.",
@@ -1336,7 +1336,7 @@
       "required": "First and last name are required."
     },
     "team": {
-      "metaTitle": "Area Settings",
+      "metaTitle": "Team",
       "metaDescription": "Manage team members, roles, and notifications"
     },
     "workspace": {
@@ -1524,7 +1524,7 @@
       }
     },
     "integrations": {
-      "metaTitle": "Integrations",
+      "metaTitle": "Connected apps",
       "metaDescription": "Connect third-party accounts to this workspace.",
       "sectionLabel": "Connected apps",
       "sectionDescription": "Connect a third-party account to this workspace. One account per app.",
@@ -1547,7 +1547,7 @@
       }
     },
     "notifications": {
-      "metaTitle": "Notifications",
+      "metaTitle": "Team chat alerts",
       "metaDescription": "Send workspace events to Slack, Microsoft Teams or Google Chat.",
       "sectionLabel": "Channels",
       "sectionDescription": "Post workspace events to Slack, Microsoft Teams or Google Chat the moment they happen.",
@@ -1712,7 +1712,7 @@
       "deleteFailed": "Could not delete the stage.",
       "reorderFailed": "Could not reorder stages.",
       "readOnlyHint": "Only workspace admins can change pipeline stages. You can view the configuration below.",
-      "metaTitle": "Pipeline stages",
+      "metaTitle": "Deal stages",
       "metaDescription": "Rename, reorder, recolor, hide or add the stages of your lead and deal pipelines.",
       "pipelinePickerLabel": "Pipeline",
       "pipelinePickerHint": "Each pipeline has its own deal stages."
@@ -1788,7 +1788,7 @@
     "avatarSavedWorkspace": "Workspace picture updated",
     "avatarRemovedWorkspace": "Workspace picture removed",
     "ai": {
-      "metaTitle": "AI",
+      "metaTitle": "AI key",
       "metaDescription": "Connect the OpenRouter key your AI assistants run on and pick the default model.",
       "sectionLabel": "OpenRouter key",
       "sectionDescription": "AI assistants run on your own OpenRouter account. Chat, classification and embeddings are all billed to this key.",
@@ -2142,7 +2142,7 @@
       }
     },
     "emailNotifications": {
-      "metaTitle": "Email notifications",
+      "metaTitle": "Email summaries",
       "metaDescription": "Short summaries by email: new leads, today's tasks, your pipeline and more.",
       "sectionLabel": "Digest emails",
       "sectionDescription": "Sent in the morning, local time ({{tz}}). Nothing to report means no email.",
@@ -2167,7 +2167,7 @@
       "instantLink": "Set it on the team page"
     },
     "businessProfile": {
-      "metaTitle": "Business profile",
+      "metaTitle": "Business details",
       "metaDescription": "Your business as your customers see it: address, hours, what you offer and your legal details.",
       "websiteLabel": "Website",
       "websiteDescription": "We read your website to fill in your profile. What you confirmed is never overwritten.",
@@ -2235,6 +2235,17 @@
         "trial": "Trial",
         "pending": "Pending"
       }
+    },
+    "navLabels": {
+      "profile": "Your profile",
+      "team": "Team",
+      "businessDetails": "Business details",
+      "emailCopies": "Email copies (BCC)",
+      "connectedApps": "Apps",
+      "aiKey": "AI key",
+      "emailSummaries": "Email summaries",
+      "teamChat": "Team chat alerts",
+      "dealStages": "Deal stages"
     }
   },
   "booking": {
@@ -7836,7 +7847,16 @@
       "label": "Setup progress",
       "left_one": "1 chapter left",
       "left_other": "{{count}} chapters left",
-      "last": "Last chapter"
+      "last": "Last chapter",
+      "title": "Your setup",
+      "stepOf": "Step {{n}} of {{total}}",
+      "stepShort": "{{n}} of {{total}}",
+      "minutesLeft_one": "About {{count}} minute left",
+      "minutesLeft_other": "About {{count}} minutes left",
+      "minutesShort_one": "~{{count}} min left",
+      "minutesShort_other": "~{{count}} min left",
+      "lastStep": "Last step",
+      "openList": "Show all steps"
     },
     "source": {
       "website": "from your website",
@@ -8575,7 +8595,16 @@
         "chatTitleTeam": "Talk it through with one of our guides",
         "chatSubTeam": "Like a chat with a colleague. Pick someone who explains things the way you like.",
         "chatCtaTeam": "Start the chat"
-      }
+      },
+      "promise": {
+        "free_one": "First month free",
+        "free_other": "{{count}} months free",
+        "hidden": "No hidden costs",
+        "seats": "No cost per team member",
+        "cancel": "Cancel anytime"
+      },
+      "finePrint": "Then {{price}} a year, about {{perDay}} a day, excl. VAT. Nothing to pay today, no card needed.",
+      "finePrintNoPrice": "Then one yearly price. Nothing to pay today, no card needed."
     },
     "chat": {
       "metaTitle": "Set up with your guide",
@@ -8633,6 +8662,23 @@
           }
         }
       }
+    },
+    "stepNames": {
+      "business": "Business name",
+      "website": "Website",
+      "details": "Your business",
+      "you": "About you",
+      "google": "Google Maps",
+      "social": "Social media",
+      "goals": "Your goals",
+      "growth": "What's next for you",
+      "sales": "Your customers",
+      "email": "Email",
+      "domain": "Web address",
+      "team": "Your team",
+      "notifications": "Email summaries",
+      "billing": "Invoice details",
+      "plan": "Your plan"
     }
   },
   "salesContact": {
@@ -8687,10 +8733,10 @@
     },
     "settingsGroups": {
       "you": "You",
-      "workspace": "Workspace",
+      "workspace": "Your business",
       "connections": "Connections",
-      "alerts": "Alerts",
-      "sales": "Sales",
+      "alerts": "Updates",
+      "sales": "Deals",
       "root": "re:praesent"
     }
   },

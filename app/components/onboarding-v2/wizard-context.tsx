@@ -41,6 +41,8 @@ interface WizardCtx {
   draftName: string;
   setDraftName: (v: string) => void;
   goTo: (step: OnboardingStep, dir?: 1 | -1) => void;
+  /** The furthest step the customer may open (same rule as the route's clamp). */
+  furthest: OnboardingStep;
   next: (from?: OnboardingStep) => void;
   back: () => void;
   /** Save a step and move on. Resolves with the new state. */
@@ -129,6 +131,17 @@ export function WizardProvider({ step, children }: { step: OnboardingStep; child
     goTo(to, -1);
   }, [goTo, step, steps]);
 
+  // Same rule as routes/onboarding.start.tsx: no skipping ahead of what's been answered;
+  // "reading" is a waiting screen, so the review step after it is always open.
+  const serverStep = state?.run?.current_step as OnboardingStep | undefined;
+  const furthest: OnboardingStep = serverStep
+    ? serverStep === "reading"
+      ? "details"
+      : serverStep
+    : draftName
+      ? "website"
+      : "business";
+
   const setState = useCallback((s: OnboardingState) => qc.setQueryData(STATE_KEY, s), [qc]);
   const markSaved = useCallback(() => setSavedAt(Date.now()), []);
 
@@ -163,6 +176,7 @@ export function WizardProvider({ step, children }: { step: OnboardingStep; child
     draftName,
     setDraftName,
     goTo,
+    furthest,
     next,
     back,
     save,

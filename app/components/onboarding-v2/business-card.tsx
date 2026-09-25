@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { createContext, useContext, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import {
@@ -60,16 +60,23 @@ function todayHours(days: unknown, t: (k: string, o?: Record<string, unknown>) =
   return t("onb.card.openToday", { hours: ranges.map((r) => `${r.open}–${r.close}`).join(", ") });
 }
 
-function Row({ icon, children, k }: { icon: React.ReactNode; children: React.ReactNode; k: string }) {
+/**
+ * The card is part of the page frame: it must look the same on every step and
+ * after every save. Only a value that arrives while the card is on screen gets
+ * a moment of attention (a soft marker wash); what was already there when the
+ * card appeared is drawn still, and nothing moves because something else changed.
+ */
+const Settled = createContext(false);
+
+function Row({ icon, children }: { icon: React.ReactNode; children: React.ReactNode; k: string }) {
   const reduce = useReducedMotion();
+  const settled = useContext(Settled);
   return (
     <motion.li
-      key={k}
-      layout={!reduce}
-      initial={reduce ? { opacity: 0 } : { opacity: 0, transform: "translateY(6px)" }}
-      animate={reduce ? { opacity: 1 } : { opacity: 1, transform: "translateY(0px)" }}
-      transition={{ type: "spring", duration: 0.45, bounce: 0.1 }}
-      className="flex items-start gap-2.5 text-[13px] leading-snug text-foreground/85"
+      initial={settled ? { backgroundColor: "rgba(245,215,79,0.45)" } : false}
+      animate={{ backgroundColor: "rgba(245,215,79,0)" }}
+      transition={{ duration: reduce ? 0.2 : 1.1, ease: "easeOut" }}
+      className="-mx-1.5 flex items-start gap-2.5 rounded-md px-1.5 text-[13px] leading-snug text-foreground/85"
     >
       <span className="mt-0.5 text-muted-foreground">{icon}</span>
       <span className="min-w-0 flex-1 break-words">{children}</span>
@@ -89,7 +96,8 @@ function Placeholder({ label }: { label: string }) {
 /**
  * The customer's business, filling in as they answer and as we find things.
  * Desktop: a sticky card beside the questions. Mobile: a compact chip that
- * expands. Every value that lands animates in once (reduced motion: fades).
+ * expands. Static frame: only values that arrive while it's on screen get a
+ * short marker wash.
  */
 export function BusinessCard({
   data,
@@ -101,6 +109,12 @@ export function BusinessCard({
   compact?: boolean;
 }) {
   const { t } = useTranslation();
+  // First paint = still; afterwards new values get the marker wash (see Settled).
+  const [settled, setSettled] = useState(false);
+  useEffect(() => {
+    const id = requestAnimationFrame(() => setSettled(true));
+    return () => cancelAnimationFrame(id);
+  }, []);
   const d = data ?? {};
   const g = (s: string, f: string) => d[s]?.[f] as unknown;
   const pct = completeness(d);
@@ -122,24 +136,16 @@ export function BusinessCard({
   ];
 
   return (
+    <Settled.Provider value={settled}>
     <div className={cn("overflow-hidden rounded-3xl border border-border bg-card shadow-[0_1px_2px_rgba(19,21,21,0.04),0_12px_32px_-12px_rgba(19,21,21,0.12)]", compact && "rounded-2xl")}>
       {/* A thin band in the brand blue — the card is "theirs", ours frames it. */}
       <div className="h-1.5 bg-[linear-gradient(90deg,var(--foreground)_0%,var(--foreground)_62%,var(--secondary)_62%)]" />
       <div className="space-y-5 p-6">
         <div className="space-y-1.5">
           <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">{t("onb.card.eyebrow")}</p>
-          <AnimatePresence mode="popLayout" initial={false}>
-            <motion.h2
-              key={name ? "named" : "empty"}
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.2 }}
-              className={cn("ob2-heading text-2xl leading-tight tracking-[-0.01em]", !name && "text-muted-foreground/50")}
-            >
-              {name || t("onb.card.namePlaceholder")}
-            </motion.h2>
-          </AnimatePresence>
+          <h2 className={cn("ob2-heading text-2xl leading-tight tracking-[-0.01em] transition-colors duration-300", !name && "text-muted-foreground/50")}>
+            {name || t("onb.card.namePlaceholder")}
+          </h2>
           {kind ? (
             <span className="inline-flex rounded-full bg-muted px-2.5 py-0.5 text-[12px] font-medium text-foreground/80">
               {t(`onb.presence.${kind}.title`)}
@@ -185,9 +191,9 @@ export function BusinessCard({
             {(brands.length ? brands : cats).slice(0, 6).map((b) => (
               <motion.span
                 key={b}
-                initial={{ opacity: 0, transform: "scale(0.96)" }}
-                animate={{ opacity: 1, transform: "scale(1)" }}
-                transition={{ duration: 0.2, ease: [0.23, 1, 0.32, 1] }}
+                initial={settled ? { opacity: 0 } : false}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.2 }}
                 className="rounded-lg bg-muted px-2 py-1 text-[12px] text-foreground/80"
               >
                 {b}
@@ -231,6 +237,7 @@ export function BusinessCard({
         </div>
       </div>
     </div>
+    </Settled.Provider>
   );
 }
 

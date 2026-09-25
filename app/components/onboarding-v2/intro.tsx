@@ -6,15 +6,13 @@ import { motion, useReducedMotion } from "motion/react";
 import {
   ArrowRight,
   CalendarCheck2,
+  Check,
   ClipboardList,
-  Gift,
   MessageSquareText,
   PhoneCall,
-  ReceiptText,
   Rocket,
   Sparkles,
   Star,
-  Wallet,
 } from "lucide-react";
 import logoUrl from "~/components/icons/re_praesent-mark-brand-hor.svg?url";
 import type { OnboardingState } from "~/lib/api/onboarding-v2";
@@ -61,15 +59,17 @@ export function OnboardingIntro({ state, onStart }: { state: OnboardingState; on
           transition: { duration: 0.5, ease: EASE_OUT, delay: 0.06 * i },
         };
 
-  const offer = [
-    { icon: Gift, title: t("onb.intro.offer.free.title", { count: free }), sub: t("onb.intro.offer.free.sub") },
-    { icon: Wallet, title: t("onb.intro.offer.today.title"), sub: t("onb.intro.offer.today.sub") },
-    {
-      icon: ReceiptText,
-      title: q ? t("onb.intro.offer.then.title", { price: money(q.yearly) }) : t("onb.intro.offer.then.titleNoPrice"),
-      sub: q ? t("onb.intro.offer.then.sub", { perDay: money(q.perDay, 2) }) : "",
-    },
+  // The four promises people look for before they read anything else. All four
+  // are true for every plan (one flat yearly price, no seats, cancel anytime).
+  const promises = [
+    t("onb.intro.promise.free", { count: free }),
+    t("onb.intro.promise.hidden"),
+    t("onb.intro.promise.seats"),
+    t("onb.intro.promise.cancel"),
   ];
+  const finePrint = q
+    ? t("onb.intro.finePrint", { price: money(q.yearly), perDay: money(q.perDay, 2) })
+    : t("onb.intro.finePrintNoPrice");
 
   const steps = [
     { icon: MessageSquareText, title: t("onb.intro.steps.tell.title"), body: t("onb.intro.steps.tell.body") },
@@ -95,7 +95,7 @@ export function OnboardingIntro({ state, onStart }: { state: OnboardingState; on
         </div>
       </header>
 
-      <main className="mx-auto max-w-6xl px-5 pb-20 pt-10 sm:pt-16">
+      <main className="mx-auto max-w-6xl px-5 pb-20 pt-7 sm:pt-14">
         {/* ── Hero ─────────────────────────────────────────────────────────── */}
         <section className="grid items-center gap-12 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)] lg:gap-16">
           <div>
@@ -105,7 +105,7 @@ export function OnboardingIntro({ state, onStart }: { state: OnboardingState; on
             </motion.p>
             <motion.h1
               {...rise(1)}
-              className="ob2-heading mt-4 max-w-[18ch] text-balance text-[2.25rem] leading-[1.06] tracking-[-0.02em] sm:text-[3.5rem]"
+              className="ob2-heading mt-3 max-w-[18ch] text-balance text-[2rem] leading-[1.06] tracking-[-0.02em] sm:text-[3.25rem]"
             >
               {ownHeadline ?? (
                 <>
@@ -118,43 +118,36 @@ export function OnboardingIntro({ state, onStart }: { state: OnboardingState; on
                 </>
               )}
             </motion.h1>
-            <motion.p {...rise(2)} className="mt-5 max-w-[46ch] text-[16px] leading-relaxed text-muted-foreground sm:text-[17px]">
-              {ownSub ?? t("onb.intro.sub")}
-            </motion.p>
-
-            {/* The offer: impossible to miss, before a single field. */}
+            {/* Promise first, choice second: most people decide from these two
+                blocks alone, so everything else waits below the fold. */}
             <motion.ul
-              {...rise(3)}
+              {...rise(2)}
               aria-label={t("onb.intro.offer.label")}
-              className="mt-8 grid overflow-hidden rounded-2xl border border-foreground/10 bg-secondary sm:grid-cols-3"
+              className="mt-7 grid grid-cols-2 gap-px overflow-hidden rounded-2xl border border-foreground/10 bg-foreground/10"
             >
-              {offer.map((o, i) => (
-                <li
-                  key={i}
-                  className={cn(
-                    "flex items-start gap-3 px-4 py-3.5",
-                    i > 0 && "border-t border-foreground/10 sm:border-l sm:border-t-0",
-                  )}
-                >
-                  <o.icon className="mt-0.5 size-4 shrink-0 text-foreground" aria-hidden />
-                  <span className="min-w-0">
-                    <span className="block text-[14px] font-semibold leading-snug text-foreground">{o.title}</span>
-                    {o.sub ? <span className="mt-0.5 block text-[12.5px] leading-snug text-foreground/70">{o.sub}</span> : null}
+              {promises.map((p, i) => (
+                <li key={i} className="flex items-center gap-2.5 bg-secondary px-3.5 py-3 sm:px-4 sm:py-3.5">
+                  <span className="flex size-5 shrink-0 items-center justify-center rounded-full bg-foreground text-secondary" aria-hidden>
+                    <Check className="size-3" strokeWidth={3} />
                   </span>
+                  <span className="text-[14px] font-semibold leading-snug text-foreground sm:text-[15px]">{p}</span>
                 </li>
               ))}
             </motion.ul>
 
             {assistant ? (
-              <motion.div {...rise(4)} className="mt-8">
+              <motion.div {...rise(3)} className="mt-7">
                 <WayChoice name={assistant.name} chosen={assistant.chosen ?? null} onStart={onStart} />
               </motion.div>
             ) : (
-              <motion.div {...rise(4)} className="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-5">
+              <motion.div {...rise(3)} className="mt-7 flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-5">
                 <StartButton onStart={() => onStart("form")} label={t("onb.intro.cta")} />
                 <p className="text-[13px] text-muted-foreground">{t("onb.intro.ctaNote")}</p>
               </motion.div>
             )}
+            <motion.p {...rise(4)} className="mt-4 text-[12.5px] leading-relaxed text-muted-foreground">
+              {finePrint}
+            </motion.p>
           </div>
 
           <Showcase />
@@ -162,7 +155,8 @@ export function OnboardingIntro({ state, onStart }: { state: OnboardingState; on
 
         {/* ── How it works ─────────────────────────────────────────────────── */}
         <section className="mt-20 sm:mt-28" aria-labelledby="onb-intro-how">
-          <h2 id="onb-intro-how" className="ob2-heading text-[1.75rem] leading-tight tracking-[-0.01em] sm:text-[2.1rem]">
+          <p className="max-w-[60ch] text-[16px] leading-relaxed text-muted-foreground sm:text-[17px]">{ownSub ?? t("onb.intro.sub")}</p>
+          <h2 id="onb-intro-how" className="ob2-heading mt-10 text-[1.75rem] leading-tight tracking-[-0.01em] sm:text-[2.1rem]">
             {t("onb.intro.howTitle")}
           </h2>
           <ol className="mt-8 grid gap-4 md:grid-cols-3">

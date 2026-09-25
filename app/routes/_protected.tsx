@@ -259,7 +259,12 @@ export default function ProtectedLayout() {
     (!eligibilityProbeDone ||
       (hintHasBothNames && (autoProfileMutation.isPending || !user?.first_name?.trim())));
 
-  if (isLoading || isPreProfileChecking) {
+  // During onboarding a background refresh of the account (after step 1, a
+  // language switch, the plan step) must not blank the page: that unmounted the
+  // wizard and replayed the business card on every refresh. Only the first load
+  // (no user yet) shows the spinner there.
+  const backgroundRefresh = isOnOnboarding && !!user && !isPreProfileChecking;
+  if ((isLoading && !backgroundRefresh) || isPreProfileChecking) {
     return (
       <div className="flex min-h-screen items-center justify-center">
         <div className="flex flex-col items-center gap-4">
@@ -317,7 +322,14 @@ export default function ProtectedLayout() {
   }
 
   if (!workspaces?.length) {
-    return isOnOnboarding || isOnNoWorkspace ? <Outlet /> : null;
+    // Same wrapper as below, so gaining the first workspace (after onboarding
+    // step 1) doesn't remount the whole wizard.
+    return isOnOnboarding || isOnNoWorkspace ? (
+      <div className="flex flex-col min-h-screen">
+        {null /* the past-due banner's slot below: keeps <Outlet /> at the same position */}
+        <Outlet />
+      </div>
+    ) : null;
   }
 
   if (
