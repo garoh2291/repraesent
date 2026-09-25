@@ -224,7 +224,11 @@
           "title": "Link verlopen",
           "detail": "Deze magic link is ongeldig of verlopen. Vraag een nieuwe aan om in te loggen."
         }
-      }
+      },
+      "stalledTitle": "Duurt langer dan normaal",
+      "stalledDetail": "Je bent ingelogd — de server is druk en kon je werkruimte nog niet openen.",
+      "tryAgain": "Opnieuw proberen",
+      "slow": "Je werkruimte wordt geopend — de server is druk, we blijven het proberen…"
     },
     "workspacePicker": {
       "metaTitle": "Kies gebied",

@@ -224,7 +224,11 @@
           "title": "Link abgelaufen",
           "detail": "Dieser Magic Link ist ungültig oder abgelaufen. Bitte fordere einen neuen an."
         }
-      }
+      },
+      "stalledTitle": "Dauert länger als sonst",
+      "stalledDetail": "Du bist angemeldet — der Server ist gerade ausgelastet und konnte deinen Arbeitsbereich noch nicht öffnen.",
+      "tryAgain": "Nochmal versuchen",
+      "slow": "Dein Arbeitsbereich wird geöffnet — der Server ist ausgelastet, wir versuchen es weiter…"
     },
     "workspacePicker": {
       "metaTitle": "Bereich wählen",

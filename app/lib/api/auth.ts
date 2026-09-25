@@ -289,6 +289,33 @@ export const getUserContext = async (): Promise<UserContextResponse> => {
   }
 };
 
+/** 401/403 from the context call: the session really is gone. */
+export function isAuthRejection(error: unknown): boolean {
+  const status = (error as { response?: { status?: number } } | null)?.response?.status;
+  return status === 401 || status === 403;
+}
+
+/**
+ * getUserContext, retried with backoff on anything that is NOT an auth
+ * rejection (5xx, pool timeout, network). A transient database blip must never
+ * cost the user their session — and after a magic link the one-time token is
+ * already spent, so giving up would strand them (the demo has no password).
+ */
+export async function getUserContextWithRetry(
+  delaysMs: number[] = [1000, 2000, 4000, 8000],
+  onRetry?: (attempt: number) => void,
+): Promise<UserContextResponse> {
+  for (let attempt = 0; ; attempt++) {
+    try {
+      return await getUserContext();
+    } catch (error) {
+      if (isAuthRejection(error) || attempt >= delaysMs.length) throw error;
+      onRetry?.(attempt + 1);
+      await new Promise((r) => setTimeout(r, delaysMs[attempt]));
+    }
+  }
+}
+
 /**
  * Update current user's locale
  */

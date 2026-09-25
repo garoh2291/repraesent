@@ -2,7 +2,8 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router";
 import {
   requestMagicLink,
-  getUserContext,
+  getUserContextWithRetry,
+  isAuthRejection,
   logout,
   type User,
   type WorkspaceContext,
@@ -68,7 +69,8 @@ export function useAuth() {
       }
 
       try {
-        const context = await getUserContext();
+        // Retries 5xx / network with backoff; only a real 401/403 signs out.
+        const context = await getUserContextWithRetry([1000, 2000, 4000]);
 
         // Brand context (if user is brand) is returned alongside workspaces —
         // brand users may also be workspace members and switch between views.
@@ -110,8 +112,10 @@ export function useAuth() {
           brand,
           brandWorkspaces,
         };
-      } catch {
-        clearStoredAuth();
+      } catch (error) {
+        // A transient failure (DB pool timeout, network) keeps the stored
+        // token so the next load recovers; only an auth rejection clears it.
+        if (isAuthRejection(error)) clearStoredAuth();
         return {
           user: null,
           workspaces: [],

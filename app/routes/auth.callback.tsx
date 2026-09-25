@@ -4,7 +4,8 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import {
   verifyMagicLink,
-  getUserContext,
+  getUserContextWithRetry,
+  isAuthRejection,
   MagicLinkError,
   MAGIC_LINK_USED,
   type UserContextResponse,
@@ -41,7 +42,10 @@ export default function AuthCallback() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const [status, setStatus] = useState<"loading" | "error">("loading");
+  /** stalled = signed in, but the workspace could not be opened yet (server busy). */
+  const [status, setStatus] = useState<"loading" | "error" | "stalled">("loading");
+  const [slow, setSlow] = useState(false);
+  const retryOpenRef = useRef<(() => void) | null>(null);
   /**
    * Which thing went wrong, so the screen can say it.
    *
@@ -201,13 +205,37 @@ export default function AuthCallback() {
         navigate(resolveDestination("/"), { replace: true });
       };
 
+      /**
+       * Open the workspace for a session we already hold. Never throws, and
+       * never discards the token on a transient failure: the one-time link is
+       * spent by now, so dropping the token would strand the user — a demo
+       * account has no password to come back with.
+       */
+      const openWorkspace = async () => {
+        try {
+          const context: UserContextResponse = await getUserContextWithRetry(undefined, () => setSlow(true));
+          routeAfterAuth(context);
+        } catch (err) {
+          if (isAuthRejection(err)) {
+            setFailure(null);
+            setStatus("error");
+            clearStoredToken();
+            clearStoredWorkspaceId();
+          } else {
+            setStatus("stalled");
+          }
+        }
+      };
+      retryOpenRef.current = () => {
+        setStatus("loading");
+        void openWorkspace();
+      };
+
       try {
         const auth = await verifyMagicLink(token);
         setStoredToken(auth.access_token);
         queryClient.invalidateQueries({ queryKey: ["auth"] });
-
-        const context: UserContextResponse = await getUserContext();
-        routeAfterAuth(context);
+        await openWorkspace();
       } catch (err) {
         // The code, not the sentence. Substring-matching English in a
         // four-language app only ever worked by accident.
@@ -216,16 +244,8 @@ export default function AuthCallback() {
 
         if (isAlreadyUsed) {
           // Token was consumed by a prior render; user is already authenticated
-          try {
-            queryClient.invalidateQueries({ queryKey: ["auth"] });
-            const context: UserContextResponse = await getUserContext();
-            routeAfterAuth(context);
-          } catch {
-            setFailure(code);
-            setStatus("error");
-            clearStoredToken();
-            clearStoredWorkspaceId();
-          }
+          queryClient.invalidateQueries({ queryKey: ["auth"] });
+          await openWorkspace();
           return;
         }
 
@@ -286,6 +306,28 @@ export default function AuthCallback() {
     );
   }
 
+  if (status === "stalled") {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-[#0f0f11] p-4 sm:p-8">
+        <div className="w-full max-w-sm text-center space-y-6 app-fade-up">
+          <div className="space-y-2">
+            <h1 className="text-xl font-semibold text-white">{t("auth.callback.stalledTitle", "Taking longer than usual")}</h1>
+            <p className="text-sm text-white/45 leading-relaxed">
+              {t("auth.callback.stalledDetail", "You're signed in — the server is busy and couldn't open your workspace just now.")}
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={() => retryOpenRef.current?.()}
+            className="inline-flex h-10 items-center justify-center rounded-lg bg-white px-6 text-sm font-medium text-[#141516] hover:bg-white/90 transition-all duration-150"
+          >
+            {t("auth.callback.tryAgain", "Try again")}
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="flex min-h-screen items-center justify-center bg-[#0f0f11]">
       <div className="flex flex-col items-center gap-5 app-fade-up">
@@ -294,7 +336,9 @@ export default function AuthCallback() {
         </div>
         <div className="text-center space-y-1">
           <p className="text-sm font-medium text-white/70">{t("auth.callback.signingIn")}</p>
-          <p className="text-xs text-white/30">{t("auth.callback.moment")}</p>
+          <p className="text-xs text-white/30">
+            {slow ? t("auth.callback.slow", "Opening your workspace — the server is busy, still trying…") : t("auth.callback.moment")}
+          </p>
         </div>
       </div>
     </div>

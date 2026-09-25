@@ -224,7 +224,11 @@
           "title": "Lien expiré",
           "detail": "Ce lien magique est invalide ou a expiré. Veuillez en demander un nouveau."
         }
-      }
+      },
+      "stalledTitle": "Cela prend plus de temps que d'habitude",
+      "stalledDetail": "Vous êtes connecté — le serveur est occupé et n'a pas pu ouvrir votre espace pour l'instant.",
+      "tryAgain": "Réessayer",
+      "slow": "Ouverture de votre espace — le serveur est occupé, nouvel essai en cours…"
     },
     "workspacePicker": {
       "metaTitle": "Choisir un espace",

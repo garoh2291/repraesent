@@ -224,7 +224,11 @@
           "title": "Link expired",
           "detail": "This magic link is invalid or has expired. Please request a new one to sign in."
         }
-      }
+      },
+      "stalledTitle": "Taking longer than usual",
+      "stalledDetail": "You're signed in — the server is busy and couldn't open your workspace just now.",
+      "tryAgain": "Try again",
+      "slow": "Opening your workspace — the server is busy, still trying…"
     },
     "workspacePicker": {
       "metaTitle": "Choose area",
