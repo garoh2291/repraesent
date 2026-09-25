@@ -2116,7 +2116,15 @@
         "model": "AI-model",
         "modelCost": "{{cost}} per onboarding",
         "noKey": "De assistent heeft een AI-sleutel in deze werkruimte nodig voordat klanten hem zien.",
-        "noKeyLink": "OpenRouter koppelen"
+        "noKeyLink": "OpenRouter koppelen",
+        "assistantsTitle": "Assistenten",
+        "assistantsHint": "Klanten kiezen er een als de chat opent en kunnen altijd wisselen. Alle drie stellen elke vraag; alleen de uitleg verschilt.",
+        "assistantName": "Naam",
+        "assistantStyle": "Persoonlijkheid (optioneel)",
+        "assistantStylePlaceholder": "Warm, rustig, met een vleugje humor",
+        "levelTech": "Thuis in techniek",
+        "levelAssisted": "Heeft hulp bij techniek",
+        "levelSimple": "Houdt het eenvoudig"
       }
     },
     "emailNotifications": {
@@ -8549,7 +8557,10 @@
         "chatCta": "Beginnen met {{name}}",
         "formTitle": "Formulier invullen",
         "formSub": "Ongeveer 8 minuten, in uw eigen tempo.",
-        "switch": "U kunt op elk moment wisselen. Er gaat niets verloren."
+        "switch": "U kunt op elk moment wisselen. Er gaat niets verloren.",
+        "chatTitleTeam": "In gesprek met een van onze begeleiders",
+        "chatSubTeam": "Zoals een chat met een collega. Kies wie de dingen uitlegt zoals u dat prettig vindt.",
+        "chatCtaTeam": "Chat starten"
       }
     },
     "chat": {
@@ -8580,7 +8591,34 @@
         "unavailable": "De assistent is nu niet beschikbaar. Ga verder in het formulier, er gaat niets verloren.",
         "invalid_request": "Dat lukte niet."
       },
-      "mascotLabel": "{{name}}, uw begeleider. Tik om hallo te zeggen."
+      "mascotLabel": "{{name}}, uw begeleider. Tik om hallo te zeggen.",
+      "continueChat": "Verder in de chat",
+      "assistants": {
+        "pickTitle": "Met wie wilt u alles instellen?",
+        "pickSub": "Dezelfde vragen, hetzelfde resultaat. Kies de uitleg die bij u past. Wisselen kan altijd.",
+        "howTheyAsk": "Zo vraagt die het",
+        "choose": "Praat met {{name}}",
+        "change": "Wisselen",
+        "switchTitle": "Met iemand anders praten",
+        "switchSub": "Uw antwoorden blijven. Alleen de uitleg verandert.",
+        "current": "In gesprek",
+        "handover": "{{name}} neemt het over. Uw antwoorden blijven.",
+        "picked": "U praat met {{name}}",
+        "levels": {
+          "tech": {
+            "title": "Ik ben thuis in techniek",
+            "sample": "Bij welke registrar staat uw domein, en wie heeft de DNS-login?"
+          },
+          "assisted": {
+            "title": "Iemand helpt me met de techniek",
+            "sample": "Weet u waar uw webadres beheerd wordt? Als uw webbouwer dat doet, kan ik die erbij halen."
+          },
+          "simple": {
+            "title": "Graag zo eenvoudig mogelijk",
+            "sample": "Uw webadres is wat mensen intypen om u te vinden. Weet u wie het heeft ingesteld? 'Weet ik niet' is prima."
+          }
+        }
+      }
     }
   },
   "salesContact": {

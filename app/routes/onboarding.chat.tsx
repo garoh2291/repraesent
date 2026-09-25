@@ -24,11 +24,16 @@ import {
   BusinessCardChip,
 } from "~/components/onboarding-v2/business-card";
 import {
-  Mascot,
-  type MascotMood,
-  type MascotReaction,
-  type MascotReactionKind,
-} from "~/components/onboarding-v2/chat/mascot";
+  Portrait,
+  type FaceMood,
+  type FaceReaction,
+  type FaceReactionKind,
+} from "~/components/onboarding-v2/chat/portrait";
+import {
+  AssistantPicker,
+  AssistantSwitcher,
+  HandoverDivider,
+} from "~/components/onboarding-v2/chat/assistants";
 import { ChatCardView } from "~/components/onboarding-v2/chat/chat-cards";
 import {
   STATE_KEY,
@@ -43,6 +48,7 @@ import {
   type ChatEvent,
   type ChatMessage,
   type ChatProgress,
+  type AssistantLevel,
 } from "~/lib/api/onboarding-chat";
 import { matchChoice } from "~/lib/onboarding/choice-match";
 import type { OnboardingState } from "~/lib/api/onboarding-v2";
@@ -82,11 +88,13 @@ export default function OnboardingChatRoute() {
   const [turns, setTurns] = useState<Turn[]>([]);
   const [progress, setProgress] = useState<ChatProgress | null>(null);
   const [busy, setBusy] = useState(false);
-  const [mood, setMood] = useState<MascotMood>("idle");
-  const [reaction, setReaction] = useState<MascotReaction>(null);
+  const [mood, setMood] = useState<FaceMood>("idle");
+  const [reaction, setReaction] = useState<FaceReaction>(null);
+  // Who's talking (Phase 6): picked when the chat first opens, switchable any time.
+  const [level, setLevel] = useState<AssistantLevel | null>(null);
   const [typing, setTyping] = useState(false);
   const react = useCallback(
-    (kind: MascotReactionKind) =>
+    (kind: FaceReactionKind) =>
       setReaction({ kind, id: Date.now() + Math.random() }),
     [],
   );
@@ -131,6 +139,7 @@ export default function OnboardingChatRoute() {
     if (!chatQuery.data?.available) return;
     setTurns(chatQuery.data.messages);
     setProgress(chatQuery.data.progress);
+    setLevel(chatQuery.data.assistant ?? null);
     const p = chatQuery.data.progress;
     if (lastPct.current === null && p?.total)
       lastPct.current = (p.done / p.total) * 100;
@@ -146,7 +155,7 @@ export default function OnboardingChatRoute() {
   }, [chatQuery.data, react]);
 
   // Listening while the customer writes, thinking/speaking while Lena does.
-  const liveMood: MascotMood = busy
+  const liveMood: FaceMood = busy
     ? mood
     : typing && draft.trim()
       ? "listening"
@@ -165,6 +174,7 @@ export default function OnboardingChatRoute() {
     async (
       body: { message?: string; event?: ChatEvent; open_choice?: string },
       echo?: string,
+      by: AssistantLevel | null = level,
     ) => {
       if (busy) return;
       setBusy(true);
@@ -178,6 +188,7 @@ export default function OnboardingChatRoute() {
               {
                 id: `u-${now}`,
                 role: "user" as const,
+                by: null,
                 content: echo,
                 cards: [],
                 saved: [],
@@ -188,6 +199,7 @@ export default function OnboardingChatRoute() {
         {
           id: `a-${now}`,
           role: "assistant" as const,
+          by,
           content: "",
           cards: [],
           saved: [],
@@ -200,6 +212,14 @@ export default function OnboardingChatRoute() {
       await streamChatTurn(
         body,
         {
+          // Handover divider + the new assistant's welcome: they go before the reply being written.
+          onMessage: (m) =>
+            setTurns((all) => {
+              const i = all.findIndex((x) => x.streaming);
+              return i < 0
+                ? [...all, m]
+                : [...all.slice(0, i), m, ...all.slice(i)];
+            }),
           onToken: (tok) => {
             setMood("speaking");
             patchLast((x) => ({ ...x, content: x.content + tok }));
@@ -249,7 +269,23 @@ export default function OnboardingChatRoute() {
       // The profile may have changed through a card (billing, Google): refresh quietly.
       void qc.invalidateQueries({ queryKey: STATE_KEY });
     },
-    [busy, qc, setState, react],
+    [busy, qc, setState, react, level],
+  );
+
+  // Pick (first visit) or switch: the new face shows at once, the server adds the divider.
+  const pickAssistant = useCallback(
+    (next: AssistantLevel) => {
+      if (busy || next === level) return;
+      setLevel(next);
+      started.current = true;
+      react("wave");
+      void send(
+        { event: { type: "pick_assistant", level: next } },
+        undefined,
+        next,
+      );
+    },
+    [busy, level, react, send],
   );
 
   // Lena speaks first: the first question after her welcome, or picking up again when the
@@ -345,7 +381,10 @@ export default function OnboardingChatRoute() {
     el.style.height = `${Math.min(el.scrollHeight, 160)}px`;
   }, [draft]);
 
-  const name = chatQuery.data?.persona?.name ?? "";
+  const assistants = chatQuery.data?.assistants ?? [];
+  const nameOf = (l: AssistantLevel | null) =>
+    assistants.find((a) => a.key === l)?.name ?? "";
+  const name = nameOf(level);
   const bizName = state?.workspace?.name ?? "";
   const lastAssistant = [...turns]
     .reverse()
@@ -368,7 +407,7 @@ export default function OnboardingChatRoute() {
     return (
       <div className="flex min-h-dvh items-center justify-center bg-background">
         <OnboardingStyles />
-        <Mascot mood="thinking" size={88} />
+        <Portrait level="assisted" mood="thinking" size={88} />
       </div>
     );
   }
@@ -435,87 +474,148 @@ export default function OnboardingChatRoute() {
 
       <div className="mx-auto grid max-w-6xl gap-10 px-5 pt-8 sm:pt-12 lg:grid-cols-[minmax(0,1fr)_360px] lg:gap-16">
         <main className="min-w-0 max-w-[660px]" ref={scroller}>
-          {/* Who you're talking to */}
-          <div className="mb-8 flex items-center gap-4">
-            <Mascot
-              mood={liveMood}
-              reaction={reaction}
-              size={76}
-              interactive
-              trackPointer
-              label={t("onb.chat.mascotLabel", { name })}
-            />
-            <div>
-              <h1 className="ob2-heading text-2xl leading-tight">{name}</h1>
-              <p
-                className="flex items-center gap-1.5 text-[13px] text-muted-foreground"
-                aria-live="polite"
-              >
-                <span
-                  className={cn(
-                    "size-1.5 rounded-full",
-                    busy ? "bg-secondary" : "bg-[#3f9a64]",
-                  )}
-                  aria-hidden
-                />
-                {busy ? t("onb.chat.thinking", { name }) : t("onb.chat.role")}
-              </p>
+          {!level ? (
+            <div className="pb-40">
+              <AssistantPicker
+                assistants={assistants}
+                onPick={pickAssistant}
+                disabled={busy}
+              />
             </div>
-          </div>
-          {bizName ? (
-            <div className="mb-6 lg:hidden">
-              <BusinessCardChip data={state.profile?.data} name={bizName} />
-            </div>
-          ) : null}
-
-          <ol
-            className="space-y-6 pb-40"
-            aria-live="polite"
-            aria-relevant="additions"
-          >
-            <AnimatePresence initial={false}>
-              {turns.map((turn) => (
-                <motion.li
-                  key={turn.id}
-                  layout={reduce ? false : "position"}
-                  initial={
-                    reduce
-                      ? { opacity: 0 }
-                      : { opacity: 0, transform: "translateY(10px)" }
-                  }
-                  animate={
-                    reduce
-                      ? { opacity: 1 }
-                      : { opacity: 1, transform: "translateY(0px)" }
-                  }
-                  transition={
-                    reduce
-                      ? { duration: 0.15 }
-                      : { type: "spring", duration: 0.42, bounce: 0.08 }
-                  }
-                  className={cn(
-                    "flex",
-                    turn.role === "user" ? "justify-end" : "justify-start",
-                  )}
-                >
-                  {turn.role === "user" ? (
-                    <p className="max-w-[80%] whitespace-pre-wrap rounded-2xl rounded-br-md bg-foreground px-4 py-2.5 text-[15px] leading-relaxed text-background">
-                      {turn.content}
-                    </p>
-                  ) : (
-                    <AssistantTurn
-                      turn={turn}
-                      active={turn === lastAssistant && !busy}
-                      state={state}
-                      setState={setState}
-                      onEvent={onEvent}
-                      onRetry={() => void send({ event: { type: "start" } })}
+          ) : (
+            <>
+              {/* Who you're talking to */}
+              <div className="mb-8 flex items-center gap-4">
+                <AnimatePresence mode="popLayout" initial={false}>
+                  <motion.span
+                    key={level}
+                    initial={
+                      reduce
+                        ? { opacity: 0 }
+                        : { opacity: 0, transform: "scale(0.85)" }
+                    }
+                    animate={
+                      reduce
+                        ? { opacity: 1 }
+                        : { opacity: 1, transform: "scale(1)" }
+                    }
+                    exit={
+                      reduce
+                        ? { opacity: 0 }
+                        : { opacity: 0, transform: "scale(0.85)" }
+                    }
+                    transition={{
+                      duration: reduce ? 0.12 : 0.28,
+                      ease: EASE_OUT,
+                    }}
+                    className="inline-flex"
+                  >
+                    <Portrait
+                      level={level}
+                      mood={liveMood}
+                      reaction={reaction}
+                      size={76}
+                      interactive
+                      trackPointer
+                      label={t("onb.chat.mascotLabel", { name })}
                     />
-                  )}
-                </motion.li>
-              ))}
-            </AnimatePresence>
-          </ol>
+                  </motion.span>
+                </AnimatePresence>
+                <div className="min-w-0">
+                  <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+                    <h1 className="ob2-heading text-2xl leading-tight">
+                      {name}
+                    </h1>
+                    <AssistantSwitcher
+                      assistants={assistants}
+                      current={level}
+                      onPick={pickAssistant}
+                      disabled={busy}
+                    />
+                  </div>
+                  <p
+                    className="flex items-center gap-1.5 text-[13px] text-muted-foreground"
+                    aria-live="polite"
+                  >
+                    <span
+                      className={cn(
+                        "size-1.5 rounded-full",
+                        busy ? "bg-secondary" : "bg-[#3f9a64]",
+                      )}
+                      aria-hidden
+                    />
+                    {busy
+                      ? t("onb.chat.thinking", { name })
+                      : t("onb.chat.role")}
+                  </p>
+                </div>
+              </div>
+              {bizName ? (
+                <div className="mb-6 lg:hidden">
+                  <BusinessCardChip data={state.profile?.data} name={bizName} />
+                </div>
+              ) : null}
+
+              <ol
+                className="space-y-6 pb-40"
+                aria-live="polite"
+                aria-relevant="additions"
+              >
+                <AnimatePresence initial={false}>
+                  {turns.map((turn) => (
+                    <motion.li
+                      key={turn.id}
+                      layout={reduce ? false : "position"}
+                      initial={
+                        reduce
+                          ? { opacity: 0 }
+                          : { opacity: 0, transform: "translateY(10px)" }
+                      }
+                      animate={
+                        reduce
+                          ? { opacity: 1 }
+                          : { opacity: 1, transform: "translateY(0px)" }
+                      }
+                      transition={
+                        reduce
+                          ? { duration: 0.15 }
+                          : { type: "spring", duration: 0.42, bounce: 0.08 }
+                      }
+                      className={cn(
+                        "flex",
+                        turn.role === "user" ? "justify-end" : "justify-start",
+                      )}
+                    >
+                      {turn.role === "handover" && turn.by ? (
+                        <div className="w-full">
+                          <HandoverDivider
+                            level={turn.by}
+                            name={nameOf(turn.by)}
+                          />
+                        </div>
+                      ) : turn.role === "user" ? (
+                        <p className="max-w-[80%] whitespace-pre-wrap rounded-2xl rounded-br-md bg-foreground px-4 py-2.5 text-[15px] leading-relaxed text-background">
+                          {turn.content}
+                        </p>
+                      ) : (
+                        <AssistantTurn
+                          turn={turn}
+                          level={turn.by ?? level}
+                          active={turn === lastAssistant && !busy}
+                          state={state}
+                          setState={setState}
+                          onEvent={onEvent}
+                          onRetry={() =>
+                            void send({ event: { type: "start" } })
+                          }
+                        />
+                      )}
+                    </motion.li>
+                  ))}
+                </AnimatePresence>
+              </ol>
+            </>
+          )}
         </main>
         <aside className="hidden lg:block">
           <div className="sticky top-28">
@@ -524,78 +624,85 @@ export default function OnboardingChatRoute() {
         </aside>
       </div>
 
-      {/* Composer */}
-      <div className="pointer-events-none fixed inset-x-0 bottom-0 z-20 bg-gradient-to-t from-background via-background/95 to-transparent pb-[max(1rem,env(safe-area-inset-bottom))] pt-8">
-        <div className="mx-auto grid max-w-6xl px-5 lg:grid-cols-[minmax(0,1fr)_360px] lg:gap-16">
-          <div className="relative max-w-[660px]">
-            {/* Lena peeks over the message box: her legs tuck behind it. */}
-            <div className="pointer-events-auto absolute -top-[46px] right-5 z-0">
-              <Mascot
-                mood={liveMood}
-                reaction={reaction}
-                size={56}
-                interactive
-                trackPointer
-                label={t("onb.chat.mascotLabel", { name })}
-              />
-            </div>
-            <form
-              className="pointer-events-auto relative z-10 flex items-end gap-2 rounded-2xl border border-border bg-card p-2 shadow-[0_8px_30px_-12px_rgba(19,21,21,0.25)] focus-within:border-foreground/40"
-              onSubmit={(e) => {
-                e.preventDefault();
-                submit();
-              }}
-            >
-              <label htmlFor="onb-chat-input" className="sr-only">
-                {t("onb.chat.placeholder", { name })}
-              </label>
-              <textarea
-                id="onb-chat-input"
-                ref={input}
-                rows={1}
-                value={draft}
-                maxLength={2000}
-                onChange={(e) => setDraft(e.target.value)}
-                onFocus={() => setTyping(true)}
-                onBlur={() => setTyping(false)}
-                onKeyDown={(e) => {
-                  if (
-                    e.key === "Enter" &&
-                    !e.shiftKey &&
-                    !e.nativeEvent.isComposing
-                  ) {
-                    e.preventDefault();
-                    submit();
-                  }
-                }}
-                placeholder={t("onb.chat.placeholder", { name })}
-                className="max-h-40 min-h-10 flex-1 resize-none bg-transparent px-3 py-2 text-[15px] leading-relaxed outline-none placeholder:text-muted-foreground"
-              />
-              <button
-                type="submit"
-                disabled={busy || !draft.trim()}
-                aria-label={t("onb.chat.send")}
-                className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-foreground text-background transition-[transform,opacity] active:scale-[0.94] disabled:opacity-30"
-              >
-                {busy ? (
-                  <Loader2
-                    className="size-4 animate-spin motion-reduce:animate-none"
-                    aria-hidden
+      {/* Composer (after an assistant is picked) */}
+      {level ? (
+        <div className="pointer-events-none fixed inset-x-0 bottom-0 z-20 bg-gradient-to-t from-background via-background/95 to-transparent pb-[max(1rem,env(safe-area-inset-bottom))] pt-8">
+          <div className="mx-auto grid max-w-6xl px-5 lg:grid-cols-[minmax(0,1fr)_360px] lg:gap-16">
+            <div className="relative max-w-[660px]">
+              {/* The assistant peeks over the message box: shoulders tuck behind it. */}
+              {level ? (
+                <div className="pointer-events-auto absolute -top-[40px] right-5 z-0">
+                  <Portrait
+                    key={level}
+                    level={level}
+                    mood={liveMood}
+                    reaction={reaction}
+                    size={56}
+                    interactive
+                    trackPointer
+                    label={t("onb.chat.mascotLabel", { name })}
                   />
-                ) : (
-                  <ArrowUp className="size-4" aria-hidden />
-                )}
-              </button>
-            </form>
+                </div>
+              ) : null}
+              <form
+                className="pointer-events-auto relative z-10 flex items-end gap-2 rounded-2xl border border-border bg-card p-2 shadow-[0_8px_30px_-12px_rgba(19,21,21,0.25)] focus-within:border-foreground/40"
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  submit();
+                }}
+              >
+                <label htmlFor="onb-chat-input" className="sr-only">
+                  {t("onb.chat.placeholder", { name })}
+                </label>
+                <textarea
+                  id="onb-chat-input"
+                  ref={input}
+                  rows={1}
+                  value={draft}
+                  maxLength={2000}
+                  onChange={(e) => setDraft(e.target.value)}
+                  onFocus={() => setTyping(true)}
+                  onBlur={() => setTyping(false)}
+                  onKeyDown={(e) => {
+                    if (
+                      e.key === "Enter" &&
+                      !e.shiftKey &&
+                      !e.nativeEvent.isComposing
+                    ) {
+                      e.preventDefault();
+                      submit();
+                    }
+                  }}
+                  placeholder={t("onb.chat.placeholder", { name })}
+                  className="max-h-40 min-h-10 flex-1 resize-none bg-transparent px-3 py-2 text-[15px] leading-relaxed outline-none placeholder:text-muted-foreground"
+                />
+                <button
+                  type="submit"
+                  disabled={busy || !draft.trim()}
+                  aria-label={t("onb.chat.send")}
+                  className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-foreground text-background transition-[transform,opacity] active:scale-[0.94] disabled:opacity-30"
+                >
+                  {busy ? (
+                    <Loader2
+                      className="size-4 animate-spin motion-reduce:animate-none"
+                      aria-hidden
+                    />
+                  ) : (
+                    <ArrowUp className="size-4" aria-hidden />
+                  )}
+                </button>
+              </form>
+            </div>
           </div>
         </div>
-      </div>
+      ) : null}
     </div>
   );
 }
 
 function AssistantTurn({
   turn,
+  level,
   active,
   state,
   setState,
@@ -603,6 +710,7 @@ function AssistantTurn({
   onRetry,
 }: {
   turn: Turn;
+  level: AssistantLevel;
   active: boolean;
   state: OnboardingState;
   setState: (s: OnboardingState) => void;
@@ -613,7 +721,12 @@ function AssistantTurn({
   const waiting = turn.streaming && !visibleText(turn.content).trim();
   return (
     <div className="flex w-full max-w-[640px] gap-3">
-      <Mascot size={30} simple className="mt-0.5 hidden sm:inline-flex" />
+      <Portrait
+        level={level}
+        size={30}
+        simple
+        className="mt-0.5 hidden sm:inline-flex"
+      />
       <div className="min-w-0 flex-1">
         {waiting ? (
           <span

@@ -2118,7 +2118,15 @@
         "model": "KI-Modell",
         "modelCost": "{{cost}} pro Onboarding",
         "noKey": "Der Assistent braucht einen KI-Schlüssel in diesem Workspace, bevor Kunden ihn sehen.",
-        "noKeyLink": "OpenRouter verbinden"
+        "noKeyLink": "OpenRouter verbinden",
+        "assistantsTitle": "Assistenten",
+        "assistantsHint": "Kunden wählen einen, wenn der Chat öffnet, und können jederzeit wechseln. Alle drei stellen jede Frage, nur die Erklärung ändert sich.",
+        "assistantName": "Name",
+        "assistantStyle": "Persönlichkeit (optional)",
+        "assistantStylePlaceholder": "Herzlich, ruhig, ein wenig humorvoll",
+        "levelTech": "Kennt sich mit Technik aus",
+        "levelAssisted": "Hat Hilfe bei der Technik",
+        "levelSimple": "Mag es einfach"
       }
     },
     "emailNotifications": {
@@ -8551,7 +8559,10 @@
         "chatCta": "Mit {{name}} starten",
         "formTitle": "Formular ausfüllen",
         "formSub": "Etwa 8 Minuten, in Ihrem Tempo.",
-        "switch": "Sie können jederzeit wechseln. Es geht nichts verloren."
+        "switch": "Sie können jederzeit wechseln. Es geht nichts verloren.",
+        "chatTitleTeam": "Im Gespräch mit einer unserer Begleitungen",
+        "chatSubTeam": "Wie ein Chat mit einer Kollegin. Wählen Sie, wer Ihnen Dinge so erklärt, wie Sie es mögen.",
+        "chatCtaTeam": "Chat starten"
       }
     },
     "chat": {
@@ -8582,7 +8593,34 @@
         "unavailable": "Der Assistent ist gerade nicht verfügbar. Bitte machen Sie im Formular weiter, es geht nichts verloren.",
         "invalid_request": "Das hat nicht geklappt."
       },
-      "mascotLabel": "{{name}}, Ihre Begleitung bei der Einrichtung. Antippen zum Hallo-Sagen."
+      "mascotLabel": "{{name}}, Ihre Begleitung bei der Einrichtung. Antippen zum Hallo-Sagen.",
+      "continueChat": "Im Chat weitermachen",
+      "assistants": {
+        "pickTitle": "Mit wem möchten Sie die Einrichtung machen?",
+        "pickSub": "Gleiche Fragen, gleiches Ergebnis. Wählen Sie, wie Ihnen Dinge am liebsten erklärt werden. Wechseln geht jederzeit.",
+        "howTheyAsk": "So würde gefragt",
+        "choose": "Mit {{name}} sprechen",
+        "change": "Wechseln",
+        "switchTitle": "Mit jemand anderem sprechen",
+        "switchSub": "Ihre Antworten bleiben. Es wird nur anders erklärt.",
+        "current": "Spricht gerade",
+        "handover": "{{name}} übernimmt. Ihre Antworten bleiben.",
+        "picked": "Sie sprechen mit {{name}}",
+        "levels": {
+          "tech": {
+            "title": "Ich kenne mich mit Technik aus",
+            "sample": "Bei welchem Registrar liegt Ihre Domain, und wer hat den DNS-Zugang?"
+          },
+          "assisted": {
+            "title": "Jemand hilft mir bei der Technik",
+            "sample": "Wissen Sie, wo Ihre Webadresse verwaltet wird? Wenn Ihr Webbetreuer das macht, kann ich ihn dazuholen."
+          },
+          "simple": {
+            "title": "Bitte ganz einfach",
+            "sample": "Ihre Webadresse ist das, was man eintippt, um Sie zu finden. Wissen Sie, wer sie eingerichtet hat? „Weiß nicht“ ist völlig in Ordnung."
+          }
+        }
+      }
     }
   },
   "salesContact": {

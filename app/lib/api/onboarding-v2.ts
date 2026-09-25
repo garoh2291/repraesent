@@ -1,4 +1,5 @@
 import { apiClient } from "./axios-instance";
+import type { AssistantLevel } from "./onboarding-chat";
 
 /** Backend: nestjs-monolith/src/modules/onboarding-v2 (see ONBOARDING_V2_PLAN.md). */
 
@@ -122,7 +123,14 @@ export interface OnboardingState {
   /** Who calls after setup (intro screen): names + photos of the sales hosts. */
   sales_team?: Array<{ label: string | null; avatar_url: string | null }>;
   /** The AI onboarding assistant: offered only when the root switched it on (texts resolved for this customer). */
-  assistant?: { available: boolean; name: string | null; intro: { headline: string | null; sub: string | null } | null };
+  assistant?: {
+    available: boolean;
+    /** The picked assistant's name (null until the customer picks one in the chat). */
+    name: string | null;
+    assistants?: Array<{ key: AssistantLevel; name: string }>;
+    chosen?: AssistantLevel | null;
+    intro: { headline: string | null; sub: string | null } | null;
+  };
   user: { id: string; email: string; first_name: string | null; last_name: string | null; locale: string };
   run: {
     id: string;

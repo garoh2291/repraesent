@@ -2118,7 +2118,15 @@
         "model": "Modèle IA",
         "modelCost": "{{cost}} par onboarding",
         "noKey": "L'assistant a besoin d'une clé IA dans cet espace avant d'être proposé aux clients.",
-        "noKeyLink": "Connecter OpenRouter"
+        "noKeyLink": "Connecter OpenRouter",
+        "assistantsTitle": "Assistants",
+        "assistantsHint": "Le client en choisit un à l'ouverture du chat et peut changer à tout moment. Les trois posent toutes les questions ; seule l'explication change.",
+        "assistantName": "Nom",
+        "assistantStyle": "Personnalité (facultatif)",
+        "assistantStylePlaceholder": "Chaleureux, calme, un brin d'humour",
+        "levelTech": "À l'aise avec la technique",
+        "levelAssisted": "A quelqu'un pour la technique",
+        "levelSimple": "Préfère la simplicité"
       }
     },
     "emailNotifications": {
@@ -8551,7 +8559,10 @@
         "chatCta": "Commencer avec {{name}}",
         "formTitle": "Remplir le formulaire",
         "formSub": "Environ 8 minutes, à votre rythme.",
-        "switch": "Vous pouvez changer à tout moment. Rien ne se perd."
+        "switch": "Vous pouvez changer à tout moment. Rien ne se perd.",
+        "chatTitleTeam": "En discutant avec l'un de nos guides",
+        "chatSubTeam": "Comme une conversation avec un collègue. Choisissez la personne qui explique à votre façon.",
+        "chatCtaTeam": "Démarrer le chat"
       }
     },
     "chat": {
@@ -8582,7 +8593,34 @@
         "unavailable": "L'assistant n'est pas disponible pour le moment. Continuez dans le formulaire, rien ne se perd.",
         "invalid_request": "Cela n'a pas fonctionné."
       },
-      "mascotLabel": "{{name}}, votre guide. Touchez pour dire bonjour."
+      "mascotLabel": "{{name}}, votre guide. Touchez pour dire bonjour.",
+      "continueChat": "Continuer dans le chat",
+      "assistants": {
+        "pickTitle": "Avec qui souhaitez-vous faire la configuration ?",
+        "pickSub": "Mêmes questions, même résultat. Choisissez la façon d'expliquer qui vous convient. Vous pouvez changer à tout moment.",
+        "howTheyAsk": "Sa façon de demander",
+        "choose": "Parler avec {{name}}",
+        "change": "Changer",
+        "switchTitle": "Parler avec quelqu'un d'autre",
+        "switchSub": "Vos réponses restent. Seule la façon d'expliquer change.",
+        "current": "En conversation",
+        "handover": "{{name}} prend le relais. Vos réponses restent.",
+        "picked": "Vous parlez avec {{name}}",
+        "levels": {
+          "tech": {
+            "title": "La technique, je connais",
+            "sample": "Chez quel registraire est votre domaine, et qui a l'accès DNS ?"
+          },
+          "assisted": {
+            "title": "Quelqu'un m'aide pour la technique",
+            "sample": "Savez-vous où votre adresse web est gérée ? Si votre prestataire s'en occupe, je peux l'inviter."
+          },
+          "simple": {
+            "title": "Le plus simple possible",
+            "sample": "Votre adresse web, c'est ce qu'on tape pour vous trouver. Savez-vous qui l'a mise en place ? « Je ne sais pas » convient très bien."
+          }
+        }
+      }
     }
   },
   "salesContact": {

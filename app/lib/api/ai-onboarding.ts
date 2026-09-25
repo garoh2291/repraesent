@@ -1,3 +1,4 @@
+import type { AssistantLevel } from "./onboarding-chat";
 import { apiClient } from "./axios-instance";
 
 /** Root Settings → Onboarding → AI assistant (AI_ONBOARDING_PLAN.md, Phase 2). Mirrors ai-onboarding.types.ts. */
@@ -17,6 +18,9 @@ export interface Regional<T> {
   regions: Partial<Record<OverrideRegion, T>>;
 }
 
+/** Built-in names until the root admin renames them (mirrors onboarding-v2/ai-chat/assistants.ts). */
+export const DEFAULT_ASSISTANT_NAMES: Record<AssistantLevel, string> = { tech: "Jonas", assisted: "Mara", simple: "Clara" };
+
 export interface Persona {
   name: string;
   style: string;
@@ -33,7 +37,8 @@ export const ASSISTANT_MODELS = [
 export interface AiOnboardingSettings {
   enabled: boolean;
   model: string;
-  persona: Regional<Persona>;
+  /** The three assistants by tech level (Phase 6), each nameable per region. */
+  assistants: Record<AssistantLevel, Regional<Persona>>;
   welcome: Regional<LocalizedText>;
   intro: Regional<{ headline: LocalizedText; sub: LocalizedText }>;
 }

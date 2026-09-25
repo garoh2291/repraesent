@@ -1,4 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { clearOnboardingSession } from "~/lib/onboarding/session-draft";
 import { useNavigate } from "react-router";
 import {
   requestMagicLink,
@@ -39,6 +40,8 @@ export const clearStoredAuth = (): void => {
   clearStoredToken();
   clearStoredWorkspaceId();
   clearStoredSelectedView();
+  // The next person in this tab must not inherit an onboarding draft.
+  clearOnboardingSession();
 };
 
 export function useAuth() {

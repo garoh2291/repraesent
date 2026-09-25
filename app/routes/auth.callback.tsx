@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { clearOnboardingSession } from "~/lib/onboarding/session-draft";
 import { useNavigate, useSearchParams } from "react-router";
 import { useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
@@ -234,6 +235,11 @@ export default function AuthCallback() {
       try {
         const auth = await verifyMagicLink(token);
         setStoredToken(auth.access_token);
+        // A fresh sign-in may be a different person than whoever used this tab before
+        // (magic link opened while another account was signed in, or a new account after
+        // sign-out): drop their onboarding draft and every cached answer.
+        clearOnboardingSession();
+        queryClient.removeQueries({ predicate: (q) => q.queryKey[0] !== "auth" });
         queryClient.invalidateQueries({ queryKey: ["auth"] });
         await openWorkspace();
       } catch (err) {

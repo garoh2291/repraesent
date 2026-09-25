@@ -6,7 +6,8 @@ import { useTranslation } from "react-i18next";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { Check, LogOut, MoreHorizontal, Repeat } from "lucide-react";
 import logoUrl from "~/components/icons/re_praesent-mark-brand-hor.svg?url";
-import { Mascot } from "./chat/mascot";
+import { Portrait, PortraitStack } from "./chat/portrait";
+import { ASSISTANT_LEVELS } from "~/lib/api/onboarding-chat";
 import { LanguageSwitcher } from "~/components/language-switcher";
 import {
   DropdownMenu,
@@ -172,9 +173,9 @@ export function WizardShell({ children, hideCard = false }: { children: React.Re
                 to="/onboarding/chat"
                 className="inline-flex h-9 items-center gap-2 rounded-full border border-border bg-card p-1 text-[13px] sm:pr-3 font-medium text-foreground/85 transition-colors hover:border-foreground/40 hover:text-foreground"
               >
-                <Mascot size={28} simple />
-                <span className="hidden sm:inline">{t("onb.chat.continueWith", { name: state.assistant.name })}</span>
-                <span className="sr-only sm:hidden">{t("onb.chat.continueWith", { name: state.assistant.name })}</span>
+                {state.assistant.chosen ? <Portrait level={state.assistant.chosen} size={28} simple /> : <PortraitStack levels={ASSISTANT_LEVELS} size={24} />}
+                <span className="hidden sm:inline">{state.assistant.name ? t("onb.chat.continueWith", { name: state.assistant.name }) : t("onb.chat.continueChat")}</span>
+                <span className="sr-only sm:hidden">{state.assistant.name ? t("onb.chat.continueWith", { name: state.assistant.name }) : t("onb.chat.continueChat")}</span>
               </Link>
             ) : null}
             <OnbLanguageSwitcher />

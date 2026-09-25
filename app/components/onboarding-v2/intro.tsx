@@ -21,7 +21,8 @@ import type { OnboardingState } from "~/lib/api/onboarding-v2";
 import { formatMoney } from "~/lib/onboarding/helpers";
 import { cn } from "~/lib/utils";
 import { AccountMenu, OnbLanguageSwitcher, OnboardingStyles } from "./shell";
-import { Mascot } from "./chat/mascot";
+import { Portrait, PortraitStack } from "./chat/portrait";
+import { ASSISTANT_LEVELS, type AssistantLevel } from "~/lib/api/onboarding-chat";
 
 const EASE_OUT = [0.23, 1, 0.32, 1] as const;
 
@@ -146,7 +147,7 @@ export function OnboardingIntro({ state, onStart }: { state: OnboardingState; on
 
             {assistant ? (
               <motion.div {...rise(4)} className="mt-8">
-                <WayChoice name={assistant.name ?? ""} onStart={onStart} />
+                <WayChoice name={assistant.name} chosen={assistant.chosen ?? null} onStart={onStart} />
               </motion.div>
             ) : (
               <motion.div {...rise(4)} className="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-5">
@@ -210,7 +211,7 @@ export function OnboardingIntro({ state, onStart }: { state: OnboardingState; on
             </div>
             <StartButton
               onStart={() => onStart(assistant ? "chat" : "form")}
-              label={assistant ? t("onb.intro.way.chatCta", { name: assistant.name }) : t("onb.intro.cta")}
+              label={assistant ? (assistant.name ? t("onb.intro.way.chatCta", { name: assistant.name }) : t("onb.intro.way.chatCtaTeam")) : t("onb.intro.cta")}
               inverted
             />
           </div>
@@ -322,7 +323,7 @@ function Showcase() {
  * Two ways through the same onboarding. Equal weight on purpose: the form is
  * not the "boring" option, it is the in-control one.
  */
-function WayChoice({ name, onStart }: { name: string; onStart: (mode: OnboardingMode) => void }) {
+function WayChoice({ name, chosen, onStart }: { name: string | null; chosen: AssistantLevel | null; onStart: (mode: OnboardingMode) => void }) {
   const { t } = useTranslation();
   const [hover, setHover] = useState(false);
   const card =
@@ -339,14 +340,17 @@ function WayChoice({ name, onStart }: { name: string; onStart: (mode: Onboarding
           className={cn(card, "border-foreground bg-foreground text-background shadow-[0_10px_30px_-14px_rgba(19,21,21,0.55)] hover:-translate-y-0.5")}
         >
           <span className="flex w-full items-center justify-between">
-            <span className="flex size-12 items-center justify-center rounded-2xl bg-background/10">
-              <Mascot mood={hover ? "speaking" : "idle"} size={44} />
-            </span>
+            {/* One face once they've picked someone, otherwise the three to choose from. */}
+            {chosen ? (
+              <Portrait level={chosen} mood={hover ? "listening" : "idle"} size={44} />
+            ) : (
+              <PortraitStack levels={ASSISTANT_LEVELS} size={40} className="[&>span]:ring-foreground" />
+            )}
             <ArrowRight className="size-4 text-secondary transition-transform duration-200 group-hover:translate-x-0.5" aria-hidden />
           </span>
           <span>
-            <span className="block text-[15px] font-semibold">{t("onb.intro.way.chatTitle", { name })}</span>
-            <span className="mt-1 block text-[13px] leading-snug text-background/70">{t("onb.intro.way.chatSub", { name })}</span>
+            <span className="block text-[15px] font-semibold">{name ? t("onb.intro.way.chatTitle", { name }) : t("onb.intro.way.chatTitleTeam")}</span>
+            <span className="mt-1 block text-[13px] leading-snug text-background/70">{name ? t("onb.intro.way.chatSub", { name }) : t("onb.intro.way.chatSubTeam")}</span>
           </span>
         </button>
         <button type="button" onClick={() => onStart("form")} className={cn(card, "border-border bg-card text-foreground hover:-translate-y-0.5 hover:border-foreground/40")}>

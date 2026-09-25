@@ -2116,7 +2116,15 @@
         "model": "AI model",
         "modelCost": "{{cost}} per onboarding",
         "noKey": "The assistant needs an AI key in this workspace before customers can see it.",
-        "noKeyLink": "Connect OpenRouter"
+        "noKeyLink": "Connect OpenRouter",
+        "assistantsTitle": "Assistants",
+        "assistantsHint": "Customers pick one when the chat opens and can switch any time. All three ask every question; only the explaining changes.",
+        "assistantName": "Name",
+        "assistantStyle": "Personality (optional)",
+        "assistantStylePlaceholder": "Warm, calm, a little witty",
+        "levelTech": "At home with tech",
+        "levelAssisted": "Has a tech person",
+        "levelSimple": "Keeps it simple"
       }
     },
     "emailNotifications": {
@@ -8549,7 +8557,10 @@
         "chatCta": "Start with {{name}}",
         "formTitle": "Fill in the form",
         "formSub": "About 8 minutes, at your own pace.",
-        "switch": "You can switch at any point. Nothing gets lost."
+        "switch": "You can switch at any point. Nothing gets lost.",
+        "chatTitleTeam": "Talk it through with one of our guides",
+        "chatSubTeam": "Like a chat with a colleague. Pick someone who explains things the way you like.",
+        "chatCtaTeam": "Start the chat"
       }
     },
     "chat": {
@@ -8580,7 +8591,34 @@
         "unavailable": "The assistant isn't available right now. Please continue in the form; nothing is lost.",
         "invalid_request": "That didn't go through."
       },
-      "mascotLabel": "{{name}}, your setup guide. Tap to say hi."
+      "mascotLabel": "{{name}}, your setup guide. Tap to say hi.",
+      "continueChat": "Continue in the chat",
+      "assistants": {
+        "pickTitle": "Who would you like to set up with?",
+        "pickSub": "Same questions, same result. Pick the way of explaining that suits you. You can switch at any time.",
+        "howTheyAsk": "How they'd ask",
+        "choose": "Talk with {{name}}",
+        "change": "Change",
+        "switchTitle": "Talk with someone else",
+        "switchSub": "Your answers stay. The next one just explains things differently.",
+        "current": "Talking now",
+        "handover": "{{name}} takes over. Your answers stay.",
+        "picked": "You're talking with {{name}}",
+        "levels": {
+          "tech": {
+            "title": "I'm at home with tech",
+            "sample": "Which registrar is your domain with, and who holds the DNS login?"
+          },
+          "assisted": {
+            "title": "Someone helps me with the technical side",
+            "sample": "Do you know where your web address is managed? If your web person looks after it, I can bring them in."
+          },
+          "simple": {
+            "title": "Keep it simple, please",
+            "sample": "Your web address is what people type to find you. Do you know who set it up? \"Not sure\" is fine."
+          }
+        }
+      }
     }
   },
   "salesContact": {

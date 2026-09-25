@@ -10,9 +10,16 @@ export type ChatCard =
   | { type: "billing"; id: string }
   | { type: "consent"; id: string };
 
+/** The three assistants by tech level (Phase 6): Jonas · Mara · Clara by default. */
+export const ASSISTANT_LEVELS = ["tech", "assisted", "simple"] as const;
+export type AssistantLevel = (typeof ASSISTANT_LEVELS)[number];
+
 export interface ChatMessage {
   id: string;
-  role: "user" | "assistant";
+  /** "handover": the customer picked or switched assistant (a divider, no text). */
+  role: "user" | "assistant" | "handover";
+  /** Who wrote it (assistant) or took over (handover); null for older messages. */
+  by: AssistantLevel | null;
   content: string;
   cards: ChatCard[];
   saved: string[];
@@ -28,6 +35,11 @@ export interface ChatProgress {
 export interface ChatOpen {
   available: boolean;
   persona: { name: string } | null;
+  /** All three, names resolved for the customer's region. */
+  assistants: Array<{ key: AssistantLevel; name: string }>;
+  assistant: AssistantLevel | null;
+  /** No assistant picked yet: show the three to choose from first. */
+  needs_pick?: boolean;
   messages: ChatMessage[];
   progress: ChatProgress | null;
   needs_start?: boolean;
@@ -44,10 +56,13 @@ export type ChatEvent =
   | { type: "place_none"; label: string }
   | { type: "website_read" }
   | { type: "billing_saved" }
-  | { type: "resume" };
+  | { type: "resume" }
+  | { type: "pick_assistant"; level: AssistantLevel };
 
 export interface ChatHandlers {
   onMeta?: (d: { user_message_id: string }) => void;
+  /** A finished message the server added (handover divider, the new assistant's welcome). */
+  onMessage?: (m: ChatMessage) => void;
   onToken?: (t: string) => void;
   /** The final text, when the server cleaned it up (hidden markers removed). */
   onText?: (t: string) => void;
@@ -119,6 +134,8 @@ export async function streamChatTurn(
     switch (event) {
       case "meta":
         return handlers.onMeta?.(d as { user_message_id: string });
+      case "message":
+        return handlers.onMessage?.(d as ChatMessage);
       case "token":
         return handlers.onToken?.((d as { t: string }).t ?? "");
       case "text":
