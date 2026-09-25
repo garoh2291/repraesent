@@ -98,7 +98,9 @@ export default function DashboardLayout() {
 
       <main
         className={
-          "flex min-w-0 flex-1 flex-col overflow-y-auto overflow-x-hidden bg-background" +
+          // relative: absolutely positioned children (sr-only labels, badges) must be laid out
+          // inside this scroll box; otherwise they stretch the page and add a second scrollbar.
+          "relative flex min-w-0 flex-1 flex-col overflow-y-auto overflow-x-hidden bg-background" +
           (sections ? " pb-[calc(4rem+env(safe-area-inset-bottom))] lg:pb-0" : "")
         }
       >
