@@ -81,7 +81,21 @@
     "mediaLibrary": "Bibliotheek",
     "mediaFavorites": "Favorieten",
     "mediaBin": "Prullenbak",
-    "aiAssistants": "AI-assistenten"
+    "aiAssistants": "AI-assistenten",
+    "mobileMenu": {
+      "title": "Menu",
+      "description": "Alles buiten de vier tabbladen",
+      "search": "Zoeken of ga naar…",
+      "switchArea": "Omgeving wisselen",
+      "mainMenu": "Menu",
+      "language": "Taal",
+      "hints": {
+        "website": "Pagina's, SEO en uw diensten",
+        "settings": "U, uw team en koppelingen",
+        "billing": "Abonnement en facturen",
+        "contact": "Een echt persoon uit ons team"
+      }
+    }
   },
   "db_brand": {
     "subtitle": "Kies een retailer in de zijbalk om de Social Ads en Leads te bekijken.",

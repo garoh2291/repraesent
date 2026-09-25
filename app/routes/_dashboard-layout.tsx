@@ -7,7 +7,7 @@ import { Sidebar } from "~/components/sidebar";
 import { PilotRouteGate } from "~/components/PilotRouteGate";
 import { Button } from "~/components/ui/button";
 import { AlertTriangle, Menu, Search } from "lucide-react";
-import { Sheet, SheetContent } from "~/components/ui/sheet";
+import { MobileMenu } from "~/components/notebook/mobile-menu";
 import { getWorkspaceInvoices } from "~/lib/api/workspaces";
 import { updateUserLocale } from "~/lib/api/auth";
 import { normalizeLocale, type SupportedLocale } from "~/i18n/locales";
@@ -56,6 +56,10 @@ export default function DashboardLayout() {
   // every redirect that reads it are untouched.
 
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
+  // Any navigation (a tile, a search result, the back button) puts the sheet away.
+  useEffect(() => {
+    setMobileNavOpen(false);
+  }, [location.pathname]);
 
   const showUnpaidBanner =
     currentWorkspace?.status === "active" &&
@@ -84,17 +88,9 @@ export default function DashboardLayout() {
       {/* Desktop sidebar — the ink column */}
       <Sidebar className="hidden lg:flex" collapsible />
 
-      {/* Full navigation on phones: opened from "More" (or the menu button
-          in brand workspaces, which keep their own list). */}
-      <Sheet open={mobileNavOpen} onOpenChange={setMobileNavOpen}>
-        <SheetContent
-          side="left"
-          showCloseButton={false}
-          className="p-0 w-[280px] max-w-[85vw] bg-[#111113] border-r border-white/5 gap-0"
-        >
-          <Sidebar onClose={() => setMobileNavOpen(false)} />
-        </SheetContent>
-      </Sheet>
+      {/* Everything beyond the four tabs on phones: a light sheet from the
+          bottom, opened from "More" (or the menu button in brand workspaces). */}
+      <MobileMenu open={mobileNavOpen} onOpenChange={setMobileNavOpen} />
 
       <main
         className={
@@ -180,7 +176,7 @@ export default function DashboardLayout() {
 
       {sections ? (
         <>
-          <BottomTabBar sections={sections} onMore={() => setMobileNavOpen(true)} />
+          <BottomTabBar sections={sections} onMore={() => setMobileNavOpen(true)} moreOpen={mobileNavOpen} />
           <CommandPalette />
         </>
       ) : null}

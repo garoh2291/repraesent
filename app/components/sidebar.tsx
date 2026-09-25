@@ -1,4 +1,4 @@
-import { Link, useLocation, useNavigate } from "react-router";
+import { Link, useLocation } from "react-router";
 import {
   Children,
   createContext,
@@ -30,10 +30,8 @@ import {
 import { SafeImg } from "~/components/atom/safe-img";
 
 import { useAuthContext } from "~/providers/auth-provider";
-import { setStoredSelectedView, BRAND_VIEW } from "~/lib/api/axios-instance";
-import { PILOT_FEATURE_LABEL_KEY, usePilotFeatures } from "~/lib/feature-flags";
+import { PILOT_FEATURE_LABEL_KEY } from "~/lib/feature-flags";
 import { useWorkspaceWpPluginInstalls } from "~/lib/hooks/useWorkspaceWpPluginInstalls";
-import { useWorkspaceWpSite } from "~/lib/hooks/useWorkspaceWpSite";
 import { LanguageSwitcher } from "~/components/language-switcher";
 import { ContactSalesDialog } from "~/components/sales-contact/contact-sales-dialog";
 import {
@@ -49,7 +47,7 @@ import {
 
 import logoUrl from "~/components/icons/re_praesent-mark-brand-hor.svg?url";
 import { activeSection, useNavSections } from "~/lib/nav/sections";
-import { SETTINGS_GROUPS, SETTINGS_NAV } from "~/lib/nav/settings";
+import { PILOT_SETTINGS, useNavModel } from "~/lib/nav/use-nav-model";
 import { useToday } from "~/lib/hooks/useToday";
 import { MarkerCount } from "~/components/notebook/stat";
 import { openCommandPalette } from "~/components/notebook/command-palette";
@@ -271,67 +269,25 @@ export function Sidebar({
   /** Desktop instance only — the mobile sheet always renders expanded. */
   collapsible?: boolean;
 }) {
+  const { logout, isLoggingOut } = useAuthContext();
+  const { t, i18n } = useTranslation();
+  const location = useLocation();
+  // Who sees what: shared with the phone menu sheet (~/lib/nav/use-nav-model).
   const {
-    user,
     currentWorkspace,
     workspaces,
     brand,
-    setCurrentWorkspace,
-    logout,
-    isLoggingOut,
-  } = useAuthContext();
-  const { t, i18n } = useTranslation();
-  const location = useLocation();
-  const navigate = useNavigate();
-  // Brand users with a linked brand entity get a "Brand" entry in the switcher
-  // so they can hop back to their brand dashboard from a workspace view.
-  const showBrandSwitchEntry = user?.user_type === "brand" && !!brand;
-  const hasMultipleWorkspaces =
-    (workspaces?.length ?? 0) > 1 ||
-    (showBrandSwitchEntry && (workspaces?.length ?? 0) >= 1);
-  // A live demo is a product tour: every destination stays visible even with
-  // nothing connected, so the visitor can see what the app does. The pages
-  // show their own empty states. Real workspaces keep the gates below.
-  const isDemoWorkspace = currentWorkspace?.is_demo === true;
-  // Root workspace admins configure the new-customer onboarding.
-  const isRootAdmin =
-    currentWorkspace?.is_root === true &&
-    currentWorkspace.member_role === "admin";
-  // Section gates (appointments, calendar, Stripe, pilots) live in
-  // ~/lib/nav/sections — one place for every destination.
-  const isDoorboostBrandWs = currentWorkspace?.type === "doorboost_brand";
-  // "Contact re:praesent": every customer workspace. Not the root (that's
-  // re:praesent itself), not demo workspaces (read-only), not DoorBoost brands.
-  const showContactSales =
-    !!currentWorkspace &&
-    currentWorkspace.is_root !== true &&
-    currentWorkspace.is_demo !== true &&
-    !isDoorboostBrandWs &&
-    // Switched on per workspace by re:praesent (root Settings → Support).
-    currentWorkspace.support_contact_enabled === true;
+    showBrandSwitchEntry,
+    hasMultipleWorkspaces,
+    isDoorboostBrandWs,
+    showContactSales,
+    inSettings,
+    inWebsite,
+    settingsGroups,
+    switchWorkspace: handleWorkspaceChange,
+    switchToBrand,
+  } = useNavModel();
   const [contactOpen, setContactOpen] = useState(false);
-  // TEMPORARY: Workflows and Settings → Integrations are still being piloted,
-  // so in production only the pilot workspace sees those nav entries. Local
-  // development always shows them.
-  // Pilot gating lives in ~/lib/feature-flags. These hide entries; the routes
-  // themselves are bounced by PilotRouteGate in the dashboard layout.
-  const pilot = usePilotFeatures();
-  const showAiAssistant = pilot.aiAssistant;
-  // Route-driven rather than stateful: deep links and refreshes land in the
-  // right mode for free, and there is nothing to reset on the way out.
-  const inSettings = location.pathname.startsWith("/settings");
-  const { data: wpSite } = useWorkspaceWpSite(
-    !!currentWorkspace?.id && !isDoorboostBrandWs
-  );
-  const showWebsite = !!wpSite?.sso_enabled || isDemoWorkspace;
-  // Same drill-in as Settings: /website replaces the nav list with Overview
-  // plus the workspace's services, and "Back" returns to the main list.
-  const inWebsite = showWebsite && location.pathname.startsWith("/website");
-
-  const handleWorkspaceChange = (workspaceId: string) => {
-    setCurrentWorkspace(workspaceId);
-    navigate("/", { replace: true });
-  };
 
   // Collapsed = icon rail. Restored from localStorage AFTER mount so the SSR
   // markup always matches the first client render (expanded) — a mismatch here
@@ -483,8 +439,7 @@ export function Sidebar({
                       key="__brand__"
                       onClick={() => {
                         onClose?.();
-                        setStoredSelectedView(BRAND_VIEW);
-                        navigate("/brand", { replace: true });
+                        switchToBrand();
                       }}
                     >
                       <Building2 className="h-4 w-4" />
@@ -572,20 +527,8 @@ export function Sidebar({
                 </NavLink>
               </div>
 
-              {SETTINGS_GROUPS.map((group) => {
-                const items = SETTINGS_NAV.filter(
-                  (item) =>
-                    item.group === group.key &&
-                    (item.to === "/settings/integrations"
-                      ? pilot.integrations || isDemoWorkspace
-                      : item.to === "/settings/ai"
-                        ? showAiAssistant
-                        : item.to === "/settings/onboarding" ||
-                            item.to === "/settings/support"
-                          ? isRootAdmin
-                          : true)
-                );
-                if (items.length === 0) return null;
+              {settingsGroups.map((group) => {
+                const items = group.items;
                 return (
                   <div key={group.key} className="pb-2">
                     {!collapsed && (
@@ -602,8 +545,7 @@ export function Sidebar({
                       >
                         <Icon className="h-4 w-4 shrink-0" />
                         <span className="truncate">{t(labelKey)}</span>
-                        {to === "/settings/integrations" ||
-                        to === "/settings/ai" ? (
+                        {PILOT_SETTINGS.has(to) ? (
                           <DemoPill />
                         ) : null}
                       </NavLink>

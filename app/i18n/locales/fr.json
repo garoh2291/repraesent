@@ -81,7 +81,21 @@
     "mediaLibrary": "Bibliothèque",
     "mediaFavorites": "Favoris",
     "mediaBin": "Corbeille",
-    "aiAssistants": "Assistants IA"
+    "aiAssistants": "Assistants IA",
+    "mobileMenu": {
+      "title": "Menu",
+      "description": "Tout ce qui dépasse les quatre onglets",
+      "search": "Rechercher ou aller à…",
+      "switchArea": "Changer d'espace",
+      "mainMenu": "Menu",
+      "language": "Langue",
+      "hints": {
+        "website": "Pages, SEO et vos services",
+        "settings": "Vous, votre équipe et vos connexions",
+        "billing": "Offre et factures",
+        "contact": "Une vraie personne de notre équipe"
+      }
+    }
   },
   "db_brand": {
     "subtitle": "Sélectionnez un revendeur dans la barre latérale pour afficher ses Social Ads et Leads.",

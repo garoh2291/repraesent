@@ -81,7 +81,21 @@
     "mediaLibrary": "Library",
     "mediaFavorites": "Favourites",
     "mediaBin": "Recycle bin",
-    "aiAssistants": "AI assistants"
+    "aiAssistants": "AI assistants",
+    "mobileMenu": {
+      "title": "Menu",
+      "description": "Everything beyond the four tabs",
+      "search": "Search or jump to…",
+      "switchArea": "Switch area",
+      "mainMenu": "Menu",
+      "language": "Language",
+      "hints": {
+        "website": "Pages, SEO and your services",
+        "settings": "You, your team and connections",
+        "billing": "Plan and invoices",
+        "contact": "A real person from our team"
+      }
+    }
   },
   "db_brand": {
     "subtitle": "Pick a retailer from the sidebar to view its Social Ads & Leads.",

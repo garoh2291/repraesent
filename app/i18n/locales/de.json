@@ -81,7 +81,21 @@
     "mediaLibrary": "Bibliothek",
     "mediaFavorites": "Favoriten",
     "mediaBin": "Papierkorb",
-    "aiAssistants": "KI-Assistenten"
+    "aiAssistants": "KI-Assistenten",
+    "mobileMenu": {
+      "title": "Menü",
+      "description": "Alles jenseits der vier Tabs",
+      "search": "Suchen oder springen zu …",
+      "switchArea": "Bereich wechseln",
+      "mainMenu": "Menü",
+      "language": "Sprache",
+      "hints": {
+        "website": "Seiten, SEO und Ihre Dienste",
+        "settings": "Sie, Ihr Team und Verbindungen",
+        "billing": "Tarif und Rechnungen",
+        "contact": "Ein echter Mensch aus unserem Team"
+      }
+    }
   },
   "db_brand": {
     "subtitle": "Wähle einen Händler in der Seitenleiste, um Social Ads & Leads zu sehen.",

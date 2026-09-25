@@ -14,9 +14,12 @@ import { MarkerCount } from "~/components/notebook/stat";
 export function BottomTabBar({
   sections,
   onMore,
+  moreOpen = false,
 }: {
   sections: NavSection[];
   onMore: () => void;
+  /** The menu sheet is up: More is the active tab. */
+  moreOpen?: boolean;
 }) {
   const { t } = useTranslation();
   const location = useLocation();
@@ -61,9 +64,16 @@ export function BottomTabBar({
             </Link>
           );
         })}
-        <button type="button" onClick={onMore} className={cn(item, "text-muted-foreground")}>
-          <Menu className="size-[22px]" />
+        <button
+          type="button"
+          onClick={onMore}
+          aria-expanded={moreOpen}
+          aria-haspopup="dialog"
+          className={cn(item, moreOpen ? "text-foreground" : "text-muted-foreground")}
+        >
+          <Menu className={cn("size-[22px]", moreOpen && "stroke-[2.25]")} />
           <span>{t("sections.more", "More")}</span>
+          {moreOpen ? <span className="absolute inset-x-5 top-0 h-[3px] rounded-b-full bg-marker" aria-hidden /> : null}
         </button>
       </div>
     </nav>
