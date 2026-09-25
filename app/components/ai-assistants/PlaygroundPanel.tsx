@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
-  Bug,
   RotateCcw,
   Send,
   Square,
@@ -14,6 +13,8 @@ import { Input } from "~/components/ui/input";
 import { Label } from "~/components/ui/label";
 import { Switch } from "~/components/ui/switch";
 import { InfoNote } from "~/components/wordpress/fields";
+import { AdvancedSection } from "~/components/notebook/advanced-section";
+import { setLocalFlag } from "~/components/notebook/setup-checklist";
 import { GuardChip } from "~/components/ai-assistants/GuardChip";
 import {
   DebugTable,
@@ -81,6 +82,9 @@ export function PlaygroundPanel({ assistantId }: { assistantId: string }) {
     const message = input.trim();
     if (!message || busy) return;
     setInput("");
+    // Ticks "Try it" on the editor's checklist. Set on send, not on the
+    // answer: the owner did their part even if the AI account is down.
+    setLocalFlag(`ai-tried:${assistantId}`);
     const userId = `u-${Date.now()}`;
     const botId = `a-${Date.now()}`;
     setTurns((prev) => [
@@ -133,32 +137,22 @@ export function PlaygroundPanel({ assistantId }: { assistantId: string }) {
   };
 
   return (
-    <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_300px]">
+    <div className="grid grid-cols-1 gap-5 lg:grid-cols-[minmax(0,1fr)_300px]">
       <div className="flex h-[min(70vh,640px)] flex-col overflow-hidden rounded-2xl border border-border bg-card">
         <div className="flex items-center justify-between gap-3 border-b border-border px-4 py-2.5">
           <span className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
             {t("aiAssistants.playground.title")}
           </span>
-          <div className="flex items-center gap-3">
-            <label className="flex items-center gap-2 text-xs text-muted-foreground">
-              <Bug className="h-3.5 w-3.5" aria-hidden />
-              {t("aiAssistants.playground.debug")}
-              <Switch
-                checked={debug}
-                onCheckedChange={setDebug}
-                className="scale-90"
-              />
-            </label>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={reset}
-              disabled={turns.length === 0}
-            >
-              <RotateCcw className="h-3.5 w-3.5" />
-              {t("aiAssistants.playground.reset")}
-            </Button>
-          </div>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={reset}
+            disabled={turns.length === 0}
+            className="h-11 sm:h-8"
+          >
+            <RotateCcw className="h-3.5 w-3.5" />
+            {t("aiAssistants.playground.reset")}
+          </Button>
         </div>
 
         <div
@@ -182,6 +176,7 @@ export function PlaygroundPanel({ assistantId }: { assistantId: string }) {
                 onFeedback={(rating) =>
                   patch(turn.id, (x) => ({ ...x, feedback: rating }))
                 }
+                showTech={debug}
               />
             ))
           )}
@@ -226,7 +221,20 @@ export function PlaygroundPanel({ assistantId }: { assistantId: string }) {
 
       <aside className="space-y-3">
         <InfoNote>{t("aiAssistants.playground.draftNote")}</InfoNote>
-        <InfoNote>{t("aiAssistants.playground.debugNote")}</InfoNote>
+        {/* What it looked up (matched passages, token counts) is for whoever
+            chases a wrong answer — off by default, one switch away. */}
+        <AdvancedSection
+          storageKey="ai-playground"
+          hint={t("aiAssistants.playground.advancedHint")}
+        >
+          <label className="flex min-h-11 cursor-pointer items-center justify-between gap-3 text-sm">
+            <span>{t("aiAssistants.playground.debug")}</span>
+            <Switch checked={debug} onCheckedChange={setDebug} />
+          </label>
+          <p className="text-xs leading-relaxed text-muted-foreground">
+            {t("aiAssistants.playground.debugNote")}
+          </p>
+        </AdvancedSection>
       </aside>
     </div>
   );
@@ -238,12 +246,15 @@ function TurnView({
   conversationId,
   onLeadSubmitted,
   onFeedback,
+  showTech,
 }: {
   turn: Turn;
   assistantId: string;
   conversationId: string | undefined;
   onLeadSubmitted: () => void;
   onFeedback: (rating: "up" | "down") => void;
+  /** Token counts ride along with "Show what it looked up". */
+  showTech: boolean;
 }) {
   const { t } = useTranslation();
   const mine = turn.role === "user";
@@ -323,7 +334,7 @@ function TurnView({
               {t("aiAssistants.conversations.unanswered")}
             </span>
           ) : null}
-          {turn.done ? (
+          {turn.done && showTech ? (
             <span className="text-[10px] tabular-nums text-muted-foreground/70">
               {turn.done.tokens_in}→{turn.done.tokens_out} tok
             </span>

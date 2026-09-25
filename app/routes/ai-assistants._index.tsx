@@ -115,6 +115,21 @@ export default function AiAssistantsIndexRoute() {
             <Skeleton key={i} className="h-20 w-full rounded-xl" />
           ))}
         </div>
+      ) : filtered.length === 0 && (assistants?.length ?? 0) > 0 ? (
+        // A search that hides every assistant is not "no assistants yet" —
+        // saying so would send the owner off to create a duplicate.
+        <div className="flex flex-col items-center gap-3 rounded-xl border border-dashed px-6 py-12 text-center app-fade-up">
+          <p className="text-sm text-muted-foreground">
+            {t("guided.noMatch", { query: search.trim() })}
+          </p>
+          <Button
+            variant="outline"
+            className="h-11 sm:h-9"
+            onClick={() => setSearch("")}
+          >
+            {t("guided.clearSearch")}
+          </Button>
+        </div>
       ) : filtered.length === 0 ? (
         <div className="flex flex-col items-center gap-4 rounded-xl border border-dashed px-6 py-16 text-center app-fade-up">
           <span className="flex size-12 items-center justify-center rounded-2xl border border-border bg-muted/40">
@@ -177,7 +192,7 @@ export default function AiAssistantsIndexRoute() {
                           ? "border-border text-muted-foreground"
                           : kbReady
                             ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300"
-                            : "border-sky-500/30 bg-sky-500/10 text-sky-700 dark:text-sky-300",
+                            : "border-marker/40 bg-marker-soft text-marker-ink",
                       )}
                       title={t("aiAssistants.list.kbTitle")}
                     >
@@ -187,12 +202,10 @@ export default function AiAssistantsIndexRoute() {
                       })}
                     </span>
                   </div>
-                  {/* One line on every width: the slug gives way, the date —
-                      the part that changes — always stays readable. */}
-                  <p className="flex items-baseline gap-1 text-xs text-muted-foreground">
-                    <span className="truncate font-mono">{a.slug}</span>
-                    <span aria-hidden>·</span>
-                    <span className="shrink-0">
+                  {/* The slug is an internal name — same as on the forms
+                      list, the owner only needs to know when it last changed. */}
+                  <p className="text-xs text-muted-foreground">
+                    <span>
                       {t("aiAssistants.list.updated")}{" "}
                       {formatDate(a.updated_at)}
                     </span>

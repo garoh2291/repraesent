@@ -160,6 +160,8 @@ ${s} {
   -webkit-font-smoothing: antialiased;
 }
 ${s} *, ${s} *::before, ${s} *::after { box-sizing: inherit; }
+/* Selected text takes the form's own accent, not the browser's blue. */
+${s} ::selection { background-color: ${withAlpha(theme.accent, 0.22)}; color: inherit; }
 @supports not (animation-timing-function: linear(0, 1)) {
   ${s} { --rf-spring: cubic-bezier(0.16, 1, 0.3, 1); }
 }

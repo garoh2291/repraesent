@@ -23,7 +23,8 @@ export interface ContactTarget {
 /**
  * Call / WhatsApp / Email as big, thumb-sized buttons (NOTEBOOK_UX_PLAN.md §3).
  * Each tap reports the channel first (first-contact telemetry, then the
- * outcome sheet), then lets the browser open the dialer / WhatsApp / mail app.
+ * outcome sheet), then lets the browser open the dialer / WhatsApp / mail app
+ * (or, with `emailInApp`, leaves email to our composer).
  */
 export function ContactActions({
   target,
@@ -32,6 +33,7 @@ export function ContactActions({
   className,
   showEmpty = false,
   iconOnly = false,
+  emailInApp = false,
 }: {
   target: ContactTarget;
   onContact?: (channel: ContactChannel) => void;
@@ -41,6 +43,11 @@ export function ContactActions({
   showEmpty?: boolean;
   /** Icon-only squares (table rows, kanban cards). */
   iconOnly?: boolean;
+  /**
+   * Email opens our own composer through onContact, so the mailto: link must
+   * not also fire. It stays an href: middle-click still reaches the mail app.
+   */
+  emailInApp?: boolean;
 }) {
   const { t } = useTranslation();
   const phone = target.phone?.trim() || null;
@@ -73,6 +80,7 @@ export function ContactActions({
             rel={external ? "noopener noreferrer" : undefined}
             onClick={(e) => {
               e.stopPropagation();
+              if (channel === "email" && emailInApp) e.preventDefault();
               onContact?.(channel);
             }}
             className={cn(

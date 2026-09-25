@@ -99,19 +99,14 @@ export function SourceRow({
       t("aiAssistants.knowledge.pages.count", { count: source.page_count }),
     );
   }
-  // "14 found · 14 crawled · 8 skipped" — each part only when the server knows it.
+  // "12 pages learned · 8 skipped" — each part only when the server knows it.
+  // Chunk counts are how the index is cut up, not something an owner can act
+  // on; they stay in the row's tooltip for whoever debugs a missing answer.
   const crawlStats: string[] = [];
   if (isWebsite && p?.pages_total == null) {
-    if (source.discovered_count != null) {
-      crawlStats.push(
-        t("aiAssistants.knowledge.crawlStats.found", {
-          count: source.discovered_count,
-        }),
-      );
-    }
     if (source.page_count != null) {
       crawlStats.push(
-        t("aiAssistants.knowledge.crawlStats.crawled", {
+        t("aiAssistants.knowledge.pagesLearned", {
           count: source.page_count,
         }),
       );
@@ -124,15 +119,12 @@ export function SourceRow({
       );
     }
   }
-  if (source.status === "embedding" && p?.chunks_done != null) {
-    detail.push(
-      t("aiAssistants.knowledge.progressChunks", { done: p.chunks_done }),
-    );
-  } else if (source.chunk_count != null) {
-    detail.push(
-      t("aiAssistants.knowledge.chunks", { count: source.chunk_count }),
-    );
-  }
+  const chunkTitle =
+    source.status === "embedding" && p?.chunks_done != null
+      ? t("aiAssistants.knowledge.progressChunks", { done: p.chunks_done })
+      : source.chunk_count != null
+        ? t("aiAssistants.knowledge.chunks", { count: source.chunk_count })
+        : undefined;
   if (source.size_bytes != null && source.type === "document") {
     detail.push(formatBytes(source.size_bytes));
   }
@@ -142,6 +134,7 @@ export function SourceRow({
 
   return (
     <li
+      title={chunkTitle}
       className={cn(
         "flex items-start gap-3 px-3 py-2.5 transition-opacity",
         !enabled && "opacity-55",
@@ -219,7 +212,7 @@ export function SourceRow({
             }
           >
             <SelectTrigger
-              className="h-7 w-auto gap-1 px-2 text-[11px]"
+              className="h-11 w-auto gap-1 px-2 text-[11px] sm:h-7"
               aria-label={t("aiAssistants.knowledge.recrawl.label")}
             >
               <RefreshCw className="h-3 w-3" />
@@ -251,7 +244,7 @@ export function SourceRow({
               <Button
                 variant="ghost"
                 size="icon"
-                className="size-7"
+                className="size-11 sm:size-7"
                 aria-label={source.title}
                 aria-busy={busy || undefined}
                 disabled={busy}

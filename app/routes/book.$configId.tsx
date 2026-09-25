@@ -810,6 +810,10 @@ function Step1DateAndTime({
           )}
         >
           <style>{`
+            ::selection {
+              background-color: color-mix(in srgb, ${bgColor} 22%, transparent);
+              color: inherit;
+            }
             .booking-cal [data-selected-single="true"] {
               background-color: ${bgColor} !important;
               color: ${textColor} !important;

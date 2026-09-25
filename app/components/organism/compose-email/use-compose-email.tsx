@@ -21,12 +21,16 @@ export interface ComposeRequest {
   dealId?: string;
   /** Contact the composer was opened from. */
   contactId?: string;
+  /** Inquiry the composer was opened from — lands in its History, and on its contact. */
+  leadId?: string;
   /** The message being replied to, for In-Reply-To / References. */
   replyTo?: BccMessage;
   /** Shown under the dialog title so it is obvious what this email attaches to. */
   contextLabel?: string;
   /** Query keys to invalidate after a successful send. */
   invalidateKeys?: readonly (readonly unknown[])[];
+  /** Runs once after a successful send (e.g. ask how it went). */
+  onSent?: () => void;
 }
 
 interface ComposeEmailContextValue {

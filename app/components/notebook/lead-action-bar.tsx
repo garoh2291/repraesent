@@ -32,6 +32,7 @@ export function LeadActionBar({ lead, className }: { lead: Lead; className?: str
         target={{ phone: lead.phone, email: lead.email }}
         onContact={(ch) => flow.contact(fl, ch)}
         showEmpty
+        emailInApp={flow.emailInApp}
       />
       <div className="mt-3 flex flex-wrap items-center gap-2">
         <Button variant="outline" size="sm" onClick={() => flow.recordOutcome(fl)} className="gap-1.5">

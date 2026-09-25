@@ -87,7 +87,7 @@ const PALETTE = (type: FormFieldType) => `[data-field-type="${type}"]`;
 /** Unique inside the canvas, and it tracks the bottom of the growing form. */
 const SUBMIT_ROW = ".rf-canvas .rf-actions";
 /** The accent the Design chapter picks — shared by the step and the outcome. */
-const ACCENT = "#5265f3";
+const ACCENT = "#f5d74f";
 const TAB = (value: string) =>
   `[data-slot="tabs-trigger"][id$="-trigger-${value}"]`;
 

@@ -22,6 +22,8 @@ import { markLeadNotSpam, updateLeadStatus } from "~/lib/api/leads";
 import type { ContactChannel, LeadOutcome } from "~/lib/api/lead-outcomes";
 import { parseDealValue } from "~/lib/api/deals";
 import { extractErrorMessage } from "~/lib/api/axios-instance";
+import { useComposeEmail } from "~/components/organism/compose-email/use-compose-email";
+import { useCanSendEmail } from "~/lib/hooks/useCanSendEmail";
 
 /** The little the flow needs to know about a lead. */
 export interface FlowLead {
@@ -352,6 +354,11 @@ interface LeadFlowApi {
   /** Ask for an outcome without a tap (called from another phone, met in person). */
   recordOutcome: (lead: FlowLead) => void;
   makeDeal: (lead: FlowLead) => void;
+  /**
+   * Email opens our composer (a working mailbox is connected) instead of the
+   * mail app. Callers pass it to ContactActions so the mailto: link is held back.
+   */
+  emailInApp: boolean;
 }
 
 const LeadFlowContext = createContext<LeadFlowApi | null>(null);
@@ -363,7 +370,10 @@ const LeadFlowContext = createContext<LeadFlowApi | null>(null);
  * dialer / WhatsApp (visibilitychange), or right away on a desktop.
  */
 export function LeadFlowProvider({ children }: { children: React.ReactNode }) {
+  const { t } = useTranslation();
   const attempt = useContactAttempt();
+  const { openCompose } = useComposeEmail();
+  const emailInApp = useCanSendEmail();
   const [lead, setLead] = useState<FlowLead | null>(null);
   const [channel, setChannel] = useState<ContactChannel | null>(null);
   const [outcomeOpen, setOutcomeOpen] = useState(false);
@@ -394,6 +404,31 @@ export function LeadFlowProvider({ children }: { children: React.ReactNode }) {
 
   const contact = useCallback<LeadFlowApi["contact"]>(
     (l, ch) => {
+      const email = l.email?.trim();
+      if (ch === "email" && emailInApp && email) {
+        // Sent from our composer: count the attempt only once it actually
+        // went out, then ask how it went — nothing to wait for.
+        const name = l.name?.trim() || undefined;
+        openCompose({
+          to: [{ email, name }],
+          leadId: l.id,
+          contextLabel: t("compose.contextContact", {
+            defaultValue: "To {{name}}",
+            name: displayName(l, t),
+          }),
+          invalidateKeys: [
+            ["lead-history", l.id],
+            ["contact-emails"],
+            ["outbound-pending"],
+            ["mail-messages"],
+          ],
+          onSent: () => {
+            attempt.mutate({ leadId: l.id, channel: "email" });
+            openOutcome(l, "email");
+          },
+        });
+        return;
+      }
       attempt.mutate({ leadId: l.id, channel: ch });
       pending.current = { lead: l, channel: ch };
       // On a phone, the dialer / WhatsApp takes over the screen and the sheet
@@ -419,7 +454,7 @@ export function LeadFlowProvider({ children }: { children: React.ReactNode }) {
         }
       }, 1600);
     },
-    [attempt, openOutcome],
+    [attempt, openOutcome, openCompose, emailInApp, t],
   );
 
   const api = useMemo<LeadFlowApi>(
@@ -431,8 +466,9 @@ export function LeadFlowProvider({ children }: { children: React.ReactNode }) {
         setDealSession((n) => n + 1);
         setDealOpen(true);
       },
+      emailInApp,
     }),
-    [contact, openOutcome],
+    [contact, openOutcome, emailInApp],
   );
 
   return (
@@ -464,6 +500,7 @@ export function useLeadFlow(): LeadFlowApi {
       contact: () => {},
       recordOutcome: () => {},
       makeDeal: () => {},
+      emailInApp: false,
     }
   );
 }

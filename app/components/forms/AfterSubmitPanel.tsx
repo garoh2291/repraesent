@@ -47,7 +47,7 @@ export function AfterSubmitPanel({
   return (
     <div className="max-w-2xl">
       <Panel>
-        <PanelHeader title={t("forms.builder.tabAfterSubmit")} />
+        <PanelHeader title={t("forms.builder.tabAfterSending")} />
         <PanelBody>
           <Field>
             <Label>{t("forms.design.successMode")}</Label>

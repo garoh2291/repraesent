@@ -83,7 +83,7 @@ export function DatePickerPopover({
           data-slot="date-picker-trigger"
           className={cn(
             // Match ~/components/ui/input.tsx field chrome
-            "flex h-9 w-full min-w-0 items-center gap-2 rounded-md border border-input bg-transparent px-3 py-1 text-left text-base shadow-xs outline-none transition-[color,box-shadow] selection:bg-primary selection:text-primary-foreground md:text-sm",
+            "flex h-9 w-full min-w-0 items-center gap-2 rounded-md border border-input bg-transparent px-3 py-1 text-left text-base shadow-xs outline-none transition-[color,box-shadow] md:text-sm",
             "dark:bg-input/30",
             "focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50",
             "disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50",

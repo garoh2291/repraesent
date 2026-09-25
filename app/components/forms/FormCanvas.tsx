@@ -271,8 +271,8 @@ export function FormCanvas({
 .rf-canvas .rf-field:hover,
 .rf-canvas .rf-head:hover,
 .rf-canvas .rf-actions:hover { outline-color: rgba(120,113,108,.45); }
-/* --color-primary, not a near-miss literal: the old #6366f1 was one shade off
-   the app's own #5265f3. */
+/* --color-primary (ink), not a literal, so the selection ring follows the app
+   theme instead of drifting from it. */
 .rf-canvas .rf-field[data-selected],
 .rf-canvas .rf-head[data-selected],
 .rf-canvas .rf-actions[data-selected] {
@@ -300,7 +300,7 @@ export function FormCanvas({
 .rf-canvas .rf-step.rf-step-exit { display: none; }
 
 /* A field the validator is complaining about, in the language being edited.
-   Solid red beats the dashed hover outline and the blue selection ring, because
+   Solid red beats the dashed hover outline and the ink selection ring, because
    "this is broken" outranks "this is where your mouse is". Builder-only: the
    attribute is never emitted in live mode. */
 .rf-canvas .rf-field[data-rf-invalid] {

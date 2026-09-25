@@ -166,13 +166,13 @@ export function DemoBuilder({ state, demoId, compact = false }: Props) {
         <div className="border-b border-border">
           <TabsList variant="line" className="-mb-px">
             <TabsTrigger value="build">
-              {t("forms.builder.tabBuild")}
+              {t("forms.builder.tabQuestions")}
             </TabsTrigger>
             <TabsTrigger value="design">
-              {t("forms.builder.tabDesign")}
+              {t("forms.builder.tabLook")}
             </TabsTrigger>
             <TabsTrigger value="share">
-              {t("forms.builder.tabShare")}
+              {t("forms.builder.tabWebsite")}
             </TabsTrigger>
           </TabsList>
         </div>
@@ -292,7 +292,7 @@ function DemoList({ state, compact }: { state: DemoState; compact: boolean }) {
             {t("forms.list.title")}
           </h1>
           <p className="max-w-2xl text-sm text-muted-foreground">
-            {t("forms.list.hint")}
+            {t("forms.list.intro")}
           </p>
         </div>
         <Button data-demo="new-form" className="shrink-0" tabIndex={-1}>

@@ -496,6 +496,7 @@ export default function LeadForm() {
           <ContactActions
             iconOnly
             target={{ phone: l.phone, email: l.email }}
+            emailInApp={leadFlow.emailInApp}
             onContact={(ch) =>
               leadFlow.contact(
                 {

@@ -804,7 +804,7 @@ export function TemplateBuilder({
                 setName(e.target.value);
                 setDirty(true);
               }}
-              className="h-9 min-w-0 flex-1 rounded-lg border-transparent bg-transparent px-0 text-lg font-semibold tracking-tight text-white shadow-none selection:bg-white/20 focus-visible:border-white/10 focus-visible:bg-white/5 focus-visible:px-2.5 disabled:opacity-100 sm:text-xl"
+              className="h-9 min-w-0 flex-1 rounded-lg border-transparent bg-transparent px-0 text-lg font-semibold tracking-tight text-white shadow-none ink-surface focus-visible:border-white/10 focus-visible:bg-white/5 focus-visible:px-2.5 disabled:opacity-100 sm:text-xl"
             />
             <TemplateStatusBadge
               tone="dark"

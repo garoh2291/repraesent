@@ -115,6 +115,7 @@ function LeadRow({
           target={{ phone: lead.phone, email: lead.email }}
           onContact={(ch) => flow.contact(fl, ch)}
           size="sm"
+          emailInApp={flow.emailInApp}
         />
         <DropdownMenu modal={false}>
           <DropdownMenuTrigger asChild>

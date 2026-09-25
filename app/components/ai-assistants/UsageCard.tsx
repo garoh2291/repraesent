@@ -1,6 +1,7 @@
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { Panel, PanelBody, PanelHeader } from "~/components/forms/chrome";
+import { AdvancedSection } from "~/components/notebook/advanced-section";
 import { Activity, ThumbsDown, ThumbsUp } from "lucide-react";
 import { useAiUsage, useChatModels } from "~/lib/hooks/useAiAssistants";
 import type { AssistantUsageToday } from "~/lib/api/ai-assistants";
@@ -15,8 +16,10 @@ function compact(n: number): string {
 
 /**
  * Today at a glance, plus thirty days of message volume as a bar strip. Pure
- * divs, not Recharts: five numbers and thirty bars need no axis machinery,
- * and this stays crisp inside a 340px column.
+ * divs, not Recharts: four numbers and thirty bars need no axis machinery,
+ * and this stays crisp inside a 340px column. Tokens and the per-model split
+ * mean nothing to an owner — they live under Advanced for whoever pays the
+ * AI bill.
  */
 export function UsageCard({
   assistantId,
@@ -56,14 +59,10 @@ export function UsageCard({
 
   const stats: Array<{ label: string; value: string }> = [
     { label: t("aiAssistants.usage.messages"), value: compact(today.messages) },
-    {
-      label: t("aiAssistants.usage.tokens"),
-      value: compact(today.tokens_in + today.tokens_out),
-    },
     { label: t("aiAssistants.usage.blocked"), value: compact(today.blocked) },
-    { label: t("aiAssistants.usage.leads"), value: compact(today.leads) },
+    { label: t("aiAssistants.usage.inquiries"), value: compact(today.leads) },
     {
-      label: t("aiAssistants.usage.cost"),
+      label: t("aiAssistants.usage.spent"),
       value: eur(today.cost_micro_usd),
     },
   ];
@@ -80,13 +79,15 @@ export function UsageCard({
         }
       />
       <PanelBody className="space-y-4">
-        <dl className="grid grid-cols-5 gap-2">
+        {/* Two by two: the card lives in a narrow sidebar, and four columns
+            cut "Spent (estimate)" — and every German label — in half. */}
+        <dl className="grid grid-cols-2 gap-x-3 gap-y-3">
           {stats.map((s) => (
             <div key={s.label} className="min-w-0">
               <dd className="truncate text-base font-semibold tabular-nums tracking-tight">
                 {s.value}
               </dd>
-              <dt className="truncate text-[11px] text-muted-foreground">
+              <dt className="text-[11px] leading-tight text-muted-foreground">
                 {s.label}
               </dt>
             </div>
@@ -147,30 +148,43 @@ export function UsageCard({
           </div>
         </div>
 
-        {usage && usage.models.length > 0 ? (
-          <div className="space-y-1.5 border-t border-border/70 pt-3">
-            <p className="text-[11px] text-muted-foreground">
-              {t("aiAssistants.usage.byModel")}
-            </p>
-            <ul className="space-y-1">
-              {usage.models.map((m) => (
-                <li
-                  key={m.model}
-                  className="flex items-baseline justify-between gap-2 text-xs"
-                >
-                  <span className="truncate" title={m.model}>
-                    {modelLabel(m.model)}
-                  </span>
-                  <span className="shrink-0 tabular-nums text-muted-foreground">
-                    {compact(m.messages)} ·{" "}
-                    {compact(m.tokens_in + m.tokens_out)} tok ·{" "}
-                    {eur(m.cost_micro_usd)}
-                  </span>
-                </li>
-              ))}
-            </ul>
-          </div>
-        ) : null}
+        <AdvancedSection
+          storageKey="ai-usage"
+          hint={t("aiAssistants.usage.advancedHint")}
+        >
+          <p className="flex items-baseline justify-between gap-2 text-xs">
+            <span className="text-muted-foreground">
+              {t("aiAssistants.usage.tokensToday")}
+            </span>
+            <span className="tabular-nums">
+              {compact(today.tokens_in + today.tokens_out)}
+            </span>
+          </p>
+          {usage && usage.models.length > 0 ? (
+            <div className="space-y-1.5">
+              <p className="text-[11px] text-muted-foreground">
+                {t("aiAssistants.usage.byModel")}
+              </p>
+              <ul className="space-y-1">
+                {usage.models.map((m) => (
+                  <li
+                    key={m.model}
+                    className="flex items-baseline justify-between gap-2 text-xs"
+                  >
+                    <span className="truncate" title={m.model}>
+                      {modelLabel(m.model)}
+                    </span>
+                    <span className="shrink-0 tabular-nums text-muted-foreground">
+                      {compact(m.messages)} ·{" "}
+                      {compact(m.tokens_in + m.tokens_out)} tok ·{" "}
+                      {eur(m.cost_micro_usd)}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ) : null}
+        </AdvancedSection>
       </PanelBody>
     </Panel>
   );

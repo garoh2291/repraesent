@@ -41,6 +41,7 @@ import { Switch } from "~/components/ui/switch";
 import { Textarea } from "~/components/ui/textarea";
 import { LabelEditor } from "~/components/forms/LabelEditor";
 import { Field, FieldHint } from "~/components/wordpress/fields";
+import { AdvancedSection } from "~/components/notebook/advanced-section";
 import {
   appointmentDefaults,
   FIELD_TYPE_META,
@@ -374,6 +375,14 @@ export function FieldInspector({
 
   const keyCollides = otherKeys?.has(field.key) ?? false;
   const keyBlank = field.key.trim() === "";
+  /**
+   * keyMissing / duplicateKey / duplicateMapping all live in the Advanced box.
+   * otherMappings excludes this field, so a hit means two fields share a
+   * column — possible in a definition saved before the Select disabled it.
+   */
+  const mappingCollides =
+    !!field.mapping && (otherMappings?.has(field.mapping) ?? false);
+  const dataProblem = keyBlank || keyCollides || mappingCollides;
   const presentational = isPresentational(field.type);
   /**
    * Same rule as the delete guard: a field carrying the only `email` or name
@@ -396,8 +405,9 @@ export function FieldInspector({
   const requiredLocked = emailField != null;
 
   // For an appointment field the Rules section IS the field — target calendar,
-  // duration, window — while Data (key, label) is secondary. Everywhere else
-  // Rules stays last, in its historical place.
+  // duration, window — so it leads. Everywhere else Rules follows Layout. The
+  // Data settings (save to, internal name) always close the panel, behind
+  // Advanced.
   const rulesSection = HAS_TYPE_RULES.has(field.type) ? (
     <PanelSection title={t("forms.inspector.sectionRules")}>
       <TypeSpecific
@@ -425,80 +435,6 @@ export function FieldInspector({
       />
       <PanelBody>
         {rulesFirst ? rulesSection : null}
-        <PanelSection title={t("forms.inspector.sectionData")}>
-          {/* Save-to first: it is the decision, and the key is its consequence
-              — a field pointed at a lead column has its key largely settled. */}
-          {mappable ? (
-            <Field>
-              <Label>{t("forms.inspector.mapping")}</Label>
-              <Select
-                disabled={disabled || mappingLocked}
-                value={field.mapping ?? NO_MAPPING}
-                onValueChange={(v) =>
-                  patchField({
-                    mapping: v === NO_MAPPING ? null : (v as FormFieldMapping),
-                  })
-                }
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value={NO_MAPPING}>
-                    {t("forms.inspector.mappingNone")}
-                  </SelectItem>
-                  {FORM_FIELD_MAPPINGS.map((mapping) => (
-                    <SelectItem
-                      key={mapping}
-                      value={mapping}
-                      // A lead column can only be filled once.
-                      disabled={otherMappings?.has(mapping) ?? false}
-                    >
-                      {t(`forms.mapping.${mapping}`, {
-                        defaultValue: mapping.replace(/_/g, " "),
-                      })}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              {/* Locked while this field is the only thing satisfying the
-                  e-mail or name requirement. Repointing it elsewhere would make
-                  the form unpublishable, discovered later and somewhere else —
-                  the same reasoning that disables its delete button. */}
-              <FieldHint>
-                {mappingLocked
-                  ? t("forms.inspector.mappingLocked")
-                  : t("forms.inspector.mappingHint")}
-              </FieldHint>
-            </Field>
-          ) : null}
-
-          <Field>
-            <Label htmlFor="fi-key">{t("forms.inspector.key")}</Label>
-            <Input
-              id="fi-key"
-              disabled={disabled}
-              value={field.key}
-              aria-invalid={keyCollides || keyBlank || undefined}
-              // snakeKeyRaw, not snakeKey: the fallback version substituted
-              // "field" for an empty box, so deleting the last character of a
-              // key silently renamed it and it could never be cleared.
-              onChange={(e) => patchField({ key: snakeKeyRaw(e.target.value) })}
-              className="font-mono text-sm"
-            />
-            {keyBlank ? (
-              <p className="text-xs text-destructive">
-                {t("forms.inspector.keyRequired")}
-              </p>
-            ) : keyCollides ? (
-              <p className="text-xs text-destructive">
-                {t("forms.inspector.keyInUse")}
-              </p>
-            ) : (
-              <FieldHint>{t("forms.inspector.keyHint")}</FieldHint>
-            )}
-          </Field>
-        </PanelSection>
 
         <PanelSection title={t("forms.inspector.sectionContent")}>
           {/* First, and outside the two-column grid: whether an answer is
@@ -665,6 +601,89 @@ export function FieldInspector({
         </PanelSection>
 
         {rulesFirst ? null : rulesSection}
+
+        {/* Where the answer lands and what it is called internally. Both are
+            set automatically, so they wait behind Advanced — and open by
+            themselves when one of them blocks publishing, so tucking them
+            away never hides the error. */}
+        <AdvancedSection
+          storageKey="forms-field-data"
+          hint={t("forms.inspector.dataHint")}
+          forceOpen={dataProblem}
+        >
+          {/* Save-to first: it is the decision, and the key is its consequence
+              — a field pointed at a lead column has its key largely settled. */}
+          {mappable ? (
+            <Field>
+              <Label>{t("forms.inspector.mapping")}</Label>
+              <Select
+                disabled={disabled || mappingLocked}
+                value={field.mapping ?? NO_MAPPING}
+                onValueChange={(v) =>
+                  patchField({
+                    mapping: v === NO_MAPPING ? null : (v as FormFieldMapping),
+                  })
+                }
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value={NO_MAPPING}>
+                    {t("forms.inspector.mappingNone")}
+                  </SelectItem>
+                  {FORM_FIELD_MAPPINGS.map((mapping) => (
+                    <SelectItem
+                      key={mapping}
+                      value={mapping}
+                      // A lead column can only be filled once.
+                      disabled={otherMappings?.has(mapping) ?? false}
+                    >
+                      {t(`forms.mapping.${mapping}`, {
+                        defaultValue: mapping.replace(/_/g, " "),
+                      })}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {/* Locked while this field is the only thing satisfying the
+                  e-mail or name requirement. Repointing it elsewhere would make
+                  the form unpublishable, discovered later and somewhere else —
+                  the same reasoning that disables its delete button. */}
+              <FieldHint>
+                {mappingLocked
+                  ? t("forms.inspector.mappingLocked")
+                  : t("forms.inspector.mappingHint")}
+              </FieldHint>
+            </Field>
+          ) : null}
+
+          <Field>
+            <Label htmlFor="fi-key">{t("forms.inspector.key")}</Label>
+            <Input
+              id="fi-key"
+              disabled={disabled}
+              value={field.key}
+              aria-invalid={keyCollides || keyBlank || undefined}
+              // snakeKeyRaw, not snakeKey: the fallback version substituted
+              // "field" for an empty box, so deleting the last character of a
+              // key silently renamed it and it could never be cleared.
+              onChange={(e) => patchField({ key: snakeKeyRaw(e.target.value) })}
+              className="font-mono text-sm"
+            />
+            {keyBlank ? (
+              <p className="text-xs text-destructive">
+                {t("forms.inspector.keyRequired")}
+              </p>
+            ) : keyCollides ? (
+              <p className="text-xs text-destructive">
+                {t("forms.inspector.keyInUse")}
+              </p>
+            ) : (
+              <FieldHint>{t("forms.inspector.keyHint")}</FieldHint>
+            )}
+          </Field>
+        </AdvancedSection>
       </PanelBody>
     </Panel>
   );

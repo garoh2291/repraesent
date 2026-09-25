@@ -283,7 +283,7 @@ export function AppearancePanel({ draft, canEdit, onChange }: Props) {
   };
 
   return (
-    <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_minmax(320px,44%)]">
+    <div className="grid grid-cols-1 gap-5 lg:grid-cols-[minmax(0,1fr)_minmax(320px,44%)]">
       <div className="space-y-5">
         <Panel>
           <PanelHeader

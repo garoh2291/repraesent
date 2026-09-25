@@ -1,8 +1,8 @@
 import { Check, Globe, Languages, LayoutGrid } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
-/** Brand palette — the same five the app's charts and status dots draw from. */
-const CONFETTI_COLORS = ["#f59e0b", "#5265f3", "#f5d74f", "#34d399", "#e25f77"];
+/** Marker, ink and paper — the app's own colours, plus the soft marker. No blue. */
+const CONFETTI_COLORS = ["#f5d74f", "#141516", "#f5f4f1", "#fbefb4"];
 
 const PIECES = 26;
 

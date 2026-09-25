@@ -23,6 +23,8 @@ import {
 } from "~/components/ui/alert-dialog";
 import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
+import { Switch } from "~/components/ui/switch";
+import { AdvancedSection } from "~/components/notebook/advanced-section";
 import { Skeleton } from "~/components/ui/skeleton";
 import { GuardChip } from "~/components/ai-assistants/GuardChip";
 import { extractErrorMessage } from "~/lib/api/axios-instance";
@@ -33,7 +35,9 @@ import { cn } from "~/lib/utils";
 /**
  * Regression questions: "does the assistant still find the right chunk for
  * this?" The cheap run checks retrieval only; the LLM run also grades the
- * answer for the expected keywords and costs tokens, so it asks first.
+ * answer for the expected keywords and costs tokens, so it asks first. The
+ * buttons say which is free and which spends AI credit; the similarity score
+ * behind a pass/fail is a web-person detail, one switch away.
  */
 export function TestsPanel({
   assistantId,
@@ -49,6 +53,7 @@ export function TestsPanel({
   const [keywords, setKeywords] = useState("");
   const [confirmLlm, setConfirmLlm] = useState(false);
   const [runningId, setRunningId] = useState<string | null>(null);
+  const [showScores, setShowScores] = useState(false);
 
   const fail = (e: unknown) =>
     toast.error(t("common.failedToSave", { defaultValue: "Could not save" }), {
@@ -104,7 +109,7 @@ export function TestsPanel({
   const passed = tests?.filter((x) => x.last_result?.passed).length ?? 0;
 
   return (
-    <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_300px]">
+    <div className="grid grid-cols-1 gap-5 lg:grid-cols-[minmax(0,1fr)_300px]">
       <Panel>
         <PanelHeader
           icon={<FlaskConical className="h-3.5 w-3.5" />}
@@ -116,39 +121,41 @@ export function TestsPanel({
               </span>
             ) : null
           }
-          action={
-            canEdit && count > 0 ? (
-              <div className="flex gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  disabled={m.run.isPending}
-                  onClick={() => run({})}
-                >
-                  {runningId === "all" && !confirmLlm ? (
-                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                  ) : (
-                    <Play className="h-3.5 w-3.5" />
-                  )}
-                  {t("aiAssistants.tests.runAll")}
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  loading={m.run.isPending && confirmLlm}
-                  disabled={m.run.isPending}
-                  onClick={() => setConfirmLlm(true)}
-                >
-                  {m.run.isPending && confirmLlm ? null : (
-                    <Sparkles className="h-3.5 w-3.5" />
-                  )}
-                  {t("aiAssistants.tests.runLlm")}
-                </Button>
-              </div>
-            ) : null
-          }
         />
         <PanelBody>
+          {canEdit && count > 0 ? (
+            // In the body, not the header: the plain labels are long, and on a
+            // phone two of them have to be able to wrap.
+            <div className="flex flex-wrap gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-11 sm:h-8"
+                disabled={m.run.isPending}
+                onClick={() => run({})}
+              >
+                {runningId === "all" && !confirmLlm ? (
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                ) : (
+                  <Play className="h-3.5 w-3.5" />
+                )}
+                {t("aiAssistants.tests.runAll")}
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-11 sm:h-8"
+                loading={m.run.isPending && confirmLlm}
+                disabled={m.run.isPending}
+                onClick={() => setConfirmLlm(true)}
+              >
+                {m.run.isPending && confirmLlm ? null : (
+                  <Sparkles className="h-3.5 w-3.5" />
+                )}
+                {t("aiAssistants.tests.runLlm")}
+              </Button>
+            </div>
+          ) : null}
           {canEdit ? (
             <form
               className="grid gap-2 rounded-xl border border-border bg-muted/30 p-3 @sm:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)_auto]"
@@ -203,6 +210,7 @@ export function TestsPanel({
                   canEdit={canEdit}
                   running={runningId === x.id}
                   formatDate={formatDate}
+                  showScore={showScores}
                   onRun={() => run({ ids: [x.id] })}
                   onDelete={() => m.remove.mutate(x.id, { onError: fail })}
                 />
@@ -215,6 +223,15 @@ export function TestsPanel({
       <aside className="space-y-3 lg:sticky lg:top-[var(--ai-stick,5.5rem)] lg:self-start">
         <InfoNote>{t("aiAssistants.tests.note1")}</InfoNote>
         <InfoNote>{t("aiAssistants.tests.note2")}</InfoNote>
+        <AdvancedSection
+          storageKey="ai-tests"
+          hint={t("aiAssistants.tests.advancedHint")}
+        >
+          <label className="flex min-h-11 cursor-pointer items-center justify-between gap-3 text-sm">
+            <span>{t("aiAssistants.tests.showScores")}</span>
+            <Switch checked={showScores} onCheckedChange={setShowScores} />
+          </label>
+        </AdvancedSection>
       </aside>
 
       <AlertDialog open={confirmLlm} onOpenChange={setConfirmLlm}>
@@ -237,7 +254,7 @@ export function TestsPanel({
                 run({ with_llm: true });
               }}
             >
-              {t("aiAssistants.tests.runLlm")}
+              {t("aiAssistants.tests.llmConfirm")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -251,6 +268,7 @@ function TestRow({
   canEdit,
   running,
   formatDate,
+  showScore,
   onRun,
   onDelete,
 }: {
@@ -258,6 +276,7 @@ function TestRow({
   canEdit: boolean;
   running: boolean;
   formatDate: (iso: string) => string;
+  showScore: boolean;
   onRun: () => void;
   onDelete: () => void;
 }) {
@@ -304,10 +323,12 @@ function TestRow({
         {r ? (
           <p className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px] text-muted-foreground">
             <GuardChip decision={r.decision as GuardDecision} />
-            <span className="tabular-nums">
-              {t("aiAssistants.tests.similarity")}{" "}
-              {r.best_similarity != null ? r.best_similarity.toFixed(2) : "—"}
-            </span>
+            {showScore ? (
+              <span className="tabular-nums">
+                {t("aiAssistants.tests.similarity")}{" "}
+                {r.best_similarity != null ? r.best_similarity.toFixed(2) : "—"}
+              </span>
+            ) : null}
             {r.with_llm ? <span>{t("aiAssistants.tests.withLlm")}</span> : null}
             <span>{formatDate(r.ran_at)}</span>
           </p>
@@ -326,7 +347,7 @@ function TestRow({
           <Button
             variant="ghost"
             size="icon"
-            className="size-7"
+            className="size-11 sm:size-7"
             disabled={running}
             onClick={onRun}
             aria-label={t("aiAssistants.tests.run")}
@@ -340,7 +361,7 @@ function TestRow({
           <Button
             variant="ghost"
             size="icon"
-            className="size-7 text-muted-foreground"
+            className="size-11 text-muted-foreground sm:size-7"
             onClick={onDelete}
             aria-label={t("common.delete", { defaultValue: "Delete" })}
           >

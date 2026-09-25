@@ -299,6 +299,18 @@ body {
   body {
     @apply bg-background text-foreground;
   }
+  /* Selected text wears the marker, never the browser's blue. Dark
+     surfaces (sidebar, builder command bars) opt into the full-strength
+     marker with `.ink-surface` so the highlight still reads on ink. */
+  ::selection {
+    background-color: var(--marker-soft);
+    color: var(--foreground);
+  }
+  .ink-surface::selection,
+  .ink-surface ::selection {
+    background-color: var(--marker);
+    color: #141516;
+  }
 }
 
 @layer utilities {

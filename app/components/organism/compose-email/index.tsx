@@ -157,6 +157,7 @@ export function ComposeEmailDialog({
         html: editor?.getHTML() ?? html,
         dealId: request.dealId,
         contactId: request.contactId,
+        leadId: request.leadId,
         replyToMessageId: request.replyTo?.id,
       }),
     onSuccess: () => {
@@ -167,13 +168,17 @@ export function ComposeEmailDialog({
         void queryClient.invalidateQueries({ queryKey: key });
       }
       toast.success(t("compose.sentToast", { defaultValue: "Email sent" }), {
-        description: t("compose.sentToastDescription", {
-          defaultValue:
-            "It appears in this list in full once the copy is processed — usually a few minutes.",
-        }),
+        // An inquiry has no email list to point at; it shows in its History.
+        description: request.leadId
+          ? undefined
+          : t("compose.sentToastDescription", {
+              defaultValue:
+                "It appears in this list in full once the copy is processed — usually a few minutes.",
+            }),
       });
       dirtyRef.current = false;
       onOpenChange(false);
+      request.onSent?.();
     },
     onError: (error) =>
       toast.error(

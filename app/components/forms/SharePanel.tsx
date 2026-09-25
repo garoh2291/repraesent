@@ -19,6 +19,9 @@ import {
   PanelHeader,
 } from "~/components/forms/chrome";
 import { FieldHint, InfoNote } from "~/components/wordpress/fields";
+import { AdvancedSection } from "~/components/notebook/advanced-section";
+import { CopyForWebPerson } from "~/components/notebook/copy-for-web-person";
+import { setLocalFlag } from "~/components/notebook/setup-checklist";
 import { getFormSnippet, type SnippetMode } from "~/lib/api/forms";
 import { buildPublicFormUrl } from "~/lib/config";
 import type { FormLocale } from "~/lib/forms/schema";
@@ -46,22 +49,34 @@ export function SharePanel({
   const { t } = useTranslation();
   const published = status === "published";
   const publicUrl = publicUrlOverride ?? buildPublicFormUrl(formId);
+  /** Feeds the builder checklist's last step ("Put it on your website"). */
+  const copiedFlag = `forms-copied:${formId}`;
 
   const copy = (text: string) => {
     void navigator.clipboard.writeText(text);
     toast.success(t("forms.share.copied"));
   };
 
-  if (!published) {
-    return <InfoNote>{t("forms.share.publishFirst")}</InfoNote>;
-  }
+  // The recommended embed. Same query key as the Advanced script card and the
+  // CSP card, so all three read one cached response.
+  const { data: embedSnippet } = useQuery({
+    queryKey: ["form-snippet", formId, "embed", defaultLocale],
+    queryFn: () => getFormSnippet(formId, "embed", defaultLocale),
+  });
 
   return (
     <div className="space-y-5">
-      {hasUnpublishedChanges ? (
+      {/* Everything below renders before the form is live, on purpose: the
+          owner can hand the code over today, and it starts working the moment
+          they turn the form on. The note says exactly that. */}
+      {!published ? (
+        <InfoNote>{t("forms.share.turnOnFirst")}</InfoNote>
+      ) : hasUnpublishedChanges ? (
         <InfoNote>{t("forms.share.unpublishedWarning")}</InfoNote>
       ) : null}
 
+      {/* 1. The link. Needs nobody's help, works in an email, on WhatsApp or
+          behind a QR code — so it comes first and is the biggest thing here. */}
       <Panel>
         <PanelHeader
           icon={<Link2 className="h-3.5 w-3.5" />}
@@ -73,64 +88,99 @@ export function SharePanel({
             <Input
               readOnly
               value={publicUrl}
-              className="h-10 flex-1 font-mono text-sm"
+              aria-label={t("forms.share.linkTitle")}
+              className="h-11 flex-1 font-mono text-[13.5px]"
               onFocus={(e) => e.currentTarget.select()}
             />
             <div className="flex gap-2">
-              <GhostAction className="h-10" onClick={() => copy(publicUrl)}>
+              <GhostAction
+                className="h-11 flex-1 sm:flex-none"
+                onClick={() => {
+                  copy(publicUrl);
+                  setLocalFlag(copiedFlag);
+                }}
+              >
                 <Copy className="h-3.5 w-3.5" />
                 {t("forms.share.copy")}
               </GhostAction>
-              <a
-                href={publicUrl}
-                target="_blank"
-                rel="noreferrer"
-                className="inline-flex h-10 items-center gap-2 rounded-lg border border-border bg-muted/40 px-3 text-sm transition-colors hover:bg-muted"
-              >
-                <ExternalLink className="h-3.5 w-3.5" />
-                {t("forms.share.open")}
-              </a>
+              {published ? (
+                <a
+                  href={publicUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  // Opening the link counts as "it's out there": the owner
+                  // who shares a link rather than embedding is also done.
+                  onClick={() => setLocalFlag(copiedFlag)}
+                  className="inline-flex h-11 flex-1 items-center justify-center gap-2 rounded-lg border border-border bg-muted/40 px-3 text-sm transition-colors hover:bg-muted sm:flex-none"
+                >
+                  <ExternalLink className="h-3.5 w-3.5" />
+                  {t("forms.share.open")}
+                </a>
+              ) : null}
             </div>
           </div>
         </PanelBody>
       </Panel>
 
-      {/* Ordered by how little the host site has to change to accept them.
-          Copy HTML needs nothing, the iframe needs one frame-src entry, and the
-          script embed needs an origin whitelisted in two directives — so it
-          comes last, next to the CSP card that explains what it needs. */}
-      <SnippetCard
-        formId={formId}
-        mode="html"
-        locale={defaultLocale}
-        icon={<FileCode2 className="h-3.5 w-3.5" />}
-        title={t("forms.share.htmlTitle")}
-        subtitle={t("forms.share.htmlHint")}
-        warning={t("forms.share.htmlWarning")}
-        onCopy={copy}
-      />
+      {/* 2. On the website: the one embed we recommend, handed to whoever
+          looks after the site. It updates itself whenever the form is saved
+          live, which is why it beats the frozen HTML copy for most owners. */}
+      <Panel>
+        <PanelHeader
+          icon={<Code2 className="h-3.5 w-3.5" />}
+          title={t("forms.share.websiteTitle")}
+        />
+        <PanelBody>
+          {embedSnippet ? (
+            <CopyForWebPerson
+              code={embedSnippet}
+              hint={t("forms.share.websiteHint")}
+              emailSubject={t("forms.share.emailSubject")}
+              emailIntro={t("forms.share.emailIntro", { url: publicUrl })}
+              copiedFlag={copiedFlag}
+            />
+          ) : (
+            <Skeleton className="h-28 w-full rounded-lg" />
+          )}
+        </PanelBody>
+      </Panel>
 
-      <SnippetCard
-        formId={formId}
-        mode="iframe"
-        locale={defaultLocale}
-        icon={<MonitorPlay className="h-3.5 w-3.5" />}
-        title={t("forms.share.iframeTitle")}
-        subtitle={t("forms.share.iframeHint")}
-        onCopy={copy}
-      />
+      {/* 3. Everything a web person might need instead: other embed styles
+          and the Content-Security-Policy lines. Ordered by how little the
+          host site has to change to accept them. */}
+      <AdvancedSection
+        storageKey="forms-share"
+        hint={t("forms.share.advancedHint")}
+      >
+        <SnippetCard
+          formId={formId}
+          mode="iframe"
+          locale={defaultLocale}
+          icon={<MonitorPlay className="h-3.5 w-3.5" />}
+          title={t("forms.share.iframeTitle")}
+          subtitle={t("forms.share.iframeHint")}
+          onCopy={(text) => {
+            copy(text);
+            setLocalFlag(copiedFlag);
+          }}
+        />
 
-      <SnippetCard
-        formId={formId}
-        mode="embed"
-        locale={defaultLocale}
-        icon={<Code2 className="h-3.5 w-3.5" />}
-        title={t("forms.share.embedTitle")}
-        subtitle={t("forms.share.embedHint")}
-        onCopy={copy}
-      />
+        <SnippetCard
+          formId={formId}
+          mode="html"
+          locale={defaultLocale}
+          icon={<FileCode2 className="h-3.5 w-3.5" />}
+          title={t("forms.share.htmlTitle")}
+          subtitle={t("forms.share.htmlHint")}
+          warning={t("forms.share.htmlWarning")}
+          onCopy={(text) => {
+            copy(text);
+            setLocalFlag(copiedFlag);
+          }}
+        />
 
-      <CspCard formId={formId} locale={defaultLocale} onCopy={copy} />
+        <CspCard formId={formId} locale={defaultLocale} onCopy={copy} />
+      </AdvancedSection>
     </div>
   );
 }

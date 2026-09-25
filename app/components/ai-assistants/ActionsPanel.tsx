@@ -200,7 +200,7 @@ export function ActionsPanel({ draft, canEdit, onChange }: Props) {
   };
 
   return (
-    <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_320px]">
+    <div className="grid grid-cols-1 gap-5 lg:grid-cols-[minmax(0,1fr)_320px]">
       <Panel>
         <PanelHeader
           icon={<MousePointerClick className="h-3.5 w-3.5" />}

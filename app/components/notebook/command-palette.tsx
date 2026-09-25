@@ -9,6 +9,7 @@ import {
   CheckSquare,
   ClipboardList,
   CornerDownLeft,
+  Mail,
   Plus,
   Search,
   Settings,
@@ -21,6 +22,8 @@ import { useNavSections } from "~/lib/nav/sections";
 import { useGlobalSearch } from "~/lib/hooks/useGlobalSearch";
 import { SETTINGS_NAV } from "~/lib/nav/settings";
 import { isMacPlatform } from "~/lib/utils/platform";
+import { useComposeEmail } from "~/components/organism/compose-email/use-compose-email";
+import { useCanEditLeads } from "~/lib/hooks/useCanEditLeads";
 
 type Item = {
   id: string;
@@ -31,6 +34,8 @@ type Item = {
   keywords?: string;
   /** Opens a create dialog over the current page instead of navigating. */
   create?: QuickCreateKind;
+  /** Runs over the current page instead of navigating (e.g. the email composer). */
+  run?: () => void;
 };
 
 function norm(s: string) {
@@ -131,6 +136,9 @@ export function CommandPalette() {
     return out;
   }, [sections, pilot, isDemo, isRootAdmin, t]);
 
+  const { openCompose } = useComposeEmail();
+  const canEdit = useCanEditLeads();
+
   const actions = useMemo<Item[]>(
     () =>
       sections
@@ -140,9 +148,14 @@ export function CommandPalette() {
             { id: "new-task", label: t("command.newTask", "New task"), icon: Plus, to: "/tasks?new=1", create: "task" },
             { id: "new-contact", label: t("command.newContact", "New contact"), icon: Plus, to: "/contacts?new=1", create: "contact" },
             { id: "new-form", label: t("command.newForm", "New form"), icon: Plus, to: "/forms" },
+            // Sending is editor-only server-side; the composer itself handles
+            // "no mailbox connected yet" with a Connect button.
+            ...(canEdit
+              ? [{ id: "new-email", label: t("command.newEmail", "Send new email"), icon: Mail, to: "", keywords: "email e-mail mail write message nachricht courriel", run: () => openCompose({}) }]
+              : []),
           ]
         : [],
-    [sections, t],
+    [sections, t, canEdit, openCompose],
   );
 
   const q = norm(query.trim());
@@ -203,7 +216,10 @@ export function CommandPalette() {
       key={i.id}
       value={i.id}
       onSelect={() => {
-        if (i.create) {
+        if (i.run) {
+          setOpen(false);
+          i.run();
+        } else if (i.create) {
           // Stay on this page: the palette closes, the dialog opens over it.
           setOpen(false);
           quickCreate.open(i.create);

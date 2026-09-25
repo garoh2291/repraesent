@@ -26,6 +26,12 @@ import { TestsPanel } from "~/components/ai-assistants/TestsPanel";
 import { UsageCard } from "~/components/ai-assistants/UsageCard";
 import { UnsavedChangesGuard } from "~/components/forms/UnsavedChangesGuard";
 import {
+  SetupChecklist,
+  useLocalFlag,
+  type ChecklistStep,
+} from "~/components/notebook/setup-checklist";
+import { TabsMore } from "~/components/notebook/tabs-more";
+import {
   AlertDialog,
   AlertDialogAction,
   AlertDialogCancel,
@@ -77,6 +83,8 @@ import {
 } from "~/lib/api/ai-assistants";
 import {
   useAiAssistant,
+  useAiSources,
+  useAiUsage,
   useCanEditAiAssistants,
   useDeleteAssistant,
   usePublishAssistant,
@@ -98,6 +106,23 @@ const TABS = [
 type Tab = (typeof TABS)[number];
 /** v1 URLs still in bookmarks and emails. */
 const LEGACY_TABS: Record<string, Tab> = { leads: "actions", share: "publish" };
+
+/**
+ * The strip in the order an owner works: teach it, shape it, try it, put it
+ * on the site, then read the chats. "Check answers" is a once-in-a-while job,
+ * so its trigger sits behind "More" — the tab value and `?tab=tests` URLs
+ * are unchanged, Radix renders the content by value alone.
+ */
+const MAIN_TABS: readonly Tab[] = [
+  "knowledge",
+  "behaviour",
+  "appearance",
+  "actions",
+  "playground",
+  "publish",
+  "conversations",
+];
+const MORE_TABS: readonly Tab[] = ["tests"];
 
 export function meta() {
   return [{ title: `${i18n.t("aiAssistants.list.title")} · Repraesent` }];
@@ -142,12 +167,28 @@ export default function AiAssistantDetailRoute() {
   const { data: workspaceAi } = useWorkspaceAi();
   const aiConfigured =
     !workspaceAi || (workspaceAi.connected && workspaceAi.status !== "revoked");
+  // The checklist's step 0 uses the banner's own test ("error" counts as
+  // broken there too), and stays hidden while the answer is still loading.
+  const aiAccountBroken =
+    !!workspaceAi &&
+    (!workspaceAi.connected ||
+      workspaceAi.status === "revoked" ||
+      workspaceAi.status === "error");
+  // Both queries already run on the Knowledge tab; reading them here too is a
+  // cache hit, not a new request, and keeps the checklist live on every tab.
+  const { data: sources } = useAiSources(assistantId);
+  const { data: usage } = useAiUsage(assistantId, 30);
+  const tried = useLocalFlag(`ai-tried:${assistantId}`);
+  const copied = useLocalFlag(`ai-copied:${assistantId}`);
 
   const tab: Tab = (() => {
     const wanted = searchParams.get("tab");
-    return wanted && (TABS as readonly string[]).includes(wanted)
-      ? (wanted as Tab)
-      : "knowledge";
+    if (wanted && (TABS as readonly string[]).includes(wanted)) {
+      return wanted as Tab;
+    }
+    // The alias table existed but was never consulted, so old `?tab=leads`
+    // and `?tab=share` links quietly opened Knowledge.
+    return (wanted && LEGACY_TABS[wanted]) || "knowledge";
   })();
   const setTab = (next: string) =>
     setSearchParams(
@@ -365,6 +406,68 @@ export default function AiAssistantDetailRoute() {
   /** Only the current tab's issues — the other tabs' counts already say so. */
   const tabIssues = issues.filter((i) => i.tab === tab);
 
+  // --- "Getting ready" -------------------------------------------------------
+  const taught =
+    draft.business_description.trim().length > 0 ||
+    (sources ?? []).some((x) => x.type !== "description" && x.status === "ready");
+  const hadChats =
+    assistant.usage_today.messages > 0 ||
+    (usage?.days ?? []).some((d) => d.messages > 0);
+  const steps: ChecklistStep[] = [
+    ...(aiAccountBroken
+      ? [
+          {
+            id: "account",
+            label: t("aiAssistants.checklist.account"),
+            hint: t("aiAssistants.checklist.accountHint"),
+            done: false,
+            onClick: () => navigate("/settings/ai"),
+          },
+        ]
+      : []),
+    {
+      id: "teach",
+      label: t("aiAssistants.checklist.teach"),
+      hint: t("aiAssistants.checklist.teachHint"),
+      done: taught,
+      onClick: () => setTab("knowledge"),
+    },
+    {
+      id: "try",
+      label: t("aiAssistants.checklist.try"),
+      hint: t("aiAssistants.checklist.tryHint"),
+      done: tried || hadChats,
+      onClick: () => setTab("playground"),
+    },
+    {
+      id: "live",
+      label: t("aiAssistants.checklist.live"),
+      hint: t("aiAssistants.checklist.liveHint"),
+      done: isLive,
+      onClick: () => setTab("publish"),
+    },
+    {
+      id: "site",
+      label: t("aiAssistants.checklist.site"),
+      hint: t("aiAssistants.checklist.siteHint"),
+      done: copied,
+      onClick: () => setTab("publish"),
+    },
+  ];
+  const tabLabel = (key: Tab) => t(`aiAssistants.tabLabels.${key}`);
+  const issueBadge = (key: Tab) => (
+    <IssueBadge
+      count={counts[key] ?? 0}
+      label={t("aiAssistants.validation.badgeLabel", {
+        n: counts[key] ?? 0,
+      })}
+      onClick={() => {
+        const first = issues.find((i) => i.tab === key);
+        if (first) goToIssue(first);
+      }}
+    />
+  );
+
   return (
     <div
       // Same wrapper as the forms editor: app-fade-in makes this its own stacking
@@ -392,7 +495,7 @@ export default function AiAssistantDetailRoute() {
               disabled={!canEdit}
               onChange={(e) => patch({ name: e.target.value })}
               aria-label={t("aiAssistants.create.nameLabel")}
-              className="h-9 min-w-[10rem] flex-1 rounded-lg border-transparent bg-transparent px-0 text-lg font-semibold tracking-tight text-white shadow-none selection:bg-white/20 focus-visible:border-white/10 focus-visible:bg-white/5 focus-visible:px-2.5 disabled:opacity-100 sm:text-xl"
+              className="h-9 min-w-[10rem] flex-1 rounded-lg border-transparent bg-transparent px-0 text-lg font-semibold tracking-tight text-white shadow-none ink-surface focus-visible:border-white/10 focus-visible:bg-white/5 focus-visible:px-2.5 disabled:opacity-100 sm:text-xl"
             />
 
             <AssistantStatusBadge
@@ -535,32 +638,46 @@ export default function AiAssistantDetailRoute() {
         </div>
       </div>
 
-      <AiKeyBanner />
+      {/* A missing account is the checklist's first step; the strip only
+          speaks up when a working one broke. */}
+      <AiKeyBanner revokedOnly />
 
       {!canEdit ? (
         <p className="text-sm text-muted-foreground">
           {t("aiAssistants.detail.readOnly")}
         </p>
-      ) : null}
+      ) : (
+        <SetupChecklist id={`ai:${assistant.id}`} steps={steps} />
+      )}
 
       <Tabs value={tab} onValueChange={setTab}>
         <div className="app-fade-up app-fade-up-d1 overflow-x-auto border-b border-border">
           <TabsList variant="line" className="-mb-px">
-            {TABS.map((key) => (
+            {MAIN_TABS.map((key) => (
               <TabsTrigger key={key} value={key}>
-                {t(`aiAssistants.tabs.${key}`)}
-                <IssueBadge
-                  count={counts[key] ?? 0}
-                  label={t("aiAssistants.validation.badgeLabel", {
-                    n: counts[key] ?? 0,
-                  })}
-                  onClick={() => {
-                    const first = issues.find((i) => i.tab === key);
-                    if (first) goToIssue(first);
-                  }}
-                />
+                {tabLabel(key)}
+                {issueBadge(key)}
               </TabsTrigger>
             ))}
+            <TabsMore
+              tabs={MORE_TABS.map((key) => ({
+                value: key,
+                label: tabLabel(key),
+                issues: counts[key] ?? 0,
+              }))}
+              value={tab}
+              onSelect={setTab}
+              renderBadge={(n) =>
+                n > 0 ? (
+                  <span
+                    aria-label={t("aiAssistants.validation.badgeLabel", { n })}
+                    className="ml-1 inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-destructive px-1 text-[10px] font-semibold tabular-nums text-white"
+                  >
+                    {n}
+                  </span>
+                ) : null
+              }
+            />
           </TabsList>
         </div>
 
@@ -588,7 +705,7 @@ export default function AiAssistantDetailRoute() {
         ) : null}
 
         <TabsContent value="knowledge" className="app-fade-up pt-5">
-          <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_340px]">
+          <div className="grid grid-cols-1 gap-5 lg:grid-cols-[minmax(0,1fr)_340px]">
             <KnowledgePanel
               assistantId={assistant.id}
               canEdit={canEdit}
@@ -615,6 +732,9 @@ export default function AiAssistantDetailRoute() {
             canEdit={canEdit}
             onChange={patch}
             searchConfigured={assistant?.search_configured}
+            issuePaths={issues
+              .filter((i) => i.tab === "behaviour")
+              .map((i) => i.path)}
           />
         </TabsContent>
         <TabsContent value="appearance" className="app-fade-up pt-5">

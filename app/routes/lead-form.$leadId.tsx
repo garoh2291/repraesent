@@ -29,6 +29,7 @@ import { ContactEmailSuggestion } from "~/components/organism/contact-email-sugg
 import { extractErrorMessage } from "~/lib/api/axios-instance";
 import { CreateDealDialog } from "~/components/organism/create-deal-dialog";
 import { LeadActionBar } from "~/components/notebook/lead-action-bar";
+import { useLeadFlow } from "~/components/notebook/lead-flow";
 import i18n from "~/i18n";
 import { useDocumentMeta } from "~/lib/hooks/use-document-meta";
 
@@ -59,6 +60,7 @@ export default function LeadFormLeadId() {
   const updateStatusMutation = useUpdateLeadStatus();
   const { requestStatusChange: requestHideGuarded, guardModal: hideGuardModal } = useHideLeadGuard();
   const canEdit = useCanEditLeads();
+  const leadFlow = useLeadFlow();
 
   const workspaceQuery = useQuery({
     queryKey: ["workspace-detail"],
@@ -197,6 +199,28 @@ export default function LeadFormLeadId() {
     [lead.first_name, lead.last_name].filter(Boolean).join(" ").trim() ||
     "Lead";
 
+  // The linked contact's own address, sent through the inquiry loop so it
+  // lands in History and asks how it went (mailto: stays the fallback).
+  const linkedEmail = (() => {
+    const emails = linkedContactData?.emails ?? [];
+    const e = emails.find((x) => x.is_primary) ?? emails[0];
+    return e?.address ? String(e.address) : null;
+  })();
+  const composeToLinked =
+    canEdit && leadFlow.emailInApp && linkedEmail
+      ? () =>
+          leadFlow.contact(
+            {
+              id: lead.id,
+              name: displayName,
+              status: lead.status,
+              phone: lead.phone,
+              email: linkedEmail,
+            },
+            "email",
+          )
+      : undefined;
+
   return (
     <div className="p-4 sm:p-6 space-y-4 sm:space-y-6 app-fade-in">
       {/* Header */}
@@ -238,6 +262,7 @@ export default function LeadFormLeadId() {
             addresses={linkedContactData.addresses}
             leadId={leadId ?? null}
             viewContactId={linkedContactId}
+            onCompose={composeToLinked}
             onOpenCreateDeal={
               canEdit && linkedContactId
                 ? () => {

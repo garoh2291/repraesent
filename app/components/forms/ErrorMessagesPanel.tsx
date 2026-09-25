@@ -40,7 +40,7 @@ export function ErrorMessagesPanel({ disabled, getText, setText }: Props) {
           shell — not this panel's own header. */}
       <Panel>
         <PanelHeader
-          title={t("forms.builder.tabErrors")}
+          title={t("forms.builder.tabErrorWording")}
           meta={
             <span className="text-[11px] normal-case tracking-normal text-muted-foreground/70">
               {t("forms.design.errorsSummary", {

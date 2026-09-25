@@ -235,6 +235,11 @@ export function formatHistoryAction(
     return t("leads.detail.historyTaskAssigneeRemoved", {
       defaultValue: "Task assignee removed",
     });
+  if (item.action === "email_sent")
+    return t("leads.detail.historyEmailSent", {
+      defaultValue: "Email sent: {{subject}}",
+      subject: String(item.details?.subject ?? ""),
+    });
   if (item.action === "task_created")
     return t("tasks.detail.historyTaskCreated", {
       defaultValue: "Task created",

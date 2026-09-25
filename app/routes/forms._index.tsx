@@ -8,7 +8,8 @@ import {
   MoreHorizontal,
   Plus,
   ShoppingBag,
-  Webhook,
+  Inbox,
+  SearchX,
   Trash2,
 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
@@ -60,7 +61,7 @@ import i18n from "~/i18n";
 export function meta() {
   return [
     { title: `${i18n.t("forms.list.title")} · Repraesent` },
-    { name: "description", content: i18n.t("forms.list.hint") },
+    { name: "description", content: i18n.t("forms.list.intro") },
   ];
 }
 
@@ -222,7 +223,7 @@ export default function FormsIndexRoute() {
             {t("forms.list.title")}
           </h1>
           <p className="max-w-2xl text-sm text-muted-foreground">
-            {t("forms.list.hint")}
+            {t("forms.list.intro")}
           </p>
         </div>
         <div className="flex shrink-0 items-center gap-2">
@@ -266,6 +267,27 @@ export default function FormsIndexRoute() {
           {[0, 1, 2].map((i) => (
             <Skeleton key={i} className="h-20 w-full rounded-xl" />
           ))}
+        </div>
+      ) : filtered.length === 0 && (forms?.length ?? 0) > 0 ? (
+        // A search that matched nothing is not "you have no forms" — that
+        // empty state offered to create a first form to someone with ten.
+        <div className="flex flex-col items-center gap-3 rounded-xl border border-dashed py-12 text-center app-fade-up">
+          <SearchX
+            className="h-7 w-7 text-muted-foreground/60"
+            aria-hidden="true"
+          />
+          <p className="text-sm text-muted-foreground">
+            {t("guided.noMatch", { query: search.trim() })}
+          </p>
+          <Button
+            variant="outline"
+            onClick={() => {
+              setSearch("");
+              searchInputRef.current?.focus();
+            }}
+          >
+            {t("guided.clearSearch")}
+          </Button>
         </div>
       ) : filtered.length === 0 ? (
         <div className="flex flex-col items-center gap-3 rounded-xl border border-dashed py-16 text-center app-fade-up">
@@ -322,8 +344,8 @@ export default function FormsIndexRoute() {
                     </span>
                   ) : form.kind === "intake" ? (
                     <span className="inline-flex items-center gap-1 rounded-md border border-border bg-muted/40 px-1.5 py-0.5 text-[11px] font-medium text-muted-foreground">
-                      <Webhook className="h-3 w-3" aria-hidden />
-                      {t("forms.list.kindIntake", { defaultValue: "Webhook" })}
+                      <Inbox className="h-3 w-3" aria-hidden />
+                      {t("forms.list.kindIntake")}
                     </span>
                   ) : form.layout_mode === "multi_step" ? (
                     <span className="inline-flex items-center gap-1 rounded-md border border-border bg-muted/40 px-1.5 py-0.5 text-[11px] font-medium text-muted-foreground">
@@ -332,9 +354,9 @@ export default function FormsIndexRoute() {
                     </span>
                   ) : null}
                 </div>
+                {/* No slug: it is a technical handle the owner never types.
+                    Languages and the last change are what tell forms apart. */}
                 <p className="text-xs text-muted-foreground">
-                  <span className="font-mono">{form.slug}</span>
-                  {" · "}
                   {form.locales.join(", ").toUpperCase()}
                   {" · "}
                   {t("forms.list.colUpdated")} {formatDate(form.updated_at)}

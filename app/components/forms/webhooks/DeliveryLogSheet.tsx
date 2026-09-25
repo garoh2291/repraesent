@@ -184,7 +184,7 @@ function DeliveryRow({
             <p className="mb-1 text-[11px] font-semibold uppercase tracking-widest text-muted-foreground/70">
               {t("forms.webhooks.request")}
             </p>
-            <pre className="max-h-64 overflow-auto rounded-lg border bg-[#111113] p-3 font-mono text-[11px] leading-relaxed text-white/80">
+            <pre className="ink-surface max-h-64 overflow-auto rounded-lg border bg-[#111113] p-3 font-mono text-[11px] leading-relaxed text-white/80">
               {JSON.stringify(d.payload, null, 2)}
             </pre>
           </div>

@@ -165,7 +165,7 @@ export default function PublicAssistantRoute() {
 
   return (
     <>
-      <style>{`html,body{background:${bg};color-scheme:${dark ? "dark" : "light"};}`}</style>
+      <style>{`html,body{background:${bg};color-scheme:${dark ? "dark" : "light"};}::selection{background-color:color-mix(in srgb,${accent} 22%,transparent);color:inherit;}`}</style>
       <main
         className="mx-auto flex h-dvh w-full max-w-[760px] flex-col overflow-hidden"
         style={{ color: fg }}

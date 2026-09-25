@@ -317,7 +317,7 @@ export function Sidebar({
     <SidebarCollapsedContext.Provider value={collapsed}>
       <aside
         className={cn(
-          "flex h-full shrink-0 flex-col bg-[#111113] border-r border-white/5 transition-[width] duration-200",
+          "ink-surface flex h-full shrink-0 flex-col bg-[#111113] border-r border-white/5 transition-[width] duration-200",
           // Inside the phone menu sheet it fills the sheet; a fixed 220px
           // column left a second dark strip beside it.
           onClose ? "w-full border-r-0" : collapsed ? "w-[64px]" : "w-[220px]",
