@@ -48,31 +48,41 @@ export function IntroCallCard() {
     setHidden(true);
   };
 
+  // Stacked on every width: it lives in Today's narrow right column, where a
+  // side-by-side layout overflowed and added a second (horizontal) scrollbar.
+  // Dark ink so it reads as the one personal invitation on the screen.
   return (
-    <section className="app-fade-up relative flex flex-col gap-4 rounded-2xl border border-border bg-card p-4 shadow-xs sm:flex-row sm:items-center sm:p-5">
-      <span className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-secondary text-secondary-foreground" aria-hidden>
-        <CalendarPlus className="size-5" />
-      </span>
-      <div className="min-w-0 flex-1 pr-6 sm:pr-0">
-        <h2 className="text-sm font-semibold text-foreground">{t("onb.introCard.title")}</h2>
-        <p className="text-sm text-muted-foreground">
-          {host ? t("onb.introCard.body", { name: host }) : t("onb.introCard.bodyNoName")}
-        </p>
-      </div>
-      <Link
-        to="/welcome"
-        className="inline-flex h-10 shrink-0 items-center justify-center rounded-xl bg-foreground px-4 text-sm font-semibold text-background transition-opacity hover:opacity-90"
-      >
-        {t("onb.introCard.cta")}
-      </Link>
+    <section className="relative overflow-hidden rounded-xl bg-[#141516] p-5 text-white shadow-sm">
+      <span
+        className="pointer-events-none absolute -right-6 -top-6 size-24 rounded-full bg-marker/15"
+        aria-hidden
+      />
       <button
         type="button"
         onClick={hide}
         aria-label={t("onb.introCard.hide")}
-        className="absolute right-2 top-2 flex size-8 items-center justify-center rounded-lg text-muted-foreground hover:bg-foreground/5 hover:text-foreground sm:static"
+        className="absolute right-2 top-2 flex size-8 items-center justify-center rounded-lg text-white/50 transition-colors hover:bg-white/10 hover:text-white"
       >
         <X className="size-4" />
       </button>
+      <span
+        className="relative flex size-10 items-center justify-center rounded-lg bg-marker text-[#141516]"
+        aria-hidden
+      >
+        <CalendarPlus className="size-5" />
+      </span>
+      <h2 className="relative mt-4 pr-6 text-[16px] font-semibold leading-snug">
+        {t("onb.introCard.title")}
+      </h2>
+      <p className="relative mt-1.5 text-[13.5px] leading-relaxed text-white/65">
+        {host ? t("onb.introCard.body", { name: host }) : t("onb.introCard.bodyNoName")}
+      </p>
+      <Link
+        to="/welcome"
+        className="press relative mt-4 flex h-10 w-full items-center justify-center rounded-lg bg-marker px-4 text-[14px] font-semibold text-[#141516] transition-opacity hover:opacity-90"
+      >
+        {t("onb.introCard.cta")}
+      </Link>
     </section>
   );
 }

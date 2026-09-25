@@ -165,6 +165,7 @@ export default function TasksPage() {
       queryClient.invalidateQueries({ queryKey: ["home-tasks-upcoming"] });
       queryClient.invalidateQueries({ queryKey: ["home-tasks-overdue"] });
       queryClient.invalidateQueries({ queryKey: ["leads"] });
+      queryClient.invalidateQueries({ queryKey: ["ai-visibility"] });
     },
   });
 
@@ -215,6 +216,7 @@ export default function TasksPage() {
       queryClient.invalidateQueries({ queryKey: ["home-tasks-upcoming"] });
       queryClient.invalidateQueries({ queryKey: ["home-tasks-overdue"] });
       queryClient.invalidateQueries({ queryKey: ["leads"] });
+      queryClient.invalidateQueries({ queryKey: ["ai-visibility"] });
     },
   });
 

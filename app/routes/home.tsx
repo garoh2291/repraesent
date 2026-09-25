@@ -203,6 +203,7 @@ function entityHref(task: TodayTask) {
   if (task.entity_table === "deals") return `/pipeline/${task.entity_id}`;
   if (task.entity_table === "contacts") return `/contacts/${task.entity_id}`;
   if (task.entity_table === "leads") return `/lead-form/${task.entity_id}`;
+  if (task.entity_table === "ai_visibility_actions") return `/ai-visibility/actions#${task.entity_id}`;
   return `/tasks?task_id=${task.id}`;
 }
 

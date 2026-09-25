@@ -25,6 +25,7 @@ import {
   Eye,
   LineChart,
   Briefcase,
+  Radar,
 } from "lucide-react";
 import * as LucideIcons from "lucide-react";
 import { OpenAiMark } from "~/components/icons/openai-mark";
@@ -271,6 +272,15 @@ export function useNavSections(): NavSection[] | null {
       icon: OpenAiMark,
     },
   ];
+  if (pilot.aiVisibility) {
+    results.push({
+      key: "ai-visibility",
+      label: t("sections.tabs.aiVisibility", "AI visibility"),
+      to: "/ai-visibility",
+      icon: Radar,
+      pilot: true,
+    });
+  }
 
   const website: SectionTab[] = [];
   if (showWebsite) {

@@ -98,7 +98,7 @@ export default function DashboardLayout() {
 
       <main
         className={
-          "flex min-w-0 flex-1 flex-col overflow-y-auto bg-background" +
+          "flex min-w-0 flex-1 flex-col overflow-y-auto overflow-x-hidden bg-background" +
           (sections ? " pb-[calc(4rem+env(safe-area-inset-bottom))] lg:pb-0" : "")
         }
       >

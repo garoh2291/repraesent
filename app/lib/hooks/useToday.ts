@@ -66,6 +66,8 @@ export function useInvalidateWork() {
       "home-tasks-upcoming",
       "home-tasks-overdue",
       "results",
+      // A task created from an AI visibility action carries its status back.
+      "ai-visibility",
     ]) {
       void qc.invalidateQueries({ queryKey: [key] });
     }

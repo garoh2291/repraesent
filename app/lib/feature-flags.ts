@@ -31,7 +31,9 @@ export type PilotFeature =
   /** Email marketing: /campaigns, /segments, /email-templates. */
   | "emailCampaigns"
   /** Website AI assistant: /ai-assistants. */
-  | "aiAssistant";
+  | "aiAssistant"
+  /** AI visibility (Peec-style tracking): /ai-visibility. AI_VISIBILITY_PLAN.md. */
+  | "aiVisibility";
 
 /** i18n key of the label the sidebar shows next to a piloted entry. */
 export const PILOT_FEATURE_LABEL_KEY = "nav.demoBadge";
@@ -51,6 +53,7 @@ export const PILOT_ROUTES: ReadonlyArray<{
   { prefix: "/email-templates", feature: "emailCampaigns" },
   { prefix: "/ai-assistants", feature: "aiAssistant" },
   { prefix: "/settings/ai", feature: "aiAssistant" },
+  { prefix: "/ai-visibility", feature: "aiVisibility" },
   { prefix: "/settings/integrations", feature: "integrations" },
 ];
 
@@ -98,5 +101,6 @@ export function usePilotFeatures(): Record<PilotFeature, boolean> {
     integrations: enabled,
     emailCampaigns: enabled,
     aiAssistant: enabled,
+    aiVisibility: enabled,
   };
 }

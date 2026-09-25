@@ -55,8 +55,6 @@ import { MarkerCount } from "~/components/notebook/stat";
 import { openCommandPalette } from "~/components/notebook/command-palette";
 import { isMacPlatform } from "~/lib/utils/platform";
 
-
-
 /**
  * True while the desktop sidebar is collapsed to its icon rail. NavLink and
  * PipelineNav read it so every call site keeps its normal children — in
@@ -207,13 +205,15 @@ function SearchRow() {
       title={collapsed ? t("command.title", "Go to or search") : undefined}
       className={cn(
         "mb-2 flex w-full items-center rounded-lg border border-white/[0.07] bg-white/[0.03] py-2 text-[13px] text-white/45 transition-colors hover:border-white/15 hover:text-white/75",
-        collapsed ? "justify-center px-0" : "gap-2.5 px-3",
+        collapsed ? "justify-center px-0" : "gap-2.5 px-3"
       )}
     >
       <Search className="h-4 w-4 shrink-0" />
       {!collapsed && (
         <>
-          <span className="flex-1 truncate text-left">{t("command.short", "Search")}</span>
+          <span className="flex-1 truncate text-left">
+            {t("command.short", "Search")}
+          </span>
           <span className="num text-[11px] text-white/30">{hint}</span>
         </>
       )}
@@ -231,8 +231,7 @@ function MainSections({ onClose }: { onClose?: () => void }) {
   const sections = useNavSections();
   const active = activeSection(sections, location.pathname);
   const today = useToday("me", !!sections);
-  const counts =
-    today.data && today.data.supported ? today.data.counts : null;
+  const counts = today.data && today.data.supported ? today.data.counts : null;
   const needsYou = counts
     ? // People waiting — the same number the Today greeting shows.
       counts.new_leads + counts.follow_ups_due + (counts.signups ?? 0)
@@ -322,7 +321,7 @@ export function Sidebar({
   // right mode for free, and there is nothing to reset on the way out.
   const inSettings = location.pathname.startsWith("/settings");
   const { data: wpSite } = useWorkspaceWpSite(
-    !!currentWorkspace?.id && !isDoorboostBrandWs,
+    !!currentWorkspace?.id && !isDoorboostBrandWs
   );
   const showWebsite = !!wpSite?.sso_enabled || isDemoWorkspace;
   // Same drill-in as Settings: /website replaces the nav list with Overview
@@ -584,7 +583,7 @@ export function Sidebar({
                         : item.to === "/settings/onboarding" ||
                             item.to === "/settings/support"
                           ? isRootAdmin
-                          : true),
+                          : true)
                 );
                 if (items.length === 0) return null;
                 return (
@@ -603,7 +602,8 @@ export function Sidebar({
                       >
                         <Icon className="h-4 w-4 shrink-0" />
                         <span className="truncate">{t(labelKey)}</span>
-                        {to === "/settings/integrations" || to === "/settings/ai" ? (
+                        {to === "/settings/integrations" ||
+                        to === "/settings/ai" ? (
                           <DemoPill />
                         ) : null}
                       </NavLink>

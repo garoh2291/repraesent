@@ -63,6 +63,18 @@ export default [
     layout("routes/_dashboard-layout.tsx", [
       index("routes/home.tsx"),
       route("results", "routes/results.tsx"),
+      // AI visibility (pilot flag `aiVisibility`, AI_VISIBILITY_PLAN.md).
+      route("ai-visibility", "routes/ai-visibility.tsx", [
+        index("routes/ai-visibility._index.tsx"),
+        route("setup", "routes/ai-visibility.setup.tsx"),
+        route("actions", "routes/ai-visibility.actions.tsx"),
+        route("prompts", "routes/ai-visibility.prompts.tsx"),
+        route("prompts/:promptId", "routes/ai-visibility.prompts.$promptId.tsx"),
+        route("competitors", "routes/ai-visibility.competitors.tsx"),
+        route("sources", "routes/ai-visibility.sources.tsx"),
+        route("answers", "routes/ai-visibility.answers.tsx"),
+        route("plan", "routes/ai-visibility.plan.tsx"),
+      ]),
       // Workspace subscription + invoices. Moved off /products so the Stripe
       // catalogue can take that path; the sidebar already called it Billing.
       route("billing", "routes/billing.tsx"),
