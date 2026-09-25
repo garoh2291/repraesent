@@ -310,12 +310,12 @@ export function WebAnalyticsSection() {
               <Line
                 type="monotone"
                 dataKey="visitors"
-                stroke="#5265f3"
+                stroke="#141516"
                 strokeWidth={2}
                 dot={false}
                 activeDot={{
                   r: 4,
-                  fill: "#5265f3",
+                  fill: "#141516",
                   stroke: "var(--card)",
                   strokeWidth: 2,
                 }}

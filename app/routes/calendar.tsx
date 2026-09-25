@@ -1,4 +1,5 @@
 import { useCallback, useMemo, useRef, useState } from "react";
+import { CalendarHubTabs } from "~/components/notebook/calendar-hub-tabs";
 import { Navigate } from "react-router";
 import { useTranslation } from "react-i18next";
 import { useQuery, useQueryClient, keepPreviousData } from "@tanstack/react-query";
@@ -313,9 +314,10 @@ export default function CalendarPage() {
 
   return (
     <div className="w-full p-4 sm:p-6 py-10! space-y-4 sm:space-y-6 app-fade-in">
+      <CalendarHubTabs />
       {/* Header */}
       <div className="flex flex-wrap items-center justify-between gap-3 app-fade-up">
-        <h1 className="text-xl sm:text-2xl font-semibold text-foreground tracking-tight">
+        <h1 className="title-display text-[26px] font-semibold text-foreground sm:text-[30px]">
           {t("calendar.title")}
         </h1>
 

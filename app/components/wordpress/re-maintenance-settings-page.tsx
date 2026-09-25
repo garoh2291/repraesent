@@ -188,7 +188,7 @@ export function ReMaintenanceSettingsPage() {
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between app-fade-up">
         <div className="flex flex-col gap-1">
           <div className="flex flex-wrap items-center gap-2">
-            <h1 className="text-xl font-semibold tracking-tight text-foreground sm:text-2xl">
+            <h1 className="title-display text-[26px] font-semibold text-foreground sm:text-[30px]">
               {pageTitle}
             </h1>
             {dirty || overlayDirty ? (

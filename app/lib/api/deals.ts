@@ -76,6 +76,15 @@ export interface DealListItem {
   primary_email: string | null;
   primary_phone: string | null;
   board_position: number | null;
+  /** Open tasks on the deal — the "next step" (absent on older API builds). */
+  tasks_summary?: DealTasksSummary;
+}
+
+export interface DealTasksSummary {
+  open_count: number;
+  nearest_due_date: string | null;
+  nearest_urgency: "overdue" | "due_soon" | "upcoming" | null;
+  nearest_title: string | null;
 }
 
 export interface PaginatedDeals {
@@ -261,6 +270,8 @@ export type DealDetailResponse = {
   /** Newest first. */
   invoices: DealInvoice[];
   invoice_readiness: InvoiceReadiness;
+  /** Open tasks on the deal — the "next step". */
+  tasks_summary?: DealTasksSummary;
 };
 
 export async function getDeal(dealId: string): Promise<DealDetailResponse> {

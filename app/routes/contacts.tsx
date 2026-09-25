@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { useOpenFromParam } from "~/lib/hooks/useOpenFromParam";
 import { Link, useNavigate, useSearchParams } from "react-router";
 import { useTranslation } from "react-i18next";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -123,6 +124,7 @@ export default function ContactsPage() {
     mode: "csv" | "vcard" | "xlsx";
   }>({ open: false, mode: "csv" });
   const [createOpen, setCreateOpen] = useState(false);
+  useOpenFromParam(() => setCreateOpen(true));
 
   const tableQuery = useQuery({
     queryKey: [
@@ -202,7 +204,7 @@ export default function ContactsPage() {
       {/* Header — same pattern as Leads */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between shrink-0 app-fade-up">
         <div>
-          <h1 className="text-xl sm:text-2xl font-semibold text-foreground tracking-tight">
+          <h1 className="title-display text-[26px] font-semibold text-foreground sm:text-[30px]">
             {t("contacts.contactsTitle")}
           </h1>
           <p className="text-sm text-muted-foreground mt-0.5">
@@ -469,7 +471,7 @@ export default function ContactsPage() {
                                   className="object-cover"
                                 />
                               ) : null}
-                              <AvatarFallback className="bg-linear-to-br from-secondary/30 to-primary/10 text-[11px] font-semibold text-foreground">
+                              <AvatarFallback className="bg-muted text-[11px] font-semibold text-foreground">
                                 {contactInitials(name)}
                               </AvatarFallback>
                             </Avatar>

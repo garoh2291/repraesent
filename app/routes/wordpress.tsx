@@ -1,3 +1,4 @@
+import { WebsiteCapabilities } from "~/components/notebook/website-capabilities";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
@@ -71,7 +72,7 @@ export default function WordPressPage() {
     <div className="mx-auto w-full max-w-[1280px] space-y-6 p-4 py-10! sm:space-y-8 sm:p-6 app-fade-in">
       {/* Header */}
       <div className="flex flex-col gap-1 app-fade-up">
-        <h1 className="text-xl font-semibold tracking-tight text-foreground sm:text-2xl">
+        <h1 className="title-display text-[26px] font-semibold text-foreground sm:text-[30px]">
           {t("wordpress.title", "Website")}
         </h1>
         <p className="text-sm text-muted-foreground">
@@ -99,10 +100,10 @@ export default function WordPressPage() {
       ) : !site?.sso_enabled ? (
         <EmptyState />
       ) : (
-        <div className="overflow-hidden rounded-2xl border bg-card app-fade-up">
+        <div className="overflow-hidden rounded-xl border bg-card shadow-xs">
           <div className="flex flex-col gap-5 p-5 sm:flex-row sm:items-center sm:justify-between sm:p-6">
             <div className="flex min-w-0 items-center gap-4">
-              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary ring-1 ring-primary/20">
+              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-muted text-foreground">
                 <Globe className="h-6 w-6" />
               </div>
               <div className="min-w-0">
@@ -132,6 +133,8 @@ export default function WordPressPage() {
           </div>
         </div>
       )}
+
+      {site?.sso_enabled ? <WebsiteCapabilities /> : null}
 
       <WebAnalyticsSection />
     </div>

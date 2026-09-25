@@ -83,7 +83,7 @@ export default function CampaignsIndex() {
     <div className="mx-auto w-full max-w-[1280px] space-y-6 p-4 py-10! sm:space-y-8 sm:p-6 app-fade-in">
       <div className="flex flex-col gap-3 app-fade-up sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-xl font-semibold tracking-tight text-foreground sm:text-2xl">
+          <h1 className="title-display text-[26px] font-semibold text-foreground sm:text-[30px]">
             {t("emailCampaigns.list.title", { defaultValue: "Campaigns" })}
           </h1>
           <p className="text-sm text-muted-foreground">

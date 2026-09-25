@@ -283,7 +283,7 @@ function ContactKanbanCardInner({ contact }: { contact: ContactListItem }) {
               className="object-cover"
             />
           ) : null}
-          <AvatarFallback className="bg-linear-to-br from-secondary/30 to-primary/10 text-[10px] font-semibold text-foreground">
+          <AvatarFallback className="bg-muted text-[10px] font-semibold text-foreground">
             {contactInitials(name)}
           </AvatarFallback>
         </Avatar>
@@ -482,7 +482,7 @@ function ContactScheduleRow({
             className="object-cover"
           />
         ) : null}
-        <AvatarFallback className="bg-linear-to-br from-secondary/30 to-primary/10 text-[10px] font-semibold">
+        <AvatarFallback className="bg-muted text-[10px] font-semibold">
           {contactInitials(name)}
         </AvatarFallback>
       </Avatar>

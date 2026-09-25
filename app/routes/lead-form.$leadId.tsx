@@ -20,7 +20,7 @@ import type { WorkspaceMemberItem } from "~/components/organism/tasks/task-form-
 import { useCanEditLeads } from "~/lib/hooks/useCanEditLeads";
 import { useUpdateLeadStatus } from "~/lib/hooks/useUpdateLeadStatus";
 import { Button } from "~/components/ui/button";
-import { ArrowLeft, UserCheck, UserPlus } from "lucide-react";
+import { ArrowLeft, UserPlus } from "lucide-react";
 import { LeadSpamButton } from "~/components/organism/lead-spam/lead-spam-button";
 import { useHideLeadGuard } from "~/lib/leads/use-hide-lead-guard";
 import { getContact, convertLeadToContact } from "~/lib/api/contacts-crm";
@@ -28,6 +28,7 @@ import { ContactHero } from "~/components/organism/contact-detail/contact-hero";
 import { ContactEmailSuggestion } from "~/components/organism/contact-email-suggestion";
 import { extractErrorMessage } from "~/lib/api/axios-instance";
 import { CreateDealDialog } from "~/components/organism/create-deal-dialog";
+import { LeadActionBar } from "~/components/notebook/lead-action-bar";
 import i18n from "~/i18n";
 import { useDocumentMeta } from "~/lib/hooks/use-document-meta";
 
@@ -207,22 +208,18 @@ export default function LeadFormLeadId() {
           <ArrowLeft className="h-3.5 w-3.5" />
           {t("leads.detail.backToLeads")}
         </Link>
-        <h1 className="text-xl sm:text-2xl font-semibold text-foreground tracking-tight">
+        <h1 className="title-display text-[26px] sm:text-[32px] font-semibold text-foreground">
           {displayName}
         </h1>
+        {canEdit ? <LeadActionBar lead={lead} className="pt-2" /> : null}
       </div>
 
       <div className="border-t border-border" />
 
       {linkedContactId && linkedContactData ? (
         <div className="app-fade-up space-y-2">
-          <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2.5 py-0.5 text-[11px] font-medium text-emerald-700 dark:text-emerald-400">
-            <UserCheck className="h-3 w-3" />
-            {t("leads.detail.hasContact", {
-              defaultValue: "This lead is linked to a contact.",
-            })}
-          </span>
           <ContactHero
+            variant="linked"
             displayName={
               (linkedContactData.contact?.full_name as string)?.trim() ||
               [

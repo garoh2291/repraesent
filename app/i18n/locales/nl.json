@@ -43,11 +43,12 @@
     "view": "Bekijken",
     "yes": "Ja",
     "you": "U",
-    "copyFailed": "Kopiëren mislukt — selecteer de tekst en kopieer hem handmatig."
+    "copyFailed": "Kopiëren mislukt — selecteer de tekst en kopieer hem handmatig.",
+    "retry": "Opnieuw proberen"
   },
   "nav": {
     "home": "Startpagina",
-    "leads": "Leads",
+    "leads": "Aanvragen",
     "appointments": "Afspraken",
     "tasks": "Taken",
     "contacts": "Contacten",
@@ -287,7 +288,7 @@
   "leads": {
     "metaTitle": "Leads",
     "metaDescription": "Leadbeheer",
-    "title": "Leads",
+    "title": "Aanvragen",
     "manageHint": "Beheer en volg uw binnenkomende leads",
     "tableView": "Tabel",
     "kanbanView": "Kanban",
@@ -364,7 +365,7 @@
       "notes": "Notities",
       "history": "Geschiedenis",
       "emails": "E-mails",
-      "backToLeads": "Terug naar leads",
+      "backToLeads": "Terug naar aanvragen",
       "loading": "Lead laden…",
       "addNote": "Notitie toevoegen",
       "newNote": "Nieuwe notitie",
@@ -680,8 +681,8 @@
     "stages": {
       "new": "Nieuw",
       "in_progress": "In behandeling",
-      "won": "Gewonnen",
-      "lost": "Verloren"
+      "won": "Nieuwe klant",
+      "lost": "Niet doorgegaan"
     },
     "errors": {
       "moveFailed": "Kon de deal niet verplaatsen.",
@@ -8606,5 +8607,303 @@
     "bookedSub": "Uw volgende gesprek met het re:praesent-team.",
     "inviteAt": "De agenda-uitnodiging is verstuurd naar {{email}}.",
     "joinCall": "Deelnemen aan gesprek"
+  },
+  "sections": {
+    "today": "Vandaag",
+    "customers": "Klanten",
+    "deals": "Deals",
+    "results": "Resultaten",
+    "website": "Website",
+    "more": "Meer",
+    "mobileNav": "Hoofdmenu",
+    "tabs": {
+      "inquiries": "Aanvragen",
+      "people": "Contacten",
+      "inbox": "Inbox",
+      "pipeline": "Pipeline",
+      "overview": "Overzicht",
+      "chatgptAds": "ChatGPT-advertenties",
+      "site": "Site",
+      "aiChat": "AI-chat",
+      "files": "Bestanden"
+    },
+    "settingsGroups": {
+      "you": "Jij",
+      "workspace": "Werkruimte",
+      "connections": "Koppelingen",
+      "alerts": "Meldingen",
+      "sales": "Verkoop",
+      "root": "re:praesent"
+    }
+  },
+  "command": {
+    "title": "Openen of zoeken",
+    "short": "Zoeken",
+    "description": "Vind een pagina, persoon of deal",
+    "placeholder": "Pagina, persoon of deal zoeken…",
+    "actions": "Nieuw",
+    "goTo": "Ga naar",
+    "newInquiry": "Nieuwe aanvraag",
+    "newDeal": "Nieuwe deal",
+    "newTask": "Nieuwe taak",
+    "newContact": "Nieuw contact",
+    "newForm": "Nieuw formulier",
+    "empty": "Niets gevonden voor ‘{{q}}’.",
+    "footer": "Zoek personen, deals, taken en pagina's"
+  },
+  "today": {
+    "metaTitle": "Vandaag",
+    "hello": "Hallo{{name}}.",
+    "allClear": "Alles is bij{{name}}.",
+    "waitingCount_one": "1 persoon wacht",
+    "waitingCount_other": "{{count}} mensen wachten",
+    "waitingTail": "op jou.",
+    "scope": "Wiens werk",
+    "mine": "Mijn",
+    "everyone": "Iedereen",
+    "needsYou": "Wacht op jou",
+    "signupsTitle": "Nieuwe aanmeldingen om te bellen",
+    "noSignups": "Geen nieuwe aanmeldingen.",
+    "emptyTitle": "Wie contact opneemt, verschijnt hier.",
+    "emptyBody": "Formulier, chat, boeking of advertentie – elke nieuwe aanvraag komt hier binnen, met één tik om terug te bellen.",
+    "noNew": "Niemand wacht op jou.",
+    "noNewBody": "Nieuwe aanvragen verschijnen hier zodra ze binnenkomen.",
+    "seeAll": "Alles bekijken",
+    "unnamed": "Iemand",
+    "callAgainDue": "Opnieuw bellen",
+    "waiting": "wacht {{time}}",
+    "more": "Meer",
+    "recordOutcome": "Resultaat vastleggen",
+    "open": "Openen",
+    "dueTitle": "Vandaag te doen",
+    "overdueHint_one": "1 te laat",
+    "overdueHint_other": "{{count}} te laat",
+    "allTasks": "Alle taken",
+    "noTasks": "Vandaag niets te doen.",
+    "markDone": "Markeren als klaar",
+    "taskDone": "Klaar",
+    "overdueSince": "te laat sinds {{date}}",
+    "noNextTitle": "Deals zonder volgende stap",
+    "untitledDeal": "Deal",
+    "chatTitle": "Je websitechat",
+    "unanswered_one": "1 vraag deze week zonder antwoord",
+    "unanswered_other": "{{count}} vragen deze week zonder antwoord",
+    "thisMonth": "Laatste 30 dagen",
+    "results": "Resultaten",
+    "loadFailed": "Vandaag kon niet laden.",
+    "callAgainToday": "Vandaag opnieuw bellen",
+    "seeAllCount": "Alle {{count}} bekijken"
+  },
+  "outcome": {
+    "call": "Bellen",
+    "whatsapp": "WhatsApp",
+    "email": "E-mail",
+    "noChannel": "Niet bekend",
+    "title": "Hoe ging het?",
+    "sub": {
+      "call": "Je hebt {{name}} gebeld.",
+      "whatsapp": "Je hebt {{name}} via WhatsApp geschreven.",
+      "email": "Je hebt {{name}} gemaild."
+    },
+    "subGeneric": "Leg vast wat er met {{name}} gebeurde.",
+    "options": {
+      "reached": "Bereikt",
+      "no_answer": "Geen antwoord",
+      "not_interested": "Geen interesse",
+      "fake": "Nep of spam"
+    },
+    "callAgainOn": "Opnieuw bellen op",
+    "callAgainTitle": "{{name}} opnieuw bellen",
+    "fakeHint": "De aanvraag wordt verborgen en de afzender geblokkeerd. Je kunt dit ongedaan maken.",
+    "notInterestedHint": "Hij gaat naar je afgesloten aanvragen. Er wordt niets verwijderd.",
+    "notePlaceholder": "Notitie toevoegen (optioneel)",
+    "later": "Later",
+    "save": "Opslaan",
+    "notNow": "Niet nu",
+    "reachedTitle": "Mooi. Hoe verder met {{name}}?",
+    "reachedBody": "Maak er een deal van, met een waarde en een volgende stap — of laat het voorlopig zo.",
+    "saved": {
+      "reached": "Opgeslagen",
+      "no_answer": "Opgeslagen — we herinneren je eraan terug te bellen",
+      "not_interested": "Afgesloten als geen interesse",
+      "fake": "Verborgen en afzender geblokkeerd"
+    },
+    "badge": {
+      "reached": "Bereikt",
+      "no_answer": "Geen antwoord",
+      "not_interested": "Geen interesse",
+      "fake": "Spam",
+      "tried_one": "1× geprobeerd",
+      "tried_other": "{{count}}× geprobeerd"
+    },
+    "thisPerson": "deze persoon",
+    "saving": "Opslaan…",
+    "saveFailed": "Opslaan mislukt — probeer het opnieuw."
+  },
+  "makeDeal": {
+    "cta": "Deal maken",
+    "title": "Deal maken",
+    "body": "Een deal houdt de waarde en de volgende stap bij elkaar.",
+    "what": "Waar gaat het om?",
+    "value": "Geschatte waarde ({{currency}})",
+    "nextStep": "Volgende stap",
+    "when": "Wanneer",
+    "defaultTask": "Offerte sturen",
+    "submit": "Deal maken",
+    "created": "Deal gemaakt",
+    "open": "Openen",
+    "existing": "Deze aanvraag heeft al een deal"
+  },
+  "whatsNext": {
+    "title": "Wat is de volgende stap?",
+    "subCompleted": "Klaar. {{name}} heeft nog geen volgende stap.",
+    "subNone": "{{name}} heeft geen volgende stap.",
+    "picks": {
+      "call": "Terugbellen",
+      "offer": "Offerte sturen",
+      "meeting": "Afspraak maken"
+    },
+    "customPlaceholder": "Iets anders…",
+    "when": "Wanneer",
+    "add": "Volgende stap toevoegen",
+    "addAnother": "Nog een stap plannen",
+    "saved": "Volgende stap toegevoegd",
+    "orClose": "Of afsluiten",
+    "won": "Nieuwe klant",
+    "lost": "Is niet doorgegaan",
+    "wonToast": "Gemarkeerd als nieuwe klant",
+    "lostToast": "Afgesloten — niet doorgegaan",
+    "confirm": "Tik nogmaals om te bevestigen"
+  },
+  "nextStep": {
+    "label": "Volgende stap",
+    "none": "Geen volgende stap",
+    "today": "vandaag",
+    "tomorrow": "morgen"
+  },
+  "leadBar": {
+    "howDidItGo": "Hoe ging het?",
+    "notContacted": "Nog niet benaderd",
+    "firstContact": "Eerste contact {{time}} na binnenkomst",
+    "reach": "Contact",
+    "linkedContact": "Gekoppeld contact"
+  },
+  "sourceLabel": {
+    "form": "Websiteformulier",
+    "formNamed": "Formulier · {{name}}",
+    "chat": "Websitechat",
+    "booking": "Boeking",
+    "signup": "Nieuwe aanmelding",
+    "googleAd": "Google-advertentie",
+    "facebookAd": "Facebook-advertentie",
+    "instagramAd": "Instagram-advertentie",
+    "manual": "Handmatig toegevoegd",
+    "website": "Website",
+    "other": "Overig"
+  },
+  "setup": {
+    "title": "Instellen",
+    "progress": "{{done}} van {{total}} klaar",
+    "hide": "Verbergen",
+    "skip": "Overslaan",
+    "items": {
+      "email": "Koppel je e-mail zodat antwoorden van jou komen",
+      "form": "Zet een contactformulier op je website",
+      "website": "Voeg je website toe",
+      "assistant": "Zet de websitechat aan",
+      "teammate": "Nodig uit wie je aanvragen behandelt",
+      "calendar": "Koppel je agenda",
+      "profile": "Maak je bedrijfsprofiel af"
+    }
+  },
+  "results": {
+    "metaTitle": "Resultaten",
+    "metaDescription": "Hoeveel mensen je vonden, contact opnamen en klant werden.",
+    "title": "Resultaten",
+    "subtitle": "Hoeveel mensen je vonden, contact opnamen en klant werden.",
+    "period": "Periode",
+    "periods": {
+      "7d": "7 dagen",
+      "30d": "30 dagen",
+      "90d": "90 dagen",
+      "12m": "12 maanden"
+    },
+    "sentence": {
+      "lead": {
+        "7d": "In de afgelopen 7 dagen",
+        "30d": "In de afgelopen 30 dagen",
+        "90d": "In de afgelopen 90 dagen",
+        "12m": "In de afgelopen 12 maanden"
+      },
+      "saw": "zagen {{n}} mensen je",
+      "contacted": "namen er {{n}} contact op",
+      "customers_one": "werd er 1 klant",
+      "customers_other": "werden er {{count}} klant",
+      "and": "en je verdiende"
+    },
+    "sentenceEmpty": "Nog niets te tellen voor deze periode.",
+    "saw": "zagen je",
+    "contacted": "namen contact op",
+    "customers": "nieuwe klanten",
+    "earned": "verdiend",
+    "vsBefore": "t.o.v. ervoor",
+    "otherCurrencies": "Ook verdiend in andere valuta:",
+    "sawNote": "‘Zagen je’ telt websitebezoekers en mensen die je advertenties bereikten — wie allebei deed, telt dubbel.",
+    "bySource": "Waar ze vandaan kwamen",
+    "col": {
+      "source": "Bron",
+      "saw": "Zagen je",
+      "contacted": "Contact",
+      "customers": "Klanten",
+      "earned": "Verdiend"
+    },
+    "noSources": "Nog geen bronnen.",
+    "noSourcesBody": "Resultaten vullen zich zodra mensen je vinden — koppel je advertenties of zet een formulier of chat op je website.",
+    "addForm": "Formulier aan je website toevoegen",
+    "connected": {
+      "website": "Websitebezoekers",
+      "ads": "Advertenties",
+      "openai": "ChatGPT-advertenties"
+    },
+    "on": "aan",
+    "off": "niet gekoppeld",
+    "sources": {
+      "google": "Google",
+      "facebook": "Facebook",
+      "instagram": "Instagram",
+      "website": "Je website",
+      "chat": "Websitechat",
+      "openai": "ChatGPT",
+      "booking": "Boekingen",
+      "onboarding": "Aanmeldingen",
+      "manual": "Handmatig",
+      "other": "Overig"
+    },
+    "loadFailed": "Resultaten konden niet laden.",
+    "notAvailable": "Resultaten zijn niet beschikbaar voor deze werkruimte."
+  },
+  "pipelineStrip": {
+    "open": "open",
+    "noNext": "zonder volgende stap",
+    "won": "nieuwe klanten deze maand"
+  },
+  "calendarHub": {
+    "calendar": "Agenda",
+    "booking": "Boekingspagina",
+    "sources": "Gekoppelde agenda's"
+  },
+  "websiteCaps": {
+    "title": "Wat je website doet",
+    "on": "Aan",
+    "off": "Uit"
+  },
+  "dayField": {
+    "tomorrow": "Morgen",
+    "inTwoDays": "Over 2 dagen",
+    "nextWeek": "Volgende week",
+    "placeholder": "Typ een datum, bv. 30-9",
+    "aria": "Datum",
+    "openCalendar": "Agenda openen",
+    "invalid": "Dat is geen datum vanaf vandaag."
   }
 }

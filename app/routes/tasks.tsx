@@ -1,5 +1,6 @@
 import { useMemo, useState, useCallback } from "react";
 import { useSearchParams } from "react-router";
+import { useOpenFromParam } from "~/lib/hooks/useOpenFromParam";
 import { useTranslation } from "react-i18next";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuthContext } from "~/providers/auth-provider";
@@ -66,6 +67,7 @@ export default function TasksPage() {
 
   const selectedTaskId = searchParams.get("task_id") ?? null;
   const [formOpen, setFormOpen] = useState(false);
+  useOpenFromParam(() => setFormOpen(true));
 
   const handleTaskSelect = useCallback(
     (taskId: string) => onSelect({ task_id: taskId }, true),
@@ -230,7 +232,7 @@ export default function TasksPage() {
       {/* Header */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between shrink-0 app-fade-up">
         <div>
-          <h1 className="text-xl sm:text-2xl font-semibold text-foreground tracking-tight">
+          <h1 className="title-display text-[26px] font-semibold text-foreground sm:text-[30px]">
             {t("tasks.title")}
           </h1>
           <p className="text-sm text-muted-foreground mt-0.5">

@@ -43,6 +43,7 @@ import {
   resolveStageLabelByKey,
 } from "~/lib/pipeline-stages/labels";
 import { cn } from "~/lib/utils";
+import { OutcomeBadge, useLeadFlow } from "~/components/notebook/lead-flow";
 import {
   kanbanCollisionDetection,
   positionForInsertion,
@@ -135,6 +136,7 @@ export function LeadsKanban({
   const { visible: stages, byKey, isLoading: stagesLoading } = useLeadStages();
   const { requestStatusChange: requestHideGuarded, guardModal: hideGuardModal } = useHideLeadGuard();
   const [activeId, setActiveId] = useState<string | null>(null);
+  const leadFlow = useLeadFlow();
   // Confirmation dialog shown when a lead is dropped into a won-category column.
   const [successConfirm, setSuccessConfirm] = useState<{
     lead: Lead;
@@ -553,6 +555,20 @@ export function LeadsKanban({
         }
         onConfirm={handleConfirmSuccess}
         onClose={() => setSuccessConfirm(null)}
+        onMakeDeal={
+          successConfirm
+            ? () => {
+                const l = successConfirm.lead;
+                leadFlow.makeDeal({
+                  id: l.id,
+                  name: l.full_name || [l.first_name, l.last_name].filter(Boolean).join(" ") || l.email || "",
+                  status: l.status,
+                  phone: l.phone,
+                  email: l.email,
+                });
+              }
+            : undefined
+        }
       />
       {hideGuardModal}
     </>
@@ -821,6 +837,12 @@ function KanbanCardInner({ lead }: { lead: Lead }) {
       <p className="text-xs text-muted-foreground truncate line-clamp-2">
         {lead.email || lead.phone || "—"}
       </p>
+      {lead.contact_state ? (
+        <OutcomeBadge
+          outcome={lead.contact_state.outcome}
+          attempts={lead.contact_state.attempts}
+        />
+      ) : null}
     </div>
   );
 }
@@ -990,6 +1012,13 @@ function LeadScheduleRow({
               {formatDate(new Date(lead.created_at), "MMM d")}
             </span>
           )}
+          {lead.contact_state ? (
+            <OutcomeBadge
+              outcome={lead.contact_state.outcome}
+              attempts={lead.contact_state.attempts}
+              className="text-[10px]"
+            />
+          ) : null}
           {appointment && (
             <span className="inline-flex items-center gap-1 text-[10px] text-muted-foreground tabular-nums">
               <CalendarClock className="h-3 w-3 shrink-0" />

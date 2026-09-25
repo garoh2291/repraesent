@@ -1,7 +1,6 @@
 import { Link, useLocation, useNavigate } from "react-router";
 import {
   Children,
-  Fragment,
   createContext,
   useContext,
   useEffect,
@@ -11,74 +10,36 @@ import { cn } from "~/lib/utils";
 import { useTranslation } from "react-i18next";
 import {
   ArrowLeft,
-  AtSign,
-  BellRing,
-  MailCheck,
-  Bot,
   Building2,
-  BookUser,
-  CalendarDays,
-  CalendarRange,
-  CheckSquare,
   ChevronDown,
-  ClipboardList,
-  Columns3,
-  Kanban,
   Globe,
   HomeIcon,
-  ImageIcon,
   Loader2,
-  Inbox,
-  LayoutTemplate,
   LogOut,
-  Mail,
   Megaphone,
   Package,
   PanelLeftClose,
   PanelLeftOpen,
-  Plug,
-  Plus,
-  Send,
   Settings,
-  Sparkles,
-  ShoppingBag,
-  Star,
   Store,
-  Trash2,
-  User,
   Users,
-  UsersRound,
-  Workflow,
   X,
-  Rocket,
+  Search,
   Headset,
 } from "lucide-react";
-import * as LucideIcons from "lucide-react";
 import { SafeImg } from "~/components/atom/safe-img";
-import { OpenAiMark } from "~/components/icons/openai-mark";
 
-import { getLocalizedServiceName } from "~/lib/api/auth";
 import { useAuthContext } from "~/providers/auth-provider";
 import { setStoredSelectedView, BRAND_VIEW } from "~/lib/api/axios-instance";
-import { useAppointmentConfigs } from "~/lib/hooks/useAppointmentConfigs";
-import { useCalendarSummary } from "~/lib/hooks/useCalendarSummary";
 import { PILOT_FEATURE_LABEL_KEY, usePilotFeatures } from "~/lib/feature-flags";
 import { useWorkspaceWpPluginInstalls } from "~/lib/hooks/useWorkspaceWpPluginInstalls";
 import { useWorkspaceWpSite } from "~/lib/hooks/useWorkspaceWpSite";
-import { useStripeConnection } from "~/lib/hooks/useWorkspaceIntegrations";
 import { LanguageSwitcher } from "~/components/language-switcher";
 import { ContactSalesDialog } from "~/components/sales-contact/contact-sales-dialog";
-import { usePipelinesQuery } from "~/lib/hooks/usePipelines";
-import { PipelineDialog } from "~/components/organism/pipeline-dialog";
 import {
   pluginKindIcon,
   wordpressPluginSettingsPath,
 } from "~/lib/utils/wordpress-plugin-kind";
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from "~/components/ui/collapsible";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -87,98 +48,14 @@ import {
 } from "~/components/ui/dropdown-menu";
 
 import logoUrl from "~/components/icons/re_praesent-mark-brand-hor.svg?url";
+import { activeSection, useNavSections } from "~/lib/nav/sections";
+import { SETTINGS_GROUPS, SETTINGS_NAV } from "~/lib/nav/settings";
+import { useToday } from "~/lib/hooks/useToday";
+import { MarkerCount } from "~/components/notebook/stat";
+import { openCommandPalette } from "~/components/notebook/command-palette";
+import { isMacPlatform } from "~/lib/utils/platform";
 
-const lucideIconNames = new Set(
-  Object.keys(LucideIcons).filter((key) => /^[A-Z]/.test(key))
-);
 
-function kebabToPascal(name: string) {
-  return name
-    .split("-")
-    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
-    .join("");
-}
-
-function DynamicIcon({
-  name,
-  className,
-}: {
-  name: string;
-  className?: string;
-}) {
-  const Icon = (LucideIcons as Record<string, unknown>)[name] as
-    | React.ComponentType<{ className?: string }>
-    | undefined;
-  if (!Icon) return null;
-  return <Icon className={className} />;
-}
-
-/**
- * The settings sub-navigation.
- *
- * Labels reuse the keys the deleted tab strip used, so all four locales already
- * have them. Order matches the old tabs.
- */
-const SETTINGS_NAV = [
-  { to: "/settings/profile", labelKey: "settings.tabs.profile", Icon: User },
-  { to: "/settings/team", labelKey: "settings.tabs.areaSettings", Icon: Users },
-  {
-    to: "/settings/business-profile",
-    labelKey: "settings.tabs.businessProfile",
-    Icon: Store,
-  },
-  {
-    to: "/settings/email-accounts",
-    labelKey: "settings.tabs.emailAccounts",
-    Icon: AtSign,
-  },
-  {
-    to: "/settings/calendars",
-    labelKey: "settings.tabs.calendars",
-    Icon: CalendarDays,
-  },
-  { to: "/settings/bcc", labelKey: "settings.tabs.bcc", Icon: Inbox },
-  {
-    to: "/settings/email-notifications",
-    labelKey: "settings.tabs.emailNotifications",
-    Icon: MailCheck,
-  },
-  {
-    to: "/settings/notifications",
-    labelKey: "settings.tabs.notifications",
-    Icon: BellRing,
-  },
-  {
-    to: "/settings/integrations",
-    labelKey: "settings.tabs.integrations",
-    Icon: Plug,
-  },
-  {
-    to: "/settings/openai-ads",
-    labelKey: "settings.tabs.openaiAds",
-    Icon: OpenAiMark,
-  },
-  {
-    to: "/settings/ai",
-    labelKey: "settings.tabs.ai",
-    Icon: Sparkles,
-  },
-  {
-    to: "/settings/pipelines",
-    labelKey: "settings.tabs.pipelines",
-    Icon: Kanban,
-  },
-  {
-    to: "/settings/onboarding",
-    labelKey: "settings.tabs.onboarding",
-    Icon: Rocket,
-  },
-  {
-    to: "/settings/support",
-    labelKey: "settings.tabs.support",
-    Icon: Headset,
-  },
-] as const;
 
 /**
  * True while the desktop sidebar is collapsed to its icon rail. NavLink and
@@ -218,8 +95,8 @@ function NavLink({
         disabled
           ? "cursor-not-allowed border-transparent text-white/25"
           : isActive
-            ? "border-amber-400 bg-amber-400/10 text-amber-300"
-            : "border-transparent text-white/45 hover:bg-white/5 hover:text-white/75",
+            ? "border-marker bg-white/[0.07] text-white"
+            : "border-transparent text-white/55 hover:bg-white/5 hover:text-white/85",
         className ?? "",
       ].join(" ")}
     >
@@ -239,203 +116,6 @@ function DemoPill() {
     <span className="ml-auto rounded-full bg-foreground/10 px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wider text-muted-foreground">
       {t(PILOT_FEATURE_LABEL_KEY, { defaultValue: "Demo" })}
     </span>
-  );
-}
-
-/**
- * The "Pipeline" nav entry: a collapsible listing every deal pipeline
- * (Default first) plus an admin-only "New pipeline" row. Falls back to the
- * old flat link while the pipelines query has nothing to show.
- */
-function PipelineNav({ onClose }: { onClose?: () => void }) {
-  const { t } = useTranslation();
-  const location = useLocation();
-  const { currentWorkspace } = useAuthContext();
-  const isAdmin = currentWorkspace?.member_role === "admin";
-  const onPipeline = location.pathname.startsWith("/pipeline");
-  const [open, setOpen] = useState(onPipeline);
-  const [newOpen, setNewOpen] = useState(false);
-  const pipelinesQuery = usePipelinesQuery();
-  const pipelines = pipelinesQuery.data ?? [];
-  const collapsed = useContext(SidebarCollapsedContext);
-
-  // Landing anywhere under /pipeline reveals the list.
-  useEffect(() => {
-    if (onPipeline) setOpen(true);
-  }, [onPipeline]);
-
-  // No room for a nested list on the icon rail — one link to the default view.
-  if (collapsed) {
-    return (
-      <NavLink to="/pipeline" isActive={onPipeline} onClick={onClose}>
-        <Columns3 className="h-4 w-4 shrink-0" />
-      </NavLink>
-    );
-  }
-
-  if (!pipelinesQuery.isSuccess || pipelines.length === 0) {
-    return (
-      <NavLink to="/pipeline" isActive={onPipeline} onClick={onClose}>
-        <Columns3 className="h-4 w-4 shrink-0" />
-        {t("nav.pipeline", { defaultValue: "Pipeline" })}
-      </NavLink>
-    );
-  }
-
-  const defaultPipeline = pipelines.find((p) => p.is_default) ?? pipelines[0];
-  const activeParam =
-    location.pathname === "/pipeline"
-      ? new URLSearchParams(location.search).get("p")
-      : undefined;
-
-  return (
-    <Collapsible open={open} onOpenChange={setOpen}>
-      {/* Toggles only — never closes the mobile sheet and never navigates. */}
-      <CollapsibleTrigger asChild>
-        <button
-          type="button"
-          className={cn(
-            "group flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-[13px] font-medium",
-            "border-l-2 transition-all duration-150",
-            onPipeline && !open
-              ? "border-amber-400 bg-amber-400/10 text-amber-300"
-              : onPipeline
-                ? "border-transparent text-amber-300/90 hover:bg-white/5"
-                : "border-transparent text-white/45 hover:bg-white/5 hover:text-white/75"
-          )}
-        >
-          <Columns3 className="h-4 w-4 shrink-0" />
-          <span className="flex-1 text-left">
-            {t("nav.pipeline", { defaultValue: "Pipeline" })}
-          </span>
-          <ChevronDown className="h-3.5 w-3.5 shrink-0 text-white/30 transition-transform duration-200 group-data-[state=open]:rotate-180" />
-        </button>
-      </CollapsibleTrigger>
-      <CollapsibleContent className="space-y-0.5 pt-0.5">
-        {pipelines.map((p) => {
-          const isDefault = p.id === defaultPipeline?.id;
-          const isActive =
-            activeParam !== undefined &&
-            (activeParam ?? null) === (isDefault ? null : p.id);
-          return (
-            <NavLink
-              key={p.id}
-              to={isDefault ? "/pipeline" : `/pipeline?p=${p.id}`}
-              isActive={isActive}
-              onClick={onClose}
-              className="ml-5"
-            >
-              <span className="truncate">{p.name}</span>
-              <span className="ml-auto text-[10px] tabular-nums text-white/25">
-                {p.deal_count}
-              </span>
-            </NavLink>
-          );
-        })}
-        {isAdmin && (
-          <button
-            type="button"
-            onClick={() => setNewOpen(true)}
-            className={cn(
-              "ml-5 flex w-[calc(100%-1.25rem)] items-center gap-2.5 rounded-lg px-3 py-2 text-[13px] font-medium",
-              "border-l-2 border-transparent text-white/45 transition-all duration-150 hover:bg-white/5 hover:text-white/75"
-            )}
-          >
-            <Plus className="h-3.5 w-3.5 shrink-0" />
-            {t("nav.newPipeline", { defaultValue: "New pipeline" })}
-          </button>
-        )}
-      </CollapsibleContent>
-      <PipelineDialog open={newOpen} onOpenChange={setNewOpen} />
-    </Collapsible>
-  );
-}
-
-/**
- * The "Media" nav entry: a collapsible with Library / Favourites / Recycle
- * bin views. Same behavior as PipelineNav — the trigger only toggles the
- * group; navigation happens via the sub-items.
- */
-function MediaNav({ onClose }: { onClose?: () => void }) {
-  const { t } = useTranslation();
-  const location = useLocation();
-  const onMedia = location.pathname.startsWith("/media");
-  const [open, setOpen] = useState(onMedia);
-  const collapsed = useContext(SidebarCollapsedContext);
-
-  // Landing anywhere under /media reveals the views.
-  useEffect(() => {
-    if (onMedia) setOpen(true);
-  }, [onMedia]);
-
-  // No room for a nested list on the icon rail — one link to the library.
-  if (collapsed) {
-    return (
-      <NavLink to="/media" isActive={onMedia} onClick={onClose}>
-        <ImageIcon className="h-4 w-4 shrink-0" />
-      </NavLink>
-    );
-  }
-
-  const views = [
-    {
-      to: "/media",
-      icon: <ImageIcon className="h-3.5 w-3.5 shrink-0" />,
-      label: t("nav.mediaLibrary", { defaultValue: "Library" }),
-      active: location.pathname === "/media",
-    },
-    {
-      to: "/media/favorites",
-      icon: <Star className="h-3.5 w-3.5 shrink-0" />,
-      label: t("nav.mediaFavorites", { defaultValue: "Favourites" }),
-      active: location.pathname === "/media/favorites",
-    },
-    {
-      to: "/media/bin",
-      icon: <Trash2 className="h-3.5 w-3.5 shrink-0" />,
-      label: t("nav.mediaBin", { defaultValue: "Recycle bin" }),
-      active: location.pathname === "/media/bin",
-    },
-  ];
-
-  return (
-    <Collapsible open={open} onOpenChange={setOpen}>
-      {/* Toggles only — never closes the mobile sheet and never navigates. */}
-      <CollapsibleTrigger asChild>
-        <button
-          type="button"
-          className={cn(
-            "group flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-[13px] font-medium",
-            "border-l-2 transition-all duration-150",
-            onMedia && !open
-              ? "border-amber-400 bg-amber-400/10 text-amber-300"
-              : onMedia
-                ? "border-transparent text-amber-300/90 hover:bg-white/5"
-                : "border-transparent text-white/45 hover:bg-white/5 hover:text-white/75"
-          )}
-        >
-          <ImageIcon className="h-4 w-4 shrink-0" />
-          <span className="flex-1 text-left">
-            {t("nav.media", { defaultValue: "Media" })}
-          </span>
-          <ChevronDown className="h-3.5 w-3.5 shrink-0 text-white/30 transition-transform duration-200 group-data-[state=open]:rotate-180" />
-        </button>
-      </CollapsibleTrigger>
-      <CollapsibleContent className="space-y-0.5 pt-0.5">
-        {views.map((v) => (
-          <NavLink
-            key={v.to}
-            to={v.to}
-            isActive={v.active}
-            onClick={onClose}
-            className="ml-5"
-          >
-            {v.icon}
-            <span className="truncate">{v.label}</span>
-          </NavLink>
-        ))}
-      </CollapsibleContent>
-    </Collapsible>
   );
 }
 
@@ -510,6 +190,78 @@ function WebsiteSubNav({ onClose }: { onClose?: () => void }) {
   );
 }
 
+/** Opens ⌘K. The hint is added after hydration (platform-specific). */
+function SearchRow() {
+  const { t } = useTranslation();
+  const collapsed = useContext(SidebarCollapsedContext);
+  const [hint, setHint] = useState("");
+  useEffect(() => {
+    // Keyboard shortcuts mean nothing on a phone.
+    const touch = window.matchMedia?.("(pointer: coarse)").matches;
+    setHint(touch ? "" : isMacPlatform() ? "⌘K" : "Ctrl K");
+  }, []);
+  return (
+    <button
+      type="button"
+      onClick={openCommandPalette}
+      title={collapsed ? t("command.title", "Go to or search") : undefined}
+      className={cn(
+        "mb-2 flex w-full items-center rounded-lg border border-white/[0.07] bg-white/[0.03] py-2 text-[13px] text-white/45 transition-colors hover:border-white/15 hover:text-white/75",
+        collapsed ? "justify-center px-0" : "gap-2.5 px-3",
+      )}
+    >
+      <Search className="h-4 w-4 shrink-0" />
+      {!collapsed && (
+        <>
+          <span className="flex-1 truncate text-left">{t("command.short", "Search")}</span>
+          <span className="num text-[11px] text-white/30">{hint}</span>
+        </>
+      )}
+    </button>
+  );
+}
+
+/**
+ * The main list: five jobs, not thirty modules (NOTEBOOK_UX_PLAN.md §2).
+ * Each section's own pages are one tap away in the tab strip at the top of
+ * the content, so the sidebar never has to nest.
+ */
+function MainSections({ onClose }: { onClose?: () => void }) {
+  const location = useLocation();
+  const sections = useNavSections();
+  const active = activeSection(sections, location.pathname);
+  const today = useToday("me", !!sections);
+  const counts =
+    today.data && today.data.supported ? today.data.counts : null;
+  const needsYou = counts
+    ? // People waiting — the same number the Today greeting shows.
+      counts.new_leads + counts.follow_ups_due + (counts.signups ?? 0)
+    : 0;
+  if (!sections) return null;
+  return (
+    <>
+      <SearchRow />
+      {sections.map((section) => {
+        const Icon = section.icon;
+        return (
+          <NavLink
+            key={section.key}
+            to={section.to}
+            isActive={active?.key === section.key}
+            onClick={onClose}
+          >
+            <Icon className="h-4 w-4 shrink-0" />
+            <span className="truncate">{section.label}</span>
+            {section.key === "today" && needsYou > 0 ? (
+              <MarkerCount n={needsYou} dark className="ml-auto" />
+            ) : null}
+          </NavLink>
+        );
+      })}
+    </>
+  );
+}
+
 export function Sidebar({
   onClose,
   className,
@@ -546,22 +298,8 @@ export function Sidebar({
   const isRootAdmin =
     currentWorkspace?.is_root === true &&
     currentWorkspace.member_role === "admin";
-  const hasAppointmentsService =
-    currentWorkspace?.services?.some(
-      (s) => s.service_type === "appointments"
-    ) ?? false;
-  const { data: appointmentConfigs } = useAppointmentConfigs(
-    hasAppointmentsService && !!currentWorkspace?.id
-  );
-  const showAppointmentsInSidebar =
-    (hasAppointmentsService && !!appointmentConfigs?.length) || isDemoWorkspace;
-  // The team Calendar page only exists once someone connected a source, so
-  // the nav entry follows the same summary the page itself redirects on.
-  const { data: calendarSummary } = useCalendarSummary(!!currentWorkspace?.id);
-  const showCalendarInSidebar =
-    (calendarSummary?.google_account_count ?? 0) +
-      (calendarSummary?.baikal_config_count ?? 0) >
-      0 || isDemoWorkspace;
+  // Section gates (appointments, calendar, Stripe, pilots) live in
+  // ~/lib/nav/sections — one place for every destination.
   const isDoorboostBrandWs = currentWorkspace?.type === "doorboost_brand";
   // "Contact re:praesent": every customer workspace. Not the root (that's
   // re:praesent itself), not demo workspaces (read-only), not DoorBoost brands.
@@ -579,17 +317,12 @@ export function Sidebar({
   // Pilot gating lives in ~/lib/feature-flags. These hide entries; the routes
   // themselves are bounced by PilotRouteGate in the dashboard layout.
   const pilot = usePilotFeatures();
-  const showWorkflows = pilot.workflows || isDemoWorkspace;
-  const showEmailCampaigns = pilot.emailCampaigns;
   const showAiAssistant = pilot.aiAssistant;
   // Route-driven rather than stateful: deep links and refreshes land in the
   // right mode for free, and there is nothing to reset on the way out.
   const inSettings = location.pathname.startsWith("/settings");
   const { data: wpSite } = useWorkspaceWpSite(
     !!currentWorkspace?.id && !isDoorboostBrandWs,
-  );
-  const { isConnected: hasStripeConnection } = useStripeConnection(
-    !!currentWorkspace?.id && !isDoorboostBrandWs
   );
   const showWebsite = !!wpSite?.sso_enabled || isDemoWorkspace;
   // Same drill-in as Settings: /website replaces the nav list with Overview
@@ -630,7 +363,9 @@ export function Sidebar({
       <aside
         className={cn(
           "flex h-full shrink-0 flex-col bg-[#111113] border-r border-white/5 transition-[width] duration-200",
-          collapsed ? "w-[64px]" : "w-[220px]",
+          // Inside the phone menu sheet it fills the sheet; a fixed 220px
+          // column left a second dark strip beside it.
+          onClose ? "w-full border-r-0" : collapsed ? "w-[64px]" : "w-[220px]",
           className
         )}
       >
@@ -838,28 +573,44 @@ export function Sidebar({
                 </NavLink>
               </div>
 
-              {SETTINGS_NAV.filter((item) =>
-                item.to === "/settings/integrations"
-                  ? pilot.integrations || isDemoWorkspace
-                  : item.to === "/settings/ai"
-                    ? showAiAssistant
-                    : item.to === "/settings/onboarding" || item.to === "/settings/support"
-                      ? isRootAdmin
-                      : true
-              ).map(({ to, labelKey, Icon }) => (
-                <NavLink
-                  key={to}
-                  to={to}
-                  isActive={location.pathname.startsWith(to)}
-                  onClick={onClose}
-                >
-                  <Icon className="h-4 w-4 shrink-0" />
-                  <span className="truncate">{t(labelKey)}</span>
-                  {to === "/settings/integrations" || to === "/settings/ai" ? (
-                    <DemoPill />
-                  ) : null}
-                </NavLink>
-              ))}
+              {SETTINGS_GROUPS.map((group) => {
+                const items = SETTINGS_NAV.filter(
+                  (item) =>
+                    item.group === group.key &&
+                    (item.to === "/settings/integrations"
+                      ? pilot.integrations || isDemoWorkspace
+                      : item.to === "/settings/ai"
+                        ? showAiAssistant
+                        : item.to === "/settings/onboarding" ||
+                            item.to === "/settings/support"
+                          ? isRootAdmin
+                          : true),
+                );
+                if (items.length === 0) return null;
+                return (
+                  <div key={group.key} className="pb-2">
+                    {!collapsed && (
+                      <p className="px-3 pb-1 pt-2 text-[10.5px] font-semibold uppercase tracking-[0.09em] text-white/30">
+                        {t(group.labelKey, group.fallback)}
+                      </p>
+                    )}
+                    {items.map(({ to, labelKey, Icon }) => (
+                      <NavLink
+                        key={to}
+                        to={to}
+                        isActive={location.pathname.startsWith(to)}
+                        onClick={onClose}
+                      >
+                        <Icon className="h-4 w-4 shrink-0" />
+                        <span className="truncate">{t(labelKey)}</span>
+                        {to === "/settings/integrations" || to === "/settings/ai" ? (
+                          <DemoPill />
+                        ) : null}
+                      </NavLink>
+                    ))}
+                  </div>
+                );
+              })}
             </>
           ) : inWebsite ? (
             <WebsiteSubNav onClose={onClose} />
@@ -902,249 +653,7 @@ export function Sidebar({
               </NavLink>
             </>
           ) : (
-            <>
-              <NavLink
-                to="/"
-                isActive={location.pathname === "/"}
-                onClick={onClose}
-              >
-                <HomeIcon className="h-4 w-4 shrink-0" />
-                {t("nav.home")}
-              </NavLink>
-
-              {showWebsite && (
-                <NavLink to="/website" isActive={false} onClick={onClose}>
-                  <Globe className="h-4 w-4 shrink-0" />
-                  {t("nav.wordpress", "Website")}
-                </NavLink>
-              )}
-
-              {/* Forms is available to every workspace, so it sits outside the
-                services map rather than being gated on a service_type. */}
-              <NavLink
-                to="/forms"
-                isActive={location.pathname.startsWith("/forms")}
-                onClick={onClose}
-              >
-                <ClipboardList className="h-4 w-4 shrink-0" />
-                {t("nav.forms", "Forms")}
-              </NavLink>
-
-              {/* The CRM. Leads and everything hanging off them used to be
-                rendered from a `lead-form` service row, so a workspace nobody
-                remembered to attach it to lost the whole section from the nav
-                while the pages underneath kept working. Every workspace has
-                leads; migration 174 retired the service. */}
-              <NavLink
-                to="/lead-form"
-                isActive={
-                  location.pathname === "/lead-form" ||
-                  location.pathname.startsWith("/lead-form/")
-                }
-                onClick={onClose}
-              >
-                <Users className="h-4 w-4 shrink-0" />
-                {t("nav.leads")}
-              </NavLink>
-              <NavLink
-                to="/contacts"
-                isActive={location.pathname.startsWith("/contacts")}
-                onClick={onClose}
-              >
-                <BookUser className="h-4 w-4 shrink-0" />
-                {t("nav.contacts", { defaultValue: "Contacts" })}
-              </NavLink>
-              <NavLink
-                to="/mail"
-                isActive={location.pathname.startsWith("/mail")}
-                onClick={onClose}
-              >
-                <Mail className="h-4 w-4 shrink-0" />
-                {t("nav.mail", { defaultValue: "Mail" })}
-              </NavLink>
-              <PipelineNav onClose={onClose} />
-              <NavLink
-                to="/tasks"
-                isActive={location.pathname === "/tasks"}
-                onClick={onClose}
-              >
-                <CheckSquare className="h-4 w-4 shrink-0" />
-                {t("nav.tasks")}
-              </NavLink>
-
-              {showAiAssistant && (
-                <NavLink
-                  to="/ai-assistants"
-                  isActive={location.pathname.startsWith("/ai-assistants")}
-                  onClick={onClose}
-                >
-                  <Bot className="h-4 w-4 shrink-0" />
-                  <span className="truncate">
-                    {t("nav.aiAssistants", { defaultValue: "AI assistants" })}
-                  </span>
-                  <DemoPill />
-                </NavLink>
-              )}
-
-              {/* Gated on the connection rather than a service entitlement: the
-                catalogue is a live proxy, so with no Stripe account there is
-                literally nothing for the page to show — except in a demo,
-                where the page's own connect-Stripe card is the point. */}
-              {(hasStripeConnection || isDemoWorkspace) && (
-                <NavLink
-                  to="/products"
-                  isActive={location.pathname.startsWith("/products")}
-                  onClick={onClose}
-                >
-                  <ShoppingBag className="h-4 w-4 shrink-0" />
-                  {t("nav.stripeProducts", { defaultValue: "Products" })}
-                </NavLink>
-              )}
-
-              {/* Always visible — the feature is self-serve (any workspace admin
-                pastes their own API key), so the entry point has to exist
-                before a connection does. Unconnected workspaces land on the
-                onboarding state of /openai-ads. The "New" pill stays for
-                everyone while the feature is fresh; drop it here when it no
-                longer is. */}
-              <NavLink
-                to="/openai-ads"
-                isActive={location.pathname.startsWith("/openai-ads")}
-                onClick={onClose}
-              >
-                <OpenAiMark className="h-4 w-4 shrink-0" />
-                <span className="truncate">
-                  {t("nav.openaiAds", { defaultValue: "OpenAI Ads" })}
-                </span>
-                <span className="ml-auto rounded-full bg-amber-400/15 px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wider text-amber-300">
-                  {t("nav.newBadge", { defaultValue: "New" })}
-                </span>
-              </NavLink>
-
-              {showWorkflows && (
-                <NavLink
-                  to="/workflows"
-                  isActive={location.pathname.startsWith("/workflows")}
-                  onClick={onClose}
-                >
-                  <Workflow className="h-4 w-4 shrink-0" />
-                  <span className="truncate">
-                    {t("nav.workflows", { defaultValue: "Workflows" })}
-                  </span>
-                  <DemoPill />
-                </NavLink>
-              )}
-
-              {showEmailCampaigns && (
-                <>
-                  <NavLink
-                    to="/campaigns"
-                    isActive={location.pathname.startsWith("/campaigns")}
-                    onClick={onClose}
-                  >
-                    <Send className="h-4 w-4 shrink-0" />
-                    <span className="truncate">
-                      {t("nav.emailCampaigns", { defaultValue: "Campaigns" })}
-                    </span>
-                    <DemoPill />
-                  </NavLink>
-                  <NavLink
-                    to="/segments"
-                    isActive={location.pathname.startsWith("/segments")}
-                    onClick={onClose}
-                  >
-                    <UsersRound className="h-4 w-4 shrink-0" />
-                    <span className="truncate">
-                      {t("nav.segments", { defaultValue: "Segments" })}
-                    </span>
-                    <DemoPill />
-                  </NavLink>
-                  <NavLink
-                    to="/email-templates"
-                    isActive={location.pathname.startsWith("/email-templates")}
-                    onClick={onClose}
-                  >
-                    <LayoutTemplate className="h-4 w-4 shrink-0" />
-                    <span className="truncate">
-                      {t("nav.emailTemplates", { defaultValue: "Templates" })}
-                    </span>
-                    <DemoPill />
-                  </NavLink>
-                </>
-              )}
-
-              {/* Media hub is generally available — deliberately NOT behind
-                  the emailCampaigns pilot flag. */}
-              <MediaNav onClose={onClose} />
-
-              {currentWorkspace?.services
-                ?.filter(
-                  (service) =>
-                    service.service_type !== "appointments" ||
-                    showAppointmentsInSidebar
-                )
-                ?.slice()
-                ?.sort(
-                  (a, b) => (a.service_order ?? 0) - (b.service_order ?? 0)
-                )
-                ?.map((service) => {
-                  const href = service.service_slug
-                    ? `/${service.service_slug}`
-                    : "#";
-                  const isActive =
-                    !!service.service_slug &&
-                    (location.pathname === `/${service.service_slug}` ||
-                      location.pathname.startsWith(
-                        `/${service.service_slug}/`
-                      ));
-                  const hasSlug = !!service.service_slug;
-                  const iconName = service.service_icon
-                    ? kebabToPascal(service.service_icon)
-                    : null;
-                  const hasIcon = !!iconName && lucideIconNames.has(iconName);
-
-                  return (
-                    <Fragment key={service.service_id}>
-                      <div className="flex items-center group/svc">
-                        <NavLink
-                          to={href}
-                          isActive={isActive}
-                          disabled={!hasSlug}
-                          onClick={(e) => {
-                            if (!hasSlug) e.preventDefault();
-                            else onClose?.();
-                          }}
-                          className="flex-1 min-w-0"
-                        >
-                          {hasIcon && (
-                            <DynamicIcon
-                              name={iconName!}
-                              className="h-4 w-4 shrink-0"
-                            />
-                          )}
-                          <span className="truncate">
-                            {getLocalizedServiceName(
-                              service,
-                              i18n.language ?? "de"
-                            )}
-                          </span>
-                        </NavLink>
-                      </div>
-                    </Fragment>
-                  );
-                })}
-
-              {showCalendarInSidebar && (
-                <NavLink
-                  to="/calendar"
-                  isActive={location.pathname.startsWith("/calendar")}
-                  onClick={onClose}
-                >
-                  <CalendarRange className="h-4 w-4 shrink-0" />
-                  {t("nav.calendar", { defaultValue: "Calendar" })}
-                </NavLink>
-              )}
-            </>
+            <MainSections onClose={onClose} />
           )}
         </nav>
 

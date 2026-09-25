@@ -7,15 +7,16 @@ import {
   OctagonXIcon,
   TriangleAlertIcon,
 } from "lucide-react"
-import { useTheme } from "next-themes"
 import { Toaster as Sonner, type ToasterProps } from "sonner"
 
+// The app is light-only (no ThemeProvider): following the OS scheme would
+// paint dark toasts over the light app.
 const Toaster = ({ ...props }: ToasterProps) => {
-  const { theme = "system" } = useTheme()
-
   return (
     <Sonner
-      theme={theme as ToasterProps["theme"]}
+      theme="light"
+      // Clear the phone bottom tab bar (4rem + safe area).
+      mobileOffset={{ bottom: "calc(4.75rem + env(safe-area-inset-bottom))" }}
       className="toaster group"
       icons={{
         success: <CircleCheckIcon className="size-4" />,

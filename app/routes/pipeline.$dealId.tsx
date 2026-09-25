@@ -83,6 +83,9 @@ import {
   apiDatetimeToIsoDateString,
 } from "~/components/molecule/date-picker-popover";
 import { cn } from "~/lib/utils";
+import { NextStepChip } from "~/components/notebook/next-step-chip";
+import { useDealFlow } from "~/components/notebook/deal-flow";
+import { isOpenDeal } from "~/lib/deals/is-open";
 import {
   formatCurrency,
   formatDate,
@@ -184,6 +187,12 @@ export default function PipelineDealDetailPage() {
   });
 
   const deal = dealQuery.data?.deal;
+  const dealFlow = useDealFlow();
+  const dealIsOpen =
+    !!deal &&
+    isOpenDeal(
+      deal as { status?: string | null; won_at?: string | null; lost_at?: string | null },
+    );
 
   // The stepper renders the DEAL's pipeline's stages (undefined = Default
   // while loading — replaced as soon as the deal arrives).
@@ -575,27 +584,24 @@ export default function PipelineDealDetailPage() {
       <section className="app-fade-up overflow-hidden rounded-2xl border border-border bg-card shadow-(--shadow)">
         <div
           aria-hidden
-          className={cn(
-            "relative h-20 bg-linear-to-r transition-colors duration-500",
-            stageFacets.heroBg,
-          )}
+          className={cn("h-1.5 transition-colors duration-500", stageFacets.dot)}
         />
-        <div className="px-4 pb-5 pt-0 sm:px-6">
-          <div className="-mt-10 flex flex-col gap-4 sm:flex-row sm:items-end sm:gap-5">
+        <div className="px-4 pb-5 pt-5 sm:px-6">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:gap-5">
             <Avatar
               size="lg"
               className={cn(
-                "size-20 shrink-0 border-4 border-card bg-card shadow-(--shadow) ring-4",
+                "size-14 shrink-0 bg-card ring-2",
                 stageFacets.ring,
               )}
             >
-              <AvatarFallback className="bg-linear-to-br from-secondary/30 to-primary/10 text-lg font-semibold tracking-tight text-foreground">
+              <AvatarFallback className="bg-muted text-base font-semibold tracking-tight text-foreground">
                 {initials(displayTitle)}
               </AvatarFallback>
             </Avatar>
 
             <div className="min-w-0 flex-1">
-              <h1 className="truncate text-2xl font-semibold tracking-tight text-foreground sm:text-[28px]">
+              <h1 className="title-display truncate text-[26px] font-semibold text-foreground sm:text-[32px]">
                 {displayTitle}
               </h1>
               <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
@@ -631,7 +637,7 @@ export default function PipelineDealDetailPage() {
                 <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">
                   {t("pipeline.fields.value", { defaultValue: "Value" })}
                 </p>
-                <p className="text-2xl font-semibold tabular-nums tracking-tight text-foreground sm:text-3xl">
+                <p className="title-display num text-2xl font-semibold text-foreground sm:text-3xl">
                   {valueDisplay}
                 </p>
               </div>
@@ -716,6 +722,33 @@ export default function PipelineDealDetailPage() {
               })}
             </div>
           </div>
+
+          {/* NEXT STEP — every open deal should answer "what happens next?" */}
+          {dealIsOpen && dealQuery.data?.tasks_summary ? (
+            <div className="mt-4 flex flex-wrap items-center gap-2 border-t border-border pt-4">
+              <span className="text-[11px] font-semibold uppercase tracking-[0.1em] text-muted-foreground">
+                {t("nextStep.label", "Next step")}
+              </span>
+              <NextStepChip summary={dealQuery.data.tasks_summary} />
+              {canEdit ? (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="ml-auto h-8 text-xs"
+                  onClick={() =>
+                    dealFlow.whatsNext(
+                      { id: dealId!, title: displayTitle },
+                      "none",
+                    )
+                  }
+                >
+                  {dealQuery.data.tasks_summary.open_count === 0
+                    ? t("whatsNext.add", "Add next step")
+                    : t("whatsNext.addAnother", "Plan another step")}
+                </Button>
+              ) : null}
+            </div>
+          ) : null}
         </div>
       </section>
 

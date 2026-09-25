@@ -1,6 +1,8 @@
 import { useState, useEffect, useRef } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
+import { useDealFlow } from "~/components/notebook/deal-flow";
+import { isOpenDeal } from "~/lib/deals/is-open";
 import { isToday, isTomorrow } from "date-fns";
 import { Plus, Check } from "lucide-react";
 import { formatDate } from "~/lib/utils/format";
@@ -77,6 +79,7 @@ export function LeadTasksSection({
 }: LeadTasksSectionProps) {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
+  const dealFlow = useDealFlow();
   const [formOpen, setFormOpen] = useState(false);
   const lastAddSignal = useRef(openAddSignal);
   useEffect(() => {
@@ -127,9 +130,35 @@ export function LeadTasksSection({
         queryClient.setQueryData(tasksQueryKey, ctx.prev);
       }
     },
-    onSuccess: () => {
+    onSuccess: (_data, { taskId, isDone }) => {
+      // Last open task on a deal just got done: ask what happens next
+      // (NOTEBOOK_UX_PLAN.md D7). Read before the refetch replaces the cache.
+      if (dealId && isDone) {
+        const list = queryClient.getQueryData<Task[]>(tasksQueryKey) ?? [];
+        const stillOpen = list.filter(
+          (x) => x.id !== taskId && x.status !== "done",
+        ).length;
+        const cached = queryClient.getQueryData<{
+          deal?: {
+            won_at?: string | null;
+            lost_at?: string | null;
+            status?: string;
+            title?: string | null;
+          };
+        }>(["deal", dealId]);
+        const dealOpen = cached?.deal ? isOpenDeal(cached.deal) : true;
+        if (stillOpen === 0 && dealOpen) {
+          dealFlow.whatsNext(
+            { id: dealId, title: cached?.deal?.title ?? null },
+            "completed",
+          );
+        }
+      }
       queryClient.invalidateQueries({ queryKey: tasksQueryKey });
       queryClient.invalidateQueries({ queryKey: ["tasks"] });
+      queryClient.invalidateQueries({ queryKey: ["today"] });
+      queryClient.invalidateQueries({ queryKey: ["deals"] });
+      queryClient.invalidateQueries({ queryKey: ["deals-pipeline"] });
       queryClient.invalidateQueries({ queryKey: ["home-tasks-upcoming"] });
       queryClient.invalidateQueries({ queryKey: ["home-tasks-overdue"] });
       if (leadId) {

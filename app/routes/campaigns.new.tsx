@@ -182,7 +182,7 @@ export default function CampaignNew() {
         >
           <ArrowLeft className="h-4 w-4" />
         </Link>
-        <h1 className="text-xl font-semibold tracking-tight text-foreground sm:text-2xl">
+        <h1 className="title-display text-[26px] font-semibold text-foreground sm:text-[30px]">
           {t("emailCampaigns.wizard.title", { defaultValue: "New campaign" })}
         </h1>
       </div>

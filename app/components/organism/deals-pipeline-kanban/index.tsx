@@ -30,6 +30,9 @@ import {
 import { formatDate, formatCurrency, formatCurrencyTotals, sumByCurrency } from "~/lib/utils/format";
 import { useWorkspaceCurrency } from "~/lib/hooks/useWorkspaceCurrency";
 import { cn } from "~/lib/utils";
+import { NextStepChip } from "~/components/notebook/next-step-chip";
+import { isOpenDeal } from "~/lib/deals/is-open";
+import { useDealFlow } from "~/components/notebook/deal-flow";
 import { useTerminalStageGuard } from "~/lib/deals/use-terminal-stage-guard";
 import type { DealListItem } from "~/lib/api/deals";
 import type { PipelineStage } from "~/lib/api/pipeline-stages";
@@ -494,7 +497,14 @@ function DealColumn({
   );
 }
 
-function DealCardInner({ deal }: { deal: DealListItem }) {
+function DealCardInner({
+  deal,
+  canEdit = false,
+}: {
+  deal: DealListItem;
+  canEdit?: boolean;
+}) {
+  const dealFlow = useDealFlow();
   const title = cardTitle(deal);
   const sub = deal.contact_full_name?.trim();
   const showSub = !!(sub && deal.title?.trim());
@@ -541,14 +551,26 @@ function DealCardInner({ deal }: { deal: DealListItem }) {
           </span>
         ) : null}
       </div>
-      <p className="text-[10px] text-muted-foreground/80">
-        {deal.created_at
-          ? formatDate(new Date(deal.created_at), "MMM d, yyyy")
-          : ""}
-      </p>
+      {isOpenDeal(deal) && deal.tasks_summary ? (
+        <NextStepChip
+          summary={deal.tasks_summary}
+          onAdd={
+            canEdit
+              ? () => dealFlow.whatsNext({ id: deal.id, title: title })
+              : undefined
+          }
+        />
+      ) : (
+        <p className="text-[10px] text-muted-foreground/80">
+          {deal.created_at
+            ? formatDate(new Date(deal.created_at), "MMM d, yyyy")
+            : ""}
+        </p>
+      )}
     </>
   );
 }
+
 
 /** Per-currency totals of a column — CAD and EUR are never added together. */
 function stageDealTotals(deals: DealListItem[]): Map<string, number> {
@@ -690,6 +712,11 @@ function DealScheduleRow({
             </span>
           ) : null}
         </div>
+        {isOpenDeal(deal) && deal.tasks_summary ? (
+          <div className="pt-1">
+            <NextStepChip summary={deal.tasks_summary} />
+          </div>
+        ) : null}
       </div>
 
       {hasAssignee ? (
@@ -803,7 +830,7 @@ function DealKanbanCard({
         canEdit && !disabled && "cursor-grab active:cursor-grabbing",
       )}
     >
-      <DealCardInner deal={deal} />
+      <DealCardInner deal={deal} canEdit={!!canEdit && !disabled} />
     </button>
   );
 

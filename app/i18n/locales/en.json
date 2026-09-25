@@ -43,11 +43,12 @@
     "view": "View",
     "yes": "Yes",
     "you": "You",
-    "copyFailed": "Could not copy — select the text and copy it manually."
+    "copyFailed": "Could not copy — select the text and copy it manually.",
+    "retry": "Try again"
   },
   "nav": {
     "home": "Home",
-    "leads": "Leads",
+    "leads": "Inquiries",
     "appointments": "Appointments",
     "tasks": "Tasks",
     "contacts": "Contacts",
@@ -287,7 +288,7 @@
   "leads": {
     "metaTitle": "Leads",
     "metaDescription": "Leads management",
-    "title": "Leads",
+    "title": "Inquiries",
     "manageHint": "Manage and track your incoming leads",
     "tableView": "Table",
     "kanbanView": "Kanban",
@@ -364,7 +365,7 @@
       "notes": "Notes",
       "history": "History",
       "emails": "Emails",
-      "backToLeads": "Back to leads",
+      "backToLeads": "Back to inquiries",
       "loading": "Loading lead…",
       "addNote": "Add note",
       "newNote": "New note",
@@ -680,8 +681,8 @@
     "stages": {
       "new": "New",
       "in_progress": "In progress",
-      "won": "Won",
-      "lost": "Lost"
+      "won": "New customer",
+      "lost": "Didn't happen"
     },
     "errors": {
       "moveFailed": "Could not move deal.",
@@ -8606,5 +8607,303 @@
     "bookedSub": "Your upcoming call with the re:praesent team.",
     "inviteAt": "The calendar invite went to {{email}}.",
     "joinCall": "Join the call"
+  },
+  "sections": {
+    "today": "Today",
+    "customers": "Customers",
+    "deals": "Deals",
+    "results": "Results",
+    "website": "Website",
+    "more": "More",
+    "mobileNav": "Main",
+    "tabs": {
+      "inquiries": "Inquiries",
+      "people": "People",
+      "inbox": "Inbox",
+      "pipeline": "Pipeline",
+      "overview": "Overview",
+      "chatgptAds": "ChatGPT ads",
+      "site": "Site",
+      "aiChat": "AI chat",
+      "files": "Files"
+    },
+    "settingsGroups": {
+      "you": "You",
+      "workspace": "Workspace",
+      "connections": "Connections",
+      "alerts": "Alerts",
+      "sales": "Sales",
+      "root": "re:praesent"
+    }
+  },
+  "command": {
+    "title": "Go to or search",
+    "short": "Search",
+    "description": "Find a page, a person or a deal",
+    "placeholder": "Find a page, a person, a deal…",
+    "actions": "Start something",
+    "goTo": "Go to",
+    "newInquiry": "New inquiry",
+    "newDeal": "New deal",
+    "newTask": "New task",
+    "newContact": "New contact",
+    "newForm": "New form",
+    "empty": "Nothing matches “{{q}}”.",
+    "footer": "Search people, deals, tasks and pages"
+  },
+  "today": {
+    "metaTitle": "Today",
+    "hello": "Hello{{name}}.",
+    "allClear": "All clear{{name}}.",
+    "waitingCount_one": "1 person is waiting",
+    "waitingCount_other": "{{count}} people are waiting",
+    "waitingTail": "on you.",
+    "scope": "Whose work",
+    "mine": "Mine",
+    "everyone": "Everyone",
+    "needsYou": "Needs you",
+    "signupsTitle": "New signups to call",
+    "noSignups": "No new signups waiting.",
+    "emptyTitle": "When someone reaches out, they show up here.",
+    "emptyBody": "A form on your website, a chat, a booking or an ad — every new inquiry lands here with one tap to call them back.",
+    "noNew": "Nobody is waiting on you.",
+    "noNewBody": "New inquiries will appear here as they come in.",
+    "seeAll": "See all",
+    "unnamed": "Someone",
+    "callAgainDue": "Call again",
+    "waiting": "waiting {{time}}",
+    "more": "More",
+    "recordOutcome": "Record how it went",
+    "open": "Open",
+    "dueTitle": "Due today",
+    "overdueHint_one": "1 overdue",
+    "overdueHint_other": "{{count}} overdue",
+    "allTasks": "All tasks",
+    "noTasks": "Nothing due today.",
+    "markDone": "Mark done",
+    "taskDone": "Done",
+    "overdueSince": "overdue since {{date}}",
+    "noNextTitle": "Deals with no next step",
+    "untitledDeal": "Deal",
+    "chatTitle": "Your website chat",
+    "unanswered_one": "1 question it couldn't answer this week",
+    "unanswered_other": "{{count}} questions it couldn't answer this week",
+    "thisMonth": "Last 30 days",
+    "results": "Results",
+    "loadFailed": "Today could not load.",
+    "callAgainToday": "Call again today",
+    "seeAllCount": "See all {{count}}"
+  },
+  "outcome": {
+    "call": "Call",
+    "whatsapp": "WhatsApp",
+    "email": "Email",
+    "noChannel": "Not on file",
+    "title": "How did it go?",
+    "sub": {
+      "call": "You called {{name}}.",
+      "whatsapp": "You wrote to {{name}} on WhatsApp.",
+      "email": "You emailed {{name}}."
+    },
+    "subGeneric": "Record what happened with {{name}}.",
+    "options": {
+      "reached": "Reached them",
+      "no_answer": "No answer",
+      "not_interested": "Not interested",
+      "fake": "Fake or spam"
+    },
+    "callAgainOn": "Call again on",
+    "callAgainTitle": "Call {{name}} again",
+    "fakeHint": "It gets hidden and this sender is blocked. You can undo it.",
+    "notInterestedHint": "It moves to your closed inquiries. Nothing is deleted.",
+    "notePlaceholder": "Add a note (optional)",
+    "later": "Later",
+    "save": "Save",
+    "notNow": "Not now",
+    "reachedTitle": "Good. What's next with {{name}}?",
+    "reachedBody": "Turn it into a deal so it gets a value and a next step — or just leave it for now.",
+    "saved": {
+      "reached": "Saved",
+      "no_answer": "Saved — we'll remind you to call again",
+      "not_interested": "Closed as not interested",
+      "fake": "Hidden and sender blocked"
+    },
+    "badge": {
+      "reached": "Reached",
+      "no_answer": "No answer",
+      "not_interested": "Not interested",
+      "fake": "Spam",
+      "tried_one": "Tried once",
+      "tried_other": "Tried {{count}}×"
+    },
+    "thisPerson": "this person",
+    "saving": "Saving…",
+    "saveFailed": "Couldn't save — please try again."
+  },
+  "makeDeal": {
+    "cta": "Make a deal",
+    "title": "Make a deal",
+    "body": "A deal keeps the value and the next step in one place.",
+    "what": "What is it?",
+    "value": "Roughly worth ({{currency}})",
+    "nextStep": "Next step",
+    "when": "When",
+    "defaultTask": "Send an offer",
+    "submit": "Create deal",
+    "created": "Deal created",
+    "open": "Open",
+    "existing": "This inquiry already has a deal"
+  },
+  "whatsNext": {
+    "title": "What's next?",
+    "subCompleted": "Done. {{name}} has no next step yet.",
+    "subNone": "{{name}} has no next step.",
+    "picks": {
+      "call": "Call back",
+      "offer": "Send an offer",
+      "meeting": "Meet"
+    },
+    "customPlaceholder": "Something else…",
+    "when": "When",
+    "add": "Add next step",
+    "addAnother": "Plan another step",
+    "saved": "Next step added",
+    "orClose": "Or close it",
+    "won": "New customer",
+    "lost": "Didn't happen",
+    "wonToast": "Marked as a new customer",
+    "lostToast": "Closed — didn't happen",
+    "confirm": "Tap again to confirm"
+  },
+  "nextStep": {
+    "label": "Next step",
+    "none": "No next step",
+    "today": "today",
+    "tomorrow": "tomorrow"
+  },
+  "leadBar": {
+    "howDidItGo": "How did it go?",
+    "notContacted": "Not contacted yet",
+    "firstContact": "First contact {{time}} after it came in",
+    "reach": "Reach",
+    "linkedContact": "Linked contact"
+  },
+  "sourceLabel": {
+    "form": "Website form",
+    "formNamed": "Form · {{name}}",
+    "chat": "Website chat",
+    "booking": "Booking",
+    "signup": "New signup",
+    "googleAd": "Google ad",
+    "facebookAd": "Facebook ad",
+    "instagramAd": "Instagram ad",
+    "manual": "Added by hand",
+    "website": "Website",
+    "other": "Other"
+  },
+  "setup": {
+    "title": "Get set up",
+    "progress": "{{done}} of {{total}} done",
+    "hide": "Hide",
+    "skip": "Skip",
+    "items": {
+      "email": "Connect your email so replies come from you",
+      "form": "Put a contact form on your website",
+      "website": "Add your website",
+      "assistant": "Turn on the website chat",
+      "teammate": "Invite who handles your inquiries",
+      "calendar": "Connect your calendar",
+      "profile": "Finish your business profile"
+    }
+  },
+  "results": {
+    "metaTitle": "Results",
+    "metaDescription": "How many people found you, reached out and became customers.",
+    "title": "Results",
+    "subtitle": "How many people found you, reached out and became customers.",
+    "period": "Period",
+    "periods": {
+      "7d": "7 days",
+      "30d": "30 days",
+      "90d": "90 days",
+      "12m": "12 months"
+    },
+    "sentence": {
+      "lead": {
+        "7d": "In the last 7 days",
+        "30d": "In the last 30 days",
+        "90d": "In the last 90 days",
+        "12m": "In the last 12 months"
+      },
+      "saw": "{{n}} people saw you",
+      "contacted": "{{n}} reached out",
+      "customers_one": "1 became a customer",
+      "customers_other": "{{count}} became customers",
+      "and": "and you earned"
+    },
+    "sentenceEmpty": "Nothing to count yet for this period.",
+    "saw": "saw you",
+    "contacted": "contacted you",
+    "customers": "new customers",
+    "earned": "earned",
+    "vsBefore": "vs. before",
+    "otherCurrencies": "Also earned in other currencies:",
+    "sawNote": "“Saw you” adds website visitors and people your ads reached — someone who did both counts twice.",
+    "bySource": "Where they came from",
+    "col": {
+      "source": "Source",
+      "saw": "Saw you",
+      "contacted": "Reached out",
+      "customers": "Customers",
+      "earned": "Earned"
+    },
+    "noSources": "No sources to show yet.",
+    "noSourcesBody": "Results fill in as people find you — connect your ads or put a form or chat on your website.",
+    "addForm": "Add a form to your website",
+    "connected": {
+      "website": "Website visitors",
+      "ads": "Ads",
+      "openai": "ChatGPT ads"
+    },
+    "on": "on",
+    "off": "not connected",
+    "sources": {
+      "google": "Google",
+      "facebook": "Facebook",
+      "instagram": "Instagram",
+      "website": "Your website",
+      "chat": "Website chat",
+      "openai": "ChatGPT",
+      "booking": "Bookings",
+      "onboarding": "Signups",
+      "manual": "Added by hand",
+      "other": "Other"
+    },
+    "loadFailed": "Results could not load.",
+    "notAvailable": "Results are not available for this area."
+  },
+  "pipelineStrip": {
+    "open": "open",
+    "noNext": "without a next step",
+    "won": "new customers this month"
+  },
+  "calendarHub": {
+    "calendar": "Calendar",
+    "booking": "Booking page",
+    "sources": "Connected calendars"
+  },
+  "websiteCaps": {
+    "title": "What your website does",
+    "on": "On",
+    "off": "Off"
+  },
+  "dayField": {
+    "tomorrow": "Tomorrow",
+    "inTwoDays": "In 2 days",
+    "nextWeek": "Next week",
+    "placeholder": "Type a date, e.g. 9/30",
+    "aria": "Date",
+    "openCalendar": "Open calendar",
+    "invalid": "That isn't a date from today on."
   }
 }

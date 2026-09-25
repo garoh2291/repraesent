@@ -17,6 +17,14 @@ export interface LeadTasksSummary {
   nearest_title: string | null;
 }
 
+/** First contact / attempts / latest outcome (lead-outcomes, migration 190). */
+export interface LeadContactState {
+  first_contacted_at: string | null;
+  attempts: number;
+  outcome: "reached" | "no_answer" | "not_interested" | "fake" | null;
+  outcome_at: string | null;
+}
+
 export interface Lead {
   id: string;
   first_name: string | null;
@@ -34,6 +42,8 @@ export interface Lead {
   created_at: string;
   updated_at: string;
   tasks_summary: LeadTasksSummary;
+  /** Null until someone contacts the lead or records an outcome. */
+  contact_state?: LeadContactState | null;
   board_position: number | null;
   /** Detail view only: the contact this lead was converted to, if any. */
   linked_contact_id?: string | null;

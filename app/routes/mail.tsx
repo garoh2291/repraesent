@@ -83,7 +83,7 @@ export default function MailPage() {
             <Mail className="h-5 w-5 text-amber-500" />
           </div>
           <div>
-            <h1 className="text-xl font-semibold tracking-tight text-foreground sm:text-2xl">
+            <h1 className="title-display text-[26px] font-semibold text-foreground sm:text-[30px]">
               {t("mail.pageTitle", { defaultValue: "Mail" })}
             </h1>
             <p className="mt-0.5 text-sm text-muted-foreground">

@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAuthContext } from "~/providers/auth-provider";
 import { PipelineDialog } from "~/components/organism/pipeline-dialog";
+import { PipelineSummaryStrip } from "~/components/notebook/pipeline-summary-strip";
 import { getWorkspaceDetail } from "~/lib/api/workspaces";
 import { useDebounce } from "~/lib/hooks/useDebounce";
 import { useSearchShortcut } from "~/lib/hooks/useSearchShortcut";
@@ -363,7 +364,7 @@ export default function PipelinePage() {
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between shrink-0 app-fade-up">
         <div className="min-w-0">
           <div className="flex items-center gap-2">
-            <h1 className="text-xl sm:text-2xl font-semibold text-foreground tracking-tight truncate">
+            <h1 className="title-display text-[26px] font-semibold text-foreground sm:text-[30px] truncate">
               {currentPipeline?.name ??
                 t("nav.pipeline", { defaultValue: "Pipeline" })}
             </h1>
@@ -456,7 +457,7 @@ export default function PipelinePage() {
         ) : null}
       </div>
 
-      <div className="border-t border-border shrink-0" />
+      <PipelineSummaryStrip pipelineId={currentPipeline?.id} />
 
       {/* Filters */}
       <div className="flex flex-col sm:flex-row sm:flex-wrap sm:items-center gap-2 sm:gap-3 shrink-0 app-fade-up app-fade-up-d1">

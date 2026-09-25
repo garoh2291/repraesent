@@ -448,7 +448,7 @@ export default function BrandWorkspaces() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3">
         <div>
-          <h1 className="text-xl sm:text-2xl font-semibold text-foreground tracking-tight">
+          <h1 className="title-display text-[26px] font-semibold text-foreground sm:text-[30px]">
             {t("brand.workspacesTitle", ctw)}
           </h1>
           <p className="text-sm text-muted-foreground mt-0.5">

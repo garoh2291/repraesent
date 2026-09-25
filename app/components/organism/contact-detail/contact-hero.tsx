@@ -29,6 +29,7 @@ import { Button } from "~/components/ui/button";
 import { ContactSourceBadge } from "~/components/molecule/contact-badges";
 import { toast } from "sonner";
 import { cn } from "~/lib/utils";
+import { ContactActions } from "~/components/notebook/contact-actions";
 import { formatDate } from "~/lib/utils/format";
 import type { ContactDetail } from "~/lib/api/contacts-crm";
 import {
@@ -259,6 +260,11 @@ interface ContactHeroProps {
   onCompose?: () => void;
   canEdit?: boolean;
   onInvalidate?: () => void;
+  /**
+   * "linked": shown on a lead page under the lead's own header — a smaller
+   * name and no second row of Call / WhatsApp / Email buttons.
+   */
+  variant?: "page" | "linked";
 }
 
 export function ContactHero({
@@ -274,6 +280,7 @@ export function ContactHero({
   onCompose,
   canEdit,
   onInvalidate,
+  variant = "page",
 }: ContactHeroProps) {
   const { t } = useTranslation();
   const contactId = contact?.id ? String(contact.id) : null;
@@ -330,13 +337,8 @@ export function ContactHero({
 
   return (
     <section className="app-fade-up overflow-hidden rounded-2xl border border-border bg-card shadow-(--shadow)">
-      <div
-        aria-hidden
-        className="relative h-20 bg-linear-to-r from-secondary/25 via-secondary/10 to-primary/10 dark:from-secondary/15 dark:via-secondary/5 dark:to-primary/15"
-      />
-
-      <div className="px-4 pb-5 pt-0 sm:px-6">
-        <div className="-mt-10 flex flex-col gap-4 sm:flex-row sm:items-center sm:gap-5">
+      <div className="px-4 pb-5 pt-5 sm:px-6">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:gap-5">
           <ContactHeroAvatar
             contactId={contactId}
             avatarUrl={(contact as { avatar_url?: string | null } | null)?.avatar_url ?? null}
@@ -344,9 +346,27 @@ export function ContactHero({
           />
 
           <div className="min-w-0 flex-1">
-            <h1 className="truncate text-2xl font-semibold tracking-tight text-foreground sm:text-[28px]">
-              {displayName}
-            </h1>
+            {variant === "linked" ? (
+              <>
+                <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">
+                  {t("leadBar.linkedContact", "Linked contact")}
+                </p>
+                <h2 className="truncate text-[18px] font-semibold text-foreground">
+                  {displayName}
+                </h2>
+              </>
+            ) : (
+              <>
+                <h1 className="title-display truncate text-[26px] font-semibold text-foreground sm:text-[32px]">
+                  {displayName}
+                </h1>
+                <ContactActions
+                  className="mt-2.5"
+                  size="sm"
+                  target={{ phone: phoneValue || null, email: emailValue || null }}
+                />
+              </>
+            )}
             <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
               {onCompose ? (
                 <Button
@@ -572,11 +592,11 @@ function ContactHeroAvatar({
       {/* No size="lg": its data-[size=lg]:size-10 variant class beats the
           size-20 override (tailwind-merge can't merge across variants) and
           shrinks the circle inside the 80px wrapper. */}
-      <Avatar className="size-20 border-4 border-card bg-card shadow-(--shadow)">
+      <Avatar className="size-20 bg-card ring-1 ring-border">
         {avatarUrl ? (
           <AvatarImage src={avatarUrl} className="object-cover" />
         ) : null}
-        <AvatarFallback className="bg-linear-to-br from-secondary/30 to-primary/10 text-lg font-semibold tracking-tight text-foreground">
+        <AvatarFallback className="bg-muted text-lg font-semibold tracking-tight text-foreground">
           {fallbackInitials}
         </AvatarFallback>
       </Avatar>

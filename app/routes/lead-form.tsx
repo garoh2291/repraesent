@@ -1,5 +1,8 @@
 import { useMemo, useEffect, useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router";
+import { useOpenFromParam } from "~/lib/hooks/useOpenFromParam";
+import { ContactActions } from "~/components/notebook/contact-actions";
+import { OutcomeBadge, useLeadFlow } from "~/components/notebook/lead-flow";
 import { useTranslation } from "react-i18next";
 import {
   useMutation,
@@ -146,6 +149,8 @@ export default function LeadForm() {
   const [selectedLeadId, setSelectedLeadId] = useState<string | null>(null);
   const [importModalOpen, setImportModalOpen] = useState(false);
   const [createLeadOpen, setCreateLeadOpen] = useState(false);
+  useOpenFromParam(() => setCreateLeadOpen(true));
+  const leadFlow = useLeadFlow();
   const [showHidden, setShowHidden] = useState(false);
 
   // Task create modal state
@@ -482,6 +487,32 @@ export default function LeadForm() {
       },
     },
     {
+      id: "reach",
+      header: t("leadBar.reach", "Reach"),
+      cell: ({ row }) => {
+        const l = row.original;
+        if (!canEdit) return null;
+        return (
+          <ContactActions
+            iconOnly
+            target={{ phone: l.phone, email: l.email }}
+            onContact={(ch) =>
+              leadFlow.contact(
+                {
+                  id: l.id,
+                  name: l.full_name || [l.first_name, l.last_name].filter(Boolean).join(" ") || l.email || "",
+                  status: l.status,
+                  phone: l.phone,
+                  email: l.email,
+                },
+                ch,
+              )
+            }
+          />
+        );
+      },
+    },
+    {
       accessorKey: "form_name",
       header: t("leads.columns.formName"),
       cell: ({ row }) => {
@@ -510,6 +541,11 @@ export default function LeadForm() {
                 {name}
               </span>
             </TooltipContainer>
+            <OutcomeBadge
+              outcome={row.original.contact_state?.outcome}
+              attempts={row.original.contact_state?.attempts}
+              className="shrink-0"
+            />
             {appointment && (
               <TooltipContainer
                 tooltipContent={formatAppointmentRange(appointment)}
@@ -664,7 +700,7 @@ export default function LeadForm() {
       {/* Header */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between shrink-0 app-fade-up">
         <div>
-          <h1 className="text-xl sm:text-2xl font-semibold text-foreground tracking-tight">
+          <h1 className="title-display text-[26px] font-semibold text-foreground sm:text-[30px]">
             {t("leads.title")}
           </h1>
           <p className="text-sm text-muted-foreground mt-0.5">

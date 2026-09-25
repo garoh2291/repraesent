@@ -46,7 +46,7 @@ export default function SettingsLayout() {
   return (
     <div className="mx-auto w-full max-w-[1280px] p-4 sm:p-6 py-10! space-y-6 sm:space-y-8 app-fade-in">
       <div className="app-fade-up">
-        <h1 className="text-xl sm:text-2xl font-semibold text-foreground tracking-tight">
+        <h1 className="title-display text-[26px] font-semibold text-foreground sm:text-[30px]">
           {t(`settings.${key}.metaTitle`)}
         </h1>
         <p className="text-sm text-muted-foreground mt-0.5">

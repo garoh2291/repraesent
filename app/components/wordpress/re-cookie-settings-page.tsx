@@ -166,7 +166,7 @@ export function ReCookieSettingsPage() {
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="flex min-w-0 flex-col gap-0.5">
             <div className="flex flex-wrap items-center gap-2">
-              <h1 className="text-xl font-semibold tracking-tight text-foreground sm:text-2xl">
+              <h1 className="title-display text-[26px] font-semibold text-foreground sm:text-[30px]">
                 {pageTitle}
               </h1>
               {dirty ? (

@@ -2,7 +2,10 @@
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
 
+/* Light-only app: `dark:` utilities are bound to a `.dark` class nothing ever
+   sets, so leftover dark variants can never follow the OS scheme. */
 @custom-variant dark (&:is(.dark *));
+
 
 /* ── Instructions Markdown Renderer ────────────────────────────────── */
 .instructions-md {
@@ -163,18 +166,19 @@
 
 @theme {
   --font-sans: "Geist", "Noto Sans JP", sans-serif;
+  /* Titles and big numbers only (NOTEBOOK_UX_PLAN.md D3). */
+  --font-display: "Bricolage Grotesque", "Geist", sans-serif;
 }
 
 html,
 body {
-  @apply bg-[#0f0f11] text-foreground;
+  @apply bg-background text-foreground;
 
-  /* The app has one look, so it declares one scheme. This used to be wrapped in
-     `@media (prefers-color-scheme: dark)`, which meant native widgets — the
-     caret, autofill, scrollbars, date pickers — followed the visitor's OS
-     instead of the page. The public form route overrides this with its own
-     theme's scheme; see routes/f.$formId.tsx. */
-  color-scheme: dark;
+  /* The app has one look — light paper with an ink sidebar — so it declares
+     one scheme. Native widgets (caret, autofill, scrollbars, date pickers)
+     follow the page, not the visitor's OS. The public form route overrides
+     this with its own theme's scheme; see routes/f.$formId.tsx. */
+  color-scheme: light;
 }
 
 @theme inline {
@@ -219,88 +223,73 @@ body {
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
+  --color-marker: var(--marker);
+  --color-marker-soft: var(--marker-soft);
+  --color-marker-ink: var(--marker-ink);
+  --color-overdue: var(--overdue);
+  --color-overdue-soft: var(--overdue-soft);
+  --color-earned: var(--earned);
+  --color-earned-soft: var(--earned-soft);
 }
 
 :root {
-  --radius: 0.4rem;
+  --radius: 0.5rem;
 
+  /* Paper, ink, marker (NOTEBOOK_UX_PLAN.md §1). Evolution of the existing
+     palette: paper and rules unchanged; ink replaces the old blue primary;
+     the marker yellow is the only loud colour and means "needs you". */
   --background: #f5f4f1;
-  --foreground: #131515;
+  --foreground: #141516;
 
   --card: #ffffff;
-  --card-foreground: #131515;
+  --card-foreground: #141516;
 
   --popover: #ffffff;
-  --popover-foreground: #131515;
+  --popover-foreground: #141516;
 
-  --primary: #5265f3;
+  --primary: #141516;
   --primary-foreground: #ffffff;
 
   --secondary: #f5d74f;
-  --secondary-foreground: #131515;
+  --secondary-foreground: #141516;
 
   --muted: #eeede9;
-  --muted-foreground: #6b6866;
+  --muted-foreground: #6b6a67;
 
   --accent: #eeede9;
-  --accent-foreground: #131515;
+  --accent-foreground: #141516;
 
-  --destructive: #e25f77;
+  --destructive: #c8414f;
 
   --border: #e2e1dc;
   --input: #e2e1dc;
 
-  --ring: #99a6e7;
+  --ring: #141516;
 
-  --chart-1: #5265f3;
+  /* Semantic */
+  --marker: #f5d74f;
+  --marker-soft: #fbefb4;
+  --marker-ink: #5c4a00;
+  --overdue: #c8414f;
+  --overdue-soft: #fbe7e9;
+  --earned: #2e7d55;
+  --earned-soft: #e3f2ea;
+
+  --chart-1: #141516;
   --chart-2: #f5d74f;
-  --chart-3: #a4dab8;
-  --chart-4: #d19f68;
-  --chart-5: #e25f77;
+  --chart-3: #2e7d55;
+  --chart-4: #b08a5a;
+  --chart-5: #c8414f;
 
-  /* Sidebar — dark theme */
+  /* Sidebar — the ink column */
   --sidebar: #111113;
   --sidebar-foreground: #d0cfc9;
-  --sidebar-primary: #5265f3;
-  --sidebar-primary-foreground: #ffffff;
+  --sidebar-primary: #f5d74f;
+  --sidebar-primary-foreground: #141516;
   --sidebar-accent: #221f10;
   --sidebar-accent-foreground: #f5d74f;
   --sidebar-border: #1d1d1f;
-  --sidebar-ring: #5265f3;
-}
-
-.dark {
-  --background: oklch(0.129 0.042 264.695);
-  --foreground: oklch(0.984 0.003 247.858);
-  --card: oklch(0.208 0.042 265.755);
-  --card-foreground: oklch(0.984 0.003 247.858);
-  --popover: oklch(0.208 0.042 265.755);
-  --popover-foreground: oklch(0.984 0.003 247.858);
-  --primary: oklch(0.929 0.013 255.508);
-  --primary-foreground: oklch(0.208 0.042 265.755);
-  --secondary: oklch(0.279 0.041 260.031);
-  --secondary-foreground: oklch(0.984 0.003 247.858);
-  --muted: oklch(0.279 0.041 260.031);
-  --muted-foreground: oklch(0.704 0.04 256.788);
-  --accent: oklch(0.279 0.041 260.031);
-  --accent-foreground: oklch(0.984 0.003 247.858);
-  --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.551 0.027 264.364);
-  --chart-1: oklch(0.488 0.243 264.376);
-  --chart-2: oklch(0.696 0.17 162.48);
-  --chart-3: oklch(0.769 0.188 70.08);
-  --chart-4: oklch(0.627 0.265 303.9);
-  --chart-5: oklch(0.645 0.246 16.439);
-  --sidebar: oklch(0.208 0.042 265.755);
-  --sidebar-foreground: oklch(0.984 0.003 247.858);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.984 0.003 247.858);
-  --sidebar-accent: oklch(0.279 0.041 260.031);
-  --sidebar-accent-foreground: oklch(0.984 0.003 247.858);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.551 0.027 264.364);
+  --sidebar-ring: #f5d74f;
 }
 
 @layer base {
@@ -313,6 +302,47 @@ body {
 }
 
 @layer utilities {
+  /* The signature: a highlighter swipe behind whatever needs the owner. */
+  .marker {
+    background-image: linear-gradient(
+      100deg,
+      transparent 0.2em,
+      var(--marker) 0.2em,
+      var(--marker) calc(100% - 0.15em),
+      transparent calc(100% - 0.15em)
+    );
+    background-size: 100% 62%;
+    background-position: 0 72%;
+    background-repeat: no-repeat;
+    padding-inline: 0.18em;
+    -webkit-box-decoration-break: clone;
+    box-decoration-break: clone;
+  }
+  /* Display type: titles and big numbers. */
+  .title-display {
+    font-family: var(--font-display);
+    font-optical-sizing: auto;
+    letter-spacing: -0.02em;
+    line-height: 1.05;
+  }
+  .num {
+    font-variant-numeric: tabular-nums;
+  }
+  /* Press feedback on pointer-down (apple-design §1). */
+  .press {
+    transition: transform 120ms ease-out;
+  }
+  .press:active {
+    transform: scale(0.97);
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .press:active {
+      transform: none;
+    }
+  }
+  .pb-safe {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
   .scrollbar-hide {
     -ms-overflow-style: none;
     scrollbar-width: none;

@@ -23,6 +23,7 @@ import { LeadSourceIcon } from "~/components/organism/lead-source-icon";
 import { LeadStatusSelect } from "~/components/molecule/lead-status-select";
 import { useLeadStages } from "~/lib/hooks/usePipelineStages";
 import { LeadSpamButton } from "~/components/organism/lead-spam/lead-spam-button";
+import { LeadActionBar } from "~/components/notebook/lead-action-bar";
 import { useHideLeadGuard } from "~/lib/leads/use-hide-lead-guard";
 import {
   resolveStageLabel,
@@ -526,6 +527,12 @@ export function LeadDetailSheet({
             </div>
           ) : (
             <div className="divide-y divide-border">
+              {/* Reach them, record how it went, make it a deal */}
+              {!readOnly && (
+                <div className="sticky top-0 z-10 bg-background/95 px-5 py-4 backdrop-blur supports-[backdrop-filter]:bg-background/85">
+                  <LeadActionBar lead={lead} />
+                </div>
+              )}
               {/* Lead info */}
               <div className="px-5 py-5">
                 <LeadInfoSection

@@ -1,999 +1,718 @@
-import { useState, useMemo } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { Link } from "react-router";
+import { useEffect, useRef, useState } from "react";
+import { Link, useNavigate } from "react-router";
 import { useTranslation } from "react-i18next";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 import {
   ArrowRight,
-  CheckCircle2,
-  Circle,
-  AlertCircle,
-  Clock,
+  Bot,
+  Check,
+  CircleDashed,
   Inbox,
-  TrendingUp,
-  Trophy,
-  Columns3,
-  ListChecks,
+  MoreHorizontal,
+  X,
 } from "lucide-react";
-import {
-  ResponsiveContainer,
-  LineChart,
-  Line,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-} from "recharts";
-import {
-  format,
-  isToday,
-  isTomorrow,
-  isPast,
-  addDays,
-  subDays,
-} from "date-fns";
+import i18n from "~/i18n";
+import { cn } from "~/lib/utils";
 import { useAuthContext } from "~/providers/auth-provider";
+import { useDocumentMeta } from "~/lib/hooks/use-document-meta";
+import { useToday, useInvalidateWork, useUpdateSetup } from "~/lib/hooks/useToday";
+import { useResultsSummary } from "~/lib/hooks/useResultsSummary";
+import { usePilotFeatures } from "~/lib/feature-flags";
+import { updateTask } from "~/lib/api/tasks";
+import { completeOnboarding } from "~/lib/api/auth";
+import { extractErrorMessage } from "~/lib/api/axios-instance";
+import type {
+  SetupItemKey,
+  SetupState,
+  TodayDeal,
+  TodayLead,
+  TodayTask,
+} from "~/lib/api/today";
+import { leadSourceLabel, waitingFor } from "~/lib/leads/source-label";
+import { formatCurrency, formatNumber } from "~/lib/utils/format";
 import { DoorboostHomeSection } from "~/components/doorboost-home-section";
 import { IntroCallCard } from "~/components/onboarding-v2/intro-call-card";
-import { cn } from "~/lib/utils";
+import { PageContainer } from "~/components/notebook/page-header";
+import { Panel, PanelHeader } from "~/components/notebook/panel";
+import { EmptyState } from "~/components/notebook/empty-state";
+import { ContactActions } from "~/components/notebook/contact-actions";
+import { NextStepChip } from "~/components/notebook/next-step-chip";
+import { OutcomeBadge, useLeadFlow, type FlowLead } from "~/components/notebook/lead-flow";
+import { useDealFlow } from "~/components/notebook/deal-flow";
+import { Button } from "~/components/ui/button";
 import {
-  formatDate as fmtDate,
-  formatRelativeTime,
-  formatDateShort,
-  formatNumber,
-  formatCurrency,
-  formatCurrencyTotals,
-  sumByCurrency,
-} from "~/lib/utils/format";
-import { useWorkspaceCurrency } from "~/lib/hooks/useWorkspaceCurrency";
-import { getLeadAnalytics, type LeadAnalyticsPeriod } from "~/lib/api/leads";
-import { getDeals, type DealListItem } from "~/lib/api/deals";
-import { useDealStageLookup } from "~/lib/hooks/usePipelineStages";
-import { getAllTasks, type Task, type TaskStatus } from "~/lib/api/tasks";
-import i18n from "~/i18n";
-import { useDocumentMeta } from "~/lib/hooks/use-document-meta";
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "~/components/ui/dropdown-menu";
+import { Skeleton } from "~/components/ui/skeleton";
 
 export function meta() {
   return [
-    { title: i18n.t("home.metaTitle") + " - Repraesent" },
+    { title: i18n.t("today.metaTitle", "Today") + " - Repraesent" },
     { name: "description", content: i18n.t("home.metaDescription") },
   ];
 }
 
-function usePeriods(): { value: LeadAnalyticsPeriod; labelKey: string }[] {
-  return [
-    { value: "1d", labelKey: "home.period1d" },
-    { value: "7d", labelKey: "home.period7d" },
-    { value: "30d", labelKey: "home.period30d" },
-    { value: "all_time", labelKey: "home.periodAllTime" },
-  ];
+/** Rows shown per list before "See all" — Today is a to-do list, not a table. */
+const VISIBLE_ROWS = 8;
+
+function toFlowLead(l: TodayLead): FlowLead {
+  return { id: l.id, name: l.name, status: l.status, phone: l.phone, email: l.email };
 }
 
-const FORM_NAME_COLORS = [
-  "#5265f3",
-  "#f5d74f",
-  "#34d399",
-  "#f472b6",
-  "#fb923c",
-  "#a78bfa",
-  "#38bdf8",
-  "#f87171",
-];
+// ─── Needs you ──────────────────────────────────────────────────────────────
 
-function getFormNameColor(index: number): string {
-  return FORM_NAME_COLORS[index % FORM_NAME_COLORS.length];
-}
-
-function fillSeriesGaps(
-  series: { date: string; count: number }[],
-  period: LeadAnalyticsPeriod
-): { date: string; count: number }[] {
-  const now = new Date();
-  const map = new Map(series.map((p) => [p.date, p.count]));
-  const slots: string[] = [];
-
-  if (period === "1d") {
-    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-    for (let h = 0; h <= now.getHours(); h++) {
-      const d = new Date(today);
-      d.setHours(h);
-      const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}T${String(h).padStart(2, "0")}:00:00`;
-      slots.push(key);
-    }
-  } else if (period === "7d") {
-    for (let i = 6; i >= 0; i--) {
-      const d = new Date(now);
-      d.setDate(d.getDate() - i);
-      slots.push(
-        `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`
-      );
-    }
-  } else if (period === "30d") {
-    for (let i = 29; i >= 0; i--) {
-      const d = new Date(now);
-      d.setDate(d.getDate() - i);
-      slots.push(
-        `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`
-      );
-    }
-  } else {
-    if (series.length === 0) return [];
-    const start = new Date(series[0].date + "T00:00:00");
-    const end = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-    for (const d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
-      slots.push(
-        `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`
-      );
-    }
-  }
-
-  return slots.map((key) => ({ date: key, count: map.get(key) ?? 0 }));
-}
-
-function formatXLabel(date: string, period: LeadAnalyticsPeriod): string {
-  if (period === "1d") {
-    const hour = parseInt(date.slice(11, 13), 10);
-    return `${hour.toString().padStart(2, "0")}:00`;
-  }
-  const [year, month, day] = date.split("-");
-  const d = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
-  return formatDateShort(d);
-}
-
-function CustomTooltip({
-  active,
-  payload,
-  label,
-  period,
+function LeadRow({
+  lead,
+  task,
 }: {
-  active?: boolean;
-  payload?: { value: number }[];
-  label?: string;
-  period: LeadAnalyticsPeriod;
+  lead: TodayLead;
+  /** Set for a "no answer" follow-up. */
+  task?: TodayTask;
+}) {
+  const { t, i18n: i } = useTranslation();
+  const navigate = useNavigate();
+  const flow = useLeadFlow();
+  const fl = toFlowLead(lead);
+  return (
+    <li className="group flex flex-col gap-3 px-4 py-3.5 sm:flex-row sm:items-center sm:gap-4 sm:px-5">
+      <button
+        type="button"
+        onClick={() => navigate(`/lead-form/${lead.id}`)}
+        className="min-w-0 flex-1 text-left"
+      >
+        <p className="truncate text-[15px] font-semibold text-foreground group-hover:underline group-hover:decoration-foreground/30 group-hover:underline-offset-4">
+          {lead.name || lead.email || lead.phone || t("today.unnamed", "Someone")}
+        </p>
+        <p className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-[12.5px] text-muted-foreground">
+          <span>{leadSourceLabel(lead, t)}</span>
+          <span aria-hidden>·</span>
+          {task ? (
+            <span className={cn(task.urgency === "overdue" && "font-medium text-overdue")}>
+              {t("today.callAgainDue", "Call again")}
+            </span>
+          ) : (
+            <span
+              className={cn(
+                "num",
+                Date.now() - new Date(lead.created_at).getTime() > 86_400_000 &&
+                  "marker font-medium text-foreground",
+              )}
+            >
+              {t("today.waiting", "waiting {{time}}", { time: waitingFor(lead.created_at, i.language) })}
+            </span>
+          )}
+          {task || lead.attempts ? (
+            <OutcomeBadge outcome={task ? "no_answer" : null} attempts={lead.attempts} />
+          ) : null}
+        </p>
+      </button>
+      <div className="flex items-center gap-1.5">
+        <ContactActions
+          target={{ phone: lead.phone, email: lead.email }}
+          onContact={(ch) => flow.contact(fl, ch)}
+          size="sm"
+        />
+        <DropdownMenu modal={false}>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" size="icon-sm" aria-label={t("today.more", "More")}>
+              <MoreHorizontal className="size-4" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="min-w-52">
+            <DropdownMenuItem onSelect={() => flow.recordOutcome(fl)}>
+              {t("today.recordOutcome", "Record how it went")}
+            </DropdownMenuItem>
+            <DropdownMenuItem onSelect={() => flow.makeDeal(fl)}>
+              {t("makeDeal.cta", "Make a deal")}
+            </DropdownMenuItem>
+            <DropdownMenuItem onSelect={() => navigate(`/lead-form/${lead.id}`)}>
+              {t("today.open", "Open")}
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
+    </li>
+  );
+}
+
+function NeedsYou({
+  leads,
+  followUps,
+  total,
+  title,
+  emptyTitle,
+  emptyBody,
+  seeAllHref = "/lead-form",
+}: {
+  seeAllHref?: string;
+  leads: TodayLead[];
+  followUps: { lead: TodayLead; task: TodayTask }[];
+  total: number;
+  title: string;
+  emptyTitle: string;
+  emptyBody: string;
 }) {
   const { t } = useTranslation();
-  if (!active || !payload?.length || !label) return null;
-  const count = payload[0].value;
+  const count = total + followUps.length;
   return (
-    <div className="rounded-lg border border-border bg-card px-3 py-2 shadow-md text-[13px]">
-      <p className="text-muted-foreground mb-0.5">
-        {formatXLabel(label, period)}
-      </p>
-      <p className="font-semibold text-foreground">
-        {t("home.tooltipLead", { count })}
-      </p>
-    </div>
-  );
-}
-
-function LeadAnalyticsChart() {
-  const { currentWorkspace } = useAuthContext();
-  const { t } = useTranslation();
-  const periods = usePeriods();
-  const [period, setPeriod] = useState<LeadAnalyticsPeriod>("7d");
-
-  const { data, isLoading } = useQuery({
-    queryKey: ["leadAnalytics", currentWorkspace?.id, period],
-    queryFn: () => getLeadAnalytics(period),
-    enabled: !!currentWorkspace?.id,
-  });
-
-  const chartData = useMemo(
-    () => fillSeriesGaps(data?.series ?? [], period),
-    [data?.series, period]
-  );
-
-  const maxY = Math.max(...chartData.map((p) => p.count), 1);
-  const yDomain: [number, number] = [0, maxY + Math.ceil(maxY * 0.2)];
-
-  const tickCount = chartData.length;
-  const tickStep =
-    tickCount <= 10 ? 1 : tickCount <= 20 ? 2 : Math.ceil(tickCount / 10);
-  const xTicks = chartData
-    .filter((_, i) => i % tickStep === 0 || i === chartData.length - 1)
-    .map((p) => p.date);
-
-  return (
-    <div
-      className="app-fade-up rounded-2xl border border-border bg-card p-4 sm:p-6 space-y-4 sm:space-y-5"
-      style={{ animationDelay: "0.06s" }}
-    >
-      <div className="flex items-start justify-between gap-4">
-        <div className="space-y-1">
-          <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
-            {t("home.leadsChartTitle")}
-          </p>
-          {isLoading ? (
-            <div className="h-8 w-12 animate-pulse rounded-md bg-muted" />
-          ) : (
-            <p className="text-3xl font-bold tracking-tight text-foreground">
-              {data?.total ?? 0}
-            </p>
-          )}
-        </div>
-
-        <Link
-          to="/lead-form"
-          className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-muted/50 px-3 py-1.5 text-xs font-medium text-foreground hover:bg-muted transition-colors shrink-0 mt-1"
-        >
-          {t("home.viewAllLeads")}
-          <ArrowRight className="h-3 w-3" />
-        </Link>
-      </div>
-
-      <div className="flex items-center gap-0.5 sm:gap-1 rounded-xl bg-muted p-0.5 sm:p-1 overflow-x-auto scrollbar-hide w-fit">
-        {periods.map((p) => (
-          <button
-            key={p.value}
-            onClick={() => setPeriod(p.value)}
-            className={cn(
-              "rounded-lg px-1.5 sm:px-2.5 py-1 sm:py-1.5 text-[10px] sm:text-[11px] font-medium transition-all duration-150 whitespace-nowrap shrink-0",
-              period === p.value
-                ? "bg-card text-foreground shadow-sm"
-                : "text-muted-foreground hover:text-foreground"
-            )}
-          >
-            {t(p.labelKey)}
-          </button>
-        ))}
-      </div>
-
-      {!isLoading && data && data.form_names.length > 0 && (
-        <div className="flex flex-wrap gap-2">
-          {data.form_names.map((f, idx) => (
+    <Panel>
+      <PanelHeader title={title} count={count} marker />
+      {count === 0 ? (
+        <EmptyState compact icon={<Check />} title={emptyTitle} body={emptyBody} />
+      ) : (
+        <>
+          {followUps.length > 0 ? (
+            <>
+              <p className="border-b border-border bg-muted/40 px-4 py-1.5 text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground sm:px-5">
+                {t("today.callAgainToday", "Call again today")}
+              </p>
+              <ul className="divide-y divide-border border-b border-border">
+                {followUps.slice(0, VISIBLE_ROWS).map((f) => (
+                  <LeadRow key={`f-${f.task.id}`} lead={f.lead} task={f.task} />
+                ))}
+              </ul>
+            </>
+          ) : null}
+          <ul className="divide-y divide-border">
+            {leads.slice(0, Math.max(0, VISIBLE_ROWS - followUps.length)).map((l) => (
+              <LeadRow key={l.id} lead={l} />
+            ))}
+          </ul>
+          {count > VISIBLE_ROWS ? (
             <Link
-              key={f.form_name}
-              to={`/lead-form?form_name=${f.form_name}`}
-              className="flex items-center gap-1.5 rounded-full border border-border bg-muted/50 px-3 py-1 text-[12px] no-underline transition-colors hover:border-primary/40 hover:bg-muted"
+              to={seeAllHref}
+              className="flex items-center justify-center gap-1.5 border-t border-border px-4 py-3 text-[13px] font-medium text-foreground hover:bg-accent/50"
             >
-              <span
-                className="h-2 w-2 rounded-full shrink-0"
-                style={{
-                  backgroundColor: getFormNameColor(idx),
-                }}
-              />
-              <span className="text-muted-foreground">{f.label}</span>
-              <span className="font-semibold text-foreground">{f.count}</span>
+              {t("today.seeAllCount", "See all {{count}}", { count })}
+              <ArrowRight className="size-3.5" />
             </Link>
-          ))}
-        </div>
+          ) : null}
+        </>
       )}
-
-      <div className="h-48">
-        {isLoading ? (
-          <div className="h-full w-full animate-pulse rounded-xl bg-muted" />
-        ) : (
-          <ResponsiveContainer width="100%" height="100%">
-            <LineChart
-              data={chartData}
-              margin={{ top: 4, right: 4, bottom: 0, left: -16 }}
-            >
-              <CartesianGrid
-                strokeDasharray="3 3"
-                stroke="var(--border)"
-                vertical={false}
-              />
-              <XAxis
-                dataKey="date"
-                ticks={xTicks}
-                tickFormatter={(v) => formatXLabel(v, period)}
-                tick={{
-                  fontSize: 11,
-                  fill: "var(--muted-foreground)",
-                  fontFamily: "'Plus Jakarta Sans', sans-serif",
-                }}
-                axisLine={false}
-                tickLine={false}
-                dy={8}
-              />
-              <YAxis
-                domain={yDomain}
-                allowDecimals={false}
-                tick={{
-                  fontSize: 11,
-                  fill: "var(--muted-foreground)",
-                  fontFamily: "'Plus Jakarta Sans', sans-serif",
-                }}
-                axisLine={false}
-                tickLine={false}
-                width={32}
-              />
-              <Tooltip
-                content={<CustomTooltip period={period} />}
-                cursor={{ stroke: "var(--border)", strokeWidth: 1 }}
-              />
-              <Line
-                type="monotone"
-                dataKey="count"
-                stroke="#5265f3"
-                strokeWidth={2}
-                dot={false}
-                activeDot={{
-                  r: 4,
-                  fill: "#5265f3",
-                  stroke: "var(--card)",
-                  strokeWidth: 2,
-                }}
-              />
-            </LineChart>
-          </ResponsiveContainer>
-        )}
-      </div>
-    </div>
+    </Panel>
   );
 }
 
-function formatTaskDueLabel(dateStr: string): {
-  label: string;
-  urgent: boolean;
-  overdue: boolean;
-} {
-  const d = new Date(dateStr);
-  if (isPast(d) && !isToday(d))
-    return {
-      label: formatRelativeTime(d),
-      urgent: true,
-      overdue: true,
-    };
-  if (isToday(d)) return { label: "Today", urgent: true, overdue: false };
-  if (isTomorrow(d))
-    return { label: "Tomorrow", urgent: false, overdue: false };
-  return { label: fmtDate(d, "MMM d"), urgent: false, overdue: false };
+// ─── Due today ──────────────────────────────────────────────────────────────
+
+function entityHref(task: TodayTask) {
+  if (task.entity_table === "deals") return `/pipeline/${task.entity_id}`;
+  if (task.entity_table === "contacts") return `/contacts/${task.entity_id}`;
+  if (task.entity_table === "leads") return `/lead-form/${task.entity_id}`;
+  return `/tasks?task_id=${task.id}`;
 }
 
-function MyTaskRow({ task }: { task: Task }) {
-  const isDone = task.status === "done";
-  const dueInfo = task.due_date ? formatTaskDueLabel(task.due_date) : null;
-
+function TaskRow({ task }: { task: TodayTask }) {
+  const { t, i18n: i } = useTranslation();
+  const invalidate = useInvalidateWork();
+  const dealFlow = useDealFlow();
+  const [done, setDone] = useState(false);
+  const mutation = useMutation({
+    mutationFn: () => updateTask(task.id, { status: "done" }),
+    onSuccess: () => {
+      invalidate();
+      if (
+        task.entity_table === "deals" &&
+        task.deal_open_tasks === 1 &&
+        task.deal_is_open !== false
+      ) {
+        dealFlow.whatsNext({ id: task.entity_id, title: task.entity_label }, "completed");
+      } else {
+        toast.success(t("today.taskDone", "Done"));
+      }
+    },
+    onError: (err) => {
+      setDone(false);
+      toast.error(extractErrorMessage(err) || t("common.error", "Something went wrong"));
+    },
+  });
+  const overdue = task.urgency === "overdue";
+  const due = task.due_date ? new Date(task.due_date) : null;
   return (
-    <Link
-      to={`/tasks?task_id=${task.id}`}
-      className={cn(
-        "group flex items-center gap-3 rounded-xl border px-4 py-3 transition-all duration-150",
-        isDone
-          ? "border-border/50 bg-muted/30"
-          : task.urgency === "overdue"
-            ? "border-red-200/70 bg-red-50/50 hover:border-red-200 hover:bg-red-50"
-            : task.urgency === "due_soon"
-              ? "border-yellow-200/70 bg-yellow-50/40 hover:border-yellow-200 hover:bg-yellow-50"
-              : "border-border bg-card hover:border-border/80 hover:bg-muted/30"
-      )}
-    >
-      {/* Status icon */}
-      <div className="shrink-0">
-        {isDone ? (
-          <CheckCircle2 className="h-4 w-4 text-emerald-500" />
-        ) : task.urgency === "overdue" ? (
-          <AlertCircle className="h-4 w-4 text-red-500" />
-        ) : task.urgency === "due_soon" ? (
-          <Clock className="h-4 w-4 text-yellow-600" />
-        ) : (
-          <Circle className="h-4 w-4 text-muted-foreground/40" />
+    <li className="flex items-center gap-3 px-4 py-3 sm:px-5">
+      <button
+        type="button"
+        role="checkbox"
+        aria-checked={done}
+        aria-label={t("today.markDone", "Mark done")}
+        disabled={mutation.isPending || done}
+        onClick={() => {
+          setDone(true);
+          mutation.mutate();
+        }}
+        className={cn(
+          "press flex size-6 shrink-0 items-center justify-center rounded-full border-2 transition-colors",
+          done ? "border-foreground bg-foreground text-background" : "border-foreground/25 hover:border-foreground",
         )}
-      </div>
-
-      {/* Title + meta */}
-      <div className="flex-1 min-w-0">
-        <p
-          className={cn(
-            "text-sm font-medium leading-snug truncate",
-            isDone && "line-through text-muted-foreground/60"
-          )}
-        >
+      >
+        {done ? <Check className="size-3.5" strokeWidth={3} /> : null}
+      </button>
+      <Link to={entityHref(task)} className="min-w-0 flex-1">
+        <p className={cn("truncate text-[14.5px] font-medium", done ? "text-muted-foreground line-through" : "text-foreground")}>
           {task.title}
         </p>
-        {task.lead_full_name && (
-          <p className="text-[11px] text-muted-foreground truncate mt-0.5">
-            {task.lead_full_name}
-          </p>
-        )}
-      </div>
-
-      {/* Due date badge */}
-      {dueInfo && (
-        <span
-          className={cn(
-            "shrink-0 text-[11px] font-medium px-2 py-0.5 rounded-full",
-            isDone
-              ? "bg-muted text-muted-foreground/60"
-              : dueInfo.overdue
-                ? "bg-red-100 text-red-700"
-                : dueInfo.urgent
-                  ? "bg-yellow-100 text-yellow-800"
-                  : "bg-muted text-muted-foreground"
-          )}
-        >
-          {dueInfo.label}
-        </span>
-      )}
-    </Link>
+        <p className="mt-0.5 truncate text-[12.5px] text-muted-foreground">
+          {task.entity_label ? `${task.entity_label} · ` : ""}
+          <span className={cn("num", overdue && "font-medium text-overdue")}>
+            {overdue
+              ? t("today.overdueSince", "overdue since {{date}}", {
+                  date: due?.toLocaleDateString(i.language, { day: "numeric", month: "short" }),
+                })
+              : due && (due.getHours() !== 0 || due.getMinutes() !== 0)
+                ? due.toLocaleTimeString(i.language, { hour: "2-digit", minute: "2-digit" })
+                : t("nextStep.today", "today")}
+          </span>
+        </p>
+      </Link>
+    </li>
   );
 }
 
-function getDateGroupKey(task: Task): string {
-  if (!task.due_date) return "9999-99-99";
-  return task.due_date.slice(0, 10);
-}
-
-function getDateGroupLabel(
-  key: string,
-  t: (key: string) => string
-): { label: string; isOverdue: boolean } {
-  if (key === "9999-99-99") {
-    return { label: t("home.taskDateNoDueDate"), isOverdue: false };
-  }
-  const todayStr = format(new Date(), "yyyy-MM-dd");
-  const tomorrowStr = format(addDays(new Date(), 1), "yyyy-MM-dd");
-  if (key === todayStr)
-    return { label: t("home.taskDateToday"), isOverdue: false };
-  if (key === tomorrowStr)
-    return { label: t("home.taskDateTomorrow"), isOverdue: false };
-  const d = new Date(key + "T00:00:00");
-  const isOverdue = key < todayStr;
-  return { label: fmtDate(d, "EEE, MMM d"), isOverdue };
-}
-
-function groupTasksByDate(
-  tasks: Task[],
-  t: (key: string) => string
-): { label: string; isOverdue: boolean; tasks: Task[] }[] {
-  const groups = new Map<string, Task[]>();
-  for (const task of tasks) {
-    const key = getDateGroupKey(task);
-    const existing = groups.get(key);
-    if (existing) existing.push(task);
-    else groups.set(key, [task]);
-  }
-  return Array.from(groups.entries())
-    .sort(([a], [b]) => a.localeCompare(b))
-    .map(([key, groupTasks]) => {
-      const { label, isOverdue } = getDateGroupLabel(key, t);
-      return { label, isOverdue, tasks: groupTasks };
-    });
-}
-
-function MyTasksSection({ userId }: { userId: string }) {
+function DueToday({
+  tasks,
+  total,
+  overdue,
+}: {
+  tasks: TodayTask[];
+  total: number;
+  overdue: number;
+}) {
   const { t } = useTranslation();
-  const { currentWorkspace } = useAuthContext();
-
-  const todayStr = useMemo(() => format(new Date(), "yyyy-MM-dd"), []);
-  const yesterdayStr = useMemo(
-    () => format(subDays(new Date(), 1), "yyyy-MM-dd"),
-    []
-  );
-
-  // Today + future tasks (all statuses, up to 10)
-  const { data: upcomingData, isLoading: upcomingLoading } = useQuery({
-    queryKey: ["home-tasks-upcoming", userId, currentWorkspace?.id, todayStr],
-    queryFn: () =>
-      getAllTasks({ assignee_id: userId, due_date_from: todayStr, limit: 10 }),
-    enabled: !!userId && !!currentWorkspace,
-    staleTime: 0,
-    refetchOnMount: "always",
-  });
-
-  // Overdue tasks (past due, not done)
-  const { data: overdueData, isLoading: overdueLoading } = useQuery({
-    queryKey: [
-      "home-tasks-overdue",
-      userId,
-      currentWorkspace?.id,
-      yesterdayStr,
-    ],
-    queryFn: () =>
-      getAllTasks({
-        assignee_id: userId,
-        due_date_to: yesterdayStr,
-        limit: 50,
-      }),
-    enabled: !!userId && !!currentWorkspace,
-    staleTime: 0,
-    refetchOnMount: "always",
-  });
-
-  const isLoading = upcomingLoading || overdueLoading;
-
-  const tasks = useMemo(() => {
-    const upcoming = upcomingData?.data ?? [];
-    const overdue = (overdueData?.data ?? []).filter(
-      (task) => task.status !== "done"
-    );
-    // Overdue first (oldest → newest), then upcoming
-    return [...overdue, ...upcoming];
-  }, [upcomingData, overdueData]);
-
-  const openCount = tasks.filter((task) => task.status !== "done").length;
-  const dateGroups = useMemo(() => groupTasksByDate(tasks, t), [tasks, t]);
-
   return (
-    <div
-      className="app-fade-up rounded-2xl border border-border bg-card p-4 sm:p-6 space-y-4 sm:space-y-5"
-      style={{ animationDelay: "0.1s" }}
-    >
-      {/* Header */}
-      <div className="flex items-start justify-between gap-4">
-        <div className="space-y-1">
-          <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
-            {t("home.myTasks")}
-          </p>
-          {isLoading ? (
-            <div className="h-8 w-12 animate-pulse rounded-md bg-muted" />
-          ) : (
-            <div className="flex items-baseline gap-2">
-              <p className="text-3xl font-bold tracking-tight text-foreground">
-                {openCount}
-              </p>
-              <span className="text-sm text-muted-foreground">
-                {t("home.myTasksOpen")}
-              </span>
-            </div>
-          )}
-        </div>
-
-        <Link
-          to="/tasks"
-          className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-muted/50 px-3 py-1.5 text-xs font-medium text-foreground hover:bg-muted transition-colors shrink-0 mt-1"
-        >
-          {t("home.viewAllTasks")}
-          <ArrowRight className="h-3 w-3" />
-        </Link>
-      </div>
-
-      {/* Task list grouped by date */}
-      {isLoading ? (
-        <div className="space-y-2">
-          {[1, 2, 3].map((i) => (
-            <div
-              key={i}
-              className="h-[58px] rounded-xl border border-border animate-pulse bg-muted/40"
-            />
-          ))}
-        </div>
-      ) : tasks.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-8 gap-2">
-          <CheckCircle2 className="h-8 w-8 text-muted-foreground/25" />
-          <p className="text-sm text-muted-foreground">{t("home.noMyTasks")}</p>
-        </div>
+    <Panel>
+      <PanelHeader
+        title={t("today.dueTitle", "Due today")}
+        count={total}
+        marker={overdue > 0}
+        hint={overdue ? t("today.overdueHint", "{{count}} overdue", { count: overdue }) : undefined}
+        action={
+          <Link
+            to="/tasks"
+            className="inline-flex items-center gap-1 text-[12.5px] font-medium text-muted-foreground hover:text-foreground"
+          >
+            {t("today.allTasks", "All tasks")}
+            <ArrowRight className="size-3.5" />
+          </Link>
+        }
+      />
+      {tasks.length === 0 ? (
+        <EmptyState compact icon={<Check />} title={t("today.noTasks", "Nothing due today.")} />
       ) : (
-        <div className="space-y-4">
-          {dateGroups.map((group) => (
-            <div key={group.label} className="space-y-1.5">
-              {/* Date group header */}
-              <div className="flex items-center gap-2 px-1">
-                {group.isOverdue && (
-                  <span className="h-1.5 w-1.5 rounded-full bg-red-500 shrink-0" />
+        <ul className="divide-y divide-border">
+          {tasks.slice(0, VISIBLE_ROWS).map((task) => (
+            <TaskRow key={task.id} task={task} />
+          ))}
+        </ul>
+      )}
+    </Panel>
+  );
+}
+
+// ─── Deals without a next step ─────────────────────────────────────────────
+
+function NoNextStep({ deals, total }: { deals: TodayDeal[]; total: number }) {
+  const { t } = useTranslation();
+  const dealFlow = useDealFlow();
+  if (total === 0) return null;
+  return (
+    <Panel>
+      <PanelHeader title={t("today.noNextTitle", "Deals with no next step")} count={total} marker />
+      <ul className="divide-y divide-border">
+        {deals.map((d) => (
+          <li key={d.id} className="flex items-center gap-3 px-4 py-3 sm:px-5">
+            <Link to={`/pipeline/${d.id}`} className="min-w-0 flex-1">
+              <p className="truncate text-[14.5px] font-medium text-foreground">
+                {d.title || d.contact_name || t("today.untitledDeal", "Deal")}
+              </p>
+              <p className="truncate text-[12.5px] text-muted-foreground">
+                {[d.contact_name, d.value ? formatCurrency(Number(d.value), d.currency ?? "EUR") : null]
+                  .filter(Boolean)
+                  .join(" · ") || " "}
+              </p>
+            </Link>
+            <NextStepChip
+              summary={{ open_count: 0, nearest_due_date: null, nearest_urgency: null, nearest_title: null }}
+              onAdd={() => dealFlow.whatsNext({ id: d.id, title: d.title || d.contact_name })}
+            />
+          </li>
+        ))}
+      </ul>
+    </Panel>
+  );
+}
+
+// ─── Website chat ───────────────────────────────────────────────────────────
+
+function ChatGaps({
+  items,
+}: {
+  items: { assistant_id: string; name: string; total_unanswered: number }[];
+}) {
+  const { t } = useTranslation();
+  const pilot = usePilotFeatures();
+  if (!pilot.aiAssistant || items.length === 0) return null;
+  return (
+    <Panel>
+      <PanelHeader title={t("today.chatTitle", "Your website chat")} />
+      <ul className="divide-y divide-border">
+        {items.map((a) => (
+          <li key={a.assistant_id}>
+            <Link
+              to={`/ai-assistants/${a.assistant_id}?tab=knowledge`}
+              className="flex items-center gap-3 px-4 py-3 hover:bg-accent/50 sm:px-5"
+            >
+              <Bot className="size-4 shrink-0 text-muted-foreground" />
+              <span className="min-w-0 flex-1 text-[14px] text-foreground">
+                {t("today.unanswered", "{{count}} questions it couldn't answer this week", {
+                  count: a.total_unanswered,
+                })}
+                <span className="text-muted-foreground"> · {a.name}</span>
+              </span>
+              <ArrowRight className="size-4 text-muted-foreground" />
+            </Link>
+          </li>
+        ))}
+      </ul>
+    </Panel>
+  );
+}
+
+// ─── Right rail ─────────────────────────────────────────────────────────────
+
+function ThisMonth() {
+  const { t } = useTranslation();
+  const q = useResultsSummary("30d");
+  const data = q.data && q.data.supported ? q.data : null;
+  return (
+    <Panel>
+      <PanelHeader
+        title={t("today.thisMonth", "Last 30 days")}
+        action={
+          <Link
+            to="/results"
+            className="inline-flex items-center gap-1 text-[12.5px] font-medium text-muted-foreground hover:text-foreground"
+          >
+            {t("today.results", "Results")}
+            <ArrowRight className="size-3.5" />
+          </Link>
+        }
+      />
+      {q.isLoading ? (
+        <div className="grid grid-cols-2 gap-4 p-5">
+          {[0, 1, 2, 3].map((k) => (
+            <Skeleton key={k} className="h-12" />
+          ))}
+        </div>
+      ) : data ? (
+        <dl className="grid grid-cols-2 gap-x-4 gap-y-4 p-5">
+          {[
+            { k: "saw", v: data.funnel.people_saw, label: t("results.saw", "saw you") },
+            { k: "contacted", v: data.funnel.contacted, label: t("results.contacted", "contacted you") },
+            { k: "customers", v: data.funnel.new_customers, label: t("results.customers", "new customers") },
+            {
+              k: "earned",
+              v: data.funnel.earned,
+              label: t("results.earned", "earned"),
+              money: true,
+            },
+          ].map((s) => (
+            <div key={s.k} className="min-w-0">
+              <dt className="sr-only">{s.label}</dt>
+              <dd
+                className={cn(
+                  "title-display num truncate text-[24px] font-semibold",
+                  s.money && s.v ? "text-earned" : "text-foreground",
                 )}
-                <p
-                  className={cn(
-                    "text-[11px] font-semibold uppercase tracking-wider",
-                    group.isOverdue
-                      ? "text-red-500"
-                      : group.label === t("home.taskDateToday")
-                        ? "text-foreground"
-                        : "text-muted-foreground"
-                  )}
-                >
-                  {group.label}
-                </p>
-                <span className="flex-1 h-px bg-border/50" />
-                <span className="text-[10px] text-muted-foreground/60">
-                  {group.tasks.length}
-                </span>
-              </div>
-              <div className="space-y-1.5">
-                {group.tasks.map((task) => (
-                  <MyTaskRow key={task.id} task={task} />
-                ))}
-              </div>
+              >
+                {s.v == null ? "—" : s.money ? formatCurrency(s.v, data.currency) : formatNumber(s.v)}
+              </dd>
+              <p className="text-[12.5px] text-muted-foreground">{s.label}</p>
             </div>
           ))}
-          {(upcomingData?.total ?? 0) > 10 && (
-            <Link
-              to="/tasks"
-              className="flex items-center justify-center gap-1.5 py-2 text-xs text-muted-foreground hover:text-foreground transition-colors"
-            >
-              +{(upcomingData?.total ?? 0) - 10} {t("home.moreTasks")}
-              <ArrowRight className="h-3 w-3" />
-            </Link>
-          )}
-        </div>
+        </dl>
+      ) : (
+        <p className="p-5 text-[13px] text-muted-foreground">—</p>
       )}
-    </div>
+    </Panel>
   );
 }
 
-// ─── Deals Pipeline Summary Section ──────────────────────────────────────────
+const SETUP_TARGET: Record<SetupItemKey, string> = {
+  email: "/settings/email-accounts",
+  form: "/forms",
+  website: "/settings/business-profile",
+  assistant: "/ai-assistants",
+  teammate: "/settings/team",
+  calendar: "/settings/calendars",
+  profile: "/settings/business-profile",
+};
 
-type SummaryCategory = "open" | "won";
-
-// Stages are workspace-configurable now, so the summary aggregates by stage
-// CATEGORY instead of hardcoded stage keys. Static Tailwind classes (no
-// dynamic interpolation) so they survive purge.
-const DEAL_SUMMARY_CARDS: {
-  category: SummaryCategory;
-  labelKey: string;
-  labelDefault: string;
-  icon: typeof Inbox;
-  iconWrap: string;
-  accent: string;
-  ring: string;
-}[] = [
-  {
-    category: "open",
-    labelKey: "home.dealsOpen",
-    labelDefault: "Open deals",
-    icon: TrendingUp,
-    iconWrap: "bg-sky-100 text-sky-600",
-    accent: "from-sky-400/20",
-    ring: "group-hover:ring-sky-300/60",
-  },
-  {
-    category: "won",
-    labelKey: "home.dealsWon",
-    labelDefault: "Won",
-    icon: Trophy,
-    iconWrap: "bg-emerald-100 text-emerald-600",
-    accent: "from-emerald-400/20",
-    ring: "group-hover:ring-emerald-300/60",
-  },
-];
-
-function sumDealValue(deals: DealListItem[]): Map<string, number> {
-  return sumByCurrency(deals, (d) => ({ value: d.value, currency: d.currency }));
-}
-
-function mergeTotals(...maps: Array<Map<string, number>>): Map<string, number> {
-  const out = new Map<string, number>();
-  for (const m of maps) for (const [k, v] of m) out.set(k, (out.get(k) ?? 0) + v);
-  return out;
-}
-
-function DealsSummarySection() {
+function GetSetUp({ setup }: { setup: SetupState }) {
   const { t } = useTranslation();
-  const { currentWorkspace } = useAuthContext();
-  // Deals here span every pipeline, so the lookup resolves per deal.
-  const { resolve: resolveDealStage } = useDealStageLookup();
-
-  const { data, isLoading } = useQuery({
-    // Nested under the "deals-pipeline" prefix so every deal mutation
-    // (move, reorder, won/lost, create, edit) — which all invalidate
-    // ["deals-pipeline"] — also refreshes these summary counts.
-    queryKey: ["deals-pipeline", "home-summary", currentWorkspace?.id],
-    queryFn: () => getDeals({ page: 1, limit: 500 }),
-    enabled: !!currentWorkspace,
-    // The global default is refetchOnMount: false, so a query invalidated
-    // while this page is unmounted (e.g. after creating a deal from the
-    // pipeline) would serve stale cache on return and miss the new deal.
-    // Refetch on mount so navigating back to home always reflects mutations.
-    staleTime: 0,
-    refetchOnMount: "always",
-  });
-
-  const byCategory = useMemo(() => {
-    const acc: Record<SummaryCategory, DealListItem[]> = { open: [], won: [] };
-    for (const d of data?.data ?? []) {
-      // Unknown keys (stage deleted from config) count as open — better than
-      // vanishing from the summary.
-      const category = resolveDealStage(d.pipeline_id, d.stage)?.category ?? "open";
-      if (category === "open" || category === "won") acc[category].push(d);
-    }
-    return acc;
-  }, [data?.data, resolveDealStage]);
-
-  // Lost deals stay excluded, matching the old hardcoded new+in_progress+won.
-  const masterTotals = mergeTotals(sumDealValue(byCategory.open), sumDealValue(byCategory.won));
-  const { currency: workspaceCurrency } = useWorkspaceCurrency();
-  // The workspace currency is the headline; other currencies sit under it,
-  // never added in (no exchange rates).
-  const headline = masterTotals.get(workspaceCurrency) ?? 0;
-  const others = new Map([...masterTotals].filter(([cur, v]) => cur !== workspaceCurrency && v !== 0));
-
+  const pilot = usePilotFeatures();
+  const update = useUpdateSetup();
+  if (setup.dismissed_at) return null;
+  const items = setup.items.filter(
+    (i) =>
+      !setup.dismissed_items.includes(i.key) &&
+      (i.key !== "assistant" || pilot.aiAssistant),
+  );
+  const done = items.filter((i) => i.done).length;
+  if (items.length === 0 || done === items.length) return null;
   return (
-    <div
-      className="app-fade-up rounded-2xl border border-border bg-card p-4 sm:p-6 space-y-4 sm:space-y-5"
-      style={{ animationDelay: "0.02s" }}
-    >
-      {/* Header */}
-      <div className="flex items-start justify-between gap-4">
-        <div className="space-y-1">
-          <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground flex items-center gap-1.5">
-            <Columns3 className="h-3 w-3" />
-            {t("home.dealsTitle", { defaultValue: "Pipeline" })}
-          </p>
-          {isLoading ? (
-            <div className="h-8 w-12 animate-pulse rounded-md bg-muted" />
-          ) : (
-            <>
-              <p className="text-3xl font-bold tracking-tight text-foreground tabular-nums">
-                {formatCurrency(headline, workspaceCurrency)}
-              </p>
-              {others.size > 0 ? (
-                <p className="text-sm font-semibold text-muted-foreground tabular-nums">
-                  + {formatCurrencyTotals(others, workspaceCurrency)}
-                </p>
-              ) : null}
-            </>
-          )}
+    <Panel className="overflow-hidden">
+      <div className="border-b border-border bg-marker-soft/60 px-4 py-3.5 sm:px-5">
+        <div className="flex items-start justify-between gap-3">
+          <div>
+            <h2 className="text-[15px] font-semibold text-foreground">{t("setup.title", "Get set up")}</h2>
+            <p className="mt-0.5 text-[12.5px] text-muted-foreground">
+              {t("setup.progress", "{{done}} of {{total}} done", { done, total: items.length })}
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={() => update.mutate({ dismiss_all: true })}
+            className="text-[12px] font-medium text-muted-foreground hover:text-foreground"
+          >
+            {t("setup.hide", "Hide")}
+          </button>
         </div>
-
-        <Link
-          to="/pipeline"
-          className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-muted/50 px-3 py-1.5 text-xs font-medium text-foreground hover:bg-muted transition-colors shrink-0 mt-1"
-        >
-          {t("home.viewPipeline", { defaultValue: "View pipeline" })}
-          <ArrowRight className="h-3 w-3" />
-        </Link>
+        <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-foreground/10">
+          <div
+            className="h-full rounded-full bg-foreground transition-[width] duration-500"
+            style={{ width: `${(done / items.length) * 100}%` }}
+          />
+        </div>
       </div>
-
-      {/* Stage cards */}
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-        {DEAL_SUMMARY_CARDS.map(
-          ({ category, labelKey, labelDefault, icon: Icon, iconWrap, accent }) => {
-          const categoryDeals = byCategory[category];
-          const count = categoryDeals.length;
-          const total = sumDealValue(categoryDeals);
-
-          return (
-            <Link
-              key={category}
-              to="/pipeline"
-              className="group relative overflow-hidden rounded-xl border border-border bg-muted/30 p-4 transition-colors duration-150 hover:bg-muted/60 hover:border-border/80"
-            >
-              {/* Soft accent glow */}
-              <div
-                className={cn(
-                  "pointer-events-none absolute -right-8 -top-8 h-24 w-24 rounded-full bg-gradient-to-br to-transparent blur-2xl opacity-60 transition-opacity duration-200 group-hover:opacity-100",
-                  accent,
-                )}
-              />
-
-              <div className="relative flex items-start justify-between gap-3">
-                <div
-                  className={cn(
-                    "flex h-9 w-9 items-center justify-center rounded-xl",
-                    iconWrap,
-                  )}
-                >
-                  <Icon className="h-[18px] w-[18px]" />
-                </div>
-                <ArrowRight className="h-4 w-4 text-muted-foreground/30 transition-all duration-200 group-hover:translate-x-0.5 group-hover:text-muted-foreground" />
-              </div>
-
-              <div className="relative mt-4 space-y-1">
-                <p className="text-[12px] font-medium text-muted-foreground">
-                  {t(labelKey, { defaultValue: labelDefault })}
-                </p>
-                {isLoading ? (
-                  <div className="h-8 w-14 animate-pulse rounded-md bg-muted" />
-                ) : (
-                  <p className="text-[28px] font-bold leading-none tracking-tight text-foreground tabular-nums">
-                    {formatNumber(count)}
-                  </p>
-                )}
-              </div>
-
-              <div className="relative mt-3 flex items-center justify-between gap-2 border-t border-border/60 pt-3">
-                <p className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground/70">
-                  {t("home.dealsTotalValue", { defaultValue: "Total value" })}
-                </p>
-                {isLoading ? (
-                  <div className="h-4 w-16 animate-pulse rounded bg-muted" />
-                ) : (
-                  <p className="text-[15px] font-semibold text-foreground tabular-nums leading-tight">
-                    {formatCurrencyTotals(total, workspaceCurrency)}
-                  </p>
-                )}
-              </div>
-            </Link>
-          );
-        },
-        )}
-      </div>
-    </div>
-  );
-}
-
-// ─── Tasks Summary Section ───────────────────────────────────────────────────
-
-type OpenTaskStatus = Extract<TaskStatus, "todo" | "in_progress">;
-
-const TASK_SUMMARY_COLUMNS: {
-  status: OpenTaskStatus;
-  dot: string;
-}[] = [
-  { status: "todo", dot: "bg-slate-400" },
-  { status: "in_progress", dot: "bg-amber-500" },
-];
-
-const TASKS_PER_COLUMN = 5;
-
-/** Sort by due date ascending (overdue first); tasks without a due date last. */
-function sortTasksByDue(tasks: Task[]): Task[] {
-  return [...tasks].sort((a, b) => {
-    const ad = a.due_date ?? "";
-    const bd = b.due_date ?? "";
-    if (!ad && !bd) return 0;
-    if (!ad) return 1;
-    if (!bd) return -1;
-    return ad.localeCompare(bd);
-  });
-}
-
-function TasksSummarySection({ userId }: { userId: string }) {
-  const { t } = useTranslation();
-  const { currentWorkspace } = useAuthContext();
-
-  const { data, isLoading } = useQuery({
-    // Nested under the "tasks" prefix so every task mutation — which all
-    // invalidate ["tasks"] — also refreshes these summary counts.
-    queryKey: ["tasks", "home-summary", userId, currentWorkspace?.id],
-    queryFn: () => getAllTasks({ assignee_id: userId, limit: 500 }),
-    enabled: !!userId && !!currentWorkspace,
-    staleTime: 0,
-    refetchOnMount: "always",
-  });
-
-  const byStatus = useMemo(() => {
-    const acc: Record<OpenTaskStatus, Task[]> = {
-      todo: [],
-      in_progress: [],
-    };
-    for (const task of data?.data ?? []) {
-      if (task.status === "todo" || task.status === "in_progress") {
-        acc[task.status].push(task);
-      }
-    }
-    acc.todo = sortTasksByDue(acc.todo);
-    acc.in_progress = sortTasksByDue(acc.in_progress);
-    return acc;
-  }, [data?.data]);
-
-  const totalTasks = byStatus.todo.length + byStatus.in_progress.length;
-
-  return (
-    <div
-      className="app-fade-up rounded-2xl border border-border bg-card p-4 sm:p-6 space-y-4 sm:space-y-5"
-      style={{ animationDelay: "0.06s" }}
-    >
-      {/* Header */}
-      <div className="flex items-start justify-between gap-4">
-        <div className="space-y-1">
-          <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground flex items-center gap-1.5">
-            <ListChecks className="h-3 w-3" />
-            {t("home.myTasks", { defaultValue: "Tasks" })}
-          </p>
-          {isLoading ? (
-            <div className="h-8 w-12 animate-pulse rounded-md bg-muted" />
-          ) : (
-            <div className="flex items-baseline gap-2">
-              <p className="text-3xl font-bold tracking-tight text-foreground tabular-nums">
-                {formatNumber(totalTasks)}
-              </p>
-              <span className="text-sm text-muted-foreground">
-                {t("home.myTasksOpen", { defaultValue: "open" })}
+      <ul className="divide-y divide-border">
+        {items.map((i) => (
+          <li key={i.key} className="group flex items-center gap-3 px-4 py-2.5 sm:px-5">
+            {i.done ? (
+              <span className="flex size-5 shrink-0 items-center justify-center rounded-full bg-foreground text-background">
+                <Check className="size-3" strokeWidth={3} />
               </span>
-            </div>
-          )}
-        </div>
+            ) : (
+              <CircleDashed className="size-5 shrink-0 text-foreground/35" />
+            )}
+            {i.done ? (
+              <span className="flex-1 text-[13.5px] text-muted-foreground line-through">
+                {t(`setup.items.${i.key}`)}
+              </span>
+            ) : (
+              <Link to={SETUP_TARGET[i.key]} className="flex-1 text-[13.5px] font-medium text-foreground hover:underline hover:underline-offset-4">
+                {t(`setup.items.${i.key}`)}
+              </Link>
+            )}
+            {!i.done ? (
+              <button
+                type="button"
+                onClick={() => update.mutate({ dismiss: [i.key] })}
+                className="p-1 opacity-100 transition-opacity focus:opacity-100 sm:opacity-0 sm:group-hover:opacity-100"
+                aria-label={t("setup.skip", "Skip")}
+              >
+                <X className="size-3.5 text-muted-foreground" />
+              </button>
+            ) : null}
+          </li>
+        ))}
+      </ul>
+    </Panel>
+  );
+}
 
-        <Link
-          to="/tasks"
-          className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-muted/50 px-3 py-1.5 text-xs font-medium text-foreground hover:bg-muted transition-colors shrink-0 mt-1"
-        >
-          {t("home.viewAllTasks", { defaultValue: "View all tasks" })}
-          <ArrowRight className="h-3 w-3" />
-        </Link>
-      </div>
+// ─── Page ───────────────────────────────────────────────────────────────────
 
-      {/* Status columns with actual tasks */}
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-        {TASK_SUMMARY_COLUMNS.map(({ status, dot }) => {
-          const statusTasks = byStatus[status];
-          const count = statusTasks.length;
-          const shown = statusTasks.slice(0, TASKS_PER_COLUMN);
-          const remaining = count - shown.length;
-
-          return (
-            <div
-              key={status}
-              className="flex flex-col rounded-xl border border-border bg-muted/30 p-3"
-            >
-              {/* Column header */}
-              <div className="flex items-center gap-2 px-1 pb-2.5">
-                <span className={cn("h-2 w-2 rounded-full shrink-0", dot)} />
-                <span className="text-sm font-medium text-foreground">
-                  {t(`tasks.statuses.${status}`, { defaultValue: status })}
-                </span>
-                <span className="inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-background px-1.5 text-xs font-medium text-muted-foreground">
-                  {count}
-                </span>
-              </div>
-
-              {/* Task list */}
-              {isLoading ? (
-                <div className="space-y-1.5">
-                  {[1, 2, 3].map((i) => (
-                    <div
-                      key={i}
-                      className="h-[58px] rounded-xl border border-border animate-pulse bg-muted/40"
-                    />
-                  ))}
-                </div>
-              ) : count === 0 ? (
-                <div className="flex flex-col items-center justify-center gap-2 py-8">
-                  <CheckCircle2 className="h-7 w-7 text-muted-foreground/25" />
-                  <p className="text-xs text-muted-foreground">
-                    {status === "todo"
-                      ? t("home.noTodoTasks", { defaultValue: "No to-do tasks" })
-                      : t("home.noInProgressTasks", {
-                          defaultValue: "No in progress tasks",
-                        })}
-                  </p>
-                </div>
-              ) : (
-                <div className="space-y-1.5">
-                  {shown.map((task) => (
-                    <MyTaskRow key={task.id} task={task} />
-                  ))}
-                  {remaining > 0 && (
-                    <Link
-                      to="/tasks"
-                      className="flex items-center justify-center gap-1.5 py-2 text-xs text-muted-foreground hover:text-foreground transition-colors"
-                    >
-                      +{remaining} {t("home.moreTasks", { defaultValue: "more" })}
-                      <ArrowRight className="h-3 w-3" />
-                    </Link>
-                  )}
-                </div>
-              )}
-            </div>
-          );
-        })}
-      </div>
+function Greeting({
+  firstName,
+  count,
+  loading,
+}: {
+  firstName: string;
+  count: number;
+  loading: boolean;
+}) {
+  const { t, i18n: i } = useTranslation();
+  const [date] = useState(() => new Date());
+  return (
+    <div className="space-y-1.5">
+      <p className="text-[12.5px] font-medium uppercase tracking-[0.08em] text-muted-foreground">
+        {date.toLocaleDateString(i.language, { weekday: "long", day: "numeric", month: "long" })}
+      </p>
+      <h1 className="title-display text-[28px] font-semibold text-foreground sm:text-[36px]">
+        {loading ? (
+          t("today.hello", "Hello{{name}}.", { name: firstName ? `, ${firstName}` : "" })
+        ) : count > 0 ? (
+          <>
+            <span className="marker">{t("today.waitingCount", { count })}</span>{" "}
+            {t("today.waitingTail", "on you.")}
+          </>
+        ) : (
+          t("today.allClear", "All clear{{name}}.", { name: firstName ? `, ${firstName}` : "" })
+        )}
+      </h1>
     </div>
   );
 }
 
-export default function Home() {
+export default function Today() {
   const { user, currentWorkspace } = useAuthContext();
   const { t } = useTranslation();
   useDocumentMeta({
-    titleKey: "home.metaTitle",
+    titleKey: "today.metaTitle",
     descriptionKey: "home.metaDescription",
     titleSuffix: " - Repraesent",
   });
+  const [scope, setScope] = useState<"me" | "all">("me");
+  const q = useToday(scope);
+  const qc = useQueryClient();
 
-  const role = currentWorkspace?.member_role ?? "—";
-  const displayName = [user?.first_name, user?.last_name]
-    .filter(Boolean)
-    .join(" ");
-  const firstName = displayName.split(" ")[0];
+  // The retired first-run tour used to stamp onboarding_completed_at; other
+  // screens still gate on it (e.g. the Forms intro). Today replaces the tour,
+  // so reaching it counts as the tour being done.
+  const stamped = useRef(false);
+  useEffect(() => {
+    if (
+      stamped.current ||
+      !user ||
+      user.onboarding_completed_at != null ||
+      currentWorkspace?.status !== "active" ||
+      currentWorkspace?.type === "doorboost_brand"
+    ) {
+      return;
+    }
+    stamped.current = true;
+    void completeOnboarding()
+      .then(() => qc.invalidateQueries({ queryKey: ["auth"] }))
+      .catch(() => undefined);
+  }, [user, currentWorkspace?.status, currentWorkspace?.type, qc]);
+  const firstName = (user?.first_name ?? "").trim().split(" ")[0] ?? "";
+  const data = q.data && q.data.supported ? q.data : null;
+
+  // Brand (DoorBoost) workspaces keep their own dashboard content.
+  if (q.data && !q.data.supported) {
+    return (
+      <PageContainer className="space-y-6">
+        <Greeting firstName={firstName} count={0} loading />
+        <DoorboostHomeSection />
+      </PageContainer>
+    );
+  }
+
+  const counts = data?.counts;
+  // People waiting — tasks are not people, they get their own panel.
+  const needs = counts
+    ? counts.new_leads + counts.follow_ups_due + (counts.signups ?? 0)
+    : 0;
+  const waiting = needs;
+  const isRoot = data?.is_root === true;
+  const isEmptyAccount =
+    !!data &&
+    needs === 0 &&
+    (data.tasks?.length ?? 0) === 0 &&
+    counts?.deals_no_next_step === 0;
 
   return (
-    <div className="mx-auto w-full max-w-[1280px] p-4 sm:p-6 py-10! space-y-6 sm:space-y-8 app-fade-in">
-      {/* Page heading */}
-      <div className="app-fade-up space-y-1">
-        <h1 className="text-2xl font-semibold text-foreground tracking-tight">
-          {t("home.greeting", { name: firstName ? `, ${firstName}` : "" })}
-        </h1>
-        <p className="text-sm text-muted-foreground">
-          {currentWorkspace?.name} · <span className="capitalize">{role}</span>
-        </p>
+    <PageContainer className="space-y-6 sm:space-y-8">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+        <Greeting firstName={firstName} count={waiting} loading={!data} />
+        <div
+          role="tablist"
+          aria-label={t("today.scope", "Whose work")}
+          className="inline-flex self-start rounded-lg border border-border bg-card p-0.5 sm:self-auto"
+        >
+          {(["me", "all"] as const).map((s) => (
+            <button
+              key={s}
+              role="tab"
+              aria-selected={scope === s}
+              onClick={() => setScope(s)}
+              className={cn(
+                "rounded-md px-3 py-1.5 text-[12.5px] font-medium transition-colors",
+                scope === s ? "bg-foreground text-background" : "text-muted-foreground hover:text-foreground",
+              )}
+            >
+              {s === "me" ? t("today.mine", "Mine") : t("today.everyone", "Everyone")}
+            </button>
+          ))}
+        </div>
       </div>
 
-      {/* New customers who skipped booking their intro call */}
-      <IntroCallCard />
+      <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_340px] lg:items-start">
+        <div className="min-w-0 space-y-6">
+          {!data && !q.isError ? (
+            <Panel className="space-y-3 p-5">
+              <Skeleton className="h-5 w-40" />
+              <Skeleton className="h-14" />
+              <Skeleton className="h-14" />
+            </Panel>
+          ) : data ? (
+            <>
+              {isRoot && data.signups ? (
+                <NeedsYou
+                  title={t("today.signupsTitle", "New signups to call")}
+                  leads={data.signups}
+                  followUps={[]}
+                  total={counts?.signups ?? data.signups.length}
+                  emptyTitle={t("today.noSignups", "No new signups waiting.")}
+                  emptyBody=""
+                />
+              ) : null}
+              <NeedsYou
+                title={t("today.needsYou", "Needs you")}
+                leads={data.new_leads ?? []}
+                followUps={data.follow_ups ?? []}
+                total={counts?.new_leads ?? 0}
+                emptyTitle={
+                  isEmptyAccount
+                    ? t("today.emptyTitle", "When someone reaches out, they show up here.")
+                    : t("today.noNew", "Nobody is waiting on you.")
+                }
+                emptyBody={
+                  isEmptyAccount
+                    ? t(
+                        "today.emptyBody",
+                        "A form on your website, a chat, a booking or an ad — every new inquiry lands here with one tap to call them back.",
+                      )
+                    : t("today.noNewBody", "New inquiries will appear here as they come in.")
+                }
+              />
+              <DueToday
+                tasks={data.tasks ?? []}
+                total={(counts?.tasks_overdue ?? 0) + (counts?.tasks_due_today ?? 0)}
+                overdue={counts?.tasks_overdue ?? 0}
+              />
+              <NoNextStep
+                deals={data.deals_no_next_step ?? []}
+                total={counts?.deals_no_next_step ?? 0}
+              />
+              <ChatGaps items={data.unanswered ?? []} />
+            </>
+          ) : (
+            <Panel>
+              <EmptyState
+                icon={<Inbox />}
+                title={t("today.loadFailed", "Today could not load.")}
+                action={
+                  <Button variant="outline" onClick={() => void q.refetch()}>
+                    {t("common.retry", "Try again")}
+                  </Button>
+                }
+              />
+            </Panel>
+          )}
+        </div>
 
-      {/* Doorboost migration — always above pipeline & tasks */}
-      <DoorboostHomeSection />
-
-      {/* Deals pipeline summary */}
-      <DealsSummarySection />
-
-      {/* Tasks summary */}
-      {user?.id && <TasksSummarySection userId={user.id} />}
-
-      {/* Analytics chart */}
-      <LeadAnalyticsChart />
-    </div>
+        <aside className="min-w-0 space-y-6">
+          {data?.setup ? <GetSetUp setup={data.setup} /> : null}
+          <IntroCallCard />
+          <ThisMonth />
+          {currentWorkspace ? <DoorboostHomeSection /> : null}
+        </aside>
+      </div>
+    </PageContainer>
   );
 }

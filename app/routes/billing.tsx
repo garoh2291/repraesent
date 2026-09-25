@@ -95,7 +95,7 @@ export default function Products() {
     <div className="mx-auto w-full max-w-[1280px] p-4 sm:p-6 py-10! space-y-6 sm:space-y-8 app-fade-in">
       {/* Heading */}
       <div className="app-fade-up space-y-1">
-        <h1 className="text-xl sm:text-2xl font-semibold text-foreground tracking-tight">
+        <h1 className="title-display text-[26px] font-semibold text-foreground sm:text-[30px]">
           {t("products.title")}
         </h1>
         <p className="text-sm text-muted-foreground">
@@ -105,7 +105,7 @@ export default function Products() {
 
       {/* Trial workspace marketing card (Doorboost-restored) */}
       {isTrialWorkspace && (
-        <section className="app-fade-up app-fade-up-d1 relative overflow-hidden rounded-2xl border border-amber-400/30 bg-gradient-to-br from-amber-50 via-white to-amber-50/40 dark:from-amber-500/[0.07] dark:via-transparent dark:to-amber-500/[0.04] p-6 sm:p-8">
+        <section className="app-fade-up app-fade-up-d1 relative overflow-hidden rounded-xl border border-marker/60 bg-marker-soft/50 p-6 sm:p-8">
           <div className="pointer-events-none absolute -top-16 -right-16 h-56 w-56 rounded-full bg-amber-300/20 blur-3xl" />
           <div className="pointer-events-none absolute -bottom-20 -left-10 h-48 w-48 rounded-full bg-amber-400/10 blur-3xl" />
 

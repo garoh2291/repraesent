@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { CalendarHubTabs } from "~/components/notebook/calendar-hub-tabs";
 import { useLocation } from "react-router";
 import { useTranslation } from "react-i18next";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -367,6 +368,7 @@ export default function SettingsCalendars() {
 
   return (
     <div className="space-y-6 sm:space-y-8 app-fade-up app-fade-up-d2">
+      <CalendarHubTabs />
       {oauthResult ? (
         <OAuthResultBanner
           result={oauthResult}

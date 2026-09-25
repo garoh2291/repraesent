@@ -43,11 +43,12 @@
     "view": "Ansehen",
     "yes": "Ja",
     "you": "Sie",
-    "copyFailed": "Kopieren nicht möglich — markiere den Text und kopiere ihn manuell."
+    "copyFailed": "Kopieren nicht möglich — markiere den Text und kopiere ihn manuell.",
+    "retry": "Erneut versuchen"
   },
   "nav": {
     "home": "Startseite",
-    "leads": "Leads",
+    "leads": "Anfragen",
     "appointments": "Termine",
     "tasks": "Aufgaben",
     "contacts": "Kontakte",
@@ -287,7 +288,7 @@
   "leads": {
     "metaTitle": "Leads",
     "metaDescription": "Lead-Verwaltung",
-    "title": "Leads",
+    "title": "Anfragen",
     "manageHint": "Verwalten Sie Ihre eingehenden Leads",
     "tableView": "Tabelle",
     "kanbanView": "Kanban",
@@ -364,7 +365,7 @@
       "notes": "Notizen",
       "history": "Verlauf",
       "emails": "E-Mails",
-      "backToLeads": "Zurück zu Leads",
+      "backToLeads": "Zurück zu den Anfragen",
       "loading": "Lead wird geladen…",
       "addNote": "Notiz hinzufügen",
       "newNote": "Neue Notiz",
@@ -646,8 +647,8 @@
     "stages": {
       "new": "Neu",
       "in_progress": "In Bearbeitung",
-      "won": "Gewonnen",
-      "lost": "Verloren"
+      "won": "Neuer Kunde",
+      "lost": "Hat nicht geklappt"
     },
     "errors": {
       "moveFailed": "Deal konnte nicht verschoben werden.",
@@ -8608,5 +8609,303 @@
     "bookedSub": "Ihr nächster Termin mit dem re:praesent-Team.",
     "inviteAt": "Die Kalendereinladung ging an {{email}}.",
     "joinCall": "Zum Gespräch"
+  },
+  "sections": {
+    "today": "Heute",
+    "customers": "Kunden",
+    "deals": "Deals",
+    "results": "Ergebnisse",
+    "website": "Website",
+    "more": "Mehr",
+    "mobileNav": "Hauptmenü",
+    "tabs": {
+      "inquiries": "Anfragen",
+      "people": "Kontakte",
+      "inbox": "Posteingang",
+      "pipeline": "Pipeline",
+      "overview": "Übersicht",
+      "chatgptAds": "ChatGPT-Anzeigen",
+      "site": "Website",
+      "aiChat": "KI-Chat",
+      "files": "Dateien"
+    },
+    "settingsGroups": {
+      "you": "Du",
+      "workspace": "Bereich",
+      "connections": "Verbindungen",
+      "alerts": "Benachrichtigungen",
+      "sales": "Vertrieb",
+      "root": "re:praesent"
+    }
+  },
+  "command": {
+    "title": "Öffnen oder suchen",
+    "short": "Suchen",
+    "description": "Finde eine Seite, eine Person oder einen Deal",
+    "placeholder": "Seite, Person oder Deal finden…",
+    "actions": "Neu anlegen",
+    "goTo": "Öffnen",
+    "newInquiry": "Neue Anfrage",
+    "newDeal": "Neuer Deal",
+    "newTask": "Neue Aufgabe",
+    "newContact": "Neuer Kontakt",
+    "newForm": "Neues Formular",
+    "empty": "Nichts gefunden für „{{q}}“.",
+    "footer": "Personen, Deals, Aufgaben und Seiten durchsuchen"
+  },
+  "today": {
+    "metaTitle": "Heute",
+    "hello": "Hallo{{name}}.",
+    "allClear": "Alles erledigt{{name}}.",
+    "waitingCount_one": "1 Person wartet",
+    "waitingCount_other": "{{count}} Personen warten",
+    "waitingTail": "auf dich.",
+    "scope": "Wessen Aufgaben",
+    "mine": "Meine",
+    "everyone": "Alle",
+    "needsYou": "Wartet auf dich",
+    "signupsTitle": "Neue Anmeldungen zum Anrufen",
+    "noSignups": "Keine neuen Anmeldungen offen.",
+    "emptyTitle": "Wer sich meldet, erscheint hier.",
+    "emptyBody": "Formular, Chat, Buchung oder Anzeige – jede neue Anfrage landet hier, mit einem Tipp zum Zurückrufen.",
+    "noNew": "Niemand wartet auf dich.",
+    "noNewBody": "Neue Anfragen erscheinen hier, sobald sie eingehen.",
+    "seeAll": "Alle ansehen",
+    "unnamed": "Jemand",
+    "callAgainDue": "Erneut anrufen",
+    "waiting": "wartet seit {{time}}",
+    "more": "Mehr",
+    "recordOutcome": "Ergebnis eintragen",
+    "open": "Öffnen",
+    "dueTitle": "Heute fällig",
+    "overdueHint_one": "1 überfällig",
+    "overdueHint_other": "{{count}} überfällig",
+    "allTasks": "Alle Aufgaben",
+    "noTasks": "Heute ist nichts fällig.",
+    "markDone": "Als erledigt markieren",
+    "taskDone": "Erledigt",
+    "overdueSince": "überfällig seit {{date}}",
+    "noNextTitle": "Deals ohne nächsten Schritt",
+    "untitledDeal": "Deal",
+    "chatTitle": "Dein Website-Chat",
+    "unanswered_one": "1 Frage konnte diese Woche nicht beantwortet werden",
+    "unanswered_other": "{{count}} Fragen konnten diese Woche nicht beantwortet werden",
+    "thisMonth": "Letzte 30 Tage",
+    "results": "Ergebnisse",
+    "loadFailed": "Heute konnte nicht geladen werden.",
+    "callAgainToday": "Heute erneut anrufen",
+    "seeAllCount": "Alle {{count}} ansehen"
+  },
+  "outcome": {
+    "call": "Anrufen",
+    "whatsapp": "WhatsApp",
+    "email": "E-Mail",
+    "noChannel": "Nicht hinterlegt",
+    "title": "Wie lief es?",
+    "sub": {
+      "call": "Du hast {{name}} angerufen.",
+      "whatsapp": "Du hast {{name}} auf WhatsApp geschrieben.",
+      "email": "Du hast {{name}} eine E-Mail geschrieben."
+    },
+    "subGeneric": "Halte fest, was mit {{name}} passiert ist.",
+    "options": {
+      "reached": "Erreicht",
+      "no_answer": "Keine Antwort",
+      "not_interested": "Kein Interesse",
+      "fake": "Fake oder Spam"
+    },
+    "callAgainOn": "Erneut anrufen am",
+    "callAgainTitle": "{{name}} erneut anrufen",
+    "fakeHint": "Die Anfrage wird ausgeblendet und der Absender blockiert. Du kannst das rückgängig machen.",
+    "notInterestedHint": "Sie wandert zu den abgeschlossenen Anfragen. Es wird nichts gelöscht.",
+    "notePlaceholder": "Notiz hinzufügen (optional)",
+    "later": "Später",
+    "save": "Speichern",
+    "notNow": "Jetzt nicht",
+    "reachedTitle": "Gut. Wie geht es mit {{name}} weiter?",
+    "reachedBody": "Mach einen Deal daraus – mit Wert und nächstem Schritt. Oder lass es vorerst so.",
+    "saved": {
+      "reached": "Gespeichert",
+      "no_answer": "Gespeichert – wir erinnern dich ans Zurückrufen",
+      "not_interested": "Als „kein Interesse“ abgeschlossen",
+      "fake": "Ausgeblendet und Absender blockiert"
+    },
+    "badge": {
+      "reached": "Erreicht",
+      "no_answer": "Keine Antwort",
+      "not_interested": "Kein Interesse",
+      "fake": "Spam",
+      "tried_one": "1× versucht",
+      "tried_other": "{{count}}× versucht"
+    },
+    "thisPerson": "diese Person",
+    "saving": "Wird gespeichert…",
+    "saveFailed": "Speichern fehlgeschlagen – bitte erneut versuchen."
+  },
+  "makeDeal": {
+    "cta": "Deal anlegen",
+    "title": "Deal anlegen",
+    "body": "Ein Deal hält Wert und nächsten Schritt an einem Ort.",
+    "what": "Worum geht es?",
+    "value": "Ungefährer Wert ({{currency}})",
+    "nextStep": "Nächster Schritt",
+    "when": "Wann",
+    "defaultTask": "Angebot senden",
+    "submit": "Deal anlegen",
+    "created": "Deal angelegt",
+    "open": "Öffnen",
+    "existing": "Für diese Anfrage gibt es schon einen Deal"
+  },
+  "whatsNext": {
+    "title": "Wie geht es weiter?",
+    "subCompleted": "Erledigt. {{name}} hat noch keinen nächsten Schritt.",
+    "subNone": "{{name}} hat keinen nächsten Schritt.",
+    "picks": {
+      "call": "Zurückrufen",
+      "offer": "Angebot senden",
+      "meeting": "Termin vereinbaren"
+    },
+    "customPlaceholder": "Etwas anderes…",
+    "when": "Wann",
+    "add": "Nächsten Schritt anlegen",
+    "addAnother": "Weiteren Schritt planen",
+    "saved": "Nächster Schritt angelegt",
+    "orClose": "Oder abschließen",
+    "won": "Neuer Kunde",
+    "lost": "Hat nicht geklappt",
+    "wonToast": "Als neuer Kunde markiert",
+    "lostToast": "Abgeschlossen – hat nicht geklappt",
+    "confirm": "Zum Bestätigen erneut tippen"
+  },
+  "nextStep": {
+    "label": "Nächster Schritt",
+    "none": "Kein nächster Schritt",
+    "today": "heute",
+    "tomorrow": "morgen"
+  },
+  "leadBar": {
+    "howDidItGo": "Wie lief es?",
+    "notContacted": "Noch nicht kontaktiert",
+    "firstContact": "Erster Kontakt {{time}} nach Eingang",
+    "reach": "Kontakt",
+    "linkedContact": "Verknüpfter Kontakt"
+  },
+  "sourceLabel": {
+    "form": "Website-Formular",
+    "formNamed": "Formular · {{name}}",
+    "chat": "Website-Chat",
+    "booking": "Buchung",
+    "signup": "Neue Anmeldung",
+    "googleAd": "Google-Anzeige",
+    "facebookAd": "Facebook-Anzeige",
+    "instagramAd": "Instagram-Anzeige",
+    "manual": "Manuell angelegt",
+    "website": "Website",
+    "other": "Sonstige"
+  },
+  "setup": {
+    "title": "Einrichten",
+    "progress": "{{done}} von {{total}} erledigt",
+    "hide": "Ausblenden",
+    "skip": "Überspringen",
+    "items": {
+      "email": "E-Mail verbinden, damit Antworten von dir kommen",
+      "form": "Kontaktformular auf die Website bringen",
+      "website": "Website hinzufügen",
+      "assistant": "Website-Chat einschalten",
+      "teammate": "Einladen, wer Anfragen bearbeitet",
+      "calendar": "Kalender verbinden",
+      "profile": "Unternehmensprofil vervollständigen"
+    }
+  },
+  "results": {
+    "metaTitle": "Ergebnisse",
+    "metaDescription": "Wie viele Menschen dich gefunden, kontaktiert und bei dir gekauft haben.",
+    "title": "Ergebnisse",
+    "subtitle": "Wie viele Menschen dich gefunden, kontaktiert und bei dir gekauft haben.",
+    "period": "Zeitraum",
+    "periods": {
+      "7d": "7 Tage",
+      "30d": "30 Tage",
+      "90d": "90 Tage",
+      "12m": "12 Monate"
+    },
+    "sentence": {
+      "lead": {
+        "7d": "In den letzten 7 Tagen haben",
+        "30d": "In den letzten 30 Tagen haben",
+        "90d": "In den letzten 90 Tagen haben",
+        "12m": "In den letzten 12 Monaten haben"
+      },
+      "saw": "{{n}} Menschen dich gesehen",
+      "contacted": "{{n}} sich gemeldet",
+      "customers_one": "1 wurde Kunde",
+      "customers_other": "{{count}} wurden Kunden",
+      "and": "und du hast verdient:"
+    },
+    "sentenceEmpty": "Für diesen Zeitraum gibt es noch nichts zu zählen.",
+    "saw": "haben dich gesehen",
+    "contacted": "haben sich gemeldet",
+    "customers": "neue Kunden",
+    "earned": "verdient",
+    "vsBefore": "ggü. davor",
+    "otherCurrencies": "Außerdem in anderen Währungen verdient:",
+    "sawNote": "„Gesehen“ zählt Website-Besucher und Menschen, die deine Anzeigen erreicht haben – wer beides tat, zählt doppelt.",
+    "bySource": "Woher sie kamen",
+    "col": {
+      "source": "Quelle",
+      "saw": "Gesehen",
+      "contacted": "Gemeldet",
+      "customers": "Kunden",
+      "earned": "Verdient"
+    },
+    "noSources": "Noch keine Quellen.",
+    "noSourcesBody": "Die Ergebnisse füllen sich, sobald Menschen dich finden – verbinde deine Anzeigen oder bring ein Formular oder den Chat auf deine Website.",
+    "addForm": "Formular zur Website hinzufügen",
+    "connected": {
+      "website": "Website-Besucher",
+      "ads": "Anzeigen",
+      "openai": "ChatGPT-Anzeigen"
+    },
+    "on": "aktiv",
+    "off": "nicht verbunden",
+    "sources": {
+      "google": "Google",
+      "facebook": "Facebook",
+      "instagram": "Instagram",
+      "website": "Deine Website",
+      "chat": "Website-Chat",
+      "openai": "ChatGPT",
+      "booking": "Buchungen",
+      "onboarding": "Anmeldungen",
+      "manual": "Manuell angelegt",
+      "other": "Sonstige"
+    },
+    "loadFailed": "Die Ergebnisse konnten nicht geladen werden.",
+    "notAvailable": "Für diesen Bereich gibt es keine Ergebnisse."
+  },
+  "pipelineStrip": {
+    "open": "offen",
+    "noNext": "ohne nächsten Schritt",
+    "won": "neue Kunden diesen Monat"
+  },
+  "calendarHub": {
+    "calendar": "Kalender",
+    "booking": "Buchungsseite",
+    "sources": "Verbundene Kalender"
+  },
+  "websiteCaps": {
+    "title": "Was deine Website kann",
+    "on": "An",
+    "off": "Aus"
+  },
+  "dayField": {
+    "tomorrow": "Morgen",
+    "inTwoDays": "In 2 Tagen",
+    "nextWeek": "Nächste Woche",
+    "placeholder": "Datum eingeben, z. B. 30.9.",
+    "aria": "Datum",
+    "openCalendar": "Kalender öffnen",
+    "invalid": "Das ist kein Datum ab heute."
   }
 }
