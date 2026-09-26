@@ -675,7 +675,10 @@
       "dealSubscriptionCanceled": "Abonnement résilié",
       "dealInvoiceLinked": "Facture Stripe {{number}} liée",
       "dealProductsReplaced": "Produits remplacés depuis la facture {{number}} ({{count}} lignes)",
-      "dealInvoiceUnlinked": "Facture {{number}} dissociée"
+      "dealInvoiceUnlinked": "Facture {{number}} dissociée",
+      "dealMarkedPaid": "Marqué comme payé",
+      "dealPaidStripe": "Payé — une facture Stripe a été réglée",
+      "dealPaidCleared": "N'est plus marqué comme payé"
     },
     "saveCloseDate": "Enregistrer la date de clôture",
     "saveNotes": "Enregistrer les notes",
@@ -993,6 +996,52 @@
       "live": "En direct du profil du client · mis à jour le {{date}}",
       "contactFirst": "Écrire d'abord par courriel; appeler seulement si la personne le souhaite.",
       "legalName": "Raison sociale"
+    },
+    "stagesByType": {
+      "health": {
+        "new": "Nouvelle demande",
+        "in_progress": "Rendez-vous fixé",
+        "won": "Nouveau patient",
+        "lost": "Ne s'est pas fait"
+      },
+      "beauty": {
+        "new": "Nouvelle demande",
+        "in_progress": "Rendez-vous pris",
+        "won": "Nouveau client",
+        "lost": "Ne s'est pas fait"
+      },
+      "hospitality": {
+        "new": "Demande de réservation",
+        "in_progress": "Offre envoyée",
+        "won": "Réservé",
+        "lost": "Pas réservé"
+      },
+      "trades": {
+        "new": "Demande de travaux",
+        "in_progress": "Devis envoyé",
+        "won": "Chantier obtenu",
+        "lost": "Pas de chantier"
+      },
+      "retail": {
+        "new": "Intéressé",
+        "in_progress": "Offre envoyée",
+        "won": "A acheté",
+        "lost": "N'a pas acheté"
+      },
+      "business": {
+        "new": "Nouvelle demande",
+        "in_progress": "Proposition envoyée",
+        "won": "Nouveau client",
+        "lost": "Ne s'est pas fait"
+      }
+    },
+    "paid": {
+      "mark": "Marquer comme payé",
+      "markedToast": "Marqué comme payé",
+      "clearedToast": "N'est plus marqué comme payé",
+      "onDate": "Payé le {{date}}",
+      "onDateStripe": "Payé le {{date}} · via Stripe",
+      "chip": "Payé"
     }
   },
   "appointments": {
@@ -7637,7 +7686,22 @@
       "export": "Exporter .txt",
       "attachmentDownload": "Télécharger",
       "attachmentDownloadFailed": "Impossible de télécharger le fichier.",
-      "attachmentGone": "Plus conservé"
+      "attachmentGone": "Plus conservé",
+      "counts": {
+        "label": "Filtrer les chats",
+        "all": "chats",
+        "inquiry": "devenus une demande",
+        "unanswered": "avec une question sans réponse",
+        "badly": "se sont mal passés"
+      },
+      "couldNotAnswer_one": "{{count}} question sans réponse",
+      "couldNotAnswer_other": "{{count}} questions sans réponse",
+      "wentBadly": "S'est mal passé",
+      "emptyFilter": {
+        "inquiry": "Aucun chat n'est encore devenu une demande.",
+        "unanswered": "Chaque question a reçu une réponse.",
+        "badly": "Aucun chat ne s'est mal passé."
+      }
     },
     "playground": {
       "title": "Essayer",
@@ -9030,7 +9094,20 @@
       "other": "Autre"
     },
     "loadFailed": "Impossible de charger les résultats.",
-    "notAvailable": "Les résultats ne sont pas disponibles pour cet espace."
+    "notAvailable": "Les résultats ne sont pas disponibles pour cet espace.",
+    "firstReply": "Vous répondez en général à une nouvelle demande en {{time}}.",
+    "ai": {
+      "title": "Ce que les assistants IA disent de vous",
+      "notSetUp": "Voyez si ChatGPT et d'autres assistants IA citent votre entreprise quand on leur demande une recommandation.",
+      "setUp": "Configurer",
+      "paused": "Les vérifications sont en pause : rien de nouveau pour cette période.",
+      "noAnswers": "Aucune vérification n'a encore eu lieu sur cette période. Les résultats s'afficheront ici après la prochaine.",
+      "named": "ChatGPT et d'autres assistants IA vous ont cité dans {{named}} réponses sur {{answers}}.",
+      "before": "La période précédente : {{named}} sur {{answers}}.",
+      "details": "Voir les questions et les réponses"
+    },
+    "paidSplit": "Dont {{paid}} payés et {{toCollect}} encore à encaisser.",
+    "paidAll": "Tout est payé."
   },
   "pipelineStrip": {
     "open": "en cours",

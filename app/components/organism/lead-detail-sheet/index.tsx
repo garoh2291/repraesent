@@ -41,7 +41,9 @@ import {
 import { cn } from "~/lib/utils";
 import { personNameOr } from "~/lib/contacts/display-name";
 import { getWorkspaceDetail } from "~/lib/api/workspaces";
-import { convertLeadToContact } from "~/lib/api/contacts-crm";
+import { convertLeadToContact, getContact } from "~/lib/api/contacts-crm";
+import { ContactHero } from "~/components/organism/contact-detail/contact-hero";
+import { useLeadFlow } from "~/components/notebook/lead-flow";
 import { ContactEmailSuggestion } from "~/components/organism/contact-email-suggestion";
 import { extractErrorMessage } from "~/lib/api/axios-instance";
 import type { WorkspaceMemberItem } from "~/components/organism/tasks/task-form-modal";
@@ -342,6 +344,12 @@ export function formatHistoryAction(
       defaultValue: "Voided invoice {{number}}",
       number,
     });
+  if (item.action === "deal_marked_paid")
+    return d.paid_source === "stripe"
+      ? t("pipeline.history.dealPaidStripe", { defaultValue: "Paid — a Stripe invoice was paid" })
+      : t("pipeline.history.dealMarkedPaid", { defaultValue: "Marked as paid" });
+  if (item.action === "deal_paid_cleared")
+    return t("pipeline.history.dealPaidCleared", { defaultValue: "No longer marked as paid" });
   if (item.action === "deal_invoice_marked_paid")
     return t("pipeline.history.dealInvoiceMarkedPaid", {
       defaultValue: "Marked invoice {{number}} as paid",
@@ -452,6 +460,15 @@ export function LeadDetailSheet({
   const emailMatch = lead?.contact_email_match ?? null;
   const leadEmail = lead?.email?.trim() ?? "";
 
+  // Same query (and cache key) as the full lead page, so the contact card and
+  // its Email button work the same here. Brand / read-only sheets skip it.
+  const { data: linkedContactData } = useQuery({
+    queryKey: ["contact", linkedContactId],
+    queryFn: () => getContact(linkedContactId!),
+    enabled: !!linkedContactId && open && !readOnly,
+  });
+  const leadFlow = useLeadFlow();
+
   const convertMutation = useMutation({
     mutationFn: () => convertLeadToContact(leadId!),
     onSuccess: () => {
@@ -509,6 +526,29 @@ export function LeadDetailSheet({
   // not already know from having opened it.
   const displayName = lead ? personNameOr(lead, "Lead") : "Lead Details";
 
+  // The linked contact's own address, sent through the inquiry loop so it
+  // lands in History and asks how it went (mailto: stays the fallback) —
+  // the same as routes/lead-form.$leadId.tsx.
+  const linkedEmail = (() => {
+    const emails = linkedContactData?.emails ?? [];
+    const e = emails.find((x) => x.is_primary) ?? emails[0];
+    return e?.address ? String(e.address) : null;
+  })();
+  const composeToLinked =
+    lead && effectiveCanEdit && leadFlow.emailInApp && linkedEmail
+      ? () =>
+          leadFlow.contact(
+            {
+              id: lead.id,
+              name: displayName,
+              status: lead.status,
+              phone: lead.phone,
+              email: linkedEmail,
+            },
+            "email",
+          )
+      : undefined;
+
   return (
     <>
     <Sheet open={open} onOpenChange={onOpenChange}>
@@ -533,7 +573,7 @@ export function LeadDetailSheet({
           ) : (
             <div className="divide-y divide-border">
               {/* Reach them, record how it went, make it a deal */}
-              {!readOnly && (
+              {effectiveCanEdit && (
                 <div className="sticky top-0 z-10 bg-background/95 px-5 py-4 backdrop-blur supports-[backdrop-filter]:bg-background/85">
                   <LeadActionBar lead={lead} />
                 </div>
@@ -593,8 +633,34 @@ export function LeadDetailSheet({
                   />
                 </div>
               )}
-              {/* Linked contact link */}
-              {!readOnly && linkedContactId && (
+              {/* Linked contact: the same card as the full page (Email opens the composer) */}
+              {!readOnly && linkedContactId && linkedContactData ? (
+                <div className="px-5 py-4">
+                  <ContactHero
+                    variant="linked"
+                    compact
+                    displayName={
+                      (linkedContactData.contact?.full_name as string)?.trim() ||
+                      [
+                        linkedContactData.contact?.first_name,
+                        linkedContactData.contact?.last_name,
+                      ]
+                        .filter(Boolean)
+                        .join(" ")
+                        .trim() ||
+                      displayName
+                    }
+                    crm={linkedContactData.crm}
+                    contact={linkedContactData.contact}
+                    emails={linkedContactData.emails}
+                    phones={linkedContactData.phones}
+                    addresses={linkedContactData.addresses}
+                    leadId={lead.id}
+                    viewContactId={linkedContactId}
+                    onCompose={composeToLinked}
+                  />
+                </div>
+              ) : !readOnly && linkedContactId && (
                 <div className="px-5 py-4">
                   <Link
                     to={`/contacts/${linkedContactId}`}

@@ -718,7 +718,10 @@
       "dealSubscriptionCanceled": "Abo gekündigt",
       "dealInvoiceLinked": "Stripe-Rechnung {{number}} verknüpft",
       "dealProductsReplaced": "Produkte aus Rechnung {{number}} übernommen ({{count}} Positionen)",
-      "dealInvoiceUnlinked": "Rechnung {{number}} getrennt"
+      "dealInvoiceUnlinked": "Rechnung {{number}} getrennt",
+      "dealMarkedPaid": "Als bezahlt markiert",
+      "dealPaidStripe": "Bezahlt – eine Stripe-Rechnung wurde beglichen",
+      "dealPaidCleared": "Nicht mehr als bezahlt markiert"
     },
     "products": {
       "title": "Produkte",
@@ -995,6 +998,52 @@
       "live": "Live aus dem Kundenprofil · aktualisiert {{date}}",
       "contactFirst": "Zuerst per E-Mail melden; anrufen nur, wenn gewünscht.",
       "legalName": "Firmenname"
+    },
+    "stagesByType": {
+      "health": {
+        "new": "Neue Anfrage",
+        "in_progress": "Termin vereinbart",
+        "won": "Neuer Patient",
+        "lost": "Hat nicht geklappt"
+      },
+      "beauty": {
+        "new": "Neue Anfrage",
+        "in_progress": "Termin gebucht",
+        "won": "Neuer Kunde",
+        "lost": "Hat nicht geklappt"
+      },
+      "hospitality": {
+        "new": "Buchungsanfrage",
+        "in_progress": "Angebot geschickt",
+        "won": "Gebucht",
+        "lost": "Nicht gebucht"
+      },
+      "trades": {
+        "new": "Auftragsanfrage",
+        "in_progress": "Angebot geschickt",
+        "won": "Auftrag erhalten",
+        "lost": "Kein Auftrag"
+      },
+      "retail": {
+        "new": "Interessiert",
+        "in_progress": "Angebot geschickt",
+        "won": "Gekauft",
+        "lost": "Nicht gekauft"
+      },
+      "business": {
+        "new": "Neue Anfrage",
+        "in_progress": "Angebot geschickt",
+        "won": "Neuer Kunde",
+        "lost": "Hat nicht geklappt"
+      }
+    },
+    "paid": {
+      "mark": "Als bezahlt markieren",
+      "markedToast": "Als bezahlt markiert",
+      "clearedToast": "Nicht mehr als bezahlt markiert",
+      "onDate": "Bezahlt am {{date}}",
+      "onDateStripe": "Bezahlt am {{date}} · über Stripe",
+      "chip": "Bezahlt"
     }
   },
   "appointments": {
@@ -7637,7 +7686,22 @@
       "export": ".txt exportieren",
       "attachmentDownload": "Herunterladen",
       "attachmentDownloadFailed": "Die Datei konnte nicht heruntergeladen werden.",
-      "attachmentGone": "Nicht mehr gespeichert"
+      "attachmentGone": "Nicht mehr gespeichert",
+      "counts": {
+        "label": "Chats filtern",
+        "all": "Chats",
+        "inquiry": "wurden zur Anfrage",
+        "unanswered": "mit unbeantworteter Frage",
+        "badly": "liefen nicht gut"
+      },
+      "couldNotAnswer_one": "{{count}} Frage unbeantwortet",
+      "couldNotAnswer_other": "{{count}} Fragen unbeantwortet",
+      "wentBadly": "Lief nicht gut",
+      "emptyFilter": {
+        "inquiry": "Noch kein Chat wurde zur Anfrage.",
+        "unanswered": "Jede Frage wurde beantwortet.",
+        "badly": "Kein Chat lief schlecht."
+      }
     },
     "playground": {
       "title": "Testen",
@@ -9030,7 +9094,20 @@
       "other": "Sonstige"
     },
     "loadFailed": "Die Ergebnisse konnten nicht geladen werden.",
-    "notAvailable": "Für diesen Bereich gibt es keine Ergebnisse."
+    "notAvailable": "Für diesen Bereich gibt es keine Ergebnisse.",
+    "firstReply": "Zeit bis zu deiner ersten Antwort auf eine neue Anfrage: meist {{time}}.",
+    "ai": {
+      "title": "Was KI-Assistenten über dich sagen",
+      "notSetUp": "Sieh nach, ob ChatGPT und andere KI-Assistenten dein Geschäft nennen, wenn jemand nach einer Empfehlung fragt.",
+      "setUp": "Einrichten",
+      "paused": "Die Prüfungen sind pausiert – für diesen Zeitraum gibt es nichts Neues.",
+      "noAnswers": "In diesem Zeitraum lief noch keine Prüfung. Die Ergebnisse erscheinen hier nach der nächsten.",
+      "named": "ChatGPT und andere KI-Assistenten haben dich in {{named}} von {{answers}} Antworten genannt.",
+      "before": "Im Zeitraum davor: {{named}} von {{answers}}.",
+      "details": "Fragen und Antworten ansehen"
+    },
+    "paidSplit": "Davon sind {{paid}} bezahlt und {{toCollect}} noch offen.",
+    "paidAll": "Alles davon ist bezahlt."
   },
   "pipelineStrip": {
     "open": "offen",

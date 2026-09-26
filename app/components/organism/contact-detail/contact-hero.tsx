@@ -265,6 +265,11 @@ interface ContactHeroProps {
    * name and no second row of Call / WhatsApp / Email buttons.
    */
   variant?: "page" | "linked";
+  /**
+   * Narrow container (the 480px lead sheet): keep the stacked layout at every
+   * screen width — the sm/lg breakpoints follow the viewport, not the sheet.
+   */
+  compact?: boolean;
 }
 
 export function ContactHero({
@@ -281,6 +286,7 @@ export function ContactHero({
   canEdit,
   onInvalidate,
   variant = "page",
+  compact = false,
 }: ContactHeroProps) {
   const { t } = useTranslation();
   const contactId = contact?.id ? String(contact.id) : null;
@@ -338,7 +344,12 @@ export function ContactHero({
   return (
     <section className="app-fade-up overflow-hidden rounded-2xl border border-border bg-card shadow-(--shadow)">
       <div className="px-4 pb-5 pt-5 sm:px-6">
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:gap-5">
+        <div
+          className={cn(
+            "flex gap-4",
+            compact ? "flex-row items-center" : "flex-col sm:flex-row sm:items-center sm:gap-5",
+          )}
+        >
           <ContactHeroAvatar
             contactId={contactId}
             avatarUrl={(contact as { avatar_url?: string | null } | null)?.avatar_url ?? null}
@@ -427,7 +438,12 @@ export function ContactHero({
           </div>
         </div>
 
-        <div className="mt-5 grid grid-cols-1 gap-2.5 sm:grid-cols-2 lg:grid-cols-3">
+        <div
+          className={cn(
+            "mt-5 grid grid-cols-1 gap-2.5",
+            !compact && "sm:grid-cols-2 lg:grid-cols-3",
+          )}
+        >
           <CopyChip
             icon={<Mail />}
             label={t("contacts.primaryEmailLabel", {

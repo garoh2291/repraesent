@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { useStageLabel } from "~/lib/pipeline-stages/use-stage-label";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import { Handshake, Loader2 } from "lucide-react";
@@ -21,7 +22,6 @@ import {
 import { extractErrorMessage } from "~/lib/api/axios-instance";
 import type { PipelineStage } from "~/lib/api/pipeline-stages";
 import { resolveStageColors } from "~/lib/pipeline-stages/colors";
-import { resolveStageLabel } from "~/lib/pipeline-stages/labels";
 import {
   useDeleteFormDealSettings,
   useFormDealOptions,
@@ -40,6 +40,7 @@ const NO_LOST = "__none__";
 
 function StageOption({ stage }: { stage: PipelineStage }) {
   const { t } = useTranslation();
+  const stageLabel = useStageLabel();
   return (
     <span className="inline-flex items-center gap-2">
       <span
@@ -49,7 +50,7 @@ function StageOption({ stage }: { stage: PipelineStage }) {
           resolveStageColors(stage).dot,
         )}
       />
-      {resolveStageLabel(stage, t)}
+      {stageLabel(stage)}
     </span>
   );
 }

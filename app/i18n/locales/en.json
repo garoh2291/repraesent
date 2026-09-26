@@ -675,7 +675,10 @@
       "dealSubscriptionCanceled": "Canceled subscription",
       "dealInvoiceLinked": "Linked Stripe invoice {{number}}",
       "dealProductsReplaced": "Replaced products from invoice {{number}} ({{count}} lines)",
-      "dealInvoiceUnlinked": "Unlinked invoice {{number}}"
+      "dealInvoiceUnlinked": "Unlinked invoice {{number}}",
+      "dealMarkedPaid": "Marked as paid",
+      "dealPaidStripe": "Paid — a Stripe invoice was paid",
+      "dealPaidCleared": "No longer marked as paid"
     },
     "saveCloseDate": "Save close date",
     "saveNotes": "Save notes",
@@ -993,6 +996,52 @@
       "live": "Live from the customer's profile · updated {{date}}",
       "contactFirst": "Email first. Only call if they asked you to.",
       "legalName": "Legal name"
+    },
+    "stagesByType": {
+      "health": {
+        "new": "New request",
+        "in_progress": "Appointment set",
+        "won": "New patient",
+        "lost": "Didn't happen"
+      },
+      "beauty": {
+        "new": "New request",
+        "in_progress": "Appointment booked",
+        "won": "New client",
+        "lost": "Didn't happen"
+      },
+      "hospitality": {
+        "new": "Booking request",
+        "in_progress": "Offer sent",
+        "won": "Booked",
+        "lost": "Didn't book"
+      },
+      "trades": {
+        "new": "Job request",
+        "in_progress": "Quote sent",
+        "won": "Job won",
+        "lost": "No job"
+      },
+      "retail": {
+        "new": "Interested",
+        "in_progress": "Offer sent",
+        "won": "Bought",
+        "lost": "Didn't buy"
+      },
+      "business": {
+        "new": "New request",
+        "in_progress": "Proposal sent",
+        "won": "New client",
+        "lost": "Didn't happen"
+      }
+    },
+    "paid": {
+      "mark": "Mark as paid",
+      "markedToast": "Marked as paid",
+      "clearedToast": "No longer marked as paid",
+      "onDate": "Paid on {{date}}",
+      "onDateStripe": "Paid on {{date}} · via Stripe",
+      "chip": "Paid"
     }
   },
   "appointments": {
@@ -7635,7 +7684,22 @@
       "export": "Export .txt",
       "attachmentDownload": "Download",
       "attachmentDownloadFailed": "Could not download the file.",
-      "attachmentGone": "No longer stored"
+      "attachmentGone": "No longer stored",
+      "counts": {
+        "label": "Filter chats",
+        "all": "chats",
+        "inquiry": "became an inquiry",
+        "unanswered": "had a question it couldn't answer",
+        "badly": "didn't go well"
+      },
+      "couldNotAnswer_one": "{{count}} question not answered",
+      "couldNotAnswer_other": "{{count}} questions not answered",
+      "wentBadly": "Didn't go well",
+      "emptyFilter": {
+        "inquiry": "No chat has become an inquiry yet.",
+        "unanswered": "Every question got an answer.",
+        "badly": "No chat went badly."
+      }
     },
     "playground": {
       "title": "Try it",
@@ -9028,7 +9092,20 @@
       "other": "Other"
     },
     "loadFailed": "Results could not load.",
-    "notAvailable": "Results are not available for this area."
+    "notAvailable": "Results are not available for this area.",
+    "firstReply": "You usually answer a new inquiry within {{time}}.",
+    "ai": {
+      "title": "What AI assistants say about you",
+      "notSetUp": "See whether ChatGPT and other AI assistants name your business when people ask them for a recommendation.",
+      "setUp": "Set it up",
+      "paused": "Checks are paused, so there is nothing new for this period.",
+      "noAnswers": "No checks ran in this period yet. Results show here after the next one.",
+      "named": "ChatGPT and other AI assistants named you in {{named}} of {{answers}} answers.",
+      "before": "The period before: {{named}} of {{answers}}.",
+      "details": "See the questions and answers"
+    },
+    "paidSplit": "Of this, {{paid}} is paid and {{toCollect}} is still to collect.",
+    "paidAll": "All of it is paid."
   },
   "pipelineStrip": {
     "open": "open",

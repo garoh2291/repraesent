@@ -783,6 +783,20 @@ export interface ConversationSummary {
   first_message: string | null;
   last_message_at: string | null;
   created_at: string;
+  /** Questions the assistant could not answer in this chat. */
+  unanswered_count?: number;
+  /** Thumbs-down the visitor gave. */
+  thumbs_down?: number;
+  /** Any thumbs-down, or 2+ unanswered questions. */
+  went_badly?: boolean;
+}
+
+/** Counts over all the assistant's chats — ignores search and filters. */
+export interface ConversationCounts {
+  chats: number;
+  became_inquiry: number;
+  had_unanswered: number;
+  went_badly: number;
 }
 
 export interface ConversationPage {
@@ -790,6 +804,8 @@ export interface ConversationPage {
   total: number;
   page: number;
   limit: number;
+  /** Null when the counts could not be computed; older API: absent. */
+  summary?: ConversationCounts | null;
 }
 
 export type GuardDecision =
@@ -1420,6 +1436,8 @@ export interface ListConversationsParams {
   page?: number;
   limit?: number;
   lead_only?: boolean;
+  unanswered_only?: boolean;
+  went_badly_only?: boolean;
   search?: string;
 }
 
@@ -1431,6 +1449,8 @@ export async function getConversations(
   if (params.page) q.set("page", String(params.page));
   if (params.limit) q.set("limit", String(params.limit));
   if (params.lead_only) q.set("lead_only", "true");
+  if (params.unanswered_only) q.set("unanswered_only", "true");
+  if (params.went_badly_only) q.set("went_badly_only", "true");
   if (params.search) q.set("search", params.search);
   const qs = q.toString();
   const r = await apiClient.get<ConversationPage>(

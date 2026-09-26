@@ -167,6 +167,8 @@ export interface WorkspaceContext {
   is_root?: boolean;
   /** Root's Settings → Support switched "Contact re:praesent" on for this workspace. */
   support_contact_enabled?: boolean;
+  /** Business type from the workspace profile (CLIENT_TYPES); drives default deal-stage words. Older API: absent. */
+  industry?: string | null;
   /** Onboarding v2 in progress for this workspace, and whether it's mine. */
   onboarding?: { open: boolean; owner_is_me: boolean } | null;
   demo_expires_at?: string | null;

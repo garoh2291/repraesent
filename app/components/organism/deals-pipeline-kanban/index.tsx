@@ -1,4 +1,6 @@
 import { useState, useCallback, useRef, useEffect, useMemo } from "react";
+import { PaidChip } from "~/components/notebook/deal-paid";
+import { useStageLabel } from "~/lib/pipeline-stages/use-stage-label";
 import {
   DndContext,
   DragOverlay,
@@ -39,7 +41,6 @@ import type { PipelineStage } from "~/lib/api/pipeline-stages";
 import type { Pipeline } from "~/lib/api/pipelines";
 import { useDealStages } from "~/lib/hooks/usePipelineStages";
 import { resolveStageColors } from "~/lib/pipeline-stages/colors";
-import { resolveStageLabel } from "~/lib/pipeline-stages/labels";
 import { dealComparator, type DealSortMode } from "~/lib/deals/deal-sort";
 import { Avatar, AvatarFallback } from "~/components/ui/avatar";
 import {
@@ -432,6 +433,7 @@ function DealColumn({
   onRequestDelete?: (deal: DealListItem) => void;
 }) {
   const { t } = useTranslation();
+  const stageLabel = useStageLabel();
   const { setNodeRef, isOver } = useDroppable({ id: stage.key });
   const colorClass = resolveStageColors(stage).dot;
   const isEmpty = columnDeals.length === 0;
@@ -457,7 +459,7 @@ function DealColumn({
       <div className="shrink-0 px-3 pt-3 pb-2">
         <h3 className="flex items-center gap-2 text-sm font-medium text-foreground">
           <span className={cn("inline-block h-2 w-2 rounded-full", colorClass)} />
-          <span>{resolveStageLabel(stage, t)}</span>
+          <span>{stageLabel(stage)}</span>
           <span className="inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-background px-1.5 text-xs font-medium text-muted-foreground">
             {columnDeals.length}
           </span>
@@ -534,8 +536,11 @@ function DealCardInner({
           />
         ) : null}
       </div>
-      {val ? (
-        <p className="text-sm font-semibold text-foreground">{val}</p>
+      {val || (deal.status === "won" && deal.paid_at) ? (
+        <p className="flex items-center gap-1.5 text-sm font-semibold text-foreground">
+          {val}
+          {deal.status === "won" && deal.paid_at ? <PaidChip /> : null}
+        </p>
       ) : null}
       <div className="flex flex-wrap items-center gap-x-2 text-[10px] text-muted-foreground">
         {deal.primary_email ? (
@@ -589,6 +594,7 @@ function DealsMobileSchedule({
   onDealSelect: (id: string) => void;
 }) {
   const { t } = useTranslation();
+  const stageLabel = useStageLabel();
   const { currency: workspaceCurrency } = useWorkspaceCurrency();
 
   return (
@@ -608,7 +614,7 @@ function DealsMobileSchedule({
                 <div className={cn("h-8 w-1 rounded-full shrink-0", colorClass)} />
                 <div className="flex-1 min-w-0">
                   <span className="text-sm font-semibold text-foreground">
-                    {resolveStageLabel(stage, t)}
+                    {stageLabel(stage)}
                   </span>
                   {columnTotals.size > 0 ? (
                     <p className="text-xs font-medium text-muted-foreground mt-0.5">
@@ -690,8 +696,11 @@ function DealScheduleRow({
         {showSub ? (
           <p className="text-xs text-muted-foreground truncate">{sub}</p>
         ) : null}
-        {val ? (
-          <p className="text-xs font-semibold text-foreground">{val}</p>
+        {val || (deal.status === "won" && deal.paid_at) ? (
+          <p className="flex items-center gap-1.5 text-xs font-semibold text-foreground">
+            {val}
+            {deal.status === "won" && deal.paid_at ? <PaidChip /> : null}
+          </p>
         ) : null}
         <div className="flex flex-wrap items-center gap-x-2 pt-0.5 text-[10px] text-muted-foreground">
           {deal.primary_email ? (
@@ -799,6 +808,7 @@ function DealKanbanCard({
   onRequestDelete?: (deal: DealListItem) => void;
 }) {
   const { t } = useTranslation();
+  const stageLabel = useStageLabel();
   const {
     attributes,
     listeners,
@@ -866,7 +876,7 @@ function DealKanbanCard({
                       resolveStageColors(s).dot,
                     )}
                   />
-                  <span className="truncate">{resolveStageLabel(s, t)}</span>
+                  <span className="truncate">{stageLabel(s)}</span>
                   {current ? <Check className="ml-auto" /> : null}
                 </ContextMenuItem>
               );

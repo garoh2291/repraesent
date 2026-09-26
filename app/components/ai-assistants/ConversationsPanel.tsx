@@ -14,9 +14,7 @@ import {
   ThumbsUp,
 } from "lucide-react";
 import { Input } from "~/components/ui/input";
-import { Label } from "~/components/ui/label";
 import { Skeleton } from "~/components/ui/skeleton";
-import { Switch } from "~/components/ui/switch";
 import { Button } from "~/components/ui/button";
 import {
   Sheet,
@@ -38,12 +36,16 @@ import {
   downloadMessageAttachment,
   type MessageAttachment,
   type ConversationDetail,
+  type ConversationCounts,
   type ConversationSummary,
 } from "~/lib/api/ai-assistants";
 import { toast } from "sonner";
 import { cn } from "~/lib/utils";
 
 const LIMIT = 25;
+
+/** Which chats the list shows — one at a time, picked from the counts row. */
+type ChatFilter = "all" | "inquiry" | "unanswered" | "badly";
 
 export function ConversationsPanel({
   assistantId,
@@ -55,7 +57,7 @@ export function ConversationsPanel({
   const { t, i18n } = useTranslation();
   const [searchParams, setSearchParams] = useSearchParams();
   const [page, setPage] = useState(1);
-  const [leadOnly, setLeadOnly] = useState(false);
+  const [filter, setFilter] = useState<ChatFilter>("all");
   const [search, setSearch] = useState("");
   const [debounced, setDebounced] = useState("");
   // `?open=<id>` deep-links a transcript (from the knowledge-gaps list).
@@ -75,12 +77,14 @@ export function ConversationsPanel({
     const timer = setTimeout(() => setDebounced(search.trim()), 300);
     return () => clearTimeout(timer);
   }, [search]);
-  useEffect(() => setPage(1), [debounced, leadOnly]);
+  useEffect(() => setPage(1), [debounced, filter]);
 
   const { data, isLoading } = useAiConversations(assistantId, {
     page,
     limit: LIMIT,
-    lead_only: leadOnly,
+    lead_only: filter === "inquiry",
+    unanswered_only: filter === "unanswered",
+    went_badly_only: filter === "badly",
     search: debounced || undefined,
   });
 
@@ -97,27 +101,18 @@ export function ConversationsPanel({
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <Input
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          placeholder={t("aiAssistants.conversations.search")}
-          className="max-w-xs"
-        />
-        <div className="flex items-center gap-3">
-          <Label
-            htmlFor="lead-only"
-            className="text-sm font-normal text-muted-foreground"
-          >
-            {t("aiAssistants.conversations.leadOnly")}
-          </Label>
-          <Switch
-            id="lead-only"
-            checked={leadOnly}
-            onCheckedChange={setLeadOnly}
-          />
-        </div>
-      </div>
+      <ChatCountsRow
+        counts={data?.summary ?? null}
+        filter={filter}
+        onFilter={setFilter}
+      />
+
+      <Input
+        value={search}
+        onChange={(e) => setSearch(e.target.value)}
+        placeholder={t("aiAssistants.conversations.search")}
+        className="max-w-xs"
+      />
 
       {isLoading ? (
         <div className="space-y-2">
@@ -133,11 +128,15 @@ export function ConversationsPanel({
           />
           <div className="space-y-1">
             <p className="font-medium">
-              {t("aiAssistants.conversations.empty")}
+              {filter === "all" || debounced
+                ? t("aiAssistants.conversations.empty")
+                : t(`aiAssistants.conversations.emptyFilter.${filter}`)}
             </p>
-            <p className="mx-auto max-w-sm text-sm text-muted-foreground">
-              {t("aiAssistants.conversations.emptyHint")}
-            </p>
+            {filter === "all" && !debounced ? (
+              <p className="mx-auto max-w-sm text-sm text-muted-foreground">
+                {t("aiAssistants.conversations.emptyHint")}
+              </p>
+            ) : null}
           </div>
         </div>
       ) : (
@@ -194,6 +193,68 @@ export function ConversationsPanel({
   );
 }
 
+/**
+ * The chats in four plain counts that double as the filter: all, the ones
+ * that became an inquiry, the ones with an unanswered question, the ones that
+ * didn't go well. Yellow only on the two that need the owner.
+ */
+function ChatCountsRow({
+  counts,
+  filter,
+  onFilter,
+}: {
+  counts: ConversationCounts | null;
+  filter: ChatFilter;
+  onFilter: (f: ChatFilter) => void;
+}) {
+  const { t } = useTranslation();
+  const items: { key: ChatFilter; n: number | null; label: string; needsYou?: boolean }[] = [
+    { key: "all", n: counts?.chats ?? null, label: t("aiAssistants.conversations.counts.all") },
+    { key: "inquiry", n: counts?.became_inquiry ?? null, label: t("aiAssistants.conversations.counts.inquiry") },
+    { key: "unanswered", n: counts?.had_unanswered ?? null, label: t("aiAssistants.conversations.counts.unanswered"), needsYou: true },
+    { key: "badly", n: counts?.went_badly ?? null, label: t("aiAssistants.conversations.counts.badly"), needsYou: true },
+  ];
+  return (
+    <div
+      role="tablist"
+      aria-label={t("aiAssistants.conversations.counts.label")}
+      className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1 sm:mx-0 sm:px-0"
+    >
+      {items.map((it) => {
+        const active = filter === it.key;
+        return (
+          <button
+            key={it.key}
+            type="button"
+            role="tab"
+            aria-selected={active}
+            onClick={() => onFilter(it.key)}
+            className={cn(
+              "flex min-h-11 shrink-0 items-baseline gap-2 rounded-xl border px-3.5 py-2 text-left text-[13px] transition-colors active:scale-[.98] motion-reduce:transform-none",
+              active
+                ? "border-foreground bg-foreground text-background"
+                : "border-border bg-card text-muted-foreground hover:border-foreground/40 hover:text-foreground",
+            )}
+          >
+            {it.n !== null ? (
+              <span
+                className={cn(
+                  "title-display num text-[17px] font-semibold",
+                  active ? "text-background" : "text-foreground",
+                  !active && it.needsYou && it.n > 0 && "marker",
+                )}
+              >
+                {it.n}
+              </span>
+            ) : null}
+            <span className="whitespace-nowrap">{it.label}</span>
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
 function ConversationRow({
   c,
   formatDate,
@@ -243,8 +304,24 @@ function ConversationRow({
                 </span>
               </>
             ) : null}
+            {c.unanswered_count ? (
+              <>
+                <span>·</span>
+                <span className="text-foreground">
+                  {t("aiAssistants.conversations.couldNotAnswer", {
+                    count: c.unanswered_count,
+                  })}
+                </span>
+              </>
+            ) : null}
           </p>
         </div>
+        {c.went_badly ? (
+          <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-marker px-2 py-0.5 text-[11px] font-medium text-foreground">
+            {c.thumbs_down ? <ThumbsDown className="h-3 w-3" aria-hidden /> : null}
+            {t("aiAssistants.conversations.wentBadly")}
+          </span>
+        ) : null}
         {c.lead_id ? (
           <Link
             to={`/lead-form/${c.lead_id}`}

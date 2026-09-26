@@ -78,6 +78,9 @@ export interface DealListItem {
   board_position: number | null;
   /** Open tasks on the deal — the "next step" (absent on older API builds). */
   tasks_summary?: DealTasksSummary;
+  /** When a won deal was paid (absent on older API builds / before migration 196). */
+  paid_at?: string | null;
+  paid_source?: "manual" | "stripe" | null;
 }
 
 export interface DealTasksSummary {
@@ -259,6 +262,8 @@ export interface InvoiceReadiness {
 
 export type DealDetailResponse = {
   deal: Record<string, unknown>;
+  /** False (or absent on older API builds) until paid tracking is switched on. */
+  paid_supported?: boolean;
   /** Primary contact (mirrors deals.contact_id); kept for backward compatibility. */
   contact: Record<string, unknown> | null;
   /** All contacts attached to the deal, primary first. */
@@ -306,6 +311,18 @@ export async function patchDeal(
     `/deals/${dealId}`,
     body,
   );
+  return res.data;
+}
+
+/** Mark a won deal as paid. 409 `deal_not_won` / `paid_not_ready`. */
+export async function markDealPaid(dealId: string): Promise<DealDetailResponse> {
+  const res = await apiClient.post<DealDetailResponse>(`/deals/${dealId}/paid`);
+  return res.data;
+}
+
+/** Undo "paid". */
+export async function clearDealPaid(dealId: string): Promise<DealDetailResponse> {
+  const res = await apiClient.delete<DealDetailResponse>(`/deals/${dealId}/paid`);
   return res.data;
 }
 

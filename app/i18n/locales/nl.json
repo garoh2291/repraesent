@@ -675,7 +675,10 @@
       "dealSubscriptionCanceled": "Abonnement opgezegd",
       "dealInvoiceLinked": "Stripe-factuur {{number}} gekoppeld",
       "dealProductsReplaced": "Producten vervangen vanuit factuur {{number}} ({{count}} regels)",
-      "dealInvoiceUnlinked": "Factuur {{number}} losgekoppeld"
+      "dealInvoiceUnlinked": "Factuur {{number}} losgekoppeld",
+      "dealMarkedPaid": "Gemarkeerd als betaald",
+      "dealPaidStripe": "Betaald — een Stripe-factuur is voldaan",
+      "dealPaidCleared": "Niet meer gemarkeerd als betaald"
     },
     "saveCloseDate": "Afsluitdatum opslaan",
     "saveNotes": "Notities opslaan",
@@ -993,6 +996,52 @@
       "live": "Live uit het klantprofiel · bijgewerkt {{date}}",
       "contactFirst": "Eerst per e-mail contact opnemen; alleen bellen als dat gewenst is.",
       "legalName": "Statutaire naam"
+    },
+    "stagesByType": {
+      "health": {
+        "new": "Nieuwe aanvraag",
+        "in_progress": "Afspraak gemaakt",
+        "won": "Nieuwe patiënt",
+        "lost": "Niet doorgegaan"
+      },
+      "beauty": {
+        "new": "Nieuwe aanvraag",
+        "in_progress": "Afspraak geboekt",
+        "won": "Nieuwe klant",
+        "lost": "Niet doorgegaan"
+      },
+      "hospitality": {
+        "new": "Boekingsaanvraag",
+        "in_progress": "Offerte verstuurd",
+        "won": "Geboekt",
+        "lost": "Niet geboekt"
+      },
+      "trades": {
+        "new": "Klusaanvraag",
+        "in_progress": "Offerte verstuurd",
+        "won": "Klus binnen",
+        "lost": "Geen klus"
+      },
+      "retail": {
+        "new": "Geïnteresseerd",
+        "in_progress": "Offerte verstuurd",
+        "won": "Gekocht",
+        "lost": "Niet gekocht"
+      },
+      "business": {
+        "new": "Nieuwe aanvraag",
+        "in_progress": "Voorstel verstuurd",
+        "won": "Nieuwe klant",
+        "lost": "Niet doorgegaan"
+      }
+    },
+    "paid": {
+      "mark": "Markeren als betaald",
+      "markedToast": "Gemarkeerd als betaald",
+      "clearedToast": "Niet meer gemarkeerd als betaald",
+      "onDate": "Betaald op {{date}}",
+      "onDateStripe": "Betaald op {{date}} · via Stripe",
+      "chip": "Betaald"
     }
   },
   "appointments": {
@@ -7635,7 +7684,22 @@
       "export": ".txt exporteren",
       "attachmentDownload": "Downloaden",
       "attachmentDownloadFailed": "Het bestand kon niet worden gedownload.",
-      "attachmentGone": "Niet meer opgeslagen"
+      "attachmentGone": "Niet meer opgeslagen",
+      "counts": {
+        "label": "Chats filteren",
+        "all": "chats",
+        "inquiry": "werden een aanvraag",
+        "unanswered": "met een onbeantwoorde vraag",
+        "badly": "liepen niet goed"
+      },
+      "couldNotAnswer_one": "{{count}} vraag onbeantwoord",
+      "couldNotAnswer_other": "{{count}} vragen onbeantwoord",
+      "wentBadly": "Liep niet goed",
+      "emptyFilter": {
+        "inquiry": "Nog geen chat werd een aanvraag.",
+        "unanswered": "Elke vraag kreeg een antwoord.",
+        "badly": "Geen enkele chat liep slecht."
+      }
     },
     "playground": {
       "title": "Uitproberen",
@@ -9028,7 +9092,20 @@
       "other": "Overig"
     },
     "loadFailed": "Resultaten konden niet laden.",
-    "notAvailable": "Resultaten zijn niet beschikbaar voor deze werkruimte."
+    "notAvailable": "Resultaten zijn niet beschikbaar voor deze werkruimte.",
+    "firstReply": "Je beantwoordt een nieuwe aanvraag meestal binnen {{time}}.",
+    "ai": {
+      "title": "Wat AI-assistenten over je zeggen",
+      "notSetUp": "Kijk of ChatGPT en andere AI-assistenten je bedrijf noemen als iemand om een aanbeveling vraagt.",
+      "setUp": "Instellen",
+      "paused": "De controles staan op pauze, dus er is niets nieuws voor deze periode.",
+      "noAnswers": "In deze periode liep nog geen controle. De resultaten verschijnen hier na de volgende.",
+      "named": "ChatGPT en andere AI-assistenten noemden je in {{named}} van de {{answers}} antwoorden.",
+      "before": "De periode ervoor: {{named}} van de {{answers}}.",
+      "details": "Bekijk de vragen en antwoorden"
+    },
+    "paidSplit": "Daarvan is {{paid}} betaald en staat {{toCollect}} nog open.",
+    "paidAll": "Alles is betaald."
   },
   "pipelineStrip": {
     "open": "open",

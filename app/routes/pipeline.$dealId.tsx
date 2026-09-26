@@ -1,4 +1,5 @@
 import { DealCurrencySelect } from "~/components/molecule/deal-currency-select";
+import { useStageLabel } from "~/lib/pipeline-stages/use-stage-label";
 import { extractErrorMessage } from "~/lib/api/axios-instance";
 import {
   useTerminalStageGuard,
@@ -44,7 +45,6 @@ import {
   resolveStageColorsByKey,
 } from "~/lib/pipeline-stages/colors";
 import {
-  resolveStageLabel,
   resolveStageLabelByKey,
 } from "~/lib/pipeline-stages/labels";
 import { useCanEditLeads } from "~/lib/hooks/useCanEditLeads";
@@ -86,6 +86,7 @@ import { cn } from "~/lib/utils";
 import { NextStepChip } from "~/components/notebook/next-step-chip";
 import { useDealFlow } from "~/components/notebook/deal-flow";
 import { isOpenDeal } from "~/lib/deals/is-open";
+import { DealPaid } from "~/components/notebook/deal-paid";
 import {
   formatCurrency,
   formatDate,
@@ -137,6 +138,7 @@ function MetaRow({ icon, label, children }: MetaRowProps) {
 
 export default function PipelineDealDetailPage() {
   const { t } = useTranslation();
+  const labelOfStage = useStageLabel();
   const { openCompose } = useComposeEmail();
   const { dealId } = useParams<{ dealId: string }>();
   const navigate = useNavigate();
@@ -560,7 +562,7 @@ export default function PipelineDealDetailPage() {
     ? resolveStageColors(stageRow)
     : resolveStageColorsByKey("deal", stage);
   const stageLabel = stageRow
-    ? resolveStageLabel(stageRow, t)
+    ? labelOfStage(stageRow)
     : resolveStageLabelByKey("deal", stage, t);
 
   return (
@@ -640,6 +642,15 @@ export default function PipelineDealDetailPage() {
                 <p className="title-display num text-2xl font-semibold text-foreground sm:text-3xl">
                   {valueDisplay}
                 </p>
+                {dealQuery.data?.paid_supported && deal?.status === "won" ? (
+                  <DealPaid
+                    className="mt-1.5 sm:justify-end"
+                    dealId={dealId!}
+                    paidAt={(deal.paid_at as string | null | undefined) ?? null}
+                    paidSource={(deal.paid_source as "manual" | "stripe" | null | undefined) ?? null}
+                    canEdit={canEdit}
+                  />
+                ) : null}
               </div>
               {canEdit && composeRecipients.length > 0 ? (
                 <Button
@@ -715,7 +726,7 @@ export default function PipelineDealDetailPage() {
                       )}
                     />
                     <span className="truncate">
-                      {resolveStageLabel(stageOption, t)}
+                      {labelOfStage(stageOption)}
                     </span>
                   </button>
                 );

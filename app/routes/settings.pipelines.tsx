@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { useStageLabel } from "~/lib/pipeline-stages/use-stage-label";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -50,7 +51,6 @@ import {
   TOKEN_FACETS,
   resolveStageColors,
 } from "~/lib/pipeline-stages/colors";
-import { resolveStageLabel } from "~/lib/pipeline-stages/labels";
 import { cn } from "~/lib/utils";
 import { Badge } from "~/components/ui/badge";
 import { Button } from "~/components/ui/button";
@@ -409,12 +409,13 @@ function StageRow({
   onMoveDown: () => void;
 }) {
   const { t } = useTranslation();
+  const stageLabel = useStageLabel();
   const patchMutation = usePatchPipelineStage();
   const deleteMutation = useDeletePipelineStage();
   const [deleteOpen, setDeleteOpen] = useState(false);
   const rules = stageRules(stage, siblings);
   const facets = resolveStageColors(stage);
-  const resolvedLabel = resolveStageLabel(stage, t);
+  const resolvedLabel = stageLabel(stage);
 
   // Inline rename: uncontrolled-ish input seeded from the resolved label,
   // saved on blur/Enter only when actually changed.

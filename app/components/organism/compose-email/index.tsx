@@ -213,7 +213,15 @@ export function ComposeEmailDialog({
       >
         <DialogContent
           showCloseButton={false}
-          onInteractOutside={(e) => e.preventDefault()}
+          // A click outside closes through requestClose (asks first when the
+          // draft has content). Toasts and the composer's own floating layers
+          // (From select, template picker, suggestions) are not "outside".
+          onInteractOutside={(e) => {
+            const target = e.target as HTMLElement | null;
+            if (target?.closest?.("[data-sonner-toaster],[data-radix-popper-content-wrapper]")) {
+              e.preventDefault();
+            }
+          }}
           className={cn(
             "gap-0 overflow-hidden p-0 sm:max-w-2xl",
             // Full-bleed on phones: a mail composer is the whole task, and a

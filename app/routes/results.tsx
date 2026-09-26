@@ -6,7 +6,9 @@ import i18n from "~/i18n";
 import { cn } from "~/lib/utils";
 import { useDocumentMeta } from "~/lib/hooks/use-document-meta";
 import { useResultsSummary } from "~/lib/hooks/useResultsSummary";
-import type { Funnel, ResultPeriod, SourceBucket } from "~/lib/api/results";
+import type { AiVisibilitySummary, Funnel, ResultPeriod, SourceBucket } from "~/lib/api/results";
+import { usePilotFeatures } from "~/lib/feature-flags";
+import { durationWords } from "~/lib/utils/duration-words";
 import { formatCurrency, formatNumber } from "~/lib/utils/format";
 import { PageContainer, PageHeader } from "~/components/notebook/page-header";
 import { Panel, PanelHeader } from "~/components/notebook/panel";
@@ -33,6 +35,9 @@ function delta(cur: number | null, prev: number | null): number | null {
   return (cur - prev) / prev;
 }
 
+/** Under five answered inquiries, a "usually" would not be true. */
+const FIRST_REPLY_MIN_SAMPLE = 5;
+
 const CONNECT: Partial<Record<SourceBucket, string>> = {
   google: "/social-ads",
   facebook: "/social-ads",
@@ -48,7 +53,8 @@ const CONNECT: Partial<Record<SourceBucket, string>> = {
  * stay one tab away.
  */
 export default function ResultsPage() {
-  const { t } = useTranslation();
+  const { t, i18n: i18nInstance } = useTranslation();
+  const pilot = usePilotFeatures();
   useDocumentMeta({ titleKey: "results.metaTitle", titleSuffix: " - Repraesent" });
   const [period, setPeriod] = useState<ResultPeriod>("30d");
   const q = useResultsSummary(period);
@@ -180,12 +186,31 @@ export default function ResultsPage() {
                 deltaLabel={t("results.vsBefore", "vs. before")}
               />
             </div>
+            {data?.paid_tracking && f.paid != null && f.to_collect != null && f.earned > 0 ? (
+              <p className="mt-4 text-[14px] text-foreground">
+                {f.to_collect > 0
+                  ? t("results.paidSplit", "Of this, {{paid}} is paid and {{toCollect}} is still to collect.", {
+                      paid: money(f.paid),
+                      toCollect: money(f.to_collect),
+                    })
+                  : t("results.paidAll", "All of it is paid.")}
+              </p>
+            ) : null}
             {data && Object.keys(data.other_currencies).length > 0 ? (
               <p className="mt-4 text-[12.5px] text-muted-foreground">
                 {t("results.otherCurrencies", "Also earned in other currencies:")}{" "}
                 {Object.entries(data.other_currencies)
                   .map(([c, v]) => formatCurrency(v, c))
                   .join(" · ")}
+              </p>
+            ) : null}
+            {data?.first_reply &&
+            data.first_reply.median_minutes != null &&
+            data.first_reply.sample >= FIRST_REPLY_MIN_SAMPLE ? (
+              <p className="mt-4 text-[14px] text-foreground">
+                {t("results.firstReply", "You usually answer a new inquiry within {{time}}.", {
+                  time: durationWords(data.first_reply.median_minutes, i18nInstance.language),
+                })}
               </p>
             ) : null}
             {f.people_saw != null ? (
@@ -289,9 +314,73 @@ export default function ResultsPage() {
         ) : null}
       </Panel>
 
+      {pilot.aiVisibility && data?.ai_visibility ? (
+        <AiVisibilityCard summary={data.ai_visibility} />
+      ) : null}
+
       {/* The old home screen's overviews, kept */}
       <LeadAnalyticsChart />
       <DealsSummarySection />
     </PageContainer>
+  );
+}
+
+/**
+ * What AI assistants say about the business, from checks that already ran.
+ * Three states: not set up (what it does + Set up), set up without answers
+ * yet, and the plain count of answers that named the business.
+ */
+function AiVisibilityCard({ summary }: { summary: AiVisibilitySummary }) {
+  const { t } = useTranslation();
+  const link =
+    "inline-flex items-center gap-1 text-[13px] font-medium text-foreground underline decoration-foreground/30 underline-offset-4";
+  return (
+    <Panel>
+      <PanelHeader title={t("results.ai.title", "What AI assistants say about you")} />
+      <div className="space-y-3 px-4 py-4 sm:px-5">
+        {!summary.set_up ? (
+          <>
+            <p className="text-[14px] text-muted-foreground">
+              {t(
+                "results.ai.notSetUp",
+                "See whether ChatGPT and other AI assistants name your business when people ask them for a recommendation.",
+              )}
+            </p>
+            <Button asChild variant="outline">
+              <Link to="/ai-visibility/setup">{t("results.ai.setUp", "Set it up")}</Link>
+            </Button>
+          </>
+        ) : summary.answers === 0 ? (
+          <p className="text-[14px] text-muted-foreground">
+            {summary.status === "paused"
+              ? t("results.ai.paused", "Checks are paused, so there is nothing new for this period.")
+              : t("results.ai.noAnswers", "No checks ran in this period yet. Results show here after the next one.")}
+          </p>
+        ) : (
+          <>
+            <p className="title-display text-[18px] font-medium leading-snug text-foreground sm:text-[20px]">
+              {t("results.ai.named", "ChatGPT and other AI assistants named you in {{named}} of {{answers}} answers.", {
+                named: formatNumber(summary.named),
+                answers: formatNumber(summary.answers),
+              })}
+            </p>
+            {summary.previous_answers > 0 ? (
+              <p className="text-[13px] text-muted-foreground">
+                {t("results.ai.before", "The period before: {{named}} of {{answers}}.", {
+                  named: formatNumber(summary.previous_named),
+                  answers: formatNumber(summary.previous_answers),
+                })}
+              </p>
+            ) : null}
+          </>
+        )}
+        {summary.set_up ? (
+          <Link to="/ai-visibility" className={link}>
+            {t("results.ai.details", "See the questions and answers")}
+            <ArrowRight className="size-3.5" />
+          </Link>
+        ) : null}
+      </div>
+    </Panel>
   );
 }
