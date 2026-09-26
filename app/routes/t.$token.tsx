@@ -133,6 +133,21 @@ function Tracking({ view }: { view: DealTrackingView }) {
         {outcomeLine ? (
           <p className="mt-3 text-sm text-neutral-600">{outcomeLine}</p>
         ) : null}
+        {view.outcome === "won" && view.reviewUrl ? (
+          // Same line for every customer (GOOGLE_REVIEWS_PLAN.md): no
+          // "were you happy?" filter in front of Google, no reward.
+          <p className="mt-3 text-sm text-neutral-700">
+            {t("tracking.reviewAsk", { defaultValue: "Happy with us?" })}{" "}
+            <a
+              href={view.reviewUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="font-medium text-neutral-900 underline decoration-neutral-300 underline-offset-4 hover:decoration-neutral-900"
+            >
+              {t("tracking.reviewLink", { defaultValue: "Leave a review on Google" })}
+            </a>
+          </p>
+        ) : null}
         <p className="mt-3 text-xs text-neutral-400">
           {t("tracking.lastUpdated", {
             date: formatDateTime(view.updatedAt, i18next.language),

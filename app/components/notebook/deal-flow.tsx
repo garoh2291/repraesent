@@ -13,6 +13,7 @@ import { getDeal, patchDeal, patchDealStatus } from "~/lib/api/deals";
 import { extractErrorMessage } from "~/lib/api/axios-instance";
 import { useInvalidateWork } from "~/lib/hooks/useToday";
 import { tomorrowNineIso } from "~/components/notebook/lead-flow";
+import { useReviewAsk } from "~/components/notebook/review-ask";
 
 export interface FlowDeal {
   id: string;
@@ -56,6 +57,7 @@ function WhatsNextSheet({
 }) {
   const { t } = useTranslation();
   const invalidate = useInvalidateWork();
+  const reviewAsk = useReviewAsk();
   // Remounted (key) on every open, so the sheet always starts fresh.
   const [pick, setPick] = useState<Pick | null>(null);
   const [custom, setCustom] = useState("");
@@ -91,6 +93,7 @@ function WhatsNextSheet({
       invalidate();
       onOpenChange(false);
       const dealId = deal!.id;
+      if (status === "won") reviewAsk.afterDeal(dealId, "visit");
       toast.success(
         status === "won"
           ? t("whatsNext.wonToast", "Marked as a new customer")

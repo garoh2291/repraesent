@@ -7,6 +7,7 @@ import { clearDealPaid, markDealPaid } from "~/lib/api/deals";
 import { extractErrorMessage } from "~/lib/api/axios-instance";
 import { useInvalidateWork } from "~/lib/hooks/useToday";
 import { cn } from "~/lib/utils";
+import { useReviewAsk } from "~/components/notebook/review-ask";
 
 /**
  * "Paid" on a won deal (PRODUCT_DOC_LEFTOVERS.md §2): a won deal is a
@@ -30,6 +31,7 @@ export function DealPaid({
   const { t, i18n } = useTranslation();
   const qc = useQueryClient();
   const invalidateWork = useInvalidateWork();
+  const reviewAsk = useReviewAsk();
   const refresh = () => {
     invalidateWork();
     void qc.invalidateQueries({ queryKey: ["deal", dealId] });
@@ -43,6 +45,8 @@ export function DealPaid({
     mutationFn: () => markDealPaid(dealId),
     onSuccess: () => {
       refresh();
+      // A project business asks for a Google review once the job is paid.
+      reviewAsk.afterDeal(dealId, "paid");
       toast.success(t("pipeline.paid.markedToast", "Marked as paid"), {
         action: {
           label: t("common.undo", "Undo"),

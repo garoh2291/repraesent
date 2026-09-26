@@ -25,6 +25,7 @@ import {
 } from "~/components/notebook/command-palette";
 import { LeadFlowProvider } from "~/components/notebook/lead-flow";
 import { DealFlowProvider } from "~/components/notebook/deal-flow";
+import { ReviewAskProvider } from "~/components/notebook/review-ask";
 import { QuickCreateProvider } from "~/components/notebook/quick-create";
 export default function DashboardLayout() {
   const { user, currentWorkspace } = useAuthContext();
@@ -82,6 +83,7 @@ export default function DashboardLayout() {
   const section = activeSection(sections, location.pathname);
 
   return (
+    <ReviewAskProvider>
     <LeadFlowProvider>
     <DealFlowProvider>
     <QuickCreateProvider>
@@ -191,5 +193,6 @@ export default function DashboardLayout() {
     </QuickCreateProvider>
     </DealFlowProvider>
     </LeadFlowProvider>
+    </ReviewAskProvider>
   );
 }

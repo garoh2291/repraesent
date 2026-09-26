@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import type { Editor } from "@tiptap/react";
 import {
   AlertTriangle,
+  Check,
   ChevronDown,
   CornerDownRight,
   Loader2,
@@ -80,6 +81,8 @@ export function ComposeEmailDialog({
   const [showCc, setShowCc] = useState((request.cc?.length ?? 0) > 0);
   const [editor, setEditor] = useState<Editor | null>(null);
   const [confirmDiscard, setConfirmDiscard] = useState(false);
+  // Set once the email went out: the dialog turns into the small "Email sent" card.
+  const [sent, setSent] = useState<{ toLabel: string; subject: string } | null>(null);
   const dirtyRef = useRef(false);
 
   // Read-only here. This key is shared with the Settings pages and the Forms
@@ -167,18 +170,18 @@ export function ComposeEmailDialog({
       for (const key of request.invalidateKeys ?? []) {
         void queryClient.invalidateQueries({ queryKey: key });
       }
-      toast.success(t("compose.sentToast", { defaultValue: "Email sent" }), {
-        // An inquiry has no email list to point at; it shows in its History.
-        description: request.leadId
-          ? undefined
-          : t("compose.sentToastDescription", {
-              defaultValue:
-                "It appears in this list in full once the copy is processed — usually a few minutes.",
-            }),
-      });
       dirtyRef.current = false;
-      onOpenChange(false);
+      // Data first (the caller records the send), then the confirmation card
+      // in place of the form. The card replaces the old success toast.
       request.onSent?.();
+      const first = to[0];
+      const more = to.length - 1;
+      setSent({
+        toLabel:
+          (first?.name?.trim() || first?.email || "") +
+          (more > 0 ? ` +${more}` : ""),
+        subject: subject.trim(),
+      });
     },
     onError: (error) =>
       toast.error(
@@ -187,14 +190,24 @@ export function ComposeEmailDialog({
       ),
   });
 
+  // Closing the "Email sent" card: nothing to discard, then the caller's follow-up.
+  const finish = useCallback(() => {
+    onOpenChange(false);
+    request.onDone?.();
+  }, [onOpenChange, request]);
+
   const requestClose = useCallback(() => {
+    if (sent) {
+      finish();
+      return;
+    }
     if (mutation.isPending) return;
     if (dirtyRef.current) {
       setConfirmDiscard(true);
       return;
     }
     onOpenChange(false);
-  }, [mutation.isPending, onOpenChange]);
+  }, [sent, finish, mutation.isPending, onOpenChange]);
 
   const noAccount = !accountsLoading && sendable.length === 0;
   // A workspace with mailboxes that all need reconnecting is a different
@@ -211,6 +224,15 @@ export function ComposeEmailDialog({
           requestClose();
         }}
       >
+        {sent ? (
+          <SentCard
+            toLabel={sent.toLabel}
+            subject={sent.subject}
+            // An inquiry has no email list to point at; it shows in its History.
+            showCopyNote={!request.leadId}
+            onDone={finish}
+          />
+        ) : (
         <DialogContent
           showCloseButton={false}
           // A click outside closes through requestClose (asks first when the
@@ -395,6 +417,7 @@ export function ComposeEmailDialog({
             </div>
           </div>
         </DialogContent>
+        )}
       </Dialog>
 
       <AlertDialog open={confirmDiscard} onOpenChange={setConfirmDiscard}>
@@ -429,6 +452,64 @@ export function ComposeEmailDialog({
         </AlertDialogContent>
       </AlertDialog>
     </>
+  );
+}
+
+/**
+ * "Email sent" — the composer's own success state. Same dialog, now a small
+ * centred card (on phones too): what went out, to whom, and one Done button.
+ * No auto-close: a card that vanishes by itself is easy to miss and fights
+ * the keyboard.
+ */
+function SentCard({
+  toLabel,
+  subject,
+  showCopyNote,
+  onDone,
+}: {
+  toLabel: string;
+  subject: string;
+  showCopyNote: boolean;
+  onDone: () => void;
+}) {
+  const { t } = useTranslation();
+  return (
+    <DialogContent
+      showCloseButton={false}
+      className={cn(
+        "max-w-[calc(100%-2rem)] gap-0 rounded-2xl p-6 text-center sm:max-w-sm",
+        "motion-safe:animate-in motion-safe:fade-in-0 motion-safe:zoom-in-95 motion-safe:duration-150",
+      )}
+    >
+      <div role="status" aria-live="polite" className="flex flex-col items-center">
+        <span className="mb-3 flex size-12 items-center justify-center rounded-full bg-earned-soft">
+          <Check className="size-6 text-earned" strokeWidth={2.5} aria-hidden />
+        </span>
+        <DialogHeader className="items-center gap-1 text-center sm:text-center">
+          <DialogTitle className="text-lg font-semibold tracking-tight">
+            {t("compose.sentTitle", { defaultValue: "Email sent" })}
+          </DialogTitle>
+          <DialogDescription className="text-sm text-foreground">
+            {t("compose.sentTo", { defaultValue: "To {{name}}", name: toLabel })}
+          </DialogDescription>
+        </DialogHeader>
+        {subject ? (
+          <p className="mt-1 max-w-full truncate text-[13px] text-muted-foreground" title={subject}>
+            {subject}
+          </p>
+        ) : null}
+        {showCopyNote ? (
+          <p className="mt-3 text-[12.5px] leading-relaxed text-muted-foreground">
+            {t("compose.sentCopyNote", {
+              defaultValue: "A copy shows on the contact and deal in a few minutes.",
+            })}
+          </p>
+        ) : null}
+      </div>
+      <Button type="button" className="mt-5 h-11 w-full sm:h-10" onClick={onDone} autoFocus>
+        {t("compose.sentDone", { defaultValue: "Done" })}
+      </Button>
+    </DialogContent>
   );
 }
 

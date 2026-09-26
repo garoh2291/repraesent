@@ -422,10 +422,9 @@ export function LeadFlowProvider({ children }: { children: React.ReactNode }) {
             ["outbound-pending"],
             ["mail-messages"],
           ],
-          onSent: () => {
-            attempt.mutate({ leadId: l.id, channel: "email" });
-            openOutcome(l, "email");
-          },
+          onSent: () => attempt.mutate({ leadId: l.id, channel: "email" }),
+          // After the "Email sent" card is closed, never on top of it.
+          onDone: () => openOutcome(l, "email"),
         });
         return;
       }

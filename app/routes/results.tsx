@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { ReviewResultsCard } from "~/components/notebook/review-results";
 import { Link } from "react-router";
 import { useTranslation } from "react-i18next";
 import { ArrowRight, Plug } from "lucide-react";
@@ -318,6 +319,8 @@ export default function ResultsPage() {
       {pilot.aiVisibility && data?.ai_visibility ? (
         <AiVisibilityCard summary={data.ai_visibility} fromAi={data.from_ai} currency={data.currency} />
       ) : null}
+
+      <ReviewResultsCard />
 
       {/* The old home screen's overviews, kept */}
       <LeadAnalyticsChart />

@@ -19,6 +19,7 @@ import {
   User as UserIcon,
 } from "lucide-react";
 import { toast } from "sonner";
+import { useReviewAsk } from "~/components/notebook/review-ask";
 import { useAuthContext } from "~/providers/auth-provider";
 import { getWorkspaceDetail } from "~/lib/api/workspaces";
 import {
@@ -143,6 +144,7 @@ export default function PipelineDealDetailPage() {
   const { dealId } = useParams<{ dealId: string }>();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const reviewAsk = useReviewAsk();
   const { currentWorkspace } = useAuthContext();
   const canEdit = useCanEditLeads();
 
@@ -389,7 +391,12 @@ export default function PipelineDealDetailPage() {
     byKey: dealStagesByKey,
     onProceed: (_dealId, next) => {
       setStage(next);
-      stageMutation.mutate(next);
+      stageMutation.mutate(next, {
+        // A visit business asks for a Google review once the job is won.
+        onSuccess: () => {
+          if (dealId && dealStagesByKey.get(next)?.category === "won") reviewAsk.afterDeal(dealId, "visit");
+        },
+      });
     },
   });
 

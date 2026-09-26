@@ -41,6 +41,7 @@ import { ContactActions } from "~/components/notebook/contact-actions";
 import { NextStepChip } from "~/components/notebook/next-step-chip";
 import { OutcomeBadge, useLeadFlow, type FlowLead } from "~/components/notebook/lead-flow";
 import { useDealFlow } from "~/components/notebook/deal-flow";
+import { ReviewsToAsk } from "~/components/notebook/review-today";
 import { Button } from "~/components/ui/button";
 import {
   DropdownMenu,
@@ -751,6 +752,7 @@ export default function Today() {
                 deals={data.deals_no_next_step ?? []}
                 total={counts?.deals_no_next_step ?? 0}
               />
+              <ReviewsToAsk />
               <ChatGaps items={data.unanswered ?? []} />
               {data.ai_visibility ? <AiVisibilityAlert alert={data.ai_visibility} /> : null}
             </>

@@ -29,8 +29,14 @@ export interface ComposeRequest {
   contextLabel?: string;
   /** Query keys to invalidate after a successful send. */
   invalidateKeys?: readonly (readonly unknown[])[];
-  /** Runs once after a successful send (e.g. ask how it went). */
+  /** Runs once, right after a successful send (record it, refresh data). */
   onSent?: () => void;
+  /**
+   * Runs when the "Email sent" card is closed (Done, Esc, click outside) —
+   * the moment for a follow-up dialog such as "How did it go?", so two
+   * dialogs are never on screen at once.
+   */
+  onDone?: () => void;
 }
 
 interface ComposeEmailContextValue {

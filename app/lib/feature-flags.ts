@@ -33,7 +33,13 @@ export type PilotFeature =
   /** Website AI assistant: /ai-assistants. */
   | "aiAssistant"
   /** AI visibility (Peec-style tracking): /ai-visibility. AI_VISIBILITY_PLAN.md. */
-  | "aiVisibility";
+  | "aiVisibility"
+  /**
+   * Google review asks: after-the-job sheet, Today list, Results line, review
+   * card. GOOGLE_REVIEWS_PLAN.md. The API gates it too (nestjs-monolith
+   * `common/pilot-workspaces.ts`) because it calls Google and shows on a public page.
+   */
+  | "googleReviews";
 
 /** i18n key of the label the sidebar shows next to a piloted entry. */
 export const PILOT_FEATURE_LABEL_KEY = "nav.demoBadge";
@@ -102,5 +108,6 @@ export function usePilotFeatures(): Record<PilotFeature, boolean> {
     emailCampaigns: enabled,
     aiAssistant: enabled,
     aiVisibility: enabled,
+    googleReviews: enabled,
   };
 }

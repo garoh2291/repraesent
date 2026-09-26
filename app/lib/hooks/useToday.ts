@@ -58,6 +58,8 @@ export function useInvalidateWork() {
       "deals",
       "deal",
       "deals-pipeline",
+      // Winning or paying a deal can put a customer on "Ask for a review".
+      "google-reviews",
       "deal-history",
       "contact",
       "contacts",

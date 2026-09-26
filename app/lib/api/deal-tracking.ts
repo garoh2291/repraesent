@@ -36,6 +36,8 @@ export interface DealTrackingView {
   currentStage: TrackingStage | null;
   products: TrackingProduct[];
   outcome: "won" | "lost" | "open";
+  /** Google "write a review" link once the order is complete (pilot). Absent on older APIs. */
+  reviewUrl?: string | null;
 }
 
 /**

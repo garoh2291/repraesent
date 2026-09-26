@@ -72,6 +72,7 @@ import {
   X,
 } from "lucide-react";
 import { toast } from "sonner";
+import { useReviewAsk } from "~/components/notebook/review-ask";
 
 export function meta() {
   return [
@@ -85,6 +86,7 @@ export default function PipelinePage() {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const queryClient = useQueryClient();
+  const reviewAsk = useReviewAsk();
   const { currentWorkspace } = useAuthContext();
   const canEdit = useCanEditLeads();
 
@@ -313,7 +315,11 @@ export default function PipelinePage() {
     else if (category === "lost") optimistic.status = "lost";
     else optimistic.status = "new";
     const snapshots = applyOptimisticDeal(dealId, optimistic);
-    patchStageMutation.mutate({ dealId, stage, snapshots });
+    patchStageMutation.mutate(
+      { dealId, stage, snapshots },
+      // A visit business asks for a Google review once the job is won.
+      { onSuccess: () => (category === "won" ? reviewAsk.afterDeal(dealId, "visit") : undefined) },
+    );
   };
 
   // Pipeline rename / description / delete (admins).

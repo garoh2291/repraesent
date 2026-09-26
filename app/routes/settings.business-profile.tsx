@@ -17,6 +17,7 @@ import {
 import { checkWebsite, displayHost } from "~/lib/onboarding/helpers";
 import { useDocumentMeta } from "~/lib/hooks/use-document-meta";
 import { useAuthContext } from "~/providers/auth-provider";
+import { ReviewSettings } from "~/components/notebook/review-settings";
 import { Button } from "~/components/ui/button";
 import { Skeleton } from "~/components/ui/skeleton";
 import { Field, FormError, TextInput } from "~/components/onboarding-v2/primitives";
@@ -154,6 +155,8 @@ function ProfileEditor({ view, queryKey }: { view: WorkspaceProfileView; queryKe
           </div>
         </section>
       ) : null}
+
+      <ReviewSettings view={view} queryKey={queryKey} />
 
       <form onSubmit={submit} noValidate className="space-y-4">
         <SectionLabel>{t("settings.businessProfile.detailsLabel")}</SectionLabel>
