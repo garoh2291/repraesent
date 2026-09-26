@@ -8906,7 +8906,20 @@
     "results": "Résultats",
     "loadFailed": "Impossible de charger Aujourd'hui.",
     "callAgainToday": "À rappeler aujourd'hui",
-    "seeAllCount": "Voir les {{count}}"
+    "seeAllCount": "Voir les {{count}}",
+    "ai": {
+      "title": "Ce que les assistants IA disent de vous",
+      "dropped": "Cette semaine, les assistants IA vous ont cité dans {{named}} réponses sur {{answers}}, contre {{prevNamed}} sur {{prevAnswers}} avant.",
+      "ahead": "{{name}} a été cité plus souvent.",
+      "cap": "Les vérifications IA sont en pause : la limite de dépenses du mois est atteinte. Elles reprennent le 1er.",
+      "key": "Les vérifications IA sont en pause : votre clé OpenRouter ne fonctionne plus.",
+      "changeLimit": "Modifier la limite",
+      "reconnect": "La reconnecter",
+      "whatToDo": "Voir quoi faire",
+      "wrongFact_one": "Cette semaine, 1 réponse IA a dit quelque chose d'inexact sur votre entreprise.",
+      "wrongFact_other": "Cette semaine, {{count}} réponses IA ont dit quelque chose d'inexact sur votre entreprise.",
+      "seeWrong": "Voir ce qui a été dit"
+    }
   },
   "outcome": {
     "call": "Appeler",
@@ -9087,11 +9100,12 @@
       "instagram": "Instagram",
       "website": "Votre site",
       "chat": "Chat du site",
-      "openai": "ChatGPT",
+      "openai": "Annonces ChatGPT",
       "booking": "Réservations",
       "onboarding": "Inscriptions",
       "manual": "Ajouté à la main",
-      "other": "Autre"
+      "other": "Autre",
+      "ai_assistants": "Assistants IA"
     },
     "loadFailed": "Impossible de charger les résultats.",
     "notAvailable": "Les résultats ne sont pas disponibles pour cet espace.",
@@ -9104,7 +9118,10 @@
       "noAnswers": "Aucune vérification n'a encore eu lieu sur cette période. Les résultats s'afficheront ici après la prochaine.",
       "named": "ChatGPT et d'autres assistants IA vous ont cité dans {{named}} réponses sur {{answers}}.",
       "before": "La période précédente : {{named}} sur {{answers}}.",
-      "details": "Voir les questions et les réponses"
+      "details": "Voir les questions et les réponses",
+      "sent_one": "{{formattedCount}} personne vous a contacté après une recommandation d'un assistant IA.",
+      "sent_other": "{{formattedCount}} personnes vous ont contacté après une recommandation d'un assistant IA.",
+      "sentEarned": "{{customers}} sont devenus clients · {{earned}} gagnés."
     },
     "paidSplit": "Dont {{paid}} payés et {{toCollect}} encore à encaisser.",
     "paidAll": "Tout est payé."
@@ -9152,7 +9169,8 @@
         "earned_media": "Presse & magazines",
         "own_content": "Votre site",
         "reference": "Encyclopédies",
-        "technical": "Accès au site"
+        "technical": "Accès au site",
+        "fact_fix": "Infos inexactes"
       },
       "markDone": "Marquer comme fait",
       "none": "Aucune recommandation pour l'instant.",
@@ -9624,6 +9642,30 @@
       "cancel": "Annuler",
       "retry": "Réessayer",
       "dismiss": "Masquer"
+    },
+    "facts": {
+      "title": "Ce que l'IA dit de faux sur vous",
+      "noFacts": "Indiquez vos horaires, votre adresse et votre offre : nous vérifions si les assistants IA les donnent correctement.",
+      "addDetails": "Ajouter les infos de votre entreprise",
+      "inAnswers_one": "dans 1 réponse",
+      "inAnswers_other": "dans {{count}} réponses",
+      "said": "L'IA a dit :",
+      "yourFact": "Vos infos :",
+      "howToFix": "Comment le corriger",
+      "allRight_one": "Rien d'inexact dans la réponse qui parlait concrètement de vous.",
+      "allRight_other": "Rien d'inexact dans les {{count}} réponses qui parlaient concrètement de vous.",
+      "nothingYet": "Aucune réponse n'a encore dit quelque chose de concret sur vous.",
+      "wordsYou": "Comment l'IA vous décrit :",
+      "wordsRival": "Comment l'IA décrit {{name}} :",
+      "topic": {
+        "hours": "Horaires",
+        "address": "Adresse",
+        "phone": "Téléphone",
+        "email": "E-mail",
+        "website": "Site web",
+        "services": "Votre offre",
+        "prices": "Prix"
+      }
     }
   },
   "guided": {

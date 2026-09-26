@@ -8904,7 +8904,20 @@
     "results": "Resultaten",
     "loadFailed": "Vandaag kon niet laden.",
     "callAgainToday": "Vandaag opnieuw bellen",
-    "seeAllCount": "Alle {{count}} bekijken"
+    "seeAllCount": "Alle {{count}} bekijken",
+    "ai": {
+      "title": "Wat AI-assistenten over je zeggen",
+      "dropped": "AI-assistenten noemden je deze week in {{named}} van de {{answers}} antwoorden, eerder {{prevNamed}} van de {{prevAnswers}}.",
+      "ahead": "{{name}} werd vaker genoemd.",
+      "cap": "De AI-controles staan op pauze: de uitgavenlimiet van deze maand is bereikt. Ze gaan op de 1e weer verder.",
+      "key": "De AI-controles staan op pauze: je OpenRouter-sleutel werkt niet meer.",
+      "changeLimit": "Limiet aanpassen",
+      "reconnect": "Opnieuw verbinden",
+      "whatToDo": "Bekijk wat je kunt doen",
+      "wrongFact_one": "1 AI-antwoord zei deze week iets onjuists over je bedrijf.",
+      "wrongFact_other": "{{count}} AI-antwoorden zeiden deze week iets onjuists over je bedrijf.",
+      "seeWrong": "Bekijk wat er gezegd werd"
+    }
   },
   "outcome": {
     "call": "Bellen",
@@ -9085,11 +9098,12 @@
       "instagram": "Instagram",
       "website": "Je website",
       "chat": "Websitechat",
-      "openai": "ChatGPT",
+      "openai": "ChatGPT-advertenties",
       "booking": "Boekingen",
       "onboarding": "Aanmeldingen",
       "manual": "Handmatig",
-      "other": "Overig"
+      "other": "Overig",
+      "ai_assistants": "AI-assistenten"
     },
     "loadFailed": "Resultaten konden niet laden.",
     "notAvailable": "Resultaten zijn niet beschikbaar voor deze werkruimte.",
@@ -9102,7 +9116,10 @@
       "noAnswers": "In deze periode liep nog geen controle. De resultaten verschijnen hier na de volgende.",
       "named": "ChatGPT en andere AI-assistenten noemden je in {{named}} van de {{answers}} antwoorden.",
       "before": "De periode ervoor: {{named}} van de {{answers}}.",
-      "details": "Bekijk de vragen en antwoorden"
+      "details": "Bekijk de vragen en antwoorden",
+      "sent_one": "{{formattedCount}} persoon nam contact op nadat een AI-assistent je aanraadde.",
+      "sent_other": "{{formattedCount}} mensen namen contact op nadat een AI-assistent je aanraadde.",
+      "sentEarned": "{{customers}} werden klant · {{earned}} verdiend."
     },
     "paidSplit": "Daarvan is {{paid}} betaald en staat {{toCollect}} nog open.",
     "paidAll": "Alles is betaald."
@@ -9150,7 +9167,8 @@
         "earned_media": "Pers & tijdschriften",
         "own_content": "Je website",
         "reference": "Encyclopedieën",
-        "technical": "Toegang tot je website"
+        "technical": "Toegang tot je website",
+        "fact_fix": "Onjuiste gegevens"
       },
       "markDone": "Markeer als klaar",
       "none": "Nog geen aanbevelingen.",
@@ -9622,6 +9640,30 @@
       "cancel": "Annuleren",
       "retry": "Opnieuw proberen",
       "dismiss": "Verbergen"
+    },
+    "facts": {
+      "title": "Wat AI verkeerd over je zegt",
+      "noFacts": "Vul je openingstijden, adres en aanbod in, dan controleren we of AI-assistenten ze goed weergeven.",
+      "addDetails": "Bedrijfsgegevens invullen",
+      "inAnswers_one": "in 1 antwoord",
+      "inAnswers_other": "in {{count}} antwoorden",
+      "said": "AI zei:",
+      "yourFact": "Jouw gegevens:",
+      "howToFix": "Zo corrigeer je het",
+      "allRight_one": "Niets onjuists in het antwoord dat iets concreets over je zei.",
+      "allRight_other": "Niets onjuists in {{count}} antwoorden die iets concreets over je zeiden.",
+      "nothingYet": "Nog geen antwoord heeft iets concreets over je gezegd.",
+      "wordsYou": "Zo beschrijft AI je:",
+      "wordsRival": "Zo beschrijft AI {{name}}:",
+      "topic": {
+        "hours": "Openingstijden",
+        "address": "Adres",
+        "phone": "Telefoon",
+        "email": "E-mail",
+        "website": "Website",
+        "services": "Aanbod",
+        "prices": "Prijzen"
+      }
     }
   },
   "guided": {

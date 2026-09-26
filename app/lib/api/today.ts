@@ -88,7 +88,21 @@ export type TodayResponse =
         | { assistant_id: string; name: string; total_unanswered: number }[]
         | null;
       setup: SetupState | null;
+      /** Only when AI visibility needs the owner. Older API: absent. */
+      ai_visibility?: TodayAiAlert | null;
     };
+
+export interface TodayAiAlert {
+  reason: "wrong_fact" | "dropped" | "cap" | "key";
+  named: number;
+  answers: number;
+  prev_named: number;
+  prev_answers: number;
+  /** Tracked competitor named more often, if any. */
+  ahead: string | null;
+  /** Answers this week that said something wrong about the business. */
+  wrong_facts?: number;
+}
 
 export function browserTimeZone(): string | undefined {
   try {

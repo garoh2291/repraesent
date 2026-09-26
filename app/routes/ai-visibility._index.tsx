@@ -13,6 +13,7 @@ import { AnswerSheet } from "~/components/ai-visibility/answer-sheet";
 import { AnswerList } from "~/components/ai-visibility/answer-list";
 import { TrendChart } from "~/components/ai-visibility/trend-chart";
 import { Impact } from "~/components/ai-visibility/impact";
+import { FactsPanel } from "~/components/ai-visibility/facts-panel";
 import { Bar, Delta, EngineMark, Explain, num, pct, rank, shortDate, useDomainTypeLabel, useFilters, useToneWord } from "~/components/ai-visibility/shared";
 
 /**
@@ -178,6 +179,8 @@ export default function AiVisibilityOverview() {
           </ul>
         </Panel>
       ) : null}
+
+      {!nothing ? <FactsPanel onOpenAnswer={setOpenId} /> : null}
 
       {!nothing ? (
         <>

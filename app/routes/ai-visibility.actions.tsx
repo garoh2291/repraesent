@@ -88,6 +88,7 @@ export default function AiVisibilityActions() {
       directory: t("aiVisibility.actions.kind.directory", "Listings & reviews"),
       community: t("aiVisibility.actions.kind.community", "Communities"),
       reference: t("aiVisibility.actions.kind.reference", "Encyclopedias"),
+      fact_fix: t("aiVisibility.actions.kind.fact_fix", "Wrong facts"),
     })[k];
 
   /** Tasks, Today and this page all change together. */

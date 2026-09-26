@@ -11,7 +11,7 @@ export type PromptIntent = "informational" | "commercial" | "transactional";
 export type PromptStatus = "active" | "suggested" | "archived";
 export type DomainType = "corporate" | "editorial" | "institutional" | "ugc" | "reference" | "directory" | "other";
 export type ActionStatus = "new" | "in_progress" | "done" | "dismissed";
-export type ActionKind = "own_content" | "comparison_page" | "earned_media" | "directory" | "community" | "reference" | "technical";
+export type ActionKind = "own_content" | "comparison_page" | "earned_media" | "directory" | "community" | "reference" | "technical" | "fact_fix";
 
 export interface EngineInfo {
   engine: AiEngine;
@@ -231,6 +231,28 @@ export interface Action {
   task_assignee_name: string | null;
 }
 
+export type FactTopic = "hours" | "address" | "phone" | "email" | "website" | "services" | "prices";
+
+/** "What AI gets wrong about you". ready=false: the server is not set up for it yet (migration 197). */
+export type FactsSummary =
+  | { ready: false; known: FactTopic[] }
+  | {
+      ready: true;
+      /** Topics we can check, from the business details. Empty = ask for them. */
+      known: FactTopic[];
+      /** Answers that said something concrete about the business. */
+      checked: number;
+      ok: number;
+      wrong: Array<{
+        topic: FactTopic;
+        fact: string;
+        answers: number;
+        engines: AiEngine[];
+        examples: Array<{ said: string; engine: AiEngine; answer_id: string; run_date: string }>;
+      }>;
+      words: { own: string[]; rival: { name: string; words: string[] } | null };
+    };
+
 export interface Overview {
   period: Period;
   from: string;
@@ -396,6 +418,7 @@ export const aiVisibilityApi = {
   progress: (batchId: string) => apiClient.get<BatchProgress>(`${base}/runs/${batchId}`).then((r) => r.data),
 
   overview: (f: Filters) => apiClient.get<Overview>(`${base}/overview`, { params: params(f) }).then((r) => r.data),
+  facts: (f: Filters) => apiClient.get<FactsSummary>(`${base}/facts`, { params: params(f) }).then((r) => r.data),
   prompts: (f: Filters) => apiClient.get<PromptsPage>(`${base}/prompts`, { params: params(f) }).then((r) => r.data),
   prompt: (id: string, f: Filters) => apiClient.get<PromptDetail>(`${base}/prompts/${id}`, { params: params(f) }).then((r) => r.data),
   competitors: (f: Filters) => apiClient.get<CompetitorsPage>(`${base}/competitors`, { params: params(f) }).then((r) => r.data),

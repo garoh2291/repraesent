@@ -8906,7 +8906,20 @@
     "results": "Ergebnisse",
     "loadFailed": "Heute konnte nicht geladen werden.",
     "callAgainToday": "Heute erneut anrufen",
-    "seeAllCount": "Alle {{count}} ansehen"
+    "seeAllCount": "Alle {{count}} ansehen",
+    "ai": {
+      "title": "Was KI-Assistenten über dich sagen",
+      "dropped": "KI-Assistenten haben dich diese Woche in {{named}} von {{answers}} Antworten genannt – vorher {{prevNamed}} von {{prevAnswers}}.",
+      "ahead": "{{name}} wurde öfter genannt.",
+      "cap": "Die KI-Prüfungen sind pausiert: Das Ausgabenlimit für diesen Monat ist erreicht. Am 1. geht es weiter.",
+      "key": "Die KI-Prüfungen sind pausiert: Dein OpenRouter-Schlüssel funktioniert nicht mehr.",
+      "changeLimit": "Limit ändern",
+      "reconnect": "Neu verbinden",
+      "whatToDo": "Was du tun kannst",
+      "wrongFact_one": "1 KI-Antwort hat diese Woche etwas Falsches über dein Geschäft gesagt.",
+      "wrongFact_other": "{{count}} KI-Antworten haben diese Woche etwas Falsches über dein Geschäft gesagt.",
+      "seeWrong": "Ansehen, was gesagt wurde"
+    }
   },
   "outcome": {
     "call": "Anrufen",
@@ -9087,11 +9100,12 @@
       "instagram": "Instagram",
       "website": "Deine Website",
       "chat": "Website-Chat",
-      "openai": "ChatGPT",
+      "openai": "ChatGPT-Anzeigen",
       "booking": "Buchungen",
       "onboarding": "Anmeldungen",
       "manual": "Manuell angelegt",
-      "other": "Sonstige"
+      "other": "Sonstige",
+      "ai_assistants": "KI-Assistenten"
     },
     "loadFailed": "Die Ergebnisse konnten nicht geladen werden.",
     "notAvailable": "Für diesen Bereich gibt es keine Ergebnisse.",
@@ -9104,7 +9118,10 @@
       "noAnswers": "In diesem Zeitraum lief noch keine Prüfung. Die Ergebnisse erscheinen hier nach der nächsten.",
       "named": "ChatGPT und andere KI-Assistenten haben dich in {{named}} von {{answers}} Antworten genannt.",
       "before": "Im Zeitraum davor: {{named}} von {{answers}}.",
-      "details": "Fragen und Antworten ansehen"
+      "details": "Fragen und Antworten ansehen",
+      "sent_one": "{{formattedCount}} Person hat dich kontaktiert, nachdem ein KI-Assistent sie zu dir geschickt hat.",
+      "sent_other": "{{formattedCount}} Personen haben dich kontaktiert, nachdem ein KI-Assistent sie zu dir geschickt hat.",
+      "sentEarned": "Daraus wurden {{customers}} Kunden · {{earned}} verdient."
     },
     "paidSplit": "Davon sind {{paid}} bezahlt und {{toCollect}} noch offen.",
     "paidAll": "Alles davon ist bezahlt."
@@ -9152,7 +9169,8 @@
         "earned_media": "Presse & Magazine",
         "own_content": "Deine Website",
         "reference": "Lexika",
-        "technical": "Zugriff auf die Website"
+        "technical": "Zugriff auf die Website",
+        "fact_fix": "Falsche Angaben"
       },
       "markDone": "Als erledigt markieren",
       "none": "Noch keine Empfehlungen.",
@@ -9624,6 +9642,30 @@
       "cancel": "Abbrechen",
       "retry": "Nochmal versuchen",
       "dismiss": "Ausblenden"
+    },
+    "facts": {
+      "title": "Was KI über dich falsch sagt",
+      "noFacts": "Trag deine Öffnungszeiten, Adresse und dein Angebot ein – dann prüfen wir, ob KI-Assistenten sie richtig wiedergeben.",
+      "addDetails": "Geschäftsdaten eintragen",
+      "inAnswers_one": "in 1 Antwort",
+      "inAnswers_other": "in {{count}} Antworten",
+      "said": "Die KI sagte:",
+      "yourFact": "Deine Angabe:",
+      "howToFix": "So korrigierst du es",
+      "allRight_one": "Nichts Falsches in der 1 Antwort, die konkret über dich gesprochen hat.",
+      "allRight_other": "Nichts Falsches in {{count}} Antworten, die konkret über dich gesprochen haben.",
+      "nothingYet": "Noch hat keine Antwort etwas Konkretes über dich gesagt.",
+      "wordsYou": "So beschreibt dich die KI:",
+      "wordsRival": "So beschreibt die KI {{name}}:",
+      "topic": {
+        "hours": "Öffnungszeiten",
+        "address": "Adresse",
+        "phone": "Telefon",
+        "email": "E-Mail",
+        "website": "Website",
+        "services": "Angebot",
+        "prices": "Preise"
+      }
     }
   },
   "guided": {

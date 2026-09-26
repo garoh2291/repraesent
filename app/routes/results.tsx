@@ -43,6 +43,7 @@ const CONNECT: Partial<Record<SourceBucket, string>> = {
   facebook: "/social-ads",
   instagram: "/social-ads",
   openai: "/openai-ads",
+  ai_assistants: "/ai-visibility",
   chat: "/ai-assistants",
   website: "/forms",
 };
@@ -315,7 +316,7 @@ export default function ResultsPage() {
       </Panel>
 
       {pilot.aiVisibility && data?.ai_visibility ? (
-        <AiVisibilityCard summary={data.ai_visibility} />
+        <AiVisibilityCard summary={data.ai_visibility} fromAi={data.from_ai} currency={data.currency} />
       ) : null}
 
       {/* The old home screen's overviews, kept */}
@@ -330,8 +331,17 @@ export default function ResultsPage() {
  * Three states: not set up (what it does + Set up), set up without answers
  * yet, and the plain count of answers that named the business.
  */
-function AiVisibilityCard({ summary }: { summary: AiVisibilitySummary }) {
+function AiVisibilityCard({
+  summary,
+  fromAi,
+  currency,
+}: {
+  summary: AiVisibilitySummary;
+  fromAi?: { saw: number | null; contacted: number; customers: number; earned: number };
+  currency: string;
+}) {
   const { t } = useTranslation();
+  const sent = fromAi && (fromAi.contacted > 0 || fromAi.customers > 0) ? fromAi : null;
   const link =
     "inline-flex items-center gap-1 text-[13px] font-medium text-foreground underline decoration-foreground/30 underline-offset-4";
   return (
@@ -374,6 +384,21 @@ function AiVisibilityCard({ summary }: { summary: AiVisibilitySummary }) {
             ) : null}
           </>
         )}
+        {sent ? (
+          <p className="text-[14px] text-foreground">
+            {t("results.ai.sent", "{{count}} people contacted you after an AI assistant sent them.", {
+              count: sent.contacted,
+              formattedCount: formatNumber(sent.contacted),
+            })}
+            {sent.customers > 0
+              ? " " +
+                t("results.ai.sentEarned", "{{customers}} became customers · {{earned}} earned.", {
+                  customers: formatNumber(sent.customers),
+                  earned: formatCurrency(sent.earned, currency),
+                })
+              : null}
+          </p>
+        ) : null}
         {summary.set_up ? (
           <Link to="/ai-visibility" className={link}>
             {t("results.ai.details", "See the questions and answers")}

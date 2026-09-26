@@ -8904,7 +8904,20 @@
     "results": "Results",
     "loadFailed": "Today could not load.",
     "callAgainToday": "Call again today",
-    "seeAllCount": "See all {{count}}"
+    "seeAllCount": "See all {{count}}",
+    "ai": {
+      "title": "What AI assistants say about you",
+      "dropped": "AI assistants named you in {{named}} of {{answers}} answers this week, down from {{prevNamed}} of {{prevAnswers}}.",
+      "ahead": "{{name}} was named more often.",
+      "cap": "AI checks are paused: this month's spending limit is reached. They start again on the 1st.",
+      "key": "AI checks are paused: your OpenRouter key stopped working.",
+      "changeLimit": "Change the limit",
+      "reconnect": "Connect it again",
+      "whatToDo": "See what to do",
+      "wrongFact_one": "1 AI answer said something wrong about your business this week.",
+      "wrongFact_other": "{{count}} AI answers said something wrong about your business this week.",
+      "seeWrong": "See what they said"
+    }
   },
   "outcome": {
     "call": "Call",
@@ -9085,11 +9098,12 @@
       "instagram": "Instagram",
       "website": "Your website",
       "chat": "Website chat",
-      "openai": "ChatGPT",
+      "openai": "ChatGPT ads",
       "booking": "Bookings",
       "onboarding": "Signups",
       "manual": "Added by hand",
-      "other": "Other"
+      "other": "Other",
+      "ai_assistants": "AI assistants"
     },
     "loadFailed": "Results could not load.",
     "notAvailable": "Results are not available for this area.",
@@ -9102,7 +9116,10 @@
       "noAnswers": "No checks ran in this period yet. Results show here after the next one.",
       "named": "ChatGPT and other AI assistants named you in {{named}} of {{answers}} answers.",
       "before": "The period before: {{named}} of {{answers}}.",
-      "details": "See the questions and answers"
+      "details": "See the questions and answers",
+      "sent_one": "{{formattedCount}} person contacted you after an AI assistant sent them.",
+      "sent_other": "{{formattedCount}} people contacted you after an AI assistant sent them.",
+      "sentEarned": "{{customers}} became customers · {{earned}} earned."
     },
     "paidSplit": "Of this, {{paid}} is paid and {{toCollect}} is still to collect.",
     "paidAll": "All of it is paid."
@@ -9150,7 +9167,8 @@
         "earned_media": "Press & magazines",
         "own_content": "Your website",
         "reference": "Encyclopedias",
-        "technical": "Website access"
+        "technical": "Website access",
+        "fact_fix": "Wrong facts"
       },
       "markDone": "Mark done",
       "none": "No recommendations yet.",
@@ -9622,6 +9640,30 @@
       "cancel": "Cancel",
       "retry": "Try again",
       "dismiss": "Dismiss"
+    },
+    "facts": {
+      "title": "What AI gets wrong about you",
+      "noFacts": "Add your opening hours, address and what you offer, and we check whether AI assistants get them right.",
+      "addDetails": "Add your business details",
+      "inAnswers_one": "in 1 answer",
+      "inAnswers_other": "in {{count}} answers",
+      "said": "AI said:",
+      "yourFact": "You told us:",
+      "howToFix": "How to correct it",
+      "allRight_one": "Nothing wrong in the 1 answer that said something concrete about you.",
+      "allRight_other": "Nothing wrong in {{count}} answers that said something concrete about you.",
+      "nothingYet": "No answer has said anything concrete about you yet.",
+      "wordsYou": "How AI describes you:",
+      "wordsRival": "How AI describes {{name}}:",
+      "topic": {
+        "hours": "Opening hours",
+        "address": "Address",
+        "phone": "Phone",
+        "email": "Email",
+        "website": "Website",
+        "services": "What you offer",
+        "prices": "Prices"
+      }
     }
   },
   "guided": {

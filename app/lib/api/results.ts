@@ -9,6 +9,7 @@ export type SourceBucket =
   | "website"
   | "chat"
   | "openai"
+  | "ai_assistants"
   | "booking"
   | "onboarding"
   | "manual"
@@ -61,6 +62,8 @@ export type ResultsSummary =
       first_reply?: { median_minutes: number | null; sample: number; waiting: number } | null;
       /** Last AI visibility checks, read only. Null/absent = could not read. */
       ai_visibility?: AiVisibilitySummary | null;
+      /** People AI assistants sent (organic referrals, not ChatGPT ads). Older API: absent. */
+      from_ai?: { saw: number | null; contacted: number; customers: number; earned: number };
     };
 
 export type AiVisibilitySummary =

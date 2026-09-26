@@ -11,6 +11,7 @@ export const aiVisibilityKeys = {
   status: (ws: string | null) => ["ai-visibility", ws, "status"] as const,
   overview: (ws: string | null, f: Filters) => ["ai-visibility", ws, "overview", f] as const,
   prompts: (ws: string | null, f: Filters) => ["ai-visibility", ws, "prompts", f] as const,
+  facts: (ws: string | null, f: Filters) => ["ai-visibility", ws, "facts", f] as const,
   prompt: (ws: string | null, id: string, f: Filters) => ["ai-visibility", ws, "prompt", id, f] as const,
   competitors: (ws: string | null, f: Filters) => ["ai-visibility", ws, "competitors", f] as const,
   sources: (ws: string | null, f: Filters) => ["ai-visibility", ws, "sources", f] as const,
@@ -46,6 +47,11 @@ export function useAiVisibilityJob(kind: JobKind): Job | null {
 export function useAiVisibilityOverview(f: Filters, enabled = true) {
   const ws = getStoredWorkspaceId();
   return useQuery({ queryKey: aiVisibilityKeys.overview(ws, f), queryFn: () => aiVisibilityApi.overview(f), enabled: enabled && !!ws, ...opts });
+}
+
+export function useAiVisibilityFacts(f: Filters, enabled = true) {
+  const ws = getStoredWorkspaceId();
+  return useQuery({ queryKey: aiVisibilityKeys.facts(ws, f), queryFn: () => aiVisibilityApi.facts(f), enabled: enabled && !!ws, ...opts });
 }
 
 export function useAiVisibilityPrompts(f: Filters, enabled = true) {

@@ -23,6 +23,7 @@ import { updateTask } from "~/lib/api/tasks";
 import { completeOnboarding } from "~/lib/api/auth";
 import { extractErrorMessage } from "~/lib/api/axios-instance";
 import type {
+  TodayAiAlert,
   SetupItemKey,
   SetupState,
   TodayDeal,
@@ -383,6 +384,65 @@ function ChatGaps({
   );
 }
 
+// ─── AI visibility: only when something needs the owner ─────────────────────
+
+function AiVisibilityAlert({ alert }: { alert: TodayAiAlert }) {
+  const { t } = useTranslation();
+  const pilot = usePilotFeatures();
+  if (!pilot.aiVisibility) return null;
+  const link =
+    alert.reason === "cap"
+      ? { to: "/ai-visibility/plan", label: t("today.ai.changeLimit", "Change the limit") }
+      : alert.reason === "key"
+        ? { to: "/settings/ai", label: t("today.ai.reconnect", "Connect it again") }
+        : alert.reason === "wrong_fact"
+          ? { to: "/ai-visibility", label: t("today.ai.seeWrong", "See what they said") }
+          : { to: "/ai-visibility/actions", label: t("today.ai.whatToDo", "See what to do") };
+  return (
+    <Panel>
+      <PanelHeader title={t("today.ai.title", "What AI assistants say about you")} marker />
+      <div className="space-y-2 px-4 py-4 sm:px-5">
+        {alert.reason === "wrong_fact" ? (
+          <p className="text-[14px] text-foreground">
+            {t("today.ai.wrongFact", "{{count}} AI answers said something wrong about your business this week.", {
+              count: alert.wrong_facts ?? 1,
+            })}
+          </p>
+        ) : alert.reason === "dropped" ? (
+          <>
+            <p className="text-[14px] text-foreground">
+              {t("today.ai.dropped", "AI assistants named you in {{named}} of {{answers}} answers this week, down from {{prevNamed}} of {{prevAnswers}}.", {
+                named: formatNumber(alert.named),
+                answers: formatNumber(alert.answers),
+                prevNamed: formatNumber(alert.prev_named),
+                prevAnswers: formatNumber(alert.prev_answers),
+              })}
+            </p>
+            {alert.ahead ? (
+              <p className="text-[13px] text-muted-foreground">
+                {t("today.ai.ahead", "{{name}} was named more often.", { name: alert.ahead })}
+              </p>
+            ) : null}
+          </>
+        ) : (
+          <p className="text-[14px] text-foreground">
+            {alert.reason === "cap"
+              ? t("today.ai.cap", "AI checks are paused: this month's spending limit is reached. They start again on the 1st.")
+              : t("today.ai.key", "AI checks are paused: your OpenRouter key stopped working.")}
+          </p>
+        )}
+        <Link
+          to={link.to}
+          className="inline-flex min-h-11 items-center gap-1 text-[13px] font-medium text-foreground underline decoration-foreground/30 underline-offset-4 sm:min-h-0"
+        >
+          {link.label}
+          <ArrowRight className="size-3.5" />
+        </Link>
+      </div>
+    </Panel>
+  );
+}
+
 // ─── Right rail ─────────────────────────────────────────────────────────────
 
 function ThisMonth() {
@@ -692,6 +752,7 @@ export default function Today() {
                 total={counts?.deals_no_next_step ?? 0}
               />
               <ChatGaps items={data.unanswered ?? []} />
+              {data.ai_visibility ? <AiVisibilityAlert alert={data.ai_visibility} /> : null}
             </>
           ) : (
             <Panel>
