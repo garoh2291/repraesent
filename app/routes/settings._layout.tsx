@@ -10,6 +10,7 @@ import { useTranslation } from "react-i18next";
  */
 const SECTIONS = [
   { match: "/settings/email-notifications", key: "emailNotifications" },
+  { match: "/settings/phone-alerts", key: "phoneAlerts" },
   { match: "/settings/business-profile", key: "businessProfile" },
   { match: "/settings/email-accounts", key: "emailAccounts" },
   { match: "/settings/notifications", key: "notifications" },

@@ -415,7 +415,7 @@ export default function OnboardingChatRoute() {
   return (
     <div className="min-h-dvh overflow-x-clip bg-background text-foreground">
       <OnboardingStyles />
-      <header className="sticky top-0 z-20 border-b border-border/60 bg-background/85 backdrop-blur-md">
+      <header className="sticky top-0 z-20 border-b border-border/60 bg-background/85 pt-safe backdrop-blur-md">
         <div className="mx-auto flex h-16 max-w-6xl items-center gap-2 px-4 sm:gap-3 sm:px-5">
           <img
             src={logoUrl}

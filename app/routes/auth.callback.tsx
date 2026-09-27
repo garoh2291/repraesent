@@ -13,18 +13,13 @@ import {
 } from "~/lib/api/auth";
 import {
   setStoredToken,
-  setStoredWorkspaceId,
   clearStoredToken,
   clearStoredWorkspaceId,
-  getStoredWorkspaceId,
   getStoredToken,
-  getStoredSelectedView,
-  setStoredSelectedView,
-  BRAND_VIEW,
 } from "~/lib/api/axios-instance";
 import i18n from "~/i18n";
 import { useDocumentMeta } from "~/lib/hooks/use-document-meta";
-import { resolveWorkspaceRoute } from "~/lib/onboarding/resolve-route";
+import { routeAfterAuth } from "~/lib/auth/route-after-auth";
 
 export function meta() {
   return [
@@ -73,138 +68,9 @@ export default function AuthCallback() {
       const workspaceParam = searchParams.get("workspace");
       const redirectParam = searchParams.get("redirect");
 
-      // Resolve where to go after auth — use redirect param if it's a safe relative path
-      const resolveDestination = (fallback: string) => {
-        if (redirectParam && redirectParam.startsWith("/")) {
-          return redirectParam;
-        }
-        return fallback;
-      };
-
-      // Route based on context — shared between fresh auth and already-used-token recovery
-      const routeAfterAuth = (context: UserContextResponse) => {
-        const isBrand = context.user.user_type === "brand";
-        const workspaces = context.workspaces ?? [];
-        const hasBrand = !!context.brand;
-
-        // Invited members log in with an empty name (email-only invite). Send
-        // them to complete their profile first — even though they already belong
-        // to the workspace they were invited to — then they land in the app.
-        const needsProfile =
-          !isBrand &&
-          (!context.user.first_name?.trim() ||
-            !context.user.last_name?.trim());
-        if (needsProfile) {
-          if (workspaceParam && workspaces.some((w) => w.id === workspaceParam)) {
-            setStoredWorkspaceId(workspaceParam);
-            setStoredSelectedView(workspaceParam);
-          } else if (workspaces.length === 1) {
-            setStoredWorkspaceId(workspaces[0].id);
-            setStoredSelectedView(workspaces[0].id);
-          }
-          navigate("/onboarding/profile", { replace: true });
-          return;
-        }
-
-        // Email deep-link to a specific workspace — always wins, applies to both
-        // regular and brand users.
-        if (workspaceParam && workspaces.some((w) => w.id === workspaceParam)) {
-          setStoredWorkspaceId(workspaceParam);
-          setStoredSelectedView(workspaceParam);
-          queryClient.removeQueries();
-          navigate(resolveDestination("/"), { replace: true });
-          return;
-        }
-
-        // Explicit redirect param — honour any safe relative path.
-        if (redirectParam && redirectParam.startsWith("/")) {
-          if (redirectParam.startsWith("/brand")) {
-            if (isBrand && hasBrand) setStoredSelectedView(BRAND_VIEW);
-          }
-          navigate(redirectParam, { replace: true });
-          return;
-        }
-
-        // Brand user whose brand was revoked: no /brand access. If they have
-        // workspaces, let them pick one; otherwise drop them at /no-workspace.
-        if (isBrand && !hasBrand) {
-          if (workspaces.length === 0) {
-            navigate("/no-workspace", { replace: true });
-            return;
-          }
-          const stored = getStoredSelectedView();
-          if (stored && stored !== BRAND_VIEW && workspaces.some((w) => w.id === stored)) {
-            setStoredWorkspaceId(stored);
-            navigate(resolveDestination("/"), { replace: true });
-            return;
-          }
-          if (workspaces.length === 1) {
-            const ws = workspaces[0];
-            setStoredWorkspaceId(ws.id);
-            setStoredSelectedView(ws.id);
-            navigate(resolveDestination("/"), { replace: true });
-            return;
-          }
-          navigate("/auth/workspace-picker", { replace: true });
-          return;
-        }
-
-        // Brand user routing.
-        if (isBrand && hasBrand) {
-          // Brand-only (no workspace memberships) → /brand is the only option.
-          if (workspaces.length === 0) {
-            setStoredSelectedView(BRAND_VIEW);
-            navigate("/brand", { replace: true });
-            return;
-          }
-
-          const stored = getStoredSelectedView();
-          if (stored === BRAND_VIEW) {
-            navigate("/brand", { replace: true });
-            return;
-          }
-          if (stored && workspaces.some((w) => w.id === stored)) {
-            setStoredWorkspaceId(stored);
-            navigate(resolveDestination("/"), { replace: true });
-            return;
-          }
-          // First-time brand-user with workspaces, or stored view no longer
-          // valid → let them pick.
-          navigate("/auth/workspace-picker", { replace: true });
-          return;
-        }
-
-        // Regular user paths below.
-        if (!workspaces.length) {
-          navigate("/onboarding/profile", { replace: true });
-          return;
-        }
-
-        if (workspaces.length === 1) {
-          const ws = workspaces[0];
-          setStoredWorkspaceId(ws.id);
-          setStoredSelectedView(ws.id);
-          // Same rules as the protected layout (onboarding, welcome, holds).
-          const wanted = resolveDestination("/");
-          const gate = resolveWorkspaceRoute(ws, wanted, context.user);
-          navigate(gate ?? wanted, { replace: true });
-          return;
-        }
-
-        if (workspaces.length > 1) {
-          const storedWs = getStoredWorkspaceId();
-          const hasValidStored = storedWs && workspaces.some((w) => w.id === storedWs);
-          if (hasValidStored) {
-            setStoredSelectedView(storedWs);
-            navigate(resolveDestination("/"), { replace: true });
-            return;
-          }
-          navigate("/auth/workspace-picker", { replace: true });
-          return;
-        }
-
-        navigate(resolveDestination("/"), { replace: true });
-      };
+      // Where to land — shared with the 6-digit code on the login page.
+      const route = (context: UserContextResponse) =>
+        routeAfterAuth(context, { navigate, queryClient, workspaceParam, redirectParam });
 
       /**
        * Open the workspace for a session we already hold. Never throws, and
@@ -215,7 +81,7 @@ export default function AuthCallback() {
       const openWorkspace = async () => {
         try {
           const context: UserContextResponse = await getUserContextWithRetry(undefined, () => setSlow(true));
-          routeAfterAuth(context);
+          route(context);
         } catch (err) {
           if (isAuthRejection(err)) {
             setFailure(null);
@@ -280,7 +146,7 @@ export default function AuthCallback() {
 
   if (status === "error") {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-[#0f0f11] p-4 sm:p-8">
+      <div className="flex min-h-screen items-center justify-center bg-[#0f0f11] p-4 pt-[max(1rem,env(safe-area-inset-top))] sm:p-8">
         <div className="w-full max-w-sm text-center space-y-6 app-fade-up">
           <div className="inline-flex h-14 w-14 items-center justify-center rounded-full bg-white/5 border border-white/10 mx-auto">
             <svg className="h-6 w-6 text-white/40" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
@@ -314,7 +180,7 @@ export default function AuthCallback() {
 
   if (status === "stalled") {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-[#0f0f11] p-4 sm:p-8">
+      <div className="flex min-h-screen items-center justify-center bg-[#0f0f11] p-4 pt-[max(1rem,env(safe-area-inset-top))] sm:p-8">
         <div className="w-full max-w-sm text-center space-y-6 app-fade-up">
           <div className="space-y-2">
             <h1 className="text-xl font-semibold text-white">{t("auth.callback.stalledTitle", "Taking longer than usual")}</h1>
@@ -335,7 +201,7 @@ export default function AuthCallback() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-[#0f0f11]">
+    <div className="flex min-h-screen items-center justify-center bg-[#0f0f11] pt-safe">
       <div className="flex flex-col items-center gap-5 app-fade-up">
         <div className="relative">
           <div className="h-10 w-10 app-spin rounded-full border-2 border-white/10 border-t-white/50" />

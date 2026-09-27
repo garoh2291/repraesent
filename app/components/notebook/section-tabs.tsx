@@ -118,7 +118,7 @@ export function SectionTabs({ section }: { section: NavSection }) {
   return (
     <nav
       aria-label={section.label}
-      className="sticky top-0 z-20 shrink-0 border-b border-border bg-background/85 backdrop-blur supports-[backdrop-filter]:bg-background/70"
+      className="sticky top-[var(--safe-top)] z-20 shrink-0 border-b border-border bg-background/85 backdrop-blur supports-[backdrop-filter]:bg-background/70"
     >
       <div className="scrollbar-hide flex items-center gap-5 overflow-x-auto px-4 sm:px-6">
         {section.tabs.map((tab) => (

@@ -233,6 +233,8 @@ body {
 }
 
 :root {
+  /* Top inset of the installed app (notch / status bar); 0 in a browser tab. */
+  --safe-top: env(safe-area-inset-top, 0px);
   --radius: 0.5rem;
 
   /* Paper, ink, marker (NOTEBOOK_UX_PLAN.md §1). Evolution of the existing
@@ -352,6 +354,7 @@ body {
       transform: none;
     }
   }
+  /* Bottom safe area; pt-safe / px-safe are @utility rules below. */
   .pb-safe {
     padding-bottom: env(safe-area-inset-bottom);
   }
@@ -362,6 +365,20 @@ body {
   .scrollbar-hide::-webkit-scrollbar {
     display: none;
   }
+}
+
+/* Safe areas (installed app, viewport-fit=cover). Every inset is 0 in a
+   normal browser tab, so these change nothing there. @utility so they sort
+   with Tailwind's own spacing and take variants (sm:pt-0). */
+@utility pt-safe {
+  padding-top: env(safe-area-inset-top);
+}
+@utility px-safe {
+  padding-left: env(safe-area-inset-left);
+  padding-right: env(safe-area-inset-right);
+}
+@utility top-safe {
+  top: env(safe-area-inset-top);
 }
 
 /* ── App-wide animation utilities ─────────────────────────── */
@@ -1003,5 +1020,23 @@ body {
   .lead-conversation-scroll {
     -webkit-mask-image: none;
     mask-image: none;
+  }
+}
+
+/*
+ * Installed app (home-screen / standalone): pages that scroll the whole
+ * document would slide under the status bar and the clock. A paper strip the
+ * height of the top safe area keeps that band calm, like a native app. In a
+ * normal browser the inset is 0, so this draws nothing.
+ */
+@media (display-mode: standalone) {
+  body::before {
+    content: "";
+    position: fixed;
+    inset: 0 0 auto 0;
+    height: env(safe-area-inset-top);
+    background: var(--background);
+    z-index: 40;
+    pointer-events: none;
   }
 }

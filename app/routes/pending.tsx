@@ -132,7 +132,7 @@ export default function Pending() {
 
   if (!workspaceId) {
     return (
-      <div className="flex min-h-screen items-center justify-center">
+      <div className="flex min-h-screen items-center justify-center pt-safe">
         <p className="text-muted-foreground text-sm">{t("common.loading")}</p>
       </div>
     );
@@ -140,7 +140,7 @@ export default function Pending() {
 
   if (hasPastDue) {
     return (
-      <div className="flex min-h-screen flex-col bg-stone-50 dark:bg-zinc-950">
+      <div className="flex min-h-screen flex-col bg-stone-50 pt-safe dark:bg-zinc-950">
         <style>{STATUS_STYLES}</style>
         <StatusPageHeader />
         <div className="flex flex-1 flex-col items-center justify-center p-4 sm:p-8">
@@ -194,7 +194,7 @@ export default function Pending() {
 
   if (hasInvoiceSent) {
     return (
-      <div className="flex min-h-screen flex-col bg-stone-50 dark:bg-zinc-950">
+      <div className="flex min-h-screen flex-col bg-stone-50 pt-safe dark:bg-zinc-950">
         <style>{STATUS_STYLES}</style>
         <StatusPageHeader />
         <div className="flex flex-1 flex-col items-center justify-center p-4 sm:p-8">
@@ -247,7 +247,7 @@ export default function Pending() {
   }
 
   return (
-    <div className="flex min-h-screen flex-col bg-stone-50 dark:bg-zinc-950">
+    <div className="flex min-h-screen flex-col bg-stone-50 pt-safe dark:bg-zinc-950">
       <style>{STATUS_STYLES}</style>
       <StatusPageHeader />
       <div className="flex flex-1 flex-col items-center justify-center p-8">

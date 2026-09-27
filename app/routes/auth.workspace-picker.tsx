@@ -48,7 +48,7 @@ export default function WorkspacePicker() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-stone-50 p-6">
+    <div className="flex min-h-screen items-center justify-center bg-stone-50 p-6 pt-[max(1.5rem,env(safe-area-inset-top))]">
       <div className="w-full max-w-lg space-y-10 app-fade-up">
         {/* Logo */}
         <div className="flex justify-center">

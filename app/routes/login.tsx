@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate, useSearchParams, Link } from "react-router";
 import { FlaskConical } from "lucide-react";
 import { useTranslation } from "react-i18next";
@@ -11,6 +11,7 @@ import { useDocumentMeta } from "~/lib/hooks/use-document-meta";
 
 import logoUrl from "~/components/icons/re_praesent-mark-brand-hor.svg?url";
 import { LegalFooter } from "~/components/molecule/legal-footer";
+import { LoginCodeBox } from "~/components/molecule/login-code-box";
 
 export function meta() {
   return [
@@ -47,9 +48,13 @@ export default function Login() {
   } = useAuthContext();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+  // While a typed code signs in, the shared routeAfterAuth decides where to
+  // go; this page's own "already signed in" redirect must not race it.
+  const codeSignIn = useRef(false);
+  const [codeSigningIn, setCodeSigningIn] = useState(false);
 
   useEffect(() => {
-    if (isAuthLoading) return;
+    if (isAuthLoading || codeSignIn.current) return;
     if (isAuthenticated) {
       const returnUrl = searchParams.get("returnUrl");
       // Brand users: prefer explicit returnUrl, otherwise the last-selected
@@ -140,16 +145,17 @@ export default function Login() {
     }
   };
 
-  if (isAuthLoading) {
+  // Keep the code box mounted while its own sign-in loads the account.
+  if (isAuthLoading && !codeSigningIn) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-[#0f0f11]">
+      <div className="flex min-h-screen items-center justify-center bg-[#0f0f11] pt-safe">
         <div className="h-5 w-5 app-spin rounded-full border-2 border-white/20 border-t-white/60" />
       </div>
     );
   }
 
   return (
-    <div className="flex min-h-screen">
+    <div className="flex min-h-screen pt-safe">
       {/* Left brand panel */}
       <div className="hidden lg:flex lg:w-[400px] shrink-0 flex-col bg-[#111113] p-10 border-r border-white/5 relative overflow-hidden">
         {/* Background image — fades up from the bottom, grayscale to keep black theme */}
@@ -265,6 +271,20 @@ export default function Login() {
                     {t("auth.login.checkInboxDetail", { email })}
                   </p>
                 </div>
+                <LoginCodeBox
+                  email={email}
+                  returnUrl={searchParams.get("returnUrl")}
+                  onResend={() =>
+                    requestMagicLinkAsync({
+                      email,
+                      locale: normalizeLocale(i18n.language),
+                    })
+                  }
+                  onSigningIn={(active) => {
+                    codeSignIn.current = active;
+                    setCodeSigningIn(active);
+                  }}
+                />
                 <p className="text-sm text-muted-foreground text-center">
                   {t("auth.login.didntReceive")}{" "}
                   <button

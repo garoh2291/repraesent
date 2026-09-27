@@ -184,7 +184,22 @@
       "brandSubtitle": "The platform for modern sales teams. Manage leads, schedule appointments, and close deals.",
       "feature1": "Smart lead management",
       "feature2": "Appointment booking",
-      "feature3": "Team collaboration"
+      "feature3": "Team collaboration",
+      "code": {
+        "title": "Type the code from the email",
+        "hint": "Open the email and type the 6-digit code here, or tap the link on this device.",
+        "verifying": "Signing you in…",
+        "resend": "Send a new code",
+        "resendIn": "Send a new code in {{s}} s",
+        "resent": "New code sent. Only the newest code works.",
+        "errors": {
+          "CODE_INVALID": "That code doesn't match. Check the newest email and type it again.",
+          "CODE_EXPIRED": "This code has expired. Send a new code and use that one.",
+          "CODE_TOO_MANY": "Too many tries with this code. Send a new code to try again.",
+          "MAGIC_LINK_INELIGIBLE": "This account can't sign in to this app. Please contact your administrator.",
+          "fallback": "Signing in didn't work. Check your connection and try again."
+        }
+      }
     },
     "register": {
       "metaTitle": "Create account",
@@ -2215,7 +2230,9 @@
       "neverSignedIn": "hasn't signed in yet",
       "pickOne": "Pick at least one person, or send to everyone.",
       "instantNote": "The email for each new enquiry is a separate switch per person.",
-      "instantLink": "Set it on the team page"
+      "instantLink": "Set it on the team page",
+      "phoneNote": "Want a ping on your phone instead?",
+      "phoneLink": "Phone alerts"
     },
     "businessProfile": {
       "metaTitle": "Business details",
@@ -2296,7 +2313,90 @@
       "aiKey": "AI key",
       "emailSummaries": "Email summaries",
       "teamChat": "Team chat alerts",
-      "dealStages": "Deal stages"
+      "dealStages": "Deal stages",
+      "phoneAlerts": "Phone alerts"
+    },
+    "phoneAlerts": {
+      "metaTitle": "Phone alerts",
+      "metaDescription": "A ping on your phone when someone asks, when a task is due, and when your day starts.",
+      "unavailable": "Phone alerts aren't available yet.",
+      "thisPhone": "This phone",
+      "thisComputer": "This computer",
+      "desktopNote": "Alerts work best on your phone: open re:praesent there and add it to your home screen.",
+      "saved": "Saved",
+      "device": {
+        "notHereTitle": "Alerts can't be turned on in this app's browser",
+        "installFirstTitle": "Add re:praesent to your home screen first",
+        "installFirstBody": "On iPhone and iPad, alerts only work in the app on your home screen.",
+        "unsupportedTitle": "This browser can't show alerts",
+        "unsupportedIos": "Update your iPhone to iOS 16.4 or newer, then add re:praesent to your home screen.",
+        "unsupportedBrowser": "Open re:praesent in Chrome, Edge, Firefox or Safari to get alerts.",
+        "offTitle": "Alerts are off on this phone",
+        "offTitleComputer": "Alerts are off on this computer",
+        "offBody": "Turn them on and we'll ping you when someone asks.",
+        "onTitle": "Alerts are on for this phone",
+        "onTitleComputer": "Alerts are on for this computer",
+        "onBody": "Send yourself a test to see how they look.",
+        "test": "Send a test alert",
+        "testSent": "Test alert sent. It should arrive within a few seconds.",
+        "testNone": "No device got the test. Turn alerts on first, then try again.",
+        "turnOff": "Turn off for this phone",
+        "turnOffComputer": "Turn off for this computer",
+        "turnedOff": "Alerts are off for this phone"
+      },
+      "whatLabel": "What to send",
+      "whatDescription": "For every business you're part of.",
+      "kinds": {
+        "new_inquiry": {
+          "title": "New inquiries",
+          "desc": "The moment someone contacts you, with a tap to call them back."
+        },
+        "morning_summary": {
+          "title": "Summary when your day starts",
+          "desc": "Who is waiting and what's due today, in one message."
+        },
+        "task_due": {
+          "title": "Tasks when they're due",
+          "desc": "When a task assigned to you is due."
+        },
+        "show_names": {
+          "title": "Show names on the lock screen",
+          "desc": "Switched off, the alert only says “New inquiry”. You see who it is when you open it."
+        }
+      },
+      "hours": {
+        "label": "Active hours",
+        "description": "When alerts may reach you.",
+        "days": "Days",
+        "from": "From",
+        "to": "To",
+        "preview": "Outside these hours we hold alerts and send one summary at {{start}}.",
+        "overnight": "Alerts reach you from {{start}} until {{end}} the next morning. Outside that we hold them and send one summary at {{start}}.",
+        "allDay": "Alerts reach you all day on these days.",
+        "sameTime": "From and To are the same. Pick two different times.",
+        "otherDays": "On the days you leave out, alerts wait for your next active day.",
+        "pickOneDay": "Keep at least one day.",
+        "timezone": "Times are in {{tz}}, your phone's time zone."
+      },
+      "devices": {
+        "label": "Your phones",
+        "description": "Every phone and browser that gets your alerts.",
+        "empty": "No phones yet. Turn on alerts on your phone and it shows up here.",
+        "thisPhone": "This phone",
+        "thisComputer": "This computer",
+        "lastUsed": "Last used {{when}}",
+        "neverUsed": "Not used yet",
+        "remove": "Remove",
+        "removed": "Removed. That device gets no more alerts.",
+        "platform": {
+          "ios": "iPhone or iPad",
+          "android": "Android phone",
+          "desktop": "Computer",
+          "other": "Browser"
+        }
+      },
+      "emailNote": "Prefer email?",
+      "emailLink": "Email summaries"
     }
   },
   "booking": {
@@ -9749,5 +9849,85 @@
       "scan": "Scan the code with your phone camera."
     },
     "composeContext": "Review request to {{name}}"
+  },
+  "pwa": {
+    "update": {
+      "title": "New version ready",
+      "reload": "Reload"
+    },
+    "install": {
+      "title": "Put re:praesent on your home screen",
+      "body": "It opens like an app and can ping you the moment someone asks.",
+      "bodyNoAlerts": "It opens like an app, one tap from your home screen.",
+      "hide": "Hide",
+      "step3": "Open re:praesent from the new icon",
+      "ios": {
+        "step1": "Tap the Share button",
+        "step1Hint": "The square with the arrow, in Safari's toolbar",
+        "step2": "Choose “Add to Home Screen”",
+        "step2Hint": "Don't see it? Scroll down the list.",
+        "step3Hint": "Sign in there once with the code from your email.",
+        "ios26": "On iOS 26, leave “Open as Web App” switched on.",
+        "step1_26": "Tap ••• , then Share",
+        "step1Hint26": "The three dots at the bottom right of Safari",
+        "step2Hint26": "Don't see it? Tap “More” and look further down."
+      },
+      "android": {
+        "install": "Install",
+        "installing": "Installing…",
+        "step1": "Tap ⋮ at the top right of Chrome",
+        "step2": "Choose “Install app” or “Add to Home screen”"
+      },
+      "inApp": {
+        "title": "Open this page in {{browser}} first",
+        "body": "This page is open inside another app, which can't put it on your home screen. Use that app's menu (⋯) to open it in {{browser}}, or copy the link and paste it there.",
+        "copy": "Copy link",
+        "copied": "Link copied"
+      },
+      "done": {
+        "title": "re:praesent is installed",
+        "body": "Open it from the icon from now on."
+      }
+    },
+    "alertsAsk": {
+      "title": "Get a ping when someone asks",
+      "body": "So you can call back first. You choose which alerts and when, in Settings.",
+      "turnOn": "Turn on alerts",
+      "turningOn": "Turning on…",
+      "notNow": "Not now",
+      "toastOn": "Alerts are on for this phone",
+      "failed": "Alerts couldn't be turned on. Check your connection and try again.",
+      "on": {
+        "title": "Alerts are on",
+        "body": "This phone gets a ping for every new inquiry.",
+        "link": "Choose which alerts"
+      },
+      "denied": {
+        "title": "Alerts are blocked on this phone",
+        "body": "You can allow them again in your phone's settings:",
+        "titleComputer": "Alerts are blocked in this browser",
+        "bodyComputer": "You can allow them again in your browser:"
+      },
+      "failedDevice": "This phone didn't accept alerts. Close re:praesent completely, open it again from the home screen and try once more."
+    },
+    "reenable": {
+      "ios": {
+        "step1": "Open your iPhone's Settings",
+        "step2": "Tap Notifications, then re:praesent",
+        "step3": "Switch on Allow Notifications"
+      },
+      "android": {
+        "step1": "Touch and hold the re:praesent icon",
+        "step2": "Tap App info, then Notifications",
+        "step3": "Switch notifications on"
+      },
+      "desktop": "Click the icon to the left of the web address and allow notifications for this site."
+    },
+    "example": {
+      "label": "Example",
+      "title": "New inquiry: Anna Weber",
+      "body": "Via your website form · Tap to call back",
+      "when": "now"
+    }
   }
 }

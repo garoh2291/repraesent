@@ -249,6 +249,8 @@ export function ComposeEmailDialog({
             // Full-bleed on phones: a mail composer is the whole task, and a
             // 220px editor inside a floating card is unusable with a keyboard up.
             "h-[100svh] max-w-none rounded-none sm:h-auto sm:max-h-[calc(100svh-2rem)] sm:rounded-2xl",
+            // Installed app on a phone: keep the header below the notch.
+            "pt-safe sm:pt-0",
             "flex flex-col",
           )}
         >
@@ -373,7 +375,7 @@ export function ComposeEmailDialog({
             </div>
           )}
 
-          <div className="flex items-center justify-between gap-2 border-t border-border bg-card px-4 py-3 sm:px-6">
+          <div className="flex items-center justify-between gap-2 border-t border-border bg-card px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:px-6 sm:pb-3">
             {noAccount ? (
               <span />
             ) : (

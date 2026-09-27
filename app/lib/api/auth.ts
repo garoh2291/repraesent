@@ -274,6 +274,36 @@ export const verifyMagicLink = async (token: string): Promise<AuthResponse> => {
   }
 };
 
+/** Causes for a 6-digit login code that did not work (PWA_PUSH_PLAN.md). */
+export const CODE_INVALID = "CODE_INVALID";
+export const CODE_EXPIRED = "CODE_EXPIRED";
+export const CODE_TOO_MANY = "CODE_TOO_MANY";
+export const MAGIC_LINK_INELIGIBLE = "MAGIC_LINK_INELIGIBLE";
+
+/**
+ * Sign in with the 6-digit code from the login email. Same response and the
+ * same refresh-token storage as `verifyMagicLink`; failures carry the API's
+ * `code` (CODE_INVALID | CODE_EXPIRED | CODE_TOO_MANY | MAGIC_LINK_INELIGIBLE)
+ * so the login page can say what happened.
+ */
+export const verifyMagicCode = async (email: string, code: string): Promise<AuthResponse> => {
+  try {
+    const response = await apiClient.post<AuthResponse>("/users/magic-link/verify-code", {
+      email: email.trim(),
+      code,
+    });
+    if (response.data.refresh_token) {
+      setStoredRefreshToken(response.data.refresh_token);
+    }
+    return response.data;
+  } catch (error) {
+    const apiError = createApiError(error);
+    // 429 from a rate limiter without a body code still means "too many".
+    const code = extractErrorCode(error) ?? (apiError.status === 429 ? CODE_TOO_MANY : null);
+    throw new MagicLinkError(apiError.message || "Invalid or expired code", code);
+  }
+};
+
 /**
  * Get user dashboard context (user + workspaces with services and role)
  */
@@ -338,5 +368,11 @@ export const completeOnboarding = async (): Promise<void> => {
  * Logout (client-side only)
  */
 export const logout = async (): Promise<void> => {
-  return Promise.resolve();
+  // A signed-out phone must not keep showing this person's inquiries on the
+  // lock screen. Best effort, capped so signing out never hangs.
+  const { forgetThisDeviceForAlerts } = await import("~/lib/pwa/use-pwa");
+  await Promise.race([
+    forgetThisDeviceForAlerts().catch(() => undefined),
+    new Promise((r) => setTimeout(r, 2500)),
+  ]);
 };

@@ -27,6 +27,8 @@ import { LeadFlowProvider } from "~/components/notebook/lead-flow";
 import { DealFlowProvider } from "~/components/notebook/deal-flow";
 import { ReviewAskProvider } from "~/components/notebook/review-ask";
 import { QuickCreateProvider } from "~/components/notebook/quick-create";
+import { useWorkspaceFromParam } from "~/lib/hooks/use-workspace-from-param";
+import { refreshThisDeviceSubscription } from "~/lib/pwa/use-pwa";
 export default function DashboardLayout() {
   const { user, currentWorkspace } = useAuthContext();
   const location = useLocation();
@@ -79,6 +81,24 @@ export default function DashboardLayout() {
       (inv) => inv.status === "open" && inv.hosted_invoice_url
     )?.hosted_invoice_url ?? currentWorkspace?.unpaid_invoice_url;
 
+  // Phone alert links carry ?ws=: switch workspace first, then show the page.
+  const switchingWorkspace = useWorkspaceFromParam();
+
+  // Once per app open: keep this phone's alert subscription fresh (and pick
+  // up one the browser replaced). Silent; never asks for permission.
+  useEffect(() => {
+    if (!user) return;
+    void refreshThisDeviceSubscription();
+    if (typeof navigator === "undefined" || !("serviceWorker" in navigator)) return;
+    const onMessage = (event: MessageEvent) => {
+      if ((event.data as { type?: string } | null)?.type === "PUSH_SUBSCRIPTION_CHANGED") {
+        void refreshThisDeviceSubscription(true);
+      }
+    };
+    navigator.serviceWorker.addEventListener("message", onMessage);
+    return () => navigator.serviceWorker.removeEventListener("message", onMessage);
+  }, [user?.id]);
+
   const sections = useNavSections();
   const section = activeSection(sections, location.pathname);
 
@@ -100,15 +120,28 @@ export default function DashboardLayout() {
         className={
           // relative: absolutely positioned children (sr-only labels, badges) must be laid out
           // inside this scroll box; otherwise they stretch the page and add a second scrollbar.
-          "relative flex min-w-0 flex-1 flex-col overflow-y-auto overflow-x-hidden bg-background" +
+          "px-safe relative flex min-w-0 flex-1 flex-col overflow-y-auto overflow-x-hidden bg-background" +
           (sections ? " pb-[calc(4rem+env(safe-area-inset-bottom))] lg:pb-0" : "")
         }
         // Height of the sticky section tabs, so pages' own sticky headers stop
         // just below them instead of sliding underneath (0 when there are no tabs).
-        style={{ "--section-tabs-h": section && section.tabs.length > 1 ? "2.8125rem" : "0px" } as React.CSSProperties}
+        // Includes the installed app's top inset (0 in a browser tab), because
+        // the tabs themselves stick below the status bar.
+        style={{
+          "--section-tabs-h":
+            section && section.tabs.length > 1
+              ? "calc(2.8125rem + var(--safe-top))"
+              : "var(--safe-top)",
+        } as React.CSSProperties}
       >
+        {/* Installed app: a paper strip under the status bar, so scrolled
+            content never shows through it (0 px tall in a browser tab). */}
+        <div
+          aria-hidden
+          className="pointer-events-none fixed inset-x-0 top-0 z-40 h-[var(--safe-top)] bg-card lg:hidden"
+        />
         {/* Mobile top bar */}
-        <div className="flex lg:hidden items-center h-14 px-4 border-b border-border bg-card shrink-0 gap-3">
+        <div className="flex lg:hidden items-center box-content h-14 pt-safe px-4 border-b border-border bg-card shrink-0 gap-3">
           {sections ? (
             <Link to="/" className="flex min-w-0 flex-1 items-center">
               <img src={logoUrl} alt="Repraesent" className="h-6 w-auto max-w-[120px]" />
@@ -178,7 +211,7 @@ export default function DashboardLayout() {
           <DoorboostMigrationBanner />
         )}
         {section && section.tabs.length > 1 ? <SectionTabs section={section} /> : null}
-        <Outlet />
+        {switchingWorkspace ? null : <Outlet />}
       </main>
 
       {sections ? (

@@ -118,7 +118,7 @@ export function WizardShell({ children, hideCard = false }: { children: React.Re
     // autofocused input would otherwise scroll the page sideways. Clip keeps `sticky` working.
     <div className="min-h-dvh overflow-x-clip bg-background text-foreground">
       <OnboardingStyles />
-      <header className="sticky top-0 z-20 border-b border-border/60 bg-background/80 backdrop-blur-md">
+      <header className="sticky top-0 z-20 border-b border-border/60 bg-background/80 pt-safe backdrop-blur-md">
         <div className="mx-auto flex h-16 max-w-6xl items-center gap-2 px-4 sm:gap-4 sm:px-5 xl:max-w-7xl">
           <img src={logoUrl} alt="re:praesent" className="h-4 w-auto max-w-[96px] shrink-0 sm:h-6 sm:max-w-[120px]" />
           {/* Tablet: progress in the header. Desktop has the rail; phones the strip below. */}

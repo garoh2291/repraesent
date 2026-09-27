@@ -298,6 +298,12 @@ export default function SettingsEmailNotifications() {
           {t("settings.emailNotifications.instantLink")}
         </Link>
       </p>
+      <p className="-mt-6 text-sm text-muted-foreground">
+        {t("settings.emailNotifications.phoneNote")}{" "}
+        <Link to="/settings/phone-alerts" className="font-medium text-primary hover:underline">
+          {t("settings.emailNotifications.phoneLink")}
+        </Link>
+      </p>
     </div>
   );
 }

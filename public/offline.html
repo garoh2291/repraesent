@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="theme-color" content="#ffffff" />
+<title>re:praesent</title>
+<style>
+  :root { --paper: #f5f4f1; --ink: #141516; --muted: #6b6b66; --rule: #e4e2dc; --card: #ffffff; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; }
+  body {
+    background: var(--paper);
+    color: var(--ink);
+    font: 16px/1.5 ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: calc(24px + env(safe-area-inset-top)) calc(20px + env(safe-area-inset-right))
+      calc(24px + env(safe-area-inset-bottom)) calc(20px + env(safe-area-inset-left));
+    -webkit-font-smoothing: antialiased;
+  }
+  main { width: 100%; max-width: 360px; }
+  .mark { font-weight: 800; font-size: 28px; letter-spacing: -0.03em; }
+  .card {
+    margin-top: 28px;
+    background: var(--card);
+    border: 1px solid var(--rule);
+    border-radius: 14px;
+    padding: 22px 20px;
+  }
+  .dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--muted); margin-right: 8px; vertical-align: middle; }
+  h1 { margin: 0; font: 600 20px/1.25 Georgia, "Times New Roman", serif; }
+  p { margin: 8px 0 0; color: var(--muted); font-size: 15px; }
+  button {
+    margin-top: 20px;
+    width: 100%;
+    min-height: 44px;
+    border: 0;
+    border-radius: 10px;
+    background: var(--ink);
+    color: #fff;
+    font-size: 15px;
+    font-weight: 600;
+    font-family: inherit;
+    cursor: pointer;
+  }
+  button:active { transform: scale(0.98); }
+  @media (prefers-reduced-motion: reduce) { button:active { transform: none; } }
+</style>
+</head>
+<body>
+<main>
+  <div class="mark" aria-label="re:praesent">re:</div>
+  <div class="card">
+    <h1 id="t"><span class="dot" aria-hidden="true"></span>Du bist offline</h1>
+    <p id="b">Alles, was du gespeichert hast, ist sicher. Die Seite lädt von selbst neu, sobald du wieder online bist.</p>
+    <button id="r" type="button">Erneut versuchen</button>
+  </div>
+</main>
+<script>
+  (function () {
+    var copy = {
+      en: ["You're offline", "Everything you saved is safe. This page reloads by itself as soon as you're back online.", "Try again"],
+      de: ["Du bist offline", "Alles, was du gespeichert hast, ist sicher. Die Seite lädt von selbst neu, sobald du wieder online bist.", "Erneut versuchen"],
+      fr: ["Vous êtes hors ligne", "Tout ce que vous avez enregistré est en sécurité. La page se recharge d'elle-même dès que vous êtes de nouveau en ligne.", "Réessayer"],
+      nl: ["Je bent offline", "Alles wat je hebt opgeslagen is veilig. De pagina laadt vanzelf opnieuw zodra je weer online bent.", "Opnieuw proberen"]
+    };
+    var pick = "de";
+    try {
+      var langs = navigator.languages && navigator.languages.length ? navigator.languages : [navigator.language || "de"];
+      for (var i = 0; i < langs.length; i++) {
+        var l = String(langs[i]).slice(0, 2).toLowerCase();
+        if (copy[l]) { pick = l; break; }
+      }
+    } catch (e) {}
+    var c = copy[pick];
+    document.documentElement.lang = pick;
+    document.getElementById("t").lastChild.nodeValue = c[0];
+    document.getElementById("b").textContent = c[1];
+    var btn = document.getElementById("r");
+    btn.textContent = c[2];
+    function reload() { location.reload(); }
+    btn.addEventListener("click", reload);
+    window.addEventListener("online", reload);
+  })();
+</script>
+</body>
+</html>

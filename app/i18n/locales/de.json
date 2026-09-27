@@ -184,7 +184,22 @@
       "brandSubtitle": "Die Plattform für moderne Vertriebsteams. Verwalten Sie Leads, buchen Sie Termine und schließen Sie Deals ab.",
       "feature1": "Intelligentes Lead-Management",
       "feature2": "Terminbuchung",
-      "feature3": "Team-Zusammenarbeit"
+      "feature3": "Team-Zusammenarbeit",
+      "code": {
+        "title": "Code aus der E-Mail eingeben",
+        "hint": "Öffnen Sie die E-Mail und geben Sie den 6-stelligen Code hier ein – oder tippen Sie auf diesem Gerät auf den Link.",
+        "verifying": "Sie werden angemeldet …",
+        "resend": "Neuen Code senden",
+        "resendIn": "Neuer Code in {{s}} s",
+        "resent": "Neuer Code gesendet. Nur der neueste Code gilt.",
+        "errors": {
+          "CODE_INVALID": "Dieser Code stimmt nicht. Prüfen Sie die neueste E-Mail und geben Sie ihn noch einmal ein.",
+          "CODE_EXPIRED": "Dieser Code ist abgelaufen. Fordern Sie einen neuen Code an und nutzen Sie diesen.",
+          "CODE_TOO_MANY": "Zu viele Versuche mit diesem Code. Fordern Sie einen neuen Code an, um es erneut zu versuchen.",
+          "MAGIC_LINK_INELIGIBLE": "Mit diesem Konto ist die Anmeldung in dieser App nicht möglich. Bitte wenden Sie sich an Ihren Administrator.",
+          "fallback": "Die Anmeldung hat nicht geklappt. Prüfen Sie Ihre Verbindung und versuchen Sie es erneut."
+        }
+      }
     },
     "register": {
       "metaTitle": "Konto erstellen",
@@ -2217,7 +2232,9 @@
       "neverSignedIn": "noch nicht angemeldet",
       "pickOne": "Wählen Sie mindestens eine Person aus oder senden Sie an alle.",
       "instantNote": "Die E-Mail zu jeder neuen Anfrage ist ein eigener Schalter pro Person.",
-      "instantLink": "Auf der Team-Seite einstellen"
+      "instantLink": "Auf der Team-Seite einstellen",
+      "phoneNote": "Lieber eine Meldung aufs Handy?",
+      "phoneLink": "Handy-Meldungen"
     },
     "businessProfile": {
       "metaTitle": "Unternehmensdaten",
@@ -2298,7 +2315,90 @@
       "aiKey": "KI-Schlüssel",
       "emailSummaries": "E-Mail-Zusammenfassungen",
       "teamChat": "Team-Chat-Meldungen",
-      "dealStages": "Deal-Phasen"
+      "dealStages": "Deal-Phasen",
+      "phoneAlerts": "Handy-Meldungen"
+    },
+    "phoneAlerts": {
+      "metaTitle": "Handy-Meldungen",
+      "metaDescription": "Eine Meldung aufs Handy, wenn jemand anfragt, eine Aufgabe fällig ist und dein Tag beginnt.",
+      "unavailable": "Handy-Meldungen sind noch nicht verfügbar.",
+      "thisPhone": "Dieses Handy",
+      "thisComputer": "Dieser Computer",
+      "desktopNote": "Am besten funktionieren Meldungen auf dem Handy: Öffne re:praesent dort und leg es auf den Home-Bildschirm.",
+      "saved": "Gespeichert",
+      "device": {
+        "notHereTitle": "Im Browser dieser App lassen sich keine Meldungen einschalten",
+        "installFirstTitle": "Leg re:praesent zuerst auf deinen Home-Bildschirm",
+        "installFirstBody": "Auf iPhone und iPad funktionieren Meldungen nur in der App auf dem Home-Bildschirm.",
+        "unsupportedTitle": "Dieser Browser kann keine Meldungen anzeigen",
+        "unsupportedIos": "Aktualisiere dein iPhone auf iOS 16.4 oder neuer und leg re:praesent dann auf den Home-Bildschirm.",
+        "unsupportedBrowser": "Öffne re:praesent in Chrome, Edge, Firefox oder Safari, um Meldungen zu bekommen.",
+        "offTitle": "Meldungen sind auf diesem Handy aus",
+        "offTitleComputer": "Meldungen sind auf diesem Computer aus",
+        "offBody": "Schalte sie ein, dann melden wir uns, sobald jemand anfragt.",
+        "onTitle": "Meldungen sind auf diesem Handy an",
+        "onTitleComputer": "Meldungen sind auf diesem Computer an",
+        "onBody": "Schick dir eine Test-Meldung, um zu sehen, wie sie aussieht.",
+        "test": "Test-Meldung senden",
+        "testSent": "Test-Meldung gesendet. Sie sollte in wenigen Sekunden ankommen.",
+        "testNone": "Kein Gerät hat die Test-Meldung bekommen. Schalte zuerst die Meldungen ein und versuch es dann noch mal.",
+        "turnOff": "Auf diesem Handy ausschalten",
+        "turnOffComputer": "Auf diesem Computer ausschalten",
+        "turnedOff": "Meldungen sind auf diesem Handy aus"
+      },
+      "whatLabel": "Was gemeldet wird",
+      "whatDescription": "Für jedes Unternehmen, zu dem du gehörst.",
+      "kinds": {
+        "new_inquiry": {
+          "title": "Neue Anfragen",
+          "desc": "Sobald sich jemand meldet – mit einem Tipp zum Zurückrufen."
+        },
+        "morning_summary": {
+          "title": "Überblick zum Tagesstart",
+          "desc": "Wer auf dich wartet und was heute fällig ist, in einer Nachricht."
+        },
+        "task_due": {
+          "title": "Fällige Aufgaben",
+          "desc": "Wenn eine Aufgabe fällig wird, die dir zugewiesen ist."
+        },
+        "show_names": {
+          "title": "Namen auf dem Sperrbildschirm zeigen",
+          "desc": "Ausgeschaltet steht in der Meldung nur „Neue Anfrage“. Wer es ist, siehst du beim Öffnen."
+        }
+      },
+      "hours": {
+        "label": "Aktive Zeiten",
+        "description": "Wann dich Meldungen erreichen dürfen.",
+        "days": "Tage",
+        "from": "Von",
+        "to": "Bis",
+        "preview": "Außerhalb dieser Zeiten halten wir Meldungen zurück und schicken um {{start}} Uhr einen Überblick.",
+        "overnight": "Meldungen erreichen dich von {{start}} bis {{end}} Uhr am nächsten Morgen. Außerhalb davon halten wir sie zurück und schicken um {{start}} Uhr einen Überblick.",
+        "allDay": "An diesen Tagen erreichen dich Meldungen rund um die Uhr.",
+        "sameTime": "„Von“ und „Bis“ sind gleich. Wähl zwei verschiedene Uhrzeiten.",
+        "otherDays": "An den übrigen Tagen warten Meldungen bis zu deinem nächsten aktiven Tag.",
+        "pickOneDay": "Mindestens ein Tag muss bleiben.",
+        "timezone": "Die Zeiten gelten in {{tz}}, der Zeitzone deines Handys."
+      },
+      "devices": {
+        "label": "Deine Handys",
+        "description": "Alle Handys und Browser, die deine Meldungen bekommen.",
+        "empty": "Noch keine Handys. Schalte Meldungen auf deinem Handy ein, dann erscheint es hier.",
+        "thisPhone": "Dieses Handy",
+        "thisComputer": "Dieser Computer",
+        "lastUsed": "Zuletzt genutzt: {{when}}",
+        "neverUsed": "Noch nicht genutzt",
+        "remove": "Entfernen",
+        "removed": "Entfernt. Dieses Gerät bekommt keine Meldungen mehr.",
+        "platform": {
+          "ios": "iPhone oder iPad",
+          "android": "Android-Handy",
+          "desktop": "Computer",
+          "other": "Browser"
+        }
+      },
+      "emailNote": "Lieber per E-Mail?",
+      "emailLink": "E-Mail-Zusammenfassungen"
     }
   },
   "booking": {
@@ -9751,5 +9851,85 @@
       "scan": "Einfach den Code mit der Handykamera scannen."
     },
     "composeContext": "Bitte um Bewertung an {{name}}"
+  },
+  "pwa": {
+    "update": {
+      "title": "Neue Version bereit",
+      "reload": "Neu laden"
+    },
+    "install": {
+      "title": "Leg re:praesent auf deinen Home-Bildschirm",
+      "body": "Es öffnet sich wie eine App und meldet sich, sobald jemand anfragt.",
+      "bodyNoAlerts": "Es öffnet sich wie eine App – ein Tipp auf dem Home-Bildschirm genügt.",
+      "hide": "Ausblenden",
+      "step3": "Öffne re:praesent über das neue Symbol",
+      "ios": {
+        "step1": "Tippe auf „Teilen“",
+        "step1Hint": "Das Quadrat mit dem Pfeil in der Safari-Leiste",
+        "step2": "Wähle „Zum Home-Bildschirm“",
+        "step2Hint": "Nicht zu sehen? Scroll in der Liste nach unten.",
+        "step3Hint": "Dort meldest du dich einmal mit dem Code aus der E-Mail an.",
+        "ios26": "Unter iOS 26: Lass „Als Web-App öffnen“ eingeschaltet.",
+        "step1_26": "Tippe auf ••• und dann auf „Teilen“",
+        "step1Hint26": "Die drei Punkte unten rechts in Safari",
+        "step2Hint26": "Nicht zu sehen? Tippe auf „Mehr“ und schau weiter unten."
+      },
+      "android": {
+        "install": "Installieren",
+        "installing": "Wird installiert …",
+        "step1": "Tippe in Chrome oben rechts auf ⋮",
+        "step2": "Wähle „App installieren“ oder „Zum Startbildschirm hinzufügen“"
+      },
+      "inApp": {
+        "title": "Öffne diese Seite zuerst in {{browser}}",
+        "body": "Die Seite ist gerade in einer anderen App geöffnet, und die kann sie nicht auf deinen Home-Bildschirm legen. Öffne sie über das Menü dieser App (⋯) in {{browser}} – oder kopiere den Link und füge ihn dort ein.",
+        "copy": "Link kopieren",
+        "copied": "Link kopiert"
+      },
+      "done": {
+        "title": "re:praesent ist installiert",
+        "body": "Öffne es ab jetzt über das Symbol."
+      }
+    },
+    "alertsAsk": {
+      "title": "Erfahre sofort, wenn jemand anfragt",
+      "body": "So kannst du gleich zurückrufen. Welche Meldungen wann kommen, legst du in den Einstellungen fest.",
+      "turnOn": "Meldungen einschalten",
+      "turningOn": "Wird eingeschaltet …",
+      "notNow": "Nicht jetzt",
+      "toastOn": "Meldungen sind auf diesem Handy an",
+      "failed": "Die Meldungen ließen sich nicht einschalten. Prüf deine Verbindung und versuch es noch mal.",
+      "on": {
+        "title": "Meldungen sind an",
+        "body": "Bei jeder neuen Anfrage meldet sich dieses Handy.",
+        "link": "Meldungen auswählen"
+      },
+      "denied": {
+        "title": "Meldungen sind auf diesem Handy blockiert",
+        "body": "In den Einstellungen deines Handys kannst du sie wieder erlauben:",
+        "titleComputer": "Meldungen sind in diesem Browser blockiert",
+        "bodyComputer": "In deinem Browser kannst du sie wieder erlauben:"
+      },
+      "failedDevice": "Dieses Handy hat die Meldungen nicht angenommen. Schließe re:praesent ganz, öffne es wieder über den Home-Bildschirm und versuch es noch einmal."
+    },
+    "reenable": {
+      "ios": {
+        "step1": "Öffne die Einstellungen deines iPhones",
+        "step2": "Tippe auf „Mitteilungen“ und dann auf „re:praesent“",
+        "step3": "Schalte „Mitteilungen erlauben“ ein"
+      },
+      "android": {
+        "step1": "Halte das re:praesent-Symbol gedrückt",
+        "step2": "Tippe auf „App-Info“ und dann auf „Benachrichtigungen“",
+        "step3": "Schalte die Benachrichtigungen ein"
+      },
+      "desktop": "Klicke links neben der Webadresse auf das Symbol und erlaube Benachrichtigungen für diese Seite."
+    },
+    "example": {
+      "label": "Beispiel",
+      "title": "Neue Anfrage: Anna Weber",
+      "body": "Über Ihr Website-Formular · Tippen zum Zurückrufen",
+      "when": "jetzt"
+    }
   }
 }

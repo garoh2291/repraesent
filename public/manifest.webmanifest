@@ -1,0 +1,68 @@
+{
+  "id": "/",
+  "name": "re:praesent",
+  "short_name": "re:praesent",
+  "description": "Ihre Anfragen, Kunden und Aufgaben auf dem Handy.",
+  "lang": "de",
+  "dir": "ltr",
+  "start_url": "/?source=app",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#f5f4f1",
+  "theme_color": "#ffffff",
+  "categories": [
+    "business",
+    "productivity"
+  ],
+  "icons": [
+    {
+      "src": "/icons/app-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/app-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/app-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/icons/apple-touch-icon-180.png",
+      "sizes": "180x180",
+      "type": "image/png"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Neue Anfrage",
+      "short_name": "Neue Anfrage",
+      "url": "/?new=lead",
+      "icons": [
+        {
+          "src": "/icons/app-192.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
+    },
+    {
+      "name": "Heute",
+      "short_name": "Heute",
+      "url": "/",
+      "icons": [
+        {
+          "src": "/icons/app-192.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
+    }
+  ]
+}

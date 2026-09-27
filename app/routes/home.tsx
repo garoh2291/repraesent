@@ -42,6 +42,10 @@ import { NextStepChip } from "~/components/notebook/next-step-chip";
 import { OutcomeBadge, useLeadFlow, type FlowLead } from "~/components/notebook/lead-flow";
 import { useDealFlow } from "~/components/notebook/deal-flow";
 import { ReviewsToAsk } from "~/components/notebook/review-today";
+import { InstallCard } from "~/components/notebook/install-card";
+import { AlertsAskCard } from "~/components/notebook/alerts-ask-card";
+import { useQuickCreate } from "~/components/notebook/quick-create";
+import { useOpenFromParam } from "~/lib/hooks/useOpenFromParam";
 import { Button } from "~/components/ui/button";
 import {
   DropdownMenu,
@@ -450,6 +454,7 @@ function ThisMonth() {
   const { t } = useTranslation();
   const q = useResultsSummary("30d");
   const data = q.data && q.data.supported ? q.data : null;
+
   return (
     <Panel>
       <PanelHeader
@@ -632,6 +637,9 @@ export default function Today() {
   const [scope, setScope] = useState<"me" | "all">("me");
   const q = useToday(scope);
   const qc = useQueryClient();
+  // Home-screen shortcut "New inquiry" (manifest): /?new=lead.
+  const quickCreate = useQuickCreate();
+  useOpenFromParam(() => quickCreate.open("lead"), "new", "lead");
 
   // The retired first-run tour used to stamp onboarding_completed_at; other
   // screens still gate on it (e.g. the Forms intro). Today replaces the tour,
@@ -655,6 +663,20 @@ export default function Today() {
   const firstName = (user?.first_name ?? "").trim().split(" ")[0] ?? "";
   const data = q.data && q.data.supported ? q.data : null;
 
+  // Installed app: the icon's badge shows how many people are waiting, the
+  // same number the alerts set — cleared here once nobody is.
+  const badgeCount = data?.counts
+    ? data.counts.new_leads + data.counts.follow_ups_due + (data.counts.signups ?? 0)
+    : null;
+  useEffect(() => {
+    if (badgeCount === null || typeof navigator === "undefined" || !("setAppBadge" in navigator)) return;
+    const nav = navigator as Navigator & {
+      setAppBadge: (n?: number) => Promise<void>;
+      clearAppBadge: () => Promise<void>;
+    };
+    (badgeCount > 0 ? nav.setAppBadge(badgeCount) : nav.clearAppBadge()).catch(() => undefined);
+  }, [badgeCount]);
+
   // Brand (DoorBoost) workspaces keep their own dashboard content.
   if (q.data && !q.data.supported) {
     return (
@@ -672,6 +694,7 @@ export default function Today() {
     : 0;
   const waiting = needs;
   const isRoot = data?.is_root === true;
+
   const isEmptyAccount =
     !!data &&
     needs === 0 &&
@@ -703,6 +726,10 @@ export default function Today() {
           ))}
         </div>
       </div>
+
+      {/* Phones only (each card decides): install first, then the alerts ask. */}
+      <InstallCard />
+      <AlertsAskCard />
 
       <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_340px] lg:items-start">
         <div className="min-w-0 space-y-6">

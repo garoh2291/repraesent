@@ -51,7 +51,7 @@ export default function OnboardingLayout() {
         }
       `}</style>
 
-      <div className="min-h-screen bg-stone-50 dark:bg-zinc-950">
+      <div className="min-h-screen bg-stone-50 pt-safe dark:bg-zinc-950">
         <div className="mx-auto max-w-2xl px-5">
 
           {/* Top bar */}

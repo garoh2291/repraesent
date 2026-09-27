@@ -184,7 +184,22 @@
       "brandSubtitle": "La plateforme pour les équipes commerciales modernes. Gérez vos leads, planifiez des rendez-vous et concluez des ventes.",
       "feature1": "Gestion intelligente des leads",
       "feature2": "Réservation de rendez-vous",
-      "feature3": "Collaboration d'équipe"
+      "feature3": "Collaboration d'équipe",
+      "code": {
+        "title": "Saisissez le code reçu par e-mail",
+        "hint": "Ouvrez l'e-mail et saisissez ici le code à 6 chiffres, ou touchez le lien sur cet appareil.",
+        "verifying": "Connexion en cours…",
+        "resend": "Envoyer un nouveau code",
+        "resendIn": "Nouveau code dans {{s}} s",
+        "resent": "Nouveau code envoyé. Seul le plus récent fonctionne.",
+        "errors": {
+          "CODE_INVALID": "Ce code ne correspond pas. Vérifiez le dernier e-mail et saisissez-le à nouveau.",
+          "CODE_EXPIRED": "Ce code a expiré. Demandez un nouveau code et utilisez celui-ci.",
+          "CODE_TOO_MANY": "Trop d'essais avec ce code. Demandez un nouveau code pour réessayer.",
+          "MAGIC_LINK_INELIGIBLE": "Ce compte ne peut pas se connecter à cette application. Contactez votre administrateur.",
+          "fallback": "La connexion n'a pas abouti. Vérifiez votre connexion et réessayez."
+        }
+      }
     },
     "register": {
       "metaTitle": "Créer un compte",
@@ -2217,7 +2232,9 @@
       "neverSignedIn": "ne s'est pas encore connecté",
       "pickOne": "Choisissez au moins une personne, ou envoyez à tout le monde.",
       "instantNote": "Le courriel pour chaque nouvelle demande est un réglage séparé pour chaque personne.",
-      "instantLink": "Le régler sur la page de l'équipe"
+      "instantLink": "Le régler sur la page de l'équipe",
+      "phoneNote": "Plutôt une alerte sur votre téléphone ?",
+      "phoneLink": "Alertes sur le téléphone"
     },
     "businessProfile": {
       "metaTitle": "Infos de l'entreprise",
@@ -2298,7 +2315,90 @@
       "aiKey": "Clé IA",
       "emailSummaries": "Résumés par e-mail",
       "teamChat": "Alertes chat d'équipe",
-      "dealStages": "Étapes des affaires"
+      "dealStages": "Étapes des affaires",
+      "phoneAlerts": "Alertes sur le téléphone"
+    },
+    "phoneAlerts": {
+      "metaTitle": "Alertes sur le téléphone",
+      "metaDescription": "Une alerte sur votre téléphone quand quelqu'un vous contacte, quand une tâche arrive à échéance et quand votre journée commence.",
+      "unavailable": "Les alertes sur le téléphone ne sont pas encore disponibles.",
+      "thisPhone": "Ce téléphone",
+      "thisComputer": "Cet ordinateur",
+      "desktopNote": "Les alertes sont plus utiles sur votre téléphone : ouvrez-y re:praesent et ajoutez-la à l'écran d'accueil.",
+      "saved": "Enregistré",
+      "device": {
+        "notHereTitle": "Impossible d'activer les alertes dans le navigateur de cette application",
+        "installFirstTitle": "Ajoutez d'abord re:praesent à votre écran d'accueil",
+        "installFirstBody": "Sur iPhone et iPad, les alertes ne fonctionnent que dans l'appli de l'écran d'accueil.",
+        "unsupportedTitle": "Ce navigateur ne peut pas afficher d'alertes",
+        "unsupportedIos": "Mettez votre iPhone à jour vers iOS 16.4 ou plus récent, puis ajoutez re:praesent à votre écran d'accueil.",
+        "unsupportedBrowser": "Ouvrez re:praesent dans Chrome, Edge, Firefox ou Safari pour recevoir des alertes.",
+        "offTitle": "Les alertes sont désactivées sur ce téléphone",
+        "offTitleComputer": "Les alertes sont désactivées sur cet ordinateur",
+        "offBody": "Activez-les et nous vous préviendrons dès que quelqu'un vous contacte.",
+        "onTitle": "Les alertes sont activées sur ce téléphone",
+        "onTitleComputer": "Les alertes sont activées sur cet ordinateur",
+        "onBody": "Envoyez-vous un test pour voir à quoi elles ressemblent.",
+        "test": "Envoyer une alerte test",
+        "testSent": "Alerte test envoyée. Elle devrait arriver dans quelques secondes.",
+        "testNone": "Aucun appareil n'a reçu le test. Activez d'abord les alertes, puis réessayez.",
+        "turnOff": "Désactiver sur ce téléphone",
+        "turnOffComputer": "Désactiver sur cet ordinateur",
+        "turnedOff": "Les alertes sont désactivées sur ce téléphone"
+      },
+      "whatLabel": "Ce que vous recevez",
+      "whatDescription": "Pour chaque entreprise dont vous faites partie.",
+      "kinds": {
+        "new_inquiry": {
+          "title": "Nouvelles demandes",
+          "desc": "Dès que quelqu'un vous contacte, avec un toucher pour rappeler."
+        },
+        "morning_summary": {
+          "title": "Résumé au début de votre journée",
+          "desc": "Qui attend et ce qui est prévu aujourd'hui, en un seul message."
+        },
+        "task_due": {
+          "title": "Tâches à échéance",
+          "desc": "Quand une tâche qui vous est attribuée arrive à échéance."
+        },
+        "show_names": {
+          "title": "Afficher les noms sur l'écran verrouillé",
+          "desc": "Désactivé, l'alerte indique seulement « Nouvelle demande ». Vous voyez de qui il s'agit en l'ouvrant."
+        }
+      },
+      "hours": {
+        "label": "Heures actives",
+        "description": "Quand les alertes peuvent vous joindre.",
+        "days": "Jours",
+        "from": "De",
+        "to": "À",
+        "preview": "En dehors de ces heures, nous gardons les alertes et envoyons un seul résumé à {{start}}.",
+        "overnight": "Les alertes vous joignent de {{start}} jusqu'à {{end}} le lendemain matin. En dehors, nous les gardons et envoyons un seul résumé à {{start}}.",
+        "allDay": "Ces jours-là, les alertes vous joignent à toute heure.",
+        "sameTime": "« De » et « À » sont identiques. Choisissez deux heures différentes.",
+        "otherDays": "Les jours non cochés, les alertes attendent votre prochain jour actif.",
+        "pickOneDay": "Gardez au moins un jour.",
+        "timezone": "Heures selon {{tz}}, le fuseau horaire de votre téléphone."
+      },
+      "devices": {
+        "label": "Vos téléphones",
+        "description": "Tous les téléphones et navigateurs qui reçoivent vos alertes.",
+        "empty": "Aucun téléphone pour l'instant. Activez les alertes sur votre téléphone pour le voir ici.",
+        "thisPhone": "Ce téléphone",
+        "thisComputer": "Cet ordinateur",
+        "lastUsed": "Dernière utilisation : {{when}}",
+        "neverUsed": "Pas encore utilisé",
+        "remove": "Retirer",
+        "removed": "Retiré. Cet appareil ne reçoit plus d'alertes.",
+        "platform": {
+          "ios": "iPhone ou iPad",
+          "android": "Téléphone Android",
+          "desktop": "Ordinateur",
+          "other": "Navigateur"
+        }
+      },
+      "emailNote": "Vous préférez l'e-mail ?",
+      "emailLink": "Résumés par e-mail"
     }
   },
   "booking": {
@@ -9751,5 +9851,85 @@
       "scan": "Scannez le code avec l'appareil photo de votre téléphone."
     },
     "composeContext": "Demande d'avis à {{name}}"
+  },
+  "pwa": {
+    "update": {
+      "title": "Nouvelle version prête",
+      "reload": "Recharger"
+    },
+    "install": {
+      "title": "Ajoutez re:praesent à votre écran d'accueil",
+      "body": "Elle s'ouvre comme une appli et peut vous prévenir dès que quelqu'un vous contacte.",
+      "bodyNoAlerts": "Elle s'ouvre comme une appli, d'un simple toucher depuis votre écran d'accueil.",
+      "hide": "Masquer",
+      "step3": "Ouvrez re:praesent depuis la nouvelle icône",
+      "ios": {
+        "step1": "Touchez le bouton Partager",
+        "step1Hint": "Le carré avec la flèche, dans la barre de Safari",
+        "step2": "Choisissez « Sur l'écran d'accueil »",
+        "step2Hint": "Vous ne le voyez pas ? Faites défiler la liste.",
+        "step3Hint": "Connectez-vous-y une fois avec le code reçu par e-mail.",
+        "ios26": "Sous iOS 26, laissez « Ouvrir en tant qu'app web » activé.",
+        "step1_26": "Touchez ••• , puis Partager",
+        "step1Hint26": "Les trois points en bas à droite de Safari",
+        "step2Hint26": "Vous ne le voyez pas ? Touchez « Plus » et regardez plus bas."
+      },
+      "android": {
+        "install": "Installer",
+        "installing": "Installation…",
+        "step1": "Touchez ⋮ en haut à droite de Chrome",
+        "step2": "Choisissez « Installer l'application » ou « Ajouter à l'écran d'accueil »"
+      },
+      "inApp": {
+        "title": "Ouvrez d'abord cette page dans {{browser}}",
+        "body": "Cette page est ouverte dans une autre application, qui ne peut pas l'ajouter à votre écran d'accueil. Utilisez le menu de cette application (⋯) pour l'ouvrir dans {{browser}}, ou copiez le lien et collez-le dans {{browser}}.",
+        "copy": "Copier le lien",
+        "copied": "Lien copié"
+      },
+      "done": {
+        "title": "re:praesent est installée",
+        "body": "Ouvrez-la désormais depuis l'icône."
+      }
+    },
+    "alertsAsk": {
+      "title": "Soyez prévenu dès que quelqu'un vous contacte",
+      "body": "Pour rappeler au plus vite. Vous choisissez quelles alertes et quand, dans les Paramètres.",
+      "turnOn": "Activer les alertes",
+      "turningOn": "Activation…",
+      "notNow": "Pas maintenant",
+      "toastOn": "Les alertes sont activées sur ce téléphone",
+      "failed": "Impossible d'activer les alertes. Vérifiez votre connexion et réessayez.",
+      "on": {
+        "title": "Les alertes sont activées",
+        "body": "Ce téléphone vous prévient à chaque nouvelle demande.",
+        "link": "Choisir les alertes"
+      },
+      "denied": {
+        "title": "Les alertes sont bloquées sur ce téléphone",
+        "body": "Vous pouvez les autoriser à nouveau dans les réglages du téléphone :",
+        "titleComputer": "Les alertes sont bloquées dans ce navigateur",
+        "bodyComputer": "Vous pouvez les autoriser à nouveau dans votre navigateur :"
+      },
+      "failedDevice": "Ce téléphone n'a pas accepté les alertes. Fermez complètement re:praesent, rouvrez-le depuis l'écran d'accueil et réessayez."
+    },
+    "reenable": {
+      "ios": {
+        "step1": "Ouvrez les Réglages de votre iPhone",
+        "step2": "Touchez Notifications, puis re:praesent",
+        "step3": "Activez Autoriser les notifications"
+      },
+      "android": {
+        "step1": "Maintenez l'icône re:praesent appuyée",
+        "step2": "Touchez Infos sur l'appli, puis Notifications",
+        "step3": "Activez les notifications"
+      },
+      "desktop": "Cliquez sur l'icône à gauche de l'adresse web et autorisez les notifications pour ce site."
+    },
+    "example": {
+      "label": "Exemple",
+      "title": "Nouvelle demande : Claire Martin",
+      "body": "Via le formulaire de votre site · Touchez pour rappeler",
+      "when": "maintenant"
+    }
   }
 }

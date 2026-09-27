@@ -9,6 +9,9 @@ import {
 } from "react-router";
 import { Toaster } from "./components/ui/sonner";
 import { WpSsoErrorNotice } from "./components/wordpress/wp-sso-error-notice";
+// Side effect: starts listening for the install prompt as early as possible.
+import "./lib/pwa/register";
+import { PwaBoot } from "./lib/pwa/pwa-boot";
 
 import type { Route } from "./+types/root";
 import "./app.css";
@@ -80,7 +83,21 @@ export function Layout({ children }: { children: React.ReactNode }) {
     <html lang={lang}>
       <head>
         <meta charSet="utf-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        {/* viewport-fit=cover: the installed app draws under the notch and home
+            bar; the pt-safe / pb-safe utilities keep content clear of them.
+            In a normal browser tab every inset is 0, so nothing moves. */}
+        <meta
+          name="viewport"
+          content="width=device-width, initial-scale=1, viewport-fit=cover"
+        />
+        {/* Installable app (PWA_PUSH_PLAN.md). */}
+        <link rel="manifest" href="/manifest.webmanifest" />
+        <meta name="theme-color" content="#ffffff" />
+        <link rel="apple-touch-icon" href="/icons/apple-touch-icon-180.png" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-title" content="re:praesent" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="default" />
         <Meta />
         <Links />
       </head>
@@ -98,6 +115,8 @@ export function Layout({ children }: { children: React.ReactNode }) {
                     path currently lands. */}
                 <WpSsoErrorNotice />
                 <Toaster />
+                {/* Service worker, update toast, alert taps (client-only effects). */}
+                <PwaBoot />
 
                 <ScrollRestoration />
                 <Scripts />

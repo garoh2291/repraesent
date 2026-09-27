@@ -86,7 +86,7 @@ export default function WelcomeRoute() {
   const bookedStart = booked ? new Date(booked.start) : null;
 
   return (
-    <div className="min-h-dvh overflow-x-clip bg-background text-foreground">
+    <div className="min-h-dvh overflow-x-clip bg-background pt-safe text-foreground">
       <OnboardingStyles />
       <div className="mx-auto flex h-16 max-w-3xl items-center justify-between px-5">
         <img src={logoUrl} alt="re:praesent" className="h-6 w-auto" />

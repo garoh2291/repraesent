@@ -184,7 +184,22 @@
       "brandSubtitle": "Het platform voor moderne salesteams. Beheer leads, plan afspraken en sluit deals.",
       "feature1": "Slim leadbeheer",
       "feature2": "Afspraken boeken",
-      "feature3": "Teamsamenwerking"
+      "feature3": "Teamsamenwerking",
+      "code": {
+        "title": "Voer de code uit de e-mail in",
+        "hint": "Open de e-mail en voer hier de 6-cijferige code in, of tik op dit apparaat op de link.",
+        "verifying": "U wordt aangemeld…",
+        "resend": "Nieuwe code sturen",
+        "resendIn": "Nieuwe code over {{s}} s",
+        "resent": "Nieuwe code verstuurd. Alleen de nieuwste code werkt.",
+        "errors": {
+          "CODE_INVALID": "Deze code klopt niet. Controleer de nieuwste e-mail en voer de code opnieuw in.",
+          "CODE_EXPIRED": "Deze code is verlopen. Vraag een nieuwe code aan en gebruik die.",
+          "CODE_TOO_MANY": "Te veel pogingen met deze code. Vraag een nieuwe code aan om het opnieuw te proberen.",
+          "MAGIC_LINK_INELIGIBLE": "Met dit account kunt u niet inloggen in deze app. Neem contact op met uw beheerder.",
+          "fallback": "Inloggen is niet gelukt. Controleer uw verbinding en probeer het opnieuw."
+        }
+      }
     },
     "register": {
       "metaTitle": "Account aanmaken",
@@ -2215,7 +2230,9 @@
       "neverSignedIn": "nog niet ingelogd",
       "pickOne": "Kies minstens één persoon, of stuur naar iedereen.",
       "instantNote": "De e-mail bij elke nieuwe aanvraag is een aparte schakelaar per persoon.",
-      "instantLink": "Instellen op de teampagina"
+      "instantLink": "Instellen op de teampagina",
+      "phoneNote": "Liever een seintje op je telefoon?",
+      "phoneLink": "Telefoonmeldingen"
     },
     "businessProfile": {
       "metaTitle": "Bedrijfsgegevens",
@@ -2296,7 +2313,90 @@
       "aiKey": "AI-sleutel",
       "emailSummaries": "E-mailsamenvattingen",
       "teamChat": "Teamchatmeldingen",
-      "dealStages": "Dealfasen"
+      "dealStages": "Dealfasen",
+      "phoneAlerts": "Telefoonmeldingen"
+    },
+    "phoneAlerts": {
+      "metaTitle": "Telefoonmeldingen",
+      "metaDescription": "Een seintje op je telefoon als iemand iets vraagt, als een taak moet gebeuren en als je dag begint.",
+      "unavailable": "Telefoonmeldingen zijn nog niet beschikbaar.",
+      "thisPhone": "Deze telefoon",
+      "thisComputer": "Deze computer",
+      "desktopNote": "Meldingen werken het best op je telefoon: open re:praesent daar en zet het op je beginscherm.",
+      "saved": "Opgeslagen",
+      "device": {
+        "notHereTitle": "In de browser van deze app kun je geen meldingen aanzetten",
+        "installFirstTitle": "Zet re:praesent eerst op je beginscherm",
+        "installFirstBody": "Op iPhone en iPad werken meldingen alleen in de app op je beginscherm.",
+        "unsupportedTitle": "Deze browser kan geen meldingen tonen",
+        "unsupportedIos": "Werk je iPhone bij naar iOS 16.4 of nieuwer en zet re:praesent daarna op je beginscherm.",
+        "unsupportedBrowser": "Open re:praesent in Chrome, Edge, Firefox of Safari om meldingen te krijgen.",
+        "offTitle": "Meldingen staan uit op deze telefoon",
+        "offTitleComputer": "Meldingen staan uit op deze computer",
+        "offBody": "Zet ze aan, dan geven we je een seintje zodra iemand iets vraagt.",
+        "onTitle": "Meldingen staan aan op deze telefoon",
+        "onTitleComputer": "Meldingen staan aan op deze computer",
+        "onBody": "Stuur jezelf een test om te zien hoe ze eruitzien.",
+        "test": "Testmelding sturen",
+        "testSent": "Testmelding verstuurd. Die komt binnen een paar seconden binnen.",
+        "testNone": "Geen enkel apparaat kreeg de test. Zet eerst meldingen aan en probeer het dan opnieuw.",
+        "turnOff": "Uitzetten op deze telefoon",
+        "turnOffComputer": "Uitzetten op deze computer",
+        "turnedOff": "Meldingen staan uit op deze telefoon"
+      },
+      "whatLabel": "Wat je krijgt",
+      "whatDescription": "Voor elk bedrijf waar je bij hoort.",
+      "kinds": {
+        "new_inquiry": {
+          "title": "Nieuwe aanvragen",
+          "desc": "Zodra iemand contact opneemt, met één tik om terug te bellen."
+        },
+        "morning_summary": {
+          "title": "Overzicht als je dag begint",
+          "desc": "Wie op je wacht en wat er vandaag moet gebeuren, in één bericht."
+        },
+        "task_due": {
+          "title": "Taken als ze aan de beurt zijn",
+          "desc": "Als een taak die aan jou is toegewezen moet gebeuren."
+        },
+        "show_names": {
+          "title": "Namen tonen op het vergrendelscherm",
+          "desc": "Uitgeschakeld staat er alleen ‘Nieuwe aanvraag’. Wie het is, zie je als je de melding opent."
+        }
+      },
+      "hours": {
+        "label": "Actieve uren",
+        "description": "Wanneer meldingen je mogen bereiken.",
+        "days": "Dagen",
+        "from": "Van",
+        "to": "Tot",
+        "preview": "Buiten deze uren houden we meldingen vast en sturen we om {{start}} één overzicht.",
+        "overnight": "Meldingen bereiken je van {{start}} tot {{end}} de volgende ochtend. Daarbuiten houden we ze vast en sturen we om {{start}} één overzicht.",
+        "allDay": "Op deze dagen bereiken meldingen je de hele dag.",
+        "sameTime": "‘Van’ en ‘Tot’ zijn gelijk. Kies twee verschillende tijden.",
+        "otherDays": "Op de dagen die je uitzet, wachten meldingen tot je volgende actieve dag.",
+        "pickOneDay": "Houd minstens één dag aan.",
+        "timezone": "Tijden in {{tz}}, de tijdzone van je telefoon."
+      },
+      "devices": {
+        "label": "Je telefoons",
+        "description": "Alle telefoons en browsers die je meldingen krijgen.",
+        "empty": "Nog geen telefoons. Zet meldingen aan op je telefoon, dan verschijnt hij hier.",
+        "thisPhone": "Deze telefoon",
+        "thisComputer": "Deze computer",
+        "lastUsed": "Laatst gebruikt: {{when}}",
+        "neverUsed": "Nog niet gebruikt",
+        "remove": "Verwijderen",
+        "removed": "Verwijderd. Dat apparaat krijgt geen meldingen meer.",
+        "platform": {
+          "ios": "iPhone of iPad",
+          "android": "Android-telefoon",
+          "desktop": "Computer",
+          "other": "Browser"
+        }
+      },
+      "emailNote": "Liever per e-mail?",
+      "emailLink": "E-mailsamenvattingen"
     }
   },
   "booking": {
@@ -9749,5 +9849,85 @@
       "scan": "Scan de code met de camera van uw telefoon."
     },
     "composeContext": "Reviewverzoek aan {{name}}"
+  },
+  "pwa": {
+    "update": {
+      "title": "Nieuwe versie klaar",
+      "reload": "Opnieuw laden"
+    },
+    "install": {
+      "title": "Zet re:praesent op je beginscherm",
+      "body": "Het opent als een app en kan je meteen een seintje geven als iemand iets vraagt.",
+      "bodyNoAlerts": "Het opent als een app, met één tik vanaf je beginscherm.",
+      "hide": "Verbergen",
+      "step3": "Open re:praesent via het nieuwe icoon",
+      "ios": {
+        "step1": "Tik op de deelknop",
+        "step1Hint": "Het vierkantje met de pijl, in de balk van Safari",
+        "step2": "Kies ‘Zet op beginscherm’",
+        "step2Hint": "Zie je het niet? Scrol omlaag in de lijst.",
+        "step3Hint": "Log daar één keer in met de code uit de e-mail.",
+        "ios26": "Laat op iOS 26 ‘Open als webapp’ aanstaan.",
+        "step1_26": "Tik op ••• en dan op Deel",
+        "step1Hint26": "De drie puntjes rechtsonder in Safari",
+        "step2Hint26": "Zie je het niet? Tik op ‘Meer’ en kijk verder omlaag."
+      },
+      "android": {
+        "install": "Installeren",
+        "installing": "Installeren…",
+        "step1": "Tik rechtsboven in Chrome op ⋮",
+        "step2": "Kies ‘App installeren’ of ‘Toevoegen aan startscherm’"
+      },
+      "inApp": {
+        "title": "Open deze pagina eerst in {{browser}}",
+        "body": "Deze pagina is geopend in een andere app, en die kan hem niet op je beginscherm zetten. Open hem via het menu van die app (⋯) in {{browser}}, of kopieer de link en plak hem daar.",
+        "copy": "Link kopiëren",
+        "copied": "Link gekopieerd"
+      },
+      "done": {
+        "title": "re:praesent is geïnstalleerd",
+        "body": "Open het vanaf nu via het icoon."
+      }
+    },
+    "alertsAsk": {
+      "title": "Krijg een seintje als iemand iets vraagt",
+      "body": "Zo bel je meteen terug. Welke meldingen je wanneer krijgt, kies je in Instellingen.",
+      "turnOn": "Meldingen aanzetten",
+      "turningOn": "Aanzetten…",
+      "notNow": "Niet nu",
+      "toastOn": "Meldingen staan aan op deze telefoon",
+      "failed": "Meldingen aanzetten is niet gelukt. Controleer je verbinding en probeer het opnieuw.",
+      "on": {
+        "title": "Meldingen staan aan",
+        "body": "Deze telefoon geeft een seintje bij elke nieuwe aanvraag.",
+        "link": "Meldingen kiezen"
+      },
+      "denied": {
+        "title": "Meldingen zijn geblokkeerd op deze telefoon",
+        "body": "Je kunt ze weer toestaan in de instellingen van je telefoon:",
+        "titleComputer": "Meldingen zijn geblokkeerd in deze browser",
+        "bodyComputer": "Je kunt ze in je browser weer toestaan:"
+      },
+      "failedDevice": "Deze telefoon heeft de meldingen niet geaccepteerd. Sluit re:praesent helemaal af, open het opnieuw vanaf je beginscherm en probeer het nog een keer."
+    },
+    "reenable": {
+      "ios": {
+        "step1": "Open Instellingen op je iPhone",
+        "step2": "Tik op Berichtgeving en dan op re:praesent",
+        "step3": "Zet ‘Sta berichtgeving toe’ aan"
+      },
+      "android": {
+        "step1": "Houd het re:praesent-icoon ingedrukt",
+        "step2": "Tik op App-info en dan op Meldingen",
+        "step3": "Zet meldingen aan"
+      },
+      "desktop": "Klik op het icoon links van het webadres en sta meldingen toe voor deze site."
+    },
+    "example": {
+      "label": "Voorbeeld",
+      "title": "Nieuwe aanvraag: Anna de Vries",
+      "body": "Via het formulier op uw website · Tik om terug te bellen",
+      "when": "nu"
+    }
   }
 }

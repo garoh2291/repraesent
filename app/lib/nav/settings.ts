@@ -8,6 +8,7 @@ import {
   MailCheck,
   Plug,
   Rocket,
+  Smartphone,
   Sparkles,
   Store,
   User,
@@ -66,6 +67,12 @@ export const SETTINGS_NAV = [
     to: "/settings/email-notifications",
     labelKey: "settings.navLabels.emailSummaries",
     Icon: MailCheck,
+    group: "alerts",
+  },
+  {
+    to: "/settings/phone-alerts",
+    labelKey: "settings.navLabels.phoneAlerts",
+    Icon: Smartphone,
     group: "alerts",
   },
   {

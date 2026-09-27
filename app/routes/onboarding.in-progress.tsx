@@ -17,7 +17,7 @@ export default function OnboardingInProgressRoute() {
   useDocumentMeta({ titleKey: "onb.inProgress.title", descriptionKey: "onb.inProgress.sub", titleSuffix: " - re:praesent" });
 
   return (
-    <div className="min-h-dvh bg-background">
+    <div className="min-h-dvh bg-background pt-safe">
       <OnboardingStyles />
       <div className="mx-auto flex h-16 max-w-3xl items-center justify-between px-5">
         <img src={logoUrl} alt="re:praesent" className="h-6 w-auto" />

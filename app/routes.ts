@@ -136,6 +136,7 @@ export default [
         route("ai", "routes/settings.ai.tsx"),
         route("notifications", "routes/settings.notifications.tsx"),
         route("email-notifications", "routes/settings.email-notifications.tsx"),
+        route("phone-alerts", "routes/settings.phone-alerts.tsx"),
         route("business-profile", "routes/settings.business-profile.tsx"),
         route("calendars", "routes/settings.calendars.tsx"),
         route("bcc", "routes/settings.bcc.tsx"),

@@ -66,7 +66,7 @@ export default function Register() {
   };
 
   return (
-    <div className="flex min-h-screen">
+    <div className="flex min-h-screen pt-safe">
       {/* Left brand panel */}
       <div className="hidden lg:flex lg:w-[400px] shrink-0 flex-col bg-[#111113] p-10 border-r border-white/5 relative overflow-hidden">
         {/* Background image — fades up from the bottom, grayscale to keep black theme */}
