@@ -296,11 +296,11 @@ export default function TasksPage() {
               onSelect({ search: e.target.value, page: "1" }, true)
             }
             placeholder={withHint(t("tasks.searchPlaceholder"))}
-            className="h-9 w-full sm:w-[220px] text-sm pr-3"
+            className="h-9 w-full sm:w-[220px] text-base sm:text-sm pr-3"
           />
         </div>
 
-        <div className="flex items-center gap-2 flex-wrap">
+        <div className="flex items-center gap-2 flex-wrap max-sm:grid max-sm:grid-cols-2">
           {/* Assignee filter */}
           <Select
             value={assigneeFilter || "all"}
@@ -308,7 +308,7 @@ export default function TasksPage() {
               onSelect({ assignee: v === "all" ? "" : v }, true)
             }
           >
-            <SelectTrigger className="h-9 w-[150px] text-xs">
+            <SelectTrigger className="h-9 w-full sm:w-[150px] text-xs">
               <SelectValue placeholder={t("tasks.allAssignees")} />
             </SelectTrigger>
             <SelectContent>
@@ -330,7 +330,7 @@ export default function TasksPage() {
               onSelect({ status: v === "all" ? "" : v }, true)
             }
           >
-            <SelectTrigger className="h-9 w-[130px] text-xs">
+            <SelectTrigger className="h-9 w-full sm:w-[130px] text-xs">
               <SelectValue placeholder={t("tasks.allStatuses")} />
             </SelectTrigger>
             <SelectContent>
@@ -348,7 +348,7 @@ export default function TasksPage() {
           {/* Clear filters */}
           {hasFilters && (
             <button
-              className="inline-flex items-center gap-1 rounded-full border border-dashed border-border px-3 py-1 text-xs font-medium text-muted-foreground hover:text-foreground hover:border-border/80 transition-colors"
+              className="inline-flex items-center gap-1 rounded-full border border-dashed border-border px-3 py-1 text-xs font-medium text-muted-foreground hover:text-foreground hover:border-border/80 transition-colors max-sm:col-span-2 max-sm:justify-self-start"
               onClick={() =>
                 onSelect({ assignee: "", status: "", search: "" }, true)
               }

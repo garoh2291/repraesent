@@ -67,9 +67,9 @@ if (typeof window !== "undefined") {
 function shouldRegister(): boolean {
   if (typeof window === "undefined" || !("serviceWorker" in navigator)) return false;
   if (import.meta.env.PROD) return true;
-  // Dev: only on localhost (a secure context), so push can be tested locally.
-  const h = window.location.hostname;
-  return h === "localhost" || h === "127.0.0.1" || h === "[::1]";
+  // Dev: any secure context — localhost, or an https tunnel to a real phone.
+  // (Registering only on localhost left alerts waiting forever through a tunnel.)
+  return window.isSecureContext;
 }
 
 let registration: Promise<ServiceWorkerRegistration | null> | null = null;

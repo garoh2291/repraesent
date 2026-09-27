@@ -477,18 +477,18 @@ export default function PipelinePage() {
                 defaultValue: "Title or contact…",
               })
             )}
-            className="h-9 w-full sm:w-[220px] text-sm pr-3"
+            className="h-9 w-full sm:w-[220px] text-base sm:text-sm pr-3"
           />
         </div>
 
-        <div className="flex items-center gap-2 flex-wrap">
+        <div className="flex items-center gap-2 flex-wrap max-sm:grid max-sm:grid-cols-2">
           <Select
             value={assignedTo || "all"}
             onValueChange={(v) =>
               setParam("assigned_to", v === "all" ? undefined : v)
             }
           >
-            <SelectTrigger className="h-9 w-[180px] text-xs">
+            <SelectTrigger className="h-9 w-full sm:w-[180px] text-xs">
               <SelectValue
                 placeholder={t("contacts.assignedTo", {
                   defaultValue: "Assigned to",
@@ -513,7 +513,7 @@ export default function PipelinePage() {
               setParam("sort", v === DEFAULT_DEAL_SORT ? undefined : v)
             }
           >
-            <SelectTrigger className="h-9 w-[180px] text-xs">
+            <SelectTrigger className="h-9 w-full sm:w-[180px] text-xs">
               <span className="inline-flex items-center gap-1.5">
                 <ArrowUpDown className="h-3.5 w-3.5 opacity-60" />
                 <SelectValue />
@@ -540,7 +540,7 @@ export default function PipelinePage() {
           {hasFilters && (
             <button
               type="button"
-              className="inline-flex items-center gap-1 rounded-full border border-dashed border-border px-3 py-1 text-xs font-medium text-muted-foreground hover:text-foreground hover:border-border/80 transition-colors"
+              className="inline-flex items-center gap-1 rounded-full border border-dashed border-border px-3 py-1 text-xs font-medium text-muted-foreground hover:text-foreground hover:border-border/80 transition-colors max-sm:col-span-2 max-sm:justify-self-start"
               onClick={() => {
                 const next = new URLSearchParams(searchParams);
                 next.delete("search");

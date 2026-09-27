@@ -38,6 +38,7 @@ export function BottomTabBar({
   return (
     <nav
       aria-label={t("sections.mobileNav", "Main")}
+      data-tab-bar=""
       className="pb-safe fixed inset-x-0 bottom-0 z-40 border-t border-border bg-card/90 backdrop-blur-md supports-[backdrop-filter]:bg-card/80 lg:hidden"
     >
       <div className="mx-auto flex max-w-lg items-stretch">
@@ -48,6 +49,8 @@ export function BottomTabBar({
             <Link
               key={s.key}
               to={s.to}
+              // Loads the next screen's code on touch-start, so the tap feels instant.
+              prefetch="intent"
               aria-current={isActive ? "page" : undefined}
               className={cn(item, isActive ? "text-foreground" : "text-muted-foreground")}
             >

@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useState } from "react";
-import { Link, useParams, useNavigate } from "react-router";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { Link, useParams, useNavigate, useSearchParams } from "react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
@@ -20,7 +20,7 @@ import type { WorkspaceMemberItem } from "~/components/organism/tasks/task-form-
 import { useCanEditLeads } from "~/lib/hooks/useCanEditLeads";
 import { useUpdateLeadStatus } from "~/lib/hooks/useUpdateLeadStatus";
 import { Button } from "~/components/ui/button";
-import { ArrowLeft, UserPlus } from "lucide-react";
+import { ArrowLeft, Phone, UserPlus } from "lucide-react";
 import { LeadSpamButton } from "~/components/organism/lead-spam/lead-spam-button";
 import { useHideLeadGuard } from "~/lib/leads/use-hide-lead-guard";
 import { getContact, convertLeadToContact } from "~/lib/api/contacts-crm";
@@ -30,6 +30,7 @@ import { extractErrorMessage } from "~/lib/api/axios-instance";
 import { CreateDealDialog } from "~/components/organism/create-deal-dialog";
 import { LeadActionBar } from "~/components/notebook/lead-action-bar";
 import { useLeadFlow } from "~/components/notebook/lead-flow";
+import { telHref } from "~/components/notebook/contact-actions";
 import i18n from "~/i18n";
 import { useDocumentMeta } from "~/lib/hooks/use-document-meta";
 
@@ -159,6 +160,38 @@ export default function LeadFormLeadId() {
     }
   }, [currentWorkspace, navigate]);
 
+  // "Call now" on an Android phone alert opens this page with ?call=1.
+  // Dialling needs a tap unless the browser still counts the notification
+  // tap as one, so usually a big "Call …" button waits at the top instead.
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [callPrompt, setCallPrompt] = useState(false);
+  const callHandled = useRef(false);
+  useEffect(() => {
+    if (callHandled.current || !lead || searchParams.get("call") !== "1") return;
+    callHandled.current = true;
+    const next = new URLSearchParams(searchParams);
+    next.delete("call");
+    setSearchParams(next, { replace: true });
+    const phone = lead.phone?.trim();
+    if (!phone || !canEdit) return;
+    const activation = (navigator as Navigator & { userActivation?: { isActive: boolean } }).userActivation;
+    if (activation?.isActive) {
+      leadFlow.contact(
+        {
+          id: lead.id,
+          name: lead.full_name || [lead.first_name, lead.last_name].filter(Boolean).join(" ").trim(),
+          status: lead.status,
+          phone: lead.phone,
+          email: lead.email,
+        },
+        "call",
+      );
+      window.location.href = telHref(phone);
+    } else {
+      setCallPrompt(true);
+    }
+  }, [lead, searchParams, setSearchParams, canEdit, leadFlow]);
+
   useEffect(() => {
     if (lead) {
       const name =
@@ -235,6 +268,22 @@ export default function LeadFormLeadId() {
         <h1 className="title-display text-[26px] sm:text-[32px] font-semibold text-foreground">
           {displayName}
         </h1>
+        {callPrompt && lead.phone ? (
+          <a
+            href={telHref(lead.phone)}
+            onClick={() => {
+              setCallPrompt(false);
+              leadFlow.contact(
+                { id: lead.id, name: displayName, status: lead.status, phone: lead.phone, email: lead.email },
+                "call",
+              );
+            }}
+            className="press mt-1 flex h-14 w-full items-center justify-center gap-2.5 rounded-xl bg-foreground text-[16px] font-semibold text-background hover:bg-foreground/90 sm:w-auto sm:px-8"
+          >
+            <Phone className="size-5" aria-hidden />
+            {t("calls.callName", "Call {{name}}", { name: displayName })}
+          </a>
+        ) : null}
         {canEdit ? <LeadActionBar lead={lead} className="pt-2" /> : null}
       </div>
 

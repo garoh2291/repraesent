@@ -114,9 +114,11 @@ export function browserTimeZone(): string | undefined {
 
 export async function getToday(params: {
   assignee: "me" | "all";
+  /** Rows per list (server default 20, max 50). The call queue asks for 50. */
+  limit?: number;
 }): Promise<TodayResponse> {
   const { data } = await apiClient.get("/today", {
-    params: { assignee: params.assignee, tz: browserTimeZone() },
+    params: { assignee: params.assignee, tz: browserTimeZone(), ...(params.limit ? { limit: params.limit } : {}) },
   });
   return data;
 }

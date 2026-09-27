@@ -63,6 +63,8 @@ export default [
     layout("routes/_dashboard-layout.tsx", [
       index("routes/home.tsx"),
       route("results", "routes/results.tsx"),
+      // Call queue: "Start calls" on Today (MOBILE_PACKAGE_PLAN.md C1).
+      route("calls", "routes/calls.tsx"),
       // AI visibility (pilot flag `aiVisibility`, AI_VISIBILITY_PLAN.md).
       route("ai-visibility", "routes/ai-visibility.tsx", [
         index("routes/ai-visibility._index.tsx"),

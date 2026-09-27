@@ -15,6 +15,10 @@ import {
 import { useAuthContext } from "~/providers/auth-provider";
 import { Button } from "~/components/ui/button";
 import { Textarea } from "~/components/ui/textarea";
+import { Keyboard, Mic } from "lucide-react";
+import { canRecordAudio } from "~/lib/audio/wav-recorder";
+import { transcribeNoteVoice } from "~/lib/api/lead-outcomes";
+import { VoiceNoteButton } from "~/components/notebook/voice-note-button";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -119,6 +123,25 @@ export function LeadNotesSection({
   const { user } = useAuthContext();
   const [isAddingNew, setIsAddingNew] = useState(false);
   const [newNoteContent, setNewNoteContent] = useState("");
+  // "Add note" first offers Type / Say it (when this device can record).
+  const [addMode, setAddMode] = useState<"type" | "speak" | null>(null);
+  const [micOk, setMicOk] = useState(false);
+  useEffect(() => setMicOk(canRecordAudio()), []);
+  useEffect(() => {
+    if (!isAddingNew) setAddMode(null);
+  }, [isAddingNew]);
+  const mode = addMode ?? (micOk ? "choose" : "type");
+  // Bring the composer (choices, recorder, textarea) into view the moment it
+  // opens, clear of the phone tab bar — no scrolling to find it.
+  const composerRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (!isAddingNew) return;
+    const id = requestAnimationFrame(() => {
+      const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      composerRef.current?.scrollIntoView({ block: "nearest", behavior: reduce ? "auto" : "smooth" });
+    });
+    return () => cancelAnimationFrame(id);
+  }, [isAddingNew, mode]);
   const [editingNoteId, setEditingNoteId] = useState<string | null>(null);
   const [editingContent, setEditingContent] = useState("");
   const [noteIdToDelete, setNoteIdToDelete] = useState<string | null>(null);
@@ -423,9 +446,9 @@ export function LeadNotesSection({
             <button
               onClick={() => setIsAddingNew(true)}
               disabled={isAddingNew}
-              className="inline-flex items-center gap-1 rounded-md border border-border bg-muted/60 px-2.5 py-1 text-xs font-medium text-foreground hover:bg-muted transition-colors disabled:opacity-50"
+              className="press inline-flex items-center gap-1 rounded-md border border-border bg-muted/60 px-2.5 py-1 text-xs font-medium text-foreground hover:bg-muted transition-colors disabled:opacity-50 max-sm:min-h-10 max-sm:gap-1.5 max-sm:rounded-lg max-sm:px-3.5 max-sm:text-sm"
             >
-              <Plus className="h-3 w-3" />
+              <Plus className="h-3 w-3 max-sm:size-4" />
               {t("leads.detail.addNote")}
             </button>
           )}
@@ -434,7 +457,61 @@ export function LeadNotesSection({
 
       <div className="space-y-2">
         {/* New note input */}
-        {isAddingNew && (
+        <div
+          ref={composerRef}
+          className="scroll-mt-4 scroll-mb-[calc(6rem+env(safe-area-inset-bottom))] empty:hidden"
+        >
+        {isAddingNew && mode === "choose" && (
+          <div className="rounded-xl border border-border bg-card p-3 shadow-xs">
+            <div className="grid grid-cols-2 gap-2">
+              <button
+                type="button"
+                onClick={() => setAddMode("type")}
+                className="press flex min-h-16 flex-col items-center justify-center gap-1.5 rounded-xl border border-border bg-background px-3 py-3 text-[13.5px] font-medium text-foreground transition-colors hover:border-foreground/30 sm:min-h-12 sm:flex-row"
+              >
+                <Keyboard className="size-5 sm:size-4" aria-hidden />
+                {t("notes.add.type", "Type a note")}
+              </button>
+              <button
+                type="button"
+                onClick={() => setAddMode("speak")}
+                className="press flex min-h-16 flex-col items-center justify-center gap-1.5 rounded-xl border border-foreground bg-foreground px-3 py-3 text-[13.5px] font-medium text-background transition-colors hover:bg-foreground/90 sm:min-h-12 sm:flex-row"
+              >
+                <Mic className="size-5 sm:size-4" aria-hidden />
+                {t("notes.add.speak", "Say it")}
+              </button>
+            </div>
+            <div className="mt-2 flex justify-end">
+              <Button type="button" variant="ghost" size="sm" onClick={() => setIsAddingNew(false)}>
+                {t("common.cancel", "Cancel")}
+              </Button>
+            </div>
+          </div>
+        )}
+
+        {isAddingNew && mode === "speak" && (
+          <div className="rounded-xl border border-border bg-card p-3 shadow-xs space-y-2">
+            <VoiceNoteButton
+              transcribe={transcribeNoteVoice}
+              label={t("notes.add.speakStart", "Tap and say your note")}
+              hint={t("notes.add.speakHint", "Tap again when you're done. You'll check the text before it's saved.")}
+              onResult={(res) => {
+                setNewNoteContent((prev) => (prev.trim() ? `${prev.trim()}\n${res.note}` : res.note));
+                setAddMode("type");
+              }}
+            />
+            <div className="flex justify-between">
+              <Button type="button" variant="ghost" size="sm" onClick={() => setAddMode("type")}>
+                {t("notes.add.typeInstead", "Type instead")}
+              </Button>
+              <Button type="button" variant="ghost" size="sm" onClick={() => setIsAddingNew(false)}>
+                {t("common.cancel", "Cancel")}
+              </Button>
+            </div>
+          </div>
+        )}
+
+        {isAddingNew && mode === "type" && (
           <div className="rounded-xl border border-primary/30 bg-primary/4 p-3 space-y-2.5 shadow-sm">
             <div className="flex items-center gap-2 text-xs text-muted-foreground">
               <UserAvatar
@@ -478,6 +555,7 @@ export function LeadNotesSection({
             </div>
           </div>
         )}
+        </div>
 
         {notes.length === 0 && !isAddingNew ? (
           <p className="text-sm text-muted-foreground py-2">
@@ -589,11 +667,11 @@ export function LeadNotesSection({
 
                 {/* Edit/delete controls */}
                 {canEdit && (
-                  <div className="absolute top-3 right-3 flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity duration-150">
+                  <div className="absolute top-3 right-3 flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity duration-150 pointer-coarse:top-1 pointer-coarse:right-1 pointer-coarse:opacity-100">
                     <Button
                       variant="ghost"
                       size="icon-xs"
-                      className="h-6 w-6 text-muted-foreground hover:text-foreground"
+                      className="h-6 w-6 text-muted-foreground hover:text-foreground pointer-coarse:h-10 pointer-coarse:w-10"
                       onClick={() => handleStartEdit(note)}
                       aria-label="Edit note"
                     >
@@ -604,7 +682,7 @@ export function LeadNotesSection({
                         <Button
                           variant="ghost"
                           size="icon-xs"
-                          className="h-6 w-6 text-muted-foreground hover:text-foreground"
+                          className="h-6 w-6 text-muted-foreground hover:text-foreground pointer-coarse:h-10 pointer-coarse:w-10"
                           aria-label="More options"
                         >
                           <MoreHorizontal className="h-3 w-3" />

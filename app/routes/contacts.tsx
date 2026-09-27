@@ -45,6 +45,8 @@ import {
   IdCard,
   Info,
   Plus,
+  PenLine,
+  Smartphone,
   X,
 } from "lucide-react";
 import {
@@ -57,6 +59,8 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "~/components/ui/dropdown-menu";
 import {
@@ -71,6 +75,7 @@ import { cn } from "~/lib/utils";
 import { personName } from "~/lib/contacts/display-name";
 import { ContactImportModal } from "~/components/organism/contact-import-modal";
 import { CreateContactDialog } from "~/components/organism/create-contact-dialog";
+import { ContactActions } from "~/components/notebook/contact-actions";
 
 export function meta() {
   return [
@@ -124,7 +129,13 @@ export default function ContactsPage() {
     mode: "csv" | "vcard" | "xlsx";
   }>({ open: false, mode: "csv" });
   const [createOpen, setCreateOpen] = useState(false);
-  useOpenFromParam(() => setCreateOpen(true));
+  // Phones pick how first (New contact menu); desktop opens the form directly.
+  const [createStart, setCreateStart] = useState<"phone" | "manual" | undefined>(undefined);
+  const openCreate = (start?: "phone" | "manual") => {
+    setCreateStart(start);
+    setCreateOpen(true);
+  };
+  useOpenFromParam(() => openCreate());
 
   const tableQuery = useQuery({
     queryKey: [
@@ -217,7 +228,7 @@ export default function ContactsPage() {
               <Button
                 variant="outline"
                 size="sm"
-                className="h-9 gap-1.5 text-xs"
+                className="h-9 gap-1.5 text-xs max-sm:hidden"
               >
                 <Upload className="h-3.5 w-3.5" />
                 {t("contacts.import.menuButton", {
@@ -251,12 +262,48 @@ export default function ContactsPage() {
           </DropdownMenu>
           <Button
             size="sm"
-            className="h-9 gap-1.5 text-xs"
-            onClick={() => setCreateOpen(true)}
+            className="h-9 gap-1.5 text-xs max-sm:hidden"
+            onClick={() => openCreate()}
           >
             <Plus className="h-3.5 w-3.5" />
             {t("contacts.newContactButton", { defaultValue: "New contact" })}
           </Button>
+          {/* Phones: New contact first asks how — from the phone, typed, or a file. */}
+          <DropdownMenu modal={false}>
+            <DropdownMenuTrigger asChild>
+              <Button className="h-11 flex-1 gap-1.5 text-sm sm:hidden">
+                <Plus className="size-4" />
+                {t("contacts.newContactButton", { defaultValue: "New contact" })}
+                <ChevronDown className="size-4 opacity-70" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" sideOffset={6} className="w-[min(18rem,calc(100vw-2rem))] p-1.5">
+              <DropdownMenuItem className="min-h-11 gap-3 text-[15px]" onSelect={() => openCreate("phone")}>
+                <Smartphone className="size-5" />
+                {t("contacts.newMenu.fromPhone", "From your phone")}
+              </DropdownMenuItem>
+              <DropdownMenuItem className="min-h-11 gap-3 text-[15px]" onSelect={() => openCreate("manual")}>
+                <PenLine className="size-5" />
+                {t("contacts.newMenu.typeIn", "Type it in")}
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuLabel className="px-2 pt-1.5 pb-1 text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
+                {t("contacts.newMenu.importLabel", "Import a file")}
+              </DropdownMenuLabel>
+              <DropdownMenuItem className="min-h-11 gap-3 text-[15px]" onSelect={() => setImportModal({ open: true, mode: "vcard" })}>
+                <IdCard className="size-5" />
+                {t("contacts.import.vcardButton")}
+              </DropdownMenuItem>
+              <DropdownMenuItem className="min-h-11 gap-3 text-[15px]" onSelect={() => setImportModal({ open: true, mode: "csv" })}>
+                <Upload className="size-5" />
+                {t("contacts.import.button", { defaultValue: "Import CSV" })}
+              </DropdownMenuItem>
+              <DropdownMenuItem className="min-h-11 gap-3 text-[15px]" onSelect={() => setImportModal({ open: true, mode: "xlsx" })}>
+                <Upload className="size-5" />
+                {t("contacts.import.xlsxButton", { defaultValue: "Import Excel" })}
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </div>
 
@@ -320,7 +367,64 @@ export default function ContactsPage() {
 
       {!isError && (
         <TooltipProvider delayDuration={150}>
-          <div className="rounded-md border border-border bg-card shadow-(--shadow) overflow-hidden overflow-x-auto">
+          {/* Phones: one card per person instead of the wide table
+              (MOBILE_PACKAGE_PLAN.md B2). Same query, same row link. */}
+          <ul className="space-y-2 sm:hidden">
+            {isLoading || !data ? (
+              <li className="rounded-xl border border-border bg-card px-4 py-6 text-center text-sm text-muted-foreground">
+                {t("common.loading")}
+              </li>
+            ) : data.data.length === 0 ? (
+              <li className="rounded-xl border border-border bg-card px-4 py-6 text-center text-sm text-muted-foreground">
+                {t("contacts.empty", { defaultValue: "No contacts yet." })}
+              </li>
+            ) : (
+              data.data.map((row) => {
+                const email = row.primary_email?.trim() ?? "";
+                const name = personName({ full_name: row.contact_full_name, email }) ?? "—";
+                const phone = row.primary_phone?.trim() ?? "";
+                const ltvNum = row.lifetime_value != null ? Number(row.lifetime_value) : null;
+                return (
+                  <li
+                    key={row.id}
+                    className="flex items-center gap-3 rounded-xl border border-border bg-card px-3 py-2.5 shadow-xs"
+                  >
+                    <Link
+                      to={`/contacts/${row.id}`}
+                      className="press flex min-h-11 min-w-0 flex-1 items-center gap-3"
+                    >
+                      <Avatar className="size-10 shrink-0">
+                        {(row.avatar_thumb_url ?? row.avatar_url) ? (
+                          <AvatarImage
+                            src={(row.avatar_thumb_url ?? row.avatar_url)!}
+                            className="object-cover"
+                          />
+                        ) : null}
+                        <AvatarFallback className="bg-muted text-[12px] font-semibold text-foreground">
+                          {contactInitials(name)}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate text-[15px] font-semibold text-foreground">{name}</p>
+                        <p className="truncate text-[12.5px] text-muted-foreground">
+                          {email || phone || t("contacts.noContactInfo", { defaultValue: "No contact info" })}
+                        </p>
+                        {ltvNum != null && Number.isFinite(ltvNum) && ltvNum > 0 ? (
+                          <p className="num mt-0.5 text-[12.5px] font-medium text-earned">
+                            {t("mobile.people.earned", "Earned {{value}}", {
+                              value: formatContactValue(row, "won", ltvNum, workspaceCurrency),
+                            })}
+                          </p>
+                        ) : null}
+                      </div>
+                    </Link>
+                    <ContactActions iconOnly target={{ phone }} className="shrink-0 flex-nowrap" />
+                  </li>
+                );
+              })
+            )}
+          </ul>
+          <div className="rounded-md border border-border bg-card shadow-(--shadow) overflow-hidden overflow-x-auto max-sm:hidden">
             <Table className="min-w-[1040px]">
               <TableHeader>
                 <TableRow>
@@ -713,7 +817,7 @@ export default function ContactsPage() {
         importMode={importModal.mode}
         onOpenChange={(o) => setImportModal((s) => ({ ...s, open: o }))}
       />
-      <CreateContactDialog open={createOpen} onOpenChange={setCreateOpen} />
+      <CreateContactDialog open={createOpen} onOpenChange={setCreateOpen} start={createStart} />
     </div>
   );
 }

@@ -1,21 +1,10 @@
-import { useEffect, useState, type ReactNode } from "react";
+import type { ReactNode } from "react";
+import { useTranslation } from "react-i18next";
 import { Drawer } from "vaul";
 import { XIcon } from "lucide-react";
 import { Dialog as DialogPrimitive } from "radix-ui";
 import { cn } from "~/lib/utils";
-
-/** True from the `sm` breakpoint up. False during SSR and the first paint. */
-function useIsDesktop() {
-  const [desktop, setDesktop] = useState(false);
-  useEffect(() => {
-    const mq = window.matchMedia("(min-width: 640px)");
-    const update = () => setDesktop(mq.matches);
-    update();
-    mq.addEventListener("change", update);
-    return () => mq.removeEventListener("change", update);
-  }, []);
-  return desktop;
-}
+import { useIsPhone } from "~/lib/hooks/use-is-phone";
 
 interface SheetProps {
   open: boolean;
@@ -36,8 +25,10 @@ interface SheetProps {
  * question. Same content and footer in both.
  */
 export function BottomSheet(props: SheetProps) {
-  const desktop = useIsDesktop();
-  return desktop ? <CenteredModal {...props} /> : <MobileSheet {...props} />;
+  // Shared phone query: desktop never renders the drawer, not even for the
+  // first paint; a phone switches to it right after hydration.
+  const phone = useIsPhone();
+  return phone ? <MobileSheet {...props} /> : <CenteredModal {...props} />;
 }
 
 function MobileSheet({
@@ -49,8 +40,11 @@ function MobileSheet({
   footer,
   className,
 }: SheetProps) {
+  const { t } = useTranslation();
   return (
-    <Drawer.Root open={open} onOpenChange={onOpenChange}>
+    // repositionInputs: the sheet rides up with the keyboard so the field
+    // being typed in stays visible.
+    <Drawer.Root open={open} onOpenChange={onOpenChange} repositionInputs>
       <Drawer.Portal>
         <Drawer.Overlay className="fixed inset-0 z-50 bg-[#141516]/40" />
         <Drawer.Content
@@ -60,7 +54,14 @@ function MobileSheet({
           )}
         >
           <div className="mx-auto mt-2.5 h-1 w-10 shrink-0 rounded-full bg-foreground/15" aria-hidden />
-          <div className="px-5 pb-3 pt-4">
+          <div className="relative pl-5 pr-14 pb-3 pt-4">
+            {/* A visible close: grab handles get missed (NN/g). 44 px target. */}
+            <Drawer.Close
+              className="press absolute right-1.5 top-1 flex size-11 items-center justify-center rounded-full text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground/20"
+              aria-label={t("common.close", "Close")}
+            >
+              <XIcon className="size-5" />
+            </Drawer.Close>
             <Drawer.Title className="title-display text-[22px] font-semibold leading-tight text-foreground">
               {title}
             </Drawer.Title>

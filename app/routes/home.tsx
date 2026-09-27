@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { createContext, useContext, useEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router";
 import { useTranslation } from "react-i18next";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -10,13 +10,15 @@ import {
   CircleDashed,
   Inbox,
   MoreHorizontal,
+  Phone,
   X,
 } from "lucide-react";
 import i18n from "~/i18n";
 import { cn } from "~/lib/utils";
 import { useAuthContext } from "~/providers/auth-provider";
 import { useDocumentMeta } from "~/lib/hooks/use-document-meta";
-import { useToday, useInvalidateWork, useUpdateSetup } from "~/lib/hooks/useToday";
+import { CALL_QUEUE_LIMIT, useToday, useInvalidateWork, useUpdateSetup } from "~/lib/hooks/useToday";
+import { LEAD_OUTCOME_MUTATION_KEY } from "~/lib/hooks/useLeadOutcome";
 import { useResultsSummary } from "~/lib/hooks/useResultsSummary";
 import { usePilotFeatures } from "~/lib/feature-flags";
 import { updateTask } from "~/lib/api/tasks";
@@ -69,6 +71,56 @@ function toFlowLead(l: TodayLead): FlowLead {
   return { id: l.id, name: l.name, status: l.status, phone: l.phone, email: l.email };
 }
 
+// ─── Row exit after an outcome ──────────────────────────────────────────────
+
+/**
+ * Inquiries whose outcome was just saved (MOBILE_PACKAGE_PLAN.md A4): their
+ * row fades and collapses instead of vanishing when the refetch lands. The
+ * save itself lives in the lead flow; Today only watches it. A mark is
+ * dropped on error, or once fresh Today data has arrived after the save (so
+ * an Undo brings the row back).
+ */
+function useLeavingLeads(dataVersion: unknown): Set<string> {
+  const qc = useQueryClient();
+  const [leaving, setLeaving] = useState<Map<string, "pending" | "settled">>(() => new Map());
+  useEffect(() => {
+    return qc.getMutationCache().subscribe((event) => {
+      if (event.type !== "updated") return;
+      const m = event.mutation;
+      if (m.options.mutationKey?.[0] !== LEAD_OUTCOME_MUTATION_KEY[0]) return;
+      const leadId = (m.state.variables as { leadId?: string } | undefined)?.leadId;
+      if (!leadId) return;
+      const status = event.action.type;
+      if (status === "pending") {
+        // The one haptic: a saved outcome (Android; iOS ignores it).
+        if (typeof navigator !== "undefined") navigator.vibrate?.(8);
+        setLeaving((prev) => new Map(prev).set(leadId, "pending"));
+      } else if (status === "success") {
+        setLeaving((prev) => (prev.has(leadId) ? new Map(prev).set(leadId, "settled") : prev));
+      } else if (status === "error") {
+        setLeaving((prev) => {
+          if (!prev.has(leadId)) return prev;
+          const next = new Map(prev);
+          next.delete(leadId);
+          return next;
+        });
+      }
+    });
+  }, [qc]);
+  // New Today data after the save: the row is gone (or back, after Undo).
+  useEffect(() => {
+    setLeaving((prev) => {
+      if (![...prev.values()].includes("settled")) return prev;
+      const next = new Map(prev);
+      for (const [id, st] of prev) if (st === "settled") next.delete(id);
+      return next;
+    });
+  }, [dataVersion]);
+  return new Set(leaving.keys());
+}
+
+const LeavingContext = createContext<Set<string>>(new Set());
+
 // ─── Needs you ──────────────────────────────────────────────────────────────
 
 function LeadRow({
@@ -83,8 +135,10 @@ function LeadRow({
   const navigate = useNavigate();
   const flow = useLeadFlow();
   const fl = toFlowLead(lead);
+  const leaving = useContext(LeavingContext).has(lead.id);
   return (
-    <li className="group flex flex-col gap-3 px-4 py-3.5 sm:flex-row sm:items-center sm:gap-4 sm:px-5">
+    <li className="app-row-exit" data-leaving={leaving || undefined} aria-hidden={leaving || undefined}>
+    <div className="group flex flex-col gap-3 px-4 py-3.5 sm:flex-row sm:items-center sm:gap-4 sm:px-5">
       <button
         type="button"
         onClick={() => navigate(`/lead-form/${lead.id}`)}
@@ -142,6 +196,7 @@ function LeadRow({
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
+    </div>
     </li>
   );
 }
@@ -154,8 +209,11 @@ function NeedsYou({
   emptyTitle,
   emptyBody,
   seeAllHref = "/lead-form",
+  callsCount = 0,
 }: {
   seeAllHref?: string;
+  /** People to call now (new + call-backs due): shows "Start calls (N)". */
+  callsCount?: number;
   leads: TodayLead[];
   followUps: { lead: TodayLead; task: TodayTask }[];
   total: number;
@@ -167,7 +225,22 @@ function NeedsYou({
   const count = total + followUps.length;
   return (
     <Panel>
-      <PanelHeader title={title} count={count} marker />
+      <PanelHeader
+        title={title}
+        count={count}
+        marker
+        action={
+          callsCount > 0 ? (
+            <Link
+              to="/calls"
+              className="press inline-flex shrink-0 items-center gap-1.5 rounded-md bg-foreground px-2.5 py-1.5 text-[12.5px] font-medium text-background hover:bg-foreground/90 pointer-coarse:min-h-11 pointer-coarse:px-3.5 pointer-coarse:text-[13.5px]"
+            >
+              <Phone className="size-3.5" />
+              {t("mobile.today.startCalls", "Start calls ({{count}})", { count: callsCount })}
+            </Link>
+          ) : undefined
+        }
+      />
       {count === 0 ? (
         <EmptyState compact icon={<Check />} title={emptyTitle} body={emptyBody} />
       ) : (
@@ -253,7 +326,7 @@ function TaskRow({ task }: { task: TodayTask }) {
           mutation.mutate();
         }}
         className={cn(
-          "press flex size-6 shrink-0 items-center justify-center rounded-full border-2 transition-colors",
+          "press relative flex size-6 shrink-0 items-center justify-center rounded-full border-2 transition-colors pointer-coarse:after:absolute pointer-coarse:after:-inset-2.5",
           done ? "border-foreground bg-foreground text-background" : "border-foreground/25 hover:border-foreground",
         )}
       >
@@ -637,6 +710,7 @@ export default function Today() {
   const [scope, setScope] = useState<"me" | "all">("me");
   const q = useToday(scope);
   const qc = useQueryClient();
+  const leaving = useLeavingLeads(q.dataUpdatedAt);
   // Home-screen shortcut "New inquiry" (manifest): /?new=lead.
   const quickCreate = useQuickCreate();
   useOpenFromParam(() => quickCreate.open("lead"), "new", "lead");
@@ -702,6 +776,7 @@ export default function Today() {
     counts?.deals_no_next_step === 0;
 
   return (
+    <LeavingContext.Provider value={leaving}>
     <PageContainer className="space-y-6 sm:space-y-8">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <Greeting firstName={firstName} count={waiting} loading={!data} />
@@ -756,6 +831,8 @@ export default function Today() {
                 leads={data.new_leads ?? []}
                 followUps={data.follow_ups ?? []}
                 total={counts?.new_leads ?? 0}
+                // The queue works through at most CALL_QUEUE_LIMIT people per run; the button says the same.
+                callsCount={Math.min(CALL_QUEUE_LIMIT, (counts?.new_leads ?? 0) + (counts?.follow_ups_due ?? 0))}
                 emptyTitle={
                   isEmptyAccount
                     ? t("today.emptyTitle", "When someone reaches out, they show up here.")
@@ -806,5 +883,6 @@ export default function Today() {
         </aside>
       </div>
     </PageContainer>
+    </LeavingContext.Provider>
   );
 }

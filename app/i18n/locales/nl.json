@@ -3602,7 +3602,12 @@
     "avatarUpload": "Contactfoto uploaden",
     "avatarRemoveWarning": "De foto van het contact wordt permanent verwijderd en in plaats daarvan worden de initialen getoond.",
     "historyAvatarUpdated": "Contactfoto bijgewerkt",
-    "historyAvatarRemoved": "Contactfoto verwijderd"
+    "historyAvatarRemoved": "Contactfoto verwijderd",
+    "newMenu": {
+      "fromPhone": "Uit je telefoon",
+      "typeIn": "Zelf invullen",
+      "importLabel": "Uit een bestand"
+    }
   },
   "leadEmails": {
     "emptyTitle": "Nog geen e-mails gelogd",
@@ -9908,7 +9913,8 @@
         "titleComputer": "Meldingen zijn geblokkeerd in deze browser",
         "bodyComputer": "Je kunt ze in je browser weer toestaan:"
       },
-      "failedDevice": "Deze telefoon heeft de meldingen niet geaccepteerd. Sluit re:praesent helemaal af, open het opnieuw vanaf je beginscherm en probeer het nog een keer."
+      "failedDevice": "Deze telefoon heeft de meldingen niet geaccepteerd. Sluit re:praesent helemaal af, open het opnieuw vanaf je beginscherm en probeer het nog een keer.",
+      "notReady": "Deze telefoon kon de meldingen niet starten. Sluit re:praesent helemaal af, open het opnieuw vanaf je beginscherm en probeer het nog een keer."
     },
     "reenable": {
       "ios": {
@@ -9928,6 +9934,144 @@
       "title": "Nieuwe aanvraag: Anna de Vries",
       "body": "Via het formulier op uw website · Tik om terug te bellen",
       "when": "nu"
+    }
+  },
+  "mobile": {
+    "more": "Meer",
+    "today": {
+      "startCalls": "Begin met bellen ({{count}})"
+    },
+    "stagePicker": {
+      "title": "Verplaatsen naar…",
+      "moveTo": "Verplaatsen…",
+      "moved": "Verplaatst naar {{stage}}"
+    },
+    "people": {
+      "earned": "Verdiend: {{value}}"
+    },
+    "deal": {
+      "stageChip": "Fase:",
+      "closeSummary": "Afsluiting: {{date}}",
+      "photos": "Foto's"
+    }
+  },
+  "calls": {
+    "metaTitle": "Bellen",
+    "backToToday": "Vandaag",
+    "backToTodayButton": "Terug naar Vandaag",
+    "progress": "{{n}} van {{total}}",
+    "emptyTitle": "Niemand wacht op een telefoontje",
+    "emptyBody": "Nieuwe aanvragen en terugbelverzoeken verschijnen hier. Er is nu niets te doen.",
+    "lastNote": "Laatste notitie",
+    "noNote": "Nog geen notities.",
+    "noChannel": "Geen telefoon of e-mail bekend. Open de aanvraag om er een toe te voegen.",
+    "record": "Hoe ging het?",
+    "skip": "Overslaan",
+    "swipeHint": "Veeg naar links om over te slaan",
+    "later": "Later",
+    "saveNext": "Opslaan · volgende",
+    "notNowNext": "Nu niet · volgende",
+    "callName": "{{name}} bellen",
+    "done": {
+      "title": "Klaar",
+      "reached": "{{count}} bereikt",
+      "noAnswer": "{{count}} geen antwoord",
+      "notInterested": "{{count}} geen interesse",
+      "fake": "{{count}} spam",
+      "skipped": "{{count}} overgeslagen",
+      "callBacksTomorrow": "De terugbelmomenten staan op morgen.",
+      "callBacks": "De terugbelmomenten staan klaar.",
+      "skippedStay": "Wie je hebt overgeslagen, staat nog op Vandaag.",
+      "moreWaiting_one": "Er wacht nog {{count}} persoon op Vandaag.",
+      "moreWaiting_other": "Er wachten nog {{count}} mensen op Vandaag."
+    }
+  },
+  "voice": {
+    "start": "Zeg hoe het ging",
+    "stop": "Opname stoppen",
+    "listening": "Aan het luisteren…",
+    "writing": "Wordt opgeschreven…",
+    "hint": "Tik of houd ingedrukt om te praten. Maximaal een minuut.",
+    "tapToStop": "Tik om te stoppen — of laat los als je ingedrukt houdt",
+    "nothingSaved": "Er wordt pas iets opgeslagen als je op Opslaan tikt.",
+    "dealDraft": "Uit je spraaknotitie: {{bits}}",
+    "errors": {
+      "blocked": "De microfoon is geblokkeerd. Sta hem toe voor deze site in je browserinstellingen en tik dan opnieuw.",
+      "noMic": "Geen microfoon gevonden op dit apparaat.",
+      "cap": "De spraaknotities zijn voor vandaag op. Typ de notitie — morgen kan het weer.",
+      "unclear": "We konden niets duidelijks horen. Probeer het wat dichterbij opnieuw, of typ het.",
+      "tooLong": "Dat was te lang. Blijf onder een minuut, of typ het.",
+      "notReady": "Spraaknotities staan nog niet aan. Typ de notitie voorlopig.",
+      "generic": "Dat lukte niet. Probeer het opnieuw, of typ de notitie.",
+      "short": "Te kort — tik en zeg hoe het ging."
+    }
+  },
+  "photos": {
+    "title": "Foto's",
+    "take": "Foto maken",
+    "gallery": "Uit galerij",
+    "add": "Foto's toevoegen",
+    "empty": "Nog geen foto's. Voeg er een toe ter plekke of uit je galerij — alleen je team ziet ze.",
+    "emptyViewer": "Nog geen foto's.",
+    "open": "Foto {{n}} openen",
+    "uploading": "Uploaden…",
+    "position": "{{n}} van {{total}}",
+    "delete": "Foto verwijderen",
+    "deleted": "Foto verwijderd",
+    "prev": "Vorige foto",
+    "next": "Volgende foto",
+    "viewerHint": "Veeg of gebruik de pijltjestoetsen voor de andere foto's.",
+    "captionPlaceholder": "Bijschrift toevoegen",
+    "captionSaved": "Bijschrift opgeslagen",
+    "addedBy": "{{name}} · {{when}}",
+    "errors": {
+      "tooBig": "Die foto is groter dan 10 MB. Kies een kleinere.",
+      "type": "Dat bestand is geen bruikbare foto (JPEG, PNG, GIF of WebP).",
+      "upload": "De foto is niet geüpload. Probeer het opnieuw.",
+      "caption": "Het bijschrift is niet opgeslagen. Probeer het opnieuw.",
+      "delete": "De foto is niet verwijderd. Probeer het opnieuw.",
+      "network": "De foto kon vanaf dit adres niet worden geüpload. Probeer het opnieuw of open de app via het gewone adres."
+    },
+    "history": {
+      "added": "Heeft een foto toegevoegd",
+      "removed": "Heeft een foto verwijderd",
+      "restored": "Heeft een foto teruggezet"
+    }
+  },
+  "phoneContacts": {
+    "add": "Toevoegen uit telefoon",
+    "back": "Liever zelf intypen",
+    "ios": {
+      "title": "Toevoegen uit de contacten van je telefoon",
+      "body": "Twee stappen in de app Contacten:",
+      "step1": "Open de persoon in Contacten en tik op ‘Deel contact’.",
+      "step2": "Tik op ‘Bewaar in Bestanden’, kom terug en kies het bestand.",
+      "choose": "Bestand kiezen"
+    },
+    "confirmTitle": "{{count}} personen toevoegen?",
+    "confirmCta": "{{count}} personen toevoegen",
+    "resultTitle": "{{count}} toegevoegd",
+    "already": "Al een klant: {{name}}",
+    "open": "Openen",
+    "skipped_one": "{{count}} stond al bij je klanten.",
+    "skipped_other": "{{count}} stonden al bij je klanten.",
+    "failed_one": "{{count}} kon niet worden toegevoegd — voeg hem met de hand toe.",
+    "failed_other": "{{count}} konden niet worden toegevoegd — voeg ze met de hand toe.",
+    "done": "Klaar",
+    "errors": {
+      "picker": "Je telefoon heeft de contacten niet gedeeld. Probeer het opnieuw.",
+      "empty": "Geen contacten in dat bestand. Deel een contactkaart (.vcf) en kies die.",
+      "file": "Dat bestand kon niet worden gelezen. Kies een contactkaart (.vcf).",
+      "save": "Ze zijn niet toegevoegd. Probeer het opnieuw."
+    }
+  },
+  "notes": {
+    "add": {
+      "type": "Notitie typen",
+      "speak": "Inspreken",
+      "speakStart": "Tik en spreek je notitie in",
+      "speakHint": "Tik nog een keer als je klaar bent. Je controleert de tekst voordat hij wordt opgeslagen.",
+      "typeInstead": "Toch typen"
     }
   }
 }

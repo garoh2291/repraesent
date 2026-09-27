@@ -16,11 +16,15 @@ export function todayKey(workspaceId: string | null, assignee?: "me" | "all") {
     : (["today", workspaceId] as const);
 }
 
-export function useToday(assignee: "me" | "all", enabled = true) {
+/** The call queue works through at most this many people per run (server max). */
+export const CALL_QUEUE_LIMIT = 50;
+
+export function useToday(assignee: "me" | "all", enabled = true, limit?: number) {
   const workspaceId = getStoredWorkspaceId();
   return useQuery({
-    queryKey: todayKey(workspaceId, assignee),
-    queryFn: () => getToday({ assignee }),
+    // Same prefix as Today, so every invalidate of ["today"] refreshes it too.
+    queryKey: limit ? [...todayKey(workspaceId, assignee), limit] : todayKey(workspaceId, assignee),
+    queryFn: () => getToday({ assignee, limit }),
     enabled: enabled && !!workspaceId,
     staleTime: 30_000,
     refetchOnWindowFocus: true,

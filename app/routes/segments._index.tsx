@@ -269,7 +269,7 @@ function SegmentCard({
           ) : null}
         </div>
       </Link>
-      <div className="absolute bottom-3 right-3 flex gap-1 opacity-0 transition-opacity group-hover:opacity-100">
+      <div className="absolute bottom-3 right-3 flex gap-1 opacity-0 transition-opacity group-hover:opacity-100 pointer-coarse:bottom-1.5 pointer-coarse:right-1.5 pointer-coarse:opacity-100">
         <button
           type="button"
           onClick={() => refresh.mutate()}
@@ -277,7 +277,7 @@ function SegmentCard({
           aria-label={t("emailCampaigns.segments.refresh", {
             defaultValue: "Refresh counts",
           })}
-          className="rounded p-1.5 text-muted-foreground hover:bg-muted"
+          className="rounded p-1.5 text-muted-foreground hover:bg-muted pointer-coarse:p-[13px]"
         >
           <RefreshCw
             className={`h-3.5 w-3.5 ${refresh.isPending ? "animate-spin" : ""}`}
@@ -287,7 +287,7 @@ function SegmentCard({
           type="button"
           onClick={onDelete}
           aria-label={t("common.delete", { defaultValue: "Delete" })}
-          className="rounded p-1.5 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+          className="rounded p-1.5 text-muted-foreground hover:bg-destructive/10 hover:text-destructive pointer-coarse:p-[13px]"
         >
           <Trash2 className="h-3.5 w-3.5" />
         </button>

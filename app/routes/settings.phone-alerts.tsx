@@ -15,6 +15,8 @@ import {
   Smartphone,
   Sunrise,
   Trash2,
+  Clock,
+  ChevronDown,
 } from "lucide-react";
 import i18n from "~/i18n";
 import { cn } from "~/lib/utils";
@@ -35,7 +37,7 @@ import {
   usePhoneAlertsConfig,
   useThisDeviceEndpoint,
 } from "~/lib/hooks/use-phone-alerts";
-import { disableAlertsHere, enableAlerts, usePwa, type PwaEnv } from "~/lib/pwa/use-pwa";
+import { disableAlertsHere, enableAlerts, usePwa, withAlertsTimeout, type PwaEnv } from "~/lib/pwa/use-pwa";
 import { InstallSteps } from "~/components/notebook/install-card";
 import { ExampleAlert, ReEnableSteps } from "~/components/notebook/alerts-ask-card";
 import { Button } from "~/components/ui/button";
@@ -214,7 +216,7 @@ function ThisDevice({
   const turnOn = async () => {
     setBusy("on");
     try {
-      const r = await enableAlerts(publicKey);
+      const r = await withAlertsTimeout(enableAlerts(publicKey), 60_000);
       if (r === "on") toast.success(t("pwa.alertsAsk.toastOn"));
       if (r === "denied") setJustDenied(true);
       onChanged();
@@ -222,8 +224,16 @@ function ThisDevice({
       console.error("[phone-alerts] turning on failed", err);
       // The phone itself refused (permission granted, subscription not): say so,
       // don't blame the connection.
-      const refused = (err as DOMException)?.name === "NotAllowedError";
-      toast.error(t(refused ? "pwa.alertsAsk.failedDevice" : "pwa.alertsAsk.failed"), {
+      // The phone itself refused (permission granted, subscription not), or it
+      // never got its background helper: say so, don't blame the connection.
+      const name = (err as Error)?.name;
+      const key =
+        name === "NotAllowedError"
+          ? "pwa.alertsAsk.failedDevice"
+          : name === "AlertsNotReadyError"
+            ? "pwa.alertsAsk.notReady"
+            : "pwa.alertsAsk.failed";
+      toast.error(t(key), {
         // Development only: the real reason, to tell a browser refusal from a server error.
         description: import.meta.env.DEV ? String(err) : undefined,
       });
@@ -363,8 +373,17 @@ function ActiveHours({
     queue({ days: next, start, end });
   };
 
+  // Our own field look: iOS draws time inputs with an arrow glued to the
+  // right edge — appearance-none drops it; clock + chevron are ours.
   const timeClass =
-    "num h-11 w-full rounded-lg border border-border bg-card px-3 text-[15px] text-foreground outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50";
+    "num block h-11 min-h-11 w-full appearance-none rounded-lg border border-border bg-background pl-10 pr-9 text-left text-[16px] font-medium text-foreground outline-none transition-colors hover:border-foreground/30 focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 [&::-webkit-date-and-time-value]:text-left [&::-webkit-calendar-picker-indicator]:hidden [&::-webkit-inner-spin-button]:hidden";
+  const timeField = (value: string, onValue: (v: string) => void) => (
+    <span className="relative block">
+      <Clock className="pointer-events-none absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" aria-hidden />
+      <input type="time" step={60} value={value} onChange={(e) => onValue(e.target.value)} className={timeClass} />
+      <ChevronDown className="pointer-events-none absolute right-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" aria-hidden />
+    </span>
+  );
 
   return (
     <div className="space-y-5 rounded-2xl border border-border bg-card p-4 sm:p-5">
@@ -397,31 +416,19 @@ function ActiveHours({
       <div className="grid grid-cols-2 gap-3 sm:max-w-sm">
         <label className="space-y-1.5">
           <span className="block text-sm font-medium text-foreground">{t("settings.phoneAlerts.hours.from")}</span>
-          <input
-            type="time"
-            step={60}
-            value={start}
-            onChange={(e) => {
-              const v = hhmm(e.target.value, start);
-              setStart(v);
-              queue({ days, start: v, end });
-            }}
-            className={timeClass}
-          />
+          {timeField(start, (raw) => {
+            const v = hhmm(raw, start);
+            setStart(v);
+            queue({ days, start: v, end });
+          })}
         </label>
         <label className="space-y-1.5">
           <span className="block text-sm font-medium text-foreground">{t("settings.phoneAlerts.hours.to")}</span>
-          <input
-            type="time"
-            step={60}
-            value={end}
-            onChange={(e) => {
-              const v = hhmm(e.target.value, end);
-              setEnd(v);
-              queue({ days, start, end: v });
-            }}
-            className={timeClass}
-          />
+          {timeField(end, (raw) => {
+            const v = hhmm(raw, end);
+            setEnd(v);
+            queue({ days, start, end: v });
+          })}
         </label>
       </div>
 

@@ -93,7 +93,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
         {/* Installable app (PWA_PUSH_PLAN.md). */}
         <link rel="manifest" href="/manifest.webmanifest" />
         <meta name="theme-color" content="#ffffff" />
-        <link rel="apple-touch-icon" href="/icons/apple-touch-icon-180.png" />
+        <link rel="apple-touch-icon" href="/icons/apple-touch-icon-180.png?v=2" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-title" content="re:praesent" />

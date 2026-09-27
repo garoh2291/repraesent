@@ -202,14 +202,14 @@ function CopyChip({
         ) : null}
       </div>
       {!isEmpty ? (
-        <div className="ml-1 flex shrink-0 items-center gap-1 opacity-0 transition-opacity group-hover:opacity-100 focus-within:opacity-100">
+        <div className="ml-1 flex shrink-0 items-center gap-1 opacity-0 transition-opacity group-hover:opacity-100 focus-within:opacity-100 pointer-coarse:opacity-100">
           {onAction ? (
             <button
               type="button"
               onClick={onAction.onClick}
               aria-label={onAction.label}
               title={onAction.label}
-              className="inline-flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none [&>svg]:h-3.5 [&>svg]:w-3.5"
+              className="inline-flex h-7 w-7 pointer-coarse:h-10 pointer-coarse:w-10 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none [&>svg]:h-3.5 [&>svg]:w-3.5"
             >
               {onAction.icon}
             </button>
@@ -219,7 +219,7 @@ function CopyChip({
               target={hrefAction.newTab ? "_blank" : undefined}
               rel={hrefAction.newTab ? "noreferrer" : undefined}
               aria-label={hrefAction.label}
-              className="inline-flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground [&>svg]:h-3.5 [&>svg]:w-3.5"
+              className="inline-flex h-7 w-7 pointer-coarse:h-10 pointer-coarse:w-10 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground [&>svg]:h-3.5 [&>svg]:w-3.5"
             >
               {hrefAction.icon}
             </a>
@@ -231,7 +231,7 @@ function CopyChip({
               defaultValue: "Copy {{label}}",
               label,
             })}
-            className="inline-flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+            className="inline-flex h-7 w-7 pointer-coarse:h-10 pointer-coarse:w-10 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
           >
             {copied ? (
               <Check className="h-3.5 w-3.5 text-emerald-500" />
@@ -626,7 +626,7 @@ function ContactHeroAvatar({
             aria-label={t("contacts.avatarUpload", {
               defaultValue: "Upload contact picture",
             })}
-            className="absolute -right-0.5 -bottom-0.5 flex h-7 w-7 cursor-pointer items-center justify-center rounded-full border border-border bg-card text-muted-foreground opacity-0 shadow transition-opacity hover:bg-muted hover:text-foreground focus-visible:opacity-100 group-hover/avatar:opacity-100"
+            className="absolute -right-0.5 -bottom-0.5 flex h-7 w-7 cursor-pointer items-center justify-center rounded-full border border-border bg-card text-muted-foreground opacity-0 shadow transition-opacity hover:bg-muted hover:text-foreground focus-visible:opacity-100 group-hover/avatar:opacity-100 pointer-coarse:opacity-100 pointer-coarse:after:absolute pointer-coarse:after:-inset-1.5"
           >
             <Camera className="h-3.5 w-3.5" />
           </button>
@@ -637,7 +637,7 @@ function ContactHeroAvatar({
               aria-label={t("settings.avatarRemove", {
                 defaultValue: "Remove",
               })}
-              className="absolute -top-0.5 -right-0.5 flex h-6 w-6 cursor-pointer items-center justify-center rounded-full border border-border bg-card text-muted-foreground opacity-0 shadow transition-opacity hover:text-destructive focus-visible:opacity-100 group-hover/avatar:opacity-100"
+              className="absolute -top-0.5 -right-0.5 flex h-6 w-6 cursor-pointer items-center justify-center rounded-full border border-border bg-card text-muted-foreground opacity-0 shadow transition-opacity hover:text-destructive focus-visible:opacity-100 group-hover/avatar:opacity-100 pointer-coarse:opacity-100 pointer-coarse:after:absolute pointer-coarse:after:-inset-2"
             >
               <Trash2 className="h-3 w-3" />
             </button>

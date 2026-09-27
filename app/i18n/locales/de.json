@@ -3604,7 +3604,12 @@
     "avatarUpload": "Kontaktbild hochladen",
     "avatarRemoveWarning": "Das Bild des Kontakts wird dauerhaft gelöscht und stattdessen werden die Initialen angezeigt.",
     "historyAvatarUpdated": "Kontaktbild aktualisiert",
-    "historyAvatarRemoved": "Kontaktbild entfernt"
+    "historyAvatarRemoved": "Kontaktbild entfernt",
+    "newMenu": {
+      "fromPhone": "Aus dem Handy",
+      "typeIn": "Selbst eintippen",
+      "importLabel": "Aus einer Datei"
+    }
   },
   "leadEmails": {
     "emptyTitle": "Noch keine E-Mails protokolliert",
@@ -9910,7 +9915,8 @@
         "titleComputer": "Meldungen sind in diesem Browser blockiert",
         "bodyComputer": "In deinem Browser kannst du sie wieder erlauben:"
       },
-      "failedDevice": "Dieses Handy hat die Meldungen nicht angenommen. Schließe re:praesent ganz, öffne es wieder über den Home-Bildschirm und versuch es noch einmal."
+      "failedDevice": "Dieses Handy hat die Meldungen nicht angenommen. Schließe re:praesent ganz, öffne es wieder über den Home-Bildschirm und versuch es noch einmal.",
+      "notReady": "Dieses Handy konnte die Meldungen nicht starten. Schließe re:praesent ganz, öffne es wieder über den Home-Bildschirm und versuch es noch einmal."
     },
     "reenable": {
       "ios": {
@@ -9930,6 +9936,144 @@
       "title": "Neue Anfrage: Anna Weber",
       "body": "Über Ihr Website-Formular · Tippen zum Zurückrufen",
       "when": "jetzt"
+    }
+  },
+  "mobile": {
+    "more": "Mehr",
+    "today": {
+      "startCalls": "Anrufe starten ({{count}})"
+    },
+    "stagePicker": {
+      "title": "Verschieben nach…",
+      "moveTo": "Verschieben…",
+      "moved": "Verschoben nach {{stage}}"
+    },
+    "people": {
+      "earned": "Verdient: {{value}}"
+    },
+    "deal": {
+      "stageChip": "Phase:",
+      "closeSummary": "Abschluss: {{date}}",
+      "photos": "Fotos"
+    }
+  },
+  "calls": {
+    "metaTitle": "Anrufe",
+    "backToToday": "Heute",
+    "backToTodayButton": "Zurück zu Heute",
+    "progress": "{{n}} von {{total}}",
+    "emptyTitle": "Niemand wartet auf einen Anruf",
+    "emptyBody": "Neue Anfragen und Rückrufe erscheinen hier. Gerade ist nichts zu tun.",
+    "lastNote": "Letzte Notiz",
+    "noNote": "Noch keine Notizen.",
+    "noChannel": "Keine Telefonnummer oder E-Mail hinterlegt. Öffne die Anfrage, um eine einzutragen.",
+    "record": "Wie lief's?",
+    "skip": "Überspringen",
+    "swipeHint": "Nach links wischen zum Überspringen",
+    "later": "Später",
+    "saveNext": "Speichern · weiter",
+    "notNowNext": "Jetzt nicht · weiter",
+    "callName": "{{name}} anrufen",
+    "done": {
+      "title": "Fertig",
+      "reached": "{{count}} erreicht",
+      "noAnswer": "{{count}} ohne Antwort",
+      "notInterested": "{{count}} kein Interesse",
+      "fake": "{{count}} Spam",
+      "skipped": "{{count}} übersprungen",
+      "callBacksTomorrow": "Die Rückrufe stehen für morgen an.",
+      "callBacks": "Die Rückrufe sind eingetragen.",
+      "skippedStay": "Wen du übersprungen hast, findest du weiter unter Heute.",
+      "moreWaiting_one": "{{count}} weitere Person wartet noch auf Heute.",
+      "moreWaiting_other": "{{count}} weitere Personen warten noch auf Heute."
+    }
+  },
+  "voice": {
+    "start": "Sag, wie's lief",
+    "stop": "Aufnahme beenden",
+    "listening": "Ich höre zu…",
+    "writing": "Wird aufgeschrieben…",
+    "hint": "Tippen oder gedrückt halten und sprechen. Bis zu einer Minute.",
+    "tapToStop": "Zum Beenden tippen – oder loslassen, wenn du hältst",
+    "nothingSaved": "Gespeichert wird erst, wenn du auf Speichern tippst.",
+    "dealDraft": "Aus deiner Sprachnotiz: {{bits}}",
+    "errors": {
+      "blocked": "Das Mikrofon ist blockiert. Erlaube es für diese Seite in den Browser-Einstellungen und tippe dann noch mal.",
+      "noMic": "Auf diesem Gerät wurde kein Mikrofon gefunden.",
+      "cap": "Die Sprachnotizen für heute sind aufgebraucht. Tipp die Notiz ein – morgen geht's wieder.",
+      "unclear": "Wir konnten nichts Deutliches hören. Versuch es etwas näher noch mal oder tipp es ein.",
+      "tooLong": "Das war zu lang. Bleib unter einer Minute oder tipp es ein.",
+      "notReady": "Sprachnotizen sind noch nicht eingeschaltet. Tipp die Notiz vorerst ein.",
+      "generic": "Das hat nicht geklappt. Versuch es noch mal oder tipp die Notiz ein.",
+      "short": "Zu kurz – tippe und sag, wie's lief."
+    }
+  },
+  "photos": {
+    "title": "Fotos",
+    "take": "Foto machen",
+    "gallery": "Aus der Galerie",
+    "add": "Fotos hinzufügen",
+    "empty": "Noch keine Fotos. Füge eins vor Ort oder aus der Galerie hinzu – nur dein Team sieht sie.",
+    "emptyViewer": "Noch keine Fotos.",
+    "open": "Foto {{n}} öffnen",
+    "uploading": "Wird hochgeladen…",
+    "position": "{{n}} von {{total}}",
+    "delete": "Foto löschen",
+    "deleted": "Foto gelöscht",
+    "prev": "Vorheriges Foto",
+    "next": "Nächstes Foto",
+    "viewerHint": "Wische oder nutze die Pfeiltasten für die anderen Fotos.",
+    "captionPlaceholder": "Bildunterschrift hinzufügen",
+    "captionSaved": "Bildunterschrift gespeichert",
+    "addedBy": "{{name}} · {{when}}",
+    "errors": {
+      "tooBig": "Das Foto ist größer als 10 MB. Wähle ein kleineres.",
+      "type": "Diese Datei ist kein passendes Foto (JPEG, PNG, GIF oder WebP).",
+      "upload": "Das Foto wurde nicht hochgeladen. Versuch es noch mal.",
+      "caption": "Die Bildunterschrift wurde nicht gespeichert. Versuch es noch mal.",
+      "delete": "Das Foto wurde nicht gelöscht. Versuch es noch mal.",
+      "network": "Das Foto ließ sich von dieser Adresse nicht hochladen. Versuch es noch einmal oder öffne die App über ihre normale Adresse."
+    },
+    "history": {
+      "added": "Hat ein Foto hinzugefügt",
+      "removed": "Hat ein Foto entfernt",
+      "restored": "Hat ein Foto zurückgeholt"
+    }
+  },
+  "phoneContacts": {
+    "add": "Aus dem Telefon hinzufügen",
+    "back": "Lieber selbst eintippen",
+    "ios": {
+      "title": "Aus den Kontakten deines Telefons hinzufügen",
+      "body": "Zwei Schritte in der Kontakte-App:",
+      "step1": "Öffne die Person in Kontakte und tippe auf „Kontakt teilen“.",
+      "step2": "Tippe auf „In Dateien sichern“, komm zurück und wähle die Datei.",
+      "choose": "Datei wählen"
+    },
+    "confirmTitle": "{{count}} Personen hinzufügen?",
+    "confirmCta": "{{count}} Personen hinzufügen",
+    "resultTitle": "{{count}} hinzugefügt",
+    "already": "Schon ein Kunde: {{name}}",
+    "open": "Öffnen",
+    "skipped_one": "{{count}} war schon bei deinen Kunden.",
+    "skipped_other": "{{count}} waren schon bei deinen Kunden.",
+    "failed_one": "{{count}} konnte nicht hinzugefügt werden – bitte von Hand eintragen.",
+    "failed_other": "{{count}} konnten nicht hinzugefügt werden – bitte von Hand eintragen.",
+    "done": "Fertig",
+    "errors": {
+      "picker": "Dein Telefon hat die Kontakte nicht freigegeben. Versuch es noch mal.",
+      "empty": "In der Datei sind keine Kontakte. Teile eine Kontaktkarte (.vcf) und wähle sie aus.",
+      "file": "Die Datei konnte nicht gelesen werden. Wähle eine Kontaktkarte (.vcf).",
+      "save": "Sie wurden nicht hinzugefügt. Versuch es noch mal."
+    }
+  },
+  "notes": {
+    "add": {
+      "type": "Notiz tippen",
+      "speak": "Sprechen",
+      "speakStart": "Tippen und Notiz sprechen",
+      "speakHint": "Tippe noch einmal, wenn du fertig bist. Du prüfst den Text, bevor er gespeichert wird.",
+      "typeInstead": "Lieber tippen"
     }
   }
 }

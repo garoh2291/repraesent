@@ -11,7 +11,7 @@
  * "New version ready · Reload" and old caches are removed on activate.
  * Served with Cache-Control: no-cache (infra/nginx.conf) so updates are seen.
  */
-const VERSION = "v1";
+const VERSION = "v3";
 const STATIC_CACHE = `rp-static-${VERSION}`;
 const ASSET_CACHE = `rp-assets-${VERSION}`;
 const OFFLINE_URL = "/offline.html";
@@ -175,6 +175,15 @@ self.addEventListener("push", (event) => {
         if (n.silent === true) options.silent = true;
         const extra = payload.data && typeof payload.data === "object" ? payload.data : {};
         options.data = { ...extra, navigate: safeTarget(n.navigate) };
+        // Android only (the server sends them to Android devices): "Call now"
+        // and "Remind me in 1 hour". Other platforms ignore or never get them.
+        if (Array.isArray(n.actions)) {
+          const actions = n.actions
+            .filter((a) => a && typeof a.action === "string" && typeof a.title === "string")
+            .slice(0, 2)
+            .map((a) => ({ action: a.action, title: a.title }));
+          if (actions.length) options.actions = actions;
+        }
 
         if (typeof n.app_badge === "number" && self.navigator && "setAppBadge" in self.navigator) {
           try {
@@ -192,9 +201,39 @@ self.addEventListener("push", (event) => {
   );
 });
 
+/** "Remind me in 1 hour": the server re-queues the same alert. No page opens. */
+async function snooze(data) {
+  const s = data && data.snooze;
+  if (!s || typeof s.url !== "string" || typeof s.token !== "string") return;
+  let url;
+  try {
+    url = new URL(s.url);
+  } catch {
+    return;
+  }
+  if (url.protocol !== "https:" && url.hostname !== "localhost") return;
+  try {
+    await fetch(url.href, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ token: s.token }),
+      credentials: "omit",
+    });
+  } catch {
+    /* offline: the alert simply doesn't come back */
+  }
+}
+
 self.addEventListener("notificationclick", (event) => {
   event.notification.close();
-  const target = safeTarget(event.notification.data && event.notification.data.navigate);
+  const data = event.notification.data || {};
+  if (event.action === "snooze") {
+    event.waitUntil(snooze(data));
+    return;
+  }
+  // "Call now" opens the inquiry with ?call=1; the page starts the call.
+  const raw = event.action === "call" && typeof data.call_url === "string" ? data.call_url : data.navigate;
+  const target = safeTarget(raw);
   event.waitUntil(
     (async () => {
       const windows = await self.clients.matchAll({ type: "window", includeUncontrolled: true });

@@ -242,9 +242,35 @@ if (typeof window !== "undefined" && "serviceWorker" in navigator) {
   });
 }
 
+/** Thrown when this browser never got a service worker; the UI turns it into one plain line. */
+export class AlertsNotReadyError extends Error {
+  constructor() {
+    super("SW_NOT_READY");
+    this.name = "AlertsNotReadyError";
+  }
+}
+
+/** Rejects with AlertsNotReadyError after `ms` — nothing on the alerts path may wait forever. */
+export function withAlertsTimeout<T>(p: Promise<T>, ms: number): Promise<T> {
+  return new Promise<T>((resolve, reject) => {
+    const id = window.setTimeout(() => reject(new AlertsNotReadyError()), ms);
+    p.then(
+      (v) => {
+        window.clearTimeout(id);
+        resolve(v);
+      },
+      (e) => {
+        window.clearTimeout(id);
+        reject(e);
+      },
+    );
+  });
+}
+
 async function readyRegistration(): Promise<ServiceWorkerRegistration> {
   if (knownRegistration) return knownRegistration;
-  const reg = (await registerServiceWorker()) ?? (await navigator.serviceWorker.ready);
+  const reg =
+    (await registerServiceWorker()) ?? (await withAlertsTimeout(navigator.serviceWorker.ready, 10_000));
   knownRegistration = reg;
   return reg;
 }

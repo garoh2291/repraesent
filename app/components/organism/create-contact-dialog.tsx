@@ -35,6 +35,7 @@ import {
   DialogTitle,
 } from "~/components/ui/dialog";
 import { toast } from "sonner";
+import { AddFromPhone } from "~/components/notebook/phone-contacts";
 
 export interface CreateContactInitialValues {
   firstName?: string;
@@ -55,6 +56,12 @@ export interface CreateContactDialogProps {
   initialValues?: CreateContactInitialValues;
   /** Called after successfully adding info to existing contact. */
   onUpdated?: () => void;
+  /**
+   * Where the owner started from the New contact menu: "phone" opens the
+   * phone's contacts straight away, "manual" shows only the form. Unset keeps
+   * the form with "Add from phone" on top (⌘K quick-create).
+   */
+  start?: "phone" | "manual";
 }
 
 /**
@@ -91,6 +98,7 @@ export function CreateContactDialog({
   editContactId,
   initialValues,
   onUpdated,
+  start,
 }: CreateContactDialogProps) {
   const { t } = useTranslation();
   const navigate = useNavigate();
@@ -103,6 +111,8 @@ export function CreateContactDialog({
   const [phone, setPhone] = useState("");
   const [contactType, setContactType] = useState<ContactType>("contact");
   const [address, setAddress] = useState(EMPTY_ADDRESS);
+  // "Add from phone" (phones only) can replace the form with its own panel.
+  const [phonePanel, setPhonePanel] = useState(false);
 
   useEffect(() => {
     if (open && initialValues) {
@@ -121,6 +131,7 @@ export function CreateContactDialog({
       setPhone("");
       setContactType("contact");
       setAddress(EMPTY_ADDRESS);
+      setPhonePanel(false);
     }
   }, [open, initialValues]);
 
@@ -267,6 +278,21 @@ export function CreateContactDialog({
           </DialogTitle>
         </DialogHeader>
 
+        {!isEditMode && start !== "manual" ? (
+          <AddFromPhone
+            autoStart={start === "phone"}
+            onPrefill={(v) => {
+              setFirstName(v.firstName ?? "");
+              setLastName(v.lastName ?? "");
+              setEmail(v.email ?? "");
+              setPhone(v.phone ?? "");
+            }}
+            onActiveChange={setPhonePanel}
+            onFinished={() => onOpenChange(false)}
+          />
+        ) : null}
+
+        {phonePanel ? null : (
         <div className="space-y-4 py-1 flex-1 overflow-y-auto px-2">
           {/* Name */}
           <div className="grid grid-cols-2 gap-3">
@@ -442,7 +468,9 @@ export function CreateContactDialog({
             </div>
           </div>
         </div>
+        )}
 
+        {phonePanel ? null : (
         <DialogFooter>
           <Button
             type="button"
@@ -469,6 +497,7 @@ export function CreateContactDialog({
                 : t("contacts.create", { defaultValue: "Create" })}
           </Button>
         </DialogFooter>
+        )}
       </DialogContent>
     </Dialog>
   );

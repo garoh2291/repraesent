@@ -61,7 +61,17 @@ import {
   Plus,
   EyeOff,
   Eye,
+  MoreHorizontal,
 } from "lucide-react";
+import { useIsPhone } from "~/lib/hooks/use-is-phone";
+import { useSearchShortcut } from "~/lib/hooks/useSearchShortcut";
+import { Input } from "~/components/ui/input";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "~/components/ui/dropdown-menu";
 import {
   Select,
   SelectContent,
@@ -145,7 +155,11 @@ export default function LeadForm() {
     ? sortParam
     : DEFAULT_LEAD_SORT;
 
-  const [viewMode, setViewMode] = useLeadsViewMode();
+  const [savedViewMode, setViewMode] = useLeadsViewMode();
+  // Phones always get the stage list (the kanban's phone layout); the saved
+  // desktop choice is left untouched (MOBILE_PACKAGE_PLAN.md B1).
+  const isPhone = useIsPhone();
+  const viewMode = isPhone ? "kanban" : savedViewMode;
   const [selectedLeadId, setSelectedLeadId] = useState<string | null>(null);
   const [importModalOpen, setImportModalOpen] = useState(false);
   const [createLeadOpen, setCreateLeadOpen] = useState(false);
@@ -714,7 +728,7 @@ export default function LeadForm() {
               variant="outline"
               size="sm"
               onClick={() => setImportModalOpen(true)}
-              className="h-9 gap-1.5 text-xs"
+              className="h-9 gap-1.5 text-xs max-sm:hidden"
             >
               <Upload className="h-3.5 w-3.5" />
               {t("leads.importLeads")}
@@ -724,11 +738,32 @@ export default function LeadForm() {
             <Button
               size="sm"
               onClick={() => setCreateLeadOpen(true)}
-              className="h-9 gap-1.5 text-xs"
+              className="h-9 gap-1.5 text-xs max-sm:h-11 max-sm:flex-1 max-sm:text-sm"
             >
-              <Plus className="h-3.5 w-3.5" />
+              <Plus className="h-3.5 w-3.5 max-sm:size-4" />
               {t("leads.createLead", { defaultValue: "Create lead" })}
             </Button>
+          )}
+          {canEdit && (
+            // Phones: the rare "Import CSV" steps aside into a ⋯ menu.
+            <DropdownMenu modal={false}>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className="size-11 sm:hidden"
+                  aria-label={t("mobile.more", "More")}
+                >
+                  <MoreHorizontal className="size-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="min-w-48">
+                <DropdownMenuItem onSelect={() => setImportModalOpen(true)}>
+                  <Upload className="h-3.5 w-3.5" />
+                  {t("leads.importLeads")}
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           )}
           {viewMode === "kanban" && (
             <Select
@@ -737,7 +772,7 @@ export default function LeadForm() {
                 onSelect({ sort: v === DEFAULT_LEAD_SORT ? "" : v })
               }
             >
-              <SelectTrigger className="h-9 w-[180px] text-xs">
+              <SelectTrigger className="h-9 w-[180px] text-xs max-sm:h-11! max-sm:w-full max-sm:text-sm">
                 <span className="inline-flex items-center gap-1.5">
                   <ArrowUpDown className="h-3.5 w-3.5 opacity-60" />
                   <SelectValue />
@@ -756,7 +791,7 @@ export default function LeadForm() {
               </SelectContent>
             </Select>
           )}
-          <div className="flex items-center rounded-lg border border-border bg-muted/50 p-0.5">
+          <div className="flex items-center rounded-lg border border-border bg-muted/50 p-0.5 max-sm:hidden">
             <button
               onClick={() => {
                 setViewMode("table");
@@ -872,6 +907,13 @@ export default function LeadForm() {
         />
       ) : (
         <div className="flex-1 min-h-0 flex flex-col">
+          {isPhone ? (
+            <PhoneLeadSearch
+              value={search}
+              placeholder={t("leads.searchPlaceholder")}
+              onChange={(value) => onSelect({ search: value, page: "1" }, true)}
+            />
+          ) : null}
           <LeadsKanban
             filters={{
               search: debouncedSearch || undefined,
@@ -935,5 +977,28 @@ export default function LeadForm() {
         }}
       />
     </div>
+  );
+}
+
+/** Phones: the stage list has no table toolbar, so it gets its own search. */
+function PhoneLeadSearch({
+  value,
+  placeholder,
+  onChange,
+}: {
+  value: string;
+  placeholder: string;
+  onChange: (value: string) => void;
+}) {
+  const { ref, withHint } = useSearchShortcut();
+  return (
+    <Input
+      ref={ref}
+      type="search"
+      value={value}
+      onChange={(e) => onChange(e.target.value)}
+      placeholder={withHint(placeholder)}
+      className="mt-4 h-11 text-base"
+    />
   );
 }

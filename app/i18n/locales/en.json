@@ -3602,7 +3602,12 @@
     "avatarUpload": "Upload contact picture",
     "avatarRemoveWarning": "The contact's picture is deleted permanently and the initials are shown instead.",
     "historyAvatarUpdated": "Contact picture updated",
-    "historyAvatarRemoved": "Contact picture removed"
+    "historyAvatarRemoved": "Contact picture removed",
+    "newMenu": {
+      "fromPhone": "From your phone",
+      "typeIn": "Type it in",
+      "importLabel": "Import a file"
+    }
   },
   "leadEmails": {
     "emptyTitle": "No emails logged yet",
@@ -9908,7 +9913,8 @@
         "titleComputer": "Alerts are blocked in this browser",
         "bodyComputer": "You can allow them again in your browser:"
       },
-      "failedDevice": "This phone didn't accept alerts. Close re:praesent completely, open it again from the home screen and try once more."
+      "failedDevice": "This phone didn't accept alerts. Close re:praesent completely, open it again from the home screen and try once more.",
+      "notReady": "This phone couldn't start alerts. Close re:praesent completely, open it again from the home screen and try once more."
     },
     "reenable": {
       "ios": {
@@ -9928,6 +9934,144 @@
       "title": "New inquiry: Anna Weber",
       "body": "Via your website form · Tap to call back",
       "when": "now"
+    }
+  },
+  "mobile": {
+    "more": "More",
+    "today": {
+      "startCalls": "Start calls ({{count}})"
+    },
+    "stagePicker": {
+      "title": "Move to…",
+      "moveTo": "Move to…",
+      "moved": "Moved to {{stage}}"
+    },
+    "people": {
+      "earned": "Earned {{value}}"
+    },
+    "deal": {
+      "stageChip": "Stage:",
+      "closeSummary": "Close: {{date}}",
+      "photos": "Photos"
+    }
+  },
+  "calls": {
+    "metaTitle": "Calls",
+    "backToToday": "Today",
+    "backToTodayButton": "Back to Today",
+    "progress": "{{n}} of {{total}}",
+    "emptyTitle": "Nobody is waiting on a call",
+    "emptyBody": "New inquiries and call-backs show up here. Nothing to do right now.",
+    "lastNote": "Last note",
+    "noNote": "No notes yet.",
+    "noChannel": "No phone or email on file. Open the inquiry to add one.",
+    "record": "How did it go?",
+    "skip": "Skip",
+    "swipeHint": "Swipe left to skip",
+    "later": "Later",
+    "saveNext": "Save · next",
+    "notNowNext": "Not now · next",
+    "callName": "Call {{name}}",
+    "done": {
+      "title": "Done",
+      "reached": "{{count}} reached",
+      "noAnswer": "{{count}} no answer",
+      "notInterested": "{{count}} not interested",
+      "fake": "{{count}} spam",
+      "skipped": "{{count}} skipped",
+      "callBacksTomorrow": "Call-backs are set for tomorrow.",
+      "callBacks": "Call-backs are set.",
+      "skippedStay": "Anyone you skipped is still on Today.",
+      "moreWaiting_one": "{{count}} more person is still waiting on Today.",
+      "moreWaiting_other": "{{count}} more people are still waiting on Today."
+    }
+  },
+  "voice": {
+    "start": "Say how it went",
+    "stop": "Stop recording",
+    "listening": "Listening…",
+    "writing": "Writing it down…",
+    "hint": "Tap or hold to talk. Up to a minute.",
+    "tapToStop": "Tap to stop — or let go if you're holding",
+    "nothingSaved": "Nothing is saved until you tap Save.",
+    "dealDraft": "From your voice note: {{bits}}",
+    "errors": {
+      "blocked": "The microphone is blocked. Allow it for this site in your browser's settings, then tap again.",
+      "noMic": "No microphone found on this device.",
+      "cap": "Voice notes are used up for today. Type the note instead — it's back tomorrow.",
+      "unclear": "We couldn't hear anything clear. Try again a bit closer, or type it.",
+      "tooLong": "That was too long. Keep it under a minute, or type it.",
+      "notReady": "Voice notes aren't switched on yet. Type the note for now.",
+      "generic": "That didn't work. Try again, or type the note.",
+      "short": "Too short — tap and say how it went."
+    }
+  },
+  "photos": {
+    "title": "Photos",
+    "take": "Take photo",
+    "gallery": "From gallery",
+    "add": "Add photos",
+    "empty": "No photos yet. Add one from the site or your gallery — only your team sees them.",
+    "emptyViewer": "No photos yet.",
+    "open": "Open photo {{n}}",
+    "uploading": "Uploading…",
+    "position": "{{n}} of {{total}}",
+    "delete": "Delete photo",
+    "deleted": "Photo deleted",
+    "prev": "Previous photo",
+    "next": "Next photo",
+    "viewerHint": "Swipe or use the arrow keys to see the other photos.",
+    "captionPlaceholder": "Add a caption",
+    "captionSaved": "Caption saved",
+    "addedBy": "{{name}} · {{when}}",
+    "errors": {
+      "tooBig": "That photo is over 10 MB. Pick a smaller one.",
+      "type": "That file isn't a photo we can use (JPEG, PNG, GIF or WebP).",
+      "upload": "The photo didn't upload. Try again.",
+      "caption": "The caption didn't save. Try again.",
+      "delete": "The photo wasn't deleted. Try again.",
+      "network": "The photo couldn't be uploaded from this address. Try again, or use the app at its normal address."
+    },
+    "history": {
+      "added": "Added a photo",
+      "removed": "Removed a photo",
+      "restored": "Put a photo back"
+    }
+  },
+  "phoneContacts": {
+    "add": "Add from phone",
+    "back": "Type it in instead",
+    "ios": {
+      "title": "Add from your phone's contacts",
+      "body": "Two steps in the Contacts app:",
+      "step1": "In Contacts, open the person and tap Share Contact.",
+      "step2": "Tap Save to Files, then come back and choose the file.",
+      "choose": "Choose file"
+    },
+    "confirmTitle": "Add {{count}} people?",
+    "confirmCta": "Add {{count}} people",
+    "resultTitle": "{{count}} added",
+    "already": "Already a customer: {{name}}",
+    "open": "Open",
+    "skipped_one": "{{count}} was already in your customers.",
+    "skipped_other": "{{count}} were already in your customers.",
+    "failed_one": "{{count}} couldn't be added — add them by hand.",
+    "failed_other": "{{count}} couldn't be added — add them by hand.",
+    "done": "Done",
+    "errors": {
+      "picker": "Your phone didn't share the contacts. Try again.",
+      "empty": "No contacts in that file. Share a contact card (.vcf) and choose it.",
+      "file": "That file couldn't be read. Choose a contact card (.vcf).",
+      "save": "They weren't added. Try again."
+    }
+  },
+  "notes": {
+    "add": {
+      "type": "Type a note",
+      "speak": "Say it",
+      "speakStart": "Tap and say your note",
+      "speakHint": "Tap again when you're done. You'll check the text before it's saved.",
+      "typeInstead": "Type instead"
     }
   }
 }

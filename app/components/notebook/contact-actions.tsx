@@ -87,7 +87,7 @@ export function ContactActions({
               "press inline-flex items-center gap-1.5 rounded-lg border border-border bg-card font-medium text-foreground transition-colors hover:border-foreground/30 hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground/20",
               channel === "call" && "border-foreground bg-foreground text-background hover:bg-foreground/90 hover:text-background",
               iconOnly
-                ? "size-8 justify-center p-0"
+                ? "size-8 justify-center p-0 max-sm:size-11"
                 : size === "sm"
                   ? "h-8 px-2.5 text-[12.5px]"
                   : "h-10 px-3.5 text-[13.5px]",

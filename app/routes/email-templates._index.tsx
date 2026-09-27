@@ -257,7 +257,7 @@ function TemplateCard({
         type="button"
         onClick={onDelete}
         aria-label={t("common.delete", { defaultValue: "Delete" })}
-        className="absolute bottom-3 right-3 rounded p-1.5 text-muted-foreground opacity-0 transition-opacity hover:bg-destructive/10 hover:text-destructive group-hover:opacity-100"
+        className="absolute bottom-3 right-3 rounded p-1.5 text-muted-foreground opacity-0 transition-opacity hover:bg-destructive/10 hover:text-destructive group-hover:opacity-100 pointer-coarse:bottom-1.5 pointer-coarse:right-1.5 pointer-coarse:p-[13px] pointer-coarse:opacity-100"
       >
         <Trash2 className="h-3.5 w-3.5" />
       </button>

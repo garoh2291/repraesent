@@ -19,7 +19,8 @@ import { useContactAttempt, useLeadOutcomeMutation, useMakeDeal } from "~/lib/ho
 import { useInvalidateWork } from "~/lib/hooks/useToday";
 import { useWorkspaceCurrency } from "~/lib/hooks/useWorkspaceCurrency";
 import { markLeadNotSpam, updateLeadStatus } from "~/lib/api/leads";
-import type { ContactChannel, LeadOutcome } from "~/lib/api/lead-outcomes";
+import type { ContactChannel, LeadOutcome, VoiceOutcomeResult } from "~/lib/api/lead-outcomes";
+import { VoiceNoteButton } from "~/components/notebook/voice-note-button";
 import { parseDealValue } from "~/lib/api/deals";
 import { extractErrorMessage } from "~/lib/api/axios-instance";
 import { useComposeEmail } from "~/components/organism/compose-email/use-compose-email";
@@ -67,7 +68,7 @@ function fromDateInput(v: string) {
   return out.toISOString();
 }
 
-// ─── Outcome sheet ──────────────────────────────────────────────────────────
+// ─── Outcome form (shared by the sheet and the call queue) ─────────────────
 
 const OUTCOMES: {
   key: LeadOutcome;
@@ -80,41 +81,69 @@ const OUTCOMES: {
   { key: "fake", Icon: ShieldAlert, tone: "text-overdue" },
 ];
 
-function OutcomeSheet({
-  lead,
-  channel,
-  open,
-  onOpenChange,
-  onMakeDeal,
-}: {
-  lead: FlowLead | null;
-  channel: ContactChannel | null;
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  onMakeDeal: (lead: FlowLead) => void;
-}) {
+/** A deal suggested by a voice note; prefills "Make a deal". Strings as typed. */
+export interface DealDraft {
+  title?: string;
+  value?: string;
+  task?: string;
+  /** yyyy-MM-dd */
+  due?: string;
+}
+
+export interface OutcomeFormState {
+  choice: LeadOutcome | null;
+  setChoice: (c: LeadOutcome | null) => void;
+  note: string;
+  setNote: (n: string) => void;
+  again: string;
+  setAgain: (d: string) => void;
+  dealDraft: DealDraft | null;
+  applyVoice: (res: VoiceOutcomeResult) => void;
+  /**
+   * Optimistic save: `onSaved` runs right away (close / move on), the server
+   * answers through a toast. Returns false when nothing was picked.
+   */
+  save: (onSaved: (picked: LeadOutcome, again: string) => void) => boolean;
+}
+
+/**
+ * The outcome question's state and save. Mount it fresh per lead (key) so
+ * nothing from the previous person can flash.
+ */
+export function useOutcomeForm(lead: FlowLead | null): OutcomeFormState {
   const { t } = useTranslation();
   const mutation = useLeadOutcomeMutation();
   const invalidate = useInvalidateWork();
-  // Fresh state on every open: the provider remounts this sheet (key) each
-  // time it opens, so nothing from the previous lead can flash.
   const [choice, setChoice] = useState<LeadOutcome | null>(null);
   const [note, setNote] = useState("");
   const [again, setAgain] = useState(() => toDateInput(tomorrowNineIso()));
-  const [reached, setReached] = useState(false);
+  const [dealDraft, setDealDraft] = useState<DealDraft | null>(null);
 
-  if (!lead) return null;
-  const who = displayName(lead, t);
+  const applyVoice = (res: VoiceOutcomeResult) => {
+    if (res.outcome) setChoice(res.outcome);
+    const spoken = res.note?.trim();
+    if (spoken) setNote((old) => (old.trim() ? `${old.trim()}\n${spoken}` : spoken));
+    if (res.outcome === "no_answer" && res.next_step?.day && /^\d{4}-\d{2}-\d{2}$/.test(res.next_step.day)) {
+      setAgain(res.next_step.day);
+    }
+    if (res.outcome === "reached" && (res.deal || res.next_step)) {
+      setDealDraft({
+        title: res.deal?.title?.trim() || undefined,
+        value: res.deal?.value != null ? String(res.deal.value) : undefined,
+        task: res.next_step?.title?.trim() || undefined,
+        due: res.next_step?.day || undefined,
+      });
+    } else {
+      setDealDraft(null);
+    }
+  };
 
-  // Optimistic: the owner's answer is recorded the moment they tap Save —
-  // the sheet closes (or moves on to "What's next?") right away and a toast
-  // reports the result. A round trip to the server never blocks them.
-  const save = () => {
-    if (!choice) return;
+  const save: OutcomeFormState["save"] = (onSaved) => {
+    if (!choice || !lead) return false;
     const picked = choice;
+    const who = displayName(lead, t);
     const toastId = toast.loading(t("outcome.saving", "Saving…"));
-    if (picked === "reached") setReached(true);
-    else onOpenChange(false);
+    onSaved(picked, again);
     mutation
       .mutateAsync({
         leadId: lead.id,
@@ -136,12 +165,13 @@ function OutcomeSheet({
             toast.error(extractErrorMessage(err) || t("common.error", "Something went wrong"));
           }
         };
+        const canUndo = picked === "fake" || (picked === "not_interested" && res.to_status);
         toast.success(t(`outcome.saved.${picked}`), {
           id: toastId,
-          action:
-            picked === "fake" || (picked === "not_interested" && res.to_status)
-              ? { label: t("common.undo", "Undo"), onClick: () => void undo() }
-              : undefined,
+          // Undo needs time to be found on a phone, most of all in the call
+          // queue where the next person is already on screen (5–8 s guidance).
+          ...(canUndo ? { duration: 8000 } : {}),
+          action: canUndo ? { label: t("common.undo", "Undo"), onClick: () => void undo() } : undefined,
         });
       })
       .catch((err) => {
@@ -150,57 +180,26 @@ function OutcomeSheet({
           { id: toastId },
         );
       });
+    return true;
   };
 
-  if (reached) {
-    return (
-      <BottomSheet
-        open={open}
-        onOpenChange={onOpenChange}
-        title={t("outcome.reachedTitle", "Good. What's next with {{name}}?", { name: who })}
-        description={t("outcome.reachedBody", "Turn it into a deal so it gets a value and a next step — or just leave it for now.")}
-      >
-        <div className="grid gap-2 pt-1">
-          <Button
-            size="lg"
-            className="h-12 justify-start gap-3 text-[15px]"
-            onClick={() => {
-              onOpenChange(false);
-              onMakeDeal(lead);
-            }}
-          >
-            <Briefcase className="size-5" />
-            {t("makeDeal.cta", "Make a deal")}
-          </Button>
-          <Button variant="outline" size="lg" className="h-12 justify-start text-[15px]" onClick={() => onOpenChange(false)}>
-            {t("outcome.notNow", "Not now")}
-          </Button>
-        </div>
-      </BottomSheet>
-    );
-  }
+  return { choice, setChoice, note, setNote, again, setAgain, dealDraft, applyVoice, save };
+}
 
+/** The outcome choices, hints, voice note and note field. No buttons. */
+export function OutcomeFields({
+  form,
+  lead,
+  canUseVoice = true,
+}: {
+  form: OutcomeFormState;
+  lead: FlowLead;
+  canUseVoice?: boolean;
+}) {
+  const { t } = useTranslation();
+  const { choice, setChoice } = form;
   return (
-    <BottomSheet
-      open={open}
-      onOpenChange={onOpenChange}
-      title={t("outcome.title", "How did it go?")}
-      description={
-        channel
-          ? t(`outcome.sub.${channel}`, { name: who })
-          : t("outcome.subGeneric", "Record what happened with {{name}}.", { name: who })
-      }
-      footer={
-        <div className="flex items-center justify-between gap-2">
-          <Button variant="ghost" onClick={() => onOpenChange(false)}>
-            {t("outcome.later", "Later")}
-          </Button>
-          <Button disabled={!choice} onClick={save} className="min-w-28">
-            {t("outcome.save", "Save")}
-          </Button>
-        </div>
-      }
-    >
+    <>
       <div className="grid grid-cols-2 gap-2 pt-1" role="radiogroup">
         {OUTCOMES.map(({ key, Icon, tone }) => {
           const selected = choice === key;
@@ -229,8 +228,8 @@ function OutcomeSheet({
         <DayField
           className="mt-4 rounded-xl bg-muted/60 p-3"
           label={t("outcome.callAgainOn", "Call again on")}
-          value={again}
-          onChange={setAgain}
+          value={form.again}
+          onChange={form.setAgain}
         />
       ) : null}
       {choice === "fake" ? (
@@ -245,11 +244,115 @@ function OutcomeSheet({
       ) : null}
 
       <Textarea
-        value={note}
-        onChange={(e) => setNote(e.target.value)}
+        value={form.note}
+        onChange={(e) => form.setNote(e.target.value)}
         placeholder={t("outcome.notePlaceholder", "Add a note (optional)")}
         className="mt-4 min-h-20 bg-card"
       />
+      {canUseVoice ? (
+        <VoiceNoteButton leadId={lead.id} onResult={form.applyVoice} className="mt-3" />
+      ) : null}
+    </>
+  );
+}
+
+/** "Make a deal" can start from what the voice note heard. */
+function DraftLine({ draft }: { draft: DealDraft | null }) {
+  const { t } = useTranslation();
+  if (!draft || (!draft.title && !draft.value && !draft.task)) return null;
+  const bits = [draft.title, draft.value, draft.task].filter(Boolean).join(" · ");
+  return (
+    <p className="mt-3 rounded-lg bg-muted px-3 py-2.5 text-[13px] text-muted-foreground">
+      {t("voice.dealDraft", "From your voice note: {{bits}}", { bits })}
+    </p>
+  );
+}
+
+// ─── Outcome sheet ──────────────────────────────────────────────────────────
+
+function OutcomeSheet({
+  lead,
+  channel,
+  open,
+  onOpenChange,
+  onMakeDeal,
+}: {
+  lead: FlowLead | null;
+  channel: ContactChannel | null;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  onMakeDeal: (lead: FlowLead, prefill?: DealDraft) => void;
+}) {
+  const { t } = useTranslation();
+  // Fresh state on every open: the provider remounts this sheet (key) each
+  // time it opens, so nothing from the previous lead can flash.
+  const form = useOutcomeForm(lead);
+  const [reached, setReached] = useState(false);
+
+  if (!lead) return null;
+  const who = displayName(lead, t);
+
+  // Optimistic: the owner's answer is recorded the moment they tap Save —
+  // the sheet closes (or moves on to "What's next?") right away and a toast
+  // reports the result. A round trip to the server never blocks them.
+  const save = () => {
+    form.save((picked) => {
+      if (picked === "reached") setReached(true);
+      else onOpenChange(false);
+    });
+  };
+
+  if (reached) {
+    return (
+      <BottomSheet
+        open={open}
+        onOpenChange={onOpenChange}
+        title={t("outcome.reachedTitle", "Good. What's next with {{name}}?", { name: who })}
+        description={t("outcome.reachedBody", "Turn it into a deal so it gets a value and a next step — or just leave it for now.")}
+      >
+        <div className="grid gap-2 pt-1">
+          <Button
+            size="lg"
+            className="h-12 justify-start gap-3 text-[15px]"
+            onClick={() => {
+              onOpenChange(false);
+              onMakeDeal(lead, form.dealDraft ?? undefined);
+            }}
+          >
+            <Briefcase className="size-5" />
+            {t("makeDeal.cta", "Make a deal")}
+          </Button>
+          <Button variant="outline" size="lg" className="h-12 justify-start text-[15px]" onClick={() => onOpenChange(false)}>
+            {t("outcome.notNow", "Not now")}
+          </Button>
+        </div>
+        <DraftLine draft={form.dealDraft} />
+      </BottomSheet>
+    );
+  }
+
+  return (
+    <BottomSheet
+      open={open}
+      onOpenChange={onOpenChange}
+      title={t("outcome.title", "How did it go?")}
+      description={
+        channel
+          ? t(`outcome.sub.${channel}`, { name: who })
+          : t("outcome.subGeneric", "Record what happened with {{name}}.", { name: who })
+      }
+      footer={
+        <div className="flex items-center justify-between gap-2">
+          <Button variant="ghost" onClick={() => onOpenChange(false)}>
+            {t("outcome.later", "Later")}
+          </Button>
+          <Button disabled={!form.choice} onClick={save} className="min-w-28">
+            {t("outcome.save", "Save")}
+          </Button>
+        </div>
+      }
+    >
+      <OutcomeFields form={form} lead={lead} />
     </BottomSheet>
   );
 }
@@ -260,20 +363,23 @@ export function MakeDealSheet({
   lead,
   open,
   onOpenChange,
+  prefill,
 }: {
   lead: FlowLead | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  /** What a voice note suggested; the owner still reviews and taps Create. */
+  prefill?: DealDraft | null;
 }) {
   const { t } = useTranslation();
   const { currency } = useWorkspaceCurrency();
   const navigate = useNavigate();
   const mutation = useMakeDeal();
   // Remounted (key) on every open, so these start fresh for this lead.
-  const [title, setTitle] = useState(() => lead?.name || "");
-  const [value, setValue] = useState("");
-  const [task, setTask] = useState(() => t("makeDeal.defaultTask", "Send an offer"));
-  const [due, setDue] = useState(() => toDateInput(tomorrowNineIso()));
+  const [title, setTitle] = useState(() => prefill?.title || lead?.name || "");
+  const [value, setValue] = useState(() => prefill?.value ?? "");
+  const [task, setTask] = useState(() => prefill?.task || t("makeDeal.defaultTask", "Send an offer"));
+  const [due, setDue] = useState(() => prefill?.due || toDateInput(tomorrowNineIso()));
 
   if (!lead) return null;
 
@@ -348,12 +454,20 @@ export function MakeDealSheet({
 
 // ─── The flow: tap → attempt → come back → outcome ─────────────────────────
 
+export interface ContactOptions {
+  /**
+   * Log the attempt (and open the composer for in-app email) but never open
+   * the outcome sheet: the caller asks how it went itself (the call queue).
+   */
+  inline?: boolean;
+}
+
 interface LeadFlowApi {
   /** Call / WhatsApp / Email tapped: log the attempt, then ask how it went. */
-  contact: (lead: FlowLead, channel: ContactChannel) => void;
+  contact: (lead: FlowLead, channel: ContactChannel, opts?: ContactOptions) => void;
   /** Ask for an outcome without a tap (called from another phone, met in person). */
   recordOutcome: (lead: FlowLead) => void;
-  makeDeal: (lead: FlowLead) => void;
+  makeDeal: (lead: FlowLead, prefill?: DealDraft) => void;
   /**
    * Email opens our composer (a working mailbox is connected) instead of the
    * mail app. Callers pass it to ContactActions so the mailto: link is held back.
@@ -378,6 +492,7 @@ export function LeadFlowProvider({ children }: { children: React.ReactNode }) {
   const [channel, setChannel] = useState<ContactChannel | null>(null);
   const [outcomeOpen, setOutcomeOpen] = useState(false);
   const [dealLead, setDealLead] = useState<FlowLead | null>(null);
+  const [dealPrefill, setDealPrefill] = useState<DealDraft | null>(null);
   const [dealOpen, setDealOpen] = useState(false);
   // Bumped on every open: the sheets are keyed by it so they start fresh.
   const [outcomeSession, setOutcomeSession] = useState(0);
@@ -403,7 +518,8 @@ export function LeadFlowProvider({ children }: { children: React.ReactNode }) {
   }, [openOutcome]);
 
   const contact = useCallback<LeadFlowApi["contact"]>(
-    (l, ch) => {
+    (l, ch, opts) => {
+      const inline = !!opts?.inline;
       const email = l.email?.trim();
       if (ch === "email" && emailInApp && email) {
         // Sent from our composer: count the attempt only once it actually
@@ -424,11 +540,12 @@ export function LeadFlowProvider({ children }: { children: React.ReactNode }) {
           ],
           onSent: () => attempt.mutate({ leadId: l.id, channel: "email" }),
           // After the "Email sent" card is closed, never on top of it.
-          onDone: () => openOutcome(l, "email"),
+          onDone: inline ? undefined : () => openOutcome(l, "email"),
         });
         return;
       }
       attempt.mutate({ leadId: l.id, channel: ch });
+      if (inline) return;
       pending.current = { lead: l, channel: ch };
       // On a phone, the dialer / WhatsApp takes over the screen and the sheet
       // opens when the owner comes back (visibilitychange above). WhatsApp
@@ -460,8 +577,9 @@ export function LeadFlowProvider({ children }: { children: React.ReactNode }) {
     () => ({
       contact,
       recordOutcome: (l) => openOutcome(l, null),
-      makeDeal: (l) => {
+      makeDeal: (l, prefill) => {
         setDealLead(l);
+        setDealPrefill(prefill ?? null);
         setDealSession((n) => n + 1);
         setDealOpen(true);
       },
@@ -484,6 +602,7 @@ export function LeadFlowProvider({ children }: { children: React.ReactNode }) {
       <MakeDealSheet
         key={`deal-${dealSession}`}
         lead={dealLead}
+        prefill={dealPrefill}
         open={dealOpen}
         onOpenChange={setDealOpen}
       />

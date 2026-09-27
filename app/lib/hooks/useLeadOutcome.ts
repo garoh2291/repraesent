@@ -34,11 +34,15 @@ function forLead(root: string, leadId: string) {
   };
 }
 
+/** Lets a list watch outcome saves (e.g. Today's row exit) without owning the save. */
+export const LEAD_OUTCOME_MUTATION_KEY = ["lead-outcome"] as const;
+
 export function useLeadOutcomeMutation() {
   const invalidate = useInvalidateWork();
   const qc = useQueryClient();
   const { user } = useAuthContext();
   return useMutation({
+    mutationKey: LEAD_OUTCOME_MUTATION_KEY,
     mutationFn: (v: { leadId: string } & RecordOutcomeInput) => {
       const { leadId, ...input } = v;
       return recordLeadOutcome(leadId, input);

@@ -228,6 +228,12 @@ export function formatHistoryAction(
     return t("leads.detail.historyContactDeleted", {
       defaultValue: "Contact deleted",
     });
+  if (item.action === "photo_added")
+    return t("photos.history.added", { defaultValue: "Added a photo" });
+  if (item.action === "photo_removed")
+    return t("photos.history.removed", { defaultValue: "Removed a photo" });
+  if (item.action === "photo_restored")
+    return t("photos.history.restored", { defaultValue: "Put a photo back" });
   if (item.action === "note_created") return t("leads.detail.historyNoteAdded");
   if (item.action === "note_updated")
     return t("leads.detail.historyNoteEdited");
@@ -554,7 +560,7 @@ export function LeadDetailSheet({
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent
         side="right"
-        className="sm:max-w-[480px] flex flex-col overflow-hidden p-0 gap-0"
+        className="sm:max-w-[480px] flex flex-col overflow-hidden p-0 gap-0 max-sm:w-full max-sm:border-l-0 max-sm:pt-[env(safe-area-inset-top)]"
       >
         <SheetHeader className="px-5 py-4 border-b border-border shrink-0">
           <SheetTitle className="text-base font-semibold text-foreground">

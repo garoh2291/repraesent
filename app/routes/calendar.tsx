@@ -1,4 +1,5 @@
-import { useCallback, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useIsPhone } from "~/lib/hooks/use-is-phone";
 import { CalendarHubTabs } from "~/components/notebook/calendar-hub-tabs";
 import { Navigate } from "react-router";
 import { useTranslation } from "react-i18next";
@@ -181,7 +182,18 @@ export default function CalendarPage() {
   }, [accounts, baikalConfigs]);
 
   const [date, setDate] = useState(() => new Date());
-  const [view, setView] = useState<View>("week");
+  const [view, setViewState] = useState<View>("week");
+  // Phones open on the Day view (a week of 7 columns is unreadable at
+  // 375 px); the web keeps Week. A view the user picked always wins.
+  const isPhone = useIsPhone();
+  const viewPicked = useRef(false);
+  const setView = useCallback((v: View) => {
+    viewPicked.current = true;
+    setViewState(v);
+  }, []);
+  useEffect(() => {
+    if (isPhone && !viewPicked.current) setViewState("day");
+  }, [isPhone]);
   const [timezone, setTimezone] = useState<string>(initialTimezone);
 
   const handleTimezoneChange = useCallback((tz: string) => {

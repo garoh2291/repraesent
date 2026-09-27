@@ -1,6 +1,8 @@
 import { useState, useCallback, useRef, useEffect, useMemo } from "react";
 import { PaidChip } from "~/components/notebook/deal-paid";
 import { useStageLabel } from "~/lib/pipeline-stages/use-stage-label";
+import { toast } from "sonner";
+import { StagePickerSheet } from "~/components/notebook/stage-picker-sheet";
 import {
   DndContext,
   DragOverlay,
@@ -126,6 +128,10 @@ export function DealsPipelineKanban({
   const [justMovedId, setJustMovedId] = useState<string | null>(null);
   const landTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const undoRef = useRef<Array<{ dealId: string; prevStage: string }>>([]);
+  // Phones: the deal being moved through the "Move to…" sheet.
+  const [movingDeal, setMovingDeal] = useState<DealListItem | null>(null);
+  const sheetMoveRef = useRef<{ dealId: string; prevStage: string } | null>(null);
+  const stageLabel = useStageLabel();
 
   // Undo entries reference the columns of one board — a stale entry after a
   // pipeline switch would 400 (its stage key belongs to another pipeline).
@@ -223,8 +229,27 @@ export function DealsPipelineKanban({
       landTimerRef.current = setTimeout(() => setJustMovedId(null), 500);
 
       onStageChange(deal.id, targetStage);
+
+      // Moved from the phone's "Move to…" sheet: offer Undo (a drag has Cmd+Z).
+      const fromSheet = sheetMoveRef.current;
+      if (fromSheet && fromSheet.dealId === deal.id) {
+        sheetMoveRef.current = null;
+        const stageRow = byKey.get(targetStage);
+        toast.success(
+          t("mobile.stagePicker.moved", "Moved to {{stage}}", {
+            stage: stageRow ? stageLabel(stageRow) : targetStage,
+          }),
+          {
+            duration: 8000, // Undo needs time on a phone (5–8 s guidance).
+            action: {
+              label: t("common.undo", "Undo"),
+              onClick: () => onStageChange(deal.id, fromSheet.prevStage),
+            },
+          },
+        );
+      }
     },
-    [onStageChange],
+    [onStageChange, byKey, stageLabel, t],
   );
 
   // Leaving a won or lost stage clears the deal's outcome date, so it asks
@@ -313,6 +338,49 @@ export function DealsPipelineKanban({
           stages={stages}
           dealsByStage={byStage}
           onDealSelect={onDealSelect}
+          onMove={canEdit ? setMovingDeal : undefined}
+        />
+        <StagePickerSheet
+          open={!!movingDeal}
+          onOpenChange={(o) => !o && setMovingDeal(null)}
+          stages={stages.map((s) => ({
+            key: s.key,
+            label: stageLabel(s),
+            color: resolveStageColors(s).hex,
+            category: s.category,
+          }))}
+          current={movingDeal?.stage ?? null}
+          onPick={(key) => {
+            if (!movingDeal || movingDeal.stage === key) return;
+            sheetMoveRef.current = { dealId: movingDeal.id, prevStage: movingDeal.stage };
+            moveDealToStage(movingDeal, key);
+          }}
+          extra={
+            onMoveToPipeline && otherPipelines.length > 0 && movingDeal ? (
+              <div className="mt-4 border-t border-border pt-3">
+                <p className="px-1 pb-1.5 text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">
+                  {t("pipeline.contextMovePipeline", "Move to pipeline")}
+                </p>
+                <ul className="-mx-2 space-y-0.5">
+                  {otherPipelines.map((p) => (
+                    <li key={p.id}>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const id = movingDeal.id;
+                          setMovingDeal(null);
+                          onMoveToPipeline(id, p.id);
+                        }}
+                        className="press flex min-h-12 w-full items-center gap-3 rounded-lg px-3 text-left text-[15px] text-foreground hover:bg-accent/60"
+                      >
+                        <span className="min-w-0 flex-1 truncate">{p.name}</span>
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ) : null
+          }
         />
       </div>
 
@@ -588,10 +656,12 @@ function DealsMobileSchedule({
   stages,
   dealsByStage,
   onDealSelect,
+  onMove,
 }: {
   stages: PipelineStage[];
   dealsByStage: Record<string, DealListItem[]>;
   onDealSelect: (id: string) => void;
+  onMove?: (deal: DealListItem) => void;
 }) {
   const { t } = useTranslation();
   const stageLabel = useStageLabel();
@@ -642,13 +712,14 @@ function DealsMobileSchedule({
                 </p>
               </div>
             ) : (
-              <div className="px-3 pb-3 space-y-1">
+              <div className="px-3 pb-3 space-y-2">
                 {deals.map((deal) => (
                   <DealScheduleRow
                     key={deal.id}
                     deal={deal}
                     colorClass={colorClass}
                     onSelect={() => onDealSelect(deal.id)}
+                    onMove={onMove ? () => onMove(deal) : undefined}
                   />
                 ))}
               </div>
@@ -664,11 +735,14 @@ function DealScheduleRow({
   deal,
   colorClass,
   onSelect,
+  onMove,
 }: {
   deal: DealListItem;
   colorClass: string;
   onSelect: () => void;
+  onMove?: () => void;
 }) {
+  const { t } = useTranslation();
   const title = cardTitle(deal);
   const sub = deal.contact_full_name?.trim();
   const showSub = !!(sub && deal.title?.trim());
@@ -681,12 +755,13 @@ function DealScheduleRow({
   );
 
   return (
+    <div className="rounded-xl border border-border bg-card shadow-xs transition-colors hover:bg-muted/40">
     <button
       type="button"
       onClick={onSelect}
       className={cn(
-        "flex w-full items-start gap-3 rounded-lg px-3 py-2.5 text-left transition-colors",
-        "hover:bg-muted/60 active:bg-muted",
+        "press flex w-full items-start gap-3 rounded-lg px-3 py-2.5 text-left transition-colors",
+        "active:bg-muted",
       )}
     >
       <div className={cn("mt-1 h-4 w-0.5 rounded-full shrink-0", colorClass)} />
@@ -738,6 +813,19 @@ function DealScheduleRow({
         />
       ) : null}
     </button>
+    {onMove ? (
+      <div className="flex justify-end px-3 pb-2.5">
+        <button
+          type="button"
+          onClick={onMove}
+          className="press inline-flex h-11 items-center gap-1.5 rounded-lg border border-border bg-card px-3 text-[13px] font-medium text-foreground"
+        >
+          <ArrowRightLeft className="size-3.5" aria-hidden />
+          {t("mobile.stagePicker.moveTo", "Move to…")}
+        </button>
+      </div>
+    ) : null}
+    </div>
   );
 }
 

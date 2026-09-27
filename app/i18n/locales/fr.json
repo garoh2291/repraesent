@@ -3604,7 +3604,12 @@
     "avatarUpload": "Téléverser la photo du contact",
     "avatarRemoveWarning": "La photo du contact est supprimée définitivement et les initiales sont affichées à la place.",
     "historyAvatarUpdated": "Photo du contact mise à jour",
-    "historyAvatarRemoved": "Photo du contact supprimée"
+    "historyAvatarRemoved": "Photo du contact supprimée",
+    "newMenu": {
+      "fromPhone": "Depuis votre téléphone",
+      "typeIn": "Saisir à la main",
+      "importLabel": "Importer un fichier"
+    }
   },
   "leadEmails": {
     "emptyTitle": "Aucun e-mail journalisé pour le moment",
@@ -9910,7 +9915,8 @@
         "titleComputer": "Les alertes sont bloquées dans ce navigateur",
         "bodyComputer": "Vous pouvez les autoriser à nouveau dans votre navigateur :"
       },
-      "failedDevice": "Ce téléphone n'a pas accepté les alertes. Fermez complètement re:praesent, rouvrez-le depuis l'écran d'accueil et réessayez."
+      "failedDevice": "Ce téléphone n'a pas accepté les alertes. Fermez complètement re:praesent, rouvrez-le depuis l'écran d'accueil et réessayez.",
+      "notReady": "Ce téléphone n'a pas pu activer les alertes. Fermez complètement re:praesent, rouvrez-le depuis l'écran d'accueil et réessayez."
     },
     "reenable": {
       "ios": {
@@ -9930,6 +9936,144 @@
       "title": "Nouvelle demande : Claire Martin",
       "body": "Via le formulaire de votre site · Touchez pour rappeler",
       "when": "maintenant"
+    }
+  },
+  "mobile": {
+    "more": "Plus",
+    "today": {
+      "startCalls": "Lancer les appels ({{count}})"
+    },
+    "stagePicker": {
+      "title": "Déplacer vers…",
+      "moveTo": "Déplacer…",
+      "moved": "Déplacé vers {{stage}}"
+    },
+    "people": {
+      "earned": "Gagné : {{value}}"
+    },
+    "deal": {
+      "stageChip": "Étape :",
+      "closeSummary": "Clôture : {{date}}",
+      "photos": "Photos"
+    }
+  },
+  "calls": {
+    "metaTitle": "Appels",
+    "backToToday": "Aujourd'hui",
+    "backToTodayButton": "Retour à Aujourd'hui",
+    "progress": "{{n}} sur {{total}}",
+    "emptyTitle": "Personne n'attend d'appel",
+    "emptyBody": "Les nouvelles demandes et les rappels apparaissent ici. Rien à faire pour l'instant.",
+    "lastNote": "Dernière note",
+    "noNote": "Pas encore de note.",
+    "noChannel": "Aucun téléphone ni e-mail enregistré. Ouvrez la demande pour en ajouter un.",
+    "record": "Comment ça s'est passé ?",
+    "skip": "Passer",
+    "swipeHint": "Balayez vers la gauche pour passer",
+    "later": "Plus tard",
+    "saveNext": "Enregistrer · suivant",
+    "notNowNext": "Pas maintenant · suivant",
+    "callName": "Appeler {{name}}",
+    "done": {
+      "title": "Terminé",
+      "reached": "{{count}} joint(s)",
+      "noAnswer": "{{count}} sans réponse",
+      "notInterested": "{{count}} pas intéressé(s)",
+      "fake": "{{count}} spam",
+      "skipped": "{{count}} passé(s)",
+      "callBacksTomorrow": "Les rappels sont prévus pour demain.",
+      "callBacks": "Les rappels sont prévus.",
+      "skippedStay": "Les personnes passées restent dans Aujourd'hui.",
+      "moreWaiting_one": "{{count}} autre personne attend encore dans Aujourd'hui.",
+      "moreWaiting_other": "{{count}} autres personnes attendent encore dans Aujourd'hui."
+    }
+  },
+  "voice": {
+    "start": "Dites comment ça s'est passé",
+    "stop": "Arrêter l'enregistrement",
+    "listening": "J'écoute…",
+    "writing": "Retranscription…",
+    "hint": "Touchez ou maintenez pour parler. Une minute maximum.",
+    "tapToStop": "Touchez pour arrêter — ou relâchez si vous maintenez",
+    "nothingSaved": "Rien n'est enregistré tant que vous n'avez pas touché Enregistrer.",
+    "dealDraft": "D'après votre note vocale : {{bits}}",
+    "errors": {
+      "blocked": "Le micro est bloqué. Autorisez-le pour ce site dans les réglages du navigateur, puis touchez à nouveau.",
+      "noMic": "Aucun micro trouvé sur cet appareil.",
+      "cap": "Les notes vocales sont épuisées pour aujourd'hui. Tapez la note — c'est de retour demain.",
+      "unclear": "Nous n'avons rien entendu de clair. Réessayez un peu plus près, ou tapez-le.",
+      "tooLong": "C'était trop long. Restez sous une minute, ou tapez-le.",
+      "notReady": "Les notes vocales ne sont pas encore activées. Tapez la note pour l'instant.",
+      "generic": "Ça n'a pas fonctionné. Réessayez, ou tapez la note.",
+      "short": "Trop court — touchez et dites comment ça s'est passé."
+    }
+  },
+  "photos": {
+    "title": "Photos",
+    "take": "Prendre une photo",
+    "gallery": "Depuis la galerie",
+    "add": "Ajouter des photos",
+    "empty": "Pas encore de photo. Ajoutez-en une sur place ou depuis la galerie — seule votre équipe les voit.",
+    "emptyViewer": "Pas encore de photo.",
+    "open": "Ouvrir la photo {{n}}",
+    "uploading": "Envoi…",
+    "position": "{{n}} sur {{total}}",
+    "delete": "Supprimer la photo",
+    "deleted": "Photo supprimée",
+    "prev": "Photo précédente",
+    "next": "Photo suivante",
+    "viewerHint": "Balayez ou utilisez les flèches pour voir les autres photos.",
+    "captionPlaceholder": "Ajouter une légende",
+    "captionSaved": "Légende enregistrée",
+    "addedBy": "{{name}} · {{when}}",
+    "errors": {
+      "tooBig": "Cette photo dépasse 10 Mo. Choisissez-en une plus petite.",
+      "type": "Ce fichier n'est pas une photo utilisable (JPEG, PNG, GIF ou WebP).",
+      "upload": "La photo n'a pas été envoyée. Réessayez.",
+      "caption": "La légende n'a pas été enregistrée. Réessayez.",
+      "delete": "La photo n'a pas été supprimée. Réessayez.",
+      "network": "La photo n'a pas pu être envoyée depuis cette adresse. Réessayez, ou ouvrez l'application à son adresse habituelle."
+    },
+    "history": {
+      "added": "A ajouté une photo",
+      "removed": "A retiré une photo",
+      "restored": "A remis une photo"
+    }
+  },
+  "phoneContacts": {
+    "add": "Ajouter depuis le téléphone",
+    "back": "Plutôt saisir à la main",
+    "ios": {
+      "title": "Ajouter depuis les contacts du téléphone",
+      "body": "Deux étapes dans l'app Contacts :",
+      "step1": "Dans Contacts, ouvrez la personne et touchez « Partager la fiche ».",
+      "step2": "Touchez « Enregistrer dans Fichiers », puis revenez et choisissez le fichier.",
+      "choose": "Choisir le fichier"
+    },
+    "confirmTitle": "Ajouter {{count}} personnes ?",
+    "confirmCta": "Ajouter {{count}} personnes",
+    "resultTitle": "{{count}} ajouté(s)",
+    "already": "Déjà client : {{name}}",
+    "open": "Ouvrir",
+    "skipped_one": "{{count}} figurait déjà parmi vos clients.",
+    "skipped_other": "{{count}} figuraient déjà parmi vos clients.",
+    "failed_one": "{{count}} n'a pas pu être ajouté — ajoutez-le à la main.",
+    "failed_other": "{{count}} n'ont pas pu être ajoutés — ajoutez-les à la main.",
+    "done": "Terminé",
+    "errors": {
+      "picker": "Votre téléphone n'a pas partagé les contacts. Réessayez.",
+      "empty": "Aucun contact dans ce fichier. Partagez une fiche contact (.vcf) et choisissez-la.",
+      "file": "Ce fichier n'a pas pu être lu. Choisissez une fiche contact (.vcf).",
+      "save": "Ils n'ont pas été ajoutés. Réessayez."
+    }
+  },
+  "notes": {
+    "add": {
+      "type": "Écrire une note",
+      "speak": "La dicter",
+      "speakStart": "Touchez et dictez votre note",
+      "speakHint": "Touchez à nouveau quand vous avez fini. Vous vérifiez le texte avant l'enregistrement.",
+      "typeInstead": "Plutôt l'écrire"
     }
   }
 }

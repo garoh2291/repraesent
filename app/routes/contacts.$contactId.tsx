@@ -16,6 +16,7 @@ import { useCanEditLeads } from "~/lib/hooks/useCanEditLeads";
 import { ContactHero } from "~/components/organism/contact-detail/contact-hero";
 import { ContactInfoCard } from "~/components/organism/contact-detail/contact-info-card";
 import { ContactDealsSection } from "~/components/organism/contact-deals-section";
+import { PhotoStrip } from "~/components/notebook/photo-strip";
 import { Button } from "~/components/ui/button";
 import {
   AlertDialog,
@@ -268,6 +269,10 @@ export default function ContactDetailPage() {
             canEdit={canEdit}
             onInvalidate={invalidateContact}
           />
+          {/* Team-only photos, right after the info card. */}
+          {resolvedContactId ? (
+            <PhotoStrip entity="contacts" entityId={resolvedContactId} canEdit={canEdit} />
+          ) : null}
           <ActivityPanel
             variant="contact"
             leadId={taskLeadId}

@@ -255,7 +255,7 @@ function CampaignRow({
           type="button"
           onClick={onDelete}
           aria-label={t("common.delete", { defaultValue: "Delete" })}
-          className="rounded p-1.5 text-muted-foreground opacity-0 transition-opacity hover:bg-destructive/10 hover:text-destructive group-hover:opacity-100"
+          className="rounded p-1.5 text-muted-foreground opacity-0 transition-opacity hover:bg-destructive/10 hover:text-destructive group-hover:opacity-100 pointer-coarse:p-[13px] pointer-coarse:opacity-100"
         >
           <Trash2 className="h-3.5 w-3.5" />
         </button>

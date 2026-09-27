@@ -12,6 +12,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   ArrowLeft,
   CalendarClock,
+  ChevronDown,
   ExternalLink,
   Send,
   Tag,
@@ -88,6 +89,9 @@ import { NextStepChip } from "~/components/notebook/next-step-chip";
 import { useDealFlow } from "~/components/notebook/deal-flow";
 import { isOpenDeal } from "~/lib/deals/is-open";
 import { DealPaid } from "~/components/notebook/deal-paid";
+import { PhotoStrip } from "~/components/notebook/photo-strip";
+import { StagePickerSheet } from "~/components/notebook/stage-picker-sheet";
+import { DealActionBar } from "~/components/notebook/deal-action-bar";
 import {
   formatCurrency,
   formatDate,
@@ -154,6 +158,9 @@ export default function PipelineDealDetailPage() {
   const [stage, setStage] = useState<string>("new");
   const [expectedClose, setExpectedClose] = useState("");
   const [deleteOpen, setDeleteOpen] = useState(false);
+  // Phones: the stage chip's sheet, and the collapsed "Deal details" card.
+  const [stageSheetOpen, setStageSheetOpen] = useState(false);
+  const [detailsOpen, setDetailsOpen] = useState(false);
 
   // The form values as last persisted (server load or successful autosave).
   // Autosave compares the live fields against this snapshot to decide whether
@@ -572,8 +579,15 @@ export default function PipelineDealDetailPage() {
     ? labelOfStage(stageRow)
     : resolveStageLabelByKey("deal", stage, t);
 
+  // The deal contact's phone for the phone action bar: primary first.
+  const barPhone =
+    dealContacts.find((c) => c.is_primary && c.primary_phone?.trim())?.primary_phone ??
+    dealContacts.find((c) => c.primary_phone?.trim())?.primary_phone ??
+    null;
+  const closeLabel = expectedClose ? formatDate(new Date(expectedClose), "PP") : "—";
+
   return (
-    <div className="p-4 sm:p-6 space-y-4 sm:space-y-6 app-fade-in">
+    <div className="p-4 sm:p-6 space-y-4 sm:space-y-6 app-fade-in max-sm:pb-24">
       <div className="flex items-center justify-between gap-2">
         <Link
           to="/pipeline"
@@ -701,7 +715,24 @@ export default function PipelineDealDetailPage() {
                 </Select>
               </div>
             ) : null}
-            <div className="flex w-full overflow-hidden rounded-xl border border-border bg-background/40">
+            {/* Phones: one chip instead of the stepper; tapping opens the
+                stage sheet (same guard, same save). */}
+            <button
+              type="button"
+              disabled={!canEdit || stageMutation.isPending}
+              onClick={() => setStageSheetOpen(true)}
+              className="press flex min-h-11 w-full items-center gap-2 rounded-xl border border-border bg-background/40 px-3.5 text-left text-[14px] sm:hidden"
+            >
+              <span className={cn("inline-block size-2.5 shrink-0 rounded-full", stageFacets.dot)} aria-hidden />
+              <span className="min-w-0 flex-1 truncate">
+                <span className="text-muted-foreground">
+                  {t("mobile.deal.stageChip", "Stage:")}{" "}
+                </span>
+                <span className="font-semibold text-foreground">{stageLabel}</span>
+              </span>
+              {canEdit ? <ChevronDown className="size-4 shrink-0 text-muted-foreground" aria-hidden /> : null}
+            </button>
+            <div className="flex w-full overflow-hidden rounded-xl border border-border bg-background/40 max-sm:hidden">
               {dealStages.map((stageOption, idx) => {
                 const active = stageOption.key === stage;
                 const isLast = idx === dealStages.length - 1;
@@ -770,11 +801,46 @@ export default function PipelineDealDetailPage() {
         </div>
       </section>
 
+      {/* Team-only photos (never on the tracking page). */}
+      <div id="deal-photos" className="scroll-mt-4 empty:hidden">
+        <PhotoStrip entity="deals" entityId={dealId} canEdit={canEdit} />
+      </div>
+
+      {/* Phones reorder the cards (display: contents flattens both columns
+          into this one-column grid): activity, contacts, then the rest. From
+          sm up the max-sm: classes are inert and the layout is unchanged. */}
       <div className="grid grid-cols-1 gap-4 sm:gap-6 lg:grid-cols-5">
         {/* LEFT — main */}
-        <div className="space-y-4 sm:space-y-6 lg:col-span-3">
+        <div className="space-y-4 sm:space-y-6 lg:col-span-3 max-sm:contents max-sm:space-y-0">
           <section className="app-fade-up app-fade-up-d1 rounded-2xl border border-border bg-card shadow-(--shadow)">
-            <header className="border-b border-border px-4 py-3.5 sm:px-5">
+            {/* Phones: a one-line summary that opens the form. */}
+            <button
+              type="button"
+              onClick={() => setDetailsOpen((v) => !v)}
+              aria-expanded={detailsOpen}
+              className="flex min-h-12 w-full items-center gap-3 px-4 py-3 text-left sm:hidden"
+            >
+              <span className="min-w-0 flex-1">
+                <span className="block text-sm font-semibold tracking-tight text-foreground">
+                  {t("pipeline.dealDetails", { defaultValue: "Deal details" })}
+                </span>
+                <span className="num mt-0.5 block truncate text-[12.5px] text-muted-foreground">
+                  {[
+                    valueDisplay,
+                    assigneeName ?? t("contacts.unassigned", { defaultValue: "Unassigned" }),
+                    t("mobile.deal.closeSummary", "Close: {{date}}", { date: closeLabel }),
+                  ].join(" · ")}
+                </span>
+              </span>
+              <ChevronDown
+                className={cn(
+                  "size-4 shrink-0 text-muted-foreground transition-transform duration-200",
+                  detailsOpen && "rotate-180",
+                )}
+                aria-hidden
+              />
+            </button>
+            <header className="border-b border-border px-4 py-3.5 sm:px-5 max-sm:hidden">
               <h2 className="text-sm font-semibold tracking-tight text-foreground">
                 {t("pipeline.dealDetails", { defaultValue: "Deal details" })}
               </h2>
@@ -786,7 +852,7 @@ export default function PipelineDealDetailPage() {
               </p>
             </header>
 
-            <div className="p-4 sm:p-5">
+            <div className={cn("p-4 sm:p-5", detailsOpen ? "max-sm:border-t max-sm:border-border" : "max-sm:hidden")}>
               <div className="grid gap-4 sm:grid-cols-2">
                 <div className="space-y-1.5 sm:col-span-2">
                   <Label htmlFor="deal-detail-title">
@@ -903,6 +969,7 @@ export default function PipelineDealDetailPage() {
             </div>
           </section>
 
+          <div className="max-sm:-order-2">
           <ActivityPanel
             variant="deal"
             dealId={dealId}
@@ -916,20 +983,23 @@ export default function PipelineDealDetailPage() {
             history={dealHistoryQuery.data ?? []}
             historyLoading={dealHistoryQuery.isLoading}
           />
+          </div>
         </div>
 
         {/* RIGHT — sidebar */}
-        <div className="space-y-4 sm:space-y-6 lg:col-span-2">
-          <div className="space-y-4 sm:space-y-6">
+        <div className="space-y-4 sm:space-y-6 lg:col-span-2 max-sm:contents max-sm:space-y-0">
+          <div className="space-y-4 sm:space-y-6 max-sm:contents max-sm:space-y-0">
             {/* Root workspace: what the customer told us during onboarding. */}
             {currentWorkspace?.is_root ? <OnboardingProfilePanel dealId={dealId} /> : null}
 
             {/* Contacts */}
+            <div className="max-sm:-order-1">
             <DealContactSection
               dealId={dealId}
               contacts={dealContacts}
               canEdit={canEdit}
             />
+            </div>
 
             {/* Stripe customer — who the deal is invoiced to. */}
             <DealCustomerSection
@@ -1060,7 +1130,7 @@ export default function PipelineDealDetailPage() {
       </div>
 
       {canEdit ? (
-        <div className="flex justify-end">
+        <div className="flex justify-end max-sm:hidden">
           <Button
             type="button"
             variant="ghost"
@@ -1075,6 +1145,36 @@ export default function PipelineDealDetailPage() {
       ) : null}
 
       {guardModal}
+
+      <StagePickerSheet
+        open={stageSheetOpen}
+        onOpenChange={setStageSheetOpen}
+        stages={dealStages.map((s) => ({
+          key: s.key,
+          label: labelOfStage(s),
+          color: resolveStageColors(s).hex,
+          category: s.category,
+        }))}
+        current={stage}
+        onPick={(key) => requestStageChange(guardableDeal, key)}
+      />
+
+      <DealActionBar
+        phone={barPhone}
+        onNextStep={
+          canEdit && dealIsOpen
+            ? () => dealFlow.whatsNext({ id: dealId!, title: displayTitle }, "none")
+            : undefined
+        }
+        onEmail={canEdit && composeRecipients.length > 0 ? openComposer : undefined}
+        onPhotos={() =>
+          document.getElementById("deal-photos")?.scrollIntoView({
+            behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth",
+            block: "start",
+          })
+        }
+        onDelete={canEdit ? () => setDeleteOpen(true) : undefined}
+      />
 
       <AlertDialog open={deleteOpen} onOpenChange={setDeleteOpen}>
         <AlertDialogContent>

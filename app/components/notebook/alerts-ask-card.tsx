@@ -6,7 +6,7 @@ import { BellRing, BellOff, Check, Loader2, X } from "lucide-react";
 import { cn } from "~/lib/utils";
 import { Panel } from "~/components/notebook/panel";
 import { Button } from "~/components/ui/button";
-import { enableAlerts, isAlertsOffHere, usePwa, type DevicePlatform } from "~/lib/pwa/use-pwa";
+import { enableAlerts, isAlertsOffHere, usePwa, withAlertsTimeout, type DevicePlatform } from "~/lib/pwa/use-pwa";
 import { ALERTS_ASK_KEY, isSnoozed, snooze } from "~/lib/pwa/snooze";
 import { usePhoneAlertsConfig, useThisDeviceEndpoint } from "~/lib/hooks/use-phone-alerts";
 
@@ -97,7 +97,7 @@ export function AlertsAskCard() {
   const turnOn = async () => {
     setPhase("working");
     try {
-      const result = await enableAlerts(publicKey);
+      const result = await withAlertsTimeout(enableAlerts(publicKey), 60_000);
       if (result === "on") {
         setPhase("on");
         recheck();
@@ -110,8 +110,16 @@ export function AlertsAskCard() {
       console.error("[phone-alerts] turning on failed", err);
       // The phone itself refused (permission granted, subscription not): say so,
       // don't blame the connection.
-      const refused = (err as DOMException)?.name === "NotAllowedError";
-      toast.error(t(refused ? "pwa.alertsAsk.failedDevice" : "pwa.alertsAsk.failed"), {
+      // The phone itself refused (permission granted, subscription not), or it
+      // never got its background helper: say so, don't blame the connection.
+      const name = (err as Error)?.name;
+      const key =
+        name === "NotAllowedError"
+          ? "pwa.alertsAsk.failedDevice"
+          : name === "AlertsNotReadyError"
+            ? "pwa.alertsAsk.notReady"
+            : "pwa.alertsAsk.failed";
+      toast.error(t(key), {
         // Development only: the real reason, to tell a browser refusal from a server error.
         description: import.meta.env.DEV ? String(err) : undefined,
       });

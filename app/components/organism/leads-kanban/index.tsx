@@ -18,7 +18,10 @@ import {
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { useTranslation } from "react-i18next";
-import { CalendarClock, ChevronDown, Loader2 } from "lucide-react";
+import { toast } from "sonner";
+import { ArrowRightLeft, CalendarClock, ChevronDown, Loader2 } from "lucide-react";
+import { ContactActions } from "~/components/notebook/contact-actions";
+import { StagePickerSheet } from "~/components/notebook/stage-picker-sheet";
 import { formatDate, formatDateIntl } from "~/lib/utils/format";
 import {
   isAppointmentPast,
@@ -428,6 +431,48 @@ export function LeadsKanban({
     [resolveDrop, allLoadedLeads, byKey, commitMove, requestHideGuarded],
   );
 
+  // Phones: "Move to…" instead of a drag (MOBILE_PACKAGE_PLAN.md B1/B4). The
+  // same guards as a drop — won asks first, hidden offers to block — then the
+  // same move; a plain move gets an Undo toast (hidden already has its own).
+  const [movingLead, setMovingLead] = useState<Lead | null>(null);
+  const moveFromSheet = useCallback(
+    (lead: Lead, status: string) => {
+      if (lead.status === status) return;
+      const targetStage = byKey.get(status);
+      if (
+        targetStage?.category === "won" &&
+        byKey.get(lead.status)?.category !== "won"
+      ) {
+        setSuccessConfirm({ lead, targetStage, phase: "confirm" });
+        return;
+      }
+      const previousStatus = lead.status;
+      requestHideGuarded(lead, status, () => {
+        const res = commitMove(lead, { status, insertionIndex: 0 });
+        if (targetStage?.category !== "hidden") {
+          void Promise.resolve(res)
+            .then(() => {
+              toast.success(
+                t("mobile.stagePicker.moved", "Moved to {{stage}}", {
+                  stage: targetStage ? resolveStageLabel(targetStage, t) : status,
+                }),
+                {
+                  duration: 8000, // Undo needs time on a phone (5–8 s guidance).
+                  action: {
+                    label: t("common.undo", "Undo"),
+                    onClick: () => void onStatusChange(lead.id, previousStatus),
+                  },
+                },
+              );
+            })
+            .catch(() => undefined);
+        }
+        return res;
+      });
+    },
+    [byKey, commitMove, requestHideGuarded, onStatusChange, t],
+  );
+
   const handleConfirmSuccess = useCallback(async () => {
     setSuccessConfirm((curr) => (curr ? { ...curr, phase: "saving" } : curr));
     const lead = successConfirm?.lead;
@@ -507,6 +552,19 @@ export function LeadsKanban({
           filters={filters}
           sortMode={sortMode}
           onLeadSelect={onLeadSelect}
+          onMove={canEdit ? setMovingLead : undefined}
+        />
+        <StagePickerSheet
+          open={!!movingLead}
+          onOpenChange={(o) => !o && setMovingLead(null)}
+          stages={stages.map((s) => ({
+            key: s.key,
+            label: resolveStageLabel(s, t),
+            color: resolveStageColors(s).hex,
+            category: s.category,
+          }))}
+          current={movingLead?.status ?? null}
+          onPick={(key) => movingLead && moveFromSheet(movingLead, key)}
         />
       </div>
 
@@ -856,6 +914,7 @@ function LeadsMobileSchedule({
   filters,
   sortMode,
   onLeadSelect,
+  onMove,
 }: {
   stages: PipelineStage[];
   leadsByStatus: Record<string, Lead[]>;
@@ -863,6 +922,7 @@ function LeadsMobileSchedule({
   filters: KanbanFilters;
   sortMode: LeadSortMode;
   onLeadSelect: (id: string) => void;
+  onMove?: (lead: Lead) => void;
 }) {
   return (
     <div className="space-y-2 pt-4 pb-6">
@@ -875,6 +935,7 @@ function LeadsMobileSchedule({
           filters={filters}
           sortMode={sortMode}
           onLeadSelect={onLeadSelect}
+          onMove={onMove}
         />
       ))}
     </div>
@@ -888,6 +949,7 @@ function MobileStageSection({
   filters,
   sortMode,
   onLeadSelect,
+  onMove,
 }: {
   stage: PipelineStage;
   leads: Lead[];
@@ -895,6 +957,7 @@ function MobileStageSection({
   filters: KanbanFilters;
   sortMode: LeadSortMode;
   onLeadSelect: (id: string) => void;
+  onMove?: (lead: Lead) => void;
 }) {
   const { t } = useTranslation();
   // Shares the cache entry with the desktop column (same query key), so this
@@ -932,13 +995,14 @@ function MobileStageSection({
           <p className="text-xs text-muted-foreground/50 text-center py-3">—</p>
         </div>
       ) : (
-        <div className="px-3 pb-3 space-y-1">
+        <div className="px-3 pb-3 space-y-2">
           {leads.map((lead) => (
             <LeadScheduleRow
               key={lead.id}
               lead={lead}
               colorClass={colorClass}
               onSelect={() => onLeadSelect(lead.id)}
+              onMove={onMove ? () => onMove(lead) : undefined}
             />
           ))}
           {q.hasNextPage && (
@@ -970,11 +1034,15 @@ function LeadScheduleRow({
   lead,
   colorClass,
   onSelect,
+  onMove,
 }: {
   lead: Lead;
   colorClass: string;
   onSelect: () => void;
+  onMove?: () => void;
 }) {
+  const { t } = useTranslation();
+  const leadFlow = useLeadFlow();
   const displayName = lead.full_name || lead.email || "—";
   const subtitle = lead.email || lead.phone || null;
   const formName = lead.form_name
@@ -982,13 +1050,17 @@ function LeadScheduleRow({
     : null;
   const appointment = nextLeadAppointment(lead);
 
+  const hasChannel = !!(lead.phone?.trim() || lead.email?.trim());
   return (
+    // A card per inquiry, like People: border + soft shadow so each one reads
+    // as its own thing on a phone (this list only renders below sm).
+    <div className="rounded-xl border border-border bg-card shadow-xs transition-colors hover:bg-muted/40">
     <button
       type="button"
       onClick={onSelect}
       className={cn(
-        "flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left transition-colors",
-        "hover:bg-muted/60 active:bg-muted",
+        "press flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left transition-colors",
+        "active:bg-muted",
       )}
     >
       <div className={cn("h-8 w-0.5 rounded-full shrink-0", colorClass)} />
@@ -1045,6 +1117,40 @@ function LeadScheduleRow({
         />
       )}
     </button>
+    {hasChannel || onMove ? (
+      // Act from the list: call / WhatsApp / email feed the outcome flow,
+      // "Move to…" is the one-tap alternative to dragging a card.
+      <div className="flex items-center gap-1.5 px-3 pb-2.5 pl-[1.4rem]">
+        <ContactActions
+          iconOnly
+          target={{ phone: lead.phone, email: lead.email }}
+          emailInApp={leadFlow.emailInApp}
+          onContact={(ch) =>
+            leadFlow.contact(
+              {
+                id: lead.id,
+                name: lead.full_name || [lead.first_name, lead.last_name].filter(Boolean).join(" ") || lead.email || "",
+                status: lead.status,
+                phone: lead.phone,
+                email: lead.email,
+              },
+              ch,
+            )
+          }
+        />
+        {onMove ? (
+          <button
+            type="button"
+            onClick={onMove}
+            className="press ml-auto inline-flex h-11 items-center gap-1.5 rounded-lg border border-border bg-card px-3 text-[13px] font-medium text-foreground"
+          >
+            <ArrowRightLeft className="size-3.5" aria-hidden />
+            {t("mobile.stagePicker.moveTo", "Move to…")}
+          </button>
+        ) : null}
+      </div>
+    ) : null}
+    </div>
   );
 }
 
