@@ -211,7 +211,7 @@ export function WebAnalyticsSection() {
                 key={p.value}
                 onClick={() => setPeriod(p.value)}
                 className={cn(
-                  "rounded-lg px-1.5 sm:px-2.5 py-1 sm:py-1.5 text-[10px] sm:text-[11px] font-medium transition-all duration-150 whitespace-nowrap shrink-0",
+                  "rounded-lg px-1.5 sm:px-2.5 py-1 sm:py-1.5 text-[10px] sm:text-[11px] font-medium transition-all duration-150 whitespace-nowrap shrink-0 max-sm:min-h-10 max-sm:px-3 max-sm:text-[13px]",
                   period === p.value
                     ? "bg-card text-foreground shadow-sm"
                     : "text-muted-foreground hover:text-foreground"
@@ -224,7 +224,7 @@ export function WebAnalyticsSection() {
 
           <Link
             to="/analytics"
-            className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-muted/50 px-3 py-1.5 text-xs font-medium text-foreground hover:bg-muted transition-colors shrink-0"
+            className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-muted/50 px-3 py-1.5 text-xs font-medium text-foreground hover:bg-muted transition-colors shrink-0 max-sm:min-h-11 max-sm:text-[13px]"
           >
             {t("home.viewFullAnalytics")}
             <ArrowRight className="h-3 w-3" />

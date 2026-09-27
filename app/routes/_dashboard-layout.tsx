@@ -29,6 +29,13 @@ import { ReviewAskProvider } from "~/components/notebook/review-ask";
 import { QuickCreateProvider } from "~/components/notebook/quick-create";
 import { useWorkspaceFromParam } from "~/lib/hooks/use-workspace-from-param";
 import { refreshThisDeviceSubscription } from "~/lib/pwa/use-pwa";
+import { useIsPhone } from "~/lib/hooks/use-is-phone";
+import { useResuming } from "~/lib/nav/resume-store";
+import { useDelayedFlag, usePendingPathname } from "~/lib/nav/use-pending-nav";
+import { PageSkeleton } from "~/components/notebook/page-skeleton";
+import { PageErrorBoundary } from "~/components/notebook/page-error-boundary";
+import { DailyPrefetch } from "~/components/notebook/daily-prefetch";
+import { SearchHint } from "~/components/notebook/search-hint";
 export default function DashboardLayout() {
   const { user, currentWorkspace } = useAuthContext();
   const location = useLocation();
@@ -100,14 +107,27 @@ export default function DashboardLayout() {
   }, [user?.id]);
 
   const sections = useNavSections();
-  const section = activeSection(sections, location.pathname);
+  // Where the tap is going: tabs light up at once; if the page's code is
+  // still on its way (slow connection), show its frame straight away.
+  const { pathname: shownPath, pending } = usePendingPathname();
+  // The loading frame and line are for phones (slow networks, thumbs that
+  // tap again); on the web the old page simply stays until the new one is in.
+  const isPhone = useIsPhone();
+  const showPending = useDelayedFlag(!!pending && isPhone, 150);
+  // Back after a long break (phones): "updating" until fresh data is in.
+  const resuming = useResuming();
+  const section = activeSection(sections, shownPath);
+  useEffect(() => {
+    // The loading frame is the new page: start it at the top.
+    if (showPending) document.querySelector("[data-app-shell] main")?.scrollTo({ top: 0 });
+  }, [showPending]);
 
   return (
     <ReviewAskProvider>
     <LeadFlowProvider>
     <DealFlowProvider>
     <QuickCreateProvider>
-    <div className="flex h-dvh overflow-hidden bg-background">
+    <div data-app-shell="" className="flex h-dvh overflow-hidden bg-background">
       <PilotRouteGate />
       {/* Desktop sidebar — the ink column */}
       <Sidebar className="hidden lg:flex" collapsible />
@@ -117,6 +137,7 @@ export default function DashboardLayout() {
       <MobileMenu open={mobileNavOpen} onOpenChange={setMobileNavOpen} />
 
       <main
+        data-resuming={resuming ? "" : undefined}
         className={
           // relative: absolutely positioned children (sr-only labels, badges) must be laid out
           // inside this scroll box; otherwise they stretch the page and add a second scrollbar.
@@ -143,14 +164,14 @@ export default function DashboardLayout() {
         {/* Mobile top bar */}
         <div className="flex lg:hidden items-center box-content h-14 pt-safe px-4 border-b border-border bg-card shrink-0 gap-3">
           {sections ? (
-            <Link to="/" className="flex min-w-0 flex-1 items-center">
+            <Link to="/" className="flex min-h-11 min-w-0 flex-1 items-center">
               <img src={logoUrl} alt="Repraesent" className="h-6 w-auto max-w-[120px]" />
             </Link>
           ) : (
             <>
               <button
                 onClick={() => setMobileNavOpen(true)}
-                className="flex h-9 w-9 items-center justify-center rounded-lg border border-border text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+                className="press flex size-11 items-center justify-center rounded-xl border border-border text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
                 aria-label="Open navigation"
               >
                 <Menu className="h-4 w-4" />
@@ -163,14 +184,15 @@ export default function DashboardLayout() {
           {sections ? (
             <button
               type="button"
+              data-search-hint=""
               onClick={openCommandPalette}
-              className="press flex h-9 w-9 items-center justify-center rounded-lg border border-border text-muted-foreground hover:bg-muted hover:text-foreground"
+              className="press flex size-11 items-center justify-center rounded-xl border border-border text-muted-foreground hover:bg-muted hover:text-foreground"
               aria-label={t("command.title", "Go to or search")}
             >
               <Search className="h-4 w-4" />
             </button>
           ) : (
-            <div className="w-9" />
+            <div className="w-11" />
           )}
         </div>
 
@@ -211,8 +233,18 @@ export default function DashboardLayout() {
           <DoorboostMigrationBanner />
         )}
         {section && section.tabs.length > 1 ? <SectionTabs section={section} /> : null}
-        {switchingWorkspace ? null : <Outlet />}
+        {switchingWorkspace ? null : showPending ? (
+          <PageSkeleton />
+        ) : (
+          <PageErrorBoundary resetKey={location.pathname}>
+            <Outlet />
+          </PageErrorBoundary>
+        )}
       </main>
+      {/* Slow page change: a thin ink line runs at the top edge. */}
+      {showPending || resuming ? <div className="rp-nav-progress" aria-hidden /> : null}
+      <DailyPrefetch />
+      {sections ? <SearchHint /> : null}
 
       {sections ? (
         <>

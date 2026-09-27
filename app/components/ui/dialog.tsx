@@ -3,6 +3,7 @@ import { XIcon } from "lucide-react"
 import { Dialog as DialogPrimitive } from "radix-ui"
 
 import { cn } from "~/lib/utils"
+import { touchSafeOpenAutoFocus } from "~/lib/utils/touch"
 import { Button } from "~/components/ui/button"
 
 function Dialog({
@@ -53,12 +54,13 @@ function DialogOverlay({
  * Reduced motion drops the slide (app.css).
  */
 export const PHONE_SHEET =
-  "max-sm:top-auto max-sm:bottom-0 max-sm:left-0 max-sm:translate-x-0 max-sm:translate-y-0 max-sm:w-full max-sm:max-w-none max-sm:max-h-[calc(100dvh-env(safe-area-inset-top)-1rem)] max-sm:overflow-y-auto max-sm:overscroll-contain max-sm:rounded-t-2xl max-sm:rounded-b-none max-sm:border-x-0 max-sm:border-b-0 max-sm:pb-[max(1.5rem,env(safe-area-inset-bottom))] max-sm:data-[state=open]:zoom-in-100 max-sm:data-[state=closed]:zoom-out-100 max-sm:data-[state=open]:slide-in-from-bottom max-sm:data-[state=closed]:slide-out-to-bottom max-sm:data-[state=open]:duration-[240ms] max-sm:data-[state=closed]:duration-[160ms] max-sm:ease-(--ease-drawer)"
+  "max-sm:top-auto max-sm:bottom-(--kb,0px) max-sm:left-0 max-sm:translate-x-0 max-sm:translate-y-0 max-sm:w-full max-sm:max-w-none max-sm:max-h-[calc(100dvh-var(--kb,0px)-env(safe-area-inset-top)-1rem)] max-sm:overflow-y-auto max-sm:overscroll-contain max-sm:rounded-t-2xl max-sm:rounded-b-none max-sm:border-x-0 max-sm:border-b-0 max-sm:pb-[max(1.5rem,env(safe-area-inset-bottom))] max-sm:data-[state=open]:zoom-in-100 max-sm:data-[state=closed]:zoom-out-100 max-sm:data-[state=open]:slide-in-from-bottom max-sm:data-[state=closed]:slide-out-to-bottom max-sm:data-[state=open]:duration-[240ms] max-sm:data-[state=closed]:duration-[160ms] max-sm:ease-(--ease-drawer)"
 
 function DialogContent({
   className,
   children,
   showCloseButton = true,
+  onOpenAutoFocus,
   ...props
 }: React.ComponentProps<typeof DialogPrimitive.Content> & {
   showCloseButton?: boolean
@@ -68,6 +70,7 @@ function DialogContent({
       <DialogOverlay />
       <DialogPrimitive.Content
         data-slot="dialog-content"
+        onOpenAutoFocus={touchSafeOpenAutoFocus(onOpenAutoFocus)}
         className={cn(
           "bg-background data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 fixed top-[50%] left-[50%] z-50 grid w-full max-w-[calc(100%-2rem)] translate-x-[-50%] translate-y-[-50%] gap-4 rounded-lg border p-6 shadow-lg duration-200 outline-none sm:max-w-lg",
           PHONE_SHEET,
@@ -113,6 +116,9 @@ function DialogFooter({
       data-slot="dialog-footer"
       className={cn(
         "flex flex-col-reverse gap-2 sm:flex-row sm:justify-end",
+        // Phones: Save stays in reach while the sheet scrolls — pinned to the
+        // sheet's bottom edge, 44 px full-width buttons, paper behind it.
+        "max-sm:sticky max-sm:-bottom-[max(1.5rem,env(safe-area-inset-bottom))] max-sm:z-10 max-sm:-mb-[max(1.5rem,env(safe-area-inset-bottom))] max-sm:bg-background max-sm:pt-3 max-sm:pb-[max(1.5rem,env(safe-area-inset-bottom))] max-sm:shadow-[0_-12px_16px_-12px_var(--background)] max-sm:[&_[data-slot=button]]:h-11 max-sm:[&_[data-slot=button]]:w-full max-sm:[&_[data-slot=button]]:text-[15px]",
         className
       )}
       {...props}

@@ -95,7 +95,8 @@
         "settings": "U, uw team en koppelingen",
         "billing": "Abonnement en facturen",
         "contact": "Een echt persoon uit ons team"
-      }
+      },
+      "switchBusiness": "Ander bedrijf kiezen"
     }
   },
   "db_brand": {
@@ -199,7 +200,11 @@
           "MAGIC_LINK_INELIGIBLE": "Met dit account kunt u niet inloggen in deze app. Neem contact op met uw beheerder.",
           "fallback": "Inloggen is niet gelukt. Controleer uw verbinding en probeer het opnieuw."
         }
-      }
+      },
+      "checkInboxDetailCode": "We hebben een link en een 6-cijferige code naar {{email}} gestuurd.",
+      "checkInboxExpiry": "De link werkt 30 minuten, de code 10 minuten.",
+      "subtitleCode": "We mailen u een link en een 6-cijferige code.",
+      "sendButton": "Inlogmail versturen →"
     },
     "register": {
       "metaTitle": "Account aanmaken",
@@ -219,7 +224,8 @@
       "signIn": "Inloggen",
       "emailRequired": "Voer uw e-mailadres in",
       "emailInvalid": "Voer een geldig e-mailadres in",
-      "somethingWrong": "Er is iets misgegaan. Probeer het opnieuw."
+      "somethingWrong": "Er is iets misgegaan. Probeer het opnieuw.",
+      "benefitNoPassword": "Geen wachtwoord — een link per e-mail"
     },
     "callback": {
       "metaTitle": "Bezig met inloggen",
@@ -258,7 +264,8 @@
       "stalledTitle": "Duurt langer dan normaal",
       "stalledDetail": "Je bent ingelogd — de server is druk en kon je werkruimte nog niet openen.",
       "tryAgain": "Opnieuw proberen",
-      "slow": "Je werkruimte wordt geopend — de server is druk, we blijven het proberen…"
+      "slow": "Je werkruimte wordt geopend — de server is druk, we blijven het proberen…",
+      "linkExpiredDetailPlain": "Deze inloglink is verlopen of al gebruikt. Vraag een nieuwe aan op de inlogpagina."
     },
     "workspacePicker": {
       "metaTitle": "Kies gebied",
@@ -268,6 +275,12 @@
       "subtitle_other": "U heeft toegang tot {{count}} gebieden. Selecteer er een om door te gaan.",
       "noWorkspaces": "Geen gebied gevonden",
       "clickToEnter": "Klik om het gebied te openen"
+    },
+    "errors": {
+      "network": "Geen verbinding. Controleer uw internet en probeer het opnieuw.",
+      "tooMany": "Te veel pogingen. Wacht een minuut en verstuur dan opnieuw.",
+      "linkIncomplete": "Die inloglink was onvolledig. Vraag hieronder een nieuwe aan.",
+      "adminManaged": "Dit e-mailadres hoort bij een beheerdersaccount. Log in plaats daarvan in op de inlogpagina."
     }
   },
   "home": {
@@ -317,7 +330,8 @@
     "plausibleVisitors_one": "{{count}} bezoeker",
     "plausibleVisitors_other": "{{count}} bezoekers",
     "dealsOpen": "Open deals",
-    "dealsWon": "Gewonnen"
+    "dealsWon": "Gewonnen",
+    "viewAllInquiries": "Alle aanvragen bekijken"
   },
   "leads": {
     "metaTitle": "Leads",
@@ -447,11 +461,13 @@
       "contactConversionModalTitle": "Contact aangemaakt",
       "contactConversionModalDescription": "Deze lead is nu gekoppeld aan een contact. Open het contactrecord om deals toe te voegen of op te volgen.",
       "createDeal": "Deal aanmaken",
-      "backToLead": "Terug naar lead",
+      "backToLead": "Terug naar aanvraag",
       "historyTaskAssigneeRemoved": "Toegewezen persoon van taak verwijderd",
       "historyCheckoutPaid": "{{amount}} betaald via checkout",
       "historyCheckoutFailed": "Checkout-betaling mislukt",
-      "historyCheckoutExpired": "Checkout verlopen zonder betaling"
+      "historyCheckoutExpired": "Checkout verlopen zonder betaling",
+      "saveAsContact": "Opslaan als contact",
+      "details": "Gegevens"
     },
     "empty": "Nog geen leads",
     "filters": {
@@ -599,7 +615,16 @@
       "hiddenHint": "De afzender kan u nog steeds bereiken.",
       "blockSender": "Afzender blokkeren",
       "thisLead": "deze lead"
-    }
+    },
+    "listHint": "Iedereen die bij je aanvroeg, nieuwste eerst.",
+    "newInquiry": "Nieuwe aanvraag",
+    "listView": "Lijst",
+    "boardView": "Kolommen",
+    "phoneMenu": {
+      "all": "Alle"
+    },
+    "newInquiryTitle": "Nieuwe aanvraag",
+    "saveInquiry": "Aanvraag opslaan"
   },
   "pipeline": {
     "stripeNotConnected": {
@@ -620,7 +645,7 @@
     "dealCreated": "Deal aangemaakt.",
     "dealSaved": "Deal opgeslagen.",
     "dealNotFound": "Deal kon niet worden geladen.",
-    "backToPipeline": "Terug naar pijplijn",
+    "backToPipeline": "Terug naar deals",
     "dealDetails": "Deal",
     "untitledDeal": "Deze deal",
     "capHint": "Er worden maximaal 500 deals weergegeven. Verfijn indien nodig de zoekopdracht of toegewezen persoon.",
@@ -1403,7 +1428,11 @@
     },
     "team": {
       "metaTitle": "Team",
-      "metaDescription": "Teamleden, rollen en meldingen beheren"
+      "metaDescription": "Teamleden, rollen en meldingen beheren",
+      "businessPictureTitle": "Afbeelding van je bedrijf",
+      "businessPictureHint": "Zichtbaar in het menu en als je van bedrijf wisselt.",
+      "businessPictureSaved": "Bedrijfsafbeelding bijgewerkt",
+      "businessPictureRemoved": "Bedrijfsafbeelding verwijderd"
     },
     "workspace": {
       "title": "Gebiedsinstellingen",
@@ -1471,7 +1500,12 @@
       "inviteSummaryError_one": "{{count}} mislukt",
       "inviteSummaryError_other": "{{count}} mislukt",
       "roleUpdated": "Rol van lid bijgewerkt",
-      "notificationsUpdated": "Leadmeldingen bijgewerkt"
+      "notificationsUpdated": "Leadmeldingen bijgewerkt",
+      "addHintPlain": "Nodig de mensen uit die je helpen met aanvragen en klanten.",
+      "headerInquiryAlerts": "Meldingen bij aanvragen",
+      "noMembersPlain": "Er zit nog niemand anders in je team.",
+      "inquiryAlertsUpdated": "Meldingen bij aanvragen bijgewerkt",
+      "removeDescriptionPlain": "{{name}} zit dan niet meer in je team. Dit kun je niet ongedaan maken."
     },
     "language": {
       "title": "Mijn taal",
@@ -1610,7 +1644,8 @@
         "denied": "Je hebt de koppeling geannuleerd.",
         "expired": "Die link is verlopen. Probeer het opnieuw.",
         "failed": "Koppelen mislukt{{reason}}"
-      }
+      },
+      "sectionDescriptionPlain": "Koppel een account dat je al ergens anders gebruikt. Eén account per app."
     },
     "notifications": {
       "metaTitle": "Teamchatmeldingen",
@@ -1673,7 +1708,9 @@
           "step3": "Klik op “Webhooks toevoegen”, geef een naam (bijv. Repraesent) en sla op.",
           "step4": "Kopieer de webhook-URL en plak deze hier."
         }
-      }
+      },
+      "sectionDescriptionPlain": "Laat je teamchat meteen weten als er iets gebeurt, zoals een nieuwe aanvraag.",
+      "adminOnlyPlain": "Alleen mensen met de rol Admin kunnen teamchatmeldingen wijzigen."
     },
     "calendars": {
       "metaTitle": "Agenda's",
@@ -1781,7 +1818,8 @@
       "metaTitle": "Dealfasen",
       "metaDescription": "Fasen van je lead- en dealpipelines hernoemen, herschikken, kleuren, verbergen of toevoegen.",
       "pipelinePickerLabel": "Pijplijn",
-      "pipelinePickerHint": "Elke pijplijn heeft zijn eigen dealfasen."
+      "pipelinePickerHint": "Elke pijplijn heeft zijn eigen dealfasen.",
+      "readOnlyHintPlain": "Alleen mensen met de rol Admin kunnen fases wijzigen. Je ziet ze hieronder."
     },
     "openaiAds": {
       "metaTitle": "OpenAI Ads",
@@ -2397,7 +2435,8 @@
       },
       "emailNote": "Liever per e-mail?",
       "emailLink": "E-mailsamenvattingen"
-    }
+    },
+    "adminOnlyPlain": "Alleen mensen met de rol Admin kunnen dit wijzigen."
   },
   "booking": {
     "metaTitle": "Een afspraak boeken",
@@ -2700,7 +2739,24 @@
     "validationError": "Controleer uw invoer.",
     "paymentOverdue": "Betaling achterstallig",
     "viewYourInvoice": "bekijk uw factuur",
-    "checkInboxForStripe": "controleer uw inbox op een factuur van Stripe"
+    "checkInboxForStripe": "controleer uw inbox op een factuur van Stripe",
+    "goToday": "Naar Vandaag",
+    "tryAgain": "Opnieuw proberen",
+    "pageTitle": "Deze pagina is niet goed geladen",
+    "pageBody": "Je gegevens zijn veilig. Probeer het opnieuw of ga terug naar Vandaag.",
+    "appTitle": "Er ging iets mis op deze pagina",
+    "appBody": "Je gegevens zijn veilig. Probeer het opnieuw of ga terug naar Vandaag.",
+    "notFoundTitle": "Deze pagina bestaat niet",
+    "notFoundBody": "De link is misschien oud of verkeerd getypt. De rest staat waar je het liet.",
+    "loadTitle": "We konden {{what}} niet laden",
+    "loadBody": "Controleer je verbinding en probeer het opnieuw.",
+    "what": {
+      "people": "je contacten",
+      "today": "wat er vandaag op je wacht",
+      "tasks": "je taken",
+      "deals": "je deals",
+      "inquiries": "je aanvragen"
+    }
   },
   "analytics": {
     "metaTitle": "Analyse - Repraesent",
@@ -2828,7 +2884,9 @@
       "prevMonth": "Vorige maand",
       "nextMonth": "Volgende maand",
       "monthView": "Maand",
-      "weekView": "Week"
+      "weekView": "Week",
+      "viewTypeLabel": "Maand of week",
+      "nothingThisDay": "Niets gepland op deze dag."
     },
     "columns": {
       "title": "Titel",
@@ -2842,7 +2900,12 @@
       "noTasks": "—",
       "openCount": "{{count}} open"
     },
-    "noEntityHint": "Taken hebben context van een lead, contact of deal nodig."
+    "noEntityHint": "Taken hebben context van een lead, contact of deal nodig.",
+    "pageHintPlain": "Wat er moet gebeuren, en wanneer.",
+    "viewToggleLabel": "Taken tonen als",
+    "viewList": "Lijst",
+    "viewBoard": "Kolommen",
+    "viewCalendar": "Agenda"
   },
   "meta": {
     "titleSuffix": " - Repraesent"
@@ -2924,7 +2987,8 @@
         "step5": "Voer voor uitgaande e-mail de SMTP-servergegevens in met authenticatie ingeschakeld.",
         "step6": "Sla op en test de verbinding."
       }
-    }
+    },
+    "pageSubtitlePlain": "Zo voeg je je mailbox toe aan Outlook, Apple Mail of een andere mail-app."
   },
   "leadFallback": {
     "metaTitle": "Bevestigingsmail",
@@ -3562,7 +3626,7 @@
     "noPrimaryPhone": "Geen telefoonnummer geregistreerd",
     "openExternal": "Openen",
     "openInMaps": "Openen in Maps",
-    "openLead": "Lead openen",
+    "openLead": "Aanvraag openen",
     "phoneNumber": "Nummer",
     "phonePlaceholder": "Telefoonnummer",
     "phoneRequired": "Telefoonnummer is verplicht.",
@@ -3593,7 +3657,7 @@
     },
     "suggestion": {
       "title": "Er bestaat al een contact met deze e-mail",
-      "body": "{{email}} wordt al gebruikt door een ander contact. Een lead kan maar aan één contact worden gekoppeld, dus deze kan hier niet worden verbonden — open in plaats daarvan het bestaande contact.",
+      "body": "{{email}} hoort al bij een ander contact. Een aanvraag kan maar bij één contact horen — open dat contact.",
       "view": "{{name}} bekijken",
       "unnamed": "Bestaand contact"
     },
@@ -3607,6 +3671,13 @@
       "fromPhone": "Uit je telefoon",
       "typeIn": "Zelf invullen",
       "importLabel": "Uit een bestand"
+    },
+    "peopleHint": "Iedereen met wie je werkt, op één plek.",
+    "emptyBody": "Voeg de mensen toe met wie je werkt — uit je telefoon, zelf ingetypt of uit een bestand.",
+    "emptySearch": {
+      "title": "Niemand gevonden.",
+      "body": "Probeer een andere naam, of wis de zoekopdracht en filters.",
+      "clear": "Iedereen tonen"
     }
   },
   "leadEmails": {
@@ -3671,7 +3742,11 @@
     "unlinkConfirmTitle": "Dit contact loskoppelen?",
     "unlinkConfirmBody": "De koppeling tussen deze e-mail en {{name}} verwijderen? Het contact zelf wordt niet verwijderd.",
     "bulkProgress": "Contacten aanmaken… {{done}}/{{total}}",
-    "bulkPartial": "{{created}} aangemaakt, {{failed}} mislukt."
+    "bulkPartial": "{{created}} aangemaakt, {{failed}} mislukt.",
+    "pageSubtitlePlain": "Elke e-mail die je in kopie zette, op één plek.",
+    "filterLabel": "Tonen",
+    "emptySubtitlePlain": "Zet je kopie-adres in de BCC als je een e-mail stuurt, dan verschijnt hij hier.",
+    "emptyCtaPlain": "E-mailkopieën (BCC) instellen"
   },
   "activity": {
     "title": "Activiteit",
@@ -5170,7 +5245,9 @@
       "placementDropped": "De plaatsing “alleen via de shortcode” is niet bewaard — de re:banner-plugin van deze site moet worden bijgewerkt naar 1.4.0 of nieuwer. Tot die tijd blijft de banner bovenaan de pagina staan.",
       "renameBanner": "Banner hernoemen",
       "alignTextHint": "Centreert de woorden in de paginakolom. Automatisch laat de uitlijning aan je thema over."
-    }
+    },
+    "subtitlePlain": "Je website en alles wat eraan gekoppeld is.",
+    "noSiteBodyPlain": "Je website is hier nog niet gekoppeld."
   },
   "forms": {
     "metaTitle": "Formulier",
@@ -5257,7 +5334,10 @@
       "tabWebsite": "Op uw website",
       "tabErrorWording": "Foutmeldingen",
       "tabOtherApps": "Naar andere apps sturen",
-      "intakeAdvancedHint": "Een test die u vanaf de opdrachtregel van een computer kunt uitvoeren."
+      "intakeAdvancedHint": "Een test die u vanaf de opdrachtregel van een computer kunt uitvoeren.",
+      "sheetEditQuestion": "Vraag bewerken",
+      "sheetEditStep": "Stap bewerken",
+      "sheetEdit": "Bewerken"
     },
     "palette": {
       "title": "Vraag toevoegen",
@@ -5613,45 +5693,6 @@
       "linkedTranslations": "Talen gekoppeld — wijzigingen worden voortaan overgenomen",
       "notLinked": "Niet gekoppeld aan {{locale}} — wijzigingen worden niet overgenomen",
       "notLinkedBody": "Deze tekst is geschreven voordat talen konden synchroniseren. Koppel hem en wijzigingen in {{locale}} worden voortaan overgenomen — er wordt niets herschreven."
-    },
-    "intro": {
-      "title": "Zo werken formulieren",
-      "subtitle": "Een korte rondleiding: een formulier bouwen en publiceren.",
-      "stepOf": "Stap {{step}} van {{total}}",
-      "goToStep": "Ga naar stap {{step}}",
-      "replay": "Zo werken formulieren",
-      "replayShort": "Opnieuw bekijken",
-      "pause": "Pauzeren",
-      "play": "Afspelen",
-      "skip": "Overslaan",
-      "done": "Aan de slag",
-      "finished": "Nu is het jouw beurt.",
-      "chapter": {
-        "create": "Begin met een nieuw formulier.",
-        "name": "Geef het een naam.",
-        "fields": "Voeg de vragen toe die u nodig hebt — kies een type en de vraag staat in het formulier.",
-        "language": "Voeg een taal toe en het formulier wordt voor je vertaald.",
-        "design": "Bij Uiterlijk stelt u kleuren, lettertypen en witruimte in.",
-        "share": "Kopieer de link, of stuur de code naar degene die uw website beheert.",
-        "publish": "Zet het aan, en elk antwoord komt binnen als aanvraag.",
-        "celebrate": "En klaar — een live formulier."
-      },
-      "demo": {
-        "formName": "Contactformulier",
-        "name": "Naam",
-        "email": "E-mail",
-        "phone": "Telefoon",
-        "message": "Bericht",
-        "formTitle": "Neem contact op",
-        "submit": "Versturen"
-      },
-      "celebrate": {
-        "title": "Zo eenvoudig is het",
-        "body": "Je zag zojuist een formulier in een paar minuten van leeg naar live gaan. Bij jou gaat het net zo snel.",
-        "chipBuild": "Vragen",
-        "chipTranslate": "Vertalen",
-        "chipPublish": "Publiceren"
-      }
     },
     "appointmentContent": {
       "loading": "Tijden worden geladen...",
@@ -9233,7 +9274,8 @@
       "sentEarned": "{{customers}} werden klant · {{earned}} verdiend."
     },
     "paidSplit": "Daarvan is {{paid}} betaald en staat {{toCollect}} nog open.",
-    "paidAll": "Alles is betaald."
+    "paidAll": "Alles is betaald.",
+    "connectSource": "Koppelen"
   },
   "pipelineStrip": {
     "open": "open",
@@ -9939,7 +9981,8 @@
   "mobile": {
     "more": "Meer",
     "today": {
-      "startCalls": "Begin met bellen ({{count}})"
+      "startCalls": "Begin met bellen ({{count}})",
+      "goThroughList": "Lijst doorlopen ({{count}})"
     },
     "stagePicker": {
       "title": "Verplaatsen naar…",
@@ -10073,5 +10116,10 @@
       "speakHint": "Tik nog een keer als je klaar bent. Je controleert de tekst voordat hij wordt opgeslagen.",
       "typeInstead": "Toch typen"
     }
+  },
+  "searchHint": {
+    "title": "Hier vind je alles",
+    "body": "Contacten, deals, taken en pagina’s — tik om te zoeken.",
+    "ok": "Begrepen"
   }
 }

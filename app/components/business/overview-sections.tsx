@@ -190,9 +190,9 @@ export function LeadAnalyticsChart() {
 
         <Link
           to="/lead-form"
-          className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-muted/50 px-3 py-1.5 text-xs font-medium text-foreground hover:bg-muted transition-colors shrink-0 mt-1"
+          className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-muted/50 px-3 py-1.5 text-xs font-medium text-foreground hover:bg-muted transition-colors shrink-0 mt-1 max-sm:min-h-11 max-sm:text-[13px]"
         >
-          {t("home.viewAllLeads")}
+          {t("home.viewAllInquiries", "See all inquiries")}
           <ArrowRight className="h-3 w-3" />
         </Link>
       </div>
@@ -203,7 +203,7 @@ export function LeadAnalyticsChart() {
             key={p.value}
             onClick={() => setPeriod(p.value)}
             className={cn(
-              "rounded-lg px-1.5 sm:px-2.5 py-1 sm:py-1.5 text-[10px] sm:text-[11px] font-medium transition-all duration-150 whitespace-nowrap shrink-0",
+              "rounded-lg px-1.5 sm:px-2.5 py-1 sm:py-1.5 text-[10px] sm:text-[11px] font-medium transition-all duration-150 whitespace-nowrap shrink-0 max-sm:min-h-10 max-sm:px-3 max-sm:text-[13px]",
               period === p.value
                 ? "bg-card text-foreground shadow-sm"
                 : "text-muted-foreground hover:text-foreground"
@@ -220,7 +220,7 @@ export function LeadAnalyticsChart() {
             <Link
               key={f.form_name}
               to={`/lead-form?form_name=${f.form_name}`}
-              className="flex items-center gap-1.5 rounded-full border border-border bg-muted/50 px-3 py-1 text-[12px] no-underline transition-colors hover:border-primary/40 hover:bg-muted"
+              className="flex items-center gap-1.5 rounded-full border border-border bg-muted/50 px-3 py-1 text-[12px] no-underline transition-colors hover:border-primary/40 hover:bg-muted max-sm:min-h-10 max-sm:text-[13px]"
             >
               <span
                 className="h-2 w-2 rounded-full shrink-0"
@@ -410,7 +410,7 @@ export function DealsSummarySection() {
 
         <Link
           to="/pipeline"
-          className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-muted/50 px-3 py-1.5 text-xs font-medium text-foreground hover:bg-muted transition-colors shrink-0 mt-1"
+          className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-muted/50 px-3 py-1.5 text-xs font-medium text-foreground hover:bg-muted transition-colors shrink-0 mt-1 max-sm:min-h-11 max-sm:text-[13px]"
         >
           {t("home.viewPipeline", { defaultValue: "View pipeline" })}
           <ArrowRight className="h-3 w-3" />

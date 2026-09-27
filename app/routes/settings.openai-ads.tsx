@@ -290,6 +290,7 @@ function ConnectionCard({ canManage }: { canManage: boolean }) {
             />
           </div>
           <Button
+            className="max-sm:h-11 max-sm:w-full"
             disabled={!canManage || !apiKey.trim() || connectMutation.isPending}
             onClick={() => connectMutation.mutate(apiKey.trim())}
           >
@@ -454,6 +455,7 @@ function ConversionsCard({ canManage }: { canManage: boolean }) {
               </div>
             </div>
             <Button
+            className="max-sm:h-11 max-sm:w-full"
               disabled={!canManage || setupMutation.isPending}
               onClick={() => setupMutation.mutate()}
             >

@@ -188,9 +188,9 @@ export default function SettingsNotifications() {
               })}
             </SectionLabel>
             <p className="text-sm text-muted-foreground">
-              {t("settings.notifications.sectionDescription", {
+              {t("settings.notifications.sectionDescriptionPlain", {
                 defaultValue:
-                  "Post workspace events to Slack or Microsoft Teams the moment they happen.",
+                  "Tell your team chat the moment something happens, like a new inquiry.",
               })}
             </p>
           </div>
@@ -237,9 +237,9 @@ export default function SettingsNotifications() {
 
         {!canManage ? (
           <p className="text-xs text-muted-foreground">
-            {t("settings.notifications.adminOnly", {
+            {t("settings.notifications.adminOnlyPlain", {
               defaultValue:
-                "Only workspace admins can manage notification channels.",
+                "Only people with the Admin role can change team chat alerts.",
             })}
           </p>
         ) : null}
@@ -394,6 +394,7 @@ function AllowlistSection({ canManage }: { canManage: boolean }) {
           </div>
           <Button
             type="submit"
+            className="max-sm:h-11"
             disabled={!pattern.trim() || addMutation.isPending}
           >
             <Plus className="mr-1.5 h-4 w-4" />
@@ -920,7 +921,7 @@ function BlocklistSection({ canManage }: { canManage: boolean }) {
               onChange={(e) => setPattern(e.target.value)}
             />
           </div>
-          <Button type="submit" disabled={!pattern.trim() || addMutation.isPending}>
+          <Button type="submit" className="max-sm:h-11" disabled={!pattern.trim() || addMutation.isPending}>
             <Plus className="mr-1.5 h-4 w-4" />
             {t("settings.allowlist.add", { defaultValue: "Add" })}
           </Button>

@@ -1,4 +1,5 @@
 import { useState, useCallback, useMemo, useEffect, useRef } from "react";
+import { useIsPhone } from "~/lib/hooks/use-is-phone";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import {
@@ -130,7 +131,10 @@ export function LeadNotesSection({
   useEffect(() => {
     if (!isAddingNew) setAddMode(null);
   }, [isAddingNew]);
-  const mode = addMode ?? (micOk ? "choose" : "type");
+  // The Type / Say it choice is a phone thing; on the web "+ Add note" opens
+  // the text box straight away, as it always did.
+  const isPhone = useIsPhone();
+  const mode = addMode ?? (micOk && isPhone ? "choose" : "type");
   // Bring the composer (choices, recorder, textarea) into view the moment it
   // opens, clear of the phone tab bar — no scrolling to find it.
   const composerRef = useRef<HTMLDivElement>(null);

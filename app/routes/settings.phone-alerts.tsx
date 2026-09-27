@@ -376,7 +376,10 @@ function ActiveHours({
   // Our own field look: iOS draws time inputs with an arrow glued to the
   // right edge — appearance-none drops it; clock + chevron are ours.
   const timeClass =
-    "num block h-11 min-h-11 w-full appearance-none rounded-lg border border-border bg-background pl-10 pr-9 text-left text-[16px] font-medium text-foreground outline-none transition-colors hover:border-foreground/30 focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 [&::-webkit-date-and-time-value]:text-left [&::-webkit-calendar-picker-indicator]:hidden [&::-webkit-inner-spin-button]:hidden";
+    // iOS draws the time at the top of a restyled time field: pin the line
+  // height to the field's inner height and zero the inner margins so it sits
+  // on the same centre line as the clock and chevron.
+  "num block h-11 min-h-11 w-full appearance-none rounded-lg border border-border bg-background py-0 pl-10 pr-9 text-left text-[16px] leading-[42px] font-medium text-foreground outline-none transition-colors hover:border-foreground/30 focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 [&::-webkit-date-and-time-value]:m-0 [&::-webkit-date-and-time-value]:text-left [&::-webkit-date-and-time-value]:leading-[42px] [&::-webkit-datetime-edit]:p-0 [&::-webkit-datetime-edit]:leading-[42px] [&::-webkit-datetime-edit-fields-wrapper]:p-0 [&::-webkit-calendar-picker-indicator]:hidden [&::-webkit-inner-spin-button]:hidden";
   const timeField = (value: string, onValue: (v: string) => void) => (
     <span className="relative block">
       <Clock className="pointer-events-none absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" aria-hidden />

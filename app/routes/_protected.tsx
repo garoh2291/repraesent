@@ -1,6 +1,8 @@
 import { useEffect, useRef } from "react";
 import { Outlet, useNavigate, useLocation } from "react-router";
 import { useTranslation } from "react-i18next";
+import { isBootDone, markBootReady } from "~/components/notebook/brand-splash";
+import { useRefreshOnReturn } from "~/lib/hooks/use-refresh-on-return";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAuthContext } from "~/providers/auth-provider";
 import {
@@ -22,6 +24,8 @@ const ONBOARDING_PREFIX = "/onboarding";
 const BRAND_PREFIX = "/brand";
 
 export default function ProtectedLayout() {
+  // Minimised app opened again → fresh data straight away.
+  useRefreshOnReturn();
   const { t } = useTranslation();
   const { isAuthenticated, isLoading, user, workspaces, currentWorkspace, brand } =
     useAuthContext();
@@ -264,7 +268,15 @@ export default function ProtectedLayout() {
   // wizard and replayed the business card on every refresh. Only the first load
   // (no user yet) shows the spinner there.
   const backgroundRefresh = isOnOnboarding && !!user && !isPreProfileChecking;
-  if ((isLoading && !backgroundRefresh) || isPreProfileChecking) {
+  const holding = (isLoading && !backgroundRefresh) || isPreProfileChecking;
+  // The start screen stays up until the first real screen can draw.
+  useEffect(() => {
+    if (!holding) markBootReady();
+  }, [holding]);
+  if (holding) {
+    // First load: the start screen (root) covers this; later reloads of the
+    // account show the plain spinner.
+    if (!isBootDone()) return null;
     return (
       <div className="flex min-h-screen items-center justify-center pt-safe">
         <div className="flex flex-col items-center gap-4">

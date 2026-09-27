@@ -94,6 +94,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "~/components/ui/select";
+import { desktopAutoFocus } from "~/lib/utils/touch";
 
 export function meta() {
   return [
@@ -183,9 +184,9 @@ export default function PipelinesSettingsPage() {
     <div className="space-y-10">
       {!isAdmin && (
         <p className="rounded-lg border border-border bg-muted/40 px-4 py-3 text-sm text-muted-foreground">
-          {t("settings.pipelines.readOnlyHint", {
+          {t("settings.pipelines.readOnlyHintPlain", {
             defaultValue:
-              "Only workspace admins can change pipeline stages. You can view the configuration below.",
+              "Only people with the Admin role can change stages. You can see them below.",
           })}
         </p>
       )}
@@ -817,7 +818,7 @@ function AddStageDialog({
               onChange={(e) => setLabel(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && submit()}
               maxLength={60}
-              autoFocus
+              autoFocus={desktopAutoFocus()}
               placeholder={t("settings.pipelines.namePlaceholder", {
                 defaultValue: "e.g. Negotiation",
               })}

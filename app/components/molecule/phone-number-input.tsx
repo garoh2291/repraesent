@@ -37,6 +37,8 @@ interface PhoneNumberInputProps {
   id?: string;
   "aria-describedby"?: string;
   "aria-invalid"?: boolean;
+  /** Phone keyboards: what the return key says ("next", "done"…). */
+  enterKeyHint?: React.HTMLAttributes<HTMLInputElement>["enterKeyHint"];
 }
 
 export function PhoneNumberInput({
@@ -50,6 +52,7 @@ export function PhoneNumberInput({
   id,
   "aria-describedby": ariaDescribedBy,
   "aria-invalid": ariaInvalid,
+  enterKeyHint,
 }: PhoneNumberInputProps) {
   // The locked country calling code (`countryCallingCodeEditable={false}`) prevents
   // the underlying input from accepting a pasted international number that uses a
@@ -93,6 +96,8 @@ export function PhoneNumberInput({
       id={id}
       aria-describedby={ariaDescribedBy}
       aria-invalid={ariaInvalid || undefined}
+      autoComplete="tel"
+      enterKeyHint={enterKeyHint}
     />
   );
 }

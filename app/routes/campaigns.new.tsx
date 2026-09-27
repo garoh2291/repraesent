@@ -42,6 +42,7 @@ import {
   resolveScheduledInstant,
   ScheduleFields,
 } from "~/components/email-campaigns/ScheduleFields";
+import { desktopAutoFocus } from "~/lib/utils/touch";
 
 /**
  * Four steps — audience, template, settings, review — with an explicit step
@@ -249,7 +250,7 @@ export default function CampaignNew() {
                 </span>
               </Label>
               <Input
-                autoFocus
+                autoFocus={desktopAutoFocus()}
                 required
                 value={name}
                 onChange={(e) => setName(e.target.value)}

@@ -17,6 +17,7 @@ import { EmptyState } from "~/components/notebook/empty-state";
 import { Stat } from "~/components/notebook/stat";
 import { Skeleton } from "~/components/ui/skeleton";
 import { Button } from "~/components/ui/button";
+import { Segmented } from "~/components/notebook/segmented";
 import {
   DealsSummarySection,
   LeadAnalyticsChart,
@@ -78,26 +79,14 @@ export default function ResultsPage() {
         title={t("results.title", "Results")}
         subtitle={t("results.subtitle", "How many people found you, reached out and became customers.")}
         actions={
-          <div
+          <Segmented
             role="tablist"
-            aria-label={t("results.period", "Period")}
-            className="inline-flex rounded-lg border border-border bg-card p-0.5"
-          >
-            {PERIODS.map((k) => (
-              <button
-                key={k}
-                role="tab"
-                aria-selected={period === k}
-                onClick={() => setPeriod(k)}
-                className={cn(
-                  "num rounded-md px-3 py-1.5 text-[12.5px] font-medium transition-colors",
-                  period === k ? "bg-foreground text-background" : "text-muted-foreground hover:text-foreground",
-                )}
-              >
-                {t(`results.periods.${k}`)}
-              </button>
-            ))}
-          </div>
+            label={t("results.period", "Period")}
+            value={period}
+            onChange={setPeriod}
+            stretch
+            options={PERIODS.map((k) => ({ value: k, label: t(`results.periods.${k}`) }))}
+          />
         }
       />
 
@@ -257,7 +246,52 @@ export default function ResultsPage() {
             }
           />
         ) : (
-          <div className="overflow-x-auto">
+          <>
+          {/* Phones: one card per source, same rows as the table */}
+          <ul className="divide-y divide-border sm:hidden">
+            {data.by_source.map((r) => (
+              <li key={r.source} className="px-4 py-3.5">
+                <div className="flex items-baseline justify-between gap-3">
+                  <span className="min-w-0 truncate text-[15px] font-medium text-foreground">
+                    {t(`results.sources.${r.source}`)}
+                  </span>
+                  <span className={cn("num shrink-0 text-[15px]", r.earned > 0 ? "font-semibold text-earned" : "text-muted-foreground")}>
+                    {r.earned > 0 ? money(r.earned) : "—"}
+                  </span>
+                </div>
+                <dl className="mt-2 grid grid-cols-3 gap-2 text-[13px]">
+                  <div>
+                    <dt className="text-muted-foreground">{t("results.col.saw", "Saw you")}</dt>
+                    <dd className="num text-foreground">
+                      {r.saw == null ? (
+                        CONNECT[r.source] ? (
+                          <Link
+                            to={CONNECT[r.source]!}
+                            className="press -ml-1 inline-flex min-h-11 items-center px-1 text-foreground underline decoration-foreground/30 underline-offset-4"
+                          >
+                            {t("results.connectSource", "Connect")}
+                          </Link>
+                        ) : (
+                          "—"
+                        )
+                      ) : (
+                        formatNumber(r.saw)
+                      )}
+                    </dd>
+                  </div>
+                  <div>
+                    <dt className="text-muted-foreground">{t("results.col.contacted", "Reached out")}</dt>
+                    <dd className="num text-foreground">{formatNumber(r.contacted)}</dd>
+                  </div>
+                  <div>
+                    <dt className="text-muted-foreground">{t("results.col.customers", "Customers")}</dt>
+                    <dd className="num text-foreground">{formatNumber(r.customers)}</dd>
+                  </div>
+                </dl>
+              </li>
+            ))}
+          </ul>
+          <div className="overflow-x-auto max-sm:hidden">
             <table className="w-full min-w-[560px] text-[14px]">
               <thead>
                 <tr className="border-b border-border text-left text-[12px] text-muted-foreground">
@@ -295,6 +329,7 @@ export default function ResultsPage() {
               </tbody>
             </table>
           </div>
+          </>
         )}
         {data ? (
           <div className="flex flex-wrap gap-x-4 gap-y-1 border-t border-border px-5 py-3 text-[12px] text-muted-foreground">

@@ -8,6 +8,7 @@ import { formatDate } from "~/lib/utils/format";
 import {
   Dialog,
   DialogContent,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from "~/components/ui/dialog";
@@ -42,6 +43,7 @@ import { getLeads, type Lead } from "~/lib/api/leads";
 import { getContacts, type ContactListItem } from "~/lib/api/contacts-crm";
 import { getDeals, type DealListItem } from "~/lib/api/deals";
 import { useDebounce } from "~/lib/hooks/useDebounce";
+import { desktopAutoFocus } from "~/lib/utils/touch";
 
 type EntityType = "lead" | "contact" | "deal";
 
@@ -338,7 +340,7 @@ export function TaskFormModal({
           {showEntityPicker && (
             <>
               <div className="space-y-1.5">
-                <Label className="text-xs font-medium">
+                <Label className="text-xs font-medium max-sm:text-[13px]">
                   {t("tasks.fields.entityType", { defaultValue: "Task type" })}{" "}
                   <span className="text-destructive">*</span>
                 </Label>
@@ -377,7 +379,7 @@ export function TaskFormModal({
               {/* Lead picker */}
               {entityType === "lead" && (
                 <div className="space-y-1.5">
-                  <Label className="text-xs font-medium">
+                  <Label className="text-xs font-medium max-sm:text-[13px]">
                     {t("tasks.fields.lead")}{" "}
                     <span className="text-destructive">*</span>
                   </Label>
@@ -386,7 +388,7 @@ export function TaskFormModal({
                       <button
                         type="button"
                         className={cn(
-                          "flex w-full items-center gap-2 rounded-lg border border-border bg-background px-3 py-2 text-sm transition-colors",
+                          "flex w-full items-center gap-2 rounded-lg border border-border bg-background px-3 py-2 text-sm transition-colors max-sm:min-h-11 max-sm:text-[15px]",
                           "hover:bg-muted/50 focus:outline-none focus:ring-2 focus:ring-primary/20",
                           !pickedLead && "text-muted-foreground"
                         )}
@@ -410,7 +412,7 @@ export function TaskFormModal({
                               (e.key === "Enter" || e.key === " ") &&
                               setPickedLead(null)
                             }
-                            className="text-muted-foreground hover:text-foreground"
+                            className="relative text-muted-foreground hover:text-foreground max-sm:after:absolute max-sm:after:-inset-[15px]"
                           >
                             <X className="h-3.5 w-3.5" />
                           </span>
@@ -426,7 +428,7 @@ export function TaskFormModal({
                       <div className="flex items-center gap-2 border-b border-border px-3 py-2 shrink-0">
                         <Search className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
                         <Input
-                          autoFocus
+                          autoFocus={desktopAutoFocus()}
                           value={leadSearch}
                           onChange={(e) => setLeadSearch(e.target.value)}
                           placeholder={t("tasks.form.searchLead")}
@@ -435,7 +437,7 @@ export function TaskFormModal({
                       </div>
                       <div
                         ref={leadListScrollRef}
-                        className="min-h-0 max-h-[200px] overflow-y-auto overscroll-contain"
+                        className="min-h-0 max-h-[200px] max-sm:max-h-[50dvh] overflow-y-auto overscroll-contain"
                         onWheel={handleListWheel(leadListScrollRef)}
                       >
                         {leadsQuery.isFetching ? (
@@ -464,7 +466,7 @@ export function TaskFormModal({
                                   setPickedLead(lead);
                                   setLeadPickerOpen(false);
                                 }}
-                                className="w-full text-left px-3 py-2.5 text-sm hover:bg-muted transition-colors flex items-center gap-2"
+                                className="w-full text-left px-3 py-2.5 text-sm hover:bg-muted transition-colors flex items-center gap-2 max-sm:min-h-11"
                               >
                                 <span className="font-medium flex-1 truncate">
                                   {name}
@@ -487,7 +489,7 @@ export function TaskFormModal({
               {/* Contact picker */}
               {entityType === "contact" && (
                 <div className="space-y-1.5">
-                  <Label className="text-xs font-medium">
+                  <Label className="text-xs font-medium max-sm:text-[13px]">
                     {t("tasks.fields.contact", { defaultValue: "Contact" })}{" "}
                     <span className="text-destructive">*</span>
                   </Label>
@@ -496,7 +498,7 @@ export function TaskFormModal({
                       <button
                         type="button"
                         className={cn(
-                          "flex w-full items-center gap-2 rounded-lg border border-border bg-background px-3 py-2 text-sm transition-colors",
+                          "flex w-full items-center gap-2 rounded-lg border border-border bg-background px-3 py-2 text-sm transition-colors max-sm:min-h-11 max-sm:text-[15px]",
                           "hover:bg-muted/50 focus:outline-none focus:ring-2 focus:ring-primary/20",
                           !pickedContact && "text-muted-foreground"
                         )}
@@ -520,7 +522,7 @@ export function TaskFormModal({
                               (e.key === "Enter" || e.key === " ") &&
                               setPickedContact(null)
                             }
-                            className="text-muted-foreground hover:text-foreground"
+                            className="relative text-muted-foreground hover:text-foreground max-sm:after:absolute max-sm:after:-inset-[15px]"
                           >
                             <X className="h-3.5 w-3.5" />
                           </span>
@@ -536,7 +538,7 @@ export function TaskFormModal({
                       <div className="flex items-center gap-2 border-b border-border px-3 py-2 shrink-0">
                         <Search className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
                         <Input
-                          autoFocus
+                          autoFocus={desktopAutoFocus()}
                           value={contactSearch}
                           onChange={(e) => setContactSearch(e.target.value)}
                           placeholder={t("tasks.form.searchContact", { defaultValue: "Search contacts…" })}
@@ -545,7 +547,7 @@ export function TaskFormModal({
                       </div>
                       <div
                         ref={contactListScrollRef}
-                        className="min-h-0 max-h-[200px] overflow-y-auto overscroll-contain"
+                        className="min-h-0 max-h-[200px] max-sm:max-h-[50dvh] overflow-y-auto overscroll-contain"
                         onWheel={handleListWheel(contactListScrollRef)}
                       >
                         {contactsQuery.isFetching ? (
@@ -567,7 +569,7 @@ export function TaskFormModal({
                                   setPickedContact(c);
                                   setContactPickerOpen(false);
                                 }}
-                                className="w-full text-left px-3 py-2.5 text-sm hover:bg-muted transition-colors flex items-center gap-2"
+                                className="w-full text-left px-3 py-2.5 text-sm hover:bg-muted transition-colors flex items-center gap-2 max-sm:min-h-11"
                               >
                                 <span className="font-medium flex-1 truncate">
                                   {name}
@@ -590,7 +592,7 @@ export function TaskFormModal({
               {/* Deal picker */}
               {entityType === "deal" && (
                 <div className="space-y-1.5">
-                  <Label className="text-xs font-medium">
+                  <Label className="text-xs font-medium max-sm:text-[13px]">
                     {t("tasks.fields.deal", { defaultValue: "Deal" })}{" "}
                     <span className="text-destructive">*</span>
                   </Label>
@@ -599,7 +601,7 @@ export function TaskFormModal({
                       <button
                         type="button"
                         className={cn(
-                          "flex w-full items-center gap-2 rounded-lg border border-border bg-background px-3 py-2 text-sm transition-colors",
+                          "flex w-full items-center gap-2 rounded-lg border border-border bg-background px-3 py-2 text-sm transition-colors max-sm:min-h-11 max-sm:text-[15px]",
                           "hover:bg-muted/50 focus:outline-none focus:ring-2 focus:ring-primary/20",
                           !pickedDeal && "text-muted-foreground"
                         )}
@@ -623,7 +625,7 @@ export function TaskFormModal({
                               (e.key === "Enter" || e.key === " ") &&
                               setPickedDeal(null)
                             }
-                            className="text-muted-foreground hover:text-foreground"
+                            className="relative text-muted-foreground hover:text-foreground max-sm:after:absolute max-sm:after:-inset-[15px]"
                           >
                             <X className="h-3.5 w-3.5" />
                           </span>
@@ -639,7 +641,7 @@ export function TaskFormModal({
                       <div className="flex items-center gap-2 border-b border-border px-3 py-2 shrink-0">
                         <Search className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
                         <Input
-                          autoFocus
+                          autoFocus={desktopAutoFocus()}
                           value={dealSearch}
                           onChange={(e) => setDealSearch(e.target.value)}
                           placeholder={t("tasks.form.searchDeal", { defaultValue: "Search deals…" })}
@@ -648,7 +650,7 @@ export function TaskFormModal({
                       </div>
                       <div
                         ref={dealListScrollRef}
-                        className="min-h-0 max-h-[200px] overflow-y-auto overscroll-contain"
+                        className="min-h-0 max-h-[200px] max-sm:max-h-[50dvh] overflow-y-auto overscroll-contain"
                         onWheel={handleListWheel(dealListScrollRef)}
                       >
                         {dealsQuery.isFetching ? (
@@ -670,7 +672,7 @@ export function TaskFormModal({
                                   setPickedDeal(d);
                                   setDealPickerOpen(false);
                                 }}
-                                className="w-full text-left px-3 py-2.5 text-sm hover:bg-muted transition-colors flex items-center gap-2"
+                                className="w-full text-left px-3 py-2.5 text-sm hover:bg-muted transition-colors flex items-center gap-2 max-sm:min-h-11"
                               >
                                 <span className="font-medium flex-1 truncate">
                                   {name}
@@ -694,12 +696,12 @@ export function TaskFormModal({
 
           {/* Title */}
           <div className="space-y-1.5">
-            <Label htmlFor="task-title" className="text-xs font-medium">
+            <Label htmlFor="task-title" className="text-xs font-medium max-sm:text-[13px]">
               {t("tasks.fields.title")}
             </Label>
             <Input
               id="task-title"
-              autoFocus={!!leadId || isEdit}
+              autoFocus={desktopAutoFocus() && (!!leadId || isEdit)}
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder={t("tasks.form.titlePlaceholder")}
@@ -710,7 +712,7 @@ export function TaskFormModal({
 
           {/* Description / comment */}
           <div className="space-y-1.5">
-            <Label htmlFor="task-desc" className="text-xs font-medium">
+            <Label htmlFor="task-desc" className="text-xs font-medium max-sm:text-[13px]">
               {t("tasks.fields.description")}{" "}
               <span className="text-muted-foreground font-normal">
                 ({t("common.optional")})
@@ -727,7 +729,7 @@ export function TaskFormModal({
 
           {/* Due date */}
           <div className="space-y-1.5">
-            <Label className="text-xs font-medium">
+            <Label className="text-xs font-medium max-sm:text-[13px]">
               {t("tasks.fields.dueDate")}{" "}
               <span className="text-muted-foreground font-normal">
                 ({t("common.optional")})
@@ -738,7 +740,7 @@ export function TaskFormModal({
                 <button
                   type="button"
                   className={cn(
-                    "flex w-full items-center gap-2 rounded-lg border border-border bg-background px-3 py-2 text-sm transition-colors",
+                    "flex w-full items-center gap-2 rounded-lg border border-border bg-background px-3 py-2 text-sm transition-colors max-sm:min-h-11 max-sm:text-[15px]",
                     "hover:bg-muted/50 focus:outline-none focus:ring-2 focus:ring-primary/20",
                     !dueDate && "text-muted-foreground"
                   )}
@@ -758,7 +760,7 @@ export function TaskFormModal({
                         (e.key === "Enter" || e.key === " ") &&
                         setDueDate(undefined)
                       }
-                      className="text-muted-foreground hover:text-foreground"
+                      className="relative text-muted-foreground hover:text-foreground max-sm:after:absolute max-sm:after:-inset-[15px]"
                     >
                       <X className="h-3.5 w-3.5" />
                     </span>
@@ -782,7 +784,7 @@ export function TaskFormModal({
 
           {/* Assignee */}
           <div className="space-y-1.5">
-            <Label className="text-xs font-medium">
+            <Label className="text-xs font-medium max-sm:text-[13px]">
               {t("tasks.fields.assignee")}{" "}
               <span className="text-muted-foreground font-normal">
                 ({t("common.optional")})
@@ -823,7 +825,7 @@ export function TaskFormModal({
           </div>
 
           {/* Actions */}
-          <div className="flex items-center justify-end gap-2 pt-2">
+          <DialogFooter className="pt-2 sm:items-center">
             <Button
               type="button"
               variant="outline"
@@ -851,7 +853,7 @@ export function TaskFormModal({
                 ? t("common.saving")
                 : t("tasks.actions.save")}
             </Button>
-          </div>
+          </DialogFooter>
         </form>
       </DialogContent>
     </Dialog>

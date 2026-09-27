@@ -95,7 +95,8 @@
         "settings": "You, your team and connections",
         "billing": "Plan and invoices",
         "contact": "A real person from our team"
-      }
+      },
+      "switchBusiness": "Switch business"
     }
   },
   "db_brand": {
@@ -199,7 +200,11 @@
           "MAGIC_LINK_INELIGIBLE": "This account can't sign in to this app. Please contact your administrator.",
           "fallback": "Signing in didn't work. Check your connection and try again."
         }
-      }
+      },
+      "checkInboxDetailCode": "We sent a link and a 6-digit code to {{email}}.",
+      "checkInboxExpiry": "The link works for 30 minutes, the code for 10.",
+      "subtitleCode": "We'll email you a link and a 6-digit code.",
+      "sendButton": "Send sign-in email →"
     },
     "register": {
       "metaTitle": "Create account",
@@ -219,7 +224,8 @@
       "signIn": "Sign in",
       "emailRequired": "Please enter your email address",
       "emailInvalid": "Please enter a valid email address",
-      "somethingWrong": "Something went wrong. Please try again."
+      "somethingWrong": "Something went wrong. Please try again.",
+      "benefitNoPassword": "No password — a link by email"
     },
     "callback": {
       "metaTitle": "Signing in",
@@ -258,7 +264,8 @@
       "stalledTitle": "Taking longer than usual",
       "stalledDetail": "You're signed in — the server is busy and couldn't open your workspace just now.",
       "tryAgain": "Try again",
-      "slow": "Opening your workspace — the server is busy, still trying…"
+      "slow": "Opening your workspace — the server is busy, still trying…",
+      "linkExpiredDetailPlain": "This sign-in link has expired or was already used. Send a new one from the sign-in page."
     },
     "workspacePicker": {
       "metaTitle": "Choose area",
@@ -268,6 +275,12 @@
       "subtitle_other": "You have access to {{count}} areas. Select one to continue.",
       "noWorkspaces": "No area found",
       "clickToEnter": "Click to enter area"
+    },
+    "errors": {
+      "network": "No connection. Check your internet and try again.",
+      "tooMany": "Too many tries. Wait a minute, then send again.",
+      "linkIncomplete": "That sign-in link was incomplete. Send a new one below.",
+      "adminManaged": "This email belongs to an admin account. Sign in on the sign-in page instead."
     }
   },
   "home": {
@@ -317,7 +330,8 @@
     "plausibleVisitors_one": "{{count}} visitor",
     "plausibleVisitors_other": "{{count}} visitors",
     "dealsOpen": "Open deals",
-    "dealsWon": "Won"
+    "dealsWon": "Won",
+    "viewAllInquiries": "See all inquiries"
   },
   "leads": {
     "metaTitle": "Leads",
@@ -447,11 +461,13 @@
       "contactConversionModalTitle": "Contact created",
       "contactConversionModalDescription": "This lead is now linked to a contact. Open the contact record to add deals or follow up.",
       "createDeal": "Create deal",
-      "backToLead": "Back to lead",
+      "backToLead": "Back to inquiry",
       "historyTaskAssigneeRemoved": "Task assignee removed",
       "historyCheckoutPaid": "Paid {{amount}} via checkout",
       "historyCheckoutFailed": "Checkout payment failed",
-      "historyCheckoutExpired": "Checkout expired without payment"
+      "historyCheckoutExpired": "Checkout expired without payment",
+      "saveAsContact": "Save as contact",
+      "details": "Details"
     },
     "empty": "No leads yet",
     "filters": {
@@ -599,7 +615,16 @@
       "hiddenHint": "The sender can still reach you.",
       "blockSender": "Block sender",
       "thisLead": "this lead"
-    }
+    },
+    "listHint": "Everyone who asked about you, newest first.",
+    "newInquiry": "New inquiry",
+    "listView": "List",
+    "boardView": "Board",
+    "phoneMenu": {
+      "all": "All"
+    },
+    "newInquiryTitle": "New inquiry",
+    "saveInquiry": "Save inquiry"
   },
   "pipeline": {
     "stripeNotConnected": {
@@ -620,7 +645,7 @@
     "dealCreated": "Deal created.",
     "dealSaved": "Deal saved.",
     "dealNotFound": "Deal could not be loaded.",
-    "backToPipeline": "Back to pipeline",
+    "backToPipeline": "Back to deals",
     "dealDetails": "Deal",
     "untitledDeal": "This deal",
     "capHint": "Showing up to 500 deals. Refine search or assignee if needed.",
@@ -1403,7 +1428,11 @@
     },
     "team": {
       "metaTitle": "Team",
-      "metaDescription": "Manage team members, roles, and notifications"
+      "metaDescription": "Manage team members, roles, and notifications",
+      "businessPictureTitle": "Your business picture",
+      "businessPictureHint": "Shows in the menu and when you switch business.",
+      "businessPictureSaved": "Business picture updated",
+      "businessPictureRemoved": "Business picture removed"
     },
     "workspace": {
       "title": "Area settings",
@@ -1471,7 +1500,12 @@
       "inviteSummaryError_one": "{{count}} failed",
       "inviteSummaryError_other": "{{count}} failed",
       "roleUpdated": "Member role updated",
-      "notificationsUpdated": "Lead notifications updated"
+      "notificationsUpdated": "Lead notifications updated",
+      "addHintPlain": "Invite the people who help you with inquiries and customers.",
+      "headerInquiryAlerts": "Inquiry alerts",
+      "noMembersPlain": "Nobody else is on your team yet.",
+      "inquiryAlertsUpdated": "Inquiry alerts updated",
+      "removeDescriptionPlain": "{{name}} will no longer be on your team. You can't undo this."
     },
     "language": {
       "title": "My language",
@@ -1610,7 +1644,8 @@
         "denied": "You cancelled the connection.",
         "expired": "That link expired. Please try connecting again.",
         "failed": "Connection failed{{reason}}"
-      }
+      },
+      "sectionDescriptionPlain": "Connect an account you already use elsewhere. One account per app."
     },
     "notifications": {
       "metaTitle": "Team chat alerts",
@@ -1673,7 +1708,9 @@
           "step3": "Click “Add webhooks”, give it a name (e.g. Repraesent), and save.",
           "step4": "Copy the webhook URL and paste it here."
         }
-      }
+      },
+      "sectionDescriptionPlain": "Tell your team chat the moment something happens, like a new inquiry.",
+      "adminOnlyPlain": "Only people with the Admin role can change team chat alerts."
     },
     "calendars": {
       "metaTitle": "Calendars",
@@ -1781,7 +1818,8 @@
       "metaTitle": "Deal stages",
       "metaDescription": "Rename, reorder, recolor, hide or add the stages of your lead and deal pipelines.",
       "pipelinePickerLabel": "Pipeline",
-      "pipelinePickerHint": "Each pipeline has its own deal stages."
+      "pipelinePickerHint": "Each pipeline has its own deal stages.",
+      "readOnlyHintPlain": "Only people with the Admin role can change stages. You can see them below."
     },
     "openaiAds": {
       "metaTitle": "OpenAI Ads",
@@ -2397,7 +2435,8 @@
       },
       "emailNote": "Prefer email?",
       "emailLink": "Email summaries"
-    }
+    },
+    "adminOnlyPlain": "Only people with the Admin role can change this."
   },
   "booking": {
     "metaTitle": "Book an Appointment",
@@ -2700,7 +2739,24 @@
     "validationError": "Please check your input.",
     "paymentOverdue": "Payment overdue",
     "viewYourInvoice": "view your invoice",
-    "checkInboxForStripe": "please check your inbox for an invoice from Stripe"
+    "checkInboxForStripe": "please check your inbox for an invoice from Stripe",
+    "goToday": "Go to Today",
+    "tryAgain": "Try again",
+    "pageTitle": "This page didn't load properly",
+    "pageBody": "Your data is safe. Try again, or go back to Today.",
+    "appTitle": "Something went wrong on this page",
+    "appBody": "Your data is safe. Try again, or go back to Today.",
+    "notFoundTitle": "This page doesn't exist",
+    "notFoundBody": "The link may be old or mistyped. Everything else is where you left it.",
+    "loadTitle": "We couldn't load {{what}}",
+    "loadBody": "Check your connection and try again.",
+    "what": {
+      "people": "your people",
+      "today": "what needs you today",
+      "tasks": "your tasks",
+      "deals": "your deals",
+      "inquiries": "your inquiries"
+    }
   },
   "analytics": {
     "metaTitle": "Analytics - Repraesent",
@@ -2828,7 +2884,9 @@
       "prevMonth": "Previous month",
       "nextMonth": "Next month",
       "monthView": "Month",
-      "weekView": "Week"
+      "weekView": "Week",
+      "viewTypeLabel": "Month or week",
+      "nothingThisDay": "Nothing due this day."
     },
     "columns": {
       "title": "Title",
@@ -2842,7 +2900,12 @@
       "noTasks": "—",
       "openCount": "{{count}} open"
     },
-    "noEntityHint": "Tasks need a lead, contact, or deal context."
+    "noEntityHint": "Tasks need a lead, contact, or deal context.",
+    "pageHintPlain": "What needs doing, and by when.",
+    "viewToggleLabel": "How to show tasks",
+    "viewList": "List",
+    "viewBoard": "Board",
+    "viewCalendar": "Calendar"
   },
   "meta": {
     "titleSuffix": " - Repraesent"
@@ -2924,7 +2987,8 @@
         "step5": "For outgoing mail, enter the SMTP server details with authentication enabled.",
         "step6": "Save and test the connection."
       }
-    }
+    },
+    "pageSubtitlePlain": "How to add your mailbox to Outlook, Apple Mail or any other email app."
   },
   "leadFallback": {
     "metaTitle": "Confirmation Email",
@@ -3562,7 +3626,7 @@
     "noPrimaryPhone": "No phone on file",
     "openExternal": "Open",
     "openInMaps": "Open in Maps",
-    "openLead": "Open lead",
+    "openLead": "Open inquiry",
     "phoneNumber": "Number",
     "phonePlaceholder": "Phone number",
     "phoneRequired": "Phone number is required.",
@@ -3593,7 +3657,7 @@
     },
     "suggestion": {
       "title": "A contact with this email already exists",
-      "body": "{{email}} is already used by another contact. A lead can only link to one contact, so it can't be connected here — open the existing contact instead.",
+      "body": "{{email}} already belongs to another contact. An inquiry can only belong to one contact — open that contact instead.",
       "view": "View {{name}}",
       "unnamed": "Existing contact"
     },
@@ -3607,6 +3671,13 @@
       "fromPhone": "From your phone",
       "typeIn": "Type it in",
       "importLabel": "Import a file"
+    },
+    "peopleHint": "Everyone you work with, in one place.",
+    "emptyBody": "Add the people you work with — from your phone, typed in, or from a file.",
+    "emptySearch": {
+      "title": "Nobody matches that.",
+      "body": "Try another name, or clear the search and filters.",
+      "clear": "Show everyone"
     }
   },
   "leadEmails": {
@@ -3671,7 +3742,11 @@
     "unlinkConfirmTitle": "Unlink this contact?",
     "unlinkConfirmBody": "Remove the link between this email and {{name}}? The contact itself is not deleted.",
     "bulkProgress": "Creating contacts… {{done}}/{{total}}",
-    "bulkPartial": "Created {{created}}, {{failed}} failed."
+    "bulkPartial": "Created {{created}}, {{failed}} failed.",
+    "pageSubtitlePlain": "Every email you copied in, in one place.",
+    "filterLabel": "Show",
+    "emptySubtitlePlain": "Put your copy address in BCC when you send an email, and it shows up here.",
+    "emptyCtaPlain": "Set up email copies (BCC)"
   },
   "activity": {
     "title": "Activity",
@@ -5170,7 +5245,9 @@
       "placementDropped": "Shortcode-only placement was not kept — this site's re:banner plugin needs updating to 1.4.0 or later. Until then the banner is still pinned at the top of the page.",
       "renameBanner": "Rename banner",
       "alignTextHint": "Centres the words in the page column. Automatic leaves your theme's alignment alone."
-    }
+    },
+    "subtitlePlain": "Your website and everything connected to it.",
+    "noSiteBodyPlain": "Your website isn't connected here yet."
   },
   "forms": {
     "metaTitle": "Form",
@@ -5257,7 +5334,10 @@
       "tabWebsite": "Put it on your website",
       "tabErrorWording": "Error wording",
       "tabOtherApps": "Send to other apps",
-      "intakeAdvancedHint": "A test you can run from a computer’s command line."
+      "intakeAdvancedHint": "A test you can run from a computer’s command line.",
+      "sheetEditQuestion": "Edit question",
+      "sheetEditStep": "Edit step",
+      "sheetEdit": "Edit"
     },
     "palette": {
       "title": "Add a question",
@@ -5613,45 +5693,6 @@
       "linkedTranslations": "Languages linked — edits will now sync",
       "notLinked": "Not linked to {{locale}} — edits will not sync",
       "notLinkedBody": "This text was written before languages could sync. Link it and edits to {{locale}} will carry over from now on — nothing is rewritten."
-    },
-    "intro": {
-      "title": "How Forms works",
-      "subtitle": "A short walkthrough of building and publishing a form.",
-      "stepOf": "Step {{step}} of {{total}}",
-      "goToStep": "Go to step {{step}}",
-      "replay": "How Forms works",
-      "replayShort": "Watch again",
-      "pause": "Pause",
-      "play": "Play",
-      "skip": "Skip",
-      "done": "Start building",
-      "finished": "Now make one of your own.",
-      "chapter": {
-        "create": "Start with a new form.",
-        "name": "Give it a name.",
-        "fields": "Add the questions you need — pick a type and it appears on the form.",
-        "language": "Add a language and the form is translated for you.",
-        "design": "Look sets the colours, fonts and spacing.",
-        "share": "Copy the link, or send the code to whoever looks after your website.",
-        "publish": "Turn it on, and every answer arrives as an inquiry.",
-        "celebrate": "And that's a live form."
-      },
-      "demo": {
-        "formName": "Contact form",
-        "name": "Name",
-        "email": "E-mail",
-        "phone": "Phone",
-        "message": "Message",
-        "formTitle": "Get in touch",
-        "submit": "Send"
-      },
-      "celebrate": {
-        "title": "That's how easy it is",
-        "body": "You just watched a form go from empty to live in a couple of minutes. Yours will be just as quick.",
-        "chipBuild": "Questions",
-        "chipTranslate": "Translate",
-        "chipPublish": "Publish"
-      }
     },
     "appointmentContent": {
       "loading": "Loading times...",
@@ -9233,7 +9274,8 @@
       "sentEarned": "{{customers}} became customers · {{earned}} earned."
     },
     "paidSplit": "Of this, {{paid}} is paid and {{toCollect}} is still to collect.",
-    "paidAll": "All of it is paid."
+    "paidAll": "All of it is paid.",
+    "connectSource": "Connect"
   },
   "pipelineStrip": {
     "open": "open",
@@ -9939,7 +9981,8 @@
   "mobile": {
     "more": "More",
     "today": {
-      "startCalls": "Start calls ({{count}})"
+      "startCalls": "Start calls ({{count}})",
+      "goThroughList": "Go through the list ({{count}})"
     },
     "stagePicker": {
       "title": "Move to…",
@@ -10073,5 +10116,10 @@
       "speakHint": "Tap again when you're done. You'll check the text before it's saved.",
       "typeInstead": "Type instead"
     }
+  },
+  "searchHint": {
+    "title": "Find anything here",
+    "body": "People, deals, tasks and pages — tap to search.",
+    "ok": "Got it"
   }
 }

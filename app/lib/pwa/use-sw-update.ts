@@ -2,6 +2,8 @@ import { useEffect } from "react";
 import { toast } from "sonner";
 import { useTranslation } from "react-i18next";
 import { registerServiceWorker } from "./register";
+import { applyWaitingUpdate, setWaitingWorker } from "./update-store";
+import { PHONE_QUERY } from "~/lib/hooks/use-is-phone";
 
 const TOAST_ID = "sw-update";
 
@@ -27,15 +29,16 @@ export function useSwUpdate() {
     };
 
     const offer = (worker: ServiceWorker) => {
+      setWaitingWorker(worker);
+      // Phones: a dot on More and a row in the More sheet, not a toast
+      // sitting on top of the page (REDESIGN_PLAN.md §2).
+      if (window.matchMedia(PHONE_QUERY).matches) return;
       toast(t("pwa.update.title"), {
         id: TOAST_ID,
         duration: Infinity,
         action: {
           label: t("pwa.update.reload"),
-          onClick: () => {
-            navigator.serviceWorker.addEventListener("controllerchange", onControllerChange);
-            worker.postMessage({ type: "SKIP_WAITING" });
-          },
+          onClick: () => applyWaitingUpdate(),
         },
       });
     };

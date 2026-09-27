@@ -63,6 +63,7 @@ import {
 } from "~/lib/workflows/optimistic";
 import { useCanEditForms } from "~/lib/hooks/useCanEditForms";
 import { useDocumentMeta } from "~/lib/hooks/use-document-meta";
+import { desktopAutoFocus } from "~/lib/utils/touch";
 
 export function meta() {
   return [
@@ -320,7 +321,7 @@ export default function WorkflowsIndex() {
             <Label htmlFor="wf-name">{t("workflows.nameLabel")}</Label>
             <Input
               id="wf-name"
-              autoFocus
+              autoFocus={desktopAutoFocus()}
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder={t("workflows.namePlaceholder")}

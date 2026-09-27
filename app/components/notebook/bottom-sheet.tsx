@@ -73,14 +73,22 @@ function MobileSheet({
               <Drawer.Description className="sr-only">{title}</Drawer.Description>
             )}
           </div>
-          <div className="min-h-0 flex-1 overflow-y-auto px-5 pb-5">{children}</div>
+          {/* One scroll only: the list stops at its ends instead of dragging
+              the page behind it (overscroll-contain), and the last row clears
+              the home bar. */}
+          <div
+            className={cn(
+              "min-h-0 flex-1 overflow-y-auto overscroll-contain px-5",
+              footer ? "pb-5" : "pb-[max(1.5rem,calc(env(safe-area-inset-bottom)+0.75rem))]",
+            )}
+          >
+            {children}
+          </div>
           {footer ? (
             <div className="border-t border-border px-5 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
               {footer}
             </div>
-          ) : (
-            <div className="pb-[env(safe-area-inset-bottom)]" />
-          )}
+          ) : null}
         </Drawer.Content>
       </Drawer.Portal>
     </Drawer.Root>

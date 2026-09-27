@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router";
 import { useTranslation } from "react-i18next";
+import { LoadError } from "~/components/notebook/load-error";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAuthContext } from "~/providers/auth-provider";
 import { PipelineDialog } from "~/components/organism/pipeline-dialog";
@@ -170,6 +171,10 @@ export default function PipelinePage() {
   });
 
   const deals: DealListItem[] = dealsQuery.data?.data ?? [];
+  // The 500-deal cap is only worth a line when it actually cut the list.
+  const dealsCapped =
+    !!dealsQuery.data &&
+    (dealsQuery.data.hasNext || dealsQuery.data.total > deals.length);
 
   // Shared with the deal page and its side panels (lib/deals/optimistic).
   const applyOptimisticDeal = (dealId: string, patch: Partial<DealListItem>) =>
@@ -365,7 +370,7 @@ export default function PipelinePage() {
   const hasFilters = !!(debouncedSearch || assignedTo);
 
   return (
-    <div className="flex flex-col min-h-[calc(100vh-8rem)] p-4 sm:p-6 gap-4 sm:gap-6 app-fade-in">
+    <div className="flex flex-col sm:min-h-[calc(100vh-8rem)] p-4 sm:p-6 gap-4 sm:gap-6 app-fade-in">
       {/* Header */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between shrink-0 app-fade-up">
         <div className="min-w-0">
@@ -377,7 +382,7 @@ export default function PipelinePage() {
             {currentPipeline?.is_default && (
               <Badge
                 variant="outline"
-                className="text-[10px] font-medium text-muted-foreground shrink-0"
+                className="text-[10px] font-medium text-muted-foreground shrink-0 max-sm:text-[11px]"
               >
                 {t("pipeline.defaultPipelineBadge", {
                   defaultValue: "Default",
@@ -391,7 +396,7 @@ export default function PipelinePage() {
             {currentPipeline?.public_tracking_enabled && (
               <Badge
                 variant="outline"
-                className="gap-1 text-[10px] font-medium text-muted-foreground shrink-0"
+                className="gap-1 text-[10px] font-medium text-muted-foreground shrink-0 max-sm:text-[11px]"
               >
                 <Globe className="h-2.5 w-2.5" aria-hidden />
                 {t("pipeline.visibility.public", { defaultValue: "Public" })}
@@ -404,7 +409,7 @@ export default function PipelinePage() {
                     type="button"
                     variant="ghost"
                     size="sm"
-                    className="h-8 w-8 p-0 shrink-0 text-muted-foreground"
+                    className="h-8 w-8 p-0 shrink-0 text-muted-foreground max-sm:size-11"
                     aria-label={t("pipeline.pipelineMenu", {
                       defaultValue: "Pipeline actions",
                     })}
@@ -438,20 +443,35 @@ export default function PipelinePage() {
               Falls back to the deal-cap hint rather than leaving the line
               empty — the header would jump by a row on every board without a
               description. */}
-          <p className="text-sm text-muted-foreground mt-0.5">
+          <p className="text-sm text-muted-foreground mt-0.5 max-sm:hidden">
             {currentPipeline?.description ||
               t("pipeline.capHint", {
                 defaultValue:
                   "Showing up to 500 deals. Refine search or assignee if needed.",
               })}
           </p>
+          {/* Phones: the board's own description, and the cap hint only when
+              the list was actually cut at 500. */}
+          {currentPipeline?.description ? (
+            <p className="text-sm text-muted-foreground mt-0.5 sm:hidden">
+              {currentPipeline.description}
+            </p>
+          ) : null}
+          {dealsCapped ? (
+            <p className="text-[13px] text-muted-foreground mt-1 sm:hidden">
+              {t("pipeline.capHint", {
+                defaultValue:
+                  "Showing up to 500 deals. Refine search or assignee if needed.",
+              })}
+            </p>
+          ) : null}
         </div>
 
         {canEdit ? (
           <Button
             type="button"
             size="sm"
-            className="h-9 gap-1.5 text-xs"
+            className="h-9 gap-1.5 text-xs max-sm:h-11 max-sm:w-full max-sm:text-sm"
             onClick={() => {
               setNewDealPrefillContactId(null);
               setNewOpen(true);
@@ -477,7 +497,7 @@ export default function PipelinePage() {
                 defaultValue: "Title or contact…",
               })
             )}
-            className="h-9 w-full sm:w-[220px] text-base sm:text-sm pr-3"
+            className="h-9 w-full sm:w-[220px] text-base sm:text-sm pr-3 max-sm:h-11"
           />
         </div>
 
@@ -488,7 +508,7 @@ export default function PipelinePage() {
               setParam("assigned_to", v === "all" ? undefined : v)
             }
           >
-            <SelectTrigger className="h-9 w-full sm:w-[180px] text-xs">
+            <SelectTrigger className="h-9 w-full sm:w-[180px] text-xs max-sm:h-11 max-sm:text-sm">
               <SelectValue
                 placeholder={t("contacts.assignedTo", {
                   defaultValue: "Assigned to",
@@ -513,7 +533,7 @@ export default function PipelinePage() {
               setParam("sort", v === DEFAULT_DEAL_SORT ? undefined : v)
             }
           >
-            <SelectTrigger className="h-9 w-full sm:w-[180px] text-xs">
+            <SelectTrigger className="h-9 w-full sm:w-[180px] text-xs max-sm:h-11 max-sm:text-sm">
               <span className="inline-flex items-center gap-1.5">
                 <ArrowUpDown className="h-3.5 w-3.5 opacity-60" />
                 <SelectValue />
@@ -540,7 +560,7 @@ export default function PipelinePage() {
           {hasFilters && (
             <button
               type="button"
-              className="inline-flex items-center gap-1 rounded-full border border-dashed border-border px-3 py-1 text-xs font-medium text-muted-foreground hover:text-foreground hover:border-border/80 transition-colors max-sm:col-span-2 max-sm:justify-self-start"
+              className="inline-flex items-center gap-1 rounded-full border border-dashed border-border px-3 py-1 text-xs font-medium text-muted-foreground hover:text-foreground hover:border-border/80 transition-colors max-sm:col-span-2 max-sm:justify-self-start max-sm:min-h-11 max-sm:px-4 max-sm:text-sm"
               onClick={() => {
                 const next = new URLSearchParams(searchParams);
                 next.delete("search");
@@ -555,6 +575,9 @@ export default function PipelinePage() {
         </div>
       </div>
 
+      {dealsQuery.isError && !dealsQuery.data ? (
+        <LoadError what={t("errors.what.deals", "your deals")} onRetry={() => void dealsQuery.refetch()} />
+      ) : null}
       <div className="flex-1 min-h-0 flex flex-col">
         <DealsPipelineKanban
           deals={deals}

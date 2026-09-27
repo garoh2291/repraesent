@@ -193,7 +193,7 @@ function ProfileEditor({ view, queryKey }: { view: WorkspaceProfileView; queryKe
         </fieldset>
         {canEdit ? (
           <div className="flex justify-end">
-            <Button type="submit" className="h-10 rounded-lg px-5" disabled={save.isPending}>
+            <Button type="submit" className="h-10 rounded-lg px-5 max-sm:h-11 max-sm:w-full" disabled={save.isPending}>
               {save.isPending ? <Loader2 className="mr-1.5 size-4 animate-spin" aria-hidden /> : null}
               {t("settings.businessProfile.save")}
             </Button>

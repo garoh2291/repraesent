@@ -325,7 +325,7 @@ export default function CalendarPage() {
   );
 
   return (
-    <div className="w-full p-4 sm:p-6 py-10! space-y-4 sm:space-y-6 app-fade-in">
+    <div className="w-full p-4 sm:p-6 py-4 sm:py-10! space-y-4 sm:space-y-6 app-fade-in">
       <CalendarHubTabs />
       {/* Header */}
       <div className="flex flex-wrap items-center justify-between gap-3 app-fade-up">
@@ -333,10 +333,10 @@ export default function CalendarPage() {
           {t("calendar.title")}
         </h1>
 
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2 max-sm:grid max-sm:w-full max-sm:grid-cols-[1fr_auto]">
           <Button
             size="sm"
-            className="gap-2"
+            className="gap-2 max-sm:h-11 max-sm:text-sm"
             onClick={() => setCreateOpen(true)}
           >
             <Plus className="w-3.5 h-3.5" />
@@ -348,9 +348,9 @@ export default function CalendarPage() {
               (app-fade-up), which makes it a stacking context, so no z-index
               inside it can beat the calendar section below — the dropdown was
               sliding under the grid. A portal escapes the trap entirely. */}
-          <div className="flex items-center gap-1.5">
+          <div className="flex items-center gap-1.5 max-sm:order-last max-sm:col-span-2">
             <Globe className="hidden sm:block w-3.5 h-3.5 text-muted-foreground" />
-            <div className="w-56 sm:w-72">
+            <div className="w-56 sm:w-72 max-sm:w-full">
               <TimezoneSelect
                 value={timezone}
                 onChange={(tz) =>
@@ -363,7 +363,7 @@ export default function CalendarPage() {
                 styles={{
                   menuPortal: (base) => ({ ...base, zIndex: 60 }),
                 }}
-                className="text-sm [&_.react-select__control]:min-h-9 [&_.react-select__control]:rounded-lg [&_.react-select__control]:border-border [&_.react-select__control]:text-sm"
+                className="text-sm [&_.react-select__control]:min-h-9 max-sm:[&_.react-select__control]:min-h-11 [&_.react-select__control]:rounded-lg [&_.react-select__control]:border-border [&_.react-select__control]:text-sm"
               />
             </div>
           </div>
@@ -371,7 +371,7 @@ export default function CalendarPage() {
           {/* Mobile: sources panel lives in a sheet */}
           <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
             <SheetTrigger asChild>
-              <Button variant="outline" size="sm" className="gap-2 lg:hidden">
+              <Button variant="outline" size="sm" className="gap-2 lg:hidden max-sm:h-11 max-sm:text-sm">
                 <SlidersHorizontal className="w-3.5 h-3.5" />
                 {t("calendar.calendars")}
               </Button>
@@ -396,7 +396,7 @@ export default function CalendarPage() {
           <button
             type="button"
             onClick={() => setDismissedSignature(errorSignature)}
-            className="shrink-0 rounded-md p-1 text-amber-500 hover:text-amber-700 hover:bg-amber-100 transition-colors"
+            className="relative shrink-0 rounded-md p-1 text-amber-500 hover:text-amber-700 hover:bg-amber-100 transition-colors max-sm:after:absolute max-sm:after:-inset-[13px]"
             aria-label={t("common.close")}
           >
             <X className="h-3.5 w-3.5" />
@@ -416,7 +416,7 @@ export default function CalendarPage() {
             </div>
           )}
           <div
-            className={`appointments-calendar team-calendar h-[560px] sm:h-[700px] rounded-2xl border border-border overflow-hidden transition-opacity duration-150 ${eventsFetching ? "opacity-70" : "opacity-100"}`}
+            className={`appointments-calendar team-calendar h-[560px] max-sm:h-[max(420px,calc(100dvh-16rem))] sm:h-[700px] rounded-2xl border border-border overflow-hidden transition-opacity duration-150 ${eventsFetching ? "opacity-70" : "opacity-100"}`}
           >
             <CalendarView
               events={events}

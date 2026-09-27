@@ -1,5 +1,6 @@
 import { Outlet, useLocation } from "react-router";
 import { useTranslation } from "react-i18next";
+import { BackLink } from "~/components/notebook/back-link";
 
 /**
  * Which section is open, as an i18n key stem.
@@ -43,19 +44,29 @@ export default function SettingsLayout() {
   const key =
     SECTIONS.find((s) => location.pathname.startsWith(s.match))?.key ??
     "profile";
+  // Bare /settings: the phone list page (desktop redirects to the profile).
+  const isIndex = location.pathname.replace(/\/+$/, "") === "/settings";
 
   return (
-    <div className="mx-auto w-full max-w-[1280px] p-4 sm:p-6 py-10! space-y-6 sm:space-y-8 app-fade-in">
+    <div className="mx-auto w-full max-w-[1280px] p-4 sm:p-6 sm:py-10! space-y-6 sm:space-y-8 app-fade-in max-sm:space-y-5">
       <div className="app-fade-up">
+        {/* Phones: the way back to every other setting (REDESIGN_PLAN.md §2). */}
+        {!isIndex ? (
+          <BackLink to="/settings" className="mb-1 sm:hidden">
+            {t("nav.settings", "Settings")}
+          </BackLink>
+        ) : null}
         <h1 className="title-display text-[26px] font-semibold text-foreground sm:text-[30px]">
-          {t(`settings.${key}.metaTitle`)}
+          {isIndex ? t("nav.settings", "Settings") : t(`settings.${key}.metaTitle`)}
         </h1>
-        <p className="text-sm text-muted-foreground mt-0.5">
-          {t(`settings.${key}.metaDescription`)}
-        </p>
+        {isIndex ? null : (
+          <p className="text-sm text-muted-foreground mt-0.5">
+            {t(`settings.${key}.metaDescription`)}
+          </p>
+        )}
       </div>
 
-      <div className="border-t border-border" />
+      {isIndex ? null : <div className="border-t border-border" />}
 
       <Outlet />
     </div>

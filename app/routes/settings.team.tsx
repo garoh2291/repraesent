@@ -143,8 +143,8 @@ export default function SettingsTeam() {
     onSuccess: async () => {
       await invalidateAvatarQueries();
       toast.success(
-        t("settings.avatarSavedWorkspace", {
-          defaultValue: "Workspace picture updated",
+        t("settings.team.businessPictureSaved", {
+          defaultValue: "Business picture updated",
         }),
       );
     },
@@ -156,8 +156,8 @@ export default function SettingsTeam() {
     onSuccess: async () => {
       await invalidateAvatarQueries();
       toast.success(
-        t("settings.avatarRemovedWorkspace", {
-          defaultValue: "Workspace picture removed",
+        t("settings.team.businessPictureRemoved", {
+          defaultValue: "Business picture removed",
         }),
       );
     },
@@ -223,7 +223,7 @@ export default function SettingsTeam() {
     onSuccess: (_, variables) => {
       toast.success(
         variables.data.lead_notification !== undefined
-          ? t("settings.members.notificationsUpdated")
+          ? t("settings.members.inquiryAlertsUpdated", "Inquiry alerts updated")
           : t("settings.members.roleUpdated")
       );
     },
@@ -283,12 +283,12 @@ export default function SettingsTeam() {
     <>
       <div className="space-y-6 sm:space-y-8 app-fade-up app-fade-up-d2">
         <SettingsSection
-          label={t("settings.workspaceSectionTitle", {
-            defaultValue: "Workspace",
+          label={t("settings.team.businessPictureTitle", {
+            defaultValue: "Your business picture",
           })}
-          description={t("settings.workspaceAvatarHint", {
+          description={t("settings.team.businessPictureHint", {
             defaultValue:
-              "The workspace picture shows in the sidebar and the workspace switcher.",
+              "Shows in the menu and when you switch business.",
           })}
         >
           <div className="rounded-2xl border border-border bg-card p-5 sm:p-6">
@@ -327,13 +327,13 @@ export default function SettingsTeam() {
 
         <SettingsSection
           label={t("settings.members.title")}
-          description={t("settings.members.addHint")}
+          description={t("settings.members.addHintPlain", "Invite the people who help you with inquiries and customers.")}
           action={
             isAdmin ? (
               <Button
                 size="sm"
                 onClick={() => setInviteOpen(true)}
-                className="shrink-0 h-9 gap-1.5 bg-foreground text-background hover:bg-foreground/90 hover:text-background"
+                className="shrink-0 h-9 max-sm:h-11 gap-1.5 bg-foreground text-background hover:bg-foreground/90 hover:text-background"
               >
                 <UserPlus className="h-3.5 w-3.5" />
                 {t("settings.members.inviteMember")}
@@ -348,7 +348,7 @@ export default function SettingsTeam() {
                   t("settings.members.headerMember"),
                   t("settings.members.headerEmail"),
                   t("settings.members.headerRole"),
-                  t("settings.members.headerLeadAlerts"),
+                  t("settings.members.headerInquiryAlerts", "Inquiry alerts"),
                   "",
                 ].map((h) => (
                   <span
@@ -453,7 +453,7 @@ export default function SettingsTeam() {
                       </Select>
                       <div className="flex items-center justify-between md:justify-start gap-2">
                         <span className="text-xs text-muted-foreground md:hidden">
-                          {t("settings.members.headerLeadAlerts")}
+                          {t("settings.members.headerInquiryAlerts", "Inquiry alerts")}
                         </span>
                         <Switch
                           checked={m.lead_notification ?? false}
@@ -509,7 +509,7 @@ export default function SettingsTeam() {
           ) : (
             <div className="rounded-2xl border border-border bg-card px-5 py-6">
               <p className="text-sm text-muted-foreground">
-                {t("settings.members.noMembers")}
+                {t("settings.members.noMembersPlain", "Nobody else is on your team yet.")}
               </p>
             </div>
           )}
@@ -534,7 +534,8 @@ export default function SettingsTeam() {
               {t("settings.members.removeTitle")}
             </AlertDialogTitle>
             <AlertDialogDescription>
-              {t("settings.members.removeDescription", {
+              {t("settings.members.removeDescriptionPlain", {
+                defaultValue: "{{name}} will no longer be on your team. You can't undo this.",
                 name: memberToRemove?.name ?? "",
               })}
             </AlertDialogDescription>

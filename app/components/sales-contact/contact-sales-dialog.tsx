@@ -19,6 +19,7 @@ import {
   type SalesContactConfig,
 } from "~/lib/api/sales-contact";
 import { useAuthContext } from "~/providers/auth-provider";
+import { desktopAutoFocus } from "~/lib/utils/touch";
 
 type View = "book" | "message" | "booked" | "sent";
 
@@ -279,7 +280,7 @@ function MessageForm({ onSent, onBackToBooking }: { onSent: () => void; onBackTo
             id={a.id}
             aria-describedby={a.describedBy}
             aria-invalid={a.invalid}
-            autoFocus
+            autoFocus={desktopAutoFocus()}
             rows={4}
             maxLength={1000}
             placeholder={t("salesContact.messagePlaceholder")}

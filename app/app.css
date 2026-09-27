@@ -181,6 +181,62 @@ body {
   color-scheme: light;
 }
 
+/* Touch hit areas (REDESIGN_PLAN.md §0, apple-design: 44 pt targets).
+   Small buttons, checkboxes and switches keep their look but get an
+   invisible 44 × 44 area centred on them on touch devices. In the
+   components layer, so a position utility (absolute, fixed…) on the element
+   still wins over `relative`. Matched on data-variant + data-size, not
+   data-slot: a Button inside a Radix trigger (asChild) gets the trigger's
+   data-slot. Opt out with data-hit="none". */
+@layer components {
+  @media (pointer: coarse) {
+    [data-variant]:is([data-size="default"], [data-size="sm"], [data-size="xs"], [data-size="icon"], [data-size="icon-sm"], [data-size="icon-xs"]):not([data-hit="none"]),
+    [data-slot="checkbox"]:not([data-hit="none"]),
+    [data-slot="switch"]:not([data-hit="none"]) {
+      position: relative;
+    }
+    [data-variant]:is([data-size="default"], [data-size="sm"], [data-size="xs"], [data-size="icon"], [data-size="icon-sm"], [data-size="icon-xs"]):not([data-hit="none"])::after,
+    [data-slot="checkbox"]:not([data-hit="none"])::after,
+    [data-slot="switch"]:not([data-hit="none"])::after {
+      content: "";
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      width: max(100%, 44px);
+      height: max(100%, 44px);
+      transform: translate(-50%, -50%);
+    }
+  }
+}
+
+/* The app shell scrolls in <main> only. On iPhone the document itself could
+   still scroll and bounce, dragging the sticky section tabs and top bar out
+   of view: two scrolls on a long Inquiries or Deals list. Lock the document
+   on app pages (public pages keep normal page scrolling) and keep <main>'s
+   bounce to itself. */
+html:has([data-app-shell]),
+html:has([data-app-shell]) body {
+  height: 100%;
+  overflow: hidden;
+  overscroll-behavior: none;
+}
+[data-app-shell] main {
+  overscroll-behavior-y: contain;
+}
+
+/* One scroll at a time (REDESIGN_PLAN.md §4). The app scrolls inside
+   <main>, not the body, so the body lock that sheets apply doesn't reach it:
+   scrolling a sheet's list past its end used to scroll the page behind it
+   too, and the top bar slid away. While a sheet or dialog is open, the page
+   stays put (its scroll position is kept). */
+body:has([data-vaul-drawer][data-state="open"]) main,
+body:has([data-slot="dialog-content"][data-state="open"]) main,
+body:has([data-slot="alert-dialog-content"][data-state="open"]) main,
+body:has([data-slot="sheet-content"][data-state="open"]) main {
+  overflow: hidden;
+  overscroll-behavior: none;
+}
+
 /* Phones never zoom by themselves.
    - iOS zooms into any field under 16px when it's focused, and the bottom
      tab bar drops off screen until the owner pinches back out. Touch devices
@@ -595,6 +651,22 @@ html {
   animation: app-slide-in-left 0.35s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
+/* Phones: page entrances are quicker — a thumb moves faster than a mouse,
+   and a 450 ms rise on every tab switch feels slow (REDESIGN_PLAN.md §6). */
+@media (max-width: 639px) {
+  .app-fade-up,
+  .app-fade-down {
+    animation-duration: 0.3s;
+  }
+  .app-fade-in {
+    animation-duration: 0.25s;
+  }
+  .app-fade-up-d1 { animation-delay: 0.04s; }
+  .app-fade-up-d2 { animation-delay: 0.08s; }
+  .app-fade-up-d3 { animation-delay: 0.12s; }
+  .app-fade-up-d4 { animation-delay: 0.16s; }
+}
+
 /* Reduced motion (MOBILE_PACKAGE_PLAN.md A2): every entrance becomes a short
    opacity fade — no movement, no scale. */
 @keyframes app-reduced-fade {
@@ -999,6 +1071,13 @@ html {
     font-size: 0.875rem;
   }
 }
+/* Phones: every phone field is 44 px, like the Input and Select primitives. */
+@media (max-width: 639px) {
+  .crm-phone-input,
+  .crm-phone-input.crm-phone-input--control {
+    height: 2.75rem;
+  }
+}
 .crm-phone-input.crm-phone-input--control:hover {
   border-color: color-mix(in srgb, var(--foreground) 25%, transparent);
 }
@@ -1138,5 +1217,179 @@ html {
     background: var(--background);
     z-index: 40;
     pointer-events: none;
+  }
+}
+
+/* ── Start screen (REDESIGN_PLAN.md §3) ─────────────────────────────────────
+   Ink, white wordmark. "re:" fades in centred (it sits 39.5% right of its
+   final spot: (1415 − 297) / 2 / 1415), then glides left while "praesent"
+   draws out of it. Plain CSS so it runs before JavaScript and off the main
+   thread. 1 s intro, matching INTRO_MS in brand-splash.tsx. */
+.rp-splash {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #141516;
+  color: #ffffff;
+  padding: env(safe-area-inset-top) 0 env(safe-area-inset-bottom);
+  transition: opacity 280ms cubic-bezier(0.23, 1, 0.32, 1);
+}
+.rp-splash[data-leaving] {
+  opacity: 0;
+  pointer-events: none;
+}
+.rp-splash__mark {
+  position: relative;
+  width: min(62vw, 264px);
+  aspect-ratio: 1415 / 221;
+  transition: transform 280ms cubic-bezier(0.23, 1, 0.32, 1);
+}
+.rp-splash[data-leaving] .rp-splash__mark {
+  transform: scale(1.03);
+}
+.rp-splash__a,
+.rp-splash__b {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  will-change: transform;
+}
+.rp-splash__a {
+  animation: rp-splash-a 1000ms both;
+}
+.rp-splash__b {
+  animation: rp-splash-b 1000ms both;
+}
+@keyframes rp-splash-a {
+  0% {
+    opacity: 0;
+    transform: translateX(39.5%) scale(0.94);
+    animation-timing-function: cubic-bezier(0.23, 1, 0.32, 1);
+  }
+  26% {
+    opacity: 1;
+    transform: translateX(39.5%) scale(1);
+  }
+  34% {
+    transform: translateX(39.5%) scale(1);
+    animation-timing-function: cubic-bezier(0.65, 0, 0.35, 1);
+  }
+  92%,
+  100% {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+  }
+}
+@keyframes rp-splash-b {
+  0%,
+  34% {
+    transform: translateX(39.5%);
+    clip-path: inset(0 77.5% 0 22.5%);
+    animation-timing-function: cubic-bezier(0.65, 0, 0.35, 1);
+  }
+  92%,
+  100% {
+    transform: translateX(0);
+    clip-path: inset(0 0 0 22.5%);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .rp-splash__a,
+  .rp-splash__b {
+    animation: rp-splash-fade 300ms ease both;
+  }
+  .rp-splash[data-leaving] .rp-splash__mark {
+    transform: none;
+  }
+}
+@keyframes rp-splash-fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* Slow page change (REDESIGN_PLAN.md): a thin ink line at the top edge while
+   the next page's code downloads. Only after 150 ms, so fast taps never see it. */
+.rp-nav-progress {
+  position: fixed;
+  left: 0;
+  right: 0;
+  top: var(--safe-top, 0px);
+  z-index: 60;
+  height: 2px;
+  overflow: hidden;
+  pointer-events: none;
+}
+.rp-nav-progress::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  width: 40%;
+  background: var(--foreground);
+  border-radius: 0 2px 2px 0;
+  animation: rp-nav-progress 1.1s cubic-bezier(0.65, 0, 0.35, 1) infinite;
+}
+@keyframes rp-nav-progress {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(260%);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .rp-nav-progress::before {
+    animation: none;
+    width: 100%;
+    opacity: 0.35;
+  }
+}
+
+/* Back after a long break on a phone (use-refresh-on-return.ts): the page
+   fades a little while fresh data loads, and stays usable. */
+[data-app-shell] main > * {
+  transition: opacity 150ms ease-out;
+}
+[data-app-shell] main[data-resuming] > * {
+  opacity: 0.6;
+}
+
+/* First-time search hint (components/notebook/search-hint.tsx). */
+.rp-hint-ring {
+  box-shadow: 0 0 0 3px var(--marker);
+  animation: rp-hint-pulse 1.4s cubic-bezier(0.23, 1, 0.32, 1) 2 both;
+}
+@keyframes rp-hint-pulse {
+  0% {
+    box-shadow: 0 0 0 3px var(--marker), 0 0 0 3px color-mix(in srgb, var(--marker) 55%, transparent);
+  }
+  70% {
+    box-shadow: 0 0 0 3px var(--marker), 0 0 0 14px color-mix(in srgb, var(--marker) 0%, transparent);
+  }
+  100% {
+    box-shadow: 0 0 0 3px var(--marker), 0 0 0 14px transparent;
+  }
+}
+.rp-hint-bubble {
+  animation: rp-hint-in 260ms cubic-bezier(0.23, 1, 0.32, 1) both;
+}
+@keyframes rp-hint-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px) scale(0.97);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .rp-hint-ring,
+  .rp-hint-bubble {
+    animation: none;
   }
 }

@@ -1,3 +1,4 @@
+import axios from "axios";
 import {
   apiClient,
   extractErrorCode,
@@ -178,6 +179,70 @@ export interface WorkspaceContext {
 }
 
 /**
+ * Why sending a sign-in / sign-up email failed, as something the page can say
+ * in the reader's language. The server's English `message` is kept for logs
+ * only — pages show `authErrorKey(err)` instead.
+ */
+export type AuthRequestErrorKind = "network" | "tooMany" | "adminManaged" | "other";
+
+export class AuthRequestError extends Error {
+  constructor(
+    message: string,
+    readonly kind: AuthRequestErrorKind,
+    readonly status?: number,
+  ) {
+    super(message);
+    this.name = "AuthRequestError";
+  }
+}
+
+/** No response at all (offline, DNS, CORS, timeout) counts as a network error. */
+const isNetworkFailure = (error: unknown): boolean => {
+  if (!axios.isAxiosError(error)) return false;
+  return (
+    !error.response ||
+    error.code === "ERR_NETWORK" ||
+    error.code === "ECONNABORTED" ||
+    error.code === "ETIMEDOUT"
+  );
+};
+
+const toAuthRequestError = (error: unknown, fallback: string): AuthRequestError => {
+  const apiError = createApiError(error);
+  const kind: AuthRequestErrorKind = isNetworkFailure(error)
+    ? "network"
+    : apiError.status === 429
+      ? "tooMany"
+      : "other";
+  return new AuthRequestError(apiError.message || fallback, kind, apiError.status);
+};
+
+/**
+ * The i18n key (with its English default) for a failed email request. Never
+ * the raw server text.
+ */
+export const authErrorMessage = (
+  error: unknown,
+  t: (key: string, defaultValue: string) => string,
+  fallbackKey = "auth.login.somethingWrong",
+): string => {
+  if (error instanceof AuthRequestError || axios.isAxiosError(error)) {
+    const kind =
+      error instanceof AuthRequestError ? error.kind : toAuthRequestError(error, "").kind;
+    if (kind === "network")
+      return t("auth.errors.network", "No connection. Check your internet and try again.");
+    if (kind === "tooMany")
+      return t("auth.errors.tooMany", "Too many tries. Wait a minute, then send again.");
+    if (kind === "adminManaged")
+      return t(
+        "auth.errors.adminManaged",
+        "This email belongs to an admin account. Sign in on the sign-in page instead.",
+      );
+  }
+  return t(fallbackKey, "Something went wrong. Please try again.");
+};
+
+/**
  * Register for self-service (sends magic link)
  */
 export const register = async (
@@ -196,11 +261,13 @@ export const register = async (
   } catch (error) {
     const apiError = createApiError(error);
     if (apiError.status === 409) {
-      throw new Error(
+      throw new AuthRequestError(
         "This email is managed by an admin account. Use the login page.",
+        "adminManaged",
+        409,
       );
     }
-    throw new Error(apiError.message || "Failed to register");
+    throw toAuthRequestError(error, "Failed to register");
   }
 };
 
@@ -226,8 +293,7 @@ export const requestMagicLink = async (
   try {
     await apiClient.post("/users/magic-link", { email, locale });
   } catch (error) {
-    const apiError = createApiError(error);
-    throw new Error(apiError.message || "Failed to send magic link");
+    throw toAuthRequestError(error, "Failed to send magic link");
   }
 };
 

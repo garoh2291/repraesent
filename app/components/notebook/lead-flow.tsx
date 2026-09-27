@@ -21,7 +21,8 @@ import { useWorkspaceCurrency } from "~/lib/hooks/useWorkspaceCurrency";
 import { markLeadNotSpam, updateLeadStatus } from "~/lib/api/leads";
 import type { ContactChannel, LeadOutcome, VoiceOutcomeResult } from "~/lib/api/lead-outcomes";
 import { VoiceNoteButton } from "~/components/notebook/voice-note-button";
-import { parseDealValue } from "~/lib/api/deals";
+import { parseDealValue, type DealCurrency } from "~/lib/api/deals";
+import { DealCurrencySelect } from "~/components/molecule/deal-currency-select";
 import { extractErrorMessage } from "~/lib/api/axios-instance";
 import { useComposeEmail } from "~/components/organism/compose-email/use-compose-email";
 import { useCanSendEmail } from "~/lib/hooks/useCanSendEmail";
@@ -380,6 +381,10 @@ export function MakeDealSheet({
   const [value, setValue] = useState(() => prefill?.value ?? "");
   const [task, setTask] = useState(() => prefill?.task || t("makeDeal.defaultTask", "Send an offer"));
   const [due, setDue] = useState(() => prefill?.due || toDateInput(tomorrowNineIso()));
+  // The business's currency until the owner picks another one for this deal
+  // (the default can still be loading when the sheet opens).
+  const [picked, setPicked] = useState<DealCurrency | null>(null);
+  const dealCurrency = picked ?? currency;
 
   if (!lead) return null;
 
@@ -390,7 +395,7 @@ export function MakeDealSheet({
         leadId: lead.id,
         title: title.trim() || undefined,
         value: value.trim() ? parseDealValue(value) : null,
-        currency,
+        currency: dealCurrency,
         first_task: task.trim() ? { title: task.trim(), due_date: fromDateInput(due) } : undefined,
       });
       onOpenChange(false);
@@ -422,18 +427,24 @@ export function MakeDealSheet({
           <span className="text-[12.5px] font-medium text-muted-foreground">{t("makeDeal.what", "What is it?")}</span>
           <Input value={title} onChange={(e) => setTitle(e.target.value)} className="h-11 bg-card" />
         </label>
-        <label className="block space-y-1.5">
-          <span className="text-[12.5px] font-medium text-muted-foreground">
-            {t("makeDeal.value", "Roughly worth ({{currency}})", { currency })}
-          </span>
-          <Input
-            inputMode="decimal"
-            value={value}
-            onChange={(e) => setValue(e.target.value)}
-            placeholder="0"
-            className="num h-11 bg-card"
-          />
-        </label>
+        <div className="space-y-1.5">
+          <label htmlFor="make-deal-value" className="block text-[12.5px] font-medium text-muted-foreground">
+            {t("makeDeal.value", "Roughly worth ({{currency}})", { currency: dealCurrency })}
+          </label>
+          {/* Value and currency on one line, like the New deal form. The
+              currency picker only shows once deal currencies are on. */}
+          <div className="flex gap-2">
+            <Input
+              id="make-deal-value"
+              inputMode="decimal"
+              value={value}
+              onChange={(e) => setValue(e.target.value)}
+              placeholder="0"
+              className="num h-11 min-w-0 flex-1 bg-card"
+            />
+            <DealCurrencySelect value={dealCurrency} onChange={setPicked} className="h-11! bg-card" />
+          </div>
+        </div>
         <label className="block space-y-1.5">
           <span className="text-[12.5px] font-medium text-muted-foreground">{t("makeDeal.nextStep", "Next step")}</span>
           <Input value={task} onChange={(e) => setTask(e.target.value)} className="h-11 bg-card" />

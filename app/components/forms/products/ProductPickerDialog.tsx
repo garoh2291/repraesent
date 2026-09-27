@@ -25,6 +25,7 @@ import {
 } from "~/lib/hooks/useStripeCatalog";
 import { formatMoneyFromMinor } from "~/lib/utils/format";
 import { cn } from "~/lib/utils";
+import { desktopAutoFocus } from "~/lib/utils/touch";
 
 interface Props {
   open: boolean;
@@ -239,7 +240,7 @@ export function ProductPickerDialog({
             <div className="relative">
               <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input
-                autoFocus
+                autoFocus={desktopAutoFocus()}
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder={t("forms.products.picker.search")}

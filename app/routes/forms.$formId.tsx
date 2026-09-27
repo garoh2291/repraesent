@@ -16,6 +16,8 @@ import { toast } from "sonner";
 import { listEmailAccounts } from "~/lib/api/workspaces";
 import { ConfirmationEmailPanel } from "~/components/forms/ConfirmationEmailPanel";
 import { FieldInspector } from "~/components/forms/FieldInspector";
+import { BottomSheet } from "~/components/notebook/bottom-sheet";
+import { useIsPhone } from "~/lib/hooks/use-is-phone";
 import { FieldPalette } from "~/components/forms/FieldPalette";
 import { IntakeSetupPanel } from "~/components/forms/IntakeSetupPanel";
 import { FormCanvas } from "~/components/forms/FormCanvas";
@@ -975,6 +977,10 @@ export default function FormBuilderRoute() {
               }
             : null;
 
+  // Phones: the inspector opens in a sheet over the canvas instead of
+  // stacking under the whole form (REDESIGN_PLAN.md §5, Forms).
+  const isPhone = useIsPhone();
+
   // Selecting a field that lives on another step (from the banner, say) has to
   // bring that step on screen, or the selection ring points at nothing.
   useEffect(() => {
@@ -1650,6 +1656,60 @@ export default function FormBuilderRoute() {
       .map((f) => f.mapping as string),
   );
 
+  const inspectorEl = (
+              <FieldInspector
+                target={inspectorTarget}
+                otherKeys={otherKeys}
+                otherMappings={otherMappings}
+                disabled={!canEdit}
+                getText={(key) => getRawContent(definition, editingLocale, key)}
+                setText={setText}
+                onChange={(patch) =>
+                  mapFields((f) =>
+                    f.id === activeFieldId ? { ...f, ...patch } : f,
+                  )
+                }
+                onMoveToStep={
+                  activeFieldId
+                    ? (stepId) => moveFieldToStep(activeFieldId, stepId)
+                    : undefined
+                }
+                onMoveStep={
+                  selection?.kind === "step"
+                    ? (dir) => {
+                        const ids = definition.sections.map((s) => s.id);
+                        const from = ids.indexOf(selection.stepId);
+                        const to = from + dir;
+                        if (from < 0 || to < 0 || to >= ids.length) return;
+                        const next = [...ids];
+                        next.splice(from, 1);
+                        next.splice(to, 0, selection.stepId);
+                        reorderSteps(next);
+                      }
+                    : undefined
+                }
+                onDeleteStep={
+                  selection?.kind === "step"
+                    ? () => requestDeleteStep(selection.stepId)
+                    : undefined
+                }
+                commerce={definition.commerce}
+                onCommerceChange={(patch) =>
+                  patchDefinition({
+                    ...definition,
+                    commerce: {
+                      ...(definition.commerce ?? DEFAULT_FORM_COMMERCE),
+                      ...patch,
+                    },
+                  })
+                }
+                archivedPriceIds={archivedPriceIds}
+                onDeleteField={
+                  activeFieldId ? () => deleteField(activeFieldId) : undefined
+                }
+              />
+  );
+
   return (
     <div
       className="mx-auto w-full max-w-[1280px] space-y-5 p-4 pb-10! pt-0! sm:p-6 sm:pb-14! sm:pt-0! app-fade-in"
@@ -1675,7 +1735,7 @@ export default function FormBuilderRoute() {
               to="/forms"
               aria-label={t("forms.builder.back")}
               title={t("forms.builder.back")}
-              className="inline-flex size-8 shrink-0 items-center justify-center rounded-lg text-white/35 transition-colors hover:bg-white/10 hover:text-white/80"
+              className="press inline-flex size-8 max-sm:-ml-2 max-sm:size-11 shrink-0 items-center justify-center rounded-lg text-white/35 transition-colors hover:bg-white/10 hover:text-white/80"
             >
               <ArrowLeft className="h-4 w-4" />
             </Link>
@@ -1982,59 +2042,27 @@ export default function FormBuilderRoute() {
               />
             </div>
 
+            {isPhone ? (
+              <BottomSheet
+                open={!!inspectorTarget}
+                onOpenChange={(open) => {
+                  if (!open) setSelection(null);
+                }}
+                title={
+                  inspectorTarget?.kind === "field"
+                    ? t("forms.builder.sheetEditQuestion", "Edit question")
+                    : inspectorTarget?.kind === "step"
+                      ? t("forms.builder.sheetEditStep", "Edit step")
+                      : t("forms.builder.sheetEdit", "Edit")
+                }
+              >
+                {inspectorEl}
+              </BottomSheet>
+            ) : (
             <aside className="app-fade-up app-fade-up-d3 order-3 lg:col-span-2 xl:col-span-1 xl:sticky xl:top-[var(--fb-stick)] xl:self-start">
-              <FieldInspector
-                target={inspectorTarget}
-                otherKeys={otherKeys}
-                otherMappings={otherMappings}
-                disabled={!canEdit}
-                getText={(key) => getRawContent(definition, editingLocale, key)}
-                setText={setText}
-                onChange={(patch) =>
-                  mapFields((f) =>
-                    f.id === activeFieldId ? { ...f, ...patch } : f,
-                  )
-                }
-                onMoveToStep={
-                  activeFieldId
-                    ? (stepId) => moveFieldToStep(activeFieldId, stepId)
-                    : undefined
-                }
-                onMoveStep={
-                  selection?.kind === "step"
-                    ? (dir) => {
-                        const ids = definition.sections.map((s) => s.id);
-                        const from = ids.indexOf(selection.stepId);
-                        const to = from + dir;
-                        if (from < 0 || to < 0 || to >= ids.length) return;
-                        const next = [...ids];
-                        next.splice(from, 1);
-                        next.splice(to, 0, selection.stepId);
-                        reorderSteps(next);
-                      }
-                    : undefined
-                }
-                onDeleteStep={
-                  selection?.kind === "step"
-                    ? () => requestDeleteStep(selection.stepId)
-                    : undefined
-                }
-                commerce={definition.commerce}
-                onCommerceChange={(patch) =>
-                  patchDefinition({
-                    ...definition,
-                    commerce: {
-                      ...(definition.commerce ?? DEFAULT_FORM_COMMERCE),
-                      ...patch,
-                    },
-                  })
-                }
-                archivedPriceIds={archivedPriceIds}
-                onDeleteField={
-                  activeFieldId ? () => deleteField(activeFieldId) : undefined
-                }
-              />
+              {inspectorEl}
             </aside>
+            )}
           </div>
 
           <AlertDialog

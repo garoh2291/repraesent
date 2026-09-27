@@ -32,6 +32,9 @@ import { pluginKindIcon, wordpressPluginSettingsPath } from "~/lib/utils/wordpre
 import { useNavSections } from "~/lib/nav/sections";
 import { PILOT_SETTINGS, useNavModel } from "~/lib/nav/use-nav-model";
 import { cn } from "~/lib/utils";
+import { ListRow, SettingsGroups } from "~/components/notebook/settings-groups";
+import { applyWaitingUpdate, useUpdateWaiting } from "~/lib/pwa/update-store";
+import { EASE_OUT, SPRING } from "~/lib/motion";
 
 /**
  * The phone menu: a light sheet that rises from the bottom (opened by "More"
@@ -46,7 +49,6 @@ import { cn } from "~/lib/utils";
 
 type View = "main" | "settings" | "website";
 
-const EASE_OUT = [0.23, 1, 0.32, 1] as const;
 
 export function MobileMenu({ open, onOpenChange }: { open: boolean; onOpenChange: (open: boolean) => void }) {
   const { t } = useTranslation();
@@ -60,6 +62,8 @@ export function MobileMenu({ open, onOpenChange }: { open: boolean; onOpenChange
   }, [open, routeView]);
 
   const close = () => onOpenChange(false);
+  const reduce = useReducedMotion();
+  const updateWaiting = useUpdateWaiting();
 
   return (
     <>
@@ -84,7 +88,37 @@ export function MobileMenu({ open, onOpenChange }: { open: boolean; onOpenChange
               </button>
             ) : null}
 
-            <div className="mt-5">
+            {updateWaiting ? (
+              <button
+                type="button"
+                onClick={applyWaitingUpdate}
+                className="press mt-3 flex min-h-12 w-full items-center gap-3 rounded-2xl border border-border bg-card px-4 text-left active:bg-muted"
+              >
+                <span className="size-2 shrink-0 rounded-full bg-marker ring-4 ring-marker/25" aria-hidden />
+                <span className="min-w-0 flex-1 text-[15px] font-medium text-foreground">
+                  {t("pwa.update.title", "New version ready")}
+                </span>
+                <span className="rounded-full bg-foreground px-3 py-1.5 text-[13px] font-semibold text-background">
+                  {t("pwa.update.reload", "Reload")}
+                </span>
+              </button>
+            ) : null}
+
+            <div className="relative mt-5 overflow-x-clip">
+              <AnimatePresence mode="popLayout" initial={false} custom={view === "main" ? -1 : 1}>
+              <motion.div
+                key={view}
+                custom={view === "main" ? -1 : 1}
+                variants={{
+                  enter: (dir: number) => (reduce ? { opacity: 0 } : { opacity: 0, x: dir * 36 }),
+                  center: { opacity: 1, x: 0 },
+                  exit: (dir: number) => (reduce ? { opacity: 0 } : { opacity: 0, x: dir * -36 }),
+                }}
+                initial="enter"
+                animate="center"
+                exit="exit"
+                transition={reduce ? { duration: 0.15 } : SPRING}
+              >
               {view === "settings" ? (
                 <SettingsList onBack={() => setView("main")} onNavigate={close} />
               ) : view === "website" ? (
@@ -99,8 +133,11 @@ export function MobileMenu({ open, onOpenChange }: { open: boolean; onOpenChange
                     close();
                     setContactOpen(true);
                   }}
+                  onOpenView={setView}
                 />
               )}
+              </motion.div>
+              </AnimatePresence>
             </div>
 
             <Footer />
@@ -149,7 +186,7 @@ function AreaSwitcher({ onPicked }: { onPicked: () => void }) {
       <span className="min-w-0 flex-1">
         <span className="block truncate text-[16px] font-semibold leading-tight text-foreground">{ws.name}</span>
         {nav.hasMultipleWorkspaces ? (
-          <span className="mt-0.5 block text-[12.5px] text-muted-foreground">{t("nav.mobileMenu.switchArea", "Switch area")}</span>
+          <span className="mt-0.5 block text-[12.5px] text-muted-foreground">{t("nav.mobileMenu.switchBusiness", "Switch business")}</span>
         ) : null}
       </span>
     </>
@@ -243,6 +280,8 @@ type Tile = {
   icon: React.ComponentType<{ className?: string }>;
   to?: string;
   onClick?: () => void;
+  /** Opens a list inside the sheet: shows a chevron. */
+  drill?: boolean;
   active?: boolean;
 };
 
@@ -264,6 +303,9 @@ function TileGrid({ tiles, open, onNavigate }: { tiles: Tile[]; open: boolean; o
               {tile.hint ? <span className="mt-1 block text-[12.5px] leading-snug text-muted-foreground">{tile.hint}</span> : null}
             </span>
             {wide ? <ChevronRight className="size-4 shrink-0 text-muted-foreground/60" aria-hidden /> : null}
+            {tile.drill && !wide ? (
+              <ChevronRight className="absolute right-3.5 top-4 size-4 text-muted-foreground/60" aria-hidden />
+            ) : null}
             {tile.active ? <span className="absolute inset-x-5 bottom-0 h-[3px] rounded-t-full bg-marker" aria-hidden /> : null}
           </>
         );
@@ -280,7 +322,7 @@ function TileGrid({ tiles, open, onNavigate }: { tiles: Tile[]; open: boolean; o
             transition={{ duration: 0.26, delay: reduce ? 0 : 0.06 + i * 0.04, ease: EASE_OUT }}
           >
             {tile.to ? (
-              <Link to={tile.to} onClick={onNavigate} aria-current={tile.active ? "page" : undefined} className={cls}>
+              <Link to={tile.to} prefetch="intent" onClick={onNavigate} aria-current={tile.active ? "page" : undefined} className={cls}>
                 {body}
               </Link>
             ) : (
@@ -295,7 +337,18 @@ function TileGrid({ tiles, open, onNavigate }: { tiles: Tile[]; open: boolean; o
   );
 }
 
-function MainTiles({ open, onNavigate, onContact }: { open: boolean; onNavigate: () => void; onContact: () => void }) {
+function MainTiles({
+  open,
+  onNavigate,
+  onContact,
+  onOpenView,
+}: {
+  open: boolean;
+  onNavigate: () => void;
+  onContact: () => void;
+  /** Website and Settings open their own list in the sheet, not a page. */
+  onOpenView: (view: "settings" | "website") => void;
+}) {
   const { t } = useTranslation();
   const location = useLocation();
   const nav = useNavModel();
@@ -308,7 +361,8 @@ function MainTiles({ open, onNavigate, onContact }: { open: boolean; onNavigate:
       label: website.label,
       hint: t("nav.mobileMenu.hints.website", "Pages, SEO and your services"),
       icon: website.icon ?? Globe,
-      to: website.to,
+      onClick: () => onOpenView("website"),
+      drill: true,
       active: location.pathname.startsWith("/website"),
     });
   }
@@ -318,7 +372,8 @@ function MainTiles({ open, onNavigate, onContact }: { open: boolean; onNavigate:
       label: t("nav.settings"),
       hint: t("nav.mobileMenu.hints.settings", "You, your team and connections"),
       icon: Settings,
-      to: "/settings/profile",
+      onClick: () => onOpenView("settings"),
+      drill: true,
       active: nav.inSettings,
     },
     {
@@ -379,78 +434,12 @@ function BackRow({ label, onBack }: { label: string; onBack: () => void }) {
   );
 }
 
-function ListRow({
-  to,
-  icon: Icon,
-  label,
-  active,
-  onNavigate,
-  pill,
-}: {
-  to: string;
-  icon: React.ComponentType<{ className?: string }>;
-  label: string;
-  active: boolean;
-  onNavigate: () => void;
-  pill?: React.ReactNode;
-}) {
-  return (
-    <li>
-      <Link
-        to={to}
-        onClick={onNavigate}
-        aria-current={active ? "page" : undefined}
-        className={cn(
-          "press flex min-h-12 items-center gap-3 px-3 py-2 text-[15px] transition-colors active:bg-muted",
-          active ? "font-semibold text-foreground" : "text-foreground/85",
-        )}
-      >
-        <span className={cn("flex size-8 shrink-0 items-center justify-center rounded-lg", active ? "bg-secondary" : "bg-muted")}>
-          <Icon className="size-4" aria-hidden />
-        </span>
-        <span className="min-w-0 flex-1 truncate">{label}</span>
-        {pill}
-        {active ? <span className="size-2 rounded-full bg-marker" aria-hidden /> : <ChevronRight className="size-4 text-muted-foreground/60" aria-hidden />}
-      </Link>
-    </li>
-  );
-}
-
 function SettingsList({ onBack, onNavigate }: { onBack: () => void; onNavigate: () => void }) {
   const { t } = useTranslation();
-  const { pathname } = useLocation();
-  const nav = useNavModel();
   return (
     <div>
       <BackRow label={t("nav.settings")} onBack={onBack} />
-      <div className="space-y-4">
-        {nav.settingsGroups.map((group) => (
-          <section key={group.key}>
-            <p className="px-1 pb-1.5 text-[11px] font-semibold uppercase tracking-[0.09em] text-muted-foreground">
-              {t(group.labelKey, group.fallback)}
-            </p>
-            <ul className="divide-y divide-border overflow-hidden rounded-2xl border border-border bg-card">
-              {group.items.map(({ to, labelKey, Icon }) => (
-                <ListRow
-                  key={to}
-                  to={to}
-                  icon={Icon}
-                  label={t(labelKey)}
-                  active={pathname.startsWith(to)}
-                  onNavigate={onNavigate}
-                  pill={
-                    PILOT_SETTINGS.has(to) ? (
-                      <span className="rounded-full bg-foreground/10 px-1.5 py-0.5 text-[9.5px] font-semibold uppercase tracking-wider text-muted-foreground">
-                        {t(PILOT_FEATURE_LABEL_KEY, { defaultValue: "Demo" })}
-                      </span>
-                    ) : null
-                  }
-                />
-              ))}
-            </ul>
-          </section>
-        ))}
-      </div>
+      <SettingsGroups onNavigate={onNavigate} />
     </div>
   );
 }

@@ -44,7 +44,7 @@ export function CalendarHubTabs({ className }: { className?: string }) {
             role="tab"
             aria-selected={active}
             className={cn(
-              "whitespace-nowrap rounded-md px-3 py-1.5 text-[12.5px] font-medium transition-colors",
+              "press whitespace-nowrap rounded-md px-3 py-1.5 text-[12.5px] font-medium transition-colors max-sm:flex max-sm:min-h-10 max-sm:items-center max-sm:text-[14px]",
               active ? "bg-foreground text-background" : "text-muted-foreground hover:text-foreground",
             )}
           >

@@ -26,6 +26,7 @@ import { ConfirmDeleteDialog } from "~/components/molecule/confirm-delete-dialog
 import { useDocumentMeta } from "~/lib/hooks/use-document-meta";
 import { useDebounce } from "~/lib/hooks/useDebounce";
 import { useSearchShortcut } from "~/lib/hooks/useSearchShortcut";
+import { desktopAutoFocus } from "~/lib/utils/touch";
 
 export default function EmailTemplatesIndex() {
   const { t, i18n: i18next } = useTranslation();
@@ -174,7 +175,7 @@ export default function EmailTemplatesIndex() {
             </DialogTitle>
           </DialogHeader>
           <Input
-            autoFocus
+            autoFocus={desktopAutoFocus()}
             value={newName}
             onChange={(e) => setNewName(e.target.value)}
             placeholder={t("emailCampaigns.templates.namePlaceholder", {

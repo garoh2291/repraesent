@@ -2,6 +2,7 @@ import * as React from "react"
 import { Popover as PopoverPrimitive } from "radix-ui"
 
 import { cn } from "~/lib/utils"
+import { touchSafeOpenAutoFocus } from "~/lib/utils/touch"
 
 function Popover({
   ...props
@@ -19,12 +20,14 @@ function PopoverContent({
   className,
   align = "center",
   sideOffset = 4,
+  onOpenAutoFocus,
   ...props
 }: React.ComponentProps<typeof PopoverPrimitive.Content>) {
   return (
     <PopoverPrimitive.Portal>
       <PopoverPrimitive.Content
         data-slot="popover-content"
+        onOpenAutoFocus={touchSafeOpenAutoFocus(onOpenAutoFocus)}
         align={align}
         sideOffset={sideOffset}
         className={cn(

@@ -95,7 +95,8 @@
         "settings": "Vous, votre équipe et vos connexions",
         "billing": "Offre et factures",
         "contact": "Une vraie personne de notre équipe"
-      }
+      },
+      "switchBusiness": "Changer d’entreprise"
     }
   },
   "db_brand": {
@@ -199,7 +200,11 @@
           "MAGIC_LINK_INELIGIBLE": "Ce compte ne peut pas se connecter à cette application. Contactez votre administrateur.",
           "fallback": "La connexion n'a pas abouti. Vérifiez votre connexion et réessayez."
         }
-      }
+      },
+      "checkInboxDetailCode": "Nous avons envoyé un lien et un code à 6 chiffres à {{email}}.",
+      "checkInboxExpiry": "Le lien est valable 30 minutes, le code 10 minutes.",
+      "subtitleCode": "Nous vous envoyons un lien et un code à 6 chiffres par e-mail.",
+      "sendButton": "Recevoir l’e-mail de connexion →"
     },
     "register": {
       "metaTitle": "Créer un compte",
@@ -219,7 +224,8 @@
       "signIn": "Se connecter",
       "emailRequired": "Veuillez saisir votre adresse e-mail",
       "emailInvalid": "Veuillez saisir une adresse e-mail valide",
-      "somethingWrong": "Une erreur s'est produite. Veuillez réessayer."
+      "somethingWrong": "Une erreur s'est produite. Veuillez réessayer.",
+      "benefitNoPassword": "Pas de mot de passe — un lien par e-mail"
     },
     "callback": {
       "metaTitle": "Connexion en cours",
@@ -258,7 +264,8 @@
       "stalledTitle": "Cela prend plus de temps que d'habitude",
       "stalledDetail": "Vous êtes connecté — le serveur est occupé et n'a pas pu ouvrir votre espace pour l'instant.",
       "tryAgain": "Réessayer",
-      "slow": "Ouverture de votre espace — le serveur est occupé, nouvel essai en cours…"
+      "slow": "Ouverture de votre espace — le serveur est occupé, nouvel essai en cours…",
+      "linkExpiredDetailPlain": "Ce lien de connexion a expiré ou a déjà été utilisé. Demandez-en un nouveau sur la page de connexion."
     },
     "workspacePicker": {
       "metaTitle": "Choisir un espace",
@@ -268,6 +275,12 @@
       "subtitle_other": "Vous avez accès à {{count}} espaces. Sélectionnez-en un pour continuer.",
       "noWorkspaces": "Aucun espace trouvé",
       "clickToEnter": "Cliquez pour accéder à l'espace"
+    },
+    "errors": {
+      "network": "Pas de connexion. Vérifiez votre accès internet et réessayez.",
+      "tooMany": "Trop de tentatives. Attendez une minute, puis renvoyez.",
+      "linkIncomplete": "Ce lien de connexion était incomplet. Demandez-en un nouveau ci-dessous.",
+      "adminManaged": "Cet e-mail appartient à un compte administrateur. Connectez-vous plutôt sur la page de connexion."
     }
   },
   "home": {
@@ -317,7 +330,8 @@
     "plausibleVisitors_one": "{{count}} visiteur",
     "plausibleVisitors_other": "{{count}} visiteurs",
     "dealsOpen": "Affaires ouvertes",
-    "dealsWon": "Gagnées"
+    "dealsWon": "Gagnées",
+    "viewAllInquiries": "Voir toutes les demandes"
   },
   "leads": {
     "metaTitle": "Leads",
@@ -447,11 +461,13 @@
       "contactConversionModalTitle": "Contact créé",
       "contactConversionModalDescription": "Ce lead est désormais lié à un contact. Ouvrez la fiche du contact pour ajouter des affaires ou assurer le suivi.",
       "createDeal": "Créer une affaire",
-      "backToLead": "Retour au lead",
+      "backToLead": "Retour à la demande",
       "historyTaskAssigneeRemoved": "Responsable de la tâche retiré",
       "historyCheckoutPaid": "A payé {{amount}} via le paiement",
       "historyCheckoutFailed": "Paiement refusé lors du checkout",
-      "historyCheckoutExpired": "Checkout expiré sans paiement"
+      "historyCheckoutExpired": "Checkout expiré sans paiement",
+      "saveAsContact": "Enregistrer comme contact",
+      "details": "Détails"
     },
     "empty": "Aucun lead pour le moment",
     "filters": {
@@ -599,7 +615,16 @@
       "hiddenHint": "L’expéditeur peut toujours vous contacter.",
       "blockSender": "Bloquer l’expéditeur",
       "thisLead": "ce lead"
-    }
+    },
+    "listHint": "Toutes les personnes qui vous ont contacté, les plus récentes d’abord.",
+    "newInquiry": "Nouvelle demande",
+    "listView": "Liste",
+    "boardView": "Colonnes",
+    "phoneMenu": {
+      "all": "Toutes"
+    },
+    "newInquiryTitle": "Nouvelle demande",
+    "saveInquiry": "Enregistrer la demande"
   },
   "pipeline": {
     "stripeNotConnected": {
@@ -620,7 +645,7 @@
     "dealCreated": "Affaire créée.",
     "dealSaved": "Affaire enregistrée.",
     "dealNotFound": "Impossible de charger l'affaire.",
-    "backToPipeline": "Retour au pipeline",
+    "backToPipeline": "Retour aux affaires",
     "dealDetails": "Affaire",
     "untitledDeal": "Cette affaire",
     "capHint": "Affichage jusqu'à 500 affaires. Affinez la recherche ou le responsable si nécessaire.",
@@ -1403,7 +1428,11 @@
     },
     "team": {
       "metaTitle": "Équipe",
-      "metaDescription": "Gérer les membres de l'équipe, les rôles et les notifications"
+      "metaDescription": "Gérer les membres de l'équipe, les rôles et les notifications",
+      "businessPictureTitle": "Image de votre entreprise",
+      "businessPictureHint": "Apparaît dans le menu et quand vous changez d’entreprise.",
+      "businessPictureSaved": "Image de l’entreprise mise à jour",
+      "businessPictureRemoved": "Image de l’entreprise supprimée"
     },
     "workspace": {
       "title": "Paramètres de l'espace",
@@ -1473,7 +1502,12 @@
       "inviteSummaryError_one": "{{count}} échoué",
       "inviteSummaryError_other": "{{count}} échoués",
       "roleUpdated": "Rôle du membre mis à jour",
-      "notificationsUpdated": "Notifications de leads mises à jour"
+      "notificationsUpdated": "Notifications de leads mises à jour",
+      "addHintPlain": "Invitez les personnes qui vous aident avec les demandes et les clients.",
+      "headerInquiryAlerts": "Alertes de demandes",
+      "noMembersPlain": "Personne d’autre ne fait encore partie de votre équipe.",
+      "inquiryAlertsUpdated": "Alertes de demandes mises à jour",
+      "removeDescriptionPlain": "{{name}} ne fera plus partie de votre équipe. Cette action est définitive."
     },
     "language": {
       "title": "Ma langue",
@@ -1612,7 +1646,8 @@
         "denied": "Vous avez annulé la connexion.",
         "expired": "Ce lien a expiré. Veuillez réessayer.",
         "failed": "Échec de la connexion{{reason}}"
-      }
+      },
+      "sectionDescriptionPlain": "Connectez un compte que vous utilisez déjà ailleurs. Un compte par application."
     },
     "notifications": {
       "metaTitle": "Alertes chat d'équipe",
@@ -1675,7 +1710,9 @@
           "step3": "Cliquez sur « Ajouter des webhooks », donnez-lui un nom (p. ex. Repraesent) et enregistrez.",
           "step4": "Copiez l’URL du webhook et collez-la ici."
         }
-      }
+      },
+      "sectionDescriptionPlain": "Prévenez le chat de votre équipe dès qu’il se passe quelque chose, comme une nouvelle demande.",
+      "adminOnlyPlain": "Seules les personnes ayant le rôle Admin peuvent modifier les alertes du chat d’équipe."
     },
     "calendars": {
       "metaTitle": "Calendriers",
@@ -1783,7 +1820,8 @@
       "metaTitle": "Étapes des affaires",
       "metaDescription": "Renommer, réordonner, colorer, masquer ou ajouter les étapes de vos pipelines de leads et d'affaires.",
       "pipelinePickerLabel": "Pipeline",
-      "pipelinePickerHint": "Chaque pipeline a ses propres étapes d’affaires."
+      "pipelinePickerHint": "Chaque pipeline a ses propres étapes d’affaires.",
+      "readOnlyHintPlain": "Seules les personnes ayant le rôle Admin peuvent modifier les étapes. Vous les voyez ci-dessous."
     },
     "openaiAds": {
       "metaTitle": "OpenAI Ads",
@@ -2399,7 +2437,8 @@
       },
       "emailNote": "Vous préférez l'e-mail ?",
       "emailLink": "Résumés par e-mail"
-    }
+    },
+    "adminOnlyPlain": "Seules les personnes ayant le rôle Admin peuvent modifier ceci."
   },
   "booking": {
     "metaTitle": "Réserver un rendez-vous",
@@ -2702,7 +2741,24 @@
     "validationError": "Veuillez vérifier votre saisie.",
     "paymentOverdue": "Paiement en retard",
     "viewYourInvoice": "voir votre facture",
-    "checkInboxForStripe": "veuillez vérifier votre boîte de réception pour une facture de Stripe"
+    "checkInboxForStripe": "veuillez vérifier votre boîte de réception pour une facture de Stripe",
+    "goToday": "Aller à Aujourd’hui",
+    "tryAgain": "Réessayer",
+    "pageTitle": "Cette page ne s’est pas chargée correctement",
+    "pageBody": "Vos données sont en sécurité. Réessayez, ou revenez à Aujourd’hui.",
+    "appTitle": "Un problème est survenu sur cette page",
+    "appBody": "Vos données sont en sécurité. Réessayez, ou revenez à Aujourd’hui.",
+    "notFoundTitle": "Cette page n’existe pas",
+    "notFoundBody": "Le lien est peut-être ancien ou mal saisi. Tout le reste est à sa place.",
+    "loadTitle": "Impossible de charger {{what}}",
+    "loadBody": "Vérifiez votre connexion et réessayez.",
+    "what": {
+      "people": "vos contacts",
+      "today": "ce qui vous attend aujourd’hui",
+      "tasks": "vos tâches",
+      "deals": "vos affaires",
+      "inquiries": "vos demandes"
+    }
   },
   "analytics": {
     "metaTitle": "Analyses - Repraesent",
@@ -2830,7 +2886,9 @@
       "prevMonth": "Mois précédent",
       "nextMonth": "Mois suivant",
       "monthView": "Mois",
-      "weekView": "Semaine"
+      "weekView": "Semaine",
+      "viewTypeLabel": "Mois ou semaine",
+      "nothingThisDay": "Rien de prévu ce jour-là."
     },
     "columns": {
       "title": "Titre",
@@ -2844,7 +2902,12 @@
       "noTasks": "—",
       "openCount": "{{count}} ouverte(s)"
     },
-    "noEntityHint": "Les tâches nécessitent un contexte de lead, contact ou affaire."
+    "noEntityHint": "Les tâches nécessitent un contexte de lead, contact ou affaire.",
+    "pageHintPlain": "Ce qu’il faut faire, et pour quand.",
+    "viewToggleLabel": "Afficher les tâches en",
+    "viewList": "Liste",
+    "viewBoard": "Colonnes",
+    "viewCalendar": "Calendrier"
   },
   "meta": {
     "titleSuffix": " - Repraesent"
@@ -2926,7 +2989,8 @@
         "step5": "Pour le courrier sortant, saisissez les détails du serveur SMTP avec l'authentification activée.",
         "step6": "Enregistrez et testez la connexion."
       }
-    }
+    },
+    "pageSubtitlePlain": "Comment ajouter votre boîte mail à Outlook, Apple Mail ou une autre application."
   },
   "leadFallback": {
     "metaTitle": "E-mail de confirmation",
@@ -3564,7 +3628,7 @@
     "noPrimaryPhone": "Aucun téléphone enregistré",
     "openExternal": "Ouvrir",
     "openInMaps": "Ouvrir dans Maps",
-    "openLead": "Ouvrir le lead",
+    "openLead": "Ouvrir la demande",
     "phoneNumber": "Numéro",
     "phonePlaceholder": "Numéro de téléphone",
     "phoneRequired": "Le numéro de téléphone est obligatoire.",
@@ -3595,7 +3659,7 @@
     },
     "suggestion": {
       "title": "Un contact avec cet e-mail existe déjà",
-      "body": "{{email}} est déjà utilisé par un autre contact. Un lead ne peut être lié qu'à un seul contact, il ne peut donc pas être connecté ici — ouvrez plutôt le contact existant.",
+      "body": "{{email}} appartient déjà à un autre contact. Une demande ne peut appartenir qu’à un seul contact — ouvrez plutôt ce contact.",
       "view": "Voir {{name}}",
       "unnamed": "Contact existant"
     },
@@ -3609,6 +3673,13 @@
       "fromPhone": "Depuis votre téléphone",
       "typeIn": "Saisir à la main",
       "importLabel": "Importer un fichier"
+    },
+    "peopleHint": "Toutes les personnes avec qui vous travaillez, au même endroit.",
+    "emptyBody": "Ajoutez les personnes avec qui vous travaillez — depuis votre téléphone, à la main ou depuis un fichier.",
+    "emptySearch": {
+      "title": "Personne ne correspond.",
+      "body": "Essayez un autre nom, ou effacez la recherche et les filtres.",
+      "clear": "Afficher tout le monde"
     }
   },
   "leadEmails": {
@@ -3673,7 +3744,11 @@
     "unlinkConfirmTitle": "Dissocier ce contact ?",
     "unlinkConfirmBody": "Supprimer le lien entre cet e-mail et {{name}} ? Le contact lui-même n'est pas supprimé.",
     "bulkProgress": "Création des contacts… {{done}}/{{total}}",
-    "bulkPartial": "{{created}} créé(s), {{failed}} échoué(s)."
+    "bulkPartial": "{{created}} créé(s), {{failed}} échoué(s).",
+    "pageSubtitlePlain": "Tous les e-mails que vous avez mis en copie, au même endroit.",
+    "filterLabel": "Afficher",
+    "emptySubtitlePlain": "Mettez votre adresse de copie en Cci quand vous envoyez un e-mail : il apparaîtra ici.",
+    "emptyCtaPlain": "Configurer les copies d’e-mails (Cci)"
   },
   "activity": {
     "title": "Activité",
@@ -5172,7 +5247,9 @@
       "placementDropped": "Le placement « uniquement via le shortcode » n'a pas été conservé — le plugin re:banner de ce site doit être mis à jour en 1.4.0 ou plus. D'ici là, la bannière reste épinglée en haut de la page.",
       "renameBanner": "Renommer la bannière",
       "alignTextHint": "Centre les mots dans la colonne de la page. Automatique laisse l'alignement à votre thème."
-    }
+    },
+    "subtitlePlain": "Votre site web et tout ce qui y est relié.",
+    "noSiteBodyPlain": "Votre site web n’est pas encore relié ici."
   },
   "forms": {
     "metaTitle": "Formulaire",
@@ -5259,7 +5336,10 @@
       "tabWebsite": "Sur votre site",
       "tabErrorWording": "Messages d’erreur",
       "tabOtherApps": "Envoyer vers d’autres apps",
-      "intakeAdvancedHint": "Un test à lancer depuis la ligne de commande d’un ordinateur."
+      "intakeAdvancedHint": "Un test à lancer depuis la ligne de commande d’un ordinateur.",
+      "sheetEditQuestion": "Modifier la question",
+      "sheetEditStep": "Modifier l’étape",
+      "sheetEdit": "Modifier"
     },
     "palette": {
       "title": "Ajouter une question",
@@ -5615,45 +5695,6 @@
       "linkedTranslations": "Langues liées — les modifications seront désormais répercutées",
       "notLinked": "Non lié à {{locale}} — les modifications ne seront pas répercutées",
       "notLinkedBody": "Ce texte a été écrit avant que les langues puissent se synchroniser. Liez-le et les modifications de {{locale}} seront répercutées à partir de maintenant — rien n'est réécrit."
-    },
-    "intro": {
-      "title": "Comment fonctionnent les formulaires",
-      "subtitle": "Une courte visite : créer et publier un formulaire.",
-      "stepOf": "Étape {{step}} sur {{total}}",
-      "goToStep": "Aller à l’étape {{step}}",
-      "replay": "Comment fonctionnent les formulaires",
-      "replayShort": "Revoir",
-      "pause": "Pause",
-      "play": "Lecture",
-      "skip": "Passer",
-      "done": "Commencer",
-      "finished": "À vous de jouer.",
-      "chapter": {
-        "create": "Commencez par un nouveau formulaire.",
-        "name": "Donnez-lui un nom.",
-        "fields": "Ajoutez les questions dont vous avez besoin — choisissez un type, elle apparaît dans le formulaire.",
-        "language": "Ajoutez une langue : le formulaire est traduit pour vous.",
-        "design": "Apparence règle les couleurs, les polices et les espacements.",
-        "share": "Copiez le lien, ou envoyez le code à la personne qui s’occupe de votre site.",
-        "publish": "Activez-le, et chaque réponse arrive comme une demande.",
-        "celebrate": "Et voilà, un formulaire en ligne."
-      },
-      "demo": {
-        "formName": "Formulaire de contact",
-        "name": "Nom",
-        "email": "E-mail",
-        "phone": "Téléphone",
-        "message": "Message",
-        "formTitle": "Nous contacter",
-        "submit": "Envoyer"
-      },
-      "celebrate": {
-        "title": "C’est aussi simple que ça",
-        "body": "Vous venez de voir un formulaire passer de vide à en ligne en quelques minutes. Le vôtre ira aussi vite.",
-        "chipBuild": "Questions",
-        "chipTranslate": "Traduire",
-        "chipPublish": "Publier"
-      }
     },
     "appointmentContent": {
       "loading": "Chargement des horaires...",
@@ -9235,7 +9276,8 @@
       "sentEarned": "{{customers}} sont devenus clients · {{earned}} gagnés."
     },
     "paidSplit": "Dont {{paid}} payés et {{toCollect}} encore à encaisser.",
-    "paidAll": "Tout est payé."
+    "paidAll": "Tout est payé.",
+    "connectSource": "Connecter"
   },
   "pipelineStrip": {
     "open": "en cours",
@@ -9941,7 +9983,8 @@
   "mobile": {
     "more": "Plus",
     "today": {
-      "startCalls": "Lancer les appels ({{count}})"
+      "startCalls": "Lancer les appels ({{count}})",
+      "goThroughList": "Parcourir la liste ({{count}})"
     },
     "stagePicker": {
       "title": "Déplacer vers…",
@@ -10075,5 +10118,10 @@
       "speakHint": "Touchez à nouveau quand vous avez fini. Vous vérifiez le texte avant l'enregistrement.",
       "typeInstead": "Plutôt l'écrire"
     }
+  },
+  "searchHint": {
+    "title": "Tout se trouve ici",
+    "body": "Contacts, affaires, tâches et pages — touchez pour chercher.",
+    "ok": "Compris"
   }
 }

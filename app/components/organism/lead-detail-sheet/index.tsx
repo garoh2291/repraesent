@@ -562,13 +562,13 @@ export function LeadDetailSheet({
         side="right"
         className="sm:max-w-[480px] flex flex-col overflow-hidden p-0 gap-0 max-sm:w-full max-sm:border-l-0 max-sm:pt-[env(safe-area-inset-top)]"
       >
-        <SheetHeader className="px-5 py-4 border-b border-border shrink-0">
+        <SheetHeader className="px-5 py-4 border-b border-border shrink-0 max-sm:pr-14">
           <SheetTitle className="text-base font-semibold text-foreground">
             {displayName}
           </SheetTitle>
         </SheetHeader>
 
-        <div className="flex-1 overflow-y-auto">
+        <div className="flex-1 overflow-y-auto max-sm:pb-[max(1rem,env(safe-area-inset-bottom))]">
           {leadLoading || !lead ? (
             <div className="flex flex-col items-center justify-center py-16 gap-3">
               <div className="h-5 w-5 app-spin rounded-full border-2 border-primary/20 border-t-primary" />
@@ -613,21 +613,21 @@ export function LeadDetailSheet({
                   <Button
                     variant="outline"
                     size="sm"
-                    className="w-full gap-2"
+                    className="w-full gap-2 max-sm:h-11 max-sm:text-sm"
                     disabled={convertMutation.isPending}
                     onClick={() => convertMutation.mutate()}
                   >
                     <UserPlus className="h-4 w-4" />
                     {convertMutation.isPending
                       ? t("common.loading")
-                      : t("leads.detail.convertToContact")}
+                      : t("leads.detail.saveAsContact", "Save as contact")}
                   </Button>
                 </div>
               )}
               {/* Spam: hide + block the sender, or undo it */}
               {!readOnly && (
                 <div className="px-5 py-4">
-                  <LeadSpamButton lead={lead} className="w-full" />
+                  <LeadSpamButton lead={lead} className="w-full max-sm:h-11 max-sm:text-sm" />
                 </div>
               )}
               {/* Existing contact with the same email */}
@@ -736,9 +736,9 @@ function FieldRow({
   children: React.ReactNode;
 }) {
   return (
-    <div className="grid grid-cols-[110px_1fr] gap-3 items-start py-1.5 border-b border-border/40 last:border-0">
+    <div className="grid grid-cols-[110px_1fr] gap-3 items-start py-1.5 border-b border-border/40 last:border-0 max-sm:grid-cols-1 max-sm:gap-0.5 max-sm:py-2">
       <TooltipContainer tooltipContent={label}>
-        <span className="text-[11px] font-medium text-muted-foreground/80 leading-5 mt-0.5 truncate">
+        <span className="text-[11px] font-medium text-muted-foreground/80 leading-5 mt-0.5 truncate max-sm:mt-0 max-sm:text-[12px]">
           {label}
         </span>
       </TooltipContainer>
@@ -838,7 +838,7 @@ export function LeadInfoSection({
     <div className="space-y-4">
       <div className="flex items-center justify-between gap-2">
         <h3 className="text-xs font-semibold text-muted-foreground">
-          {t("leads.detail.leadInformation")}
+          {t("leads.detail.details", "Details")}
         </h3>
         {!withoutLink && (
           <Link

@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router";
 import { useTranslation } from "react-i18next";
+import { LoadError } from "~/components/notebook/load-error";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import {
@@ -10,7 +11,7 @@ import {
   CircleDashed,
   Inbox,
   MoreHorizontal,
-  Phone,
+  ListChecks,
   X,
 } from "lucide-react";
 import i18n from "~/i18n";
@@ -37,6 +38,7 @@ import { formatCurrency, formatNumber } from "~/lib/utils/format";
 import { DoorboostHomeSection } from "~/components/doorboost-home-section";
 import { IntroCallCard } from "~/components/onboarding-v2/intro-call-card";
 import { PageContainer } from "~/components/notebook/page-header";
+import { Segmented } from "~/components/notebook/segmented";
 import { Panel, PanelHeader } from "~/components/notebook/panel";
 import { EmptyState } from "~/components/notebook/empty-state";
 import { ContactActions } from "~/components/notebook/contact-actions";
@@ -231,12 +233,13 @@ function NeedsYou({
         marker
         action={
           callsCount > 0 ? (
+            // Phones only: one person at a time, by call, WhatsApp or email.
             <Link
               to="/calls"
-              className="press inline-flex shrink-0 items-center gap-1.5 rounded-md bg-foreground px-2.5 py-1.5 text-[12.5px] font-medium text-background hover:bg-foreground/90 pointer-coarse:min-h-11 pointer-coarse:px-3.5 pointer-coarse:text-[13.5px]"
+              className="press inline-flex shrink-0 items-center gap-1.5 rounded-md bg-foreground px-2.5 py-1.5 text-[12.5px] font-medium text-background hover:bg-foreground/90 pointer-coarse:min-h-11 pointer-coarse:px-3.5 pointer-coarse:text-[13.5px] sm:hidden"
             >
-              <Phone className="size-3.5" />
-              {t("mobile.today.startCalls", "Start calls ({{count}})", { count: callsCount })}
+              <ListChecks className="size-3.5" aria-hidden />
+              {t("mobile.today.goThroughList", "Go through the list ({{count}})", { count: callsCount })}
             </Link>
           ) : undefined
         }
@@ -617,7 +620,7 @@ function GetSetUp({ setup }: { setup: SetupState }) {
           <button
             type="button"
             onClick={() => update.mutate({ dismiss_all: true })}
-            className="text-[12px] font-medium text-muted-foreground hover:text-foreground"
+            className="relative text-[12px] font-medium text-muted-foreground hover:text-foreground pointer-coarse:after:absolute pointer-coarse:after:-inset-x-2 pointer-coarse:after:-inset-y-3.5"
           >
             {t("setup.hide", "Hide")}
           </button>
@@ -652,7 +655,7 @@ function GetSetUp({ setup }: { setup: SetupState }) {
               <button
                 type="button"
                 onClick={() => update.mutate({ dismiss: [i.key] })}
-                className="p-1 opacity-100 transition-opacity focus:opacity-100 sm:opacity-0 sm:group-hover:opacity-100"
+                className="relative p-1 opacity-100 transition-opacity focus:opacity-100 sm:opacity-0 sm:group-hover:opacity-100 pointer-coarse:after:absolute pointer-coarse:after:-inset-3"
                 aria-label={t("setup.skip", "Skip")}
               >
                 <X className="size-3.5 text-muted-foreground" />
@@ -780,26 +783,18 @@ export default function Today() {
     <PageContainer className="space-y-6 sm:space-y-8">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <Greeting firstName={firstName} count={waiting} loading={!data} />
-        <div
+        <Segmented
           role="tablist"
-          aria-label={t("today.scope", "Whose work")}
-          className="inline-flex self-start rounded-lg border border-border bg-card p-0.5 sm:self-auto"
-        >
-          {(["me", "all"] as const).map((s) => (
-            <button
-              key={s}
-              role="tab"
-              aria-selected={scope === s}
-              onClick={() => setScope(s)}
-              className={cn(
-                "rounded-md px-3 py-1.5 text-[12.5px] font-medium transition-colors",
-                scope === s ? "bg-foreground text-background" : "text-muted-foreground hover:text-foreground",
-              )}
-            >
-              {s === "me" ? t("today.mine", "Mine") : t("today.everyone", "Everyone")}
-            </button>
-          ))}
-        </div>
+          label={t("today.scope", "Whose work")}
+          value={scope}
+          onChange={setScope}
+          stretch
+          className="self-start sm:self-auto"
+          options={[
+            { value: "me", label: t("today.mine", "Mine") },
+            { value: "all", label: t("today.everyone", "Everyone") },
+          ]}
+        />
       </div>
 
       {/* Phones only (each card decides): install first, then the alerts ask. */}
@@ -808,6 +803,9 @@ export default function Today() {
 
       <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_340px] lg:items-start">
         <div className="min-w-0 space-y-6">
+          {!data && q.isError ? (
+            <LoadError what={t("errors.what.today", "what needs you today")} onRetry={() => void q.refetch()} />
+          ) : null}
           {!data && !q.isError ? (
             <Panel className="space-y-3 p-5">
               <Skeleton className="h-5 w-40" />

@@ -74,6 +74,7 @@ import {
   parseMoneyParts,
 } from "./constants";
 import { cn } from "~/lib/utils";
+import { desktopAutoFocus } from "~/lib/utils/touch";
 
 /**
  * Regions and the prices that follow them.
@@ -1152,7 +1153,7 @@ function FirstRun({
               <Input
                 id="rt-first-label"
                 value={label}
-                autoFocus
+                autoFocus={desktopAutoFocus()}
                 placeholder={t(
                   "wordpress.reTranslate.firstRunNamePlaceholder",
                   "Europe",
@@ -1459,7 +1460,7 @@ function RegionDialog({
               <Input
                 id="rt-region-label"
                 value={label}
-                autoFocus
+                autoFocus={desktopAutoFocus()}
                 placeholder={t(
                   "wordpress.reTranslate.regionNamePlaceholder",
                   "Canada",

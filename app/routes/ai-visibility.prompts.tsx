@@ -17,6 +17,7 @@ import { Textarea } from "~/components/ui/textarea";
 import { Skeleton } from "~/components/ui/skeleton";
 import { useAiVisibilityContext } from "~/components/ai-visibility/context";
 import { Bar, Segmented, intentLabel, pct, rank, useFilters } from "~/components/ai-visibility/shared";
+import { desktopAutoFocus } from "~/lib/utils/touch";
 
 /**
  * The questions we ask every run day, grouped by topic, with how each one
@@ -339,7 +340,7 @@ function AddPromptsSheet({ open, onClose, topics, room }: { open: boolean; onClo
           value={lines}
           onChange={(e) => setLines(e.target.value)}
           rows={7}
-          autoFocus
+          autoFocus={desktopAutoFocus()}
           placeholder={t("aiVisibility.prompts.addPlaceholder", "Which kitchen studio in Hamburg is good for a small budget?\nWho installs fitted kitchens near Altona?")}
         />
         <div className="grid gap-3 sm:grid-cols-2">

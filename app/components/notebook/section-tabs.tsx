@@ -1,4 +1,5 @@
 import { Link, useLocation } from "react-router";
+import { usePendingPathname } from "~/lib/nav/use-pending-nav";
 import { useTranslation } from "react-i18next";
 import { useState } from "react";
 import { ChevronDown, Plus } from "lucide-react";
@@ -68,6 +69,7 @@ function TabLink({ tab, pathname }: { tab: SectionTab; pathname: string }) {
             <DropdownMenuItem key={it.key} asChild>
               <Link
                 to={it.to}
+                prefetch="intent"
                 className={cn(
                   "flex w-full items-center justify-between gap-3",
                   current === it.to && "font-semibold",
@@ -99,7 +101,7 @@ function TabLink({ tab, pathname }: { tab: SectionTab; pathname: string }) {
   }
 
   return (
-    <Link to={tab.to} className={tabClass(active)} aria-current={active ? "page" : undefined}>
+    <Link to={tab.to} prefetch="intent" className={tabClass(active)} aria-current={active ? "page" : undefined}>
       <Icon className="size-4" />
       {tab.label}
       {pills}
@@ -114,6 +116,8 @@ function TabLink({ tab, pathname }: { tab: SectionTab; pathname: string }) {
  */
 export function SectionTabs({ section }: { section: NavSection }) {
   const location = useLocation();
+  // The tab being opened lights up on tap (slow connections).
+  const navPath = usePendingPathname().pathname;
   if (section.tabs.length < 2) return null;
   return (
     <nav
@@ -122,7 +126,7 @@ export function SectionTabs({ section }: { section: NavSection }) {
     >
       <div className="scrollbar-hide flex items-center gap-5 overflow-x-auto px-4 sm:px-6">
         {section.tabs.map((tab) => (
-          <TabLink key={tab.key} tab={tab} pathname={location.pathname} />
+          <TabLink key={tab.key} tab={tab} pathname={navPath} />
         ))}
       </div>
     </nav>

@@ -1,10 +1,11 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate, useSearchParams, Link } from "react-router";
-import { FlaskConical } from "lucide-react";
+import { AlertCircle, FlaskConical, Mail } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { Input } from "~/components/ui/input";
 import { useAuthContext } from "~/providers/auth-provider";
 import { getStoredSelectedView, BRAND_VIEW } from "~/lib/api/axios-instance";
+import { authErrorMessage } from "~/lib/api/auth";
 import i18n from "~/i18n";
 import { normalizeLocale } from "~/i18n/locales";
 import { useDocumentMeta } from "~/lib/hooks/use-document-meta";
@@ -44,7 +45,6 @@ export default function Login() {
     isAuthenticated,
     isLoading: isAuthLoading,
     isRequestingMagicLink,
-    magicLinkError,
   } = useAuthContext();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -52,6 +52,22 @@ export default function Login() {
   // go; this page's own "already signed in" redirect must not race it.
   const codeSignIn = useRef(false);
   const [codeSigningIn, setCodeSigningIn] = useState(false);
+
+  // A sign-in link that couldn't be used sends people here with ?error=…
+  // (auth.callback.tsx). Say what happened in their language, once; a new
+  // submit clears it like any other error.
+  const linkErrorParam = searchParams.get("error");
+  useEffect(() => {
+    if (!linkErrorParam) return;
+    setError(
+      linkErrorParam === "missing_token"
+        ? t(
+            "auth.errors.linkIncomplete",
+            "That sign-in link was incomplete. Send a new one below."
+          )
+        : t("auth.login.somethingWrong")
+    );
+  }, [linkErrorParam, t]);
 
   useEffect(() => {
     if (isAuthLoading || codeSignIn.current) return;
@@ -137,18 +153,14 @@ export default function Login() {
       });
       setSuccess(true);
     } catch (err) {
-      setError(
-        err instanceof Error
-          ? err.message
-          : magicLinkError?.message || t("auth.login.somethingWrong")
-      );
+      setError(authErrorMessage(err, t));
     }
   };
 
   // Keep the code box mounted while its own sign-in loads the account.
   if (isAuthLoading && !codeSigningIn) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-[#0f0f11] pt-safe">
+      <div className="flex min-h-screen items-center justify-center bg-[#141516] pt-safe">
         <div className="h-5 w-5 app-spin rounded-full border-2 border-white/20 border-t-white/60" />
       </div>
     );
@@ -157,7 +169,7 @@ export default function Login() {
   return (
     <div className="flex min-h-screen pt-safe">
       {/* Left brand panel */}
-      <div className="hidden lg:flex lg:w-[400px] shrink-0 flex-col bg-[#111113] p-10 border-r border-white/5 relative overflow-hidden">
+      <div className="hidden lg:flex lg:w-[400px] shrink-0 flex-col bg-[#141516] p-10 border-r border-white/5 relative overflow-hidden">
         {/* Background image — fades up from the bottom, grayscale to keep black theme */}
         <div
           className="absolute inset-0 z-0 pointer-events-none"
@@ -223,7 +235,7 @@ export default function Login() {
                   className="app-fade-up flex items-center gap-3"
                   style={{ animationDelay: `${0.35 + i * 0.1}s` }}
                 >
-                  <div className="h-1.5 w-1.5 rounded-full bg-amber-400 shrink-0" />
+                  <div className="h-1.5 w-1.5 rounded-full bg-marker shrink-0" />
                   <span className="text-sm text-white/50">{t(key)}</span>
                 </div>
               ))}
@@ -242,7 +254,7 @@ export default function Login() {
       </div>
 
       {/* Right form panel */}
-      <div className="flex-1 flex flex-col bg-stone-50 relative">
+      <div className="flex-1 flex flex-col bg-background relative">
         <div className="flex-1 flex items-center justify-center p-4 sm:p-8">
           <div className="w-full max-w-sm space-y-8 app-fade-up">
             {/* Mobile logo */}
@@ -259,17 +271,36 @@ export default function Login() {
                 {t("auth.login.title")}
               </h1>
               <p className="text-sm text-muted-foreground">
-                {t("auth.login.subtitle")}
+                {t(
+                  "auth.login.subtitleCode",
+                  "We'll email you a link and a 6-digit code."
+                )}
               </p>
             </div>
 
             {success ? (
               <div className="space-y-5 app-fade-up">
-                <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-4 text-sm text-emerald-800 leading-relaxed">
-                  <p className="font-medium">{t("auth.login.checkInbox")}</p>
-                  <p className="text-emerald-700/80 mt-0.5">
-                    {t("auth.login.checkInboxDetail", { email })}
-                  </p>
+                <div
+                  role="status"
+                  className="flex items-start gap-3 rounded-xl border border-marker bg-marker-soft px-4 py-4 text-sm text-marker-ink leading-relaxed"
+                >
+                  <Mail className="size-4 shrink-0 mt-0.5" aria-hidden />
+                  <div className="min-w-0 break-words">
+                    <p className="font-medium">{t("auth.login.checkInbox")}</p>
+                    <p className="mt-0.5">
+                      {t("auth.login.checkInboxDetailCode", {
+                        email,
+                        defaultValue:
+                          "We sent a link and a 6-digit code to {{email}}.",
+                      })}
+                    </p>
+                    <p className="mt-0.5 opacity-80">
+                      {t(
+                        "auth.login.checkInboxExpiry",
+                        "The link works for 30 minutes, the code for 10."
+                      )}
+                    </p>
+                  </div>
                 </div>
                 <LoginCodeBox
                   email={email}
@@ -289,7 +320,7 @@ export default function Login() {
                   {t("auth.login.didntReceive")}{" "}
                   <button
                     type="button"
-                    className="text-primary font-medium hover:underline"
+                    className="inline-flex min-h-11 items-center px-1 text-primary font-medium hover:underline"
                     onClick={() => setSuccess(false)}
                   >
                     {t("auth.login.tryAgain")}
@@ -302,8 +333,12 @@ export default function Login() {
                 className="space-y-5 app-fade-up app-fade-up-d1"
               >
                 {error && (
-                  <div className="rounded-lg border border-destructive/20 bg-destructive/6 px-4 py-3 text-sm text-destructive">
-                    {error}
+                  <div
+                    role="alert"
+                    className="flex items-start gap-2 rounded-xl border border-overdue/30 bg-overdue-soft px-4 py-3 text-sm text-overdue"
+                  >
+                    <AlertCircle className="size-4 shrink-0 mt-0.5" aria-hidden />
+                    <span className="min-w-0">{error}</span>
                   </div>
                 )}
 
@@ -324,7 +359,7 @@ export default function Login() {
                     required
                     autoComplete="email"
                     autoFocus
-                    className="h-11 border-stone-200 bg-white focus-visible:ring-1 focus-visible:ring-foreground/25 transition-shadow"
+                    className="h-11 border-border bg-card focus-visible:ring-1 focus-visible:ring-foreground/25 transition-shadow"
                   />
                 </div>
 
@@ -339,7 +374,7 @@ export default function Login() {
                       {t("auth.login.submittingButton")}
                     </>
                   ) : (
-                    t("auth.login.submitButton")
+                    t("auth.login.sendButton", "Send sign-in email →")
                   )}
                 </button>
 
@@ -355,17 +390,17 @@ export default function Login() {
 
                 <div className="space-y-3 pt-1">
                   <div className="flex items-center gap-3">
-                    <span className="h-px flex-1 bg-stone-200" />
+                    <span className="h-px flex-1 bg-border" />
                     <span className="text-[11px] font-medium uppercase tracking-widest text-muted-foreground">
                       {t("auth.login.tryDemo")}
                     </span>
-                    <span className="h-px flex-1 bg-stone-200" />
+                    <span className="h-px flex-1 bg-border" />
                   </div>
                   <Link
                     to="/demo"
-                    className="w-full h-11 rounded-lg border border-stone-300 bg-white text-foreground text-sm font-medium transition-colors duration-150 hover:bg-stone-100 flex items-center justify-center gap-2"
+                    className="w-full h-11 rounded-lg border border-border bg-card text-foreground text-sm font-medium transition-colors duration-150 hover:bg-muted flex items-center justify-center gap-2"
                   >
-                    <FlaskConical className="h-4 w-4 text-amber-500" />
+                    <FlaskConical className="h-4 w-4 text-foreground" />
                     {t("auth.login.tryDemoLink")}
                   </Link>
                 </div>

@@ -56,6 +56,7 @@ import { UseTemplatePicker } from "~/components/email-campaigns/UseTemplatePicke
 import { RichTextEditor, RichTextToolbar } from "./rich-text-editor";
 import { RecipientField, type Recipient } from "./recipient-field";
 import type { ComposeRequest } from "./use-compose-email";
+import { desktopAutoFocus } from "~/lib/utils/touch";
 
 const LAST_ACCOUNT_KEY = "repraesent.compose.lastAccountId";
 
@@ -284,7 +285,7 @@ export function ComposeEmailDialog({
                   label={t("compose.to", { defaultValue: "To" })}
                   value={to}
                   onChange={setTo}
-                  autoFocus
+                  autoFocus={desktopAutoFocus()}
                   disabled={mutation.isPending}
                 />
                 {!showCc && (
@@ -508,7 +509,7 @@ function SentCard({
           </p>
         ) : null}
       </div>
-      <Button type="button" className="mt-5 h-11 w-full sm:h-10" onClick={onDone} autoFocus>
+      <Button type="button" className="mt-5 h-11 w-full sm:h-10" onClick={onDone} autoFocus={desktopAutoFocus()}>
         {t("compose.sentDone", { defaultValue: "Done" })}
       </Button>
     </DialogContent>

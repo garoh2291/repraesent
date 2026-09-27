@@ -13,6 +13,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "~/components/ui/dialog";
+import { desktopAutoFocus } from "~/lib/utils/touch";
 
 interface LinkContactDialogProps {
   open: boolean;
@@ -98,7 +99,7 @@ export function LinkContactDialog({
               defaultValue: "Search by name, email, or phone…",
             })}
             className="pl-9 pr-9"
-            autoFocus
+            autoFocus={desktopAutoFocus()}
           />
           {search ? (
             <Button

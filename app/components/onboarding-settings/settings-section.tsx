@@ -65,10 +65,10 @@ export function SaveBar({
         )}
       >
         <span className="mr-auto hidden text-sm text-muted-foreground sm:inline">{t("settings.onboarding.unsaved")}</span>
-        <Button variant="ghost" onClick={onDiscard} disabled={saving || !dirty} tabIndex={dirty ? 0 : -1}>
+        <Button variant="ghost" onClick={onDiscard} disabled={saving || !dirty} tabIndex={dirty ? 0 : -1} className="max-sm:h-11 max-sm:flex-1">
           {t("settings.onboarding.discard")}
         </Button>
-        <Button onClick={onSave} disabled={saving || !dirty} tabIndex={dirty ? 0 : -1}>
+        <Button onClick={onSave} disabled={saving || !dirty} tabIndex={dirty ? 0 : -1} className="max-sm:h-11 max-sm:flex-1">
           {saving ? t("settings.onboarding.saving") : t("settings.onboarding.save")}
         </Button>
       </div>

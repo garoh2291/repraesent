@@ -8,9 +8,9 @@ import {
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router";
 import { useTranslation } from "react-i18next";
+import { BackLink } from "~/components/notebook/back-link";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
-  ArrowLeft,
   CalendarClock,
   ChevronDown,
   ExternalLink,
@@ -130,7 +130,7 @@ function MetaRow({ icon, label, children }: MetaRowProps) {
         {icon}
       </div>
       <div className="min-w-0 flex-1">
-        <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">
+        <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground max-sm:text-[12px]">
           {label}
         </p>
         <div className="mt-0.5 text-sm font-medium text-foreground">
@@ -589,13 +589,9 @@ export default function PipelineDealDetailPage() {
   return (
     <div className="p-4 sm:p-6 space-y-4 sm:space-y-6 app-fade-in max-sm:pb-24">
       <div className="flex items-center justify-between gap-2">
-        <Link
-          to="/pipeline"
-          className="inline-flex items-center gap-1.5 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors"
-        >
-          <ArrowLeft className="h-3.5 w-3.5" />
+        <BackLink to="/pipeline">
           {t("pipeline.backToPipeline", { defaultValue: "Back to pipeline" })}
-        </Link>
+        </BackLink>
         {/* Only when this deal's pipeline actually serves tracking pages — a
             copy button for a URL that 404s is worse than no button. */}
         {trackingEnabled && trackingToken ? (
@@ -646,7 +642,7 @@ export default function PipelineDealDetailPage() {
                 {contactName && contactId ? (
                   <Link
                     to={`/contacts/${contactId}`}
-                    className="inline-flex items-center gap-1 rounded-sm border border-border bg-muted/60 px-2 py-0.5 text-[11px] font-medium text-foreground transition-colors hover:bg-muted"
+                    className="inline-flex items-center gap-1 rounded-sm border border-border bg-muted/60 px-2 py-0.5 text-[11px] font-medium text-foreground transition-colors hover:bg-muted max-sm:min-h-9 max-sm:rounded-md max-sm:px-2.5 max-sm:text-[13px]"
                   >
                     {contactName}
                     <ExternalLink className="h-3 w-3" />
@@ -657,7 +653,7 @@ export default function PipelineDealDetailPage() {
 
             <div className="flex shrink-0 items-center gap-3 sm:flex-row-reverse">
               <div className="text-left sm:text-right">
-                <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">
+                <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground max-sm:text-[12px]">
                   {t("pipeline.fields.value", { defaultValue: "Value" })}
                 </p>
                 <p className="title-display num text-2xl font-semibold text-foreground sm:text-3xl">
@@ -676,7 +672,7 @@ export default function PipelineDealDetailPage() {
               {canEdit && composeRecipients.length > 0 ? (
                 <Button
                   size="sm"
-                  className="h-8 gap-1.5 text-xs"
+                  className="h-8 gap-1.5 text-xs max-sm:h-11 max-sm:px-4 max-sm:text-sm"
                   onClick={openComposer}
                 >
                   <Send className="h-3.5 w-3.5" />
@@ -689,8 +685,8 @@ export default function PipelineDealDetailPage() {
           {/* STAGE STEPPER */}
           <div className="mt-5">
             {pipelines.length > 1 && dealPipelineId ? (
-              <div className="mb-2 flex items-center gap-2">
-                <span className="text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">
+              <div className="mb-2 flex items-center gap-2 max-sm:mb-3 max-sm:flex-col max-sm:items-stretch max-sm:gap-1.5">
+                <span className="text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground max-sm:text-[12px]">
                   {t("pipeline.movePipelineLabel", {
                     defaultValue: "Pipeline",
                   })}
@@ -702,7 +698,7 @@ export default function PipelineDealDetailPage() {
                   }}
                   disabled={!canEdit || movePipelineMutation.isPending}
                 >
-                  <SelectTrigger className="h-7 w-[180px] text-xs">
+                  <SelectTrigger className="h-7 w-[180px] text-xs max-sm:h-11 max-sm:w-full max-sm:text-sm">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -775,7 +771,7 @@ export default function PipelineDealDetailPage() {
           {/* NEXT STEP — every open deal should answer "what happens next?" */}
           {dealIsOpen && dealQuery.data?.tasks_summary ? (
             <div className="mt-4 flex flex-wrap items-center gap-2 border-t border-border pt-4">
-              <span className="text-[11px] font-semibold uppercase tracking-[0.1em] text-muted-foreground">
+              <span className="text-[11px] font-semibold uppercase tracking-[0.1em] text-muted-foreground max-sm:text-[12px]">
                 {t("nextStep.label", "Next step")}
               </span>
               <NextStepChip summary={dealQuery.data.tasks_summary} />
@@ -783,7 +779,7 @@ export default function PipelineDealDetailPage() {
                 <Button
                   size="sm"
                   variant="outline"
-                  className="ml-auto h-8 text-xs"
+                  className="ml-auto h-8 text-xs max-sm:ml-0 max-sm:h-11 max-sm:w-full max-sm:text-sm"
                   onClick={() =>
                     dealFlow.whatsNext(
                       { id: dealId!, title: displayTitle },
@@ -873,7 +869,7 @@ export default function PipelineDealDetailPage() {
                     aria-invalid={titleEmpty}
                   />
                   {titleEmpty ? (
-                    <p className="text-[11px] text-destructive">
+                    <p className="text-[11px] text-destructive max-sm:text-[13px]">
                       {t("pipeline.errors.titleRequired", {
                         defaultValue: "Title can't be blank.",
                       })}
@@ -912,7 +908,7 @@ export default function PipelineDealDetailPage() {
                   />
                   </div>
                   {valueNegative ? (
-                    <p className="text-[11px] text-destructive">
+                    <p className="text-[11px] text-destructive max-sm:text-[13px]">
                       {t("pipeline.errors.valueNegative", {
                         defaultValue: "Value cannot be negative.",
                       })}
@@ -1105,7 +1101,7 @@ export default function PipelineDealDetailPage() {
               </div>
 
               {(createdAt || updatedAt) && (
-                <div className="space-y-1 border-t border-border/60 pt-3 text-[11px] text-muted-foreground">
+                <div className="space-y-1 border-t border-border/60 pt-3 text-[11px] text-muted-foreground max-sm:text-[12px]">
                   {createdAt ? (
                     <p>
                       {t("common.created", { defaultValue: "Created" })}:{" "}

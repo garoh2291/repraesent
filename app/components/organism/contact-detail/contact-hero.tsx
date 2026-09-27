@@ -159,7 +159,7 @@ function CopyChip({
           : undefined
       }
       className={cn(
-        "group relative flex items-start gap-3 rounded-xl border border-border/70 bg-card/60 px-3.5 py-3 transition-all",
+        "group relative flex items-start gap-3 rounded-xl border border-border/70 bg-card/60 px-3.5 py-3 transition-all max-sm:items-center max-sm:px-3 max-sm:py-2",
         "hover:border-border hover:bg-card hover:shadow-(--shadow-sm)",
         isEmpty && !showAddAction && "opacity-60",
         showAddAction &&
@@ -176,7 +176,7 @@ function CopyChip({
         {icon}
       </div>
       <div className="min-w-0 flex-1">
-        <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">
+        <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground max-sm:text-[11px]">
           {label}
         </p>
         {showAddAction ? (
@@ -209,7 +209,7 @@ function CopyChip({
               onClick={onAction.onClick}
               aria-label={onAction.label}
               title={onAction.label}
-              className="inline-flex h-7 w-7 pointer-coarse:h-10 pointer-coarse:w-10 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none [&>svg]:h-3.5 [&>svg]:w-3.5"
+              className="inline-flex h-7 w-7 pointer-coarse:h-10 pointer-coarse:w-10 max-sm:size-11 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none [&>svg]:h-3.5 [&>svg]:w-3.5"
             >
               {onAction.icon}
             </button>
@@ -219,7 +219,7 @@ function CopyChip({
               target={hrefAction.newTab ? "_blank" : undefined}
               rel={hrefAction.newTab ? "noreferrer" : undefined}
               aria-label={hrefAction.label}
-              className="inline-flex h-7 w-7 pointer-coarse:h-10 pointer-coarse:w-10 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground [&>svg]:h-3.5 [&>svg]:w-3.5"
+              className="inline-flex h-7 w-7 pointer-coarse:h-10 pointer-coarse:w-10 max-sm:size-11 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground [&>svg]:h-3.5 [&>svg]:w-3.5"
             >
               {hrefAction.icon}
             </a>
@@ -231,7 +231,7 @@ function CopyChip({
               defaultValue: "Copy {{label}}",
               label,
             })}
-            className="inline-flex h-7 w-7 pointer-coarse:h-10 pointer-coarse:w-10 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+            className="inline-flex h-7 w-7 pointer-coarse:h-10 pointer-coarse:w-10 max-sm:size-11 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
           >
             {copied ? (
               <Check className="h-3.5 w-3.5 text-emerald-500" />
@@ -372,9 +372,25 @@ export function ContactHero({
                   {displayName}
                 </h1>
                 <ContactActions
-                  className="mt-2.5"
+                  className="mt-2.5 max-sm:hidden"
                   size="sm"
                   target={{ phone: phoneValue || null, email: emailValue || null }}
+                />
+                {/* Phones: one even row. Email opens our composer when it can
+                    (the same onCompose as the ink button, hidden here). */}
+                <ContactActions
+                  className="mt-3 sm:hidden"
+                  even
+                  showEmpty
+                  target={{ phone: phoneValue || null, email: emailValue || null }}
+                  emailInApp={!!onCompose}
+                  onContact={
+                    onCompose
+                      ? (channel) => {
+                          if (channel === "email") onCompose();
+                        }
+                      : undefined
+                  }
                 />
               </>
             )}
@@ -382,14 +398,22 @@ export function ContactHero({
               {onCompose ? (
                 <Button
                   size="sm"
-                  className="h-7 gap-1.5 px-2.5 text-[11px]"
+                  className={cn(
+                    "h-7 gap-1.5 px-2.5 text-[11px]",
+                    variant === "page" && "max-sm:hidden",
+                  )}
                   onClick={onCompose}
                 >
                   <Send className="h-3 w-3" />
                   {t("compose.emailAction", { defaultValue: "Email" })}
                 </Button>
               ) : null}
-              {source ? <ContactSourceBadge source={source} /> : null}
+              {source ? (
+                <ContactSourceBadge
+                  source={source}
+                  className="bg-muted text-muted-foreground ring-border dark:text-muted-foreground"
+                />
+              ) : null}
               {lastContactedRaw ? (
                 <span className="inline-flex items-center gap-1 text-muted-foreground">
                   <CalendarClock className="h-3 w-3" />

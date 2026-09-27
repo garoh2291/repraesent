@@ -1010,7 +1010,7 @@ function MobileStageSection({
               type="button"
               onClick={() => q.fetchNextPage()}
               disabled={q.isFetchingNextPage}
-              className="w-full rounded-lg border border-dashed border-border py-2 text-[11px] font-medium text-muted-foreground hover:text-foreground hover:bg-muted transition-colors flex items-center justify-center gap-1.5"
+              className="press w-full min-h-11 rounded-lg border border-dashed border-border py-2 text-[13px] font-medium text-muted-foreground hover:text-foreground hover:bg-muted transition-colors flex items-center justify-center gap-1.5"
             >
               {q.isFetchingNextPage ? (
                 <Loader2 className="h-3 w-3 animate-spin" />
@@ -1059,7 +1059,7 @@ function LeadScheduleRow({
       type="button"
       onClick={onSelect}
       className={cn(
-        "press flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left transition-colors",
+        "press flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left transition-colors",
         "active:bg-muted",
       )}
     >
@@ -1073,14 +1073,14 @@ function LeadScheduleRow({
           <p className="text-xs text-muted-foreground truncate">{subtitle}</p>
         )}
 
-        <div className="flex items-center gap-2 pt-0.5">
+        <div className="flex flex-wrap items-center gap-x-2 gap-y-1 pt-0.5">
           {formName && (
-            <span className="text-[10px] text-muted-foreground/70 truncate max-w-[120px]">
+            <span className="text-[11px] text-muted-foreground/70 truncate max-w-[120px]">
               {formName}
             </span>
           )}
           {lead.created_at && (
-            <span className="text-[10px] text-muted-foreground/50">
+            <span className="text-[11px] text-muted-foreground/60">
               {formatDate(new Date(lead.created_at), "MMM d")}
             </span>
           )}
@@ -1088,11 +1088,11 @@ function LeadScheduleRow({
             <OutcomeBadge
               outcome={lead.contact_state.outcome}
               attempts={lead.contact_state.attempts}
-              className="text-[10px]"
+              className="text-[11px]"
             />
           ) : null}
           {appointment && (
-            <span className="inline-flex items-center gap-1 text-[10px] text-muted-foreground tabular-nums">
+            <span className="inline-flex items-center gap-1 text-[11px] text-muted-foreground tabular-nums">
               <CalendarClock className="h-3 w-3 shrink-0" />
               {formatDateIntl(appointment.start, {
                 month: "short",
@@ -1177,7 +1177,8 @@ function ScheduleSection({
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
-        className="flex w-full items-center gap-3 px-4 py-3 text-left"
+        aria-expanded={open}
+        className="press flex w-full min-h-14 items-center gap-3 px-4 py-3 text-left"
       >
         {header}
         <ChevronDown

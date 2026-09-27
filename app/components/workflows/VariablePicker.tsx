@@ -9,6 +9,7 @@ import {
 } from "~/components/ui/popover";
 import type { CatalogField } from "~/lib/api/workflows";
 import { buildVariableGroups, filterGroups } from "~/lib/workflows/variables";
+import { desktopAutoFocus } from "~/lib/utils/touch";
 
 /**
  * Insert a value into a template, by name.
@@ -81,7 +82,7 @@ export function VariablePicker({
         <div className="flex items-center gap-2 border-b border-border px-3 py-2">
           <Search className="h-3.5 w-3.5 shrink-0 text-muted-foreground" aria-hidden />
           <Input
-            autoFocus
+            autoFocus={desktopAutoFocus()}
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder={t("workflows.variables.search", {

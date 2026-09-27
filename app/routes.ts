@@ -167,6 +167,8 @@ export default [
         "db-brand/retailers/:retailerId/leads/:leadId",
         "routes/db-brand.retailers.$retailerId.leads.$leadId.tsx",
       ),
+      // Anything else inside the app: a not-found card, menu still there.
+      route("*", "routes/not-found.tsx"),
     ]),
   ]),
 ] satisfies RouteConfig;

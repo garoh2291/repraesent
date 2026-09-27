@@ -4,6 +4,7 @@ import { useOpenFromParam } from "~/lib/hooks/useOpenFromParam";
 import { ContactActions } from "~/components/notebook/contact-actions";
 import { OutcomeBadge, useLeadFlow } from "~/components/notebook/lead-flow";
 import { useTranslation } from "react-i18next";
+import { LoadError } from "~/components/notebook/load-error";
 import {
   useMutation,
   useQuery,
@@ -70,6 +71,12 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
+  DropdownMenuSeparator,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from "~/components/ui/dropdown-menu";
 import {
@@ -708,7 +715,7 @@ export default function LeadForm() {
       className={cn(
         "app-fade-in",
         viewMode === "kanban"
-          ? "flex flex-col min-h-[calc(100vh-8rem)] p-4 sm:p-6"
+          ? "flex flex-col sm:min-h-[calc(100vh-8rem)] p-4 sm:p-6"
           : "p-4 sm:p-6 space-y-4 sm:space-y-6",
       )}
     >
@@ -719,7 +726,7 @@ export default function LeadForm() {
             {t("leads.title")}
           </h1>
           <p className="text-sm text-muted-foreground mt-0.5">
-            {t("leads.manageHint")}
+            {t("leads.listHint", "Everyone who asked about you, newest first.")}
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
@@ -741,30 +748,82 @@ export default function LeadForm() {
               className="h-9 gap-1.5 text-xs max-sm:h-11 max-sm:flex-1 max-sm:text-sm"
             >
               <Plus className="h-3.5 w-3.5 max-sm:size-4" />
-              {t("leads.createLead", { defaultValue: "Create lead" })}
+              {t("leads.newInquiry", "New inquiry")}
             </Button>
           )}
-          {canEdit && (
-            // Phones: the rare "Import CSV" steps aside into a ⋯ menu.
-            <DropdownMenu modal={false}>
-              <DropdownMenuTrigger asChild>
-                <Button
-                  variant="outline"
-                  size="icon"
-                  className="size-11 sm:hidden"
-                  aria-label={t("mobile.more", "More")}
-                >
-                  <MoreHorizontal className="size-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="min-w-48">
-                <DropdownMenuItem onSelect={() => setImportModalOpen(true)}>
-                  <Upload className="h-3.5 w-3.5" />
-                  {t("leads.importLeads")}
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          )}
+          {/* Phones: the rare "Import CSV" and the filters the desktop
+              toolbar carries step aside into a ⋯ menu. Same URL params. */}
+          <DropdownMenu modal={false}>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="outline"
+                size="icon"
+                className="relative size-11 sm:hidden"
+                aria-label={t("mobile.more", "More")}
+              >
+                <MoreHorizontal className="size-4" />
+                {sourceFilter || formNameFilter ? (
+                  <span
+                    aria-hidden
+                    className="absolute right-2 top-2 size-2 rounded-full bg-foreground"
+                  />
+                ) : null}
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="min-w-52">
+              {canEdit && (
+                <>
+                  <DropdownMenuItem onSelect={() => setImportModalOpen(true)}>
+                    <Upload className="h-3.5 w-3.5" />
+                    {t("leads.importLeads")}
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                </>
+              )}
+              <DropdownMenuSub>
+                <DropdownMenuSubTrigger>
+                  {t("leads.filters.source")}
+                </DropdownMenuSubTrigger>
+                <DropdownMenuSubContent className="max-h-[50dvh] overflow-y-auto">
+                  <DropdownMenuRadioGroup
+                    value={sourceFilter}
+                    onValueChange={(v) => onSelect({ source: v, page: "1" }, true)}
+                  >
+                    <DropdownMenuRadioItem value="">
+                      {t("leads.phoneMenu.all", "All")}
+                    </DropdownMenuRadioItem>
+                    {LEAD_FILTER_SOURCE_OPTIONS.map((o) => (
+                      <DropdownMenuRadioItem key={o.key} value={o.key}>
+                        {t(o.label, { defaultValue: o.label })}
+                      </DropdownMenuRadioItem>
+                    ))}
+                  </DropdownMenuRadioGroup>
+                </DropdownMenuSubContent>
+              </DropdownMenuSub>
+              {formNameFilterOptions.length > 0 && (
+                <DropdownMenuSub>
+                  <DropdownMenuSubTrigger>
+                    {t("leads.columns.formName")}
+                  </DropdownMenuSubTrigger>
+                  <DropdownMenuSubContent className="max-h-[50dvh] overflow-y-auto">
+                    <DropdownMenuRadioGroup
+                      value={formNameFilter}
+                      onValueChange={(v) => onSelect({ form_name: v, page: "1" }, true)}
+                    >
+                      <DropdownMenuRadioItem value="">
+                        {t("leads.phoneMenu.all", "All")}
+                      </DropdownMenuRadioItem>
+                      {formNameFilterOptions.map((o) => (
+                        <DropdownMenuRadioItem key={o.key} value={o.key}>
+                          {o.label}
+                        </DropdownMenuRadioItem>
+                      ))}
+                    </DropdownMenuRadioGroup>
+                  </DropdownMenuSubContent>
+                </DropdownMenuSub>
+              )}
+            </DropdownMenuContent>
+          </DropdownMenu>
           {viewMode === "kanban" && (
             <Select
               value={sortMode}
@@ -805,7 +864,7 @@ export default function LeadForm() {
               )}
             >
               <Table2 className="h-3.5 w-3.5" />
-              {t("leads.tableView")}
+              {t("leads.listView", "List")}
             </button>
             <button
               onClick={() => {
@@ -820,7 +879,7 @@ export default function LeadForm() {
               )}
             >
               <LayoutGrid className="h-3.5 w-3.5" />
-              {t("leads.kanbanView")}
+              {t("leads.boardView", "Board")}
             </button>
           </div>
         </div>
@@ -828,7 +887,9 @@ export default function LeadForm() {
 
       <div className="border-t border-border shrink-0" />
 
-      {viewMode === "table" ? (
+      {viewMode === "table" && leadsQuery.isError && !leadsQuery.data ? (
+        <LoadError what={t("errors.what.inquiries", "your inquiries")} onRetry={() => void leadsQuery.refetch()} />
+      ) : viewMode === "table" ? (
         <DataTable<Lead, unknown>
           enableSorting={false}
           columns={columns}
@@ -927,7 +988,9 @@ export default function LeadForm() {
             onReorder={({ leadId, status, position }) =>
               reorderMutation.mutateAsync({ id: leadId, status, position })
             }
-            onLeadSelect={setSelectedLeadId}
+            // Phones open the inquiry as its own page; the side sheet is for
+            // the wide board and the table.
+            onLeadSelect={(id) => (isPhone ? navigate(`/lead-form/${id}`) : setSelectedLeadId(id))}
             canEdit={canEdit}
             sortMode={sortMode}
           />

@@ -1,4 +1,5 @@
-import { Link, useLocation } from "react-router";
+import { Link } from "react-router";
+import { usePendingPathname } from "~/lib/nav/use-pending-nav";
 import {
   Children,
   createContext,
@@ -82,6 +83,7 @@ function NavLink({
   return (
     <Link
       to={to}
+      prefetch="intent"
       onClick={onClick}
       aria-disabled={disabled}
       className={[
@@ -125,7 +127,8 @@ function DemoPill() {
  */
 function WebsiteSubNav({ onClose }: { onClose?: () => void }) {
   const { t } = useTranslation();
-  const location = useLocation();
+  // The page being opened counts as current, so the tap shows at once.
+  const navPath = usePendingPathname().pathname;
   const installsQuery = useWorkspaceWpPluginInstalls(true);
   const plugins = [...(installsQuery.data?.plugins ?? [])].sort((a, b) =>
     a.display_name.localeCompare(b.display_name, undefined, {
@@ -147,7 +150,7 @@ function WebsiteSubNav({ onClose }: { onClose?: () => void }) {
 
       <NavLink
         to="/website"
-        isActive={location.pathname === "/website"}
+        isActive={navPath === "/website"}
         onClick={onClose}
       >
         <Globe className="h-4 w-4 shrink-0" />
@@ -173,7 +176,7 @@ function WebsiteSubNav({ onClose }: { onClose?: () => void }) {
             <NavLink
               key={p.plugin_uuid}
               to={path}
-              isActive={location.pathname === path}
+              isActive={navPath === path}
               onClick={onClose}
             >
               <Icon className="h-4 w-4 shrink-0" />
@@ -199,6 +202,7 @@ function SearchRow() {
   return (
     <button
       type="button"
+      data-search-hint=""
       onClick={openCommandPalette}
       title={collapsed ? t("command.title", "Go to or search") : undefined}
       className={cn(
@@ -225,9 +229,10 @@ function SearchRow() {
  * the content, so the sidebar never has to nest.
  */
 function MainSections({ onClose }: { onClose?: () => void }) {
-  const location = useLocation();
+  // The page being opened counts as current, so the tap shows at once.
+  const navPath = usePendingPathname().pathname;
   const sections = useNavSections();
-  const active = activeSection(sections, location.pathname);
+  const active = activeSection(sections, navPath);
   const today = useToday("me", !!sections);
   const counts = today.data && today.data.supported ? today.data.counts : null;
   const needsYou = counts
@@ -271,7 +276,8 @@ export function Sidebar({
 }) {
   const { logout, isLoggingOut } = useAuthContext();
   const { t, i18n } = useTranslation();
-  const location = useLocation();
+  // The page being opened counts as current, so the tap shows at once.
+  const navPath = usePendingPathname().pathname;
   // Who sees what: shared with the phone menu sheet (~/lib/nav/use-nav-model).
   const {
     currentWorkspace,
@@ -540,7 +546,7 @@ export function Sidebar({
                       <NavLink
                         key={to}
                         to={to}
-                        isActive={location.pathname.startsWith(to)}
+                        isActive={navPath.startsWith(to)}
                         onClick={onClose}
                       >
                         <Icon className="h-4 w-4 shrink-0" />
@@ -560,7 +566,7 @@ export function Sidebar({
             <>
               <NavLink
                 to="/db-brand"
-                isActive={location.pathname === "/db-brand"}
+                isActive={navPath === "/db-brand"}
                 onClick={onClose}
               >
                 <HomeIcon className="h-4 w-4 shrink-0" />
@@ -569,8 +575,8 @@ export function Sidebar({
               <NavLink
                 to="/brand-retailers"
                 isActive={
-                  location.pathname.startsWith("/brand-retailers") ||
-                  location.pathname.startsWith("/db-brand/retailers")
+                  navPath.startsWith("/brand-retailers") ||
+                  navPath.startsWith("/db-brand/retailers")
                 }
                 onClick={onClose}
               >
@@ -579,7 +585,7 @@ export function Sidebar({
               </NavLink>
               <NavLink
                 to="/brand-campaigns"
-                isActive={location.pathname.startsWith("/brand-campaigns")}
+                isActive={navPath.startsWith("/brand-campaigns")}
                 onClick={onClose}
               >
                 <Megaphone className="h-4 w-4 shrink-0" />
@@ -587,7 +593,7 @@ export function Sidebar({
               </NavLink>
               <NavLink
                 to="/brand-leads"
-                isActive={location.pathname.startsWith("/brand-leads")}
+                isActive={navPath.startsWith("/brand-leads")}
                 onClick={onClose}
               >
                 <Users className="h-4 w-4 shrink-0" />
@@ -646,7 +652,7 @@ export function Sidebar({
               )}
               <NavLink
                 to="/billing"
-                isActive={location.pathname === "/billing"}
+                isActive={navPath === "/billing"}
                 onClick={onClose}
               >
                 <Package className="h-4 w-4 shrink-0" />

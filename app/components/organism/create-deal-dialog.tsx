@@ -326,6 +326,8 @@ export function CreateDealDialog({
               id="create-deal-title"
               value={newTitle}
               onChange={(e) => setNewTitle(e.target.value)}
+              autoCapitalize="sentences"
+              enterKeyHint="next"
               placeholder={t("pipeline.fields.titlePlaceholder", {
                 defaultValue: "Enter deal title",
               })}
@@ -353,7 +355,7 @@ export function CreateDealDialog({
               <DealCurrencySelect value={currency} onChange={setNewCurrency} />
             </div>
             {valueNegative ? (
-              <p className="text-[11px] text-destructive">
+              <p className="text-[11px] text-destructive max-sm:text-[13px]">
                 {t("pipeline.errors.valueNegative", {
                   defaultValue: "Value cannot be negative.",
                 })}
@@ -382,7 +384,7 @@ export function CreateDealDialog({
                       defaultValue: "Search contacts…",
                     })}
                     autoComplete="off"
-                    className="px-9"
+                    className="px-9 max-sm:pr-11"
                   />
                   {contactSearch ? (
                     <button
@@ -391,7 +393,7 @@ export function CreateDealDialog({
                       aria-label={t("common.clearSearch", {
                         defaultValue: "Clear",
                       })}
-                      className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                      className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground max-sm:right-0 max-sm:flex max-sm:size-11 max-sm:items-center max-sm:justify-center max-sm:[&>svg]:size-4"
                     >
                       <X className="h-3.5 w-3.5" />
                     </button>
@@ -422,7 +424,7 @@ export function CreateDealDialog({
                       <div className="h-4 w-4 app-spin rounded-full border-2 border-primary/20 border-t-primary" />
                     </div>
                   ) : contactRows.length === 0 ? (
-                    <div className="px-3 py-4 text-xs text-center text-muted-foreground">
+                    <div className="px-3 py-4 text-xs text-center text-muted-foreground max-sm:text-[13px]">
                       {t("pipeline.attachContactNoResults", {
                         defaultValue: "No contacts found.",
                       })}
@@ -433,7 +435,7 @@ export function CreateDealDialog({
                         key={row.id}
                         type="button"
                         onClick={() => selectContact(row.id, row.label)}
-                        className="flex w-full items-center gap-2 px-3 py-2.5 text-left text-sm transition-colors hover:bg-muted"
+                        className="flex w-full items-center gap-2 px-3 py-2.5 text-left text-sm transition-colors hover:bg-muted max-sm:min-h-11 max-sm:text-[15px] active:bg-muted"
                       >
                         <span className="flex-1 truncate font-medium">
                           {row.label}
@@ -463,7 +465,7 @@ export function CreateDealDialog({
                 }
                 onValueChange={setSelectedPipelineId}
               >
-                <SelectTrigger>
+                <SelectTrigger className="max-sm:w-full">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -479,7 +481,7 @@ export function CreateDealDialog({
           <div className="space-y-1.5">
             <Label>{t("contacts.assignedTo", { defaultValue: "Assigned to" })}</Label>
             <Select value={newAssignee} onValueChange={setNewAssignee}>
-              <SelectTrigger>
+              <SelectTrigger className="max-sm:w-full">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>

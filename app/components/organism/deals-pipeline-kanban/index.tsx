@@ -707,7 +707,7 @@ function DealsMobileSchedule({
           >
             {count === 0 ? (
               <div className="px-4 pb-4 pt-1">
-                <p className="text-xs text-muted-foreground/50 text-center py-3">
+                <p className="text-[13px] text-muted-foreground/70 text-center py-3">
                   —
                 </p>
               </div>
@@ -777,7 +777,7 @@ function DealScheduleRow({
             {deal.status === "won" && deal.paid_at ? <PaidChip /> : null}
           </p>
         ) : null}
-        <div className="flex flex-wrap items-center gap-x-2 pt-0.5 text-[10px] text-muted-foreground">
+        <div className="flex flex-wrap items-center gap-x-2 pt-0.5 text-[12px] text-muted-foreground">
           {deal.primary_email ? (
             <span className="inline-flex items-center gap-0.5 truncate max-w-full">
               <Mail className="h-3 w-3 shrink-0 opacity-70" />

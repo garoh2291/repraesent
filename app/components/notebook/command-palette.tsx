@@ -234,7 +234,7 @@ export function CommandPalette() {
       {i.hint ? (
         <span className="max-w-[45%] shrink-0 truncate text-[12px] text-muted-foreground">{i.hint}</span>
       ) : null}
-      <CornerDownLeft className="size-3.5 shrink-0 text-muted-foreground opacity-0 group-aria-selected:opacity-100" />
+      <CornerDownLeft className="size-3.5 shrink-0 text-muted-foreground opacity-0 group-aria-selected:opacity-100 pointer-coarse:hidden" />
     </Command.Item>
   );
 
@@ -297,7 +297,8 @@ export function CommandPalette() {
           </Command.List>
           <div className="flex items-center justify-between border-t border-border px-4 py-2 text-[11.5px] text-muted-foreground">
             <span>{t("command.footer", "Search people, deals, tasks and pages")}</span>
-            <span className="num">{isMacPlatform() ? "⌘K" : "Ctrl K"}</span>
+            {/* Keyboard shortcut: meaningless on a touch screen. */}
+            <span className="num pointer-coarse:hidden">{isMacPlatform() ? "⌘K" : "Ctrl K"}</span>
           </div>
         </Command>
       </DialogContent>

@@ -27,6 +27,7 @@ import {
 } from "~/lib/api/segments";
 import { useDocumentMeta } from "~/lib/hooks/use-document-meta";
 import { formatDateMedium } from "~/lib/utils/format";
+import { desktopAutoFocus } from "~/lib/utils/touch";
 
 export default function SegmentsIndex() {
   const { t } = useTranslation();
@@ -153,7 +154,7 @@ export default function SegmentsIndex() {
           </DialogHeader>
           <div className="space-y-4">
             <Input
-              autoFocus
+              autoFocus={desktopAutoFocus()}
               value={newName}
               onChange={(e) => setNewName(e.target.value)}
               placeholder={t("emailCampaigns.segments.namePlaceholder", {

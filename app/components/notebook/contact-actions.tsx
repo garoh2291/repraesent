@@ -34,6 +34,7 @@ export function ContactActions({
   showEmpty = false,
   iconOnly = false,
   emailInApp = false,
+  even = false,
 }: {
   target: ContactTarget;
   onContact?: (channel: ContactChannel) => void;
@@ -48,6 +49,11 @@ export function ContactActions({
    * not also fire. It stays an href: middle-click still reaches the mail app.
    */
   emailInApp?: boolean;
+  /**
+   * Phones only: one even row of equal 44px buttons (the main actions on a
+   * detail page). Desktop keeps the wrapping row at the chosen size.
+   */
+  even?: boolean;
 }) {
   const { t } = useTranslation();
   const phone = target.phone?.trim() || null;
@@ -69,8 +75,22 @@ export function ContactActions({
   const visible = showEmpty ? items : items.filter((i) => i.href);
   if (visible.length === 0) return null;
 
+  const evenCols = ["", "max-sm:grid-cols-1", "max-sm:grid-cols-2", "max-sm:grid-cols-3"][visible.length];
+  const evenItem = even && !iconOnly && "max-sm:h-11 max-sm:min-w-0 max-sm:justify-center max-sm:gap-1.5 max-sm:px-1.5 max-sm:text-[14px] max-sm:[&>svg]:size-4 max-sm:[&>svg]:shrink-0";
+  // Small buttons stay small to the eye; on touch they get an invisible 44px
+  // hit area (same idea as the small Button sizes).
+  const smHit =
+    size === "sm" && !iconOnly && !even &&
+    "relative pointer-coarse:after:absolute pointer-coarse:after:inset-x-0 pointer-coarse:after:-inset-y-1.5 pointer-coarse:after:content-['']";
+
   return (
-    <div className={cn("flex flex-wrap items-center gap-1.5", className)}>
+    <div
+      className={cn(
+        "flex flex-wrap items-center gap-1.5",
+        even && !iconOnly && ["max-sm:grid max-sm:gap-2", evenCols],
+        className,
+      )}
+    >
       {visible.map(({ channel, href, label, Icon, external }) =>
         href ? (
           <a
@@ -90,7 +110,9 @@ export function ContactActions({
                 ? "size-8 justify-center p-0 max-sm:size-11"
                 : size === "sm"
                   ? "h-8 px-2.5 text-[12.5px]"
-                  : "h-10 px-3.5 text-[13.5px]",
+                  : "h-10 px-3.5 text-[13.5px] max-sm:h-11",
+              smHit,
+              evenItem,
             )}
             aria-label={iconOnly ? label : undefined}
             title={iconOnly ? label : undefined}
@@ -104,7 +126,8 @@ export function ContactActions({
             aria-disabled
             className={cn(
               "inline-flex cursor-not-allowed items-center gap-1.5 rounded-lg border border-dashed border-border font-medium text-muted-foreground/60",
-              size === "sm" ? "h-8 px-2.5 text-[12.5px]" : "h-10 px-3.5 text-[13.5px]",
+              size === "sm" ? "h-8 px-2.5 text-[12.5px]" : "h-10 px-3.5 text-[13.5px] max-sm:h-11",
+              evenItem,
             )}
             title={t("outcome.noChannel", "Not on file")}
           >

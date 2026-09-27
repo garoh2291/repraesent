@@ -310,12 +310,12 @@ export default function Emails() {
   const isConfigured = !!account;
 
   return (
-    <div className="mx-auto w-full max-w-[1280px] p-4 sm:p-6 py-10! space-y-6 sm:space-y-8 app-fade-in">
+    <div className="mx-auto w-full max-w-[1280px] p-4 sm:p-6 py-4 sm:py-10! space-y-6 sm:space-y-8 app-fade-in">
       <div className="mx-auto w-full space-y-6">
         {/* Header */}
         <div className="app-fade-up flex items-start justify-between gap-4">
           <div className="flex items-center gap-3">
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-amber-400/10">
+            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-amber-400/10 max-sm:hidden">
               <Mail className="h-5 w-5 text-amber-400" />
             </div>
             <div>
@@ -323,7 +323,7 @@ export default function Emails() {
                 {t("email.pageTitle")}
               </h1>
               <p className="text-sm text-muted-foreground mt-0.5">
-                {t("email.pageSubtitle")}
+                {t("email.pageSubtitlePlain", "How to add your mailbox to Outlook, Apple Mail or any other email app.")}
               </p>
             </div>
           </div>

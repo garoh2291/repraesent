@@ -9,6 +9,7 @@ import { EmailCard } from "~/components/organism/email-card";
 import { MailCardActions } from "~/components/organism/mail-card-actions";
 import { Button } from "~/components/ui/button";
 import { Skeleton } from "~/components/ui/skeleton";
+import { Segmented } from "~/components/notebook/segmented";
 import { cn } from "~/lib/utils";
 import { useDocumentMeta } from "~/lib/hooks/use-document-meta";
 import i18n from "~/i18n";
@@ -79,7 +80,7 @@ export default function MailPage() {
       {/* Header */}
       <div className="app-fade-up flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-400/10">
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-400/10 max-sm:hidden">
             <Mail className="h-5 w-5 text-amber-500" />
           </div>
           <div>
@@ -87,31 +88,22 @@ export default function MailPage() {
               {t("mail.pageTitle", { defaultValue: "Mail" })}
             </h1>
             <p className="mt-0.5 text-sm text-muted-foreground">
-              {t("mail.pageSubtitle", {
-                defaultValue: "Every email logged for this workspace.",
+              {t("mail.pageSubtitlePlain", {
+                defaultValue: "Every email you copied in, in one place.",
               })}
             </p>
           </div>
         </div>
 
         {/* Segmented filter */}
-        <div className="inline-flex shrink-0 items-center gap-1 rounded-full border border-border bg-muted/40 p-1">
-          {filters.map((f) => (
-            <button
-              key={f.key}
-              type="button"
-              onClick={() => setFilter(f.key)}
-              className={cn(
-                "rounded-full px-3 py-1.5 text-xs font-medium transition-colors",
-                filter === f.key
-                  ? "bg-card text-foreground shadow-(--shadow-sm)"
-                  : "text-muted-foreground hover:text-foreground",
-              )}
-            >
-              {f.label}
-            </button>
-          ))}
-        </div>
+        <Segmented
+          label={t("mail.filterLabel", { defaultValue: "Show" })}
+          value={filter}
+          onChange={setFilter}
+          stretch
+          className="shrink-0"
+          options={filters.map((f) => ({ value: f.key, label: f.label }))}
+        />
       </div>
 
       {/* Body */}
@@ -138,15 +130,15 @@ export default function MailPage() {
                 })}
           </p>
           <p className="max-w-sm text-xs leading-relaxed text-muted-foreground">
-            {t("mail.emptySubtitle", {
+            {t("mail.emptySubtitlePlain", {
               defaultValue:
-                "BCC your logging address on emails and they show up here automatically.",
+                "Put your copy address in BCC when you send an email, and it shows up here.",
             })}
           </p>
-          <Button asChild variant="outline" size="sm" className="mt-2 gap-1.5">
+          <Button asChild variant="outline" size="sm" className="mt-2 gap-1.5 max-sm:h-11 max-sm:px-4 max-sm:text-sm">
             <Link to="/settings/bcc">
               <Mail className="size-3.5" />
-              {t("mail.emptyCta", { defaultValue: "Set up BCC logging" })}
+              {t("mail.emptyCtaPlain", { defaultValue: "Set up email copies (BCC)" })}
               <ArrowRight className="size-3.5" />
             </Link>
           </Button>
@@ -175,7 +167,7 @@ export default function MailPage() {
                 size="sm"
                 onClick={() => query.fetchNextPage()}
                 disabled={query.isFetchingNextPage}
-                className="gap-2"
+                className="gap-2 max-sm:h-11 max-sm:w-full max-sm:text-sm"
               >
                 {query.isFetchingNextPage && (
                   <div className="h-3.5 w-3.5 app-spin rounded-full border-2 border-primary/20 border-t-primary" />

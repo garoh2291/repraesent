@@ -1,3 +1,5 @@
+import { useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import {
   isRouteErrorResponse,
   Links,
@@ -5,9 +7,13 @@ import {
   Outlet,
   Scripts,
   ScrollRestoration,
+  useLocation,
   useRouteLoaderData,
 } from "react-router";
 import { Toaster } from "./components/ui/sonner";
+import { useKeyboardInset } from "./lib/hooks/use-keyboard-inset";
+import { BrandSplash, isPublicPath, markBootReady } from "./components/notebook/brand-splash";
+import { ErrorCard } from "./components/notebook/error-card";
 import { WpSsoErrorNotice } from "./components/wordpress/wp-sso-error-notice";
 // Side effect: starts listening for the install prompt as early as possible.
 import "./lib/pwa/register";
@@ -75,6 +81,21 @@ export const links: Route.LinksFunction = () => [
   },
 ];
 
+/**
+ * The root loader only reads the language cookie. Re-running it on every
+ * link or filter change cost a server round trip before each page showed;
+ * the client switches language itself, so only form submissions re-run it.
+ */
+export function shouldRevalidate({
+  formMethod,
+  defaultShouldRevalidate,
+}: {
+  formMethod?: string;
+  defaultShouldRevalidate: boolean;
+}) {
+  return formMethod ? defaultShouldRevalidate : false;
+}
+
 export function Layout({ children }: { children: React.ReactNode }) {
   // Root loader data isn't available on the error path, so fall back safely.
   const data = useRouteLoaderData<typeof loader>("root");
@@ -115,6 +136,8 @@ export function Layout({ children }: { children: React.ReactNode }) {
                     path currently lands. */}
                 <WpSsoErrorNotice />
                 <Toaster />
+                {/* Start screen: ink + "re:" → "re:praesent" (REDESIGN_PLAN.md §3). */}
+                <BrandSplash />
                 {/* Service worker, update toast, alert taps (client-only effects). */}
                 <PwaBoot />
 
@@ -130,34 +153,39 @@ export function Layout({ children }: { children: React.ReactNode }) {
 }
 
 export default function App() {
+  useKeyboardInset();
   return <Outlet />;
 }
 
 export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
-  let message = "Oops!";
-  let details = "An unexpected error occurred.";
-  let stack: string | undefined;
-
-  if (isRouteErrorResponse(error)) {
-    message = error.status === 404 ? "404" : "Error";
-    details =
-      error.status === 404
-        ? "The requested page could not be found."
-        : error.statusText || details;
-  } else if (import.meta.env.DEV && error && error instanceof Error) {
-    details = error.message;
-    stack = error.stack;
-  }
+  // Never leave the start screen over an error page.
+  useEffect(() => markBootReady(), []);
+  const { t } = useTranslation();
+  const { pathname } = useLocation();
+  const notFound = isRouteErrorResponse(error) && error.status === 404;
+  // Visitors on public pages (booking, forms, tracking) have no "Today".
+  const inApp = !isPublicPath(pathname);
+  const stack = import.meta.env.DEV && error instanceof Error ? `${error.message}\n\n${error.stack ?? ""}` : null;
 
   return (
-    <main className="pt-16 p-4 container mx-auto">
-      <h1>{message}</h1>
-      <p>{details}</p>
-      {stack && (
-        <pre className="w-full p-4 overflow-x-auto">
-          <code>{stack}</code>
-        </pre>
-      )}
+    <main className="flex min-h-dvh items-center bg-background px-4 pt-safe pb-safe">
+      <ErrorCard
+        title={notFound ? t("errors.notFoundTitle", "This page doesn't exist") : t("errors.appTitle", "Something went wrong on this page")}
+        body={
+          notFound
+            ? t("errors.notFoundBody", "The link may be old or mistyped. Everything else is where you left it.")
+            : t("errors.appBody", "Your data is safe. Try again, or go back to Today.")
+        }
+        onRetry={notFound ? undefined : () => window.location.reload()}
+        showHome={inApp}
+      >
+        {stack ? (
+          <details className="mt-4 text-left">
+            <summary className="cursor-pointer text-[12px] text-muted-foreground">Details (dev only)</summary>
+            <pre className="mt-2 max-h-64 overflow-auto rounded-lg bg-muted p-3 text-[11px] leading-snug">{stack}</pre>
+          </details>
+        ) : null}
+      </ErrorCard>
     </main>
   );
 }

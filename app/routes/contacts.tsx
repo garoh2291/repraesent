@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import { useOpenFromParam } from "~/lib/hooks/useOpenFromParam";
 import { Link, useNavigate, useSearchParams } from "react-router";
 import { useTranslation } from "react-i18next";
+import { LoadError } from "~/components/notebook/load-error";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAuthContext } from "~/providers/auth-provider";
 import {
@@ -76,6 +77,7 @@ import { personName } from "~/lib/contacts/display-name";
 import { ContactImportModal } from "~/components/organism/contact-import-modal";
 import { CreateContactDialog } from "~/components/organism/create-contact-dialog";
 import { ContactActions } from "~/components/notebook/contact-actions";
+import { EmptyState } from "~/components/notebook/empty-state";
 
 export function meta() {
   return [
@@ -218,8 +220,11 @@ export default function ContactsPage() {
           <h1 className="title-display text-[26px] font-semibold text-foreground sm:text-[30px]">
             {t("contacts.contactsTitle")}
           </h1>
-          <p className="text-sm text-muted-foreground mt-0.5">
+          <p className="text-sm text-muted-foreground mt-0.5 max-sm:hidden">
             {t("contacts.contactsManageHint")}
+          </p>
+          <p className="text-sm text-muted-foreground mt-0.5 sm:hidden">
+            {t("contacts.peopleHint", "Everyone you work with, in one place.")}
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
@@ -321,7 +326,7 @@ export default function ContactsPage() {
             )}
             value={search}
             onChange={(e) => setParam({ search: e.target.value, page: "1" })}
-            className="pl-9 pr-9"
+            className="pl-9 pr-9 max-sm:pr-11"
           />
           {search ? (
             <Button
@@ -329,7 +334,7 @@ export default function ContactsPage() {
               variant="ghost"
               size="icon-xs"
               onClick={() => setParam({ search: undefined, page: "1" })}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground h-6 w-6"
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground h-6 w-6 max-sm:right-0 max-sm:size-11"
               aria-label={t("common.clearSearch")}
             >
               <X className="h-4 w-4" />
@@ -341,7 +346,7 @@ export default function ContactsPage() {
           {hasTableFilters && (
             <button
               type="button"
-              className="inline-flex items-center gap-1 rounded-full border border-dashed border-border px-3 py-1 text-xs font-medium text-muted-foreground hover:text-foreground hover:border-border/80 transition-colors"
+              className="press inline-flex items-center gap-1 rounded-full border border-dashed border-border px-3 py-1 text-xs font-medium text-muted-foreground hover:text-foreground hover:border-border/80 transition-colors max-sm:min-h-11 max-sm:px-4 max-sm:text-sm"
               onClick={() =>
                 setParam({
                   source: undefined,
@@ -358,11 +363,7 @@ export default function ContactsPage() {
       </div>
 
       {isError && (
-        <p className="text-sm text-destructive">
-          {t("contacts.loadError", {
-            defaultValue: "Could not load contacts.",
-          })}
-        </p>
+        <LoadError what={t("errors.what.people", "your people")} onRetry={() => void tableQuery.refetch()} />
       )}
 
       {!isError && (
@@ -371,12 +372,47 @@ export default function ContactsPage() {
               (MOBILE_PACKAGE_PLAN.md B2). Same query, same row link. */}
           <ul className="space-y-2 sm:hidden">
             {isLoading || !data ? (
-              <li className="rounded-xl border border-border bg-card px-4 py-6 text-center text-sm text-muted-foreground">
-                {t("common.loading")}
+              <li className="rounded-xl border border-border bg-card">
+                <EmptyState compact title={t("common.loading")} />
               </li>
             ) : data.data.length === 0 ? (
-              <li className="rounded-xl border border-border bg-card px-4 py-6 text-center text-sm text-muted-foreground">
-                {t("contacts.empty", { defaultValue: "No contacts yet." })}
+              <li className="rounded-xl border border-border bg-card">
+                {search || hasTableFilters ? (
+                  <EmptyState
+                    icon={<Search />}
+                    title={t("contacts.emptySearch.title", "Nobody matches that.")}
+                    body={t("contacts.emptySearch.body", "Try another name, or clear the search and filters.")}
+                    action={
+                      <Button
+                        variant="outline"
+                        className="h-11 text-sm"
+                        onClick={() =>
+                          setParam({
+                            search: undefined,
+                            source: undefined,
+                            contact_type: undefined,
+                            page: "1",
+                          })
+                        }
+                      >
+                        <X className="size-4" />
+                        {t("contacts.emptySearch.clear", "Show everyone")}
+                      </Button>
+                    }
+                  />
+                ) : (
+                  <EmptyState
+                    icon={<IdCard />}
+                    title={t("contacts.empty", { defaultValue: "No contacts yet." })}
+                    body={t("contacts.emptyBody", "Add the people you work with — from your phone, typed in, or from a file.")}
+                    action={
+                      <Button className="h-11 gap-1.5 text-sm" onClick={() => openCreate()}>
+                        <Plus className="size-4" />
+                        {t("contacts.newContactButton", { defaultValue: "New contact" })}
+                      </Button>
+                    }
+                  />
+                )}
               </li>
             ) : (
               data.data.map((row) => {
@@ -743,7 +779,7 @@ export default function ContactsPage() {
                     })
                   }
                 >
-                  <SelectTrigger className="w-[70px]">
+                  <SelectTrigger className="w-[70px] max-sm:w-[76px]">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -758,6 +794,7 @@ export default function ContactsPage() {
                   <Button
                     variant="outline"
                     size="sm"
+                    className="max-sm:size-11"
                     onClick={() => setParam({ page: String(data.page - 1) })}
                     disabled={!data.hasPrev}
                   >
@@ -800,6 +837,7 @@ export default function ContactsPage() {
                   <Button
                     variant="outline"
                     size="sm"
+                    className="max-sm:size-11"
                     onClick={() => setParam({ page: String(data.page + 1) })}
                     disabled={!data.hasNext}
                   >

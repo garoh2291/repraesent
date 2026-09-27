@@ -34,6 +34,7 @@ import { isWorkspaceAiNotConfigured } from "~/lib/api/workspace-ai";
 import { aiKeys, useAiSources } from "~/lib/hooks/useAiAssistants";
 import { useQueryClient } from "@tanstack/react-query";
 import { cn } from "~/lib/utils";
+import { desktopAutoFocus } from "~/lib/utils/touch";
 
 interface Props {
   open: boolean;
@@ -213,7 +214,7 @@ export function CreateAssistantWizard({ open, onOpenChange }: Props) {
               </Label>
               <Input
                 id="assistant-name"
-                autoFocus
+                autoFocus={desktopAutoFocus()}
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 placeholder={t("aiAssistants.create.namePlaceholder")}
@@ -290,7 +291,7 @@ export function CreateAssistantWizard({ open, onOpenChange }: Props) {
               </Label>
               <Textarea
                 id="wizard-description"
-                autoFocus
+                autoFocus={desktopAutoFocus()}
                 value={description}
                 maxLength={4000}
                 onChange={(e) => setDescription(e.target.value)}

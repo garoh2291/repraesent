@@ -315,43 +315,55 @@ function QueueCard({
           swipeOn && "touch-pan-y",
         )}
       >
-        {/* Who */}
-        <div className="min-w-0">
-          <Link
-            to={`/lead-form/${lead.id}`}
-            className="title-display block truncate text-[26px] font-semibold leading-tight text-foreground hover:underline hover:decoration-foreground/30 hover:underline-offset-4"
-          >
-            {name}
-          </Link>
-          <p className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-[13px] text-muted-foreground">
-            <span>{leadSourceLabel(lead, t)}</span>
-            <span aria-hidden>·</span>
-            {task ? (
-              <span className={cn(task.urgency === "overdue" && "font-medium text-overdue")}>
-                {t("today.callAgainDue", "Call again")}
-              </span>
-            ) : (
-              <span className="num">
-                {t("today.waiting", "waiting {{time}}", { time: waitingFor(lead.created_at, i18n.language) })}
-              </span>
-            )}
-            {task || lead.attempts ? (
-              <OutcomeBadge outcome={task ? "no_answer" : null} attempts={lead.attempts} />
-            ) : null}
-          </p>
-        </div>
-
-        {/* How to reach them — seen before tapping, like a notebook entry */}
-        {phase !== "outcome" && (lead.phone || lead.email) ? (
-          <div className="mt-3 space-y-0.5 text-[14px] text-foreground">
-            {lead.phone ? <p className="num truncate">{lead.phone}</p> : null}
-            {lead.email ? <p className="truncate text-muted-foreground">{lead.email}</p> : null}
+        {/* Who — an ink band, like the sidebar and the start screen, so the
+            person reads first and the card never looks empty. */}
+        <div className="-mx-5 -mt-5 rounded-t-2xl bg-foreground px-5 pt-5 pb-4 text-background">
+          <div className="min-w-0">
+            <Link
+              to={`/lead-form/${lead.id}`}
+              className="title-display block truncate text-[26px] font-semibold leading-tight text-background hover:underline hover:decoration-background/40 hover:underline-offset-4"
+            >
+              {name}
+            </Link>
+            <p className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-[13px] text-background/65">
+              <span>{leadSourceLabel(lead, t)}</span>
+              <span aria-hidden>·</span>
+              {task ? (
+                <span
+                  className={cn(
+                    task.urgency === "overdue" &&
+                      "rounded-md bg-overdue px-1.5 py-0.5 text-[11.5px] font-semibold text-white",
+                  )}
+                >
+                  {t("today.callAgainDue", "Call again")}
+                </span>
+              ) : (
+                <span className="num">
+                  {t("today.waiting", "waiting {{time}}", { time: waitingFor(lead.created_at, i18n.language) })}
+                </span>
+              )}
+              {task || lead.attempts ? (
+                <OutcomeBadge
+                  outcome={task ? "no_answer" : null}
+                  attempts={lead.attempts}
+                  className="bg-marker text-foreground"
+                />
+              ) : null}
+            </p>
           </div>
-        ) : null}
+
+          {/* How to reach them — seen before tapping, like a notebook entry */}
+          {phase !== "outcome" && (lead.phone || lead.email) ? (
+            <div className="mt-3 space-y-0.5 text-[14px] text-background/85">
+              {lead.phone ? <p className="num truncate">{lead.phone}</p> : null}
+              {lead.email ? <p className="truncate text-background/65">{lead.email}</p> : null}
+            </div>
+          ) : null}
+        </div>
 
         {/* Last note */}
         {phase !== "outcome" ? (
-          <div className="mt-4 rounded-xl bg-muted/60 px-3.5 py-3">
+          <div className="mt-4 flex-1 rounded-xl bg-muted/60 px-3.5 py-3">
             <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">
               {t("calls.lastNote", "Last note")}
             </p>

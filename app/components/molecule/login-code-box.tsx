@@ -3,9 +3,10 @@ import { useNavigate } from "react-router";
 import { useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { REGEXP_ONLY_DIGITS } from "input-otp";
-import { Loader2 } from "lucide-react";
+import { AlertCircle, Loader2 } from "lucide-react";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "~/components/ui/input-otp";
 import {
+  authErrorMessage,
   getUserContextWithRetry,
   MagicLinkError,
   verifyMagicCode,
@@ -18,7 +19,7 @@ const RESEND_COOLDOWN_S = 30;
 const KNOWN_ERRORS = new Set(["CODE_INVALID", "CODE_EXPIRED", "CODE_TOO_MANY", "MAGIC_LINK_INELIGIBLE"]);
 
 const SLOT =
-  "num h-12 w-11 rounded-lg border border-stone-300 bg-white text-xl font-semibold text-foreground shadow-none first:rounded-lg last:rounded-lg data-[active=true]:border-foreground data-[active=true]:ring-foreground/15";
+  "num h-12 w-11 max-[380px]:w-10 rounded-lg border border-border bg-card text-xl font-semibold text-foreground shadow-none first:rounded-lg last:rounded-lg data-[active=true]:border-foreground data-[active=true]:ring-foreground/15";
 
 /**
  * The 6-digit code from the login email. It is how the installed iPhone app
@@ -96,14 +97,14 @@ export function LoginCodeBox({
       setNotice(t("auth.login.code.resent"));
       setCooldown(RESEND_COOLDOWN_S);
     } catch (err) {
-      setError(err instanceof Error && err.message ? err.message : t("auth.login.somethingWrong"));
+      setError(authErrorMessage(err, t));
     } finally {
       setResending(false);
     }
   };
 
   return (
-    <div className="space-y-4 rounded-xl border border-stone-200 bg-white px-4 py-5 sm:px-5">
+    <div className="space-y-4 rounded-xl border border-border bg-card px-4 py-5 sm:px-5">
       <div className="space-y-1">
         <p id="login-code-title" className="text-[15px] font-semibold text-foreground">
           {t("auth.login.code.title")}
@@ -138,7 +139,7 @@ export function LoginCodeBox({
           <InputOTPSlot index={1} className={SLOT} />
           <InputOTPSlot index={2} className={SLOT} />
         </InputOTPGroup>
-        <span aria-hidden className="h-px w-2.5 bg-stone-400" />
+        <span aria-hidden className="h-px w-2.5 bg-muted-foreground/40" />
         <InputOTPGroup className="gap-1.5">
           <InputOTPSlot index={3} className={SLOT} />
           <InputOTPSlot index={4} className={SLOT} />
@@ -153,7 +154,11 @@ export function LoginCodeBox({
             {t("auth.login.code.verifying")}
           </span>
         ) : error ? (
-          <span className="text-destructive">{error}</span>
+          <span className="flex items-start gap-2 rounded-xl border border-overdue/30 bg-overdue-soft px-4 py-3 text-left text-sm text-overdue"
+          >
+            <AlertCircle className="size-4 shrink-0 mt-0.5" aria-hidden />
+            <span className="min-w-0">{error}</span>
+          </span>
         ) : notice ? (
           <span className="text-muted-foreground">{notice}</span>
         ) : null}

@@ -146,10 +146,10 @@ export default function AuthCallback() {
 
   if (status === "error") {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-[#0f0f11] p-4 pt-[max(1rem,env(safe-area-inset-top))] sm:p-8">
+      <div className="flex min-h-screen items-center justify-center bg-[#141516] p-4 pt-[max(1rem,env(safe-area-inset-top))] sm:p-8">
         <div className="w-full max-w-sm text-center space-y-6 app-fade-up">
           <div className="inline-flex h-14 w-14 items-center justify-center rounded-full bg-white/5 border border-white/10 mx-auto">
-            <svg className="h-6 w-6 text-white/40" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+            <svg className="h-6 w-6 text-marker" aria-hidden="true" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
             </svg>
           </div>
@@ -160,16 +160,23 @@ export default function AuthCallback() {
                 { defaultValue: t("auth.callback.linkExpired") },
               )}
             </h1>
-            <p className="text-sm text-white/45 leading-relaxed">
+            <p className="text-sm text-white/65 leading-relaxed">
               {t(
-                `auth.callback.failure.${failure ?? "fallback"}.detail`,
-                { defaultValue: t("auth.callback.linkExpiredDetail") },
+                failure
+                  ? `auth.callback.failure.${failure}.detail`
+                  : "auth.callback.linkExpiredDetailPlain",
+                {
+                  defaultValue: t(
+                    "auth.callback.linkExpiredDetailPlain",
+                    "This sign-in link has expired or was already used. Send a new one from the sign-in page."
+                  ),
+                },
               )}
             </p>
           </div>
           <a
             href="/login"
-            className="inline-flex h-10 items-center justify-center rounded-lg border border-white/15 bg-white/8 px-6 text-sm font-medium text-white/80 hover:bg-white/12 hover:text-white transition-all duration-150"
+            className="inline-flex h-11 items-center justify-center rounded-lg border border-white/15 bg-white/8 px-6 text-sm font-medium text-white/80 hover:bg-white/12 hover:text-white transition-all duration-150"
           >
             {t("auth.callback.backToSignIn")}
           </a>
@@ -180,18 +187,18 @@ export default function AuthCallback() {
 
   if (status === "stalled") {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-[#0f0f11] p-4 pt-[max(1rem,env(safe-area-inset-top))] sm:p-8">
+      <div className="flex min-h-screen items-center justify-center bg-[#141516] p-4 pt-[max(1rem,env(safe-area-inset-top))] sm:p-8">
         <div className="w-full max-w-sm text-center space-y-6 app-fade-up">
           <div className="space-y-2">
             <h1 className="text-xl font-semibold text-white">{t("auth.callback.stalledTitle", "Taking longer than usual")}</h1>
-            <p className="text-sm text-white/45 leading-relaxed">
+            <p className="text-sm text-white/65 leading-relaxed">
               {t("auth.callback.stalledDetail", "You're signed in — the server is busy and couldn't open your workspace just now.")}
             </p>
           </div>
           <button
             type="button"
             onClick={() => retryOpenRef.current?.()}
-            className="inline-flex h-10 items-center justify-center rounded-lg bg-white px-6 text-sm font-medium text-[#141516] hover:bg-white/90 transition-all duration-150"
+            className="inline-flex h-11 items-center justify-center rounded-lg bg-white px-6 text-sm font-medium text-[#141516] hover:bg-white/90 transition-all duration-150"
           >
             {t("auth.callback.tryAgain", "Try again")}
           </button>
@@ -201,14 +208,14 @@ export default function AuthCallback() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-[#0f0f11] pt-safe">
+    <div className="flex min-h-screen items-center justify-center bg-[#141516] pt-safe">
       <div className="flex flex-col items-center gap-5 app-fade-up">
         <div className="relative">
           <div className="h-10 w-10 app-spin rounded-full border-2 border-white/10 border-t-white/50" />
         </div>
         <div className="text-center space-y-1">
           <p className="text-sm font-medium text-white/70">{t("auth.callback.signingIn")}</p>
-          <p className="text-xs text-white/30">
+          <p className="text-xs text-white/55">
             {slow ? t("auth.callback.slow", "Opening your workspace — the server is busy, still trying…") : t("auth.callback.moment")}
           </p>
         </div>

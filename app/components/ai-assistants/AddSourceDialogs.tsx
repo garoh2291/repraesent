@@ -24,6 +24,7 @@ import {
   type CrawlLanguages,
   type CrawlOptions,
 } from "~/lib/api/ai-assistants";
+import { desktopAutoFocus } from "~/lib/utils/touch";
 
 export const TEXT_MAX = 60_000;
 
@@ -94,7 +95,7 @@ export function CrawlWebsiteDialog({
             </Label>
             <Input
               id="crawl-url"
-              autoFocus
+              autoFocus={desktopAutoFocus()}
               inputMode="url"
               value={url}
               onChange={(e) => setUrl(e.target.value)}
@@ -272,7 +273,7 @@ export function TextSourceDialog({
             </Label>
             <Input
               id="text-title"
-              autoFocus
+              autoFocus={desktopAutoFocus()}
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder={t("aiAssistants.knowledge.text.namePlaceholder")}

@@ -69,7 +69,7 @@ export default function WordPressPage() {
   }
 
   return (
-    <div className="mx-auto w-full max-w-[1280px] space-y-6 p-4 py-10! sm:space-y-8 sm:p-6 app-fade-in">
+    <div className="mx-auto w-full max-w-[1280px] space-y-6 p-4 py-4 sm:py-10! sm:space-y-8 sm:p-6 app-fade-in">
       {/* Header */}
       <div className="flex flex-col gap-1 app-fade-up">
         <h1 className="title-display text-[26px] font-semibold text-foreground sm:text-[30px]">
@@ -77,8 +77,8 @@ export default function WordPressPage() {
         </h1>
         <p className="text-sm text-muted-foreground">
           {t(
-            "wordpress.subtitle",
-            "Admin access for your site. Pick a service in the sidebar to edit its settings.",
+            "wordpress.subtitlePlain",
+            "Your website and everything connected to it.",
           )}
         </p>
       </div>
@@ -121,9 +121,9 @@ export default function WordPressPage() {
               </div>
             </div>
 
-            <div className="flex items-center gap-3 sm:flex-col sm:items-end sm:gap-2.5">
+            <div className="flex items-center gap-3 max-sm:flex-col max-sm:items-stretch sm:flex-col sm:items-end sm:gap-2.5">
               <SsoBadge connected />
-              <Button onClick={handleSignIn} disabled={signingIn}>
+              <Button onClick={handleSignIn} disabled={signingIn} className="max-sm:h-11 max-sm:w-full">
                 <LogIn className="h-4 w-4" />
                 {signingIn
                   ? t("wordpress.signingIn", "Opening site admin…")
@@ -192,8 +192,8 @@ function EmptyState() {
         </p>
         <p className="mt-1 max-w-sm text-sm text-muted-foreground">
           {t(
-            "wordpress.noSiteBody",
-            "This workspace doesn't have a website connected yet.",
+            "wordpress.noSiteBodyPlain",
+            "Your website isn't connected here yet.",
           )}
         </p>
       </div>
