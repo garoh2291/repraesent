@@ -280,7 +280,11 @@
       "network": "Pas de connexion. Vérifiez votre accès internet et réessayez.",
       "tooMany": "Trop de tentatives. Attendez une minute, puis renvoyez.",
       "linkIncomplete": "Ce lien de connexion était incomplet. Demandez-en un nouveau ci-dessous.",
-      "adminManaged": "Cet e-mail appartient à un compte administrateur. Connectez-vous plutôt sur la page de connexion."
+      "adminManaged": "Cet e-mail appartient à un compte administrateur. Connectez-vous plutôt sur la page de connexion.",
+      "accountExists": "Un compte existe déjà avec cet e-mail. Veuillez vous connecter.",
+      "accountNotFound": "Aucun compte n'existe encore avec cet e-mail. Créez-en un — cela ne prend qu'une minute.",
+      "signupUnfinished": "Vous avez commencé votre inscription avec cet e-mail sans la terminer. Reprenez là où vous vous êtes arrêté.",
+      "finishSignup": "Terminer l'inscription"
     }
   },
   "home": {
@@ -1932,6 +1936,31 @@
         "step4": "Ajoutez du crédit, collez la clé ci-dessus et cliquez sur Connecter.",
         "billing": "Tout ce que consomment les chats de votre entreprise est facturé sur cette clé.",
         "link": "Ouvrir openrouter.ai/keys"
+      },
+      "spend": {
+        "title": "Dépensé sur cette clé",
+        "subtitle": "Tout ce que l'IA de votre entreprise a utilisé sur votre clé OpenRouter.",
+        "thisMonth": "ce mois-ci",
+        "lastMonth": "mois dernier {{amount}}",
+        "nothingYet": "Rien de dépensé ce mois-ci.",
+        "estimatedTitle": "En partie notre estimation",
+        "estimatedNote": "* En partie estimé d'après les mots utilisés, quand OpenRouter n'a pas envoyé le prix.",
+        "realNote": "Les montants facturés par OpenRouter.",
+        "exactBill": "Facture exacte sur OpenRouter",
+        "feature": {
+          "assistant_chat": "Chat du site",
+          "assistant_embed": "Lecture de vos documents pour le chat",
+          "assistant_translate": "Traduction des textes du chat",
+          "assistant_tests": "Tests du chat",
+          "assistant_profile": "Lecture de vos informations pour le chat",
+          "visibility_answers": "Visibilité IA — questions aux assistants",
+          "visibility_setup": "Visibilité IA — configuration",
+          "visibility_actions": "Visibilité IA — rédaction des actions",
+          "visibility_domains": "Visibilité IA — classement des sites",
+          "visibility_suggestions": "Visibilité IA — suggestions de pages",
+          "visibility_drafts": "Visibilité IA — pages de comparaison",
+          "onboarding_chat": "Conversations de démarrage"
+        }
       }
     },
     "allowlist": {
@@ -9788,7 +9817,7 @@
       "view": "Voir"
     },
     "spendChip": "{{spent}} sur {{cap}}",
-    "spendTitle": "Dépensé ce mois-ci sur votre clé OpenRouter",
+    "spendTitle": "Dépensé ce mois-ci pour la visibilité IA (votre clé OpenRouter). Tout ce qui passe par la clé : Paramètres → IA.",
     "subtitle": "Ce que ChatGPT, Perplexity et d'autres assistants IA répondent aux gens qui cherchent une entreprise comme {{brand}}.",
     "title": "Visibilité IA",
     "tone": {

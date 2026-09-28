@@ -1,11 +1,16 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate, useSearchParams, Link } from "react-router";
-import { AlertCircle, FlaskConical, Mail } from "lucide-react";
+import { FlaskConical, Mail } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { Input } from "~/components/ui/input";
+import { cn } from "~/lib/utils";
 import { useAuthContext } from "~/providers/auth-provider";
 import { getStoredSelectedView, BRAND_VIEW } from "~/lib/api/axios-instance";
-import { authErrorMessage } from "~/lib/api/auth";
+import {
+  authErrorKind,
+  authErrorMessage,
+  type AuthRequestErrorKind,
+} from "~/lib/api/auth";
 import i18n from "~/i18n";
 import { normalizeLocale } from "~/i18n/locales";
 import { useDocumentMeta } from "~/lib/hooks/use-document-meta";
@@ -13,6 +18,7 @@ import { useDocumentMeta } from "~/lib/hooks/use-document-meta";
 import logoUrl from "~/components/icons/re_praesent-mark-brand-hor.svg?url";
 import { LegalFooter } from "~/components/molecule/legal-footer";
 import { LoginCodeBox } from "~/components/molecule/login-code-box";
+import { AuthErrorBox } from "~/components/molecule/auth-error-box";
 
 export function meta() {
   return [
@@ -34,8 +40,8 @@ export default function Login() {
     descriptionKey: "auth.login.metaDescription",
     titleSuffix: " - Repraesent",
   });
-  const [email, setEmail] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [errorKind, setErrorKind] = useState<AuthRequestErrorKind | null>(null);
   const [success, setSuccess] = useState(false);
   const {
     user,
@@ -48,6 +54,8 @@ export default function Login() {
   } = useAuthContext();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+  // Sent here from the register page ("already has an account") with the email filled in.
+  const [email, setEmail] = useState(() => searchParams.get("email") ?? "");
   // While a typed code signs in, the shared routeAfterAuth decides where to
   // go; this page's own "already signed in" redirect must not race it.
   const codeSignIn = useRef(false);
@@ -133,6 +141,7 @@ export default function Login() {
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError(null);
+    setErrorKind(null);
     setSuccess(false);
 
     if (!email) {
@@ -154,8 +163,14 @@ export default function Login() {
       setSuccess(true);
     } catch (err) {
       setError(authErrorMessage(err, t));
+      setErrorKind(authErrorKind(err));
     }
   };
+
+  // "No account" / "didn't finish signing up" → the existing Create link
+  // wears the marker, with the email carried over.
+  const highlightRegister =
+    errorKind === "accountNotFound" || errorKind === "signupUnfinished";
 
   // Keep the code box mounted while its own sign-in loads the account.
   if (isAuthLoading && !codeSigningIn) {
@@ -332,15 +347,7 @@ export default function Login() {
                 onSubmit={handleSubmit}
                 className="space-y-5 app-fade-up app-fade-up-d1"
               >
-                {error && (
-                  <div
-                    role="alert"
-                    className="flex items-start gap-2 rounded-xl border border-overdue/30 bg-overdue-soft px-4 py-3 text-sm text-overdue"
-                  >
-                    <AlertCircle className="size-4 shrink-0 mt-0.5" aria-hidden />
-                    <span className="min-w-0">{error}</span>
-                  </div>
-                )}
+                {error && <AuthErrorBox message={error} />}
 
                 <div className="space-y-1.5">
                   <label
@@ -354,7 +361,13 @@ export default function Login() {
                     type="email"
                     placeholder={t("auth.login.emailPlaceholder")}
                     value={email}
-                    onChange={(e) => setEmail(e.target.value)}
+                    onChange={(e) => {
+                      setEmail(e.target.value);
+                      if (highlightRegister) {
+                        setError(null);
+                        setErrorKind(null);
+                      }
+                    }}
                     disabled={isRequestingMagicLink}
                     required
                     autoComplete="email"
@@ -381,10 +394,19 @@ export default function Login() {
                 <p className="text-center text-sm text-muted-foreground">
                   {t("auth.login.noAccount")}{" "}
                   <Link
-                    to="/register"
-                    className="text-primary font-medium hover:underline"
+                    to={
+                      highlightRegister
+                        ? `/register?email=${encodeURIComponent(email)}`
+                        : "/register"
+                    }
+                    className={cn(
+                      "text-primary font-medium hover:underline",
+                      highlightRegister && "marker px-1 font-semibold text-foreground"
+                    )}
                   >
-                    {t("auth.login.createOne")}
+                    {errorKind === "signupUnfinished"
+                      ? t("auth.errors.finishSignup", "Finish signing up")
+                      : t("auth.login.createOne")}
                   </Link>
                 </p>
 

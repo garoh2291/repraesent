@@ -137,7 +137,7 @@ export default function AiVisibilityLayout() {
               <NavLink
                 to={`/ai-visibility/plan${search}`}
                 className="group inline-flex h-9 items-center gap-2 rounded-lg border border-border bg-card px-3 text-[12.5px] text-muted-foreground hover:text-foreground"
-                title={t("aiVisibility.spendTitle", "Spent this month on your OpenRouter key")}
+                title={t("aiVisibility.spendTitle", "Spent this month on AI visibility (your OpenRouter key). Everything on the key: Settings → AI.")}
               >
                 <span className="relative h-1.5 w-10 overflow-hidden rounded-full bg-foreground/[0.08]" aria-hidden>
                   <span

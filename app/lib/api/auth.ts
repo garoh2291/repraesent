@@ -183,7 +183,17 @@ export interface WorkspaceContext {
  * in the reader's language. The server's English `message` is kept for logs
  * only — pages show `authErrorKey(err)` instead.
  */
-export type AuthRequestErrorKind = "network" | "tooMany" | "adminManaged" | "other";
+export type AuthRequestErrorKind =
+  | "network"
+  | "tooMany"
+  | "adminManaged"
+  /** Register: this email can already sign in (no email was sent). */
+  | "accountExists"
+  /** Sign in: nobody has registered with this email. */
+  | "accountNotFound"
+  /** Sign in: registered, but never finished signing up (no workspace yet). */
+  | "signupUnfinished"
+  | "other";
 
 export class AuthRequestError extends Error {
   constructor(
@@ -209,11 +219,18 @@ const isNetworkFailure = (error: unknown): boolean => {
 
 const toAuthRequestError = (error: unknown, fallback: string): AuthRequestError => {
   const apiError = createApiError(error);
+  const code = extractErrorCode(error);
   const kind: AuthRequestErrorKind = isNetworkFailure(error)
     ? "network"
     : apiError.status === 429
       ? "tooMany"
-      : "other";
+      : code === "ACCOUNT_EXISTS"
+        ? "accountExists"
+        : code === "ACCOUNT_NOT_FOUND"
+          ? "accountNotFound"
+          : code === "SIGNUP_UNFINISHED"
+            ? "signupUnfinished"
+            : "other";
   return new AuthRequestError(apiError.message || fallback, kind, apiError.status);
 };
 
@@ -238,8 +255,27 @@ export const authErrorMessage = (
         "auth.errors.adminManaged",
         "This email belongs to an admin account. Sign in on the sign-in page instead.",
       );
+    if (kind === "accountExists")
+      return t("auth.errors.accountExists", "This email already has an account. Please sign in.");
+    if (kind === "accountNotFound")
+      return t(
+        "auth.errors.accountNotFound",
+        "There is no account with this email yet. Create one — it takes a minute.",
+      );
+    if (kind === "signupUnfinished")
+      return t(
+        "auth.errors.signupUnfinished",
+        "You started signing up with this email but didn't finish. Carry on where you left off.",
+      );
   }
   return t(fallbackKey, "Something went wrong. Please try again.");
+};
+
+/** Which kind of failure this was, so a page can offer the right next step. */
+export const authErrorKind = (error: unknown): AuthRequestErrorKind => {
+  if (error instanceof AuthRequestError) return error.kind;
+  if (axios.isAxiosError(error)) return toAuthRequestError(error, "").kind;
+  return "other";
 };
 
 /**
@@ -260,6 +296,9 @@ export const register = async (
     return response.data;
   } catch (error) {
     const apiError = createApiError(error);
+    if (apiError.status === 409 && extractErrorCode(error) === "ACCOUNT_EXISTS") {
+      throw new AuthRequestError(apiError.message, "accountExists", 409);
+    }
     if (apiError.status === 409) {
       throw new AuthRequestError(
         "This email is managed by an admin account. Use the login page.",

@@ -280,7 +280,11 @@
       "network": "Geen verbinding. Controleer uw internet en probeer het opnieuw.",
       "tooMany": "Te veel pogingen. Wacht een minuut en verstuur dan opnieuw.",
       "linkIncomplete": "Die inloglink was onvolledig. Vraag hieronder een nieuwe aan.",
-      "adminManaged": "Dit e-mailadres hoort bij een beheerdersaccount. Log in plaats daarvan in op de inlogpagina."
+      "adminManaged": "Dit e-mailadres hoort bij een beheerdersaccount. Log in plaats daarvan in op de inlogpagina.",
+      "accountExists": "Er bestaat al een account met dit e-mailadres. Log in.",
+      "accountNotFound": "Er is nog geen account met dit e-mailadres. Maak er een aan — dat duurt maar een minuut.",
+      "signupUnfinished": "U bent met dit e-mailadres begonnen met registreren, maar heeft dit niet afgerond. Ga verder waar u was gebleven.",
+      "finishSignup": "Registratie afronden"
     }
   },
   "home": {
@@ -1930,6 +1934,31 @@
         "step4": "Voeg tegoed toe, plak de sleutel hierboven en klik op Verbinden.",
         "billing": "Alles wat de chats van uw bedrijf gebruiken, wordt via deze sleutel gefactureerd.",
         "link": "openrouter.ai/keys openen"
+      },
+      "spend": {
+        "title": "Verbruik van deze sleutel",
+        "subtitle": "Alles wat de AI in uw bedrijf via uw OpenRouter-sleutel heeft gebruikt.",
+        "thisMonth": "deze maand",
+        "lastMonth": "vorige maand {{amount}}",
+        "nothingYet": "Deze maand nog niets verbruikt.",
+        "estimatedTitle": "Deels door ons geschat",
+        "estimatedNote": "* Deels geschat op basis van de gebruikte woorden, waar OpenRouter geen prijs meestuurde.",
+        "realNote": "De bedragen die OpenRouter heeft gerekend.",
+        "exactBill": "Exacte factuur bij OpenRouter",
+        "feature": {
+          "assistant_chat": "Websitechat",
+          "assistant_embed": "Uw documenten lezen voor de chat",
+          "assistant_translate": "Teksten van de chat vertalen",
+          "assistant_tests": "Testruns van de chat",
+          "assistant_profile": "Uw bedrijfsgegevens lezen voor de chat",
+          "visibility_answers": "AI-zichtbaarheid — assistenten vragen",
+          "visibility_setup": "AI-zichtbaarheid — instellen",
+          "visibility_actions": "AI-zichtbaarheid — aanbevelingen schrijven",
+          "visibility_domains": "AI-zichtbaarheid — websites indelen",
+          "visibility_suggestions": "AI-zichtbaarheid — paginasuggesties",
+          "visibility_drafts": "AI-zichtbaarheid — vergelijkingspagina's",
+          "onboarding_chat": "Startgesprekken"
+        }
       }
     },
     "allowlist": {
@@ -9786,7 +9815,7 @@
       "view": "Bekijken"
     },
     "spendChip": "{{spent}} van {{cap}}",
-    "spendTitle": "Deze maand uitgegeven via je OpenRouter-sleutel",
+    "spendTitle": "Deze maand verbruikt voor AI-zichtbaarheid (je OpenRouter-sleutel). Alles op de sleutel: Instellingen → AI.",
     "subtitle": "Wat ChatGPT, Perplexity en andere AI-assistenten vertellen aan mensen die zoeken naar een bedrijf zoals {{brand}}.",
     "title": "AI-zichtbaarheid",
     "tone": {

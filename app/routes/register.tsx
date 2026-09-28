@@ -1,15 +1,22 @@
 import { useState } from "react";
-import { Link } from "react-router";
+import { Link, useSearchParams } from "react-router";
 import { useTranslation } from "react-i18next";
-import { AlertCircle, FlaskConical, Mail } from "lucide-react";
+import { FlaskConical, Mail } from "lucide-react";
 import { Input } from "~/components/ui/input";
-import { authErrorMessage, register } from "~/lib/api/auth";
+import { cn } from "~/lib/utils";
+import {
+  authErrorKind,
+  authErrorMessage,
+  register,
+  type AuthRequestErrorKind,
+} from "~/lib/api/auth";
 import i18n from "~/i18n";
 import { normalizeLocale } from "~/i18n/locales";
 import { useDocumentMeta } from "~/lib/hooks/use-document-meta";
 
 import logoUrl from "~/components/icons/re_praesent-mark-brand-hor.svg?url";
 import { LegalFooter } from "~/components/molecule/legal-footer";
+import { AuthErrorBox } from "~/components/molecule/auth-error-box";
 
 export function meta() {
   return [
@@ -31,14 +38,18 @@ export default function Register() {
     descriptionKey: "auth.register.metaDescription",
     titleSuffix: " - Repraesent",
   });
-  const [email, setEmail] = useState("");
+  // Sent here from the sign-in page ("no account yet") with the email filled in.
+  const [searchParams] = useSearchParams();
+  const [email, setEmail] = useState(() => searchParams.get("email") ?? "");
   const [error, setError] = useState<string | null>(null);
+  const [errorKind, setErrorKind] = useState<AuthRequestErrorKind | null>(null);
   const [success, setSuccess] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError(null);
+    setErrorKind(null);
     setSuccess(false);
 
     if (!email) {
@@ -58,6 +69,7 @@ export default function Register() {
       setSuccess(true);
     } catch (err) {
       setError(authErrorMessage(err, t, "auth.register.somethingWrong"));
+      setErrorKind(authErrorKind(err));
     } finally {
       setIsSubmitting(false);
     }
@@ -204,15 +216,7 @@ export default function Register() {
                 onSubmit={handleSubmit}
                 className="space-y-5 app-fade-up app-fade-up-d1"
               >
-                {error && (
-                  <div
-                    role="alert"
-                    className="flex items-start gap-2 rounded-xl border border-overdue/30 bg-overdue-soft px-4 py-3 text-sm text-overdue"
-                  >
-                    <AlertCircle className="size-4 shrink-0 mt-0.5" aria-hidden />
-                    <span className="min-w-0">{error}</span>
-                  </div>
-                )}
+                {error && <AuthErrorBox message={error} />}
 
                 <div className="space-y-1.5">
                   <label
@@ -226,7 +230,13 @@ export default function Register() {
                     type="email"
                     placeholder={t("auth.login.emailPlaceholder")}
                     value={email}
-                    onChange={(e) => setEmail(e.target.value)}
+                    onChange={(e) => {
+                      setEmail(e.target.value);
+                      if (errorKind === "accountExists") {
+                        setError(null);
+                        setErrorKind(null);
+                      }
+                    }}
                     disabled={isSubmitting}
                     required
                     autoComplete="email"
@@ -252,9 +262,19 @@ export default function Register() {
 
                 <p className="text-center text-sm text-muted-foreground">
                   {t("auth.register.hasAccount")}{" "}
+                  {/* "This email already has an account" → the existing
+                      Sign in link wears the marker, with the email carried over. */}
                   <Link
-                    to="/login"
-                    className="text-primary font-medium hover:underline"
+                    to={
+                      errorKind === "accountExists"
+                        ? `/login?email=${encodeURIComponent(email)}`
+                        : "/login"
+                    }
+                    className={cn(
+                      "text-primary font-medium hover:underline",
+                      errorKind === "accountExists" &&
+                        "marker px-1 font-semibold text-foreground"
+                    )}
                   >
                     {t("auth.register.signIn")}
                   </Link>

@@ -280,7 +280,11 @@
       "network": "No connection. Check your internet and try again.",
       "tooMany": "Too many tries. Wait a minute, then send again.",
       "linkIncomplete": "That sign-in link was incomplete. Send a new one below.",
-      "adminManaged": "This email belongs to an admin account. Sign in on the sign-in page instead."
+      "adminManaged": "This email belongs to an admin account. Sign in on the sign-in page instead.",
+      "accountExists": "This email already has an account. Please sign in.",
+      "accountNotFound": "There is no account with this email yet. Create one — it takes a minute.",
+      "signupUnfinished": "You started signing up with this email but didn't finish. Carry on where you left off.",
+      "finishSignup": "Finish signing up"
     }
   },
   "home": {
@@ -1930,6 +1934,31 @@
         "step4": "Add credits, then paste the key above and press Connect.",
         "billing": "Everything every chat in this business uses is billed to this key.",
         "link": "Open openrouter.ai/keys"
+      },
+      "spend": {
+        "title": "Spent on this key",
+        "subtitle": "Everything the AI in this business ran on your OpenRouter key.",
+        "thisMonth": "this month",
+        "lastMonth": "last month {{amount}}",
+        "nothingYet": "Nothing spent yet this month.",
+        "estimatedTitle": "Partly our estimate",
+        "estimatedNote": "* Partly estimated from the words used, where OpenRouter didn't send the price.",
+        "realNote": "The amounts OpenRouter charged.",
+        "exactBill": "Exact bill on OpenRouter",
+        "feature": {
+          "assistant_chat": "Website chat",
+          "assistant_embed": "Reading your documents for the chat",
+          "assistant_translate": "Translating the chat's texts",
+          "assistant_tests": "Chat test runs",
+          "assistant_profile": "Reading your business details for the chat",
+          "visibility_answers": "AI visibility — asking the assistants",
+          "visibility_setup": "AI visibility — setup",
+          "visibility_actions": "AI visibility — writing what to do",
+          "visibility_domains": "AI visibility — sorting websites",
+          "visibility_suggestions": "AI visibility — page suggestions",
+          "visibility_drafts": "AI visibility — comparison pages",
+          "onboarding_chat": "Onboarding conversations"
+        }
       }
     },
     "allowlist": {
@@ -9786,7 +9815,7 @@
       "view": "Show"
     },
     "spendChip": "{{spent}} of {{cap}}",
-    "spendTitle": "Spent this month on your OpenRouter key",
+    "spendTitle": "Spent this month on AI visibility (your OpenRouter key). Everything on the key: Settings → AI.",
     "subtitle": "What ChatGPT, Perplexity and other AI assistants tell people who ask for a business like {{brand}}.",
     "title": "AI visibility",
     "tone": {

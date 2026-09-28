@@ -280,7 +280,11 @@
       "network": "Keine Verbindung. Prüfen Sie Ihr Internet und versuchen Sie es erneut.",
       "tooMany": "Zu viele Versuche. Warten Sie eine Minute und senden Sie dann erneut.",
       "linkIncomplete": "Dieser Anmelde-Link war unvollständig. Fordern Sie unten einen neuen an.",
-      "adminManaged": "Diese E-Mail gehört zu einem Admin-Konto. Melden Sie sich stattdessen auf der Anmeldeseite an."
+      "adminManaged": "Diese E-Mail gehört zu einem Admin-Konto. Melden Sie sich stattdessen auf der Anmeldeseite an.",
+      "accountExists": "Für diese E-Mail gibt es bereits ein Konto. Bitte melden Sie sich an.",
+      "accountNotFound": "Mit dieser E-Mail gibt es noch kein Konto. Legen Sie eines an – das dauert nur eine Minute.",
+      "signupUnfinished": "Sie haben die Registrierung mit dieser E-Mail begonnen, aber nicht abgeschlossen. Machen Sie dort weiter, wo Sie aufgehört haben.",
+      "finishSignup": "Registrierung abschließen"
     }
   },
   "home": {
@@ -1932,6 +1936,31 @@
         "step4": "Guthaben aufladen, Schlüssel oben einfügen und auf „Verbinden“ klicken.",
         "billing": "Alles, was die Chats Ihres Unternehmens verbrauchen, wird über diesen Schlüssel abgerechnet.",
         "link": "openrouter.ai/keys öffnen"
+      },
+      "spend": {
+        "title": "Verbrauch dieses Schlüssels",
+        "subtitle": "Alles, was die KI in Ihrem Unternehmen über Ihren OpenRouter-Schlüssel genutzt hat.",
+        "thisMonth": "diesen Monat",
+        "lastMonth": "letzten Monat {{amount}}",
+        "nothingYet": "Diesen Monat noch nichts verbraucht.",
+        "estimatedTitle": "Teilweise von uns geschätzt",
+        "estimatedNote": "* Teilweise anhand der genutzten Wörter geschätzt, wo OpenRouter keinen Preis mitgeschickt hat.",
+        "realNote": "Die Beträge, die OpenRouter berechnet hat.",
+        "exactBill": "Genaue Abrechnung bei OpenRouter",
+        "feature": {
+          "assistant_chat": "Website-Chat",
+          "assistant_embed": "Ihre Dokumente für den Chat lesen",
+          "assistant_translate": "Texte des Chats übersetzen",
+          "assistant_tests": "Testläufe des Chats",
+          "assistant_profile": "Ihre Betriebsdaten für den Chat lesen",
+          "visibility_answers": "KI-Sichtbarkeit – Assistenten fragen",
+          "visibility_setup": "KI-Sichtbarkeit – Einrichtung",
+          "visibility_actions": "KI-Sichtbarkeit – Empfehlungen schreiben",
+          "visibility_domains": "KI-Sichtbarkeit – Websites einordnen",
+          "visibility_suggestions": "KI-Sichtbarkeit – Seitenvorschläge",
+          "visibility_drafts": "KI-Sichtbarkeit – Vergleichsseiten",
+          "onboarding_chat": "Einrichtungsgespräche"
+        }
       }
     },
     "allowlist": {
@@ -9788,7 +9817,7 @@
       "view": "Ansehen"
     },
     "spendChip": "{{spent}} von {{cap}}",
-    "spendTitle": "Diesen Monat über deinen OpenRouter-Schlüssel ausgegeben",
+    "spendTitle": "Diesen Monat für KI-Sichtbarkeit verbraucht (dein OpenRouter-Schlüssel). Alles auf dem Schlüssel: Einstellungen → KI.",
     "subtitle": "Was ChatGPT, Perplexity und andere KI-Assistenten Menschen sagen, die nach einem Betrieb wie {{brand}} fragen.",
     "title": "KI-Sichtbarkeit",
     "tone": {
