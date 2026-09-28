@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Link, useLocation } from "react-router";
 import { useTranslation } from "react-i18next";
 import { ArrowRight, ListTodo, MessageSquareQuote, Radar } from "lucide-react";
-import { useAiVisibilityAnswer, useAiVisibilityAnswers, useAiVisibilityOverview } from "~/lib/hooks/useAiVisibility";
+import { useAiVisibilityAnswer, useAiVisibilityAnswers, useAiVisibilityOverview, useAiVisibilityWebsite } from "~/lib/hooks/useAiVisibility";
 import { cn } from "~/lib/utils";
 import { Panel, PanelHeader } from "~/components/notebook/panel";
 import { EmptyState } from "~/components/notebook/empty-state";
@@ -137,6 +137,8 @@ export default function AiVisibilityOverview() {
           </>
         )}
       </Panel>
+
+      <WebsiteLine />
 
       {/* What to do next */}
       {d.actions.length ? (
@@ -354,5 +356,32 @@ function LatestQuote({ onOpen }: { onOpen: (id: string) => void }) {
         </button>
       </div>
     </Panel>
+  );
+}
+
+/** One line: how ready the website is, and where to see why. Hidden until there is a check. */
+function WebsiteLine() {
+  const { t } = useTranslation();
+  const { search } = useLocation();
+  const q = useAiVisibilityWebsite();
+  const check = q.data?.ready ? q.data.check : null;
+  if (!check || check.score == null) return null;
+  const needs = check.checks.filter((c) => c.status === "fail" || c.status === "warn").length;
+  return (
+    <Link
+      to={`/ai-visibility/website${search}`}
+      className="flex items-center gap-3 rounded-xl border border-border bg-card px-4 py-3 text-[13.5px] shadow-xs hover:border-foreground/30 sm:px-5"
+    >
+      <span className="title-display num text-[20px] font-semibold leading-none text-foreground">
+        {check.score}
+        <span className="text-[12px] font-medium text-muted-foreground">/100</span>
+      </span>
+      <span className="min-w-0 flex-1 text-foreground/85">
+        {needs
+          ? t("aiVisibility.overview.websiteNeeds", "Your website for AI — {{n}} things to look at", { count: needs, n: needs })
+          : t("aiVisibility.overview.websiteGood", "Your website for AI — nothing needs you")}
+      </span>
+      <ArrowRight className="size-3.5 shrink-0 text-muted-foreground" aria-hidden />
+    </Link>
   );
 }

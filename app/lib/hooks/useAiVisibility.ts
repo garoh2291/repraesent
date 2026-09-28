@@ -18,6 +18,7 @@ export const aiVisibilityKeys = {
   answers: (ws: string | null, f: object) => ["ai-visibility", ws, "answers", f] as const,
   answer: (ws: string | null, id: string) => ["ai-visibility", ws, "answer", id] as const,
   actions: (ws: string | null) => ["ai-visibility", ws, "actions"] as const,
+  website: (ws: string | null) => ["ai-visibility", ws, "website"] as const,
 };
 
 const opts = { staleTime: 60_000, placeholderData: keepPreviousData } as const;
@@ -98,6 +99,11 @@ export function useAiVisibilityActions(enabled = true) {
 }
 
 /** One place that knows what a change invalidates: everything in the feature. */
+export function useAiVisibilityWebsite(enabled = true) {
+  const ws = getStoredWorkspaceId();
+  return useQuery({ queryKey: aiVisibilityKeys.website(ws), queryFn: aiVisibilityApi.website, enabled: enabled && !!ws, staleTime: 60_000 });
+}
+
 export function useInvalidateAiVisibility() {
   const qc = useQueryClient();
   return useCallback(() => qc.invalidateQueries({ queryKey: aiVisibilityKeys.all(getStoredWorkspaceId()) }), [qc]);

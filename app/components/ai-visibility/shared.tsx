@@ -2,7 +2,7 @@ import type { ReactNode } from "react";
 import { useMemo } from "react";
 import { useSearchParams } from "react-router";
 import { useTranslation } from "react-i18next";
-import { ArrowDownRight, ArrowUpRight, Info } from "lucide-react";
+import { ArrowDownRight, ArrowUpRight, ChevronDown, Info } from "lucide-react";
 import { cn } from "~/lib/utils";
 import { getIntlLocale } from "~/lib/utils/format";
 import { Popover, PopoverContent, PopoverTrigger } from "~/components/ui/popover";
@@ -121,7 +121,7 @@ export function Segmented<T extends string>({
   className?: string;
 }) {
   return (
-    <div role="radiogroup" aria-label={label} className={cn("inline-flex rounded-lg border border-border bg-card p-0.5", className)}>
+    <div role="radiogroup" aria-label={label} className={cn("inline-flex h-9 items-stretch rounded-lg border border-border bg-card p-0.5", className)}>
       {options.map((o) => (
         <button
           key={o.value}
@@ -130,7 +130,7 @@ export function Segmented<T extends string>({
           aria-checked={value === o.value}
           onClick={() => onChange(o.value)}
           className={cn(
-            "num whitespace-nowrap rounded-md px-3 py-1.5 text-[12.5px] font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground/25",
+            "num inline-flex items-center whitespace-nowrap rounded-md px-3 text-[12.5px] font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground/25",
             value === o.value ? "bg-foreground text-background" : "text-muted-foreground hover:text-foreground",
           )}
         >
@@ -138,6 +138,29 @@ export function Segmented<T extends string>({
         </button>
       ))}
     </div>
+  );
+}
+
+/**
+ * A native select that looks like the Segmented control next to it: same
+ * 36 px height, border, radius and type, our own chevron. Native on purpose —
+ * phones get their own picker.
+ */
+export function FilterSelect({
+  className,
+  children,
+  ...rest
+}: React.SelectHTMLAttributes<HTMLSelectElement> & { className?: string }) {
+  return (
+    <span className={cn("relative inline-flex", className)}>
+      <select
+        {...rest}
+        className="h-9 w-full min-w-0 cursor-pointer appearance-none truncate rounded-lg border border-border bg-card pl-3 pr-8 text-[12.5px] font-medium text-foreground transition-colors hover:border-foreground/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground/25 disabled:cursor-not-allowed disabled:opacity-50"
+      >
+        {children}
+      </select>
+      <ChevronDown className="pointer-events-none absolute right-2.5 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" aria-hidden />
+    </span>
   );
 }
 

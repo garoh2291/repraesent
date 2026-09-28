@@ -9319,7 +9319,8 @@
       "ev": {
         "blocked": "blockiert: {{bots}}",
         "gap": "{{n}} Antworten nannten einen Wettbewerber, nicht dich",
-        "rivals": "stattdessen genannt: {{names}}"
+        "rivals": "stattdessen genannt: {{names}}",
+        "openWebsite": "„Deine Website“ öffnen – dort stehen die Details und fertige Vorschläge"
       },
       "intro": "KI-Assistenten wiederholen, was vertrauenswürdige Websites sagen. Jede Empfehlung unten stammt aus den Antworten der letzten 30 Tage: eine Seite, die über deine Wettbewerber spricht, aber nicht über dich, oder eine Frage, bei der du nie vorkommst. Fang mit den längsten Balken an.",
       "kind": {
@@ -9366,6 +9367,21 @@
         "dismissTitle": "Nicht relevant — und die Aufgabe löschen?",
         "dismissBody": "Zu dieser Empfehlung gibt es eine offene Aufgabe. Wenn du sie als nicht relevant markierst, wird die Aufgabe auch gelöscht. Du kannst die Empfehlung später wieder öffnen.",
         "dismissConfirm": "Aufgabe löschen und ausblenden"
+      },
+      "draft": {
+        "failed": "Das Schreiben der Seite konnte nicht starten.",
+        "compareWith": "Vergleichen mit",
+        "vs": "Du vs. {{name}}",
+        "writing": "Seite wird geschrieben…",
+        "again": "Neu schreiben",
+        "write": "Schreib mir die Seite",
+        "offer": "Wir können die Seite schreiben: ein fairer Vergleich aus dem, was du uns gesagt hast, beiden Startseiten und dem, was die Assistenten gesagt haben. Was wir nicht bestätigen können, bleibt für dich offen. Ein paar Cent auf deinem OpenRouter-Schlüssel.",
+        "hide": "Geschriebene Seite ausblenden",
+        "show": "Geschriebene Seite lesen – du vs. {{name}}",
+        "toCheck": "Vor dem Veröffentlichen ausfüllen",
+        "copyText": "Als Text kopieren",
+        "copyHtml": "Für deine Web-Person kopieren (HTML)",
+        "honest": "Geschrieben {{when}} aus dem, was wir wissen. Lies es einmal durch, bevor du veröffentlichst – von hier geht nichts online."
       }
     },
     "answer": {
@@ -9472,7 +9488,8 @@
       "overview": "Übersicht",
       "plan": "Paket & Kosten",
       "prompts": "Fragen",
-      "sources": "Quellen"
+      "sources": "Quellen",
+      "website": "Deine Website"
     },
     "notice": {
       "capBody": "{{spent}} von {{cap}} verbraucht. Das Tracking startet am 1. wieder – oder sofort, wenn du das Limit erhöhst.",
@@ -9529,7 +9546,10 @@
       "sentenceB": "von {{n}} Antworten genannt",
       "sourcesTitle": "Websites, die die Assistenten am meisten lesen",
       "vsHint": "Anteil der Antworten, die die jeweilige Marke nennen",
-      "vsTitle": "Du und deine Wettbewerber"
+      "vsTitle": "Du und deine Wettbewerber",
+      "websiteNeeds_one": "Deine Website für KI – 1 Punkt zum Anschauen",
+      "websiteNeeds_other": "Deine Website für KI – {{n}} Punkte zum Anschauen",
+      "websiteGood": "Deine Website für KI – nichts braucht dich"
     },
     "periods": {
       "30d": "30 Tage",
@@ -9801,7 +9821,13 @@
       "canLeave": "Du kannst die Seite schließen — es läuft weiter und das Ergebnis wird gespeichert.",
       "cancel": "Abbrechen",
       "retry": "Nochmal versuchen",
-      "dismiss": "Ausblenden"
+      "dismiss": "Ausblenden",
+      "siteChecking": "Deine Website wird geprüft…",
+      "siteCheck": "Website-Check",
+      "pageSuggesting": "Fragen und Einstieg für die Seite werden geschrieben…",
+      "pageSuggest": "Seitenvorschläge",
+      "drafting": "Vergleichsseite wird geschrieben…",
+      "draft": "Vergleichsseite"
     },
     "facts": {
       "title": "Was KI über dich falsch sagt",
@@ -9825,6 +9851,134 @@
         "website": "Website",
         "services": "Angebot",
         "prices": "Preise"
+      }
+    },
+    "website": {
+      "checkFailed": "Die Prüfung konnte nicht starten.",
+      "onePage": "Eine Seite nach der anderen – die Seite, die gerade läuft, kommt zuerst.",
+      "suggestFailed": "Die Vorschläge konnten nicht starten.",
+      "pendingTitle": "Dein Website-Check ist fast bereit.",
+      "pendingBody": "Er wird mit dem nächsten Update eingeschaltet. Du musst nichts tun.",
+      "noDomainTitle": "Trag zuerst deine Website-Adresse ein.",
+      "noDomainBody": "Unter Paket & Kosten → Dein Betrieb, danach kannst du sie hier prüfen.",
+      "intro": "Assistenten können nur empfehlen, was sie lesen können. Wir schauen uns deine Website so an wie sie – von außen, wie ein Besucher – und zeigen, was ihnen hilft, sie zu verstehen und zu zitieren.",
+      "outsideTitle": "Zwei Dinge, die nur du erledigen kannst",
+      "outsideBody": "Melde deine Website bei den Bing Webmaster Tools an – die ChatGPT-Suche liest bei Bing. Und reiche sie bei Brave ein – Claude sucht mit Brave. Beides dauert ein paar Minuten, du musst dich dafür anmelden.",
+      "checking": "Wird geprüft…",
+      "recheck": "Erneut prüfen",
+      "checkNow": "Meine Website prüfen",
+      "checkingTitle": "{{domain}} wird geprüft…",
+      "neverTitle": "Noch nicht geprüft.",
+      "neverBody": "Die Prüfung liest deine Startseite und bis zu 11 weitere Seiten. Sie ist kostenlos und dauert unter einer Minute.",
+      "readiness": "So bereit ist deine Website für KI",
+      "lookedAt": "{{n}} Seiten angesehen",
+      "checked": "geprüft {{when}}",
+      "unreachable": "Wir konnten {{domain}} nicht öffnen. Prüf die Adresse unter Paket & Kosten oder ob die Website online ist.",
+      "needsCount_one": "1 Punkt zum Anschauen.",
+      "needsCount_other": "{{n}} Punkte zum Anschauen.",
+      "allGood": "Nichts braucht deine Aufmerksamkeit.",
+      "status": {
+        "pass": "In Ordnung",
+        "warn": "Geht besser",
+        "fail": "Braucht dich",
+        "info": "Nicht geprüft"
+      },
+      "check": {
+        "unreachable": "Nicht prüfbar – die Startseite ließ sich nicht öffnen.",
+        "noPosts": "Wir haben keine Blogbeiträge oder Artikel zum Anschauen gefunden.",
+        "ai_crawlers_allowed": {
+          "title": "KI-Assistenten dürfen deine Website lesen",
+          "fail": "Deine robots.txt sperrt {{bots}} aus. Sie können deine Website weder lesen noch empfehlen.",
+          "passTraining": "Kein Assistent ist von Antworten ausgesperrt. Du hältst {{bots}} vom Training mit deinen Seiten ab – das ist deine Entscheidung und versteckt dich nicht.",
+          "pass": "Kein Assistent ist ausgesperrt."
+        },
+        "https": {
+          "title": "Sichere Adresse (https)",
+          "pass": "Deine Website öffnet über https.",
+          "fail": "Deine Website öffnet nicht über https. Deine Web-Person kann das einschalten."
+        },
+        "homepage_indexable": {
+          "title": "Suchmaschinen dürfen deine Startseite aufnehmen",
+          "pass": "Deine Startseite kann aufgenommen werden.",
+          "fail": "Deine Startseite sagt Suchmaschinen, sie nicht aufzunehmen (noindex). Assistenten, die im Web suchen, finden sie nicht."
+        },
+        "sitemap": {
+          "title": "Eine Liste deiner Seiten für Suchmaschinen (Sitemap)",
+          "pass": "Gefunden unter {{path}}.",
+          "fail": "Keine Sitemap unter den üblichen Adressen. Die meisten Website-Baukästen veröffentlichen eine per Schalter."
+        },
+        "bing_verification": {
+          "title": "Bei Bing angemeldet",
+          "pass": "Die Bing-Bestätigung ist vorhanden.",
+          "warn": "Nicht gefunden. Die ChatGPT-Suche liest bei Bing – melde deine Website bei den Bing Webmaster Tools an (Link unten)."
+        },
+        "org_schema": {
+          "title": "Betriebsdaten, die Assistenten lesen können",
+          "pass": "Deine Startseite enthält Name und Kontaktdaten in einer Form, die Assistenten direkt lesen.",
+          "warn": "Gefunden, aber ohne Adresse oder Telefon. Beides hilft Assistenten, dich von Betrieben mit ähnlichem Namen zu unterscheiden.",
+          "fail": "Deine Startseite enthält Name, Adresse und Telefon nicht in einer Form, die Assistenten direkt lesen (Schema). Deine Web-Person kann das ergänzen."
+        },
+        "article_schema": {
+          "title": "Beiträge als Artikel gekennzeichnet",
+          "pass": "Alle {{total}} angesehenen Beiträge sind gekennzeichnet.",
+          "warn": "{{count}} von {{total}} Beiträgen sind gekennzeichnet.",
+          "fail": "Keiner der {{total}} angesehenen Beiträge ist als Artikel gekennzeichnet."
+        },
+        "faq_schema": {
+          "title": "Fragen und Antworten, die Assistenten lesen können",
+          "pass": "{{count}} Seiten haben sie.",
+          "warn": "Nur {{count}} von {{total}} Seiten haben sie. Unten schreiben wir sie für jede Seite.",
+          "fail": "Keine der {{total}} angesehenen Seiten hat sie. Unten schreiben wir sie für jede Seite."
+        },
+        "answer_blocks": {
+          "title": "Seiten, die mit einer direkten Antwort beginnen",
+          "none": "Außer der Startseite haben wir keine Seiten gefunden.",
+          "pass": "{{count}} von {{total}} Seiten tun das.",
+          "warn": "Nur {{count}} von {{total}} Seiten tun das. Assistenten zitieren die ersten Zeilen am häufigsten.",
+          "fail": "Keine der {{total}} angesehenen Seiten tut das. Assistenten zitieren die ersten Zeilen am häufigsten."
+        },
+        "author_date": {
+          "title": "Autor und Datum bei Beiträgen",
+          "pass": "Beiträge zeigen, wer sie geschrieben hat und wann.",
+          "fail": "Beiträge zeigen weder Autor noch Datum.",
+          "noAuthor": "Beiträge zeigen ein Datum, aber keinen Autor.",
+          "noDate": "Beiträge zeigen einen Autor, aber kein Datum.",
+          "warn": "Manche Beiträge zeigen keinen Autor oder kein Datum."
+        },
+        "llms_txt": {
+          "title": "Kurze Zusammenfassung für KI-Tools (llms.txt)",
+          "pass": "Veröffentlicht.",
+          "warn": "Nicht veröffentlicht. Ein kleines Extra für KI-Tools – Suchergebnisse hängen nicht davon ab."
+        }
+      },
+      "pagesTitle": "Deine Seiten",
+      "pagesHint": "Fragen und ein direkter Einstieg, geschrieben aus dem, was schon auf der Seite steht",
+      "flag": {
+        "answer": "Direkter Einstieg",
+        "faq": "Fragen"
+      },
+      "used": "Verwendet",
+      "see": "Vorschläge ansehen",
+      "writing": "Wird geschrieben…",
+      "write": "Vorschläge schreiben",
+      "otherPage": "Andere Seite:",
+      "costNote": "Vorschläge laufen über deinen OpenRouter-Schlüssel – ein paar Cent pro Seite, im Monatslimit mitgezählt. Eine unveränderte Seite kostet nie zweimal.",
+      "saveFailed": "Das konnte nicht gespeichert werden.",
+      "sheet": {
+        "opening": "Beginne die Seite damit",
+        "openingHint": "Direkt unter die Hauptüberschrift. Assistenten zitieren die ersten Zeilen am häufigsten.",
+        "faqs": "Fragen und Antworten für die Seite",
+        "copyFaqs": "Fragen kopieren",
+        "codeTitle": "Dieselben Fragen, lesbar für Assistenten",
+        "codeHint": "Sobald die Fragen auf der Seite stehen, kommt dieser Code auf dieselbe Seite. Schick ihn an die Person, die sich um deine Website kümmert.",
+        "emailSubject": "Fragen und Antworten für unsere Website",
+        "emailIntro": "Kannst du die Fragen und Antworten auf diese Seite ({{url}}) setzen und diesen Code auf dieselbe Seite?",
+        "meta": "Titel und Beschreibung in den Suchergebnissen",
+        "notes": "Einen Blick wert",
+        "honest": "Nur aus dem geschrieben, was auf der Seite steht. Lies es einmal durch, bevor du es verwendest – wir veröffentlichen nichts.",
+        "markUsed": "Als verwendet markieren",
+        "markUnused": "Doch nicht verwendet",
+        "dismiss": "Brauche ich nicht"
       }
     }
   },

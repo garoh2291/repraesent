@@ -100,7 +100,15 @@ export interface LatestBatch {
   running: boolean;
 }
 
-export type JobKind = "analyze_site" | "suggest_prompts" | "refresh_actions" | "run" | "classify_domains";
+export type JobKind =
+  | "analyze_site"
+  | "suggest_prompts"
+  | "refresh_actions"
+  | "run"
+  | "classify_domains"
+  | "site_check"
+  | "page_suggest"
+  | "comparison_draft";
 export type JobStatus = "queued" | "running" | "succeeded" | "failed" | "cancelled";
 
 /** A durable background job (ai_visibility_jobs). Survives closed tabs and restarts. */
@@ -229,6 +237,85 @@ export interface Action {
   task_due_date: string | null;
   task_assignee_id: string | null;
   task_assignee_name: string | null;
+  /** comparison_page only: the written page, once asked for. */
+  draft: ComparisonDraft | null;
+}
+
+export interface ComparisonDraft {
+  competitor: { id: string | null; name: string };
+  title: string;
+  intro: string;
+  table: Array<{ aspect: string; you: string; them: string }>;
+  sections: Array<{ heading: string; body: string }>;
+  faqs: Array<{ question: string; answer: string }>;
+  to_check: string[];
+  model: string;
+  generated_at: string;
+}
+
+// ------------------------------------------------------------ your website
+
+export type SiteCheckId =
+  | "ai_crawlers_allowed"
+  | "https"
+  | "homepage_indexable"
+  | "sitemap"
+  | "bing_verification"
+  | "org_schema"
+  | "article_schema"
+  | "faq_schema"
+  | "answer_blocks"
+  | "author_date"
+  | "llms_txt";
+
+export interface SiteCheckItem {
+  id: SiteCheckId;
+  status: "pass" | "warn" | "fail" | "info";
+  params: Record<string, string | number | boolean | string[]>;
+}
+
+export interface ScannedPage {
+  url: string;
+  title: string | null;
+  post: boolean;
+  faq_schema: boolean;
+  article_schema: boolean;
+  opens_with_answer: boolean;
+  author: boolean;
+  date: boolean;
+}
+
+export interface PageSuggestion {
+  id: string;
+  page_url: string;
+  page_title: string | null;
+  status: "new" | "applied" | "dismissed";
+  output: {
+    answer_block: string;
+    faqs: Array<{ question: string; answer: string }>;
+    schema_jsonld: Record<string, unknown> | null;
+    structure_notes: string[];
+    meta_title: string;
+    meta_description: string;
+  };
+  cost_micro_usd: number;
+  created_at: string;
+}
+
+/** ready=false: the server is not set up for it yet (migration 202). */
+export interface WebsiteState {
+  ready: boolean;
+  domain: string | null;
+  check: {
+    id: string;
+    domain: string;
+    score: number | null;
+    checks: SiteCheckItem[];
+    pages: ScannedPage[];
+    error: string | null;
+    ran_at: string;
+  } | null;
+  suggestions: PageSuggestion[];
 }
 
 export type FactTopic = "hours" | "address" | "phone" | "email" | "website" | "services" | "prices";
@@ -452,6 +539,14 @@ export const aiVisibilityApi = {
   /** "I'm on it": creates (or returns) the linked task, assigned to me, due in 7 days. */
   startAction: (id: string) => apiClient.post<{ task_id: string; created: boolean }>(`${base}/actions/${id}/start`).then((r) => r.data),
   refreshActions: () => apiClient.post<{ job: Job; existing: boolean }>(`${base}/actions/refresh`).then((r) => r.data),
+  /** Comparison to-do: queue writing the page. */
+  draftComparison: (id: string, competitor?: string | null) =>
+    apiClient.post<{ job: Job; existing: boolean }>(`${base}/actions/${id}/draft`, { competitor: competitor ?? undefined }).then((r) => r.data),
+
+  website: () => apiClient.get<WebsiteState>(`${base}/website`).then((r) => r.data),
+  checkWebsite: () => apiClient.post<{ job: Job; existing: boolean }>(`${base}/website/check`).then((r) => r.data),
+  suggestForPage: (url: string) => apiClient.post<{ job: Job; existing: boolean }>(`${base}/website/suggestions`, { url }).then((r) => r.data),
+  setSuggestionStatus: (id: string, status: PageSuggestion["status"]) => apiClient.patch(`${base}/website/suggestions/${id}`, { status }),
 
   jobs: () => apiClient.get<Job[]>(`${base}/jobs`).then((r) => r.data),
   cancelJob: (id: string) => apiClient.post<Job>(`${base}/jobs/${id}/cancel`).then((r) => r.data),

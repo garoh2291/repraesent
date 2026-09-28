@@ -8,8 +8,11 @@ import { cn } from "~/lib/utils";
 import { formatRelativeTime } from "~/lib/utils/format";
 import { Button } from "~/components/ui/button";
 
-/** Follow-ups the owner never asked for: finish silently. */
-const SILENT: JobKind[] = ["classify_domains"];
+/**
+ * Follow-ups the owner never asked for: finish silently. The website check
+ * also runs after every run, and its tab shows its own progress.
+ */
+const SILENT: JobKind[] = ["classify_domains", "site_check"];
 
 export function useJobLabel() {
   const { t } = useTranslation();
@@ -25,6 +28,12 @@ export function useJobLabel() {
         return active ? t("aiVisibility.jobs.running", "Asking the assistants…") : t("aiVisibility.jobs.run", "Run");
       case "classify_domains":
         return active ? t("aiVisibility.jobs.classifying", "Sorting the websites…") : t("aiVisibility.jobs.classify", "Website sorting");
+      case "site_check":
+        return active ? t("aiVisibility.jobs.siteChecking", "Checking your website…") : t("aiVisibility.jobs.siteCheck", "Website check");
+      case "page_suggest":
+        return active ? t("aiVisibility.jobs.pageSuggesting", "Writing questions and an opening for the page…") : t("aiVisibility.jobs.pageSuggest", "Page suggestions");
+      case "comparison_draft":
+        return active ? t("aiVisibility.jobs.drafting", "Writing the comparison page…") : t("aiVisibility.jobs.draft", "Comparison page");
     }
   };
 }

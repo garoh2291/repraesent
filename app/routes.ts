@@ -70,6 +70,7 @@ export default [
         index("routes/ai-visibility._index.tsx"),
         route("setup", "routes/ai-visibility.setup.tsx"),
         route("actions", "routes/ai-visibility.actions.tsx"),
+        route("website", "routes/ai-visibility.website.tsx"),
         route("prompts", "routes/ai-visibility.prompts.tsx"),
         route("prompts/:promptId", "routes/ai-visibility.prompts.$promptId.tsx"),
         route("competitors", "routes/ai-visibility.competitors.tsx"),

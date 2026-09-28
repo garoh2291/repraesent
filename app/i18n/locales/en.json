@@ -9317,7 +9317,8 @@
       "ev": {
         "blocked": "blocked: {{bots}}",
         "gap": "{{n}} answers named a competitor, not you",
-        "rivals": "named instead: {{names}}"
+        "rivals": "named instead: {{names}}",
+        "openWebsite": "Open “Your website” — the details and ready-made suggestions are there"
       },
       "intro": "AI assistants repeat what trusted websites say. Each recommendation below comes from your last 30 days of answers: a place that talks about your competitors but not you, or a question where you never come up. Start with the tallest bars.",
       "kind": {
@@ -9364,6 +9365,21 @@
         "dismissTitle": "Not relevant — and delete its task?",
         "dismissBody": "This recommendation has an open task. Marking it not relevant deletes that task as well. You can reopen the recommendation later.",
         "dismissConfirm": "Delete task and dismiss"
+      },
+      "draft": {
+        "failed": "Could not start writing the page.",
+        "compareWith": "Compare with",
+        "vs": "You vs {{name}}",
+        "writing": "Writing the page…",
+        "again": "Write it again",
+        "write": "Write the page for me",
+        "offer": "We can write the page: a fair comparison from what you told us, both homepages and what the assistants said. Anything we can't confirm is left open for you. A few cents on your OpenRouter key.",
+        "hide": "Hide the written page",
+        "show": "Read the written page — you vs {{name}}",
+        "toCheck": "Fill in before you publish",
+        "copyText": "Copy as text",
+        "copyHtml": "Copy for your web person (HTML)",
+        "honest": "Written {{when}} from what we know. Read it once before you publish — nothing goes online from here."
       }
     },
     "answer": {
@@ -9470,7 +9486,8 @@
       "overview": "Overview",
       "plan": "Plan & cost",
       "prompts": "Questions",
-      "sources": "Sources"
+      "sources": "Sources",
+      "website": "Your website"
     },
     "notice": {
       "capBody": "{{spent}} of {{cap}} used. Tracking restarts on the 1st, or right away if you raise the limit.",
@@ -9527,7 +9544,10 @@
       "sentenceB": "of {{n}} answers",
       "sourcesTitle": "Websites the assistants read most",
       "vsHint": "share of answers naming each brand",
-      "vsTitle": "You and your competitors"
+      "vsTitle": "You and your competitors",
+      "websiteGood": "Your website for AI — nothing needs you",
+      "websiteNeeds_one": "Your website for AI — 1 thing to look at",
+      "websiteNeeds_other": "Your website for AI — {{n}} things to look at"
     },
     "periods": {
       "30d": "30 days",
@@ -9799,7 +9819,13 @@
       "canLeave": "You can close this page — it keeps going and the result is saved.",
       "cancel": "Cancel",
       "retry": "Try again",
-      "dismiss": "Dismiss"
+      "dismiss": "Dismiss",
+      "siteChecking": "Checking your website…",
+      "siteCheck": "Website check",
+      "pageSuggesting": "Writing questions and an opening for the page…",
+      "pageSuggest": "Page suggestions",
+      "drafting": "Writing the comparison page…",
+      "draft": "Comparison page"
     },
     "facts": {
       "title": "What AI gets wrong about you",
@@ -9824,6 +9850,134 @@
         "services": "What you offer",
         "prices": "Prices"
       }
+    },
+    "website": {
+      "checkFailed": "Could not start the check.",
+      "onePage": "One page at a time — the page already in progress comes first.",
+      "suggestFailed": "Could not start the suggestions.",
+      "pendingTitle": "Your website check is almost ready.",
+      "pendingBody": "It switches on with the next update. Nothing to do on your side.",
+      "noDomainTitle": "Add your website address first.",
+      "noDomainBody": "Enter it under Plan & cost → Your business, then check it here.",
+      "intro": "Assistants can only recommend what they can read. We look at your website the way they do — from outside, like a visitor — and show what helps them understand and quote it.",
+      "outsideTitle": "Two things only you can do",
+      "outsideBody": "Claim your site in Bing Webmaster Tools — ChatGPT search reads from Bing. And submit it to Brave — Claude searches with Brave. Both take a few minutes and need you to sign in.",
+      "checking": "Checking…",
+      "recheck": "Check again",
+      "checkNow": "Check my website",
+      "checkingTitle": "Checking {{domain}}…",
+      "neverTitle": "Not checked yet.",
+      "neverBody": "The check reads your homepage and up to 11 more pages. It is free and takes under a minute.",
+      "readiness": "How ready your site is for AI",
+      "lookedAt": "{{n}} pages looked at",
+      "checked": "checked {{when}}",
+      "unreachable": "We could not open {{domain}}. Check the address under Plan & cost, or whether the site is online.",
+      "allGood": "Nothing needs your attention.",
+      "status": {
+        "pass": "Fine",
+        "warn": "Could be better",
+        "fail": "Needs you",
+        "info": "Not checked"
+      },
+      "check": {
+        "unreachable": "Could not be checked — the homepage did not open.",
+        "noPosts": "We found no blog posts or articles to look at.",
+        "ai_crawlers_allowed": {
+          "title": "AI assistants may read your site",
+          "fail": "Your robots.txt shuts out {{bots}}. They cannot read or recommend your site.",
+          "passTraining": "No assistant is shut out of answers. You keep {{bots}} from training on your pages — that is your choice and doesn't hide you.",
+          "pass": "No assistant is shut out."
+        },
+        "https": {
+          "title": "Secure address (https)",
+          "pass": "Your site opens over https.",
+          "fail": "Your site doesn't open over https. Your web person can switch it on."
+        },
+        "homepage_indexable": {
+          "title": "Search engines may list your homepage",
+          "pass": "Your homepage can be listed.",
+          "fail": "Your homepage tells search engines not to list it (noindex). Assistants that search the web won't find it."
+        },
+        "sitemap": {
+          "title": "A list of your pages for search engines (sitemap)",
+          "pass": "Found at {{path}}.",
+          "fail": "No sitemap at the usual addresses. Most website builders can publish one with a switch."
+        },
+        "bing_verification": {
+          "title": "Claimed in Bing",
+          "pass": "Bing verification is in place.",
+          "warn": "Not found. ChatGPT search reads from Bing — claim your site in Bing Webmaster Tools (link below)."
+        },
+        "org_schema": {
+          "title": "Business details assistants can read",
+          "pass": "Your homepage carries your name and contact details in a form assistants read directly.",
+          "warn": "Found, but without address or phone. Both help assistants tell you apart from others with a similar name.",
+          "fail": "Your homepage doesn't carry your name, address and phone in a form assistants read directly (schema). Your web person can add it."
+        },
+        "article_schema": {
+          "title": "Posts marked as articles",
+          "pass": "All {{total}} posts we looked at are marked.",
+          "warn": "{{count}} of {{total}} posts are marked.",
+          "fail": "None of the {{total}} posts we looked at are marked as articles."
+        },
+        "faq_schema": {
+          "title": "Questions and answers assistants can read",
+          "pass": "{{count}} pages have them.",
+          "warn": "Only {{count}} of {{total}} pages have them. Below, we can write them for any page.",
+          "fail": "None of the {{total}} pages we looked at have them. Below, we can write them for any page."
+        },
+        "answer_blocks": {
+          "title": "Pages that open with a direct answer",
+          "none": "We found no pages besides the homepage.",
+          "pass": "{{count}} of {{total}} pages do.",
+          "warn": "Only {{count}} of {{total}} pages do. Assistants quote the first lines most.",
+          "fail": "None of the {{total}} pages we looked at do. Assistants quote the first lines most."
+        },
+        "author_date": {
+          "title": "Author and date on posts",
+          "pass": "Posts show who wrote them and when.",
+          "fail": "Posts show neither an author nor a date.",
+          "noAuthor": "Posts show a date but no author.",
+          "noDate": "Posts show an author but no date.",
+          "warn": "Some posts show no author or no date."
+        },
+        "llms_txt": {
+          "title": "Short summary for AI tools (llms.txt)",
+          "pass": "Published.",
+          "warn": "Not published. A small extra for AI tools — search results don't depend on it."
+        }
+      },
+      "pagesTitle": "Your pages",
+      "pagesHint": "Questions and a direct opening, written from what the page already says",
+      "flag": {
+        "answer": "Direct opening",
+        "faq": "Questions"
+      },
+      "used": "Used",
+      "see": "See suggestions",
+      "writing": "Writing…",
+      "write": "Write suggestions",
+      "otherPage": "Another page:",
+      "costNote": "Suggestions use your OpenRouter key — a few cents a page, counted in your monthly limit. An unchanged page is never charged twice.",
+      "saveFailed": "Could not save that.",
+      "sheet": {
+        "opening": "Open the page with this",
+        "openingHint": "Put it right under the main heading. Assistants quote the first lines most.",
+        "faqs": "Questions and answers for the page",
+        "copyFaqs": "Copy the questions",
+        "codeTitle": "The same questions, readable for assistants",
+        "codeHint": "Once the questions are on the page, this code goes into the same page. Send it to whoever looks after your website.",
+        "emailSubject": "Questions and answers for our website",
+        "emailIntro": "Could you add the questions and answers to this page ({{url}}), and this code to the same page?",
+        "meta": "Title and description in search results",
+        "notes": "Worth a look",
+        "honest": "Written only from what the page says. Read it once before you use it — nothing is published by us.",
+        "markUsed": "Mark as used",
+        "markUnused": "Not used after all",
+        "dismiss": "Don't need these"
+      },
+      "needsCount_one": "1 thing to look at.",
+      "needsCount_other": "{{n}} things to look at."
     }
   },
   "guided": {

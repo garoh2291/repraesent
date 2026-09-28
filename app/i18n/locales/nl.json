@@ -9317,7 +9317,8 @@
       "ev": {
         "blocked": "geblokkeerd: {{bots}}",
         "gap": "{{n}} antwoorden noemden een concurrent, niet jou",
-        "rivals": "in plaats daarvan genoemd: {{names}}"
+        "rivals": "in plaats daarvan genoemd: {{names}}",
+        "openWebsite": "Open „Je website” — daar staan de details en kant-en-klare suggesties"
       },
       "intro": "AI-assistenten herhalen wat betrouwbare websites zeggen. Elke aanbeveling hieronder komt uit je antwoorden van de afgelopen 30 dagen: een plek die over je concurrenten praat maar niet over jou, of een vraag waarbij je nooit voorkomt. Begin met de hoogste balken.",
       "kind": {
@@ -9364,6 +9365,21 @@
         "dismissTitle": "Niet relevant — en de taak verwijderen?",
         "dismissBody": "Bij deze aanbeveling hoort een open taak. Als je hem als niet relevant markeert, wordt die taak ook verwijderd. Je kunt de aanbeveling later heropenen.",
         "dismissConfirm": "Taak verwijderen en negeren"
+      },
+      "draft": {
+        "failed": "Het schrijven van de pagina kon niet starten.",
+        "compareWith": "Vergelijken met",
+        "vs": "Jij vs {{name}}",
+        "writing": "Pagina wordt geschreven…",
+        "again": "Opnieuw schrijven",
+        "write": "Schrijf de pagina voor mij",
+        "offer": "We kunnen de pagina schrijven: een eerlijke vergelijking uit wat je ons vertelde, beide homepages en wat de assistenten zeiden. Wat we niet kunnen bevestigen, laten we voor jou open. Een paar cent op je OpenRouter-sleutel.",
+        "hide": "Geschreven pagina verbergen",
+        "show": "Geschreven pagina lezen — jij vs {{name}}",
+        "toCheck": "Invullen voordat je publiceert",
+        "copyText": "Kopiëren als tekst",
+        "copyHtml": "Kopiëren voor je webbeheerder (HTML)",
+        "honest": "Geschreven {{when}} uit wat we weten. Lees het één keer door voordat je publiceert — vanaf hier gaat niets online."
       }
     },
     "answer": {
@@ -9470,7 +9486,8 @@
       "overview": "Overzicht",
       "plan": "Pakket & kosten",
       "prompts": "Vragen",
-      "sources": "Bronnen"
+      "sources": "Bronnen",
+      "website": "Je website"
     },
     "notice": {
       "capBody": "{{spent}} van {{cap}} gebruikt. Het volgen start weer op de 1e, of meteen als je de limiet verhoogt.",
@@ -9527,7 +9544,10 @@
       "sentenceB": "van {{n}} antwoorden",
       "sourcesTitle": "Websites die de assistenten het meest lezen",
       "vsHint": "aandeel antwoorden dat elk merk noemt",
-      "vsTitle": "Jij en je concurrenten"
+      "vsTitle": "Jij en je concurrenten",
+      "websiteNeeds_one": "Je website voor AI — 1 punt om naar te kijken",
+      "websiteNeeds_other": "Je website voor AI — {{n}} punten om naar te kijken",
+      "websiteGood": "Je website voor AI — niets heeft je nodig"
     },
     "periods": {
       "30d": "30 dagen",
@@ -9799,7 +9819,13 @@
       "canLeave": "Je kunt deze pagina sluiten — het gaat door en het resultaat wordt bewaard.",
       "cancel": "Annuleren",
       "retry": "Opnieuw proberen",
-      "dismiss": "Verbergen"
+      "dismiss": "Verbergen",
+      "siteChecking": "Je website wordt gecontroleerd…",
+      "siteCheck": "Websitecontrole",
+      "pageSuggesting": "Vragen en een begin voor de pagina worden geschreven…",
+      "pageSuggest": "Paginasuggesties",
+      "drafting": "Vergelijkingspagina wordt geschreven…",
+      "draft": "Vergelijkingspagina"
     },
     "facts": {
       "title": "Wat AI verkeerd over je zegt",
@@ -9823,6 +9849,134 @@
         "website": "Website",
         "services": "Aanbod",
         "prices": "Prijzen"
+      }
+    },
+    "website": {
+      "checkFailed": "De controle kon niet starten.",
+      "onePage": "Eén pagina tegelijk — de pagina die al loopt, gaat voor.",
+      "suggestFailed": "De suggesties konden niet starten.",
+      "pendingTitle": "Je websitecontrole is bijna klaar.",
+      "pendingBody": "Die gaat aan met de volgende update. Je hoeft niets te doen.",
+      "noDomainTitle": "Vul eerst je websiteadres in.",
+      "noDomainBody": "Onder Pakket & kosten → Je bedrijf, en controleer het dan hier.",
+      "intro": "Assistenten kunnen alleen aanraden wat ze kunnen lezen. We bekijken je website zoals zij dat doen — van buitenaf, als een bezoeker — en laten zien wat hen helpt hem te begrijpen en te citeren.",
+      "outsideTitle": "Twee dingen die alleen jij kunt doen",
+      "outsideBody": "Claim je site in Bing Webmaster Tools — ChatGPT-zoeken leest bij Bing. En dien hem in bij Brave — Claude zoekt met Brave. Beide kosten een paar minuten en je moet inloggen.",
+      "checking": "Bezig met controleren…",
+      "recheck": "Opnieuw controleren",
+      "checkNow": "Mijn website controleren",
+      "checkingTitle": "{{domain}} wordt gecontroleerd…",
+      "neverTitle": "Nog niet gecontroleerd.",
+      "neverBody": "De controle leest je homepage en tot 11 andere pagina's. Gratis, en klaar binnen een minuut.",
+      "readiness": "Zo klaar is je website voor AI",
+      "lookedAt": "{{n}} pagina's bekeken",
+      "checked": "gecontroleerd {{when}}",
+      "unreachable": "We konden {{domain}} niet openen. Controleer het adres onder Pakket & kosten, of de site online is.",
+      "needsCount_one": "1 punt om naar te kijken.",
+      "needsCount_other": "{{n}} punten om naar te kijken.",
+      "allGood": "Niets vraagt je aandacht.",
+      "status": {
+        "pass": "In orde",
+        "warn": "Kan beter",
+        "fail": "Heeft je nodig",
+        "info": "Niet gecontroleerd"
+      },
+      "check": {
+        "unreachable": "Niet te controleren — de homepage ging niet open.",
+        "noPosts": "We vonden geen blogberichten of artikelen om te bekijken.",
+        "ai_crawlers_allowed": {
+          "title": "AI-assistenten mogen je site lezen",
+          "fail": "Je robots.txt sluit {{bots}} buiten. Ze kunnen je site niet lezen of aanraden.",
+          "passTraining": "Geen assistent is buitengesloten van antwoorden. Je houdt {{bots}} weg van trainen op je pagina's — dat is jouw keuze en verbergt je niet.",
+          "pass": "Geen assistent is buitengesloten."
+        },
+        "https": {
+          "title": "Veilig adres (https)",
+          "pass": "Je site opent via https.",
+          "fail": "Je site opent niet via https. Je webbeheerder kan dat aanzetten."
+        },
+        "homepage_indexable": {
+          "title": "Zoekmachines mogen je homepage opnemen",
+          "pass": "Je homepage kan worden opgenomen.",
+          "fail": "Je homepage vraagt zoekmachines hem niet op te nemen (noindex). Assistenten die op het web zoeken, vinden hem niet."
+        },
+        "sitemap": {
+          "title": "Een lijst van je pagina's voor zoekmachines (sitemap)",
+          "pass": "Gevonden op {{path}}.",
+          "fail": "Geen sitemap op de gebruikelijke adressen. De meeste websitebouwers publiceren er een met één schakelaar."
+        },
+        "bing_verification": {
+          "title": "Geclaimd in Bing",
+          "pass": "De Bing-verificatie is aanwezig.",
+          "warn": "Niet gevonden. ChatGPT-zoeken leest bij Bing — claim je site in Bing Webmaster Tools (link hieronder)."
+        },
+        "org_schema": {
+          "title": "Bedrijfsgegevens die assistenten kunnen lezen",
+          "pass": "Je homepage bevat je naam en contactgegevens in een vorm die assistenten direct lezen.",
+          "warn": "Gevonden, maar zonder adres of telefoon. Beide helpen assistenten je te onderscheiden van bedrijven met een vergelijkbare naam.",
+          "fail": "Je homepage bevat naam, adres en telefoon niet in een vorm die assistenten direct lezen (schema). Je webbeheerder kan het toevoegen."
+        },
+        "article_schema": {
+          "title": "Berichten gemarkeerd als artikel",
+          "pass": "Alle {{total}} bekeken berichten zijn gemarkeerd.",
+          "warn": "{{count}} van de {{total}} berichten zijn gemarkeerd.",
+          "fail": "Geen van de {{total}} bekeken berichten is als artikel gemarkeerd."
+        },
+        "faq_schema": {
+          "title": "Vragen en antwoorden die assistenten kunnen lezen",
+          "pass": "{{count}} pagina's hebben ze.",
+          "warn": "Maar {{count}} van de {{total}} pagina's hebben ze. Hieronder schrijven we ze voor elke pagina.",
+          "fail": "Geen van de {{total}} bekeken pagina's heeft ze. Hieronder schrijven we ze voor elke pagina."
+        },
+        "answer_blocks": {
+          "title": "Pagina's die beginnen met een direct antwoord",
+          "none": "Behalve de homepage vonden we geen pagina's.",
+          "pass": "{{count}} van de {{total}} pagina's doen dat.",
+          "warn": "Maar {{count}} van de {{total}} pagina's doen dat. Assistenten citeren de eerste regels het vaakst.",
+          "fail": "Geen van de {{total}} bekeken pagina's doet dat. Assistenten citeren de eerste regels het vaakst."
+        },
+        "author_date": {
+          "title": "Auteur en datum bij berichten",
+          "pass": "Berichten tonen wie ze schreef en wanneer.",
+          "fail": "Berichten tonen geen auteur en geen datum.",
+          "noAuthor": "Berichten tonen een datum maar geen auteur.",
+          "noDate": "Berichten tonen een auteur maar geen datum.",
+          "warn": "Sommige berichten tonen geen auteur of geen datum."
+        },
+        "llms_txt": {
+          "title": "Korte samenvatting voor AI-tools (llms.txt)",
+          "pass": "Gepubliceerd.",
+          "warn": "Niet gepubliceerd. Een kleine extra voor AI-tools — zoekresultaten hangen er niet van af."
+        }
+      },
+      "pagesTitle": "Je pagina's",
+      "pagesHint": "Vragen en een direct begin, geschreven uit wat er al op de pagina staat",
+      "flag": {
+        "answer": "Direct begin",
+        "faq": "Vragen"
+      },
+      "used": "Gebruikt",
+      "see": "Suggesties bekijken",
+      "writing": "Bezig met schrijven…",
+      "write": "Suggesties schrijven",
+      "otherPage": "Andere pagina:",
+      "costNote": "Suggesties gebruiken je OpenRouter-sleutel — een paar cent per pagina, meegeteld in je maandlimiet. Een ongewijzigde pagina kost nooit twee keer.",
+      "saveFailed": "Dat kon niet worden opgeslagen.",
+      "sheet": {
+        "opening": "Begin de pagina hiermee",
+        "openingHint": "Direct onder de hoofdkop. Assistenten citeren de eerste regels het vaakst.",
+        "faqs": "Vragen en antwoorden voor de pagina",
+        "copyFaqs": "Vragen kopiëren",
+        "codeTitle": "Dezelfde vragen, leesbaar voor assistenten",
+        "codeHint": "Zodra de vragen op de pagina staan, komt deze code op dezelfde pagina. Stuur hem naar wie je website beheert.",
+        "emailSubject": "Vragen en antwoorden voor onze website",
+        "emailIntro": "Kun je de vragen en antwoorden op deze pagina ({{url}}) zetten, en deze code op dezelfde pagina?",
+        "meta": "Titel en beschrijving in zoekresultaten",
+        "notes": "Het bekijken waard",
+        "honest": "Alleen geschreven uit wat er op de pagina staat. Lees het één keer door voordat je het gebruikt — wij publiceren niets.",
+        "markUsed": "Markeren als gebruikt",
+        "markUnused": "Toch niet gebruikt",
+        "dismiss": "Niet nodig"
       }
     }
   },

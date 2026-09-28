@@ -2,9 +2,18 @@ import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { CheckCircle2, Circle, CircleDot, Lightbulb, ListTodo, RefreshCw } from "lucide-react";
+import { Link } from "react-router";
+import { CheckCircle2, Circle, CircleDot, Lightbulb, ListTodo, Loader2, RefreshCw, Sparkles } from "lucide-react";
 import { useAiVisibilityActions, useAiVisibilityJob, useInvalidateAiVisibility } from "~/lib/hooks/useAiVisibility";
-import { aiVisibilityApi, apiErrorMessage, isActiveJob, type Action, type ActionKind, type ActionStatus } from "~/lib/api/ai-visibility";
+import {
+  aiVisibilityApi,
+  apiErrorMessage,
+  isActiveJob,
+  type Action,
+  type ActionKind,
+  type ActionStatus,
+  type ComparisonDraft,
+} from "~/lib/api/ai-visibility";
 import { getWorkspaceDetail } from "~/lib/api/workspaces";
 import { useAuthContext } from "~/providers/auth-provider";
 import { cn } from "~/lib/utils";
@@ -27,7 +36,8 @@ import { TaskDetailModal } from "~/components/organism/tasks/task-detail-modal";
 import type { WorkspaceMemberItem } from "~/components/organism/tasks/task-form-modal";
 import { useAiVisibilityContext } from "~/components/ai-visibility/context";
 import { Impact } from "~/components/ai-visibility/impact";
-import { Segmented } from "~/components/ai-visibility/shared";
+import { FilterSelect, Segmented } from "~/components/ai-visibility/shared";
+import { CopyBlock } from "~/components/ai-visibility/copy-block";
 
 type View = "open" | "done" | "dismissed";
 
@@ -235,6 +245,7 @@ export default function AiVisibilityActions() {
                     </ol>
                   ) : null}
                   <Evidence evidence={a.evidence} />
+                  {a.kind === "comparison_page" ? <ComparisonDraftBlock action={a} canEdit={canEdit && isOpen} /> : null}
 
                   {a.task_id ? <LinkedTask action={a} onOpen={() => setOpenTaskId(a.task_id)} /> : null}
 
@@ -370,16 +381,22 @@ function Evidence({ evidence }: { evidence: Record<string, unknown> }) {
     rivals?: string[];
     blocked_bots?: string[];
     competitor_domains?: Array<{ domain: string; answers_used: number }>;
+    link?: string;
   };
   if (e.domain) bits.push(e.domain);
   if (e.gap_answers) bits.push(t("aiVisibility.actions.ev.gap", "{{n}} answers named a competitor, not you", { n: e.gap_answers }));
   if (e.rivals?.length) bits.push(t("aiVisibility.actions.ev.rivals", "named instead: {{names}}", { names: e.rivals.slice(0, 4).join(", ") }));
   if (e.blocked_bots?.length) bits.push(t("aiVisibility.actions.ev.blocked", "blocked: {{bots}}", { bots: e.blocked_bots.join(", ") }));
   if (e.competitor_domains?.length) bits.push(e.competitor_domains.map((d) => d.domain).join(", "));
-  if (!bits.length && !e.prompts?.length) return null;
+  if (!bits.length && !e.prompts?.length && !e.link) return null;
   return (
     <div className="mt-3 space-y-1.5 border-t border-dashed border-border pt-3 text-[12.5px] text-muted-foreground">
       {bits.length ? <p>{bits.join(" · ")}</p> : null}
+      {e.link?.startsWith("/ai-visibility/") ? (
+        <Link to={e.link} className="inline-block font-medium text-foreground underline decoration-foreground/30 underline-offset-4 hover:decoration-foreground">
+          {t("aiVisibility.actions.ev.openWebsite", "Open “Your website” — the details and ready-made suggestions are there")}
+        </Link>
+      ) : null}
       {e.prompts?.length ? (
         <ul className="space-y-0.5">
           {e.prompts.slice(0, 3).map((p) => (
@@ -389,6 +406,215 @@ function Evidence({ evidence }: { evidence: Record<string, unknown> }) {
           ))}
         </ul>
       ) : null}
+    </div>
+  );
+}
+
+/**
+ * The comparison to-do's own help: we write the page. The owner picks the
+ * competitor, reads it, fills what we could not know, and publishes it
+ * themselves — nothing goes online from here.
+ */
+function ComparisonDraftBlock({ action, canEdit }: { action: Action; canEdit: boolean }) {
+  const { t } = useTranslation();
+  const invalidate = useInvalidateAiVisibility();
+  const job = useAiVisibilityJob("comparison_draft");
+  const writing = !!job && isActiveJob(job) && job.payload.action_id === action.id;
+  const busyElsewhere = !!job && isActiveJob(job) && job.payload.action_id !== action.id;
+  const names = useMemo(() => {
+    const list = ((action.evidence as { competitor_domains?: Array<{ domain?: string; name?: string | null }> }).competitor_domains ?? [])
+      .map((d) => d.name || d.domain || "")
+      .filter(Boolean);
+    return [...new Set(list)];
+  }, [action.evidence]);
+  const [pick, setPick] = useState<string>(action.draft?.competitor.name ?? names[0] ?? "");
+  const [open, setOpen] = useState(false);
+  const draft = action.draft;
+
+  const write = async () => {
+    try {
+      await aiVisibilityApi.draftComparison(action.id, pick || null);
+      setOpen(true);
+      void invalidate();
+    } catch (err) {
+      toast.error(apiErrorMessage(err, t("aiVisibility.actions.draft.failed", "Could not start writing the page.")));
+    }
+  };
+
+  if (!names.length) return null;
+
+  const controls = canEdit ? (
+    <div className="flex flex-wrap items-center gap-2">
+      {names.length > 1 ? (
+        <FilterSelect
+          aria-label={t("aiVisibility.actions.draft.compareWith", "Compare with")}
+          value={pick}
+          onChange={(e) => setPick(e.target.value)}
+          disabled={writing}
+        >
+          {names.map((n) => (
+            <option key={n} value={n}>
+              {t("aiVisibility.actions.draft.vs", "You vs {{name}}", { name: n })}
+            </option>
+          ))}
+        </FilterSelect>
+      ) : null}
+      <Button size="sm" variant={draft ? "ghost" : "outline"} onClick={write} disabled={writing || busyElsewhere}>
+        {writing ? <Loader2 className="size-3.5 animate-spin motion-reduce:animate-none" /> : draft ? null : <Sparkles className="size-3.5" />}
+        {writing
+          ? t("aiVisibility.actions.draft.writing", "Writing the page…")
+          : draft
+            ? t("aiVisibility.actions.draft.again", "Write it again")
+            : t("aiVisibility.actions.draft.write", "Write the page for me")}
+      </Button>
+    </div>
+  ) : null;
+
+  return (
+    <div className="mt-4 rounded-lg border border-border bg-background/60 p-3.5">
+      {!draft ? (
+        <div className="space-y-2">
+          <p className="text-[13px] leading-relaxed text-foreground/80">
+            {t(
+              "aiVisibility.actions.draft.offer",
+              "We can write the page: a fair comparison from what you told us, both homepages and what the assistants said. Anything we can't confirm is left open for you. A few cents on your OpenRouter key.",
+            )}
+          </p>
+          {controls}
+        </div>
+      ) : (
+        <div className="space-y-3">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <button
+              type="button"
+              onClick={() => setOpen((v) => !v)}
+              aria-expanded={open}
+              className="text-left text-[13.5px] font-semibold text-foreground underline decoration-foreground/30 underline-offset-4 hover:decoration-foreground"
+            >
+              {open
+                ? t("aiVisibility.actions.draft.hide", "Hide the written page")
+                : t("aiVisibility.actions.draft.show", "Read the written page — you vs {{name}}", { name: draft.competitor.name })}
+            </button>
+            {controls}
+          </div>
+          {open ? <DraftView draft={draft} /> : null}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function draftAsText(d: ComparisonDraft): string {
+  return [
+    d.title,
+    "",
+    d.intro,
+    "",
+    ...d.table.map((r) => `${r.aspect}: ${r.you} | ${r.them}`),
+    "",
+    ...d.sections.flatMap((s) => [s.heading, s.body, ""]),
+    ...d.faqs.flatMap((f) => [f.question, f.answer, ""]),
+  ]
+    .join("\n")
+    .trim();
+}
+
+function esc(s: string): string {
+  return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+}
+
+function draftAsHtml(d: ComparisonDraft, you: string): string {
+  const faqLd = d.faqs.length
+    ? `\n<script type="application/ld+json">\n${JSON.stringify(
+        {
+          "@context": "https://schema.org",
+          "@type": "FAQPage",
+          mainEntity: d.faqs.map((f) => ({ "@type": "Question", name: f.question, acceptedAnswer: { "@type": "Answer", text: f.answer } })),
+        },
+        null,
+        2,
+      )}\n</script>`
+    : "";
+  return [
+    `<h1>${esc(d.title)}</h1>`,
+    `<p>${esc(d.intro)}</p>`,
+    d.table.length
+      ? `<table>\n<thead><tr><th></th><th>${esc(you)}</th><th>${esc(d.competitor.name)}</th></tr></thead>\n<tbody>\n${d.table
+          .map((r) => `<tr><th>${esc(r.aspect)}</th><td>${esc(r.you)}</td><td>${esc(r.them)}</td></tr>`)
+          .join("\n")}\n</tbody>\n</table>`
+      : "",
+    ...d.sections.map((s) => `<h2>${esc(s.heading)}</h2>\n<p>${esc(s.body)}</p>`),
+    d.faqs.length ? `<h2>FAQ</h2>\n${d.faqs.map((f) => `<h3>${esc(f.question)}</h3>\n<p>${esc(f.answer)}</p>`).join("\n")}` : "",
+  ]
+    .filter(Boolean)
+    .join("\n\n") + faqLd;
+}
+
+function DraftView({ draft }: { draft: ComparisonDraft }) {
+  const { t } = useTranslation();
+  const { state } = useAiVisibilityContext();
+  const you = state.project.brand_name;
+  return (
+    <div className="space-y-4 rounded-lg border border-border bg-card p-4">
+      {draft.to_check.length ? (
+        <div className="rounded-lg bg-marker-soft px-3.5 py-3">
+          <p className="text-[13px] font-semibold text-marker-ink">{t("aiVisibility.actions.draft.toCheck", "Fill in before you publish")}</p>
+          <ul className="mt-1 list-disc space-y-0.5 pl-5 text-[13px] leading-relaxed text-foreground/85">
+            {draft.to_check.map((x, i) => (
+              <li key={i}>{x}</li>
+            ))}
+          </ul>
+        </div>
+      ) : null}
+      <h4 className="title-display text-[18px] font-semibold leading-snug text-foreground">{draft.title}</h4>
+      <p className="text-[14px] leading-relaxed text-foreground/85">{draft.intro}</p>
+      {draft.table.length ? (
+        <div className="-mx-1 overflow-x-auto px-1">
+          <table className="w-full min-w-[420px] border-collapse text-left text-[13px]">
+            <thead>
+              <tr className="border-b border-border text-muted-foreground">
+                <th className="py-2 pr-3 font-medium" />
+                <th className="py-2 pr-3 font-semibold text-foreground">{you}</th>
+                <th className="py-2 font-semibold text-foreground">{draft.competitor.name}</th>
+              </tr>
+            </thead>
+            <tbody>
+              {draft.table.map((r, i) => (
+                <tr key={i} className="border-b border-border/60 align-top">
+                  <th className="py-2 pr-3 font-medium text-foreground">{r.aspect}</th>
+                  <td className={cn("py-2 pr-3", r.you === "—" && "text-muted-foreground")}>{r.you}</td>
+                  <td className={cn("py-2", r.them === "—" && "text-muted-foreground")}>{r.them}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      ) : null}
+      {draft.sections.map((s, i) => (
+        <div key={i}>
+          <p className="text-[14px] font-semibold text-foreground">{s.heading}</p>
+          <p className="mt-1 whitespace-pre-line text-[13.5px] leading-relaxed text-foreground/85">{s.body}</p>
+        </div>
+      ))}
+      {draft.faqs.length ? (
+        <dl className="space-y-2.5">
+          {draft.faqs.map((f, i) => (
+            <div key={i}>
+              <dt className="text-[13.5px] font-semibold text-foreground">{f.question}</dt>
+              <dd className="mt-0.5 text-[13.5px] leading-relaxed text-foreground/85">{f.answer}</dd>
+            </div>
+          ))}
+        </dl>
+      ) : null}
+      <div className="flex flex-wrap gap-x-2 border-t border-border pt-2">
+        <CopyBlock text={draftAsText(draft)} label={t("aiVisibility.actions.draft.copyText", "Copy as text")} hideText />
+        <CopyBlock text={draftAsHtml(draft, you)} label={t("aiVisibility.actions.draft.copyHtml", "Copy for your web person (HTML)")} hideText />
+      </div>
+      <p className="text-[12px] text-muted-foreground">
+        {t("aiVisibility.actions.draft.honest", "Written {{when}} from what we know. Read it once before you publish — nothing goes online from here.", {
+          when: formatRelativeTime(draft.generated_at),
+        })}
+      </p>
     </div>
   );
 }

@@ -17,7 +17,7 @@ import { Skeleton } from "~/components/ui/skeleton";
 import { AiVisibilityContext } from "~/components/ai-visibility/context";
 import { RunProgress, StateNotice } from "~/components/ai-visibility/run-banner";
 import { JobsStrip, useJobWatcher } from "~/components/ai-visibility/jobs-strip";
-import { ENGINE_META, PERIODS, Segmented, eur, useFilters } from "~/components/ai-visibility/shared";
+import { ENGINE_META, FilterSelect, PERIODS, Segmented, eur, useFilters } from "~/components/ai-visibility/shared";
 
 export function meta() {
   return [{ title: i18n.t("aiVisibility.metaTitle", "AI visibility") + " - Repraesent" }];
@@ -88,7 +88,7 @@ export default function AiVisibilityLayout() {
   const state = data as ProjectState;
   const runningId = startedBatch ?? (state.latest_batch?.running ? state.latest_batch.id : null);
   const path = location.pathname.replace(/\/+$/, "");
-  const showFilters = !/\/(actions|plan)$/.test(path);
+  const showFilters = !/\/(actions|plan|website)$/.test(path);
 
   const runNow = async () => {
     setStarting(true);
@@ -112,6 +112,7 @@ export default function AiVisibilityLayout() {
   const tabs = [
     { to: "/ai-visibility", label: t("aiVisibility.nav.overview", "Overview"), end: true },
     { to: "/ai-visibility/actions", label: t("aiVisibility.nav.actions", "What to do") },
+    { to: "/ai-visibility/website", label: t("aiVisibility.nav.website", "Your website") },
     { to: "/ai-visibility/prompts", label: t("aiVisibility.nav.prompts", "Questions") },
     { to: "/ai-visibility/competitors", label: t("aiVisibility.nav.competitors", "Competitors") },
     { to: "/ai-visibility/sources", label: t("aiVisibility.nav.sources", "Sources") },
@@ -162,7 +163,8 @@ export default function AiVisibilityLayout() {
         <JobsStrip canEdit={canEdit} onRetryRun={runNow} />
         {runningId ? <RunProgress key={runningId} batchId={runningId} onDone={() => setStartedBatch(null)} /> : null}
 
-        <div className="flex flex-col gap-3 border-b border-border pb-3 lg:flex-row lg:items-center lg:justify-between">
+        {/* Tabs on one row (scrolls sideways on a phone), the filters for the tab below. */}
+        <div className="space-y-3 border-b border-border pb-3">
           <nav aria-label={t("aiVisibility.nav.label", "AI visibility sections")} className="-mx-4 overflow-x-auto px-4 scrollbar-hide sm:mx-0 sm:px-0">
             <ul className="flex min-w-max gap-1">
               {tabs.map((tab) => (
@@ -185,11 +187,10 @@ export default function AiVisibilityLayout() {
           </nav>
           {showFilters ? (
             <div className="flex flex-wrap items-center gap-2">
-              <select
+              <FilterSelect
                 aria-label={t("aiVisibility.filters.engine", "Assistant")}
                 value={filters.engine ?? ""}
                 onChange={(e) => setFilters({ engine: (e.target.value || null) as typeof filters.engine })}
-                className="h-8 rounded-lg border border-border bg-card px-2 text-[12.5px] text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground/25"
               >
                 <option value="">{t("aiVisibility.filters.allEngines", "All assistants")}</option>
                 {state.project.engines.map((e) => (
@@ -197,13 +198,13 @@ export default function AiVisibilityLayout() {
                     {ENGINE_META[e].label}
                   </option>
                 ))}
-              </select>
+              </FilterSelect>
               {state.topics.length ? (
-                <select
+                <FilterSelect
                   aria-label={t("aiVisibility.filters.topic", "Topic")}
                   value={filters.topic_id ?? ""}
                   onChange={(e) => setFilters({ topic_id: e.target.value || null })}
-                  className="h-8 max-w-[180px] rounded-lg border border-border bg-card px-2 text-[12.5px] text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground/25"
+                  className="max-w-[220px]"
                 >
                   <option value="">{t("aiVisibility.filters.allTopics", "All topics")}</option>
                   {state.topics.map((tp) => (
@@ -211,7 +212,7 @@ export default function AiVisibilityLayout() {
                       {tp.name}
                     </option>
                   ))}
-                </select>
+                </FilterSelect>
               ) : null}
               <Segmented
                 label={t("aiVisibility.filters.period", "Period")}
