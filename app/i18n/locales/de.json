@@ -2924,7 +2924,8 @@
   },
   "switchWorkspace": {
     "title": "Bereich wechseln",
-    "description": "Wählen Sie einen Bereich zum Wechseln."
+    "description": "Wählen Sie einen Bereich zum Wechseln.",
+    "otherTab": "Jetzt in {{name}} – Sie haben in einem anderen Tab gewechselt."
   },
   "instructions": {
     "metaTitle": "Kalender-Setup",

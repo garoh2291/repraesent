@@ -163,13 +163,24 @@ export function useAuth() {
     },
   });
 
-  const setCurrentWorkspace = (workspaceId: string) => {
-    const workspaces = authState?.workspaces ?? [];
+  /**
+   * `persist: false` is for adopting a switch another tab already wrote to
+   * localStorage (see useWorkspaceTabSync) — the value is there, and writing
+   * it again would bounce a storage event back to that tab. `workspaces`
+   * overrides the list when the caller has just refetched it.
+   */
+  const setCurrentWorkspace = (
+    workspaceId: string,
+    opts: { persist?: boolean; workspaces?: WorkspaceContext[] } = {},
+  ) => {
+    const workspaces = opts.workspaces ?? authState?.workspaces ?? [];
     const workspace = workspaces.find((w) => w.id === workspaceId);
     if (!workspace) return;
 
-    setStoredWorkspaceId(workspaceId);
-    setStoredSelectedView(workspaceId);
+    if (opts.persist !== false) {
+      setStoredWorkspaceId(workspaceId);
+      setStoredSelectedView(workspaceId);
+    }
 
     queryClient.setQueryData<AuthState>(["auth"], (prev) =>
       prev

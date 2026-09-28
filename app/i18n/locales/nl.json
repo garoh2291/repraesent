@@ -2922,7 +2922,8 @@
   },
   "switchWorkspace": {
     "title": "Van gebied wisselen",
-    "description": "Kies een gebied om naartoe te wisselen."
+    "description": "Kies een gebied om naartoe te wisselen.",
+    "otherTab": "Nu in {{name}} — u heeft in een ander tabblad gewisseld."
   },
   "instructions": {
     "metaTitle": "Agenda instellen",

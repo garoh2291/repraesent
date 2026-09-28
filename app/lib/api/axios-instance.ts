@@ -8,7 +8,7 @@ const API_BASE_URL =
 // Token storage keys
 const AUTH_TOKEN_KEY = "auth_token";
 const REFRESH_TOKEN_KEY = "refresh_token";
-const WORKSPACE_ID_KEY = "workspace_id";
+export const WORKSPACE_ID_KEY = "workspace_id";
 // Last entry the user chose at the picker / via the switcher. Distinct from
 // WORKSPACE_ID_KEY because brand users may pick "brand" (no workspace id).
 // Value: "brand" | <workspace_id>

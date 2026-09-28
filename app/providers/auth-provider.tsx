@@ -21,10 +21,13 @@ interface AuthContextType {
   }) => Promise<void>;
   isRequestingMagicLink: boolean;
   magicLinkError: Error | null;
-  setCurrentWorkspace: (workspaceId: string) => void;
+  setCurrentWorkspace: (
+    workspaceId: string,
+    opts?: { persist?: boolean; workspaces?: WorkspaceContext[] },
+  ) => void;
   logout: () => void;
   isLoggingOut: boolean;
-  refetchAuth: () => Promise<unknown>;
+  refetchAuth: () => Promise<{ data?: { workspaces: WorkspaceContext[] } }>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
