@@ -19,6 +19,7 @@ import {
   clearStoredToken,
   clearStoredWorkspaceId,
   getStoredWorkspaceId,
+  getLastWorkspaceId,
   setStoredWorkspaceId,
   clearStoredSelectedView,
   setStoredSelectedView,
@@ -100,9 +101,17 @@ export function useAuth() {
         if (workspaces.length === 1) {
           currentWorkspace = workspaces[0];
           setStoredWorkspaceId(workspaces[0].id);
-        } else if (storedWorkspaceId) {
+        } else {
+          // This tab's workspace, else where the last tab was (e.g. this tab
+          // still holds a workspace of someone who signed out elsewhere).
+          const lastWorkspaceId = getLastWorkspaceId();
           currentWorkspace =
-            workspaces.find((w) => w.id === storedWorkspaceId) ?? null;
+            (storedWorkspaceId ? workspaces.find((w) => w.id === storedWorkspaceId) : undefined) ??
+            (lastWorkspaceId ? workspaces.find((w) => w.id === lastWorkspaceId) : undefined) ??
+            null;
+          if (currentWorkspace && currentWorkspace.id !== storedWorkspaceId) {
+            setStoredWorkspaceId(currentWorkspace.id);
+          }
         }
 
         return {
@@ -164,10 +173,9 @@ export function useAuth() {
   });
 
   /**
-   * `persist: false` is for adopting a switch another tab already wrote to
-   * localStorage (see useWorkspaceTabSync) — the value is there, and writing
-   * it again would bounce a storage event back to that tab. `workspaces`
-   * overrides the list when the caller has just refetched it.
+   * `persist: false` switches the in-memory state only, without touching
+   * storage. `workspaces` overrides the list when the caller has just
+   * refetched it.
    */
   const setCurrentWorkspace = (
     workspaceId: string,

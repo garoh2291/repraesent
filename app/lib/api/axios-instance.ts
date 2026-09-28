@@ -8,7 +8,7 @@ const API_BASE_URL =
 // Token storage keys
 const AUTH_TOKEN_KEY = "auth_token";
 const REFRESH_TOKEN_KEY = "refresh_token";
-export const WORKSPACE_ID_KEY = "workspace_id";
+const WORKSPACE_ID_KEY = "workspace_id";
 // Last entry the user chose at the picker / via the switcher. Distinct from
 // WORKSPACE_ID_KEY because brand users may pick "brand" (no workspace id).
 // Value: "brand" | <workspace_id>
@@ -57,47 +57,89 @@ export const clearStoredToken = (): void => {
 };
 
 /**
- * Get stored workspace ID from localStorage
+ * The workspace (and brand/workspace view) is chosen PER TAB, like Linear:
+ *
+ *  * sessionStorage = this tab's choice. Survives a reload, dies with the tab,
+ *    and no other tab can change it.
+ *  * localStorage   = the last choice anywhere — where a NEW tab starts.
+ *
+ * A read with nothing in this tab yet adopts the last choice and pins it
+ * straight into the tab, so a tab that never switched doesn't quietly follow
+ * a switch made in another tab (its sidebar would show one workspace while
+ * its requests went to another). A switch writes both; a sign-out clears both.
+ *
+ * Every read of the workspace id goes through these helpers (axios header,
+ * the SSE fetches, query keys), so that is the whole mechanism.
  */
-export const getStoredWorkspaceId = (): string | null => {
+const tabStore = {
+  get(key: string): string | null {
+    try {
+      return sessionStorage.getItem(key);
+    } catch {
+      return null; // sessionStorage blocked: behave as before (localStorage only)
+    }
+  },
+  set(key: string, value: string): void {
+    try {
+      sessionStorage.setItem(key, value);
+    } catch {
+      /* see get() */
+    }
+  },
+  remove(key: string): void {
+    try {
+      sessionStorage.removeItem(key);
+    } catch {
+      /* see get() */
+    }
+  },
+};
+
+function readPerTab(key: string): string | null {
+  if (typeof window === "undefined") return null;
+  const own = tabStore.get(key);
+  if (own) return own;
+  const last = localStorage.getItem(key);
+  if (last) tabStore.set(key, last);
+  return last;
+}
+
+function writePerTab(key: string, value: string): void {
+  if (typeof window === "undefined") return;
+  tabStore.set(key, value);
+  localStorage.setItem(key, value);
+}
+
+function clearPerTab(key: string): void {
+  if (typeof window === "undefined") return;
+  tabStore.remove(key);
+  localStorage.removeItem(key);
+}
+
+/** This tab's workspace id (see above). */
+export const getStoredWorkspaceId = (): string | null => readPerTab(WORKSPACE_ID_KEY);
+
+/** Where new tabs start — ignores this tab's own choice. */
+export const getLastWorkspaceId = (): string | null => {
   if (typeof window === "undefined") return null;
   return localStorage.getItem(WORKSPACE_ID_KEY);
 };
 
-/**
- * Store workspace ID in localStorage
- */
-export const setStoredWorkspaceId = (workspaceId: string): void => {
-  if (typeof window === "undefined") return;
-  localStorage.setItem(WORKSPACE_ID_KEY, workspaceId);
-};
+/** Switch this tab, and make it where new tabs start. */
+export const setStoredWorkspaceId = (workspaceId: string): void => writePerTab(WORKSPACE_ID_KEY, workspaceId);
 
-/**
- * Clear stored workspace ID
- */
-export const clearStoredWorkspaceId = (): void => {
-  if (typeof window === "undefined") return;
-  localStorage.removeItem(WORKSPACE_ID_KEY);
-};
+export const clearStoredWorkspaceId = (): void => clearPerTab(WORKSPACE_ID_KEY);
 
 /**
  * Last selected view — "brand" or a workspace UUID. Used by the entry-point
  * router to bring brand users back to whichever view they were in last.
+ * Per tab, like the workspace.
  */
-export const getStoredSelectedView = (): string | null => {
-  if (typeof window === "undefined") return null;
-  return localStorage.getItem(SELECTED_VIEW_KEY);
-};
+export const getStoredSelectedView = (): string | null => readPerTab(SELECTED_VIEW_KEY);
 
-export const setStoredSelectedView = (view: string): void => {
-  if (typeof window === "undefined") return;
-  localStorage.setItem(SELECTED_VIEW_KEY, view);
-};
+export const setStoredSelectedView = (view: string): void => writePerTab(SELECTED_VIEW_KEY, view);
 
-export const clearStoredSelectedView = (): void => {
-  if (typeof window === "undefined") return;
-  localStorage.removeItem(SELECTED_VIEW_KEY);
-};
+export const clearStoredSelectedView = (): void => clearPerTab(SELECTED_VIEW_KEY);
 
 /**
  * Create axios instance with default configuration

@@ -2924,8 +2924,7 @@
   },
   "switchWorkspace": {
     "title": "Changer d'espace",
-    "description": "Choisissez un espace vers lequel basculer.",
-    "otherTab": "Vous êtes maintenant dans {{name}} — changé dans un autre onglet."
+    "description": "Choisissez un espace vers lequel basculer."
   },
   "instructions": {
     "metaTitle": "Configuration du calendrier",

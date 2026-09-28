@@ -3,7 +3,6 @@ import { Outlet, useNavigate, useLocation } from "react-router";
 import { useTranslation } from "react-i18next";
 import { isBootDone, markBootReady } from "~/components/notebook/brand-splash";
 import { useRefreshOnReturn } from "~/lib/hooks/use-refresh-on-return";
-import { useWorkspaceTabSync } from "~/lib/hooks/use-workspace-tab-sync";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAuthContext } from "~/providers/auth-provider";
 import {
@@ -27,8 +26,6 @@ const BRAND_PREFIX = "/brand";
 export default function ProtectedLayout() {
   // Minimised app opened again → fresh data straight away.
   useRefreshOnReturn();
-  // Area switched in another tab → this tab follows (sidebar included).
-  useWorkspaceTabSync();
   const { t } = useTranslation();
   const { isAuthenticated, isLoading, user, workspaces, currentWorkspace, brand } =
     useAuthContext();

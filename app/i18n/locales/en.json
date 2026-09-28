@@ -2922,8 +2922,7 @@
   },
   "switchWorkspace": {
     "title": "Switch area",
-    "description": "Choose an area to switch to.",
-    "otherTab": "Now in {{name}} — you switched in another tab."
+    "description": "Choose an area to switch to."
   },
   "instructions": {
     "metaTitle": "Calendar Setup",
