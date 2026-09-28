@@ -319,6 +319,47 @@ ${s} .rf-textarea[aria-invalid="true"],
 ${s} .rf-select[aria-invalid="true"] {
   border-color: var(--rf-danger);
 }
+/* Phone: flag + calling code (the device's own list opens on tap: a native
+   <select> lies invisibly over it) next to the number field. */
+${s} .rf-phone { display: flex; align-items: stretch; gap: 8px; }
+${s} .rf-phone-cc {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex: none;
+  padding: 0 ${d.padX};
+  font-size: ${d.font};
+  color: var(--rf-field-text);
+  ${fieldBase}
+  transition: border-color .15s ease, box-shadow .15s ease, background-color .15s ease;
+}
+${s} .rf-phone-cc:focus-within { ${fieldFocus} }
+${s} .rf-phone-flag {
+  width: 21px;
+  height: 14px;
+  flex: none;
+  border-radius: 2px;
+  object-fit: cover;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, .1);
+}
+${s} .rf-phone-dial { white-space: nowrap; font-variant-numeric: tabular-nums; }
+${s} .rf-phone-chev { width: 12px; height: 12px; flex: none; opacity: .6; }
+${s} .rf-phone-select {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  border: 0;
+  opacity: 0;
+  cursor: pointer;
+  font-size: 16px;
+  appearance: none;
+  -webkit-appearance: none;
+}
+${s} .rf-phone-select:disabled { cursor: default; }
+${s} .rf-phone-num { flex: 1 1 auto; min-width: 0; }
 
 /* Choice groups.
 

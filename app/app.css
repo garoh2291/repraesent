@@ -1393,3 +1393,10 @@ html {
     animation: none;
   }
 }
+
+/* Code boxes (input-otp): the real input is invisible on top of the boxes;
+   no grey tap flash on it either. (Selection handles after a paste are
+   cleared in login-code-box.tsx by letting go of the field.) */
+[data-input-otp] {
+  -webkit-tap-highlight-color: transparent;
+}

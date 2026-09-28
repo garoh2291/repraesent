@@ -119,7 +119,13 @@ export function LoginCodeBox({
           setCode(v);
           if (error) setError(null);
         }}
-        onComplete={(v: string) => void submit(v)}
+        onComplete={(v: string) => {
+          // A pasted code leaves the hidden input's text selected, and iOS
+          // draws blue selection handles beside the boxes. Letting go of the
+          // field clears them (and drops the keyboard while we sign in).
+          if (document.activeElement instanceof HTMLElement) document.activeElement.blur();
+          void submit(v);
+        }}
         pattern={REGEXP_ONLY_DIGITS}
         // "123 456", "123-456", "Code: 123456" all paste as the six digits.
         pasteTransformer={(pasted) => pasted.replace(/\D/g, "").slice(0, 6)}

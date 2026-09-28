@@ -13,6 +13,7 @@ import {
   PenLine,
   Send,
   Settings2,
+  X,
 } from "lucide-react";
 import { getBccAddress } from "~/lib/api/bcc-logs";
 import {
@@ -178,8 +179,9 @@ export function ComposeEmailDialog({
       const first = to[0];
       const more = to.length - 1;
       setSent({
+        // Name and address, so the card confirms exactly where it went.
         toLabel:
-          (first?.name?.trim() || first?.email || "") +
+          (first?.name?.trim() ? `${first.name.trim()} · ${first.email}` : first?.email || "") +
           (more > 0 ? ` +${more}` : ""),
         subject: subject.trim(),
       });
@@ -255,7 +257,7 @@ export function ComposeEmailDialog({
             "flex flex-col",
           )}
         >
-          <DialogHeader className="border-b border-border px-4 py-3 text-left sm:px-6">
+          <DialogHeader className="relative border-b border-border py-3 pr-14 pl-4 text-left sm:pl-6">
             <DialogTitle className="text-sm font-semibold tracking-tight">
               {request.replyTo
                 ? t("compose.titleReply", { defaultValue: "Reply" })
@@ -267,6 +269,15 @@ export function ComposeEmailDialog({
                   defaultValue: "Sent from your connected mailbox",
                 })}
             </DialogDescription>
+            {/* Close, same path as Discard / Esc: a started draft asks first. */}
+            <button
+              type="button"
+              onClick={requestClose}
+              aria-label={t("common.close", "Close")}
+              className="press absolute top-1/2 right-2 flex size-11 -translate-y-1/2 items-center justify-center rounded-full text-muted-foreground hover:bg-muted hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
+            >
+              <X className="size-5" aria-hidden />
+            </button>
           </DialogHeader>
 
           {noAccount ? (

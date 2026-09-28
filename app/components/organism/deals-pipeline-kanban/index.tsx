@@ -1,5 +1,5 @@
 import { useState, useCallback, useRef, useEffect, useMemo } from "react";
-import { PaidChip } from "~/components/notebook/deal-paid";
+import { PaidChip, UnpaidChip } from "~/components/notebook/deal-paid";
 import { useStageLabel } from "~/lib/pipeline-stages/use-stage-label";
 import { toast } from "sonner";
 import { StagePickerSheet } from "~/components/notebook/stage-picker-sheet";
@@ -607,7 +607,7 @@ function DealCardInner({
       {val || (deal.status === "won" && deal.paid_at) ? (
         <p className="flex items-center gap-1.5 text-sm font-semibold text-foreground">
           {val}
-          {deal.status === "won" && deal.paid_at ? <PaidChip /> : null}
+          {deal.status === "won" && deal.paid_at ? <PaidChip /> : deal.status === "won" && deal.paid_supported ? <UnpaidChip /> : null}
         </p>
       ) : null}
       <div className="flex flex-wrap items-center gap-x-2 text-[10px] text-muted-foreground">
@@ -774,7 +774,7 @@ function DealScheduleRow({
         {val || (deal.status === "won" && deal.paid_at) ? (
           <p className="flex items-center gap-1.5 text-xs font-semibold text-foreground">
             {val}
-            {deal.status === "won" && deal.paid_at ? <PaidChip /> : null}
+            {deal.status === "won" && deal.paid_at ? <PaidChip /> : deal.status === "won" && deal.paid_supported ? <UnpaidChip /> : null}
           </p>
         ) : null}
         <div className="flex flex-wrap items-center gap-x-2 pt-0.5 text-[12px] text-muted-foreground">

@@ -80,6 +80,8 @@ export interface DealListItem {
   tasks_summary?: DealTasksSummary;
   /** When a won deal was paid (absent on older API builds / before migration 196). */
   paid_at?: string | null;
+  /** Deal lists: paid tracking is on, so an unpaid won deal can say "Not paid yet". */
+  paid_supported?: boolean;
   paid_source?: "manual" | "stripe" | null;
 }
 

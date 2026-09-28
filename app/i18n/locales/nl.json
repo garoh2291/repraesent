@@ -1081,7 +1081,11 @@
       "clearedToast": "Niet meer gemarkeerd als betaald",
       "onDate": "Betaald op {{date}}",
       "onDateStripe": "Betaald op {{date}} · via Stripe",
-      "chip": "Betaald"
+      "chip": "Betaald",
+      "hintTitle": "Al betaald?",
+      "hintBody": "Markeer het hier — Resultaten laat dan zien wat er nog open staat.",
+      "hintLater": "Nog niet",
+      "notYetChip": "Nog niet betaald"
     }
   },
   "appointments": {
@@ -6561,7 +6565,9 @@
     "sentTitle": "E-mail verzonden",
     "sentTo": "Aan {{name}}",
     "sentCopyNote": "Over een paar minuten staat er een kopie bij het contact en de deal.",
-    "sentDone": "Klaar"
+    "sentDone": "Klaar",
+    "showAddress": "{{name}} · {{email}}",
+    "copyAddress": "Adres kopiëren"
   },
   "demo": {
     "metaTitle": "Live demo",

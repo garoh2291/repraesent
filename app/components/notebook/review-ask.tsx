@@ -239,8 +239,12 @@ function ReviewAskSheet({
             onClick={() => void decide("whatsapp")}
             className={cn(channelClass, "border-foreground bg-foreground text-background hover:bg-foreground/90")}
           >
-            <MessageCircle className="size-[18px]" aria-hidden />
-            {t("reviews.whatsapp")}
+            <MessageCircle className="size-[18px] shrink-0" aria-hidden />
+            {/* Where it goes, so nobody sends to the wrong number. */}
+            <span className="min-w-0 truncate">
+              {t("reviews.whatsapp")}
+              <span className="num font-normal opacity-65"> · {candidate.phone}</span>
+            </span>
           </a>
         ) : null}
         {mailHref && canSendEmail ? (
@@ -250,8 +254,11 @@ function ReviewAskSheet({
             disabled={!!busy}
             className={cn(channelClass, "border-border bg-card hover:border-foreground/30")}
           >
-            <Mail className="size-[18px]" aria-hidden />
-            {t("reviews.email")}
+            <Mail className="size-[18px] shrink-0" aria-hidden />
+            <span className="min-w-0 truncate">
+              {t("reviews.email")}
+              <span className="font-normal text-muted-foreground"> · {candidate.email}</span>
+            </span>
           </button>
         ) : mailHref ? (
           <a
@@ -259,8 +266,11 @@ function ReviewAskSheet({
             onClick={() => void decide("email")}
             className={cn(channelClass, "border-border bg-card hover:border-foreground/30")}
           >
-            <Mail className="size-[18px]" aria-hidden />
-            {t("reviews.email")}
+            <Mail className="size-[18px] shrink-0" aria-hidden />
+            <span className="min-w-0 truncate">
+              {t("reviews.email")}
+              <span className="font-normal text-muted-foreground"> · {candidate.email}</span>
+            </span>
           </a>
         ) : null}
         <button

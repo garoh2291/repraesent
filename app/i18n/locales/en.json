@@ -1081,7 +1081,11 @@
       "clearedToast": "No longer marked as paid",
       "onDate": "Paid on {{date}}",
       "onDateStripe": "Paid on {{date}} · via Stripe",
-      "chip": "Paid"
+      "chip": "Paid",
+      "hintTitle": "Paid already?",
+      "hintBody": "Mark it here — Results then shows what's still to collect.",
+      "hintLater": "Not yet",
+      "notYetChip": "Not paid yet"
     }
   },
   "appointments": {
@@ -6561,7 +6565,9 @@
     "sentTitle": "Email sent",
     "sentTo": "To {{name}}",
     "sentCopyNote": "A copy shows on the contact and deal in a few minutes.",
-    "sentDone": "Done"
+    "sentDone": "Done",
+    "showAddress": "{{name}} · {{email}}",
+    "copyAddress": "Copy address"
   },
   "demo": {
     "metaTitle": "Live demo",

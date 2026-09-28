@@ -1081,7 +1081,11 @@
       "clearedToast": "N'est plus marqué comme payé",
       "onDate": "Payé le {{date}}",
       "onDateStripe": "Payé le {{date}} · via Stripe",
-      "chip": "Payé"
+      "chip": "Payé",
+      "hintTitle": "Déjà payé ?",
+      "hintBody": "Indiquez-le ici — Résultats montrera ce qui reste à encaisser.",
+      "hintLater": "Pas encore",
+      "notYetChip": "Pas encore payé"
     }
   },
   "appointments": {
@@ -6563,7 +6567,9 @@
     "sentTitle": "E-mail envoyé",
     "sentTo": "À {{name}}",
     "sentCopyNote": "Une copie apparaît sur le contact et l'affaire d'ici quelques minutes.",
-    "sentDone": "Terminé"
+    "sentDone": "Terminé",
+    "showAddress": "{{name}} · {{email}}",
+    "copyAddress": "Copier l’adresse"
   },
   "demo": {
     "metaTitle": "Démo live",

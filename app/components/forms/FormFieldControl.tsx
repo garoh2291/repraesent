@@ -13,10 +13,19 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { Star } from "lucide-react";
-import { useState, type ReactNode } from "react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { InlineText } from "~/components/forms/InlineText";
 import { getAppointmentAvailability } from "~/lib/api/forms";
 import { visibleHosts } from "~/lib/forms/appointment-hosts";
+import {
+  PHONE_COUNTRIES,
+  countryForInternational,
+  countryName,
+  defaultPhoneCountry,
+  joinPhone,
+  phoneCountry,
+  splitPhone,
+} from "~/lib/forms/phone";
 import {
   contentKey,
   type FormField,
@@ -303,8 +312,19 @@ export function FormFieldControl({
         />
       );
 
-    case "email":
     case "phone":
+      return (
+        <PhoneControl
+          aria={aria}
+          placeholder={placeholder}
+          label={t(contentKey.fieldLabel(field.id)) || placeholder || field.key}
+          value={String(value ?? "")}
+          locale={locale}
+          onChange={onChange}
+        />
+      );
+
+    case "email":
     case "url":
     default:
       return (
@@ -313,19 +333,11 @@ export function FormFieldControl({
           type={
             field.type === "email"
               ? "email"
-              : field.type === "phone"
-                ? "tel"
-                : field.type === "url"
-                  ? "url"
-                  : "text"
+              : field.type === "url"
+                ? "url"
+                : "text"
           }
-          autoComplete={
-            field.type === "email"
-              ? "email"
-              : field.type === "phone"
-                ? "tel"
-                : undefined
-          }
+          autoComplete={field.type === "email" ? "email" : undefined}
           className="rf-input"
           placeholder={placeholder}
           value={String(value ?? "")}
@@ -588,6 +600,124 @@ function AppointmentControl({
       </div>
       <div className="rf-appt-slots">{slotGrid}</div>
       <input type="hidden" id={inputId} value={selected} readOnly />
+    </div>
+  );
+}
+
+/**
+ * Phone: a flag + calling code (the device's own picker opens on tap) and the
+ * number. The same markup as the website runtime (form-render.service.ts),
+ * so the builder preview matches the embedded form. Saves "+491511234567".
+ */
+function PhoneControl({
+  aria,
+  placeholder,
+  label,
+  value,
+  locale,
+  onChange,
+}: {
+  aria: {
+    id: string;
+    "aria-invalid"?: true;
+    "aria-required"?: true;
+    "aria-label"?: string;
+    disabled?: boolean;
+  };
+  placeholder: string;
+  label: string;
+  value: string;
+  locale?: string;
+  onChange: (value: unknown) => void;
+}) {
+  const fallback = defaultPhoneCountry(locale);
+  const [iso, setIso] = useState(() => splitPhone(value, fallback).iso);
+  const [national, setNational] = useState(() => splitPhone(value, fallback).national);
+
+  // Before a number is typed, the country follows a language switch.
+  const [startedOn, setStartedOn] = useState(fallback);
+  useEffect(() => {
+    if (fallback === startedOn) return;
+    if (!national && iso === startedOn) setIso(fallback);
+    setStartedOn(fallback);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [fallback]);
+
+  // The form cleared itself (sent, or reset): clear the number too.
+  useEffect(() => {
+    if (!value && national) setNational("");
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [value]);
+
+  const country = phoneCountry(iso) ?? phoneCountry(fallback) ?? PHONE_COUNTRIES[0];
+  const options = useMemo(() => {
+    const named = PHONE_COUNTRIES.map((c) => ({ ...c, name: countryName(c.iso, locale) }));
+    named.sort((a, b) => a.name.localeCompare(b.name, locale || "en"));
+    const top = named.find((c) => c.iso === fallback);
+    return { top, all: named };
+  }, [locale, fallback]);
+
+  return (
+    <div className="rf-phone">
+      <span className="rf-phone-cc">
+        <img
+          className="rf-phone-flag"
+          src={`/flags/${country.iso.toLowerCase()}.svg`}
+          alt=""
+          width={21}
+          height={14}
+        />
+        <span className="rf-phone-dial">+{country.dial}</span>
+        <svg className="rf-phone-chev" viewBox="0 0 12 12" aria-hidden="true">
+          <path d="M3 4.5 6 7.5 9 4.5" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+        <select
+          className="rf-phone-select"
+          aria-label={label}
+          value={country.iso}
+          disabled={aria.disabled}
+          onChange={(e) => {
+            const next = e.target.value;
+            setIso(next);
+            onChange(joinPhone(next, national));
+          }}
+        >
+          {options.top ? (
+            <option value={options.top.iso}>
+              {options.top.name} +{options.top.dial}
+            </option>
+          ) : null}
+          {options.top ? <option disabled>──────────</option> : null}
+          {options.all.map((c) => (
+            <option key={c.iso} value={c.iso}>
+              {c.name} +{c.dial}
+            </option>
+          ))}
+        </select>
+      </span>
+      <input
+        {...aria}
+        type="tel"
+        inputMode="tel"
+        autoComplete="tel-national"
+        className="rf-input rf-phone-num"
+        placeholder={placeholder}
+        value={national}
+        onChange={(e) => {
+          const typed = e.target.value;
+          setNational(typed);
+          let next = iso;
+          // "+33 6…" typed or pasted: follow it to that country.
+          if (/^(\+|00)/.test(typed.trim())) {
+            const match = countryForInternational(typed, iso);
+            if (match) {
+              next = match.iso;
+              setIso(match.iso);
+            }
+          }
+          onChange(joinPhone(next, typed));
+        }}
+      />
     </div>
   );
 }

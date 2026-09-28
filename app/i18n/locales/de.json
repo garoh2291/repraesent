@@ -1083,7 +1083,11 @@
       "clearedToast": "Nicht mehr als bezahlt markiert",
       "onDate": "Bezahlt am {{date}}",
       "onDateStripe": "Bezahlt am {{date}} · über Stripe",
-      "chip": "Bezahlt"
+      "chip": "Bezahlt",
+      "hintTitle": "Schon bezahlt?",
+      "hintBody": "Markier es hier – Ergebnisse zeigt dann, was noch offen ist.",
+      "hintLater": "Noch nicht",
+      "notYetChip": "Noch nicht bezahlt"
     }
   },
   "appointments": {
@@ -6563,7 +6567,9 @@
     "sentTitle": "E-Mail gesendet",
     "sentTo": "An {{name}}",
     "sentCopyNote": "Eine Kopie erscheint in ein paar Minuten beim Kontakt und beim Deal.",
-    "sentDone": "Fertig"
+    "sentDone": "Fertig",
+    "showAddress": "{{name}} · {{email}}",
+    "copyAddress": "Adresse kopieren"
   },
   "demo": {
     "metaTitle": "Live-Demo",
