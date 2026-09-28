@@ -9,6 +9,12 @@
 
 export const TARGET_RATE = 16_000;
 
+/** Silence guard: 30 ms frames with RMS over this count as speech. */
+export const VOICE_FRAME_MS = 30;
+export const VOICE_SPEECH_RMS = 0.015;
+/** Less speech than this is "nothing was said": nothing is sent. */
+export const VOICE_MIN_VOICED_SECONDS = 0.4;
+
 export function canRecordAudio(): boolean {
   return (
     typeof navigator !== "undefined" &&
@@ -33,8 +39,11 @@ registerProcessor("rp-capture", RpCapture);
 `;
 
 export interface WavRecorder {
-  /** Stops the mic and returns the WAV plus its length in seconds. */
-  stop: () => Promise<{ blob: Blob; seconds: number }>;
+  /**
+   * Stops the mic and returns the WAV, its length, and how many of those
+   * seconds were loud enough to be speech (silence guard).
+   */
+  stop: () => Promise<{ blob: Blob; seconds: number; voicedSeconds: number }>;
   /** Stops the mic and throws the samples away. */
   cancel: () => void;
 }
@@ -52,8 +61,25 @@ export async function startWavRecorder(onLevel?: (level: number) => void): Promi
   const source = ctx.createMediaStreamSource(stream);
   const chunks: Float32Array[] = [];
 
+  // Silence guard: count 30 ms frames loud enough to be speech. Same numbers
+  // as the server (nestjs-monolith lead-outcomes/voice-note.ts), so a silent
+  // recording never goes to the AI — which would make up a note from it.
+  const frameLen = Math.max(1, Math.round(ctx.sampleRate * (VOICE_FRAME_MS / 1000)));
+  let frameSum = 0;
+  let frameN = 0;
+  let voicedFrames = 0;
+
   const onSamples = (data: Float32Array) => {
     chunks.push(data);
+    for (let i = 0; i < data.length; i++) {
+      frameSum += data[i] * data[i];
+      frameN += 1;
+      if (frameN === frameLen) {
+        if (Math.sqrt(frameSum / frameN) > VOICE_SPEECH_RMS) voicedFrames += 1;
+        frameSum = 0;
+        frameN = 0;
+      }
+    }
     if (onLevel) {
       let sum = 0;
       for (let i = 0; i < data.length; i++) sum += data[i] * data[i];
@@ -110,7 +136,11 @@ export async function startWavRecorder(onLevel?: (level: number) => void): Promi
         off += c.length;
       }
       const samples = downsample(all, rate, TARGET_RATE);
-      return { blob: encodeWav(samples, TARGET_RATE), seconds: samples.length / TARGET_RATE };
+      return {
+        blob: encodeWav(samples, TARGET_RATE),
+        seconds: samples.length / TARGET_RATE,
+        voicedSeconds: (voicedFrames * frameLen) / rate,
+      };
     },
   };
 }

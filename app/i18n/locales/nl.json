@@ -10052,7 +10052,8 @@
       "tooLong": "Dat was te lang. Blijf onder een minuut, of typ het.",
       "notReady": "Spraaknotities staan nog niet aan. Typ de notitie voorlopig.",
       "generic": "Dat lukte niet. Probeer het opnieuw, of typ de notitie.",
-      "short": "Te kort — tik en zeg hoe het ging."
+      "short": "Te kort — tik en zeg hoe het ging.",
+      "silent": "Ik hoorde niets. Tik en praat iets dichter bij je telefoon."
     }
   },
   "photos": {

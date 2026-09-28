@@ -10054,7 +10054,8 @@
       "tooLong": "C'était trop long. Restez sous une minute, ou tapez-le.",
       "notReady": "Les notes vocales ne sont pas encore activées. Tapez la note pour l'instant.",
       "generic": "Ça n'a pas fonctionné. Réessayez, ou tapez la note.",
-      "short": "Trop court — touchez et dites comment ça s'est passé."
+      "short": "Trop court — touchez et dites comment ça s'est passé.",
+      "silent": "Je n’ai rien entendu. Touchez et parlez un peu plus près du téléphone."
     }
   },
   "photos": {

@@ -10052,7 +10052,8 @@
       "tooLong": "That was too long. Keep it under a minute, or type it.",
       "notReady": "Voice notes aren't switched on yet. Type the note for now.",
       "generic": "That didn't work. Try again, or type the note.",
-      "short": "Too short — tap and say how it went."
+      "short": "Too short — tap and say how it went.",
+      "silent": "I didn't hear anything. Tap and speak a little closer to the phone."
     }
   },
   "photos": {

@@ -3,7 +3,7 @@ import { useTranslation } from "react-i18next";
 import { useReducedMotion } from "motion/react";
 import { Loader2, Mic, Square } from "lucide-react";
 import { cn } from "~/lib/utils";
-import { canRecordAudio, startWavRecorder, type WavRecorder } from "~/lib/audio/wav-recorder";
+import { canRecordAudio, startWavRecorder, type WavRecorder, VOICE_MIN_VOICED_SECONDS } from "~/lib/audio/wav-recorder";
 import { transcribeOutcomeVoice, type VoiceOutcomeResult } from "~/lib/api/lead-outcomes";
 import { browserTimeZone } from "~/lib/api/today";
 import { isoDay } from "~/components/notebook/day-field";
@@ -107,11 +107,19 @@ export function VoiceNoteButton<T = VoiceOutcomeResult>({
     setLevel(0);
     setPhase("uploading");
     try {
-      const { blob, seconds: len } = await r.stop();
+      const { blob, seconds: len, voicedSeconds } = await r.stop();
       if (len < 0.6) {
         if (alive.current) {
           setPhase("idle");
           setError(t("voice.errors.short", "Too short — tap and say how it went."));
+        }
+        return;
+      }
+      // Nothing was said: never send silence (the AI would invent a note).
+      if (voicedSeconds < VOICE_MIN_VOICED_SECONDS) {
+        if (alive.current) {
+          setPhase("idle");
+          setError(t("voice.errors.silent", "I didn't hear anything. Tap and speak a little closer to the phone."));
         }
         return;
       }

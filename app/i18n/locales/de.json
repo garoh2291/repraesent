@@ -10054,7 +10054,8 @@
       "tooLong": "Das war zu lang. Bleib unter einer Minute oder tipp es ein.",
       "notReady": "Sprachnotizen sind noch nicht eingeschaltet. Tipp die Notiz vorerst ein.",
       "generic": "Das hat nicht geklappt. Versuch es noch mal oder tipp die Notiz ein.",
-      "short": "Zu kurz – tippe und sag, wie's lief."
+      "short": "Zu kurz – tippe und sag, wie's lief.",
+      "silent": "Ich habe nichts gehört. Tipp und sprich etwas näher am Handy."
     }
   },
   "photos": {

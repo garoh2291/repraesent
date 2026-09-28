@@ -408,7 +408,12 @@ function QueueCard({
                 ))}
               </div>
             )}
+            {/* Skip on the left, "How did it go?" on the right (under the thumb). */}
             <div className="mt-2 grid grid-cols-2 gap-2">
+              <Button variant="outline" className="h-12 gap-2 text-[14px]" onClick={skip}>
+                <SkipForward className="size-4" aria-hidden />
+                {t("calls.skip", "Skip")}
+              </Button>
               {canEdit ? (
                 <Button
                   variant="ghost"
@@ -424,10 +429,6 @@ function QueueCard({
               ) : (
                 <span />
               )}
-              <Button variant="outline" className="h-12 gap-2 text-[14px]" onClick={skip}>
-                <SkipForward className="size-4" aria-hidden />
-                {t("calls.skip", "Skip")}
-              </Button>
             </div>
             {swipeOn ? (
               <p className="mt-2 text-center text-[11.5px] text-muted-foreground pointer-fine:hidden">
