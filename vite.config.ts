@@ -8,9 +8,6 @@ export default defineConfig({
   // rewrites the optimized deps the main :5173 server is serving.
   cacheDir: process.env.VITE_CACHE_DIR || "node_modules/.vite",
   plugins: [tailwindcss(), reactRouter(), tsconfigPaths()],
-  server: {
-    allowedHosts: [".trycloudflare.com"],
-  },
   // Routes are lazy-loaded, so without this Vite only discovers a route's
   // dependencies (recharts, react-hook-form, react-timezone-select, vaul…) the
   // first time that page opens, re-optimizes mid-session and briefly serves two
