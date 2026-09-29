@@ -10,6 +10,7 @@ import {
   ShieldAlert,
 } from "lucide-react";
 import { cn } from "~/lib/utils";
+import { isCoarsePointer } from "~/lib/utils/touch";
 import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
 import { Textarea } from "~/components/ui/textarea";
@@ -248,7 +249,15 @@ export function OutcomeFields({
         value={form.note}
         onChange={(e) => form.setNote(e.target.value)}
         placeholder={t("outcome.notePlaceholder", "Add a note (optional)")}
-        className="mt-4 min-h-20 bg-card"
+        // Grows with the note up to a limit, then scrolls inside itself (like
+        // a chat composer), so a long note never pushes Save off the screen.
+        className="mt-4 min-h-20 max-h-[40dvh] overflow-y-auto overscroll-contain bg-card"
+        onFocus={(e) => {
+          if (!isCoarsePointer()) return;
+          const el = e.currentTarget;
+          // After the keyboard has slid up.
+          window.setTimeout(() => el.scrollIntoView({ block: "nearest", behavior: "smooth" }), 320);
+        }}
       />
       {canUseVoice ? (
         <VoiceNoteButton leadId={lead.id} onResult={form.applyVoice} className="mt-3" />

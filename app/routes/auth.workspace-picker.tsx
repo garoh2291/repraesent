@@ -48,8 +48,8 @@ export default function WorkspacePicker() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-stone-50 p-6 pt-[max(1.5rem,env(safe-area-inset-top))]">
-      <div className="w-full max-w-lg space-y-10 app-fade-up">
+    <div className="flex min-h-dvh items-center justify-center overflow-x-hidden bg-stone-50 p-6 pt-[max(1.5rem,env(safe-area-inset-top))] pb-[max(1.5rem,env(safe-area-inset-bottom))]">
+      <div className="w-full min-w-0 max-w-lg space-y-10 app-fade-up">
         {/* Logo */}
         <div className="flex justify-center">
           <img
@@ -73,24 +73,26 @@ export default function WorkspacePicker() {
         </div>
 
         {/* Workspace cards */}
-        <div className="grid gap-3 app-fade-up app-fade-up-d2">
+        <div className="grid grid-cols-[minmax(0,1fr)] gap-3 app-fade-up app-fade-up-d2">
           {showBrandEntry && brand && (
             <button
               key="__brand__"
               type="button"
               onClick={handleSelectBrand}
-              className="group flex items-center gap-4 w-full rounded-xl border border-amber-300 bg-amber-50/40 p-4 text-left shadow-sm transition-all duration-200 hover:border-amber-400 hover:shadow-md active:scale-[0.99]"
+              className="group flex min-w-0 items-center gap-4 w-full rounded-xl border border-amber-300 bg-amber-50/40 p-4 text-left shadow-sm transition-all duration-200 hover:border-amber-400 hover:shadow-md active:scale-[0.99]"
               style={{ animationDelay: "0.18s" }}
             >
               <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-amber-500 text-white text-lg font-bold">
                 {brand.name.charAt(0).toUpperCase()}
               </div>
               <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2">
-                  <p className="font-semibold text-foreground truncate">
+                <div className="flex min-w-0 items-start gap-2">
+                  {/* Long names wrap to two lines, then "…": the end of a name
+                      ("… Köln" / "… Bonn") is often what tells them apart. */}
+                  <p className="min-w-0 line-clamp-2 break-words font-semibold leading-snug text-foreground" title={brand.name}>
                     {brand.name}
                   </p>
-                  <span className="rounded bg-amber-500/15 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-amber-700">
+                  <span className="mt-0.5 shrink-0 rounded bg-amber-500/15 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-amber-700">
                     {t("nav.brand_label", "Brand")}
                   </span>
                 </div>
@@ -108,7 +110,7 @@ export default function WorkspacePicker() {
               key={workspace.id}
               type="button"
               onClick={() => handleSelect(workspace.id)}
-              className="group flex items-center gap-4 w-full rounded-xl border border-stone-200 bg-white p-4 text-left shadow-sm transition-all duration-200 hover:border-stone-300 hover:shadow-md active:scale-[0.99]"
+              className="group flex min-w-0 items-center gap-4 w-full rounded-xl border border-stone-200 bg-white p-4 text-left shadow-sm transition-all duration-200 hover:border-stone-300 hover:shadow-md active:scale-[0.99]"
               style={{ animationDelay: `${0.18 + (showBrandEntry ? i + 1 : i) * 0.06}s` }}
             >
               {/* Workspace picture (1:1 box, image keeps its own ratio) or initial */}
@@ -132,12 +134,12 @@ export default function WorkspacePicker() {
 
               {/* Name */}
               <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2">
-                  <p className="font-semibold text-foreground truncate">
+                <div className="flex min-w-0 items-start gap-2">
+                  <p className="min-w-0 line-clamp-2 break-words font-semibold leading-snug text-foreground" title={workspace.name}>
                     {workspace.name}
                   </p>
                   {workspace.type === "doorboost_brand" && (
-                    <span className="rounded bg-amber-500/15 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-amber-700">
+                    <span className="mt-0.5 shrink-0 rounded bg-amber-500/15 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-amber-700">
                       {t("nav.brand_label", "Brand")}
                     </span>
                   )}

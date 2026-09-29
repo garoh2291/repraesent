@@ -10200,6 +10200,8 @@
     "record": "How did it go?",
     "skip": "Skip",
     "swipeHint": "Swipe left to skip",
+    "showAll": "Show all",
+    "showLess": "Show less",
     "later": "Later",
     "saveNext": "Save · next",
     "notNowNext": "Not now · next",

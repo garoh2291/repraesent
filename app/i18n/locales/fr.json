@@ -10202,6 +10202,8 @@
     "record": "Comment ça s'est passé ?",
     "skip": "Passer",
     "swipeHint": "Balayez vers la gauche pour passer",
+    "showAll": "Tout afficher",
+    "showLess": "Afficher moins",
     "later": "Plus tard",
     "saveNext": "Enregistrer · suivant",
     "notNowNext": "Pas maintenant · suivant",

@@ -130,7 +130,7 @@ export function CallQueue() {
   const current = done ? null : items[index];
 
   return (
-    <div className="mx-auto flex w-full max-w-md flex-1 flex-col px-4 pt-3 pb-5 sm:pt-8">
+    <div className="mx-auto flex w-full max-w-md flex-1 flex-col px-4 pt-3 pb-[calc(1.25rem+var(--kb,0px))] sm:pt-8">
       <div className="flex items-center justify-between gap-3">
         <Link
           to="/"
@@ -213,6 +213,20 @@ function QueueCard({
     staleTime: 60_000,
   });
   const lastNote = notes.data?.[0];
+  const lastNoteText = lastNote?.content?.trim() || "";
+  const [noteOpen, setNoteOpen] = useState(false);
+  // Only offer "Show all" when the 4-line preview actually hides something.
+  const noteRef = useRef<HTMLParagraphElement>(null);
+  const [noteClipped, setNoteClipped] = useState(false);
+  useEffect(() => {
+    const el = noteRef.current;
+    if (!el || noteOpen) return;
+    const check = () => setNoteClipped(el.scrollHeight > el.clientHeight + 1);
+    check();
+    const ro = new ResizeObserver(check);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [lastNoteText, noteOpen]);
 
   // ── Swipe left = skip (never records an outcome) ──
   const x = useMotionValue(0);
@@ -367,13 +381,29 @@ function QueueCard({
             <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">
               {t("calls.lastNote", "Last note")}
             </p>
-            <p className="mt-1 line-clamp-4 whitespace-pre-line text-[14px] leading-relaxed text-foreground">
+            <p
+              ref={noteRef}
+              className={cn(
+                "mt-1 whitespace-pre-line break-words text-[14px] leading-relaxed text-foreground",
+                !noteOpen && "line-clamp-4",
+              )}
+            >
               {notes.isLoading
                 ? "…"
-                : lastNote?.content?.trim() || (
+                : lastNoteText || (
                     <span className="text-muted-foreground">{t("calls.noNote", "No notes yet.")}</span>
                   )}
             </p>
+            {lastNoteText && (noteClipped || noteOpen) ? (
+              <button
+                type="button"
+                onClick={() => setNoteOpen((o) => !o)}
+                aria-expanded={noteOpen}
+                className="press -mb-2 -ml-1 inline-flex h-11 items-center px-1 text-[13px] font-semibold text-foreground underline decoration-foreground/30 underline-offset-4"
+              >
+                {noteOpen ? t("calls.showLess", "Show less") : t("calls.showAll", "Show all")}
+              </button>
+            ) : null}
           </div>
         ) : null}
 
