@@ -251,7 +251,7 @@ export function OutcomeFields({
         placeholder={t("outcome.notePlaceholder", "Add a note (optional)")}
         // Grows with the note up to a limit, then scrolls inside itself (like
         // a chat composer), so a long note never pushes Save off the screen.
-        className="mt-4 min-h-20 max-h-[40dvh] overflow-y-auto overscroll-contain bg-card"
+        className="mt-4 min-h-20 max-h-[40dvh] overflow-y-auto bg-card"
         onFocus={(e) => {
           if (!isCoarsePointer()) return;
           const el = e.currentTarget;

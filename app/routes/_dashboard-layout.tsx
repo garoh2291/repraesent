@@ -141,8 +141,7 @@ export default function DashboardLayout() {
         className={
           // relative: absolutely positioned children (sr-only labels, badges) must be laid out
           // inside this scroll box; otherwise they stretch the page and add a second scrollbar.
-          "px-safe relative flex min-w-0 flex-1 flex-col overflow-y-auto overflow-x-hidden bg-background" +
-          (sections ? " pb-[calc(4rem+env(safe-area-inset-bottom))] lg:pb-0" : "")
+          "px-safe relative flex min-w-0 flex-1 flex-col overflow-y-auto overflow-x-hidden bg-background"
         }
         // Height of the sticky section tabs, so pages' own sticky headers stop
         // just below them instead of sliding underneath (0 when there are no tabs).
@@ -240,6 +239,14 @@ export default function DashboardLayout() {
             <Outlet />
           </PageErrorBoundary>
         )}
+        {/* Room for the tab bar. A real element, not padding on <main>:
+            iOS Safari leaves a flex scroller's bottom padding out of the
+            scroll range, so a page just taller than the screen (the
+            installed app is taller) couldn't scroll its last row out from
+            under the tab bar. */}
+        {sections ? (
+          <div aria-hidden className="h-[calc(4rem+env(safe-area-inset-bottom))] shrink-0 lg:hidden" />
+        ) : null}
       </main>
       {/* Slow page change: a thin ink line runs at the top edge. */}
       {showPending || resuming ? <div className="rp-nav-progress" aria-hidden /> : null}

@@ -53,7 +53,7 @@ export function SaveBar({
   return (
     <div
       className={cn(
-        "pointer-events-none sticky bottom-4 z-30 transition-all duration-300 motion-reduce:transition-none",
+        "pointer-events-none sticky bottom-4 max-lg:bottom-[calc(5rem+env(safe-area-inset-bottom))] z-30 transition-all duration-300 motion-reduce:transition-none",
         dirty ? "translate-y-0 opacity-100" : "translate-y-4 opacity-0",
       )}
       aria-hidden={!dirty}

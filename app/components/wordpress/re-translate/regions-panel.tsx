@@ -827,7 +827,7 @@ function PricesCard({
 
           {/* Follows you down a long list, so saving is never a scroll away. */}
           {dirty > 0 ? (
-            <div className="sticky bottom-4 z-20 mx-5 mb-5 flex flex-wrap items-center gap-x-3 gap-y-2 rounded-xl border bg-card px-4 py-3 shadow-lg sm:mx-6 sm:mb-6">
+            <div className="sticky bottom-4 max-lg:bottom-[calc(5rem+env(safe-area-inset-bottom))] z-20 mx-5 mb-5 flex flex-wrap items-center gap-x-3 gap-y-2 rounded-xl border bg-card px-4 py-3 shadow-lg sm:mx-6 sm:mb-6">
               <Button size="sm" disabled={busy} onClick={save}>
                 {busy ? <Loader2 className="size-3.5 animate-spin" /> : null}
                 {t("wordpress.reTranslate.saveCount", "Save {{count}}", {

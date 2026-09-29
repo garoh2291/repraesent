@@ -16,18 +16,44 @@ export function useKeyboardInset() {
     if (!vv || !window.matchMedia("(pointer: coarse)").matches) return;
     const root = document.documentElement;
     let frame = 0;
+    let blurTimer = 0;
+    // Not while pinch-zoomed: there the offset is the owner's, on purpose.
+    const resetShell = () => {
+      if (vv.scale > 1.01 || !root.matches(":has([data-app-shell])")) return;
+      if (window.scrollY !== 0 || root.scrollTop !== 0) window.scrollTo(0, 0);
+    };
+    // The keyboard can close without a resize event reaching us in time
+    // (installed app); check again once the field has lost focus.
+    const onFocusOut = () => {
+      window.clearTimeout(blurTimer);
+      blurTimer = window.setTimeout(() => {
+        const active = document.activeElement;
+        if (active && active.matches("input, textarea, select, [contenteditable]")) return;
+        resetShell();
+      }, 350);
+    };
     const update = () => {
       cancelAnimationFrame(frame);
       frame = requestAnimationFrame(() => {
         const inset = Math.max(0, Math.round(window.innerHeight - vv.height - vv.offsetTop));
         // Small differences are browser chrome, not a keyboard.
-        root.style.setProperty("--kb", inset > 80 ? `${inset}px` : "0px");
+        const open = inset > 80;
+        root.style.setProperty("--kb", open ? `${inset}px` : "0px");
+        // Installed app on iOS: focusing a field scrolls the locked document
+        // up to reveal it, and when the keyboard closes it stays there. <main>
+        // is then shifted and stops scrolling (Safari tabs recover by
+        // themselves). The app shell never scrolls the document, so put it
+        // back once the keyboard is gone.
+        if (!open) resetShell();
       });
     };
     update();
     vv.addEventListener("resize", update);
     vv.addEventListener("scroll", update);
+    document.addEventListener("focusout", onFocusOut);
     return () => {
+      window.clearTimeout(blurTimer);
+      document.removeEventListener("focusout", onFocusOut);
       cancelAnimationFrame(frame);
       vv.removeEventListener("resize", update);
       vv.removeEventListener("scroll", update);
