@@ -327,7 +327,7 @@ export function ProductFieldInspector({
                           )}
                         >
                           <div className="overflow-hidden">
-                            <div className="grid grid-cols-3 gap-2 pt-1">
+                            <div className="grid grid-cols-1 gap-2 pt-1 sm:grid-cols-3">
                               {(["min", "default", "max"] as const).map((k) => (
                                 <label key={k} className="space-y-1">
                                   <span className="block text-[11px] text-muted-foreground">

@@ -17,6 +17,14 @@ export interface LeadTasksSummary {
   nearest_title: string | null;
 }
 
+/** First contact / attempts / latest outcome (lead-outcomes, migration 190). */
+export interface LeadContactState {
+  first_contacted_at: string | null;
+  attempts: number;
+  outcome: "reached" | "no_answer" | "not_interested" | "fake" | null;
+  outcome_at: string | null;
+}
+
 export interface Lead {
   id: string;
   first_name: string | null;
@@ -34,6 +42,8 @@ export interface Lead {
   created_at: string;
   updated_at: string;
   tasks_summary: LeadTasksSummary;
+  /** Null until someone contacts the lead or records an outcome. */
+  contact_state?: LeadContactState | null;
   board_position: number | null;
   /** Detail view only: the contact this lead was converted to, if any. */
   linked_contact_id?: string | null;
@@ -146,6 +156,22 @@ export async function updateLeadStatus(
 ): Promise<Lead> {
   const res = await apiClient.patch<Lead>(`/leads/${id}`, { status });
   return res.data;
+}
+
+/**
+ * Hide it and block the sender's future leads (email + phone). `fromStatus`: the stage it
+ * was in before, when it was hidden a moment earlier — so Undo / Not spam puts it back there.
+ */
+export async function markLeadSpam(
+  id: string,
+  fromStatus?: string,
+): Promise<{ blocked: Array<"email" | "phone" | "domain">; alsoHidden: number }> {
+  return (await apiClient.post(`/leads/${id}/spam`, fromStatus ? { from_status: fromStatus } : {})).data;
+}
+
+/** Back to the stage it was in before (first stage when unknown), and lift every block on its sender. */
+export async function markLeadNotSpam(id: string): Promise<{ unblocked: number; alsoRestored: number }> {
+  return (await apiClient.post(`/leads/${id}/not-spam`)).data;
 }
 
 export async function reorderLead(

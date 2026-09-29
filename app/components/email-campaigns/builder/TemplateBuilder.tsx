@@ -779,13 +779,13 @@ export function TemplateBuilder({
   return (
     <div
       className="mx-auto w-full max-w-[1280px] space-y-5 p-4 pb-10! pt-0! sm:p-6 sm:pb-14! sm:pt-0! app-fade-in"
-      style={{ "--fb-stick": "5.5rem" } as React.CSSProperties}
+      style={{ "--fb-stick": "calc(5.5rem + var(--section-tabs-h, 0px))" } as React.CSSProperties}
     >
       <UnsavedChangesGuard when={dirty} />
 
       {/* The command bar, deliberately thin — identity only (forms model).
           Everything you DO lives on the tabs baseline below. */}
-      <div className="app-fade-down sticky top-0 z-30 -mx-4 bg-background/80 px-4 pb-3 pt-4 backdrop-blur sm:-mx-6 sm:px-6 sm:pt-6">
+      <div className="app-fade-down sticky top-[var(--section-tabs-h,0px)] z-30 -mx-4 bg-background/80 px-4 pb-3 pt-4 backdrop-blur sm:-mx-6 sm:px-6 sm:pt-6">
         <div className="overflow-hidden rounded-2xl bg-[#111113] shadow-[0_8px_24px_-12px_rgba(0,0,0,0.35)]">
           <div className="flex min-w-0 items-center gap-3 px-4 py-2.5 sm:px-5">
             <Link
@@ -804,7 +804,7 @@ export function TemplateBuilder({
                 setName(e.target.value);
                 setDirty(true);
               }}
-              className="h-9 min-w-0 flex-1 rounded-lg border-transparent bg-transparent px-0 text-lg font-semibold tracking-tight text-white shadow-none selection:bg-white/20 focus-visible:border-white/10 focus-visible:bg-white/5 focus-visible:px-2.5 disabled:opacity-100 sm:text-xl"
+              className="h-9 min-w-0 flex-1 rounded-lg border-transparent bg-transparent px-0 text-lg font-semibold tracking-tight text-white shadow-none ink-surface focus-visible:border-white/10 focus-visible:bg-white/5 focus-visible:px-2.5 disabled:opacity-100 sm:text-xl"
             />
             <TemplateStatusBadge
               tone="dark"

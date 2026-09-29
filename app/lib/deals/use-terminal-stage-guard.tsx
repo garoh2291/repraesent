@@ -1,10 +1,10 @@
 import { useCallback, useState } from "react";
+import { useStageLabel } from "~/lib/pipeline-stages/use-stage-label";
 import { useTranslation } from "react-i18next";
 import {
   ReopenDealConfirmModal,
   type ReopenConfirmPhase,
 } from "~/components/organism/reopen-deal-confirm-modal";
-import { resolveStageLabel } from "~/lib/pipeline-stages/labels";
 import type { PipelineStage } from "~/lib/api/pipeline-stages";
 
 /** The little a guarded deal has to expose. */
@@ -41,6 +41,7 @@ export function useTerminalStageGuard({
   onProceed: (dealId: string, stage: string) => void;
 }) {
   const { t, i18n } = useTranslation();
+  const stageLabel = useStageLabel();
   const [pendingMove, setPendingMove] = useState<{
     deal: GuardableDeal;
     stage: string;
@@ -113,7 +114,7 @@ export function useTerminalStageGuard({
       fromCategory={pendingMove.fromCategory}
       toStageLabel={
         targetStage
-          ? resolveStageLabel(targetStage, t)
+          ? stageLabel(targetStage)
           : pendingMove.stage
       }
       outcomeDate={outcomeDate}

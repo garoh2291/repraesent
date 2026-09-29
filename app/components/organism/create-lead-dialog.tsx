@@ -16,6 +16,7 @@ import {
   DialogTitle,
 } from "~/components/ui/dialog";
 import { toast } from "sonner";
+import { desktopAutoFocus } from "~/lib/utils/touch";
 
 export interface CreateLeadDialogProps {
   open: boolean;
@@ -102,11 +103,22 @@ export function CreateLeadDialog({
       <DialogContent className="sm:max-w-xl max-h-[90vh] flex flex-col overflow-hidden">
         <DialogHeader>
           <DialogTitle>
-            {t("leads.newLeadTitle", { defaultValue: "New lead" })}
+            {t("leads.newInquiryTitle", "New inquiry")}
           </DialogTitle>
         </DialogHeader>
-        <div className="space-y-4 py-1 flex-1 overflow-y-auto px-2">
-          <div className="grid grid-cols-2 gap-3">
+        {/* `contents`: the form adds no box, so the dialog layout is unchanged.
+            Enter / Go submits the same handler as the Save button. */}
+        <form
+          className="contents"
+          onSubmit={(e) => {
+            e.preventDefault();
+            if (createMutation.isPending || !hasIdentity) return;
+            createMutation.mutate();
+          }}
+        >
+        {/* Phones: the sheet itself scrolls (one scroller, sticky footer). */}
+        <div className="space-y-4 py-1 flex-1 overflow-y-auto px-2 max-sm:flex-none max-sm:overflow-visible max-sm:px-0">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <div className="space-y-1.5">
               <Label htmlFor="create-lead-first-name">
                 {t("leads.fields.firstName", { defaultValue: "First name" })}
@@ -115,7 +127,10 @@ export function CreateLeadDialog({
                 id="create-lead-first-name"
                 value={firstName}
                 onChange={(e) => setFirstName(e.target.value)}
-                autoFocus
+                autoFocus={desktopAutoFocus()}
+                autoComplete="given-name"
+                autoCapitalize="words"
+                enterKeyHint="next"
               />
             </div>
             <div className="space-y-1.5">
@@ -126,6 +141,9 @@ export function CreateLeadDialog({
                 id="create-lead-last-name"
                 value={lastName}
                 onChange={(e) => setLastName(e.target.value)}
+                autoComplete="family-name"
+                autoCapitalize="words"
+                enterKeyHint="next"
               />
             </div>
           </div>
@@ -134,7 +152,7 @@ export function CreateLeadDialog({
             <Label>
               {t("leads.fields.status", { defaultValue: "Status" })}
             </Label>
-            <LeadStatusSelect value={effectiveStatus} onValueChange={setStatus} />
+            <LeadStatusSelect value={effectiveStatus} onValueChange={setStatus} className="max-sm:w-full" />
           </div>
 
           <div className="space-y-1.5">
@@ -146,6 +164,10 @@ export function CreateLeadDialog({
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
+              autoComplete="email"
+              inputMode="email"
+              autoCapitalize="none"
+              enterKeyHint="done"
             />
           </div>
           <div className="space-y-1.5">
@@ -168,15 +190,15 @@ export function CreateLeadDialog({
             {t("common.cancel", { defaultValue: "Cancel" })}
           </Button>
           <Button
-            type="button"
-            onClick={() => createMutation.mutate()}
+            type="submit"
             disabled={createMutation.isPending || !hasIdentity}
           >
             {createMutation.isPending
               ? t("common.loading", { defaultValue: "Loading…" })
-              : t("leads.create", { defaultValue: "Create lead" })}
+              : t("leads.saveInquiry", "Save inquiry")}
           </Button>
         </DialogFooter>
+        </form>
       </DialogContent>
     </Dialog>
   );

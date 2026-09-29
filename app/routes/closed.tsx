@@ -45,7 +45,7 @@ export default function Closed() {
   }, [status]);
 
   return (
-    <div className="flex min-h-screen flex-col bg-stone-50 dark:bg-zinc-950">
+    <div className="flex min-h-screen flex-col bg-stone-50 pt-safe dark:bg-zinc-950">
       <style>{CLOSED_STYLES}</style>
       <StatusPageHeader />
 

@@ -49,7 +49,7 @@ const LOCALE_COUNTRY: Record<FormLocale, "GB" | "DE" | "FR" | "NL"> = {
   nl: "NL",
 };
 
-function LocaleFlag({ locale }: { locale: FormLocale }) {
+export function LocaleFlag({ locale }: { locale: FormLocale }) {
   const country = LOCALE_COUNTRY[locale];
   const Flag = flags[country];
   if (!Flag) return null;

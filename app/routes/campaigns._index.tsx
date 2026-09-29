@@ -83,7 +83,7 @@ export default function CampaignsIndex() {
     <div className="mx-auto w-full max-w-[1280px] space-y-6 p-4 py-10! sm:space-y-8 sm:p-6 app-fade-in">
       <div className="flex flex-col gap-3 app-fade-up sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-xl font-semibold tracking-tight text-foreground sm:text-2xl">
+          <h1 className="title-display text-[26px] font-semibold text-foreground sm:text-[30px]">
             {t("emailCampaigns.list.title", { defaultValue: "Campaigns" })}
           </h1>
           <p className="text-sm text-muted-foreground">
@@ -255,7 +255,7 @@ function CampaignRow({
           type="button"
           onClick={onDelete}
           aria-label={t("common.delete", { defaultValue: "Delete" })}
-          className="rounded p-1.5 text-muted-foreground opacity-0 transition-opacity hover:bg-destructive/10 hover:text-destructive group-hover:opacity-100"
+          className="rounded p-1.5 text-muted-foreground opacity-0 transition-opacity hover:bg-destructive/10 hover:text-destructive group-hover:opacity-100 pointer-coarse:p-[13px] pointer-coarse:opacity-100"
         >
           <Trash2 className="h-3.5 w-3.5" />
         </button>

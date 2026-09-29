@@ -95,7 +95,9 @@ export function useSearchShortcut(): {
   const [hint, setHint] = useState<string | null>(null);
 
   useEffect(() => {
-    setHint(isMacPlatform() ? "⌘F" : "Ctrl F");
+    // Touch-first devices have no keyboard shortcut to hint at.
+    const coarse = window.matchMedia?.("(pointer: coarse)").matches ?? false;
+    setHint(coarse ? null : isMacPlatform() ? "⌘F" : "Ctrl F");
 
     registry.push(ref);
     if (registry.length === 1) {

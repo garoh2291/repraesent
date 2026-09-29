@@ -22,6 +22,9 @@ import { LeadTasksSection } from "~/components/organism/tasks/lead-tasks-section
 import { LeadSourceIcon } from "~/components/organism/lead-source-icon";
 import { LeadStatusSelect } from "~/components/molecule/lead-status-select";
 import { useLeadStages } from "~/lib/hooks/usePipelineStages";
+import { LeadSpamButton } from "~/components/organism/lead-spam/lead-spam-button";
+import { LeadActionBar } from "~/components/notebook/lead-action-bar";
+import { useHideLeadGuard } from "~/lib/leads/use-hide-lead-guard";
 import {
   resolveStageLabel,
   resolveStageLabelByKey,
@@ -38,7 +41,9 @@ import {
 import { cn } from "~/lib/utils";
 import { personNameOr } from "~/lib/contacts/display-name";
 import { getWorkspaceDetail } from "~/lib/api/workspaces";
-import { convertLeadToContact } from "~/lib/api/contacts-crm";
+import { convertLeadToContact, getContact } from "~/lib/api/contacts-crm";
+import { ContactHero } from "~/components/organism/contact-detail/contact-hero";
+import { useLeadFlow } from "~/components/notebook/lead-flow";
 import { ContactEmailSuggestion } from "~/components/organism/contact-email-suggestion";
 import { extractErrorMessage } from "~/lib/api/axios-instance";
 import type { WorkspaceMemberItem } from "~/components/organism/tasks/task-form-modal";
@@ -53,6 +58,13 @@ import {
   formatAppointmentRange,
   isAppointmentPast,
 } from "~/lib/leads/appointment";
+import {
+  formatOnboardingValue,
+  humanizeField,
+  onboardingClaimedMetaKeys,
+  onboardingGroups,
+  translateOnboardingValue,
+} from "~/lib/leads/onboarding";
 import { LeadConversation } from "~/components/leads/lead-conversation";
 import {
   aiActionPrefixes,
@@ -216,6 +228,12 @@ export function formatHistoryAction(
     return t("leads.detail.historyContactDeleted", {
       defaultValue: "Contact deleted",
     });
+  if (item.action === "photo_added")
+    return t("photos.history.added", { defaultValue: "Added a photo" });
+  if (item.action === "photo_removed")
+    return t("photos.history.removed", { defaultValue: "Removed a photo" });
+  if (item.action === "photo_restored")
+    return t("photos.history.restored", { defaultValue: "Put a photo back" });
   if (item.action === "note_created") return t("leads.detail.historyNoteAdded");
   if (item.action === "note_updated")
     return t("leads.detail.historyNoteEdited");
@@ -224,6 +242,11 @@ export function formatHistoryAction(
   if (item.action === "task_assignee_removed")
     return t("leads.detail.historyTaskAssigneeRemoved", {
       defaultValue: "Task assignee removed",
+    });
+  if (item.action === "email_sent")
+    return t("leads.detail.historyEmailSent", {
+      defaultValue: "Email sent: {{subject}}",
+      subject: String(item.details?.subject ?? ""),
     });
   if (item.action === "task_created")
     return t("tasks.detail.historyTaskCreated", {
@@ -327,6 +350,12 @@ export function formatHistoryAction(
       defaultValue: "Voided invoice {{number}}",
       number,
     });
+  if (item.action === "deal_marked_paid")
+    return d.paid_source === "stripe"
+      ? t("pipeline.history.dealPaidStripe", { defaultValue: "Paid — a Stripe invoice was paid" })
+      : t("pipeline.history.dealMarkedPaid", { defaultValue: "Marked as paid" });
+  if (item.action === "deal_paid_cleared")
+    return t("pipeline.history.dealPaidCleared", { defaultValue: "No longer marked as paid" });
   if (item.action === "deal_invoice_marked_paid")
     return t("pipeline.history.dealInvoiceMarkedPaid", {
       defaultValue: "Marked invoice {{number}} as paid",
@@ -376,7 +405,8 @@ interface LeadDetailSheetProps {
   leadId: string | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onStatusChange?: (id: string, status: LeadStatus) => void;
+  /** Return the save (e.g. `mutateAsync`) so "Hide & block" can wait for the move first. */
+  onStatusChange?: (id: string, status: LeadStatus) => void | Promise<unknown>;
   isStatusUpdating?: boolean;
   canEdit?: boolean;
   /**
@@ -436,6 +466,15 @@ export function LeadDetailSheet({
   const emailMatch = lead?.contact_email_match ?? null;
   const leadEmail = lead?.email?.trim() ?? "";
 
+  // Same query (and cache key) as the full lead page, so the contact card and
+  // its Email button work the same here. Brand / read-only sheets skip it.
+  const { data: linkedContactData } = useQuery({
+    queryKey: ["contact", linkedContactId],
+    queryFn: () => getContact(linkedContactId!),
+    enabled: !!linkedContactId && open && !readOnly,
+  });
+  const leadFlow = useLeadFlow();
+
   const convertMutation = useMutation({
     mutationFn: () => convertLeadToContact(leadId!),
     onSuccess: () => {
@@ -479,7 +518,13 @@ export function LeadDetailSheet({
   //   a static badge inside <LeadInfoSection>)
   // - no Tasks section, no Add/Edit/Delete note controls (canEdit forced off)
   // - no "Full page" link (controlled via `withoutLink`)
-  const effectiveOnStatusChange = readOnly ? undefined : onStatusChange;
+  // Moving into Hidden asks "just hide, or block the sender too?" first.
+  const { requestStatusChange: requestHideGuarded, guardModal: hideGuardModal } = useHideLeadGuard();
+  const effectiveOnStatusChange =
+    readOnly || !onStatusChange || !lead
+      ? undefined
+      : (id: string, status: LeadStatus) =>
+          requestHideGuarded(lead, status, () => onStatusChange(id, status));
   const effectiveCanEdit = readOnly ? false : canEdit;
 
   // Falls back to the address before the generic word. A newsletter signup has
@@ -487,19 +532,43 @@ export function LeadDetailSheet({
   // not already know from having opened it.
   const displayName = lead ? personNameOr(lead, "Lead") : "Lead Details";
 
+  // The linked contact's own address, sent through the inquiry loop so it
+  // lands in History and asks how it went (mailto: stays the fallback) —
+  // the same as routes/lead-form.$leadId.tsx.
+  const linkedEmail = (() => {
+    const emails = linkedContactData?.emails ?? [];
+    const e = emails.find((x) => x.is_primary) ?? emails[0];
+    return e?.address ? String(e.address) : null;
+  })();
+  const composeToLinked =
+    lead && effectiveCanEdit && leadFlow.emailInApp && linkedEmail
+      ? () =>
+          leadFlow.contact(
+            {
+              id: lead.id,
+              name: displayName,
+              status: lead.status,
+              phone: lead.phone,
+              email: linkedEmail,
+            },
+            "email",
+          )
+      : undefined;
+
   return (
+    <>
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent
         side="right"
-        className="sm:max-w-[480px] flex flex-col overflow-hidden p-0 gap-0"
+        className="sm:max-w-[480px] flex flex-col overflow-hidden p-0 gap-0 max-sm:w-full max-sm:border-l-0 max-sm:pt-[env(safe-area-inset-top)]"
       >
-        <SheetHeader className="px-5 py-4 border-b border-border shrink-0">
+        <SheetHeader className="px-5 py-4 border-b border-border shrink-0 max-sm:pr-14">
           <SheetTitle className="text-base font-semibold text-foreground">
             {displayName}
           </SheetTitle>
         </SheetHeader>
 
-        <div className="flex-1 overflow-y-auto">
+        <div className="flex-1 overflow-y-auto max-sm:pb-[max(1rem,env(safe-area-inset-bottom))]">
           {leadLoading || !lead ? (
             <div className="flex flex-col items-center justify-center py-16 gap-3">
               <div className="h-5 w-5 app-spin rounded-full border-2 border-primary/20 border-t-primary" />
@@ -509,6 +578,12 @@ export function LeadDetailSheet({
             </div>
           ) : (
             <div className="divide-y divide-border">
+              {/* Reach them, record how it went, make it a deal */}
+              {effectiveCanEdit && (
+                <div className="sticky top-0 z-10 bg-background/95 px-5 py-4 backdrop-blur supports-[backdrop-filter]:bg-background/85">
+                  <LeadActionBar lead={lead} />
+                </div>
+              )}
               {/* Lead info */}
               <div className="px-5 py-5">
                 <LeadInfoSection
@@ -538,15 +613,21 @@ export function LeadDetailSheet({
                   <Button
                     variant="outline"
                     size="sm"
-                    className="w-full gap-2"
+                    className="w-full gap-2 max-sm:h-11 max-sm:text-sm"
                     disabled={convertMutation.isPending}
                     onClick={() => convertMutation.mutate()}
                   >
                     <UserPlus className="h-4 w-4" />
                     {convertMutation.isPending
                       ? t("common.loading")
-                      : t("leads.detail.convertToContact")}
+                      : t("leads.detail.saveAsContact", "Save as contact")}
                   </Button>
+                </div>
+              )}
+              {/* Spam: hide + block the sender, or undo it */}
+              {!readOnly && (
+                <div className="px-5 py-4">
+                  <LeadSpamButton lead={lead} className="w-full max-sm:h-11 max-sm:text-sm" />
                 </div>
               )}
               {/* Existing contact with the same email */}
@@ -558,8 +639,34 @@ export function LeadDetailSheet({
                   />
                 </div>
               )}
-              {/* Linked contact link */}
-              {!readOnly && linkedContactId && (
+              {/* Linked contact: the same card as the full page (Email opens the composer) */}
+              {!readOnly && linkedContactId && linkedContactData ? (
+                <div className="px-5 py-4">
+                  <ContactHero
+                    variant="linked"
+                    compact
+                    displayName={
+                      (linkedContactData.contact?.full_name as string)?.trim() ||
+                      [
+                        linkedContactData.contact?.first_name,
+                        linkedContactData.contact?.last_name,
+                      ]
+                        .filter(Boolean)
+                        .join(" ")
+                        .trim() ||
+                      displayName
+                    }
+                    crm={linkedContactData.crm}
+                    contact={linkedContactData.contact}
+                    emails={linkedContactData.emails}
+                    phones={linkedContactData.phones}
+                    addresses={linkedContactData.addresses}
+                    leadId={lead.id}
+                    viewContactId={linkedContactId}
+                    onCompose={composeToLinked}
+                  />
+                </div>
+              ) : !readOnly && linkedContactId && (
                 <div className="px-5 py-4">
                   <Link
                     to={`/contacts/${linkedContactId}`}
@@ -601,6 +708,8 @@ export function LeadDetailSheet({
         </div>
       </SheetContent>
     </Sheet>
+    {hideGuardModal}
+    </>
   );
 }
 
@@ -627,9 +736,9 @@ function FieldRow({
   children: React.ReactNode;
 }) {
   return (
-    <div className="grid grid-cols-[110px_1fr] gap-3 items-start py-1.5 border-b border-border/40 last:border-0">
+    <div className="grid grid-cols-[110px_1fr] gap-3 items-start py-1.5 border-b border-border/40 last:border-0 max-sm:grid-cols-1 max-sm:gap-0.5 max-sm:py-2">
       <TooltipContainer tooltipContent={label}>
-        <span className="text-[11px] font-medium text-muted-foreground/80 leading-5 mt-0.5 truncate">
+        <span className="text-[11px] font-medium text-muted-foreground/80 leading-5 mt-0.5 truncate max-sm:mt-0 max-sm:text-[12px]">
           {label}
         </span>
       </TooltipContainer>
@@ -705,6 +814,9 @@ export function LeadInfoSection({
   // The payment block owns the checkout stamps — no raw rows for them.
   const checkoutClaimedKeys = checkoutClaimedMetaKeys(lead);
   const filterVerdict = extractLeadFilterVerdict(lead);
+  // Onboarding intake leads (root workspace): ~60 answers, grouped below.
+  const onboardingClaimedKeys = onboardingClaimedMetaKeys(lead);
+  const onboarding = onboardingGroups(lead);
 
   // message → shown inline; misc/platform_campaign_id → hidden;
   // appointment keys → promoted banner; rest → collapsible
@@ -718,6 +830,7 @@ export function LeadInfoSection({
       !appointmentClaimedKeys.has(key) &&
       !aiClaimedKeys.has(key) &&
       !checkoutClaimedKeys.has(key) &&
+      !onboardingClaimedKeys.has(key) &&
       !FILTERED_CLAIMED_META_KEYS.has(key),
   );
 
@@ -725,7 +838,7 @@ export function LeadInfoSection({
     <div className="space-y-4">
       <div className="flex items-center justify-between gap-2">
         <h3 className="text-xs font-semibold text-muted-foreground">
-          {t("leads.detail.leadInformation")}
+          {t("leads.detail.details", "Details")}
         </h3>
         {!withoutLink && (
           <Link
@@ -737,7 +850,13 @@ export function LeadInfoSection({
         )}
       </div>
 
-      {filterVerdict ? (
+      {filterVerdict && filterVerdict.reverted ? (
+        <p className="rounded-lg border border-border/60 bg-muted/40 px-3 py-2 text-[11px] text-muted-foreground">
+          {t("leads.spam.revertedNote", {
+            rule: t(`leads.filtered.rule.${filterVerdict.rule}`, { defaultValue: "Filtered by the spam check" }),
+          })}
+        </p>
+      ) : filterVerdict ? (
         /* Why this lead was put away. It sits above the record rather than
            inside "Additional info" because it is the first question anybody
            opening a filtered lead has, and the answer used to be nowhere. */
@@ -905,6 +1024,42 @@ export function LeadInfoSection({
             </FieldRow>
           ))}
         </div>
+
+        {onboarding.length > 0 && (
+          <Collapsible defaultOpen={false}>
+            <CollapsibleTrigger className="group flex w-full items-center gap-2 border-t border-border/40 px-3 py-2.5 text-xs font-medium text-muted-foreground transition-colors hover:text-foreground hover:bg-muted/30">
+              <ChevronDown className="h-3.5 w-3.5 shrink-0 transition-transform duration-200 group-data-[state=open]:rotate-180" />
+              {t("leads.onboarding.title", { defaultValue: "Onboarding answers" })}
+              <span className="ml-auto tabular-nums text-muted-foreground/50">
+                {onboarding.reduce((n, g) => n + g.rows.length, 0)}
+              </span>
+            </CollapsibleTrigger>
+            <CollapsibleContent>
+              <div className="px-3 border-t border-border/40">
+                {onboarding.map((group) => (
+                  <div key={group.section}>
+                    <p className="pt-3 pb-1 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/70">
+                      {t(`leads.onboarding.sections.${group.section}`, {
+                        defaultValue: humanizeField(group.section),
+                      })}
+                    </p>
+                    {group.rows.map((row) => (
+                      <FieldRow key={row.key} label={humanizeField(row.field)}>
+                        <FieldValue className="whitespace-pre-wrap">
+                          {formatOnboardingValue(
+                            translateOnboardingValue(group.section, row.field, row.value, t),
+                            t("leads.onboarding.yes", { defaultValue: "Yes" }),
+                            t("leads.onboarding.no", { defaultValue: "No" }),
+                          )}
+                        </FieldValue>
+                      </FieldRow>
+                    ))}
+                  </div>
+                ))}
+              </div>
+            </CollapsibleContent>
+          </Collapsible>
+        )}
 
         {collapsibleEntries.length > 0 && (
           <Collapsible defaultOpen={false}>

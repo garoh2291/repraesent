@@ -1,28 +1,8 @@
-import { Outlet, Link, useLocation } from "react-router";
-import { Check } from "lucide-react";
-import { useTranslation } from "react-i18next";
+import { Outlet } from "react-router";
 import logoUrl from "~/components/icons/re_praesent-mark-brand-hor.svg?url";
 import { LanguageSwitcher } from "~/components/language-switcher";
-import { useAuthContext } from "~/providers/auth-provider";
-
-const STEP_KEYS = [
-  { path: "/onboarding/profile", key: "onboarding.steps.profile" },
-  { path: "/onboarding/workspace", key: "onboarding.steps.workspace" },
-  { path: "/onboarding/billing", key: "onboarding.steps.billing" },
-  { path: "/onboarding/products", key: "onboarding.steps.products" },
-];
 
 export default function OnboardingLayout() {
-  const { t } = useTranslation();
-  const location = useLocation();
-  const { workspaces } = useAuthContext();
-  const currentIndex = STEP_KEYS.findIndex((s) => location.pathname === s.path);
-  const activeIndex = currentIndex >= 0 ? currentIndex : 0;
-  // Invited members only complete their name at /onboarding/profile while
-  // already belonging to a workspace — the full signup stepper doesn't apply.
-  const hideStepper =
-    location.pathname === "/onboarding/profile" &&
-    (workspaces?.length ?? 0) > 0;
 
   return (
     <>
@@ -71,7 +51,7 @@ export default function OnboardingLayout() {
         }
       `}</style>
 
-      <div className="min-h-screen bg-stone-50 dark:bg-zinc-950">
+      <div className="min-h-screen bg-stone-50 pt-safe dark:bg-zinc-950">
         <div className="mx-auto max-w-2xl px-5">
 
           {/* Top bar */}
@@ -86,66 +66,11 @@ export default function OnboardingLayout() {
             </div>
           </div>
 
-          {/* Stepper */}
-          {!hideStepper && (
-          <div className="pb-10 pt-2 ob-fade-up">
-            <div className="flex items-center">
-              {STEP_KEYS.map((step, i) => {
-                const isCompleted = i < activeIndex;
-                const isActive = i === activeIndex;
-                return (
-                  <div
-                    key={step.path}
-                    className="flex items-center flex-1 last:flex-none"
-                  >
-                    <Link
-                      to={step.path}
-                      className="flex items-center gap-2 group"
-                    >
-                      {/* Circle */}
-                      <div
-                        className={[
-                          "relative flex h-7 w-7 shrink-0 items-center justify-center rounded-full",
-                          "text-[11px] font-bold transition-all duration-200",
-                          isCompleted
-                            ? "bg-foreground text-background"
-                            : isActive
-                            ? "bg-foreground text-background shadow-[0_0_0_4px_hsl(var(--foreground)/0.08)]"
-                            : "border border-stone-300 dark:border-zinc-600 text-stone-400 dark:text-zinc-500",
-                        ].join(" ")}
-                      >
-                        {isCompleted ? (
-                          <Check className="h-3.5 w-3.5" />
-                        ) : (
-                          <span>{i + 1}</span>
-                        )}
-                      </div>
-
-                      {/* Label */}
-                      <span
-                        className={[
-                          "hidden sm:block text-[13px] font-medium transition-colors",
-                          isActive
-                            ? "text-foreground"
-                            : isCompleted
-                            ? "text-foreground/60"
-                            : "text-muted-foreground",
-                        ].join(" ")}
-                      >
-                        {t(step.key)}
-                      </span>
-                    </Link>
-
-                    {/* Connector line */}
-                    {i < STEP_KEYS.length - 1 && (
-                      <div className="mx-3 flex-1 h-px bg-stone-200 dark:bg-zinc-800" />
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-          )}
+          {/* The old 4-step stepper (profile → workspace → billing → products)
+              is gone with the steps it listed: new accounts use the
+              onboarding wizard at /onboarding/start, which has its own
+              progress bar. Profile and DoorBoost pages keep this shell. */}
+          <div className="pb-6" />
 
           {/* Page content */}
           <div className="pb-20">

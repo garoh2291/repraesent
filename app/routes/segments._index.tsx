@@ -27,6 +27,7 @@ import {
 } from "~/lib/api/segments";
 import { useDocumentMeta } from "~/lib/hooks/use-document-meta";
 import { formatDateMedium } from "~/lib/utils/format";
+import { desktopAutoFocus } from "~/lib/utils/touch";
 
 export default function SegmentsIndex() {
   const { t } = useTranslation();
@@ -69,7 +70,7 @@ export default function SegmentsIndex() {
     <div className="mx-auto w-full max-w-[1280px] space-y-6 p-4 py-10! sm:space-y-8 sm:p-6 app-fade-in">
       <div className="flex flex-col gap-3 app-fade-up sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-xl font-semibold tracking-tight text-foreground sm:text-2xl">
+          <h1 className="title-display text-[26px] font-semibold text-foreground sm:text-[30px]">
             {t("emailCampaigns.segments.title", { defaultValue: "Segments" })}
           </h1>
           <p className="text-sm text-muted-foreground">
@@ -153,7 +154,7 @@ export default function SegmentsIndex() {
           </DialogHeader>
           <div className="space-y-4">
             <Input
-              autoFocus
+              autoFocus={desktopAutoFocus()}
               value={newName}
               onChange={(e) => setNewName(e.target.value)}
               placeholder={t("emailCampaigns.segments.namePlaceholder", {
@@ -269,7 +270,7 @@ function SegmentCard({
           ) : null}
         </div>
       </Link>
-      <div className="absolute bottom-3 right-3 flex gap-1 opacity-0 transition-opacity group-hover:opacity-100">
+      <div className="absolute bottom-3 right-3 flex gap-1 opacity-0 transition-opacity group-hover:opacity-100 pointer-coarse:bottom-1.5 pointer-coarse:right-1.5 pointer-coarse:opacity-100">
         <button
           type="button"
           onClick={() => refresh.mutate()}
@@ -277,7 +278,7 @@ function SegmentCard({
           aria-label={t("emailCampaigns.segments.refresh", {
             defaultValue: "Refresh counts",
           })}
-          className="rounded p-1.5 text-muted-foreground hover:bg-muted"
+          className="rounded p-1.5 text-muted-foreground hover:bg-muted pointer-coarse:p-[13px]"
         >
           <RefreshCw
             className={`h-3.5 w-3.5 ${refresh.isPending ? "animate-spin" : ""}`}
@@ -287,7 +288,7 @@ function SegmentCard({
           type="button"
           onClick={onDelete}
           aria-label={t("common.delete", { defaultValue: "Delete" })}
-          className="rounded p-1.5 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+          className="rounded p-1.5 text-muted-foreground hover:bg-destructive/10 hover:text-destructive pointer-coarse:p-[13px]"
         >
           <Trash2 className="h-3.5 w-3.5" />
         </button>

@@ -1,0 +1,108 @@
+"use client";
+
+import {
+  keepPreviousData,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from "@tanstack/react-query";
+import { getStoredWorkspaceId } from "~/lib/api/axios-instance";
+import { getToday, updateSetup } from "~/lib/api/today";
+
+/** Today feed, per workspace and scope. */
+export function todayKey(workspaceId: string | null, assignee?: "me" | "all") {
+  return assignee
+    ? (["today", workspaceId, assignee] as const)
+    : (["today", workspaceId] as const);
+}
+
+/** The call queue works through at most this many people per run (server max). */
+export const CALL_QUEUE_LIMIT = 50;
+
+export function useToday(assignee: "me" | "all", enabled = true, limit?: number) {
+  const workspaceId = getStoredWorkspaceId();
+  return useQuery({
+    // Same prefix as Today, so every invalidate of ["today"] refreshes it too.
+    queryKey: limit ? [...todayKey(workspaceId, assignee), limit] : todayKey(workspaceId, assignee),
+    queryFn: () => getToday({ assignee, limit }),
+    enabled: enabled && !!workspaceId,
+    staleTime: 30_000,
+    refetchOnWindowFocus: true,
+    // Switching Mine / Everyone keeps the screen instead of blanking it.
+    placeholderData: keepPreviousData,
+  });
+}
+
+/**
+ * Everything the owner's loop can change: Today, the inquiry lists and
+ * boards, tasks, deals and histories. One place, so every action on the
+ * Today screen, the lead sheet and the kanban refreshes the same caches.
+ */
+export function useInvalidateWork() {
+  const qc = useQueryClient();
+  return () => {
+    for (const key of [
+      "today",
+      "leads",
+      "lead",
+      "leads-kanban-counts",
+      "leads-kanban-column",
+      "lead-history",
+      "tasks",
+      "task",
+      "lead-tasks",
+      "deal-tasks",
+      "contact-tasks",
+      // An outcome can carry a note; every notes list (lead sheet / page,
+      // deal and contact activity panels) must show it without a reload.
+      "lead-notes",
+      "deal-notes",
+      "customer-notes",
+      "pipelines",
+      "deals",
+      "deal",
+      "deals-pipeline",
+      // Winning or paying a deal can put a customer on "Ask for a review".
+      "google-reviews",
+      "deal-history",
+      "contact",
+      "contacts",
+      "contact-history",
+      "contact-deals",
+      "home-tasks-upcoming",
+      "home-tasks-overdue",
+      "results",
+      // A task created from an AI visibility action carries its status back.
+      "ai-visibility",
+    ]) {
+      void qc.invalidateQueries({ queryKey: [key] });
+    }
+  };
+}
+
+export function useUpdateSetup() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: updateSetup,
+    onSuccess: () => void qc.invalidateQueries({ queryKey: ["today"] }),
+  });
+}
+
+/**
+ * A Call / WhatsApp / Email tap only changes the lead's contact state: refresh
+ * the screens that show it, not every board in the app.
+ */
+export function useInvalidateLeadAttempt() {
+  const qc = useQueryClient();
+  return () => {
+    for (const key of [
+      "today",
+      "lead",
+      "leads",
+      "leads-kanban-column",
+      "lead-history",
+    ]) {
+      void qc.invalidateQueries({ queryKey: [key] });
+    }
+  };
+}

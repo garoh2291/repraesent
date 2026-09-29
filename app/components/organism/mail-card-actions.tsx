@@ -62,7 +62,7 @@ export function MailCardActions({ message }: { message: BccMessage }) {
         {contacts.map((c) => (
           <span
             key={c.id}
-            className="inline-flex items-center gap-1 rounded-full border border-border bg-muted/40 py-0.5 pl-2 pr-1 text-xs"
+            className="inline-flex items-center gap-1 rounded-full border border-border bg-muted/40 py-0.5 pl-2 pr-1 text-xs max-sm:min-h-9 max-sm:gap-1.5 max-sm:pl-3 max-sm:text-[13px]"
           >
             <Link
               to={`/contacts/${c.id}`}
@@ -85,7 +85,7 @@ export function MailCardActions({ message }: { message: BccMessage }) {
               }
               disabled={detachMutation.isPending}
               aria-label={t("mail.unlink", { defaultValue: "Unlink" })}
-              className="ml-0.5 flex size-4 items-center justify-center rounded-full text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+              className="relative ml-0.5 flex size-4 items-center justify-center rounded-full text-muted-foreground hover:bg-destructive/10 hover:text-destructive max-sm:size-7 pointer-coarse:after:absolute pointer-coarse:after:-inset-2 pointer-coarse:after:content-['']"
             >
               <X className="size-3" />
             </button>
@@ -97,7 +97,7 @@ export function MailCardActions({ message }: { message: BccMessage }) {
           <button
             type="button"
             onClick={() => setParticipantsOpen(true)}
-            className="inline-flex items-center gap-1 rounded-full border border-dashed border-amber-500/50 bg-amber-500/5 px-2 py-0.5 text-xs font-medium text-amber-700 transition-colors hover:bg-amber-500/10 dark:text-amber-400"
+            className="inline-flex items-center gap-1 rounded-full border border-dashed border-amber-500/50 bg-amber-500/5 px-2 py-0.5 text-xs font-medium text-amber-700 transition-colors hover:bg-amber-500/10 dark:text-amber-400 max-sm:min-h-9 max-sm:px-3 max-sm:text-[13px]"
           >
             <Users className="size-3" />
             {t("mail.unlinkedCount", {

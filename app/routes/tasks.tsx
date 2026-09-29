@@ -1,6 +1,8 @@
 import { useMemo, useState, useCallback } from "react";
 import { useSearchParams } from "react-router";
+import { useOpenFromParam } from "~/lib/hooks/useOpenFromParam";
 import { useTranslation } from "react-i18next";
+import { LoadError } from "~/components/notebook/load-error";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuthContext } from "~/providers/auth-provider";
 import { useSearchParamsSelect } from "~/lib/hooks/useQueryParams";
@@ -32,6 +34,7 @@ import { getWorkspaceDetail } from "~/lib/api/workspaces";
 import { LayoutGrid, CalendarDays, Plus, X } from "lucide-react";
 import { cn } from "~/lib/utils";
 import { Input } from "~/components/ui/input";
+import { Segmented } from "~/components/notebook/segmented";
 import i18n from "~/i18n";
 import { useDocumentMeta } from "~/lib/hooks/use-document-meta";
 
@@ -66,6 +69,7 @@ export default function TasksPage() {
 
   const selectedTaskId = searchParams.get("task_id") ?? null;
   const [formOpen, setFormOpen] = useState(false);
+  useOpenFromParam(() => setFormOpen(true));
 
   const handleTaskSelect = useCallback(
     (taskId: string) => onSelect({ task_id: taskId }, true),
@@ -163,6 +167,7 @@ export default function TasksPage() {
       queryClient.invalidateQueries({ queryKey: ["home-tasks-upcoming"] });
       queryClient.invalidateQueries({ queryKey: ["home-tasks-overdue"] });
       queryClient.invalidateQueries({ queryKey: ["leads"] });
+      queryClient.invalidateQueries({ queryKey: ["ai-visibility"] });
     },
   });
 
@@ -213,6 +218,7 @@ export default function TasksPage() {
       queryClient.invalidateQueries({ queryKey: ["home-tasks-upcoming"] });
       queryClient.invalidateQueries({ queryKey: ["home-tasks-overdue"] });
       queryClient.invalidateQueries({ queryKey: ["leads"] });
+      queryClient.invalidateQueries({ queryKey: ["ai-visibility"] });
     },
   });
 
@@ -230,11 +236,11 @@ export default function TasksPage() {
       {/* Header */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between shrink-0 app-fade-up">
         <div>
-          <h1 className="text-xl sm:text-2xl font-semibold text-foreground tracking-tight">
+          <h1 className="title-display text-[26px] font-semibold text-foreground sm:text-[30px]">
             {t("tasks.title")}
           </h1>
           <p className="text-sm text-muted-foreground mt-0.5">
-            {t("tasks.pageHint")}
+            {t("tasks.pageHintPlain", "What needs doing, and by when.")}
           </p>
         </div>
 
@@ -242,7 +248,7 @@ export default function TasksPage() {
           {/* New task button */}
           <Button
             size="sm"
-            className="h-9 gap-1.5 text-xs"
+            className="h-9 gap-1.5 text-xs max-sm:h-11 max-sm:flex-1 max-sm:text-sm"
             onClick={() => setFormOpen(true)}
           >
             <Plus className="h-3.5 w-3.5" />
@@ -250,32 +256,33 @@ export default function TasksPage() {
           </Button>
 
           {/* View toggle */}
-          <div className="flex items-center rounded-lg border border-border bg-muted/50 p-0.5">
-            <button
-              onClick={() => onSelect({ view: "kanban" }, true)}
-              className={cn(
-                "flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition-all duration-150",
-                viewMode === "kanban"
-                  ? "bg-white shadow-sm text-foreground"
-                  : "text-muted-foreground hover:text-foreground"
-              )}
-            >
-              <LayoutGrid className="h-3.5 w-3.5" />
-              {t("tasks.kanbanView")}
-            </button>
-            <button
-              onClick={() => onSelect({ view: "calendar" }, true)}
-              className={cn(
-                "flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition-all duration-150",
-                viewMode === "calendar"
-                  ? "bg-white shadow-sm text-foreground"
-                  : "text-muted-foreground hover:text-foreground"
-              )}
-            >
-              <CalendarDays className="h-3.5 w-3.5" />
-              {t("tasks.calendarView")}
-            </button>
-          </div>
+          <Segmented
+            role="tablist"
+            label={t("tasks.viewToggleLabel", "How to show tasks")}
+            value={viewMode}
+            onChange={(v) => onSelect({ view: v }, true)}
+            options={[
+              {
+                value: "kanban",
+                label: (
+                  <span className="inline-flex items-center gap-1.5">
+                    <LayoutGrid className="h-3.5 w-3.5 max-sm:hidden" />
+                    <span className="sm:hidden">{t("tasks.viewList", "List")}</span>
+                    <span className="max-sm:hidden">{t("tasks.viewBoard", "Board")}</span>
+                  </span>
+                ),
+              },
+              {
+                value: "calendar",
+                label: (
+                  <span className="inline-flex items-center gap-1.5">
+                    <CalendarDays className="h-3.5 w-3.5 max-sm:hidden" />
+                    {t("tasks.viewCalendar", "Calendar")}
+                  </span>
+                ),
+              },
+            ]}
+          />
         </div>
       </div>
 
@@ -292,11 +299,11 @@ export default function TasksPage() {
               onSelect({ search: e.target.value, page: "1" }, true)
             }
             placeholder={withHint(t("tasks.searchPlaceholder"))}
-            className="h-9 w-full sm:w-[220px] text-sm pr-3"
+            className="h-9 max-sm:h-11 w-full sm:w-[220px] text-base sm:text-sm pr-3"
           />
         </div>
 
-        <div className="flex items-center gap-2 flex-wrap">
+        <div className="flex items-center gap-2 flex-wrap max-sm:grid max-sm:grid-cols-2">
           {/* Assignee filter */}
           <Select
             value={assigneeFilter || "all"}
@@ -304,7 +311,7 @@ export default function TasksPage() {
               onSelect({ assignee: v === "all" ? "" : v }, true)
             }
           >
-            <SelectTrigger className="h-9 w-[150px] text-xs">
+            <SelectTrigger className="h-9 max-sm:h-11 w-full sm:w-[150px] text-xs max-sm:text-sm">
               <SelectValue placeholder={t("tasks.allAssignees")} />
             </SelectTrigger>
             <SelectContent>
@@ -326,7 +333,7 @@ export default function TasksPage() {
               onSelect({ status: v === "all" ? "" : v }, true)
             }
           >
-            <SelectTrigger className="h-9 w-[130px] text-xs">
+            <SelectTrigger className="h-9 max-sm:h-11 w-full sm:w-[130px] text-xs max-sm:text-sm">
               <SelectValue placeholder={t("tasks.allStatuses")} />
             </SelectTrigger>
             <SelectContent>
@@ -344,7 +351,7 @@ export default function TasksPage() {
           {/* Clear filters */}
           {hasFilters && (
             <button
-              className="inline-flex items-center gap-1 rounded-full border border-dashed border-border px-3 py-1 text-xs font-medium text-muted-foreground hover:text-foreground hover:border-border/80 transition-colors"
+              className="inline-flex items-center gap-1 rounded-full border border-dashed border-border px-3 py-1 max-sm:min-h-11 max-sm:px-4 text-xs font-medium text-muted-foreground hover:text-foreground hover:border-border/80 transition-colors max-sm:col-span-2 max-sm:justify-self-start"
               onClick={() =>
                 onSelect({ assignee: "", status: "", search: "" }, true)
               }
@@ -356,7 +363,9 @@ export default function TasksPage() {
       </div>
 
       {/* Content */}
-      {viewMode === "kanban" ? (
+      {tasksQuery.isError && !tasksQuery.data ? (
+        <LoadError what={t("errors.what.tasks", "your tasks")} onRetry={() => void tasksQuery.refetch()} />
+      ) : viewMode === "kanban" ? (
         <div className="flex-1 min-h-0 flex flex-col">
           <TasksKanban
             tasks={tasks}

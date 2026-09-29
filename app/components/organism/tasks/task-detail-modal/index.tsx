@@ -199,6 +199,8 @@ export function TaskDetailModal({
     queryClient.invalidateQueries({ queryKey: ["home-tasks-upcoming"] });
     queryClient.invalidateQueries({ queryKey: ["home-tasks-overdue"] });
     queryClient.invalidateQueries({ queryKey: ["leads"] });
+    // Tasks created from AI visibility actions keep the action in sync.
+    queryClient.invalidateQueries({ queryKey: ["ai-visibility"] });
   }, [queryClient, taskId, task, historyContactId]);
 
   const updateStatusMutation = useMutation({
@@ -268,13 +270,17 @@ export function TaskDetailModal({
                               ? `/contacts/${task.entity_id}`
                               : task.entity_table === "deals"
                                 ? `/pipeline/${task.entity_id}`
-                                : null;
+                                : task.entity_table === "ai_visibility_actions"
+                                  ? `/ai-visibility/actions#${task.entity_id}`
+                                  : null;
                         const labelKey =
                           task.entity_table === "contacts"
                             ? "tasks.detail.attachedContact"
                             : task.entity_table === "deals"
                               ? "tasks.detail.attachedDeal"
-                              : "tasks.detail.attachedLead";
+                              : task.entity_table === "ai_visibility_actions"
+                                ? "tasks.detail.attachedAiAction"
+                                : "tasks.detail.attachedLead";
                         if (!entityRoute) return null;
                         return (
                           <div className="mt-1 flex items-center gap-1 text-xs text-muted-foreground">

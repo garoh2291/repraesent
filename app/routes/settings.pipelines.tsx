@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
+import { useStageLabel } from "~/lib/pipeline-stages/use-stage-label";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   DndContext,
   MouseSensor,
@@ -26,6 +28,9 @@ import {
 } from "lucide-react";
 import i18n from "~/i18n";
 import { useAuthContext } from "~/providers/auth-provider";
+import { DealCurrencySelect } from "~/components/molecule/deal-currency-select";
+import { useWorkspaceCurrency } from "~/lib/hooks/useWorkspaceCurrency";
+import { setWorkspaceCurrency, type DealCurrency } from "~/lib/api/deals";
 import { useDocumentMeta } from "~/lib/hooks/use-document-meta";
 import { extractErrorMessage } from "~/lib/api/axios-instance";
 import type {
@@ -46,7 +51,6 @@ import {
   TOKEN_FACETS,
   resolveStageColors,
 } from "~/lib/pipeline-stages/colors";
-import { resolveStageLabel } from "~/lib/pipeline-stages/labels";
 import { cn } from "~/lib/utils";
 import { Badge } from "~/components/ui/badge";
 import { Button } from "~/components/ui/button";
@@ -90,6 +94,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "~/components/ui/select";
+import { desktopAutoFocus } from "~/lib/utils/touch";
 
 export function meta() {
   return [
@@ -179,12 +184,13 @@ export default function PipelinesSettingsPage() {
     <div className="space-y-10">
       {!isAdmin && (
         <p className="rounded-lg border border-border bg-muted/40 px-4 py-3 text-sm text-muted-foreground">
-          {t("settings.pipelines.readOnlyHint", {
+          {t("settings.pipelines.readOnlyHintPlain", {
             defaultValue:
-              "Only workspace admins can change pipeline stages. You can view the configuration below.",
+              "Only people with the Admin role can change stages. You can see them below.",
           })}
         </p>
       )}
+      <DealCurrencySection isAdmin={isAdmin} />
       <EntityStagesSection
         entity="lead"
         label={t("settings.pipelines.leadStages", {
@@ -404,12 +410,13 @@ function StageRow({
   onMoveDown: () => void;
 }) {
   const { t } = useTranslation();
+  const stageLabel = useStageLabel();
   const patchMutation = usePatchPipelineStage();
   const deleteMutation = useDeletePipelineStage();
   const [deleteOpen, setDeleteOpen] = useState(false);
   const rules = stageRules(stage, siblings);
   const facets = resolveStageColors(stage);
-  const resolvedLabel = resolveStageLabel(stage, t);
+  const resolvedLabel = stageLabel(stage);
 
   // Inline rename: uncontrolled-ish input seeded from the resolved label,
   // saved on blur/Enter only when actually changed.
@@ -811,7 +818,7 @@ function AddStageDialog({
               onChange={(e) => setLabel(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && submit()}
               maxLength={60}
-              autoFocus
+              autoFocus={desktopAutoFocus()}
               placeholder={t("settings.pipelines.namePlaceholder", {
                 defaultValue: "e.g. Negotiation",
               })}
@@ -897,5 +904,38 @@ function AddStageDialog({
         </DialogFooter>
       </DialogContent>
     </Dialog>
+  );
+}
+
+/**
+ * Workspace currency: what new deals start in and the headline currency of
+ * totals. Deals in other currencies keep their own and are shown next to it,
+ * never converted.
+ */
+function DealCurrencySection({ isAdmin }: { isAdmin: boolean }) {
+  const { t } = useTranslation();
+  const queryClient = useQueryClient();
+  const { currentWorkspace } = useAuthContext();
+  const { currency, available } = useWorkspaceCurrency();
+  const mutation = useMutation({
+    mutationFn: (c: DealCurrency) => setWorkspaceCurrency(c),
+    onSuccess: (fresh) => {
+      queryClient.setQueryData(["workspace-currency", currentWorkspace?.id], fresh);
+      void queryClient.invalidateQueries({ queryKey: ["contacts"] });
+      toast.success(t("settings.currency.saved"));
+    },
+    onError: () => toast.error(t("settings.currency.error")),
+  });
+  if (!available) return null;
+  return (
+    <section className="space-y-3">
+      <div className="space-y-0.5">
+        <SectionLabel>{t("settings.currency.label")}</SectionLabel>
+        <p className="text-sm text-muted-foreground">{t("settings.currency.hint")}</p>
+      </div>
+      <div className="flex items-center gap-3">
+        <DealCurrencySelect value={currency} onChange={(c) => mutation.mutate(c)} disabled={!isAdmin || mutation.isPending} className="w-40" />
+      </div>
+    </section>
   );
 }

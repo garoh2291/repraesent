@@ -63,6 +63,7 @@ import {
 } from "~/lib/workflows/optimistic";
 import { useCanEditForms } from "~/lib/hooks/useCanEditForms";
 import { useDocumentMeta } from "~/lib/hooks/use-document-meta";
+import { desktopAutoFocus } from "~/lib/utils/touch";
 
 export function meta() {
   return [
@@ -238,7 +239,7 @@ export default function WorkflowsIndex() {
     <div className="mx-auto w-full max-w-[1280px] space-y-6 p-4 py-10! sm:space-y-8 sm:p-6 app-fade-in">
       <div className="flex flex-col gap-3 app-fade-up sm:flex-row sm:items-start sm:justify-between sm:gap-4">
         <div className="space-y-1">
-          <h1 className="text-xl font-semibold tracking-tight text-foreground sm:text-2xl">
+          <h1 className="title-display text-[26px] font-semibold text-foreground sm:text-[30px]">
             {t("workflows.title")}
           </h1>
           <p className="max-w-2xl text-sm text-muted-foreground">
@@ -320,7 +321,7 @@ export default function WorkflowsIndex() {
             <Label htmlFor="wf-name">{t("workflows.nameLabel")}</Label>
             <Input
               id="wf-name"
-              autoFocus
+              autoFocus={desktopAutoFocus()}
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder={t("workflows.namePlaceholder")}

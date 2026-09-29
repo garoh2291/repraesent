@@ -1,8 +1,10 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { clearOnboardingSession } from "~/lib/onboarding/session-draft";
 import { useNavigate } from "react-router";
 import {
   requestMagicLink,
-  getUserContext,
+  getUserContextWithRetry,
+  isAuthRejection,
   logout,
   type User,
   type WorkspaceContext,
@@ -17,6 +19,7 @@ import {
   clearStoredToken,
   clearStoredWorkspaceId,
   getStoredWorkspaceId,
+  getLastWorkspaceId,
   setStoredWorkspaceId,
   clearStoredSelectedView,
   setStoredSelectedView,
@@ -38,6 +41,8 @@ export const clearStoredAuth = (): void => {
   clearStoredToken();
   clearStoredWorkspaceId();
   clearStoredSelectedView();
+  // The next person in this tab must not inherit an onboarding draft.
+  clearOnboardingSession();
 };
 
 export function useAuth() {
@@ -68,7 +73,8 @@ export function useAuth() {
       }
 
       try {
-        const context = await getUserContext();
+        // Retries 5xx / network with backoff; only a real 401/403 signs out.
+        const context = await getUserContextWithRetry([1000, 2000, 4000]);
 
         // Brand context (if user is brand) is returned alongside workspaces —
         // brand users may also be workspace members and switch between views.
@@ -95,9 +101,17 @@ export function useAuth() {
         if (workspaces.length === 1) {
           currentWorkspace = workspaces[0];
           setStoredWorkspaceId(workspaces[0].id);
-        } else if (storedWorkspaceId) {
+        } else {
+          // This tab's workspace, else where the last tab was (e.g. this tab
+          // still holds a workspace of someone who signed out elsewhere).
+          const lastWorkspaceId = getLastWorkspaceId();
           currentWorkspace =
-            workspaces.find((w) => w.id === storedWorkspaceId) ?? null;
+            (storedWorkspaceId ? workspaces.find((w) => w.id === storedWorkspaceId) : undefined) ??
+            (lastWorkspaceId ? workspaces.find((w) => w.id === lastWorkspaceId) : undefined) ??
+            null;
+          if (currentWorkspace && currentWorkspace.id !== storedWorkspaceId) {
+            setStoredWorkspaceId(currentWorkspace.id);
+          }
         }
 
         return {
@@ -110,8 +124,10 @@ export function useAuth() {
           brand,
           brandWorkspaces,
         };
-      } catch {
-        clearStoredAuth();
+      } catch (error) {
+        // A transient failure (DB pool timeout, network) keeps the stored
+        // token so the next load recovers; only an auth rejection clears it.
+        if (isAuthRejection(error)) clearStoredAuth();
         return {
           user: null,
           workspaces: [],
@@ -156,13 +172,23 @@ export function useAuth() {
     },
   });
 
-  const setCurrentWorkspace = (workspaceId: string) => {
-    const workspaces = authState?.workspaces ?? [];
+  /**
+   * `persist: false` switches the in-memory state only, without touching
+   * storage. `workspaces` overrides the list when the caller has just
+   * refetched it.
+   */
+  const setCurrentWorkspace = (
+    workspaceId: string,
+    opts: { persist?: boolean; workspaces?: WorkspaceContext[] } = {},
+  ) => {
+    const workspaces = opts.workspaces ?? authState?.workspaces ?? [];
     const workspace = workspaces.find((w) => w.id === workspaceId);
     if (!workspace) return;
 
-    setStoredWorkspaceId(workspaceId);
-    setStoredSelectedView(workspaceId);
+    if (opts.persist !== false) {
+      setStoredWorkspaceId(workspaceId);
+      setStoredSelectedView(workspaceId);
+    }
 
     queryClient.setQueryData<AuthState>(["auth"], (prev) =>
       prev

@@ -16,6 +16,8 @@ import { toast } from "sonner";
 import { listEmailAccounts } from "~/lib/api/workspaces";
 import { ConfirmationEmailPanel } from "~/components/forms/ConfirmationEmailPanel";
 import { FieldInspector } from "~/components/forms/FieldInspector";
+import { BottomSheet } from "~/components/notebook/bottom-sheet";
+import { useIsPhone } from "~/lib/hooks/use-is-phone";
 import { FieldPalette } from "~/components/forms/FieldPalette";
 import { IntakeSetupPanel } from "~/components/forms/IntakeSetupPanel";
 import { FormCanvas } from "~/components/forms/FormCanvas";
@@ -28,6 +30,12 @@ import { SharePanel } from "~/components/forms/SharePanel";
 import { ThemePanel } from "~/components/forms/ThemePanel";
 import { DealPanel } from "~/components/forms/DealPanel";
 import { WebhooksPanel } from "~/components/forms/webhooks/WebhooksPanel";
+import {
+  SetupChecklist,
+  useLocalFlag,
+  type ChecklistStep,
+} from "~/components/notebook/setup-checklist";
+import { TabsMore } from "~/components/notebook/tabs-more";
 import { Input } from "~/components/ui/input";
 import { Label } from "~/components/ui/label";
 import { Skeleton } from "~/components/ui/skeleton";
@@ -90,6 +98,7 @@ import {
   defaultStepTitle,
   flattenFields,
   isMultiStep,
+  isPresentational,
   type FormConfirmationEmail,
   type FormDefinition,
   type FormDefinitionIssue,
@@ -99,6 +108,7 @@ import {
   type FormSection,
 } from "~/lib/forms/schema";
 import { validateDefinition } from "~/lib/forms/validate";
+import { parseInline } from "~/lib/forms/rich-text";
 import { useAuthContext } from "~/providers/auth-provider";
 import { useCanEditForms } from "~/lib/hooks/useCanEditForms";
 import { useFormDefinition } from "~/lib/hooks/useForms";
@@ -928,6 +938,13 @@ export default function FormBuilderRoute() {
     fields.find((f) => f.id === selectedFieldId(selection)) ?? null;
 
   const multi = definition ? isMultiStep(definition) : false;
+
+  /**
+   * "Put it on your website" has no server record — the owner copied the code,
+   * emailed it or opened the public link. SharePanel (and the intake URL copy)
+   * set this flag; the checklist reads it. Per form, per browser.
+   */
+  const sharedOnce = useLocalFlag(`forms-copied:${formId ?? ""}`);
   const selectedStepIndex =
     selection?.kind === "step" && definition
       ? definition.sections.findIndex((s) => s.id === selection.stepId)
@@ -959,6 +976,10 @@ export default function FormBuilderRoute() {
                 )?.id,
               }
             : null;
+
+  // Phones: the inspector opens in a sheet over the canvas instead of
+  // stacking under the whole form (REDESIGN_PLAN.md §5, Forms).
+  const isPhone = useIsPhone();
 
   // Selecting a field that lives on another step (from the banner, say) has to
   // bring that step on screen, or the selection ring points at nothing.
@@ -1552,6 +1573,79 @@ export default function FormBuilderRoute() {
     );
   }
 
+  /**
+   * "Getting ready" — worked out from what the builder already knows, nothing
+   * new is stored. Look is left out on purpose: the default look works, so it
+   * is never a step anyone has to finish.
+   */
+  const goToLiveSwitch = () => {
+    setTab("share");
+    // The switch lives in the tab bar; focus it so the next key press is the
+    // one that turns the form on.
+    window.requestAnimationFrame(() =>
+      document.getElementById("form-live-toggle")?.focus(),
+    );
+  };
+  const checklistSteps: ChecklistStep[] = isIntake
+    ? // An intake form has no page and needs no Live switch to receive — the
+      // address works as soon as it exists. So: hand it over, then see one
+      // arrive.
+      [
+        {
+          id: "copy",
+          label: t("forms.checklist.intakeCopy"),
+          hint: t("forms.checklist.intakeCopyHint"),
+          done: sharedOnce || definition.intake?.lastPayload != null,
+          onClick: () => setTab("setup"),
+        },
+        {
+          id: "received",
+          label: t("forms.checklist.intakeReceived"),
+          hint: t("forms.checklist.intakeReceivedHint"),
+          done: definition.intake?.lastPayload != null,
+          onClick: () => setTab("setup"),
+        },
+      ]
+    : [
+        {
+          id: "questions",
+          label: t("forms.checklist.questions"),
+          hint:
+            issuesByTab.build > 0
+              ? t("forms.checklist.questionsFixHint", {
+                  count: issuesByTab.build,
+                })
+              : t("forms.checklist.questionsHint"),
+          done:
+            fields.some(
+              (f) => !isPresentational(f.type) && f.type !== "hidden",
+            ) && issuesByTab.build === 0,
+          onClick: () => setTab("build"),
+        },
+        {
+          id: "live",
+          label: t("forms.checklist.turnOn"),
+          hint: t("forms.checklist.turnOnHint"),
+          done: isLive,
+          onClick: canEdit ? goToLiveSwitch : () => setTab("share"),
+        },
+        {
+          id: "website",
+          label: t("forms.checklist.website"),
+          hint: t("forms.checklist.websiteHint"),
+          done: sharedOnce,
+          onClick: () => setTab("share"),
+        },
+      ];
+
+  /** Rare tabs, behind "More". Their `?tab=` values and panels are unchanged. */
+  const moreTabs = isIntake
+    ? []
+    : [
+        { value: "errors", label: t("forms.builder.tabErrorWording") },
+        { value: "webhooks", label: t("forms.builder.tabOtherApps") },
+      ];
+
   const activeFieldId = selectedFieldId(selection);
   const otherKeys = new Set(
     fields.filter((f) => f.id !== activeFieldId).map((f) => f.key),
@@ -1562,6 +1656,60 @@ export default function FormBuilderRoute() {
       .map((f) => f.mapping as string),
   );
 
+  const inspectorEl = (
+              <FieldInspector
+                target={inspectorTarget}
+                otherKeys={otherKeys}
+                otherMappings={otherMappings}
+                disabled={!canEdit}
+                getText={(key) => getRawContent(definition, editingLocale, key)}
+                setText={setText}
+                onChange={(patch) =>
+                  mapFields((f) =>
+                    f.id === activeFieldId ? { ...f, ...patch } : f,
+                  )
+                }
+                onMoveToStep={
+                  activeFieldId
+                    ? (stepId) => moveFieldToStep(activeFieldId, stepId)
+                    : undefined
+                }
+                onMoveStep={
+                  selection?.kind === "step"
+                    ? (dir) => {
+                        const ids = definition.sections.map((s) => s.id);
+                        const from = ids.indexOf(selection.stepId);
+                        const to = from + dir;
+                        if (from < 0 || to < 0 || to >= ids.length) return;
+                        const next = [...ids];
+                        next.splice(from, 1);
+                        next.splice(to, 0, selection.stepId);
+                        reorderSteps(next);
+                      }
+                    : undefined
+                }
+                onDeleteStep={
+                  selection?.kind === "step"
+                    ? () => requestDeleteStep(selection.stepId)
+                    : undefined
+                }
+                commerce={definition.commerce}
+                onCommerceChange={(patch) =>
+                  patchDefinition({
+                    ...definition,
+                    commerce: {
+                      ...(definition.commerce ?? DEFAULT_FORM_COMMERCE),
+                      ...patch,
+                    },
+                  })
+                }
+                archivedPriceIds={archivedPriceIds}
+                onDeleteField={
+                  activeFieldId ? () => deleteField(activeFieldId) : undefined
+                }
+              />
+  );
+
   return (
     <div
       className="mx-auto w-full max-w-[1280px] space-y-5 p-4 pb-10! pt-0! sm:p-6 sm:pb-14! sm:pt-0! app-fade-in"
@@ -1569,7 +1717,7 @@ export default function FormBuilderRoute() {
       // preview and the validation banner all offset by it so they clear the
       // command bar instead of sliding under it. Retuned when the bar lost its
       // buttons and language strip — bar height plus the wrapper's padding.
-      style={{ "--fb-stick": "5.5rem" } as React.CSSProperties}
+      style={{ "--fb-stick": "calc(5.5rem + var(--section-tabs-h, 0px))" } as React.CSSProperties}
     >
       <UnsavedChangesGuard when={canEdit && (dirty || emailDirty)} />
 
@@ -1580,14 +1728,14 @@ export default function FormBuilderRoute() {
 
           Bleeds the page padding, or the sticky element leaves a transparent
           gutter as content scrolls under it. */}
-      <div className="app-fade-down sticky top-0 z-30 -mx-4 bg-background/80 px-4 pb-3 pt-4 backdrop-blur sm:-mx-6 sm:px-6 sm:pt-6">
+      <div className="app-fade-down sticky top-[var(--section-tabs-h,0px)] z-30 -mx-4 bg-background/80 px-4 pb-3 pt-4 backdrop-blur sm:-mx-6 sm:px-6 sm:pt-6">
         <div className="overflow-hidden rounded-2xl bg-[#111113] shadow-[0_8px_24px_-12px_rgba(0,0,0,0.35)]">
           <div className="flex min-w-0 items-center gap-3 px-4 py-2.5 sm:px-5">
             <Link
               to="/forms"
               aria-label={t("forms.builder.back")}
               title={t("forms.builder.back")}
-              className="inline-flex size-8 shrink-0 items-center justify-center rounded-lg text-white/35 transition-colors hover:bg-white/10 hover:text-white/80"
+              className="press inline-flex size-8 max-sm:-ml-2 max-sm:size-11 shrink-0 items-center justify-center rounded-lg text-white/35 transition-colors hover:bg-white/10 hover:text-white/80"
             >
               <ArrowLeft className="h-4 w-4" />
             </Link>
@@ -1599,7 +1747,7 @@ export default function FormBuilderRoute() {
                 setName(e.target.value);
                 setDirty(true);
               }}
-              className="h-9 min-w-0 flex-1 rounded-lg border-transparent bg-transparent px-0 text-lg font-semibold tracking-tight text-white shadow-none selection:bg-white/20 focus-visible:border-white/10 focus-visible:bg-white/5 focus-visible:px-2.5 disabled:opacity-100 sm:text-xl"
+              className="h-9 min-w-0 flex-1 rounded-lg border-transparent bg-transparent px-0 text-lg font-semibold tracking-tight text-white shadow-none ink-surface focus-visible:border-white/10 focus-visible:bg-white/5 focus-visible:px-2.5 disabled:opacity-100 sm:text-xl"
             />
 
             <FormStatusBadge
@@ -1640,7 +1788,7 @@ export default function FormBuilderRoute() {
                 <li
                   key={`${issue.code}:${issue.locale ?? ""}:${issue.fieldId ?? issue.contentKey ?? index}`}
                 >
-                  {describeIssue(issue, t, defaultLocale)}
+                  {describeIssue(issue, t, defaultLocale, definition)}
                 </li>
               ))}
             </ul>
@@ -1670,63 +1818,88 @@ export default function FormBuilderRoute() {
         </div>
       ) : null}
 
+      {canEdit ? (
+        <SetupChecklist
+          id={`forms:${form.id}`}
+          steps={checklistSteps}
+          doneLabel={
+            isIntake ? t("forms.checklist.intakeAllDone") : undefined
+          }
+          className="app-fade-up"
+        />
+      ) : null}
+
       <Tabs value={tab} onValueChange={setTab}>
         {/* Tabs and actions share one baseline. The `line` variant only
             underlines the active trigger, so the wrapper supplies the rule the
             whole row sits on — including the buttons, which is what makes them
             read as part of the same control surface rather than floating. */}
         <div className="app-fade-up app-fade-up-d1 flex flex-wrap items-end justify-between gap-x-4 gap-y-2 border-b border-border">
-          <TabsList variant="line" className="-mb-px">
-            {/* An intake form is a URL: no canvas to draw, no theme to style,
-                no copy a visitor ever reads. Showing those tabs would be
-                showing an editor for a page that does not exist. */}
-            {isIntake ? (
-              <TabsTrigger value="setup">
-                {t("forms.builder.tabSetup", { defaultValue: "Setup" })}
-              </TabsTrigger>
-            ) : (
-              <>
-                <TabsTrigger value="build">
-                  {t("forms.builder.tabBuild")}
-                  <IssueBadge count={issuesByTab.build} />
+          {/* Scrolls sideways on a phone rather than pushing the page wider.
+              pb-px leaves exactly the room the active underline hangs below
+              the list, so the scroller clips nothing and never scrolls
+              vertically; -mb-px keeps that underline on the shared rule. */}
+          <div className="-mb-px min-w-0 max-w-full overflow-x-auto overflow-y-hidden pb-px [scrollbar-width:none]">
+            <TabsList variant="line">
+              {/* An intake form is a URL: no canvas to draw, no theme to style,
+                  no copy a visitor ever reads. Showing those tabs would be
+                  showing an editor for a page that does not exist. */}
+              {isIntake ? (
+                <TabsTrigger value="setup">
+                  {t("forms.builder.tabSetup")}
                 </TabsTrigger>
-                <TabsTrigger value="design">
-                  {t("forms.builder.tabDesign")}
-                  <IssueBadge count={issuesByTab.design} />
+              ) : (
+                <>
+                  <TabsTrigger value="build">
+                    {t("forms.builder.tabQuestions")}
+                    <IssueBadge count={issuesByTab.build} />
+                  </TabsTrigger>
+                  <TabsTrigger value="design">
+                    {t("forms.builder.tabLook")}
+                    <IssueBadge count={issuesByTab.design} />
+                  </TabsTrigger>
+                </>
+              )}
+              {/* A product form hands the visitor to Stripe; what comes after is
+                  the checkout's outcome pages, configured on the product field. */}
+              {form.kind !== "product" && !isIntake ? (
+                <TabsTrigger value="afterSubmit">
+                  {t("forms.builder.tabAfterSending")}
+                  <IssueBadge count={issuesByTab.afterSubmit} />
                 </TabsTrigger>
-              </>
-            )}
-            {/* A product form hands the visitor to Stripe; what comes after is
-                the checkout's outcome pages, configured on the product field. */}
-            {form.kind !== "product" && !isIntake ? (
-              <TabsTrigger value="afterSubmit">
-                {t("forms.builder.tabAfterSubmit")}
-                <IssueBadge count={issuesByTab.afterSubmit} />
+              ) : null}
+              {hasEmailConfig && !isIntake ? (
+                <TabsTrigger value="email">
+                  {t("forms.builder.tabEmailSender")}
+                  <IssueBadge count={issuesByTab.email} />
+                </TabsTrigger>
+              ) : null}
+              {form.kind === "product" ? (
+                <TabsTrigger value="deal">
+                  {t("forms.builder.tabDeal")}
+                </TabsTrigger>
+              ) : null}
+              {/* Intake: sending on is half of what an intake form is for, so it
+                  stays a main tab there instead of hiding behind More. */}
+              {isIntake ? (
+                <TabsTrigger value="webhooks">
+                  {t("forms.builder.tabOtherApps")}
+                </TabsTrigger>
+              ) : null}
+              <TabsTrigger value="share">
+                {t("forms.builder.tabWebsite")}
               </TabsTrigger>
-            ) : null}
-            {!isIntake ? (
-              <TabsTrigger value="errors">
-                {t("forms.builder.tabErrors")}
-              </TabsTrigger>
-            ) : null}
-            {hasEmailConfig && !isIntake ? (
-              <TabsTrigger value="email">
-                {t("forms.builder.tabEmail")}
-                <IssueBadge count={issuesByTab.email} />
-              </TabsTrigger>
-            ) : null}
-            {form.kind === "product" ? (
-              <TabsTrigger value="deal">
-                {t("forms.builder.tabDeal", { defaultValue: "Deal" })}
-              </TabsTrigger>
-            ) : null}
-            <TabsTrigger value="webhooks">
-              {t("forms.builder.tabWebhooks")}
-            </TabsTrigger>
-            <TabsTrigger value="share">
-              {t("forms.builder.tabShare")}
-            </TabsTrigger>
-          </TabsList>
+              {/* Error wording and sending to other apps are set once, if ever.
+                  Radix renders TabsContent by value, so both panels (and their
+                  old ?tab= links) keep working from behind this menu. */}
+              <TabsMore
+                tabs={moreTabs}
+                value={tab}
+                onSelect={setTab}
+                renderBadge={(count) => <IssueBadge count={count} />}
+              />
+            </TabsList>
+          </div>
 
           <div className="flex flex-wrap items-center gap-2 pb-1.5">
             {isLive ? (
@@ -1869,59 +2042,27 @@ export default function FormBuilderRoute() {
               />
             </div>
 
+            {isPhone ? (
+              <BottomSheet
+                open={!!inspectorTarget}
+                onOpenChange={(open) => {
+                  if (!open) setSelection(null);
+                }}
+                title={
+                  inspectorTarget?.kind === "field"
+                    ? t("forms.builder.sheetEditQuestion", "Edit question")
+                    : inspectorTarget?.kind === "step"
+                      ? t("forms.builder.sheetEditStep", "Edit step")
+                      : t("forms.builder.sheetEdit", "Edit")
+                }
+              >
+                {inspectorEl}
+              </BottomSheet>
+            ) : (
             <aside className="app-fade-up app-fade-up-d3 order-3 lg:col-span-2 xl:col-span-1 xl:sticky xl:top-[var(--fb-stick)] xl:self-start">
-              <FieldInspector
-                target={inspectorTarget}
-                otherKeys={otherKeys}
-                otherMappings={otherMappings}
-                disabled={!canEdit}
-                getText={(key) => getRawContent(definition, editingLocale, key)}
-                setText={setText}
-                onChange={(patch) =>
-                  mapFields((f) =>
-                    f.id === activeFieldId ? { ...f, ...patch } : f,
-                  )
-                }
-                onMoveToStep={
-                  activeFieldId
-                    ? (stepId) => moveFieldToStep(activeFieldId, stepId)
-                    : undefined
-                }
-                onMoveStep={
-                  selection?.kind === "step"
-                    ? (dir) => {
-                        const ids = definition.sections.map((s) => s.id);
-                        const from = ids.indexOf(selection.stepId);
-                        const to = from + dir;
-                        if (from < 0 || to < 0 || to >= ids.length) return;
-                        const next = [...ids];
-                        next.splice(from, 1);
-                        next.splice(to, 0, selection.stepId);
-                        reorderSteps(next);
-                      }
-                    : undefined
-                }
-                onDeleteStep={
-                  selection?.kind === "step"
-                    ? () => requestDeleteStep(selection.stepId)
-                    : undefined
-                }
-                commerce={definition.commerce}
-                onCommerceChange={(patch) =>
-                  patchDefinition({
-                    ...definition,
-                    commerce: {
-                      ...(definition.commerce ?? DEFAULT_FORM_COMMERCE),
-                      ...patch,
-                    },
-                  })
-                }
-                archivedPriceIds={archivedPriceIds}
-                onDeleteField={
-                  activeFieldId ? () => deleteField(activeFieldId) : undefined
-                }
-              />
+              {inspectorEl}
             </aside>
+            )}
           </div>
 
           <AlertDialog
@@ -2112,12 +2253,42 @@ function IssueBadge({ count }: { count: number }) {
   );
 }
 
-/** Name the offending field — "a choice field has no options" is unactionable. */
+/**
+ * A question as the owner knows it: its label in the default language, markup
+ * stripped. Falls back to the internal name only when there is no label yet —
+ * "Question 'field_3'" beats no name at all.
+ */
+function questionName(
+  definition: FormDefinition,
+  defaultLocale: FormLocale,
+  issue: FormDefinitionIssue,
+): string | undefined {
+  if (issue.fieldId) {
+    const raw = getRawContent(
+      definition,
+      defaultLocale,
+      contentKey.fieldLabel(issue.fieldId),
+    );
+    const plain = parseInline(raw)
+      .map((span) => span.text)
+      .join("")
+      .trim();
+    if (plain) return plain.length > 48 ? `${plain.slice(0, 47)}…` : plain;
+  }
+  return issue.fieldKey || undefined;
+}
+
+/**
+ * Name the offending question — "a choice question has no options" is
+ * unactionable. Every message says what happened and how to fix it.
+ */
 function describeIssue(
   issue: FormDefinitionIssue,
   t: TFunction,
   defaultLocale: FormLocale,
+  definition: FormDefinition,
 ): string {
+  const field = questionName(definition, defaultLocale, issue);
   // missingContent FIRST — it carries a fieldKey too, and the generic
   // fieldKey branch below would otherwise swallow it and drop the locale.
   if (issue.code === "missingContent") {
@@ -2126,7 +2297,7 @@ function describeIssue(
       return t("forms.validation.missingSubmit", { locale });
     }
     return t("forms.validation.field.missingContentLocale", {
-      field: issue.fieldKey,
+      field,
       locale,
     });
   }
@@ -2148,11 +2319,11 @@ function describeIssue(
     return `${t("forms.validation.commerceInactivePrice")} (${issue.priceId})`;
   }
 
-  // A blank key has no key to name it by, so fall through to the generic copy
-  // rather than rendering "Field  has no key".
-  if (issue.fieldKey) {
+  // Nothing to name it by (no label, blank key): fall through to the generic
+  // copy rather than rendering "Question “” has no options".
+  if (field) {
     return t(`forms.validation.field.${issue.code}`, {
-      field: issue.fieldKey,
+      field,
       defaultValue: t(`forms.validation.${issue.code}`),
     });
   }

@@ -3,6 +3,7 @@ import {
   connectWorkspaceAi,
   disconnectWorkspaceAi,
   getWorkspaceAiSettings,
+  getWorkspaceAiSpend,
   testWorkspaceAi,
   updateWorkspaceAiSettings,
 } from "~/lib/api/workspace-ai";
@@ -20,6 +21,17 @@ export function useWorkspaceAi(enabled = true) {
     queryFn: getWorkspaceAiSettings,
     enabled,
     retry: false,
+    staleTime: 60_000,
+  });
+}
+
+/** What this workspace's key spent this month and last, per job. */
+export function useWorkspaceAiSpend(enabled = true) {
+  const { currentWorkspace } = useAuthContext();
+  return useQuery({
+    queryKey: ["workspace-ai-spend", currentWorkspace?.id ?? null],
+    queryFn: getWorkspaceAiSpend,
+    enabled: enabled && !!currentWorkspace,
     staleTime: 60_000,
   });
 }

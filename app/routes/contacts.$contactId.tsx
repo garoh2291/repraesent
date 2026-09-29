@@ -2,8 +2,9 @@ import { useEffect, useMemo, useState } from "react";
 import { Link, useParams, useNavigate, useLocation } from "react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
+import { BackLink } from "~/components/notebook/back-link";
 import { personNameOr } from "~/lib/contacts/display-name";
-import { ArrowLeft, Trash2 } from "lucide-react";
+import { Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { useAuthContext } from "~/providers/auth-provider";
 import { getContact, getContactHistory } from "~/lib/api/contacts-crm";
@@ -16,6 +17,7 @@ import { useCanEditLeads } from "~/lib/hooks/useCanEditLeads";
 import { ContactHero } from "~/components/organism/contact-detail/contact-hero";
 import { ContactInfoCard } from "~/components/organism/contact-detail/contact-info-card";
 import { ContactDealsSection } from "~/components/organism/contact-deals-section";
+import { PhotoStrip } from "~/components/notebook/photo-strip";
 import { Button } from "~/components/ui/button";
 import {
   AlertDialog,
@@ -202,15 +204,11 @@ export default function ContactDetailPage() {
 
   return (
     <div className="p-4 sm:p-6 space-y-4 sm:space-y-6 app-fade-in">
-      <Link
-        to={cameFromLead ? `/lead-form/${cameFromLead}` : "/contacts"}
-        className="inline-flex items-center gap-1.5 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors"
-      >
-        <ArrowLeft className="h-3.5 w-3.5" />
+      <BackLink to={cameFromLead ? `/lead-form/${cameFromLead}` : "/contacts"}>
         {cameFromLead
           ? t("leads.detail.backToLead", { defaultValue: "Back to lead" })
           : t("contacts.backToList", { defaultValue: "Back to contacts" })}
-      </Link>
+      </BackLink>
 
       <ContactHero
         displayName={displayName}
@@ -268,6 +266,10 @@ export default function ContactDetailPage() {
             canEdit={canEdit}
             onInvalidate={invalidateContact}
           />
+          {/* Team-only photos, right after the info card. */}
+          {resolvedContactId ? (
+            <PhotoStrip entity="contacts" entityId={resolvedContactId} canEdit={canEdit} />
+          ) : null}
           <ActivityPanel
             variant="contact"
             leadId={taskLeadId}
@@ -296,12 +298,12 @@ export default function ContactDetailPage() {
       </div>
 
       {canEdit ? (
-        <div className="flex justify-end">
+        <div className="flex justify-end max-sm:border-t max-sm:border-border max-sm:pt-4">
           <Button
             type="button"
             variant="ghost"
             size="sm"
-            className="text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+            className="text-muted-foreground hover:bg-destructive/10 hover:text-destructive max-sm:h-11 max-sm:w-full max-sm:justify-center max-sm:rounded-xl max-sm:border max-sm:border-border max-sm:text-sm max-sm:text-destructive"
             onClick={() => setDeleteConfirmOpen(true)}
           >
             <Trash2 className="h-4 w-4 mr-1.5" />

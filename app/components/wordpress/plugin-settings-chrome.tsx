@@ -143,7 +143,7 @@ export function ServiceInactiveGate({
       />
 
       {label ? (
-        <h1 className="text-xl font-semibold tracking-tight text-foreground sm:text-2xl">
+        <h1 className="title-display text-[26px] font-semibold text-foreground sm:text-[30px]">
           {label}
         </h1>
       ) : null}

@@ -79,8 +79,8 @@ const INDUSTRY_LABEL_OVERRIDES: Partial<Record<DemoIndustry, string>> = {
   electrician: "demo.industryOverrides.electrician",
 };
 
-/** One staged step every ~2.8s → ~17s show before the redirect. */
-const STEP_MS = 2800;
+/** One staged step every ~1.4s → ~8.4s show before the redirect (was 2.8s / ~17s). */
+const STEP_MS = 1400;
 const TOTAL_MS = STEP_MS * LOADING_STEP_KEYS.length;
 const TICK_MS = 200;
 
@@ -131,14 +131,20 @@ export default function Demo() {
     setElapsed(0);
     redirectUrlRef.current = null;
     setBuilding(true);
+    // One quiet retry on a transient failure (server busy / network). A 4xx
+    // (rate limit, validation) is final and shown straight away.
+    const create = () => createDemo(industry, normalizeLocale(i18n.language), website, kind);
     try {
-      const { redirect_url } = await createDemo(
-        industry,
-        normalizeLocale(i18n.language),
-        website,
-        kind,
-      );
-      redirectUrlRef.current = redirect_url;
+      let result: Awaited<ReturnType<typeof createDemo>>;
+      try {
+        result = await create();
+      } catch (first) {
+        const status = first instanceof AxiosError ? first.response?.status : null;
+        if (status && status < 500) throw first;
+        await new Promise((r) => setTimeout(r, 1500));
+        result = await create();
+      }
+      redirectUrlRef.current = result.redirect_url;
     } catch (err) {
       setBuilding(false);
       const status = err instanceof AxiosError ? err.response?.status : null;

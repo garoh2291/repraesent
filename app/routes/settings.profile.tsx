@@ -245,7 +245,7 @@ export default function SettingsProfile() {
                 disabled={
                   saveMutation.isPending || !form.formState.isDirty
                 }
-                className="h-10 px-6 bg-foreground text-background hover:bg-foreground/90 hover:text-background transition-colors"
+                className="h-10 px-6 max-sm:h-11 max-sm:w-full bg-foreground text-background hover:bg-foreground/90 hover:text-background transition-colors"
               >
                 {saveMutation.isPending
                   ? t("common.saving")

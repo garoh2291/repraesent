@@ -21,6 +21,7 @@ import {
   type RecentRecord,
   type WorkflowEntity,
 } from "~/lib/api/workflows";
+import { desktopAutoFocus } from "~/lib/utils/touch";
 
 /**
  * Dry-run against a real record.
@@ -108,7 +109,7 @@ export function TestRunDialog({
           </Label>
           <Input
             id="wf-entity-id"
-            autoFocus
+            autoFocus={desktopAutoFocus()}
             value={entityId}
             onChange={(e) => setEntityId(e.target.value)}
             placeholder="00000000-0000-0000-0000-000000000000"

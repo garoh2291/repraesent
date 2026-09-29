@@ -35,6 +35,7 @@ import {
   SegmentedButton,
 } from "~/components/forms/chrome";
 import { Field, FieldHint } from "~/components/wordpress/fields";
+import { AdvancedSection } from "~/components/notebook/advanced-section";
 import { extractErrorMessage } from "~/lib/api/axios-instance";
 import {
   CHECKOUT_WEBHOOK_EVENTS,
@@ -272,7 +273,7 @@ export function WebhookEditorSheet({
                   id="wh-name"
                   value={name}
                   disabled={disabled}
-                  placeholder="Zapier — new leads"
+                  placeholder={t("forms.webhooks.namePlaceholder")}
                   onChange={(e) => setName(e.target.value)}
                 />
               </Field>
@@ -326,12 +327,15 @@ export function WebhookEditorSheet({
                       onCheckedChange={(v) => toggleEvent(event, v === true)}
                       className="mt-0.5"
                     />
+                    {/* The plain sentence is what the owner reads; the event
+                        name is what their web person types into Zapier, so it
+                        stays, small, underneath. */}
                     <span className="space-y-0.5">
-                      <span className="block font-mono text-[12px]">
-                        {event}
-                      </span>
-                      <span className="block text-xs text-muted-foreground">
+                      <span className="block text-[13px] text-foreground">
                         {t(`forms.webhooks.event.${event.replace(".", "_")}`)}
+                      </span>
+                      <span className="block font-mono text-[11px] text-muted-foreground">
+                        {event}
                       </span>
                     </span>
                   </label>
@@ -343,107 +347,117 @@ export function WebhookEditorSheet({
             ) : null}
           </PanelSection>
 
-          <PanelSection
-            title={t("forms.webhooks.payload")}
-            action={
-              <Segmented className="@lg:hidden">
-                <SegmentedButton
-                  active={pane === "keys"}
-                  onClick={() => setPane("keys")}
-                >
-                  {t("forms.webhooks.paneKeys")}
-                </SegmentedButton>
-                <SegmentedButton
-                  active={pane === "preview"}
-                  onClick={() => setPane("preview")}
-                >
-                  {t("forms.webhooks.panePreview")}
-                </SegmentedButton>
-              </Segmented>
-            }
+          {/* Endpoint and events are the whole job for Zapier or Make. The
+              key mapping and the signing secret are for someone writing their
+              own receiver, so they wait behind Advanced — opened by force
+              when a renamed key collides, because that blocks Save. */}
+          <AdvancedSection
+            storageKey="forms-webhook-editor"
+            hint={t("forms.webhooks.advancedHint")}
+            forceOpen={collisions.size > 0 || badNames}
           >
-            <FieldHint>{t("forms.webhooks.payloadHint")}</FieldHint>
-            {!payloadKeys ? (
-              <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                <Loader2 className="h-4 w-4 animate-spin" />
-                {t("common.loading", { defaultValue: "Loading…" })}
-              </div>
-            ) : (
-              <div className="grid gap-4 @lg:grid-cols-2">
-                <div className={pane === "keys" ? "" : "hidden @lg:block"}>
-                  <PayloadMappingTable
-                    groups={groups}
-                    map={map}
-                    onChange={setMap}
-                    disabled={disabled}
-                  />
+            <PanelSection
+              title={t("forms.webhooks.payload")}
+              action={
+                <Segmented className="@lg:hidden">
+                  <SegmentedButton
+                    active={pane === "keys"}
+                    onClick={() => setPane("keys")}
+                  >
+                    {t("forms.webhooks.paneKeys")}
+                  </SegmentedButton>
+                  <SegmentedButton
+                    active={pane === "preview"}
+                    onClick={() => setPane("preview")}
+                  >
+                    {t("forms.webhooks.panePreview")}
+                  </SegmentedButton>
+                </Segmented>
+              }
+            >
+              <FieldHint>{t("forms.webhooks.payloadHint")}</FieldHint>
+              {!payloadKeys ? (
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  {t("common.loading", { defaultValue: "Loading…" })}
                 </div>
-                <div
-                  className={`@lg:sticky @lg:top-0 @lg:self-start ${
-                    pane === "preview" ? "" : "hidden @lg:block"
-                  }`}
-                >
-                  <PayloadPreview
-                    envelope={payloadKeys.envelope_example}
-                    groups={groups}
-                    map={map}
-                    events={events.length ? events : ["form.submitted"]}
-                    event={previewEvent}
-                    onEventChange={setPreviewEvent}
-                  />
-                  <div className="mt-3">
-                    <SignatureSnippet />
+              ) : (
+                <div className="grid gap-4 @lg:grid-cols-2">
+                  <div className={pane === "keys" ? "" : "hidden @lg:block"}>
+                    <PayloadMappingTable
+                      groups={groups}
+                      map={map}
+                      onChange={setMap}
+                      disabled={disabled}
+                    />
+                  </div>
+                  <div
+                    className={`@lg:sticky @lg:top-0 @lg:self-start ${
+                      pane === "preview" ? "" : "hidden @lg:block"
+                    }`}
+                  >
+                    <PayloadPreview
+                      envelope={payloadKeys.envelope_example}
+                      groups={groups}
+                      map={map}
+                      events={events.length ? events : ["form.submitted"]}
+                      event={previewEvent}
+                      onEventChange={setPreviewEvent}
+                    />
+                    <div className="mt-3">
+                      <SignatureSnippet />
+                    </div>
                   </div>
                 </div>
-              </div>
-            )}
-          </PanelSection>
-
-          {webhook ? (
-            <PanelSection title={t("forms.webhooks.secret")}>
-              <div className="flex flex-wrap items-center gap-2">
-                <code className="rounded-lg border bg-muted/40 px-2.5 py-1.5 font-mono text-[12px]">
-                  {revealed ?? webhook.secret_masked}
-                </code>
-                {isAdmin ? (
-                  <>
-                    {revealed ? (
-                      <button
-                        type="button"
-                        onClick={() => setRevealed(null)}
-                        className="inline-flex h-8 items-center gap-1.5 rounded-lg border px-2.5 text-xs text-muted-foreground hover:bg-muted hover:text-foreground"
-                      >
-                        <EyeOff className="h-3.5 w-3.5" />
-                        {t("forms.webhooks.hideIn", { s: revealLeft })}
-                      </button>
-                    ) : (
-                      <button
-                        type="button"
-                        onClick={reveal}
-                        className="inline-flex h-8 items-center gap-1.5 rounded-lg border px-2.5 text-xs text-muted-foreground hover:bg-muted hover:text-foreground"
-                      >
-                        <Eye className="h-3.5 w-3.5" />
-                        {t("forms.webhooks.reveal")}
-                      </button>
-                    )}
-                    <button
-                      type="button"
-                      onClick={() => setRotateOpen(true)}
-                      className="inline-flex h-8 items-center gap-1.5 rounded-lg border px-2.5 text-xs text-muted-foreground hover:bg-muted hover:text-foreground"
-                    >
-                      <RefreshCw className="h-3.5 w-3.5" />
-                      {t("forms.webhooks.rotate")}
-                    </button>
-                  </>
-                ) : null}
-              </div>
-              <FieldHint>
-                {isAdmin
-                  ? t("forms.webhooks.secretHint")
-                  : t("forms.webhooks.adminOnly")}
-              </FieldHint>
+              )}
             </PanelSection>
-          ) : null}
+
+            {webhook ? (
+              <PanelSection title={t("forms.webhooks.secret")}>
+                <div className="flex flex-wrap items-center gap-2">
+                  <code className="rounded-lg border bg-muted/40 px-2.5 py-1.5 font-mono text-[12px]">
+                    {revealed ?? webhook.secret_masked}
+                  </code>
+                  {isAdmin ? (
+                    <>
+                      {revealed ? (
+                        <button
+                          type="button"
+                          onClick={() => setRevealed(null)}
+                          className="inline-flex h-8 items-center gap-1.5 rounded-lg border px-2.5 text-xs text-muted-foreground hover:bg-muted hover:text-foreground"
+                        >
+                          <EyeOff className="h-3.5 w-3.5" />
+                          {t("forms.webhooks.hideIn", { s: revealLeft })}
+                        </button>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={reveal}
+                          className="inline-flex h-8 items-center gap-1.5 rounded-lg border px-2.5 text-xs text-muted-foreground hover:bg-muted hover:text-foreground"
+                        >
+                          <Eye className="h-3.5 w-3.5" />
+                          {t("forms.webhooks.reveal")}
+                        </button>
+                      )}
+                      <button
+                        type="button"
+                        onClick={() => setRotateOpen(true)}
+                        className="inline-flex h-8 items-center gap-1.5 rounded-lg border px-2.5 text-xs text-muted-foreground hover:bg-muted hover:text-foreground"
+                      >
+                        <RefreshCw className="h-3.5 w-3.5" />
+                        {t("forms.webhooks.rotate")}
+                      </button>
+                    </>
+                  ) : null}
+                </div>
+                <FieldHint>
+                  {isAdmin
+                    ? t("forms.webhooks.secretHint")
+                    : t("forms.webhooks.adminOnly")}
+                </FieldHint>
+              </PanelSection>
+            ) : null}
+          </AdvancedSection>
         </div>
 
         <SheetFooter className="border-t px-5 py-4 sm:flex-row sm:justify-end">

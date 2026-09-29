@@ -1,11 +1,17 @@
 import { useMemo, useEffect, useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router";
+import { useOpenFromParam } from "~/lib/hooks/useOpenFromParam";
+import { ContactActions } from "~/components/notebook/contact-actions";
+import { OutcomeBadge, useLeadFlow } from "~/components/notebook/lead-flow";
 import { useTranslation } from "react-i18next";
+import { LoadError } from "~/components/notebook/load-error";
 import {
+  useMutation,
   useQuery,
   useQueryClient,
   type InfiniteData,
 } from "@tanstack/react-query";
+import { toast } from "sonner";
 import type { ColumnDef } from "@tanstack/react-table";
 import { useAuthContext } from "~/providers/auth-provider";
 import { DataTable } from "~/components/organism/data-table";
@@ -20,11 +26,14 @@ import {
   useLeadFilterStatusOptions,
 } from "~/lib/leads/filter-presets";
 import { useLeadStages } from "~/lib/hooks/usePipelineStages";
+import { useHideLeadGuard } from "~/lib/leads/use-hide-lead-guard";
+import { refreshLeadViews } from "~/lib/leads/hide-choice";
 import { Button } from "~/components/ui/button";
 import TooltipContainer from "~/components/tooltip-container";
 import {
   getLeads,
   getLeadFormNames,
+  markLeadNotSpam,
   type Lead,
   type LeadStatus,
   type PaginatedLeads,
@@ -53,7 +62,23 @@ import {
   Plus,
   EyeOff,
   Eye,
+  MoreHorizontal,
 } from "lucide-react";
+import { useIsPhone } from "~/lib/hooks/use-is-phone";
+import { useSearchShortcut } from "~/lib/hooks/useSearchShortcut";
+import { Input } from "~/components/ui/input";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
+  DropdownMenuSeparator,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
+  DropdownMenuTrigger,
+} from "~/components/ui/dropdown-menu";
 import {
   Select,
   SelectContent,
@@ -137,10 +162,16 @@ export default function LeadForm() {
     ? sortParam
     : DEFAULT_LEAD_SORT;
 
-  const [viewMode, setViewMode] = useLeadsViewMode();
+  const [savedViewMode, setViewMode] = useLeadsViewMode();
+  // Phones always get the stage list (the kanban's phone layout); the saved
+  // desktop choice is left untouched (MOBILE_PACKAGE_PLAN.md B1).
+  const isPhone = useIsPhone();
+  const viewMode = isPhone ? "kanban" : savedViewMode;
   const [selectedLeadId, setSelectedLeadId] = useState<string | null>(null);
   const [importModalOpen, setImportModalOpen] = useState(false);
   const [createLeadOpen, setCreateLeadOpen] = useState(false);
+  useOpenFromParam(() => setCreateLeadOpen(true));
+  const leadFlow = useLeadFlow();
   const [showHidden, setShowHidden] = useState(false);
 
   // Task create modal state
@@ -384,6 +415,17 @@ export default function LeadForm() {
   const hiddenCount = hiddenCountQuery.data ?? 0;
 
   const leadStages = useLeadStages();
+  const { requestStatusChange: requestHideGuarded, guardModal: hideGuardModal } = useHideLeadGuard();
+  const notSpamMutation = useMutation({
+    mutationFn: (id: string) => markLeadNotSpam(id),
+    onSuccess: (res, id) => {
+      refreshLeadViews(queryClient, id);
+      toast.success(t("leads.spam.restored"), {
+          description: res.alsoRestored ? t("leads.spam.alsoRestored", { count: res.alsoRestored }) : undefined,
+        });
+    },
+    onError: () => toast.error(t("leads.spam.error")),
+  });
 
   const leadStatusFilterOptions = useLeadFilterStatusOptions();
   const leadsFilters = useMemo(
@@ -466,6 +508,33 @@ export default function LeadForm() {
       },
     },
     {
+      id: "reach",
+      header: t("leadBar.reach", "Reach"),
+      cell: ({ row }) => {
+        const l = row.original;
+        if (!canEdit) return null;
+        return (
+          <ContactActions
+            iconOnly
+            target={{ phone: l.phone, email: l.email }}
+            emailInApp={leadFlow.emailInApp}
+            onContact={(ch) =>
+              leadFlow.contact(
+                {
+                  id: l.id,
+                  name: l.full_name || [l.first_name, l.last_name].filter(Boolean).join(" ") || l.email || "",
+                  status: l.status,
+                  phone: l.phone,
+                  email: l.email,
+                },
+                ch,
+              )
+            }
+          />
+        );
+      },
+    },
+    {
       accessorKey: "form_name",
       header: t("leads.columns.formName"),
       cell: ({ row }) => {
@@ -494,6 +563,11 @@ export default function LeadForm() {
                 {name}
               </span>
             </TooltipContainer>
+            <OutcomeBadge
+              outcome={row.original.contact_state?.outcome}
+              attempts={row.original.contact_state?.attempts}
+              className="shrink-0"
+            />
             {appointment && (
               <TooltipContainer
                 tooltipContent={formatAppointmentRange(appointment)}
@@ -568,7 +642,9 @@ export default function LeadForm() {
             <LeadStatusSelect
               value={lead.status}
               onValueChange={(status) =>
-                updateStatusMutation.mutate({ id: lead.id, status })
+                requestHideGuarded(lead, status, () =>
+                  updateStatusMutation.mutateAsync({ id: lead.id, status }),
+                )
               }
               disabled={!canEdit || updateStatusMutation.isPending}
               className="w-[140px]"
@@ -590,12 +666,11 @@ export default function LeadForm() {
                   type="button"
                   onClick={(event) => {
                     event.stopPropagation();
-                    updateStatusMutation.mutate({
-                      id: lead.id,
-                      status: leadStages.entry!.key as LeadStatus,
-                    });
+                    // "Restore" = not spam: back to the stage it was in and the
+                    // sender's blocks lifted, so their next lead gets through.
+                    notSpamMutation.mutate(lead.id);
                   }}
-                  disabled={updateStatusMutation.isPending}
+                  disabled={notSpamMutation.isPending}
                   className="shrink-0 rounded-lg border border-amber-300 bg-amber-50 px-2 py-1 text-[11px] font-medium text-amber-800 transition-colors hover:bg-amber-100 disabled:opacity-50"
                 >
                   {t("leads.restoreFiltered", { defaultValue: "Restore" })}
@@ -640,18 +715,18 @@ export default function LeadForm() {
       className={cn(
         "app-fade-in",
         viewMode === "kanban"
-          ? "flex flex-col min-h-[calc(100vh-8rem)] p-4 sm:p-6"
+          ? "flex flex-col sm:min-h-[calc(100vh-8rem)] p-4 sm:p-6"
           : "p-4 sm:p-6 space-y-4 sm:space-y-6",
       )}
     >
       {/* Header */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between shrink-0 app-fade-up">
         <div>
-          <h1 className="text-xl sm:text-2xl font-semibold text-foreground tracking-tight">
+          <h1 className="title-display text-[26px] font-semibold text-foreground sm:text-[30px]">
             {t("leads.title")}
           </h1>
           <p className="text-sm text-muted-foreground mt-0.5">
-            {t("leads.manageHint")}
+            {t("leads.listHint", "Everyone who asked about you, newest first.")}
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
@@ -660,7 +735,7 @@ export default function LeadForm() {
               variant="outline"
               size="sm"
               onClick={() => setImportModalOpen(true)}
-              className="h-9 gap-1.5 text-xs"
+              className="h-9 gap-1.5 text-xs max-sm:hidden"
             >
               <Upload className="h-3.5 w-3.5" />
               {t("leads.importLeads")}
@@ -670,12 +745,85 @@ export default function LeadForm() {
             <Button
               size="sm"
               onClick={() => setCreateLeadOpen(true)}
-              className="h-9 gap-1.5 text-xs"
+              className="h-9 gap-1.5 text-xs max-sm:h-11 max-sm:flex-1 max-sm:text-sm"
             >
-              <Plus className="h-3.5 w-3.5" />
-              {t("leads.createLead", { defaultValue: "Create lead" })}
+              <Plus className="h-3.5 w-3.5 max-sm:size-4" />
+              {t("leads.newInquiry", "New inquiry")}
             </Button>
           )}
+          {/* Phones: the rare "Import CSV" and the filters the desktop
+              toolbar carries step aside into a ⋯ menu. Same URL params. */}
+          <DropdownMenu modal={false}>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="outline"
+                size="icon"
+                className="relative size-11 sm:hidden"
+                aria-label={t("mobile.more", "More")}
+              >
+                <MoreHorizontal className="size-4" />
+                {sourceFilter || formNameFilter ? (
+                  <span
+                    aria-hidden
+                    className="absolute right-2 top-2 size-2 rounded-full bg-foreground"
+                  />
+                ) : null}
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="min-w-52">
+              {canEdit && (
+                <>
+                  <DropdownMenuItem onSelect={() => setImportModalOpen(true)}>
+                    <Upload className="h-3.5 w-3.5" />
+                    {t("leads.importLeads")}
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                </>
+              )}
+              <DropdownMenuSub>
+                <DropdownMenuSubTrigger>
+                  {t("leads.filters.source")}
+                </DropdownMenuSubTrigger>
+                <DropdownMenuSubContent className="max-h-[50dvh] overflow-y-auto">
+                  <DropdownMenuRadioGroup
+                    value={sourceFilter}
+                    onValueChange={(v) => onSelect({ source: v, page: "1" }, true)}
+                  >
+                    <DropdownMenuRadioItem value="">
+                      {t("leads.phoneMenu.all", "All")}
+                    </DropdownMenuRadioItem>
+                    {LEAD_FILTER_SOURCE_OPTIONS.map((o) => (
+                      <DropdownMenuRadioItem key={o.key} value={o.key}>
+                        {t(o.label, { defaultValue: o.label })}
+                      </DropdownMenuRadioItem>
+                    ))}
+                  </DropdownMenuRadioGroup>
+                </DropdownMenuSubContent>
+              </DropdownMenuSub>
+              {formNameFilterOptions.length > 0 && (
+                <DropdownMenuSub>
+                  <DropdownMenuSubTrigger>
+                    {t("leads.columns.formName")}
+                  </DropdownMenuSubTrigger>
+                  <DropdownMenuSubContent className="max-h-[50dvh] overflow-y-auto">
+                    <DropdownMenuRadioGroup
+                      value={formNameFilter}
+                      onValueChange={(v) => onSelect({ form_name: v, page: "1" }, true)}
+                    >
+                      <DropdownMenuRadioItem value="">
+                        {t("leads.phoneMenu.all", "All")}
+                      </DropdownMenuRadioItem>
+                      {formNameFilterOptions.map((o) => (
+                        <DropdownMenuRadioItem key={o.key} value={o.key}>
+                          {o.label}
+                        </DropdownMenuRadioItem>
+                      ))}
+                    </DropdownMenuRadioGroup>
+                  </DropdownMenuSubContent>
+                </DropdownMenuSub>
+              )}
+            </DropdownMenuContent>
+          </DropdownMenu>
           {viewMode === "kanban" && (
             <Select
               value={sortMode}
@@ -683,7 +831,7 @@ export default function LeadForm() {
                 onSelect({ sort: v === DEFAULT_LEAD_SORT ? "" : v })
               }
             >
-              <SelectTrigger className="h-9 w-[180px] text-xs">
+              <SelectTrigger className="h-9 w-[180px] text-xs max-sm:h-11! max-sm:w-full max-sm:text-sm">
                 <span className="inline-flex items-center gap-1.5">
                   <ArrowUpDown className="h-3.5 w-3.5 opacity-60" />
                   <SelectValue />
@@ -702,7 +850,7 @@ export default function LeadForm() {
               </SelectContent>
             </Select>
           )}
-          <div className="flex items-center rounded-lg border border-border bg-muted/50 p-0.5">
+          <div className="flex items-center rounded-lg border border-border bg-muted/50 p-0.5 max-sm:hidden">
             <button
               onClick={() => {
                 setViewMode("table");
@@ -716,7 +864,7 @@ export default function LeadForm() {
               )}
             >
               <Table2 className="h-3.5 w-3.5" />
-              {t("leads.tableView")}
+              {t("leads.listView", "List")}
             </button>
             <button
               onClick={() => {
@@ -731,7 +879,7 @@ export default function LeadForm() {
               )}
             >
               <LayoutGrid className="h-3.5 w-3.5" />
-              {t("leads.kanbanView")}
+              {t("leads.boardView", "Board")}
             </button>
           </div>
         </div>
@@ -739,7 +887,9 @@ export default function LeadForm() {
 
       <div className="border-t border-border shrink-0" />
 
-      {viewMode === "table" ? (
+      {viewMode === "table" && leadsQuery.isError && !leadsQuery.data ? (
+        <LoadError what={t("errors.what.inquiries", "your inquiries")} onRetry={() => void leadsQuery.refetch()} />
+      ) : viewMode === "table" ? (
         <DataTable<Lead, unknown>
           enableSorting={false}
           columns={columns}
@@ -818,6 +968,13 @@ export default function LeadForm() {
         />
       ) : (
         <div className="flex-1 min-h-0 flex flex-col">
+          {isPhone ? (
+            <PhoneLeadSearch
+              value={search}
+              placeholder={t("leads.searchPlaceholder")}
+              onChange={(value) => onSelect({ search: value, page: "1" }, true)}
+            />
+          ) : null}
           <LeadsKanban
             filters={{
               search: debouncedSearch || undefined,
@@ -831,7 +988,9 @@ export default function LeadForm() {
             onReorder={({ leadId, status, position }) =>
               reorderMutation.mutateAsync({ id: leadId, status, position })
             }
-            onLeadSelect={setSelectedLeadId}
+            // Phones open the inquiry as its own page; the side sheet is for
+            // the wide board and the table.
+            onLeadSelect={(id) => (isPhone ? navigate(`/lead-form/${id}`) : setSelectedLeadId(id))}
             canEdit={canEdit}
             sortMode={sortMode}
           />
@@ -844,12 +1003,14 @@ export default function LeadForm() {
         onOpenChange={(open) => !open && setSelectedLeadId(null)}
         onStatusChange={
           canEdit
-            ? (id, status) => updateStatusMutation.mutate({ id, status })
+            ? (id, status) => updateStatusMutation.mutateAsync({ id, status })
             : undefined
         }
         isStatusUpdating={updateStatusMutation.isPending}
         canEdit={canEdit}
       />
+
+      {hideGuardModal}
 
       <LeadImportModal
         open={importModalOpen}
@@ -879,5 +1040,28 @@ export default function LeadForm() {
         }}
       />
     </div>
+  );
+}
+
+/** Phones: the stage list has no table toolbar, so it gets its own search. */
+function PhoneLeadSearch({
+  value,
+  placeholder,
+  onChange,
+}: {
+  value: string;
+  placeholder: string;
+  onChange: (value: string) => void;
+}) {
+  const { ref, withHint } = useSearchShortcut();
+  return (
+    <Input
+      ref={ref}
+      type="search"
+      value={value}
+      onChange={(e) => onChange(e.target.value)}
+      placeholder={withHint(placeholder)}
+      className="mt-4 h-11 text-base"
+    />
   );
 }

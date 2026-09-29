@@ -6,16 +6,28 @@ import { cn } from "~/lib/utils";
 
 /**
  * Amber strip shown wherever an assistant can be worked on while the
- * workspace has no usable OpenRouter key. Silent while loading and when
- * connected — the common case must not flash.
+ * workspace has no usable AI account (an OpenRouter key). Silent while loading
+ * and when connected — the common case must not flash.
+ *
+ * `revokedOnly`: the editor's "Getting ready" checklist already carries the
+ * never-connected case as its first step, so there the strip only speaks up
+ * when a working account broke — a live chat went quiet, and a checklist the
+ * owner closed long ago would never say so.
  */
-export function AiKeyBanner({ className }: { className?: string }) {
+export function AiKeyBanner({
+  className,
+  revokedOnly = false,
+}: {
+  className?: string;
+  revokedOnly?: boolean;
+}) {
   const { t } = useTranslation();
   const { data, isPending } = useWorkspaceAi();
   if (isPending || !data) return null;
 
   const revoked = data.status === "revoked" || data.status === "error";
   if (data.connected && !revoked) return null;
+  if (revokedOnly && !revoked) return null;
 
   return (
     <div
@@ -51,7 +63,7 @@ export function AiKeyBanner({ className }: { className?: string }) {
       </div>
       <Link
         to="/settings/ai"
-        className="inline-flex h-9 shrink-0 items-center gap-1.5 rounded-lg bg-amber-600 px-3 text-sm font-medium text-white transition-colors hover:bg-amber-700 dark:bg-amber-400 dark:text-black dark:hover:bg-amber-300"
+        className="inline-flex h-11 shrink-0 sm:h-9 items-center gap-1.5 rounded-lg bg-amber-600 px-3 text-sm font-medium text-white transition-colors hover:bg-amber-700 dark:bg-amber-400 dark:text-black dark:hover:bg-amber-300"
       >
         {t("aiAssistants.banner.cta")}
         <ArrowRight className="h-3.5 w-3.5" />

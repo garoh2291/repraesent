@@ -73,7 +73,7 @@ export function PayloadPreview({
   };
 
   return (
-    <div className="overflow-hidden rounded-xl border border-border bg-[#111113] text-white/85">
+    <div className="ink-surface overflow-hidden rounded-xl border border-border bg-[#111113] text-white/85">
       <div className="flex items-center gap-2 border-b border-white/10 px-3 py-2">
         <span className="text-[11px] font-semibold uppercase tracking-widest text-white/45">
           {t("forms.webhooks.previewEvent")}
@@ -122,7 +122,7 @@ export function PayloadPreview({
               key={i}
               className={cn(
                 "-mx-1 flex items-baseline whitespace-pre px-1",
-                was && "border-l-2 border-primary/70 bg-primary/10",
+                was && "border-l-2 border-[#f5d74f]/70 bg-[#f5d74f]/10",
               )}
             >
               <span className="min-w-0">
@@ -137,7 +137,7 @@ export function PayloadPreview({
                           : tok.kind === "number"
                             ? "text-amber-300/90"
                             : tok.kind === "literal"
-                              ? "text-sky-300/90"
+                              ? "text-[#f5d74f]/90"
                               : "text-white/45"
                     }
                   >

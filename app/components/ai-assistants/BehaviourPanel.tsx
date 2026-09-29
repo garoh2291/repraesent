@@ -1,8 +1,10 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Globe,
+import {
+  Globe,
   Cpu,
   Languages,
+  PiggyBank,
   Paperclip,
   MessageSquareText,
   Shield,
@@ -10,7 +12,6 @@ import { Globe,
   X,
 } from "lucide-react";
 import {
-  Cols,
   Panel,
   PanelBody,
   PanelHeader,
@@ -19,6 +20,7 @@ import {
   SegmentedButton,
 } from "~/components/forms/chrome";
 import { FieldAnchor } from "~/components/ai-assistants/FieldAnchor";
+import { AdvancedSection } from "~/components/notebook/advanced-section";
 import { Field, FieldHint } from "~/components/wordpress/fields";
 import { Input } from "~/components/ui/input";
 import { Label } from "~/components/ui/label";
@@ -64,17 +66,42 @@ interface Props {
    * cries wolf.
    */
   searchConfigured?: boolean;
+  /**
+   * Paths of the current problems on this tab. Anything outside the owner's
+   * fields opens the Advanced box by itself, so hiding a setting never hides
+   * the error that blocks saving.
+   */
+  issuePaths?: string[];
+}
+
+/**
+ * What stays in plain view: who it speaks for, how it sounds, and what it may
+ * spend. Everything else on this tab (model, creativity, lengths, re-rank,
+ * domains, attachments, web search) is web-person territory.
+ */
+function isOwnerPath(path: string): boolean {
+  return (
+    path === "business_name" ||
+    path === "daily_budget_eur_cents" ||
+    path.startsWith("persona.")
+  );
 }
 
 const TONES: PersonaTone[] = ["friendly", "formal", "concise"];
 const INSTRUCTIONS_MAX = 1000;
 
-export function BehaviourPanel({ draft, canEdit, onChange, searchConfigured }: Props) {
+export function BehaviourPanel({
+  draft,
+  canEdit,
+  onChange,
+  searchConfigured,
+  issuePaths = [],
+}: Props) {
   const { t } = useTranslation();
   const { data: models } = useChatModels();
   const modelList = models?.models ?? [];
-  // The estimate follows the Chat model select above, so switching to a
-  // pricier model visibly buys fewer messages for the same euro figure.
+  // The estimate follows the Chat model select (under Advanced), so switching
+  // to a pricier model visibly buys fewer messages for the same euro figure.
   const selectedModel = modelList.find((m) => m.id === draft.chat_model);
   // The model is capped at the SMALLER of the two, so either can win. Computed
   // once here rather than reasoned about in the JSX.
@@ -107,198 +134,10 @@ export function BehaviourPanel({ draft, canEdit, onChange, searchConfigured }: P
   };
   const setWebSearch = (p: Partial<WebSearchConfig>) =>
     onChange({ web_search: { ...webSearch, ...p } });
+  const advancedHasIssue = issuePaths.some((path) => !isOwnerPath(path));
 
   return (
-    <div className="grid gap-5 lg:grid-cols-2">
-      <Panel>
-        <PanelHeader
-          icon={<Cpu className="h-3.5 w-3.5" />}
-          title={t("aiAssistants.behaviour.modelTitle")}
-        />
-        <PanelBody>
-          <Field>
-            <Label htmlFor="chat-model">
-              {t("aiAssistants.behaviour.model")}
-            </Label>
-            <Select
-              value={draft.chat_model}
-              disabled={!canEdit}
-              onValueChange={(v) => onChange({ chat_model: v })}
-            >
-              <SelectTrigger id="chat-model" className="w-full">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {(modelList.length
-                  ? modelList
-                  : [{ id: draft.chat_model, label: draft.chat_model }]
-                ).map((mo) => (
-                  <SelectItem key={mo.id} value={mo.id}>
-                    {mo.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <FieldHint>{t("aiAssistants.behaviour.modelHint")}</FieldHint>
-          </Field>
-
-          <Field>
-            <div className="flex items-baseline justify-between">
-              <Label htmlFor="temperature">
-                {t("aiAssistants.behaviour.temperature")}
-              </Label>
-              <span className="text-sm tabular-nums text-muted-foreground">
-                {draft.temperature.toFixed(2)}
-              </span>
-            </div>
-            <Slider
-              id="temperature"
-              min={0}
-              max={1}
-              step={0.05}
-              disabled={!canEdit}
-              value={[draft.temperature]}
-              onValueChange={(v) => onChange({ temperature: v[0] ?? 0 })}
-            />
-            <FieldHint>{t("aiAssistants.behaviour.temperatureHint")}</FieldHint>
-          </Field>
-
-          <Field>
-            <Label>{t("aiAssistants.behaviour.answerLength.label")}</Label>
-            <Segmented label={t("aiAssistants.behaviour.answerLength.label")}>
-              {ANSWER_LENGTHS.map((len: AnswerLength) => (
-                <SegmentedButton
-                  key={len}
-                  active={(draft.answer_length ?? "medium") === len}
-                  onClick={() =>
-                    canEdit &&
-                    // Sets BOTH: the preset is what the model is TOLD, the
-                    // number is where it gets cut off. Setting only the first
-                    // let them silently disagree — picking Long while the
-                    // number sat at 600 quietly stayed medium-length.
-                    onChange({
-                      answer_length: len,
-                      max_output_tokens: ANSWER_LENGTH_TOKENS[len],
-                    })
-                  }
-                >
-                  {t(`aiAssistants.behaviour.answerLength.${len}`)}
-                </SegmentedButton>
-              ))}
-            </Segmented>
-            <FieldHint>
-              {t(
-                `aiAssistants.behaviour.answerLength.hint_${draft.answer_length ?? "medium"}`,
-              )}
-            </FieldHint>
-          </Field>
-
-          <Cols>
-            <Field>
-              <Label htmlFor="max-tokens">
-                {t("aiAssistants.behaviour.maxTokens")}
-              </Label>
-              <div className="relative">
-                <Input
-                  id="max-tokens"
-                  type="number"
-                  // Shown in words; the model is still capped in tokens.
-                  min={tokensToWords(100)}
-                  max={tokensToWords(1500)}
-                  step={25}
-                  className="pr-16"
-                  disabled={!canEdit}
-                  value={tokensToWords(draft.max_output_tokens)}
-                  onChange={(e) =>
-                    onChange({
-                      max_output_tokens: clamp(
-                        wordsToTokens(Number(e.target.value) || 0),
-                        100,
-                        1500,
-                      ),
-                    })
-                  }
-                />
-                <span
-                  aria-hidden
-                  className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground"
-                >
-                  {t("aiAssistants.behaviour.wordsUnit")}
-                </span>
-              </div>
-              <FieldHint>
-                {t("aiAssistants.behaviour.maxTokensHint")}
-                {effectiveTokens !== draft.max_output_tokens ? (
-                  // The old copy said "the advanced limit below still applies",
-                  // which is a confession rather than an explanation. The cap
-                  // is min(number, preset), so EITHER can silently win — say
-                  // plainly where answers actually stop.
-                  <>
-                    {" "}
-                    <span className="text-amber-600 dark:text-amber-500">
-                      {t("aiAssistants.behaviour.maxTokensEffective", {
-                        words: tokensToWords(effectiveTokens),
-                      })}
-                    </span>
-                  </>
-                ) : null}
-              </FieldHint>
-            </Field>
-            <Field>
-              <Label htmlFor="budget">
-                {t("aiAssistants.behaviour.budget")}
-              </Label>
-              <div className="relative">
-                <span
-                  aria-hidden
-                  className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground"
-                >
-                  €
-                </span>
-                <Input
-                  id="budget"
-                  type="number"
-                  // Mirrors the API's own bounds (€0.10–€1,000) so a value that
-                  // saves can never then be rejected with a generic error.
-                  min={0.1}
-                  max={1000}
-                  step={0.5}
-                  className="pl-7"
-                  disabled={!canEdit}
-                  placeholder={t("aiAssistants.behaviour.budgetUnlimited")}
-                  value={
-                    draft.daily_budget_eur_cents == null
-                      ? ""
-                      : draft.daily_budget_eur_cents / 100
-                  }
-                  onChange={(e) =>
-                    onChange({
-                      daily_budget_eur_cents:
-                        e.target.value === ""
-                          ? null
-                          : Math.min(
-                              100_000,
-                              Math.max(10, Math.round(Number(e.target.value) * 100) || 10),
-                            ),
-                    })
-                  }
-                />
-              </div>
-              <FieldHint>
-                {budgetMessages != null && selectedModel
-                  ? `${t("aiAssistants.behaviour.budgetEstimate", {
-                      count: budgetMessages,
-                      // "…a day with GPT-4o mini (default)." reads as though
-                      // "(default)" were part of the model's name mid-sentence.
-                      model: selectedModel.label.replace(/\s*\(default\)$/, ""),
-                    })} ${t("aiAssistants.behaviour.budgetHint")}`
-                  : t("aiAssistants.behaviour.budgetUnlimitedHint")}
-              </FieldHint>
-            </Field>
-          </Cols>
-        </PanelBody>
-      </Panel>
-
+    <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
       <Panel>
         <PanelHeader
           icon={<MessageSquareText className="h-3.5 w-3.5" />}
@@ -450,207 +289,414 @@ export function BehaviourPanel({ draft, canEdit, onChange, searchConfigured }: P
         </PanelBody>
       </Panel>
 
-      <Panel className="lg:col-span-2">
+      <Panel>
         <PanelHeader
-          icon={<Shield className="h-3.5 w-3.5" />}
-          title={t("aiAssistants.behaviour.domainsTitle")}
+          icon={<PiggyBank className="h-3.5 w-3.5" />}
+          title={t("aiAssistants.behaviour.budget")}
         />
         <PanelBody>
-          <FieldHint>{t("aiAssistants.behaviour.domainsHint")}</FieldHint>
-          <FieldAnchor path="allowed_domains">
-            <DomainTagInput
-              value={draft.allowed_domains}
-              disabled={!canEdit}
-              onChange={(allowed_domains) => onChange({ allowed_domains })}
-            />
-          </FieldAnchor>
-        </PanelBody>
-      </Panel>
-
-      <Panel className="lg:col-span-2">
-        <PanelHeader
-          icon={<SlidersHorizontal className="h-3.5 w-3.5" />}
-          title={t("aiAssistants.behaviour.advancedTitle")}
-        />
-        <PanelBody>
-          <FieldAnchor path="retrieval.rerank">
-            <label className="flex cursor-pointer items-start justify-between gap-4 rounded-lg border border-border px-3 py-2.5">
-              <span className="space-y-0.5">
-                <span className="block text-sm">
-                  {t("aiAssistants.behaviour.rerank")}
-                </span>
-                <span className="block text-xs text-muted-foreground">
-                  {t("aiAssistants.behaviour.rerankHint")}
-                </span>
+          <Field>
+            <Label htmlFor="budget" className="sr-only">
+              {t("aiAssistants.behaviour.budget")}
+            </Label>
+            <div className="relative">
+              <span
+                aria-hidden
+                className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground"
+              >
+                €
               </span>
-              <Switch
-                checked={rerank}
+              <Input
+                id="budget"
+                type="number"
+                // Mirrors the API's own bounds (€0.10–€1,000) so a value that
+                // saves can never then be rejected with a generic error.
+                min={0.1}
+                max={1000}
+                step={0.5}
+                className="max-w-48 pl-7"
                 disabled={!canEdit}
-                onCheckedChange={(v) =>
-                  onChange({ retrieval: { ...draft.retrieval, rerank: v } })
+                placeholder={t("aiAssistants.behaviour.budgetUnlimited")}
+                value={
+                  draft.daily_budget_eur_cents == null
+                    ? ""
+                    : draft.daily_budget_eur_cents / 100
                 }
-                aria-label={t("aiAssistants.behaviour.rerank")}
-                className="mt-0.5"
+                onChange={(e) =>
+                  onChange({
+                    daily_budget_eur_cents:
+                      e.target.value === ""
+                        ? null
+                        : Math.min(
+                            100_000,
+                            Math.max(10, Math.round(Number(e.target.value) * 100) || 10),
+                          ),
+                  })
+                }
               />
-            </label>
-          </FieldAnchor>
-
-          <FieldAnchor path="attachments.enabled">
-            <div className="rounded-lg border border-border">
-              <label className="flex cursor-pointer items-start justify-between gap-4 px-3 py-2.5">
-                <span className="space-y-0.5">
-                  <span className="flex items-center gap-1.5 text-sm">
-                    <Paperclip className="h-3.5 w-3.5 text-muted-foreground" />
-                    {t("aiAssistants.behaviour.attachmentsEnabled")}
-                  </span>
-                  <span className="block text-xs text-muted-foreground">
-                    {t("aiAssistants.behaviour.attachmentsHint")}
-                  </span>
-                </span>
-                <Switch
-                  checked={attachments.enabled}
-                  disabled={!canEdit}
-                  onCheckedChange={(v) => setAttachments({ enabled: v })}
-                  aria-label={t("aiAssistants.behaviour.attachmentsEnabled")}
-                  className="mt-0.5"
-                />
-              </label>
-              <div
-                className={cn(
-                  "grid gap-2 border-t border-border px-3 py-2.5 sm:grid-cols-2",
-                  !attachments.enabled && "opacity-50",
-                )}
-              >
-                <label className="flex items-center gap-2 text-sm">
-                  <Checkbox
-                    checked={attachments.images}
-                    disabled={!canEdit || !attachments.enabled}
-                    onCheckedChange={(v) =>
-                      setAttachments({ images: v === true })
-                    }
-                  />
-                  {t("aiAssistants.behaviour.attachmentsImages")}
-                </label>
-                <label className="flex items-center gap-2 text-sm">
-                  <Checkbox
-                    checked={attachments.documents}
-                    disabled={!canEdit || !attachments.enabled}
-                    onCheckedChange={(v) =>
-                      setAttachments({ documents: v === true })
-                    }
-                  />
-                  {t("aiAssistants.behaviour.attachmentsDocuments")}
-                </label>
-              </div>
             </div>
-          </FieldAnchor>
-
-          <FieldAnchor path="web_search.enabled">
-            <div className="rounded-lg border border-border">
-              <label className="flex cursor-pointer items-start justify-between gap-4 px-3 py-2.5">
-                <span className="space-y-0.5">
-                  <span className="flex items-center gap-1.5 text-sm">
-                    <Globe className="h-3.5 w-3.5 text-muted-foreground" />
-                    {t("aiAssistants.behaviour.webSearchEnabled")}
-                  </span>
-                  <span className="block text-xs text-muted-foreground">
-                    {t("aiAssistants.behaviour.webSearchHint")}
-                  </span>
-                </span>
-                <Switch
-                  checked={webSearch.enabled}
-                  disabled={!canEdit}
-                  onCheckedChange={(v) => setWebSearch({ enabled: v })}
-                  aria-label={t("aiAssistants.behaviour.webSearchEnabled")}
-                  className="mt-0.5"
-                />
-              </label>
-              {webSearch.enabled && searchConfigured === false ? (
-                // The toggle used to read "on" whatever the server could do, so
-                // an operator with search switched on got an assistant telling
-                // visitors it could not browse, with nothing to explain it.
-                <p className="border-t border-amber-500/30 bg-amber-500/10 px-3 py-2 text-xs text-amber-800 dark:text-amber-300">
-                  {t("aiAssistants.behaviour.webSearchNotConfigured")}
-                </p>
-              ) : null}
-              <div
-                className={cn(
-                  "space-y-2 border-t border-border px-3 py-2.5",
-                  !webSearch.enabled && "opacity-50",
-                )}
-              >
-                <Field>
-                  <Label htmlFor="ws-domains">
-                    {t("aiAssistants.behaviour.webSearchDomains")}
-                  </Label>
-                  <Textarea
-                    id="ws-domains"
-                    rows={3}
-                    className="font-mono text-xs"
-                    placeholder={"lg.com\nbosch-home.com\nyoutube.com"}
-                    value={webSearch.domains.join("\n")}
-                    disabled={!canEdit || !webSearch.enabled}
-                    onChange={(e) =>
-                      setWebSearch({
-                        domains: e.target.value
-                          .split(/[\n,]/)
-                          .map((d) => d.trim())
-                          .filter(Boolean),
-                      })
-                    }
-                  />
-                  <p className="text-xs text-muted-foreground">
-                    {t("aiAssistants.behaviour.webSearchDomainsHint")}
-                  </p>
-                </Field>
-                <Field>
-                  <Label>{t("aiAssistants.behaviour.webSearchMode.label")}</Label>
-                  <Segmented label={t("aiAssistants.behaviour.webSearchMode.label")}>
-                    {(["ask", "direct"] as const).map((m) => (
-                      <SegmentedButton
-                        key={m}
-                        active={(webSearch.mode ?? "ask") === m}
-                        onClick={() =>
-                          canEdit && webSearch.enabled && setWebSearch({ mode: m })
-                        }
-                      >
-                        {t(`aiAssistants.behaviour.webSearchMode.${m}`)}
-                      </SegmentedButton>
-                    ))}
-                  </Segmented>
-                  <p className="text-xs text-muted-foreground">
-                    {t(
-                      `aiAssistants.behaviour.webSearchMode.${webSearch.mode ?? "ask"}Hint`,
-                    )}
-                  </p>
-                </Field>
-                <Field>
-                  <Label htmlFor="ws-limit">
-                    {t("aiAssistants.behaviour.webSearchLimit")}
-                  </Label>
-                  <Input
-                    id="ws-limit"
-                    type="number"
-                    min={0}
-                    max={500}
-                    className="w-32"
-                    value={webSearch.daily_limit}
-                    disabled={!canEdit || !webSearch.enabled}
-                    onChange={(e) =>
-                      setWebSearch({
-                        daily_limit: Math.max(0, Math.min(500, Number(e.target.value) || 0)),
-                      })
-                    }
-                  />
-                  <p className="text-xs text-muted-foreground">
-                    {t("aiAssistants.behaviour.webSearchLimitHint")}
-                  </p>
-                </Field>
-              </div>
-            </div>
-          </FieldAnchor>
+            <FieldHint>
+              {/* The estimate still follows the model picked under Advanced,
+                  but the model's name stays there: "about 40 answers a day" is
+                  the part an owner can weigh. */}
+              {budgetMessages != null && selectedModel
+                ? `${t("aiAssistants.behaviour.budgetEstimatePlain", {
+                    count: budgetMessages,
+                  })} ${t("aiAssistants.behaviour.budgetHint")}`
+                : t("aiAssistants.behaviour.budgetUnlimitedHint")}
+            </FieldHint>
+          </Field>
         </PanelBody>
       </Panel>
+
+      {/* Model, lengths, domains and the rest work fine on their defaults,
+          and a word like "re-rank" means nothing to an owner. */}
+      <AdvancedSection
+        storageKey="ai-behaviour"
+        hint={t("aiAssistants.behaviour.advancedHint")}
+        forceOpen={advancedHasIssue}
+        className="lg:col-span-2"
+      >
+        <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
+          <Panel>
+            <PanelHeader
+              icon={<Cpu className="h-3.5 w-3.5" />}
+              title={t("aiAssistants.behaviour.modelTitle")}
+            />
+            <PanelBody>
+              <Field>
+                <Label htmlFor="chat-model">
+                  {t("aiAssistants.behaviour.model")}
+                </Label>
+                <Select
+                  value={draft.chat_model}
+                  disabled={!canEdit}
+                  onValueChange={(v) => onChange({ chat_model: v })}
+                >
+                  <SelectTrigger id="chat-model" className="w-full">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {(modelList.length
+                      ? modelList
+                      : [{ id: draft.chat_model, label: draft.chat_model }]
+                    ).map((mo) => (
+                      <SelectItem key={mo.id} value={mo.id}>
+                        {mo.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <FieldHint>{t("aiAssistants.behaviour.modelHint")}</FieldHint>
+              </Field>
+
+              <Field>
+                <div className="flex items-baseline justify-between">
+                  <Label htmlFor="temperature">
+                    {t("aiAssistants.behaviour.temperature")}
+                  </Label>
+                  <span className="text-sm tabular-nums text-muted-foreground">
+                    {draft.temperature.toFixed(2)}
+                  </span>
+                </div>
+                <Slider
+                  id="temperature"
+                  min={0}
+                  max={1}
+                  step={0.05}
+                  disabled={!canEdit}
+                  value={[draft.temperature]}
+                  onValueChange={(v) => onChange({ temperature: v[0] ?? 0 })}
+                />
+                <FieldHint>{t("aiAssistants.behaviour.temperatureHint")}</FieldHint>
+              </Field>
+
+              <Field>
+                <Label>{t("aiAssistants.behaviour.answerLength.label")}</Label>
+                <Segmented label={t("aiAssistants.behaviour.answerLength.label")}>
+                  {ANSWER_LENGTHS.map((len: AnswerLength) => (
+                    <SegmentedButton
+                      key={len}
+                      active={(draft.answer_length ?? "medium") === len}
+                      onClick={() =>
+                        canEdit &&
+                        // Sets BOTH: the preset is what the model is TOLD, the
+                        // number is where it gets cut off. Setting only the first
+                        // let them silently disagree — picking Long while the
+                        // number sat at 600 quietly stayed medium-length.
+                        onChange({
+                          answer_length: len,
+                          max_output_tokens: ANSWER_LENGTH_TOKENS[len],
+                        })
+                      }
+                    >
+                      {t(`aiAssistants.behaviour.answerLength.${len}`)}
+                    </SegmentedButton>
+                  ))}
+                </Segmented>
+                <FieldHint>
+                  {t(
+                    `aiAssistants.behaviour.answerLength.hint_${draft.answer_length ?? "medium"}`,
+                  )}
+                </FieldHint>
+              </Field>
+
+              <Field>
+                <Label htmlFor="max-tokens">
+                  {t("aiAssistants.behaviour.maxTokens")}
+                </Label>
+                <div className="relative">
+                  <Input
+                    id="max-tokens"
+                    type="number"
+                    // Shown in words; the model is still capped in tokens.
+                    min={tokensToWords(100)}
+                    max={tokensToWords(1500)}
+                    step={25}
+                    className="pr-16"
+                    disabled={!canEdit}
+                    value={tokensToWords(draft.max_output_tokens)}
+                    onChange={(e) =>
+                      onChange({
+                        max_output_tokens: clamp(
+                          wordsToTokens(Number(e.target.value) || 0),
+                          100,
+                          1500,
+                        ),
+                      })
+                    }
+                  />
+                  <span
+                    aria-hidden
+                    className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground"
+                  >
+                    {t("aiAssistants.behaviour.wordsUnit")}
+                  </span>
+                </div>
+                <FieldHint>
+                  {t("aiAssistants.behaviour.maxTokensHint")}
+                  {effectiveTokens !== draft.max_output_tokens ? (
+                    // The old copy said "the advanced limit below still applies",
+                    // which is a confession rather than an explanation. The cap
+                    // is min(number, preset), so EITHER can silently win — say
+                    // plainly where answers actually stop.
+                    <>
+                      {" "}
+                      <span className="text-amber-600 dark:text-amber-500">
+                        {t("aiAssistants.behaviour.maxTokensEffective", {
+                          words: tokensToWords(effectiveTokens),
+                        })}
+                      </span>
+                    </>
+                  ) : null}
+                </FieldHint>
+              </Field>
+            </PanelBody>
+          </Panel>
+
+          <Panel>
+            <PanelHeader
+              icon={<Shield className="h-3.5 w-3.5" />}
+              title={t("aiAssistants.behaviour.domainsTitle")}
+            />
+            <PanelBody>
+              <FieldHint>{t("aiAssistants.behaviour.domainsHint")}</FieldHint>
+              <FieldAnchor path="allowed_domains">
+                <DomainTagInput
+                  value={draft.allowed_domains}
+                  disabled={!canEdit}
+                  onChange={(allowed_domains) => onChange({ allowed_domains })}
+                />
+              </FieldAnchor>
+            </PanelBody>
+          </Panel>
+
+          <Panel className="lg:col-span-2">
+            <PanelHeader
+              icon={<SlidersHorizontal className="h-3.5 w-3.5" />}
+              title={t("aiAssistants.behaviour.extrasTitle")}
+            />
+            <PanelBody>
+              <FieldAnchor path="retrieval.rerank">
+                <label className="flex cursor-pointer items-start justify-between gap-4 rounded-lg border border-border px-3 py-2.5">
+                  <span className="space-y-0.5">
+                    <span className="block text-sm">
+                      {t("aiAssistants.behaviour.rerank")}
+                    </span>
+                    <span className="block text-xs text-muted-foreground">
+                      {t("aiAssistants.behaviour.rerankHint")}
+                    </span>
+                  </span>
+                  <Switch
+                    checked={rerank}
+                    disabled={!canEdit}
+                    onCheckedChange={(v) =>
+                      onChange({ retrieval: { ...draft.retrieval, rerank: v } })
+                    }
+                    aria-label={t("aiAssistants.behaviour.rerank")}
+                    className="mt-0.5"
+                  />
+                </label>
+              </FieldAnchor>
+
+              <FieldAnchor path="attachments.enabled">
+                <div className="rounded-lg border border-border">
+                  <label className="flex cursor-pointer items-start justify-between gap-4 px-3 py-2.5">
+                    <span className="space-y-0.5">
+                      <span className="flex items-center gap-1.5 text-sm">
+                        <Paperclip className="h-3.5 w-3.5 text-muted-foreground" />
+                        {t("aiAssistants.behaviour.attachmentsEnabled")}
+                      </span>
+                      <span className="block text-xs text-muted-foreground">
+                        {t("aiAssistants.behaviour.attachmentsHint")}
+                      </span>
+                    </span>
+                    <Switch
+                      checked={attachments.enabled}
+                      disabled={!canEdit}
+                      onCheckedChange={(v) => setAttachments({ enabled: v })}
+                      aria-label={t("aiAssistants.behaviour.attachmentsEnabled")}
+                      className="mt-0.5"
+                    />
+                  </label>
+                  <div
+                    className={cn(
+                      "grid gap-2 border-t border-border px-3 py-2.5 sm:grid-cols-2",
+                      !attachments.enabled && "opacity-50",
+                    )}
+                  >
+                    <label className="flex items-center gap-2 text-sm">
+                      <Checkbox
+                        checked={attachments.images}
+                        disabled={!canEdit || !attachments.enabled}
+                        onCheckedChange={(v) =>
+                          setAttachments({ images: v === true })
+                        }
+                      />
+                      {t("aiAssistants.behaviour.attachmentsImages")}
+                    </label>
+                    <label className="flex items-center gap-2 text-sm">
+                      <Checkbox
+                        checked={attachments.documents}
+                        disabled={!canEdit || !attachments.enabled}
+                        onCheckedChange={(v) =>
+                          setAttachments({ documents: v === true })
+                        }
+                      />
+                      {t("aiAssistants.behaviour.attachmentsDocuments")}
+                    </label>
+                  </div>
+                </div>
+              </FieldAnchor>
+
+              <FieldAnchor path="web_search.enabled">
+                <div className="rounded-lg border border-border">
+                  <label className="flex cursor-pointer items-start justify-between gap-4 px-3 py-2.5">
+                    <span className="space-y-0.5">
+                      <span className="flex items-center gap-1.5 text-sm">
+                        <Globe className="h-3.5 w-3.5 text-muted-foreground" />
+                        {t("aiAssistants.behaviour.webSearchEnabled")}
+                      </span>
+                      <span className="block text-xs text-muted-foreground">
+                        {t("aiAssistants.behaviour.webSearchHint")}
+                      </span>
+                    </span>
+                    <Switch
+                      checked={webSearch.enabled}
+                      disabled={!canEdit}
+                      onCheckedChange={(v) => setWebSearch({ enabled: v })}
+                      aria-label={t("aiAssistants.behaviour.webSearchEnabled")}
+                      className="mt-0.5"
+                    />
+                  </label>
+                  {webSearch.enabled && searchConfigured === false ? (
+                    // The toggle used to read "on" whatever the server could do, so
+                    // an operator with search switched on got an assistant telling
+                    // visitors it could not browse, with nothing to explain it.
+                    <p className="border-t border-amber-500/30 bg-amber-500/10 px-3 py-2 text-xs text-amber-800 dark:text-amber-300">
+                      {t("aiAssistants.behaviour.webSearchNotConfigured")}
+                    </p>
+                  ) : null}
+                  <div
+                    className={cn(
+                      "space-y-2 border-t border-border px-3 py-2.5",
+                      !webSearch.enabled && "opacity-50",
+                    )}
+                  >
+                    <Field>
+                      <Label htmlFor="ws-domains">
+                        {t("aiAssistants.behaviour.webSearchDomains")}
+                      </Label>
+                      <Textarea
+                        id="ws-domains"
+                        rows={3}
+                        className="font-mono text-xs"
+                        placeholder={"lg.com\nbosch-home.com\nyoutube.com"}
+                        value={webSearch.domains.join("\n")}
+                        disabled={!canEdit || !webSearch.enabled}
+                        onChange={(e) =>
+                          setWebSearch({
+                            domains: e.target.value
+                              .split(/[\n,]/)
+                              .map((d) => d.trim())
+                              .filter(Boolean),
+                          })
+                        }
+                      />
+                      <p className="text-xs text-muted-foreground">
+                        {t("aiAssistants.behaviour.webSearchDomainsHint")}
+                      </p>
+                    </Field>
+                    <Field>
+                      <Label>{t("aiAssistants.behaviour.webSearchMode.label")}</Label>
+                      <Segmented label={t("aiAssistants.behaviour.webSearchMode.label")}>
+                        {(["ask", "direct"] as const).map((m) => (
+                          <SegmentedButton
+                            key={m}
+                            active={(webSearch.mode ?? "ask") === m}
+                            onClick={() =>
+                              canEdit && webSearch.enabled && setWebSearch({ mode: m })
+                            }
+                          >
+                            {t(`aiAssistants.behaviour.webSearchMode.${m}`)}
+                          </SegmentedButton>
+                        ))}
+                      </Segmented>
+                      <p className="text-xs text-muted-foreground">
+                        {t(
+                          `aiAssistants.behaviour.webSearchMode.${webSearch.mode ?? "ask"}Hint`,
+                        )}
+                      </p>
+                    </Field>
+                    <Field>
+                      <Label htmlFor="ws-limit">
+                        {t("aiAssistants.behaviour.webSearchLimit")}
+                      </Label>
+                      <Input
+                        id="ws-limit"
+                        type="number"
+                        min={0}
+                        max={500}
+                        className="w-32"
+                        value={webSearch.daily_limit}
+                        disabled={!canEdit || !webSearch.enabled}
+                        onChange={(e) =>
+                          setWebSearch({
+                            daily_limit: Math.max(0, Math.min(500, Number(e.target.value) || 0)),
+                          })
+                        }
+                      />
+                      <p className="text-xs text-muted-foreground">
+                        {t("aiAssistants.behaviour.webSearchLimitHint")}
+                      </p>
+                    </Field>
+                  </div>
+                </div>
+              </FieldAnchor>
+            </PanelBody>
+          </Panel>
+        </div>
+      </AdvancedSection>
     </div>
   );
 }

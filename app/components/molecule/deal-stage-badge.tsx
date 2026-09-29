@@ -1,4 +1,5 @@
 import { useTranslation } from "react-i18next";
+import { useStageLabel } from "~/lib/pipeline-stages/use-stage-label";
 import { cn } from "~/lib/utils";
 import { useDealStageLookup } from "~/lib/hooks/usePipelineStages";
 import {
@@ -6,7 +7,6 @@ import {
   resolveStageColorsByKey,
 } from "~/lib/pipeline-stages/colors";
 import {
-  resolveStageLabel,
   resolveStageLabelByKey,
 } from "~/lib/pipeline-stages/labels";
 
@@ -26,13 +26,14 @@ export function DealStageBadge({
   className,
 }: DealStageBadgeProps) {
   const { t } = useTranslation();
+  const stageLabel = useStageLabel();
   const { resolve } = useDealStageLookup();
   const row = resolve(pipelineId, stage);
   const facets = row
     ? resolveStageColors(row)
     : resolveStageColorsByKey("deal", stage);
   const label = row
-    ? resolveStageLabel(row, t)
+    ? stageLabel(row)
     : resolveStageLabelByKey("deal", stage, t);
 
   return (

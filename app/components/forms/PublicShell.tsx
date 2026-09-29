@@ -4,7 +4,7 @@
  * Suppressed entirely under ?embed=1 so the iframe shows only the form and
  * inherits the host page's own background. "Inherits the host page's
  * background" was a lie until the document itself was made transparent:
- * app.css paints html and body `#0f0f11` for the dashboard, and an iframe
+ * app.css paints html and body paper `#f5f4f1` for the dashboard, and an iframe
  * document paints its own body over whatever is behind it.
  *
  * DocumentScheme pins the colour scheme to the form's own theme, so native
@@ -42,10 +42,10 @@ export function PublicShell({
 }
 
 /**
- * Overrides the dashboard's `html, body { background: #0f0f11; color-scheme:
- * dark }` for this route only. A plain <style> element rather than a class,
+ * Overrides the dashboard's `html, body { background: #f5f4f1; color-scheme:
+ * light }` for this route only. A plain <style> element rather than a class,
  * because the rules have to reach html and body, which the route does not
- * render. Ships in the SSR HTML, so there is no flash of dark background.
+ * render. Ships in the SSR HTML, so there is no flash of the dashboard's paper.
  */
 export function DocumentScheme({
   theme,

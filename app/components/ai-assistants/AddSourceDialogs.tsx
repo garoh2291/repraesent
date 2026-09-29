@@ -1,12 +1,8 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { ChevronRight, Loader2 } from "lucide-react";
+import { Loader2 } from "lucide-react";
+import { AdvancedSection } from "~/components/notebook/advanced-section";
 import { Button } from "~/components/ui/button";
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from "~/components/ui/collapsible";
 import { Segmented, SegmentedButton } from "~/components/forms/chrome";
 import {
   Dialog,
@@ -28,6 +24,7 @@ import {
   type CrawlLanguages,
   type CrawlOptions,
 } from "~/lib/api/ai-assistants";
+import { desktopAutoFocus } from "~/lib/utils/touch";
 
 export const TEXT_MAX = 60_000;
 
@@ -54,7 +51,6 @@ export function CrawlWebsiteDialog({
   const [limit, setLimit] = useState(CRAWL_LIMIT_DEFAULT);
   const [languages, setLanguages] = useState<CrawlLanguages>("primary");
   const [excludeText, setExcludeText] = useState("");
-  const [advancedOpen, setAdvancedOpen] = useState(false);
 
   useEffect(() => {
     if (open) {
@@ -62,7 +58,6 @@ export function CrawlWebsiteDialog({
       setLimit(CRAWL_LIMIT_DEFAULT);
       setLanguages("primary");
       setExcludeText("");
-      setAdvancedOpen(false);
     }
   }, [open]);
 
@@ -100,31 +95,12 @@ export function CrawlWebsiteDialog({
             </Label>
             <Input
               id="crawl-url"
-              autoFocus
+              autoFocus={desktopAutoFocus()}
               inputMode="url"
               value={url}
               onChange={(e) => setUrl(e.target.value)}
               placeholder="https://example.com"
             />
-          </div>
-          <div className="space-y-3">
-            <div className="flex items-baseline justify-between">
-              <Label htmlFor="crawl-limit">
-                {t("aiAssistants.knowledge.crawl.limit")}
-              </Label>
-              <span className="text-sm tabular-nums text-muted-foreground">
-                {t("aiAssistants.knowledge.crawl.pages", { count: limit })}
-              </span>
-            </div>
-            <Slider
-              id="crawl-limit"
-              min={CRAWL_LIMIT_MIN}
-              max={CRAWL_LIMIT_MAX}
-              step={10}
-              value={[limit]}
-              onValueChange={(v) => setLimit(v[0] ?? CRAWL_LIMIT_DEFAULT)}
-            />
-            <FieldHint>{t("aiAssistants.knowledge.crawl.limitHint")}</FieldHint>
           </div>
           <div className="space-y-2">
             <Label>{t("aiAssistants.knowledge.crawl.languages.label")}</Label>
@@ -143,12 +119,36 @@ export function CrawlWebsiteDialog({
               {t("aiAssistants.knowledge.crawl.languages.hint")}
             </FieldHint>
           </div>
-          <Collapsible open={advancedOpen} onOpenChange={setAdvancedOpen}>
-            <CollapsibleTrigger className="group inline-flex items-center gap-1 text-xs font-medium text-muted-foreground hover:text-foreground">
-              <ChevronRight className="h-3.5 w-3.5 transition-transform group-data-[state=open]:rotate-90 motion-reduce:transition-none" />
-              {t("aiAssistants.knowledge.crawl.advanced")}
-            </CollapsibleTrigger>
-            <CollapsibleContent className="space-y-2 pt-3">
+          {/* How many pages and which to skip are cost and site-structure
+              questions — the default is sensible, so they wait under
+              Advanced. The one-liner keeps the cap honest in plain view. */}
+          <p className="text-xs leading-relaxed text-muted-foreground">
+            {t("aiAssistants.knowledge.crawl.limitPlain", { count: limit })}
+          </p>
+          <AdvancedSection
+            storageKey="ai-crawl"
+            hint={t("aiAssistants.knowledge.crawl.advancedHint")}
+          >
+            <div className="space-y-3">
+              <div className="flex items-baseline justify-between">
+                <Label htmlFor="crawl-limit">
+                  {t("aiAssistants.knowledge.crawl.limit")}
+                </Label>
+                <span className="text-sm tabular-nums text-muted-foreground">
+                  {t("aiAssistants.knowledge.crawl.pages", { count: limit })}
+                </span>
+              </div>
+              <Slider
+                id="crawl-limit"
+                min={CRAWL_LIMIT_MIN}
+                max={CRAWL_LIMIT_MAX}
+                step={10}
+                value={[limit]}
+                onValueChange={(v) => setLimit(v[0] ?? CRAWL_LIMIT_DEFAULT)}
+              />
+              <FieldHint>{t("aiAssistants.knowledge.crawl.limitHint")}</FieldHint>
+            </div>
+            <div className="space-y-2">
               <Label htmlFor="crawl-exclude">
                 {t("aiAssistants.knowledge.crawl.excludePaths")}
               </Label>
@@ -162,8 +162,8 @@ export function CrawlWebsiteDialog({
               <FieldHint>
                 {t("aiAssistants.knowledge.crawl.excludePathsHint")}
               </FieldHint>
-            </CollapsibleContent>
-          </Collapsible>
+            </div>
+          </AdvancedSection>
           <DialogFooter>
             <Button
               type="button"
@@ -273,7 +273,7 @@ export function TextSourceDialog({
             </Label>
             <Input
               id="text-title"
-              autoFocus
+              autoFocus={desktopAutoFocus()}
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder={t("aiAssistants.knowledge.text.namePlaceholder")}

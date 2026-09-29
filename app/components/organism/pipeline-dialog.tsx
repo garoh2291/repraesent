@@ -29,6 +29,7 @@ import {
   DialogTitle,
 } from "~/components/ui/dialog";
 import { cn } from "~/lib/utils";
+import { desktopAutoFocus } from "~/lib/utils/touch";
 
 /**
  * Create or edit a pipeline.
@@ -181,7 +182,7 @@ export function PipelineDialog({
                 onChange={(e) => setName(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && submit()}
                 maxLength={80}
-                autoFocus
+                autoFocus={desktopAutoFocus()}
                 placeholder={t("pipeline.pipelineNamePlaceholder", {
                   defaultValue: "e.g. Enterprise sales",
                 })}

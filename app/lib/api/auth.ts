@@ -1,3 +1,4 @@
+import axios from "axios";
 import {
   apiClient,
   extractErrorCode,
@@ -26,6 +27,8 @@ export interface User {
   avatar_thumb_url?: string | null;
   created_at?: string;
   updated_at?: string;
+  /** Onboarding v2: finished, welcome screen (intro call) not closed yet. */
+  onboarding_welcome_workspace_id?: string | null;
 }
 
 /**
@@ -161,11 +164,119 @@ export interface WorkspaceContext {
   doorboost_brand_id?: string | null;
   /** "Try a live demo" throwaway workspace (migration 126). */
   is_demo?: boolean;
+  /** The platform's own workspace (migration 176): owns onboarding config. */
+  is_root?: boolean;
+  /** Root's Settings → Support switched "Contact re:praesent" on for this workspace. */
+  support_contact_enabled?: boolean;
+  /** Business type from the workspace profile (CLIENT_TYPES); drives default deal-stage words. Older API: absent. */
+  industry?: string | null;
+  /** Onboarding v2 in progress for this workspace, and whether it's mine. */
+  onboarding?: { open: boolean; owner_is_me: boolean } | null;
   demo_expires_at?: string | null;
   /** Optional: older backends don't send it (deploy skew). */
   avatar_url?: string | null;
   avatar_thumb_url?: string | null;
 }
+
+/**
+ * Why sending a sign-in / sign-up email failed, as something the page can say
+ * in the reader's language. The server's English `message` is kept for logs
+ * only — pages show `authErrorKey(err)` instead.
+ */
+export type AuthRequestErrorKind =
+  | "network"
+  | "tooMany"
+  | "adminManaged"
+  /** Register: this email can already sign in (no email was sent). */
+  | "accountExists"
+  /** Sign in: nobody has registered with this email. */
+  | "accountNotFound"
+  /** Sign in: registered, but never finished signing up (no workspace yet). */
+  | "signupUnfinished"
+  | "other";
+
+export class AuthRequestError extends Error {
+  constructor(
+    message: string,
+    readonly kind: AuthRequestErrorKind,
+    readonly status?: number,
+  ) {
+    super(message);
+    this.name = "AuthRequestError";
+  }
+}
+
+/** No response at all (offline, DNS, CORS, timeout) counts as a network error. */
+const isNetworkFailure = (error: unknown): boolean => {
+  if (!axios.isAxiosError(error)) return false;
+  return (
+    !error.response ||
+    error.code === "ERR_NETWORK" ||
+    error.code === "ECONNABORTED" ||
+    error.code === "ETIMEDOUT"
+  );
+};
+
+const toAuthRequestError = (error: unknown, fallback: string): AuthRequestError => {
+  const apiError = createApiError(error);
+  const code = extractErrorCode(error);
+  const kind: AuthRequestErrorKind = isNetworkFailure(error)
+    ? "network"
+    : apiError.status === 429
+      ? "tooMany"
+      : code === "ACCOUNT_EXISTS"
+        ? "accountExists"
+        : code === "ACCOUNT_NOT_FOUND"
+          ? "accountNotFound"
+          : code === "SIGNUP_UNFINISHED"
+            ? "signupUnfinished"
+            : "other";
+  return new AuthRequestError(apiError.message || fallback, kind, apiError.status);
+};
+
+/**
+ * The i18n key (with its English default) for a failed email request. Never
+ * the raw server text.
+ */
+export const authErrorMessage = (
+  error: unknown,
+  t: (key: string, defaultValue: string) => string,
+  fallbackKey = "auth.login.somethingWrong",
+): string => {
+  if (error instanceof AuthRequestError || axios.isAxiosError(error)) {
+    const kind =
+      error instanceof AuthRequestError ? error.kind : toAuthRequestError(error, "").kind;
+    if (kind === "network")
+      return t("auth.errors.network", "No connection. Check your internet and try again.");
+    if (kind === "tooMany")
+      return t("auth.errors.tooMany", "Too many tries. Wait a minute, then send again.");
+    if (kind === "adminManaged")
+      return t(
+        "auth.errors.adminManaged",
+        "This email belongs to an admin account. Sign in on the sign-in page instead.",
+      );
+    if (kind === "accountExists")
+      return t("auth.errors.accountExists", "This email already has an account. Please sign in.");
+    if (kind === "accountNotFound")
+      return t(
+        "auth.errors.accountNotFound",
+        "There is no account with this email yet. Create one — it takes a minute.",
+      );
+    if (kind === "signupUnfinished")
+      return t(
+        "auth.errors.signupUnfinished",
+        "You started signing up with this email but didn't finish. Carry on where you left off.",
+      );
+  }
+  return t(fallbackKey, "Something went wrong. Please try again.");
+};
+
+/** Which kind of failure this was, so a page can offer the right next step. */
+export const authErrorKind = (error: unknown): AuthRequestErrorKind => {
+  if (error instanceof AuthRequestError) return error.kind;
+  if (axios.isAxiosError(error)) return toAuthRequestError(error, "").kind;
+  return "other";
+};
 
 /**
  * Register for self-service (sends magic link)
@@ -185,12 +296,17 @@ export const register = async (
     return response.data;
   } catch (error) {
     const apiError = createApiError(error);
+    if (apiError.status === 409 && extractErrorCode(error) === "ACCOUNT_EXISTS") {
+      throw new AuthRequestError(apiError.message, "accountExists", 409);
+    }
     if (apiError.status === 409) {
-      throw new Error(
+      throw new AuthRequestError(
         "This email is managed by an admin account. Use the login page.",
+        "adminManaged",
+        409,
       );
     }
-    throw new Error(apiError.message || "Failed to register");
+    throw toAuthRequestError(error, "Failed to register");
   }
 };
 
@@ -216,8 +332,7 @@ export const requestMagicLink = async (
   try {
     await apiClient.post("/users/magic-link", { email, locale });
   } catch (error) {
-    const apiError = createApiError(error);
-    throw new Error(apiError.message || "Failed to send magic link");
+    throw toAuthRequestError(error, "Failed to send magic link");
   }
 };
 
@@ -264,6 +379,36 @@ export const verifyMagicLink = async (token: string): Promise<AuthResponse> => {
   }
 };
 
+/** Causes for a 6-digit login code that did not work (PWA_PUSH_PLAN.md). */
+export const CODE_INVALID = "CODE_INVALID";
+export const CODE_EXPIRED = "CODE_EXPIRED";
+export const CODE_TOO_MANY = "CODE_TOO_MANY";
+export const MAGIC_LINK_INELIGIBLE = "MAGIC_LINK_INELIGIBLE";
+
+/**
+ * Sign in with the 6-digit code from the login email. Same response and the
+ * same refresh-token storage as `verifyMagicLink`; failures carry the API's
+ * `code` (CODE_INVALID | CODE_EXPIRED | CODE_TOO_MANY | MAGIC_LINK_INELIGIBLE)
+ * so the login page can say what happened.
+ */
+export const verifyMagicCode = async (email: string, code: string): Promise<AuthResponse> => {
+  try {
+    const response = await apiClient.post<AuthResponse>("/users/magic-link/verify-code", {
+      email: email.trim(),
+      code,
+    });
+    if (response.data.refresh_token) {
+      setStoredRefreshToken(response.data.refresh_token);
+    }
+    return response.data;
+  } catch (error) {
+    const apiError = createApiError(error);
+    // 429 from a rate limiter without a body code still means "too many".
+    const code = extractErrorCode(error) ?? (apiError.status === 429 ? CODE_TOO_MANY : null);
+    throw new MagicLinkError(apiError.message || "Invalid or expired code", code);
+  }
+};
+
 /**
  * Get user dashboard context (user + workspaces with services and role)
  */
@@ -280,6 +425,33 @@ export const getUserContext = async (): Promise<UserContextResponse> => {
     throw new Error(apiError.message || "Failed to fetch user context");
   }
 };
+
+/** 401/403 from the context call: the session really is gone. */
+export function isAuthRejection(error: unknown): boolean {
+  const status = (error as { response?: { status?: number } } | null)?.response?.status;
+  return status === 401 || status === 403;
+}
+
+/**
+ * getUserContext, retried with backoff on anything that is NOT an auth
+ * rejection (5xx, pool timeout, network). A transient database blip must never
+ * cost the user their session — and after a magic link the one-time token is
+ * already spent, so giving up would strand them (the demo has no password).
+ */
+export async function getUserContextWithRetry(
+  delaysMs: number[] = [1000, 2000, 4000, 8000],
+  onRetry?: (attempt: number) => void,
+): Promise<UserContextResponse> {
+  for (let attempt = 0; ; attempt++) {
+    try {
+      return await getUserContext();
+    } catch (error) {
+      if (isAuthRejection(error) || attempt >= delaysMs.length) throw error;
+      onRetry?.(attempt + 1);
+      await new Promise((r) => setTimeout(r, delaysMs[attempt]));
+    }
+  }
+}
 
 /**
  * Update current user's locale
@@ -301,5 +473,11 @@ export const completeOnboarding = async (): Promise<void> => {
  * Logout (client-side only)
  */
 export const logout = async (): Promise<void> => {
-  return Promise.resolve();
+  // A signed-out phone must not keep showing this person's inquiries on the
+  // lock screen. Best effort, capped so signing out never hangs.
+  const { forgetThisDeviceForAlerts } = await import("~/lib/pwa/use-pwa");
+  await Promise.race([
+    forgetThisDeviceForAlerts().catch(() => undefined),
+    new Promise((r) => setTimeout(r, 2500)),
+  ]);
 };

@@ -26,6 +26,7 @@ import { ConfirmDeleteDialog } from "~/components/molecule/confirm-delete-dialog
 import { useDocumentMeta } from "~/lib/hooks/use-document-meta";
 import { useDebounce } from "~/lib/hooks/useDebounce";
 import { useSearchShortcut } from "~/lib/hooks/useSearchShortcut";
+import { desktopAutoFocus } from "~/lib/utils/touch";
 
 export default function EmailTemplatesIndex() {
   const { t, i18n: i18next } = useTranslation();
@@ -78,7 +79,7 @@ export default function EmailTemplatesIndex() {
     <div className="mx-auto w-full max-w-[1280px] space-y-6 p-4 py-10! sm:space-y-8 sm:p-6 app-fade-in">
       <div className="flex flex-col gap-3 app-fade-up sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-xl font-semibold tracking-tight text-foreground sm:text-2xl">
+          <h1 className="title-display text-[26px] font-semibold text-foreground sm:text-[30px]">
             {t("emailCampaigns.templates.title", {
               defaultValue: "Email templates",
             })}
@@ -174,7 +175,7 @@ export default function EmailTemplatesIndex() {
             </DialogTitle>
           </DialogHeader>
           <Input
-            autoFocus
+            autoFocus={desktopAutoFocus()}
             value={newName}
             onChange={(e) => setNewName(e.target.value)}
             placeholder={t("emailCampaigns.templates.namePlaceholder", {
@@ -257,7 +258,7 @@ function TemplateCard({
         type="button"
         onClick={onDelete}
         aria-label={t("common.delete", { defaultValue: "Delete" })}
-        className="absolute bottom-3 right-3 rounded p-1.5 text-muted-foreground opacity-0 transition-opacity hover:bg-destructive/10 hover:text-destructive group-hover:opacity-100"
+        className="absolute bottom-3 right-3 rounded p-1.5 text-muted-foreground opacity-0 transition-opacity hover:bg-destructive/10 hover:text-destructive group-hover:opacity-100 pointer-coarse:bottom-1.5 pointer-coarse:right-1.5 pointer-coarse:p-[13px] pointer-coarse:opacity-100"
       >
         <Trash2 className="h-3.5 w-3.5" />
       </button>

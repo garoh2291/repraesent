@@ -31,6 +31,25 @@ export interface WorkspaceAiTestResult {
 
 const BASE = "/workspace-ai/settings";
 
+/** What the workspace's OpenRouter key spent, per job (workspace_ai_spend). */
+export interface WorkspaceAiSpend {
+  /** false until the server has the ledger (migration 203). */
+  ready: boolean;
+  /** This month first, then last month. "YYYY-MM". */
+  months: Array<{
+    month: string;
+    total_micro_usd: number;
+    /** The part of the total that is a price-table estimate, not OpenRouter's bill. */
+    estimated_micro_usd: number;
+    features: Array<{ feature: string; cost_micro_usd: number; estimated_micro_usd: number; calls: number }>;
+  }>;
+}
+
+export async function getWorkspaceAiSpend(): Promise<WorkspaceAiSpend> {
+  const r = await apiClient.get<WorkspaceAiSpend>(`${BASE}/spend`);
+  return r.data;
+}
+
 export async function getWorkspaceAiSettings(): Promise<WorkspaceAiStatus> {
   const r = await apiClient.get<WorkspaceAiStatus>(BASE);
   return r.data;

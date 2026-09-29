@@ -1,7 +1,8 @@
-import { useEffect, useMemo, useState } from "react";
-import { Link, useParams, useNavigate } from "react-router";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { Link, useParams, useNavigate, useSearchParams } from "react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
+import { BackLink } from "~/components/notebook/back-link";
 import { toast } from "sonner";
 import { useAuthContext } from "~/providers/auth-provider";
 import {
@@ -20,12 +21,21 @@ import type { WorkspaceMemberItem } from "~/components/organism/tasks/task-form-
 import { useCanEditLeads } from "~/lib/hooks/useCanEditLeads";
 import { useUpdateLeadStatus } from "~/lib/hooks/useUpdateLeadStatus";
 import { Button } from "~/components/ui/button";
-import { ArrowLeft, UserCheck, UserPlus } from "lucide-react";
+import { Phone, UserPlus } from "lucide-react";
+import {
+  LeadSpamButton,
+  LeadSpamMenuItem,
+  useLeadSpamActions,
+} from "~/components/organism/lead-spam/lead-spam-button";
+import { useHideLeadGuard } from "~/lib/leads/use-hide-lead-guard";
 import { getContact, convertLeadToContact } from "~/lib/api/contacts-crm";
 import { ContactHero } from "~/components/organism/contact-detail/contact-hero";
 import { ContactEmailSuggestion } from "~/components/organism/contact-email-suggestion";
 import { extractErrorMessage } from "~/lib/api/axios-instance";
 import { CreateDealDialog } from "~/components/organism/create-deal-dialog";
+import { LeadActionBar } from "~/components/notebook/lead-action-bar";
+import { useLeadFlow } from "~/components/notebook/lead-flow";
+import { telHref } from "~/components/notebook/contact-actions";
 import i18n from "~/i18n";
 import { useDocumentMeta } from "~/lib/hooks/use-document-meta";
 
@@ -54,7 +64,9 @@ export default function LeadFormLeadId() {
     useState<string | null>(null);
 
   const updateStatusMutation = useUpdateLeadStatus();
+  const { requestStatusChange: requestHideGuarded, guardModal: hideGuardModal } = useHideLeadGuard();
   const canEdit = useCanEditLeads();
+  const leadFlow = useLeadFlow();
 
   const workspaceQuery = useQuery({
     queryKey: ["workspace-detail"],
@@ -109,6 +121,13 @@ export default function LeadFormLeadId() {
     },
   });
 
+  // Phones reach "Mark as spam" from the action bar's ⋯; the mutation lives
+  // here so it outlives the menu (same actions as LeadSpamButton).
+  const spamActions = useLeadSpamActions({
+    id: leadId ?? "",
+    status: lead?.status ?? "",
+  });
+
   const contactLinkLoading =
     leadLoading || (!!linkedContactId && !linkedContactData);
 
@@ -153,6 +172,38 @@ export default function LeadFormLeadId() {
     }
   }, [currentWorkspace, navigate]);
 
+  // "Call now" on an Android phone alert opens this page with ?call=1.
+  // Dialling needs a tap unless the browser still counts the notification
+  // tap as one, so usually a big "Call …" button waits at the top instead.
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [callPrompt, setCallPrompt] = useState(false);
+  const callHandled = useRef(false);
+  useEffect(() => {
+    if (callHandled.current || !lead || searchParams.get("call") !== "1") return;
+    callHandled.current = true;
+    const next = new URLSearchParams(searchParams);
+    next.delete("call");
+    setSearchParams(next, { replace: true });
+    const phone = lead.phone?.trim();
+    if (!phone || !canEdit) return;
+    const activation = (navigator as Navigator & { userActivation?: { isActive: boolean } }).userActivation;
+    if (activation?.isActive) {
+      leadFlow.contact(
+        {
+          id: lead.id,
+          name: lead.full_name || [lead.first_name, lead.last_name].filter(Boolean).join(" ").trim(),
+          status: lead.status,
+          phone: lead.phone,
+          email: lead.email,
+        },
+        "call",
+      );
+      window.location.href = telHref(phone);
+    } else {
+      setCallPrompt(true);
+    }
+  }, [lead, searchParams, setSearchParams, canEdit, leadFlow]);
+
   useEffect(() => {
     if (lead) {
       const name =
@@ -185,7 +236,7 @@ export default function LeadFormLeadId() {
     id: string,
     status: import("~/lib/api/leads").LeadStatus,
   ) => {
-    updateStatusMutation.mutate({ id, status });
+    requestHideGuarded(lead, status, () => updateStatusMutation.mutateAsync({ id, status }));
   };
 
   const displayName =
@@ -193,33 +244,69 @@ export default function LeadFormLeadId() {
     [lead.first_name, lead.last_name].filter(Boolean).join(" ").trim() ||
     "Lead";
 
+  // The linked contact's own address, sent through the inquiry loop so it
+  // lands in History and asks how it went (mailto: stays the fallback).
+  const linkedEmail = (() => {
+    const emails = linkedContactData?.emails ?? [];
+    const e = emails.find((x) => x.is_primary) ?? emails[0];
+    return e?.address ? String(e.address) : null;
+  })();
+  const composeToLinked =
+    canEdit && leadFlow.emailInApp && linkedEmail
+      ? () =>
+          leadFlow.contact(
+            {
+              id: lead.id,
+              name: displayName,
+              status: lead.status,
+              phone: lead.phone,
+              email: linkedEmail,
+            },
+            "email",
+          )
+      : undefined;
+
   return (
     <div className="p-4 sm:p-6 space-y-4 sm:space-y-6 app-fade-in">
       {/* Header */}
       <div className="app-fade-up space-y-2">
-        <Link
-          to="/lead-form"
-          className="inline-flex items-center gap-1.5 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors"
-        >
-          <ArrowLeft className="h-3.5 w-3.5" />
+        <BackLink to="/lead-form">
           {t("leads.detail.backToLeads")}
-        </Link>
-        <h1 className="text-xl sm:text-2xl font-semibold text-foreground tracking-tight">
+        </BackLink>
+        <h1 className="title-display text-[26px] sm:text-[32px] font-semibold text-foreground">
           {displayName}
         </h1>
+        {callPrompt && lead.phone ? (
+          <a
+            href={telHref(lead.phone)}
+            onClick={() => {
+              setCallPrompt(false);
+              leadFlow.contact(
+                { id: lead.id, name: displayName, status: lead.status, phone: lead.phone, email: lead.email },
+                "call",
+              );
+            }}
+            className="press mt-1 flex h-14 w-full items-center justify-center gap-2.5 rounded-xl bg-foreground text-[16px] font-semibold text-background hover:bg-foreground/90 sm:w-auto sm:px-8"
+          >
+            <Phone className="size-5" aria-hidden />
+            {t("calls.callName", "Call {{name}}", { name: displayName })}
+          </a>
+        ) : null}
+        {canEdit ? (
+          <LeadActionBar
+            lead={lead}
+            className="pt-2"
+            phoneMenu={<LeadSpamMenuItem actions={spamActions} />}
+          />
+        ) : null}
       </div>
 
       <div className="border-t border-border" />
 
       {linkedContactId && linkedContactData ? (
         <div className="app-fade-up space-y-2">
-          <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2.5 py-0.5 text-[11px] font-medium text-emerald-700 dark:text-emerald-400">
-            <UserCheck className="h-3 w-3" />
-            {t("leads.detail.hasContact", {
-              defaultValue: "This lead is linked to a contact.",
-            })}
-          </span>
           <ContactHero
+            variant="linked"
             displayName={
               (linkedContactData.contact?.full_name as string)?.trim() ||
               [
@@ -238,6 +325,7 @@ export default function LeadFormLeadId() {
             addresses={linkedContactData.addresses}
             leadId={leadId ?? null}
             viewContactId={linkedContactId}
+            onCompose={composeToLinked}
             onOpenCreateDeal={
               canEdit && linkedContactId
                 ? () => {
@@ -256,7 +344,7 @@ export default function LeadFormLeadId() {
       ) : emailMatch ? (
         <ContactEmailSuggestion contact={emailMatch} email={leadEmail} />
       ) : (
-        <div className="app-fade-up rounded-xl border border-border bg-muted/30 px-4 py-3 flex items-center justify-between gap-3">
+        <div className="app-fade-up rounded-xl border border-border bg-muted/30 px-4 py-3 flex items-center justify-between gap-3 max-sm:flex-col max-sm:items-stretch max-sm:px-3">
           <span className="text-sm text-muted-foreground">
             {t("leads.detail.noContactLinked")}
           </span>
@@ -264,16 +352,22 @@ export default function LeadFormLeadId() {
             <Button
               variant="outline"
               size="sm"
-              className="gap-2 shrink-0"
+              className="gap-2 shrink-0 max-sm:h-11 max-sm:text-sm"
               disabled={convertMutation.isPending}
               onClick={() => convertMutation.mutate()}
             >
               <UserPlus className="h-4 w-4" />
               {convertMutation.isPending
                 ? t("common.loading")
-                : t("leads.detail.convertToContact")}
+                : t("leads.detail.saveAsContact", "Save as contact")}
             </Button>
           )}
+        </div>
+      )}
+
+      {canEdit && (
+        <div className="flex justify-end max-sm:hidden">
+          <LeadSpamButton lead={lead} />
         </div>
       )}
 
@@ -281,7 +375,7 @@ export default function LeadFormLeadId() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 app-fade-up app-fade-up-d1">
         {/* Lead info panel (+ payment card for product-form leads) */}
         <div className="space-y-4 sm:space-y-6">
-          <div className="rounded-2xl border border-border bg-card p-4 sm:p-6">
+          <div className="rounded-2xl border border-border bg-card p-3 sm:p-6">
             <LeadInfoSection
               lead={lead}
               onStatusChange={canEdit ? handleStatusChange : undefined}
@@ -299,7 +393,7 @@ export default function LeadFormLeadId() {
         </div>
 
         {/* Tasks + Notes + History panel */}
-        <div className="rounded-2xl border border-border bg-card p-4 sm:p-6">
+        <div className="rounded-2xl border border-border bg-card p-3 sm:p-6">
           <Tabs defaultValue="notes" className="w-full">
             <TabsList variant="line" className="w-full mb-4 sm:mb-5">
               <TabsTrigger value="notes">{t("leads.detail.notes")}</TabsTrigger>
@@ -344,6 +438,7 @@ export default function LeadFormLeadId() {
         prefillContactLabel={createDealDialogPrefillLabel}
         canCreate={canEdit}
       />
+      {hideGuardModal}
     </div>
   );
 }

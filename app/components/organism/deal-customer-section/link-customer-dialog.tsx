@@ -16,6 +16,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "~/components/ui/dialog";
+import { desktopAutoFocus } from "~/lib/utils/touch";
 
 interface LinkCustomerDialogProps {
   open: boolean;
@@ -132,7 +133,7 @@ export function LinkCustomerDialog({
             <div className="relative">
               <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input
-                autoFocus
+                autoFocus={desktopAutoFocus()}
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder={t("pipeline.customer.dialog.searchPlaceholder", {

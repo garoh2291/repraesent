@@ -183,7 +183,7 @@ export function ButtonEditor({
           <ArrowLeft className="h-3.5 w-3.5" />
           {t("wordpress.reAppointment.allButtons", "All buttons")}
         </button>
-        <h1 className="text-xl font-semibold tracking-tight text-foreground sm:text-2xl">
+        <h1 className="title-display text-[26px] font-semibold text-foreground sm:text-[30px]">
           {buttonId
             ? t("wordpress.reAppointment.editButton", "Edit button")
             : t("wordpress.reAppointment.newButton", "New button")}

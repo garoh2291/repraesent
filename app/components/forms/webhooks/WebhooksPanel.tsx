@@ -57,7 +57,7 @@ interface Props {
 }
 
 /**
- * The Webhooks tab. Cards per endpoint, a sheet to edit one, a sheet for its
+ * The "Send to other apps" tab (value `webhooks`). Cards per endpoint, a sheet to edit one, a sheet for its
  * deliveries. Everything a person needs to trust the integration is on the
  * card: on/off, where it goes, whether the last one landed, and a way to send
  * a test without waiting for a visitor.
@@ -137,6 +137,12 @@ export function WebhooksPanel({ formId, kind, canEdit }: Props) {
           }
         />
 
+        {/* One plain line before anything technical: what this is for, in
+            the names the owner has heard of. */}
+        <p className="border-b border-border px-4 py-3 text-[13px] leading-relaxed text-muted-foreground sm:px-5">
+          {t("forms.webhooks.intro")}
+        </p>
+
         {isLoading ? (
           <PanelBody>
             <div className="h-16 animate-pulse rounded-xl bg-muted/40" />
@@ -184,9 +190,15 @@ export function WebhooksPanel({ formId, kind, canEdit }: Props) {
                         {hook.events.map((e) => (
                           <span
                             key={e}
-                            className="rounded bg-muted px-1.5 py-0.5 font-mono text-[10px] text-muted-foreground"
+                            title={e}
+                            className="rounded bg-muted px-1.5 py-0.5 text-[11px] text-muted-foreground"
                           >
-                            {e}
+                            {t(
+                              `forms.webhooks.eventShort.${e.replace(".", "_")}`,
+                              {
+                                defaultValue: e,
+                              },
+                            )}
                           </span>
                         ))}
                       </div>
@@ -195,7 +207,7 @@ export function WebhooksPanel({ formId, kind, canEdit }: Props) {
                     <div className="flex items-center gap-1.5">
                       {canEdit ? (
                         <GhostAction
-                          className="h-8 text-xs"
+                          className="h-10 text-xs sm:h-8"
                           disabled={
                             test.isPending && test.variables?.id === hook.id
                           }
@@ -206,14 +218,7 @@ export function WebhooksPanel({ formId, kind, canEdit }: Props) {
                         </GhostAction>
                       ) : null}
                       <GhostAction
-                        className="h-8 text-xs"
-                        onClick={() => setLog(hook)}
-                      >
-                        <ScrollText className="h-3.5 w-3.5" />
-                        {t("forms.webhooks.deliveries")}
-                      </GhostAction>
-                      <GhostAction
-                        className="h-8 text-xs"
+                        className="h-10 text-xs sm:h-8"
                         onClick={() => setEditor({ open: true, webhook: hook })}
                       >
                         <Pencil className="h-3.5 w-3.5" />
@@ -221,37 +226,47 @@ export function WebhooksPanel({ formId, kind, canEdit }: Props) {
                           ? t("forms.webhooks.edit")
                           : t("forms.webhooks.view")}
                       </GhostAction>
-                      {canEdit ? (
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <button
-                              type="button"
-                              aria-label={t("forms.webhooks.more")}
-                              className="inline-flex h-8 w-8 items-center justify-center rounded-lg border text-muted-foreground hover:bg-muted hover:text-foreground"
-                            >
-                              <MoreHorizontal className="h-3.5 w-3.5" />
-                            </button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end" className="w-48">
-                            <DropdownMenuItem
-                              onSelect={() =>
-                                setEditor({ open: true, webhook: hook })
-                              }
-                            >
-                              <Pencil className="h-4 w-4" />
-                              {t("forms.webhooks.edit")}
-                            </DropdownMenuItem>
-                            <DropdownMenuSeparator />
-                            <DropdownMenuItem
-                              variant="destructive"
-                              onSelect={() => setPendingDelete(hook)}
-                            >
-                              <Trash2 className="h-4 w-4" />
-                              {t("forms.webhooks.delete")}
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      ) : null}
+                      {/* The delivery log is for whoever debugs the receiving
+                          side, so it sits in the menu rather than on the card.
+                          The menu shows for read-only members too — they can
+                          still look at the log. */}
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <button
+                            type="button"
+                            aria-label={t("forms.webhooks.more")}
+                            className="inline-flex size-10 items-center justify-center rounded-lg border text-muted-foreground hover:bg-muted hover:text-foreground sm:size-8"
+                          >
+                            <MoreHorizontal className="h-3.5 w-3.5" />
+                          </button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" className="w-52">
+                          <DropdownMenuItem onSelect={() => setLog(hook)}>
+                            <ScrollText className="h-4 w-4" />
+                            {t("forms.webhooks.deliveries")}
+                          </DropdownMenuItem>
+                          {canEdit ? (
+                            <>
+                              <DropdownMenuItem
+                                onSelect={() =>
+                                  setEditor({ open: true, webhook: hook })
+                                }
+                              >
+                                <Pencil className="h-4 w-4" />
+                                {t("forms.webhooks.edit")}
+                              </DropdownMenuItem>
+                              <DropdownMenuSeparator />
+                              <DropdownMenuItem
+                                variant="destructive"
+                                onSelect={() => setPendingDelete(hook)}
+                              >
+                                <Trash2 className="h-4 w-4" />
+                                {t("forms.webhooks.delete")}
+                              </DropdownMenuItem>
+                            </>
+                          ) : null}
+                        </DropdownMenuContent>
+                      </DropdownMenu>
                     </div>
                   </div>
 

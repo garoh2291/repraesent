@@ -29,12 +29,19 @@ export default [
     route("auth/workspace-picker", "routes/auth.workspace-picker.tsx"),
     route("pending", "routes/pending.tsx"),
     route("closed", "routes/closed.tsx"),
+    // Onboarding v2 (ONBOARDING_V2_PLAN.md): own full-screen layout.
+    route("onboarding/start/:step?", "routes/onboarding.start.tsx"),
+    route("onboarding/chat", "routes/onboarding.chat.tsx"),
+    route("onboarding/in-progress", "routes/onboarding.in-progress.tsx"),
+    route("welcome", "routes/welcome.tsx"),
     layout("routes/_onboarding-layout.tsx", [
       route("onboarding/profile", "routes/onboarding.profile.tsx"),
-      route("onboarding/workspace", "routes/onboarding.workspace.tsx"),
-      route("onboarding/products", "routes/onboarding.products.tsx"),
-      route("onboarding/offers", "routes/onboarding.offers.tsx"),
-      route("onboarding/billing", "routes/onboarding.billing.tsx"),
+      // The old steps now lead into the wizard (bookmarks, emails, and the
+      // DoorBoost "start fresh" button, which stays untouched).
+      route("onboarding/workspace", "routes/onboarding.legacy-redirect.tsx", { id: "onboarding-legacy-workspace" }),
+      route("onboarding/products", "routes/onboarding.legacy-redirect.tsx", { id: "onboarding-legacy-products" }),
+      route("onboarding/offers", "routes/onboarding.legacy-redirect.tsx", { id: "onboarding-legacy-offers" }),
+      route("onboarding/billing", "routes/onboarding.legacy-redirect.tsx", { id: "onboarding-legacy-billing" }),
       route(
         "onboarding/doorboost-choice",
         "routes/onboarding.doorboost-choice.tsx",
@@ -55,6 +62,22 @@ export default [
     ]),
     layout("routes/_dashboard-layout.tsx", [
       index("routes/home.tsx"),
+      route("results", "routes/results.tsx"),
+      // Call queue: "Start calls" on Today (MOBILE_PACKAGE_PLAN.md C1).
+      route("calls", "routes/calls.tsx"),
+      // AI visibility (pilot flag `aiVisibility`, AI_VISIBILITY_PLAN.md).
+      route("ai-visibility", "routes/ai-visibility.tsx", [
+        index("routes/ai-visibility._index.tsx"),
+        route("setup", "routes/ai-visibility.setup.tsx"),
+        route("actions", "routes/ai-visibility.actions.tsx"),
+        route("website", "routes/ai-visibility.website.tsx"),
+        route("prompts", "routes/ai-visibility.prompts.tsx"),
+        route("prompts/:promptId", "routes/ai-visibility.prompts.$promptId.tsx"),
+        route("competitors", "routes/ai-visibility.competitors.tsx"),
+        route("sources", "routes/ai-visibility.sources.tsx"),
+        route("answers", "routes/ai-visibility.answers.tsx"),
+        route("plan", "routes/ai-visibility.plan.tsx"),
+      ]),
       // Workspace subscription + invoices. Moved off /products so the Stripe
       // catalogue can take that path; the sidebar already called it Billing.
       route("billing", "routes/billing.tsx"),
@@ -115,9 +138,14 @@ export default [
         route("openai-ads", "routes/settings.openai-ads.tsx"),
         route("ai", "routes/settings.ai.tsx"),
         route("notifications", "routes/settings.notifications.tsx"),
+        route("email-notifications", "routes/settings.email-notifications.tsx"),
+        route("phone-alerts", "routes/settings.phone-alerts.tsx"),
+        route("business-profile", "routes/settings.business-profile.tsx"),
         route("calendars", "routes/settings.calendars.tsx"),
         route("bcc", "routes/settings.bcc.tsx"),
         route("pipelines", "routes/settings.pipelines.tsx"),
+        route("onboarding", "routes/settings.onboarding.tsx"),
+        route("support", "routes/settings.support.tsx"),
       ]),
       route("instructions", "routes/instructions.tsx"),
       route("db-brand", "routes/db-brand._index.tsx"),
@@ -140,6 +168,8 @@ export default [
         "db-brand/retailers/:retailerId/leads/:leadId",
         "routes/db-brand.retailers.$retailerId.leads.$leadId.tsx",
       ),
+      // Anything else inside the app: a not-found card, menu still there.
+      route("*", "routes/not-found.tsx"),
     ]),
   ]),
 ] satisfies RouteConfig;

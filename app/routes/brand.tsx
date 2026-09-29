@@ -1486,7 +1486,7 @@ export default function BrandDashboard() {
       {/* Page heading */}
       <div className="flex items-start justify-between gap-4">
         <div className="space-y-1">
-          <h1 className="text-2xl font-semibold text-foreground tracking-tight">
+          <h1 className="title-display text-[26px] font-semibold text-foreground sm:text-[30px]">
             {t("brand.greeting", "Good to see you.")}
           </h1>
           <p className="text-sm text-muted-foreground">

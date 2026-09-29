@@ -1,15 +1,22 @@
 import { useState } from "react";
-import { Link } from "react-router";
+import { Link, useSearchParams } from "react-router";
 import { useTranslation } from "react-i18next";
-import { FlaskConical } from "lucide-react";
+import { FlaskConical, Mail } from "lucide-react";
 import { Input } from "~/components/ui/input";
-import { register } from "~/lib/api/auth";
+import { cn } from "~/lib/utils";
+import {
+  authErrorKind,
+  authErrorMessage,
+  register,
+  type AuthRequestErrorKind,
+} from "~/lib/api/auth";
 import i18n from "~/i18n";
 import { normalizeLocale } from "~/i18n/locales";
 import { useDocumentMeta } from "~/lib/hooks/use-document-meta";
 
 import logoUrl from "~/components/icons/re_praesent-mark-brand-hor.svg?url";
 import { LegalFooter } from "~/components/molecule/legal-footer";
+import { AuthErrorBox } from "~/components/molecule/auth-error-box";
 
 export function meta() {
   return [
@@ -18,10 +25,10 @@ export function meta() {
   ];
 }
 
-const BENEFIT_KEYS = [
-  "auth.register.benefit1",
-  "auth.register.benefit2",
-  "auth.register.benefit3",
+const BENEFITS = [
+  { key: "auth.register.benefit1", defaultValue: undefined },
+  { key: "auth.register.benefitNoPassword", defaultValue: "No password — a link by email" },
+  { key: "auth.register.benefit3", defaultValue: undefined },
 ] as const;
 
 export default function Register() {
@@ -31,14 +38,18 @@ export default function Register() {
     descriptionKey: "auth.register.metaDescription",
     titleSuffix: " - Repraesent",
   });
-  const [email, setEmail] = useState("");
+  // Sent here from the sign-in page ("no account yet") with the email filled in.
+  const [searchParams] = useSearchParams();
+  const [email, setEmail] = useState(() => searchParams.get("email") ?? "");
   const [error, setError] = useState<string | null>(null);
+  const [errorKind, setErrorKind] = useState<AuthRequestErrorKind | null>(null);
   const [success, setSuccess] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError(null);
+    setErrorKind(null);
     setSuccess(false);
 
     if (!email) {
@@ -57,18 +68,17 @@ export default function Register() {
       await register(email, normalizeLocale(i18n.language));
       setSuccess(true);
     } catch (err) {
-      setError(
-        err instanceof Error ? err.message : t("auth.register.somethingWrong")
-      );
+      setError(authErrorMessage(err, t, "auth.register.somethingWrong"));
+      setErrorKind(authErrorKind(err));
     } finally {
       setIsSubmitting(false);
     }
   };
 
   return (
-    <div className="flex min-h-screen">
+    <div className="flex min-h-screen pt-safe">
       {/* Left brand panel */}
-      <div className="hidden lg:flex lg:w-[400px] shrink-0 flex-col bg-[#111113] p-10 border-r border-white/5 relative overflow-hidden">
+      <div className="hidden lg:flex lg:w-[400px] shrink-0 flex-col bg-[#141516] p-10 border-r border-white/5 relative overflow-hidden">
         {/* Background image — fades up from the bottom, grayscale to keep black theme */}
         <div
           className="absolute inset-0 z-0 pointer-events-none"
@@ -128,14 +138,16 @@ export default function Register() {
             </div>
 
             <div className="space-y-2.5">
-              {BENEFIT_KEYS.map((key, i) => (
+              {BENEFITS.map(({ key, defaultValue }, i) => (
                 <div
                   key={key}
                   className="app-fade-up flex items-center gap-3"
                   style={{ animationDelay: `${0.35 + i * 0.1}s` }}
                 >
-                  <div className="h-1.5 w-1.5 rounded-full bg-amber-400 shrink-0" />
-                  <span className="text-sm text-white/50">{t(key)}</span>
+                  <div className="h-1.5 w-1.5 rounded-full bg-marker shrink-0" />
+                  <span className="text-sm text-white/50">
+                    {defaultValue ? t(key, defaultValue) : t(key)}
+                  </span>
                 </div>
               ))}
             </div>
@@ -153,7 +165,7 @@ export default function Register() {
       </div>
 
       {/* Right form panel */}
-      <div className="flex-1 flex flex-col bg-stone-50 relative">
+      <div className="flex-1 flex flex-col bg-background relative">
         <div className="flex-1 flex items-center justify-center p-4 sm:p-8">
           <div className="w-full max-w-sm space-y-8 app-fade-up">
             {/* Mobile logo */}
@@ -176,17 +188,23 @@ export default function Register() {
 
             {success ? (
               <div className="space-y-5 app-fade-up">
-                <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-4 text-sm text-emerald-800 leading-relaxed">
-                  <p className="font-medium">{t("auth.login.checkInbox")}</p>
-                  <p className="text-emerald-700/80 mt-0.5">
-                    {t("auth.register.checkInboxDetail", { email })}
-                  </p>
+                <div
+                  role="status"
+                  className="flex items-start gap-3 rounded-xl border border-marker bg-marker-soft px-4 py-4 text-sm text-marker-ink leading-relaxed"
+                >
+                  <Mail className="size-4 shrink-0 mt-0.5" aria-hidden />
+                  <div className="min-w-0 break-words">
+                    <p className="font-medium">{t("auth.login.checkInbox")}</p>
+                    <p className="mt-0.5">
+                      {t("auth.register.checkInboxDetail", { email })}
+                    </p>
+                  </div>
                 </div>
                 <p className="text-sm text-muted-foreground text-center">
                   {t("auth.login.didntReceive")}{" "}
                   <button
                     type="button"
-                    className="text-primary font-medium hover:underline"
+                    className="inline-flex min-h-11 items-center px-1 text-primary font-medium hover:underline"
                     onClick={() => setSuccess(false)}
                   >
                     {t("auth.login.tryAgain")}
@@ -198,11 +216,7 @@ export default function Register() {
                 onSubmit={handleSubmit}
                 className="space-y-5 app-fade-up app-fade-up-d1"
               >
-                {error && (
-                  <div className="rounded-lg border border-destructive/20 bg-destructive/6 px-4 py-3 text-sm text-destructive">
-                    {error}
-                  </div>
-                )}
+                {error && <AuthErrorBox message={error} />}
 
                 <div className="space-y-1.5">
                   <label
@@ -216,12 +230,18 @@ export default function Register() {
                     type="email"
                     placeholder={t("auth.login.emailPlaceholder")}
                     value={email}
-                    onChange={(e) => setEmail(e.target.value)}
+                    onChange={(e) => {
+                      setEmail(e.target.value);
+                      if (errorKind === "accountExists") {
+                        setError(null);
+                        setErrorKind(null);
+                      }
+                    }}
                     disabled={isSubmitting}
                     required
                     autoComplete="email"
                     autoFocus
-                    className="h-11 border-stone-200 bg-white focus-visible:ring-1 focus-visible:ring-foreground/25 transition-shadow"
+                    className="h-11 border-border bg-card focus-visible:ring-1 focus-visible:ring-foreground/25 transition-shadow"
                   />
                 </div>
 
@@ -242,9 +262,19 @@ export default function Register() {
 
                 <p className="text-center text-sm text-muted-foreground">
                   {t("auth.register.hasAccount")}{" "}
+                  {/* "This email already has an account" → the existing
+                      Sign in link wears the marker, with the email carried over. */}
                   <Link
-                    to="/login"
-                    className="text-primary font-medium hover:underline"
+                    to={
+                      errorKind === "accountExists"
+                        ? `/login?email=${encodeURIComponent(email)}`
+                        : "/login"
+                    }
+                    className={cn(
+                      "text-primary font-medium hover:underline",
+                      errorKind === "accountExists" &&
+                        "marker px-1 font-semibold text-foreground"
+                    )}
                   >
                     {t("auth.register.signIn")}
                   </Link>
@@ -252,17 +282,17 @@ export default function Register() {
 
                 <div className="space-y-3 pt-1">
                   <div className="flex items-center gap-3">
-                    <span className="h-px flex-1 bg-stone-200" />
+                    <span className="h-px flex-1 bg-border" />
                     <span className="text-[11px] font-medium uppercase tracking-widest text-muted-foreground">
                       {t("auth.login.tryDemo")}
                     </span>
-                    <span className="h-px flex-1 bg-stone-200" />
+                    <span className="h-px flex-1 bg-border" />
                   </div>
                   <Link
                     to="/demo"
-                    className="w-full h-11 rounded-lg border border-stone-300 bg-white text-foreground text-sm font-medium transition-colors duration-150 hover:bg-stone-100 flex items-center justify-center gap-2"
+                    className="w-full h-11 rounded-lg border border-border bg-card text-foreground text-sm font-medium transition-colors duration-150 hover:bg-muted flex items-center justify-center gap-2"
                   >
-                    <FlaskConical className="h-4 w-4 text-amber-500" />
+                    <FlaskConical className="h-4 w-4 text-foreground" />
                     {t("auth.login.tryDemoLink")}
                   </Link>
                 </div>

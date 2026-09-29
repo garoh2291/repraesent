@@ -54,6 +54,7 @@ import {
   sortLanguagesByPriority,
   type TabId,
 } from "./constants";
+import { desktopAutoFocus } from "~/lib/utils/touch";
 
 export function OverviewPanel({
   settings,
@@ -541,7 +542,7 @@ function LanguagePicker({
               aria-hidden
             />
             <Input
-              autoFocus
+              autoFocus={desktopAutoFocus()}
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder={t(

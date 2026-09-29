@@ -12,9 +12,11 @@ const WORKING: ReadonlySet<SourceStatus> = new Set([
 ]);
 
 /**
- * One chip per pipeline stage. While a source is in flight the dot breathes
- * (opacity only — `motion-reduce` freezes it), so a list of ten sources reads
- * at a glance without a spinner on every row.
+ * One chip per pipeline stage, named for what the owner cares about ("Reading
+ * your website", "Learning") rather than the machinery. While a source is in
+ * flight the dot breathes (opacity only — `motion-reduce` freezes it), so a
+ * list of ten sources reads at a glance without a spinner on every row. Work
+ * in progress wears the soft marker: it is the one state worth a glance.
  */
 export function SourceStatusChip({
   status,
@@ -37,7 +39,7 @@ export function SourceStatusChip({
         failed &&
           "border-red-500/30 bg-red-500/10 text-red-700 dark:text-red-300",
         working &&
-          "border-sky-500/30 bg-sky-500/10 text-sky-700 dark:text-sky-300",
+          "border-marker/40 bg-marker-soft text-marker-ink",
         className,
       )}
     >
@@ -47,7 +49,7 @@ export function SourceStatusChip({
           "h-1.5 w-1.5 rounded-full",
           ready && "bg-emerald-500",
           failed && "bg-red-500",
-          working && "bg-sky-400 animate-pulse motion-reduce:animate-none",
+          working && "bg-marker animate-pulse motion-reduce:animate-none",
         )}
       />
       {t(`aiAssistants.sourceStatus.${status}`)}

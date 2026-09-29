@@ -183,9 +183,9 @@ export default function SettingsIntegrations() {
         label={t("settings.integrations.sectionLabel", {
           defaultValue: "Connected apps",
         })}
-        description={t("settings.integrations.sectionDescription", {
+        description={t("settings.integrations.sectionDescriptionPlain", {
           defaultValue:
-            "Connect a third-party account to this workspace. One account per app.",
+            "Connect an account you already use elsewhere. One account per app.",
         })}
       >
         {isPending ? (
@@ -387,8 +387,8 @@ function IntegrationCard({
 
       {!canManage ? (
         <p className="mt-3 text-xs text-muted-foreground">
-          {t("settings.integrations.adminOnly", {
-            defaultValue: "Only workspace admins can change this.",
+          {t("settings.adminOnlyPlain", {
+            defaultValue: "Only people with the Admin role can change this.",
           })}
         </p>
       ) : null}

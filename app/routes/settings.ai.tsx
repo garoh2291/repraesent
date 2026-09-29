@@ -16,7 +16,9 @@ import {
   useCanManageWorkspaceAi,
   useWorkspaceAi,
   useWorkspaceAiMutations,
+  useWorkspaceAiSpend,
 } from "~/lib/hooks/useWorkspaceAi";
+import { getIntlLocale } from "~/lib/utils/format";
 import { useDocumentMeta } from "~/lib/hooks/use-document-meta";
 import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
@@ -81,6 +83,8 @@ export default function SettingsAi() {
         ) : (
           <KeyCard canManage={canManage} />
         )}
+
+        <SpendCard />
 
         {!canManage ? (
           <p className="text-xs text-muted-foreground">
@@ -347,6 +351,89 @@ function KeyCard({ canManage }: { canManage: boolean }) {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+    </div>
+  );
+}
+
+// ───────────────────────────────────────────────────────── what the key spent
+
+/** Same rate the server converts caps with (workspace-ai/chat-models.ts USD_PER_EUR). */
+const USD_PER_EUR = 1.08;
+
+function money(microUsd: number): string {
+  const eur = microUsd / 1_000_000 / USD_PER_EUR;
+  return new Intl.NumberFormat(getIntlLocale(), {
+    style: "currency",
+    currency: "EUR",
+    minimumFractionDigits: 2,
+    maximumFractionDigits: eur > 0 && eur < 0.1 ? 3 : 2,
+  }).format(eur);
+}
+
+/**
+ * Everything the key paid for this month, by job — website chat, AI
+ * visibility, onboarding… Real OpenRouter charges where they were reported,
+ * marked when part of it is our estimate. The exact bill stays OpenRouter's.
+ */
+function SpendCard() {
+  const { t } = useTranslation();
+  const { data } = useWorkspaceAiSpend();
+  if (!data?.ready) return null;
+  const [now, before] = data.months;
+  if (!now || (!now.total_micro_usd && !before?.total_micro_usd)) return null;
+
+  const label = (f: string) => t(`settings.ai.spend.feature.${f}`, { defaultValue: f });
+  const top = now.features[0]?.cost_micro_usd || 1;
+
+  return (
+    <div className="rounded-2xl border border-border bg-card p-5 sm:p-6">
+      <div className="flex flex-wrap items-end justify-between gap-3">
+        <div>
+          <h3 className="text-sm font-semibold text-foreground">{t("settings.ai.spend.title")}</h3>
+          <p className="mt-0.5 text-xs text-muted-foreground">{t("settings.ai.spend.subtitle")}</p>
+        </div>
+        <div className="text-right">
+          <p className="num text-2xl font-semibold leading-none text-foreground">{money(now.total_micro_usd)}</p>
+          <p className="mt-1 text-xs text-muted-foreground">
+            {t("settings.ai.spend.thisMonth")}
+            {before ? ` · ${t("settings.ai.spend.lastMonth", { amount: money(before.total_micro_usd) })}` : ""}
+          </p>
+        </div>
+      </div>
+
+      {now.features.length ? (
+        <ul className="mt-4 space-y-2.5">
+          {now.features.map((f) => (
+            <li key={f.feature} className="space-y-1">
+              <div className="flex items-baseline justify-between gap-3 text-sm">
+                <span className="min-w-0 truncate text-foreground">{label(f.feature)}</span>
+                <span className="num shrink-0 text-muted-foreground">
+                  {money(f.cost_micro_usd)}
+                  {f.estimated_micro_usd > 0 ? <span title={t("settings.ai.spend.estimatedTitle")}>*</span> : null}
+                </span>
+              </div>
+              <div className="h-1 overflow-hidden rounded-full bg-foreground/[0.06]" aria-hidden>
+                <div className="h-full rounded-full bg-foreground/60" style={{ width: `${Math.max(2, (f.cost_micro_usd / top) * 100)}%` }} />
+              </div>
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <p className="mt-4 text-sm text-muted-foreground">{t("settings.ai.spend.nothingYet")}</p>
+      )}
+
+      <div className="mt-4 flex flex-col gap-1.5 border-t border-border pt-3 text-xs text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
+        <span>{now.estimated_micro_usd > 0 ? t("settings.ai.spend.estimatedNote") : t("settings.ai.spend.realNote")}</span>
+        <a
+          href="https://openrouter.ai/activity"
+          target="_blank"
+          rel="noreferrer"
+          className="inline-flex items-center gap-1 font-medium text-foreground underline decoration-foreground/30 underline-offset-4 hover:decoration-foreground"
+        >
+          {t("settings.ai.spend.exactBill")}
+          <ExternalLink className="h-3 w-3" />
+        </a>
+      </div>
     </div>
   );
 }

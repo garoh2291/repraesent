@@ -1,3 +1,6 @@
+import { DealCurrencySelect } from "~/components/molecule/deal-currency-select";
+import { useStageLabel } from "~/lib/pipeline-stages/use-stage-label";
+import { extractErrorMessage } from "~/lib/api/axios-instance";
 import {
   useTerminalStageGuard,
   type GuardableDeal,
@@ -5,10 +8,11 @@ import {
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router";
 import { useTranslation } from "react-i18next";
+import { BackLink } from "~/components/notebook/back-link";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
-  ArrowLeft,
   CalendarClock,
+  ChevronDown,
   ExternalLink,
   Send,
   Tag,
@@ -16,6 +20,7 @@ import {
   User as UserIcon,
 } from "lucide-react";
 import { toast } from "sonner";
+import { useReviewAsk } from "~/components/notebook/review-ask";
 import { useAuthContext } from "~/providers/auth-provider";
 import { getWorkspaceDetail } from "~/lib/api/workspaces";
 import {
@@ -25,6 +30,7 @@ import {
   moveDealPipeline,
   patchDeal,
   parseDealValue,
+  type DealCurrency,
   formatDealValueInput,
   type DealListItem,
 } from "~/lib/api/deals";
@@ -41,7 +47,6 @@ import {
   resolveStageColorsByKey,
 } from "~/lib/pipeline-stages/colors";
 import {
-  resolveStageLabel,
   resolveStageLabelByKey,
 } from "~/lib/pipeline-stages/labels";
 import { useCanEditLeads } from "~/lib/hooks/useCanEditLeads";
@@ -73,12 +78,20 @@ import { DealContactSection } from "~/components/organism/deal-contact-section";
 import { DealProductsSection } from "~/components/organism/deal-products-section";
 import { DealCustomerSection } from "~/components/organism/deal-customer-section";
 import { DealInvoicesSection } from "~/components/organism/deal-invoices-section";
+import { OnboardingProfilePanel } from "~/components/organism/onboarding-profile-panel";
 import type { WorkspaceMemberItem } from "~/components/organism/tasks/task-form-modal";
 import {
   DatePickerPopover,
   apiDatetimeToIsoDateString,
 } from "~/components/molecule/date-picker-popover";
 import { cn } from "~/lib/utils";
+import { NextStepChip } from "~/components/notebook/next-step-chip";
+import { useDealFlow } from "~/components/notebook/deal-flow";
+import { isOpenDeal } from "~/lib/deals/is-open";
+import { DealPaid } from "~/components/notebook/deal-paid";
+import { PhotoStrip } from "~/components/notebook/photo-strip";
+import { StagePickerSheet } from "~/components/notebook/stage-picker-sheet";
+import { DealActionBar } from "~/components/notebook/deal-action-bar";
 import {
   formatCurrency,
   formatDate,
@@ -117,7 +130,7 @@ function MetaRow({ icon, label, children }: MetaRowProps) {
         {icon}
       </div>
       <div className="min-w-0 flex-1">
-        <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">
+        <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground max-sm:text-[12px]">
           {label}
         </p>
         <div className="mt-0.5 text-sm font-medium text-foreground">
@@ -130,10 +143,12 @@ function MetaRow({ icon, label, children }: MetaRowProps) {
 
 export default function PipelineDealDetailPage() {
   const { t } = useTranslation();
+  const labelOfStage = useStageLabel();
   const { openCompose } = useComposeEmail();
   const { dealId } = useParams<{ dealId: string }>();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const reviewAsk = useReviewAsk();
   const { currentWorkspace } = useAuthContext();
   const canEdit = useCanEditLeads();
 
@@ -143,6 +158,9 @@ export default function PipelineDealDetailPage() {
   const [stage, setStage] = useState<string>("new");
   const [expectedClose, setExpectedClose] = useState("");
   const [deleteOpen, setDeleteOpen] = useState(false);
+  // Phones: the stage chip's sheet, and the collapsed "Deal details" card.
+  const [stageSheetOpen, setStageSheetOpen] = useState(false);
+  const [detailsOpen, setDetailsOpen] = useState(false);
 
   // The form values as last persisted (server load or successful autosave).
   // Autosave compares the live fields against this snapshot to decide whether
@@ -180,6 +198,12 @@ export default function PipelineDealDetailPage() {
   });
 
   const deal = dealQuery.data?.deal;
+  const dealFlow = useDealFlow();
+  const dealIsOpen =
+    !!deal &&
+    isOpenDeal(
+      deal as { status?: string | null; won_at?: string | null; lost_at?: string | null },
+    );
 
   // The stepper renders the DEAL's pipeline's stages (undefined = Default
   // while loading — replaced as soon as the deal arrives).
@@ -244,6 +268,15 @@ export default function PipelineDealDetailPage() {
     patchDealInLists(queryClient, dealId!, patch);
   const rollbackSnapshots = (snapshots: ListSnapshots) =>
     restoreSnapshots(queryClient, snapshots);
+
+  const currencyMutation = useMutation({
+    mutationFn: (currency: DealCurrency) => patchDeal(dealId!, { currency }),
+    onSuccess: () => {
+      invalidate();
+      toast.success(t("pipeline.dealSaved", { defaultValue: "Deal saved." }));
+    },
+    onError: (error) => toast.error(extractErrorMessage(error)),
+  });
 
   const saveFieldsMutation = useMutation({
     mutationFn: async () => {
@@ -365,7 +398,12 @@ export default function PipelineDealDetailPage() {
     byKey: dealStagesByKey,
     onProceed: (_dealId, next) => {
       setStage(next);
-      stageMutation.mutate(next);
+      stageMutation.mutate(next, {
+        // A visit business asks for a Google review once the job is won.
+        onSuccess: () => {
+          if (dealId && dealStagesByKey.get(next)?.category === "won") reviewAsk.afterDeal(dealId, "visit");
+        },
+      });
     },
   });
 
@@ -515,12 +553,13 @@ export default function PipelineDealDetailPage() {
   // Lines carry their own currency; the legacy formatter assumes EUR and is
   // only right for deals with no Stripe lines on them.
   const linesCurrency = dealProducts.find((p) => p.currency)?.currency ?? null;
+  const dealCurrency = ((deal?.currency as string | undefined) ?? "EUR").toUpperCase() as DealCurrency;
   const valueDisplay =
     numericValue == null
       ? "—"
       : linesCurrency
         ? formatMoneyFromMinor(Math.round(numericValue * 100), linesCurrency)
-        : formatCurrency(numericValue);
+        : formatCurrency(numericValue, dealCurrency);
 
   const assigneeMember = workspaceMembers.find((m) => m.user_id === assignee);
   const assigneeName = assigneeMember
@@ -537,19 +576,22 @@ export default function PipelineDealDetailPage() {
     ? resolveStageColors(stageRow)
     : resolveStageColorsByKey("deal", stage);
   const stageLabel = stageRow
-    ? resolveStageLabel(stageRow, t)
+    ? labelOfStage(stageRow)
     : resolveStageLabelByKey("deal", stage, t);
 
+  // The deal contact's phone for the phone action bar: primary first.
+  const barPhone =
+    dealContacts.find((c) => c.is_primary && c.primary_phone?.trim())?.primary_phone ??
+    dealContacts.find((c) => c.primary_phone?.trim())?.primary_phone ??
+    null;
+  const closeLabel = expectedClose ? formatDate(new Date(expectedClose), "PP") : "—";
+
   return (
-    <div className="p-4 sm:p-6 space-y-4 sm:space-y-6 app-fade-in">
+    <div className="p-4 sm:p-6 space-y-4 sm:space-y-6 app-fade-in max-sm:pb-24">
       <div className="flex items-center justify-between gap-2">
-        <Link
-          to="/pipeline"
-          className="inline-flex items-center gap-1.5 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors"
-        >
-          <ArrowLeft className="h-3.5 w-3.5" />
+        <BackLink to="/pipeline">
           {t("pipeline.backToPipeline", { defaultValue: "Back to pipeline" })}
-        </Link>
+        </BackLink>
         {/* Only when this deal's pipeline actually serves tracking pages — a
             copy button for a URL that 404s is worse than no button. */}
         {trackingEnabled && trackingToken ? (
@@ -561,27 +603,24 @@ export default function PipelineDealDetailPage() {
       <section className="app-fade-up overflow-hidden rounded-2xl border border-border bg-card shadow-(--shadow)">
         <div
           aria-hidden
-          className={cn(
-            "relative h-20 bg-linear-to-r transition-colors duration-500",
-            stageFacets.heroBg,
-          )}
+          className={cn("h-1.5 transition-colors duration-500", stageFacets.dot)}
         />
-        <div className="px-4 pb-5 pt-0 sm:px-6">
-          <div className="-mt-10 flex flex-col gap-4 sm:flex-row sm:items-end sm:gap-5">
+        <div className="px-4 pb-5 pt-5 sm:px-6">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:gap-5">
             <Avatar
               size="lg"
               className={cn(
-                "size-20 shrink-0 border-4 border-card bg-card shadow-(--shadow) ring-4",
+                "size-14 shrink-0 bg-card ring-2",
                 stageFacets.ring,
               )}
             >
-              <AvatarFallback className="bg-linear-to-br from-secondary/30 to-primary/10 text-lg font-semibold tracking-tight text-foreground">
+              <AvatarFallback className="bg-muted text-base font-semibold tracking-tight text-foreground">
                 {initials(displayTitle)}
               </AvatarFallback>
             </Avatar>
 
             <div className="min-w-0 flex-1">
-              <h1 className="truncate text-2xl font-semibold tracking-tight text-foreground sm:text-[28px]">
+              <h1 className="title-display truncate text-[26px] font-semibold text-foreground sm:text-[32px]">
                 {displayTitle}
               </h1>
               <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
@@ -603,7 +642,7 @@ export default function PipelineDealDetailPage() {
                 {contactName && contactId ? (
                   <Link
                     to={`/contacts/${contactId}`}
-                    className="inline-flex items-center gap-1 rounded-sm border border-border bg-muted/60 px-2 py-0.5 text-[11px] font-medium text-foreground transition-colors hover:bg-muted"
+                    className="inline-flex items-center gap-1 rounded-sm border border-border bg-muted/60 px-2 py-0.5 text-[11px] font-medium text-foreground transition-colors hover:bg-muted max-sm:min-h-9 max-sm:rounded-md max-sm:px-2.5 max-sm:text-[13px]"
                   >
                     {contactName}
                     <ExternalLink className="h-3 w-3" />
@@ -614,17 +653,26 @@ export default function PipelineDealDetailPage() {
 
             <div className="flex shrink-0 items-center gap-3 sm:flex-row-reverse">
               <div className="text-left sm:text-right">
-                <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">
+                <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground max-sm:text-[12px]">
                   {t("pipeline.fields.value", { defaultValue: "Value" })}
                 </p>
-                <p className="text-2xl font-semibold tabular-nums tracking-tight text-foreground sm:text-3xl">
+                <p className="title-display num text-2xl font-semibold text-foreground sm:text-3xl">
                   {valueDisplay}
                 </p>
+                {dealQuery.data?.paid_supported && deal?.status === "won" ? (
+                  <DealPaid
+                    className="mt-1.5 sm:justify-end"
+                    dealId={dealId!}
+                    paidAt={(deal.paid_at as string | null | undefined) ?? null}
+                    paidSource={(deal.paid_source as "manual" | "stripe" | null | undefined) ?? null}
+                    canEdit={canEdit}
+                  />
+                ) : null}
               </div>
               {canEdit && composeRecipients.length > 0 ? (
                 <Button
                   size="sm"
-                  className="h-8 gap-1.5 text-xs"
+                  className="h-8 gap-1.5 text-xs max-sm:h-11 max-sm:px-4 max-sm:text-sm"
                   onClick={openComposer}
                 >
                   <Send className="h-3.5 w-3.5" />
@@ -637,8 +685,8 @@ export default function PipelineDealDetailPage() {
           {/* STAGE STEPPER */}
           <div className="mt-5">
             {pipelines.length > 1 && dealPipelineId ? (
-              <div className="mb-2 flex items-center gap-2">
-                <span className="text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">
+              <div className="mb-2 flex items-center gap-2 max-sm:mb-3 max-sm:flex-col max-sm:items-stretch max-sm:gap-1.5">
+                <span className="text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground max-sm:text-[12px]">
                   {t("pipeline.movePipelineLabel", {
                     defaultValue: "Pipeline",
                   })}
@@ -650,7 +698,7 @@ export default function PipelineDealDetailPage() {
                   }}
                   disabled={!canEdit || movePipelineMutation.isPending}
                 >
-                  <SelectTrigger className="h-7 w-[180px] text-xs">
+                  <SelectTrigger className="h-7 w-[180px] text-xs max-sm:h-11 max-sm:w-full max-sm:text-sm">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -663,7 +711,24 @@ export default function PipelineDealDetailPage() {
                 </Select>
               </div>
             ) : null}
-            <div className="flex w-full overflow-hidden rounded-xl border border-border bg-background/40">
+            {/* Phones: one chip instead of the stepper; tapping opens the
+                stage sheet (same guard, same save). */}
+            <button
+              type="button"
+              disabled={!canEdit || stageMutation.isPending}
+              onClick={() => setStageSheetOpen(true)}
+              className="press flex min-h-11 w-full items-center gap-2 rounded-xl border border-border bg-background/40 px-3.5 text-left text-[14px] sm:hidden"
+            >
+              <span className={cn("inline-block size-2.5 shrink-0 rounded-full", stageFacets.dot)} aria-hidden />
+              <span className="min-w-0 flex-1 truncate">
+                <span className="text-muted-foreground">
+                  {t("mobile.deal.stageChip", "Stage:")}{" "}
+                </span>
+                <span className="font-semibold text-foreground">{stageLabel}</span>
+              </span>
+              {canEdit ? <ChevronDown className="size-4 shrink-0 text-muted-foreground" aria-hidden /> : null}
+            </button>
+            <div className="flex w-full overflow-hidden rounded-xl border border-border bg-background/40 max-sm:hidden">
               {dealStages.map((stageOption, idx) => {
                 const active = stageOption.key === stage;
                 const isLast = idx === dealStages.length - 1;
@@ -695,21 +760,83 @@ export default function PipelineDealDetailPage() {
                       )}
                     />
                     <span className="truncate">
-                      {resolveStageLabel(stageOption, t)}
+                      {labelOfStage(stageOption)}
                     </span>
                   </button>
                 );
               })}
             </div>
           </div>
+
+          {/* NEXT STEP — every open deal should answer "what happens next?" */}
+          {dealIsOpen && dealQuery.data?.tasks_summary ? (
+            <div className="mt-4 flex flex-wrap items-center gap-2 border-t border-border pt-4">
+              <span className="text-[11px] font-semibold uppercase tracking-[0.1em] text-muted-foreground max-sm:text-[12px]">
+                {t("nextStep.label", "Next step")}
+              </span>
+              <NextStepChip summary={dealQuery.data.tasks_summary} />
+              {canEdit ? (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="ml-auto h-8 text-xs max-sm:ml-0 max-sm:h-11 max-sm:w-full max-sm:text-sm"
+                  onClick={() =>
+                    dealFlow.whatsNext(
+                      { id: dealId!, title: displayTitle },
+                      "none",
+                    )
+                  }
+                >
+                  {dealQuery.data.tasks_summary.open_count === 0
+                    ? t("whatsNext.add", "Add next step")
+                    : t("whatsNext.addAnother", "Plan another step")}
+                </Button>
+              ) : null}
+            </div>
+          ) : null}
         </div>
       </section>
 
+      {/* Team-only photos (never on the tracking page). */}
+      <div id="deal-photos" className="scroll-mt-4 empty:hidden">
+        <PhotoStrip entity="deals" entityId={dealId} canEdit={canEdit} />
+      </div>
+
+      {/* Phones reorder the cards (display: contents flattens both columns
+          into this one-column grid): activity, contacts, then the rest. From
+          sm up the max-sm: classes are inert and the layout is unchanged. */}
       <div className="grid grid-cols-1 gap-4 sm:gap-6 lg:grid-cols-5">
         {/* LEFT — main */}
-        <div className="space-y-4 sm:space-y-6 lg:col-span-3">
+        <div className="space-y-4 sm:space-y-6 lg:col-span-3 max-sm:contents max-sm:space-y-0">
           <section className="app-fade-up app-fade-up-d1 rounded-2xl border border-border bg-card shadow-(--shadow)">
-            <header className="border-b border-border px-4 py-3.5 sm:px-5">
+            {/* Phones: a one-line summary that opens the form. */}
+            <button
+              type="button"
+              onClick={() => setDetailsOpen((v) => !v)}
+              aria-expanded={detailsOpen}
+              className="flex min-h-12 w-full items-center gap-3 px-4 py-3 text-left sm:hidden"
+            >
+              <span className="min-w-0 flex-1">
+                <span className="block text-sm font-semibold tracking-tight text-foreground">
+                  {t("pipeline.dealDetails", { defaultValue: "Deal details" })}
+                </span>
+                <span className="num mt-0.5 block truncate text-[12.5px] text-muted-foreground">
+                  {[
+                    valueDisplay,
+                    assigneeName ?? t("contacts.unassigned", { defaultValue: "Unassigned" }),
+                    t("mobile.deal.closeSummary", "Close: {{date}}", { date: closeLabel }),
+                  ].join(" · ")}
+                </span>
+              </span>
+              <ChevronDown
+                className={cn(
+                  "size-4 shrink-0 text-muted-foreground transition-transform duration-200",
+                  detailsOpen && "rotate-180",
+                )}
+                aria-hidden
+              />
+            </button>
+            <header className="border-b border-border px-4 py-3.5 sm:px-5 max-sm:hidden">
               <h2 className="text-sm font-semibold tracking-tight text-foreground">
                 {t("pipeline.dealDetails", { defaultValue: "Deal details" })}
               </h2>
@@ -721,7 +848,7 @@ export default function PipelineDealDetailPage() {
               </p>
             </header>
 
-            <div className="p-4 sm:p-5">
+            <div className={cn("p-4 sm:p-5", detailsOpen ? "max-sm:border-t max-sm:border-border" : "max-sm:hidden")}>
               <div className="grid gap-4 sm:grid-cols-2">
                 <div className="space-y-1.5 sm:col-span-2">
                   <Label htmlFor="deal-detail-title">
@@ -742,7 +869,7 @@ export default function PipelineDealDetailPage() {
                     aria-invalid={titleEmpty}
                   />
                   {titleEmpty ? (
-                    <p className="text-[11px] text-destructive">
+                    <p className="text-[11px] text-destructive max-sm:text-[13px]">
                       {t("pipeline.errors.titleRequired", {
                         defaultValue: "Title can't be blank.",
                       })}
@@ -753,11 +880,13 @@ export default function PipelineDealDetailPage() {
                 <div className="space-y-1.5">
                   <Label htmlFor="deal-detail-value">
                     {t("pipeline.fields.value", {
-                      defaultValue: "Value (EUR)",
+                      defaultValue: "Value",
                     })}
                   </Label>
+                  <div className="flex gap-2">
                   <Input
                     id="deal-detail-value"
+                    className="flex-1"
                     value={valueStr}
                     onChange={(e) => {
                       const raw = e.target.value.replace(/,/g, "");
@@ -771,8 +900,15 @@ export default function PipelineDealDetailPage() {
                       defaultValue: "0",
                     })}
                   />
+                  <DealCurrencySelect
+                    value={dealCurrency}
+                    onChange={(c) => currencyMutation.mutate(c)}
+                    // Product lines decide the currency (their sum is the value).
+                    disabled={!canEdit || dealProducts.length > 0 || currencyMutation.isPending}
+                  />
+                  </div>
                   {valueNegative ? (
-                    <p className="text-[11px] text-destructive">
+                    <p className="text-[11px] text-destructive max-sm:text-[13px]">
                       {t("pipeline.errors.valueNegative", {
                         defaultValue: "Value cannot be negative.",
                       })}
@@ -829,6 +965,7 @@ export default function PipelineDealDetailPage() {
             </div>
           </section>
 
+          <div className="max-sm:-order-2">
           <ActivityPanel
             variant="deal"
             dealId={dealId}
@@ -842,17 +979,23 @@ export default function PipelineDealDetailPage() {
             history={dealHistoryQuery.data ?? []}
             historyLoading={dealHistoryQuery.isLoading}
           />
+          </div>
         </div>
 
         {/* RIGHT — sidebar */}
-        <div className="space-y-4 sm:space-y-6 lg:col-span-2">
-          <div className="space-y-4 sm:space-y-6">
+        <div className="space-y-4 sm:space-y-6 lg:col-span-2 max-sm:contents max-sm:space-y-0">
+          <div className="space-y-4 sm:space-y-6 max-sm:contents max-sm:space-y-0">
+            {/* Root workspace: what the customer told us during onboarding. */}
+            {currentWorkspace?.is_root ? <OnboardingProfilePanel dealId={dealId} /> : null}
+
             {/* Contacts */}
+            <div className="max-sm:-order-1">
             <DealContactSection
               dealId={dealId}
               contacts={dealContacts}
               canEdit={canEdit}
             />
+            </div>
 
             {/* Stripe customer — who the deal is invoiced to. */}
             <DealCustomerSection
@@ -958,7 +1101,7 @@ export default function PipelineDealDetailPage() {
               </div>
 
               {(createdAt || updatedAt) && (
-                <div className="space-y-1 border-t border-border/60 pt-3 text-[11px] text-muted-foreground">
+                <div className="space-y-1 border-t border-border/60 pt-3 text-[11px] text-muted-foreground max-sm:text-[12px]">
                   {createdAt ? (
                     <p>
                       {t("common.created", { defaultValue: "Created" })}:{" "}
@@ -983,7 +1126,7 @@ export default function PipelineDealDetailPage() {
       </div>
 
       {canEdit ? (
-        <div className="flex justify-end">
+        <div className="flex justify-end max-sm:hidden">
           <Button
             type="button"
             variant="ghost"
@@ -998,6 +1141,36 @@ export default function PipelineDealDetailPage() {
       ) : null}
 
       {guardModal}
+
+      <StagePickerSheet
+        open={stageSheetOpen}
+        onOpenChange={setStageSheetOpen}
+        stages={dealStages.map((s) => ({
+          key: s.key,
+          label: labelOfStage(s),
+          color: resolveStageColors(s).hex,
+          category: s.category,
+        }))}
+        current={stage}
+        onPick={(key) => requestStageChange(guardableDeal, key)}
+      />
+
+      <DealActionBar
+        phone={barPhone}
+        onNextStep={
+          canEdit && dealIsOpen
+            ? () => dealFlow.whatsNext({ id: dealId!, title: displayTitle }, "none")
+            : undefined
+        }
+        onEmail={canEdit && composeRecipients.length > 0 ? openComposer : undefined}
+        onPhotos={() =>
+          document.getElementById("deal-photos")?.scrollIntoView({
+            behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth",
+            block: "start",
+          })
+        }
+        onDelete={canEdit ? () => setDeleteOpen(true) : undefined}
+      />
 
       <AlertDialog open={deleteOpen} onOpenChange={setDeleteOpen}>
         <AlertDialogContent>

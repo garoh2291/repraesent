@@ -27,7 +27,8 @@ import {
   type ContactType,
 } from "~/lib/contacts/contact-types";
 import { cn } from "~/lib/utils";
-import { formatCurrency } from "~/lib/utils/format";
+import { formatContactValue, type ContactDealValues } from "~/lib/utils/format";
+import { useWorkspaceCurrency } from "~/lib/hooks/useWorkspaceCurrency";
 import {
   DatePickerPopover,
   apiDatetimeToIsoDateString,
@@ -50,6 +51,7 @@ export function ContactPipelineCard({
   hasContact = false,
 }: ContactPipelineCardProps) {
   const { t } = useTranslation();
+  const { currency: workspaceCurrency } = useWorkspaceCurrency();
   const queryClient = useQueryClient();
 
   const [lastContacted, setLastContacted] = useState(
@@ -169,7 +171,9 @@ export function ContactPipelineCard({
                   const raw = crm.lifetime_value;
                   const n =
                     raw != null && raw !== "" ? Number(raw) : Number.NaN;
-                  return Number.isFinite(n) ? formatCurrency(n) : "—";
+                  return Number.isFinite(n)
+                    ? formatContactValue(crm as { deal_values?: ContactDealValues | null }, "won", n, workspaceCurrency)
+                    : "—";
                 })()}
               </div>
               <p className="text-[10px] text-muted-foreground">

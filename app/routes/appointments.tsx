@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { CalendarHubTabs } from "~/components/notebook/calendar-hub-tabs";
 import { useNavigate } from "react-router";
 import { useTranslation } from "react-i18next";
 import axios from "axios";
@@ -179,7 +180,7 @@ function DevEmailProcessor() {
     return (
       <button
         onClick={() => setExpanded(true)}
-        className="fixed bottom-4 right-4 z-50 h-10 w-10 flex items-center justify-center rounded-full bg-amber-100 border border-amber-300 text-amber-700 shadow-lg hover:bg-amber-200 transition-colors"
+        className="fixed bottom-[calc(4.75rem+env(safe-area-inset-bottom))] right-4 z-50 h-10 w-10 lg:bottom-4 flex items-center justify-center rounded-full bg-amber-100 border border-amber-300 text-amber-700 shadow-lg hover:bg-amber-200 transition-colors"
         title="Dev: Email Queue Processor"
       >
         <Play className="h-4 w-4" />
@@ -188,7 +189,7 @@ function DevEmailProcessor() {
   }
 
   return (
-    <div className="fixed bottom-4 right-4 z-50 w-72 rounded-xl border border-dashed border-amber-300 bg-amber-50/95 backdrop-blur-sm p-3.5 space-y-2.5 shadow-xl">
+    <div className="fixed bottom-[calc(4.75rem+env(safe-area-inset-bottom))] right-4 z-50 w-72 lg:bottom-4 rounded-xl border border-dashed border-amber-300 bg-amber-50/95 backdrop-blur-sm p-3.5 space-y-2.5 shadow-xl">
       <div className="flex items-center justify-between">
         <p className="text-[11px] font-semibold text-amber-700 flex items-center gap-1.5">
           <Play className="h-3 w-3" /> Dev: Email Processor
@@ -264,10 +265,11 @@ function AppointmentsDashboard({
   const navigate = useNavigate();
   return (
     <div className="mx-auto w-full max-w-[1280px] p-4 sm:p-6 py-10! space-y-6 sm:space-y-8 app-fade-in">
+      <CalendarHubTabs />
       {/* Header */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between app-fade-up">
         <div>
-          <h1 className="text-xl sm:text-2xl font-semibold text-foreground tracking-tight">
+          <h1 className="title-display text-[26px] font-semibold text-foreground sm:text-[30px]">
             {t("appointments.title")}
           </h1>
           <p className="text-sm text-muted-foreground mt-0.5">

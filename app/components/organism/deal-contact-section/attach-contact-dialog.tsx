@@ -14,6 +14,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "~/components/ui/dialog";
+import { desktopAutoFocus } from "~/lib/utils/touch";
 
 interface AttachContactDialogProps {
   open: boolean;
@@ -143,7 +144,7 @@ export function AttachContactDialog({
               defaultValue: "Search by name, email, or phone…",
             })}
             className="pl-9 pr-9"
-            autoFocus
+            autoFocus={desktopAutoFocus()}
           />
           {search ? (
             <Button

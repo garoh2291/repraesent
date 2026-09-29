@@ -6,6 +6,8 @@ import { Input } from "~/components/ui/input";
 import { Label } from "~/components/ui/label";
 import { Field, FieldHint } from "~/components/wordpress/fields";
 import type { FormIntakeConfig } from "~/lib/forms/schema";
+import { AdvancedSection } from "~/components/notebook/advanced-section";
+import { setLocalFlag } from "~/components/notebook/setup-checklist";
 
 /** Recognised without any configuration — the keys real form builders emit. */
 const AUTO_MAPPED: { column: string; keys: string }[] = [
@@ -54,6 +56,8 @@ export function IntakeSetupPanel({
     try {
       await navigator.clipboard.writeText(text);
       setCopied(what);
+      // Copying the address is the checklist's first intake step.
+      if (what === "url") setLocalFlag(`forms-copied:${formId}`);
       setTimeout(() => setCopied(null), 2000);
     } catch {
       toast.error(
@@ -86,7 +90,7 @@ export function IntakeSetupPanel({
             type="button"
             onClick={() => copy("url", url)}
             aria-label={t("common.copy", { defaultValue: "Copy" })}
-            className="shrink-0 rounded-lg border border-border px-2.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+            className="flex min-h-10 min-w-10 shrink-0 items-center justify-center rounded-lg border border-border px-2.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
           >
             {copied === "url" ? (
               <Check className="h-4 w-4 text-emerald-600" />
@@ -101,27 +105,6 @@ export function IntakeSetupPanel({
               "Anyone with this URL can create a lead in this workspace. Treat it like a password.",
           })}
         </FieldHint>
-      </Field>
-
-      <Field>
-        <div className="flex items-center justify-between gap-2">
-          <Label>{t("forms.builder.intakeCurl", { defaultValue: "Try it" })}</Label>
-          <button
-            type="button"
-            onClick={() => copy("curl", curl)}
-            className="inline-flex items-center gap-1.5 text-xs font-medium text-muted-foreground transition-colors hover:text-foreground"
-          >
-            {copied === "curl" ? (
-              <Check className="h-3.5 w-3.5 text-emerald-600" />
-            ) : (
-              <Copy className="h-3.5 w-3.5" />
-            )}
-            {t("common.copy", { defaultValue: "Copy" })}
-          </button>
-        </div>
-        <pre className="overflow-x-auto rounded-xl border border-border bg-muted/40 p-3 text-[11px] leading-relaxed">
-          <code>{curl}</code>
-        </pre>
       </Field>
 
       <Field>
@@ -189,6 +172,36 @@ export function IntakeSetupPanel({
           </div>
         )}
       </Field>
+
+      {/* A test from the command line — for whoever connects the other tool,
+          not for the owner. */}
+      <AdvancedSection
+        storageKey="forms-intake"
+        hint={t("forms.builder.intakeAdvancedHint")}
+      >
+        <Field>
+          <div className="flex items-center justify-between gap-2">
+            <Label>
+              {t("forms.builder.intakeCurl", { defaultValue: "Try it" })}
+            </Label>
+            <button
+              type="button"
+              onClick={() => copy("curl", curl)}
+              className="inline-flex items-center gap-1.5 text-xs font-medium text-muted-foreground transition-colors hover:text-foreground"
+            >
+              {copied === "curl" ? (
+                <Check className="h-3.5 w-3.5 text-emerald-600" />
+              ) : (
+                <Copy className="h-3.5 w-3.5" />
+              )}
+              {t("common.copy", { defaultValue: "Copy" })}
+            </button>
+          </div>
+          <pre className="overflow-x-auto rounded-xl border border-border bg-muted/40 p-3 text-[11px] leading-relaxed">
+            <code>{curl}</code>
+          </pre>
+        </Field>
+      </AdvancedSection>
     </div>
   );
 }

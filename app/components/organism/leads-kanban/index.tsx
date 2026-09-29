@@ -18,7 +18,10 @@ import {
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { useTranslation } from "react-i18next";
-import { CalendarClock, ChevronDown, Loader2 } from "lucide-react";
+import { toast } from "sonner";
+import { ArrowRightLeft, CalendarClock, ChevronDown, Loader2 } from "lucide-react";
+import { ContactActions } from "~/components/notebook/contact-actions";
+import { StagePickerSheet } from "~/components/notebook/stage-picker-sheet";
 import { formatDate, formatDateIntl } from "~/lib/utils/format";
 import {
   isAppointmentPast,
@@ -33,6 +36,7 @@ import {
 } from "~/components/organism/lead-success-confirm-modal";
 import type { PipelineStage } from "~/lib/api/pipeline-stages";
 import { useLeadStages } from "~/lib/hooks/usePipelineStages";
+import { useHideLeadGuard } from "~/lib/leads/use-hide-lead-guard";
 import {
   resolveStageColors,
   resolveStageColorsByKey,
@@ -42,6 +46,7 @@ import {
   resolveStageLabelByKey,
 } from "~/lib/pipeline-stages/labels";
 import { cn } from "~/lib/utils";
+import { OutcomeBadge, useLeadFlow } from "~/components/notebook/lead-flow";
 import {
   kanbanCollisionDetection,
   positionForInsertion,
@@ -132,7 +137,9 @@ export function LeadsKanban({
   const { t } = useTranslation();
   const manualOrder = isManualOrder(sortMode);
   const { visible: stages, byKey, isLoading: stagesLoading } = useLeadStages();
+  const { requestStatusChange: requestHideGuarded, guardModal: hideGuardModal } = useHideLeadGuard();
   const [activeId, setActiveId] = useState<string | null>(null);
+  const leadFlow = useLeadFlow();
   // Confirmation dialog shown when a lead is dropped into a won-category column.
   const [successConfirm, setSuccessConfirm] = useState<{
     lead: Lead;
@@ -326,33 +333,10 @@ export function LeadsKanban({
     [byKey, stages, leadsByStatus],
   );
 
-  const handleDragEnd = useCallback(
-    (event: DragEndEvent) => {
-      const { active, over } = event;
-      setActiveId(null);
-      if (!over) return;
-
-      const leadId = String(active.id).replace(/^lead-/, "");
-      const drop = resolveDrop(leadId, String(over.id));
-      if (!drop) return;
-
-      const lead = allLoadedLeads.find((l) => l.id === leadId);
-      if (!lead) return;
-
-      // Dropping into a won-category column is a deliberate action (it marks
-      // the lead as converted) — confirm it first.
-      const targetStage = byKey.get(drop.status);
-      const currentCategory = byKey.get(lead.status)?.category;
-      if (
-        targetStage &&
-        targetStage.category === "won" &&
-        currentCategory !== "won" &&
-        lead.status !== drop.status
-      ) {
-        setSuccessConfirm({ lead, targetStage, phase: "confirm" });
-        return;
-      }
-
+  /** The actual move, after any confirmation. Returns the save so the hide guard can wait for it. */
+  const commitMove = useCallback(
+    (lead: Lead, drop: { status: string; insertionIndex: number }) => {
+      const leadId = lead.id;
       // Sorted modes: the column order is the server's, so an in-column drag
       // means nothing and must not write a board_position that manual mode
       // would later honour. A drop into another column is still a real status
@@ -374,8 +358,7 @@ export function LeadsKanban({
         if (landTimerRef.current) clearTimeout(landTimerRef.current);
         landTimerRef.current = setTimeout(() => setJustMovedId(null), 500);
 
-        onStatusChange(leadId, drop.status);
-        return;
+        return onStatusChange(leadId, drop.status);
       }
 
       const position = positionForInsertion(
@@ -409,17 +392,85 @@ export function LeadsKanban({
       if (landTimerRef.current) clearTimeout(landTimerRef.current);
       landTimerRef.current = setTimeout(() => setJustMovedId(null), 500);
 
-      onReorder({ leadId, status: drop.status, position });
+      return onReorder({ leadId, status: drop.status, position });
     },
-    [
-      resolveDrop,
-      allLoadedLeads,
-      byKey,
-      leadsByStatus,
-      onReorder,
-      onStatusChange,
-      manualOrder,
-    ],
+    [leadsByStatus, onReorder, onStatusChange, manualOrder],
+  );
+
+  const handleDragEnd = useCallback(
+    (event: DragEndEvent) => {
+      const { active, over } = event;
+      setActiveId(null);
+      if (!over) return;
+
+      const leadId = String(active.id).replace(/^lead-/, "");
+      const drop = resolveDrop(leadId, String(over.id));
+      if (!drop) return;
+
+      const lead = allLoadedLeads.find((l) => l.id === leadId);
+      if (!lead) return;
+
+      // Dropping into a won-category column is a deliberate action (it marks
+      // the lead as converted) — confirm it first.
+      const targetStage = byKey.get(drop.status);
+      const currentCategory = byKey.get(lead.status)?.category;
+      if (
+        targetStage &&
+        targetStage.category === "won" &&
+        currentCategory !== "won" &&
+        lead.status !== drop.status
+      ) {
+        setSuccessConfirm({ lead, targetStage, phase: "confirm" });
+        return;
+      }
+
+      // Moving into Hidden asks first: just hide, or also block the sender.
+      // Like the won check, the card stays put until they choose.
+      requestHideGuarded(lead, drop.status, () => commitMove(lead, drop));
+    },
+    [resolveDrop, allLoadedLeads, byKey, commitMove, requestHideGuarded],
+  );
+
+  // Phones: "Move to…" instead of a drag (MOBILE_PACKAGE_PLAN.md B1/B4). The
+  // same guards as a drop — won asks first, hidden offers to block — then the
+  // same move; a plain move gets an Undo toast (hidden already has its own).
+  const [movingLead, setMovingLead] = useState<Lead | null>(null);
+  const moveFromSheet = useCallback(
+    (lead: Lead, status: string) => {
+      if (lead.status === status) return;
+      const targetStage = byKey.get(status);
+      if (
+        targetStage?.category === "won" &&
+        byKey.get(lead.status)?.category !== "won"
+      ) {
+        setSuccessConfirm({ lead, targetStage, phase: "confirm" });
+        return;
+      }
+      const previousStatus = lead.status;
+      requestHideGuarded(lead, status, () => {
+        const res = commitMove(lead, { status, insertionIndex: 0 });
+        if (targetStage?.category !== "hidden") {
+          void Promise.resolve(res)
+            .then(() => {
+              toast.success(
+                t("mobile.stagePicker.moved", "Moved to {{stage}}", {
+                  stage: targetStage ? resolveStageLabel(targetStage, t) : status,
+                }),
+                {
+                  duration: 8000, // Undo needs time on a phone (5–8 s guidance).
+                  action: {
+                    label: t("common.undo", "Undo"),
+                    onClick: () => void onStatusChange(lead.id, previousStatus),
+                  },
+                },
+              );
+            })
+            .catch(() => undefined);
+        }
+        return res;
+      });
+    },
+    [byKey, commitMove, requestHideGuarded, onStatusChange, t],
   );
 
   const handleConfirmSuccess = useCallback(async () => {
@@ -501,6 +552,19 @@ export function LeadsKanban({
           filters={filters}
           sortMode={sortMode}
           onLeadSelect={onLeadSelect}
+          onMove={canEdit ? setMovingLead : undefined}
+        />
+        <StagePickerSheet
+          open={!!movingLead}
+          onOpenChange={(o) => !o && setMovingLead(null)}
+          stages={stages.map((s) => ({
+            key: s.key,
+            label: resolveStageLabel(s, t),
+            color: resolveStageColors(s).hex,
+            category: s.category,
+          }))}
+          current={movingLead?.status ?? null}
+          onPick={(key) => movingLead && moveFromSheet(movingLead, key)}
         />
       </div>
 
@@ -549,7 +613,22 @@ export function LeadsKanban({
         }
         onConfirm={handleConfirmSuccess}
         onClose={() => setSuccessConfirm(null)}
+        onMakeDeal={
+          successConfirm
+            ? () => {
+                const l = successConfirm.lead;
+                leadFlow.makeDeal({
+                  id: l.id,
+                  name: l.full_name || [l.first_name, l.last_name].filter(Boolean).join(" ") || l.email || "",
+                  status: l.status,
+                  phone: l.phone,
+                  email: l.email,
+                });
+              }
+            : undefined
+        }
       />
+      {hideGuardModal}
     </>
   );
 }
@@ -816,6 +895,12 @@ function KanbanCardInner({ lead }: { lead: Lead }) {
       <p className="text-xs text-muted-foreground truncate line-clamp-2">
         {lead.email || lead.phone || "—"}
       </p>
+      {lead.contact_state ? (
+        <OutcomeBadge
+          outcome={lead.contact_state.outcome}
+          attempts={lead.contact_state.attempts}
+        />
+      ) : null}
     </div>
   );
 }
@@ -829,6 +914,7 @@ function LeadsMobileSchedule({
   filters,
   sortMode,
   onLeadSelect,
+  onMove,
 }: {
   stages: PipelineStage[];
   leadsByStatus: Record<string, Lead[]>;
@@ -836,6 +922,7 @@ function LeadsMobileSchedule({
   filters: KanbanFilters;
   sortMode: LeadSortMode;
   onLeadSelect: (id: string) => void;
+  onMove?: (lead: Lead) => void;
 }) {
   return (
     <div className="space-y-2 pt-4 pb-6">
@@ -848,6 +935,7 @@ function LeadsMobileSchedule({
           filters={filters}
           sortMode={sortMode}
           onLeadSelect={onLeadSelect}
+          onMove={onMove}
         />
       ))}
     </div>
@@ -861,6 +949,7 @@ function MobileStageSection({
   filters,
   sortMode,
   onLeadSelect,
+  onMove,
 }: {
   stage: PipelineStage;
   leads: Lead[];
@@ -868,6 +957,7 @@ function MobileStageSection({
   filters: KanbanFilters;
   sortMode: LeadSortMode;
   onLeadSelect: (id: string) => void;
+  onMove?: (lead: Lead) => void;
 }) {
   const { t } = useTranslation();
   // Shares the cache entry with the desktop column (same query key), so this
@@ -905,13 +995,14 @@ function MobileStageSection({
           <p className="text-xs text-muted-foreground/50 text-center py-3">—</p>
         </div>
       ) : (
-        <div className="px-3 pb-3 space-y-1">
+        <div className="px-3 pb-3 space-y-2">
           {leads.map((lead) => (
             <LeadScheduleRow
               key={lead.id}
               lead={lead}
               colorClass={colorClass}
               onSelect={() => onLeadSelect(lead.id)}
+              onMove={onMove ? () => onMove(lead) : undefined}
             />
           ))}
           {q.hasNextPage && (
@@ -919,7 +1010,7 @@ function MobileStageSection({
               type="button"
               onClick={() => q.fetchNextPage()}
               disabled={q.isFetchingNextPage}
-              className="w-full rounded-lg border border-dashed border-border py-2 text-[11px] font-medium text-muted-foreground hover:text-foreground hover:bg-muted transition-colors flex items-center justify-center gap-1.5"
+              className="press w-full min-h-11 rounded-lg border border-dashed border-border py-2 text-[13px] font-medium text-muted-foreground hover:text-foreground hover:bg-muted transition-colors flex items-center justify-center gap-1.5"
             >
               {q.isFetchingNextPage ? (
                 <Loader2 className="h-3 w-3 animate-spin" />
@@ -943,11 +1034,15 @@ function LeadScheduleRow({
   lead,
   colorClass,
   onSelect,
+  onMove,
 }: {
   lead: Lead;
   colorClass: string;
   onSelect: () => void;
+  onMove?: () => void;
 }) {
+  const { t } = useTranslation();
+  const leadFlow = useLeadFlow();
   const displayName = lead.full_name || lead.email || "—";
   const subtitle = lead.email || lead.phone || null;
   const formName = lead.form_name
@@ -955,13 +1050,17 @@ function LeadScheduleRow({
     : null;
   const appointment = nextLeadAppointment(lead);
 
+  const hasChannel = !!(lead.phone?.trim() || lead.email?.trim());
   return (
+    // A card per inquiry, like People: border + soft shadow so each one reads
+    // as its own thing on a phone (this list only renders below sm).
+    <div className="rounded-xl border border-border bg-card shadow-xs transition-colors hover:bg-muted/40">
     <button
       type="button"
       onClick={onSelect}
       className={cn(
-        "flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left transition-colors",
-        "hover:bg-muted/60 active:bg-muted",
+        "press flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left transition-colors",
+        "active:bg-muted",
       )}
     >
       <div className={cn("h-8 w-0.5 rounded-full shrink-0", colorClass)} />
@@ -974,19 +1073,26 @@ function LeadScheduleRow({
           <p className="text-xs text-muted-foreground truncate">{subtitle}</p>
         )}
 
-        <div className="flex items-center gap-2 pt-0.5">
+        <div className="flex flex-wrap items-center gap-x-2 gap-y-1 pt-0.5">
           {formName && (
-            <span className="text-[10px] text-muted-foreground/70 truncate max-w-[120px]">
+            <span className="text-[11px] text-muted-foreground/70 truncate max-w-[120px]">
               {formName}
             </span>
           )}
           {lead.created_at && (
-            <span className="text-[10px] text-muted-foreground/50">
+            <span className="text-[11px] text-muted-foreground/60">
               {formatDate(new Date(lead.created_at), "MMM d")}
             </span>
           )}
+          {lead.contact_state ? (
+            <OutcomeBadge
+              outcome={lead.contact_state.outcome}
+              attempts={lead.contact_state.attempts}
+              className="text-[11px]"
+            />
+          ) : null}
           {appointment && (
-            <span className="inline-flex items-center gap-1 text-[10px] text-muted-foreground tabular-nums">
+            <span className="inline-flex items-center gap-1 text-[11px] text-muted-foreground tabular-nums">
               <CalendarClock className="h-3 w-3 shrink-0" />
               {formatDateIntl(appointment.start, {
                 month: "short",
@@ -1011,6 +1117,40 @@ function LeadScheduleRow({
         />
       )}
     </button>
+    {hasChannel || onMove ? (
+      // Act from the list: call / WhatsApp / email feed the outcome flow,
+      // "Move to…" is the one-tap alternative to dragging a card.
+      <div className="flex items-center gap-1.5 px-3 pb-2.5 pl-[1.4rem]">
+        <ContactActions
+          iconOnly
+          target={{ phone: lead.phone, email: lead.email }}
+          emailInApp={leadFlow.emailInApp}
+          onContact={(ch) =>
+            leadFlow.contact(
+              {
+                id: lead.id,
+                name: lead.full_name || [lead.first_name, lead.last_name].filter(Boolean).join(" ") || lead.email || "",
+                status: lead.status,
+                phone: lead.phone,
+                email: lead.email,
+              },
+              ch,
+            )
+          }
+        />
+        {onMove ? (
+          <button
+            type="button"
+            onClick={onMove}
+            className="press ml-auto inline-flex h-11 items-center gap-1.5 rounded-lg border border-border bg-card px-3 text-[13px] font-medium text-foreground"
+          >
+            <ArrowRightLeft className="size-3.5" aria-hidden />
+            {t("mobile.stagePicker.moveTo", "Move to…")}
+          </button>
+        ) : null}
+      </div>
+    ) : null}
+    </div>
   );
 }
 
@@ -1037,7 +1177,8 @@ function ScheduleSection({
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
-        className="flex w-full items-center gap-3 px-4 py-3 text-left"
+        aria-expanded={open}
+        className="press flex w-full min-h-14 items-center gap-3 px-4 py-3 text-left"
       >
         {header}
         <ChevronDown

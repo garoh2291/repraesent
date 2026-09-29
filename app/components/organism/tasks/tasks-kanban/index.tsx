@@ -15,7 +15,8 @@ import {
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 import { useTranslation } from "react-i18next";
-import { ChevronDown } from "lucide-react";
+import { Check, ChevronDown } from "lucide-react";
+import { toast } from "sonner";
 import { formatDate } from "~/lib/utils/format";
 import { cn } from "~/lib/utils";
 import { UserAvatar } from "~/components/atom/user-avatar";
@@ -227,6 +228,24 @@ export function TasksKanban({
       {/* Mobile: Schedule-style accordion list */}
       <div className="sm:hidden">
         <TasksMobileSchedule
+          onToggleDone={
+            canEdit
+              ? (task) => {
+                  const previous = task.status as TaskStatus;
+                  const next: TaskStatus = previous === "done" ? "todo" : "done";
+                  onStatusChange(task.id, next);
+                  if (next === "done") {
+                    toast.success(t("today.taskDone", "Done"), {
+                      duration: 8000, // Undo needs time on a phone (5–8 s guidance).
+                      action: {
+                        label: t("common.undo", "Undo"),
+                        onClick: () => onStatusChange(task.id, previous),
+                      },
+                    });
+                  }
+                }
+              : undefined
+          }
           tasksByStatus={tasksByStatus}
           onTaskSelect={onTaskSelect}
         />
@@ -342,16 +361,27 @@ function KanbanColumn({
 function TasksMobileSchedule({
   tasksByStatus,
   onTaskSelect,
+  onToggleDone,
 }: {
   tasksByStatus: Record<TaskStatus, Task[]>;
   onTaskSelect: (id: string) => void;
+  onToggleDone?: (task: Task) => void;
 }) {
   const { t } = useTranslation();
+  // Phones: To-do reads as a list of what's due — earliest (overdue) first,
+  // undated last. The board keeps its manual order.
+  const byDue = (list: Task[]) =>
+    [...list].sort((a, b) => {
+      if (a.due_date && b.due_date) return a.due_date.localeCompare(b.due_date);
+      if (a.due_date) return -1;
+      if (b.due_date) return 1;
+      return 0;
+    });
 
   return (
     <div className="space-y-2 pt-2 pb-6">
       {TASK_STATUS_COLUMNS.map((status) => {
-        const tasks = tasksByStatus[status];
+        const tasks = status === "todo" ? byDue(tasksByStatus[status]) : tasksByStatus[status];
         const colorClass = TASK_STATUS_COLORS[status];
         const count = tasks.length;
 
@@ -394,6 +424,7 @@ function TasksMobileSchedule({
                     task={task}
                     colorClass={colorClass}
                     onSelect={() => onTaskSelect(task.id)}
+                    onToggleDone={onToggleDone ? () => onToggleDone(task) : undefined}
                   />
                 ))}
               </div>
@@ -409,22 +440,50 @@ function TaskScheduleRow({
   task,
   colorClass,
   onSelect,
+  onToggleDone,
 }: {
   task: Task;
   colorClass: string;
   onSelect: () => void;
+  onToggleDone?: () => void;
 }) {
+  const { t } = useTranslation();
+  const done = task.status === "done";
   return (
+    <div className="flex items-start rounded-lg transition-colors hover:bg-muted/60">
+    {onToggleDone ? (
+      // 44 px tick: done in one tap, Undo in the toast.
+      <button
+        type="button"
+        role="checkbox"
+        aria-checked={done}
+        aria-label={t("today.markDone", "Mark done")}
+        onClick={onToggleDone}
+        className="press flex size-11 shrink-0 items-center justify-center"
+      >
+        <span
+          className={cn(
+            "flex size-6 items-center justify-center rounded-full border-2 transition-colors",
+            done ? "border-foreground bg-foreground text-background" : "border-foreground/25",
+          )}
+        >
+          {done ? <Check className="size-3.5" strokeWidth={3} /> : null}
+        </span>
+      </button>
+    ) : null}
     <button
       type="button"
       onClick={onSelect}
       className={cn(
-        "flex w-full items-start gap-3 rounded-lg px-3 py-2.5 text-left transition-colors",
-        "hover:bg-muted/60 active:bg-muted"
+        "press flex min-w-0 flex-1 items-start gap-3 rounded-lg py-2.5 text-left transition-colors",
+        onToggleDone ? "pl-1 pr-3" : "px-3",
+        "active:bg-muted"
       )}
     >
       {/* Color accent line */}
-      <div className={cn("mt-1 h-4 w-0.5 rounded-full shrink-0", colorClass)} />
+      {onToggleDone ? null : (
+        <div className={cn("mt-1 h-4 w-0.5 rounded-full shrink-0", colorClass)} />
+      )}
 
       {/* Content */}
       <div className="flex-1 min-w-0 space-y-0.5">
@@ -473,6 +532,7 @@ function TaskScheduleRow({
         />
       )}
     </button>
+    </div>
   );
 }
 

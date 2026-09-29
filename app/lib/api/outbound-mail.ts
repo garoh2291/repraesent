@@ -14,6 +14,7 @@ export interface SendOutboundEmailPayload {
   html: string;
   dealId?: string;
   contactId?: string;
+  leadId?: string;
   /** bcc_log_messages.id being replied to, so the recipient's client threads it. */
   replyToMessageId?: string;
 }

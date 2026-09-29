@@ -288,7 +288,7 @@ export default function Products() {
       <div className="p-4 sm:p-6 space-y-4 sm:space-y-6 app-fade-in">
         <header className="app-fade-up flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
           <div>
-            <h1 className="text-xl font-semibold tracking-tight text-foreground sm:text-2xl">
+            <h1 className="title-display text-[26px] font-semibold text-foreground sm:text-[30px]">
               {t("stripeProducts.title", { defaultValue: "Products" })}
             </h1>
             <p className="mt-0.5 flex flex-wrap items-center gap-2 text-sm text-muted-foreground">

@@ -1,6 +1,8 @@
 import { useEffect, useRef } from "react";
 import { Outlet, useNavigate, useLocation } from "react-router";
 import { useTranslation } from "react-i18next";
+import { isBootDone, markBootReady } from "~/components/notebook/brand-splash";
+import { useRefreshOnReturn } from "~/lib/hooks/use-refresh-on-return";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAuthContext } from "~/providers/auth-provider";
 import {
@@ -16,26 +18,14 @@ import {
   type DoorboostEligibility,
 } from "~/lib/api/doorboost-restore";
 import { updateOnboardingProfile } from "~/lib/api/onboarding";
+import { resolveWorkspaceRoute } from "~/lib/onboarding/resolve-route";
 
 const ONBOARDING_PREFIX = "/onboarding";
-const PENDING_PATH = "/pending";
-const CLOSED_PATH = "/closed";
 const BRAND_PREFIX = "/brand";
 
-/**
- * Paths a doorboost_brand workspace is allowed to render. Anything outside
- * this set gets redirected back to /db-brand.
- */
-function isDoorboostBrandPath(path: string): boolean {
-  return (
-    path.startsWith("/db-brand") ||
-    path.startsWith("/brand-retailers") ||
-    path.startsWith("/brand-campaigns") ||
-    path.startsWith("/brand-leads")
-  );
-}
-
 export default function ProtectedLayout() {
+  // Minimised app opened again → fresh data straight away.
+  useRefreshOnReturn();
   const { t } = useTranslation();
   const { isAuthenticated, isLoading, user, workspaces, currentWorkspace, brand } =
     useAuthContext();
@@ -43,8 +33,6 @@ export default function ProtectedLayout() {
   const location = useLocation();
   const path = location.pathname;
   const isOnOnboarding = path.startsWith(ONBOARDING_PREFIX);
-  const isOnPending = path === PENDING_PATH;
-  const isOnClosed = path === CLOSED_PATH;
   const isOnNoWorkspace = path === "/no-workspace";
   const isOnWorkspacePicker = path === "/auth/workspace-picker";
   // Only match the brand-user routes (/brand, /brand/workspaces, …) — NOT
@@ -195,9 +183,9 @@ export default function ProtectedLayout() {
 
     // STEP 2: No workspace → always pass through the Doorboost-choice gate.
     // The choice page itself fetches /onboarding/doorboost/eligibility and
-    // auto-redirects to /onboarding/workspace when the user isn't a returning
-    // Doorboost customer. This avoids a race where /onboarding/workspace
-    // renders before the (async) eligibility fetch resolves.
+    // auto-redirects to /onboarding/workspace (→ the wizard at /onboarding/start)
+    // when the user isn't a returning Doorboost customer. This avoids a race
+    // where the wizard renders before the (async) eligibility fetch resolves.
     if (noWorkspacesYet) {
       if (!isOnOnboarding && !isOnNoWorkspace) {
         navigate("/onboarding/doorboost-choice", { replace: true });
@@ -218,80 +206,12 @@ export default function ProtectedLayout() {
     // STEP 4: Workspace selected — sequential onboarding then status
     if (!currentWorkspace) return;
 
-    const ws = currentWorkspace;
-    const status = ws?.status ?? "active";
-
-    // Doorboost-brand workspace: bypass all product/Stripe/onboarding gating.
-    // Land users on /db-brand. Settings is intentionally not exposed here.
-    if (ws.type === "doorboost_brand") {
-      if (!isDoorboostBrandPath(path) && !isOnWorkspacePicker) {
-        navigate("/db-brand", { replace: true });
-      }
-      return;
-    }
-
-    // Canceled → only /closed, nothing else
-    if (status === "canceled") {
-      if (!isOnClosed) {
-        navigate(CLOSED_PATH, { replace: true });
-      }
-      return;
-    }
-    if (isOnClosed) {
-      navigate("/", { replace: true });
-      return;
-    }
-
-    // Trial workspaces (Doorboost-restored) act like "active" — full UI access.
-    // The TrialBanner in _dashboard-layout signals limited features.
-    if (status === "active" || status === "trial") {
-      if (isOnPending) {
-        navigate("/", { replace: true });
-        return;
-      }
-      // Allow staying on /onboarding/sync-pending — that page polls for the
-      // historical sync to finish and self-redirects when ready.
-      if (isOnOnboarding && path !== "/onboarding/sync-pending") {
-        navigate("/", { replace: true });
-      }
-      return;
-    }
-
-    // Pending workspace — sequential onboarding gates
-    const hasBilling = !!(ws as { stripe_customer_id?: string | null })
-      .stripe_customer_id;
-    const hasProducts = !!(ws as { products?: unknown[] }).products?.length;
-
-    // Billing not done → block products/pending, send to billing if outside onboarding
-    if (!hasBilling) {
-      if (path === "/onboarding/products" || isOnPending) {
-        navigate("/onboarding/billing", { replace: true });
-        return;
-      }
-      if (!isOnOnboarding) {
-        navigate("/onboarding/billing", { replace: true });
-        return;
-      }
-      return;
-    }
-
-    // Billing done, products not done → block pending, send to products if outside onboarding
-    if (!hasProducts) {
-      if (isOnPending) {
-        navigate("/onboarding/products", { replace: true });
-        return;
-      }
-      if (!isOnOnboarding) {
-        navigate("/onboarding/products", { replace: true });
-        return;
-      }
-      return;
-    }
-
-    // All onboarding complete → hold on /pending
-    if (!isOnPending) {
-      navigate(PENDING_PATH, { replace: true });
-    }
+    // Status + onboarding gating lives in one pure function shared with the
+    // render check below and the magic-link callback (resolve-route.ts).
+    const target = resolveWorkspaceRoute(currentWorkspace, path, user, {
+      isOnWorkspacePicker,
+    });
+    if (target && target !== path) navigate(target, { replace: true });
   }, [
     isAuthenticated,
     isLoading,
@@ -302,8 +222,6 @@ export default function ProtectedLayout() {
     location,
     path,
     isOnOnboarding,
-    isOnPending,
-    isOnClosed,
     isOnNoWorkspace,
     isOnWorkspacePicker,
     isBrandUser,
@@ -345,9 +263,22 @@ export default function ProtectedLayout() {
     (!eligibilityProbeDone ||
       (hintHasBothNames && (autoProfileMutation.isPending || !user?.first_name?.trim())));
 
-  if (isLoading || isPreProfileChecking) {
+  // During onboarding a background refresh of the account (after step 1, a
+  // language switch, the plan step) must not blank the page: that unmounted the
+  // wizard and replayed the business card on every refresh. Only the first load
+  // (no user yet) shows the spinner there.
+  const backgroundRefresh = isOnOnboarding && !!user && !isPreProfileChecking;
+  const holding = (isLoading && !backgroundRefresh) || isPreProfileChecking;
+  // The start screen stays up until the first real screen can draw.
+  useEffect(() => {
+    if (!holding) markBootReady();
+  }, [holding]);
+  if (holding) {
+    // First load: the start screen (root) covers this; later reloads of the
+    // account show the plain spinner.
+    if (!isBootDone()) return null;
     return (
-      <div className="flex min-h-screen items-center justify-center">
+      <div className="flex min-h-screen items-center justify-center pt-safe">
         <div className="flex flex-col items-center gap-4">
           <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
           <p className="text-sm text-muted-foreground">{t("common.loading")}</p>
@@ -403,7 +334,14 @@ export default function ProtectedLayout() {
   }
 
   if (!workspaces?.length) {
-    return isOnOnboarding || isOnNoWorkspace ? <Outlet /> : null;
+    // Same wrapper as below, so gaining the first workspace (after onboarding
+    // step 1) doesn't remount the whole wizard.
+    return isOnOnboarding || isOnNoWorkspace ? (
+      <div className="flex flex-col min-h-screen">
+        {null /* the past-due banner's slot below: keeps <Outlet /> at the same position */}
+        <Outlet />
+      </div>
+    ) : null;
   }
 
   if (
@@ -414,37 +352,11 @@ export default function ProtectedLayout() {
     return null;
   }
 
-  if (currentWorkspace) {
-    const ws = currentWorkspace;
-    const status = ws?.status ?? "active";
-
-    // Doorboost-brand: only render brand-scoped paths.
-    if (ws.type === "doorboost_brand") {
-      if (!isDoorboostBrandPath(path) && !isOnWorkspacePicker) return null;
-    } else if (status === "canceled") {
-      if (!isOnClosed) return null;
-      // canceled + on /closed → render, skip all other guards
-    } else if (isOnClosed) {
-      return null;
-    } else if (status === "active" || status === "trial") {
-      if (isOnPending) return null;
-      if (isOnOnboarding && path !== "/onboarding/sync-pending") return null;
-    } else {
-      // Pending workspace — sequential onboarding gates
-      const hasBilling = !!(ws as { stripe_customer_id?: string | null })
-        .stripe_customer_id;
-      const hasProducts = !!(ws as { products?: unknown[] }).products?.length;
-
-      if (!hasBilling) {
-        if (path === "/onboarding/products" || isOnPending) return null;
-        if (!isOnOnboarding) return null;
-      } else if (!hasProducts) {
-        if (isOnPending) return null;
-        if (!isOnOnboarding) return null;
-      } else {
-        if (!isOnPending) return null;
-      }
-    }
+  if (
+    currentWorkspace &&
+    resolveWorkspaceRoute(currentWorkspace, path, user, { isOnWorkspacePicker })
+  ) {
+    return null;
   }
 
   return (

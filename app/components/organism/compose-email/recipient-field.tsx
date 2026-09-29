@@ -1,7 +1,8 @@
 import { useEffect, useId, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useQuery } from "@tanstack/react-query";
-import { Lock, X } from "lucide-react";
+import { Check, Copy, Lock, X } from "lucide-react";
+import { Popover, PopoverContent, PopoverTrigger } from "~/components/ui/popover";
 import { getContacts } from "~/lib/api/contacts-crm";
 import TooltipContainer from "~/components/tooltip-container";
 import { cn } from "~/lib/utils";
@@ -135,7 +136,11 @@ export function RecipientField({
               key={r.email}
               className="inline-flex max-w-full items-center gap-1 rounded-full bg-muted py-1 pl-2.5 pr-1 text-xs text-foreground"
             >
-              <span className="truncate">{r.name?.trim() || r.email}</span>
+              {r.name?.trim() ? (
+                <ChipAddress name={r.name.trim()} email={r.email} />
+              ) : (
+                <span className="truncate">{r.email}</span>
+              )}
               <button
                 type="button"
                 onClick={() => remove(r.email)}
@@ -262,5 +267,51 @@ function LockedChip({
         {chip}
       </span>
     </TooltipContainer>
+  );
+}
+
+/**
+ * A chip that shows a name: tap it to see (and copy) the address it goes to,
+ * so nobody has to guess which Anna the email is for. Tap works on phones;
+ * no hover needed.
+ */
+function ChipAddress({ name, email }: { name: string; email: string }) {
+  const { t } = useTranslation();
+  const [copied, setCopied] = useState(false);
+  const copy = async () => {
+    try {
+      await navigator.clipboard.writeText(email);
+      setCopied(true);
+      window.setTimeout(() => setCopied(false), 1500);
+    } catch {
+      /* Clipboard blocked: the address is on screen to select by hand. */
+    }
+  };
+  return (
+    <Popover>
+      <PopoverTrigger asChild>
+        <button
+          type="button"
+          className="min-w-0 truncate rounded-full text-left underline decoration-foreground/25 decoration-dotted underline-offset-[3px] focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
+          aria-label={t("compose.showAddress", { defaultValue: "{{name}} · {{email}}", name, email })}
+        >
+          {name}
+        </button>
+      </PopoverTrigger>
+      <PopoverContent align="start" sideOffset={6} className="w-auto max-w-[min(20rem,calc(100vw-2rem))] p-3">
+        <p className="text-[12px] font-medium text-muted-foreground">{name}</p>
+        <div className="mt-1 flex items-center gap-2">
+          <span className="min-w-0 break-all text-[14px] font-medium text-foreground select-all">{email}</span>
+          <button
+            type="button"
+            onClick={() => void copy()}
+            aria-label={t("compose.copyAddress", { defaultValue: "Copy address" })}
+            className="press flex size-9 shrink-0 items-center justify-center rounded-lg border border-border text-muted-foreground hover:text-foreground"
+          >
+            {copied ? <Check className="size-4 text-earned" aria-hidden /> : <Copy className="size-4" aria-hidden />}
+          </button>
+        </div>
+      </PopoverContent>
+    </Popover>
   );
 }

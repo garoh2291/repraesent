@@ -35,6 +35,8 @@ import {
   DialogTitle,
 } from "~/components/ui/dialog";
 import { toast } from "sonner";
+import { AddFromPhone } from "~/components/notebook/phone-contacts";
+import { desktopAutoFocus } from "~/lib/utils/touch";
 
 export interface CreateContactInitialValues {
   firstName?: string;
@@ -55,6 +57,12 @@ export interface CreateContactDialogProps {
   initialValues?: CreateContactInitialValues;
   /** Called after successfully adding info to existing contact. */
   onUpdated?: () => void;
+  /**
+   * Where the owner started from the New contact menu: "phone" opens the
+   * phone's contacts straight away, "manual" shows only the form. Unset keeps
+   * the form with "Add from phone" on top (⌘K quick-create).
+   */
+  start?: "phone" | "manual";
 }
 
 /**
@@ -91,6 +99,7 @@ export function CreateContactDialog({
   editContactId,
   initialValues,
   onUpdated,
+  start,
 }: CreateContactDialogProps) {
   const { t } = useTranslation();
   const navigate = useNavigate();
@@ -103,6 +112,8 @@ export function CreateContactDialog({
   const [phone, setPhone] = useState("");
   const [contactType, setContactType] = useState<ContactType>("contact");
   const [address, setAddress] = useState(EMPTY_ADDRESS);
+  // "Add from phone" (phones only) can replace the form with its own panel.
+  const [phonePanel, setPhonePanel] = useState(false);
 
   useEffect(() => {
     if (open && initialValues) {
@@ -121,6 +132,7 @@ export function CreateContactDialog({
       setPhone("");
       setContactType("contact");
       setAddress(EMPTY_ADDRESS);
+      setPhonePanel(false);
     }
   }, [open, initialValues]);
 
@@ -254,6 +266,12 @@ export function CreateContactDialog({
     ? undefined
     : emailParse.error.issues[0]?.message;
 
+  const submitDisabled = isEditMode
+    ? editMutation.isPending
+    : createMutation.isPending || !hasIdentity || !isEmailValid;
+  const submit = () =>
+    isEditMode ? editMutation.mutate() : createMutation.mutate();
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-xl max-h-[90vh] flex flex-col overflow-hidden">
@@ -267,9 +285,32 @@ export function CreateContactDialog({
           </DialogTitle>
         </DialogHeader>
 
-        <div className="space-y-4 py-1 flex-1 overflow-y-auto px-2">
+        {!isEditMode && start !== "manual" ? (
+          <AddFromPhone
+            autoStart={start === "phone"}
+            onPrefill={(v) => {
+              setFirstName(v.firstName ?? "");
+              setLastName(v.lastName ?? "");
+              setEmail(v.email ?? "");
+              setPhone(v.phone ?? "");
+            }}
+            onActiveChange={setPhonePanel}
+            onFinished={() => onOpenChange(false)}
+          />
+        ) : null}
+
+        {phonePanel ? null : (
+        <form
+          id="create-contact-form"
+          noValidate
+          onSubmit={(e) => {
+            e.preventDefault();
+            if (!submitDisabled) submit();
+          }}
+          className="space-y-4 py-1 flex-1 overflow-y-auto px-2 max-sm:flex-none max-sm:overflow-visible max-sm:px-0.5"
+        >
           {/* Name */}
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <div className="space-y-1.5">
               <Label htmlFor="create-contact-first-name">
                 {t("contacts.fields.firstName", { defaultValue: "First name" })}
@@ -278,7 +319,10 @@ export function CreateContactDialog({
                 id="create-contact-first-name"
                 value={firstName}
                 onChange={(e) => setFirstName(e.target.value)}
-                autoFocus={!isEditMode}
+                autoComplete="given-name"
+                autoCapitalize="words"
+                enterKeyHint="next"
+                autoFocus={desktopAutoFocus() && (!isEditMode)}
                 readOnly={isEditMode}
                 className={isEditMode ? "bg-muted/50" : undefined}
               />
@@ -291,6 +335,9 @@ export function CreateContactDialog({
                 id="create-contact-last-name"
                 value={lastName}
                 onChange={(e) => setLastName(e.target.value)}
+                autoComplete="family-name"
+                autoCapitalize="words"
+                enterKeyHint="next"
                 readOnly={isEditMode}
                 className={isEditMode ? "bg-muted/50" : undefined}
               />
@@ -306,7 +353,7 @@ export function CreateContactDialog({
               value={contactType}
               onValueChange={(v) => setContactType(v as ContactType)}
             >
-              <SelectTrigger>
+              <SelectTrigger className="max-sm:w-full">
                 <SelectValue
                   placeholder={t("contacts.contactType", {
                     defaultValue: "Contact type",
@@ -333,6 +380,12 @@ export function CreateContactDialog({
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
+              autoComplete="email"
+              inputMode="email"
+              autoCapitalize="none"
+              autoCorrect="off"
+              spellCheck={false}
+              enterKeyHint="next"
               readOnly={isEditMode && !!initialValues?.email}
               aria-invalid={showEmailError}
               className={
@@ -354,6 +407,7 @@ export function CreateContactDialog({
               {t("contacts.fields.phone", { defaultValue: "Phone" })}
             </Label>
             <PhoneNumberInput
+              id="create-contact-phone"
               value={phone}
               onChange={setPhone}
               placeholder={t("contacts.fields.phone", {
@@ -373,6 +427,8 @@ export function CreateContactDialog({
               onChange={(e) =>
                 setAddress((a) => ({ ...a, line1: e.target.value }))
               }
+              autoComplete="address-line1"
+              enterKeyHint="next"
             />
           </div>
           <div className="space-y-1.5">
@@ -385,9 +441,11 @@ export function CreateContactDialog({
               onChange={(e) =>
                 setAddress((a) => ({ ...a, line2: e.target.value }))
               }
+              autoComplete="address-line2"
+              enterKeyHint="next"
             />
           </div>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-[7rem_1fr] gap-3 sm:grid-cols-2">
             <div className="space-y-1.5">
               <Label htmlFor="create-contact-postal">
                 {t("contacts.postalCode", { defaultValue: "Postal code" })}
@@ -398,6 +456,8 @@ export function CreateContactDialog({
                 onChange={(e) =>
                   setAddress((a) => ({ ...a, postal_code: e.target.value }))
                 }
+                autoComplete="postal-code"
+                enterKeyHint="next"
               />
             </div>
             <div className="space-y-1.5">
@@ -410,10 +470,13 @@ export function CreateContactDialog({
                 onChange={(e) =>
                   setAddress((a) => ({ ...a, city: e.target.value }))
                 }
+                autoComplete="address-level2"
+                autoCapitalize="words"
+                enterKeyHint="next"
               />
             </div>
           </div>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <div className="space-y-1.5">
               <Label htmlFor="create-contact-state">
                 {t("contacts.state", { defaultValue: "State / Region" })}
@@ -424,6 +487,9 @@ export function CreateContactDialog({
                 onChange={(e) =>
                   setAddress((a) => ({ ...a, state: e.target.value }))
                 }
+                autoComplete="address-level1"
+                autoCapitalize="words"
+                enterKeyHint="next"
               />
             </div>
             <div className="space-y-1.5">
@@ -436,13 +502,18 @@ export function CreateContactDialog({
                 onChange={(e) =>
                   setAddress((a) => ({ ...a, country: e.target.value }))
                 }
+                autoComplete="country"
+                autoCapitalize="characters"
+                enterKeyHint="done"
                 placeholder="DE"
                 maxLength={2}
               />
             </div>
           </div>
-        </div>
+        </form>
+        )}
 
+        {phonePanel ? null : (
         <DialogFooter>
           <Button
             type="button"
@@ -452,15 +523,9 @@ export function CreateContactDialog({
             {t("common.cancel", { defaultValue: "Cancel" })}
           </Button>
           <Button
-            type="button"
-            onClick={() =>
-              isEditMode ? editMutation.mutate() : createMutation.mutate()
-            }
-            disabled={
-              isEditMode
-                ? editMutation.isPending
-                : createMutation.isPending || !hasIdentity || !isEmailValid
-            }
+            type="submit"
+            form="create-contact-form"
+            disabled={submitDisabled}
           >
             {(isEditMode ? editMutation.isPending : createMutation.isPending)
               ? t("common.loading", { defaultValue: "Loading…" })
@@ -469,6 +534,7 @@ export function CreateContactDialog({
                 : t("contacts.create", { defaultValue: "Create" })}
           </Button>
         </DialogFooter>
+        )}
       </DialogContent>
     </Dialog>
   );

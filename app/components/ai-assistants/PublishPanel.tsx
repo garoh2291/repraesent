@@ -14,6 +14,10 @@ import {
   PanelHeader,
 } from "~/components/forms/chrome";
 import { FieldHint, InfoNote } from "~/components/wordpress/fields";
+import { AdvancedSection } from "~/components/notebook/advanced-section";
+import { CopyForWebPerson } from "~/components/notebook/copy-for-web-person";
+import { setLocalFlag } from "~/components/notebook/setup-checklist";
+import { Button } from "~/components/ui/button";
 import { Skeleton } from "~/components/ui/skeleton";
 import { WidgetTypeIcon } from "~/components/ai-assistants/WidgetTypeIcon";
 import { useAiSnippet } from "~/lib/hooks/useAiAssistants";
@@ -46,44 +50,161 @@ export function PublishPanel({
 }: Props) {
   const { t } = useTranslation();
   const published = status === "published";
+  const copiedFlag = `ai-copied:${assistantId}`;
 
   const copy = (text: string) => {
     void navigator.clipboard.writeText(text);
     toast.success(t("aiAssistants.share.copied"));
   };
 
-  if (!published) {
-    return <InfoNote>{t("aiAssistants.share.publishFirst")}</InfoNote>;
-  }
-
-  // The configured type first, then the self-contained HTML block for the
-  // same type; the other types are still offered — a bubble site may want the
-  // section on its contact page or the hosted page in an email.
-  const modes: SnippetMode[] = [
-    widgetType,
+  // Same shape as the forms Share tab: the link we host first (it works with
+  // no web person at all), then the one piece of code that matches the chosen
+  // look, ready to copy or email. Everything else — the other looks, the
+  // inlined HTML block, the CSP lines — is for whoever edits the site.
+  const others: SnippetMode[] = [
     "html",
-    ...WIDGET_TYPES.filter((m) => m !== widgetType),
+    ...WIDGET_TYPES.filter((m) => m !== widgetType && m !== "page"),
   ];
 
   return (
     <div className="space-y-5">
-      {hasUnpublishedChanges ? (
+      {!published ? (
+        <InfoNote>{t("aiAssistants.share.publishFirst")}</InfoNote>
+      ) : hasUnpublishedChanges ? (
         <InfoNote>{t("aiAssistants.share.unpublishedWarning")}</InfoNote>
       ) : null}
 
-      {modes.map((mode) => (
-        <SnippetCard
-          key={mode}
+      <HostedPageCard
+        assistantId={assistantId}
+        onCopy={(text) => {
+          copy(text);
+          // Sharing the hosted link is how a "page" assistant gets onto the
+          // website, so it ticks the same checklist step as the code does.
+          setLocalFlag(copiedFlag);
+        }}
+      />
+
+      {widgetType !== "page" ? (
+        <RecommendedSnippet
           assistantId={assistantId}
-          mode={mode}
-          primary={mode === widgetType}
-          onCopy={copy}
+          mode={widgetType}
+          copiedFlag={copiedFlag}
         />
-      ))}
+      ) : null}
 
-      <CspCard assistantId={assistantId} onCopy={copy} />
-
+      <AdvancedSection
+        storageKey="ai-publish"
+        hint={t("aiAssistants.share.advancedHint")}
+      >
+        {others.map((mode) => (
+          <SnippetCard
+            key={mode}
+            assistantId={assistantId}
+            mode={mode}
+            primary={false}
+            onCopy={copy}
+          />
+        ))}
+        <CspCard assistantId={assistantId} onCopy={copy} />
+      </AdvancedSection>
     </div>
+  );
+}
+
+/** The page we host: a link the owner can share themselves, today. */
+function HostedPageCard({
+  assistantId,
+  onCopy,
+}: {
+  assistantId: string;
+  onCopy: (text: string) => void;
+}) {
+  const { t } = useTranslation();
+  const { data, isLoading } = useAiSnippet(assistantId, "page");
+  const url = data?.page_url;
+  return (
+    <Panel>
+      <PanelHeader
+        icon={<WidgetTypeIcon type="page" className="h-3.5 w-3.5" />}
+        title={t("aiAssistants.share.pageTitle")}
+      />
+      <PanelBody>
+        <FieldHint>{t("aiAssistants.share.pageHint")}</FieldHint>
+        {isLoading ? (
+          <Skeleton className="h-11 w-full rounded-lg" />
+        ) : (
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+            <p className="min-w-0 flex-1 select-text break-all rounded-lg border bg-muted/40 px-3 py-2.5 font-mono text-sm">
+              {url}
+            </p>
+            <div className="flex shrink-0 gap-2">
+              {url ? (
+                <a
+                  href={url}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex h-11 items-center gap-2 rounded-lg border border-border bg-muted/40 px-3 text-sm transition-colors hover:bg-muted sm:h-10"
+                >
+                  <ExternalLink className="h-3.5 w-3.5" aria-hidden />
+                  {t("aiAssistants.share.pageUrlOpen")}
+                </a>
+              ) : null}
+              <Button
+                type="button"
+                variant="outline"
+                className="h-11 sm:h-10"
+                disabled={!url}
+                onClick={() => url && onCopy(url)}
+              >
+                <Copy className="h-3.5 w-3.5" aria-hidden />
+                {t("aiAssistants.share.copyLink")}
+              </Button>
+            </div>
+          </div>
+        )}
+      </PanelBody>
+    </Panel>
+  );
+}
+
+/** The code for the look picked under "Look", worded for the owner. */
+function RecommendedSnippet({
+  assistantId,
+  mode,
+  copiedFlag,
+}: {
+  assistantId: string;
+  mode: WidgetType;
+  copiedFlag: string;
+}) {
+  const { t } = useTranslation();
+  const { data, isLoading } = useAiSnippet(assistantId, mode);
+  const where = t(`aiAssistants.share.${mode}Hint`);
+  return (
+    <Panel>
+      <PanelHeader
+        icon={<WidgetTypeIcon type={mode} className="h-3.5 w-3.5" />}
+        title={t("aiAssistants.share.recommendedTitle")}
+        meta={
+          <span className="rounded-md bg-muted px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground">
+            {t(`aiAssistants.widgetType.${mode}`)}
+          </span>
+        }
+      />
+      <PanelBody>
+        {isLoading || !data?.snippet ? (
+          <Skeleton className="h-24 w-full rounded-lg" />
+        ) : (
+          <CopyForWebPerson
+            code={data.snippet}
+            hint={where}
+            emailSubject={t("aiAssistants.share.emailSubject")}
+            emailIntro={`${t("aiAssistants.share.emailIntro")}\n\n${where}`}
+            copiedFlag={copiedFlag}
+          />
+        )}
+      </PanelBody>
+    </Panel>
   );
 }
 

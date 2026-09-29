@@ -29,6 +29,7 @@ import { Button } from "~/components/ui/button";
 import { ContactSourceBadge } from "~/components/molecule/contact-badges";
 import { toast } from "sonner";
 import { cn } from "~/lib/utils";
+import { ContactActions } from "~/components/notebook/contact-actions";
 import { formatDate } from "~/lib/utils/format";
 import type { ContactDetail } from "~/lib/api/contacts-crm";
 import {
@@ -158,7 +159,7 @@ function CopyChip({
           : undefined
       }
       className={cn(
-        "group relative flex items-start gap-3 rounded-xl border border-border/70 bg-card/60 px-3.5 py-3 transition-all",
+        "group relative flex items-start gap-3 rounded-xl border border-border/70 bg-card/60 px-3.5 py-3 transition-all max-sm:items-center max-sm:px-3 max-sm:py-2",
         "hover:border-border hover:bg-card hover:shadow-(--shadow-sm)",
         isEmpty && !showAddAction && "opacity-60",
         showAddAction &&
@@ -175,7 +176,7 @@ function CopyChip({
         {icon}
       </div>
       <div className="min-w-0 flex-1">
-        <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">
+        <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground max-sm:text-[11px]">
           {label}
         </p>
         {showAddAction ? (
@@ -201,14 +202,14 @@ function CopyChip({
         ) : null}
       </div>
       {!isEmpty ? (
-        <div className="ml-1 flex shrink-0 items-center gap-1 opacity-0 transition-opacity group-hover:opacity-100 focus-within:opacity-100">
+        <div className="ml-1 flex shrink-0 items-center gap-1 opacity-0 transition-opacity group-hover:opacity-100 focus-within:opacity-100 pointer-coarse:opacity-100">
           {onAction ? (
             <button
               type="button"
               onClick={onAction.onClick}
               aria-label={onAction.label}
               title={onAction.label}
-              className="inline-flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none [&>svg]:h-3.5 [&>svg]:w-3.5"
+              className="inline-flex h-7 w-7 pointer-coarse:h-10 pointer-coarse:w-10 max-sm:size-11 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none [&>svg]:h-3.5 [&>svg]:w-3.5"
             >
               {onAction.icon}
             </button>
@@ -218,7 +219,7 @@ function CopyChip({
               target={hrefAction.newTab ? "_blank" : undefined}
               rel={hrefAction.newTab ? "noreferrer" : undefined}
               aria-label={hrefAction.label}
-              className="inline-flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground [&>svg]:h-3.5 [&>svg]:w-3.5"
+              className="inline-flex h-7 w-7 pointer-coarse:h-10 pointer-coarse:w-10 max-sm:size-11 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground [&>svg]:h-3.5 [&>svg]:w-3.5"
             >
               {hrefAction.icon}
             </a>
@@ -230,7 +231,7 @@ function CopyChip({
               defaultValue: "Copy {{label}}",
               label,
             })}
-            className="inline-flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+            className="inline-flex h-7 w-7 pointer-coarse:h-10 pointer-coarse:w-10 max-sm:size-11 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
           >
             {copied ? (
               <Check className="h-3.5 w-3.5 text-emerald-500" />
@@ -259,6 +260,16 @@ interface ContactHeroProps {
   onCompose?: () => void;
   canEdit?: boolean;
   onInvalidate?: () => void;
+  /**
+   * "linked": shown on a lead page under the lead's own header — a smaller
+   * name and no second row of Call / WhatsApp / Email buttons.
+   */
+  variant?: "page" | "linked";
+  /**
+   * Narrow container (the 480px lead sheet): keep the stacked layout at every
+   * screen width — the sm/lg breakpoints follow the viewport, not the sheet.
+   */
+  compact?: boolean;
 }
 
 export function ContactHero({
@@ -274,6 +285,8 @@ export function ContactHero({
   onCompose,
   canEdit,
   onInvalidate,
+  variant = "page",
+  compact = false,
 }: ContactHeroProps) {
   const { t } = useTranslation();
   const contactId = contact?.id ? String(contact.id) : null;
@@ -330,13 +343,13 @@ export function ContactHero({
 
   return (
     <section className="app-fade-up overflow-hidden rounded-2xl border border-border bg-card shadow-(--shadow)">
-      <div
-        aria-hidden
-        className="relative h-20 bg-linear-to-r from-secondary/25 via-secondary/10 to-primary/10 dark:from-secondary/15 dark:via-secondary/5 dark:to-primary/15"
-      />
-
-      <div className="px-4 pb-5 pt-0 sm:px-6">
-        <div className="-mt-10 flex flex-col gap-4 sm:flex-row sm:items-center sm:gap-5">
+      <div className="px-4 pb-5 pt-5 sm:px-6">
+        <div
+          className={cn(
+            "flex gap-4",
+            compact ? "flex-row items-center" : "flex-col sm:flex-row sm:items-center sm:gap-5",
+          )}
+        >
           <ContactHeroAvatar
             contactId={contactId}
             avatarUrl={(contact as { avatar_url?: string | null } | null)?.avatar_url ?? null}
@@ -344,21 +357,63 @@ export function ContactHero({
           />
 
           <div className="min-w-0 flex-1">
-            <h1 className="truncate text-2xl font-semibold tracking-tight text-foreground sm:text-[28px]">
-              {displayName}
-            </h1>
+            {variant === "linked" ? (
+              <>
+                <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">
+                  {t("leadBar.linkedContact", "Linked contact")}
+                </p>
+                <h2 className="truncate text-[18px] font-semibold text-foreground">
+                  {displayName}
+                </h2>
+              </>
+            ) : (
+              <>
+                <h1 className="title-display truncate text-[26px] font-semibold text-foreground sm:text-[32px]">
+                  {displayName}
+                </h1>
+                <ContactActions
+                  className="mt-2.5 max-sm:hidden"
+                  size="sm"
+                  target={{ phone: phoneValue || null, email: emailValue || null }}
+                />
+                {/* Phones: one even row. Email opens our composer when it can
+                    (the same onCompose as the ink button, hidden here). */}
+                <ContactActions
+                  className="mt-3 sm:hidden"
+                  even
+                  showEmpty
+                  target={{ phone: phoneValue || null, email: emailValue || null }}
+                  emailInApp={!!onCompose}
+                  onContact={
+                    onCompose
+                      ? (channel) => {
+                          if (channel === "email") onCompose();
+                        }
+                      : undefined
+                  }
+                />
+              </>
+            )}
             <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
               {onCompose ? (
                 <Button
                   size="sm"
-                  className="h-7 gap-1.5 px-2.5 text-[11px]"
+                  className={cn(
+                    "h-7 gap-1.5 px-2.5 text-[11px]",
+                    variant === "page" && "max-sm:hidden",
+                  )}
                   onClick={onCompose}
                 >
                   <Send className="h-3 w-3" />
                   {t("compose.emailAction", { defaultValue: "Email" })}
                 </Button>
               ) : null}
-              {source ? <ContactSourceBadge source={source} /> : null}
+              {source ? (
+                <ContactSourceBadge
+                  source={source}
+                  className="bg-muted text-muted-foreground ring-border dark:text-muted-foreground"
+                />
+              ) : null}
               {lastContactedRaw ? (
                 <span className="inline-flex items-center gap-1 text-muted-foreground">
                   <CalendarClock className="h-3 w-3" />
@@ -407,7 +462,12 @@ export function ContactHero({
           </div>
         </div>
 
-        <div className="mt-5 grid grid-cols-1 gap-2.5 sm:grid-cols-2 lg:grid-cols-3">
+        <div
+          className={cn(
+            "mt-5 grid grid-cols-1 gap-2.5",
+            !compact && "sm:grid-cols-2 lg:grid-cols-3",
+          )}
+        >
           <CopyChip
             icon={<Mail />}
             label={t("contacts.primaryEmailLabel", {
@@ -572,11 +632,11 @@ function ContactHeroAvatar({
       {/* No size="lg": its data-[size=lg]:size-10 variant class beats the
           size-20 override (tailwind-merge can't merge across variants) and
           shrinks the circle inside the 80px wrapper. */}
-      <Avatar className="size-20 border-4 border-card bg-card shadow-(--shadow)">
+      <Avatar className="size-20 bg-card ring-1 ring-border">
         {avatarUrl ? (
           <AvatarImage src={avatarUrl} className="object-cover" />
         ) : null}
-        <AvatarFallback className="bg-linear-to-br from-secondary/30 to-primary/10 text-lg font-semibold tracking-tight text-foreground">
+        <AvatarFallback className="bg-muted text-lg font-semibold tracking-tight text-foreground">
           {fallbackInitials}
         </AvatarFallback>
       </Avatar>
@@ -590,7 +650,7 @@ function ContactHeroAvatar({
             aria-label={t("contacts.avatarUpload", {
               defaultValue: "Upload contact picture",
             })}
-            className="absolute -right-0.5 -bottom-0.5 flex h-7 w-7 cursor-pointer items-center justify-center rounded-full border border-border bg-card text-muted-foreground opacity-0 shadow transition-opacity hover:bg-muted hover:text-foreground focus-visible:opacity-100 group-hover/avatar:opacity-100"
+            className="absolute -right-0.5 -bottom-0.5 flex h-7 w-7 cursor-pointer items-center justify-center rounded-full border border-border bg-card text-muted-foreground opacity-0 shadow transition-opacity hover:bg-muted hover:text-foreground focus-visible:opacity-100 group-hover/avatar:opacity-100 pointer-coarse:opacity-100 pointer-coarse:after:absolute pointer-coarse:after:-inset-1.5"
           >
             <Camera className="h-3.5 w-3.5" />
           </button>
@@ -601,7 +661,7 @@ function ContactHeroAvatar({
               aria-label={t("settings.avatarRemove", {
                 defaultValue: "Remove",
               })}
-              className="absolute -top-0.5 -right-0.5 flex h-6 w-6 cursor-pointer items-center justify-center rounded-full border border-border bg-card text-muted-foreground opacity-0 shadow transition-opacity hover:text-destructive focus-visible:opacity-100 group-hover/avatar:opacity-100"
+              className="absolute -top-0.5 -right-0.5 flex h-6 w-6 cursor-pointer items-center justify-center rounded-full border border-border bg-card text-muted-foreground opacity-0 shadow transition-opacity hover:text-destructive focus-visible:opacity-100 group-hover/avatar:opacity-100 pointer-coarse:opacity-100 pointer-coarse:after:absolute pointer-coarse:after:-inset-2"
             >
               <Trash2 className="h-3 w-3" />
             </button>

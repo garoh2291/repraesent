@@ -740,7 +740,7 @@ export default function MediaLibraryPage() {
       {/* Header */}
       <div className="app-fade-up flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-xl font-semibold tracking-tight text-foreground sm:text-2xl">
+          <h1 className="title-display text-[26px] font-semibold text-foreground sm:text-[30px]">
             {t("media.title", { defaultValue: "Media Library" })}
           </h1>
           <p className="text-sm text-muted-foreground">

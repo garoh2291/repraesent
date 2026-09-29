@@ -147,6 +147,7 @@ function OptionRow({
     transition,
     isDragging,
   } = useSortable({ id: option.id, disabled });
+  const { t } = useTranslation();
 
   return (
     <div
@@ -163,7 +164,7 @@ function OptionRow({
         className="cursor-grab touch-none p-1 text-muted-foreground/60 active:cursor-grabbing"
         {...attributes}
         {...listeners}
-        aria-label="Reorder"
+        aria-label={t("forms.inspector.optionReorder")}
       >
         <GripVertical className="h-3.5 w-3.5" />
       </button>
@@ -190,7 +191,7 @@ function OptionRow({
         className="h-8 w-8 shrink-0"
         disabled={disabled}
         onClick={onRemove}
-        aria-label="Remove"
+        aria-label={t("forms.inspector.optionRemove")}
       >
         <X className="h-3.5 w-3.5" />
       </Button>

@@ -41,7 +41,7 @@ export function SignatureSnippet() {
         <p className="mb-2 text-xs leading-relaxed text-muted-foreground">
           {t("forms.webhooks.verifyHint")}
         </p>
-        <div className="relative overflow-hidden rounded-xl border bg-[#111113]">
+        <div className="ink-surface relative overflow-hidden rounded-xl border bg-[#111113]">
           <button
             type="button"
             onClick={copy}

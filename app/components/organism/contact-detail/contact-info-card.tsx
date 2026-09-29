@@ -232,11 +232,11 @@ export function ContactInfoCard({
 
       <Tabs defaultValue={contact ? "profile" : "emails"} className="w-full">
         <div className="border-b border-border px-3 sm:px-4">
-          <TabsList variant="line" className="h-10 gap-1">
+          <TabsList variant="line" className="h-10 gap-1 max-sm:h-11">
             {contact ? (
               <TabsTrigger
                 value="profile"
-                className="gap-1.5 px-2 text-xs sm:gap-2 sm:px-3"
+                className="gap-1.5 px-2 text-xs max-sm:min-w-11 max-sm:px-3 sm:gap-2 sm:px-3"
               >
                 <UserCircle className="h-3.5 w-3.5 shrink-0" />
                 <span className="hidden sm:inline">
@@ -246,7 +246,7 @@ export function ContactInfoCard({
             ) : null}
             <TabsTrigger
               value="emails"
-              className="gap-1.5 px-2 text-xs sm:gap-2 sm:px-3"
+              className="gap-1.5 px-2 text-xs max-sm:min-w-11 max-sm:px-3 sm:gap-2 sm:px-3"
             >
               <Mail className="h-3.5 w-3.5 shrink-0" />
               <span className="hidden sm:inline">
@@ -256,7 +256,7 @@ export function ContactInfoCard({
             </TabsTrigger>
             <TabsTrigger
               value="phones"
-              className="gap-1.5 px-2 text-xs sm:gap-2 sm:px-3"
+              className="gap-1.5 px-2 text-xs max-sm:min-w-11 max-sm:px-3 sm:gap-2 sm:px-3"
             >
               <Phone className="h-3.5 w-3.5 shrink-0" />
               <span className="hidden sm:inline">
@@ -266,7 +266,7 @@ export function ContactInfoCard({
             </TabsTrigger>
             <TabsTrigger
               value="addresses"
-              className="gap-1.5 px-2 text-xs sm:gap-2 sm:px-3"
+              className="gap-1.5 px-2 text-xs max-sm:min-w-11 max-sm:px-3 sm:gap-2 sm:px-3"
             >
               <MapPin className="h-3.5 w-3.5 shrink-0" />
               <span className="hidden sm:inline">
@@ -278,7 +278,7 @@ export function ContactInfoCard({
         </div>
 
         {contact && contactId ? (
-          <TabsContent value="profile" className="mt-0 p-4 sm:p-5">
+          <TabsContent value="profile" className="mt-0 p-4 max-sm:p-3 sm:p-5">
             <ContactProfileForm
               contactId={contactId}
               contact={contact}
@@ -292,7 +292,7 @@ export function ContactInfoCard({
           </TabsContent>
         ) : null}
 
-        <TabsContent value="emails" className="mt-0 p-4 sm:p-5">
+        <TabsContent value="emails" className="mt-0 p-4 max-sm:p-3 sm:p-5">
           <KindPanel
             kind="email"
             contactId={contactId}
@@ -301,7 +301,7 @@ export function ContactInfoCard({
             onInvalidate={onInvalidate}
           />
         </TabsContent>
-        <TabsContent value="phones" className="mt-0 p-4 sm:p-5">
+        <TabsContent value="phones" className="mt-0 p-4 max-sm:p-3 sm:p-5">
           <KindPanel
             kind="phone"
             contactId={contactId}
@@ -310,7 +310,7 @@ export function ContactInfoCard({
             onInvalidate={onInvalidate}
           />
         </TabsContent>
-        <TabsContent value="addresses" className="mt-0 p-4 sm:p-5">
+        <TabsContent value="addresses" className="mt-0 p-4 max-sm:p-3 sm:p-5">
           <KindPanel
             kind="address"
             contactId={contactId}
@@ -624,7 +624,7 @@ function RowCard({ kind, entityId, row, canEdit, onInvalidate }: RowCardProps) {
   return (
     <div
       className={cn(
-        "group relative flex items-start gap-3 rounded-xl border border-border/70 bg-card px-3.5 py-3 transition-all",
+        "group relative flex items-start gap-3 rounded-xl border border-border/70 bg-card px-3.5 py-3 transition-all max-sm:px-3 max-sm:py-2.5",
         "hover:border-border hover:shadow-(--shadow-sm)",
         isPrimary && "ring-1 ring-primary/30 border-primary/40 bg-primary/2",
       )}

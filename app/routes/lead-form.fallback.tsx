@@ -850,7 +850,7 @@ export default function LeadFallbackPage() {
               <Mail className="h-5 w-5 text-amber-400" />
             </div>
             <div>
-              <h1 className="text-xl sm:text-2xl font-semibold text-foreground tracking-tight">
+              <h1 className="title-display text-[26px] font-semibold text-foreground sm:text-[30px]">
                 {t("email.tabConfirmation")}
               </h1>
               <p className="text-sm text-muted-foreground mt-0.5">

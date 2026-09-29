@@ -1,0 +1,2 @@
+Flag images from country-flag-icons (https://gitlab.com/catamphetamine/country-flag-icons), MIT License.
+Copied for the phone field of re:praesent forms (country picker), so embedded forms can load them from the app.

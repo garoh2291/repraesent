@@ -20,6 +20,8 @@ interface LeadSuccessConfirmModalProps {
   leadName: string;
   onConfirm: () => void;
   onClose: () => void;
+  /** Offered once the lead is marked won: turn it into a deal with a next step. */
+  onMakeDeal?: () => void;
 }
 
 /**
@@ -32,6 +34,7 @@ export function LeadSuccessConfirmModal({
   leadName,
   onConfirm,
   onClose,
+  onMakeDeal,
 }: LeadSuccessConfirmModalProps) {
   const { t } = useTranslation();
   const isDone = phase === "done";
@@ -50,14 +53,14 @@ export function LeadSuccessConfirmModal({
           <div
             className={
               isDone
-                ? "mx-auto mb-1 flex h-14 w-14 items-center justify-center rounded-full bg-emerald-50 ring-4 ring-emerald-100"
-                : "mx-auto mb-1 flex h-14 w-14 items-center justify-center rounded-full bg-amber-50 ring-4 ring-amber-100"
+                ? "mx-auto mb-1 flex h-14 w-14 items-center justify-center rounded-full bg-earned-soft"
+                : "mx-auto mb-1 flex h-14 w-14 items-center justify-center rounded-full bg-marker-soft"
             }
           >
             {isDone ? (
-              <CheckCircle2 className="h-7 w-7 text-emerald-500" aria-hidden />
+              <CheckCircle2 className="h-7 w-7 text-earned" aria-hidden />
             ) : (
-              <Trophy className="h-7 w-7 text-amber-500" aria-hidden />
+              <Trophy className="h-7 w-7 text-marker-ink" aria-hidden />
             )}
           </div>
           <DialogTitle className="text-lg font-semibold">
@@ -84,9 +87,28 @@ export function LeadSuccessConfirmModal({
         </DialogHeader>
         <DialogFooter className="mt-2 flex-col gap-2 sm:flex-col">
           {isDone ? (
-            <Button type="button" className="w-full" onClick={onClose}>
-              {t("leads.markSuccess.close", { defaultValue: "Close" })}
-            </Button>
+            <>
+              {onMakeDeal ? (
+                <Button
+                  type="button"
+                  className="w-full"
+                  onClick={() => {
+                    onClose();
+                    onMakeDeal();
+                  }}
+                >
+                  {t("makeDeal.cta", { defaultValue: "Make a deal" })}
+                </Button>
+              ) : null}
+              <Button
+                type="button"
+                variant={onMakeDeal ? "outline" : "default"}
+                className="w-full"
+                onClick={onClose}
+              >
+                {t("leads.markSuccess.close", { defaultValue: "Close" })}
+              </Button>
+            </>
           ) : (
             <>
               <Button

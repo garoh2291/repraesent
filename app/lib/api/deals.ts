@@ -3,6 +3,25 @@ import type { LeadHistoryItem } from "./leads";
 
 export type DealStatus = "new" | "won" | "lost";
 
+/** Currencies a deal can be in (migration 187). Never converted into each other. */
+export const DEAL_CURRENCIES = ["EUR", "USD", "CAD"] as const;
+export type DealCurrency = (typeof DEAL_CURRENCIES)[number];
+
+export interface WorkspaceCurrency {
+  /** false until migration 187 is applied: EUR only. */
+  available: boolean;
+  currency: DealCurrency;
+  currencies: DealCurrency[];
+}
+
+export async function getWorkspaceCurrency(): Promise<WorkspaceCurrency> {
+  return (await apiClient.get<WorkspaceCurrency>("/workspace-currency")).data;
+}
+
+export async function setWorkspaceCurrency(currency: DealCurrency): Promise<WorkspaceCurrency> {
+  return (await apiClient.put<WorkspaceCurrency>("/workspace-currency", { currency })).data;
+}
+
 /**
  * Parse a user-entered deal value string into a number.
  * Accepts comma or dot as the decimal separator; returns null for empty or
@@ -39,6 +58,8 @@ export interface DealListItem {
   title: string | null;
   status: DealStatus;
   value: string | null;
+  /** EUR | USD | CAD. Absent/"EUR" before migration 187. */
+  currency?: string;
   stage: string;
   /** The deal pipeline this deal's board belongs to. */
   pipeline_id: string;
@@ -55,6 +76,20 @@ export interface DealListItem {
   primary_email: string | null;
   primary_phone: string | null;
   board_position: number | null;
+  /** Open tasks on the deal — the "next step" (absent on older API builds). */
+  tasks_summary?: DealTasksSummary;
+  /** When a won deal was paid (absent on older API builds / before migration 196). */
+  paid_at?: string | null;
+  /** Deal lists: paid tracking is on, so an unpaid won deal can say "Not paid yet". */
+  paid_supported?: boolean;
+  paid_source?: "manual" | "stripe" | null;
+}
+
+export interface DealTasksSummary {
+  open_count: number;
+  nearest_due_date: string | null;
+  nearest_urgency: "overdue" | "due_soon" | "upcoming" | null;
+  nearest_title: string | null;
 }
 
 export interface PaginatedDeals {
@@ -229,6 +264,8 @@ export interface InvoiceReadiness {
 
 export type DealDetailResponse = {
   deal: Record<string, unknown>;
+  /** False (or absent on older API builds) until paid tracking is switched on. */
+  paid_supported?: boolean;
   /** Primary contact (mirrors deals.contact_id); kept for backward compatibility. */
   contact: Record<string, unknown> | null;
   /** All contacts attached to the deal, primary first. */
@@ -240,6 +277,8 @@ export type DealDetailResponse = {
   /** Newest first. */
   invoices: DealInvoice[];
   invoice_readiness: InvoiceReadiness;
+  /** Open tasks on the deal — the "next step". */
+  tasks_summary?: DealTasksSummary;
 };
 
 export async function getDeal(dealId: string): Promise<DealDetailResponse> {
@@ -261,6 +300,7 @@ export interface PatchDealBody {
   stage?: string;
   status?: DealStatus;
   value?: number | null;
+  currency?: DealCurrency;
   assigned_to?: string | null;
   expected_close_date?: string | null;
 }
@@ -273,6 +313,18 @@ export async function patchDeal(
     `/deals/${dealId}`,
     body,
   );
+  return res.data;
+}
+
+/** Mark a won deal as paid. 409 `deal_not_won` / `paid_not_ready`. */
+export async function markDealPaid(dealId: string): Promise<DealDetailResponse> {
+  const res = await apiClient.post<DealDetailResponse>(`/deals/${dealId}/paid`);
+  return res.data;
+}
+
+/** Undo "paid". */
+export async function clearDealPaid(dealId: string): Promise<DealDetailResponse> {
+  const res = await apiClient.delete<DealDetailResponse>(`/deals/${dealId}/paid`);
   return res.data;
 }
 
@@ -401,6 +453,7 @@ export interface CreateDealBody {
   /** Pipeline to create the deal in; omitted = the Default pipeline. */
   pipeline_id?: string;
   value?: number | null;
+  currency?: DealCurrency;
   contact_id?: string | null;
   assigned_to?: string | null;
   expected_close_date?: string | null;

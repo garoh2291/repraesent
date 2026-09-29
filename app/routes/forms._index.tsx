@@ -2,20 +2,19 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   ClipboardList,
   Copy,
-  HelpCircle,
   Layers,
   Link2,
   MoreHorizontal,
   Plus,
   ShoppingBag,
-  Webhook,
+  Inbox,
+  SearchX,
   Trash2,
 } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Link, useNavigate } from "react-router";
 import { toast } from "sonner";
-import { FormsIntroModal } from "~/components/forms/intro/FormsIntroModal";
 import {
   CreateFormDialog,
   type FormType,
@@ -50,8 +49,6 @@ import {
   type FormSummary,
 } from "~/lib/api/forms";
 import { buildPublicFormUrl } from "~/lib/config";
-import { useLocalStorageValue } from "~/lib/hooks/useLocalStorage";
-import { useAuthContext } from "~/providers/auth-provider";
 import { isFormLocale, type FormLocale } from "~/lib/forms/schema";
 import { useCanEditForms } from "~/lib/hooks/useCanEditForms";
 import { useForms } from "~/lib/hooks/useForms";
@@ -60,52 +57,17 @@ import i18n from "~/i18n";
 export function meta() {
   return [
     { title: `${i18n.t("forms.list.title")} · Repraesent` },
-    { name: "description", content: i18n.t("forms.list.hint") },
+    { name: "description", content: i18n.t("forms.list.intro") },
   ];
 }
-
-/** Per-browser, by design — no migration, and nothing on `users` to hang it on. */
-const INTRO_SEEN_KEY = "forms-intro-seen";
 
 export default function FormsIndexRoute() {
   const { t, i18n: i18next } = useTranslation();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const canEdit = useCanEditForms();
-  const { user } = useAuthContext();
-  const userId = user?.id;
-  const onboardingDoneAt = user?.onboarding_completed_at;
 
   const { data: forms, isLoading } = useForms();
-
-  // --- first-visit intro ----------------------------------------------------
-  const { item: introSeen, setItem: setIntroSeen } =
-    useLocalStorageValue<boolean>(INTRO_SEEN_KEY);
-  const [introOpen, setIntroOpen] = useState(false);
-
-  useEffect(() => {
-    if (introSeen) return;
-    // Opening from an effect is required, not stylistic: useLocalStorageValue
-    // is useSyncExternalStore with a `""` server snapshot, so `introSeen` reads
-    // as null through SSR and hydration. Gating during render would flash the
-    // modal at every returning user before localStorage is legible.
-    //
-    // The null check on onboarding_completed_at keeps this off the screen while
-    // the global OnboardingTour is still pending — _dashboard-layout wraps
-    // /forms too, so a brand-new user would otherwise get both at once.
-    if (!userId || onboardingDoneAt == null) return;
-
-    const timer = setTimeout(() => setIntroOpen(true), 600);
-    return () => clearTimeout(timer);
-    // Scalars, not the `user` object: the auth context hands back a fresh
-    // reference on each render, which would re-arm the timeout every time and
-    // it would never fire. _dashboard-layout.tsx:62 does the same thing.
-  }, [introSeen, userId, onboardingDoneAt]);
-
-  const closeIntro = () => {
-    setIntroOpen(false);
-    setIntroSeen(true);
-  };
 
   const [search, setSearch] = useState("");
   const { ref: searchInputRef, withHint } = useSearchShortcut();
@@ -215,39 +177,25 @@ export default function FormsIndexRoute() {
     });
 
   return (
-    <div className="mx-auto w-full max-w-[1280px] p-4 sm:p-6 py-10! space-y-6 sm:space-y-8 app-fade-in">
+    <div className="mx-auto w-full max-w-[1280px] p-4 sm:p-6 py-4 sm:py-10! space-y-6 sm:space-y-8 app-fade-in">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div className="space-y-1">
-          <h1 className="text-2xl font-semibold tracking-tight">
+          <h1 className="title-display text-[26px] font-semibold text-foreground sm:text-[30px]">
             {t("forms.list.title")}
           </h1>
           <p className="max-w-2xl text-sm text-muted-foreground">
-            {t("forms.list.hint")}
+            {t("forms.list.intro")}
           </p>
         </div>
-        <div className="flex shrink-0 items-center gap-2">
-          {/* Without a replay, whoever hits Skip can never get the explanation
-              back. Opens without touching the seen flag. */}
-          <button
-            type="button"
-            onClick={() => setIntroOpen(true)}
-            aria-label={t("forms.intro.replay")}
-            title={t("forms.intro.replay")}
-            className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-border bg-muted/40 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-          >
-            <HelpCircle className="h-4 w-4" />
-          </button>
-
+        <div className="flex shrink-0 items-center gap-2 max-sm:w-full">
           {canEdit ? (
-            <Button onClick={() => setCreateOpen(true)}>
+            <Button onClick={() => setCreateOpen(true)} className="max-sm:h-11 max-sm:flex-1">
               <Plus className="h-4 w-4" />
               {t("forms.list.newForm")}
             </Button>
           ) : null}
         </div>
       </div>
-
-      <FormsIntroModal open={introOpen} onClose={closeIntro} />
 
       <div className="border-t" />
 
@@ -257,7 +205,7 @@ export default function FormsIndexRoute() {
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           placeholder={withHint(t("forms.list.search"))}
-          className="max-w-xs"
+          className="max-w-xs max-sm:max-w-none"
         />
       ) : null}
 
@@ -266,6 +214,28 @@ export default function FormsIndexRoute() {
           {[0, 1, 2].map((i) => (
             <Skeleton key={i} className="h-20 w-full rounded-xl" />
           ))}
+        </div>
+      ) : filtered.length === 0 && (forms?.length ?? 0) > 0 ? (
+        // A search that matched nothing is not "you have no forms" — that
+        // empty state offered to create a first form to someone with ten.
+        <div className="flex flex-col items-center gap-3 rounded-xl border border-dashed py-12 text-center app-fade-up">
+          <SearchX
+            className="h-7 w-7 text-muted-foreground/60"
+            aria-hidden="true"
+          />
+          <p className="text-sm text-muted-foreground">
+            {t("guided.noMatch", { query: search.trim() })}
+          </p>
+          <Button
+            variant="outline"
+            className="max-sm:h-11"
+            onClick={() => {
+              setSearch("");
+              searchInputRef.current?.focus();
+            }}
+          >
+            {t("guided.clearSearch")}
+          </Button>
         </div>
       ) : filtered.length === 0 ? (
         <div className="flex flex-col items-center gap-3 rounded-xl border border-dashed py-16 text-center app-fade-up">
@@ -283,7 +253,7 @@ export default function FormsIndexRoute() {
             <Button
               variant="outline"
               onClick={() => setCreateOpen(true)}
-              className="mt-1"
+              className="mt-1 max-sm:h-11"
             >
               <Plus className="h-4 w-4" />
               {t("forms.list.newForm")}
@@ -322,8 +292,8 @@ export default function FormsIndexRoute() {
                     </span>
                   ) : form.kind === "intake" ? (
                     <span className="inline-flex items-center gap-1 rounded-md border border-border bg-muted/40 px-1.5 py-0.5 text-[11px] font-medium text-muted-foreground">
-                      <Webhook className="h-3 w-3" aria-hidden />
-                      {t("forms.list.kindIntake", { defaultValue: "Webhook" })}
+                      <Inbox className="h-3 w-3" aria-hidden />
+                      {t("forms.list.kindIntake")}
                     </span>
                   ) : form.layout_mode === "multi_step" ? (
                     <span className="inline-flex items-center gap-1 rounded-md border border-border bg-muted/40 px-1.5 py-0.5 text-[11px] font-medium text-muted-foreground">
@@ -332,9 +302,9 @@ export default function FormsIndexRoute() {
                     </span>
                   ) : null}
                 </div>
+                {/* No slug: it is a technical handle the owner never types.
+                    Languages and the last change are what tell forms apart. */}
                 <p className="text-xs text-muted-foreground">
-                  <span className="font-mono">{form.slug}</span>
-                  {" · "}
                   {form.locales.join(", ").toUpperCase()}
                   {" · "}
                   {t("forms.list.colUpdated")} {formatDate(form.updated_at)}

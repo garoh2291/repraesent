@@ -21,6 +21,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "~/components/ui/dialog";
+import { desktopAutoFocus } from "~/lib/utils/touch";
 
 interface AttachDealDialogProps {
   open: boolean;
@@ -156,7 +157,7 @@ export function AttachDealDialog({
               defaultValue: "Search deals by title…",
             })}
             className="pl-9 pr-9"
-            autoFocus
+            autoFocus={desktopAutoFocus()}
           />
           {search ? (
             <Button
@@ -192,7 +193,7 @@ export function AttachDealDialog({
                 const alreadyLinked = attachedDealIds.has(d.id);
                 const val =
                   d.value != null && d.value !== ""
-                    ? formatCurrency(Number(d.value))
+                    ? formatCurrency(Number(d.value), d.currency)
                     : null;
                 const isAttaching = attachingId === d.id;
                 const isDetaching = detachingId === d.id;

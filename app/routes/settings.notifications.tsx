@@ -6,6 +6,7 @@ import {
   BellRing,
   Plus,
   Send,
+  ShieldAlert,
   ShieldCheck,
   Trash2,
   TriangleAlert,
@@ -23,6 +24,12 @@ import {
   type NotificationEvent,
   type NotificationProvider,
 } from "~/lib/api/notification-channels";
+import {
+  addLeadBlocklistEntry,
+  deleteLeadBlocklistEntry,
+  listLeadBlocklist,
+  type LeadBlocklistEntry,
+} from "~/lib/api/lead-blocklist";
 import {
   createLeadAllowlistEntry,
   deleteLeadAllowlistEntry,
@@ -181,9 +188,9 @@ export default function SettingsNotifications() {
               })}
             </SectionLabel>
             <p className="text-sm text-muted-foreground">
-              {t("settings.notifications.sectionDescription", {
+              {t("settings.notifications.sectionDescriptionPlain", {
                 defaultValue:
-                  "Post workspace events to Slack or Microsoft Teams the moment they happen.",
+                  "Tell your team chat the moment something happens, like a new inquiry.",
               })}
             </p>
           </div>
@@ -230,15 +237,16 @@ export default function SettingsNotifications() {
 
         {!canManage ? (
           <p className="text-xs text-muted-foreground">
-            {t("settings.notifications.adminOnly", {
+            {t("settings.notifications.adminOnlyPlain", {
               defaultValue:
-                "Only workspace admins can manage notification channels.",
+                "Only people with the Admin role can change team chat alerts.",
             })}
           </p>
         ) : null}
       </div>
 
       <AllowlistSection canManage={canManage} />
+      <BlocklistSection canManage={canManage} />
 
       <AddChannelDialog
         open={addOpen}
@@ -386,6 +394,7 @@ function AllowlistSection({ canManage }: { canManage: boolean }) {
           </div>
           <Button
             type="submit"
+            className="max-sm:h-11"
             disabled={!pattern.trim() || addMutation.isPending}
           >
             <Plus className="mr-1.5 h-4 w-4" />
@@ -851,5 +860,112 @@ function AddChannelDialog({
         </DialogFooter>
       </DialogContent>
     </Dialog>
+  );
+}
+
+/** Display form of a stored block value. */
+function blockLabel(entry: LeadBlocklistEntry): string {
+  if (entry.kind === "domain") return `@${entry.value}`;
+  if (entry.kind === "phone") return `+${entry.value}`;
+  return entry.value;
+}
+
+/**
+ * "Always block": senders somebody marked as spam (email, phone, and a
+ * business domain after repeat spam), plus anything added here by hand.
+ * Their next lead goes straight to Hidden. "Always accept" still wins.
+ */
+function BlocklistSection({ canManage }: { canManage: boolean }) {
+  const { t, i18n } = useTranslation();
+  const queryClient = useQueryClient();
+  const [pattern, setPattern] = useState("");
+  const { data: entries, isPending } = useQuery({ queryKey: ["lead-blocklist"], queryFn: listLeadBlocklist });
+
+  const addMutation = useMutation({
+    mutationFn: () => addLeadBlocklistEntry(pattern.trim()),
+    onSuccess: (fresh) => {
+      queryClient.setQueryData(["lead-blocklist"], fresh);
+      setPattern("");
+    },
+    onError: (error) => toast.error(extractErrorMessage(error)),
+  });
+  const removeMutation = useMutation({
+    mutationFn: (id: string) => deleteLeadBlocklistEntry(id),
+    onSuccess: (fresh) => queryClient.setQueryData(["lead-blocklist"], fresh),
+    onError: (error) => toast.error(extractErrorMessage(error)),
+  });
+
+  return (
+    <div className="space-y-4">
+      <div className="space-y-0.5">
+        <SectionLabel>{t("settings.blocklist.sectionLabel")}</SectionLabel>
+        <p className="text-sm text-muted-foreground">{t("settings.blocklist.sectionDescription")}</p>
+      </div>
+
+      {canManage ? (
+        <form
+          className="flex flex-col gap-2 sm:flex-row"
+          onSubmit={(e) => {
+            e.preventDefault();
+            if (pattern.trim()) addMutation.mutate();
+          }}
+        >
+          <div className="flex-1">
+            <Label htmlFor="blocklist-pattern" className="sr-only">
+              {t("settings.blocklist.patternLabel")}
+            </Label>
+            <Input
+              id="blocklist-pattern"
+              value={pattern}
+              placeholder={t("settings.blocklist.patternPlaceholder")}
+              onChange={(e) => setPattern(e.target.value)}
+            />
+          </div>
+          <Button type="submit" className="max-sm:h-11" disabled={!pattern.trim() || addMutation.isPending}>
+            <Plus className="mr-1.5 h-4 w-4" />
+            {t("settings.allowlist.add", { defaultValue: "Add" })}
+          </Button>
+        </form>
+      ) : null}
+
+      {isPending ? (
+        <Skeleton className="h-[72px] w-full rounded-2xl" />
+      ) : !entries?.length ? (
+        <div className="rounded-2xl border border-dashed border-border p-6 text-center">
+          <ShieldAlert className="mx-auto h-7 w-7 text-muted-foreground/50" />
+          <p className="mt-2 text-sm text-muted-foreground">{t("settings.blocklist.empty")}</p>
+        </div>
+      ) : (
+        <ul className="divide-y divide-border overflow-hidden rounded-2xl border border-border">
+          {entries.map((entry) => (
+            <li key={entry.id} className="flex items-center justify-between gap-3 px-4 py-3">
+              <div className="min-w-0">
+                <p className="truncate font-mono text-sm text-foreground">{blockLabel(entry)}</p>
+                <p className="truncate text-xs text-muted-foreground">
+                  {t(`leads.spam.kind.${entry.kind}`)}
+                  {" · "}
+                  {entry.hits > 0
+                    ? t("settings.blocklist.hits", { count: entry.hits })
+                    : t("settings.blocklist.addedOn", {
+                        date: new Date(entry.created_at).toLocaleDateString(i18n.language, { dateStyle: "medium" }),
+                      })}
+                </p>
+              </div>
+              {canManage ? (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  aria-label={t("settings.allowlist.remove", { defaultValue: "Remove" })}
+                  disabled={removeMutation.isPending}
+                  onClick={() => removeMutation.mutate(entry.id)}
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              ) : null}
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
   );
 }

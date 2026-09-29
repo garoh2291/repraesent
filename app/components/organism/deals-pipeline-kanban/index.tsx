@@ -1,4 +1,8 @@
 import { useState, useCallback, useRef, useEffect, useMemo } from "react";
+import { PaidChip, UnpaidChip } from "~/components/notebook/deal-paid";
+import { useStageLabel } from "~/lib/pipeline-stages/use-stage-label";
+import { toast } from "sonner";
+import { StagePickerSheet } from "~/components/notebook/stage-picker-sheet";
 import {
   DndContext,
   DragOverlay,
@@ -27,15 +31,18 @@ import {
   Phone,
   Trash2,
 } from "lucide-react";
-import { formatDate, formatCurrency } from "~/lib/utils/format";
+import { formatDate, formatCurrency, formatCurrencyTotals, sumByCurrency } from "~/lib/utils/format";
+import { useWorkspaceCurrency } from "~/lib/hooks/useWorkspaceCurrency";
 import { cn } from "~/lib/utils";
+import { NextStepChip } from "~/components/notebook/next-step-chip";
+import { isOpenDeal } from "~/lib/deals/is-open";
+import { useDealFlow } from "~/components/notebook/deal-flow";
 import { useTerminalStageGuard } from "~/lib/deals/use-terminal-stage-guard";
 import type { DealListItem } from "~/lib/api/deals";
 import type { PipelineStage } from "~/lib/api/pipeline-stages";
 import type { Pipeline } from "~/lib/api/pipelines";
 import { useDealStages } from "~/lib/hooks/usePipelineStages";
 import { resolveStageColors } from "~/lib/pipeline-stages/colors";
-import { resolveStageLabel } from "~/lib/pipeline-stages/labels";
 import { dealComparator, type DealSortMode } from "~/lib/deals/deal-sort";
 import { Avatar, AvatarFallback } from "~/components/ui/avatar";
 import {
@@ -121,6 +128,10 @@ export function DealsPipelineKanban({
   const [justMovedId, setJustMovedId] = useState<string | null>(null);
   const landTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const undoRef = useRef<Array<{ dealId: string; prevStage: string }>>([]);
+  // Phones: the deal being moved through the "Move to…" sheet.
+  const [movingDeal, setMovingDeal] = useState<DealListItem | null>(null);
+  const sheetMoveRef = useRef<{ dealId: string; prevStage: string } | null>(null);
+  const stageLabel = useStageLabel();
 
   // Undo entries reference the columns of one board — a stale entry after a
   // pipeline switch would 400 (its stage key belongs to another pipeline).
@@ -218,8 +229,27 @@ export function DealsPipelineKanban({
       landTimerRef.current = setTimeout(() => setJustMovedId(null), 500);
 
       onStageChange(deal.id, targetStage);
+
+      // Moved from the phone's "Move to…" sheet: offer Undo (a drag has Cmd+Z).
+      const fromSheet = sheetMoveRef.current;
+      if (fromSheet && fromSheet.dealId === deal.id) {
+        sheetMoveRef.current = null;
+        const stageRow = byKey.get(targetStage);
+        toast.success(
+          t("mobile.stagePicker.moved", "Moved to {{stage}}", {
+            stage: stageRow ? stageLabel(stageRow) : targetStage,
+          }),
+          {
+            duration: 8000, // Undo needs time on a phone (5–8 s guidance).
+            action: {
+              label: t("common.undo", "Undo"),
+              onClick: () => onStageChange(deal.id, fromSheet.prevStage),
+            },
+          },
+        );
+      }
     },
-    [onStageChange],
+    [onStageChange, byKey, stageLabel, t],
   );
 
   // Leaving a won or lost stage clears the deal's outcome date, so it asks
@@ -308,6 +338,49 @@ export function DealsPipelineKanban({
           stages={stages}
           dealsByStage={byStage}
           onDealSelect={onDealSelect}
+          onMove={canEdit ? setMovingDeal : undefined}
+        />
+        <StagePickerSheet
+          open={!!movingDeal}
+          onOpenChange={(o) => !o && setMovingDeal(null)}
+          stages={stages.map((s) => ({
+            key: s.key,
+            label: stageLabel(s),
+            color: resolveStageColors(s).hex,
+            category: s.category,
+          }))}
+          current={movingDeal?.stage ?? null}
+          onPick={(key) => {
+            if (!movingDeal || movingDeal.stage === key) return;
+            sheetMoveRef.current = { dealId: movingDeal.id, prevStage: movingDeal.stage };
+            moveDealToStage(movingDeal, key);
+          }}
+          extra={
+            onMoveToPipeline && otherPipelines.length > 0 && movingDeal ? (
+              <div className="mt-4 border-t border-border pt-3">
+                <p className="px-1 pb-1.5 text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">
+                  {t("pipeline.contextMovePipeline", "Move to pipeline")}
+                </p>
+                <ul className="-mx-2 space-y-0.5">
+                  {otherPipelines.map((p) => (
+                    <li key={p.id}>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const id = movingDeal.id;
+                          setMovingDeal(null);
+                          onMoveToPipeline(id, p.id);
+                        }}
+                        className="press flex min-h-12 w-full items-center gap-3 rounded-lg px-3 text-left text-[15px] text-foreground hover:bg-accent/60"
+                      >
+                        <span className="min-w-0 flex-1 truncate">{p.name}</span>
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ) : null
+          }
         />
       </div>
 
@@ -428,6 +501,7 @@ function DealColumn({
   onRequestDelete?: (deal: DealListItem) => void;
 }) {
   const { t } = useTranslation();
+  const stageLabel = useStageLabel();
   const { setNodeRef, isOver } = useDroppable({ id: stage.key });
   const colorClass = resolveStageColors(stage).dot;
   const isEmpty = columnDeals.length === 0;
@@ -435,8 +509,9 @@ function DealColumn({
     () => columnDeals.map((d) => `deal-${d.id}`),
     [columnDeals],
   );
-  const columnTotal = useMemo(
-    () => stageDealTotal(columnDeals),
+  const { currency: workspaceCurrency } = useWorkspaceCurrency();
+  const columnTotals = useMemo(
+    () => stageDealTotals(columnDeals),
     [columnDeals],
   );
 
@@ -452,14 +527,14 @@ function DealColumn({
       <div className="shrink-0 px-3 pt-3 pb-2">
         <h3 className="flex items-center gap-2 text-sm font-medium text-foreground">
           <span className={cn("inline-block h-2 w-2 rounded-full", colorClass)} />
-          <span>{resolveStageLabel(stage, t)}</span>
+          <span>{stageLabel(stage)}</span>
           <span className="inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-background px-1.5 text-xs font-medium text-muted-foreground">
             {columnDeals.length}
           </span>
         </h3>
-        {columnTotal > 0 ? (
+        {columnTotals.size > 0 ? (
           <p className="mt-1 text-xs font-semibold text-muted-foreground">
-            {formatCurrency(columnTotal)}
+            {formatCurrencyTotals(columnTotals, workspaceCurrency)}
           </p>
         ) : null}
       </div>
@@ -492,13 +567,20 @@ function DealColumn({
   );
 }
 
-function DealCardInner({ deal }: { deal: DealListItem }) {
+function DealCardInner({
+  deal,
+  canEdit = false,
+}: {
+  deal: DealListItem;
+  canEdit?: boolean;
+}) {
+  const dealFlow = useDealFlow();
   const title = cardTitle(deal);
   const sub = deal.contact_full_name?.trim();
   const showSub = !!(sub && deal.title?.trim());
   const val =
     deal.value != null && deal.value !== ""
-      ? formatCurrency(Number(deal.value))
+      ? formatCurrency(Number(deal.value), deal.currency)
       : null;
   const hasAssignee = !!(
     deal.assignee_first_name || deal.assignee_last_name
@@ -522,8 +604,11 @@ function DealCardInner({ deal }: { deal: DealListItem }) {
           />
         ) : null}
       </div>
-      {val ? (
-        <p className="text-sm font-semibold text-foreground">{val}</p>
+      {val || (deal.status === "won" && deal.paid_at) ? (
+        <p className="flex items-center gap-1.5 text-sm font-semibold text-foreground">
+          {val}
+          {deal.status === "won" && deal.paid_at ? <PaidChip /> : deal.status === "won" && deal.paid_supported ? <UnpaidChip /> : null}
+        </p>
       ) : null}
       <div className="flex flex-wrap items-center gap-x-2 text-[10px] text-muted-foreground">
         {deal.primary_email ? (
@@ -539,24 +624,30 @@ function DealCardInner({ deal }: { deal: DealListItem }) {
           </span>
         ) : null}
       </div>
-      <p className="text-[10px] text-muted-foreground/80">
-        {deal.created_at
-          ? formatDate(new Date(deal.created_at), "MMM d, yyyy")
-          : ""}
-      </p>
+      {isOpenDeal(deal) && deal.tasks_summary ? (
+        <NextStepChip
+          summary={deal.tasks_summary}
+          onAdd={
+            canEdit
+              ? () => dealFlow.whatsNext({ id: deal.id, title: title })
+              : undefined
+          }
+        />
+      ) : (
+        <p className="text-[10px] text-muted-foreground/80">
+          {deal.created_at
+            ? formatDate(new Date(deal.created_at), "MMM d, yyyy")
+            : ""}
+        </p>
+      )}
     </>
   );
 }
 
-function stageDealTotal(deals: DealListItem[]): number {
-  let total = 0;
-  for (const d of deals) {
-    if (d.value == null || d.value === "") continue;
-    const n = Number(d.value);
-    if (!Number.isFinite(n)) continue;
-    total += n;
-  }
-  return total;
+
+/** Per-currency totals of a column — CAD and EUR are never added together. */
+function stageDealTotals(deals: DealListItem[]): Map<string, number> {
+  return sumByCurrency(deals, (d) => ({ value: d.value, currency: d.currency }));
 }
 
 /* ─── Mobile Schedule List (Google Calendar-style) ─── */
@@ -565,12 +656,16 @@ function DealsMobileSchedule({
   stages,
   dealsByStage,
   onDealSelect,
+  onMove,
 }: {
   stages: PipelineStage[];
   dealsByStage: Record<string, DealListItem[]>;
   onDealSelect: (id: string) => void;
+  onMove?: (deal: DealListItem) => void;
 }) {
   const { t } = useTranslation();
+  const stageLabel = useStageLabel();
+  const { currency: workspaceCurrency } = useWorkspaceCurrency();
 
   return (
     <div className="space-y-2 pt-2 pb-6">
@@ -578,7 +673,7 @@ function DealsMobileSchedule({
         const deals = dealsByStage[stage.key] ?? [];
         const colorClass = resolveStageColors(stage).dot;
         const count = deals.length;
-        const columnTotal = stageDealTotal(deals);
+        const columnTotals = stageDealTotals(deals);
 
         return (
           <ScheduleSection
@@ -589,11 +684,11 @@ function DealsMobileSchedule({
                 <div className={cn("h-8 w-1 rounded-full shrink-0", colorClass)} />
                 <div className="flex-1 min-w-0">
                   <span className="text-sm font-semibold text-foreground">
-                    {resolveStageLabel(stage, t)}
+                    {stageLabel(stage)}
                   </span>
-                  {columnTotal > 0 ? (
+                  {columnTotals.size > 0 ? (
                     <p className="text-xs font-medium text-muted-foreground mt-0.5">
-                      {formatCurrency(columnTotal)}
+                      {formatCurrencyTotals(columnTotals, workspaceCurrency)}
                     </p>
                   ) : null}
                 </div>
@@ -612,18 +707,19 @@ function DealsMobileSchedule({
           >
             {count === 0 ? (
               <div className="px-4 pb-4 pt-1">
-                <p className="text-xs text-muted-foreground/50 text-center py-3">
+                <p className="text-[13px] text-muted-foreground/70 text-center py-3">
                   —
                 </p>
               </div>
             ) : (
-              <div className="px-3 pb-3 space-y-1">
+              <div className="px-3 pb-3 space-y-2">
                 {deals.map((deal) => (
                   <DealScheduleRow
                     key={deal.id}
                     deal={deal}
                     colorClass={colorClass}
                     onSelect={() => onDealSelect(deal.id)}
+                    onMove={onMove ? () => onMove(deal) : undefined}
                   />
                 ))}
               </div>
@@ -639,29 +735,33 @@ function DealScheduleRow({
   deal,
   colorClass,
   onSelect,
+  onMove,
 }: {
   deal: DealListItem;
   colorClass: string;
   onSelect: () => void;
+  onMove?: () => void;
 }) {
+  const { t } = useTranslation();
   const title = cardTitle(deal);
   const sub = deal.contact_full_name?.trim();
   const showSub = !!(sub && deal.title?.trim());
   const val =
     deal.value != null && deal.value !== ""
-      ? formatCurrency(Number(deal.value))
+      ? formatCurrency(Number(deal.value), deal.currency)
       : null;
   const hasAssignee = !!(
     deal.assignee_first_name || deal.assignee_last_name
   );
 
   return (
+    <div className="rounded-xl border border-border bg-card shadow-xs transition-colors hover:bg-muted/40">
     <button
       type="button"
       onClick={onSelect}
       className={cn(
-        "flex w-full items-start gap-3 rounded-lg px-3 py-2.5 text-left transition-colors",
-        "hover:bg-muted/60 active:bg-muted",
+        "press flex w-full items-start gap-3 rounded-lg px-3 py-2.5 text-left transition-colors",
+        "active:bg-muted",
       )}
     >
       <div className={cn("mt-1 h-4 w-0.5 rounded-full shrink-0", colorClass)} />
@@ -671,10 +771,13 @@ function DealScheduleRow({
         {showSub ? (
           <p className="text-xs text-muted-foreground truncate">{sub}</p>
         ) : null}
-        {val ? (
-          <p className="text-xs font-semibold text-foreground">{val}</p>
+        {val || (deal.status === "won" && deal.paid_at) ? (
+          <p className="flex items-center gap-1.5 text-xs font-semibold text-foreground">
+            {val}
+            {deal.status === "won" && deal.paid_at ? <PaidChip /> : deal.status === "won" && deal.paid_supported ? <UnpaidChip /> : null}
+          </p>
         ) : null}
-        <div className="flex flex-wrap items-center gap-x-2 pt-0.5 text-[10px] text-muted-foreground">
+        <div className="flex flex-wrap items-center gap-x-2 pt-0.5 text-[12px] text-muted-foreground">
           {deal.primary_email ? (
             <span className="inline-flex items-center gap-0.5 truncate max-w-full">
               <Mail className="h-3 w-3 shrink-0 opacity-70" />
@@ -693,6 +796,11 @@ function DealScheduleRow({
             </span>
           ) : null}
         </div>
+        {isOpenDeal(deal) && deal.tasks_summary ? (
+          <div className="pt-1">
+            <NextStepChip summary={deal.tasks_summary} />
+          </div>
+        ) : null}
       </div>
 
       {hasAssignee ? (
@@ -705,6 +813,19 @@ function DealScheduleRow({
         />
       ) : null}
     </button>
+    {onMove ? (
+      <div className="flex justify-end px-3 pb-2.5">
+        <button
+          type="button"
+          onClick={onMove}
+          className="press inline-flex h-11 items-center gap-1.5 rounded-lg border border-border bg-card px-3 text-[13px] font-medium text-foreground"
+        >
+          <ArrowRightLeft className="size-3.5" aria-hidden />
+          {t("mobile.stagePicker.moveTo", "Move to…")}
+        </button>
+      </div>
+    ) : null}
+    </div>
   );
 }
 
@@ -775,6 +896,7 @@ function DealKanbanCard({
   onRequestDelete?: (deal: DealListItem) => void;
 }) {
   const { t } = useTranslation();
+  const stageLabel = useStageLabel();
   const {
     attributes,
     listeners,
@@ -806,7 +928,7 @@ function DealKanbanCard({
         canEdit && !disabled && "cursor-grab active:cursor-grabbing",
       )}
     >
-      <DealCardInner deal={deal} />
+      <DealCardInner deal={deal} canEdit={!!canEdit && !disabled} />
     </button>
   );
 
@@ -842,7 +964,7 @@ function DealKanbanCard({
                       resolveStageColors(s).dot,
                     )}
                   />
-                  <span className="truncate">{resolveStageLabel(s, t)}</span>
+                  <span className="truncate">{stageLabel(s)}</span>
                   {current ? <Check className="ml-auto" /> : null}
                 </ContextMenuItem>
               );
