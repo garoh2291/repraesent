@@ -133,6 +133,7 @@ export default [
         index("routes/settings._index.tsx"),
         route("profile", "routes/settings.profile.tsx"),
         route("team", "routes/settings.team.tsx"),
+        route("team/inquiry-message", "routes/settings.team.inquiry-message.tsx"),
         route("email-accounts", "routes/settings.email-accounts.tsx"),
         route("integrations", "routes/settings.integrations.tsx"),
         route("openai-ads", "routes/settings.openai-ads.tsx"),

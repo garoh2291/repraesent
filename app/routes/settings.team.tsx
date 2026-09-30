@@ -24,6 +24,7 @@ import {
   type WorkspaceDetail,
 } from "~/lib/api/workspaces";
 import { InviteMembersDialog } from "~/components/team/invite-members-dialog";
+import { InquiryAlertsOverview } from "~/components/team/inquiry-alerts-overview";
 import { SafeImg } from "~/components/atom/safe-img";
 import { extractErrorMessage } from "~/lib/api/axios-instance";
 import { AvatarUploader } from "~/components/media/AvatarUploader";
@@ -323,6 +324,13 @@ export default function SettingsTeam() {
               </p>
             </div>
           </div>
+        </SettingsSection>
+
+        <SettingsSection
+          label={t("settings.inquiryAlerts.title")}
+          description={t("settings.inquiryAlerts.description")}
+        >
+          <InquiryAlertsOverview members={workspace.members ?? []} />
         </SettingsSection>
 
         <SettingsSection

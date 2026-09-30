@@ -2303,7 +2303,12 @@
       "instantNote": "De e-mail bij elke nieuwe aanvraag is een aparte schakelaar per persoon.",
       "instantLink": "Instellen op de teampagina",
       "phoneNote": "Liever een seintje op je telefoon?",
-      "phoneLink": "Telefoonmeldingen"
+      "phoneLink": "Telefoonmeldingen",
+      "instantTitle": "Direct verstuurd, niet in samenvattingen",
+      "instantDescription": "Deze gaan meteen weg als er iets gebeurt. Wie meldingen bij aanvragen krijgt, stelt u per persoon in op de teampagina.",
+      "instantAlertsGroup": "Met meldingen bij aanvragen",
+      "instantAlwaysGroup": "Altijd, voor wie het aangaat",
+      "instantManage": "Wie ze krijgt en wat erin staat"
     },
     "businessProfile": {
       "metaTitle": "Bedrijfsgegevens",
@@ -2469,7 +2474,91 @@
       "emailNote": "Liever per e-mail?",
       "emailLink": "E-mailsamenvattingen"
     },
-    "adminOnlyPlain": "Alleen mensen met de rol Admin kunnen dit wijzigen."
+    "adminOnlyPlain": "Alleen mensen met de rol Admin kunnen dit wijzigen.",
+    "inquiryAlerts": {
+      "title": "Meldingen bij aanvragen",
+      "description": "Wie meteen hoort van een nieuwe aanvraag, en wat die te zien krijgt.",
+      "countOn_one": "Aan voor {{on}} van 1 persoon",
+      "countOn_other": "Aan voor {{on}} van {{count}} mensen",
+      "noneOn": "Nu hoort niemand van nieuwe aanvragen. Zet hieronder de schakelaar aan voor minstens één persoon.",
+      "switchOnLabel": "Met de schakelaar aan krijgt iemand",
+      "alwaysLabel": "Iedereen krijgt, schakelaar aan of uit",
+      "items": {
+        "inquiryEmail": "Een e-mail bij elke nieuwe aanvraag",
+        "phone": "Een melding op de telefoon, zodra telefoonmeldingen daar aan staan",
+        "booking": "Een e-mail als iemand een afspraak boekt",
+        "chatGaps": "Met de websitechat: 's ochtends een e-mail met vragen die hij niet kon beantwoorden",
+        "taskGiven": "Een e-mail als ze een taak krijgen",
+        "taskDue": "Een herinnering als een taak binnen een dag af moet zijn"
+      },
+      "summariesNote": "Dag- en weekoverzichten stel je apart in:",
+      "messageRow": "Wat het bericht bij een aanvraag laat zien",
+      "standardBadge": "Standaard",
+      "customBadge": "Eigen keuze"
+    },
+    "inquiryMessage": {
+      "metaTitle": "Wat het bericht bij een aanvraag laat zien",
+      "metaDescription": "Kies welke gegevens van een nieuwe aanvraag je team ziet in de e-mail en de teamchat.",
+      "back": "Team",
+      "basics": "Basis",
+      "extras": "Uit je formulieren en websitechat",
+      "extrasHint": "Gevonden in je laatste {{count}} aanvragen.",
+      "extrasEmpty": "Extra gegevens verschijnen hier na je eerste aanvragen via een formulier of de websitechat.",
+      "searchPlaceholder": "Gegevens zoeken",
+      "noMatch": "Geen gegeven past bij ‘{{q}}’.",
+      "order": "In deze volgorde",
+      "orderEmpty": "Niets gekozen. De e-mail meldt dan alleen dat er een nieuwe aanvraag is.",
+      "moveUp": "{{label}} omhoog",
+      "moveDown": "{{label}} omlaag",
+      "remove": "{{label}} weghalen",
+      "drag": "Sleep {{label}} om de volgorde te wijzigen",
+      "fields": {
+        "name": "Naam",
+        "phone": "Telefoon",
+        "email": "E-mail",
+        "source": "Waarvandaan",
+        "message": "Bericht",
+        "stage": "Fase",
+        "form": "Formulier"
+      },
+      "preview": "Voorbeeld",
+      "previewEmail": "E-mail",
+      "previewChat": "Teamchat",
+      "previewFromLatest": "Met je nieuwste aanvraag",
+      "previewExample": "Voorbeeld, nog geen aanvragen",
+      "previewH1": "Nieuwe aanvraag",
+      "previewFor": "voor",
+      "previewNoDetails": "Open de aanvraag om te zien wie het is en hoe u diegene bereikt.",
+      "emptyHere": "leeg bij deze",
+      "chatStandardNote": "De teamchat houdt zijn gewone gegevens (naam, e-mail, telefoon, waarvandaan, fase) tot je je eigen keuze opslaat. Teamchatberichten zijn in het Engels.",
+      "chatCustomNote": "Teamchatberichten zijn in het Engels.",
+      "phoneNote": "De telefoonmelding blijft bewust kort: naam en waarvandaan, meer niet op het vergrendelscherm.",
+      "privacy": "E-mails zijn te lezen op elk apparaat van die persoon. Kies alleen wat je team nodig heeft.",
+      "save": "Wijzigingen opslaan",
+      "saved_one": "Opgeslagen. Het volgende aanvraagbericht toont 1 gegeven.",
+      "saved_other": "Opgeslagen. Het volgende aanvraagbericht toont {{count}} gegevens.",
+      "reset": "Terug naar standaard",
+      "resetDone": "Terug naar standaard: naam, telefoon, waarvandaan.",
+      "test": "Stuur mij een testmail",
+      "testSent": "Testmail verstuurd naar {{email}}.",
+      "testFailed": "De testmail is niet verstuurd. Probeer het over een minuut opnieuw.",
+      "testUsesSaved": "Eerst opslaan: de test gebruikt de opgeslagen gegevens.",
+      "unsaved": "Nog niet opgeslagen",
+      "adminOnly": "Alleen mensen met de rol Beheerder kunnen dit wijzigen.",
+      "maxReached": "Maximaal 20 gegevens.",
+      "showPreview": "Voorbeeld tonen",
+      "all": {
+        "label": "Alle overige gegevens",
+        "hint": "Alles wat de aanvraag verder meebrengt, ook gegevens die later pas binnenkomen.",
+        "countOnLatest_one": "1 gegeven bij je nieuwste aanvraag",
+        "countOnLatest_other": "{{count}} gegevens bij je nieuwste aanvraag",
+        "whatever": "Wat er ook met de aanvraag meekomt",
+        "alreadyIncluded": "Zit al in ‘Alle overige gegevens’. Voeg er hier een toe om het een eigen plek te geven.",
+        "more_one": "+ 1 ander gegeven in de aanvraag",
+        "more_other": "+ {{count}} andere gegevens in de aanvraag",
+        "saved": "Opgeslagen. Het volgende aanvraagbericht toont je keuze en alle overige gegevens."
+      }
+    }
   },
   "booking": {
     "metaTitle": "Een afspraak boeken",
@@ -8554,7 +8643,7 @@
           "desc": "Werkdagen 's ochtends: wat vandaag moet en wat te laat is."
         },
         "weekly_pipeline_summary": {
-          "title": "Uw pipeline van de week",
+          "title": "Uw deals van de week",
           "desc": "Maandag: gewonnen, verloren en openstaande deals."
         },
         "stale_leads_reminder": {
