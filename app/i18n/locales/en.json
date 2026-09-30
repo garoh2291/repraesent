@@ -2303,7 +2303,12 @@
       "instantNote": "The email for each new enquiry is a separate switch per person.",
       "instantLink": "Set it on the team page",
       "phoneNote": "Want a ping on your phone instead?",
-      "phoneLink": "Phone alerts"
+      "phoneLink": "Phone alerts",
+      "instantTitle": "Sent right away, not in summaries",
+      "instantDescription": "These go out the moment something happens. Who gets inquiry alerts is set per person on the team page.",
+      "instantAlertsGroup": "With inquiry alerts on",
+      "instantAlwaysGroup": "Always, for the person it's about",
+      "instantManage": "Who gets them and what they show"
     },
     "businessProfile": {
       "metaTitle": "Business details",
@@ -2469,7 +2474,91 @@
       "emailNote": "Prefer email?",
       "emailLink": "Email summaries"
     },
-    "adminOnlyPlain": "Only people with the Admin role can change this."
+    "adminOnlyPlain": "Only people with the Admin role can change this.",
+    "inquiryAlerts": {
+      "title": "Inquiry alerts",
+      "description": "Who hears about a new inquiry right away, and what they see.",
+      "countOn_one": "On for {{on}} of 1 person",
+      "countOn_other": "On for {{on}} of {{count}} people",
+      "noneOn": "Nobody hears about new inquiries right now. Turn the switch on for at least one person below.",
+      "switchOnLabel": "With the switch on, a person gets",
+      "alwaysLabel": "Everyone gets, switch on or off",
+      "items": {
+        "inquiryEmail": "An email for every new inquiry",
+        "phone": "An alert on their phone, once phone alerts are on there",
+        "booking": "An email when someone books an appointment",
+        "chatGaps": "With the website chat: a morning email with questions it couldn't answer",
+        "taskGiven": "An email when a task is given to them",
+        "taskDue": "A reminder when a task is due within a day"
+      },
+      "summariesNote": "Weekly and daily overviews are set separately:",
+      "messageRow": "What the inquiry message shows",
+      "standardBadge": "Standard",
+      "customBadge": "Your own"
+    },
+    "inquiryMessage": {
+      "metaTitle": "What the inquiry message shows",
+      "metaDescription": "Choose which details of a new inquiry your team sees in the email and team chat.",
+      "back": "Team",
+      "basics": "Basics",
+      "extras": "From your forms and website chat",
+      "extrasHint": "Seen on your last {{count}} inquiries.",
+      "extrasEmpty": "Extra details show up here after your first inquiries from a form or the website chat.",
+      "searchPlaceholder": "Search details",
+      "noMatch": "No detail matches “{{q}}”.",
+      "order": "Shown in this order",
+      "orderEmpty": "Nothing picked. The email then only says a new inquiry came in.",
+      "moveUp": "Move {{label}} up",
+      "moveDown": "Move {{label}} down",
+      "remove": "Remove {{label}}",
+      "drag": "Drag {{label}} to change the order",
+      "fields": {
+        "name": "Name",
+        "phone": "Phone",
+        "email": "Email",
+        "source": "Where from",
+        "message": "Message",
+        "stage": "Stage",
+        "form": "Form"
+      },
+      "preview": "Preview",
+      "previewEmail": "Email",
+      "previewChat": "Team chat",
+      "previewFromLatest": "With your newest inquiry",
+      "previewExample": "Example, no inquiries yet",
+      "previewH1": "New inquiry",
+      "previewFor": "for",
+      "previewNoDetails": "Open the inquiry to see who it is and how to reach them.",
+      "emptyHere": "empty on this one",
+      "chatStandardNote": "Team chat keeps its usual details (name, email, phone, where from, stage) until you save your own. Team chat messages are in English.",
+      "chatCustomNote": "Team chat messages are in English.",
+      "phoneNote": "The phone alert stays short on purpose: name and where from, nothing more on the lock screen.",
+      "privacy": "Emails can be read on any device the person uses. Pick only what your team needs.",
+      "save": "Save changes",
+      "saved_one": "Saved. The next inquiry message shows 1 detail.",
+      "saved_other": "Saved. The next inquiry message shows {{count}} details.",
+      "reset": "Back to the standard",
+      "resetDone": "Back to the standard: name, phone, where from.",
+      "test": "Send me a test email",
+      "testSent": "Test email sent to {{email}}.",
+      "testFailed": "The test email didn't go out. Try again in a minute.",
+      "testUsesSaved": "Save first: the test uses the saved details.",
+      "unsaved": "Not saved yet",
+      "adminOnly": "Only people with the Admin role can change this.",
+      "maxReached": "Up to 20 details.",
+      "showPreview": "Show preview",
+      "all": {
+        "label": "All other details",
+        "hint": "Everything else the inquiry brings along, even details that arrive later.",
+        "countOnLatest_one": "1 detail on your newest inquiry",
+        "countOnLatest_other": "{{count}} details on your newest inquiry",
+        "whatever": "Whatever arrives with the inquiry",
+        "alreadyIncluded": "Already part of All other details. Add one here to give it its own place.",
+        "more_one": "+ 1 more detail in the inquiry",
+        "more_other": "+ {{count}} more details in the inquiry",
+        "saved": "Saved. The next inquiry message shows your picks and all other details."
+      }
+    }
   },
   "booking": {
     "metaTitle": "Book an Appointment",
@@ -8546,7 +8635,7 @@
       "sub": "Short summaries, never spam. Change them any time in Settings.",
       "kinds": {
         "weekly_leads_digest": {
-          "title": "New leads each week",
+          "title": "New inquiries each week",
           "desc": "Mondays: who got in touch last week, and from where."
         },
         "daily_tasks_digest": {
@@ -8554,16 +8643,16 @@
           "desc": "Workday mornings: what's due today and what's overdue."
         },
         "weekly_pipeline_summary": {
-          "title": "Your pipeline each week",
-          "desc": "Mondays: deals won, lost and still open."
+          "title": "Your deals each week",
+          "desc": "Mondays: new customers, deals that didn't happen, and deals still open."
         },
         "stale_leads_reminder": {
-          "title": "Leads waiting too long",
-          "desc": "Thursdays: enquiries nobody has answered for 7 days."
+          "title": "Inquiries waiting too long",
+          "desc": "Thursdays: inquiries nobody has answered for 7 days."
         },
         "monthly_performance_report": {
           "title": "Monthly report",
-          "desc": "First workday of the month: leads, deals and appointments compared to last month."
+          "desc": "First workday of the month: inquiries, deals and appointments compared to last month."
         }
       },
       "instant": "You'll also get an email the moment a new enquiry comes in. You can turn that off in Settings.",

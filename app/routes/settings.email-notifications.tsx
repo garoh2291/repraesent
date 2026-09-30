@@ -3,7 +3,8 @@ import { Link } from "react-router";
 import { useTranslation } from "react-i18next";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { BarChart3, BellOff, Bell, Hourglass, Inbox, Kanban, ListTodo, Loader2, Send } from "lucide-react";
+import { BarChart3, BellOff, Bell, ChevronRight, Hourglass, Inbox, Kanban, ListTodo, Loader2, Send } from "lucide-react";
+import { ALWAYS_ITEMS, AlertItemList, SWITCH_ITEMS } from "~/components/team/alert-coverage";
 import i18n from "~/i18n";
 import { extractErrorMessage } from "~/lib/api/axios-instance";
 import {
@@ -292,18 +293,26 @@ export default function SettingsEmailNotifications() {
         </section>
       ) : null}
 
-      <p className="text-sm text-muted-foreground">
-        {t("settings.emailNotifications.instantNote")}{" "}
-        <Link to="/settings/team" className="font-medium text-primary hover:underline">
-          {t("settings.emailNotifications.instantLink")}
-        </Link>
-      </p>
-      <p className="-mt-6 text-sm text-muted-foreground">
-        {t("settings.emailNotifications.phoneNote")}{" "}
-        <Link to="/settings/phone-alerts" className="font-medium text-primary hover:underline">
-          {t("settings.emailNotifications.phoneLink")}
-        </Link>
-      </p>
+      <section className="space-y-4">
+        <div className="space-y-0.5">
+          <SectionLabel>{t("settings.emailNotifications.instantTitle")}</SectionLabel>
+          <p className="text-sm text-muted-foreground">{t("settings.emailNotifications.instantDescription")}</p>
+        </div>
+        <div className="overflow-hidden rounded-2xl border border-border bg-card">
+          <div className="grid gap-5 px-5 py-4 md:grid-cols-2 md:gap-8">
+            <AlertItemList label={t("settings.emailNotifications.instantAlertsGroup")} items={SWITCH_ITEMS} />
+            <AlertItemList label={t("settings.emailNotifications.instantAlwaysGroup")} items={ALWAYS_ITEMS} muted />
+          </div>
+          <Link
+            to="/settings/team"
+            prefetch="intent"
+            className="press group flex min-h-12 items-center gap-3 border-t border-border px-5 py-3 text-[15px] font-medium text-foreground transition-colors hover:bg-muted/50 active:bg-muted"
+          >
+            <span className="min-w-0 flex-1">{t("settings.emailNotifications.instantManage")}</span>
+            <ChevronRight className="size-4 shrink-0 text-muted-foreground/60 transition-transform group-hover:translate-x-0.5 motion-reduce:transition-none" aria-hidden />
+          </Link>
+        </div>
+      </section>
     </div>
   );
 }
