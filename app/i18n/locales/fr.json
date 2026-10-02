@@ -1649,6 +1649,10 @@
       "adminOnly": "Seuls les administrateurs de l'espace de travail peuvent modifier cela.",
       "disconnectTitle": "Déconnecter le compte ?",
       "disconnectBody": "Vos produits restent dans {{name}} — cet espace de travail perd simplement l'accès. Les produits déjà liés à des affaires conservent leur nom et leur prix enregistrés. Vous pouvez vous reconnecter à tout moment.",
+      "usePlatform": "Utiliser notre propre compte Stripe",
+      "connectOther": "Connecter un autre compte",
+      "platformNote": "C’est notre propre compte Stripe — celui avec lequel nous facturons aussi nos clients.",
+      "platformConnected": "Notre propre compte Stripe est connecté.",
       "outcome": {
         "connected": "{{account}} connecté.",
         "denied": "Vous avez annulé la connexion.",

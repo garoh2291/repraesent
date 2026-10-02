@@ -17,6 +17,11 @@ export interface WorkspaceIntegration {
   account_email: string | null;
   livemode: boolean | null;
   status: "connected" | "revoked" | "error" | null;
+  /**
+   * "platform" = the root workspace using re:praesent's own Stripe account,
+   * which cannot go through the consent screen. Null when not connected.
+   */
+  mode: "oauth" | "platform" | null;
   connected_at: string | null;
   auth_failed_at: string | null;
   connected_by_user_id: string | null;
@@ -42,6 +47,14 @@ export async function getIntegrationAuthorizeUrl(
     `/integrations/${encodeURIComponent(key)}/authorize-url`,
   );
   return res.data.url;
+}
+
+/**
+ * Root workspace only: use the platform's own Stripe account. One call, no
+ * consent screen — Stripe refuses to connect an account to its own app.
+ */
+export async function connectPlatformStripe(): Promise<void> {
+  await apiClient.post("/integrations/stripe/connect-platform");
 }
 
 export async function disconnectIntegration(key: string): Promise<void> {

@@ -1649,6 +1649,10 @@
       "adminOnly": "Nur Administratoren des Arbeitsbereichs können das ändern.",
       "disconnectTitle": "Konto trennen?",
       "disconnectBody": "Deine Produkte bleiben in {{name}} — dieser Arbeitsbereich verliert nur den Zugriff darauf. Bereits mit Deals verknüpfte Produkte behalten ihren gespeicherten Namen und Preis. Du kannst jederzeit wieder verbinden.",
+      "usePlatform": "Unser eigenes Stripe-Konto verwenden",
+      "connectOther": "Anderes Konto verbinden",
+      "platformNote": "Das ist unser eigenes Stripe-Konto – dasselbe, über das wir unsere Kunden abrechnen.",
+      "platformConnected": "Unser eigenes Stripe-Konto ist verbunden.",
       "outcome": {
         "connected": "{{account}} verbunden.",
         "denied": "Du hast die Verbindung abgebrochen.",

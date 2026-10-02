@@ -1647,6 +1647,10 @@
       "adminOnly": "Only workspace admins can change this.",
       "disconnectTitle": "Disconnect account?",
       "disconnectBody": "Your products will stay in {{name}} — this workspace just loses access to them. Products already attached to deals keep their saved name and price. You can reconnect at any time.",
+      "usePlatform": "Use our own Stripe account",
+      "connectOther": "Connect another account",
+      "platformNote": "This is our own Stripe account — the one we also bill our customers with.",
+      "platformConnected": "Our own Stripe account is connected.",
       "outcome": {
         "connected": "Connected {{account}}.",
         "denied": "You cancelled the connection.",

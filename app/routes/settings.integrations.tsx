@@ -13,6 +13,7 @@ import {
 import i18n from "~/i18n";
 import { extractErrorMessage } from "~/lib/api/axios-instance";
 import {
+  connectPlatformStripe,
   disconnectIntegration,
   getIntegrationAuthorizeUrl,
   type WorkspaceIntegration,
@@ -20,6 +21,7 @@ import {
 import { useWorkspaceIntegrations } from "~/lib/hooks/useWorkspaceIntegrations";
 import { useCanManageIntegrations } from "~/lib/hooks/useCanManageIntegrations";
 import { useDocumentMeta } from "~/lib/hooks/use-document-meta";
+import { useAuthContext } from "~/providers/auth-provider";
 import { Button } from "~/components/ui/button";
 import { Skeleton } from "~/components/ui/skeleton";
 import {
@@ -93,6 +95,10 @@ export default function SettingsIntegrations() {
 
   const queryClient = useQueryClient();
   const canManage = useCanManageIntegrations();
+  // Stripe will not connect an account to its own app, so the root workspace
+  // gets a one-click way to use the platform's own account instead.
+  const { currentWorkspace } = useAuthContext();
+  const isRoot = currentWorkspace?.is_root === true;
   const { data: integrations, isPending } = useWorkspaceIntegrations();
 
   const [startingKey, setStartingKey] = useState<string | null>(null);
@@ -155,6 +161,23 @@ export default function SettingsIntegrations() {
     }
   }
 
+  const platformMutation = useMutation({
+    mutationFn: () => connectPlatformStripe(),
+    onSuccess: async () => {
+      await invalidate();
+      await queryClient.invalidateQueries({ queryKey: ["stripe-account"] });
+      await queryClient.invalidateQueries({ queryKey: ["stripe-catalog"] });
+      toast.success(
+        t("settings.integrations.platformConnected", {
+          defaultValue: "Our own Stripe account is connected.",
+        }),
+      );
+    },
+    onError: (error) => {
+      toast.error(extractErrorMessage(error));
+    },
+  });
+
   const disconnectMutation = useMutation({
     mutationFn: (key: string) => disconnectIntegration(key),
     onSuccess: async () => {
@@ -211,6 +234,12 @@ export default function SettingsIntegrations() {
                 canManage={canManage}
                 isStarting={startingKey === app.key}
                 onConnect={() => handleConnect(app)}
+                onUsePlatform={
+                  isRoot && app.key === "stripe"
+                    ? () => platformMutation.mutate()
+                    : undefined
+                }
+                isUsingPlatform={platformMutation.isPending}
                 onDisconnect={() => setPendingDisconnect(app)}
               />
             ))}
@@ -269,12 +298,17 @@ function IntegrationCard({
   canManage,
   isStarting,
   onConnect,
+  onUsePlatform,
+  isUsingPlatform,
   onDisconnect,
 }: {
   app: WorkspaceIntegration;
   canManage: boolean;
   isStarting: boolean;
   onConnect: () => void;
+  /** Only passed for the root workspace's Stripe card. */
+  onUsePlatform?: () => void;
+  isUsingPlatform?: boolean;
   onDisconnect: () => void;
 }) {
   const { t } = useTranslation();
@@ -345,6 +379,15 @@ function IntegrationCard({
               </p>
             ) : null}
 
+            {app.connected && app.mode === "platform" ? (
+              <p className="text-xs text-muted-foreground">
+                {t("settings.integrations.platformNote", {
+                  defaultValue:
+                    "This is our own Stripe account — the one we also bill our customers with.",
+                })}
+              </p>
+            ) : null}
+
             {!app.configured ? (
               <p className="text-xs text-amber-600 dark:text-amber-400">
                 {t("settings.integrations.notConfigured", {
@@ -369,6 +412,34 @@ function IntegrationCard({
                 defaultValue: "Disconnect",
               })}
             </Button>
+          ) : onUsePlatform ? (
+            <div className="flex flex-col gap-2 sm:items-end">
+              <Button
+                size="sm"
+                disabled={!canManage || isUsingPlatform || isStarting}
+                onClick={onUsePlatform}
+              >
+                {isUsingPlatform
+                  ? t("common.loading", { defaultValue: "Loading…" })
+                  : t("settings.integrations.usePlatform", {
+                      defaultValue: "Use our own Stripe account",
+                    })}
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={
+                  !canManage || !app.configured || isStarting || isUsingPlatform
+                }
+                onClick={onConnect}
+              >
+                {isStarting
+                  ? t("common.loading", { defaultValue: "Loading…" })
+                  : t("settings.integrations.connectOther", {
+                      defaultValue: "Connect another account",
+                    })}
+              </Button>
+            </div>
           ) : (
             <Button
               size="sm"

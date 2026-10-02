@@ -1647,6 +1647,10 @@
       "adminOnly": "Alleen beheerders van de werkruimte kunnen dit wijzigen.",
       "disconnectTitle": "Account ontkoppelen?",
       "disconnectBody": "Je producten blijven in {{name}} — deze werkruimte verliest alleen de toegang. Producten die al aan deals hangen behouden hun opgeslagen naam en prijs. Je kunt op elk moment opnieuw koppelen.",
+      "usePlatform": "Ons eigen Stripe-account gebruiken",
+      "connectOther": "Ander account koppelen",
+      "platformNote": "Dit is ons eigen Stripe-account — hetzelfde waarmee we onze klanten factureren.",
+      "platformConnected": "Ons eigen Stripe-account is gekoppeld.",
       "outcome": {
         "connected": "{{account}} gekoppeld.",
         "denied": "Je hebt de koppeling geannuleerd.",
