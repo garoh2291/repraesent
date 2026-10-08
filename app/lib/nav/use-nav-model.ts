@@ -42,8 +42,7 @@ export function useNavModel() {
   // free, and there is nothing to reset on the way out.
   const inSettings = location.pathname.startsWith("/settings");
   const { data: wpSite } = useWorkspaceWpSite(!!currentWorkspace?.id && !isDoorboostBrandWs);
-  // TEMP: SSO gate bypassed so a linked WordPress site is enough to test. Revert to `!!wpSite?.sso_enabled`.
-  const showWebsite = !!wpSite || isDemoWorkspace;
+  const showWebsite = !!wpSite?.sso_enabled || isDemoWorkspace;
   const inWebsite = showWebsite && location.pathname.startsWith("/website");
 
   /** Settings groups with only the entries this person may open. */
