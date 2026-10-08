@@ -1648,6 +1648,10 @@
       "adminOnly": "Nur Administratoren des Arbeitsbereichs können das ändern.",
       "disconnectTitle": "Konto trennen?",
       "disconnectBody": "Deine Produkte bleiben in {{name}} — dieser Arbeitsbereich verliert nur den Zugriff darauf. Bereits mit Deals verknüpfte Produkte behalten ihren gespeicherten Namen und Preis. Du kannst jederzeit wieder verbinden.",
+      "usePlatform": "Unser eigenes Stripe-Konto verwenden",
+      "connectOther": "Anderes Konto verbinden",
+      "platformNote": "Das ist unser eigenes Stripe-Konto – dasselbe, über das wir unsere Kunden abrechnen.",
+      "platformConnected": "Unser eigenes Stripe-Konto ist verbunden.",
       "outcome": {
         "connected": "{{account}} verbunden.",
         "denied": "Du hast die Verbindung abgebrochen.",
@@ -2304,7 +2308,12 @@
       "instantNote": "Die E-Mail zu jeder neuen Anfrage ist ein eigener Schalter pro Person.",
       "instantLink": "Auf der Team-Seite einstellen",
       "phoneNote": "Lieber eine Meldung aufs Handy?",
-      "phoneLink": "Handy-Meldungen"
+      "phoneLink": "Handy-Meldungen",
+      "instantTitle": "Kommt sofort, nicht in Zusammenfassungen",
+      "instantDescription": "Diese gehen raus, sobald etwas passiert. Wer Hinweise zu Anfragen bekommt, stellen Sie pro Person auf der Team-Seite ein.",
+      "instantAlertsGroup": "Mit Hinweisen zu Anfragen",
+      "instantAlwaysGroup": "Immer, für die betroffene Person",
+      "instantManage": "Wer sie bekommt und was darin steht"
     },
     "businessProfile": {
       "metaTitle": "Unternehmensdaten",
@@ -2470,7 +2479,91 @@
       "emailNote": "Lieber per E-Mail?",
       "emailLink": "E-Mail-Zusammenfassungen"
     },
-    "adminOnlyPlain": "Nur Leute mit der Rolle Admin können das ändern."
+    "adminOnlyPlain": "Nur Leute mit der Rolle Admin können das ändern.",
+    "inquiryAlerts": {
+      "title": "Hinweise zu Anfragen",
+      "description": "Wer sofort von einer neuen Anfrage erfährt und was darin steht.",
+      "countOn_one": "An für {{on}} von 1 Person",
+      "countOn_other": "An für {{on}} von {{count}} Personen",
+      "noneOn": "Gerade erfährt niemand von neuen Anfragen. Schalte unten für mindestens eine Person den Schalter ein.",
+      "switchOnLabel": "Mit Schalter an bekommt die Person",
+      "alwaysLabel": "Alle bekommen, egal wie der Schalter steht",
+      "items": {
+        "inquiryEmail": "Eine E-Mail zu jeder neuen Anfrage",
+        "phone": "Eine Meldung aufs Handy, sobald dort Handy-Meldungen an sind",
+        "booking": "Eine E-Mail, wenn jemand einen Termin bucht",
+        "chatGaps": "Mit Website-Chat: morgens eine E-Mail mit Fragen, die er nicht beantworten konnte",
+        "taskGiven": "Eine E-Mail, wenn ihnen eine Aufgabe zugeteilt wird",
+        "taskDue": "Eine Erinnerung, wenn eine Aufgabe innerhalb eines Tages fällig ist"
+      },
+      "summariesNote": "Wochen- und Tagesübersichten stellst du getrennt ein:",
+      "messageRow": "Was in der Nachricht zur Anfrage steht",
+      "standardBadge": "Standard",
+      "customBadge": "Eigene Auswahl"
+    },
+    "inquiryMessage": {
+      "metaTitle": "Was in der Nachricht zur Anfrage steht",
+      "metaDescription": "Wähle, welche Angaben einer neuen Anfrage dein Team in der E-Mail und im Team-Chat sieht.",
+      "back": "Team",
+      "basics": "Grundangaben",
+      "extras": "Aus deinen Formularen und dem Website-Chat",
+      "extrasHint": "Gefunden in deinen letzten {{count}} Anfragen.",
+      "extrasEmpty": "Weitere Angaben erscheinen hier, sobald die ersten Anfragen über ein Formular oder den Website-Chat kommen.",
+      "searchPlaceholder": "Angaben suchen",
+      "noMatch": "Keine Angabe passt zu „{{q}}“.",
+      "order": "In dieser Reihenfolge",
+      "orderEmpty": "Nichts gewählt. Die E-Mail sagt dann nur, dass eine neue Anfrage da ist.",
+      "moveUp": "{{label}} nach oben",
+      "moveDown": "{{label}} nach unten",
+      "remove": "{{label}} entfernen",
+      "drag": "{{label}} ziehen, um die Reihenfolge zu ändern",
+      "fields": {
+        "name": "Name",
+        "phone": "Telefon",
+        "email": "E-Mail",
+        "source": "Woher",
+        "message": "Nachricht",
+        "stage": "Phase",
+        "form": "Formular"
+      },
+      "preview": "Vorschau",
+      "previewEmail": "E-Mail",
+      "previewChat": "Team-Chat",
+      "previewFromLatest": "Mit deiner neuesten Anfrage",
+      "previewExample": "Beispiel, noch keine Anfragen",
+      "previewH1": "Neue Anfrage",
+      "previewFor": "für",
+      "previewNoDetails": "Öffnen Sie die Anfrage, um zu sehen, wer es ist und wie Sie die Person erreichen.",
+      "emptyHere": "bei dieser leer",
+      "chatStandardNote": "Der Team-Chat zeigt seine üblichen Angaben (Name, E-Mail, Telefon, Woher, Phase), bis du eigene speicherst. Nachrichten im Team-Chat sind auf Englisch.",
+      "chatCustomNote": "Nachrichten im Team-Chat sind auf Englisch.",
+      "phoneNote": "Die Handy-Meldung bleibt bewusst kurz: Name und Woher, mehr nicht auf dem Sperrbildschirm.",
+      "privacy": "E-Mails lassen sich auf jedem Gerät der Person lesen. Wähle nur, was dein Team braucht.",
+      "save": "Änderungen speichern",
+      "saved_one": "Gespeichert. Die nächste Nachricht zur Anfrage zeigt 1 Angabe.",
+      "saved_other": "Gespeichert. Die nächste Nachricht zur Anfrage zeigt {{count}} Angaben.",
+      "reset": "Zurück zum Standard",
+      "resetDone": "Zurück zum Standard: Name, Telefon, Woher.",
+      "test": "Test-E-Mail an mich",
+      "testSent": "Test-E-Mail an {{email}} geschickt.",
+      "testFailed": "Die Test-E-Mail ging nicht raus. Versuch es in einer Minute noch mal.",
+      "testUsesSaved": "Erst speichern: Der Test nutzt die gespeicherten Angaben.",
+      "unsaved": "Noch nicht gespeichert",
+      "adminOnly": "Nur Personen mit der Rolle Admin können das ändern.",
+      "maxReached": "Bis zu 20 Angaben.",
+      "showPreview": "Vorschau zeigen",
+      "all": {
+        "label": "Alle weiteren Angaben",
+        "hint": "Alles, was sonst mit der Anfrage kommt, auch Angaben, die erst später dazukommen.",
+        "countOnLatest_one": "1 Angabe bei deiner neuesten Anfrage",
+        "countOnLatest_other": "{{count}} Angaben bei deiner neuesten Anfrage",
+        "whatever": "Was immer mit der Anfrage kommt",
+        "alreadyIncluded": "Schon in „Alle weiteren Angaben“ enthalten. Füge eine hier hinzu, um ihr einen eigenen Platz zu geben.",
+        "more_one": "+ 1 weitere Angabe in der Anfrage",
+        "more_other": "+ {{count}} weitere Angaben in der Anfrage",
+        "saved": "Gespeichert. Die nächste Nachricht zur Anfrage zeigt deine Auswahl und alle weiteren Angaben."
+      }
+    }
   },
   "booking": {
     "metaTitle": "Termin buchen",
@@ -8470,8 +8563,8 @@
           "desc": "Werktags morgens: was heute fällig ist und was überfällig ist."
         },
         "weekly_pipeline_summary": {
-          "title": "Ihre Pipeline der Woche",
-          "desc": "Montags: gewonnene, verlorene und offene Deals."
+          "title": "Ihre Deals der Woche",
+          "desc": "Montags: neue Kunden, nicht zustande gekommene und offene Deals."
         },
         "stale_leads_reminder": {
           "title": "Anfragen, die zu lange warten",

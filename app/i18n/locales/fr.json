@@ -1648,6 +1648,10 @@
       "adminOnly": "Seuls les administrateurs de l'espace de travail peuvent modifier cela.",
       "disconnectTitle": "Déconnecter le compte ?",
       "disconnectBody": "Vos produits restent dans {{name}} — cet espace de travail perd simplement l'accès. Les produits déjà liés à des affaires conservent leur nom et leur prix enregistrés. Vous pouvez vous reconnecter à tout moment.",
+      "usePlatform": "Utiliser notre propre compte Stripe",
+      "connectOther": "Connecter un autre compte",
+      "platformNote": "C’est notre propre compte Stripe — celui avec lequel nous facturons aussi nos clients.",
+      "platformConnected": "Notre propre compte Stripe est connecté.",
       "outcome": {
         "connected": "{{account}} connecté.",
         "denied": "Vous avez annulé la connexion.",
@@ -2304,7 +2308,12 @@
       "instantNote": "Le courriel pour chaque nouvelle demande est un réglage séparé pour chaque personne.",
       "instantLink": "Le régler sur la page de l'équipe",
       "phoneNote": "Plutôt une alerte sur votre téléphone ?",
-      "phoneLink": "Alertes sur le téléphone"
+      "phoneLink": "Alertes sur le téléphone",
+      "instantTitle": "Envoyé tout de suite, pas dans les résumés",
+      "instantDescription": "Ils partent dès que quelque chose se passe. Qui reçoit les alertes de demandes se règle par personne sur la page de l’équipe.",
+      "instantAlertsGroup": "Avec les alertes de demandes",
+      "instantAlwaysGroup": "Toujours, pour la personne concernée",
+      "instantManage": "Qui les reçoit et ce qu’elles montrent"
     },
     "businessProfile": {
       "metaTitle": "Infos de l'entreprise",
@@ -2470,7 +2479,91 @@
       "emailNote": "Vous préférez l'e-mail ?",
       "emailLink": "Résumés par e-mail"
     },
-    "adminOnlyPlain": "Seules les personnes ayant le rôle Admin peuvent modifier ceci."
+    "adminOnlyPlain": "Seules les personnes ayant le rôle Admin peuvent modifier ceci.",
+    "inquiryAlerts": {
+      "title": "Alertes de demandes",
+      "description": "Qui est prévenu tout de suite d’une nouvelle demande, et ce qu’il voit.",
+      "countOn_one": "Activées pour {{on}} sur 1 personne",
+      "countOn_other": "Activées pour {{on}} sur {{count}} personnes",
+      "noneOn": "Personne n’est prévenu des nouvelles demandes pour l’instant. Activez l’interrupteur pour au moins une personne ci-dessous.",
+      "switchOnLabel": "Interrupteur activé, la personne reçoit",
+      "alwaysLabel": "Tout le monde reçoit, interrupteur activé ou non",
+      "items": {
+        "inquiryEmail": "Un e-mail pour chaque nouvelle demande",
+        "phone": "Une alerte sur son téléphone, dès que les alertes y sont activées",
+        "booking": "Un e-mail quand quelqu’un réserve un rendez-vous",
+        "chatGaps": "Avec le chat du site : un e-mail le matin avec les questions restées sans réponse",
+        "taskGiven": "Un e-mail quand une tâche lui est confiée",
+        "taskDue": "Un rappel quand une tâche arrive à échéance dans la journée"
+      },
+      "summariesNote": "Les récapitulatifs quotidiens et hebdomadaires se règlent à part :",
+      "messageRow": "Ce que montre le message de demande",
+      "standardBadge": "Standard",
+      "customBadge": "Personnalisé"
+    },
+    "inquiryMessage": {
+      "metaTitle": "Ce que montre le message de demande",
+      "metaDescription": "Choisissez les informations d’une nouvelle demande que votre équipe voit dans l’e-mail et le chat d’équipe.",
+      "back": "Équipe",
+      "basics": "L’essentiel",
+      "extras": "De vos formulaires et du chat du site",
+      "extrasHint": "Trouvées dans vos {{count}} dernières demandes.",
+      "extrasEmpty": "D’autres informations apparaîtront ici après vos premières demandes via un formulaire ou le chat du site.",
+      "searchPlaceholder": "Rechercher une information",
+      "noMatch": "Aucune information ne correspond à « {{q}} ».",
+      "order": "Dans cet ordre",
+      "orderEmpty": "Rien de choisi. L’e-mail indiquera seulement qu’une nouvelle demande est arrivée.",
+      "moveUp": "Monter {{label}}",
+      "moveDown": "Descendre {{label}}",
+      "remove": "Retirer {{label}}",
+      "drag": "Faites glisser {{label}} pour changer l’ordre",
+      "fields": {
+        "name": "Nom",
+        "phone": "Téléphone",
+        "email": "E-mail",
+        "source": "Provenance",
+        "message": "Message",
+        "stage": "Étape",
+        "form": "Formulaire"
+      },
+      "preview": "Aperçu",
+      "previewEmail": "E-mail",
+      "previewChat": "Chat d’équipe",
+      "previewFromLatest": "Avec votre demande la plus récente",
+      "previewExample": "Exemple, pas encore de demandes",
+      "previewH1": "Nouvelle demande",
+      "previewFor": "pour",
+      "previewNoDetails": "Ouvrez la demande pour voir de qui il s’agit et comment la joindre.",
+      "emptyHere": "vide pour celle-ci",
+      "chatStandardNote": "Le chat d’équipe garde ses informations habituelles (nom, e-mail, téléphone, provenance, étape) jusqu’à ce que vous enregistriez les vôtres. Les messages du chat d’équipe sont en anglais.",
+      "chatCustomNote": "Les messages du chat d’équipe sont en anglais.",
+      "phoneNote": "L’alerte sur le téléphone reste courte exprès : le nom et la provenance, rien de plus sur l’écran verrouillé.",
+      "privacy": "Les e-mails se lisent sur tous les appareils de la personne. Ne choisissez que ce dont votre équipe a besoin.",
+      "save": "Enregistrer les modifications",
+      "saved_one": "Enregistré. Le prochain message de demande affichera 1 information.",
+      "saved_other": "Enregistré. Le prochain message de demande affichera {{count}} informations.",
+      "reset": "Revenir au standard",
+      "resetDone": "Retour au standard : nom, téléphone, provenance.",
+      "test": "M’envoyer un e-mail de test",
+      "testSent": "E-mail de test envoyé à {{email}}.",
+      "testFailed": "L’e-mail de test n’est pas parti. Réessayez dans une minute.",
+      "testUsesSaved": "Enregistrez d’abord : le test utilise les informations enregistrées.",
+      "unsaved": "Pas encore enregistré",
+      "adminOnly": "Seules les personnes avec le rôle Administrateur peuvent modifier cela.",
+      "maxReached": "20 informations maximum.",
+      "showPreview": "Voir l’aperçu",
+      "all": {
+        "label": "Toutes les autres informations",
+        "hint": "Tout ce que la demande apporte d’autre, même les informations qui arriveront plus tard.",
+        "countOnLatest_one": "1 information sur votre demande la plus récente",
+        "countOnLatest_other": "{{count}} informations sur votre demande la plus récente",
+        "whatever": "Tout ce qui arrive avec la demande",
+        "alreadyIncluded": "Déjà incluse dans « Toutes les autres informations ». Ajoutez-en une ici pour lui donner sa propre place.",
+        "more_one": "+ 1 autre information dans la demande",
+        "more_other": "+ {{count}} autres informations dans la demande",
+        "saved": "Enregistré. Le prochain message de demande affichera votre sélection et toutes les autres informations."
+      }
+    }
   },
   "booking": {
     "metaTitle": "Réserver un rendez-vous",
@@ -8470,8 +8563,8 @@
           "desc": "Les matins de semaine : ce qui est dû aujourd'hui et ce qui est en retard."
         },
         "weekly_pipeline_summary": {
-          "title": "Votre pipeline de la semaine",
-          "desc": "Le lundi : affaires gagnées, perdues et en cours."
+          "title": "Vos affaires de la semaine",
+          "desc": "Le lundi : nouveaux clients, affaires qui ne se sont pas faites et affaires en cours."
         },
         "stale_leads_reminder": {
           "title": "Demandes en attente",

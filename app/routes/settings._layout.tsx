@@ -22,6 +22,7 @@ const SECTIONS = [
   { match: "/settings/pipelines", key: "pipelines" },
   { match: "/settings/onboarding", key: "onboarding" },
   { match: "/settings/support", key: "support" },
+  { match: "/settings/team/inquiry-message", key: "inquiryMessage", back: "/settings/team" },
   { match: "/settings/team", key: "team" },
   { match: "/settings/bcc", key: "bcc" },
 ] as const;
@@ -41,9 +42,11 @@ export default function SettingsLayout() {
   const { t } = useTranslation();
   const location = useLocation();
 
-  const key =
-    SECTIONS.find((s) => location.pathname.startsWith(s.match))?.key ??
-    "profile";
+  const section = SECTIONS.find((s) => location.pathname.startsWith(s.match));
+  const key = section?.key ?? "profile";
+  // A page one level inside a section (Team → inquiry message) goes back to
+  // that section, on every screen size.
+  const back = section && "back" in section ? section.back : null;
   // Bare /settings: the phone list page (desktop redirects to the profile).
   const isIndex = location.pathname.replace(/\/+$/, "") === "/settings";
 
@@ -51,7 +54,11 @@ export default function SettingsLayout() {
     <div className="mx-auto w-full max-w-[1280px] p-4 sm:p-6 sm:py-10! space-y-6 sm:space-y-8 app-fade-in max-sm:space-y-5">
       <div className="app-fade-up">
         {/* Phones: the way back to every other setting (REDESIGN_PLAN.md §2). */}
-        {!isIndex ? (
+        {back ? (
+          <BackLink to={back} className="mb-1">
+            {t(`settings.${key}.back`)}
+          </BackLink>
+        ) : !isIndex ? (
           <BackLink to="/settings" className="mb-1 sm:hidden">
             {t("nav.settings", "Settings")}
           </BackLink>
