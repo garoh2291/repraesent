@@ -3,7 +3,6 @@
  * Mirrors re:translate extractors (cookie / maintenance / reappt / site SEO).
  */
 
-import type { TranslateString } from "~/lib/api/wordpress-hub";
 import type { ReCookieTranslationLang } from "~/lib/wordpress/plugin-settings-types";
 
 export type PluginI18nLanguage = {
@@ -17,6 +16,14 @@ export type PluginI18nState = {
   source: string;
   languages: PluginI18nLanguage[];
   translatePluginUuid: string | null;
+};
+
+/** One string of a re:translate 1.x overlay pack (field_key → stored translation). */
+export type TranslateString = {
+  id: number;
+  field_key: string;
+  source_text: string;
+  translated_text?: string;
 };
 
 export type OverlayStringMap = Record<

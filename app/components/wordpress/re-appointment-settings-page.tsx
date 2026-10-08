@@ -47,7 +47,8 @@ export function ReAppointmentSettingsPage() {
   const { pluginUuid } = useParams<{ pluginUuid: string }>();
 
   const siteQuery = useWorkspaceWpSite(true);
-  const hasSite = !!siteQuery.data?.sso_enabled;
+  // TEMP: SSO gate bypassed for testing. Revert to `!!siteQuery.data?.sso_enabled`.
+  const hasSite = !!siteQuery.data;
   const listQuery = useWorkspaceReAppointmentButtons(pluginUuid, hasSite);
 
   const createMutation = useCreateReAppointmentButton(pluginUuid);

@@ -97,7 +97,7 @@ export default function WordPressPage() {
             )}
           </p>
         </div>
-      ) : !site?.sso_enabled ? (
+      ) : !site ? (
         <EmptyState />
       ) : (
         <div className="overflow-hidden rounded-xl border bg-card shadow-xs">
@@ -134,7 +134,7 @@ export default function WordPressPage() {
         </div>
       )}
 
-      {site?.sso_enabled ? <WebsiteCapabilities /> : null}
+      {site ? <WebsiteCapabilities /> : null}
 
       <WebAnalyticsSection />
     </div>

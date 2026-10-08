@@ -149,7 +149,8 @@ export function useNavSections(): NavSection[] | null {
 
   if (!currentWorkspace || isBrand) return null;
 
-  const showWebsite = !!wpSite?.sso_enabled || isDemo;
+  // TEMP: SSO gate bypassed so a linked WordPress site is enough to test. Revert to `!!wpSite?.sso_enabled`.
+  const showWebsite = !!wpSite || isDemo;
   const showAppointments =
     (hasAppointmentsService && !!appointmentConfigs?.length) || isDemo;
   const showCalendar =

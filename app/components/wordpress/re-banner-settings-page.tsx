@@ -41,6 +41,7 @@ import {
 } from "~/components/wordpress/re-banner/constants";
 import {
   PluginSettingsBackLink,
+  ServicePauseToggle,
   PluginSettingsLoadingPage,
 } from "~/components/wordpress/plugin-settings-chrome";
 import { PageShell } from "~/components/wordpress/fields";
@@ -64,7 +65,8 @@ export function ReBannerSettingsPage() {
   const { pluginUuid } = useParams<{ pluginUuid: string }>();
 
   const siteQuery = useWorkspaceWpSite(true);
-  const hasSite = !!siteQuery.data?.sso_enabled;
+  // TEMP: SSO gate bypassed for testing. Revert to `!!siteQuery.data?.sso_enabled`.
+  const hasSite = !!siteQuery.data;
   const listQuery = useWorkspaceReBanners(pluginUuid, hasSite);
 
   const createMutation = useCreateReBanner(pluginUuid);
@@ -314,15 +316,26 @@ export function ReBannerSettingsPage() {
             <PluginSettingsBackLink
               label={t("wordpress.reBanner.backToWebsite", "Back to website")}
             />
-            <h1 className="text-xl font-semibold tracking-tight sm:text-2xl">
-              {t("wordpress.reBanner.heading", "Banners")}
-            </h1>
-            <p className="mt-1 text-sm text-muted-foreground">
-              {t(
-                "wordpress.reBanner.subheading",
-                "Temporary announcements that appear and remove themselves on schedule.",
-              )}
-            </p>
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+              <div>
+                <h1 className="text-xl font-semibold tracking-tight sm:text-2xl">
+                  {t("wordpress.reBanner.heading", "Banners")}
+                </h1>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  {t(
+                    "wordpress.reBanner.subheading",
+                    "Temporary announcements that appear and remove themselves on schedule.",
+                  )}
+                </p>
+              </div>
+              <ServicePauseToggle
+                pluginUuid={pluginUuid ?? ""}
+                pauseHint={t(
+                  "wordpress.reBanner.pauseHint",
+                  "Switch off to pause every banner at once. Visitors see none until you switch back on. Nothing is deleted.",
+                )}
+              />
+            </div>
           </div>
 
           {loadError ? (

@@ -5,6 +5,7 @@
   "packageManager": "yarn@1.22.22",
   "type": "module",
   "scripts": {
+    "test:re-translate": "vite-node scripts/test-re-translate.ts",
     "build": "react-router build",
     "dev": "react-router dev",
     "start": "react-router-serve ./build/server/index.js",

@@ -17,7 +17,7 @@ import { useResolvePluginKind } from "~/lib/hooks/useWorkspaceWpPluginCatalog";
 import type { ReIndexSettings } from "~/lib/wordpress/plugin-settings-types";
 import { mergeRecordWithDefaults } from "~/lib/utils/deep-merge";
 import { formatPluginSettingsTitle } from "~/lib/utils/wordpress-plugin-kind";
-import { PluginSettingsBackLink, PluginSettingsLoadingPage, ServiceActiveToggle } from "~/components/wordpress/plugin-settings-chrome";
+import { PluginSettingsBackLink, PluginSettingsLoadingPage, ServicePauseToggle } from "~/components/wordpress/plugin-settings-chrome";
 import { Badge } from "~/components/ui/badge";
 import { Button } from "~/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "~/components/ui/tabs";
@@ -210,7 +210,13 @@ export function ReIndexSettingsPage() {
           </p>
         </div>
         <div className="flex shrink-0 flex-wrap items-center gap-3">
-          <ServiceActiveToggle pluginUuid={pluginUuid} name={pageTitle} />
+          <ServicePauseToggle
+            pluginUuid={pluginUuid}
+            pauseHint={t(
+              "wordpress.reIndex.pauseHint",
+              "Switch off to pause. Your sitemap, search tags and analytics script stop on your website until you switch back on. Nothing is deleted.",
+            )}
+          />
           <Button onClick={() => void handleSave()} disabled={saving}>
             <Save className="h-4 w-4" />
             {saving
