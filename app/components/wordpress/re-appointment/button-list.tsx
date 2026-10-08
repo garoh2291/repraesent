@@ -10,7 +10,7 @@ import type {
 import { cn } from "~/lib/utils";
 import { formatPluginSettingsTitle } from "~/lib/utils/wordpress-plugin-kind";
 import { useResolvePluginKind } from "~/lib/hooks/useWorkspaceWpPluginCatalog";
-import { PluginSettingsBackLink, ServiceActiveToggle } from "~/components/wordpress/plugin-settings-chrome";
+import { PluginSettingsBackLink, ServicePauseToggle } from "~/components/wordpress/plugin-settings-chrome";
 import { Badge } from "~/components/ui/badge";
 import { Button } from "~/components/ui/button";
 import { Switch } from "~/components/ui/switch";
@@ -81,7 +81,13 @@ export function ButtonList({
         </div>
         <div className="flex shrink-0 flex-wrap items-center gap-3">
           {pluginUuid ? (
-            <ServiceActiveToggle pluginUuid={pluginUuid} name={pageTitle} />
+            <ServicePauseToggle
+              pluginUuid={pluginUuid}
+              pauseHint={t(
+                "wordpress.reAppointment.pauseHint",
+                "Switch off to pause. Your buttons disappear from your website until you switch back on. Nothing is deleted.",
+              )}
+            />
           ) : null}
           <Button onClick={onCreate} className="shrink-0">
             <Plus className="h-4 w-4" />

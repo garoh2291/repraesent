@@ -1,12 +1,17 @@
 import type { ReactNode } from "react";
-import { ChevronLeft, Power } from "lucide-react";
+import { ChevronLeft, Globe, Power, type LucideIcon } from "lucide-react";
 import { Link } from "react-router";
 import { useTranslation } from "react-i18next";
 import { PageShell } from "~/components/wordpress/fields";
 import { Button } from "~/components/ui/button";
 import { Spinner } from "~/components/ui/spinner";
+import { Label } from "~/components/ui/label";
 import { Switch } from "~/components/ui/switch";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "~/components/ui/tooltip";
 import { cn } from "~/lib/utils";
+import { useWorkspacePluginPause } from "~/lib/hooks/useWorkspacePluginPause";
+import { extractErrorMessage } from "~/lib/api/axios-instance";
+import { flash } from "~/components/wordpress/re-translate/constants";
 import {
   useWorkspacePluginActivation,
   useWorkspaceWpPluginInstalls,
@@ -91,6 +96,129 @@ export function ServiceActiveToggle({
         }}
       />
     </div>
+  );
+}
+
+/**
+ * "Live" switch for a service page (top-right of the header), the same pill the
+ * form builder uses. Turning it off PAUSES the service — visitors see the site
+ * as if it were not installed, and nothing is deleted. It never deactivates the
+ * plugin; that stays on the website list.
+ */
+export function ServiceLiveToggle({
+  live,
+  onChange,
+  busy = false,
+  id = "service-live-toggle",
+  pauseHint,
+  resumeHint,
+  label,
+  tone = "live",
+  icon: Icon = Globe,
+}: {
+  live: boolean;
+  onChange: (live: boolean) => void;
+  busy?: boolean;
+  id?: string;
+  /** What pausing does for this service, shown on hover while it is live. */
+  pauseHint?: string;
+  /** Shown on hover while it is off. */
+  resumeHint?: string;
+  /** Defaults to "Live". re:maintenance says "Maintenance page" instead. */
+  label?: string;
+  /** `warning` paints "on" amber — for a switch whose on-state hides the site. */
+  tone?: "live" | "warning";
+  icon?: LucideIcon;
+}) {
+  const { t } = useTranslation();
+  const text = label ?? t("wordpress.plugins.live", "Live");
+  const tip = live
+    ? (pauseHint ??
+      t("wordpress.plugins.liveTipPause", "Switch off to pause. Nothing is deleted."))
+    : (resumeHint ??
+      t("wordpress.plugins.liveTipResume", "Paused. Switch on to go live again."));
+
+  return (
+    <TooltipProvider>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <span
+            tabIndex={0}
+            className="inline-flex h-9 shrink-0 items-center gap-2 rounded-lg border px-3"
+          >
+            <Icon
+              className={cn(
+                "h-3.5 w-3.5",
+                !live
+                  ? "text-muted-foreground/50"
+                  : tone === "warning"
+                    ? "text-amber-500"
+                    : "text-emerald-500",
+              )}
+              aria-hidden="true"
+            />
+            <Label
+              htmlFor={id}
+              className="cursor-pointer text-sm font-medium text-muted-foreground"
+            >
+              {text}
+            </Label>
+            <Switch
+              id={id}
+              checked={live}
+              disabled={busy}
+              onCheckedChange={(next) => {
+                if (next !== live) onChange(next);
+              }}
+              aria-label={text}
+            />
+          </span>
+        </TooltipTrigger>
+        <TooltipContent>{tip}</TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
+  );
+}
+
+/**
+ * The Live switch for plugins with no pause setting of their own in the page's
+ * data (cookie, index, review, banner, appointment): it reads and writes the
+ * plugin's pause flag on the site, and saves on its own.
+ */
+export function ServicePauseToggle({
+  pluginUuid,
+  pauseHint,
+}: {
+  pluginUuid: string;
+  pauseHint?: string;
+}) {
+  const { t } = useTranslation();
+  const { query, mutation } = useWorkspacePluginPause(pluginUuid);
+
+  // Until the flag is read, showing "live" would be a guess.
+  if (!query.data) return null;
+
+  return (
+    <ServiceLiveToggle
+      id={`live-${pluginUuid}`}
+      live={!query.data.paused}
+      busy={mutation.isPending}
+      pauseHint={pauseHint}
+      onChange={(live) =>
+        mutation.mutate(!live, {
+          onSuccess: () =>
+            flash(
+              live
+                ? t("wordpress.plugins.resumedFlash", "Live again.")
+                : t(
+                    "wordpress.plugins.pausedFlash",
+                    "Paused. Visitors no longer see it. Nothing was deleted.",
+                  ),
+            ),
+          onError: (err) => flash(extractErrorMessage(err), "error"),
+        })
+      }
+    />
   );
 }
 

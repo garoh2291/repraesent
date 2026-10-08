@@ -1,62 +1,36 @@
 "use client";
 
-import { useCallback, useMemo, useState } from "react";
-import {
-  getTranslateContentDetail,
-  saveTranslateStrings,
-} from "~/lib/api/wordpress-hub";
-import { stringsToMap, type OverlayStringMap } from "~/lib/wordpress/plugin-i18n";
+import { useCallback, useMemo } from "react";
+import type { OverlayStringMap } from "~/lib/wordpress/plugin-i18n";
 
 /**
  * Load / save a re:translate overlay pack for a plugin object
  * (cookie/0, maintenance/0, site/0, reappt/{id}).
  *
- * Depend on `load` / `save` in effects — not the whole return value —
- * so `loading`/`saving` flips do not retrigger overlay fetches.
+ * Overlay packs were re:translate 1.x's strings. Since 2.0 the plugin
+ * translates this copy on the site itself and sentences are changed on the
+ * Translation page, so there is nothing to load or save here, and
+ * usePluginTranslateLanguages never turns the language bars on.
  */
-export function usePluginOverlayPack(translatePluginUuid: string | null) {
-  const [loading, setLoading] = useState(false);
-  const [saving, setSaving] = useState(false);
-
+export function usePluginOverlayPack(_translatePluginUuid: string | null) {
   const load = useCallback(
     async (
-      objectType: string,
-      id: number | string,
-      language: string,
-    ): Promise<OverlayStringMap> => {
-      if (!translatePluginUuid) return {};
-      setLoading(true);
-      try {
-        const detail = await getTranslateContentDetail(
-          translatePluginUuid,
-          id,
-          { language, object_type: objectType },
-        );
-        return stringsToMap(detail.strings ?? []);
-      } finally {
-        setLoading(false);
-      }
-    },
-    [translatePluginUuid],
+      _objectType: string,
+      _id: number | string,
+      _language: string,
+    ): Promise<OverlayStringMap> => ({}),
+    [],
   );
 
   const save = useCallback(
     async (
-      strings: { id: number; translated_text: string; status: string }[],
-    ): Promise<void> => {
-      if (!translatePluginUuid || strings.length === 0) return;
-      setSaving(true);
-      try {
-        await saveTranslateStrings(translatePluginUuid, strings);
-      } finally {
-        setSaving(false);
-      }
-    },
-    [translatePluginUuid],
+      _strings: { id: number; translated_text: string; status: string }[],
+    ): Promise<void> => {},
+    [],
   );
 
   return useMemo(
-    () => ({ load, save, loading, saving }),
-    [load, save, loading, saving],
+    () => ({ load, save, loading: false, saving: false }),
+    [load, save],
   );
 }

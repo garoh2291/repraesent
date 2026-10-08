@@ -9,10 +9,6 @@ import type {
   ReBannerLinkTarget,
   ReIndexPageSeoListResponse,
   ReTranslateBulkState,
-  ReTranslatePriceCellInput,
-  ReTranslatePricing,
-  ReTranslatePricingResult,
-  ReTranslatePricingSettings,
 } from "~/lib/wordpress/plugin-settings-types";
 
 /** The WordPress site the current workspace owns, or null if it has none. */
@@ -231,6 +227,30 @@ export async function putWorkspacePluginSettings(
   return res.data;
 }
 
+export type WpPluginPauseState = { paused: boolean };
+
+/** `GET /wordpress/site/plugins/:pluginUuid/pause` — the plugin's "Live" switch. */
+export async function getWorkspacePluginPause(
+  pluginUuid: string,
+): Promise<WpPluginPauseState> {
+  const res = await apiClient.get<WpPluginPauseState>(
+    `/wordpress/site/plugins/${pluginUuid}/pause`,
+  );
+  return res.data;
+}
+
+/** `PUT /wordpress/site/plugins/:pluginUuid/pause` — pause or resume. Nothing is deleted. */
+export async function putWorkspacePluginPause(
+  pluginUuid: string,
+  paused: boolean,
+): Promise<WpPluginPauseState> {
+  const res = await apiClient.put<WpPluginPauseState>(
+    `/wordpress/site/plugins/${pluginUuid}/pause`,
+    { paused },
+  );
+  return res.data;
+}
+
 /** `POST /wordpress/site/plugins/:pluginUuid/{action}` — a plugin-defined op. */
 async function pluginAction<T>(pluginUuid: string, action: string): Promise<T> {
   const res = await apiClient.post<T>(
@@ -258,6 +278,10 @@ export async function getWorkspaceReIndexPageSeo(
     `/wordpress/site/plugins/${pluginUuid}/page-seo`,
   );
   return res.data;
+}
+
+function pluginUrl(pluginUuid: string, path: string) {
+  return `/wordpress/site/plugins/${encodeURIComponent(pluginUuid)}/${path}`;
 }
 
 /**
@@ -511,322 +535,6 @@ export async function deleteWorkspaceReBanner(
 ): Promise<{ success: true; id: number }> {
   const res = await apiClient.delete<{ success: true; id: number }>(
     `/wordpress/site/plugins/${pluginUuid}/banners/${bannerId}`,
-  );
-  return res.data;
-}
-
-/* ── re:translate ────────────────────────────────────────────────────── */
-
-export type TranslateLanguageProgress = {
-  total: number;
-  translated: number;
-  stale: number;
-  percent: number;
-};
-
-export type TranslateContentItem = {
-  id: number | string;
-  object_type: string;
-  title: string;
-  post_type?: string;
-  type_label: string;
-  status: string;
-  strings: number;
-  languages: Record<string, TranslateLanguageProgress>;
-  /** Absolute wp-admin edit URL for posts. Absent for forms/chrome. */
-  edit_url?: string;
-};
-
-export type TranslateContentListResponse = {
-  items: TranslateContentItem[];
-  total: number;
-  has_rf_forms: boolean;
-  has_plugins: boolean;
-};
-
-export type TranslateString = {
-  id: number;
-  field_key: string;
-  label: string;
-  source_text: string;
-  current_source_text?: string;
-  translated_text?: string;
-  status: string;
-  is_stale: boolean;
-  is_html: boolean;
-  updated_at?: string;
-};
-
-export type TranslateContentDetailResponse = {
-  item: TranslateContentItem;
-  language: string;
-  strings: TranslateString[];
-  progress: TranslateLanguageProgress;
-};
-
-function pluginUrl(pluginUuid: string, path: string) {
-  return `/wordpress/site/plugins/${encodeURIComponent(pluginUuid)}/${path}`;
-}
-
-export async function getTranslateContent(
-  pluginUuid: string,
-  params: {
-    page?: number;
-    per_page?: number;
-    search?: string;
-    post_type?: string;
-    object_type?: string;
-  },
-): Promise<TranslateContentListResponse> {
-  const res = await apiClient.get<TranslateContentListResponse>(
-    pluginUrl(pluginUuid, "translate-content"),
-    { params },
-  );
-  return res.data;
-}
-
-export async function getTranslateContentDetail(
-  pluginUuid: string,
-  id: number | string,
-  params: { language: string; object_type?: string },
-): Promise<TranslateContentDetailResponse> {
-  const res = await apiClient.get<TranslateContentDetailResponse>(
-    pluginUrl(
-      pluginUuid,
-      `translate-content/${encodeURIComponent(String(id))}`,
-    ),
-    { params },
-  );
-  return res.data;
-}
-
-export async function addTranslateLanguage(
-  pluginUuid: string,
-  body: { code: string; label?: string; locale?: string; flag?: string },
-): Promise<Record<string, unknown>> {
-  const res = await apiClient.post<Record<string, unknown>>(
-    pluginUrl(pluginUuid, "translate-languages"),
-    body,
-  );
-  return res.data;
-}
-
-export async function removeTranslateLanguage(
-  pluginUuid: string,
-  code: string,
-  purge: boolean,
-): Promise<Record<string, unknown>> {
-  const res = await apiClient.delete<Record<string, unknown>>(
-    pluginUrl(pluginUuid, `translate-languages/${encodeURIComponent(code)}`),
-    { params: { purge } },
-  );
-  return res.data;
-}
-
-export async function saveTranslateStrings(
-  pluginUuid: string,
-  strings: { id: number; translated_text: string; status: string }[],
-): Promise<{ ok?: boolean; strings?: unknown[] }> {
-  const res = await apiClient.post<{ ok?: boolean; strings?: unknown[] }>(
-    pluginUrl(pluginUuid, "translate-strings/save"),
-    { strings },
-  );
-  return res.data;
-}
-
-export async function runTranslateIndex(
-  pluginUuid: string,
-  action: "start" | "batch" | "cancel",
-): Promise<{ ok?: boolean; index?: Record<string, unknown> }> {
-  const res = await apiClient.post<{
-    ok?: boolean;
-    index?: Record<string, unknown>;
-  }>(pluginUrl(pluginUuid, "translate-index"), { action });
-  return res.data;
-}
-
-/**
- * Start or cancel a site-wide machine translation.
- *
- * `start` only records the run — the API scheduler builds the queue and works
- * through it, so this returns in milliseconds and the run keeps going after
- * this tab is gone. Watch it with {@link getTranslateBulkStatus}.
- */
-export async function runTranslateBulk(
-  pluginUuid: string,
-  action: "start" | "cancel",
-  languages?: string[],
-  mode?: "empty_or_stale" | "empty_only" | "overwrite",
-): Promise<{ bulk?: ReTranslateBulkState }> {
-  const res = await apiClient.post<{ bulk?: ReTranslateBulkState }>(
-    pluginUrl(pluginUuid, "translate-bulk"),
-    { action, languages, mode },
-  );
-  return res.data;
-}
-
-/** Progress of the site's live run, or the last one it finished. */
-export async function getTranslateBulkStatus(
-  pluginUuid: string,
-): Promise<{ bulk?: ReTranslateBulkState }> {
-  const res = await apiClient.get<{ bulk?: ReTranslateBulkState }>(
-    pluginUrl(pluginUuid, "translate-bulk"),
-  );
-  return res.data;
-}
-
-export async function setTranslateSourceLanguage(
-  pluginUuid: string,
-  code: string,
-  replaceTarget?: boolean,
-): Promise<Record<string, unknown>> {
-  const res = await apiClient.post<Record<string, unknown>>(
-    pluginUrl(pluginUuid, "translate-source-language"),
-    { code, replace_target: replaceTarget },
-  );
-  return res.data;
-}
-
-export async function machineTranslateContent(
-  pluginUuid: string,
-  id: number | string,
-  language: string,
-  objectType?: string,
-  mode?: "empty_or_stale" | "empty_only" | "overwrite",
-): Promise<Record<string, unknown>> {
-  const res = await apiClient.post<Record<string, unknown>>(
-    pluginUrl(
-      pluginUuid,
-      `translate-content/${encodeURIComponent(String(id))}/machine-translate`,
-    ),
-    { language, object_type: objectType, mode },
-    { timeout: 120_000 },
-  );
-  return res.data;
-}
-
-export async function importTranslations(
-  pluginUuid: string,
-  csv: string,
-): Promise<Record<string, unknown>> {
-  const res = await apiClient.post<Record<string, unknown>>(
-    pluginUrl(pluginUuid, "translate-import"),
-    { csv },
-  );
-  return res.data;
-}
-
-export async function exportTranslations(
-  pluginUuid: string,
-  params: { language?: string; only?: string },
-): Promise<{ filename?: string; csv?: string }> {
-  const res = await apiClient.get<{ filename?: string; csv?: string }>(
-    pluginUrl(pluginUuid, "translate-export"),
-    { params },
-  );
-  return res.data;
-}
-
-/* ── regions and pricing ─────────────────────────────────────────────────── */
-
-/**
- * One GET for the whole tab.
- *
- * Regions, prices, the amounts grid and the currency catalogue arrive together
- * because a grid assembled from separately-fetched parts can disagree with
- * itself — a region whose currency list has moved on from the amounts already
- * drawn against it. Every write below answers with this same shape, taken
- * after the write, so the UI never repaints from what it hoped it wrote.
- */
-export async function getTranslatePricing(
-  pluginUuid: string,
-): Promise<ReTranslatePricing> {
-  const res = await apiClient.get<ReTranslatePricing>(
-    pluginUrl(pluginUuid, "translate-pricing"),
-  );
-  return res.data;
-}
-
-export async function saveTranslateRegion(
-  pluginUuid: string,
-  body: {
-    slug: string;
-    label?: string;
-    flag?: string;
-    currencies?: string[];
-    countries?: string[];
-  },
-): Promise<ReTranslatePricingResult> {
-  const res = await apiClient.post<ReTranslatePricingResult>(
-    pluginUrl(pluginUuid, "translate-regions"),
-    body,
-  );
-  return res.data;
-}
-
-export async function removeTranslateRegion(
-  pluginUuid: string,
-  slug: string,
-  purge: boolean,
-): Promise<ReTranslatePricingResult> {
-  const res = await apiClient.delete<ReTranslatePricingResult>(
-    pluginUrl(pluginUuid, `translate-regions/${encodeURIComponent(slug)}`),
-    { params: { purge } },
-  );
-  return res.data;
-}
-
-export async function setTranslateDefaultRegion(
-  pluginUuid: string,
-  slug: string,
-): Promise<ReTranslatePricingResult> {
-  const res = await apiClient.post<ReTranslatePricingResult>(
-    pluginUrl(pluginUuid, "translate-regions/default"),
-    { slug },
-  );
-  return res.data;
-}
-
-export async function saveTranslatePrices(
-  pluginUuid: string,
-  cells: ReTranslatePriceCellInput[],
-): Promise<ReTranslatePricingResult> {
-  const res = await apiClient.post<ReTranslatePricingResult>(
-    pluginUrl(pluginUuid, "translate-prices"),
-    { cells },
-  );
-  return res.data;
-}
-
-export async function saveTranslatePricingSettings(
-  pluginUuid: string,
-  pricing: Partial<ReTranslatePricingSettings>,
-): Promise<ReTranslatePricingResult> {
-  const res = await apiClient.post<ReTranslatePricingResult>(
-    pluginUrl(pluginUuid, "translate-pricing-settings"),
-    pricing,
-  );
-  return res.data;
-}
-
-/* ── prices found in existing content ────────────────────────────────────── */
-
-/**
- * Read one slice of the site's pages for amounts.
- *
- * One slice per call because the API is holding a bridge request open on a
- * WordPress site; a thousand-page scan in a single call would time out with
- * nothing to show. The caller loops while `scan.done` is false, passing back
- * `scan.cursor`. Each slice is committed as it goes, so stopping halfway leaves
- * a partial index rather than a broken one.
- */
-export async function scanTranslatePrices(
-  pluginUuid: string,
-  body: { after?: number; limit?: number } = {},
-): Promise<ReTranslatePricingResult> {
-  const res = await apiClient.post<ReTranslatePricingResult>(
-    pluginUrl(pluginUuid, "translate-prices/scan"),
-    body,
   );
   return res.data;
 }

@@ -1,379 +1,109 @@
 import { useParams, useSearchParams } from "react-router";
 import { useTranslation } from "react-i18next";
-import {
-  Globe,
-  Languages as LanguagesIcon,
-  LayoutDashboard,
-  MousePointerClick,
-  Percent,
-  Wallet,
-  Save,
-  Settings2,
-  TriangleAlert,
-  Type,
-} from "lucide-react";
-import { useCallback } from "react";
-import { extractErrorMessage } from "~/lib/api/axios-instance";
-import { useWorkspacePluginSettingsForm } from "~/lib/hooks/useWorkspacePluginSettings";
-import {
-  useRefreshTranslateCounters,
-  useWatchTranslateBulkCompletion,
-  type TranslateCounters,
-} from "~/lib/hooks/useWorkspaceReTranslate";
+import { Languages as LanguagesIcon, MousePointerClick, Palette } from "lucide-react";
+import { useReTranslateActions, useReTranslateOverview } from "~/lib/hooks/useReTranslate";
 import { useResolvePluginKind } from "~/lib/hooks/useWorkspaceWpPluginCatalog";
-import type { ReTranslateSettings } from "~/lib/wordpress/plugin-settings-types";
 import { formatPluginSettingsTitle } from "~/lib/utils/wordpress-plugin-kind";
-import {
-  PluginSettingsBackLink,
-  PluginSettingsLoadingPage,
-  ServiceActiveToggle,
-} from "~/components/wordpress/plugin-settings-chrome";
-import { Badge } from "~/components/ui/badge";
-import { Button } from "~/components/ui/button";
-import { Spinner } from "~/components/ui/spinner";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "~/components/ui/tabs";
-import {
-  InfoNote,
-  PageShell,
-  StatTile,
-} from "~/components/wordpress/fields";
-import {
-  DEFAULT_SETTINGS,
-  PAGE_PARAM,
-  TAB_PARAM,
-  TYPE_PARAM,
-  flash,
-  summariseStats,
-  tabFromParam,
-  type TabId,
-} from "~/components/wordpress/re-translate/constants";
-import { OverviewPanel } from "~/components/wordpress/re-translate/overview-panel";
-import { TranslatePanel } from "~/components/wordpress/re-translate/translate-panel";
-import { GeneralPanel } from "~/components/wordpress/re-translate/general-panel";
-import { SwitcherPanel } from "~/components/wordpress/re-translate/switcher-panel";
-import { SwitcherPreview } from "~/components/wordpress/re-translate/switcher-preview";
-import { RegionsPanel } from "~/components/wordpress/re-translate/regions-panel";
-import { previewLanguage } from "~/components/wordpress/re-translate/constants";
+import { PluginSettingsBackLink, PluginSettingsLoadingPage, ServiceLiveToggle } from "~/components/wordpress/plugin-settings-chrome";
+import { InfoNote, PageShell } from "~/components/wordpress/fields";
+import { errorText, flash } from "~/components/wordpress/re-translate/constants";
+import { LanguagesPanel } from "~/components/wordpress/re-translate/languages-panel";
+import { MenuPanel } from "~/components/wordpress/re-translate/menu-panel";
+import { StylePanel } from "~/components/wordpress/re-translate/style-panel";
+
+const TABS = ["languages", "style", "menu"] as const;
+type Tab = (typeof TABS)[number];
 
 /**
- * re:translate settings inside Repraesent. Full parity with the WordPress plugin
- * admin (Overview, Translate, Switcher, Settings) via the ops API + bridge.
- * Languages are managed on Overview. Chrome matches the dashboard.
+ * re:translate inside Repraesent. One screen per job: languages & pages
+ * (translate, check, make live), how it should sound, the language menu
+ * visitors use, and the two site-wide switches.
  */
 export function ReTranslateSettingsPage() {
   const { t } = useTranslation();
   const { pluginUuid = "" } = useParams<{ pluginUuid: string }>();
   const { catalogItem } = useResolvePluginKind(pluginUuid);
-  const pageTitle = formatPluginSettingsTitle(
-    catalogItem?.display_name,
-    t("wordpress.reTranslate.titleFallback", "Translation"),
-  );
-  const [searchParams, setSearchParams] = useSearchParams();
-  const tab = tabFromParam(searchParams.get(TAB_PARAM));
+  const title = formatPluginSettingsTitle(catalogItem?.display_name, t("wordpress.reTranslate.title", "Translation"));
+  const [params, setParams] = useSearchParams();
+  const asked = params.get("tab") === "switcher" ? "menu" : (params.get("tab") ?? "");
+  const tab: Tab = (TABS as readonly string[]).includes(asked) ? (asked as Tab) : "languages";
+  const target = { pluginUuid };
+  const { data, isLoading, error } = useReTranslateOverview(target);
+  const { saveOptions } = useReTranslateActions(target);
 
-  function selectTab(next: string) {
-    setSearchParams(
-      (prev) => {
-        const params = new URLSearchParams(prev);
-        params.set(TAB_PARAM, next);
-        // Translate list pagination / type filter only apply on that tab.
-        if (next !== "translate") {
-          params.delete(PAGE_PARAM);
-          params.delete(TYPE_PARAM);
-        }
-        return params;
-      },
-      // Tab is UI state only — don't revalidate the root locale loader.
-      { replace: true, preventScrollReset: true, unstable_defaultShouldRevalidate: false },
-    );
-  }
-
-  const {
-    settings,
-    setSettings,
-    setSavedSettings,
-    skipNextSeed,
-    reseed,
-    site,
-    hasSite,
-    found,
-    loading,
-    saving,
-    dirty,
-    loadError,
-    saveMutation,
-  } = useWorkspacePluginSettingsForm<ReTranslateSettings>(
-    pluginUuid,
-    DEFAULT_SETTINGS,
-  );
-
-  function patchSettings(
-    updater: (prev: ReTranslateSettings) => ReTranslateSettings,
-  ) {
-    setSettings(updater);
-  }
-
-  const refreshCounters = useRefreshTranslateCounters(pluginUuid);
-
-  /**
-   * Pull the server's counters into the open form after a translate run, so the
-   * stat tiles and the overview move without a page refresh. Only the counters
-   * are taken — a half-edited Switcher or Settings tab has to survive — and the
-   * saved baseline moves with them so this never reads as an unsaved change.
-   */
-  const syncCounters = useCallback(
-    async (optimistic?: Partial<TranslateCounters>) => {
-      if (optimistic) {
-        const mergeOptimistic = (
-          prev: ReTranslateSettings,
-        ): ReTranslateSettings => ({
-          ...prev,
-          stats: optimistic.stats ?? prev.stats,
-          index: optimistic.index ?? prev.index,
-          bulk: optimistic.bulk ?? prev.bulk,
-        });
-        setSettings(mergeOptimistic);
-        setSavedSettings(mergeOptimistic);
-      }
-      skipNextSeed();
-      try {
-        const counters = await refreshCounters();
-        if (!counters) return;
-        const merge = (prev: ReTranslateSettings): ReTranslateSettings => ({
-          ...prev,
-          stats: counters.stats ?? prev.stats,
-          index: counters.index ?? prev.index,
-          bulk: counters.bulk ?? prev.bulk,
-        });
-        setSettings(merge);
-        setSavedSettings(merge);
-      } catch {
-        // No refetch landed, so nothing will consume the armed skip — disarm it
-        // or the next genuine seed would be swallowed.
-        skipNextSeed(false);
-      }
-    },
-    [refreshCounters, setSettings, setSavedSettings, skipNextSeed],
-  );
-
-  useWatchTranslateBulkCompletion(
-    pluginUuid,
-    settings.bulk,
-    syncCounters,
-    hasSite,
-  );
-
-  function handleSave() {
-    saveMutation.mutate(settings as unknown as Record<string, unknown>, {
-      onSuccess: (data) => {
-        reseed(data.settings);
-        flash(t("wordpress.reTranslate.saved", "Settings saved."));
-      },
-      onError: (err) => flash(extractErrorMessage(err), "error"),
-    });
-  }
-
-  if (loading) {
-    return <PluginSettingsLoadingPage />;
-  }
-
-  if (!hasSite) {
-    return (
-      <PageShell>
-        <div className="rounded-2xl border border-border bg-muted/40 px-4 py-3 text-sm text-muted-foreground">
-          {t(
-            "wordpress.reTranslate.noSite",
-            "This workspace doesn't have a WordPress site connected yet.",
-          )}
-        </div>
-      </PageShell>
-    );
-  }
-
-  const stats = summariseStats(settings);
-  const previewLanguages = [
-    previewLanguage({ code: settings.source_language || "en" }, true),
-    ...settings.languages.map((language) => previewLanguage(language)),
-  ];
-
-  const showSave = tab === "switcher" || tab === "settings";
+  if (isLoading) return <PluginSettingsLoadingPage />;
 
   return (
     <PageShell width="md">
-      <PluginSettingsBackLink
-        label={t("wordpress.reTranslate.backToPlugins", "Back to website")}
-      />
+      <PluginSettingsBackLink label={t("wordpress.reTranslate.back", "Back to website")} />
 
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between app-fade-up">
         <div className="flex flex-col gap-1">
           <div className="flex flex-wrap items-center gap-2">
-            <h1 className="title-display text-[26px] font-semibold text-foreground sm:text-[30px]">
-              {pageTitle}
-            </h1>
-            {settings.kill_switch ? (
-              <Badge
-                variant="outline"
-                className="gap-1.5 border-amber-500/30 bg-amber-500/10 font-normal text-amber-800 dark:text-amber-300"
-              >
-                {t("wordpress.reTranslate.paused", "Paused")}
-              </Badge>
-            ) : null}
-            {dirty ? (
-              <Badge
-                variant="secondary"
-                className="gap-1.5 font-normal text-muted-foreground"
-              >
-                <span className="size-1.5 rounded-full bg-amber-500" />
-                {t("wordpress.reTranslate.unsaved", "Unsaved changes")}
-              </Badge>
-            ) : null}
+            <h1 className="title-display text-[26px] font-semibold text-foreground sm:text-[30px]">{title}</h1>
           </div>
-          <p className="text-sm text-muted-foreground">
-            {site?.url
-              ? site.url.replace(/^https?:\/\//i, "")
-              : t(
-                  "wordpress.reTranslate.subtitle",
-                  "Multilingual content by re:praesent",
-                )}
-          </p>
+          <p className="text-sm text-muted-foreground">{data?.plugin.home ? (data.plugin.site_url ?? data.plugin.home).replace(/^https?:\/\//i, "").replace(/\/$/, "") : t("wordpress.reTranslate.subtitle", "Your website in more languages")}</p>
         </div>
-        <div className="flex shrink-0 flex-wrap items-center gap-3">
-          <ServiceActiveToggle pluginUuid={pluginUuid} name={pageTitle} />
-          {showSave ? (
-            <Button onClick={handleSave} disabled={saving} className="shrink-0">
-              {saving ? (
-                <Spinner className="size-4" />
-              ) : (
-                <Save className="size-4" />
-              )}
-              {saving
-                ? t("wordpress.reTranslate.saving", "Saving\u2026")
-                : t("wordpress.reTranslate.save", "Save settings")}
-            </Button>
-          ) : null}
-        </div>
+        {data ? (
+          <ServiceLiveToggle
+            id="re-translate-live"
+            live={!data.settings.paused}
+            busy={saveOptions.isPending}
+            pauseHint={t("wordpress.reTranslate.pauseHint", "Every visitor sees the original pages until you turn this on again. Nothing is deleted.")}
+            onChange={(live) =>
+              saveOptions.mutate(
+                { paused: !live },
+                {
+                  onSuccess: () => flash(live ? t("wordpress.reTranslate.resumed", "Translations are live again.") : t("wordpress.reTranslate.paused", "Translations paused. Visitors see the original pages.")),
+                  onError: (err) => flash(errorText(t, err), "error"),
+                },
+              )
+            }
+          />
+        ) : null}
       </div>
 
-      {loadError ? (
-        <div
-          role="alert"
-          className="rounded-2xl border border-destructive/30 bg-destructive/5 px-4 py-3 text-sm text-destructive"
-        >
-          {loadError}
+      {error ? (
+        <div role="alert" className="rounded-2xl border border-destructive/30 bg-destructive/5 px-4 py-3 text-sm text-destructive">
+          {errorText(t, error)}
         </div>
       ) : null}
 
-      {!found ? (
-        <InfoNote>
-          {t(
-            "wordpress.reTranslate.notConfigured",
-            "No settings saved yet — saving will create them.",
-          )}
-        </InfoNote>
+      {data?.plugin.v1_active ? (
+        <InfoNote>{t("wordpress.reTranslate.v1Active", "The old translation service (re:translate) is still switched on for this website. Switch it off first; until then this one waits.")}</InfoNote>
+      ) : null}
+      {data && !data.plugin.core_buffer ? (
+        <InfoNote>{t("wordpress.reTranslate.needsUpdate", "Your website needs a WordPress update before translated pages can be shown. Ask us to update it.")}</InfoNote>
       ) : null}
 
-      <div className="grid grid-cols-2 gap-3 app-fade-up app-fade-up-d1 sm:grid-cols-4 sm:gap-4">
-        <StatTile
-          icon={<LanguagesIcon className="size-3.5" />}
-          label={t("wordpress.reTranslate.statLanguages", "Languages")}
-          value={stats.languageCount}
-          size="lg"
-          tone={stats.languageCount > 0 ? "positive" : "muted"}
-        />
-        <StatTile
-          icon={<Percent className="size-3.5" />}
-          label={t("wordpress.reTranslate.statTranslated", "Translated")}
-          value={`${stats.translatedPercent}%`}
-          size="lg"
-          tone={stats.translatedPercent > 0 ? "positive" : "muted"}
-        />
-        <StatTile
-          icon={<TriangleAlert className="size-3.5" />}
-          label={t("wordpress.reTranslate.statNeedsUpdating", "Needs updating")}
-          value={stats.needsUpdating}
-          size="lg"
-          tone={stats.needsUpdating > 0 ? "neutral" : "muted"}
-        />
-        <StatTile
-          icon={<Type className="size-3.5" />}
-          label={t("wordpress.reTranslate.statUntranslated", "Untranslated")}
-          value={stats.untranslated.toLocaleString()}
-          size="lg"
-          tone="muted"
-        />
-      </div>
-
-      <Tabs
-        value={tab}
-        onValueChange={selectTab}
-        className="app-fade-up app-fade-up-d2 gap-4"
-      >
-        <TabsList
-          aria-label={t("wordpress.reTranslate.tabs", "Translation settings")}
-        >
-          <TabsTrigger value="overview" className="gap-1.5">
-            <LayoutDashboard className="size-3.5" />
-            {t("wordpress.reTranslate.tabOverview", "Overview")}
-          </TabsTrigger>
-          <TabsTrigger value="translate" className="gap-1.5">
-            <Globe className="size-3.5" />
-            {t("wordpress.reTranslate.tabTranslate", "Translate")}
-          </TabsTrigger>
-          <TabsTrigger value="regions" className="gap-1.5">
-            <Wallet className="size-3.5" />
-            {t("wordpress.reTranslate.tabRegions", "Regions")}
-          </TabsTrigger>
-          <TabsTrigger value="switcher" className="gap-1.5">
-            <MousePointerClick className="size-3.5" />
-            {t("wordpress.reTranslate.tabSwitcher", "Switcher")}
-          </TabsTrigger>
-          <TabsTrigger value="settings" className="gap-1.5">
-            <Settings2 className="size-3.5" />
-            {t("wordpress.reTranslate.tabSettings", "Settings")}
-          </TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="overview" className="mt-0">
-          <OverviewPanel
-            settings={settings}
-            pluginUuid={pluginUuid}
-            onNavigate={(next) => selectTab(next)}
-          />
-        </TabsContent>
-
-        <TabsContent value="translate" className="mt-0">
-          <TranslatePanel
-            settings={settings}
-            pluginUuid={pluginUuid}
-            onCountersChanged={syncCounters}
-          />
-        </TabsContent>
-
-        <TabsContent value="regions" className="mt-0">
-          <RegionsPanel pluginUuid={pluginUuid} />
-        </TabsContent>
-
-        <TabsContent value="switcher" className="mt-0">
-          <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_380px] xl:grid-cols-[minmax(0,1fr)_440px]">
-            <SwitcherPanel settings={settings} patchSettings={patchSettings} />
-            <div className="lg:sticky lg:top-6">
-              <SwitcherPreview
-                switcher={settings.switcher}
-                languages={previewLanguages}
-              />
-            </div>
-          </div>
-        </TabsContent>
-
-        <TabsContent value="settings" className="mt-0">
-          <GeneralPanel
-            settings={settings}
-            patchSettings={patchSettings}
-            pluginUuid={pluginUuid}
-            onCountersChanged={syncCounters}
-          />
-        </TabsContent>
-      </Tabs>
+      {data ? (
+        <Tabs value={tab} onValueChange={(v) => setParams((p) => { const n = new URLSearchParams(p); n.set("tab", v); return n; }, { replace: true, preventScrollReset: true })} className="app-fade-up app-fade-up-d1 gap-4">
+          <TabsList aria-label={t("wordpress.reTranslate.tabs", "Translation")}>
+            <TabsTrigger value="languages" className="gap-1.5">
+              <LanguagesIcon className="size-3.5" />
+              {t("wordpress.reTranslate.tabLanguages", "Languages & pages")}
+            </TabsTrigger>
+            <TabsTrigger value="style" className="gap-1.5">
+              <Palette className="size-3.5" />
+              {t("wordpress.reTranslate.tabStyle", "How it sounds")}
+            </TabsTrigger>
+            <TabsTrigger value="menu" className="gap-1.5">
+              <MousePointerClick className="size-3.5" />
+              {t("wordpress.reTranslate.tabMenu", "Language Menu Placement")}
+            </TabsTrigger>
+          </TabsList>
+          <TabsContent value="languages" className="mt-0">
+            <LanguagesPanel target={target} overview={data} />
+          </TabsContent>
+          <TabsContent value="style" className="mt-0">
+            <StylePanel target={target} />
+          </TabsContent>
+          <TabsContent value="menu" className="mt-0">
+            <MenuPanel target={target} overview={data} />
+          </TabsContent>
+        </Tabs>
+      ) : null}
     </PageShell>
   );
 }

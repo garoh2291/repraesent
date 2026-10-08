@@ -1,13 +1,13 @@
 import { useCallback, useEffect, useState } from "react";
 import { useParams } from "react-router";
 import { useTranslation } from "react-i18next";
-import { Eye, MessageSquareText, Power, Save } from "lucide-react";
+import { Construction, Eye, MessageSquareText, Power, Save } from "lucide-react";
 import { extractErrorMessage } from "~/lib/api/axios-instance";
 import { useWorkspacePluginSettingsForm } from "~/lib/hooks/useWorkspacePluginSettings";
 import { useResolvePluginKind } from "~/lib/hooks/useWorkspaceWpPluginCatalog";
 import type { ReMaintenanceSettings } from "~/lib/wordpress/plugin-settings-types";
 import { formatPluginSettingsTitle } from "~/lib/utils/wordpress-plugin-kind";
-import { PluginSettingsBackLink, PluginSettingsLoadingPage, ServiceActiveToggle } from "~/components/wordpress/plugin-settings-chrome";
+import { PluginSettingsBackLink, PluginSettingsLoadingPage, ServiceLiveToggle } from "~/components/wordpress/plugin-settings-chrome";
 import { Badge } from "~/components/ui/badge";
 import { Button } from "~/components/ui/button";
 import { Label } from "~/components/ui/label";
@@ -24,7 +24,6 @@ import {
   InfoNote,
   PageShell,
   SectionCard,
-  ToggleField,
 } from "~/components/wordpress/fields";
 import { PluginLangBar } from "~/components/wordpress/plugin-lang-bar";
 import { usePluginTranslateLanguages } from "~/lib/hooks/usePluginTranslateLanguages";
@@ -62,6 +61,7 @@ export function ReMaintenanceSettingsPage() {
   const {
     settings,
     setSettings,
+    setSavedSettings,
     reseed,
     site,
     found,
@@ -140,6 +140,29 @@ export function ReMaintenanceSettingsPage() {
     }
   }
 
+  /**
+   * Maintenance page on / off saves by itself, and only that one setting — the
+   * server merges it, so a message half-typed below is neither sent nor lost.
+   */
+  function handleLiveChange(enabled: boolean) {
+    saveMutation.mutate({ maintenance: { enabled } }, {
+      onSuccess: () => {
+        const apply = (prev: ReMaintenanceSettings): ReMaintenanceSettings => ({
+          ...prev,
+          maintenance: { ...prev.maintenance, enabled },
+        });
+        setSettings(apply);
+        setSavedSettings(apply);
+        flash(
+          enabled
+            ? t("wordpress.reMaintenance.nowOn", "Maintenance page is on. Visitors see it.")
+            : t("wordpress.reMaintenance.nowOff", "Maintenance page is off. Visitors see your website."),
+        );
+      },
+      onError: (err) => flash(extractErrorMessage(err), "error"),
+    });
+  }
+
   async function handleSave() {
     try {
       if (multilingual && !isSource) {
@@ -211,7 +234,23 @@ export function ReMaintenanceSettingsPage() {
           </p>
         </div>
         <div className="flex shrink-0 flex-wrap items-center gap-3">
-          <ServiceActiveToggle pluginUuid={pluginUuid} name={pageTitle} />
+          <ServiceLiveToggle
+            id="re-maintenance-live"
+            live={maintenance.enabled}
+            busy={saving}
+            label={t("wordpress.reMaintenance.switchLabel", "Maintenance page")}
+            tone="warning"
+            icon={Construction}
+            pauseHint={t(
+              "wordpress.reMaintenance.onTip",
+              "Visitors see the maintenance page.",
+            )}
+            resumeHint={t(
+              "wordpress.reMaintenance.offTip",
+              "Your website is open to everyone.",
+            )}
+            onChange={handleLiveChange}
+          />
           <Button onClick={() => void handleSave()} disabled={saving || overlays.saving} className="shrink-0">
             <Save className="h-4 w-4" />
             {saving || overlays.saving
@@ -245,7 +284,7 @@ export function ReMaintenanceSettingsPage() {
             title={t("wordpress.reMaintenance.statusTitle", "Status")}
             subtitle={t(
               "wordpress.reMaintenance.statusSubtitle",
-              "Turn maintenance mode on or off for visitors",
+              "Switch it on or off at the top right",
             )}
           />
           <div className="space-y-4 p-5 sm:p-6">
@@ -264,28 +303,6 @@ export function ReMaintenanceSettingsPage() {
                   ? t("wordpress.reMaintenance.active", "Active")
                   : t("wordpress.reMaintenance.inactive", "Inactive")}
               </Badge>
-              <ToggleField
-                id="re-maintenance-enabled"
-                checked={maintenance.enabled}
-                disabled={!isSource}
-                onChange={(checked) =>
-                  patch((p) => ({
-                    ...p,
-                    maintenance: { ...p.maintenance, enabled: checked },
-                  }))
-                }
-                label={
-                  maintenance.enabled
-                    ? t(
-                        "wordpress.reMaintenance.toggleOn",
-                        "Maintenance on",
-                      )
-                    : t(
-                        "wordpress.reMaintenance.toggleOff",
-                        "Maintenance off",
-                      )
-                }
-              />
             </div>
             <p className="text-xs text-muted-foreground">
               {maintenance.enabled
