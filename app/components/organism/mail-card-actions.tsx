@@ -1,3 +1,4 @@
+import { contactPath } from "~/lib/contacts/contact-path";
 import { useState } from "react";
 import { Link } from "react-router";
 import { useTranslation } from "react-i18next";
@@ -65,12 +66,19 @@ export function MailCardActions({ message }: { message: BccMessage }) {
             className="inline-flex items-center gap-1 rounded-full border border-border bg-muted/40 py-0.5 pl-2 pr-1 text-xs max-sm:min-h-9 max-sm:gap-1.5 max-sm:pl-3 max-sm:text-[13px]"
           >
             <Link
-              to={`/contacts/${c.id}`}
-              className="max-w-[160px] truncate font-medium text-foreground hover:text-primary"
+              to={contactPath(c)}
+              title={c.company_name ?? undefined}
+              className="max-w-[200px] truncate font-medium text-foreground hover:text-primary"
             >
               {c.full_name?.trim() ||
                 c.primary_email ||
                 t("mail.theContact", { defaultValue: "contact" })}
+              {c.company_name ? (
+                <span className="font-normal text-muted-foreground">
+                  {" · "}
+                  {c.company_name}
+                </span>
+              ) : null}
             </Link>
             <button
               type="button"

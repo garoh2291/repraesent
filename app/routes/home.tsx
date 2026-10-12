@@ -413,7 +413,7 @@ function NoNextStep({ deals, total }: { deals: TodayDeal[]; total: number }) {
                 {d.title || d.contact_name || t("today.untitledDeal", "Deal")}
               </p>
               <p className="truncate text-[12.5px] text-muted-foreground">
-                {[d.contact_name, d.value ? formatCurrency(Number(d.value), d.currency ?? "EUR") : null]
+                {[d.title ? d.contact_name : null, d.contact_company, d.value ? formatCurrency(Number(d.value), d.currency ?? "EUR") : null]
                   .filter(Boolean)
                   .join(" · ") || " "}
               </p>

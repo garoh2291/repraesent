@@ -36,6 +36,7 @@ const RECIPIENT_PATHS = [
   "full_name",
   "email",
   "phone",
+  "company_name",
 ] as const;
 export function VariableMenu({
   onInsert,

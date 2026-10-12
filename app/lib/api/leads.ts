@@ -1,6 +1,6 @@
 import type { LeadSourceValue } from "~/lib/leads/constants";
 import { apiClient } from "./axios-instance";
-import type { ContactEmailMatch } from "./contacts-crm";
+import type { ContactCompanyMatch, ContactEmailMatch } from "./contacts-crm";
 
 /**
  * Lead statuses are workspace-configurable pipeline-stage keys now — use
@@ -30,6 +30,8 @@ export interface Lead {
   first_name: string | null;
   last_name: string | null;
   full_name: string | null;
+  /** Company the inquiry came from; may be all that is known. */
+  company_name?: string | null;
   email: string | null;
   phone: string | null;
   metadata: Record<string, unknown>;
@@ -49,6 +51,8 @@ export interface Lead {
   linked_contact_id?: string | null;
   /** Detail view only: an existing contact with this lead's email when unlinked. */
   contact_email_match?: ContactEmailMatch | null;
+  /** Detail view only: an existing company contact with this inquiry's company name. */
+  contact_company_match?: ContactCompanyMatch | null;
 }
 
 export interface LeadHistoryItem {
@@ -136,6 +140,7 @@ export interface CreateLeadBody {
   last_name?: string | null;
   email?: string | null;
   phone?: string | null;
+  company_name?: string | null;
 }
 
 export async function createLead(

@@ -1,7 +1,7 @@
 import { Link, useLocation } from "react-router";
 import { usePendingPathname } from "~/lib/nav/use-pending-nav";
 import { useTranslation } from "react-i18next";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ChevronDown, Plus } from "lucide-react";
 import { PipelineDialog } from "~/components/organism/pipeline-dialog";
 import { DropdownMenuSeparator } from "~/components/ui/dropdown-menu";
@@ -43,6 +43,19 @@ function TabLink({ tab, pathname }: { tab: SectionTab; pathname: string }) {
   const active = tabIsActive(tab, pathname);
   const Icon = tab.icon;
   const [newPipelineOpen, setNewPipelineOpen] = useState(false);
+  // The strip scrolls sideways with no scrollbar: on a phone the open tab can
+  // sit past the edge, so bring it into view (sideways only, never the page).
+  const activeRef = useRef<HTMLAnchorElement>(null);
+  useEffect(() => {
+    const el = activeRef.current;
+    const strip = el?.parentElement;
+    if (!active || !el || !strip) return;
+    const left = el.offsetLeft - strip.offsetLeft;
+    const hidden =
+      left < strip.scrollLeft ||
+      left + el.offsetWidth > strip.scrollLeft + strip.clientWidth;
+    if (hidden) strip.scrollTo({ left: Math.max(0, left - 16) });
+  }, [active]);
 
   const pills = (
     <>
@@ -101,7 +114,7 @@ function TabLink({ tab, pathname }: { tab: SectionTab; pathname: string }) {
   }
 
   return (
-    <Link to={tab.to} prefetch="intent" className={tabClass(active)} aria-current={active ? "page" : undefined}>
+    <Link ref={activeRef} to={tab.to} prefetch="intent" className={tabClass(active)} aria-current={active ? "page" : undefined}>
       <Icon className="size-4" />
       {tab.label}
       {pills}

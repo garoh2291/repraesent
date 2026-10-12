@@ -1,10 +1,15 @@
+import { contactSubtitle } from "~/lib/contacts/contact-path";
 import { DealCurrencySelect } from "~/components/molecule/deal-currency-select";
 import { useWorkspaceCurrency } from "~/lib/hooks/useWorkspaceCurrency";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router";
 import { useTranslation } from "react-i18next";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Search, X } from "lucide-react";
+import { Building2, Search, UserPlus, UserRound, X } from "lucide-react";
+import {
+  CreateContactDialog,
+  type CreateContactInitialValues,
+} from "~/components/organism/create-contact-dialog";
 import { useDebounce } from "~/lib/hooks/useDebounce";
 import { useAuthContext } from "~/providers/auth-provider";
 import { getWorkspaceDetail } from "~/lib/api/workspaces";
@@ -175,8 +180,14 @@ export function CreateDealDialog({
     () =>
       apiContacts.map((c) => ({
         id: c.id,
+        isCompany: c.kind === "company",
         label: labelFromListItem(c),
-        subtitle: c.primary_email?.trim() || c.primary_phone?.trim() || null,
+        subtitle: contactSubtitle({
+          company: c.parent_full_name,
+          job_title: c.job_title,
+          email: c.primary_email,
+          phone: c.primary_phone,
+        }),
       })),
     [apiContacts],
   );
@@ -292,6 +303,28 @@ export function CreateDealDialog({
     setContactPickerOpen(false);
   };
 
+  // "New contact" from the picker: the contact form opens on top of this
+  // dialog; what was typed in the search starts it off, and the saved contact
+  // comes straight back into the field.
+  const [newContactOpen, setNewContactOpen] = useState(false);
+  const [newContactStart, setNewContactStart] = useState<
+    CreateContactInitialValues | undefined
+  >(undefined);
+  const openNewContact = () => {
+    const typed =
+      selectedContactId === CONTACT_NONE ? contactSearch.trim() : "";
+    const [first, ...rest] = typed.split(/\s+/).filter(Boolean);
+    setNewContactStart(
+      !typed
+        ? undefined
+        : typed.includes("@")
+          ? { email: typed }
+          : { firstName: first ?? "", lastName: rest.join(" ") },
+    );
+    setContactPickerOpen(false);
+    setNewContactOpen(true);
+  };
+
   const clearContact = () => {
     setSelectedContactId(CONTACT_NONE);
     setSelectedContactLabel(null);
@@ -310,6 +343,7 @@ export function CreateDealDialog({
   };
 
   return (
+    <>
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
@@ -437,6 +471,21 @@ export function CreateDealDialog({
                         onClick={() => selectContact(row.id, row.label)}
                         className="flex w-full items-center gap-2 px-3 py-2.5 text-left text-sm transition-colors hover:bg-muted max-sm:min-h-11 max-sm:text-[15px] active:bg-muted"
                       >
+                        {row.isCompany ? (
+                          <Building2
+                            className="size-4 shrink-0 text-muted-foreground"
+                            aria-label={t("contacts.company.company", {
+                              defaultValue: "Company",
+                            })}
+                          />
+                        ) : (
+                          <UserRound
+                            className="size-4 shrink-0 text-muted-foreground"
+                            aria-label={t("contacts.company.person", {
+                              defaultValue: "Person",
+                            })}
+                          />
+                        )}
                         <span className="flex-1 truncate font-medium">
                           {row.label}
                         </span>
@@ -449,6 +498,25 @@ export function CreateDealDialog({
                     ))
                   )}
                 </div>
+                {canCreate ? (
+                  <button
+                    type="button"
+                    onClick={openNewContact}
+                    className="flex w-full shrink-0 items-center gap-2 border-t border-border px-3 py-2.5 text-left text-sm font-medium transition-colors hover:bg-muted max-sm:min-h-11 max-sm:text-[15px] active:bg-muted"
+                  >
+                    <UserPlus className="size-4 shrink-0" />
+                    <span className="min-w-0 flex-1 truncate">
+                      {selectedContactId === CONTACT_NONE && contactSearch.trim()
+                        ? t("pipeline.newContactNamed", {
+                            defaultValue: "New contact “{{name}}”",
+                            name: contactSearch.trim(),
+                          })
+                        : t("contacts.newContactTitle", {
+                            defaultValue: "New contact",
+                          })}
+                    </span>
+                  </button>
+                ) : null}
               </PopoverContent>
             </Popover>
           </div>
@@ -518,5 +586,14 @@ export function CreateDealDialog({
         </DialogFooter>
       </DialogContent>
     </Dialog>
+    <CreateContactDialog
+      open={newContactOpen}
+      onOpenChange={setNewContactOpen}
+      start="manual"
+      withDeals={false}
+      initialValues={newContactStart}
+      onCreated={(id, created) => selectContact(id, created.name || "—")}
+    />
+    </>
   );
 }

@@ -13,6 +13,7 @@ import {
   CalendarClock,
   Briefcase,
   Plus,
+  Building2,
 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "~/components/ui/avatar";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -253,6 +254,8 @@ interface ContactHeroProps {
   phones: Record<string, unknown>[];
   addresses: Record<string, unknown>[];
   leadId: string | null;
+  /** The company a person works at, or the company this company is part of. */
+  company?: { id: string; full_name: string | null } | null;
   viewContactId?: string | null;
   /** When set with `viewContactId`, shows a chip that opens the shared Create deal dialog. */
   onOpenCreateDeal?: () => void;
@@ -280,6 +283,7 @@ export function ContactHero({
   phones,
   addresses,
   leadId,
+  company,
   viewContactId,
   onOpenCreateDeal,
   onCompose,
@@ -353,7 +357,13 @@ export function ContactHero({
           <ContactHeroAvatar
             contactId={contactId}
             avatarUrl={(contact as { avatar_url?: string | null } | null)?.avatar_url ?? null}
-            fallbackInitials={initials(displayName)}
+            fallbackInitials={
+              contact?.kind === "company" ? (
+                <Building2 className="size-7" aria-hidden />
+              ) : (
+                initials(displayName)
+              )
+            }
           />
 
           <div className="min-w-0 flex-1">
@@ -407,6 +417,22 @@ export function ContactHero({
                   <Send className="h-3 w-3" />
                   {t("compose.emailAction", { defaultValue: "Email" })}
                 </Button>
+              ) : null}
+              {company?.full_name ? (
+                <Link
+                  to={`/companies/${company.id}`}
+                  className="inline-flex max-w-full items-center gap-1 rounded-sm border border-border bg-muted/60 px-2 py-0.5 text-[11px] font-medium text-foreground transition-colors hover:bg-muted max-sm:min-h-11 max-sm:px-3 max-sm:text-[13px]"
+                >
+                  <Building2 className="h-3 w-3 shrink-0" />
+                  <span className="truncate">
+                    {[
+                      (contact?.job_title as string | null | undefined)?.trim(),
+                      company.full_name,
+                    ]
+                      .filter(Boolean)
+                      .join(" · ")}
+                  </span>
+                </Link>
               ) : null}
               {source ? (
                 <ContactSourceBadge
@@ -582,7 +608,7 @@ function ContactHeroAvatar({
 }: {
   contactId: string | null;
   avatarUrl: string | null;
-  fallbackInitials: string;
+  fallbackInitials: React.ReactNode;
 }) {
   const { t } = useTranslation();
   const queryClient = useQueryClient();

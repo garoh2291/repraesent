@@ -62,6 +62,7 @@ export const FORM_FIELD_MAPPINGS = [
   "full_name",
   "email",
   "phone",
+  "company_name",
 ] as const;
 export type FormFieldMapping = (typeof FORM_FIELD_MAPPINGS)[number] | null;
 

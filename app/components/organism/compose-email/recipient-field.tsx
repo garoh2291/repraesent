@@ -216,10 +216,13 @@ export function RecipientField({
                     className="flex w-full flex-col items-start gap-0.5 rounded-lg px-2.5 py-2 text-left transition-colors hover:bg-muted focus-visible:bg-muted focus-visible:outline-none"
                   >
                     <span className="text-sm text-foreground">
-                      {c.contact_full_name ?? c.primary_email}
+                      {/* `||`: the name column is "" — never null — when empty. */}
+                      {c.contact_full_name?.trim() || c.primary_email}
                     </span>
                     <span className="text-xs text-muted-foreground">
-                      {c.primary_email}
+                      {[c.parent_full_name?.trim(), c.primary_email]
+                        .filter(Boolean)
+                        .join(" · ")}
                     </span>
                   </button>
                 </li>

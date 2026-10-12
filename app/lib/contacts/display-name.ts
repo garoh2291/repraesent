@@ -21,11 +21,13 @@ export interface PersonLike {
   full_name?: string | null;
   first_name?: string | null;
   last_name?: string | null;
+  /** An inquiry may know only the company it came from. */
+  company_name?: string | null;
   email?: string | null;
 }
 
 /**
- * Name → email → null.
+ * Name → company → email → null.
  *
  * Returns null rather than a placeholder so the caller decides what a total
  * blank looks like in its own context — a table cell, an avatar and a page
@@ -43,6 +45,9 @@ export function personName(person: PersonLike | null | undefined): string | null
     .join(" ")
     .trim();
   if (joined) return joined;
+
+  const company = person.company_name?.trim();
+  if (company) return company;
 
   return person.email?.trim() || null;
 }

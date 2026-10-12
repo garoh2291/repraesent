@@ -96,6 +96,7 @@ export default function LeadFormLeadId() {
   // so no second request is needed.
   const linkedContactId = lead?.linked_contact_id ?? null;
   const emailMatch = lead?.contact_email_match ?? null;
+  const companyMatch = lead?.contact_company_match ?? null;
   const leadEmail = lead?.email?.trim() ?? "";
 
   const { data: linkedContactData } = useQuery({
@@ -242,6 +243,7 @@ export default function LeadFormLeadId() {
   const displayName =
     lead.full_name ||
     [lead.first_name, lead.last_name].filter(Boolean).join(" ").trim() ||
+    lead.company_name?.trim() ||
     "Lead";
 
   // The linked contact's own address, sent through the inquiry loop so it
@@ -343,6 +345,8 @@ export default function LeadFormLeadId() {
         </div>
       ) : emailMatch ? (
         <ContactEmailSuggestion contact={emailMatch} email={leadEmail} />
+      ) : companyMatch ? (
+        <ContactEmailSuggestion company={companyMatch} />
       ) : (
         <div className="app-fade-up rounded-xl border border-border bg-muted/30 px-4 py-3 flex items-center justify-between gap-3 max-sm:flex-col max-sm:items-stretch max-sm:px-3">
           <span className="text-sm text-muted-foreground">

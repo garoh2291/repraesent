@@ -158,7 +158,9 @@ export function AddMembersDialog({
                         })}
                     </span>
                     <span className="block truncate text-xs text-muted-foreground">
-                      {contact.primary_email ?? "—"}
+                      {[contact.parent_full_name?.trim(), contact.primary_email]
+                        .filter(Boolean)
+                        .join(" · ") || "—"}
                     </span>
                   </span>
                 </label>

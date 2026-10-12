@@ -73,6 +73,8 @@ export interface DealListItem {
   updated_at: string;
   stage_changed_at: string | null;
   contact_full_name: string | null;
+  /** The company the deal's contact works at (absent on older API builds). */
+  contact_company_name?: string | null;
   primary_email: string | null;
   primary_phone: string | null;
   board_position: number | null;
@@ -83,6 +85,12 @@ export interface DealListItem {
   /** Deal lists: paid tracking is on, so an unpaid won deal can say "Not paid yet". */
   paid_supported?: boolean;
   paid_source?: "manual" | "stripe" | null;
+  /**
+   * Company pages only: this deal belongs to a person who works there, not to
+   * the company itself.
+   */
+  via_contact_id?: string;
+  via_contact_name?: string | null;
 }
 
 export interface DealTasksSummary {
@@ -137,6 +145,12 @@ export async function getDeals(
 export interface DealContact {
   id: string;
   full_name: string | null;
+  /** "person" or "company" (absent on older API builds). */
+  kind?: string;
+  /** The company this person works at, or this company is part of. */
+  company_name?: string | null;
+  /** Position of a person at their company. */
+  job_title?: string | null;
   is_primary: boolean;
   primary_email: string | null;
   primary_phone: string | null;

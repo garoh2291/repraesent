@@ -1,3 +1,4 @@
+import { contactSubtitle } from "~/lib/contacts/contact-path";
 import { useEffect, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
@@ -178,8 +179,12 @@ export function AttachContactDialog({
             <ul className="divide-y divide-border">
               {contacts.map((c) => {
                 const alreadyAttached = attachedSet.has(c.id);
-                const subtitle =
-                  c.primary_email?.trim() || c.primary_phone?.trim() || null;
+                const subtitle = contactSubtitle({
+                  company: c.parent_full_name,
+                  job_title: c.job_title,
+                  email: c.primary_email,
+                  phone: c.primary_phone,
+                });
                 const isAttaching = attachingId === c.id;
                 const isDetaching = detachingId === c.id;
 

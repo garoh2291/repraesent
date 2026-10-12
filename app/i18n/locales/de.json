@@ -374,7 +374,8 @@
       "firstName": "Vorname",
       "lastName": "Nachname",
       "metadata": "Metadaten",
-      "formName": "Formular"
+      "formName": "Formular",
+      "company": "Unternehmen"
     },
     "statuses": {
       "new_lead": "Neuer Lead",
@@ -628,7 +629,11 @@
       "all": "Alle"
     },
     "newInquiryTitle": "Neue Anfrage",
-    "saveInquiry": "Anfrage speichern"
+    "saveInquiry": "Anfrage speichern",
+    "searchPlaceholderCompany": "Nach Name, Unternehmen, E-Mail oder Telefon suchen…",
+    "fields": {
+      "company": "Unternehmen"
+    }
   },
   "pipeline": {
     "stripeNotConnected": {
@@ -1092,7 +1097,8 @@
       "hintBody": "Markier es hier – Ergebnisse zeigt dann, was noch offen ist.",
       "hintLater": "Noch nicht",
       "notYetChip": "Noch nicht bezahlt"
-    }
+    },
+    "newContactNamed": "Neuer Kontakt „{{name}}“"
   },
   "appointments": {
     "metaTitle": "Termine",
@@ -2524,7 +2530,8 @@
         "source": "Woher",
         "message": "Nachricht",
         "stage": "Phase",
-        "form": "Formular"
+        "form": "Formular",
+        "company": "Unternehmen"
       },
       "preview": "Vorschau",
       "previewEmail": "E-Mail",
@@ -2882,7 +2889,8 @@
       "today": "deine Aufgaben für heute",
       "tasks": "deine Aufgaben",
       "deals": "deine Deals",
-      "inquiries": "deine Anfragen"
+      "inquiries": "deine Anfragen",
+      "companies": "deine Unternehmen"
     }
   },
   "analytics": {
@@ -3504,7 +3512,8 @@
     "filters": {
       "contactSource": "Quelle",
       "contactType": "Kontakttyp",
-      "assignee": "Zuständig"
+      "assignee": "Zuständig",
+      "contactKind": "Personen oder Unternehmen"
     },
     "allStatuses": "Alle Status",
     "loadError": "Kontakte konnten nicht geladen werden.",
@@ -3707,8 +3716,12 @@
         "status": "Status",
         "contactType": "Kontakttyp",
         "metadata": "Weitere",
-        "address": "Adresse"
-      }
+        "address": "Adresse",
+        "company": "Unternehmen",
+        "position": "Position"
+      },
+      "companiesAdded_one": "{{count}} Unternehmen hinzugefügt",
+      "companiesAdded_other": "{{count}} Unternehmen hinzugefügt"
     },
     "addAddress": "Adresse hinzufügen",
     "addEmail": "E-Mail hinzufügen",
@@ -3785,7 +3798,9 @@
       "title": "Ein Kontakt mit dieser E-Mail existiert bereits",
       "body": "{{email}} gehört schon zu einem anderen Kontakt. Eine Anfrage kann nur zu einem Kontakt gehören – öffne stattdessen diesen Kontakt.",
       "view": "{{name}} öffnen",
-      "unnamed": "Vorhandener Kontakt"
+      "unnamed": "Vorhandener Kontakt",
+      "companyTitle": "Dieses Unternehmen ist schon in deinen Kontakten",
+      "companyBody": "{{name}} ist schon gespeichert. Öffne es und füge dort die Person hinzu, mit der du sprichst."
     },
     "avatarSaved": "Kontaktbild aktualisiert",
     "avatarRemoved": "Kontaktbild entfernt",
@@ -3804,6 +3819,80 @@
       "title": "Niemand passt dazu.",
       "body": "Versuch einen anderen Namen oder setz Suche und Filter zurück.",
       "clear": "Alle zeigen"
+    },
+    "kinds": {
+      "people": "Personen",
+      "companies": "Unternehmen"
+    },
+    "searchPlaceholderCompany": "Nach Name, Unternehmen, E-Mail oder Telefon suchen…",
+    "company": {
+      "kindLabel": "Person oder Unternehmen",
+      "person": "Person",
+      "company": "Unternehmen",
+      "name": "Name des Unternehmens",
+      "partOf": "Gehört zu",
+      "partOfPlaceholder": "Größeres Unternehmen, zu dem es gehört (optional)",
+      "companyPlaceholder": "Wo die Person arbeitet (optional)",
+      "addNew": "„{{name}}“ als neues Unternehmen anlegen",
+      "typeToFind": "Gib den Namen eines Unternehmens ein.",
+      "createdSuccess": "Unternehmen gespeichert.",
+      "save": "Unternehmen speichern",
+      "newTitle": "Neues Unternehmen",
+      "open": "{{name}} öffnen",
+      "peopleHere": "Personen hier",
+      "addPerson": "Person hinzufügen",
+      "noPeople": "Noch niemand. Füge die Person hinzu, mit der du in diesem Unternehmen sprichst.",
+      "includes": "Unternehmen, die dazugehören",
+      "dealVia": "Mit {{name}}",
+      "earnedTotal": "{{value}} mit diesem Unternehmen verdient",
+      "errors": {
+        "COMPANY_NAME_REQUIRED": "Das Unternehmen braucht einen Namen. Gib einen ein und speichere noch einmal.",
+        "COMPANY_NOT_FOUND": "Dieses Unternehmen ist nicht mehr in deinen Kontakten. Wähle ein anderes.",
+        "COMPANY_PARENT_SELF": "Ein Unternehmen kann nicht zu sich selbst gehören. Wähle ein anderes.",
+        "COMPANY_PARENT_NOT_COMPANY": "Das ist eine Person, kein Unternehmen. Wähle ein Unternehmen.",
+        "COMPANY_PARENT_LOOP": "Diese beiden Unternehmen würden zueinander gehören. Wähle ein anderes."
+      },
+      "position": "Position",
+      "positionPlaceholder": "Was die Person dort macht (optional)",
+      "addExisting": "Vorhandene hinzufügen",
+      "addPeopleTitle": "Personen zu {{name}} hinzufügen",
+      "addPeopleHint": "Wähle Personen, die du schon hast. Wer woanders arbeitet, wechselt hierher.",
+      "searchPeople": "Nach Name, E-Mail oder Telefon suchen…",
+      "add": "Hinzufügen",
+      "moveHere": "Hierher holen",
+      "here": "Hier",
+      "nowAt": "Jetzt bei {{name}}",
+      "remove": "Aus diesem Unternehmen entfernen",
+      "removeShort": "Entfernen",
+      "added": "{{name}} hinzugefügt.",
+      "removed": "{{name}} aus diesem Unternehmen entfernt.",
+      "noPeopleFound": "Niemand passt dazu. Versuch einen anderen Namen.",
+      "noPeopleYet": "Noch niemand. Füge jemanden hinzu, den du schon hast, oder eine neue Person."
+    },
+    "companies": {
+      "title": "Unternehmen",
+      "hint": "Die Unternehmen, mit denen du arbeitest – und mit wem du dort sprichst.",
+      "searchPlaceholder": "Nach Unternehmen, E-Mail oder Telefon suchen…",
+      "empty": "Noch keine Unternehmen.",
+      "emptyBody": "Füge das erste Unternehmen hinzu, mit dem du arbeitest. Die Personen dort kommen danach.",
+      "noMatch": "Kein Unternehmen passt dazu.",
+      "noMatchBody": "Versuch einen anderen Namen oder setz Suche und Filter zurück.",
+      "showAll": "Alle Unternehmen anzeigen",
+      "peopleCount_one": "{{count}} Person",
+      "peopleCount_other": "{{count}} Personen",
+      "partOf": "Gehört zu {{name}}",
+      "deleted": "Unternehmen entfernt.",
+      "backToList": "Zurück zu den Unternehmen",
+      "deleteConfirmTitle": "Dieses Unternehmen löschen?",
+      "deleteConfirmDescription": "{{name}} wird entfernt. Die Personen, die dort arbeiten, bleiben in deinen Kontakten – ohne Unternehmen."
+    },
+    "deals": {
+      "label": "Deals",
+      "placeholder": "Zu einem vorhandenen Deal hinzufügen (optional)",
+      "noneFound": "Kein Deal passt dazu.",
+      "removeOne": "{{name}} entfernen",
+      "someFailed_one": "Der Kontakt ist gespeichert, aber {{count}} Deal konnte nicht hinzugefügt werden. Öffne den Kontakt und füge ihn unter Deals hinzu.",
+      "someFailed_other": "Der Kontakt ist gespeichert, aber {{count}} Deals konnten nicht hinzugefügt werden. Öffne den Kontakt und füge sie unter Deals hinzu."
     }
   },
   "leadEmails": {
@@ -5700,7 +5789,8 @@
       "last_name": "Nachname",
       "full_name": "Vollständiger Name",
       "email": "E-Mail",
-      "phone": "Telefon"
+      "phone": "Telefon",
+      "company_name": "Unternehmen"
     },
     "strip": {
       "groupLabel": "Formularsprachen",
@@ -9032,7 +9122,8 @@
       "site": "Website",
       "aiChat": "KI-Chat",
       "files": "Dateien",
-      "aiVisibility": "KI-Sichtbarkeit"
+      "aiVisibility": "KI-Sichtbarkeit",
+      "companies": "Unternehmen"
     },
     "settingsGroups": {
       "you": "Du",
@@ -9057,7 +9148,8 @@
     "newForm": "Neues Formular",
     "newEmail": "Neue E-Mail senden",
     "empty": "Nichts gefunden für „{{q}}“.",
-    "footer": "Personen, Deals, Aufgaben und Seiten durchsuchen"
+    "footer": "Personen, Deals, Aufgaben und Seiten durchsuchen",
+    "newCompany": "Neues Unternehmen"
   },
   "today": {
     "metaTitle": "Heute",

@@ -464,6 +464,7 @@ export function LeadDetailSheet({
   // (only the default getLead path — brand/read-only sheets don't need them).
   const linkedContactId = lead?.linked_contact_id ?? null;
   const emailMatch = lead?.contact_email_match ?? null;
+  const companyMatch = lead?.contact_company_match ?? null;
   const leadEmail = lead?.email?.trim() ?? "";
 
   // Same query (and cache key) as the full lead page, so the contact card and
@@ -491,7 +492,11 @@ export function LeadDetailSheet({
   });
 
   const showConvertButton =
-    !readOnly && !leadLoading && !linkedContactId && !emailMatch;
+    !readOnly &&
+    !leadLoading &&
+    !linkedContactId &&
+    !emailMatch &&
+    !companyMatch;
 
   // Skip the workspace-detail query in read-only mode — it powers task
   // assignment which is hidden in that mode.
@@ -637,6 +642,11 @@ export function LeadDetailSheet({
                     contact={emailMatch}
                     email={leadEmail}
                   />
+                </div>
+              )}
+              {!readOnly && !linkedContactId && !emailMatch && companyMatch && (
+                <div className="px-5 py-4">
+                  <ContactEmailSuggestion company={companyMatch} />
                 </div>
               )}
               {/* Linked contact: the same card as the full page (Email opens the composer) */}
@@ -969,6 +979,12 @@ export function LeadInfoSection({
           <FieldRow label={t("leads.columns.fullName")}>
             <FieldValue>{lead.full_name || "—"}</FieldValue>
           </FieldRow>
+
+          {lead.company_name ? (
+            <FieldRow label={t("leads.columns.company", "Company")}>
+              <FieldValue>{lead.company_name}</FieldValue>
+            </FieldRow>
+          ) : null}
 
           <FieldRow label={t("leads.columns.email")}>
             <FieldValue className="break-all">{lead.email || "—"}</FieldValue>

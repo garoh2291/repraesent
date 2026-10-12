@@ -31,12 +31,15 @@ interface ContactDealsSectionProps {
   /** Shown immediately in the create-deal dialog while the contact list loads in the background. */
   contactDisplayName?: string | null;
   canEdit?: boolean;
+  /** Company pages: sum what the company and its people brought in. */
+  showEarnedTotal?: boolean;
 }
 
 export function ContactDealsSection({
   contactRouteId,
   contactDisplayName,
   canEdit = false,
+  showEarnedTotal = false,
 }: ContactDealsSectionProps) {
   const { t } = useTranslation();
   const [createDealOpen, setCreateDealOpen] = useState(false);
@@ -46,6 +49,20 @@ export function ContactDealsSection({
     queryFn: () => getDealsForContact(contactRouteId),
     enabled: !!contactRouteId,
   });
+
+  // What the company and its people brought in. One line only when every won
+  // deal is in the same currency — a mixed sum would be a made-up number.
+  const wonDeals = showEarnedTotal
+    ? deals.filter((d) => d.status === "won" && Number(d.value) > 0)
+    : [];
+  const wonCurrencies = new Set(wonDeals.map((d) => d.currency ?? "EUR"));
+  const earnedTotal =
+    wonDeals.length > 0 && wonCurrencies.size === 1
+      ? formatCurrency(
+          wonDeals.reduce((sum, d) => sum + Number(d.value), 0),
+          wonDeals[0].currency,
+        )
+      : null;
 
   const headerActions = canEdit ? (
     <div className="flex shrink-0 items-center gap-2">
@@ -138,6 +155,14 @@ export function ContactDealsSection({
                       "Open a deal in the pipeline to edit stage and value.",
                   })}
                 </p>
+                {earnedTotal ? (
+                  <p className="num mt-1 text-xs font-medium text-earned">
+                    {t("contacts.company.earnedTotal", {
+                      defaultValue: "Earned {{value}} with this company",
+                      value: earnedTotal,
+                    })}
+                  </p>
+                ) : null}
               </div>
               {headerActions}
             </header>
@@ -209,6 +234,14 @@ function DealRow({ deal, contactId, canEdit }: DealRowProps) {
       >
         <div className="min-w-0 flex-1">
           <p className="truncate font-medium text-foreground">{title}</p>
+          {deal.via_contact_name ? (
+            <p className="truncate text-[11px] text-muted-foreground">
+              {t("contacts.company.dealVia", {
+                defaultValue: "With {{name}}",
+                name: deal.via_contact_name,
+              })}
+            </p>
+          ) : null}
           <DealStageBadge
             stage={deal.stage}
             pipelineId={deal.pipeline_id}
@@ -222,7 +255,7 @@ function DealRow({ deal, contactId, canEdit }: DealRowProps) {
           <ExternalLink className="h-3.5 w-3.5 text-muted-foreground" />
         </div>
       </Link>
-      {canEdit ? (
+      {canEdit && !deal.via_contact_id ? (
         <Button
           type="button"
           variant="ghost"

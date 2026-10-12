@@ -30,6 +30,9 @@ export interface BccLinkedContact {
   id: string;
   full_name: string | null;
   primary_email: string | null;
+  kind?: string;
+  /** The company this person works at. */
+  company_name?: string | null;
 }
 
 export interface BccMessage {

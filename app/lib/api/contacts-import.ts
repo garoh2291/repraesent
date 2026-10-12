@@ -22,6 +22,8 @@ export interface ContactImportRow {
   email?: string | null;
   phone?: string | null;
   company_name?: string | null;
+  /** Position of the person at their company. */
+  job_title?: string | null;
   notes?: string | null;
   contact_type?: string | null;
   addresses?: ContactImportAddress[];
@@ -40,6 +42,8 @@ export interface ParseContactsVcardResponse extends ParseContactsCsvResponse {
 
 export interface UploadContactsImportResponse {
   created: number;
+  /** How many of `created` are companies (absent on older API builds). */
+  companies?: number;
   ids: string[];
   skipped: number;
   errors: Array<{ index: number; reason: string }>;

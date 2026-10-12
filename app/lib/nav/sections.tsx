@@ -4,6 +4,7 @@ import {
   BarChart3,
   Bot,
   BookUser,
+  Building2,
   CalendarRange,
   CheckSquare,
   ClipboardList,
@@ -170,6 +171,12 @@ export function useNavSections(): NavSection[] | null {
       label: t("sections.tabs.people", "People"),
       to: "/contacts",
       icon: BookUser,
+    },
+    {
+      key: "companies",
+      label: t("sections.tabs.companies", "Companies"),
+      to: "/companies",
+      icon: Building2,
     },
     {
       key: "inbox",

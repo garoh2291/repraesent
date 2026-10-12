@@ -4,6 +4,8 @@ import type { LeadHistoryItem } from "./leads";
 
 import type { ContactType } from "~/lib/contacts/contact-types";
 
+export type ContactKind = "person" | "company";
+
 export interface ContactListItem {
   id: string;
   source: string;
@@ -12,6 +14,15 @@ export interface ContactListItem {
   updated_at: string;
   contact_full_name: string | null;
   contact_type: string | null;
+  /** "person" or "company". Optional: older backends don't send it. */
+  kind?: ContactKind;
+  /** The company a person works at, or the company a company is part of. */
+  parent_contact_id?: string | null;
+  parent_full_name?: string | null;
+  /** Position of a person at their company. */
+  job_title?: string | null;
+  /** Companies only: how many people work there. */
+  people_count?: number;
   primary_email: string | null;
   primary_phone: string | null;
   lifetime_value: string | null;
@@ -41,6 +52,9 @@ export interface GetContactsParams {
   search?: string;
   source?: string;
   contact_type?: string;
+  kind?: ContactKind;
+  /** Only the people and companies that belong to this company. */
+  parent_contact_id?: string;
 }
 
 export async function getContacts(
@@ -53,11 +67,26 @@ export async function getContacts(
   if (params.source) searchParams.set("source", params.source);
   if (params.contact_type)
     searchParams.set("contact_type", params.contact_type);
+  if (params.kind) searchParams.set("kind", params.kind);
+  if (params.parent_contact_id)
+    searchParams.set("parent_contact_id", params.parent_contact_id);
 
   const res = await apiClient.get<PaginatedContacts>(
     `/contacts?${searchParams.toString()}`,
   );
   return res.data;
+}
+
+export interface ContactCompanyRef {
+  id: string;
+  full_name: string | null;
+  kind: ContactKind;
+}
+
+export interface ContactCompanyPerson extends ContactCompanyRef {
+  job_title?: string | null;
+  primary_email: string | null;
+  primary_phone: string | null;
 }
 
 export type ContactDetail = {
@@ -66,6 +95,12 @@ export type ContactDetail = {
   emails: Record<string, unknown>[];
   phones: Record<string, unknown>[];
   addresses: Record<string, unknown>[];
+  /** The company a person works at, or the company this company is part of. */
+  company?: ContactCompanyRef | null;
+  /** People who work here (companies only). */
+  people?: ContactCompanyPerson[];
+  /** Companies that are part of this one (companies only). */
+  includes?: ContactCompanyRef[];
 };
 
 export async function getContact(id: string): Promise<ContactDetail> {
@@ -102,6 +137,15 @@ export interface CreateContactBody {
   phone?: string | null;
   notes?: string | null;
   contact_type?: ContactType | null;
+  kind?: ContactKind;
+  /** Required when kind is "company". */
+  company_name?: string | null;
+  /** A picked company: where a person works, or what a company is part of. */
+  parent_contact_id?: string | null;
+  /** A typed company name instead; found by exact name or created. */
+  parent_company_name?: string | null;
+  /** Position of a person at their company. */
+  job_title?: string | null;
 }
 
 export async function createContact(
@@ -136,6 +180,11 @@ export async function convertLeadToContact(
     `/contacts/from-lead/${encodeURIComponent(leadId)}`,
   );
   return res.data;
+}
+
+export interface ContactCompanyMatch {
+  id: string;
+  full_name: string | null;
 }
 
 export interface ContactEmailMatch {

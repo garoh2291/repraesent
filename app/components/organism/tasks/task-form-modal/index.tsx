@@ -1,3 +1,4 @@
+import { contactSubtitle } from "~/lib/contacts/contact-path";
 import { useState, useEffect, useRef, useMemo } from "react";
 import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
@@ -574,11 +575,16 @@ export function TaskFormModal({
                                 <span className="font-medium flex-1 truncate">
                                   {name}
                                 </span>
-                                {c.primary_email && c.contact_full_name && (
+                                {c.contact_full_name?.trim() &&
+                                (c.parent_full_name || c.primary_email) ? (
                                   <span className="text-muted-foreground text-xs truncate max-w-[140px]">
-                                    {c.primary_email}
+                                    {contactSubtitle({
+                                      company: c.parent_full_name,
+                                      job_title: c.job_title,
+                                      email: c.primary_email,
+                                    })}
                                   </span>
-                                )}
+                                ) : null}
                               </button>
                             );
                           })

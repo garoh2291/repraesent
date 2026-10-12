@@ -7,6 +7,8 @@ export interface SearchHit {
   status?: string | null;
   entity_table?: string | null;
   entity_id?: string | null;
+  /** Contact hits only: "person" or "company". */
+  kind?: string | null;
 }
 
 export interface SearchResults {

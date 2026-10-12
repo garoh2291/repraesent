@@ -1,3 +1,4 @@
+import { contactPath } from "~/lib/contacts/contact-path";
 import { DealCurrencySelect } from "~/components/molecule/deal-currency-select";
 import { useStageLabel } from "~/lib/pipeline-stages/use-stage-label";
 import { extractErrorMessage } from "~/lib/api/axios-instance";
@@ -641,11 +642,23 @@ export default function PipelineDealDetailPage() {
                 ) : null}
                 {contactName && contactId ? (
                   <Link
-                    to={`/contacts/${contactId}`}
-                    className="inline-flex items-center gap-1 rounded-sm border border-border bg-muted/60 px-2 py-0.5 text-[11px] font-medium text-foreground transition-colors hover:bg-muted max-sm:min-h-9 max-sm:rounded-md max-sm:px-2.5 max-sm:text-[13px]"
+                    to={contactPath({
+                      id: contactId,
+                      kind: contact?.kind as string | undefined,
+                    })}
+                    className="inline-flex max-w-full items-center gap-1 rounded-sm border border-border bg-muted/60 px-2 py-0.5 text-[11px] font-medium text-foreground transition-colors hover:bg-muted max-sm:min-h-9 max-sm:rounded-md max-sm:px-2.5 max-sm:text-[13px]"
                   >
-                    {contactName}
-                    <ExternalLink className="h-3 w-3" />
+                    <span className="truncate">
+                      {[
+                        contactName,
+                        dealContacts
+                          .find((c) => c.id === contactId)
+                          ?.company_name?.trim(),
+                      ]
+                        .filter(Boolean)
+                        .join(" · ")}
+                    </span>
+                    <ExternalLink className="h-3 w-3 shrink-0" />
                   </Link>
                 ) : null}
               </div>

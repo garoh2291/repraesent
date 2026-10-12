@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import { useOpenFromParam } from "~/lib/hooks/useOpenFromParam";
-import { Link, useNavigate, useSearchParams } from "react-router";
+import { Link, useLocation, useNavigate, useSearchParams } from "react-router";
+import { contactPath } from "~/lib/contacts/contact-path";
 import { useTranslation } from "react-i18next";
 import { LoadError } from "~/components/notebook/load-error";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -39,6 +40,8 @@ import {
   ChevronDown,
   ChevronLeft,
   ChevronRight,
+  Building2,
+  Users,
   Mail,
   Phone,
   Search,
@@ -79,9 +82,13 @@ import { CreateContactDialog } from "~/components/organism/create-contact-dialog
 import { ContactActions } from "~/components/notebook/contact-actions";
 import { EmptyState } from "~/components/notebook/empty-state";
 
-export function meta() {
+export function meta({ location }: { location: { pathname: string } }) {
   return [
-    { title: "Contacts - Repraesent" },
+    {
+      title: location.pathname.startsWith("/companies")
+        ? "Companies - Repraesent"
+        : "Contacts - Repraesent",
+    },
     { name: "description", content: "Contact CRM" },
   ];
 }
@@ -123,6 +130,10 @@ export default function ContactsPage() {
   const contactTypeRaw = searchParams.get("contact_type") ?? "";
   const contactTypeFilter =
     contactTypeRaw === "end_customer" ? "customer" : contactTypeRaw;
+  // One page, two places: People (/contacts) and Companies (/companies).
+  const isCompanies = useLocation().pathname.startsWith("/companies");
+  const kindFilter = isCompanies ? "company" : "person";
+  const companyStart = useMemo(() => ({ kind: "company" as const }), []);
   const debouncedSearch = useDebounce(search, 300);
   const { ref: searchInputRef, withHint } = useSearchShortcut();
 
@@ -148,6 +159,7 @@ export default function ContactsPage() {
       debouncedSearch,
       sourceFilter || undefined,
       contactTypeFilter || undefined,
+      kindFilter,
     ],
     queryFn: () =>
       getContacts({
@@ -156,6 +168,7 @@ export default function ContactsPage() {
         search: debouncedSearch || undefined,
         source: sourceFilter || undefined,
         contact_type: contactTypeFilter || undefined,
+        kind: kindFilter,
       }),
     enabled: !!currentWorkspace,
     refetchOnMount: true,
@@ -212,22 +225,80 @@ export default function ContactsPage() {
 
   const hasTableFilters = !!sourceFilter || !!contactTypeFilter;
 
+  // Every word that differs between the two places, in one spot.
+  const copy = isCompanies
+    ? {
+        title: t("contacts.companies.title", "Companies"),
+        hint: t(
+          "contacts.companies.hint",
+          "The companies you work with, and who you talk to there.",
+        ),
+        add: t("contacts.company.newTitle", "New company"),
+        search: t(
+          "contacts.companies.searchPlaceholder",
+          "Search by company, email or phone…",
+        ),
+        empty: t("contacts.companies.empty", "No companies yet."),
+        emptyBody: t(
+          "contacts.companies.emptyBody",
+          "Add the first company you work with. The people there come next.",
+        ),
+        noMatch: t("contacts.companies.noMatch", "No company matches that."),
+        noMatchBody: t(
+          "contacts.companies.noMatchBody",
+          "Try another name, or clear the search and filters.",
+        ),
+        showAll: t("contacts.companies.showAll", "Show all companies"),
+        loadWhat: t("errors.what.companies", "your companies"),
+      }
+    : {
+        title: t("contacts.contactsTitle"),
+        hint: t("contacts.peopleHint", "Everyone you work with, in one place."),
+        add: t("contacts.newContactButton", { defaultValue: "New contact" }),
+        search: t("contacts.searchPlaceholderCompany", {
+          defaultValue: "Search by name, company, email or phone…",
+        }),
+        empty: t("contacts.empty", { defaultValue: "No contacts yet." }),
+        emptyBody: t(
+          "contacts.emptyBody",
+          "Add the people you work with — from your phone, typed in, or from a file.",
+        ),
+        noMatch: t("contacts.emptySearch.title", "Nobody matches that."),
+        noMatchBody: t(
+          "contacts.emptySearch.body",
+          "Try another name, or clear the search and filters.",
+        ),
+        showAll: t("contacts.emptySearch.clear", "Show everyone"),
+        loadWhat: t("errors.what.people", "your people"),
+      };
+
   return (
     <div className="p-4 sm:p-6 space-y-4 sm:space-y-6 app-fade-in">
       {/* Header — same pattern as Leads */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between shrink-0 app-fade-up">
         <div>
           <h1 className="title-display text-[26px] font-semibold text-foreground sm:text-[30px]">
-            {t("contacts.contactsTitle")}
+            {copy.title}
           </h1>
           <p className="text-sm text-muted-foreground mt-0.5 max-sm:hidden">
-            {t("contacts.contactsManageHint")}
+            {isCompanies ? copy.hint : t("contacts.contactsManageHint")}
           </p>
           <p className="text-sm text-muted-foreground mt-0.5 sm:hidden">
-            {t("contacts.peopleHint", "Everyone you work with, in one place.")}
+            {copy.hint}
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
+          {isCompanies ? (
+            // A company is typed in: no phone book, no file.
+            <Button
+              className="h-9 gap-1.5 text-xs max-sm:h-11 max-sm:flex-1 max-sm:text-sm"
+              onClick={() => openCreate("manual")}
+            >
+              <Plus className="size-3.5 max-sm:size-4" />
+              {copy.add}
+            </Button>
+          ) : (
+          <>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button
@@ -309,6 +380,8 @@ export default function ContactsPage() {
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
+          </>
+          )}
         </div>
       </div>
 
@@ -320,9 +393,7 @@ export default function ContactsPage() {
           <Input
             ref={searchInputRef}
             placeholder={withHint(
-              t("contacts.searchPlaceholder", {
-                defaultValue: "Search by name, email, or phone…",
-              })
+              copy.search
             )}
             value={search}
             onChange={(e) => setParam({ search: e.target.value, page: "1" })}
@@ -351,6 +422,7 @@ export default function ContactsPage() {
                 setParam({
                   source: undefined,
                   contact_type: undefined,
+                  kind: undefined,
                   page: "1",
                 })
               }
@@ -363,7 +435,7 @@ export default function ContactsPage() {
       </div>
 
       {isError && (
-        <LoadError what={t("errors.what.people", "your people")} onRetry={() => void tableQuery.refetch()} />
+        <LoadError what={copy.loadWhat} onRetry={() => void tableQuery.refetch()} />
       )}
 
       {!isError && (
@@ -380,8 +452,8 @@ export default function ContactsPage() {
                 {search || hasTableFilters ? (
                   <EmptyState
                     icon={<Search />}
-                    title={t("contacts.emptySearch.title", "Nobody matches that.")}
-                    body={t("contacts.emptySearch.body", "Try another name, or clear the search and filters.")}
+                    title={copy.noMatch}
+                    body={copy.noMatchBody}
                     action={
                       <Button
                         variant="outline"
@@ -391,24 +463,25 @@ export default function ContactsPage() {
                             search: undefined,
                             source: undefined,
                             contact_type: undefined,
+                  kind: undefined,
                             page: "1",
                           })
                         }
                       >
                         <X className="size-4" />
-                        {t("contacts.emptySearch.clear", "Show everyone")}
+                        {copy.showAll}
                       </Button>
                     }
                   />
                 ) : (
                   <EmptyState
-                    icon={<IdCard />}
-                    title={t("contacts.empty", { defaultValue: "No contacts yet." })}
-                    body={t("contacts.emptyBody", "Add the people you work with — from your phone, typed in, or from a file.")}
+                    icon={isCompanies ? <Building2 /> : <IdCard />}
+                    title={copy.empty}
+                    body={copy.emptyBody}
                     action={
-                      <Button className="h-11 gap-1.5 text-sm" onClick={() => openCreate()}>
+                      <Button className="h-11 gap-1.5 text-sm" onClick={() => openCreate(isCompanies ? "manual" : undefined)}>
                         <Plus className="size-4" />
-                        {t("contacts.newContactButton", { defaultValue: "New contact" })}
+                        {copy.add}
                       </Button>
                     }
                   />
@@ -419,6 +492,7 @@ export default function ContactsPage() {
                 const email = row.primary_email?.trim() ?? "";
                 const name = personName({ full_name: row.contact_full_name, email }) ?? "—";
                 const phone = row.primary_phone?.trim() ?? "";
+                const company = row.parent_full_name?.trim() ?? "";
                 const ltvNum = row.lifetime_value != null ? Number(row.lifetime_value) : null;
                 return (
                   <li
@@ -426,7 +500,7 @@ export default function ContactsPage() {
                     className="flex items-center gap-3 rounded-xl border border-border bg-card px-3 py-2.5 shadow-xs"
                   >
                     <Link
-                      to={`/contacts/${row.id}`}
+                      to={contactPath(row)}
                       className="press flex min-h-11 min-w-0 flex-1 items-center gap-3"
                     >
                       <Avatar className="size-10 shrink-0">
@@ -437,13 +511,27 @@ export default function ContactsPage() {
                           />
                         ) : null}
                         <AvatarFallback className="bg-muted text-[12px] font-semibold text-foreground">
-                          {contactInitials(name)}
+                          {row.kind === "company" ? (
+                            <Building2 className="size-4" aria-hidden />
+                          ) : (
+                            contactInitials(name)
+                          )}
                         </AvatarFallback>
                       </Avatar>
                       <div className="min-w-0 flex-1">
                         <p className="truncate text-[15px] font-semibold text-foreground">{name}</p>
                         <p className="truncate text-[12.5px] text-muted-foreground">
-                          {email || phone || t("contacts.noContactInfo", { defaultValue: "No contact info" })}
+                          {isCompanies
+                            ? [
+                                t("contacts.companies.peopleCount", "{{count}} people", { count: row.people_count ?? 0 }),
+                                company ? t("contacts.companies.partOf", "Part of {{name}}", { name: company }) : email || phone,
+                              ]
+                                .filter(Boolean)
+                                .join(" · ")
+                            : [row.job_title?.trim(), company].filter(Boolean).join(" · ") ||
+                              email ||
+                              phone ||
+                              t("contacts.noContactInfo", { defaultValue: "No contact info" })}
                         </p>
                         {ltvNum != null && Number.isFinite(ltvNum) && ltvNum > 0 ? (
                           <p className="num mt-0.5 text-[12.5px] font-medium text-earned">
@@ -566,7 +654,11 @@ export default function ContactsPage() {
                       colSpan={9}
                       className="h-24 text-center text-muted-foreground"
                     >
-                      {t("contacts.empty", {
+                      {search || hasTableFilters
+                        ? copy.noMatch
+                        : isCompanies
+                          ? copy.empty
+                          : t("contacts.empty", {
                         defaultValue: "No contacts yet.",
                       })}
                     </TableCell>
@@ -583,6 +675,7 @@ export default function ContactsPage() {
                         email,
                       }) ?? "—";
                     const phone = row.primary_phone?.trim() ?? "";
+                    const company = row.parent_full_name?.trim() ?? "";
                     const ltvNum =
                       row.lifetime_value != null
                         ? Number(row.lifetime_value)
@@ -596,12 +689,12 @@ export default function ContactsPage() {
                     return (
                       <TableRow
                         key={row.id}
-                        onClick={() => navigate(`/contacts/${row.id}`)}
+                        onClick={() => navigate(contactPath(row))}
                         className="cursor-pointer"
                       >
                         <TableCell className="whitespace-normal px-4 py-3 align-middle text-left">
                           <Link
-                            to={`/contacts/${row.id}`}
+                            to={contactPath(row)}
                             className="flex items-center gap-3 group"
                           >
                             <Avatar className="size-9 shrink-0">
@@ -612,7 +705,11 @@ export default function ContactsPage() {
                                 />
                               ) : null}
                               <AvatarFallback className="bg-muted text-[11px] font-semibold text-foreground">
-                                {contactInitials(name)}
+                                {row.kind === "company" ? (
+                                  <Building2 className="size-4" aria-hidden />
+                                ) : (
+                                  contactInitials(name)
+                                )}
                               </AvatarFallback>
                             </Avatar>
                             <div className="min-w-0 text-left">
@@ -620,6 +717,25 @@ export default function ContactsPage() {
                                 {name}
                               </div>
                               <div className="mt-0.5 flex flex-wrap items-center gap-x-3 gap-y-0.5 text-[11px] text-muted-foreground">
+                                {isCompanies ? (
+                                  <span className="num inline-flex items-center gap-1 text-foreground/80">
+                                    <Users className="h-3 w-3 shrink-0 opacity-70" />
+                                    {t("contacts.companies.peopleCount", "{{count}} people", { count: row.people_count ?? 0 })}
+                                  </span>
+                                ) : null}
+                                {company || row.job_title ? (
+                                  <span
+                                    className="inline-flex items-center gap-1 truncate max-w-[220px] text-foreground/80"
+                                    title={company}
+                                  >
+                                    <Building2 className="h-3 w-3 shrink-0 opacity-70" />
+                                    <span className="truncate">
+                                      {isCompanies
+                                        ? t("contacts.companies.partOf", "Part of {{name}}", { name: company })
+                                        : [row.job_title?.trim(), company].filter(Boolean).join(" · ")}
+                                    </span>
+                                  </span>
+                                ) : null}
                                 {email ? (
                                   <span
                                     className="inline-flex items-center gap-1 truncate max-w-[220px]"
@@ -635,7 +751,7 @@ export default function ContactsPage() {
                                     <span className="truncate">{phone}</span>
                                   </span>
                                 ) : null}
-                                {!email && !phone ? (
+                                {!email && !phone && !company ? (
                                   <span className="italic">
                                     {t("contacts.noContactInfo", {
                                       defaultValue: "No contact info",
@@ -745,7 +861,7 @@ export default function ContactsPage() {
                         </TableCell>
                         <TableCell className="whitespace-normal px-4 py-3 align-middle text-left">
                           <Link
-                            to={`/contacts/${row.id}`}
+                            to={contactPath(row)}
                             className="inline-flex items-center gap-1 text-xs font-medium text-foreground hover:underline"
                           >
                             {t("leads.openLead")}
@@ -855,7 +971,12 @@ export default function ContactsPage() {
         importMode={importModal.mode}
         onOpenChange={(o) => setImportModal((s) => ({ ...s, open: o }))}
       />
-      <CreateContactDialog open={createOpen} onOpenChange={setCreateOpen} start={createStart} />
+      <CreateContactDialog
+        open={createOpen}
+        onOpenChange={setCreateOpen}
+        start={createStart}
+        initialValues={isCompanies ? companyStart : undefined}
+      />
     </div>
   );
 }

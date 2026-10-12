@@ -1,8 +1,9 @@
+import { contactPath, contactSubtitle } from "~/lib/contacts/contact-path";
 import { useState } from "react";
 import { Link } from "react-router";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
-import { Link2, Link2Off, Star, UserPlus } from "lucide-react";
+import { Building2, Link2, Link2Off, Star, UserPlus } from "lucide-react";
 import { toast } from "sonner";
 import {
   attachDealContact,
@@ -79,7 +80,7 @@ export function DealContactSection({
         type="button"
         size="sm"
         variant="outline"
-        className="h-8 gap-1.5 text-xs"
+        className="h-8 gap-1.5 text-xs max-sm:h-11 max-sm:text-sm"
         onClick={() => setAttachContactOpen(true)}
       >
         <Link2 className="h-3.5 w-3.5" />
@@ -90,7 +91,7 @@ export function DealContactSection({
       <Button
         type="button"
         size="sm"
-        className="h-8 gap-1.5 text-xs"
+        className="h-8 gap-1.5 text-xs max-sm:h-11 max-sm:text-sm"
         onClick={() => setCreateContactOpen(true)}
       >
         <UserPlus className="h-3.5 w-3.5" />
@@ -106,6 +107,7 @@ export function DealContactSection({
       <CreateContactDialog
         open={createContactOpen}
         onOpenChange={setCreateContactOpen}
+        withDeals={false}
         onCreated={(newContactId) => {
           attachMutation.mutate(newContactId);
         }}
@@ -177,8 +179,12 @@ function ContactRow({ dealId, contact, canEdit, onChanged }: ContactRowProps) {
   const name =
     contact.full_name?.trim() ||
     t("contacts.untitled", { defaultValue: "Untitled contact" });
-  const subtitle =
-    contact.primary_email?.trim() || contact.primary_phone?.trim() || null;
+  const subtitle = contactSubtitle({
+    company: contact.company_name,
+    job_title: contact.job_title,
+    email: contact.primary_email,
+    phone: contact.primary_phone,
+  });
 
   const detachMutation = useMutation({
     mutationFn: () => detachDealContact(dealId, contact.id),
@@ -250,11 +256,17 @@ function ContactRow({ dealId, contact, canEdit, onChanged }: ContactRowProps) {
   return (
     <li className="group flex items-center gap-1 pr-2 transition-colors hover:bg-muted/40">
       <Link
-        to={`/contacts/${contact.id}`}
+        to={contactPath(contact)}
         className="flex min-w-0 flex-1 items-center justify-between gap-3 px-4 py-3 text-sm"
       >
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2">
+            {contact.kind === "company" ? (
+              <Building2
+                className="size-3.5 shrink-0 text-muted-foreground"
+                aria-hidden
+              />
+            ) : null}
             <p className="truncate font-medium text-foreground">{name}</p>
             {contact.is_primary ? (
               <span className="inline-flex shrink-0 items-center gap-1 rounded-sm bg-primary/10 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-primary">

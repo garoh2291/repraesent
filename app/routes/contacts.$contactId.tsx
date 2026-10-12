@@ -4,6 +4,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { BackLink } from "~/components/notebook/back-link";
 import { personNameOr } from "~/lib/contacts/display-name";
+import { contactListPath, contactPath } from "~/lib/contacts/contact-path";
 import { Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { useAuthContext } from "~/providers/auth-provider";
@@ -17,6 +18,7 @@ import { useCanEditLeads } from "~/lib/hooks/useCanEditLeads";
 import { ContactHero } from "~/components/organism/contact-detail/contact-hero";
 import { ContactInfoCard } from "~/components/organism/contact-detail/contact-info-card";
 import { ContactDealsSection } from "~/components/organism/contact-deals-section";
+import { ContactCompanySection } from "~/components/organism/contact-company-section";
 import { PhotoStrip } from "~/components/notebook/photo-strip";
 import { Button } from "~/components/ui/button";
 import {
@@ -31,9 +33,13 @@ import {
 } from "~/components/ui/alert-dialog";
 import { deleteContact } from "~/lib/api/contacts";
 
-export function meta() {
+export function meta({ location }: { location: { pathname: string } }) {
   return [
-    { title: "Contact - Repraesent" },
+    {
+      title: location.pathname.startsWith("/companies")
+        ? "Company - Repraesent"
+        : "Contact - Repraesent",
+    },
     { name: "description", content: "Contact details" },
   ];
 }
@@ -94,11 +100,33 @@ export default function ContactDetailPage() {
     }
   }, [currentWorkspace, navigate]);
 
+  // A company lives under Companies, a person under People. A link that did
+  // not know which it was pointing at lands here and is moved to the right
+  // place, so the right tab is lit and Back goes to the right list.
+  const loadedKind = data?.contact?.kind as string | undefined;
+  const loadedId = data?.contact?.id ? String(data.contact.id) : null;
+  useEffect(() => {
+    if (!loadedId || !loadedKind) return;
+    const want = contactPath({ id: loadedId, kind: loadedKind });
+    if (location.pathname !== want) {
+      navigate(want, { replace: true, state: location.state });
+    }
+  }, [loadedId, loadedKind, location.pathname, location.state, navigate]);
+
+  // Before the contact has loaded, the address itself says where we are.
+  const listPath = contactListPath(
+    loadedKind ??
+      (location.pathname.startsWith("/companies") ? "company" : "person"),
+  );
+  const isCompany = listPath === "/companies";
+
   const invalidateContact = () => {
     if (!contactRouteId) return;
-    void queryClient.invalidateQueries({
-      queryKey: ["contact", contactRouteId],
-    });
+    // Every open contact page, not only this one: linking a person to a
+    // company also changes the company's page ("People here"), and a company's
+    // deals list includes its people's deals.
+    void queryClient.invalidateQueries({ queryKey: ["contact"] });
+    void queryClient.invalidateQueries({ queryKey: ["contact-deals"] });
     void queryClient.invalidateQueries({
       queryKey: ["contact-history", contactRouteId],
     });
@@ -111,12 +139,17 @@ export default function ContactDetailPage() {
       setDeleteConfirmOpen(false);
       void queryClient.invalidateQueries({ queryKey: ["contacts"] });
       void queryClient.removeQueries({ queryKey: ["contact", contactRouteId] });
+      // A company that lost this person, or people who lost this company.
+      void queryClient.invalidateQueries({ queryKey: ["contact"] });
+      void queryClient.invalidateQueries({ queryKey: ["contact-deals"] });
       toast.success(
-        t("contacts.deleteContactSuccess", {
-          defaultValue: "Contact removed.",
-        }),
+        isCompany
+          ? t("contacts.companies.deleted", "Company removed.")
+          : t("contacts.deleteContactSuccess", {
+              defaultValue: "Contact removed.",
+            }),
       );
-      navigate("/contacts", { replace: true });
+      navigate(listPath, { replace: true });
     },
     onError: () => {
       toast.error(
@@ -128,7 +161,7 @@ export default function ContactDetailPage() {
   });
 
   if (!contactRouteId) {
-    navigate("/contacts", { replace: true });
+    navigate(listPath, { replace: true });
     return null;
   }
 
@@ -149,10 +182,12 @@ export default function ContactDetailPage() {
           })}
         </p>
         <Link
-          to="/contacts"
+          to={listPath}
           className="text-sm font-medium text-primary hover:underline"
         >
-          {t("contacts.backToList", { defaultValue: "Back to contacts" })}
+          {isCompany
+            ? t("contacts.companies.backToList", "Back to companies")
+            : t("contacts.backToList", { defaultValue: "Back to contacts" })}
         </Link>
       </div>
     );
@@ -175,6 +210,7 @@ export default function ContactDetailPage() {
       full_name: contact?.full_name as string | null | undefined,
       first_name: contact?.first_name as string | null | undefined,
       last_name: contact?.last_name as string | null | undefined,
+      company_name: contact?.company_name as string | null | undefined,
       email: primaryEmail?.address ? String(primaryEmail.address) : null,
     },
     t("contacts.unnamed", { defaultValue: "Contact" }),
@@ -204,10 +240,12 @@ export default function ContactDetailPage() {
 
   return (
     <div className="p-4 sm:p-6 space-y-4 sm:space-y-6 app-fade-in">
-      <BackLink to={cameFromLead ? `/lead-form/${cameFromLead}` : "/contacts"}>
+      <BackLink to={cameFromLead ? `/lead-form/${cameFromLead}` : listPath}>
         {cameFromLead
           ? t("leads.detail.backToLead", { defaultValue: "Back to lead" })
-          : t("contacts.backToList", { defaultValue: "Back to contacts" })}
+          : isCompany
+            ? t("contacts.companies.backToList", "Back to companies")
+            : t("contacts.backToList", { defaultValue: "Back to contacts" })}
       </BackLink>
 
       <ContactHero
@@ -218,6 +256,7 @@ export default function ContactDetailPage() {
         phones={phones}
         addresses={addresses}
         leadId={leadId}
+        company={data.company ?? null}
         canEdit={canEdit}
         onCompose={
           canEdit && composeRecipients.length > 0 ? openComposer : undefined
@@ -229,16 +268,27 @@ export default function ContactDetailPage() {
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>
-              {t("contacts.deleteContactConfirmTitle", {
-                defaultValue: "Delete this contact?",
-              })}
+              {isCompany
+                ? t(
+                    "contacts.companies.deleteConfirmTitle",
+                    "Delete this company?",
+                  )
+                : t("contacts.deleteContactConfirmTitle", {
+                    defaultValue: "Delete this contact?",
+                  })}
             </AlertDialogTitle>
             <AlertDialogDescription>
-              {t("contacts.deleteContactConfirmDescription", {
-                name: displayName,
-                defaultValue:
-                  "{{name}} will be removed from your contacts. This does not delete a linked lead.",
-              })}
+              {isCompany
+                ? t("contacts.companies.deleteConfirmDescription", {
+                    name: displayName,
+                    defaultValue:
+                      "{{name}} will be removed. The people who work there stay in your contacts, without a company.",
+                  })
+                : t("contacts.deleteContactConfirmDescription", {
+                    name: displayName,
+                    defaultValue:
+                      "{{name}} will be removed from your contacts. This does not delete a linked lead.",
+                  })}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -254,8 +304,12 @@ export default function ContactDetailPage() {
         </AlertDialogContent>
       </AlertDialog>
 
+      {/* Below lg the two columns dissolve (`contents`) and every block takes
+          its own place: who they work with and their deals come before the
+          long activity list, not under it. Desktop keeps the two columns. */}
       <div className="grid grid-cols-1 gap-4 sm:gap-6 lg:grid-cols-5">
-        <div className="space-y-4 sm:space-y-6 lg:col-span-3">
+        <div className="max-lg:contents lg:col-span-3 lg:space-y-6">
+          <div className="max-lg:order-3">
           <ContactInfoCard
             contactId={resolvedContactId}
             contact={contact}
@@ -266,10 +320,14 @@ export default function ContactDetailPage() {
             canEdit={canEdit}
             onInvalidate={invalidateContact}
           />
+          </div>
           {/* Team-only photos, right after the info card. */}
           {resolvedContactId ? (
-            <PhotoStrip entity="contacts" entityId={resolvedContactId} canEdit={canEdit} />
+            <div className="max-lg:order-4">
+              <PhotoStrip entity="contacts" entityId={resolvedContactId} canEdit={canEdit} />
+            </div>
           ) : null}
+          <div className="max-lg:order-5">
           <ActivityPanel
             variant="contact"
             leadId={taskLeadId}
@@ -284,15 +342,31 @@ export default function ContactDetailPage() {
             history={contactHistory}
             historyLoading={contactHistoryLoading}
           />
+          </div>
         </div>
 
-        <div className="space-y-4 sm:space-y-6 lg:col-span-2">
-          <div className="lg:sticky lg:top-6">
+        <div className="max-lg:contents lg:col-span-2">
+          <div className="max-lg:contents lg:sticky lg:top-6 lg:space-y-6">
+            <div className="max-lg:order-1">
+            <ContactCompanySection
+              contactId={resolvedContactId}
+              displayName={displayName}
+              isCompany={contact?.kind === "company"}
+              company={data.company ?? null}
+              people={data.people ?? []}
+              includes={data.includes ?? []}
+              canEdit={canEdit}
+              onInvalidate={invalidateContact}
+            />
+            </div>
+            <div className="max-lg:order-2">
             <ContactDealsSection
               contactRouteId={contactRouteId}
               contactDisplayName={displayName}
               canEdit={canEdit}
+              showEarnedTotal={contact?.kind === "company"}
             />
+            </div>
           </div>
         </div>
       </div>

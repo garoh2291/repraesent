@@ -492,6 +492,7 @@ export default function LeadForm() {
                   .filter(Boolean)
                   .join(" ")
                   .trim() ||
+                lead.company_name ||
                 lead.email ||
                 "Lead";
               setTaskCreateLeadId(lead.id);
@@ -553,7 +554,10 @@ export default function LeadForm() {
       accessorKey: "full_name",
       header: t("leads.columns.fullName"),
       cell: ({ row }) => {
-        const name = row.original.full_name ?? "—";
+        const name =
+          row.original.full_name?.trim() ||
+          row.original.company_name?.trim() ||
+          "—";
         const appointment = nextLeadAppointment(row.original);
         const checkout = extractLeadCheckout(row.original);
         return (
@@ -963,7 +967,7 @@ export default function LeadForm() {
             onSelect({ search: value, page: "1" }, true);
           }}
           searchValue={search}
-          searchPlaceholder={t("leads.searchPlaceholder")}
+          searchPlaceholder={t("leads.searchPlaceholderCompany")}
           onRowClick={(row) => setSelectedLeadId(row.id)}
         />
       ) : (
@@ -971,7 +975,7 @@ export default function LeadForm() {
           {isPhone ? (
             <PhoneLeadSearch
               value={search}
-              placeholder={t("leads.searchPlaceholder")}
+              placeholder={t("leads.searchPlaceholderCompany")}
               onChange={(value) => onSelect({ search: value, page: "1" }, true)}
             />
           ) : null}

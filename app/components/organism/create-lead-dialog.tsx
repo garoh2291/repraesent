@@ -39,6 +39,7 @@ export function CreateLeadDialog({
   const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
+  const [company, setCompany] = useState("");
   const [status, setStatus] = useState("");
   const effectiveStatus = status || defaultStatus;
 
@@ -48,6 +49,7 @@ export function CreateLeadDialog({
       setLastName("");
       setEmail("");
       setPhone("");
+      setCompany("");
       setStatus("");
     }
   }, [open]);
@@ -72,6 +74,7 @@ export function CreateLeadDialog({
         last_name: lastName.trim() || null,
         email: email.trim() || null,
         phone: phone.trim() || null,
+        company_name: company.trim() || null,
       });
       if (effectiveStatus !== defaultStatus) {
         await updateLeadStatus(res.id, effectiveStatus);
@@ -95,6 +98,7 @@ export function CreateLeadDialog({
   const hasIdentity =
     firstName.trim().length > 0 ||
     lastName.trim().length > 0 ||
+    company.trim().length > 0 ||
     email.trim().length > 0 ||
     phone.trim().length > 0;
 
@@ -146,6 +150,20 @@ export function CreateLeadDialog({
                 enterKeyHint="next"
               />
             </div>
+          </div>
+
+          <div className="space-y-1.5">
+            <Label htmlFor="create-lead-company">
+              {t("leads.fields.company", { defaultValue: "Company" })}
+            </Label>
+            <Input
+              id="create-lead-company"
+              value={company}
+              onChange={(e) => setCompany(e.target.value)}
+              autoComplete="organization"
+              autoCapitalize="words"
+              enterKeyHint="next"
+            />
           </div>
 
           <div className="space-y-1.5">

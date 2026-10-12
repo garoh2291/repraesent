@@ -374,7 +374,8 @@
       "firstName": "Voornaam",
       "lastName": "Achternaam",
       "metadata": "Metagegevens",
-      "formName": "Formulier"
+      "formName": "Formulier",
+      "company": "Bedrijf"
     },
     "statuses": {
       "new_lead": "Nieuwe lead",
@@ -628,7 +629,11 @@
       "all": "Alle"
     },
     "newInquiryTitle": "Nieuwe aanvraag",
-    "saveInquiry": "Aanvraag opslaan"
+    "saveInquiry": "Aanvraag opslaan",
+    "searchPlaceholderCompany": "Zoeken op naam, bedrijf, e-mail of telefoon…",
+    "fields": {
+      "company": "Bedrijf"
+    }
   },
   "pipeline": {
     "stripeNotConnected": {
@@ -1090,7 +1095,8 @@
       "hintBody": "Markeer het hier — Resultaten laat dan zien wat er nog open staat.",
       "hintLater": "Nog niet",
       "notYetChip": "Nog niet betaald"
-    }
+    },
+    "newContactNamed": "Nieuw contact “{{name}}”"
   },
   "appointments": {
     "metaTitle": "Afspraken",
@@ -2522,7 +2528,8 @@
         "source": "Waarvandaan",
         "message": "Bericht",
         "stage": "Fase",
-        "form": "Formulier"
+        "form": "Formulier",
+        "company": "Bedrijf"
       },
       "preview": "Voorbeeld",
       "previewEmail": "E-mail",
@@ -2880,7 +2887,8 @@
       "today": "wat er vandaag op je wacht",
       "tasks": "je taken",
       "deals": "je deals",
-      "inquiries": "je aanvragen"
+      "inquiries": "je aanvragen",
+      "companies": "je bedrijven"
     }
   },
   "analytics": {
@@ -3502,7 +3510,8 @@
     "filters": {
       "contactSource": "Bron",
       "contactType": "Contacttype",
-      "assignee": "Toegewezen aan"
+      "assignee": "Toegewezen aan",
+      "contactKind": "Personen of bedrijven"
     },
     "allStatuses": "Alle statussen",
     "loadError": "Kon de contacten niet laden.",
@@ -3705,8 +3714,12 @@
         "status": "Status",
         "contactType": "Contacttype",
         "metadata": "Overig",
-        "address": "Adres"
-      }
+        "address": "Adres",
+        "company": "Bedrijf",
+        "position": "Functie"
+      },
+      "companiesAdded_one": "{{count}} bedrijf toegevoegd",
+      "companiesAdded_other": "{{count}} bedrijven toegevoegd"
     },
     "addAddress": "Adres toevoegen",
     "addEmail": "E-mail toevoegen",
@@ -3783,7 +3796,9 @@
       "title": "Er bestaat al een contact met deze e-mail",
       "body": "{{email}} hoort al bij een ander contact. Een aanvraag kan maar bij één contact horen — open dat contact.",
       "view": "{{name}} bekijken",
-      "unnamed": "Bestaand contact"
+      "unnamed": "Bestaand contact",
+      "companyTitle": "Dit bedrijf staat al in je contacten",
+      "companyBody": "{{name}} is al opgeslagen. Open het en voeg daar de persoon toe met wie je praat."
     },
     "avatarSaved": "Contactfoto bijgewerkt",
     "avatarRemoved": "Contactfoto verwijderd",
@@ -3802,6 +3817,80 @@
       "title": "Niemand gevonden.",
       "body": "Probeer een andere naam, of wis de zoekopdracht en filters.",
       "clear": "Iedereen tonen"
+    },
+    "kinds": {
+      "people": "Personen",
+      "companies": "Bedrijven"
+    },
+    "searchPlaceholderCompany": "Zoeken op naam, bedrijf, e-mail of telefoon…",
+    "company": {
+      "kindLabel": "Persoon of bedrijf",
+      "person": "Persoon",
+      "company": "Bedrijf",
+      "name": "Bedrijfsnaam",
+      "partOf": "Onderdeel van",
+      "partOfPlaceholder": "Groter bedrijf waar het bij hoort (optioneel)",
+      "companyPlaceholder": "Waar deze persoon werkt (optioneel)",
+      "addNew": "“{{name}}” toevoegen als nieuw bedrijf",
+      "typeToFind": "Typ een bedrijfsnaam.",
+      "createdSuccess": "Bedrijf opgeslagen.",
+      "save": "Bedrijf opslaan",
+      "newTitle": "Nieuw bedrijf",
+      "open": "{{name}} openen",
+      "peopleHere": "Mensen hier",
+      "addPerson": "Persoon toevoegen",
+      "noPeople": "Nog niemand. Voeg de persoon toe met wie je bij dit bedrijf praat.",
+      "includes": "Bedrijven die erbij horen",
+      "dealVia": "Met {{name}}",
+      "earnedTotal": "{{value}} verdiend met dit bedrijf",
+      "errors": {
+        "COMPANY_NAME_REQUIRED": "Het bedrijf heeft een naam nodig. Typ er een en sla opnieuw op.",
+        "COMPANY_NOT_FOUND": "Dit bedrijf staat niet meer in je contacten. Kies een ander.",
+        "COMPANY_PARENT_SELF": "Een bedrijf kan geen onderdeel van zichzelf zijn. Kies een ander bedrijf.",
+        "COMPANY_PARENT_NOT_COMPANY": "Dat is een persoon, geen bedrijf. Kies een bedrijf.",
+        "COMPANY_PARENT_LOOP": "Deze twee bedrijven zouden onderdeel van elkaar zijn. Kies een ander bedrijf."
+      },
+      "position": "Functie",
+      "positionPlaceholder": "Wat deze persoon daar doet (optioneel)",
+      "addExisting": "Bestaande toevoegen",
+      "addPeopleTitle": "Mensen toevoegen aan {{name}}",
+      "addPeopleHint": "Kies mensen die je al hebt. Wie ergens anders werkt, verhuist hierheen.",
+      "searchPeople": "Zoeken op naam, e-mail of telefoon…",
+      "add": "Toevoegen",
+      "moveHere": "Hierheen halen",
+      "here": "Hier",
+      "nowAt": "Nu bij {{name}}",
+      "remove": "Uit dit bedrijf halen",
+      "removeShort": "Weghalen",
+      "added": "{{name}} toegevoegd.",
+      "removed": "{{name}} uit dit bedrijf gehaald.",
+      "noPeopleFound": "Niemand gevonden. Probeer een andere naam.",
+      "noPeopleYet": "Nog niemand. Voeg iemand toe die je al hebt, of een nieuwe persoon."
+    },
+    "companies": {
+      "title": "Bedrijven",
+      "hint": "De bedrijven waarmee je werkt, en met wie je daar praat.",
+      "searchPlaceholder": "Zoeken op bedrijf, e-mail of telefoon…",
+      "empty": "Nog geen bedrijven.",
+      "emptyBody": "Voeg het eerste bedrijf toe waarmee je werkt. De mensen daar komen daarna.",
+      "noMatch": "Geen bedrijf gevonden.",
+      "noMatchBody": "Probeer een andere naam of wis de zoekopdracht en filters.",
+      "showAll": "Alle bedrijven tonen",
+      "peopleCount_one": "{{count}} persoon",
+      "peopleCount_other": "{{count}} personen",
+      "partOf": "Onderdeel van {{name}}",
+      "deleted": "Bedrijf verwijderd.",
+      "backToList": "Terug naar bedrijven",
+      "deleteConfirmTitle": "Dit bedrijf verwijderen?",
+      "deleteConfirmDescription": "{{name}} wordt verwijderd. De mensen die er werken blijven in je contacten, zonder bedrijf."
+    },
+    "deals": {
+      "label": "Deals",
+      "placeholder": "Toevoegen aan een bestaande deal (optioneel)",
+      "noneFound": "Geen deal gevonden.",
+      "removeOne": "{{name}} weghalen",
+      "someFailed_one": "Het contact is opgeslagen, maar {{count}} deal kon niet worden toegevoegd. Open het contact en voeg hem toe onder Deals.",
+      "someFailed_other": "Het contact is opgeslagen, maar {{count}} deals konden niet worden toegevoegd. Open het contact en voeg ze toe onder Deals."
     }
   },
   "leadEmails": {
@@ -5698,7 +5787,8 @@
       "last_name": "Achternaam",
       "full_name": "Volledige naam",
       "email": "E-mail",
-      "phone": "Telefoon"
+      "phone": "Telefoon",
+      "company_name": "Bedrijf"
     },
     "strip": {
       "groupLabel": "Formuliertalen",
@@ -9030,7 +9120,8 @@
       "site": "Site",
       "aiChat": "AI-chat",
       "files": "Bestanden",
-      "aiVisibility": "AI-zichtbaarheid"
+      "aiVisibility": "AI-zichtbaarheid",
+      "companies": "Bedrijven"
     },
     "settingsGroups": {
       "you": "Jij",
@@ -9055,7 +9146,8 @@
     "newForm": "Nieuw formulier",
     "newEmail": "Nieuwe e-mail sturen",
     "empty": "Niets gevonden voor ‘{{q}}’.",
-    "footer": "Zoek personen, deals, taken en pagina's"
+    "footer": "Zoek personen, deals, taken en pagina's",
+    "newCompany": "Nieuw bedrijf"
   },
   "today": {
     "metaTitle": "Vandaag",

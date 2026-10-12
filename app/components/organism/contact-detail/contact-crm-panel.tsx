@@ -215,8 +215,14 @@ export function ContactProfileForm({
       }),
     [salutationLang],
   );
+  // A company has a name, not a first and last name, birthdate or salutation.
+  const isCompany = contact.kind === "company";
+  const [companyName, setCompanyName] = useState(
+    String(contact.company_name ?? ""),
+  );
   const [first, setFirst] = useState(String(contact.first_name ?? ""));
   const [last, setLast] = useState(String(contact.last_name ?? ""));
+  const [jobTitle, setJobTitle] = useState(String(contact.job_title ?? ""));
   const [dob, setDob] = useState(
     apiDatetimeToIsoDateString(contact.date_of_birth),
   );
@@ -236,6 +242,8 @@ export function ContactProfileForm({
   const [dirty, setDirty] = useState(false);
 
   useEffect(() => {
+    setCompanyName(String(contact.company_name ?? ""));
+    setJobTitle(String(contact.job_title ?? ""));
     setFirst(String(contact.first_name ?? ""));
     setLast(String(contact.last_name ?? ""));
     setDob(apiDatetimeToIsoDateString(contact.date_of_birth));
@@ -295,13 +303,16 @@ export function ContactProfileForm({
           ? rawSalutation
           : null;
     mutation.mutate({
-      contact: {
-        first_name: first.trim() || null,
-        last_name: last.trim() || null,
-        date_of_birth: dob || null,
-        salutation: salutationOut,
-        contact_type: contactType,
-      },
+      contact: isCompany
+        ? { company_name: companyName.trim(), contact_type: contactType }
+        : {
+            first_name: first.trim() || null,
+            last_name: last.trim() || null,
+            job_title: jobTitle.trim() || null,
+            date_of_birth: dob || null,
+            salutation: salutationOut,
+            contact_type: contactType,
+          },
       lastContactedAt: contactId
         ? lastContacted.trim()
           ? new Date(`${lastContacted.trim()}T12:00:00`).toISOString()
@@ -310,7 +321,9 @@ export function ContactProfileForm({
     });
   };
 
-  const nameEmpty = first.trim() === "" && last.trim() === "";
+  const nameEmpty = isCompany
+    ? companyName.trim() === ""
+    : first.trim() === "" && last.trim() === "";
 
   // Debounced autosave: fires ~800ms after the user stops editing, but only
   // when something changed and a name is present. onSuccess clears `dirty`, so
@@ -327,6 +340,8 @@ export function ContactProfileForm({
     mutation.isPending,
     first,
     last,
+    companyName,
+    jobTitle,
     dob,
     salutation,
     contactType,
@@ -341,6 +356,24 @@ export function ContactProfileForm({
           withSectionFooter && "p-4 sm:p-5",
         )}
       >
+        {isCompany ? (
+          <FormField
+            label={t("contacts.company.name", { defaultValue: "Company name" })}
+            className="sm:col-span-2"
+          >
+            <Input
+              value={companyName}
+              onChange={(e) => {
+                setCompanyName(e.target.value);
+                markDirty();
+              }}
+              disabled={!canEdit}
+              className="h-9"
+              aria-invalid={nameEmpty}
+            />
+          </FormField>
+        ) : (
+        <>
         <FormField
           label={t("contacts.firstName", { defaultValue: "First name" })}
         >
@@ -369,6 +402,8 @@ export function ContactProfileForm({
             aria-invalid={nameEmpty}
           />
         </FormField>
+        </>
+        )}
         {nameEmpty ? (
           <p className="text-[11px] text-destructive sm:col-span-2">
             {t("contacts.errors.nameRequired", {
@@ -376,6 +411,27 @@ export function ContactProfileForm({
             })}
           </p>
         ) : null}
+        {isCompany ? null : (
+        <>
+        <FormField
+          label={t("contacts.company.position", { defaultValue: "Position" })}
+          className="sm:col-span-2"
+        >
+          <Input
+            value={jobTitle}
+            onChange={(e) => {
+              setJobTitle(e.target.value);
+              markDirty();
+            }}
+            disabled={!canEdit}
+            maxLength={200}
+            autoComplete="organization-title"
+            placeholder={t("contacts.company.positionPlaceholder", {
+              defaultValue: "What they do there (optional)",
+            })}
+            className="h-9 max-sm:h-11"
+          />
+        </FormField>
         <FormField
           label={t("contacts.dateOfBirth", { defaultValue: "Birthdate" })}
         >
@@ -423,6 +479,8 @@ export function ContactProfileForm({
             </SelectContent>
           </Select>
         </FormField>
+        </>
+        )}
         <FormField
           label={t("contacts.contactType", {
             defaultValue: "Contact type",

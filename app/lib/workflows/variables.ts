@@ -31,6 +31,7 @@ const PERSON_FIELDS: VariableItem[] = [
   { path: "recipient.full_name", label: "Full name" },
   { path: "recipient.email", label: "Email" },
   { path: "recipient.phone", label: "Phone" },
+  { path: "recipient.company_name", label: "Company" },
 ];
 
 const WORKSPACE_FIELDS: VariableItem[] = [

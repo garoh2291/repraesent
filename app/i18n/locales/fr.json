@@ -374,7 +374,8 @@
       "firstName": "Prénom",
       "lastName": "Nom",
       "metadata": "Métadonnées",
-      "formName": "Formulaire"
+      "formName": "Formulaire",
+      "company": "Entreprise"
     },
     "statuses": {
       "new_lead": "Nouveau lead",
@@ -628,7 +629,11 @@
       "all": "Toutes"
     },
     "newInquiryTitle": "Nouvelle demande",
-    "saveInquiry": "Enregistrer la demande"
+    "saveInquiry": "Enregistrer la demande",
+    "searchPlaceholderCompany": "Rechercher par nom, entreprise, e-mail ou téléphone…",
+    "fields": {
+      "company": "Entreprise"
+    }
   },
   "pipeline": {
     "stripeNotConnected": {
@@ -1090,7 +1095,8 @@
       "hintBody": "Indiquez-le ici — Résultats montrera ce qui reste à encaisser.",
       "hintLater": "Pas encore",
       "notYetChip": "Pas encore payé"
-    }
+    },
+    "newContactNamed": "Nouveau contact « {{name}} »"
   },
   "appointments": {
     "metaTitle": "Rendez-vous",
@@ -2524,7 +2530,8 @@
         "source": "Provenance",
         "message": "Message",
         "stage": "Étape",
-        "form": "Formulaire"
+        "form": "Formulaire",
+        "company": "Entreprise"
       },
       "preview": "Aperçu",
       "previewEmail": "E-mail",
@@ -2882,7 +2889,8 @@
       "today": "ce qui vous attend aujourd’hui",
       "tasks": "vos tâches",
       "deals": "vos affaires",
-      "inquiries": "vos demandes"
+      "inquiries": "vos demandes",
+      "companies": "vos entreprises"
     }
   },
   "analytics": {
@@ -3504,7 +3512,8 @@
     "filters": {
       "contactSource": "Source",
       "contactType": "Type de contact",
-      "assignee": "Responsable"
+      "assignee": "Responsable",
+      "contactKind": "Personnes ou entreprises"
     },
     "allStatuses": "Tous les statuts",
     "loadError": "Impossible de charger les contacts.",
@@ -3707,8 +3716,12 @@
         "status": "Statut",
         "contactType": "Type de contact",
         "metadata": "Autre",
-        "address": "Adresse"
-      }
+        "address": "Adresse",
+        "company": "Entreprise",
+        "position": "Fonction"
+      },
+      "companiesAdded_one": "{{count}} entreprise ajoutée",
+      "companiesAdded_other": "{{count}} entreprises ajoutées"
     },
     "addAddress": "Ajouter une adresse",
     "addEmail": "Ajouter un e-mail",
@@ -3785,7 +3798,9 @@
       "title": "Un contact avec cet e-mail existe déjà",
       "body": "{{email}} appartient déjà à un autre contact. Une demande ne peut appartenir qu’à un seul contact — ouvrez plutôt ce contact.",
       "view": "Voir {{name}}",
-      "unnamed": "Contact existant"
+      "unnamed": "Contact existant",
+      "companyTitle": "Cette entreprise est déjà dans vos contacts",
+      "companyBody": "{{name}} est déjà enregistrée. Ouvrez-la et ajoutez-y votre interlocuteur."
     },
     "avatarSaved": "Photo du contact mise à jour",
     "avatarRemoved": "Photo du contact supprimée",
@@ -3804,6 +3819,80 @@
       "title": "Personne ne correspond.",
       "body": "Essayez un autre nom, ou effacez la recherche et les filtres.",
       "clear": "Afficher tout le monde"
+    },
+    "kinds": {
+      "people": "Personnes",
+      "companies": "Entreprises"
+    },
+    "searchPlaceholderCompany": "Rechercher par nom, entreprise, e-mail ou téléphone…",
+    "company": {
+      "kindLabel": "Personne ou entreprise",
+      "person": "Personne",
+      "company": "Entreprise",
+      "name": "Nom de l’entreprise",
+      "partOf": "Fait partie de",
+      "partOfPlaceholder": "Entreprise plus grande dont elle fait partie (facultatif)",
+      "companyPlaceholder": "Où cette personne travaille (facultatif)",
+      "addNew": "Ajouter « {{name}} » comme nouvelle entreprise",
+      "typeToFind": "Saisissez le nom d’une entreprise.",
+      "createdSuccess": "Entreprise enregistrée.",
+      "save": "Enregistrer l’entreprise",
+      "newTitle": "Nouvelle entreprise",
+      "open": "Ouvrir {{name}}",
+      "peopleHere": "Personnes ici",
+      "addPerson": "Ajouter une personne",
+      "noPeople": "Personne pour l’instant. Ajoutez votre interlocuteur dans cette entreprise.",
+      "includes": "Entreprises qui en font partie",
+      "dealVia": "Avec {{name}}",
+      "earnedTotal": "{{value}} gagnés avec cette entreprise",
+      "errors": {
+        "COMPANY_NAME_REQUIRED": "L’entreprise a besoin d’un nom. Saisissez-le et enregistrez à nouveau.",
+        "COMPANY_NOT_FOUND": "Cette entreprise n’est plus dans vos contacts. Choisissez-en une autre.",
+        "COMPANY_PARENT_SELF": "Une entreprise ne peut pas faire partie d’elle-même. Choisissez-en une autre.",
+        "COMPANY_PARENT_NOT_COMPANY": "C’est une personne, pas une entreprise. Choisissez une entreprise.",
+        "COMPANY_PARENT_LOOP": "Ces deux entreprises feraient partie l’une de l’autre. Choisissez-en une autre."
+      },
+      "position": "Fonction",
+      "positionPlaceholder": "Ce qu’elle y fait (facultatif)",
+      "addExisting": "Ajouter un contact existant",
+      "addPeopleTitle": "Ajouter des personnes à {{name}}",
+      "addPeopleHint": "Choisissez des personnes que vous avez déjà. Celles qui travaillent ailleurs passent ici.",
+      "searchPeople": "Rechercher par nom, e-mail ou téléphone…",
+      "add": "Ajouter",
+      "moveHere": "Déplacer ici",
+      "here": "Ici",
+      "nowAt": "Actuellement chez {{name}}",
+      "remove": "Retirer de cette entreprise",
+      "removeShort": "Retirer",
+      "added": "{{name}} ajouté(e).",
+      "removed": "{{name}} retiré(e) de cette entreprise.",
+      "noPeopleFound": "Personne ne correspond. Essayez un autre nom.",
+      "noPeopleYet": "Personne pour l’instant. Ajoutez un contact existant ou une nouvelle personne."
+    },
+    "companies": {
+      "title": "Entreprises",
+      "hint": "Les entreprises avec lesquelles vous travaillez, et vos interlocuteurs sur place.",
+      "searchPlaceholder": "Rechercher par entreprise, e-mail ou téléphone…",
+      "empty": "Aucune entreprise pour l’instant.",
+      "emptyBody": "Ajoutez la première entreprise avec laquelle vous travaillez. Les personnes viendront ensuite.",
+      "noMatch": "Aucune entreprise ne correspond.",
+      "noMatchBody": "Essayez un autre nom ou effacez la recherche et les filtres.",
+      "showAll": "Afficher toutes les entreprises",
+      "peopleCount_one": "{{count}} personne",
+      "peopleCount_other": "{{count}} personnes",
+      "partOf": "Fait partie de {{name}}",
+      "deleted": "Entreprise supprimée.",
+      "backToList": "Retour aux entreprises",
+      "deleteConfirmTitle": "Supprimer cette entreprise ?",
+      "deleteConfirmDescription": "{{name}} sera supprimée. Les personnes qui y travaillent restent dans vos contacts, sans entreprise."
+    },
+    "deals": {
+      "label": "Affaires",
+      "placeholder": "Ajouter à une affaire existante (facultatif)",
+      "noneFound": "Aucune affaire ne correspond.",
+      "removeOne": "Retirer {{name}}",
+      "someFailed_one": "Le contact est enregistré, mais {{count}} affaire n’a pas pu être ajoutée. Ouvrez le contact et ajoutez-la sous Affaires.",
+      "someFailed_other": "Le contact est enregistré, mais {{count}} affaires n’ont pas pu être ajoutées. Ouvrez le contact et ajoutez-les sous Affaires."
     }
   },
   "leadEmails": {
@@ -5700,7 +5789,8 @@
       "last_name": "Nom",
       "full_name": "Nom complet",
       "email": "E-mail",
-      "phone": "Téléphone"
+      "phone": "Téléphone",
+      "company_name": "Entreprise"
     },
     "strip": {
       "groupLabel": "Langues du formulaire",
@@ -9032,7 +9122,8 @@
       "site": "Site",
       "aiChat": "Chat IA",
       "files": "Fichiers",
-      "aiVisibility": "Visibilité IA"
+      "aiVisibility": "Visibilité IA",
+      "companies": "Entreprises"
     },
     "settingsGroups": {
       "you": "Vous",
@@ -9057,7 +9148,8 @@
     "newForm": "Nouveau formulaire",
     "newEmail": "Envoyer un nouvel e-mail",
     "empty": "Aucun résultat pour « {{q}} ».",
-    "footer": "Recherchez personnes, affaires, tâches et pages"
+    "footer": "Recherchez personnes, affaires, tâches et pages",
+    "newCompany": "Nouvelle entreprise"
   },
   "today": {
     "metaTitle": "Aujourd'hui",

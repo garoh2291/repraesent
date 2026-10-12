@@ -16,7 +16,9 @@ import { TaskFormModal } from "~/components/organism/tasks/task-form-modal";
  * the list pages keep working for emails and bookmarks.
  */
 
-export type QuickCreateKind = "lead" | "task" | "contact" | "deal";
+export type QuickCreateKind = "lead" | "task" | "contact" | "company" | "deal";
+
+const COMPANY_START = { kind: "company" } as const;
 
 interface QuickCreateApi {
   open: (kind: QuickCreateKind) => void;
@@ -46,6 +48,9 @@ export function QuickCreateProvider({ children }: { children: React.ReactNode })
       {children}
       {kind === "lead" ? <CreateLeadDialog key={`lead-${session}`} open onOpenChange={close} /> : null}
       {kind === "contact" ? <CreateContactDialog key={`contact-${session}`} open onOpenChange={close} /> : null}
+      {kind === "company" ? (
+        <CreateContactDialog key={`company-${session}`} open onOpenChange={close} start="manual" initialValues={COMPANY_START} />
+      ) : null}
       {kind === "deal" ? <QuickDeal key={`deal-${session}`} onOpenChange={close} /> : null}
       {kind === "task" ? <QuickTask key={`task-${session}`} onOpenChange={close} /> : null}
     </QuickCreateContext.Provider>

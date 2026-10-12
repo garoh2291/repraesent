@@ -40,6 +40,8 @@ export interface TodayDeal {
   value: string | null;
   currency?: string;
   contact_name: string | null;
+  /** The company the deal's contact works at. */
+  contact_company?: string | null;
   assigned_to: string | null;
   updated_at: string;
 }

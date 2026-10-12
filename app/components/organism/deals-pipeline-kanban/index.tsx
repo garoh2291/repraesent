@@ -576,8 +576,13 @@ function DealCardInner({
 }) {
   const dealFlow = useDealFlow();
   const title = cardTitle(deal);
-  const sub = deal.contact_full_name?.trim();
-  const showSub = !!(sub && deal.title?.trim());
+  // "Anna Weber · Leicht Paris" — with a deal title the person goes on the
+  // second line; without one the name is the title and only the company is left.
+  const company = deal.contact_company_name?.trim();
+  const sub = deal.title?.trim()
+    ? [deal.contact_full_name?.trim(), company].filter(Boolean).join(" · ")
+    : company;
+  const showSub = !!sub;
   const val =
     deal.value != null && deal.value !== ""
       ? formatCurrency(Number(deal.value), deal.currency)
@@ -744,8 +749,13 @@ function DealScheduleRow({
 }) {
   const { t } = useTranslation();
   const title = cardTitle(deal);
-  const sub = deal.contact_full_name?.trim();
-  const showSub = !!(sub && deal.title?.trim());
+  // "Anna Weber · Leicht Paris" — with a deal title the person goes on the
+  // second line; without one the name is the title and only the company is left.
+  const company = deal.contact_company_name?.trim();
+  const sub = deal.title?.trim()
+    ? [deal.contact_full_name?.trim(), company].filter(Boolean).join(" · ")
+    : company;
+  const showSub = !!sub;
   const val =
     deal.value != null && deal.value !== ""
       ? formatCurrency(Number(deal.value), deal.currency)

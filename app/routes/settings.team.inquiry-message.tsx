@@ -76,6 +76,7 @@ const SEARCH_FROM = 12;
 /** English labels: team chat messages are English-only (notification-formatters). */
 const CHAT_CORE_LABELS: Record<string, string> = {
   name: "Name",
+  company: "Company",
   phone: "Phone",
   email: "Email",
   source: "Where from",
@@ -87,6 +88,7 @@ const CHAT_CORE_LABELS: Record<string, string> = {
 /** Shown when the business has no inquiries yet — clearly labelled "Example". */
 const EXAMPLE_VALUES: Record<string, string> = {
   name: "Anna Schmidt",
+  company: "Küchenstudio Schmidt",
   phone: "+49 170 1234567",
   email: "anna@example.com",
   source: "—",

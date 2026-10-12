@@ -10,6 +10,7 @@ const DAILY_PAGES = [
   "/",
   "/lead-form",
   "/contacts",
+  "/companies",
   "/pipeline",
   "/tasks",
   "/results",

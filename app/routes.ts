@@ -96,6 +96,11 @@ export default [
       route("lead-form/:leadId", "routes/lead-form.$leadId.tsx"),
       route("contacts", "routes/contacts.tsx"),
       route("contacts/:contactId", "routes/contacts.$contactId.tsx"),
+      // Companies are contacts of kind "company": same pages, their own place.
+      route("companies", "routes/contacts.tsx", { id: "companies" }),
+      route("companies/:contactId", "routes/contacts.$contactId.tsx", {
+        id: "company-detail",
+      }),
       route("mail", "routes/mail.tsx"),
       route("pipeline", "routes/pipeline.tsx"),
       route("pipeline/:dealId", "routes/pipeline.$dealId.tsx"),

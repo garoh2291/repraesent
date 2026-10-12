@@ -10,6 +10,14 @@ export interface PatchContactBody {
   newsletter_opt_in?: boolean;
   newsletter_opt_in_at?: string | null;
   contact_type?: ContactType;
+  /** Companies only. */
+  company_name?: string | null;
+  /** null removes the link. */
+  parent_contact_id?: string | null;
+  /** A typed company name instead; found by exact name or created. */
+  parent_company_name?: string | null;
+  /** Position of a person at their company. */
+  job_title?: string | null;
 }
 
 export async function patchContact(

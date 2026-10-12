@@ -45,7 +45,8 @@ const CONTACT_FIELD_KEY_MAP: Record<string, string> = {
   full_name: "contacts.import.columns.fullName",
   email: "contacts.import.columns.email",
   phone: "contacts.import.columns.phone",
-  company_name: "contacts.import.columns.companyName",
+  company_name: "contacts.import.columns.company",
+  job_title: "contacts.import.columns.position",
   notes: "contacts.import.columns.notes",
   contact_type: "contacts.import.columns.contactType",
   metadata: "contacts.import.columns.metadata",
@@ -243,6 +244,7 @@ const NON_META_FIELDS = [
   "email",
   "phone",
   "company_name",
+  "job_title",
   "notes",
   "contact_type",
 ] as const;
@@ -315,6 +317,14 @@ export function ContactImportModal({
     onSuccess: (data) => {
       toast.success(
         t("contacts.import.importedSuccess", { count: data.created }),
+        data.companies
+          ? {
+              description: t("contacts.import.companiesAdded", {
+                count: data.companies,
+                defaultValue: "{{count}} companies added",
+              }),
+            }
+          : undefined,
       );
       if (data.skipped > 0) {
         toast.warning(

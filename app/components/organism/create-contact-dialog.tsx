@@ -8,7 +8,22 @@ import {
   addContactAddress,
   createContact,
   patchContactCrm,
+  type ContactKind,
 } from "~/lib/api/contacts-crm";
+import {
+  CompanyPicker,
+  EMPTY_COMPANY,
+  companyErrorMessage,
+  companyPickerPayload,
+  type CompanyPickerValue,
+} from "~/components/molecule/company-picker";
+import { cn } from "~/lib/utils";
+import { attachDealContact } from "~/lib/api/deals";
+import {
+  DealMultiPicker,
+  type PickedDeal,
+} from "~/components/molecule/deal-multi-picker";
+import { contactPath } from "~/lib/contacts/contact-path";
 import { extractErrorMessage } from "~/lib/api/axios-instance";
 import {
   addContactEmail,
@@ -44,13 +59,30 @@ export interface CreateContactInitialValues {
   email?: string;
   phone?: string;
   contactType?: string;
+  /** Start on "Company" instead of "Person". */
+  kind?: ContactKind;
+  /** The company the new person works at ("Add person" on a company page). */
+  company?: CompanyPickerValue;
 }
 
 export interface CreateContactDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  /** Called with the new contact id instead of navigating to the contact page. */
-  onCreated?: (contactId: string) => void;
+  /**
+   * Called with the new contact instead of navigating to its page. `created`
+   * carries what a caller needs to show it right away (a picker filling
+   * itself in) without a second request.
+   */
+  onCreated?: (
+    contactId: string,
+    created: { name: string; kind: ContactKind },
+  ) => void;
+  /**
+   * Show the "Deals" field: existing deals the new contact is added to once
+   * saved. Off where the caller links the deal itself (the deal page, the New
+   * deal dialog) — asking twice would be confusing.
+   */
+  withDeals?: boolean;
   /** When set, operates in "add info" mode – adds missing data to an existing contact. */
   editContactId?: string;
   /** Pre-fill form fields (useful when editing an existing contact). */
@@ -96,6 +128,7 @@ export function CreateContactDialog({
   open,
   onOpenChange,
   onCreated,
+  withDeals = true,
   editContactId,
   initialValues,
   onUpdated,
@@ -112,6 +145,15 @@ export function CreateContactDialog({
   const [phone, setPhone] = useState("");
   const [contactType, setContactType] = useState<ContactType>("contact");
   const [address, setAddress] = useState(EMPTY_ADDRESS);
+  const [kind, setKind] = useState<ContactKind>("person");
+  const [companyName, setCompanyName] = useState("");
+  // Person: the company they work at. Company: the company it is part of.
+  const [company, setCompany] = useState<CompanyPickerValue>(EMPTY_COMPANY);
+  const [jobTitle, setJobTitle] = useState("");
+  // Existing deals this contact belongs to; linked right after the save.
+  const [deals, setDeals] = useState<PickedDeal[]>([]);
+  const showDeals = withDeals && !isEditMode;
+  const isCompany = kind === "company" && !isEditMode;
   // "Add from phone" (phones only) can replace the form with its own panel.
   const [phonePanel, setPhonePanel] = useState(false);
 
@@ -124,6 +166,8 @@ export function CreateContactDialog({
       setContactType(
         (initialValues.contactType as ContactType | undefined) ?? "contact",
       );
+      setKind(initialValues.kind ?? "person");
+      setCompany(initialValues.company ?? EMPTY_COMPANY);
     }
     if (!open) {
       setFirstName("");
@@ -132,6 +176,11 @@ export function CreateContactDialog({
       setPhone("");
       setContactType("contact");
       setAddress(EMPTY_ADDRESS);
+      setKind("person");
+      setCompanyName("");
+      setCompany(EMPTY_COMPANY);
+      setJobTitle("");
+      setDeals([]);
       setPhonePanel(false);
     }
   }, [open, initialValues]);
@@ -141,8 +190,15 @@ export function CreateContactDialog({
   const createMutation = useMutation({
     mutationFn: async () => {
       const res = await createContact({
-        first_name: firstName.trim() || null,
-        last_name: lastName.trim() || null,
+        kind,
+        ...(isCompany
+          ? { company_name: companyName.trim() }
+          : {
+              first_name: firstName.trim() || null,
+              last_name: lastName.trim() || null,
+              job_title: jobTitle.trim() || null,
+            }),
+        ...companyPickerPayload(company),
         email: email.trim() || null,
         phone: phone.trim() || null,
         contact_type: contactType,
@@ -158,19 +214,56 @@ export function CreateContactDialog({
           is_primary: true,
         });
       }
-      return res;
+      // The contact exists now; a deal that cannot be linked must not undo
+      // that, so failures are counted and said, not thrown.
+      const linked = showDeals
+        ? await Promise.allSettled(
+            deals.map((d) => attachDealContact(d.id, res.id)),
+          )
+        : [];
+      return {
+        ...res,
+        dealsLinked: linked.length,
+        dealsFailed: linked.filter((r) => r.status === "rejected").length,
+      };
     },
     onSuccess: (res) => {
       void queryClient.invalidateQueries({ queryKey: ["contacts"] });
       void queryClient.invalidateQueries({ queryKey: ["contacts-options"] });
+      // A new person with a company belongs on that company's page too.
+      void queryClient.invalidateQueries({ queryKey: ["contact"] });
+      if (res.dealsLinked > 0) {
+        void queryClient.invalidateQueries({ queryKey: ["deals"] });
+        void queryClient.invalidateQueries({ queryKey: ["deals-pipeline"] });
+        void queryClient.invalidateQueries({ queryKey: ["deal"] });
+        void queryClient.invalidateQueries({ queryKey: ["contact-deals"] });
+      }
+      if (res.dealsFailed > 0) {
+        toast.warning(
+          t("contacts.deals.someFailed", {
+            defaultValue:
+              "The contact is saved, but {{count}} deals could not be added. Open the contact and add them under Deals.",
+            count: res.dealsFailed,
+          }),
+        );
+      }
+      const createdName = isCompany
+        ? companyName.trim()
+        : [firstName.trim(), lastName.trim()].filter(Boolean).join(" ") ||
+          email.trim() ||
+          phone.trim();
       onOpenChange(false);
       toast.success(
-        t("contacts.createdSuccess", { defaultValue: "Contact created." }),
+        isCompany
+          ? t("contacts.company.createdSuccess", {
+              defaultValue: "Company saved.",
+            })
+          : t("contacts.createdSuccess", { defaultValue: "Contact created." }),
       );
       if (onCreated) {
-        onCreated(res.id);
+        onCreated(res.id, { name: createdName, kind });
       } else {
-        navigate(`/contacts/${res.id}`);
+        navigate(contactPath({ id: res.id, kind }));
       }
     },
     onError: (error) => {
@@ -178,7 +271,10 @@ export function CreateContactDialog({
         t("contacts.errors.createFailed", {
           defaultValue: "Could not create contact.",
         }),
-        { description: extractErrorMessage(error) },
+        {
+          description:
+            companyErrorMessage(error, t) ?? extractErrorMessage(error),
+        },
       );
     },
   });
@@ -250,8 +346,9 @@ export function CreateContactDialog({
     },
   });
 
-  const hasIdentity =
-    firstName.trim().length > 0 ||
+  const hasIdentity = isCompany
+    ? companyName.trim().length > 0
+    : firstName.trim().length > 0 ||
     lastName.trim().length > 0 ||
     email.trim().length > 0 ||
     phone.trim().length > 0;
@@ -281,11 +378,15 @@ export function CreateContactDialog({
               ? t("contacts.addInfoTitle", {
                   defaultValue: "Add contact information",
                 })
-              : t("contacts.newContactTitle", { defaultValue: "New contact" })}
+              : isCompany
+                ? t("contacts.company.newTitle", {
+                    defaultValue: "New company",
+                  })
+                : t("contacts.newContactTitle", { defaultValue: "New contact" })}
           </DialogTitle>
         </DialogHeader>
 
-        {!isEditMode && start !== "manual" ? (
+        {!isEditMode && start !== "manual" && !isCompany ? (
           <AddFromPhone
             autoStart={start === "phone"}
             onPrefill={(v) => {
@@ -309,7 +410,76 @@ export function CreateContactDialog({
           }}
           className="space-y-4 py-1 flex-1 overflow-y-auto px-2 max-sm:flex-none max-sm:overflow-visible max-sm:px-0.5"
         >
+          {/* Person or company */}
+          {!isEditMode ? (
+            <div
+              role="radiogroup"
+              aria-label={t("contacts.company.kindLabel", {
+                defaultValue: "Person or company",
+              })}
+              className="grid grid-cols-2 gap-1 rounded-lg bg-muted p-1"
+            >
+              {(["person", "company"] as const).map((k) => (
+                <button
+                  key={k}
+                  type="button"
+                  role="radio"
+                  aria-checked={kind === k}
+                  onClick={() => setKind(k)}
+                  className={cn(
+                    "press h-9 rounded-md text-sm font-medium transition-colors max-sm:h-11",
+                    kind === k
+                      ? "bg-card text-foreground shadow-xs"
+                      : "text-muted-foreground hover:text-foreground",
+                  )}
+                >
+                  {k === "person"
+                    ? t("contacts.company.person", { defaultValue: "Person" })
+                    : t("contacts.company.company", {
+                        defaultValue: "Company",
+                      })}
+                </button>
+              ))}
+            </div>
+          ) : null}
+
+          {isCompany ? (
+            <>
+              <div className="space-y-1.5">
+                <Label htmlFor="create-contact-company-name">
+                  {t("contacts.company.name", {
+                    defaultValue: "Company name",
+                  })}
+                </Label>
+                <Input
+                  id="create-contact-company-name"
+                  value={companyName}
+                  onChange={(e) => setCompanyName(e.target.value)}
+                  autoComplete="organization"
+                  autoCapitalize="words"
+                  enterKeyHint="next"
+                  autoFocus={desktopAutoFocus()}
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="create-contact-part-of">
+                  {t("contacts.company.partOf", { defaultValue: "Part of" })}
+                </Label>
+                <CompanyPicker
+                  id="create-contact-part-of"
+                  value={company}
+                  onChange={setCompany}
+                  placeholder={t("contacts.company.partOfPlaceholder", {
+                    defaultValue: "A bigger company it belongs to (optional)",
+                  })}
+                />
+              </div>
+            </>
+          ) : null}
+
           {/* Name */}
+          {isCompany ? null : (
+          <>
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <div className="space-y-1.5">
               <Label htmlFor="create-contact-first-name">
@@ -343,6 +513,42 @@ export function CreateContactDialog({
               />
             </div>
           </div>
+          {!isEditMode ? (
+            <div className="space-y-1.5">
+              <Label htmlFor="create-contact-company">
+                {t("contacts.company.company", { defaultValue: "Company" })}
+              </Label>
+              <CompanyPicker
+                id="create-contact-company"
+                value={company}
+                onChange={setCompany}
+                placeholder={t("contacts.company.companyPlaceholder", {
+                  defaultValue: "Where they work (optional)",
+                })}
+              />
+            </div>
+          ) : null}
+          {!isEditMode ? (
+            <div className="space-y-1.5">
+              <Label htmlFor="create-contact-position">
+                {t("contacts.company.position", { defaultValue: "Position" })}
+              </Label>
+              <Input
+                id="create-contact-position"
+                value={jobTitle}
+                onChange={(e) => setJobTitle(e.target.value)}
+                autoComplete="organization-title"
+                autoCapitalize="sentences"
+                enterKeyHint="next"
+                maxLength={200}
+                placeholder={t("contacts.company.positionPlaceholder", {
+                  defaultValue: "What they do there (optional)",
+                })}
+              />
+            </div>
+          ) : null}
+          </>
+          )}
 
           {/* Contact type */}
           <div className="space-y-1.5">
@@ -415,6 +621,23 @@ export function CreateContactDialog({
               })}
             />
           </div>
+
+          {/* Deals */}
+          {showDeals ? (
+            <div className="space-y-1.5">
+              <Label htmlFor="create-contact-deals">
+                {t("contacts.deals.label", { defaultValue: "Deals" })}
+              </Label>
+              <DealMultiPicker
+                id="create-contact-deals"
+                value={deals}
+                onChange={setDeals}
+                placeholder={t("contacts.deals.placeholder", {
+                  defaultValue: "Add to a deal you already have (optional)",
+                })}
+              />
+            </div>
+          ) : null}
 
           {/* Address */}
           <div className="space-y-1.5">
@@ -531,7 +754,11 @@ export function CreateContactDialog({
               ? t("common.loading", { defaultValue: "Loading…" })
               : isEditMode
                 ? t("common.save", { defaultValue: "Save" })
-                : t("contacts.create", { defaultValue: "Create" })}
+                : isCompany
+                  ? t("contacts.company.save", {
+                      defaultValue: "Save company",
+                    })
+                  : t("contacts.create", { defaultValue: "Create" })}
           </Button>
         </DialogFooter>
         )}

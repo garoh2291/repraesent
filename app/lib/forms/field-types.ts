@@ -536,6 +536,9 @@ export function normalizeIntake(
     // Only the five columns a field may map onto; anything else would silently
     // claim to write a column that does not exist.
     if (!(FORM_FIELD_MAPPINGS as readonly string[]).includes(column)) continue;
+    // The company of an incoming submission is recognised by its key
+    // (company, firma, …) and copied; it has no manual override.
+    if (column === "company_name") continue;
     if (typeof key === "string" && key.trim()) mapping[column] = key.trim();
   }
 

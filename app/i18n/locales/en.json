@@ -374,7 +374,8 @@
       "firstName": "First Name",
       "lastName": "Last Name",
       "metadata": "Metadata",
-      "formName": "Form"
+      "formName": "Form",
+      "company": "Company"
     },
     "statuses": {
       "new_lead": "New lead",
@@ -628,7 +629,11 @@
       "all": "All"
     },
     "newInquiryTitle": "New inquiry",
-    "saveInquiry": "Save inquiry"
+    "saveInquiry": "Save inquiry",
+    "searchPlaceholderCompany": "Search by name, company, email or phone…",
+    "fields": {
+      "company": "Company"
+    }
   },
   "pipeline": {
     "stripeNotConnected": {
@@ -1090,7 +1095,8 @@
       "hintBody": "Mark it here — Results then shows what's still to collect.",
       "hintLater": "Not yet",
       "notYetChip": "Not paid yet"
-    }
+    },
+    "newContactNamed": "New contact “{{name}}”"
   },
   "appointments": {
     "metaTitle": "Appointments",
@@ -2522,7 +2528,8 @@
         "source": "Where from",
         "message": "Message",
         "stage": "Stage",
-        "form": "Form"
+        "form": "Form",
+        "company": "Company"
       },
       "preview": "Preview",
       "previewEmail": "Email",
@@ -2880,7 +2887,8 @@
       "today": "what needs you today",
       "tasks": "your tasks",
       "deals": "your deals",
-      "inquiries": "your inquiries"
+      "inquiries": "your inquiries",
+      "companies": "your companies"
     }
   },
   "analytics": {
@@ -3502,7 +3510,8 @@
     "filters": {
       "contactSource": "Source",
       "contactType": "Contact type",
-      "assignee": "Assignee"
+      "assignee": "Assignee",
+      "contactKind": "People or companies"
     },
     "allStatuses": "All statuses",
     "loadError": "Could not load contacts.",
@@ -3705,8 +3714,12 @@
         "status": "Status",
         "contactType": "Contact type",
         "metadata": "Other",
-        "address": "Address"
-      }
+        "address": "Address",
+        "company": "Company",
+        "position": "Position"
+      },
+      "companiesAdded_one": "{{count}} company added",
+      "companiesAdded_other": "{{count}} companies added"
     },
     "addAddress": "Add address",
     "addEmail": "Add email",
@@ -3783,7 +3796,9 @@
       "title": "A contact with this email already exists",
       "body": "{{email}} already belongs to another contact. An inquiry can only belong to one contact — open that contact instead.",
       "view": "View {{name}}",
-      "unnamed": "Existing contact"
+      "unnamed": "Existing contact",
+      "companyTitle": "This company is already in your contacts",
+      "companyBody": "{{name}} is already saved. Open it and add the person you talk to there."
     },
     "avatarSaved": "Contact picture updated",
     "avatarRemoved": "Contact picture removed",
@@ -3802,6 +3817,80 @@
       "title": "Nobody matches that.",
       "body": "Try another name, or clear the search and filters.",
       "clear": "Show everyone"
+    },
+    "kinds": {
+      "people": "People",
+      "companies": "Companies"
+    },
+    "searchPlaceholderCompany": "Search by name, company, email or phone…",
+    "company": {
+      "kindLabel": "Person or company",
+      "person": "Person",
+      "company": "Company",
+      "name": "Company name",
+      "partOf": "Part of",
+      "partOfPlaceholder": "A bigger company it belongs to (optional)",
+      "companyPlaceholder": "Where they work (optional)",
+      "addNew": "Add “{{name}}” as a new company",
+      "typeToFind": "Type a company name.",
+      "createdSuccess": "Company saved.",
+      "save": "Save company",
+      "newTitle": "New company",
+      "open": "Open {{name}}",
+      "peopleHere": "People here",
+      "addPerson": "Add person",
+      "noPeople": "Nobody yet. Add the person you talk to at this company.",
+      "includes": "Companies that are part of it",
+      "dealVia": "With {{name}}",
+      "earnedTotal": "Earned {{value}} with this company",
+      "errors": {
+        "COMPANY_NAME_REQUIRED": "The company needs a name. Type one and save again.",
+        "COMPANY_NOT_FOUND": "That company is no longer in your contacts. Pick another one.",
+        "COMPANY_PARENT_SELF": "A company cannot be part of itself. Pick another company.",
+        "COMPANY_PARENT_NOT_COMPANY": "That is a person, not a company. Pick a company.",
+        "COMPANY_PARENT_LOOP": "These two companies would be part of each other. Pick another company."
+      },
+      "position": "Position",
+      "positionPlaceholder": "What they do there (optional)",
+      "addExisting": "Add existing",
+      "addPeopleTitle": "Add people to {{name}}",
+      "addPeopleHint": "Pick people you already have. Someone who works elsewhere moves here.",
+      "searchPeople": "Search by name, email or phone…",
+      "add": "Add",
+      "moveHere": "Move here",
+      "here": "Here",
+      "nowAt": "Now at {{name}}",
+      "remove": "Remove from this company",
+      "removeShort": "Remove",
+      "added": "{{name}} added.",
+      "removed": "{{name}} removed from this company.",
+      "noPeopleFound": "Nobody matches that. Try another name.",
+      "noPeopleYet": "Nobody yet. Add someone you already have, or a new person."
+    },
+    "companies": {
+      "title": "Companies",
+      "hint": "The companies you work with, and who you talk to there.",
+      "searchPlaceholder": "Search by company, email or phone…",
+      "empty": "No companies yet.",
+      "emptyBody": "Add the first company you work with. The people there come next.",
+      "noMatch": "No company matches that.",
+      "noMatchBody": "Try another name, or clear the search and filters.",
+      "showAll": "Show all companies",
+      "peopleCount_one": "{{count}} person",
+      "peopleCount_other": "{{count}} people",
+      "partOf": "Part of {{name}}",
+      "deleted": "Company removed.",
+      "backToList": "Back to companies",
+      "deleteConfirmTitle": "Delete this company?",
+      "deleteConfirmDescription": "{{name}} will be removed. The people who work there stay in your contacts, without a company."
+    },
+    "deals": {
+      "label": "Deals",
+      "placeholder": "Add to a deal you already have (optional)",
+      "noneFound": "No deal matches that.",
+      "removeOne": "Remove {{name}}",
+      "someFailed_one": "The contact is saved, but {{count}} deal could not be added. Open the contact and add it under Deals.",
+      "someFailed_other": "The contact is saved, but {{count}} deals could not be added. Open the contact and add them under Deals."
     }
   },
   "leadEmails": {
@@ -5698,7 +5787,8 @@
       "last_name": "Last name",
       "full_name": "Full name",
       "email": "E-mail",
-      "phone": "Phone"
+      "phone": "Phone",
+      "company_name": "Company"
     },
     "strip": {
       "groupLabel": "Form languages",
@@ -9030,7 +9120,8 @@
       "site": "Site",
       "aiChat": "AI chat",
       "files": "Files",
-      "aiVisibility": "AI visibility"
+      "aiVisibility": "AI visibility",
+      "companies": "Companies"
     },
     "settingsGroups": {
       "you": "You",
@@ -9055,7 +9146,8 @@
     "newForm": "New form",
     "newEmail": "Send new email",
     "empty": "Nothing matches “{{q}}”.",
-    "footer": "Search people, deals, tasks and pages"
+    "footer": "Search people, deals, tasks and pages",
+    "newCompany": "New company"
   },
   "today": {
     "metaTitle": "Today",

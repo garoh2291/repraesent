@@ -890,7 +890,7 @@ function KanbanCardInner({ lead }: { lead: Lead }) {
         </div>
       </div>
       <p className="font-semibold text-sm truncate leading-tight">
-        {lead.full_name || lead.email || "—"}
+        {lead.full_name || lead.company_name || lead.email || "—"}
       </p>
       <p className="text-xs text-muted-foreground truncate line-clamp-2">
         {lead.email || lead.phone || "—"}
@@ -1043,7 +1043,8 @@ function LeadScheduleRow({
 }) {
   const { t } = useTranslation();
   const leadFlow = useLeadFlow();
-  const displayName = lead.full_name || lead.email || "—";
+  const displayName =
+    lead.full_name || lead.company_name || lead.email || "—";
   const subtitle = lead.email || lead.phone || null;
   const formName = lead.form_name
     ? lead.form_name.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase())

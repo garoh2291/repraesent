@@ -1,26 +1,32 @@
 import { Link } from "react-router";
 import { useTranslation } from "react-i18next";
 import { Users, ArrowUpRight } from "lucide-react";
-import type { ContactEmailMatch } from "~/lib/api/contacts-crm";
+import type {
+  ContactCompanyMatch,
+  ContactEmailMatch,
+} from "~/lib/api/contacts-crm";
 
 /**
  * Shown on the lead page / detail sheet when a lead has no linked contact but a
  * contact with the SAME email already exists in the workspace. We keep the DB
  * rule of one contact per lead, so we don't auto-link — we point the user at the
  * existing contact instead. Amber = "heads up", not an error.
+ *
+ * With `company` it says the same about an inquiry that names a company that
+ * is already saved: one contact per company, so open it and add the person.
  */
-export function ContactEmailSuggestion({
-  contact,
-  email,
-}: {
-  contact: ContactEmailMatch;
-  email: string;
-}) {
+export function ContactEmailSuggestion(
+  props:
+    | { contact: ContactEmailMatch; email: string; company?: undefined }
+    | { company: ContactCompanyMatch; contact?: undefined; email?: undefined },
+) {
   const { t } = useTranslation();
+  const contact = props.company ?? props.contact;
+  const email = props.email ?? "";
 
   const name =
     contact.full_name?.trim() ||
-    contact.primary_email?.trim() ||
+    props.contact?.primary_email?.trim() ||
     email ||
     t("contacts.suggestion.unnamed", { defaultValue: "Existing contact" });
 
@@ -32,13 +38,23 @@ export function ContactEmailSuggestion({
         </span>
         <div className="min-w-0 flex-1 space-y-1.5">
           <p className="text-sm font-medium text-amber-900 dark:text-amber-200">
-            {t("contacts.suggestion.title", {
-              defaultValue: "A contact with this email already exists",
-            })}
+            {props.company
+              ? t("contacts.suggestion.companyTitle", {
+                  defaultValue: "This company is already in your contacts",
+                })
+              : t("contacts.suggestion.title", {
+                  defaultValue: "A contact with this email already exists",
+                })}
           </p>
           <p className="text-xs leading-relaxed text-amber-800/80 dark:text-amber-300/80">
-            {t("contacts.suggestion.body", {
-              email: contact.primary_email || email,
+            {props.company
+              ? t("contacts.suggestion.companyBody", {
+                  name,
+                  defaultValue:
+                    "{{name}} is already saved. Open it and add the person you talk to there.",
+                })
+              : t("contacts.suggestion.body", {
+              email: props.contact?.primary_email || email,
               defaultValue:
                 "{{email}} is already used by another contact. A lead can only link to one contact, so it can't be connected here — open the existing contact instead.",
             })}

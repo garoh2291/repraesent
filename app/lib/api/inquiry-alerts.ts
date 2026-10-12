@@ -7,6 +7,7 @@ import { apiClient } from "./axios-instance";
 
 export const CORE_ALERT_FIELDS = [
   "name",
+  "company",
   "phone",
   "email",
   "source",

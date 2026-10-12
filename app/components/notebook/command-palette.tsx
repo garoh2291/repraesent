@@ -5,6 +5,7 @@ import { useTranslation } from "react-i18next";
 import { Command } from "cmdk";
 import {
   BookUser,
+  Building2,
   Briefcase,
   CheckSquare,
   ClipboardList,
@@ -24,6 +25,7 @@ import { SETTINGS_NAV } from "~/lib/nav/settings";
 import { isMacPlatform } from "~/lib/utils/platform";
 import { useComposeEmail } from "~/components/organism/compose-email/use-compose-email";
 import { useCanEditLeads } from "~/lib/hooks/useCanEditLeads";
+import { contactPath } from "~/lib/contacts/contact-path";
 
 type Item = {
   id: string;
@@ -147,6 +149,7 @@ export function CommandPalette() {
             { id: "new-deal", label: t("command.newDeal", "New deal"), icon: Plus, to: "/pipeline?newDeal=1", create: "deal" },
             { id: "new-task", label: t("command.newTask", "New task"), icon: Plus, to: "/tasks?new=1", create: "task" },
             { id: "new-contact", label: t("command.newContact", "New contact"), icon: Plus, to: "/contacts?new=1", create: "contact" },
+            { id: "new-company", label: t("command.newCompany", "New company"), icon: Plus, to: "/companies?new=1", create: "company", keywords: "company firma unternehmen entreprise bedrijf" },
             { id: "new-form", label: t("command.newForm", "New form"), icon: Plus, to: "/forms" },
             // Sending is editor-only server-side; the composer itself handles
             // "no mailbox connected yet" with a Connect button.
@@ -179,7 +182,15 @@ export function CommandPalette() {
         },
         {
           group: t("sections.tabs.people", "People"),
-          items: hits.contacts.map((h) => ({ id: `c-${h.id}`, label: h.title, hint: h.subtitle ?? undefined, icon: BookUser, to: `/contacts/${h.id}` })),
+          items: hits.contacts
+            .filter((h) => h.kind !== "company")
+            .map((h) => ({ id: `c-${h.id}`, label: h.title, hint: h.subtitle ?? undefined, icon: BookUser, to: contactPath(h) })),
+        },
+        {
+          group: t("sections.tabs.companies", "Companies"),
+          items: hits.contacts
+            .filter((h) => h.kind === "company")
+            .map((h) => ({ id: `c-${h.id}`, label: h.title, hint: h.subtitle ?? undefined, icon: Building2, to: contactPath(h) })),
         },
         {
           group: t("sections.deals", "Deals"),
