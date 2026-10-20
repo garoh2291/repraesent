@@ -30,6 +30,7 @@ import {
   Mail,
   Phone,
   Trash2,
+  Building2,
 } from "lucide-react";
 import { formatDate, formatCurrency, formatCurrencyTotals, sumByCurrency } from "~/lib/utils/format";
 import { useWorkspaceCurrency } from "~/lib/hooks/useWorkspaceCurrency";
@@ -68,12 +69,52 @@ import {
 import { kanbanCollisionDetection } from "~/lib/kanban/board-position";
 import { UserAvatar } from "~/components/atom/user-avatar";
 
+/**
+ * What a deal card says about who it is with. The company is always the name it
+ * trades under (contacts.full_name of the company), never its legal name:
+ * the contact itself when it is a company, else the company the person works at.
+ */
+function dealPeople(d: DealListItem): {
+  title: string;
+  person: string | null;
+  company: string | null;
+} {
+  const isCompany = d.contact_kind === "company";
+  const name = d.contact_full_name?.trim() || null;
+  const person = isCompany ? null : name;
+  const company = (isCompany ? name : d.contact_company_name?.trim()) || null;
+  const title = d.title?.trim() || person || company || "—";
+  return {
+    title,
+    // With a deal title the person goes on its own line; without one the
+    // person already is the title.
+    person: d.title?.trim() ? person : null,
+    company: company && company !== title ? company : null,
+  };
+}
+
 function cardTitle(d: DealListItem): string {
-  const t = d.title?.trim();
-  if (t) return t;
-  const n = d.contact_full_name?.trim();
-  if (n) return n;
-  return "—";
+  return dealPeople(d).title;
+}
+
+function DealCompanyLine({
+  name,
+  className,
+}: {
+  name: string;
+  className?: string;
+}) {
+  return (
+    <p
+      className={cn(
+        "flex min-w-0 items-center gap-1 text-muted-foreground",
+        className,
+      )}
+    >
+      <Building2 className="h-3 w-3 shrink-0 opacity-70" aria-hidden />
+      <span className="truncate">{name}</span>
+    </p>
+  );
 }
 
 function assigneeInitials(row: DealListItem): string {
@@ -575,14 +616,7 @@ function DealCardInner({
   canEdit?: boolean;
 }) {
   const dealFlow = useDealFlow();
-  const title = cardTitle(deal);
-  // "Anna Weber · Leicht Paris" — with a deal title the person goes on the
-  // second line; without one the name is the title and only the company is left.
-  const company = deal.contact_company_name?.trim();
-  const sub = deal.title?.trim()
-    ? [deal.contact_full_name?.trim(), company].filter(Boolean).join(" · ")
-    : company;
-  const showSub = !!sub;
+  const { title, person, company } = dealPeople(deal);
   const val =
     deal.value != null && deal.value !== ""
       ? formatCurrency(Number(deal.value), deal.currency)
@@ -596,8 +630,11 @@ function DealCardInner({
       <div className="flex items-start gap-2">
         <div className="min-w-0 flex-1 space-y-0.5">
           <p className="text-sm font-medium leading-snug truncate">{title}</p>
-          {showSub ? (
-            <p className="text-[11px] text-muted-foreground truncate">{sub}</p>
+          {person ? (
+            <p className="text-[11px] text-muted-foreground truncate">{person}</p>
+          ) : null}
+          {company ? (
+            <DealCompanyLine name={company} className="text-[11px]" />
           ) : null}
         </div>
         {hasAssignee ? (
@@ -748,14 +785,7 @@ function DealScheduleRow({
   onMove?: () => void;
 }) {
   const { t } = useTranslation();
-  const title = cardTitle(deal);
-  // "Anna Weber · Leicht Paris" — with a deal title the person goes on the
-  // second line; without one the name is the title and only the company is left.
-  const company = deal.contact_company_name?.trim();
-  const sub = deal.title?.trim()
-    ? [deal.contact_full_name?.trim(), company].filter(Boolean).join(" · ")
-    : company;
-  const showSub = !!sub;
+  const { title, person, company } = dealPeople(deal);
   const val =
     deal.value != null && deal.value !== ""
       ? formatCurrency(Number(deal.value), deal.currency)
@@ -778,9 +808,10 @@ function DealScheduleRow({
 
       <div className="flex-1 min-w-0 space-y-0.5">
         <p className="text-sm font-medium leading-snug truncate">{title}</p>
-        {showSub ? (
-          <p className="text-xs text-muted-foreground truncate">{sub}</p>
+        {person ? (
+          <p className="text-xs text-muted-foreground truncate">{person}</p>
         ) : null}
+        {company ? <DealCompanyLine name={company} className="text-xs" /> : null}
         {val || (deal.status === "won" && deal.paid_at) ? (
           <p className="flex items-center gap-1.5 text-xs font-semibold text-foreground">
             {val}

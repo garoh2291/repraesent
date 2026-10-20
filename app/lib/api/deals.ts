@@ -73,6 +73,8 @@ export interface DealListItem {
   updated_at: string;
   stage_changed_at: string | null;
   contact_full_name: string | null;
+  /** person | company (absent on older API builds). */
+  contact_kind?: string | null;
   /** The company the deal's contact works at (absent on older API builds). */
   contact_company_name?: string | null;
   primary_email: string | null;

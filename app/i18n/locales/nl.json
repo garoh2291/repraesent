@@ -3739,7 +3739,7 @@
     "confirmRemovePhoneDescription": "Hiermee verwijdert u {{number}} uit het profiel. U kunt het later opnieuw toevoegen.",
     "confirmRemovePhoneDescriptionEmpty": "Dit telefoonnummer wordt uit het profiel verwijderd. U kunt het later opnieuw toevoegen.",
     "confirmRemovePhoneTitle": "Dit telefoonnummer verwijderen?",
-    "contactInfoHint": "E-mails, telefoonnummers en adressen voor dit contact.",
+    "contactInfoHint": "E-mails, telefoonnummers, adressen en websites voor dit contact.",
     "copied": "Gekopieerd naar klembord",
     "copy": "Kopiëren",
     "copyFailed": "Kon niet kopiëren",
@@ -3865,7 +3865,18 @@
       "added": "{{name}} toegevoegd.",
       "removed": "{{name}} uit dit bedrijf gehaald.",
       "noPeopleFound": "Niemand gevonden. Probeer een andere naam.",
-      "noPeopleYet": "Nog niemand. Voeg iemand toe die je al hebt, of een nieuwe persoon."
+      "noPeopleYet": "Nog niemand. Voeg iemand toe die je al hebt, of een nieuwe persoon.",
+      "nameHint": "De naam die klanten kennen",
+      "legalName": "Statutaire naam",
+      "legalNameHint": "Zoals op facturen, bijv. Jansen Bouw B.V.",
+      "legalNamePlaceholder": "Zoals op facturen, bijv. Jansen Bouw B.V. (optioneel)",
+      "taxNumber": "Btw-nummer",
+      "taxNumberHint": "Btw-nummer of EIN",
+      "taxNumberPlaceholder": "Btw-nummer of EIN (optioneel)",
+      "addInfoTitle": "Bedrijfsgegevens aanvullen",
+      "billingSame": "Factuur-e-mail gelijk aan bedrijfs-e-mail",
+      "billingEmail": "Factuur-e-mail",
+      "billingEmailPlaceholder": "bijv. facturen@bedrijf.nl"
     },
     "companies": {
       "title": "Bedrijven",
@@ -3891,7 +3902,16 @@
       "removeOne": "{{name}} weghalen",
       "someFailed_one": "Het contact is opgeslagen, maar {{count}} deal kon niet worden toegevoegd. Open het contact en voeg hem toe onder Deals.",
       "someFailed_other": "Het contact is opgeslagen, maar {{count}} deals konden niet worden toegevoegd. Open het contact en voeg ze toe onder Deals."
-    }
+    },
+    "website": "Website",
+    "websites": "Websites",
+    "addWebsite": "Website toevoegen",
+    "noWebsites": "Nog geen websites geregistreerd.",
+    "noWebsite": "Geen website geregistreerd",
+    "openWebsite": "Website openen",
+    "websiteInvalid": "Vul een website in zoals voorbeeld.nl",
+    "confirmRemoveWebsiteTitle": "Deze website verwijderen?",
+    "confirmRemoveWebsiteDescription": "Deze website wordt uit het profiel verwijderd. U kunt hem later opnieuw toevoegen."
   },
   "leadEmails": {
     "emptyTitle": "Nog geen e-mails gelogd",

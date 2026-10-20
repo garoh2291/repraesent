@@ -3741,7 +3741,7 @@
     "confirmRemovePhoneDescription": "Dadurch wird {{number}} aus dem Profil gelöscht. Sie können sie später wieder hinzufügen.",
     "confirmRemovePhoneDescriptionEmpty": "Diese Telefonnummer wird aus dem Profil entfernt. Sie können sie später wieder hinzufügen.",
     "confirmRemovePhoneTitle": "Diese Telefonnummer entfernen?",
-    "contactInfoHint": "E-Mails, Telefonnummern und Adressen für diesen Kontakt.",
+    "contactInfoHint": "E-Mails, Telefonnummern, Adressen und Websites für diesen Kontakt.",
     "copied": "In die Zwischenablage kopiert",
     "copy": "Kopieren",
     "copyFailed": "Konnte nicht kopiert werden",
@@ -3867,7 +3867,18 @@
       "added": "{{name}} hinzugefügt.",
       "removed": "{{name}} aus diesem Unternehmen entfernt.",
       "noPeopleFound": "Niemand passt dazu. Versuch einen anderen Namen.",
-      "noPeopleYet": "Noch niemand. Füge jemanden hinzu, den du schon hast, oder eine neue Person."
+      "noPeopleYet": "Noch niemand. Füge jemanden hinzu, den du schon hast, oder eine neue Person.",
+      "nameHint": "Der Name, den Kunden kennen",
+      "legalName": "Firmierung",
+      "legalNameHint": "Wie auf Rechnungen, z. B. Müller Bau GmbH",
+      "legalNamePlaceholder": "Wie auf Rechnungen, z. B. Müller Bau GmbH (optional)",
+      "taxNumber": "Steuernummer",
+      "taxNumberHint": "USt-IdNr. oder Steuernummer",
+      "taxNumberPlaceholder": "USt-IdNr. oder Steuernummer (optional)",
+      "addInfoTitle": "Unternehmensdaten ergänzen",
+      "billingSame": "Rechnungen an die Unternehmens-E-Mail",
+      "billingEmail": "Rechnungs-E-Mail",
+      "billingEmailPlaceholder": "z. B. rechnung@firma.de"
     },
     "companies": {
       "title": "Unternehmen",
@@ -3893,7 +3904,16 @@
       "removeOne": "{{name}} entfernen",
       "someFailed_one": "Der Kontakt ist gespeichert, aber {{count}} Deal konnte nicht hinzugefügt werden. Öffne den Kontakt und füge ihn unter Deals hinzu.",
       "someFailed_other": "Der Kontakt ist gespeichert, aber {{count}} Deals konnten nicht hinzugefügt werden. Öffne den Kontakt und füge sie unter Deals hinzu."
-    }
+    },
+    "website": "Website",
+    "websites": "Websites",
+    "addWebsite": "Website hinzufügen",
+    "noWebsites": "Noch keine Websites vorhanden.",
+    "noWebsite": "Keine Website hinterlegt",
+    "openWebsite": "Website öffnen",
+    "websiteInvalid": "Geben Sie eine Website wie beispiel.de ein",
+    "confirmRemoveWebsiteTitle": "Diese Website entfernen?",
+    "confirmRemoveWebsiteDescription": "Diese Website wird aus dem Profil entfernt. Sie können sie später wieder hinzufügen."
   },
   "leadEmails": {
     "emptyTitle": "Noch keine E-Mails protokolliert",

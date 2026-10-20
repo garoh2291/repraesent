@@ -14,7 +14,9 @@ import {
   Briefcase,
   Plus,
   Building2,
+  Globe,
 } from "lucide-react";
+import { websiteHref, websiteLabel } from "~/lib/contacts/website";
 import { Avatar, AvatarFallback, AvatarImage } from "~/components/ui/avatar";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Camera, Trash2 } from "lucide-react";
@@ -253,6 +255,7 @@ interface ContactHeroProps {
   emails: Record<string, unknown>[];
   phones: Record<string, unknown>[];
   addresses: Record<string, unknown>[];
+  websites?: Record<string, unknown>[];
   leadId: string | null;
   /** The company a person works at, or the company this company is part of. */
   company?: { id: string; full_name: string | null } | null;
@@ -282,6 +285,7 @@ export function ContactHero({
   emails,
   phones,
   addresses,
+  websites = [],
   leadId,
   company,
   viewContactId,
@@ -308,6 +312,23 @@ export function ContactHero({
     return findContactPrimary(addresses, contactId);
   }, [addresses, contactId]);
 
+  const primaryWebsiteRow = useMemo(() => {
+    return findContactPrimary(websites, contactId);
+  }, [websites, contactId]);
+  const websiteValue = primaryWebsiteRow
+    ? String(primaryWebsiteRow.url ?? "")
+    : "";
+  const hasBillingEmail = useMemo(
+    () =>
+      emails.some(
+        (e) =>
+          e.type === "billing" &&
+          e.entity_table === "contacts" &&
+          String(e.entity_id) === contactId,
+      ),
+    [emails, contactId],
+  );
+
   const emailValue = primaryEmailRow
     ? String(primaryEmailRow.address ?? "")
     : "";
@@ -329,8 +350,18 @@ export function ContactHero({
     | null
     | undefined;
 
+  // "Add contact information" fills gaps, so it gets what is already there:
+  // a company opens it as a company (its name, no first/last name).
   const initialValues = useMemo<CreateContactInitialValues>(
     () => ({
+      kind: contact?.kind === "company" ? "company" : "person",
+      companyName: contact?.company_name
+        ? String(contact.company_name)
+        : undefined,
+      legalName: contact?.legal_name ? String(contact.legal_name) : undefined,
+      taxNumber: contact?.tax_number ? String(contact.tax_number) : undefined,
+      hasBillingEmail,
+      website: websiteValue || undefined,
       firstName: contact?.first_name ? String(contact.first_name) : undefined,
       lastName: contact?.last_name ? String(contact.last_name) : undefined,
       email: emailValue || undefined,
@@ -339,7 +370,7 @@ export function ContactHero({
         ? String(contact.contact_type)
         : undefined,
     }),
-    [contact, emailValue, phoneValue],
+    [contact, emailValue, phoneValue, websiteValue, hasBillingEmail],
   );
 
   const showAddActions = canEdit && !!contactId;
@@ -491,7 +522,7 @@ export function ContactHero({
         <div
           className={cn(
             "mt-5 grid grid-cols-1 gap-2.5",
-            !compact && "sm:grid-cols-2 lg:grid-cols-3",
+            !compact && "sm:grid-cols-2 xl:grid-cols-4",
           )}
         >
           <CopyChip
@@ -577,6 +608,28 @@ export function ContactHero({
             }
             onAdd={showAddActions && !addressValue ? handleOpenAddInfo : undefined}
             addLabel={t("contacts.addAddress", { defaultValue: "Add address" })}
+          />
+          <CopyChip
+            icon={<Globe />}
+            label={t("contacts.website", { defaultValue: "Website" })}
+            value={websiteValue ? websiteLabel(websiteValue) : ""}
+            fallback={t("contacts.noWebsite", {
+              defaultValue: "No website on file",
+            })}
+            hrefAction={
+              websiteValue
+                ? {
+                    href: websiteHref(websiteValue),
+                    label: t("contacts.openWebsite", {
+                      defaultValue: "Open website",
+                    }),
+                    icon: <ExternalLink />,
+                    newTab: true,
+                  }
+                : undefined
+            }
+            onAdd={showAddActions && !websiteValue ? handleOpenAddInfo : undefined}
+            addLabel={t("contacts.addWebsite", { defaultValue: "Add website" })}
           />
         </div>
       </div>

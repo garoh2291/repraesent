@@ -18,6 +18,10 @@ export interface PatchContactBody {
   parent_company_name?: string | null;
   /** Position of a person at their company. */
   job_title?: string | null;
+  /** Registered name (companies only; company_name stays the trading name). */
+  legal_name?: string | null;
+  /** VAT ID / EIN (companies only). */
+  tax_number?: string | null;
 }
 
 export async function patchContact(
@@ -128,4 +132,34 @@ export async function deleteContactAddress(
   addressId: string,
 ): Promise<void> {
   await apiClient.delete(`/contacts/${contactId}/addresses/${addressId}`);
+}
+
+export async function addContactWebsite(
+  contactId: string,
+  body: { url: string; is_primary?: boolean },
+): Promise<Record<string, unknown>> {
+  const res = await apiClient.post<Record<string, unknown>>(
+    `/contacts/${contactId}/websites`,
+    body,
+  );
+  return res.data;
+}
+
+export async function patchContactWebsite(
+  contactId: string,
+  websiteId: string,
+  body: Record<string, unknown>,
+): Promise<Record<string, unknown>> {
+  const res = await apiClient.patch<Record<string, unknown>>(
+    `/contacts/${contactId}/websites/${websiteId}`,
+    body,
+  );
+  return res.data;
+}
+
+export async function deleteContactWebsite(
+  contactId: string,
+  websiteId: string,
+): Promise<void> {
+  await apiClient.delete(`/contacts/${contactId}/websites/${websiteId}`);
 }

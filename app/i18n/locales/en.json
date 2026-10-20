@@ -3739,7 +3739,7 @@
     "confirmRemovePhoneDescription": "This will delete {{number}} from the profile. You can add it again later.",
     "confirmRemovePhoneDescriptionEmpty": "This phone number will be removed from the profile. You can add it again later.",
     "confirmRemovePhoneTitle": "Remove this phone number?",
-    "contactInfoHint": "Emails, phones and addresses for this contact.",
+    "contactInfoHint": "Emails, phones, addresses and websites for this contact.",
     "copied": "Copied to clipboard",
     "copy": "Copy",
     "copyFailed": "Could not copy",
@@ -3865,7 +3865,18 @@
       "added": "{{name}} added.",
       "removed": "{{name}} removed from this company.",
       "noPeopleFound": "Nobody matches that. Try another name.",
-      "noPeopleYet": "Nobody yet. Add someone you already have, or a new person."
+      "noPeopleYet": "Nobody yet. Add someone you already have, or a new person.",
+      "nameHint": "The name customers know",
+      "legalName": "Legal name",
+      "legalNameHint": "As on invoices, e.g. Müller Bau GmbH",
+      "legalNamePlaceholder": "As on invoices, e.g. Müller Bau GmbH (optional)",
+      "taxNumber": "Tax number",
+      "taxNumberHint": "VAT ID or EIN",
+      "taxNumberPlaceholder": "VAT ID or EIN (optional)",
+      "addInfoTitle": "Add company details",
+      "billingSame": "Billing email same as company email",
+      "billingEmail": "Billing email",
+      "billingEmailPlaceholder": "e.g. invoices@company.com"
     },
     "companies": {
       "title": "Companies",
@@ -3891,7 +3902,16 @@
       "removeOne": "Remove {{name}}",
       "someFailed_one": "The contact is saved, but {{count}} deal could not be added. Open the contact and add it under Deals.",
       "someFailed_other": "The contact is saved, but {{count}} deals could not be added. Open the contact and add them under Deals."
-    }
+    },
+    "website": "Website",
+    "websites": "Websites",
+    "addWebsite": "Add website",
+    "noWebsites": "No websites on file yet.",
+    "noWebsite": "No website on file",
+    "openWebsite": "Open website",
+    "websiteInvalid": "Enter a website like example.com",
+    "confirmRemoveWebsiteTitle": "Remove this website?",
+    "confirmRemoveWebsiteDescription": "This website will be removed from the profile. You can add it again later."
   },
   "leadEmails": {
     "emptyTitle": "No emails logged yet",

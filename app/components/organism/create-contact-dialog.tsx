@@ -28,8 +28,12 @@ import { extractErrorMessage } from "~/lib/api/axios-instance";
 import {
   addContactEmail,
   addContactPhone,
+  addContactWebsite,
+  patchContact,
   addContactAddress as addContactAddressAlt,
 } from "~/lib/api/contacts";
+import { Switch } from "~/components/ui/switch";
+import { isWebsite } from "~/lib/contacts/website";
 import { CONTACT_TYPES, type ContactType } from "~/lib/contacts/contact-types";
 import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
@@ -63,6 +67,12 @@ export interface CreateContactInitialValues {
   kind?: ContactKind;
   /** The company the new person works at ("Add person" on a company page). */
   company?: CompanyPickerValue;
+  /** "Add info" on a company: what is already saved, so only gaps are asked. */
+  companyName?: string;
+  legalName?: string;
+  taxNumber?: string;
+  hasBillingEmail?: boolean;
+  website?: string;
 }
 
 export interface CreateContactDialogProps {
@@ -150,10 +160,18 @@ export function CreateContactDialog({
   // Person: the company they work at. Company: the company it is part of.
   const [company, setCompany] = useState<CompanyPickerValue>(EMPTY_COMPANY);
   const [jobTitle, setJobTitle] = useState("");
+  const [legalName, setLegalName] = useState("");
+  const [taxNumber, setTaxNumber] = useState("");
+  // Billing email: "Same as company email" (on) saves nothing extra.
+  const [billingSame, setBillingSame] = useState(true);
+  const [billingEmail, setBillingEmail] = useState("");
+  const [website, setWebsite] = useState("");
   // Existing deals this contact belongs to; linked right after the save.
   const [deals, setDeals] = useState<PickedDeal[]>([]);
   const showDeals = withDeals && !isEditMode;
-  const isCompany = kind === "company" && !isEditMode;
+  // In "add info" mode the kind comes from the contact being filled in, so a
+  // company never sees first / last name boxes.
+  const isCompany = kind === "company";
   // "Add from phone" (phones only) can replace the form with its own panel.
   const [phonePanel, setPhonePanel] = useState(false);
 
@@ -168,6 +186,10 @@ export function CreateContactDialog({
       );
       setKind(initialValues.kind ?? "person");
       setCompany(initialValues.company ?? EMPTY_COMPANY);
+      setCompanyName(initialValues.companyName ?? "");
+      setLegalName(initialValues.legalName ?? "");
+      setTaxNumber(initialValues.taxNumber ?? "");
+      setWebsite(initialValues.website ?? "");
     }
     if (!open) {
       setFirstName("");
@@ -180,6 +202,11 @@ export function CreateContactDialog({
       setCompanyName("");
       setCompany(EMPTY_COMPANY);
       setJobTitle("");
+      setLegalName("");
+      setTaxNumber("");
+      setBillingSame(true);
+      setBillingEmail("");
+      setWebsite("");
       setDeals([]);
       setPhonePanel(false);
     }
@@ -192,7 +219,12 @@ export function CreateContactDialog({
       const res = await createContact({
         kind,
         ...(isCompany
-          ? { company_name: companyName.trim() }
+          ? {
+              company_name: companyName.trim(),
+              legal_name: legalName.trim() || null,
+              tax_number: taxNumber.trim() || null,
+              billing_email: billingSame ? null : billingEmail.trim() || null,
+            }
           : {
               first_name: firstName.trim() || null,
               last_name: lastName.trim() || null,
@@ -201,6 +233,7 @@ export function CreateContactDialog({
         ...companyPickerPayload(company),
         email: email.trim() || null,
         phone: phone.trim() || null,
+        website: website.trim() || null,
         contact_type: contactType,
       });
       if (hasAddress) {
@@ -302,6 +335,39 @@ export function CreateContactDialog({
           }),
         );
       }
+      if (isCompany) {
+        const legalOut = legalName.trim() || null;
+        const taxOut = taxNumber.trim() || null;
+        if (
+          legalOut !== (initialValues?.legalName || null) ||
+          taxOut !== (initialValues?.taxNumber || null)
+        ) {
+          promises.push(
+            patchContact(editContactId, {
+              legal_name: legalOut,
+              tax_number: taxOut,
+            }),
+          );
+        }
+        const newBilling = billingSame ? "" : billingEmail.trim();
+        if (
+          newBilling &&
+          !initialValues?.hasBillingEmail &&
+          newBilling.toLowerCase() !== newEmail.toLowerCase()
+        ) {
+          promises.push(
+            addContactEmail(editContactId, {
+              address: newBilling,
+              type: "billing",
+              is_primary: !hadEmail && !newEmail,
+            }),
+          );
+        }
+      }
+      const newWebsite = website.trim();
+      if (newWebsite && !initialValues?.website) {
+        promises.push(addContactWebsite(editContactId, { url: newWebsite }));
+      }
       if (newPhone && !hadPhone) {
         promises.push(
           addContactPhone(editContactId, {
@@ -363,9 +429,18 @@ export function CreateContactDialog({
     ? undefined
     : emailParse.error.issues[0]?.message;
 
-  const submitDisabled = isEditMode
-    ? editMutation.isPending
-    : createMutation.isPending || !hasIdentity || !isEmailValid;
+  const billingInput = isCompany && !billingSame ? billingEmail.trim() : "";
+  const billingParse = createContactSchema(t).shape.email.safeParse(billingInput);
+  const showBillingError = billingInput.length > 0 && !billingParse.success;
+  const websiteInput = website.trim();
+  const showWebsiteError = websiteInput.length > 0 && !isWebsite(websiteInput);
+
+  const submitDisabled =
+    showBillingError ||
+    showWebsiteError ||
+    (isEditMode
+      ? editMutation.isPending
+      : createMutation.isPending || !hasIdentity || !isEmailValid);
   const submit = () =>
     isEditMode ? editMutation.mutate() : createMutation.mutate();
 
@@ -375,9 +450,13 @@ export function CreateContactDialog({
         <DialogHeader>
           <DialogTitle>
             {isEditMode
-              ? t("contacts.addInfoTitle", {
-                  defaultValue: "Add contact information",
-                })
+              ? isCompany
+                ? t("contacts.company.addInfoTitle", {
+                    defaultValue: "Add company details",
+                  })
+                : t("contacts.addInfoTitle", {
+                    defaultValue: "Add contact information",
+                  })
               : isCompany
                 ? t("contacts.company.newTitle", {
                     defaultValue: "New company",
@@ -458,9 +537,37 @@ export function CreateContactDialog({
                   autoComplete="organization"
                   autoCapitalize="words"
                   enterKeyHint="next"
-                  autoFocus={desktopAutoFocus()}
+                  autoFocus={desktopAutoFocus() && !isEditMode}
+                  readOnly={isEditMode}
+                  className={isEditMode ? "bg-muted/50" : undefined}
+                />
+                {isEditMode ? null : (
+                  <p className="text-xs text-muted-foreground">
+                    {t("contacts.company.nameHint", {
+                      defaultValue: "The name customers know",
+                    })}
+                  </p>
+                )}
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="create-contact-legal-name">
+                  {t("contacts.company.legalName", {
+                    defaultValue: "Legal name",
+                  })}
+                </Label>
+                <Input
+                  id="create-contact-legal-name"
+                  value={legalName}
+                  onChange={(e) => setLegalName(e.target.value)}
+                  autoCapitalize="words"
+                  enterKeyHint="next"
+                  maxLength={200}
+                  placeholder={t("contacts.company.legalNamePlaceholder", {
+                    defaultValue: "As on invoices, e.g. Müller Bau GmbH (optional)",
+                  })}
                 />
               </div>
+              {isEditMode ? null : (
               <div className="space-y-1.5">
                 <Label htmlFor="create-contact-part-of">
                   {t("contacts.company.partOf", { defaultValue: "Part of" })}
@@ -474,6 +581,7 @@ export function CreateContactDialog({
                   })}
                 />
               </div>
+              )}
             </>
           ) : null}
 
@@ -607,6 +715,60 @@ export function CreateContactDialog({
             )}
           </div>
 
+          {/* Billing email (companies; once one is saved it is edited under Emails) */}
+          {isCompany && !initialValues?.hasBillingEmail ? (
+            <div className="space-y-2">
+              <div className="flex min-h-11 items-center justify-between gap-3 sm:min-h-9">
+                <Label htmlFor="create-contact-billing-same" className="font-normal">
+                  {t("contacts.company.billingSame", {
+                    defaultValue: "Billing email same as company email",
+                  })}
+                </Label>
+                <Switch
+                  id="create-contact-billing-same"
+                  checked={billingSame}
+                  onCheckedChange={setBillingSame}
+                />
+              </div>
+              {billingSame ? null : (
+                <div className="space-y-1.5">
+                  <Label htmlFor="create-contact-billing-email">
+                    {t("contacts.company.billingEmail", {
+                      defaultValue: "Billing email",
+                    })}
+                  </Label>
+                  <Input
+                    id="create-contact-billing-email"
+                    type="email"
+                    value={billingEmail}
+                    onChange={(e) => setBillingEmail(e.target.value)}
+                    inputMode="email"
+                    autoCapitalize="none"
+                    autoCorrect="off"
+                    spellCheck={false}
+                    enterKeyHint="next"
+                    placeholder={t("contacts.company.billingEmailPlaceholder", {
+                      defaultValue: "e.g. invoices@company.com",
+                    })}
+                    aria-invalid={showBillingError}
+                    className={
+                      showBillingError
+                        ? "border-destructive focus-visible:ring-destructive"
+                        : undefined
+                    }
+                  />
+                  {showBillingError ? (
+                    <p className="text-sm text-destructive">
+                      {t("contacts.errors.invalidEmail", {
+                        defaultValue: "Please enter a valid email address.",
+                      })}
+                    </p>
+                  ) : null}
+                </div>
+              )}
+            </div>
+          ) : null}
+
           {/* Phone */}
           <div className="space-y-1.5">
             <Label htmlFor="create-contact-phone">
@@ -621,6 +783,64 @@ export function CreateContactDialog({
               })}
             />
           </div>
+
+          {/* Website (more than one: under Websites on the contact page) */}
+          <div className="space-y-1.5">
+            <Label htmlFor="create-contact-website">
+              {t("contacts.website", { defaultValue: "Website" })}
+            </Label>
+            <Input
+              id="create-contact-website"
+              type="url"
+              value={website}
+              onChange={(e) => setWebsite(e.target.value)}
+              inputMode="url"
+              autoComplete="url"
+              autoCapitalize="none"
+              autoCorrect="off"
+              spellCheck={false}
+              enterKeyHint="next"
+              placeholder="example.com"
+              readOnly={isEditMode && !!initialValues?.website}
+              aria-invalid={showWebsiteError}
+              className={
+                isEditMode && !!initialValues?.website
+                  ? "bg-muted/50"
+                  : showWebsiteError
+                    ? "border-destructive focus-visible:ring-destructive"
+                    : undefined
+              }
+            />
+            {showWebsiteError ? (
+              <p className="text-sm text-destructive">
+                {t("contacts.websiteInvalid", {
+                  defaultValue: "Enter a website like example.com",
+                })}
+              </p>
+            ) : null}
+          </div>
+
+          {/* Tax number (companies) */}
+          {isCompany ? (
+            <div className="space-y-1.5">
+              <Label htmlFor="create-contact-tax-number">
+                {t("contacts.company.taxNumber", { defaultValue: "Tax number" })}
+              </Label>
+              <Input
+                id="create-contact-tax-number"
+                value={taxNumber}
+                onChange={(e) => setTaxNumber(e.target.value)}
+                autoCapitalize="characters"
+                autoCorrect="off"
+                spellCheck={false}
+                enterKeyHint="next"
+                maxLength={100}
+                placeholder={t("contacts.company.taxNumberPlaceholder", {
+                  defaultValue: "VAT ID or EIN (optional)",
+                })}
+              />
+            </div>
+          ) : null}
 
           {/* Deals */}
           {showDeals ? (

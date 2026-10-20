@@ -95,6 +95,8 @@ export type ContactDetail = {
   emails: Record<string, unknown>[];
   phones: Record<string, unknown>[];
   addresses: Record<string, unknown>[];
+  /** Absent on API builds before migration 217. */
+  websites?: Record<string, unknown>[];
   /** The company a person works at, or the company this company is part of. */
   company?: ContactCompanyRef | null;
   /** People who work here (companies only). */
@@ -146,6 +148,13 @@ export interface CreateContactBody {
   parent_company_name?: string | null;
   /** Position of a person at their company. */
   job_title?: string | null;
+  /** Companies only. */
+  legal_name?: string | null;
+  /** Companies only. */
+  tax_number?: string | null;
+  /** Companies only; saved as an email of type billing. */
+  billing_email?: string | null;
+  website?: string | null;
 }
 
 export async function createContact(

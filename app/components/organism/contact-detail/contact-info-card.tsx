@@ -17,6 +17,7 @@ import {
   Calendar,
   ChevronDown,
   ChevronUp,
+  Globe,
 } from "lucide-react";
 import { ContactProfileForm } from "~/components/organism/contact-detail/contact-crm-panel";
 import { toast } from "sonner";
@@ -54,32 +55,43 @@ import {
   addContactAddress,
   deleteContactAddress,
   patchContactAddress,
+  addContactWebsite,
+  deleteContactWebsite,
+  patchContactWebsite,
 } from "~/lib/api/contacts";
+import { isWebsite, websiteHref } from "~/lib/contacts/website";
+import { desktopAutoFocus } from "~/lib/utils/touch";
 import { PhoneNumberInput } from "~/components/molecule/phone-number-input";
 
-const EMAIL_TYPES = ["work", "personal", "other"] as const;
+const EMAIL_TYPES = ["work", "personal", "billing", "other"] as const;
 const PHONE_TYPES = ["mobile", "work", "home", "fax", "other"] as const;
 const ADDRESS_TYPES = ["work", "home", "billing", "shipping", "other"] as const;
 
-type Kind = "email" | "phone" | "address";
+type Kind = "email" | "phone" | "address" | "website";
 
 type ContactRow = Record<string, unknown> & { id?: unknown };
 type ContactQueryData = {
   emails: ContactRow[];
   phones: ContactRow[];
   addresses: ContactRow[];
+  /** Missing on API builds before migration 217. */
+  websites: ContactRow[];
   [k: string]: unknown;
 };
 type ContactSnapshot = Array<
   [readonly unknown[], ContactQueryData | undefined]
 >;
 
-function arrayKey(kind: Kind): "emails" | "phones" | "addresses" {
+function arrayKey(
+  kind: Kind,
+): "emails" | "phones" | "addresses" | "websites" {
   return kind === "email"
     ? "emails"
     : kind === "phone"
       ? "phones"
-      : "addresses";
+      : kind === "website"
+        ? "websites"
+        : "addresses";
 }
 
 function snapshotContactQueries(qc: QueryClient): ContactSnapshot {
@@ -129,6 +141,7 @@ interface ContactInfoCardProps {
   emails: Record<string, unknown>[];
   phones: Record<string, unknown>[];
   addresses: Record<string, unknown>[];
+  websites?: Record<string, unknown>[];
   canEdit: boolean;
   onInvalidate: () => void;
 }
@@ -182,6 +195,7 @@ export function ContactInfoCard({
   emails,
   phones,
   addresses,
+  websites = [],
   canEdit,
   onInvalidate,
 }: ContactInfoCardProps) {
@@ -205,6 +219,11 @@ export function ContactInfoCard({
     [addresses, contactId],
   );
 
+  const websitesContact = useMemo(
+    () => sortByPrimary(filterContactRows(websites, contactId)),
+    [websites, contactId],
+  );
+
   const totalEmails = emailsContact.length;
   const totalPhones = phonesContact.length;
   const totalAddresses = addressesContact.length;
@@ -220,7 +239,8 @@ export function ContactInfoCard({
           </h2>
           <p className="mt-0.5 text-[11px] text-muted-foreground">
             {t("contacts.contactInfoHint", {
-              defaultValue: "Emails, phones and addresses for this contact.",
+              defaultValue:
+                "Emails, phones, addresses and websites for this contact.",
             })}
           </p>
         </div>
@@ -274,6 +294,16 @@ export function ContactInfoCard({
               </span>
               <CountBadge n={totalAddresses} />
             </TabsTrigger>
+            <TabsTrigger
+              value="websites"
+              className="gap-1.5 px-2 text-xs max-sm:min-w-11 max-sm:px-3 sm:gap-2 sm:px-3"
+            >
+              <Globe className="h-3.5 w-3.5 shrink-0" />
+              <span className="hidden sm:inline">
+                {t("contacts.websites", { defaultValue: "Websites" })}
+              </span>
+              <CountBadge n={websitesContact.length} />
+            </TabsTrigger>
           </TabsList>
         </div>
 
@@ -315,6 +345,15 @@ export function ContactInfoCard({
             kind="address"
             contactId={contactId}
             contactRows={addressesContact}
+            canEdit={canEdit}
+            onInvalidate={onInvalidate}
+          />
+        </TabsContent>
+        <TabsContent value="websites" className="mt-0 p-4 max-sm:p-3 sm:p-5">
+          <KindPanel
+            kind="website"
+            contactId={contactId}
+            contactRows={websitesContact}
             canEdit={canEdit}
             onInvalidate={onInvalidate}
           />
@@ -450,6 +489,14 @@ function KindPanel({
         defaultValue: "No addresses on file yet.",
       }),
     },
+    website: {
+      add: t("contacts.addWebsite", {
+        defaultValue: "Add website",
+      }),
+      empty: t("contacts.noWebsites", {
+        defaultValue: "No websites on file yet.",
+      }),
+    },
   }[kind];
 
   const addForm = () => {
@@ -536,6 +583,7 @@ function KindPanel({
 function KindIcon({ kind, className }: { kind: Kind; className?: string }) {
   if (kind === "email") return <Mail className={className} />;
   if (kind === "phone") return <Phone className={className} />;
+  if (kind === "website") return <Globe className={className} />;
   return <MapPin className={className} />;
 }
 
@@ -578,7 +626,9 @@ function RowCard({ kind, entityId, row, canEdit, onInvalidate }: RowCardProps) {
       ? String(row.address ?? "")
       : kind === "phone"
         ? String(row.number ?? "")
-        : formatAddressOneLine(row);
+        : kind === "website"
+          ? String(row.url ?? "")
+          : formatAddressOneLine(row);
 
   const typeText = String(row.type ?? "");
   const labelText = kind === "phone" ? String(row.label ?? "") : "";
@@ -604,7 +654,10 @@ function RowCard({ kind, entityId, row, canEdit, onInvalidate }: RowCardProps) {
         ? `tel:${primaryValue.replace(/\s+/g, "")}`
         : kind === "address" && primaryValue
           ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(primaryValue)}`
-          : null;
+          : kind === "website" && primaryValue
+            ? websiteHref(primaryValue)
+            : null;
+  const opensNewTab = kind === "address" || kind === "website";
 
   if (editing) {
     return (
@@ -673,8 +726,8 @@ function RowCard({ kind, entityId, row, canEdit, onInvalidate }: RowCardProps) {
         {externalHref ? (
           <a
             href={externalHref}
-            target={kind === "address" ? "_blank" : undefined}
-            rel={kind === "address" ? "noreferrer" : undefined}
+            target={opensNewTab ? "_blank" : undefined}
+            rel={opensNewTab ? "noreferrer" : undefined}
             aria-label={t("contacts.openExternal", {
               defaultValue: "Open",
             })}
@@ -742,6 +795,7 @@ function RowEditorInline({
   const [state, setState] = useState(String(row.state ?? ""));
   const [postal, setPostal] = useState(String(row.postal_code ?? ""));
   const [country, setCountry] = useState(String(row.country ?? "DE"));
+  const [url, setUrl] = useState(String(row.url ?? ""));
   const [primary, setPrimary] = useState(!!row.is_primary);
   const [removeConfirmOpen, setRemoveConfirmOpen] = useState(false);
   const queryClient = useQueryClient();
@@ -759,13 +813,25 @@ function RowEditorInline({
     setState(String(row.state ?? ""));
     setPostal(String(row.postal_code ?? ""));
     setCountry(String(row.country ?? "DE"));
+    setUrl(String(row.url ?? ""));
     setPrimary(!!row.is_primary);
   }, [row]);
 
   const save = () => {
     let body: Record<string, unknown>;
     let patch: ContactRow;
-    if (kind === "email") {
+    if (kind === "website") {
+      if (!isWebsite(url)) {
+        toast.error(
+          t("contacts.websiteInvalid", {
+            defaultValue: "Enter a website like example.com",
+          }),
+        );
+        return;
+      }
+      body = { url: url.trim(), is_primary: primary };
+      patch = { ...body };
+    } else if (kind === "email") {
       body = {
         address: address.trim(),
         type: emailType,
@@ -806,7 +872,7 @@ function RowEditorInline({
     const snap = snapshotContactQueries(queryClient);
     const ak = arrayKey(kind);
     applyToContactQueries(queryClient, (v) => {
-      let next = v[ak].map((r) =>
+      let next = (v[ak] ?? []).map((r) =>
         String(r.id) === id ? { ...r, ...patch } : r,
       );
       if (primary) next = withSinglePrimary(next, id);
@@ -815,7 +881,9 @@ function RowEditorInline({
     onDone();
 
     const apiCall =
-      kind === "email"
+      kind === "website"
+        ? patchContactWebsite(entityId, id, body)
+        : kind === "email"
         ? patchContactEmail(
             entityId,
             id,
@@ -853,12 +921,14 @@ function RowEditorInline({
     const ak = arrayKey(kind);
     applyToContactQueries(queryClient, (v) => ({
       ...v,
-      [ak]: v[ak].filter((r) => String(r.id) !== id),
+      [ak]: (v[ak] ?? []).filter((r) => String(r.id) !== id),
     }));
     onDone();
 
     const apiCall =
-      kind === "email"
+      kind === "website"
+        ? deleteContactWebsite(entityId, id)
+        : kind === "email"
         ? deleteContactEmail(entityId, id)
         : kind === "phone"
           ? deleteContactPhone(entityId, id)
@@ -878,7 +948,11 @@ function RowEditorInline({
   };
 
   const removeDialogTitle =
-    kind === "phone"
+    kind === "website"
+      ? t("contacts.confirmRemoveWebsiteTitle", {
+          defaultValue: "Remove this website?",
+        })
+      : kind === "phone"
       ? t("contacts.confirmRemovePhoneTitle", {
           defaultValue: "Remove this phone number?",
         })
@@ -891,7 +965,12 @@ function RowEditorInline({
           });
 
   const removeDialogDescription =
-    kind === "phone"
+    kind === "website"
+      ? t("contacts.confirmRemoveWebsiteDescription", {
+          defaultValue:
+            "This website will be removed from the profile. You can add it again later.",
+        })
+      : kind === "phone"
       ? phoneNum.trim()
         ? t("contacts.confirmRemovePhoneDescription", {
             number: phoneNum.trim(),
@@ -927,6 +1006,19 @@ function RowEditorInline({
             {t("contacts.editEntry", { defaultValue: "Edit entry" })}
           </div>
         </div>
+
+        {kind === "website" ? (
+          <FieldRow label={t("contacts.website", { defaultValue: "Website" })}>
+            <Input
+              type="url"
+              inputMode="url"
+              value={url}
+              onChange={(e) => setUrl(e.target.value)}
+              className="h-9"
+              placeholder="example.com"
+            />
+          </FieldRow>
+        ) : null}
 
         {kind === "email" ? (
           <div className="grid gap-3 sm:grid-cols-[1fr_140px]">
@@ -1192,6 +1284,7 @@ function AddRowInline({
   const [city, setCity] = useState("");
   const [postal, setPostal] = useState("");
   const [country, setCountry] = useState("DE");
+  const [url, setUrl] = useState("");
   const queryClient = useQueryClient();
 
   const submit = () => {
@@ -1199,7 +1292,24 @@ function AddRowInline({
     let optimisticRow: ContactRow;
     const newId = tempId();
 
-    if (kind === "email") {
+    if (kind === "website") {
+      if (!isWebsite(url)) {
+        toast.error(
+          t("contacts.websiteInvalid", {
+            defaultValue: "Enter a website like example.com",
+          }),
+        );
+        return;
+      }
+      body = { url: url.trim(), is_primary: markAsPrimary };
+      optimisticRow = {
+        id: newId,
+        entity_table: "contacts",
+        entity_id: entityId,
+        url: url.trim(),
+        is_primary: markAsPrimary,
+      };
+    } else if (kind === "email") {
       if (!address.trim()) {
         toast.error(
           t("contacts.emailRequired", { defaultValue: "Email is required." }),
@@ -1268,7 +1378,7 @@ function AddRowInline({
     const snap = snapshotContactQueries(queryClient);
     const ak = arrayKey(kind);
     applyToContactQueries(queryClient, (v) => {
-      let next = [...v[ak], optimisticRow];
+      let next = [...(v[ak] ?? []), optimisticRow];
       if (markAsPrimary) next = withSinglePrimary(next, newId);
       return { ...v, [ak]: next };
     });
@@ -1277,7 +1387,12 @@ function AddRowInline({
     onDone();
 
     const apiCall =
-      kind === "email"
+      kind === "website"
+        ? addContactWebsite(
+            entityId,
+            body as Parameters<typeof addContactWebsite>[1],
+          )
+        : kind === "email"
         ? addContactEmail(
             entityId,
             body as Parameters<typeof addContactEmail>[1],
@@ -1314,6 +1429,24 @@ function AddRowInline({
           {t("contacts.newEntry", { defaultValue: "New entry" })}
         </div>
       </div>
+
+      {kind === "website" ? (
+        <Input
+          type="url"
+          inputMode="url"
+          value={url}
+          onChange={(e) => setUrl(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              e.preventDefault();
+              submit();
+            }
+          }}
+          placeholder="example.com"
+          className="h-9"
+          autoFocus={desktopAutoFocus()}
+        />
+      ) : null}
 
       {kind === "email" ? (
         <div className="grid gap-3 sm:grid-cols-[1fr_140px]">

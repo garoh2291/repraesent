@@ -220,6 +220,8 @@ export function ContactProfileForm({
   const [companyName, setCompanyName] = useState(
     String(contact.company_name ?? ""),
   );
+  const [legalName, setLegalName] = useState(String(contact.legal_name ?? ""));
+  const [taxNumber, setTaxNumber] = useState(String(contact.tax_number ?? ""));
   const [first, setFirst] = useState(String(contact.first_name ?? ""));
   const [last, setLast] = useState(String(contact.last_name ?? ""));
   const [jobTitle, setJobTitle] = useState(String(contact.job_title ?? ""));
@@ -243,6 +245,8 @@ export function ContactProfileForm({
 
   useEffect(() => {
     setCompanyName(String(contact.company_name ?? ""));
+    setLegalName(String(contact.legal_name ?? ""));
+    setTaxNumber(String(contact.tax_number ?? ""));
     setJobTitle(String(contact.job_title ?? ""));
     setFirst(String(contact.first_name ?? ""));
     setLast(String(contact.last_name ?? ""));
@@ -304,7 +308,12 @@ export function ContactProfileForm({
           : null;
     mutation.mutate({
       contact: isCompany
-        ? { company_name: companyName.trim(), contact_type: contactType }
+        ? {
+            company_name: companyName.trim(),
+            legal_name: legalName.trim() || null,
+            tax_number: taxNumber.trim() || null,
+            contact_type: contactType,
+          }
         : {
             first_name: first.trim() || null,
             last_name: last.trim() || null,
@@ -341,6 +350,8 @@ export function ContactProfileForm({
     first,
     last,
     companyName,
+    legalName,
+    taxNumber,
     jobTitle,
     dob,
     salutation,
@@ -357,9 +368,12 @@ export function ContactProfileForm({
         )}
       >
         {isCompany ? (
+          <>
           <FormField
             label={t("contacts.company.name", { defaultValue: "Company name" })}
-            className="sm:col-span-2"
+            hint={t("contacts.company.nameHint", {
+              defaultValue: "The name customers know",
+            })}
           >
             <Input
               value={companyName}
@@ -372,6 +386,23 @@ export function ContactProfileForm({
               aria-invalid={nameEmpty}
             />
           </FormField>
+          <FormField
+            label={t("contacts.company.legalName", { defaultValue: "Legal name" })}
+            hint={t("contacts.company.legalNameHint", {
+              defaultValue: "As on invoices, e.g. Müller Bau GmbH",
+            })}
+          >
+            <Input
+              value={legalName}
+              onChange={(e) => {
+                setLegalName(e.target.value);
+                markDirty();
+              }}
+              disabled={!canEdit}
+              className="h-9"
+            />
+          </FormField>
+          </>
         ) : (
         <>
         <FormField
@@ -481,6 +512,26 @@ export function ContactProfileForm({
         </FormField>
         </>
         )}
+        {isCompany ? (
+          <FormField
+            label={t("contacts.company.taxNumber", { defaultValue: "Tax number" })}
+            hint={t("contacts.company.taxNumberHint", {
+              defaultValue: "VAT ID or EIN",
+            })}
+            className="sm:col-span-2"
+          >
+            <Input
+              value={taxNumber}
+              onChange={(e) => {
+                setTaxNumber(e.target.value);
+                markDirty();
+              }}
+              disabled={!canEdit}
+              className="h-9"
+              autoComplete="off"
+            />
+          </FormField>
+        ) : null}
         <FormField
           label={t("contacts.contactType", {
             defaultValue: "Contact type",

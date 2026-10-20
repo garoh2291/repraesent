@@ -194,6 +194,7 @@ export default function ContactDetailPage() {
   }
 
   const { crm, contact, emails, phones, addresses } = data;
+  const websites = data.websites ?? [];
   const resolvedContactId = contact?.id ? String(contact.id) : contactRouteId;
   const leadId = crm.lead_id ? String(crm.lead_id) : null;
 
@@ -255,6 +256,7 @@ export default function ContactDetailPage() {
         emails={emails}
         phones={phones}
         addresses={addresses}
+        websites={websites}
         leadId={leadId}
         company={data.company ?? null}
         canEdit={canEdit}
@@ -317,6 +319,7 @@ export default function ContactDetailPage() {
             emails={emails}
             phones={phones}
             addresses={addresses}
+            websites={websites}
             canEdit={canEdit}
             onInvalidate={invalidateContact}
           />

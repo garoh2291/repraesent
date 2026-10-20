@@ -3741,7 +3741,7 @@
     "confirmRemovePhoneDescription": "Cela supprimera {{number}} du profil. Vous pourrez l'ajouter à nouveau plus tard.",
     "confirmRemovePhoneDescriptionEmpty": "Ce numéro de téléphone sera retiré du profil. Vous pourrez l'ajouter à nouveau plus tard.",
     "confirmRemovePhoneTitle": "Retirer ce numéro de téléphone ?",
-    "contactInfoHint": "E-mails, téléphones et adresses de ce contact.",
+    "contactInfoHint": "E-mails, téléphones, adresses et sites web de ce contact.",
     "copied": "Copié dans le presse-papiers",
     "copy": "Copier",
     "copyFailed": "Impossible de copier",
@@ -3867,7 +3867,18 @@
       "added": "{{name}} ajouté(e).",
       "removed": "{{name}} retiré(e) de cette entreprise.",
       "noPeopleFound": "Personne ne correspond. Essayez un autre nom.",
-      "noPeopleYet": "Personne pour l’instant. Ajoutez un contact existant ou une nouvelle personne."
+      "noPeopleYet": "Personne pour l’instant. Ajoutez un contact existant ou une nouvelle personne.",
+      "nameHint": "Le nom que connaissent les clients",
+      "legalName": "Raison sociale",
+      "legalNameHint": "Comme sur les factures, p. ex. Dupont Bâtiment SARL",
+      "legalNamePlaceholder": "Comme sur les factures, p. ex. Dupont Bâtiment SARL (facultatif)",
+      "taxNumber": "Numéro de TVA",
+      "taxNumberHint": "Numéro de TVA ou EIN",
+      "taxNumberPlaceholder": "Numéro de TVA ou EIN (facultatif)",
+      "addInfoTitle": "Compléter l’entreprise",
+      "billingSame": "E-mail de facturation identique à celui de l’entreprise",
+      "billingEmail": "E-mail de facturation",
+      "billingEmailPlaceholder": "p. ex. factures@entreprise.fr"
     },
     "companies": {
       "title": "Entreprises",
@@ -3893,7 +3904,16 @@
       "removeOne": "Retirer {{name}}",
       "someFailed_one": "Le contact est enregistré, mais {{count}} affaire n’a pas pu être ajoutée. Ouvrez le contact et ajoutez-la sous Affaires.",
       "someFailed_other": "Le contact est enregistré, mais {{count}} affaires n’ont pas pu être ajoutées. Ouvrez le contact et ajoutez-les sous Affaires."
-    }
+    },
+    "website": "Site web",
+    "websites": "Sites web",
+    "addWebsite": "Ajouter un site web",
+    "noWebsites": "Aucun site web enregistré pour le moment.",
+    "noWebsite": "Aucun site web enregistré",
+    "openWebsite": "Ouvrir le site",
+    "websiteInvalid": "Saisissez un site comme exemple.fr",
+    "confirmRemoveWebsiteTitle": "Supprimer ce site web ?",
+    "confirmRemoveWebsiteDescription": "Ce site web sera supprimé du profil. Vous pourrez l’ajouter à nouveau plus tard."
   },
   "leadEmails": {
     "emptyTitle": "Aucun e-mail journalisé pour le moment",
