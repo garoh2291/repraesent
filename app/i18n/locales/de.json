@@ -6722,7 +6722,9 @@
     "sentCopyNote": "Eine Kopie erscheint in ein paar Minuten beim Kontakt und beim Deal.",
     "sentDone": "Fertig",
     "showAddress": "{{name}} · {{email}}",
-    "copyAddress": "Adresse kopieren"
+    "copyAddress": "Adresse kopieren",
+    "sentSyncToast": "E-Mail gesendet",
+    "sentSyncToastDescription": "Sie steht schon in den Aktivitäten. Die vollständige Kopie folgt in wenigen Minuten."
   },
   "demo": {
     "metaTitle": "Live-Demo",

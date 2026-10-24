@@ -6722,7 +6722,9 @@
     "sentCopyNote": "Une copie apparaît sur le contact et l'affaire d'ici quelques minutes.",
     "sentDone": "Terminé",
     "showAddress": "{{name}} · {{email}}",
-    "copyAddress": "Copier l’adresse"
+    "copyAddress": "Copier l’adresse",
+    "sentSyncToast": "E-mail envoyé",
+    "sentSyncToastDescription": "Il apparaît déjà dans l'activité. La copie complète arrive d'ici quelques minutes."
   },
   "demo": {
     "metaTitle": "Démo live",

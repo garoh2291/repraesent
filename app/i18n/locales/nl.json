@@ -6720,7 +6720,9 @@
     "sentCopyNote": "Over een paar minuten staat er een kopie bij het contact en de deal.",
     "sentDone": "Klaar",
     "showAddress": "{{name}} · {{email}}",
-    "copyAddress": "Adres kopiëren"
+    "copyAddress": "Adres kopiëren",
+    "sentSyncToast": "E-mail verzonden",
+    "sentSyncToastDescription": "Hij staat al bij de activiteit. De volledige kopie volgt binnen een paar minuten."
   },
   "demo": {
     "metaTitle": "Live demo",

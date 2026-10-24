@@ -6720,7 +6720,9 @@
     "sentCopyNote": "A copy shows on the contact and deal in a few minutes.",
     "sentDone": "Done",
     "showAddress": "{{name}} · {{email}}",
-    "copyAddress": "Copy address"
+    "copyAddress": "Copy address",
+    "sentSyncToast": "Email sent",
+    "sentSyncToastDescription": "It's in the activity now. The full copy syncs within a few minutes."
   },
   "demo": {
     "metaTitle": "Live demo",

@@ -13,8 +13,10 @@ import type { LeadHistoryItem } from "~/lib/api/leads";
 import { updateTask, type Task } from "~/lib/api/tasks";
 import type { Note } from "~/lib/api/notes";
 import type { BccMessage } from "~/lib/api/bcc-logs";
+import type { PendingOutboundEmail } from "~/lib/api/outbound-mail";
 import { EmailCard } from "~/components/organism/email-card";
 import { DealEmailCardActions } from "./deal-email-card-actions";
+import { PendingEmailCard, usePendingOutbound } from "./pending-email-card";
 import { TaskDetailModal } from "~/components/organism/tasks/task-detail-modal";
 import { TaskUrgencyBadge } from "~/components/organism/tasks/task-urgency-badge";
 import type { WorkspaceMemberItem } from "~/components/organism/tasks/task-form-modal";
@@ -43,6 +45,9 @@ type Item =
   | { kind: "note"; ts: number; id: string; note: Note }
   | { kind: "task"; ts: number; id: string; task: Task }
   | { kind: "email"; ts: number; id: string; email: BccMessage }
+  // Sent from the composer, BCC copy not ingested yet: shown at once so a send
+  // never looks like it failed.
+  | { kind: "pending"; ts: number; id: string; pending: PendingOutboundEmail }
   | { kind: "event"; ts: number; id: string; event: LeadHistoryItem };
 
 // Note/task CRUD is already shown as its own card, so drop those audit lines.
@@ -98,6 +103,7 @@ export function ActivityTimeline({
     queryFn: eq.fn,
     enabled: !!eq.id,
   });
+  const pending = usePendingOutbound(ctx, variant);
 
   const toggleDone = useMutation({
     mutationFn: ({ taskId, isDone }: { taskId: string; isDone: boolean }) =>
@@ -154,6 +160,14 @@ export function ActivityTimeline({
         email: m,
       });
     }
+    for (const p of pending.data ?? []) {
+      out.push({
+        kind: "pending",
+        ts: p.sent_at ? new Date(p.sent_at).getTime() : Date.now(),
+        id: `pending-${p.id}`,
+        pending: p,
+      });
+    }
     history.forEach((ev, i) => {
       if (!isMeaningfulEvent(ev.action)) return;
       out.push({
@@ -164,7 +178,7 @@ export function ActivityTimeline({
       });
     });
     return out.sort((a, b) => b.ts - a.ts);
-  }, [notes.data, tasks.data, emails.data, history, variant]);
+  }, [notes.data, tasks.data, emails.data, pending.data, history, variant]);
 
   const loading =
     (enabledNT && (notes.isLoading || tasks.isLoading)) ||
@@ -257,6 +271,12 @@ export function ActivityTimeline({
                           }
                         />
                       )}
+                      {item.kind === "pending" && (
+                        <PendingEmailCard
+                          pending={item.pending}
+                          locale={i18n.language}
+                        />
+                      )}
                       {item.kind === "note" && (
                         <NoteRow note={item.note} time={itemTime(item)} />
                       )}
@@ -315,6 +335,10 @@ const MARKER: Record<Item["kind"], { wrap: string; icon: ReactNode }> = {
     icon: <CheckSquare className="size-4" />,
   },
   email: {
+    wrap: "bg-indigo-100 text-indigo-600 dark:bg-indigo-500/15 dark:text-indigo-400",
+    icon: <Mail className="size-4" />,
+  },
+  pending: {
     wrap: "bg-indigo-100 text-indigo-600 dark:bg-indigo-500/15 dark:text-indigo-400",
     icon: <Mail className="size-4" />,
   },

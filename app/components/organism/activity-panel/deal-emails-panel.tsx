@@ -18,13 +18,11 @@ import { useComposeEmail } from "~/components/organism/compose-email/use-compose
 import type { Recipient } from "~/components/organism/compose-email/recipient-field";
 import { DealEmailCardActions } from "./deal-email-card-actions";
 import { DealEmailSegmentEditor } from "./deal-email-rules-editor";
-import { PendingEmailsList } from "./pending-email-card";
-import { PENDING_POLL_MS } from "./emails-list";
+import { PendingEmailsList, usePendingOutbound } from "./pending-email-card";
 import {
   composeInvalidateKeys,
   emailsQuery,
   dealEmailSegmentQuery,
-  pendingOutboundQuery,
   type ActivityContext,
 } from "./shared";
 
@@ -42,7 +40,6 @@ export function DealEmailsPanel({
   const dealId = ctx.dealId!;
   const q = emailsQuery(ctx, "deal");
   const sq = dealEmailSegmentQuery(dealId);
-  const pq = pendingOutboundQuery(ctx, "deal");
   const [rulesOpen, setRulesOpen] = useState(false);
   const [sub, setSub] = useState<"pipeline" | "hidden">("pipeline");
 
@@ -52,13 +49,7 @@ export function DealEmailsPanel({
     enabled: !!q.id,
   });
   const { data: segment } = useQuery({ queryKey: sq.key, queryFn: sq.fn });
-  const { data: pending } = useQuery({
-    queryKey: pq.key,
-    queryFn: pq.fn,
-    enabled: !!pq.id,
-    refetchInterval: (query) =>
-      (query.state.data?.length ?? 0) > 0 ? PENDING_POLL_MS : false,
-  });
+  const { data: pending } = usePendingOutbound(ctx, "deal");
   const conditionCount = segment?.conditions.length ?? 0;
 
   const messages = data?.data ?? [];

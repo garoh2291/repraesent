@@ -22,7 +22,7 @@ import {
   sortAccountsWithAliases,
   type EmailAccount,
 } from "~/lib/api/email-accounts";
-import { sendOutboundEmail } from "~/lib/api/outbound-mail";
+import { sendOutboundEmail, type PendingOutboundEmail } from "~/lib/api/outbound-mail";
 import { extractErrorMessage } from "~/lib/api/axios-instance";
 import { Button } from "~/components/ui/button";
 import {
@@ -165,16 +165,39 @@ export function ComposeEmailDialog({
         leadId: request.leadId,
         replyToMessageId: request.replyTo?.id,
       }),
-    onSuccess: () => {
+    onSuccess: (result) => {
       if (accountId && typeof window !== "undefined") {
         window.localStorage.setItem(LAST_ACCOUNT_KEY, accountId);
+      }
+      // Put the "Sent · syncing" card on the page this instant, before the
+      // refetch below replaces it with the server's own pending row. Otherwise
+      // the feed looks unchanged for a moment and people send again.
+      const account = accounts?.find((a) => a.id === accountId);
+      const placeholder: PendingOutboundEmail = {
+        id: result.id,
+        subject: subject.trim(),
+        from_email: account?.email ?? "",
+        from_name: account?.name ?? null,
+        to_emails: to.map((r) => r.email),
+        cc_emails: cc.map((r) => r.email),
+        text_body: editor?.getText() ?? null,
+        html_body: editor?.getHTML() ?? html,
+        sent_at: result.sent_at ?? new Date().toISOString(),
+        send_error: null,
+      };
+      for (const key of request.invalidateKeys ?? []) {
+        if (key[0] !== "outbound-pending") continue;
+        queryClient.setQueryData<PendingOutboundEmail[]>(key, (old) => [
+          placeholder,
+          ...(old ?? []).filter((p) => p.id !== placeholder.id),
+        ]);
       }
       for (const key of request.invalidateKeys ?? []) {
         void queryClient.invalidateQueries({ queryKey: key });
       }
       dirtyRef.current = false;
       // Data first (the caller records the send), then the confirmation card
-      // in place of the form. The card replaces the old success toast.
+      // in place of the form; closing it shows a toast that outlives the card.
       request.onSent?.();
       const first = to[0];
       const more = to.length - 1;
@@ -194,10 +217,20 @@ export function ComposeEmailDialog({
   });
 
   // Closing the "Email sent" card: nothing to discard, then the caller's follow-up.
+  // The toast waits for the card to close so it never sits on top of it, and
+  // lands on the page where the "Sent · syncing" card now is. An inquiry has
+  // no email list to point at; it shows in its History.
   const finish = useCallback(() => {
     onOpenChange(false);
+    if (!request.leadId && (request.dealId || request.contactId)) {
+      toast.success(t("compose.sentSyncToast", { defaultValue: "Email sent" }), {
+        description: t("compose.sentSyncToastDescription", {
+          defaultValue: "It's in the activity now. The full copy syncs within a few minutes.",
+        }),
+      });
+    }
     request.onDone?.();
-  }, [onOpenChange, request]);
+  }, [onOpenChange, request, t]);
 
   const requestClose = useCallback(() => {
     if (sent) {
@@ -491,29 +524,29 @@ function SentCard({
     <DialogContent
       showCloseButton={false}
       className={cn(
-        "max-w-[calc(100%-2rem)] gap-0 rounded-2xl p-6 text-center sm:max-w-sm",
+        "w-[calc(100%-2rem)] max-w-[calc(100%-2rem)] min-w-0 grid-cols-[minmax(0,1fr)] gap-0 rounded-2xl p-6 text-center sm:max-w-md",
         "motion-safe:animate-in motion-safe:fade-in-0 motion-safe:zoom-in-95 motion-safe:duration-150",
       )}
     >
-      <div role="status" aria-live="polite" className="flex flex-col items-center">
+      <div role="status" aria-live="polite" className="flex w-full min-w-0 flex-col items-center">
         <span className="mb-3 flex size-12 items-center justify-center rounded-full bg-earned-soft">
           <Check className="size-6 text-earned" strokeWidth={2.5} aria-hidden />
         </span>
-        <DialogHeader className="items-center gap-1 text-center sm:text-center">
+        <DialogHeader className="w-full min-w-0 items-center gap-1 text-center sm:text-center">
           <DialogTitle className="text-lg font-semibold tracking-tight">
             {t("compose.sentTitle", { defaultValue: "Email sent" })}
           </DialogTitle>
-          <DialogDescription className="text-sm text-foreground">
+          <DialogDescription className="max-w-full text-sm break-words text-foreground [overflow-wrap:anywhere]">
             {t("compose.sentTo", { defaultValue: "To {{name}}", name: toLabel })}
           </DialogDescription>
         </DialogHeader>
         {subject ? (
-          <p className="mt-1 max-w-full truncate text-[13px] text-muted-foreground" title={subject}>
+          <p className="mt-1 line-clamp-2 max-w-full text-[13px] break-words text-muted-foreground [overflow-wrap:anywhere]" title={subject}>
             {subject}
           </p>
         ) : null}
         {showCopyNote ? (
-          <p className="mt-3 text-[12.5px] leading-relaxed text-muted-foreground">
+          <p className="mt-3 max-w-full text-[12.5px] leading-relaxed text-muted-foreground">
             {t("compose.sentCopyNote", {
               defaultValue: "A copy shows on the contact and deal in a few minutes.",
             })}
