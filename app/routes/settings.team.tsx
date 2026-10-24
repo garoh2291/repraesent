@@ -24,6 +24,7 @@ import {
   type WorkspaceDetail,
 } from "~/lib/api/workspaces";
 import { InviteMembersDialog } from "~/components/team/invite-members-dialog";
+import { SignInCopyDialog } from "~/components/team/sign-in-copy-dialog";
 import { InquiryAlertsOverview } from "~/components/team/inquiry-alerts-overview";
 import { SafeImg } from "~/components/atom/safe-img";
 import { extractErrorMessage } from "~/lib/api/axios-instance";
@@ -115,6 +116,9 @@ export default function SettingsTeam() {
     name: string;
   } | null>(null);
   const [inviteOpen, setInviteOpen] = useState(false);
+  const [copyMember, setCopyMember] = useState<
+    WorkspaceDetail["members"][number] | null
+  >(null);
   const [memberToResend, setMemberToResend] = useState<{
     userId: string;
     name: string;
@@ -386,6 +390,32 @@ export default function SettingsTeam() {
                     .map((w: string) => w[0])
                     .join("")
                     .toUpperCase();
+                  // Sign-in copy: admins set it; the person sees their own.
+                  const copyLine = isAdmin ? (
+                    <button
+                      type="button"
+                      onClick={() => setCopyMember(m)}
+                      className="inline-flex min-h-11 md:min-h-0 max-w-full items-center gap-1 text-xs text-muted-foreground hover:text-foreground hover:underline underline-offset-2 text-left"
+                    >
+                      <Mail className="h-3 w-3 shrink-0" aria-hidden />
+                      <span className="truncate">
+                        {m.login_copy_email
+                          ? t("settings.members.signInCopy.rowSet", {
+                              email: m.login_copy_email,
+                            })
+                          : t("settings.members.signInCopy.rowAdd")}
+                      </span>
+                    </button>
+                  ) : m.login_copy_email ? (
+                    <p className="flex items-center gap-1 text-xs text-muted-foreground min-w-0">
+                      <Mail className="h-3 w-3 shrink-0" aria-hidden />
+                      <span className="truncate">
+                        {t("settings.members.signInCopy.rowSet", {
+                          email: m.login_copy_email,
+                        })}
+                      </span>
+                    </p>
+                  ) : null;
 
                   return (
                     <div
@@ -427,11 +457,15 @@ export default function SettingsTeam() {
                           <p className="text-xs text-muted-foreground truncate md:hidden mt-0.5">
                             {m.user_email}
                           </p>
+                          {copyLine && <div className="md:hidden">{copyLine}</div>}
                         </div>
                       </div>
-                      <span className="text-sm text-muted-foreground truncate hidden md:block">
-                        {m.user_email}
-                      </span>
+                      <div className="hidden md:block min-w-0">
+                        <span className="block text-sm text-muted-foreground truncate">
+                          {m.user_email}
+                        </span>
+                        {copyLine}
+                      </div>
                       <Select
                         value={m.role}
                         onValueChange={(v) =>
@@ -530,6 +564,12 @@ export default function SettingsTeam() {
         open={inviteOpen}
         onOpenChange={setInviteOpen}
         workspaceId={currentWorkspace?.id}
+      />
+
+      <SignInCopyDialog
+        member={copyMember}
+        workspaceId={currentWorkspace?.id}
+        onOpenChange={(open) => !open && setCopyMember(null)}
       />
 
       <AlertDialog

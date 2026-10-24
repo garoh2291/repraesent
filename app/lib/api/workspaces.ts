@@ -27,6 +27,8 @@ export interface WorkspaceDetail {
     lead_notification: boolean;
     user_onboarding_completed_at?: string | null;
     has_logged_in?: boolean;
+    /** Sign-in copy address; null unless you're an admin or it's you. */
+    login_copy_email?: string | null;
     user_avatar_url?: string | null;
     user_avatar_thumb_url?: string | null;
   }>;
@@ -61,7 +63,12 @@ export async function decryptEmailConfigPassword(
 
 export async function updateWorkspaceMember(
   userId: string,
-  data: { role?: "admin" | "editor" | "viewer"; lead_notification?: boolean }
+  data: {
+    role?: "admin" | "editor" | "viewer";
+    lead_notification?: boolean;
+    /** "" removes the sign-in copy address. */
+    login_copy_email?: string;
+  }
 ): Promise<void> {
   await apiClient.patch(`/users/me/workspace/members/${userId}`, data);
 }
