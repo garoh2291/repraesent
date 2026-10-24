@@ -35,13 +35,19 @@ export function BottomTabBar({
     ? // People waiting — the same number the Today greeting shows.
       counts.new_leads + counts.follow_ups_due + (counts.signups ?? 0)
     : 0;
-  const primary = sections.filter((s) => s.key !== "website");
+  // Four daily jobs under the thumb. With Appointments as a section of its
+  // own, Results moves behind More (a tile there) so the bar stays at five.
+  const hasAppointments = sections.some((s) => s.key === "appointments");
+  const primary = sections.filter(
+    (s) => s.key !== "website" && !(hasAppointments && s.key === "results"),
+  );
   const reduce = useReducedMotion();
   const updateWaiting = useUpdateWaiting();
   // Pages that live behind More (Website, Settings, Billing) light up More,
   // so you always know where you are (REDESIGN_PLAN.md §2).
   const behindMore =
     active?.key === "website" ||
+    (hasAppointments && active?.key === "results") ||
     /^\/(settings|website|billing)(\/|$)/.test(pathname);
   const moreActive = moreOpen || behindMore;
   const marker = (

@@ -23,6 +23,9 @@ export default [
   // Public order tracking. Above _protected on purpose: a customer following
   // this link from an email has no session and must never meet the login page.
   route("t/:token", "routes/t.$token.tsx"),
+  // A customer's own appointment: see it, confirm, move or cancel. Public —
+  // the signed token is the capability (APPOINTMENTS_PLAN.md step 4).
+  route("booking/:token", "routes/booking.$token.tsx"),
 
   layout("routes/_protected.tsx", [
     route("no-workspace", "routes/no-workspace.tsx"),
@@ -104,7 +107,15 @@ export default [
       route("mail", "routes/mail.tsx"),
       route("pipeline", "routes/pipeline.tsx"),
       route("pipeline/:dealId", "routes/pipeline.$dealId.tsx"),
-      route("appointments", "routes/appointments.tsx"),
+      // Appointments (APPOINTMENTS_PLAN.md, pilot `appointmentBook`). The old
+      // Baikal booking-page settings moved one level down; without the pilot,
+      // /appointments forwards there so nothing changes for those workspaces.
+      route("appointments", "routes/appointments._index.tsx"),
+      route("appointments/booking-page", "routes/appointments.tsx"),
+      route("appointments/calendar", "routes/appointments.calendar.tsx"),
+      route("appointments/calendars", "routes/appointments.calendars.tsx"),
+      route("appointments/calendars/:calendarId", "routes/appointments.calendars.$calendarId.tsx"),
+      route("appointments/:appointmentId", "routes/appointments.$appointmentId.tsx"),
       route("calendar", "routes/calendar.tsx"),
       route("analytics", "routes/analytics.tsx"),
       route("social-ads", "routes/social-ads.tsx"),

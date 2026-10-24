@@ -150,6 +150,9 @@ export function CommandPalette() {
             { id: "new-task", label: t("command.newTask", "New task"), icon: Plus, to: "/tasks?new=1", create: "task" },
             { id: "new-contact", label: t("command.newContact", "New contact"), icon: Plus, to: "/contacts?new=1", create: "contact" },
             { id: "new-company", label: t("command.newCompany", "New company"), icon: Plus, to: "/companies?new=1", create: "company", keywords: "company firma unternehmen entreprise bedrijf" },
+            ...(pilot.appointmentBook
+              ? [{ id: "new-appointment", label: t("command.newAppointment", "New appointment"), icon: Plus, to: "/appointments", create: "appointment" as const, keywords: "appointment termin rendez-vous afspraak visit besuch booking buchung" }]
+              : []),
             { id: "new-form", label: t("command.newForm", "New form"), icon: Plus, to: "/forms" },
             // Sending is editor-only server-side; the composer itself handles
             // "no mailbox connected yet" with a Connect button.
@@ -158,7 +161,7 @@ export function CommandPalette() {
               : []),
           ]
         : [],
-    [sections, t, canEdit, openCompose],
+    [sections, t, canEdit, openCompose, pilot.appointmentBook],
   );
 
   const q = norm(query.trim());

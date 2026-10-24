@@ -308,7 +308,7 @@ export default function InstructionsPage() {
       <div className="p-4 sm:p-6 lg:p-8 max-w-3xl mx-auto">
         <button
           type="button"
-          onClick={() => navigate("/appointments")}
+          onClick={() => navigate("/appointments/booking-page")}
           className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors mb-6"
         >
           <ArrowLeft className="h-4 w-4" />
@@ -338,7 +338,7 @@ export default function InstructionsPage() {
       {/* Back link */}
       <button
         type="button"
-        onClick={() => navigate("/appointments")}
+        onClick={() => navigate("/appointments/booking-page")}
         className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors mb-6"
       >
         <ArrowLeft className="h-4 w-4" />

@@ -98,6 +98,7 @@ import {
   formatDate,
   formatMoneyFromMinor,
 } from "~/lib/utils/format";
+import { AppointmentsCard } from "~/components/appointment-book/appointments-card";
 
 export function meta() {
   return [
@@ -1009,6 +1010,26 @@ export default function PipelineDealDetailPage() {
               canEdit={canEdit}
             />
             </div>
+
+            {/* Visits for this deal (and the inquiry it came from). */}
+            <AppointmentsCard
+              target={{ dealId }}
+              prefill={{
+                deal: { id: dealId, label: (deal?.title as string | null | undefined) || "" },
+                contact: (() => {
+                  const c = dealContacts.find((x) => x.is_primary) ?? dealContacts[0];
+                  return c
+                    ? {
+                        id: c.id,
+                        label: c.full_name || c.primary_email || "",
+                        kind: c.kind === "company" ? ("company" as const) : ("person" as const),
+                        email: c.primary_email,
+                        phone: c.primary_phone,
+                      }
+                    : null;
+                })(),
+              }}
+            />
 
             {/* Stripe customer — who the deal is invoiced to. */}
             <DealCustomerSection

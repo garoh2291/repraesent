@@ -813,6 +813,9 @@ html {
   font-size: 0.6875rem;
   color: var(--muted-foreground);
   font-weight: 500;
+  /* Room on both sides: rbc sizes the gutter (and the header's) from this. */
+  padding: 0 6px;
+  white-space: nowrap;
 }
 /* Events */
 .appointments-calendar .rbc-day-slot .rbc-event,
@@ -961,9 +964,6 @@ html {
   }
   .appointments-calendar .rbc-event {
     font-size: 0.6875rem;
-  }
-  .appointments-calendar .rbc-time-gutter {
-    width: 44px;
   }
 }
 

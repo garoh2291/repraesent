@@ -30,6 +30,8 @@ import {
 } from "~/lib/api/calendar";
 import { CalendarSourcesPanel } from "~/components/calendar/CalendarSourcesPanel";
 import { CalendarView } from "~/components/calendar/CalendarView";
+import { usePilotFeatures } from "~/lib/feature-flags";
+import { canImportMeeting, ImportMeetingSheet } from "~/components/appointment-book/import-meeting-sheet";
 import { CreateEventDialog } from "~/components/calendar/CreateEventDialog";
 import { Button } from "~/components/ui/button";
 import {
@@ -90,8 +92,9 @@ function computeRange(
     start = m.clone().startOf("month").subtract(7, "days").startOf("day");
     end = m.clone().endOf("month").add(7, "days").endOf("day");
   } else if (view === "week") {
-    start = m.clone().startOf("week");
-    end = m.clone().endOf("week");
+    // A day either side: the grid starts the week on Sunday or Monday by language.
+    start = m.clone().startOf("week").subtract(1, "day");
+    end = m.clone().endOf("week").add(1, "day");
   } else if (view === "agenda") {
     // RBC's agenda view lists 30 days starting at the current date
     start = m.clone().startOf("day");
@@ -271,6 +274,9 @@ export default function CalendarPage() {
   const [selectedEvent, setSelectedEvent] =
     useState<UnifiedCalendarEvent | null>(null);
   const [sheetOpen, setSheetOpen] = useState(false);
+  // "Add to appointments" from the event dialog (Appointments pilot only).
+  const pilot = usePilotFeatures();
+  const [importing, setImporting] = useState<UnifiedCalendarEvent | null>(null);
   const [createOpen, setCreateOpen] = useState(false);
 
   // No sources connected: this page has nothing to show — except in a demo,
@@ -507,11 +513,29 @@ export default function CalendarPage() {
                     </a>
                   </Button>
                 )}
+                {pilot.appointmentBook && canImportMeeting(selectedEvent.calendarKey) ? (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="max-sm:h-11"
+                    onClick={() => {
+                      setImporting(selectedEvent);
+                      setSelectedEvent(null);
+                    }}
+                  >
+                    {t("appointmentBook.import.confirm", "Add to appointments")}
+                  </Button>
+                ) : null}
               </div>
             </>
           )}
         </DialogContent>
       </Dialog>
+      <ImportMeetingSheet
+        meeting={importing}
+        timezone={timezone}
+        onOpenChange={(o) => !o && setImporting(null)}
+      />
     </div>
   );
 }

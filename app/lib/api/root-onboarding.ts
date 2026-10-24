@@ -23,6 +23,8 @@ export interface RootBookingConfig {
   /** US / Canada / Australia teams; an empty list = that region uses Europe's team. */
   regionHosts?: Partial<Record<Exclude<SalesRegion, "europe">, SalesHost[]>>;
   checkAllOwnerCalendars: boolean;
+  /** Also show each booked call in Appointments (no emails from there). */
+  showInAppointments?: boolean;
   durationMinutes: number;
   window: { start: string; end: string };
   weekdays: string[];

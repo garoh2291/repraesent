@@ -20,6 +20,8 @@ export type AppointmentProvider =
   | "microsoft"
   | "caldav"
   | "baikal"
+  /** A Repraesent calendar: the booking is an appointment record (APPOINTMENTS_PLAN.md). */
+  | "repraesent"
   | "unknown";
 
 /** One co-host of a co-booked appointment. */
@@ -59,6 +61,7 @@ const PROVIDERS: readonly AppointmentProvider[] = [
   "microsoft",
   "caldav",
   "baikal",
+  "repraesent",
 ];
 
 const COMPANION_SUFFIXES = [

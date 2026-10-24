@@ -10,11 +10,18 @@ import {
   Sliders,
   Trash2,
 } from "lucide-react";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router";
 import TimezoneSelect from "react-timezone-select";
 import { calendarKeyFor, listCalendarAccounts } from "~/lib/api/calendar";
+import { usePilotFeatures } from "~/lib/feature-flags";
+import {
+  NativeCalendarPicker,
+  TargetKindSwitch,
+  isNativeKey,
+  nativeTargetPatch,
+} from "~/components/appointment-book/native-target";
 import { CalDavIcon } from "~/components/icons/CalDavIcon";
 import { GoogleIcon } from "~/components/icons/GoogleIcon";
 import { MicrosoftIcon } from "~/components/icons/MicrosoftIcon";
@@ -977,6 +984,12 @@ function AppointmentConfig({
   const patch = (p: Partial<NonNullable<FormField["appointment"]>>) =>
     onChange({ appointment: { ...ap, ...p } });
 
+  // Repraesent calendars (pilot `appointmentBook`): the field books one of
+  // your own calendars, whose hours and rules then apply instead of the
+  // window below. Chosen explicitly, else inferred from the stored key.
+  const pilot = usePilotFeatures();
+  const [kindChoice, setKindChoice] = useState<"native" | "connected" | null>(null);
+
   const accounts = data?.accounts ?? [];
   const baikalConfigs = data?.baikal_configs ?? [];
 
@@ -1004,19 +1017,58 @@ function AppointmentConfig({
     baikalConfigs.length > 0 ||
     caldavAccounts.some((a) => a.calendars.length > 0);
 
+  const currentKey = primaryTargetKeyOf(ap);
+  const nativeOn = pilot.appointmentBook;
+  const native =
+    nativeOn &&
+    (kindChoice
+      ? kindChoice === "native"
+      : isNativeKey(currentKey) || (!currentKey && !isLoading && !hasTargets));
+  const kindSwitch = nativeOn ? (
+    <TargetKindSwitch
+      native={native}
+      disabled={disabled}
+      onChange={(n) => {
+        setKindChoice(n ? "native" : "connected");
+        // Leaving a Repraesent calendar: its key means nothing to the
+        // connected-calendar pickers below.
+        if (!n && isNativeKey(currentKey)) patch(hostsPatch([]));
+      }}
+    />
+  ) : null;
+
+  if (native) {
+    return (
+      <div className="space-y-4">
+        {kindSwitch}
+        <Field>
+          <Label>{t("appointmentBook.target.calendar", "Calendar")}</Label>
+          <NativeCalendarPicker
+            targetKey={currentKey}
+            disabled={disabled}
+            onPick={(c) => patch(nativeTargetPatch(c))}
+          />
+        </Field>
+      </div>
+    );
+  }
+
   if (!isLoading && !hasTargets) {
     return (
-      <div className="space-y-2 rounded-lg border border-dashed p-3">
-        <p className="text-sm text-muted-foreground">
-          {t("forms.inspector.appointment.noTargets")}
-        </p>
-        <Link
-          to="/settings/calendars"
-          className="inline-flex items-center gap-1.5 text-sm font-medium text-foreground underline underline-offset-2"
-        >
-          <CalendarPlus className="h-3.5 w-3.5" aria-hidden="true" />
-          {t("forms.inspector.appointment.connectLink")}
-        </Link>
+      <div className="space-y-4">
+        {kindSwitch}
+        <div className="space-y-2 rounded-lg border border-dashed p-3">
+          <p className="text-sm text-muted-foreground">
+            {t("forms.inspector.appointment.noTargets")}
+          </p>
+          <Link
+            to="/settings/calendars"
+            className="inline-flex items-center gap-1.5 text-sm font-medium text-foreground underline underline-offset-2"
+          >
+            <CalendarPlus className="h-3.5 w-3.5" aria-hidden="true" />
+            {t("forms.inspector.appointment.connectLink")}
+          </Link>
+        </div>
       </div>
     );
   }
@@ -1153,6 +1205,7 @@ function AppointmentConfig({
 
   return (
     <>
+      {kindSwitch}
       <Field>
         <Label>{t("forms.inspector.appointment.hosts")}</Label>
         <AppointmentHostList

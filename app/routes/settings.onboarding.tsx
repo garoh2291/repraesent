@@ -278,6 +278,21 @@ function GeneralTab() {
             </span>
           </span>
         </label>
+        <label className="mt-3 flex items-start gap-3 rounded-lg border border-border bg-muted/30 px-3 py-2.5">
+          <Switch
+            checked={draft.booking.showInAppointments === true}
+            onCheckedChange={(v) => patchBooking({ showInAppointments: v })}
+            className="mt-0.5"
+          />
+          <span className="text-sm">
+            <span className="font-medium text-foreground">
+              {t("settings.onboarding.showInAppointmentsTitle")}
+            </span>
+            <span className="block text-xs text-muted-foreground">
+              {t("settings.onboarding.showInAppointmentsHint")}
+            </span>
+          </span>
+        </label>
       </Section>
 
       <Section

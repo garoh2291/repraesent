@@ -39,7 +39,14 @@ export type PilotFeature =
    * card. GOOGLE_REVIEWS_PLAN.md. The API gates it too (nestjs-monolith
    * `common/pilot-workspaces.ts`) because it calls Google and shows on a public page.
    */
-  | "googleReviews";
+  | "googleReviews"
+  /**
+   * Appointments as their own section: Repraesent calendars, the appointment
+   * book, customer messages. APPOINTMENTS_PLAN.md. Not in PILOT_ROUTES on
+   * purpose — `/appointments` is also where the legacy booking page lives, and
+   * the pages redirect themselves instead.
+   */
+  | "appointmentBook";
 
 /** i18n key of the label the sidebar shows next to a piloted entry. */
 export const PILOT_FEATURE_LABEL_KEY = "nav.demoBadge";
@@ -109,5 +116,6 @@ export function usePilotFeatures(): Record<PilotFeature, boolean> {
     aiAssistant: enabled,
     aiVisibility: enabled,
     googleReviews: enabled,
+    appointmentBook: enabled,
   };
 }

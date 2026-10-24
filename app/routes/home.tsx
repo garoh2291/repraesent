@@ -58,6 +58,7 @@ import {
   DropdownMenuTrigger,
 } from "~/components/ui/dropdown-menu";
 import { Skeleton } from "~/components/ui/skeleton";
+import { TodayAppointments } from "~/components/appointment-book/appointments-card";
 
 export function meta() {
   return [
@@ -850,6 +851,7 @@ export default function Today() {
                 total={(counts?.tasks_overdue ?? 0) + (counts?.tasks_due_today ?? 0)}
                 overdue={counts?.tasks_overdue ?? 0}
               />
+              <TodayAppointments />
               <NoNextStep
                 deals={data.deals_no_next_step ?? []}
                 total={counts?.deals_no_next_step ?? 0}
