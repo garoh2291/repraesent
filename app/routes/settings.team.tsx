@@ -390,8 +390,10 @@ export default function SettingsTeam() {
                     .map((w: string) => w[0])
                     .join("")
                     .toUpperCase();
-                  // Sign-in copy: admins set it; the person sees their own.
-                  const copyLine = isAdmin ? (
+                  // Sign-in copy: admins manage everyone's, every role manages
+                  // their own (the API only sends non-admins their own copy).
+                  const canEditCopy = isAdmin || isSelf;
+                  const copyLine = canEditCopy ? (
                     <button
                       type="button"
                       onClick={() => setCopyMember(m)}
@@ -406,15 +408,6 @@ export default function SettingsTeam() {
                           : t("settings.members.signInCopy.rowAdd")}
                       </span>
                     </button>
-                  ) : m.login_copy_email ? (
-                    <p className="flex items-center gap-1 text-xs text-muted-foreground min-w-0">
-                      <Mail className="h-3 w-3 shrink-0" aria-hidden />
-                      <span className="truncate">
-                        {t("settings.members.signInCopy.rowSet", {
-                          email: m.login_copy_email,
-                        })}
-                      </span>
-                    </p>
                   ) : null;
 
                   return (
