@@ -5449,7 +5449,8 @@
       "kindProduct": "Produkt",
       "kindMulti": "Mehrstufig",
       "kindIntake": "Aus anderem Tool",
-      "intro": "Jede Antwort landet in Ihren Anfragen."
+      "intro": "Jede Antwort landet in Ihren Anfragen.",
+      "webhookOnly": "Nur an andere Apps"
     },
     "status": {
       "draft": "Entwurf",
@@ -5801,7 +5802,8 @@
         "duplicateProductField": "„{{field}}“ ist eine zweite Produktfrage. Ein Formular kann nur eine haben — löschen Sie eine davon.",
         "productFieldOnStandardForm": "„{{field}}“ verlangt eine Zahlung, aber dieses Formular kann keine annehmen. Löschen Sie die Frage hier.",
         "commerceNoItems": "„{{field}}“ enthält noch keine Produkte. Wählen Sie die Frage aus und fügen Sie mindestens eins hinzu.",
-        "keyMissing": "„{{field}}“ hat keinen internen Namen. Öffnen Sie bei dieser Frage „Erweitert“ und tragen Sie einen ein."
+        "keyMissing": "„{{field}}“ hat keinen internen Namen. Öffnen Sie bei dieser Frage „Erweitert“ und tragen Sie einen ein.",
+        "crmSaveAppointment": "„{{field}}“ bucht einen Termin, aber dieses Formular speichert keine Antworten. Löschen Sie die Frage oder schalten Sie „Antworten als Anfragen speichern“ ein."
       },
       "otherLocales": "{{count}} weitere(r) Punkt(e) in:",
       "keyMissing": "Eine Frage hat keinen internen Namen. Öffnen Sie bei dieser Frage „Erweitert“ und tragen Sie einen ein.",
@@ -5818,7 +5820,8 @@
       "invalidCancelUrl": "Die Seite nach einer abgebrochenen Zahlung muss mit https:// beginnen. Geben Sie die vollständige Adresse ein.",
       "needsProductField": "Es gibt keine Produktfrage — Besucher sehen nicht, was sie kaufen. Fügen Sie eine über „Frage hinzufügen“ hinzu.",
       "duplicateProductField": "Ein Formular kann nur eine Produktfrage haben. Löschen Sie die zusätzliche.",
-      "productFieldOnStandardForm": "Eine Produktfrage funktioniert nur in Formularen mit Bezahlung. Löschen Sie sie hier."
+      "productFieldOnStandardForm": "Eine Produktfrage funktioniert nur in Formularen mit Bezahlung. Löschen Sie sie hier.",
+      "crmSaveAppointment": "Eine Terminfrage braucht gespeicherte Antworten. Löschen Sie sie oder schalten Sie „Antworten als Anfragen speichern“ ein."
     },
     "public": {
       "notAvailable": "Dieses Formular ist nicht verfügbar",
@@ -6033,7 +6036,18 @@
         "checkout_failed": "Zahlung fehlgeschlagen",
         "checkout_expired": "Zahlung nicht abgeschlossen"
       },
-      "advancedHint": "Was genau gesendet wird, der Signaturschlüssel und wie man ihn prüft."
+      "advancedHint": "Was genau gesendet wird, der Signaturschlüssel und wie man ihn prüft.",
+      "crm": {
+        "title": "Wohin die Antworten gehen",
+        "label": "Antworten als Anfragen speichern",
+        "onHelp": "Jede Antwort erscheint unter Kunden, und Ihr Team erfährt davon.",
+        "offHelp": "Antworten gehen nur an die Apps unten. Repraesent behält nur die Anzahl.",
+        "noWebhook": "Unten ist noch keine App eingeschaltet, deshalb werden Antworten weiter als Anfragen gespeichert. Schalten Sie eine ein, damit sie stattdessen dorthin gehen.",
+        "lockedProduct": "Zahlungsformulare speichern Antworten immer, damit jede Zahlung zu einem Kunden gehört.",
+        "lockedAppointment": "Dieses Formular bucht Termine und speichert Antworten deshalb immer: Jede Buchung braucht einen Kunden.",
+        "emailOff": "Dieses Formular sendet Antworten nur an andere Apps, deshalb geht keine Bestätigungs-E-Mail raus. Wenn Sie eine senden möchten, schalten Sie unter „An andere Apps senden“ „Antworten als Anfragen speichern“ ein.",
+        "payloadCleared": "Die Antworten wurden nach dem Senden gelöscht, weil dieses Formular nichts in Repraesent speichert."
+      }
     },
     "products": {
       "title": "Paket",

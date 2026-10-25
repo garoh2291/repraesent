@@ -572,6 +572,17 @@ export interface FormDefinition {
   commerce?: FormCommerce;
   /** Intake forms only. Ignored — and stripped — on every other kind. */
   intake?: FormIntakeConfig;
+  /** Absent on definitions saved before webhook-only forms existed — read as save. */
+  crm?: FormCrmBehavior;
+}
+
+/**
+ * Whether a submission becomes a lead. `save: false` = webhook only: the
+ * answers go to the form's webhooks and nowhere else. Standard and intake
+ * forms only, never with an appointment field (see crmSaveAppointment).
+ */
+export interface FormCrmBehavior {
+  save: boolean;
 }
 
 export interface FormConfirmationEmailLocale {
@@ -659,6 +670,8 @@ export const FORM_DEFINITION_ISSUES = [
   "duplicateProductField",
   /** A product field on a standard form, which can never open a checkout. */
   "productFieldOnStandardForm",
+  /** An appointment field on a webhook-only form — a booking needs a lead. */
+  "crmSaveAppointment",
 ] as const;
 export type FormDefinitionIssueCode = (typeof FORM_DEFINITION_ISSUES)[number];
 

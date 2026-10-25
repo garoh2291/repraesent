@@ -23,6 +23,8 @@ export interface FormSummary {
   locales: FormLocale[];
   default_locale: FormLocale;
   submission_count: number;
+  /** false = webhook only: answers go to the form's webhooks, no inquiry is saved. */
+  saves_to_crm: boolean;
   last_submission_at: string | null;
   created_at: string;
   updated_at: string;

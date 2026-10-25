@@ -30,6 +30,7 @@ import { SharePanel } from "~/components/forms/SharePanel";
 import { ThemePanel } from "~/components/forms/ThemePanel";
 import { DealPanel } from "~/components/forms/DealPanel";
 import { WebhooksPanel } from "~/components/forms/webhooks/WebhooksPanel";
+import { CrmSaveCard } from "~/components/forms/webhooks/CrmSaveCard";
 import {
   SetupChecklist,
   useLocalFlag,
@@ -2171,6 +2172,13 @@ export default function FormBuilderRoute() {
         {hasEmailConfig ? (
           <TabsContent value="email" className="app-fade-up pt-5">
             <TabLanguages {...stripProps} />
+            {/* Webhook only: no inquiry is saved, and the e-mail is sent to
+                the inquiry's address — so nothing would go out. */}
+            {definition.crm?.save === false ? (
+              <p className="mb-4 rounded-xl border border-border bg-muted/40 px-4 py-3 text-[13px] leading-relaxed text-muted-foreground">
+                {t("forms.webhooks.crm.emailOff")}
+              </p>
+            ) : null}
             <ConfirmationEmailPanel
               definition={definition}
               locales={locales}
@@ -2178,7 +2186,7 @@ export default function FormBuilderRoute() {
               value={confirmationEmail}
               locale={editingLocale}
               onSelectLocale={setEditingLocale}
-              disabled={!canEdit}
+              disabled={!canEdit || definition.crm?.save === false}
               // The Save used to hang on the page background below the card
               // with no footer or toolbar; it lives in the panel header now.
               onSave={canEdit ? () => emailMutation.mutate() : undefined}
@@ -2197,7 +2205,14 @@ export default function FormBuilderRoute() {
           <DealPanel formId={form.id} canEdit={canEdit} />
         </TabsContent>
 
-        <TabsContent value="webhooks" className="app-fade-up pt-5">
+        <TabsContent value="webhooks" className="app-fade-up space-y-4 pt-5">
+          <CrmSaveCard
+            formId={form.id}
+            kind={form.kind}
+            definition={definition}
+            canEdit={canEdit}
+            onChange={patchDefinition}
+          />
           <WebhooksPanel formId={form.id} kind={form.kind} canEdit={canEdit} />
         </TabsContent>
 

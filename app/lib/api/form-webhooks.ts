@@ -82,6 +82,8 @@ export interface FormWebhookDelivery {
   last_error: string | null;
   lead_id: string | null;
   payload: unknown;
+  /** Webhook-only form: the answers were wiped once the delivery was final. */
+  payload_cleared_at: string | null;
   next_attempt_at: string;
   created_at: string;
   delivered_at: string | null;

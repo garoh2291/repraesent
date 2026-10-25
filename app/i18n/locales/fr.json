@@ -5449,7 +5449,8 @@
       "kindProduct": "Produit",
       "kindMulti": "Multi-étapes",
       "kindIntake": "Depuis un autre outil",
-      "intro": "Chaque réponse arrive dans vos demandes."
+      "intro": "Chaque réponse arrive dans vos demandes.",
+      "webhookOnly": "Uniquement vers d’autres apps"
     },
     "status": {
       "draft": "Brouillon",
@@ -5801,7 +5802,8 @@
         "duplicateProductField": "« {{field}} » est une deuxième question produit. Un formulaire ne peut en avoir qu’une — supprimez-en une.",
         "productFieldOnStandardForm": "« {{field}} » demande un paiement, mais ce formulaire ne peut pas en recevoir. Supprimez-la ici.",
         "commerceNoItems": "« {{field}} » ne contient encore aucun produit. Sélectionnez-la et ajoutez-en au moins un.",
-        "keyMissing": "« {{field}} » n’a pas de nom interne. Ouvrez Avancé sur cette question et ajoutez-en un."
+        "keyMissing": "« {{field}} » n’a pas de nom interne. Ouvrez Avancé sur cette question et ajoutez-en un.",
+        "crmSaveAppointment": "« {{field}} » réserve un rendez-vous, mais ce formulaire n’enregistre pas les réponses. Supprimez la question ou activez « Enregistrer les réponses comme demandes »."
       },
       "otherLocales": "{{count}} autre(s) point(s) à corriger en :",
       "keyMissing": "Une question n’a pas de nom interne. Ouvrez Avancé sur cette question et ajoutez-en un.",
@@ -5818,7 +5820,8 @@
       "invalidCancelUrl": "La page après un paiement annulé doit commencer par https://. Saisissez l’adresse complète.",
       "needsProductField": "Il n’y a pas de question produit : les visiteurs ne voient pas ce qu’ils achètent. Ajoutez-en une via « Ajouter une question ».",
       "duplicateProductField": "Un formulaire ne peut avoir qu’une question produit. Supprimez celle en trop.",
-      "productFieldOnStandardForm": "Une question produit ne fonctionne que sur un formulaire avec paiement. Supprimez-la ici."
+      "productFieldOnStandardForm": "Une question produit ne fonctionne que sur un formulaire avec paiement. Supprimez-la ici.",
+      "crmSaveAppointment": "Une question de rendez-vous a besoin de réponses enregistrées. Supprimez-la ou activez « Enregistrer les réponses comme demandes »."
     },
     "public": {
       "notAvailable": "Ce formulaire n'est pas disponible",
@@ -6033,7 +6036,18 @@
         "checkout_failed": "Paiement échoué",
         "checkout_expired": "Paiement non terminé"
       },
-      "advancedHint": "Ce qui est envoyé exactement, le secret de signature et comment le vérifier."
+      "advancedHint": "Ce qui est envoyé exactement, le secret de signature et comment le vérifier.",
+      "crm": {
+        "title": "Où vont les réponses",
+        "label": "Enregistrer les réponses comme demandes",
+        "onHelp": "Chaque réponse apparaît dans Clients, et votre équipe en est informée.",
+        "offHelp": "Les réponses vont uniquement vers les apps ci-dessous. Repraesent ne garde que leur nombre.",
+        "noWebhook": "Aucune app ci-dessous n’est encore activée : les réponses sont donc toujours enregistrées comme demandes. Activez-en une pour les y envoyer à la place.",
+        "lockedProduct": "Les formulaires de paiement enregistrent toujours les réponses, pour que chaque paiement soit rattaché à un client.",
+        "lockedAppointment": "Ce formulaire réserve des rendez-vous, il enregistre donc toujours les réponses : chaque réservation a besoin d’un client.",
+        "emailOff": "Ce formulaire envoie les réponses uniquement vers d’autres apps : aucun e-mail de confirmation n’est envoyé. Pour en envoyer un, activez « Enregistrer les réponses comme demandes » dans « Envoyer vers d’autres apps ».",
+        "payloadCleared": "Les réponses ont été supprimées après l’envoi, car ce formulaire ne garde rien dans Repraesent."
+      }
     },
     "products": {
       "title": "Lot",

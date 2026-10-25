@@ -5447,7 +5447,8 @@
       "kindProduct": "Product",
       "kindMulti": "Multi-step",
       "kindIntake": "From another tool",
-      "intro": "Every answer lands in your inquiries."
+      "intro": "Every answer lands in your inquiries.",
+      "webhookOnly": "Only to other apps"
     },
     "status": {
       "draft": "Draft",
@@ -5799,7 +5800,8 @@
         "duplicateProductField": "“{{field}}” is a second product question. A form can have only one — delete one of them.",
         "productFieldOnStandardForm": "“{{field}}” asks for payment, but this form can’t take payments. Delete it here.",
         "commerceNoItems": "“{{field}}” has no products yet. Select it and add at least one.",
-        "keyMissing": "“{{field}}” has no internal name. Open Advanced on that question and add one."
+        "keyMissing": "“{{field}}” has no internal name. Open Advanced on that question and add one.",
+        "crmSaveAppointment": "“{{field}}” books an appointment, but this form doesn’t save answers. Delete the question, or switch on “Save answers as inquiries”."
       },
       "otherLocales": "{{count}} more thing(s) to fix in:",
       "keyMissing": "One question has no internal name. Open Advanced on that question and add one.",
@@ -5816,7 +5818,8 @@
       "invalidCancelUrl": "The page after a cancelled payment must start with https://. Enter the full address.",
       "needsProductField": "There’s no product question, so visitors can’t see what they’re buying. Add one from “Add a question”.",
       "duplicateProductField": "A form can have only one product question. Delete the extra one.",
-      "productFieldOnStandardForm": "A product question only works on a form that takes payments. Delete it here."
+      "productFieldOnStandardForm": "A product question only works on a form that takes payments. Delete it here.",
+      "crmSaveAppointment": "An appointment question needs saved answers. Delete it, or switch on “Save answers as inquiries”."
     },
     "public": {
       "notAvailable": "This form is not available",
@@ -6031,7 +6034,18 @@
         "checkout_failed": "Payment failed",
         "checkout_expired": "Payment not finished"
       },
-      "advancedHint": "What exactly is sent, the signing secret, and how to check it."
+      "advancedHint": "What exactly is sent, the signing secret, and how to check it.",
+      "crm": {
+        "title": "Where answers go",
+        "label": "Save answers as inquiries",
+        "onHelp": "Every answer appears under Customers, and your team is told about it.",
+        "offHelp": "Answers go only to the apps below. Repraesent keeps just the number of answers.",
+        "noWebhook": "No app below is switched on yet, so answers are still saved as inquiries. Switch one on to send them there instead.",
+        "lockedProduct": "Payment forms always save answers, so every payment belongs to a customer.",
+        "lockedAppointment": "This form books appointments, so it always saves answers: every booking needs a customer.",
+        "emailOff": "This form sends answers only to other apps, so no confirmation e-mail goes out. To send one, switch on “Save answers as inquiries” under “Send to other apps”.",
+        "payloadCleared": "The answers were deleted after sending, because this form keeps nothing in Repraesent."
+      }
     },
     "products": {
       "title": "Bundle",

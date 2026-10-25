@@ -471,6 +471,20 @@ export function validateDefinition(
     });
   }
 
+  // A webhook-only form saves no lead, and a booking needs one: the lead id is
+  // the Meet idempotency key and the event is stamped onto the lead.
+  if (definition.crm?.save === false) {
+    for (const field of fields) {
+      if (field.type !== "appointment") continue;
+      issues.push({
+        code: "crmSaveAppointment",
+        tab: "build",
+        fieldId: field.id,
+        fieldKey: field.key,
+      });
+    }
+  }
+
   // ── per-locale content ────────────────────────────────────────────────────
   // EVERY enabled locale must be able to render the form on its own. Falling
   // back to the default was acceptable while a locale was just a translation

@@ -5447,7 +5447,8 @@
       "kindProduct": "Product",
       "kindMulti": "Meerstaps",
       "kindIntake": "Uit andere tool",
-      "intro": "Elk antwoord komt binnen bij uw aanvragen."
+      "intro": "Elk antwoord komt binnen bij uw aanvragen.",
+      "webhookOnly": "Alleen naar andere apps"
     },
     "status": {
       "draft": "Concept",
@@ -5799,7 +5800,8 @@
         "duplicateProductField": "‘{{field}}’ is een tweede productvraag. Een formulier kan er maar één hebben — verwijder er een.",
         "productFieldOnStandardForm": "‘{{field}}’ vraagt om een betaling, maar dit formulier kan geen betalingen ontvangen. Verwijder de vraag hier.",
         "commerceNoItems": "‘{{field}}’ bevat nog geen producten. Selecteer de vraag en voeg er minstens één toe.",
-        "keyMissing": "‘{{field}}’ heeft geen interne naam. Open Geavanceerd bij die vraag en voeg er een toe."
+        "keyMissing": "‘{{field}}’ heeft geen interne naam. Open Geavanceerd bij die vraag en voeg er een toe.",
+        "crmSaveAppointment": "‘{{field}}’ boekt een afspraak, maar dit formulier slaat geen antwoorden op. Verwijder de vraag of zet ‘Antwoorden opslaan als aanvragen’ aan."
       },
       "otherLocales": "Nog {{count}} punt(en) op te lossen in:",
       "keyMissing": "Eén vraag heeft geen interne naam. Open Geavanceerd bij die vraag en voeg er een toe.",
@@ -5816,7 +5818,8 @@
       "invalidCancelUrl": "De pagina na een geannuleerde betaling moet beginnen met https://. Vul het volledige adres in.",
       "needsProductField": "Er is geen productvraag, dus bezoekers zien niet wat ze kopen. Voeg er een toe via ‘Vraag toevoegen’.",
       "duplicateProductField": "Een formulier kan maar één productvraag hebben. Verwijder de extra vraag.",
-      "productFieldOnStandardForm": "Een productvraag werkt alleen op een formulier met betaling. Verwijder haar hier."
+      "productFieldOnStandardForm": "Een productvraag werkt alleen op een formulier met betaling. Verwijder haar hier.",
+      "crmSaveAppointment": "Een afspraakvraag heeft opgeslagen antwoorden nodig. Verwijder de vraag of zet ‘Antwoorden opslaan als aanvragen’ aan."
     },
     "public": {
       "notAvailable": "Dit formulier is niet beschikbaar",
@@ -6031,7 +6034,18 @@
         "checkout_failed": "Betaling mislukt",
         "checkout_expired": "Betaling niet afgerond"
       },
-      "advancedHint": "Wat er precies wordt verstuurd, de ondertekeningssleutel en hoe u die controleert."
+      "advancedHint": "Wat er precies wordt verstuurd, de ondertekeningssleutel en hoe u die controleert.",
+      "crm": {
+        "title": "Waar de antwoorden heen gaan",
+        "label": "Antwoorden opslaan als aanvragen",
+        "onHelp": "Elk antwoord verschijnt onder Klanten, en uw team krijgt er bericht van.",
+        "offHelp": "Antwoorden gaan alleen naar de apps hieronder. Repraesent houdt alleen het aantal bij.",
+        "noWebhook": "Hieronder staat nog geen app aan, dus antwoorden worden nog als aanvragen opgeslagen. Zet er een aan om ze daarheen te sturen.",
+        "lockedProduct": "Betaalformulieren slaan antwoorden altijd op, zodat elke betaling bij een klant hoort.",
+        "lockedAppointment": "Dit formulier boekt afspraken en slaat antwoorden daarom altijd op: elke boeking heeft een klant nodig.",
+        "emailOff": "Dit formulier stuurt antwoorden alleen naar andere apps, dus er gaat geen bevestigingsmail uit. Wilt u er een sturen, zet dan ‘Antwoorden opslaan als aanvragen’ aan onder ‘Naar andere apps sturen’.",
+        "payloadCleared": "De antwoorden zijn na het versturen verwijderd, omdat dit formulier niets in Repraesent bewaart."
+      }
     },
     "products": {
       "title": "Bundel",

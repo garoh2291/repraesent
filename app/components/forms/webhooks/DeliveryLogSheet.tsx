@@ -74,7 +74,7 @@ export function DeliveryLogSheet({
                   delivery={d}
                   expanded={expanded === d.id}
                   onToggle={() => setExpanded(expanded === d.id ? null : d.id)}
-                  canRedeliver={canEdit && !!webhook}
+                  canRedeliver={canEdit && !!webhook && !d.payload_cleared_at}
                   redelivering={
                     redeliver.isPending &&
                     redeliver.variables?.deliveryId === d.id
@@ -184,9 +184,15 @@ function DeliveryRow({
             <p className="mb-1 text-[11px] font-semibold uppercase tracking-widest text-muted-foreground/70">
               {t("forms.webhooks.request")}
             </p>
-            <pre className="ink-surface max-h-64 overflow-auto rounded-lg border bg-[#111113] p-3 font-mono text-[11px] leading-relaxed text-white/80">
-              {JSON.stringify(d.payload, null, 2)}
-            </pre>
+            {d.payload_cleared_at ? (
+              <p className="rounded-lg border bg-muted/40 p-3 text-[13px] text-muted-foreground">
+                {t("forms.webhooks.crm.payloadCleared")}
+              </p>
+            ) : (
+              <pre className="ink-surface max-h-64 overflow-auto rounded-lg border bg-[#111113] p-3 font-mono text-[11px] leading-relaxed text-white/80">
+                {JSON.stringify(d.payload, null, 2)}
+              </pre>
+            )}
           </div>
           <div>
             <p className="mb-1 text-[11px] font-semibold uppercase tracking-widest text-muted-foreground/70">
