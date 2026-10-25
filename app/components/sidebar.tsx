@@ -254,6 +254,7 @@ function MainSections({ onClose }: { onClose?: () => void }) {
           >
             <Icon className="h-4 w-4 shrink-0" />
             <span className="truncate">{section.label}</span>
+            {section.pilot ? <DemoPill /> : null}
             {section.key === "today" && needsYou > 0 ? (
               <MarkerCount n={needsYou} dark className="ml-auto" />
             ) : null}

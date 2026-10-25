@@ -8,7 +8,6 @@ import { cn } from "~/lib/utils";
 import { useDocumentMeta } from "~/lib/hooks/use-document-meta";
 import { useResultsSummary } from "~/lib/hooks/useResultsSummary";
 import type { AiVisibilitySummary, Funnel, ResultPeriod, SourceBucket } from "~/lib/api/results";
-import { usePilotFeatures } from "~/lib/feature-flags";
 import { durationWords } from "~/lib/utils/duration-words";
 import { formatCurrency, formatNumber } from "~/lib/utils/format";
 import { PageContainer, PageHeader } from "~/components/notebook/page-header";
@@ -57,7 +56,6 @@ const CONNECT: Partial<Record<SourceBucket, string>> = {
  */
 export default function ResultsPage() {
   const { t, i18n: i18nInstance } = useTranslation();
-  const pilot = usePilotFeatures();
   useDocumentMeta({ titleKey: "results.metaTitle", titleSuffix: " - Repraesent" });
   const [period, setPeriod] = useState<ResultPeriod>("30d");
   const q = useResultsSummary(period);
@@ -351,7 +349,7 @@ export default function ResultsPage() {
         ) : null}
       </Panel>
 
-      {pilot.aiVisibility && data?.ai_visibility ? (
+      {data?.ai_visibility ? (
         <AiVisibilityCard summary={data.ai_visibility} fromAi={data.from_ai} currency={data.currency} />
       ) : null}
 

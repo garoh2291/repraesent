@@ -51,7 +51,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "~/components/ui/select";
-import { usePilotFeatures } from "~/lib/feature-flags";
 import { cn } from "~/lib/utils";
 import { UseTemplatePicker } from "~/components/email-campaigns/UseTemplatePicker";
 import { RichTextEditor, RichTextToolbar } from "./rich-text-editor";
@@ -72,7 +71,6 @@ export function ComposeEmailDialog({
 }) {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
-  const pilot = usePilotFeatures();
 
   const [to, setTo] = useState<Recipient[]>(request.to ?? []);
   const [cc, setCc] = useState<Recipient[]>(request.cc ?? []);
@@ -107,7 +105,7 @@ export function ComposeEmailDialog({
   const { data: signature } = useQuery({
     queryKey: ["email-account-signature", accountId],
     queryFn: () => getEmailAccountSignature(accountId!),
-    enabled: open && !!accountId && pilot.emailSignature,
+    enabled: open && !!accountId,
   });
 
   const sendable = useMemo(
@@ -409,7 +407,7 @@ export function ComposeEmailDialog({
                 />
               </div>
 
-              {pilot.emailSignature && signature?.signature_html ? (
+              {signature?.signature_html ? (
                 <SignatureNotice
                   html={signature.signature_html}
                   fromEmail={

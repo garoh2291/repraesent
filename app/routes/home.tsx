@@ -470,8 +470,6 @@ function ChatGaps({
 
 function AiVisibilityAlert({ alert }: { alert: TodayAiAlert }) {
   const { t } = useTranslation();
-  const pilot = usePilotFeatures();
-  if (!pilot.aiVisibility) return null;
   const link =
     alert.reason === "cap"
       ? { to: "/ai-visibility/plan", label: t("today.ai.changeLimit", "Change the limit") }

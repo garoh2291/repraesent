@@ -118,7 +118,6 @@ export function CommandPalette() {
     }
     for (const it of SETTINGS_NAV) {
       if (it.to === "/settings/integrations" && !(pilot.integrations || isDemo)) continue;
-      if (it.to === "/settings/ai" && !pilot.aiAssistant) continue;
       if ((it.to === "/settings/onboarding" || it.to === "/settings/support") && !isRootAdmin) continue;
       out.push({
         id: `set-${it.to}`,

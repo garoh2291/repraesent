@@ -81,6 +81,8 @@ export interface NavSection {
   /** Path prefixes that light this section up. */
   match: string[];
   tabs: SectionTab[];
+  /** Shows the neutral "Demo" pill (pilot features). */
+  pilot?: boolean;
 }
 
 const lucideIconNames = new Set(
@@ -320,15 +322,12 @@ export function useNavSections(): NavSection[] | null {
       icon: OpenAiMark,
     },
   ];
-  if (pilot.aiVisibility) {
-    results.push({
-      key: "ai-visibility",
-      label: t("sections.tabs.aiVisibility", "AI visibility"),
-      to: "/ai-visibility",
-      icon: Radar,
-      pilot: true,
-    });
-  }
+  results.push({
+    key: "ai-visibility",
+    label: t("sections.tabs.aiVisibility", "AI visibility"),
+    to: "/ai-visibility",
+    icon: Radar,
+  });
 
   const website: SectionTab[] = [];
   if (showWebsite) {
@@ -456,6 +455,7 @@ export function useNavSections(): NavSection[] | null {
             to: "/appointments",
             match: ["/appointments", "/calendar", "/instructions"],
             tabs: appointments,
+            pilot: true,
           },
         ]
       : []),

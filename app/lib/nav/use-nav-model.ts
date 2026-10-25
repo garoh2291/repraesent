@@ -36,7 +36,6 @@ export function useNavModel() {
     currentWorkspace.is_demo !== true &&
     !isDoorboostBrandWs &&
     currentWorkspace.support_contact_enabled === true;
-  const showAiAssistant = pilot.aiAssistant;
 
   // Route-driven modes: deep links and refreshes land in the right mode for
   // free, and there is nothing to reset on the way out.
@@ -53,9 +52,7 @@ export function useNavModel() {
         item.group === group.key &&
         (item.to === "/settings/integrations"
           ? pilot.integrations || isDemoWorkspace
-          : item.to === "/settings/ai"
-            ? showAiAssistant
-            : item.to === "/settings/onboarding" || item.to === "/settings/support"
+          : item.to === "/settings/onboarding" || item.to === "/settings/support"
               ? isRootAdmin
               : true),
     ),
@@ -90,4 +87,4 @@ export function useNavModel() {
 }
 
 /** Settings entries that carry the neutral "Demo" pill (pilot features). */
-export const PILOT_SETTINGS = new Set(["/settings/integrations", "/settings/ai"]);
+export const PILOT_SETTINGS = new Set(["/settings/integrations"]);
