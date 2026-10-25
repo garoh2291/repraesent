@@ -23,6 +23,7 @@ import { normalizeDefinition } from "~/lib/forms/field-types";
 import {
   contentKey,
   isFormLocale,
+  toFormLocale,
   isMultiStep,
   type FormErrorCode,
   type FormLocale,
@@ -106,8 +107,9 @@ export default function PublicFormRoute() {
     if (!data || locale) return;
     const offered = data.locales;
 
-    if (isFormLocale(langParam) && offered.includes(langParam)) {
-      setLocale(langParam);
+    const asked = toFormLocale(langParam);
+    if (asked && offered.includes(asked)) {
+      setLocale(asked);
       return;
     }
     const stored = readLangCookie();
@@ -116,12 +118,8 @@ export default function PublicFormRoute() {
       return;
     }
     const nav =
-      typeof navigator !== "undefined"
-        ? (navigator.language || "").split("-")[0].toLowerCase()
-        : "";
-    setLocale(
-      isFormLocale(nav) && offered.includes(nav) ? nav : data.default_locale,
-    );
+      typeof navigator !== "undefined" ? toFormLocale(navigator.language) : null;
+    setLocale(nav && offered.includes(nav) ? nav : data.default_locale);
   }, [data, langParam, locale]);
 
   useEffect(() => {

@@ -10,6 +10,7 @@ import { Input } from "~/components/ui/input";
 import { Switch } from "~/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "~/components/ui/tabs";
 import type { FormLocale } from "~/lib/forms/schema";
+import { SUPPORTED_LOCALES } from "~/i18n/locales";
 import { extractErrorMessage } from "~/lib/api/axios-instance";
 import {
   publishEmailTemplate,
@@ -817,6 +818,7 @@ export function TemplateBuilder({
 
       <div className="app-fade-up flex justify-center">
         <LanguageStrip
+          availableLocales={SUPPORTED_LOCALES}
           locales={locales as FormLocale[]}
           defaultLocale={defaultLocale as FormLocale}
           activeLocale={activeLocale as FormLocale}

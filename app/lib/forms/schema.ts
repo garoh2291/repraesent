@@ -7,7 +7,7 @@
  * app/lib/api/appointments.ts. If you change one side, change the other.
  */
 
-export const FORM_LOCALES = ["en", "de", "fr", "nl"] as const;
+export const FORM_LOCALES = ["en", "de", "fr", "nl", "hy"] as const;
 export type FormLocale = (typeof FORM_LOCALES)[number];
 
 export const FORM_FIELD_TYPES = [
@@ -1018,6 +1018,49 @@ export const FORM_RUNTIME_CONTENT: Record<
     "error.checkout_unavailable":
       "Betalen is op dit moment niet beschikbaar. Probeer het zo opnieuw.",
   },
+  hy: {
+    "nav.back": "Հետ",
+    "nav.next": "Առաջ",
+    "nav.stepOf": "Քայլ {{n}}՝ {{total}}-ից",
+    "step.title.contact": "Կոնտակտ",
+    "step.title.details": "Մանրամասներ",
+    "step.title.new": "Քայլ {{n}}",
+    "commerce.title": "Պատվերի ամփոփում",
+    "commerce.quantity": "Քանակ",
+    "commerce.subtotal": "Միջանկյալ գումար",
+    "commerce.total": "Այսօր վճարվող",
+    "commerce.then": "այնուհետև {{amount}} {{per}}",
+    "commerce.per.day": "օրական",
+    "commerce.per.week": "շաբաթական",
+    "commerce.per.month": "ամսական",
+    "commerce.per.year": "տարեկան",
+    "commerce.every": "յուրաքանչյուր {{n}} {{unit}}",
+    "commerce.unit.day": "օր",
+    "commerce.unit.week": "շաբաթ",
+    "commerce.unit.month": "ամիս",
+    "commerce.unit.year": "տարի",
+    "commerce.oneTime": "միանվագ",
+    "commerce.secure": "Անվտանգ վճարում Stripe-ի միջոցով",
+    "commerce.decrease": "Նվազեցնել քանակը",
+    "commerce.increase": "Ավելացնել քանակը",
+    "commerce.continue": "Անցնել վճարման",
+    "commerce.select": "Ընտրել",
+    "error.product_required": "Ընտրեք առնվազն մեկ ապրանք։",
+    "checkout.paid.title": "Վճարումը ստացված է",
+    "checkout.paid.body":
+      "Շնորհակալություն։ Անդորրագիրն ուղարկվում է Ձեր էլ. փոստին։",
+    "checkout.processing.title": "Վճարումը հաստատվում է",
+    "checkout.processing.body":
+      "Սովորաբար սա տևում է մի քանի վայրկյան։ Կարող եք էջը բաց թողնել։",
+    "checkout.failed.title": "Վճարումը չի կատարվել",
+    "checkout.failed.body":
+      "Ոչինչ չի գանձվել։ Փորձեք կրկին՝ վճարման այլ եղանակով։",
+    "checkout.failed.retry": "Փորձել կրկին",
+    "checkout.canceled": "Վճարումը չեղարկվել է։ Ձեր պատասխանները պահպանված են։",
+    "checkout.canceled.dismiss": "Փակել",
+    "error.checkout_unavailable":
+      "Վճարումն այս պահին հասանելի չէ։ Խնդրում ենք փորձել մի փոքր ուշ։",
+  },
 };
 
 /** The runtime keys that belong to multi-step navigation. */
@@ -1303,4 +1346,18 @@ export function isFormLocale(value: unknown): value is FormLocale {
     typeof value === "string" &&
     (FORM_LOCALES as readonly string[]).includes(value)
   );
+}
+
+/**
+ * A language code from anywhere outside the form — ?lang=, the repraesent_lang
+ * cookie, navigator.language, the re:translate override — read as a form
+ * locale, or null. Primary subtag only, so "hy-AM", "hy_am" and "HY" are all
+ * "hy"; "am" is also read as Armenian, because sites use the country code for
+ * it. Mirrored as normLocale in the embed runtime (form-render.service.ts).
+ */
+export function toFormLocale(value: unknown): FormLocale | null {
+  if (typeof value !== "string") return null;
+  let primary = value.trim().split(/[-_]/)[0].toLowerCase();
+  if (primary === "am") primary = "hy";
+  return isFormLocale(primary) ? primary : null;
 }

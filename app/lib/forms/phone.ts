@@ -43,8 +43,11 @@ export function defaultPhoneCountry(locale: string | undefined | null): string {
       return "FR";
     case "nl":
       return "NL";
+    case "hy":
+      return "AM";
     default:
-      return "GB";
+      // English forms are US English.
+      return "US";
   }
 }
 
