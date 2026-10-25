@@ -18,7 +18,7 @@ interface AuthContextType {
   requestMagicLinkAsync: (vars: {
     email: string;
     locale?: SupportedLocale;
-  }) => Promise<void>;
+  }) => Promise<{ copy_hint?: string }>;
   isRequestingMagicLink: boolean;
   magicLinkError: Error | null;
   setCurrentWorkspace: (

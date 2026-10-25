@@ -6,9 +6,11 @@ import {
   getNotes,
   getNotesForContact,
   getNotesForDeal,
+  getNotesForAppointment,
   createNote,
   createNoteForContact,
   createNoteForDeal,
+  createNoteForAppointment,
   updateNote,
   deleteNote,
   type Note,
@@ -87,6 +89,8 @@ interface LeadNotesSectionProps {
   dealId?: string;
   /** Contact-scoped notes when there is no linked lead. */
   contactId?: string;
+  /** Appointment-scoped notes (appointment page). */
+  appointmentId?: string;
   /**
    * When notes are loaded via `leadId` but the UI is the contact page, pass
    * the contact id so history cache invalidates alongside lead history.
@@ -112,6 +116,7 @@ export function LeadNotesSection({
   leadId,
   dealId,
   contactId,
+  appointmentId,
   linkedContactId,
   canEdit = true,
   fetchNotes,
@@ -172,8 +177,11 @@ export function LeadNotesSection({
     if (contactId) {
       return ["customer-notes", contactId] as const;
     }
+    if (appointmentId) {
+      return ["appointment-notes", appointmentId] as const;
+    }
     return ["notes-disabled"] as const;
-  }, [leadId, dealId, contactId, scopeKey]);
+  }, [leadId, dealId, contactId, appointmentId, scopeKey]);
 
   const { data: notes = [], isLoading } = useQuery({
     queryKey: notesQueryKey,
@@ -187,9 +195,12 @@ export function LeadNotesSection({
       if (contactId) {
         return getNotesForContact(contactId);
       }
+      if (appointmentId) {
+        return getNotesForAppointment(appointmentId);
+      }
       return Promise.resolve([]);
     },
-    enabled: !!(leadId || dealId || contactId),
+    enabled: !!(leadId || dealId || contactId || appointmentId),
   });
 
   const createMutation = useMutation({
@@ -198,7 +209,9 @@ export function LeadNotesSection({
         ? createNote(leadId, content)
         : dealId
           ? createNoteForDeal(dealId, content)
-          : createNoteForContact(contactId!, content),
+          : appointmentId
+            ? createNoteForAppointment(appointmentId, content)
+            : createNoteForContact(contactId!, content),
     onMutate: async (content) => {
       await queryClient.cancelQueries({ queryKey: notesQueryKey });
       const previousNotes = queryClient.getQueryData<Note[]>(notesQueryKey);

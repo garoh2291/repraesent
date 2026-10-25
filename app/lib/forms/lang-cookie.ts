@@ -16,7 +16,8 @@ export const LANG_COOKIE = "repraesent_lang";
  * The primary subtag of `repraesent_lang`, lowercased, or `""` for no opinion.
  *
  * "de-DE", "de_DE" and "DE" all read as "de", matching how the
- * `navigator.language` fallback is normalised. Returns "" rather than throwing
+ * `navigator.language` fallback is normalised; "am" also reads as "hy"
+ * (sites use the country code for Armenian). Returns "" rather than throwing
  * on the server, where there is no `document` — callers run it in an effect.
  */
 export function readLangCookie(): string {
@@ -41,7 +42,8 @@ export function readLangCookie(): string {
     } catch {
       // A malformed percent-escape is not worth failing the whole read over.
     }
-    return value.split(/[-_]/)[0].toLowerCase();
+    const primary = value.split(/[-_]/)[0].toLowerCase();
+    return primary === "am" ? "hy" : primary;
   }
 
   return "";

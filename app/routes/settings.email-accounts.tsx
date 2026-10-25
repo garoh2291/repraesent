@@ -38,7 +38,6 @@ import {
 } from "~/lib/api/email-accounts";
 import { MicrosoftIcon } from "~/components/icons/MicrosoftIcon";
 import { SignatureEditor } from "~/components/organism/signature-editor";
-import { usePilotFeatures } from "~/lib/feature-flags";
 import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
 import {
@@ -291,7 +290,6 @@ export default function SettingsEmailAccounts() {
   // Only one signature editor open at a time: two half-edited signatures on
   // screen invites saving the wrong one.
   const [signatureFor, setSignatureFor] = useState<EmailAccount | null>(null);
-  const pilot = usePilotFeatures();
   const [aliasParent, setAliasParent] = useState<EmailAccount | null>(null);
   const [aliasAdded, setAliasAdded] = useState<string | null>(null);
 
@@ -568,7 +566,7 @@ export default function SettingsEmailAccounts() {
                         ? handleConnectMicrosoft
                         : handleConnectGoogle
                     }
-                    canEditSignature={pilot.emailSignature}
+                    canEditSignature
                     onEditSignature={() => setSignatureFor(parent)}
                   />
                   {signatureFor?.id === parent.id ? (
@@ -586,7 +584,7 @@ export default function SettingsEmailAccounts() {
                         busy={busy}
                         onSetDefault={() => defaultMutation.mutate(alias.id)}
                         onRemove={() => setPendingDisconnect(alias)}
-                        canEditSignature={pilot.emailSignature}
+                        canEditSignature
                         onEditSignature={() => setSignatureFor(alias)}
                       />
                       {signatureFor?.id === alias.id ? (

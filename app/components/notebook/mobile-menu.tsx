@@ -355,6 +355,20 @@ function MainTiles({
   const sections = useNavSections();
   const website = sections?.find((s) => s.key === "website");
   const tiles: Tile[] = [];
+  // Results leaves the tab bar when Appointments has a place there.
+  const results = sections?.some((s) => s.key === "appointments")
+    ? sections.find((s) => s.key === "results")
+    : undefined;
+  if (results) {
+    tiles.push({
+      key: "results",
+      label: results.label,
+      hint: t("nav.mobileMenu.hints.results", "How business is going"),
+      icon: results.icon,
+      to: results.to,
+      active: results.match.some((m) => location.pathname === m || location.pathname.startsWith(`${m}/`)),
+    });
+  }
   if (website) {
     tiles.push({
       key: "website",

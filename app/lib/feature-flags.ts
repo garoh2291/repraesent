@@ -24,22 +24,25 @@ export const PILOT_WORKSPACE_IDS: ReadonlySet<string> = new Set([
 export type PilotFeature =
   /** Workflow builder. */
   | "workflows"
-  /** Per-mailbox signature editing in Settings, and its notice in the composer. */
-  | "emailSignature"
   /** Settings → Integrations (Stripe Connect). Products/invoicing follow it, since connecting happens there. */
   | "integrations"
   /** Email marketing: /campaigns, /segments, /email-templates. */
   | "emailCampaigns"
-  /** Website AI assistant: /ai-assistants. */
+  /** Website AI assistant: /ai-assistants. Settings → AI (the workspace key) is open to everyone. */
   | "aiAssistant"
-  /** AI visibility (Peec-style tracking): /ai-visibility. AI_VISIBILITY_PLAN.md. */
-  | "aiVisibility"
   /**
    * Google review asks: after-the-job sheet, Today list, Results line, review
    * card. GOOGLE_REVIEWS_PLAN.md. The API gates it too (nestjs-monolith
    * `common/pilot-workspaces.ts`) because it calls Google and shows on a public page.
    */
-  | "googleReviews";
+  | "googleReviews"
+  /**
+   * Appointments as their own section: Repraesent calendars, the appointment
+   * book, customer messages. APPOINTMENTS_PLAN.md. Not in PILOT_ROUTES on
+   * purpose — `/appointments` is also where the legacy booking page lives, and
+   * the pages redirect themselves instead.
+   */
+  | "appointmentBook";
 
 /** i18n key of the label the sidebar shows next to a piloted entry. */
 export const PILOT_FEATURE_LABEL_KEY = "nav.demoBadge";
@@ -47,7 +50,7 @@ export const PILOT_FEATURE_LABEL_KEY = "nav.demoBadge";
 /**
  * Route prefixes that belong to a pilot feature. Matched on whole path
  * segments, so `/campaigns-old` is not `/campaigns`. Longer prefixes win
- * (`/settings/ai` before anything a bare `/settings` might one day claim).
+ * (`/settings/integrations` before anything a bare `/settings` might one day claim).
  */
 export const PILOT_ROUTES: ReadonlyArray<{
   prefix: string;
@@ -58,8 +61,6 @@ export const PILOT_ROUTES: ReadonlyArray<{
   { prefix: "/segments", feature: "emailCampaigns" },
   { prefix: "/email-templates", feature: "emailCampaigns" },
   { prefix: "/ai-assistants", feature: "aiAssistant" },
-  { prefix: "/settings/ai", feature: "aiAssistant" },
-  { prefix: "/ai-visibility", feature: "aiVisibility" },
   { prefix: "/settings/integrations", feature: "integrations" },
 ];
 
@@ -103,11 +104,10 @@ export function usePilotFeatures(): Record<PilotFeature, boolean> {
 
   return {
     workflows: enabled,
-    emailSignature: enabled,
     integrations: enabled,
     emailCampaigns: enabled,
     aiAssistant: enabled,
-    aiVisibility: enabled,
     googleReviews: enabled,
+    appointmentBook: enabled,
   };
 }

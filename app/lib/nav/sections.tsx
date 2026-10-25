@@ -27,6 +27,9 @@ import {
   LineChart,
   Briefcase,
   Radar,
+  CalendarClock,
+  CalendarDays,
+  BookOpen,
 } from "lucide-react";
 import * as LucideIcons from "lucide-react";
 import { OpenAiMark } from "~/components/icons/openai-mark";
@@ -47,7 +50,7 @@ import { usePipelinesQuery } from "~/lib/hooks/usePipelines";
  * demo, Stripe, WordPress SSO, calendar sources) is kept with the same meaning.
  */
 
-export type SectionKey = "today" | "customers" | "deals" | "results" | "website";
+export type SectionKey = "today" | "customers" | "deals" | "appointments" | "results" | "website";
 
 export type IconType = ComponentType<{ className?: string }>;
 
@@ -78,6 +81,8 @@ export interface NavSection {
   /** Path prefixes that light this section up. */
   match: string[];
   tabs: SectionTab[];
+  /** Shows the neutral "Demo" pill (pilot features). */
+  pilot?: boolean;
 }
 
 const lucideIconNames = new Set(
@@ -246,11 +251,49 @@ export function useNavSections(): NavSection[] | null {
       icon: CheckSquare,
     },
   ];
-  if (showCalendar || showAppointments) {
+  // Appointments as a section of their own (pilot `appointmentBook`): the
+  // calendar pages move there from Deals. Without the pilot, nothing changes.
+  const appointmentBook = pilot.appointmentBook;
+  const appointments: SectionTab[] = [];
+  if (appointmentBook) {
+    appointments.push(
+      {
+        key: "upcoming",
+        label: t("sections.tabs.upcoming", "Upcoming"),
+        to: "/appointments",
+        icon: CalendarClock,
+        // Exact: the other tabs live under /appointments/… too.
+        exact: true,
+      },
+      {
+        key: "appointment-calendar",
+        label: t("sections.tabs.appointmentCalendar", "Calendar"),
+        to: "/appointments/calendar",
+        icon: CalendarDays,
+      },
+    );
+    if (showCalendar) {
+      appointments.push({
+        key: "team-calendar",
+        label: t("sections.tabs.teamCalendar", "Team calendar"),
+        to: "/calendar",
+        icon: CalendarRange,
+        match: ["/calendar", "/instructions"],
+      });
+    }
+    if (showAppointments) {
+      appointments.push({
+        key: "booking-page",
+        label: t("sections.tabs.bookingPage", "Booking page"),
+        to: "/appointments/booking-page",
+        icon: BookOpen,
+      });
+    }
+  } else if (showCalendar || showAppointments) {
     deals.push({
       key: "calendar",
       label: t("nav.calendar", "Calendar"),
-      to: showCalendar ? "/calendar" : "/appointments",
+      to: showCalendar ? "/calendar" : "/appointments/booking-page",
       icon: CalendarRange,
       match: ["/calendar", "/appointments", "/instructions"],
     });
@@ -279,15 +322,12 @@ export function useNavSections(): NavSection[] | null {
       icon: OpenAiMark,
     },
   ];
-  if (pilot.aiVisibility) {
-    results.push({
-      key: "ai-visibility",
-      label: t("sections.tabs.aiVisibility", "AI visibility"),
-      to: "/ai-visibility",
-      icon: Radar,
-      pilot: true,
-    });
-  }
+  results.push({
+    key: "ai-visibility",
+    label: t("sections.tabs.aiVisibility", "AI visibility"),
+    to: "/ai-visibility",
+    icon: Radar,
+  });
 
   const website: SectionTab[] = [];
   if (showWebsite) {
@@ -340,8 +380,11 @@ export function useNavSections(): NavSection[] | null {
     if (!s.service_slug) continue;
     const to = `/${s.service_slug}`;
     const section = sectionForService(s.service_slug, s.service_type ?? "");
-    // Appointments is already reachable through the Calendar tab.
-    if (s.service_type === "appointments" && deals.some((d) => d.key === "calendar")) {
+    // Appointments is already reachable through the Calendar / Booking page tab.
+    if (
+      s.service_type === "appointments" &&
+      (deals.some((d) => d.key === "calendar") || appointments.some((a) => a.key === "booking-page"))
+    ) {
       continue;
     }
     const tab: SectionTab = {
@@ -397,14 +440,25 @@ export function useNavSections(): NavSection[] | null {
       match: [
         "/pipeline",
         "/tasks",
-        "/calendar",
-        "/appointments",
-        "/instructions",
+        ...(appointmentBook ? [] : ["/calendar", "/appointments", "/instructions"]),
         "/products",
-        ...deals.map((d) => d.to),
+        ...deals.map((d) => d.to.split("?")[0]),
       ],
       tabs: deals,
     },
+    ...(appointmentBook
+      ? [
+          {
+            key: "appointments" as const,
+            label: t("sections.appointments", "Appointments"),
+            icon: CalendarClock,
+            to: "/appointments",
+            match: ["/appointments", "/calendar", "/instructions"],
+            tabs: appointments,
+            pilot: true,
+          },
+        ]
+      : []),
     {
       key: "results",
       label: t("sections.results", "Results"),

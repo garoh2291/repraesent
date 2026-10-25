@@ -94,7 +94,8 @@
         "website": "Pages, SEO and your services",
         "settings": "You, your team and connections",
         "billing": "Plan and invoices",
-        "contact": "A real person from our team"
+        "contact": "A real person from our team",
+        "results": "How business is going"
       },
       "switchBusiness": "Switch business"
     }
@@ -203,6 +204,7 @@
       },
       "checkInboxDetailCode": "We sent a link and a 6-digit code to {{email}}.",
       "checkInboxExpiry": "The link works for 30 minutes, the code for 10.",
+      "copySent": "We also sent a copy to {{hint}}.",
       "subtitleCode": "We'll email you a link and a 6-digit code.",
       "sendButton": "Send sign-in email →"
     },
@@ -397,7 +399,8 @@
         "microsoft": "Microsoft",
         "caldav": "CalDAV",
         "baikal": "Baikal",
-        "unknown": "Calendar"
+        "unknown": "Calendar",
+        "repraesent": "Repraesent calendar"
       }
     },
     "conversation": {
@@ -1490,6 +1493,22 @@
       "inviteRole": "Role",
       "inviteSent": "Invitation sent",
       "inviteTitle": "Invite members",
+      "signInCopy": {
+        "title": "Sign-in copy",
+        "description": "Sign-in emails for {{email}} also go to this address: the login link, the code and invitations. Nothing else is sent there.",
+        "label": "Also send sign-in emails to",
+        "placeholder": "name@gmail.com",
+        "hint": "For people who don't read their business inbox. You can't sign in by typing this address.",
+        "invalid": "This isn't a valid email address. Check it for typos.",
+        "sameAsMain": "This is the same as their email. Enter a different address.",
+        "save": "Save",
+        "remove": "Remove copy",
+        "saved": "Sign-in emails now also go to {{email}}.",
+        "removed": "Sign-in copy removed.",
+        "rowSet": "Sign-in copy: {{email}}",
+        "rowAdd": "Add sign-in copy",
+        "otherBusiness": "This person also belongs to another business, so only re:praesent support can change their sign-in copy."
+      },
       "inviteDescription": "Add teammates by email. They'll get a magic link to join and set up their profile.",
       "inviteEmailsPlaceholder": "name@company.com, another@company.com…",
       "inviteAdd": "Send invites",
@@ -1527,7 +1546,8 @@
       "en": "English",
       "de": "Deutsch",
       "fr": "Français",
-      "nl": "Nederlands"
+      "nl": "Nederlands",
+      "hy": "Հայերեն"
     },
     "invoices": {
       "title": "Invoices",
@@ -1910,13 +1930,13 @@
     "avatarRemovedWorkspace": "Workspace picture removed",
     "ai": {
       "metaTitle": "AI account",
-      "metaDescription": "Connect the AI account your website chat runs on.",
+      "metaDescription": "Connect the AI account your website chat and AI visibility run on.",
       "sectionLabel": "Your AI account",
-      "sectionDescription": "The chat on your website runs on your own AI account (OpenRouter runs the AI). What it uses is billed there.",
+      "sectionDescription": "Your website chat and AI visibility run on your own AI account (OpenRouter runs the AI). What they use is billed there.",
       "cardTitle": "OpenRouter",
       "statusConnected": "Connected",
       "statusRevoked": "Key rejected",
-      "notConnectedHint": "Create a key at openrouter.ai/keys and paste it here. Until then, the chat can’t be turned on.",
+      "notConnectedHint": "Create a key at openrouter.ai/keys and paste it here. Until then, the chat can’t be turned on and AI visibility can’t check anything.",
       "lastError": "Last call failed: {{error}}",
       "keyLabel": "API key",
       "rotateLabel": "Replace API key",
@@ -1930,7 +1950,7 @@
       "disconnected": "AI account disconnected",
       "disconnect": "Remove key",
       "disconnectTitle": "Disconnect your AI account?",
-      "disconnectDescription": "Chats that are live stop answering straight away, and nothing new can be learned until you connect again. The key itself stays valid at OpenRouter.",
+      "disconnectDescription": "Chats that are live stop answering straight away, AI visibility stops checking, and nothing new can be learned until you connect again. The key itself stays valid at OpenRouter.",
       "adminOnly": "Only admins can manage the AI account.",
       "defaultModel": "Default chat model",
       "defaultModelHint": "Used by new assistants. Each assistant can still pick its own model.",
@@ -1941,7 +1961,7 @@
         "step2": "Open Keys in the account menu.",
         "step3": "Create a key and copy it — it is shown only once.",
         "step4": "Add credits, then paste the key above and press Connect.",
-        "billing": "Everything every chat in this business uses is billed to this key.",
+        "billing": "Everything the chats and AI visibility in this business use is billed to this key.",
         "link": "Open openrouter.ai/keys"
       },
       "spend": {
@@ -2285,7 +2305,9 @@
         "levelTech": "At home with tech",
         "levelAssisted": "Has a tech person",
         "levelSimple": "Keeps it simple"
-      }
+      },
+      "showInAppointmentsTitle": "Also show these calls in Appointments",
+      "showInAppointmentsHint": "Each booked call appears in Appointments, linked to the inquiry and deal. It stays in the host's calendar, and nothing is emailed from Appointments."
     },
     "emailNotifications": {
       "metaTitle": "Email summaries",
@@ -5426,7 +5448,8 @@
       "kindProduct": "Product",
       "kindMulti": "Multi-step",
       "kindIntake": "From another tool",
-      "intro": "Every answer lands in your inquiries."
+      "intro": "Every answer lands in your inquiries.",
+      "webhookOnly": "Only to other apps"
     },
     "status": {
       "draft": "Draft",
@@ -5778,7 +5801,8 @@
         "duplicateProductField": "“{{field}}” is a second product question. A form can have only one — delete one of them.",
         "productFieldOnStandardForm": "“{{field}}” asks for payment, but this form can’t take payments. Delete it here.",
         "commerceNoItems": "“{{field}}” has no products yet. Select it and add at least one.",
-        "keyMissing": "“{{field}}” has no internal name. Open Advanced on that question and add one."
+        "keyMissing": "“{{field}}” has no internal name. Open Advanced on that question and add one.",
+        "crmSaveAppointment": "“{{field}}” books an appointment, but this form doesn’t save answers. Delete the question, or switch on “Save answers as inquiries”."
       },
       "otherLocales": "{{count}} more thing(s) to fix in:",
       "keyMissing": "One question has no internal name. Open Advanced on that question and add one.",
@@ -5795,7 +5819,8 @@
       "invalidCancelUrl": "The page after a cancelled payment must start with https://. Enter the full address.",
       "needsProductField": "There’s no product question, so visitors can’t see what they’re buying. Add one from “Add a question”.",
       "duplicateProductField": "A form can have only one product question. Delete the extra one.",
-      "productFieldOnStandardForm": "A product question only works on a form that takes payments. Delete it here."
+      "productFieldOnStandardForm": "A product question only works on a form that takes payments. Delete it here.",
+      "crmSaveAppointment": "An appointment question needs saved answers. Delete it, or switch on “Save answers as inquiries”."
     },
     "public": {
       "notAvailable": "This form is not available",
@@ -6010,7 +6035,18 @@
         "checkout_failed": "Payment failed",
         "checkout_expired": "Payment not finished"
       },
-      "advancedHint": "What exactly is sent, the signing secret, and how to check it."
+      "advancedHint": "What exactly is sent, the signing secret, and how to check it.",
+      "crm": {
+        "title": "Where answers go",
+        "label": "Save answers as inquiries",
+        "onHelp": "Every answer appears under Customers, and your team is told about it.",
+        "offHelp": "Answers go only to the apps below. Repraesent keeps just the number of answers.",
+        "noWebhook": "No app below is switched on yet, so answers are still saved as inquiries. Switch one on to send them there instead.",
+        "lockedProduct": "Payment forms always save answers, so every payment belongs to a customer.",
+        "lockedAppointment": "This form books appointments, so it always saves answers: every booking needs a customer.",
+        "emailOff": "This form sends answers only to other apps, so no confirmation e-mail goes out. To send one, switch on “Save answers as inquiries” under “Send to other apps”.",
+        "payloadCleared": "The answers were deleted after sending, because this form keeps nothing in Repraesent."
+      }
     },
     "products": {
       "title": "Bundle",
@@ -6161,7 +6197,8 @@
       "leads": "Leads",
       "deals": "Deals",
       "tasks": "Tasks",
-      "contacts": "Contacts"
+      "contacts": "Contacts",
+      "appointments": "Appointments"
     },
     "node": {
       "trigger": "Trigger",
@@ -6486,7 +6523,9 @@
       "why_the_lead": "the lead",
       "why_linked_contact": "linked contact",
       "why_literal_address": "",
-      "why_custom_variable": ""
+      "why_custom_variable": "",
+      "appointments_primary": "The person who booked",
+      "why_the_customer": "booked it"
     },
     "variables": {
       "insert": "Insert a value",
@@ -6713,7 +6752,9 @@
     "sentCopyNote": "A copy shows on the contact and deal in a few minutes.",
     "sentDone": "Done",
     "showAddress": "{{name}} · {{email}}",
-    "copyAddress": "Copy address"
+    "copyAddress": "Copy address",
+    "sentSyncToast": "Email sent",
+    "sentSyncToastDescription": "It's in the activity now. The full copy syncs within a few minutes."
   },
   "demo": {
     "metaTitle": "Live demo",
@@ -9141,7 +9182,11 @@
       "aiChat": "AI chat",
       "files": "Files",
       "aiVisibility": "AI visibility",
-      "companies": "Companies"
+      "companies": "Companies",
+      "upcoming": "Upcoming",
+      "appointmentCalendar": "Calendar",
+      "teamCalendar": "Team calendar",
+      "bookingPage": "Booking page"
     },
     "settingsGroups": {
       "you": "You",
@@ -9150,7 +9195,8 @@
       "alerts": "Updates",
       "sales": "Deals",
       "root": "re:praesent"
-    }
+    },
+    "appointments": "Appointments"
   },
   "command": {
     "title": "Go to or search",
@@ -9167,7 +9213,8 @@
     "newEmail": "Send new email",
     "empty": "Nothing matches “{{q}}”.",
     "footer": "Search people, deals, tasks and pages",
-    "newCompany": "New company"
+    "newCompany": "New company",
+    "newAppointment": "New appointment"
   },
   "today": {
     "metaTitle": "Today",
@@ -10432,5 +10479,388 @@
     "title": "Find anything here",
     "body": "People, deals, tasks and pages — tap to search.",
     "ok": "Got it"
+  },
+  "appointmentBook": {
+    "someone": "Someone",
+    "after": {
+      "bookAgain": "Book the next visit",
+      "task": "Add a task",
+      "deal": "Start a deal",
+      "sub": "{{name}} came. What happens next?",
+      "nothing": "Nothing for now"
+    },
+    "status": {
+      "confirmed": "Confirmed",
+      "needsOutcome": "Did they come?",
+      "completed": "Came",
+      "noShow": "Didn't come",
+      "cancelled": "Cancelled"
+    },
+    "wholeDay": "Whole day",
+    "connectedCalendar": "Connected calendar",
+    "online": "Online",
+    "inPerson": "In person",
+    "deal": "Deal",
+    "toast": {
+      "noShow": "Marked: didn't come",
+      "booked": "Appointment booked",
+      "moved": "Moved",
+      "cancelled": "Appointment cancelled"
+    },
+    "came": "Came",
+    "didntCome": "Didn't come",
+    "form": {
+      "pickTime": "Pick a time first.",
+      "title": "New appointment",
+      "notFree": "That time is not free in this calendar.",
+      "pickAnother": "Pick another time",
+      "bookAnyway": "Book anyway",
+      "book": "Book appointment",
+      "calendar": "Calendar",
+      "with": "With",
+      "name": "Name",
+      "email": "Email",
+      "phone": "Phone",
+      "pickExisting": "Pick from your customers",
+      "searchCustomer": "Search your customers…",
+      "someoneNew": "Someone new",
+      "dealOptional": "Deal (optional)",
+      "searchDeal": "Search deals…",
+      "note": "Note",
+      "notePlaceholder": "What is it about?",
+      "sendConfirmation": "Send a confirmation to {{email}}",
+      "company": "Company",
+      "day": "Day",
+      "wholeDayLabel": "Whole day",
+      "time": "Time",
+      "calendarOff": "This calendar is turned off, so it offers no times. Turn it on, or pick another time below.",
+      "noTimes": "No free time on this day. Pick another day, or write in a time.",
+      "otherTime": "Other time…",
+      "otherTimeHint": "Outside the free times — you'll be asked to confirm."
+    },
+    "card": {
+      "title": "Appointments",
+      "book": "Book",
+      "empty": "No appointments yet. Book the first visit with “Book”.",
+      "showAll": "Show all {{count}}",
+      "showAll_one": "Show {{count}} more",
+      "showAll_other": "Show all {{count}}"
+    },
+    "today": {
+      "title": "Appointments today",
+      "all": "All",
+      "none": "Nobody is booked for today."
+    },
+    "settings": {
+      "minutes": "{{count}} min",
+      "hours": "{{count}} h",
+      "days": "{{count}} days",
+      "about": "About this calendar",
+      "name": "Name",
+      "nameHint": "Your customers see it, e.g. “Viewings” or “Event dates”.",
+      "color": "Colour",
+      "description": "Note for your team (optional)",
+      "how": "How people meet you",
+      "inPerson": "In person",
+      "online": "Online",
+      "meetingUrl": "Meeting link",
+      "meetingUrlHint": "Your fixed Zoom, Meet or Teams room. Leave empty if appointments go into a connected Google or Microsoft calendar — it makes a fresh link for each one.",
+      "address": "Address",
+      "addressHint": "Goes into every confirmation and reminder.",
+      "what": "What gets booked",
+      "unitSlot": "A time",
+      "unitDay": "A whole day",
+      "unitDayHint": "Each booking takes the whole day — for an event date, a rental, a shoot.",
+      "length": "How long",
+      "step": "Times start every",
+      "stepHint": "Usually the same as the length.",
+      "hoursTitle": "When you are open",
+      "hoursHint": "Only these times are offered. Add a break to split a day.",
+      "from": "From",
+      "until": "Until",
+      "addBreak": "Add a break",
+      "closed": "Closed",
+      "bookable": "Bookable",
+      "timezone": "Time zone",
+      "rules": "Booking rules",
+      "before": "Free time before each one",
+      "none": "None",
+      "after": "Free time after each one",
+      "notice": "How soon people can book",
+      "anyTime": "Right away",
+      "daysAhead": "{{count}} days ahead",
+      "hoursAhead": "{{count}} h ahead",
+      "horizon": "How far ahead",
+      "capacity": "How many at the same time",
+      "capacityHint": "1 for one room or one person. More for a showroom with several advisors.",
+      "owner": "Who handles it",
+      "ownerHint": "Gets told when a customer moves or cancels.",
+      "connected": "Your other calendars",
+      "connectedHint": "Optional. Connect Google or Microsoft in Settings → Calendars first.",
+      "busy": "Block times when I'm busy in…",
+      "noConnected": "No other calendars yet.",
+      "repraesentCalendar": "Repraesent calendar",
+      "reconnect": "needs reconnecting",
+      "copy": "Also put appointments in…",
+      "copyHint": "A copy lands in that calendar, with a Meet or Teams link for online appointments.",
+      "copyNone": "Nowhere else",
+      "messages": "Messages to your customers",
+      "messagesHint": "Sent by email from your business name. Text messages can be added later.",
+      "msgConfirmation": "Confirmation right after booking",
+      "msgConfirmationHint": "With the date, the place and a calendar file.",
+      "msgChanges": "A note when the time changes or it's cancelled",
+      "msgReminder": "A reminder before the appointment",
+      "hoursBefore": "{{count}} h before",
+      "daysBefore": "{{count}} days before",
+      "selfService": "Let customers move or cancel from the email",
+      "selfServiceHint": "They pick another free time themselves; whoever handles it gets told.",
+      "closures": "Closed days",
+      "closuresHint": "Holidays, trade fairs, a private event — no times on these days.",
+      "closureNote": "Why (optional)",
+      "addClosure": "Add closed day",
+      "metaTitle": "Calendar settings",
+      "saved": "Changes saved",
+      "turnedOn": "Calendar is on",
+      "turnedOff": "Calendar is off — no new bookings",
+      "nowDefault": "New appointments start in this calendar",
+      "deleted": "Calendar deleted",
+      "reminderWorkflowName": "Reminder 1 day before — {{name}}",
+      "offBanner": "Turned off: it offers no times, and forms or the chat that use it say so. Appointments already in it stay.",
+      "subtitle": "The rules for this calendar. Forms, the chat and your team all follow them.",
+      "useOnWebsite": "To let people book it on your website, add an appointment field to a form (Website → Forms) or a booking action to your chat, and pick “{{name}}”.",
+      "ownReminders": "Your own reminders",
+      "ownRemindersHint": "Want different words, a second reminder, or a message after the visit? Start from a ready-made workflow and change it.",
+      "doubleReminder": "The reminder above is on too — turn one off so nobody gets two.",
+      "startWorkflow": "Start a reminder workflow",
+      "manage": "This calendar",
+      "turnOn": "Turn on",
+      "turnOff": "Turn off",
+      "makeDefault": "Use for new appointments",
+      "deleteConfirm": "Tap again to delete",
+      "delete": "Delete calendar",
+      "cantDelete": "It has {{count}} appointments, so it can't be deleted — turn it off instead.",
+      "unsaved": "You have changes that aren't saved.",
+      "minutes_one": "{{count}} min",
+      "minutes_other": "{{count}} min",
+      "hours_one": "{{count}} h",
+      "hours_other": "{{count}} h",
+      "days_one": "{{count}} day",
+      "days_other": "{{count}} days",
+      "daysAhead_one": "{{count}} day ahead",
+      "daysAhead_other": "{{count}} days ahead",
+      "hoursAhead_one": "{{count}} h ahead",
+      "hoursAhead_other": "{{count}} h ahead",
+      "hoursBefore_one": "{{count}} h before",
+      "hoursBefore_other": "{{count}} h before",
+      "daysBefore_one": "{{count}} day before",
+      "daysBefore_other": "{{count}} days before",
+      "cantDelete_one": "It has {{count}} appointment, so it can't be deleted — turn it off instead.",
+      "cantDelete_other": "It has {{count}} appointments, so it can't be deleted — turn it off instead."
+    },
+    "detail": {
+      "nobody": "Nobody yet",
+      "metaTitle": "Appointment",
+      "what": "this appointment",
+      "move": "Move",
+      "cancel": "Cancel",
+      "undoOutcome": "Undo",
+      "where": "Where",
+      "joinOnline": "Join online",
+      "onlineNoLink": "Online — no link yet. Add one in the calendar's settings.",
+      "noPlace": "In person — no address set on the calendar.",
+      "notes": "Notes",
+      "outcomeNote": "After the visit:",
+      "cancelReason": "Why it was cancelled:",
+      "who": "Who",
+      "customer": "Customer",
+      "openContact": "Open contact",
+      "openInquiry": "The inquiry",
+      "deal": "Deal",
+      "openDeal": "Open deal",
+      "handledBy": "Who handles it",
+      "messages": "Messages",
+      "messagesHint": "Email now. Text messages can join later.",
+      "history": "History",
+      "details": "Details",
+      "detailsFrom": {
+        "form": "From the booking form",
+        "ai_assistant": "From the website chat",
+        "customer_page": "From the customer",
+        "import": "Added from your calendar",
+        "legacy_booking": "From the booking page",
+        "api": "From a connected app",
+        "manual": "Written when it was booked",
+        "onboarding": "From the onboarding booking"
+      },
+      "host": "With {{name}}",
+      "syncedHint": "This meeting lives in your calendar. Move or cancel it there — it updates here within 10 minutes."
+    },
+    "move": {
+      "title": "Move appointment",
+      "now": "Now: {{when}}",
+      "anyway": "Move anyway",
+      "save": "Move it",
+      "connectedHint": "This appointment lives in a connected calendar; the event there moves with it.",
+      "tell": "Tell {{email}} about the new time"
+    },
+    "cancel": {
+      "title": "Cancel appointment?",
+      "sub": "It stays in the history as cancelled. The time becomes free again.",
+      "keep": "Keep it",
+      "confirm": "Cancel appointment",
+      "reason": "Why? (only you see this)",
+      "tell": "Tell {{email}} it's cancelled"
+    },
+    "target": {
+      "label": "Where bookings go",
+      "native": "Repraesent calendar",
+      "connected": "Connected calendar",
+      "pick": "Pick a calendar",
+      "rulesFrom": "Days, hours, length and rules come from “{{name}}”.",
+      "edit": "Change them",
+      "off": "This calendar is turned off, so visitors will see no times.",
+      "hint": "Bookings land in Appointments, linked to the inquiry.",
+      "calendar": "Calendar"
+    },
+    "calendars": {
+      "off": "Turned off",
+      "what": "your calendars",
+      "title": "Your calendars",
+      "metaTitle": "Your calendars",
+      "subtitle": "Each calendar has its own hours and rules. Your website forms and chat book into the one you pick.",
+      "new": "New calendar",
+      "default": "Default",
+      "upcoming": "{{count}} coming up",
+      "created": "Calendar added",
+      "newSub": "Give it a name now; hours and rules come next.",
+      "create": "Add calendar",
+      "namePlaceholder": "e.g. Viewings",
+      "kind": "What kind",
+      "upcoming_one": "{{count}} coming up",
+      "upcoming_other": "{{count}} coming up"
+    },
+    "title": "Appointments",
+    "messages": {
+      "sent": "Sent {{when}}",
+      "failed": "Could not be sent",
+      "planned": "Goes out {{when}}",
+      "none": "Nothing sent or planned. The calendar's settings decide which messages go out.",
+      "noAddress": "No email address, so no messages. Add one to the customer to send a confirmation and reminders.",
+      "sms": "Text",
+      "email": "Email",
+      "kind": {
+        "confirmation": "Confirmation",
+        "reminder": "Reminder",
+        "changed": "New time",
+        "cancelled": "Cancellation",
+        "custom": "Message"
+      }
+    },
+    "history": {
+      "byCustomer": "the customer",
+      "bySystem": "Repraesent",
+      "byTeam": "your team",
+      "created": "Booked by {{who}}",
+      "moved": "Moved to {{to}} by {{who}}",
+      "cancelled": "Cancelled by {{who}}",
+      "confirmed": "The customer said they'll come",
+      "outcome": "Outcome noted by {{who}}",
+      "linked": "People or deal changed by {{who}}",
+      "updated": "Details changed by {{who}}",
+      "copyFailed": "Could not put it in the connected calendar",
+      "messageFailed": "A message could not be sent"
+    },
+    "metaTitle": "Appointments",
+    "metaDescription": "Who is coming, and when.",
+    "book": {
+      "today": "Today",
+      "tomorrow": "Tomorrow",
+      "thisWeek": "This week",
+      "later": "Later"
+    },
+    "subtitle": "Who is coming, and when.",
+    "calendarsButton": "Calendars",
+    "new": "New appointment",
+    "didTheyCome": "Did they come?",
+    "didTheyComeHint": "Visits that already happened. One tap each.",
+    "viewLabel": "Which appointments",
+    "views": {
+      "upcoming": "Coming up",
+      "past": "Past",
+      "cancelled": "Cancelled"
+    },
+    "searchPlaceholder": "Search by name, email or phone…",
+    "allCalendars": "All calendars",
+    "clearFilters": "Clear filters",
+    "what": "your appointments",
+    "empty": {
+      "filtered": "Nothing matches these filters.",
+      "upcoming": "No appointments coming up.",
+      "past": "No past appointments yet.",
+      "cancelled": "Nothing was cancelled.",
+      "upcomingBody": "Book one yourself, or let people book on your website: add an appointment field to a form and pick one of your calendars."
+    },
+    "calendarView": {
+      "metaTitle": "Appointments calendar",
+      "title": "Calendar",
+      "subtitle": "Click a free time to book it.",
+      "subtitleTouch": "Touch and hold a free time to book it.",
+      "showOther": "Show my other calendars"
+    },
+    "public": {
+      "metaTitle": "Your appointment",
+      "invalidTitle": "This link no longer works",
+      "invalidBody": "It may have expired after the appointment. Please contact the business directly to change anything.",
+      "taken": "That time was just taken. Please pick another one.",
+      "tooMany": "Too many changes in a short time. Please try again in a few minutes.",
+      "failed": "That did not work. Please try again, or contact the business directly.",
+      "tooLate": "It is too close to the appointment to change it here. Please contact {{business}} directly.",
+      "notAllowed": "To change this appointment, please contact {{business}} directly.",
+      "cancelledTitle": "Your appointment is cancelled",
+      "title": "Your appointment",
+      "join": "Join online",
+      "confirmed": "You said you'll be there",
+      "pickNew": "Pick a new time",
+      "back": "Back",
+      "moveConfirm": "Move my appointment",
+      "cancelTitle": "Cancel this appointment?",
+      "reason": "Would you like to tell us why? (optional)",
+      "keep": "Keep it",
+      "cancelConfirm": "Yes, cancel it",
+      "willCome": "Yes, I'll be there",
+      "move": "Choose another time",
+      "cancel": "Cancel appointment"
+    },
+    "source": {
+      "manual": "Booked by your team",
+      "form": "Booked on your website form",
+      "ai_assistant": "Booked in your website chat",
+      "customer_page": "Booked by the customer",
+      "api": "Booked through an app",
+      "import": "From your calendar",
+      "legacy_booking": "Booked on your booking page",
+      "onboarding": "Onboarding call"
+    },
+    "import": {
+      "title": "Add to appointments",
+      "sub": "It stays in your calendar. Move or delete it there, and it updates here. Nobody gets an email from us.",
+      "confirm": "Add to appointments",
+      "added": "Added to appointments",
+      "untitled": "Meeting"
+    }
+  },
+  "calendarView": {
+    "today": "Today",
+    "previous": "Back",
+    "next": "Next",
+    "month": "Month",
+    "week": "Week",
+    "day": "Day",
+    "agenda": "List",
+    "date": "Date",
+    "time": "Time",
+    "event": "What",
+    "allDay": "All day",
+    "showMore": "+{{count}} more"
   }
 }

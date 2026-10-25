@@ -333,6 +333,11 @@ export default function FormsIndexRoute() {
                     <div className="text-xs text-muted-foreground">
                       {t("forms.list.colSubmissions")}
                     </div>
+                    {form.saves_to_crm === false ? (
+                      <div className="text-[11px] text-muted-foreground">
+                        {t("forms.list.webhookOnly")}
+                      </div>
+                    ) : null}
                   </Link>
                 ) : (
                   <div className="px-2 py-1 text-right">
@@ -342,6 +347,11 @@ export default function FormsIndexRoute() {
                     <div className="text-xs text-muted-foreground">
                       {t("forms.list.colSubmissions")}
                     </div>
+                    {form.saves_to_crm === false ? (
+                      <div className="text-[11px] text-muted-foreground">
+                        {t("forms.list.webhookOnly")}
+                      </div>
+                    ) : null}
                   </div>
                 )}
 

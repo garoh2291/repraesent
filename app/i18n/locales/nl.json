@@ -94,7 +94,8 @@
         "website": "Pagina's, SEO en uw diensten",
         "settings": "U, uw team en koppelingen",
         "billing": "Abonnement en facturen",
-        "contact": "Een echt persoon uit ons team"
+        "contact": "Een echt persoon uit ons team",
+        "results": "Hoe het met de zaak gaat"
       },
       "switchBusiness": "Ander bedrijf kiezen"
     }
@@ -203,6 +204,7 @@
       },
       "checkInboxDetailCode": "We hebben een link en een 6-cijferige code naar {{email}} gestuurd.",
       "checkInboxExpiry": "De link werkt 30 minuten, de code 10 minuten.",
+      "copySent": "We hebben ook een kopie gestuurd naar {{hint}}.",
       "subtitleCode": "We mailen u een link en een 6-cijferige code.",
       "sendButton": "Inlogmail versturen →"
     },
@@ -397,7 +399,8 @@
         "microsoft": "Microsoft",
         "caldav": "CalDAV",
         "baikal": "Baikal",
-        "unknown": "Agenda"
+        "unknown": "Agenda",
+        "repraesent": "Repraesent-agenda"
       }
     },
     "conversation": {
@@ -1490,6 +1493,22 @@
       "inviteRole": "Rol",
       "inviteSent": "Uitnodiging verstuurd",
       "inviteTitle": "Leden uitnodigen",
+      "signInCopy": {
+        "title": "Inlogkopie",
+        "description": "Inlogmails voor {{email}} gaan ook naar dit adres: de inloglink, de code en uitnodigingen. Verder wordt er niets naartoe gestuurd.",
+        "label": "Inlogmails ook sturen naar",
+        "placeholder": "naam@gmail.com",
+        "hint": "Voor mensen die hun zakelijke inbox niet lezen. Met dit adres kunt u niet inloggen.",
+        "invalid": "Dit is geen geldig e-mailadres. Controleer de spelling.",
+        "sameAsMain": "Dit is hetzelfde als hun e-mailadres. Vul een ander adres in.",
+        "save": "Opslaan",
+        "remove": "Kopie verwijderen",
+        "saved": "Inlogmails gaan nu ook naar {{email}}.",
+        "removed": "Inlogkopie verwijderd.",
+        "rowSet": "Inlogkopie: {{email}}",
+        "rowAdd": "Inlogkopie toevoegen",
+        "otherBusiness": "Deze persoon hoort ook bij een ander bedrijf. Alleen de support van re:praesent kan de inlogkopie wijzigen."
+      },
       "inviteDescription": "Voeg teamgenoten toe per e-mail. Ze ontvangen een magic link om deel te nemen en hun profiel in te stellen.",
       "inviteEmailsPlaceholder": "naam@bedrijf.nl, ander@bedrijf.nl…",
       "inviteAdd": "Uitnodigingen versturen",
@@ -1527,7 +1546,8 @@
       "en": "English",
       "de": "Deutsch",
       "fr": "Français",
-      "nl": "Nederlands"
+      "nl": "Nederlands",
+      "hy": "Հայերեն"
     },
     "invoices": {
       "title": "Facturen",
@@ -1910,13 +1930,13 @@
     "avatarRemovedWorkspace": "Workspacefoto verwijderd",
     "ai": {
       "metaTitle": "AI-account",
-      "metaDescription": "Koppel het AI-account waarop uw websitechat draait.",
+      "metaDescription": "Koppel het AI-account waarop uw websitechat en AI-zichtbaarheid draaien.",
       "sectionLabel": "Uw AI-account",
-      "sectionDescription": "De chat op uw website draait op uw eigen AI-account (OpenRouter draait de AI). Het gebruik wordt daar gefactureerd.",
+      "sectionDescription": "De chat op uw website en AI-zichtbaarheid draaien op uw eigen AI-account (OpenRouter draait de AI). Het gebruik wordt daar gefactureerd.",
       "cardTitle": "OpenRouter",
       "statusConnected": "Verbonden",
       "statusRevoked": "Sleutel afgewezen",
-      "notConnectedHint": "Maak een sleutel aan op openrouter.ai/keys en plak die hier. Tot dan kan de chat niet aan.",
+      "notConnectedHint": "Maak een sleutel aan op openrouter.ai/keys en plak die hier. Tot dan kan de chat niet aan en kan AI-zichtbaarheid niets controleren.",
       "lastError": "Laatste aanroep mislukt: {{error}}",
       "keyLabel": "API-sleutel",
       "rotateLabel": "API-sleutel vervangen",
@@ -1930,7 +1950,7 @@
       "disconnected": "AI-account ontkoppeld",
       "disconnect": "Sleutel verwijderen",
       "disconnectTitle": "AI-account ontkoppelen?",
-      "disconnectDescription": "Chats die live staan, stoppen meteen met antwoorden, en er kan niets nieuws geleerd worden tot u opnieuw koppelt. De sleutel zelf blijft geldig bij OpenRouter.",
+      "disconnectDescription": "Chats die live staan, stoppen meteen met antwoorden, AI-zichtbaarheid stopt met controleren, en er kan niets nieuws geleerd worden tot u opnieuw koppelt. De sleutel zelf blijft geldig bij OpenRouter.",
       "adminOnly": "Alleen beheerders kunnen het AI-account beheren.",
       "defaultModel": "Standaard chatmodel",
       "defaultModelHint": "Voor nieuwe assistenten. Elke assistent kan nog steeds een eigen model kiezen.",
@@ -1941,7 +1961,7 @@
         "step2": "Open „Keys” in het accountmenu.",
         "step3": "Maak een sleutel en kopieer die — hij wordt maar één keer getoond.",
         "step4": "Voeg tegoed toe, plak de sleutel hierboven en klik op Verbinden.",
-        "billing": "Alles wat de chats van uw bedrijf gebruiken, wordt via deze sleutel gefactureerd.",
+        "billing": "Alles wat de chats en AI-zichtbaarheid van uw bedrijf gebruiken, wordt via deze sleutel gefactureerd.",
         "link": "openrouter.ai/keys openen"
       },
       "spend": {
@@ -2285,7 +2305,9 @@
         "levelTech": "Thuis in techniek",
         "levelAssisted": "Heeft hulp bij techniek",
         "levelSimple": "Houdt het eenvoudig"
-      }
+      },
+      "showInAppointmentsTitle": "Deze gesprekken ook bij Afspraken tonen",
+      "showInAppointmentsHint": "Elk geboekt gesprek verschijnt bij Afspraken, gekoppeld aan de aanvraag en deal. Het blijft in de agenda van de host, en vanuit Afspraken wordt niets gemaild."
     },
     "emailNotifications": {
       "metaTitle": "E-mailsamenvattingen",
@@ -5426,7 +5448,8 @@
       "kindProduct": "Product",
       "kindMulti": "Meerstaps",
       "kindIntake": "Uit andere tool",
-      "intro": "Elk antwoord komt binnen bij uw aanvragen."
+      "intro": "Elk antwoord komt binnen bij uw aanvragen.",
+      "webhookOnly": "Alleen naar andere apps"
     },
     "status": {
       "draft": "Concept",
@@ -5778,7 +5801,8 @@
         "duplicateProductField": "‘{{field}}’ is een tweede productvraag. Een formulier kan er maar één hebben — verwijder er een.",
         "productFieldOnStandardForm": "‘{{field}}’ vraagt om een betaling, maar dit formulier kan geen betalingen ontvangen. Verwijder de vraag hier.",
         "commerceNoItems": "‘{{field}}’ bevat nog geen producten. Selecteer de vraag en voeg er minstens één toe.",
-        "keyMissing": "‘{{field}}’ heeft geen interne naam. Open Geavanceerd bij die vraag en voeg er een toe."
+        "keyMissing": "‘{{field}}’ heeft geen interne naam. Open Geavanceerd bij die vraag en voeg er een toe.",
+        "crmSaveAppointment": "‘{{field}}’ boekt een afspraak, maar dit formulier slaat geen antwoorden op. Verwijder de vraag of zet ‘Antwoorden opslaan als aanvragen’ aan."
       },
       "otherLocales": "Nog {{count}} punt(en) op te lossen in:",
       "keyMissing": "Eén vraag heeft geen interne naam. Open Geavanceerd bij die vraag en voeg er een toe.",
@@ -5795,7 +5819,8 @@
       "invalidCancelUrl": "De pagina na een geannuleerde betaling moet beginnen met https://. Vul het volledige adres in.",
       "needsProductField": "Er is geen productvraag, dus bezoekers zien niet wat ze kopen. Voeg er een toe via ‘Vraag toevoegen’.",
       "duplicateProductField": "Een formulier kan maar één productvraag hebben. Verwijder de extra vraag.",
-      "productFieldOnStandardForm": "Een productvraag werkt alleen op een formulier met betaling. Verwijder haar hier."
+      "productFieldOnStandardForm": "Een productvraag werkt alleen op een formulier met betaling. Verwijder haar hier.",
+      "crmSaveAppointment": "Een afspraakvraag heeft opgeslagen antwoorden nodig. Verwijder de vraag of zet ‘Antwoorden opslaan als aanvragen’ aan."
     },
     "public": {
       "notAvailable": "Dit formulier is niet beschikbaar",
@@ -6010,7 +6035,18 @@
         "checkout_failed": "Betaling mislukt",
         "checkout_expired": "Betaling niet afgerond"
       },
-      "advancedHint": "Wat er precies wordt verstuurd, de ondertekeningssleutel en hoe u die controleert."
+      "advancedHint": "Wat er precies wordt verstuurd, de ondertekeningssleutel en hoe u die controleert.",
+      "crm": {
+        "title": "Waar de antwoorden heen gaan",
+        "label": "Antwoorden opslaan als aanvragen",
+        "onHelp": "Elk antwoord verschijnt onder Klanten, en uw team krijgt er bericht van.",
+        "offHelp": "Antwoorden gaan alleen naar de apps hieronder. Repraesent houdt alleen het aantal bij.",
+        "noWebhook": "Hieronder staat nog geen app aan, dus antwoorden worden nog als aanvragen opgeslagen. Zet er een aan om ze daarheen te sturen.",
+        "lockedProduct": "Betaalformulieren slaan antwoorden altijd op, zodat elke betaling bij een klant hoort.",
+        "lockedAppointment": "Dit formulier boekt afspraken en slaat antwoorden daarom altijd op: elke boeking heeft een klant nodig.",
+        "emailOff": "Dit formulier stuurt antwoorden alleen naar andere apps, dus er gaat geen bevestigingsmail uit. Wilt u er een sturen, zet dan ‘Antwoorden opslaan als aanvragen’ aan onder ‘Naar andere apps sturen’.",
+        "payloadCleared": "De antwoorden zijn na het versturen verwijderd, omdat dit formulier niets in Repraesent bewaart."
+      }
     },
     "products": {
       "title": "Bundel",
@@ -6161,7 +6197,8 @@
       "leads": "Leads",
       "deals": "Deals",
       "tasks": "Tasks",
-      "contacts": "Contacts"
+      "contacts": "Contacts",
+      "appointments": "Afspraken"
     },
     "node": {
       "trigger": "Trigger",
@@ -6486,7 +6523,9 @@
       "why_the_lead": "de lead",
       "why_linked_contact": "gekoppeld contact",
       "why_literal_address": "",
-      "why_custom_variable": ""
+      "why_custom_variable": "",
+      "appointments_primary": "De persoon die heeft geboekt",
+      "why_the_customer": "heeft geboekt"
     },
     "variables": {
       "insert": "Waarde invoegen",
@@ -6713,7 +6752,9 @@
     "sentCopyNote": "Over een paar minuten staat er een kopie bij het contact en de deal.",
     "sentDone": "Klaar",
     "showAddress": "{{name}} · {{email}}",
-    "copyAddress": "Adres kopiëren"
+    "copyAddress": "Adres kopiëren",
+    "sentSyncToast": "E-mail verzonden",
+    "sentSyncToastDescription": "Hij staat al bij de activiteit. De volledige kopie volgt binnen een paar minuten."
   },
   "demo": {
     "metaTitle": "Live demo",
@@ -9141,7 +9182,11 @@
       "aiChat": "AI-chat",
       "files": "Bestanden",
       "aiVisibility": "AI-zichtbaarheid",
-      "companies": "Bedrijven"
+      "companies": "Bedrijven",
+      "upcoming": "Komend",
+      "appointmentCalendar": "Agenda",
+      "teamCalendar": "Teamagenda",
+      "bookingPage": "Boekingspagina"
     },
     "settingsGroups": {
       "you": "Jij",
@@ -9150,7 +9195,8 @@
       "alerts": "Updates",
       "sales": "Deals",
       "root": "re:praesent"
-    }
+    },
+    "appointments": "Afspraken"
   },
   "command": {
     "title": "Openen of zoeken",
@@ -9167,7 +9213,8 @@
     "newEmail": "Nieuwe e-mail sturen",
     "empty": "Niets gevonden voor ‘{{q}}’.",
     "footer": "Zoek personen, deals, taken en pagina's",
-    "newCompany": "Nieuw bedrijf"
+    "newCompany": "Nieuw bedrijf",
+    "newAppointment": "Nieuwe afspraak"
   },
   "today": {
     "metaTitle": "Vandaag",
@@ -10432,5 +10479,388 @@
     "title": "Hier vind je alles",
     "body": "Contacten, deals, taken en pagina’s — tik om te zoeken.",
     "ok": "Begrepen"
+  },
+  "appointmentBook": {
+    "someone": "Iemand",
+    "after": {
+      "bookAgain": "Volgende afspraak boeken",
+      "task": "Taak toevoegen",
+      "deal": "Deal starten",
+      "sub": "{{name}} is geweest. Hoe nu verder?",
+      "nothing": "Voorlopig niets"
+    },
+    "status": {
+      "confirmed": "Bevestigd",
+      "needsOutcome": "Is iemand gekomen?",
+      "completed": "Gekomen",
+      "noShow": "Niet gekomen",
+      "cancelled": "Geannuleerd"
+    },
+    "wholeDay": "Hele dag",
+    "connectedCalendar": "Gekoppelde agenda",
+    "online": "Online",
+    "inPerson": "Op locatie",
+    "deal": "Deal",
+    "toast": {
+      "noShow": "Genoteerd: niet gekomen",
+      "booked": "Afspraak geboekt",
+      "moved": "Verzet",
+      "cancelled": "Afspraak geannuleerd"
+    },
+    "came": "Gekomen",
+    "didntCome": "Niet gekomen",
+    "form": {
+      "pickTime": "Kies eerst een tijd.",
+      "title": "Nieuwe afspraak",
+      "notFree": "Die tijd is niet vrij in deze agenda.",
+      "pickAnother": "Andere tijd kiezen",
+      "bookAnyway": "Toch boeken",
+      "book": "Afspraak boeken",
+      "calendar": "Agenda",
+      "with": "Met",
+      "name": "Naam",
+      "email": "E-mail",
+      "phone": "Telefoon",
+      "pickExisting": "Kiezen uit je klanten",
+      "searchCustomer": "Klant zoeken…",
+      "someoneNew": "Iemand nieuw",
+      "dealOptional": "Deal (optioneel)",
+      "searchDeal": "Deals zoeken…",
+      "note": "Notitie",
+      "notePlaceholder": "Waar gaat het over?",
+      "sendConfirmation": "Bevestiging sturen naar {{email}}",
+      "company": "Bedrijf",
+      "day": "Dag",
+      "wholeDayLabel": "Hele dag",
+      "time": "Tijd",
+      "calendarOff": "Deze agenda staat uit en biedt geen tijden aan. Zet hem aan of kies hieronder een andere tijd.",
+      "noTimes": "Op deze dag is niets vrij. Kies een andere dag of vul een tijd in.",
+      "otherTime": "Andere tijd…",
+      "otherTimeHint": "Buiten de vrije tijden – je wordt gevraagd te bevestigen."
+    },
+    "card": {
+      "title": "Afspraken",
+      "book": "Boeken",
+      "empty": "Nog geen afspraken. Boek de eerste met ‘Boeken’.",
+      "showAll": "Alle {{count}} tonen",
+      "showAll_one": "Nog {{count}} tonen",
+      "showAll_other": "Alle {{count}} tonen"
+    },
+    "today": {
+      "title": "Afspraken vandaag",
+      "all": "Alle",
+      "none": "Vandaag staat er niemand gepland."
+    },
+    "settings": {
+      "minutes": "{{count}} min",
+      "hours": "{{count}} uur",
+      "days": "{{count}} dagen",
+      "about": "Over deze agenda",
+      "name": "Naam",
+      "nameHint": "Je klanten zien deze naam, bijv. ‘Bezichtigingen’ of ‘Evenementdata’.",
+      "color": "Kleur",
+      "description": "Notitie voor je team (optioneel)",
+      "how": "Hoe mensen je ontmoeten",
+      "inPerson": "Op locatie",
+      "online": "Online",
+      "meetingUrl": "Vergaderlink",
+      "meetingUrlHint": "Je vaste Zoom-, Meet- of Teams-ruimte. Laat leeg als afspraken in een gekoppelde Google- of Microsoft-agenda komen – die maakt per afspraak een nieuwe link.",
+      "address": "Adres",
+      "addressHint": "Staat in elke bevestiging en herinnering.",
+      "what": "Wat er geboekt wordt",
+      "unitSlot": "Een tijdstip",
+      "unitDay": "Een hele dag",
+      "unitDayHint": "Elke boeking neemt de hele dag in – voor een evenementdatum, een verhuur, een shoot.",
+      "length": "Duur",
+      "step": "Starttijden elke",
+      "stepHint": "Meestal gelijk aan de duur.",
+      "hoursTitle": "Wanneer je open bent",
+      "hoursHint": "Alleen deze tijden worden aangeboden. Voeg een pauze toe om de dag te splitsen.",
+      "from": "Van",
+      "until": "Tot",
+      "addBreak": "Pauze toevoegen",
+      "closed": "Gesloten",
+      "bookable": "Boekbaar",
+      "timezone": "Tijdzone",
+      "rules": "Boekingsregels",
+      "before": "Vrije tijd ervoor",
+      "none": "Geen",
+      "after": "Vrije tijd erna",
+      "notice": "Hoe snel men kan boeken",
+      "anyTime": "Meteen",
+      "daysAhead": "{{count}} dagen vooraf",
+      "hoursAhead": "{{count}} uur vooraf",
+      "horizon": "Hoe ver vooruit",
+      "capacity": "Hoeveel tegelijk",
+      "capacityHint": "1 voor één ruimte of één persoon. Meer voor een showroom met meerdere adviseurs.",
+      "owner": "Wie het behandelt",
+      "ownerHint": "Krijgt bericht als een klant verzet of annuleert.",
+      "connected": "Je andere agenda’s",
+      "connectedHint": "Optioneel. Koppel eerst Google of Microsoft via Instellingen → Agenda’s.",
+      "busy": "Tijden blokkeren als ik bezet ben in…",
+      "noConnected": "Nog geen andere agenda’s.",
+      "repraesentCalendar": "Repraesent-agenda",
+      "reconnect": "opnieuw koppelen",
+      "copy": "Afspraken ook zetten in…",
+      "copyHint": "Een kopie komt in die agenda, met een Meet- of Teams-link voor online afspraken.",
+      "copyNone": "Nergens anders",
+      "messages": "Berichten aan je klanten",
+      "messagesHint": "Per e-mail onder je bedrijfsnaam. Sms kan later worden toegevoegd.",
+      "msgConfirmation": "Bevestiging direct na het boeken",
+      "msgConfirmationHint": "Met datum, plaats en een agendabestand.",
+      "msgChanges": "Bericht bij een nieuwe tijd of annulering",
+      "msgReminder": "Herinnering vóór de afspraak",
+      "hoursBefore": "{{count}} uur vooraf",
+      "daysBefore": "{{count}} dagen vooraf",
+      "selfService": "Klanten kunnen via de e-mail verzetten of annuleren",
+      "selfServiceHint": "Ze kiezen zelf een andere vrije tijd; wie het behandelt krijgt bericht.",
+      "closures": "Gesloten dagen",
+      "closuresHint": "Feestdagen, beurzen, een privé-evenement – op deze dagen geen tijden.",
+      "closureNote": "Reden (optioneel)",
+      "addClosure": "Gesloten dag toevoegen",
+      "metaTitle": "Agenda-instellingen",
+      "saved": "Wijzigingen opgeslagen",
+      "turnedOn": "Agenda staat aan",
+      "turnedOff": "Agenda staat uit – geen nieuwe boekingen",
+      "nowDefault": "Nieuwe afspraken beginnen in deze agenda",
+      "deleted": "Agenda verwijderd",
+      "reminderWorkflowName": "Herinnering 1 dag vooraf – {{name}}",
+      "offBanner": "Uitgeschakeld: er worden geen tijden aangeboden, en formulieren of de chat die hem gebruiken laten dat zien. Bestaande afspraken blijven.",
+      "subtitle": "De regels van deze agenda. Formulieren, chat en je team volgen ze allemaal.",
+      "useOnWebsite": "Om op je website te laten boeken: voeg een afspraakveld toe aan een formulier (Website → Formulieren) of een boekingsactie aan je chat, en kies ‘{{name}}’.",
+      "ownReminders": "Je eigen herinneringen",
+      "ownRemindersHint": "Andere woorden, een tweede herinnering of een bericht na de afspraak? Begin met een kant-en-klare workflow en pas hem aan.",
+      "doubleReminder": "De herinnering hierboven staat ook aan – zet er een uit zodat niemand er twee krijgt.",
+      "startWorkflow": "Herinneringsworkflow starten",
+      "manage": "Deze agenda",
+      "turnOn": "Aanzetten",
+      "turnOff": "Uitzetten",
+      "makeDefault": "Gebruiken voor nieuwe afspraken",
+      "deleteConfirm": "Tik nogmaals om te verwijderen",
+      "delete": "Agenda verwijderen",
+      "cantDelete": "Hij bevat {{count}} afspraken en kan niet worden verwijderd – zet hem in plaats daarvan uit.",
+      "unsaved": "Je hebt wijzigingen die nog niet zijn opgeslagen.",
+      "minutes_one": "{{count}} min",
+      "minutes_other": "{{count}} min",
+      "hours_one": "{{count}} uur",
+      "hours_other": "{{count}} uur",
+      "days_one": "{{count}} dag",
+      "days_other": "{{count}} dagen",
+      "daysAhead_one": "{{count}} dag vooraf",
+      "daysAhead_other": "{{count}} dagen vooraf",
+      "hoursAhead_one": "{{count}} uur vooraf",
+      "hoursAhead_other": "{{count}} uur vooraf",
+      "hoursBefore_one": "{{count}} uur vooraf",
+      "hoursBefore_other": "{{count}} uur vooraf",
+      "daysBefore_one": "{{count}} dag vooraf",
+      "daysBefore_other": "{{count}} dagen vooraf",
+      "cantDelete_one": "Hij bevat {{count}} afspraak en kan niet worden verwijderd – zet hem in plaats daarvan uit.",
+      "cantDelete_other": "Hij bevat {{count}} afspraken en kan niet worden verwijderd – zet hem in plaats daarvan uit."
+    },
+    "detail": {
+      "nobody": "Nog niemand",
+      "metaTitle": "Afspraak",
+      "what": "deze afspraak",
+      "move": "Verzetten",
+      "cancel": "Annuleren",
+      "undoOutcome": "Ongedaan maken",
+      "where": "Waar",
+      "joinOnline": "Online deelnemen",
+      "onlineNoLink": "Online – nog geen link. Voeg er een toe in de agenda-instellingen.",
+      "noPlace": "Op locatie – geen adres ingesteld in de agenda.",
+      "notes": "Notities",
+      "outcomeNote": "Na de afspraak:",
+      "cancelReason": "Reden van annulering:",
+      "who": "Wie",
+      "customer": "Klant",
+      "openContact": "Contact openen",
+      "openInquiry": "De aanvraag",
+      "deal": "Deal",
+      "openDeal": "Deal openen",
+      "handledBy": "Wie het behandelt",
+      "messages": "Berichten",
+      "messagesHint": "Nu per e-mail. Sms kan later volgen.",
+      "history": "Geschiedenis",
+      "details": "Details",
+      "detailsFrom": {
+        "form": "Uit het boekingsformulier",
+        "ai_assistant": "Uit de websitechat",
+        "customer_page": "Van de klant",
+        "import": "Toegevoegd uit je agenda",
+        "legacy_booking": "Van de boekingspagina",
+        "api": "Uit een gekoppelde app",
+        "manual": "Genoteerd bij het boeken",
+        "onboarding": "Uit de onboardingboeking"
+      },
+      "host": "Met {{name}}",
+      "syncedHint": "Deze afspraak staat in je agenda. Verplaats of annuleer hem daar — hier wordt hij binnen 10 minuten bijgewerkt."
+    },
+    "move": {
+      "title": "Afspraak verzetten",
+      "now": "Nu: {{when}}",
+      "anyway": "Toch verzetten",
+      "save": "Verzetten",
+      "connectedHint": "Deze afspraak staat in een gekoppelde agenda; het item daar verschuift mee.",
+      "tell": "{{email}} laten weten wat de nieuwe tijd is"
+    },
+    "cancel": {
+      "title": "Afspraak annuleren?",
+      "sub": "Hij blijft als geannuleerd in de geschiedenis. De tijd komt weer vrij.",
+      "keep": "Laten staan",
+      "confirm": "Afspraak annuleren",
+      "reason": "Waarom? (alleen jij ziet dit)",
+      "tell": "{{email}} laten weten dat hij geannuleerd is"
+    },
+    "target": {
+      "label": "Waar boekingen terechtkomen",
+      "native": "Repraesent-agenda",
+      "connected": "Gekoppelde agenda",
+      "pick": "Agenda kiezen",
+      "rulesFrom": "Dagen, tijden, duur en regels komen uit ‘{{name}}’.",
+      "edit": "Aanpassen",
+      "off": "Deze agenda staat uit, bezoekers zien geen tijden.",
+      "hint": "Boekingen komen in Afspraken, gekoppeld aan de aanvraag.",
+      "calendar": "Agenda"
+    },
+    "calendars": {
+      "off": "Uitgeschakeld",
+      "what": "je agenda’s",
+      "title": "Je agenda’s",
+      "metaTitle": "Je agenda’s",
+      "subtitle": "Elke agenda heeft eigen tijden en regels. Formulieren en chat op je website boeken in de agenda die je kiest.",
+      "new": "Nieuwe agenda",
+      "default": "Standaard",
+      "upcoming": "{{count}} komend",
+      "created": "Agenda toegevoegd",
+      "newSub": "Geef hem nu een naam; tijden en regels volgen.",
+      "create": "Agenda toevoegen",
+      "namePlaceholder": "bijv. Bezichtigingen",
+      "kind": "Welk soort",
+      "upcoming_one": "{{count}} komend",
+      "upcoming_other": "{{count}} komend"
+    },
+    "title": "Afspraken",
+    "messages": {
+      "sent": "Verstuurd {{when}}",
+      "failed": "Kon niet worden verstuurd",
+      "planned": "Gaat uit op {{when}}",
+      "none": "Niets verstuurd of gepland. De agenda-instellingen bepalen welke berichten uitgaan.",
+      "noAddress": "Geen e-mailadres, dus geen berichten. Voeg er een toe bij de klant om bevestiging en herinneringen te sturen.",
+      "sms": "Sms",
+      "email": "E-mail",
+      "kind": {
+        "confirmation": "Bevestiging",
+        "reminder": "Herinnering",
+        "changed": "Nieuwe tijd",
+        "cancelled": "Annulering",
+        "custom": "Bericht"
+      }
+    },
+    "history": {
+      "byCustomer": "de klant",
+      "bySystem": "Repraesent",
+      "byTeam": "je team",
+      "created": "Geboekt door {{who}}",
+      "moved": "Verzet naar {{to}} door {{who}}",
+      "cancelled": "Geannuleerd door {{who}}",
+      "confirmed": "De klant heeft bevestigd te komen",
+      "outcome": "Uitkomst genoteerd door {{who}}",
+      "linked": "Personen of deal gewijzigd door {{who}}",
+      "updated": "Gegevens gewijzigd door {{who}}",
+      "copyFailed": "Kon niet in de gekoppelde agenda worden gezet",
+      "messageFailed": "Een bericht kon niet worden verstuurd"
+    },
+    "metaTitle": "Afspraken",
+    "metaDescription": "Wie er komt, en wanneer.",
+    "book": {
+      "today": "Vandaag",
+      "tomorrow": "Morgen",
+      "thisWeek": "Deze week",
+      "later": "Later"
+    },
+    "subtitle": "Wie er komt, en wanneer.",
+    "calendarsButton": "Agenda’s",
+    "new": "Nieuwe afspraak",
+    "didTheyCome": "Zijn ze gekomen?",
+    "didTheyComeHint": "Afspraken die al voorbij zijn. Eén tik per afspraak.",
+    "viewLabel": "Welke afspraken",
+    "views": {
+      "upcoming": "Komend",
+      "past": "Voorbij",
+      "cancelled": "Geannuleerd"
+    },
+    "searchPlaceholder": "Zoeken op naam, e-mail of telefoon…",
+    "allCalendars": "Alle agenda’s",
+    "clearFilters": "Filters wissen",
+    "what": "je afspraken",
+    "empty": {
+      "filtered": "Niets past bij deze filters.",
+      "upcoming": "Geen komende afspraken.",
+      "past": "Nog geen afspraken in het verleden.",
+      "cancelled": "Er is niets geannuleerd.",
+      "upcomingBody": "Boek er zelf een, of laat mensen boeken op je website: voeg een afspraakveld toe aan een formulier en kies een van je agenda’s."
+    },
+    "calendarView": {
+      "metaTitle": "Afsprakenagenda",
+      "title": "Agenda",
+      "subtitle": "Klik op een vrije tijd om die te boeken.",
+      "subtitleTouch": "Houd een vrij tijdstip ingedrukt om het te boeken.",
+      "showOther": "Mijn andere agenda’s tonen"
+    },
+    "public": {
+      "metaTitle": "Uw afspraak",
+      "invalidTitle": "Deze link werkt niet meer",
+      "invalidBody": "Hij is na de afspraak mogelijk verlopen. Neem voor wijzigingen rechtstreeks contact op met het bedrijf.",
+      "taken": "Die tijd is net bezet. Kies alstublieft een andere.",
+      "tooMany": "Te veel wijzigingen in korte tijd. Probeer het over een paar minuten opnieuw.",
+      "failed": "Dat is niet gelukt. Probeer het opnieuw of neem rechtstreeks contact op met het bedrijf.",
+      "tooLate": "De afspraak is te dichtbij om hier te wijzigen. Neem rechtstreeks contact op met {{business}}.",
+      "notAllowed": "Neem voor wijzigingen aan deze afspraak rechtstreeks contact op met {{business}}.",
+      "cancelledTitle": "Uw afspraak is geannuleerd",
+      "title": "Uw afspraak",
+      "join": "Online deelnemen",
+      "confirmed": "U hebt bevestigd te komen",
+      "pickNew": "Nieuwe tijd kiezen",
+      "back": "Terug",
+      "moveConfirm": "Mijn afspraak verzetten",
+      "cancelTitle": "Deze afspraak annuleren?",
+      "reason": "Wilt u ons laten weten waarom? (optioneel)",
+      "keep": "Afspraak houden",
+      "cancelConfirm": "Ja, annuleren",
+      "willCome": "Ja, ik kom",
+      "move": "Andere tijd kiezen",
+      "cancel": "Afspraak annuleren"
+    },
+    "source": {
+      "manual": "Geboekt door je team",
+      "form": "Geboekt via je websiteformulier",
+      "ai_assistant": "Geboekt in je websitechat",
+      "customer_page": "Geboekt door de klant",
+      "api": "Geboekt via een app",
+      "import": "Uit je agenda",
+      "legacy_booking": "Geboekt via je boekingspagina",
+      "onboarding": "Onboardinggesprek"
+    },
+    "import": {
+      "title": "Toevoegen aan afspraken",
+      "sub": "Hij blijft in je agenda. Verplaats of verwijder hem daar, dan verandert hij hier ook. Niemand krijgt een e-mail van ons.",
+      "confirm": "Toevoegen aan afspraken",
+      "added": "Toegevoegd aan afspraken",
+      "untitled": "Afspraak"
+    }
+  },
+  "calendarView": {
+    "today": "Vandaag",
+    "previous": "Terug",
+    "next": "Volgende",
+    "month": "Maand",
+    "week": "Week",
+    "day": "Dag",
+    "agenda": "Lijst",
+    "date": "Datum",
+    "time": "Tijd",
+    "event": "Wat",
+    "allDay": "Hele dag",
+    "showMore": "+{{count}} meer"
   }
 }

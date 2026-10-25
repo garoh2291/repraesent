@@ -1,9 +1,54 @@
+import { useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Clock } from "lucide-react";
 import { EmailCard } from "~/components/organism/email-card";
 import TooltipContainer from "~/components/tooltip-container";
 import type { BccMessage } from "~/lib/api/bcc-logs";
 import type { PendingOutboundEmail } from "~/lib/api/outbound-mail";
+import {
+  emailsQuery,
+  pendingOutboundQuery,
+  type ActivityContext,
+  type Variant,
+} from "./shared";
+
+/** How often to re-check for an ingested copy while a send is still in flight. */
+export const PENDING_POLL_MS = 20_000;
+
+/**
+ * Sent-but-not-ingested emails for a contact or deal, shared by the All feed
+ * and both Emails tabs (same key, one cache).
+ *
+ * Polls only while something is pending: the app's global query defaults turn
+ * off every automatic refetch. When a placeholder drops out, its real copy has
+ * landed, so the message list is refetched to put it in the same spot.
+ */
+export function usePendingOutbound(ctx: ActivityContext, variant: Variant) {
+  const queryClient = useQueryClient();
+  const pq = pendingOutboundQuery(ctx, variant);
+  const emailsKey = emailsQuery(ctx, variant).key;
+  const query = useQuery({
+    queryKey: pq.key,
+    queryFn: pq.fn,
+    enabled: !!pq.id,
+    refetchInterval: (q) =>
+      (q.state.data?.length ?? 0) > 0 ? PENDING_POLL_MS : false,
+  });
+
+  const count = query.data?.length;
+  const prev = useRef(count);
+  useEffect(() => {
+    if (count !== undefined && prev.current !== undefined && count < prev.current) {
+      void queryClient.invalidateQueries({ queryKey: emailsKey });
+    }
+    prev.current = count;
+    // emailsKey is rebuilt every render; its contents only change with ctx.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [count, queryClient, JSON.stringify(emailsKey)]);
+
+  return query;
+}
 
 /**
  * Render a just-sent email with the same card as an ingested one.

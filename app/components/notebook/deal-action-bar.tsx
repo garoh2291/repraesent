@@ -12,7 +12,7 @@ import {
 } from "~/components/ui/dropdown-menu";
 
 /** Height of the bottom tab bar (incl. safe area), so the bar sits right above it. */
-function useTabBarHeight(): number | null {
+export function useTabBarHeight(): number | null {
   const [h, setH] = useState<number | null>(null);
   useEffect(() => {
     const el = document.querySelector<HTMLElement>("[data-tab-bar]");

@@ -117,7 +117,7 @@ export function LocalizedField({
               )}
             >
               <span className="hidden sm:inline-flex">
-                <LocaleFlag locale={l} />
+                <LocaleFlag locale={l} englishCountry="GB" />
               </span>
               {l}
               <span

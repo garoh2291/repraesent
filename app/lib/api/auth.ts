@@ -322,15 +322,25 @@ export interface UserContextResponse {
   brandWorkspaces?: BrandWorkspace[];
 }
 
+/** `copy_hint` is the masked sign-in copy address ("g•••@gmail.com") when one is set. */
+export interface MagicLinkRequestResult {
+  message?: string;
+  copy_hint?: string;
+}
+
 /**
  * Request a magic link to be sent to the given email
  */
 export const requestMagicLink = async (
   email: string,
   locale?: SupportedLocale,
-): Promise<void> => {
+): Promise<MagicLinkRequestResult> => {
   try {
-    await apiClient.post("/users/magic-link", { email, locale });
+    const response = await apiClient.post<MagicLinkRequestResult>(
+      "/users/magic-link",
+      { email, locale },
+    );
+    return response.data ?? {};
   } catch (error) {
     throw toAuthRequestError(error, "Failed to send magic link");
   }

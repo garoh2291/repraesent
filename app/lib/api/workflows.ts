@@ -13,6 +13,7 @@ export const WORKFLOW_ENTITIES = [
   "deals",
   "tasks",
   "contacts",
+  "appointments",
 ] as const;
 export type WorkflowEntity = (typeof WORKFLOW_ENTITIES)[number];
 
@@ -190,6 +191,7 @@ export const AUDIENCES_BY_ENTITY: Record<
   leads: ["primary", "linked_contact", "address", "path"],
   contacts: ["primary", "address", "path"],
   tasks: ["primary", "address", "path"],
+  appointments: ["primary", "address", "path"],
 };
 
 /**

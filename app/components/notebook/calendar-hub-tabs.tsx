@@ -25,7 +25,7 @@ export function CalendarHubTabs({ className }: { className?: string }) {
 
   const tabs = [
     showCalendar ? { to: "/calendar", label: t("calendarHub.calendar", "Calendar") } : null,
-    showBooking ? { to: "/appointments", label: t("calendarHub.booking", "Booking page") } : null,
+    showBooking ? { to: "/appointments/booking-page", label: t("calendarHub.booking", "Booking page") } : null,
     { to: "/settings/calendars", label: t("calendarHub.sources", "Connected calendars") },
   ].filter(Boolean) as { to: string; label: string }[];
 

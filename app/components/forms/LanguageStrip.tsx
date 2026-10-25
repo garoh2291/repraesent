@@ -34,23 +34,33 @@ import { FORM_LOCALES, type FormLocale } from "~/lib/forms/schema";
 
 /**
  * Locale -> country for the flag. A language is not a country (English least of
- * all), so this is a pragmatic convention, not a fact: en shows the UK flag
- * because that is what every language picker does.
+ * all), so this is a pragmatic convention, not a fact: form English is US
+ * English, so en shows the US flag. Places that mean the app's own English
+ * (onboarding fields) pass `englishCountry="GB"` to keep the UK flag.
  *
  * The flag set is `react-phone-number-input/flags`, already a dependency and
  * already used by `molecule/phone-number-input.tsx` — real SVGs, so they render
  * identically everywhere. Emoji flags would have been one line, but Windows
  * ships no flag glyphs and would have shown bare "GB"/"DE" letter pairs.
  */
-const LOCALE_COUNTRY: Record<FormLocale, "GB" | "DE" | "FR" | "NL"> = {
-  en: "GB",
+const LOCALE_COUNTRY: Record<FormLocale, "US" | "DE" | "FR" | "NL" | "AM"> = {
+  en: "US",
   de: "DE",
   fr: "FR",
   nl: "NL",
+  hy: "AM",
 };
 
-export function LocaleFlag({ locale }: { locale: FormLocale }) {
-  const country = LOCALE_COUNTRY[locale];
+export function LocaleFlag({
+  locale,
+  englishCountry,
+}: {
+  locale: FormLocale;
+  /** Overrides the flag shown for en only. */
+  englishCountry?: "US" | "GB";
+}) {
+  const country =
+    locale === "en" && englishCountry ? englishCountry : LOCALE_COUNTRY[locale];
   const Flag = flags[country];
   if (!Flag) return null;
   return (
@@ -111,6 +121,12 @@ interface Props {
    * menu, which would be wrong for something that fires while you type.
    */
   syncing?: ReadonlySet<string>;
+
+  /**
+   * Languages the Add menu offers. Defaults to every form language; email
+   * templates pass the app's four, since Armenian exists for forms only.
+   */
+  availableLocales?: readonly FormLocale[];
 }
 
 /**
@@ -149,6 +165,7 @@ export function LanguageStrip({
   unlinkedLocales,
   onLinkTranslations,
   syncing,
+  availableLocales = FORM_LOCALES,
 }: Props) {
   const { t } = useTranslation();
   const [confirmRemove, setConfirmRemove] = useState<FormLocale | null>(null);
@@ -159,7 +176,7 @@ export function LanguageStrip({
     defaultLocale,
     ...locales.filter((l) => l !== defaultLocale),
   ];
-  const addable = FORM_LOCALES.filter((l) => !locales.includes(l));
+  const addable = availableLocales.filter((l) => !locales.includes(l));
   /**
    * One AI translation at a time, across the whole strip.
    *

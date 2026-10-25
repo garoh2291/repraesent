@@ -43,6 +43,8 @@ export default function Login() {
   const [error, setError] = useState<string | null>(null);
   const [errorKind, setErrorKind] = useState<AuthRequestErrorKind | null>(null);
   const [success, setSuccess] = useState(false);
+  // Masked sign-in copy address ("g•••@gmail.com") when the account has one.
+  const [copyHint, setCopyHint] = useState<string | null>(null);
   const {
     user,
     workspaces,
@@ -156,10 +158,11 @@ export default function Login() {
     try {
       // Send the visitor's current UI language so the magic-link email is in
       // that language and their saved locale is synced to it.
-      await requestMagicLinkAsync({
+      const sent = await requestMagicLinkAsync({
         email,
         locale: normalizeLocale(i18n.language),
       });
+      setCopyHint(sent?.copy_hint ?? null);
       setSuccess(true);
     } catch (err) {
       setError(authErrorMessage(err, t));
@@ -309,6 +312,14 @@ export default function Login() {
                           "We sent a link and a 6-digit code to {{email}}.",
                       })}
                     </p>
+                    {copyHint && (
+                      <p className="mt-0.5">
+                        {t("auth.login.copySent", {
+                          hint: copyHint,
+                          defaultValue: "We also sent a copy to {{hint}}.",
+                        })}
+                      </p>
+                    )}
                     <p className="mt-0.5 opacity-80">
                       {t(
                         "auth.login.checkInboxExpiry",
@@ -320,12 +331,13 @@ export default function Login() {
                 <LoginCodeBox
                   email={email}
                   returnUrl={searchParams.get("returnUrl")}
-                  onResend={() =>
-                    requestMagicLinkAsync({
+                  onResend={async () => {
+                    const sent = await requestMagicLinkAsync({
                       email,
                       locale: normalizeLocale(i18n.language),
-                    })
-                  }
+                    });
+                    setCopyHint(sent?.copy_hint ?? null);
+                  }}
                   onSigningIn={(active) => {
                     codeSignIn.current = active;
                     setCodeSigningIn(active);

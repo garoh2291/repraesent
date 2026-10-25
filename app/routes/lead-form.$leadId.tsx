@@ -38,6 +38,7 @@ import { useLeadFlow } from "~/components/notebook/lead-flow";
 import { telHref } from "~/components/notebook/contact-actions";
 import i18n from "~/i18n";
 import { useDocumentMeta } from "~/lib/hooks/use-document-meta";
+import { AppointmentsCard } from "~/components/appointment-book/appointments-card";
 
 export function meta() {
   return [
@@ -393,6 +394,19 @@ export default function LeadFormLeadId() {
           <LeadConversation
             lead={lead}
             maxHeightClassName="max-h-[min(60vh,560px)]"
+          />
+          <AppointmentsCard
+            target={{ leadId: lead.id }}
+            prefill={{
+              leadId: lead.id,
+              leadLabel:
+                lead.full_name?.trim() ||
+                [lead.first_name, lead.last_name].filter(Boolean).join(" ").trim() ||
+                lead.email ||
+                null,
+              customerEmail: lead.email ?? null,
+              customerPhone: lead.phone ?? null,
+            }}
           />
         </div>
 

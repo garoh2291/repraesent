@@ -33,6 +33,11 @@ export async function getNotesForDeal(dealId: string): Promise<Note[]> {
   return res.data;
 }
 
+export async function getNotesForAppointment(appointmentId: string): Promise<Note[]> {
+  const res = await apiClient.get<Note[]>(`/appointments/${appointmentId}/notes`);
+  return res.data;
+}
+
 export async function createNote(
   leadId: string,
   content: string
@@ -51,6 +56,16 @@ export async function createNoteForContact(
     `/contacts/${contactRouteId}/notes`,
     { content },
   );
+  return res.data;
+}
+
+export async function createNoteForAppointment(
+  appointmentId: string,
+  content: string,
+): Promise<Note> {
+  const res = await apiClient.post<Note>(`/appointments/${appointmentId}/notes`, {
+    content,
+  });
   return res.data;
 }
 

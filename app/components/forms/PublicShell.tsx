@@ -12,7 +12,7 @@
  */
 
 import { onColor } from "~/lib/forms/css";
-import type { FormTheme } from "~/lib/forms/schema";
+import { toFormLocale, type FormTheme } from "~/lib/forms/schema";
 
 export function PublicShell({
   embed,
@@ -95,11 +95,13 @@ export function resolveVisitorLocale<L extends string>(
 ): L {
   const isOffered = (v: unknown): v is L =>
     typeof v === "string" && (offered as readonly string[]).includes(v);
-  if (isOffered(langParam)) return langParam;
-  if (isOffered(cookie)) return cookie;
+  // Exact first, then read as a form locale ("hy-AM", "am" → "hy").
+  const pick = (v: string | null): L | null => {
+    if (isOffered(v)) return v;
+    const normalized = toFormLocale(v);
+    return isOffered(normalized) ? normalized : null;
+  };
   const nav =
-    typeof navigator !== "undefined"
-      ? (navigator.language || "").split("-")[0].toLowerCase()
-      : "";
-  return isOffered(nav) ? nav : fallback;
+    typeof navigator !== "undefined" ? (navigator.language ?? null) : null;
+  return pick(langParam) ?? pick(cookie) ?? pick(nav) ?? fallback;
 }

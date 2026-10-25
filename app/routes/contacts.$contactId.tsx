@@ -32,6 +32,7 @@ import {
   AlertDialogTitle,
 } from "~/components/ui/alert-dialog";
 import { deleteContact } from "~/lib/api/contacts";
+import { AppointmentsCard } from "~/components/appointment-book/appointments-card";
 
 export function meta({ location }: { location: { pathname: string } }) {
   return [
@@ -363,6 +364,17 @@ export default function ContactDetailPage() {
             />
             </div>
             <div className="max-lg:order-2">
+            <AppointmentsCard
+              className="mb-4 sm:mb-6"
+              target={{ contactId: resolvedContactId }}
+              prefill={{
+                contact: {
+                  id: resolvedContactId,
+                  label: displayName,
+                  kind: contact?.kind === "company" ? "company" : "person",
+                },
+              }}
+            />
             <ContactDealsSection
               contactRouteId={contactRouteId}
               contactDisplayName={displayName}

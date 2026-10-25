@@ -58,6 +58,7 @@ import {
   DropdownMenuTrigger,
 } from "~/components/ui/dropdown-menu";
 import { Skeleton } from "~/components/ui/skeleton";
+import { TodayAppointments } from "~/components/appointment-book/appointments-card";
 
 export function meta() {
   return [
@@ -469,8 +470,6 @@ function ChatGaps({
 
 function AiVisibilityAlert({ alert }: { alert: TodayAiAlert }) {
   const { t } = useTranslation();
-  const pilot = usePilotFeatures();
-  if (!pilot.aiVisibility) return null;
   const link =
     alert.reason === "cap"
       ? { to: "/ai-visibility/plan", label: t("today.ai.changeLimit", "Change the limit") }
@@ -850,6 +849,7 @@ export default function Today() {
                 total={(counts?.tasks_overdue ?? 0) + (counts?.tasks_due_today ?? 0)}
                 overdue={counts?.tasks_overdue ?? 0}
               />
+              <TodayAppointments />
               <NoNextStep
                 deals={data.deals_no_next_step ?? []}
                 total={counts?.deals_no_next_step ?? 0}

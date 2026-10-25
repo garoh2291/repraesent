@@ -94,7 +94,8 @@
         "website": "Pages, SEO et vos services",
         "settings": "Vous, votre équipe et vos connexions",
         "billing": "Offre et factures",
-        "contact": "Une vraie personne de notre équipe"
+        "contact": "Une vraie personne de notre équipe",
+        "results": "Comment vont les affaires"
       },
       "switchBusiness": "Changer d’entreprise"
     }
@@ -203,6 +204,7 @@
       },
       "checkInboxDetailCode": "Nous avons envoyé un lien et un code à 6 chiffres à {{email}}.",
       "checkInboxExpiry": "Le lien est valable 30 minutes, le code 10 minutes.",
+      "copySent": "Nous avons aussi envoyé une copie à {{hint}}.",
       "subtitleCode": "Nous vous envoyons un lien et un code à 6 chiffres par e-mail.",
       "sendButton": "Recevoir l’e-mail de connexion →"
     },
@@ -397,7 +399,8 @@
         "microsoft": "Microsoft",
         "caldav": "CalDAV",
         "baikal": "Baikal",
-        "unknown": "Calendrier"
+        "unknown": "Calendrier",
+        "repraesent": "Agenda Repraesent"
       }
     },
     "conversation": {
@@ -1492,6 +1495,22 @@
       "inviteRole": "Rôle",
       "inviteSent": "Invitation envoyée",
       "inviteTitle": "Inviter des membres",
+      "signInCopy": {
+        "title": "Copie de connexion",
+        "description": "Les e-mails de connexion de {{email}} sont aussi envoyés à cette adresse : lien de connexion, code et invitations. Rien d’autre n’y est envoyé.",
+        "label": "Envoyer aussi les e-mails de connexion à",
+        "placeholder": "nom@gmail.com",
+        "hint": "Pour les personnes qui ne lisent pas leur boîte professionnelle. On ne peut pas se connecter avec cette adresse.",
+        "invalid": "Cette adresse e-mail n’est pas valide. Vérifiez l’orthographe.",
+        "sameAsMain": "C’est la même adresse que son e-mail. Saisissez-en une autre.",
+        "save": "Enregistrer",
+        "remove": "Retirer la copie",
+        "saved": "Les e-mails de connexion vont aussi à {{email}}.",
+        "removed": "Copie de connexion retirée.",
+        "rowSet": "Copie de connexion : {{email}}",
+        "rowAdd": "Ajouter une copie de connexion",
+        "otherBusiness": "Cette personne fait aussi partie d’une autre entreprise : seul le support re:praesent peut modifier sa copie de connexion."
+      },
       "inviteDescription": "Ajoutez des coéquipiers par e-mail. Ils recevront un lien magique pour rejoindre et configurer leur profil.",
       "inviteEmailsPlaceholder": "nom@entreprise.com, autre@entreprise.com…",
       "inviteAdd": "Envoyer les invitations",
@@ -1529,7 +1548,8 @@
       "en": "English",
       "de": "Deutsch",
       "fr": "Français",
-      "nl": "Nederlands"
+      "nl": "Nederlands",
+      "hy": "Հայերեն"
     },
     "invoices": {
       "title": "Factures",
@@ -1912,13 +1932,13 @@
     "avatarRemovedWorkspace": "Photo de l'espace de travail supprimée",
     "ai": {
       "metaTitle": "Compte IA",
-      "metaDescription": "Connectez le compte IA qui fait tourner le chat de votre site.",
+      "metaDescription": "Connectez le compte IA qui fait tourner le chat de votre site et la visibilité IA.",
       "sectionLabel": "Votre compte IA",
-      "sectionDescription": "Le chat de votre site fonctionne avec votre propre compte IA (OpenRouter fait tourner l’IA). La consommation y est facturée.",
+      "sectionDescription": "Le chat de votre site et la visibilité IA fonctionnent avec votre propre compte IA (OpenRouter fait tourner l’IA). La consommation y est facturée.",
       "cardTitle": "OpenRouter",
       "statusConnected": "Connecté",
       "statusRevoked": "Clé refusée",
-      "notConnectedHint": "Créez une clé sur openrouter.ai/keys et collez-la ici. D’ici là, le chat ne peut pas être activé.",
+      "notConnectedHint": "Créez une clé sur openrouter.ai/keys et collez-la ici. D’ici là, le chat ne peut pas être activé et la visibilité IA ne peut rien vérifier.",
       "lastError": "Dernier appel échoué : {{error}}",
       "keyLabel": "Clé API",
       "rotateLabel": "Remplacer la clé API",
@@ -1932,7 +1952,7 @@
       "disconnected": "Compte IA déconnecté",
       "disconnect": "Retirer la clé",
       "disconnectTitle": "Déconnecter votre compte IA ?",
-      "disconnectDescription": "Les chats en ligne cessent aussitôt de répondre, et rien de nouveau ne peut être appris avant une nouvelle connexion. La clé reste valable chez OpenRouter.",
+      "disconnectDescription": "Les chats en ligne cessent aussitôt de répondre, la visibilité IA arrête ses vérifications, et rien de nouveau ne peut être appris avant une nouvelle connexion. La clé reste valable chez OpenRouter.",
       "adminOnly": "Seuls les administrateurs peuvent gérer le compte IA.",
       "defaultModel": "Modèle de chat par défaut",
       "defaultModelHint": "Utilisé par les nouveaux assistants. Chaque assistant peut choisir son propre modèle.",
@@ -1943,7 +1963,7 @@
         "step2": "Ouvrez « Keys » dans le menu du compte.",
         "step3": "Créez une clé et copiez-la — elle n’est affichée qu’une fois.",
         "step4": "Ajoutez du crédit, collez la clé ci-dessus et cliquez sur Connecter.",
-        "billing": "Tout ce que consomment les chats de votre entreprise est facturé sur cette clé.",
+        "billing": "Tout ce que consomment les chats et la visibilité IA de votre entreprise est facturé sur cette clé.",
         "link": "Ouvrir openrouter.ai/keys"
       },
       "spend": {
@@ -2287,7 +2307,9 @@
         "levelTech": "À l'aise avec la technique",
         "levelAssisted": "A quelqu'un pour la technique",
         "levelSimple": "Préfère la simplicité"
-      }
+      },
+      "showInAppointmentsTitle": "Afficher aussi ces appels dans Rendez-vous",
+      "showInAppointmentsHint": "Chaque appel réservé apparaît dans Rendez-vous, lié à la demande et à la vente. Il reste dans l'agenda de l'hôte, et aucun e-mail n'est envoyé depuis Rendez-vous."
     },
     "emailNotifications": {
       "metaTitle": "Résumés par e-mail",
@@ -5428,7 +5450,8 @@
       "kindProduct": "Produit",
       "kindMulti": "Multi-étapes",
       "kindIntake": "Depuis un autre outil",
-      "intro": "Chaque réponse arrive dans vos demandes."
+      "intro": "Chaque réponse arrive dans vos demandes.",
+      "webhookOnly": "Uniquement vers d’autres apps"
     },
     "status": {
       "draft": "Brouillon",
@@ -5780,7 +5803,8 @@
         "duplicateProductField": "« {{field}} » est une deuxième question produit. Un formulaire ne peut en avoir qu’une — supprimez-en une.",
         "productFieldOnStandardForm": "« {{field}} » demande un paiement, mais ce formulaire ne peut pas en recevoir. Supprimez-la ici.",
         "commerceNoItems": "« {{field}} » ne contient encore aucun produit. Sélectionnez-la et ajoutez-en au moins un.",
-        "keyMissing": "« {{field}} » n’a pas de nom interne. Ouvrez Avancé sur cette question et ajoutez-en un."
+        "keyMissing": "« {{field}} » n’a pas de nom interne. Ouvrez Avancé sur cette question et ajoutez-en un.",
+        "crmSaveAppointment": "« {{field}} » réserve un rendez-vous, mais ce formulaire n’enregistre pas les réponses. Supprimez la question ou activez « Enregistrer les réponses comme demandes »."
       },
       "otherLocales": "{{count}} autre(s) point(s) à corriger en :",
       "keyMissing": "Une question n’a pas de nom interne. Ouvrez Avancé sur cette question et ajoutez-en un.",
@@ -5797,7 +5821,8 @@
       "invalidCancelUrl": "La page après un paiement annulé doit commencer par https://. Saisissez l’adresse complète.",
       "needsProductField": "Il n’y a pas de question produit : les visiteurs ne voient pas ce qu’ils achètent. Ajoutez-en une via « Ajouter une question ».",
       "duplicateProductField": "Un formulaire ne peut avoir qu’une question produit. Supprimez celle en trop.",
-      "productFieldOnStandardForm": "Une question produit ne fonctionne que sur un formulaire avec paiement. Supprimez-la ici."
+      "productFieldOnStandardForm": "Une question produit ne fonctionne que sur un formulaire avec paiement. Supprimez-la ici.",
+      "crmSaveAppointment": "Une question de rendez-vous a besoin de réponses enregistrées. Supprimez-la ou activez « Enregistrer les réponses comme demandes »."
     },
     "public": {
       "notAvailable": "Ce formulaire n'est pas disponible",
@@ -6012,7 +6037,18 @@
         "checkout_failed": "Paiement échoué",
         "checkout_expired": "Paiement non terminé"
       },
-      "advancedHint": "Ce qui est envoyé exactement, le secret de signature et comment le vérifier."
+      "advancedHint": "Ce qui est envoyé exactement, le secret de signature et comment le vérifier.",
+      "crm": {
+        "title": "Où vont les réponses",
+        "label": "Enregistrer les réponses comme demandes",
+        "onHelp": "Chaque réponse apparaît dans Clients, et votre équipe en est informée.",
+        "offHelp": "Les réponses vont uniquement vers les apps ci-dessous. Repraesent ne garde que leur nombre.",
+        "noWebhook": "Aucune app ci-dessous n’est encore activée : les réponses sont donc toujours enregistrées comme demandes. Activez-en une pour les y envoyer à la place.",
+        "lockedProduct": "Les formulaires de paiement enregistrent toujours les réponses, pour que chaque paiement soit rattaché à un client.",
+        "lockedAppointment": "Ce formulaire réserve des rendez-vous, il enregistre donc toujours les réponses : chaque réservation a besoin d’un client.",
+        "emailOff": "Ce formulaire envoie les réponses uniquement vers d’autres apps : aucun e-mail de confirmation n’est envoyé. Pour en envoyer un, activez « Enregistrer les réponses comme demandes » dans « Envoyer vers d’autres apps ».",
+        "payloadCleared": "Les réponses ont été supprimées après l’envoi, car ce formulaire ne garde rien dans Repraesent."
+      }
     },
     "products": {
       "title": "Lot",
@@ -6163,7 +6199,8 @@
       "leads": "Leads",
       "deals": "Deals",
       "tasks": "Tasks",
-      "contacts": "Contacts"
+      "contacts": "Contacts",
+      "appointments": "Rendez-vous"
     },
     "node": {
       "trigger": "Trigger",
@@ -6488,7 +6525,9 @@
       "why_the_lead": "le lead",
       "why_linked_contact": "contact lié",
       "why_literal_address": "",
-      "why_custom_variable": ""
+      "why_custom_variable": "",
+      "appointments_primary": "La personne qui a réservé",
+      "why_the_customer": "a réservé"
     },
     "variables": {
       "insert": "Insérer une valeur",
@@ -6715,7 +6754,9 @@
     "sentCopyNote": "Une copie apparaît sur le contact et l'affaire d'ici quelques minutes.",
     "sentDone": "Terminé",
     "showAddress": "{{name}} · {{email}}",
-    "copyAddress": "Copier l’adresse"
+    "copyAddress": "Copier l’adresse",
+    "sentSyncToast": "E-mail envoyé",
+    "sentSyncToastDescription": "Il apparaît déjà dans l'activité. La copie complète arrive d'ici quelques minutes."
   },
   "demo": {
     "metaTitle": "Démo live",
@@ -9143,7 +9184,11 @@
       "aiChat": "Chat IA",
       "files": "Fichiers",
       "aiVisibility": "Visibilité IA",
-      "companies": "Entreprises"
+      "companies": "Entreprises",
+      "upcoming": "À venir",
+      "appointmentCalendar": "Agenda",
+      "teamCalendar": "Agenda d’équipe",
+      "bookingPage": "Page de réservation"
     },
     "settingsGroups": {
       "you": "Vous",
@@ -9152,7 +9197,8 @@
       "alerts": "Mises à jour",
       "sales": "Affaires",
       "root": "re:praesent"
-    }
+    },
+    "appointments": "Rendez-vous"
   },
   "command": {
     "title": "Aller à ou rechercher",
@@ -9169,7 +9215,8 @@
     "newEmail": "Envoyer un nouvel e-mail",
     "empty": "Aucun résultat pour « {{q}} ».",
     "footer": "Recherchez personnes, affaires, tâches et pages",
-    "newCompany": "Nouvelle entreprise"
+    "newCompany": "Nouvelle entreprise",
+    "newAppointment": "Nouveau rendez-vous"
   },
   "today": {
     "metaTitle": "Aujourd'hui",
@@ -10434,5 +10481,388 @@
     "title": "Tout se trouve ici",
     "body": "Contacts, affaires, tâches et pages — touchez pour chercher.",
     "ok": "Compris"
+  },
+  "appointmentBook": {
+    "someone": "Quelqu’un",
+    "after": {
+      "bookAgain": "Réserver la prochaine visite",
+      "task": "Ajouter une tâche",
+      "deal": "Créer une affaire",
+      "sub": "{{name}} est venu. Et maintenant ?",
+      "nothing": "Rien pour l’instant"
+    },
+    "status": {
+      "confirmed": "Confirmé",
+      "needsOutcome": "Venu ou pas ?",
+      "completed": "Venu",
+      "noShow": "Pas venu",
+      "cancelled": "Annulé"
+    },
+    "wholeDay": "Journée entière",
+    "connectedCalendar": "Agenda connecté",
+    "online": "En ligne",
+    "inPerson": "Sur place",
+    "deal": "Affaire",
+    "toast": {
+      "noShow": "Noté : pas venu",
+      "booked": "Rendez-vous réservé",
+      "moved": "Déplacé",
+      "cancelled": "Rendez-vous annulé"
+    },
+    "came": "Venu",
+    "didntCome": "Pas venu",
+    "form": {
+      "pickTime": "Choisissez d’abord un horaire.",
+      "title": "Nouveau rendez-vous",
+      "notFree": "Ce créneau n’est pas libre dans cet agenda.",
+      "pickAnother": "Choisir un autre horaire",
+      "bookAnyway": "Réserver quand même",
+      "book": "Réserver le rendez-vous",
+      "calendar": "Agenda",
+      "with": "Avec",
+      "name": "Nom",
+      "email": "E-mail",
+      "phone": "Téléphone",
+      "pickExisting": "Choisir parmi vos clients",
+      "searchCustomer": "Rechercher un client…",
+      "someoneNew": "Quelqu’un de nouveau",
+      "dealOptional": "Affaire (facultatif)",
+      "searchDeal": "Rechercher une affaire…",
+      "note": "Note",
+      "notePlaceholder": "De quoi s’agit-il ?",
+      "sendConfirmation": "Envoyer une confirmation à {{email}}",
+      "company": "Entreprise",
+      "day": "Jour",
+      "wholeDayLabel": "Journée entière",
+      "time": "Horaire",
+      "calendarOff": "Cet agenda est désactivé et ne propose aucun créneau. Activez-le, ou indiquez un autre horaire ci-dessous.",
+      "noTimes": "Aucun créneau libre ce jour-là. Choisissez un autre jour ou indiquez un horaire.",
+      "otherTime": "Autre horaire…",
+      "otherTimeHint": "En dehors des créneaux libres : une confirmation vous sera demandée."
+    },
+    "card": {
+      "title": "Rendez-vous",
+      "book": "Réserver",
+      "empty": "Aucun rendez-vous pour l’instant. Réservez le premier avec « Réserver ».",
+      "showAll": "Afficher les {{count}}",
+      "showAll_one": "Afficher {{count}} de plus",
+      "showAll_other": "Afficher les {{count}}"
+    },
+    "today": {
+      "title": "Rendez-vous du jour",
+      "all": "Tous",
+      "none": "Personne n’est prévu aujourd’hui."
+    },
+    "settings": {
+      "minutes": "{{count}} min",
+      "hours": "{{count}} h",
+      "days": "{{count}} jours",
+      "about": "À propos de cet agenda",
+      "name": "Nom",
+      "nameHint": "Vos clients le voient, p. ex. « Visites » ou « Dates d’événement ».",
+      "color": "Couleur",
+      "description": "Note pour votre équipe (facultatif)",
+      "how": "Comment on vous rencontre",
+      "inPerson": "Sur place",
+      "online": "En ligne",
+      "meetingUrl": "Lien de réunion",
+      "meetingUrlHint": "Votre salle Zoom, Meet ou Teams fixe. Laissez vide si les rendez-vous vont dans un agenda Google ou Microsoft connecté : il crée un lien pour chacun.",
+      "address": "Adresse",
+      "addressHint": "Figure dans chaque confirmation et rappel.",
+      "what": "Ce qui se réserve",
+      "unitSlot": "Un horaire",
+      "unitDay": "Une journée entière",
+      "unitDayHint": "Chaque réservation prend la journée entière : une date d’événement, une location, un tournage.",
+      "length": "Durée",
+      "step": "Un horaire toutes les",
+      "stepHint": "En général identique à la durée.",
+      "hoursTitle": "Vos heures d’ouverture",
+      "hoursHint": "Seuls ces horaires sont proposés. Ajoutez une pause pour couper la journée.",
+      "from": "De",
+      "until": "À",
+      "addBreak": "Ajouter une pause",
+      "closed": "Fermé",
+      "bookable": "Réservable",
+      "timezone": "Fuseau horaire",
+      "rules": "Règles de réservation",
+      "before": "Temps libre avant chacun",
+      "none": "Aucun",
+      "after": "Temps libre après chacun",
+      "notice": "Délai minimum de réservation",
+      "anyTime": "Immédiatement",
+      "daysAhead": "{{count}} jours avant",
+      "hoursAhead": "{{count}} h avant",
+      "horizon": "Jusqu’à quand",
+      "capacity": "Combien en même temps",
+      "capacityHint": "1 pour une salle ou une personne. Plus pour un showroom avec plusieurs conseillers.",
+      "owner": "Qui s’en occupe",
+      "ownerHint": "Est prévenu quand un client déplace ou annule.",
+      "connected": "Vos autres agendas",
+      "connectedHint": "Facultatif. Connectez d’abord Google ou Microsoft dans Réglages → Agendas.",
+      "busy": "Bloquer les créneaux où je suis occupé dans…",
+      "noConnected": "Pas encore d’autre agenda.",
+      "repraesentCalendar": "Agenda Repraesent",
+      "reconnect": "à reconnecter",
+      "copy": "Ajouter aussi les rendez-vous dans…",
+      "copyHint": "Une copie arrive dans cet agenda, avec un lien Meet ou Teams pour les rendez-vous en ligne.",
+      "copyNone": "Nulle part ailleurs",
+      "messages": "Messages à vos clients",
+      "messagesHint": "Envoyés par e-mail au nom de votre entreprise. Les SMS pourront s’ajouter plus tard.",
+      "msgConfirmation": "Confirmation juste après la réservation",
+      "msgConfirmationHint": "Avec la date, le lieu et un fichier d’agenda.",
+      "msgChanges": "Un message si l’horaire change ou en cas d’annulation",
+      "msgReminder": "Un rappel avant le rendez-vous",
+      "hoursBefore": "{{count}} h avant",
+      "daysBefore": "{{count}} jours avant",
+      "selfService": "Permettre aux clients de déplacer ou d’annuler depuis l’e-mail",
+      "selfServiceHint": "Ils choisissent eux-mêmes un autre créneau ; la personne responsable est prévenue.",
+      "closures": "Jours de fermeture",
+      "closuresHint": "Jours fériés, salons, un événement privé : aucun créneau ces jours-là.",
+      "closureNote": "Pourquoi (facultatif)",
+      "addClosure": "Ajouter un jour de fermeture",
+      "metaTitle": "Réglages de l’agenda",
+      "saved": "Modifications enregistrées",
+      "turnedOn": "Agenda activé",
+      "turnedOff": "Agenda désactivé : plus de nouvelles réservations",
+      "nowDefault": "Les nouveaux rendez-vous commencent dans cet agenda",
+      "deleted": "Agenda supprimé",
+      "reminderWorkflowName": "Rappel 1 jour avant – {{name}}",
+      "offBanner": "Désactivé : aucun créneau n’est proposé, et les formulaires ou le chat qui l’utilisent l’indiquent. Les rendez-vous existants restent.",
+      "subtitle": "Les règles de cet agenda. Formulaires, chat et équipe les suivent tous.",
+      "useOnWebsite": "Pour permettre la réservation sur votre site, ajoutez un champ rendez-vous à un formulaire (Site → Formulaires) ou une action de réservation à votre chat, puis choisissez « {{name}} ».",
+      "ownReminders": "Vos propres rappels",
+      "ownRemindersHint": "D’autres mots, un second rappel ou un message après la visite ? Partez d’un workflow prêt à l’emploi et adaptez-le.",
+      "doubleReminder": "Le rappel ci-dessus est aussi activé : désactivez-en un pour éviter les doublons.",
+      "startWorkflow": "Créer un workflow de rappel",
+      "manage": "Cet agenda",
+      "turnOn": "Activer",
+      "turnOff": "Désactiver",
+      "makeDefault": "Utiliser pour les nouveaux rendez-vous",
+      "deleteConfirm": "Cliquez à nouveau pour supprimer",
+      "delete": "Supprimer l’agenda",
+      "cantDelete": "Il contient {{count}} rendez-vous et ne peut pas être supprimé : désactivez-le plutôt.",
+      "unsaved": "Vous avez des modifications non enregistrées.",
+      "minutes_one": "{{count}} min",
+      "minutes_other": "{{count}} min",
+      "hours_one": "{{count}} h",
+      "hours_other": "{{count}} h",
+      "days_one": "{{count}} jour",
+      "days_other": "{{count}} jours",
+      "daysAhead_one": "{{count}} jour avant",
+      "daysAhead_other": "{{count}} jours avant",
+      "hoursAhead_one": "{{count}} h avant",
+      "hoursAhead_other": "{{count}} h avant",
+      "hoursBefore_one": "{{count}} h avant",
+      "hoursBefore_other": "{{count}} h avant",
+      "daysBefore_one": "{{count}} jour avant",
+      "daysBefore_other": "{{count}} jours avant",
+      "cantDelete_one": "Il contient {{count}} rendez-vous et ne peut pas être supprimé : désactivez-le plutôt.",
+      "cantDelete_other": "Il contient {{count}} rendez-vous et ne peut pas être supprimé : désactivez-le plutôt."
+    },
+    "detail": {
+      "nobody": "Personne pour l’instant",
+      "metaTitle": "Rendez-vous",
+      "what": "ce rendez-vous",
+      "move": "Déplacer",
+      "cancel": "Annuler",
+      "undoOutcome": "Annuler",
+      "where": "Où",
+      "joinOnline": "Rejoindre en ligne",
+      "onlineNoLink": "En ligne, pas encore de lien. Ajoutez-en un dans les réglages de l’agenda.",
+      "noPlace": "Sur place, aucune adresse dans l’agenda.",
+      "notes": "Notes",
+      "outcomeNote": "Après la visite :",
+      "cancelReason": "Motif de l’annulation :",
+      "who": "Qui",
+      "customer": "Client",
+      "openContact": "Ouvrir le contact",
+      "openInquiry": "La demande",
+      "deal": "Affaire",
+      "openDeal": "Ouvrir l’affaire",
+      "handledBy": "Qui s’en occupe",
+      "messages": "Messages",
+      "messagesHint": "Par e-mail pour l’instant. Les SMS pourront suivre.",
+      "history": "Historique",
+      "details": "Détails",
+      "detailsFrom": {
+        "form": "Depuis le formulaire de réservation",
+        "ai_assistant": "Depuis le chat du site",
+        "customer_page": "Du client",
+        "import": "Ajouté depuis votre agenda",
+        "legacy_booking": "Depuis la page de réservation",
+        "api": "Depuis une application connectée",
+        "manual": "Noté lors de la réservation",
+        "onboarding": "Depuis la réservation d'onboarding"
+      },
+      "host": "Avec {{name}}",
+      "syncedHint": "Ce rendez-vous se trouve dans votre agenda. Déplacez-le ou annulez-le là-bas — il est mis à jour ici en 10 minutes."
+    },
+    "move": {
+      "title": "Déplacer le rendez-vous",
+      "now": "Actuellement : {{when}}",
+      "anyway": "Déplacer quand même",
+      "save": "Déplacer",
+      "connectedHint": "Ce rendez-vous est dans un agenda connecté ; l’événement y est déplacé aussi.",
+      "tell": "Prévenir {{email}} du nouvel horaire"
+    },
+    "cancel": {
+      "title": "Annuler le rendez-vous ?",
+      "sub": "Il reste dans l’historique comme annulé. Le créneau se libère.",
+      "keep": "Le garder",
+      "confirm": "Annuler le rendez-vous",
+      "reason": "Pourquoi ? (visible par vous seul)",
+      "tell": "Prévenir {{email}} de l’annulation"
+    },
+    "target": {
+      "label": "Où vont les réservations",
+      "native": "Agenda Repraesent",
+      "connected": "Agenda connecté",
+      "pick": "Choisir un agenda",
+      "rulesFrom": "Jours, horaires, durée et règles viennent de « {{name}} ».",
+      "edit": "Les modifier",
+      "off": "Cet agenda est désactivé : les visiteurs ne verront aucun créneau.",
+      "hint": "Les réservations arrivent dans Rendez-vous, liées à la demande.",
+      "calendar": "Agenda"
+    },
+    "calendars": {
+      "off": "Désactivé",
+      "what": "vos agendas",
+      "title": "Vos agendas",
+      "metaTitle": "Vos agendas",
+      "subtitle": "Chaque agenda a ses horaires et ses règles. Les formulaires et le chat de votre site réservent dans celui que vous choisissez.",
+      "new": "Nouvel agenda",
+      "default": "Par défaut",
+      "upcoming": "{{count}} à venir",
+      "created": "Agenda ajouté",
+      "newSub": "Donnez-lui un nom ; horaires et règles viennent ensuite.",
+      "create": "Ajouter l’agenda",
+      "namePlaceholder": "p. ex. Visites",
+      "kind": "Quel type",
+      "upcoming_one": "{{count}} à venir",
+      "upcoming_other": "{{count}} à venir"
+    },
+    "title": "Rendez-vous",
+    "messages": {
+      "sent": "Envoyé {{when}}",
+      "failed": "N’a pas pu être envoyé",
+      "planned": "Part le {{when}}",
+      "none": "Rien d’envoyé ni de prévu. Les réglages de l’agenda décident des messages envoyés.",
+      "noAddress": "Pas d’adresse e-mail, donc pas de messages. Ajoutez-en une au client pour envoyer confirmation et rappels.",
+      "sms": "SMS",
+      "email": "E-mail",
+      "kind": {
+        "confirmation": "Confirmation",
+        "reminder": "Rappel",
+        "changed": "Nouvel horaire",
+        "cancelled": "Annulation",
+        "custom": "Message"
+      }
+    },
+    "history": {
+      "byCustomer": "le client",
+      "bySystem": "Repraesent",
+      "byTeam": "votre équipe",
+      "created": "Réservé par {{who}}",
+      "moved": "Déplacé au {{to}} par {{who}}",
+      "cancelled": "Annulé par {{who}}",
+      "confirmed": "Le client a confirmé sa venue",
+      "outcome": "Issue notée par {{who}}",
+      "linked": "Personnes ou affaire modifiées par {{who}}",
+      "updated": "Détails modifiés par {{who}}",
+      "copyFailed": "N’a pas pu être ajouté à l’agenda connecté",
+      "messageFailed": "Un message n’a pas pu être envoyé"
+    },
+    "metaTitle": "Rendez-vous",
+    "metaDescription": "Qui vient, et quand.",
+    "book": {
+      "today": "Aujourd’hui",
+      "tomorrow": "Demain",
+      "thisWeek": "Cette semaine",
+      "later": "Plus tard"
+    },
+    "subtitle": "Qui vient, et quand.",
+    "calendarsButton": "Agendas",
+    "new": "Nouveau rendez-vous",
+    "didTheyCome": "Sont-ils venus ?",
+    "didTheyComeHint": "Visites déjà passées. Un clic chacune.",
+    "viewLabel": "Quels rendez-vous",
+    "views": {
+      "upcoming": "À venir",
+      "past": "Passés",
+      "cancelled": "Annulés"
+    },
+    "searchPlaceholder": "Rechercher par nom, e-mail ou téléphone…",
+    "allCalendars": "Tous les agendas",
+    "clearFilters": "Effacer les filtres",
+    "what": "vos rendez-vous",
+    "empty": {
+      "filtered": "Rien ne correspond à ces filtres.",
+      "upcoming": "Aucun rendez-vous à venir.",
+      "past": "Pas encore de rendez-vous passé.",
+      "cancelled": "Aucune annulation.",
+      "upcomingBody": "Réservez-en un vous-même, ou laissez réserver sur votre site : ajoutez un champ rendez-vous à un formulaire et choisissez l’un de vos agendas."
+    },
+    "calendarView": {
+      "metaTitle": "Agenda des rendez-vous",
+      "title": "Agenda",
+      "subtitle": "Cliquez sur un créneau libre pour le réserver.",
+      "subtitleTouch": "Maintenez le doigt sur un horaire libre pour le réserver.",
+      "showOther": "Afficher mes autres agendas"
+    },
+    "public": {
+      "metaTitle": "Votre rendez-vous",
+      "invalidTitle": "Ce lien ne fonctionne plus",
+      "invalidBody": "Il a peut-être expiré après le rendez-vous. Pour toute modification, veuillez contacter directement l’entreprise.",
+      "taken": "Ce créneau vient d’être pris. Veuillez en choisir un autre.",
+      "tooMany": "Trop de modifications en peu de temps. Veuillez réessayer dans quelques minutes.",
+      "failed": "Cela n’a pas fonctionné. Veuillez réessayer ou contacter directement l’entreprise.",
+      "tooLate": "Le rendez-vous est trop proche pour être modifié ici. Veuillez contacter directement {{business}}.",
+      "notAllowed": "Pour modifier ce rendez-vous, veuillez contacter directement {{business}}.",
+      "cancelledTitle": "Votre rendez-vous est annulé",
+      "title": "Votre rendez-vous",
+      "join": "Rejoindre en ligne",
+      "confirmed": "Vous avez confirmé votre venue",
+      "pickNew": "Choisir un nouvel horaire",
+      "back": "Retour",
+      "moveConfirm": "Déplacer mon rendez-vous",
+      "cancelTitle": "Annuler ce rendez-vous ?",
+      "reason": "Souhaitez-vous nous dire pourquoi ? (facultatif)",
+      "keep": "Le garder",
+      "cancelConfirm": "Oui, l’annuler",
+      "willCome": "Oui, je serai là",
+      "move": "Choisir un autre horaire",
+      "cancel": "Annuler le rendez-vous"
+    },
+    "source": {
+      "manual": "Réservé par votre équipe",
+      "form": "Réservé via le formulaire de votre site",
+      "ai_assistant": "Réservé dans le chat de votre site",
+      "customer_page": "Réservé par le client",
+      "api": "Réservé via une application",
+      "import": "Depuis votre agenda",
+      "legacy_booking": "Réservé via votre page de réservation",
+      "onboarding": "Appel d'onboarding"
+    },
+    "import": {
+      "title": "Ajouter aux rendez-vous",
+      "sub": "Il reste dans votre agenda. Déplacez-le ou supprimez-le là-bas, et il se met à jour ici. Personne ne reçoit d'e-mail de notre part.",
+      "confirm": "Ajouter aux rendez-vous",
+      "added": "Ajouté aux rendez-vous",
+      "untitled": "Rendez-vous"
+    }
+  },
+  "calendarView": {
+    "today": "Aujourd'hui",
+    "previous": "Précédent",
+    "next": "Suivant",
+    "month": "Mois",
+    "week": "Semaine",
+    "day": "Jour",
+    "agenda": "Liste",
+    "date": "Date",
+    "time": "Heure",
+    "event": "Quoi",
+    "allDay": "Toute la journée",
+    "showMore": "+{{count}} de plus"
   }
 }

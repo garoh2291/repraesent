@@ -11,15 +11,11 @@ import { Button } from "~/components/ui/button";
 import {
   composeInvalidateKeys,
   emailsQuery,
-  pendingOutboundQuery,
   type ActivityContext,
   type Variant,
 } from "./shared";
-import { PendingEmailsList } from "./pending-email-card";
+import { PendingEmailsList, usePendingOutbound } from "./pending-email-card";
 import { DealEmailsPanel } from "./deal-emails-panel";
-
-/** How often to re-check for an ingested copy while a send is still in flight. */
-export const PENDING_POLL_MS = 60_000;
 
 export function ActivityEmailsList({
   ctx,
@@ -76,7 +72,6 @@ function ContactEmailsList({
 }) {
   const { openCompose } = useComposeEmail();
   const q = emailsQuery(ctx, "contact");
-  const pq = pendingOutboundQuery(ctx, "contact");
 
   const { data, isLoading, isError } = useQuery({
     queryKey: q.key,
@@ -84,15 +79,7 @@ function ContactEmailsList({
     enabled: !!q.id,
   });
 
-  const { data: pending } = useQuery({
-    queryKey: pq.key,
-    queryFn: pq.fn,
-    enabled: !!pq.id,
-    // The app disables every automatic refetch globally, so a placeholder would
-    // otherwise sit there until the user navigated away and back.
-    refetchInterval: (query) =>
-      (query.state.data?.length ?? 0) > 0 ? PENDING_POLL_MS : false,
-  });
+  const { data: pending } = usePendingOutbound(ctx, "contact");
 
   const compose = () =>
     openCompose({
