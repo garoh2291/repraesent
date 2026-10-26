@@ -12,7 +12,7 @@ export const PILOT_WORKSPACE_IDS: ReadonlySet<string> = new Set([
 
 /**
  * Pilot features: on in development, and in production only for the pilot
- * workspaces above.
+ * workspaces above (plus single features in `EARLY_ACCESS` below).
  *
  * Two things enforce them on the client: the sidebar hides the entries (and
  * labels them "Demo" for pilots), and `PilotRouteGate` in the dashboard layout
@@ -82,13 +82,30 @@ export function pilotFeatureForPath(pathname: string): PilotFeature | null {
   return best?.feature ?? null;
 }
 
+/**
+ * Customers given single pilot features ahead of everyone else. The pilot
+ * workspaces above get every feature; these get only what is listed, and see
+ * no "Demo" pill.
+ */
+const EARLY_ACCESS: Readonly<Record<string, ReadonlyArray<PilotFeature>>> = {
+  // The Amara Estate: appointments, and the workflows behind their reminders
+  // (APPOINTMENTS_PLAN.md).
+  "d50fe320-70ce-4d9a-a058-34f17a2a2904": ["appointmentBook", "workflows"],
+};
+
+/**
+ * Without `feature`: whether this is one of our pilot workspaces (all pilots
+ * on, "Demo" pill shown). With `feature`: whether that one feature is on,
+ * counting early access.
+ */
 export function isPilotFeatureEnabled(
-  workspaceId: string | null | undefined
+  workspaceId: string | null | undefined,
+  feature?: PilotFeature
 ): boolean {
-  return (
-    import.meta.env.DEV ||
-    (!!workspaceId && PILOT_WORKSPACE_IDS.has(workspaceId))
-  );
+  if (import.meta.env.DEV) return true;
+  if (!workspaceId) return false;
+  if (PILOT_WORKSPACE_IDS.has(workspaceId)) return true;
+  return !!feature && (EARLY_ACCESS[workspaceId]?.includes(feature) ?? false);
 }
 
 /**
@@ -100,14 +117,15 @@ export function isPilotFeatureEnabled(
  */
 export function usePilotFeatures(): Record<PilotFeature, boolean> {
   const { currentWorkspace } = useAuthContext();
-  const enabled = isPilotFeatureEnabled(currentWorkspace?.id);
+  const on = (feature: PilotFeature) =>
+    isPilotFeatureEnabled(currentWorkspace?.id, feature);
 
   return {
-    workflows: enabled,
-    integrations: enabled,
-    emailCampaigns: enabled,
-    aiAssistant: enabled,
-    googleReviews: enabled,
-    appointmentBook: enabled,
+    workflows: on("workflows"),
+    integrations: on("integrations"),
+    emailCampaigns: on("emailCampaigns"),
+    aiAssistant: on("aiAssistant"),
+    googleReviews: on("googleReviews"),
+    appointmentBook: on("appointmentBook"),
   };
 }

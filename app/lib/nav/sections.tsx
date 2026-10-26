@@ -35,7 +35,7 @@ import * as LucideIcons from "lucide-react";
 import { OpenAiMark } from "~/components/icons/openai-mark";
 import { getLocalizedServiceName } from "~/lib/api/auth";
 import { useAuthContext } from "~/providers/auth-provider";
-import { usePilotFeatures } from "~/lib/feature-flags";
+import { isPilotFeatureEnabled, usePilotFeatures } from "~/lib/feature-flags";
 import { useAppointmentConfigs } from "~/lib/hooks/useAppointmentConfigs";
 import { useCalendarSummary } from "~/lib/hooks/useCalendarSummary";
 import { useWorkspaceWpSite } from "~/lib/hooks/useWorkspaceWpSite";
@@ -455,7 +455,8 @@ export function useNavSections(): NavSection[] | null {
             to: "/appointments",
             match: ["/appointments", "/calendar", "/instructions"],
             tabs: appointments,
-            pilot: true,
+            // Our own reminder: early-access customers see no pill.
+            pilot: isPilotFeatureEnabled(currentWorkspace.id),
           },
         ]
       : []),
