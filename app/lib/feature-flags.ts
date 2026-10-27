@@ -3,11 +3,14 @@ import { useAuthContext } from "~/providers/auth-provider";
 /**
  * Workspaces allowed to see features that are still being piloted.
  * `0941b49b-…` is re:praesent, our own workspace; `4681cb1b-…` is the first
- * customer pilot.
+ * customer pilot; `afef2cc9-…` is Küchenwelten Trossingen (added 2026-10-28).
+ * Keep in step with nestjs-monolith `common/pilot-workspaces.ts`.
  */
 export const PILOT_WORKSPACE_IDS: ReadonlySet<string> = new Set([
   "0941b49b-edaa-44bb-8d6f-8f6decd10502",
   "4681cb1b-32d1-47cf-909b-29b2a63ffff3",
+  // Küchenwelten Trossingen (2026-10-28).
+  "afef2cc9-b5b3-4c4a-9cd5-58e1be2d8a2a",
 ]);
 
 /**

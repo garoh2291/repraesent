@@ -103,7 +103,7 @@ function CalendarCard({ calendar: c }: { calendar: AppointmentCalendar }) {
             <span className="text-[16px] font-semibold text-foreground">{c.name}</span>
             {c.is_default ? (
               <span className="rounded-full bg-muted px-2 py-0.5 text-[11.5px] font-medium text-muted-foreground">
-                {t("appointmentBook.calendars.default", "Default")}
+                {t("appointmentBook.calendars.fallback", "Used when nothing else is picked")}
               </span>
             ) : null}
             {off ? (

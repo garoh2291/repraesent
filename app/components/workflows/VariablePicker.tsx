@@ -1,4 +1,4 @@
-import { Braces, Search } from "lucide-react";
+import { Braces, ChevronDown, Search } from "lucide-react";
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Input } from "~/components/ui/input";
@@ -68,7 +68,8 @@ export function VariablePicker({
           className="inline-flex h-7 items-center gap-1.5 rounded-lg border border-border px-2 text-xs font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:opacity-50"
         >
           <Braces className="h-3.5 w-3.5" aria-hidden />
-          {t("workflows.variables.insert", { defaultValue: "Insert a value" })}
+          {t("workflows.variables.insert", { defaultValue: "Insert" })}
+          <ChevronDown className="h-3 w-3" aria-hidden />
         </button>
       </PopoverTrigger>
 

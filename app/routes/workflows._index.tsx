@@ -1,4 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { triggerSentence } from "~/lib/workflows/timing";
 import {
   ExternalLink,
   FilePen,
@@ -392,6 +393,8 @@ function WorkflowCard({
   const { t } = useTranslation();
 
   const live = !!workflow.published_version_id;
+  // Same model as the builder: Off (never on, or turned off), On, Paused.
+  const isOn = live && workflow.status !== "draft";
   const actions: WorkflowAction[] = [
     {
       key: "open",
@@ -402,46 +405,47 @@ function WorkflowCard({
   ];
 
   if (canEdit) {
-    // Publish is only ever worth offering when there is something to publish:
-    // saving already publishes a runnable draft, so the rest of the time this
-    // would be a no-op wearing a verb.
-    if (!live || workflow.has_unpublished_changes) {
+    if (!isOn) {
+      // Publishes and switches on in one go. An incomplete workflow gets the
+      // server's list of what is missing as the error.
       actions.push({
-        key: "publish",
-        icon: <Upload />,
-        label: t("workflows.publish"),
+        key: "turn-on",
+        icon: <Play />,
+        label: t("workflows.golive.turnOn"),
         onSelect: () => onPublish(workflow),
         separatorBefore: true,
       });
-    }
-
-    if (workflow.status === "active") {
-      actions.push({
-        key: "pause",
-        icon: <Pause />,
-        label: t("workflows.pause"),
-        onSelect: () => onChangeStatus(workflow, "paused"),
-        separatorBefore: !live || workflow.has_unpublished_changes ? false : true,
-      });
     } else {
-      // Disabled rather than hidden: "you cannot activate this yet" is the
-      // useful answer, and hiding it would leave a never-published workflow
-      // looking like it has no way forward.
-      actions.push({
-        key: "activate",
-        icon: <Play />,
-        label: t("workflows.activate"),
-        onSelect: () => onChangeStatus(workflow, "active"),
-        disabled: !live,
-        separatorBefore: !live || workflow.has_unpublished_changes ? false : true,
-      });
-    }
-
-    if (live && workflow.status !== "draft") {
+      if (workflow.has_unpublished_changes) {
+        actions.push({
+          key: "publish",
+          icon: <Upload />,
+          label: t("workflows.golive.publishChanges"),
+          onSelect: () => onPublish(workflow),
+          separatorBefore: true,
+        });
+      }
+      actions.push(
+        workflow.status === "active"
+          ? {
+              key: "pause",
+              icon: <Pause />,
+              label: t("workflows.pause"),
+              onSelect: () => onChangeStatus(workflow, "paused"),
+              separatorBefore: !workflow.has_unpublished_changes,
+            }
+          : {
+              key: "resume",
+              icon: <Play />,
+              label: t("workflows.golive.resume"),
+              onSelect: () => onChangeStatus(workflow, "active"),
+              separatorBefore: !workflow.has_unpublished_changes,
+            },
+      );
       actions.push({
         key: "draft",
         icon: <FilePen />,
-        label: t("workflows.backToDraft", { defaultValue: "Back to draft" }),
+        label: t("workflows.golive.turnOff"),
         onSelect: () => onChangeStatus(workflow, "draft"),
       });
     }
@@ -477,14 +481,16 @@ function WorkflowCard({
             {workflow.entity
               ? t(`workflows.entity.${workflow.entity}`)
               : t("workflows.noTrigger")}
-            {workflow.trigger_type
-              ? ` · ${t(`workflows.trigger.type_${workflow.trigger_type}`)}`
-              : ""}
+            {workflow.trigger
+              ? ` · ${triggerSentence(workflow.trigger, t)}`
+              : workflow.trigger_type
+                ? ` · ${t(`workflows.trigger.type_${workflow.trigger_type}`)}`
+                : ""}
           </p>
         </div>
 
         <div className="flex shrink-0 items-start gap-1">
-          <StatusBadge status={workflow.status} />
+          <StatusBadge workflow={workflow} />
           {actions.length > 1 ? (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -571,13 +577,15 @@ function WorkflowCard({
   );
 }
 
-function StatusBadge({ status }: { status: WorkflowSummary["status"] }) {
+function StatusBadge({ workflow }: { workflow: WorkflowSummary }) {
   const { t } = useTranslation();
+  const isOn = !!workflow.published_version_id && workflow.status !== "draft";
+  const state = !isOn ? "off" : workflow.status === "active" ? "on" : "paused";
 
   const tone =
-    status === "active"
+    state === "on"
       ? "border-emerald-300 bg-emerald-50 text-emerald-800 dark:border-emerald-500/40 dark:bg-emerald-500/10 dark:text-emerald-300"
-      : status === "paused"
+      : state === "paused"
         ? "border-amber-400/40 bg-amber-400/10 text-amber-800 dark:text-amber-200"
         : "border-border bg-muted/50 text-muted-foreground";
 
@@ -586,14 +594,21 @@ function StatusBadge({ status }: { status: WorkflowSummary["status"] }) {
       <span
         className={`rounded-full border px-2 py-0.5 text-[11px] font-medium ${tone}`}
       >
-        {t(`workflows.status.${status}`)}
+        {t(
+          state === "on"
+            ? "workflows.golive.stateOn"
+            : state === "paused"
+              ? "workflows.golive.statePaused"
+              : "workflows.golive.stateOff",
+        )}
       </span>
-      {/*
-        No "unpublished changes" caption: saving publishes, so it no longer
-        describes anything an author can act on. The only remaining case is a
-        workflow too incomplete to run, which the builder explains far better
-        than a caption here could.
-      */}
+      {/* Saving does not publish, so a live workflow can be running an older
+          version than the one in the editor. Say so where the owner looks. */}
+      {isOn && workflow.has_unpublished_changes ? (
+        <span className="rounded-sm bg-secondary px-1.5 text-[11px] font-medium text-secondary-foreground">
+          {t("workflows.golive.notLiveYet")}
+        </span>
+      ) : null}
     </span>
   );
 }

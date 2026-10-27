@@ -11,12 +11,13 @@
  */
 
 import { useEffect, useMemo, useState } from "react";
-import { useParams } from "react-router";
+import { useParams, useSearchParams } from "react-router";
 import { I18nextProvider } from "react-i18next";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Check, MapPin, Video } from "lucide-react";
 import { isAxiosError } from "axios";
 import i18n from "~/i18n";
+import { PUBLIC_BOOKING_HY } from "~/lib/appointment-book/public-hy";
 import { DocumentScheme } from "~/components/forms/PublicShell";
 import { Button } from "~/components/ui/button";
 import { Textarea } from "~/components/ui/textarea";
@@ -41,6 +42,12 @@ export function meta() {
 }
 
 const PAPER = "#f5f4f1";
+
+// Armenian for this page only (the app UI stays EN/DE/FR/NL): a customer who
+// booked in Armenian reads their appointment in Armenian.
+if (!i18n.hasResourceBundle("hy", "translation")) {
+  i18n.addResourceBundle("hy", "translation", PUBLIC_BOOKING_HY, true, false);
+}
 
 export default function PublicAppointmentRoute() {
   const { token = "" } = useParams<{ token: string }>();
@@ -87,12 +94,17 @@ function AppointmentCard({ token, view }: { token: string; view: PublicAppointme
   const t = i18n.getFixedT(view.locale);
   // The language the customer booked in, its own clock: 12-hour for English,
   // 24-hour elsewhere — the same as the time buttons below.
-  const intl = { en: "en-US", de: "de-DE", fr: "fr-FR", nl: "nl-NL" }[view.locale];
+  const intl = { en: "en-US", de: "de-DE", fr: "fr-FR", nl: "nl-NL", hy: "hy-AM" }[view.locale];
   // The time picker is shared with the app and reads the app's language; give
   // it the customer's instead, so the whole page speaks one language.
   const pickerI18n = useMemo(() => i18n.cloneInstance({ lng: view.locale }), [view.locale]);
   const qc = useQueryClient();
-  const [mode, setMode] = useState<"view" | "move" | "cancel">("view");
+  // The email's "Cancel" / "Choose another time" buttons open straight on that step.
+  const [searchParams] = useSearchParams();
+  const [mode, setMode] = useState<"view" | "move" | "cancel">(() => {
+    const action = searchParams.get("action");
+    return view.can_change && (action === "move" || action === "cancel") ? action : "view";
+  });
   const [day, setDay] = useState(dayOf(view.starts_at, view.timezone));
   const [time, setTime] = useState<PickedTime | null>(null);
   const [reason, setReason] = useState("");

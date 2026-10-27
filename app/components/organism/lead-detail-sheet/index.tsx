@@ -22,6 +22,7 @@ import { LeadTasksSection } from "~/components/organism/tasks/lead-tasks-section
 import { LeadSourceIcon } from "~/components/organism/lead-source-icon";
 import { LeadStatusSelect } from "~/components/molecule/lead-status-select";
 import { useLeadStages } from "~/lib/hooks/usePipelineStages";
+import { RequestedTimeNotice } from "~/components/appointment-book/requested-time-notice";
 import { LeadSpamButton } from "~/components/organism/lead-spam/lead-spam-button";
 import { LeadActionBar } from "~/components/notebook/lead-action-bar";
 import { useHideLeadGuard } from "~/lib/leads/use-hide-lead-guard";
@@ -803,6 +804,7 @@ export function LeadInfoSection({
   withoutLink?: boolean;
 }) {
   const { t } = useTranslation();
+  const leadStagesForNotice = useLeadStages();
   const metadata = lead.metadata as Record<string, unknown> | null | undefined;
   const metadataEntries =
     metadata && typeof metadata === "object" ? Object.entries(metadata) : [];
@@ -816,6 +818,9 @@ export function LeadInfoSection({
   });
 
   const appointments = extractLeadAppointments(lead);
+  // Until the stages load, treat it as hidden: no "Book this time" flashing on a spam inquiry.
+  const leadIsHidden =
+    leadStagesForNotice.byKey.size === 0 || leadStagesForNotice.byKey.get(lead.status)?.category === "hidden";
   const appointmentClaimedKeys = appointmentClaimedMetaKeys(lead);
   // AI-assistant leads: opaque booking ids and the transcript are hidden, and
   // what survives loses its action-id prefix.
@@ -928,13 +933,16 @@ export function LeadInfoSection({
                     >
                       {formatAppointmentRange(appointment)}
                     </p>
-                    {!appointment.booked && (
-                      <p className="text-[11px] text-amber-600 dark:text-amber-500">
-                        {t("leads.appointment.notBooked", {
-                          defaultValue: "Not confirmed in calendar",
-                        })}
-                      </p>
-                    )}
+                    {!appointment.booked &&
+                      (leadIsHidden ? (past ? null : (
+                        <p className="text-[11px] text-muted-foreground">
+                          {t("leads.requestedTime.whenApproved", {
+                            defaultValue: "Booked when you mark it as not spam (if the time is still free).",
+                          })}
+                        </p>
+                      )) : (
+                        <RequestedTimeNotice lead={lead} appointment={appointment} hidden={false} />
+                      ))}
                   </div>
                   {appointment.meetLink && (
                     <Button

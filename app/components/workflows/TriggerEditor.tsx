@@ -32,7 +32,20 @@ import {
   unreachableStages,
   withPipelineScope,
 } from "~/lib/workflows/pipeline-scope";
+import {
+  APPOINTMENT_CHOICES,
+  appointmentChoiceOf,
+  applyAppointmentChoice,
+  offsetToParts,
+  partsToOffset,
+  withDirection,
+  type AppointmentChoice,
+  type OffsetUnit,
+} from "~/lib/workflows/timing";
 import { ConditionBuilder } from "./ConditionBuilder";
+
+/** Sentinel for the plain-choice select: show the generic trigger types. */
+const CUSTOM_CHOICE = "custom";
 
 const TRIGGER_TYPES: TriggerType[] = [
   "record_created",
@@ -70,7 +83,17 @@ export function TriggerEditor({
   // change-capture trigger can watch, and a metadata key is not a column either.
   const columnFields = fields.filter((f) => !f.resolved && !f.dynamic);
   const selected = fields.find((f) => f.path === config.path);
-  const days = Math.round((config.offsetMinutes ?? 0) / 1440);
+  const isAppointments = config.entity === "appointments";
+  const choice = appointmentChoiceOf(config);
+  // Once someone picks "Something else", keep the generic picker open even if
+  // what they then build happens to match a plain choice.
+  const [customOpen, setCustomOpen] = useState(isAppointments && choice === null);
+  const showGenericType = !isAppointments || customOpen || choice === null;
+  // A plain choice already says which field and value; repeating the generic
+  // field/column pickers under it would only invite contradicting it.
+  const plainChoice = !showGenericType;
+  const fieldLabel = (path: string) =>
+    fields.find((f) => f.path === path)?.label;
 
   // Built from a one-node graph: this editor only ever sees its own trigger,
   // and that is all the check needs.
@@ -130,8 +153,48 @@ export function TriggerEditor({
           </Select>
         </Field>
 
+        {isAppointments ? (
+          <Field>
+            <Label>{t("workflows.trigger.when")}</Label>
+            <Select
+              value={showGenericType ? CUSTOM_CHOICE : (choice ?? CUSTOM_CHOICE)}
+              disabled={disabled}
+              onValueChange={(v) => {
+                if (v === CUSTOM_CHOICE) {
+                  setCustomOpen(true);
+                  return;
+                }
+                setCustomOpen(false);
+                onChange(applyAppointmentChoice(config, v as AppointmentChoice));
+              }}
+            >
+              <SelectTrigger className="w-full">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {APPOINTMENT_CHOICES.map((c) => (
+                  <SelectItem key={c} value={c}>
+                    {t(`workflows.timing.choice_${c}`)}
+                  </SelectItem>
+                ))}
+                <SelectItem value={CUSTOM_CHOICE}>
+                  {t("workflows.timing.choice_custom")}
+                </SelectItem>
+              </SelectContent>
+            </Select>
+            {!showGenericType && choice ? (
+              <FieldHint>{t(`workflows.timing.choiceHint_${choice}`)}</FieldHint>
+            ) : null}
+          </Field>
+        ) : null}
+
+        {showGenericType ? (
         <Field>
-          <Label>{t("workflows.trigger.when")}</Label>
+          <Label>
+            {isAppointments
+              ? t("workflows.timing.customWhen")
+              : t("workflows.trigger.when")}
+          </Label>
           <Select
             value={config.type}
             disabled={disabled}
@@ -150,6 +213,7 @@ export function TriggerEditor({
           </Select>
           <FieldHint>{t(`workflows.trigger.hint_${config.type}`)}</FieldHint>
         </Field>
+        ) : null}
 
         {/* Beside the entity, because that is what it narrows — a control that
             changes what "a deal" means belongs next to the word "deals", not
@@ -215,7 +279,7 @@ export function TriggerEditor({
           tweak and rename, then filtered afterwards. Naming the columns is the
           difference between "when the stage changes" and "whenever anything
           changes and the stage happens to look right". */}
-      {config.type === "record_updated" ? (
+      {!plainChoice && config.type === "record_updated" ? (
         <Field>
           <Label>{t("workflows.trigger.watchedColumns")}</Label>
           <ColumnPicker
@@ -240,7 +304,7 @@ export function TriggerEditor({
         </Field>
       ) : null}
 
-      {config.type === "field_changed_to" ? (
+      {!plainChoice && config.type === "field_changed_to" ? (
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <Field>
             <Label>{t("workflows.trigger.field")}</Label>
@@ -286,58 +350,31 @@ export function TriggerEditor({
       {config.type === "no_change_for" ? (
         <Field>
           <Label>{t("workflows.trigger.untouchedFor")}</Label>
-          <div className="flex items-center gap-2">
-            <Input
-              type="number"
-              min={1}
-              className="max-w-[120px]"
-              disabled={disabled}
-              value={days || 7}
-              onChange={(e) =>
-                patch({ offsetMinutes: Math.max(1, e.target.valueAsNumber || 1) * 1440 })
-              }
-            />
-            <span className="text-sm text-muted-foreground">
-              {t("workflows.delay.days")}
-            </span>
-          </div>
+          <AmountAndUnit
+            offsetMinutes={config.offsetMinutes || 10080}
+            disabled={disabled}
+            min={1}
+            onChange={(amount, unit) =>
+              patch({
+                offsetMinutes: partsToOffset({
+                  amount: Math.max(1, amount),
+                  unit,
+                  direction: "after",
+                }),
+              })
+            }
+          />
         </Field>
       ) : null}
 
       {config.type === "date_field_relative" ? (
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <Field>
-            <Label>{t("workflows.trigger.dateField")}</Label>
-            <Select
-              value={config.dateField ?? dateFields[0] ?? ""}
-              disabled={disabled}
-              onValueChange={(dateField) => patch({ dateField })}
-            >
-              <SelectTrigger className="w-full">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {dateFields.map((d) => (
-                  <SelectItem key={d} value={d}>
-                    {fields.find((f) => f.path === d)?.label ?? d}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </Field>
-          <Field>
-            <Label>{t("workflows.trigger.offsetDays")}</Label>
-            <Input
-              type="number"
-              disabled={disabled}
-              value={days}
-              onChange={(e) =>
-                patch({ offsetMinutes: (e.target.valueAsNumber || 0) * 1440 })
-              }
-            />
-            <FieldHint>{t("workflows.trigger.offsetHint")}</FieldHint>
-          </Field>
-        </div>
+        <TimingSentence
+          config={config}
+          dateFields={dateFields}
+          fieldLabel={fieldLabel}
+          disabled={disabled}
+          onChange={onChange}
+        />
       ) : null}
 
       <div className="space-y-2 border-t border-border pt-4">
@@ -437,5 +474,141 @@ function ColumnPicker({
         </div>
       </PopoverContent>
     </Popover>
+  );
+}
+
+/** `[24] [hours ▾]` — the number and its unit, stored as exact minutes. */
+function AmountAndUnit({
+  offsetMinutes,
+  disabled,
+  min = 0,
+  onChange,
+}: {
+  offsetMinutes: number | undefined;
+  disabled?: boolean;
+  min?: number;
+  onChange: (amount: number, unit: OffsetUnit) => void;
+}) {
+  const { t } = useTranslation();
+  const parts = offsetToParts(offsetMinutes);
+  return (
+    <div className="flex items-center gap-2">
+      <Input
+        type="number"
+        inputMode="numeric"
+        min={min}
+        className="w-20 shrink-0"
+        disabled={disabled}
+        aria-label={t("workflows.timing.amount")}
+        value={parts.amount}
+        onChange={(e) =>
+          onChange(Math.max(min, Math.floor(e.target.valueAsNumber || 0)), parts.unit)
+        }
+      />
+      <Select
+        value={parts.unit}
+        disabled={disabled}
+        onValueChange={(unit) => onChange(parts.amount, unit as OffsetUnit)}
+      >
+        <SelectTrigger className="w-28 shrink-0" aria-label={t("workflows.timing.unit")}>
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent>
+          {(["minutes", "hours", "days"] as const).map((u) => (
+            <SelectItem key={u} value={u}>
+              {t(`workflows.timing.unit_${u}`)}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+    </div>
+  );
+}
+
+/**
+ * `[24] [hours] [before] [the appointment starts]` — no signed numbers. The
+ * sign comes from before/after; the anchor is the date it is measured from.
+ */
+function TimingSentence({
+  config,
+  dateFields,
+  fieldLabel,
+  disabled,
+  onChange,
+}: {
+  config: TriggerConfig;
+  dateFields: string[];
+  fieldLabel: (path: string) => string | undefined;
+  disabled?: boolean;
+  onChange: (next: TriggerConfig) => void;
+}) {
+  const { t } = useTranslation();
+  const parts = offsetToParts(config.offsetMinutes);
+  const isAppointments = config.entity === "appointments";
+  const anchor = config.dateField ?? dateFields[0] ?? "";
+  const anchorLabel = (path: string) =>
+    isAppointments && (path === "starts_at" || path === "ends_at")
+      ? t(`workflows.timing.anchor_${path}`)
+      : (fieldLabel(path) ?? path);
+
+  return (
+    <Field>
+      <Label>{t("workflows.timing.label")}</Label>
+      <div className="flex flex-wrap items-center gap-2">
+        <AmountAndUnit
+          offsetMinutes={config.offsetMinutes}
+          disabled={disabled}
+          onChange={(amount, unit) =>
+            onChange({
+              ...config,
+              offsetMinutes: partsToOffset({ ...parts, amount, unit }),
+            })
+          }
+        />
+        <Select
+          value={parts.direction}
+          disabled={disabled}
+          onValueChange={(d) =>
+            onChange(withDirection(config, d as "before" | "after"))
+          }
+        >
+          <SelectTrigger className="w-24 shrink-0" aria-label={t("workflows.timing.direction")}>
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="before">{t("workflows.timing.before")}</SelectItem>
+            <SelectItem value="after">{t("workflows.timing.after")}</SelectItem>
+          </SelectContent>
+        </Select>
+        <Select
+          value={anchor}
+          disabled={disabled}
+          onValueChange={(dateField) => onChange({ ...config, dateField })}
+        >
+          <SelectTrigger
+            className="min-w-0 flex-1 basis-48"
+            aria-label={t("workflows.trigger.dateField")}
+          >
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {dateFields.map((d) => (
+              <SelectItem key={d} value={d}>
+                {anchorLabel(d)}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+      <FieldHint>
+        {isAppointments && parts.direction === "before"
+          ? t("workflows.timing.lateBookingHint", {
+              duration: t(`workflows.timing.amount_${parts.unit}`, {
+                count: parts.amount,
+              }),
+            })
+          : t("workflows.timing.scheduleHint")}
+      </FieldHint>
+    </Field>
   );
 }
