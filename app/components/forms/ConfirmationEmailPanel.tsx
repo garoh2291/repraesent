@@ -153,6 +153,12 @@ export function ConfirmationEmailPanel({
     return [...new Set([...BASE_VARIABLES, ...fieldKeys])];
   }, [definition]);
 
+  /** A booking form: this email doubles as the appointment confirmation. */
+  const hasAppointment = useMemo(
+    () => flattenFields(definition).some((f) => f.type === "appointment"),
+    [definition],
+  );
+
   const current = config.by_locale?.[activeLocale] ?? { subject: "", html: "" };
 
   const patchLocale = (patch: Partial<{ subject: string; html: string }>) =>
@@ -338,6 +344,17 @@ export function ConfirmationEmailPanel({
 
         {config.enabled ? (
           <PanelSection title={t("forms.email.sectionMessage")}>
+            {hasAppointment ? (
+              <p className="mb-3 rounded-lg border border-border bg-muted/40 px-3 py-2.5 text-xs leading-relaxed text-foreground">
+                {t("forms.confirmationEmail.appointmentNote", {
+                  defaultValue:
+                    "This email also confirms the appointment — the time, place and a 'change or cancel' link are added for you. Put {{appointment_block}} where you want them, or they go at the end.",
+                  // Shown literally: it is the token people type.
+                  appointment_block: "{{appointment_block}}",
+                  interpolation: { escapeValue: false },
+                })}
+              </p>
+            ) : null}
             {/* Named languages, from every tab, because the whole point is that
               you cannot see the empty one from the tab you are standing on. */}
             {blankLocales.length > 0 ? (

@@ -15,7 +15,7 @@ import { useLocation } from "react-router";
  * show it.
  */
 
-const PUBLIC_PREFIXES = ["/login", "/register", "/demo", "/auth/callback", "/book/", "/f/", "/a/", "/unsubscribe/", "/t/", "/health"];
+const PUBLIC_PREFIXES = ["/login", "/register", "/demo", "/auth/callback", "/book/", "/booking/", "/f/", "/a/", "/unsubscribe/", "/t/", "/health"];
 
 /** Length of the intro in ms; matches the keyframes in app.css. */
 const INTRO_MS = 1000;

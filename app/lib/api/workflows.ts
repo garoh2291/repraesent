@@ -1,4 +1,5 @@
 import { apiClient } from "./axios-instance";
+import i18n from "~/i18n";
 
 /**
  * Mirrors `nestjs-monolith/src/modules/workflows/workflow.types.ts`.
@@ -339,6 +340,8 @@ export interface WorkflowSummary {
   default_locale: string;
   entity: WorkflowEntity | null;
   trigger_type: TriggerType | null;
+  /** The trigger without its filter — enough to say it as a sentence. */
+  trigger: WorkflowTriggerSummary | null;
   /**
    * Whether a live version exists. Activating a workflow that has never been
    * published is a 400, so the card needs this to know whether to offer it.
@@ -352,9 +355,19 @@ export interface WorkflowSummary {
   updated_at: string;
 }
 
+export interface WorkflowTriggerSummary {
+  type: TriggerType;
+  entity: WorkflowEntity;
+  offsetMinutes: number | null;
+  dateField: string | null;
+  columns: string[] | null;
+  path: string | null;
+  value: string | null;
+}
+
 export interface WorkflowDetail extends Omit<
   WorkflowSummary,
-  "entity" | "trigger_type" | "runs_7d" | "failed_7d" | "last_run_at"
+  "entity" | "trigger_type" | "trigger" | "runs_7d" | "failed_7d" | "last_run_at"
 > {
   graph: WorkflowGraph;
   draft_version_id: string | null;
@@ -428,6 +441,20 @@ export async function listWorkflows(): Promise<WorkflowSummary[]> {
   return data;
 }
 
+/**
+ * Appointment workflows whose trigger is narrowed to this calendar (by "is"
+ * or "is one of", at any depth). Workflows that run for every calendar are
+ * not included.
+ */
+export async function listWorkflowsForCalendar(
+  calendarId: string,
+): Promise<WorkflowSummary[]> {
+  const { data } = await apiClient.get<WorkflowSummary[]>("/workflows", {
+    params: { calendar_id: calendarId },
+  });
+  return data;
+}
+
 export async function getWorkflow(id: string): Promise<WorkflowDetail> {
   const { data } = await apiClient.get<WorkflowDetail>(`/workflows/${id}`);
   return data;
@@ -465,9 +492,23 @@ export async function updateWorkflow(
   return data;
 }
 
+/**
+ * Make the saved draft live. A draft is turned on by this; a paused workflow
+ * stays paused. Saving alone never publishes.
+ */
 export async function publishWorkflow(id: string): Promise<WorkflowDetail> {
   const { data } = await apiClient.post<WorkflowDetail>(
     `/workflows/${id}/publish`,
+  );
+  return data;
+}
+
+/** Throw away saved-but-unpublished edits: back to exactly what is live. */
+export async function discardWorkflowDraft(
+  id: string,
+): Promise<WorkflowDetail> {
+  const { data } = await apiClient.post<WorkflowDetail>(
+    `/workflows/${id}/discard`,
   );
   return data;
 }
@@ -580,7 +621,34 @@ export async function getFieldCatalog(): Promise<EntityCatalog[]> {
   const { data } = await apiClient.get<EntityCatalog[]>(
     "/workflows/field-catalog",
   );
-  return data;
+  return localizeCatalog(data);
+}
+
+/**
+ * The catalog's labels come from the server in English. Where the app has
+ * words for them (`workflows.catalog.<entity>.*`), the owner sees their own
+ * language — "Kalender ist Appointments", not "Calendar ist Appointments" —
+ * and option values ("scheduled") become words ("Geplant"). Anything without
+ * a translation keeps the server's label.
+ */
+export function localizeCatalog(catalog: EntityCatalog[]): EntityCatalog[] {
+  const tr = (key: string, fallback: string) =>
+    i18n.exists(key) ? i18n.t(key) : fallback;
+  return catalog.map((entity) => {
+    const base = `workflows.catalog.${entity.entity}`;
+    return {
+      ...entity,
+      label: tr(`${base}.label`, entity.label),
+      fields: entity.fields.map((field) => ({
+        ...field,
+        label: tr(`${base}.fields.${field.path}`, field.label),
+        options: field.options?.map((option) => ({
+          ...option,
+          label: tr(`${base}.options.${field.path}.${option.value}`, option.label),
+        })),
+      })),
+    };
+  });
 }
 
 export async function getWorkflowCapabilities(): Promise<OutboundCapability> {

@@ -17,10 +17,29 @@ export interface TimeRange {
 
 export type WeeklyHours = Record<WeekdayKey, TimeRange[]>;
 
+export const CUSTOMER_MESSAGE_KINDS = ["confirmation", "reminder", "changed", "cancelled"] as const;
+export type CustomerMessageKind = (typeof CUSTOMER_MESSAGE_KINDS)[number];
+export const MESSAGE_LOCALES = ["en", "de", "fr", "nl"] as const;
+export type MessageLocale = (typeof MESSAGE_LOCALES)[number];
+
+/** The owner's own words for one message in one language. `{name}` etc. are filled on send. */
+export interface CustomerMessageCopy {
+  subject: string;
+  title: string;
+  lead: string;
+}
+
+/** kind → locale → words. Absent = our default text. */
+export type CustomerMessageCopyMap = Partial<
+  Record<CustomerMessageKind, Partial<Record<MessageLocale, CustomerMessageCopy>>>
+>;
+
 export interface CustomerMessagesSettings {
   confirmation: boolean;
   changes: boolean;
   reminder: { enabled: boolean; minutes_before: number };
+  /** Sent = replaces the saved copy; `{}` resets all; omitted = kept. */
+  copy?: CustomerMessageCopyMap;
 }
 
 export type AppointmentMode = "in_person" | "online";
@@ -241,6 +260,10 @@ export const appointmentKeys = {
     ["appointment-book", wsId, "slots", calendarId, date] as const,
   days: (wsId: string | null | undefined, calendarId: string, from: string, to: string) =>
     ["appointment-book", wsId, "days", calendarId, from, to] as const,
+  messageDefaults: (wsId: string | null | undefined, calendarId: string) =>
+    ["appointment-book", wsId, "message-defaults", calendarId] as const,
+  messagePreview: (wsId: string | null | undefined, calendarId: string, kind: string, locale: string, copy: string) =>
+    ["appointment-book", wsId, "message-preview", calendarId, kind, locale, copy] as const,
 };
 
 function browserTimezone(): string | undefined {
@@ -306,6 +329,38 @@ export async function getCalendarSlots(id: string, date: string, exclude?: strin
 
 export async function getCalendarDays(id: string, from: string, to: string): Promise<DaysResult> {
   const { data } = await apiClient.get<DaysResult>(`/appointment-calendars/${id}/days`, { params: { from, to } });
+  return data;
+}
+
+// ── customer messages (the calendar's own emails) ──────────────────────────
+
+export interface MessageDefaults {
+  placeholders: string[];
+  copy: Record<CustomerMessageKind, Record<MessageLocale, CustomerMessageCopy>>;
+}
+
+export interface MessageRequest {
+  kind: CustomerMessageKind;
+  locale: MessageLocale;
+  /** The words being edited (not saved yet). Omitted = the saved / default words. */
+  copy?: CustomerMessageCopy;
+}
+
+export async function getMessageDefaults(calendarId: string): Promise<MessageDefaults> {
+  const { data } = await apiClient.get<MessageDefaults>(`/appointment-calendars/${calendarId}/messages/defaults`);
+  return data;
+}
+
+export async function previewCalendarMessage(calendarId: string, body: MessageRequest): Promise<{ subject: string; html: string }> {
+  const { data } = await apiClient.post<{ subject: string; html: string }>(
+    `/appointment-calendars/${calendarId}/messages/preview`,
+    body,
+  );
+  return data;
+}
+
+export async function sendTestCalendarMessage(calendarId: string, body: MessageRequest): Promise<{ sent_to: string }> {
+  const { data } = await apiClient.post<{ sent_to: string }>(`/appointment-calendars/${calendarId}/messages/test`, body);
   return data;
 }
 

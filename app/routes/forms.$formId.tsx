@@ -59,7 +59,8 @@ import {
 } from "~/components/ui/tooltip";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "~/components/ui/tabs";
 import { extractErrorMessage } from "~/lib/api/axios-instance";
-import { verifyFormCommerce } from "~/lib/api/forms";
+import { discardFormDraft, verifyFormCommerce } from "~/lib/api/forms";
+import { diffDefinitions } from "~/lib/forms/definition-diff";
 import {
   EMAIL_BODY_KEY,
   EMAIL_SUBJECT_KEY,
@@ -399,6 +400,38 @@ export default function FormBuilderRoute() {
         description: extractErrorMessage(error),
       }),
   });
+
+  const discardMutation = useMutation({
+    mutationFn: () => discardFormDraft(formId!),
+    onSuccess: async (result) => {
+      // Rehydrate from what the server now holds — the same reset the page
+      // does on load — so unsaved edits go too, not only the stored draft.
+      setName(result.name);
+      setDefinition(
+        normalizeDefinition(result.definition, result.default_locale, result.kind),
+      );
+      setLocales(result.locales);
+      setDefaultLocale(result.default_locale);
+      setDirty(false);
+      await invalidate();
+      toast.success(t("forms.status.changes.undone"));
+    },
+    onError: (error: unknown) =>
+      toast.error(
+        t("common.failedToSave", { defaultValue: "Could not save" }),
+        { description: extractErrorMessage(error) },
+      ),
+  });
+
+  /** What the badge's popover lists: the working draft against the live form. */
+  const liveChanges = useMemo(() => {
+    if (!form?.published_definition || !definition) return [];
+    return diffDefinitions(
+      definition,
+      normalizeDefinition(form.published_definition, form.default_locale, form.kind),
+      defaultLocale,
+    );
+  }, [form?.published_definition, form?.default_locale, form?.kind, definition, defaultLocale]);
 
   const unpublishMutation = useMutation({
     mutationFn: () => unpublishForm(formId!),
@@ -1755,6 +1788,17 @@ export default function FormBuilderRoute() {
               tone="dark"
               status={form.status}
               hasUnpublishedChanges={form.has_unpublished_changes || dirty}
+              details={{
+                changes: liveChanges,
+                unsaved: dirty,
+                canEdit,
+                busy:
+                  publishMutation.isPending ||
+                  discardMutation.isPending ||
+                  saveMutation.isPending,
+                onMakeLive: () => publishMutation.mutate(),
+                onUndo: () => discardMutation.mutate(),
+              }}
             />
           </div>
         </div>

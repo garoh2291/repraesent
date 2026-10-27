@@ -1,4 +1,5 @@
 import { useCallback, useState } from "react";
+import { requestedTimeNote } from "~/components/appointment-book/requested-time-notice";
 import { useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
@@ -50,7 +51,10 @@ export function useHideLeadGuard() {
         const res = await markLeadNotSpam(leadId);
         refreshLeadViews(queryClient, leadId);
         toast.success(t("leads.spam.restored"), {
-          description: res.alsoRestored ? t("leads.spam.alsoRestored", { count: res.alsoRestored }) : undefined,
+          description:
+            [requestedTimeNote(t, res), res.alsoRestored ? t("leads.spam.alsoRestored", { count: res.alsoRestored }) : null]
+              .filter(Boolean)
+              .join(" ") || undefined,
         });
       } catch {
         toast.error(t("leads.spam.error"));
