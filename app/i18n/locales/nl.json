@@ -2914,12 +2914,30 @@
     }
   },
   "analytics": {
-    "metaTitle": "Analyse - Repraesent",
-    "metaDescription": "Analysedashboard",
-    "notEnabled": "De analysedienst is niet ingeschakeld voor dit gebied.",
-    "notConfigured": "Analyse is nog niet geconfigureerd. Neem contact op met uw beheerder.",
-    "loading": "Analyse laden...",
-    "iframeTitle": "Analyse"
+    "metaTitle": "Websitebezoekers - Repraesent",
+    "metaDescription": "Wie je website bezocht en waarvandaan",
+    "title": "Websitebezoekers",
+    "subtitle": "Wie op je website kwam en waarvandaan",
+    "periodLabel": "Periode",
+    "headline_one": "{{formatted}} persoon bezocht je website",
+    "headline_other": "{{formatted}} mensen bezochten je website",
+    "nobodyTryLonger": "Nog niemand in deze periode. Probeer een langere periode.",
+    "nobodyEver": "Er is nog niemand geteld. Bezoeken verschijnen hier zodra iemand je website opent.",
+    "pagesInTooltip_one": "{{count}} pagina bekeken",
+    "pagesInTooltip_other": "{{count}} pagina's bekeken",
+    "visits": "bezoeken",
+    "pagesViewed": "pagina's bekeken",
+    "leftAfterOne": "weg na één pagina",
+    "timeOnSite": "gemiddeld op je website",
+    "sourcesTitle": "Waar ze vandaan kwamen",
+    "pagesTitle": "Bekeken pagina's",
+    "countriesTitle": "Landen",
+    "peopleColumn": "mensen",
+    "sourceDirect": "Adres getypt of bladwijzer",
+    "listEmpty": "Nog niets in deze periode.",
+    "notTrackedTitle": "We zien nog geen bezoekers op je website",
+    "notTrackedBody": "Bezoekers worden geteld voor het websiteadres dat bij je bedrijf is opgeslagen. Controleer het adres op de pagina Website, of mail support en wij kijken het na.",
+    "notTrackedAction": "Website openen"
   },
   "closed": {
     "metaTitle": "Gebied gesloten - Repraesent",
@@ -9186,7 +9204,8 @@
       "upcoming": "Komend",
       "appointmentCalendar": "Agenda",
       "teamCalendar": "Teamagenda",
-      "bookingPage": "Boekingspagina"
+      "bookingPage": "Boekingspagina",
+      "websiteVisitors": "Websitebezoekers"
     },
     "settingsGroups": {
       "you": "Jij",

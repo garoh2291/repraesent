@@ -2916,12 +2916,30 @@
     }
   },
   "analytics": {
-    "metaTitle": "Analyses - Repraesent",
-    "metaDescription": "Tableau de bord des analyses",
-    "notEnabled": "Le service d'analyses n'est pas activé pour cet espace.",
-    "notConfigured": "Les analyses ne sont pas encore configurées. Veuillez contacter votre administrateur.",
-    "loading": "Chargement des analyses...",
-    "iframeTitle": "Analyses"
+    "metaTitle": "Visiteurs du site - Repraesent",
+    "metaDescription": "Qui a visité votre site et d'où",
+    "title": "Visiteurs du site",
+    "subtitle": "Qui est venu sur votre site et d'où",
+    "periodLabel": "Période",
+    "headline_one": "{{formatted}} personne a visité votre site",
+    "headline_other": "{{formatted}} personnes ont visité votre site",
+    "nobodyTryLonger": "Personne sur cette période pour l'instant. Essayez une période plus longue.",
+    "nobodyEver": "Personne n'a encore été compté. Les visites apparaissent ici dès que quelqu'un ouvre votre site.",
+    "pagesInTooltip_one": "{{count}} page vue",
+    "pagesInTooltip_other": "{{count}} pages vues",
+    "visits": "visites",
+    "pagesViewed": "pages vues",
+    "leftAfterOne": "partis après une page",
+    "timeOnSite": "temps moyen sur votre site",
+    "sourcesTitle": "D'où ils viennent",
+    "pagesTitle": "Pages consultées",
+    "countriesTitle": "Pays",
+    "peopleColumn": "personnes",
+    "sourceDirect": "Adresse tapée ou favori",
+    "listEmpty": "Rien sur cette période pour l'instant.",
+    "notTrackedTitle": "Nous ne voyons pas encore de visiteurs sur votre site",
+    "notTrackedBody": "Les visites sont comptées pour l'adresse du site enregistrée pour votre entreprise. Vérifiez l'adresse sur la page Site web, ou écrivez au support et nous vérifierons.",
+    "notTrackedAction": "Ouvrir Site web"
   },
   "closed": {
     "metaTitle": "Espace fermé - Repraesent",
@@ -9188,7 +9206,8 @@
       "upcoming": "À venir",
       "appointmentCalendar": "Agenda",
       "teamCalendar": "Agenda d’équipe",
-      "bookingPage": "Page de réservation"
+      "bookingPage": "Page de réservation",
+      "websiteVisitors": "Visiteurs du site"
     },
     "settingsGroups": {
       "you": "Vous",

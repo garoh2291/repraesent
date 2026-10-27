@@ -2916,12 +2916,30 @@
     }
   },
   "analytics": {
-    "metaTitle": "Analyse - Repraesent",
-    "metaDescription": "Analyse-Dashboard",
-    "notEnabled": "Analysedienst ist für diesen Bereich nicht aktiviert.",
-    "notConfigured": "Analyse ist noch nicht konfiguriert. Bitte wenden Sie sich an Ihren Administrator.",
-    "loading": "Analyse wird geladen...",
-    "iframeTitle": "Analyse"
+    "metaTitle": "Website-Besucher - Repraesent",
+    "metaDescription": "Wer deine Website besucht hat und woher",
+    "title": "Website-Besucher",
+    "subtitle": "Wer auf deiner Website war und woher",
+    "periodLabel": "Zeitraum",
+    "headline_one": "{{formatted}} Person hat deine Website besucht",
+    "headline_other": "{{formatted}} Personen haben deine Website besucht",
+    "nobodyTryLonger": "In diesem Zeitraum noch niemand. Wähle einen längeren Zeitraum.",
+    "nobodyEver": "Bisher wurde noch niemand gezählt. Besuche erscheinen hier, sobald jemand deine Website öffnet.",
+    "pagesInTooltip_one": "{{count}} Seite angesehen",
+    "pagesInTooltip_other": "{{count}} Seiten angesehen",
+    "visits": "Besuche",
+    "pagesViewed": "Seiten angesehen",
+    "leftAfterOne": "nach einer Seite gegangen",
+    "timeOnSite": "durchschnittlich auf deiner Website",
+    "sourcesTitle": "Woher sie kamen",
+    "pagesTitle": "Welche Seiten sie ansahen",
+    "countriesTitle": "Länder",
+    "peopleColumn": "Personen",
+    "sourceDirect": "Adresse eingetippt oder Lesezeichen",
+    "listEmpty": "In diesem Zeitraum noch nichts.",
+    "notTrackedTitle": "Wir sehen noch keine Besucher auf deiner Website",
+    "notTrackedBody": "Gezählt wird für die Website-Adresse, die für dein Unternehmen hinterlegt ist. Prüfe die Adresse auf der Seite „Website“ oder schreib dem Support – wir sehen nach.",
+    "notTrackedAction": "Website öffnen"
   },
   "closed": {
     "metaTitle": "Bereich geschlossen - Repraesent",
@@ -9188,7 +9206,8 @@
       "upcoming": "Anstehend",
       "appointmentCalendar": "Kalender",
       "teamCalendar": "Teamkalender",
-      "bookingPage": "Buchungsseite"
+      "bookingPage": "Buchungsseite",
+      "websiteVisitors": "Website-Besucher"
     },
     "settingsGroups": {
       "you": "Du",
