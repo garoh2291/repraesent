@@ -6187,7 +6187,17 @@
       "intakeAllDone": "Ready · answers arrive in your inquiries"
     },
     "confirmationEmail": {
-      "appointmentNote": "This email also confirms the appointment — the time, place and a 'change or cancel' link are added for you. Put {{appointment_block}} where you want them, or they go at the end."
+      "appointmentNote": "This email also confirms the appointment — the time, place and a 'change or cancel' link are added for you. Put {{appointment_block}} where you want them, or they go at the end.",
+      "bookingOn": "This form books appointments. The calendar has its own confirmation email. While this email is on, only this one is sent — people get one email, not two.",
+      "bookingOff": "This form books appointments. With this email off, people get the calendar's own confirmation email instead.",
+      "seeCalendarEmail": "See the calendar's email",
+      "offTitle": "Turn off this email?",
+      "offBody": "This form books appointments. Without this email, people get the calendar's own confirmation instead — with the time, place and a link to change or cancel. Your text here is kept for later.",
+      "keepOn": "Keep it on",
+      "turnOff": "Turn off",
+      "bookingOnConnected": "This form books appointments into a connected calendar. This email is the confirmation people get from you.",
+      "bookingOffConnected": "This form books appointments into a connected calendar. With this email off, people get no confirmation from you — only an invitation, if their calendar sends one.",
+      "offBodyConnected": "This form books into a connected calendar, which has no confirmation email of its own here. Without this email, people get no confirmation from you. Your text here is kept for later."
     }
   },
   "workflows": {

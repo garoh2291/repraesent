@@ -6189,7 +6189,17 @@
       "intakeAllDone": "Prêt · les réponses arrivent dans vos demandes"
     },
     "confirmationEmail": {
-      "appointmentNote": "Cet e-mail confirme aussi le rendez-vous : l’heure, le lieu et un lien « modifier ou annuler » sont ajoutés pour vous. Placez {{appointment_block}} là où vous les voulez, sinon ils vont à la fin."
+      "appointmentNote": "Cet e-mail confirme aussi le rendez-vous : l’heure, le lieu et un lien « modifier ou annuler » sont ajoutés pour vous. Placez {{appointment_block}} là où vous les voulez, sinon ils vont à la fin.",
+      "bookingOn": "Ce formulaire réserve des rendez-vous. L’agenda a son propre e-mail de confirmation. Tant que cet e-mail est activé, seul celui-ci est envoyé — vos clients reçoivent un seul e-mail, pas deux.",
+      "bookingOff": "Ce formulaire réserve des rendez-vous. Si cet e-mail est désactivé, vos clients reçoivent à la place la confirmation de l’agenda.",
+      "seeCalendarEmail": "Voir l’e-mail de l’agenda",
+      "offTitle": "Désactiver cet e-mail ?",
+      "offBody": "Ce formulaire réserve des rendez-vous. Sans cet e-mail, vos clients reçoivent la confirmation de l’agenda — avec l’heure, le lieu et un lien pour modifier ou annuler. Votre texte ici est conservé.",
+      "keepOn": "Le garder",
+      "turnOff": "Désactiver",
+      "bookingOnConnected": "Ce formulaire réserve dans un agenda connecté. Cet e-mail est la confirmation que vos clients reçoivent de votre part.",
+      "bookingOffConnected": "Ce formulaire réserve dans un agenda connecté. Si cet e-mail est désactivé, vos clients ne reçoivent aucune confirmation de votre part — seulement une invitation, si leur agenda en envoie une.",
+      "offBodyConnected": "Ce formulaire réserve dans un agenda connecté, qui n’a pas ici d’e-mail de confirmation propre. Sans cet e-mail, vos clients ne reçoivent aucune confirmation de votre part. Votre texte ici est conservé."
     }
   },
   "workflows": {

@@ -19,7 +19,7 @@ export type WeeklyHours = Record<WeekdayKey, TimeRange[]>;
 
 export const CUSTOMER_MESSAGE_KINDS = ["confirmation", "reminder", "changed", "cancelled"] as const;
 export type CustomerMessageKind = (typeof CUSTOMER_MESSAGE_KINDS)[number];
-export const MESSAGE_LOCALES = ["en", "de", "fr", "nl"] as const;
+export const MESSAGE_LOCALES = ["en", "de", "fr", "nl", "hy"] as const;
 export type MessageLocale = (typeof MESSAGE_LOCALES)[number];
 
 /** The owner's own words for one message in one language. `{name}` etc. are filled on send. */
@@ -465,7 +465,8 @@ export interface PublicAppointment {
   min_notice_hours: number;
   booking_unit: BookingUnit;
   duration_minutes: number;
-  locale: "en" | "de" | "fr" | "nl";
+  /** The customer's language — Armenian too, when they booked through an Armenian form. */
+  locale: "en" | "de" | "fr" | "nl" | "hy";
 }
 
 const pub = (token: string) => `/public/appointment-book/${encodeURIComponent(token)}`;

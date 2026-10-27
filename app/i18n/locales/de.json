@@ -6189,7 +6189,17 @@
       "intakeAllDone": "Fertig · Antworten landen in Ihren Anfragen"
     },
     "confirmationEmail": {
-      "appointmentNote": "Diese E-Mail bestätigt auch den Termin – Uhrzeit, Ort und ein Link zum Ändern oder Absagen werden automatisch eingefügt. Setz {{appointment_block}} dorthin, wo sie stehen sollen, sonst kommen sie ans Ende."
+      "appointmentNote": "Diese E-Mail bestätigt auch den Termin – Uhrzeit, Ort und ein Link zum Ändern oder Absagen werden automatisch eingefügt. Setz {{appointment_block}} dorthin, wo sie stehen sollen, sonst kommen sie ans Ende.",
+      "bookingOn": "Über dieses Formular werden Termine gebucht. Der Kalender hat eine eigene Bestätigungs-E-Mail. Solange diese E-Mail an ist, wird nur sie verschickt – Ihre Kunden erhalten eine E-Mail, nicht zwei.",
+      "bookingOff": "Über dieses Formular werden Termine gebucht. Ist diese E-Mail aus, erhalten Ihre Kunden stattdessen die Bestätigung des Kalenders.",
+      "seeCalendarEmail": "E-Mail des Kalenders ansehen",
+      "offTitle": "Diese E-Mail ausschalten?",
+      "offBody": "Über dieses Formular werden Termine gebucht. Ohne diese E-Mail erhalten Ihre Kunden die Bestätigung des Kalenders – mit Uhrzeit, Ort und einem Link zum Ändern oder Absagen. Ihr Text hier bleibt gespeichert.",
+      "keepOn": "Anlassen",
+      "turnOff": "Ausschalten",
+      "bookingOnConnected": "Über dieses Formular werden Termine in einen verbundenen Kalender gebucht. Diese E-Mail ist die Bestätigung, die Ihre Kunden von Ihnen erhalten.",
+      "bookingOffConnected": "Über dieses Formular werden Termine in einen verbundenen Kalender gebucht. Ist diese E-Mail aus, erhalten Ihre Kunden keine Bestätigung von Ihnen – höchstens eine Einladung, falls ihr Kalender eine verschickt.",
+      "offBodyConnected": "Dieses Formular bucht in einen verbundenen Kalender, der hier keine eigene Bestätigungs-E-Mail hat. Ohne diese E-Mail erhalten Ihre Kunden keine Bestätigung von Ihnen. Ihr Text hier bleibt gespeichert."
     }
   },
   "workflows": {

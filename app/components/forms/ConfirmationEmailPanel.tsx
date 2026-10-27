@@ -3,6 +3,17 @@ import { Check, Code2, Eye, Loader2, Mail, Save } from "lucide-react";
 import { useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
+import { Link } from "react-router";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "~/components/ui/alert-dialog";
 import { Input } from "~/components/ui/input";
 import { Label } from "~/components/ui/label";
 import {
@@ -159,6 +170,21 @@ export function ConfirmationEmailPanel({
     [definition],
   );
 
+  /**
+   * The Repraesent calendar a booking lands in — where its own email is set up.
+   * null for a connected calendar (Google, Microsoft, CalDAV): those bookings
+   * get no calendar email from us, so the wording below must not promise one.
+   */
+  const bookingCalendarId = useMemo(() => {
+    for (const f of flattenFields(definition)) {
+      const key = f.type === "appointment" ? f.appointment?.targetKey : undefined;
+      if (key?.startsWith("repraesent:")) return key.slice("repraesent:".length);
+    }
+    return null;
+  }, [definition]);
+  const ownCalendar = bookingCalendarId !== null;
+  const [confirmOff, setConfirmOff] = useState(false);
+
   const current = config.by_locale?.[activeLocale] ?? { subject: "", html: "" };
 
   const patchLocale = (patch: Partial<{ subject: string; html: string }>) =>
@@ -258,12 +284,40 @@ export function ConfirmationEmailPanel({
             id="ce-enabled"
             label={t("forms.email.enabled")}
             checked={config.enabled}
-            onChange={(v) =>
-              onChange(
-                v ? enableWithDefaults(config) : { ...config, enabled: false },
-              )
-            }
+            onChange={(v) => {
+              // A booking form: turning this off hands the confirmation back to
+              // the calendar — say so before it happens.
+              if (!v && hasAppointment) {
+                setConfirmOff(true);
+                return;
+              }
+              onChange(v ? enableWithDefaults(config) : { ...config, enabled: false });
+            }}
           />
+
+          {/* Who confirms a booking: this email when it is on, the calendar's
+              own email when it is off — never both. */}
+          {hasAppointment ? (
+            <div className="rounded-lg border-l-4 border-secondary bg-secondary/20 px-3 py-2.5 text-xs leading-relaxed text-foreground">
+              <p>
+                {ownCalendar
+                  ? config.enabled
+                    ? t("forms.confirmationEmail.bookingOn")
+                    : t("forms.confirmationEmail.bookingOff")
+                  : config.enabled
+                    ? t("forms.confirmationEmail.bookingOnConnected")
+                    : t("forms.confirmationEmail.bookingOffConnected")}
+              </p>
+              {bookingCalendarId ? (
+                <Link
+                  to={`/appointments/calendars/${bookingCalendarId}`}
+                  className="mt-1 inline-flex min-h-11 items-center font-medium underline underline-offset-4 hover:no-underline sm:min-h-0"
+                >
+                  {t("forms.confirmationEmail.seeCalendarEmail", { defaultValue: "See the calendar's email" })}
+                </Link>
+              ) : null}
+            </div>
+          ) : null}
 
           {/* Everything below the switch only matters once it is on. Off, the
               sender picker and an empty message editor are dead weight the
@@ -478,6 +532,32 @@ export function ConfirmationEmailPanel({
           </PanelSection>
         ) : null}
       </PanelBody>
+
+      <AlertDialog open={confirmOff} onOpenChange={setConfirmOff}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              {t("forms.confirmationEmail.offTitle", { defaultValue: "Turn off this email?" })}
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              {ownCalendar ? t("forms.confirmationEmail.offBody") : t("forms.confirmationEmail.offBodyConnected")}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>
+              {t("forms.confirmationEmail.keepOn", { defaultValue: "Keep it on" })}
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                onChange({ ...config, enabled: false });
+                setConfirmOff(false);
+              }}
+            >
+              {t("forms.confirmationEmail.turnOff", { defaultValue: "Turn off" })}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Panel>
   );
 }

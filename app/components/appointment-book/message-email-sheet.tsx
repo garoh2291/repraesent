@@ -185,7 +185,7 @@ export function MessageEmailSheet({
                 value: l,
                 label: (
                   <span className="inline-flex items-center gap-1">
-                    {l.toUpperCase()}
+                    {langLabel(l)}
                     {ownLocales.has(l) ? <span className="size-1.5 rounded-full bg-current opacity-70" aria-hidden /> : null}
                   </span>
                 ),
@@ -356,4 +356,9 @@ function FittedEmailFrame({ title, html }: { title: string; html: string }) {
       />
     </div>
   );
+}
+
+/** Tab label: Armenian shows as "AM", as in the forms' language strip. */
+function langLabel(locale: MessageLocale): string {
+  return locale === "hy" ? "AM" : locale.toUpperCase();
 }

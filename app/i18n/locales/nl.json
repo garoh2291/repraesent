@@ -6187,7 +6187,17 @@
       "intakeAllDone": "Klaar · antwoorden komen binnen bij uw aanvragen"
     },
     "confirmationEmail": {
-      "appointmentNote": "Deze e-mail bevestigt ook de afspraak – tijd, plaats en een link om te wijzigen of af te zeggen worden voor je toegevoegd. Zet {{appointment_block}} waar je ze wilt hebben, anders komen ze onderaan."
+      "appointmentNote": "Deze e-mail bevestigt ook de afspraak – tijd, plaats en een link om te wijzigen of af te zeggen worden voor je toegevoegd. Zet {{appointment_block}} waar je ze wilt hebben, anders komen ze onderaan.",
+      "bookingOn": "Via dit formulier worden afspraken geboekt. De agenda heeft een eigen bevestigingsmail. Zolang deze e-mail aan staat, wordt alleen deze verstuurd — klanten krijgen één e-mail, niet twee.",
+      "bookingOff": "Via dit formulier worden afspraken geboekt. Staat deze e-mail uit, dan krijgen klanten in plaats daarvan de bevestiging van de agenda.",
+      "seeCalendarEmail": "E-mail van de agenda bekijken",
+      "offTitle": "Deze e-mail uitzetten?",
+      "offBody": "Via dit formulier worden afspraken geboekt. Zonder deze e-mail krijgen klanten de bevestiging van de agenda — met tijd, plaats en een link om te wijzigen of af te zeggen. Uw tekst hier blijft bewaard.",
+      "keepOn": "Aan laten",
+      "turnOff": "Uitzetten",
+      "bookingOnConnected": "Via dit formulier worden afspraken in een gekoppelde agenda geboekt. Deze e-mail is de bevestiging die klanten van u krijgen.",
+      "bookingOffConnected": "Via dit formulier worden afspraken in een gekoppelde agenda geboekt. Staat deze e-mail uit, dan krijgen klanten geen bevestiging van u — hooguit een uitnodiging, als hun agenda die stuurt.",
+      "offBodyConnected": "Dit formulier boekt in een gekoppelde agenda, die hier geen eigen bevestigingsmail heeft. Zonder deze e-mail krijgen klanten geen bevestiging van u. Uw tekst hier blijft bewaard."
     }
   },
   "workflows": {

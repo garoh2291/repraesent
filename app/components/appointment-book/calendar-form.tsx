@@ -542,6 +542,12 @@ export function CalendarForm({
                   value={tz}
                   onChange={(next) => set("timezone", typeof next === "string" ? next : next.value)}
                   aria-label={t("appointmentBook.settings.timezone", "Time zone")}
+                  // The card clips its content (rounded corners): the list
+                  // opens on top of the page instead of half inside the card.
+                  menuPortalTarget={typeof document !== "undefined" ? document.body : null}
+                  menuPosition="fixed"
+                  menuPlacement="auto"
+                  styles={{ menuPortal: (base) => ({ ...base, zIndex: 60 }) }}
                   className="sm:max-w-md [&_.react-select__control]:min-h-10 [&_.react-select__control]:rounded-lg [&_.react-select__control]:border-border [&_.react-select__control]:text-sm"
                 />
               ) : null}
