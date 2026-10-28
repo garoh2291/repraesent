@@ -14,6 +14,7 @@ import {
   type BreakdownRow,
   type StatsDimension,
   type StatsParams,
+  type StatsScope,
 } from "~/lib/api/website-stats";
 import { dimensionLabel, valueLabel } from "./labels";
 
@@ -43,7 +44,7 @@ export function BreakdownPanel({
   hint,
   tabs,
   params,
-  workspaceId,
+  scope,
   enabled,
   onFilter,
 }: {
@@ -51,7 +52,7 @@ export function BreakdownPanel({
   hint?: string;
   tabs: PanelTab[];
   params: StatsParams;
-  workspaceId: string | undefined;
+  scope: StatsScope;
   enabled: boolean;
   onFilter: (dim: RowDim, value: string) => void;
 }) {
@@ -63,8 +64,8 @@ export function BreakdownPanel({
   const [detailsOpen, setDetailsOpen] = useState(false);
 
   const { data, isLoading, isError } = useQuery({
-    queryKey: statsKeys.breakdown(workspaceId, params, dim, { limit: 8 }),
-    queryFn: () => getStatsBreakdown(params, dim, { limit: 8 }),
+    queryKey: statsKeys.breakdown(scope, params, dim, { limit: 8 }),
+    queryFn: () => getStatsBreakdown(scope, params, dim, { limit: 8 }),
     enabled,
     staleTime: 60_000,
     placeholderData: keepPreviousData,
@@ -174,7 +175,7 @@ export function BreakdownPanel({
           title={`${title} · ${tab.dims.length > 1 ? dimensionLabel(dim, t) : tab.label}`}
           dim={dim}
           params={params}
-          workspaceId={workspaceId}
+          scope={scope}
           onFilter={(d, v) => {
             setDetailsOpen(false);
             onFilter(d, v);
@@ -193,7 +194,7 @@ function DetailsSheet({
   title,
   dim,
   params,
-  workspaceId,
+  scope,
   onFilter,
 }: {
   open: boolean;
@@ -201,7 +202,7 @@ function DetailsSheet({
   title: string;
   dim: RowDim;
   params: StatsParams;
-  workspaceId: string | undefined;
+  scope: StatsScope;
   onFilter: (dim: RowDim, value: string) => void;
 }) {
   const { t, i18n } = useTranslation();
@@ -210,8 +211,8 @@ function DetailsSheet({
   const [typed, setTyped] = useState("");
   const opts = { limit: PAGE_SIZE, page, search };
   const { data, isFetching } = useQuery({
-    queryKey: statsKeys.breakdown(workspaceId, params, dim, opts),
-    queryFn: () => getStatsBreakdown(params, dim, opts),
+    queryKey: statsKeys.breakdown(scope, params, dim, opts),
+    queryFn: () => getStatsBreakdown(scope, params, dim, opts),
     staleTime: 60_000,
     placeholderData: keepPreviousData,
   });

@@ -11,6 +11,7 @@ import {
   type StatsDimension,
   type StatsFilter,
   type StatsParams,
+  type StatsScope,
 } from "~/lib/api/website-stats";
 import { dimensionLabel, valueLabel } from "./labels";
 
@@ -44,12 +45,12 @@ export function FilterBar({
   filters,
   onChange,
   params,
-  workspaceId,
+  scope,
 }: {
   filters: StatsFilter[];
   onChange: (filters: StatsFilter[]) => void;
   params: StatsParams;
-  workspaceId: string | undefined;
+  scope: StatsScope;
 }) {
   const { t, i18n } = useTranslation();
   const [adding, setAdding] = useState(false);
@@ -104,7 +105,7 @@ export function FilterBar({
           open={adding}
           onOpenChange={setAdding}
           params={params}
-          workspaceId={workspaceId}
+          scope={scope}
           onAdd={(f) => {
             onChange([...filters.filter((x) => !(x.dim === f.dim && x.op === f.op)), f]);
             setAdding(false);
@@ -119,13 +120,13 @@ function AddFilter({
   open,
   onOpenChange,
   params,
-  workspaceId,
+  scope,
   onAdd,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   params: StatsParams;
-  workspaceId: string | undefined;
+  scope: StatsScope;
   onAdd: (f: StatsFilter) => void;
 }) {
   const { t, i18n } = useTranslation();
@@ -137,8 +138,8 @@ function AddFilter({
   // Suggestions: the most common values of that dimension in the same range.
   const suggestDim = dim === "goal" ? null : dim;
   const { data } = useQuery({
-    queryKey: statsKeys.breakdown(workspaceId, { ...params, filters: [] }, dim, { limit: 50 }),
-    queryFn: () => getStatsBreakdown({ ...params, filters: [] }, suggestDim as Exclude<StatsDimension, "goal">, { limit: 50 }),
+    queryKey: statsKeys.breakdown(scope, { ...params, filters: [] }, dim, { limit: 50 }),
+    queryFn: () => getStatsBreakdown(scope, { ...params, filters: [] }, suggestDim as Exclude<StatsDimension, "goal">, { limit: 50 }),
     enabled: !!suggestDim,
     staleTime: 60_000,
   });

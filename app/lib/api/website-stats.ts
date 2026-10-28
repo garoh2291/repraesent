@@ -100,39 +100,56 @@ export interface GoalProps {
   rows: { key: string; value: string; visitors: number; events: number }[];
 }
 
+/**
+ * Where the stats come from: the current workspace (X-Workspace-Id), or one
+ * partner house read by its brand. `key` keeps their caches apart.
+ */
+export interface StatsScope {
+  base: string;
+  key: string;
+}
+
+export function workspaceScope(workspaceId: string | undefined): StatsScope {
+  return { base: "/users/me/workspace/website-stats", key: `ws:${workspaceId ?? ""}` };
+}
+
+export function brandScope(houseId: string): StatsScope {
+  return { base: `/brands/me/website-stats/${encodeURIComponent(houseId)}`, key: `brand:${houseId}` };
+}
+
 function base(p: StatsParams): Record<string, string> {
   const out: Record<string, string> = { from: p.from, to: p.to, tz: p.tz };
   if (p.filters.length) out.filters = JSON.stringify(p.filters);
   return out;
 }
 
-const URL = "/users/me/workspace/website-stats";
-
-export async function getStatsOverview(p: StatsParams, compare: StatsCompare) {
-  const res = await apiClient.get<Overview | null>(`${URL}/overview`, {
+export async function getStatsOverview(s: StatsScope, p: StatsParams, compare: StatsCompare) {
+  const res = await apiClient.get<Overview | null>(`${s.base}/overview`, {
     params: { ...base(p), compare },
   });
   return res.data ?? null;
 }
 
 export async function getStatsSeries(
+  s: StatsScope,
   p: StatsParams,
   metric: StatsMetric,
   interval: StatsInterval,
   compare: StatsCompare,
 ) {
-  const res = await apiClient.get<Series | null>(`${URL}/timeseries`, {
+  const res = await apiClient.get<Series | null>(`${s.base}/timeseries`, {
     params: { ...base(p), metric, interval, compare },
   });
   return res.data ?? null;
 }
 
 export async function getStatsBreakdown(
+  s: StatsScope,
   p: StatsParams,
   dimension: Exclude<StatsDimension, "goal">,
   opts: { limit?: number; page?: number; search?: string } = {},
 ) {
-  const res = await apiClient.get<Breakdown | null>(`${URL}/breakdown`, {
+  const res = await apiClient.get<Breakdown | null>(`${s.base}/breakdown`, {
     params: {
       ...base(p),
       dimension,
@@ -144,43 +161,37 @@ export async function getStatsBreakdown(
   return res.data ?? null;
 }
 
-export async function getStatsGoals(p: StatsParams) {
-  const res = await apiClient.get<Goals | null>(`${URL}/goals`, { params: base(p) });
+export async function getStatsGoals(s: StatsScope, p: StatsParams) {
+  const res = await apiClient.get<Goals | null>(`${s.base}/goals`, { params: base(p) });
   return res.data ?? null;
 }
 
-export async function getStatsGoalProps(p: StatsParams, goal: string) {
-  const res = await apiClient.get<GoalProps | null>(`${URL}/goal-props`, {
+export async function getStatsGoalProps(s: StatsScope, p: StatsParams, goal: string) {
+  const res = await apiClient.get<GoalProps | null>(`${s.base}/goal-props`, {
     params: { ...base(p), goal },
   });
   return res.data ?? null;
 }
 
-export async function getStatsRealtime() {
-  const res = await apiClient.get<{ visitors: number } | null>(`${URL}/realtime`);
+export async function getStatsRealtime(s: StatsScope) {
+  const res = await apiClient.get<{ visitors: number } | null>(`${s.base}/realtime`);
   return res.data ?? null;
 }
 
 /** Query keys: everything a result depends on, so cache entries never mix. */
 export const statsKeys = {
-  all: (ws: string | undefined) => ["website-stats", ws] as const,
-  overview: (ws: string | undefined, p: StatsParams, c: StatsCompare) =>
-    ["website-stats", ws, "overview", p, c] as const,
-  series: (
-    ws: string | undefined,
-    p: StatsParams,
-    m: StatsMetric,
-    i: StatsInterval,
-    c: StatsCompare,
-  ) => ["website-stats", ws, "series", p, m, i, c] as const,
+  overview: (s: StatsScope, p: StatsParams, c: StatsCompare) =>
+    ["website-stats", s.key, "overview", p, c] as const,
+  series: (s: StatsScope, p: StatsParams, m: StatsMetric, i: StatsInterval, c: StatsCompare) =>
+    ["website-stats", s.key, "series", p, m, i, c] as const,
   breakdown: (
-    ws: string | undefined,
+    s: StatsScope,
     p: StatsParams,
     d: StatsDimension,
     opts: { limit?: number; page?: number; search?: string },
-  ) => ["website-stats", ws, "breakdown", p, d, opts] as const,
-  goals: (ws: string | undefined, p: StatsParams) => ["website-stats", ws, "goals", p] as const,
-  goalProps: (ws: string | undefined, p: StatsParams, g: string) =>
-    ["website-stats", ws, "goal-props", p, g] as const,
-  realtime: (ws: string | undefined) => ["website-stats", ws, "realtime"] as const,
+  ) => ["website-stats", s.key, "breakdown", p, d, opts] as const,
+  goals: (s: StatsScope, p: StatsParams) => ["website-stats", s.key, "goals", p] as const,
+  goalProps: (s: StatsScope, p: StatsParams, g: string) =>
+    ["website-stats", s.key, "goal-props", p, g] as const,
+  realtime: (s: StatsScope) => ["website-stats", s.key, "realtime"] as const,
 };

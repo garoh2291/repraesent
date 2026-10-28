@@ -11,6 +11,7 @@ import {
   getStatsGoals,
   statsKeys,
   type StatsParams,
+  type StatsScope,
 } from "~/lib/api/website-stats";
 
 /** Plain names for the events the Plausible script sends by itself. */
@@ -21,11 +22,11 @@ function goalName(goal: string, t: (k: string, f: string) => string): string {
   return goal;
 }
 
-function Props({ goal, params, workspaceId }: { goal: string; params: StatsParams; workspaceId: string | undefined }) {
+function Props({ goal, params, scope }: { goal: string; params: StatsParams; scope: StatsScope }) {
   const { t } = useTranslation();
   const { data, isLoading } = useQuery({
-    queryKey: statsKeys.goalProps(workspaceId, params, goal),
-    queryFn: () => getStatsGoalProps(params, goal),
+    queryKey: statsKeys.goalProps(scope, params, goal),
+    queryFn: () => getStatsGoalProps(scope, params, goal),
     staleTime: 60_000,
   });
   if (isLoading) return <Skeleton className="m-3 h-16" />;
@@ -50,20 +51,20 @@ function Props({ goal, params, workspaceId }: { goal: string; params: StatsParam
 
 export function GoalsPanel({
   params,
-  workspaceId,
+  scope,
   enabled,
   onFilter,
 }: {
   params: StatsParams;
-  workspaceId: string | undefined;
+  scope: StatsScope;
   enabled: boolean;
   onFilter: (goal: string) => void;
 }) {
   const { t } = useTranslation();
   const [open, setOpen] = useState<string | null>(null);
   const { data, isLoading } = useQuery({
-    queryKey: statsKeys.goals(workspaceId, params),
-    queryFn: () => getStatsGoals(params),
+    queryKey: statsKeys.goals(scope, params),
+    queryFn: () => getStatsGoals(scope, params),
     enabled,
     staleTime: 60_000,
     placeholderData: keepPreviousData,
@@ -106,7 +107,7 @@ export function GoalsPanel({
                   events={r.events}
                   rate={r.conversion_rate}
                 >
-                  <Props goal={r.goal} params={params} workspaceId={workspaceId} />
+                  <Props goal={r.goal} params={params} scope={scope} />
                 </GoalRow>
               ))}
             </tbody>

@@ -2,8 +2,8 @@ import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import {
   Area,
-  AreaChart,
   CartesianGrid,
+  ComposedChart,
   Line,
   ResponsiveContainer,
   Tooltip,
@@ -224,7 +224,7 @@ export function VisitorsChart({
       ) : (
         <div className="h-56 sm:h-64">
           <ResponsiveContainer width="100%" height="100%">
-            <AreaChart data={data} margin={{ top: 6, right: 6, bottom: 0, left: -12 }}>
+            <ComposedChart data={data} margin={{ top: 6, right: 6, bottom: 0, left: -12 }}>
               <defs>
                 <linearGradient id="statsInk" x1="0" y1="0" x2="0" y2="1">
                   <stop offset="0%" stopColor={INK} stopOpacity={0.14} />
@@ -290,7 +290,7 @@ export function VisitorsChart({
                 activeDot={{ r: 4, fill: INK, stroke: "var(--card)", strokeWidth: 2 }}
                 isAnimationActive={false}
               />
-            </AreaChart>
+            </ComposedChart>
           </ResponsiveContainer>
         </div>
       )}
