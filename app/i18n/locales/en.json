@@ -1949,7 +1949,7 @@
       "cardTitle": "OpenRouter",
       "statusConnected": "Connected",
       "statusRevoked": "Key rejected",
-      "notConnectedHint": "Create a key at openrouter.ai/keys and paste it here. Until then, the chat can’t be turned on and AI visibility can’t check anything.",
+      "notConnectedHint": "Until you connect, the chat can’t be turned on and AI visibility can’t check anything.",
       "lastError": "Last call failed: {{error}}",
       "keyLabel": "API key",
       "rotateLabel": "Replace API key",
@@ -2000,6 +2000,28 @@
           "visibility_suggestions": "AI visibility — page suggestions",
           "visibility_drafts": "AI visibility — comparison pages",
           "onboarding_chat": "Onboarding conversations"
+        }
+      },
+      "oauth": {
+        "connect": "Connect with OpenRouter",
+        "reconnect": "Connect again",
+        "tripLabel": "What happens when you connect",
+        "trip1": "You start here",
+        "trip2": "Sign in to OpenRouter and approve",
+        "trip3": "Back here, connected",
+        "billing": "No key to copy. What the AI uses is billed to your own OpenRouter credits. No account yet? You can create one on the way — then add credits.",
+        "pasteToggle": "I already have a key — paste it",
+        "pasteToggleConnected": "Paste a different key",
+        "methodOauth": "connected through OpenRouter",
+        "methodPasted": "pasted key",
+        "openKey": "Open this key on OpenRouter",
+        "disconnectKeyStays": "To delete it in your OpenRouter account as well:",
+        "tryAgain": "Try again",
+        "result": {
+          "connected": "Connected. Your website chat and AI visibility can run now.",
+          "denied": "You cancelled on OpenRouter. Nothing was connected.",
+          "expired": "That took longer than 10 minutes, so the link ran out. Please try again.",
+          "error": "OpenRouter didn’t hand over a key. Please try again, or paste a key instead."
         }
       }
     },
@@ -2927,12 +2949,133 @@
     }
   },
   "analytics": {
-    "metaTitle": "Analytics - Repraesent",
-    "metaDescription": "Analytics dashboard",
-    "notEnabled": "Analytics service is not enabled for this area.",
-    "notConfigured": "Analytics is not configured yet. Please contact your administrator.",
-    "loading": "Loading analytics...",
-    "iframeTitle": "Analytics"
+    "metaTitle": "Website visitors - Repraesent",
+    "metaDescription": "Who visited your website and where they came from",
+    "title": "Website visitors",
+    "subtitle": "Who came to your website and where from",
+    "sourcesTitle": "Where they came from",
+    "pagesTitle": "Pages",
+    "countriesTitle": "Countries",
+    "sourceDirect": "Typed your address or saved link",
+    "listEmpty": "Nothing in this period yet.",
+    "notTrackedTitle": "We don't see visitors from your website yet",
+    "notTrackedBody": "Visitors are counted for the website address saved for your business. Check that the address is right on your Website page, or write to support and we'll check it.",
+    "notTrackedAction": "Open Website",
+    "addFilter": "Add a filter",
+    "applyFilter": "Show these visitors",
+    "channelDirect": "Direct",
+    "citiesNote": "City names are not available",
+    "clearFilters": "Clear all",
+    "comparedPeriod": "the period before",
+    "details": "Details",
+    "devicesTitle": "Devices",
+    "earlierRows": "Earlier",
+    "filterContainsHint": "Part of the text, e.g. sale",
+    "filterHow": "How",
+    "filterPick": "Pick or type a value",
+    "filterTip": "Tip: click any row below to see only those visitors.",
+    "filterValue": "Value",
+    "filterWhat": "What",
+    "footnote": "Counted without cookies. Times are in your time zone ({{tz}}).",
+    "goalFilter": "Show only people who did this",
+    "goalRate": "Of all people",
+    "goalTimes": "Times",
+    "goalsEmpty": "No goals in this period. Clicks on links to other sites, file downloads and your own events show up here.",
+    "goalsHint": "Open a goal to see its details",
+    "goalsTitle": "Goals — things people did on your site",
+    "inAppBrowser": "In-app browser (Instagram, Facebook…)",
+    "intervalLabel": "Group by",
+    "loadFailed": "We couldn't load this right now. Try again in a minute.",
+    "loadFailedTitle": "The numbers didn't load",
+    "locationsTitle": "Locations",
+    "moreRows": "More",
+    "newThisPeriod": "new",
+    "noChange": "no change",
+    "noProps": "No extra details were sent with this goal.",
+    "none": "(none)",
+    "pagesHint": "Entry = first page, exit = last page",
+    "points": "{{n}} pts",
+    "removeFilter": "Remove filter",
+    "retry": "Try again",
+    "rowFilterHint": "Show only these visitors",
+    "rowFilterTip": "Click a row to filter",
+    "search": "Search",
+    "searchEmpty": "Nothing matches “{{q}}”.",
+    "searchPlaceholder": "Search…",
+    "showingRows": "Showing {{from}}–{{to}}",
+    "liveNow_one": "{{formatted}} person on your site now",
+    "liveNow_other": "{{formatted}} people on your site now",
+    "device": {
+      "desktop": "Computer",
+      "laptop": "Laptop",
+      "mobile": "Phone",
+      "tablet": "Tablet"
+    },
+    "dim": {
+      "browser": "Browser",
+      "channel": "Channel",
+      "country": "Country",
+      "device": "Device",
+      "entryPage": "Entry page",
+      "exitPage": "Exit page",
+      "goal": "Goal",
+      "os": "System",
+      "page": "Page",
+      "referrer": "Referring page",
+      "region": "Region",
+      "source": "Source",
+      "utmCampaign": "UTM campaign",
+      "utmContent": "UTM content",
+      "utmMedium": "UTM medium",
+      "utmSource": "UTM source",
+      "utmTerm": "UTM term"
+    },
+    "goal": {
+      "download": "Downloaded a file",
+      "notFound": "Opened a page that doesn't exist",
+      "outbound": "Clicked a link to another site"
+    },
+    "interval": {
+      "day": "Days",
+      "hour": "Hours",
+      "month": "Months",
+      "week": "Weeks"
+    },
+    "metric": {
+      "bounceRate": "Left after one page",
+      "pageviews": "Pages viewed",
+      "viewsPerVisit": "Pages per visit",
+      "visitDuration": "Time per visit",
+      "visitors": "People",
+      "visits": "Visits"
+    },
+    "op": {
+      "contains": "contains",
+      "is": "is",
+      "isNot": "is not"
+    },
+    "tab": {
+      "browser": "Browser",
+      "channels": "Channels",
+      "countries": "Countries",
+      "device": "Device",
+      "entryPages": "Entry pages",
+      "exitPages": "Exit pages",
+      "os": "System",
+      "referrers": "Referring pages",
+      "regions": "Regions",
+      "sources": "Sources",
+      "topPages": "Top pages",
+      "utm": "Campaign links (UTM)"
+    },
+    "utm": {
+      "campaign": "Campaign",
+      "content": "Content",
+      "medium": "Medium",
+      "source": "Source",
+      "term": "Term"
+    },
+    "comparedYear": "same dates last year"
   },
   "closed": {
     "metaTitle": "Area closed - Repraesent",
@@ -3198,13 +3341,6 @@
     "navWorkspaces": "{{Types}}",
     "navAnalytics": "Analytics",
     "analyticsTitle": "Analytics",
-    "analyticsViewingSubtitle": "Viewing analytics dashboard",
-    "analyticsSelectPlaceholder": "Select {{type}}",
-    "analyticsNotConnected": "Not connected",
-    "analyticsSelectPrompt": "Choose one of your {{types}} to view its analytics",
-    "analyticsSelectHint": "Choose from the dropdown to get started",
-    "analyticsNotConfigured": "Analytics not configured for this {{type}}",
-    "analyticsLoading": "Loading analytics...",
     "pageTitle": "Brand Dashboard – Repraesent",
     "workspacesPageTitle": "{{Types}} – Repraesent",
     "greeting": "Good to see you.",
@@ -3328,7 +3464,17 @@
     "socialAdsSelectPlaceholder": "Select {{type}}",
     "socialAdsSelectAllHouses": "All {{types}}",
     "socialAdsDisabledHint": "no social ads",
-    "socialAdsNoHouses": "No {{types}} found"
+    "socialAdsNoHouses": "No {{types}} found",
+    "analyticsSearch": "Find a {{type}}…",
+    "analyticsTrackedGroup": "Visitors counted · last 30 days",
+    "analyticsUntrackedGroup": "No visitors counted yet",
+    "analyticsUntrackedReason": "Website not connected",
+    "analyticsNoMatch": "No {{type}} matches “{{q}}”.",
+    "analyticsPickHouse": "Choose a {{type}}",
+    "analyticsCounted": "{{n}} of {{total}} {{types}} counted",
+    "analyticsNoneTitle": "No visitors counted for your {{types}} yet",
+    "analyticsUnknownTitle": "We don't count visitors for this {{type}} yet",
+    "analyticsNoneBody": "Visitors are counted once a {{type}}'s website is connected. Write to us and we'll connect it."
   },
   "campaigns": {
     "title": "Campaign Analytics",
@@ -3382,7 +3528,23 @@
     "lastMonth": "Last month",
     "allTime": "All time",
     "startDate": "Start date",
-    "endDate": "End date"
+    "endDate": "End date",
+    "apply": "Show these dates",
+    "cancel": "Cancel",
+    "compareWith": "Compare with",
+    "compareOff": "Nothing",
+    "comparePrevious": "Previous period",
+    "compareYear": "Same dates last year",
+    "custom": "Custom range",
+    "earlierMonth": "Earlier month",
+    "laterMonth": "Later month",
+    "last12Months": "Last 12 months",
+    "last28": "Last 28 days",
+    "last90": "Last 90 days",
+    "thisYear": "This year",
+    "title": "Dates",
+    "vsPrevious": "vs previous period",
+    "vsYear": "vs last year"
   },
   "facebookAds": {
     "metaTitle": "Facebook Ads",
@@ -3946,7 +4108,10 @@
     "openWebsite": "Open website",
     "websiteInvalid": "Enter a website like example.com",
     "confirmRemoveWebsiteTitle": "Remove this website?",
-    "confirmRemoveWebsiteDescription": "This website will be removed from the profile. You can add it again later."
+    "confirmRemoveWebsiteDescription": "This website will be removed from the profile. You can add it again later.",
+    "languageUnknown": "Not known",
+    "preferredLanguage": "Preferred communication language",
+    "preferredLanguageHint": "Appointment emails and confirmations go out in this language. Leave it empty if you don't know it yet."
   },
   "leadEmails": {
     "emptyTitle": "No emails logged yet",
@@ -9377,7 +9542,8 @@
       "upcoming": "Upcoming",
       "appointmentCalendar": "Calendar",
       "teamCalendar": "Team calendar",
-      "bookingPage": "Booking page"
+      "bookingPage": "Booking page",
+      "websiteVisitors": "Website visitors"
     },
     "settingsGroups": {
       "you": "You",
@@ -10867,7 +11033,8 @@
       "copyTo": "Copy appointments to",
       "makeFallback": "Use when nothing else is picked",
       "isFallback": "Used when nothing else is picked — new appointments start here.",
-      "nowFallback": "Now used when nothing else is picked"
+      "nowFallback": "Now used when nothing else is picked",
+      "messagesHint2": "Sent by email under your business name. Text messages can be added later."
     },
     "detail": {
       "nobody": "Nobody yet",
@@ -11111,7 +11278,8 @@
       "close": "Done",
       "titleChanges": "When it moves or is cancelled",
       "titleReminder": "The reminder",
-      "titleConfirmation": "The confirmation"
+      "titleConfirmation": "The confirmation",
+      "testSentFrom": "Test sent to {{email}} from {{from}}"
     },
     "flows": {
       "nameWith": "{{what}} — {{name}}",
@@ -11161,6 +11329,34 @@
         "comeBack": "Come back after 6 weeks",
         "comeBackHint": "Asks them to book their next visit."
       }
+    },
+    "sender": {
+      "label": "Send from",
+      "default": "Your main mailbox",
+      "defaultWith": "Your main mailbox ({{email}})",
+      "from": "Sent from {{email}}",
+      "platformTitle": "This goes out from Repraesent's address, not yours",
+      "reconnectTitle": "Your mailbox needs reconnecting, so this goes out from Repraesent's address",
+      "platformBody": "Customers see your business name, but some email programs trust it less and may put it in spam. Connect your own mailbox and it goes out from your address.",
+      "connectCta": "Connect your mailbox",
+      "reconnectCta": "Reconnect your mailbox"
+    },
+    "language": {
+      "pick": "Pick a language",
+      "none": "Not set",
+      "short": "Language",
+      "label": "Language for their emails",
+      "fromCalendar": "We don't know this customer's language yet, so it's set to the calendar's. Change it if they speak another one.",
+      "required": "Pick the language this customer should get their emails in.",
+      "calendarLabel": "Language when we don't know the customer's",
+      "calendarHint": "Customers get emails in their own language when we know it — from their form or their customer card. Otherwise in this one.",
+      "calendarNone": "The language of whoever handles it",
+      "cardWillUpdate": "{{language}} will also be saved on {{name}}'s customer card.",
+      "cardWillUpdateNoName": "{{language}} will also be saved on their customer card.",
+      "cardWillUpdateWhy": "Every email to them from now on goes out in it.",
+      "savedOnCard2": "We'll update it on their customer card.",
+      "cardUpdated": "Saved, and updated on {{name}}'s customer card",
+      "noCard": "Only for this appointment — they aren't one of your customers yet."
     }
   },
   "calendarView": {

@@ -82,8 +82,10 @@ export interface BrandService {
 export interface BrandAnalyticsWorkspace {
   id: string;
   name: string;
+  /** Website is tracked on pa-002 (or a demo brand). */
   has_analytics: boolean;
-  shared_link: string | null;
+  /** Matched website domain, when known. */
+  site: string | null;
 }
 
 export async function getBrandAnalyticsWorkspaces(): Promise<BrandAnalyticsWorkspace[]> {

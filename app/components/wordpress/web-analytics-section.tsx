@@ -14,96 +14,17 @@ import {
 } from "recharts";
 import { useAuthContext } from "~/providers/auth-provider";
 import { cn } from "~/lib/utils";
-import { formatDateShort, formatNumber } from "~/lib/utils/format";
+import { formatNumber } from "~/lib/utils/format";
 import {
   getWorkspacePlausibleStats,
   type PlausiblePeriod,
 } from "~/lib/api/workspaces";
+import {
+  WEBSITE_PERIODS as PLAUSIBLE_PERIODS,
+  fillSeriesGaps as fillPlausibleSeriesGaps,
+  formatBucketLabel as formatPlausibleXLabel,
+} from "~/lib/analytics/website-stats";
 
-const PLAUSIBLE_PERIODS: { value: PlausiblePeriod; labelKey: string }[] = [
-  { value: "1d", labelKey: "home.period1d" },
-  { value: "7d", labelKey: "home.period7d" },
-  { value: "30d", labelKey: "home.period30d" },
-  { value: "all_time", labelKey: "home.periodAllTime" },
-];
-
-function fillPlausibleSeriesGaps(
-  series: { date: string; visitors: number; pageviews: number }[],
-  period: PlausiblePeriod
-): { date: string; visitors: number; pageviews: number }[] {
-  const now = new Date();
-  const map = new Map(series.map((p) => [p.date, p]));
-  const slots: string[] = [];
-  const pad = (n: number) => String(n).padStart(2, "0");
-
-  if (period === "1d") {
-    const y = now.getFullYear();
-    const m = pad(now.getMonth() + 1);
-    const d = pad(now.getDate());
-    for (let h = 0; h <= now.getHours(); h++) {
-      slots.push(`${y}-${m}-${d}T${pad(h)}:00:00`);
-    }
-  } else if (period === "7d") {
-    for (let i = 6; i >= 0; i--) {
-      const d = new Date(now);
-      d.setDate(d.getDate() - i);
-      slots.push(
-        `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`
-      );
-    }
-  } else if (period === "30d") {
-    for (let i = 29; i >= 0; i--) {
-      const d = new Date(now);
-      d.setDate(d.getDate() - i);
-      slots.push(
-        `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`
-      );
-    }
-  } else {
-    // all_time — monthly buckets, fill gaps between first and last data point
-    if (series.length === 0) return series;
-    const first = series[0].date; // e.g. "2025-03-01"
-    const [fy, fm] = first.split("-").map(Number);
-    const nowY = now.getFullYear();
-    const nowM = now.getMonth() + 1;
-    let y = fy;
-    let m = fm;
-    while (y < nowY || (y === nowY && m <= nowM)) {
-      slots.push(`${y}-${pad(m)}-01`);
-      m++;
-      if (m > 12) {
-        m = 1;
-        y++;
-      }
-    }
-  }
-
-  // Plausible may use space or T separator for hourly data — normalize matching
-  return slots.map((key) => {
-    const found = map.get(key) ?? map.get(key.replace("T", " "));
-    return found ?? { date: key, visitors: 0, pageviews: 0 };
-  });
-}
-
-function formatPlausibleXLabel(date: string, period: PlausiblePeriod): string {
-  if (period === "1d") {
-    // hourly data like "2026-04-01 14:00:00" or "2026-04-01T14:00:00"
-    const hourMatch = date.match(/(\d{2}):00/);
-    if (hourMatch) return `${hourMatch[1]}:00`;
-    return date;
-  }
-  if (period === "all_time") {
-    // monthly data like "2026-03"
-    const parts = date.split("-");
-    if (parts.length === 2) {
-      const d = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, 1);
-      return d.toLocaleString(undefined, { month: "short" });
-    }
-  }
-  const [year, month, day] = date.split("-");
-  const d = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
-  return formatDateShort(d);
-}
 
 function PlausibleStatsTooltip({
   active,

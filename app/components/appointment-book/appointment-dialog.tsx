@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import { addDays, format } from "date-fns";
@@ -18,7 +18,11 @@ import {
 } from "~/components/ui/select";
 import { BottomSheet } from "~/components/notebook/bottom-sheet";
 import { extractErrorMessage } from "~/lib/api/axios-instance";
-import { createContact } from "~/lib/api/contacts-crm";
+import { createContact, getContact } from "~/lib/api/contacts-crm";
+import { LANGUAGE_NAMES } from "~/i18n/language-names";
+import type { FormLocale } from "~/lib/forms/schema";
+import { CustomerLanguageSelect, announceCardLanguage, isCustomerLocale } from "./customer-language-select";
+import { SenderNotice } from "./email-sender";
 import { createAppointment, getCalendarDays, type Appointment } from "~/lib/api/appointment-book";
 import { useAppointmentCalendars, useInvalidateAppointments } from "~/lib/hooks/useAppointmentBook";
 import { CalendarDot } from "./appointment-bits";
@@ -42,6 +46,8 @@ export interface AppointmentPrefill {
   customerPhone?: string | null;
   /** Someone with no contact yet (book again after a visit): starts as "someone new", filled in. */
   customerName?: string | null;
+  /** The inquiry's form language, when the dialog opens from one. */
+  customerLocale?: string | null;
 }
 
 /**
@@ -127,6 +133,33 @@ export function AppointmentDialog({
   const recipient = (newPerson || !contact ? email : contact?.email ?? email).trim();
   const canNotify = !!calendar?.customer_messages.confirmation && !!recipient;
 
+  // The customer's language. Known from their card (or the inquiry's form)
+  // it is shown and can be changed; unknown, the calendar's language is
+  // offered to check; with neither, it has to be picked before an email goes.
+  const contactLocaleQuery = useQuery({
+    queryKey: ["contact-locale", contact?.id],
+    queryFn: async () => {
+      const detail = await getContact(contact!.id);
+      return (detail.contact?.locale as string | null | undefined) ?? null;
+    },
+    enabled: open && !!contact && contact.locale === undefined,
+    staleTime: 60_000,
+  });
+  const contactLocale = contact ? (contact.locale !== undefined ? contact.locale : contactLocaleQuery.data) : undefined;
+  const knownLocale: FormLocale | null = isCustomerLocale(contactLocale)
+    ? contactLocale
+    : !contact && isCustomerLocale(prefill?.customerLocale)
+      ? prefill.customerLocale
+      : null;
+  const calendarLocale = calendar?.default_locale ?? null;
+  const [pickedLocale, setPickedLocale] = useState<FormLocale | null | undefined>(undefined);
+  useEffect(() => setPickedLocale(undefined), [contact?.id]);
+  const locale = pickedLocale !== undefined ? pickedLocale : (knownLocale ?? calendarLocale);
+  const localeFrom: "picked" | "known" | "calendar" | "none" =
+    pickedLocale !== undefined ? "picked" : knownLocale ? "known" : calendarLocale ? "calendar" : "none";
+  const willEmail = canNotify && notify;
+  const localeMissing = willEmail && !locale;
+
   const create = useMutation({
     mutationFn: async (override: boolean) => {
       if (!calendar || !time) throw new Error(t("appointmentBook.form.pickTime", "Pick a time first."));
@@ -142,6 +175,7 @@ export function AppointmentDialog({
             last_name: rest.join(" ") || null,
             email: email.trim() || null,
             phone: phone.trim() || null,
+            locale: locale ?? null,
           });
           contactId = created.id;
         } catch {
@@ -161,7 +195,7 @@ export function AppointmentDialog({
         customer_name: newPerson ? name.trim() || null : null,
         customer_email: (newPerson || !contact) && email.trim() ? email.trim() : null,
         customer_phone: (newPerson || !contact) && phone.trim() ? phone.trim() : null,
-        customer_locale: i18n.language?.slice(0, 2) ?? null,
+        customer_locale: locale ?? null,
         notes: notes.trim() || null,
         notify_customer: canNotify && notify,
       });
@@ -185,7 +219,10 @@ export function AppointmentDialog({
   });
 
   const hasWho = !!contact || !!prefill?.leadId || (newPerson && !!name.trim()) || !!email.trim();
-  const ready = !!calendar && !!time && hasWho;
+  const ready = !!calendar && !!time && hasWho && !localeMissing;
+  const pickedPerson = !newPerson ? (contact ?? prefill?.contact ?? null) : null;
+  const infoEmail = pickedPerson?.email ?? (lockedPerson ? prefill?.customerEmail : null) ?? null;
+  const infoPhone = pickedPerson?.phone ?? (lockedPerson ? prefill?.customerPhone : null) ?? null;
 
   return (
     <BottomSheet
@@ -265,7 +302,8 @@ export function AppointmentDialog({
             <p className="rounded-lg border border-border bg-muted/40 px-3 py-2.5 text-[14px] font-medium text-foreground">
               {prefill?.contact?.label ?? prefill?.leadLabel ?? t("appointmentBook.someone", "Someone")}
             </p>
-          ) : newPerson ? (
+          ) : null}
+          {lockedPerson ? null : newPerson ? (
             <div className="space-y-2">
               <Input
                 value={name}
@@ -320,7 +358,65 @@ export function AppointmentDialog({
               </button>
             </div>
           )}
+          {(lockedPerson || contact) && (infoEmail || infoPhone || knownLocale) ? (
+            <dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 rounded-lg bg-muted/40 px-3 py-2 text-[13px]">
+              {infoEmail ? (
+                <>
+                  <dt className="text-muted-foreground">{t("appointmentBook.form.email", "Email")}</dt>
+                  <dd className="truncate">{infoEmail}</dd>
+                </>
+              ) : null}
+              {infoPhone ? (
+                <>
+                  <dt className="text-muted-foreground">{t("appointmentBook.form.phone", "Phone")}</dt>
+                  <dd className="truncate">{infoPhone}</dd>
+                </>
+              ) : null}
+              {knownLocale ? (
+                <>
+                  <dt className="text-muted-foreground">{t("appointmentBook.language.short", "Language")}</dt>
+                  <dd>{LANGUAGE_NAMES[knownLocale]}</dd>
+                </>
+              ) : null}
+            </dl>
+          ) : null}
         </div>
+
+        {hasWho ? (
+          <div className="space-y-1.5">
+            <label htmlFor="appt-customer-language" className="block text-[12.5px] font-medium text-muted-foreground">
+              {t("appointmentBook.language.label", "Language for their emails")}
+            </label>
+            <CustomerLanguageSelect
+              id="appt-customer-language"
+              value={locale}
+              onChange={(v) => {
+                setPickedLocale(v);
+                // Only a customer with a card gets it written there.
+                const cardOwner = !newPerson ? (contact ?? prefill?.contact ?? null) : null;
+                const cardLocale = isCustomerLocale(contactLocale) ? contactLocale : null;
+                if (v && cardOwner && v !== cardLocale) announceCardLanguage(t, cardOwner.label, v);
+              }}
+              invalid={localeMissing}
+            />
+            {localeFrom === "calendar" ? (
+              <p className="rounded-md bg-secondary/25 px-2 py-1 text-[12.5px] text-foreground">
+                {t(
+                  "appointmentBook.language.fromCalendar",
+                  "We don't know this customer's language yet, so it's set to the calendar's. Change it if they speak another one.",
+                )}
+              </p>
+            ) : localeMissing ? (
+              <p className="rounded-md bg-secondary/25 px-2 py-1 text-[12.5px] text-foreground">
+                {t("appointmentBook.language.required", "Pick the language this customer should get their emails in.")}
+              </p>
+            ) : localeFrom === "picked" && contact && locale !== (isCustomerLocale(contactLocale) ? contactLocale : null) ? (
+              <p className="text-[12.5px] text-muted-foreground">
+                {t("appointmentBook.language.savedOnCard2", "We'll update it on their customer card.")}
+              </p>
+            ) : null}
+          </div>
+        ) : null}
 
         {!prefill?.deal ? (
           <div className="space-y-1.5">
@@ -347,12 +443,15 @@ export function AppointmentDialog({
         </div>
 
         {canNotify ? (
-          <label className="flex min-h-11 cursor-pointer items-center gap-3 text-[14px]">
-            <Checkbox checked={notify} onCheckedChange={(v) => setNotify(v === true)} />
-            <span>
-              {t("appointmentBook.form.sendConfirmation", "Send a confirmation to {{email}}", { email: recipient })}
-            </span>
-          </label>
+          <div className="space-y-2">
+            <label className="flex min-h-11 cursor-pointer items-center gap-3 text-[14px]">
+              <Checkbox checked={notify} onCheckedChange={(v) => setNotify(v === true)} />
+              <span>
+                {t("appointmentBook.form.sendConfirmation", "Send a confirmation to {{email}}", { email: recipient })}
+              </span>
+            </label>
+            {notify && calendar?.sender ? <SenderNotice sender={calendar.sender} compact /> : null}
+          </div>
         ) : null}
       </div>
     </BottomSheet>

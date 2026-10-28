@@ -62,6 +62,8 @@ const HIDDEN_BOOKING_SUFFIXES = [
 export const AI_HIDDEN_META_KEYS: readonly string[] = [
   "conversation_id",
   "transcript_summary",
+  // The chat's language: it lives on the customer card as their language.
+  "locale",
 ];
 
 function metaOf(lead: AiLeadLike): Record<string, unknown> {

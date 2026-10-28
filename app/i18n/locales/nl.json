@@ -1949,7 +1949,7 @@
       "cardTitle": "OpenRouter",
       "statusConnected": "Verbonden",
       "statusRevoked": "Sleutel afgewezen",
-      "notConnectedHint": "Maak een sleutel aan op openrouter.ai/keys en plak die hier. Tot dan kan de chat niet aan en kan AI-zichtbaarheid niets controleren.",
+      "notConnectedHint": "Zolang er niets gekoppeld is, kan de chat niet aan en kan AI-zichtbaarheid niets controleren.",
       "lastError": "Laatste aanroep mislukt: {{error}}",
       "keyLabel": "API-sleutel",
       "rotateLabel": "API-sleutel vervangen",
@@ -2000,6 +2000,28 @@
           "visibility_suggestions": "AI-zichtbaarheid — paginasuggesties",
           "visibility_drafts": "AI-zichtbaarheid — vergelijkingspagina's",
           "onboarding_chat": "Startgesprekken"
+        }
+      },
+      "oauth": {
+        "connect": "Koppelen met OpenRouter",
+        "reconnect": "Opnieuw koppelen",
+        "tripLabel": "Wat er gebeurt bij het koppelen",
+        "trip1": "U begint hier",
+        "trip2": "Log in bij OpenRouter en geef toestemming",
+        "trip3": "Terug hier, gekoppeld",
+        "billing": "Geen sleutel om te kopiëren. Wat de AI gebruikt, gaat van uw eigen OpenRouter-tegoed af. Nog geen account? U kunt er onderweg een aanmaken en daarna tegoed toevoegen.",
+        "pasteToggle": "Ik heb al een sleutel — plakken",
+        "pasteToggleConnected": "Een andere sleutel plakken",
+        "methodOauth": "gekoppeld via OpenRouter",
+        "methodPasted": "geplakte sleutel",
+        "openKey": "Deze sleutel openen bij OpenRouter",
+        "disconnectKeyStays": "Om hem ook in uw OpenRouter-account te verwijderen:",
+        "tryAgain": "Opnieuw proberen",
+        "result": {
+          "connected": "Gekoppeld. Uw websitechat en AI-zichtbaarheid kunnen nu draaien.",
+          "denied": "U heeft geannuleerd bij OpenRouter. Er is niets gekoppeld.",
+          "expired": "Dat duurde langer dan 10 minuten, de link is verlopen. Probeer het opnieuw.",
+          "error": "OpenRouter gaf geen sleutel door. Probeer het opnieuw, of plak een sleutel."
         }
       }
     },
@@ -2927,12 +2949,133 @@
     }
   },
   "analytics": {
-    "metaTitle": "Analyse - Repraesent",
-    "metaDescription": "Analysedashboard",
-    "notEnabled": "De analysedienst is niet ingeschakeld voor dit gebied.",
-    "notConfigured": "Analyse is nog niet geconfigureerd. Neem contact op met uw beheerder.",
-    "loading": "Analyse laden...",
-    "iframeTitle": "Analyse"
+    "metaTitle": "Websitebezoekers - Repraesent",
+    "metaDescription": "Wie je website bezocht en waarvandaan",
+    "title": "Websitebezoekers",
+    "subtitle": "Wie op je website kwam en waarvandaan",
+    "sourcesTitle": "Waar ze vandaan kwamen",
+    "pagesTitle": "Pagina's",
+    "countriesTitle": "Landen",
+    "sourceDirect": "Adres getypt of bladwijzer",
+    "listEmpty": "Nog niets in deze periode.",
+    "notTrackedTitle": "We zien nog geen bezoekers op je website",
+    "notTrackedBody": "Bezoekers worden geteld voor het websiteadres dat bij je bedrijf is opgeslagen. Controleer het adres op de pagina Website, of mail support en wij kijken het na.",
+    "notTrackedAction": "Website openen",
+    "addFilter": "Filter toevoegen",
+    "applyFilter": "Deze bezoekers tonen",
+    "channelDirect": "Direct",
+    "citiesNote": "Plaatsnamen zijn niet beschikbaar",
+    "clearFilters": "Alles wissen",
+    "comparedPeriod": "de periode ervoor",
+    "details": "Details",
+    "devicesTitle": "Apparaten",
+    "earlierRows": "Vorige",
+    "filterContainsHint": "Deel van de tekst, bijv. sale",
+    "filterHow": "Hoe",
+    "filterPick": "Kies of typ een waarde",
+    "filterTip": "Tip: een klik op een regel toont alleen die bezoekers.",
+    "filterValue": "Waarde",
+    "filterWhat": "Wat",
+    "footnote": "Geteld zonder cookies. Tijden in tijdzone {{tz}}.",
+    "goalFilter": "Alleen mensen tonen die dit deden",
+    "goalRate": "Van alle mensen",
+    "goalTimes": "Keer",
+    "goalsEmpty": "Geen doelen in deze periode. Klikken naar andere sites, downloads en eigen gebeurtenissen verschijnen hier.",
+    "goalsHint": "Doel openen voor de details",
+    "goalsTitle": "Doelen — wat mensen op de website deden",
+    "inAppBrowser": "In-app-browser (Instagram, Facebook…)",
+    "intervalLabel": "Groeperen per",
+    "loadFailed": "Dit kon nu niet geladen worden. Over een minuut opnieuw proberen.",
+    "loadFailedTitle": "De cijfers zijn niet geladen",
+    "locationsTitle": "Locaties",
+    "moreRows": "Meer",
+    "newThisPeriod": "nieuw",
+    "noChange": "geen verschil",
+    "noProps": "Er zijn geen extra details met dit doel meegestuurd.",
+    "none": "(geen)",
+    "pagesHint": "Instap = eerste pagina, uitstap = laatste pagina",
+    "points": "{{n}} ptn",
+    "removeFilter": "Filter verwijderen",
+    "retry": "Opnieuw proberen",
+    "rowFilterHint": "Alleen deze bezoekers tonen",
+    "rowFilterTip": "Klik op een regel om te filteren",
+    "search": "Zoeken",
+    "searchEmpty": "Niets komt overeen met ‘{{q}}’.",
+    "searchPlaceholder": "Zoeken…",
+    "showingRows": "{{from}}–{{to}} getoond",
+    "liveNow_one": "{{formatted}} persoon nu op de website",
+    "liveNow_other": "{{formatted}} mensen nu op de website",
+    "device": {
+      "desktop": "Computer",
+      "laptop": "Laptop",
+      "mobile": "Telefoon",
+      "tablet": "Tablet"
+    },
+    "dim": {
+      "browser": "Browser",
+      "channel": "Kanaal",
+      "country": "Land",
+      "device": "Apparaat",
+      "entryPage": "Instappagina",
+      "exitPage": "Uitstappagina",
+      "goal": "Doel",
+      "os": "Systeem",
+      "page": "Pagina",
+      "referrer": "Verwijzende pagina",
+      "region": "Regio",
+      "source": "Bron",
+      "utmCampaign": "UTM-campagne",
+      "utmContent": "UTM-inhoud",
+      "utmMedium": "UTM-medium",
+      "utmSource": "UTM-bron",
+      "utmTerm": "UTM-term"
+    },
+    "goal": {
+      "download": "Bestand gedownload",
+      "notFound": "Pagina geopend die niet bestaat",
+      "outbound": "Klikte op een link naar een andere site"
+    },
+    "interval": {
+      "day": "Dagen",
+      "hour": "Uren",
+      "month": "Maanden",
+      "week": "Weken"
+    },
+    "metric": {
+      "bounceRate": "Weg na één pagina",
+      "pageviews": "Pagina's bekeken",
+      "viewsPerVisit": "Pagina's per bezoek",
+      "visitDuration": "Tijd per bezoek",
+      "visitors": "Mensen",
+      "visits": "Bezoeken"
+    },
+    "op": {
+      "contains": "bevat",
+      "is": "is",
+      "isNot": "is niet"
+    },
+    "tab": {
+      "browser": "Browser",
+      "channels": "Kanalen",
+      "countries": "Landen",
+      "device": "Apparaat",
+      "entryPages": "Instappagina's",
+      "exitPages": "Uitstappagina's",
+      "os": "Systeem",
+      "referrers": "Verwijzende pagina's",
+      "regions": "Regio's",
+      "sources": "Bronnen",
+      "topPages": "Meest bekeken",
+      "utm": "Campagnelinks (UTM)"
+    },
+    "utm": {
+      "campaign": "Campagne",
+      "content": "Inhoud",
+      "medium": "Medium",
+      "source": "Bron",
+      "term": "Term"
+    },
+    "comparedYear": "zelfde data vorig jaar"
   },
   "closed": {
     "metaTitle": "Gebied gesloten - Repraesent",
@@ -3198,13 +3341,6 @@
     "navWorkspaces": "{{Types}}",
     "navAnalytics": "Analyse",
     "analyticsTitle": "Analyse",
-    "analyticsViewingSubtitle": "Analysedashboard weergeven",
-    "analyticsSelectPlaceholder": "Selecteer {{type}}",
-    "analyticsNotConnected": "Niet verbonden",
-    "analyticsSelectPrompt": "Selecteer een {{type}} om de analyse te bekijken",
-    "analyticsSelectHint": "Kies uit de vervolgkeuzelijst om te beginnen",
-    "analyticsNotConfigured": "Analyse niet geconfigureerd voor: {{type}}",
-    "analyticsLoading": "Analyse laden...",
     "pageTitle": "Merkdashboard – Repraesent",
     "workspacesPageTitle": "{{Types}} – Repraesent",
     "greeting": "Fijn u te zien.",
@@ -3328,7 +3464,17 @@
     "socialAdsSelectPlaceholder": "Selecteer {{type}}",
     "socialAdsSelectAllHouses": "Alle {{types}}",
     "socialAdsDisabledHint": "geen social ads",
-    "socialAdsNoHouses": "Geen {{types}} gevonden"
+    "socialAdsNoHouses": "Geen {{types}} gevonden",
+    "analyticsSearch": "Zoek een {{type}}…",
+    "analyticsTrackedGroup": "Bezoekers geteld · laatste 30 dagen",
+    "analyticsUntrackedGroup": "Nog geen bezoekers geteld",
+    "analyticsUntrackedReason": "Website niet gekoppeld",
+    "analyticsNoMatch": "Geen resultaat voor ‘{{q}}’.",
+    "analyticsPickHouse": "Kies een {{type}}",
+    "analyticsCounted": "{{n}} van {{total}} {{types}} geteld",
+    "analyticsNoneTitle": "Voor uw {{types}} worden nog geen bezoekers geteld",
+    "analyticsUnknownTitle": "Voor deze {{type}} tellen we nog geen bezoekers",
+    "analyticsNoneBody": "Bezoekers worden geteld zodra de website gekoppeld is. Schrijf ons en wij koppelen hem."
   },
   "campaigns": {
     "title": "Campagneanalyse",
@@ -3382,7 +3528,23 @@
     "lastMonth": "Vorige maand",
     "allTime": "Altijd",
     "startDate": "Begindatum",
-    "endDate": "Einddatum"
+    "endDate": "Einddatum",
+    "apply": "Deze datums tonen",
+    "cancel": "Annuleren",
+    "compareWith": "Vergelijken met",
+    "compareOff": "Niets",
+    "comparePrevious": "Vorige periode",
+    "compareYear": "Zelfde data vorig jaar",
+    "custom": "Eigen periode",
+    "earlierMonth": "Eerdere maand",
+    "laterMonth": "Latere maand",
+    "last12Months": "Laatste 12 maanden",
+    "last28": "Laatste 28 dagen",
+    "last90": "Laatste 90 dagen",
+    "thisYear": "Dit jaar",
+    "title": "Periode",
+    "vsPrevious": "vs vorige periode",
+    "vsYear": "vs vorig jaar"
   },
   "facebookAds": {
     "metaTitle": "Facebook Ads",
@@ -3946,7 +4108,10 @@
     "openWebsite": "Website openen",
     "websiteInvalid": "Vul een website in zoals voorbeeld.nl",
     "confirmRemoveWebsiteTitle": "Deze website verwijderen?",
-    "confirmRemoveWebsiteDescription": "Deze website wordt uit het profiel verwijderd. U kunt hem later opnieuw toevoegen."
+    "confirmRemoveWebsiteDescription": "Deze website wordt uit het profiel verwijderd. U kunt hem later opnieuw toevoegen.",
+    "languageUnknown": "Onbekend",
+    "preferredLanguage": "Voorkeurstaal voor communicatie",
+    "preferredLanguageHint": "Afspraak-e-mails en bevestigingen gaan in deze taal. Laat leeg als u die nog niet weet."
   },
   "leadEmails": {
     "emptyTitle": "Nog geen e-mails gelogd",
@@ -9377,7 +9542,8 @@
       "upcoming": "Komend",
       "appointmentCalendar": "Agenda",
       "teamCalendar": "Teamagenda",
-      "bookingPage": "Boekingspagina"
+      "bookingPage": "Boekingspagina",
+      "websiteVisitors": "Websitebezoekers"
     },
     "settingsGroups": {
       "you": "Jij",
@@ -10867,7 +11033,8 @@
       "copyTo": "Afspraken kopiëren naar",
       "makeFallback": "Gebruiken als er niets anders gekozen is",
       "isFallback": "Wordt gebruikt als er niets anders gekozen is – nieuwe afspraken komen hier.",
-      "nowFallback": "Wordt nu gebruikt als er niets anders gekozen is"
+      "nowFallback": "Wordt nu gebruikt als er niets anders gekozen is",
+      "messagesHint2": "Per e-mail onder uw bedrijfsnaam. Sms'jes kunnen later worden toegevoegd."
     },
     "detail": {
       "nobody": "Nog niemand",
@@ -11111,7 +11278,8 @@
       "close": "Klaar",
       "titleChanges": "Bij verzetten of afzeggen",
       "titleReminder": "De herinnering",
-      "titleConfirmation": "De bevestiging"
+      "titleConfirmation": "De bevestiging",
+      "testSentFrom": "Test verzonden naar {{email}} vanaf {{from}}"
     },
     "flows": {
       "nameWith": "{{what}} – {{name}}",
@@ -11161,6 +11329,34 @@
         "comeBack": "Terugkomen na 6 weken",
         "comeBackHint": "Vraagt of ze hun volgende bezoek willen boeken."
       }
+    },
+    "sender": {
+      "label": "Verzenden vanaf",
+      "default": "Uw hoofdmailbox",
+      "defaultWith": "Uw hoofdmailbox ({{email}})",
+      "from": "Verzonden vanaf {{email}}",
+      "platformTitle": "Deze e-mail gaat vanaf het adres van Repraesent, niet vanaf het uwe",
+      "reconnectTitle": "Uw mailbox moet opnieuw worden gekoppeld – tot dan gaat deze e-mail vanaf het adres van Repraesent",
+      "platformBody": "Uw klanten zien uw bedrijfsnaam, maar sommige e-mailprogramma's vertrouwen dit adres minder en kunnen de e-mail als spam zien. Koppel uw eigen mailbox, dan gaat hij vanaf uw adres.",
+      "connectCta": "Mailbox koppelen",
+      "reconnectCta": "Mailbox opnieuw koppelen"
+    },
+    "language": {
+      "pick": "Kies een taal",
+      "none": "Niet ingesteld",
+      "short": "Taal",
+      "label": "Taal van de e-mails aan deze klant",
+      "fromCalendar": "We kennen de taal van deze klant nog niet, dus staat hier die van de agenda. Pas hem aan als de klant een andere taal spreekt.",
+      "required": "Kies de taal waarin deze klant zijn e-mails krijgt.",
+      "calendarLabel": "Taal als we die van de klant niet kennen",
+      "calendarHint": "Klanten krijgen e-mails in hun eigen taal als we die kennen – uit hun formulier of klantkaart. Anders in deze.",
+      "calendarNone": "De taal van wie het afhandelt",
+      "cardWillUpdate": "{{language}} wordt ook opgeslagen op de klantkaart van {{name}}.",
+      "cardWillUpdateNoName": "{{language}} wordt ook opgeslagen op de klantkaart.",
+      "cardWillUpdateWhy": "Alle volgende e-mails aan deze klant gaan dan in deze taal.",
+      "savedOnCard2": "We werken hem bij op de klantkaart.",
+      "cardUpdated": "Opgeslagen en bijgewerkt op de klantkaart van {{name}}",
+      "noCard": "Alleen voor deze afspraak – deze persoon staat nog niet bij uw klanten."
     }
   },
   "calendarView": {

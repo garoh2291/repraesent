@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { ChevronDown, Search, X } from "lucide-react";
@@ -18,6 +18,8 @@ export interface PickedEntity {
   kind?: "person" | "company";
   email?: string | null;
   phone?: string | null;
+  /** Contacts only: the language they get emails in. Undefined = not loaded. */
+  locale?: string | null;
 }
 
 /**
@@ -40,6 +42,7 @@ export function EntityPicker({
   const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState("");
+  const listRef = useRef<HTMLDivElement>(null);
   const q = useDebounce(search, 250);
 
   const results = useQuery({
@@ -54,6 +57,7 @@ export function EntityPicker({
           kind: c.kind === "company" ? "company" : "person",
           email: c.primary_email ?? null,
           phone: c.primary_phone ?? null,
+          locale: c.locale ?? null,
         }));
       }
       const res = await getDeals({ search: q || undefined, limit: 20 });
@@ -114,7 +118,26 @@ export function EntityPicker({
             className="h-auto border-0 p-0 text-sm focus-visible:ring-0"
           />
         </div>
-        <div className="max-h-[240px] overflow-y-auto overscroll-contain max-sm:max-h-[50dvh]">
+        {/* The list is portaled outside the dialog / phone sheet, whose scroll
+            lock cancels wheel and touch scrolling at the document. The wheel
+            scrolls it by hand (same as create-deal-dialog); a touch move stops
+            before the lock's document listener (React listens on the document
+            too, and first); data-vaul-no-drag keeps the sheet from dragging. */}
+        <div
+          ref={listRef}
+          data-vaul-no-drag
+          onWheel={(e) => {
+            const el = listRef.current;
+            if (!el) return;
+            const { scrollTop, scrollHeight, clientHeight } = el;
+            if ((e.deltaY < 0 && scrollTop > 0) || (e.deltaY > 0 && scrollTop < scrollHeight - clientHeight)) {
+              e.stopPropagation();
+              el.scrollTop += e.deltaY;
+            }
+          }}
+          onTouchMove={(e) => e.nativeEvent.stopImmediatePropagation()}
+          className="max-h-[240px] overflow-y-auto overscroll-contain max-sm:max-h-[50dvh]"
+        >
           {results.isFetching && !results.data ? (
             <div className="px-3 py-4 text-center text-xs text-muted-foreground">{t("common.loading", "Loading…")}</div>
           ) : (results.data ?? []).length === 0 ? (

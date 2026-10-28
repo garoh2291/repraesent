@@ -1951,7 +1951,7 @@
       "cardTitle": "OpenRouter",
       "statusConnected": "Verbunden",
       "statusRevoked": "Schlüssel abgelehnt",
-      "notConnectedHint": "Erstellen Sie unter openrouter.ai/keys einen Schlüssel und fügen Sie ihn hier ein. Bis dahin lässt sich der Chat nicht einschalten, und die KI-Sichtbarkeit kann nichts prüfen.",
+      "notConnectedHint": "Solange nichts verbunden ist, lässt sich der Chat nicht einschalten, und die KI-Sichtbarkeit kann nichts prüfen.",
       "lastError": "Letzter Aufruf fehlgeschlagen: {{error}}",
       "keyLabel": "API-Schlüssel",
       "rotateLabel": "API-Schlüssel ersetzen",
@@ -2002,6 +2002,28 @@
           "visibility_suggestions": "KI-Sichtbarkeit – Seitenvorschläge",
           "visibility_drafts": "KI-Sichtbarkeit – Vergleichsseiten",
           "onboarding_chat": "Einrichtungsgespräche"
+        }
+      },
+      "oauth": {
+        "connect": "Mit OpenRouter verbinden",
+        "reconnect": "Neu verbinden",
+        "tripLabel": "Was beim Verbinden passiert",
+        "trip1": "Sie starten hier",
+        "trip2": "Bei OpenRouter anmelden und zustimmen",
+        "trip3": "Zurück hier, verbunden",
+        "billing": "Kein Schlüssel zum Kopieren. Was die KI verbraucht, wird über Ihr eigenes OpenRouter-Guthaben abgerechnet. Noch kein Konto? Sie können unterwegs eines anlegen – danach Guthaben aufladen.",
+        "pasteToggle": "Ich habe schon einen Schlüssel – einfügen",
+        "pasteToggleConnected": "Einen anderen Schlüssel einfügen",
+        "methodOauth": "über OpenRouter verbunden",
+        "methodPasted": "eingefügter Schlüssel",
+        "openKey": "Diesen Schlüssel bei OpenRouter öffnen",
+        "disconnectKeyStays": "Um ihn auch in Ihrem OpenRouter-Konto zu löschen:",
+        "tryAgain": "Erneut versuchen",
+        "result": {
+          "connected": "Verbunden. Ihr Website-Chat und die KI-Sichtbarkeit können jetzt laufen.",
+          "denied": "Sie haben bei OpenRouter abgebrochen. Es wurde nichts verbunden.",
+          "expired": "Das hat länger als 10 Minuten gedauert, der Link ist abgelaufen. Bitte versuchen Sie es erneut.",
+          "error": "OpenRouter hat keinen Schlüssel übergeben. Bitte versuchen Sie es erneut oder fügen Sie einen Schlüssel ein."
         }
       }
     },
@@ -2929,12 +2951,133 @@
     }
   },
   "analytics": {
-    "metaTitle": "Analyse - Repraesent",
-    "metaDescription": "Analyse-Dashboard",
-    "notEnabled": "Analysedienst ist für diesen Bereich nicht aktiviert.",
-    "notConfigured": "Analyse ist noch nicht konfiguriert. Bitte wenden Sie sich an Ihren Administrator.",
-    "loading": "Analyse wird geladen...",
-    "iframeTitle": "Analyse"
+    "metaTitle": "Website-Besucher - Repraesent",
+    "metaDescription": "Wer deine Website besucht hat und woher",
+    "title": "Website-Besucher",
+    "subtitle": "Wer auf deiner Website war und woher",
+    "sourcesTitle": "Woher sie kamen",
+    "pagesTitle": "Seiten",
+    "countriesTitle": "Länder",
+    "sourceDirect": "Adresse eingetippt oder Lesezeichen",
+    "listEmpty": "In diesem Zeitraum noch nichts.",
+    "notTrackedTitle": "Wir sehen noch keine Besucher auf deiner Website",
+    "notTrackedBody": "Gezählt wird für die Website-Adresse, die für dein Unternehmen hinterlegt ist. Prüfe die Adresse auf der Seite „Website“ oder schreib dem Support – wir sehen nach.",
+    "notTrackedAction": "Website öffnen",
+    "addFilter": "Filter hinzufügen",
+    "applyFilter": "Diese Besucher zeigen",
+    "channelDirect": "Direkt",
+    "citiesNote": "Städtenamen sind nicht verfügbar",
+    "clearFilters": "Alle entfernen",
+    "comparedPeriod": "der Zeitraum davor",
+    "details": "Details",
+    "devicesTitle": "Geräte",
+    "earlierRows": "Zurück",
+    "filterContainsHint": "Teil des Textes, z. B. sale",
+    "filterHow": "Wie",
+    "filterPick": "Wert wählen oder eintippen",
+    "filterTip": "Tipp: Ein Klick auf eine Zeile zeigt nur diese Besucher.",
+    "filterValue": "Wert",
+    "filterWhat": "Was",
+    "footnote": "Ohne Cookies gezählt. Zeiten in der Zeitzone {{tz}}.",
+    "goalFilter": "Nur Personen zeigen, die das getan haben",
+    "goalRate": "Von allen Personen",
+    "goalTimes": "Mal",
+    "goalsEmpty": "Keine Ziele in diesem Zeitraum. Klicks auf Links zu anderen Seiten, Downloads und eigene Ereignisse erscheinen hier.",
+    "goalsHint": "Ziel öffnen für die Details",
+    "goalsTitle": "Ziele – was Besucher auf der Website getan haben",
+    "inAppBrowser": "In-App-Browser (Instagram, Facebook …)",
+    "intervalLabel": "Gruppieren nach",
+    "loadFailed": "Das konnte gerade nicht geladen werden. Bitte in einer Minute erneut versuchen.",
+    "loadFailedTitle": "Die Zahlen wurden nicht geladen",
+    "locationsTitle": "Orte",
+    "moreRows": "Weiter",
+    "newThisPeriod": "neu",
+    "noChange": "unverändert",
+    "noProps": "Zu diesem Ziel wurden keine weiteren Details gesendet.",
+    "none": "(keine)",
+    "pagesHint": "Einstieg = erste Seite, Ausstieg = letzte Seite",
+    "points": "{{n}} Pkt.",
+    "removeFilter": "Filter entfernen",
+    "retry": "Erneut versuchen",
+    "rowFilterHint": "Nur diese Besucher zeigen",
+    "rowFilterTip": "Zeile anklicken zum Filtern",
+    "search": "Suchen",
+    "searchEmpty": "Nichts passt zu „{{q}}“.",
+    "searchPlaceholder": "Suchen …",
+    "showingRows": "{{from}}–{{to}} angezeigt",
+    "liveNow_one": "{{formatted}} Person gerade auf der Website",
+    "liveNow_other": "{{formatted}} Personen gerade auf der Website",
+    "device": {
+      "desktop": "Computer",
+      "laptop": "Laptop",
+      "mobile": "Handy",
+      "tablet": "Tablet"
+    },
+    "dim": {
+      "browser": "Browser",
+      "channel": "Kanal",
+      "country": "Land",
+      "device": "Gerät",
+      "entryPage": "Einstiegsseite",
+      "exitPage": "Ausstiegsseite",
+      "goal": "Ziel",
+      "os": "System",
+      "page": "Seite",
+      "referrer": "Verweisende Seite",
+      "region": "Region",
+      "source": "Quelle",
+      "utmCampaign": "UTM-Kampagne",
+      "utmContent": "UTM-Inhalt",
+      "utmMedium": "UTM-Medium",
+      "utmSource": "UTM-Quelle",
+      "utmTerm": "UTM-Begriff"
+    },
+    "goal": {
+      "download": "Datei heruntergeladen",
+      "notFound": "Seite aufgerufen, die es nicht gibt",
+      "outbound": "Link zu einer anderen Website geklickt"
+    },
+    "interval": {
+      "day": "Tage",
+      "hour": "Stunden",
+      "month": "Monate",
+      "week": "Wochen"
+    },
+    "metric": {
+      "bounceRate": "Nach einer Seite gegangen",
+      "pageviews": "Seiten angesehen",
+      "viewsPerVisit": "Seiten pro Besuch",
+      "visitDuration": "Zeit pro Besuch",
+      "visitors": "Personen",
+      "visits": "Besuche"
+    },
+    "op": {
+      "contains": "enthält",
+      "is": "ist",
+      "isNot": "ist nicht"
+    },
+    "tab": {
+      "browser": "Browser",
+      "channels": "Kanäle",
+      "countries": "Länder",
+      "device": "Gerät",
+      "entryPages": "Einstiegsseiten",
+      "exitPages": "Ausstiegsseiten",
+      "os": "System",
+      "referrers": "Verweisende Seiten",
+      "regions": "Regionen",
+      "sources": "Quellen",
+      "topPages": "Meistbesucht",
+      "utm": "Kampagnen-Links (UTM)"
+    },
+    "utm": {
+      "campaign": "Kampagne",
+      "content": "Inhalt",
+      "medium": "Medium",
+      "source": "Quelle",
+      "term": "Begriff"
+    },
+    "comparedYear": "gleiche Tage im Vorjahr"
   },
   "closed": {
     "metaTitle": "Bereich geschlossen - Repraesent",
@@ -3200,13 +3343,6 @@
     "navWorkspaces": "{{Types}}",
     "navAnalytics": "Analytik",
     "analyticsTitle": "Analytik",
-    "analyticsViewingSubtitle": "Analytik-Dashboard wird angezeigt",
-    "analyticsSelectPlaceholder": "{{Type}} auswählen",
-    "analyticsNotConnected": "Nicht verbunden",
-    "analyticsSelectPrompt": "{{Type}} auswählen, um Analysen anzuzeigen",
-    "analyticsSelectHint": "Wählen Sie oben aus dem Dropdown-Menü",
-    "analyticsNotConfigured": "Analytik für {{Type}} nicht konfiguriert",
-    "analyticsLoading": "Analytik wird geladen...",
     "pageTitle": "Brand Dashboard – Repraesent",
     "workspacesPageTitle": "{{Types}} – Repraesent",
     "greeting": "Schön, Sie zu sehen.",
@@ -3330,7 +3466,17 @@
     "socialAdsSelectPlaceholder": "{{Type}} auswählen",
     "socialAdsSelectAllHouses": "Alle {{Types}}",
     "socialAdsDisabledHint": "keine Social Ads",
-    "socialAdsNoHouses": "Keine {{Types}} gefunden"
+    "socialAdsNoHouses": "Keine {{Types}} gefunden",
+    "analyticsSearch": "{{Type}} suchen …",
+    "analyticsTrackedGroup": "Besucher gezählt · letzte 30 Tage",
+    "analyticsUntrackedGroup": "Noch keine Besucher gezählt",
+    "analyticsUntrackedReason": "Website nicht verbunden",
+    "analyticsNoMatch": "Kein Treffer für „{{q}}“.",
+    "analyticsPickHouse": "{{Type}} wählen",
+    "analyticsCounted": "{{n}} von {{total}} {{types}} gezählt",
+    "analyticsNoneTitle": "Für Ihre {{types}} werden noch keine Besucher gezählt",
+    "analyticsUnknownTitle": "Für diese(n) {{type}} zählen wir noch keine Besucher",
+    "analyticsNoneBody": "Besucher werden gezählt, sobald die Website verbunden ist. Schreiben Sie uns – wir verbinden sie."
   },
   "campaigns": {
     "title": "Kampagnen-Analyse",
@@ -3384,7 +3530,23 @@
     "lastMonth": "Letzter Monat",
     "allTime": "Gesamter Zeitraum",
     "startDate": "Startdatum",
-    "endDate": "Enddatum"
+    "endDate": "Enddatum",
+    "apply": "Diese Daten zeigen",
+    "cancel": "Abbrechen",
+    "compareWith": "Vergleichen mit",
+    "compareOff": "Nichts",
+    "comparePrevious": "Vorheriger Zeitraum",
+    "compareYear": "Gleiche Tage im Vorjahr",
+    "custom": "Eigener Zeitraum",
+    "earlierMonth": "Früherer Monat",
+    "laterMonth": "Späterer Monat",
+    "last12Months": "Letzte 12 Monate",
+    "last28": "Letzte 28 Tage",
+    "last90": "Letzte 90 Tage",
+    "thisYear": "Dieses Jahr",
+    "title": "Zeitraum",
+    "vsPrevious": "vs. vorheriger Zeitraum",
+    "vsYear": "vs. Vorjahr"
   },
   "facebookAds": {
     "metaTitle": "Facebook Ads",
@@ -3948,7 +4110,10 @@
     "openWebsite": "Website öffnen",
     "websiteInvalid": "Geben Sie eine Website wie beispiel.de ein",
     "confirmRemoveWebsiteTitle": "Diese Website entfernen?",
-    "confirmRemoveWebsiteDescription": "Diese Website wird aus dem Profil entfernt. Sie können sie später wieder hinzufügen."
+    "confirmRemoveWebsiteDescription": "Diese Website wird aus dem Profil entfernt. Sie können sie später wieder hinzufügen.",
+    "languageUnknown": "Unbekannt",
+    "preferredLanguage": "Bevorzugte Kommunikationssprache",
+    "preferredLanguageHint": "Termin-E-Mails und Bestätigungen gehen in dieser Sprache raus. Lassen Sie das Feld leer, wenn Sie sie noch nicht kennen."
   },
   "leadEmails": {
     "emptyTitle": "Noch keine E-Mails protokolliert",
@@ -9379,7 +9544,8 @@
       "upcoming": "Anstehend",
       "appointmentCalendar": "Kalender",
       "teamCalendar": "Teamkalender",
-      "bookingPage": "Buchungsseite"
+      "bookingPage": "Buchungsseite",
+      "websiteVisitors": "Website-Besucher"
     },
     "settingsGroups": {
       "you": "Du",
@@ -10869,7 +11035,8 @@
       "copyTo": "Termine kopieren nach",
       "makeFallback": "Verwenden, wenn nichts anderes gewählt ist",
       "isFallback": "Wird verwendet, wenn nichts anderes gewählt ist – neue Termine landen hier.",
-      "nowFallback": "Wird jetzt verwendet, wenn nichts anderes gewählt ist"
+      "nowFallback": "Wird jetzt verwendet, wenn nichts anderes gewählt ist",
+      "messagesHint2": "Per E-Mail unter Ihrem Firmennamen. SMS können später dazukommen."
     },
     "detail": {
       "nobody": "Noch niemand",
@@ -11113,7 +11280,8 @@
       "close": "Fertig",
       "titleChanges": "Bei Verschiebung oder Absage",
       "titleReminder": "Die Erinnerung",
-      "titleConfirmation": "Die Bestätigung"
+      "titleConfirmation": "Die Bestätigung",
+      "testSentFrom": "Test an {{email}} gesendet, von {{from}}"
     },
     "flows": {
       "nameWith": "{{what}} – {{name}}",
@@ -11163,6 +11331,34 @@
         "comeBack": "Wiederkommen nach 6 Wochen",
         "comeBackHint": "Fragt, ob sie den nächsten Besuch buchen möchten."
       }
+    },
+    "sender": {
+      "label": "Absender",
+      "default": "Ihr Haupt-Postfach",
+      "defaultWith": "Ihr Haupt-Postfach ({{email}})",
+      "from": "Gesendet von {{email}}",
+      "platformTitle": "Diese E-Mail geht von der Adresse von Repraesent raus, nicht von Ihrer",
+      "reconnectTitle": "Ihr Postfach muss neu verbunden werden – bis dahin geht diese E-Mail von der Adresse von Repraesent raus",
+      "platformBody": "Ihre Kunden sehen Ihren Firmennamen, aber manche E-Mail-Programme vertrauen dieser Adresse weniger und legen die E-Mail eventuell im Spam ab. Verbinden Sie Ihr eigenes Postfach, dann geht sie von Ihrer Adresse raus.",
+      "connectCta": "Postfach verbinden",
+      "reconnectCta": "Postfach neu verbinden"
+    },
+    "language": {
+      "pick": "Sprache wählen",
+      "none": "Nicht festgelegt",
+      "short": "Sprache",
+      "label": "Sprache der E-Mails an diesen Kunden",
+      "fromCalendar": "Die Sprache dieses Kunden kennen wir noch nicht, deshalb steht hier die des Kalenders. Ändern Sie sie, wenn er eine andere spricht.",
+      "required": "Wählen Sie die Sprache, in der dieser Kunde seine E-Mails bekommt.",
+      "calendarLabel": "Sprache, wenn wir die des Kunden nicht kennen",
+      "calendarHint": "Kunden bekommen E-Mails in ihrer eigenen Sprache, wenn wir sie kennen – aus dem Formular oder der Kundenkarte. Sonst in dieser.",
+      "calendarNone": "Die Sprache der zuständigen Person",
+      "cardWillUpdate": "{{language}} wird auch auf der Kundenkarte von {{name}} gespeichert.",
+      "cardWillUpdateNoName": "{{language}} wird auch auf der Kundenkarte gespeichert.",
+      "cardWillUpdateWhy": "Alle weiteren E-Mails an diesen Kunden gehen dann in dieser Sprache raus.",
+      "savedOnCard2": "Wir aktualisieren sie auf der Kundenkarte.",
+      "cardUpdated": "Gespeichert und auf der Kundenkarte von {{name}} aktualisiert",
+      "noCard": "Nur für diesen Termin – die Person ist noch nicht in Ihren Kunden."
     }
   },
   "calendarView": {

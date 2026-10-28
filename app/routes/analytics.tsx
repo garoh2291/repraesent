@@ -1,10 +1,15 @@
-import { useEffect, useRef, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { Link } from "react-router";
 import { useTranslation } from "react-i18next";
+import { Globe } from "lucide-react";
 import i18n from "~/i18n";
 import { useAuthContext } from "~/providers/auth-provider";
-import { getServiceConfig } from "~/lib/api/workspaces";
 import { useDocumentMeta } from "~/lib/hooks/use-document-meta";
+import { workspaceScope } from "~/lib/api/website-stats";
+import { PageContainer, PageHeader } from "~/components/notebook/page-header";
+import { Panel } from "~/components/notebook/panel";
+import { EmptyState } from "~/components/notebook/empty-state";
+import { Button } from "~/components/ui/button";
+import { WebsiteStatsExplorer } from "~/components/analytics/website-stats-explorer";
 
 export function meta() {
   return [
@@ -13,92 +18,50 @@ export function meta() {
   ];
 }
 
-const PLAUSIBLE_SCRIPT = "https://plausible0.gagadomains.com/js/embed.host.js";
-
+/** Website visitors: Plausible-level stats from pa-002, drawn in our own style. */
 export default function Analytics() {
   const { t } = useTranslation();
-  useDocumentMeta({
-    titleKey: "analytics.metaTitle",
-    descriptionKey: "analytics.metaDescription",
-  });
+  useDocumentMeta({ titleKey: "analytics.metaTitle", descriptionKey: "analytics.metaDescription" });
   const { currentWorkspace } = useAuthContext();
-  const iframeRef = useRef<HTMLIFrameElement>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const tracked = currentWorkspace?.has_plausible_analytics ?? false;
 
-  const analyticsService = currentWorkspace?.services?.find(
-    (s) => s.service_type === "analytics",
-  );
-
-  const { data: serviceConfig, isPending } = useQuery({
-    queryKey: ["service-config", analyticsService?.service_id],
-    queryFn: () => getServiceConfig(analyticsService!.service_id),
-    enabled: !!analyticsService?.service_id,
-  });
-
-  const sharedLink = serviceConfig?.shared_link as string | undefined;
-
-  useEffect(() => {
-    if (!sharedLink) return;
-    if (document.querySelector(`script[src="${PLAUSIBLE_SCRIPT}"]`)) return;
-
-    const script = document.createElement("script");
-    script.src = PLAUSIBLE_SCRIPT;
-    script.async = true;
-    document.body.appendChild(script);
-
-    return () => {
-      document.querySelector(`script[src="${PLAUSIBLE_SCRIPT}"]`)?.remove();
-    };
-  }, [sharedLink]);
-
-  useEffect(() => {
-    if (iframeRef.current) {
-      iframeRef.current.setAttribute("plausible-embed", "");
-    }
-  }, []);
-
-  if (!analyticsService && !isPending) {
+  if (!tracked) {
     return (
-      <div className="flex h-full items-center justify-center">
-        <p className="text-muted-foreground">{t("analytics.notEnabled")}</p>
-      </div>
+      <PageContainer className="space-y-6">
+        <PageHeader
+          eyebrow={t("sections.results", "Results")}
+          title={t("analytics.title")}
+          subtitle={t("analytics.subtitle")}
+        />
+        <Panel className="p-5 sm:p-6">
+          <EmptyState
+            icon={<Globe className="size-5" aria-hidden />}
+            title={t("analytics.notTrackedTitle")}
+            body={t("analytics.notTrackedBody")}
+            action={
+              <Button asChild variant="outline">
+                <Link to="/website">{t("analytics.notTrackedAction")}</Link>
+              </Button>
+            }
+          />
+        </Panel>
+      </PageContainer>
     );
   }
-
-  if (!sharedLink && !isPending) {
-    return (
-      <div className="flex h-full items-center justify-center">
-        <p className="text-muted-foreground">{t("analytics.notConfigured")}</p>
-      </div>
-    );
-  }
-
-  const embedSrc = `${sharedLink}&embed=true&theme=light&background=%23f5f4f1`;
 
   return (
-    <div className="w-full h-full overflow-auto relative">
-      {(isLoading || isPending) && (
-        <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-background">
-          <div className="h-8 w-8 animate-spin rounded-full border-4 border-muted border-t-primary" />
-          <p className="text-sm text-muted-foreground">{t("analytics.loading")}</p>
-        </div>
-      )}
-      <iframe
-        ref={iframeRef}
-        src={embedSrc}
-        scrolling="no"
-        frameBorder="0"
-        loading="lazy"
-        style={{
-          width: "1px",
-          minWidth: "100%",
-          height: "1600px",
-          opacity: isLoading ? 0 : 1,
-          transition: "opacity 0.3s ease",
-        }}
-        title={t("analytics.iframeTitle")}
-        onLoad={() => setIsLoading(false)}
+    <PageContainer className="space-y-5">
+      <WebsiteStatsExplorer
+        scope={workspaceScope(currentWorkspace?.id)}
+        header={({ site, live }) => (
+          <PageHeader
+            eyebrow={t("sections.results", "Results")}
+            title={t("analytics.title")}
+            subtitle={site ?? t("analytics.subtitle")}
+            actions={live}
+          />
+        )}
       />
-    </div>
+    </PageContainer>
   );
 }
