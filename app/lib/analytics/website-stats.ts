@@ -103,3 +103,131 @@ export function flagEmoji(iso: string): string {
   if (!/^[A-Z]{2}$/.test(code)) return "";
   return String.fromCodePoint(...[...code].map((c) => 0x1f1e6 + c.charCodeAt(0) - 65));
 }
+
+// ─── Explorer (/analytics) ─────────────────────────────────────────────────
+
+export type ExplorerInterval = "hour" | "day" | "week" | "month";
+
+function localDay(d: Date): string {
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+}
+
+function parseLocalDay(s: string): Date {
+  const [y, m, d] = s.split("-").map(Number);
+  return new Date(y, m - 1, d);
+}
+
+export function rangeDays(from: string, to: string): number {
+  const ms = parseLocalDay(to).getTime() - parseLocalDay(from).getTime();
+  return Math.round(ms / 86_400_000) + 1;
+}
+
+/** Intervals that make sense for a range, the first being the default. */
+export function intervalsFor(from: string, to: string): ExplorerInterval[] {
+  const days = rangeDays(from, to);
+  if (days <= 1) return ["hour"];
+  if (days <= 7) return ["day", "hour"];
+  if (days <= 31) return ["day", "week"];
+  if (days <= 92) return ["day", "week", "month"];
+  if (days <= 366) return ["week", "day", "month"];
+  return ["month", "week"];
+}
+
+/**
+ * Every bucket between `from` and `to` in the viewer's own time zone — the
+ * same strings the server returns when given that zone — with zeros where the
+ * server had no row. Future hours of today are left out.
+ */
+export function fillSlots(
+  points: { date: string; value: number }[],
+  interval: ExplorerInterval,
+  from: string,
+  to: string,
+  now = new Date(),
+): { date: string; value: number }[] {
+  const map = new Map(points.map((p) => [p.date, p.value]));
+  const slots: string[] = [];
+  const start = parseLocalDay(from);
+  const end = parseLocalDay(to);
+  if (interval === "hour") {
+    for (const d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+      for (let h = 0; h < 24; h++) {
+        const at = new Date(d.getFullYear(), d.getMonth(), d.getDate(), h);
+        if (at > now) break;
+        slots.push(`${localDay(d)} ${pad(h)}:00:00`);
+      }
+    }
+  } else if (interval === "week") {
+    const d = new Date(start);
+    d.setDate(d.getDate() - ((d.getDay() + 6) % 7));
+    for (; d <= end; d.setDate(d.getDate() + 7)) slots.push(localDay(d));
+  } else if (interval === "month") {
+    const d = new Date(start.getFullYear(), start.getMonth(), 1);
+    for (; d <= end; d.setMonth(d.getMonth() + 1)) slots.push(localDay(d));
+  } else {
+    for (const d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) slots.push(localDay(d));
+  }
+  return slots.map((date) => ({ date, value: map.get(date) ?? 0 }));
+}
+
+/** Axis / tooltip label for an explorer bucket (already in local time). */
+export function explorerLabel(date: string, interval: ExplorerInterval, long = false): string {
+  const [day, time] = date.split(" ");
+  const d = parseLocalDay(day);
+  if (interval === "hour") {
+    const hour = Number((time ?? "00").slice(0, 2));
+    const at = new Date(d.getFullYear(), d.getMonth(), d.getDate(), hour);
+    const t = at.toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" });
+    return long ? `${formatDateShort(d)}, ${t}` : t;
+  }
+  if (interval === "month") {
+    return d.toLocaleDateString(undefined, { month: long ? "long" : "short", year: "numeric" });
+  }
+  return formatDateShort(d);
+}
+
+/** Names for the region codes our customers see most (local spelling). */
+const REGION_NAMES: Record<string, string> = {
+  "DE-BW": "Baden-Württemberg", "DE-BY": "Bayern", "DE-BE": "Berlin", "DE-BB": "Brandenburg",
+  "DE-HB": "Bremen", "DE-HH": "Hamburg", "DE-HE": "Hessen", "DE-MV": "Mecklenburg-Vorpommern",
+  "DE-NI": "Niedersachsen", "DE-NW": "Nordrhein-Westfalen", "DE-RP": "Rheinland-Pfalz",
+  "DE-SL": "Saarland", "DE-SN": "Sachsen", "DE-ST": "Sachsen-Anhalt",
+  "DE-SH": "Schleswig-Holstein", "DE-TH": "Thüringen",
+  "AT-1": "Burgenland", "AT-2": "Kärnten", "AT-3": "Niederösterreich", "AT-4": "Oberösterreich",
+  "AT-5": "Salzburg", "AT-6": "Steiermark", "AT-7": "Tirol", "AT-8": "Vorarlberg", "AT-9": "Wien",
+  "CH-ZH": "Zürich", "CH-BE": "Bern", "CH-LU": "Luzern", "CH-BS": "Basel-Stadt", "CH-BL": "Basel-Landschaft",
+  "CH-SG": "St. Gallen", "CH-AG": "Aargau", "CH-TG": "Thurgau", "CH-TI": "Ticino", "CH-VD": "Vaud",
+  "CH-GE": "Genève", "CH-ZG": "Zug", "CH-GR": "Graubünden", "CH-SO": "Solothurn", "CH-FR": "Fribourg",
+  "NL-DR": "Drenthe", "NL-FL": "Flevoland", "NL-FR": "Fryslân", "NL-GE": "Gelderland",
+  "NL-GR": "Groningen", "NL-LI": "Limburg", "NL-NB": "Noord-Brabant", "NL-NH": "Noord-Holland",
+  "NL-OV": "Overijssel", "NL-UT": "Utrecht", "NL-ZE": "Zeeland", "NL-ZH": "Zuid-Holland",
+  "BE-BRU": "Bruxelles", "BE-VLG": "Vlaanderen", "BE-WAL": "Wallonie",
+  "FR-IDF": "Île-de-France", "FR-ARA": "Auvergne-Rhône-Alpes", "FR-PAC": "Provence-Alpes-Côte d'Azur",
+  "FR-GES": "Grand Est", "FR-HDF": "Hauts-de-France", "FR-OCC": "Occitanie", "FR-NAQ": "Nouvelle-Aquitaine",
+};
+
+export function regionName(code: string): string {
+  return REGION_NAMES[code] ?? code;
+}
+
+/** Filters in the URL: one JSON param, so values may hold any character. */
+export function readFilters<T extends { dim: string; op: string; values: string[] }>(
+  raw: string | null,
+  dims: readonly string[],
+): T[] {
+  if (!raw) return [];
+  try {
+    const list = JSON.parse(raw) as unknown;
+    if (!Array.isArray(list)) return [];
+    return list.filter(
+      (f): f is T =>
+        !!f &&
+        dims.includes((f as T).dim) &&
+        ["is", "is_not", "contains"].includes((f as T).op) &&
+        Array.isArray((f as T).values) &&
+        (f as T).values.every((v) => typeof v === "string"),
+    );
+  } catch {
+    return [];
+  }
+}

@@ -1,40 +1,39 @@
-import { useMemo, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { Link } from "react-router";
+import { useMemo } from "react";
+import { keepPreviousData, useQuery } from "@tanstack/react-query";
+import { Link, useSearchParams } from "react-router";
 import { useTranslation } from "react-i18next";
 import { Globe } from "lucide-react";
-import {
-  Area,
-  AreaChart,
-  CartesianGrid,
-  ResponsiveContainer,
-  Tooltip,
-  XAxis,
-  YAxis,
-} from "recharts";
 import i18n from "~/i18n";
 import { useAuthContext } from "~/providers/auth-provider";
 import { useDocumentMeta } from "~/lib/hooks/use-document-meta";
 import { formatNumber } from "~/lib/utils/format";
-import { countryName } from "~/lib/forms/phone";
+import { intervalsFor, readFilters, type ExplorerInterval } from "~/lib/analytics/website-stats";
 import {
-  getWorkspacePlausibleStats,
-  type PlausiblePeriod,
-} from "~/lib/api/workspaces";
-import {
-  WEBSITE_PERIODS,
-  fillSeriesGaps,
-  flagEmoji,
-  formatBucketLabel,
-  secondsToWords,
-} from "~/lib/analytics/website-stats";
+  getStatsOverview,
+  getStatsRealtime,
+  getStatsSeries,
+  statsKeys,
+  type StatsCompare,
+  type StatsDimension,
+  type StatsFilter,
+  type StatsMetric,
+  type StatsParams,
+} from "~/lib/api/website-stats";
 import { PageContainer, PageHeader } from "~/components/notebook/page-header";
-import { Panel, PanelHeader } from "~/components/notebook/panel";
+import { Panel } from "~/components/notebook/panel";
 import { EmptyState } from "~/components/notebook/empty-state";
-import { Stat } from "~/components/notebook/stat";
-import { Segmented } from "~/components/notebook/segmented";
-import { Skeleton } from "~/components/ui/skeleton";
 import { Button } from "~/components/ui/button";
+import {
+  DateRangePicker,
+  RANGE_PRESETS,
+  presetRange,
+  type RangePreset,
+  type RangeValue,
+} from "~/components/notebook/date-range-picker";
+import { TopStats, VisitorsChart } from "~/components/analytics/top-stats";
+import { BreakdownPanel } from "~/components/analytics/breakdown-panel";
+import { GoalsPanel } from "~/components/analytics/goals-panel";
+import { FilterBar } from "~/components/analytics/filter-bar";
 
 export function meta() {
   return [
@@ -43,60 +42,136 @@ export function meta() {
   ];
 }
 
-const AXIS_TICK = {
-  fontSize: 11,
-  fill: "var(--muted-foreground)",
-  fontFamily: "'Plus Jakarta Sans', sans-serif",
-};
+const DIMS: StatsDimension[] = [
+  "channel", "source", "referrer", "utm_medium", "utm_source", "utm_campaign", "utm_content",
+  "utm_term", "page", "entry_page", "exit_page", "country", "region", "device", "browser", "os", "goal",
+];
+const METRICS: StatsMetric[] = ["visitors", "visits", "pageviews", "views_per_visit", "bounce_rate", "visit_duration"];
+const DAY = /^\d{4}-\d{2}-\d{2}$/;
 
-/** Website visitors, drawn from our own stats (pa-002 ClickHouse). */
+/** Mirrors the server's comparison window so the chart can line both up. */
+function compareOf(from: string, to: string, mode: StatsCompare): { from: string; to: string } | null {
+  if (mode === "off") return null;
+  const f = new Date(`${from}T00:00:00`);
+  const t = new Date(`${to}T00:00:00`);
+  const ymd = (d: Date) =>
+    `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+  if (mode === "year") {
+    f.setFullYear(f.getFullYear() - 1);
+    t.setFullYear(t.getFullYear() - 1);
+    return { from: ymd(f), to: ymd(t) };
+  }
+  const days = Math.round((t.getTime() - f.getTime()) / 86_400_000) + 1;
+  const end = new Date(f);
+  end.setDate(end.getDate() - 1);
+  const start = new Date(f);
+  start.setDate(start.getDate() - days);
+  return { from: ymd(start), to: ymd(end) };
+}
+
+function browserTimeZone(): string {
+  try {
+    return Intl.DateTimeFormat().resolvedOptions().timeZone || "Europe/Berlin";
+  } catch {
+    return "Europe/Berlin";
+  }
+}
+
+/** Website visitors: Plausible-level stats from pa-002, drawn in our own style. */
 export default function Analytics() {
-  const { t, i18n: i18nInstance } = useTranslation();
-  useDocumentMeta({
-    titleKey: "analytics.metaTitle",
-    descriptionKey: "analytics.metaDescription",
-  });
+  const { t } = useTranslation();
+  useDocumentMeta({ titleKey: "analytics.metaTitle", descriptionKey: "analytics.metaDescription" });
   const { currentWorkspace } = useAuthContext();
+  const ws = currentWorkspace?.id;
   const tracked = currentWorkspace?.has_plausible_analytics ?? false;
-  const [period, setPeriod] = useState<PlausiblePeriod>("30d");
+  const [sp, setSp] = useSearchParams();
 
-  // Same key as the Website card, so both share one cache entry.
-  const { data: stats, isLoading } = useQuery({
-    queryKey: ["workspace-plausible-stats", currentWorkspace?.id, period],
-    queryFn: () => getWorkspacePlausibleStats(period),
+  // ── State from the URL (shareable, back button works) ──
+  const presetParam = sp.get("preset") as RangePreset | null;
+  const range: RangeValue = useMemo(() => {
+    const from = sp.get("from");
+    const to = sp.get("to");
+    if (presetParam && RANGE_PRESETS.includes(presetParam)) {
+      return { ...presetRange(presetParam), preset: presetParam };
+    }
+    if (from && to && DAY.test(from) && DAY.test(to)) return { from, to, preset: null };
+    return { ...presetRange("last_30"), preset: "last_30" };
+  }, [presetParam, sp]);
+  const compare = (["off", "previous", "year"].includes(sp.get("compare") ?? "")
+    ? sp.get("compare")
+    : "previous") as StatsCompare;
+  const metric = (METRICS.includes(sp.get("metric") as StatsMetric) ? sp.get("metric") : "visitors") as StatsMetric;
+  const filtersRaw = sp.get("f");
+  const filters = useMemo(() => readFilters<StatsFilter>(filtersRaw, DIMS), [filtersRaw]);
+  const intervals = intervalsFor(range.from, range.to);
+  const interval = (intervals.includes(sp.get("interval") as ExplorerInterval)
+    ? sp.get("interval")
+    : intervals[0]) as ExplorerInterval;
+
+  const update = (patch: Record<string, string | null>, push = true) => {
+    const next = new URLSearchParams(sp);
+    for (const [k, v] of Object.entries(patch)) {
+      if (v === null) next.delete(k);
+      else next.set(k, v);
+    }
+    setSp(next, { replace: !push, preventScrollReset: true });
+  };
+
+  const params: StatsParams = useMemo(
+    () => ({ from: range.from, to: range.to, tz: browserTimeZone(), filters }),
+    [range.from, range.to, filters],
+  );
+  const cmpRange = compareOf(range.from, range.to, compare);
+
+  const overview = useQuery({
+    queryKey: statsKeys.overview(ws, params, compare),
+    queryFn: () => getStatsOverview(params, compare),
     enabled: tracked,
-    staleTime: 5 * 60_000,
+    staleTime: 60_000,
+    placeholderData: keepPreviousData,
+  });
+  const series = useQuery({
+    queryKey: statsKeys.series(ws, params, metric, interval, compare),
+    queryFn: () => getStatsSeries(params, metric, interval, compare),
+    enabled: tracked,
+    staleTime: 60_000,
+    placeholderData: keepPreviousData,
+  });
+  const live = useQuery({
+    queryKey: statsKeys.realtime(ws),
+    queryFn: getStatsRealtime,
+    enabled: tracked,
+    refetchInterval: 30_000,
   });
 
-  const series = useMemo(
-    () => fillSeriesGaps(stats?.timeseries ?? [], period),
-    [stats?.timeseries, period],
-  );
-  const locale = i18nInstance.language ?? "de";
+  const setFilters = (next: StatsFilter[]) => update({ f: next.length ? JSON.stringify(next) : null });
+  const addFilter = (dim: StatsDimension, value: string) => {
+    const rest = filters.filter((f) => !(f.dim === dim && f.op === "is"));
+    setFilters([...rest, { dim, op: "is", values: [value] }]);
+  };
 
   const header = (
     <PageHeader
       eyebrow={t("sections.results", "Results")}
       title={t("analytics.title")}
-      subtitle={stats?.site_id ? stats.site_id : t("analytics.subtitle")}
+      subtitle={overview.data?.site_id ?? t("analytics.subtitle")}
       actions={
-        tracked ? (
-          <Segmented
-            value={period}
-            onChange={setPeriod}
-            label={t("analytics.periodLabel")}
-            className="max-w-full overflow-x-auto scrollbar-hide"
-            options={WEBSITE_PERIODS.map((p) => ({
-              value: p.value,
-              label: t(p.labelKey),
-            }))}
-          />
+        tracked && live.data ? (
+          <span className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-3 py-1.5 text-[13px] font-semibold text-foreground">
+            <span className="relative flex size-2.5" aria-hidden>
+              {live.data.visitors > 0 ? (
+                <span className="absolute inline-flex size-full animate-ping rounded-full bg-earned/60 motion-reduce:animate-none" />
+              ) : null}
+              <span className={live.data.visitors > 0 ? "relative inline-flex size-2.5 rounded-full bg-earned" : "relative inline-flex size-2.5 rounded-full bg-muted-foreground/50"} />
+            </span>
+            {t("analytics.liveNow", { count: live.data.visitors, formatted: formatNumber(live.data.visitors) })}
+          </span>
         ) : null
       }
     />
   );
 
-  if (!tracked || (!isLoading && !stats)) {
+  if (!tracked) {
     return (
       <PageContainer className="space-y-6">
         {header}
@@ -116,224 +191,144 @@ export default function Analytics() {
     );
   }
 
-  const agg = stats?.aggregate;
-  const nobody = !isLoading && (agg?.visitors ?? 0) === 0;
-  const tickStep = Math.max(1, Math.ceil(series.length / 8));
-  const ticks = series
-    .filter((_, i) => i % tickStep === 0 || i === series.length - 1)
-    .map((p) => p.date);
+  const failed = !overview.isLoading && (overview.isError || overview.data === null);
+  const loading = overview.isLoading;
+  const dimTabs = (list: [StatsDimension, string, string][]) =>
+    list.map(([dim, k, f]) => ({ dim: dim as Exclude<StatsDimension, "goal">, label: t(k, f) }));
 
   return (
-    <PageContainer className="space-y-6">
+    <PageContainer className="space-y-5">
       {header}
 
-      <Panel className="p-5 sm:p-6">
-        {isLoading ? (
-          <div className="space-y-4">
-            <Skeleton className="h-10 w-2/3" />
-            <Skeleton className="h-56 w-full" />
-          </div>
-        ) : (
-          <>
-            <p className="title-display text-[22px] font-semibold leading-snug text-foreground sm:text-[26px]">
-              {t("analytics.headline", {
-                count: agg?.visitors ?? 0,
-                formatted: formatNumber(agg?.visitors ?? 0),
-              })}
-            </p>
-            {nobody ? (
-              <p className="mt-2 text-[14px] text-muted-foreground">
-                {period === "all_time"
-                  ? t("analytics.nobodyEver")
-                  : t("analytics.nobodyTryLonger")}
-              </p>
-            ) : (
-              <div className="mt-5 h-56 sm:h-64">
-                <ResponsiveContainer width="100%" height="100%">
-                  <AreaChart
-                    data={series}
-                    margin={{ top: 4, right: 4, bottom: 0, left: -16 }}
-                  >
-                    <defs>
-                      <linearGradient id="visitorsInk" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="0%" stopColor="#141516" stopOpacity={0.14} />
-                        <stop offset="100%" stopColor="#141516" stopOpacity={0} />
-                      </linearGradient>
-                    </defs>
-                    <CartesianGrid
-                      strokeDasharray="3 3"
-                      stroke="var(--border)"
-                      vertical={false}
-                    />
-                    <XAxis
-                      dataKey="date"
-                      ticks={ticks}
-                      tickFormatter={(v) => formatBucketLabel(v, period)}
-                      tick={AXIS_TICK}
-                      axisLine={false}
-                      tickLine={false}
-                      dy={8}
-                    />
-                    <YAxis
-                      allowDecimals={false}
-                      tick={AXIS_TICK}
-                      axisLine={false}
-                      tickLine={false}
-                      width={36}
-                    />
-                    <Tooltip
-                      cursor={{ stroke: "var(--border)", strokeWidth: 1 }}
-                      content={({ active, payload, label }) =>
-                        active && payload?.length && label ? (
-                          <div className="space-y-0.5 rounded-lg border border-border bg-card px-3 py-2 text-[13px] shadow-md">
-                            <p className="text-[11px] text-muted-foreground">
-                              {formatBucketLabel(String(label), period)}
-                            </p>
-                            <p className="font-semibold text-foreground">
-                              {t("home.plausibleVisitors", {
-                                count: Number(payload[0]?.payload?.visitors ?? 0),
-                              })}
-                            </p>
-                            <p className="text-muted-foreground">
-                              {t("analytics.pagesInTooltip", {
-                                count: Number(payload[0]?.payload?.pageviews ?? 0),
-                              })}
-                            </p>
-                          </div>
-                        ) : null
-                      }
-                    />
-                    <Area
-                      type="monotone"
-                      dataKey="visitors"
-                      stroke="#141516"
-                      strokeWidth={2}
-                      fill="url(#visitorsInk)"
-                      activeDot={{ r: 4, fill: "#141516", stroke: "var(--card)", strokeWidth: 2 }}
-                      isAnimationActive={false}
-                    />
-                  </AreaChart>
-                </ResponsiveContainer>
-              </div>
-            )}
+      <div className="space-y-2.5 sm:sticky sm:top-0 sm:z-20 sm:-mx-6 sm:bg-background/95 sm:px-6 sm:py-2.5 sm:backdrop-blur">
 
-            <div className="mt-6 grid grid-cols-2 gap-6 border-t border-border pt-6 sm:grid-cols-4">
-              <Stat value={formatNumber(agg?.visits ?? 0)} label={t("analytics.visits")} />
-              <Stat
-                value={formatNumber(agg?.pageviews ?? 0)}
-                label={t("analytics.pagesViewed")}
-              />
-              <Stat
-                value={`${Math.round(agg?.bounce_rate ?? 0)}%`}
-                label={t("analytics.leftAfterOne")}
-              />
-              <Stat
-                value={secondsToWords(agg?.visit_duration ?? 0, locale)}
-                label={t("analytics.timeOnSite")}
-              />
-            </div>
-          </>
-        )}
-      </Panel>
-
-      <div className="grid gap-6 lg:grid-cols-3">
-        <ShareList
-          title={t("analytics.sourcesTitle")}
-          loading={isLoading}
-          rows={(stats?.top_sources ?? []).map((s) => ({
-            key: s.source,
-            label:
-              s.source === "Direct / None" ? t("analytics.sourceDirect") : s.source,
-            value: s.visitors,
-          }))}
-          empty={t("analytics.listEmpty")}
+        <DateRangePicker
+          value={range}
+          compare={compare}
+          onChange={(v, c) =>
+            update(
+              v.preset
+                ? { preset: v.preset, from: null, to: null, compare: c, interval: null }
+                : { preset: null, from: v.from, to: v.to, compare: c, interval: null },
+            )
+          }
+          className="max-sm:w-full"
         />
-        <ShareList
-          title={t("analytics.pagesTitle")}
-          loading={isLoading}
-          rows={(stats?.top_pages ?? []).map((p) => ({
-            key: p.page,
-            label: p.page,
-            mono: true,
-            value: p.visitors,
-          }))}
-          empty={t("analytics.listEmpty")}
-        />
-        <ShareList
-          title={t("analytics.countriesTitle")}
-          loading={isLoading}
-          rows={(stats?.countries ?? []).map((c) => ({
-            key: c.country,
-            label: countryName(c.country, locale),
-            prefix: flagEmoji(c.country),
-            value: c.visitors,
-          }))}
-          empty={t("analytics.listEmpty")}
-        />
+        <FilterBar filters={filters} onChange={setFilters} params={params} workspaceId={ws} />
       </div>
-    </PageContainer>
-  );
-}
 
-type ShareRow = {
-  key: string;
-  label: string;
-  value: number;
-  prefix?: string;
-  mono?: boolean;
-};
-
-/** A ranked list where a thin ink bar shows each row's share of the top row. */
-function ShareList({
-  title,
-  rows,
-  loading,
-  empty,
-}: {
-  title: string;
-  rows: ShareRow[];
-  loading: boolean;
-  empty: string;
-}) {
-  const { t } = useTranslation();
-  const max = Math.max(1, ...rows.map((r) => r.value));
-  return (
-    <Panel>
-      <PanelHeader title={title} hint={t("analytics.peopleColumn")} />
-      {loading ? (
-        <div className="space-y-2 p-4 sm:p-5">
-          {Array.from({ length: 5 }).map((_, i) => (
-            <Skeleton key={i} className="h-8 w-full" />
-          ))}
-        </div>
-      ) : rows.length === 0 ? (
-        <p className="px-4 py-5 text-[14px] text-muted-foreground sm:px-5">{empty}</p>
+      {failed ? (
+        <Panel className="p-5 sm:p-6">
+          <EmptyState
+            title={t("analytics.loadFailedTitle", "The numbers didn't load")}
+            body={t("analytics.loadFailed", "We couldn't load this right now. Try again in a minute.")}
+            action={
+              <Button variant="outline" onClick={() => overview.refetch()}>
+                {t("analytics.retry", "Try again")}
+              </Button>
+            }
+          />
+        </Panel>
       ) : (
-        <ul className="space-y-1 p-2 sm:p-3">
-          {rows.map((r) => (
-            <li key={r.key} className="relative flex min-h-10 items-center gap-3 rounded-md px-2.5">
-              <span
-                aria-hidden
-                className="absolute inset-y-1 left-0 rounded-md bg-foreground/[0.06]"
-                style={{ width: `${Math.max(2, (r.value / max) * 100)}%` }}
-              />
-              <span
-                className={
-                  "relative min-w-0 flex-1 truncate text-[14px] text-foreground" +
-                  (r.mono ? " font-mono text-[13px]" : "")
-                }
-                title={r.label}
-              >
-                {r.prefix ? <span className="mr-1.5">{r.prefix}</span> : null}
-                {r.label}
-              </span>
-              <span className="num relative text-[14px] font-semibold text-foreground">
-                {formatNumber(r.value)}
-              </span>
-            </li>
-          ))}
-        </ul>
+        <>
+          <Panel className="overflow-hidden">
+            <TopStats
+              overview={overview.data}
+              loading={loading}
+              metric={metric}
+              onMetric={(m) => update({ metric: m === "visitors" ? null : m }, false)}
+            />
+            <VisitorsChart
+              series={series.data}
+              loading={series.isLoading}
+              metric={metric}
+              interval={interval}
+              intervals={intervals}
+              onInterval={(i) => update({ interval: i === intervals[0] ? null : i }, false)}
+              from={range.from}
+              to={range.to}
+              compareFrom={cmpRange?.from ?? null}
+              compareTo={cmpRange?.to ?? null}
+              compareMode={compare}
+            />
+          </Panel>
+
+          <div className="grid gap-5 lg:grid-cols-2">
+            <BreakdownPanel
+              title={t("analytics.sourcesTitle", "Where they came from")}
+              hint={t("analytics.rowFilterTip", "Click a row to filter")}
+              params={params}
+              workspaceId={ws}
+              enabled={tracked}
+              onFilter={addFilter}
+              tabs={[
+                { key: "channel", label: t("analytics.tab.channels", "Channels"), dims: dimTabs([["channel", "analytics.dim.channel", "Channel"]]) },
+                { key: "source", label: t("analytics.tab.sources", "Sources"), dims: dimTabs([["source", "analytics.dim.source", "Source"]]) },
+                {
+                  key: "utm",
+                  label: t("analytics.tab.utm", "Campaign links (UTM)"),
+                  dims: dimTabs([
+                    ["utm_campaign", "analytics.utm.campaign", "Campaign"],
+                    ["utm_source", "analytics.utm.source", "Source"],
+                    ["utm_medium", "analytics.utm.medium", "Medium"],
+                    ["utm_content", "analytics.utm.content", "Content"],
+                    ["utm_term", "analytics.utm.term", "Term"],
+                  ]),
+                },
+                { key: "referrer", label: t("analytics.tab.referrers", "Referring pages"), dims: dimTabs([["referrer", "analytics.dim.referrer", "Referring page"]]) },
+              ]}
+            />
+            <BreakdownPanel
+              title={t("analytics.pagesTitle", "Pages")}
+              hint={t("analytics.pagesHint", "Entry = first page, exit = last page")}
+              params={params}
+              workspaceId={ws}
+              enabled={tracked}
+              onFilter={addFilter}
+              tabs={[
+                { key: "page", label: t("analytics.tab.topPages", "Top pages"), dims: dimTabs([["page", "analytics.dim.page", "Page"]]) },
+                { key: "entry", label: t("analytics.tab.entryPages", "Entry pages"), dims: dimTabs([["entry_page", "analytics.dim.entryPage", "Entry page"]]) },
+                { key: "exit", label: t("analytics.tab.exitPages", "Exit pages"), dims: dimTabs([["exit_page", "analytics.dim.exitPage", "Exit page"]]) },
+              ]}
+            />
+            <BreakdownPanel
+              title={t("analytics.locationsTitle", "Locations")}
+              hint={t("analytics.citiesNote", "City names are not available")}
+              params={params}
+              workspaceId={ws}
+              enabled={tracked}
+              onFilter={addFilter}
+              tabs={[
+                { key: "country", label: t("analytics.tab.countries", "Countries"), dims: dimTabs([["country", "analytics.dim.country", "Country"]]) },
+                { key: "region", label: t("analytics.tab.regions", "Regions"), dims: dimTabs([["region", "analytics.dim.region", "Region"]]) },
+              ]}
+            />
+            <BreakdownPanel
+              title={t("analytics.devicesTitle", "Devices")}
+              params={params}
+              workspaceId={ws}
+              enabled={tracked}
+              onFilter={addFilter}
+              tabs={[
+                { key: "device", label: t("analytics.tab.device", "Device"), dims: dimTabs([["device", "analytics.dim.device", "Device"]]) },
+                { key: "browser", label: t("analytics.tab.browser", "Browser"), dims: dimTabs([["browser", "analytics.dim.browser", "Browser"]]) },
+                { key: "os", label: t("analytics.tab.os", "System"), dims: dimTabs([["os", "analytics.dim.os", "System"]]) },
+              ]}
+            />
+          </div>
+
+          <GoalsPanel
+            params={params}
+            workspaceId={ws}
+            enabled={tracked}
+            onFilter={(goal) => addFilter("goal", goal)}
+          />
+
+          <p className="text-[12px] text-muted-foreground">
+            {t("analytics.footnote", "Counted without cookies. Times are in your time zone ({{tz}}).", { tz: params.tz })}
+          </p>
+        </>
       )}
-    </Panel>
+    </PageContainer>
   );
 }
