@@ -158,13 +158,14 @@ export default function SettingsTeam() {
     onError: (error) => toast.error(extractErrorMessage(error)),
   });
 
-  // Pictures saved before emails had their own copy (they show initials in
-  // appointment emails): re-save once, silently, with the copy. Same bytes,
-  // new key; on any failure nothing changes and it is tried next visit.
+  // Pictures saved before emails had their current copy — none (initials in
+  // appointment emails) or the old cropped one (/m2/): re-save once,
+  // silently. Same bytes, new key; on any failure nothing changes and it is
+  // tried next visit.
   const emailCopyFixed = useRef(false);
   const avatarUrl = workspace?.avatar_url ?? null;
   useEffect(() => {
-    if (!isAdmin || !avatarUrl || avatarUrl.includes("/m2/") || emailCopyFixed.current) return;
+    if (!isAdmin || !avatarUrl || avatarUrl.includes("/m3/") || emailCopyFixed.current) return;
     emailCopyFixed.current = true;
     void (async () => {
       try {

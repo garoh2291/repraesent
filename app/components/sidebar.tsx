@@ -418,7 +418,7 @@ export function Sidebar({
                           (currentWorkspace.avatar_thumb_url ??
                             currentWorkspace.avatar_url)!
                         }
-                        className="h-6 w-6 shrink-0 rounded-md bg-white/90 object-contain p-0.5"
+                        className="h-6 w-6 shrink-0 rounded-md bg-white/90 object-contain p-1"
                         fallback={
                           <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-white/10 text-white text-[10px] font-bold">
                             {currentWorkspace.name.charAt(0).toUpperCase()}
@@ -464,7 +464,7 @@ export function Sidebar({
                       {(ws.avatar_thumb_url ?? ws.avatar_url) ? (
                         <SafeImg
                           src={(ws.avatar_thumb_url ?? ws.avatar_url)!}
-                          className="h-4 w-4 shrink-0 rounded-sm bg-white object-contain"
+                          className="h-4 w-4 shrink-0 rounded-sm bg-white object-contain p-px"
                           fallback={<Building2 className="h-4 w-4" />}
                         />
                       ) : (
@@ -495,7 +495,7 @@ export function Sidebar({
                       (currentWorkspace.avatar_thumb_url ??
                         currentWorkspace.avatar_url)!
                     }
-                    className="h-6 w-6 shrink-0 rounded-md bg-white/90 object-contain p-0.5"
+                    className="h-6 w-6 shrink-0 rounded-md bg-white/90 object-contain p-1"
                     fallback={
                       <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-white/10 text-white text-[10px] font-bold">
                         {currentWorkspace.name.charAt(0).toUpperCase()}

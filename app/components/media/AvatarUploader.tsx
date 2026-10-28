@@ -100,7 +100,8 @@ export function AvatarUploader({
   return (
     <div className="flex flex-wrap items-center gap-4">
       {/* Fixed 1:1 box; the image keeps its own ratio inside it
-          (object-contain) so any logo/photo shape always looks right. */}
+          (object-contain) with ~15% room on every side, so a wide logo is
+          whole and centred instead of running into the edges. */}
       <div
         className={cn(
           "flex size-16 shrink-0 items-center justify-center overflow-hidden border border-border bg-muted",
@@ -113,7 +114,7 @@ export function AvatarUploader({
             className={cn(
               "h-full w-full",
               shape === "square"
-                ? "object-contain p-1.5"
+                ? "object-contain p-2.5"
                 : "object-cover",
             )}
             fallback={

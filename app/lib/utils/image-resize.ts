@@ -189,32 +189,32 @@ export async function resizeImageFile(
 }
 
 /**
- * The business picture as customer emails show it: a 144px square PNG
- * (centre crop). Mail apps ignore `object-fit` and not all of them can show
- * WebP, so the email gets its own small copy next to the picture.
+ * The business picture as customer emails show it: a 144px square PNG with
+ * the WHOLE picture fitted inside the round frame, centred on white — the
+ * same picture people see in Settings → Team, never cropped. Mail apps ignore
+ * `object-fit` and not all of them can show WebP, so the email gets its own
+ * small copy next to the picture.
  */
 export async function emailLogoCopy(source: Blob, size = 144): Promise<Blob> {
   const url = URL.createObjectURL(source);
   try {
     const img = await loadImage(url);
-    const side = Math.min(img.naturalWidth, img.naturalHeight);
+    const w = img.naturalWidth;
+    const h = img.naturalHeight;
+    // The email shows it as a circle: scale so the picture's corners stay
+    // inside it (diagonal ≤ 88% of the frame), which keeps a wide logo whole.
+    const scale = (size * 0.88) / Math.hypot(w, h);
+    const dw = w * scale;
+    const dh = h * scale;
     const canvas = document.createElement("canvas");
     canvas.width = size;
     canvas.height = size;
     const ctx = canvas.getContext("2d");
     if (!ctx) throw new Error("Could not process that image.");
+    ctx.fillStyle = "#ffffff";
+    ctx.fillRect(0, 0, size, size);
     ctx.imageSmoothingQuality = "high";
-    ctx.drawImage(
-      img,
-      (img.naturalWidth - side) / 2,
-      (img.naturalHeight - side) / 2,
-      side,
-      side,
-      0,
-      0,
-      size,
-      size,
-    );
+    ctx.drawImage(img, (size - dw) / 2, (size - dh) / 2, dw, dh);
     const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, "image/png"));
     if (!blob) throw new Error("Could not process that image.");
     return blob;

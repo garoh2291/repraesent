@@ -164,7 +164,7 @@ function WsAvatar({ name, src, size = 40 }: { name: string; src: string | null |
   return (
     <SafeImg
       src={src}
-      className="shrink-0 rounded-xl border border-border bg-white object-contain p-1"
+      className="shrink-0 rounded-xl border border-border bg-white object-contain p-1.5"
       style={{ width: size, height: size }}
       fallback={letter}
     />
