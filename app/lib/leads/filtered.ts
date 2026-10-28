@@ -68,4 +68,8 @@ export function extractLeadFilterVerdict(
  */
 export const FILTERED_CLAIMED_META_KEYS: ReadonlySet<string> = new Set([
   FILTERED_META_KEY,
+  // Bookkeeping of "held at the door → Not spam" (form-submission.service approveHeldLead).
+  "__held",
+  "__approved_at",
+  "__booking_pending",
 ]);

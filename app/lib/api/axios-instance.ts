@@ -186,6 +186,9 @@ const PUBLIC_PATH_PREFIXES = [
   "/register",
   "/auth/callback",
   "/book/",
+  // The customer's own appointment page (/booking/:token), opened from the
+  // confirmation email. Without it the splash and a stale token kept it shut.
+  "/booking/",
   "/f/",
   "/demo",
   "/unsubscribe/",

@@ -1,4 +1,5 @@
 import { useMemo, useEffect, useState } from "react";
+import { requestedTimeNote } from "~/components/appointment-book/requested-time-notice";
 import { Link, useNavigate, useSearchParams } from "react-router";
 import { useOpenFromParam } from "~/lib/hooks/useOpenFromParam";
 import { ContactActions } from "~/components/notebook/contact-actions";
@@ -421,8 +422,11 @@ export default function LeadForm() {
     onSuccess: (res, id) => {
       refreshLeadViews(queryClient, id);
       toast.success(t("leads.spam.restored"), {
-          description: res.alsoRestored ? t("leads.spam.alsoRestored", { count: res.alsoRestored }) : undefined,
-        });
+        description:
+          [requestedTimeNote(t, res), res.alsoRestored ? t("leads.spam.alsoRestored", { count: res.alsoRestored }) : null]
+            .filter(Boolean)
+            .join(" ") || undefined,
+      });
     },
     onError: () => toast.error(t("leads.spam.error")),
   });

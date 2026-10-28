@@ -1,4 +1,5 @@
 import { AlertTriangle } from "lucide-react";
+import { calendarLabel } from "~/lib/calendar/calendar-label";
 import { useTranslation } from "react-i18next";
 import { CalDavIcon } from "~/components/icons/CalDavIcon";
 import { GoogleIcon } from "~/components/icons/GoogleIcon";
@@ -61,7 +62,7 @@ export function BusyCalendarPicker({
               key={key}
               // Ordered like the target picker — the distinguishing token
               // first, so one calendar reads the same in both lists.
-              label={`${c.summary} · ${a.google_email || a.user_name}`}
+              label={calendarLabel(a, c).full}
               provider={a.provider}
               authFailed={a.auth_failed}
               locked={lockedKeys.has(key)}

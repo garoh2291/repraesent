@@ -32,6 +32,7 @@ import {
   type WorkflowNode,
 } from "~/lib/api/workflows";
 import { triggerOf } from "~/lib/workflows/graph";
+import { triggerSentence } from "~/lib/workflows/timing";
 import { toTree, type LaneRef, type TreeNode } from "~/lib/workflows/tree";
 
 const ICONS: Record<NodeType, React.ComponentType<{ className?: string }>> = {
@@ -82,8 +83,11 @@ export function StepList({
   onAdd,
   onRemove,
   onMove,
+  fieldLabel,
 }: {
   graph: WorkflowGraph;
+  /** Catalog label for a date field, so the trigger reads "3 days after Due date". */
+  fieldLabel?: (path: string) => string | undefined;
   selectedId: string | null;
   disabled?: boolean;
   onSelect: (nodeId: string) => void;
@@ -107,8 +111,10 @@ export function StepList({
         <StepCard
           node={trigger}
           label={t("workflows.step.trigger")}
-          sublabel={t(
-            `workflows.trigger.type_${(trigger.config as { type: string }).type}`,
+          sublabel={triggerSentence(
+            trigger.config as TriggerConfig,
+            t,
+            fieldLabel,
           )}
           selected={selectedId === trigger.id}
           onSelect={() => onSelect(trigger.id)}
