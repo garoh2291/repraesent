@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { emailLogoCopy, generateThumbnail } from "~/lib/utils/image-resize";
 import { useNavigate } from "react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -143,8 +144,9 @@ export default function SettingsTeam() {
   };
 
   const wsAvatarUpload = useMutation({
-    mutationFn: ({ file, thumb }: { file: File; thumb?: Blob }) =>
-      uploadWorkspaceAvatar(file, thumb),
+    mutationFn: async ({ file, thumb }: { file: File; thumb?: Blob }) =>
+      // The email copy never blocks the picture itself.
+      uploadWorkspaceAvatar(file, thumb, await emailLogoCopy(file).catch(() => undefined)),
     onSuccess: async () => {
       await invalidateAvatarQueries();
       toast.success(
@@ -155,6 +157,30 @@ export default function SettingsTeam() {
     },
     onError: (error) => toast.error(extractErrorMessage(error)),
   });
+
+  // Pictures saved before emails had their own copy (they show initials in
+  // appointment emails): re-save once, silently, with the copy. Same bytes,
+  // new key; on any failure nothing changes and it is tried next visit.
+  const emailCopyFixed = useRef(false);
+  const avatarUrl = workspace?.avatar_url ?? null;
+  useEffect(() => {
+    if (!isAdmin || !avatarUrl || avatarUrl.includes("/m2/") || emailCopyFixed.current) return;
+    emailCopyFixed.current = true;
+    void (async () => {
+      try {
+        const res = await fetch(avatarUrl, { mode: "cors" });
+        if (!res.ok) return;
+        const blob = await res.blob();
+        const name = avatarUrl.split("/").pop() || "picture";
+        const file = new File([blob], name, { type: blob.type });
+        const [thumb, email] = await Promise.all([generateThumbnail(file, 128), emailLogoCopy(blob)]);
+        await uploadWorkspaceAvatar(file, thumb.blob, email);
+        await invalidateAvatarQueries();
+      } catch {
+        // Next visit tries again; the picture in the app is unaffected.
+      }
+    })();
+  }, [isAdmin, avatarUrl]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const wsAvatarRemove = useMutation({
     mutationFn: deleteWorkspaceAvatar,
