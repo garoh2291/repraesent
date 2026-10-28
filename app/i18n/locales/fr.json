@@ -1951,7 +1951,7 @@
       "cardTitle": "OpenRouter",
       "statusConnected": "Connecté",
       "statusRevoked": "Clé refusée",
-      "notConnectedHint": "Créez une clé sur openrouter.ai/keys et collez-la ici. D’ici là, le chat ne peut pas être activé et la visibilité IA ne peut rien vérifier.",
+      "notConnectedHint": "Tant que rien n’est connecté, le chat ne peut pas être activé et la visibilité IA ne peut rien vérifier.",
       "lastError": "Dernier appel échoué : {{error}}",
       "keyLabel": "Clé API",
       "rotateLabel": "Remplacer la clé API",
@@ -2002,6 +2002,28 @@
           "visibility_suggestions": "Visibilité IA — suggestions de pages",
           "visibility_drafts": "Visibilité IA — pages de comparaison",
           "onboarding_chat": "Conversations de démarrage"
+        }
+      },
+      "oauth": {
+        "connect": "Se connecter avec OpenRouter",
+        "reconnect": "Reconnecter",
+        "tripLabel": "Ce qui se passe à la connexion",
+        "trip1": "Vous partez d’ici",
+        "trip2": "Connectez-vous à OpenRouter et acceptez",
+        "trip3": "De retour ici, connecté",
+        "billing": "Aucune clé à copier. Ce que l’IA consomme est facturé sur votre propre crédit OpenRouter. Pas encore de compte ? Vous pouvez en créer un en chemin, puis ajouter du crédit.",
+        "pasteToggle": "J’ai déjà une clé — la coller",
+        "pasteToggleConnected": "Coller une autre clé",
+        "methodOauth": "connectée via OpenRouter",
+        "methodPasted": "clé collée",
+        "openKey": "Ouvrir cette clé sur OpenRouter",
+        "disconnectKeyStays": "Pour la supprimer aussi de votre compte OpenRouter :",
+        "tryAgain": "Réessayer",
+        "result": {
+          "connected": "Connecté. Votre chat de site et la visibilité IA peuvent fonctionner.",
+          "denied": "Vous avez annulé sur OpenRouter. Rien n’a été connecté.",
+          "expired": "Cela a pris plus de 10 minutes, le lien a expiré. Veuillez réessayer.",
+          "error": "OpenRouter n’a pas transmis de clé. Veuillez réessayer, ou collez une clé."
         }
       }
     },

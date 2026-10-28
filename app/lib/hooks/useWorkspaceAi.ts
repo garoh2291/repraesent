@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   connectWorkspaceAi,
   disconnectWorkspaceAi,
+  getOpenRouterAuthorizeUrl,
   getWorkspaceAiSettings,
   getWorkspaceAiSpend,
   testWorkspaceAi,
@@ -63,5 +64,13 @@ export function useWorkspaceAiMutations() {
     onSuccess: refresh,
   });
 
-  return { connect, update, test, disconnect };
+  /** Leaves the app for openrouter.ai; the page reloads on the way back. */
+  const startOAuth = useMutation({
+    mutationFn: getOpenRouterAuthorizeUrl,
+    onSuccess: ({ url }) => {
+      window.location.href = url;
+    },
+  });
+
+  return { connect, update, test, disconnect, startOAuth };
 }

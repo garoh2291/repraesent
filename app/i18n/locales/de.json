@@ -1951,7 +1951,7 @@
       "cardTitle": "OpenRouter",
       "statusConnected": "Verbunden",
       "statusRevoked": "Schlüssel abgelehnt",
-      "notConnectedHint": "Erstellen Sie unter openrouter.ai/keys einen Schlüssel und fügen Sie ihn hier ein. Bis dahin lässt sich der Chat nicht einschalten, und die KI-Sichtbarkeit kann nichts prüfen.",
+      "notConnectedHint": "Solange nichts verbunden ist, lässt sich der Chat nicht einschalten, und die KI-Sichtbarkeit kann nichts prüfen.",
       "lastError": "Letzter Aufruf fehlgeschlagen: {{error}}",
       "keyLabel": "API-Schlüssel",
       "rotateLabel": "API-Schlüssel ersetzen",
@@ -2002,6 +2002,28 @@
           "visibility_suggestions": "KI-Sichtbarkeit – Seitenvorschläge",
           "visibility_drafts": "KI-Sichtbarkeit – Vergleichsseiten",
           "onboarding_chat": "Einrichtungsgespräche"
+        }
+      },
+      "oauth": {
+        "connect": "Mit OpenRouter verbinden",
+        "reconnect": "Neu verbinden",
+        "tripLabel": "Was beim Verbinden passiert",
+        "trip1": "Sie starten hier",
+        "trip2": "Bei OpenRouter anmelden und zustimmen",
+        "trip3": "Zurück hier, verbunden",
+        "billing": "Kein Schlüssel zum Kopieren. Was die KI verbraucht, wird über Ihr eigenes OpenRouter-Guthaben abgerechnet. Noch kein Konto? Sie können unterwegs eines anlegen – danach Guthaben aufladen.",
+        "pasteToggle": "Ich habe schon einen Schlüssel – einfügen",
+        "pasteToggleConnected": "Einen anderen Schlüssel einfügen",
+        "methodOauth": "über OpenRouter verbunden",
+        "methodPasted": "eingefügter Schlüssel",
+        "openKey": "Diesen Schlüssel bei OpenRouter öffnen",
+        "disconnectKeyStays": "Um ihn auch in Ihrem OpenRouter-Konto zu löschen:",
+        "tryAgain": "Erneut versuchen",
+        "result": {
+          "connected": "Verbunden. Ihr Website-Chat und die KI-Sichtbarkeit können jetzt laufen.",
+          "denied": "Sie haben bei OpenRouter abgebrochen. Es wurde nichts verbunden.",
+          "expired": "Das hat länger als 10 Minuten gedauert, der Link ist abgelaufen. Bitte versuchen Sie es erneut.",
+          "error": "OpenRouter hat keinen Schlüssel übergeben. Bitte versuchen Sie es erneut oder fügen Sie einen Schlüssel ein."
         }
       }
     },

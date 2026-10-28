@@ -1949,7 +1949,7 @@
       "cardTitle": "OpenRouter",
       "statusConnected": "Connected",
       "statusRevoked": "Key rejected",
-      "notConnectedHint": "Create a key at openrouter.ai/keys and paste it here. Until then, the chat can’t be turned on and AI visibility can’t check anything.",
+      "notConnectedHint": "Until you connect, the chat can’t be turned on and AI visibility can’t check anything.",
       "lastError": "Last call failed: {{error}}",
       "keyLabel": "API key",
       "rotateLabel": "Replace API key",
@@ -2000,6 +2000,28 @@
           "visibility_suggestions": "AI visibility — page suggestions",
           "visibility_drafts": "AI visibility — comparison pages",
           "onboarding_chat": "Onboarding conversations"
+        }
+      },
+      "oauth": {
+        "connect": "Connect with OpenRouter",
+        "reconnect": "Connect again",
+        "tripLabel": "What happens when you connect",
+        "trip1": "You start here",
+        "trip2": "Sign in to OpenRouter and approve",
+        "trip3": "Back here, connected",
+        "billing": "No key to copy. What the AI uses is billed to your own OpenRouter credits. No account yet? You can create one on the way — then add credits.",
+        "pasteToggle": "I already have a key — paste it",
+        "pasteToggleConnected": "Paste a different key",
+        "methodOauth": "connected through OpenRouter",
+        "methodPasted": "pasted key",
+        "openKey": "Open this key on OpenRouter",
+        "disconnectKeyStays": "To delete it in your OpenRouter account as well:",
+        "tryAgain": "Try again",
+        "result": {
+          "connected": "Connected. Your website chat and AI visibility can run now.",
+          "denied": "You cancelled on OpenRouter. Nothing was connected.",
+          "expired": "That took longer than 10 minutes, so the link ran out. Please try again.",
+          "error": "OpenRouter didn’t hand over a key. Please try again, or paste a key instead."
         }
       }
     },

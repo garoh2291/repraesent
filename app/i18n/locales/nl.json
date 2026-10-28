@@ -1949,7 +1949,7 @@
       "cardTitle": "OpenRouter",
       "statusConnected": "Verbonden",
       "statusRevoked": "Sleutel afgewezen",
-      "notConnectedHint": "Maak een sleutel aan op openrouter.ai/keys en plak die hier. Tot dan kan de chat niet aan en kan AI-zichtbaarheid niets controleren.",
+      "notConnectedHint": "Zolang er niets gekoppeld is, kan de chat niet aan en kan AI-zichtbaarheid niets controleren.",
       "lastError": "Laatste aanroep mislukt: {{error}}",
       "keyLabel": "API-sleutel",
       "rotateLabel": "API-sleutel vervangen",
@@ -2000,6 +2000,28 @@
           "visibility_suggestions": "AI-zichtbaarheid — paginasuggesties",
           "visibility_drafts": "AI-zichtbaarheid — vergelijkingspagina's",
           "onboarding_chat": "Startgesprekken"
+        }
+      },
+      "oauth": {
+        "connect": "Koppelen met OpenRouter",
+        "reconnect": "Opnieuw koppelen",
+        "tripLabel": "Wat er gebeurt bij het koppelen",
+        "trip1": "U begint hier",
+        "trip2": "Log in bij OpenRouter en geef toestemming",
+        "trip3": "Terug hier, gekoppeld",
+        "billing": "Geen sleutel om te kopiëren. Wat de AI gebruikt, gaat van uw eigen OpenRouter-tegoed af. Nog geen account? U kunt er onderweg een aanmaken en daarna tegoed toevoegen.",
+        "pasteToggle": "Ik heb al een sleutel — plakken",
+        "pasteToggleConnected": "Een andere sleutel plakken",
+        "methodOauth": "gekoppeld via OpenRouter",
+        "methodPasted": "geplakte sleutel",
+        "openKey": "Deze sleutel openen bij OpenRouter",
+        "disconnectKeyStays": "Om hem ook in uw OpenRouter-account te verwijderen:",
+        "tryAgain": "Opnieuw proberen",
+        "result": {
+          "connected": "Gekoppeld. Uw websitechat en AI-zichtbaarheid kunnen nu draaien.",
+          "denied": "U heeft geannuleerd bij OpenRouter. Er is niets gekoppeld.",
+          "expired": "Dat duurde langer dan 10 minuten, de link is verlopen. Probeer het opnieuw.",
+          "error": "OpenRouter gaf geen sleutel door. Probeer het opnieuw, of plak een sleutel."
         }
       }
     },
