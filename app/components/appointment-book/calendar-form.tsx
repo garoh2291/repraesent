@@ -16,6 +16,8 @@ import { getWorkspaceDetail } from "~/lib/api/workspaces";
 import { calendarKeyFor, listCalendarAccounts } from "~/lib/api/calendar";
 import { useAuthContext } from "~/providers/auth-provider";
 import { MessageEmailSheet } from "~/components/appointment-book/message-email-sheet";
+import { SenderNotice, SenderSelect, senderOf, useEmailAccounts } from "~/components/appointment-book/email-sender";
+import { CustomerLanguageSelect } from "~/components/appointment-book/customer-language-select";
 import {
   WEEKDAYS,
   type AppointmentCalendar,
@@ -53,6 +55,8 @@ export type CalendarDraft = Required<
     | "busy_calendar_keys"
     | "copy_target_key"
     | "customer_messages"
+    | "email_account_id"
+    | "default_locale"
     | "self_service"
   >
 >;
@@ -79,6 +83,8 @@ export function draftOf(c: AppointmentCalendar): CalendarDraft {
     busy_calendar_keys: c.busy_calendar_keys,
     copy_target_key: c.copy_target_key,
     customer_messages: c.customer_messages,
+    email_account_id: c.email_account_id ?? null,
+    default_locale: c.default_locale ?? null,
     self_service: c.self_service,
   };
 }
@@ -162,6 +168,8 @@ export function CalendarForm({
   const set = <K extends keyof CalendarDraft>(key: K, value: CalendarDraft[K]) => onChange({ ...draft, [key]: value });
   const members = useQuery({ queryKey: ["workspace-detail"], queryFn: () => getWorkspaceDetail(), enabled: !!currentWorkspace });
   const accounts = useQuery({ queryKey: ["calendar-accounts"], queryFn: listCalendarAccounts, enabled: !!currentWorkspace });
+  const emailAccounts = useEmailAccounts();
+  const sender = senderOf(emailAccounts.data ?? [], draft.email_account_id ?? null);
   const [moreOpen, setMoreOpen] = useState(false);
   const [tzOpen, setTzOpen] = useState(false);
   const [sheet, setSheet] = useState<null | "confirmation" | "changes" | "reminder">(null);
@@ -371,8 +379,29 @@ export function CalendarForm({
       {/* ── Messages to your customers ───────────────────────────────── */}
       <Section
         title={t("appointmentBook.settings.messages", "Messages to your customers")}
-        hint={t("appointmentBook.settings.messagesHint", "Sent by email from your business name. Text messages can be added later.")}
+        hint={t("appointmentBook.settings.messagesHint2", "Sent by email under your business name. Text messages can be added later.")}
       >
+        <div className="grid gap-4 sm:grid-cols-2">
+          <FieldRow label={t("appointmentBook.sender.label", "Send from")}>
+            <SenderSelect value={draft.email_account_id ?? null} onChange={(v) => set("email_account_id", v)} />
+          </FieldRow>
+          <FieldRow
+            label={t("appointmentBook.language.calendarLabel", "Language when we don't know the customer's")}
+            hint={t(
+              "appointmentBook.language.calendarHint",
+              "Customers get emails in their own language when we know it — from their form or their customer card. Otherwise in this one.",
+            )}
+          >
+            <CustomerLanguageSelect
+              value={draft.default_locale ?? null}
+              onChange={(v) => set("default_locale", v)}
+              allowNone
+              noneLabel={t("appointmentBook.language.calendarNone", "The language of whoever handles it")}
+              className="sm:w-full"
+            />
+          </FieldRow>
+        </div>
+        {emailAccounts.isSuccess ? <SenderNotice sender={sender} /> : null}
         <div className="divide-y divide-border">
           <MessageRow
             checked={messages.confirmation ?? true}

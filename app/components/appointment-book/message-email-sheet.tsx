@@ -113,7 +113,12 @@ export function MessageEmailSheet({
 
   const test = useMutation({
     mutationFn: () => sendTestCalendarMessage(calendarId, { kind, locale, ...(current ? { copy: current } : {}) }),
-    onSuccess: (r) => toast.success(t("appointmentBook.mail.testSent", "Test sent to {{email}}", { email: r.sent_to })),
+    onSuccess: (r) =>
+      toast.success(
+        r.sent_from
+          ? t("appointmentBook.mail.testSentFrom", "Test sent to {{email}} from {{from}}", { email: r.sent_to, from: r.sent_from })
+          : t("appointmentBook.mail.testSent", "Test sent to {{email}}", { email: r.sent_to }),
+      ),
     onError: (e) => toast.error(extractErrorMessage(e)),
   });
 

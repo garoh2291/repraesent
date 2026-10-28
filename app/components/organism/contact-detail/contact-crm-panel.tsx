@@ -1,3 +1,5 @@
+import { CustomerLanguageSelect, isCustomerLocale } from "~/components/appointment-book/customer-language-select";
+import type { FormLocale } from "~/lib/forms/schema";
 import { useState, useEffect, useMemo } from "react";
 import { createPortal } from "react-dom";
 import { useMutation } from "@tanstack/react-query";
@@ -225,6 +227,9 @@ export function ContactProfileForm({
   const [first, setFirst] = useState(String(contact.first_name ?? ""));
   const [last, setLast] = useState(String(contact.last_name ?? ""));
   const [jobTitle, setJobTitle] = useState(String(contact.job_title ?? ""));
+  const [locale, setLocale] = useState<FormLocale | null>(
+    isCustomerLocale(contact.locale) ? contact.locale : null,
+  );
   const [dob, setDob] = useState(
     apiDatetimeToIsoDateString(contact.date_of_birth),
   );
@@ -248,6 +253,7 @@ export function ContactProfileForm({
     setLegalName(String(contact.legal_name ?? ""));
     setTaxNumber(String(contact.tax_number ?? ""));
     setJobTitle(String(contact.job_title ?? ""));
+    setLocale(isCustomerLocale(contact.locale) ? contact.locale : null);
     setFirst(String(contact.first_name ?? ""));
     setLast(String(contact.last_name ?? ""));
     setDob(apiDatetimeToIsoDateString(contact.date_of_birth));
@@ -313,6 +319,7 @@ export function ContactProfileForm({
             legal_name: legalName.trim() || null,
             tax_number: taxNumber.trim() || null,
             contact_type: contactType,
+            locale,
           }
         : {
             first_name: first.trim() || null,
@@ -321,6 +328,7 @@ export function ContactProfileForm({
             date_of_birth: dob || null,
             salutation: salutationOut,
             contact_type: contactType,
+            locale,
           },
       lastContactedAt: contactId
         ? lastContacted.trim()
@@ -353,6 +361,7 @@ export function ContactProfileForm({
     legalName,
     taxNumber,
     jobTitle,
+    locale,
     dob,
     salutation,
     contactType,
@@ -512,6 +521,26 @@ export function ContactProfileForm({
         </FormField>
         </>
         )}
+        <FormField
+          label={t("contacts.preferredLanguage", {
+            defaultValue: "Preferred communication language",
+          })}
+          hint={t("contacts.preferredLanguageHint", {
+            defaultValue:
+              "Appointment emails and confirmations go out in this language. Leave it empty if you don't know it yet.",
+          })}
+        >
+          <CustomerLanguageSelect
+            value={locale}
+            onChange={(v) => {
+              setLocale(v);
+              markDirty();
+            }}
+            allowNone
+            noneLabel={t("contacts.languageUnknown", { defaultValue: "Not known" })}
+            className="h-9 w-full sm:w-full max-sm:h-11"
+          />
+        </FormField>
         {isCompany ? (
           <FormField
             label={t("contacts.company.taxNumber", { defaultValue: "Tax number" })}

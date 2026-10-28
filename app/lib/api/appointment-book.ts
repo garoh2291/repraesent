@@ -45,6 +45,14 @@ export interface CustomerMessagesSettings {
 export type AppointmentMode = "in_person" | "online";
 export type BookingUnit = "slot" | "day";
 
+/** Where a calendar's customer emails come from right now. */
+export interface CalendarSender {
+  via: "mailbox" | "platform";
+  /** The mailbox address; null on the platform or the legacy email setup. */
+  email: string | null;
+  reason: "ok" | "no_mailbox" | "needs_reconnect";
+}
+
 export interface AppointmentCalendar {
   id: string;
   key: string;
@@ -68,6 +76,11 @@ export interface AppointmentCalendar {
   busy_calendar_keys: string[];
   copy_target_key: string | null;
   customer_messages: CustomerMessagesSettings;
+  /** Mailbox the emails go out from; null = the workspace's main mailbox. */
+  email_account_id: string | null;
+  /** Language for customers whose own language is unknown. */
+  default_locale: "en" | "de" | "fr" | "nl" | "hy" | null;
+  sender: CalendarSender;
   self_service: boolean;
   is_default: boolean;
   status: "active" | "disabled";
@@ -79,7 +92,7 @@ export interface AppointmentCalendar {
 }
 
 export type SaveCalendarInput = Partial<
-  Omit<AppointmentCalendar, "id" | "key" | "is_default" | "status" | "appointment_count" | "upcoming_count" | "created_at" | "updated_at">
+  Omit<AppointmentCalendar, "id" | "key" | "is_default" | "status" | "appointment_count" | "upcoming_count" | "created_at" | "updated_at" | "sender">
 >;
 
 export interface Closure {
@@ -141,6 +154,10 @@ export interface Appointment {
   customer_email: string | null;
   customer_phone: string | null;
   customer_locale: string | null;
+  /** What the customer's emails go out in right now (their card first). */
+  customer_language?: string;
+  /** The language on the customer's card; null = not set there yet. */
+  card_language?: string | null;
   sms_consent_at: string | null;
   provider: string | null;
   /** The connected calendar's own event id, when the meeting lives there. */
@@ -359,8 +376,11 @@ export async function previewCalendarMessage(calendarId: string, body: MessageRe
   return data;
 }
 
-export async function sendTestCalendarMessage(calendarId: string, body: MessageRequest): Promise<{ sent_to: string }> {
-  const { data } = await apiClient.post<{ sent_to: string }>(`/appointment-calendars/${calendarId}/messages/test`, body);
+export async function sendTestCalendarMessage(
+  calendarId: string,
+  body: MessageRequest,
+): Promise<{ sent_to: string; sent_from?: string | null }> {
+  const { data } = await apiClient.post<{ sent_to: string; sent_from?: string | null }>(`/appointment-calendars/${calendarId}/messages/test`, body);
   return data;
 }
 

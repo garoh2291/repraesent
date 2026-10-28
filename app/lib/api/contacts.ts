@@ -3,6 +3,8 @@ import type { ContactType } from "~/lib/contacts/contact-types";
 import type { Salutation } from "~/lib/contacts/contact-salutations";
 
 export interface PatchContactBody {
+  /** Language the customer gets emails in; null = not known. */
+  locale?: string | null;
   first_name?: string | null;
   last_name?: string | null;
   date_of_birth?: string | null;

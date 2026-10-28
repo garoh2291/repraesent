@@ -1,3 +1,5 @@
+import { isCustomerLocale } from "~/components/appointment-book/customer-language-select";
+import { LANGUAGE_NAMES } from "~/i18n/language-names";
 import { useMemo, useRef, useState } from "react";
 import { Link } from "react-router";
 import { useTranslation } from "react-i18next";
@@ -15,6 +17,7 @@ import {
   Plus,
   Building2,
   Globe,
+  Languages,
 } from "lucide-react";
 import { websiteHref, websiteLabel } from "~/lib/contacts/website";
 import { Avatar, AvatarFallback, AvatarImage } from "~/components/ui/avatar";
@@ -362,6 +365,7 @@ export function ContactHero({
       taxNumber: contact?.tax_number ? String(contact.tax_number) : undefined,
       hasBillingEmail,
       website: websiteValue || undefined,
+      locale: isCustomerLocale(contact?.locale) ? contact.locale : null,
       firstName: contact?.first_name ? String(contact.first_name) : undefined,
       lastName: contact?.last_name ? String(contact.last_name) : undefined,
       email: emailValue || undefined,
@@ -470,6 +474,17 @@ export function ContactHero({
                   source={source}
                   className="bg-muted text-muted-foreground ring-border dark:text-muted-foreground"
                 />
+              ) : null}
+              {isCustomerLocale(contact?.locale) ? (
+                <span
+                  className="inline-flex items-center gap-1 text-muted-foreground"
+                  title={t("contacts.preferredLanguage", {
+                    defaultValue: "Preferred communication language",
+                  })}
+                >
+                  <Languages className="h-3 w-3" aria-hidden />
+                  {LANGUAGE_NAMES[contact.locale]}
+                </span>
               ) : null}
               {lastContactedRaw ? (
                 <span className="inline-flex items-center gap-1 text-muted-foreground">

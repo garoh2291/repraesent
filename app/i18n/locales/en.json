@@ -4086,7 +4086,10 @@
     "openWebsite": "Open website",
     "websiteInvalid": "Enter a website like example.com",
     "confirmRemoveWebsiteTitle": "Remove this website?",
-    "confirmRemoveWebsiteDescription": "This website will be removed from the profile. You can add it again later."
+    "confirmRemoveWebsiteDescription": "This website will be removed from the profile. You can add it again later.",
+    "languageUnknown": "Not known",
+    "preferredLanguage": "Preferred communication language",
+    "preferredLanguageHint": "Appointment emails and confirmations go out in this language. Leave it empty if you don't know it yet."
   },
   "leadEmails": {
     "emptyTitle": "No emails logged yet",
@@ -11008,7 +11011,8 @@
       "copyTo": "Copy appointments to",
       "makeFallback": "Use when nothing else is picked",
       "isFallback": "Used when nothing else is picked — new appointments start here.",
-      "nowFallback": "Now used when nothing else is picked"
+      "nowFallback": "Now used when nothing else is picked",
+      "messagesHint2": "Sent by email under your business name. Text messages can be added later."
     },
     "detail": {
       "nobody": "Nobody yet",
@@ -11252,7 +11256,8 @@
       "close": "Done",
       "titleChanges": "When it moves or is cancelled",
       "titleReminder": "The reminder",
-      "titleConfirmation": "The confirmation"
+      "titleConfirmation": "The confirmation",
+      "testSentFrom": "Test sent to {{email}} from {{from}}"
     },
     "flows": {
       "nameWith": "{{what}} — {{name}}",
@@ -11302,6 +11307,34 @@
         "comeBack": "Come back after 6 weeks",
         "comeBackHint": "Asks them to book their next visit."
       }
+    },
+    "sender": {
+      "label": "Send from",
+      "default": "Your main mailbox",
+      "defaultWith": "Your main mailbox ({{email}})",
+      "from": "Sent from {{email}}",
+      "platformTitle": "This goes out from Repraesent's address, not yours",
+      "reconnectTitle": "Your mailbox needs reconnecting, so this goes out from Repraesent's address",
+      "platformBody": "Customers see your business name, but some email programs trust it less and may put it in spam. Connect your own mailbox and it goes out from your address.",
+      "connectCta": "Connect your mailbox",
+      "reconnectCta": "Reconnect your mailbox"
+    },
+    "language": {
+      "pick": "Pick a language",
+      "none": "Not set",
+      "short": "Language",
+      "label": "Language for their emails",
+      "fromCalendar": "We don't know this customer's language yet, so it's set to the calendar's. Change it if they speak another one.",
+      "required": "Pick the language this customer should get their emails in.",
+      "calendarLabel": "Language when we don't know the customer's",
+      "calendarHint": "Customers get emails in their own language when we know it — from their form or their customer card. Otherwise in this one.",
+      "calendarNone": "The language of whoever handles it",
+      "cardWillUpdate": "{{language}} will also be saved on {{name}}'s customer card.",
+      "cardWillUpdateNoName": "{{language}} will also be saved on their customer card.",
+      "cardWillUpdateWhy": "Every email to them from now on goes out in it.",
+      "savedOnCard2": "We'll update it on their customer card.",
+      "cardUpdated": "Saved, and updated on {{name}}'s customer card",
+      "noCard": "Only for this appointment — they aren't one of your customers yet."
     }
   },
   "calendarView": {

@@ -34,6 +34,11 @@ import {
 } from "~/lib/api/appointment-book";
 import { useAppointmentCalendars, useInvalidateAppointments } from "~/lib/hooks/useAppointmentBook";
 import { contactPath } from "~/lib/contacts/contact-path";
+import {
+  CustomerLanguageSelect,
+  announceCardLanguage,
+  isCustomerLocale,
+} from "~/components/appointment-book/customer-language-select";
 import { PageContainer } from "~/components/notebook/page-header";
 import { Panel, PanelHeader } from "~/components/notebook/panel";
 import { LeadNotesSection } from "~/components/organism/lead-notes-section";
@@ -326,6 +331,40 @@ function PeoplePanel({ appointment: a }: { appointment: Appointment }) {
                 </a>
               ) : null}
             </div>
+          ) : null}
+        </div>
+        <div className={row}>
+          <label htmlFor="appt-detail-language" className={label}>
+            {t("appointmentBook.language.label", "Language for their emails")}
+          </label>
+          <CustomerLanguageSelect
+            id="appt-detail-language"
+            value={isCustomerLocale(a.customer_language) ? a.customer_language : null}
+            onChange={(v) => {
+              if (!v) return;
+              const owner = a.contact ?? a.company;
+              const toCard = !!owner && v !== a.card_language;
+              if (toCard) announceCardLanguage(t, owner?.name, v);
+              patch.mutate(
+                { customer_locale: v },
+                toCard
+                  ? {
+                      onSuccess: () =>
+                        toast.success(
+                          t("appointmentBook.language.cardUpdated", "Saved, and updated on {{name}}'s customer card", {
+                            name: owner?.name || t("appointmentBook.someone", "Someone"),
+                          }),
+                        ),
+                    }
+                  : undefined,
+              );
+            }}
+            className="sm:w-full"
+          />
+          {!a.contact && !a.company ? (
+            <p className="text-[12.5px] text-muted-foreground">
+              {t("appointmentBook.language.noCard", "Only for this appointment — they aren't one of your customers yet.")}
+            </p>
           ) : null}
         </div>
         <div className={row}>

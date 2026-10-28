@@ -4086,7 +4086,10 @@
     "openWebsite": "Website openen",
     "websiteInvalid": "Vul een website in zoals voorbeeld.nl",
     "confirmRemoveWebsiteTitle": "Deze website verwijderen?",
-    "confirmRemoveWebsiteDescription": "Deze website wordt uit het profiel verwijderd. U kunt hem later opnieuw toevoegen."
+    "confirmRemoveWebsiteDescription": "Deze website wordt uit het profiel verwijderd. U kunt hem later opnieuw toevoegen.",
+    "languageUnknown": "Onbekend",
+    "preferredLanguage": "Voorkeurstaal voor communicatie",
+    "preferredLanguageHint": "Afspraak-e-mails en bevestigingen gaan in deze taal. Laat leeg als u die nog niet weet."
   },
   "leadEmails": {
     "emptyTitle": "Nog geen e-mails gelogd",
@@ -11008,7 +11011,8 @@
       "copyTo": "Afspraken kopiëren naar",
       "makeFallback": "Gebruiken als er niets anders gekozen is",
       "isFallback": "Wordt gebruikt als er niets anders gekozen is – nieuwe afspraken komen hier.",
-      "nowFallback": "Wordt nu gebruikt als er niets anders gekozen is"
+      "nowFallback": "Wordt nu gebruikt als er niets anders gekozen is",
+      "messagesHint2": "Per e-mail onder uw bedrijfsnaam. Sms'jes kunnen later worden toegevoegd."
     },
     "detail": {
       "nobody": "Nog niemand",
@@ -11252,7 +11256,8 @@
       "close": "Klaar",
       "titleChanges": "Bij verzetten of afzeggen",
       "titleReminder": "De herinnering",
-      "titleConfirmation": "De bevestiging"
+      "titleConfirmation": "De bevestiging",
+      "testSentFrom": "Test verzonden naar {{email}} vanaf {{from}}"
     },
     "flows": {
       "nameWith": "{{what}} – {{name}}",
@@ -11302,6 +11307,34 @@
         "comeBack": "Terugkomen na 6 weken",
         "comeBackHint": "Vraagt of ze hun volgende bezoek willen boeken."
       }
+    },
+    "sender": {
+      "label": "Verzenden vanaf",
+      "default": "Uw hoofdmailbox",
+      "defaultWith": "Uw hoofdmailbox ({{email}})",
+      "from": "Verzonden vanaf {{email}}",
+      "platformTitle": "Deze e-mail gaat vanaf het adres van Repraesent, niet vanaf het uwe",
+      "reconnectTitle": "Uw mailbox moet opnieuw worden gekoppeld – tot dan gaat deze e-mail vanaf het adres van Repraesent",
+      "platformBody": "Uw klanten zien uw bedrijfsnaam, maar sommige e-mailprogramma's vertrouwen dit adres minder en kunnen de e-mail als spam zien. Koppel uw eigen mailbox, dan gaat hij vanaf uw adres.",
+      "connectCta": "Mailbox koppelen",
+      "reconnectCta": "Mailbox opnieuw koppelen"
+    },
+    "language": {
+      "pick": "Kies een taal",
+      "none": "Niet ingesteld",
+      "short": "Taal",
+      "label": "Taal van de e-mails aan deze klant",
+      "fromCalendar": "We kennen de taal van deze klant nog niet, dus staat hier die van de agenda. Pas hem aan als de klant een andere taal spreekt.",
+      "required": "Kies de taal waarin deze klant zijn e-mails krijgt.",
+      "calendarLabel": "Taal als we die van de klant niet kennen",
+      "calendarHint": "Klanten krijgen e-mails in hun eigen taal als we die kennen – uit hun formulier of klantkaart. Anders in deze.",
+      "calendarNone": "De taal van wie het afhandelt",
+      "cardWillUpdate": "{{language}} wordt ook opgeslagen op de klantkaart van {{name}}.",
+      "cardWillUpdateNoName": "{{language}} wordt ook opgeslagen op de klantkaart.",
+      "cardWillUpdateWhy": "Alle volgende e-mails aan deze klant gaan dan in deze taal.",
+      "savedOnCard2": "We werken hem bij op de klantkaart.",
+      "cardUpdated": "Opgeslagen en bijgewerkt op de klantkaart van {{name}}",
+      "noCard": "Alleen voor deze afspraak – deze persoon staat nog niet bij uw klanten."
     }
   },
   "calendarView": {

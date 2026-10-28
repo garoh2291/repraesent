@@ -4088,7 +4088,10 @@
     "openWebsite": "Website öffnen",
     "websiteInvalid": "Geben Sie eine Website wie beispiel.de ein",
     "confirmRemoveWebsiteTitle": "Diese Website entfernen?",
-    "confirmRemoveWebsiteDescription": "Diese Website wird aus dem Profil entfernt. Sie können sie später wieder hinzufügen."
+    "confirmRemoveWebsiteDescription": "Diese Website wird aus dem Profil entfernt. Sie können sie später wieder hinzufügen.",
+    "languageUnknown": "Unbekannt",
+    "preferredLanguage": "Bevorzugte Kommunikationssprache",
+    "preferredLanguageHint": "Termin-E-Mails und Bestätigungen gehen in dieser Sprache raus. Lassen Sie das Feld leer, wenn Sie sie noch nicht kennen."
   },
   "leadEmails": {
     "emptyTitle": "Noch keine E-Mails protokolliert",
@@ -11010,7 +11013,8 @@
       "copyTo": "Termine kopieren nach",
       "makeFallback": "Verwenden, wenn nichts anderes gewählt ist",
       "isFallback": "Wird verwendet, wenn nichts anderes gewählt ist – neue Termine landen hier.",
-      "nowFallback": "Wird jetzt verwendet, wenn nichts anderes gewählt ist"
+      "nowFallback": "Wird jetzt verwendet, wenn nichts anderes gewählt ist",
+      "messagesHint2": "Per E-Mail unter Ihrem Firmennamen. SMS können später dazukommen."
     },
     "detail": {
       "nobody": "Noch niemand",
@@ -11254,7 +11258,8 @@
       "close": "Fertig",
       "titleChanges": "Bei Verschiebung oder Absage",
       "titleReminder": "Die Erinnerung",
-      "titleConfirmation": "Die Bestätigung"
+      "titleConfirmation": "Die Bestätigung",
+      "testSentFrom": "Test an {{email}} gesendet, von {{from}}"
     },
     "flows": {
       "nameWith": "{{what}} – {{name}}",
@@ -11304,6 +11309,34 @@
         "comeBack": "Wiederkommen nach 6 Wochen",
         "comeBackHint": "Fragt, ob sie den nächsten Besuch buchen möchten."
       }
+    },
+    "sender": {
+      "label": "Absender",
+      "default": "Ihr Haupt-Postfach",
+      "defaultWith": "Ihr Haupt-Postfach ({{email}})",
+      "from": "Gesendet von {{email}}",
+      "platformTitle": "Diese E-Mail geht von der Adresse von Repraesent raus, nicht von Ihrer",
+      "reconnectTitle": "Ihr Postfach muss neu verbunden werden – bis dahin geht diese E-Mail von der Adresse von Repraesent raus",
+      "platformBody": "Ihre Kunden sehen Ihren Firmennamen, aber manche E-Mail-Programme vertrauen dieser Adresse weniger und legen die E-Mail eventuell im Spam ab. Verbinden Sie Ihr eigenes Postfach, dann geht sie von Ihrer Adresse raus.",
+      "connectCta": "Postfach verbinden",
+      "reconnectCta": "Postfach neu verbinden"
+    },
+    "language": {
+      "pick": "Sprache wählen",
+      "none": "Nicht festgelegt",
+      "short": "Sprache",
+      "label": "Sprache der E-Mails an diesen Kunden",
+      "fromCalendar": "Die Sprache dieses Kunden kennen wir noch nicht, deshalb steht hier die des Kalenders. Ändern Sie sie, wenn er eine andere spricht.",
+      "required": "Wählen Sie die Sprache, in der dieser Kunde seine E-Mails bekommt.",
+      "calendarLabel": "Sprache, wenn wir die des Kunden nicht kennen",
+      "calendarHint": "Kunden bekommen E-Mails in ihrer eigenen Sprache, wenn wir sie kennen – aus dem Formular oder der Kundenkarte. Sonst in dieser.",
+      "calendarNone": "Die Sprache der zuständigen Person",
+      "cardWillUpdate": "{{language}} wird auch auf der Kundenkarte von {{name}} gespeichert.",
+      "cardWillUpdateNoName": "{{language}} wird auch auf der Kundenkarte gespeichert.",
+      "cardWillUpdateWhy": "Alle weiteren E-Mails an diesen Kunden gehen dann in dieser Sprache raus.",
+      "savedOnCard2": "Wir aktualisieren sie auf der Kundenkarte.",
+      "cardUpdated": "Gespeichert und auf der Kundenkarte von {{name}} aktualisiert",
+      "noCard": "Nur für diesen Termin – die Person ist noch nicht in Ihren Kunden."
     }
   },
   "calendarView": {

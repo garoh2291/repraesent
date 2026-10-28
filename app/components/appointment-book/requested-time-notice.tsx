@@ -20,7 +20,7 @@ export function RequestedTimeNotice({
   appointment,
   hidden,
 }: {
-  lead: Pick<Lead, "id" | "full_name" | "email" | "phone">;
+  lead: Pick<Lead, "id" | "full_name" | "email" | "phone"> & Partial<Pick<Lead, "metadata">>;
   appointment: LeadAppointment;
   /** Still in Hidden: "Not spam" does the booking, nothing to offer here. */
   hidden: boolean;
@@ -52,6 +52,7 @@ export function RequestedTimeNotice({
         customerName: lead.full_name ?? null,
         customerEmail: lead.email ?? null,
         customerPhone: lead.phone ?? null,
+        customerLocale: (lead.metadata?.form_locale as string | undefined) ?? null,
         startsAt: past ? undefined : appointment.start.toISOString(),
       },
     });

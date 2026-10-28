@@ -10,14 +10,8 @@ import {
   normalizeLocale,
   type SupportedLocale,
 } from "~/i18n/locales";
+import { LANGUAGE_NAMES } from "~/i18n/language-names";
 
-/** Full display names for the compact dropdown variant. */
-const LANGUAGE_NAMES: Record<SupportedLocale, string> = {
-  en: "English",
-  de: "Deutsch",
-  fr: "Français",
-  nl: "Nederlands",
-};
 
 interface LanguageSwitcherProps {
   /** "dark"/"light" = button group; "dropdown" = compact NativeSelect with full names */

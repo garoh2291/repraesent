@@ -4088,7 +4088,10 @@
     "openWebsite": "Ouvrir le site",
     "websiteInvalid": "Saisissez un site comme exemple.fr",
     "confirmRemoveWebsiteTitle": "Supprimer ce site web ?",
-    "confirmRemoveWebsiteDescription": "Ce site web sera supprimé du profil. Vous pourrez l’ajouter à nouveau plus tard."
+    "confirmRemoveWebsiteDescription": "Ce site web sera supprimé du profil. Vous pourrez l’ajouter à nouveau plus tard.",
+    "languageUnknown": "Inconnue",
+    "preferredLanguage": "Langue de communication préférée",
+    "preferredLanguageHint": "Les e-mails de rendez-vous et les confirmations partent dans cette langue. Laissez vide si vous ne la connaissez pas encore."
   },
   "leadEmails": {
     "emptyTitle": "Aucun e-mail journalisé pour le moment",
@@ -11010,7 +11013,8 @@
       "copyTo": "Copier les rendez-vous dans",
       "makeFallback": "Utiliser quand rien d’autre n’est choisi",
       "isFallback": "Utilisé quand rien d’autre n’est choisi : les nouveaux rendez-vous arrivent ici.",
-      "nowFallback": "Utilisé désormais quand rien d’autre n’est choisi"
+      "nowFallback": "Utilisé désormais quand rien d’autre n’est choisi",
+      "messagesHint2": "Envoyés par e-mail au nom de votre entreprise. Les SMS pourront être ajoutés plus tard."
     },
     "detail": {
       "nobody": "Personne pour l’instant",
@@ -11254,7 +11258,8 @@
       "close": "OK",
       "titleChanges": "En cas de report ou d’annulation",
       "titleReminder": "Le rappel",
-      "titleConfirmation": "La confirmation"
+      "titleConfirmation": "La confirmation",
+      "testSentFrom": "Test envoyé à {{email}} depuis {{from}}"
     },
     "flows": {
       "nameWith": "{{what}} — {{name}}",
@@ -11304,6 +11309,34 @@
         "comeBack": "Revenir après 6 semaines",
         "comeBackHint": "Propose de réserver la prochaine visite."
       }
+    },
+    "sender": {
+      "label": "Envoyer depuis",
+      "default": "Votre boîte principale",
+      "defaultWith": "Votre boîte principale ({{email}})",
+      "from": "Envoyé depuis {{email}}",
+      "platformTitle": "Cet e-mail part de l'adresse de Repraesent, pas de la vôtre",
+      "reconnectTitle": "Votre boîte doit être reconnectée : en attendant, cet e-mail part de l'adresse de Repraesent",
+      "platformBody": "Vos clients voient le nom de votre entreprise, mais certaines messageries s'y fient moins et peuvent classer l'e-mail en spam. Connectez votre propre boîte et il partira de votre adresse.",
+      "connectCta": "Connecter votre boîte",
+      "reconnectCta": "Reconnecter votre boîte"
+    },
+    "language": {
+      "pick": "Choisir une langue",
+      "none": "Non défini",
+      "short": "Langue",
+      "label": "Langue de ses e-mails",
+      "fromCalendar": "Nous ne connaissons pas encore la langue de ce client : c'est celle du calendrier. Changez-la s'il en parle une autre.",
+      "required": "Choisissez la langue dans laquelle ce client recevra ses e-mails.",
+      "calendarLabel": "Langue quand nous ne connaissons pas celle du client",
+      "calendarHint": "Les clients reçoivent les e-mails dans leur langue quand nous la connaissons — via leur formulaire ou leur fiche client. Sinon dans celle-ci.",
+      "calendarNone": "La langue de la personne qui s'en occupe",
+      "cardWillUpdate": "{{language}} sera aussi enregistrée sur la fiche client de {{name}}.",
+      "cardWillUpdateNoName": "{{language}} sera aussi enregistrée sur sa fiche client.",
+      "cardWillUpdateWhy": "Tous ses prochains e-mails partiront dans cette langue.",
+      "savedOnCard2": "Nous la mettrons à jour sur sa fiche client.",
+      "cardUpdated": "Enregistré, et mis à jour sur la fiche client de {{name}}",
+      "noCard": "Seulement pour ce rendez-vous — cette personne ne fait pas encore partie de vos clients."
     }
   },
   "calendarView": {
