@@ -103,8 +103,8 @@ export function useWorkspacePluginSettingsForm<T extends object>(
   const [savedSettings, setSavedSettings] = useState<T>(() => fromApi(null));
 
   const siteQuery = useWorkspaceWpSite(true);
-  // Site management requires admin SSO — without it the Website surface is hidden.
-  const hasSite = !!siteQuery.data?.sso_enabled;
+  // Any WordPress site will do: admin SSO only gates the "Sign in to admin" button.
+  const hasSite = !!siteQuery.data;
   const settingsQuery = useWorkspacePluginSettings(pluginUuid, hasSite);
   const saveMutation = useWorkspacePluginSettingsMutation(pluginUuid);
 
@@ -176,6 +176,8 @@ export function useWorkspacePluginSettingsForm<T extends object>(
     ),
     /** True while the form differs from what's on the server. */
     dirty,
+    /** The last state known to be on the server. */
+    savedSettings,
     /** Sync the saved baseline for edits that a server action already
      *  persisted outside the normal save (e.g. re:index sitemap regenerate). */
     setSavedSettings,

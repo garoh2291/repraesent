@@ -43,3 +43,19 @@ export async function getWorkspaceProfileJob(jobId: string): Promise<{ job: Enri
   const { data } = await apiClient.get<{ job: EnrichmentJob; profile: WorkspaceProfileView["profile"] }>(`/workspace-profile/enrich/${jobId}`);
   return data;
 }
+
+export type ProfileImageKind = "logo" | "favicon";
+
+/** Upload the logo or favicon; saved straight away (the website read never replaces it). */
+export async function uploadProfileImage(kind: ProfileImageKind, file: File): Promise<{ url: string }> {
+  const form = new FormData();
+  form.append("file", file);
+  const { data } = await apiClient.post<{ url: string }>(`/workspace-profile/image/${kind}`, form, {
+    headers: { "Content-Type": "multipart/form-data" },
+  });
+  return data;
+}
+
+export async function removeProfileImage(kind: ProfileImageKind): Promise<void> {
+  await apiClient.delete(`/workspace-profile/image/${kind}`);
+}

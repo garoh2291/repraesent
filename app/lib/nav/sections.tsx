@@ -30,6 +30,8 @@ import {
   CalendarClock,
   CalendarDays,
   BookOpen,
+  SlidersHorizontal,
+  FlaskConical,
 } from "lucide-react";
 import * as LucideIcons from "lucide-react";
 import { OpenAiMark } from "~/components/icons/openai-mark";
@@ -39,6 +41,21 @@ import { isPilotFeatureEnabled, usePilotFeatures } from "~/lib/feature-flags";
 import { useAppointmentConfigs } from "~/lib/hooks/useAppointmentConfigs";
 import { useCalendarSummary } from "~/lib/hooks/useCalendarSummary";
 import { useWorkspaceWpSite } from "~/lib/hooks/useWorkspaceWpSite";
+import {
+  usePreloadWpPluginInstalls,
+  useWorkspaceWpPluginInstalls,
+} from "~/lib/hooks/useWorkspaceWpPluginInstalls";
+import {
+  useSwitchWpSite,
+  useWorkspaceWpSites,
+  useWpSitesHosting,
+} from "~/lib/hooks/useWorkspaceWpSites";
+import {
+  pluginKindIcon,
+  WEBSITE_SETTINGS_PATH,
+  WEBSITE_STAGING_PATH,
+  wordpressPluginSettingsPath,
+} from "~/lib/utils/wordpress-plugin-kind";
 import { useStripeConnection } from "~/lib/hooks/useWorkspaceIntegrations";
 import { usePipelinesQuery } from "~/lib/hooks/usePipelines";
 
@@ -73,6 +90,24 @@ export interface SectionTab {
   createPipeline?: boolean;
 }
 
+/** A page listed under its section in the left panel (Website › Production, › Staging). */
+export interface SectionChild {
+  key: string;
+  label: string;
+  to: string;
+  icon: IconType;
+  /**
+   * Whether the section's other pages work on this one right now: Settings
+   * and the services follow the open site, so they light up its entry.
+   */
+  selected: boolean;
+  /**
+   * Runs with the click, before the page opens: makes this entry's site the
+   * open one, so the tabs above the page are already that site's.
+   */
+  onSelect?: () => void;
+}
+
 export interface NavSection {
   key: SectionKey;
   label: string;
@@ -81,6 +116,10 @@ export interface NavSection {
   /** Path prefixes that light this section up. */
   match: string[];
   tabs: SectionTab[];
+  /** Pages nested under the section in the left panel. */
+  children?: SectionChild[];
+  /** Runs with a click on the section itself, before its page opens. */
+  onSelect?: () => void;
   /** Shows the neutral "Demo" pill (pilot features). */
   pilot?: boolean;
 }
@@ -142,6 +181,17 @@ export function useNavSections(): NavSection[] | null {
   const enabled = !!currentWorkspace?.id && !isBrand;
 
   const { data: wpSite } = useWorkspaceWpSite(enabled);
+  // The site list (a quick database read): Staging shows when it has a copy.
+  const { data: wpSites } = useWorkspaceWpSites(enabled);
+  const isElsewhere = useWpSitesHosting(enabled && !!wpSite);
+  // The site's services (cookie banner, SEO, translations…) are Website tabs.
+  const { data: wpInstalls } = useWorkspaceWpPluginInstalls(
+    enabled ? wpSite?.id : undefined,
+  );
+  // Every site's services, loaded in the background: a switch between
+  // Production and Staging then shows the new site's tabs at once.
+  usePreloadWpPluginInstalls(enabled ? (wpSites ?? []).map((s) => s.id) : []);
+  const switchSite = useSwitchWpSite();
   const { isConnected: hasStripe } = useStripeConnection(enabled);
   const hasAppointmentsService =
     currentWorkspace?.services?.some((s) => s.service_type === "appointments") ??
@@ -155,7 +205,44 @@ export function useNavSections(): NavSection[] | null {
 
   if (!currentWorkspace || isBrand) return null;
 
-  const showWebsite = !!wpSite?.sso_enabled || isDemo;
+  const showWebsite = !!wpSite || isDemo;
+  const hasLive = !!wpSites?.some((s) => s.type === "production");
+  const hasStaging = !!wpSites?.some((s) => s.type !== "production");
+  const openIsStaging = hasStaging && !!wpSite && wpSite.type !== "production";
+  // The site each page opens: the open one if it's that kind, else the first.
+  const siteOf = (production: boolean) =>
+    wpSite && (wpSite.type === "production") === production
+      ? wpSite
+      : wpSites?.find((s) => (s.type === "production") === production);
+  const productionSite = siteOf(true);
+  const stagingSite = siteOf(false);
+  const open = (site: typeof wpSite) => () => {
+    if (site && site.id !== wpSite?.id) switchSite(site);
+  };
+  // Website opens the production site; with only a staging copy, that copy.
+  const websiteHome = !hasLive && hasStaging ? WEBSITE_STAGING_PATH : "/website";
+  // Production and Staging sit under Website in the left panel only when both exist.
+  const websiteChildren: SectionChild[] | undefined =
+    showWebsite && hasLive && hasStaging
+      ? [
+          {
+            key: "live",
+            label: t("nav.websiteProduction", "Production"),
+            to: "/website",
+            icon: Globe,
+            selected: !openIsStaging,
+            onSelect: open(productionSite),
+          },
+          {
+            key: "staging",
+            label: t("nav.websiteStaging", "Staging"),
+            to: WEBSITE_STAGING_PATH,
+            icon: FlaskConical,
+            selected: openIsStaging,
+            onSelect: open(stagingSite),
+          },
+        ]
+      : undefined;
   const showAppointments =
     (hasAppointmentsService && !!appointmentConfigs?.length) || isDemo;
   const showCalendar =
@@ -339,21 +426,56 @@ export function useNavSections(): NavSection[] | null {
     icon: Radar,
   });
 
-  const website: SectionTab[] = [];
-  if (showWebsite) {
-    website.push({
-      key: "site",
-      label: t("sections.tabs.site", "Site"),
-      to: "/website",
-      icon: Globe,
-    });
-  }
-  website.push({
+  const forms: SectionTab = {
     key: "forms",
     label: t("nav.forms", "Forms"),
     to: "/forms",
     icon: ClipboardList,
-  });
+  };
+  const website: SectionTab[] = [];
+  // Settings for the whole site goes last in the strip, after everything else.
+  let websiteSettings: SectionTab | null = null;
+  if (showWebsite) {
+    website.push({
+      key: "site",
+      label: t("nav.websiteOverview", "Overview"),
+      // The open site's own page: Live, or Staging while a copy is open.
+      to: openIsStaging ? WEBSITE_STAGING_PATH : "/website",
+      match: ["/website", WEBSITE_STAGING_PATH],
+      icon: Globe,
+      // Exact: the other Website pages live under /website/… as their own tabs.
+      exact: true,
+    });
+    // A site we don't host has no settings or services to manage here.
+    if (!isElsewhere(wpSite?.id)) {
+      websiteSettings = {
+        key: "site-settings",
+        label: t("nav.websiteSettings", "Settings"),
+        to: WEBSITE_SETTINGS_PATH,
+        icon: SlidersHorizontal,
+        // Exact: /website/settings/<uuid> is a service tab.
+        exact: true,
+      };
+    }
+    // Forms comes right after Overview, before the services.
+    website.push(forms);
+    if (!isElsewhere(wpSite?.id)) {
+      const plugins = [...(wpInstalls?.plugins ?? [])].sort((a, b) =>
+        a.display_name.localeCompare(b.display_name, undefined, {
+          sensitivity: "base",
+        }),
+      );
+      for (const p of plugins) {
+        website.push({
+          key: `wp-${p.plugin_uuid}`,
+          label: p.display_name,
+          to: wordpressPluginSettingsPath(p.plugin_uuid),
+          icon: pluginKindIcon(p.name),
+        });
+      }
+    }
+  }
+  if (!showWebsite) website.push(forms);
   if (pilot.aiAssistant) {
     website.push({
       key: "chat",
@@ -416,6 +538,7 @@ export function useNavSections(): NavSection[] | null {
       section === "today" ? "website" : section
     ].push(tab);
   }
+  if (websiteSettings) website.push(websiteSettings);
 
   return [
     {
@@ -490,7 +613,7 @@ export function useNavSections(): NavSection[] | null {
       key: "website",
       label: t("sections.website", "Website"),
       icon: Globe,
-      to: website[0]?.to ?? "/forms",
+      to: showWebsite ? websiteHome : (website[0]?.to ?? "/forms"),
       match: [
         "/website",
         "/forms",
@@ -499,6 +622,8 @@ export function useNavSections(): NavSection[] | null {
         ...website.map((w) => w.to),
       ],
       tabs: website,
+      children: websiteChildren,
+      onSelect: showWebsite ? open(hasLive ? productionSite : stagingSite) : undefined,
     },
   ];
 }
@@ -514,6 +639,22 @@ export function activeSection(
     sections
       .slice(1)
       .find((s) => pathMatches(pathname, s.match)) ?? null
+  );
+}
+
+/**
+ * Which nested entry is current: the one whose page is open, else — on the
+ * section's other pages — the one they work on.
+ */
+export function activeChild(
+  section: NavSection,
+  pathname: string,
+): SectionChild | null {
+  const children = section.children ?? [];
+  return (
+    children.find((c) => pathname === c.to) ??
+    children.find((c) => c.selected) ??
+    null
   );
 }
 

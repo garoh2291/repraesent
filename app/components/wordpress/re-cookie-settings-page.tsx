@@ -12,7 +12,6 @@ import type {
 } from "~/lib/wordpress/plugin-settings-types";
 import { formatPluginSettingsTitle } from "~/lib/utils/wordpress-plugin-kind";
 import {
-  PluginSettingsBackLink,
   PluginSettingsLoadingPage,
   ServicePauseToggle,
 } from "~/components/wordpress/plugin-settings-chrome";
@@ -158,10 +157,6 @@ export function ReCookieSettingsPage() {
 
   return (
     <PageShell>
-      <PluginSettingsBackLink
-        label={t("wordpress.reCookie.back", "Back to website")}
-      />
-
       <div className="sticky top-0 z-20 -mx-4 mb-6 border-b bg-background/80 px-4 py-3 backdrop-blur-md sm:-mx-6 sm:px-6 app-fade-up">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="flex min-w-0 flex-col gap-0.5">

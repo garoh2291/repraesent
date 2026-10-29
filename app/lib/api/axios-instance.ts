@@ -142,6 +142,25 @@ export const setStoredSelectedView = (view: string): void => writePerTab(SELECTE
 export const clearStoredSelectedView = (): void => clearPerTab(SELECTED_VIEW_KEY);
 
 /**
+ * Which of the workspace's WordPress sites (production, staging, development)
+ * the Website section works on — picked in Website settings, chosen per tab
+ * like the workspace itself and keyed by workspace so a switch never carries
+ * one workspace's site into another. The API only honours ids belonging to the
+ * workspace; without one it opens on production.
+ */
+const wpSiteKey = (workspaceId: string) => `rp_wp_site:${workspaceId}`;
+
+export const getStoredWpSiteId = (): string | null => {
+  const workspaceId = getStoredWorkspaceId();
+  return workspaceId ? readPerTab(wpSiteKey(workspaceId)) : null;
+};
+
+export const setStoredWpSiteId = (siteId: string): void => {
+  const workspaceId = getStoredWorkspaceId();
+  if (workspaceId) writePerTab(wpSiteKey(workspaceId), siteId);
+};
+
+/**
  * Create axios instance with default configuration
  */
 export const apiClient = axios.create({
@@ -164,6 +183,11 @@ apiClient.interceptors.request.use(
     const workspaceId = getStoredWorkspaceId();
     if (workspaceId && config.headers) {
       config.headers["X-Workspace-Id"] = workspaceId;
+    }
+    // A request may name its site itself (preloading another site's data).
+    const wpSiteId = getStoredWpSiteId();
+    if (wpSiteId && config.headers && !config.headers["X-Wp-Site-Id"]) {
+      config.headers["X-Wp-Site-Id"] = wpSiteId;
     }
     return config;
   },

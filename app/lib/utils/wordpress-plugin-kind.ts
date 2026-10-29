@@ -44,6 +44,16 @@ export function wordpressPluginSettingsPath(pluginUuid: string): string {
 }
 
 /**
+ * Website settings: what belongs to the site rather than to one service —
+ * tracking tags (added by re:cookie) and search engine verification + sitemap
+ * (by re:index). The services' own screens sit one level below it.
+ */
+export const WEBSITE_SETTINGS_PATH = "/website/settings";
+
+/** Website › Staging: the staging and test copies of the live site. */
+export const WEBSITE_STAGING_PATH = "/website/staging";
+
+/**
  * Settings-page header: catalog `display_name` from `wp_plugins`. Falls back
  * to `fallback` while the catalog is still loading or the UUID is unknown.
  */

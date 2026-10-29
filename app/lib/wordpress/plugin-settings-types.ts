@@ -40,10 +40,30 @@ export type ReCookieTranslationLang = {
   mediaBlocker: { message: string };
 };
 
-export type ReCookieNamedScript = { name: string; script: string };
+export type ReCookieNamedScript = {
+  name: string;
+  script: string;
+  /** Loads at page start, without waiting for consent, while the banner is on. */
+  always_on?: boolean;
+  /**
+   * Where on the page (re:cookie 1.5): inside <head>, right after <body>
+   * opens, or before </body>. Missing = head, which is what 1.4 did.
+   */
+  placement?: ReCookieScriptPlacement;
+};
+
+export type ReCookieScriptPlacement = "head" | "body_open" | "footer";
+
+/**
+ * `ask`: the banner shows and tags wait for consent. `off`: no banner, every
+ * tag loads for every visitor. Missing on sites saved before re:cookie 1.4,
+ * which behave as `ask`.
+ */
+export type ReCookieConsentMode = "ask" | "off" | "region";
 
 export type ReCookieSettings = {
   config_version: number;
+  consent_mode?: ReCookieConsentMode;
   banner_position: "bottom" | "center";
   primary_color: string;
   background_color: string;
@@ -134,7 +154,8 @@ export type ReIndexSettings = {
     og_description: string;
     compressed_url: string;
   };
-  /** Machine SEO generation is available (plugin ships a default token). */
+  /** Repraesent's own visitor statistics tracker. Read-only: staff set it up. */
+  plausible?: { enabled: boolean; domain: string };
   /** Live or last finished site-wide Optimize SEO run. */
   seo_bulk?: ReTranslateBulkState;
 };

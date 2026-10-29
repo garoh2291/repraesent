@@ -2,10 +2,7 @@ import { Link, useParams } from "react-router";
 import { useTranslation } from "react-i18next";
 import i18n from "~/i18n";
 import { useDocumentMeta } from "~/lib/hooks/use-document-meta";
-import {
-  PluginSettingsLoadingPage,
-  ServiceInactiveGate,
-} from "~/components/wordpress/plugin-settings-chrome";
+import { PluginSettingsLoadingPage } from "~/components/wordpress/plugin-settings-chrome";
 import { ReCookieSettingsPage } from "~/components/wordpress/re-cookie-settings-page";
 import { ReIndexSettingsPage } from "~/components/wordpress/re-index-settings-page";
 import { ReMaintenanceSettingsPage } from "~/components/wordpress/re-maintenance-settings-page";
@@ -15,6 +12,10 @@ import { ReTranslateSettingsPage } from "~/components/wordpress/re-translate-set
 import { ReVisibleSettingsPage } from "~/components/wordpress/re-visible-settings-page";
 import { ReBannerSettingsPage } from "~/components/wordpress/re-banner-settings-page";
 import { useResolvePluginKind } from "~/lib/hooks/useWorkspaceWpPluginCatalog";
+import { useWorkspaceWpSite } from "~/lib/hooks/useWorkspaceWpSite";
+import { useWpSitesHosting } from "~/lib/hooks/useWorkspaceWpSites";
+import { PageShell } from "~/components/wordpress/fields";
+import { NotHostedNotice } from "~/components/wordpress/website-site-picker";
 
 export function meta() {
   return [
@@ -51,10 +52,21 @@ export default function WordPressPluginSettingsRoute() {
     titleSuffix: " - Repraesent",
   });
 
-  const { kind, catalogItem, isLoading } = useResolvePluginKind(pluginUuid);
+  const { kind, isLoading } = useResolvePluginKind(pluginUuid);
+  const siteQuery = useWorkspaceWpSite(true);
+  const isElsewhere = useWpSitesHosting(!!siteQuery.data);
 
-  if (isLoading || kind === undefined) {
+  if (isLoading || kind === undefined || siteQuery.isLoading) {
     return <PluginSettingsLoadingPage />;
+  }
+
+  // A site we don't host: none of its services can be read or saved from here.
+  if (siteQuery.data && isElsewhere(siteQuery.data.id)) {
+    return (
+      <PageShell>
+        <NotHostedNotice site={siteQuery.data} />
+      </PageShell>
+    );
   }
 
   if (kind === null) {
@@ -99,12 +111,7 @@ export default function WordPressPluginSettingsRoute() {
     }
   })();
 
-  return (
-    <ServiceInactiveGate
-      pluginUuid={pluginUuid ?? ""}
-      name={catalogItem?.display_name}
-    >
-      {page}
-    </ServiceInactiveGate>
-  );
+  // No activate step: an installed service is switched on in WordPress, and
+  // the API switches it on before any save if it somehow isn't.
+  return page;
 }

@@ -11,7 +11,6 @@ import {
   Globe,
   Headset,
   HomeIcon,
-  Loader2,
   LogOut,
   Megaphone,
   Package,
@@ -27,12 +26,10 @@ import { ContactSalesDialog } from "~/components/sales-contact/contact-sales-dia
 import { openCommandPalette } from "~/components/notebook/command-palette";
 import { useAuthContext } from "~/providers/auth-provider";
 import { PILOT_FEATURE_LABEL_KEY } from "~/lib/feature-flags";
-import { useWorkspaceWpPluginInstalls } from "~/lib/hooks/useWorkspaceWpPluginInstalls";
-import { pluginKindIcon, wordpressPluginSettingsPath } from "~/lib/utils/wordpress-plugin-kind";
 import { useNavSections } from "~/lib/nav/sections";
 import { PILOT_SETTINGS, useNavModel } from "~/lib/nav/use-nav-model";
 import { cn } from "~/lib/utils";
-import { ListRow, SettingsGroups } from "~/components/notebook/settings-groups";
+import { SettingsGroups } from "~/components/notebook/settings-groups";
 import { applyWaitingUpdate, useUpdateWaiting } from "~/lib/pwa/update-store";
 import { EASE_OUT, SPRING } from "~/lib/motion";
 
@@ -42,19 +39,19 @@ import { EASE_OUT, SPRING } from "~/lib/motion";
  * tab bar, so the sheet holds everything else — the area switcher, search,
  * Website, Settings, Billing, Contact re:praesent, language and log out.
  *
- * Same rules as the desktop sidebar (useNavModel). Inside Settings or Website
- * it opens on that section's own list, with a way back to the main menu that
+ * Same rules as the desktop sidebar (useNavModel). Inside Settings it opens
+ * on the settings list, with a way back to the main menu that
  * doesn't navigate anywhere.
  */
 
-type View = "main" | "settings" | "website";
+type View = "main" | "settings";
 
 
 export function MobileMenu({ open, onOpenChange }: { open: boolean; onOpenChange: (open: boolean) => void }) {
   const { t } = useTranslation();
   const nav = useNavModel();
   const [contactOpen, setContactOpen] = useState(false);
-  const routeView: View = nav.inSettings ? "settings" : nav.inWebsite ? "website" : "main";
+  const routeView: View = nav.inSettings ? "settings" : "main";
   const [view, setView] = useState<View>(routeView);
   // Every opening starts where the person is.
   useEffect(() => {
@@ -121,8 +118,6 @@ export function MobileMenu({ open, onOpenChange }: { open: boolean; onOpenChange
               >
               {view === "settings" ? (
                 <SettingsList onBack={() => setView("main")} onNavigate={close} />
-              ) : view === "website" ? (
-                <WebsiteList onBack={() => setView("main")} onNavigate={close} />
               ) : nav.isDoorboostBrandWs ? (
                 <BrandTiles open={open} onNavigate={close} />
               ) : (
@@ -280,6 +275,8 @@ type Tile = {
   icon: React.ComponentType<{ className?: string }>;
   to?: string;
   onClick?: () => void;
+  /** With `to`: runs with the tap, before the page opens. */
+  onSelect?: () => void;
   /** Opens a list inside the sheet: shows a chevron. */
   drill?: boolean;
   active?: boolean;
@@ -322,7 +319,16 @@ function TileGrid({ tiles, open, onNavigate }: { tiles: Tile[]; open: boolean; o
             transition={{ duration: 0.26, delay: reduce ? 0 : 0.06 + i * 0.04, ease: EASE_OUT }}
           >
             {tile.to ? (
-              <Link to={tile.to} prefetch="intent" onClick={onNavigate} aria-current={tile.active ? "page" : undefined} className={cls}>
+              <Link
+                to={tile.to}
+                prefetch="intent"
+                onClick={() => {
+                  tile.onSelect?.();
+                  onNavigate();
+                }}
+                aria-current={tile.active ? "page" : undefined}
+                className={cls}
+              >
                 {body}
               </Link>
             ) : (
@@ -346,8 +352,8 @@ function MainTiles({
   open: boolean;
   onNavigate: () => void;
   onContact: () => void;
-  /** Website and Settings open their own list in the sheet, not a page. */
-  onOpenView: (view: "settings" | "website") => void;
+  /** Settings opens its own list in the sheet, not a page. */
+  onOpenView: (view: "settings") => void;
 }) {
   const { t } = useTranslation();
   const location = useLocation();
@@ -370,15 +376,32 @@ function MainTiles({
     });
   }
   if (website) {
+    // Website's nested Staging entry, as in the left panel; Website is Live.
+    const staging = website.children?.find((c) => c.key === "staging");
+    const onStaging = !!staging && location.pathname === staging.to;
+    const inWebsite = website.match.some((m) => location.pathname === m || location.pathname.startsWith(`${m}/`));
     tiles.push({
       key: "website",
       label: website.label,
       hint: t("nav.mobileMenu.hints.website", "Pages, SEO and your services"),
       icon: website.icon ?? Globe,
-      onClick: () => onOpenView("website"),
-      drill: true,
-      active: location.pathname.startsWith("/website"),
+      // Its services are tabs at the top of the page, like every section.
+      to: website.to,
+      onSelect: website.onSelect,
+      active: inWebsite && !onStaging,
     });
+    // Like the left panel: Staging shows once you're in Website.
+    if (staging && inWebsite) {
+      tiles.push({
+        key: "website-staging",
+        label: staging.label,
+        hint: t("nav.mobileMenu.hints.websiteStaging", "Your website's test copy"),
+        icon: staging.icon,
+        to: staging.to,
+        onSelect: staging.onSelect,
+        active: onStaging,
+      });
+    }
   }
   tiles.push(
     {
@@ -429,7 +452,7 @@ function BrandTiles({ open, onNavigate }: { open: boolean; onNavigate: () => voi
   return <TileGrid tiles={tiles} open={open} onNavigate={onNavigate} />;
 }
 
-// ── section lists (Settings, Website) ────────────────────────────────────────
+// ── section lists (Settings) ────────────────────────────────────────────────
 
 function BackRow({ label, onBack }: { label: string; onBack: () => void }) {
   const { t } = useTranslation();
@@ -454,36 +477,6 @@ function SettingsList({ onBack, onNavigate }: { onBack: () => void; onNavigate: 
     <div>
       <BackRow label={t("nav.settings")} onBack={onBack} />
       <SettingsGroups onNavigate={onNavigate} />
-    </div>
-  );
-}
-
-function WebsiteList({ onBack, onNavigate }: { onBack: () => void; onNavigate: () => void }) {
-  const { t } = useTranslation();
-  const { pathname } = useLocation();
-  const installs = useWorkspaceWpPluginInstalls(true);
-  const plugins = [...(installs.data?.plugins ?? [])].sort((a, b) =>
-    a.display_name.localeCompare(b.display_name, undefined, { sensitivity: "base" }),
-  );
-  return (
-    <div>
-      <BackRow label={t("nav.website", "Website")} onBack={onBack} />
-      <ul className="divide-y divide-border overflow-hidden rounded-2xl border border-border bg-card">
-        <ListRow to="/website" icon={Globe} label={t("nav.websiteOverview", "Overview")} active={pathname === "/website"} onNavigate={onNavigate} />
-        {installs.isPending && !installs.data ? (
-          <li className="flex min-h-12 items-center gap-3 px-3 text-[14px] text-muted-foreground" aria-busy="true">
-            <Loader2 className="size-4 animate-spin motion-reduce:animate-none" aria-hidden />
-            {t("nav.loadingPlugins", "Loading services…")}
-          </li>
-        ) : (
-          plugins.map((p) => {
-            const path = wordpressPluginSettingsPath(p.plugin_uuid);
-            return (
-              <ListRow key={p.plugin_uuid} to={path} icon={pluginKindIcon(p.name)} label={p.display_name} active={pathname === path} onNavigate={onNavigate} />
-            );
-          })
-        )}
-      </ul>
     </div>
   );
 }
