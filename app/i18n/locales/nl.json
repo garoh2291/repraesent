@@ -5722,7 +5722,6 @@
       "comingSoon": "Bezoekers zien nu je ‘binnenkort online’-pagina, dus de afbeelding toont die pagina."
     },
     "websiteCode": {
-      "adminsOnly": "Alleen beheerders van deze workspace kunnen de code op je website wijzigen. Je kunt wel zien wat er staat.",
       "paused": "De cookiebanner-dienst is gepauzeerd, dus geen van deze code laadt nu. Zet hem weer aan op de pagina van de cookiebanner.",
       "title": "Code op je website",
       "subtitleAsk": "Plak de code die een tool je geeft en kies waar die komt. Code die cookies plaatst, wacht tot de bezoeker akkoord gaat.",

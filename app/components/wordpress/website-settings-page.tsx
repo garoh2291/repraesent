@@ -53,7 +53,6 @@ import {
 import { TrackingIntegrations } from "~/components/wordpress/re-cookie/tracking-tags";
 import { WebsiteCodePanel } from "~/components/wordpress/website-code-panel";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "~/components/ui/tabs";
-import { useAuthContext } from "~/providers/auth-provider";
 import {
   DEFAULT_SETTINGS as INDEX_DEFAULTS,
   flash,
@@ -115,8 +114,6 @@ export function WebsiteSettingsPage() {
   const cookiePause = useWorkspacePluginPause(cookieUuid);
   const regenerate = useWorkspaceReIndexRegenerateSitemap(indexUuid);
   const [saving, setSaving] = useState(false);
-  const { currentWorkspace } = useAuthContext();
-  const canEditCode = currentWorkspace?.member_role === "admin";
   const [searchParams, setSearchParams] = useSearchParams();
 
   const cookieInstall =
@@ -521,7 +518,6 @@ export function WebsiteSettingsPage() {
                 settings={cookie.settings}
                 patch={cookie.setSettings}
                 consentMode={consentMode}
-                canEdit={canEditCode}
                 bannerPaused={!!cookiePause.query.data?.paused}
                 plausibleOn={!!plausible?.enabled}
               />

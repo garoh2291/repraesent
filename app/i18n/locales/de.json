@@ -5724,7 +5724,6 @@
       "comingSoon": "Besucher sehen gerade Ihre „Bald verfügbar“-Seite, deshalb zeigt das Bild diese Seite."
     },
     "websiteCode": {
-      "adminsOnly": "Nur Admins dieses Workspaces können den Code auf Ihrer Website ändern. Sie können sehen, was dort ist.",
       "paused": "Der Cookie-Banner-Dienst ist pausiert, daher lädt gerade keiner dieser Codes. Schalten Sie ihn auf der Seite des Cookie-Banners wieder ein.",
       "title": "Code auf Ihrer Website",
       "subtitleAsk": "Fügen Sie den Code ein, den ein Tool Ihnen gibt, und wählen Sie, wo er hinkommt. Code, der Cookies setzt, wartet, bis der Besucher zustimmt.",

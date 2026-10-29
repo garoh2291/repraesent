@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { Check, Code2, CopyX, Lock, Plus, ShieldAlert, Trash2 } from "lucide-react";
+import { Check, Code2, CopyX, Plus, ShieldAlert, Trash2 } from "lucide-react";
 import {
   getWorkspaceWebsiteCodePolicy,
   requestWorkspaceWebsiteCodeHosts,
@@ -101,7 +101,6 @@ export function WebsiteCodePanel({
   settings,
   patch,
   consentMode,
-  canEdit,
   bannerPaused,
   plausibleOn,
 }: {
@@ -109,7 +108,6 @@ export function WebsiteCodePanel({
   settings: ReCookieSettings;
   patch: PatchSettings;
   consentMode: ReCookieConsentMode;
-  canEdit: boolean;
   bannerPaused: boolean;
   /** Repraesent's visitor statistics (Plausible) already load on every page. */
   plausibleOn: boolean;
@@ -156,16 +154,6 @@ export function WebsiteCodePanel({
 
   return (
     <div className="space-y-4">
-      {!canEdit ? (
-        <p className="flex items-start gap-2 rounded-xl border bg-muted/40 px-3.5 py-3 text-xs leading-relaxed text-muted-foreground">
-          <Lock className="mt-0.5 size-3.5 shrink-0" />
-          {t(
-            "wordpress.websiteCode.adminsOnly",
-            "Only admins of this workspace can change the code on your website. You can see what's there.",
-          )}
-        </p>
-      ) : null}
-
       {bannerPaused ? (
         <p className="rounded-xl border border-amber-500/30 bg-amber-500/10 px-3.5 py-3 text-xs leading-relaxed text-amber-800 dark:text-amber-300">
           {t(
@@ -212,7 +200,6 @@ export function WebsiteCodePanel({
               index={idx}
               row={row}
               consentMode={consentMode}
-              canEdit={canEdit}
               policy={policy.data}
               duplicate={duplicateOf(row.script, settings.integrations, plausibleOn)}
               onChange={(change) => update(row.uid, change)}
@@ -220,20 +207,18 @@ export function WebsiteCodePanel({
             />
           ))}
 
-          {canEdit ? (
-            <Button
-              type="button"
-              variant="outline"
-              className="h-11 w-full border-dashed text-muted-foreground sm:h-10"
-              onClick={add}
-              disabled={rows.length >= MAX_PIECES}
-            >
-              <Plus className="size-4" />
-              {rows.length >= MAX_PIECES
-                ? t("wordpress.websiteCode.full", "At most {{count}} pieces of code", { count: MAX_PIECES })
-                : t("wordpress.websiteCode.add", "Add code")}
-            </Button>
-          ) : null}
+          <Button
+            type="button"
+            variant="outline"
+            className="h-11 w-full border-dashed text-muted-foreground sm:h-10"
+            onClick={add}
+            disabled={rows.length >= MAX_PIECES}
+          >
+            <Plus className="size-4" />
+            {rows.length >= MAX_PIECES
+              ? t("wordpress.websiteCode.full", "At most {{count}} pieces of code", { count: MAX_PIECES })
+              : t("wordpress.websiteCode.add", "Add code")}
+          </Button>
         </CardBody>
       </SectionCard>
 
@@ -258,12 +243,10 @@ function PlacementPicker({
   labelledBy,
   value,
   onChange,
-  disabled,
 }: {
   labelledBy: string;
   value: ReCookieScriptPlacement;
   onChange: (next: ReCookieScriptPlacement) => void;
-  disabled: boolean;
 }) {
   const { t } = useTranslation();
   const at = Math.max(0, PLACEMENTS.findIndex((p) => p.value === value));
@@ -290,7 +273,6 @@ function PlacementPicker({
             role="radio"
             aria-checked={selected}
             tabIndex={selected ? 0 : -1}
-            disabled={disabled}
             onClick={() => onChange(p.value)}
             onKeyDown={(e) => {
               if (e.key === "ArrowRight" || e.key === "ArrowDown") {
@@ -302,7 +284,7 @@ function PlacementPicker({
               }
             }}
             className={cn(
-              "h-9 rounded-md px-2 text-sm font-medium transition-colors max-sm:h-11 disabled:cursor-not-allowed disabled:opacity-60",
+              "h-9 rounded-md px-2 text-sm font-medium transition-colors max-sm:h-11",
               "focus-visible:ring-ring/50 outline-none focus-visible:ring-[3px]",
               selected
                 ? "bg-card text-foreground shadow-sm"
@@ -321,7 +303,6 @@ function CodeRow({
   index,
   row,
   consentMode,
-  canEdit,
   policy,
   duplicate,
   onChange,
@@ -330,7 +311,6 @@ function CodeRow({
   index: number;
   row: Row;
   consentMode: ReCookieConsentMode;
-  canEdit: boolean;
   policy: WebsiteCodePolicy | undefined;
   /** What this code repeats (it is then left off the site), or null. */
   duplicate: string | null;
@@ -356,21 +336,18 @@ function CodeRow({
           placeholder={t("wordpress.websiteCode.namePlaceholder", "Name, e.g. Chat widget")}
           value={row.name}
           onChange={(e) => onChange({ name: e.target.value })}
-          disabled={!canEdit}
           className="h-10 flex-1 bg-card max-sm:h-11"
         />
-        {canEdit ? (
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon"
-            className="size-10 shrink-0 text-muted-foreground hover:text-destructive max-sm:size-11"
-            onClick={onRemove}
-            aria-label={t("wordpress.websiteCode.remove", "Remove this code")}
-          >
-            <Trash2 className="size-4" />
-          </Button>
-        ) : null}
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon"
+          className="size-10 shrink-0 text-muted-foreground hover:text-destructive max-sm:size-11"
+          onClick={onRemove}
+          aria-label={t("wordpress.websiteCode.remove", "Remove this code")}
+        >
+          <Trash2 className="size-4" />
+        </Button>
       </div>
 
       <Textarea
@@ -379,7 +356,6 @@ function CodeRow({
         placeholder="<script>…</script>"
         value={row.script}
         onChange={(e) => onChange({ script: e.target.value })}
-        disabled={!canEdit}
         spellCheck={false}
         className="mt-2.5 min-h-[120px] bg-card font-mono text-xs leading-relaxed"
       />
@@ -404,7 +380,6 @@ function CodeRow({
             labelledBy={`${id}-where`}
             value={row.placement}
             onChange={(placement) => onChange({ placement })}
-            disabled={!canEdit}
           />
           <p className="text-xs leading-relaxed text-muted-foreground">
             {row.placement === "body_open"
@@ -427,7 +402,6 @@ function CodeRow({
                 const v = e.target.value as When;
                 onChange(v === "always" ? { always_on: true } : { always_on: false, category: v });
               }}
-              disabled={!canEdit}
               className="h-10 bg-card max-sm:h-11"
             >
               <NativeSelectOption value="always">
@@ -479,7 +453,7 @@ function CodeRow({
           )}
         </p>
       ) : null}
-      <BlockedNotice check={check} canEdit={canEdit} />
+      <BlockedNotice check={check} />
     </div>
   );
 }
@@ -488,7 +462,7 @@ function CodeRow({
  * The site's policy blocks part of this code: say so, and let the customer ask
  * our team to allow the address (one request per site and set of addresses).
  */
-function BlockedNotice({ check, canEdit }: { check: ReturnType<typeof checkCode>; canEdit: boolean }) {
+function BlockedNotice({ check }: { check: ReturnType<typeof checkCode> }) {
   const { t } = useTranslation();
   const [asked, setAsked] = useState<string | null>(null);
   const ask = useMutation({
@@ -516,7 +490,7 @@ function BlockedNotice({ check, canEdit }: { check: ReturnType<typeof checkCode>
               )}
         </span>
       </p>
-      {check.blockedHosts.length > 0 && canEdit ? (
+      {check.blockedHosts.length > 0 ? (
         done ? (
           <p className="mt-2 flex items-center gap-1.5 pl-5.5 font-medium">
             <Check className="size-3.5" />

@@ -5722,7 +5722,6 @@
       "comingSoon": "Visitors see your coming-soon page right now, so the picture shows that page."
     },
     "websiteCode": {
-      "adminsOnly": "Only admins of this workspace can change the code on your website. You can see what's there.",
       "paused": "The cookie banner service is paused, so none of this code loads right now. Switch it back on on the cookie banner page.",
       "title": "Code on your website",
       "subtitleAsk": "Paste the code a tool gives you and choose where it goes. Code that sets cookies waits until the visitor agrees.",
