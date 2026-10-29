@@ -1,278 +1,282 @@
-import { useState, useEffect, useRef } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { useTranslation } from "react-i18next";
 import { useSearchParams } from "react-router";
-import { ChevronDown, LineChart, AlertCircle } from "lucide-react";
-import {
-  getBrandAnalyticsWorkspaces,
-  type BrandAnalyticsWorkspace,
-} from "~/lib/api/brand";
-import { cn } from "~/lib/utils";
+import { useTranslation } from "react-i18next";
+import { Check, ChevronDown, Globe, Search } from "lucide-react";
 import i18n from "~/i18n";
+import { cn } from "~/lib/utils";
+import { formatNumber } from "~/lib/utils/format";
 import { useDocumentMeta } from "~/lib/hooks/use-document-meta";
 import { useClientTypeWording } from "~/lib/hooks/useClientTypeWording";
+import { useIsPhone } from "~/lib/hooks/use-is-phone";
+import {
+  getBrandAnalyticsWorkspaces,
+  getBrandPlausibleAnalytics,
+  type BrandAnalyticsWorkspace,
+} from "~/lib/api/brand";
+import { brandScope } from "~/lib/api/website-stats";
+import { PageContainer, PageHeader } from "~/components/notebook/page-header";
+import { Panel } from "~/components/notebook/panel";
+import { EmptyState } from "~/components/notebook/empty-state";
+import { BottomSheet } from "~/components/notebook/bottom-sheet";
+import { Skeleton } from "~/components/ui/skeleton";
+import { Popover, PopoverContent, PopoverTrigger } from "~/components/ui/popover";
+import { WebsiteStatsExplorer } from "~/components/analytics/website-stats-explorer";
 
 export function meta() {
-  return [
-    { title: i18n.t("brand.analyticsTitle", "Analytics") + " – Repraesent" },
-  ];
+  return [{ title: i18n.t("brand.analyticsTitle", "Analytics") + " – Repraesent" }];
 }
 
-const PLAUSIBLE_SCRIPT = "https://plausible0.gagadomains.com/js/embed.host.js";
+type House = BrandAnalyticsWorkspace & { people: number | null };
 
+function HouseList({
+  houses,
+  selectedId,
+  onPick,
+}: {
+  houses: House[];
+  selectedId: string | null;
+  onPick: (id: string) => void;
+}) {
+  const { t } = useTranslation();
+  const ctw = useClientTypeWording();
+  const [q, setQ] = useState("");
+  const needle = q.trim().toLowerCase();
+  const match = (h: House) =>
+    !needle || h.name.toLowerCase().includes(needle) || (h.site ?? "").toLowerCase().includes(needle);
+  const tracked = houses.filter((h) => h.has_analytics && match(h));
+  const untracked = houses.filter((h) => !h.has_analytics && match(h));
+
+  return (
+    <div className="flex max-h-[70vh] flex-col sm:max-h-[460px]">
+      <div className="border-b border-border p-3">
+        <label className="flex min-h-10 items-center gap-2 rounded-lg border border-border bg-card px-3">
+          <Search className="size-4 text-muted-foreground" aria-hidden />
+          <span className="sr-only">{t("brand.analyticsSearch", { ...ctw, defaultValue: "Find a {{type}}…" })}</span>
+          <input
+            type="search"
+            autoFocus
+            value={q}
+            onChange={(e) => setQ(e.target.value)}
+            placeholder={t("brand.analyticsSearch", { ...ctw, defaultValue: "Find a {{type}}…" })}
+            className="min-w-0 flex-1 bg-transparent text-[14px] text-foreground outline-none max-sm:text-[16px]"
+          />
+        </label>
+      </div>
+      <div className="overflow-y-auto p-1.5">
+        {tracked.length > 0 ? (
+          <p className="px-2.5 pb-1 pt-2 text-[10.5px] font-semibold uppercase tracking-widest text-muted-foreground">
+            {t("brand.analyticsTrackedGroup", "Visitors counted · last 30 days")}
+          </p>
+        ) : null}
+        {tracked.map((h) => {
+          const on = h.id === selectedId;
+          return (
+            <button
+              key={h.id}
+              type="button"
+              onClick={() => onPick(h.id)}
+              aria-current={on}
+              className={cn(
+                "flex min-h-[52px] w-full items-center gap-3 rounded-lg px-2.5 text-left transition-colors",
+                on ? "bg-foreground text-background" : "text-foreground hover:bg-muted",
+              )}
+            >
+              <span className="flex min-w-0 flex-1 flex-col">
+                <span className="truncate text-[14px] font-semibold">{h.name}</span>
+                {h.site ? <span className={cn("truncate text-[12px]", on ? "text-background/70" : "text-muted-foreground")}>{h.site}</span> : null}
+              </span>
+              {h.people !== null ? (
+                <span className="num text-[14px] font-semibold">{formatNumber(h.people)}</span>
+              ) : null}
+              {on ? <Check className="size-4 shrink-0" aria-hidden /> : null}
+            </button>
+          );
+        })}
+        {untracked.length > 0 ? (
+          <>
+            <p className="px-2.5 pb-1 pt-3 text-[10.5px] font-semibold uppercase tracking-widest text-muted-foreground">
+              {t("brand.analyticsUntrackedGroup", "No visitors counted yet")}
+            </p>
+            {untracked.map((h) => (
+              <div key={h.id} className="flex min-h-11 items-center gap-3 px-2.5 text-[14px] text-muted-foreground">
+                <span className="min-w-0 flex-1 truncate">{h.name}</span>
+                <span className="shrink-0 text-[11.5px]">{t("brand.analyticsUntrackedReason", "Website not connected")}</span>
+              </div>
+            ))}
+          </>
+        ) : null}
+        {tracked.length + untracked.length === 0 ? (
+          <p className="px-3 py-5 text-[14px] text-muted-foreground">
+            {t("brand.analyticsNoMatch", { ...ctw, q, defaultValue: "No {{type}} matches “{{q}}”." })}
+          </p>
+        ) : null}
+      </div>
+    </div>
+  );
+}
+
+function HousePicker({
+  houses,
+  selected,
+  onPick,
+}: {
+  houses: House[];
+  selected: House | null;
+  onPick: (id: string) => void;
+}) {
+  const { t } = useTranslation();
+  const ctw = useClientTypeWording();
+  const phone = useIsPhone();
+  const [open, setOpen] = useState(false);
+  const pick = (id: string) => {
+    setOpen(false);
+    onPick(id);
+  };
+  const trigger = (
+    <button
+      type="button"
+      onClick={phone ? () => setOpen(true) : undefined}
+      aria-haspopup="dialog"
+      className="-mx-1.5 inline-flex max-w-full items-center gap-2 rounded-lg px-1.5 text-left transition-colors hover:bg-muted/60"
+    >
+      <span className="title-display min-w-0 text-[26px] font-semibold text-foreground max-sm:break-words sm:whitespace-nowrap sm:text-[32px]">
+        {selected?.name ?? t("brand.analyticsPickHouse", { ...ctw, defaultValue: "Choose a {{type}}" })}
+      </span>
+      <ChevronDown className={cn("size-5 shrink-0 transition-transform sm:size-6", open && "rotate-180")} aria-hidden />
+    </button>
+  );
+  const list = <HouseList houses={houses} selectedId={selected?.id ?? null} onPick={pick} />;
+
+  if (phone) {
+    return (
+      <>
+        {trigger}
+        <BottomSheet open={open} onOpenChange={setOpen} title={ctw.Types}>
+          {list}
+        </BottomSheet>
+      </>
+    );
+  }
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>{trigger}</PopoverTrigger>
+      <PopoverContent align="start" sideOffset={8} className="w-[400px] overflow-hidden rounded-xl border-border p-0 shadow-xl">
+        {open ? list : null}
+      </PopoverContent>
+    </Popover>
+  );
+}
+
+/** Website visitors of one partner house, for its brand — same explorer as /analytics. */
 export default function BrandAnalytics() {
   const { t } = useTranslation();
   const ctw = useClientTypeWording();
-  useDocumentMeta({
-    titleKey: "brand.analyticsTitle",
-    titleSuffix: " – Repraesent",
-  });
-  const [searchParams, setSearchParams] = useSearchParams();
-  const iframeRef = useRef<HTMLIFrameElement>(null);
-  const [isIframeLoading, setIsIframeLoading] = useState(true);
-  const [dropdownOpen, setDropdownOpen] = useState(false);
-  const [selectedId, setSelectedId] = useState<string | null>(null);
-  const initializedRef = useRef(false);
-  const dropdownRef = useRef<HTMLDivElement>(null);
+  useDocumentMeta({ titleKey: "brand.analyticsTitle", titleSuffix: " – Repraesent" });
+  const [sp, setSp] = useSearchParams();
 
-  const { data: workspaces = [], isLoading } = useQuery({
+  const { data: workspaces, isLoading } = useQuery({
     queryKey: ["brand-analytics-workspaces"],
     queryFn: getBrandAnalyticsWorkspaces,
     staleTime: 5 * 60_000,
   });
+  // Same query as the brand dashboard's visitors chart, so it is usually cached.
+  const { data: counts } = useQuery({
+    queryKey: ["brand-analytics", "plausible", "30d"],
+    queryFn: () => getBrandPlausibleAnalytics("30d"),
+    staleTime: 5 * 60_000,
+  });
 
-  // Auto-select from ?workspace= query param, or first available
+  const houses: House[] = useMemo(() => {
+    const people = new Map((counts?.workspaces ?? []).map((w) => [w.workspace_id, w.visitors]));
+    return (workspaces ?? []).map((w) => ({ ...w, people: people.get(w.id) ?? null }));
+  }, [workspaces, counts]);
+
+  const trackedHouses = houses.filter((h) => h.has_analytics);
+  const wanted = sp.get("workspace");
+  const selected =
+    trackedHouses.find((h) => h.id === wanted) ?? (wanted ? null : trackedHouses[0]) ?? null;
+
+  // Put the default house in the URL so the page can be shared and reloaded.
   useEffect(() => {
-    if (workspaces.length > 0 && !initializedRef.current) {
-      initializedRef.current = true;
-      const wsParam = searchParams.get("workspace");
-      if (wsParam) {
-        const match = workspaces.find((w) => w.id === wsParam && w.has_analytics);
-        if (match) {
-          setSelectedId(match.id);
-          return;
-        }
-      }
-      const first = workspaces.find((w) => w.has_analytics);
-      if (first) {
-        setSelectedId(first.id);
-        setSearchParams((prev) => {
-          const next = new URLSearchParams(prev);
-          next.set("workspace", first.id);
-          return next;
-        }, { replace: true });
-      }
+    if (!wanted && trackedHouses[0]) {
+      const next = new URLSearchParams(sp);
+      next.set("workspace", trackedHouses[0].id);
+      setSp(next, { replace: true });
     }
-  }, [workspaces, searchParams, setSearchParams]);
+  }, [wanted, trackedHouses, sp, setSp]);
 
-  // Close dropdown on outside click
-  useEffect(() => {
-    function handle(e: MouseEvent) {
-      if (
-        dropdownRef.current &&
-        !dropdownRef.current.contains(e.target as Node)
-      ) {
-        setDropdownOpen(false);
-      }
-    }
-    document.addEventListener("mousedown", handle);
-    return () => document.removeEventListener("mousedown", handle);
-  }, []);
-
-  // Inject Plausible embed script once
-  useEffect(() => {
-    if (document.querySelector(`script[src="${PLAUSIBLE_SCRIPT}"]`)) return;
-    const script = document.createElement("script");
-    script.src = PLAUSIBLE_SCRIPT;
-    script.async = true;
-    document.body.appendChild(script);
-    return () => {
-      document.querySelector(`script[src="${PLAUSIBLE_SCRIPT}"]`)?.remove();
-    };
-  }, []);
-
-  // Mark iframe for Plausible whenever it remounts
-  useEffect(() => {
-    iframeRef.current?.setAttribute("plausible-embed", "");
-  }, [selectedId]);
-
-  const selected = workspaces.find((w) => w.id === selectedId) ?? null;
-
-  const handleSelect = (ws: BrandAnalyticsWorkspace) => {
-    if (!ws.has_analytics) return;
-    if (ws.id !== selectedId) {
-      setSelectedId(ws.id);
-      setIsIframeLoading(true);
-      setSearchParams((prev) => {
-        const next = new URLSearchParams(prev);
-        next.set("workspace", ws.id);
-        return next;
-      }, { replace: true });
-    }
-    setDropdownOpen(false);
+  const pick = (id: string) => {
+    const next = new URLSearchParams(sp);
+    next.set("workspace", id);
+    // Filters belong to one website (its pages, campaigns); dates and comparison carry over.
+    next.delete("f");
+    setSp(next);
   };
 
-  const embedSrc = selected?.shared_link
-    ? `${selected.shared_link}&embed=true&theme=light&background=%23f5f4f1`
-    : null;
+  const countedLine = t("brand.analyticsCounted", {
+    ...ctw,
+    n: trackedHouses.length,
+    total: houses.length,
+    defaultValue: "{{n}} of {{total}} {{types}} counted",
+  });
 
-  const connectedCount = workspaces.filter((w) => w.has_analytics).length;
+  if (isLoading) {
+    return (
+      <PageContainer className="space-y-5">
+        <Skeleton className="h-10 w-72" />
+        <Skeleton className="h-64 w-full" />
+      </PageContainer>
+    );
+  }
+
+  if (trackedHouses.length === 0 || (wanted && !selected)) {
+    const unknown = !!wanted && trackedHouses.length > 0;
+    return (
+      <PageContainer className="space-y-6">
+        <PageHeader
+          eyebrow={t("brand.analyticsTitle", "Analytics")}
+          title={
+            trackedHouses.length > 0 ? (
+              <HousePicker houses={houses} selected={null} onPick={pick} />
+            ) : (
+              t("brand.analyticsTitle", "Analytics")
+            )
+          }
+          subtitle={houses.length ? countedLine : undefined}
+        />
+        <Panel className="p-5 sm:p-6">
+          <EmptyState
+            icon={<Globe className="size-5" aria-hidden />}
+            title={
+              unknown
+                ? t("brand.analyticsUnknownTitle", { ...ctw, defaultValue: "We don't count visitors for this {{type}} yet" })
+                : t("brand.analyticsNoneTitle", { ...ctw, defaultValue: "No visitors counted for your {{types}} yet" })
+            }
+            body={t("brand.analyticsNoneBody", {
+              ...ctw,
+              defaultValue: "Visitors are counted once a {{type}}'s website is connected. Write to us and we'll connect it.",
+            })}
+          />
+        </Panel>
+      </PageContainer>
+    );
+  }
 
   return (
-    <div className="flex flex-col h-full">
-      {/* ── Header ── */}
-      <div className="mx-auto w-full max-w-[1280px] shrink-0 px-4  sm:px-6 pt-10! pb-5 ">
-        {/* Workspace picker as title */}
-        <div className="relative" ref={dropdownRef}>
-          <button
-            onClick={() => setDropdownOpen((o) => !o)}
-            disabled={isLoading || workspaces.length === 0}
-            className={cn(
-              "group flex items-center gap-1.5 -mx-1.5 px-1.5 py-1 rounded-lg text-left",
-              "hover:bg-muted/60 transition-colors duration-150",
-              "disabled:opacity-50 disabled:pointer-events-none"
-            )}
-          >
-            <h1 className="text-xl font-semibold text-foreground tracking-tight truncate max-w-[480px]">
-              {isLoading
-                ? t("common.loading")
-                : selected
-                  ? selected.name
-                  : t("brand.analyticsTitle")}
-            </h1>
-            <ChevronDown
-              className={cn(
-                "h-5 w-5 text-muted-foreground shrink-0 transition-transform duration-200 mt-0.5",
-                "group-hover:text-foreground",
-                dropdownOpen && "rotate-180"
-              )}
-            />
-          </button>
-
-          <p className="text-xs text-muted-foreground mt-0.5 px-1.5">
-            {selected
-              ? t("brand.analyticsViewingSubtitle")
-              : isLoading
-                ? t("common.loading")
-                : `${connectedCount} / ${workspaces.length} connected`}
-          </p>
-
-          {dropdownOpen && (
-            <div className="absolute left-0 top-full mt-1.5 z-50 min-w-[280px] rounded-xl border border-border bg-card shadow-xl overflow-hidden">
-              {connectedCount > 0 && (
-                <div className="px-3 pt-2.5 pb-1">
-                  <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
-                    Connected
-                  </span>
-                </div>
-              )}
-              <div className="max-h-64 overflow-y-auto">
-                {workspaces.map((ws) => (
-                  <button
-                    key={ws.id}
-                    onClick={() => handleSelect(ws)}
-                    disabled={!ws.has_analytics}
-                    className={cn(
-                      "w-full flex items-center justify-between gap-3 px-3.5 py-2.5 text-sm text-left transition-colors",
-                      ws.id === selectedId
-                        ? "bg-amber-50 text-amber-700 dark:bg-amber-400/10 dark:text-amber-300"
-                        : ws.has_analytics
-                          ? "text-foreground hover:bg-muted"
-                          : "text-muted-foreground/50 cursor-not-allowed"
-                    )}
-                  >
-                    <span className="truncate font-medium">{ws.name}</span>
-                    <span className="shrink-0 flex items-center gap-1.5">
-                      {ws.id === selectedId && (
-                        <span className="h-1.5 w-1.5 rounded-full bg-amber-400" />
-                      )}
-                      {!ws.has_analytics && (
-                        <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/40 bg-muted rounded px-1.5 py-0.5">
-                          {t("brand.analyticsNotConnected")}
-                        </span>
-                      )}
-                    </span>
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* ── Content area ── */}
-      <div className="flex-1 relative overflow-hidden">
-        {/* Global loading */}
-        {isLoading && (
-          <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-background">
-            <div className="h-8 w-8 animate-spin rounded-full border-4 border-muted border-t-primary" />
-            <p className="text-sm text-muted-foreground">
-              {t("common.loading")}
-            </p>
-          </div>
+    <PageContainer className="space-y-5">
+      <WebsiteStatsExplorer
+        key={selected!.id}
+        scope={brandScope(selected!.id)}
+        header={({ site, live }) => (
+          <PageHeader
+            eyebrow={t("brand.analyticsTitle", "Analytics")}
+            title={<HousePicker houses={houses} selected={selected} onPick={pick} />}
+            subtitle={`${site ?? selected!.site ?? ""}${site || selected!.site ? " · " : ""}${countedLine}`}
+            actions={live}
+          />
         )}
-
-        {/* No selection yet */}
-        {!isLoading && !selected && (
-          <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 text-center px-6">
-            <div className="h-14 w-14 rounded-2xl bg-muted/60 flex items-center justify-center">
-              <LineChart className="h-7 w-7 text-muted-foreground/50" />
-            </div>
-            <div className="space-y-1">
-              <p className="text-sm font-semibold text-foreground">
-                {t("brand.analyticsSelectPrompt", ctw)}
-              </p>
-              <p className="text-xs text-muted-foreground">
-                {t("brand.analyticsSelectHint")}
-              </p>
-            </div>
-          </div>
-        )}
-
-        {/* Selected but no shared_link */}
-        {!isLoading && selected && !embedSrc && (
-          <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 text-center px-6">
-            <AlertCircle className="h-10 w-10 text-muted-foreground/30" />
-            <div className="space-y-1">
-              <p className="text-sm font-semibold text-foreground">
-                {t("brand.analyticsNotConfigured", ctw)}
-              </p>
-              <p className="text-xs text-muted-foreground">{selected.name}</p>
-            </div>
-          </div>
-        )}
-
-        {/* Iframe */}
-        {embedSrc && (
-          <div className="w-full h-full overflow-auto">
-            {isIframeLoading && (
-              <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-background z-10">
-                <div className="h-8 w-8 animate-spin rounded-full border-4 border-muted border-t-primary" />
-                <p className="text-sm text-muted-foreground">
-                  {t("brand.analyticsLoading")}
-                </p>
-              </div>
-            )}
-            <iframe
-              key={selectedId}
-              ref={iframeRef}
-              src={embedSrc}
-              scrolling="no"
-              frameBorder="0"
-              loading="lazy"
-              style={{
-                width: "1px",
-                minWidth: "100%",
-                height: "1600px",
-                opacity: isIframeLoading ? 0 : 1,
-                transition: "opacity 0.3s ease",
-              }}
-              title={selected?.name ?? "Analytics"}
-              onLoad={() => setIsIframeLoading(false)}
-            />
-          </div>
-        )}
-      </div>
-    </div>
+      />
+    </PageContainer>
   );
 }

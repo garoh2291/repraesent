@@ -1,4 +1,5 @@
 import { useTranslation } from "react-i18next";
+import { calendarLabel } from "~/lib/calendar/calendar-label";
 import { TriangleAlert } from "lucide-react";
 import { Checkbox } from "~/components/ui/checkbox";
 import { CalDavIcon } from "~/components/icons/CalDavIcon";
@@ -103,7 +104,7 @@ function AccountCalendars({
           <SourceRow
             key={key}
             calendarKey={key}
-            label={cal.summary}
+            label={calendarLabel(account, cal).name}
             color={cal.backgroundColor}
             checked={!hiddenKeys.has(key)}
             hasError={errorKeys.has(key) || account.auth_failed}

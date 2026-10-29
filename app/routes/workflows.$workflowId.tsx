@@ -1,5 +1,12 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, FlaskConical, Pause, Play, Save } from "lucide-react";
+import {
+  ArrowLeft,
+  ChevronRight,
+  CircleAlert,
+  FlaskConical,
+  Power,
+  Save,
+} from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Link, useNavigate, useParams } from "react-router";
@@ -19,19 +26,39 @@ import {
   PanelHeader,
 } from "~/components/forms/chrome";
 import { Input } from "~/components/ui/input";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "~/components/ui/alert-dialog";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "~/components/ui/popover";
+import { Switch } from "~/components/ui/switch";
 import { Skeleton } from "~/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "~/components/ui/tabs";
 import { extractErrorMessage } from "~/lib/api/axios-instance";
 import { SUPPORTED_LOCALES } from "~/i18n/locales";
 import {
+  discardWorkflowDraft,
   getFieldCatalog,
+  getRecentRecords,
   getWorkflow,
   getWorkflowCapabilities,
+  publishWorkflow,
   setWorkflowStatus,
   updateWorkflow,
   type NodeType,
   type RecentRecord,
   type TriggerConfig,
+  type WorkflowDetail,
   type WorkflowGraph,
 } from "~/lib/api/workflows";
 import {
@@ -42,7 +69,7 @@ import {
 } from "~/lib/workflows/optimistic";
 import { getWorkspaceDetail } from "~/lib/api/workspaces";
 import {
-  publishBlockers,
+  publishProblems,
   starterGraph,
   triggerOf,
 } from "~/lib/workflows/graph";
@@ -181,10 +208,43 @@ export default function WorkflowBuilder() {
     [workspaceDetail],
   );
 
-  const blockers = useMemo(
-    () => (graph ? publishBlockers(graph, t, allSteps(graph)) : []),
+  const problems = useMemo(
+    () => (graph ? publishProblems(graph, t, allSteps(graph)) : []),
     [graph, t],
   );
+  // "This is ready. Turn it on?" — shown after a save that left nothing to do
+  // on a workflow that is not on yet. Cleared by any further edit.
+  const [justReady, setJustReady] = useState(false);
+  const [discardOpen, setDiscardOpen] = useState(false);
+
+  /** Open the step a "thing left" is about, and bring it into view. */
+  const focusNode = (nodeId: string | null) => {
+    setTab("build");
+    if (!nodeId) return;
+    setSelectedId(nodeId);
+    requestAnimationFrame(() =>
+      document
+        .getElementById("workflow-inspector")
+        ?.scrollIntoView({ behavior: "smooth", block: "start" }),
+    );
+  };
+
+  /**
+   * No record picked for previews yet: take the most recent one, so an email
+   * step shows a real filled-in message the moment it opens. None at all →
+   * previews fall back to sample details, and say so.
+   */
+  const { data: recentForPreview } = useQuery({
+    queryKey: ["workflow-recent-records", entity, ""],
+    queryFn: () => getRecentRecords(entity, ""),
+    enabled: !!workflow && !previewRecord,
+    staleTime: 60_000,
+  });
+  useEffect(() => {
+    if (!previewRecord && recentForPreview?.length) {
+      setPreviewRecord(recentForPreview[0]);
+    }
+  }, [recentForPreview]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // --- mutations -----------------------------------------------------------
 
@@ -192,21 +252,56 @@ export default function WorkflowBuilder() {
     mutationFn: () =>
       updateWorkflow(workflowId!, { name: name.trim(), graph: graph! }),
     onSuccess: async (saved) => {
-      await queryClient.invalidateQueries({
-        queryKey: ["workflow", workflowId],
-      });
+      queryClient.setQueryData(["workflow", workflowId], saved);
       await queryClient.invalidateQueries({ queryKey: ["workflows"] });
       setDirty(false);
-      // Saving publishes, so say whether it actually went live. An incomplete
-      // workflow still saves but cannot run yet, and silently implying
-      // otherwise is the confusion this whole change exists to remove.
+      // Saving never publishes. Say what that means for something already on.
+      const isOn = !!saved.published_version_id && saved.status !== "draft";
       toast.success(
-        saved.published_version_id && !saved.has_unpublished_changes
-          ? t("workflows.savedLive", {
-              defaultValue: "Saved — your changes are live",
-            })
+        isOn && saved.has_unpublished_changes
+          ? t("workflows.golive.savedNotLive")
           : t("workflows.saved"),
       );
+      setJustReady(!isOn && problems.length === 0);
+    },
+    onError: (error) => toast.error(extractErrorMessage(error)),
+  });
+
+  /**
+   * "Turn on" and "Publish changes". Unsaved edits are saved first — nobody
+   * means "publish the version from before my last edit".
+   */
+  const publishMutation = useMutation({
+    mutationFn: async () => {
+      if (dirty) {
+        await updateWorkflow(workflowId!, { name: name.trim(), graph: graph! });
+      }
+      return publishWorkflow(workflowId!);
+    },
+    onSuccess: async (detail: WorkflowDetail, _vars, _ctx) => {
+      const wasOn = !!workflow?.published_version_id && workflow.status !== "draft";
+      queryClient.setQueryData(["workflow", workflowId], detail);
+      setDirty(false);
+      setJustReady(false);
+      toast.success(
+        wasOn ? t("workflows.golive.published") : t("workflows.golive.turnedOn"),
+      );
+      markWorkflowsStale(queryClient, workflowId);
+    },
+    onError: (error) => toast.error(extractErrorMessage(error)),
+  });
+
+  const discardMutation = useMutation({
+    mutationFn: () => discardWorkflowDraft(workflowId!),
+    onSuccess: (detail) => {
+      queryClient.setQueryData(["workflow", workflowId], detail);
+      setName(detail.name);
+      setGraph(detail.graph);
+      setSelectedId(triggerOf(detail.graph)?.id ?? null);
+      setDirty(false);
+      setDiscardOpen(false);
+      toast.success(t("workflows.golive.discarded"));
+      markWorkflowsStale(queryClient, workflowId);
     },
     onError: (error) => toast.error(extractErrorMessage(error)),
   });
@@ -241,7 +336,12 @@ export default function WorkflowBuilder() {
   const patchGraph = (next: WorkflowGraph) => {
     setGraph(next);
     setDirty(true);
+    setJustReady(false);
   };
+
+  // "On" means published and not taken back to draft. Paused still counts as
+  // on — it is live, switched off for now, and its edits need publishing.
+  const isOn = !!workflow?.published_version_id && workflow.status !== "draft";
 
   if (isLoading || !graph) {
     return (
@@ -295,12 +395,16 @@ export default function WorkflowBuilder() {
               />
               <span
                 className={`rounded-full border px-2 py-0.5 text-[11px] font-medium ${
-                  workflow.status === "active"
+                  isOn && workflow.status === "active"
                     ? "border-emerald-400/40 bg-emerald-400/10 text-emerald-300"
                     : "border-white/10 bg-white/5 text-white/50"
                 }`}
               >
-                {t(`workflows.status.${workflow.status}`)}
+                {!isOn
+                  ? t("workflows.golive.stateOff")
+                  : workflow.status === "active"
+                    ? t("workflows.golive.stateOn")
+                    : t("workflows.golive.statePaused")}
               </span>
             </div>
           </div>
@@ -329,57 +433,169 @@ export default function WorkflowBuilder() {
                 {t("workflows.test")}
               </button>
 
-              {workflow.published_version_id ? (
-                <button
-                  type="button"
-                  onClick={() =>
-                    changeStatus(
-                      workflow.status === "active" ? "paused" : "active",
-                    )
-                  }
-                  className="inline-flex h-9 items-center gap-2 rounded-lg border border-white/10 bg-white/5 px-3 text-sm text-white/70 transition-colors hover:bg-white/10 hover:text-white"
-                >
-                  {workflow.status === "active" ? (
-                    <>
-                      <Pause className="h-3.5 w-3.5" />
-                      {t("workflows.pause")}
-                    </>
-                  ) : (
-                    <>
-                      <Play className="h-3.5 w-3.5" />
-                      {t("workflows.activate")}
-                    </>
-                  )}
-                </button>
-              ) : null}
-
               <button
                 type="button"
                 disabled={!dirty || saveMutation.isPending}
                 onClick={() => saveMutation.mutate()}
-                className="inline-flex h-9 items-center gap-2 rounded-lg bg-white px-4 text-sm font-medium text-[#131515] transition-opacity hover:opacity-90 disabled:opacity-40"
+                className="inline-flex h-9 items-center gap-2 rounded-lg border border-white/10 bg-white/5 px-3 text-sm text-white/80 transition-colors hover:bg-white/10 hover:text-white disabled:opacity-40"
               >
-                <Save className="h-4 w-4" />
+                <Save className="h-3.5 w-3.5" />
                 {t("workflows.save")}
               </button>
+
+              {/* The one main button: what is left, Turn on, or the On switch. */}
+              {problems.length > 0 ? (
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <button
+                      type="button"
+                      className="inline-flex h-9 items-center gap-2 rounded-lg bg-secondary px-3 text-sm font-medium text-secondary-foreground transition-opacity hover:opacity-90"
+                    >
+                      <CircleAlert className="h-3.5 w-3.5" />
+                      {t("workflows.golive.thingsLeft", {
+                        count: problems.length,
+                      })}
+                    </button>
+                  </PopoverTrigger>
+                  <PopoverContent align="end" className="w-[min(20rem,calc(100vw-2rem))] p-2">
+                    <p className="px-2 pb-1.5 pt-1 text-xs text-muted-foreground">
+                      {isOn
+                        ? t("workflows.golive.thingsLeftHintLive")
+                        : t("workflows.golive.thingsLeftHint")}
+                    </p>
+                    <ul className="space-y-0.5">
+                      {problems.map((p, i) => (
+                        <li key={`${p.nodeId}-${i}`}>
+                          <button
+                            type="button"
+                            onClick={() => focusNode(p.nodeId)}
+                            className="flex min-h-11 w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-sm hover:bg-muted"
+                          >
+                            <span className="h-4 w-4 shrink-0 rounded-full border-2 border-foreground/30" />
+                            <span className="min-w-0 flex-1">{p.message}</span>
+                            {p.nodeId ? (
+                              <ChevronRight className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                            ) : null}
+                          </button>
+                        </li>
+                      ))}
+                    </ul>
+                  </PopoverContent>
+                </Popover>
+              ) : !isOn ? (
+                <button
+                  type="button"
+                  disabled={publishMutation.isPending}
+                  onClick={() => publishMutation.mutate()}
+                  className="inline-flex h-9 items-center gap-2 rounded-lg bg-white px-4 text-sm font-medium text-[#131515] transition-opacity hover:opacity-90 disabled:opacity-40"
+                >
+                  <Power className="h-4 w-4" />
+                  {t("workflows.golive.turnOn")}
+                </button>
+              ) : null}
+
+              {isOn ? (
+                <label className="inline-flex h-9 cursor-pointer items-center gap-2 rounded-lg border border-white/10 bg-white/5 px-3 text-sm text-white/80">
+                  <Switch
+                    checked={workflow.status === "active"}
+                    disabled={statusMutation.isPending}
+                    onCheckedChange={(on) => changeStatus(on ? "active" : "paused")}
+                    aria-label={t("workflows.golive.onSwitch")}
+                  />
+                  {workflow.status === "active"
+                    ? t("workflows.golive.stateOn")
+                    : t("workflows.golive.statePaused")}
+                </label>
+              ) : null}
             </div>
           ) : null}
         </div>
 
-        {/*
-          No Publish button: saving applies the change. Publishing used to be a
-          separate act, which meant a corrected workflow could sit unapplied
-          while the live one kept sending the old version — including swallowing
-          a whole condition branch. The draft/published split still exists
-          underneath so in-flight runs finish on the shape they started, but it
-          is no longer something anyone has to think about.
-        */}
-        {blockers.length > 0 && canEdit ? (
-          <div className="border-t border-white/5 px-4 py-2 text-xs text-amber-300/90 sm:px-5">
-            {t("workflows.cannotPublish")}: {blockers.join(" · ")}
+        {/* Saving does not publish. Something already on keeps running the
+            version that was live until the owner publishes the edits. */}
+        {canEdit && isOn && (workflow.has_unpublished_changes || dirty) ? (
+          <div className="flex flex-col gap-2 bg-secondary px-4 py-2.5 text-secondary-foreground sm:flex-row sm:items-center sm:justify-between sm:px-5">
+            <div className="min-w-0 text-sm">
+              <span className="font-semibold">
+                {t("workflows.golive.notLiveYet")}
+              </span>
+              <span className="block text-xs opacity-75 sm:ml-2 sm:inline">
+                {t("workflows.golive.waitingKeepOld")}
+              </span>
+            </div>
+            <div className="flex shrink-0 items-center gap-2">
+              <button
+                type="button"
+                disabled={discardMutation.isPending || (!workflow.has_unpublished_changes && !dirty)}
+                onClick={() => setDiscardOpen(true)}
+                className="inline-flex h-9 items-center rounded-lg px-3 text-sm font-medium underline-offset-2 hover:underline disabled:opacity-40"
+              >
+                {t("workflows.golive.discard")}
+              </button>
+              <button
+                type="button"
+                disabled={problems.length > 0 || publishMutation.isPending}
+                title={problems.length > 0 ? t("workflows.golive.fixFirst") : undefined}
+                onClick={() => publishMutation.mutate()}
+                className="inline-flex h-9 items-center rounded-lg bg-foreground px-4 text-sm font-medium text-background transition-opacity hover:opacity-90 disabled:opacity-40"
+              >
+                {t("workflows.golive.publishChanges")}
+              </button>
+            </div>
           </div>
         ) : null}
       </div>
+
+      {canEdit && justReady && !isOn && problems.length === 0 && !dirty ? (
+        <div className="flex flex-col gap-3 rounded-2xl border border-foreground/10 bg-secondary/40 p-4 sm:flex-row sm:items-center sm:justify-between app-fade-up">
+          <div className="min-w-0">
+            <p className="font-medium">{t("workflows.golive.readyTitle")}</p>
+            <p className="text-sm text-muted-foreground">
+              {t("workflows.golive.readyBody")}
+            </p>
+          </div>
+          <div className="flex shrink-0 items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setJustReady(false)}
+              className="inline-flex h-10 items-center rounded-lg px-3 text-sm text-muted-foreground hover:text-foreground"
+            >
+              {t("workflows.golive.notYet")}
+            </button>
+            <button
+              type="button"
+              disabled={publishMutation.isPending}
+              onClick={() => publishMutation.mutate()}
+              className="inline-flex h-10 items-center gap-2 rounded-lg bg-foreground px-4 text-sm font-medium text-background hover:opacity-90 disabled:opacity-40"
+            >
+              <Power className="h-4 w-4" />
+              {t("workflows.golive.turnOn")}
+            </button>
+          </div>
+        </div>
+      ) : null}
+
+      <AlertDialog open={discardOpen} onOpenChange={setDiscardOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{t("workflows.golive.discardTitle")}</AlertDialogTitle>
+            <AlertDialogDescription>
+              {t("workflows.golive.discardBody")}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>{t("common.cancel", { defaultValue: "Cancel" })}</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={(e) => {
+                e.preventDefault();
+                discardMutation.mutate();
+              }}
+            >
+              {t("workflows.golive.discardConfirm")}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       {/* --- tabs -------------------------------------------------------- */}
       <Tabs
@@ -407,6 +623,9 @@ export default function WorkflowBuilder() {
               <PanelBody>
                 <StepList
                   graph={graph}
+                  fieldLabel={(path) =>
+                    fields.find((f) => f.path === path)?.label
+                  }
                   selectedId={selectedId}
                   disabled={!canEdit}
                   onSelect={setSelectedId}
@@ -436,6 +655,7 @@ export default function WorkflowBuilder() {
               </PanelBody>
             </Panel>
 
+            <div id="workflow-inspector" className="min-w-0 scroll-mt-4">
             <Panel>
               {/* No Save here. There used to be one, calling the same mutation
                   as the command bar's — two buttons for one action, and this
@@ -473,6 +693,7 @@ export default function WorkflowBuilder() {
                 />
               </PanelBody>
             </Panel>
+            </div>
           </div>
         </TabsContent>
 

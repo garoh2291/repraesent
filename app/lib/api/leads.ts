@@ -174,9 +174,26 @@ export async function markLeadSpam(
   return (await apiClient.post(`/leads/${id}/spam`, fromStatus ? { from_status: fromStatus } : {})).data;
 }
 
-/** Back to the stage it was in before (first stage when unknown), and lift every block on its sender. */
-export async function markLeadNotSpam(id: string): Promise<{ unblocked: number; alsoRestored: number }> {
+/** What "Not spam" (or "Book this time") did about the time a form inquiry asked for. */
+export interface RequestedTimeResult {
+  booking: "none" | "booked" | "taken" | "already" | "pending";
+  startsAt: string | null;
+}
+
+/**
+ * Back to the stage it was in before (first stage when unknown), and lift every block on its sender.
+ * A form inquiry the filter held back also gets what it missed: the time it asked for is booked
+ * when still free, plus its contact, confirmation email and webhooks.
+ */
+export async function markLeadNotSpam(
+  id: string,
+): Promise<{ unblocked: number; alsoRestored: number } & RequestedTimeResult> {
   return (await apiClient.post(`/leads/${id}/not-spam`)).data;
+}
+
+/** Book the time a form inquiry asked for, if it is still free. */
+export async function bookRequestedTime(id: string): Promise<RequestedTimeResult> {
+  return (await apiClient.post(`/leads/${id}/book-requested-time`)).data;
 }
 
 export async function reorderLead(

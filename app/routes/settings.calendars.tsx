@@ -863,8 +863,9 @@ function AccountRow({
               {account.is_own ? t("settings.calendars.you") : account.user_name}
             </p>
             {isCaldav && account.caldav_server_url ? (
-              <p className="mt-0.5 truncate text-xs text-muted-foreground">
-                {account.caldav_server_url}
+              <p className="mt-0.5 truncate text-xs text-muted-foreground" title={account.caldav_server_url}>
+                {/* The host says where it lives; the full …/dav.php path means nothing to an owner. */}
+                {hostOf(account.caldav_server_url)}
               </p>
             ) : null}
           </div>
@@ -1134,4 +1135,12 @@ function BaikalRow({
       </div>
     </div>
   );
+}
+
+function hostOf(url: string): string {
+  try {
+    return new URL(url).host;
+  } catch {
+    return url;
+  }
 }

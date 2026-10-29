@@ -406,6 +406,7 @@ export default function LeadFormLeadId() {
                 null,
               customerEmail: lead.email ?? null,
               customerPhone: lead.phone ?? null,
+              customerLocale: (lead.metadata?.form_locale as string | undefined) ?? null,
             }}
           />
         </div>

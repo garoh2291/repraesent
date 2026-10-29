@@ -1,4 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
+import { calendarLabel } from "~/lib/calendar/calendar-label";
 import {
   CalendarPlus,
   ChevronLeft,
@@ -1108,10 +1109,9 @@ function AppointmentConfig({
                   <CalDavIcon className="h-3 w-3 shrink-0" />
                 )}
                 <span className="min-w-0 truncate">
-                  {c.summary}
+                  {calendarLabel(a, c).name}
                   <span className="text-muted-foreground">
-                    {" "}
-                    · {a.google_email || a.user_name}
+                    {calendarLabel(a, c).detail ? ` · ${calendarLabel(a, c).detail}` : ""}
                     {a.auth_failed
                       ? ` — ${t("forms.inspector.appointment.accountNeedsReconnect")}`
                       : taken

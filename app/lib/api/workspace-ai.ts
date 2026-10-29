@@ -18,6 +18,10 @@ export interface WorkspaceAiStatus {
   last_error: string | null;
   auth_failed_at: string | null;
   connected_at: string | null;
+  /** How the key got here — null when nothing is connected. */
+  connect_method: "pasted" | "oauth" | null;
+  /** openrouter.ai/keys/<hash> — opens this key's page for its signed-in owner. */
+  openrouter_key_url: string | null;
   default_chat_model: string;
   models: WorkspaceAiModel[];
 }
@@ -59,6 +63,16 @@ export async function connectWorkspaceAi(
   apiKey: string,
 ): Promise<WorkspaceAiStatus> {
   const r = await apiClient.put<WorkspaceAiStatus>(BASE, { api_key: apiKey });
+  return r.data;
+}
+
+/**
+ * "Connect with OpenRouter": the server mints the openrouter.ai/auth URL
+ * (PKCE + signed state); the caller sets window.location. OpenRouter sends the
+ * user back to /settings/ai?openrouter=connected|denied|expired|error.
+ */
+export async function getOpenRouterAuthorizeUrl(): Promise<{ url: string }> {
+  const r = await apiClient.get<{ url: string }>(`${BASE}/oauth/authorize-url`);
   return r.data;
 }
 

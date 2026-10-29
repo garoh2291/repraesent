@@ -1,4 +1,5 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { requestedTimeNote } from "~/components/appointment-book/requested-time-notice";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import { Loader2, ShieldAlert, ShieldCheck } from "lucide-react";
@@ -28,8 +29,11 @@ export function useLeadSpamActions(lead: Pick<Lead, "id" | "status">) {
     onSuccess: (res) => {
       refresh();
       toast.success(t("leads.spam.restored"), {
-          description: res.alsoRestored ? t("leads.spam.alsoRestored", { count: res.alsoRestored }) : undefined,
-        });
+        description:
+          [requestedTimeNote(t, res), res.alsoRestored ? t("leads.spam.alsoRestored", { count: res.alsoRestored }) : null]
+            .filter(Boolean)
+            .join(" ") || undefined,
+      });
     },
     onError: () => toast.error(t("leads.spam.error")),
   });

@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { calendarLabel } from "~/lib/calendar/calendar-label";
 import { useIsPhone } from "~/lib/hooks/use-is-phone";
 import { CalendarHubTabs } from "~/components/notebook/calendar-hub-tabs";
 import { Navigate } from "react-router";
@@ -171,9 +172,8 @@ export default function CalendarPage() {
       for (const cal of account.calendars) {
         const key = calendarKeyFor(account, cal.id);
         if (cal.backgroundColor) colors[key] = cal.backgroundColor;
-        names[key] = account.is_own
-          ? cal.summary
-          : `${account.user_name} · ${cal.summary}`;
+        const label = calendarLabel(account, cal);
+        names[key] = account.is_own ? label.name : label.full;
       }
     }
     for (const config of baikalConfigs) {

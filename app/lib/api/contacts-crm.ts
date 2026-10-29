@@ -21,6 +21,8 @@ export interface ContactListItem {
   parent_full_name?: string | null;
   /** Position of a person at their company. */
   job_title?: string | null;
+  /** Language the customer gets emails in; null = not known. */
+  locale?: string | null;
   /** Companies only: how many people work there. */
   people_count?: number;
   primary_email: string | null;
@@ -155,6 +157,8 @@ export interface CreateContactBody {
   /** Companies only; saved as an email of type billing. */
   billing_email?: string | null;
   website?: string | null;
+  /** Language the customer gets emails in. */
+  locale?: string | null;
 }
 
 export async function createContact(

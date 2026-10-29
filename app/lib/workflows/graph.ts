@@ -213,20 +213,48 @@ export function publishBlockers(
    *  circular import between this module and `tree.ts`. */
   steps: WorkflowNode[] = stepsOf(graph),
 ): string[] {
-  const problems: string[] = [];
+  return [...new Set(publishProblems(graph, t, steps).map((p) => p.message))];
+}
+
+/** One thing left before a workflow can go live, and the step it is on. */
+export interface PublishProblem {
+  message: string;
+  /** The step to open when the owner clicks it; null = nothing to open. */
+  nodeId: string | null;
+}
+
+/**
+ * The same checks as `publishBlockers`, keeping which step each one is on so
+ * the "N things left" checklist can open it. Not de-duplicated: two empty
+ * emails are two things left.
+ */
+export function publishProblems(
+  graph: WorkflowGraph,
+  t: (key: string, opts?: Record<string, unknown>) => string,
+  steps: WorkflowNode[] = stepsOf(graph),
+): PublishProblem[] {
+  const problems: PublishProblem[] = [];
   const trigger = triggerOf(graph);
 
-  if (!trigger) problems.push(t("workflows.validation.noTrigger"));
-  if (steps.length === 0) problems.push(t("workflows.validation.noSteps"));
+  if (!trigger) {
+    problems.push({ message: t("workflows.validation.noTrigger"), nodeId: null });
+  }
+  if (steps.length === 0) {
+    problems.push({
+      message: t("workflows.validation.noSteps"),
+      nodeId: trigger?.id ?? null,
+    });
+  }
 
   for (const step of steps) {
+    const push = (message: string) => problems.push({ message, nodeId: step.id });
     if (step.type === "send_internal_email") {
       const cfg = step.config as SendInternalEmailConfig;
       if ((cfg.recipients ?? []).length === 0) {
-        problems.push(t("workflows.validation.noRecipients"));
+        push(t("workflows.validation.noRecipients"));
       }
       if (!hasAnyTemplate(cfg.by_locale)) {
-        problems.push(t("workflows.validation.noTemplate"));
+        push(t("workflows.validation.noTemplate"));
       }
     }
     if (step.type === "send_customer_email") {
@@ -239,29 +267,29 @@ export function publishBlockers(
       const blank =
         (audience.kind === "address" && !audience.email.trim()) ||
         (audience.kind === "path" && !audience.path.trim());
-      if (blank) problems.push(t("workflows.validation.noToPath"));
+      if (blank) push(t("workflows.validation.noToPath"));
       if (!hasAnyTemplate(cfg.by_locale)) {
-        problems.push(t("workflows.validation.noTemplate"));
+        push(t("workflows.validation.noTemplate"));
       }
     }
     if (step.type === "condition") {
       const cfg = step.config as { group: ConditionGroup };
       if ((cfg.group?.conditions ?? []).length === 0) {
-        problems.push(t("workflows.validation.emptyCondition"));
+        push(t("workflows.validation.emptyCondition"));
       }
     }
     if (step.type === "create_task") {
       const cfg = step.config as CreateTaskConfig;
-      if (!cfg.title?.trim()) problems.push(t("workflows.validation.noTaskTitle"));
+      if (!cfg.title?.trim()) push(t("workflows.validation.noTaskTitle"));
     }
     if (step.type === "add_note") {
       const cfg = step.config as AddNoteConfig;
-      if (!cfg.body?.trim()) problems.push(t("workflows.validation.noNoteBody"));
+      if (!cfg.body?.trim()) push(t("workflows.validation.noNoteBody"));
     }
     if (step.type === "notify_team") {
       const cfg = step.config as NotifyTeamConfig;
       if (!cfg.message?.trim()) {
-        problems.push(t("workflows.validation.noNotifyMessage"));
+        push(t("workflows.validation.noNotifyMessage"));
       }
     }
     if (step.type === "update_record") {
@@ -269,11 +297,11 @@ export function publishBlockers(
       // no-op that will publish and quietly do nothing on every run.
       const cfg = step.config as UpdateRecordConfig;
       const set = Object.entries(cfg.set ?? {}).filter(([, v]) => v?.trim());
-      if (set.length === 0) problems.push(t("workflows.validation.noUpdateFields"));
+      if (set.length === 0) push(t("workflows.validation.noUpdateFields"));
     }
   }
 
-  return [...new Set(problems)];
+  return problems;
 }
 
 /**

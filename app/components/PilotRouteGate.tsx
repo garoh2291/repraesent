@@ -42,7 +42,7 @@ export function PilotRouteGate() {
       lastBounced.current = null;
       return;
     }
-    if (isPilotFeatureEnabled(workspaceId)) return;
+    if (isPilotFeatureEnabled(workspaceId, feature)) return;
     if (isDemo && DEMO_WORKSPACE_ALLOWED.has(feature)) return;
 
     // One toast per bounce, not one per render of the same bounce.

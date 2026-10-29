@@ -492,11 +492,16 @@ export function normalizeDefinition(
   const base = emptyDefinition(locale);
   const commerce = normalizeCommerce(raw?.commerce, kind);
   const intake = normalizeIntake(raw?.intake, kind);
+  // Same rule as the server's asDefinition(): a product form always saves, any
+  // other kind keeps its webhook-only switch. Dropping this here used to flip
+  // webhook-only forms back to saving on the next save.
+  const crm = { save: kind === "product" ? true : raw?.crm?.save !== false };
   if (!raw) {
     return {
       ...base,
       ...(commerce ? { commerce } : {}),
       ...(intake ? { intake } : {}),
+      crm,
     };
   }
 
@@ -515,6 +520,7 @@ export function normalizeDefinition(
     layout: normalizeLayout(raw.layout),
     ...(commerce ? { commerce } : {}),
     ...(intake ? { intake } : {}),
+    crm,
   };
 }
 

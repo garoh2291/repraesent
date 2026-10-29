@@ -29,10 +29,13 @@ export async function deleteMyAvatar(): Promise<void> {
 export async function uploadWorkspaceAvatar(
   file: File,
   thumb?: File | Blob,
+  /** 144px PNG for customer emails (see emailLogoCopy). */
+  email?: Blob,
 ): Promise<{ avatar_url: string; avatar_thumb_url?: string }> {
   const form = new FormData();
   form.append("file", file);
   if (thumb) form.append("thumb", thumb, "thumb.webp");
+  if (email) form.append("email", email, "email.png");
   const { data } = await apiClient.post<{ avatar_url: string }>(
     "/users/me/workspace/avatar",
     form,

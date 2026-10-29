@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { Code2, Eye, TriangleAlert } from "lucide-react";
-import { useRef, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Input } from "~/components/ui/input";
 import { Label } from "~/components/ui/label";
@@ -12,6 +12,11 @@ import { extractErrorMessage } from "~/lib/api/axios-instance";
 import { Field, FieldHint } from "~/components/wordpress/fields";
 import { ResolvedHint } from "./ResolvedHint";
 import { VariablePicker } from "./VariablePicker";
+import {
+  renderWithSamples,
+  templatePaths,
+  variableLabels,
+} from "~/lib/workflows/sample-render";
 import {
   previewTemplate,
   type CatalogField,
@@ -56,7 +61,9 @@ export function EmailTemplateEditor({
   onLocaleChange: (locale: string) => void;
 }) {
   const { t } = useTranslation();
-  const [view, setView] = useState<"code" | "preview">("code");
+  // Preview first: the owner reads the email a customer gets, and only opens
+  // the code when they want to change it.
+  const [view, setView] = useState<"code" | "preview">("preview");
   const bodyRef = useRef<HTMLTextAreaElement | null>(null);
   const subjectRef = useRef<HTMLInputElement | null>(null);
   /**
@@ -115,6 +122,42 @@ export function EmailTemplateEditor({
     // A preview that failed must say so, not retry three times in silence.
     retry: false,
   });
+
+  /**
+   * No record of this kind exists yet, so there is nothing real to render
+   * against. Fill in sample details instead and label it as an example.
+   */
+  const sample = useMemo(
+    () =>
+      previewRecord
+        ? null
+        : {
+            subject: renderWithSamples(current.subject, fields, t, { escape: false }),
+            html: renderWithSamples(current.html, fields, t, { escape: true }),
+          },
+    [previewRecord, current.subject, current.html, fields, t],
+  );
+  const shown = previewRecord ? preview : sample;
+
+  // The merge fields this email uses, by plain name — "Customer", not
+  // `trigger.record.customer`.
+  const labels = useMemo(() => variableLabels(fields), [fields]);
+  const usedPaths = useMemo(
+    () => templatePaths(`${current.subject} ${current.html}`),
+    [current.subject, current.html],
+  );
+
+  /** Select a merge field in the code so it can be retyped or deleted. */
+  const selectToken = (path: string) => {
+    const el = bodyRef.current;
+    if (!el) return;
+    const match = new RegExp(
+      `\\{\\{\\s*${path.replace(/\./g, "\\.")}\\s*(?:\\|[^}]*)?\\}\\}`,
+    ).exec(current.html);
+    if (!match) return;
+    el.focus();
+    el.setSelectionRange(match.index, match.index + match[0].length);
+  };
 
   const patch = (next: Partial<{ subject: string; html: string }>) =>
     onChange({ ...byLocale, [activeLocale]: { ...current, ...next } });
@@ -252,8 +295,8 @@ export function EmailTemplateEditor({
                 })}
               </p>
             ) : (
-              <p className="text-xs text-muted-foreground">
-                {t("workflows.preview.pickToRender")}
+              <p className="inline-flex rounded-sm bg-secondary px-1.5 py-0.5 text-xs font-medium text-secondary-foreground">
+                {t("workflows.emailPreview.exampleLabel")}
               </p>
             )}
 
@@ -268,9 +311,9 @@ export function EmailTemplateEditor({
               </p>
             ) : null}
 
-            {preview?.subject ? (
+            {shown?.subject ? (
               <p className="rounded-lg border border-border bg-muted/30 px-3 py-2 text-sm font-medium">
-                {preview.subject}
+                {shown.subject}
               </p>
             ) : null}
 
@@ -286,10 +329,10 @@ export function EmailTemplateEditor({
                 /* Only ever the SERVER's render. Falling back to `current.html`
                    showed raw {{paths}} and passed it off as the result. When
                    there is nothing to show, show nothing and say why. */
-                html={preview?.html ?? ""}
+                html={shown?.html ?? ""}
                 className="block h-[360px] w-full rounded-xl border border-border bg-white"
               />
-              {previewLoading ? (
+              {previewRecord && previewLoading ? (
                 <div className="absolute inset-0 flex items-center justify-center rounded-xl bg-background/60 text-xs text-muted-foreground backdrop-blur-[1px]">
                   {t("workflows.preview.rendering", {
                     defaultValue: "Rendering…",
@@ -298,7 +341,7 @@ export function EmailTemplateEditor({
               ) : null}
             </div>
 
-            {preview?.unresolved.length ? (
+            {previewRecord && preview?.unresolved.length ? (
               <p className="flex items-start gap-1.5 text-xs text-amber-700 dark:text-amber-300">
                 <TriangleAlert className="mt-0.5 h-3 w-3 shrink-0" />
                 {t("workflows.preview.unresolved", {
@@ -310,11 +353,37 @@ export function EmailTemplateEditor({
         )}
       </Field>
 
+      {usedPaths.length > 0 ? (
+        <div className="flex flex-wrap items-center gap-1.5">
+          <span className="text-xs text-muted-foreground">
+            {t("workflows.emailPreview.usedFields")}
+          </span>
+          {usedPaths.map((path) => (
+            <button
+              key={path}
+              type="button"
+              title={`{{${path}}}`}
+              onClick={() => {
+                if (view !== "code") setView("code");
+                requestAnimationFrame(() => selectToken(path));
+              }}
+              className="inline-flex h-7 items-center rounded-full border border-foreground/15 bg-muted/50 px-2.5 text-xs font-medium transition-colors hover:bg-muted"
+            >
+              {labels.get(path) ?? path.split(".").pop()?.replace(/_/g, " ")}
+            </button>
+          ))}
+        </div>
+      ) : null}
+
       <div className="flex items-center gap-2">
         <VariablePicker
           fields={fields}
-          disabled={disabled || view === "preview"}
-          onInsert={insert}
+          disabled={disabled}
+          onInsert={(path) => {
+            // Inserting needs the caret, which lives in the code view.
+            if (view !== "code") setView("code");
+            insert(path);
+          }}
         />
         <FieldHint>
           {focused === "subject"

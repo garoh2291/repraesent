@@ -49,6 +49,11 @@ export interface LeadAppointment {
   hosts: LeadAppointmentHost[] | null;
   /** A co-booking that was rolled back: the lead is real, no event exists. */
   bookingFailed: boolean;
+  /**
+   * Why the time they asked for could not be booked after "Not spam":
+   * someone else took it, or it is in the past. null when not known.
+   */
+  failReason: "taken" | "past" | null;
   /** Metadata keys this appointment accounts for — hidden from "Additional info". */
   claimedKeys: string[];
 }
@@ -181,6 +186,7 @@ export function extractLeadAppointments(
         // The standalone booking page has always been one calendar.
         hosts: null,
         bookingFailed: false,
+        failReason: null,
         claimedKeys: ["appointment_uid", "start", "end", "config_id"],
       });
     }
@@ -222,7 +228,7 @@ export function extractLeadAppointments(
       // host got theirs. A rolled-back co-booking leaves no _event_id at all.
       booked: eventId != null,
       hosts,
-      bookingFailed: asString(companion("_booking_failed")) === "1",
+      ...bookingFailure(companion("_booking_failed")),
       claimedKeys: [
         key,
         ...bases.flatMap((base) =>
@@ -273,4 +279,21 @@ export function formatAppointmentRange(appt: LeadAppointment): string {
   });
   if (!appt.end) return start;
   return `${start} – ${formatDateIntl(appt.end, { timeStyle: "short" })}`;
+}
+
+/**
+ * `_booking_failed`: "1" from a rolled-back co-booking, or JSON
+ * `{start, end, reason}` when "Not spam" found the time already gone.
+ */
+function bookingFailure(raw: unknown): { bookingFailed: boolean; failReason: "taken" | "past" | null } {
+  const value = asString(raw);
+  if (!value) return { bookingFailed: false, failReason: null };
+  if (value === "1") return { bookingFailed: true, failReason: null };
+  try {
+    const parsed = JSON.parse(value) as { reason?: unknown };
+    const reason = parsed.reason === "past" ? "past" : parsed.reason === "taken" ? "taken" : null;
+    return { bookingFailed: true, failReason: reason };
+  } catch {
+    return { bookingFailed: true, failReason: null };
+  }
 }

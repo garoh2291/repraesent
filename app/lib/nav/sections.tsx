@@ -37,7 +37,7 @@ import * as LucideIcons from "lucide-react";
 import { OpenAiMark } from "~/components/icons/openai-mark";
 import { getLocalizedServiceName } from "~/lib/api/auth";
 import { useAuthContext } from "~/providers/auth-provider";
-import { usePilotFeatures } from "~/lib/feature-flags";
+import { isPilotFeatureEnabled, usePilotFeatures } from "~/lib/feature-flags";
 import { useAppointmentConfigs } from "~/lib/hooks/useAppointmentConfigs";
 import { useCalendarSummary } from "~/lib/hooks/useCalendarSummary";
 import { useWorkspaceWpSite } from "~/lib/hooks/useWorkspaceWpSite";
@@ -409,6 +409,16 @@ export function useNavSections(): NavSection[] | null {
       icon: OpenAiMark,
     },
   ];
+  // Website visitors follow the stats themselves (website found on pa-002),
+  // not the old "analytics" service row with its Plausible share link.
+  if (currentWorkspace.has_plausible_analytics) {
+    results.push({
+      key: "website-visitors",
+      label: t("sections.tabs.websiteVisitors", "Website visitors"),
+      to: "/analytics",
+      icon: Eye,
+    });
+  }
   results.push({
     key: "ai-visibility",
     label: t("sections.tabs.aiVisibility", "AI visibility"),
@@ -500,6 +510,8 @@ export function useNavSections(): NavSection[] | null {
       .sort((a, b) => (a.service_order ?? 0) - (b.service_order ?? 0)) ?? [];
   for (const s of services) {
     if (!s.service_slug) continue;
+    // Shown as the fixed "Website visitors" tab when there are stats.
+    if (s.service_slug === "analytics" || s.service_type === "analytics") continue;
     const to = `/${s.service_slug}`;
     const section = sectionForService(s.service_slug, s.service_type ?? "");
     // Appointments is already reachable through the Calendar / Booking page tab.
@@ -578,7 +590,8 @@ export function useNavSections(): NavSection[] | null {
             to: "/appointments",
             match: ["/appointments", "/calendar", "/instructions"],
             tabs: appointments,
-            pilot: true,
+            // Our own reminder: early-access customers see no pill.
+            pilot: isPilotFeatureEnabled(currentWorkspace.id),
           },
         ]
       : []),

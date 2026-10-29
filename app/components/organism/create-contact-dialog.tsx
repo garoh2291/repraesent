@@ -1,3 +1,5 @@
+import { CustomerLanguageSelect } from "~/components/appointment-book/customer-language-select";
+import type { FormLocale } from "~/lib/forms/schema";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router";
 import { useTranslation } from "react-i18next";
@@ -73,6 +75,8 @@ export interface CreateContactInitialValues {
   taxNumber?: string;
   hasBillingEmail?: boolean;
   website?: string;
+  /** Preferred communication language, when already known. */
+  locale?: FormLocale | null;
 }
 
 export interface CreateContactDialogProps {
@@ -166,6 +170,7 @@ export function CreateContactDialog({
   const [billingSame, setBillingSame] = useState(true);
   const [billingEmail, setBillingEmail] = useState("");
   const [website, setWebsite] = useState("");
+  const [locale, setLocale] = useState<FormLocale | null>(null);
   // Existing deals this contact belongs to; linked right after the save.
   const [deals, setDeals] = useState<PickedDeal[]>([]);
   const showDeals = withDeals && !isEditMode;
@@ -190,6 +195,7 @@ export function CreateContactDialog({
       setLegalName(initialValues.legalName ?? "");
       setTaxNumber(initialValues.taxNumber ?? "");
       setWebsite(initialValues.website ?? "");
+      setLocale(initialValues.locale ?? null);
     }
     if (!open) {
       setFirstName("");
@@ -207,6 +213,7 @@ export function CreateContactDialog({
       setBillingSame(true);
       setBillingEmail("");
       setWebsite("");
+      setLocale(null);
       setDeals([]);
       setPhonePanel(false);
     }
@@ -234,6 +241,7 @@ export function CreateContactDialog({
         email: email.trim() || null,
         phone: phone.trim() || null,
         website: website.trim() || null,
+        locale,
         contact_type: contactType,
       });
       if (hasAddress) {
@@ -321,6 +329,9 @@ export function CreateContactDialog({
       const hadPhone = !!initialValues?.phone;
 
       const promises: Promise<unknown>[] = [];
+      if (locale !== (initialValues?.locale ?? null)) {
+        promises.push(patchContact(editContactId, { locale }));
+      }
       if (contactType !== (initialValues?.contactType ?? "contact")) {
         promises.push(
           patchContactCrm(editContactId, { contact_type: contactType }),
@@ -818,6 +829,29 @@ export function CreateContactDialog({
                 })}
               </p>
             ) : null}
+          </div>
+
+          {/* Preferred communication language (people and companies) */}
+          <div className="space-y-1.5">
+            <Label htmlFor="create-contact-language">
+              {t("contacts.preferredLanguage", {
+                defaultValue: "Preferred communication language",
+              })}
+            </Label>
+            <CustomerLanguageSelect
+              id="create-contact-language"
+              value={locale}
+              onChange={setLocale}
+              allowNone
+              noneLabel={t("contacts.languageUnknown", { defaultValue: "Not known" })}
+              className="sm:w-full"
+            />
+            <p className="text-xs text-muted-foreground">
+              {t("contacts.preferredLanguageHint", {
+                defaultValue:
+                  "Appointment emails and confirmations go out in this language. Leave it empty if you don't know it yet.",
+              })}
+            </p>
           </div>
 
           {/* Tax number (companies) */}

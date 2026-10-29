@@ -91,6 +91,14 @@ export async function unpublishForm(formId: string): Promise<FormRecord> {
   return response.data;
 }
 
+/** Throw away edits that are not live: the draft becomes the live version again. */
+export async function discardFormDraft(formId: string): Promise<FormRecord> {
+  const response = await apiClient.post<FormRecord>(
+    `/forms/${formId}/discard-draft`,
+  );
+  return response.data;
+}
+
 export async function duplicateForm(formId: string): Promise<FormRecord> {
   const response = await apiClient.post<FormRecord>(
     `/forms/${formId}/duplicate`,
