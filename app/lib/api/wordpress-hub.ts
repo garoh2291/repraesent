@@ -11,14 +11,89 @@ import type {
   ReTranslateBulkState,
 } from "~/lib/wordpress/plugin-settings-types";
 
-/** The WordPress site the current workspace owns, or null if it has none. */
+/** The WordPress site the Website section works on, or null if it has none. */
 export interface WorkspaceWpSite {
   id: string;
   url: string;
   type: "development" | "production" | "staging";
   /** Whether admin SSO has been configured for this site. */
   sso_enabled: boolean;
+  /** When the site was added to Repraesent (ISO). */
+  created_at?: string;
 }
+
+/** The open site's picture, dates and coming-soon state (Website › Overview). */
+export interface WebsiteOverview {
+  preview: {
+    /** Short-lived link to the picture; null until the first one is taken. */
+    url: string | null;
+    taken_at: string | null;
+    /**
+     * `taking`: a new picture is on its way; the old one (if any) stays.
+     * `failed`: the last try didn't work and there is no picture yet.
+     */
+    state: "ready" | "taking" | "none" | "failed";
+    /** A newer try didn't work (website didn't answer): the shown picture is the last one. */
+    last_try_failed?: boolean;
+  };
+  /** When the site was added (shown as "Online since" for now). */
+  published_at: string;
+  /** Newest published content change; null when the site can't be read. */
+  updated_at: string | null;
+  /** Visitors see the coming-soon page (re:maintenance is on). */
+  coming_soon: boolean;
+}
+
+/** `siteId`: that site rather than the open one (preloading). */
+export async function getWorkspaceWebsiteOverview(siteId?: string): Promise<WebsiteOverview> {
+  const res = await apiClient.get<WebsiteOverview>("/wordpress/site/overview", {
+    headers: siteId ? { "X-Wp-Site-Id": siteId } : undefined,
+  });
+  return res.data;
+}
+
+/** Take a new picture now. `started: false` when one was asked for in the last 5 minutes. */
+export async function refreshWorkspaceWebsitePreview(): Promise<{ started: boolean }> {
+  const res = await apiClient.post<{ started: boolean }>(
+    "/wordpress/site/overview/preview",
+  );
+  return res.data;
+}
+
+/** One Content-Security-Policy: directive → sources (lower-cased). */
+export type CspPolicy = Record<string, string[]>;
+
+/** Where the open site lets code load from (its live Content-Security-Policy). */
+export interface WebsiteCodePolicy {
+  /** false: no policy, code from anywhere loads; null: couldn't ask the site. */
+  enforced: boolean | null;
+  policies: CspPolicy[];
+  /** The host `'self'` means. */
+  site_host: string | null;
+}
+
+export async function getWorkspaceWebsiteCodePolicy(): Promise<WebsiteCodePolicy> {
+  const res = await apiClient.get<WebsiteCodePolicy>("/wordpress/site/code-policy");
+  return res.data;
+}
+
+/** Ask our team to allow addresses the site's policy blocks (asking twice adds nothing). */
+export async function requestWorkspaceWebsiteCodeHosts(
+  hosts: string[],
+): Promise<{ requested: string[] }> {
+  const res = await apiClient.post<{ requested: string[] }>(
+    "/wordpress/site/code-policy/request",
+    { hosts },
+  );
+  return res.data;
+}
+
+/**
+ * Whether we host each site: "elsewhere" means its settings and services can't
+ * be managed from the app, so those screens are hidden; "unknown" means our
+ * servers couldn't be asked just now — treated like ours.
+ */
+export type WpSiteHosting = "ours" | "elsewhere" | "unknown";
 
 /**
  * Fetch the current workspace's WordPress site (scoped by the X-Workspace-Id
@@ -27,6 +102,28 @@ export interface WorkspaceWpSite {
 export async function getWorkspaceWpSite(): Promise<WorkspaceWpSite | null> {
   const res = await apiClient.get<WorkspaceWpSite | null>("/wordpress/site");
   return res.data ?? null;
+}
+
+/**
+ * Every WordPress site the workspace has — production first, then staging and
+ * development. The one the app works on is picked with `setStoredWpSiteId`.
+ */
+export async function getWorkspaceWpSites(): Promise<WorkspaceWpSite[]> {
+  const res = await apiClient.get<WorkspaceWpSite[]>("/wordpress/sites");
+  return res.data ?? [];
+}
+
+/**
+ * Whether we host each of the workspace's sites, by site id. Slower than the
+ * site list (it asks our web servers), so the app keeps the last answer.
+ */
+export async function getWorkspaceWpSitesHosting(): Promise<
+  Record<string, WpSiteHosting>
+> {
+  const res = await apiClient.get<Record<string, WpSiteHosting>>(
+    "/wordpress/sites/hosting",
+  );
+  return res.data ?? {};
 }
 
 /**
@@ -121,24 +218,13 @@ export async function getWorkspaceWpPluginCatalog(): Promise<
  * Reads `wp_plugin_installs` only (`deleted_at` IS NULL).
  * Throws (404) when the workspace has no WordPress site.
  */
-export async function getWorkspaceWpPluginInstalls(): Promise<WpPluginInstallList> {
+/** `siteId`: that site rather than the open one (preloading). */
+export async function getWorkspaceWpPluginInstalls(
+  siteId?: string,
+): Promise<WpPluginInstallList> {
   const res = await apiClient.get<WpPluginInstallList>(
     "/wordpress/site/plugin-installs",
-  );
-  return res.data;
-}
-
-/**
- * Activate or deactivate a catalog service on the workspace's WordPress site.
- * Returns the refreshed install list so the sidebar and page toggle stay in sync.
- */
-export async function setWorkspaceCatalogPluginActive(
-  pluginUuid: string,
-  active: boolean,
-): Promise<WpPluginInstallList> {
-  const action = active ? "activate" : "deactivate";
-  const res = await apiClient.post<WpPluginInstallList>(
-    `/wordpress/site/plugin-installs/${pluginUuid}/${action}`,
+    { headers: siteId ? { "X-Wp-Site-Id": siteId } : undefined },
   );
   return res.data;
 }

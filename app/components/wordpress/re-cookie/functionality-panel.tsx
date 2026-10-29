@@ -1,49 +1,38 @@
-import { useState } from "react";
+import { Link } from "react-router";
 import { useTranslation } from "react-i18next";
 import {
+  ArrowRight,
   BarChart3,
-  ChevronDown,
-  Code2,
-  Facebook,
   Layers,
   Megaphone,
   Play,
   ShieldCheck,
   SlidersHorizontal,
   Tag,
-  Target,
   Wrench,
 } from "lucide-react";
+import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
 import { Label } from "~/components/ui/label";
 import { Switch } from "~/components/ui/switch";
 import { Textarea } from "~/components/ui/textarea";
-import { cn } from "~/lib/utils";
 import type {
   ReCookieCategorySlug,
-  ReCookieNamedScript,
-  ReCookieScriptCategory,
   ReCookieSettings,
 } from "~/lib/wordpress/plugin-settings-types";
+import { WEBSITE_SETTINGS_PATH } from "~/lib/utils/wordpress-plugin-kind";
 import {
-  asScriptList,
   CATEGORY_LABELS,
   CATEGORY_SLUGS,
-  NAMED_SCRIPT_CATS,
-  NAMED_SCRIPT_LABELS,
   type PatchSettings,
 } from "./constants";
-import {
-  PROVIDER_LABEL,
-  validateTrackingId,
-  type TrackingIdProvider,
-} from "./tracking-ids";
+import { activeTagNames } from "./tracking-tags";
 import {
   CardBody,
   CardHeader,
+  ExpandableRow,
   Field,
   FieldHint,
-  NamedScriptsRepeater,
   SectionCard,
   Segmented,
   SwitchRow,
@@ -82,33 +71,6 @@ export function FunctionalityPanel({
       categories: {
         ...prev.categories,
         [slug]: { ...prev.categories[slug], [field]: val },
-      },
-    }));
-  }
-
-  function setIntegration(
-    provider: "gtm" | "google_ads" | "ga4" | "meta",
-    field: string,
-    val: unknown,
-  ) {
-    patch((prev) => ({
-      ...prev,
-      integrations: {
-        ...prev.integrations,
-        [provider]: { ...prev.integrations[provider], [field]: val },
-      },
-    }));
-  }
-
-  function setNamedScripts(
-    cat: ReCookieScriptCategory,
-    items: ReCookieNamedScript[],
-  ) {
-    patch((prev) => ({
-      ...prev,
-      integrations: {
-        ...prev.integrations,
-        named_scripts: { ...prev.integrations.named_scripts, [cat]: items },
       },
     }));
   }
@@ -233,210 +195,7 @@ export function FunctionalityPanel({
         </CardBody>
       </SectionCard>
 
-      <SectionCard>
-        <CardHeader
-          icon={<Tag className="size-4" />}
-          title={t("wordpress.reCookie.integrationsTitle", "Integrations")}
-          subtitle={t(
-            "wordpress.reCookie.integrationsDesc",
-            "Set up tracking scripts and integrations (GTM, Google Ads, GA4, Meta Pixel, etc.).",
-          )}
-        />
-        <CardBody className="space-y-3">
-          <IntegrationCard
-            icon={<Tag className="size-4" />}
-            name={t("wordpress.reCookie.gtmEnabled", "Google Tag Manager")}
-            enabled={settings.integrations.gtm.enabled}
-            onEnabledChange={(v) => setIntegration("gtm", "enabled", v)}
-            switchId="re-cookie-gtm-enabled"
-          >
-            <Field>
-              <Label htmlFor="re-cookie-gtm-container-id">
-                {t("wordpress.reCookie.gtmContainerId", "GTM container ID")}
-              </Label>
-              <Input
-                id="re-cookie-gtm-container-id"
-                type="text"
-                className="max-w-xs bg-card font-mono"
-                value={settings.integrations.gtm.container_id}
-                placeholder="GTM-XXXXXXX"
-                onChange={(e) =>
-                  setIntegration("gtm", "container_id", e.target.value)
-                }
-              />
-              <FieldHint>
-                {t(
-                  "wordpress.reCookie.gtmContainerIdHint",
-                  "GTM-XXXXXXX only. Do not put AW- or G- IDs here.",
-                )}
-              </FieldHint>
-              <TrackingIdNotice
-                provider="gtm"
-                value={settings.integrations.gtm.container_id}
-                enabled={settings.integrations.gtm.enabled}
-              />
-            </Field>
-          </IntegrationCard>
-
-          <IntegrationCard
-            icon={<Target className="size-4" />}
-            name={t("wordpress.reCookie.googleAdsEnabled", "Google Ads")}
-            enabled={settings.integrations.google_ads.enabled}
-            onEnabledChange={(v) => setIntegration("google_ads", "enabled", v)}
-            switchId="re-cookie-google-ads-enabled"
-          >
-            <Field>
-              <Label htmlFor="re-cookie-google-ads-conversion-id">
-                {t(
-                  "wordpress.reCookie.googleAdsConversionId",
-                  "Google Ads conversion ID",
-                )}
-              </Label>
-              <Input
-                id="re-cookie-google-ads-conversion-id"
-                type="text"
-                className="max-w-xs bg-card font-mono"
-                value={settings.integrations.google_ads.conversion_id}
-                placeholder="AW-1234567890"
-                onChange={(e) =>
-                  setIntegration("google_ads", "conversion_id", e.target.value)
-                }
-              />
-              <FieldHint>
-                {t(
-                  "wordpress.reCookie.googleAdsConversionIdHint",
-                  "Loads after marketing consent. Do not also paste the same AW- snippet under Marketing scripts.",
-                )}
-              </FieldHint>
-              <TrackingIdNotice
-                provider="google_ads"
-                value={settings.integrations.google_ads.conversion_id}
-                enabled={settings.integrations.google_ads.enabled}
-              />
-            </Field>
-          </IntegrationCard>
-
-          <IntegrationCard
-            icon={<BarChart3 className="size-4" />}
-            name={t("wordpress.reCookie.ga4Enabled", "Google Analytics 4")}
-            enabled={settings.integrations.ga4.enabled}
-            onEnabledChange={(v) => setIntegration("ga4", "enabled", v)}
-            switchId="re-cookie-ga4-enabled"
-          >
-            <Field>
-              <Label htmlFor="re-cookie-ga4-measurement-id">
-                {t("wordpress.reCookie.ga4MeasurementId", "GA4 measurement ID")}
-              </Label>
-              <Input
-                id="re-cookie-ga4-measurement-id"
-                type="text"
-                className="max-w-xs bg-card font-mono"
-                value={settings.integrations.ga4.measurement_id}
-                placeholder="G-XXXXXXXXXX"
-                onChange={(e) =>
-                  setIntegration("ga4", "measurement_id", e.target.value)
-                }
-              />
-              <TrackingIdNotice
-                provider="ga4"
-                value={settings.integrations.ga4.measurement_id}
-                enabled={settings.integrations.ga4.enabled}
-              />
-            </Field>
-            <Field>
-              <Label htmlFor="re-cookie-ga4-load-via">
-                {t("wordpress.reCookie.ga4LoadVia", "GA4 load method")}
-              </Label>
-              <Segmented
-                value={settings.integrations.ga4.load_via}
-                onChange={(v) => setIntegration("ga4", "load_via", v)}
-                ariaLabel={t("wordpress.reCookie.ga4LoadVia", "GA4 load method")}
-                className="bg-card"
-                options={[
-                  {
-                    value: "gtag",
-                    label: t("wordpress.reCookie.directGtag", "Direct gtag"),
-                  },
-                  {
-                    value: "gtm",
-                    label: t("wordpress.reCookie.viaGtm", "Via GTM"),
-                  },
-                ]}
-              />
-            </Field>
-          </IntegrationCard>
-
-          <IntegrationCard
-            icon={<Facebook className="size-4" />}
-            name={t("wordpress.reCookie.metaEnabled", "Meta Pixel")}
-            enabled={settings.integrations.meta.enabled}
-            onEnabledChange={(v) => setIntegration("meta", "enabled", v)}
-            switchId="re-cookie-meta-enabled"
-          >
-            <Field>
-              <Label htmlFor="re-cookie-meta-pixel-id">
-                {t("wordpress.reCookie.metaPixelId", "Meta Pixel ID")}
-              </Label>
-              <Input
-                id="re-cookie-meta-pixel-id"
-                type="text"
-                className="max-w-xs bg-card font-mono"
-                value={settings.integrations.meta.pixel_id}
-                placeholder="Pixel ID"
-                onChange={(e) =>
-                  setIntegration("meta", "pixel_id", e.target.value)
-                }
-              />
-              <TrackingIdNotice
-                provider="meta"
-                value={settings.integrations.meta.pixel_id}
-                enabled={settings.integrations.meta.enabled}
-              />
-            </Field>
-          </IntegrationCard>
-        </CardBody>
-      </SectionCard>
-
-      <SectionCard>
-        <CardHeader
-          icon={<Code2 className="size-4" />}
-          title={t("wordpress.reCookie.namedScriptsTitle", "Consent-gated scripts")}
-          subtitle={t(
-            "wordpress.reCookie.namedScriptsDesc",
-            "Scripts injected only once the visitor consents to the matching category.",
-          )}
-        />
-        <CardBody className="space-y-3">
-          {NAMED_SCRIPT_CATS.map((cat) => {
-            const items = asScriptList(settings.integrations.named_scripts[cat]);
-            const Icon = CATEGORY_ICONS[cat];
-            return (
-              <ExpandableRow
-                key={cat}
-                icon={<Icon className="size-4" />}
-                title={t(
-                  `wordpress.reCookie.namedScripts.${cat}`,
-                  NAMED_SCRIPT_LABELS[cat],
-                )}
-                meta={
-                  items.length === 0
-                    ? t("wordpress.reCookie.noScripts", "No scripts")
-                    : t("wordpress.reCookie.scriptCount", {
-                        count: items.length,
-                        defaultValue: "{{count}} script(s)",
-                      })
-                }
-                defaultOpen={items.length > 0}
-              >
-                <NamedScriptsRepeater
-                  items={items}
-                  onChange={(next) => setNamedScripts(cat, next)}
-                />
-              </ExpandableRow>
-            );
-          })}
-        </CardBody>
-      </SectionCard>
+      <TagsOnWebsiteCard settings={settings} />
 
       <SectionCard>
         <CardHeader
@@ -559,151 +318,71 @@ function CategoryRow({
   );
 }
 
-/** An integration: enable switch on the row, credentials underneath. */
 /**
- * Why this tracking ID will not do what it looks like it does: either the shape
- * is one WordPress will reject on save, or an ID is filled in while the
- * integration is switched off — in which case the tag never loads and nothing
- * anywhere says so.
+ * The tags themselves are edited under Website settings — the same settings row,
+ * so this list is always what the banner names. Here they are only listed, and
+ * the card says so when the banner is switched off there.
  */
-function TrackingIdNotice({
-  provider,
-  value,
-  enabled,
-}: {
-  provider: TrackingIdProvider;
-  value: string;
-  enabled: boolean;
-}) {
-  const invalid = validateTrackingId(provider, value);
-  if (invalid) {
-    return <p className="text-xs leading-relaxed text-destructive">{invalid}</p>;
-  }
-  if (value.trim() !== "" && !enabled) {
-    return (
-      <p className="text-xs leading-relaxed text-amber-700 dark:text-amber-300">
-        {PROVIDER_LABEL[provider]} is switched off, so this ID will not load on
-        the site. Turn it on above to activate the tag.
-      </p>
-    );
-  }
-  return null;
-}
-
-function IntegrationCard({
-  icon,
-  name,
-  enabled,
-  onEnabledChange,
-  switchId,
-  children,
-}: {
-  icon: React.ReactNode;
-  name: string;
-  enabled: boolean;
-  onEnabledChange: (v: boolean) => void;
-  switchId: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <div
-      className={cn(
-        "rounded-xl border transition-colors",
-        enabled ? "border-primary/30 bg-primary/[0.03]" : "bg-muted/20",
-      )}
-    >
-      <div className="flex items-center gap-3 px-4 py-3">
-        <span
-          aria-hidden
-          className={cn(
-            "flex size-8 shrink-0 items-center justify-center rounded-lg",
-            enabled
-              ? "bg-primary/10 text-primary"
-              : "bg-muted text-muted-foreground",
-          )}
-        >
-          {icon}
-        </span>
-        <Label htmlFor={switchId} className="flex-1 font-medium">
-          {name}
-        </Label>
-        <Switch
-          id={switchId}
-          checked={enabled}
-          onCheckedChange={onEnabledChange}
-        />
-      </div>
-      <div className="space-y-4 border-t px-4 py-4">{children}</div>
-    </div>
-  );
-}
-
-/** Disclosure row: summary line always visible, editor revealed on demand. */
-function ExpandableRow({
-  icon,
-  title,
-  meta,
-  control,
-  children,
-  dimmed,
-  defaultOpen = false,
-}: {
-  icon: React.ReactNode;
-  title: string;
-  meta?: string;
-  control?: React.ReactNode;
-  children: React.ReactNode;
-  dimmed?: boolean;
-  defaultOpen?: boolean;
-}) {
-  const [open, setOpen] = useState(defaultOpen);
+function TagsOnWebsiteCard({ settings }: { settings: ReCookieSettings }) {
+  const { t } = useTranslation();
+  const names = activeTagNames(settings);
+  const bannerOff = settings.consent_mode === "off";
+  const europeOnly = settings.consent_mode === "region";
 
   return (
-    <div
-      className={cn(
-        "overflow-hidden rounded-xl border transition-colors",
-        dimmed ? "bg-muted/20" : "bg-card",
-      )}
-    >
-      <div className="flex items-center gap-3 px-4 py-3">
-        <button
-          type="button"
-          onClick={() => setOpen((v) => !v)}
-          aria-expanded={open}
-          className="flex min-w-0 flex-1 items-center gap-3 text-left"
-        >
-          <span
-            aria-hidden
-            className={cn(
-              "flex size-8 shrink-0 items-center justify-center rounded-lg transition-colors",
-              dimmed
-                ? "bg-muted text-muted-foreground"
-                : "bg-primary/10 text-primary",
+    <SectionCard>
+      <CardHeader
+        icon={<Tag className="size-4" />}
+        title={t("wordpress.reCookie.tagsOnSiteTitle", "Tags on your website")}
+        subtitle={t(
+          "wordpress.reCookie.tagsOnSiteDesc",
+          "The banner lists these under their group. Add or change them in Website settings.",
+        )}
+        action={
+          <Button asChild variant="outline" size="sm">
+            <Link to={WEBSITE_SETTINGS_PATH}>
+              {t("wordpress.reCookie.editTags", "Edit tags")}
+              <ArrowRight className="size-3.5" />
+            </Link>
+          </Button>
+        }
+      />
+      <CardBody className="space-y-3">
+        {bannerOff ? (
+          <p className="rounded-xl border border-amber-500/30 bg-amber-500/10 px-3.5 py-3 text-xs leading-relaxed text-amber-800 dark:text-amber-300">
+            {t(
+              "wordpress.reCookie.bannerOffNotice",
+              "The banner is switched off in Website settings, so visitors don't see it and every tag loads straight away.",
             )}
-          >
-            {icon}
-          </span>
-          <span className="min-w-0 flex-1">
-            <span className="block truncate text-sm font-medium">{title}</span>
-            {meta ? (
-              <span className="block truncate text-xs text-muted-foreground">
-                {meta}
-              </span>
-            ) : null}
-          </span>
-          <ChevronDown
-            aria-hidden
-            className={cn(
-              "size-4 shrink-0 text-muted-foreground transition-transform",
-              open && "rotate-180",
+          </p>
+        ) : europeOnly ? (
+          <p className="rounded-xl border px-3.5 py-3 text-xs leading-relaxed text-muted-foreground">
+            {t(
+              "wordpress.reCookie.bannerRegionNotice",
+              "Website settings shows the banner only to visitors in Europe. Everyone else gets every tag straight away.",
             )}
-          />
-        </button>
-        {control ? <div className="shrink-0 pl-1">{control}</div> : null}
-      </div>
-      {open ? (
-        <div className="border-t bg-muted/20 px-4 py-4">{children}</div>
-      ) : null}
-    </div>
+          </p>
+        ) : null}
+        {names.length === 0 ? (
+          <p className="text-sm text-muted-foreground">
+            {t(
+              "wordpress.reCookie.noTags",
+              "No tags yet. Add Google Analytics, Meta Pixel or your own scripts in Website settings.",
+            )}
+          </p>
+        ) : (
+          <ul className="flex flex-wrap gap-2">
+            {names.map((name) => (
+              <li
+                key={name}
+                className="rounded-lg border bg-muted/30 px-2.5 py-1 text-xs font-medium"
+              >
+                {name}
+              </li>
+            ))}
+          </ul>
+        )}
+      </CardBody>
+    </SectionCard>
   );
 }

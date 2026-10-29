@@ -41,8 +41,7 @@ export function useNavModel() {
   // free, and there is nothing to reset on the way out.
   const inSettings = location.pathname.startsWith("/settings");
   const { data: wpSite } = useWorkspaceWpSite(!!currentWorkspace?.id && !isDoorboostBrandWs);
-  const showWebsite = !!wpSite?.sso_enabled || isDemoWorkspace;
-  const inWebsite = showWebsite && location.pathname.startsWith("/website");
+  const showWebsite = !!wpSite || isDemoWorkspace;
 
   /** Settings groups with only the entries this person may open. */
   const settingsGroups = SETTINGS_GROUPS.map((group) => ({
@@ -79,7 +78,6 @@ export function useNavModel() {
     showContactSales,
     showWebsite,
     inSettings,
-    inWebsite,
     settingsGroups,
     switchWorkspace,
     switchToBrand,

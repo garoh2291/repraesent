@@ -1,5 +1,5 @@
-import React from "react";
-import { Plus, X } from "lucide-react";
+import React, { useState } from "react";
+import { ChevronDown, Plus, X } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
@@ -257,13 +257,20 @@ export function SliderField({
 export function NamedScriptsRepeater({
   items,
   onChange,
+  showAlwaysOn = false,
 }: {
   items: ReCookieNamedScript[];
   onChange: (items: ReCookieNamedScript[]) => void;
+  /** Offer "load without asking" per script (only meaningful with the banner on). */
+  showAlwaysOn?: boolean;
 }) {
   const { t } = useTranslation();
 
-  function update(idx: number, field: "name" | "script", val: string) {
+  function update<K extends keyof ReCookieNamedScript>(
+    idx: number,
+    field: K,
+    val: ReCookieNamedScript[K],
+  ) {
     onChange(items.map((it, i) => (i === idx ? { ...it, [field]: val } : it)));
   }
   function remove(idx: number) {
@@ -308,6 +315,33 @@ export function NamedScriptsRepeater({
             onChange={(e) => update(idx, "script", e.target.value)}
             className="min-h-[72px] bg-card font-mono text-xs"
           />
+          {showAlwaysOn ? (
+            <div className="mt-2.5 flex items-start justify-between gap-3">
+              <div className="min-w-0">
+                <Label
+                  htmlFor={`named-script-always-${idx}`}
+                  className="text-xs font-medium"
+                >
+                  {t(
+                    "wordpress.websiteSettings.alwaysOn",
+                    "Load without asking",
+                  )}
+                </Label>
+                <p className="mt-0.5 text-xs leading-relaxed text-muted-foreground">
+                  {t(
+                    "wordpress.websiteSettings.alwaysOnHint",
+                    "For tools that set no cookies, like Plausible. The cookie banner lists it under Always on.",
+                  )}
+                </p>
+              </div>
+              <Switch
+                id={`named-script-always-${idx}`}
+                checked={!!item.always_on}
+                onCheckedChange={(v) => update(idx, "always_on", v)}
+                className="shrink-0"
+              />
+            </div>
+          ) : null}
         </div>
       ))}
       <Button
@@ -320,6 +354,76 @@ export function NamedScriptsRepeater({
         <Plus className="size-4" />
         {t("wordpress.reCookie.addScript", "Add script")}
       </Button>
+    </div>
+  );
+}
+
+/** Disclosure row: summary line always visible, editor revealed on demand. */
+export function ExpandableRow({
+  icon,
+  title,
+  meta,
+  control,
+  children,
+  dimmed,
+  defaultOpen = false,
+}: {
+  icon: React.ReactNode;
+  title: string;
+  meta?: string;
+  control?: React.ReactNode;
+  children: React.ReactNode;
+  dimmed?: boolean;
+  defaultOpen?: boolean;
+}) {
+  const [open, setOpen] = useState(defaultOpen);
+
+  return (
+    <div
+      className={cn(
+        "overflow-hidden rounded-xl border transition-colors",
+        dimmed ? "bg-muted/20" : "bg-card",
+      )}
+    >
+      <div className="flex items-center gap-3 px-4 py-3">
+        <button
+          type="button"
+          onClick={() => setOpen((v) => !v)}
+          aria-expanded={open}
+          className="flex min-w-0 flex-1 items-center gap-3 text-left"
+        >
+          <span
+            aria-hidden
+            className={cn(
+              "flex size-8 shrink-0 items-center justify-center rounded-lg transition-colors",
+              dimmed
+                ? "bg-muted text-muted-foreground"
+                : "bg-primary/10 text-primary",
+            )}
+          >
+            {icon}
+          </span>
+          <span className="min-w-0 flex-1">
+            <span className="block truncate text-sm font-medium">{title}</span>
+            {meta ? (
+              <span className="block truncate text-xs text-muted-foreground">
+                {meta}
+              </span>
+            ) : null}
+          </span>
+          <ChevronDown
+            aria-hidden
+            className={cn(
+              "size-4 shrink-0 text-muted-foreground transition-transform",
+              open && "rotate-180",
+            )}
+          />
+        </button>
+        {control ? <div className="shrink-0 pl-1">{control}</div> : null}
+      </div>
+      {open ? (
+        <div className="border-t bg-muted/20 px-4 py-4">{children}</div>
+      ) : null}
     </div>
   );
 }

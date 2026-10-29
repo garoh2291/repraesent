@@ -10,7 +10,7 @@ import type {
 import { cn } from "~/lib/utils";
 import { formatPluginSettingsTitle } from "~/lib/utils/wordpress-plugin-kind";
 import { useResolvePluginKind } from "~/lib/hooks/useWorkspaceWpPluginCatalog";
-import { PluginSettingsBackLink, ServicePauseToggle } from "~/components/wordpress/plugin-settings-chrome";
+import { ServicePauseToggle } from "~/components/wordpress/plugin-settings-chrome";
 import { Badge } from "~/components/ui/badge";
 import { Button } from "~/components/ui/button";
 import { Switch } from "~/components/ui/switch";
@@ -61,10 +61,6 @@ export function ButtonList({
 
   return (
     <PageShell>
-      <PluginSettingsBackLink
-        label={t("wordpress.reAppointment.backToPlugins", "Back to website")}
-      />
-
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between app-fade-up">
         <div className="flex flex-col gap-1">
           <div className="flex flex-wrap items-center gap-2">

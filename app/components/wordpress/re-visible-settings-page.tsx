@@ -12,9 +12,7 @@ import { useResolvePluginKind } from "~/lib/hooks/useWorkspaceWpPluginCatalog";
 import { useAuthContext } from "~/providers/auth-provider";
 import { formatPluginSettingsTitle } from "~/lib/utils/wordpress-plugin-kind";
 import {
-  PluginSettingsBackLink,
   PluginSettingsLoadingPage,
-  ServiceActiveToggle,
 } from "~/components/wordpress/plugin-settings-chrome";
 import { InfoNote, PageShell } from "~/components/wordpress/fields";
 import {
@@ -361,10 +359,6 @@ export function ReVisibleSettingsPage() {
 
   return (
     <PageShell width="lg">
-      <PluginSettingsBackLink
-        label={t("wordpress.reVisible.backToWebsite", "Back to website")}
-      />
-
       <div className="app-fade-up flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div className="flex flex-col gap-1">
           <div className="flex flex-wrap items-center gap-2">
@@ -391,7 +385,6 @@ export function ReVisibleSettingsPage() {
           </p>
         </div>
         <div className="flex shrink-0 flex-wrap items-center gap-3">
-          <ServiceActiveToggle pluginUuid={pluginUuid} name={pageTitle} />
           {tab === "settings" ? (
             <Button onClick={() => void handleSave()} disabled={saving}>
               <Save className="size-4" aria-hidden />

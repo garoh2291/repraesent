@@ -1,4 +1,5 @@
 import { toast } from "sonner";
+import { mergeRecordWithDefaults } from "~/lib/utils/deep-merge";
 import type {
   ReIndexSettings,
   ReIndexVerification,
@@ -35,6 +36,16 @@ export const DEFAULT_SETTINGS: ReIndexSettings = {
     compressed_url: "",
   },
 };
+
+/** The API payload as the form holds it: WP stores bare verification codes,
+ * the form shows the full meta tags. */
+export function reIndexSettingsFromApi(raw: unknown): ReIndexSettings {
+  const merged = mergeRecordWithDefaults(DEFAULT_SETTINGS, raw);
+  return {
+    ...merged,
+    verification: verificationForForm(merged.verification),
+  };
+}
 
 export const FORMAT_KEYS = [
   "front_page",
@@ -171,17 +182,18 @@ export const TITLE_TOKENS = [
   ["[sep]", "sep"],
 ] as const;
 
-export type TabId = "indexing" | "seo" | "pages";
+// The sitemap and verification ("indexing") moved to Website settings.
+export type TabId = "seo" | "pages";
 
 /** Query param carrying the open tab, so a refresh or a shared link reopens it. */
 export const TAB_PARAM = "tab";
 
-const TAB_IDS: readonly TabId[] = ["indexing", "seo", "pages"];
+const TAB_IDS: readonly TabId[] = ["seo", "pages"];
 
 /** The tab a `?tab=` value names, falling back to the first tab when it is
  * missing or not one we have. */
 export function tabFromParam(value: string | null): TabId {
-  return TAB_IDS.includes(value as TabId) ? (value as TabId) : "indexing";
+  return TAB_IDS.includes(value as TabId) ? (value as TabId) : "seo";
 }
 
 export type PatchSettings = (

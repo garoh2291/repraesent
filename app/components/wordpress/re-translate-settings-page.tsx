@@ -5,7 +5,7 @@ import { useReTranslateActions, useReTranslateOverview } from "~/lib/hooks/useRe
 import { useResolvePluginKind } from "~/lib/hooks/useWorkspaceWpPluginCatalog";
 import { formatPluginSettingsTitle } from "~/lib/utils/wordpress-plugin-kind";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "~/components/ui/tabs";
-import { PluginSettingsBackLink, PluginSettingsLoadingPage, ServiceLiveToggle } from "~/components/wordpress/plugin-settings-chrome";
+import { PluginSettingsLoadingPage, ServiceLiveToggle } from "~/components/wordpress/plugin-settings-chrome";
 import { InfoNote, PageShell } from "~/components/wordpress/fields";
 import { errorText, flash } from "~/components/wordpress/re-translate/constants";
 import { LanguagesPanel } from "~/components/wordpress/re-translate/languages-panel";
@@ -36,8 +36,6 @@ export function ReTranslateSettingsPage() {
 
   return (
     <PageShell width="md">
-      <PluginSettingsBackLink label={t("wordpress.reTranslate.back", "Back to website")} />
-
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between app-fade-up">
         <div className="flex flex-col gap-1">
           <div className="flex flex-wrap items-center gap-2">

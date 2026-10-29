@@ -7,7 +7,7 @@ import { useWorkspacePluginSettingsForm } from "~/lib/hooks/useWorkspacePluginSe
 import { useResolvePluginKind } from "~/lib/hooks/useWorkspaceWpPluginCatalog";
 import type { ReMaintenanceSettings } from "~/lib/wordpress/plugin-settings-types";
 import { formatPluginSettingsTitle } from "~/lib/utils/wordpress-plugin-kind";
-import { PluginSettingsBackLink, PluginSettingsLoadingPage, ServiceLiveToggle } from "~/components/wordpress/plugin-settings-chrome";
+import { PluginSettingsLoadingPage, ServiceLiveToggle } from "~/components/wordpress/plugin-settings-chrome";
 import { Badge } from "~/components/ui/badge";
 import { Button } from "~/components/ui/button";
 import { Label } from "~/components/ui/label";
@@ -204,10 +204,6 @@ export function ReMaintenanceSettingsPage() {
 
   return (
     <PageShell>
-      <PluginSettingsBackLink
-        label={t("wordpress.reMaintenance.backToPlugins", "Back to website")}
-      />
-
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between app-fade-up">
         <div className="flex flex-col gap-1">
           <div className="flex flex-wrap items-center gap-2">

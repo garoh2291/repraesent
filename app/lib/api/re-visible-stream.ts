@@ -1,4 +1,9 @@
-import { apiClient, getStoredToken, getStoredWorkspaceId } from "./axios-instance";
+import {
+  apiClient,
+  getStoredToken,
+  getStoredWorkspaceId,
+  getStoredWpSiteId,
+} from "./axios-instance";
 import type { PromptCandidate } from "./re-visible";
 
 /**
@@ -39,6 +44,9 @@ function headers(): Record<string, string> {
 
   const workspaceId = getStoredWorkspaceId();
   if (workspaceId) out["X-Workspace-Id"] = workspaceId;
+
+  const wpSiteId = getStoredWpSiteId();
+  if (wpSiteId) out["X-Wp-Site-Id"] = wpSiteId;
 
   return out;
 }

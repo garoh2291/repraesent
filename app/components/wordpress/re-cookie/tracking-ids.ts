@@ -20,6 +20,14 @@ const PATTERNS: Record<TrackingIdProvider, RegExp | null> = {
   meta: null,
 };
 
+/** The id of each provider's input on the Tracking screen. */
+export const ID_INPUT: Record<TrackingIdProvider, string> = {
+  gtm: "re-cookie-gtm-container-id",
+  google_ads: "re-cookie-google-ads-conversion-id",
+  ga4: "re-cookie-ga4-measurement-id",
+  meta: "re-cookie-meta-pixel-id",
+};
+
 /** Where each provider's ID lives inside `settings.integrations`. */
 export const ID_FIELD: Record<TrackingIdProvider, string> = {
   gtm: "container_id",
@@ -35,14 +43,17 @@ export const PROVIDER_LABEL: Record<TrackingIdProvider, string> = {
   meta: "Meta Pixel",
 };
 
+/** Why an ID won't be stored; the screen words each one in the open language. */
+export type TrackingIdProblem = "ads_label" | "ads" | "gtm" | "ga4";
+
 /**
  * Null when `value` is empty (an empty ID is always allowed — it just means the
- * integration is unconfigured) or well-formed; otherwise a message to show.
+ * integration is unconfigured) or well-formed; otherwise what is wrong with it.
  */
 export function validateTrackingId(
   provider: TrackingIdProvider,
   value: string,
-): string | null {
+): TrackingIdProblem | null {
   const trimmed = value.trim();
   if (trimmed === "") return null;
 
@@ -53,16 +64,26 @@ export function validateTrackingId(
     case "google_ads":
       // AW-1234567890/AbC-D_efGh is what a conversion-action snippet gives you;
       // only the part before the slash belongs in this field.
-      return trimmed.includes("/")
-        ? "Enter only the AW-1234567890 part — drop the /conversion-label suffix."
-        : "Must look like AW-1234567890. WordPress will reject anything else and keep the previous value.";
+      return trimmed.includes("/") ? "ads_label" : "ads";
     case "gtm":
-      return "Must look like GTM-XXXXXXX. AW- and G- IDs belong in their own fields.";
+      return "gtm";
     case "ga4":
-      return "Must look like G-XXXXXXXXXX.";
+      return "ga4";
     default:
       return null;
   }
+}
+
+/**
+ * Providers whose ID WordPress would reject. Saving them anyway loses what
+ * was typed (the plugin keeps the old value), so the save waits for a fix.
+ */
+export function invalidTrackingIds(settings: unknown): TrackingIdProvider[] {
+  const providers: TrackingIdProvider[] = ["gtm", "google_ads", "ga4", "meta"];
+  return providers.filter((provider) => {
+    const value = readId(settings, provider);
+    return value !== undefined && validateTrackingId(provider, value) !== null;
+  });
 }
 
 type IntegrationsShape = Record<string, unknown>;

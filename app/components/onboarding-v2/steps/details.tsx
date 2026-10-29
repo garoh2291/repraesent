@@ -1,7 +1,7 @@
 "use client";
 
 import { isPossiblePhoneNumber } from "react-phone-number-input";
-import { useMemo, useState } from "react";
+import { useId, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Building2, Laptop, MapPinned, Store } from "lucide-react";
 import { Switch } from "~/components/ui/switch";
@@ -29,6 +29,9 @@ import { useWizard } from "../wizard-context";
 import { focusFirstError, mapFieldErrors, useProfileDraft } from "./profile-draft";
 import { StepHeading } from "../primitives";
 
+/** Links to the business's own legal pages; the website read fills them when it finds them. */
+const LEGAL_PAGE_PATHS = ["legal.imprint_url", "legal.privacy_url", "legal.terms_url"];
+
 export const DETAIL_PATHS = [
   "identity.display_name",
   "identity.legal_name",
@@ -37,6 +40,7 @@ export const DETAIL_PATHS = [
   "identity.brand_partner",
   "identity.tagline",
   "identity.description",
+  ...LEGAL_PAGE_PATHS,
   "presence.kind",
   "presence.appointment_only",
   "location.street",
@@ -70,10 +74,13 @@ export function ProfileFields({
   draft,
   sources,
   errors,
+  aboutExtra,
 }: {
   draft: ReturnType<typeof useProfileDraft>;
   sources: Record<string, FieldSource> | undefined;
   errors: Record<string, string>;
+  /** Shown in "About your business" before the legal links (Settings: logo and favicon). */
+  aboutExtra?: React.ReactNode;
 }) {
   const { t } = useTranslation();
   const country = (draft.get<string>("location.country") ?? null) as string | null;
@@ -90,6 +97,7 @@ export function ProfileFields({
   const src = (p: string) => sources?.[p] ?? null;
   const err = (p: string) => errors[p] ?? null;
   const str = (p: string) => (draft.get<string>(p) ?? "") as string;
+  const legalPagesId = useId();
 
   return (
     <div className="space-y-4">
@@ -142,6 +150,31 @@ export function ProfileFields({
             <TextArea id={a.id} rows={3} maxLength={2000} value={str("identity.description")} onChange={(e) => draft.set("identity.description", e.target.value)} />
           )}
         </Field>
+        {aboutExtra}
+        <div role="group" aria-labelledby={legalPagesId} aria-describedby={`${legalPagesId}-hint`} className="space-y-4 border-t border-border pt-4">
+          <div className="space-y-0.5">
+            <p id={legalPagesId} className="text-[13px] font-semibold text-foreground">{t("onb.f.legal_pages")}</p>
+            <p id={`${legalPagesId}-hint`} className="text-[13px] text-muted-foreground">{t("onb.f.legal_pages_hint")}</p>
+          </div>
+          {LEGAL_PAGE_PATHS.map((p) => (
+            <Field key={p} label={t(`onb.f.${p.split(".")[1]}`)} optional source={src(p)} error={err(p)}>
+              {(a) => (
+                <TextInput
+                  id={a.id}
+                  type="url"
+                  inputMode="url"
+                  autoComplete="off"
+                  spellCheck={false}
+                  placeholder="https://…"
+                  aria-describedby={a.describedBy}
+                  aria-invalid={a.invalid}
+                  value={str(p)}
+                  onChange={(e) => draft.set(p, e.target.value)}
+                />
+              )}
+            </Field>
+          ))}
+        </div>
       </Section>
 
       <Section title={t("onb.details.how")}>

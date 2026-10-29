@@ -126,6 +126,11 @@ export default [
       route("email", "routes/email.tsx"),
       route("tasks", "routes/tasks.tsx"),
       route("website", "routes/wordpress.tsx"),
+      // The staging copies of the site, apart from the live one.
+      route("website/staging", "routes/website.staging.tsx"),
+      // Settings for the site as a whole (tracking tags, search engines). The
+      // services' own screens are one level down, by plugin UUID.
+      route("website/settings", "routes/website.settings.tsx"),
       route(
         "website/settings/:pluginUuid",
         "routes/wordpress.settings.$settingsKind.tsx",

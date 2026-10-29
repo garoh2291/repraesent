@@ -13,9 +13,7 @@ import {
   ArrowLeft,
   Building2,
   ChevronDown,
-  Globe,
   HomeIcon,
-  Loader2,
   LogOut,
   Megaphone,
   Package,
@@ -32,13 +30,8 @@ import { SafeImg } from "~/components/atom/safe-img";
 
 import { useAuthContext } from "~/providers/auth-provider";
 import { PILOT_FEATURE_LABEL_KEY } from "~/lib/feature-flags";
-import { useWorkspaceWpPluginInstalls } from "~/lib/hooks/useWorkspaceWpPluginInstalls";
 import { LanguageSwitcher } from "~/components/language-switcher";
 import { ContactSalesDialog } from "~/components/sales-contact/contact-sales-dialog";
-import {
-  pluginKindIcon,
-  wordpressPluginSettingsPath,
-} from "~/lib/utils/wordpress-plugin-kind";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -47,7 +40,7 @@ import {
 } from "~/components/ui/dropdown-menu";
 
 import logoUrl from "~/components/icons/re_praesent-mark-brand-hor.svg?url";
-import { activeSection, useNavSections } from "~/lib/nav/sections";
+import { activeChild, activeSection, useNavSections } from "~/lib/nav/sections";
 import { PILOT_SETTINGS, useNavModel } from "~/lib/nav/use-nav-model";
 import { useToday } from "~/lib/hooks/useToday";
 import { MarkerCount } from "~/components/notebook/stat";
@@ -117,78 +110,6 @@ function DemoPill() {
   );
 }
 
-/**
- * The website sub-navigation, rendered in place of the main nav list while the
- * user is somewhere under /website — same drill-in shape as Settings, so the
- * "Website" entry replaces the list rather than nesting one inside it.
- *
- * Route-driven like Settings: deep links and refreshes land in the right mode
- * for free, and there is nothing to reset on the way out.
- */
-function WebsiteSubNav({ onClose }: { onClose?: () => void }) {
-  const { t } = useTranslation();
-  // The page being opened counts as current, so the tap shows at once.
-  const navPath = usePendingPathname().pathname;
-  const installsQuery = useWorkspaceWpPluginInstalls(true);
-  const plugins = [...(installsQuery.data?.plugins ?? [])].sort((a, b) =>
-    a.display_name.localeCompare(b.display_name, undefined, {
-      sensitivity: "base",
-    })
-  );
-  const waitingForPlugins = installsQuery.isPending && !installsQuery.data;
-
-  return (
-    <>
-      {/* Separated from the list below so it reads as a way out rather than a
-        destination of its own. */}
-      <div className="mb-2 border-b border-white/5 pb-2">
-        <NavLink to="/" isActive={false} onClick={onClose}>
-          <ArrowLeft className="h-4 w-4 shrink-0" />
-          {t("common.back")}
-        </NavLink>
-      </div>
-
-      <NavLink
-        to="/website"
-        isActive={navPath === "/website"}
-        onClick={onClose}
-      >
-        <Globe className="h-4 w-4 shrink-0" />
-        <span className="truncate">{t("nav.websiteOverview", "Overview")}</span>
-      </NavLink>
-
-      {waitingForPlugins ? (
-        <div
-          className="flex items-center gap-2.5 rounded-lg border-l-2 border-transparent px-3 py-2 text-[13px] font-medium text-white/35"
-          aria-busy="true"
-          aria-live="polite"
-        >
-          <Loader2 className="h-4 w-4 shrink-0 animate-spin text-white/25" />
-          <span className="truncate">
-            {t("nav.loadingPlugins", "Loading services…")}
-          </span>
-        </div>
-      ) : (
-        plugins.map((p) => {
-          const path = wordpressPluginSettingsPath(p.plugin_uuid);
-          const Icon = pluginKindIcon(p.name);
-          return (
-            <NavLink
-              key={p.plugin_uuid}
-              to={path}
-              isActive={navPath === path}
-              onClick={onClose}
-            >
-              <Icon className="h-4 w-4 shrink-0" />
-              <span className="truncate">{p.display_name}</span>
-            </NavLink>
-          );
-        })
-      )}
-    </>
-  );
-}
-
 /** Opens ⌘K. The hint is added after hydration (platform-specific). */
 function SearchRow() {
   const { t } = useTranslation();
@@ -226,7 +147,7 @@ function SearchRow() {
 /**
  * The main list: five jobs, not thirty modules (NOTEBOOK_UX_PLAN.md §2).
  * Each section's own pages are one tap away in the tab strip at the top of
- * the content, so the sidebar never has to nest.
+ * the content. Only Website nests, for its Live and Staging sites.
  */
 function MainSections({ onClose }: { onClose?: () => void }) {
   // The page being opened counts as current, so the tap shows at once.
@@ -239,26 +160,59 @@ function MainSections({ onClose }: { onClose?: () => void }) {
     ? // People waiting — the same number the Today greeting shows.
       counts.new_leads + counts.follow_ups_due + (counts.signups ?? 0)
     : 0;
+  const collapsed = useContext(SidebarCollapsedContext);
   if (!sections) return null;
   return (
     <>
       <SearchRow />
       {sections.map((section) => {
         const Icon = section.icon;
+        const isActive = active?.key === section.key;
+        // Nested entries open with their section (the site list behind them is
+        // already loaded) and then carry the marker, so the section doesn't.
+        const nested = !collapsed && isActive && !!section.children?.length;
+        const current = isActive && nested ? activeChild(section, navPath) : null;
         return (
-          <NavLink
-            key={section.key}
-            to={section.to}
-            isActive={active?.key === section.key}
-            onClick={onClose}
-          >
-            <Icon className="h-4 w-4 shrink-0" />
-            <span className="truncate">{section.label}</span>
-            {section.pilot ? <DemoPill /> : null}
-            {section.key === "today" && needsYou > 0 ? (
-              <MarkerCount n={needsYou} dark className="ml-auto" />
+          <div key={section.key}>
+            <NavLink
+              to={section.to}
+              isActive={isActive && !nested}
+              onClick={() => {
+                section.onSelect?.();
+                onClose?.();
+              }}
+              className={isActive && nested ? "!text-white" : undefined}
+            >
+              <Icon className="h-4 w-4 shrink-0" />
+              <span className="truncate">{section.label}</span>
+              {section.pilot ? <DemoPill /> : null}
+              {section.key === "today" && needsYou > 0 ? (
+                <MarkerCount n={needsYou} dark className="ml-auto" />
+              ) : null}
+            </NavLink>
+            {nested ? (
+              // The same rows as every other entry, set in under Website.
+              <div className="pl-5">
+                {section.children!.map((child) => {
+                  const ChildIcon = child.icon;
+                  return (
+                    <NavLink
+                      key={child.key}
+                      to={child.to}
+                      isActive={current?.key === child.key}
+                      onClick={() => {
+                        child.onSelect?.();
+                        onClose?.();
+                      }}
+                    >
+                      <ChildIcon className="h-4 w-4 shrink-0" />
+                      <span className="truncate">{child.label}</span>
+                    </NavLink>
+                  );
+                })}
+              </div>
             ) : null}
-          </NavLink>
+          </div>
         );
       })}
     </>
@@ -289,7 +243,6 @@ export function Sidebar({
     isDoorboostBrandWs,
     showContactSales,
     inSettings,
-    inWebsite,
     settingsGroups,
     switchWorkspace: handleWorkspaceChange,
     switchToBrand,
@@ -561,8 +514,6 @@ export function Sidebar({
                 );
               })}
             </>
-          ) : inWebsite ? (
-            <WebsiteSubNav onClose={onClose} />
           ) : isDoorboostBrandWs ? (
             <>
               <NavLink

@@ -18,6 +18,7 @@ import { checkWebsite, displayHost } from "~/lib/onboarding/helpers";
 import { useDocumentMeta } from "~/lib/hooks/use-document-meta";
 import { useAuthContext } from "~/providers/auth-provider";
 import { ReviewSettings } from "~/components/notebook/review-settings";
+import { BrandImages } from "~/components/onboarding-v2/brand-images";
 import { Button } from "~/components/ui/button";
 import { Skeleton } from "~/components/ui/skeleton";
 import { Field, FormError, TextInput } from "~/components/onboarding-v2/primitives";
@@ -163,7 +164,7 @@ function ProfileEditor({ view, queryKey }: { view: WorkspaceProfileView; queryKe
         <FormError message={formError} />
         {/* A disabled fieldset turns every input and button inside read-only for non-admins. */}
         <fieldset disabled={!canEdit || save.isPending} className="min-w-0 space-y-4">
-          <ProfileFields draft={draft} sources={sources} errors={errors} />
+          <ProfileFields draft={draft} sources={sources} errors={errors} aboutExtra={<BrandImages data={data} sources={sources} />} />
           <section className="rounded-2xl border border-border bg-card p-5 shadow-xs sm:p-6">
             <h2 className="mb-4 text-[15px] font-semibold text-foreground">{t("settings.businessProfile.socialsLabel")}</h2>
             <div className="grid items-start gap-4 sm:grid-cols-2">

@@ -1,23 +1,13 @@
 import { useParams, useSearchParams } from "react-router";
 import { useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import {
-  Check,
-  CircleSlash,
-  Clock,
-  FileText,
-  Layers,
-  Save,
-  Search,
-} from "lucide-react";
+import { FileText, Save, Search } from "lucide-react";
 import { extractErrorMessage } from "~/lib/api/axios-instance";
 import { useWorkspacePluginSettingsForm } from "~/lib/hooks/useWorkspacePluginSettings";
-import { useWorkspaceReIndexRegenerateSitemap } from "~/lib/hooks/useWorkspaceReIndexSettings";
 import { useResolvePluginKind } from "~/lib/hooks/useWorkspaceWpPluginCatalog";
 import type { ReIndexSettings } from "~/lib/wordpress/plugin-settings-types";
-import { mergeRecordWithDefaults } from "~/lib/utils/deep-merge";
 import { formatPluginSettingsTitle } from "~/lib/utils/wordpress-plugin-kind";
-import { PluginSettingsBackLink, PluginSettingsLoadingPage, ServicePauseToggle } from "~/components/wordpress/plugin-settings-chrome";
+import { PluginSettingsLoadingPage, ServicePauseToggle } from "~/components/wordpress/plugin-settings-chrome";
 import { Badge } from "~/components/ui/badge";
 import { Button } from "~/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "~/components/ui/tabs";
@@ -25,34 +15,19 @@ import {
   DEFAULT_SETTINGS,
   TAB_PARAM,
   flash,
-  hasVerificationCode,
-  sitemapUrlFromSiteUrl,
+  reIndexSettingsFromApi,
   tabFromParam,
-  verificationForForm,
 } from "~/components/wordpress/re-index/constants";
-import {
-  InfoNote,
-  PageShell,
-  StatTile,
-} from "~/components/wordpress/fields";
+import { InfoNote, PageShell } from "~/components/wordpress/fields";
 import { BulkSeoBar } from "~/components/wordpress/re-index/bulk-seo-bar";
-import { IndexingPanel } from "~/components/wordpress/re-index/indexing-panel";
 import { PageSeoPanel } from "~/components/wordpress/re-index/page-seo-panel";
 import { SeoPanel } from "~/components/wordpress/re-index/seo-panel";
 
 /**
- * re:index settings inside Repraesent. Behavior matches the WordPress plugin
- * admin (verification, SEO titles, identity, OG); chrome matches the rest of
- * the dashboard. Saving goes through the Repraesent API.
+ * re:index settings inside Repraesent: titles, descriptions, social previews
+ * and per-page SEO. The sitemap and search engine verification live under
+ * Website settings. Saving goes through the Repraesent API.
  */
-function settingsFromApi(raw: unknown): ReIndexSettings {
-  const merged = mergeRecordWithDefaults(DEFAULT_SETTINGS, raw);
-  return {
-    ...merged,
-    // WP stores bare codes; the form shows the full meta tags.
-    verification: verificationForForm(merged.verification),
-  };
-}
 
 export function ReIndexSettingsPage() {
   const { t } = useTranslation();
@@ -82,27 +57,20 @@ export function ReIndexSettingsPage() {
     settings,
     setSettings,
     reseed,
-    skipNextSeed,
     site,
     hasSite,
     found,
     loading,
     saving,
     dirty,
-    setSavedSettings,
     loadError,
     saveMutation,
   } = useWorkspacePluginSettingsForm<ReIndexSettings>(
     pluginUuid,
     DEFAULT_SETTINGS,
-    { fromApi: settingsFromApi },
+    { fromApi: reIndexSettingsFromApi },
   );
 
-  const regenerateMutation = useWorkspaceReIndexRegenerateSitemap(pluginUuid);
-  const regenerating = regenerateMutation.isPending;
-
-  const sitemapUrl = sitemapUrlFromSiteUrl(site?.url);
-  const hasGsc = hasVerificationCode(settings.verification.google);
   const overlaySaveRef = useRef<(() => Promise<void>) | null>(null);
   const [overlayDirty, setOverlayDirty] = useState(false);
 
@@ -130,37 +98,6 @@ export function ReIndexSettingsPage() {
     });
   }
 
-  function handleRegenerate() {
-    // Arm before the mutation cache write so a sync query re-render cannot
-    // reseed the form and wipe in-progress edits.
-    skipNextSeed();
-    regenerateMutation.mutate(undefined, {
-      onSuccess: (data) => {
-        const next = mergeRecordWithDefaults(DEFAULT_SETTINGS, data.settings);
-        setSettings((prev) => ({
-          ...prev,
-          stats: next.stats,
-        }));
-        // Regenerate persists new stats server-side, so fold them into the saved
-        // baseline too — otherwise they'd read as unsaved edits.
-        setSavedSettings((prev) => ({
-          ...prev,
-          stats: next.stats,
-        }));
-        flash(
-          t(
-            "wordpress.reIndex.regenerated",
-            "Sitemap regenerated successfully.",
-          ),
-        );
-      },
-      onError: (err) => {
-        skipNextSeed(false);
-        flash(extractErrorMessage(err), "error");
-      },
-    });
-  }
-
   if (loading) {
     return <PluginSettingsLoadingPage />;
   }
@@ -180,10 +117,6 @@ export function ReIndexSettingsPage() {
 
   return (
     <PageShell>
-      <PluginSettingsBackLink
-        label={t("wordpress.reIndex.backToPlugins", "Back to website")}
-      />
-
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between app-fade-up">
         <div className="flex flex-col gap-1">
           <div className="flex flex-wrap items-center gap-2">
@@ -213,8 +146,8 @@ export function ReIndexSettingsPage() {
           <ServicePauseToggle
             pluginUuid={pluginUuid}
             pauseHint={t(
-              "wordpress.reIndex.pauseHint",
-              "Switch off to pause. Your sitemap, search tags and analytics script stop on your website until you switch back on. Nothing is deleted.",
+              "wordpress.reIndex.pauseHintTitles",
+              "Switch off to pause. Your page titles, descriptions and social previews stop on your website until you switch back on. The sitemap and search engine codes in Website settings keep working. Nothing is deleted.",
             )}
           />
           <Button onClick={() => void handleSave()} disabled={saving}>
@@ -248,52 +181,6 @@ export function ReIndexSettingsPage() {
         </InfoNote>
       ) : null}
 
-      <div className="grid grid-cols-2 gap-3 app-fade-up app-fade-up-d1 sm:grid-cols-3 sm:gap-4">
-        <StatTile
-          icon={<FileText className="h-3.5 w-3.5" />}
-          label={t("wordpress.reIndex.statPages", "Pages indexed")}
-          value={
-            <span className="tabular-nums">{settings.stats.page_count}</span>
-          }
-          tone="neutral"
-        />
-        <StatTile
-          icon={<Clock className="h-3.5 w-3.5" />}
-          label={t("wordpress.reIndex.statGenerated", "Last generated")}
-          value={
-            <span className="text-sm font-medium sm:text-base">
-              {settings.stats.last_generated ||
-                t("wordpress.reIndex.never", "Never")}
-            </span>
-          }
-          tone="muted"
-        />
-        <StatTile
-          icon={
-            hasGsc ? (
-              <Check className="h-3.5 w-3.5" />
-            ) : (
-              <CircleSlash className="h-3.5 w-3.5" />
-            )
-          }
-          label={t("wordpress.reIndex.statGsc", "GSC status")}
-          value={
-            <Badge
-              variant="outline"
-              className={
-                hasGsc
-                  ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-400"
-                  : undefined
-              }
-            >
-              {hasGsc
-                ? t("wordpress.reIndex.active", "Active")
-                : t("wordpress.reIndex.inactive", "Inactive")}
-            </Badge>
-          }
-          tone={hasGsc ? "positive" : "muted"}
-        />
-      </div>
 
       <Tabs
         value={tab}
@@ -303,13 +190,6 @@ export function ReIndexSettingsPage() {
         <TabsList
           aria-label={t("wordpress.reIndex.tabs", "SEO settings")}
         >
-          <TabsTrigger value="indexing" className="gap-1.5">
-            <Layers className="h-3.5 w-3.5" />
-            {t(
-              "wordpress.reIndex.tabIndexing",
-              "Indexing & Verification",
-            )}
-          </TabsTrigger>
           <TabsTrigger value="seo" className="gap-1.5">
             <Search className="h-3.5 w-3.5" />
             {t("wordpress.reIndex.tabSeo", "SEO & Identity")}
@@ -320,18 +200,6 @@ export function ReIndexSettingsPage() {
           </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="indexing" className="mt-0">
-          <IndexingPanel
-            settings={settings}
-            sitemapUrl={sitemapUrl}
-            regenerating={regenerating}
-            patchSettings={patchSettings}
-            onCopied={() =>
-              flash(t("wordpress.reIndex.copied", "Copied."))
-            }
-            onRegenerate={handleRegenerate}
-          />
-        </TabsContent>
 
         <TabsContent value="seo" className="mt-0">
           <SeoPanel
