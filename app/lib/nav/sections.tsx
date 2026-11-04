@@ -52,6 +52,7 @@ import {
 } from "~/lib/hooks/useWorkspaceWpSites";
 import {
   pluginKindIcon,
+  pluginServiceName,
   WEBSITE_SETTINGS_PATH,
   WEBSITE_STAGING_PATH,
   wordpressPluginSettingsPath,
@@ -460,15 +461,18 @@ export function useNavSections(): NavSection[] | null {
     // Forms comes right after Overview, before the services.
     website.push(forms);
     if (!isElsewhere(wpSite?.id)) {
-      const plugins = [...(wpInstalls?.plugins ?? [])].sort((a, b) =>
-        a.display_name.localeCompare(b.display_name, undefined, {
-          sensitivity: "base",
-        }),
-      );
+      const plugins = (wpInstalls?.plugins ?? [])
+        .map((p) => ({
+          ...p,
+          label: pluginServiceName(p.name, p.display_name, t),
+        }))
+        .sort((a, b) =>
+          a.label.localeCompare(b.label, undefined, { sensitivity: "base" }),
+        );
       for (const p of plugins) {
         website.push({
           key: `wp-${p.plugin_uuid}`,
-          label: p.display_name,
+          label: p.label,
           to: wordpressPluginSettingsPath(p.plugin_uuid),
           icon: pluginKindIcon(p.name),
         });

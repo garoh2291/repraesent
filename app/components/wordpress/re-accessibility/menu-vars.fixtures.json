@@ -1,0 +1,47 @@
+[
+    {
+        "name": "defaults",
+        "settings": {},
+        "vars": "--reacc-accent:#1f2937;--reacc-x:20px;--reacc-y:20px;--reacc-size:48px;--reacc-launcher:#1f2937;--reacc-launcher-ink:#ffffff;--reacc-launcher-border:#ffffff;--reacc-launcher-bw:0px;--reacc-launcher-radius:14px;--reacc-launcher-icon:50;--reacc-panel-w:380px;--reacc-panel-radius:16px;--reacc-radius:12px;--reacc-control-radius:8px;--reacc-surface:#f4f4f5;--reacc-head:#ffffff;--reacc-card:#ffffff;--reacc-ink:#18181b;--reacc-muted:#52525b;--reacc-line:#e4e4e7;",
+        "classes": [
+            "reacc",
+            "reacc--left",
+            "reacc--launcher-shadow"
+        ]
+    },
+    {
+        "name": "right, light accent, no shadow, hidden on phones",
+        "settings": {
+            "position": "right",
+            "offset_x": 32,
+            "offset_y": 8,
+            "launcher_size": 64,
+            "launcher_icon_size": 72,
+            "launcher_color": "#111111",
+            "launcher_icon_color": "#FFD60A",
+            "launcher_border_color": "#ffd60a",
+            "launcher_border_width": 0,
+            "launcher_radius": 12,
+            "launcher_shadow": false,
+            "hide_on_mobile": true,
+            "panel_width": 440,
+            "panel_radius": 24,
+            "card_radius": 4,
+            "control_radius": 6,
+            "accent_color": "#ffd60a",
+            "surface_color": "#0f172a",
+            "header_color": "#111827",
+            "card_color": "#1f2937",
+            "text_color": "#f9fafb",
+            "muted_color": "#9ca3af",
+            "line_color": "#374151"
+        },
+        "vars": "--reacc-accent:#ffd60a;--reacc-x:32px;--reacc-y:8px;--reacc-size:64px;--reacc-launcher:#111111;--reacc-launcher-ink:#ffd60a;--reacc-launcher-border:#ffd60a;--reacc-launcher-bw:0px;--reacc-launcher-radius:12px;--reacc-launcher-icon:72;--reacc-panel-w:440px;--reacc-panel-radius:24px;--reacc-radius:4px;--reacc-control-radius:6px;--reacc-surface:#0f172a;--reacc-head:#111827;--reacc-card:#1f2937;--reacc-ink:#f9fafb;--reacc-muted:#9ca3af;--reacc-line:#374151;",
+        "classes": [
+            "reacc",
+            "reacc--right",
+            "reacc--accent-light",
+            "reacc--hide-mobile"
+        ]
+    }
+]

@@ -11,6 +11,7 @@ import { ReAppointmentSettingsPage } from "~/components/wordpress/re-appointment
 import { ReTranslateSettingsPage } from "~/components/wordpress/re-translate-settings-page";
 import { ReVisibleSettingsPage } from "~/components/wordpress/re-visible-settings-page";
 import { ReBannerSettingsPage } from "~/components/wordpress/re-banner-settings-page";
+import { ReAccessibilitySettingsPage } from "~/components/wordpress/re-accessibility-settings-page";
 import { useResolvePluginKind } from "~/lib/hooks/useWorkspaceWpPluginCatalog";
 import { useWorkspaceWpSite } from "~/lib/hooks/useWorkspaceWpSite";
 import { useWpSitesHosting } from "~/lib/hooks/useWorkspaceWpSites";
@@ -108,6 +109,8 @@ export default function WordPressPluginSettingsRoute() {
         return <ReVisibleSettingsPage />;
       case "re-banner":
         return <ReBannerSettingsPage />;
+      case "re-accessibility":
+        return <ReAccessibilitySettingsPage />;
     }
   })();
 

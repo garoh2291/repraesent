@@ -29,7 +29,10 @@ import type {
   ReIndexSettings,
 } from "~/lib/wordpress/plugin-settings-types";
 import { mergeRecordWithDefaults } from "~/lib/utils/deep-merge";
-import { wordpressPluginSettingsPath } from "~/lib/utils/wordpress-plugin-kind";
+import {
+  pluginServiceName,
+  wordpressPluginSettingsPath,
+} from "~/lib/utils/wordpress-plugin-kind";
 import { cn } from "~/lib/utils";
 import { Badge } from "~/components/ui/badge";
 import { Button } from "~/components/ui/button";
@@ -475,7 +478,7 @@ export function WebsiteSettingsPage() {
                         to={wordpressPluginSettingsPath(cookieInstall.plugin_uuid)}
                         className="font-medium text-foreground underline underline-offset-2"
                       >
-                        {cookieInstall.display_name}
+                        {pluginServiceName(cookieInstall.name, cookieInstall.display_name, t)}
                       </Link>
                       .
                     </InfoNote>

@@ -8,8 +8,6 @@ import type {
   ReAppointmentSlot,
 } from "~/lib/wordpress/plugin-settings-types";
 import { cn } from "~/lib/utils";
-import { formatPluginSettingsTitle } from "~/lib/utils/wordpress-plugin-kind";
-import { useResolvePluginKind } from "~/lib/hooks/useWorkspaceWpPluginCatalog";
 import { ServicePauseToggle } from "~/components/wordpress/plugin-settings-chrome";
 import { Badge } from "~/components/ui/badge";
 import { Button } from "~/components/ui/button";
@@ -38,11 +36,7 @@ export function ButtonList({
 }) {
   const { t } = useTranslation();
   const { pluginUuid } = useParams<{ pluginUuid: string }>();
-  const { catalogItem } = useResolvePluginKind(pluginUuid);
-  const pageTitle = formatPluginSettingsTitle(
-    catalogItem?.display_name,
-    t("wordpress.reAppointment.titleFallback", "Calendar Appointments"),
-  );
+  const pageTitle = t("wordpress.reAppointment.titleFallback", "Calendar Appointments");
 
   const total = buttons.length;
   const active = buttons.filter((b) => b.status === "active").length;

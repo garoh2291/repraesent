@@ -2,8 +2,6 @@ import { useParams, useSearchParams } from "react-router";
 import { useTranslation } from "react-i18next";
 import { Languages as LanguagesIcon, MousePointerClick, Palette } from "lucide-react";
 import { useReTranslateActions, useReTranslateOverview } from "~/lib/hooks/useReTranslate";
-import { useResolvePluginKind } from "~/lib/hooks/useWorkspaceWpPluginCatalog";
-import { formatPluginSettingsTitle } from "~/lib/utils/wordpress-plugin-kind";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "~/components/ui/tabs";
 import { PluginSettingsLoadingPage, ServiceLiveToggle } from "~/components/wordpress/plugin-settings-chrome";
 import { InfoNote, PageShell } from "~/components/wordpress/fields";
@@ -23,8 +21,7 @@ type Tab = (typeof TABS)[number];
 export function ReTranslateSettingsPage() {
   const { t } = useTranslation();
   const { pluginUuid = "" } = useParams<{ pluginUuid: string }>();
-  const { catalogItem } = useResolvePluginKind(pluginUuid);
-  const title = formatPluginSettingsTitle(catalogItem?.display_name, t("wordpress.reTranslate.title", "Translation"));
+  const title = t("wordpress.reTranslate.title", "Translation");
   const [params, setParams] = useSearchParams();
   const asked = params.get("tab") === "switcher" ? "menu" : (params.get("tab") ?? "");
   const tab: Tab = (TABS as readonly string[]).includes(asked) ? (asked as Tab) : "languages";

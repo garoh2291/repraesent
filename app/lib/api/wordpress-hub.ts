@@ -154,7 +154,8 @@ export type WpPluginSettingsKind =
   | "re-appointment"
   | "re-translate"
   | "re-visible"
-  | "re-banner";
+  | "re-banner"
+  | "re-accessibility";
 
 /** A single plugin installed on the workspace's WordPress site. */
 export interface WpPlugin {

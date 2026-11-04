@@ -4,9 +4,7 @@ import { useTranslation } from "react-i18next";
 import { FileText, Save, Search } from "lucide-react";
 import { extractErrorMessage } from "~/lib/api/axios-instance";
 import { useWorkspacePluginSettingsForm } from "~/lib/hooks/useWorkspacePluginSettings";
-import { useResolvePluginKind } from "~/lib/hooks/useWorkspaceWpPluginCatalog";
 import type { ReIndexSettings } from "~/lib/wordpress/plugin-settings-types";
-import { formatPluginSettingsTitle } from "~/lib/utils/wordpress-plugin-kind";
 import { PluginSettingsLoadingPage, ServicePauseToggle } from "~/components/wordpress/plugin-settings-chrome";
 import { Badge } from "~/components/ui/badge";
 import { Button } from "~/components/ui/button";
@@ -32,11 +30,7 @@ import { SeoPanel } from "~/components/wordpress/re-index/seo-panel";
 export function ReIndexSettingsPage() {
   const { t } = useTranslation();
   const { pluginUuid = "" } = useParams<{ pluginUuid: string }>();
-  const { catalogItem } = useResolvePluginKind(pluginUuid);
-  const pageTitle = formatPluginSettingsTitle(
-    catalogItem?.display_name,
-    t("wordpress.reIndex.titleFallback", "SEO Optimization"),
-  );
+  const pageTitle = t("wordpress.reIndex.titleFallback", "SEO Optimization");
   // The open tab lives in the URL, so a refresh (or a pasted link) reopens it.
   const [searchParams, setSearchParams] = useSearchParams();
   const tab = tabFromParam(searchParams.get(TAB_PARAM));

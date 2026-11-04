@@ -1,4 +1,5 @@
 import {
+  Accessibility,
   CalendarCheck,
   Cookie,
   Languages,
@@ -10,6 +11,7 @@ import {
   Wrench,
   type LucideIcon,
 } from "lucide-react";
+import type { TFunction } from "i18next";
 import type { WpPluginSettingsKind } from "~/lib/api/wordpress-hub";
 
 /** Managed plugins whose admin has been ported into Repraesent so far. */
@@ -22,6 +24,7 @@ export const PORTED_SETTINGS_KINDS = [
   "re-translate",
   "re-visible",
   "re-banner",
+  "re-accessibility",
 ] as const;
 
 export type PortedSettingsKind = (typeof PORTED_SETTINGS_KINDS)[number];
@@ -53,15 +56,30 @@ export const WEBSITE_SETTINGS_PATH = "/website/settings";
 /** Website › Staging: the staging and test copies of the live site. */
 export const WEBSITE_STAGING_PATH = "/website/staging";
 
+/** Where each service's name lives in the locale files. */
+const PLUGIN_NAME_KEYS: Partial<Record<PortedSettingsKind, string>> = {
+  "re-accessibility": "wordpress.reAccessibility.titleFallback",
+  "re-appointment": "wordpress.reAppointment.titleFallback",
+  "re-cookie": "wordpress.reCookie.titleFallback",
+  "re-index": "wordpress.reIndex.titleFallback",
+  "re-maintenance": "wordpress.reMaintenance.titleFallback",
+  "re-review": "wordpress.reReview.titleFallback",
+  "re-translate": "wordpress.reTranslate.title",
+  "re-visible": "wordpress.reVisible.titleFallback",
+};
+
 /**
- * Settings-page header: catalog `display_name` from `wp_plugins`. Falls back
- * to `fallback` while the catalog is still loading or the UUID is unknown.
+ * A service's name in the viewer's language. The catalog's `display_name` is a
+ * single English string, so it only stands in for a service with no translated
+ * name (re:banner keeps its brand name; a kind this app doesn't know yet).
  */
-export function formatPluginSettingsTitle(
-  displayName: string | null | undefined,
-  fallback: string,
+export function pluginServiceName(
+  kind: string | undefined,
+  catalogName: string,
+  t: TFunction,
 ): string {
-  return displayName?.trim() || fallback;
+  const key = isPortedSettingsKind(kind) ? PLUGIN_NAME_KEYS[kind] : undefined;
+  return key ? t(key, catalogName) : catalogName;
 }
 
 /**
@@ -78,6 +96,7 @@ export const PLUGIN_KIND_ICONS: Record<PortedSettingsKind, LucideIcon> = {
   "re-cookie": Cookie,
   "re-visible": Radar,
   "re-banner": Megaphone,
+  "re-accessibility": Accessibility,
 };
 
 export function pluginKindIcon(kind: string | undefined): LucideIcon {
