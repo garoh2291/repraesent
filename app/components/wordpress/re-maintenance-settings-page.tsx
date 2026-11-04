@@ -4,9 +4,7 @@ import { useTranslation } from "react-i18next";
 import { Construction, Eye, MessageSquareText, Power, Save } from "lucide-react";
 import { extractErrorMessage } from "~/lib/api/axios-instance";
 import { useWorkspacePluginSettingsForm } from "~/lib/hooks/useWorkspacePluginSettings";
-import { useResolvePluginKind } from "~/lib/hooks/useWorkspaceWpPluginCatalog";
 import type { ReMaintenanceSettings } from "~/lib/wordpress/plugin-settings-types";
-import { formatPluginSettingsTitle } from "~/lib/utils/wordpress-plugin-kind";
 import { PluginSettingsLoadingPage, ServiceLiveToggle } from "~/components/wordpress/plugin-settings-chrome";
 import { Badge } from "~/components/ui/badge";
 import { Button } from "~/components/ui/button";
@@ -42,11 +40,7 @@ import { cn } from "~/lib/utils";
 export function ReMaintenanceSettingsPage() {
   const { t } = useTranslation();
   const { pluginUuid = "" } = useParams<{ pluginUuid: string }>();
-  const { catalogItem } = useResolvePluginKind(pluginUuid);
-  const pageTitle = formatPluginSettingsTitle(
-    catalogItem?.display_name,
-    t("wordpress.reMaintenance.titleFallback", "Maintenance Mode"),
-  );
+  const pageTitle = t("wordpress.reMaintenance.titleFallback", "Maintenance Mode");
   const i18n = usePluginTranslateLanguages();
   const overlays = usePluginOverlayPack(i18n.translatePluginUuid);
   const [activeLang, setActiveLang] = useState("");

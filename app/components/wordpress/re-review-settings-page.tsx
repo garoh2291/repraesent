@@ -15,9 +15,7 @@ import {
   useWorkspaceReReviewClearCache,
   useWorkspaceReReviewTestFetch,
 } from "~/lib/hooks/useWorkspaceReReviewSettings";
-import { useResolvePluginKind } from "~/lib/hooks/useWorkspaceWpPluginCatalog";
 import type { ReReviewSettings } from "~/lib/wordpress/plugin-settings-types";
-import { formatPluginSettingsTitle } from "~/lib/utils/wordpress-plugin-kind";
 import { PluginSettingsLoadingPage, ServicePauseToggle } from "~/components/wordpress/plugin-settings-chrome";
 import { Badge } from "~/components/ui/badge";
 import { Button } from "~/components/ui/button";
@@ -47,11 +45,7 @@ import { cn } from "~/lib/utils";
 export function ReReviewSettingsPage() {
   const { t } = useTranslation();
   const { pluginUuid = "" } = useParams<{ pluginUuid: string }>();
-  const { catalogItem } = useResolvePluginKind(pluginUuid);
-  const pageTitle = formatPluginSettingsTitle(
-    catalogItem?.display_name,
-    t("wordpress.reReview.titleFallback", "Google Reviews"),
-  );
+  const pageTitle = t("wordpress.reReview.titleFallback", "Google Reviews");
   const {
     settings,
     setSettings,

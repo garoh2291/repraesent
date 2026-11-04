@@ -1,0 +1,1012 @@
+/**
+ * re:accessibility — menu UI and page adjustments.
+ *
+ * Two halves:
+ *
+ * 1. The menu itself (#reacc). Every rule is scoped under the #reacc id so a
+ *    theme's `button {}` or `h2 {}` styles can't reshape it, and sizes are in
+ *    px so neither the theme's root font size nor our own "Bigger text" moves
+ *    it.
+ * 2. The adjustments, keyed off `html.reacc-{feature}-{state}` classes that
+ *    the inline <head> script restores before first paint. Each one excludes
+ *    the menu (`:not(#reacc, #reacc *)`), so the controls stay usable while
+ *    the page around them changes.
+ *
+ * @package Re_Accessibility
+ */
+
+/* ── Fonts (only downloaded when a visitor picks them) ───────────────────── */
+
+@font-face {
+	font-family: "reacc-OpenDyslexic";
+	src: url("../fonts/opendyslexic-400.woff2") format("woff2");
+	font-weight: 400;
+	font-style: normal;
+	font-display: swap;
+}
+
+@font-face {
+	font-family: "reacc-OpenDyslexic";
+	src: url("../fonts/opendyslexic-700.woff2") format("woff2");
+	font-weight: 700;
+	font-style: normal;
+	font-display: swap;
+}
+
+@font-face {
+	font-family: "reacc-Atkinson";
+	src: url("../fonts/atkinson-hyperlegible-400.woff2") format("woff2");
+	font-weight: 400;
+	font-style: normal;
+	font-display: swap;
+}
+
+@font-face {
+	font-family: "reacc-Atkinson";
+	src: url("../fonts/atkinson-hyperlegible-700.woff2") format("woff2");
+	font-weight: 700;
+	font-style: normal;
+	font-display: swap;
+}
+
+/* ── Root & reset ────────────────────────────────────────────────────────── */
+
+/* Defaults match Re_Accessibility_Settings::defaults(); the root's inline style
+   (Re_Accessibility_Frontend::css_vars) overrides every one of them. Neutral by
+   default; a site brings its own main (accent) and second colour. */
+#reacc {
+	--reacc-accent: #1f2937;
+	--reacc-x: 20px;
+	--reacc-y: 20px;
+	--reacc-size: 48px;
+	--reacc-launcher: #1f2937;
+	--reacc-launcher-ink: #fff;
+	--reacc-launcher-border: #fff;
+	--reacc-launcher-bw: 0px;
+	--reacc-launcher-radius: 14px;
+	--reacc-launcher-icon: 50;
+	--reacc-panel-w: 380px;
+	--reacc-panel-radius: 16px;
+	--reacc-radius: 12px;
+	--reacc-control-radius: 8px;
+	--reacc-scale: 1;
+	--reacc-ink: #18181b;
+	--reacc-muted: #52525b;
+	--reacc-line: #e4e4e7;
+	--reacc-surface: #f4f4f5;
+	--reacc-head: #fff;
+	--reacc-card: #fff;
+	/* Text on a chosen option; .reacc--accent-light flips it on a light accent. */
+	--reacc-on-accent: #fff;
+
+	position: fixed;
+	inset: 0;
+	z-index: 2147483000;
+	pointer-events: none;
+	font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+	font-size: calc(15px * var(--reacc-scale));
+	font-weight: 400;
+	font-style: normal;
+	line-height: 1.4;
+	letter-spacing: normal;
+	word-spacing: normal;
+	text-align: left;
+	text-transform: none;
+	text-shadow: none;
+	color: var(--reacc-ink);
+}
+
+/* Pure black: is_light() weighs white against black, so this is the pair it
+   promises (a mid blue reaches 4.5:1 with black, not with a softer dark). */
+#reacc.reacc--accent-light {
+	--reacc-on-accent: #000;
+}
+
+#reacc *,
+#reacc *::before,
+#reacc *::after {
+	box-sizing: border-box;
+}
+
+/* Some themes force typography with !important (rolf-benz: `h1…h6 { text-
+   transform: uppercase !important }`). Inside the menu, ours has to win. */
+#reacc,
+#reacc * {
+	font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif !important;
+	letter-spacing: normal !important;
+	word-spacing: normal !important;
+	text-transform: none !important;
+}
+
+#reacc button {
+	-webkit-appearance: none;
+	appearance: none;
+	margin: 0;
+	padding: 0;
+	border: 0;
+	border-radius: 0;
+	background: none;
+	box-shadow: none;
+	color: inherit;
+	font: inherit;
+	letter-spacing: normal;
+	line-height: inherit;
+	text-align: inherit;
+	text-decoration: none;
+	text-shadow: none;
+	text-transform: none;
+	width: auto;
+	height: auto;
+	min-width: 0;
+	min-height: 0;
+	cursor: pointer;
+}
+
+#reacc ul,
+#reacc li {
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+
+#reacc ul::before,
+#reacc li::before,
+#reacc li::marker {
+	content: none;
+}
+
+#reacc p {
+	margin: 0;
+}
+
+#reacc [hidden] {
+	display: none !important;
+}
+
+#reacc .reacc-icon {
+	display: block;
+	flex: none;
+	width: 24px;
+	height: 24px;
+	fill: none;
+	stroke: currentColor;
+}
+
+#reacc .reacc-icon [fill="currentColor"] {
+	fill: currentColor;
+}
+
+#reacc .reacc-icon [stroke="none"] {
+	stroke: none;
+}
+
+#reacc :focus {
+	outline: none;
+}
+
+#reacc :focus-visible {
+	outline: 3px solid var(--reacc-accent);
+	outline-offset: 2px;
+	box-shadow: 0 0 0 2px var(--reacc-card);
+}
+
+.reacc-sr,
+#reacc .reacc-sr {
+	position: absolute !important;
+	width: 1px !important;
+	height: 1px !important;
+	padding: 0 !important;
+	margin: -1px !important;
+	overflow: hidden !important;
+	clip: rect(0, 0, 0, 0) !important;
+	white-space: nowrap !important;
+	border: 0 !important;
+}
+
+/* ── Launcher ────────────────────────────────────────────────────────────── */
+
+#reacc .reacc-launcher {
+	position: absolute;
+	bottom: var(--reacc-y);
+	right: var(--reacc-x);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: var(--reacc-size);
+	height: var(--reacc-size);
+	border: var(--reacc-launcher-bw) solid var(--reacc-launcher-border);
+	/* Corners that overlap are scaled by the browser: 40px is always fully round. */
+	border-radius: var(--reacc-launcher-radius);
+	background: var(--reacc-launcher);
+	color: var(--reacc-launcher-ink);
+	pointer-events: auto;
+	/* A theme's `button:hover` must not move or animate it. */
+	transform: none;
+	animation: none;
+	transition: transform 0.15s ease;
+}
+
+#reacc.reacc--launcher-shadow .reacc-launcher {
+	box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2), 0 6px 20px -6px rgba(0, 0, 0, 0.35);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+	#reacc .reacc-launcher:hover {
+		transform: translateY(-1px);
+	}
+}
+
+#reacc .reacc-launcher .reacc-icon {
+	width: calc(var(--reacc-size) * var(--reacc-launcher-icon) / 100);
+	height: calc(var(--reacc-size) * var(--reacc-launcher-icon) / 100);
+}
+
+#reacc.reacc--left .reacc-launcher {
+	right: auto;
+	left: var(--reacc-x);
+}
+
+#reacc.reacc--hidden .reacc-launcher {
+	display: none;
+}
+
+@media (max-width: 767px) {
+	#reacc.reacc--hide-mobile .reacc-launcher {
+		display: none;
+	}
+}
+
+/* ── Panel: a popover above the button; a bottom sheet on a phone ────────── */
+
+#reacc .reacc-panel {
+	position: absolute;
+	right: var(--reacc-x);
+	bottom: calc(var(--reacc-y) + var(--reacc-size) + 10px);
+	display: flex;
+	flex-direction: column;
+	width: min(calc(var(--reacc-panel-w) * var(--reacc-scale)), calc(100vw - var(--reacc-x) - 12px));
+	max-height: calc(100vh - var(--reacc-y) - var(--reacc-size) - 22px);
+	border: 1px solid var(--reacc-line);
+	border-radius: var(--reacc-panel-radius);
+	background: var(--reacc-surface);
+	box-shadow: 0 16px 48px -12px rgba(0, 0, 0, 0.3);
+	pointer-events: auto;
+	overflow: hidden;
+	/* Above the reading mask and guide, so the menu stays readable. */
+	z-index: 1;
+	/* The labels are translated: a long word breaks rather than leaves the card. */
+	overflow-wrap: anywhere;
+}
+
+#reacc.reacc--left .reacc-panel {
+	right: auto;
+	left: var(--reacc-x);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+	#reacc .reacc-panel {
+		animation: reacc-rise 0.14s ease-out;
+	}
+}
+
+/* Movement only: the card is solid from its first frame, even if a paused or
+   background tab never finishes the animation. */
+@keyframes reacc-rise {
+	from {
+		transform: translateY(6px);
+	}
+}
+
+@media (max-width: 767px) {
+	#reacc .reacc-panel,
+	#reacc.reacc--left .reacc-panel {
+		right: 0;
+		bottom: 0;
+		left: 0;
+		width: 100%;
+		max-height: 85vh;
+		border-width: 1px 0 0;
+		border-radius: var(--reacc-panel-radius) var(--reacc-panel-radius) 0 0;
+	}
+}
+
+#reacc .reacc-panel__head {
+	display: flex;
+	align-items: flex-start;
+	justify-content: space-between;
+	gap: 8px;
+	padding: 14px 8px 10px 16px;
+	background: var(--reacc-head);
+}
+
+#reacc .reacc-panel__heading {
+	min-width: 0;
+}
+
+#reacc .reacc-panel__title {
+	margin: 0;
+	padding: 0;
+	font-family: inherit;
+	font-size: calc(17px * var(--reacc-scale));
+	font-weight: 700;
+	line-height: 1.3;
+	color: var(--reacc-ink);
+}
+
+#reacc .reacc-panel__lead {
+	margin-top: 2px;
+	font-size: calc(13px * var(--reacc-scale));
+	color: var(--reacc-muted);
+}
+
+#reacc .reacc-close {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	flex: none;
+	width: 40px;
+	height: 40px;
+	border-radius: var(--reacc-control-radius);
+	color: var(--reacc-muted);
+}
+
+#reacc .reacc-close:hover {
+	background: var(--reacc-surface);
+	color: var(--reacc-ink);
+}
+
+#reacc .reacc-close .reacc-icon {
+	width: 20px;
+	height: 20px;
+}
+
+/* ── Tabs ────────────────────────────────────────────────────────────────── */
+
+#reacc .reacc-tabs {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0 4px;
+	padding: 0 8px;
+	background: var(--reacc-head);
+	border-bottom: 1px solid var(--reacc-line);
+}
+
+#reacc .reacc-tab {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	min-height: 40px;
+	margin-bottom: -1px;
+	padding: 0 8px;
+	border-bottom: 2px solid transparent;
+	color: var(--reacc-muted);
+	font-size: calc(14px * var(--reacc-scale));
+	font-weight: 600;
+	white-space: nowrap;
+}
+
+#reacc .reacc-tab:hover {
+	color: var(--reacc-ink);
+}
+
+#reacc .reacc-tab[aria-selected="true"] {
+	border-bottom-color: var(--reacc-accent);
+	color: var(--reacc-ink);
+}
+
+#reacc .reacc-tab[data-count]::after {
+	content: attr(data-count);
+	min-width: 18px;
+	padding: 0 5px;
+	border-radius: 9px;
+	background: var(--reacc-accent);
+	color: var(--reacc-on-accent);
+	font-size: 12px;
+	font-weight: 700;
+	line-height: 18px;
+	text-align: center;
+}
+
+#reacc .reacc-panel__body {
+	flex: 1 1 auto;
+	min-height: 0;
+	padding: 12px;
+	overflow-y: auto;
+	overscroll-behavior: contain;
+}
+
+/* All panes share one grid cell, so the menu keeps the height of the tallest
+   and doesn't jump when the tab changes. */
+#reacc .reacc-panes {
+	display: grid;
+}
+
+#reacc .reacc-pane {
+	grid-area: 1 / 1;
+	visibility: hidden;
+}
+
+#reacc .reacc-pane.is-active {
+	visibility: visible;
+}
+
+/* ── Adjustments: rows in one card ───────────────────────────────────────── */
+
+#reacc .reacc-list {
+	border: 1px solid var(--reacc-line);
+	border-radius: var(--reacc-radius);
+	background: var(--reacc-card);
+}
+
+#reacc .reacc-item {
+	padding: 10px 12px;
+}
+
+#reacc .reacc-item + .reacc-item {
+	border-top: 1px solid var(--reacc-line);
+}
+
+#reacc .reacc-item__row {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	min-height: 28px;
+}
+
+#reacc .reacc-item__icon {
+	flex: none;
+	color: var(--reacc-muted);
+}
+
+#reacc .reacc-item__icon .reacc-icon {
+	width: calc(18px * var(--reacc-scale));
+	height: calc(18px * var(--reacc-scale));
+}
+
+#reacc .reacc-item:not([data-level="0"]) .reacc-item__icon {
+	color: var(--reacc-ink);
+}
+
+#reacc .reacc-item__name {
+	flex: 1 1 auto;
+	min-width: 0;
+	font-size: calc(14px * var(--reacc-scale));
+	font-weight: 600;
+	line-height: 1.3;
+}
+
+/* A row of options, all in view; the chosen one is filled. */
+#reacc .reacc-seg {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 2px;
+	margin-top: 8px;
+	padding: 2px;
+	border-radius: var(--reacc-control-radius);
+	background: var(--reacc-surface);
+}
+
+#reacc .reacc-seg__opt {
+	flex: 1 1 auto;
+	min-height: 32px;
+	padding: 0 8px;
+	border-radius: max(0px, calc(var(--reacc-control-radius) - 2px));
+	color: var(--reacc-muted);
+	font-size: calc(13px * var(--reacc-scale));
+	font-weight: 500;
+	text-align: center;
+}
+
+#reacc .reacc-seg__opt:hover {
+	color: var(--reacc-ink);
+}
+
+#reacc .reacc-seg__opt[aria-checked="true"] {
+	background: var(--reacc-accent);
+	color: var(--reacc-on-accent);
+	font-weight: 600;
+}
+
+/* "Off" chosen is the resting state, so it stays quiet. */
+#reacc .reacc-seg__opt[data-reacc-level="0"][aria-checked="true"] {
+	background: var(--reacc-card);
+	box-shadow: inset 0 0 0 1px var(--reacc-line);
+	color: var(--reacc-ink);
+}
+
+/* An iOS-style switch: a pill and a round white knob, whatever the corner
+   settings say. The gray and the knob hold 3:1 on light and dark menus alike. */
+#reacc .reacc-switch {
+	position: relative;
+	flex: none;
+	width: 46px;
+	height: 28px;
+	border-radius: 14px;
+	background: #8e8e93;
+	transition: background 0.2s ease;
+}
+
+#reacc .reacc-switch__knob {
+	position: absolute;
+	top: 2px;
+	left: 2px;
+	width: 24px;
+	height: 24px;
+	border-radius: 50%;
+	background: #fff;
+	box-shadow: 0 0 0 0.5px rgba(0, 0, 0, 0.12), 0 2px 4px rgba(0, 0, 0, 0.25);
+	transition: transform 0.2s cubic-bezier(0.3, 1.2, 0.5, 1);
+}
+
+#reacc .reacc-switch[aria-checked="true"] {
+	background: var(--reacc-accent);
+}
+
+#reacc .reacc-switch[aria-checked="true"] .reacc-switch__knob {
+	transform: translateX(18px);
+}
+
+/* ── Footer ──────────────────────────────────────────────────────────────── */
+
+#reacc .reacc-panel__foot {
+	padding: 10px 12px;
+	background: var(--reacc-head);
+	border-top: 1px solid var(--reacc-line);
+}
+
+/* Side by side when they fit; a long translation takes a row of its own. */
+#reacc .reacc-tools {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 8px;
+}
+
+#reacc .reacc-tool {
+	display: flex;
+	flex: 1 1 auto;
+	align-items: center;
+	justify-content: center;
+	gap: 6px;
+	min-height: 36px;
+	padding: 4px 10px;
+	border: 1px solid var(--reacc-line);
+	border-radius: var(--reacc-control-radius);
+	font-size: calc(13px * var(--reacc-scale));
+	font-weight: 600;
+}
+
+#reacc .reacc-tool:hover,
+#reacc .reacc-tool[aria-expanded="true"] {
+	border-color: var(--reacc-ink);
+}
+
+#reacc .reacc-tool .reacc-icon {
+	flex: none;
+	width: 16px;
+	height: 16px;
+}
+
+#reacc .reacc-options {
+	display: grid;
+	gap: 6px;
+	padding-top: 8px;
+}
+
+#reacc .reacc-row {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 12px;
+	min-height: 36px;
+	padding: 0 2px;
+	font-size: calc(13px * var(--reacc-scale));
+	font-weight: 600;
+}
+
+#reacc .reacc-option {
+	width: 100%;
+	min-height: 36px;
+	padding: 0 10px;
+	border: 1px solid var(--reacc-line);
+	border-radius: var(--reacc-control-radius);
+	font-size: calc(13px * var(--reacc-scale));
+	text-align: left;
+}
+
+#reacc .reacc-option:hover {
+	border-color: var(--reacc-ink);
+}
+
+#reacc .reacc-panel__meta {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	justify-content: space-between;
+	gap: 4px 12px;
+	margin-top: 10px;
+	font-size: calc(12.5px * var(--reacc-scale));
+	color: var(--reacc-muted);
+}
+
+#reacc .reacc-statement-link {
+	color: inherit;
+	line-height: 24px;
+	text-decoration: underline;
+	text-underline-offset: 2px;
+}
+
+#reacc .reacc-statement-link:hover {
+	color: var(--reacc-ink);
+}
+
+/* No keys to press on a phone or tablet. */
+@media (hover: none) and (pointer: coarse) {
+	#reacc .reacc-panel__kbd {
+		display: none;
+	}
+}
+
+#reacc kbd {
+	display: inline-block;
+	margin: 0;
+	padding: 0 5px;
+	border: 1px solid var(--reacc-line);
+	border-radius: 5px;
+	background: var(--reacc-card);
+	color: var(--reacc-ink);
+	font: inherit;
+	font-weight: 600;
+	box-shadow: none;
+}
+
+/* ── Bigger menu ─────────────────────────────────────────────────────────── */
+
+#reacc.reacc--big {
+	--reacc-scale: 1.25;
+}
+
+/* The dialog takes focus on open so the next Tab starts inside it; it is not
+   a control itself, so no ring around the whole card. */
+#reacc .reacc-panel:focus-visible {
+	outline: none;
+	box-shadow: 0 16px 48px -12px rgba(0, 0, 0, 0.3);
+}
+
+/* ── Reading aids and tooltip (created by the script) ────────────────────── */
+
+#reacc .reacc-mask {
+	position: absolute;
+	left: 0;
+	right: 0;
+	background: rgba(0, 0, 0, 0.65);
+	pointer-events: none;
+}
+
+#reacc .reacc-mask--top {
+	top: 0;
+}
+
+#reacc .reacc-mask--bottom {
+	bottom: 0;
+}
+
+#reacc .reacc-guide {
+	position: absolute;
+	left: 0;
+	width: min(560px, 90vw);
+	height: 14px;
+	border: 3px solid #ffd60a;
+	border-radius: 7px;
+	background: #111;
+	pointer-events: none;
+	transform: translateX(-50%);
+}
+
+#reacc .reacc-tooltip {
+	position: absolute;
+	max-width: min(320px, calc(100vw - 24px));
+	padding: 8px 12px;
+	border: 2px solid #fff;
+	border-radius: 8px;
+	background: #111;
+	color: #fff;
+	font-size: 16px;
+	line-height: 1.35;
+	pointer-events: none;
+	box-shadow: 0 4px 14px rgba(0, 0, 0, 0.3);
+}
+
+/* ── Skip link ───────────────────────────────────────────────────────────── */
+
+.reacc-skip {
+	position: fixed;
+	top: 12px;
+	left: 12px;
+	z-index: 2147483001;
+	padding: 12px 18px;
+	border: 3px solid #111;
+	border-radius: 8px;
+	background: #fff;
+	color: #111 !important;
+	font: 600 16px/1.2 system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+	text-decoration: underline;
+	transform: translateY(-300%);
+}
+
+.reacc-skip:focus {
+	transform: none;
+	outline: 3px solid var(--reacc-focus, #1f2937);
+	outline-offset: 2px;
+}
+
+/* ── Statement page ──────────────────────────────────────────────────────── */
+
+.reacc-statement__open {
+	display: inline-block;
+	padding: 12px 20px;
+	border: 2px solid #111;
+	border-radius: 8px;
+	background: #111;
+	color: #fff;
+	font: inherit;
+	font-weight: 600;
+	cursor: pointer;
+}
+
+.reacc-statement__open:hover {
+	background: #fff;
+	color: #111;
+}
+
+/* ════════════════════════════════════════════════════════════════════════════
+   Page adjustments
+   ════════════════════════════════════════════════════════════════════════════ */
+
+/* Always-on: a focus ring keyboard users can actually see. Two-tone (white
+   inner ring, coloured outline) so it shows on light and dark backgrounds
+   alike. The colour is a setting, printed on <html> as --reacc-focus. The
+   menu's own dialog is left out: it only holds focus so the next Tab starts
+   inside it. */
+html.reacc-focus-ring :focus-visible:not(#reacc-panel) {
+	outline: 3px solid var(--reacc-focus, #1f2937) !important;
+	outline-offset: 2px !important;
+	box-shadow: 0 0 0 2px #fff !important;
+}
+
+/* Always-on: honour the operating system's "reduce motion" setting. Durations
+   go to ~0 rather than pausing, so anything that animates in still ends up
+   visible. */
+@media (prefers-reduced-motion: reduce) {
+	html.reacc-reduced-motion *,
+	html.reacc-reduced-motion *::before,
+	html.reacc-reduced-motion *::after {
+		animation-duration: 0.001ms !important;
+		animation-delay: 0s !important;
+		animation-iteration-count: 1 !important;
+		transition-duration: 0.001ms !important;
+		transition-delay: 0s !important;
+		scroll-behavior: auto !important;
+	}
+}
+
+/* ── Contrast & saturation (filters on <html>) ───────────────────────────────
+   Filters go on the root element: per spec it is the one element whose filter
+   does not become the containing block for fixed descendants, so sticky
+   headers and the menu itself keep their place. Contrast and saturation
+   share the one `filter` property through two custom properties. */
+
+html.reacc-contrast-1 {
+	--reacc-f-invert: invert(1) hue-rotate(180deg);
+}
+
+html.reacc-saturation-1 {
+	--reacc-f-sat: saturate(0.5);
+}
+
+html.reacc-saturation-2 {
+	--reacc-f-sat: saturate(2);
+}
+
+html.reacc-saturation-3 {
+	--reacc-f-sat: grayscale(1);
+}
+
+html.reacc-contrast-1,
+html.reacc-saturation-1,
+html.reacc-saturation-2,
+html.reacc-saturation-3 {
+	filter: var(--reacc-f-invert, ) var(--reacc-f-sat, );
+}
+
+/* Photos and video flip back so people don't look like negatives, and the
+   menu flips back so it stays recognisable. */
+html.reacc-contrast-1 :is(img, video, iframe, canvas, embed, object):not(#reacc *),
+html.reacc-contrast-1 #reacc {
+	filter: invert(1) hue-rotate(180deg);
+}
+
+html.reacc-contrast-1 {
+	background-color: #fff;
+}
+
+/* Dark contrast */
+html.reacc-contrast-2,
+html.reacc-contrast-2 body,
+html.reacc-contrast-2 body *:not(#reacc, #reacc *, img, video, svg, svg *) {
+	background-color: #000 !important;
+	color: #fff !important;
+	border-color: #fff !important;
+	text-shadow: none !important;
+	box-shadow: none !important;
+}
+
+html.reacc-contrast-2 :is(a, a *, [role="link"]):not(#reacc *) {
+	color: #ffeb3b !important;
+}
+
+html.reacc-contrast-2 :is(button, input, select, textarea, [role="button"]):not(#reacc *) {
+	border: 1px solid #fff !important;
+}
+
+html.reacc-contrast-2 ::placeholder {
+	color: #d1d5db !important;
+	opacity: 1 !important;
+}
+
+/* Light contrast */
+html.reacc-contrast-3,
+html.reacc-contrast-3 body,
+html.reacc-contrast-3 body *:not(#reacc, #reacc *, img, video, svg, svg *) {
+	background-color: #fff !important;
+	color: #000 !important;
+	border-color: #000 !important;
+	text-shadow: none !important;
+	box-shadow: none !important;
+}
+
+html.reacc-contrast-3 :is(a, a *, [role="link"]):not(#reacc *) {
+	color: #0000c8 !important;
+}
+
+html.reacc-contrast-3 :is(button, input, select, textarea, [role="button"]):not(#reacc *) {
+	border: 1px solid #000 !important;
+}
+
+html.reacc-contrast-3 ::placeholder {
+	color: #374151 !important;
+	opacity: 1 !important;
+}
+
+html.reacc-contrast-2 :focus-visible {
+	outline-color: #ffeb3b !important;
+}
+
+/* ── Highlight links ─────────────────────────────────────────────────────── */
+
+html.reacc-links-1 :is(a, [role="link"]):not(#reacc *, .reacc-skip) {
+	background-color: #ffeb3b !important;
+	color: #000 !important;
+	outline: 2px solid #000 !important;
+	outline-offset: 1px !important;
+	text-decoration: underline !important;
+	text-decoration-thickness: 2px !important;
+	text-underline-offset: 3px !important;
+}
+
+html.reacc-links-1 :is(a, [role="link"]):not(#reacc *) *:not(img, svg, svg *) {
+	color: #000 !important;
+}
+
+/* ── Text spacing (WCAG 1.4.12 values at "moderate") ────────────────────── */
+
+html.reacc-spacing-1 body *:not(#reacc, #reacc *) {
+	letter-spacing: 0.06em !important;
+	word-spacing: 0.1em !important;
+}
+
+html.reacc-spacing-2 body *:not(#reacc, #reacc *) {
+	letter-spacing: 0.12em !important;
+	word-spacing: 0.16em !important;
+}
+
+html.reacc-spacing-3 body *:not(#reacc, #reacc *) {
+	letter-spacing: 0.2em !important;
+	word-spacing: 0.3em !important;
+}
+
+/* ── Line height ─────────────────────────────────────────────────────────── */
+
+html.reacc-lineheight-1 body *:not(#reacc, #reacc *) {
+	line-height: 1.5 !important;
+}
+
+html.reacc-lineheight-2 body *:not(#reacc, #reacc *) {
+	line-height: 1.75 !important;
+}
+
+html.reacc-lineheight-3 body *:not(#reacc, #reacc *) {
+	line-height: 2 !important;
+}
+
+/* ── Text align ──────────────────────────────────────────────────────────── */
+
+html.reacc-align-1 body *:not(#reacc, #reacc *) {
+	text-align: left !important;
+}
+
+html.reacc-align-2 body *:not(#reacc, #reacc *) {
+	text-align: right !important;
+}
+
+html.reacc-align-3 body *:not(#reacc, #reacc *) {
+	text-align: center !important;
+}
+
+html.reacc-align-4 body *:not(#reacc, #reacc *) {
+	text-align: justify !important;
+}
+
+/* ── Pause animations ────────────────────────────────────────────────────── */
+
+/* The menu too: visitors who need this mean all of it. The script holds back
+   hover rules in the page's stylesheets, which still move with no transition. */
+html.reacc-pause-1 *,
+html.reacc-pause-1 *::before,
+html.reacc-pause-1 *::after {
+	animation-duration: 0.001ms !important;
+	animation-delay: 0s !important;
+	animation-iteration-count: 1 !important;
+	transition-duration: 0.001ms !important;
+	transition-delay: 0s !important;
+	scroll-behavior: auto !important;
+}
+
+html.reacc-pause-1 #reacc,
+html.reacc-pause-1 #reacc *,
+html.reacc-pause-1 #reacc *::before,
+html.reacc-pause-1 #reacc *::after {
+	animation: none !important;
+	transition: none !important;
+}
+
+html.reacc-pause-1 #reacc .reacc-launcher {
+	transform: none !important;
+}
+
+/* ── Hide images ─────────────────────────────────────────────────────────── */
+
+html.reacc-images-1 :is(img, picture, video, canvas, svg[role="img"], [role="img"]):not(#reacc *) {
+	visibility: hidden !important;
+}
+
+html.reacc-images-1 body *:not(#reacc, #reacc *),
+html.reacc-images-1 body *:not(#reacc, #reacc *)::before,
+html.reacc-images-1 body *:not(#reacc, #reacc *)::after {
+	background-image: none !important;
+}
+
+/* ── Dyslexia-friendly fonts ─────────────────────────────────────────────────
+   Icon fonts are left alone, or every icon on the page turns into a letter. */
+
+html.reacc-dyslexia-1 body *:not(#reacc, #reacc *, i, svg, svg *, .dashicons, .material-icons, .material-symbols-outlined, [class*="icon"], [class*="Icon"], [class^="fa"], [class*=" fa-"]) {
+	font-family: "reacc-OpenDyslexic", "Comic Sans MS", sans-serif !important;
+}
+
+html.reacc-dyslexia-2 body *:not(#reacc, #reacc *, i, svg, svg *, .dashicons, .material-icons, .material-symbols-outlined, [class*="icon"], [class*="Icon"], [class^="fa"], [class*=" fa-"]) {
+	font-family: "reacc-Atkinson", Verdana, Arial, sans-serif !important;
+}
+
+/* ── Big cursor ──────────────────────────────────────────────────────────── */
+
+html.reacc-cursor-1,
+html.reacc-cursor-1 * {
+	cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='48' height='48' viewBox='0 0 48 48'%3E%3Cpath d='M8 3v37l9.5-9.5 6.5 15 7-3-6.5-15H38z' fill='black' stroke='white' stroke-width='2.5' stroke-linejoin='round'/%3E%3C/svg%3E") 8 3, auto !important;
+}
+
+html.reacc-cursor-1 :is(a, a *, button, button *, [role="button"], [role="link"], label, select, summary, input[type="checkbox"], input[type="radio"], input[type="submit"], input[type="button"]) {
+	cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='48' height='48' viewBox='0 0 48 48'%3E%3Cpath d='M16 24V6a4 4 0 0 1 8 0v14a3 3 0 0 1 6 0v2a3 3 0 0 1 6 0v2a3 3 0 0 1 6 0v10c0 6-4 10-10 10h-8c-4 0-6-2-8-5l-9-9a3 3 0 0 1 5-4l4 4z' fill='black' stroke='white' stroke-width='2.5' stroke-linejoin='round'/%3E%3C/svg%3E") 20 2, pointer !important;
+}
+
+html.reacc-cursor-1 :is(input:not([type]), input[type="text"], input[type="email"], input[type="search"], input[type="tel"], input[type="url"], input[type="password"], input[type="number"], textarea) {
+	cursor: text !important;
+}

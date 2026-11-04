@@ -4,13 +4,11 @@ import { useTranslation } from "react-i18next";
 import { FileText, Palette, Save, Settings } from "lucide-react";
 import { extractErrorMessage } from "~/lib/api/axios-instance";
 import { useWorkspacePluginSettingsForm } from "~/lib/hooks/useWorkspacePluginSettings";
-import { useResolvePluginKind } from "~/lib/hooks/useWorkspaceWpPluginCatalog";
 import type {
   ReCookieLang,
   ReCookieSettings,
   ReCookieTranslationLang,
 } from "~/lib/wordpress/plugin-settings-types";
-import { formatPluginSettingsTitle } from "~/lib/utils/wordpress-plugin-kind";
 import {
   PluginSettingsLoadingPage,
   ServicePauseToggle,
@@ -41,11 +39,7 @@ import { PageShell } from "~/components/wordpress/re-cookie/fields";
 export function ReCookieSettingsPage() {
   const { t } = useTranslation();
   const { pluginUuid = "" } = useParams<{ pluginUuid: string }>();
-  const { catalogItem } = useResolvePluginKind(pluginUuid);
-  const pageTitle = formatPluginSettingsTitle(
-    catalogItem?.display_name,
-    t("wordpress.reCookie.titleFallback", "GDPR Cookie Banner"),
-  );
+  const pageTitle = t("wordpress.reCookie.titleFallback", "GDPR Cookie Banner");
   const [tab, setTab] = useState<TabId>("design");
   const [activeLang, setActiveLang] = useState<ReCookieLang>("de");
   const [savedSnapshot, setSavedSnapshot] = useState<string | null>(null);

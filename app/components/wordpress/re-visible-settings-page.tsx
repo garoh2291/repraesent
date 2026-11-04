@@ -8,9 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "~/components/ui/tabs";
 import { extractErrorMessage } from "~/lib/api/axios-instance";
 import { requestWpSsoLogin } from "~/lib/api/wordpress-hub";
 import { useWorkspacePluginSettingsForm } from "~/lib/hooks/useWorkspacePluginSettings";
-import { useResolvePluginKind } from "~/lib/hooks/useWorkspaceWpPluginCatalog";
 import { useAuthContext } from "~/providers/auth-provider";
-import { formatPluginSettingsTitle } from "~/lib/utils/wordpress-plugin-kind";
 import {
   PluginSettingsLoadingPage,
 } from "~/components/wordpress/plugin-settings-chrome";
@@ -80,13 +78,9 @@ import {
 export function ReVisibleSettingsPage() {
   const { t } = useTranslation();
   const { pluginUuid = "" } = useParams<{ pluginUuid: string }>();
-  const { catalogItem } = useResolvePluginKind(pluginUuid);
   const { currentWorkspace } = useAuthContext();
 
-  const pageTitle = formatPluginSettingsTitle(
-    catalogItem?.display_name,
-    t("wordpress.reVisible.titleFallback", "AI Analytics"),
-  );
+  const pageTitle = t("wordpress.reVisible.titleFallback", "AI Analytics");
 
   const [searchParams, setSearchParams] = useSearchParams();
   const tab = tabFromParam(searchParams.get(TAB_PARAM));
