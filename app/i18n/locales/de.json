@@ -96,7 +96,8 @@
         "billing": "Tarif und Rechnungen",
         "contact": "Ein echter Mensch aus unserem Team",
         "results": "Wie das Geschäft läuft",
-        "websiteStaging": "Die Testkopie Ihrer Website"
+        "websiteStaging": "Die Testkopie Ihrer Website",
+        "help": "Etwas kaputt oder eine Änderung an Ihrer Website"
       },
       "switchBusiness": "Betrieb wechseln"
     },
@@ -1414,7 +1415,7 @@
       "onboarding": "Onboarding",
       "emailNotifications": "E-Mail-Benachrichtigungen",
       "businessProfile": "Unternehmensprofil",
-      "support": "Support"
+      "support": "Kontakt-Button"
     },
     "bcc": {
       "metaTitle": "E-Mail-Kopien (BCC)",
@@ -2029,6 +2030,39 @@
           "expired": "Das hat länger als 10 Minuten gedauert, der Link ist abgelaufen. Bitte versuchen Sie es erneut.",
           "error": "OpenRouter hat keinen Schlüssel übergeben. Bitte versuchen Sie es erneut oder fügen Sie einen Schlüssel ein."
         }
+      },
+      "statusNoCredits": "Verbunden · kein Guthaben mehr",
+      "balance": {
+        "title": "Guthaben",
+        "subtitle": "Was auf Ihrem OpenRouter-Konto noch übrig ist. Chat und KI-Sichtbarkeit stoppen, wenn es leer ist.",
+        "refresh": "Jetzt prüfen",
+        "unknown": "OpenRouter hat das Guthaben gerade nicht verraten. Versuchen Sie „Jetzt prüfen“ in einer Minute.",
+        "empty": "Nichts mehr übrig – Antworten stoppen, bis Sie aufladen",
+        "low": "Unter Ihrer Warngrenze von {{amount}}",
+        "left": "noch verfügbar",
+        "usedMonth": "Diesen Monat verbraucht",
+        "usedAll": "Insgesamt verbraucht",
+        "keyLimit": "Limit dieses Schlüssels",
+        "checked": "Geprüft {{when}}",
+        "addCredits": "Guthaben bei OpenRouter aufladen"
+      },
+      "alert": {
+        "amountRequired": "Geben Sie den Betrag ein, ab dem wir warnen sollen, zum Beispiel 5.",
+        "channelRequired": "Wählen Sie Handy, E-Mail oder beides.",
+        "savedOn": "Warnung bei niedrigem Guthaben ist an.",
+        "savedOff": "Warnung bei niedrigem Guthaben ist aus.",
+        "saveFailed": "Das wurde nicht gespeichert. Versuchen Sie es noch einmal.",
+        "title": "Warnen, wenn das Guthaben knapp wird",
+        "subtitle": "Wir prüfen einmal am Tag und melden uns höchstens einmal täglich, solange es darunter liegt.",
+        "amount": "Warnen unter",
+        "how": "Wie wir Sie erreichen",
+        "phone": "Handy",
+        "email": "E-Mail",
+        "noPhone": "Noch bekommt keines Ihrer Handys Benachrichtigungen.",
+        "turnOnPhone": "Handy-Benachrichtigungen einschalten",
+        "save": "Änderungen speichern",
+        "turnOn": "Warnung einschalten",
+        "last": "Letzte Warnung {{when}}"
       }
     },
     "allowlist": {
@@ -2450,7 +2484,7 @@
       "error": "Die Währung konnte nicht gespeichert werden."
     },
     "support": {
-      "metaTitle": "Support",
+      "metaTitle": "Kontakt-Button",
       "metaDescription": "Legen Sie fest, welche Kunden-Workspaces „re:praesent kontaktieren“ sehen und wer antwortet.",
       "searchPlaceholder": "Workspaces oder Inhaber-E-Mail suchen…",
       "filterLabel": "Anzeigen",
@@ -2534,6 +2568,12 @@
         "show_names": {
           "title": "Namen auf dem Sperrbildschirm zeigen",
           "desc": "Ausgeschaltet steht in der Meldung nur „Neue Anfrage“. Wer es ist, siehst du beim Öffnen."
+        },
+        "support": {
+          "title": "Hilfe & Änderungen",
+          "desc": "Wenn re:praesent auf etwas antwortet, das du unter Hilfe & Änderungen gemeldet hast, oder es erledigt. Immer an, innerhalb deiner aktiven Zeiten.",
+          "titleRoot": "Support-Tickets",
+          "descRoot": "Neue Tickets, Antworten von Kunden und wieder geöffnete Tickets. Immer an, innerhalb deiner aktiven Zeiten."
         }
       },
       "hours": {
@@ -8743,7 +8783,13 @@
       "chunk": "Textstelle",
       "understoodAs": "Verstanden als:",
       "reranked": "neu sortiert",
-      "advancedHint": "Sehen, was er für jede Antwort nachgeschlagen hat."
+      "advancedHint": "Sehen, was er für jede Antwort nachgeschlagen hat.",
+      "errors": {
+        "credits": "Auf deinem OpenRouter-Konto ist kein Guthaben mehr, deshalb kann die KI nicht antworten. Lade auf openrouter.ai auf und versuch es dann noch einmal. Dein Guthaben steht unter Einstellungen → KI.",
+        "noKey": "Kein funktionierender OpenRouter-Schlüssel. Verbinde ihn unter Einstellungen → KI und versuch es dann noch einmal.",
+        "limit": "Das Tageslimit dieses Assistenten ist erreicht. Erhöhe es unter Limits oder versuch es morgen wieder.",
+        "generic": "Der KI-Dienst hat nicht geantwortet. Versuch es in einer Minute noch einmal."
+      }
     },
     "usage": {
       "title": "Aktivität",
@@ -9885,7 +9931,8 @@
       "sales": "Deals",
       "root": "re:praesent"
     },
-    "appointments": "Termine"
+    "appointments": "Termine",
+    "support": "Support"
   },
   "command": {
     "title": "Öffnen oder suchen",
@@ -10377,7 +10424,10 @@
       "keyTitle": "Verbinde deinen OpenRouter-Schlüssel, damit das Tracking weiterläuft",
       "pausedBody": "Es werden keine Fragen gestellt und nichts ausgegeben, bis du fortsetzt.",
       "pausedCta": "Fortsetzen",
-      "pausedTitle": "Tracking ist pausiert"
+      "pausedTitle": "Tracking ist pausiert",
+      "creditsTitle": "Dein OpenRouter-Konto hat kein Guthaben mehr",
+      "creditsBody": "Das Tracking ist pausiert. Lade bei OpenRouter Guthaben auf, dann geht es innerhalb einer Stunde von selbst weiter. Dein Guthaben steht unter Einstellungen → KI.",
+      "creditsCta": "Guthaben ansehen"
     },
     "ordinal": {
       "1": "1.",
@@ -11361,7 +11411,9 @@
       "makeFallback": "Verwenden, wenn nichts anderes gewählt ist",
       "isFallback": "Wird verwendet, wenn nichts anderes gewählt ist – neue Termine landen hier.",
       "nowFallback": "Wird jetzt verwendet, wenn nichts anderes gewählt ist",
-      "messagesHint2": "Per E-Mail unter Ihrem Firmennamen. SMS können später dazukommen."
+      "messagesHint2": "Per E-Mail unter Ihrem Firmennamen. SMS können später dazukommen.",
+      "ownerHintTop": "Jeder neue Termin in diesem Kalender geht an diese Person. Sie wird informiert, wenn jemand verschiebt oder absagt.",
+      "secMoreHintV2": "Pausen zwischen Terminen, wie kurzfristig gebucht werden kann, Zeitzone."
     },
     "detail": {
       "nobody": "Noch niemand",
@@ -11444,7 +11496,9 @@
       "kind": "Welche Art",
       "upcoming_one": "{{count}} anstehend",
       "upcoming_other": "{{count}} anstehend",
-      "fallback": "Wenn nichts anderes gewählt ist"
+      "fallback": "Wenn nichts anderes gewählt ist",
+      "handledBy": "zuständig: {{name}}",
+      "nobodyHandles": "noch niemand zuständig"
     },
     "title": "Termine",
     "messages": {
@@ -11684,6 +11738,28 @@
       "savedOnCard2": "Wir aktualisieren sie auf der Kundenkarte.",
       "cardUpdated": "Gespeichert und auf der Kundenkarte von {{name}} aktualisiert",
       "noCard": "Nur für diesen Termin – die Person ist noch nicht in Ihren Kunden."
+    },
+    "match": {
+      "isAppointment": "Das ist ein re:praesent-Termin",
+      "handledBy": "kümmert sich: {{name}}",
+      "nobody": "noch niemand zuständig",
+      "open": "Öffnen",
+      "linkExisting": "Das ist ein vorhandener Termin …",
+      "linked": "Verknüpft. Dieses Meeting zeigt jetzt diesen Termin.",
+      "linkFailed": "Das hat nicht geklappt. Versuch es noch einmal.",
+      "linkTitle": "Welcher Termin ist das?",
+      "linkSubtitle": "Termine von einem Tag vor bis einem Tag nach „{{title}}“.",
+      "noCandidates": "Keine Termine um diese Zeit. Mit „Zu Terminen hinzufügen“ wird dieses Meeting einer.",
+      "untitled": "Termin"
+    },
+    "handlers": {
+      "saved": "Gespeichert. Neue Termine in diesem Kalender gehen an diese Person.",
+      "failed": "Das wurde nicht gespeichert. Versuch es noch einmal.",
+      "title": "Deine Google- und Outlook-Kalender",
+      "subtitle": "Leg fest, wer sich um Termine kümmert, die dort landen – aus Formular, Chat oder „Zu Terminen hinzufügen“.",
+      "connectedIt": "hat ihn verbunden",
+      "titleDirect": "Termine direkt in Google oder Outlook",
+      "subtitleDirect": "Nur für Termine, die in diesen Kalendern liegen: ein Formular oder der Chat, der direkt in Google oder Outlook bucht, oder „Zu Terminen hinzufügen“ im Teamkalender. Termine in einem re:praesent-Kalender oben gehen immer an die Person, die dort eingestellt ist."
     }
   },
   "calendarView": {
@@ -11699,5 +11775,188 @@
     "event": "Was",
     "allDay": "Ganztägig",
     "showMore": "+{{count}} weitere"
+  },
+  "help": {
+    "nav": "Hilfe & Änderungen",
+    "metaTitle": "Hilfe & Änderungen",
+    "title": "Hilfe & Änderungen",
+    "subtitle": "Etwas auf Ihrer Website ist kaputt, oder Sie brauchen eine Änderung? Schreiben Sie es hier – wir antworten an derselben Stelle.",
+    "back": "Alle Meldungen",
+    "reportWord": "diese Meldung",
+    "unread": "Neue Antwort",
+    "today_one": "re:praesent braucht Ihre Antwort zu 1 Meldung",
+    "today_other": "re:praesent braucht Ihre Antwort zu {{count}} Meldungen",
+    "new": {
+      "cta": "Problem melden",
+      "title": "Problem melden oder Änderung anfragen",
+      "subtitle": "Wir antworten hier, und Sie bekommen dazu eine E-Mail.",
+      "sentTitle": "Ist angekommen",
+      "about": "Zu {{host}}",
+      "whichSite": "Welche Website?",
+      "noSite": "Etwas anderes",
+      "howBad": "Wie schlimm ist es?",
+      "what": "Was ist passiert?",
+      "whatPlaceholder": "z. B. Das Kontaktformular sendet nicht. Heute Morgen am Handy probiert, der Knopf dreht sich nur.",
+      "addPage": "+ Welche Seite? (optional)",
+      "page": "Welche Seite?",
+      "optional": "(optional)",
+      "pagePlaceholder": "Adresse aus dem Browser einfügen",
+      "addScreenshot": "Screenshot hinzufügen (optional)",
+      "pasteHint": "Tipp: Sie können einen Screenshot direkt einfügen.",
+      "failed": "Die Meldung ist nicht angekommen. Prüfen Sie Ihre Verbindung und senden Sie sie noch einmal.",
+      "send": "An re:praesent senden",
+      "sentBody": "Wir antworten hier und schicken Ihnen eine E-Mail an {{email}}.",
+      "sentBodyNoEmail": "Wir antworten hier und schicken Ihnen dazu eine E-Mail.",
+      "seeIt": "Meldung ansehen"
+    },
+    "severity": {
+      "urgent": "Website ist down oder kaputt",
+      "normal": "Etwas funktioniert nicht richtig",
+      "low": "Kleine Änderung oder Frage"
+    },
+    "severityHint": {
+      "urgent": "Niemand erreicht die Seite, oder eine wichtige Seite bzw. ein Formular geht nicht.",
+      "normal": "Eine Seite sieht falsch aus, ein Knopf oder Formular spinnt.",
+      "low": "Neuer Text oder Fotos, Öffnungszeiten, eine kurze Frage."
+    },
+    "status": {
+      "open": "Wir kümmern uns",
+      "waiting_on_client": "Wartet auf Ihre Antwort",
+      "resolved": "Erledigt"
+    },
+    "empty": {
+      "title": "Noch nichts gemeldet",
+      "body": "Wenn auf Ihrer Website etwas kaputtgeht oder geändert werden soll, melden Sie es hier. Sie sehen jede Antwort und den Stand."
+    },
+    "groups": {
+      "waiting": "Wartet auf Ihre Antwort",
+      "open": "Wir kümmern uns",
+      "done": "Erledigt"
+    },
+    "thread": {
+      "today": "Heute",
+      "yesterday": "Gestern",
+      "you": "Sie",
+      "sending": "Wird gesendet …",
+      "openScreenshot": "Screenshot öffnen",
+      "screenshot": "Screenshot",
+      "thePage": "Die Seite",
+      "sentOn": "Gesendet am {{date}}",
+      "waitingBanner": "Wir brauchen Ihre Antwort, um weiterzumachen. Antworten Sie unten.",
+      "doneBar": "Wir haben das als erledigt markiert. Noch nicht behoben?",
+      "reopen": "Ist noch nicht behoben",
+      "placeholderReopen": "Schreiben Sie, was Sie noch sehen. Mit dem Senden ist die Meldung wieder offen.",
+      "placeholder": "Antwort schreiben …",
+      "solved": "Hat sich erledigt",
+      "sendFailed": "Ihre Antwort ist nicht angekommen. Versuchen Sie es noch einmal.",
+      "markedDone": "Als erledigt markiert. Danke!",
+      "reopened": "Wieder offen. Wir schauen es uns noch einmal an.",
+      "statusFailed": "Das wurde nicht gespeichert. Versuchen Sie es noch einmal.",
+      "send": "Senden"
+    },
+    "event": {
+      "reopened": "{{who}} hat die Meldung wieder geöffnet",
+      "status": "{{who}} hat den Stand auf „{{status}}“ gesetzt",
+      "severity": "{{who}} hat es auf „{{severity}}“ geändert",
+      "email": "{{who}} hat Ihnen an {{to}} geschrieben: „{{subject}}“"
+    },
+    "files": {
+      "type": "Screenshots können PNG, JPG, WebP oder GIF sein.",
+      "size": "Jeder Screenshot darf bis zu 5 MB groß sein.",
+      "count": "Bis zu 3 Screenshots auf einmal.",
+      "remove": "Screenshot entfernen",
+      "addAnother": "Weiteren hinzufügen",
+      "add": "Screenshot hinzufügen",
+      "addShort": "Screenshot"
+    }
+  },
+  "support": {
+    "metaTitle": "Support",
+    "title": "Support",
+    "mine": "{{n}} bei dir",
+    "statusFilter": "Stand",
+    "segments": {
+      "open": "Antwort fällig",
+      "waiting": "Wartet",
+      "resolved": "Erledigt",
+      "all": "Alle"
+    },
+    "search": "Kunde, Website oder #Nummer",
+    "filters": {
+      "client": "Kunde",
+      "website": "Website",
+      "severity": "Dringlichkeit",
+      "assignee": "Wer",
+      "me": "Meine",
+      "nobody": "Noch niemand"
+    },
+    "sortTitle": "Reihenfolge ändern",
+    "sort": {
+      "severity": "Dringendste zuerst",
+      "activity": "Neueste zuerst"
+    },
+    "notReady": "Support ist auf diesem Server noch nicht eingeschaltet.",
+    "empty": {
+      "allClear": "Niemand wartet auf dich.",
+      "noMatch": "Keine Tickets zu diesen Filtern.",
+      "allClearBody": "Neue Tickets von Kunden landen zuerst hier.",
+      "noMatchBody": "Nimm einen Filter raus, um mehr zu sehen."
+    },
+    "more": "{{n}} von {{total}}. Grenz es mit einem Filter ein.",
+    "pick": "Wähl links ein Ticket. Mit ↑ ↓ gehst du durch die Liste.",
+    "us": "Wir",
+    "unread": "Ungelesen",
+    "sendFailed": "Nicht gesendet. Versuch es noch einmal.",
+    "sentResolved": "Gesendet und erledigt. Der Kunde bekommt eine E-Mail.",
+    "sent": "Gesendet. Der Kunde bekommt eine E-Mail.",
+    "saveFailed": "Das wurde nicht gespeichert. Versuch es noch einmal.",
+    "ticketWord": "dieses Ticket",
+    "controls": {
+      "status": "Stand",
+      "severity": "Dringlichkeit",
+      "assignee": "Wer kümmert sich"
+    },
+    "reopened_one": "Einmal wieder geöffnet",
+    "reopened_other": "{{count}}× wieder geöffnet",
+    "composer": {
+      "mode": "Antwort oder Notiz",
+      "note": "Interne Notiz",
+      "reply": "Kunden antworten",
+      "noteHint": "Sieht nur dein Team.",
+      "notePlaceholder": "Notiz fürs Team …",
+      "placeholder": "Antwort an {{client}} …",
+      "addNote": "Notiz speichern",
+      "sendResolve": "Senden & erledigen",
+      "send": "Senden",
+      "sendHint": "Senden setzt den Stand auf „Wartet auf Kunden“ und schickt eine E-Mail."
+    },
+    "severity": {
+      "urgent": "Dringend",
+      "normal": "Normal",
+      "low": "Niedrig"
+    },
+    "status": {
+      "open": "Offen",
+      "waiting_on_client": "Wartet auf Kunden",
+      "resolved": "Erledigt"
+    },
+    "thread": {
+      "note": "Interne Notiz"
+    },
+    "event": {
+      "assigned": "{{who}} hat es an {{name}} übergeben",
+      "unassigned": "{{who}} hat die Zuständigkeit entfernt"
+    },
+    "today_one": "1 Support-Ticket braucht eine Antwort",
+    "today_other": "{{count}} Support-Tickets brauchen eine Antwort",
+    "noteAdded": "Notiz gespeichert. Nur dein Team sieht sie.",
+    "email": {
+      "context": "Ticket #{{number}} · {{client}}",
+      "failed": "Die E-Mail ließ sich nicht öffnen. Versuch es noch einmal.",
+      "title": "{{name}} aus deinem Postfach schreiben",
+      "notSent": "Nicht gesendet",
+      "sent": "Gesendet",
+      "by": "E-Mail von {{who}}"
+    }
   }
 }

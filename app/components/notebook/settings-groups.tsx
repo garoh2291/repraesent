@@ -1,8 +1,7 @@
 import { Link, useLocation } from "react-router";
 import { useTranslation } from "react-i18next";
 import { ChevronRight } from "lucide-react";
-import { PILOT_FEATURE_LABEL_KEY } from "~/lib/feature-flags";
-import { PILOT_SETTINGS, useNavModel } from "~/lib/nav/use-nav-model";
+import { useNavModel } from "~/lib/nav/use-nav-model";
 import { cn } from "~/lib/utils";
 
 /**
@@ -30,13 +29,6 @@ export function SettingsGroups({ onNavigate }: { onNavigate?: () => void }) {
                 label={t(labelKey)}
                 active={pathname.startsWith(to)}
                 onNavigate={onNavigate}
-                pill={
-                  PILOT_SETTINGS.has(to) ? (
-                    <span className="rounded-full bg-foreground/10 px-1.5 py-0.5 text-[9.5px] font-semibold uppercase tracking-wider text-muted-foreground">
-                      {t(PILOT_FEATURE_LABEL_KEY, { defaultValue: "Demo" })}
-                    </span>
-                  ) : null
-                }
               />
             ))}
           </ul>

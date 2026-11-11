@@ -196,7 +196,7 @@ export function ComposeEmailDialog({
       dirtyRef.current = false;
       // Data first (the caller records the send), then the confirmation card
       // in place of the form; closing it shows a toast that outlives the card.
-      request.onSent?.();
+      request.onSent?.({ id: result.id, sent_at: result.sent_at ?? null });
       const first = to[0];
       const more = to.length - 1;
       setSent({

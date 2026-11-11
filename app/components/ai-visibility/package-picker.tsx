@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Check } from "lucide-react";
 import type { AiEngine, Cadence, EngineInfo, PackageKey } from "~/lib/api/ai-visibility";
@@ -234,14 +235,9 @@ export function PackagePicker({
         <div className="flex flex-wrap items-center gap-3">
           <div className="relative">
             <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[13px] text-muted-foreground">€</span>
-            <Input
-              type="number"
-              inputMode="decimal"
-              min={1}
-              step={1}
-              value={Math.round(value.monthly_cap_eur_cents / 100)}
-              onChange={(e) => onChange({ ...value, monthly_cap_eur_cents: Math.max(100, Math.round((Number(e.target.value) || 1) * 100)) })}
-              className="num h-10 w-32 pl-7"
+            <CapInput
+              cents={value.monthly_cap_eur_cents}
+              onCents={(c) => onChange({ ...value, monthly_cap_eur_cents: c })}
             />
           </div>
           <button
@@ -259,5 +255,48 @@ export function PackagePicker({
         ) : null}
       </div>
     </div>
+  );
+}
+
+/**
+ * Whole euros, typed freely. The field may be empty while you type (the old
+ * one snapped an empty field straight back to "1", so the 1 could never be
+ * deleted); a valid number is applied as you type, and leaving the field
+ * empty or at 0 puts back the last valid limit.
+ */
+function CapInput({ cents, onCents }: { cents: number; onCents: (cents: number) => void }) {
+  const euros = Math.round(cents / 100);
+  const [draft, setDraft] = useState(String(euros));
+  // Outside changes ("Use €40") replace the draft; our own typing doesn't loop.
+  useEffect(() => {
+    setDraft((d) => (Number(d) === euros ? d : String(euros)));
+  }, [euros]);
+  const commit = () => {
+    const n = Math.round(Number(draft.replace(",", ".")));
+    if (!draft.trim() || !Number.isFinite(n) || n < 1) {
+      setDraft(String(euros));
+      return;
+    }
+    setDraft(String(n));
+    if (n * 100 !== cents) onCents(n * 100);
+  };
+  return (
+    <Input
+      type="text"
+      inputMode="numeric"
+      autoComplete="off"
+      value={draft}
+      onChange={(e) => {
+        const next = e.target.value.replace(/[^\d]/g, "").slice(0, 6);
+        setDraft(next);
+        const n = Number(next);
+        if (next && Number.isFinite(n) && n >= 1) onCents(n * 100);
+      }}
+      onBlur={commit}
+      onKeyDown={(e) => {
+        if (e.key === "Enter") commit();
+      }}
+      className="num h-10 w-32 pl-7"
+    />
   );
 }

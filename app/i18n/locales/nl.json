@@ -96,7 +96,8 @@
         "billing": "Abonnement en facturen",
         "contact": "Een echt persoon uit ons team",
         "results": "Hoe het met de zaak gaat",
-        "websiteStaging": "De testkopie van uw website"
+        "websiteStaging": "De testkopie van uw website",
+        "help": "Iets kapot of een wijziging op uw site"
       },
       "switchBusiness": "Ander bedrijf kiezen"
     },
@@ -1412,7 +1413,7 @@
       "onboarding": "Onboarding",
       "emailNotifications": "E-mailmeldingen",
       "businessProfile": "Bedrijfsprofiel",
-      "support": "Support"
+      "support": "Contactknop"
     },
     "bcc": {
       "metaTitle": "E-mailkopieën (BCC)",
@@ -2027,6 +2028,39 @@
           "expired": "Dat duurde langer dan 10 minuten, de link is verlopen. Probeer het opnieuw.",
           "error": "OpenRouter gaf geen sleutel door. Probeer het opnieuw, of plak een sleutel."
         }
+      },
+      "statusNoCredits": "Gekoppeld · geen tegoed meer",
+      "balance": {
+        "title": "Tegoed",
+        "subtitle": "Wat er nog op uw OpenRouter-account staat. Chat en AI-zichtbaarheid stoppen als het op is.",
+        "refresh": "Nu controleren",
+        "unknown": "OpenRouter gaf het tegoed nu niet door. Probeer ‘Nu controleren’ over een minuut.",
+        "empty": "Niets meer over — antwoorden stoppen tot u aanvult",
+        "low": "Onder uw waarschuwing van {{amount}}",
+        "left": "nog te besteden",
+        "usedMonth": "Deze maand gebruikt",
+        "usedAll": "In totaal gebruikt",
+        "keyLimit": "Limiet van deze sleutel",
+        "checked": "Gecontroleerd {{when}}",
+        "addCredits": "Tegoed aanvullen bij OpenRouter"
+      },
+      "alert": {
+        "amountRequired": "Vul het bedrag in waarbij we u waarschuwen, bijvoorbeeld 5.",
+        "channelRequired": "Kies telefoon, e-mail of beide.",
+        "savedOn": "Waarschuwing bij laag tegoed staat aan.",
+        "savedOff": "Waarschuwing bij laag tegoed staat uit.",
+        "saveFailed": "Dat is niet opgeslagen. Probeer het opnieuw.",
+        "title": "Waarschuw me bij laag tegoed",
+        "subtitle": "We controleren één keer per dag en melden het hoogstens één keer per dag zolang het eronder zit.",
+        "amount": "Waarschuwen onder",
+        "how": "Hoe we u laten weten",
+        "phone": "Telefoon",
+        "email": "E-mail",
+        "noPhone": "Nog geen van uw telefoons krijgt meldingen.",
+        "turnOnPhone": "Telefoonmeldingen aanzetten",
+        "save": "Wijzigingen opslaan",
+        "turnOn": "Waarschuwing aanzetten",
+        "last": "Laatste waarschuwing {{when}}"
       }
     },
     "allowlist": {
@@ -2448,7 +2482,7 @@
       "error": "De valuta kon niet worden opgeslagen."
     },
     "support": {
-      "metaTitle": "Support",
+      "metaTitle": "Contactknop",
       "metaDescription": "Kies welke klantwerkruimtes „Contact met re:praesent” zien en wie hen antwoordt.",
       "searchPlaceholder": "Zoek werkruimtes of e-mail van eigenaar…",
       "filterLabel": "Tonen",
@@ -2532,6 +2566,12 @@
         "show_names": {
           "title": "Namen tonen op het vergrendelscherm",
           "desc": "Uitgeschakeld staat er alleen ‘Nieuwe aanvraag’. Wie het is, zie je als je de melding opent."
+        },
+        "support": {
+          "title": "Hulp & wijzigingen",
+          "desc": "Als re:praesent antwoordt op iets dat je bij Hulp & wijzigingen hebt gemeld, of het oplost. Altijd aan, binnen je actieve uren.",
+          "titleRoot": "Supporttickets",
+          "descRoot": "Nieuwe tickets, antwoorden van klanten en heropende tickets. Altijd aan, binnen je actieve uren."
         }
       },
       "hours": {
@@ -8741,7 +8781,13 @@
       "chunk": "passage",
       "understoodAs": "Begrepen als:",
       "reranked": "herordend",
-      "advancedHint": "Bekijk wat hij per antwoord heeft opgezocht."
+      "advancedHint": "Bekijk wat hij per antwoord heeft opgezocht.",
+      "errors": {
+        "credits": "Je OpenRouter-account heeft geen tegoed meer, dus de AI kan niet antwoorden. Vul aan op openrouter.ai en probeer het opnieuw. Je tegoed staat bij Instellingen → AI.",
+        "noKey": "Geen werkende OpenRouter-sleutel. Koppel hem bij Instellingen → AI en probeer het opnieuw.",
+        "limit": "De daglimiet van deze assistent is bereikt. Verhoog hem bij Limieten of probeer het morgen opnieuw.",
+        "generic": "De AI-dienst gaf geen antwoord. Probeer het over een minuut opnieuw."
+      }
     },
     "usage": {
       "title": "Activiteit",
@@ -9883,7 +9929,8 @@
       "sales": "Deals",
       "root": "re:praesent"
     },
-    "appointments": "Afspraken"
+    "appointments": "Afspraken",
+    "support": "Support"
   },
   "command": {
     "title": "Openen of zoeken",
@@ -10375,7 +10422,10 @@
       "keyTitle": "Koppel je OpenRouter-sleutel om te blijven volgen",
       "pausedBody": "Er worden geen vragen gesteld en er wordt niets uitgegeven tot je hervat.",
       "pausedCta": "Hervatten",
-      "pausedTitle": "Volgen is gepauzeerd"
+      "pausedTitle": "Volgen is gepauzeerd",
+      "creditsTitle": "Je OpenRouter-account heeft geen tegoed meer",
+      "creditsBody": "Het volgen staat op pauze. Vul tegoed aan bij OpenRouter en het gaat binnen het uur vanzelf verder. Je tegoed staat bij Instellingen → AI.",
+      "creditsCta": "Tegoed bekijken"
     },
     "ordinal": {
       "1": "1e",
@@ -11359,7 +11409,9 @@
       "makeFallback": "Gebruiken als er niets anders gekozen is",
       "isFallback": "Wordt gebruikt als er niets anders gekozen is – nieuwe afspraken komen hier.",
       "nowFallback": "Wordt nu gebruikt als er niets anders gekozen is",
-      "messagesHint2": "Per e-mail onder uw bedrijfsnaam. Sms'jes kunnen later worden toegevoegd."
+      "messagesHint2": "Per e-mail onder uw bedrijfsnaam. Sms'jes kunnen later worden toegevoegd.",
+      "ownerHintTop": "Elke nieuwe afspraak in deze agenda gaat naar deze persoon. Die hoort het als een klant verzet of afzegt.",
+      "secMoreHintV2": "Pauzes tussen afspraken, hoe kort van tevoren men kan boeken, tijdzone."
     },
     "detail": {
       "nobody": "Nog niemand",
@@ -11442,7 +11494,9 @@
       "kind": "Welk soort",
       "upcoming_one": "{{count}} komend",
       "upcoming_other": "{{count}} komend",
-      "fallback": "Als niets anders gekozen is"
+      "fallback": "Als niets anders gekozen is",
+      "handledBy": "door {{name}}",
+      "nobodyHandles": "nog niemand toegewezen"
     },
     "title": "Afspraken",
     "messages": {
@@ -11682,6 +11736,28 @@
       "savedOnCard2": "We werken hem bij op de klantkaart.",
       "cardUpdated": "Opgeslagen en bijgewerkt op de klantkaart van {{name}}",
       "noCard": "Alleen voor deze afspraak – deze persoon staat nog niet bij uw klanten."
+    },
+    "match": {
+      "isAppointment": "Dit is een re:praesent-afspraak",
+      "handledBy": "door {{name}}",
+      "nobody": "nog niemand toegewezen",
+      "open": "Openen",
+      "linkExisting": "Het is een bestaande afspraak…",
+      "linked": "Gekoppeld. Deze meeting toont nu die afspraak.",
+      "linkFailed": "Koppelen is niet gelukt. Probeer opnieuw.",
+      "linkTitle": "Welke afspraak is dit?",
+      "linkSubtitle": "Afspraken van een dag voor tot een dag na ‘{{title}}’.",
+      "noCandidates": "Geen afspraken rond die tijd. Gebruik ‘Toevoegen aan afspraken’ om er een van te maken.",
+      "untitled": "Afspraak"
+    },
+    "handlers": {
+      "saved": "Opgeslagen. Nieuwe afspraken in deze agenda gaan naar die persoon.",
+      "failed": "Dat is niet opgeslagen. Probeer opnieuw.",
+      "title": "Je Google- en Outlook-agenda's",
+      "subtitle": "Kies wie de afspraken oppakt die daar binnenkomen — via een formulier, de chat of ‘Toevoegen aan afspraken’.",
+      "connectedIt": "heeft hem gekoppeld",
+      "titleDirect": "Afspraken direct in Google of Outlook",
+      "subtitleDirect": "Alleen voor afspraken die in deze agenda's staan: een formulier of de chat die direct in Google of Outlook boekt, of ‘Toevoegen aan afspraken’ in de teamagenda. Afspraken in een re:praesent-agenda hierboven gaan altijd naar de persoon die op die agenda staat."
     }
   },
   "calendarView": {
@@ -11697,5 +11773,188 @@
     "event": "Wat",
     "allDay": "Hele dag",
     "showMore": "+{{count}} meer"
+  },
+  "help": {
+    "nav": "Hulp & wijzigingen",
+    "metaTitle": "Hulp & wijzigingen",
+    "title": "Hulp & wijzigingen",
+    "subtitle": "Is er iets stuk op uw website, of heeft u een wijziging nodig? Meld het hier, wij antwoorden op dezelfde plek.",
+    "back": "Alle meldingen",
+    "reportWord": "deze melding",
+    "unread": "Nieuw antwoord",
+    "today_one": "re:praesent wacht op uw antwoord bij 1 melding",
+    "today_other": "re:praesent wacht op uw antwoord bij {{count}} meldingen",
+    "new": {
+      "cta": "Probleem melden",
+      "title": "Probleem melden of wijziging vragen",
+      "subtitle": "We antwoorden hier, en u krijgt een e-mail als we dat doen.",
+      "sentTitle": "Ontvangen",
+      "about": "Over {{host}}",
+      "whichSite": "Welke website?",
+      "noSite": "Iets anders",
+      "howBad": "Hoe erg is het?",
+      "what": "Wat is er aan de hand?",
+      "whatPlaceholder": "bijv. Het contactformulier verstuurt niet. Vanochtend op mijn telefoon geprobeerd, de knop blijft draaien.",
+      "addPage": "+ Welke pagina? (optioneel)",
+      "page": "Welke pagina?",
+      "optional": "(optioneel)",
+      "pagePlaceholder": "Plak het adres uit uw browser",
+      "addScreenshot": "Screenshot toevoegen (optioneel)",
+      "pasteHint": "Tip: u kunt een screenshot direct plakken.",
+      "failed": "De melding is niet verstuurd. Controleer uw verbinding en stuur hem opnieuw.",
+      "send": "Naar re:praesent sturen",
+      "sentBody": "We antwoorden hier en mailen u op {{email}}.",
+      "sentBodyNoEmail": "We antwoorden hier en sturen u een e-mail.",
+      "seeIt": "Melding bekijken"
+    },
+    "severity": {
+      "urgent": "Website ligt eruit of is kapot",
+      "normal": "Iets werkt niet goed",
+      "low": "Kleine wijziging of vraag"
+    },
+    "severityHint": {
+      "urgent": "Niemand komt op de site, of een belangrijke pagina of formulier werkt niet.",
+      "normal": "Een pagina ziet er verkeerd uit, een knop of formulier doet raar.",
+      "low": "Nieuwe tekst of foto's, openingstijden, een korte vraag."
+    },
+    "status": {
+      "open": "We zijn ermee bezig",
+      "waiting_on_client": "Wacht op uw antwoord",
+      "resolved": "Opgelost"
+    },
+    "empty": {
+      "title": "Nog niets gemeld",
+      "body": "Als er iets stuk gaat of moet veranderen op uw website, meld het hier. U ziet elk antwoord en hoe het ervoor staat."
+    },
+    "groups": {
+      "waiting": "Wacht op uw antwoord",
+      "open": "We zijn ermee bezig",
+      "done": "Opgelost"
+    },
+    "thread": {
+      "today": "Vandaag",
+      "yesterday": "Gisteren",
+      "you": "U",
+      "sending": "Versturen…",
+      "openScreenshot": "Screenshot openen",
+      "screenshot": "Screenshot",
+      "thePage": "De pagina",
+      "sentOn": "Verstuurd op {{date}}",
+      "waitingBanner": "We hebben uw antwoord nodig om verder te gaan. Antwoord hieronder.",
+      "doneBar": "We hebben dit als opgelost gemarkeerd. Nog niet verholpen?",
+      "reopen": "Het is nog niet verholpen",
+      "placeholderReopen": "Schrijf wat u nog ziet. Met versturen gaat de melding weer open.",
+      "placeholder": "Schrijf een antwoord…",
+      "solved": "Dit is opgelost",
+      "sendFailed": "Uw antwoord is niet verstuurd. Probeer het opnieuw.",
+      "markedDone": "Als opgelost gemarkeerd. Dank u!",
+      "reopened": "Weer open. We kijken er opnieuw naar.",
+      "statusFailed": "Dat is niet opgeslagen. Probeer het opnieuw.",
+      "send": "Versturen"
+    },
+    "event": {
+      "reopened": "{{who}} heeft het heropend",
+      "status": "{{who}} zette het op ‘{{status}}’",
+      "severity": "{{who}} veranderde het in ‘{{severity}}’",
+      "email": "{{who}} heeft u gemaild op {{to}}: ‘{{subject}}’"
+    },
+    "files": {
+      "type": "Screenshots kunnen PNG, JPG, WebP of GIF zijn.",
+      "size": "Elke screenshot mag tot 5 MB zijn.",
+      "count": "Maximaal 3 screenshots tegelijk.",
+      "remove": "Screenshot verwijderen",
+      "addAnother": "Nog een toevoegen",
+      "add": "Screenshot toevoegen",
+      "addShort": "Screenshot"
+    }
+  },
+  "support": {
+    "metaTitle": "Support",
+    "title": "Support",
+    "mine": "{{n}} van jou",
+    "statusFilter": "Status",
+    "segments": {
+      "open": "Antwoord nodig",
+      "waiting": "Wacht",
+      "resolved": "Opgelost",
+      "all": "Alle"
+    },
+    "search": "Klant, site of #nummer",
+    "filters": {
+      "client": "Klant",
+      "website": "Website",
+      "severity": "Ernst",
+      "assignee": "Wie",
+      "me": "Mijn",
+      "nobody": "Nog niemand"
+    },
+    "sortTitle": "Volgorde wijzigen",
+    "sort": {
+      "severity": "Dringendste eerst",
+      "activity": "Nieuwste eerst"
+    },
+    "notReady": "Support staat op deze server nog niet aan.",
+    "empty": {
+      "allClear": "Niemand wacht op je.",
+      "noMatch": "Geen tickets bij deze filters.",
+      "allClearBody": "Nieuwe tickets van klanten komen hier eerst binnen.",
+      "noMatchBody": "Haal een filter weg om meer te zien."
+    },
+    "more": "{{n}} van {{total}}. Verfijn met een filter.",
+    "pick": "Kies links een ticket. Met ↑ ↓ blader je erdoor.",
+    "us": "Wij",
+    "unread": "Ongelezen",
+    "sendFailed": "Niet verstuurd. Probeer opnieuw.",
+    "sentResolved": "Verstuurd en opgelost. De klant krijgt een e-mail.",
+    "sent": "Verstuurd. De klant krijgt een e-mail.",
+    "saveFailed": "Dat is niet opgeslagen. Probeer opnieuw.",
+    "ticketWord": "dit ticket",
+    "controls": {
+      "status": "Status",
+      "severity": "Ernst",
+      "assignee": "Wie pakt het op"
+    },
+    "reopened_one": "Eén keer heropend",
+    "reopened_other": "{{count}}× heropend",
+    "composer": {
+      "mode": "Antwoord of notitie",
+      "note": "Interne notitie",
+      "reply": "Klant antwoorden",
+      "noteHint": "Alleen je team ziet dit.",
+      "notePlaceholder": "Een notitie voor het team…",
+      "placeholder": "Antwoord aan {{client}}…",
+      "addNote": "Notitie toevoegen",
+      "sendResolve": "Versturen & oplossen",
+      "send": "Versturen",
+      "sendHint": "Versturen zet het op ‘Wacht op klant’ en mailt de klant."
+    },
+    "severity": {
+      "urgent": "Dringend",
+      "normal": "Normaal",
+      "low": "Laag"
+    },
+    "status": {
+      "open": "Open",
+      "waiting_on_client": "Wacht op klant",
+      "resolved": "Opgelost"
+    },
+    "thread": {
+      "note": "Interne notitie"
+    },
+    "event": {
+      "assigned": "{{who}} gaf het aan {{name}}",
+      "unassigned": "{{who}} haalde de toewijzing weg"
+    },
+    "today_one": "1 supportticket wacht op antwoord",
+    "today_other": "{{count}} supporttickets wachten op antwoord",
+    "noteAdded": "Notitie toegevoegd. Alleen je team ziet hem.",
+    "email": {
+      "context": "Ticket #{{number}} · {{client}}",
+      "failed": "De e-mail kon niet worden geopend. Probeer opnieuw.",
+      "title": "{{name}} mailen vanuit je mailbox",
+      "notSent": "Niet verstuurd",
+      "sent": "Verstuurd",
+      "by": "E-mail van {{who}}"
+    }
   }
 }

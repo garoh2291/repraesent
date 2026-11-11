@@ -119,7 +119,7 @@ export function PlaygroundPanel({ assistantId }: { assistantId: string }) {
           patch(botId, (x) => ({
             ...x,
             streaming: false,
-            error: `${e.code}: ${e.message}`,
+            error: playgroundErrorText(e.code, e.message, t),
           })),
       },
       controller.signal,
@@ -383,4 +383,25 @@ function TurnView({
       {turn.done?.debug ? <DebugTable debug={turn.done.debug} /> : null}
     </div>
   );
+}
+
+/**
+ * What went wrong, for the owner testing their assistant: what happened and
+ * what fixes it, never a raw code like "upstream_failed".
+ */
+function playgroundErrorText(code: string, message: string, t: (k: string, d: string) => string): string {
+  switch (code) {
+    case "ai_credits_exhausted":
+      return t(
+        "aiAssistants.playground.errors.credits",
+        "Your OpenRouter account has no credits left, so the AI can't answer. Add credits on openrouter.ai, then try again. Your balance is in Settings → AI.",
+      );
+    case "workspace_ai_not_configured":
+      return t("aiAssistants.playground.errors.noKey", "No working OpenRouter key. Connect it in Settings → AI, then try again.");
+    case "rate_limited":
+    case "budget_exhausted":
+      return message || t("aiAssistants.playground.errors.limit", "The daily limit for this assistant is reached. Raise it under Limits or try again tomorrow.");
+    default:
+      return t("aiAssistants.playground.errors.generic", "The AI service didn't answer. Try again in a minute.");
+  }
 }

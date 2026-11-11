@@ -29,8 +29,8 @@ export interface ComposeRequest {
   contextLabel?: string;
   /** Query keys to invalidate after a successful send. */
   invalidateKeys?: readonly (readonly unknown[])[];
-  /** Runs once, right after a successful send (record it, refresh data). */
-  onSent?: () => void;
+  /** Runs once, right after a successful send (record it, refresh data). Gets the sent email's id. */
+  onSent?: (sent: { id: string; sent_at: string | null }) => void;
   /**
    * Runs when the "Email sent" card is closed (Done, Esc, click outside) —
    * the moment for a follow-up dialog such as "How did it go?", so two

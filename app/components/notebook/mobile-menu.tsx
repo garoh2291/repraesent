@@ -18,6 +18,7 @@ import {
   Settings,
   Store,
   Users,
+  LifeBuoy,
 } from "lucide-react";
 import { Drawer, DrawerContent, DrawerDescription, DrawerTitle } from "~/components/ui/drawer";
 import { SafeImg } from "~/components/atom/safe-img";
@@ -25,13 +26,13 @@ import { LanguageSwitcher } from "~/components/language-switcher";
 import { ContactSalesDialog } from "~/components/sales-contact/contact-sales-dialog";
 import { openCommandPalette } from "~/components/notebook/command-palette";
 import { useAuthContext } from "~/providers/auth-provider";
-import { PILOT_FEATURE_LABEL_KEY } from "~/lib/feature-flags";
 import { useNavSections } from "~/lib/nav/sections";
-import { PILOT_SETTINGS, useNavModel } from "~/lib/nav/use-nav-model";
+import { useNavModel } from "~/lib/nav/use-nav-model";
 import { cn } from "~/lib/utils";
 import { SettingsGroups } from "~/components/notebook/settings-groups";
 import { applyWaitingUpdate, useUpdateWaiting } from "~/lib/pwa/update-store";
 import { EASE_OUT, SPRING } from "~/lib/motion";
+import { useSupportBadges } from "~/components/support/use-support-badges";
 
 /**
  * The phone menu: a light sheet that rises from the bottom (opened by "More"
@@ -359,10 +360,11 @@ function MainTiles({
   const location = useLocation();
   const nav = useNavModel();
   const sections = useNavSections();
+  const support = useSupportBadges();
   const website = sections?.find((s) => s.key === "website");
   const tiles: Tile[] = [];
   // Results leaves the tab bar when Appointments has a place there.
-  const results = sections?.some((s) => s.key === "appointments")
+  const results = sections?.some((s) => s.key === "appointments" || s.key === "support")
     ? sections.find((s) => s.key === "results")
     : undefined;
   if (results) {
@@ -422,6 +424,18 @@ function MainTiles({
       active: location.pathname === "/billing",
     },
   );
+  if (support.helpAvailable) {
+    tiles.push({
+      key: "help",
+      label: support.helpWaiting
+        ? `${t("help.nav", "Help & changes")} · ${support.helpWaiting}`
+        : t("help.nav", "Help & changes"),
+      hint: t("nav.mobileMenu.hints.help", "Something broken, or a change on your site"),
+      icon: LifeBuoy,
+      to: "/help",
+      active: location.pathname.startsWith("/help"),
+    });
+  }
   if (nav.showContactSales) {
     tiles.push({
       key: "contact",

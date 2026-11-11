@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router";
 import { useQuery } from "@tanstack/react-query";
+import { matchCalendarEvents } from "~/lib/api/appointment-book";
 import { useTranslation } from "react-i18next";
 import moment from "moment-timezone";
 import type { View } from "react-big-calendar";
@@ -92,6 +93,16 @@ export default function AppointmentsCalendarPage() {
 
   const colorByKey: Record<string, string> = {};
   for (const c of calendars.data ?? []) colorByKey[c.key] = c.color || "#141516";
+  // Repraesent-calendar copies and hand-linked meetings are matched on the
+  // server (copy target key / linked_event_key), so they show once too.
+  const otherIds = (other.data?.events ?? []).map((e) => e.id);
+  const matched = useQuery({
+    queryKey: ["calendar-event-match-bulk", otherIds],
+    queryFn: () => matchCalendarEvents(otherIds),
+    enabled: showOther && otherIds.length > 0,
+    staleTime: 60_000,
+    placeholderData: (prev) => prev,
+  });
   const events: UnifiedCalendarEvent[] = useMemo(() => {
     const mine = (list.data ?? [])
       .filter((a) => a.status !== "cancelled")
@@ -112,11 +123,11 @@ export default function AppointmentsCalendarPage() {
     );
     const theirs = showOther
       ? (other.data?.events ?? [])
-          .filter((e) => !added.has(e.id))
+          .filter((e) => !added.has(e.id) && !matched.data?.[e.id])
           .map((e) => ({ ...e, id: `ext:${e.id}`, calendarKey: `other:${e.calendarKey}` }))
       : [];
     return [...theirs, ...mine];
-  }, [list.data, hidden, other.data, showOther, t]);
+  }, [list.data, hidden, other.data, showOther, t, matched.data]);
   for (const e of events) if (e.calendarKey.startsWith("other:")) colorByKey[e.calendarKey] = OTHER_COLOR;
 
   if (!allowed) return null;

@@ -19,6 +19,8 @@ import { Input } from "~/components/ui/input";
 import { CalendarDot } from "~/components/appointment-book/appointment-bits";
 import { useAppointmentBookGate } from "~/components/appointment-book/use-appointment-book-gate";
 import { cn } from "~/lib/utils";
+import { ConnectedCalendarHandlers } from "~/components/appointment-book/connected-calendar-handlers";
+import { useWorkspaceMembers } from "~/lib/hooks/useWorkspaceMembers";
 
 export function meta() {
   return [{ title: `${i18n.t("appointmentBook.calendars.metaTitle", "Your calendars")} - Repraesent` }];
@@ -68,6 +70,7 @@ export default function AppointmentCalendarsPage() {
           {calendars.isLoading ? <div className="h-32 animate-pulse rounded-xl bg-muted" /> : null}
         </div>
       )}
+      <ConnectedCalendarHandlers />
       {creating ? <NewCalendarSheet onOpenChange={setCreating} /> : null}
     </PageContainer>
   );
@@ -90,6 +93,9 @@ function hoursSummary(c: AppointmentCalendar, locale: string, closed: string): s
 function CalendarCard({ calendar: c }: { calendar: AppointmentCalendar }) {
   const { t, i18n: i } = useTranslation();
   const off = c.status === "disabled";
+  const members = useWorkspaceMembers();
+  const owner = (members.data?.members ?? []).find((m) => m.user_id === c.owner_user_id);
+  const ownerName = owner ? [owner.user_first_name, owner.user_last_name].filter(Boolean).join(" ") || owner.user_email : null;
   const length =
     c.booking_unit === "day"
       ? t("appointmentBook.wholeDay", "Whole day")
@@ -125,6 +131,12 @@ function CalendarCard({ calendar: c }: { calendar: AppointmentCalendar }) {
           <p className="text-[13px] text-muted-foreground">{hoursSummary(c, i.language, t("appointmentBook.settings.closed", "Closed"))}</p>
           <p className="num text-[13px] text-foreground">
             {t("appointmentBook.calendars.upcoming", "{{count}} coming up", { count: c.upcoming_count })}
+            <span className="text-muted-foreground">
+              {" · "}
+              {ownerName
+                ? t("appointmentBook.calendars.handledBy", "handled by {{name}}", { name: ownerName })
+                : t("appointmentBook.calendars.nobodyHandles", "nobody handles it yet")}
+            </span>
           </p>
         </div>
         <ChevronRight className="mt-1 size-4 shrink-0 text-muted-foreground" aria-hidden />

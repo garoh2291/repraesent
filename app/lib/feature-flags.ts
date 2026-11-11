@@ -1,7 +1,8 @@
 import { useAuthContext } from "~/providers/auth-provider";
 
 /**
- * Workspaces allowed to see features that are still being piloted.
+ * Workspaces allowed to see features that are still being piloted (today
+ * only Google review asks).
  * `0941b49b-…` is re:praesent, our own workspace; `4681cb1b-…` is the first
  * customer pilot; `afef2cc9-…` is Küchenwelten Trossingen (added 2026-10-28).
  * Keep in step with nestjs-monolith `common/pilot-workspaces.ts`.
@@ -14,121 +15,35 @@ export const PILOT_WORKSPACE_IDS: ReadonlySet<string> = new Set([
 ]);
 
 /**
- * Pilot features: on in development, and in production only for the pilot
- * workspaces above (plus single features in `EARLY_ACCESS` below).
+ * Feature flags (2026-11-12): every feature is released to every workspace —
+ * workflows, Connected apps (integrations), email campaigns, the website AI
+ * assistant and Appointments. No "Demo" pills, no route gate.
  *
- * Two things enforce them on the client: the sidebar hides the entries (and
- * labels them "Demo" for pilots), and `PilotRouteGate` in the dashboard layout
- * bounces any route listed in `PILOT_ROUTES` back to `/` for workspaces
- * outside the set. The API endpoints behind them are unchanged, so this is a
- * product boundary, not a security one. Deleting a flag once its feature
- * ships to everyone is the intended end state.
+ * Only Google review asks stay a pilot: they call the Google Places API (paid)
+ * and put a review link on the public deal-tracking page. The API enforces it
+ * too (nestjs-monolith `common/pilot-workspaces.ts`).
  */
-export type PilotFeature =
-  /** Workflow builder. */
-  | "workflows"
-  /** Settings → Integrations (Stripe Connect). Products/invoicing follow it, since connecting happens there. */
-  | "integrations"
-  /** Email marketing: /campaigns, /segments, /email-templates. */
-  | "emailCampaigns"
-  /** Website AI assistant: /ai-assistants. Settings → AI (the workspace key) is open to everyone. */
-  | "aiAssistant"
-  /**
-   * Google review asks: after-the-job sheet, Today list, Results line, review
-   * card. GOOGLE_REVIEWS_PLAN.md. The API gates it too (nestjs-monolith
-   * `common/pilot-workspaces.ts`) because it calls Google and shows on a public page.
-   */
-  | "googleReviews"
-  /**
-   * Appointments as their own section: Repraesent calendars, the appointment
-   * book, customer messages. APPOINTMENTS_PLAN.md. Not in PILOT_ROUTES on
-   * purpose — `/appointments` is also where the legacy booking page lives, and
-   * the pages redirect themselves instead.
-   */
-  | "appointmentBook";
+export type PilotFeature = "googleReviews";
 
-/** i18n key of the label the sidebar shows next to a piloted entry. */
-export const PILOT_FEATURE_LABEL_KEY = "nav.demoBadge";
+/** Released features — always on. Kept as names so callers read naturally. */
+export type ReleasedFeature = "workflows" | "integrations" | "emailCampaigns" | "aiAssistant" | "appointmentBook";
 
-/**
- * Route prefixes that belong to a pilot feature. Matched on whole path
- * segments, so `/campaigns-old` is not `/campaigns`. Longer prefixes win
- * (`/settings/integrations` before anything a bare `/settings` might one day claim).
- */
-export const PILOT_ROUTES: ReadonlyArray<{
-  prefix: string;
-  feature: PilotFeature;
-}> = [
-  { prefix: "/workflows", feature: "workflows" },
-  { prefix: "/campaigns", feature: "emailCampaigns" },
-  { prefix: "/segments", feature: "emailCampaigns" },
-  { prefix: "/email-templates", feature: "emailCampaigns" },
-  { prefix: "/ai-assistants", feature: "aiAssistant" },
-  { prefix: "/settings/integrations", feature: "integrations" },
-];
-
-function pathMatchesPrefix(pathname: string, prefix: string): boolean {
-  if (pathname === prefix) return true;
-  if (!pathname.startsWith(prefix)) return false;
-  const next = pathname.charAt(prefix.length);
-  return next === "/" || next === "?" || next === "#";
-}
-
-/** The pilot feature a pathname belongs to, or null for public routes. */
-export function pilotFeatureForPath(pathname: string): PilotFeature | null {
-  const clean = pathname.replace(/\/+$/, "") || "/";
-  let best: { prefix: string; feature: PilotFeature } | null = null;
-  for (const route of PILOT_ROUTES) {
-    if (!pathMatchesPrefix(clean, route.prefix)) continue;
-    if (!best || route.prefix.length > best.prefix.length) best = route;
-  }
-  return best?.feature ?? null;
-}
-
-/**
- * Customers given single pilot features ahead of everyone else. The pilot
- * workspaces above get every feature; these get only what is listed, and see
- * no "Demo" pill.
- */
-const EARLY_ACCESS: Readonly<Record<string, ReadonlyArray<PilotFeature>>> = {
-  // The Amara Estate: appointments, and the workflows behind their reminders
-  // (APPOINTMENTS_PLAN.md).
-  "d50fe320-70ce-4d9a-a058-34f17a2a2904": ["appointmentBook", "workflows"],
-};
-
-/**
- * Without `feature`: whether this is one of our pilot workspaces (all pilots
- * on, "Demo" pill shown). With `feature`: whether that one feature is on,
- * counting early access.
- */
-export function isPilotFeatureEnabled(
-  workspaceId: string | null | undefined,
-  feature?: PilotFeature
-): boolean {
+/** Whether a pilot feature is on for this workspace (development: always). */
+export function isPilotFeatureEnabled(workspaceId: string | null | undefined, feature: PilotFeature): boolean {
   if (import.meta.env.DEV) return true;
   if (!workspaceId) return false;
-  if (PILOT_WORKSPACE_IDS.has(workspaceId)) return true;
-  return !!feature && (EARLY_ACCESS[workspaceId]?.includes(feature) ?? false);
+  return feature === "googleReviews" && PILOT_WORKSPACE_IDS.has(workspaceId);
 }
 
-/**
- * Which pilot features the current workspace may see.
- *
- * Returns a flag per feature rather than one boolean so each can be released
- * independently — the point is that they stop being a single switch the moment
- * one of them ships.
- */
-export function usePilotFeatures(): Record<PilotFeature, boolean> {
+/** Which features the current workspace may see: everything, Google reviews only for pilots. */
+export function usePilotFeatures(): Record<PilotFeature | ReleasedFeature, boolean> {
   const { currentWorkspace } = useAuthContext();
-  const on = (feature: PilotFeature) =>
-    isPilotFeatureEnabled(currentWorkspace?.id, feature);
-
   return {
-    workflows: on("workflows"),
-    integrations: on("integrations"),
-    emailCampaigns: on("emailCampaigns"),
-    aiAssistant: on("aiAssistant"),
-    googleReviews: on("googleReviews"),
-    appointmentBook: on("appointmentBook"),
+    workflows: true,
+    integrations: true,
+    emailCampaigns: true,
+    aiAssistant: true,
+    appointmentBook: true,
+    googleReviews: isPilotFeatureEnabled(currentWorkspace?.id, "googleReviews"),
   };
 }

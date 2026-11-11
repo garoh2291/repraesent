@@ -53,7 +53,7 @@ export interface Project {
   prompt_limit: number;
   monthly_cap_eur_cents: number;
   status: "setup" | "active" | "paused";
-  paused_reason: "manual" | "cap" | "key" | null;
+  paused_reason: "manual" | "cap" | "key" | "credits" | null;
   next_run_at: string | null;
   last_run_at: string | null;
   created_at: string;
@@ -135,6 +135,8 @@ export interface KeyState {
   connected: boolean;
   status: string | null;
   last_error: string | null;
+  /** credits: key works but the OpenRouter account is empty; revoked: key rejected. */
+  problem?: "credits" | "revoked" | null;
 }
 
 export type Status =

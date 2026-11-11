@@ -1,6 +1,9 @@
 import { useEffect, useState } from "react";
 import { useLocation } from "react-router";
-import { useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { BalanceCard, LowBalanceAlertCard } from "~/components/settings-ai/balance-cards";
+import { getLowBalanceAlert } from "~/lib/api/workspace-ai";
+import { useAuthContext } from "~/providers/auth-provider";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import {
@@ -73,6 +76,13 @@ export default function SettingsAi() {
 
   const canManage = useCanManageWorkspaceAi();
   const status = useWorkspaceAi();
+  const { currentWorkspace } = useAuthContext();
+  const lowAlert = useQuery({
+    queryKey: ["workspace-ai-low-balance", currentWorkspace?.id ?? null],
+    queryFn: getLowBalanceAlert,
+    enabled: !!status.data?.connected,
+    retry: false,
+  });
 
   return (
     <div className="space-y-6 sm:space-y-8 app-fade-up app-fade-up-d2">
@@ -89,6 +99,13 @@ export default function SettingsAi() {
         ) : (
           <KeyCard canManage={canManage} />
         )}
+
+        {status.data?.connected ? (
+          <>
+            <BalanceCard threshold={lowAlert.data?.enabled ? lowAlert.data.threshold_usd : null} problem={status.data.problem} />
+            <LowBalanceAlertCard canManage={canManage} />
+          </>
+        ) : null}
 
         <SpendCard />
 
@@ -346,7 +363,12 @@ function KeyCard({ canManage }: { canManage: boolean }) {
               <h3 className="text-sm font-semibold text-foreground">
                 {t("settings.ai.cardTitle")}
               </h3>
-              {isConnected && !revoked ? (
+              {isConnected && !revoked && data?.problem === "credits" ? (
+                <span className="inline-flex items-center gap-1 rounded-full bg-marker px-2 py-0.5 text-[11px] font-medium text-foreground">
+                  <TriangleAlert className="h-3 w-3" />
+                  {t("settings.ai.statusNoCredits", "Connected · no credits left")}
+                </span>
+              ) : isConnected && !revoked ? (
                 <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/10 px-2 py-0.5 text-[11px] font-medium text-emerald-600 dark:text-emerald-400">
                   <BadgeCheck className="h-3 w-3" />
                   {t("settings.ai.statusConnected")}

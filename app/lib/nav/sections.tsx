@@ -32,6 +32,7 @@ import {
   BookOpen,
   SlidersHorizontal,
   FlaskConical,
+  LifeBuoy,
 } from "lucide-react";
 import * as LucideIcons from "lucide-react";
 import { OpenAiMark } from "~/components/icons/openai-mark";
@@ -68,7 +69,7 @@ import { usePipelinesQuery } from "~/lib/hooks/usePipelines";
  * demo, Stripe, WordPress SSO, calendar sources) is kept with the same meaning.
  */
 
-export type SectionKey = "today" | "customers" | "deals" | "appointments" | "results" | "website";
+export type SectionKey = "today" | "customers" | "deals" | "appointments" | "support" | "results" | "website";
 
 export type IconType = ComponentType<{ className?: string }>;
 
@@ -285,21 +286,18 @@ export function useNavSections(): NavSection[] | null {
         label: t("nav.emailCampaigns", "Campaigns"),
         to: "/campaigns",
         icon: Send,
-        pilot: true,
       },
       {
         key: "segments",
         label: t("nav.segments", "Segments"),
         to: "/segments",
         icon: UsersRound,
-        pilot: true,
       },
       {
         key: "templates",
         label: t("nav.emailTemplates", "Templates"),
         to: "/email-templates",
         icon: LayoutTemplate,
-        pilot: true,
       },
     );
   }
@@ -309,7 +307,6 @@ export function useNavSections(): NavSection[] | null {
       label: t("nav.workflows", "Workflows"),
       to: "/workflows",
       icon: Workflow,
-      pilot: true,
     });
   }
 
@@ -486,7 +483,6 @@ export function useNavSections(): NavSection[] | null {
       label: t("sections.tabs.aiChat", "AI chat"),
       to: "/ai-assistants",
       icon: Bot,
-      pilot: true,
     });
   }
   website.push({
@@ -594,8 +590,20 @@ export function useNavSections(): NavSection[] | null {
             to: "/appointments",
             match: ["/appointments", "/calendar", "/instructions"],
             tabs: appointments,
-            // Our own reminder: early-access customers see no pill.
-            pilot: isPilotFeatureEnabled(currentWorkspace.id),
+          },
+        ]
+      : []),
+    // Root workspace only: the support queue is the team's daily job
+    // (SUPPORT_TICKETS_PLAN.md). Customers reach Help & changes from the menu.
+    ...(currentWorkspace.is_root === true
+      ? [
+          {
+            key: "support" as const,
+            label: t("sections.support", "Support"),
+            icon: LifeBuoy,
+            to: "/support",
+            match: ["/support"],
+            tabs: [] as SectionTab[],
           },
         ]
       : []),

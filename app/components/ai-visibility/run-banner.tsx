@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router";
 import { useTranslation } from "react-i18next";
-import { ArrowRight, KeyRound, PauseCircle, TriangleAlert } from "lucide-react";
+import { ArrowRight, KeyRound, PauseCircle, TriangleAlert, Wallet } from "lucide-react";
 import { streamRun, type BatchProgress, type ProjectState } from "~/lib/api/ai-visibility";
 import { useInvalidateAiVisibility } from "~/lib/hooks/useAiVisibility";
 import { cn } from "~/lib/utils";
@@ -92,10 +92,21 @@ export function StateNotice({ state, className }: { state: ProjectState; classNa
   let body: string | null = null;
   let action: { to: string; label: string } | null = null;
 
-  if (keyBroken || (p.status === "paused" && p.paused_reason === "key")) {
+  const noCredits = state.key.problem === "credits" || (p.status === "paused" && p.paused_reason === "credits");
+  if (state.key.connected && noCredits) {
+    // The key works; the OpenRouter account behind it is empty. Saying
+    // "connect your key" here sent people to a page that said "Connected".
+    icon = <Wallet className="size-4" />;
+    title = t("aiVisibility.notice.creditsTitle", "Your OpenRouter account is out of credits");
+    body = t(
+      "aiVisibility.notice.creditsBody",
+      "Tracking is paused. Add credits on OpenRouter and it starts again by itself within the hour. Your balance is in Settings → AI.",
+    );
+    action = { to: "/settings/ai", label: t("aiVisibility.notice.creditsCta", "See balance") };
+  } else if (keyBroken || (p.status === "paused" && p.paused_reason === "key")) {
     icon = state.key.status === "revoked" ? <TriangleAlert className="size-4" /> : <KeyRound className="size-4" />;
     title = t("aiVisibility.notice.keyTitle", "Connect your OpenRouter key to keep tracking");
-    body = state.key.last_error
+    body = state.key.last_error && !state.key.last_error.startsWith("credits:")
       ? t("aiVisibility.notice.keyBodyError", "OpenRouter said: {{error}}. Tracking is paused and resumes by itself once the key works.", { error: state.key.last_error })
       : t("aiVisibility.notice.keyBody", "Questions are asked on your own OpenRouter key, the same one your AI chat uses. Tracking resumes by itself once it's connected.");
     action = { to: "/settings/ai", label: t("aiVisibility.notice.keyCta", "Open Settings → AI") };

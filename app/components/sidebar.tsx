@@ -25,11 +25,11 @@ import {
   X,
   Search,
   Headset,
+  LifeBuoy,
 } from "lucide-react";
 import { SafeImg } from "~/components/atom/safe-img";
 
 import { useAuthContext } from "~/providers/auth-provider";
-import { PILOT_FEATURE_LABEL_KEY } from "~/lib/feature-flags";
 import { LanguageSwitcher } from "~/components/language-switcher";
 import { ContactSalesDialog } from "~/components/sales-contact/contact-sales-dialog";
 import {
@@ -41,9 +41,10 @@ import {
 
 import logoUrl from "~/components/icons/re_praesent-mark-brand-hor.svg?url";
 import { activeChild, activeSection, useNavSections } from "~/lib/nav/sections";
-import { PILOT_SETTINGS, useNavModel } from "~/lib/nav/use-nav-model";
+import { useNavModel } from "~/lib/nav/use-nav-model";
 import { useToday } from "~/lib/hooks/useToday";
 import { MarkerCount } from "~/components/notebook/stat";
+import { useSupportBadges } from "~/components/support/use-support-badges";
 import { openCommandPalette } from "~/components/notebook/command-palette";
 import { isMacPlatform } from "~/lib/utils/platform";
 
@@ -93,20 +94,6 @@ function NavLink({
     >
       {collapsed ? Children.toArray(children)[0] : children}
     </Link>
-  );
-}
-
-/**
- * "Demo" label on entries behind a pilot flag. Same build as the amber NEW
- * pill, but neutral — it reads as a status, not a promotion. Never the first
- * child of a NavLink, so the collapsed rail drops it with the label.
- */
-function DemoPill() {
-  const { t } = useTranslation();
-  return (
-    <span className="ml-auto rounded-full bg-foreground/10 px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wider text-muted-foreground">
-      {t(PILOT_FEATURE_LABEL_KEY, { defaultValue: "Demo" })}
-    </span>
   );
 }
 
@@ -161,6 +148,7 @@ function MainSections({ onClose }: { onClose?: () => void }) {
       counts.new_leads + counts.follow_ups_due + (counts.signups ?? 0)
     : 0;
   const collapsed = useContext(SidebarCollapsedContext);
+  const support = useSupportBadges();
   if (!sections) return null;
   return (
     <>
@@ -185,9 +173,11 @@ function MainSections({ onClose }: { onClose?: () => void }) {
             >
               <Icon className="h-4 w-4 shrink-0" />
               <span className="truncate">{section.label}</span>
-              {section.pilot ? <DemoPill /> : null}
               {section.key === "today" && needsYou > 0 ? (
                 <MarkerCount n={needsYou} dark className="ml-auto" />
+              ) : null}
+              {section.key === "support" && support.queueOpen > 0 ? (
+                <MarkerCount n={support.queueOpen} dark className="ml-auto" />
               ) : null}
             </NavLink>
             {nested ? (
@@ -248,6 +238,7 @@ export function Sidebar({
     switchToBrand,
   } = useNavModel();
   const [contactOpen, setContactOpen] = useState(false);
+  const helpBadges = useSupportBadges();
 
   // Collapsed = icon rail. Restored from localStorage AFTER mount so the SSR
   // markup always matches the first client render (expanded) — a mismatch here
@@ -505,9 +496,6 @@ export function Sidebar({
                       >
                         <Icon className="h-4 w-4 shrink-0" />
                         <span className="truncate">{t(labelKey)}</span>
-                        {PILOT_SETTINGS.has(to) ? (
-                          <DemoPill />
-                        ) : null}
                       </NavLink>
                     ))}
                   </div>
@@ -570,6 +558,19 @@ export function Sidebar({
               persistToDb
             />
           </div>
+          {helpBadges.helpAvailable && (
+            <NavLink to="/help" isActive={navPath.startsWith("/help")} onClick={onClose}>
+              <LifeBuoy className="h-4 w-4 shrink-0" aria-hidden />
+              {collapsed ? (
+                <span className="sr-only">{t("help.nav", "Help & changes")}</span>
+              ) : (
+                <>
+                  <span className="truncate">{t("help.nav", "Help & changes")}</span>
+                  {helpBadges.helpWaiting > 0 ? <MarkerCount n={helpBadges.helpWaiting} dark className="ml-auto" /> : null}
+                </>
+              )}
+            </NavLink>
+          )}
           {showContactSales && (
             <button
               type="button"

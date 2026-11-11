@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 import { Menu } from "lucide-react";
 import { cn } from "~/lib/utils";
 import { activeSection, type NavSection } from "~/lib/nav/sections";
+import { useSupportBadges } from "~/components/support/use-support-badges";
 import { useToday } from "~/lib/hooks/useToday";
 import { MarkerCount } from "~/components/notebook/stat";
 import { motion, useReducedMotion } from "motion/react";
@@ -37,11 +38,13 @@ export function BottomTabBar({
     : 0;
   // Four daily jobs under the thumb. With Appointments as a section of its
   // own, Results moves behind More (a tile there) so the bar stays at five.
-  const hasAppointments = sections.some((s) => s.key === "appointments");
+  // The root team's Support queue does the same.
+  const hasAppointments = sections.some((s) => s.key === "appointments" || s.key === "support");
   const primary = sections.filter(
     (s) => s.key !== "website" && !(hasAppointments && s.key === "results"),
   );
   const reduce = useReducedMotion();
+  const support = useSupportBadges();
   const updateWaiting = useUpdateWaiting();
   // Pages that live behind More (Website, Settings, Billing) light up More,
   // so you always know where you are (REDESIGN_PLAN.md §2).
@@ -83,6 +86,9 @@ export function BottomTabBar({
             >
               <span className="relative">
                 <Icon className={cn("size-[22px]", isActive && "stroke-[2.25]")} />
+                {s.key === "support" && support.queueOpen > 0 ? (
+                  <MarkerCount n={support.queueOpen} className="absolute -right-3 -top-1.5 min-w-4 px-1 text-[10px] leading-4" />
+                ) : null}
                 {s.key === "today" && needsYou > 0 ? (
                   <MarkerCount n={needsYou} className="absolute -right-3 -top-1.5 min-w-4 px-1 text-[10px] leading-4" />
                 ) : null}

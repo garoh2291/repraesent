@@ -6,7 +6,6 @@ import { ChevronDown, Plus } from "lucide-react";
 import { PipelineDialog } from "~/components/organism/pipeline-dialog";
 import { DropdownMenuSeparator } from "~/components/ui/dropdown-menu";
 import { cn } from "~/lib/utils";
-import { PILOT_FEATURE_LABEL_KEY } from "~/lib/feature-flags";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -59,7 +58,6 @@ function TabLink({ tab, pathname }: { tab: SectionTab; pathname: string }) {
 
   const pills = (
     <>
-      {tab.pilot ? <Pill>{t(PILOT_FEATURE_LABEL_KEY, { defaultValue: "Demo" })}</Pill> : null}
       {tab.isNew ? <Pill>{t("nav.newBadge", "New")}</Pill> : null}
     </>
   );

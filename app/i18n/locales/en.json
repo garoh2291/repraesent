@@ -96,7 +96,8 @@
         "billing": "Plan and invoices",
         "contact": "A real person from our team",
         "results": "How business is going",
-        "websiteStaging": "Your website's test copy"
+        "websiteStaging": "Your website's test copy",
+        "help": "Something broken, or a change on your site"
       },
       "switchBusiness": "Switch business"
     },
@@ -1412,7 +1413,7 @@
       "onboarding": "Onboarding",
       "emailNotifications": "Email notifications",
       "businessProfile": "Business profile",
-      "support": "Support"
+      "support": "Contact button"
     },
     "bcc": {
       "metaTitle": "Email copies (BCC)",
@@ -2027,6 +2028,39 @@
           "expired": "That took longer than 10 minutes, so the link ran out. Please try again.",
           "error": "OpenRouter didn’t hand over a key. Please try again, or paste a key instead."
         }
+      },
+      "statusNoCredits": "Connected · no credits left",
+      "balance": {
+        "title": "Balance",
+        "subtitle": "Money left on your OpenRouter account. Chat and AI visibility stop when it runs out.",
+        "refresh": "Check now",
+        "unknown": "OpenRouter didn't tell us the balance right now. Try “Check now” in a minute.",
+        "empty": "Nothing left — answers stop until you add credits",
+        "low": "Below your alert of {{amount}}",
+        "left": "left to spend",
+        "usedMonth": "Used this month",
+        "usedAll": "Used in total",
+        "keyLimit": "This key's limit",
+        "checked": "Checked {{when}}",
+        "addCredits": "Add credits on OpenRouter"
+      },
+      "alert": {
+        "amountRequired": "Enter the balance to warn you at, for example 5.",
+        "channelRequired": "Pick phone, email or both.",
+        "savedOn": "Low balance alert is on.",
+        "savedOff": "Low balance alert is off.",
+        "saveFailed": "That didn't save. Try again.",
+        "title": "Warn me when the balance is low",
+        "subtitle": "We check once a day and tell you at most once a day while it's below.",
+        "amount": "Warn me below",
+        "how": "How to tell you",
+        "phone": "Phone",
+        "email": "Email",
+        "noPhone": "None of your phones get alerts yet.",
+        "turnOnPhone": "Turn on phone alerts",
+        "save": "Save changes",
+        "turnOn": "Turn on the alert",
+        "last": "Last alert {{when}}"
       }
     },
     "allowlist": {
@@ -2448,7 +2482,7 @@
       "error": "Couldn't save the currency."
     },
     "support": {
-      "metaTitle": "Support",
+      "metaTitle": "Contact button",
       "metaDescription": "Choose which customer workspaces see “Contact re:praesent” and who answers them.",
       "searchPlaceholder": "Search workspaces or owner email…",
       "filterLabel": "Show",
@@ -2532,6 +2566,12 @@
         "show_names": {
           "title": "Show names on the lock screen",
           "desc": "Switched off, the alert only says “New inquiry”. You see who it is when you open it."
+        },
+        "support": {
+          "title": "Help & changes",
+          "desc": "When re:praesent answers or finishes one of your reports. Always on, inside your active hours.",
+          "titleRoot": "Support tickets",
+          "descRoot": "New tickets, customer replies and reopened tickets. Always on, inside your active hours."
         }
       },
       "hours": {
@@ -8741,7 +8781,13 @@
       "chunk": "passage",
       "understoodAs": "Understood as:",
       "reranked": "re-ranked",
-      "advancedHint": "See what it looked up for each answer."
+      "advancedHint": "See what it looked up for each answer.",
+      "errors": {
+        "credits": "Your OpenRouter account has no credits left, so the AI can't answer. Add credits on openrouter.ai, then try again. Your balance is in Settings → AI.",
+        "noKey": "No working OpenRouter key. Connect it in Settings → AI, then try again.",
+        "limit": "The daily limit for this assistant is reached. Raise it under Limits or try again tomorrow.",
+        "generic": "The AI service didn't answer. Try again in a minute."
+      }
     },
     "usage": {
       "title": "Activity",
@@ -9883,7 +9929,8 @@
       "sales": "Deals",
       "root": "re:praesent"
     },
-    "appointments": "Appointments"
+    "appointments": "Appointments",
+    "support": "Support"
   },
   "command": {
     "title": "Go to or search",
@@ -10375,7 +10422,10 @@
       "keyTitle": "Connect your OpenRouter key to keep tracking",
       "pausedBody": "No questions are asked and nothing is spent until you resume.",
       "pausedCta": "Resume",
-      "pausedTitle": "Tracking is paused"
+      "pausedTitle": "Tracking is paused",
+      "creditsTitle": "Your OpenRouter account is out of credits",
+      "creditsBody": "Tracking is paused. Add credits on OpenRouter and it starts again by itself within the hour. Your balance is in Settings → AI.",
+      "creditsCta": "See balance"
     },
     "ordinal": {
       "1": "1st",
@@ -11359,7 +11409,9 @@
       "makeFallback": "Use when nothing else is picked",
       "isFallback": "Used when nothing else is picked — new appointments start here.",
       "nowFallback": "Now used when nothing else is picked",
-      "messagesHint2": "Sent by email under your business name. Text messages can be added later."
+      "messagesHint2": "Sent by email under your business name. Text messages can be added later.",
+      "ownerHintTop": "Every new appointment in this calendar goes to this person. They're told when a customer moves or cancels.",
+      "secMoreHintV2": "Breaks between appointments, how soon people can book, time zone."
     },
     "detail": {
       "nobody": "Nobody yet",
@@ -11442,7 +11494,9 @@
       "kind": "What kind",
       "upcoming_one": "{{count}} coming up",
       "upcoming_other": "{{count}} coming up",
-      "fallback": "Used when nothing else is picked"
+      "fallback": "Used when nothing else is picked",
+      "handledBy": "handled by {{name}}",
+      "nobodyHandles": "nobody handles it yet"
     },
     "title": "Appointments",
     "messages": {
@@ -11682,6 +11736,28 @@
       "savedOnCard2": "We'll update it on their customer card.",
       "cardUpdated": "Saved, and updated on {{name}}'s customer card",
       "noCard": "Only for this appointment — they aren't one of your customers yet."
+    },
+    "match": {
+      "isAppointment": "This is a re:praesent appointment",
+      "handledBy": "handled by {{name}}",
+      "nobody": "nobody handles it yet",
+      "open": "Open",
+      "linkExisting": "It's an existing appointment…",
+      "linked": "Linked. This meeting now shows as that appointment.",
+      "linkFailed": "That didn't link. Try again.",
+      "linkTitle": "Which appointment is this?",
+      "linkSubtitle": "Appointments from a day before to a day after “{{title}}”.",
+      "noCandidates": "No appointments around that time. Use “Add to appointments” to make this meeting one.",
+      "untitled": "Appointment"
+    },
+    "handlers": {
+      "saved": "Saved. New appointments in this calendar go to that person.",
+      "failed": "That didn't save. Try again.",
+      "title": "Your Google and Outlook calendars",
+      "subtitle": "Pick who handles appointments that land in each one — from a form, the chat or “Add to appointments”.",
+      "connectedIt": "connected it",
+      "titleDirect": "Meetings booked straight into Google or Outlook",
+      "subtitleDirect": "Only for meetings that live in these calendars: a form or the chat that books straight into Google or Outlook, or “Add to appointments” in the team calendar. Appointments in a re:praesent calendar above always go to the person set on that calendar."
     }
   },
   "calendarView": {
@@ -11697,5 +11773,188 @@
     "event": "What",
     "allDay": "All day",
     "showMore": "+{{count}} more"
+  },
+  "help": {
+    "nav": "Help & changes",
+    "metaTitle": "Help & changes",
+    "title": "Help & changes",
+    "subtitle": "Something broken on your website, or a change you need? Tell us here and we'll answer in the same place.",
+    "back": "All reports",
+    "reportWord": "this report",
+    "unread": "New reply",
+    "today_one": "re:praesent needs your answer on 1 report",
+    "today_other": "re:praesent needs your answer on {{count}} reports",
+    "new": {
+      "cta": "Report a problem",
+      "title": "Report a problem or ask for a change",
+      "subtitle": "We answer right here, and you get an email when we do.",
+      "sentTitle": "Got it",
+      "about": "About {{host}}",
+      "whichSite": "Which website?",
+      "noSite": "Something else",
+      "howBad": "How bad is it?",
+      "what": "What's going on?",
+      "whatPlaceholder": "e.g. The contact form doesn't send. I tried on my phone this morning, the button just spins.",
+      "addPage": "+ Which page? (optional)",
+      "page": "Which page?",
+      "optional": "(optional)",
+      "pagePlaceholder": "Paste the address from your browser",
+      "addScreenshot": "Add a screenshot (optional)",
+      "pasteHint": "Tip: you can paste a screenshot straight in.",
+      "failed": "The report didn't go through. Check your connection and send it again.",
+      "send": "Send to re:praesent",
+      "sentBody": "We'll answer here and email you at {{email}} when we do.",
+      "sentBodyNoEmail": "We'll answer here and email you when we do.",
+      "seeIt": "See the report"
+    },
+    "severity": {
+      "urgent": "Site is down or broken",
+      "normal": "Something isn't working right",
+      "low": "Small change or question"
+    },
+    "severityHint": {
+      "urgent": "Nobody can reach the site, or a key page or form fails.",
+      "normal": "A page looks wrong, a button or form misbehaves.",
+      "low": "New text or photos, opening hours, a quick question."
+    },
+    "status": {
+      "open": "We're on it",
+      "waiting_on_client": "Waiting for your reply",
+      "resolved": "Done"
+    },
+    "empty": {
+      "title": "Nothing reported yet",
+      "body": "When something on your website breaks or needs changing, report it here. You'll see every answer and where it stands."
+    },
+    "groups": {
+      "waiting": "Waiting for your reply",
+      "open": "We're on it",
+      "done": "Done"
+    },
+    "thread": {
+      "today": "Today",
+      "yesterday": "Yesterday",
+      "you": "You",
+      "sending": "Sending…",
+      "openScreenshot": "Open screenshot",
+      "screenshot": "Screenshot",
+      "thePage": "The page",
+      "sentOn": "Sent {{date}}",
+      "waitingBanner": "We need your answer to go on. Reply below.",
+      "doneBar": "We marked this done. Still not fixed?",
+      "reopen": "It's still not fixed",
+      "placeholderReopen": "Write what you still see. Sending it opens the report again.",
+      "placeholder": "Write a reply…",
+      "solved": "This is solved",
+      "sendFailed": "Your reply didn't go through. Try again.",
+      "markedDone": "Marked done. Thank you!",
+      "reopened": "Opened again. We'll take another look.",
+      "statusFailed": "That didn't save. Try again.",
+      "send": "Send"
+    },
+    "event": {
+      "reopened": "{{who}} opened it again",
+      "status": "{{who}} set it to “{{status}}”",
+      "severity": "{{who}} changed it to “{{severity}}”",
+      "email": "{{who}} emailed you at {{to}}: “{{subject}}”"
+    },
+    "files": {
+      "type": "Screenshots can be PNG, JPG, WebP or GIF.",
+      "size": "Each screenshot can be up to 5 MB.",
+      "count": "Add up to 3 screenshots at a time.",
+      "remove": "Remove screenshot",
+      "addAnother": "Add another",
+      "add": "Add screenshot",
+      "addShort": "Screenshot"
+    }
+  },
+  "support": {
+    "metaTitle": "Support",
+    "title": "Support",
+    "mine": "{{n}} yours",
+    "statusFilter": "Status",
+    "segments": {
+      "open": "Needs reply",
+      "waiting": "Waiting",
+      "resolved": "Resolved",
+      "all": "All"
+    },
+    "search": "Search client, site or #number",
+    "filters": {
+      "client": "Client",
+      "website": "Website",
+      "severity": "How bad",
+      "assignee": "Who",
+      "me": "Mine",
+      "nobody": "Nobody yet"
+    },
+    "sortTitle": "Change the order",
+    "sort": {
+      "severity": "Most urgent first",
+      "activity": "Latest first"
+    },
+    "notReady": "Support isn't switched on on this server yet.",
+    "empty": {
+      "allClear": "Nobody is waiting on you.",
+      "noMatch": "No tickets match these filters.",
+      "allClearBody": "New tickets from customers land here first.",
+      "noMatchBody": "Clear a filter to see more."
+    },
+    "more": "Showing {{n}} of {{total}}. Narrow it down with a filter.",
+    "pick": "Pick a ticket on the left. ↑ ↓ to move through them.",
+    "us": "Us",
+    "unread": "Unread",
+    "sendFailed": "Not sent. Try again.",
+    "sentResolved": "Sent and resolved. The customer gets an email.",
+    "sent": "Sent. The customer gets an email.",
+    "saveFailed": "That didn't save. Try again.",
+    "ticketWord": "this ticket",
+    "controls": {
+      "status": "Status",
+      "severity": "How bad",
+      "assignee": "Who handles it"
+    },
+    "reopened_one": "Reopened once",
+    "reopened_other": "Reopened {{count}}×",
+    "composer": {
+      "mode": "Reply or note",
+      "note": "Internal note",
+      "reply": "Reply to customer",
+      "noteHint": "Only your team sees this.",
+      "notePlaceholder": "A note for the team…",
+      "placeholder": "Reply to {{client}}…",
+      "addNote": "Add note",
+      "sendResolve": "Send & resolve",
+      "send": "Send",
+      "sendHint": "Send sets it to “waiting on client” and emails them."
+    },
+    "severity": {
+      "urgent": "Urgent",
+      "normal": "Normal",
+      "low": "Low"
+    },
+    "status": {
+      "open": "Open",
+      "waiting_on_client": "Waiting on client",
+      "resolved": "Resolved"
+    },
+    "thread": {
+      "note": "Internal note"
+    },
+    "event": {
+      "assigned": "{{who}} handed it to {{name}}",
+      "unassigned": "{{who}} left it unassigned"
+    },
+    "today_one": "1 support ticket needs a reply",
+    "today_other": "{{count}} support tickets need a reply",
+    "noteAdded": "Note added. Only your team sees it.",
+    "email": {
+      "context": "Ticket #{{number}} · {{client}}",
+      "failed": "Couldn't open the email. Try again.",
+      "title": "Email {{name}} from your mailbox",
+      "notSent": "Not sent",
+      "sent": "Sent",
+      "by": "Email from {{who}}"
+    }
   }
 }

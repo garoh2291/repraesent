@@ -935,6 +935,7 @@ export type SseErrorCode =
   | "render_token_invalid"
   | "budget_exhausted"
   | "upstream_failed"
+  | "ai_credits_exhausted"
   | "not_published"
   | "workspace_ai_not_configured"
   | "invalid_request";

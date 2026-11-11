@@ -520,3 +520,40 @@ export async function cancelPublicAppointment(token: string, reason?: string | n
   const { data } = await publicClient.post<PublicAppointment>(`${pub(token)}/cancel`, { reason: reason ?? null });
   return data;
 }
+
+// ── team calendar: which events are re:praesent appointments ─────────────
+
+export interface MatchedAppointment {
+  id: string;
+  title: string | null;
+  customer_name: string | null;
+  assigned_user_id: string | null;
+  assigned_name: string | null;
+  status: AppointmentStatus;
+  starts_at: string;
+}
+
+/** Team-calendar event ids ("<calendarKey>:<providerId>") → the appointment behind each. */
+export async function matchCalendarEvents(eventIds: string[]): Promise<Record<string, MatchedAppointment>> {
+  const { data } = await apiClient.post<Record<string, MatchedAppointment>>("/appointment-records/match-events", { event_ids: eventIds });
+  return data;
+}
+export async function getLinkCandidates(start: string): Promise<Appointment[]> {
+  const { data } = await apiClient.get<Appointment[]>("/appointment-records/link-candidates", { params: { start } });
+  return data;
+}
+export async function linkAppointmentToEvent(id: string, eventId: string): Promise<Appointment> {
+  const { data } = await apiClient.post<Appointment>(`/appointment-records/${id}/link-event`, { event_id: eventId });
+  return data;
+}
+
+// ── default person per connected calendar ────────────────────────────────
+
+export async function getCalendarHandlers(): Promise<Array<{ calendar_key: string; user_id: string }>> {
+  const { data } = await apiClient.get<Array<{ calendar_key: string; user_id: string }>>("/appointment-records/calendar-handlers");
+  return data;
+}
+export async function setCalendarHandler(calendarKey: string, userId: string | null) {
+  const { data } = await apiClient.put<{ calendar_key: string; user_id: string | null }>("/appointment-records/calendar-handlers", { calendar_key: calendarKey, user_id: userId });
+  return data;
+}

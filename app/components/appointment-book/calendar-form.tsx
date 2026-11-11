@@ -216,6 +216,25 @@ export function CalendarForm({
           <Input value={draft.name ?? ""} onChange={(e) => set("name", e.target.value)} className="h-10 max-sm:h-11 sm:max-w-md" />
         </FieldRow>
 
+        <FieldRow
+          label={t("appointmentBook.settings.owner", "Who handles it")}
+          hint={t("appointmentBook.settings.ownerHintTop", "Every new appointment in this calendar goes to this person. They're told when a customer moves or cancels.")}
+        >
+          <Select value={draft.owner_user_id ?? "nobody"} onValueChange={(v) => set("owner_user_id", v === "nobody" ? null : v)}>
+            <SelectTrigger className="h-10 w-full max-sm:h-11 sm:w-[260px]">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="nobody">{t("appointmentBook.detail.nobody", "Nobody yet")}</SelectItem>
+              {(members.data?.members ?? []).map((m) => (
+                <SelectItem key={m.user_id} value={m.user_id}>
+                  {[m.user_first_name, m.user_last_name].filter(Boolean).join(" ") || m.user_email}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </FieldRow>
+
         <FieldRow label={t("appointmentBook.settings.how", "How people meet you")}>
           <Segmented
             label={t("appointmentBook.settings.how", "How people meet you")}
@@ -479,7 +498,7 @@ export function CalendarForm({
           <span className="min-w-0 flex-1">
             <span className="block text-[16px] font-semibold text-foreground">{t("appointmentBook.settings.secMore", "More rules")}</span>
             <span className="block text-[13px] text-muted-foreground">
-              {t("appointmentBook.settings.secMoreHint", "Breaks between appointments, how soon people can book, who handles it, time zone.")}
+              {t("appointmentBook.settings.secMoreHintV2", "Breaks between appointments, how soon people can book, time zone.")}
             </span>
           </span>
           <ChevronDown className={cn("size-4 shrink-0 text-muted-foreground transition-transform motion-reduce:transition-none", moreOpen && "rotate-180")} aria-hidden />
@@ -534,21 +553,6 @@ export function CalendarForm({
                   onChange={(e) => set("capacity", Math.max(1, Math.min(1000, e.target.valueAsNumber || 1)))}
                   className="h-10 w-[120px] max-sm:h-11"
                 />
-              </FieldRow>
-              <FieldRow label={t("appointmentBook.settings.owner", "Who handles it")} hint={t("appointmentBook.settings.ownerHint", "Gets told when a customer moves or cancels.")}>
-                <Select value={draft.owner_user_id ?? "nobody"} onValueChange={(v) => set("owner_user_id", v === "nobody" ? null : v)}>
-                  <SelectTrigger className="h-10 w-full max-sm:h-11 sm:w-[260px]">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="nobody">{t("appointmentBook.detail.nobody", "Nobody yet")}</SelectItem>
-                    {(members.data?.members ?? []).map((m) => (
-                      <SelectItem key={m.user_id} value={m.user_id}>
-                        {[m.user_first_name, m.user_last_name].filter(Boolean).join(" ") || m.user_email}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
               </FieldRow>
             </div>
             <div className="space-y-2">

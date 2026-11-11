@@ -1,3 +1,4 @@
+import { SupportTodayCard } from "~/components/support/support-today-card";
 import { createContext, useContext, useEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router";
 import { useTranslation } from "react-i18next";
@@ -813,6 +814,7 @@ export default function Today() {
             </Panel>
           ) : data ? (
             <>
+              <SupportTodayCard />
               {isRoot && data.signups ? (
                 <NeedsYou
                   title={t("today.signupsTitle", "New signups to call")}

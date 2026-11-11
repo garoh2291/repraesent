@@ -31,8 +31,8 @@ import {
 } from "~/lib/api/calendar";
 import { CalendarSourcesPanel } from "~/components/calendar/CalendarSourcesPanel";
 import { CalendarView } from "~/components/calendar/CalendarView";
-import { usePilotFeatures } from "~/lib/feature-flags";
-import { canImportMeeting, ImportMeetingSheet } from "~/components/appointment-book/import-meeting-sheet";
+import { ImportMeetingSheet } from "~/components/appointment-book/import-meeting-sheet";
+import { EventAppointmentActions, LinkSheet } from "~/components/appointment-book/event-appointment-link";
 import { CreateEventDialog } from "~/components/calendar/CreateEventDialog";
 import { Button } from "~/components/ui/button";
 import {
@@ -274,9 +274,9 @@ export default function CalendarPage() {
   const [selectedEvent, setSelectedEvent] =
     useState<UnifiedCalendarEvent | null>(null);
   const [sheetOpen, setSheetOpen] = useState(false);
-  // "Add to appointments" from the event dialog (Appointments pilot only).
-  const pilot = usePilotFeatures();
+  // "Add to appointments" / "Open appointment" from the event dialog.
   const [importing, setImporting] = useState<UnifiedCalendarEvent | null>(null);
+  const [linkingEvent, setLinkingEvent] = useState<UnifiedCalendarEvent | null>(null);
   const [createOpen, setCreateOpen] = useState(false);
 
   // No sources connected: this page has nothing to show — except in a demo,
@@ -513,24 +513,27 @@ export default function CalendarPage() {
                     </a>
                   </Button>
                 )}
-                {pilot.appointmentBook && canImportMeeting(selectedEvent.calendarKey) ? (
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="max-sm:h-11"
-                    onClick={() => {
-                      setImporting(selectedEvent);
-                      setSelectedEvent(null);
-                    }}
-                  >
-                    {t("appointmentBook.import.confirm", "Add to appointments")}
-                  </Button>
-                ) : null}
+                <EventAppointmentActions
+                  event={selectedEvent}
+                  timezone={timezone}
+                  onNavigate={() => setSelectedEvent(null)}
+                  onLink={() => {
+                    setLinkingEvent(selectedEvent);
+                    setSelectedEvent(null);
+                  }}
+                  onImport={() => {
+                    setImporting(selectedEvent);
+                    setSelectedEvent(null);
+                  }}
+                />
               </div>
             </>
           )}
         </DialogContent>
       </Dialog>
+      {linkingEvent ? (
+        <LinkSheet event={linkingEvent} timezone={timezone} open onOpenChange={(o) => !o && setLinkingEvent(null)} />
+      ) : null}
       <ImportMeetingSheet
         meeting={importing}
         timezone={timezone}

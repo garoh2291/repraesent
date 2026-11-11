@@ -15,7 +15,9 @@ import {
   Search,
   Settings,
   Users,
+  LifeBuoy,
 } from "lucide-react";
+import { useHelpAvailable } from "~/components/support/help-provider";
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from "~/components/ui/dialog";
 import { useAuthContext } from "~/providers/auth-provider";
 import { usePilotFeatures } from "~/lib/feature-flags";
@@ -91,6 +93,7 @@ export function CommandPalette() {
   const isRootAdmin =
     currentWorkspace?.is_root === true && currentWorkspace.member_role === "admin";
   const isDemo = currentWorkspace?.is_demo === true;
+  const helpAvailable = useHelpAvailable().available;
 
   const destinations = useMemo<Item[]>(() => {
     if (!sections) return [];
@@ -127,6 +130,10 @@ export function CommandPalette() {
         to: it.to,
       });
     }
+    if (helpAvailable) {
+      out.push({ id: "help", label: t("help.nav", "Help & changes"), icon: LifeBuoy, to: "/help" });
+      out.push({ id: "help-new", label: t("help.new.cta", "Report a problem"), hint: t("help.nav", "Help & changes"), icon: LifeBuoy, to: "/help?new=1" });
+    }
     out.push({
       id: "billing",
       label: t("nav.billing", "Billing"),
@@ -135,7 +142,7 @@ export function CommandPalette() {
       to: "/billing",
     });
     return out;
-  }, [sections, pilot, isDemo, isRootAdmin, t]);
+  }, [sections, pilot, isDemo, isRootAdmin, helpAvailable, t]);
 
   const { openCompose } = useComposeEmail();
   const canEdit = useCanEditLeads();

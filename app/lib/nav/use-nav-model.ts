@@ -84,5 +84,4 @@ export function useNavModel() {
   };
 }
 
-/** Settings entries that carry the neutral "Demo" pill (pilot features). */
-export const PILOT_SETTINGS = new Set(["/settings/integrations"]);
+

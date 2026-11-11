@@ -17,6 +17,7 @@ import {
   Trash2,
   Clock,
   ChevronDown,
+  LifeBuoy,
 } from "lucide-react";
 import i18n from "~/i18n";
 import { cn } from "~/lib/utils";
@@ -459,7 +460,7 @@ export default function SettingsPhoneAlerts() {
     descriptionKey: "settings.phoneAlerts.metaDescription",
     titleSuffix: " - Repraesent",
   });
-  const { user } = useAuthContext();
+  const { user, currentWorkspace } = useAuthContext();
   const queryClient = useQueryClient();
   const env = usePwa();
   const config = usePhoneAlertsConfig();
@@ -576,6 +577,26 @@ export default function SettingsPhoneAlerts() {
                 </li>
               );
             })}
+            {/* Help & changes: always on (a reply someone waits for), no switch. */}
+            {currentWorkspace?.is_demo !== true && currentWorkspace?.type !== "doorboost_brand" ? (
+              <li className="flex gap-4 p-4 sm:p-5">
+                <span aria-hidden className="mt-0.5 flex size-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                  <LifeBuoy className="size-5" />
+                </span>
+                <div className="min-w-0">
+                  <p className="text-sm font-semibold text-foreground">
+                    {currentWorkspace?.is_root
+                      ? t("settings.phoneAlerts.kinds.support.titleRoot", "Support tickets")
+                      : t("settings.phoneAlerts.kinds.support.title", "Help & changes")}
+                  </p>
+                  <p className="text-sm text-muted-foreground">
+                    {currentWorkspace?.is_root
+                      ? t("settings.phoneAlerts.kinds.support.descRoot", "New tickets, customer replies and reopened tickets. Always on, inside your active hours.")
+                      : t("settings.phoneAlerts.kinds.support.desc", "When re:praesent answers or finishes one of your reports. Always on, inside your active hours.")}
+                  </p>
+                </div>
+              </li>
+            ) : null}
           </ul>
         )}
       </section>

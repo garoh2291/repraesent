@@ -96,7 +96,8 @@
         "billing": "Offre et factures",
         "contact": "Une vraie personne de notre équipe",
         "results": "Comment vont les affaires",
-        "websiteStaging": "La copie de test de votre site"
+        "websiteStaging": "La copie de test de votre site",
+        "help": "Un souci ou une modification sur votre site"
       },
       "switchBusiness": "Changer d’entreprise"
     },
@@ -1412,7 +1413,7 @@
       "onboarding": "Onboarding",
       "emailNotifications": "Notifications par courriel",
       "businessProfile": "Profil de l'entreprise",
-      "support": "Support"
+      "support": "Bouton de contact"
     },
     "bcc": {
       "metaTitle": "Copies d'e-mails (BCC)",
@@ -2029,6 +2030,39 @@
           "expired": "Cela a pris plus de 10 minutes, le lien a expiré. Veuillez réessayer.",
           "error": "OpenRouter n’a pas transmis de clé. Veuillez réessayer, ou collez une clé."
         }
+      },
+      "statusNoCredits": "Connecté · plus de crédit",
+      "balance": {
+        "title": "Solde",
+        "subtitle": "Ce qu'il reste sur votre compte OpenRouter. Le chat et la visibilité IA s'arrêtent quand il est vide.",
+        "refresh": "Vérifier",
+        "unknown": "OpenRouter n'a pas donné le solde pour l'instant. Réessayez « Vérifier » dans une minute.",
+        "empty": "Plus rien — les réponses s'arrêtent jusqu'à ce que vous rechargiez",
+        "low": "Sous votre seuil d'alerte de {{amount}}",
+        "left": "encore disponible",
+        "usedMonth": "Utilisé ce mois-ci",
+        "usedAll": "Utilisé au total",
+        "keyLimit": "Limite de cette clé",
+        "checked": "Vérifié {{when}}",
+        "addCredits": "Ajouter du crédit sur OpenRouter"
+      },
+      "alert": {
+        "amountRequired": "Indiquez le solde à partir duquel vous prévenir, par exemple 5.",
+        "channelRequired": "Choisissez téléphone, e-mail ou les deux.",
+        "savedOn": "L'alerte de solde bas est activée.",
+        "savedOff": "L'alerte de solde bas est désactivée.",
+        "saveFailed": "Ce n'est pas enregistré. Réessayez.",
+        "title": "Me prévenir quand le solde est bas",
+        "subtitle": "Nous vérifions une fois par jour et vous prévenons au plus une fois par jour tant qu'il reste en dessous.",
+        "amount": "Me prévenir sous",
+        "how": "Comment vous prévenir",
+        "phone": "Téléphone",
+        "email": "E-mail",
+        "noPhone": "Aucun de vos téléphones ne reçoit encore d'alertes.",
+        "turnOnPhone": "Activer les alertes sur téléphone",
+        "save": "Enregistrer",
+        "turnOn": "Activer l'alerte",
+        "last": "Dernière alerte {{when}}"
       }
     },
     "allowlist": {
@@ -2450,7 +2484,7 @@
       "error": "Impossible d’enregistrer la devise."
     },
     "support": {
-      "metaTitle": "Support",
+      "metaTitle": "Bouton de contact",
       "metaDescription": "Choisissez quels espaces clients voient « Contacter re:praesent » et qui leur répond.",
       "searchPlaceholder": "Rechercher un espace ou l’e-mail du propriétaire…",
       "filterLabel": "Afficher",
@@ -2534,6 +2568,12 @@
         "show_names": {
           "title": "Afficher les noms sur l'écran verrouillé",
           "desc": "Désactivé, l'alerte indique seulement « Nouvelle demande ». Vous voyez de qui il s'agit en l'ouvrant."
+        },
+        "support": {
+          "title": "Aide et modifications",
+          "desc": "Quand re:praesent répond à l'un de vos signalements ou le règle. Toujours actif, pendant vos heures actives.",
+          "titleRoot": "Tickets de support",
+          "descRoot": "Nouveaux tickets, réponses des clients et tickets rouverts. Toujours actif, pendant vos heures actives."
         }
       },
       "hours": {
@@ -8743,7 +8783,13 @@
       "chunk": "passage",
       "understoodAs": "Compris comme :",
       "reranked": "reclassé",
-      "advancedHint": "Voir ce qu’il a consulté pour chaque réponse."
+      "advancedHint": "Voir ce qu’il a consulté pour chaque réponse.",
+      "errors": {
+        "credits": "Votre compte OpenRouter n'a plus de crédit, l'IA ne peut donc pas répondre. Rechargez sur openrouter.ai, puis réessayez. Votre solde est dans Réglages → IA.",
+        "noKey": "Aucune clé OpenRouter valide. Connectez-la dans Réglages → IA, puis réessayez.",
+        "limit": "La limite du jour de cet assistant est atteinte. Augmentez-la dans Limites ou réessayez demain.",
+        "generic": "Le service d'IA n'a pas répondu. Réessayez dans une minute."
+      }
     },
     "usage": {
       "title": "Activité",
@@ -9885,7 +9931,8 @@
       "sales": "Affaires",
       "root": "re:praesent"
     },
-    "appointments": "Rendez-vous"
+    "appointments": "Rendez-vous",
+    "support": "Support"
   },
   "command": {
     "title": "Aller à ou rechercher",
@@ -10377,7 +10424,10 @@
       "keyTitle": "Connectez votre clé OpenRouter pour continuer le suivi",
       "pausedBody": "Aucune question n'est posée et rien n'est dépensé tant que vous ne reprenez pas.",
       "pausedCta": "Reprendre",
-      "pausedTitle": "Le suivi est en pause"
+      "pausedTitle": "Le suivi est en pause",
+      "creditsTitle": "Votre compte OpenRouter n'a plus de crédit",
+      "creditsBody": "Le suivi est en pause. Ajoutez du crédit sur OpenRouter et il reprend tout seul dans l'heure. Votre solde est dans Réglages → IA.",
+      "creditsCta": "Voir le solde"
     },
     "ordinal": {
       "1": "1re",
@@ -11361,7 +11411,9 @@
       "makeFallback": "Utiliser quand rien d’autre n’est choisi",
       "isFallback": "Utilisé quand rien d’autre n’est choisi : les nouveaux rendez-vous arrivent ici.",
       "nowFallback": "Utilisé désormais quand rien d’autre n’est choisi",
-      "messagesHint2": "Envoyés par e-mail au nom de votre entreprise. Les SMS pourront être ajoutés plus tard."
+      "messagesHint2": "Envoyés par e-mail au nom de votre entreprise. Les SMS pourront être ajoutés plus tard.",
+      "ownerHintTop": "Chaque nouveau rendez-vous de ce calendrier va à cette personne. Elle est prévenue quand un client déplace ou annule.",
+      "secMoreHintV2": "Pauses entre les rendez-vous, délai de réservation, fuseau horaire."
     },
     "detail": {
       "nobody": "Personne pour l’instant",
@@ -11444,7 +11496,9 @@
       "kind": "Quel type",
       "upcoming_one": "{{count}} à venir",
       "upcoming_other": "{{count}} à venir",
-      "fallback": "Quand rien d’autre n’est choisi"
+      "fallback": "Quand rien d’autre n’est choisi",
+      "handledBy": "géré par {{name}}",
+      "nobodyHandles": "personne ne s'en occupe encore"
     },
     "title": "Rendez-vous",
     "messages": {
@@ -11684,6 +11738,28 @@
       "savedOnCard2": "Nous la mettrons à jour sur sa fiche client.",
       "cardUpdated": "Enregistré, et mis à jour sur la fiche client de {{name}}",
       "noCard": "Seulement pour ce rendez-vous — cette personne ne fait pas encore partie de vos clients."
+    },
+    "match": {
+      "isAppointment": "C'est un rendez-vous re:praesent",
+      "handledBy": "géré par {{name}}",
+      "nobody": "personne ne s'en occupe encore",
+      "open": "Ouvrir",
+      "linkExisting": "C'est un rendez-vous existant…",
+      "linked": "Lié. Cette réunion s'affiche maintenant comme ce rendez-vous.",
+      "linkFailed": "Le lien n'a pas fonctionné. Réessayez.",
+      "linkTitle": "De quel rendez-vous s'agit-il ?",
+      "linkSubtitle": "Rendez-vous d'un jour avant à un jour après « {{title}} ».",
+      "noCandidates": "Aucun rendez-vous autour de cette heure. Utilisez « Ajouter aux rendez-vous » pour en faire un.",
+      "untitled": "Rendez-vous"
+    },
+    "handlers": {
+      "saved": "Enregistré. Les nouveaux rendez-vous de ce calendrier vont à cette personne.",
+      "failed": "Ce n'est pas enregistré. Réessayez.",
+      "title": "Vos calendriers Google et Outlook",
+      "subtitle": "Choisissez qui gère les rendez-vous qui y arrivent — depuis un formulaire, le chat ou « Ajouter aux rendez-vous ».",
+      "connectedIt": "l'a connecté",
+      "titleDirect": "Rendez-vous pris directement dans Google ou Outlook",
+      "subtitleDirect": "Uniquement pour les rendez-vous qui se trouvent dans ces calendriers : un formulaire ou le chat qui réserve directement dans Google ou Outlook, ou « Ajouter aux rendez-vous » dans le calendrier d'équipe. Les rendez-vous d'un calendrier re:praesent ci-dessus vont toujours à la personne choisie sur ce calendrier."
     }
   },
   "calendarView": {
@@ -11699,5 +11775,188 @@
     "event": "Quoi",
     "allDay": "Toute la journée",
     "showMore": "+{{count}} de plus"
+  },
+  "help": {
+    "nav": "Aide et modifications",
+    "metaTitle": "Aide et modifications",
+    "title": "Aide et modifications",
+    "subtitle": "Quelque chose ne marche plus sur votre site, ou vous avez besoin d'une modification ? Dites-le ici, nous répondons au même endroit.",
+    "back": "Tous les signalements",
+    "reportWord": "ce signalement",
+    "unread": "Nouvelle réponse",
+    "today_one": "re:praesent attend votre réponse sur 1 signalement",
+    "today_other": "re:praesent attend votre réponse sur {{count}} signalements",
+    "new": {
+      "cta": "Signaler un problème",
+      "title": "Signaler un problème ou demander une modification",
+      "subtitle": "Nous répondons ici, et vous recevez un e-mail quand c'est fait.",
+      "sentTitle": "C'est reçu",
+      "about": "Concerne {{host}}",
+      "whichSite": "Quel site ?",
+      "noSite": "Autre chose",
+      "howBad": "C'est grave à quel point ?",
+      "what": "Que se passe-t-il ?",
+      "whatPlaceholder": "ex. Le formulaire de contact ne s'envoie pas. Essayé ce matin sur mon téléphone, le bouton tourne sans fin.",
+      "addPage": "+ Quelle page ? (facultatif)",
+      "page": "Quelle page ?",
+      "optional": "(facultatif)",
+      "pagePlaceholder": "Collez l'adresse depuis votre navigateur",
+      "addScreenshot": "Ajouter une capture d'écran (facultatif)",
+      "pasteHint": "Astuce : vous pouvez coller une capture d'écran directement.",
+      "failed": "Le signalement n'est pas parti. Vérifiez votre connexion et renvoyez-le.",
+      "send": "Envoyer à re:praesent",
+      "sentBody": "Nous répondons ici et vous écrivons à {{email}}.",
+      "sentBodyNoEmail": "Nous répondons ici et vous envoyons un e-mail.",
+      "seeIt": "Voir le signalement"
+    },
+    "severity": {
+      "urgent": "Le site est en panne ou cassé",
+      "normal": "Quelque chose ne marche pas bien",
+      "low": "Petite modification ou question"
+    },
+    "severityHint": {
+      "urgent": "Personne n'accède au site, ou une page ou un formulaire clé ne marche pas.",
+      "normal": "Une page s'affiche mal, un bouton ou un formulaire se comporte bizarrement.",
+      "low": "Nouveau texte ou photos, horaires, une petite question."
+    },
+    "status": {
+      "open": "Nous nous en occupons",
+      "waiting_on_client": "En attente de votre réponse",
+      "resolved": "Réglé"
+    },
+    "empty": {
+      "title": "Rien de signalé pour l'instant",
+      "body": "Quand quelque chose casse ou doit changer sur votre site, signalez-le ici. Vous verrez chaque réponse et où en est le sujet."
+    },
+    "groups": {
+      "waiting": "En attente de votre réponse",
+      "open": "Nous nous en occupons",
+      "done": "Réglé"
+    },
+    "thread": {
+      "today": "Aujourd'hui",
+      "yesterday": "Hier",
+      "you": "Vous",
+      "sending": "Envoi…",
+      "openScreenshot": "Ouvrir la capture d'écran",
+      "screenshot": "Capture d'écran",
+      "thePage": "La page",
+      "sentOn": "Envoyé le {{date}}",
+      "waitingBanner": "Nous avons besoin de votre réponse pour continuer. Répondez ci-dessous.",
+      "doneBar": "Nous l'avons marqué comme réglé. Le problème persiste ?",
+      "reopen": "Ce n'est toujours pas réglé",
+      "placeholderReopen": "Décrivez ce que vous voyez encore. L'envoi rouvre le signalement.",
+      "placeholder": "Écrire une réponse…",
+      "solved": "C'est réglé",
+      "sendFailed": "Votre réponse n'est pas partie. Réessayez.",
+      "markedDone": "Marqué comme réglé. Merci !",
+      "reopened": "Rouvert. Nous regardons à nouveau.",
+      "statusFailed": "Ce n'est pas enregistré. Réessayez.",
+      "send": "Envoyer"
+    },
+    "event": {
+      "reopened": "{{who}} l'a rouvert",
+      "status": "{{who}} l'a passé à « {{status}} »",
+      "severity": "{{who}} l'a passé à « {{severity}} »",
+      "email": "{{who}} vous a écrit à {{to}} : « {{subject}} »"
+    },
+    "files": {
+      "type": "Les captures peuvent être en PNG, JPG, WebP ou GIF.",
+      "size": "Chaque capture peut faire jusqu'à 5 Mo.",
+      "count": "Jusqu'à 3 captures à la fois.",
+      "remove": "Retirer la capture",
+      "addAnother": "En ajouter une",
+      "add": "Ajouter une capture",
+      "addShort": "Capture"
+    }
+  },
+  "support": {
+    "metaTitle": "Support",
+    "title": "Support",
+    "mine": "{{n}} pour vous",
+    "statusFilter": "Statut",
+    "segments": {
+      "open": "À répondre",
+      "waiting": "En attente",
+      "resolved": "Réglés",
+      "all": "Tous"
+    },
+    "search": "Client, site ou #numéro",
+    "filters": {
+      "client": "Client",
+      "website": "Site",
+      "severity": "Gravité",
+      "assignee": "Qui",
+      "me": "Les miens",
+      "nobody": "Personne encore"
+    },
+    "sortTitle": "Changer l'ordre",
+    "sort": {
+      "severity": "Plus urgents d'abord",
+      "activity": "Plus récents d'abord"
+    },
+    "notReady": "Le support n'est pas encore activé sur ce serveur.",
+    "empty": {
+      "allClear": "Personne ne vous attend.",
+      "noMatch": "Aucun ticket pour ces filtres.",
+      "allClearBody": "Les nouveaux tickets des clients arrivent ici en premier.",
+      "noMatchBody": "Retirez un filtre pour en voir plus."
+    },
+    "more": "{{n}} sur {{total}}. Affinez avec un filtre.",
+    "pick": "Choisissez un ticket à gauche. ↑ ↓ pour naviguer.",
+    "us": "Nous",
+    "unread": "Non lu",
+    "sendFailed": "Pas envoyé. Réessayez.",
+    "sentResolved": "Envoyé et réglé. Le client reçoit un e-mail.",
+    "sent": "Envoyé. Le client reçoit un e-mail.",
+    "saveFailed": "Ce n'est pas enregistré. Réessayez.",
+    "ticketWord": "ce ticket",
+    "controls": {
+      "status": "Statut",
+      "severity": "Gravité",
+      "assignee": "Qui s'en occupe"
+    },
+    "reopened_one": "Rouvert une fois",
+    "reopened_other": "Rouvert {{count}}×",
+    "composer": {
+      "mode": "Réponse ou note",
+      "note": "Note interne",
+      "reply": "Répondre au client",
+      "noteHint": "Seule votre équipe la voit.",
+      "notePlaceholder": "Une note pour l'équipe…",
+      "placeholder": "Répondre à {{client}}…",
+      "addNote": "Ajouter la note",
+      "sendResolve": "Envoyer et régler",
+      "send": "Envoyer",
+      "sendHint": "Envoyer passe le ticket en « En attente du client » et lui envoie un e-mail."
+    },
+    "severity": {
+      "urgent": "Urgent",
+      "normal": "Normal",
+      "low": "Faible"
+    },
+    "status": {
+      "open": "Ouvert",
+      "waiting_on_client": "En attente du client",
+      "resolved": "Réglé"
+    },
+    "thread": {
+      "note": "Note interne"
+    },
+    "event": {
+      "assigned": "{{who}} l'a confié à {{name}}",
+      "unassigned": "{{who}} l'a laissé sans responsable"
+    },
+    "today_one": "1 ticket de support attend une réponse",
+    "today_other": "{{count}} tickets de support attendent une réponse",
+    "noteAdded": "Note ajoutée. Seule votre équipe la voit.",
+    "email": {
+      "context": "Ticket n° {{number}} · {{client}}",
+      "failed": "Impossible d'ouvrir l'e-mail. Réessayez.",
+      "title": "Écrire à {{name}} depuis votre boîte mail",
+      "notSent": "Non envoyé",
+      "sent": "Envoyé",
+      "by": "E-mail de {{who}}"
+    }
   }
 }

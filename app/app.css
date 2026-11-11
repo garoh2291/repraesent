@@ -1400,3 +1400,26 @@ html {
 [data-input-otp] {
   -webkit-tap-highlight-color: transparent;
 }
+
+/* Help & changes: the ticket stub (components/support/ticket-bits.tsx).
+   A paper stub with a punched notch on each short side, like the tear-off
+   ticket at a repair counter. The notches are cut with a mask, so the stub
+   sits on any background (card, paper, marker). */
+.ticket-stub {
+  position: relative;
+  background: var(--card);
+  border: 1px dashed color-mix(in srgb, var(--foreground) 28%, transparent);
+  border-radius: 3px;
+  -webkit-mask:
+    radial-gradient(circle 4px at 0 50%, #0000 97%, #000) left / 51% 100% no-repeat,
+    radial-gradient(circle 4px at 100% 50%, #0000 97%, #000) right / 51% 100% no-repeat;
+  mask:
+    radial-gradient(circle 4px at 0 50%, #0000 97%, #000) left / 51% 100% no-repeat,
+    radial-gradient(circle 4px at 100% 50%, #0000 97%, #000) right / 51% 100% no-repeat;
+}
+/* Internal team notes: a yellow sticky slip, not a chat bubble. */
+.note-slip {
+  background: var(--marker-soft);
+  border: 1px solid color-mix(in srgb, var(--marker) 70%, var(--foreground) 6%);
+  box-shadow: 0 1px 0 color-mix(in srgb, var(--marker-ink) 12%, transparent);
+}

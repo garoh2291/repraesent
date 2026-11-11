@@ -150,6 +150,9 @@ export default [
         "routes/email-templates.$templateId.tsx",
       ),
       route("media/:view?", "routes/media.tsx"),
+      route("help", "routes/help._index.tsx"),
+      route("help/:ticketId", "routes/help.$ticketId.tsx"),
+      route("support/:ticketId?", "routes/support.tsx"),
       route("settings", "routes/settings._layout.tsx", [
         index("routes/settings._index.tsx"),
         route("profile", "routes/settings.profile.tsx"),

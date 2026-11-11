@@ -24,6 +24,36 @@ export interface WorkspaceAiStatus {
   openrouter_key_url: string | null;
   default_chat_model: string;
   models: WorkspaceAiModel[];
+  /** credits: key works but the OpenRouter account is empty; revoked: key rejected. */
+  problem?: "credits" | "revoked" | null;
+}
+
+export interface OpenRouterBalance {
+  balance_usd: number | null;
+  total_credits_usd: number | null;
+  total_usage_usd: number | null;
+  key_limit_usd: number | null;
+  key_limit_remaining_usd: number | null;
+  key_usage_usd: number | null;
+  key_usage_monthly_usd: number | null;
+  checked_at: string;
+}
+
+export interface LowBalanceAlert {
+  enabled: boolean;
+  threshold_usd: number | null;
+  channels: Array<"push" | "email">;
+  last_alerted_at: string | null;
+}
+
+export async function getWorkspaceAiBalance(fresh = false): Promise<{ ok: boolean; balance: OpenRouterBalance | null }> {
+  return (await apiClient.get<{ ok: boolean; balance: OpenRouterBalance | null }>(`/workspace-ai/settings/balance`, { params: fresh ? { fresh: "1" } : {} })).data;
+}
+export async function getLowBalanceAlert(): Promise<LowBalanceAlert> {
+  return (await apiClient.get<LowBalanceAlert>(`/workspace-ai/settings/low-balance-alert`)).data;
+}
+export async function setLowBalanceAlert(body: { enabled: boolean; threshold_usd: number | null; channels: Array<"push" | "email"> }): Promise<LowBalanceAlert> {
+  return (await apiClient.put<LowBalanceAlert>(`/workspace-ai/settings/low-balance-alert`, body)).data;
 }
 
 export interface WorkspaceAiTestResult {

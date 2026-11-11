@@ -4,7 +4,6 @@ import { useTranslation } from "react-i18next";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuthContext } from "~/providers/auth-provider";
 import { Sidebar } from "~/components/sidebar";
-import { PilotRouteGate } from "~/components/PilotRouteGate";
 import { Button } from "~/components/ui/button";
 import { AlertTriangle, Menu, Search } from "lucide-react";
 import { MobileMenu } from "~/components/notebook/mobile-menu";
@@ -19,6 +18,7 @@ import logoUrl from "~/components/icons/re_praesent-mark-brand-hor.svg?url";
 import { activeSection, useNavSections } from "~/lib/nav/sections";
 import { SectionTabs } from "~/components/notebook/section-tabs";
 import { BottomTabBar } from "~/components/notebook/bottom-tab-bar";
+import { HelpProvider } from "~/components/support/help-provider";
 import {
   CommandPalette,
   openCommandPalette,
@@ -127,8 +127,8 @@ export default function DashboardLayout() {
     <LeadFlowProvider>
     <DealFlowProvider>
     <QuickCreateProvider>
+    <HelpProvider>
     <div data-app-shell="" className="flex h-dvh overflow-hidden bg-background">
-      <PilotRouteGate />
       {/* Desktop sidebar — the ink column */}
       <Sidebar className="hidden lg:flex" collapsible />
 
@@ -262,6 +262,7 @@ export default function DashboardLayout() {
 
       <SyncCompleteModal />
     </div>
+    </HelpProvider>
     </QuickCreateProvider>
     </DealFlowProvider>
     </LeadFlowProvider>
