@@ -94,6 +94,8 @@ const EARLY_ACCESS: Readonly<Record<string, ReadonlyArray<PilotFeature>>> = {
   // The Amara Estate: appointments, and the workflows behind their reminders
   // (APPOINTMENTS_PLAN.md).
   "d50fe320-70ce-4d9a-a058-34f17a2a2904": ["appointmentBook", "workflows"],
+  // Rolf Benz Haus Praha (Dev): new appointment book (2026-11-11).
+  "afcaf795-7855-444f-aeff-9c415ee57643": ["appointmentBook"],
 };
 
 /**
