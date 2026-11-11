@@ -41,9 +41,10 @@ export type PilotFeature =
   | "googleReviews"
   /**
    * Appointments as their own section: Repraesent calendars, the appointment
-   * book, customer messages. APPOINTMENTS_PLAN.md. Not in PILOT_ROUTES on
-   * purpose — `/appointments` is also where the legacy booking page lives, and
-   * the pages redirect themselves instead.
+   * book, customer messages. Shipped to every workspace (2026-11-11). Still
+   * typed as a PilotFeature so call sites stay stable; `isPilotFeatureEnabled`
+   * always returns true for it. Not in PILOT_ROUTES — `/appointments` is also
+   * the legacy booking page.
    */
   | "appointmentBook";
 
@@ -91,23 +92,23 @@ export function pilotFeatureForPath(pathname: string): PilotFeature | null {
  * no "Demo" pill.
  */
 const EARLY_ACCESS: Readonly<Record<string, ReadonlyArray<PilotFeature>>> = {
-  // The Amara Estate: appointments, and the workflows behind their reminders
-  // (APPOINTMENTS_PLAN.md).
-  "d50fe320-70ce-4d9a-a058-34f17a2a2904": ["appointmentBook", "workflows"],
-  // Rolf Benz Haus Praha (Dev): new appointment book (2026-11-11).
-  "afcaf795-7855-444f-aeff-9c415ee57643": ["appointmentBook"],
+  // The Amara Estate: workflows behind appointment reminders (APPOINTMENTS_PLAN.md).
+  // appointmentBook itself shipped fleet-wide 2026-11-11.
+  "d50fe320-70ce-4d9a-a058-34f17a2a2904": ["workflows"],
 };
 
 /**
  * Without `feature`: whether this is one of our pilot workspaces (all pilots
  * on, "Demo" pill shown). With `feature`: whether that one feature is on,
- * counting early access.
+ * counting early access and features already shipped to everyone.
  */
 export function isPilotFeatureEnabled(
   workspaceId: string | null | undefined,
   feature?: PilotFeature
 ): boolean {
   if (import.meta.env.DEV) return true;
+  // Shipped — every signed-in workspace gets the new Appointments section.
+  if (feature === "appointmentBook") return !!workspaceId;
   if (!workspaceId) return false;
   if (PILOT_WORKSPACE_IDS.has(workspaceId)) return true;
   return !!feature && (EARLY_ACCESS[workspaceId]?.includes(feature) ?? false);

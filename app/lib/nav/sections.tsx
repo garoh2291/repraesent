@@ -339,8 +339,8 @@ export function useNavSections(): NavSection[] | null {
       icon: CheckSquare,
     },
   ];
-  // Appointments as a section of their own (pilot `appointmentBook`): the
-  // calendar pages move there from Deals. Without the pilot, nothing changes.
+  // Appointments as a section of their own (`appointmentBook`, shipped): the
+  // calendar pages live here instead of under Deals.
   const appointmentBook = pilot.appointmentBook;
   const appointments: SectionTab[] = [];
   if (appointmentBook) {
