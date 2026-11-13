@@ -9,13 +9,12 @@ import moment from "moment-timezone";
 import { toast } from "sonner";
 import {
   ExternalLink,
-  Globe,
   Plus,
   SlidersHorizontal,
   TriangleAlert,
   X,
 } from "lucide-react";
-import TimezoneSelect from "react-timezone-select";
+import { TimezonePicker } from "~/components/ui/timezone-picker";
 import type { View } from "react-big-calendar";
 import { useAuthContext } from "~/providers/auth-provider";
 import { useCalendarSummary } from "~/lib/hooks/useCalendarSummary";
@@ -355,22 +354,8 @@ export default function CalendarPage() {
               inside it can beat the calendar section below — the dropdown was
               sliding under the grid. A portal escapes the trap entirely. */}
           <div className="flex items-center gap-1.5 max-sm:order-last max-sm:col-span-2">
-            <Globe className="hidden sm:block w-3.5 h-3.5 text-muted-foreground" />
-            <div className="w-56 sm:w-72 max-sm:w-full">
-              <TimezoneSelect
-                value={timezone}
-                onChange={(tz) =>
-                  handleTimezoneChange(typeof tz === "string" ? tz : tz.value)
-                }
-                aria-label={t("calendar.timezone")}
-                menuPortalTarget={
-                  typeof document !== "undefined" ? document.body : undefined
-                }
-                styles={{
-                  menuPortal: (base) => ({ ...base, zIndex: 60 }),
-                }}
-                className="text-sm [&_.react-select__control]:min-h-9 max-sm:[&_.react-select__control]:min-h-11 [&_.react-select__control]:rounded-lg [&_.react-select__control]:border-border [&_.react-select__control]:text-sm"
-              />
+            <div className="w-56 sm:w-64 max-sm:w-full">
+              <TimezonePicker compact value={timezone} onChange={handleTimezoneChange} aria-label={t("calendar.timezone")} />
             </div>
           </div>
 

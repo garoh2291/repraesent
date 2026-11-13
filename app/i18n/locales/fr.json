@@ -11413,7 +11413,10 @@
       "nowFallback": "Utilisé désormais quand rien d’autre n’est choisi",
       "messagesHint2": "Envoyés par e-mail au nom de votre entreprise. Les SMS pourront être ajoutés plus tard.",
       "ownerHintTop": "Chaque nouveau rendez-vous de ce calendrier va à cette personne. Elle est prévenue quand un client déplace ou annule.",
-      "secMoreHintV2": "Pauses entre les rendez-vous, délai de réservation, fuseau horaire."
+      "secMoreHintV2": "Pauses entre les rendez-vous, délai de réservation, fuseau horaire.",
+      "tzTitle": "Fuseau horaire",
+      "tzHint": "Vos horaires ci-dessous sont dans ce fuseau horaire.",
+      "secMoreHintV3": "Pauses entre les rendez-vous, délai minimum et jusqu'à quand on peut réserver."
     },
     "detail": {
       "nobody": "Personne pour l’instant",
@@ -11478,7 +11481,9 @@
       "edit": "Les modifier",
       "off": "Cet agenda est désactivé : les visiteurs ne verront aucun créneau.",
       "hint": "Les réservations arrivent dans Rendez-vous, liées à la demande.",
-      "calendar": "Agenda"
+      "calendar": "Agenda",
+      "noneTitle": "Pas encore de calendrier de rendez-vous",
+      "noneBody": "Créez-en un avec vos horaires et votre fuseau horaire, puis choisissez-le ici."
     },
     "calendars": {
       "off": "Désactivé",
@@ -11498,7 +11503,9 @@
       "upcoming_other": "{{count}} à venir",
       "fallback": "Quand rien d’autre n’est choisi",
       "handledBy": "géré par {{name}}",
-      "nobodyHandles": "personne ne s'en occupe encore"
+      "nobodyHandles": "personne ne s'en occupe encore",
+      "zone": "Heure de {{city}}",
+      "newSubV2": "Un nom et un fuseau horaire maintenant ; horaires et règles ensuite."
     },
     "title": "Rendez-vous",
     "messages": {
@@ -11760,6 +11767,20 @@
       "connectedIt": "l'a connecté",
       "titleDirect": "Rendez-vous pris directement dans Google ou Outlook",
       "subtitleDirect": "Uniquement pour les rendez-vous qui se trouvent dans ces calendriers : un formulaire ou le chat qui réserve directement dans Google ou Outlook, ou « Ajouter aux rendez-vous » dans le calendrier d'équipe. Les rendez-vous d'un calendrier re:praesent ci-dessus vont toujours à la personne choisie sur ce calendrier."
+    },
+    "setup": {
+      "defaultName": "Rendez-vous",
+      "title": "Créez votre calendrier de rendez-vous",
+      "body": "Vous n'en avez pas encore. Donnez-lui un nom et un fuseau horaire — horaires d'ouverture et messages juste après.",
+      "create": "Créer le calendrier",
+      "length": "Durée",
+      "tzHint": "Vos horaires d'ouverture sont définis dans ce fuseau horaire.",
+      "dialogTitle": "D'abord, votre calendrier de rendez-vous",
+      "dialogBody": "Les rendez-vous vont dans un calendrier avec vos horaires. Créez-le une fois, puis réservez.",
+      "createAndBook": "Créer et continuer",
+      "bannerTitle": "Créez votre calendrier pour prendre des rendez-vous",
+      "bannerBody": "Un nom, votre fuseau horaire et vos horaires — ensuite formulaires, chat et équipe peuvent réserver.",
+      "start": "Créer le calendrier"
     }
   },
   "calendarView": {
@@ -11958,5 +11979,13 @@
       "sent": "Envoyé",
       "by": "E-mail de {{who}}"
     }
+  },
+  "timezonePicker": {
+    "label": "Fuseau horaire",
+    "search": "Ville, pays ou fuseau…",
+    "empty": "Aucun fuseau trouvé. Essayez une grande ville proche.",
+    "common": "Fréquents",
+    "results": "Résultats",
+    "all": "Tous les fuseaux horaires"
   }
 }

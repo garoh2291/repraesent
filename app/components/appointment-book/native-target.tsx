@@ -88,6 +88,26 @@ export function NativeCalendarPicker({
   const calendars = useAppointmentCalendars();
   const list = calendars.data ?? [];
   const current = list.find((c) => c.key === targetKey) ?? null;
+  if (calendars.data && list.length === 0) {
+    // A workspace starts with no calendar: point at the setup instead of an empty list.
+    return (
+      <div className="space-y-1.5 rounded-lg border border-dashed border-border p-3">
+        <p className="text-[13px] font-medium text-foreground">{t("appointmentBook.target.noneTitle", "No appointment calendar yet")}</p>
+        <p className="text-xs leading-relaxed text-muted-foreground">
+          {t("appointmentBook.target.noneBody", "Set one up with your hours and time zone, then pick it here.")}{" "}
+          <Link
+            to="/appointments/calendars"
+            target="_blank"
+            rel="noreferrer"
+            className="inline-flex items-center gap-1 font-medium text-foreground underline underline-offset-2"
+          >
+            {t("appointmentBook.setup.start", "Set up calendar")}
+            <ExternalLink className="size-3" aria-hidden />
+          </Link>
+        </p>
+      </div>
+    );
+  }
   return (
     <div className="space-y-2">
       <Select

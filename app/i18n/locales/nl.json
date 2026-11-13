@@ -11411,7 +11411,10 @@
       "nowFallback": "Wordt nu gebruikt als er niets anders gekozen is",
       "messagesHint2": "Per e-mail onder uw bedrijfsnaam. Sms'jes kunnen later worden toegevoegd.",
       "ownerHintTop": "Elke nieuwe afspraak in deze agenda gaat naar deze persoon. Die hoort het als een klant verzet of afzegt.",
-      "secMoreHintV2": "Pauzes tussen afspraken, hoe kort van tevoren men kan boeken, tijdzone."
+      "secMoreHintV2": "Pauzes tussen afspraken, hoe kort van tevoren men kan boeken, tijdzone.",
+      "tzTitle": "Tijdzone",
+      "tzHint": "Uw tijden hieronder gelden in deze tijdzone.",
+      "secMoreHintV3": "Pauzes tussen afspraken, hoe snel en hoe ver vooruit mensen kunnen boeken."
     },
     "detail": {
       "nobody": "Nog niemand",
@@ -11476,7 +11479,9 @@
       "edit": "Aanpassen",
       "off": "Deze agenda staat uit, bezoekers zien geen tijden.",
       "hint": "Boekingen komen in Afspraken, gekoppeld aan de aanvraag.",
-      "calendar": "Agenda"
+      "calendar": "Agenda",
+      "noneTitle": "Nog geen afsprakenagenda",
+      "noneBody": "Stel er een in met uw tijden en tijdzone en kies hem dan hier."
     },
     "calendars": {
       "off": "Uitgeschakeld",
@@ -11496,7 +11501,9 @@
       "upcoming_other": "{{count}} komend",
       "fallback": "Als niets anders gekozen is",
       "handledBy": "door {{name}}",
-      "nobodyHandles": "nog niemand toegewezen"
+      "nobodyHandles": "nog niemand toegewezen",
+      "zone": "Tijd: {{city}}",
+      "newSubV2": "Nu een naam en tijdzone; tijden en regels volgen daarna."
     },
     "title": "Afspraken",
     "messages": {
@@ -11758,6 +11765,20 @@
       "connectedIt": "heeft hem gekoppeld",
       "titleDirect": "Afspraken direct in Google of Outlook",
       "subtitleDirect": "Alleen voor afspraken die in deze agenda's staan: een formulier of de chat die direct in Google of Outlook boekt, of ‘Toevoegen aan afspraken’ in de teamagenda. Afspraken in een re:praesent-agenda hierboven gaan altijd naar de persoon die op die agenda staat."
+    },
+    "setup": {
+      "defaultName": "Afspraken",
+      "title": "Stel uw afsprakenagenda in",
+      "body": "U heeft er nog geen. Geef hem een naam en een tijdzone — openingstijden en berichten volgen direct daarna.",
+      "create": "Agenda aanmaken",
+      "length": "Hoe lang",
+      "tzHint": "Uw openingstijden gelden in deze tijdzone.",
+      "dialogTitle": "Eerst: uw afsprakenagenda",
+      "dialogBody": "Afspraken komen in een agenda met uw tijden. Eén keer instellen, dan boeken.",
+      "createAndBook": "Aanmaken en verder",
+      "bannerTitle": "Stel uw agenda in om afspraken aan te nemen",
+      "bannerBody": "Een naam, uw tijdzone en openingstijden — daarna kunnen formulieren, chat en uw team boeken.",
+      "start": "Agenda instellen"
     }
   },
   "calendarView": {
@@ -11956,5 +11977,13 @@
       "sent": "Verstuurd",
       "by": "E-mail van {{who}}"
     }
+  },
+  "timezonePicker": {
+    "label": "Tijdzone",
+    "search": "Stad, land of tijdzone…",
+    "empty": "Geen tijdzone gevonden. Probeer een grote stad in de buurt.",
+    "common": "Veelgebruikt",
+    "results": "Resultaten",
+    "all": "Alle tijdzones"
   }
 }

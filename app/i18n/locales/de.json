@@ -11413,7 +11413,10 @@
       "nowFallback": "Wird jetzt verwendet, wenn nichts anderes gewählt ist",
       "messagesHint2": "Per E-Mail unter Ihrem Firmennamen. SMS können später dazukommen.",
       "ownerHintTop": "Jeder neue Termin in diesem Kalender geht an diese Person. Sie wird informiert, wenn jemand verschiebt oder absagt.",
-      "secMoreHintV2": "Pausen zwischen Terminen, wie kurzfristig gebucht werden kann, Zeitzone."
+      "secMoreHintV2": "Pausen zwischen Terminen, wie kurzfristig gebucht werden kann, Zeitzone.",
+      "tzTitle": "Zeitzone",
+      "tzHint": "Ihre Zeiten unten gelten in dieser Zeitzone.",
+      "secMoreHintV3": "Pausen zwischen Terminen, wie kurzfristig und wie weit im Voraus gebucht werden kann."
     },
     "detail": {
       "nobody": "Noch niemand",
@@ -11478,7 +11481,9 @@
       "edit": "Ändern",
       "off": "Dieser Kalender ist ausgeschaltet, Besucher sehen keine Zeiten.",
       "hint": "Buchungen landen unter Termine, mit der Anfrage verknüpft.",
-      "calendar": "Kalender"
+      "calendar": "Kalender",
+      "noneTitle": "Noch kein Terminkalender",
+      "noneBody": "Richten Sie einen mit Ihren Zeiten und Ihrer Zeitzone ein und wählen Sie ihn dann hier."
     },
     "calendars": {
       "off": "Ausgeschaltet",
@@ -11498,7 +11503,9 @@
       "upcoming_other": "{{count}} anstehend",
       "fallback": "Wenn nichts anderes gewählt ist",
       "handledBy": "zuständig: {{name}}",
-      "nobodyHandles": "noch niemand zuständig"
+      "nobodyHandles": "noch niemand zuständig",
+      "zone": "Zeit: {{city}}",
+      "newSubV2": "Jetzt Name und Zeitzone – Zeiten und Regeln kommen danach."
     },
     "title": "Termine",
     "messages": {
@@ -11760,6 +11767,20 @@
       "connectedIt": "hat ihn verbunden",
       "titleDirect": "Termine direkt in Google oder Outlook",
       "subtitleDirect": "Nur für Termine, die in diesen Kalendern liegen: ein Formular oder der Chat, der direkt in Google oder Outlook bucht, oder „Zu Terminen hinzufügen“ im Teamkalender. Termine in einem re:praesent-Kalender oben gehen immer an die Person, die dort eingestellt ist."
+    },
+    "setup": {
+      "defaultName": "Termine",
+      "title": "Terminkalender einrichten",
+      "body": "Sie haben noch keinen. Geben Sie ihm einen Namen und eine Zeitzone – Öffnungszeiten und Nachrichten folgen direkt danach.",
+      "create": "Kalender anlegen",
+      "length": "Dauer",
+      "tzHint": "Ihre Öffnungszeiten gelten in dieser Zeitzone.",
+      "dialogTitle": "Zuerst: Ihr Terminkalender",
+      "dialogBody": "Termine landen in einem Kalender mit Ihren Zeiten. Einmal einrichten, dann buchen.",
+      "createAndBook": "Anlegen und weiter",
+      "bannerTitle": "Richten Sie Ihren Kalender ein, um Termine anzunehmen",
+      "bannerBody": "Name, Zeitzone und Öffnungszeiten – dann können Formulare, Chat und Ihr Team buchen.",
+      "start": "Kalender einrichten"
     }
   },
   "calendarView": {
@@ -11958,5 +11979,13 @@
       "sent": "Gesendet",
       "by": "E-Mail von {{who}}"
     }
+  },
+  "timezonePicker": {
+    "label": "Zeitzone",
+    "search": "Stadt, Land oder Zeitzone…",
+    "empty": "Keine Zeitzone gefunden. Versuchen Sie eine größere Stadt in der Nähe.",
+    "common": "Häufig",
+    "results": "Treffer",
+    "all": "Alle Zeitzonen"
   }
 }

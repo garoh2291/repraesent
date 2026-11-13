@@ -21,7 +21,7 @@ import { Label } from "~/components/ui/label";
 import { Textarea } from "~/components/ui/textarea";
 import { Calendar } from "~/components/ui/calendar";
 import { ScrollArea } from "~/components/ui/scroll-area";
-import TimezoneSelect from "react-timezone-select";
+import { TimezonePicker } from "~/components/ui/timezone-picker";
 import axios from "axios";
 import {
   ChevronLeft,
@@ -865,13 +865,7 @@ function Step1DateAndTime({
             <label className="block text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
               {t("booking.timezone")}
             </label>
-            <TimezoneSelect
-              value={userTimezone}
-              onChange={(tz) =>
-                onTimezoneChange(typeof tz === "string" ? tz : tz.value)
-              }
-              className="[&_.react-select__control]:min-h-10 [&_.react-select__control]:rounded-md [&_.react-select__control]:border-stone-200 [&_.react-select__control]:bg-white [&_.react-select__control]:text-sm"
-            />
+            <TimezonePicker value={userTimezone} onChange={onTimezoneChange} />
           </div>
 
           {selectedDate && (

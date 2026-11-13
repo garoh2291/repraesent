@@ -4,7 +4,7 @@ import { useTranslation } from "react-i18next";
 import { useParams } from "react-router";
 import { toast } from "sonner";
 import { Link } from "react-router";
-import TimezoneSelect from "react-timezone-select";
+import { TimezonePicker } from "~/components/ui/timezone-picker";
 import {
   ArrowDown,
   ArrowUp,
@@ -1023,14 +1023,7 @@ function BookingRules({
 
       <Field>
         <Label>{t("forms.inspector.appointment.timezone")}</Label>
-        <TimezoneSelect
-          value={ap.timezone}
-          isDisabled={disabled}
-          onChange={(tz) =>
-            patch({ timezone: typeof tz === "string" ? tz : tz.value })
-          }
-          className="[&_.react-select__control]:min-h-9 [&_.react-select__control]:rounded-lg [&_.react-select__control]:border-border [&_.react-select__control]:text-sm"
-        />
+        <TimezonePicker compact value={ap.timezone} disabled={disabled} onChange={(timezone) => patch({ timezone })} />
       </Field>
 
       <Cols>

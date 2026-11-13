@@ -9,7 +9,7 @@ import { cn } from "~/lib/utils";
 import { formatDateIntl } from "~/lib/utils/format";
 import { EASE_OUT } from "~/lib/motion";
 import type { Side, TicketAttachment, TicketMessage } from "~/lib/api/support-tickets";
-import { initials, useAttachmentUrl, useSeverityLabel, useStatusLabel } from "./ticket-bits";
+import { initials, useAttachmentUrl, usePrefetchShot, useSeverityLabel, useStatusLabel } from "./ticket-bits";
 
 const URL_RE = /(https?:\/\/[^\s<>"')]+[^\s<>"').,;:!?])/g;
 
@@ -305,28 +305,77 @@ function Shots({ items, side, align }: { items: TicketAttachment[]; side: Side; 
 
 function Shot({ a, side }: { a: TicketAttachment; side: Side }) {
   const { t } = useTranslation();
-  const { url, failed } = useAttachmentUrl(side, a.id);
   const [open, setOpen] = useState(false);
+  // Tile: the small preview (older screenshots fall back to the original server-side).
+  const thumb = useAttachmentUrl(side, a.id, "thumb");
+  // Full image: only once the lightbox opens (or a hover/press warmed it).
+  const full = useAttachmentUrl(side, a.id, "full", open);
+  const prefetch = usePrefetchShot();
+  const [tileLoaded, setTileLoaded] = useState(false);
+  const [fullLoaded, setFullLoaded] = useState(false);
+  const warm = () => prefetch(side, a.id);
   return (
     <>
       <button
         type="button"
-        onClick={() => url && setOpen(true)}
+        onClick={() => thumb.url && setOpen(true)}
+        onPointerEnter={warm}
+        onPointerDown={warm}
+        onFocus={warm}
         className="press relative size-24 overflow-hidden rounded-xl border border-border bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground/30 sm:size-28"
         aria-label={t("help.thread.openScreenshot", "Open screenshot")}
       >
-        {url ? (
-          <img src={url} alt="" className="size-full object-cover" />
-        ) : failed ? (
+        {thumb.failed ? (
           <ImageOff className="m-auto size-5 text-muted-foreground" aria-hidden />
         ) : (
-          <span className="absolute inset-0 animate-pulse bg-muted" />
+          <>
+            {!tileLoaded ? <span className="absolute inset-0 animate-pulse bg-muted" /> : null}
+            {thumb.url ? (
+              <img
+                src={thumb.url}
+                alt=""
+                decoding="async"
+                onLoad={() => setTileLoaded(true)}
+                className={cn(
+                  "relative size-full object-cover transition-opacity duration-300 motion-reduce:transition-none",
+                  tileLoaded ? "opacity-100" : "opacity-0",
+                )}
+              />
+            ) : null}
+          </>
         )}
       </button>
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="max-h-[92dvh] w-auto max-w-[min(96vw,1200px)] overflow-auto border-0 bg-transparent p-0 shadow-none sm:max-w-[min(96vw,1200px)]">
           <DialogTitle className="sr-only">{a.file_name ?? t("help.thread.screenshot", "Screenshot")}</DialogTitle>
-          {url ? <img src={url} alt={a.file_name ?? ""} className="mx-auto max-h-[88dvh] rounded-xl bg-card object-contain" /> : null}
+          {/* Blur-up, like /media: the preview fills in at once, the sharp image fades over it. */}
+          <div className="relative mx-auto overflow-hidden rounded-xl bg-card">
+            {thumb.url && !fullLoaded ? (
+              <img
+                src={thumb.url}
+                alt=""
+                aria-hidden
+                className={cn(
+                  "max-h-[88dvh] min-w-[min(80vw,560px)] scale-[1.02] object-contain blur-sm",
+                  full.url && "absolute inset-0 size-full",
+                )}
+              />
+            ) : null}
+            {full.url ? (
+              <img
+                src={full.url}
+                alt={a.file_name ?? ""}
+                onLoad={() => setFullLoaded(true)}
+                className={cn(
+                  "mx-auto max-h-[88dvh] object-contain transition-opacity duration-300 motion-reduce:transition-none",
+                  fullLoaded ? "opacity-100" : "opacity-0",
+                )}
+              />
+            ) : null}
+            {!fullLoaded && !full.failed ? (
+              <Loader2 className="absolute top-3 right-3 size-4 animate-spin text-white drop-shadow" aria-hidden />
+            ) : null}
+          </div>
         </DialogContent>
       </Dialog>
     </>

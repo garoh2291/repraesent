@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { calendarLabel } from "~/lib/calendar/calendar-label";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
-import TimezoneSelect from "react-timezone-select";
+import { TimezonePicker } from "~/components/ui/timezone-picker";
 import { ChevronDown, Mail, Plus, Trash2 } from "lucide-react";
 import { cn } from "~/lib/utils";
 import { Input } from "~/components/ui/input";
@@ -171,7 +171,6 @@ export function CalendarForm({
   const emailAccounts = useEmailAccounts();
   const sender = senderOf(emailAccounts.data ?? [], draft.email_account_id ?? null);
   const [moreOpen, setMoreOpen] = useState(false);
-  const [tzOpen, setTzOpen] = useState(false);
   const [sheet, setSheet] = useState<null | "confirmation" | "changes" | "reminder">(null);
   // The last one opened, so the sheet keeps its title while it slides away.
   const [shown, setShown] = useState<"confirmation" | "changes" | "reminder">("confirmation");
@@ -206,7 +205,6 @@ export function CalendarForm({
   const setMessages = (patch: Partial<CustomerMessagesSettings>) => set("customer_messages", { ...messages, ...patch });
   const setCopy = (copy: CustomerMessageCopyMap) => setMessages({ copy });
   const tz = draft.timezone ?? "Europe/Berlin";
-  const tzCity = (tz.split("/").pop() ?? tz).replace(/_/g, " ");
 
   return (
     <div className="space-y-5">
@@ -330,6 +328,22 @@ export function CalendarForm({
         title={t("appointmentBook.settings.secFree", "When you're free")}
         hint={t("appointmentBook.settings.hoursHint", "Only these times are offered. Add a break to split a day.")}
       >
+        {/* The time zone the hours are in — up here, not folded away: a wrong
+            zone moves every free time by hours. */}
+        <div className="flex flex-col gap-3 rounded-xl bg-muted/50 p-3 sm:flex-row sm:items-center sm:gap-4 sm:p-4">
+          <div className="min-w-0 flex-1">
+            <p className="text-[14px] font-medium text-foreground">{t("appointmentBook.settings.tzTitle", "Time zone")}</p>
+            <p className="text-[12.5px] text-muted-foreground">
+              {t("appointmentBook.settings.tzHint", "Your hours below are in this time zone.")}
+            </p>
+          </div>
+          <TimezonePicker
+            value={tz}
+            onChange={(z) => set("timezone", z)}
+            aria-label={t("appointmentBook.settings.timezone", "Time zone")}
+            className="sm:w-72 sm:shrink-0"
+          />
+        </div>
         <div className="divide-y divide-border">
           {WEEKDAYS.map((day) => {
             const ranges = draft.weekly_hours?.[day] ?? [];
@@ -498,7 +512,7 @@ export function CalendarForm({
           <span className="min-w-0 flex-1">
             <span className="block text-[16px] font-semibold text-foreground">{t("appointmentBook.settings.secMore", "More rules")}</span>
             <span className="block text-[13px] text-muted-foreground">
-              {t("appointmentBook.settings.secMoreHintV2", "Breaks between appointments, how soon people can book, time zone.")}
+              {t("appointmentBook.settings.secMoreHintV3", "Breaks between appointments, how soon and how far ahead people can book.")}
             </span>
           </span>
           <ChevronDown className={cn("size-4 shrink-0 text-muted-foreground transition-transform motion-reduce:transition-none", moreOpen && "rotate-180")} aria-hidden />
@@ -554,36 +568,6 @@ export function CalendarForm({
                   className="h-10 w-[120px] max-sm:h-11"
                 />
               </FieldRow>
-            </div>
-            <div className="space-y-2">
-              <p className="flex min-h-11 flex-wrap items-center gap-x-1.5 text-[14px] text-foreground sm:min-h-0">
-                {t("appointmentBook.settings.tzLine", "Times are in {{city}} time", { city: tzCity })}
-                <span className="text-muted-foreground" aria-hidden>
-                  ·
-                </span>
-                <button
-                  type="button"
-                  onClick={() => setTzOpen((v) => !v)}
-                  aria-expanded={tzOpen}
-                  className="inline-flex min-h-11 items-center font-medium underline underline-offset-4 hover:no-underline sm:min-h-0"
-                >
-                  {tzOpen ? t("appointmentBook.settings.tzDone", "Done") : t("appointmentBook.settings.tzChange", "Change")}
-                </button>
-              </p>
-              {tzOpen ? (
-                <TimezoneSelect
-                  value={tz}
-                  onChange={(next) => set("timezone", typeof next === "string" ? next : next.value)}
-                  aria-label={t("appointmentBook.settings.timezone", "Time zone")}
-                  // The card clips its content (rounded corners): the list
-                  // opens on top of the page instead of half inside the card.
-                  menuPortalTarget={typeof document !== "undefined" ? document.body : null}
-                  menuPosition="fixed"
-                  menuPlacement="auto"
-                  styles={{ menuPortal: (base) => ({ ...base, zIndex: 60 }) }}
-                  className="sm:max-w-md [&_.react-select__control]:min-h-10 [&_.react-select__control]:rounded-lg [&_.react-select__control]:border-border [&_.react-select__control]:text-sm"
-                />
-              ) : null}
             </div>
             <FieldRow label={t("appointmentBook.settings.description", "Note for your team (optional)")}>
               <Textarea value={draft.description ?? ""} onChange={(e) => set("description", e.target.value || null)} rows={2} className="sm:max-w-xl" />

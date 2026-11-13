@@ -1,4 +1,5 @@
 import { apiClient } from "./axios-instance";
+import { generateThumbnail } from "~/lib/utils/image-resize";
 
 /**
  * Help & changes (SUPPORT_TICKETS_PLAN.md). Two sides of one thread:
@@ -97,12 +98,33 @@ export const SEVERITIES: Severity[] = ["urgent", "normal", "low"];
 
 const MULTIPART = { headers: { "Content-Type": "multipart/form-data" } };
 
-function form(fields: Record<string, string | null | undefined>, files: File[]): FormData {
+/**
+ * Multipart body: the screenshots, plus a small WebP preview of each made in
+ * the browser (same as /media), so threads show a few KB instead of 5 MB.
+ * `thumbs[i]` belongs to `files[i]`; a GIF or a preview that can't be made
+ * gets an empty placeholder and the server serves the original instead.
+ */
+async function form(fields: Record<string, string | null | undefined>, files: File[]): Promise<FormData> {
   const fd = new FormData();
   for (const [k, v] of Object.entries(fields)) if (v != null && v !== "") fd.append(k, v);
-  for (const f of files) fd.append("files", f, f.name || "screenshot.png");
+  const thumbs = await Promise.all(
+    files.map((f) =>
+      f.type === "image/gif"
+        ? null
+        : generateThumbnail(f, SHOT_THUMB_PX)
+            .then((t) => (t.mimeType === "image/webp" ? t.blob : null))
+            .catch(() => null),
+    ),
+  );
+  files.forEach((f, i) => {
+    fd.append("files", f, f.name || "screenshot.png");
+    fd.append("thumbs", thumbs[i] ?? new Blob([], { type: "application/octet-stream" }), "thumb.webp");
+  });
   return fd;
 }
+
+/** Long edge of a thread preview: crisp on a retina 112 px tile and as the lightbox blur-up. */
+const SHOT_THUMB_PX = 480;
 
 // ── customer side ───────────────────────────────────────────────────────────
 
@@ -126,14 +148,14 @@ export async function createHelpTicket(input: {
   page_url: string | null;
   files: File[];
 }) {
-  const fd = form({ url_id: input.url_id, severity: input.severity, description: input.description, page_url: input.page_url }, input.files);
+  const fd = await form({ url_id: input.url_id, severity: input.severity, description: input.description, page_url: input.page_url }, input.files);
   return (await apiClient.post<TicketDetail>("/help/tickets", fd, MULTIPART)).data;
 }
 export async function getHelpTicket(id: string) {
   return (await apiClient.get<TicketDetail>(`/help/tickets/${id}`)).data;
 }
 export async function sendHelpMessage(id: string, body: string, files: File[]) {
-  return (await apiClient.post<TicketDetail>(`/help/tickets/${id}/messages`, form({ body }, files), MULTIPART)).data;
+  return (await apiClient.post<TicketDetail>(`/help/tickets/${id}/messages`, await form({ body }, files), MULTIPART)).data;
 }
 export async function setHelpTicketStatus(id: string, action: "resolve" | "reopen") {
   return (await apiClient.post<TicketDetail>(`/help/tickets/${id}/${action}`)).data;
@@ -194,7 +216,7 @@ export async function getQueueTicket(id: string) {
 }
 export async function sendQueueMessage(id: string, input: { body: string; kind: "message" | "note"; then: "wait" | "resolve" | "keep"; files: File[] }) {
   return (
-    await apiClient.post<TeamTicketDetail>(`/root-support/tickets/${id}/messages`, form({ body: input.body, kind: input.kind, then: input.then }, input.files), MULTIPART)
+    await apiClient.post<TeamTicketDetail>(`/root-support/tickets/${id}/messages`, await form({ body: input.body, kind: input.kind, then: input.then }, input.files), MULTIPART)
   ).data;
 }
 export async function updateQueueTicket(id: string, patch: { status?: TicketStatus; severity?: Severity; assigned_to?: string | null }) {
@@ -213,7 +235,8 @@ export async function markQueueTicketRead(id: string) {
 }
 
 /** Screenshots are private: fetched with the session, shown from a blob URL. */
-export async function fetchAttachmentBlob(side: Side, id: string): Promise<Blob> {
+export type ShotSize = "thumb" | "full";
+export async function fetchAttachmentBlob(side: Side, id: string, size: ShotSize = "full"): Promise<Blob> {
   const path = side === "team" ? `/root-support/attachments/${id}` : `/help/attachments/${id}`;
-  return (await apiClient.get<Blob>(path, { responseType: "blob" })).data;
+  return (await apiClient.get<Blob>(path, { responseType: "blob", params: size === "thumb" ? { size } : undefined })).data;
 }

@@ -11411,7 +11411,10 @@
       "nowFallback": "Now used when nothing else is picked",
       "messagesHint2": "Sent by email under your business name. Text messages can be added later.",
       "ownerHintTop": "Every new appointment in this calendar goes to this person. They're told when a customer moves or cancels.",
-      "secMoreHintV2": "Breaks between appointments, how soon people can book, time zone."
+      "secMoreHintV2": "Breaks between appointments, how soon people can book, time zone.",
+      "tzTitle": "Time zone",
+      "tzHint": "Your hours below are in this time zone.",
+      "secMoreHintV3": "Breaks between appointments, how soon and how far ahead people can book."
     },
     "detail": {
       "nobody": "Nobody yet",
@@ -11476,7 +11479,9 @@
       "edit": "Change them",
       "off": "This calendar is turned off, so visitors will see no times.",
       "hint": "Bookings land in Appointments, linked to the inquiry.",
-      "calendar": "Calendar"
+      "calendar": "Calendar",
+      "noneTitle": "No appointment calendar yet",
+      "noneBody": "Set one up with your hours and time zone, then pick it here."
     },
     "calendars": {
       "off": "Turned off",
@@ -11496,7 +11501,9 @@
       "upcoming_other": "{{count}} coming up",
       "fallback": "Used when nothing else is picked",
       "handledBy": "handled by {{name}}",
-      "nobodyHandles": "nobody handles it yet"
+      "nobodyHandles": "nobody handles it yet",
+      "zone": "{{city}} time",
+      "newSubV2": "A name and a time zone now; hours and rules come next."
     },
     "title": "Appointments",
     "messages": {
@@ -11758,6 +11765,20 @@
       "connectedIt": "connected it",
       "titleDirect": "Meetings booked straight into Google or Outlook",
       "subtitleDirect": "Only for meetings that live in these calendars: a form or the chat that books straight into Google or Outlook, or “Add to appointments” in the team calendar. Appointments in a re:praesent calendar above always go to the person set on that calendar."
+    },
+    "setup": {
+      "defaultName": "Appointments",
+      "title": "Set up your appointment calendar",
+      "body": "You don't have one yet. Give it a name and a time zone — opening hours and messages come right after.",
+      "create": "Create calendar",
+      "length": "How long",
+      "tzHint": "Your opening hours are set in this time zone.",
+      "dialogTitle": "First, your appointment calendar",
+      "dialogBody": "Appointments go into a calendar with your hours. Set it up once, then book.",
+      "createAndBook": "Create and continue",
+      "bannerTitle": "Set up your calendar to take appointments",
+      "bannerBody": "A name, your time zone and opening hours — then forms, chat and your team can book.",
+      "start": "Set up calendar"
     }
   },
   "calendarView": {
@@ -11956,5 +11977,13 @@
       "sent": "Sent",
       "by": "Email from {{who}}"
     }
+  },
+  "timezonePicker": {
+    "label": "Time zone",
+    "search": "City, country or zone…",
+    "empty": "No time zone matches. Try a big city nearby.",
+    "common": "Common",
+    "results": "Matches",
+    "all": "All time zones"
   }
 }

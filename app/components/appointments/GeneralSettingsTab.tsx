@@ -11,7 +11,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "~/components/ui/select";
-import TimezoneSelect from "react-timezone-select";
+import { TimezonePicker } from "~/components/ui/timezone-picker";
 import {
   updateAppointmentConfigById,
   type AppointmentConfig,
@@ -153,13 +153,7 @@ export function GeneralSettingsTab({ config }: GeneralSettingsTabProps) {
       <SectionPanel title={t("appointments.general.localization")}>
         <FieldGroup>
           <FieldLabel>{t("appointments.timezone")}</FieldLabel>
-          <TimezoneSelect
-            value={timezone}
-            onChange={(tz) =>
-              setTimezone(typeof tz === "string" ? tz : tz.value)
-            }
-            className="[&_.react-select__control]:min-h-10 [&_.react-select__control]:rounded-lg [&_.react-select__control]:border-border [&_.react-select__control]:text-sm"
-          />
+          <TimezonePicker value={timezone} onChange={setTimezone} />
         </FieldGroup>
         <div className="grid gap-4 sm:grid-cols-3">
           <FieldGroup>

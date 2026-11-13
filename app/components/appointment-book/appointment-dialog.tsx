@@ -16,6 +16,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "~/components/ui/select";
+import { NewCalendarSheet } from "~/components/appointment-book/new-calendar-fields";
 import { BottomSheet } from "~/components/notebook/bottom-sheet";
 import { extractErrorMessage } from "~/lib/api/axios-instance";
 import { createContact, getContact } from "~/lib/api/contacts-crm";
@@ -223,6 +224,20 @@ export function AppointmentDialog({
   const pickedPerson = !newPerson ? (contact ?? prefill?.contact ?? null) : null;
   const infoEmail = pickedPerson?.email ?? (lockedPerson ? prefill?.customerEmail : null) ?? null;
   const infoPhone = pickedPerson?.phone ?? (lockedPerson ? prefill?.customerPhone : null) ?? null;
+
+  // A workspace starts without a calendar: set one up right here, then book.
+  if (open && calendarsQuery.data && calendarsQuery.data.length === 0) {
+    return (
+      <NewCalendarSheet
+        onOpenChange={onOpenChange}
+        calendars={calendarsQuery.data}
+        onCreated={(c) => setCalendarId(c.id)}
+        title={t("appointmentBook.setup.dialogTitle", "First, your appointment calendar")}
+        description={t("appointmentBook.setup.dialogBody", "Appointments go into a calendar with your hours. Set it up once, then book.")}
+        submitLabel={t("appointmentBook.setup.createAndBook", "Create and continue")}
+      />
+    );
+  }
 
   return (
     <BottomSheet

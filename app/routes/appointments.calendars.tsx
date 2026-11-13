@@ -1,21 +1,17 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router";
-import { useMutation } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
-import { toast } from "sonner";
-import { ArrowLeft, CalendarDays, ChevronRight, MapPin, Plus, Sun, Video } from "lucide-react";
+import { ArrowLeft, CalendarDays, CalendarPlus, ChevronRight, Globe, MapPin, Plus, Sun, Video } from "lucide-react";
 import i18n from "~/i18n";
 import { useDocumentMeta } from "~/lib/hooks/use-document-meta";
-import { extractErrorMessage } from "~/lib/api/axios-instance";
-import { createAppointmentCalendar, WEEKDAYS, type AppointmentCalendar } from "~/lib/api/appointment-book";
-import { useAppointmentCalendars, useInvalidateAppointments } from "~/lib/hooks/useAppointmentBook";
+import { WEEKDAYS, type AppointmentCalendar } from "~/lib/api/appointment-book";
+import { zoneCity } from "~/lib/time/zones";
+import { NewCalendarFields, NewCalendarSheet, useCreateCalendar, useNewCalendarDraft } from "~/components/appointment-book/new-calendar-fields";
+import { useAppointmentCalendars } from "~/lib/hooks/useAppointmentBook";
 import { PageContainer, PageHeader } from "~/components/notebook/page-header";
 import { Panel } from "~/components/notebook/panel";
 import { LoadError } from "~/components/notebook/load-error";
-import { BottomSheet } from "~/components/notebook/bottom-sheet";
-import { Segmented } from "~/components/notebook/segmented";
 import { Button } from "~/components/ui/button";
-import { Input } from "~/components/ui/input";
 import { CalendarDot } from "~/components/appointment-book/appointment-bits";
 import { useAppointmentBookGate } from "~/components/appointment-book/use-appointment-book-gate";
 import { cn } from "~/lib/utils";
@@ -54,14 +50,18 @@ export default function AppointmentCalendarsPage() {
           "Each calendar has its own hours and rules. Your website forms and chat book into the one you pick.",
         )}
         actions={
-          <Button size="sm" className="h-9 gap-1.5 max-sm:h-11 max-sm:w-full" onClick={() => setCreating(true)}>
+          calendars.data?.length === 0 ? undefined : (
+          <Button size="sm" className="h-9 gap-1.5 max-sm:h-11 max-sm:w-full" disabled={!calendars.data} onClick={() => setCreating(true)}>
             <Plus className="size-3.5" aria-hidden />
             {t("appointmentBook.calendars.new", "New calendar")}
           </Button>
+          )
         }
       />
       {calendars.isError && !calendars.data ? (
         <LoadError what={t("appointmentBook.calendars.what", "your calendars")} onRetry={() => void calendars.refetch()} />
+      ) : calendars.data && calendars.data.length === 0 ? (
+        <FirstCalendarPanel />
       ) : (
         <div className="grid gap-3 sm:grid-cols-2">
           {(calendars.data ?? []).map((c) => (
@@ -71,7 +71,7 @@ export default function AppointmentCalendarsPage() {
         </div>
       )}
       <ConnectedCalendarHandlers />
-      {creating ? <NewCalendarSheet onOpenChange={setCreating} /> : null}
+      {creating ? <NewCalendarSheet onOpenChange={setCreating} calendars={calendars.data} /> : null}
     </PageContainer>
   );
 }
@@ -127,6 +127,10 @@ function CalendarCard({ calendar: c }: { calendar: AppointmentCalendar }) {
               {c.booking_unit === "day" ? <Sun className="size-3.5" aria-hidden /> : <CalendarDays className="size-3.5" aria-hidden />}
               {length}
             </span>
+            <span className="inline-flex items-center gap-1" title={c.timezone}>
+              <Globe className="size-3.5" aria-hidden />
+              {t("appointmentBook.calendars.zone", "{{city}} time", { city: zoneCity(c.timezone) })}
+            </span>
           </p>
           <p className="text-[13px] text-muted-foreground">{hoursSummary(c, i.language, t("appointmentBook.settings.closed", "Closed"))}</p>
           <p className="num text-[13px] text-foreground">
@@ -145,76 +149,30 @@ function CalendarCard({ calendar: c }: { calendar: AppointmentCalendar }) {
   );
 }
 
-function NewCalendarSheet({ onOpenChange }: { onOpenChange: (open: boolean) => void }) {
+/** "Set up your appointment calendar": a workspace starts with none. */
+function FirstCalendarPanel() {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const invalidate = useInvalidateAppointments();
-  const [name, setName] = useState("");
-  const [kind, setKind] = useState<"in_person" | "online" | "day">("in_person");
-  const create = useMutation({
-    mutationFn: () =>
-      createAppointmentCalendar({
-        name: name.trim(),
-        mode: kind === "online" ? "online" : "in_person",
-        booking_unit: kind === "day" ? "day" : "slot",
-        duration_minutes: kind === "day" ? 1440 : 60,
-        timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-        ...(kind === "day"
-          ? {
-              weekly_hours: {
-                mon: [{ start: "00:00", end: "23:59" }],
-                tue: [{ start: "00:00", end: "23:59" }],
-                wed: [{ start: "00:00", end: "23:59" }],
-                thu: [{ start: "00:00", end: "23:59" }],
-                fri: [{ start: "00:00", end: "23:59" }],
-                sat: [{ start: "00:00", end: "23:59" }],
-                sun: [{ start: "00:00", end: "23:59" }],
-              },
-              max_days_ahead: 730,
-              min_notice_hours: 24,
-            }
-          : {}),
-      }),
-    onSuccess: (c) => {
-      invalidate();
-      toast.success(t("appointmentBook.calendars.created", "Calendar added"));
-      onOpenChange(false);
-      navigate(`/appointments/calendars/${c.id}`);
-    },
-    onError: (e) => toast.error(extractErrorMessage(e)),
-  });
+  const [draft, setDraft] = useNewCalendarDraft([]);
+  const create = useCreateCalendar((c) => navigate(`/appointments/calendars/${c.id}`));
+  const submit = () => draft.name.trim() && !create.isPending && create.mutate(draft);
   return (
-    <BottomSheet
-      open
-      onOpenChange={onOpenChange}
-      title={t("appointmentBook.calendars.new", "New calendar")}
-      description={t("appointmentBook.calendars.newSub", "Give it a name now; hours and rules come next.")}
-      footer={
-        <Button className="w-full sm:w-auto max-sm:h-11" disabled={!name.trim() || create.isPending} onClick={() => create.mutate()}>
-          {t("appointmentBook.calendars.create", "Add calendar")}
-        </Button>
-      }
-    >
-      <div className="space-y-4">
-        <Input
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          placeholder={t("appointmentBook.calendars.namePlaceholder", "e.g. Viewings")}
-          className="h-10 max-sm:h-11"
-          onKeyDown={(e) => e.key === "Enter" && name.trim() && create.mutate()}
-        />
-        <Segmented
-          label={t("appointmentBook.calendars.kind", "What kind")}
-          value={kind}
-          onChange={setKind}
-          stretch
-          options={[
-            { value: "in_person", label: t("appointmentBook.settings.inPerson", "In person") },
-            { value: "online", label: t("appointmentBook.settings.online", "Online") },
-            { value: "day", label: t("appointmentBook.settings.unitDay", "A whole day") },
-          ]}
-        />
+    <Panel className="app-fade-up space-y-5 px-4 py-5 sm:px-6 sm:py-6">
+      <div className="flex items-start gap-3">
+        <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-secondary text-foreground" aria-hidden>
+          <CalendarPlus className="size-5" />
+        </span>
+        <div className="min-w-0 space-y-1">
+          <h2 className="text-[17px] font-semibold text-foreground">{t("appointmentBook.setup.title", "Set up your appointment calendar")}</h2>
+          <p className="max-w-xl text-[13.5px] leading-relaxed text-muted-foreground">
+            {t("appointmentBook.setup.body", "You don't have one yet. Give it a name and a time zone — opening hours and messages come right after.")}
+          </p>
+        </div>
       </div>
-    </BottomSheet>
+      <NewCalendarFields draft={draft} onChange={setDraft} onSubmit={submit} />
+      <Button className="w-full sm:w-auto max-sm:h-11" disabled={!draft.name.trim() || create.isPending} onClick={submit}>
+        {create.isPending ? t("common.saving", "Saving…") : t("appointmentBook.setup.create", "Create calendar")}
+      </Button>
+    </Panel>
   );
 }

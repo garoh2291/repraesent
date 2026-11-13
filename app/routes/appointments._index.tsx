@@ -1,7 +1,7 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { Link, useSearchParams } from "react-router";
 import { useTranslation } from "react-i18next";
-import { CalendarClock, Plus, Settings2, X } from "lucide-react";
+import { CalendarClock, CalendarPlus, Plus, Settings2, X } from "lucide-react";
 import i18n from "~/i18n";
 import { useDocumentMeta } from "~/lib/hooks/use-document-meta";
 import { useSearchShortcut } from "~/lib/hooks/useSearchShortcut";
@@ -20,6 +20,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "~
 import { AppointmentRow, CalendarDot } from "~/components/appointment-book/appointment-bits";
 import { bucketOf, dayOf, longDate, type DayBucket } from "~/components/appointment-book/format";
 import { useAppointmentBookGate } from "~/components/appointment-book/use-appointment-book-gate";
+import { NewCalendarSheet } from "~/components/appointment-book/new-calendar-fields";
 
 export function meta() {
   return [
@@ -57,6 +58,7 @@ export default function AppointmentsPage() {
   };
 
   const calendars = useAppointmentCalendars(allowed);
+  const [settingUp, setSettingUp] = useState(false);
   const listParams: ListAppointmentsParams = {
     status: view === "cancelled" ? "cancelled" : view,
     calendar_id: calendarId || undefined,
@@ -98,6 +100,25 @@ export default function AppointmentsPage() {
           </>
         }
       />
+
+      {calendars.data?.length === 0 ? (
+        // A workspace starts with no calendar: say so first, set it up in place.
+        <Panel className="app-fade-up flex flex-col gap-4 border-secondary bg-secondary/25 px-4 py-4 sm:flex-row sm:items-center sm:px-5">
+          <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-secondary text-foreground max-sm:hidden" aria-hidden>
+            <CalendarPlus className="size-5" />
+          </span>
+          <div className="min-w-0 flex-1 space-y-0.5">
+            <p className="text-[15px] font-semibold text-foreground">{t("appointmentBook.setup.bannerTitle", "Set up your calendar to take appointments")}</p>
+            <p className="text-[13px] text-muted-foreground">
+              {t("appointmentBook.setup.bannerBody", "A name, your time zone and opening hours — then forms, chat and your team can book.")}
+            </p>
+          </div>
+          <Button className="h-10 shrink-0 max-sm:h-11 max-sm:w-full" onClick={() => setSettingUp(true)}>
+            {t("appointmentBook.setup.start", "Set up calendar")}
+          </Button>
+        </Panel>
+      ) : null}
+      {settingUp ? <NewCalendarSheet onOpenChange={setSettingUp} calendars={calendars.data} /> : null}
 
       {view === "upcoming" && waitingList.length > 0 ? (
         <Panel className="app-fade-up">

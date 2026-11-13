@@ -9,7 +9,7 @@ import {
   type ListAppointmentsParams,
 } from "~/lib/api/appointment-book";
 
-/** Every Repraesent calendar of the workspace (the first read creates the default one). */
+/** Every Repraesent calendar of the workspace; empty until the owner sets the first one up. */
 export function useAppointmentCalendars(enabled = true) {
   const { currentWorkspace } = useAuthContext();
   return useQuery({

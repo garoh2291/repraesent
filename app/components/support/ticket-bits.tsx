@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { AlertOctagon, Wrench, MessageCircleQuestion } from "lucide-react";
 import { cn } from "~/lib/utils";
-import { fetchAttachmentBlob, type Severity, type Side, type TicketStatus } from "~/lib/api/support-tickets";
+import { fetchAttachmentBlob, type ShotSize, type Severity, type Side, type TicketStatus } from "~/lib/api/support-tickets";
 
 /**
  * Small pieces shared by both sides of Help & changes.
@@ -90,26 +91,48 @@ export function StatusPill({ status, side, className }: { status: TicketStatus; 
   );
 }
 
-/** A private screenshot: fetched with the session, shown from a blob URL. */
-export function useAttachmentUrl(side: Side, id: string): { url: string | null; failed: boolean } {
+/**
+ * A private screenshot: fetched with the session and kept in the query cache
+ * (as a Blob — it never changes), so polling, re-renders and reopening a ticket
+ * don't download it again. `thumb` is the small preview; `enabled: false`
+ * waits (the full image loads only when the lightbox opens).
+ */
+export function useAttachmentUrl(
+  side: Side,
+  id: string,
+  size: ShotSize = "full",
+  enabled = true,
+): { url: string | null; failed: boolean } {
+  const q = useQuery({
+    queryKey: ["support-shot", side, id, size],
+    queryFn: () => fetchAttachmentBlob(side, id, size),
+    enabled,
+    staleTime: Infinity,
+    gcTime: 30 * 60_000,
+    retry: 1,
+  });
+  const blob = q.data ?? null;
+  // Made and revoked in the same effect, so a remount never shows a revoked URL.
   const [url, setUrl] = useState<string | null>(null);
-  const [failed, setFailed] = useState(false);
   useEffect(() => {
-    let alive = true;
-    let made: string | null = null;
-    fetchAttachmentBlob(side, id)
-      .then((blob) => {
-        if (!alive) return;
-        made = URL.createObjectURL(blob);
-        setUrl(made);
-      })
-      .catch(() => alive && setFailed(true));
-    return () => {
-      alive = false;
-      if (made) URL.revokeObjectURL(made);
-    };
-  }, [side, id]);
-  return { url, failed };
+    if (!blob) return setUrl(null);
+    const made = URL.createObjectURL(blob);
+    setUrl(made);
+    return () => URL.revokeObjectURL(made);
+  }, [blob]);
+  return { url, failed: q.isError };
+}
+
+/** Warm the full image (hover / press) so the lightbox opens sharp. */
+export function usePrefetchShot() {
+  const qc = useQueryClient();
+  return (side: Side, id: string) =>
+    void qc.prefetchQuery({
+      queryKey: ["support-shot", side, id, "full"],
+      queryFn: () => fetchAttachmentBlob(side, id, "full"),
+      staleTime: Infinity,
+      gcTime: 30 * 60_000,
+    });
 }
 
 /** "anna@x" → "A", "Anna Weber" → "AW". */

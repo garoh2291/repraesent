@@ -294,10 +294,9 @@ function browserTimezone(): string | undefined {
 // ── calendars ────────────────────────────────────────────────────────────────
 
 export async function listAppointmentCalendars(): Promise<AppointmentCalendar[]> {
-  const tz = browserTimezone();
-  const { data } = await apiClient.get<AppointmentCalendar[]>("/appointment-calendars", {
-    params: tz ? { tz } : undefined,
-  });
+  // No browser zone any more: nothing is created on read, and a new
+  // calendar's zone is chosen in the setup (Europe/Berlin by default).
+  const { data } = await apiClient.get<AppointmentCalendar[]>("/appointment-calendars");
   return data;
 }
 
