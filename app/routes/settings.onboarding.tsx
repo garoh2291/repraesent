@@ -1,4 +1,3 @@
-import { PricingSection } from "~/components/onboarding-settings/pricing-section";
 import { HostRow } from "~/components/onboarding-settings/host-picker";
 import { SaveBar, Section } from "~/components/onboarding-settings/settings-section";
 import { AiAssistantTab } from "~/components/onboarding-settings/ai/ai-assistant-tab";
@@ -321,8 +320,9 @@ function GeneralTab() {
         />
       </Section>
 
-      {/* Prices: saved on their own (per region), not through the save bar. */}
-      <PricingSection />
+      {/* Prices (PricingSection) are hidden since 2026-11-14: no price is shown
+          to customers anywhere; scope and price are agreed in the call. The
+          component, API and tables stay so it can come back without a migration. */}
 
       <PreviewSection
         booking={{ ...draft.booking, hosts: completeHosts }}

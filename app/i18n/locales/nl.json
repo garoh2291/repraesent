@@ -1389,13 +1389,13 @@
     "trial_card": {
       "eyebrow": "Doorboost",
       "title": "U werkt met de vertrouwde Doorboost-gegevens die u al kent.",
-      "body": "Elke campagne, lead, notitie en klantrecord uit uw Doorboost-account staat in re:praesent — van u om te lezen, te doorzoeken en te rapporteren, voor altijd gratis. Neem contact op met ons supportteam om een van de onderstaande modules te activeren:",
       "feature_appointments": "Afspraken en slimme boekingspagina's",
       "feature_web_analytics": "Websiteanalyse en bezoekersinzichten",
       "feature_ad_analytics": "Advertentieanalyse voor nieuwe campagnes",
       "feature_new_leads": "Leads vastleggen vanaf de website",
       "cta": "Praat met ons team",
-      "contact": "Of schrijf ons rechtstreeks op <0>{{supportEmail}}</0>"
+      "contact": "Of schrijf ons rechtstreeks op <0>{{supportEmail}}</0>",
+      "bodyV2": "Elke campagne, lead, notitie en klantrecord uit uw Doorboost-account staat in re:praesent, van u om te lezen, te doorzoeken en te rapporteren. Neem contact op met ons supportteam om een van de onderstaande modules te activeren:"
     }
   },
   "settings": {
@@ -2795,78 +2795,6 @@
       "placeholderFirstName": "Jan",
       "placeholderLastName": "Jansen"
     },
-    "offers": {
-      "title": "Kies een abonnement",
-      "perMonth": "per maand",
-      "selectPlan": "Abonnement selecteren"
-    },
-    "billing": {
-      "metaTitle": "Factuurgegevens - Repraesent",
-      "metaDescription": "Voeg factuurgegevens toe voor facturatie",
-      "title": "Factuurgegevens",
-      "subtitle": "Voeg uw factuurgegevens toe zodat we uw Stripe-klant kunnen aanmaken en facturen kunnen versturen.",
-      "companyName": "Bedrijfsnaam",
-      "vatNumber": "Btw-nummer",
-      "address": "Adres",
-      "city": "Plaats",
-      "country": "Land",
-      "postalCode": "Postcode",
-      "sectionContact": "Contact",
-      "sectionAddress": "Adres",
-      "sectionTax": "Belasting",
-      "fullName": "Volledige naam",
-      "email": "E-mail",
-      "company": "Bedrijf",
-      "streetAddress": "Straatadres",
-      "postalZip": "Postcode",
-      "selectCountry": "Selecteer land",
-      "nameRequired": "Naam is verplicht",
-      "emailRequired": "E-mail is verplicht",
-      "emailInvalid": "Voer een geldig e-mailadres in",
-      "companyRequired": "Bedrijf is verplicht",
-      "addressRequired": "Adres is verplicht",
-      "cityRequired": "Plaats is verplicht",
-      "countryRequired": "Land is verplicht",
-      "postalCodeRequired": "Postcode is verplicht",
-      "noWorkspaceSelected": "Geen gebied geselecteerd",
-      "placeholderFullName": "Jan Jansen",
-      "placeholderEmail": "facturatie@bedrijf.nl",
-      "placeholderCompany": "Acme Inc.",
-      "placeholderAddress": "Hoofdstraat 123",
-      "placeholderCity": "Amsterdam",
-      "placeholderPostalCode": "1011 AB",
-      "placeholderVat": "NL123456789B01",
-      "optional": "(optioneel)",
-      "countries": {
-        "DE": "Duitsland",
-        "GB": "Verenigd Koninkrijk",
-        "FR": "Frankrijk",
-        "ES": "Spanje",
-        "AT": "Oostenrijk"
-      }
-    },
-    "products": {
-      "metaTitle": "Kies uw abonnement - Repraesent",
-      "metaDescription": "Selecteer een abonnement dat bij uw behoeften past",
-      "heading": "Kies uw abonnement",
-      "subtitle": "Selecteer een of meer producten. Ons team stelt uw abonnement in.",
-      "loading": "Abonnementen laden…",
-      "noPlans": "Geen abonnementen beschikbaar. Neem contact op met support.",
-      "monthly": "Maandelijks",
-      "yearly": "Jaarlijks",
-      "saveUpTo": "Bespaar tot {{percent}}%",
-      "recommended": "Aanbevolen",
-      "save": "Bespaar {{percent}}%",
-      "perMonthShort": "mnd",
-      "perYearShort": "jr",
-      "notAvailable": "Niet beschikbaar voor deze facturatieperiode",
-      "selected": "Geselecteerd:",
-      "noWorkspaceSelected": "Geen gebied geselecteerd",
-      "selectAtLeastOne": "Selecteer ten minste één product",
-      "ariaPrevious": "Vorige",
-      "ariaNext": "Volgende",
-      "ariaGoToProduct": "Ga naar product {{name}}"
-    },
     "tour": {
       "steps": {
         "welcome": {
@@ -3700,7 +3628,7 @@
   },
   "workspace": {
     "trial_banner": {
-      "message": "Elke campagne, lead en notitie uit uw Doorboost-account staat in re:praesent — van u om te gebruiken, voor altijd gratis. <0>Ontdek wat u nog meer kunt ontgrendelen →</0>"
+      "messageV2": "Elke campagne, lead en notitie uit uw Doorboost-account staat in re:praesent, klaar voor gebruik. <0>Ontdek wat u nog meer kunt ontgrendelen →</0>"
     }
   },
   "doorboost_restore": {
@@ -7519,10 +7447,10 @@
     "feature2": "Geen registratie, geen e-mail nodig",
     "feature3": "Wordt na 2 uur automatisch verwijderd",
     "banner": {
-      "message": "Dit is een tijdelijk demo-account — het verloopt over {{time}}. <0>Maak uw gratis account aan</0>",
-      "expired": "Deze demo is verlopen. <0>Maak uw gratis account aan</0>",
       "minutes": "{{minutes}} min",
-      "hoursMinutes": "{{hours}} u {{minutes}} min"
+      "hoursMinutes": "{{hours}} u {{minutes}} min",
+      "messageV2": "Dit is een tijdelijk demo-account — het verloopt over {{time}}. <0>Maak uw account aan</0>",
+      "expiredV2": "Deze demo is verlopen. <0>Maak uw account aan</0>"
     },
     "kindLabel": "Ik ben…",
     "kindWorkspaceTitle": "Ondernemer",
@@ -9020,7 +8948,7 @@
       "presence": "Online",
       "goals": "Doelen",
       "team": "Team",
-      "plan": "Pakket"
+      "plan": "Afronden"
     },
     "progress": {
       "label": "Voortgang van de inrichting",
@@ -9065,13 +8993,13 @@
       "invalid_format": "Dit lijkt niet te kloppen."
     },
     "name": {
-      "eyebrow": "Ongeveer 8 minuten · eerste 2 maanden gratis",
       "title": "Laten we uw bedrijf inrichten. Hoe heet het?",
       "sub": "We lezen uw website en vullen het meeste voor u in.",
       "label": "Naam van het bedrijf",
       "hint": "De naam die uw klanten kennen.",
       "placeholder": "De naam van uw bedrijf",
-      "tooShort": "Vul minstens 2 tekens in."
+      "tooShort": "Vul minstens 2 tekens in.",
+      "eyebrowV2": "Ongeveer 8 minuten · wordt tussendoor bewaard"
     },
     "website": {
       "title": "Heeft u een website?",
@@ -9358,20 +9286,20 @@
       "plan": {
         "keep": {
           "title": "Mijn website houden",
-          "desc": "We verhuizen hem naar re:praesent voor {{price}}.",
-          "managed": "Hij draait al met re:praesent."
+          "managed": "Hij draait al met re:praesent.",
+          "descV2": "We verhuizen hem voor u naar re:praesent."
         },
         "refresh": {
           "title": "Opfrissen",
-          "desc": "Nieuwe inhoud en afwerking, {{price}} per uur werk."
+          "descV2": "Nieuwe inhoud en afwerking, gedaan door ons team."
         },
         "rebuild": {
           "title": "Opnieuw bouwen in WordPress",
-          "desc": "Een nieuwe site, door ons gemaakt: eenmalig {{price}}."
+          "descV2": "Een nieuwe site, door ons gemaakt."
         },
         "new": {
           "title": "Bouw een website voor mij",
-          "desc": "Een nieuwe site, door ons gemaakt: eenmalig {{price}}."
+          "descV2": "Een nieuwe site, door ons gemaakt."
         },
         "later": {
           "title": "Nu even niet"
@@ -9399,7 +9327,6 @@
           "desc": "We houden nieuws en aanbiedingen op uw site actueel"
         }
       },
-      "perMonth": "{{price}}/maand",
       "noCommitment": "Er wordt nu niets geboekt. Het helpt ons team uw gesprek voor te bereiden.",
       "locations": "Hoeveel vestigingen heeft u?"
     },
@@ -9464,7 +9391,6 @@
     },
     "billing": {
       "title": "Waar mag de factuur naartoe?",
-      "sub": "Er wordt nu niets in rekening gebracht. We hebben dit nodig voor uw eerste factuur.",
       "subFound": "Dit hebben we overgenomen van uw website. Controleer het even.",
       "legalName": "Bedrijfsnaam",
       "legalNameHint": "Precies zoals het op de factuur moet staan.",
@@ -9482,25 +9408,10 @@
       "vatHint": "Leeg laten als u er geen heeft.",
       "vatFormat": "Dit komt niet overeen met het gebruikelijke formaat, bijv. {{example}}.",
       "phone": "Telefoon",
-      "nothingCharged": "Er wordt vandaag niets in rekening gebracht. Ons team loopt eerst alles met u door."
+      "subV2": "Aan wie uw facturen moeten gaan. We gebruiken dit pas als u alles met ons team hebt afgesproken."
     },
     "plan": {
-      "title": "Uw pakket: alles erin, één prijs.",
-      "sub": "Eén pakket met alles wat uw bedrijf nodig heeft. Geen kosten per gebruiker.",
       "name": "re:praesent compleet",
-      "yearly": "Jaarlijks gefactureerd",
-      "insteadOf": "in plaats van",
-      "perYear": "per jaar",
-      "included": [
-        "Website, CMS en hosting",
-        "Aanvragen en CRM op één plek",
-        "E-mail en agenda gekoppeld",
-        "Statistieken en vertalingen",
-        "Marketingtools",
-        "Onbeperkt teamleden"
-      ],
-      "nothingToday": "Vandaag niets te betalen.",
-      "nothingTodaySub": "Ons team belt u eerst en loopt alles met u door. De factuur komt daarna.",
       "talkAbout": "We bespreken ook: {{items}}.",
       "talk": {
         "website": "uw nieuwe website",
@@ -9510,7 +9421,6 @@
         "social": "social posts",
         "content": "inhoud bijhouden"
       },
-      "vat": "Prijzen exclusief btw.",
       "consentPre": "Ik heb het",
       "privacy": "privacybeleid",
       "and": "en de",
@@ -9518,11 +9428,18 @@
       "consentPost": " gelezen.",
       "finish": "Inrichting afronden",
       "incomplete": "Er ontbreken nog een paar gegevens. Controleer uw telefoonnummer en factuurgegevens.",
-      "freeMonths_one": "Eerste maand gratis",
-      "freeMonths_other": "Eerste {{count}} maanden gratis",
-      "trialTitle_one": "Uw eerste maand is gratis.",
-      "trialTitle_other": "Uw eerste {{count}} maanden zijn gratis.",
-      "trialBody": "Uw eerste factuur komt in maand {{month}}: {{yearly}} per jaar, ongeveer {{perDay}} per dag. Vandaag niets te betalen."
+      "titleV2": "Alles wat uw bedrijf nodig heeft, op één plek.",
+      "subV2": "Eén pakket, ingericht en onderhouden door ons team.",
+      "includedV2": [
+        "Website, CMS en hosting",
+        "Aanvragen en CRM op één plek",
+        "E-mail en agenda gekoppeld",
+        "Statistieken en vertalingen",
+        "Marketingtools",
+        "Eén login voor het hele team"
+      ],
+      "nextTitle": "Hoe het verder gaat",
+      "nextBody": "Ons team belt u, spreekt omvang en prijs met u af en zet daarna alles live."
     },
     "card": {
       "eyebrow": "Uw bedrijf",
@@ -9706,24 +9623,6 @@
       "titleHighlight": "Een tweede leven",
       "title2": "voor uw bedrijf, online.",
       "sub": "Uw website, Google-profiel, aanvragen en marketing op één plek — samen met u ingericht door mensen die showrooms kennen. Niet alleen hosting. Niet alleen een CRM.",
-      "offer": {
-        "label": "Wat het kost",
-        "free": {
-          "title_one": "Eerste maand gratis",
-          "title_other": "De eerste {{count}} maanden gratis",
-          "sub": "Alles inbegrepen, vanaf dag één."
-        },
-        "today": {
-          "title": "Vandaag niets te betalen",
-          "sub": "Geen creditcard nodig."
-        },
-        "then": {
-          "title": "Daarna {{price}} per jaar",
-          "titleNoPrice": "Daarna één jaarprijs",
-          "sub": "Ongeveer {{perDay}} per dag, excl. btw."
-        }
-      },
-      "cta": "Gratis beginnen",
       "ctaNote": "Ongeveer 8 minuten · wordt tussendoor opgeslagen · stop wanneer u wilt",
       "howTitle": "Zo werkt het",
       "steps": {
@@ -9739,16 +9638,13 @@
         },
         "live": {
           "title": "Uw bedrijf gaat live",
-          "body_one": "Website, Google, aanvragen en marketing werken voor u — al in uw gratis maand.",
-          "body_other": "Website, Google, aanvragen en marketing werken voor u — al in uw {{count}} gratis maanden."
+          "bodyV2": "Website, Google, aanvragen en marketing werken voor u, ingericht door ons team."
         }
       },
       "realPeople": "Uw team bij re:praesent",
       "and": "en",
       "whyEyebrow": "Waarom de vragen ertoe doen",
       "whyTitle": "Uw antwoorden zijn de briefing voor uw nieuwe online aanwezigheid.",
-      "whyBody_one": "Ze bepalen uw website, uw Google-profiel en uw eerste gesprek. Hoe meer we weten, hoe meer we doen in uw gratis maand.",
-      "whyBody_other": "Ze bepalen uw website, uw Google-profiel en uw eerste gesprek. Hoe meer we weten, hoe meer we doen in uw {{count}} gratis maanden.",
       "show": {
         "url": "uwshowroom.nl",
         "lead": {
@@ -9780,15 +9676,15 @@
         "chatSubTeam": "Zoals een chat met een collega. Kies wie de dingen uitlegt zoals u dat prettig vindt.",
         "chatCtaTeam": "Chat starten"
       },
-      "promise": {
-        "free_one": "Eerste maand gratis",
-        "free_other": "{{count}} maanden gratis",
-        "hidden": "Geen verborgen kosten",
-        "seats": "Geen kosten per teamlid",
-        "cancel": "Altijd opzegbaar"
+      "howWeWork": "Zo werken wij",
+      "promiseV2": {
+        "person": "Persoonlijk ingericht",
+        "scope": "Vooraf heldere afspraken",
+        "yours": "Uw website blijft van u",
+        "tech": "Wij regelen de techniek"
       },
-      "finePrint": "Daarna {{price}} per jaar, ongeveer {{perDay}} per dag, excl. btw. Vandaag betaalt u niets, geen kaart nodig.",
-      "finePrintNoPrice": "Daarna één vaste jaarprijs. Vandaag betaalt u niets, geen kaart nodig."
+      "ctaV2": "Inrichting starten",
+      "whyBodyV2": "Ze bepalen uw website, uw Google-profiel en uw eerste gesprek. Hoe meer we weten, hoe beter ons team zich kan voorbereiden."
     },
     "chat": {
       "metaTitle": "Inrichten in gesprek",
@@ -9862,8 +9758,9 @@
       "team": "Uw team",
       "notifications": "E-mailsamenvattingen",
       "billing": "Factuurgegevens",
-      "plan": "Uw pakket"
-    }
+      "plan": "Wat u krijgt"
+    },
+    "priceInCall": "Ons team spreekt omvang en prijs met u af in een kort gesprek."
   },
   "salesContact": {
     "nav": "Contact met re:praesent",

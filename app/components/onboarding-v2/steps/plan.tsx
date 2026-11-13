@@ -4,8 +4,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router";
 import { useTranslation } from "react-i18next";
 import { useQueryClient } from "@tanstack/react-query";
-import { motion, useReducedMotion } from "motion/react";
-import { Check, Gift, Lock } from "lucide-react";
+import { Check, Lock, PhoneCall } from "lucide-react";
 import { PhoneNumberInput } from "~/components/molecule/phone-number-input";
 import {
   completeOnboarding,
@@ -14,7 +13,7 @@ import {
   saveBilling,
   type OnboardingState,
 } from "~/lib/api/onboarding-v2";
-import { EMAIL_RE, formatMoney, suggestEmail } from "~/lib/onboarding/helpers";
+import { EMAIL_RE, suggestEmail } from "~/lib/onboarding/helpers";
 import { CountryCombobox } from "../country-combobox";
 import { ActionBar, Field, FormError, StepHeading, TextInput } from "../primitives";
 import { useWizard } from "../wizard-context";
@@ -33,7 +32,7 @@ export function StepBilling() {
         markSaved();
         goTo("plan");
       }}
-      header={(fromImpressum) => <StepHeading title={t("onb.billing.title")} sub={fromImpressum ? t("onb.billing.subFound") : t("onb.billing.sub")} />}
+      header={(fromImpressum) => <StepHeading title={t("onb.billing.title")} sub={fromImpressum ? t("onb.billing.subFound") : t("onb.billing.subV2")} />}
       actions={(busy) => <ActionBar onBack={back} busy={busy} primaryLabel={t("onb.continue")} />}
     />
   );
@@ -41,7 +40,8 @@ export function StepBilling() {
 
 /**
  * The invoice details form (Stripe customer; nothing is charged). Shared by the
- * wizard's billing step and the AI assistant's billing card.
+ * wizard's billing step and the AI assistant's billing card. No price talk:
+ * scope and price are agreed with our team in the call.
  */
 export function BillingForm({
   state,
@@ -169,7 +169,7 @@ export function BillingForm({
           </Field>
         </div>
         <p className="flex items-center gap-2 rounded-xl bg-muted/50 px-4 py-3 text-[13px] text-muted-foreground">
-          <Lock className="size-3.5 shrink-0" /> {t("onb.billing.nothingCharged")}
+          <Lock className="size-3.5 shrink-0" /> {t("onb.priceInCall")}
         </p>
       </div>
       {actions(busy)}
@@ -177,18 +177,18 @@ export function BillingForm({
   );
 }
 
+/**
+ * The last step: what you get and what happens next, then consent and finish.
+ * Never a price — scope and price are agreed with our team in the call.
+ */
 export function StepPlan() {
-  const { t, i18n } = useTranslation();
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const qc = useQueryClient();
-  const reduce = useReducedMotion();
   const { state, back, setState } = useWizard();
-  const q = state?.pricing;
   const [consent, setConsent] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  if (!q) return null;
-  const money = (c: number, d: "auto" | 0 | 2 = "auto") => formatMoney(c, q.currency, i18n.language, d);
   const interests = (state?.profile?.data?.interests ?? {}) as Record<string, unknown>;
   const talkAbout = [
     interests.website_plan === "rebuild"
@@ -224,56 +224,14 @@ export function StepPlan() {
     }
   };
 
-  const included = t("onb.plan.included", { returnObjects: true }) as string[];
+  const included = t("onb.plan.includedV2", { returnObjects: true }) as string[];
 
   return (
     <form onSubmit={finish} noValidate>
-      <StepHeading title={t("onb.plan.title")} sub={t("onb.plan.sub")} />
+      <StepHeading title={t("onb.plan.titleV2")} sub={t("onb.plan.subV2")} />
       <div className="overflow-hidden rounded-3xl border border-border bg-card shadow-[0_12px_32px_-16px_rgba(19,21,21,0.18)]">
-        <div className="space-y-5 p-6 sm:p-8">
-          <div className="flex flex-wrap-reverse items-start justify-between gap-x-4 gap-y-2">
-            <div>
-              <p className="text-sm font-semibold">{t("onb.plan.name")}</p>
-              <p className="text-[13px] text-muted-foreground">{t("onb.plan.yearly")}</p>
-            </div>
-            <span className="shrink-0 whitespace-nowrap rounded-full bg-secondary px-3 py-1 text-[12px] font-semibold text-secondary-foreground">
-              {t("onb.plan.freeMonths", { count: q.freeMonths })}
-            </span>
-          </div>
-          <div className="flex flex-wrap items-end gap-x-4 gap-y-1">
-            <span className="relative text-lg tabular-nums text-muted-foreground">
-              {money(q.twelveMonthly)}
-              <motion.span
-                aria-hidden
-                className="absolute left-0 top-1/2 h-[1.5px] w-full origin-left bg-muted-foreground"
-                initial={reduce ? false : { transform: "scaleX(0)" }}
-                animate={{ transform: "scaleX(1)" }}
-                transition={{ duration: 0.3, delay: 0.25, ease: [0.23, 1, 0.32, 1] }}
-              />
-              <span className="sr-only">{t("onb.plan.insteadOf")}</span>
-            </span>
-            <motion.span
-              className="ob2-heading text-5xl leading-none tracking-[-0.02em] tabular-nums"
-              initial={reduce ? false : { opacity: 0, transform: "translateY(6px)" }}
-              animate={{ opacity: 1, transform: "translateY(0px)" }}
-              transition={{ duration: 0.3, delay: 0.4, ease: [0.23, 1, 0.32, 1] }}
-            >
-              {money(q.yearly)}
-            </motion.span>
-            <span className="pb-1 text-sm text-muted-foreground">{t("onb.plan.perYear")}</span>
-          </div>
-          {/* The free start, said plainly — not a footnote. */}
-          <div className="flex items-start gap-3 rounded-2xl bg-secondary/60 px-4 py-3">
-            <Gift className="mt-0.5 size-4 shrink-0" aria-hidden />
-            <p className="text-[14px] leading-snug">
-              <span className="font-semibold">{t("onb.plan.trialTitle", { count: q.freeMonths })}</span>{" "}
-              {t("onb.plan.trialBody", {
-                month: q.firstInvoiceMonth ?? q.freeMonths + 1,
-                yearly: money(q.yearly),
-                perDay: money(q.perDay, 2),
-              })}
-            </p>
-          </div>
+        <div className="space-y-4 p-6 sm:p-8">
+          <p className="text-sm font-semibold">{t("onb.plan.name")}</p>
           <ul className="grid gap-2 sm:grid-cols-2">
             {Array.isArray(included)
               ? included.map((item) => (
@@ -284,15 +242,17 @@ export function StepPlan() {
               : null}
           </ul>
         </div>
-        <div className="border-t border-border bg-[#a4dab8]/15 px-6 py-4 sm:px-8">
-          <p className="text-sm font-semibold">{t("onb.plan.nothingToday")}</p>
-          <p className="text-[13px] text-muted-foreground">{t("onb.plan.nothingTodaySub")}</p>
+        <div className="flex items-start gap-3 border-t border-border bg-secondary/40 px-6 py-4 sm:px-8">
+          <PhoneCall className="mt-0.5 size-4 shrink-0" aria-hidden />
+          <div>
+            <p className="text-sm font-semibold">{t("onb.plan.nextTitle")}</p>
+            <p className="text-[13px] leading-snug text-foreground/75">{t("onb.plan.nextBody")}</p>
+          </div>
         </div>
       </div>
       {talkAbout.length ? (
         <p className="mt-5 text-[13px] text-muted-foreground">{t("onb.plan.talkAbout", { items: talkAbout.join(", ") })}</p>
       ) : null}
-      <p className="mt-2 text-[12px] text-muted-foreground">{t("onb.plan.vat")}</p>
 
       <label className="mt-8 flex cursor-pointer items-start gap-3 rounded-2xl border border-border bg-card p-4">
         <input type="checkbox" className="mt-0.5 size-5 shrink-0 accent-[var(--foreground)] [color-scheme:light]" checked={consent} onChange={(e) => setConsent(e.target.checked)} />

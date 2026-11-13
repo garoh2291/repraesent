@@ -67,10 +67,10 @@ export function DemoBanner({ expiresAt }: Props) {
       </span>
       <p className="text-sm flex-1">
         {expired ? (
-          <Trans i18nKey="demo.banner.expired" components={[exitLink]} />
+          <Trans i18nKey="demo.banner.expiredV2" components={[exitLink]} />
         ) : (
           <Trans
-            i18nKey="demo.banner.message"
+            i18nKey="demo.banner.messageV2"
             values={{ time: timeLabel ?? "" }}
             components={[exitLink]}
           />

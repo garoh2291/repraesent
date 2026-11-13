@@ -19,7 +19,7 @@ export function TrialBanner({ workspaceId: _workspaceId }: Props) {
       </span>
       <p className="text-sm flex-1">
         <Trans
-          i18nKey="workspace.trial_banner.message"
+          i18nKey="workspace.trial_banner.messageV2"
           components={[
             <Link
               key="link"

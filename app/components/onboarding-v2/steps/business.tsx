@@ -97,7 +97,7 @@ export function StepName() {
 
   return (
     <form onSubmit={submit} noValidate>
-      <StepHeading eyebrow={t("onb.name.eyebrow")} title={t("onb.name.title")} sub={t("onb.name.sub")} />
+      <StepHeading eyebrow={t("onb.name.eyebrowV2")} title={t("onb.name.title")} sub={t("onb.name.sub")} />
       <Field label={t("onb.name.label")} hint={t("onb.name.hint")} error={error}>
         {({ id, describedBy, invalid }) => (
           <BigInput

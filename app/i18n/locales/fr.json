@@ -1389,13 +1389,13 @@
     "trial_card": {
       "eyebrow": "Doorboost",
       "title": "Vous travaillez avec les données Doorboost auxquelles vous faites déjà confiance.",
-      "body": "Chaque campagne, lead, note et fiche client de votre compte Doorboost se trouve dans re:praesent — à vous de les lire, rechercher et analyser, gratuitement pour toujours. Pour activer l'un des modules ci-dessous, contactez notre équipe d'assistance :",
       "feature_appointments": "Rendez-vous et pages de réservation intelligentes",
       "feature_web_analytics": "Analyse du site web et insights visiteurs",
       "feature_ad_analytics": "Analyse publicitaire pour les nouvelles campagnes",
       "feature_new_leads": "Capture de leads depuis le site web",
       "cta": "Parler à notre équipe",
-      "contact": "Ou écrivez-nous directement à <0>{{supportEmail}}</0>"
+      "contact": "Ou écrivez-nous directement à <0>{{supportEmail}}</0>",
+      "bodyV2": "Chaque campagne, lead, note et fiche client de votre compte Doorboost se trouve dans re:praesent, à vous de les lire, rechercher et analyser. Pour activer l'un des modules ci-dessous, contactez notre équipe d'assistance :"
     }
   },
   "settings": {
@@ -2797,78 +2797,6 @@
       "placeholderFirstName": "Jean",
       "placeholderLastName": "Dupont"
     },
-    "offers": {
-      "title": "Choisir un forfait",
-      "perMonth": "par mois",
-      "selectPlan": "Sélectionner le forfait"
-    },
-    "billing": {
-      "metaTitle": "Informations de facturation - Repraesent",
-      "metaDescription": "Ajoutez vos coordonnées de facturation",
-      "title": "Informations de facturation",
-      "subtitle": "Ajoutez vos coordonnées de facturation afin que nous puissions créer votre client Stripe et envoyer les factures.",
-      "companyName": "Nom de l'entreprise",
-      "vatNumber": "Numéro de TVA",
-      "address": "Adresse",
-      "city": "Ville",
-      "country": "Pays",
-      "postalCode": "Code postal",
-      "sectionContact": "Contact",
-      "sectionAddress": "Adresse",
-      "sectionTax": "Fiscalité",
-      "fullName": "Nom complet",
-      "email": "E-mail",
-      "company": "Entreprise",
-      "streetAddress": "Adresse",
-      "postalZip": "Code postal",
-      "selectCountry": "Sélectionner un pays",
-      "nameRequired": "Le nom est obligatoire",
-      "emailRequired": "L'e-mail est obligatoire",
-      "emailInvalid": "Veuillez saisir une adresse e-mail valide",
-      "companyRequired": "L'entreprise est obligatoire",
-      "addressRequired": "L'adresse est obligatoire",
-      "cityRequired": "La ville est obligatoire",
-      "countryRequired": "Le pays est obligatoire",
-      "postalCodeRequired": "Le code postal est obligatoire",
-      "noWorkspaceSelected": "Aucun espace sélectionné",
-      "placeholderFullName": "Jean Dupont",
-      "placeholderEmail": "facturation@entreprise.com",
-      "placeholderCompany": "Acme Inc.",
-      "placeholderAddress": "123 rue Principale",
-      "placeholderCity": "Berlin",
-      "placeholderPostalCode": "10115",
-      "placeholderVat": "DE123456789",
-      "optional": "(facultatif)",
-      "countries": {
-        "DE": "Allemagne",
-        "GB": "Royaume-Uni",
-        "FR": "France",
-        "ES": "Espagne",
-        "AT": "Autriche"
-      }
-    },
-    "products": {
-      "metaTitle": "Choisissez votre forfait - Repraesent",
-      "metaDescription": "Sélectionnez un forfait adapté à vos besoins",
-      "heading": "Choisissez votre forfait",
-      "subtitle": "Sélectionnez un ou plusieurs produits. Notre équipe configurera votre abonnement.",
-      "loading": "Chargement des forfaits…",
-      "noPlans": "Aucun forfait disponible. Veuillez contacter l'assistance.",
-      "monthly": "Mensuel",
-      "yearly": "Annuel",
-      "saveUpTo": "Économisez jusqu'à {{percent}} %",
-      "recommended": "Recommandé",
-      "save": "Économisez {{percent}} %",
-      "perMonthShort": "mois",
-      "perYearShort": "an",
-      "notAvailable": "Non disponible pour cette période de facturation",
-      "selected": "Sélectionné :",
-      "noWorkspaceSelected": "Aucun espace sélectionné",
-      "selectAtLeastOne": "Veuillez sélectionner au moins un produit",
-      "ariaPrevious": "Précédent",
-      "ariaNext": "Suivant",
-      "ariaGoToProduct": "Aller au produit {{name}}"
-    },
     "tour": {
       "steps": {
         "welcome": {
@@ -3702,7 +3630,7 @@
   },
   "workspace": {
     "trial_banner": {
-      "message": "Chaque campagne, lead et note de votre compte Doorboost se trouve dans re:praesent — à vous de les utiliser, gratuitement pour toujours. <0>Découvrez ce que vous pouvez débloquer d'autre →</0>"
+      "messageV2": "Chaque campagne, lead et note de votre compte Doorboost se trouve dans re:praesent, prêt à l'emploi. <0>Découvrez ce que vous pouvez débloquer d'autre →</0>"
     }
   },
   "doorboost_restore": {
@@ -7521,10 +7449,10 @@
     "feature2": "Sans inscription, sans e-mail",
     "feature3": "Supprimé automatiquement après 2 heures",
     "banner": {
-      "message": "Ceci est un compte de démo temporaire — il expire dans {{time}}. <0>Créer votre compte gratuit</0>",
-      "expired": "Cette démo a expiré. <0>Créer votre compte gratuit</0>",
       "minutes": "{{minutes}} min",
-      "hoursMinutes": "{{hours}} h {{minutes}} min"
+      "hoursMinutes": "{{hours}} h {{minutes}} min",
+      "messageV2": "Ceci est un compte de démo temporaire — il expire dans {{time}}. <0>Créer votre compte</0>",
+      "expiredV2": "Cette démo a expiré. <0>Créer votre compte</0>"
     },
     "kindLabel": "Je suis…",
     "kindWorkspaceTitle": "Propriétaire d'entreprise",
@@ -9022,7 +8950,7 @@
       "presence": "Présence",
       "goals": "Objectifs",
       "team": "Équipe",
-      "plan": "Forfait"
+      "plan": "Fin"
     },
     "progress": {
       "label": "Progression de la configuration",
@@ -9067,13 +8995,13 @@
       "invalid_format": "Cela ne semble pas correct."
     },
     "name": {
-      "eyebrow": "Environ 8 minutes · 2 premiers mois gratuits",
       "title": "Configurons votre entreprise. Comment s'appelle-t-elle ?",
       "sub": "Nous lisons votre site web et remplissons l'essentiel pour vous.",
       "label": "Nom de l'entreprise",
       "hint": "Le nom que vos clients connaissent.",
       "placeholder": "Le nom de votre entreprise",
-      "tooShort": "Entrez au moins 2 caractères."
+      "tooShort": "Entrez au moins 2 caractères.",
+      "eyebrowV2": "Environ 8 minutes · enregistré au fur et à mesure"
     },
     "website": {
       "title": "Avez-vous un site web ?",
@@ -9360,20 +9288,20 @@
       "plan": {
         "keep": {
           "title": "Garder mon site",
-          "desc": "Nous le transférons chez re:praesent pour {{price}}.",
-          "managed": "Il fonctionne déjà avec re:praesent."
+          "managed": "Il fonctionne déjà avec re:praesent.",
+          "descV2": "Nous le transférons chez re:praesent pour vous."
         },
         "refresh": {
           "title": "Le rafraîchir",
-          "desc": "Nouveau contenu et finitions, {{price}} l'heure de travail."
+          "descV2": "Nouveau contenu et finitions, réalisés par notre équipe."
         },
         "rebuild": {
           "title": "Le refaire sur WordPress",
-          "desc": "Un nouveau site, réalisé pour vous : {{price}} une fois."
+          "descV2": "Un nouveau site, réalisé pour vous."
         },
         "new": {
           "title": "Créez-moi un site",
-          "desc": "Un nouveau site, réalisé pour vous : {{price}} une fois."
+          "descV2": "Un nouveau site, réalisé pour vous."
         },
         "later": {
           "title": "Pas pour le moment"
@@ -9401,7 +9329,6 @@
           "desc": "Nous gardons vos nouvelles et offres à jour"
         }
       },
-      "perMonth": "{{price}}/mois",
       "noCommitment": "Rien n'est réservé maintenant. Cela aide notre équipe à préparer votre appel.",
       "locations": "Combien d'emplacements avez-vous ?"
     },
@@ -9466,7 +9393,6 @@
     },
     "billing": {
       "title": "Où envoyer la facture ?",
-      "sub": "Rien n'est facturé maintenant. Nous en avons besoin pour votre première facture.",
       "subFound": "Nous avons repris ces informations de vos mentions légales. Veuillez les vérifier.",
       "legalName": "Raison sociale",
       "legalNameHint": "Exactement comme elle doit figurer sur la facture.",
@@ -9484,25 +9410,10 @@
       "vatHint": "Laissez vide si vous n'en avez pas.",
       "vatFormat": "Cela ne correspond pas au format habituel, par ex. {{example}}.",
       "phone": "Téléphone",
-      "nothingCharged": "Rien n'est facturé aujourd'hui. Notre équipe passe tout en revue avec vous d'abord."
+      "subV2": "À qui adresser vos factures. Nous ne l'utilisons qu'une fois tout convenu avec notre équipe."
     },
     "plan": {
-      "title": "Votre forfait : tout compris, un seul prix.",
-      "sub": "Un forfait avec tout ce dont votre entreprise a besoin. Aucuns frais par utilisateur.",
       "name": "re:praesent complet",
-      "yearly": "Facturation annuelle",
-      "insteadOf": "au lieu de",
-      "perYear": "par an",
-      "included": [
-        "Site web, CMS et hébergement",
-        "Demandes et CRM au même endroit",
-        "Courriel et calendrier connectés",
-        "Statistiques et traductions",
-        "Outils marketing",
-        "Membres d'équipe illimités"
-      ],
-      "nothingToday": "Rien à payer aujourd'hui.",
-      "nothingTodaySub": "Notre équipe vous appelle d'abord et passe tout en revue avec vous. La facture vient ensuite.",
       "talkAbout": "Nous parlerons aussi de : {{items}}.",
       "talk": {
         "website": "votre nouveau site",
@@ -9512,7 +9423,6 @@
         "social": "les publications sociales",
         "content": "les mises à jour de contenu"
       },
-      "vat": "Prix hors taxes.",
       "consentPre": "J'ai lu la",
       "privacy": "politique de confidentialité",
       "and": "et les",
@@ -9520,11 +9430,18 @@
       "consentPost": ".",
       "finish": "Terminer la configuration",
       "incomplete": "Il manque encore quelques informations. Vérifiez votre numéro de téléphone et vos informations de facturation.",
-      "freeMonths_one": "Premier mois gratuit",
-      "freeMonths_other": "{{count}} premiers mois gratuits",
-      "trialTitle_one": "Votre premier mois est gratuit.",
-      "trialTitle_other": "Vos {{count}} premiers mois sont gratuits.",
-      "trialBody": "Votre première facture arrive au mois {{month}} : {{yearly}} par an, environ {{perDay}} par jour. Rien à payer aujourd’hui."
+      "titleV2": "Tout ce dont votre entreprise a besoin, au même endroit.",
+      "subV2": "Un seul ensemble, mis en place et suivi par notre équipe.",
+      "includedV2": [
+        "Site web, CMS et hébergement",
+        "Demandes et CRM au même endroit",
+        "Courriel et calendrier connectés",
+        "Statistiques et traductions",
+        "Outils marketing",
+        "Un seul accès pour toute l'équipe"
+      ],
+      "nextTitle": "La suite",
+      "nextBody": "Notre équipe vous appelle, convient avec vous du périmètre et du prix, puis met tout en ligne."
     },
     "card": {
       "eyebrow": "Votre entreprise",
@@ -9708,24 +9625,6 @@
       "titleHighlight": "Une seconde vie",
       "title2": "pour votre entreprise, en ligne.",
       "sub": "Votre site, votre profil Google, vos demandes et votre marketing au même endroit — mis en place avec vous par des gens qui connaissent les salles d’exposition. Pas seulement de l’hébergement. Pas seulement un CRM.",
-      "offer": {
-        "label": "Ce que ça coûte",
-        "free": {
-          "title_one": "Premier mois gratuit",
-          "title_other": "Les {{count}} premiers mois gratuits",
-          "sub": "Tout est inclus, dès le premier jour."
-        },
-        "today": {
-          "title": "Rien à payer aujourd’hui",
-          "sub": "Aucune carte requise."
-        },
-        "then": {
-          "title": "Ensuite {{price}} par an",
-          "titleNoPrice": "Ensuite un prix annuel",
-          "sub": "Environ {{perDay}} par jour, taxes en sus."
-        }
-      },
-      "cta": "Commencer gratuitement",
       "ctaNote": "Environ 8 minutes · enregistré au fur et à mesure · arrêtez quand vous voulez",
       "howTitle": "Comment ça marche",
       "steps": {
@@ -9741,16 +9640,13 @@
         },
         "live": {
           "title": "Votre entreprise est en ligne",
-          "body_one": "Site, Google, demandes et marketing travaillent pour vous — pendant votre mois gratuit.",
-          "body_other": "Site, Google, demandes et marketing travaillent pour vous — pendant vos {{count}} mois gratuits."
+          "bodyV2": "Site, Google, demandes et marketing travaillent pour vous, mis en place par notre équipe."
         }
       },
       "realPeople": "Votre équipe re:praesent",
       "and": "et",
       "whyEyebrow": "Pourquoi les questions comptent",
       "whyTitle": "Vos réponses sont le brief de votre nouvelle présence en ligne.",
-      "whyBody_one": "Elles façonnent votre site, votre profil Google et votre premier appel. Plus nous en savons, plus nous en faisons pendant votre mois gratuit.",
-      "whyBody_other": "Elles façonnent votre site, votre profil Google et votre premier appel. Plus nous en savons, plus nous en faisons pendant vos {{count}} mois gratuits.",
       "show": {
         "url": "votresalle.ca",
         "lead": {
@@ -9782,15 +9678,15 @@
         "chatSubTeam": "Comme une conversation avec un collègue. Choisissez la personne qui explique à votre façon.",
         "chatCtaTeam": "Démarrer le chat"
       },
-      "promise": {
-        "free_one": "Premier mois offert",
-        "free_other": "{{count}} mois offerts",
-        "hidden": "Aucun coût caché",
-        "seats": "Aucun coût par membre d'équipe",
-        "cancel": "Résiliable à tout moment"
+      "howWeWork": "Notre façon de travailler",
+      "promiseV2": {
+        "person": "Mis en place par une vraie personne",
+        "scope": "Un périmètre clair, dès le départ",
+        "yours": "Votre site reste le vôtre",
+        "tech": "Nous gérons la technique"
       },
-      "finePrint": "Ensuite {{price}} par an, environ {{perDay}} par jour, HT. Rien à payer aujourd'hui, sans carte bancaire.",
-      "finePrintNoPrice": "Ensuite un prix annuel unique. Rien à payer aujourd'hui, sans carte bancaire."
+      "ctaV2": "Commencer la configuration",
+      "whyBodyV2": "Elles façonnent votre site, votre profil Google et votre premier appel. Plus nous en savons, mieux notre équipe peut se préparer."
     },
     "chat": {
       "metaTitle": "Configuration guidée",
@@ -9864,8 +9760,9 @@
       "team": "Votre équipe",
       "notifications": "Résumés par e-mail",
       "billing": "Facturation",
-      "plan": "Votre offre"
-    }
+      "plan": "Ce que vous obtenez"
+    },
+    "priceInCall": "Notre équipe convient avec vous du périmètre et du prix lors d'un court appel."
   },
   "salesContact": {
     "nav": "Contacter re:praesent",

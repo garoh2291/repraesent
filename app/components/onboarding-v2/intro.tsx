@@ -16,7 +16,6 @@ import {
 } from "lucide-react";
 import logoUrl from "~/components/icons/re_praesent-mark-brand-hor.svg?url";
 import type { OnboardingState } from "~/lib/api/onboarding-v2";
-import { formatMoney } from "~/lib/onboarding/helpers";
 import { cn } from "~/lib/utils";
 import { AccountMenu, OnbLanguageSwitcher, OnboardingStyles } from "./shell";
 import { Portrait, PortraitStack } from "./chat/portrait";
@@ -25,10 +24,10 @@ import { ASSISTANT_LEVELS, type AssistantLevel } from "~/lib/api/onboarding-chat
 const EASE_OUT = [0.23, 1, 0.32, 1] as const;
 
 /**
- * The screen before step 1. Says, before anyone types anything: the first two
- * months are free and nothing is paid today, a real person (by name) sets
- * everything up with you, and the questions ahead are the brief for your
- * website and marketing — re:praesent is more than hosting and a CRM.
+ * The screen before step 1. Says, before anyone types anything: how we work
+ * (a real person sets everything up with you, clear scope up front), that
+ * scope and price are agreed in a call — never a price on screen — and that
+ * the questions ahead are the brief for your website and marketing.
  *
  * Not a wizard step: no chapter bar, not counted in progress. Shown once per
  * browser session to people who haven't started yet.
@@ -36,11 +35,8 @@ const EASE_OUT = [0.23, 1, 0.32, 1] as const;
 export type OnboardingMode = "form" | "chat";
 
 export function OnboardingIntro({ state, onStart }: { state: OnboardingState; onStart: (mode: OnboardingMode) => void }) {
-  const { t, i18n } = useTranslation();
+  const { t } = useTranslation();
   const reduce = useReducedMotion();
-  const q = state.pricing;
-  const free = q?.freeMonths ?? 2;
-  const money = (c: number, d: "auto" | 0 | 2 = "auto") => (q ? formatMoney(c, q.currency, i18n.language, d) : "");
   const team = (state.sales_team ?? []).filter((h) => h.label || h.avatar_url);
   const assistant = state.assistant?.available ? state.assistant : null;
   // The root's own intro texts for this region + language, when set (Settings → Onboarding → AI assistant).
@@ -59,17 +55,15 @@ export function OnboardingIntro({ state, onStart }: { state: OnboardingState; on
           transition: { duration: 0.5, ease: EASE_OUT, delay: 0.06 * i },
         };
 
-  // The four promises people look for before they read anything else. All four
-  // are true for every plan (one flat yearly price, no seats, cancel anytime).
+  // How we work, in the same words as repraesent.com. No prices or free
+  // periods anywhere in the app: scope and price are agreed in the call.
   const promises = [
-    t("onb.intro.promise.free", { count: free }),
-    t("onb.intro.promise.hidden"),
-    t("onb.intro.promise.seats"),
-    t("onb.intro.promise.cancel"),
+    t("onb.intro.promiseV2.person"),
+    t("onb.intro.promiseV2.scope"),
+    t("onb.intro.promiseV2.yours"),
+    t("onb.intro.promiseV2.tech"),
   ];
-  const finePrint = q
-    ? t("onb.intro.finePrint", { price: money(q.yearly), perDay: money(q.perDay, 2) })
-    : t("onb.intro.finePrintNoPrice");
+  const finePrint = t("onb.priceInCall");
 
   const steps = [
     { icon: MessageSquareText, title: t("onb.intro.steps.tell.title"), body: t("onb.intro.steps.tell.body") },
@@ -79,7 +73,7 @@ export function OnboardingIntro({ state, onStart }: { state: OnboardingState; on
       body: namesText ? t("onb.intro.steps.call.bodyNamed", { names: namesText, count: names.length }) : t("onb.intro.steps.call.body"),
       people: true,
     },
-    { icon: Rocket, title: t("onb.intro.steps.live.title"), body: t("onb.intro.steps.live.body", { count: free }) },
+    { icon: Rocket, title: t("onb.intro.steps.live.title"), body: t("onb.intro.steps.live.bodyV2") },
   ];
 
   return (
@@ -122,7 +116,7 @@ export function OnboardingIntro({ state, onStart }: { state: OnboardingState; on
                 blocks alone, so everything else waits below the fold. */}
             <motion.ul
               {...rise(2)}
-              aria-label={t("onb.intro.offer.label")}
+              aria-label={t("onb.intro.howWeWork")}
               className="mt-7 grid grid-cols-2 gap-px overflow-hidden rounded-2xl border border-foreground/10 bg-foreground/10"
             >
               {promises.map((p, i) => (
@@ -141,7 +135,7 @@ export function OnboardingIntro({ state, onStart }: { state: OnboardingState; on
               </motion.div>
             ) : (
               <motion.div {...rise(3)} className="mt-7 flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-5">
-                <StartButton onStart={() => onStart("form")} label={t("onb.intro.cta")} />
+                <StartButton onStart={() => onStart("form")} label={t("onb.intro.ctaV2")} />
                 <p className="text-[13px] text-muted-foreground">{t("onb.intro.ctaNote")}</p>
               </motion.div>
             )}
@@ -201,11 +195,11 @@ export function OnboardingIntro({ state, onStart }: { state: OnboardingState; on
               <p className="ob2-heading mt-4 max-w-[30ch] text-balance text-[1.6rem] leading-snug sm:text-[2rem]">
                 {t("onb.intro.whyTitle")}
               </p>
-              <p className="mt-3 max-w-[56ch] text-[15px] leading-relaxed text-background/70">{t("onb.intro.whyBody", { count: free })}</p>
+              <p className="mt-3 max-w-[56ch] text-[15px] leading-relaxed text-background/70">{t("onb.intro.whyBodyV2")}</p>
             </div>
             <StartButton
               onStart={() => onStart(assistant ? "chat" : "form")}
-              label={assistant ? (assistant.name ? t("onb.intro.way.chatCta", { name: assistant.name }) : t("onb.intro.way.chatCtaTeam")) : t("onb.intro.cta")}
+              label={assistant ? (assistant.name ? t("onb.intro.way.chatCta", { name: assistant.name }) : t("onb.intro.way.chatCtaTeam")) : t("onb.intro.ctaV2")}
               inverted
             />
           </div>

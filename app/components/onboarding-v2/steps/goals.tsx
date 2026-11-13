@@ -19,7 +19,7 @@ import {
   Wrench,
 } from "lucide-react";
 import { Switch } from "~/components/ui/switch";
-import { formatMoney, PROFILE_ENUMS } from "~/lib/onboarding/helpers";
+import { PROFILE_ENUMS } from "~/lib/onboarding/helpers";
 import { ActionBar, ChipQuestion, ChipToggle, ChoiceCard, ChoiceGroup, Field, inkSwitchCls, Segmented, StepHeading, TagInput, TextArea, TextInput } from "../primitives";
 import { useWizard } from "../wizard-context";
 
@@ -113,15 +113,14 @@ export function StepGoals() {
 }
 
 export function StepGrowth() {
-  const { t, i18n } = useTranslation();
+  const { t } = useTranslation();
   const { state, save, saving, back } = useWizard();
   const data = state?.profile?.data;
   const i = (data?.interests ?? {}) as Record<string, unknown>;
   const cms = data?.online?.cms_detected as string | undefined;
   const hasSite = !!state?.workspace?.website;
   const managed = cms?.includes("re:praesent");
-  const q = state?.pricing;
-  const money = (c: number) => (q ? formatMoney(c, q.currency, i18n.language) : "");
+  // No prices here: scope and price are agreed with our team in the call.
   const [plan, setPlan] = useState<string | null>((i.website_plan as string | undefined) ?? (managed ? "keep" : null));
   const [ai, setAi] = useState<string | null>((i.ai_visibility as string | undefined) ?? null);
   const [ads, setAds] = useState<boolean>(!!i.managed_ads);
@@ -147,13 +146,12 @@ export function StepGrowth() {
     });
   };
 
-  const addon = (key: string, on: boolean, set: (v: boolean) => void, price: string) => (
+  const addon = (key: string, on: boolean, set: (v: boolean) => void) => (
     <label className="flex min-h-14 cursor-pointer items-center gap-4 rounded-2xl border border-border bg-card px-4 py-3 transition-colors hover:border-foreground/25">
       <span className="min-w-0 flex-1">
         <span className="block text-[15px] font-semibold">{t(`onb.growth.addons.${key}.title`)}</span>
         <span className="block text-[13px] text-muted-foreground">{t(`onb.growth.addons.${key}.desc`)}</span>
       </span>
-      <span className="shrink-0 text-right text-[13px] tabular-nums text-muted-foreground">{price}</span>
       <Switch className={inkSwitchCls} checked={on} onCheckedChange={set} aria-label={t(`onb.growth.addons.${key}.title`)} />
     </label>
   );
@@ -172,21 +170,21 @@ export function StepGrowth() {
               onSelect={() => setPlan("keep")}
               icon={<ThumbsUp className="size-4" />}
               title={t("onb.growth.plan.keep.title")}
-              description={managed ? t("onb.growth.plan.keep.managed") : t("onb.growth.plan.keep.desc", { price: money(q?.addons.cmsTransfer ?? 0) })}
+              description={managed ? t("onb.growth.plan.keep.managed") : t("onb.growth.plan.keep.descV2")}
             />
             <ChoiceCard
               selected={plan === "refresh"}
               onSelect={() => setPlan("refresh")}
               icon={<Wrench className="size-4" />}
               title={t("onb.growth.plan.refresh.title")}
-              description={t("onb.growth.plan.refresh.desc", { price: money(q?.addons.hourly ?? 0) })}
+              description={t("onb.growth.plan.refresh.descV2")}
             />
             <ChoiceCard
               selected={plan === "rebuild"}
               onSelect={() => setPlan("rebuild")}
               icon={<Hammer className="size-4" />}
               title={t("onb.growth.plan.rebuild.title")}
-              description={t("onb.growth.plan.rebuild.desc", { price: money(q?.addons.newWebsite ?? 0) })}
+              description={t("onb.growth.plan.rebuild.descV2")}
             />
           </>
         ) : (
@@ -196,7 +194,7 @@ export function StepGrowth() {
               onSelect={() => setPlan("rebuild")}
               icon={<Hammer className="size-4" />}
               title={t("onb.growth.plan.new.title")}
-              description={t("onb.growth.plan.new.desc", { price: money(q?.addons.newWebsite ?? 0) })}
+              description={t("onb.growth.plan.new.descV2")}
             />
             <ChoiceCard selected={plan === "keep"} onSelect={() => setPlan("keep")} icon={<Clock3 className="size-4" />} title={t("onb.growth.plan.later.title")} />
           </>
@@ -217,9 +215,9 @@ export function StepGrowth() {
 
       <div className="mt-10 space-y-3">
         <p className="text-[15px] font-medium">{t("onb.growth.addonsTitle")}</p>
-        {addon("ads", ads, setAds, t("onb.growth.perMonth", { price: money(q?.addons.managedAds.monthly ?? 0) }))}
-        {addon("social", social, setSocial, t("onb.growth.perMonth", { price: money(q?.addons.socialPosts.monthly ?? 0) }))}
-        {addon("content", content, setContent, t("onb.growth.perMonth", { price: money(q?.addons.contentUpdates.monthly ?? 0) }))}
+        {addon("ads", ads, setAds)}
+        {addon("social", social, setSocial)}
+        {addon("content", content, setContent)}
         <p className="text-[12px] text-muted-foreground">{t("onb.growth.noCommitment")}</p>
       </div>
 

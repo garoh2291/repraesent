@@ -122,7 +122,7 @@ export default function Products() {
                 {t("products.trial_card.title")}
               </h2>
               <p className="text-[15px] text-muted-foreground leading-relaxed">
-                {t("products.trial_card.body")}
+                {t("products.trial_card.bodyV2")}
               </p>
             </div>
 

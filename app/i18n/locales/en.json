@@ -1389,13 +1389,13 @@
     "trial_card": {
       "eyebrow": "Doorboost",
       "title": "You're running on the Doorboost data you already trust.",
-      "body": "Every campaign, lead, note and customer record from your Doorboost account lives inside re:praesent — yours to read, search and report on, free forever. To activate any of the modules below, contact our support team:",
       "feature_appointments": "Appointments & smart booking pages",
       "feature_web_analytics": "Website analytics & visitor insights",
       "feature_ad_analytics": "Ad analytics for new campaigns",
       "feature_new_leads": "Lead capture from website",
       "cta": "Talk to our team",
-      "contact": "Or write us directly at <0>{{supportEmail}}</0>"
+      "contact": "Or write us directly at <0>{{supportEmail}}</0>",
+      "bodyV2": "Every campaign, lead, note and customer record from your Doorboost account lives inside re:praesent, yours to read, search and report on. To activate any of the modules below, contact our support team:"
     }
   },
   "settings": {
@@ -2795,78 +2795,6 @@
       "placeholderFirstName": "John",
       "placeholderLastName": "Doe"
     },
-    "offers": {
-      "title": "Choose a plan",
-      "perMonth": "per month",
-      "selectPlan": "Select plan"
-    },
-    "billing": {
-      "metaTitle": "Billing information - Repraesent",
-      "metaDescription": "Add billing details for invoicing",
-      "title": "Billing information",
-      "subtitle": "Add your billing details so we can create your Stripe customer and send invoices.",
-      "companyName": "Company name",
-      "vatNumber": "VAT number",
-      "address": "Address",
-      "city": "City",
-      "country": "Country",
-      "postalCode": "Postal code",
-      "sectionContact": "Contact",
-      "sectionAddress": "Address",
-      "sectionTax": "Tax",
-      "fullName": "Full name",
-      "email": "Email",
-      "company": "Company",
-      "streetAddress": "Street address",
-      "postalZip": "Postal / ZIP",
-      "selectCountry": "Select country",
-      "nameRequired": "Name is required",
-      "emailRequired": "Email is required",
-      "emailInvalid": "Please enter a valid email address",
-      "companyRequired": "Company is required",
-      "addressRequired": "Address is required",
-      "cityRequired": "City is required",
-      "countryRequired": "Country is required",
-      "postalCodeRequired": "Postal code is required",
-      "noWorkspaceSelected": "No area selected",
-      "placeholderFullName": "John Doe",
-      "placeholderEmail": "billing@company.com",
-      "placeholderCompany": "Acme Inc.",
-      "placeholderAddress": "123 Main St",
-      "placeholderCity": "Berlin",
-      "placeholderPostalCode": "10115",
-      "placeholderVat": "DE123456789",
-      "optional": "(optional)",
-      "countries": {
-        "DE": "Germany",
-        "GB": "United Kingdom",
-        "FR": "France",
-        "ES": "Spain",
-        "AT": "Austria"
-      }
-    },
-    "products": {
-      "metaTitle": "Choose your plan - Repraesent",
-      "metaDescription": "Select a plan that suits your needs",
-      "heading": "Choose your plan",
-      "subtitle": "Select one or more products. Our team will set up your subscription.",
-      "loading": "Loading plans…",
-      "noPlans": "No plans available. Please contact support.",
-      "monthly": "Monthly",
-      "yearly": "Yearly",
-      "saveUpTo": "Save up to {{percent}}%",
-      "recommended": "Recommended",
-      "save": "Save {{percent}}%",
-      "perMonthShort": "mo",
-      "perYearShort": "yr",
-      "notAvailable": "Not available for this billing period",
-      "selected": "Selected:",
-      "noWorkspaceSelected": "No area selected",
-      "selectAtLeastOne": "Please select at least one product",
-      "ariaPrevious": "Previous",
-      "ariaNext": "Next",
-      "ariaGoToProduct": "Go to product {{name}}"
-    },
     "tour": {
       "steps": {
         "welcome": {
@@ -3700,7 +3628,7 @@
   },
   "workspace": {
     "trial_banner": {
-      "message": "Every campaign, lead and note from your Doorboost account lives in re:praesent — yours to use, free forever. <0>See what else you can unlock →</0>"
+      "messageV2": "Every campaign, lead and note from your Doorboost account lives in re:praesent, ready to use. <0>See what else you can unlock →</0>"
     }
   },
   "doorboost_restore": {
@@ -7519,10 +7447,10 @@
     "feature2": "No signup, no email required",
     "feature3": "Deleted automatically after 2 hours",
     "banner": {
-      "message": "This is a temporary demo account — it expires in {{time}}. <0>Create your free account</0>",
-      "expired": "This demo has expired. <0>Create your free account</0>",
       "minutes": "{{minutes}} min",
-      "hoursMinutes": "{{hours}} h {{minutes}} min"
+      "hoursMinutes": "{{hours}} h {{minutes}} min",
+      "messageV2": "This is a temporary demo account — it expires in {{time}}. <0>Create your account</0>",
+      "expiredV2": "This demo has expired. <0>Create your account</0>"
     },
     "kindLabel": "I am a…",
     "kindWorkspaceTitle": "Business owner",
@@ -9020,7 +8948,7 @@
       "presence": "Presence",
       "goals": "Goals",
       "team": "Team",
-      "plan": "Plan"
+      "plan": "Finish"
     },
     "progress": {
       "label": "Setup progress",
@@ -9065,13 +8993,13 @@
       "invalid_format": "This doesn't look right."
     },
     "name": {
-      "eyebrow": "About 8 minutes · first 2 months free",
       "title": "Let's set up your business. What's it called?",
       "sub": "We read your website and fill in most of the rest for you.",
       "label": "Business name",
       "hint": "The name your customers know.",
       "placeholder": "Your business name",
-      "tooShort": "Enter at least 2 characters."
+      "tooShort": "Enter at least 2 characters.",
+      "eyebrowV2": "About 8 minutes · saved as you go"
     },
     "website": {
       "title": "Do you have a website?",
@@ -9358,20 +9286,20 @@
       "plan": {
         "keep": {
           "title": "Keep my website",
-          "desc": "We move it to re:praesent for {{price}}.",
-          "managed": "It already runs with re:praesent."
+          "managed": "It already runs with re:praesent.",
+          "descV2": "We move it to re:praesent for you."
         },
         "refresh": {
           "title": "Refresh it",
-          "desc": "New content and polish, {{price}} per hour of work."
+          "descV2": "New content and polish, done by our team."
         },
         "rebuild": {
           "title": "Rebuild it on WordPress",
-          "desc": "A new site, done for you: {{price}} once."
+          "descV2": "A new site, done for you."
         },
         "new": {
           "title": "Build me a website",
-          "desc": "A new site, done for you: {{price}} once."
+          "descV2": "A new site, done for you."
         },
         "later": {
           "title": "Not right now"
@@ -9399,7 +9327,6 @@
           "desc": "We keep your site's news and offers current"
         }
       },
-      "perMonth": "{{price}}/month",
       "noCommitment": "Nothing is booked now. It helps our team prepare your call.",
       "locations": "How many locations do you have?"
     },
@@ -9464,7 +9391,6 @@
     },
     "billing": {
       "title": "Where should the invoice go?",
-      "sub": "Nothing is charged now. We need this for your first invoice later.",
       "subFound": "We filled this in from your legal notice. Please check it.",
       "legalName": "Company name",
       "legalNameHint": "Exactly as it should appear on the invoice.",
@@ -9482,25 +9408,10 @@
       "vatHint": "Leave empty if you don't have one.",
       "vatFormat": "This doesn't match the usual format, e.g. {{example}}.",
       "phone": "Phone",
-      "nothingCharged": "Nothing is charged today. Our team walks you through everything first."
+      "subV2": "Who your invoices should go to. Nothing happens with this until you've agreed everything with our team."
     },
     "plan": {
-      "title": "Your plan: everything, one price.",
-      "sub": "One package with everything your business needs. No per-user fees.",
       "name": "re:praesent complete",
-      "yearly": "Billed yearly",
-      "insteadOf": "instead of",
-      "perYear": "per year",
-      "included": [
-        "Website, CMS and hosting",
-        "Leads and CRM in one place",
-        "Email and calendar connected",
-        "Analytics and translations",
-        "Marketing tools",
-        "Unlimited team members"
-      ],
-      "nothingToday": "Nothing to pay today.",
-      "nothingTodaySub": "Our team calls you first and walks you through everything. Your invoice comes after that.",
       "talkAbout": "We'll also talk about: {{items}}.",
       "talk": {
         "website": "your new website",
@@ -9510,7 +9421,6 @@
         "social": "social posts",
         "content": "content updates"
       },
-      "vat": "Prices excluding VAT.",
       "consentPre": "I've read the",
       "privacy": "privacy policy",
       "and": "and the",
@@ -9518,11 +9428,18 @@
       "consentPost": ".",
       "finish": "Finish setup",
       "incomplete": "A few details are still missing. Go back and check your phone number and invoice details.",
-      "freeMonths_one": "First month free",
-      "freeMonths_other": "First {{count}} months free",
-      "trialTitle_one": "Your first month is free.",
-      "trialTitle_other": "Your first {{count}} months are free.",
-      "trialBody": "Your first invoice comes in month {{month}}: {{yearly}} a year, about {{perDay}} a day. Nothing to pay today."
+      "titleV2": "Everything your business needs, in one place.",
+      "subV2": "One package, set up and looked after by our team.",
+      "includedV2": [
+        "Website, CMS and hosting",
+        "Leads and CRM in one place",
+        "Email and calendar connected",
+        "Analytics and translations",
+        "Marketing tools",
+        "One login for the whole team"
+      ],
+      "nextTitle": "What happens next",
+      "nextBody": "Our team calls you, agrees the scope and price with you, then gets everything live."
     },
     "card": {
       "eyebrow": "Your business",
@@ -9706,24 +9623,6 @@
       "titleHighlight": "A second life",
       "title2": "for your business, online.",
       "sub": "Your website, Google profile, enquiries and marketing in one place — set up with you by people who know showrooms. Not just hosting. Not just a CRM.",
-      "offer": {
-        "label": "What it costs",
-        "free": {
-          "title_one": "First month free",
-          "title_other": "First {{count}} months free",
-          "sub": "Everything included, from day one."
-        },
-        "today": {
-          "title": "Nothing to pay today",
-          "sub": "No card needed to start."
-        },
-        "then": {
-          "title": "Then {{price}} a year",
-          "titleNoPrice": "Then one yearly price",
-          "sub": "About {{perDay}} a day, excl. VAT."
-        }
-      },
-      "cta": "Start my free setup",
       "ctaNote": "About 8 minutes · saved as you go · stop anytime",
       "howTitle": "How it works",
       "steps": {
@@ -9739,16 +9638,13 @@
         },
         "live": {
           "title": "Your business goes live",
-          "body_one": "Website, Google, enquiries and marketing working for you — during your free month.",
-          "body_other": "Website, Google, enquiries and marketing working for you — during your {{count}} free months."
+          "bodyV2": "Website, Google, enquiries and marketing working for you, set up by our team."
         }
       },
       "realPeople": "Your team at re:praesent",
       "and": "and",
       "whyEyebrow": "Why the questions matter",
       "whyTitle": "Your answers are the brief for your new online presence.",
-      "whyBody_one": "They shape your website, your Google profile and your first call. The more we know, the more we can do in your free month.",
-      "whyBody_other": "They shape your website, your Google profile and your first call. The more we know, the more we can do in your {{count}} free months.",
       "show": {
         "url": "yourshowroom.com",
         "lead": {
@@ -9780,15 +9676,15 @@
         "chatSubTeam": "Like a chat with a colleague. Pick someone who explains things the way you like.",
         "chatCtaTeam": "Start the chat"
       },
-      "promise": {
-        "free_one": "First month free",
-        "free_other": "{{count}} months free",
-        "hidden": "No hidden costs",
-        "seats": "No cost per team member",
-        "cancel": "Cancel anytime"
+      "howWeWork": "How we work",
+      "promiseV2": {
+        "person": "Set up by a real person",
+        "scope": "Clear scope, up front",
+        "yours": "Your website stays yours",
+        "tech": "We handle the technical side"
       },
-      "finePrint": "Then {{price}} a year, about {{perDay}} a day, excl. VAT. Nothing to pay today, no card needed.",
-      "finePrintNoPrice": "Then one yearly price. Nothing to pay today, no card needed."
+      "ctaV2": "Start my setup",
+      "whyBodyV2": "They shape your website, your Google profile and your first call. The more we know, the better our team can prepare."
     },
     "chat": {
       "metaTitle": "Set up with your guide",
@@ -9862,8 +9758,9 @@
       "team": "Your team",
       "notifications": "Email summaries",
       "billing": "Invoice details",
-      "plan": "Your plan"
-    }
+      "plan": "What you get"
+    },
+    "priceInCall": "Our team agrees the scope and price with you in a short call."
   },
   "salesContact": {
     "nav": "Contact re:praesent",

@@ -1391,13 +1391,13 @@
     "trial_card": {
       "eyebrow": "Doorboost",
       "title": "Du arbeitest mit den vertrauten Daten aus Doorboost.",
-      "body": "Jede Kampagne, jeder Lead, jede Notiz und jeder Kunde aus deinem Doorboost-Konto sind in re:praesent verfügbar — zum Lesen, Suchen und Auswerten, dauerhaft kostenlos. Wenn du eines der unten genannten Module aktivieren möchtest, wende dich an unseren Support:",
       "feature_appointments": "Termine & smarte Buchungsseiten",
       "feature_web_analytics": "Website-Analytics & Besucher-Insights",
       "feature_ad_analytics": "Anzeigen-Analytics für neue Kampagnen",
       "feature_new_leads": "Lead-Erfassung von der Website",
       "cta": "Mit unserem Team sprechen",
-      "contact": "Oder schreib uns direkt an <0>{{supportEmail}}</0>"
+      "contact": "Oder schreib uns direkt an <0>{{supportEmail}}</0>",
+      "bodyV2": "Jede Kampagne, jeder Lead, jede Notiz und jeder Kunde aus deinem Doorboost-Konto sind in re:praesent verfügbar – zum Lesen, Suchen und Auswerten. Wenn du eines der unten genannten Module aktivieren möchtest, wende dich an unseren Support:"
     }
   },
   "settings": {
@@ -2797,78 +2797,6 @@
       "placeholderFirstName": "Max",
       "placeholderLastName": "Mustermann"
     },
-    "offers": {
-      "title": "Paket wählen",
-      "perMonth": "pro Monat",
-      "selectPlan": "Paket wählen"
-    },
-    "billing": {
-      "metaTitle": "Zahlungsinformationen - Repraesent",
-      "metaDescription": "Abrechnungsdaten für Rechnungen",
-      "title": "Zahlungsinformationen",
-      "subtitle": "Geben Sie Ihre Abrechnungsdaten an, damit wir Ihr Stripe-Konto erstellen und Rechnungen senden können.",
-      "companyName": "Firmenname",
-      "vatNumber": "USt-IdNr.",
-      "address": "Adresse",
-      "city": "Stadt",
-      "country": "Land",
-      "postalCode": "Postleitzahl",
-      "sectionContact": "Kontakt",
-      "sectionAddress": "Adresse",
-      "sectionTax": "Steuer",
-      "fullName": "Vollständiger Name",
-      "email": "E-Mail",
-      "company": "Unternehmen",
-      "streetAddress": "Straße und Hausnummer",
-      "postalZip": "Postleitzahl",
-      "selectCountry": "Land auswählen",
-      "nameRequired": "Name ist erforderlich",
-      "emailRequired": "E-Mail ist erforderlich",
-      "emailInvalid": "Bitte geben Sie eine gültige E-Mail-Adresse ein",
-      "companyRequired": "Unternehmen ist erforderlich",
-      "addressRequired": "Adresse ist erforderlich",
-      "cityRequired": "Stadt ist erforderlich",
-      "countryRequired": "Land ist erforderlich",
-      "postalCodeRequired": "Postleitzahl ist erforderlich",
-      "noWorkspaceSelected": "Kein Bereich ausgewählt",
-      "placeholderFullName": "Max Mustermann",
-      "placeholderEmail": "rechnung@firma.de",
-      "placeholderCompany": "Beispiel GmbH",
-      "placeholderAddress": "Musterstraße 1",
-      "placeholderCity": "Berlin",
-      "placeholderPostalCode": "10115",
-      "placeholderVat": "DE123456789",
-      "optional": "(optional)",
-      "countries": {
-        "DE": "Deutschland",
-        "GB": "Vereinigtes Königreich",
-        "FR": "Frankreich",
-        "ES": "Spanien",
-        "AT": "Österreich"
-      }
-    },
-    "products": {
-      "metaTitle": "Paket wählen - Repraesent",
-      "metaDescription": "Wählen Sie ein passendes Paket",
-      "heading": "Paket wählen",
-      "subtitle": "Wählen Sie ein oder mehrere Produkte. Unser Team richtet Ihr Abonnement ein.",
-      "loading": "Pakete werden geladen…",
-      "noPlans": "Keine Pakete verfügbar. Bitte kontaktieren Sie den Support.",
-      "monthly": "Monatlich",
-      "yearly": "Jährlich",
-      "saveUpTo": "Bis zu {{percent}}% sparen",
-      "recommended": "Empfohlen",
-      "save": "{{percent}}% sparen",
-      "perMonthShort": "Mon",
-      "perYearShort": "Jahr",
-      "notAvailable": "Nicht verfügbar für diesen Abrechnungszeitraum",
-      "selected": "Ausgewählt:",
-      "noWorkspaceSelected": "Kein Bereich ausgewählt",
-      "selectAtLeastOne": "Bitte wählen Sie mindestens ein Produkt aus",
-      "ariaPrevious": "Zurück",
-      "ariaNext": "Weiter",
-      "ariaGoToProduct": "Zu Produkt {{name}}"
-    },
     "tour": {
       "steps": {
         "welcome": {
@@ -3702,7 +3630,7 @@
   },
   "workspace": {
     "trial_banner": {
-      "message": "Jede Kampagne, jeder Lead und jede Notiz aus deinem Doorboost-Konto sind in re:praesent gespeichert — dauerhaft kostenlos nutzbar. <0>Mehr Funktionen entdecken →</0>"
+      "messageV2": "Jede Kampagne, jeder Lead und jede Notiz aus deinem Doorboost-Konto sind in re:praesent gespeichert und sofort nutzbar. <0>Mehr Funktionen entdecken →</0>"
     }
   },
   "doorboost_restore": {
@@ -7521,10 +7449,10 @@
     "feature2": "Keine Registrierung, keine E-Mail nötig",
     "feature3": "Wird nach 2 Stunden automatisch gelöscht",
     "banner": {
-      "message": "Dies ist ein temporäres Demo-Konto — es läuft in {{time}} ab. <0>Kostenloses Konto erstellen</0>",
-      "expired": "Diese Demo ist abgelaufen. <0>Kostenloses Konto erstellen</0>",
       "minutes": "{{minutes}} Min.",
-      "hoursMinutes": "{{hours}} Std. {{minutes}} Min."
+      "hoursMinutes": "{{hours}} Std. {{minutes}} Min.",
+      "messageV2": "Dies ist ein temporäres Demo-Konto — es läuft in {{time}} ab. <0>Konto erstellen</0>",
+      "expiredV2": "Diese Demo ist abgelaufen. <0>Konto erstellen</0>"
     },
     "kindLabel": "Ich bin…",
     "kindWorkspaceTitle": "Geschäftsinhaber",
@@ -9022,7 +8950,7 @@
       "presence": "Auftritt",
       "goals": "Ziele",
       "team": "Team",
-      "plan": "Paket"
+      "plan": "Abschluss"
     },
     "progress": {
       "label": "Fortschritt der Einrichtung",
@@ -9067,13 +8995,13 @@
       "invalid_format": "Das sieht nicht ganz richtig aus."
     },
     "name": {
-      "eyebrow": "Rund 8 Minuten · erste 2 Monate kostenlos",
       "title": "Lassen Sie uns Ihr Unternehmen einrichten. Wie heißt es?",
       "sub": "Wir lesen Ihre Website und füllen das meiste für Sie aus.",
       "label": "Name des Unternehmens",
       "hint": "Der Name, unter dem Ihre Kunden Sie kennen.",
       "placeholder": "Name Ihres Unternehmens",
-      "tooShort": "Bitte mindestens 2 Zeichen eingeben."
+      "tooShort": "Bitte mindestens 2 Zeichen eingeben.",
+      "eyebrowV2": "Rund 8 Minuten · wird laufend gespeichert"
     },
     "website": {
       "title": "Haben Sie eine Website?",
@@ -9360,20 +9288,20 @@
       "plan": {
         "keep": {
           "title": "Website behalten",
-          "desc": "Wir ziehen sie für {{price}} zu re:praesent um.",
-          "managed": "Sie läuft bereits mit re:praesent."
+          "managed": "Sie läuft bereits mit re:praesent.",
+          "descV2": "Wir ziehen sie für Sie zu re:praesent um."
         },
         "refresh": {
           "title": "Auffrischen",
-          "desc": "Neue Inhalte und Feinschliff, {{price}} pro Arbeitsstunde."
+          "descV2": "Neue Inhalte und Feinschliff, von unserem Team umgesetzt."
         },
         "rebuild": {
           "title": "Neu auf WordPress aufbauen",
-          "desc": "Eine neue Website, von uns umgesetzt: einmalig {{price}}."
+          "descV2": "Eine neue Website, von uns umgesetzt."
         },
         "new": {
           "title": "Website für mich bauen",
-          "desc": "Eine neue Website, von uns umgesetzt: einmalig {{price}}."
+          "descV2": "Eine neue Website, von uns umgesetzt."
         },
         "later": {
           "title": "Im Moment nicht"
@@ -9401,7 +9329,6 @@
           "desc": "Wir pflegen Neuigkeiten und Angebote auf Ihrer Website"
         }
       },
-      "perMonth": "{{price}}/Monat",
       "noCommitment": "Damit wird nichts gebucht. Es hilft unserem Team, Ihr Gespräch vorzubereiten.",
       "locations": "Wie viele Standorte haben Sie?"
     },
@@ -9466,7 +9393,6 @@
     },
     "billing": {
       "title": "Wohin dürfen wir die Rechnung schicken?",
-      "sub": "Heute wird nichts berechnet. Wir brauchen die Angaben für Ihre erste Rechnung.",
       "subFound": "Das haben wir aus Ihrem Impressum übernommen. Bitte prüfen Sie es.",
       "legalName": "Firmenname",
       "legalNameHint": "Genau so, wie er auf der Rechnung stehen soll.",
@@ -9484,25 +9410,10 @@
       "vatHint": "Leer lassen, wenn Sie keine haben.",
       "vatFormat": "Das entspricht nicht dem üblichen Format, z. B. {{example}}.",
       "phone": "Telefon",
-      "nothingCharged": "Heute wird nichts berechnet. Unser Team geht vorher alles mit Ihnen durch."
+      "subV2": "An wen Ihre Rechnungen gehen sollen. Wir nutzen das erst, wenn Sie alles mit unserem Team vereinbart haben."
     },
     "plan": {
-      "title": "Ihr Paket: alles drin, ein Preis.",
-      "sub": "Ein Paket mit allem, was Ihr Unternehmen braucht. Keine Kosten pro Nutzer.",
       "name": "re:praesent komplett",
-      "yearly": "Jährliche Abrechnung",
-      "insteadOf": "statt",
-      "perYear": "pro Jahr",
-      "included": [
-        "Website, CMS und Hosting",
-        "Anfragen und CRM an einem Ort",
-        "E-Mail und Kalender verbunden",
-        "Statistiken und Übersetzungen",
-        "Marketing-Werkzeuge",
-        "Beliebig viele Teammitglieder"
-      ],
-      "nothingToday": "Heute ist nichts zu zahlen.",
-      "nothingTodaySub": "Unser Team meldet sich zuerst und geht alles mit Ihnen durch. Die Rechnung kommt danach.",
       "talkAbout": "Außerdem sprechen wir über: {{items}}.",
       "talk": {
         "website": "Ihre neue Website",
@@ -9512,7 +9423,6 @@
         "social": "Social-Media-Posts",
         "content": "Inhaltspflege"
       },
-      "vat": "Preise zzgl. MwSt.",
       "consentPre": "Ich habe die",
       "privacy": "Datenschutzerklärung",
       "and": "und die",
@@ -9520,11 +9430,18 @@
       "consentPost": " gelesen.",
       "finish": "Einrichtung abschließen",
       "incomplete": "Es fehlen noch ein paar Angaben. Bitte prüfen Sie Ihre Telefonnummer und die Rechnungsangaben.",
-      "freeMonths_one": "Erster Monat kostenlos",
-      "freeMonths_other": "Erste {{count}} Monate kostenlos",
-      "trialTitle_one": "Ihr erster Monat ist kostenlos.",
-      "trialTitle_other": "Ihre ersten {{count}} Monate sind kostenlos.",
-      "trialBody": "Die erste Rechnung kommt im {{month}}. Monat: {{yearly}} pro Jahr, rund {{perDay}} pro Tag. Heute ist nichts zu bezahlen."
+      "titleV2": "Alles, was Ihr Geschäft braucht, an einem Ort.",
+      "subV2": "Ein Paket, eingerichtet und betreut von unserem Team.",
+      "includedV2": [
+        "Website, CMS und Hosting",
+        "Anfragen und CRM an einem Ort",
+        "E-Mail und Kalender verbunden",
+        "Statistiken und Übersetzungen",
+        "Marketing-Werkzeuge",
+        "Ein Login für das ganze Team"
+      ],
+      "nextTitle": "So geht es weiter",
+      "nextBody": "Unser Team ruft Sie an, vereinbart mit Ihnen Umfang und Preis und bringt dann alles online."
     },
     "card": {
       "eyebrow": "Ihr Unternehmen",
@@ -9708,24 +9625,6 @@
       "titleHighlight": "Ein zweites Leben",
       "title2": "für Ihr Geschäft – online.",
       "sub": "Website, Google-Profil, Anfragen und Marketing an einem Ort – gemeinsam mit Ihnen eingerichtet, von Menschen, die Showrooms kennen. Nicht nur Hosting. Nicht nur ein CRM.",
-      "offer": {
-        "label": "Was es kostet",
-        "free": {
-          "title_one": "Erster Monat kostenlos",
-          "title_other": "Die ersten {{count}} Monate kostenlos",
-          "sub": "Alles inklusive, ab dem ersten Tag."
-        },
-        "today": {
-          "title": "Heute nichts zu bezahlen",
-          "sub": "Keine Kreditkarte nötig."
-        },
-        "then": {
-          "title": "Danach {{price}} pro Jahr",
-          "titleNoPrice": "Danach ein Jahrespreis",
-          "sub": "Rund {{perDay}} pro Tag, zzgl. MwSt."
-        }
-      },
-      "cta": "Kostenlos einrichten",
       "ctaNote": "Rund 8 Minuten · wird laufend gespeichert · jederzeit pausieren",
       "howTitle": "So funktioniert’s",
       "steps": {
@@ -9741,16 +9640,13 @@
         },
         "live": {
           "title": "Ihr Geschäft geht online",
-          "body_one": "Website, Google, Anfragen und Marketing arbeiten für Sie – schon in Ihrem kostenlosen Monat.",
-          "body_other": "Website, Google, Anfragen und Marketing arbeiten für Sie – schon in Ihren {{count}} kostenlosen Monaten."
+          "bodyV2": "Website, Google, Anfragen und Marketing arbeiten für Sie – eingerichtet von unserem Team."
         }
       },
       "realPeople": "Ihr Team bei re:praesent",
       "and": "und",
       "whyEyebrow": "Warum die Fragen wichtig sind",
       "whyTitle": "Ihre Antworten sind das Briefing für Ihren neuen Auftritt.",
-      "whyBody_one": "Sie prägen Ihre Website, Ihr Google-Profil und Ihr erstes Gespräch. Je mehr wir wissen, desto mehr schaffen wir in Ihrem kostenlosen Monat.",
-      "whyBody_other": "Sie prägen Ihre Website, Ihr Google-Profil und Ihr erstes Gespräch. Je mehr wir wissen, desto mehr schaffen wir in Ihren {{count}} kostenlosen Monaten.",
       "show": {
         "url": "ihr-showroom.de",
         "lead": {
@@ -9782,15 +9678,15 @@
         "chatSubTeam": "Wie ein Chat mit einer Kollegin. Wählen Sie, wer Ihnen Dinge so erklärt, wie Sie es mögen.",
         "chatCtaTeam": "Chat starten"
       },
-      "promise": {
-        "free_one": "Erster Monat kostenlos",
-        "free_other": "{{count}} Monate kostenlos",
-        "hidden": "Keine versteckten Kosten",
-        "seats": "Keine Kosten pro Teammitglied",
-        "cancel": "Jederzeit kündbar"
+      "howWeWork": "So arbeiten wir",
+      "promiseV2": {
+        "person": "Persönlich eingerichtet",
+        "scope": "Klarer Umfang, vorab",
+        "yours": "Ihre Website bleibt Ihre",
+        "tech": "Die Technik übernehmen wir"
       },
-      "finePrint": "Danach {{price}} pro Jahr, etwa {{perDay}} pro Tag, zzgl. MwSt. Heute zahlen Sie nichts, keine Karte nötig.",
-      "finePrintNoPrice": "Danach ein fester Jahrespreis. Heute zahlen Sie nichts, keine Karte nötig."
+      "ctaV2": "Einrichtung starten",
+      "whyBodyV2": "Sie prägen Ihre Website, Ihr Google-Profil und Ihr erstes Gespräch. Je mehr wir wissen, desto besser kann sich unser Team vorbereiten."
     },
     "chat": {
       "metaTitle": "Einrichtung im Gespräch",
@@ -9864,8 +9760,9 @@
       "team": "Ihr Team",
       "notifications": "E-Mail-Zusammenfassungen",
       "billing": "Rechnungsdaten",
-      "plan": "Ihr Paket"
-    }
+      "plan": "Das bekommen Sie"
+    },
+    "priceInCall": "Umfang und Preis vereinbart unser Team mit Ihnen in einem kurzen Gespräch."
   },
   "salesContact": {
     "nav": "re:praesent kontaktieren",
