@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { desktopAutoFocus } from "~/lib/utils/touch";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { ArrowRight, Search } from "lucide-react";
@@ -237,7 +238,9 @@ function DetailsSheet({
             <span className="sr-only">{t("analytics.search", "Search")}</span>
             <input
               type="search"
-              autoFocus
+              // No keyboard by itself on a phone: raised while the sheet slides in, it left a gap.
+              autoFocus={desktopAutoFocus()}
+              enterKeyHint="search"
               value={typed}
               onChange={(e) => setTyped(e.target.value)}
               placeholder={t("analytics.searchPlaceholder", "Search…")}

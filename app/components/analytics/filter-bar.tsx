@@ -1,4 +1,5 @@
 import { useId, useState } from "react";
+import { desktopAutoFocus } from "~/lib/utils/touch";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { ListFilter, X } from "lucide-react";
@@ -214,7 +215,8 @@ function AddFilter({
             list={listId}
             value={value}
             onChange={(e) => setValue(e.target.value)}
-            autoFocus
+            autoFocus={desktopAutoFocus()}
+            enterKeyHint="done"
             placeholder={op === "contains" ? t("analytics.filterContainsHint", "Part of the text, e.g. sale") : t("analytics.filterPick", "Pick or type a value")}
             className="h-11 rounded-lg border border-border bg-card px-3 text-[14px] font-normal max-sm:text-[16px]"
           />

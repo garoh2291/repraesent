@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { desktopAutoFocus } from "~/lib/utils/touch";
 import { useQuery } from "@tanstack/react-query";
 import { useSearchParams } from "react-router";
 import { useTranslation } from "react-i18next";
@@ -55,7 +56,8 @@ function HouseList({
           <span className="sr-only">{t("brand.analyticsSearch", { ...ctw, defaultValue: "Find a {{type}}…" })}</span>
           <input
             type="search"
-            autoFocus
+            autoFocus={desktopAutoFocus()}
+            enterKeyHint="search"
             value={q}
             onChange={(e) => setQ(e.target.value)}
             placeholder={t("brand.analyticsSearch", { ...ctw, defaultValue: "Find a {{type}}…" })}
