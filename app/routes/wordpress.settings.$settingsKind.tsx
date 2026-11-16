@@ -1,4 +1,4 @@
-import { Link, useParams } from "react-router";
+import { Link, Navigate, useParams } from "react-router";
 import { useTranslation } from "react-i18next";
 import i18n from "~/i18n";
 import { useDocumentMeta } from "~/lib/hooks/use-document-meta";
@@ -13,6 +13,7 @@ import { ReVisibleSettingsPage } from "~/components/wordpress/re-visible-setting
 import { ReBannerSettingsPage } from "~/components/wordpress/re-banner-settings-page";
 import { ReAccessibilitySettingsPage } from "~/components/wordpress/re-accessibility-settings-page";
 import { useResolvePluginKind } from "~/lib/hooks/useWorkspaceWpPluginCatalog";
+import { wordpressPluginSettingsPath } from "~/lib/utils/wordpress-plugin-kind";
 import { useWorkspaceWpSite } from "~/lib/hooks/useWorkspaceWpSite";
 import { useWpSitesHosting } from "~/lib/hooks/useWorkspaceWpSites";
 import { PageShell } from "~/components/wordpress/fields";
@@ -36,7 +37,7 @@ export function meta() {
 }
 
 /**
- * URL: /website/settings/:pluginUuid
+ * URL: /website/settings/:pluginUuid (or a kind, swapped for its UUID)
  *
  * The plugin is named by its opaque catalog UUID; we resolve it to a kind
  * through the catalog to pick which admin screen to render against the
@@ -53,12 +54,18 @@ export default function WordPressPluginSettingsRoute() {
     titleSuffix: " - Repraesent",
   });
 
-  const { kind, isLoading } = useResolvePluginKind(pluginUuid);
+  const { kind, catalogItem, isLoading } = useResolvePluginKind(pluginUuid);
   const siteQuery = useWorkspaceWpSite(true);
   const isElsewhere = useWpSitesHosting(!!siteQuery.data);
 
   if (isLoading || kind === undefined || siteQuery.isLoading) {
     return <PluginSettingsLoadingPage />;
+  }
+
+  // A tab made before the catalog had loaded links by kind: the screens below
+  // read the UUID from the URL, so put it there first.
+  if (catalogItem && pluginUuid !== catalogItem.id) {
+    return <Navigate to={wordpressPluginSettingsPath(catalogItem.id)} replace />;
   }
 
   // A site we don't host: none of its services can be read or saved from here.

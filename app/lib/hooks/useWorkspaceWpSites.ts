@@ -12,7 +12,6 @@ import {
   getStoredWorkspaceId,
   setStoredWpSiteId,
 } from "~/lib/api/axios-instance";
-import { INSTALLS_KEY } from "./useWorkspaceWpPluginInstalls";
 import { OVERVIEW_KEY } from "./useWorkspaceWebsiteOverview";
 
 const SITES_KEY = ["workspace-wp-sites"] as const;
@@ -25,7 +24,6 @@ const NOT_SITE_BOUND = new Set<string>([
   SITES_KEY[0],
   SITE_KEY[0],
   HOSTING_KEY[0],
-  INSTALLS_KEY[0],
   // Keyed by site id and fetched for that site, so a switch can keep it.
   OVERVIEW_KEY,
 ]);
@@ -119,8 +117,7 @@ export function useSwitchWpSite() {
       // otherwise land in the new site's slot. Reset (not remove): it notifies
       // the open screens, which drop the old site's data and load the new one
       // straight away — removing left them painted with the old site until a
-      // reload. The installed-services list is keyed by site id, so it simply
-      // keeps the old tabs on screen until the new site's list arrives.
+      // reload. The service tabs are the same on every site, so they stay.
       void queryClient
         .cancelQueries({ predicate: belongsToOtherSiteData })
         .then(() =>

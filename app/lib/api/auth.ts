@@ -157,6 +157,8 @@ export interface WorkspaceContext {
   products?: WorkspaceProduct[];
   services: WorkspaceService[];
   has_plausible_analytics?: boolean;
+  /** Has a WordPress site: the Website tabs draw from this at once. */
+  has_wordpress_site?: boolean;
   member_role: "admin" | "editor" | "viewer";
   was_doorboost_client?: boolean;
   doorboost_partner_house_id?: string | null;
