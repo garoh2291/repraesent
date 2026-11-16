@@ -730,10 +730,15 @@ function useOpenTracking(workspaceId: string | null | undefined) {
     enabled: !!workspaceId,
   });
 
+  // Which addresses are being saved right now. Only that address's button
+  // waits; the others stay usable.
+  const [savingIds, setSavingIds] = useState<ReadonlySet<string>>(new Set());
+
   const save = useMutation({
     mutationFn: ({ id, next }: { id: string; next: boolean }) =>
       updateMailTrackingSettings(id, next),
     onMutate: ({ id, next }) => {
+      setSavingIds((current) => new Set(current).add(id));
       const previous = queryClient.getQueryData<MailTrackingSettings>(key);
       if (previous) {
         const ids = previous.account_ids.filter((x) => x !== id);
@@ -742,19 +747,40 @@ function useOpenTracking(workspaceId: string | null | undefined) {
           account_ids: next ? [...ids, id] : ids,
         });
       }
-      return { previous };
     },
-    onSuccess: (fresh, { next }) => {
-      queryClient.setQueryData(key, fresh);
+    onSuccess: (fresh, { id, next }) => {
+      // Only this address's answer is taken over, so a second address saved
+      // at the same moment is not flipped back by an older reply.
+      const current = queryClient.getQueryData<MailTrackingSettings>(key);
+      const ids = (current ?? fresh).account_ids.filter((x) => x !== id);
+      queryClient.setQueryData(key, {
+        ...fresh,
+        account_ids: fresh.account_ids.includes(id) ? [...ids, id] : ids,
+      });
       toast.success(
         next
           ? t("settings.emailAccounts.trackOpensOn")
           : t("settings.emailAccounts.trackOpensOff"),
       );
     },
-    onError: (error, _vars, ctx) => {
-      if (ctx?.previous) queryClient.setQueryData(key, ctx.previous);
+    onError: (error, { id, next }) => {
+      // Put back this address only.
+      const current = queryClient.getQueryData<MailTrackingSettings>(key);
+      if (current) {
+        const ids = current.account_ids.filter((x) => x !== id);
+        queryClient.setQueryData(key, {
+          ...current,
+          account_ids: next ? ids : [...ids, id],
+        });
+      }
       toast.error(extractErrorMessage(error));
+    },
+    onSettled: (_data, _error, { id }) => {
+      setSavingIds((current) => {
+        const rest = new Set(current);
+        rest.delete(id);
+        return rest;
+      });
     },
   });
 
@@ -769,7 +795,7 @@ function useOpenTracking(workspaceId: string | null | undefined) {
       const on = data.account_ids.includes(id);
       return {
         on,
-        disabled: !canEdit || save.isPending,
+        disabled: !canEdit || savingIds.has(id),
         onToggle: () => save.mutate({ id, next: !on }),
       };
     },
