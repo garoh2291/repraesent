@@ -35,6 +35,18 @@ export interface BccLinkedContact {
   company_name?: string | null;
 }
 
+/**
+ * "Opened" for an email sent from the composer. Present only when the email
+ * went out with the open picture (the workspace switch was on); null or
+ * missing means it was not tracked, which is not the same as "not opened".
+ */
+export interface OpenTracking {
+  /** Null = no mail app has loaded the picture yet, as far as we can tell. */
+  first_opened_at: string | null;
+  last_opened_at: string | null;
+  open_count: number;
+}
+
 export interface BccMessage {
   id: string;
   bcc_log_address_id: string;
@@ -56,6 +68,8 @@ export interface BccMessage {
   hidden?: boolean;
   /** Why it's hidden: a manual override or a segment rule. */
   hidden_reason?: "manual" | "rule" | null;
+  /** Set when this is a composer email that was sent with the open picture. */
+  open_tracking?: OpenTracking | null;
 }
 
 export interface PaginatedBccMessages {
