@@ -42,10 +42,7 @@ import { isPilotFeatureEnabled, usePilotFeatures } from "~/lib/feature-flags";
 import { useAppointmentConfigs } from "~/lib/hooks/useAppointmentConfigs";
 import { useCalendarSummary } from "~/lib/hooks/useCalendarSummary";
 import { useWorkspaceWpSite } from "~/lib/hooks/useWorkspaceWpSite";
-import {
-  usePreloadWpPluginInstalls,
-  useWorkspaceWpPluginInstalls,
-} from "~/lib/hooks/useWorkspaceWpPluginInstalls";
+import { useWebsiteServices } from "~/lib/hooks/useWorkspaceWpPluginCatalog";
 import {
   useSwitchWpSite,
   useWorkspaceWpSites,
@@ -53,7 +50,6 @@ import {
 } from "~/lib/hooks/useWorkspaceWpSites";
 import {
   pluginKindIcon,
-  pluginServiceName,
   WEBSITE_SETTINGS_PATH,
   WEBSITE_STAGING_PATH,
   wordpressPluginSettingsPath,
@@ -186,13 +182,9 @@ export function useNavSections(): NavSection[] | null {
   // The site list (a quick database read): Staging shows when it has a copy.
   const { data: wpSites } = useWorkspaceWpSites(enabled);
   const isElsewhere = useWpSitesHosting(enabled && !!wpSite);
-  // The site's services (cookie banner, SEO, translations…) are Website tabs.
-  const { data: wpInstalls } = useWorkspaceWpPluginInstalls(
-    enabled ? wpSite?.id : undefined,
-  );
-  // Every site's services, loaded in the background: a switch between
-  // Production and Staging then shows the new site's tabs at once.
-  usePreloadWpPluginInstalls(enabled ? (wpSites ?? []).map((s) => s.id) : []);
+  // The services (cookie banner, SEO, translations…) are Website tabs. Every
+  // site has every one, and the list is built into the app: no request.
+  const websiteServices = useWebsiteServices();
   const switchSite = useSwitchWpSite();
   const { isConnected: hasStripe } = useStripeConnection(enabled);
   const hasAppointmentsService =
@@ -207,7 +199,11 @@ export function useNavSections(): NavSection[] | null {
 
   if (!currentWorkspace || isBrand) return null;
 
-  const showWebsite = !!wpSite || isDemo;
+  // Known from sign-in, so the Website tabs are there with the first screen;
+  // the site itself (remembered, then confirmed) decides once it is in.
+  const hasWebsite =
+    wpSite !== undefined ? !!wpSite : !!currentWorkspace?.has_wordpress_site;
+  const showWebsite = hasWebsite || isDemo;
   const hasLive = !!wpSites?.some((s) => s.type === "production");
   const hasStaging = !!wpSites?.some((s) => s.type !== "production");
   const openIsStaging = hasStaging && !!wpSite && wpSite.type !== "production";
@@ -458,20 +454,12 @@ export function useNavSections(): NavSection[] | null {
     // Forms comes right after Overview, before the services.
     website.push(forms);
     if (!isElsewhere(wpSite?.id)) {
-      const plugins = (wpInstalls?.plugins ?? [])
-        .map((p) => ({
-          ...p,
-          label: pluginServiceName(p.name, p.display_name, t),
-        }))
-        .sort((a, b) =>
-          a.label.localeCompare(b.label, undefined, { sensitivity: "base" }),
-        );
-      for (const p of plugins) {
+      for (const service of websiteServices) {
         website.push({
-          key: `wp-${p.plugin_uuid}`,
-          label: p.label,
-          to: wordpressPluginSettingsPath(p.plugin_uuid),
-          icon: pluginKindIcon(p.name),
+          key: `wp-${service.kind}`,
+          label: service.label,
+          to: wordpressPluginSettingsPath(service.uuid ?? service.kind),
+          icon: pluginKindIcon(service.kind),
         });
       }
     }
