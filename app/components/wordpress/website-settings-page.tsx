@@ -17,7 +17,6 @@ import { useWorkspacePluginSettingsForm } from "~/lib/hooks/useWorkspacePluginSe
 import { useWorkspacePluginPause } from "~/lib/hooks/useWorkspacePluginPause";
 import { useWorkspaceReIndexRegenerateSitemap } from "~/lib/hooks/useWorkspaceReIndexSettings";
 import { useWorkspaceWpPluginCatalog } from "~/lib/hooks/useWorkspaceWpPluginCatalog";
-import { useWorkspaceWpPluginInstalls } from "~/lib/hooks/useWorkspaceWpPluginInstalls";
 import { useWorkspaceWpSite } from "~/lib/hooks/useWorkspaceWpSite";
 import {
   useWorkspaceWpSites,
@@ -113,18 +112,17 @@ export function WebsiteSettingsPage() {
     INDEX_DEFAULTS,
     { fromApi: reIndexSettingsFromApi },
   );
-  const installs = useWorkspaceWpPluginInstalls(siteQuery.data?.id);
   const cookiePause = useWorkspacePluginPause(cookieUuid);
   const regenerate = useWorkspaceReIndexRegenerateSitemap(indexUuid);
   const [saving, setSaving] = useState(false);
   const [searchParams, setSearchParams] = useSearchParams();
 
-  const cookieInstall =
-    installs.data?.plugins.find((p) => p.name === "re-cookie") ?? null;
-  // A site already running the banner keeps asking until someone says
-  // otherwise; a site that never had it doesn't get one just by adding a tag.
+  const cookieService =
+    catalog.data?.find((p) => p.name === "re-cookie") ?? null;
+  // Every site runs re:cookie, and the plugin asks until someone saves
+  // another choice — so an unsaved choice reads as "ask", like the site does.
   const consentMode: ReCookieConsentMode =
-    cookie.settings.consent_mode ?? (cookieInstall ? "ask" : "off");
+    cookie.settings.consent_mode ?? "ask";
 
   const site = cookie.site;
   const sitemapUrl = sitemapUrlFromSiteUrl(site?.url);
@@ -243,14 +241,7 @@ export function WebsiteSettingsPage() {
   }
 
   const openSite = siteQuery.data;
-  // The installed-services list keeps the previous site's rows on screen while
-  // the new one loads; the banner default depends on it, so wait for it too.
-  const bodyLoading =
-    !elsewhere &&
-    (cookie.loading ||
-      index.loading ||
-      installs.isLoading ||
-      installs.isPlaceholderData);
+  const bodyLoading = !elsewhere && (cookie.loading || index.loading);
   const loadError =
     cookie.loadError ??
     index.loadError ??
@@ -468,17 +459,17 @@ export function WebsiteSettingsPage() {
                         "In the EU, tags that set cookies (Google Analytics, Google Ads, Meta Pixel) usually need a visitor's consent. Choose this only if your privacy setup covers it.",
                       )}
                     </InfoNote>
-                  ) : cookieInstall ? (
+                  ) : cookieService ? (
                     <InfoNote>
                       {t(
                         "wordpress.websiteSettings.bannerLookPrefix",
                         "To change the banner's look and wording, open",
                       )}{" "}
                       <Link
-                        to={wordpressPluginSettingsPath(cookieInstall.plugin_uuid)}
+                        to={wordpressPluginSettingsPath(cookieService.id)}
                         className="font-medium text-foreground underline underline-offset-2"
                       >
-                        {pluginServiceName(cookieInstall.name, cookieInstall.display_name, t)}
+                        {pluginServiceName(cookieService.name, cookieService.display_name, t)}
                       </Link>
                       .
                     </InfoNote>

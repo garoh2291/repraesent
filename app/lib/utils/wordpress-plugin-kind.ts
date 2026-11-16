@@ -29,6 +29,24 @@ export const PORTED_SETTINGS_KINDS = [
 
 export type PortedSettingsKind = (typeof PORTED_SETTINGS_KINDS)[number];
 
+/**
+ * Every service, built into the app with its catalog name, so the Website tabs
+ * are there the moment the page draws — nothing is asked of the server first.
+ * Every site has every one of them (new sites get them installed and active).
+ * The catalog only supplies the UUIDs the tab links use.
+ */
+export const BUILT_IN_SERVICE_NAMES: Record<PortedSettingsKind, string> = {
+  "re-accessibility": "Accessibility Menu",
+  "re-visible": "AI Analytics",
+  "re-appointment": "Calendar Appointments",
+  "re-cookie": "GDPR Cookie Banner",
+  "re-review": "Google My Business Reviews",
+  "re-index": "SEO Optimization",
+  "re-translate": "Translation",
+  "re-maintenance": "Website Maintenance Mode",
+  "re-banner": "re:banner",
+};
+
 export function isPortedSettingsKind(
   s: string | undefined,
 ): s is PortedSettingsKind {
@@ -39,11 +57,12 @@ export function isPortedSettingsKind(
 
 /**
  * Where a managed plugin's settings screen lives inside the dashboard.
- * Addressed by the plugin's opaque catalog UUID, not its slug, so the
- * human-readable kind never appears in the browser URL.
+ * Addressed by the plugin's opaque catalog UUID, so the human-readable kind
+ * never appears in the browser URL. Only before the catalog has ever loaded in
+ * this browser does a tab link by kind; that page swaps in the UUID itself.
  */
-export function wordpressPluginSettingsPath(pluginUuid: string): string {
-  return `/website/settings/${pluginUuid}`;
+export function wordpressPluginSettingsPath(pluginUuidOrKind: string): string {
+  return `/website/settings/${pluginUuidOrKind}`;
 }
 
 /**

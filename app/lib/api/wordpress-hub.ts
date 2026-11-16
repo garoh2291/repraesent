@@ -215,37 +215,6 @@ export async function getWorkspaceWpPluginCatalog(): Promise<
 }
 
 /**
- * List catalog plugins installed on the current workspace's WordPress site.
- * Reads `wp_plugin_installs` only (`deleted_at` IS NULL).
- * Throws (404) when the workspace has no WordPress site.
- */
-/** `siteId`: that site rather than the open one (preloading). */
-export async function getWorkspaceWpPluginInstalls(
-  siteId?: string,
-): Promise<WpPluginInstallList> {
-  const res = await apiClient.get<WpPluginInstallList>(
-    "/wordpress/site/plugin-installs",
-    { headers: siteId ? { "X-Wp-Site-Id": siteId } : undefined },
-  );
-  return res.data;
-}
-
-/** A catalog plugin known to be installed on the workspace's WordPress site. */
-export interface WpPluginInstall {
-  plugin_uuid: string;
-  name: WpPluginSettingsKind;
-  display_name: string;
-  description: string | null;
-  icon: string | null;
-  version: string | null;
-  active: boolean;
-}
-
-export interface WpPluginInstallList {
-  plugins: WpPluginInstall[];
-}
-
-/**
  * List the plugins installed on the current workspace's WordPress site.
  * Workspace-scoped on the server (X-Workspace-Id); never returns another
  * workspace's plugins. Throws (404) when the workspace has no WordPress site.
