@@ -12,6 +12,8 @@ import {
   Copy,
   CornerDownRight,
   ExternalLink,
+  Eye,
+  EyeOff,
   Mail,
   Plus,
   Star,
@@ -74,6 +76,13 @@ import {
   SelectValue,
 } from "~/components/ui/select";
 import { Skeleton } from "~/components/ui/skeleton";
+import { cn } from "~/lib/utils";
+import {
+  getMailTrackingSettings,
+  mailTrackingSettingsKey,
+  updateMailTrackingSettings,
+  type MailTrackingSettings,
+} from "~/lib/api/outbound-mail";
 import { useDocumentMeta } from "~/lib/hooks/use-document-meta";
 
 export function meta() {
@@ -290,6 +299,7 @@ export default function SettingsEmailAccounts() {
   // Only one signature editor open at a time: two half-edited signatures on
   // screen invites saving the wrong one.
   const [signatureFor, setSignatureFor] = useState<EmailAccount | null>(null);
+  const openTracking = useOpenTracking(currentWorkspace?.id);
   const [aliasParent, setAliasParent] = useState<EmailAccount | null>(null);
   const [aliasAdded, setAliasAdded] = useState<string | null>(null);
 
@@ -568,6 +578,7 @@ export default function SettingsEmailAccounts() {
                     }
                     canEditSignature
                     onEditSignature={() => setSignatureFor(parent)}
+                    openTracking={openTracking.forAccount(parent.id)}
                   />
                   {signatureFor?.id === parent.id ? (
                     <SignatureEditor
@@ -586,6 +597,7 @@ export default function SettingsEmailAccounts() {
                         onRemove={() => setPendingDisconnect(alias)}
                         canEditSignature
                         onEditSignature={() => setSignatureFor(alias)}
+                        openTracking={openTracking.forAccount(alias.id)}
                       />
                       {signatureFor?.id === alias.id ? (
                         <SignatureEditor
@@ -605,6 +617,10 @@ export default function SettingsEmailAccounts() {
           </div>
         )}
       </SettingsSection>
+
+      {openTracking.available ? (
+        <OpenTrackingNote canEdit={openTracking.canEdit} />
+      ) : null}
 
       <AddAliasDialog
         parent={aliasParent}
@@ -687,6 +703,136 @@ export default function SettingsEmailAccounts() {
         </AlertDialogContent>
       </AlertDialog>
     </div>
+  );
+}
+
+/** What one row needs to draw its "show when opened" button. */
+interface RowOpenTracking {
+  on: boolean;
+  disabled: boolean;
+  onToggle: () => void;
+}
+
+/**
+ * "Show when opened", one switch per sending address, like the signature.
+ *
+ * Off unless an admin turns it on for that address: it adds a hidden picture
+ * to emails sent from it. `available` is false until the server offers it for
+ * this business, and then no row shows a button at all.
+ */
+function useOpenTracking(workspaceId: string | null | undefined) {
+  const { t } = useTranslation();
+  const queryClient = useQueryClient();
+  const key = mailTrackingSettingsKey(workspaceId);
+  const { data } = useQuery({
+    queryKey: key,
+    queryFn: getMailTrackingSettings,
+    enabled: !!workspaceId,
+  });
+
+  const save = useMutation({
+    mutationFn: ({ id, next }: { id: string; next: boolean }) =>
+      updateMailTrackingSettings(id, next),
+    onMutate: ({ id, next }) => {
+      const previous = queryClient.getQueryData<MailTrackingSettings>(key);
+      if (previous) {
+        const ids = previous.account_ids.filter((x) => x !== id);
+        queryClient.setQueryData(key, {
+          ...previous,
+          account_ids: next ? [...ids, id] : ids,
+        });
+      }
+      return { previous };
+    },
+    onSuccess: (fresh, { next }) => {
+      queryClient.setQueryData(key, fresh);
+      toast.success(
+        next
+          ? t("settings.emailAccounts.trackOpensOn")
+          : t("settings.emailAccounts.trackOpensOff"),
+      );
+    },
+    onError: (error, _vars, ctx) => {
+      if (ctx?.previous) queryClient.setQueryData(key, ctx.previous);
+      toast.error(extractErrorMessage(error));
+    },
+  });
+
+  const available = data?.available === true;
+  const canEdit = data?.can_edit === true;
+
+  return {
+    available,
+    canEdit,
+    forAccount: (id: string): RowOpenTracking | null => {
+      if (!available || !data) return null;
+      const on = data.account_ids.includes(id);
+      return {
+        on,
+        disabled: !canEdit || save.isPending,
+        onToggle: () => save.mutate({ id, next: !on }),
+      };
+    },
+  };
+}
+
+/** The per-address toggle, sitting beside the Signature button. */
+function OpenTrackingButton({ state }: { state: RowOpenTracking }) {
+  const { t } = useTranslation();
+  const label = t("settings.emailAccounts.trackOpensButton");
+  return (
+    <button
+      type="button"
+      onClick={state.onToggle}
+      disabled={state.disabled}
+      aria-pressed={state.on}
+      title={label}
+      className={`inline-flex h-8 items-center gap-1.5 rounded-lg border px-2.5 text-xs transition-colors disabled:opacity-50 ${
+        state.on
+          ? "border-border bg-foreground/5 text-foreground hover:bg-foreground/10"
+          : "border-border bg-muted/40 text-muted-foreground hover:bg-muted"
+      }`}
+    >
+      {state.on ? (
+        <Eye className="h-3.5 w-3.5" />
+      ) : (
+        <EyeOff className="h-3.5 w-3.5" />
+      )}
+      {label}
+    </button>
+  );
+}
+
+/** Says plainly what the button does. Shown only where the buttons are. */
+function OpenTrackingNote({ canEdit }: { canEdit: boolean }) {
+  const { t } = useTranslation();
+  return (
+    <SettingsSection label={t("settings.emailAccounts.trackOpensLabel")}>
+      <div className="flex gap-4 rounded-2xl border border-border bg-card p-4 sm:p-5">
+        <span
+          aria-hidden
+          className="mt-0.5 hidden size-10 shrink-0 items-center justify-center rounded-xl bg-muted text-muted-foreground sm:flex"
+        >
+          <Eye className="size-5" />
+        </span>
+        <div className="min-w-0 flex-1 space-y-1.5">
+          <p className="text-sm font-semibold text-foreground">
+            {t("settings.emailAccounts.trackOpensTitle")}
+          </p>
+          <p className="text-sm leading-relaxed text-muted-foreground">
+            {t("settings.emailAccounts.trackOpensBody")}
+          </p>
+          <p className="text-sm leading-relaxed text-muted-foreground">
+            {t("settings.emailAccounts.trackOpensPrivacy")}
+          </p>
+          {!canEdit ? (
+            <p className="text-xs text-muted-foreground">
+              {t("settings.emailAccounts.trackOpensAdminOnly")}
+            </p>
+          ) : null}
+        </div>
+      </div>
+    </SettingsSection>
   );
 }
 
@@ -898,6 +1044,7 @@ function AccountRow({
   onReconnect,
   canEditSignature,
   onEditSignature,
+  openTracking,
 }: {
   account: EmailAccount;
   isFirst: boolean;
@@ -908,6 +1055,7 @@ function AccountRow({
   onReconnect: () => void;
   canEditSignature: boolean;
   onEditSignature: () => void;
+  openTracking: RowOpenTracking | null;
 }) {
   const { t } = useTranslation();
   // Admin-provisioned accounts are managed by Repraesent; a member disconnecting
@@ -1032,6 +1180,7 @@ function AccountRow({
               })}
             </button>
           ) : null}
+          {openTracking ? <OpenTrackingButton state={openTracking} /> : null}
           {!isManaged ? (
             <button
               type="button"
@@ -1070,6 +1219,7 @@ function AliasRow({
   onRemove,
   canEditSignature,
   onEditSignature,
+  openTracking,
 }: {
   alias: EmailAccount;
   canEdit: boolean;
@@ -1078,6 +1228,7 @@ function AliasRow({
   onRemove: () => void;
   canEditSignature: boolean;
   onEditSignature: () => void;
+  openTracking: RowOpenTracking | null;
 }) {
   const { t } = useTranslation();
 
@@ -1150,6 +1301,7 @@ function AliasRow({
               })}
             </button>
           ) : null}
+          {openTracking ? <OpenTrackingButton state={openTracking} /> : null}
           <button
             type="button"
             onClick={onRemove}

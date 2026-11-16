@@ -88,6 +88,7 @@ function toMessage(pending: PendingOutboundEmail): BccMessage {
     html_body: pending.html_body,
     ingested_at: pending.sent_at ?? new Date().toISOString(),
     participants,
+    open_tracking: pending.open_tracking ?? null,
   };
 }
 

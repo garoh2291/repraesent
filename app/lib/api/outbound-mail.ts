@@ -1,4 +1,5 @@
 import { apiClient } from "./axios-instance";
+import type { OpenTracking } from "./bcc-logs";
 
 export interface SendOutboundEmailPayload {
   /** Omitted falls back to the workspace's default mailbox. */
@@ -38,6 +39,40 @@ export interface PendingOutboundEmail {
   html_body: string;
   sent_at: string | null;
   send_error: string | null;
+  open_tracking?: OpenTracking | null;
+}
+
+/** Settings → Email accounts: "show when opened", one switch per address. */
+export interface MailTrackingSettings {
+  /** False when this business cannot use it; the switches are hidden then. */
+  available: boolean;
+  /** Ids of the sending addresses that have it turned on. */
+  account_ids: string[];
+  can_edit: boolean;
+}
+
+export function mailTrackingSettingsKey(
+  workspaceId: string | null | undefined,
+) {
+  return ["mail-tracking-settings", workspaceId ?? null] as const;
+}
+
+export async function getMailTrackingSettings(): Promise<MailTrackingSettings> {
+  const res = await apiClient.get<MailTrackingSettings>(
+    "/outbound-mail/tracking-settings",
+  );
+  return res.data;
+}
+
+export async function updateMailTrackingSettings(
+  emailAccountId: string,
+  trackOpens: boolean,
+): Promise<MailTrackingSettings> {
+  const res = await apiClient.put<MailTrackingSettings>(
+    "/outbound-mail/tracking-settings",
+    { email_account_id: emailAccountId, track_opens: trackOpens },
+  );
+  return res.data;
 }
 
 export async function sendOutboundEmail(

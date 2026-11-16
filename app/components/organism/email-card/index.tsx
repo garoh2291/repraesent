@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
-import { ChevronDown } from "lucide-react";
+import { ChevronDown, Eye } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import type { BccMessage } from "~/lib/api/bcc-logs";
 import TooltipContainer from "~/components/tooltip-container";
 import { useMemberAvatarLookup } from "~/lib/hooks/useWorkspaceMembers";
@@ -93,6 +94,67 @@ export function HtmlEmailPreview({ html }: { html: string }) {
 }
 
 /**
+ * "Opened" on an email we sent with the open picture. Shown only once a mail
+ * app has loaded it — there is deliberately no "not opened" state, because a
+ * blocked picture looks exactly the same as an unread email.
+ */
+function OpenedPill({
+  tracking,
+  locale,
+}: {
+  tracking: NonNullable<BccMessage["open_tracking"]>;
+  locale: string;
+}) {
+  const { t } = useTranslation();
+  if (!tracking.first_opened_at) return null;
+
+  const first = formatEmailDate(tracking.first_opened_at, locale);
+  const last =
+    tracking.open_count > 1 && tracking.last_opened_at
+      ? formatEmailDate(tracking.last_opened_at, locale)
+      : "";
+
+  return (
+    <TooltipContainer
+      side="top"
+      showCopyButton={false}
+      tooltipContent={
+        <span className="block max-w-[260px] space-y-1 text-left">
+          <span className="block">
+            {t("compose.openedFirst", {
+              when: first,
+              defaultValue: "First opened {{when}}.",
+            })}
+          </span>
+          {last ? (
+            <span className="block">
+              {t("compose.openedLast", {
+                when: last,
+                defaultValue: "Last opened {{when}}.",
+              })}
+            </span>
+          ) : null}
+          <span className="block opacity-70">
+            {t("compose.openedEstimate", {
+              defaultValue:
+                "An estimate. Some mail apps block pictures, others load them by themselves.",
+            })}
+          </span>
+        </span>
+      }
+    >
+      <span
+        tabIndex={0}
+        className="inline-flex shrink-0 items-center gap-1 rounded-full bg-muted px-2 py-0.5 text-[10px] font-medium text-muted-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
+      >
+        <Eye aria-hidden className="size-3" />
+        {t("compose.opened", { defaultValue: "Opened" })}
+      </span>
+    </TooltipContainer>
+  );
+}
+
+/**
  * Collapsible BCC email card. Reused by the contact detail Emails tab and the
  * workspace Mail page. Pass `actions` to render an always-visible footer (link
  * / connect / create buttons) that sits outside the <summary> so its clicks
@@ -140,9 +202,22 @@ export function EmailCard({
               <p className="truncate text-sm font-semibold text-foreground">
                 {message.subject || fromLabel}
               </p>
-              <time className="shrink-0 font-mono text-[11px] text-muted-foreground">
-                {when}
-              </time>
+              <span className="flex shrink-0 items-center gap-2">
+                {/* Beside the time only where there is room; on a phone it
+                    gets its own line below, or the subject shrinks to a
+                    single letter. */}
+                {message.open_tracking ? (
+                  <span className="hidden sm:inline-flex">
+                    <OpenedPill
+                      tracking={message.open_tracking}
+                      locale={locale}
+                    />
+                  </span>
+                ) : null}
+                <time className="font-mono text-[11px] text-muted-foreground">
+                  {when}
+                </time>
+              </span>
             </div>
             <p className="mt-0.5 truncate text-xs text-muted-foreground">
               <span className="text-foreground/70">
@@ -170,6 +245,14 @@ export function EmailCard({
                 {preview}
               </p>
             )}
+            {message.open_tracking?.first_opened_at ? (
+              <div className="mt-2 flex sm:hidden">
+                <OpenedPill
+                  tracking={message.open_tracking}
+                  locale={locale}
+                />
+              </div>
+            ) : null}
           </div>
           <ChevronDown className="mt-1 size-4 shrink-0 text-muted-foreground transition-transform group-open:rotate-180" />
         </summary>
