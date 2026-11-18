@@ -1,29 +1,22 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, Plus, Trash2, UserRound } from "lucide-react";
+import { keepPreviousData } from "@tanstack/react-query";
+import { ArrowLeft, Plus, UserRound } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Link, useParams } from "react-router";
 import { toast } from "sonner";
 import { AddMembersDialog } from "~/components/email-campaigns/segments/AddMembersDialog";
-import { SegmentCountBadge } from "~/components/email-campaigns/segments/SegmentCountBadge";
 import { UnsavedChangesGuard } from "~/components/forms/UnsavedChangesGuard";
 import { Panel, PanelBody, PanelHeader } from "~/components/forms/chrome";
+import { SegmentContacts } from "~/components/segments/segment-contacts";
 import { ConditionBuilder } from "~/components/workflows/ConditionBuilder";
 import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "~/components/ui/table";
 import { extractErrorMessage } from "~/lib/api/axios-instance";
 import {
   getSegment,
-  listSegmentMembers,
-  previewSegmentCount,
+  listSegmentContacts,
+  previewSegmentContacts,
   removeSegmentMember,
   updateSegment,
 } from "~/lib/api/segments";
@@ -113,14 +106,25 @@ export default function SegmentDetail() {
       ) && (group.groups ?? []).every(groupComplete);
     return groupComplete(definition);
   }, [definition]);
-  const { data: liveCounts, isFetching: counting } = useQuery({
-    queryKey: [
-      "segment-preview-count",
-      segmentId,
-      JSON.stringify(debouncedDefinition),
-    ],
-    queryFn: () => previewSegmentCount(debouncedDefinition),
+  // One request feeds the two numbers and the list of people: who matches
+  // the rules as they stand on screen, saved or not.
+  const [peopleSearch, setPeopleSearch] = useState("");
+  const [peoplePage, setPeoplePage] = useState(1);
+  const debouncedSearch = useDebounce(peopleSearch, 300);
+  const definitionKey = JSON.stringify(debouncedDefinition);
+  useEffect(() => {
+    setPeoplePage(1);
+  }, [definitionKey, debouncedSearch]);
+  const { data: people, isFetching: counting } = useQuery({
+    queryKey: ["segment-preview-contacts", segmentId, definitionKey, debouncedSearch, peoplePage],
+    queryFn: () =>
+      previewSegmentContacts(debouncedDefinition, {
+        page: peoplePage,
+        limit: 25,
+        search: debouncedSearch,
+      }),
     enabled: !!segment && segment.kind === "dynamic" && definitionComplete,
+    placeholderData: keepPreviousData,
   });
 
   const save = useMutation({
@@ -165,7 +169,8 @@ export default function SegmentDetail() {
             setName(e.target.value);
             setDirty(true);
           }}
-          className="h-9 w-64"
+          aria-label={t("emailCampaigns.segments.namePlaceholder", { defaultValue: "Segment name" })}
+          className="h-9 min-w-0 flex-1 max-sm:basis-[calc(100%-3.5rem)] sm:w-64 sm:flex-none"
         />
         <span className="rounded-full bg-muted px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
           {t(`emailCampaigns.segments.kind_${segment.kind}`, {
@@ -173,14 +178,8 @@ export default function SegmentDetail() {
           })}
         </span>
         <div className="ml-auto flex items-center gap-3">
-          {segment.kind === "dynamic" ? (
-            <SegmentCountBadge
-              matched={liveCounts?.matched ?? segment.matched_count}
-              sendable={liveCounts?.sendable ?? segment.sendable_count}
-              loading={counting}
-            />
-          ) : null}
           <Button
+            className="max-sm:h-11"
             onClick={() => save.mutate()}
             disabled={save.isPending || !dirty || !definitionComplete}
           >
@@ -192,24 +191,38 @@ export default function SegmentDetail() {
       </div>
 
       {segment.kind === "dynamic" ? (
-        <Panel className="app-fade-up app-fade-up-d1">
-          <PanelHeader
-            icon={<UserRound className="h-3.5 w-3.5" />}
-            title={t("emailCampaigns.segments.conditionsTitle", {
-              defaultValue: "Who is in this segment",
-            })}
-          />
-          <PanelBody>
-            <ConditionBuilder
-              group={definition}
-              fields={fields}
-              onChange={(next) => {
-                setDefinition(next);
-                setDirty(true);
-              }}
+        // Rules beside the people they pick, so a change shows at once. Below
+        // lg they stack: rules, then people.
+        <div className="app-fade-up app-fade-up-d1 grid gap-5 lg:grid-cols-[minmax(0,5fr)_minmax(0,6fr)] lg:items-start">
+          <Panel className="lg:sticky lg:top-6">
+            <PanelHeader
+              icon={<UserRound className="h-3.5 w-3.5" />}
+              title={t("emailCampaigns.segments.rulesTitle", { defaultValue: "Rules" })}
             />
-          </PanelBody>
-        </Panel>
+            <PanelBody>
+              <ConditionBuilder
+                group={definition}
+                fields={fields}
+                onChange={(next) => {
+                  setDefinition(next);
+                  setDirty(true);
+                }}
+              />
+            </PanelBody>
+          </Panel>
+          <SegmentContacts
+            mode="rules"
+            data={definitionComplete ? people : undefined}
+            loading={counting}
+            incomplete={!definitionComplete}
+            unsaved={
+              JSON.stringify(definition) !== JSON.stringify(segment.definition ?? EMPTY_GROUP)
+            }
+            search={peopleSearch}
+            onSearch={setPeopleSearch}
+            onPage={setPeoplePage}
+          />
+        </div>
       ) : (
         <ManualMembers segmentId={segment.id} />
       )}
@@ -221,135 +234,47 @@ function ManualMembers({ segmentId }: { segmentId: string }) {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
   const [page, setPage] = useState(1);
+  const [search, setSearch] = useState("");
+  const debouncedSearch = useDebounce(search, 300);
   const [addOpen, setAddOpen] = useState(false);
+  useEffect(() => {
+    setPage(1);
+  }, [debouncedSearch]);
 
-  const { data } = useQuery({
-    queryKey: ["segment-members", segmentId, page],
-    queryFn: () => listSegmentMembers(segmentId, { page, limit: 20 }),
+  const { data, isFetching } = useQuery({
+    queryKey: ["segment-members", segmentId, debouncedSearch, page],
+    queryFn: () => listSegmentContacts(segmentId, { page, limit: 25, search: debouncedSearch }),
+    placeholderData: keepPreviousData,
   });
 
   const remove = useMutation({
-    mutationFn: (contactId: string) =>
-      removeSegmentMember(segmentId, contactId),
+    mutationFn: (contactId: string) => removeSegmentMember(segmentId, contactId),
     onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: ["segment-members", segmentId],
-      });
+      queryClient.invalidateQueries({ queryKey: ["segment-members", segmentId] });
       queryClient.invalidateQueries({ queryKey: ["segments"] });
     },
     onError: (error) => toast.error(extractErrorMessage(error)),
   });
 
   return (
-    <Panel>
-      <PanelHeader
-        icon={<UserRound className="h-3.5 w-3.5" />}
-        title={t("emailCampaigns.segments.membersTitle", {
-          defaultValue: "Members",
-        })}
-        meta={
-          data ? (
-            <span className="text-xs text-muted-foreground">{data.total}</span>
-          ) : null
-        }
+    <>
+      <SegmentContacts
+        mode="picked"
+        data={data}
+        loading={isFetching}
+        search={search}
+        onSearch={setSearch}
+        onPage={setPage}
+        onRemove={(row) => remove.mutate(row.contact_id)}
+        removing={remove.isPending}
         action={
-          <Button size="sm" onClick={() => setAddOpen(true)}>
+          <Button size="sm" className="max-sm:h-11" onClick={() => setAddOpen(true)}>
             <Plus className="mr-1 h-3.5 w-3.5" />
-            {t("emailCampaigns.segments.addMembers", {
-              defaultValue: "Add contacts",
-            })}
+            {t("emailCampaigns.segments.addMembers", { defaultValue: "Add contacts" })}
           </Button>
         }
       />
-      <PanelBody>
-        {(data?.data.length ?? 0) === 0 ? (
-          <p className="rounded-lg border border-dashed px-3 py-8 text-center text-sm text-muted-foreground">
-            {t("emailCampaigns.segments.noMembers", {
-              defaultValue: "Nobody here yet — add contacts to this list.",
-            })}
-          </p>
-        ) : (
-          <>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>
-                    {t("emailCampaigns.segments.memberName", {
-                      defaultValue: "Contact",
-                    })}
-                  </TableHead>
-                  <TableHead>
-                    {t("emailCampaigns.segments.memberEmail", {
-                      defaultValue: "Email",
-                    })}
-                  </TableHead>
-                  <TableHead className="w-10" />
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {data!.data.map((member) => (
-                  <TableRow key={member.member_id}>
-                    <TableCell>
-                      <Link
-                        to={`/contacts/${member.id}`}
-                        className="hover:underline"
-                      >
-                        {member.full_name ||
-                          t("emailCampaigns.segments.unnamed", {
-                            defaultValue: "Unnamed",
-                          })}
-                      </Link>
-                    </TableCell>
-                    <TableCell className="text-muted-foreground">
-                      {member.primary_email ?? "—"}
-                    </TableCell>
-                    <TableCell>
-                      <button
-                        type="button"
-                        onClick={() => remove.mutate(member.id)}
-                        aria-label={t("common.delete", {
-                          defaultValue: "Delete",
-                        })}
-                        className="rounded p-1.5 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
-                      >
-                        <Trash2 className="h-3.5 w-3.5" />
-                      </button>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-            {data && data.totalPages > 1 ? (
-              <div className="flex items-center justify-end gap-2 pt-3">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  disabled={!data.hasPrev}
-                  onClick={() => setPage((p) => p - 1)}
-                >
-                  {t("common.previous", { defaultValue: "Previous" })}
-                </Button>
-                <span className="text-xs text-muted-foreground">
-                  {data.page} / {data.totalPages}
-                </span>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  disabled={!data.hasNext}
-                  onClick={() => setPage((p) => p + 1)}
-                >
-                  {t("common.next", { defaultValue: "Next" })}
-                </Button>
-              </div>
-            ) : null}
-          </>
-        )}
-      </PanelBody>
-      <AddMembersDialog
-        open={addOpen}
-        onOpenChange={setAddOpen}
-        segmentId={segmentId}
-      />
-    </Panel>
+      <AddMembersDialog open={addOpen} onOpenChange={setAddOpen} segmentId={segmentId} />
+    </>
   );
 }

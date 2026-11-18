@@ -98,6 +98,9 @@ export default [
       route("email/confirmation", "routes/lead-form.fallback.tsx"),
       route("lead-form/:leadId", "routes/lead-form.$leadId.tsx"),
       route("contacts", "routes/contacts.tsx"),
+      // Bring in a contact file (CONTACT_IMPORT_PLAN.md): new, or reopen one.
+      route("contacts/import", "routes/contacts.import.tsx", { id: "contact-import-new" }),
+      route("contacts/import/:importId", "routes/contacts.import.tsx", { id: "contact-import" }),
       route("contacts/:contactId", "routes/contacts.$contactId.tsx"),
       // Companies are contacts of kind "company": same pages, their own place.
       route("companies", "routes/contacts.tsx", { id: "companies" }),

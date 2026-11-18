@@ -289,7 +289,16 @@ export default function ContactsPage() {
         </div>
         <div className="flex flex-wrap items-center gap-2">
           {isCompanies ? (
-            // A company is typed in: no phone book, no file.
+            // A company is typed in, or brought in with a file (no phone book).
+            <>
+            <Button
+              variant="outline"
+              className="h-9 gap-1.5 text-xs max-sm:h-11 max-sm:text-sm"
+              onClick={() => navigate("/contacts/import")}
+            >
+              <Upload className="size-3.5 max-sm:size-4" />
+              {t("contacts.importV2.menu", "CSV or Excel file")}
+            </Button>
             <Button
               className="h-9 gap-1.5 text-xs max-sm:h-11 max-sm:flex-1 max-sm:text-sm"
               onClick={() => openCreate("manual")}
@@ -297,6 +306,7 @@ export default function ContactsPage() {
               <Plus className="size-3.5 max-sm:size-4" />
               {copy.add}
             </Button>
+            </>
           ) : (
           <>
           <DropdownMenu>
@@ -321,18 +331,10 @@ export default function ContactsPage() {
                 {t("contacts.import.vcardButton")}
               </DropdownMenuItem>
               <DropdownMenuItem
-                onSelect={() => setImportModal({ open: true, mode: "csv" })}
+                onSelect={() => navigate("/contacts/import")}
               >
                 <Upload className="h-3.5 w-3.5 mr-2" />
-                {t("contacts.import.button", { defaultValue: "Import CSV" })}
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                onSelect={() => setImportModal({ open: true, mode: "xlsx" })}
-              >
-                <Upload className="h-3.5 w-3.5 mr-2" />
-                {t("contacts.import.xlsxButton", {
-                  defaultValue: "Import Excel",
-                })}
+                {t("contacts.importV2.menu", "CSV or Excel file")}
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
@@ -370,13 +372,9 @@ export default function ContactsPage() {
                 <IdCard className="size-5" />
                 {t("contacts.import.vcardButton")}
               </DropdownMenuItem>
-              <DropdownMenuItem className="min-h-11 gap-3 text-[15px]" onSelect={() => setImportModal({ open: true, mode: "csv" })}>
+              <DropdownMenuItem className="min-h-11 gap-3 text-[15px]" onSelect={() => navigate("/contacts/import")}>
                 <Upload className="size-5" />
-                {t("contacts.import.button", { defaultValue: "Import CSV" })}
-              </DropdownMenuItem>
-              <DropdownMenuItem className="min-h-11 gap-3 text-[15px]" onSelect={() => setImportModal({ open: true, mode: "xlsx" })}>
-                <Upload className="size-5" />
-                {t("contacts.import.xlsxButton", { defaultValue: "Import Excel" })}
+                {t("contacts.importV2.menu", "CSV or Excel file")}
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
@@ -968,7 +966,6 @@ export default function ContactsPage() {
 
       <ContactImportModal
         open={importModal.open}
-        importMode={importModal.mode}
         onOpenChange={(o) => setImportModal((s) => ({ ...s, open: o }))}
       />
       <CreateContactDialog

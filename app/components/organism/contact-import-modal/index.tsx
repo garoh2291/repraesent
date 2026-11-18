@@ -20,9 +20,7 @@ import {
   TableRow,
 } from "~/components/ui/table";
 import {
-  parseContactsCsv,
   parseContactsVcard,
-  parseContactsXlsx,
   uploadContactsImport,
   type ContactCsvFieldMapping,
   type ContactImportRow,
@@ -252,14 +250,16 @@ const NON_META_FIELDS = [
 interface ContactImportModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  importMode?: "csv" | "vcard" | "xlsx";
 }
 
-export function ContactImportModal({
-  open,
-  onOpenChange,
-  importMode = "csv",
-}: ContactImportModalProps) {
+/**
+ * vCard import only. CSV and Excel files go through the import page
+ * (`/contacts/import`, CONTACT_IMPORT_PLAN.md); this dialog can no longer read
+ * them. The mode checks below are what is left of the time it handled all
+ * three and always take the vCard side.
+ */
+export function ContactImportModal({ open, onOpenChange }: ContactImportModalProps) {
+  const importMode = "vcard" as "csv" | "vcard" | "xlsx";
   const { t } = useTranslation();
   const queryClient = useQueryClient();
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -278,11 +278,7 @@ export function ContactImportModal({
   const parseMutation = useMutation({
     mutationKey: ["parse-contact-import", importMode],
     mutationFn: (f: File) =>
-      importMode === "csv"
-        ? parseContactsCsv(f)
-        : importMode === "xlsx"
-          ? parseContactsXlsx(f)
-          : parseContactsVcard(f),
+      parseContactsVcard(f),
     onSuccess: (data) => {
       setFieldMapping(data.fieldMapping);
       setRows(data.rows);
