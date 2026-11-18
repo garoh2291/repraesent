@@ -13,10 +13,11 @@ import { inputCls } from "./primitives";
 /** Countries customers of re:praesent are most often in — shown first. */
 const TOP = ["DE", "AT", "CH", "NL", "BE", "LU", "FR", "CA"];
 
-function Flag({ code }: { code: string }) {
+export function Flag({ code }: { code: string }) {
   const F = (flags as Record<string, React.ComponentType<{ title: string }>>)[code];
   return (
-    <span className="inline-flex h-3.5 w-5 shrink-0 overflow-hidden rounded-[2px] shadow-[0_0_0_1px_rgba(0,0,0,0.06)]">
+    // Exactly 3:2 like the flag artwork, centered, no outline.
+    <span className="inline-flex h-3.5 w-[21px] shrink-0 items-center justify-center self-center overflow-hidden rounded-[2px] [&>svg]:block [&>svg]:!h-full [&>svg]:!w-full">
       {F ? <F title={code} /> : null}
     </span>
   );

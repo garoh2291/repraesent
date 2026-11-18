@@ -26,13 +26,15 @@ import { LanguageSwitcher } from "~/components/language-switcher";
 import { ContactSalesDialog } from "~/components/sales-contact/contact-sales-dialog";
 import { openCommandPalette } from "~/components/notebook/command-palette";
 import { useAuthContext } from "~/providers/auth-provider";
-import { useNavSections } from "~/lib/nav/sections";
+import { phoneTabs, useNavSections } from "~/lib/nav/sections";
 import { useNavModel } from "~/lib/nav/use-nav-model";
 import { cn } from "~/lib/utils";
 import { SettingsGroups } from "~/components/notebook/settings-groups";
 import { applyWaitingUpdate, useUpdateWaiting } from "~/lib/pwa/update-store";
 import { EASE_OUT, SPRING } from "~/lib/motion";
 import { useSupportBadges } from "~/components/support/use-support-badges";
+import { useAgencyRequestCount } from "~/lib/hooks/use-agency-request-count";
+import { WorkspaceList, useWorkspaceHint } from "~/components/notebook/workspace-list";
 
 /**
  * The phone menu: a light sheet that rises from the bottom (opened by "More"
@@ -173,15 +175,19 @@ function AreaSwitcher({ onPicked }: { onPicked: () => void }) {
   const nav = useNavModel();
   const [expanded, setExpanded] = useState(false);
   const ws = nav.currentWorkspace;
+  const hintOf = useWorkspaceHint();
   if (!ws) return null;
   const avatar = ws.avatar_thumb_url ?? ws.avatar_url;
+  const wsHint = hintOf(ws);
 
   const head = (
     <>
       <WsAvatar name={ws.name} src={avatar} />
       <span className="min-w-0 flex-1">
         <span className="block truncate text-[16px] font-semibold leading-tight text-foreground">{ws.name}</span>
-        {nav.hasMultipleWorkspaces ? (
+        {wsHint ? (
+          <span className="mt-0.5 block truncate text-[12.5px] text-muted-foreground">{wsHint}</span>
+        ) : nav.hasMultipleWorkspaces ? (
           <span className="mt-0.5 block text-[12.5px] text-muted-foreground">{t("nav.mobileMenu.switchBusiness", "Switch business")}</span>
         ) : null}
       </span>
@@ -208,59 +214,28 @@ function AreaSwitcher({ onPicked }: { onPicked: () => void }) {
       </button>
       <AnimatePresence initial={false}>
         {expanded ? (
-          <motion.ul
+          <motion.div
             initial={reduce ? { opacity: 0 } : { opacity: 0, height: 0 }}
             animate={reduce ? { opacity: 1 } : { opacity: 1, height: "auto" }}
             exit={reduce ? { opacity: 0 } : { opacity: 0, height: 0 }}
             transition={{ duration: reduce ? 0.12 : 0.24, ease: EASE_OUT }}
-            className="max-h-[40dvh] overflow-y-auto border-t border-border"
+            className="flex max-h-[40dvh] flex-col overflow-hidden border-t border-border"
           >
-            {nav.showBrandSwitchEntry && nav.brand ? (
-              <li>
-                <button
-                  type="button"
-                  onClick={() => {
-                    onPicked();
-                    nav.switchToBrand();
-                  }}
-                  className="flex min-h-12 w-full items-center gap-3 px-3 py-2 text-left active:bg-muted"
-                >
-                  <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-secondary text-foreground">
-                    <Building2 className="size-4" aria-hidden />
-                  </span>
-                  <span className="min-w-0 flex-1 truncate text-[14.5px] font-medium">{nav.brand.name}</span>
-                  <span className="rounded-full bg-secondary/70 px-2 py-0.5 text-[10.5px] font-semibold uppercase tracking-wide">
-                    {t("nav.brand_label", "Brand")}
-                  </span>
-                </button>
-              </li>
-            ) : null}
-            {nav.workspaces.map((w) => {
-              const on = w.id === ws.id;
-              return (
-                <li key={w.id}>
-                  <button
-                    type="button"
-                    aria-current={on ? "true" : undefined}
-                    onClick={() => {
-                      onPicked();
-                      if (!on) nav.switchWorkspace(w.id);
-                    }}
-                    className={cn("flex min-h-12 w-full items-center gap-3 px-3 py-2 text-left active:bg-muted", on && "bg-muted/60")}
-                  >
-                    <WsAvatar name={w.name} src={w.avatar_thumb_url ?? w.avatar_url} size={32} />
-                    <span className="min-w-0 flex-1 truncate text-[14.5px] font-medium">{w.name}</span>
-                    {w.type === "doorboost_brand" ? (
-                      <span className="rounded-full bg-secondary/70 px-2 py-0.5 text-[10.5px] font-semibold uppercase tracking-wide">
-                        {t("nav.brand_label", "Brand")}
-                      </span>
-                    ) : null}
-                    {on ? <Check className="size-4 shrink-0 text-foreground" aria-hidden /> : null}
-                  </button>
-                </li>
-              );
-            })}
-          </motion.ul>
+            <WorkspaceList
+              workspaces={nav.workspaces}
+              agencyChildren={nav.agencyChildren}
+              currentId={ws.id}
+              brand={nav.showBrandSwitchEntry ? nav.brand : null}
+              onPickBrand={() => {
+                onPicked();
+                nav.switchToBrand();
+              }}
+              onPick={(id) => {
+                onPicked();
+                if (id !== ws.id) nav.switchWorkspace(id);
+              }}
+            />
+          </motion.div>
         ) : null}
       </AnimatePresence>
     </div>
@@ -362,19 +337,20 @@ function MainTiles({
   const sections = useNavSections();
   const support = useSupportBadges();
   const website = sections?.find((s) => s.key === "website");
+  const agencyRequests = useAgencyRequestCount();
   const tiles: Tile[] = [];
-  // Results leaves the tab bar when Appointments has a place there.
-  const results = sections?.some((s) => s.key === "appointments" || s.key === "support")
-    ? sections.find((s) => s.key === "results")
-    : undefined;
-  if (results) {
+  // Sections that don't fit the tab bar (Results, sometimes Appointments) become tiles here.
+  for (const sec of sections ? phoneTabs(sections).behindMore : []) {
     tiles.push({
-      key: "results",
-      label: results.label,
-      hint: t("nav.mobileMenu.hints.results", "How business is going"),
-      icon: results.icon,
-      to: results.to,
-      active: results.match.some((m) => location.pathname === m || location.pathname.startsWith(`${m}/`)),
+      key: sec.key,
+      label: sec.label,
+      hint:
+        sec.key === "results"
+          ? t("nav.mobileMenu.hints.results", "How business is going")
+          : t("nav.mobileMenu.hints.appointments", "Bookings and your calendar"),
+      icon: sec.icon,
+      to: sec.to,
+      active: sec.match.some((m) => location.pathname === m || location.pathname.startsWith(`${m}/`)),
     });
   }
   if (website) {
@@ -408,22 +384,25 @@ function MainTiles({
   tiles.push(
     {
       key: "settings",
-      label: t("nav.settings"),
+      // Root admins: businesses waiting for an agency-mode decision (same style as Help & changes).
+      label: agencyRequests ? `${t("nav.settings")} · ${agencyRequests}` : t("nav.settings"),
       hint: t("nav.mobileMenu.hints.settings", "You, your team and connections"),
       icon: Settings,
       onClick: () => onOpenView("settings"),
       drill: true,
       active: nav.inSettings,
     },
-    {
+  );
+  if (nav.showBilling) {
+    tiles.push({
       key: "billing",
       label: t("nav.billing"),
       hint: t("nav.mobileMenu.hints.billing", "Plan and invoices"),
       icon: Package,
       to: "/billing",
       active: location.pathname === "/billing",
-    },
-  );
+    });
+  }
   if (support.helpAvailable) {
     tiles.push({
       key: "help",

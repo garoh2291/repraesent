@@ -2,6 +2,8 @@ import { Link, useLocation } from "react-router";
 import { useTranslation } from "react-i18next";
 import { ChevronRight } from "lucide-react";
 import { useNavModel } from "~/lib/nav/use-nav-model";
+import { useAgencyRequestCount } from "~/lib/hooks/use-agency-request-count";
+import { MarkerCount } from "~/components/notebook/stat";
 import { cn } from "~/lib/utils";
 
 /**
@@ -13,6 +15,7 @@ export function SettingsGroups({ onNavigate }: { onNavigate?: () => void }) {
   const { t } = useTranslation();
   const { pathname } = useLocation();
   const nav = useNavModel();
+  const agencyRequests = useAgencyRequestCount();
   return (
     <div className="space-y-4">
       {nav.settingsGroups.map((group) => (
@@ -29,6 +32,7 @@ export function SettingsGroups({ onNavigate }: { onNavigate?: () => void }) {
                 label={t(labelKey)}
                 active={pathname.startsWith(to)}
                 onNavigate={onNavigate}
+                pill={to === "/settings/agencies" && agencyRequests > 0 ? <MarkerCount n={agencyRequests} /> : undefined}
               />
             ))}
           </ul>

@@ -18,6 +18,8 @@ import {
   type Severity,
   type TicketDetail,
 } from "~/lib/api/support-tickets";
+import { NativeSelect } from "~/components/ui/native-select";
+import { Checkbox } from "~/components/ui/checkbox";
 import { ScreenshotPicker, useScreenshots } from "./composer";
 import { SEVERITY_ICON, TicketStub, useSeverityLabel } from "./ticket-bits";
 
@@ -32,7 +34,9 @@ export function useHelpAvailable() {
     !!currentWorkspace &&
     currentWorkspace.is_root !== true &&
     currentWorkspace.is_demo !== true &&
-    currentWorkspace.type !== "doorboost_brand";
+    currentWorkspace.type !== "doorboost_brand" &&
+    // Agency people in a business answer its reports from their agency's Support.
+    !currentWorkspace.via_agency_id;
   const q = useQuery({
     queryKey: helpKeys.websites(currentWorkspace?.id),
     queryFn: getHelpWebsites,
@@ -85,6 +89,9 @@ export function HelpProvider({ children }: { children: ReactNode }) {
 
 function NewReportSheet({ open, onOpenChange }: { open: boolean; onOpenChange: (v: boolean) => void }) {
   const { t } = useTranslation();
+  const { currentWorkspace } = useAuthContext();
+  // A business under an agency: its agency answers first.
+  const agency = currentWorkspace?.managed_by?.name ?? null;
   const [done, setDone] = useState<TicketDetail | null>(null);
   // A fresh form every time it opens.
   const [key, setKey] = useState(0);
@@ -99,7 +106,13 @@ function NewReportSheet({ open, onOpenChange }: { open: boolean; onOpenChange: (
       open={open}
       onOpenChange={onOpenChange}
       title={done ? t("help.new.sentTitle", "Got it") : t("help.new.title", "Report a problem or ask for a change")}
-      description={done ? undefined : t("help.new.subtitle", "We answer right here, and you get an email when we do.")}
+      description={
+        done
+          ? undefined
+          : agency
+            ? t("help.new.subtitleAgency", "{{agency}} answers right here, and you get an email when they do.", { agency })
+            : t("help.new.subtitle", "We answer right here, and you get an email when we do.")
+      }
       className="sm:max-w-[560px]"
     >
       {done ? <Sent ticket={done} onClose={() => onOpenChange(false)} /> : <NewReportForm key={key} onSent={setDone} />}
@@ -111,8 +124,15 @@ function NewReportForm({ onSent }: { onSent: (t: TicketDetail) => void }) {
   const { t } = useTranslation();
   const qc = useQueryClient();
   const reduce = useReducedMotion();
-  const { currentWorkspace } = useAuthContext();
+  const { currentWorkspace, agencyChildren } = useAuthContext();
   const { websites } = useHelpAvailable();
+  const agency = currentWorkspace?.managed_by?.name ?? null;
+  // An agency's own report can be about one of its businesses (AGENCY_MODE_PLAN.md §7).
+  const isAgency = currentWorkspace?.agency?.status === "active" && !currentWorkspace.via_agency_id;
+  const businesses = isAgency ? (agencyChildren ?? []).filter((c) => c.agency_workspace_id === currentWorkspace?.id) : [];
+  const [aboutId, setAboutId] = useState<string>("");
+  const [visible, setVisible] = useState(false);
+  const about = businesses.find((b) => b.id === aboutId) ?? null;
   const severityLabel = useSeverityLabel("client");
   const [urlId, setUrlId] = useState<string | null>(websites[0]?.id ?? null);
   const [severity, setSeverity] = useState<Severity>("normal");
@@ -125,7 +145,15 @@ function NewReportForm({ onSent }: { onSent: (t: TicketDetail) => void }) {
 
   const create = useMutation({
     mutationFn: () =>
-      createHelpTicket({ url_id: urlId, severity, description: description.trim(), page_url: page.trim() || null, files: shots.files }),
+      createHelpTicket({
+        url_id: about ? null : urlId,
+        severity,
+        description: description.trim(),
+        page_url: page.trim() || null,
+        files: shots.files,
+        about_workspace_id: about?.id ?? null,
+        client_visible: !!about && visible,
+      }),
     onSuccess: (ticket) => {
       void qc.invalidateQueries({ queryKey: helpKeys.all(currentWorkspace?.id) });
       onSent(ticket);
@@ -147,8 +175,46 @@ function NewReportForm({ onSent }: { onSent: (t: TicketDetail) => void }) {
       onPaste={shots.onPaste}
       className="space-y-5 pb-1"
     >
+      {/* 0 · Agency: about which of your businesses, and may it follow along? */}
+      {businesses.length ? (
+        <div className="space-y-2">
+          <label htmlFor="help-about" className="block text-[13px] font-semibold text-foreground">
+            {t("help.new.aboutBusiness", "Which business is it about?")}
+          </label>
+          <NativeSelect
+            id="help-about"
+            value={aboutId}
+            onChange={(e) => {
+              setAboutId(e.target.value);
+              if (!e.target.value) setVisible(false);
+            }}
+            className="h-10 w-full max-w-sm rounded-lg bg-card text-[15px] max-sm:h-11 max-sm:text-[16px]"
+          >
+            <option value="">{t("help.new.aboutAgency", "Your agency itself")}</option>
+            {businesses.map((b) => (
+              <option key={b.id} value={b.id}>
+                {b.name}
+              </option>
+            ))}
+          </NativeSelect>
+          {about ? (
+            <label className="flex min-h-11 cursor-pointer items-start gap-3 rounded-xl border border-border bg-card px-3.5 py-3">
+              <Checkbox checked={visible} onCheckedChange={(v) => setVisible(v === true)} className="mt-0.5" />
+              <span className="min-w-0">
+                <span className="block text-[14px] font-medium text-foreground">
+                  {t("help.new.visible", "{{business}} can read and reply", { business: about.name })}
+                </span>
+                <span className="block text-[12.5px] text-muted-foreground">
+                  {t("help.new.visibleHint", "They see this report and re:praesent's answers in their Help & changes. Leave it off to keep it between you and re:praesent.")}
+                </span>
+              </span>
+            </label>
+          ) : null}
+        </div>
+      ) : null}
+
       {/* 1 · Which website: a chip when there's one, a choice when there are more. */}
-      {websites.length === 1 ? (
+      {about ? null : websites.length === 1 ? (
         <p className="inline-flex items-center gap-2 rounded-full bg-muted px-3 py-1.5 text-[13px] text-foreground/80">
           <Globe className="size-3.5" aria-hidden />
           {t("help.new.about", "About {{host}}", { host: websites[0].host })}
@@ -288,7 +354,7 @@ function NewReportForm({ onSent }: { onSent: (t: TicketDetail) => void }) {
         className="press flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-foreground text-[15px] font-semibold text-background transition-opacity disabled:opacity-40"
       >
         {create.isPending ? <Loader2 className="size-4 animate-spin" aria-hidden /> : null}
-        {t("help.new.send", "Send to re:praesent")}
+        {agency ? t("help.new.sendTo", "Send to {{team}}", { team: agency }) : t("help.new.send", "Send to re:praesent")}
       </button>
     </form>
   );

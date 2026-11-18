@@ -1,6 +1,7 @@
 import { Link } from "react-router";
 import { useTranslation } from "react-i18next";
 import { ChevronRight, LifeBuoy } from "lucide-react";
+import { useAuthContext } from "~/providers/auth-provider";
 import { useSupportBadges } from "./use-support-badges";
 
 /**
@@ -11,12 +12,20 @@ import { useSupportBadges } from "./use-support-badges";
 export function SupportTodayCard() {
   const { t } = useTranslation();
   const b = useSupportBadges();
-  const n = b.isRoot ? b.queueOpen : b.helpWaiting;
+  const { currentWorkspace } = useAuthContext();
+  // A business under an agency: some reports wait on its agency, some on
+  // re:praesent, so the line names nobody.
+  const agency = !!currentWorkspace?.managed_by;
+  // Root and agencies: their queue first (an agency's own reports still show in Help).
+  const queue = !!b.queueBase && b.queueOpen > 0;
+  const n = queue ? b.queueOpen : b.queueBase === "root-support" ? 0 : b.helpWaiting;
   if (!n) return null;
-  const to = b.isRoot ? "/support" : "/help";
-  const text = b.isRoot
+  const to = queue ? "/support" : "/help";
+  const text = queue
     ? t("support.today", { count: n, defaultValue: n === 1 ? "1 support ticket needs a reply" : "{{count}} support tickets need a reply" })
-    : t("help.today", { count: n, defaultValue: n === 1 ? "re:praesent needs your answer on 1 report" : "re:praesent needs your answer on {{count}} reports" });
+    : agency
+      ? t("help.todayNeutral", { count: n, defaultValue: n === 1 ? "1 report needs your answer" : "{{count}} reports need your answer" })
+      : t("help.today", { count: n, defaultValue: n === 1 ? "re:praesent needs your answer on 1 report" : "re:praesent needs your answer on {{count}} reports" });
   return (
     <Link
       to={to}

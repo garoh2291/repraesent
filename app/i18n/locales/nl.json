@@ -97,7 +97,8 @@
         "contact": "Een echt persoon uit ons team",
         "results": "Hoe het met de zaak gaat",
         "websiteStaging": "De testkopie van uw website",
-        "help": "Iets kapot of een wijziging op uw site"
+        "help": "Iets kapot of een wijziging op uw site",
+        "appointments": "Boekingen en uw agenda"
       },
       "switchBusiness": "Ander bedrijf kiezen"
     },
@@ -2070,7 +2071,31 @@
         "save": "Wijzigingen opslaan",
         "turnOn": "Waarschuwing aanzetten",
         "last": "Laatste waarschuwing {{when}}"
-      }
+      },
+      "shared": {
+        "title": "AI wordt geleverd door {{agency}}",
+        "used": "Dit bedrijf heeft deze maand {{amount}} gebruikt.",
+        "usedOf": "Dit bedrijf heeft deze maand {{amount}} van {{limit}} gebruikt.",
+        "paused": "AI is gepauzeerd tot volgende maand. Vraag {{agency}} als u meer nodig hebt.",
+        "ownKeyHint": "U kunt hieronder ook een eigen sleutel koppelen; die wordt dan gebruikt."
+      },
+      "share": {
+        "title": "AI delen met uw bedrijven",
+        "subtitle": "Uw bedrijven gebruiken uw sleutel. Stel desgewenst een bedrag per maand in; is het op, dan pauzeert AI voor dat bedrijf tot volgende maand.",
+        "none": "U hebt nog geen bedrijven.",
+        "ownKey": "Gebruikt eigen sleutel",
+        "paused": "Gepauzeerd · {{amount}} gebruikt deze maand",
+        "usedThisMonth": "{{amount}} gebruikt deze maand",
+        "off": "Niet gedeeld",
+        "toggle": "AI delen met {{business}}",
+        "limitLabel": "Bedrag per maand (USD)",
+        "noLimit": "Geen limiet",
+        "saveLimit": "Bedrag opslaan",
+        "limitInvalid": "Vul een getal van 1 tot 100.000 in, of laat het leeg.",
+        "saved": "Opgeslagen",
+        "needKey": "Koppel eerst uw eigen AI-sleutel, dan kunt u hem delen."
+      },
+      "sharedOwnKeyHint": "Optioneel: koppel uw eigen OpenRouter-account. Uw AI draait dan daarop in plaats van op dat van uw bureau."
     },
     "allowlist": {
       "sectionLabel": "Altijd accepteren",
@@ -2528,7 +2553,10 @@
       "teamChat": "Teamchatmeldingen",
       "dealStages": "Dealfasen",
       "phoneAlerts": "Telefoonmeldingen",
-      "confirmationEmails": "Bevestigingsmails"
+      "confirmationEmails": "Bevestigingsmails",
+      "agency": "Meerdere bedrijven",
+      "agencies": "Bureaus",
+      "activity": "Activiteiten"
     },
     "phoneAlerts": {
       "metaTitle": "Telefoonmeldingen",
@@ -2722,6 +2750,18 @@
     "confirmationEmails": {
       "metaTitle": "Bevestigingsmails",
       "metaDescription": "De e-mail die mensen automatisch krijgen nadat ze een van uw formulieren hebben ingevuld."
+    },
+    "agency": {
+      "metaTitle": "Meerdere bedrijven beheren",
+      "metaDescription": "Meerdere bedrijven met één login beheren."
+    },
+    "agencies": {
+      "metaTitle": "Bureaus",
+      "metaDescription": "Aanvragen om meerdere bedrijven te beheren, limieten en welk bedrijf bij welk bureau hoort."
+    },
+    "activity": {
+      "metaTitle": "Activiteiten",
+      "metaDescription": "Wie heeft wat wanneer gewijzigd."
     }
   },
   "booking": {
@@ -7807,7 +7847,9 @@
     "florist_one": "bloemist",
     "florist_other": "bloemisten",
     "plumber_one": "loodgieter",
-    "plumber_other": "loodgieters"
+    "plumber_other": "loodgieters",
+    "other_one": "anders",
+    "other_other": "anders"
   },
   "openaiAds": {
     "metaTitle": "OpenAI Ads",
@@ -10137,7 +10179,9 @@
       "root": "re:praesent"
     },
     "appointments": "Afspraken",
-    "support": "Support"
+    "support": "Support",
+    "businesses": "Uw bedrijven",
+    "businessesShort": "Bedrijven"
   },
   "command": {
     "title": "Openen of zoeken",
@@ -12065,7 +12109,13 @@
       "send": "Naar re:praesent sturen",
       "sentBody": "We antwoorden hier en mailen u op {{email}}.",
       "sentBodyNoEmail": "We antwoorden hier en sturen u een e-mail.",
-      "seeIt": "Melding bekijken"
+      "seeIt": "Melding bekijken",
+      "subtitleAgency": "{{agency}} antwoordt hier, en u krijgt een e-mail als dat gebeurt.",
+      "sendTo": "Naar {{team}} sturen",
+      "aboutBusiness": "Over welk bedrijf gaat het?",
+      "aboutAgency": "Uw bureau zelf",
+      "visible": "{{business}} kan meelezen en antwoorden",
+      "visibleHint": "Het bedrijf ziet deze melding en de antwoorden van re:praesent bij Hulp & wijzigingen. Laat het uit om het tussen u en re:praesent te houden."
     },
     "severity": {
       "urgent": "Website ligt eruit of is kapot",
@@ -12110,13 +12160,17 @@
       "markedDone": "Als opgelost gemarkeerd. Dank u!",
       "reopened": "Weer open. We kijken er opnieuw naar.",
       "statusFailed": "Dat is niet opgeslagen. Probeer het opnieuw.",
-      "send": "Versturen"
+      "send": "Versturen",
+      "sharedBanner": "{{agency}} heeft dit over uw bedrijf naar re:praesent gestuurd en met u gedeeld. U kunt meelezen en antwoorden.",
+      "waitingBannerBy": "{{team}} heeft uw antwoord nodig om verder te gaan. Antwoord hieronder.",
+      "linked": "Doorgestuurd naar re:praesent. Volg het hier."
     },
     "event": {
       "reopened": "{{who}} heeft het heropend",
       "status": "{{who}} zette het op ‘{{status}}’",
       "severity": "{{who}} veranderde het in ‘{{severity}}’",
-      "email": "{{who}} heeft u gemaild op {{to}}: ‘{{subject}}’"
+      "email": "{{who}} heeft u gemaild op {{to}}: ‘{{subject}}’",
+      "queueMoved": "Vanaf nu beantwoordt re:praesent deze melding"
     },
     "files": {
       "type": "Screenshots kunnen PNG, JPG, WebP of GIF zijn.",
@@ -12126,7 +12180,11 @@
       "addAnother": "Nog een toevoegen",
       "add": "Screenshot toevoegen",
       "addShort": "Screenshot"
-    }
+    },
+    "todayNeutral_one": "1 melding wacht op uw antwoord",
+    "todayNeutral_other": "{{count}} meldingen wachten op uw antwoord",
+    "viaAgency": "U bent via {{agency}} in {{business}}. De meldingen van dit bedrijf komen in de Support van uw bureau: open {{agency}} om ze te beantwoorden of door te sturen naar re:praesent.",
+    "sharedBy": "Van {{agency}} · bij re:praesent"
   },
   "support": {
     "metaTitle": "Support",
@@ -12146,7 +12204,8 @@
       "severity": "Ernst",
       "assignee": "Wie",
       "me": "Mijn",
-      "nobody": "Nog niemand"
+      "nobody": "Nog niemand",
+      "business": "Bedrijf"
     },
     "sortTitle": "Volgorde wijzigen",
     "sort": {
@@ -12155,13 +12214,14 @@
     },
     "notReady": "Support staat op deze server nog niet aan.",
     "empty": {
-      "allClear": "Niemand wacht op je.",
+      "allClear": "Niemand wacht op u.",
       "noMatch": "Geen tickets bij deze filters.",
       "allClearBody": "Nieuwe tickets van klanten komen hier eerst binnen.",
-      "noMatchBody": "Haal een filter weg om meer te zien."
+      "noMatchBody": "Haal een filter weg om meer te zien.",
+      "allClearBodyAgency": "Meldingen van uw bedrijven komen eerst hier binnen."
     },
     "more": "{{n}} van {{total}}. Verfijn met een filter.",
-    "pick": "Kies links een ticket. Met ↑ ↓ blader je erdoor.",
+    "pick": "Kies links een ticket. Met ↑ ↓ bladert u erdoor.",
     "us": "Wij",
     "unread": "Ongelezen",
     "sendFailed": "Niet verstuurd. Probeer opnieuw.",
@@ -12180,7 +12240,7 @@
       "mode": "Antwoord of notitie",
       "note": "Interne notitie",
       "reply": "Klant antwoorden",
-      "noteHint": "Alleen je team ziet dit.",
+      "noteHint": "Alleen uw team ziet dit.",
       "notePlaceholder": "Een notitie voor het team…",
       "placeholder": "Antwoord aan {{client}}…",
       "addNote": "Notitie toevoegen",
@@ -12203,18 +12263,39 @@
     },
     "event": {
       "assigned": "{{who}} gaf het aan {{name}}",
-      "unassigned": "{{who}} haalde de toewijzing weg"
+      "unassigned": "{{who}} haalde de toewijzing weg",
+      "passedOn": "{{who}} heeft het als #{{number}} doorgestuurd naar re:praesent",
+      "passedOnVisible": "{{who}} heeft het als #{{number}} doorgestuurd naar re:praesent, zichtbaar voor het bedrijf",
+      "queueMoved": "Van het bureau naar re:praesent overgezet"
     },
     "today_one": "1 supportticket wacht op antwoord",
     "today_other": "{{count}} supporttickets wachten op antwoord",
-    "noteAdded": "Notitie toegevoegd. Alleen je team ziet hem.",
+    "noteAdded": "Notitie toegevoegd. Alleen uw team ziet hem.",
     "email": {
       "context": "Ticket #{{number}} · {{client}}",
       "failed": "De e-mail kon niet worden geopend. Probeer opnieuw.",
-      "title": "{{name}} mailen vanuit je mailbox",
+      "title": "{{name}} mailen vanuit uw mailbox",
       "notSent": "Niet verstuurd",
       "sent": "Verstuurd",
       "by": "E-mail van {{who}}"
+    },
+    "searchAgency": "Zoek bedrijf, website of #nummer",
+    "about": "over {{business}}",
+    "aboutLong": "over {{business}}",
+    "visibleToBusiness": "het bedrijf leest mee",
+    "passOn": {
+      "cta": "Doorsturen naar re:praesent",
+      "title": "Doorsturen naar re:praesent",
+      "subtitle": "re:praesent krijgt een nieuwe melding over {{business}}, gekoppeld aan deze. U volgt die bij Hulp & wijzigingen.",
+      "what": "Wat moet re:praesent weten?",
+      "shots": "Screenshots meesturen",
+      "visibleHint": "Het bedrijf ziet de nieuwe melding en de antwoorden van re:praesent. Uw interne notities blijven hoe dan ook bij u.",
+      "failed": "Het is niet verstuurd. Controleer uw verbinding en stuur het opnieuw.",
+      "send": "Naar re:praesent sturen",
+      "done": "Als #{{number}} naar re:praesent gestuurd. Volg het bij Hulp & wijzigingen.",
+      "open": "Openen",
+      "linked": "Bij re:praesent",
+      "linkedVisible": "Bij re:praesent · het bedrijf leest mee"
     }
   },
   "timezonePicker": {
@@ -12224,5 +12305,440 @@
     "common": "Veelgebruikt",
     "results": "Resultaten",
     "all": "Alle tijdzones"
+  },
+  "agency": {
+    "picker": {
+      "via": "via {{agency}}",
+      "agencyUnlimited_one": "Bureau · {{count}} bedrijf",
+      "agencyUnlimited_other": "Bureau · {{count}} bedrijven",
+      "agencyOfLimit_one": "Bureau · {{count}} van {{limit}} bedrijven",
+      "agencyOfLimit_other": "Bureau · {{count}} van {{limit}} bedrijven",
+      "managedBy": "Beheerd door {{agency}}",
+      "websiteBuilding": "Website wordt gebouwd",
+      "search": "Bedrijf zoeken",
+      "yourBusinesses": "Uw bedrijven",
+      "noMatch": "Geen bedrijf met die naam."
+    },
+    "banner": {
+      "youAreIn": "U werkt in {{business}} voor {{agency}}",
+      "back": "Terug naar {{agency}}",
+      "backShort": "Terug"
+    },
+    "settings": {
+      "notAvailable": "Meerdere bedrijven beheren is nog niet beschikbaar.",
+      "errors": {
+        "notPossible": "Dit bedrijf kan geen andere bedrijven beheren.",
+        "already": "Voor dit bedrijf is er al een aanvraag.",
+        "generic": "Dat lukte niet. Probeer het opnieuw."
+      },
+      "toast": {
+        "asked": "Aanvraag naar re:praesent gestuurd",
+        "withdrawn": "Aanvraag ingetrokken"
+      },
+      "on": {
+        "title": "U beheert meerdere bedrijven",
+        "countUnlimited_one": "bedrijf",
+        "countUnlimited_other": "bedrijven",
+        "countOfLimit_one": "van {{limit}} bedrijven",
+        "countOfLimit_other": "van {{limit}} bedrijven",
+        "meterLabel": "Gebruikte bedrijven",
+        "full": "Uw limiet is bereikt. Neem contact op met re:praesent om meer bedrijven toe te voegen.",
+        "how": "Open een bedrijf via de bedrijfskeuze bovenaan het menu."
+      },
+      "paused": {
+        "title": "Meerdere bedrijven beheren is gepauzeerd",
+        "body": "U kunt uw bedrijven voorlopig niet openen. Hun eigen teams werken gewoon door. Neem contact op met re:praesent."
+      },
+      "requested": {
+        "title": "Uw aanvraag ligt bij re:praesent",
+        "body": "We bekijken hem en laten uw beheerders het per e-mail weten.",
+        "withdraw": "Aanvraag intrekken"
+      },
+      "ineligible": {
+        "root": "Dit is het eigen account van re:praesent.",
+        "demo": "Niet beschikbaar in een demo.",
+        "doorboost": "Niet beschikbaar voor merkaccounts.",
+        "brand": "Dit bedrijf hoort bij een merk en kan daarom geen andere bedrijven beheren.",
+        "managed": "Dit bedrijf wordt door een bureau beheerd en kan daarom geen andere bedrijven beheren.",
+        "deleted": "Dit bedrijf bestaat niet meer."
+      },
+      "ask": {
+        "title": "Meerdere bedrijven met één login beheren",
+        "body": "Voor bureaus en eigenaren van meerdere vestigingen. re:praesent zet dit voor u aan.",
+        "points": {
+          "one": "Wissel tussen uw bedrijven zonder uit te loggen",
+          "two": "Voeg zelf nieuwe bedrijven toe, met hun team en website",
+          "three": "Elk bedrijf houdt zijn eigen aanvragen, klanten en team"
+        },
+        "rejected": "re:praesent heeft dit de vorige keer niet aangezet.",
+        "noteLabel": "Moeten we iets weten? (optioneel)",
+        "notePlaceholder": "Bijvoorbeeld hoeveel bedrijven u begeleidt",
+        "submit": "Aanvragen bij re:praesent",
+        "adminsOnly": "Alleen beheerders van dit bedrijf kunnen dit aanvragen."
+      }
+    },
+    "root": {
+      "tabsLabel": "Bureaus per status",
+      "tabs": {
+        "waiting": "Wachtend",
+        "active": "Actief",
+        "paused": "Gepauzeerd",
+        "earlier": "Eerder"
+      },
+      "empty": {
+        "waiting": "Geen wachtende aanvragen.",
+        "active": "Nog geen actieve bureaus.",
+        "paused": "Geen gepauzeerde bureaus.",
+        "earlier": "Hier staat nog niets."
+      },
+      "row": {
+        "askedBy": "Aangevraagd door {{name}} op {{date}}",
+        "asked": "Aangevraagd op {{date}}"
+      },
+      "status": {
+        "requested": "Wacht op een besluit",
+        "active": "Actief",
+        "suspended": "Gepauzeerd",
+        "rejected": "Niet aangezet",
+        "ended": "Beëindigd"
+      },
+      "limit": {
+        "label": "Hoeveel bedrijven",
+        "unlimited": "Onbeperkt",
+        "other": "Ander aantal"
+      },
+      "noteLabel": "Notitie voor het bedrijf (optioneel)",
+      "actions": {
+        "approve": "Aanzetten",
+        "reject": "Niet aanzetten",
+        "saveLimit": "Limiet opslaan",
+        "suspend": "Pauzeren",
+        "resume": "Weer aanzetten",
+        "end": "Bureaumodus beëindigen",
+        "detach": "Verwijderen",
+        "attach": "Toevoegen"
+      },
+      "toast": {
+        "approved": "Bureaumodus aangezet",
+        "rejected": "Aanvraag afgewezen",
+        "limit": "Limiet opgeslagen",
+        "suspended": "Bureau gepauzeerd",
+        "resumed": "Bureau weer aangezet",
+        "ended": "Bureaumodus beëindigd",
+        "attached": "Bedrijf toegevoegd",
+        "attachedOver": "Bedrijf toegevoegd. Het bureau zit nu boven zijn limiet.",
+        "detached": "Bedrijf uit het bureau verwijderd"
+      },
+      "errors": {
+        "alreadyManaged": "Dat bedrijf hoort al bij een bureau.",
+        "oneLevel": "Een bureau kan niet onder een ander bureau vallen.",
+        "childIneligible": "Dat bedrijf kan niet onder een bureau worden geplaatst.",
+        "ineligible": "Dit bedrijf kan geen bureau zijn.",
+        "generic": "Dat lukte niet. Probeer het opnieuw."
+      },
+      "confirm": {
+        "endTitle": "Bureaumodus voor {{agency}} beëindigen?",
+        "endBody": "Alle bedrijven worden uit het bureau verwijderd. Elk houdt zijn eigen gegevens en team. De mensen van het bureau verliezen direct de toegang.",
+        "detachTitle": "{{business}} uit het bureau verwijderen?",
+        "detachBody": "De mensen van het bureau verliezen direct de toegang. Open meldingen die zij behandelden gaan naar re:praesent, en gedeelde AI stopt."
+      },
+      "overLimit": "Dit bureau heeft meer bedrijven dan zijn limiet. Nieuwe kan het pas toevoegen als het weer onder de limiet zit.",
+      "noChildren": "Nog geen bedrijven.",
+      "attachSearch": "Bestaand bedrijf op naam toevoegen",
+      "origin": {
+        "created": "Toegevoegd door het bureau",
+        "attached": "Toegevoegd door re:praesent"
+      },
+      "website": {
+        "live": "Website online",
+        "building": "Website wordt gebouwd",
+        "none": "Geen website"
+      },
+      "blocked": {
+        "agency": "Is zelf een bureau",
+        "managed": "Hoort al bij een bureau",
+        "doorboost": "Merkaccount",
+        "demo": "Demo",
+        "root": "re:praesent"
+      },
+      "todayRequests_one": "1 bedrijf wil meerdere bedrijven beheren. Beslis nu.",
+      "todayRequests_other": "{{count}} bedrijven willen meerdere bedrijven beheren. Beslis nu."
+    },
+    "businesses": {
+      "metaTitle": "Uw bedrijven",
+      "metaDescription": "De bedrijven die uw bureau begeleidt.",
+      "title": "Uw bedrijven",
+      "countUnlimited_one": "{{count}} bedrijf",
+      "countUnlimited_other": "{{count}} bedrijven",
+      "countOfLimit_one": "{{count}} van {{limit}} bedrijven",
+      "countOfLimit_other": "{{count}} van {{limit}} bedrijven",
+      "waitingTotal_one": "{{count}} aanvraag wacht",
+      "waitingTotal_other": "{{count}} aanvragen wachten",
+      "add": "Bedrijf toevoegen",
+      "addFirst": "Uw eerste bedrijf toevoegen",
+      "emptyTitle": "Nog geen bedrijven",
+      "emptyBody": "Voeg een bedrijf en zijn team toe. re:praesent zet de website en e-mail op.",
+      "numbersNote": "Wacht = nieuwe aanvragen die nog niemand heeft opgevolgd. Aanvragen en nieuwe klanten: laatste 30 dagen.",
+      "setupOpen": "Wordt opgezet: {{items}}",
+      "open": "Openen",
+      "kinds": {
+        "website": "website",
+        "email": "e-mail",
+        "domain": "domein",
+        "other": "overig"
+      },
+      "cols": {
+        "waiting": "wachten",
+        "inquiries": "aanvragen",
+        "customers": "nieuwe klanten"
+      },
+      "reportsOpen_one": "1 melding wacht op uw antwoord",
+      "reportsOpen_other": "{{count}} meldingen wachten op uw antwoord"
+    },
+    "add": {
+      "title": "Bedrijf toevoegen",
+      "description": "Vijf korte stappen: bedrijf, mensen, website, extra's, controleren.",
+      "stepOf": "Stap {{n}} van {{total}}",
+      "steps": {
+        "business": "Het bedrijf",
+        "people": "Mensen",
+        "website": "Website",
+        "extras": "Extra's",
+        "check": "Controleren"
+      },
+      "fields": {
+        "name": "Naam van het bedrijf",
+        "namePlaceholder": "bijv. Salon Mira",
+        "industry": "Soort bedrijf",
+        "choose": "Kiezen…",
+        "currency": "Valuta",
+        "phone": "Telefoon",
+        "email": "E-mail",
+        "street": "Straat en huisnummer",
+        "postalCode": "Postcode",
+        "city": "Plaats",
+        "country": "Land",
+        "timezone": "Tijdzone",
+        "searchType": "Type zoeken",
+        "otherType": "Anders …",
+        "otherTypeLabel": "Wat voor bedrijf is het?",
+        "otherTypePlaceholder": "bijv. Tattoostudio",
+        "useTyped": "„{{typed}}” gebruiken"
+      },
+      "people": {
+        "intro": "Wie werkt er in dit bedrijf? Zij krijgen een e-mail om in te loggen. U kunt later ook nog mensen toevoegen.",
+        "emailLabel": "E-mail",
+        "emailPlaceholder": "naam@bedrijf.nl",
+        "roleLabel": "Wat deze persoon mag",
+        "roles": {
+          "admin": "Beheerder",
+          "editor": "Mag bewerken",
+          "viewer": "Mag bekijken"
+        },
+        "remove": "Verwijderen",
+        "add": "Persoon toevoegen",
+        "youHaveAccess": "U en uw bureauteam kunnen dit bedrijf altijd openen."
+      },
+      "website": {
+        "question": "Heeft het bedrijf een website nodig?",
+        "modes": {
+          "existing": "Heeft er al een",
+          "new": "Nieuwe website bouwen",
+          "none": "Voorlopig geen website"
+        },
+        "hints": {
+          "existing": "re:praesent verhuist en zet hem op.",
+          "new": "re:praesent bouwt hem.",
+          "none": "U kunt er later een aanvragen."
+        },
+        "url": "Websiteadres",
+        "note": "Moeten we iets weten over de website? (optioneel)",
+        "whatHappens": "re:praesent krijgt een taak om dit op te zetten. Tot hij online is, ziet het bedrijf „Je website wordt gebouwd”."
+      },
+      "extras": {
+        "intro": "Moet re:praesent nog iets opzetten? (optioneel)",
+        "email": "E-mailadressen",
+        "emailHint": "Mailboxen op het eigen domein van het bedrijf.",
+        "mailboxes": "Welke adressen?",
+        "mailboxesPlaceholder": "info@, anna@",
+        "domain": "Een domein",
+        "domainHint": "Nieuw registreren of hun bestaande koppelen.",
+        "domainName": "Welk domein?",
+        "other": "Iets anders",
+        "note": "Een notitie voor re:praesent"
+      },
+      "check": {
+        "people": "Mensen",
+        "nobody": "Nog niemand",
+        "website": "Website",
+        "extras": "Extra's",
+        "none": "Geen"
+      },
+      "errors": {
+        "name": "Geef het bedrijf een naam.",
+        "email": "Dit e-mailadres lijkt niet te kloppen.",
+        "memberEmail": "„{{email}}” is geen geldig e-mailadres.",
+        "websiteMissing": "Vul het websiteadres in of kies een andere optie.",
+        "websiteTaken": "Deze website is al bij re:praesent. Neem contact op met re:praesent om hem aan dit bedrijf te koppelen.",
+        "websiteInvalid": "Dit websiteadres lijkt niet te kloppen. Voorbeeld: salon-mira.nl",
+        "limit": "Uw limiet aan bedrijven is bereikt. Neem contact op met re:praesent om er meer toe te voegen.",
+        "notActive": "Meerdere bedrijven beheren staat nu niet aan. Neem contact op met re:praesent.",
+        "generic": "Dat lukte niet. Probeer het opnieuw.",
+        "otherTypeMissing": "Schrijf in een paar woorden wat voor bedrijf het is."
+      },
+      "back": "Terug",
+      "next": "Volgende",
+      "create": "Bedrijf toevoegen",
+      "creating": "Bezig met toevoegen…",
+      "toast": {
+        "added": "{{business}} toegevoegd",
+        "open": "Openen"
+      }
+    },
+    "setup": {
+      "title": "re:praesent zet iets voor je op",
+      "body": "We laten het je weten zodra het klaar is.",
+      "websiteTitle": "Je website wordt gebouwd",
+      "websiteBodyUrl": "re:praesent zet {{url}} op. Hij verschijnt hier zodra hij online is.",
+      "websiteBodyNew": "re:praesent bouwt je website. Hij verschijnt hier zodra hij online is.",
+      "alsoSettingUp": "Wordt ook opgezet: {{items}}"
+    },
+    "switching": "{{business}} wordt geopend …",
+    "switchFailed": "{{business}} kon niet worden geopend. Probeer het opnieuw."
+  },
+  "audit": {
+    "filters": {
+      "business": "Bedrijf",
+      "allBusinesses": "Alle bedrijven",
+      "workspace": "Bedrijf",
+      "everyone": "Alle bedrijven",
+      "person": "Persoon",
+      "anyone": "Iedereen",
+      "area": "Wat",
+      "everything": "Alles",
+      "period": "Wanneer",
+      "searchBusinesses": "Zoeken op naam",
+      "recent": "Recent actief",
+      "noBusiness": "Niets gevonden. Probeer een andere naam."
+    },
+    "periods": {
+      "7d": "Laatste 7 dagen",
+      "30d": "Laatste 30 dagen",
+      "90d": "Laatste 3 maanden",
+      "12m": "Laatste 12 maanden"
+    },
+    "areas": {
+      "deal": "Deals",
+      "lead": "Aanvragen",
+      "contact": "Klanten",
+      "task": "Taken",
+      "note": "Notities",
+      "member": "Team",
+      "form": "Formulieren",
+      "pipeline": "Dealfasen",
+      "workflow": "Automatiseringen",
+      "appointment": "Afspraken",
+      "email": "E-mail",
+      "website": "Website",
+      "ai": "AI",
+      "support": "Hulp & wijzigingen",
+      "agency": "Bureau",
+      "media": "Afbeeldingen en bestanden",
+      "billing": "Facturatie",
+      "settings": "Instellingen",
+      "auth": "Aanmeldingen"
+    },
+    "fields": {
+      "title": "Titel",
+      "value": "Waarde",
+      "currency": "Valuta",
+      "stage": "Fase",
+      "status": "Status",
+      "assigned_to": "Eigenaar",
+      "assignee_id": "Toegewezen aan",
+      "expected_close_date": "Verwachte afsluiting",
+      "first_name": "Voornaam",
+      "last_name": "Achternaam",
+      "email": "E-mail",
+      "phone": "Telefoon",
+      "company_name": "Bedrijf",
+      "job_title": "Functie",
+      "due_date": "Deadline",
+      "role": "Rol",
+      "lead_notification": "Krijgt aanvraagmeldingen"
+    },
+    "actors": {
+      "system": "re:praesent",
+      "staff": "Het re:praesent-team",
+      "someone": "Iemand"
+    },
+    "actions": {
+      "deal_create": "{{actor}} heeft de deal „{{label}}” toegevoegd",
+      "deal_update": "{{actor}} heeft de deal „{{label}}” gewijzigd",
+      "deal_stage": "{{actor}} heeft de deal „{{label}}” verplaatst",
+      "deal_move": "{{actor}} heeft de deal „{{label}}” naar andere fasen verplaatst",
+      "deal_paid": "{{actor}} heeft de deal „{{label}}” als betaald gemarkeerd",
+      "deal_unpaid": "{{actor}} heeft de deal „{{label}}” als niet betaald gemarkeerd",
+      "deal_delete": "{{actor}} heeft de deal „{{label}}” verwijderd",
+      "lead_create": "{{actor}} heeft de aanvraag „{{label}}” toegevoegd",
+      "lead_update": "{{actor}} heeft de aanvraag „{{label}}” gewijzigd",
+      "contact_create": "{{actor}} heeft de klant „{{label}}” toegevoegd",
+      "contact_from_lead": "{{actor}} heeft van „{{label}}” een klant gemaakt",
+      "contact_update": "{{actor}} heeft de klant „{{label}}” gewijzigd",
+      "contact_delete": "{{actor}} heeft de klant „{{label}}” verwijderd",
+      "task_create": "{{actor}} heeft de taak „{{label}}” toegevoegd",
+      "task_update": "{{actor}} heeft de taak „{{label}}” gewijzigd",
+      "task_delete": "{{actor}} heeft de taak „{{label}}” verwijderd",
+      "member_invite": "{{actor}} heeft {{emails}} uitgenodigd",
+      "member_update": "{{actor}} heeft gewijzigd wat {{label}} mag",
+      "member_remove": "{{actor}} heeft {{label}} uit het team verwijderd",
+      "member_resend_invite": "{{actor}} heeft de uitnodiging opnieuw gestuurd",
+      "agency_request": "{{actor}} heeft gevraagd om meerdere bedrijven te beheren",
+      "agency_withdraw": "{{actor}} heeft de aanvraag ingetrokken",
+      "agency_business_create": "{{actor}} heeft het bedrijf „{{label}}” toegevoegd",
+      "agency_approve": "{{actor}} heeft de bureaumodus aangezet (limiet: {{limit}})",
+      "agency_reject": "{{actor}} heeft de bureaumodus niet aangezet",
+      "agency_limit": "{{actor}} heeft de limiet gewijzigd naar {{limit}}",
+      "agency_suspend": "{{actor}} heeft de bureaumodus gepauzeerd",
+      "agency_resume": "{{actor}} heeft de bureaumodus weer aangezet",
+      "agency_end": "{{actor}} heeft de bureaumodus beëindigd",
+      "agency_attach": "{{actor}} heeft een bedrijf aan het bureau toegevoegd",
+      "agency_detach": "{{actor}} heeft een bedrijf uit het bureau verwijderd",
+      "agency_setup_sent": "Naar re:praesent gestuurd om op te zetten: {{items}}",
+      "website_live": "De website {{url}} is online",
+      "auth_sign_in": "{{actor}} heeft zich aangemeld ({{method}})",
+      "ai_share": "{{actor}} heeft de gedeelde AI voor een bedrijf gewijzigd",
+      "support_pass_on": "{{actor}} heeft een melding doorgestuurd naar re:praesent"
+    },
+    "generic": {
+      "create": "{{actor}} heeft iets toegevoegd in {{area}}",
+      "update": "{{actor}} heeft iets gewijzigd in {{area}}",
+      "delete": "{{actor}} heeft iets verwijderd in {{area}}"
+    },
+    "signInLink": "e-maillink",
+    "signInCode": "code",
+    "unlimited": "onbeperkt",
+    "via": "via {{agency}}",
+    "didNotGoThrough": "is niet gelukt",
+    "changedTo": "gewijzigd in",
+    "empty_value": "leeg",
+    "yes": "ja",
+    "no": "nee",
+    "empty": "In deze periode is niets gebeurd. Kies een langere periode.",
+    "loadError": "De activiteiten konden niet worden geladen. Laad de pagina opnieuw.",
+    "more": "Meer tonen",
+    "kept": "Wijzigingen worden 12 maanden bewaard.",
+    "values": {
+      "status": {
+        "todo": "Te doen",
+        "in_progress": "Bezig",
+        "done": "Klaar"
+      },
+      "role": {
+        "admin": "Beheerder",
+        "editor": "Mag bewerken",
+        "viewer": "Mag bekijken"
+      }
+    }
   }
 }

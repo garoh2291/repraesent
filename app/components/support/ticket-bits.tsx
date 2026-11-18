@@ -1,9 +1,9 @@
-import { useEffect, useState } from "react";
+import { createContext, useContext, useEffect, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { AlertOctagon, Wrench, MessageCircleQuestion } from "lucide-react";
 import { cn } from "~/lib/utils";
-import { fetchAttachmentBlob, type ShotSize, type Severity, type Side, type TicketStatus } from "~/lib/api/support-tickets";
+import { fetchAttachmentBlob, type QueueBase, type ShotSize, type Severity, type Side, type TicketStatus } from "~/lib/api/support-tickets";
 
 /**
  * Small pieces shared by both sides of Help & changes.
@@ -97,15 +97,19 @@ export function StatusPill({ status, side, className }: { status: TicketStatus; 
  * don't download it again. `thumb` is the small preview; `enabled: false`
  * waits (the full image loads only when the lightbox opens).
  */
+/** Which queue's screenshots the team side reads (root or agency). */
+export const QueueBaseContext = createContext<QueueBase>("root-support");
+
 export function useAttachmentUrl(
   side: Side,
   id: string,
   size: ShotSize = "full",
   enabled = true,
 ): { url: string | null; failed: boolean } {
+  const base = useContext(QueueBaseContext);
   const q = useQuery({
-    queryKey: ["support-shot", side, id, size],
-    queryFn: () => fetchAttachmentBlob(side, id, size),
+    queryKey: ["support-shot", side, side === "team" ? base : "help", id, size],
+    queryFn: () => fetchAttachmentBlob(side, id, size, base),
     enabled,
     staleTime: Infinity,
     gcTime: 30 * 60_000,
@@ -126,10 +130,11 @@ export function useAttachmentUrl(
 /** Warm the full image (hover / press) so the lightbox opens sharp. */
 export function usePrefetchShot() {
   const qc = useQueryClient();
+  const base = useContext(QueueBaseContext);
   return (side: Side, id: string) =>
     void qc.prefetchQuery({
-      queryKey: ["support-shot", side, id, "full"],
-      queryFn: () => fetchAttachmentBlob(side, id, "full"),
+      queryKey: ["support-shot", side, side === "team" ? base : "help", id, "full"],
+      queryFn: () => fetchAttachmentBlob(side, id, "full", base),
       staleTime: Infinity,
       gcTime: 30 * 60_000,
     });

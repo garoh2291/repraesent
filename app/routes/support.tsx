@@ -4,14 +4,16 @@ import { useTranslation } from "react-i18next";
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { toast } from "sonner";
-import { ArrowUp, Check, ChevronLeft, ExternalLink, Inbox, Loader2, Mail, Search, StickyNote, X } from "lucide-react";
+import { ArrowUp, Check, ChevronLeft, ExternalLink, Forward, Inbox, Loader2, Mail, Search, StickyNote, X } from "lucide-react";
 import { Input } from "~/components/ui/input";
 import { Skeleton } from "~/components/ui/skeleton";
 import { Segmented } from "~/components/notebook/segmented";
 import { LoadError } from "~/components/notebook/load-error";
 import { Thread } from "~/components/support/thread";
 import { Composer, type ComposerHandle } from "~/components/support/composer";
-import { SeverityMark, StatusPill, TicketStub, useSeverityLabel, useStatusLabel } from "~/components/support/ticket-bits";
+import { QueueBaseContext, SeverityMark, StatusPill, TicketStub, useSeverityLabel, useStatusLabel } from "~/components/support/ticket-bits";
+import { useQueueBase } from "~/components/support/use-support-badges";
+import { PassOnSheet } from "~/components/support/pass-on-sheet";
 import { useAuthContext } from "~/providers/auth-provider";
 import { useDocumentMeta } from "~/lib/hooks/use-document-meta";
 import { useDebounce } from "~/lib/hooks/useDebounce";
@@ -36,6 +38,7 @@ import {
   queueKeys,
   sendQueueMessage,
   updateQueueTicket,
+  type QueueBase,
   type QueueFilters,
   type QueueStatus,
   type Severity,
@@ -46,12 +49,12 @@ import {
 
 const STATUSES: TicketStatus[] = ["open", "waiting_on_client", "resolved"];
 
-/** Badge in the nav: open tickets (they wait for us). Root members only. */
-export function useQueueCounts(enabled: boolean) {
+/** Badge in the nav: open tickets (they wait for us). Root members and agencies. */
+export function useQueueCounts(base: QueueBase | null) {
   return useQuery({
-    queryKey: queueKeys.counts,
-    queryFn: getQueueCounts,
-    enabled,
+    queryKey: queueKeys.counts(base ?? "root-support"),
+    queryFn: () => getQueueCounts(base!),
+    enabled: !!base,
     refetchInterval: 60_000,
     refetchOnWindowFocus: true,
     retry: false,
@@ -59,7 +62,8 @@ export function useQueueCounts(enabled: boolean) {
 }
 
 /**
- * Support — the root workspace's queue (SUPPORT_TICKETS_PLAN.md). Every
+ * Support — the root workspace's queue (SUPPORT_TICKETS_PLAN.md), or an
+ * agency's queue for its businesses (AGENCY_MODE_PLAN.md §7). Every
  * customer's tickets in one list; the thread opens beside it on wide screens
  * (Mail-style split view) and on top of it on phones. Filters live in the
  * URL so a link to "urgent, open" stays that.
@@ -68,7 +72,7 @@ export default function SupportPage() {
   const { t } = useTranslation();
   useDocumentMeta({ titleKey: "support.metaTitle", titleSuffix: " - Repraesent" });
   const { currentWorkspace } = useAuthContext();
-  const isRoot = currentWorkspace?.is_root === true;
+  const base = useQueueBase();
   const { ticketId } = useParams();
   const navigate = useNavigate();
   const [params, setParams] = useSearchParams();
@@ -95,12 +99,13 @@ export default function SupportPage() {
   }, [q]);
 
   const filters: QueueFilters = { status, sort, workspace_id: ws, url_id: site, severity, assignee, q: q || undefined };
-  const counts = useQueueCounts(isRoot);
-  const filterOpts = useQuery({ queryKey: queueKeys.filters, queryFn: getQueueFilters, enabled: isRoot && counts.data?.ready === true, staleTime: 60_000 });
+  const counts = useQueueCounts(base);
+  const b = base ?? "root-support";
+  const filterOpts = useQuery({ queryKey: queueKeys.filters(b), queryFn: () => getQueueFilters(b), enabled: !!base && counts.data?.ready === true, staleTime: 60_000 });
   const list = useQuery({
-    queryKey: queueKeys.list(filters),
-    queryFn: () => listQueue(filters),
-    enabled: isRoot && counts.data?.ready === true,
+    queryKey: queueKeys.list(b, filters),
+    queryFn: () => listQueue(b, filters),
+    enabled: !!base && counts.data?.ready === true,
     placeholderData: keepPreviousData,
     refetchInterval: 45_000,
     refetchOnWindowFocus: true,
@@ -128,7 +133,8 @@ export default function SupportPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [rows, ticketId, search_]);
 
-  if (currentWorkspace && !isRoot) return <Navigate to="/help" replace />;
+  if (currentWorkspace && !base) return <Navigate to="/help" replace />;
+  const agency = base === "agency-support";
 
   const c = counts.data;
   const segLabel = (label: string, n: number | undefined) => (
@@ -141,6 +147,7 @@ export default function SupportPage() {
   const showThread = !phone || !!ticketId;
 
   return (
+    <QueueBaseContext.Provider value={b}>
     <div className="flex flex-col lg:h-dvh lg:min-h-0">
       <div className="flex flex-1 lg:min-h-0">
         {/* ── list column ── */}
@@ -179,13 +186,13 @@ export default function SupportPage() {
                   ref={searchRef}
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
-                  placeholder={withHint(t("support.search", "Search client, site or #number"))}
+                  placeholder={withHint(agency ? t("support.searchAgency", "Search business, site or #number") : t("support.search", "Search client, site or #number"))}
                   className="h-10 pl-9"
                 />
               </div>
               <div className="flex flex-wrap items-center gap-1.5">
                 <FilterSelect
-                  label={t("support.filters.client", "Client")}
+                  label={agency ? t("support.filters.business", "Business") : t("support.filters.client", "Client")}
                   value={ws}
                   onChange={(v) => {
                     const next = new URLSearchParams(params);
@@ -248,7 +255,11 @@ export default function SupportPage() {
                       : t("support.empty.noMatch", "No tickets match these filters.")}
                   </p>
                   <p className="text-[13.5px] text-muted-foreground">
-                    {status === "open" ? t("support.empty.allClearBody", "New tickets from customers land here first.") : t("support.empty.noMatchBody", "Clear a filter to see more.")}
+                    {status === "open"
+                      ? agency
+                        ? t("support.empty.allClearBodyAgency", "Reports from your businesses land here first.")
+                        : t("support.empty.allClearBody", "New tickets from customers land here first.")
+                      : t("support.empty.noMatchBody", "Clear a filter to see more.")}
                   </p>
                 </div>
               ) : (
@@ -269,7 +280,7 @@ export default function SupportPage() {
         {showThread ? (
           <section className="flex min-w-0 flex-1 flex-col bg-background lg:min-h-0">
             {ticketId ? (
-              <TicketPane key={ticketId} id={ticketId} backTo={`/support${search_}`} />
+              <TicketPane key={ticketId} id={ticketId} base={b} backTo={`/support${search_}`} />
             ) : (
               <div className="hidden flex-1 items-center justify-center lg:flex">
                 <div className="max-w-xs text-center">
@@ -286,6 +297,7 @@ export default function SupportPage() {
         ) : null}
       </div>
     </div>
+    </QueueBaseContext.Provider>
   );
 }
 
@@ -342,7 +354,10 @@ function QueueRow({ r, active, to }: { r: TeamTicketSummary; active: boolean; to
         <SeverityMark severity={r.severity} className="mt-[6px]" />
         <div className="min-w-0 flex-1">
           <div className="flex items-baseline gap-2">
-            <p className={cn("truncate text-[14px] text-foreground", r.unread ? "font-semibold" : "font-medium")}>{r.client.name}</p>
+            <p className={cn("truncate text-[14px] text-foreground", r.unread ? "font-semibold" : "font-medium")}>
+              {r.client.name}
+              {r.about ? <span className="font-normal text-muted-foreground"> · {t("support.about", "about {{business}}", { business: r.about.name })}</span> : null}
+            </p>
             <span className="num ml-auto shrink-0 text-[11.5px] text-muted-foreground">{formatRelativeTime(r.last_message_at, { addSuffix: false })}</span>
           </div>
           <p className={cn("truncate text-[13.5px]", r.unread ? "font-medium text-foreground" : "text-foreground/85")}>{r.title}</p>
@@ -367,7 +382,7 @@ function QueueRow({ r, active, to }: { r: TeamTicketSummary; active: boolean; to
   );
 }
 
-function TicketPane({ id, backTo }: { id: string; backTo: string }) {
+function TicketPane({ id, base, backTo }: { id: string; base: QueueBase; backTo: string }) {
   const { t } = useTranslation();
   const qc = useQueryClient();
   const reduce = useReducedMotion();
@@ -376,17 +391,19 @@ function TicketPane({ id, backTo }: { id: string; backTo: string }) {
   const statusLabel = useStatusLabel("team");
   const [mode, setMode] = useState<"message" | "note">("message");
   const composer = useRef<ComposerHandle>(null);
-  const key = queueKeys.ticket(id);
-  const q = useQuery({ queryKey: key, queryFn: () => getQueueTicket(id), refetchInterval: 30_000, refetchOnWindowFocus: true });
-  const filters = useQuery({ queryKey: queueKeys.filters, queryFn: getQueueFilters, staleTime: 60_000 });
+  const key = queueKeys.ticket(base, id);
+  const agency = base === "agency-support";
+  const [passOn, setPassOn] = useState(false);
+  const q = useQuery({ queryKey: key, queryFn: () => getQueueTicket(base, id), refetchInterval: 30_000, refetchOnWindowFocus: true });
+  const filters = useQuery({ queryKey: queueKeys.filters(base), queryFn: () => getQueueFilters(base), staleTime: 60_000 });
 
   const seen = q.data ? `${q.data.messages.length}` : "";
   useEffect(() => {
     if (!seen) return;
-    void markQueueTicketRead(id)
+    void markQueueTicketRead(base, id)
       .then(() => {
-        void qc.invalidateQueries({ queryKey: queueKeys.counts });
-        void qc.invalidateQueries({ queryKey: ["root-support", "list"] });
+        void qc.invalidateQueries({ queryKey: queueKeys.counts(base) });
+        void qc.invalidateQueries({ queryKey: queueKeys.lists(base) });
       })
       .catch(() => {});
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -408,16 +425,16 @@ function TicketPane({ id, backTo }: { id: string; backTo: string }) {
 
   const after = (d: TeamTicketDetail) => {
     qc.setQueryData(key, d);
-    void qc.invalidateQueries({ queryKey: ["root-support", "list"] });
-    void qc.invalidateQueries({ queryKey: queueKeys.counts });
-    void qc.invalidateQueries({ queryKey: queueKeys.filters });
+    void qc.invalidateQueries({ queryKey: queueKeys.lists(base) });
+    void qc.invalidateQueries({ queryKey: queueKeys.counts(base) });
+    void qc.invalidateQueries({ queryKey: queueKeys.filters(base) });
   };
 
   const send = useMutation({
     // The kind travels with the send: switching tabs while it's on its way
     // must not turn a note's confirmation into "Sent. The customer gets an email."
     mutationFn: (v: { body: string; files: File[]; then: "wait" | "resolve" | "keep"; kind: "message" | "note" }) =>
-      sendQueueMessage(id, { body: v.body, files: v.files, kind: v.kind, then: v.then }),
+      sendQueueMessage(base, id, { body: v.body, files: v.files, kind: v.kind, then: v.then }),
     onMutate: async (v) => {
       await qc.cancelQueries({ queryKey: key });
       const prev = qc.getQueryData<TeamTicketDetail>(key);
@@ -449,7 +466,7 @@ function TicketPane({ id, backTo }: { id: string; backTo: string }) {
   });
 
   const update = useMutation({
-    mutationFn: (patch: { status?: TicketStatus; severity?: Severity; assigned_to?: string | null }) => updateQueueTicket(id, patch),
+    mutationFn: (patch: { status?: TicketStatus; severity?: Severity; assigned_to?: string | null }) => updateQueueTicket(base, id, patch),
     onSuccess: after,
     onError: (err) => toast.error(extractErrorMessage(err) || t("support.saveFailed", "That didn't save. Try again.")),
   });
@@ -480,12 +497,18 @@ function TicketPane({ id, backTo }: { id: string; backTo: string }) {
             <div className="flex flex-wrap items-center gap-2 text-[13px] text-muted-foreground">
               <TicketStub number={d.number} size="lg" />
               <span className="font-semibold text-foreground">{d.client.name}</span>
+              {d.about ? (
+                <span>
+                  {t("support.aboutLong", "about {{business}}", { business: d.about.name })}
+                  {d.client_visible ? ` · ${t("support.visibleToBusiness", "the business reads along")}` : ""}
+                </span>
+              ) : null}
               {d.website ? (
                 <a href={d.website.url.startsWith("http") ? d.website.url : `https://${d.website.url}`} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 hover:text-foreground">
                   {d.website.host} <ExternalLink className="size-3" aria-hidden />
                 </a>
               ) : null}
-              {d.reporter.email ? <ReporterEmail ticket={d} /> : null}
+              {d.reporter.email && !agency ? <ReporterEmail ticket={d} /> : null}
             </div>
             <h2 className="title-display mt-2 line-clamp-2 text-[20px] font-semibold leading-tight text-foreground sm:text-[24px]">{d.title}</h2>
             {d.page_url ? (
@@ -519,7 +542,32 @@ function TicketPane({ id, backTo }: { id: string; backTo: string }) {
               {d.reopen_count ? (
                 <span className="text-[12px] text-muted-foreground">{t("support.reopened", "Reopened {{count}}×", { count: d.reopen_count })}</span>
               ) : null}
+              {agency ? (
+                <button
+                  type="button"
+                  onClick={() => setPassOn(true)}
+                  className="press inline-flex h-9 items-center gap-1.5 rounded-lg border border-foreground/25 px-3 text-[13px] font-semibold text-foreground hover:border-foreground max-sm:h-11 sm:ml-auto"
+                >
+                  <Forward className="size-4" aria-hidden />
+                  {t("support.passOn.cta", "Pass to re:praesent")}
+                </button>
+              ) : null}
             </div>
+            {agency && d.linked?.length ? (
+              <ul className="mt-3 space-y-1">
+                {d.linked.map((l) => (
+                  <li key={l.id}>
+                    <Link to={`/help/${l.id}`} className="inline-flex min-h-9 items-center gap-2 text-[13px] text-foreground/80 underline decoration-foreground/20 underline-offset-4 hover:text-foreground">
+                      <TicketStub number={l.number} />
+                      {l.client_visible
+                        ? t("support.passOn.linkedVisible", "With re:praesent · the business reads along")
+                        : t("support.passOn.linked", "With re:praesent")}
+                      <StatusPill status={l.status} side="client" className="h-5 px-2 text-[11px]" />
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            ) : null}
           </>
         )}
       </div>
@@ -527,6 +575,7 @@ function TicketPane({ id, backTo }: { id: string; backTo: string }) {
       {/* thread */}
       <div className="flex-1 px-4 py-4 sm:px-6 lg:min-h-0 lg:overflow-y-auto lg:overscroll-contain">
         {d ? <Thread messages={d.messages} viewer="team" teamName="re:praesent" /> : <Skeleton className="h-48 w-full rounded-2xl" />}
+        {d && agency ? <PassOnSheet open={passOn} onOpenChange={setPassOn} ticket={d} /> : null}
       </div>
 
       {/* composer */}
@@ -668,8 +717,8 @@ function ReporterEmail({ ticket }: { ticket: TeamTicketDetail }) {
         invalidateKeys: composeInvalidateKeys({ emailContactId: c.contactId }, "contact"),
         onSent: (sent) => {
           void attachTicketEmail(ticket.id, sent.id)
-            .then((d) => qc.setQueryData(queueKeys.ticket(ticket.id), d))
-            .catch(() => void qc.invalidateQueries({ queryKey: queueKeys.ticket(ticket.id) }));
+            .then((d) => qc.setQueryData(queueKeys.ticket("root-support", ticket.id), d))
+            .catch(() => void qc.invalidateQueries({ queryKey: queueKeys.ticket("root-support", ticket.id) }));
         },
       });
     },

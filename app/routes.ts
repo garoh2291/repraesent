@@ -158,6 +158,7 @@ export default [
       route("help", "routes/help._index.tsx"),
       route("help/:ticketId", "routes/help.$ticketId.tsx"),
       route("support/:ticketId?", "routes/support.tsx"),
+      route("businesses", "routes/businesses.tsx"),
       route("settings", "routes/settings._layout.tsx", [
         index("routes/settings._index.tsx"),
         route("profile", "routes/settings.profile.tsx"),
@@ -179,6 +180,9 @@ export default [
         route("pipelines", "routes/settings.pipelines.tsx"),
         route("onboarding", "routes/settings.onboarding.tsx"),
         route("support", "routes/settings.support.tsx"),
+        route("agency", "routes/settings.agency.tsx"),
+        route("activity", "routes/settings.activity.tsx"),
+        route("agencies", "routes/settings.agencies.tsx"),
       ]),
       route("instructions", "routes/instructions.tsx"),
       route("db-brand", "routes/db-brand._index.tsx"),

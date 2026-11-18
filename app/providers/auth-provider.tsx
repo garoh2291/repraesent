@@ -1,6 +1,6 @@
 import { createContext, useContext, type ReactNode } from "react";
 import { useAuth } from "~/lib/hooks/use-auth";
-import type { User, WorkspaceContext, BrandInfo, BrandWorkspace } from "~/lib/api/auth";
+import type { User, WorkspaceContext, BrandInfo, BrandWorkspace, AgencyChild } from "~/lib/api/auth";
 import type { SupportedLocale } from "~/i18n/locales";
 
 interface AuthContextType {
@@ -11,6 +11,8 @@ interface AuthContextType {
   isLoading: boolean;
   brand: BrandInfo | null;
   brandWorkspaces: BrandWorkspace[];
+  /** Businesses reached through the person's agencies (agency mode). */
+  agencyChildren: AgencyChild[];
   requestMagicLink: (vars: {
     email: string;
     locale?: SupportedLocale;

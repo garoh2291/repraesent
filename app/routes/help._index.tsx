@@ -35,6 +35,20 @@ export default function HelpPage() {
   const [showDone, setShowDone] = useState(false);
 
   if (blocked) return <Navigate to={currentWorkspace?.is_root ? "/support" : "/"} replace />;
+  // Agency people answer this business's reports from their agency's Support.
+  if (currentWorkspace?.via_agency_id) {
+    return (
+      <PageContainer className="max-w-[860px]">
+        <PageHeader title={t("help.title", "Help & changes")} />
+        <p className="mt-6 rounded-xl border border-border bg-card px-4 py-3 text-[14px] text-foreground">
+          {t("help.viaAgency", "You're in {{business}} through {{agency}}. Its reports land in your agency's Support: open {{agency}} to answer them or pass them on to re:praesent.", {
+            business: currentWorkspace.name,
+            agency: currentWorkspace.via_agency_name ?? "",
+          })}
+        </p>
+      </PageContainer>
+    );
+  }
 
   const rows = q.data ?? [];
   const waiting = rows.filter((r) => r.status === "waiting_on_client");
@@ -139,11 +153,16 @@ function List({ rows }: { rows: TicketSummary[] }) {
                   {r.unread ? <span className="size-2 shrink-0 rounded-full bg-marker ring-2 ring-marker/40" aria-label={t("help.unread", "New reply")} /> : null}
                 </div>
                 <p className="mt-0.5 truncate text-[13px] text-muted-foreground">
-                  {fromUs ? <span className="font-medium text-foreground/75">re:praesent: </span> : null}
+                  {fromUs ? <span className="font-medium text-foreground/75">{r.team_name || "re:praesent"}: </span> : null}
                   {r.last_message?.body || "—"}
                 </p>
                 <div className="mt-2 flex flex-wrap items-center gap-2 text-[12px] text-muted-foreground">
                   <TicketStub number={r.number} />
+                  {r.shared_by ? (
+                    <span className="rounded-full bg-muted px-2 py-0.5 font-medium text-foreground/75">
+                      {t("help.sharedBy", "From {{agency}} · with re:praesent", { agency: r.shared_by })}
+                    </span>
+                  ) : null}
                   {r.website ? <span>{r.website.host}</span> : null}
                   <span aria-hidden>·</span>
                   <span>{formatRelativeTime(r.last_message_at)}</span>

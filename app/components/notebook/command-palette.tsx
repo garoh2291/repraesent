@@ -23,7 +23,7 @@ import { useAuthContext } from "~/providers/auth-provider";
 import { usePilotFeatures } from "~/lib/feature-flags";
 import { useNavSections } from "~/lib/nav/sections";
 import { useGlobalSearch } from "~/lib/hooks/useGlobalSearch";
-import { SETTINGS_NAV } from "~/lib/nav/settings";
+import { PERSONAL_SETTINGS, SETTINGS_NAV } from "~/lib/nav/settings";
 import { isMacPlatform } from "~/lib/utils/platform";
 import { useComposeEmail } from "~/components/organism/compose-email/use-compose-email";
 import { useCanEditLeads } from "~/lib/hooks/useCanEditLeads";
@@ -121,6 +121,7 @@ export function CommandPalette() {
     }
     for (const it of SETTINGS_NAV) {
       if (it.to === "/settings/integrations" && !(pilot.integrations || isDemo)) continue;
+      if (currentWorkspace?.via_agency_id && PERSONAL_SETTINGS.has(it.to)) continue;
       if ((it.to === "/settings/onboarding" || it.to === "/settings/support") && !isRootAdmin) continue;
       if (
         it.to === "/settings/confirmation-emails" &&
@@ -141,13 +142,16 @@ export function CommandPalette() {
       out.push({ id: "help", label: t("help.nav", "Help & changes"), icon: LifeBuoy, to: "/help" });
       out.push({ id: "help-new", label: t("help.new.cta", "Report a problem"), hint: t("help.nav", "Help & changes"), icon: LifeBuoy, to: "/help?new=1" });
     }
-    out.push({
-      id: "billing",
-      label: t("nav.billing", "Billing"),
-      hint: t("nav.settings", "Settings"),
-      icon: Settings,
-      to: "/billing",
-    });
+    // Billing belongs to the business's own team, not agency people.
+    if (!currentWorkspace?.via_agency_id) {
+      out.push({
+        id: "billing",
+        label: t("nav.billing", "Billing"),
+        hint: t("nav.settings", "Settings"),
+        icon: Settings,
+        to: "/billing",
+      });
+    }
     return out;
   }, [sections, pilot, isDemo, isRootAdmin, helpAvailable, currentWorkspace, t]);
 

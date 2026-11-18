@@ -3,7 +3,7 @@ import { useAuthContext } from "~/providers/auth-provider";
 import { setStoredSelectedView, BRAND_VIEW } from "~/lib/api/axios-instance";
 import { usePilotFeatures } from "~/lib/feature-flags";
 import { useWorkspaceWpSite } from "~/lib/hooks/useWorkspaceWpSite";
-import { SETTINGS_GROUPS, SETTINGS_NAV } from "~/lib/nav/settings";
+import { PERSONAL_SETTINGS, SETTINGS_GROUPS, SETTINGS_NAV } from "~/lib/nav/settings";
 
 /**
  * What the navigation may show for the current person and workspace — shared
@@ -11,7 +11,7 @@ import { SETTINGS_GROUPS, SETTINGS_NAV } from "~/lib/nav/settings";
  * about who sees Settings → Onboarding, Contact re:praesent or Website.
  */
 export function useNavModel() {
-  const { user, currentWorkspace, workspaces, brand, setCurrentWorkspace } = useAuthContext();
+  const { user, currentWorkspace, workspaces, brand, setCurrentWorkspace, agencyChildren } = useAuthContext();
   const location = useLocation();
   const navigate = useNavigate();
   const pilot = usePilotFeatures();
@@ -20,7 +20,26 @@ export function useNavModel() {
   // so they can hop back to their brand dashboard from a workspace view.
   const showBrandSwitchEntry = user?.user_type === "brand" && !!brand;
   const hasMultipleWorkspaces =
-    (workspaces?.length ?? 0) > 1 || (showBrandSwitchEntry && (workspaces?.length ?? 0) >= 1);
+    (workspaces?.length ?? 0) + (agencyChildren?.length ?? 0) > 1 ||
+    (showBrandSwitchEntry && (workspaces?.length ?? 0) >= 1);
+  // Agency mode (AGENCY_MODE_PLAN.md). The person came into this business
+  // through their agency, not as one of its members.
+  const viaAgency =
+    currentWorkspace?.via_agency_id
+      ? { id: currentWorkspace.via_agency_id, name: currentWorkspace.via_agency_name ?? "" }
+      : null;
+  // This workspace runs agency mode and the person is one of its own team.
+  const isAgency = currentWorkspace?.agency?.status === "active" && !viaAgency;
+  // Agency mode is offered to a business's own admins, never inside a
+  // business under an agency (one level only) nor in root / demo / brands.
+  const canAskForAgency =
+    !!currentWorkspace &&
+    currentWorkspace.member_role === "admin" &&
+    !viaAgency &&
+    !currentWorkspace.managed_by &&
+    currentWorkspace.is_root !== true &&
+    currentWorkspace.is_demo !== true &&
+    currentWorkspace.type !== "doorboost_brand";
   // A live demo is a product tour: every destination stays visible even with
   // nothing connected. Real workspaces keep the gates below.
   const isDemoWorkspace = currentWorkspace?.is_demo === true;
@@ -55,18 +74,28 @@ export function useNavModel() {
     items: SETTINGS_NAV.filter(
       (item) =>
         item.group === group.key &&
+        !(viaAgency && PERSONAL_SETTINGS.has(item.to)) &&
         (item.to === "/settings/integrations"
           ? pilot.integrations || isDemoWorkspace
-          : item.to === "/settings/onboarding" || item.to === "/settings/support"
+          : item.to === "/settings/onboarding" ||
+              item.to === "/settings/support" ||
+              item.to === "/settings/agencies"
               ? isRootAdmin
-              : item.to === "/settings/confirmation-emails"
-                ? hasEmailConfig
-                : true),
+              : item.to === "/settings/agency"
+                ? canAskForAgency || isAgency
+                : item.to === "/settings/activity"
+                  ? currentWorkspace?.member_role === "admin"
+                : item.to === "/settings/confirmation-emails"
+                  ? hasEmailConfig
+                  : true),
     ),
   })).filter((g) => g.items.length > 0);
 
   const switchWorkspace = (workspaceId: string) => {
     setCurrentWorkspace(workspaceId);
+    // A business reached through the agency loads first; setCurrentWorkspace
+    // goes to its Today once it's there (behind the re:praesent screen).
+    if (!(workspaces ?? []).some((w) => w.id === workspaceId)) return;
     navigate("/", { replace: true });
   };
   const switchToBrand = () => {
@@ -77,6 +106,12 @@ export function useNavModel() {
   return {
     currentWorkspace,
     workspaces: workspaces ?? [],
+    agencyChildren: agencyChildren ?? [],
+    viaAgency,
+    // Billing belongs to the business's own team; agency people never see it.
+    showBilling: !viaAgency,
+    isAgency,
+    canAskForAgency,
     brand,
     showBrandSwitchEntry,
     hasMultipleWorkspaces,

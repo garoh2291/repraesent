@@ -129,14 +129,20 @@ function Appear({ children, className, mine }: { children: ReactNode; className?
 
 function Bubble({ m, viewer, teamName, showAuthor }: { m: TicketMessage; viewer: Side; teamName: string; showAuthor: boolean }) {
   const { t } = useTranslation();
-  const mine = m.side === viewer;
+  // Someone writing for another workspace (an agency on a report it shared) is never "your side".
+  const mine = m.side === viewer && !m.party;
   // The customer sees "Anna · re:praesent"; the team sees the person.
+  // The server says which team a reply came from (it survives a report moving
+  // from an agency to re:praesent); older APIs don't, then it's `teamName`.
+  const team = m.party ?? teamName;
   const who =
     viewer === "client" && m.side === "team"
       ? m.author.name
-        ? `${m.author.name} · ${teamName}`
-        : teamName
-      : m.author.is_me
+        ? `${m.author.name} · ${team}`
+        : team
+      : m.party
+        ? `${m.author.name ?? "—"} · ${m.party}`
+        : m.author.is_me
         ? t("help.thread.you", "You")
         : (m.author.name ?? "—");
   return (
@@ -150,7 +156,7 @@ function Bubble({ m, viewer, teamName, showAuthor }: { m: TicketMessage; viewer:
               m.side === "team" ? "bg-foreground text-background" : "bg-muted text-foreground",
             )}
           >
-            {viewer === "client" && m.side === "team" ? "re" : initials(m.author.name)}
+            {viewer === "client" && m.side === "team" ? (team === "re:praesent" ? "re" : initials(team)) : initials(m.author.name)}
           </span>
         ) : null}
       </div>
@@ -206,7 +212,11 @@ function EventLine({ m, viewer, teamName }: { m: TicketMessage; viewer: Side; te
   const e = m.event!;
   // The customer always sees our side as "re:praesent", even a teammate who is also a member there.
   const who =
-    viewer === "client" && m.side === "team" ? teamName : m.author.is_me ? t("help.thread.you", "You") : (m.author.name ?? "—");
+    viewer === "client" && m.side === "team"
+      ? (m.party ?? teamName)
+      : m.party
+        ? `${m.author.name ?? "—"} · ${m.party}`
+        : m.author.is_me ? t("help.thread.you", "You") : (m.author.name ?? "—");
   const text =
     e.type === "reopened"
       ? t("help.event.reopened", "{{who}} opened it again", { who })
@@ -216,7 +226,15 @@ function EventLine({ m, viewer, teamName }: { m: TicketMessage; viewer: Side; te
           ? t("help.event.severity", "{{who}} changed it to “{{severity}}”", { who, severity: severityLabel(e.to) })
           : e.type === "email"
             ? ""
-            : e.to
+            : e.type === "queue"
+              ? viewer === "client"
+                ? t("help.event.queueMoved", "re:praesent answers this report from now on")
+                : t("support.event.queueMoved", "Moved from the agency to re:praesent")
+            : e.type === "passed_on"
+              ? e.client_visible
+                ? t("support.event.passedOnVisible", "{{who}} passed it on to re:praesent as #{{number}}, visible to the business", { who, number: e.number })
+                : t("support.event.passedOn", "{{who}} passed it on to re:praesent as #{{number}}", { who, number: e.number })
+              : e.to
             ? t("support.event.assigned", "{{who}} handed it to {{name}}", { who, name: e.to_name ?? "—" })
             : t("support.event.unassigned", "{{who}} left it unassigned", { who });
   return (

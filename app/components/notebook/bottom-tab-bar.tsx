@@ -3,7 +3,7 @@ import { usePendingPathname } from "~/lib/nav/use-pending-nav";
 import { useTranslation } from "react-i18next";
 import { Menu } from "lucide-react";
 import { cn } from "~/lib/utils";
-import { activeSection, type NavSection } from "~/lib/nav/sections";
+import { activeSection, phoneTabs, type NavSection } from "~/lib/nav/sections";
 import { useSupportBadges } from "~/components/support/use-support-badges";
 import { useToday } from "~/lib/hooks/useToday";
 import { MarkerCount } from "~/components/notebook/stat";
@@ -39,10 +39,7 @@ export function BottomTabBar({
   // Four daily jobs under the thumb. With Appointments as a section of its
   // own, Results moves behind More (a tile there) so the bar stays at five.
   // The root team's Support queue does the same.
-  const hasAppointments = sections.some((s) => s.key === "appointments" || s.key === "support");
-  const primary = sections.filter(
-    (s) => s.key !== "website" && !(hasAppointments && s.key === "results"),
-  );
+  const { primary, behindMore: overflow } = phoneTabs(sections);
   const reduce = useReducedMotion();
   const support = useSupportBadges();
   const updateWaiting = useUpdateWaiting();
@@ -50,7 +47,7 @@ export function BottomTabBar({
   // so you always know where you are (REDESIGN_PLAN.md §2).
   const behindMore =
     active?.key === "website" ||
-    (hasAppointments && active?.key === "results") ||
+    overflow.some((s) => s.key === active?.key) ||
     /^\/(settings|website|billing)(\/|$)/.test(pathname);
   const moreActive = moreOpen || behindMore;
   const marker = (
@@ -93,7 +90,7 @@ export function BottomTabBar({
                   <MarkerCount n={needsYou} className="absolute -right-3 -top-1.5 min-w-4 px-1 text-[10px] leading-4" />
                 ) : null}
               </span>
-              <span className="truncate">{s.label}</span>
+              <span className="truncate">{s.shortLabel ?? s.label}</span>
               {isActive ? marker : null}
             </Link>
           );

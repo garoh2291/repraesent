@@ -32,21 +32,18 @@ import { SafeImg } from "~/components/atom/safe-img";
 import { useAuthContext } from "~/providers/auth-provider";
 import { LanguageSwitcher } from "~/components/language-switcher";
 import { ContactSalesDialog } from "~/components/sales-contact/contact-sales-dialog";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "~/components/ui/dropdown-menu";
 
 import logoUrl from "~/components/icons/re_praesent-mark-brand-hor.svg?url";
 import { activeChild, activeSection, useNavSections } from "~/lib/nav/sections";
 import { useNavModel } from "~/lib/nav/use-nav-model";
 import { useToday } from "~/lib/hooks/useToday";
 import { MarkerCount } from "~/components/notebook/stat";
+import { useAgencyRequestCount } from "~/lib/hooks/use-agency-request-count";
 import { useSupportBadges } from "~/components/support/use-support-badges";
 import { openCommandPalette } from "~/components/notebook/command-palette";
 import { isMacPlatform } from "~/lib/utils/platform";
+import { Popover, PopoverContent, PopoverTrigger } from "~/components/ui/popover";
+import { WorkspaceList, useWorkspaceHint } from "~/components/notebook/workspace-list";
 
 /**
  * True while the desktop sidebar is collapsed to its icon rail. NavLink and
@@ -236,9 +233,16 @@ export function Sidebar({
     settingsGroups,
     switchWorkspace: handleWorkspaceChange,
     switchToBrand,
+    agencyChildren,
+    showBilling,
   } = useNavModel();
+  const [pickerOpen, setPickerOpen] = useState(false);
+  const hintOf = useWorkspaceHint();
+  const currentHint = currentWorkspace ? hintOf(currentWorkspace) : null;
   const [contactOpen, setContactOpen] = useState(false);
   const helpBadges = useSupportBadges();
+  // Root admins: businesses waiting for an agency-mode decision.
+  const agencyRequests = useAgencyRequestCount();
 
   // Collapsed = icon rail. Restored from localStorage AFTER mount so the SSR
   // markup always matches the first client render (expanded) — a mismatch here
@@ -346,8 +350,8 @@ export function Sidebar({
         >
           {currentWorkspace &&
             (hasMultipleWorkspaces ? (
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
+              <Popover open={pickerOpen} onOpenChange={setPickerOpen}>
+                <PopoverTrigger asChild>
                   <button
                     title={collapsed ? currentWorkspace.name : undefined}
                     className={cn(
@@ -376,54 +380,43 @@ export function Sidebar({
                     )}
                     {!collapsed && (
                       <>
-                        <span className="flex-1 truncate font-medium text-white/70">
-                          {currentWorkspace.name}
+                        <span className="min-w-0 flex-1">
+                          <span className="block truncate font-medium text-white/70">
+                            {currentWorkspace.name}
+                          </span>
+                          {currentHint ? (
+                            <span className="block truncate text-[11px] leading-tight text-white/40">
+                              {currentHint}
+                            </span>
+                          ) : null}
                         </span>
                         <ChevronDown className="h-3.5 w-3.5 shrink-0 text-white/30" />
                       </>
                     )}
                   </button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="start" className="min-w-48">
-                  {showBrandSwitchEntry && brand && (
-                    <DropdownMenuItem
-                      key="__brand__"
-                      onClick={() => {
-                        onClose?.();
-                        switchToBrand();
-                      }}
-                    >
-                      <Building2 className="h-4 w-4" />
-                      <span className="flex-1 truncate">{brand.name}</span>
-                      <span className="ml-2 rounded bg-amber-400/15 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-amber-300">
-                        {t("nav.brand_label", "Brand")}
-                      </span>
-                    </DropdownMenuItem>
-                  )}
-                  {workspaces.map((ws) => (
-                    <DropdownMenuItem
-                      key={ws.id}
-                      onClick={() => handleWorkspaceChange(ws.id)}
-                    >
-                      {(ws.avatar_thumb_url ?? ws.avatar_url) ? (
-                        <SafeImg
-                          src={(ws.avatar_thumb_url ?? ws.avatar_url)!}
-                          className="h-4 w-4 shrink-0 rounded-sm bg-white object-contain p-px"
-                          fallback={<Building2 className="h-4 w-4" />}
-                        />
-                      ) : (
-                        <Building2 className="h-4 w-4" />
-                      )}
-                      <span className="flex-1 truncate">{ws.name}</span>
-                      {ws.type === "doorboost_brand" && (
-                        <span className="ml-2 rounded bg-amber-400/15 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-amber-300">
-                          {t("nav.brand_label", "Brand")}
-                        </span>
-                      )}
-                    </DropdownMenuItem>
-                  ))}
-                </DropdownMenuContent>
-              </DropdownMenu>
+                </PopoverTrigger>
+                <PopoverContent
+                  align="start"
+                  sideOffset={6}
+                  className="flex max-h-[min(70vh,520px)] w-[300px] flex-col overflow-hidden rounded-xl p-0"
+                >
+                  <WorkspaceList
+                    workspaces={workspaces}
+                    agencyChildren={agencyChildren}
+                    currentId={currentWorkspace.id}
+                    brand={showBrandSwitchEntry ? brand : null}
+                    onPickBrand={() => {
+                      setPickerOpen(false);
+                      onClose?.();
+                      switchToBrand();
+                    }}
+                    onPick={(id) => {
+                      setPickerOpen(false);
+                      if (id !== currentWorkspace.id) handleWorkspaceChange(id);
+                    }}
+                  />
+                </PopoverContent>
+              </Popover>
             ) : (
               <div
                 title={collapsed ? currentWorkspace.name : undefined}
@@ -496,6 +489,9 @@ export function Sidebar({
                       >
                         <Icon className="h-4 w-4 shrink-0" />
                         <span className="truncate">{t(labelKey)}</span>
+                        {to === "/settings/agencies" && agencyRequests > 0 ? (
+                          <MarkerCount n={agencyRequests} dark className="ml-auto" />
+                        ) : null}
                       </NavLink>
                     ))}
                   </div>
@@ -600,17 +596,20 @@ export function Sidebar({
                   onClick={onClose}
                 >
                   <Settings className="h-4 w-4 shrink-0" />
-                  {t("nav.settings")}
+                  <span className="truncate">{t("nav.settings")}</span>
+                  {agencyRequests > 0 ? <MarkerCount n={agencyRequests} dark className="ml-auto" /> : null}
                 </NavLink>
               )}
-              <NavLink
-                to="/billing"
-                isActive={navPath === "/billing"}
-                onClick={onClose}
-              >
-                <Package className="h-4 w-4 shrink-0" />
-                {t("nav.billing")}
-              </NavLink>
+              {showBilling ? (
+                <NavLink
+                  to="/billing"
+                  isActive={navPath === "/billing"}
+                  onClick={onClose}
+                >
+                  <Package className="h-4 w-4 shrink-0" />
+                  {t("nav.billing")}
+                </NavLink>
+              ) : null}
             </>
           )}
           <button

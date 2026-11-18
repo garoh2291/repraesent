@@ -97,7 +97,8 @@
         "contact": "Une vraie personne de notre équipe",
         "results": "Comment vont les affaires",
         "websiteStaging": "La copie de test de votre site",
-        "help": "Un souci ou une modification sur votre site"
+        "help": "Un souci ou une modification sur votre site",
+        "appointments": "Réservations et votre agenda"
       },
       "switchBusiness": "Changer d’entreprise"
     },
@@ -2072,7 +2073,31 @@
         "save": "Enregistrer",
         "turnOn": "Activer l'alerte",
         "last": "Dernière alerte {{when}}"
-      }
+      },
+      "shared": {
+        "title": "L'IA est fournie par {{agency}}",
+        "used": "Cette entreprise a utilisé {{amount}} ce mois-ci.",
+        "usedOf": "Cette entreprise a utilisé {{amount}} sur {{limit}} ce mois-ci.",
+        "paused": "L'IA est en pause jusqu'au mois prochain. Demandez à {{agency}} si vous avez besoin de plus.",
+        "ownKeyHint": "Vous pouvez aussi connecter votre propre clé ci-dessous ; elle sera alors utilisée."
+      },
+      "share": {
+        "title": "Partager l'IA avec vos entreprises",
+        "subtitle": "Vos entreprises utilisent votre clé. Fixez si vous le souhaitez un montant par mois ; une fois atteint, l'IA se met en pause pour cette entreprise jusqu'au mois suivant.",
+        "none": "Vous n'avez pas encore d'entreprise.",
+        "ownKey": "Utilise sa propre clé",
+        "paused": "En pause · {{amount}} utilisés ce mois-ci",
+        "usedThisMonth": "{{amount}} utilisés ce mois-ci",
+        "off": "Non partagée",
+        "toggle": "Partager l'IA avec {{business}}",
+        "limitLabel": "Montant par mois (USD)",
+        "noLimit": "Sans limite",
+        "saveLimit": "Enregistrer le montant",
+        "limitInvalid": "Saisissez un nombre de 1 à 100 000, ou laissez vide.",
+        "saved": "Enregistré",
+        "needKey": "Connectez d'abord votre propre clé IA, puis vous pourrez la partager."
+      },
+      "sharedOwnKeyHint": "Facultatif : connectez votre propre compte OpenRouter. Votre IA l'utilisera alors à la place de celui de votre agence."
     },
     "allowlist": {
       "sectionLabel": "Toujours accepter",
@@ -2530,7 +2555,10 @@
       "teamChat": "Alertes chat d'équipe",
       "dealStages": "Étapes des affaires",
       "phoneAlerts": "Alertes sur le téléphone",
-      "confirmationEmails": "E-mails de confirmation"
+      "confirmationEmails": "E-mails de confirmation",
+      "agency": "Plusieurs entreprises",
+      "agencies": "Agences",
+      "activity": "Journal d'activité"
     },
     "phoneAlerts": {
       "metaTitle": "Alertes sur le téléphone",
@@ -2724,6 +2752,18 @@
     "confirmationEmails": {
       "metaTitle": "E-mails de confirmation",
       "metaDescription": "L’e-mail que les gens reçoivent automatiquement après avoir rempli l’un de vos formulaires."
+    },
+    "agency": {
+      "metaTitle": "Gérer plusieurs entreprises",
+      "metaDescription": "Gérer plusieurs entreprises avec un seul accès."
+    },
+    "agencies": {
+      "metaTitle": "Agences",
+      "metaDescription": "Demandes de gestion de plusieurs entreprises, limites et rattachement des entreprises aux agences."
+    },
+    "activity": {
+      "metaTitle": "Journal d'activité",
+      "metaDescription": "Qui a modifié quoi, et quand."
     }
   },
   "booking": {
@@ -7809,7 +7849,9 @@
     "florist_one": "fleuriste",
     "florist_other": "fleuristes",
     "plumber_one": "plombier",
-    "plumber_other": "plombiers"
+    "plumber_other": "plombiers",
+    "other_one": "autre",
+    "other_other": "autres"
   },
   "openaiAds": {
     "metaTitle": "OpenAI Ads",
@@ -10139,7 +10181,9 @@
       "root": "re:praesent"
     },
     "appointments": "Rendez-vous",
-    "support": "Support"
+    "support": "Support",
+    "businesses": "Vos entreprises",
+    "businessesShort": "Entreprises"
   },
   "command": {
     "title": "Aller à ou rechercher",
@@ -12067,7 +12111,13 @@
       "send": "Envoyer à re:praesent",
       "sentBody": "Nous répondons ici et vous écrivons à {{email}}.",
       "sentBodyNoEmail": "Nous répondons ici et vous envoyons un e-mail.",
-      "seeIt": "Voir le signalement"
+      "seeIt": "Voir le signalement",
+      "subtitleAgency": "{{agency}} répond ici, et vous recevez un e-mail quand c'est fait.",
+      "sendTo": "Envoyer à {{team}}",
+      "aboutBusiness": "De quelle entreprise s'agit-il ?",
+      "aboutAgency": "Votre agence elle-même",
+      "visible": "{{business}} peut lire et répondre",
+      "visibleHint": "L'entreprise voit ce signalement et les réponses de re:praesent dans Aide et modifications. Laissez décoché pour que cela reste entre vous et re:praesent."
     },
     "severity": {
       "urgent": "Le site est en panne ou cassé",
@@ -12112,13 +12162,17 @@
       "markedDone": "Marqué comme réglé. Merci !",
       "reopened": "Rouvert. Nous regardons à nouveau.",
       "statusFailed": "Ce n'est pas enregistré. Réessayez.",
-      "send": "Envoyer"
+      "send": "Envoyer",
+      "sharedBanner": "{{agency}} a envoyé ceci à re:praesent au sujet de votre entreprise et l'a partagé avec vous. Vous pouvez lire et répondre.",
+      "waitingBannerBy": "{{team}} a besoin de votre réponse pour continuer. Répondez ci-dessous.",
+      "linked": "Transmis à re:praesent. Suivez-le ici."
     },
     "event": {
       "reopened": "{{who}} l'a rouvert",
       "status": "{{who}} l'a passé à « {{status}} »",
       "severity": "{{who}} l'a passé à « {{severity}} »",
-      "email": "{{who}} vous a écrit à {{to}} : « {{subject}} »"
+      "email": "{{who}} vous a écrit à {{to}} : « {{subject}} »",
+      "queueMoved": "re:praesent répond désormais à ce signalement"
     },
     "files": {
       "type": "Les captures peuvent être en PNG, JPG, WebP ou GIF.",
@@ -12128,7 +12182,11 @@
       "addAnother": "En ajouter une",
       "add": "Ajouter une capture",
       "addShort": "Capture"
-    }
+    },
+    "todayNeutral_one": "1 signalement attend votre réponse",
+    "todayNeutral_other": "{{count}} signalements attendent votre réponse",
+    "viaAgency": "Vous êtes dans {{business}} via {{agency}}. Ses signalements arrivent dans le Support de votre agence : ouvrez {{agency}} pour y répondre ou les transmettre à re:praesent.",
+    "sharedBy": "De {{agency}} · chez re:praesent"
   },
   "support": {
     "metaTitle": "Support",
@@ -12148,7 +12206,8 @@
       "severity": "Gravité",
       "assignee": "Qui",
       "me": "Les miens",
-      "nobody": "Personne encore"
+      "nobody": "Personne encore",
+      "business": "Entreprise"
     },
     "sortTitle": "Changer l'ordre",
     "sort": {
@@ -12160,7 +12219,8 @@
       "allClear": "Personne ne vous attend.",
       "noMatch": "Aucun ticket pour ces filtres.",
       "allClearBody": "Les nouveaux tickets des clients arrivent ici en premier.",
-      "noMatchBody": "Retirez un filtre pour en voir plus."
+      "noMatchBody": "Retirez un filtre pour en voir plus.",
+      "allClearBodyAgency": "Les signalements de vos entreprises arrivent d'abord ici."
     },
     "more": "{{n}} sur {{total}}. Affinez avec un filtre.",
     "pick": "Choisissez un ticket à gauche. ↑ ↓ pour naviguer.",
@@ -12205,7 +12265,10 @@
     },
     "event": {
       "assigned": "{{who}} l'a confié à {{name}}",
-      "unassigned": "{{who}} l'a laissé sans responsable"
+      "unassigned": "{{who}} l'a laissé sans responsable",
+      "passedOn": "{{who}} l'a transmis à re:praesent sous le n° {{number}}",
+      "passedOnVisible": "{{who}} l'a transmis à re:praesent sous le n° {{number}}, visible par l'entreprise",
+      "queueMoved": "Transféré de l'agence à re:praesent"
     },
     "today_one": "1 ticket de support attend une réponse",
     "today_other": "{{count}} tickets de support attendent une réponse",
@@ -12217,6 +12280,24 @@
       "notSent": "Non envoyé",
       "sent": "Envoyé",
       "by": "E-mail de {{who}}"
+    },
+    "searchAgency": "Chercher entreprise, site ou n°",
+    "about": "pour {{business}}",
+    "aboutLong": "au sujet de {{business}}",
+    "visibleToBusiness": "l'entreprise suit l'échange",
+    "passOn": {
+      "cta": "Transmettre à re:praesent",
+      "title": "Transmettre à re:praesent",
+      "subtitle": "re:praesent reçoit un nouveau signalement pour {{business}}, lié à celui-ci. Vous le suivez dans Aide et modifications.",
+      "what": "Que doit savoir re:praesent ?",
+      "shots": "Captures d'écran à joindre",
+      "visibleHint": "L'entreprise voit le nouveau signalement et les réponses de re:praesent. Vos notes internes restent chez vous dans tous les cas.",
+      "failed": "L'envoi a échoué. Vérifiez votre connexion et renvoyez.",
+      "send": "Envoyer à re:praesent",
+      "done": "Envoyé à re:praesent sous le n° {{number}}. Suivez-le dans Aide et modifications.",
+      "open": "Ouvrir",
+      "linked": "Chez re:praesent",
+      "linkedVisible": "Chez re:praesent · l'entreprise suit l'échange"
     }
   },
   "timezonePicker": {
@@ -12226,5 +12307,440 @@
     "common": "Fréquents",
     "results": "Résultats",
     "all": "Tous les fuseaux horaires"
+  },
+  "agency": {
+    "picker": {
+      "via": "via {{agency}}",
+      "agencyUnlimited_one": "Agence · {{count}} entreprise",
+      "agencyUnlimited_other": "Agence · {{count}} entreprises",
+      "agencyOfLimit_one": "Agence · {{count}} sur {{limit}} entreprises",
+      "agencyOfLimit_other": "Agence · {{count}} sur {{limit}} entreprises",
+      "managedBy": "Géré par {{agency}}",
+      "websiteBuilding": "Site en construction",
+      "search": "Trouver une entreprise",
+      "yourBusinesses": "Vos entreprises",
+      "noMatch": "Aucune entreprise à ce nom."
+    },
+    "banner": {
+      "youAreIn": "Vous travaillez dans {{business}} pour {{agency}}",
+      "back": "Retour à {{agency}}",
+      "backShort": "Retour"
+    },
+    "settings": {
+      "notAvailable": "La gestion de plusieurs entreprises n'est pas encore disponible.",
+      "errors": {
+        "notPossible": "Cette entreprise ne peut pas gérer d'autres entreprises.",
+        "already": "Une demande existe déjà pour cette entreprise.",
+        "generic": "Cela n'a pas fonctionné. Veuillez réessayer."
+      },
+      "toast": {
+        "asked": "Demande envoyée à re:praesent",
+        "withdrawn": "Demande retirée"
+      },
+      "on": {
+        "title": "Vous gérez plusieurs entreprises",
+        "countUnlimited_one": "entreprise",
+        "countUnlimited_other": "entreprises",
+        "countOfLimit_one": "sur {{limit}} entreprises",
+        "countOfLimit_other": "sur {{limit}} entreprises",
+        "meterLabel": "Entreprises utilisées",
+        "full": "Vous avez atteint votre limite. Contactez re:praesent pour ajouter d'autres entreprises.",
+        "how": "Ouvrez une entreprise depuis le sélecteur en haut du menu."
+      },
+      "paused": {
+        "title": "La gestion de plusieurs entreprises est en pause",
+        "body": "Pour le moment, vous ne pouvez pas ouvrir vos entreprises. Leurs équipes continuent normalement. Veuillez contacter re:praesent."
+      },
+      "requested": {
+        "title": "Votre demande est chez re:praesent",
+        "body": "Nous l'examinons et prévenons vos administrateurs par e-mail.",
+        "withdraw": "Retirer la demande"
+      },
+      "ineligible": {
+        "root": "C'est le compte de re:praesent.",
+        "demo": "Indisponible dans une démo.",
+        "doorboost": "Indisponible pour les comptes de marque.",
+        "brand": "Cette entreprise appartient à une marque et ne peut donc pas gérer d'autres entreprises.",
+        "managed": "Cette entreprise est gérée par une agence et ne peut donc pas gérer d'autres entreprises.",
+        "deleted": "Cette entreprise n'existe plus."
+      },
+      "ask": {
+        "title": "Gérer plusieurs entreprises avec un seul accès",
+        "body": "Pour les agences et les propriétaires de plusieurs établissements. re:praesent l'active pour vous.",
+        "points": {
+          "one": "Passer d'une entreprise à l'autre sans vous déconnecter",
+          "two": "Ajouter vous-même de nouvelles entreprises, avec leur équipe et leur site",
+          "three": "Chaque entreprise garde ses demandes, ses clients et son équipe"
+        },
+        "rejected": "re:praesent ne l'a pas activé la dernière fois.",
+        "noteLabel": "Quelque chose à nous dire ? (facultatif)",
+        "notePlaceholder": "Par exemple, combien d'entreprises vous suivez",
+        "submit": "Demander à re:praesent",
+        "adminsOnly": "Seuls les administrateurs de cette entreprise peuvent le demander."
+      }
+    },
+    "root": {
+      "tabsLabel": "Agences par statut",
+      "tabs": {
+        "waiting": "En attente",
+        "active": "Actives",
+        "paused": "En pause",
+        "earlier": "Anciennes"
+      },
+      "empty": {
+        "waiting": "Aucune demande en attente.",
+        "active": "Pas encore d'agence active.",
+        "paused": "Aucune agence en pause.",
+        "earlier": "Rien ici pour l'instant."
+      },
+      "row": {
+        "askedBy": "Demandé par {{name}} le {{date}}",
+        "asked": "Demandé le {{date}}"
+      },
+      "status": {
+        "requested": "En attente de décision",
+        "active": "Active",
+        "suspended": "En pause",
+        "rejected": "Non activée",
+        "ended": "Terminée"
+      },
+      "limit": {
+        "label": "Combien d'entreprises",
+        "unlimited": "Illimité",
+        "other": "Autre"
+      },
+      "noteLabel": "Note pour l'entreprise (facultatif)",
+      "actions": {
+        "approve": "Activer",
+        "reject": "Ne pas activer",
+        "saveLimit": "Enregistrer la limite",
+        "suspend": "Mettre en pause",
+        "resume": "Réactiver",
+        "end": "Terminer le mode agence",
+        "detach": "Retirer",
+        "attach": "Ajouter"
+      },
+      "toast": {
+        "approved": "Mode agence activé",
+        "rejected": "Demande refusée",
+        "limit": "Limite enregistrée",
+        "suspended": "Agence en pause",
+        "resumed": "Agence réactivée",
+        "ended": "Mode agence terminé",
+        "attached": "Entreprise ajoutée",
+        "attachedOver": "Entreprise ajoutée. L'agence dépasse maintenant sa limite.",
+        "detached": "Entreprise retirée de l'agence"
+      },
+      "errors": {
+        "alreadyManaged": "Cette entreprise est déjà rattachée à une agence.",
+        "oneLevel": "Une agence ne peut pas dépendre d'une autre agence.",
+        "childIneligible": "Cette entreprise ne peut pas être rattachée à une agence.",
+        "ineligible": "Cette entreprise ne peut pas être une agence.",
+        "generic": "Cela n'a pas fonctionné. Veuillez réessayer."
+      },
+      "confirm": {
+        "endTitle": "Terminer le mode agence pour {{agency}} ?",
+        "endBody": "Toutes les entreprises sont retirées de l'agence. Chacune garde ses données et son équipe. Les personnes de l'agence perdent l'accès immédiatement.",
+        "detachTitle": "Retirer {{business}} de l'agence ?",
+        "detachBody": "Les personnes de l'agence perdent l'accès immédiatement. Les signalements ouverts qu'elles suivaient passent à re:praesent, et l'IA partagée s'arrête."
+      },
+      "overLimit": "Cette agence a plus d'entreprises que sa limite. Elle ne peut pas en ajouter tant qu'elle la dépasse.",
+      "noChildren": "Pas encore d'entreprise.",
+      "attachSearch": "Ajouter une entreprise existante par son nom",
+      "origin": {
+        "created": "Ajoutée par l'agence",
+        "attached": "Ajoutée par re:praesent"
+      },
+      "website": {
+        "live": "Site en ligne",
+        "building": "Site en construction",
+        "none": "Pas de site"
+      },
+      "blocked": {
+        "agency": "Est elle-même une agence",
+        "managed": "Déjà rattachée à une agence",
+        "doorboost": "Compte de marque",
+        "demo": "Démo",
+        "root": "re:praesent"
+      },
+      "todayRequests_one": "1 entreprise souhaite gérer plusieurs entreprises. Décidez maintenant.",
+      "todayRequests_other": "{{count}} entreprises souhaitent gérer plusieurs entreprises. Décidez maintenant."
+    },
+    "businesses": {
+      "metaTitle": "Vos entreprises",
+      "metaDescription": "Les entreprises que votre agence suit.",
+      "title": "Vos entreprises",
+      "countUnlimited_one": "{{count}} entreprise",
+      "countUnlimited_other": "{{count}} entreprises",
+      "countOfLimit_one": "{{count}} sur {{limit}} entreprises",
+      "countOfLimit_other": "{{count}} sur {{limit}} entreprises",
+      "waitingTotal_one": "{{count}} demande en attente",
+      "waitingTotal_other": "{{count}} demandes en attente",
+      "add": "Ajouter une entreprise",
+      "addFirst": "Ajouter votre première entreprise",
+      "emptyTitle": "Pas encore d'entreprise",
+      "emptyBody": "Ajoutez une entreprise et son équipe. re:praesent met en place son site et ses e-mails.",
+      "numbersNote": "En attente = nouvelles demandes que personne n'a encore traitées. Demandes et nouveaux clients : 30 derniers jours.",
+      "setupOpen": "En cours de mise en place : {{items}}",
+      "open": "Ouvrir",
+      "kinds": {
+        "website": "site web",
+        "email": "e-mail",
+        "domain": "domaine",
+        "other": "autre"
+      },
+      "cols": {
+        "waiting": "en attente",
+        "inquiries": "demandes",
+        "customers": "nouveaux clients"
+      },
+      "reportsOpen_one": "1 signalement attend votre réponse",
+      "reportsOpen_other": "{{count}} signalements attendent votre réponse"
+    },
+    "add": {
+      "title": "Ajouter une entreprise",
+      "description": "Cinq étapes courtes : entreprise, personnes, site, extras, vérification.",
+      "stepOf": "Étape {{n}} sur {{total}}",
+      "steps": {
+        "business": "L'entreprise",
+        "people": "Personnes",
+        "website": "Site web",
+        "extras": "Extras",
+        "check": "Vérification"
+      },
+      "fields": {
+        "name": "Nom de l'entreprise",
+        "namePlaceholder": "ex. Salon Mira",
+        "industry": "Type d'entreprise",
+        "choose": "Choisir…",
+        "currency": "Devise",
+        "phone": "Téléphone",
+        "email": "E-mail",
+        "street": "Rue et numéro",
+        "postalCode": "Code postal",
+        "city": "Ville",
+        "country": "Pays",
+        "timezone": "Fuseau horaire",
+        "searchType": "Chercher un type",
+        "otherType": "Autre …",
+        "otherTypeLabel": "Quel type d'entreprise est-ce ?",
+        "otherTypePlaceholder": "p. ex. Studio de tatouage",
+        "useTyped": "Utiliser « {{typed}} »"
+      },
+      "people": {
+        "intro": "Qui travaille dans cette entreprise ? Ces personnes reçoivent un e-mail pour se connecter. Vous pourrez en ajouter plus tard.",
+        "emailLabel": "E-mail",
+        "emailPlaceholder": "nom@entreprise.fr",
+        "roleLabel": "Ce que la personne peut faire",
+        "roles": {
+          "admin": "Administrateur",
+          "editor": "Peut modifier",
+          "viewer": "Peut consulter"
+        },
+        "remove": "Retirer",
+        "add": "Ajouter une personne",
+        "youHaveAccess": "Vous et l'équipe de votre agence pouvez toujours ouvrir cette entreprise."
+      },
+      "website": {
+        "question": "L'entreprise a-t-elle besoin d'un site web ?",
+        "modes": {
+          "existing": "Elle en a déjà un",
+          "new": "Créer un nouveau site",
+          "none": "Pas de site pour l'instant"
+        },
+        "hints": {
+          "existing": "re:praesent le reprend et le met en place.",
+          "new": "re:praesent le crée.",
+          "none": "Vous pourrez en demander un plus tard."
+        },
+        "url": "Adresse du site",
+        "note": "Quelque chose à savoir sur le site ? (facultatif)",
+        "whatHappens": "re:praesent reçoit une tâche pour le mettre en place. Tant qu'il n'est pas en ligne, l'entreprise voit « Votre site est en construction »."
+      },
+      "extras": {
+        "intro": "re:praesent doit-il mettre en place autre chose ? (facultatif)",
+        "email": "Adresses e-mail",
+        "emailHint": "Boîtes mail sur le domaine de l'entreprise.",
+        "mailboxes": "Quelles adresses ?",
+        "mailboxesPlaceholder": "info@, anna@",
+        "domain": "Un domaine",
+        "domainHint": "En enregistrer un nouveau ou connecter le leur.",
+        "domainName": "Quel domaine ?",
+        "other": "Autre chose",
+        "note": "Une note pour re:praesent"
+      },
+      "check": {
+        "people": "Personnes",
+        "nobody": "Personne pour l'instant",
+        "website": "Site web",
+        "extras": "Extras",
+        "none": "Aucun"
+      },
+      "errors": {
+        "name": "Donnez un nom à l'entreprise.",
+        "email": "Cette adresse e-mail ne semble pas correcte.",
+        "memberEmail": "« {{email}} » n'est pas une adresse e-mail valide.",
+        "websiteMissing": "Indiquez l'adresse du site ou choisissez une autre option.",
+        "websiteTaken": "Ce site est déjà chez re:praesent. Veuillez contacter re:praesent pour le rattacher à cette entreprise.",
+        "websiteInvalid": "Cette adresse de site ne semble pas correcte. Exemple : salon-mira.fr",
+        "limit": "Vous avez atteint votre limite d'entreprises. Contactez re:praesent pour en ajouter.",
+        "notActive": "La gestion de plusieurs entreprises n'est pas active pour le moment. Veuillez contacter re:praesent.",
+        "generic": "Cela n'a pas fonctionné. Veuillez réessayer.",
+        "otherTypeMissing": "Indiquez en quelques mots de quel type d'entreprise il s'agit."
+      },
+      "back": "Retour",
+      "next": "Suivant",
+      "create": "Ajouter l'entreprise",
+      "creating": "Ajout…",
+      "toast": {
+        "added": "{{business}} ajoutée",
+        "open": "Ouvrir"
+      }
+    },
+    "setup": {
+      "title": "re:praesent met des choses en place",
+      "body": "Nous vous prévenons dès que c'est prêt.",
+      "websiteTitle": "Votre site est en construction",
+      "websiteBodyUrl": "re:praesent met en place {{url}}. Il apparaîtra ici dès qu'il sera en ligne.",
+      "websiteBodyNew": "re:praesent crée votre site. Il apparaîtra ici dès qu'il sera en ligne.",
+      "alsoSettingUp": "Aussi en cours : {{items}}"
+    },
+    "switching": "Ouverture de {{business}} …",
+    "switchFailed": "{{business}} n'a pas pu être ouvert. Réessayez."
+  },
+  "audit": {
+    "filters": {
+      "business": "Entreprise",
+      "allBusinesses": "Toutes les entreprises",
+      "workspace": "Entreprise",
+      "everyone": "Toutes les entreprises",
+      "person": "Personne",
+      "anyone": "Tout le monde",
+      "area": "Quoi",
+      "everything": "Tout",
+      "period": "Quand",
+      "searchBusinesses": "Rechercher par nom",
+      "recent": "Actifs récemment",
+      "noBusiness": "Aucun résultat. Essayez un autre nom."
+    },
+    "periods": {
+      "7d": "7 derniers jours",
+      "30d": "30 derniers jours",
+      "90d": "3 derniers mois",
+      "12m": "12 derniers mois"
+    },
+    "areas": {
+      "deal": "Affaires",
+      "lead": "Demandes",
+      "contact": "Clients",
+      "task": "Tâches",
+      "note": "Notes",
+      "member": "Équipe",
+      "form": "Formulaires",
+      "pipeline": "Étapes des affaires",
+      "workflow": "Automatisations",
+      "appointment": "Rendez-vous",
+      "email": "E-mail",
+      "website": "Site web",
+      "ai": "IA",
+      "support": "Aide et modifications",
+      "agency": "Agence",
+      "media": "Images et fichiers",
+      "billing": "Facturation",
+      "settings": "Paramètres",
+      "auth": "Connexions"
+    },
+    "fields": {
+      "title": "Titre",
+      "value": "Valeur",
+      "currency": "Devise",
+      "stage": "Étape",
+      "status": "Statut",
+      "assigned_to": "Responsable",
+      "assignee_id": "Attribuée à",
+      "expected_close_date": "Conclusion prévue",
+      "first_name": "Prénom",
+      "last_name": "Nom",
+      "email": "E-mail",
+      "phone": "Téléphone",
+      "company_name": "Société",
+      "job_title": "Fonction",
+      "due_date": "Échéance",
+      "role": "Rôle",
+      "lead_notification": "Reçoit les alertes de demandes"
+    },
+    "actors": {
+      "system": "re:praesent",
+      "staff": "L'équipe re:praesent",
+      "someone": "Quelqu'un"
+    },
+    "actions": {
+      "deal_create": "{{actor}} a ajouté l'affaire « {{label}} »",
+      "deal_update": "{{actor}} a modifié l'affaire « {{label}} »",
+      "deal_stage": "{{actor}} a déplacé l'affaire « {{label}} »",
+      "deal_move": "{{actor}} a déplacé l'affaire « {{label}} » vers d'autres étapes",
+      "deal_paid": "{{actor}} a marqué l'affaire « {{label}} » comme payée",
+      "deal_unpaid": "{{actor}} a marqué l'affaire « {{label}} » comme non payée",
+      "deal_delete": "{{actor}} a supprimé l'affaire « {{label}} »",
+      "lead_create": "{{actor}} a ajouté la demande « {{label}} »",
+      "lead_update": "{{actor}} a modifié la demande « {{label}} »",
+      "contact_create": "{{actor}} a ajouté le client « {{label}} »",
+      "contact_from_lead": "{{actor}} a fait de « {{label}} » un client",
+      "contact_update": "{{actor}} a modifié le client « {{label}} »",
+      "contact_delete": "{{actor}} a supprimé le client « {{label}} »",
+      "task_create": "{{actor}} a ajouté la tâche « {{label}} »",
+      "task_update": "{{actor}} a modifié la tâche « {{label}} »",
+      "task_delete": "{{actor}} a supprimé la tâche « {{label}} »",
+      "member_invite": "{{actor}} a invité {{emails}}",
+      "member_update": "{{actor}} a modifié ce que {{label}} peut faire",
+      "member_remove": "{{actor}} a retiré {{label}} de l'équipe",
+      "member_resend_invite": "{{actor}} a renvoyé l'invitation",
+      "agency_request": "{{actor}} a demandé à gérer plusieurs entreprises",
+      "agency_withdraw": "{{actor}} a retiré la demande",
+      "agency_business_create": "{{actor}} a ajouté l'entreprise « {{label}} »",
+      "agency_approve": "{{actor}} a activé le mode agence (limite : {{limit}})",
+      "agency_reject": "{{actor}} n'a pas activé le mode agence",
+      "agency_limit": "{{actor}} a changé la limite à {{limit}}",
+      "agency_suspend": "{{actor}} a mis le mode agence en pause",
+      "agency_resume": "{{actor}} a réactivé le mode agence",
+      "agency_end": "{{actor}} a terminé le mode agence",
+      "agency_attach": "{{actor}} a ajouté une entreprise à l'agence",
+      "agency_detach": "{{actor}} a retiré une entreprise de l'agence",
+      "agency_setup_sent": "Envoyé à re:praesent pour mise en place : {{items}}",
+      "website_live": "Le site {{url}} est en ligne",
+      "auth_sign_in": "{{actor}} s'est connecté ({{method}})",
+      "ai_share": "{{actor}} a modifié l'IA partagée d'une entreprise",
+      "support_pass_on": "{{actor}} a transmis un signalement à re:praesent"
+    },
+    "generic": {
+      "create": "{{actor}} a ajouté quelque chose dans {{area}}",
+      "update": "{{actor}} a modifié quelque chose dans {{area}}",
+      "delete": "{{actor}} a supprimé quelque chose dans {{area}}"
+    },
+    "signInLink": "lien e-mail",
+    "signInCode": "code",
+    "unlimited": "illimitée",
+    "via": "via {{agency}}",
+    "didNotGoThrough": "n'a pas abouti",
+    "changedTo": "remplacé par",
+    "empty_value": "vide",
+    "yes": "oui",
+    "no": "non",
+    "empty": "Rien ne s'est passé sur cette période. Essayez une période plus longue.",
+    "loadError": "Le journal n'a pas pu être chargé. Veuillez recharger la page.",
+    "more": "Afficher plus",
+    "kept": "Les modifications sont conservées 12 mois.",
+    "values": {
+      "status": {
+        "todo": "À faire",
+        "in_progress": "En cours",
+        "done": "Terminée"
+      },
+      "role": {
+        "admin": "Administrateur",
+        "editor": "Peut modifier",
+        "viewer": "Peut consulter"
+      }
+    }
   }
 }

@@ -156,7 +156,12 @@ export function OnboardingProfilePanel({ dealId }: { dealId: string }) {
       <dl className="space-y-2.5">
         {g<string>("identity", "legal_name") ? <Row label={t("pipeline.onboardingPanel.legalName")}>{g<string>("identity", "legal_name")}</Row> : null}
         {g<string>("identity", "industry") ? (
-          <Row label={t("onb.f.industry")}>{capitalize(t(`clientTypes.${g<string>("identity", "industry")}`, { count: 1 }))}</Row>
+          <Row label={t("onb.f.industry")}>
+            {/* "Other" from the agency wizard: the type in the agency's own words. */}
+            {g<string>("identity", "industry") === "other" && g<string>("identity", "industry_other")
+              ? g<string>("identity", "industry_other")
+              : capitalize(t(`clientTypes.${g<string>("identity", "industry")}`, { count: 1 }))}
+          </Row>
         ) : null}
         {g<string>("presence", "kind") ? <Row label={t("pipeline.onboardingPanel.presence")}>{t(`onb.presence.${g<string>("presence", "kind")}.title`)}</Row> : null}
         {address ? (

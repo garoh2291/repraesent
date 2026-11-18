@@ -14,6 +14,7 @@ import { DoorboostMigrationBanner } from "~/components/doorboost-migration-banne
 import { SyncCompleteModal } from "~/components/sync-complete-modal";
 import { TrialBanner } from "~/components/trial-banner";
 import { DemoBanner } from "~/components/demo-banner";
+import { ViaAgencyBanner } from "~/components/agency/via-agency-banner";
 import logoUrl from "~/components/icons/re_praesent-mark-brand-hor.svg?url";
 import { activeSection, useNavSections } from "~/lib/nav/sections";
 import { SectionTabs } from "~/components/notebook/section-tabs";
@@ -195,6 +196,7 @@ export default function DashboardLayout() {
           )}
         </div>
 
+        <ViaAgencyBanner />
         {showUnpaidBanner && (
           <div className="mx-3 mt-3 sm:mx-4 sm:mt-4 flex flex-col sm:flex-row sm:items-center gap-3 rounded-xl border border-overdue/30 bg-overdue-soft px-4 py-3 text-overdue">
             <div className="flex items-center gap-2.5 flex-1 min-w-0">

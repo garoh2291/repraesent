@@ -11,6 +11,7 @@ import i18n from "~/i18n";
 import { useDocumentMeta } from "~/lib/hooks/use-document-meta";
 
 import logoUrl from "~/components/icons/re_praesent-mark-brand-hor.svg?url";
+import { WorkspaceList, useWorkspaceHint } from "~/components/notebook/workspace-list";
 
 export function meta() {
   return [
@@ -29,7 +30,8 @@ export default function WorkspacePicker() {
     descriptionKey: "auth.workspacePicker.metaDescription",
     titleSuffix: " - Repraesent",
   });
-  const { user, workspaces, brand, setCurrentWorkspace } = useAuthContext();
+  const { user, workspaces, brand, setCurrentWorkspace, agencyChildren } = useAuthContext();
+  const hintOf = useWorkspaceHint();
   const navigate = useNavigate();
   const showBrandEntry = user?.user_type === "brand" && !!brand;
 
@@ -145,7 +147,7 @@ export default function WorkspacePicker() {
                   )}
                 </div>
                 <p className="text-xs text-muted-foreground mt-0.5">
-                  {t("auth.workspacePicker.clickToEnter")}
+                  {hintOf(workspace) ?? t("auth.workspacePicker.clickToEnter")}
                 </p>
               </div>
 
@@ -168,6 +170,24 @@ export default function WorkspacePicker() {
             </button>
           ))}
         </div>
+
+        {/* Businesses reached through the person's agency (agency mode). */}
+        {agencyChildren.length > 0 ? (
+          <section className="space-y-2 app-fade-up app-fade-up-d2">
+            <h2 className="px-1 text-[11.5px] font-semibold uppercase tracking-[0.06em] text-muted-foreground">
+              {t("agency.picker.yourBusinesses")}
+            </h2>
+            <div className="overflow-hidden rounded-xl border border-stone-200 bg-white shadow-sm">
+              <WorkspaceList
+                workspaces={[]}
+                agencyChildren={agencyChildren}
+                currentId={null}
+                onPick={handleSelect}
+                className="max-h-[50dvh]"
+              />
+            </div>
+          </section>
+        ) : null}
       </div>
     </div>
   );
