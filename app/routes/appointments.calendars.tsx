@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router";
 import { useTranslation } from "react-i18next";
-import { ArrowLeft, CalendarDays, CalendarPlus, ChevronRight, Globe, MapPin, Plus, Sun, Video } from "lucide-react";
+import { ArrowLeft, CalendarDays, CalendarPlus, ChevronRight, Globe, Link2, MapPin, Plus, Sun, Video } from "lucide-react";
 import i18n from "~/i18n";
 import { useDocumentMeta } from "~/lib/hooks/use-document-meta";
 import { WEEKDAYS, type AppointmentCalendar } from "~/lib/api/appointment-book";
@@ -15,6 +15,7 @@ import { Button } from "~/components/ui/button";
 import { CalendarDot } from "~/components/appointment-book/appointment-bits";
 import { useAppointmentBookGate } from "~/components/appointment-book/use-appointment-book-gate";
 import { cn } from "~/lib/utils";
+import { BookingPageSheet } from "~/components/appointment-book/booking-page";
 import { ConnectedCalendarHandlers } from "~/components/appointment-book/connected-calendar-handlers";
 import { useWorkspaceMembers } from "~/lib/hooks/useWorkspaceMembers";
 
@@ -32,6 +33,7 @@ export default function AppointmentCalendarsPage() {
   useDocumentMeta({ titleKey: "appointmentBook.calendars.metaTitle", titleSuffix: " - Repraesent" });
   const calendars = useAppointmentCalendars(allowed);
   const [creating, setCreating] = useState(false);
+  const [bookingPage, setBookingPage] = useState(false);
   if (!allowed) return null;
 
   return (
@@ -51,10 +53,16 @@ export default function AppointmentCalendarsPage() {
         )}
         actions={
           calendars.data?.length === 0 ? undefined : (
-          <Button size="sm" className="h-9 gap-1.5 max-sm:h-11 max-sm:w-full" disabled={!calendars.data} onClick={() => setCreating(true)}>
-            <Plus className="size-3.5" aria-hidden />
-            {t("appointmentBook.calendars.new", "New calendar")}
-          </Button>
+          <div className="flex gap-2 max-sm:w-full max-sm:flex-col">
+            <Button size="sm" variant="outline" className="h-9 gap-1.5 max-sm:h-11 max-sm:w-full" disabled={!calendars.data} onClick={() => setBookingPage(true)}>
+              <Link2 className="size-3.5" aria-hidden />
+              {t("appointmentBook.bookingPage.create", "Create booking page")}
+            </Button>
+            <Button size="sm" className="h-9 gap-1.5 max-sm:h-11 max-sm:w-full" disabled={!calendars.data} onClick={() => setCreating(true)}>
+              <Plus className="size-3.5" aria-hidden />
+              {t("appointmentBook.calendars.new", "New calendar")}
+            </Button>
+          </div>
           )
         }
       />
@@ -72,6 +80,7 @@ export default function AppointmentCalendarsPage() {
       )}
       <ConnectedCalendarHandlers />
       {creating ? <NewCalendarSheet onOpenChange={setCreating} calendars={calendars.data} /> : null}
+      {bookingPage ? <BookingPageSheet calendars={calendars.data ?? []} onOpenChange={setBookingPage} /> : null}
     </PageContainer>
   );
 }

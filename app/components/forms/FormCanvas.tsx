@@ -13,6 +13,7 @@
  * arrayMove is enough — no fractional board_position bookkeeping.
  */
 
+import { usePreviewServiceRules } from "~/lib/forms/use-preview-service-rules";
 import {
   DndContext,
   DragOverlay,
@@ -150,6 +151,8 @@ export function FormCanvas({
   const [activeId, setActiveId] = useState<string | null>(null);
 
   const multi = isMultiStep(definition);
+  // What the preview draws: the draft, plus each service's own calendar rules.
+  const previewDefinition = usePreviewServiceRules(definition);
 
   // Blank is passed through rather than falling back to the key: the row
   // already prints the key in its own mono chip, and a label-less field is an
@@ -423,7 +426,7 @@ export function FormCanvas({
               {/* The renderer draws the form; the overlay row below draws the
                 per-field handles on top of it, positioned by field order. */}
               <FormRenderer
-                definition={definition}
+                definition={previewDefinition}
                 locale={locale}
                 fallbackLocale={fallbackLocale}
                 mode="preview"

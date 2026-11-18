@@ -28,6 +28,7 @@ import { PageSkeleton } from "~/components/notebook/page-skeleton";
 import { LoadError } from "~/components/notebook/load-error";
 import { Button } from "~/components/ui/button";
 import { CalendarForm, draftOf, type CalendarDraft } from "~/components/appointment-book/calendar-form";
+import { BookingPagesPanel } from "~/components/appointment-book/booking-page";
 import { CalendarWorkflowsPanel } from "~/components/appointment-book/calendar-workflows-panel";
 import { cn } from "~/lib/utils";
 import { useAppointmentBookGate } from "~/components/appointment-book/use-appointment-book-gate";
@@ -167,6 +168,8 @@ export default function CalendarSettingsPage() {
           ) : null
         }
       />
+
+      <BookingPagesPanel calendar={calendar} calendars={calendars.data ?? []} />
 
       <Panel className="space-y-3 px-4 py-5 sm:px-6">
         <h2 className="text-[16px] font-semibold text-foreground">{t("appointmentBook.settings.manage", "This calendar")}</h2>

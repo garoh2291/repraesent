@@ -6364,7 +6364,30 @@
         "hostSearch": "Mitglieder suchen…",
         "hostEmpty": "Keine Mitglieder gefunden.",
         "alreadyAHost": "bereits Gastgeber",
-        "hostAlwaysBusy": "immer belegt"
+        "hostAlwaysBusy": "immer belegt",
+        "display": {
+          "label": "So wählen Besucher einen Termin",
+          "strip": "Tagesleiste",
+          "stripHint": "Eine Woche mit Tagen, darunter die Zeiten. Kompakt, passt auch in schmale Bereiche.",
+          "month": "Monatskalender",
+          "monthHint": "Ein ganzer Monat neben der Liste der Zeiten. Besucher können die Zeitzone wechseln.",
+          "list": "Nächste freie Zeiten",
+          "listHint": "Die nächsten Zeiten als kurze Liste. Nichts zum Blättern."
+        },
+        "services": {
+          "toggle": "Besucher wählen eine Leistung",
+          "toggleHint": "Jede Leistung hat einen eigenen Namen und einen eigenen Kalender, zum Beispiel Besuch im Showroom und Telefonat.",
+          "item": "Leistung {{n}}",
+          "name": "Name",
+          "namePlaceholder": "z. B. Besuch im Showroom",
+          "description": "Kurze Beschreibung (optional)",
+          "descriptionPlaceholder": "Was passiert, wo, wie lange",
+          "add": "Leistung hinzufügen",
+          "remove": "Diese Leistung entfernen",
+          "moveUp": "Nach oben",
+          "moveDown": "Nach unten",
+          "connectedHoursHint": "Verbundene Kalender haben keine eigenen Zeiten. Diese Einstellungen gelten für jede Leistung, die in einen verbundenen Kalender bucht."
+        }
       },
       "stepTitle": "Titel des Schritts",
       "stepDescription": "Beschreibung des Schritts",
@@ -6534,7 +6557,9 @@
         "productFieldOnStandardForm": "„{{field}}“ verlangt eine Zahlung, aber dieses Formular kann keine annehmen. Löschen Sie die Frage hier.",
         "commerceNoItems": "„{{field}}“ enthält noch keine Produkte. Wählen Sie die Frage aus und fügen Sie mindestens eins hinzu.",
         "keyMissing": "„{{field}}“ hat keinen internen Namen. Öffnen Sie bei dieser Frage „Erweitert“ und tragen Sie einen ein.",
-        "crmSaveAppointment": "„{{field}}“ bucht einen Termin, aber dieses Formular speichert keine Antworten. Löschen Sie die Frage oder schalten Sie „Antworten als Anfragen speichern“ ein."
+        "crmSaveAppointment": "„{{field}}“ bucht einen Termin, aber dieses Formular speichert keine Antworten. Löschen Sie die Frage oder schalten Sie „Antworten als Anfragen speichern“ ein.",
+        "serviceMissingCalendar": "„{{field}}“ hat eine Leistung ohne Kalender. Wählen Sie die Frage aus und legen Sie für jede Leistung einen Kalender fest.",
+        "serviceDuplicateCalendar": "„{{field}}“ hat zwei Leistungen, die in denselben Kalender buchen. Geben Sie jeder Leistung einen eigenen Kalender."
       },
       "otherLocales": "{{count}} weitere(r) Punkt(e) in:",
       "keyMissing": "Eine Frage hat keinen internen Namen. Öffnen Sie bei dieser Frage „Erweitert“ und tragen Sie einen ein.",
@@ -6552,7 +6577,9 @@
       "needsProductField": "Es gibt keine Produktfrage — Besucher sehen nicht, was sie kaufen. Fügen Sie eine über „Frage hinzufügen“ hinzu.",
       "duplicateProductField": "Ein Formular kann nur eine Produktfrage haben. Löschen Sie die zusätzliche.",
       "productFieldOnStandardForm": "Eine Produktfrage funktioniert nur in Formularen mit Bezahlung. Löschen Sie sie hier.",
-      "crmSaveAppointment": "Eine Terminfrage braucht gespeicherte Antworten. Löschen Sie sie oder schalten Sie „Antworten als Anfragen speichern“ ein."
+      "crmSaveAppointment": "Eine Terminfrage braucht gespeicherte Antworten. Löschen Sie sie oder schalten Sie „Antworten als Anfragen speichern“ ein.",
+      "serviceMissingCalendar": "Eine Terminfrage hat eine Leistung ohne Kalender. Wählen Sie sie aus und legen Sie für jede Leistung einen Kalender fest.",
+      "serviceDuplicateCalendar": "Eine Terminfrage hat zwei Leistungen, die in denselben Kalender buchen. Geben Sie jeder Leistung einen eigenen Kalender."
     },
     "public": {
       "notAvailable": "Dieses Formular ist nicht verfügbar",
@@ -11940,6 +11967,38 @@
       "bannerTitle": "Richten Sie Ihren Kalender ein, um Termine anzunehmen",
       "bannerBody": "Name, Zeitzone und Öffnungszeiten – dann können Formulare, Chat und Ihr Team buchen.",
       "start": "Kalender einrichten"
+    },
+    "bookingPage": {
+      "create": "Buchungsseite anlegen",
+      "title": "Eine Seite, auf der deine Kunden buchen",
+      "intro": "Wähle, was man buchen kann. Du bekommst einen Link, den du per E-Mail, WhatsApp oder SMS verschickst.",
+      "pickCalendars": "Was kann man buchen?",
+      "pickHint": "Bei mehreren wählen Kunden zuerst, was sie möchten.",
+      "needCalendar": "Wähle mindestens einen Kalender.",
+      "noCalendars": "Lege zuerst einen Kalender an. Danach kannst du hier seine Buchungsseite anlegen.",
+      "nameLabel": "Name der Seite",
+      "nameHint": "Anfragen von dieser Seite zeigen diesen Namen als Herkunft.",
+      "namePlaceholder": "z. B. Termin buchen",
+      "defaultName": "Termin buchen",
+      "language": "Sprache der Seite",
+      "languageHint": "Weitere Sprachen kannst du später hinzufügen.",
+      "createButton": "Seite anlegen",
+      "creating": "Wird angelegt…",
+      "readyTitle": "Deine Buchungsseite ist online",
+      "readyBody": "Schick diesen Link an deine Kunden. Jede Buchung kommt als Anfrage mit ihrem Termin an.",
+      "draftTitle": "Die Seite ist angelegt, aber noch nicht online",
+      "draftBody": "Es fehlt noch etwas. Öffne sie, um zu sehen was, und stelle sie dann online.",
+      "copyLink": "Link kopieren",
+      "copied": "Link kopiert",
+      "open": "Seite öffnen",
+      "edit": "Fragen, Texte oder Aussehen ändern",
+      "done": "Fertig",
+      "failed": "Die Seite konnte nicht angelegt werden. Versuch es gleich noch einmal.",
+      "listTitle": "Buchungsseiten",
+      "listHint": "Seiten und Formulare, über die man in diesen Kalender buchen kann.",
+      "listEmpty": "Noch bucht keine Seite in diesen Kalender.",
+      "notLive": "Nicht online",
+      "calendarOff": "Ausgeschaltet: Seine Zeiten werden nicht angeboten."
     }
   },
   "calendarView": {

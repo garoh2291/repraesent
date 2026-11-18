@@ -921,6 +921,10 @@ export function LeadInfoSection({
                       {t("leads.appointment.title", {
                         defaultValue: "Appointment",
                       })}
+                      {/* What they booked, when the form let them choose. */}
+                      {appointment.serviceName
+                        ? ` · ${appointment.serviceName}`
+                        : null}
                       {past
                         ? ` · ${t("leads.appointment.past", { defaultValue: "Past" })}`
                         : null}

@@ -6364,7 +6364,30 @@
         "hostSearch": "Rechercher des membres…",
         "hostEmpty": "Aucun membre trouvé.",
         "alreadyAHost": "déjà hôte",
-        "hostAlwaysBusy": "toujours occupé"
+        "hostAlwaysBusy": "toujours occupé",
+        "display": {
+          "label": "Comment les visiteurs choisissent un horaire",
+          "strip": "Bande de jours",
+          "stripHint": "Une semaine de jours, puis les horaires. Compact, convient aux espaces étroits.",
+          "month": "Calendrier mensuel",
+          "monthHint": "Un mois entier à côté de la liste des horaires. Les visiteurs peuvent changer de fuseau horaire.",
+          "list": "Prochains horaires libres",
+          "listHint": "Les prochains horaires en une courte liste. Rien à parcourir."
+        },
+        "services": {
+          "toggle": "Laisser choisir une prestation",
+          "toggleHint": "Chaque prestation a son propre nom et son propre calendrier, par exemple une visite au showroom et un appel téléphonique.",
+          "item": "Prestation {{n}}",
+          "name": "Nom",
+          "namePlaceholder": "p. ex. Visite au showroom",
+          "description": "Courte description (facultatif)",
+          "descriptionPlaceholder": "Ce qui se passe, où, combien de temps",
+          "add": "Ajouter une prestation",
+          "remove": "Supprimer cette prestation",
+          "moveUp": "Monter",
+          "moveDown": "Descendre",
+          "connectedHoursHint": "Les calendriers connectés n’ont pas d’horaires propres. Ces réglages s’appliquent à chaque prestation qui réserve dans un calendrier connecté."
+        }
       },
       "stepTitle": "Titre de l'étape",
       "stepDescription": "Description de l'étape",
@@ -6534,7 +6557,9 @@
         "productFieldOnStandardForm": "« {{field}} » demande un paiement, mais ce formulaire ne peut pas en recevoir. Supprimez-la ici.",
         "commerceNoItems": "« {{field}} » ne contient encore aucun produit. Sélectionnez-la et ajoutez-en au moins un.",
         "keyMissing": "« {{field}} » n’a pas de nom interne. Ouvrez Avancé sur cette question et ajoutez-en un.",
-        "crmSaveAppointment": "« {{field}} » réserve un rendez-vous, mais ce formulaire n’enregistre pas les réponses. Supprimez la question ou activez « Enregistrer les réponses comme demandes »."
+        "crmSaveAppointment": "« {{field}} » réserve un rendez-vous, mais ce formulaire n’enregistre pas les réponses. Supprimez la question ou activez « Enregistrer les réponses comme demandes ».",
+        "serviceMissingCalendar": "« {{field}} » a une prestation sans calendrier. Sélectionnez la question et choisissez un calendrier pour chaque prestation.",
+        "serviceDuplicateCalendar": "« {{field}} » a deux prestations qui réservent dans le même calendrier. Donnez à chaque prestation son propre calendrier."
       },
       "otherLocales": "{{count}} autre(s) point(s) à corriger en :",
       "keyMissing": "Une question n’a pas de nom interne. Ouvrez Avancé sur cette question et ajoutez-en un.",
@@ -6552,7 +6577,9 @@
       "needsProductField": "Il n’y a pas de question produit : les visiteurs ne voient pas ce qu’ils achètent. Ajoutez-en une via « Ajouter une question ».",
       "duplicateProductField": "Un formulaire ne peut avoir qu’une question produit. Supprimez celle en trop.",
       "productFieldOnStandardForm": "Une question produit ne fonctionne que sur un formulaire avec paiement. Supprimez-la ici.",
-      "crmSaveAppointment": "Une question de rendez-vous a besoin de réponses enregistrées. Supprimez-la ou activez « Enregistrer les réponses comme demandes »."
+      "crmSaveAppointment": "Une question de rendez-vous a besoin de réponses enregistrées. Supprimez-la ou activez « Enregistrer les réponses comme demandes ».",
+      "serviceMissingCalendar": "Une question de rendez-vous a une prestation sans calendrier. Sélectionnez-la et choisissez un calendrier pour chaque prestation.",
+      "serviceDuplicateCalendar": "Une question de rendez-vous a deux prestations qui réservent dans le même calendrier. Donnez à chaque prestation son propre calendrier."
     },
     "public": {
       "notAvailable": "Ce formulaire n'est pas disponible",
@@ -11940,6 +11967,38 @@
       "bannerTitle": "Créez votre calendrier pour prendre des rendez-vous",
       "bannerBody": "Un nom, votre fuseau horaire et vos horaires — ensuite formulaires, chat et équipe peuvent réserver.",
       "start": "Créer le calendrier"
+    },
+    "bookingPage": {
+      "create": "Créer une page de réservation",
+      "title": "Une page où vos clients réservent",
+      "intro": "Choisissez ce que l’on peut réserver. Vous recevez un lien à envoyer par e-mail, WhatsApp ou SMS.",
+      "pickCalendars": "Que peut-on réserver ?",
+      "pickHint": "S’il y en a plusieurs, les clients choisissent d’abord ce qu’ils souhaitent.",
+      "needCalendar": "Choisissez au moins un agenda.",
+      "noCalendars": "Créez d’abord un agenda. Vous pourrez ensuite créer ici sa page de réservation.",
+      "nameLabel": "Nom de la page",
+      "nameHint": "Les demandes venant de cette page affichent ce nom comme provenance.",
+      "namePlaceholder": "p. ex. Prendre rendez-vous",
+      "defaultName": "Prendre rendez-vous",
+      "language": "Langue de la page",
+      "languageHint": "Vous pourrez ajouter d’autres langues plus tard.",
+      "createButton": "Créer la page",
+      "creating": "Création…",
+      "readyTitle": "Votre page de réservation est en ligne",
+      "readyBody": "Envoyez ce lien à vos clients. Chaque réservation arrive comme une demande avec son rendez-vous.",
+      "draftTitle": "La page est créée, mais pas encore en ligne",
+      "draftBody": "Il manque encore quelque chose. Ouvrez-la pour voir quoi, puis mettez-la en ligne.",
+      "copyLink": "Copier le lien",
+      "copied": "Lien copié",
+      "open": "Ouvrir la page",
+      "edit": "Modifier les questions, les textes ou l’apparence",
+      "done": "Terminé",
+      "failed": "La page n’a pas pu être créée. Réessayez dans un instant.",
+      "listTitle": "Pages de réservation",
+      "listHint": "Pages et formulaires qui permettent de réserver dans cet agenda.",
+      "listEmpty": "Aucune page ne réserve encore dans cet agenda.",
+      "notLive": "Hors ligne",
+      "calendarOff": "Désactivé : ses horaires ne sont pas proposés."
     }
   },
   "calendarView": {

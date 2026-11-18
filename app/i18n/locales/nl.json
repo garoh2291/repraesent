@@ -6362,7 +6362,30 @@
         "hostSearch": "Leden zoeken…",
         "hostEmpty": "Geen leden gevonden.",
         "alreadyAHost": "al gastheer",
-        "hostAlwaysBusy": "altijd bezet"
+        "hostAlwaysBusy": "altijd bezet",
+        "display": {
+          "label": "Hoe bezoekers een tijd kiezen",
+          "strip": "Dagenstrook",
+          "stripHint": "Een week met dagen, daaronder de tijden. Compact, past ook op smalle plekken.",
+          "month": "Maandkalender",
+          "monthHint": "Een hele maand naast de lijst met tijden. Bezoekers kunnen de tijdzone wisselen.",
+          "list": "Eerstvolgende vrije tijden",
+          "listHint": "De eerstvolgende tijden als korte lijst. Niets om door te bladeren."
+        },
+        "services": {
+          "toggle": "Bezoekers kiezen een dienst",
+          "toggleHint": "Elke dienst heeft een eigen naam en een eigen agenda, bijvoorbeeld een bezoek aan de showroom en een telefoongesprek.",
+          "item": "Dienst {{n}}",
+          "name": "Naam",
+          "namePlaceholder": "bijv. Bezoek aan de showroom",
+          "description": "Korte omschrijving (optioneel)",
+          "descriptionPlaceholder": "Wat er gebeurt, waar, hoe lang",
+          "add": "Dienst toevoegen",
+          "remove": "Deze dienst verwijderen",
+          "moveUp": "Omhoog",
+          "moveDown": "Omlaag",
+          "connectedHoursHint": "Gekoppelde agenda’s hebben geen eigen tijden. Deze instellingen gelden voor elke dienst die in een gekoppelde agenda boekt."
+        }
       },
       "stepTitle": "Titel van de stap",
       "stepDescription": "Beschrijving van de stap",
@@ -6532,7 +6555,9 @@
         "productFieldOnStandardForm": "‘{{field}}’ vraagt om een betaling, maar dit formulier kan geen betalingen ontvangen. Verwijder de vraag hier.",
         "commerceNoItems": "‘{{field}}’ bevat nog geen producten. Selecteer de vraag en voeg er minstens één toe.",
         "keyMissing": "‘{{field}}’ heeft geen interne naam. Open Geavanceerd bij die vraag en voeg er een toe.",
-        "crmSaveAppointment": "‘{{field}}’ boekt een afspraak, maar dit formulier slaat geen antwoorden op. Verwijder de vraag of zet ‘Antwoorden opslaan als aanvragen’ aan."
+        "crmSaveAppointment": "‘{{field}}’ boekt een afspraak, maar dit formulier slaat geen antwoorden op. Verwijder de vraag of zet ‘Antwoorden opslaan als aanvragen’ aan.",
+        "serviceMissingCalendar": "‘{{field}}’ heeft een dienst zonder agenda. Selecteer de vraag en kies voor elke dienst een agenda.",
+        "serviceDuplicateCalendar": "‘{{field}}’ heeft twee diensten die in dezelfde agenda boeken. Geef elke dienst een eigen agenda."
       },
       "otherLocales": "Nog {{count}} punt(en) op te lossen in:",
       "keyMissing": "Eén vraag heeft geen interne naam. Open Geavanceerd bij die vraag en voeg er een toe.",
@@ -6550,7 +6575,9 @@
       "needsProductField": "Er is geen productvraag, dus bezoekers zien niet wat ze kopen. Voeg er een toe via ‘Vraag toevoegen’.",
       "duplicateProductField": "Een formulier kan maar één productvraag hebben. Verwijder de extra vraag.",
       "productFieldOnStandardForm": "Een productvraag werkt alleen op een formulier met betaling. Verwijder haar hier.",
-      "crmSaveAppointment": "Een afspraakvraag heeft opgeslagen antwoorden nodig. Verwijder de vraag of zet ‘Antwoorden opslaan als aanvragen’ aan."
+      "crmSaveAppointment": "Een afspraakvraag heeft opgeslagen antwoorden nodig. Verwijder de vraag of zet ‘Antwoorden opslaan als aanvragen’ aan.",
+      "serviceMissingCalendar": "Een afspraakvraag heeft een dienst zonder agenda. Selecteer de vraag en kies voor elke dienst een agenda.",
+      "serviceDuplicateCalendar": "Een afspraakvraag heeft twee diensten die in dezelfde agenda boeken. Geef elke dienst een eigen agenda."
     },
     "public": {
       "notAvailable": "Dit formulier is niet beschikbaar",
@@ -11938,6 +11965,38 @@
       "bannerTitle": "Stel uw agenda in om afspraken aan te nemen",
       "bannerBody": "Een naam, uw tijdzone en openingstijden — daarna kunnen formulieren, chat en uw team boeken.",
       "start": "Agenda instellen"
+    },
+    "bookingPage": {
+      "create": "Boekingspagina maken",
+      "title": "Een pagina waarop je klanten boeken",
+      "intro": "Kies wat mensen kunnen boeken. Je krijgt een link die je per e-mail, WhatsApp of sms verstuurt.",
+      "pickCalendars": "Wat kunnen mensen boeken?",
+      "pickHint": "Bij meer dan één kiezen klanten eerst wat ze willen.",
+      "needCalendar": "Kies minstens één agenda.",
+      "noCalendars": "Maak eerst een agenda aan. Daarna kun je hier de boekingspagina maken.",
+      "nameLabel": "Naam van de pagina",
+      "nameHint": "Aanvragen via deze pagina tonen deze naam als herkomst.",
+      "namePlaceholder": "bijv. Afspraak maken",
+      "defaultName": "Afspraak maken",
+      "language": "Taal van de pagina",
+      "languageHint": "Je kunt later meer talen toevoegen.",
+      "createButton": "Pagina maken",
+      "creating": "Wordt gemaakt…",
+      "readyTitle": "Je boekingspagina staat online",
+      "readyBody": "Stuur deze link naar je klanten. Elke boeking komt binnen als aanvraag met de afspraak erbij.",
+      "draftTitle": "De pagina is gemaakt, maar staat nog niet online",
+      "draftBody": "Er ontbreekt nog iets. Open de pagina om te zien wat, en zet hem daarna online.",
+      "copyLink": "Link kopiëren",
+      "copied": "Link gekopieerd",
+      "open": "Pagina openen",
+      "edit": "Vragen, teksten of uiterlijk aanpassen",
+      "done": "Klaar",
+      "failed": "De pagina kon niet worden gemaakt. Probeer het zo opnieuw.",
+      "listTitle": "Boekingspagina’s",
+      "listHint": "Pagina’s en formulieren waarmee mensen in deze agenda kunnen boeken.",
+      "listEmpty": "Nog geen pagina boekt in deze agenda.",
+      "notLive": "Niet online",
+      "calendarOff": "Uitgeschakeld: de tijden worden niet aangeboden."
     }
   },
   "calendarView": {
