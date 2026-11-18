@@ -43,6 +43,12 @@ export function useNavModel() {
   const { data: wpSite } = useWorkspaceWpSite(!!currentWorkspace?.id && !isDoorboostBrandWs);
   const showWebsite = !!wpSite || isDemoWorkspace;
 
+  // Our hosted mail service: confirmation emails go out through it.
+  const hasEmailConfig =
+    currentWorkspace?.services?.some(
+      (s) => s.service_type === "email-config" || s.service_slug === "email-config",
+    ) ?? false;
+
   /** Settings groups with only the entries this person may open. */
   const settingsGroups = SETTINGS_GROUPS.map((group) => ({
     ...group,
@@ -53,7 +59,9 @@ export function useNavModel() {
           ? pilot.integrations || isDemoWorkspace
           : item.to === "/settings/onboarding" || item.to === "/settings/support"
               ? isRootAdmin
-              : true),
+              : item.to === "/settings/confirmation-emails"
+                ? hasEmailConfig
+                : true),
     ),
   })).filter((g) => g.items.length > 0);
 

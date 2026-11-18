@@ -95,7 +95,8 @@ export default [
         "routes/ai-assistants.$assistantId.tsx",
       ),
       route("lead-form", "routes/lead-form.tsx"),
-      route("email/confirmation", "routes/lead-form.fallback.tsx"),
+      // Moved to /settings/confirmation-emails; old links still work.
+      route("email/confirmation", "routes/email.confirmation-redirect.tsx"),
       route("lead-form/:leadId", "routes/lead-form.$leadId.tsx"),
       route("contacts", "routes/contacts.tsx"),
       // Bring in a contact file (CONTACT_IMPORT_PLAN.md): new, or reopen one.
@@ -126,6 +127,7 @@ export default [
       route("openai-ads", "routes/openai-ads.tsx"),
       route("openai-ads/new", "routes/openai-ads.new.tsx"),
       route("sync", "routes/sync.tsx"),
+      // Moved to /settings/email-accounts/setup; old links still work.
       route("email", "routes/email.tsx"),
       route("tasks", "routes/tasks.tsx"),
       route("website", "routes/wordpress.tsx"),
@@ -162,6 +164,9 @@ export default [
         route("team", "routes/settings.team.tsx"),
         route("team/inquiry-message", "routes/settings.team.inquiry-message.tsx"),
         route("email-accounts", "routes/settings.email-accounts.tsx"),
+        // "Set up in your email app" for one hosted mailbox (?account=<id>).
+        route("email-accounts/setup", "routes/settings.email-accounts.setup.tsx"),
+        route("confirmation-emails", "routes/lead-form.fallback.tsx"),
         route("integrations", "routes/settings.integrations.tsx"),
         route("openai-ads", "routes/settings.openai-ads.tsx"),
         route("ai", "routes/settings.ai.tsx"),

@@ -122,6 +122,13 @@ export function CommandPalette() {
     for (const it of SETTINGS_NAV) {
       if (it.to === "/settings/integrations" && !(pilot.integrations || isDemo)) continue;
       if ((it.to === "/settings/onboarding" || it.to === "/settings/support") && !isRootAdmin) continue;
+      if (
+        it.to === "/settings/confirmation-emails" &&
+        !currentWorkspace?.services?.some(
+          (sv) => sv.service_type === "email-config" || sv.service_slug === "email-config",
+        )
+      )
+        continue;
       out.push({
         id: `set-${it.to}`,
         label: t(it.labelKey),
@@ -142,7 +149,7 @@ export function CommandPalette() {
       to: "/billing",
     });
     return out;
-  }, [sections, pilot, isDemo, isRootAdmin, helpAvailable, t]);
+  }, [sections, pilot, isDemo, isRootAdmin, helpAvailable, currentWorkspace, t]);
 
   const { openCompose } = useComposeEmail();
   const canEdit = useCanEditLeads();

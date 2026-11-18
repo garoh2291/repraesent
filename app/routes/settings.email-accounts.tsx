@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { useLocation } from "react-router";
+import { Link, useLocation } from "react-router";
 import { useTranslation } from "react-i18next";
 import { useForm, type UseFormReturn } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -12,6 +12,7 @@ import {
   Copy,
   CornerDownRight,
   ExternalLink,
+  MonitorSmartphone,
   Eye,
   EyeOff,
   Mail,
@@ -37,6 +38,8 @@ import {
   DEFAULT_PORT,
   type EmailAccount,
   type SmtpConnectionSecurity,
+  emailSetupPath,
+  isSetupMailbox,
 } from "~/lib/api/email-accounts";
 import { MicrosoftIcon } from "~/components/icons/MicrosoftIcon";
 import { SignatureEditor } from "~/components/organism/signature-editor";
@@ -1087,6 +1090,7 @@ function AccountRow({
   // Admin-provisioned accounts are managed by Repraesent; a member disconnecting
   // one from here would be deleting something they cannot recreate.
   const isManaged = account.source === "admin";
+  const showSetup = isSetupMailbox(account);
 
   return (
     // Two rows on a phone (identity, then actions), one row from `sm`. When
@@ -1145,11 +1149,25 @@ function AccountRow({
         </div>
       </div>
 
-      {canEdit ? (
+      {canEdit || showSetup ? (
         // Full card width on mobile — indenting these to line up under the
         // address cost the ~44px that lets Reconnect, Make default and
         // Disconnect share one line instead of orphaning the bin icon.
         <div className="flex shrink-0 flex-wrap items-center gap-1.5">
+          {/* Server details + password for Outlook / Apple Mail / a phone.
+              Not behind canEdit: any member may need to add the mailbox to
+              their own email app. */}
+          {showSetup ? (
+            <Link
+              to={emailSetupPath(account.id)}
+              className="press inline-flex h-8 items-center gap-1.5 rounded-lg border border-border bg-background px-2.5 text-xs font-medium text-foreground transition-colors hover:bg-muted max-sm:h-11 max-sm:px-3 max-sm:text-sm"
+            >
+              <MonitorSmartphone className="h-3.5 w-3.5" aria-hidden />
+              {t("settings.emailAccounts.setupInApp")}
+            </Link>
+          ) : null}
+          {canEdit ? (
+            <>
           {/* A dead OAuth grant is only fixable by consenting again, so put
               that action on the row that is broken rather than making the user
               work out that "Connect with Google/Microsoft" is also the repair. */}
@@ -1218,6 +1236,8 @@ function AccountRow({
             >
               <Trash2 className="h-4 w-4" />
             </button>
+          ) : null}
+            </>
           ) : null}
         </div>
       ) : null}

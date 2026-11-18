@@ -1682,7 +1682,8 @@
         "medium": "Mittel",
         "small": "Klein",
         "xsmall": "Sehr klein"
-      }
+      },
+      "setupInApp": "Im E-Mail-Programm einrichten"
     },
     "integrations": {
       "metaTitle": "Verbundene Apps",
@@ -2528,7 +2529,8 @@
       "emailSummaries": "E-Mail-Zusammenfassungen",
       "teamChat": "Team-Chat-Meldungen",
       "dealStages": "Deal-Phasen",
-      "phoneAlerts": "Handy-Meldungen"
+      "phoneAlerts": "Handy-Meldungen",
+      "confirmationEmails": "Bestätigungs-E-Mails"
     },
     "phoneAlerts": {
       "metaTitle": "Handy-Meldungen",
@@ -2703,6 +2705,25 @@
         "more_other": "+ {{count}} weitere Angaben in der Anfrage",
         "saved": "Gespeichert. Die nächste Nachricht zur Anfrage zeigt deine Auswahl und alle weiteren Angaben."
       }
+    },
+    "emailSetup": {
+      "metaTitle": "Im E-Mail-Programm einrichten",
+      "metaDescription": "Was Outlook, Apple Mail oder Ihr Handy brauchen, um mit dieser Adresse zu senden und zu empfangen.",
+      "back": "E-Mail-Konten",
+      "signInTitle": "Adresse und Passwort",
+      "signInDesc": "Danach fragt Ihr E-Mail-Programm. Beides gilt fürs Empfangen und fürs Senden.",
+      "pickAddress": "Adresse zum Einrichten wählen",
+      "otherDesc": "Thunderbird, Apple Mail, Android, iPhone: Nutzen Sie die Serverangaben unten.",
+      "passwordFailed": "Das Passwort konnte nicht geladen werden. Laden Sie die Seite neu und versuchen Sie es noch einmal.",
+      "noMailbox": "Hier gibt es kein Postfach einzurichten",
+      "noMailboxDesc": "Das geht nur mit Postfächern, die wir für Sie betreiben. Google- und Microsoft-Konten laufen bereits in deren eigenen Apps. Sprechen Sie uns an, wenn Sie ein Postfach mit Ihrer eigenen Domain möchten.",
+      "loadFailed": "Ihre E-Mail-Konten konnten nicht geladen werden",
+      "loadFailedDesc": "Prüfen Sie Ihre Verbindung und laden Sie die Seite neu.",
+      "backToAccounts": "Zurück zu den E-Mail-Konten"
+    },
+    "confirmationEmails": {
+      "metaTitle": "Bestätigungs-E-Mails",
+      "metaDescription": "Die E-Mail, die Menschen automatisch bekommen, nachdem sie eines Ihrer Formulare ausgefüllt haben."
     }
   },
   "booking": {

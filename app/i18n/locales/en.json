@@ -1680,7 +1680,8 @@
         "medium": "Medium",
         "small": "Small",
         "xsmall": "Extra small"
-      }
+      },
+      "setupInApp": "Set up in your email app"
     },
     "integrations": {
       "metaTitle": "Connected apps",
@@ -2526,7 +2527,8 @@
       "emailSummaries": "Email summaries",
       "teamChat": "Team chat alerts",
       "dealStages": "Deal stages",
-      "phoneAlerts": "Phone alerts"
+      "phoneAlerts": "Phone alerts",
+      "confirmationEmails": "Confirmation emails"
     },
     "phoneAlerts": {
       "metaTitle": "Phone alerts",
@@ -2701,6 +2703,25 @@
         "more_other": "+ {{count}} more details in the inquiry",
         "saved": "Saved. The next inquiry message shows your picks and all other details."
       }
+    },
+    "emailSetup": {
+      "metaTitle": "Set up in your email app",
+      "metaDescription": "What Outlook, Apple Mail or your phone need to send and receive with this address.",
+      "back": "Email accounts",
+      "signInTitle": "Address and password",
+      "signInDesc": "Your email app asks for these two. They work for receiving and for sending.",
+      "pickAddress": "Choose the address to set up",
+      "otherDesc": "Thunderbird, Apple Mail, Android, iPhone: use the server details below.",
+      "passwordFailed": "The password could not be loaded. Reload the page and try again.",
+      "noMailbox": "No mailbox to set up here",
+      "noMailboxDesc": "This only works for mailboxes we host for you. Google and Microsoft accounts already work in their own apps. Ask us if you want a mailbox on your own domain.",
+      "loadFailed": "Your email accounts could not be loaded",
+      "loadFailedDesc": "Check your connection and reload the page.",
+      "backToAccounts": "Back to email accounts"
+    },
+    "confirmationEmails": {
+      "metaTitle": "Confirmation emails",
+      "metaDescription": "The email people get automatically after they fill in one of your forms."
     }
   },
   "booking": {

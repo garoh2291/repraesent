@@ -228,3 +228,30 @@ export async function setEmailAccountSignature(
   );
   return res.data;
 }
+
+/**
+ * A mailbox hosted on our mail server: one the owner can add to Outlook, Apple
+ * Mail or a phone with the incoming/outgoing server details we hand out on
+ * Settings → Email accounts → "Set up in your email app".
+ *
+ * Google and Microsoft accounts have no such details (they send over the
+ * provider's API), and an SMTP relay connected without an incoming server has
+ * nothing to receive with — both would render an empty setup page.
+ */
+export function isSetupMailbox(account: {
+  provider: string;
+  imap_server: string | null;
+}): boolean {
+  return (
+    account.provider !== "google" &&
+    account.provider !== "microsoft" &&
+    !!account.imap_server?.trim()
+  );
+}
+
+/** The setup page for one mailbox (Settings → Email accounts). */
+export function emailSetupPath(accountId?: string | null): string {
+  return accountId
+    ? `/settings/email-accounts/setup?account=${encodeURIComponent(accountId)}`
+    : "/settings/email-accounts/setup";
+}

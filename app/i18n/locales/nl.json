@@ -1680,7 +1680,8 @@
         "medium": "Middel",
         "small": "Klein",
         "xsmall": "Extra klein"
-      }
+      },
+      "setupInApp": "Instellen in uw e-mailapp"
     },
     "integrations": {
       "metaTitle": "Gekoppelde apps",
@@ -2526,7 +2527,8 @@
       "emailSummaries": "E-mailsamenvattingen",
       "teamChat": "Teamchatmeldingen",
       "dealStages": "Dealfasen",
-      "phoneAlerts": "Telefoonmeldingen"
+      "phoneAlerts": "Telefoonmeldingen",
+      "confirmationEmails": "Bevestigingsmails"
     },
     "phoneAlerts": {
       "metaTitle": "Telefoonmeldingen",
@@ -2701,6 +2703,25 @@
         "more_other": "+ {{count}} andere gegevens in de aanvraag",
         "saved": "Opgeslagen. Het volgende aanvraagbericht toont je keuze en alle overige gegevens."
       }
+    },
+    "emailSetup": {
+      "metaTitle": "Instellen in uw e-mailapp",
+      "metaDescription": "Wat Outlook, Apple Mail of uw telefoon nodig hebben om met dit adres te versturen en te ontvangen.",
+      "back": "E-mailaccounts",
+      "signInTitle": "Adres en wachtwoord",
+      "signInDesc": "Uw e-mailapp vraagt om deze twee. Ze werken voor ontvangen en voor versturen.",
+      "pickAddress": "Kies het adres om in te stellen",
+      "otherDesc": "Thunderbird, Apple Mail, Android, iPhone: gebruik de servergegevens hieronder.",
+      "passwordFailed": "Het wachtwoord kon niet worden geladen. Laad de pagina opnieuw en probeer het nog eens.",
+      "noMailbox": "Hier is geen mailbox om in te stellen",
+      "noMailboxDesc": "Dit werkt alleen voor mailboxen die wij voor u hosten. Google- en Microsoft-accounts werken al in hun eigen apps. Neem contact met ons op als u een mailbox op uw eigen domein wilt.",
+      "loadFailed": "Uw e-mailaccounts konden niet worden geladen",
+      "loadFailedDesc": "Controleer uw verbinding en laad de pagina opnieuw.",
+      "backToAccounts": "Terug naar e-mailaccounts"
+    },
+    "confirmationEmails": {
+      "metaTitle": "Bevestigingsmails",
+      "metaDescription": "De e-mail die mensen automatisch krijgen nadat ze een van uw formulieren hebben ingevuld."
     }
   },
   "booking": {

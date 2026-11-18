@@ -1682,7 +1682,8 @@
         "medium": "Moyenne",
         "small": "Petite",
         "xsmall": "Très petite"
-      }
+      },
+      "setupInApp": "Configurer dans votre messagerie"
     },
     "integrations": {
       "metaTitle": "Applis connectées",
@@ -2528,7 +2529,8 @@
       "emailSummaries": "Résumés par e-mail",
       "teamChat": "Alertes chat d'équipe",
       "dealStages": "Étapes des affaires",
-      "phoneAlerts": "Alertes sur le téléphone"
+      "phoneAlerts": "Alertes sur le téléphone",
+      "confirmationEmails": "E-mails de confirmation"
     },
     "phoneAlerts": {
       "metaTitle": "Alertes sur le téléphone",
@@ -2703,6 +2705,25 @@
         "more_other": "+ {{count}} autres informations dans la demande",
         "saved": "Enregistré. Le prochain message de demande affichera votre sélection et toutes les autres informations."
       }
+    },
+    "emailSetup": {
+      "metaTitle": "Configurer dans votre messagerie",
+      "metaDescription": "Ce dont Outlook, Apple Mail ou votre téléphone ont besoin pour envoyer et recevoir avec cette adresse.",
+      "back": "Comptes e-mail",
+      "signInTitle": "Adresse et mot de passe",
+      "signInDesc": "Votre messagerie vous demande ces deux éléments. Ils servent à recevoir et à envoyer.",
+      "pickAddress": "Choisir l’adresse à configurer",
+      "otherDesc": "Thunderbird, Apple Mail, Android, iPhone : utilisez les informations de serveur ci-dessous.",
+      "passwordFailed": "Le mot de passe n’a pas pu être chargé. Rechargez la page et réessayez.",
+      "noMailbox": "Aucune boîte mail à configurer ici",
+      "noMailboxDesc": "Cela ne fonctionne que pour les boîtes mail que nous hébergeons pour vous. Les comptes Google et Microsoft fonctionnent déjà dans leurs propres applications. Contactez-nous si vous souhaitez une boîte mail à votre nom de domaine.",
+      "loadFailed": "Vos comptes e-mail n’ont pas pu être chargés",
+      "loadFailedDesc": "Vérifiez votre connexion et rechargez la page.",
+      "backToAccounts": "Retour aux comptes e-mail"
+    },
+    "confirmationEmails": {
+      "metaTitle": "E-mails de confirmation",
+      "metaDescription": "L’e-mail que les gens reçoivent automatiquement après avoir rempli l’un de vos formulaires."
     }
   },
   "booking": {
