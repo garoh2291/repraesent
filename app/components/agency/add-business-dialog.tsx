@@ -260,7 +260,7 @@ export function AddBusinessDialog({ open, onOpenChange }: { open: boolean; onOpe
                 <div className="grid gap-4 sm:grid-cols-2">
                   {/* Not a <label>: on a phone the list opens inside it, and a label would
                       forward every tap on a row to the button and close it again. */}
-                  <div className="space-y-1.5" role="group" aria-labelledby="ab-industry">
+                  <div className="min-w-0 space-y-1.5" role="group" aria-labelledby="ab-industry">
                     <span id="ab-industry" className="block text-sm font-medium text-foreground">{t("agency.add.fields.industry")}</span>
                     <BusinessTypePicker
                       value={d.industry}
@@ -313,7 +313,7 @@ export function AddBusinessDialog({ open, onOpenChange }: { open: boolean; onOpe
                 </div>
                 <div className="grid gap-4 sm:grid-cols-2">
                   {/* Not a <label>: on a phone the list opens inside it (see the type picker). */}
-                  <div className="space-y-1.5" role="group" aria-labelledby="ab-country">
+                  <div className="min-w-0 space-y-1.5" role="group" aria-labelledby="ab-country">
                     <span id="ab-country" className="block text-sm font-medium text-foreground">{t("agency.add.fields.country")}</span>
                     <CountryPicker value={d.country} onChange={(c) => set("country", c)} label={t("agency.add.fields.country")} />
                   </div>
