@@ -10,6 +10,7 @@
  */
 
 import {
+  APPOINTMENT_CONTENT_KEYS,
   COMMERCE_CONTENT_KEYS,
   FORM_RUNTIME_CONTENT,
   STEP_CONTENT_KEYS,
@@ -172,6 +173,19 @@ export function collectContentKeys(
     keys.push(...fieldContentKeys(field));
   }
 
+  // The time picker's own words ("Available times", "Change", the three
+  // errors only it raises). They have shipped defaults in every language, and
+  // are listed here so they can be reworded and are translated with the rest.
+  if (flattenFields(definition).some((f) => f.type === "appointment")) {
+    for (const key of APPOINTMENT_CONTENT_KEYS) {
+      keys.push({
+        key,
+        label: key.replace(/^(appointment|error)\./, ""),
+        group: "Appointment",
+      });
+    }
+  }
+
   keys.push(
     {
       key: contentKey.successInline(),
@@ -292,6 +306,22 @@ function fieldContentKeys(field: FormField): ContentKeyDescriptor[] {
         group,
       });
     }
+  }
+
+  if (field.type === "appointment") {
+    (field.appointment?.services ?? []).forEach((service, index) => {
+      keys.push({
+        key: contentKey.fieldServiceName(field.id, service.id),
+        label: `${field.key} · service ${index + 1}`,
+        group,
+      });
+      keys.push({
+        key: contentKey.fieldServiceDescription(field.id, service.id),
+        label: `${field.key} · service ${index + 1} · description`,
+        group,
+        multiline: true,
+      });
+    });
   }
 
   if (field.type === "address") {

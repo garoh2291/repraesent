@@ -8,10 +8,14 @@
  * VISITOR's language — see the header of FormRenderer.
  */
 
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useParams, useSearchParams } from "react-router";
+import {
+  APPOINTMENT_QUERY_ROOT,
+  AppointmentPicksContext,
+} from "~/components/forms/AppointmentControl";
 import { FormRenderer } from "~/components/forms/FormRenderer";
 import { PublicShell, navigateTop } from "~/components/forms/PublicShell";
 import i18n from "~/i18n";
@@ -73,6 +77,22 @@ export default function PublicFormRoute() {
   const [locale, setLocale] = useState<FormLocale | null>(null);
   const [values, setValues] = useState<Record<string, unknown>>({});
   const [errors, setErrors] = useState<Record<string, FormErrorCode>>({});
+  // Appointment fields that offer services: the picked service per field key.
+  const [servicePicks, setServicePicks] = useState<Record<string, string>>({});
+  const queryClient = useQueryClient();
+  const appointmentPicks = useMemo(
+    () => ({
+      picks: servicePicks,
+      setPick: (fieldKey: string, serviceId: string | null) =>
+        setServicePicks((prev) => {
+          const next = { ...prev };
+          if (serviceId) next[fieldKey] = serviceId;
+          else delete next[fieldKey];
+          return next;
+        }),
+    }),
+    [servicePicks],
+  );
   const [status, setStatus] = useState<{
     text: string;
     tone: "ok" | "bad";
@@ -197,12 +217,38 @@ export default function PublicFormRoute() {
         ...(definition?.commerce
           ? { quantities, selection: [...selection] }
           : {}),
+        ...(Object.keys(servicePicks).length > 0
+          ? { services: servicePicks }
+          : {}),
       }),
     onSuccess: (result) => {
       if (!result.success) {
         // The server re-validated and disagreed with the client mirror.
         const found = result.errors ?? {};
         setErrors(found);
+        // The time was just taken, or the service is gone: what the visitor is
+        // looking at is stale. Clear the pick and ask the calendars again, so
+        // "choose another" is one tap (the embed runtime does the same).
+        const stale = Object.entries(found).filter(
+          ([, code]) => code === "slot_unavailable" || code === "service_invalid",
+        );
+        if (stale.length > 0) {
+          setValues((prev) => {
+            const next = { ...prev };
+            for (const [key] of stale) next[key] = "";
+            return next;
+          });
+          setServicePicks((prev) => {
+            const next = { ...prev };
+            for (const [key, code] of stale) {
+              if (code === "service_invalid") delete next[key];
+            }
+            return next;
+          });
+          void queryClient.invalidateQueries({
+            queryKey: [APPOINTMENT_QUERY_ROOT],
+          });
+        }
         // A form-level code owns no field; it goes in the status line.
         if (typeof found._form === "string") {
           setStatus({
@@ -243,12 +289,14 @@ export default function PublicFormRoute() {
       if (result.mode === "modal") {
         setModalOpen(true);
         if (definition) setValues(emptyValues(definition));
+        setServicePicks({});
         return;
       }
 
       setStatus({ text: tContent(contentKey.successInline()), tone: "ok" });
       if (definition?.success.resetAfterSubmit) {
         setValues(emptyValues(definition));
+        setServicePicks({});
         goToStep(0);
       }
     },
@@ -343,92 +391,94 @@ export default function PublicFormRoute() {
   return (
     <PublicShell embed={isEmbed} theme={definition.theme}>
       <div ref={wrapperRef} className="w-full">
-        <FormRenderer
-          definition={definition}
-          locale={locale}
-          fallbackLocale={data.default_locale}
-          mode="live"
-          idPrefix={data.id}
-          formId={data.id}
-          values={values}
-          errors={errors}
-          onChange={(key, value) => {
-            setValues((prev) => ({ ...prev, [key]: value }));
-            setErrors((prev) => {
-              if (!prev[key]) return prev;
-              const next = { ...prev };
-              delete next[key];
-              return next;
-            });
-          }}
-          onSubmit={handleSubmit}
-          submitting={submitMutation.isPending}
-          status={status}
-          step={isMultiStep(definition) ? step : undefined}
-          stepDirection={stepDirection}
-          onNext={handleNext}
-          onBack={handleBack}
-          onStepChange={goToStep}
-          quantities={quantities}
-          onQuantityChange={(priceId, quantity) =>
-            setQuantities((prev) => ({ ...prev, [priceId]: quantity }))
-          }
-          productSelection={selection}
-          onProductSelectionChange={(priceId, on) => {
-            setSelection((prev) => {
-              const next = new Set(prev);
+        <AppointmentPicksContext.Provider value={appointmentPicks}>
+          <FormRenderer
+            definition={definition}
+            locale={locale}
+            fallbackLocale={data.default_locale}
+            mode="live"
+            idPrefix={data.id}
+            formId={data.id}
+            values={values}
+            errors={errors}
+            onChange={(key, value) => {
+              setValues((prev) => ({ ...prev, [key]: value }));
+              setErrors((prev) => {
+                if (!prev[key]) return prev;
+                const next = { ...prev };
+                delete next[key];
+                return next;
+              });
+            }}
+            onSubmit={handleSubmit}
+            submitting={submitMutation.isPending}
+            status={status}
+            step={isMultiStep(definition) ? step : undefined}
+            stepDirection={stepDirection}
+            onNext={handleNext}
+            onBack={handleBack}
+            onStepChange={goToStep}
+            quantities={quantities}
+            onQuantityChange={(priceId, quantity) =>
+              setQuantities((prev) => ({ ...prev, [priceId]: quantity }))
+            }
+            productSelection={selection}
+            onProductSelectionChange={(priceId, on) => {
+              setSelection((prev) => {
+                const next = new Set(prev);
 
-              if (on) next.add(priceId);
-              else next.delete(priceId);
+                if (on) next.add(priceId);
+                else next.delete(priceId);
 
-              return next;
-            });
+                return next;
+              });
 
-            // Ticking something clears the "choose a product" error.
+              // Ticking something clears the "choose a product" error.
 
-            setErrors((prev) => {
-              const product = definition.sections
+              setErrors((prev) => {
+                const product = definition.sections
 
-                .flatMap((s) => s.fields)
+                  .flatMap((s) => s.fields)
 
-                .find((f) => f.type === "product");
+                  .find((f) => f.type === "product");
 
-              if (!product || !prev[product.key]) return prev;
+                if (!product || !prev[product.key]) return prev;
 
-              const next = { ...prev };
+                const next = { ...prev };
 
-              delete next[product.key];
+                delete next[product.key];
 
-              return next;
-            });
-          }}
-          notice={
-            canceled && !noticeDismissed
-              ? {
-                  text: tContent(contentKey.checkout("canceled")),
-                  dismissLabel: tContent(
-                    contentKey.checkout("canceled.dismiss"),
-                  ),
-                  onDismiss: () => {
-                    setNoticeDismissed(true);
-                    setSearchParams(
-                      (prev) => {
-                        const next = new URLSearchParams(prev);
-                        next.delete("canceled");
-                        return next;
-                      },
-                      { replace: true },
-                    );
-                  },
-                }
-              : null
-          }
-          offeredLocales={data.locales}
-          onLocaleChange={(next) => {
-            setLocale(next);
-            setStatus(null);
-          }}
-        />
+                return next;
+              });
+            }}
+            notice={
+              canceled && !noticeDismissed
+                ? {
+                    text: tContent(contentKey.checkout("canceled")),
+                    dismissLabel: tContent(
+                      contentKey.checkout("canceled.dismiss"),
+                    ),
+                    onDismiss: () => {
+                      setNoticeDismissed(true);
+                      setSearchParams(
+                        (prev) => {
+                          const next = new URLSearchParams(prev);
+                          next.delete("canceled");
+                          return next;
+                        },
+                        { replace: true },
+                      );
+                    },
+                  }
+                : null
+            }
+            offeredLocales={data.locales}
+            onLocaleChange={(next) => {
+              setLocale(next);
+              setStatus(null);
+            }}
+          />
+        </AppointmentPicksContext.Provider>
 
         {modalOpen ? (
           <SuccessModal

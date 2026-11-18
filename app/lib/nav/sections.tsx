@@ -500,6 +500,15 @@ export function useNavSections(): NavSection[] | null {
     if (!s.service_slug) continue;
     // Shown as the fixed "Website visitors" tab when there are stats.
     if (s.service_slug === "analytics" || s.service_type === "analytics") continue;
+    // "Set up in your email app" + confirmation emails are setup, not a daily
+    // job: they live under Settings (Email accounts, Confirmation emails).
+    if (
+      s.service_slug === "email" ||
+      s.service_type === "email" ||
+      s.service_type === "email-config"
+    ) {
+      continue;
+    }
     const to = `/${s.service_slug}`;
     const section = sectionForService(s.service_slug, s.service_type ?? "");
     // Appointments is already reachable through the Calendar / Booking page tab.
@@ -550,7 +559,6 @@ export function useNavSections(): NavSection[] | null {
         "/segments",
         "/email-templates",
         "/workflows",
-        "/email",
         ...customers.map((c) => c.to),
       ],
       tabs: customers,

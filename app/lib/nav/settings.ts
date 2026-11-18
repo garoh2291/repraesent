@@ -7,6 +7,7 @@ import {
   Kanban,
   MailCheck,
   Plug,
+  Reply,
   Rocket,
   Smartphone,
   Sparkles,
@@ -45,6 +46,13 @@ export const SETTINGS_NAV = [
     group: "connections",
   },
   { to: "/settings/bcc", labelKey: "settings.navLabels.emailCopies", Icon: Inbox, group: "connections" },
+  // Only for workspaces with our mail service (use-nav-model.ts).
+  {
+    to: "/settings/confirmation-emails",
+    labelKey: "settings.navLabels.confirmationEmails",
+    Icon: Reply,
+    group: "connections",
+  },
   {
     to: "/settings/integrations",
     labelKey: "settings.navLabels.connectedApps",

@@ -17,6 +17,7 @@ import type { WorkspaceMemberItem } from "~/components/organism/tasks/task-form-
 import { useCanEditLeads } from "~/lib/hooks/useCanEditLeads";
 import { ContactHero } from "~/components/organism/contact-detail/contact-hero";
 import { ContactInfoCard } from "~/components/organism/contact-detail/contact-info-card";
+import { ContactCustomFieldsCard } from "~/components/organism/contact-detail/contact-custom-fields-card";
 import { ContactDealsSection } from "~/components/organism/contact-deals-section";
 import { ContactCompanySection } from "~/components/organism/contact-company-section";
 import { PhotoStrip } from "~/components/notebook/photo-strip";
@@ -325,6 +326,17 @@ export default function ContactDetailPage() {
             onInvalidate={invalidateContact}
           />
           </div>
+          {/* Extra details from imports or added by hand (contacts.metadata). */}
+          {resolvedContactId ? (
+            <div className="max-lg:order-3">
+              <ContactCustomFieldsCard
+                contactId={resolvedContactId}
+                metadata={(contact as { metadata?: unknown } | null | undefined)?.metadata}
+                canEdit={canEdit}
+                onInvalidate={invalidateContact}
+              />
+            </div>
+          ) : null}
           {/* Team-only photos, right after the info card. */}
           {resolvedContactId ? (
             <div className="max-lg:order-4">

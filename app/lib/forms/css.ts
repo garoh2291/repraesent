@@ -566,6 +566,410 @@ ${s} .rf-appt-host-nm {
   color: var(--rf-text);
 }
 
+/* ── Appointment: services, month calendar, next free times ──────────────────
+   Everything below is added by the runtime only when a field asks for it
+   (services, or a display other than the day strip), so a form that predates
+   them keeps the markup and the look above, untouched.
+
+   The month view reads like the page of a wall calendar: a quiet grid, ink on
+   the day you picked, and a small dot under every day that still has a time,
+   so a visitor sees at a glance where to tap instead of trying days one by
+   one. No media query: the two columns wrap on the field's OWN width, because
+   the same form sits in a 360px sidebar embed and on a full-width page. */
+
+/* While a service is being chosen, the picker is not shown at all. */
+${s} .rf-appt[data-rf-step="service"] > :not(.rf-appt-svcs) { display: none; }
+${s} .rf-appt[data-rf-view] > .rf-appt-nav,
+${s} .rf-appt[data-rf-view] > .rf-appt-slots { display: none; }
+
+${s} .rf-appt-svcs { display: flex; flex-direction: column; gap: 10px; }
+${s} .rf-appt-svcs:empty, ${s} .rf-appt-chip:empty { display: none; }
+${s} .rf-appt-svcs-ttl {
+  font-size: calc(${d.font} * 0.92);
+  color: var(--rf-muted);
+}
+${s} .rf-appt-svc {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: 100%;
+  min-height: 56px;
+  padding: 14px 16px;
+  font: inherit;
+  font-size: ${d.font};
+  text-align: left;
+  color: var(--rf-text);
+  background: var(--rf-surface);
+  border: 1px solid var(--rf-border);
+  border-radius: ${radius};
+  cursor: pointer;
+  transition: border-color .12s ease, box-shadow .12s ease, transform .12s ease;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+${s} .rf-appt-svc:active { transform: scale(.99); }
+${s} .rf-appt-svc:focus-visible,
+${s} .rf-appt-cal-day:focus-visible,
+${s} .rf-appt-time:focus-visible,
+${s} .rf-appt-chip-btn:focus-visible,
+${s} .rf-appt-more:focus-visible,
+${s} .rf-appt-cal-prev:focus-visible,
+${s} .rf-appt-cal-next:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px var(--rf-accent-ring);
+  border-color: var(--rf-accent);
+}
+${s} .rf-appt-svc-hd {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+${s} .rf-appt-svc-nm { font-weight: 600; line-height: 1.3; min-width: 0; overflow-wrap: anywhere; }
+${s} .rf-appt-svc-dur, ${s} .rf-appt-chip-dur {
+  flex: none;
+  padding: 3px 8px;
+  font-size: calc(${d.font} * 0.82);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  color: var(--rf-text);
+  background: var(--rf-accent-soft);
+  /* The form's own corner, capped: a full pill was the one shape here that
+     matched nothing around it. */
+  border-radius: min(${radius}, 6px);
+}
+${s} .rf-appt-svc-ds {
+  font-size: calc(${d.font} * 0.92);
+  line-height: 1.45;
+  color: var(--rf-muted);
+  overflow-wrap: anywhere;
+}
+${s} .rf-appt-svc-ds:empty { display: none; }
+
+/* The chosen service, with the way back. */
+${s} .rf-appt-chip {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 8px 8px 8px 14px;
+  font-size: calc(${d.font} * 0.94);
+  background: var(--rf-surface);
+  border: 1px solid var(--rf-border);
+  border-radius: ${radius};
+}
+${s} .rf-appt-chip-nm { flex: 1 1 auto; min-width: 0; font-weight: 600; overflow-wrap: anywhere; }
+${s} .rf-appt-chip-btn, ${s} .rf-appt-more {
+  flex: none;
+  min-height: 36px;
+  padding: 6px 12px;
+  font: inherit;
+  font-size: calc(${d.font} * 0.9);
+  color: var(--rf-text);
+  background: transparent;
+  border: 1px solid var(--rf-border);
+  border-radius: ${radius};
+  cursor: pointer;
+  transition: border-color .12s ease, box-shadow .12s ease;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+${s} .rf-appt-more { align-self: flex-start; min-height: 44px; padding: 8px 16px; }
+
+${s} .rf-appt-lbl {
+  display: block;
+  margin: 0 0 6px;
+  font-size: calc(${d.font} * 0.72);
+  font-weight: 600;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: var(--rf-muted);
+}
+
+/* Month view — two cards, three rows.
+   The calendar and the times are one object, so they share a top edge, a
+   bottom edge, and every row in between:
+
+     row 1  44px   ‹ November 2026 ›        |  time zone
+     row 2  28px   MON TUE WED …            |  AVAILABLE TIMES
+     row 3  fills  six weeks, always six    |  the times, scrolling
+
+   The calendar sets the height (six weeks every month, so paging never makes
+   the page jump) and the time list fills whatever that is — it has no height
+   of its own. Type is three levels and no more: title (600), caption (small
+   caps, muted), value (500, tabular).
+
+   Narrow is decided by the picker's OWN width, with a container query: the
+   same form sits in a 360px sidebar on a wide screen and full-width on a
+   phone. Stacked, the times become a grid of chips with no scroller inside
+   the page's scroll — a list you have to scroll within a page you are
+   already scrolling is a trap under a thumb. */
+${s} .rf-appt-month {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  align-items: stretch;
+  container-type: inline-size;
+}
+${s} .rf-appt-cal, ${s} .rf-appt-side {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  padding: 12px;
+  background: var(--rf-surface);
+  border: 1px solid var(--rf-border);
+  border-radius: ${radius};
+}
+${s} .rf-appt-cal { flex: 1 1 280px; }
+${s} .rf-appt-side { flex: 1 1 240px; }
+
+/* Row 1 */
+${s} .rf-appt-cal-hd, ${s} .rf-appt-tzwrap {
+  flex: none;
+  display: flex;
+  align-items: center;
+  height: 44px;
+  margin-bottom: 4px;
+}
+${s} .rf-appt-cal-hd { justify-content: space-between; gap: 8px; }
+${s} .rf-appt-tzwrap { position: relative; }
+${s} .rf-appt-tzwrap[hidden] { display: none; }
+/* The globe and the value say "time zone"; the label stays for screen readers. */
+${s} .rf-appt-tzwrap > .rf-appt-lbl {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+${s} .rf-appt-cal-ttl, ${s} .rf-appt-tz {
+  font-size: ${d.font};
+  font-weight: 600;
+  line-height: 1.2;
+  color: var(--rf-text);
+}
+${s} .rf-appt-cal-ttl { text-transform: capitalize; }
+${s} .rf-appt-tz {
+  width: 100%;
+  height: 44px;
+  padding: 0 30px 0 34px;
+  border-color: transparent;
+  background-color: transparent;
+  box-shadow: none;
+  background-image:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 16 16' fill='none' stroke='%23888' stroke-width='1.3' stroke-linecap='round'%3E%3Ccircle cx='8' cy='8' r='6.2'/%3E%3Cpath d='M1.8 8h12.4M8 1.8c1.9 1.7 2.8 3.8 2.8 6.2S9.9 12.5 8 14.2C6.1 12.5 5.2 10.4 5.2 8S6.1 3.5 8 1.8z'/%3E%3C/svg%3E"),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8' fill='none'%3E%3Cpath d='M1 1.5L6 6.5L11 1.5' stroke='%23888' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat, no-repeat;
+  background-position: left 10px center, right 10px center;
+  text-overflow: ellipsis;
+  cursor: pointer;
+}
+${s} .rf-appt-cal-prev, ${s} .rf-appt-cal-next {
+  flex: none;
+  width: 44px;
+  height: 44px;
+  font: inherit;
+  font-size: calc(${d.font} * 1.3);
+  line-height: 1;
+  color: var(--rf-text);
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: ${radius};
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+  user-select: none;
+  -webkit-user-select: none;
+}
+${s} .rf-appt-cal-prev[disabled], ${s} .rf-appt-cal-next[disabled] { opacity: .3; cursor: not-allowed; }
+
+/* Row 2 — one caption style on both sides. */
+${s} .rf-appt-cal-wk, ${s} .rf-appt-cal-grid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 2px;
+}
+${s} .rf-appt-cal-wk, ${s} .rf-appt-timeswrap > .rf-appt-lbl {
+  flex: none;
+  height: 28px;
+  margin: 0 0 2px;
+  align-items: center;
+  font-size: calc(${d.font} * 0.72);
+  font-weight: 600;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: var(--rf-muted);
+}
+${s} .rf-appt-cal-wk { text-align: center; }
+${s} .rf-appt-cal-wk > span { overflow: hidden; }
+${s} .rf-appt-timeswrap > .rf-appt-lbl { display: flex; padding: 0 2px; }
+/* A whole day has no zone to pick: the caption takes the header's row, so the
+   card still starts and ends level with the calendar. */
+${s} .rf-appt-tzwrap[hidden] + .rf-appt-timeswrap > .rf-appt-lbl { height: 44px; margin-bottom: 4px; }
+
+/* Row 3 */
+${s} .rf-appt-cal-grid { flex: 1 1 auto; grid-auto-rows: minmax(44px, 1fr); }
+${s} .rf-appt-cal-day {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  padding: 0;
+  font: inherit;
+  font-size: calc(${d.font} * 0.94);
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+  color: var(--rf-text);
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: ${radius};
+  cursor: pointer;
+  transition: background-color .12s ease, color .12s ease, transform .1s ease;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+  user-select: none;
+  -webkit-user-select: none;
+}
+/* The dot: this day still has a time. */
+${s} .rf-appt-cal-day.rf-free::after {
+  content: "";
+  position: absolute;
+  bottom: 6px;
+  left: 50%;
+  width: 4px;
+  height: 4px;
+  margin-left: -2px;
+  border-radius: 50%;
+  background: var(--rf-accent);
+}
+${s} .rf-appt-cal-day[disabled] { font-weight: 400; color: var(--rf-muted); opacity: .45; cursor: default; }
+/* Today is a place, not an emphasis: a ring, at the weight of its neighbours. */
+${s} .rf-appt-cal-day.rf-today { box-shadow: inset 0 0 0 1px var(--rf-border); }
+${s} .rf-appt-cal-day.rf-today[disabled] { opacity: .7; }
+${s} .rf-appt-cal-day.rf-on {
+  background: var(--rf-accent);
+  color: var(--rf-accent-on);
+  font-weight: 600;
+  box-shadow: none;
+}
+${s} .rf-appt-cal-day.rf-on::after { background: var(--rf-accent-on); }
+${s} .rf-appt-cal-day:active:not([disabled]), ${s} .rf-appt-time:active { transform: scale(.97); }
+
+${s} .rf-appt-timeswrap {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+/* No height of its own beside the calendar (basis 0): it fills the card the
+   calendar stretched. The min-height is only what a browser without container
+   queries shows once the cards have wrapped. */
+${s} .rf-appt-times {
+  flex: 1 1 0;
+  min-height: 232px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-right: -4px;
+  padding-right: 4px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+}
+${s} .rf-appt-time {
+  flex: none;
+  width: 100%;
+  min-height: 44px;
+  padding: 8px 14px;
+  font: inherit;
+  font-size: calc(${d.font} * 0.94);
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+  text-align: left;
+  color: var(--rf-text);
+  background: var(--rf-bg);
+  border: 1px solid var(--rf-border);
+  border-radius: ${radius};
+  cursor: pointer;
+  transition: border-color .12s ease, background-color .12s ease, color .12s ease, transform .1s ease;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+  user-select: none;
+  -webkit-user-select: none;
+}
+${s} .rf-appt-time.rf-on {
+  background: var(--rf-accent);
+  border-color: var(--rf-accent);
+  color: var(--rf-accent-on);
+  font-weight: 600;
+}
+${s} .rf-appt-times .rf-appt-empty, ${s} .rf-appt-times .rf-appt-loading { padding: 10px 2px; }
+
+/* Stacked: the cards are full width and the times lay out as chips. */
+@container (max-width: 551px) {
+  ${s} .rf-appt-cal, ${s} .rf-appt-side { flex-basis: 100%; }
+  ${s} .rf-appt-times {
+    flex: none;
+    min-height: 0;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    margin-right: 0;
+    padding-right: 0;
+    overflow: visible;
+  }
+  ${s} .rf-appt-time { padding: 8px 4px; text-align: center; }
+}
+
+/* Next free times */
+/* .rf-appt-soon, not -next: that name is the day strip's forward arrow. */
+${s} .rf-appt-soon { display: flex; flex-direction: column; gap: 14px; }
+${s} .rf-appt-next-grp { display: flex; flex-direction: column; gap: 8px; }
+${s} .rf-appt-next-day { font-weight: 600; font-size: calc(${d.font} * 0.96); text-transform: capitalize; }
+${s} .rf-appt-next-times {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(92px, 1fr));
+  gap: 6px;
+}
+${s} .rf-appt-next-times .rf-appt-slot { min-height: 44px; font-variant-numeric: tabular-nums; }
+
+/* The time they picked, read back in full so nothing is left to guess. */
+${s} .rf-appt-picked {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 10px 14px;
+  background: var(--rf-accent-soft);
+  border-radius: ${radius};
+}
+${s} .rf-appt-picked:empty { display: none; }
+${s} .rf-appt-picked-lbl { font-size: calc(${d.font} * 0.78); color: var(--rf-muted); }
+${s} .rf-appt-picked-val { font-weight: 600; font-size: ${d.font}; }
+/* Only where there is a real pointer: on touch, :hover sticks to the last
+   thing tapped until something else is. */
+@media (hover: hover) and (pointer: fine) {
+  ${s} .rf-appt-svc:hover, ${s} .rf-appt-time:hover:not(.rf-on),
+  ${s} .rf-appt-chip-btn:hover, ${s} .rf-appt-more:hover { border-color: var(--rf-accent); }
+  ${s} .rf-appt-cal-day:hover:not([disabled]):not(.rf-on),
+  ${s} .rf-appt-cal-prev:hover:not([disabled]),
+  ${s} .rf-appt-cal-next:hover:not([disabled]),
+  ${s} .rf-appt-tz:hover { background-color: var(--rf-accent-soft); }
+}
+/* Fingers, not a mouse: every control is a full 44px target, and the time zone
+   select is 16px so iOS does not zoom the page when it opens. */
+@media (pointer: coarse) {
+  ${s} .rf-appt-chip-btn { min-height: 44px; padding: 8px 14px; }
+  ${s} .rf-appt-tz { font-size: 16px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  ${s} .rf-appt-svc, ${s} .rf-appt-cal-day, ${s} .rf-appt-time { transition: none; }
+  ${s} .rf-appt-svc:active, ${s} .rf-appt-cal-day:active:not([disabled]), ${s} .rf-appt-time:active { transform: none; }
+}
+
 /* Address */
 ${s} .rf-address { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
 ${s} .rf-address .rf-street { grid-column: 1 / -1; }

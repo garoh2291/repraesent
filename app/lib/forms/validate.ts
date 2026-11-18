@@ -232,6 +232,7 @@ export function emptyValues(
 // Tab attribution (keep both copies in step):
 //   build  — needsEmailField, needsNameField, duplicateKey, duplicateMapping,
 //            emptyOptions, appointmentMissingCalendar,
+//            serviceMissingCalendar, serviceDuplicateCalendar,
 //            missingContent (form.submit AND field labels)
 //   design — invalidRedirect
 //   build  — emptyStep (multi-step)
@@ -375,13 +376,45 @@ export function validateDefinition(
         hostKeys.length > 0 ||
         !!ap?.targetKey ||
         !!(ap?.accountId && ap?.calendarId);
-      if (!named) {
-        issues.push({
-          code: "appointmentMissingCalendar",
-          tab: "build",
-          fieldId: field.id,
-          fieldKey: field.key,
+      // With services, each service names its own calendar and the field-level
+      // target only mirrors the first one — so the services are what is
+      // checked, and a single clear issue is raised instead of two.
+      const services = ap?.services ?? [];
+      if (services.length === 0) {
+        if (!named) {
+          issues.push({
+            code: "appointmentMissingCalendar",
+            tab: "build",
+            fieldId: field.id,
+            fieldKey: field.key,
+          });
+        }
+      } else {
+        const serviceKeys = services.map((svc) => {
+          const first = (svc?.hosts ?? [])
+            .map((h) => (h?.targetKey ?? "").trim())
+            .find((k) => k.length > 0);
+          return first ?? (svc?.targetKey ?? "").trim();
         });
+        if (serviceKeys.some((k) => k.length === 0)) {
+          issues.push({
+            code: "serviceMissingCalendar",
+            tab: "build",
+            fieldId: field.id,
+            fieldKey: field.key,
+          });
+        }
+        // Two services on one calendar would offer the same times under two
+        // names, and the calendar could not tell the bookings apart.
+        const filled = serviceKeys.filter((k) => k.length > 0);
+        if (new Set(filled).size !== filled.length) {
+          issues.push({
+            code: "serviceDuplicateCalendar",
+            tab: "build",
+            fieldId: field.id,
+            fieldKey: field.key,
+          });
+        }
       }
     }
   }
@@ -518,6 +551,10 @@ export function validateDefinition(
     (f) => isPresentational(f.type) || f.type === "checkbox",
   );
 
+  const serviceFields = flattenFields(definition).filter(
+    (f) => f.type === "appointment" && (f.appointment?.services?.length ?? 0) > 1,
+  );
+
   for (const locale of checked) {
     const content = definition.content?.[locale] ?? {};
     const missing = (key: string) => {
@@ -547,6 +584,25 @@ export function validateDefinition(
           contentKey: key,
           locale,
         });
+      }
+    }
+
+    // A service card IS its name: with two or more to choose from, a blank one
+    // is an empty box the visitor is asked to pick. A lone service is never
+    // shown, so its name is not required.
+    for (const field of serviceFields) {
+      for (const svc of field.appointment?.services ?? []) {
+        const key = contentKey.fieldServiceName(field.id, svc.id);
+        if (missing(key)) {
+          issues.push({
+            code: "missingContent",
+            tab: "build",
+            fieldId: field.id,
+            fieldKey: field.key,
+            contentKey: key,
+            locale,
+          });
+        }
       }
     }
   }

@@ -40,16 +40,15 @@ import {
 } from "lucide-react";
 import { cn } from "~/lib/utils";
 import TooltipContainer from "~/components/tooltip-container";
-import { EmailTabs } from "~/components/email-tabs";
 import i18n from "~/i18n";
 import { useDocumentMeta } from "~/lib/hooks/use-document-meta";
 
 export function meta() {
   return [
-    { title: i18n.t("leadFallback.metaTitle") + " — Repraesent" },
+    { title: i18n.t("settings.confirmationEmails.metaTitle") + " - Repraesent" },
     {
       name: "description",
-      content: i18n.t("leadFallback.metaDescription"),
+      content: i18n.t("settings.confirmationEmails.metaDescription"),
     },
   ];
 }
@@ -587,9 +586,9 @@ function AddFormInline({
 export default function LeadFallbackPage() {
   const { t } = useTranslation();
   useDocumentMeta({
-    titleKey: "leadFallback.metaTitle",
-    descriptionKey: "leadFallback.metaDescription",
-    titleSuffix: " — Repraesent",
+    titleKey: "settings.confirmationEmails.metaTitle",
+    descriptionKey: "settings.confirmationEmails.metaDescription",
+    titleSuffix: " - Repraesent",
   });
   const { currentWorkspace } = useAuthContext();
   const navigate = useNavigate();
@@ -619,7 +618,7 @@ export default function LeadFallbackPage() {
 
   useEffect(() => {
     if (currentWorkspace && !hasEmailConfig) {
-      navigate("/email", { replace: true });
+      navigate("/settings/email-accounts", { replace: true });
     }
   }, [currentWorkspace, hasEmailConfig, navigate]);
 
@@ -841,28 +840,8 @@ export default function LeadFallbackPage() {
   if (!currentWorkspace) return null;
 
   return (
-    <div className="app-fade-in flex flex-col min-h-[calc(100vh-8rem)] p-4 sm:p-6 gap-0">
-      {/* ── Page header ── */}
-      <div className="shrink-0 pb-5">
-        <div className="app-fade-up flex items-start justify-between gap-4 pb-4">
-          <div className="flex items-center gap-3">
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-amber-400/10">
-              <Mail className="h-5 w-5 text-amber-400" />
-            </div>
-            <div>
-              <h1 className="title-display text-[26px] font-semibold text-foreground sm:text-[30px]">
-                {t("email.tabConfirmation")}
-              </h1>
-              <p className="text-sm text-muted-foreground mt-0.5">
-                {t("leadFallback.subtitle")}
-              </p>
-            </div>
-          </div>
-        </div>
-        <EmailTabs />
-      </div>
-
-      <div className="h-1 shrink-0" />
+    // Inside Settings now: the layout gives the heading and the padding.
+    <div className="flex flex-col gap-0">
 
       {isLoading ? (
         <div className="flex flex-1 items-center justify-center">

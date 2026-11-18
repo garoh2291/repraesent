@@ -56,6 +56,11 @@ export interface LeadAppointment {
   failReason: "taken" | "past" | null;
   /** Metadata keys this appointment accounts for — hidden from "Additional info". */
   claimedKeys: string[];
+  /**
+   * What was booked, when the form let the visitor choose ("Showroom visit").
+   * Null for a field without services and for every non-form booking.
+   */
+  serviceName: string | null;
 }
 
 /** Minimal lead shape so brand-view row types can use these helpers too. */
@@ -84,6 +89,19 @@ const COMPANION_SUFFIXES = [
   "_booking_id",
   "_appointment_status",
 ] as const;
+
+/**
+ * Forms whose appointment field offers services: the picked service's id and
+ * its name as the form showed it (a snapshot in the form's language).
+ *
+ * Kept apart from COMPANION_SUFFIXES on purpose. Those are also claimed under
+ * an AI booking's SHORTER prefix (`<actionId>_…`), and `<actionId>_service` is
+ * exactly what a website chat stores when it asks "which service?" — an answer
+ * the owner must keep seeing under "Additional info". So these two are only
+ * ever read and claimed right next to the slot key itself (`<fieldKey>_service`),
+ * which is the one place a form writes them.
+ */
+const FORM_SERVICE_SUFFIXES = ["_service", "_service_name"] as const;
 
 /**
  * The prefixes a slot key's companions may carry.
@@ -188,6 +206,7 @@ export function extractLeadAppointments(
         bookingFailed: false,
         failReason: null,
         claimedKeys: ["appointment_uid", "start", "end", "config_id"],
+        serviceName: null,
       });
     }
   }
@@ -234,7 +253,9 @@ export function extractLeadAppointments(
         ...bases.flatMap((base) =>
           COMPANION_SUFFIXES.map((suffix) => `${base}${suffix}`),
         ),
+        ...FORM_SERVICE_SUFFIXES.map((suffix) => `${key}${suffix}`),
       ],
+      serviceName: asString(meta[`${key}_service_name`]),
     });
   }
 
