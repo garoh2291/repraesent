@@ -12165,14 +12165,21 @@
       "send": "Envoyer",
       "sharedBanner": "{{agency}} a envoyé ceci à re:praesent au sujet de votre entreprise et l'a partagé avec vous. Vous pouvez lire et répondre.",
       "waitingBannerBy": "{{team}} a besoin de votre réponse pour continuer. Répondez ci-dessous.",
-      "linked": "Transmis à re:praesent. Suivez-le ici."
+      "sharedFromOwn": "{{agency}} a demandé l’aide de re:praesent pour votre signalement n°{{number}}. Vous pouvez lire et répondre ici.",
+      "backToOwn": "Retour à votre signalement n°{{number}}",
+      "passedOnTitle": "Votre agence a demandé l’aide de re:praesent",
+      "passedOnNeeds": "re:praesent attend votre réponse",
+      "passedOnOpen": "Lire l’échange avec re:praesent",
+      "passedOnPrivate": "Votre agence suit cela avec re:praesent"
     },
     "event": {
       "reopened": "{{who}} l'a rouvert",
       "status": "{{who}} l'a passé à « {{status}} »",
       "severity": "{{who}} l'a passé à « {{severity}} »",
       "email": "{{who}} vous a écrit à {{to}} : « {{subject}} »",
-      "queueMoved": "re:praesent répond désormais à ce signalement"
+      "queueMoved": "re:praesent répond désormais à ce signalement",
+      "linkedDone": "re:praesent a réglé le n°{{number}}, celui-ci est donc réglé aussi",
+      "linkedReopened": "Le n°{{number}} chez re:praesent est rouvert, celui-ci aussi"
     },
     "files": {
       "type": "Les captures peuvent être en PNG, JPG, WebP ou GIF.",
@@ -12186,7 +12193,9 @@
     "todayNeutral_one": "1 signalement attend votre réponse",
     "todayNeutral_other": "{{count}} signalements attendent votre réponse",
     "viaAgency": "Vous êtes dans {{business}} via {{agency}}. Ses signalements arrivent dans le Support de votre agence : ouvrez {{agency}} pour y répondre ou les transmettre à re:praesent.",
-    "sharedBy": "De {{agency}} · chez re:praesent"
+    "sharedBy": "De {{agency}} · chez re:praesent",
+    "withRe": "Chez re:praesent",
+    "withReWaiting": "re:praesent attend votre réponse"
   },
   "support": {
     "metaTitle": "Support",
@@ -12297,7 +12306,9 @@
       "done": "Envoyé à re:praesent sous le n° {{number}}. Suivez-le dans Aide et modifications.",
       "open": "Ouvrir",
       "linked": "Chez re:praesent",
-      "linkedVisible": "Chez re:praesent · l'entreprise suit l'échange"
+      "linkedVisible": "Chez re:praesent · l'entreprise suit l'échange",
+      "chip": "Chez re:praesent",
+      "chipDone": "Réglé par re:praesent"
     }
   },
   "timezonePicker": {

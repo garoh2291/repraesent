@@ -34,7 +34,10 @@ export type TicketEvent =
   /** The agency passed this report on to re:praesent (the agency's team only). */
   | { type: "passed_on"; ticket_id: string; number: number; client_visible: boolean }
   /** The report moved queues (agency detached or suspended): re:praesent answers from now on. */
-  | { type: "queue"; from: string | null; to: string | null };
+  | { type: "queue"; from: string | null; to: string | null }
+  /** The report passed on to re:praesent was finished / opened again, and this one followed. */
+  | { type: "linked_done"; ticket_id: string; number: number }
+  | { type: "linked_reopened"; ticket_id: string; number: number };
 
 /** A report passed on from this one. */
 export interface LinkedTicket {
@@ -91,6 +94,8 @@ export interface TicketSummary {
   team_name?: string | null;
   /** The agency that opened this report about your business and shared it with you. */
   shared_by?: string | null;
+  /** The newest report passed on from this one to re:praesent. */
+  passed_on?: LinkedTicket | null;
 }
 
 export interface TeamTicketSummary extends TicketSummary {
@@ -109,7 +114,10 @@ export interface TicketDetail extends TicketSummary {
   messages: TicketMessage[];
   /** false on a report your agency shared with you: read and reply only. */
   may_change_status?: boolean;
+  /** Reports passed on from this one (client: `client_visible` = you may open it). */
   linked?: LinkedTicket[];
+  /** Client: your own report this one was passed on from. */
+  source?: { id: string; number: number } | null;
 }
 
 export interface TeamTicketDetail extends TicketDetail {

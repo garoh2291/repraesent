@@ -230,6 +230,10 @@ function EventLine({ m, viewer, teamName }: { m: TicketMessage; viewer: Side; te
               ? viewer === "client"
                 ? t("help.event.queueMoved", "re:praesent answers this report from now on")
                 : t("support.event.queueMoved", "Moved from the agency to re:praesent")
+            : e.type === "linked_done"
+              ? t("help.event.linkedDone", "re:praesent finished #{{number}}, so this is done too", { number: e.number })
+            : e.type === "linked_reopened"
+              ? t("help.event.linkedReopened", "#{{number}} at re:praesent is open again, so this is too", { number: e.number })
             : e.type === "passed_on"
               ? e.client_visible
                 ? t("support.event.passedOnVisible", "{{who}} passed it on to re:praesent as #{{number}}, visible to the business", { who, number: e.number })

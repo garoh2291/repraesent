@@ -371,6 +371,14 @@ function QueueRow({ r, active, to }: { r: TeamTicketSummary; active: boolean; to
           </p>
           <div className="mt-2 flex items-center gap-2 text-[11.5px] text-muted-foreground">
             <TicketStub number={r.number} />
+            {r.passed_on ? (
+              <span className="inline-flex shrink-0 items-center gap-1 rounded-full border border-foreground/15 px-1.5 py-px font-medium text-foreground/75">
+                <Forward className="size-3" aria-hidden />
+                {r.passed_on.status === "resolved"
+                  ? t("support.passOn.chipDone", "re:praesent done")
+                  : t("support.passOn.chip", "With re:praesent")}
+              </span>
+            ) : null}
             {r.website ? <span className="truncate">{r.website.host}</span> : null}
             {r.status !== "open" ? <StatusPill status={r.status} side="team" className="ml-auto h-5 px-2 text-[11px]" /> : null}
             {r.assigned_to?.name ? <span className="ml-auto truncate">{r.assigned_to.name.split(" ")[0]}</span> : null}

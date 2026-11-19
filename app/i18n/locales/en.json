@@ -12163,14 +12163,21 @@
       "send": "Send",
       "sharedBanner": "{{agency}} sent this to re:praesent about your business and shared it with you. You can read along and reply.",
       "waitingBannerBy": "{{team}} needs your answer to go on. Reply below.",
-      "linked": "Passed on to re:praesent. Follow it here."
+      "sharedFromOwn": "{{agency}} asked re:praesent for help with your report #{{number}}. You can read along and reply here.",
+      "backToOwn": "Back to your report #{{number}}",
+      "passedOnTitle": "Your agency asked re:praesent for help",
+      "passedOnNeeds": "re:praesent needs your answer",
+      "passedOnOpen": "Read the conversation with re:praesent",
+      "passedOnPrivate": "Your agency follows it with re:praesent"
     },
     "event": {
       "reopened": "{{who}} opened it again",
       "status": "{{who}} set it to “{{status}}”",
       "severity": "{{who}} changed it to “{{severity}}”",
       "email": "{{who}} emailed you at {{to}}: “{{subject}}”",
-      "queueMoved": "re:praesent answers this report from now on"
+      "queueMoved": "re:praesent answers this report from now on",
+      "linkedDone": "re:praesent finished #{{number}}, so this is done too",
+      "linkedReopened": "#{{number}} at re:praesent is open again, so this is too"
     },
     "files": {
       "type": "Screenshots can be PNG, JPG, WebP or GIF.",
@@ -12184,7 +12191,9 @@
     "todayNeutral_one": "1 report needs your answer",
     "todayNeutral_other": "{{count}} reports need your answer",
     "viaAgency": "You're in {{business}} through {{agency}}. Its reports land in your agency's Support: open {{agency}} to answer them or pass them on to re:praesent.",
-    "sharedBy": "From {{agency}} · with re:praesent"
+    "sharedBy": "From {{agency}} · with re:praesent",
+    "withRe": "With re:praesent",
+    "withReWaiting": "re:praesent needs your answer"
   },
   "support": {
     "metaTitle": "Support",
@@ -12295,7 +12304,9 @@
       "done": "Sent to re:praesent as #{{number}}. Follow it in Help & changes.",
       "open": "Open",
       "linked": "With re:praesent",
-      "linkedVisible": "With re:praesent · the business reads along"
+      "linkedVisible": "With re:praesent · the business reads along",
+      "chip": "With re:praesent",
+      "chipDone": "re:praesent done"
     }
   },
   "timezonePicker": {

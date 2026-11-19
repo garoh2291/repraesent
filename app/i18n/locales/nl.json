@@ -12163,14 +12163,21 @@
       "send": "Versturen",
       "sharedBanner": "{{agency}} heeft dit over uw bedrijf naar re:praesent gestuurd en met u gedeeld. U kunt meelezen en antwoorden.",
       "waitingBannerBy": "{{team}} heeft uw antwoord nodig om verder te gaan. Antwoord hieronder.",
-      "linked": "Doorgestuurd naar re:praesent. Volg het hier."
+      "sharedFromOwn": "{{agency}} heeft re:praesent om hulp gevraagd bij uw melding #{{number}}. U kunt hier meelezen en antwoorden.",
+      "backToOwn": "Terug naar uw melding #{{number}}",
+      "passedOnTitle": "Uw bureau heeft re:praesent om hulp gevraagd",
+      "passedOnNeeds": "re:praesent wacht op uw antwoord",
+      "passedOnOpen": "Lees het gesprek met re:praesent",
+      "passedOnPrivate": "Uw bureau regelt dit met re:praesent"
     },
     "event": {
       "reopened": "{{who}} heeft het heropend",
       "status": "{{who}} zette het op ‘{{status}}’",
       "severity": "{{who}} veranderde het in ‘{{severity}}’",
       "email": "{{who}} heeft u gemaild op {{to}}: ‘{{subject}}’",
-      "queueMoved": "Vanaf nu beantwoordt re:praesent deze melding"
+      "queueMoved": "Vanaf nu beantwoordt re:praesent deze melding",
+      "linkedDone": "re:praesent heeft #{{number}} opgelost, dus deze ook",
+      "linkedReopened": "#{{number}} bij re:praesent staat weer open, deze ook"
     },
     "files": {
       "type": "Screenshots kunnen PNG, JPG, WebP of GIF zijn.",
@@ -12184,7 +12191,9 @@
     "todayNeutral_one": "1 melding wacht op uw antwoord",
     "todayNeutral_other": "{{count}} meldingen wachten op uw antwoord",
     "viaAgency": "U bent via {{agency}} in {{business}}. De meldingen van dit bedrijf komen in de Support van uw bureau: open {{agency}} om ze te beantwoorden of door te sturen naar re:praesent.",
-    "sharedBy": "Van {{agency}} · bij re:praesent"
+    "sharedBy": "Van {{agency}} · bij re:praesent",
+    "withRe": "Bij re:praesent",
+    "withReWaiting": "re:praesent wacht op uw antwoord"
   },
   "support": {
     "metaTitle": "Support",
@@ -12295,7 +12304,9 @@
       "done": "Als #{{number}} naar re:praesent gestuurd. Volg het bij Hulp & wijzigingen.",
       "open": "Openen",
       "linked": "Bij re:praesent",
-      "linkedVisible": "Bij re:praesent · het bedrijf leest mee"
+      "linkedVisible": "Bij re:praesent · het bedrijf leest mee",
+      "chip": "Bij re:praesent",
+      "chipDone": "re:praesent klaar"
     }
   },
   "timezonePicker": {

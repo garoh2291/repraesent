@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Link, Navigate } from "react-router";
 import { useTranslation } from "react-i18next";
 import { useQuery } from "@tanstack/react-query";
-import { ChevronDown, ChevronRight, LifeBuoy, Plus } from "lucide-react";
+import { ArrowUpRight, ChevronDown, ChevronRight, LifeBuoy, Plus } from "lucide-react";
 import { PageContainer, PageHeader } from "~/components/notebook/page-header";
 import { EmptyState } from "~/components/notebook/empty-state";
 import { LoadError } from "~/components/notebook/load-error";
@@ -51,8 +51,11 @@ export default function HelpPage() {
   }
 
   const rows = q.data ?? [];
-  const waiting = rows.filter((r) => r.status === "waiting_on_client");
-  const open = rows.filter((r) => r.status === "open");
+  // re:praesent waiting on you inside a report passed on from yours counts as yours waiting.
+  const needsYou = (r: TicketSummary) =>
+    r.status === "waiting_on_client" || (r.status !== "resolved" && r.passed_on?.client_visible === true && r.passed_on.status === "waiting_on_client");
+  const waiting = rows.filter(needsYou);
+  const open = rows.filter((r) => r.status === "open" && !needsYou(r));
   const done = rows.filter((r) => r.status === "resolved");
 
   return (
@@ -161,6 +164,14 @@ function List({ rows }: { rows: TicketSummary[] }) {
                   {r.shared_by ? (
                     <span className="rounded-full bg-muted px-2 py-0.5 font-medium text-foreground/75">
                       {t("help.sharedBy", "From {{agency}} · with re:praesent", { agency: r.shared_by })}
+                    </span>
+                  ) : null}
+                  {r.passed_on && r.status !== "resolved" ? (
+                    <span className="inline-flex items-center gap-1 rounded-full border border-foreground/15 px-2 py-0.5 font-medium text-foreground/75">
+                      <ArrowUpRight className="size-3" aria-hidden />
+                      {r.passed_on.client_visible && r.passed_on.status === "waiting_on_client"
+                        ? t("help.withReWaiting", "re:praesent needs your answer")
+                        : t("help.withRe", "With re:praesent")}
                     </span>
                   ) : null}
                   {r.website ? <span>{r.website.host}</span> : null}

@@ -3,7 +3,7 @@ import { Link, useParams } from "react-router";
 import { useTranslation } from "react-i18next";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { ExternalLink, Loader2, RotateCcw } from "lucide-react";
+import { ArrowLeft, ChevronRight, ExternalLink, Loader2, RotateCcw } from "lucide-react";
 import { PageContainer } from "~/components/notebook/page-header";
 import { BackLink } from "~/components/notebook/back-link";
 import { LoadError } from "~/components/notebook/load-error";
@@ -142,9 +142,25 @@ export default function HelpTicketPage() {
           </header>
 
           {d.shared_by ? (
-            <p className="mt-5 rounded-xl border border-border bg-card px-4 py-3 text-[14px] text-foreground">
-              {t("help.thread.sharedBanner", "{{agency}} sent this to re:praesent about your business and shared it with you. You can read along and reply.", { agency: d.shared_by })}
-            </p>
+            <div className="mt-5 rounded-xl border border-border bg-card px-4 py-3 text-[14px] text-foreground">
+              <p>
+                {d.source
+                  ? t("help.thread.sharedFromOwn", "{{agency}} asked re:praesent for help with your report #{{number}}. You can read along and reply here.", {
+                      agency: d.shared_by,
+                      number: d.source.number,
+                    })
+                  : t("help.thread.sharedBanner", "{{agency}} sent this to re:praesent about your business and shared it with you. You can read along and reply.", { agency: d.shared_by })}
+              </p>
+              {d.source ? (
+                <Link
+                  to={`/help/${d.source.id}`}
+                  className="press -mx-1 mt-1.5 inline-flex min-h-11 touch-manipulation select-none items-center gap-1.5 px-1 text-[14px] font-semibold underline decoration-foreground/25 underline-offset-4 hover:decoration-foreground"
+                >
+                  <ArrowLeft className="size-4" aria-hidden />
+                  {t("help.thread.backToOwn", "Back to your report #{{number}}", { number: d.source.number })}
+                </Link>
+              ) : null}
+            </div>
           ) : null}
 
           {d.status === "waiting_on_client" ? (
@@ -156,19 +172,44 @@ export default function HelpTicketPage() {
           ) : null}
 
           {d.linked?.length ? (
-            <div className="mt-5 space-y-1.5">
-              {d.linked.map((l) => (
-                <Link
-                  key={l.id}
-                  to={`/help/${l.id}`}
-                  className="press flex min-h-11 items-center gap-2 rounded-xl border border-border bg-card px-4 py-2.5 text-[14px] text-foreground hover:border-foreground/30"
-                >
-                  <TicketStub number={l.number} />
-                  <span className="min-w-0 flex-1 truncate">{t("help.thread.linked", "Passed on to re:praesent. Follow it here.")}</span>
-                  <StatusPill status={l.status} side="client" className="shrink-0" />
-                </Link>
-              ))}
-            </div>
+            <section aria-label={t("help.thread.passedOnTitle", "Your agency asked re:praesent for help")} className="mt-5 overflow-hidden rounded-xl border border-border bg-card">
+              <p className="border-b border-border px-4 py-2.5 text-[13px] font-medium text-muted-foreground">
+                {t("help.thread.passedOnTitle", "Your agency asked re:praesent for help")}
+              </p>
+              <ul className="divide-y divide-border">
+                {d.linked.map((l) => {
+                  const needs = l.client_visible && l.status === "waiting_on_client";
+                  const body = (
+                    <>
+                      <TicketStub number={l.number} />
+                      <span className="min-w-0 flex-1 text-[14px] text-foreground">
+                        {l.client_visible
+                          ? needs
+                            ? <span className="marker font-semibold">{t("help.thread.passedOnNeeds", "re:praesent needs your answer")}</span>
+                            : t("help.thread.passedOnOpen", "Read the conversation with re:praesent")
+                          : t("help.thread.passedOnPrivate", "Your agency follows it with re:praesent")}
+                      </span>
+                      <StatusPill status={l.status} side="client" className="shrink-0" />
+                      {l.client_visible ? <ChevronRight className="size-4 shrink-0 text-muted-foreground/60" aria-hidden /> : null}
+                    </>
+                  );
+                  return (
+                    <li key={l.id}>
+                      {l.client_visible ? (
+                        <Link
+                          to={`/help/${l.id}`}
+                          className="press flex min-h-12 touch-manipulation select-none items-center gap-2.5 px-4 py-2.5 transition-colors hover:bg-muted/40 focus-visible:bg-muted/50 focus-visible:outline-none"
+                        >
+                          {body}
+                        </Link>
+                      ) : (
+                        <div className="flex min-h-12 items-center gap-2.5 px-4 py-2.5">{body}</div>
+                      )}
+                    </li>
+                  );
+                })}
+              </ul>
+            </section>
           ) : null}
 
           <Thread messages={d.messages} viewer="client" teamName={d.team_name || "re:praesent"} className="mt-6" />

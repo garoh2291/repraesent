@@ -12165,14 +12165,21 @@
       "send": "Senden",
       "sharedBanner": "{{agency}} hat dies zu Ihrem Betrieb an re:praesent geschickt und mit Ihnen geteilt. Sie können mitlesen und antworten.",
       "waitingBannerBy": "{{team}} braucht Ihre Antwort, um weiterzumachen. Antworten Sie unten.",
-      "linked": "An re:praesent weitergegeben. Hier verfolgen."
+      "sharedFromOwn": "{{agency}} hat re:praesent zu Ihrer Meldung #{{number}} um Hilfe gebeten. Sie können hier mitlesen und antworten.",
+      "backToOwn": "Zurück zu Ihrer Meldung #{{number}}",
+      "passedOnTitle": "Ihre Agentur hat re:praesent um Hilfe gebeten",
+      "passedOnNeeds": "re:praesent braucht Ihre Antwort",
+      "passedOnOpen": "Gespräch mit re:praesent lesen",
+      "passedOnPrivate": "Ihre Agentur klärt das mit re:praesent"
     },
     "event": {
       "reopened": "{{who}} hat die Meldung wieder geöffnet",
       "status": "{{who}} hat den Stand auf „{{status}}“ gesetzt",
       "severity": "{{who}} hat es auf „{{severity}}“ geändert",
       "email": "{{who}} hat Ihnen an {{to}} geschrieben: „{{subject}}“",
-      "queueMoved": "Ab jetzt beantwortet re:praesent diese Meldung"
+      "queueMoved": "Ab jetzt beantwortet re:praesent diese Meldung",
+      "linkedDone": "re:praesent hat #{{number}} erledigt, damit ist auch diese Meldung erledigt",
+      "linkedReopened": "#{{number}} bei re:praesent ist wieder offen, diese Meldung auch"
     },
     "files": {
       "type": "Screenshots können PNG, JPG, WebP oder GIF sein.",
@@ -12186,7 +12193,9 @@
     "todayNeutral_one": "1 Meldung wartet auf Ihre Antwort",
     "todayNeutral_other": "{{count}} Meldungen warten auf Ihre Antwort",
     "viaAgency": "Sie sind über {{agency}} in {{business}}. Meldungen dieses Betriebs landen im Support Ihrer Agentur: Öffnen Sie {{agency}}, um sie zu beantworten oder an re:praesent weiterzugeben.",
-    "sharedBy": "Von {{agency}} · bei re:praesent"
+    "sharedBy": "Von {{agency}} · bei re:praesent",
+    "withRe": "Bei re:praesent",
+    "withReWaiting": "re:praesent braucht Ihre Antwort"
   },
   "support": {
     "metaTitle": "Support",
@@ -12297,7 +12306,9 @@
       "done": "Als #{{number}} an re:praesent gesendet. Verfolgen Sie sie unter Hilfe & Änderungen.",
       "open": "Öffnen",
       "linked": "Bei re:praesent",
-      "linkedVisible": "Bei re:praesent · der Betrieb liest mit"
+      "linkedVisible": "Bei re:praesent · der Betrieb liest mit",
+      "chip": "Bei re:praesent",
+      "chipDone": "re:praesent fertig"
     }
   },
   "timezonePicker": {
