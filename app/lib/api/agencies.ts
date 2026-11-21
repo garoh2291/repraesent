@@ -126,6 +126,8 @@ export interface BusinessOverviewRow {
   new_customers_30d: number;
   /** Reports waiting for your reply in Support. Older API: absent. */
   open_reports?: number;
+  /** The background set-up after "Add a business" (invites, profile, re:praesent's deal). Older API: absent. */
+  setup_state?: "ready" | "setting_up" | "needs_look";
 }
 
 export interface BusinessesOverview {

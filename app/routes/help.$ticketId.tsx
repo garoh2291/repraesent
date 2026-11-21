@@ -22,6 +22,8 @@ import {
   setHelpTicketStatus,
   type TicketDetail,
 } from "~/lib/api/support-tickets";
+import { usePollEvery } from "~/lib/api/support-live";
+import { SetupReportCard } from "~/components/support/setup-report-card";
 import { formatDateMedium } from "~/lib/utils/format";
 
 /** One report: the whole conversation with re:praesent, and where it stands. */
@@ -33,11 +35,12 @@ export default function HelpTicketPage() {
   const qc = useQueryClient();
   const key = helpKeys.ticket(currentWorkspace?.id, ticketId);
   const severityLabel = useSeverityLabel("client");
+  const every = usePollEvery("help", 30_000);
   const q = useQuery({
     queryKey: key,
     queryFn: () => getHelpTicket(ticketId),
     enabled: !!currentWorkspace?.id && !!ticketId,
-    refetchInterval: 30_000,
+    refetchInterval: every,
     refetchOnWindowFocus: true,
   });
 
@@ -169,6 +172,17 @@ export default function HelpTicketPage() {
                 ? t("help.thread.waitingBannerBy", "{{team}} needs your answer to go on. Reply below.", { team: d.team_name })
                 : t("help.thread.waitingBanner", "We need your answer to go on. Reply below.")}
             </p>
+          ) : null}
+
+          {d.kind === "setup" && d.setup ? (
+            <>
+              <SetupReportCard setup={d.setup} side="client" className="mt-5" />
+              {d.status !== "resolved" ? (
+                <p className="mt-2 text-[13px] text-muted-foreground">
+                  {t("setupReport.clientHint", "re:praesent marks this done once everything is set up. Write here if anything changes.")}
+                </p>
+              ) : null}
+            </>
           ) : null}
 
           {d.linked?.length ? (

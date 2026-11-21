@@ -1566,7 +1566,8 @@
       "de": "Deutsch",
       "fr": "Français",
       "nl": "Nederlands",
-      "hy": "Հայերեն"
+      "hy": "Հայերեն",
+      "cs": "Čeština"
     },
     "invoices": {
       "title": "Invoices",
@@ -4407,6 +4408,18 @@
       "remove": "Remove",
       "edit": "Change {{name}}",
       "sourceFromFile": "Source (from file)"
+    },
+    "select": {
+      "bar": "Picked contacts",
+      "clear": "Clear",
+      "count_one": "{{count}} picked",
+      "count_other": "{{count}} picked",
+      "done": "Done picking",
+      "makeDeals": "Make deals",
+      "one": "Pick {{name}}",
+      "page": "Pick everyone on this page",
+      "start": "Pick to make deals",
+      "count": "{{count}} picked"
     }
   },
   "leadEmails": {
@@ -10181,7 +10194,8 @@
     "appointments": "Appointments",
     "support": "Support",
     "businesses": "Your businesses",
-    "businessesShort": "Businesses"
+    "businessesShort": "Businesses",
+    "businessReports": "Business reports"
   },
   "command": {
     "title": "Go to or search",
@@ -12177,7 +12191,8 @@
       "email": "{{who}} emailed you at {{to}}: “{{subject}}”",
       "queueMoved": "re:praesent answers this report from now on",
       "linkedDone": "re:praesent finished #{{number}}, so this is done too",
-      "linkedReopened": "#{{number}} at re:praesent is open again, so this is too"
+      "linkedReopened": "#{{number}} at re:praesent is open again, so this is too",
+      "setupDone": "Everything is set up, so this is done"
     },
     "files": {
       "type": "Screenshots can be PNG, JPG, WebP or GIF.",
@@ -12190,7 +12205,7 @@
     },
     "todayNeutral_one": "1 report needs your answer",
     "todayNeutral_other": "{{count}} reports need your answer",
-    "viaAgency": "You're in {{business}} through {{agency}}. Its reports land in your agency's Support: open {{agency}} to answer them or pass them on to re:praesent.",
+    "viaAgency": "You're in {{business}} through {{agency}}. Its reports go to your agency's Business reports: open {{agency}} to answer them or pass them on to re:praesent.",
     "sharedBy": "From {{agency}} · with re:praesent",
     "withRe": "With re:praesent",
     "withReWaiting": "re:praesent needs your answer"
@@ -12275,7 +12290,9 @@
       "unassigned": "{{who}} left it unassigned",
       "passedOn": "{{who}} passed it on to re:praesent as #{{number}}",
       "passedOnVisible": "{{who}} passed it on to re:praesent as #{{number}}, visible to the business",
-      "queueMoved": "Moved from the agency to re:praesent"
+      "queueMoved": "Moved from the agency to re:praesent",
+      "dealWon": "The deal moved to won with this report",
+      "dealReopened": "The deal is open again with this report"
     },
     "today_one": "1 support ticket needs a reply",
     "today_other": "{{count}} support tickets need a reply",
@@ -12307,7 +12324,10 @@
       "linkedVisible": "With re:praesent · the business reads along",
       "chip": "With re:praesent",
       "chipDone": "re:praesent done"
-    }
+    },
+    "titleAgency": "Business reports",
+    "agencyIntro": "Reports your businesses send to you.",
+    "agencyIntroLink": "Your own reports to re:praesent are in Help & changes"
   },
   "timezonePicker": {
     "label": "Time zone",
@@ -12504,7 +12524,9 @@
         "customers": "new customers"
       },
       "reportsOpen_one": "1 report needs your reply",
-      "reportsOpen_other": "{{count}} reports need your reply"
+      "reportsOpen_other": "{{count}} reports need your reply",
+      "settingUp": "Setting up · inviting the team",
+      "setupNeedsLook": "Set-up needs a look · write to re:praesent"
     },
     "add": {
       "title": "Add a business",
@@ -12595,7 +12617,16 @@
         "limit": "You've reached your limit of businesses. Contact re:praesent to add more.",
         "notActive": "Agency mode isn't on right now. Please contact re:praesent.",
         "generic": "That didn't work. Please try again.",
-        "otherTypeMissing": "Write in a few words what kind of business it is."
+        "otherTypeMissing": "Write in a few words what kind of business it is.",
+        "phone": "That phone number doesn't look right. Check the digits.",
+        "postal": "That postal code doesn't look right.",
+        "postalLike": "That postal code doesn't look right. Like {{example}}.",
+        "memberEmailShort": "That isn't a valid email address.",
+        "memberTwice": "This address is already on the list.",
+        "domain": "Write the domain like salon-mira.de.",
+        "mailboxes": "Use names like info or anna, separated by commas. Check: {{list}}",
+        "several_one": "One field needs a look.",
+        "several_other": "{{count}} fields need a look."
       },
       "back": "Back",
       "next": "Next",
@@ -12719,7 +12750,9 @@
       "website_live": "The website {{url}} is live",
       "auth_sign_in": "{{actor}} signed in ({{method}})",
       "ai_share": "{{actor}} changed shared AI for a business",
-      "support_pass_on": "{{actor}} passed a report on to re:praesent"
+      "support_pass_on": "{{actor}} passed a report on to re:praesent",
+      "deal_bulk_create": "{{actor}} made deals for several contacts at once",
+      "deal_bulk_undo": "{{actor}} took back deals made at once"
     },
     "generic": {
       "create": "{{actor}} added something in {{area}}",
@@ -12751,5 +12784,179 @@
         "viewer": "Can view"
       }
     }
+  },
+  "setupReport": {
+    "title": "What was asked",
+    "titleFor": "Set-up for {{business}}",
+    "progress": "{{done}} of {{total}} done",
+    "item": {
+      "websiteExisting": "Website: {{url}}",
+      "websiteNew": "A new website",
+      "emailBoxes": "Email: {{boxes}}",
+      "email": "Email mailboxes",
+      "domainName": "Domain: {{name}}",
+      "domain": "A domain",
+      "other": "Something else"
+    },
+    "done": "Done",
+    "toDo": "To do",
+    "nothing": "Nothing extra asked: the business and its team are in.",
+    "websiteUnlinked": "The website isn't linked yet. It closes by itself once you link it in the admin.",
+    "dealWon": "New customer",
+    "dealLost": "Didn't happen",
+    "dealOpen": "Deal open",
+    "chip": "Set-up",
+    "clientHint": "re:praesent marks this done once everything is set up. Write here if anything changes.",
+    "confirmTitle": "The website isn't linked yet",
+    "confirmBody": "Closing the set-up marks every item done and moves the deal to won. The website then no longer shows as being built, and its address is free again until you link it.",
+    "confirmKeep": "Keep it open",
+    "confirmClose": "Close the set-up anyway"
+  },
+  "dealSupport": {
+    "title": "Support reports",
+    "hint": "Marking the set-up report done moves this deal to won."
+  },
+  "dealBatch": {
+    "back": {
+      "contacts": "Contacts",
+      "import": "The import",
+      "segment": "The segment"
+    },
+    "backToWho": "Back",
+    "done": {
+      "created": "New deals",
+      "kept": "Kept",
+      "keptHint": "Someone worked on them.",
+      "keptList": "Kept, because someone worked on them",
+      "leftOut": "Who didn't get a new deal",
+      "leftOutMore_one": "and {{count}} more",
+      "leftOutMore_other": "and {{count}} more",
+      "noName": "No name",
+      "notMade": "Not made",
+      "owner": "{{name}} looks after them.",
+      "removed": "Taken back",
+      "seeDeals": "See them in Deals",
+      "skippedOpen": "Already had a deal",
+      "tasks_one": "{{count}} with a first task",
+      "tasks_other": "{{count}} with a first task",
+      "title": "Your deals are made",
+      "undoneTitle": "These deals were taken back",
+      "leftOutMore": "and {{count}} more",
+      "tasks": "{{count}} with a first task"
+    },
+    "errors": {
+      "generic": "That didn't work. Check your connection and try again.",
+      "noContacts": "None of these contacts are here any more. Go back and pick contacts again.",
+      "notReady": "Making deals in bulk isn't switched on for your business yet. Please ask support.",
+      "owner": "That person is no longer on your team. Pick someone else to look after the deals.",
+      "stillRunning": "The deals are still being made. Undo once that has finished."
+    },
+    "fromImport": {
+      "body": "Pick who, then give them all the same value, stage and first task. People who already have a deal are left out.",
+      "button": "Make deals",
+      "title": "Turn these contacts into deals"
+    },
+    "fromSegment": {
+      "button": "Make deals",
+      "saveFirst": "Save the segment first, then make deals from it."
+    },
+    "leave": {
+      "body": "It pauses when you leave. The deals made so far stay, and it carries on when you open this page again.",
+      "go": "Leave and pause",
+      "stay": "Stay on this page",
+      "title": "Leave while deals are being made?"
+    },
+    "loading": "Opening…",
+    "loadingContacts": "Getting the contacts…",
+    "make_one": "Make {{count}} deal",
+    "make_other": "Make {{count}} deals",
+    "next": "Next: the deals",
+    "notFound": "This could not be opened. It may belong to another business.",
+    "pick": {
+      "anyValue": "{{column}}: all",
+      "empty": "There are no contacts here to make deals for.",
+      "hasOpenDeal": "Already has a deal: {{title}}",
+      "kind": "Who",
+      "kindAll": "People and companies",
+      "kindCompanies": "Only companies",
+      "kindPeople": "Only people",
+      "label": "Who gets a deal",
+      "noneMatch": "Nobody matches. Clear the search or a filter.",
+      "search": "Search name, email, phone…",
+      "showMore_one": "Show {{count}} more",
+      "showMore_other": "Show {{count}} more",
+      "shownCount": "{{shown}} of {{total}} shown",
+      "tickAll": "Tick everyone",
+      "tickShown": "Tick everyone shown",
+      "totalCount_one": "{{count}} contact",
+      "totalCount_other": "{{count}} contacts",
+      "showMore": "Show {{count}} more",
+      "totalCount": "{{count}} contacts"
+    },
+    "pickedCount_one": "{{count}} ticked",
+    "pickedCount_other": "{{count}} ticked",
+    "pickedWithOpen_one": "{{count}} of them already has a deal",
+    "pickedWithOpen_other": "{{count}} of them already have a deal",
+    "reason": {
+      "failed": "Could not be made. Try this one by hand.",
+      "gone": "Contact was deleted meanwhile",
+      "open": "Already has a deal"
+    },
+    "retry": "Try again",
+    "run": {
+      "keepOpen": "Keep this page open until it is finished. If it gets closed, it carries on when you open it again.",
+      "progress": "{{done}} of {{total}} done",
+      "resume": "Carry on",
+      "stopped": "It stopped",
+      "stoppedHint": "Nothing is made twice. {{detail}}",
+      "title": "Making deals…"
+    },
+    "selectionGone": "There is no selection any more. Tick contacts on the contacts list and choose “Make deals”.",
+    "settings": {
+      "andMore_one": "and {{count}} more, one per contact",
+      "andMore_other": "and {{count}} more, one per contact",
+      "automations": "Run my deal automations for these",
+      "automationsOff": "Off: no workflow starts for these deals, so nobody gets an email per deal.",
+      "automationsOn": "Each new deal starts your workflows, like a deal made by hand. That can mean an email per deal.",
+      "extra": "Add to every title (optional)",
+      "extraHint": "Each deal is named after its contact.",
+      "extraPlaceholder": "e.g. Kitchen 2027",
+      "noValue": "No value",
+      "nobody": "Tick at least one contact to see the deals.",
+      "owner": "Who looks after them",
+      "pipeline": "Pipeline",
+      "stage": "Deal stage",
+      "task": "A first task on every deal",
+      "taskDefault": "Call them",
+      "taskDue": "Due",
+      "taskHint": "So every deal has a next step.",
+      "taskTitle": "Task",
+      "title": "Same for every deal",
+      "value": "Value of each deal",
+      "valueHint": "Leave it empty if you don't know yet. You can change each deal later.",
+      "andMore": "and {{count}} more, one per contact"
+    },
+    "subtitle": "One deal per contact you tick, all with the same value and stage.",
+    "subtitleFrom": "From {{name}}: one deal per contact you tick.",
+    "title": "Make deals",
+    "toContacts": "Go to contacts",
+    "truncated": "Showing the first 5,000. Narrow it down with a segment to reach the others.",
+    "undo": {
+      "body_one": "The {{count}} deal made here is removed, with its first task. Deals someone has moved, noted or added tasks to since are kept.",
+      "body_other": "The {{count}} deals made here are removed, with their first task. Deals someone has moved, noted or added tasks to since are kept.",
+      "button": "Undo these deals",
+      "done_one": "{{count}} deal taken back.",
+      "done_other": "{{count}} deals taken back.",
+      "doneKept": "{{removed}} deals taken back, {{kept}} kept because someone worked on them.",
+      "going": "Taking back… {{count}} to go",
+      "keep": "Keep the deals",
+      "title": "Undo these deals?",
+      "body": "The {{count}} deals made here are removed, with their first task. Deals someone has moved, noted or added tasks to since are kept.",
+      "done": "{{count}} deals taken back."
+    },
+    "viewerOnly": "You can look at deals but not make them. Ask an admin of your business.",
+    "make": "Make {{count}} deals",
+    "pickedCount": "{{count}} ticked",
+    "pickedWithOpen": "{{count}} of them already have a deal"
   }
 }

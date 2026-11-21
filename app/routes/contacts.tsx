@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useOpenFromParam } from "~/lib/hooks/useOpenFromParam";
 import { Link, useLocation, useNavigate, useSearchParams } from "react-router";
 import { contactPath } from "~/lib/contacts/contact-path";
@@ -81,6 +81,10 @@ import { ContactImportModal } from "~/components/organism/contact-import-modal";
 import { CreateContactDialog } from "~/components/organism/create-contact-dialog";
 import { ContactActions } from "~/components/notebook/contact-actions";
 import { EmptyState } from "~/components/notebook/empty-state";
+import { Checkbox } from "~/components/ui/checkbox";
+import { useCanEditLeads } from "~/lib/hooks/useCanEditLeads";
+import { useTabBarHeight } from "~/components/notebook/deal-action-bar";
+import { rememberSelection, MAX_BATCH_CONTACTS } from "~/lib/api/deal-batches";
 
 export function meta({ location }: { location: { pathname: string } }) {
   return [
@@ -136,6 +140,29 @@ export default function ContactsPage() {
   const companyStart = useMemo(() => ({ kind: "company" as const }), []);
   const debouncedSearch = useDebounce(search, 300);
   const { ref: searchInputRef, withHint } = useSearchShortcut();
+
+  // Picking contacts to make deals for. Survives paging; a new search, filter,
+  // tab or business starts it again (what's ticked must be what you see).
+  const canEdit = useCanEditLeads();
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [selectMode, setSelectMode] = useState(false);
+  useEffect(() => {
+    setSelected(new Set());
+    setSelectMode(false);
+  }, [debouncedSearch, sourceFilter, contactTypeFilter, kindFilter, currentWorkspace?.id]);
+  const toggleSelected = (id: string, on: boolean) =>
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (on) {
+        if (next.size >= MAX_BATCH_CONTACTS) return prev;
+        next.add(id);
+      } else next.delete(id);
+      return next;
+    });
+  const makeDealsFromSelection = () => {
+    rememberSelection([...selected]);
+    navigate("/pipeline/make?from=selection");
+  };
 
   const [importModal, setImportModal] = useState<{
     open: boolean;
@@ -411,6 +438,20 @@ export default function ContactsPage() {
           ) : null}
         </div>
         <div className="flex flex-wrap gap-3 items-center shrink-0 sm:justify-end">
+          {canEdit ? (
+            <Button
+              type="button"
+              variant={selectMode ? "default" : "outline"}
+              className="h-11 text-sm sm:hidden"
+              aria-pressed={selectMode}
+              onClick={() => {
+                if (selectMode) setSelected(new Set());
+                setSelectMode((v) => !v);
+              }}
+            >
+              {selectMode ? t("contacts.select.done", "Done picking") : t("contacts.select.start", "Pick to make deals")}
+            </Button>
+          ) : null}
           <FilterComponent filters={contactListFilters} />
           {hasTableFilters && (
             <button
@@ -495,10 +536,29 @@ export default function ContactsPage() {
                 return (
                   <li
                     key={row.id}
-                    className="flex items-center gap-3 rounded-xl border border-border bg-card px-3 py-2.5 shadow-xs"
+                    className={cn(
+                      "flex items-center gap-3 rounded-xl border bg-card px-3 py-2.5 shadow-xs",
+                      selected.has(row.id) ? "border-foreground/40" : "border-border",
+                    )}
                   >
+                    {selectMode ? (
+                      <label className="-my-2.5 -ml-3 flex min-h-14 min-w-12 shrink-0 cursor-pointer items-center justify-center self-stretch">
+                        <Checkbox
+                          checked={selected.has(row.id)}
+                          onCheckedChange={(v) => toggleSelected(row.id, v === true)}
+                          aria-label={t("contacts.select.one", { defaultValue: "Pick {{name}}", name })}
+                        />
+                      </label>
+                    ) : null}
                     <Link
                       to={contactPath(row)}
+                      // Picking: a tap on the card ticks it instead of opening it.
+                      onClick={(e) => {
+                        if (!selectMode) return;
+                        e.preventDefault();
+                        toggleSelected(row.id, !selected.has(row.id));
+                      }}
+                      aria-pressed={selectMode ? selected.has(row.id) : undefined}
                       className="press flex min-h-11 min-w-0 flex-1 items-center gap-3"
                     >
                       <Avatar className="size-10 shrink-0">
@@ -540,7 +600,9 @@ export default function ContactsPage() {
                         ) : null}
                       </div>
                     </Link>
-                    <ContactActions iconOnly target={{ phone }} className="shrink-0 flex-nowrap" />
+                    {selectMode ? null : (
+                      <ContactActions iconOnly target={{ phone }} className="shrink-0 flex-nowrap" />
+                    )}
                   </li>
                 );
               })
@@ -550,6 +612,24 @@ export default function ContactsPage() {
             <Table className="min-w-[1040px]">
               <TableHeader>
                 <TableRow>
+                  {canEdit ? (
+                    <TableHead className="w-10 px-0 pl-4 align-middle">
+                      {(() => {
+                        const ids = (data?.data ?? []).map((r) => r.id);
+                        const n = ids.filter((id) => selected.has(id)).length;
+                        return (
+                          <Checkbox
+                            checked={ids.length > 0 && n === ids.length ? true : n > 0 ? "indeterminate" : false}
+                            disabled={!ids.length}
+                            onCheckedChange={(v) => {
+                              for (const id of ids) toggleSelected(id, v === true);
+                            }}
+                            aria-label={t("contacts.select.page", "Pick everyone on this page")}
+                          />
+                        );
+                      })()}
+                    </TableHead>
+                  ) : null}
                   <TableHead className="h-auto min-h-10 whitespace-normal px-4 py-3 text-left align-middle font-medium">
                     {t("contacts.columns.customer", {
                       defaultValue: "Contact",
@@ -636,20 +716,20 @@ export default function ContactsPage() {
               <TableBody>
                 {isLoading ? (
                   <TableRow>
-                    <TableCell colSpan={9} className="h-24 text-center">
+                    <TableCell colSpan={canEdit ? 10 : 9} className="h-24 text-center">
                       {t("common.loading")}
                     </TableCell>
                   </TableRow>
                 ) : !data ? (
                   <TableRow>
-                    <TableCell colSpan={9} className="h-24 text-center">
+                    <TableCell colSpan={canEdit ? 10 : 9} className="h-24 text-center">
                       {t("common.loading")}
                     </TableCell>
                   </TableRow>
                 ) : data.data.length === 0 ? (
                   <TableRow>
                     <TableCell
-                      colSpan={9}
+                      colSpan={canEdit ? 10 : 9}
                       className="h-24 text-center text-muted-foreground"
                     >
                       {search || hasTableFilters
@@ -689,7 +769,17 @@ export default function ContactsPage() {
                         key={row.id}
                         onClick={() => navigate(contactPath(row))}
                         className="cursor-pointer"
+                        data-state={selected.has(row.id) ? "selected" : undefined}
                       >
+                        {canEdit ? (
+                          <TableCell className="w-10 px-0 pl-4 align-middle" onClick={(e) => e.stopPropagation()}>
+                            <Checkbox
+                              checked={selected.has(row.id)}
+                              onCheckedChange={(v) => toggleSelected(row.id, v === true)}
+                              aria-label={t("contacts.select.one", { defaultValue: "Pick {{name}}", name })}
+                            />
+                          </TableCell>
+                        ) : null}
                         <TableCell className="whitespace-normal px-4 py-3 align-middle text-left">
                           <Link
                             to={contactPath(row)}
@@ -964,6 +1054,17 @@ export default function ContactsPage() {
         </TooltipProvider>
       )}
 
+      {canEdit && selected.size > 0 ? (
+        <SelectionBar
+          count={selected.size}
+          onMake={makeDealsFromSelection}
+          onClear={() => {
+            setSelected(new Set());
+            setSelectMode(false);
+          }}
+        />
+      ) : null}
+
       <ContactImportModal
         open={importModal.open}
         onOpenChange={(o) => setImportModal((s) => ({ ...s, open: o }))}
@@ -975,5 +1076,41 @@ export default function ContactsPage() {
         initialValues={isCompanies ? companyStart : undefined}
       />
     </div>
+  );
+}
+
+/**
+ * What's picked and what to do with it. Phones: pinned above the tab bar in
+ * the thumb zone (a spacer keeps the last card reachable). Desktop: a small
+ * floating bar at the bottom of the list.
+ */
+function SelectionBar({ count, onMake, onClear }: { count: number; onMake: () => void; onClear: () => void }) {
+  const { t } = useTranslation();
+  const bottom = useTabBarHeight();
+  return (
+    <>
+      <div className="h-24 sm:hidden" aria-hidden />
+      <div
+        role="region"
+        aria-label={t("contacts.select.bar", "Picked contacts")}
+        className="fixed inset-x-0 z-30 border-t border-border bg-card/95 px-4 pt-2.5 backdrop-blur-md sm:inset-x-auto sm:bottom-6! sm:left-1/2 sm:-translate-x-1/2 sm:rounded-full sm:border sm:px-2 sm:py-2 sm:shadow-lg"
+        style={{
+          bottom: bottom == null ? "calc(4rem + env(safe-area-inset-bottom, 0px))" : bottom,
+          paddingBottom: bottom ? "0.625rem" : "calc(0.625rem + env(safe-area-inset-bottom, 0px))",
+        }}
+      >
+        <div className="flex items-center gap-2 sm:gap-3">
+          <span className="num min-w-0 flex-1 text-[14px] font-medium text-foreground sm:flex-none sm:pl-3" aria-live="polite">
+            {t("contacts.select.count", { defaultValue: "{{count}} picked", count })}
+          </span>
+          <Button variant="ghost" className="h-12 px-3 text-[15px] sm:h-9 sm:text-[13px]" onClick={onClear}>
+            {t("contacts.select.clear", "Clear")}
+          </Button>
+          <Button className="h-12 px-5 text-[15px] sm:h-9 sm:rounded-full sm:text-[13px]" onClick={onMake}>
+            {t("contacts.select.makeDeals", "Make deals")}
+          </Button>
+        </div>
+      </div>
+    </>
   );
 }

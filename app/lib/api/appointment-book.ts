@@ -19,7 +19,7 @@ export type WeeklyHours = Record<WeekdayKey, TimeRange[]>;
 
 export const CUSTOMER_MESSAGE_KINDS = ["confirmation", "reminder", "changed", "cancelled"] as const;
 export type CustomerMessageKind = (typeof CUSTOMER_MESSAGE_KINDS)[number];
-export const MESSAGE_LOCALES = ["en", "de", "fr", "nl", "hy"] as const;
+export const MESSAGE_LOCALES = ["en", "de", "fr", "nl", "hy", "cs"] as const;
 export type MessageLocale = (typeof MESSAGE_LOCALES)[number];
 
 /** The owner's own words for one message in one language. `{name}` etc. are filled on send. */
@@ -79,7 +79,7 @@ export interface AppointmentCalendar {
   /** Mailbox the emails go out from; null = the workspace's main mailbox. */
   email_account_id: string | null;
   /** Language for customers whose own language is unknown. */
-  default_locale: "en" | "de" | "fr" | "nl" | "hy" | null;
+  default_locale: "en" | "de" | "fr" | "nl" | "hy" | "cs" | null;
   sender: CalendarSender;
   self_service: boolean;
   is_default: boolean;
@@ -485,7 +485,7 @@ export interface PublicAppointment {
   booking_unit: BookingUnit;
   duration_minutes: number;
   /** The customer's language — Armenian too, when they booked through an Armenian form. */
-  locale: "en" | "de" | "fr" | "nl" | "hy";
+  locale: "en" | "de" | "fr" | "nl" | "hy" | "cs";
 }
 
 const pub = (token: string) => `/public/appointment-book/${encodeURIComponent(token)}`;

@@ -1568,7 +1568,8 @@
       "de": "Deutsch",
       "fr": "Français",
       "nl": "Nederlands",
-      "hy": "Հայերեն"
+      "hy": "Հայերեն",
+      "cs": "Čeština"
     },
     "invoices": {
       "title": "Rechnungen",
@@ -4409,6 +4410,18 @@
       "remove": "Entfernen",
       "edit": "{{name}} ändern",
       "sourceFromFile": "Quelle (aus Datei)"
+    },
+    "select": {
+      "bar": "Ausgewählte Kontakte",
+      "clear": "Leeren",
+      "count_one": "{{count}} ausgewählt",
+      "count_other": "{{count}} ausgewählt",
+      "done": "Fertig",
+      "makeDeals": "Deals anlegen",
+      "one": "{{name}} auswählen",
+      "page": "Alle auf dieser Seite auswählen",
+      "start": "Für Deals auswählen",
+      "count": "{{count}} ausgewählt"
     }
   },
   "leadEmails": {
@@ -10183,7 +10196,8 @@
     "appointments": "Termine",
     "support": "Support",
     "businesses": "Ihre Betriebe",
-    "businessesShort": "Betriebe"
+    "businessesShort": "Betriebe",
+    "businessReports": "Meldungen"
   },
   "command": {
     "title": "Öffnen oder suchen",
@@ -12179,7 +12193,8 @@
       "email": "{{who}} hat Ihnen an {{to}} geschrieben: „{{subject}}“",
       "queueMoved": "Ab jetzt beantwortet re:praesent diese Meldung",
       "linkedDone": "re:praesent hat #{{number}} erledigt, damit ist auch diese Meldung erledigt",
-      "linkedReopened": "#{{number}} bei re:praesent ist wieder offen, diese Meldung auch"
+      "linkedReopened": "#{{number}} bei re:praesent ist wieder offen, diese Meldung auch",
+      "setupDone": "Alles ist eingerichtet, damit ist diese Meldung erledigt"
     },
     "files": {
       "type": "Screenshots können PNG, JPG, WebP oder GIF sein.",
@@ -12192,7 +12207,7 @@
     },
     "todayNeutral_one": "1 Meldung wartet auf Ihre Antwort",
     "todayNeutral_other": "{{count}} Meldungen warten auf Ihre Antwort",
-    "viaAgency": "Sie sind über {{agency}} in {{business}}. Meldungen dieses Betriebs landen im Support Ihrer Agentur: Öffnen Sie {{agency}}, um sie zu beantworten oder an re:praesent weiterzugeben.",
+    "viaAgency": "Sie sind über {{agency}} in {{business}}. Meldungen dieses Betriebs landen bei Ihrer Agentur unter „Meldungen der Betriebe“: Öffnen Sie {{agency}}, um sie zu beantworten oder an re:praesent weiterzugeben.",
     "sharedBy": "Von {{agency}} · bei re:praesent",
     "withRe": "Bei re:praesent",
     "withReWaiting": "re:praesent braucht Ihre Antwort"
@@ -12277,7 +12292,9 @@
       "unassigned": "{{who}} hat die Zuständigkeit entfernt",
       "passedOn": "{{who}} hat es als #{{number}} an re:praesent weitergegeben",
       "passedOnVisible": "{{who}} hat es als #{{number}} an re:praesent weitergegeben, sichtbar für den Betrieb",
-      "queueMoved": "Von der Agentur an re:praesent übergegangen"
+      "queueMoved": "Von der Agentur an re:praesent übergegangen",
+      "dealWon": "Der Deal ist mit dieser Meldung auf gewonnen gesprungen",
+      "dealReopened": "Der Deal ist mit dieser Meldung wieder offen"
     },
     "today_one": "1 Support-Ticket braucht eine Antwort",
     "today_other": "{{count}} Support-Tickets brauchen eine Antwort",
@@ -12309,7 +12326,10 @@
       "linkedVisible": "Bei re:praesent · der Betrieb liest mit",
       "chip": "Bei re:praesent",
       "chipDone": "re:praesent fertig"
-    }
+    },
+    "titleAgency": "Meldungen der Betriebe",
+    "agencyIntro": "Meldungen, die Ihre Betriebe an Sie senden.",
+    "agencyIntroLink": "Ihre eigenen Meldungen an re:praesent finden Sie unter Hilfe & Änderungen"
   },
   "timezonePicker": {
     "label": "Zeitzone",
@@ -12506,7 +12526,9 @@
         "customers": "neue Kunden"
       },
       "reportsOpen_one": "1 Meldung wartet auf Ihre Antwort",
-      "reportsOpen_other": "{{count}} Meldungen warten auf Ihre Antwort"
+      "reportsOpen_other": "{{count}} Meldungen warten auf Ihre Antwort",
+      "settingUp": "Wird eingerichtet · Team wird eingeladen",
+      "setupNeedsLook": "Einrichtung hängt · bitte melden Sie sich bei re:praesent"
     },
     "add": {
       "title": "Betrieb hinzufügen",
@@ -12596,8 +12618,17 @@
         "websiteInvalid": "Diese Website-Adresse sieht nicht richtig aus. Beispiel: salon-mira.de",
         "limit": "Ihr Limit an Betrieben ist erreicht. Melden Sie sich bei re:praesent, um weitere hinzuzufügen.",
         "notActive": "Das Verwalten mehrerer Betriebe ist gerade nicht aktiv. Bitte melden Sie sich bei re:praesent.",
-        "generic": "Das hat nicht geklappt. Bitte versuch es noch einmal.",
-        "otherTypeMissing": "Schreiben Sie in ein paar Worten, was für ein Betrieb es ist."
+        "generic": "Das hat nicht geklappt. Bitte versuchen Sie es noch einmal.",
+        "otherTypeMissing": "Schreiben Sie in ein paar Worten, was für ein Betrieb es ist.",
+        "phone": "Diese Telefonnummer sieht nicht richtig aus. Prüfen Sie die Ziffern.",
+        "postal": "Diese Postleitzahl sieht nicht richtig aus.",
+        "postalLike": "Diese Postleitzahl sieht nicht richtig aus. Zum Beispiel {{example}}.",
+        "memberEmailShort": "Das ist keine gültige E-Mail-Adresse.",
+        "memberTwice": "Diese Adresse steht schon in der Liste.",
+        "domain": "Schreiben Sie die Domain so: salon-mira.de.",
+        "mailboxes": "Nutzen Sie Namen wie info oder anna, getrennt durch Kommas. Bitte prüfen: {{list}}",
+        "several_one": "Ein Feld braucht noch einen Blick.",
+        "several_other": "{{count}} Felder brauchen noch einen Blick."
       },
       "back": "Zurück",
       "next": "Weiter",
@@ -12721,7 +12752,9 @@
       "website_live": "Die Website {{url}} ist online",
       "auth_sign_in": "{{actor}} hat sich angemeldet ({{method}})",
       "ai_share": "{{actor}} hat die geteilte KI für einen Betrieb geändert",
-      "support_pass_on": "{{actor}} hat eine Meldung an re:praesent weitergegeben"
+      "support_pass_on": "{{actor}} hat eine Meldung an re:praesent weitergegeben",
+      "deal_bulk_create": "{{actor}} hat Deals für mehrere Kontakte auf einmal angelegt",
+      "deal_bulk_undo": "{{actor}} hat auf einmal angelegte Deals zurückgenommen"
     },
     "generic": {
       "create": "{{actor}} hat etwas in {{area}} angelegt",
@@ -12753,5 +12786,179 @@
         "viewer": "Darf ansehen"
       }
     }
+  },
+  "setupReport": {
+    "title": "Was gewünscht wurde",
+    "titleFor": "Einrichtung für {{business}}",
+    "progress": "{{done}} von {{total}} erledigt",
+    "item": {
+      "websiteExisting": "Website: {{url}}",
+      "websiteNew": "Eine neue Website",
+      "emailBoxes": "E-Mail: {{boxes}}",
+      "email": "E-Mail-Postfächer",
+      "domainName": "Domain: {{name}}",
+      "domain": "Eine Domain",
+      "other": "Etwas anderes"
+    },
+    "done": "Erledigt",
+    "toDo": "Offen",
+    "nothing": "Nichts weiter gewünscht: Der Betrieb und sein Team sind angelegt.",
+    "websiteUnlinked": "Die Website ist noch nicht verknüpft. Der Punkt schließt sich von selbst, sobald Sie sie im Admin verknüpfen.",
+    "dealWon": "Neuer Kunde",
+    "dealLost": "Nicht zustande gekommen",
+    "dealOpen": "Deal offen",
+    "chip": "Einrichtung",
+    "clientHint": "re:praesent schließt diese Meldung, sobald alles eingerichtet ist. Schreiben Sie hier, wenn sich etwas ändert.",
+    "confirmTitle": "Die Website ist noch nicht verknüpft",
+    "confirmBody": "Wenn Sie die Einrichtung schließen, sind alle Punkte erledigt und der Deal steht auf gewonnen. Die Website wird dann nicht mehr als „im Aufbau“ angezeigt, und ihre Adresse ist wieder frei, bis Sie sie verknüpfen.",
+    "confirmKeep": "Offen lassen",
+    "confirmClose": "Trotzdem schließen"
+  },
+  "dealSupport": {
+    "title": "Support-Meldungen",
+    "hint": "Wird die Einrichtungs-Meldung erledigt, springt dieser Deal auf gewonnen."
+  },
+  "dealBatch": {
+    "back": {
+      "contacts": "Kontakte",
+      "import": "Zum Import",
+      "segment": "Zum Segment"
+    },
+    "backToWho": "Zurück",
+    "done": {
+      "created": "Neue Deals",
+      "kept": "Behalten",
+      "keptHint": "Daran wurde schon gearbeitet.",
+      "keptList": "Behalten, weil schon jemand daran gearbeitet hat",
+      "leftOut": "Wer keinen neuen Deal bekommen hat",
+      "leftOutMore_one": "und {{count}} weiterer",
+      "leftOutMore_other": "und {{count}} weitere",
+      "noName": "Ohne Namen",
+      "notMade": "Nicht angelegt",
+      "owner": "{{name}} kümmert sich darum.",
+      "removed": "Zurückgenommen",
+      "seeDeals": "In Deals ansehen",
+      "skippedOpen": "Hatten schon einen Deal",
+      "tasks_one": "{{count}} mit erster Aufgabe",
+      "tasks_other": "{{count}} mit erster Aufgabe",
+      "title": "Deine Deals sind angelegt",
+      "undoneTitle": "Diese Deals wurden zurückgenommen",
+      "leftOutMore": "und {{count}} weitere",
+      "tasks": "{{count}} mit erster Aufgabe"
+    },
+    "errors": {
+      "generic": "Das hat nicht geklappt. Prüfe deine Verbindung und versuch es noch einmal.",
+      "noContacts": "Keiner dieser Kontakte ist mehr da. Geh zurück und wähle Kontakte neu aus.",
+      "notReady": "Deals in einem Rutsch anzulegen ist für deinen Betrieb noch nicht eingeschaltet. Bitte frag beim Support nach.",
+      "owner": "Diese Person ist nicht mehr in deinem Team. Wähle jemand anderen, der sich um die Deals kümmert.",
+      "stillRunning": "Die Deals werden noch angelegt. Nimm sie zurück, wenn das fertig ist."
+    },
+    "fromImport": {
+      "body": "Wähle aus, wer einen Deal bekommt, und gib allen denselben Wert, dieselbe Phase und dieselbe erste Aufgabe. Wer schon einen Deal hat, bleibt außen vor.",
+      "button": "Deals anlegen",
+      "title": "Aus diesen Kontakten Deals machen"
+    },
+    "fromSegment": {
+      "button": "Deals anlegen",
+      "saveFirst": "Speichere zuerst das Segment, dann kannst du daraus Deals anlegen."
+    },
+    "leave": {
+      "body": "Wenn du gehst, pausiert es. Die schon angelegten Deals bleiben, und es geht weiter, sobald du die Seite wieder öffnest.",
+      "go": "Gehen und pausieren",
+      "stay": "Auf der Seite bleiben",
+      "title": "Gehen, während die Deals angelegt werden?"
+    },
+    "loading": "Wird geöffnet…",
+    "loadingContacts": "Kontakte werden geladen…",
+    "make_one": "{{count}} Deal anlegen",
+    "make_other": "{{count}} Deals anlegen",
+    "next": "Weiter: die Deals",
+    "notFound": "Das ließ sich nicht öffnen. Es gehört vielleicht zu einem anderen Betrieb.",
+    "pick": {
+      "anyValue": "{{column}}: alle",
+      "empty": "Hier gibt es keine Kontakte, für die du Deals anlegen kannst.",
+      "hasOpenDeal": "Hat schon einen Deal: {{title}}",
+      "kind": "Wer",
+      "kindAll": "Personen und Firmen",
+      "kindCompanies": "Nur Firmen",
+      "kindPeople": "Nur Personen",
+      "label": "Wer einen Deal bekommt",
+      "noneMatch": "Niemand passt. Leere die Suche oder einen Filter.",
+      "search": "Name, E-Mail, Telefon suchen…",
+      "showMore_one": "{{count}} weiteren zeigen",
+      "showMore_other": "{{count}} weitere zeigen",
+      "shownCount": "{{shown}} von {{total}} angezeigt",
+      "tickAll": "Alle anhaken",
+      "tickShown": "Alle angezeigten anhaken",
+      "totalCount_one": "{{count}} Kontakt",
+      "totalCount_other": "{{count}} Kontakte",
+      "showMore": "{{count}} weitere zeigen",
+      "totalCount": "{{count}} Kontakte"
+    },
+    "pickedCount_one": "{{count}} angehakt",
+    "pickedCount_other": "{{count}} angehakt",
+    "pickedWithOpen_one": "{{count}} davon hat schon einen Deal",
+    "pickedWithOpen_other": "{{count}} davon haben schon einen Deal",
+    "reason": {
+      "failed": "Ließ sich nicht anlegen. Leg diesen Deal von Hand an.",
+      "gone": "Kontakt wurde inzwischen gelöscht",
+      "open": "Hat schon einen Deal"
+    },
+    "retry": "Noch einmal versuchen",
+    "run": {
+      "keepOpen": "Lass diese Seite offen, bis alles fertig ist. Wird sie geschlossen, geht es weiter, sobald du sie wieder öffnest.",
+      "progress": "{{done}} von {{total}} fertig",
+      "resume": "Weitermachen",
+      "stopped": "Es hat angehalten",
+      "stoppedHint": "Nichts wird doppelt angelegt. {{detail}}",
+      "title": "Deals werden angelegt…"
+    },
+    "selectionGone": "Es ist nichts mehr ausgewählt. Hake Kontakte in der Kontaktliste an und wähle „Deals anlegen“.",
+    "settings": {
+      "andMore_one": "und {{count}} weiterer, einer pro Kontakt",
+      "andMore_other": "und {{count}} weitere, einer pro Kontakt",
+      "automations": "Meine Deal-Automationen für diese starten",
+      "automationsOff": "Aus: Für diese Deals startet kein Workflow, also bekommt niemand eine E-Mail pro Deal.",
+      "automationsOn": "Jeder neue Deal startet deine Workflows, wie ein von Hand angelegter. Das kann eine E-Mail pro Deal bedeuten.",
+      "extra": "Zu jedem Titel hinzufügen (optional)",
+      "extraHint": "Jeder Deal heißt wie sein Kontakt.",
+      "extraPlaceholder": "z. B. Küche 2027",
+      "noValue": "Ohne Wert",
+      "nobody": "Hake mindestens einen Kontakt an, um die Deals zu sehen.",
+      "owner": "Wer sich darum kümmert",
+      "pipeline": "Pipeline",
+      "stage": "Deal-Phase",
+      "task": "Eine erste Aufgabe für jeden Deal",
+      "taskDefault": "Anrufen",
+      "taskDue": "Fällig",
+      "taskHint": "Damit jeder Deal einen nächsten Schritt hat.",
+      "taskTitle": "Aufgabe",
+      "title": "Gleich für jeden Deal",
+      "value": "Wert pro Deal",
+      "valueHint": "Lass es leer, wenn du es noch nicht weißt. Du kannst jeden Deal später ändern.",
+      "andMore": "und {{count}} weitere, einer pro Kontakt"
+    },
+    "subtitle": "Ein Deal pro angehaktem Kontakt, alle mit demselben Wert und derselben Phase.",
+    "subtitleFrom": "Aus {{name}}: ein Deal pro angehaktem Kontakt.",
+    "title": "Deals anlegen",
+    "toContacts": "Zu den Kontakten",
+    "truncated": "Es werden die ersten 5.000 gezeigt. Grenze sie mit einem Segment ein, um die übrigen zu erreichen.",
+    "undo": {
+      "body_one": "Der {{count}} hier angelegte Deal wird mit seiner ersten Aufgabe entfernt. Deals, die seitdem verschoben, kommentiert oder um Aufgaben ergänzt wurden, bleiben.",
+      "body_other": "Die {{count}} hier angelegten Deals werden mit ihrer ersten Aufgabe entfernt. Deals, die seitdem verschoben, kommentiert oder um Aufgaben ergänzt wurden, bleiben.",
+      "button": "Diese Deals zurücknehmen",
+      "done_one": "{{count}} Deal zurückgenommen.",
+      "done_other": "{{count}} Deals zurückgenommen.",
+      "doneKept": "{{removed}} Deals zurückgenommen, {{kept}} behalten, weil schon jemand daran gearbeitet hat.",
+      "going": "Wird zurückgenommen… noch {{count}}",
+      "keep": "Deals behalten",
+      "title": "Diese Deals zurücknehmen?",
+      "body": "Die {{count}} hier angelegten Deals werden mit ihrer ersten Aufgabe entfernt. Deals, die seitdem verschoben, kommentiert oder um Aufgaben ergänzt wurden, bleiben.",
+      "done": "{{count}} Deals zurückgenommen."
+    },
+    "viewerOnly": "Du kannst Deals ansehen, aber nicht anlegen. Frag eine Person mit Admin-Rechten in deinem Betrieb.",
+    "make": "{{count}} Deals anlegen",
+    "pickedCount": "{{count}} angehakt",
+    "pickedWithOpen": "{{count}} davon haben schon einen Deal"
   }
 }

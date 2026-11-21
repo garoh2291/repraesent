@@ -215,6 +215,25 @@ export function DoneStep({ imp, canEdit }: { imp: ContactImport; canEdit: boolea
         </section>
       ) : null}
 
+      {!isUndone && canEdit && c.added + c.updated > 0 ? (
+        <section className="flex flex-col gap-3 rounded-xl border border-border bg-card p-4 sm:flex-row sm:items-center sm:justify-between sm:p-5">
+          <div className="min-w-0">
+            <h3 className="text-[15px] font-semibold text-foreground">
+              {t("dealBatch.fromImport.title", "Turn these contacts into deals")}
+            </h3>
+            <p className="mt-0.5 text-[13.5px] text-muted-foreground">
+              {t(
+                "dealBatch.fromImport.body",
+                "Pick who, then give them all the same value, stage and first task. People who already have a deal are left out.",
+              )}
+            </p>
+          </div>
+          <Button asChild className="h-10 shrink-0 max-sm:h-11 max-sm:w-full">
+            <Link to={`/pipeline/make?from=import&id=${imp.id}`}>{t("dealBatch.fromImport.button", "Make deals")}</Link>
+          </Button>
+        </section>
+      ) : null}
+
       {!isUndone && canEdit ? <SegmentsFromColumn imp={imp} /> : null}
 
       <div className="flex flex-wrap items-center gap-2 border-t border-border pt-5">

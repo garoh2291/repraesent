@@ -9,6 +9,7 @@ import { LoadError } from "~/components/notebook/load-error";
 import { Skeleton } from "~/components/ui/skeleton";
 import { useHelp, useHelpAvailable } from "~/components/support/help-provider";
 import { SeverityMark, StatusPill, TicketStub } from "~/components/support/ticket-bits";
+import { SetupChip } from "~/components/support/setup-report-card";
 import { useAuthContext } from "~/providers/auth-provider";
 import { useDocumentMeta } from "~/lib/hooks/use-document-meta";
 import { helpKeys, listHelpTickets, type TicketSummary } from "~/lib/api/support-tickets";
@@ -161,6 +162,7 @@ function List({ rows }: { rows: TicketSummary[] }) {
                 </p>
                 <div className="mt-2 flex flex-wrap items-center gap-2 text-[12px] text-muted-foreground">
                   <TicketStub number={r.number} />
+                  {r.kind === "setup" ? <SetupChip /> : null}
                   {r.shared_by ? (
                     <span className="rounded-full bg-muted px-2 py-0.5 font-medium text-foreground/75">
                       {t("help.sharedBy", "From {{agency}} · with re:praesent", { agency: r.shared_by })}

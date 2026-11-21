@@ -37,7 +37,32 @@ export type TicketEvent =
   | { type: "queue"; from: string | null; to: string | null }
   /** The report passed on to re:praesent was finished / opened again, and this one followed. */
   | { type: "linked_done"; ticket_id: string; number: number }
-  | { type: "linked_reopened"; ticket_id: string; number: number };
+  | { type: "linked_reopened"; ticket_id: string; number: number }
+  /** Set-up report: every set-up item is done (the website went live, or re:praesent closed them). */
+  | { type: "setup_done" }
+  /** Set-up report, re:praesent only: the deal moved because the report did. */
+  | { type: "deal_moved"; deal_id: string; to: "won" | "open" };
+
+export type TicketKind = "report" | "setup";
+
+/** One thing an agency asked re:praesent to set up for a new business. */
+export interface SetupReportItem {
+  id: string;
+  kind: "website" | "email" | "domain" | "other";
+  label: string | null;
+  note: string | null;
+  status: "requested" | "in_progress" | "done" | "cancelled";
+  closed_at: string | null;
+}
+
+export interface SetupReport {
+  business: { workspace_id: string; name: string };
+  items: SetupReportItem[];
+  /** An open website item and no site linked yet. */
+  website_unlinked: boolean;
+  /** re:praesent only: its deal for this business. */
+  deal?: { id: string; title: string; status: "new" | "won" | "lost" } | null;
+}
 
 /** A report passed on from this one. */
 export interface LinkedTicket {
@@ -96,6 +121,8 @@ export interface TicketSummary {
   shared_by?: string | null;
   /** The newest report passed on from this one to re:praesent. */
   passed_on?: LinkedTicket | null;
+  /** "setup" = an agency's set-up request for a new business. */
+  kind?: TicketKind;
 }
 
 export interface TeamTicketSummary extends TicketSummary {
@@ -118,6 +145,9 @@ export interface TicketDetail extends TicketSummary {
   linked?: LinkedTicket[];
   /** Client: your own report this one was passed on from. */
   source?: { id: string; number: number } | null;
+  kind?: TicketKind;
+  /** Set-up reports: what was asked and where it stands. */
+  setup?: SetupReport | null;
 }
 
 export interface TeamTicketDetail extends TicketDetail {
@@ -268,13 +298,21 @@ export async function getQueueTicket(b: QueueBase, id: string) {
 export async function sendQueueMessage(
   b: QueueBase,
   id: string,
-  input: { body: string; kind: "message" | "note"; then: "wait" | "resolve" | "keep"; files: File[] },
+  input: { body: string; kind: "message" | "note"; then: "wait" | "resolve" | "keep"; files: File[]; close_website?: boolean },
 ) {
   return (
-    await apiClient.post<TeamTicketDetail>(`/${b}/tickets/${id}/messages`, await form({ body: input.body, kind: input.kind, then: input.then }, input.files), MULTIPART)
+    await apiClient.post<TeamTicketDetail>(
+      `/${b}/tickets/${id}/messages`,
+      await form({ body: input.body, kind: input.kind, then: input.then, close_website: input.close_website ? "true" : null }, input.files),
+      MULTIPART,
+    )
   ).data;
 }
-export async function updateQueueTicket(b: QueueBase, id: string, patch: { status?: TicketStatus; severity?: Severity; assigned_to?: string | null }) {
+export async function updateQueueTicket(
+  b: QueueBase,
+  id: string,
+  patch: { status?: TicketStatus; severity?: Severity; assigned_to?: string | null; close_website?: boolean },
+) {
   return (await apiClient.patch<TeamTicketDetail>(`/${b}/tickets/${id}`, patch)).data;
 }
 /** Agency: pass a business's report on to re:praesent as a new, linked report. */
@@ -284,6 +322,21 @@ export async function escalateQueueTicket(
 ) {
   return (await apiClient.post<{ id: string; number: number }>(`/agency-support/tickets/${id}/escalate`, input)).data;
 }
+/** Root only: the reports that belong to a re:praesent deal (set-up reports), for the deal page. */
+export interface DealTicket {
+  id: string;
+  number: number;
+  status: TicketStatus;
+  kind: TicketKind;
+  title: string;
+  business: string | null;
+}
+export async function listDealTickets(dealId: string) {
+  return (await apiClient.get<{ data: DealTicket[] }>(`/root-support/deals/${dealId}/tickets`)).data.data;
+}
+/** Resolving a set-up report whose website isn't linked yet asks first (409 with this code). */
+export const SETUP_WEBSITE_OPEN = "SETUP_WEBSITE_OPEN";
+
 /** Root only: find or create the reporter as a root contact, for the composer. */
 export async function ensureTicketContact(id: string) {
   return (await apiClient.post<{ contactId: string; email: string; name: string | null }>(`/root-support/tickets/${id}/email-contact`)).data;

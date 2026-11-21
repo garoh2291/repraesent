@@ -1566,7 +1566,8 @@
       "de": "Deutsch",
       "fr": "Français",
       "nl": "Nederlands",
-      "hy": "Հայերեն"
+      "hy": "Հայերեն",
+      "cs": "Čeština"
     },
     "invoices": {
       "title": "Facturen",
@@ -4407,6 +4408,18 @@
       "remove": "Verwijderen",
       "edit": "{{name}} wijzigen",
       "sourceFromFile": "Bron (uit bestand)"
+    },
+    "select": {
+      "bar": "Gekozen contacten",
+      "clear": "Wissen",
+      "count_one": "{{count}} gekozen",
+      "count_other": "{{count}} gekozen",
+      "done": "Klaar",
+      "makeDeals": "Deals maken",
+      "one": "{{name}} kiezen",
+      "page": "Iedereen op deze pagina kiezen",
+      "start": "Kiezen voor deals",
+      "count": "{{count}} gekozen"
     }
   },
   "leadEmails": {
@@ -10181,7 +10194,8 @@
     "appointments": "Afspraken",
     "support": "Support",
     "businesses": "Uw bedrijven",
-    "businessesShort": "Bedrijven"
+    "businessesShort": "Bedrijven",
+    "businessReports": "Meldingen"
   },
   "command": {
     "title": "Openen of zoeken",
@@ -12177,7 +12191,8 @@
       "email": "{{who}} heeft u gemaild op {{to}}: ‘{{subject}}’",
       "queueMoved": "Vanaf nu beantwoordt re:praesent deze melding",
       "linkedDone": "re:praesent heeft #{{number}} opgelost, dus deze ook",
-      "linkedReopened": "#{{number}} bij re:praesent staat weer open, deze ook"
+      "linkedReopened": "#{{number}} bij re:praesent staat weer open, deze ook",
+      "setupDone": "Alles is ingericht, dus deze melding is klaar"
     },
     "files": {
       "type": "Screenshots kunnen PNG, JPG, WebP of GIF zijn.",
@@ -12190,7 +12205,7 @@
     },
     "todayNeutral_one": "1 melding wacht op uw antwoord",
     "todayNeutral_other": "{{count}} meldingen wachten op uw antwoord",
-    "viaAgency": "U bent via {{agency}} in {{business}}. De meldingen van dit bedrijf komen in de Support van uw bureau: open {{agency}} om ze te beantwoorden of door te sturen naar re:praesent.",
+    "viaAgency": "U bent via {{agency}} in {{business}}. Meldingen van dit bedrijf komen bij uw bureau onder 'Meldingen van bedrijven': open {{agency}} om ze te beantwoorden of door te geven aan re:praesent.",
     "sharedBy": "Van {{agency}} · bij re:praesent",
     "withRe": "Bij re:praesent",
     "withReWaiting": "re:praesent wacht op uw antwoord"
@@ -12275,7 +12290,9 @@
       "unassigned": "{{who}} haalde de toewijzing weg",
       "passedOn": "{{who}} heeft het als #{{number}} doorgestuurd naar re:praesent",
       "passedOnVisible": "{{who}} heeft het als #{{number}} doorgestuurd naar re:praesent, zichtbaar voor het bedrijf",
-      "queueMoved": "Van het bureau naar re:praesent overgezet"
+      "queueMoved": "Van het bureau naar re:praesent overgezet",
+      "dealWon": "De deal staat met deze melding op gewonnen",
+      "dealReopened": "De deal staat met deze melding weer open"
     },
     "today_one": "1 supportticket wacht op antwoord",
     "today_other": "{{count}} supporttickets wachten op antwoord",
@@ -12307,7 +12324,10 @@
       "linkedVisible": "Bij re:praesent · het bedrijf leest mee",
       "chip": "Bij re:praesent",
       "chipDone": "re:praesent klaar"
-    }
+    },
+    "titleAgency": "Meldingen van bedrijven",
+    "agencyIntro": "Meldingen die uw bedrijven naar u sturen.",
+    "agencyIntroLink": "Uw eigen meldingen aan re:praesent staan bij Hulp & wijzigingen"
   },
   "timezonePicker": {
     "label": "Tijdzone",
@@ -12504,7 +12524,9 @@
         "customers": "nieuwe klanten"
       },
       "reportsOpen_one": "1 melding wacht op uw antwoord",
-      "reportsOpen_other": "{{count}} meldingen wachten op uw antwoord"
+      "reportsOpen_other": "{{count}} meldingen wachten op uw antwoord",
+      "settingUp": "Wordt ingericht · team wordt uitgenodigd",
+      "setupNeedsLook": "Inrichting loopt vast · laat het re:praesent weten"
     },
     "add": {
       "title": "Bedrijf toevoegen",
@@ -12595,7 +12617,16 @@
         "limit": "Uw limiet aan bedrijven is bereikt. Neem contact op met re:praesent om er meer toe te voegen.",
         "notActive": "Meerdere bedrijven beheren staat nu niet aan. Neem contact op met re:praesent.",
         "generic": "Dat lukte niet. Probeer het opnieuw.",
-        "otherTypeMissing": "Schrijf in een paar woorden wat voor bedrijf het is."
+        "otherTypeMissing": "Schrijf in een paar woorden wat voor bedrijf het is.",
+        "phone": "Dit telefoonnummer klopt niet. Controleer de cijfers.",
+        "postal": "Deze postcode klopt niet.",
+        "postalLike": "Deze postcode klopt niet. Bijvoorbeeld {{example}}.",
+        "memberEmailShort": "Dat is geen geldig e-mailadres.",
+        "memberTwice": "Dit adres staat al in de lijst.",
+        "domain": "Schrijf het domein zo: salon-mira.de.",
+        "mailboxes": "Gebruik namen als info of anna, gescheiden door komma's. Controleer: {{list}}",
+        "several_one": "Eén veld moet nog worden nagekeken.",
+        "several_other": "{{count}} velden moeten nog worden nagekeken."
       },
       "back": "Terug",
       "next": "Volgende",
@@ -12719,7 +12750,9 @@
       "website_live": "De website {{url}} is online",
       "auth_sign_in": "{{actor}} heeft zich aangemeld ({{method}})",
       "ai_share": "{{actor}} heeft de gedeelde AI voor een bedrijf gewijzigd",
-      "support_pass_on": "{{actor}} heeft een melding doorgestuurd naar re:praesent"
+      "support_pass_on": "{{actor}} heeft een melding doorgestuurd naar re:praesent",
+      "deal_bulk_create": "{{actor}} heeft in één keer deals voor meerdere contacten gemaakt",
+      "deal_bulk_undo": "{{actor}} heeft in één keer gemaakte deals teruggedraaid"
     },
     "generic": {
       "create": "{{actor}} heeft iets toegevoegd in {{area}}",
@@ -12751,5 +12784,179 @@
         "viewer": "Mag bekijken"
       }
     }
+  },
+  "setupReport": {
+    "title": "Wat er gevraagd is",
+    "titleFor": "Inrichting voor {{business}}",
+    "progress": "{{done}} van {{total}} klaar",
+    "item": {
+      "websiteExisting": "Website: {{url}}",
+      "websiteNew": "Een nieuwe website",
+      "emailBoxes": "E-mail: {{boxes}}",
+      "email": "E-mailadressen",
+      "domainName": "Domein: {{name}}",
+      "domain": "Een domein",
+      "other": "Iets anders"
+    },
+    "done": "Klaar",
+    "toDo": "Te doen",
+    "nothing": "Niets extra gevraagd: het bedrijf en het team staan erin.",
+    "websiteUnlinked": "De website is nog niet gekoppeld. Dit punt sluit vanzelf zodra u hem in de admin koppelt.",
+    "dealWon": "Nieuwe klant",
+    "dealLost": "Niet doorgegaan",
+    "dealOpen": "Deal open",
+    "chip": "Inrichting",
+    "clientHint": "re:praesent sluit deze melding zodra alles is ingericht. Schrijf hier als er iets verandert.",
+    "confirmTitle": "De website is nog niet gekoppeld",
+    "confirmBody": "Als u de inrichting sluit, zijn alle punten klaar en staat de deal op gewonnen. De website staat dan niet meer als 'in opbouw' en het adres is weer vrij tot u hem koppelt.",
+    "confirmKeep": "Open laten",
+    "confirmClose": "Toch sluiten"
+  },
+  "dealSupport": {
+    "title": "Supportmeldingen",
+    "hint": "Wordt de inrichtingsmelding afgerond, dan gaat deze deal naar gewonnen."
+  },
+  "dealBatch": {
+    "back": {
+      "contacts": "Contacten",
+      "import": "De import",
+      "segment": "Het segment"
+    },
+    "backToWho": "Terug",
+    "done": {
+      "created": "Nieuwe deals",
+      "kept": "Bewaard",
+      "keptHint": "Daar is al aan gewerkt.",
+      "keptList": "Bewaard, omdat iemand er al aan werkte",
+      "leftOut": "Wie geen nieuwe deal kreeg",
+      "leftOutMore_one": "en nog {{count}}",
+      "leftOutMore_other": "en nog {{count}}",
+      "noName": "Zonder naam",
+      "notMade": "Niet gemaakt",
+      "owner": "{{name}} zorgt ervoor.",
+      "removed": "Teruggedraaid",
+      "seeDeals": "Bekijken in Deals",
+      "skippedOpen": "Hadden al een deal",
+      "tasks_one": "{{count}} met een eerste taak",
+      "tasks_other": "{{count}} met een eerste taak",
+      "title": "Je deals zijn gemaakt",
+      "undoneTitle": "Deze deals zijn teruggedraaid",
+      "leftOutMore": "en nog {{count}}",
+      "tasks": "{{count}} met een eerste taak"
+    },
+    "errors": {
+      "generic": "Dat lukte niet. Controleer je verbinding en probeer het opnieuw.",
+      "noContacts": "Geen van deze contacten bestaat nog. Ga terug en kies opnieuw contacten.",
+      "notReady": "Deals in één keer maken staat nog niet aan voor je bedrijf. Vraag het aan support.",
+      "owner": "Die persoon zit niet meer in je team. Kies iemand anders die de deals opvolgt.",
+      "stillRunning": "De deals worden nog gemaakt. Draai ze terug als dat klaar is."
+    },
+    "fromImport": {
+      "body": "Kies wie, en geef iedereen dezelfde waarde, fase en eerste taak. Wie al een deal heeft, wordt overgeslagen.",
+      "button": "Deals maken",
+      "title": "Maak deals van deze contacten"
+    },
+    "fromSegment": {
+      "button": "Deals maken",
+      "saveFirst": "Sla eerst het segment op, en maak er dan deals van."
+    },
+    "leave": {
+      "body": "Het pauzeert als je weggaat. De gemaakte deals blijven, en het gaat verder zodra je deze pagina weer opent.",
+      "go": "Weggaan en pauzeren",
+      "stay": "Op deze pagina blijven",
+      "title": "Weggaan terwijl de deals worden gemaakt?"
+    },
+    "loading": "Openen…",
+    "loadingContacts": "Contacten ophalen…",
+    "make_one": "{{count}} deal maken",
+    "make_other": "{{count}} deals maken",
+    "next": "Verder: de deals",
+    "notFound": "Dit kon niet worden geopend. Het hoort misschien bij een ander bedrijf.",
+    "pick": {
+      "anyValue": "{{column}}: alle",
+      "empty": "Hier zijn geen contacten om deals voor te maken.",
+      "hasOpenDeal": "Heeft al een deal: {{title}}",
+      "kind": "Wie",
+      "kindAll": "Personen en bedrijven",
+      "kindCompanies": "Alleen bedrijven",
+      "kindPeople": "Alleen personen",
+      "label": "Wie een deal krijgt",
+      "noneMatch": "Niemand past. Wis de zoekopdracht of een filter.",
+      "search": "Zoek naam, e-mail, telefoon…",
+      "showMore_one": "Nog {{count}} tonen",
+      "showMore_other": "Nog {{count}} tonen",
+      "shownCount": "{{shown}} van {{total}} getoond",
+      "tickAll": "Iedereen aanvinken",
+      "tickShown": "Iedereen die getoond wordt aanvinken",
+      "totalCount_one": "{{count}} contact",
+      "totalCount_other": "{{count}} contacten",
+      "showMore": "Nog {{count}} tonen",
+      "totalCount": "{{count}} contacten"
+    },
+    "pickedCount_one": "{{count}} aangevinkt",
+    "pickedCount_other": "{{count}} aangevinkt",
+    "pickedWithOpen_one": "{{count}} daarvan heeft al een deal",
+    "pickedWithOpen_other": "{{count}} daarvan hebben al een deal",
+    "reason": {
+      "failed": "Kon niet worden gemaakt. Maak deze met de hand.",
+      "gone": "Contact is intussen verwijderd",
+      "open": "Heeft al een deal"
+    },
+    "retry": "Opnieuw proberen",
+    "run": {
+      "keepOpen": "Houd deze pagina open tot alles klaar is. Wordt ze gesloten, dan gaat het verder zodra je ze weer opent.",
+      "progress": "{{done}} van {{total}} klaar",
+      "resume": "Verdergaan",
+      "stopped": "Het is gestopt",
+      "stoppedHint": "Niets wordt dubbel gemaakt. {{detail}}",
+      "title": "Deals worden gemaakt…"
+    },
+    "selectionGone": "Er is niets meer gekozen. Vink contacten aan in de contactlijst en kies “Deals maken”.",
+    "settings": {
+      "andMore_one": "en nog {{count}}, één per contact",
+      "andMore_other": "en nog {{count}}, één per contact",
+      "automations": "Mijn deal-automatiseringen hiervoor starten",
+      "automationsOff": "Uit: voor deze deals start geen workflow, dus niemand krijgt een e-mail per deal.",
+      "automationsOn": "Elke nieuwe deal start je workflows, net als een deal die je met de hand maakt. Dat kan een e-mail per deal betekenen.",
+      "extra": "Aan elke titel toevoegen (optioneel)",
+      "extraHint": "Elke deal krijgt de naam van zijn contact.",
+      "extraPlaceholder": "bijv. Keuken 2027",
+      "noValue": "Zonder waarde",
+      "nobody": "Vink minstens één contact aan om de deals te zien.",
+      "owner": "Wie ze opvolgt",
+      "pipeline": "Pipeline",
+      "stage": "Dealfase",
+      "task": "Een eerste taak bij elke deal",
+      "taskDefault": "Bellen",
+      "taskDue": "Te doen op",
+      "taskHint": "Zodat elke deal een volgende stap heeft.",
+      "taskTitle": "Taak",
+      "title": "Hetzelfde voor elke deal",
+      "value": "Waarde per deal",
+      "valueHint": "Laat het leeg als je het nog niet weet. Je kunt elke deal later aanpassen.",
+      "andMore": "en nog {{count}}, één per contact"
+    },
+    "subtitle": "Eén deal per aangevinkt contact, allemaal met dezelfde waarde en fase.",
+    "subtitleFrom": "Uit {{name}}: één deal per aangevinkt contact.",
+    "title": "Deals maken",
+    "toContacts": "Naar contacten",
+    "truncated": "De eerste 5.000 worden getoond. Beperk het met een segment om de rest te bereiken.",
+    "undo": {
+      "body_one": "De {{count}} deal die hier is gemaakt, wordt verwijderd met zijn eerste taak. Deals die sindsdien zijn verplaatst, van een notitie of taken voorzien, blijven staan.",
+      "body_other": "De {{count}} deals die hier zijn gemaakt, worden verwijderd met hun eerste taak. Deals die sindsdien zijn verplaatst, van een notitie of taken voorzien, blijven staan.",
+      "button": "Deze deals terugdraaien",
+      "done_one": "{{count}} deal teruggedraaid.",
+      "done_other": "{{count}} deals teruggedraaid.",
+      "doneKept": "{{removed}} deals teruggedraaid, {{kept}} bewaard omdat iemand er al aan werkte.",
+      "going": "Terugdraaien… nog {{count}}",
+      "keep": "Deals houden",
+      "title": "Deze deals terugdraaien?",
+      "body": "De {{count}} deals die hier zijn gemaakt, worden verwijderd met hun eerste taak. Deals die sindsdien zijn verplaatst, van een notitie of taken voorzien, blijven staan.",
+      "done": "{{count}} deals teruggedraaid."
+    },
+    "viewerOnly": "Je kunt deals bekijken maar niet maken. Vraag het aan een beheerder van je bedrijf.",
+    "make": "{{count}} deals maken",
+    "pickedCount": "{{count}} aangevinkt",
+    "pickedWithOpen": "{{count}} daarvan hebben al een deal"
   }
 }

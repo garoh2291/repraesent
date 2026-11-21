@@ -1568,7 +1568,8 @@
       "de": "Deutsch",
       "fr": "Français",
       "nl": "Nederlands",
-      "hy": "Հայերեն"
+      "hy": "Հայերեն",
+      "cs": "Čeština"
     },
     "invoices": {
       "title": "Factures",
@@ -4409,6 +4410,18 @@
       "remove": "Supprimer",
       "edit": "Modifier {{name}}",
       "sourceFromFile": "Source (du fichier)"
+    },
+    "select": {
+      "bar": "Contacts choisis",
+      "clear": "Effacer",
+      "count_one": "{{count}} choisi",
+      "count_other": "{{count}} choisis",
+      "done": "Terminé",
+      "makeDeals": "Créer des affaires",
+      "one": "Choisir {{name}}",
+      "page": "Choisir tout le monde sur cette page",
+      "start": "Choisir pour créer des affaires",
+      "count": "{{count}} choisis"
     }
   },
   "leadEmails": {
@@ -10183,7 +10196,8 @@
     "appointments": "Rendez-vous",
     "support": "Support",
     "businesses": "Vos entreprises",
-    "businessesShort": "Entreprises"
+    "businessesShort": "Entreprises",
+    "businessReports": "Signalements"
   },
   "command": {
     "title": "Aller à ou rechercher",
@@ -12179,7 +12193,8 @@
       "email": "{{who}} vous a écrit à {{to}} : « {{subject}} »",
       "queueMoved": "re:praesent répond désormais à ce signalement",
       "linkedDone": "re:praesent a réglé le n°{{number}}, celui-ci est donc réglé aussi",
-      "linkedReopened": "Le n°{{number}} chez re:praesent est rouvert, celui-ci aussi"
+      "linkedReopened": "Le n°{{number}} chez re:praesent est rouvert, celui-ci aussi",
+      "setupDone": "Tout est en place, ce signalement est donc terminé"
     },
     "files": {
       "type": "Les captures peuvent être en PNG, JPG, WebP ou GIF.",
@@ -12192,7 +12207,7 @@
     },
     "todayNeutral_one": "1 signalement attend votre réponse",
     "todayNeutral_other": "{{count}} signalements attendent votre réponse",
-    "viaAgency": "Vous êtes dans {{business}} via {{agency}}. Ses signalements arrivent dans le Support de votre agence : ouvrez {{agency}} pour y répondre ou les transmettre à re:praesent.",
+    "viaAgency": "Vous êtes dans {{business}} via {{agency}}. Ses signalements arrivent dans « Signalements des entreprises » de votre agence : ouvrez {{agency}} pour y répondre ou les transmettre à re:praesent.",
     "sharedBy": "De {{agency}} · chez re:praesent",
     "withRe": "Chez re:praesent",
     "withReWaiting": "re:praesent attend votre réponse"
@@ -12277,7 +12292,9 @@
       "unassigned": "{{who}} l'a laissé sans responsable",
       "passedOn": "{{who}} l'a transmis à re:praesent sous le n° {{number}}",
       "passedOnVisible": "{{who}} l'a transmis à re:praesent sous le n° {{number}}, visible par l'entreprise",
-      "queueMoved": "Transféré de l'agence à re:praesent"
+      "queueMoved": "Transféré de l'agence à re:praesent",
+      "dealWon": "L'affaire est passée à gagnée avec ce signalement",
+      "dealReopened": "L'affaire est de nouveau ouverte avec ce signalement"
     },
     "today_one": "1 ticket de support attend une réponse",
     "today_other": "{{count}} tickets de support attendent une réponse",
@@ -12309,7 +12326,10 @@
       "linkedVisible": "Chez re:praesent · l'entreprise suit l'échange",
       "chip": "Chez re:praesent",
       "chipDone": "Réglé par re:praesent"
-    }
+    },
+    "titleAgency": "Signalements des entreprises",
+    "agencyIntro": "Les signalements que vos entreprises vous envoient.",
+    "agencyIntroLink": "Vos propres signalements à re:praesent sont dans Aide et modifications"
   },
   "timezonePicker": {
     "label": "Fuseau horaire",
@@ -12506,7 +12526,9 @@
         "customers": "nouveaux clients"
       },
       "reportsOpen_one": "1 signalement attend votre réponse",
-      "reportsOpen_other": "{{count}} signalements attendent votre réponse"
+      "reportsOpen_other": "{{count}} signalements attendent votre réponse",
+      "settingUp": "Mise en place · invitation de l'équipe",
+      "setupNeedsLook": "La mise en place bloque · écrivez à re:praesent"
     },
     "add": {
       "title": "Ajouter une entreprise",
@@ -12597,7 +12619,16 @@
         "limit": "Vous avez atteint votre limite d'entreprises. Contactez re:praesent pour en ajouter.",
         "notActive": "La gestion de plusieurs entreprises n'est pas active pour le moment. Veuillez contacter re:praesent.",
         "generic": "Cela n'a pas fonctionné. Veuillez réessayer.",
-        "otherTypeMissing": "Indiquez en quelques mots de quel type d'entreprise il s'agit."
+        "otherTypeMissing": "Indiquez en quelques mots de quel type d'entreprise il s'agit.",
+        "phone": "Ce numéro de téléphone ne semble pas correct. Vérifiez les chiffres.",
+        "postal": "Ce code postal ne semble pas correct.",
+        "postalLike": "Ce code postal ne semble pas correct. Par exemple {{example}}.",
+        "memberEmailShort": "Ce n'est pas une adresse e-mail valide.",
+        "memberTwice": "Cette adresse est déjà dans la liste.",
+        "domain": "Écrivez le domaine ainsi : salon-mira.de.",
+        "mailboxes": "Utilisez des noms comme info ou anna, séparés par des virgules. À vérifier : {{list}}",
+        "several_one": "Un champ est à vérifier.",
+        "several_other": "{{count}} champs sont à vérifier."
       },
       "back": "Retour",
       "next": "Suivant",
@@ -12721,7 +12752,9 @@
       "website_live": "Le site {{url}} est en ligne",
       "auth_sign_in": "{{actor}} s'est connecté ({{method}})",
       "ai_share": "{{actor}} a modifié l'IA partagée d'une entreprise",
-      "support_pass_on": "{{actor}} a transmis un signalement à re:praesent"
+      "support_pass_on": "{{actor}} a transmis un signalement à re:praesent",
+      "deal_bulk_create": "{{actor}} a créé des affaires pour plusieurs contacts en une fois",
+      "deal_bulk_undo": "{{actor}} a annulé des affaires créées en une fois"
     },
     "generic": {
       "create": "{{actor}} a ajouté quelque chose dans {{area}}",
@@ -12753,5 +12786,179 @@
         "viewer": "Peut consulter"
       }
     }
+  },
+  "setupReport": {
+    "title": "Ce qui a été demandé",
+    "titleFor": "Mise en place pour {{business}}",
+    "progress": "{{done}} sur {{total}} fait(s)",
+    "item": {
+      "websiteExisting": "Site web : {{url}}",
+      "websiteNew": "Un nouveau site web",
+      "emailBoxes": "E-mail : {{boxes}}",
+      "email": "Boîtes e-mail",
+      "domainName": "Domaine : {{name}}",
+      "domain": "Un domaine",
+      "other": "Autre chose"
+    },
+    "done": "Fait",
+    "toDo": "À faire",
+    "nothing": "Rien de plus demandé : l'entreprise et son équipe sont en place.",
+    "websiteUnlinked": "Le site web n'est pas encore relié. Ce point se ferme tout seul dès que vous le reliez dans l'admin.",
+    "dealWon": "Nouveau client",
+    "dealLost": "Pas conclu",
+    "dealOpen": "Affaire en cours",
+    "chip": "Mise en place",
+    "clientHint": "re:praesent clôt ce signalement une fois tout en place. Écrivez ici si quelque chose change.",
+    "confirmTitle": "Le site web n'est pas encore relié",
+    "confirmBody": "Clore la mise en place marque chaque point comme fait et passe l'affaire à gagnée. Le site n'apparaît alors plus « en construction » et son adresse redevient libre jusqu'à ce que vous le reliiez.",
+    "confirmKeep": "Laisser ouvert",
+    "confirmClose": "Clore quand même"
+  },
+  "dealSupport": {
+    "title": "Signalements support",
+    "hint": "Clore le signalement de mise en place passe cette affaire à gagnée."
+  },
+  "dealBatch": {
+    "back": {
+      "contacts": "Contacts",
+      "import": "L'import",
+      "segment": "Le segment"
+    },
+    "backToWho": "Retour",
+    "done": {
+      "created": "Nouvelles affaires",
+      "kept": "Conservées",
+      "keptHint": "Quelqu'un y a déjà travaillé.",
+      "keptList": "Conservées, car quelqu'un y a travaillé",
+      "leftOut": "Qui n'a pas reçu de nouvelle affaire",
+      "leftOutMore_one": "et {{count}} de plus",
+      "leftOutMore_other": "et {{count}} de plus",
+      "noName": "Sans nom",
+      "notMade": "Non créées",
+      "owner": "{{name}} s'en occupe.",
+      "removed": "Annulées",
+      "seeDeals": "Les voir dans Affaires",
+      "skippedOpen": "Avaient déjà une affaire",
+      "tasks_one": "{{count}} avec une première tâche",
+      "tasks_other": "{{count}} avec une première tâche",
+      "title": "Vos affaires sont créées",
+      "undoneTitle": "Ces affaires ont été annulées",
+      "leftOutMore": "et {{count}} de plus",
+      "tasks": "{{count}} avec une première tâche"
+    },
+    "errors": {
+      "generic": "Cela n'a pas fonctionné. Vérifiez votre connexion et réessayez.",
+      "noContacts": "Aucun de ces contacts n'existe encore. Revenez en arrière et choisissez à nouveau.",
+      "notReady": "La création d'affaires en une fois n'est pas encore activée pour votre entreprise. Contactez le support.",
+      "owner": "Cette personne ne fait plus partie de votre équipe. Choisissez quelqu'un d'autre pour s'occuper des affaires.",
+      "stillRunning": "Les affaires sont encore en cours de création. Annulez une fois terminé."
+    },
+    "fromImport": {
+      "body": "Choisissez qui, puis donnez à tous la même valeur, la même étape et la même première tâche. Ceux qui ont déjà une affaire sont laissés de côté.",
+      "button": "Créer des affaires",
+      "title": "Transformer ces contacts en affaires"
+    },
+    "fromSegment": {
+      "button": "Créer des affaires",
+      "saveFirst": "Enregistrez d'abord le segment, puis créez-en des affaires."
+    },
+    "leave": {
+      "body": "Cela se met en pause si vous partez. Les affaires déjà créées restent, et la suite reprend quand vous rouvrez cette page.",
+      "go": "Partir et mettre en pause",
+      "stay": "Rester sur cette page",
+      "title": "Partir pendant la création des affaires ?"
+    },
+    "loading": "Ouverture…",
+    "loadingContacts": "Chargement des contacts…",
+    "make_one": "Créer {{count}} affaire",
+    "make_other": "Créer {{count}} affaires",
+    "next": "Suivant : les affaires",
+    "notFound": "Impossible de l'ouvrir. Cela appartient peut-être à une autre entreprise.",
+    "pick": {
+      "anyValue": "{{column}} : tous",
+      "empty": "Il n'y a ici aucun contact pour créer des affaires.",
+      "hasOpenDeal": "A déjà une affaire : {{title}}",
+      "kind": "Qui",
+      "kindAll": "Personnes et entreprises",
+      "kindCompanies": "Seulement les entreprises",
+      "kindPeople": "Seulement les personnes",
+      "label": "Qui reçoit une affaire",
+      "noneMatch": "Personne ne correspond. Effacez la recherche ou un filtre.",
+      "search": "Rechercher nom, e-mail, téléphone…",
+      "showMore_one": "Afficher {{count}} de plus",
+      "showMore_other": "Afficher {{count}} de plus",
+      "shownCount": "{{shown}} sur {{total}} affichés",
+      "tickAll": "Tout cocher",
+      "tickShown": "Cocher tous ceux affichés",
+      "totalCount_one": "{{count}} contact",
+      "totalCount_other": "{{count}} contacts",
+      "showMore": "Afficher {{count}} de plus",
+      "totalCount": "{{count}} contacts"
+    },
+    "pickedCount_one": "{{count}} coché",
+    "pickedCount_other": "{{count}} cochés",
+    "pickedWithOpen_one": "dont {{count}} a déjà une affaire",
+    "pickedWithOpen_other": "dont {{count}} ont déjà une affaire",
+    "reason": {
+      "failed": "Impossible à créer. Créez celle-ci à la main.",
+      "gone": "Le contact a été supprimé entre-temps",
+      "open": "A déjà une affaire"
+    },
+    "retry": "Réessayer",
+    "run": {
+      "keepOpen": "Gardez cette page ouverte jusqu'à la fin. Si elle se ferme, la suite reprend quand vous la rouvrez.",
+      "progress": "{{done}} sur {{total}} faits",
+      "resume": "Continuer",
+      "stopped": "Cela s'est arrêté",
+      "stoppedHint": "Rien n'est créé deux fois. {{detail}}",
+      "title": "Création des affaires…"
+    },
+    "selectionGone": "Il n'y a plus de sélection. Cochez des contacts dans la liste et choisissez « Créer des affaires ».",
+    "settings": {
+      "andMore_one": "et {{count}} de plus, une par contact",
+      "andMore_other": "et {{count}} de plus, une par contact",
+      "automations": "Lancer mes automatisations d'affaires pour celles-ci",
+      "automationsOff": "Désactivé : aucun workflow ne démarre pour ces affaires, personne ne reçoit un e-mail par affaire.",
+      "automationsOn": "Chaque nouvelle affaire lance vos workflows, comme une affaire créée à la main. Cela peut signifier un e-mail par affaire.",
+      "extra": "Ajouter à chaque titre (facultatif)",
+      "extraHint": "Chaque affaire porte le nom de son contact.",
+      "extraPlaceholder": "p. ex. Cuisine 2027",
+      "noValue": "Sans valeur",
+      "nobody": "Cochez au moins un contact pour voir les affaires.",
+      "owner": "Qui s'en occupe",
+      "pipeline": "Pipeline",
+      "stage": "Étape de l'affaire",
+      "task": "Une première tâche pour chaque affaire",
+      "taskDefault": "Appeler",
+      "taskDue": "Échéance",
+      "taskHint": "Pour que chaque affaire ait une prochaine étape.",
+      "taskTitle": "Tâche",
+      "title": "Identique pour chaque affaire",
+      "value": "Valeur de chaque affaire",
+      "valueHint": "Laissez vide si vous ne savez pas encore. Vous pourrez modifier chaque affaire plus tard.",
+      "andMore": "et {{count}} de plus, une par contact"
+    },
+    "subtitle": "Une affaire par contact coché, toutes avec la même valeur et la même étape.",
+    "subtitleFrom": "Depuis {{name}} : une affaire par contact coché.",
+    "title": "Créer des affaires",
+    "toContacts": "Aller aux contacts",
+    "truncated": "Les 5 000 premiers sont affichés. Affinez avec un segment pour atteindre les autres.",
+    "undo": {
+      "body_one": "L'affaire créée ici est supprimée, avec sa première tâche. Les affaires déplacées, annotées ou complétées de tâches depuis sont conservées.",
+      "body_other": "Les {{count}} affaires créées ici sont supprimées, avec leur première tâche. Les affaires déplacées, annotées ou complétées de tâches depuis sont conservées.",
+      "button": "Annuler ces affaires",
+      "done_one": "{{count}} affaire annulée.",
+      "done_other": "{{count}} affaires annulées.",
+      "doneKept": "{{removed}} affaires annulées, {{kept}} conservées car quelqu'un y a travaillé.",
+      "going": "Annulation… encore {{count}}",
+      "keep": "Garder les affaires",
+      "title": "Annuler ces affaires ?",
+      "body": "Les {{count}} affaires créées ici sont supprimées, avec leur première tâche. Les affaires déplacées, annotées ou complétées de tâches depuis sont conservées.",
+      "done": "{{count}} affaires annulées."
+    },
+    "viewerOnly": "Vous pouvez consulter les affaires mais pas en créer. Demandez à un administrateur de votre entreprise.",
+    "make": "Créer {{count}} affaires",
+    "pickedCount": "{{count}} cochés",
+    "pickedWithOpen": "dont {{count}} ont déjà une affaire"
   }
 }

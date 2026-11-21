@@ -110,6 +110,8 @@ export default [
       }),
       route("mail", "routes/mail.tsx"),
       route("pipeline", "routes/pipeline.tsx"),
+      // Before :dealId so "make" is not read as a deal id.
+      route("pipeline/make", "routes/pipeline.make.tsx"),
       route("pipeline/:dealId", "routes/pipeline.$dealId.tsx"),
       // Appointments (APPOINTMENTS_PLAN.md, pilot `appointmentBook`). The old
       // Baikal booking-page settings moved one level down; without the pilot,

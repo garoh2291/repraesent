@@ -615,7 +615,12 @@ export function useNavSections(): NavSection[] | null {
       ? [
           {
             key: "support" as const,
-            label: t("sections.support", "Support"),
+            // An agency's queue holds its businesses' reports (its own
+            // reports to re:praesent are in Help & changes).
+            label:
+              currentWorkspace.is_root === true
+                ? t("sections.support", "Support")
+                : t("sections.businessReports", "Business reports"),
             icon: LifeBuoy,
             to: "/support",
             match: ["/support"],

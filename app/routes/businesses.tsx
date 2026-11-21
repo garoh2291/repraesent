@@ -29,6 +29,8 @@ export default function BusinessesPage() {
     queryKey: businessKeys.overview(currentWorkspace?.id),
     queryFn: getBusinessesOverview,
     enabled: isAgency,
+    // A business that is still being set up: check again shortly.
+    refetchInterval: (query) => (query.state.data?.businesses.some((b) => b.setup_state === "setting_up") ? 10_000 : false),
     staleTime: 60_000,
   });
   const [adding, setAdding] = useState(false);
@@ -121,6 +123,8 @@ export default function BusinessesPage() {
 function BusinessRow({ b, onOpen }: { b: BusinessOverviewRow; onOpen: () => void }) {
   const { t } = useTranslation();
   const status: string[] = [];
+  if (b.setup_state === "setting_up") status.push(t("agency.businesses.settingUp", "Setting up · inviting the team"));
+  if (b.setup_state === "needs_look") status.push(t("agency.businesses.setupNeedsLook", "Set-up needs a look · write to re:praesent"));
   if (b.website_state === "live") status.push(t("agency.root.website.live"));
   if (b.website_state === "building") status.push(t("agency.picker.websiteBuilding"));
   const otherSetup = b.open_setup.filter((k) => k !== "website");

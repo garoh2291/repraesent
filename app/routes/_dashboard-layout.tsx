@@ -20,6 +20,7 @@ import { activeSection, useNavSections } from "~/lib/nav/sections";
 import { SectionTabs } from "~/components/notebook/section-tabs";
 import { BottomTabBar } from "~/components/notebook/bottom-tab-bar";
 import { HelpProvider } from "~/components/support/help-provider";
+import { SupportLive } from "~/components/support/support-live";
 import {
   CommandPalette,
   openCommandPalette,
@@ -129,6 +130,7 @@ export default function DashboardLayout() {
     <DealFlowProvider>
     <QuickCreateProvider>
     <HelpProvider>
+    <SupportLive />
     <div data-app-shell="" className="flex h-dvh overflow-hidden bg-background">
       {/* Desktop sidebar — the ink column */}
       <Sidebar className="hidden lg:flex" collapsible />

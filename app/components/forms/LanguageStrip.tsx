@@ -43,12 +43,13 @@ import { FORM_LOCALES, type FormLocale } from "~/lib/forms/schema";
  * identically everywhere. Emoji flags would have been one line, but Windows
  * ships no flag glyphs and would have shown bare "GB"/"DE" letter pairs.
  */
-const LOCALE_COUNTRY: Record<FormLocale, "US" | "DE" | "FR" | "NL" | "AM"> = {
+const LOCALE_COUNTRY: Record<FormLocale, "US" | "DE" | "FR" | "NL" | "AM" | "CZ"> = {
   en: "US",
   de: "DE",
   fr: "FR",
   nl: "NL",
   hy: "AM",
+  cs: "CZ",
 };
 
 export function LocaleFlag({

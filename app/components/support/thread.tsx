@@ -230,6 +230,12 @@ function EventLine({ m, viewer, teamName }: { m: TicketMessage; viewer: Side; te
               ? viewer === "client"
                 ? t("help.event.queueMoved", "re:praesent answers this report from now on")
                 : t("support.event.queueMoved", "Moved from the agency to re:praesent")
+            : e.type === "setup_done"
+              ? t("help.event.setupDone", "Everything is set up, so this is done")
+            : e.type === "deal_moved"
+              ? e.to === "won"
+                ? t("support.event.dealWon", "The deal moved to won with this report")
+                : t("support.event.dealReopened", "The deal is open again with this report")
             : e.type === "linked_done"
               ? t("help.event.linkedDone", "re:praesent finished #{{number}}, so this is done too", { number: e.number })
             : e.type === "linked_reopened"

@@ -7,7 +7,7 @@
  * app/lib/api/appointments.ts. If you change one side, change the other.
  */
 
-export const FORM_LOCALES = ["en", "de", "fr", "nl", "hy"] as const;
+export const FORM_LOCALES = ["en", "de", "fr", "nl", "hy", "cs"] as const;
 export type FormLocale = (typeof FORM_LOCALES)[number];
 
 export const FORM_FIELD_TYPES = [
@@ -1251,6 +1251,71 @@ export const FORM_RUNTIME_CONTENT: Record<
     "error.slot_invalid": "Խնդրում ենք ընտրել ժամ։",
     "error.service_invalid": "Սա այլևս չի առաջարկվում։ Խնդրում ենք ընտրել նորից։",
   },
+  cs: {
+    "nav.back": "Zpět",
+    "nav.next": "Další",
+    "nav.stepOf": "Krok {{n}} z {{total}}",
+    "step.title.contact": "Kontakt",
+    "step.title.details": "Podrobnosti",
+    "step.title.new": "Krok {{n}}",
+    "step.title.time": "Datum a čas",
+    "step.title.yourDetails": "Vaše údaje",
+    "commerce.title": "Shrnutí objednávky",
+    "commerce.quantity": "Množství",
+    "commerce.subtotal": "Mezisoučet",
+    "commerce.total": "Celkem dnes",
+    "commerce.then": "poté {{amount}} {{per}}",
+    "commerce.per.day": "za den",
+    "commerce.per.week": "za týden",
+    "commerce.per.month": "za měsíc",
+    "commerce.per.year": "za rok",
+    "commerce.every": "každých {{n}} {{unit}}",
+    "commerce.unit.day": "dní",
+    "commerce.unit.week": "týdnů",
+    "commerce.unit.month": "měsíců",
+    "commerce.unit.year": "let",
+    "commerce.oneTime": "jednorázově",
+    "commerce.secure": "Bezpečná platba přes Stripe",
+    "commerce.decrease": "Snížit množství",
+    "commerce.increase": "Zvýšit množství",
+    "commerce.continue": "Pokračovat k platbě",
+    "commerce.select": "Vybrat",
+    "error.product_required": "Vyberte alespoň jeden produkt.",
+    "checkout.paid.title": "Platba přijata",
+    "checkout.paid.body": "Děkujeme. Potvrzení o platbě Vám přijde e-mailem.",
+    "checkout.processing.title": "Potvrzujeme Vaši platbu",
+    "checkout.processing.body":
+      "Obvykle to trvá jen pár sekund. Tuto stránku můžete nechat otevřenou.",
+    "checkout.failed.title": "Platba neproběhla",
+    "checkout.failed.body":
+      "Nic nebylo strženo. Můžete to zkusit znovu s jiným způsobem platby.",
+    "checkout.failed.retry": "Zkusit znovu",
+    "checkout.canceled": "Platba byla zrušena. Vaše odpovědi zůstaly zachovány.",
+    "checkout.canceled.dismiss": "Zavřít",
+    "error.checkout_unavailable":
+      "Platba teď není dostupná. Zkuste to prosím za chvíli znovu.",
+    "appointment.loading": "Načítáme termíny...",
+    "appointment.empty": "V tento den nejsou volné termíny.",
+    "appointment.unavailable": "Termíny teď nelze ověřit. Zkuste to prosím za chvíli.",
+    "appointment.chooseService": "Co si chcete rezervovat?",
+    "appointment.change": "Změnit",
+    "appointment.minutes": "{{n}} minut",
+    "appointment.wholeDay": "Celý den",
+    "appointment.timezone": "Časové pásmo",
+    "appointment.availableTimes": "Volné termíny",
+    "appointment.pickDay": "Vyberte den a uvidíte termíny.",
+    "appointment.nextTimes": "Nejbližší volné termíny",
+    "appointment.moreTimes": "Další termíny",
+    "appointment.noTimes": "Momentálně nejsou volné termíny.",
+    "appointment.yourTime": "Váš termín",
+    "appointment.prevMonth": "Předchozí měsíc",
+    "appointment.nextMonth": "Další měsíc",
+    "appointment.prevDays": "Předchozí dny",
+    "appointment.nextDays": "Další dny",
+    "error.slot_unavailable": "Tento termín byl právě obsazen. Vyberte prosím jiný.",
+    "error.slot_invalid": "Vyberte prosím termín.",
+    "error.service_invalid": "Tato služba už není nabízena. Vyberte prosím znovu.",
+  },
 };
 
 /** The runtime keys that belong to multi-step navigation. */
@@ -1562,12 +1627,13 @@ export function isFormLocale(value: unknown): value is FormLocale {
  * A language code from anywhere outside the form — ?lang=, the repraesent_lang
  * cookie, navigator.language, the re:translate override — read as a form
  * locale, or null. Primary subtag only, so "hy-AM", "hy_am" and "HY" are all
- * "hy"; "am" is also read as Armenian, because sites use the country code for
- * it. Mirrored as normLocale in the embed runtime (form-render.service.ts).
+ * "hy"; "am" is also read as Armenian and "cz" as Czech, because sites use
+ * the country code for them. Mirrored as normLocale in the embed runtime (form-render.service.ts).
  */
 export function toFormLocale(value: unknown): FormLocale | null {
   if (typeof value !== "string") return null;
   let primary = value.trim().split(/[-_]/)[0].toLowerCase();
   if (primary === "am") primary = "hy";
+  if (primary === "cz") primary = "cs";
   return isFormLocale(primary) ? primary : null;
 }

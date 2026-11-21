@@ -21,6 +21,7 @@ import {
 import { NativeSelect } from "~/components/ui/native-select";
 import { Checkbox } from "~/components/ui/checkbox";
 import { ScreenshotPicker, useScreenshots } from "./composer";
+import { usePollEvery } from "~/lib/api/support-live";
 import { SEVERITY_ICON, TicketStub, useSeverityLabel } from "./ticket-bits";
 
 /**
@@ -37,12 +38,13 @@ export function useHelpAvailable() {
     currentWorkspace.type !== "doorboost_brand" &&
     // Agency people in a business answer its reports from their agency's Support.
     !currentWorkspace.via_agency_id;
+  const every = usePollEvery("help", 120_000);
   const q = useQuery({
     queryKey: helpKeys.websites(currentWorkspace?.id),
     queryFn: getHelpWebsites,
     enabled: eligible,
     staleTime: 60_000,
-    refetchInterval: 120_000,
+    refetchInterval: every,
     refetchOnWindowFocus: true,
     retry: false,
   });

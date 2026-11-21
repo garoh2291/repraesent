@@ -2,6 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useAuthContext } from "~/providers/auth-provider";
 import { getQueueCounts, queueKeys, type QueueBase } from "~/lib/api/support-tickets";
 import { useHelpAvailable } from "./help-provider";
+import { usePollEvery } from "~/lib/api/support-live";
 
 /**
  * Which support queue this person works in, if any: re:praesent's own (root
@@ -24,11 +25,12 @@ export function useQueueBase(): QueueBase | null {
  */
 export function useSupportBadges() {
   const base = useQueueBase();
+  const every = usePollEvery(base, 60_000);
   const counts = useQuery({
     queryKey: queueKeys.counts(base ?? "root-support"),
     queryFn: () => getQueueCounts(base!),
     enabled: !!base,
-    refetchInterval: 60_000,
+    refetchInterval: every,
     refetchOnWindowFocus: true,
     retry: false,
   });

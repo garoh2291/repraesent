@@ -14,6 +14,17 @@ import { Composer, type ComposerHandle } from "~/components/support/composer";
 import { QueueBaseContext, SeverityMark, StatusPill, TicketStub, useSeverityLabel, useStatusLabel } from "~/components/support/ticket-bits";
 import { useQueueBase } from "~/components/support/use-support-badges";
 import { PassOnSheet } from "~/components/support/pass-on-sheet";
+import { SetupChip, SetupReportCard } from "~/components/support/setup-report-card";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "~/components/ui/alert-dialog";
 import { useAuthContext } from "~/providers/auth-provider";
 import { useDocumentMeta } from "~/lib/hooks/use-document-meta";
 import { useDebounce } from "~/lib/hooks/useDebounce";
@@ -46,16 +57,18 @@ import {
   type TeamTicketSummary,
   type TicketStatus,
 } from "~/lib/api/support-tickets";
+import { usePollEvery } from "~/lib/api/support-live";
 
 const STATUSES: TicketStatus[] = ["open", "waiting_on_client", "resolved"];
 
 /** Badge in the nav: open tickets (they wait for us). Root members and agencies. */
 export function useQueueCounts(base: QueueBase | null) {
+  const every = usePollEvery(base, 60_000);
   return useQuery({
     queryKey: queueKeys.counts(base ?? "root-support"),
     queryFn: () => getQueueCounts(base!),
     enabled: !!base,
-    refetchInterval: 60_000,
+    refetchInterval: every,
     refetchOnWindowFocus: true,
     retry: false,
   });
@@ -70,9 +83,9 @@ export function useQueueCounts(base: QueueBase | null) {
  */
 export default function SupportPage() {
   const { t } = useTranslation();
-  useDocumentMeta({ titleKey: "support.metaTitle", titleSuffix: " - Repraesent" });
   const { currentWorkspace } = useAuthContext();
   const base = useQueueBase();
+  useDocumentMeta({ titleKey: base === "agency-support" ? "support.titleAgency" : "support.metaTitle", titleSuffix: " - Repraesent" });
   const { ticketId } = useParams();
   const navigate = useNavigate();
   const [params, setParams] = useSearchParams();
@@ -101,13 +114,14 @@ export default function SupportPage() {
   const filters: QueueFilters = { status, sort, workspace_id: ws, url_id: site, severity, assignee, q: q || undefined };
   const counts = useQueueCounts(base);
   const b = base ?? "root-support";
+  const listEvery = usePollEvery(base, 45_000);
   const filterOpts = useQuery({ queryKey: queueKeys.filters(b), queryFn: () => getQueueFilters(b), enabled: !!base && counts.data?.ready === true, staleTime: 60_000 });
   const list = useQuery({
     queryKey: queueKeys.list(b, filters),
     queryFn: () => listQueue(b, filters),
     enabled: !!base && counts.data?.ready === true,
     placeholderData: keepPreviousData,
-    refetchInterval: 45_000,
+    refetchInterval: listEvery,
     refetchOnWindowFocus: true,
   });
   const rows = list.data?.data ?? [];
@@ -152,10 +166,12 @@ export default function SupportPage() {
       <div className="flex flex-1 lg:min-h-0">
         {/* ── list column ── */}
         {showList ? (
-          <section className="flex w-full flex-col border-border lg:min-h-0 lg:w-[400px] lg:shrink-0 lg:border-r" aria-label={t("support.title", "Support")}>
+          <section className="flex w-full flex-col border-border lg:min-h-0 lg:w-[400px] lg:shrink-0 lg:border-r" aria-label={agency ? t("support.titleAgency", "Business reports") : t("support.title", "Support")}>
             <div className="space-y-3 border-b border-border px-4 pb-3 pt-5 sm:px-5">
               <div className="flex items-baseline justify-between gap-3">
-                <h1 className="title-display text-[26px] font-semibold text-foreground">{t("support.title", "Support")}</h1>
+                <h1 className="title-display text-[26px] font-semibold text-foreground">
+                  {agency ? t("support.titleAgency", "Business reports") : t("support.title", "Support")}
+                </h1>
                 {c?.mine_open ? (
                   <button
                     type="button"
@@ -166,6 +182,14 @@ export default function SupportPage() {
                   </button>
                 ) : null}
               </div>
+              {agency ? (
+                <p className="-mt-1 text-[13.5px] leading-snug text-muted-foreground">
+                  {t("support.agencyIntro", "Reports your businesses send to you.")}{" "}
+                  <Link to="/help" className="press font-medium text-foreground underline decoration-foreground/25 underline-offset-4 hover:decoration-foreground">
+                    {t("support.agencyIntroLink", "Your own reports to re:praesent are in Help & changes")}
+                  </Link>
+                </p>
+              ) : null}
               <Segmented<QueueStatus>
                 value={status}
                 onChange={(v) => setParam("status", v === "open" ? undefined : v)}
@@ -239,7 +263,7 @@ export default function SupportPage() {
               {c && !c.ready ? (
                 <p className="px-5 py-8 text-[14px] text-muted-foreground">{t("support.notReady", "Support isn't switched on on this server yet.")}</p>
               ) : list.isError ? (
-                <LoadError className="m-4" what={t("support.title", "Support")} onRetry={() => void list.refetch()} />
+                <LoadError className="m-4" what={agency ? t("support.titleAgency", "Business reports") : t("support.title", "Support")} onRetry={() => void list.refetch()} />
               ) : list.isPending ? (
                 <div className="space-y-px p-2">
                   {[0, 1, 2, 3, 4].map((i) => (
@@ -371,6 +395,7 @@ function QueueRow({ r, active, to }: { r: TeamTicketSummary; active: boolean; to
           </p>
           <div className="mt-2 flex items-center gap-2 text-[11.5px] text-muted-foreground">
             <TicketStub number={r.number} />
+            {r.kind === "setup" ? <SetupChip /> : null}
             {r.passed_on ? (
               <span className="inline-flex shrink-0 items-center gap-1 rounded-full border border-foreground/15 px-1.5 py-px font-medium text-foreground/75">
                 <Forward className="size-3" aria-hidden />
@@ -402,7 +427,8 @@ function TicketPane({ id, base, backTo }: { id: string; base: QueueBase; backTo:
   const key = queueKeys.ticket(base, id);
   const agency = base === "agency-support";
   const [passOn, setPassOn] = useState(false);
-  const q = useQuery({ queryKey: key, queryFn: () => getQueueTicket(base, id), refetchInterval: 30_000, refetchOnWindowFocus: true });
+  const ticketEvery = usePollEvery(base, 30_000);
+  const q = useQuery({ queryKey: key, queryFn: () => getQueueTicket(base, id), refetchInterval: ticketEvery, refetchOnWindowFocus: true });
   const filters = useQuery({ queryKey: queueKeys.filters(base), queryFn: () => getQueueFilters(base), staleTime: 60_000 });
 
   const seen = q.data ? `${q.data.messages.length}` : "";
@@ -433,6 +459,13 @@ function TicketPane({ id, base, backTo }: { id: string; base: QueueBase; backTo:
 
   const after = (d: TeamTicketDetail) => {
     qc.setQueryData(key, d);
+    // A set-up report moves its deal: the deal page and board follow.
+    if (d.kind === "setup" && d.setup?.deal) {
+      void qc.invalidateQueries({ queryKey: ["deal", d.setup.deal.id] });
+      void qc.invalidateQueries({ queryKey: ["deal-history", d.setup.deal.id] });
+      void qc.invalidateQueries({ queryKey: ["deals-pipeline"] });
+      void qc.invalidateQueries({ queryKey: ["root-deal-support"] });
+    }
     void qc.invalidateQueries({ queryKey: queueKeys.lists(base) });
     void qc.invalidateQueries({ queryKey: queueKeys.counts(base) });
     void qc.invalidateQueries({ queryKey: queueKeys.filters(base) });
@@ -441,8 +474,8 @@ function TicketPane({ id, base, backTo }: { id: string; base: QueueBase; backTo:
   const send = useMutation({
     // The kind travels with the send: switching tabs while it's on its way
     // must not turn a note's confirmation into "Sent. The customer gets an email."
-    mutationFn: (v: { body: string; files: File[]; then: "wait" | "resolve" | "keep"; kind: "message" | "note" }) =>
-      sendQueueMessage(base, id, { body: v.body, files: v.files, kind: v.kind, then: v.then }),
+    mutationFn: (v: { body: string; files: File[]; then: "wait" | "resolve" | "keep"; kind: "message" | "note"; close_website?: boolean }) =>
+      sendQueueMessage(base, id, { body: v.body, files: v.files, kind: v.kind, then: v.then, close_website: v.close_website }),
     onMutate: async (v) => {
       await qc.cancelQueries({ queryKey: key });
       const prev = qc.getQueryData<TeamTicketDetail>(key);
@@ -474,10 +507,24 @@ function TicketPane({ id, base, backTo }: { id: string; base: QueueBase; backTo:
   });
 
   const update = useMutation({
-    mutationFn: (patch: { status?: TicketStatus; severity?: Severity; assigned_to?: string | null }) => updateQueueTicket(base, id, patch),
+    mutationFn: (patch: { status?: TicketStatus; severity?: Severity; assigned_to?: string | null; close_website?: boolean }) =>
+      updateQueueTicket(base, id, patch),
     onSuccess: after,
     onError: (err) => toast.error(extractErrorMessage(err) || t("support.saveFailed", "That didn't save. Try again.")),
   });
+
+  // A set-up report whose website isn't linked yet: closing it frees the
+  // address and ends "website being built", so ask once before resolving.
+  const [closeAsk, setCloseAsk] = useState<((ok: boolean) => void) | null>(null);
+  const confirmSetupClose = (): Promise<boolean> => {
+    const cur = qc.getQueryData<TeamTicketDetail>(key);
+    if (cur?.kind !== "setup" || !cur.setup?.website_unlinked) return Promise.resolve(false);
+    return new Promise<boolean>((resolve) => setCloseAsk(() => resolve));
+  };
+  const needsSetupAsk = () => {
+    const cur = qc.getQueryData<TeamTicketDetail>(key);
+    return cur?.kind === "setup" && cur.setup?.website_unlinked === true;
+  };
 
   if (q.isError) return <LoadError className="m-6" what={t("support.ticketWord", "this ticket")} onRetry={() => void q.refetch()} />;
   const d = q.data;
@@ -493,7 +540,7 @@ function TicketPane({ id, base, backTo }: { id: string; base: QueueBase; backTo:
       <div className="border-b border-border bg-background/85 px-4 pb-3 pt-3 backdrop-blur sm:px-6 lg:pt-5">
         <Link to={backTo} className="press -ml-1.5 mb-1 inline-flex min-h-11 items-center gap-0.5 pr-2 text-[15px] text-foreground/75 lg:hidden">
           <ChevronLeft className="size-5" aria-hidden />
-          {t("support.title", "Support")}
+          {agency ? t("support.titleAgency", "Business reports") : t("support.title", "Support")}
         </Link>
         {!d ? (
           <div className="space-y-2">
@@ -504,6 +551,7 @@ function TicketPane({ id, base, backTo }: { id: string; base: QueueBase; backTo:
           <>
             <div className="flex flex-wrap items-center gap-2 text-[13px] text-muted-foreground">
               <TicketStub number={d.number} size="lg" />
+              {d.kind === "setup" ? <SetupChip /> : null}
               <span className="font-semibold text-foreground">{d.client.name}</span>
               {d.about ? (
                 <span>
@@ -530,7 +578,13 @@ function TicketPane({ id, base, backTo }: { id: string; base: QueueBase; backTo:
                 label={t("support.controls.status", "Status")}
                 value={d.status}
                 options={STATUSES.map((s) => ({ value: s, label: statusLabel(s) }))}
-                onChange={(v) => update.mutate({ status: v as TicketStatus })}
+                onChange={async (v) => {
+                  if (v === "resolved" && needsSetupAsk()) {
+                    if (await confirmSetupClose()) update.mutate({ status: "resolved", close_website: true });
+                    return;
+                  }
+                  update.mutate({ status: v as TicketStatus });
+                }}
                 highlight={d.status === "open"}
               />
               <InlineSelect
@@ -582,8 +636,41 @@ function TicketPane({ id, base, backTo }: { id: string; base: QueueBase; backTo:
 
       {/* thread */}
       <div className="flex-1 px-4 py-4 sm:px-6 lg:min-h-0 lg:overflow-y-auto lg:overscroll-contain">
+        {d?.kind === "setup" && d.setup ? <SetupReportCard setup={d.setup} side="team" className="mb-4" /> : null}
         {d ? <Thread messages={d.messages} viewer="team" teamName="re:praesent" /> : <Skeleton className="h-48 w-full rounded-2xl" />}
         {d && agency ? <PassOnSheet open={passOn} onOpenChange={setPassOn} ticket={d} /> : null}
+        <AlertDialog
+          open={!!closeAsk}
+          onOpenChange={(o) => {
+            if (!o && closeAsk) {
+              closeAsk(false);
+              setCloseAsk(null);
+            }
+          }}
+        >
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>{t("setupReport.confirmTitle", "The website isn't linked yet")}</AlertDialogTitle>
+              <AlertDialogDescription>
+                {t(
+                  "setupReport.confirmBody",
+                  "Closing the set-up marks every item done and moves the deal to won. The website then no longer shows as being built, and its address is free again until you link it.",
+                )}
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>{t("setupReport.confirmKeep", "Keep it open")}</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={() => {
+                  closeAsk?.(true);
+                  setCloseAsk(null);
+                }}
+              >
+                {t("setupReport.confirmClose", "Close the set-up anyway")}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
 
       {/* composer */}
@@ -621,7 +708,13 @@ function TicketPane({ id, base, backTo }: { id: string; base: QueueBase; backTo:
             sending={send.isPending}
             onSend={async (body, files, alt) => {
               try {
-                await send.mutateAsync({ body, files, kind: mode, then: mode === "note" ? "keep" : alt ? "resolve" : "wait" });
+                const then = mode === "note" ? "keep" : alt ? "resolve" : "wait";
+                let closeWebsite = false;
+                if (then === "resolve" && needsSetupAsk()) {
+                  if (!(await confirmSetupClose())) return false;
+                  closeWebsite = true;
+                }
+                await send.mutateAsync({ body, files, kind: mode, then, close_website: closeWebsite });
                 return true;
               } catch {
                 return false;
