@@ -43,7 +43,7 @@ export function readLangCookie(): string {
       // A malformed percent-escape is not worth failing the whole read over.
     }
     const primary = value.split(/[-_]/)[0].toLowerCase();
-    return primary === "am" ? "hy" : primary;
+    return primary === "am" ? "hy" : primary === "cz" ? "cs" : primary;
   }
 
   return "";

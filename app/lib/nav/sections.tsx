@@ -33,6 +33,7 @@ import {
   SlidersHorizontal,
   FlaskConical,
   LifeBuoy,
+  Store,
 } from "lucide-react";
 import * as LucideIcons from "lucide-react";
 import { OpenAiMark } from "~/components/icons/openai-mark";
@@ -65,7 +66,7 @@ import { usePipelinesQuery } from "~/lib/hooks/usePipelines";
  * demo, Stripe, WordPress SSO, calendar sources) is kept with the same meaning.
  */
 
-export type SectionKey = "today" | "customers" | "deals" | "appointments" | "support" | "results" | "website";
+export type SectionKey = "today" | "businesses" | "customers" | "deals" | "appointments" | "support" | "results" | "website";
 
 export type IconType = ComponentType<{ className?: string }>;
 
@@ -109,6 +110,8 @@ export interface SectionChild {
 export interface NavSection {
   key: SectionKey;
   label: string;
+  /** Shorter label for the phone tab bar, when the full one doesn't fit. */
+  shortLabel?: string;
   icon: IconType;
   to: string;
   /** Path prefixes that light this section up. */
@@ -546,6 +549,21 @@ export function useNavSections(): NavSection[] | null {
       match: ["/"],
       tabs: [],
     },
+    // Agency mode: an agency's own team looks after its businesses every day
+    // (AGENCY_MODE_PLAN.md §4). Not shown inside a business, nor to anyone else.
+    ...(currentWorkspace.agency?.status === "active" && !currentWorkspace.via_agency_id
+      ? [
+          {
+            key: "businesses" as const,
+            label: t("sections.businesses", "Your businesses"),
+            shortLabel: t("sections.businessesShort", "Businesses"),
+            icon: Store,
+            to: "/businesses",
+            match: ["/businesses"],
+            tabs: [] as SectionTab[],
+          },
+        ]
+      : []),
     {
       key: "customers",
       label: t("sections.customers", "Customers"),
@@ -589,13 +607,20 @@ export function useNavSections(): NavSection[] | null {
           },
         ]
       : []),
-    // Root workspace only: the support queue is the team's daily job
-    // (SUPPORT_TICKETS_PLAN.md). Customers reach Help & changes from the menu.
-    ...(currentWorkspace.is_root === true
+    // Root workspace and agencies: the support queue is the team's daily job
+    // (SUPPORT_TICKETS_PLAN.md, AGENCY_MODE_PLAN.md §7). Customers reach
+    // Help & changes from the menu.
+    ...(currentWorkspace.is_root === true ||
+    (currentWorkspace.agency?.status === "active" && !currentWorkspace.via_agency_id)
       ? [
           {
             key: "support" as const,
-            label: t("sections.support", "Support"),
+            // An agency's queue holds its businesses' reports (its own
+            // reports to re:praesent are in Help & changes).
+            label:
+              currentWorkspace.is_root === true
+                ? t("sections.support", "Support")
+                : t("sections.businessReports", "Business reports"),
             icon: LifeBuoy,
             to: "/support",
             match: ["/support"],
@@ -634,6 +659,24 @@ export function useNavSections(): NavSection[] | null {
       onSelect: showWebsite ? open(hasLive ? productionSite : stagingSite) : undefined,
     },
   ];
+}
+
+/**
+ * Which sections sit in the phone tab bar and which move behind More (as
+ * tiles in the menu sheet). The bar holds at most five jobs next to More, so
+ * labels never collide at 375 px. Results moves out once Appointments,
+ * Support or Businesses has a place; an agency that has both Appointments and
+ * Support also moves Appointments out (its daily jobs are its businesses and
+ * their reports).
+ */
+export const PHONE_TAB_LIMIT = 5;
+export function phoneTabs(sections: NavSection[]): { primary: NavSection[]; behindMore: NavSection[] } {
+  const crowded = sections.some((s) => s.key === "appointments" || s.key === "support" || s.key === "businesses");
+  let primary = sections.filter((s) => s.key !== "website" && !(crowded && s.key === "results"));
+  if (primary.length > PHONE_TAB_LIMIT) primary = primary.filter((s) => s.key !== "appointments");
+  if (primary.length > PHONE_TAB_LIMIT) primary = primary.slice(0, PHONE_TAB_LIMIT);
+  const keep = new Set(primary.map((s) => s.key));
+  return { primary, behindMore: sections.filter((s) => s.key !== "website" && !keep.has(s.key)) };
 }
 
 /** The section the current path belongs to, if any. */

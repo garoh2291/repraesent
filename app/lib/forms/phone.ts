@@ -45,6 +45,8 @@ export function defaultPhoneCountry(locale: string | undefined | null): string {
       return "NL";
     case "hy":
       return "AM";
+    case "cs":
+      return "CZ";
     default:
       // English forms are US English.
       return "US";

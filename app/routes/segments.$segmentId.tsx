@@ -1,9 +1,10 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { keepPreviousData } from "@tanstack/react-query";
-import { ArrowLeft, Plus, UserRound } from "lucide-react";
+import { ArrowLeft, Handshake, Plus, UserRound } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Link, useParams } from "react-router";
+import { Link, useNavigate, useParams } from "react-router";
+import { useCanEditLeads } from "~/lib/hooks/useCanEditLeads";
 import { toast } from "sonner";
 import { AddMembersDialog } from "~/components/email-campaigns/segments/AddMembersDialog";
 import { UnsavedChangesGuard } from "~/components/forms/UnsavedChangesGuard";
@@ -44,6 +45,8 @@ export default function SegmentDetail() {
   const { t } = useTranslation();
   const { segmentId } = useParams<{ segmentId: string }>();
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
+  const canEdit = useCanEditLeads();
   useDocumentMeta({
     titleKey: "emailCampaigns.segments.metaTitle",
     titleSuffix: " - Repraesent",
@@ -178,6 +181,22 @@ export default function SegmentDetail() {
           })}
         </span>
         <div className="ml-auto flex items-center gap-3">
+          {canEdit ? (
+            <Button
+              variant="outline"
+              className="max-sm:h-11"
+              onClick={() => {
+                if (dirty) {
+                  toast.message(t("dealBatch.fromSegment.saveFirst", "Save the segment first, then make deals from it."));
+                  return;
+                }
+                navigate(`/pipeline/make?from=segment&id=${segment.id}`);
+              }}
+            >
+              <Handshake className="mr-1 h-3.5 w-3.5" aria-hidden />
+              {t("dealBatch.fromSegment.button", "Make deals")}
+            </Button>
+          ) : null}
           <Button
             className="max-sm:h-11"
             onClick={() => save.mutate()}

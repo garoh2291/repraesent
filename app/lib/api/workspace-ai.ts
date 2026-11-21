@@ -26,6 +26,8 @@ export interface WorkspaceAiStatus {
   models: WorkspaceAiModel[];
   /** credits: key works but the OpenRouter account is empty; revoked: key rejected. */
   problem?: "credits" | "revoked" | null;
+  /** Agency mode: this business uses its agency's AI (no key of its own). */
+  shared_by?: { agency_name: string; limit_usd: number | null; used_usd: number; paused: boolean } | null;
 }
 
 export interface OpenRouterBalance {
@@ -129,5 +131,32 @@ export async function disconnectWorkspaceAi(): Promise<void> {
  */
 export function isWorkspaceAiNotConfigured(error: unknown): boolean {
   const e = error as { response?: { data?: { code?: string } } } | null;
-  return e?.response?.data?.code === "workspace_ai_not_configured";
+  // A business on its agency's AI past this month's amount: same place to look.
+  const code = e?.response?.data?.code;
+  return code === "workspace_ai_not_configured" || code === "workspace_ai_share_limit";
+}
+
+/** Agency mode: the agency's AI shared with its businesses. */
+export interface AiShareRow {
+  workspace_id: string;
+  name: string;
+  own_key: boolean;
+  shared: boolean;
+  monthly_limit_usd: number | null;
+  used_this_month_usd: number;
+  paused: boolean;
+}
+
+export async function getAiShares(): Promise<AiShareRow[]> {
+  return (await apiClient.get<AiShareRow[]>("/workspace-ai/shares")).data;
+}
+
+export async function setAiShare(childId: string, body: { enabled: boolean; monthly_limit_usd: number | null }): Promise<AiShareRow[]> {
+  return (await apiClient.put<AiShareRow[]>(`/workspace-ai/shares/${childId}`, body)).data;
+}
+
+/** A business using its agency's AI after this month's cap. */
+export function isWorkspaceAiShareLimit(error: unknown): boolean {
+  const e = error as { response?: { data?: { code?: string } } } | null;
+  return e?.response?.data?.code === "workspace_ai_share_limit";
 }

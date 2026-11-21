@@ -50,6 +50,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "~/components/ui/alert-dialog";
+import { SharedByAgencyCard, ShareWithBusinessesCard } from "~/components/settings-ai/share-cards";
 
 export function meta() {
   return [
@@ -77,10 +78,11 @@ export default function SettingsAi() {
   const canManage = useCanManageWorkspaceAi();
   const status = useWorkspaceAi();
   const { currentWorkspace } = useAuthContext();
+  const isAgency = currentWorkspace?.agency?.status === "active" && !currentWorkspace.via_agency_id && canManage;
   const lowAlert = useQuery({
     queryKey: ["workspace-ai-low-balance", currentWorkspace?.id ?? null],
     queryFn: getLowBalanceAlert,
-    enabled: !!status.data?.connected,
+    enabled: !!status.data?.connected && !status.data?.shared_by,
     retry: false,
   });
 
@@ -94,13 +96,17 @@ export default function SettingsAi() {
           </p>
         </div>
 
+        {status.data?.shared_by ? <SharedByAgencyCard shared={status.data.shared_by} /> : null}
+
         {status.isPending ? (
           <Skeleton className="h-[220px] w-full rounded-2xl" />
         ) : (
           <KeyCard canManage={canManage} />
         )}
 
-        {status.data?.connected ? (
+        {isAgency ? <ShareWithBusinessesCard /> : null}
+
+        {status.data?.connected && !status.data.shared_by ? (
           <>
             <BalanceCard threshold={lowAlert.data?.enabled ? lowAlert.data.threshold_usd : null} problem={status.data.problem} />
             <LowBalanceAlertCard canManage={canManage} />
@@ -230,7 +236,8 @@ function KeyCard({ canManage }: { canManage: boolean }) {
   const [confirmDisconnect, setConfirmDisconnect] = useState(false);
   const [oauthOutcome, closeOAuthResult] = useOAuthReturn();
 
-  const isConnected = !!data?.connected;
+  // A key shared by the agency is not this business's own key.
+  const isConnected = !!data?.connected && !data?.shared_by;
   const revoked = data?.status === "revoked" || data?.status === "error";
   const viaOAuth = data?.connect_method === "oauth";
 
@@ -408,7 +415,7 @@ function KeyCard({ canManage }: { canManage: boolean }) {
               </>
             ) : (
               <p className="text-xs text-muted-foreground">
-                {t("settings.ai.notConnectedHint")}
+                {data?.shared_by ? t("settings.ai.sharedOwnKeyHint") : t("settings.ai.notConnectedHint")}
               </p>
             )}
           </div>

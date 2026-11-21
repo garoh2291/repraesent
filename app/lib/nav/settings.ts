@@ -1,5 +1,8 @@
 import {
+  History,
   AtSign,
+  Building,
+  Network,
   BellRing,
   CalendarDays,
   Headset,
@@ -24,6 +27,20 @@ import { OpenAiMark } from "~/components/icons/openai-mark";
  * the owner's words — "Team", "Deal stages", not "Area Settings". Order matches
  * the old tabs.
  */
+/**
+ * A person's own set-up inside a business (their mailbox, calendar, email
+ * copies, summaries, phone alerts). Hidden for agency people who opened the
+ * business through their agency: they are not its members and get no alerts
+ * there (AGENCY_MODE_PLAN.md decisions).
+ */
+export const PERSONAL_SETTINGS = new Set([
+  "/settings/email-accounts",
+  "/settings/calendars",
+  "/settings/bcc",
+  "/settings/email-notifications",
+  "/settings/phone-alerts",
+]);
+
 export const SETTINGS_NAV = [
   { to: "/settings/profile", labelKey: "settings.navLabels.profile", Icon: User, group: "you" },
   { to: "/settings/team", labelKey: "settings.navLabels.team", Icon: Users, group: "workspace" },
@@ -31,6 +48,21 @@ export const SETTINGS_NAV = [
     to: "/settings/business-profile",
     labelKey: "settings.navLabels.businessDetails",
     Icon: Store,
+    group: "workspace",
+  },
+  // Activity log: admins only (use-nav-model.ts).
+  {
+    to: "/settings/activity",
+    labelKey: "settings.navLabels.activity",
+    Icon: History,
+    group: "workspace",
+  },
+  // Agency mode: a business's own admins ask for it here; an agency sees its
+  // limit here (use-nav-model.ts decides who sees it).
+  {
+    to: "/settings/agency",
+    labelKey: "settings.navLabels.agency",
+    Icon: Network,
     group: "workspace",
   },
   {
@@ -105,6 +137,12 @@ export const SETTINGS_NAV = [
     to: "/settings/support",
     labelKey: "settings.tabs.support",
     Icon: Headset,
+    group: "root",
+  },
+  {
+    to: "/settings/agencies",
+    labelKey: "settings.navLabels.agencies",
+    Icon: Building,
     group: "root",
   },
 ] as const;

@@ -97,7 +97,8 @@
         "contact": "A real person from our team",
         "results": "How business is going",
         "websiteStaging": "Your website's test copy",
-        "help": "Something broken, or a change on your site"
+        "help": "Something broken, or a change on your site",
+        "appointments": "Bookings and your calendar"
       },
       "switchBusiness": "Switch business"
     },
@@ -1565,7 +1566,8 @@
       "de": "Deutsch",
       "fr": "Français",
       "nl": "Nederlands",
-      "hy": "Հայերեն"
+      "hy": "Հայերեն",
+      "cs": "Čeština"
     },
     "invoices": {
       "title": "Invoices",
@@ -2070,7 +2072,31 @@
         "save": "Save changes",
         "turnOn": "Turn on the alert",
         "last": "Last alert {{when}}"
-      }
+      },
+      "shared": {
+        "title": "AI is provided by {{agency}}",
+        "used": "This business used {{amount}} this month.",
+        "usedOf": "This business used {{amount}} of {{limit}} this month.",
+        "paused": "AI is paused until next month. Ask {{agency}} if you need more.",
+        "ownKeyHint": "You can also connect your own key below; it is then used instead."
+      },
+      "share": {
+        "title": "Share AI with your businesses",
+        "subtitle": "Your businesses use your key. Set an amount per month if you like; when it's used up, AI pauses for that business until next month.",
+        "none": "You have no businesses yet.",
+        "ownKey": "Uses its own key",
+        "paused": "Paused · {{amount}} used this month",
+        "usedThisMonth": "{{amount}} used this month",
+        "off": "Not shared",
+        "toggle": "Share AI with {{business}}",
+        "limitLabel": "Amount per month (USD)",
+        "noLimit": "No limit",
+        "saveLimit": "Save amount",
+        "limitInvalid": "Enter a number from 1 to 100,000, or leave it empty.",
+        "saved": "Saved",
+        "needKey": "Connect your own AI key first, then you can share it."
+      },
+      "sharedOwnKeyHint": "Optional: connect your own OpenRouter account. Your AI then runs on it instead of your agency's."
     },
     "allowlist": {
       "sectionLabel": "Always accept",
@@ -2528,7 +2554,10 @@
       "teamChat": "Team chat alerts",
       "dealStages": "Deal stages",
       "phoneAlerts": "Phone alerts",
-      "confirmationEmails": "Confirmation emails"
+      "confirmationEmails": "Confirmation emails",
+      "agency": "Several businesses",
+      "agencies": "Agencies",
+      "activity": "Activity log"
     },
     "phoneAlerts": {
       "metaTitle": "Phone alerts",
@@ -2722,6 +2751,18 @@
     "confirmationEmails": {
       "metaTitle": "Confirmation emails",
       "metaDescription": "The email people get automatically after they fill in one of your forms."
+    },
+    "agency": {
+      "metaTitle": "Manage several businesses",
+      "metaDescription": "Manage several businesses from one login."
+    },
+    "agencies": {
+      "metaTitle": "Agencies",
+      "metaDescription": "Requests to manage several businesses, limits, and which business belongs to which agency."
+    },
+    "activity": {
+      "metaTitle": "Activity log",
+      "metaDescription": "Who changed what, and when."
     }
   },
   "booking": {
@@ -4367,6 +4408,18 @@
       "remove": "Remove",
       "edit": "Change {{name}}",
       "sourceFromFile": "Source (from file)"
+    },
+    "select": {
+      "bar": "Picked contacts",
+      "clear": "Clear",
+      "count_one": "{{count}} picked",
+      "count_other": "{{count}} picked",
+      "done": "Done picking",
+      "makeDeals": "Make deals",
+      "one": "Pick {{name}}",
+      "page": "Pick everyone on this page",
+      "start": "Pick to make deals",
+      "count": "{{count}} picked"
     }
   },
   "leadEmails": {
@@ -7807,7 +7860,9 @@
     "florist_one": "florist",
     "florist_other": "florists",
     "plumber_one": "plumber",
-    "plumber_other": "plumbers"
+    "plumber_other": "plumbers",
+    "other_one": "other",
+    "other_other": "other"
   },
   "openaiAds": {
     "metaTitle": "OpenAI Ads",
@@ -10137,7 +10192,10 @@
       "root": "re:praesent"
     },
     "appointments": "Appointments",
-    "support": "Support"
+    "support": "Support",
+    "businesses": "Your businesses",
+    "businessesShort": "Businesses",
+    "businessReports": "Business reports"
   },
   "command": {
     "title": "Go to or search",
@@ -12065,7 +12123,13 @@
       "send": "Send to re:praesent",
       "sentBody": "We'll answer here and email you at {{email}} when we do.",
       "sentBodyNoEmail": "We'll answer here and email you when we do.",
-      "seeIt": "See the report"
+      "seeIt": "See the report",
+      "subtitleAgency": "{{agency}} answers right here, and you get an email when they do.",
+      "sendTo": "Send to {{team}}",
+      "aboutBusiness": "Which business is it about?",
+      "aboutAgency": "Your agency itself",
+      "visible": "{{business}} can read and reply",
+      "visibleHint": "They see this report and re:praesent's answers in their Help & changes. Leave it off to keep it between you and re:praesent."
     },
     "severity": {
       "urgent": "Site is down or broken",
@@ -12110,13 +12174,25 @@
       "markedDone": "Marked done. Thank you!",
       "reopened": "Opened again. We'll take another look.",
       "statusFailed": "That didn't save. Try again.",
-      "send": "Send"
+      "send": "Send",
+      "sharedBanner": "{{agency}} sent this to re:praesent about your business and shared it with you. You can read along and reply.",
+      "waitingBannerBy": "{{team}} needs your answer to go on. Reply below.",
+      "sharedFromOwn": "{{agency}} asked re:praesent for help with your report #{{number}}. You can read along and reply here.",
+      "backToOwn": "Back to your report #{{number}}",
+      "passedOnTitle": "Your agency asked re:praesent for help",
+      "passedOnNeeds": "re:praesent needs your answer",
+      "passedOnOpen": "Read the conversation with re:praesent",
+      "passedOnPrivate": "Your agency follows it with re:praesent"
     },
     "event": {
       "reopened": "{{who}} opened it again",
       "status": "{{who}} set it to “{{status}}”",
       "severity": "{{who}} changed it to “{{severity}}”",
-      "email": "{{who}} emailed you at {{to}}: “{{subject}}”"
+      "email": "{{who}} emailed you at {{to}}: “{{subject}}”",
+      "queueMoved": "re:praesent answers this report from now on",
+      "linkedDone": "re:praesent finished #{{number}}, so this is done too",
+      "linkedReopened": "#{{number}} at re:praesent is open again, so this is too",
+      "setupDone": "Everything is set up, so this is done"
     },
     "files": {
       "type": "Screenshots can be PNG, JPG, WebP or GIF.",
@@ -12126,7 +12202,13 @@
       "addAnother": "Add another",
       "add": "Add screenshot",
       "addShort": "Screenshot"
-    }
+    },
+    "todayNeutral_one": "1 report needs your answer",
+    "todayNeutral_other": "{{count}} reports need your answer",
+    "viaAgency": "You're in {{business}} through {{agency}}. Its reports go to your agency's Business reports: open {{agency}} to answer them or pass them on to re:praesent.",
+    "sharedBy": "From {{agency}} · with re:praesent",
+    "withRe": "With re:praesent",
+    "withReWaiting": "re:praesent needs your answer"
   },
   "support": {
     "metaTitle": "Support",
@@ -12146,7 +12228,8 @@
       "severity": "How bad",
       "assignee": "Who",
       "me": "Mine",
-      "nobody": "Nobody yet"
+      "nobody": "Nobody yet",
+      "business": "Business"
     },
     "sortTitle": "Change the order",
     "sort": {
@@ -12158,7 +12241,8 @@
       "allClear": "Nobody is waiting on you.",
       "noMatch": "No tickets match these filters.",
       "allClearBody": "New tickets from customers land here first.",
-      "noMatchBody": "Clear a filter to see more."
+      "noMatchBody": "Clear a filter to see more.",
+      "allClearBodyAgency": "Reports from your businesses land here first."
     },
     "more": "Showing {{n}} of {{total}}. Narrow it down with a filter.",
     "pick": "Pick a ticket on the left. ↑ ↓ to move through them.",
@@ -12203,7 +12287,12 @@
     },
     "event": {
       "assigned": "{{who}} handed it to {{name}}",
-      "unassigned": "{{who}} left it unassigned"
+      "unassigned": "{{who}} left it unassigned",
+      "passedOn": "{{who}} passed it on to re:praesent as #{{number}}",
+      "passedOnVisible": "{{who}} passed it on to re:praesent as #{{number}}, visible to the business",
+      "queueMoved": "Moved from the agency to re:praesent",
+      "dealWon": "The deal moved to won with this report",
+      "dealReopened": "The deal is open again with this report"
     },
     "today_one": "1 support ticket needs a reply",
     "today_other": "{{count}} support tickets need a reply",
@@ -12215,7 +12304,30 @@
       "notSent": "Not sent",
       "sent": "Sent",
       "by": "Email from {{who}}"
-    }
+    },
+    "searchAgency": "Search business, site or #number",
+    "about": "about {{business}}",
+    "aboutLong": "about {{business}}",
+    "visibleToBusiness": "the business reads along",
+    "passOn": {
+      "cta": "Pass to re:praesent",
+      "title": "Pass to re:praesent",
+      "subtitle": "re:praesent gets a new report about {{business}}, linked to this one. You follow it in your Help & changes.",
+      "what": "What should re:praesent know?",
+      "shots": "Screenshots to send along",
+      "visibleHint": "They see the new report and re:praesent's answers. Your internal notes stay with you either way.",
+      "failed": "It didn't go through. Check your connection and send it again.",
+      "send": "Send to re:praesent",
+      "done": "Sent to re:praesent as #{{number}}. Follow it in Help & changes.",
+      "open": "Open",
+      "linked": "With re:praesent",
+      "linkedVisible": "With re:praesent · the business reads along",
+      "chip": "With re:praesent",
+      "chipDone": "re:praesent done"
+    },
+    "titleAgency": "Business reports",
+    "agencyIntro": "Reports your businesses send to you.",
+    "agencyIntroLink": "Your own reports to re:praesent are in Help & changes"
   },
   "timezonePicker": {
     "label": "Time zone",
@@ -12224,5 +12336,627 @@
     "common": "Common",
     "results": "Matches",
     "all": "All time zones"
+  },
+  "agency": {
+    "picker": {
+      "via": "via {{agency}}",
+      "agencyUnlimited_one": "Agency · {{count}} business",
+      "agencyUnlimited_other": "Agency · {{count}} businesses",
+      "agencyOfLimit_one": "Agency · {{count}} of {{limit}} businesses",
+      "agencyOfLimit_other": "Agency · {{count}} of {{limit}} businesses",
+      "managedBy": "Managed by {{agency}}",
+      "websiteBuilding": "Website being built",
+      "search": "Find a business",
+      "yourBusinesses": "Your businesses",
+      "noMatch": "No business with that name."
+    },
+    "banner": {
+      "youAreIn": "You're working in {{business}} for {{agency}}",
+      "back": "Back to {{agency}}",
+      "backShort": "Back"
+    },
+    "settings": {
+      "notAvailable": "Managing several businesses isn't available yet.",
+      "errors": {
+        "notPossible": "This business can't manage other businesses.",
+        "already": "There's already a request for this business.",
+        "generic": "That didn't work. Please try again."
+      },
+      "toast": {
+        "asked": "Request sent to re:praesent",
+        "withdrawn": "Request taken back"
+      },
+      "on": {
+        "title": "You manage several businesses",
+        "countUnlimited_one": "business",
+        "countUnlimited_other": "businesses",
+        "countOfLimit_one": "of {{limit}} businesses",
+        "countOfLimit_other": "of {{limit}} businesses",
+        "meterLabel": "Businesses used",
+        "full": "You've reached your limit. Contact re:praesent to add more businesses.",
+        "how": "Open a business from the business switcher at the top of the menu."
+      },
+      "paused": {
+        "title": "Managing several businesses is paused",
+        "body": "For now you can't open your businesses. Their own teams keep working as usual. Please contact re:praesent."
+      },
+      "requested": {
+        "title": "Your request is with re:praesent",
+        "body": "We'll look at it and let your admins know by email.",
+        "withdraw": "Take back request"
+      },
+      "ineligible": {
+        "root": "This is re:praesent's own account.",
+        "demo": "Not available in a demo.",
+        "doorboost": "Not available for brand accounts.",
+        "brand": "This business belongs to a brand, so it can't manage other businesses.",
+        "managed": "This business is managed by an agency, so it can't manage other businesses.",
+        "deleted": "This business no longer exists."
+      },
+      "ask": {
+        "title": "Manage several businesses from one login",
+        "body": "For agencies and owners of several locations. re:praesent turns this on for you.",
+        "points": {
+          "one": "Switch between your businesses without signing out",
+          "two": "Add new businesses yourself, with their team and website",
+          "three": "Each business keeps its own inquiries, customers and team"
+        },
+        "rejected": "re:praesent didn't turn this on last time.",
+        "noteLabel": "Anything we should know? (optional)",
+        "notePlaceholder": "For example how many businesses you look after",
+        "submit": "Ask re:praesent",
+        "adminsOnly": "Only admins of this business can ask for this."
+      }
+    },
+    "root": {
+      "tabsLabel": "Agencies by status",
+      "tabs": {
+        "waiting": "Waiting",
+        "active": "Active",
+        "paused": "Paused",
+        "earlier": "Earlier"
+      },
+      "empty": {
+        "waiting": "No requests waiting.",
+        "active": "No active agencies yet.",
+        "paused": "No paused agencies.",
+        "earlier": "Nothing here yet."
+      },
+      "row": {
+        "askedBy": "Asked by {{name}} on {{date}}",
+        "asked": "Asked on {{date}}"
+      },
+      "status": {
+        "requested": "Waiting for a decision",
+        "active": "Active",
+        "suspended": "Paused",
+        "rejected": "Not turned on",
+        "ended": "Ended"
+      },
+      "limit": {
+        "label": "How many businesses",
+        "unlimited": "Unlimited",
+        "other": "Other"
+      },
+      "noteLabel": "Note for the business (optional)",
+      "actions": {
+        "approve": "Turn on",
+        "reject": "Don't turn on",
+        "saveLimit": "Save limit",
+        "suspend": "Pause",
+        "resume": "Turn back on",
+        "end": "End agency mode",
+        "detach": "Remove",
+        "attach": "Add"
+      },
+      "toast": {
+        "approved": "Agency mode turned on",
+        "rejected": "Request declined",
+        "limit": "Limit saved",
+        "suspended": "Agency paused",
+        "resumed": "Agency turned back on",
+        "ended": "Agency mode ended",
+        "attached": "Business added",
+        "attachedOver": "Business added. The agency is now over its limit.",
+        "detached": "Business removed from the agency"
+      },
+      "errors": {
+        "alreadyManaged": "That business is already under an agency.",
+        "oneLevel": "An agency can't be under another agency.",
+        "childIneligible": "That business can't be put under an agency.",
+        "ineligible": "This business can't be an agency.",
+        "generic": "That didn't work. Please try again."
+      },
+      "confirm": {
+        "endTitle": "End agency mode for {{agency}}?",
+        "endBody": "Every business is removed from the agency. Each keeps its own data and team. The agency's people lose access at once.",
+        "detachTitle": "Remove {{business}} from the agency?",
+        "detachBody": "The agency's people lose access at once. Open reports they handled move to the re:praesent queue, and shared AI stops."
+      },
+      "overLimit": "This agency has more businesses than its limit. It can't add new ones until it's under the limit.",
+      "noChildren": "No businesses yet.",
+      "attachSearch": "Add an existing business by name",
+      "origin": {
+        "created": "Added by the agency",
+        "attached": "Added by re:praesent"
+      },
+      "website": {
+        "live": "Website live",
+        "building": "Website being built",
+        "none": "No website"
+      },
+      "blocked": {
+        "agency": "Is an agency itself",
+        "managed": "Already under an agency",
+        "doorboost": "Brand account",
+        "demo": "Demo",
+        "root": "re:praesent"
+      },
+      "todayRequests_one": "1 business wants to manage several businesses. Decide now.",
+      "todayRequests_other": "{{count}} businesses want to manage several businesses. Decide now."
+    },
+    "businesses": {
+      "metaTitle": "Your businesses",
+      "metaDescription": "The businesses your agency looks after.",
+      "title": "Your businesses",
+      "countUnlimited_one": "{{count}} business",
+      "countUnlimited_other": "{{count}} businesses",
+      "countOfLimit_one": "{{count}} of {{limit}} businesses",
+      "countOfLimit_other": "{{count}} of {{limit}} businesses",
+      "waitingTotal_one": "{{count}} inquiry waiting",
+      "waitingTotal_other": "{{count}} inquiries waiting",
+      "add": "Add a business",
+      "addFirst": "Add your first business",
+      "emptyTitle": "No businesses yet",
+      "emptyBody": "Add a business and its team. re:praesent sets up its website and email.",
+      "numbersNote": "Waiting = new inquiries nobody has followed up yet. Inquiries and new customers: last 30 days.",
+      "setupOpen": "Setting up: {{items}}",
+      "open": "Open",
+      "kinds": {
+        "website": "website",
+        "email": "email",
+        "domain": "domain",
+        "other": "other set-up"
+      },
+      "cols": {
+        "waiting": "waiting",
+        "inquiries": "inquiries",
+        "customers": "new customers"
+      },
+      "reportsOpen_one": "1 report needs your reply",
+      "reportsOpen_other": "{{count}} reports need your reply",
+      "settingUp": "Setting up · inviting the team",
+      "setupNeedsLook": "Set-up needs a look · write to re:praesent"
+    },
+    "add": {
+      "title": "Add a business",
+      "description": "Five short steps: business, people, website, extras, check.",
+      "stepOf": "Step {{n}} of {{total}}",
+      "steps": {
+        "business": "The business",
+        "people": "People",
+        "website": "Website",
+        "extras": "Extras",
+        "check": "Check"
+      },
+      "fields": {
+        "name": "Business name",
+        "namePlaceholder": "e.g. Salon Mira",
+        "industry": "Type of business",
+        "choose": "Choose…",
+        "currency": "Currency",
+        "phone": "Phone",
+        "email": "Email",
+        "street": "Street and number",
+        "postalCode": "Postcode",
+        "city": "City",
+        "country": "Country",
+        "timezone": "Time zone",
+        "searchType": "Search types",
+        "otherType": "Other …",
+        "otherTypeLabel": "What kind of business is it?",
+        "otherTypePlaceholder": "e.g. Tattoo studio",
+        "useTyped": "Use “{{typed}}”"
+      },
+      "people": {
+        "intro": "Who works in this business? They get an email to sign in. You can add people later too.",
+        "emailLabel": "Email",
+        "emailPlaceholder": "name@business.com",
+        "roleLabel": "What they may do",
+        "roles": {
+          "admin": "Admin",
+          "editor": "Can edit",
+          "viewer": "Can view"
+        },
+        "remove": "Remove",
+        "add": "Add a person",
+        "youHaveAccess": "You and your agency team can always open this business."
+      },
+      "website": {
+        "question": "Does the business need a website?",
+        "modes": {
+          "existing": "They already have one",
+          "new": "Build a new website",
+          "none": "No website for now"
+        },
+        "hints": {
+          "existing": "re:praesent moves it over and sets it up.",
+          "new": "re:praesent builds it.",
+          "none": "You can ask for one later."
+        },
+        "url": "Website address",
+        "note": "Anything we should know about the website? (optional)",
+        "whatHappens": "re:praesent gets a task to set this up. Until it's live, the business sees “Your website is being built”."
+      },
+      "extras": {
+        "intro": "Anything else re:praesent should set up? (optional)",
+        "email": "Email addresses",
+        "emailHint": "Mailboxes on the business's own domain.",
+        "mailboxes": "Which addresses?",
+        "mailboxesPlaceholder": "info@, anna@",
+        "domain": "A domain",
+        "domainHint": "Register a new one or connect theirs.",
+        "domainName": "Which domain?",
+        "other": "Something else",
+        "note": "A note for re:praesent"
+      },
+      "check": {
+        "people": "People",
+        "nobody": "Nobody yet",
+        "website": "Website",
+        "extras": "Extras",
+        "none": "None"
+      },
+      "errors": {
+        "name": "Give the business a name.",
+        "email": "That email address doesn't look right.",
+        "memberEmail": "“{{email}}” isn't a valid email address.",
+        "websiteMissing": "Add the website address, or choose another option.",
+        "websiteTaken": "This website is already with re:praesent. Please contact re:praesent to add it to this business.",
+        "websiteInvalid": "That website address doesn't look right. Example: salon-mira.de",
+        "limit": "You've reached your limit of businesses. Contact re:praesent to add more.",
+        "notActive": "Agency mode isn't on right now. Please contact re:praesent.",
+        "generic": "That didn't work. Please try again.",
+        "otherTypeMissing": "Write in a few words what kind of business it is.",
+        "phone": "That phone number doesn't look right. Check the digits.",
+        "postal": "That postal code doesn't look right.",
+        "postalLike": "That postal code doesn't look right. Like {{example}}.",
+        "memberEmailShort": "That isn't a valid email address.",
+        "memberTwice": "This address is already on the list.",
+        "domain": "Write the domain like salon-mira.de.",
+        "mailboxes": "Use names like info or anna, separated by commas. Check: {{list}}",
+        "several_one": "One field needs a look.",
+        "several_other": "{{count}} fields need a look."
+      },
+      "back": "Back",
+      "next": "Next",
+      "create": "Add business",
+      "creating": "Adding…",
+      "toast": {
+        "added": "{{business}} added",
+        "open": "Open"
+      }
+    },
+    "setup": {
+      "title": "re:praesent is setting things up",
+      "body": "We'll let you know when it's ready.",
+      "websiteTitle": "Your website is being built",
+      "websiteBodyUrl": "re:praesent is setting up {{url}}. It will appear here once it's live.",
+      "websiteBodyNew": "re:praesent is building your website. It will appear here once it's live.",
+      "alsoSettingUp": "Also being set up: {{items}}"
+    },
+    "switching": "Opening {{business}} …",
+    "switchFailed": "{{business}} couldn't be opened. Try again."
+  },
+  "audit": {
+    "filters": {
+      "business": "Business",
+      "allBusinesses": "All businesses",
+      "workspace": "Business",
+      "everyone": "All businesses",
+      "person": "Person",
+      "anyone": "Anyone",
+      "area": "What",
+      "everything": "Everything",
+      "period": "When",
+      "searchBusinesses": "Search by name",
+      "recent": "Recently active",
+      "noBusiness": "No match. Try another name."
+    },
+    "periods": {
+      "7d": "Last 7 days",
+      "30d": "Last 30 days",
+      "90d": "Last 3 months",
+      "12m": "Last 12 months"
+    },
+    "areas": {
+      "deal": "Deals",
+      "lead": "Inquiries",
+      "contact": "Customers",
+      "task": "Tasks",
+      "note": "Notes",
+      "member": "Team",
+      "form": "Forms",
+      "pipeline": "Deal stages",
+      "workflow": "Automations",
+      "appointment": "Appointments",
+      "email": "Email",
+      "website": "Website",
+      "ai": "AI",
+      "support": "Help & changes",
+      "agency": "Agency",
+      "media": "Pictures and files",
+      "billing": "Billing",
+      "settings": "Settings",
+      "auth": "Sign-ins"
+    },
+    "fields": {
+      "title": "Title",
+      "value": "Value",
+      "currency": "Currency",
+      "stage": "Stage",
+      "status": "Status",
+      "assigned_to": "Owner",
+      "assignee_id": "Assigned to",
+      "expected_close_date": "Expected close",
+      "first_name": "First name",
+      "last_name": "Last name",
+      "email": "Email",
+      "phone": "Phone",
+      "company_name": "Company",
+      "job_title": "Job title",
+      "due_date": "Due",
+      "role": "Role",
+      "lead_notification": "Gets inquiry alerts"
+    },
+    "actors": {
+      "system": "re:praesent",
+      "staff": "The re:praesent team",
+      "someone": "Someone"
+    },
+    "actions": {
+      "deal_create": "{{actor}} added the deal “{{label}}”",
+      "deal_update": "{{actor}} changed the deal “{{label}}”",
+      "deal_stage": "{{actor}} moved the deal “{{label}}”",
+      "deal_move": "{{actor}} moved the deal “{{label}}” to another set of stages",
+      "deal_paid": "{{actor}} marked the deal “{{label}}” as paid",
+      "deal_unpaid": "{{actor}} marked the deal “{{label}}” as not paid",
+      "deal_delete": "{{actor}} deleted the deal “{{label}}”",
+      "lead_create": "{{actor}} added the inquiry “{{label}}”",
+      "lead_update": "{{actor}} changed the inquiry “{{label}}”",
+      "contact_create": "{{actor}} added the customer “{{label}}”",
+      "contact_from_lead": "{{actor}} made “{{label}}” a customer",
+      "contact_update": "{{actor}} changed the customer “{{label}}”",
+      "contact_delete": "{{actor}} deleted the customer “{{label}}”",
+      "task_create": "{{actor}} added the task “{{label}}”",
+      "task_update": "{{actor}} changed the task “{{label}}”",
+      "task_delete": "{{actor}} deleted the task “{{label}}”",
+      "member_invite": "{{actor}} invited {{emails}}",
+      "member_update": "{{actor}} changed what {{label}} may do",
+      "member_remove": "{{actor}} removed {{label}} from the team",
+      "member_resend_invite": "{{actor}} sent the invitation again",
+      "agency_request": "{{actor}} asked to manage several businesses",
+      "agency_withdraw": "{{actor}} took back the request to manage several businesses",
+      "agency_business_create": "{{actor}} added the business “{{label}}”",
+      "agency_approve": "{{actor}} turned on agency mode (limit: {{limit}})",
+      "agency_reject": "{{actor}} didn't turn on agency mode",
+      "agency_limit": "{{actor}} changed the limit to {{limit}}",
+      "agency_suspend": "{{actor}} paused agency mode",
+      "agency_resume": "{{actor}} turned agency mode back on",
+      "agency_end": "{{actor}} ended agency mode",
+      "agency_attach": "{{actor}} added a business to the agency",
+      "agency_detach": "{{actor}} removed a business from the agency",
+      "agency_setup_sent": "Set-up sent to re:praesent: {{items}}",
+      "website_live": "The website {{url}} is live",
+      "auth_sign_in": "{{actor}} signed in ({{method}})",
+      "ai_share": "{{actor}} changed shared AI for a business",
+      "support_pass_on": "{{actor}} passed a report on to re:praesent",
+      "deal_bulk_create": "{{actor}} made deals for several contacts at once",
+      "deal_bulk_undo": "{{actor}} took back deals made at once"
+    },
+    "generic": {
+      "create": "{{actor}} added something in {{area}}",
+      "update": "{{actor}} changed something in {{area}}",
+      "delete": "{{actor}} deleted something in {{area}}"
+    },
+    "signInLink": "email link",
+    "signInCode": "code",
+    "unlimited": "unlimited",
+    "via": "via {{agency}}",
+    "didNotGoThrough": "didn't go through",
+    "changedTo": "changed to",
+    "empty_value": "empty",
+    "yes": "yes",
+    "no": "no",
+    "empty": "Nothing happened in this time. Try a longer period.",
+    "loadError": "The activity log didn't load. Please reload the page.",
+    "more": "Show more",
+    "kept": "Changes are kept for 12 months.",
+    "values": {
+      "status": {
+        "todo": "To do",
+        "in_progress": "In progress",
+        "done": "Done"
+      },
+      "role": {
+        "admin": "Admin",
+        "editor": "Can edit",
+        "viewer": "Can view"
+      }
+    }
+  },
+  "setupReport": {
+    "title": "What was asked",
+    "titleFor": "Set-up for {{business}}",
+    "progress": "{{done}} of {{total}} done",
+    "item": {
+      "websiteExisting": "Website: {{url}}",
+      "websiteNew": "A new website",
+      "emailBoxes": "Email: {{boxes}}",
+      "email": "Email mailboxes",
+      "domainName": "Domain: {{name}}",
+      "domain": "A domain",
+      "other": "Something else"
+    },
+    "done": "Done",
+    "toDo": "To do",
+    "nothing": "Nothing extra asked: the business and its team are in.",
+    "websiteUnlinked": "The website isn't linked yet. It closes by itself once you link it in the admin.",
+    "dealWon": "New customer",
+    "dealLost": "Didn't happen",
+    "dealOpen": "Deal open",
+    "chip": "Set-up",
+    "clientHint": "re:praesent marks this done once everything is set up. Write here if anything changes.",
+    "confirmTitle": "The website isn't linked yet",
+    "confirmBody": "Closing the set-up marks every item done and moves the deal to won. The website then no longer shows as being built, and its address is free again until you link it.",
+    "confirmKeep": "Keep it open",
+    "confirmClose": "Close the set-up anyway"
+  },
+  "dealSupport": {
+    "title": "Support reports",
+    "hint": "Marking the set-up report done moves this deal to won."
+  },
+  "dealBatch": {
+    "back": {
+      "contacts": "Contacts",
+      "import": "The import",
+      "segment": "The segment"
+    },
+    "backToWho": "Back",
+    "done": {
+      "created": "New deals",
+      "kept": "Kept",
+      "keptHint": "Someone worked on them.",
+      "keptList": "Kept, because someone worked on them",
+      "leftOut": "Who didn't get a new deal",
+      "leftOutMore_one": "and {{count}} more",
+      "leftOutMore_other": "and {{count}} more",
+      "noName": "No name",
+      "notMade": "Not made",
+      "owner": "{{name}} looks after them.",
+      "removed": "Taken back",
+      "seeDeals": "See them in Deals",
+      "skippedOpen": "Already had a deal",
+      "tasks_one": "{{count}} with a first task",
+      "tasks_other": "{{count}} with a first task",
+      "title": "Your deals are made",
+      "undoneTitle": "These deals were taken back",
+      "leftOutMore": "and {{count}} more",
+      "tasks": "{{count}} with a first task"
+    },
+    "errors": {
+      "generic": "That didn't work. Check your connection and try again.",
+      "noContacts": "None of these contacts are here any more. Go back and pick contacts again.",
+      "notReady": "Making deals in bulk isn't switched on for your business yet. Please ask support.",
+      "owner": "That person is no longer on your team. Pick someone else to look after the deals.",
+      "stillRunning": "The deals are still being made. Undo once that has finished."
+    },
+    "fromImport": {
+      "body": "Pick who, then give them all the same value, stage and first task. People who already have a deal are left out.",
+      "button": "Make deals",
+      "title": "Turn these contacts into deals"
+    },
+    "fromSegment": {
+      "button": "Make deals",
+      "saveFirst": "Save the segment first, then make deals from it."
+    },
+    "leave": {
+      "body": "It pauses when you leave. The deals made so far stay, and it carries on when you open this page again.",
+      "go": "Leave and pause",
+      "stay": "Stay on this page",
+      "title": "Leave while deals are being made?"
+    },
+    "loading": "Opening…",
+    "loadingContacts": "Getting the contacts…",
+    "make_one": "Make {{count}} deal",
+    "make_other": "Make {{count}} deals",
+    "next": "Next: the deals",
+    "notFound": "This could not be opened. It may belong to another business.",
+    "pick": {
+      "anyValue": "{{column}}: all",
+      "empty": "There are no contacts here to make deals for.",
+      "hasOpenDeal": "Already has a deal: {{title}}",
+      "kind": "Who",
+      "kindAll": "People and companies",
+      "kindCompanies": "Only companies",
+      "kindPeople": "Only people",
+      "label": "Who gets a deal",
+      "noneMatch": "Nobody matches. Clear the search or a filter.",
+      "search": "Search name, email, phone…",
+      "showMore_one": "Show {{count}} more",
+      "showMore_other": "Show {{count}} more",
+      "shownCount": "{{shown}} of {{total}} shown",
+      "tickAll": "Tick everyone",
+      "tickShown": "Tick everyone shown",
+      "totalCount_one": "{{count}} contact",
+      "totalCount_other": "{{count}} contacts",
+      "showMore": "Show {{count}} more",
+      "totalCount": "{{count}} contacts"
+    },
+    "pickedCount_one": "{{count}} ticked",
+    "pickedCount_other": "{{count}} ticked",
+    "pickedWithOpen_one": "{{count}} of them already has a deal",
+    "pickedWithOpen_other": "{{count}} of them already have a deal",
+    "reason": {
+      "failed": "Could not be made. Try this one by hand.",
+      "gone": "Contact was deleted meanwhile",
+      "open": "Already has a deal"
+    },
+    "retry": "Try again",
+    "run": {
+      "keepOpen": "Keep this page open until it is finished. If it gets closed, it carries on when you open it again.",
+      "progress": "{{done}} of {{total}} done",
+      "resume": "Carry on",
+      "stopped": "It stopped",
+      "stoppedHint": "Nothing is made twice. {{detail}}",
+      "title": "Making deals…"
+    },
+    "selectionGone": "There is no selection any more. Tick contacts on the contacts list and choose “Make deals”.",
+    "settings": {
+      "andMore_one": "and {{count}} more, one per contact",
+      "andMore_other": "and {{count}} more, one per contact",
+      "automations": "Run my deal automations for these",
+      "automationsOff": "Off: no workflow starts for these deals, so nobody gets an email per deal.",
+      "automationsOn": "Each new deal starts your workflows, like a deal made by hand. That can mean an email per deal.",
+      "extra": "Add to every title (optional)",
+      "extraHint": "Each deal is named after its contact.",
+      "extraPlaceholder": "e.g. Kitchen 2027",
+      "noValue": "No value",
+      "nobody": "Tick at least one contact to see the deals.",
+      "owner": "Who looks after them",
+      "pipeline": "Pipeline",
+      "stage": "Deal stage",
+      "task": "A first task on every deal",
+      "taskDefault": "Call them",
+      "taskDue": "Due",
+      "taskHint": "So every deal has a next step.",
+      "taskTitle": "Task",
+      "title": "Same for every deal",
+      "value": "Value of each deal",
+      "valueHint": "Leave it empty if you don't know yet. You can change each deal later.",
+      "andMore": "and {{count}} more, one per contact"
+    },
+    "subtitle": "One deal per contact you tick, all with the same value and stage.",
+    "subtitleFrom": "From {{name}}: one deal per contact you tick.",
+    "title": "Make deals",
+    "toContacts": "Go to contacts",
+    "truncated": "Showing the first 5,000. Narrow it down with a segment to reach the others.",
+    "undo": {
+      "body_one": "The {{count}} deal made here is removed, with its first task. Deals someone has moved, noted or added tasks to since are kept.",
+      "body_other": "The {{count}} deals made here are removed, with their first task. Deals someone has moved, noted or added tasks to since are kept.",
+      "button": "Undo these deals",
+      "done_one": "{{count}} deal taken back.",
+      "done_other": "{{count}} deals taken back.",
+      "doneKept": "{{removed}} deals taken back, {{kept}} kept because someone worked on them.",
+      "going": "Taking back… {{count}} to go",
+      "keep": "Keep the deals",
+      "title": "Undo these deals?",
+      "body": "The {{count}} deals made here are removed, with their first task. Deals someone has moved, noted or added tasks to since are kept.",
+      "done": "{{count}} deals taken back."
+    },
+    "viewerOnly": "You can look at deals but not make them. Ask an admin of your business.",
+    "make": "Make {{count}} deals",
+    "pickedCount": "{{count}} ticked",
+    "pickedWithOpen": "{{count}} of them already have a deal"
   }
 }

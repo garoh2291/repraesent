@@ -1,6 +1,5 @@
 import { useNavigate } from "react-router";
 import { useTranslation } from "react-i18next";
-import { Building2, Check } from "lucide-react";
 import { useAuthContext } from "~/providers/auth-provider";
 import {
   DialogContent,
@@ -8,7 +7,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "~/components/ui/dialog";
-import { cn } from "~/lib/utils";
+import { WorkspaceList } from "~/components/notebook/workspace-list";
 
 export default function SwitchWorkspaceModal({
   setIsOpen,
@@ -16,7 +15,7 @@ export default function SwitchWorkspaceModal({
   setIsOpen?: (isOpen: boolean) => void;
 }) {
   const { t } = useTranslation();
-  const { workspaces, currentWorkspace, setCurrentWorkspace } =
+  const { workspaces, agencyChildren, currentWorkspace, setCurrentWorkspace } =
     useAuthContext();
   const navigate = useNavigate();
 
@@ -36,31 +35,13 @@ export default function SwitchWorkspaceModal({
           {t("switchWorkspace.description")}
         </DialogDescription>
       </DialogHeader>
-      <div className="mt-5 flex flex-col gap-1.5 overflow-y-auto overscroll-contain -mr-2 pr-2">
-        {workspaces.map((ws) => {
-          const isActive = ws.id === currentWorkspace?.id;
-          return (
-            <button
-              key={ws.id}
-              onClick={() => handleSelect(ws.id)}
-              className={cn(
-                "flex items-center gap-3 w-full rounded-xl border px-4 py-3 text-sm font-medium transition-all duration-150",
-                isActive
-                  ? "border-foreground/20 bg-foreground/5 text-foreground"
-                  : "border-border bg-transparent text-foreground hover:bg-muted/60 hover:border-border/80"
-              )}
-            >
-              <div className={cn(
-                "h-7 w-7 rounded-lg flex items-center justify-center shrink-0 text-xs font-bold",
-                isActive ? "bg-foreground text-background" : "bg-muted text-muted-foreground"
-              )}>
-                {ws.name?.[0]?.toUpperCase() ?? <Building2 className="h-3.5 w-3.5" />}
-              </div>
-              <span className="truncate flex-1 text-left">{ws.name}</span>
-              {isActive && <Check className="h-3.5 w-3.5 text-muted-foreground shrink-0" />}
-            </button>
-          );
-        })}
+      <div className="mt-4 -mx-6 flex min-h-0 flex-col overflow-hidden border-y border-border">
+        <WorkspaceList
+          workspaces={workspaces}
+          agencyChildren={agencyChildren}
+          currentId={currentWorkspace?.id}
+          onPick={handleSelect}
+        />
       </div>
     </DialogContent>
   );
