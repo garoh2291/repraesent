@@ -11,7 +11,6 @@ import type {
 } from "~/lib/wordpress/plugin-settings-types";
 import {
   PluginSettingsLoadingPage,
-  ServicePauseToggle,
 } from "~/components/wordpress/plugin-settings-chrome";
 import { Badge } from "~/components/ui/badge";
 import { Button } from "~/components/ui/button";
@@ -178,13 +177,6 @@ export function ReCookieSettingsPage() {
             </p>
           </div>
           <div className="flex shrink-0 flex-wrap items-center gap-3">
-            <ServicePauseToggle
-              pluginUuid={pluginUuid}
-              pauseHint={t(
-                "wordpress.reCookie.pauseHint",
-                "Switch off to pause. The cookie banner and tracking tags stop on your website until you switch back on. Nothing is deleted.",
-              )}
-            />
             <Button
               onClick={() => void handleSave()}
               disabled={busy}

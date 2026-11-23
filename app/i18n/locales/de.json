@@ -4585,9 +4585,7 @@
       },
       "live": "Live",
       "liveTipPause": "Ausschalten, um zu pausieren. Nichts wird gelöscht.",
-      "liveTipResume": "Pausiert. Einschalten, um wieder live zu gehen.",
-      "resumedFlash": "Wieder live.",
-      "pausedFlash": "Pausiert. Besucher sehen es nicht mehr. Nichts wurde gelöscht."
+      "liveTipResume": "Pausiert. Einschalten, um wieder live zu gehen."
     },
     "reAppointment": {
       "actionSubtitle": "Was passiert, wenn auf die Schaltfläche geklickt wird.",
@@ -4700,8 +4698,7 @@
         "url": "URL öffnen",
         "page": "Zu WP-Seite"
       },
-      "titleFallback": "Kalendertermine",
-      "pauseHint": "Ausschalten, um zu pausieren. Ihre Buttons verschwinden von Ihrer Website, bis Sie wieder einschalten. Nichts wird gelöscht."
+      "titleFallback": "Kalendertermine"
     },
     "reCookie": {
       "acceptButtonColor": "Farbe der Akzeptieren-Schaltfläche",
@@ -4838,7 +4835,6 @@
       "noticesTitle": "Anbieter- & Medienhinweise",
       "retry": "Erneut versuchen",
       "titleFallback": "DSGVO-Cookie-Banner",
-      "pauseHint": "Ausschalten, um zu pausieren. Das Cookie-Banner und die Tracking-Tags stoppen auf Ihrer Website, bis Sie wieder einschalten. Nichts wird gelöscht.",
       "tagsOnSiteTitle": "Tags auf Ihrer Website",
       "tagsOnSiteDesc": "Das Banner führt sie unter ihrer Gruppe auf. Hinzufügen oder ändern können Sie sie in den Website-Einstellungen.",
       "editTags": "Tags bearbeiten",
@@ -5018,7 +5014,6 @@
       },
       "titleFallback": "SEO-Optimierung",
       "pauseHint": "Ausschalten, um zu pausieren. Sitemap, Such-Tags und Analytics-Skript stoppen auf Ihrer Website, bis Sie wieder einschalten. Nichts wird gelöscht.",
-      "pauseHintTitles": "Ausschalten, um zu pausieren. Seitentitel, Beschreibungen und Social-Media-Vorschauen stoppen auf Ihrer Website, bis Sie wieder einschalten. Sitemap und Suchmaschinen-Codes in den Website-Einstellungen laufen weiter. Nichts wird gelöscht.",
       "sitemapNoteCrawl": "Die Sitemap wird automatisch neu erstellt, wenn Sie eine Seite veröffentlichen, ändern oder in den Papierkorb legen. Suchmaschinen holen sie sich nach ihrem eigenen Zeitplan ab. Soll eine bestimmte Seite schneller geprüft werden, nutzen Sie die URL-Prüfung in der Google Search Console und beantragen Sie die Indexierung.",
       "statPagesInSitemap": "Seiten in der Sitemap"
     },
@@ -5099,8 +5094,7 @@
         "size": "Sterngröße in px (12–128).",
         "link": "Auf \"yes\" setzen, um das Widget mit einem Link zum Google-Eintrag zu umgeben."
       },
-      "titleFallback": "Google-Bewertungen",
-      "pauseHint": "Ausschalten, um zu pausieren. Die Sternebewertung verschwindet von Ihrer Website, bis Sie wieder einschalten. Nichts wird gelöscht."
+      "titleFallback": "Google-Bewertungen"
     },
     "signIn": "Bei Website anmelden",
     "signInError": "Die Admin-Anmeldung für die Website konnte nicht gestartet werden. Prüfen Sie Ihren Zugriff auf diese Website.",
@@ -5612,8 +5606,7 @@
       "newestWinsHint": "Sind mehrere Banner an derselben Position live, wird das neueste angezeigt und die übrigen bleiben verborgen.",
       "placementDropped": "Die Platzierung „nur per Shortcode“ wurde nicht übernommen – das re:banner-Plugin dieser Website braucht ein Update auf 1.4.0 oder neuer. Bis dahin wird das Banner weiterhin oben auf der Seite eingeblendet.",
       "renameBanner": "Banner umbenennen",
-      "alignTextHint": "Zentriert die Wörter in der Seitenspalte. Automatisch überlässt die Ausrichtung Ihrem Theme.",
-      "pauseHint": "Ausschalten, um alle Banner auf einmal zu pausieren. Besucher sehen keines, bis Sie wieder einschalten. Nichts wird gelöscht."
+      "alignTextHint": "Zentriert die Wörter in der Seitenspalte. Automatisch überlässt die Ausrichtung Ihrem Theme."
     },
     "subtitlePlain": "Deine Website und alles, was dazugehört.",
     "noSiteBodyPlain": "Deine Website ist hier noch nicht verbunden.",
@@ -5624,6 +5617,7 @@
         "addFirst": "Fügen Sie diese Sprache zuerst hinzu.",
         "unknownLanguage": "Diese Sprache kann noch nicht übersetzt werden.",
         "nothingChanged": "Seit der letzten Übersetzung hat sich nichts geändert.",
+        "updateForScan": "Aktualisieren Sie re:translate auf Ihrer Website, um sie nach Änderungen zu durchsuchen.",
         "noPages": "Es gibt keine Seiten zum Übersetzen.",
         "sentenceGone": "Dieser Satz steht nicht mehr auf der Seite. Öffnen Sie die Seite erneut, um den aktuellen Text zu sehen.",
         "noSite": "Mit diesem Arbeitsbereich ist keine Website verbunden.",
@@ -5640,7 +5634,9 @@
         "de-DE": "Deutsch (Deutschland)",
         "de-AT": "Deutsch (Österreich)",
         "it-IT": "Italienisch",
-        "nl-NL": "Niederländisch",
+        "nl-NL": "Niederländisch (Niederlande)",
+        "nl-BE": "Niederländisch (Belgien)",
+        "cs-CZ": "Tschechisch",
         "ar-GULF": "Arabisch (Golfregion / Naher Osten)",
         "hy-AM": "Armenisch (Ostarmenisch)",
         "ru-RU": "Russisch"
@@ -5712,9 +5708,9 @@
       "searchNoneFlagged": "Keiner der Sätze, die einen Blick wert sind, enthält „{{query}}“. Zeigen Sie alle an, um die ganze Seite zu durchsuchen.",
       "brief": "Was der Übersetzer über diese Seite verstanden hat",
       "emptyTranslation": "Schreiben Sie eine Übersetzung oder brechen Sie ab.",
-      "keepMarkers": "Behalten Sie jede 〔 〕-Markierung genau einmal – sie halten Links und fette Wörter an ihrem Platz.",
+      "formattingLost": "Die Links in diesem Satz konnten nicht übernommen werden. Brechen Sie ab und versuchen Sie es noch einmal.",
       "sentenceSaved": "Gespeichert. Diese Formulierung gilt ab jetzt.",
-      "markersHint": "Wörter zwischen 〔1〕 und 〔/1〕 sind ein Link oder fett. Verschieben Sie die Markierungen mit den Wörtern; löschen Sie sie nicht.",
+      "formattingHint": "Unterstrichene Wörter sind ein Link oder fett, ein Punkt ist ein Zeilenumbruch oder ein Symbol. Ändern Sie einfach die Wörter; alles bleibt an seinem Platz.",
       "saveWording": "Formulierung speichern",
       "cancel": "Abbrechen",
       "noTranslation": "Noch nicht übersetzt",
@@ -5723,7 +5719,6 @@
       "editWording": "Formulierung ändern",
       "whyWording": "Warum diese Formulierung?",
       "saved": "Gespeichert.",
-      "pauseHint": "Alle Besucher sehen die Originalseiten, bis Sie das wieder einschalten. Nichts wird gelöscht.",
       "title": "Übersetzung",
       "back": "Zurück zur Website",
       "subtitle": "Ihre Website in weiteren Sprachen",
@@ -5863,6 +5858,12 @@
         "estimate_other": "{{count}} Seiten · etwa {{minutes}} Min.",
         "menuChanged": "Ihr Menü oder Footer hat sich geändert",
         "newOrChanged": "Neu oder bearbeitet seit dem letzten Mal",
+        "scan": "Nach Änderungen suchen",
+        "scanning": "{{done}} von {{total}} Seiten geprüft …",
+        "scanHint": "Liest Ihre übersetzten Seiten neu und findet Text, der noch keine Übersetzung hat – auch Änderungen, die re:translate nicht bemerkt hat.",
+        "scanFound": "Neuer Text auf {{count}} Seiten. Übersetzen Sie ihn mit der Schaltfläche neben jeder Sprache.",
+        "scanNone": "Kein neuer Text gefunden. Ihre übersetzten Seiten sind auf dem neuesten Stand.",
+        "scanFailed": "{{count}} Seiten konnten nicht gelesen werden. Versuchen Sie es später erneut.",
         "state": {
           "live": "Online",
           "waiting": "Wartet auf Sie",
@@ -5919,9 +5920,7 @@
         "publishAllWorking": "Seiten werden freigeschaltet…",
         "publishedAll": "Alle wartenden Seiten sind jetzt sichtbar.",
         "publishedSome": "Die übrigen Seiten sind sichtbar. Einige konnten nicht geändert werden: Öffnen Sie sie unter „Wartet auf Sie“, um den Grund zu sehen."
-      },
-      "resumed": "Die Übersetzungen sind wieder live.",
-      "paused": "Übersetzungen pausiert. Besucher sehen die Originalseiten."
+      }
     },
     "websiteSettings": {
       "metaTitle": "Website-Einstellungen",
@@ -5943,7 +5942,6 @@
       "consentRegionDesc": "Besucher in Europa sehen das Banner. Alle anderen bekommen die Tags sofort.",
       "consentOff": "Nein, Tags sofort laden",
       "consentOffDesc": "Kein Cookie-Banner. Alle Tags laden für alle Besucher.",
-      "cookiePaused": "Der Cookie-Banner-Dienst ist pausiert, daher lädt gerade keiner dieser Tags. Schalten Sie ihn auf der Seite des Cookie-Banners wieder ein.",
       "consentOffNote": "In der EU brauchen Tags, die Cookies setzen (Google Analytics, Google Ads, Meta Pixel), in der Regel die Einwilligung der Besucher. Wählen Sie das nur, wenn Ihr Datenschutzkonzept das abdeckt.",
       "consentRegionNote": "Wir prüfen die IP-Adresse des Besuchers anhand einer Länderliste auf dem Server Ihrer Website, es wird also nichts an Dritte geschickt. Liegt sie in Europa oder ist es unklar, erscheint das Banner. Sitzt Ihr Unternehmen in der EU, können die Regeln für alle Besucher gelten; dann behalten Sie das Banner für alle.",
       "bannerLookPrefix": "Aussehen und Texte des Banners ändern Sie unter",
@@ -6005,7 +6003,6 @@
       "comingSoon": "Besucher sehen gerade Ihre „Bald verfügbar“-Seite, deshalb zeigt das Bild diese Seite."
     },
     "websiteCode": {
-      "paused": "Der Cookie-Banner-Dienst ist pausiert, daher lädt gerade keiner dieser Codes. Schalten Sie ihn auf der Seite des Cookie-Banners wieder ein.",
       "title": "Code auf Ihrer Website",
       "subtitleAsk": "Fügen Sie den Code ein, den ein Tool Ihnen gibt, und wählen Sie, wo er hinkommt. Code, der Cookies setzt, wartet, bis der Besucher zustimmt.",
       "subtitleOff": "Fügen Sie den Code ein, den ein Tool Ihnen gibt, und wählen Sie, wo er hinkommt. Es gibt kein Cookie-Banner, daher lädt er für alle Besucher.",
@@ -6146,7 +6143,6 @@
       "panelRadius": "Menü",
       "panelWidth": "Menübreite",
       "panelWidthHint": "Auf Handys passt das Menü immer auf den Bildschirm.",
-      "pauseHint": "Ausschalten, um zu pausieren. Die Schaltfläche für Barrierefreiheit, der Sprunglink und die Fokus-Umrandung verschwinden von Ihrer Website, bis Sie wieder einschalten. Nichts wird gelöscht.",
       "placeDesc": "Wo die Schaltfläche sitzt. Besucher können sie für sich selbst auf die andere Seite verschieben.",
       "placeTitle": "Position",
       "previewClosed": "Nur Schaltfläche",

@@ -4585,9 +4585,7 @@
       },
       "live": "En ligne",
       "liveTipPause": "Désactivez pour mettre en pause. Rien n'est supprimé.",
-      "liveTipResume": "En pause. Activez pour remettre en ligne.",
-      "resumedFlash": "De nouveau en ligne.",
-      "pausedFlash": "En pause. Les visiteurs ne le voient plus. Rien n'a été supprimé."
+      "liveTipResume": "En pause. Activez pour remettre en ligne."
     },
     "reAppointment": {
       "actionSubtitle": "Ce qui se passe lorsque le bouton est cliqué.",
@@ -4700,8 +4698,7 @@
         "url": "Ouvrir l'URL",
         "page": "Aller à la page WP"
       },
-      "titleFallback": "Rendez-vous agenda",
-      "pauseHint": "Désactivez pour mettre en pause. Vos boutons disparaissent de votre site jusqu'à la réactivation. Rien n'est supprimé."
+      "titleFallback": "Rendez-vous agenda"
     },
     "reCookie": {
       "acceptButtonColor": "Couleur du bouton Accepter",
@@ -4838,7 +4835,6 @@
       "noticesTitle": "Mentions fournisseurs et médias",
       "retry": "Réessayer",
       "titleFallback": "Bannière cookies RGPD",
-      "pauseHint": "Désactivez pour mettre en pause. La bannière de cookies et les balises de suivi s'arrêtent sur votre site jusqu'à la réactivation. Rien n'est supprimé.",
       "tagsOnSiteTitle": "Balises sur votre site",
       "tagsOnSiteDesc": "Le bandeau les affiche sous leur groupe. Ajoutez-les ou modifiez-les dans les Paramètres du site.",
       "editTags": "Modifier les balises",
@@ -5018,7 +5014,6 @@
       },
       "titleFallback": "Optimisation SEO",
       "pauseHint": "Désactivez pour mettre en pause. Votre plan du site, vos balises de recherche et le script d'analyse s'arrêtent sur votre site jusqu'à la réactivation. Rien n'est supprimé.",
-      "pauseHintTitles": "Désactivez pour mettre en pause. Vos titres de page, descriptions et aperçus pour les réseaux sociaux s'arrêtent sur votre site jusqu'à ce que vous réactiviez. Le plan du site et les codes des moteurs de recherche dans les Paramètres du site continuent de fonctionner. Rien n'est supprimé.",
       "sitemapNoteCrawl": "Le sitemap se régénère automatiquement lorsque vous publiez, modifiez ou mettez une page à la corbeille. Les moteurs de recherche le consultent selon leur propre calendrier. Pour faire examiner une page plus vite, utilisez l'inspection d'URL dans Google Search Console et demandez une indexation.",
       "statPagesInSitemap": "Pages dans le sitemap"
     },
@@ -5099,8 +5094,7 @@
         "size": "Taille des étoiles en px (12–128).",
         "link": "Mettre \"yes\" pour entourer le widget d'un lien vers la fiche Google."
       },
-      "titleFallback": "Avis Google",
-      "pauseHint": "Désactivez pour mettre en pause. La note en étoiles disparaît de votre site jusqu'à la réactivation. Rien n'est supprimé."
+      "titleFallback": "Avis Google"
     },
     "signIn": "Se connecter au site web",
     "signInError": "Impossible de démarrer la connexion à l'admin du site. Vérifiez votre accès à ce site.",
@@ -5612,8 +5606,7 @@
       "newestWinsHint": "Quand plusieurs bannières sont actives à la même position, la plus récente s'affiche et les autres restent masquées.",
       "placementDropped": "Le placement « uniquement via le shortcode » n'a pas été conservé — le plugin re:banner de ce site doit être mis à jour en 1.4.0 ou plus. D'ici là, la bannière reste épinglée en haut de la page.",
       "renameBanner": "Renommer la bannière",
-      "alignTextHint": "Centre les mots dans la colonne de la page. Automatique laisse l'alignement à votre thème.",
-      "pauseHint": "Désactivez pour mettre tous les bandeaux en pause d'un coup. Les visiteurs n'en voient aucun jusqu'à la réactivation. Rien n'est supprimé."
+      "alignTextHint": "Centre les mots dans la colonne de la page. Automatique laisse l'alignement à votre thème."
     },
     "subtitlePlain": "Votre site web et tout ce qui y est relié.",
     "noSiteBodyPlain": "Votre site web n’est pas encore relié ici.",
@@ -5624,6 +5617,7 @@
         "addFirst": "Ajoutez d'abord cette langue.",
         "unknownLanguage": "Cette langue ne peut pas encore être traduite.",
         "nothingChanged": "Rien n'a changé depuis la dernière traduction.",
+        "updateForScan": "Mettez à jour re:translate sur votre site pour y rechercher les modifications.",
         "noPages": "Il n'y a aucune page à traduire.",
         "sentenceGone": "Cette phrase n'est plus sur la page. Rouvrez la page pour voir son texte actuel.",
         "noSite": "Aucun site n'est connecté à cet espace de travail.",
@@ -5640,7 +5634,9 @@
         "de-DE": "Allemand (Allemagne)",
         "de-AT": "Allemand (Autriche)",
         "it-IT": "Italien",
-        "nl-NL": "Néerlandais",
+        "nl-NL": "Néerlandais (Pays-Bas)",
+        "nl-BE": "Néerlandais (Belgique)",
+        "cs-CZ": "Tchèque",
         "ar-GULF": "Arabe (Golfe / Moyen-Orient)",
         "hy-AM": "Arménien (oriental)",
         "ru-RU": "Russe"
@@ -5712,9 +5708,9 @@
       "searchNoneFlagged": "Aucune des phrases à regarder ne contient « {{query}} ». Affichez tout pour chercher dans toute la page.",
       "brief": "Ce que le traducteur a compris de cette page",
       "emptyTranslation": "Écrivez une traduction ou annulez.",
-      "keepMarkers": "Gardez chaque repère 〔 〕 une seule fois — ils maintiennent les liens et les mots en gras à leur place.",
+      "formattingLost": "Les liens de cette phrase n'ont pas pu être conservés. Annulez et réessayez.",
       "sentenceSaved": "Enregistré. Cette formulation est utilisée désormais.",
-      "markersHint": "Les mots entre 〔1〕 et 〔/1〕 sont un lien ou en gras. Déplacez les repères avec les mots ; ne les supprimez pas.",
+      "formattingHint": "Les mots soulignés sont un lien ou en gras, et un point est un retour à la ligne ou une icône. Modifiez simplement les mots ; tout reste à sa place.",
       "saveWording": "Enregistrer la formulation",
       "cancel": "Annuler",
       "noTranslation": "Pas encore traduit",
@@ -5723,7 +5719,6 @@
       "editWording": "Modifier la formulation",
       "whyWording": "Pourquoi cette formulation ?",
       "saved": "Enregistré.",
-      "pauseHint": "Tous les visiteurs voient les pages d'origine jusqu'à ce que vous le réactiviez. Rien n'est supprimé.",
       "title": "Traduction",
       "back": "Retour au site",
       "subtitle": "Votre site dans d'autres langues",
@@ -5863,6 +5858,12 @@
         "estimate_other": "{{count}} pages · environ {{minutes}} min",
         "menuChanged": "Votre menu ou pied de page a changé",
         "newOrChanged": "Nouvelles ou modifiées depuis la dernière fois",
+        "scan": "Rechercher les modifications",
+        "scanning": "{{done}} pages vérifiées sur {{total}}…",
+        "scanHint": "Relit vos pages traduites et trouve le texte qui n'a pas encore de traduction, y compris les modifications que re:translate n'a pas remarquées.",
+        "scanFound": "Nouveau texte sur {{count}} pages. Traduisez-le avec le bouton à côté de chaque langue.",
+        "scanNone": "Aucun nouveau texte trouvé. Vos pages traduites sont à jour.",
+        "scanFailed": "{{count}} pages n'ont pas pu être lues. Réessayez plus tard.",
         "state": {
           "live": "En ligne",
           "waiting": "En attente de vous",
@@ -5919,9 +5920,7 @@
         "publishAllWorking": "Mise en ligne des pages…",
         "publishedAll": "Toutes les pages en attente sont en ligne.",
         "publishedSome": "Les autres pages sont en ligne. Certaines n'ont pas pu être modifiées : ouvrez-les dans « En attente de vous » pour voir pourquoi."
-      },
-      "resumed": "Les traductions sont de nouveau en ligne.",
-      "paused": "Traductions en pause. Les visiteurs voient les pages d'origine."
+      }
     },
     "websiteSettings": {
       "metaTitle": "Paramètres du site",
@@ -5943,7 +5942,6 @@
       "consentRegionDesc": "Les visiteurs en Europe voient le bandeau. Pour les autres, les balises se chargent tout de suite.",
       "consentOff": "Non, charger les balises tout de suite",
       "consentOffDesc": "Pas de bandeau cookies. Toutes les balises se chargent pour tous les visiteurs.",
-      "cookiePaused": "Le service de bandeau cookies est en pause : aucune de ces balises ne se charge pour l'instant. Réactivez-le sur la page du bandeau cookies.",
       "consentOffNote": "Dans l'UE, les balises qui déposent des cookies (Google Analytics, Google Ads, Meta Pixel) nécessitent généralement le consentement du visiteur. Ne choisissez cette option que si votre politique de confidentialité le couvre.",
       "consentRegionNote": "Nous vérifions l'adresse IP du visiteur dans une liste de pays conservée sur le serveur de votre site : rien n'est envoyé à des tiers. Si elle est en Europe, ou si nous ne pouvons pas le savoir, le bandeau s'affiche. Si votre entreprise est dans l'UE, les règles peuvent couvrir tous vos visiteurs ; gardez alors le bandeau pour tous.",
       "bannerLookPrefix": "Pour modifier l'apparence et les textes du bandeau, ouvrez",
@@ -6005,7 +6003,6 @@
       "comingSoon": "Les visiteurs voient en ce moment votre page « Bientôt disponible » : l'image montre donc cette page."
     },
     "websiteCode": {
-      "paused": "Le service de bandeau cookies est en pause : aucun de ces codes ne se charge pour l'instant. Réactivez-le sur la page du bandeau cookies.",
       "title": "Code sur votre site",
       "subtitleAsk": "Collez le code fourni par un outil et choisissez où il va. Le code qui dépose des cookies attend l'accord du visiteur.",
       "subtitleOff": "Collez le code fourni par un outil et choisissez où il va. Il n'y a pas de bandeau cookies : il se charge pour tous les visiteurs.",
@@ -6146,7 +6143,6 @@
       "panelRadius": "Menu",
       "panelWidth": "Largeur du menu",
       "panelWidthHint": "Sur téléphone, le menu tient toujours dans l'écran.",
-      "pauseHint": "Désactivez pour mettre en pause. Le bouton d'accessibilité, le lien d'évitement et le contour du focus disparaissent de votre site jusqu'à ce que vous réactiviez. Rien n'est supprimé.",
       "placeDesc": "L'emplacement du bouton. Les visiteurs peuvent toujours le déplacer de l'autre côté pour eux-mêmes.",
       "placeTitle": "Emplacement",
       "previewClosed": "Bouton seul",

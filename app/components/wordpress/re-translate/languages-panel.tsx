@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Check, Eye, ExternalLink, MoreHorizontal, Plus, RefreshCw, Search, Square, Trash2 } from "lucide-react";
-import type { ReTranslateLanguage, ReTranslateOverview, ReTranslatePage, ReTranslatePageState, ReTranslateRun, ReTranslateTarget } from "~/lib/api/re-translate";
+import { Check, Eye, ExternalLink, MoreHorizontal, Plus, RefreshCw, ScanSearch, Search, Square, Trash2 } from "lucide-react";
+import { needsTranslating, type ReTranslateLanguage, type ReTranslateOverview, type ReTranslatePage, type ReTranslatePageState, type ReTranslateRun, type ReTranslateTarget } from "~/lib/api/re-translate";
 import { useReTranslateActions, useReTranslatePages, useReTranslateRuns } from "~/lib/hooks/useReTranslate";
 import { cn } from "~/lib/utils";
 import {
@@ -58,6 +58,7 @@ export function LanguagesPanel({ target, overview, detailed = false }: { target:
   const [open, setOpen] = useState<{ path: string; title: string; language: ReTranslateLanguage } | null>(null);
   const [confirm, setConfirm] = useState<Confirm | null>(null);
   const [publishAll, setPublishAll] = useState(false);
+  const [scanning, setScanning] = useState<{ done: number; total: number } | null>(null);
 
   const settings = overview.settings;
   const sourceName = settings.source.native?.replace(/\s*\(.*\)$/u, "") || settings.source.name || settings.source.locale;
@@ -106,6 +107,25 @@ export function LanguagesPanel({ target, overview, detailed = false }: { target:
       },
     );
 
+  // Check for changes: only pages translated into some language; the others already wait for "Translate".
+  const translatedPaths = useMemo(() => pages.filter((p) => Object.keys(p.languages).length > 0).map((p) => p.path), [pages]);
+  const checkForChanges = () =>
+    actions.scan.mutate(
+      { paths: translatedPaths, onProgress: (done, total) => setScanning({ done, total }) },
+      {
+        onSuccess: (res) => {
+          if (res.failed > 0) flash(t(`${K}.scanFailed`, "{{count}} pages could not be read. Try again later.", { count: res.failed }), "error");
+          flash(
+            res.changed > 0
+              ? t(`${K}.scanFound`, "New text on {{count}} pages. Translate them with the button next to each language.", { count: res.changed })
+              : t(`${K}.scanNone`, "No new text found. Your translated pages are up to date."),
+          );
+        },
+        onError: (err) => flash(errorText(t, err), "error"),
+        onSettled: () => setScanning(null),
+      },
+    );
+
   const runFor = (locale: string) => activeRuns.find((r) => r.target_lang === locale);
   const runItems = (run?: ReTranslateRun) => (run ? (runsData?.runs.find((r) => r.id === run.id)?.items ?? []) : []);
 
@@ -139,8 +159,24 @@ export function LanguagesPanel({ target, overview, detailed = false }: { target:
       </div>
 
       <SectionCard>
-        <div className="flex items-baseline justify-between gap-3 border-b px-5 py-4 sm:px-6">
+        <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1 border-b px-5 py-3 sm:px-6">
           <h2 className="title-display text-lg font-semibold tracking-tight">{t(`${K}.languagesTitle`, "Languages visitors can read")}</h2>
+          {targets.length > 0 && translatedPaths.length > 0 ? (
+            <Button
+              variant="ghost"
+              className="-mr-3 h-10 shrink-0"
+              disabled={locked || actions.scan.isPending}
+              title={t(`${K}.scanHint`, "Reads your translated pages again and finds text that has no translation yet, also edits re:translate did not notice.")}
+              onClick={checkForChanges}
+            >
+              {actions.scan.isPending ? <Spinner className="size-4" /> : <ScanSearch className="size-4" />}
+              <span aria-live="polite" className="tabular-nums">
+                {actions.scan.isPending && scanning
+                  ? t(`${K}.scanning`, "Checking {{done}} of {{total}} pages…", { done: scanning.done, total: scanning.total })
+                  : t(`${K}.scan`, "Check for changes")}
+              </span>
+            </Button>
+          ) : null}
         </div>
 
         {!settings.source.locale ? (
@@ -272,8 +308,8 @@ function LanguageRow(props: {
   const live = pages.filter((p) => state(p) === "live").length;
   const waiting = pages.filter((p) => state(p) === "needs_you").length;
   const translated = pages.filter((p) => state(p)).length;
-  // Same rule the API uses for "new and changed": edited since read, or never translated into this language.
-  const pending = props.siteChanged ? pages.length : pages.filter((p) => p.changed || !state(p)).length;
+  // Same rule the API uses for "new and changed": never translated into this language, or changed since it was.
+  const pending = pages.filter((p) => needsTranslating(p, language.locale)).length;
   const address = `${props.home.replace(/^https?:\/\//, "").replace(/\/$/, "")}/${language.prefix}/`;
 
   return (

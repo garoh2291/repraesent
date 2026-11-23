@@ -16,7 +16,7 @@ import {
   useWorkspaceReReviewTestFetch,
 } from "~/lib/hooks/useWorkspaceReReviewSettings";
 import type { ReReviewSettings } from "~/lib/wordpress/plugin-settings-types";
-import { PluginSettingsLoadingPage, ServicePauseToggle } from "~/components/wordpress/plugin-settings-chrome";
+import { PluginSettingsLoadingPage } from "~/components/wordpress/plugin-settings-chrome";
 import { Badge } from "~/components/ui/badge";
 import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
@@ -186,13 +186,6 @@ export function ReReviewSettingsPage() {
           </p>
         </div>
         <div className="flex shrink-0 flex-wrap items-center gap-3">
-          <ServicePauseToggle
-            pluginUuid={pluginUuid}
-            pauseHint={t(
-              "wordpress.reReview.pauseHint",
-              "Switch off to pause. The star rating disappears from your website until you switch back on. Nothing is deleted.",
-            )}
-          />
           <Button onClick={handleSave} disabled={saving} className="shrink-0">
             <Save className="h-4 w-4" />
             {saving

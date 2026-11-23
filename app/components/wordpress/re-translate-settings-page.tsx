@@ -1,11 +1,11 @@
 import { useParams, useSearchParams } from "react-router";
 import { useTranslation } from "react-i18next";
 import { Languages as LanguagesIcon, MousePointerClick, Palette } from "lucide-react";
-import { useReTranslateActions, useReTranslateOverview } from "~/lib/hooks/useReTranslate";
+import { useReTranslateOverview } from "~/lib/hooks/useReTranslate";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "~/components/ui/tabs";
-import { PluginSettingsLoadingPage, ServiceLiveToggle } from "~/components/wordpress/plugin-settings-chrome";
+import { PluginSettingsLoadingPage } from "~/components/wordpress/plugin-settings-chrome";
 import { InfoNote, PageShell } from "~/components/wordpress/fields";
-import { errorText, flash } from "~/components/wordpress/re-translate/constants";
+import { errorText } from "~/components/wordpress/re-translate/constants";
 import { LanguagesPanel } from "~/components/wordpress/re-translate/languages-panel";
 import { MenuPanel } from "~/components/wordpress/re-translate/menu-panel";
 import { StylePanel } from "~/components/wordpress/re-translate/style-panel";
@@ -16,7 +16,7 @@ type Tab = (typeof TABS)[number];
 /**
  * re:translate inside Repraesent. One screen per job: languages & pages
  * (translate, check, make live), how it should sound, the language menu
- * visitors use, and the two site-wide switches.
+ * visitors use.
  */
 export function ReTranslateSettingsPage() {
   const { t } = useTranslation();
@@ -27,7 +27,6 @@ export function ReTranslateSettingsPage() {
   const tab: Tab = (TABS as readonly string[]).includes(asked) ? (asked as Tab) : "languages";
   const target = { pluginUuid };
   const { data, isLoading, error } = useReTranslateOverview(target);
-  const { saveOptions } = useReTranslateActions(target);
 
   if (isLoading) return <PluginSettingsLoadingPage />;
 
@@ -40,23 +39,6 @@ export function ReTranslateSettingsPage() {
           </div>
           <p className="text-sm text-muted-foreground">{data?.plugin.home ? (data.plugin.site_url ?? data.plugin.home).replace(/^https?:\/\//i, "").replace(/\/$/, "") : t("wordpress.reTranslate.subtitle", "Your website in more languages")}</p>
         </div>
-        {data ? (
-          <ServiceLiveToggle
-            id="re-translate-live"
-            live={!data.settings.paused}
-            busy={saveOptions.isPending}
-            pauseHint={t("wordpress.reTranslate.pauseHint", "Every visitor sees the original pages until you turn this on again. Nothing is deleted.")}
-            onChange={(live) =>
-              saveOptions.mutate(
-                { paused: !live },
-                {
-                  onSuccess: () => flash(live ? t("wordpress.reTranslate.resumed", "Translations are live again.") : t("wordpress.reTranslate.paused", "Translations paused. Visitors see the original pages.")),
-                  onError: (err) => flash(errorText(t, err), "error"),
-                },
-              )
-            }
-          />
-        ) : null}
       </div>
 
       {error ? (

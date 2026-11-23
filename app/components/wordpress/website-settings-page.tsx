@@ -14,7 +14,6 @@ import {
 } from "lucide-react";
 import { extractErrorMessage } from "~/lib/api/axios-instance";
 import { useWorkspacePluginSettingsForm } from "~/lib/hooks/useWorkspacePluginSettings";
-import { useWorkspacePluginPause } from "~/lib/hooks/useWorkspacePluginPause";
 import { useWorkspaceReIndexRegenerateSitemap } from "~/lib/hooks/useWorkspaceReIndexSettings";
 import { useWorkspaceWpPluginCatalog } from "~/lib/hooks/useWorkspaceWpPluginCatalog";
 import { useWorkspaceWpSite } from "~/lib/hooks/useWorkspaceWpSite";
@@ -82,8 +81,7 @@ import {
  *   row, so a tag added here is the tag the banner lists.
  * - Code: the customer's own code with its place on the page (re:cookie named
  *   scripts); only workspace admins may change it.
- * - Sitemap and Site verification: served by re:index but not paused with the
- *   SEO service.
+ * - Sitemap and Site verification: served by re:index.
  *
  * Saving writes only those slices (`consent_mode` + `integrations`,
  * `verification`), never the services' other settings.
@@ -112,7 +110,6 @@ export function WebsiteSettingsPage() {
     INDEX_DEFAULTS,
     { fromApi: reIndexSettingsFromApi },
   );
-  const cookiePause = useWorkspacePluginPause(cookieUuid);
   const regenerate = useWorkspaceReIndexRegenerateSitemap(indexUuid);
   const [saving, setSaving] = useState(false);
   const [searchParams, setSearchParams] = useSearchParams();
@@ -434,14 +431,6 @@ export function WebsiteSettingsPage() {
                     />
                   </div>
 
-                  {cookiePause.query.data?.paused ? (
-                    <p className="rounded-xl border border-amber-500/30 bg-amber-500/10 px-3.5 py-3 text-xs leading-relaxed text-amber-800 dark:text-amber-300">
-                      {t(
-                        "wordpress.websiteSettings.cookiePaused",
-                        "The cookie banner service is paused, so none of these tags load right now. Switch it back on on the cookie banner page.",
-                      )}
-                    </p>
-                  ) : null}
 
                   {consentMode === "region" ? (
                     <InfoNote>
@@ -512,7 +501,6 @@ export function WebsiteSettingsPage() {
                 settings={cookie.settings}
                 patch={cookie.setSettings}
                 consentMode={consentMode}
-                bannerPaused={!!cookiePause.query.data?.paused}
                 plausibleOn={!!plausible?.enabled}
               />
             </TabsContent>

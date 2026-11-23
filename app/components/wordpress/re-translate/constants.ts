@@ -14,8 +14,9 @@ const REFUSALS: Record<string, string> = {
   "Unknown language.": "wordpress.reTranslate.error.unknownLanguage",
   "Nothing changed since the last translation.": "wordpress.reTranslate.error.nothingChanged",
   "No pages to translate.": "wordpress.reTranslate.error.noPages",
+  "Update re:translate on this website to check its pages for changes.": "wordpress.reTranslate.error.updateForScan",
   "This sentence is not on the page any more.": "wordpress.reTranslate.error.sentenceGone",
-  "Keep every link and formatting marker exactly once.": "wordpress.reTranslate.keepMarkers",
+  "Keep every link and formatting marker exactly once.": "wordpress.reTranslate.formattingLost",
   "re:translate (v1) is still active on this site. Deactivate it first.": "wordpress.reTranslate.v1Active",
   "No WordPress site for this workspace": "wordpress.reTranslate.error.noSite",
 };

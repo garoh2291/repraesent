@@ -17,6 +17,7 @@ import type { ReTranslateOverview } from "../app/lib/api/re-translate";
 import { baseOf, flagOf, menuName, minutesFor, px, shortName } from "../app/components/wordpress/re-translate/logic";
 import { flagWords, reasonWords } from "../app/components/wordpress/re-translate/page-view";
 import { fromEditable, hasMarkers, plainText, toEditable, tokensMatch } from "../app/components/wordpress/re-translate/sentence-text";
+import { repair } from "../app/components/wordpress/re-translate/marked-text-editor";
 
 const here = dirname(fileURLToPath(import.meta.url));
 const plugin = join(here, "../../plugins/re-translate");
@@ -169,4 +170,20 @@ test("optimistic: options merge the way the API merges them", () => {
   assert.equal(s.source.flag, "none");
   assert.equal(s.languages.find((l) => l.locale === "hy-AM")?.flag, "am");
   assert.equal(s.languages.find((l) => l.locale === "fr-FR")?.flag, undefined);
+});
+
+test("editor: a wording keeps every marker of the source, so saving never fails on them", () => {
+  const source = "<1>MEISTERSTÜCKE VON ROLF BENZ </1><2/>AUS DEM SCHWARZWALD";
+  // Nothing lost: left exactly as written.
+  assert.equal(repair("<1>MISTROVSKÁ DÍLA ROLF BENZ </1><2/>ZE SCHWARZWALDU", source), "<1>MISTROVSKÁ DÍLA ROLF BENZ </1><2/>ZE SCHWARZWALDU");
+  // Every word of the link deleted and the line break with it: both come back, the link empty.
+  const lost = repair("--", source);
+  assert.equal(lost, "--<1></1><2/>");
+  assert.ok(tokensMatch(source, lost));
+  // A marker the source does not have, or one written twice, is dropped.
+  assert.equal(repair("<1>a</1><1>b</1><3/> c<2/>", source), "<1>a</1>b c<2/>");
+  // Placeholders the site fills in come back too.
+  assert.equal(repair("Ab Preis", "Ab ⟦0⟧ Euro"), "Ab Preis⟦0⟧");
+  // Every real sentence, with its words removed, is still accepted.
+  if (fixture) for (const c of fixture.cases) assert.ok(tokensMatch(c.text, repair("x", c.text)), c.text);
 });

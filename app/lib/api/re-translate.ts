@@ -95,8 +95,16 @@ export interface ReTranslatePage {
   title: string;
   path: string;
   modified: string;
+  /** Changed since it was translated, in at least one language. */
   changed: boolean;
-  languages: Record<string, { state: ReTranslatePageState; score: number | null; updated_at: string }>;
+  /** `changed`: edited since this language was translated; `missing`: new sentences a check for changes found. */
+  languages: Record<string, { state: ReTranslatePageState; score: number | null; updated_at: string; changed?: boolean; missing?: number }>;
+}
+
+/** Whether a page waits for "Translate N pages" in a language: never translated there, or changed since. */
+export function needsTranslating(page: ReTranslatePage, locale: string): boolean {
+  const state = page.languages[locale];
+  return !state || (state.changed ?? page.changed);
 }
 
 export interface ReTranslateSentence {
@@ -174,6 +182,17 @@ export async function putReTranslateOptions(target: ReTranslateTarget, body: ReT
 
 export async function getReTranslatePages(target: ReTranslateTarget): Promise<{ pages: ReTranslatePage[]; site_changed: boolean }> {
   return (await apiClient.get<{ pages: ReTranslatePage[]; site_changed: boolean }>(`${base(target)}/pages`)).data;
+}
+
+export type ReTranslateScanResult = {
+  results: Array<{ path: string; status: "ok" | "changed" | "not_translated" | "error"; languages: Record<string, { missing: number; edited: boolean }>; error?: string }>;
+  /** Paths the website did not get to in this call: send them again. */
+  left: string[];
+};
+
+/** The website reads these pages again and records the new text that has no translation. */
+export async function scanReTranslatePages(target: ReTranslateTarget, paths: string[]): Promise<ReTranslateScanResult> {
+  return (await apiClient.post<ReTranslateScanResult>(`${base(target)}/pages/scan`, { paths }, { timeout: 120_000 })).data;
 }
 
 export async function getReTranslateRuns(target: ReTranslateTarget): Promise<{ runs: ReTranslateRun[] }> {
