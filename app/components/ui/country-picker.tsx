@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Check, ChevronDown } from "lucide-react";
+import { Check, ChevronDown, Sparkles } from "lucide-react";
 import { Command, CommandGroup, CommandInput, CommandItem, CommandList, CommandSeparator } from "~/components/ui/command";
 import { Popover, PopoverContent, PopoverTrigger } from "~/components/ui/popover";
 import { Flag } from "~/components/onboarding-v2/country-combobox";
@@ -36,6 +36,10 @@ export function CountryPicker({
   onChange,
   label,
   invalid,
+  disabled,
+  codes,
+  detail,
+  emptyOption,
 }: {
   /** ISO 3166-1 alpha-2, or "" for none. */
   value: string;
@@ -43,16 +47,25 @@ export function CountryPicker({
   /** Accessible name of the button ("Country"). */
   label: string;
   invalid?: boolean;
+  disabled?: boolean;
+  /** Only these countries (e.g. the ones a phone field knows). Default: all. */
+  codes?: readonly string[];
+  /** Small grey text after the name, also searchable (a calling code: "+43"). */
+  detail?: (code: string) => string;
+  /** A first row that picks "" (e.g. "Automatic"); the button shows it when value is "". */
+  emptyOption?: string;
 }) {
   const { t, i18n } = useTranslation();
   const phone = useIsPhone();
   const [open, setOpen] = useState(false);
   const countries = useMemo<Country[]>(() => {
     const en = new Map(allCountries("en").map((c) => [c.code, c.name]));
+    const only = codes ? new Set(codes) : null;
     return allCountries(i18n.language)
       .filter((c) => !NOT_COUNTRIES.has(c.code))
+      .filter((c) => (only ? only.has(c.code) : true))
       .map((c) => ({ ...c, en: en.get(c.code) ?? c.name }));
-  }, [i18n.language]);
+  }, [i18n.language, codes]);
   const selected = countries.find((c) => c.code === value) ?? null;
 
   const pick = (code: string) => {
@@ -60,30 +73,48 @@ export function CountryPicker({
     setOpen(false);
   };
 
+  const shown = selected?.name ?? emptyOption ?? t("onb.country.pick");
   const trigger = (
     <button
       type="button"
-      aria-label={`${label}: ${selected?.name ?? t("onb.country.pick")}`}
+      disabled={disabled}
+      aria-label={`${label}: ${shown}`}
       aria-expanded={open}
       aria-haspopup="listbox"
       aria-invalid={invalid || undefined}
       onClick={phone ? () => setOpen((v) => !v) : undefined}
       className={cn(
         "press flex h-10 w-full min-w-0 items-center gap-2.5 rounded-md border border-input bg-transparent px-3 text-left text-sm shadow-xs transition-colors max-sm:h-11",
-        "touch-manipulation select-none hover:border-foreground/30 focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50",
+        "touch-manipulation select-none hover:border-foreground/30 focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:cursor-not-allowed disabled:opacity-50",
         open && "border-foreground/40",
         invalid && "border-destructive",
       )}
     >
-      {selected ? <Flag code={selected.code} /> : null}
-      <span className={cn("min-w-0 flex-1 truncate", !selected && "text-muted-foreground")}>
-        {selected?.name ?? t("onb.country.pick")}
+      {selected ? (
+        <Flag code={selected.code} />
+      ) : emptyOption ? (
+        <Sparkles className="size-3.5 shrink-0 text-muted-foreground" aria-hidden />
+      ) : null}
+      <span className={cn("min-w-0 flex-1 truncate", !selected && !emptyOption && "text-muted-foreground")}>
+        {shown}
       </span>
+      {selected && detail ? (
+        <span className="shrink-0 text-xs tabular-nums text-muted-foreground">{detail(selected.code)}</span>
+      ) : null}
       <ChevronDown className={cn("size-4 shrink-0 opacity-50 transition-transform motion-reduce:transition-none", open && "rotate-180")} aria-hidden />
     </button>
   );
 
-  const list = <CountryList value={value} countries={countries} onPick={pick} touch={phone} />;
+  const list = (
+    <CountryList
+      value={value}
+      countries={countries}
+      onPick={pick}
+      touch={phone}
+      detail={detail}
+      emptyOption={emptyOption}
+    />
+  );
 
   if (phone) {
     return (
@@ -128,11 +159,15 @@ function CountryList({
   countries,
   onPick,
   touch,
+  detail,
+  emptyOption,
 }: {
   value: string;
   countries: Country[];
   onPick: (code: string) => void;
   touch: boolean;
+  detail?: (code: string) => string;
+  emptyOption?: string;
 }) {
   const { t } = useTranslation();
   const [query, setQuery] = useState("");
@@ -143,9 +178,31 @@ function CountryList({
     <CommandItem key={c.code} value={c.code} onSelect={() => onPick(c.code)} className={row}>
       <Flag code={c.code} />
       <span className="min-w-0 flex-1 truncate">{c.name}</span>
-      {value === c.code ? <Check className="size-4" aria-hidden /> : null}
+      {detail ? <span className="shrink-0 text-xs tabular-nums text-muted-foreground">{detail(c.code)}</span> : null}
+      <span className="flex size-4 shrink-0 items-center justify-center">
+        {value === c.code ? <Check className="size-4" aria-hidden /> : null}
+      </span>
     </CommandItem>
   );
+  const empty = emptyOption ? (
+    <CommandGroup>
+      <CommandItem value="__empty" onSelect={() => onPick("")} className={row}>
+        <span className="inline-flex h-3.5 w-[21px] shrink-0 items-center justify-center">
+          <Sparkles className="size-3.5 text-muted-foreground" aria-hidden />
+        </span>
+        <span className="min-w-0 flex-1 truncate">{emptyOption}</span>
+        <span className="flex size-4 shrink-0 items-center justify-center">
+          {value === "" ? <Check className="size-4" aria-hidden /> : null}
+        </span>
+      </CommandItem>
+    </CommandGroup>
+  ) : null;
+  // "+43", "0043" or "43" finds Austria by its calling code.
+  const digits = query.replace(/[^0-9]/g, "");
+  const byCode = (c: Country) =>
+    detail && digits && /^[+0-9\s]+$/.test(query.trim())
+      ? detail(c.code).replace(/[^0-9]/g, "") === digits.replace(/^00/, "")
+      : false;
 
   // Searching: one flat list, the closest first (name starts with it, then the code, then anywhere).
   const matches = q
@@ -155,7 +212,13 @@ function CountryList({
           const en = fold(c.en);
           const code = c.code.toLowerCase();
           const rank =
-            code === q ? 0 : name.startsWith(q) || en.startsWith(q) ? 1 : name.includes(q) || en.includes(q) ? 2 : -1;
+            code === q || byCode(c)
+              ? 0
+              : name.startsWith(q) || en.startsWith(q)
+                ? 1
+                : name.includes(q) || en.includes(q)
+                  ? 2
+                  : -1;
           return { c, rank };
         })
         .filter((x) => x.rank >= 0)
@@ -185,6 +248,8 @@ function CountryList({
           )
         ) : (
           <>
+            {empty}
+            {empty ? <CommandSeparator /> : null}
             <CommandGroup>{top.map(item)}</CommandGroup>
             <CommandSeparator />
             <CommandGroup>{countries.filter((c) => !MOST_USED.includes(c.code)).map(item)}</CommandGroup>

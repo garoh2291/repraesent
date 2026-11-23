@@ -126,6 +126,13 @@ export interface FormField {
    */
   addressParts?: FormFieldAddressParts;
 
+  /**
+   * type "phone": the country the picker starts on (ISO-2, e.g. "AT"). Absent
+   * = automatic: the visitor's own country, then the form's language. A code
+   * not in the phone table is ignored (automatic).
+   */
+  phoneCountry?: string;
+
   /** type "rating", default 5 */
   ratingMax?: number;
   /** type "scale", default { min: 1, max: 10 } */

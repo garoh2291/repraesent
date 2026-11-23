@@ -23,6 +23,7 @@ import {
   defaultPhoneCountry,
   joinPhone,
   phoneCountry,
+  presetPhoneCountry,
   splitPhone,
 } from "~/lib/forms/phone";
 import {
@@ -308,6 +309,7 @@ export function FormFieldControl({
           label={t(contentKey.fieldLabel(field.id)) || placeholder || field.key}
           value={String(value ?? "")}
           locale={locale}
+          preset={field.phoneCountry}
           onChange={onChange}
         />
       );
@@ -351,6 +353,7 @@ function PhoneControl({
   label,
   value,
   locale,
+  preset: presetRaw,
   onChange,
 }: {
   aria: {
@@ -364,8 +367,11 @@ function PhoneControl({
   label: string;
   value: string;
   locale?: string;
+  /** The country the form maker chose for this field; absent = automatic. */
+  preset?: string;
   onChange: (value: unknown) => void;
 }) {
+  // The country the form maker chose always wins.
   // The visitor's own country first (time zone / browser region, read after
   // mount so the server and the browser render the same), else the form's
   // language. A phone number belongs to the person, not to the form.
@@ -374,7 +380,8 @@ function PhoneControl({
     setVisitor(browserPhoneCountry());
   }, []);
   const byLanguage = defaultPhoneCountry(locale);
-  const fallback = visitor ?? byLanguage;
+  const preset = presetPhoneCountry(presetRaw);
+  const fallback = preset ?? visitor ?? byLanguage;
   const [iso, setIso] = useState(() => splitPhone(value, fallback).iso);
   const [national, setNational] = useState(() => splitPhone(value, fallback).national);
 
@@ -398,13 +405,14 @@ function PhoneControl({
   const options = useMemo(() => {
     const named = PHONE_COUNTRIES.map((c) => ({ ...c, name: countryName(c.iso, locale) }));
     named.sort((a, b) => a.name.localeCompare(b.name, locale || "en"));
-    // On top: the visitor's country, then the form language's if different.
-    const tops = [fallback, byLanguage]
+    // On top: the chosen country, the visitor's, the form language's (no repeats).
+    const tops = [preset, visitor, byLanguage]
+      .filter((v): v is string => Boolean(v))
       .filter((v, i, a) => a.indexOf(v) === i)
       .map((t) => named.find((c) => c.iso === t))
       .filter((c): c is (typeof named)[number] => Boolean(c));
     return { tops, all: named };
-  }, [locale, fallback, byLanguage]);
+  }, [locale, preset, visitor, byLanguage]);
 
   return (
     <div className="rf-phone">

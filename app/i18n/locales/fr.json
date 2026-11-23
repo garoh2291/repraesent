@@ -6467,7 +6467,10 @@
       "product": "Produit",
       "dataHint": "Où la réponse est enregistrée, et son nom interne. Les deux sont réglés pour vous.",
       "optionReorder": "Déplacer l’option",
-      "optionRemove": "Supprimer l’option"
+      "optionRemove": "Supprimer l’option",
+      "phoneCountry": "Pays par défaut",
+      "phoneCountryAuto": "Automatique (pays du visiteur)",
+      "phoneCountryHint": "Automatique choisit le pays indiqué par l’appareil du visiteur, sinon la langue du formulaire. Le visiteur peut toujours le changer."
     },
     "design": {
       "title": "Design",

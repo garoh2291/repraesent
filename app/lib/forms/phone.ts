@@ -103,6 +103,11 @@ export function defaultPhoneCountry(locale: string | undefined | null): string {
 
 const digits = (s: string) => s.replace(/\D/g, "");
 
+/** A field's chosen start country if the phone table knows it, else undefined (automatic). */
+export function presetPhoneCountry(iso: string | undefined | null): string | undefined {
+  return phoneCountry((iso || "").trim())?.iso;
+}
+
 /** Country + what the visitor typed → the saved value ("" when empty). */
 export function joinPhone(iso: string, national: string): string {
   const typed = national.trim();

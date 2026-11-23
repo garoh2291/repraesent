@@ -6465,7 +6465,10 @@
       "product": "Product",
       "dataHint": "Waar het antwoord wordt opgeslagen, en de interne naam. Beide zijn al ingesteld.",
       "optionReorder": "Optie verplaatsen",
-      "optionRemove": "Optie verwijderen"
+      "optionRemove": "Optie verwijderen",
+      "phoneCountry": "Standaardland",
+      "phoneCountryAuto": "Automatisch (land van de bezoeker)",
+      "phoneCountryHint": "Automatisch kiest het land dat het apparaat van de bezoeker aangeeft, anders de taal van het formulier. Bezoekers kunnen het altijd wijzigen."
     },
     "design": {
       "title": "Ontwerp",

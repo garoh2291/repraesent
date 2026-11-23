@@ -6467,7 +6467,10 @@
       "product": "Produkt",
       "dataHint": "Wo die Antwort gespeichert wird, und ihr interner Name. Beides ist schon eingestellt.",
       "optionReorder": "Option verschieben",
-      "optionRemove": "Option entfernen"
+      "optionRemove": "Option entfernen",
+      "phoneCountry": "Land vorauswählen",
+      "phoneCountryAuto": "Automatisch (Land der Besucher)",
+      "phoneCountryHint": "Automatisch nimmt das Land, das das Gerät der Besucher angibt, sonst die Sprache des Formulars. Besucher können es jederzeit ändern."
     },
     "design": {
       "title": "Design",

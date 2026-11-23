@@ -13,6 +13,14 @@ import {
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { PHONE_COUNTRIES, phoneCountry, presetPhoneCountry } from "~/lib/forms/phone";
+import { CountryPicker } from "~/components/ui/country-picker";
+
+const PHONE_CODES = PHONE_COUNTRIES.map((c) => c.iso);
+const phoneDialLabel = (iso: string) => {
+  const c = phoneCountry(iso);
+  return c ? `+${c.dial}` : "";
+};
 import { cn } from "~/lib/utils";
 import { Link } from "react-router";
 import { TimezonePicker } from "~/components/ui/timezone-picker";
@@ -104,6 +112,7 @@ const HAS_TYPE_RULES = new Set<FormField["type"]>([
   "checkbox_group",
   "rating",
   "scale",
+  "phone",
   "address",
   "hidden",
   "appointment",
@@ -852,6 +861,26 @@ function TypeSpecific({
           )}
         </Cols>
       );
+
+    case "phone": {
+      // Which country the phone box starts on. Automatic = the visitor's own
+      // country (device time zone, browser region), then the form's language.
+      return (
+        <Field>
+          <Label>{t("forms.inspector.phoneCountry")}</Label>
+          <CountryPicker
+            label={t("forms.inspector.phoneCountry")}
+            value={presetPhoneCountry(field.phoneCountry) ?? ""}
+            onChange={(code) => onChange({ phoneCountry: code || undefined })}
+            disabled={disabled}
+            codes={PHONE_CODES}
+            detail={phoneDialLabel}
+            emptyOption={t("forms.inspector.phoneCountryAuto")}
+          />
+          <FieldHint>{t("forms.inspector.phoneCountryHint")}</FieldHint>
+        </Field>
+      );
+    }
 
     case "address": {
       const parts = field.addressParts ?? {

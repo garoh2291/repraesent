@@ -6465,7 +6465,10 @@
       "product": "Product",
       "dataHint": "Where the answer is saved, and its internal name. Both are set for you.",
       "optionReorder": "Move option",
-      "optionRemove": "Remove option"
+      "optionRemove": "Remove option",
+      "phoneCountry": "Start on country",
+      "phoneCountryAuto": "Automatic (visitor's own country)",
+      "phoneCountryHint": "Automatic picks the visitor's own country from their device, otherwise the form's language. Visitors can always change it."
     },
     "design": {
       "title": "Design",
