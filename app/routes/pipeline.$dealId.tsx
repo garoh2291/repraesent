@@ -79,6 +79,7 @@ import { DealContactSection } from "~/components/organism/deal-contact-section";
 import { DealProductsSection } from "~/components/organism/deal-products-section";
 import { DealCustomerSection } from "~/components/organism/deal-customer-section";
 import { DealInvoicesSection } from "~/components/organism/deal-invoices-section";
+import { DealSupportCard } from "~/components/organism/deal-support-card";
 import { OnboardingProfilePanel } from "~/components/organism/onboarding-profile-panel";
 import type { WorkspaceMemberItem } from "~/components/organism/tasks/task-form-modal";
 import {
@@ -1001,6 +1002,8 @@ export default function PipelineDealDetailPage() {
           <div className="space-y-4 sm:space-y-6 max-sm:contents max-sm:space-y-0">
             {/* Root workspace: what the customer told us during onboarding. */}
             {currentWorkspace?.is_root ? <OnboardingProfilePanel dealId={dealId} /> : null}
+            {/* Root workspace: the set-up report that moves this deal. */}
+            {currentWorkspace?.is_root ? <DealSupportCard dealId={dealId} /> : null}
 
             {/* Contacts */}
             <div className="max-sm:-order-1">

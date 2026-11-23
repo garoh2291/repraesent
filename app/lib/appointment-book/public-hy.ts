@@ -43,6 +43,15 @@ export const PUBLIC_BOOKING_HY = {
     },
     wholeDay: "Ամբողջ օրը",
   },
+  dayField: {
+    tomorrow: "Վաղը",
+    inTwoDays: "2 օրից",
+    nextWeek: "Հաջորդ շաբաթ",
+    placeholder: "Մուտքագրեք ամսաթիվը, օր.՝ 30.9.",
+    aria: "Ամսաթիվ",
+    openCalendar: "Բացել օրացույցը",
+    invalid: "Սա այսօրվանից սկսվող ամսաթիվ չէ։",
+  },
   tracking: {
     footer: "Ապահովված է Repraesent-ի կողմից",
   },

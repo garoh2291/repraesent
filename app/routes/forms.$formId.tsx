@@ -95,6 +95,7 @@ import {
 import {
   DEFAULT_FORM_COMMERCE,
   DEFAULT_FORM_LAYOUT,
+  APPOINTMENT_CONTENT_KEYS,
   STEP_CONTENT_KEYS,
   contentKey,
   defaultStepTitle,
@@ -1113,37 +1114,15 @@ export default function FormBuilderRoute() {
     // appointment field is added, same reasoning as the address labels above;
     // existing values are kept so a second field never overwrites edits.
     if (type === "appointment") {
-      const APPT_CONTENT: Array<{ key: string; i18nKey: string }> = [
-        {
-          key: "appointment.loading",
-          i18nKey: "forms.appointmentContent.loading",
-        },
-        { key: "appointment.empty", i18nKey: "forms.appointmentContent.empty" },
-        {
-          // Co-hosts only, but seeded for every appointment field: a form can
-          // gain a second host later, and this string is what the visitor sees
-          // instead of a false "no free times" when a host's calendar cannot
-          // be read.
-          key: "appointment.unavailable",
-          i18nKey: "forms.appointmentContent.unavailable",
-        },
-        {
-          key: "error.slot_unavailable",
-          i18nKey: "forms.appointmentContent.slotUnavailable",
-        },
-        {
-          key: "error.slot_invalid",
-          i18nKey: "forms.appointmentContent.slotInvalid",
-        },
-      ];
-      const content = { ...definition.content };
-      for (const locale of locales) {
-        const strings = { ...(content[locale] ?? {}) };
-        for (const { key, i18nKey } of APPT_CONTENT) {
-          if (!strings[key]) strings[key] = t(i18nKey, { lng: locale });
-        }
-        content[locale] = strings;
-      }
+      // Blanks only, from the shipped defaults (all five form languages, which
+      // the app's own four cannot offer): a second field, or a form that
+      // already reworded them, keeps what it has.
+      const seeded = seedRuntimeContent(
+        definition,
+        locales,
+        APPOINTMENT_CONTENT_KEYS,
+      );
+      const content = { ...seeded.content };
       appendFields([createField(type, taken)], content);
       return;
     }

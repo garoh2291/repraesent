@@ -7,7 +7,7 @@
  * app/lib/api/appointments.ts. If you change one side, change the other.
  */
 
-export const FORM_LOCALES = ["en", "de", "fr", "nl", "hy"] as const;
+export const FORM_LOCALES = ["en", "de", "fr", "nl", "hy", "cs"] as const;
 export type FormLocale = (typeof FORM_LOCALES)[number];
 
 export const FORM_FIELD_TYPES = [
@@ -184,7 +184,68 @@ export interface FormField {
     minNoticeHours?: number;
     /** Booking horizon in days. Default 30. */
     maxDaysAhead?: number;
+    /**
+     * How the visitor picks a time. Absent means "strip" — the seven-day strip
+     * every form had before the other two existed, and what a pasted snippet
+     * frozen before them keeps drawing.
+     *
+     *   strip — a week of day buttons, then the day's times
+     *   month — a month calendar beside a time list, with a time zone picker
+     *   list  — the soonest free times grouped by day, nothing to browse
+     */
+    display?: AppointmentDisplay;
+    /**
+     * What the visitor can book, when there is a choice. Each service books its
+     * OWN calendar, so one form can fill several. Absent or empty means no
+     * service step: the field books `targetKey` / `hosts` as it always did.
+     *
+     * The builder keeps `targetKey` / `hosts` mirroring `services[0]` (see
+     * `servicesPatch` in lib/forms/appointment-services), exactly like `hosts`
+     * mirrors into `targetKey`: a runtime that predates services sends no
+     * service id and must still book what it showed. Never write `services`
+     * without that patch.
+     *
+     * The visitor only ever sends a service `id`. Names and descriptions are
+     * content: `field.<fieldId>.service.<id>.name` / `.description`.
+     */
+    services?: AppointmentService[];
   };
+}
+
+export const APPOINTMENT_DISPLAYS = ["strip", "month", "list"] as const;
+export type AppointmentDisplay = (typeof APPOINTMENT_DISPLAYS)[number];
+
+/**
+ * One bookable service of an appointment field: a calendar under a name.
+ *
+ * A service has no length of its own. A Repraesent calendar decides its own
+ * length, hours and notice; a connected calendar (Google, Microsoft, CalDAV)
+ * has none, so its service reads them off the field.
+ */
+export interface AppointmentService {
+  /** Stable id, "sv_" + 8 hex. Submitted by the visitor; never a calendar key. */
+  id: string;
+  /** Same grammar as `appointment.targetKey`. */
+  targetKey: string;
+  /** Co-hosts of this service; `hosts[0].targetKey === targetKey`. */
+  hosts?: AppointmentHost[];
+  /**
+   * Render-time only: the picker rules of this service's calendar, filled in
+   * for a visitor by `withNativeCalendarRules`. Never stored (stripped on save)
+   * and never trusted: the server re-reads the calendar for every request.
+   */
+  rules?: AppointmentServiceRules;
+}
+
+export interface AppointmentServiceRules {
+  durationMinutes: number;
+  window: { start: string; end: string };
+  weekdays: string[];
+  timezone: string;
+  minNoticeHours: number;
+  maxDaysAhead: number;
+  /** The calendar books whole days: one entry per day, no clock time. */
+  wholeDay?: boolean;
 }
 
 /**
@@ -229,10 +290,12 @@ export interface FormSection {
  *   field.<fieldId>.text                        (heading / paragraph body)
  *   field.<fieldId>.option.<optionId>
  *   field.<fieldId>.part.street|city|zip|country
+ *   field.<fieldId>.service.<serviceId>.name | .description
+ *                                               (appointment services)
  *   success.inline | success.modal.title | success.modal.body | success.modal.cta
  *   error.generic | error.<FormErrorCode>
- *   appointment.loading | appointment.empty | appointment.unavailable
- *                                               (slot picker runtime states)
+ *   appointment.*                               (slot picker: states, labels,
+ *                                               see APPOINTMENT_CONTENT_KEYS)
  *   nav.back | nav.next | nav.stepOf            (multi-step navigation)
  *   commerce.*                                  (product forms: order summary)
  *   checkout.*                                  (product forms: after payment)
@@ -241,7 +304,8 @@ export interface FormSection {
  * `{{amount}}`, `{{per}}` — the same shape as the hidden-field capture tokens.
  * They are filled by `fillTemplate` with a plain split/join, never a regex.
  *
- * Keys under nav / commerce / checkout / error.checkout_unavailable have
+ * Keys under nav / commerce / checkout / appointment and the errors that go
+ * with them have
  * shipped defaults in FORM_RUNTIME_CONTENT, so a form saved before they existed
  * never renders a blank "Next" button.
  */
@@ -620,6 +684,8 @@ export const FORM_ERROR_CODES = [
   "slot_unavailable",
   /** Appointment value is not a well-formed future slot of the configured length. */
   "slot_invalid",
+  /** The picked service is not (or no longer) one this appointment field offers. */
+  "service_invalid",
   /**
    * Product forms: the lead was saved but no Checkout Session could be opened
    * (Stripe disconnected, a price archived, rate limit). Returned under the
@@ -672,6 +738,10 @@ export const FORM_DEFINITION_ISSUES = [
   "productFieldOnStandardForm",
   /** An appointment field on a webhook-only form — a booking needs a lead. */
   "crmSaveAppointment",
+  /** A service of an appointment field with no calendar picked. */
+  "serviceMissingCalendar",
+  /** Two services of one appointment field book the same calendar. */
+  "serviceDuplicateCalendar",
 ] as const;
 export type FormDefinitionIssueCode = (typeof FORM_DEFINITION_ISSUES)[number];
 
@@ -815,6 +885,11 @@ export const contentKey = {
     `field.${fieldId}.option.${optionId}`,
   fieldAddressPart: (fieldId: string, part: keyof FormFieldAddressParts) =>
     `field.${fieldId}.part.${part}`,
+  fieldServiceName: (fieldId: string, serviceId: string) =>
+    `field.${fieldId}.service.${serviceId}.name`,
+  fieldServiceDescription: (fieldId: string, serviceId: string) =>
+    `field.${fieldId}.service.${serviceId}.description`,
+  appointment: (key: string) => `appointment.${key}`,
   successInline: () => "success.inline",
   successModalTitle: () => "success.modal.title",
   successModalBody: () => "success.modal.body",
@@ -855,6 +930,8 @@ export const FORM_RUNTIME_CONTENT: Record<
     "step.title.contact": "Contact",
     "step.title.details": "Details",
     "step.title.new": "Step {{n}}",
+    "step.title.time": "Date and time",
+    "step.title.yourDetails": "Your details",
     "commerce.title": "Order summary",
     "commerce.quantity": "Quantity",
     "commerce.subtotal": "Subtotal",
@@ -889,6 +966,27 @@ export const FORM_RUNTIME_CONTENT: Record<
     "checkout.canceled.dismiss": "Dismiss",
     "error.checkout_unavailable":
       "Checkout is unavailable right now. Please try again in a moment.",
+    "appointment.loading": "Loading times...",
+    "appointment.empty": "No free times on this day.",
+    "appointment.unavailable": "Times cannot be checked right now. Please try again shortly.",
+    "appointment.chooseService": "What would you like to book?",
+    "appointment.change": "Change",
+    "appointment.minutes": "{{n}} minutes",
+    "appointment.wholeDay": "Whole day",
+    "appointment.timezone": "Time zone",
+    "appointment.availableTimes": "Available times",
+    "appointment.pickDay": "Pick a day to see the times.",
+    "appointment.nextTimes": "Next free times",
+    "appointment.moreTimes": "More times",
+    "appointment.noTimes": "No free times at the moment.",
+    "appointment.yourTime": "Your appointment",
+    "appointment.prevMonth": "Previous month",
+    "appointment.nextMonth": "Next month",
+    "appointment.prevDays": "Previous days",
+    "appointment.nextDays": "Next days",
+    "error.slot_unavailable": "This time was just taken. Please pick another.",
+    "error.slot_invalid": "Please pick a time.",
+    "error.service_invalid": "This is no longer offered. Please choose again.",
   },
   de: {
     "nav.back": "Zurück",
@@ -897,6 +995,8 @@ export const FORM_RUNTIME_CONTENT: Record<
     "step.title.contact": "Kontakt",
     "step.title.details": "Details",
     "step.title.new": "Schritt {{n}}",
+    "step.title.time": "Datum und Uhrzeit",
+    "step.title.yourDetails": "Ihre Angaben",
     "commerce.title": "Bestellübersicht",
     "commerce.quantity": "Menge",
     "commerce.subtotal": "Zwischensumme",
@@ -932,6 +1032,27 @@ export const FORM_RUNTIME_CONTENT: Record<
     "checkout.canceled.dismiss": "Ausblenden",
     "error.checkout_unavailable":
       "Die Zahlung ist derzeit nicht verfügbar. Bitte versuchen Sie es gleich noch einmal.",
+    "appointment.loading": "Zeiten werden geladen...",
+    "appointment.empty": "An diesem Tag sind keine Zeiten frei.",
+    "appointment.unavailable": "Zeiten können gerade nicht geprüft werden. Bitte versuchen Sie es gleich noch einmal.",
+    "appointment.chooseService": "Was möchten Sie buchen?",
+    "appointment.change": "Ändern",
+    "appointment.minutes": "{{n}} Minuten",
+    "appointment.wholeDay": "Ganzer Tag",
+    "appointment.timezone": "Zeitzone",
+    "appointment.availableTimes": "Freie Zeiten",
+    "appointment.pickDay": "Wählen Sie einen Tag, um die Zeiten zu sehen.",
+    "appointment.nextTimes": "Nächste freie Zeiten",
+    "appointment.moreTimes": "Weitere Zeiten",
+    "appointment.noTimes": "Zurzeit sind keine Zeiten frei.",
+    "appointment.yourTime": "Ihr Termin",
+    "appointment.prevMonth": "Vorheriger Monat",
+    "appointment.nextMonth": "Nächster Monat",
+    "appointment.prevDays": "Frühere Tage",
+    "appointment.nextDays": "Spätere Tage",
+    "error.slot_unavailable": "Dieser Termin wurde gerade vergeben. Bitte wählen Sie einen anderen.",
+    "error.slot_invalid": "Bitte wählen Sie einen Termin.",
+    "error.service_invalid": "Das wird nicht mehr angeboten. Bitte wählen Sie neu.",
   },
   fr: {
     "nav.back": "Retour",
@@ -940,6 +1061,8 @@ export const FORM_RUNTIME_CONTENT: Record<
     "step.title.contact": "Contact",
     "step.title.details": "Détails",
     "step.title.new": "Étape {{n}}",
+    "step.title.time": "Date et heure",
+    "step.title.yourDetails": "Vos coordonnées",
     "commerce.title": "Récapitulatif",
     "commerce.quantity": "Quantité",
     "commerce.subtotal": "Sous-total",
@@ -974,6 +1097,27 @@ export const FORM_RUNTIME_CONTENT: Record<
     "checkout.canceled.dismiss": "Fermer",
     "error.checkout_unavailable":
       "Le paiement est indisponible pour le moment. Réessayez dans un instant.",
+    "appointment.loading": "Chargement des horaires...",
+    "appointment.empty": "Aucun créneau libre ce jour-là.",
+    "appointment.unavailable": "Les créneaux ne peuvent pas être vérifiés pour le moment. Réessayez dans un instant.",
+    "appointment.chooseService": "Que souhaitez-vous réserver ?",
+    "appointment.change": "Modifier",
+    "appointment.minutes": "{{n}} minutes",
+    "appointment.wholeDay": "Journée entière",
+    "appointment.timezone": "Fuseau horaire",
+    "appointment.availableTimes": "Horaires disponibles",
+    "appointment.pickDay": "Choisissez un jour pour voir les horaires.",
+    "appointment.nextTimes": "Prochains horaires libres",
+    "appointment.moreTimes": "Plus d’horaires",
+    "appointment.noTimes": "Aucun horaire libre pour le moment.",
+    "appointment.yourTime": "Votre rendez-vous",
+    "appointment.prevMonth": "Mois précédent",
+    "appointment.nextMonth": "Mois suivant",
+    "appointment.prevDays": "Jours précédents",
+    "appointment.nextDays": "Jours suivants",
+    "error.slot_unavailable": "Ce créneau vient d’être réservé. Veuillez en choisir un autre.",
+    "error.slot_invalid": "Veuillez choisir un horaire.",
+    "error.service_invalid": "Ce choix n’est plus proposé. Veuillez choisir à nouveau.",
   },
   nl: {
     "nav.back": "Terug",
@@ -982,6 +1126,8 @@ export const FORM_RUNTIME_CONTENT: Record<
     "step.title.contact": "Contact",
     "step.title.details": "Details",
     "step.title.new": "Stap {{n}}",
+    "step.title.time": "Datum en tijd",
+    "step.title.yourDetails": "Uw gegevens",
     "commerce.title": "Overzicht bestelling",
     "commerce.quantity": "Aantal",
     "commerce.subtotal": "Subtotaal",
@@ -1017,6 +1163,27 @@ export const FORM_RUNTIME_CONTENT: Record<
     "checkout.canceled.dismiss": "Sluiten",
     "error.checkout_unavailable":
       "Betalen is op dit moment niet beschikbaar. Probeer het zo opnieuw.",
+    "appointment.loading": "Tijden worden geladen...",
+    "appointment.empty": "Geen vrije tijden op deze dag.",
+    "appointment.unavailable": "Tijden kunnen nu niet worden gecontroleerd. Probeer het zo opnieuw.",
+    "appointment.chooseService": "Wat wilt u boeken?",
+    "appointment.change": "Wijzigen",
+    "appointment.minutes": "{{n}} minuten",
+    "appointment.wholeDay": "Hele dag",
+    "appointment.timezone": "Tijdzone",
+    "appointment.availableTimes": "Beschikbare tijden",
+    "appointment.pickDay": "Kies een dag om de tijden te zien.",
+    "appointment.nextTimes": "Eerstvolgende vrije tijden",
+    "appointment.moreTimes": "Meer tijden",
+    "appointment.noTimes": "Op dit moment zijn er geen vrije tijden.",
+    "appointment.yourTime": "Uw afspraak",
+    "appointment.prevMonth": "Vorige maand",
+    "appointment.nextMonth": "Volgende maand",
+    "appointment.prevDays": "Eerdere dagen",
+    "appointment.nextDays": "Latere dagen",
+    "error.slot_unavailable": "Dit tijdstip is zojuist bezet. Kies een ander tijdstip.",
+    "error.slot_invalid": "Kies een tijdstip.",
+    "error.service_invalid": "Dit wordt niet meer aangeboden. Kies opnieuw.",
   },
   hy: {
     "nav.back": "Հետ",
@@ -1025,6 +1192,8 @@ export const FORM_RUNTIME_CONTENT: Record<
     "step.title.contact": "Կոնտակտ",
     "step.title.details": "Մանրամասներ",
     "step.title.new": "Քայլ {{n}}",
+    "step.title.time": "Օր և ժամ",
+    "step.title.yourDetails": "Ձեր տվյալները",
     "commerce.title": "Պատվերի ամփոփում",
     "commerce.quantity": "Քանակ",
     "commerce.subtotal": "Միջանկյալ գումար",
@@ -1060,6 +1229,92 @@ export const FORM_RUNTIME_CONTENT: Record<
     "checkout.canceled.dismiss": "Փակել",
     "error.checkout_unavailable":
       "Վճարումն այս պահին հասանելի չէ։ Խնդրում ենք փորձել մի փոքր ուշ։",
+    "appointment.loading": "Ժամերը բեռնվում են...",
+    "appointment.empty": "Այս օրը ազատ ժամեր չկան։",
+    "appointment.unavailable": "Ժամերն այս պահին հնարավոր չէ ստուգել։ Խնդրում ենք փորձել մի փոքր ուշ։",
+    "appointment.chooseService": "Ի՞նչ եք ցանկանում ամրագրել։",
+    "appointment.change": "Փոխել",
+    "appointment.minutes": "{{n}} րոպե",
+    "appointment.wholeDay": "Ամբողջ օրը",
+    "appointment.timezone": "Ժամային գոտի",
+    "appointment.availableTimes": "Ազատ ժամեր",
+    "appointment.pickDay": "Ընտրեք օրը՝ ժամերը տեսնելու համար։",
+    "appointment.nextTimes": "Մոտակա ազատ ժամերը",
+    "appointment.moreTimes": "Այլ ժամեր",
+    "appointment.noTimes": "Այս պահին ազատ ժամեր չկան։",
+    "appointment.yourTime": "Ձեր հանդիպումը",
+    "appointment.prevMonth": "Նախորդ ամիս",
+    "appointment.nextMonth": "Հաջորդ ամիս",
+    "appointment.prevDays": "Նախորդ օրերը",
+    "appointment.nextDays": "Հաջորդ օրերը",
+    "error.slot_unavailable": "Այս ժամը հենց նոր զբաղեցվեց։ Խնդրում ենք ընտրել մեկ այլ ժամ։",
+    "error.slot_invalid": "Խնդրում ենք ընտրել ժամ։",
+    "error.service_invalid": "Սա այլևս չի առաջարկվում։ Խնդրում ենք ընտրել նորից։",
+  },
+  cs: {
+    "nav.back": "Zpět",
+    "nav.next": "Další",
+    "nav.stepOf": "Krok {{n}} z {{total}}",
+    "step.title.contact": "Kontakt",
+    "step.title.details": "Podrobnosti",
+    "step.title.new": "Krok {{n}}",
+    "step.title.time": "Datum a čas",
+    "step.title.yourDetails": "Vaše údaje",
+    "commerce.title": "Shrnutí objednávky",
+    "commerce.quantity": "Množství",
+    "commerce.subtotal": "Mezisoučet",
+    "commerce.total": "Celkem dnes",
+    "commerce.then": "poté {{amount}} {{per}}",
+    "commerce.per.day": "za den",
+    "commerce.per.week": "za týden",
+    "commerce.per.month": "za měsíc",
+    "commerce.per.year": "za rok",
+    "commerce.every": "každých {{n}} {{unit}}",
+    "commerce.unit.day": "dní",
+    "commerce.unit.week": "týdnů",
+    "commerce.unit.month": "měsíců",
+    "commerce.unit.year": "let",
+    "commerce.oneTime": "jednorázově",
+    "commerce.secure": "Bezpečná platba přes Stripe",
+    "commerce.decrease": "Snížit množství",
+    "commerce.increase": "Zvýšit množství",
+    "commerce.continue": "Pokračovat k platbě",
+    "commerce.select": "Vybrat",
+    "error.product_required": "Vyberte alespoň jeden produkt.",
+    "checkout.paid.title": "Platba přijata",
+    "checkout.paid.body": "Děkujeme. Potvrzení o platbě Vám přijde e-mailem.",
+    "checkout.processing.title": "Potvrzujeme Vaši platbu",
+    "checkout.processing.body":
+      "Obvykle to trvá jen pár sekund. Tuto stránku můžete nechat otevřenou.",
+    "checkout.failed.title": "Platba neproběhla",
+    "checkout.failed.body":
+      "Nic nebylo strženo. Můžete to zkusit znovu s jiným způsobem platby.",
+    "checkout.failed.retry": "Zkusit znovu",
+    "checkout.canceled": "Platba byla zrušena. Vaše odpovědi zůstaly zachovány.",
+    "checkout.canceled.dismiss": "Zavřít",
+    "error.checkout_unavailable":
+      "Platba teď není dostupná. Zkuste to prosím za chvíli znovu.",
+    "appointment.loading": "Načítáme termíny...",
+    "appointment.empty": "V tento den nejsou volné termíny.",
+    "appointment.unavailable": "Termíny teď nelze ověřit. Zkuste to prosím za chvíli.",
+    "appointment.chooseService": "Co si chcete rezervovat?",
+    "appointment.change": "Změnit",
+    "appointment.minutes": "{{n}} minut",
+    "appointment.wholeDay": "Celý den",
+    "appointment.timezone": "Časové pásmo",
+    "appointment.availableTimes": "Volné termíny",
+    "appointment.pickDay": "Vyberte den a uvidíte termíny.",
+    "appointment.nextTimes": "Nejbližší volné termíny",
+    "appointment.moreTimes": "Další termíny",
+    "appointment.noTimes": "Momentálně nejsou volné termíny.",
+    "appointment.yourTime": "Váš termín",
+    "appointment.prevMonth": "Předchozí měsíc",
+    "appointment.nextMonth": "Další měsíc",
+    "appointment.prevDays": "Předchozí dny",
+    "appointment.nextDays": "Další dny",
+    "error.slot_unavailable": "Tento termín byl právě obsazen. Vyberte prosím jiný.",
+    "error.slot_invalid": "Vyberte prosím termín.",
+    "error.service_invalid": "Tato služba už není nabízena. Vyberte prosím znovu.",
   },
 };
 
@@ -1070,10 +1325,30 @@ export const STEP_CONTENT_KEYS = [
   "nav.stepOf",
 ] as const;
 
+/**
+ * The runtime keys of the appointment picker: its states, its labels and the
+ * three errors only it can raise. Listed in the Languages tab of any form with
+ * an appointment field, and seeded when one is added.
+ */
+export const APPOINTMENT_CONTENT_KEYS: readonly string[] = Object.keys(
+  FORM_RUNTIME_CONTENT.en,
+).filter(
+  (key) =>
+    key.startsWith("appointment.") ||
+    key === "error.slot_unavailable" ||
+    key === "error.slot_invalid" ||
+    key === "error.service_invalid",
+);
+
 /** The runtime keys a product form needs (everything under commerce/checkout + the unavailable error). */
 export const COMMERCE_CONTENT_KEYS: readonly string[] = Object.keys(
   FORM_RUNTIME_CONTENT.en,
-).filter((key) => !key.startsWith("nav.") && !key.startsWith("step."));
+).filter(
+  (key) =>
+    !key.startsWith("nav.") &&
+    !key.startsWith("step.") &&
+    !APPOINTMENT_CONTENT_KEYS.includes(key),
+);
 
 /**
  * Default step titles, seeded into `section.<id>.title` when a form is
@@ -1352,12 +1627,13 @@ export function isFormLocale(value: unknown): value is FormLocale {
  * A language code from anywhere outside the form — ?lang=, the repraesent_lang
  * cookie, navigator.language, the re:translate override — read as a form
  * locale, or null. Primary subtag only, so "hy-AM", "hy_am" and "HY" are all
- * "hy"; "am" is also read as Armenian, because sites use the country code for
- * it. Mirrored as normLocale in the embed runtime (form-render.service.ts).
+ * "hy"; "am" is also read as Armenian and "cz" as Czech, because sites use
+ * the country code for them. Mirrored as normLocale in the embed runtime (form-render.service.ts).
  */
 export function toFormLocale(value: unknown): FormLocale | null {
   if (typeof value !== "string") return null;
   let primary = value.trim().split(/[-_]/)[0].toLowerCase();
   if (primary === "am") primary = "hy";
+  if (primary === "cz") primary = "cs";
   return isFormLocale(primary) ? primary : null;
 }

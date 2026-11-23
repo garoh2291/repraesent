@@ -97,7 +97,8 @@
         "contact": "Une vraie personne de notre équipe",
         "results": "Comment vont les affaires",
         "websiteStaging": "La copie de test de votre site",
-        "help": "Un souci ou une modification sur votre site"
+        "help": "Un souci ou une modification sur votre site",
+        "appointments": "Réservations et votre agenda"
       },
       "switchBusiness": "Changer d’entreprise"
     },
@@ -1567,7 +1568,8 @@
       "de": "Deutsch",
       "fr": "Français",
       "nl": "Nederlands",
-      "hy": "Հայերեն"
+      "hy": "Հայերեն",
+      "cs": "Čeština"
     },
     "invoices": {
       "title": "Factures",
@@ -1682,7 +1684,8 @@
         "medium": "Moyenne",
         "small": "Petite",
         "xsmall": "Très petite"
-      }
+      },
+      "setupInApp": "Configurer dans votre messagerie"
     },
     "integrations": {
       "metaTitle": "Applis connectées",
@@ -2071,7 +2074,31 @@
         "save": "Enregistrer",
         "turnOn": "Activer l'alerte",
         "last": "Dernière alerte {{when}}"
-      }
+      },
+      "shared": {
+        "title": "L'IA est fournie par {{agency}}",
+        "used": "Cette entreprise a utilisé {{amount}} ce mois-ci.",
+        "usedOf": "Cette entreprise a utilisé {{amount}} sur {{limit}} ce mois-ci.",
+        "paused": "L'IA est en pause jusqu'au mois prochain. Demandez à {{agency}} si vous avez besoin de plus.",
+        "ownKeyHint": "Vous pouvez aussi connecter votre propre clé ci-dessous ; elle sera alors utilisée."
+      },
+      "share": {
+        "title": "Partager l'IA avec vos entreprises",
+        "subtitle": "Vos entreprises utilisent votre clé. Fixez si vous le souhaitez un montant par mois ; une fois atteint, l'IA se met en pause pour cette entreprise jusqu'au mois suivant.",
+        "none": "Vous n'avez pas encore d'entreprise.",
+        "ownKey": "Utilise sa propre clé",
+        "paused": "En pause · {{amount}} utilisés ce mois-ci",
+        "usedThisMonth": "{{amount}} utilisés ce mois-ci",
+        "off": "Non partagée",
+        "toggle": "Partager l'IA avec {{business}}",
+        "limitLabel": "Montant par mois (USD)",
+        "noLimit": "Sans limite",
+        "saveLimit": "Enregistrer le montant",
+        "limitInvalid": "Saisissez un nombre de 1 à 100 000, ou laissez vide.",
+        "saved": "Enregistré",
+        "needKey": "Connectez d'abord votre propre clé IA, puis vous pourrez la partager."
+      },
+      "sharedOwnKeyHint": "Facultatif : connectez votre propre compte OpenRouter. Votre IA l'utilisera alors à la place de celui de votre agence."
     },
     "allowlist": {
       "sectionLabel": "Toujours accepter",
@@ -2528,7 +2555,11 @@
       "emailSummaries": "Résumés par e-mail",
       "teamChat": "Alertes chat d'équipe",
       "dealStages": "Étapes des affaires",
-      "phoneAlerts": "Alertes sur le téléphone"
+      "phoneAlerts": "Alertes sur le téléphone",
+      "confirmationEmails": "E-mails de confirmation",
+      "agency": "Plusieurs entreprises",
+      "agencies": "Agences",
+      "activity": "Journal d'activité"
     },
     "phoneAlerts": {
       "metaTitle": "Alertes sur le téléphone",
@@ -2703,6 +2734,37 @@
         "more_other": "+ {{count}} autres informations dans la demande",
         "saved": "Enregistré. Le prochain message de demande affichera votre sélection et toutes les autres informations."
       }
+    },
+    "emailSetup": {
+      "metaTitle": "Configurer dans votre messagerie",
+      "metaDescription": "Ce dont Outlook, Apple Mail ou votre téléphone ont besoin pour envoyer et recevoir avec cette adresse.",
+      "back": "Comptes e-mail",
+      "signInTitle": "Adresse et mot de passe",
+      "signInDesc": "Votre messagerie vous demande ces deux éléments. Ils servent à recevoir et à envoyer.",
+      "pickAddress": "Choisir l’adresse à configurer",
+      "otherDesc": "Thunderbird, Apple Mail, Android, iPhone : utilisez les informations de serveur ci-dessous.",
+      "passwordFailed": "Le mot de passe n’a pas pu être chargé. Rechargez la page et réessayez.",
+      "noMailbox": "Aucune boîte mail à configurer ici",
+      "noMailboxDesc": "Cela ne fonctionne que pour les boîtes mail que nous hébergeons pour vous. Les comptes Google et Microsoft fonctionnent déjà dans leurs propres applications. Contactez-nous si vous souhaitez une boîte mail à votre nom de domaine.",
+      "loadFailed": "Vos comptes e-mail n’ont pas pu être chargés",
+      "loadFailedDesc": "Vérifiez votre connexion et rechargez la page.",
+      "backToAccounts": "Retour aux comptes e-mail"
+    },
+    "confirmationEmails": {
+      "metaTitle": "E-mails de confirmation",
+      "metaDescription": "L’e-mail que les gens reçoivent automatiquement après avoir rempli l’un de vos formulaires."
+    },
+    "agency": {
+      "metaTitle": "Gérer plusieurs entreprises",
+      "metaDescription": "Gérer plusieurs entreprises avec un seul accès."
+    },
+    "agencies": {
+      "metaTitle": "Agences",
+      "metaDescription": "Demandes de gestion de plusieurs entreprises, limites et rattachement des entreprises aux agences."
+    },
+    "activity": {
+      "metaTitle": "Journal d'activité",
+      "metaDescription": "Qui a modifié quoi, et quand."
     }
   },
   "booking": {
@@ -4117,7 +4179,250 @@
     "confirmRemoveWebsiteDescription": "Ce site web sera supprimé du profil. Vous pourrez l’ajouter à nouveau plus tard.",
     "languageUnknown": "Inconnue",
     "preferredLanguage": "Langue de communication préférée",
-    "preferredLanguageHint": "Les e-mails de rendez-vous et les confirmations partent dans cette langue. Laissez vide si vous ne la connaissez pas encore."
+    "preferredLanguageHint": "Les e-mails de rendez-vous et les confirmations partent dans cette langue. Laissez vide si vous ne la connaissez pas encore.",
+    "importV2": {
+      "menu": "Fichier CSV ou Excel",
+      "title": "Importer des contacts",
+      "back": "Contacts",
+      "fileLine": "{{name}} · {{rows}} lignes, {{columns}} colonnes",
+      "loading": "Ouverture de l'import…",
+      "notFound": "Impossible d'ouvrir cet import. Il appartient peut-être à une autre entreprise.",
+      "startNew": "Commencer un nouvel import",
+      "viewerOnly": "Vous pouvez consulter les contacts, mais pas en ajouter. Demandez à un administrateur d'importer le fichier.",
+      "backToMatch": "Retour",
+      "otherFile": "Autre fichier",
+      "address": "Adresse",
+      "steps": {
+        "label": "Étapes de l'import",
+        "file": "Votre fichier",
+        "match": "Associer les colonnes",
+        "check": "Vérifier",
+        "done": "Terminé",
+        "position": "{{n}} sur {{total}}"
+      },
+      "file": {
+        "title": "Importez votre liste de contacts",
+        "lead": "Un fichier CSV ou Excel avec un contact par ligne. Vous choisissez ensuite où va chaque colonne. Rien n'est enregistré avant votre vérification.",
+        "choose": "Choisir un fichier",
+        "reading": "Lecture du fichier…",
+        "orDrop": "ou déposez-le ici",
+        "limits": "Jusqu'à 5 000 lignes et 100 colonnes par fichier.",
+        "wrongType": "Ce type de fichier n'est pas lisible. Enregistrez votre liste en CSV ou Excel (.xlsx) et choisissez-la à nouveau.",
+        "tooBig": "Ce fichier dépasse 20 Mo. Divisez-le en fichiers plus petits et importez-les un par un.",
+        "errEmpty": "Ce fichier est vide. Choisissez le fichier contenant vos contacts.",
+        "errNoRows": "Ce fichier ne contient que la ligne d'en-tête. Ajoutez vos contacts en dessous et choisissez-le à nouveau.",
+        "errTooManyRows": "Ce fichier compte plus de 5 000 lignes. Divisez-le en fichiers plus petits et importez-les un par un.",
+        "errTooManyColumns": "Ce fichier compte plus de 100 colonnes. Supprimez celles dont vous n'avez pas besoin et choisissez-le à nouveau.",
+        "errUnreadable": "Ce fichier n'a pas pu être lu. Enregistrez-le à nouveau en CSV ou Excel (.xlsx) et choisissez le nouveau fichier."
+      },
+      "past": {
+        "title": "Imports précédents",
+        "undone": "Annulé",
+        "unfinished": "Non terminé",
+        "summary": "{{added}} ajoutés · {{updated}} mis à jour"
+      },
+      "groups": {
+        "who": "Qui c'est",
+        "reach": "Comment les joindre",
+        "address": "Adresse"
+      },
+      "targets": {
+        "first_name": "Prénom",
+        "last_name": "Nom",
+        "full_name": "Nom complet",
+        "company_name": "Entreprise",
+        "email": "E-mail",
+        "email_2": "Deuxième e-mail",
+        "phone": "Téléphone",
+        "job_title": "Fonction",
+        "website": "Site web",
+        "address_line1": "Rue",
+        "address_postal_code": "Code postal",
+        "address_city": "Ville",
+        "address_state": "Région",
+        "address_country": "Pays",
+        "salutation": "Civilité",
+        "date_of_birth": "Date de naissance",
+        "locale": "Langue",
+        "custom": "Garder comme information",
+        "skip": "Ne pas importer"
+      },
+      "match": {
+        "rowKind": "Chaque ligne du fichier est",
+        "kindPerson": "Une personne",
+        "kindCompany": "Une entreprise",
+        "kindAuto": "L'un ou l'autre",
+        "kindAutoHint": "Une ligne avec une entreprise et sans nom de personne devient une entreprise. Toutes les autres deviennent des personnes.",
+        "noIdentity": "Choisissez la colonne qui contient le nom, l'entreprise ou l'e-mail. Sans l'un d'eux, il n'y a personne à enregistrer.",
+        "noEmail": "Aucune colonne n'est associée à l'e-mail. Les contacts sont importés quand même, mais nous ne pouvons pas savoir si une personne existe déjà, et ils ne peuvent pas recevoir d'e-mails.",
+        "inFile": "Dans votre fichier",
+        "goesTo": "Va dans",
+        "emptyColumn": "Cette colonne est vide",
+        "pickFor": "Où va « {{column}} » ? Actuellement : {{target}}",
+        "usedBy": "(actuellement : {{column}})",
+        "detailName": "Nom de l'information pour « {{column}} »",
+        "detailPlaceholder": "Nom de cette information",
+        "nameMissing": "Donnez un nom à cette information ou choisissez « Ne pas importer ».",
+        "nameTwice": "Une autre colonne utilise déjà ce nom. Donnez-en un autre à celle-ci.",
+        "fixFirst_one": "{{count}} colonne a encore besoin d'un nom.",
+        "fixFirst_other": "{{count}} colonnes ont encore besoin d'un nom.",
+        "check_one": "Vérifier {{count}} ligne",
+        "check_other": "Vérifier {{count}} lignes",
+        "fromMemory": "Associé comme la dernière fois. Modifiez ce qui diffère.",
+        "useSuggestion": "Utiliser plutôt la suggestion"
+      },
+      "check": {
+        "lead": "Rien n'est encore enregistré. Voici ce qui se passera si vous continuez.",
+        "failed": "Le fichier n'a pas pu être vérifié.",
+        "new_one": "nouveau contact",
+        "new_other": "nouveaux contacts",
+        "withoutEmail_one": "{{count}} d'entre eux n'a pas d'e-mail et ne peut pas en recevoir.",
+        "withoutEmail_other": "{{count}} d'entre eux n'ont pas d'e-mail et ne peuvent pas en recevoir.",
+        "existing_one": "déjà dans vos contacts",
+        "existing_other": "déjà dans vos contacts",
+        "existingHint": "{{changing}} avec du nouveau, {{same}} identiques au fichier.",
+        "leftOut_one": "ligne ne peut pas être importée",
+        "leftOut_other": "lignes ne peuvent pas être importées",
+        "leftOutHint": "Voyez pourquoi ci-dessous.",
+        "doubles_one": "{{count}} ligne désigne un contact déjà présent plus haut dans le fichier. Elle est fusionnée avec la première : aucun doublon n'est créé.",
+        "doubles_other": "{{count}} lignes désignent un contact déjà présent plus haut dans le fichier. Chacune est fusionnée avec la première : aucun doublon n'est créé.",
+        "problemsTitle": "Lignes qui ne peuvent pas être importées",
+        "problemsHint": "Tout le reste est importé quand même. Vous pouvez corriger ces lignes dans le fichier et le réimporter plus tard : les contacts existants ne sont pas dupliqués.",
+        "line": "Ligne {{n}}",
+        "moreLines_one": "et {{count}} autre ligne",
+        "moreLines_other": "et {{count}} autres lignes",
+        "existingTitle": "Contacts déjà présents",
+        "modeUpdate": "Ajouter les infos du fichier",
+        "modeSkip": "Les laisser tels quels",
+        "modeUpdateHint": "Les valeurs du fichier remplacent celles en place. Une cellule vide n'efface jamais rien et l'e-mail principal n'est jamais modifié. Décochez un contact pour ne pas y toucher.",
+        "modeSkipHint": "Ces contacts ne sont pas modifiés. Cochez-en un pour lui ajouter quand même les infos du fichier.",
+        "moreChanges_one": "et {{count}} autre",
+        "moreChanges_other": "et {{count}} autres",
+        "moreExisting": "Les {{shown}} premiers sont listés. Les {{rest}} autres suivent le choix ci-dessus.",
+        "workflowsTitle_one": "{{count}} de vos workflows démarrera pour ces contacts",
+        "workflowsTitle_other": "{{count}} de vos workflows démarreront pour ces contacts",
+        "workflowsHint": "Ils sont activés et démarrent dès qu'un contact est ajouté ou modifié. S'ils envoient des e-mails, ces contacts les recevront. Pour l'éviter, désactivez d'abord le workflow.",
+        "workflowsAck": "D'accord, laissez-les démarrer",
+        "nothingToDo": "Avec ces choix, il n'y a rien à enregistrer.",
+        "ackFirst": "Cochez la case concernant vos workflows pour continuer.",
+        "save_one": "Enregistrer {{count}} contact",
+        "save_other": "Enregistrer {{count}} contacts",
+        "navLabel": "À regarder",
+        "navWorkflows": "Workflows qui démarreront",
+        "search": "Trouver un contact dans cette liste",
+        "searchEmpty": "Aucun contact de cette liste ne correspond à « {{search}} »."
+      },
+      "problems": {
+        "no_identity": "Ni nom, ni entreprise, ni e-mail, ni téléphone",
+        "bad_email": "E-mail incorrect",
+        "company_name_missing": "Pas de nom d'entreprise"
+      },
+      "reasons": {
+        "no_identity": "Ni nom, ni entreprise, ni e-mail, ni téléphone sur cette ligne",
+        "bad_email": "L'e-mail « {{detail}} » semble incorrect",
+        "company_name_missing": "Pas de nom d'entreprise sur cette ligne",
+        "in_file_double": "Même contact qu'à la ligne {{line}} du fichier, fusionné avec elle",
+        "already_here": "Déjà dans vos contacts, laissé tel quel",
+        "nothing_new": "Déjà dans vos contacts, rien de nouveau dans le fichier",
+        "left_by_choice": "Vous avez choisi de ne pas modifier ce contact",
+        "email_taken": "Un autre contact utilise déjà {{detail}}",
+        "failed": "N'a pas pu être enregistré : {{detail}}",
+        "stopped": "Non enregistré : l'import a été arrêté avant cette ligne"
+      },
+      "run": {
+        "title": "Enregistrement de vos contacts…",
+        "stopped": "L'import s'est arrêté",
+        "progress": "{{done}} lignes sur {{total}} traitées",
+        "stoppedHint": "Rien n'est perdu et rien ne sera enregistré deux fois. Vérifiez votre connexion et continuez. ({{detail}})",
+        "resume": "Continuer",
+        "keepOpen": "Gardez cette page ouverte jusqu'à la fin. Si elle se ferme, rouvrez l'import depuis « Imports précédents » : il reprend là où il s'est arrêté.",
+        "unfinished": "Cet import n'a pas été terminé. Continuez pour enregistrer le reste.",
+        "leaveTitle": "Quitter pendant l'enregistrement ?",
+        "leaveBody": "L'import se met en pause si vous quittez la page. Ce qui est enregistré le reste, et vous pourrez reprendre plus tard depuis « Imports précédents ».",
+        "leaveStay": "Rester sur cette page",
+        "leaveGo": "Quitter et mettre en pause",
+        "stopHere": "Arrêter ici",
+        "stopHint": "« Arrêter ici » garde ce qui est enregistré et laisse le reste de côté. Vous pourrez ensuite annuler l'import si vous n'en voulez rien garder.",
+        "stopFailed": "L'import n'a pas pu être arrêté."
+      },
+      "done": {
+        "title": "Vos contacts sont importés",
+        "titleUndone": "Cet import a été annulé",
+        "added_one": "ajouté",
+        "added_other": "ajoutés",
+        "updated_one": "mis à jour",
+        "updated_other": "mis à jour",
+        "unchanged_one": "déjà à jour",
+        "unchanged_other": "déjà à jour",
+        "leftOut_one": "laissé de côté",
+        "leftOut_other": "laissés de côté",
+        "companiesAdded_one": "{{count}} entreprise a été ajoutée pour les personnes qui y travaillent.",
+        "companiesAdded_other": "{{count}} entreprises ont été ajoutées pour les personnes qui y travaillent.",
+        "leftOutTitle": "Lignes laissées de côté",
+        "download_one": "Télécharger avec le motif",
+        "download_other": "Télécharger les {{count}} avec le motif",
+        "downloadHint": "Corrigez-les dans ce fichier et réimportez-le. Disponible pendant 30 jours.",
+        "csvLine": "Ligne",
+        "csvReason": "Pourquoi laissée de côté",
+        "seeContacts": "Voir vos contacts",
+        "another": "Importer un autre fichier",
+        "undo": "Annuler cet import",
+        "undoKeep": "Garder l'import",
+        "undoConfirmTitle": "Annuler cet import ?",
+        "undoConfirmBody": "Les {{added}} contacts ajoutés sont supprimés et les {{updated}} modifiés retrouvent leur état précédent. Les contacts modifiés depuis, ou qui ont des affaires ou des tâches, sont conservés.",
+        "undoDone": "Import annulé.",
+        "undoFailed": "L'import n'a pas pu être annulé.",
+        "undoSummary": "{{removed}} contacts supprimés, {{restored}} remis dans leur état précédent.",
+        "undoKept_one": "{{count}} a été modifié après l'import ou a déjà des affaires ou des tâches ; il a donc été conservé :",
+        "undoKept_other": "{{count}} ont été modifiés après l'import ou ont déjà des affaires ou des tâches ; ils ont donc été conservés :",
+        "unnamed": "Contact sans nom",
+        "cellsGone": "Les lignes du fichier sont conservées 30 jours et ne sont plus stockées : le téléchargement n'est plus possible.",
+        "undoWorkflows_one": "L'annulation modifie ces contacts : {{count}} workflow activé démarrera pour eux : {{names}}.",
+        "undoWorkflows_other": "L'annulation modifie ces contacts : {{count}} workflows activés démarreront pour eux : {{names}}.",
+        "undoing_one": "Annulation… encore {{count}}",
+        "undoing_other": "Annulation… encore {{count}}"
+      },
+      "segments": {
+        "title": "Créer des segments à partir d'une colonne",
+        "lead": "Un segment par valeur, prêt à servir d'audience pour une newsletter ou un workflow. Un segment contient tous les contacts ayant cette valeur, y compris ceux ajoutés plus tard.",
+        "column": "Colonne",
+        "lines_one": "{{count}} ligne",
+        "lines_other": "{{count}} lignes",
+        "make_one": "Créer {{count}} segment",
+        "make_other": "Créer {{count}} segments",
+        "failed": "Les segments n'ont pas pu être créés."
+      }
+    },
+    "customFields": {
+      "title": "Autres informations",
+      "hint": "Issues de fichiers importés ou ajoutées à la main. Vous pouvez les utiliser dans les segments et les e-mails.",
+      "empty": "Tout ce qu'il est utile de savoir d'autre sur ce contact, comme un numéro de client ou une pointure.",
+      "add": "Ajouter une information",
+      "nameLabel": "Comment s'appelle-t-elle ?",
+      "namePlaceholder": "Nom, p. ex. Numéro de client",
+      "valueLabel": "Valeur",
+      "valuePlaceholder": "Valeur",
+      "nameTaken": "Ce contact a déjà une information portant ce nom. Modifiez-la dans la liste ci-dessous.",
+      "saveNew": "Enregistrer l'information",
+      "saved": "Information enregistrée.",
+      "removed": "Information supprimée.",
+      "saveFailed": "L'enregistrement a échoué.",
+      "remove": "Supprimer",
+      "edit": "Modifier {{name}}",
+      "sourceFromFile": "Source (du fichier)"
+    },
+    "select": {
+      "bar": "Contacts choisis",
+      "clear": "Effacer",
+      "count_one": "{{count}} choisi",
+      "count_other": "{{count}} choisis",
+      "done": "Terminé",
+      "makeDeals": "Créer des affaires",
+      "one": "Choisir {{name}}",
+      "page": "Choisir tout le monde sur cette page",
+      "start": "Choisir pour créer des affaires",
+      "count": "{{count}} choisis"
+    }
   },
   "leadEmails": {
     "emptyTitle": "Aucun e-mail journalisé pour le moment",
@@ -6142,7 +6447,30 @@
         "hostSearch": "Rechercher des membres…",
         "hostEmpty": "Aucun membre trouvé.",
         "alreadyAHost": "déjà hôte",
-        "hostAlwaysBusy": "toujours occupé"
+        "hostAlwaysBusy": "toujours occupé",
+        "display": {
+          "label": "Comment les visiteurs choisissent un horaire",
+          "strip": "Bande de jours",
+          "stripHint": "Une semaine de jours, puis les horaires. Compact, convient aux espaces étroits.",
+          "month": "Calendrier mensuel",
+          "monthHint": "Un mois entier à côté de la liste des horaires. Les visiteurs peuvent changer de fuseau horaire.",
+          "list": "Prochains horaires libres",
+          "listHint": "Les prochains horaires en une courte liste. Rien à parcourir."
+        },
+        "services": {
+          "toggle": "Laisser choisir une prestation",
+          "toggleHint": "Chaque prestation a son propre nom et son propre calendrier, par exemple une visite au showroom et un appel téléphonique.",
+          "item": "Prestation {{n}}",
+          "name": "Nom",
+          "namePlaceholder": "p. ex. Visite au showroom",
+          "description": "Courte description (facultatif)",
+          "descriptionPlaceholder": "Ce qui se passe, où, combien de temps",
+          "add": "Ajouter une prestation",
+          "remove": "Supprimer cette prestation",
+          "moveUp": "Monter",
+          "moveDown": "Descendre",
+          "connectedHoursHint": "Les calendriers connectés n’ont pas d’horaires propres. Ces réglages s’appliquent à chaque prestation qui réserve dans un calendrier connecté."
+        }
       },
       "stepTitle": "Titre de l'étape",
       "stepDescription": "Description de l'étape",
@@ -6312,7 +6640,9 @@
         "productFieldOnStandardForm": "« {{field}} » demande un paiement, mais ce formulaire ne peut pas en recevoir. Supprimez-la ici.",
         "commerceNoItems": "« {{field}} » ne contient encore aucun produit. Sélectionnez-la et ajoutez-en au moins un.",
         "keyMissing": "« {{field}} » n’a pas de nom interne. Ouvrez Avancé sur cette question et ajoutez-en un.",
-        "crmSaveAppointment": "« {{field}} » réserve un rendez-vous, mais ce formulaire n’enregistre pas les réponses. Supprimez la question ou activez « Enregistrer les réponses comme demandes »."
+        "crmSaveAppointment": "« {{field}} » réserve un rendez-vous, mais ce formulaire n’enregistre pas les réponses. Supprimez la question ou activez « Enregistrer les réponses comme demandes ».",
+        "serviceMissingCalendar": "« {{field}} » a une prestation sans calendrier. Sélectionnez la question et choisissez un calendrier pour chaque prestation.",
+        "serviceDuplicateCalendar": "« {{field}} » a deux prestations qui réservent dans le même calendrier. Donnez à chaque prestation son propre calendrier."
       },
       "otherLocales": "{{count}} autre(s) point(s) à corriger en :",
       "keyMissing": "Une question n’a pas de nom interne. Ouvrez Avancé sur cette question et ajoutez-en un.",
@@ -6330,7 +6660,9 @@
       "needsProductField": "Il n’y a pas de question produit : les visiteurs ne voient pas ce qu’ils achètent. Ajoutez-en une via « Ajouter une question ».",
       "duplicateProductField": "Un formulaire ne peut avoir qu’une question produit. Supprimez celle en trop.",
       "productFieldOnStandardForm": "Une question produit ne fonctionne que sur un formulaire avec paiement. Supprimez-la ici.",
-      "crmSaveAppointment": "Une question de rendez-vous a besoin de réponses enregistrées. Supprimez-la ou activez « Enregistrer les réponses comme demandes »."
+      "crmSaveAppointment": "Une question de rendez-vous a besoin de réponses enregistrées. Supprimez-la ou activez « Enregistrer les réponses comme demandes ».",
+      "serviceMissingCalendar": "Une question de rendez-vous a une prestation sans calendrier. Sélectionnez-la et choisissez un calendrier pour chaque prestation.",
+      "serviceDuplicateCalendar": "Une question de rendez-vous a deux prestations qui réservent dans le même calendrier. Donnez à chaque prestation son propre calendrier."
     },
     "public": {
       "notAvailable": "Ce formulaire n'est pas disponible",
@@ -7539,7 +7871,9 @@
     "florist_one": "fleuriste",
     "florist_other": "fleuristes",
     "plumber_one": "plombier",
-    "plumber_other": "plombiers"
+    "plumber_other": "plombiers",
+    "other_one": "autre",
+    "other_other": "autres"
   },
   "openaiAds": {
     "metaTitle": "OpenAI Ads",
@@ -7819,7 +8153,26 @@
       "import": "Importer",
       "importResult": "{{added}} ajoutés, {{unmatched}} introuvables",
       "pasteHint": "Une adresse par ligne (les virgules marchent aussi). Rapprochées des contacts existants par e-mail — les adresses inconnues sont signalées, pas créées.",
-      "unnamed": "Sans nom"
+      "unnamed": "Sans nom",
+      "rulesTitle": "Règles",
+      "contacts": {
+        "title": "Qui fait partie de ce segment",
+        "count_one": "contact",
+        "count_other": "contacts",
+        "allCan": "· tous peuvent recevoir des e-mails",
+        "cannot_one": "ne peut pas recevoir d'e-mails",
+        "cannot_other": "ne peuvent pas recevoir d'e-mails",
+        "rulesHint": "Cette liste se remplit à partir des règles. Pour retirer quelqu'un, modifiez les règles ou le contact.",
+        "unsaved": "Voici les contacts qui correspondent à vos modifications. Enregistrez pour conserver les règles.",
+        "search": "Chercher dans ce segment",
+        "searchEmpty": "Aucun contact ici ne correspond à « {{search}} ».",
+        "incomplete": "Complétez la règle pour voir qui correspond.",
+        "noneRules": "Personne ne correspond encore à ces règles.",
+        "unsubscribed": "Désabonné",
+        "noEmail": "Pas d'e-mail",
+        "pageOf": "{{from}}–{{to}} sur {{total}}",
+        "remove": "Retirer {{name}} de ce segment"
+      }
     },
     "suppressions": {
       "title": "Liste d'exclusion",
@@ -9850,7 +10203,10 @@
       "root": "re:praesent"
     },
     "appointments": "Rendez-vous",
-    "support": "Support"
+    "support": "Support",
+    "businesses": "Vos entreprises",
+    "businessesShort": "Entreprises",
+    "businessReports": "Signalements"
   },
   "command": {
     "title": "Aller à ou rechercher",
@@ -11699,6 +12055,38 @@
       "bannerTitle": "Créez votre calendrier pour prendre des rendez-vous",
       "bannerBody": "Un nom, votre fuseau horaire et vos horaires — ensuite formulaires, chat et équipe peuvent réserver.",
       "start": "Créer le calendrier"
+    },
+    "bookingPage": {
+      "create": "Créer une page de réservation",
+      "title": "Une page où vos clients réservent",
+      "intro": "Choisissez ce que l’on peut réserver. Vous recevez un lien à envoyer par e-mail, WhatsApp ou SMS.",
+      "pickCalendars": "Que peut-on réserver ?",
+      "pickHint": "S’il y en a plusieurs, les clients choisissent d’abord ce qu’ils souhaitent.",
+      "needCalendar": "Choisissez au moins un agenda.",
+      "noCalendars": "Créez d’abord un agenda. Vous pourrez ensuite créer ici sa page de réservation.",
+      "nameLabel": "Nom de la page",
+      "nameHint": "Les demandes venant de cette page affichent ce nom comme provenance.",
+      "namePlaceholder": "p. ex. Prendre rendez-vous",
+      "defaultName": "Prendre rendez-vous",
+      "language": "Langue de la page",
+      "languageHint": "Vous pourrez ajouter d’autres langues plus tard.",
+      "createButton": "Créer la page",
+      "creating": "Création…",
+      "readyTitle": "Votre page de réservation est en ligne",
+      "readyBody": "Envoyez ce lien à vos clients. Chaque réservation arrive comme une demande avec son rendez-vous.",
+      "draftTitle": "La page est créée, mais pas encore en ligne",
+      "draftBody": "Il manque encore quelque chose. Ouvrez-la pour voir quoi, puis mettez-la en ligne.",
+      "copyLink": "Copier le lien",
+      "copied": "Lien copié",
+      "open": "Ouvrir la page",
+      "edit": "Modifier les questions, les textes ou l’apparence",
+      "done": "Terminé",
+      "failed": "La page n’a pas pu être créée. Réessayez dans un instant.",
+      "listTitle": "Pages de réservation",
+      "listHint": "Pages et formulaires qui permettent de réserver dans cet agenda.",
+      "listEmpty": "Aucune page ne réserve encore dans cet agenda.",
+      "notLive": "Hors ligne",
+      "calendarOff": "Désactivé : ses horaires ne sont pas proposés."
     }
   },
   "calendarView": {
@@ -11746,7 +12134,13 @@
       "send": "Envoyer à re:praesent",
       "sentBody": "Nous répondons ici et vous écrivons à {{email}}.",
       "sentBodyNoEmail": "Nous répondons ici et vous envoyons un e-mail.",
-      "seeIt": "Voir le signalement"
+      "seeIt": "Voir le signalement",
+      "subtitleAgency": "{{agency}} répond ici, et vous recevez un e-mail quand c'est fait.",
+      "sendTo": "Envoyer à {{team}}",
+      "aboutBusiness": "De quelle entreprise s'agit-il ?",
+      "aboutAgency": "Votre agence elle-même",
+      "visible": "{{business}} peut lire et répondre",
+      "visibleHint": "L'entreprise voit ce signalement et les réponses de re:praesent dans Aide et modifications. Laissez décoché pour que cela reste entre vous et re:praesent."
     },
     "severity": {
       "urgent": "Le site est en panne ou cassé",
@@ -11791,13 +12185,25 @@
       "markedDone": "Marqué comme réglé. Merci !",
       "reopened": "Rouvert. Nous regardons à nouveau.",
       "statusFailed": "Ce n'est pas enregistré. Réessayez.",
-      "send": "Envoyer"
+      "send": "Envoyer",
+      "sharedBanner": "{{agency}} a envoyé ceci à re:praesent au sujet de votre entreprise et l'a partagé avec vous. Vous pouvez lire et répondre.",
+      "waitingBannerBy": "{{team}} a besoin de votre réponse pour continuer. Répondez ci-dessous.",
+      "sharedFromOwn": "{{agency}} a demandé l’aide de re:praesent pour votre signalement n°{{number}}. Vous pouvez lire et répondre ici.",
+      "backToOwn": "Retour à votre signalement n°{{number}}",
+      "passedOnTitle": "Votre agence a demandé l’aide de re:praesent",
+      "passedOnNeeds": "re:praesent attend votre réponse",
+      "passedOnOpen": "Lire l’échange avec re:praesent",
+      "passedOnPrivate": "Votre agence suit cela avec re:praesent"
     },
     "event": {
       "reopened": "{{who}} l'a rouvert",
       "status": "{{who}} l'a passé à « {{status}} »",
       "severity": "{{who}} l'a passé à « {{severity}} »",
-      "email": "{{who}} vous a écrit à {{to}} : « {{subject}} »"
+      "email": "{{who}} vous a écrit à {{to}} : « {{subject}} »",
+      "queueMoved": "re:praesent répond désormais à ce signalement",
+      "linkedDone": "re:praesent a réglé le n°{{number}}, celui-ci est donc réglé aussi",
+      "linkedReopened": "Le n°{{number}} chez re:praesent est rouvert, celui-ci aussi",
+      "setupDone": "Tout est en place, ce signalement est donc terminé"
     },
     "files": {
       "type": "Les captures peuvent être en PNG, JPG, WebP ou GIF.",
@@ -11807,7 +12213,13 @@
       "addAnother": "En ajouter une",
       "add": "Ajouter une capture",
       "addShort": "Capture"
-    }
+    },
+    "todayNeutral_one": "1 signalement attend votre réponse",
+    "todayNeutral_other": "{{count}} signalements attendent votre réponse",
+    "viaAgency": "Vous êtes dans {{business}} via {{agency}}. Ses signalements arrivent dans « Signalements des entreprises » de votre agence : ouvrez {{agency}} pour y répondre ou les transmettre à re:praesent.",
+    "sharedBy": "De {{agency}} · chez re:praesent",
+    "withRe": "Chez re:praesent",
+    "withReWaiting": "re:praesent attend votre réponse"
   },
   "support": {
     "metaTitle": "Support",
@@ -11827,7 +12239,8 @@
       "severity": "Gravité",
       "assignee": "Qui",
       "me": "Les miens",
-      "nobody": "Personne encore"
+      "nobody": "Personne encore",
+      "business": "Entreprise"
     },
     "sortTitle": "Changer l'ordre",
     "sort": {
@@ -11839,7 +12252,8 @@
       "allClear": "Personne ne vous attend.",
       "noMatch": "Aucun ticket pour ces filtres.",
       "allClearBody": "Les nouveaux tickets des clients arrivent ici en premier.",
-      "noMatchBody": "Retirez un filtre pour en voir plus."
+      "noMatchBody": "Retirez un filtre pour en voir plus.",
+      "allClearBodyAgency": "Les signalements de vos entreprises arrivent d'abord ici."
     },
     "more": "{{n}} sur {{total}}. Affinez avec un filtre.",
     "pick": "Choisissez un ticket à gauche. ↑ ↓ pour naviguer.",
@@ -11884,7 +12298,12 @@
     },
     "event": {
       "assigned": "{{who}} l'a confié à {{name}}",
-      "unassigned": "{{who}} l'a laissé sans responsable"
+      "unassigned": "{{who}} l'a laissé sans responsable",
+      "passedOn": "{{who}} l'a transmis à re:praesent sous le n° {{number}}",
+      "passedOnVisible": "{{who}} l'a transmis à re:praesent sous le n° {{number}}, visible par l'entreprise",
+      "queueMoved": "Transféré de l'agence à re:praesent",
+      "dealWon": "L'affaire est passée à gagnée avec ce signalement",
+      "dealReopened": "L'affaire est de nouveau ouverte avec ce signalement"
     },
     "today_one": "1 ticket de support attend une réponse",
     "today_other": "{{count}} tickets de support attendent une réponse",
@@ -11896,7 +12315,30 @@
       "notSent": "Non envoyé",
       "sent": "Envoyé",
       "by": "E-mail de {{who}}"
-    }
+    },
+    "searchAgency": "Chercher entreprise, site ou n°",
+    "about": "pour {{business}}",
+    "aboutLong": "au sujet de {{business}}",
+    "visibleToBusiness": "l'entreprise suit l'échange",
+    "passOn": {
+      "cta": "Transmettre à re:praesent",
+      "title": "Transmettre à re:praesent",
+      "subtitle": "re:praesent reçoit un nouveau signalement pour {{business}}, lié à celui-ci. Vous le suivez dans Aide et modifications.",
+      "what": "Que doit savoir re:praesent ?",
+      "shots": "Captures d'écran à joindre",
+      "visibleHint": "L'entreprise voit le nouveau signalement et les réponses de re:praesent. Vos notes internes restent chez vous dans tous les cas.",
+      "failed": "L'envoi a échoué. Vérifiez votre connexion et renvoyez.",
+      "send": "Envoyer à re:praesent",
+      "done": "Envoyé à re:praesent sous le n° {{number}}. Suivez-le dans Aide et modifications.",
+      "open": "Ouvrir",
+      "linked": "Chez re:praesent",
+      "linkedVisible": "Chez re:praesent · l'entreprise suit l'échange",
+      "chip": "Chez re:praesent",
+      "chipDone": "Réglé par re:praesent"
+    },
+    "titleAgency": "Signalements des entreprises",
+    "agencyIntro": "Les signalements que vos entreprises vous envoient.",
+    "agencyIntroLink": "Vos propres signalements à re:praesent sont dans Aide et modifications"
   },
   "timezonePicker": {
     "label": "Fuseau horaire",
@@ -11905,5 +12347,627 @@
     "common": "Fréquents",
     "results": "Résultats",
     "all": "Tous les fuseaux horaires"
+  },
+  "agency": {
+    "picker": {
+      "via": "via {{agency}}",
+      "agencyUnlimited_one": "Agence · {{count}} entreprise",
+      "agencyUnlimited_other": "Agence · {{count}} entreprises",
+      "agencyOfLimit_one": "Agence · {{count}} sur {{limit}} entreprises",
+      "agencyOfLimit_other": "Agence · {{count}} sur {{limit}} entreprises",
+      "managedBy": "Géré par {{agency}}",
+      "websiteBuilding": "Site en construction",
+      "search": "Trouver une entreprise",
+      "yourBusinesses": "Vos entreprises",
+      "noMatch": "Aucune entreprise à ce nom."
+    },
+    "banner": {
+      "youAreIn": "Vous travaillez dans {{business}} pour {{agency}}",
+      "back": "Retour à {{agency}}",
+      "backShort": "Retour"
+    },
+    "settings": {
+      "notAvailable": "La gestion de plusieurs entreprises n'est pas encore disponible.",
+      "errors": {
+        "notPossible": "Cette entreprise ne peut pas gérer d'autres entreprises.",
+        "already": "Une demande existe déjà pour cette entreprise.",
+        "generic": "Cela n'a pas fonctionné. Veuillez réessayer."
+      },
+      "toast": {
+        "asked": "Demande envoyée à re:praesent",
+        "withdrawn": "Demande retirée"
+      },
+      "on": {
+        "title": "Vous gérez plusieurs entreprises",
+        "countUnlimited_one": "entreprise",
+        "countUnlimited_other": "entreprises",
+        "countOfLimit_one": "sur {{limit}} entreprises",
+        "countOfLimit_other": "sur {{limit}} entreprises",
+        "meterLabel": "Entreprises utilisées",
+        "full": "Vous avez atteint votre limite. Contactez re:praesent pour ajouter d'autres entreprises.",
+        "how": "Ouvrez une entreprise depuis le sélecteur en haut du menu."
+      },
+      "paused": {
+        "title": "La gestion de plusieurs entreprises est en pause",
+        "body": "Pour le moment, vous ne pouvez pas ouvrir vos entreprises. Leurs équipes continuent normalement. Veuillez contacter re:praesent."
+      },
+      "requested": {
+        "title": "Votre demande est chez re:praesent",
+        "body": "Nous l'examinons et prévenons vos administrateurs par e-mail.",
+        "withdraw": "Retirer la demande"
+      },
+      "ineligible": {
+        "root": "C'est le compte de re:praesent.",
+        "demo": "Indisponible dans une démo.",
+        "doorboost": "Indisponible pour les comptes de marque.",
+        "brand": "Cette entreprise appartient à une marque et ne peut donc pas gérer d'autres entreprises.",
+        "managed": "Cette entreprise est gérée par une agence et ne peut donc pas gérer d'autres entreprises.",
+        "deleted": "Cette entreprise n'existe plus."
+      },
+      "ask": {
+        "title": "Gérer plusieurs entreprises avec un seul accès",
+        "body": "Pour les agences et les propriétaires de plusieurs établissements. re:praesent l'active pour vous.",
+        "points": {
+          "one": "Passer d'une entreprise à l'autre sans vous déconnecter",
+          "two": "Ajouter vous-même de nouvelles entreprises, avec leur équipe et leur site",
+          "three": "Chaque entreprise garde ses demandes, ses clients et son équipe"
+        },
+        "rejected": "re:praesent ne l'a pas activé la dernière fois.",
+        "noteLabel": "Quelque chose à nous dire ? (facultatif)",
+        "notePlaceholder": "Par exemple, combien d'entreprises vous suivez",
+        "submit": "Demander à re:praesent",
+        "adminsOnly": "Seuls les administrateurs de cette entreprise peuvent le demander."
+      }
+    },
+    "root": {
+      "tabsLabel": "Agences par statut",
+      "tabs": {
+        "waiting": "En attente",
+        "active": "Actives",
+        "paused": "En pause",
+        "earlier": "Anciennes"
+      },
+      "empty": {
+        "waiting": "Aucune demande en attente.",
+        "active": "Pas encore d'agence active.",
+        "paused": "Aucune agence en pause.",
+        "earlier": "Rien ici pour l'instant."
+      },
+      "row": {
+        "askedBy": "Demandé par {{name}} le {{date}}",
+        "asked": "Demandé le {{date}}"
+      },
+      "status": {
+        "requested": "En attente de décision",
+        "active": "Active",
+        "suspended": "En pause",
+        "rejected": "Non activée",
+        "ended": "Terminée"
+      },
+      "limit": {
+        "label": "Combien d'entreprises",
+        "unlimited": "Illimité",
+        "other": "Autre"
+      },
+      "noteLabel": "Note pour l'entreprise (facultatif)",
+      "actions": {
+        "approve": "Activer",
+        "reject": "Ne pas activer",
+        "saveLimit": "Enregistrer la limite",
+        "suspend": "Mettre en pause",
+        "resume": "Réactiver",
+        "end": "Terminer le mode agence",
+        "detach": "Retirer",
+        "attach": "Ajouter"
+      },
+      "toast": {
+        "approved": "Mode agence activé",
+        "rejected": "Demande refusée",
+        "limit": "Limite enregistrée",
+        "suspended": "Agence en pause",
+        "resumed": "Agence réactivée",
+        "ended": "Mode agence terminé",
+        "attached": "Entreprise ajoutée",
+        "attachedOver": "Entreprise ajoutée. L'agence dépasse maintenant sa limite.",
+        "detached": "Entreprise retirée de l'agence"
+      },
+      "errors": {
+        "alreadyManaged": "Cette entreprise est déjà rattachée à une agence.",
+        "oneLevel": "Une agence ne peut pas dépendre d'une autre agence.",
+        "childIneligible": "Cette entreprise ne peut pas être rattachée à une agence.",
+        "ineligible": "Cette entreprise ne peut pas être une agence.",
+        "generic": "Cela n'a pas fonctionné. Veuillez réessayer."
+      },
+      "confirm": {
+        "endTitle": "Terminer le mode agence pour {{agency}} ?",
+        "endBody": "Toutes les entreprises sont retirées de l'agence. Chacune garde ses données et son équipe. Les personnes de l'agence perdent l'accès immédiatement.",
+        "detachTitle": "Retirer {{business}} de l'agence ?",
+        "detachBody": "Les personnes de l'agence perdent l'accès immédiatement. Les signalements ouverts qu'elles suivaient passent à re:praesent, et l'IA partagée s'arrête."
+      },
+      "overLimit": "Cette agence a plus d'entreprises que sa limite. Elle ne peut pas en ajouter tant qu'elle la dépasse.",
+      "noChildren": "Pas encore d'entreprise.",
+      "attachSearch": "Ajouter une entreprise existante par son nom",
+      "origin": {
+        "created": "Ajoutée par l'agence",
+        "attached": "Ajoutée par re:praesent"
+      },
+      "website": {
+        "live": "Site en ligne",
+        "building": "Site en construction",
+        "none": "Pas de site"
+      },
+      "blocked": {
+        "agency": "Est elle-même une agence",
+        "managed": "Déjà rattachée à une agence",
+        "doorboost": "Compte de marque",
+        "demo": "Démo",
+        "root": "re:praesent"
+      },
+      "todayRequests_one": "1 entreprise souhaite gérer plusieurs entreprises. Décidez maintenant.",
+      "todayRequests_other": "{{count}} entreprises souhaitent gérer plusieurs entreprises. Décidez maintenant."
+    },
+    "businesses": {
+      "metaTitle": "Vos entreprises",
+      "metaDescription": "Les entreprises que votre agence suit.",
+      "title": "Vos entreprises",
+      "countUnlimited_one": "{{count}} entreprise",
+      "countUnlimited_other": "{{count}} entreprises",
+      "countOfLimit_one": "{{count}} sur {{limit}} entreprises",
+      "countOfLimit_other": "{{count}} sur {{limit}} entreprises",
+      "waitingTotal_one": "{{count}} demande en attente",
+      "waitingTotal_other": "{{count}} demandes en attente",
+      "add": "Ajouter une entreprise",
+      "addFirst": "Ajouter votre première entreprise",
+      "emptyTitle": "Pas encore d'entreprise",
+      "emptyBody": "Ajoutez une entreprise et son équipe. re:praesent met en place son site et ses e-mails.",
+      "numbersNote": "En attente = nouvelles demandes que personne n'a encore traitées. Demandes et nouveaux clients : 30 derniers jours.",
+      "setupOpen": "En cours de mise en place : {{items}}",
+      "open": "Ouvrir",
+      "kinds": {
+        "website": "site web",
+        "email": "e-mail",
+        "domain": "domaine",
+        "other": "autre"
+      },
+      "cols": {
+        "waiting": "en attente",
+        "inquiries": "demandes",
+        "customers": "nouveaux clients"
+      },
+      "reportsOpen_one": "1 signalement attend votre réponse",
+      "reportsOpen_other": "{{count}} signalements attendent votre réponse",
+      "settingUp": "Mise en place · invitation de l'équipe",
+      "setupNeedsLook": "La mise en place bloque · écrivez à re:praesent"
+    },
+    "add": {
+      "title": "Ajouter une entreprise",
+      "description": "Cinq étapes courtes : entreprise, personnes, site, extras, vérification.",
+      "stepOf": "Étape {{n}} sur {{total}}",
+      "steps": {
+        "business": "L'entreprise",
+        "people": "Personnes",
+        "website": "Site web",
+        "extras": "Extras",
+        "check": "Vérification"
+      },
+      "fields": {
+        "name": "Nom de l'entreprise",
+        "namePlaceholder": "ex. Salon Mira",
+        "industry": "Type d'entreprise",
+        "choose": "Choisir…",
+        "currency": "Devise",
+        "phone": "Téléphone",
+        "email": "E-mail",
+        "street": "Rue et numéro",
+        "postalCode": "Code postal",
+        "city": "Ville",
+        "country": "Pays",
+        "timezone": "Fuseau horaire",
+        "searchType": "Chercher un type",
+        "otherType": "Autre …",
+        "otherTypeLabel": "Quel type d'entreprise est-ce ?",
+        "otherTypePlaceholder": "p. ex. Studio de tatouage",
+        "useTyped": "Utiliser « {{typed}} »"
+      },
+      "people": {
+        "intro": "Qui travaille dans cette entreprise ? Ces personnes reçoivent un e-mail pour se connecter. Vous pourrez en ajouter plus tard.",
+        "emailLabel": "E-mail",
+        "emailPlaceholder": "nom@entreprise.fr",
+        "roleLabel": "Ce que la personne peut faire",
+        "roles": {
+          "admin": "Administrateur",
+          "editor": "Peut modifier",
+          "viewer": "Peut consulter"
+        },
+        "remove": "Retirer",
+        "add": "Ajouter une personne",
+        "youHaveAccess": "Vous et l'équipe de votre agence pouvez toujours ouvrir cette entreprise."
+      },
+      "website": {
+        "question": "L'entreprise a-t-elle besoin d'un site web ?",
+        "modes": {
+          "existing": "Elle en a déjà un",
+          "new": "Créer un nouveau site",
+          "none": "Pas de site pour l'instant"
+        },
+        "hints": {
+          "existing": "re:praesent le reprend et le met en place.",
+          "new": "re:praesent le crée.",
+          "none": "Vous pourrez en demander un plus tard."
+        },
+        "url": "Adresse du site",
+        "note": "Quelque chose à savoir sur le site ? (facultatif)",
+        "whatHappens": "re:praesent reçoit une tâche pour le mettre en place. Tant qu'il n'est pas en ligne, l'entreprise voit « Votre site est en construction »."
+      },
+      "extras": {
+        "intro": "re:praesent doit-il mettre en place autre chose ? (facultatif)",
+        "email": "Adresses e-mail",
+        "emailHint": "Boîtes mail sur le domaine de l'entreprise.",
+        "mailboxes": "Quelles adresses ?",
+        "mailboxesPlaceholder": "info@, anna@",
+        "domain": "Un domaine",
+        "domainHint": "En enregistrer un nouveau ou connecter le leur.",
+        "domainName": "Quel domaine ?",
+        "other": "Autre chose",
+        "note": "Une note pour re:praesent"
+      },
+      "check": {
+        "people": "Personnes",
+        "nobody": "Personne pour l'instant",
+        "website": "Site web",
+        "extras": "Extras",
+        "none": "Aucun"
+      },
+      "errors": {
+        "name": "Donnez un nom à l'entreprise.",
+        "email": "Cette adresse e-mail ne semble pas correcte.",
+        "memberEmail": "« {{email}} » n'est pas une adresse e-mail valide.",
+        "websiteMissing": "Indiquez l'adresse du site ou choisissez une autre option.",
+        "websiteTaken": "Ce site est déjà chez re:praesent. Veuillez contacter re:praesent pour le rattacher à cette entreprise.",
+        "websiteInvalid": "Cette adresse de site ne semble pas correcte. Exemple : salon-mira.fr",
+        "limit": "Vous avez atteint votre limite d'entreprises. Contactez re:praesent pour en ajouter.",
+        "notActive": "La gestion de plusieurs entreprises n'est pas active pour le moment. Veuillez contacter re:praesent.",
+        "generic": "Cela n'a pas fonctionné. Veuillez réessayer.",
+        "otherTypeMissing": "Indiquez en quelques mots de quel type d'entreprise il s'agit.",
+        "phone": "Ce numéro de téléphone ne semble pas correct. Vérifiez les chiffres.",
+        "postal": "Ce code postal ne semble pas correct.",
+        "postalLike": "Ce code postal ne semble pas correct. Par exemple {{example}}.",
+        "memberEmailShort": "Ce n'est pas une adresse e-mail valide.",
+        "memberTwice": "Cette adresse est déjà dans la liste.",
+        "domain": "Écrivez le domaine ainsi : salon-mira.de.",
+        "mailboxes": "Utilisez des noms comme info ou anna, séparés par des virgules. À vérifier : {{list}}",
+        "several_one": "Un champ est à vérifier.",
+        "several_other": "{{count}} champs sont à vérifier."
+      },
+      "back": "Retour",
+      "next": "Suivant",
+      "create": "Ajouter l'entreprise",
+      "creating": "Ajout…",
+      "toast": {
+        "added": "{{business}} ajoutée",
+        "open": "Ouvrir"
+      }
+    },
+    "setup": {
+      "title": "re:praesent met des choses en place",
+      "body": "Nous vous prévenons dès que c'est prêt.",
+      "websiteTitle": "Votre site est en construction",
+      "websiteBodyUrl": "re:praesent met en place {{url}}. Il apparaîtra ici dès qu'il sera en ligne.",
+      "websiteBodyNew": "re:praesent crée votre site. Il apparaîtra ici dès qu'il sera en ligne.",
+      "alsoSettingUp": "Aussi en cours : {{items}}"
+    },
+    "switching": "Ouverture de {{business}} …",
+    "switchFailed": "{{business}} n'a pas pu être ouvert. Réessayez."
+  },
+  "audit": {
+    "filters": {
+      "business": "Entreprise",
+      "allBusinesses": "Toutes les entreprises",
+      "workspace": "Entreprise",
+      "everyone": "Toutes les entreprises",
+      "person": "Personne",
+      "anyone": "Tout le monde",
+      "area": "Quoi",
+      "everything": "Tout",
+      "period": "Quand",
+      "searchBusinesses": "Rechercher par nom",
+      "recent": "Actifs récemment",
+      "noBusiness": "Aucun résultat. Essayez un autre nom."
+    },
+    "periods": {
+      "7d": "7 derniers jours",
+      "30d": "30 derniers jours",
+      "90d": "3 derniers mois",
+      "12m": "12 derniers mois"
+    },
+    "areas": {
+      "deal": "Affaires",
+      "lead": "Demandes",
+      "contact": "Clients",
+      "task": "Tâches",
+      "note": "Notes",
+      "member": "Équipe",
+      "form": "Formulaires",
+      "pipeline": "Étapes des affaires",
+      "workflow": "Automatisations",
+      "appointment": "Rendez-vous",
+      "email": "E-mail",
+      "website": "Site web",
+      "ai": "IA",
+      "support": "Aide et modifications",
+      "agency": "Agence",
+      "media": "Images et fichiers",
+      "billing": "Facturation",
+      "settings": "Paramètres",
+      "auth": "Connexions"
+    },
+    "fields": {
+      "title": "Titre",
+      "value": "Valeur",
+      "currency": "Devise",
+      "stage": "Étape",
+      "status": "Statut",
+      "assigned_to": "Responsable",
+      "assignee_id": "Attribuée à",
+      "expected_close_date": "Conclusion prévue",
+      "first_name": "Prénom",
+      "last_name": "Nom",
+      "email": "E-mail",
+      "phone": "Téléphone",
+      "company_name": "Société",
+      "job_title": "Fonction",
+      "due_date": "Échéance",
+      "role": "Rôle",
+      "lead_notification": "Reçoit les alertes de demandes"
+    },
+    "actors": {
+      "system": "re:praesent",
+      "staff": "L'équipe re:praesent",
+      "someone": "Quelqu'un"
+    },
+    "actions": {
+      "deal_create": "{{actor}} a ajouté l'affaire « {{label}} »",
+      "deal_update": "{{actor}} a modifié l'affaire « {{label}} »",
+      "deal_stage": "{{actor}} a déplacé l'affaire « {{label}} »",
+      "deal_move": "{{actor}} a déplacé l'affaire « {{label}} » vers d'autres étapes",
+      "deal_paid": "{{actor}} a marqué l'affaire « {{label}} » comme payée",
+      "deal_unpaid": "{{actor}} a marqué l'affaire « {{label}} » comme non payée",
+      "deal_delete": "{{actor}} a supprimé l'affaire « {{label}} »",
+      "lead_create": "{{actor}} a ajouté la demande « {{label}} »",
+      "lead_update": "{{actor}} a modifié la demande « {{label}} »",
+      "contact_create": "{{actor}} a ajouté le client « {{label}} »",
+      "contact_from_lead": "{{actor}} a fait de « {{label}} » un client",
+      "contact_update": "{{actor}} a modifié le client « {{label}} »",
+      "contact_delete": "{{actor}} a supprimé le client « {{label}} »",
+      "task_create": "{{actor}} a ajouté la tâche « {{label}} »",
+      "task_update": "{{actor}} a modifié la tâche « {{label}} »",
+      "task_delete": "{{actor}} a supprimé la tâche « {{label}} »",
+      "member_invite": "{{actor}} a invité {{emails}}",
+      "member_update": "{{actor}} a modifié ce que {{label}} peut faire",
+      "member_remove": "{{actor}} a retiré {{label}} de l'équipe",
+      "member_resend_invite": "{{actor}} a renvoyé l'invitation",
+      "agency_request": "{{actor}} a demandé à gérer plusieurs entreprises",
+      "agency_withdraw": "{{actor}} a retiré la demande",
+      "agency_business_create": "{{actor}} a ajouté l'entreprise « {{label}} »",
+      "agency_approve": "{{actor}} a activé le mode agence (limite : {{limit}})",
+      "agency_reject": "{{actor}} n'a pas activé le mode agence",
+      "agency_limit": "{{actor}} a changé la limite à {{limit}}",
+      "agency_suspend": "{{actor}} a mis le mode agence en pause",
+      "agency_resume": "{{actor}} a réactivé le mode agence",
+      "agency_end": "{{actor}} a terminé le mode agence",
+      "agency_attach": "{{actor}} a ajouté une entreprise à l'agence",
+      "agency_detach": "{{actor}} a retiré une entreprise de l'agence",
+      "agency_setup_sent": "Envoyé à re:praesent pour mise en place : {{items}}",
+      "website_live": "Le site {{url}} est en ligne",
+      "auth_sign_in": "{{actor}} s'est connecté ({{method}})",
+      "ai_share": "{{actor}} a modifié l'IA partagée d'une entreprise",
+      "support_pass_on": "{{actor}} a transmis un signalement à re:praesent",
+      "deal_bulk_create": "{{actor}} a créé des affaires pour plusieurs contacts en une fois",
+      "deal_bulk_undo": "{{actor}} a annulé des affaires créées en une fois"
+    },
+    "generic": {
+      "create": "{{actor}} a ajouté quelque chose dans {{area}}",
+      "update": "{{actor}} a modifié quelque chose dans {{area}}",
+      "delete": "{{actor}} a supprimé quelque chose dans {{area}}"
+    },
+    "signInLink": "lien e-mail",
+    "signInCode": "code",
+    "unlimited": "illimitée",
+    "via": "via {{agency}}",
+    "didNotGoThrough": "n'a pas abouti",
+    "changedTo": "remplacé par",
+    "empty_value": "vide",
+    "yes": "oui",
+    "no": "non",
+    "empty": "Rien ne s'est passé sur cette période. Essayez une période plus longue.",
+    "loadError": "Le journal n'a pas pu être chargé. Veuillez recharger la page.",
+    "more": "Afficher plus",
+    "kept": "Les modifications sont conservées 12 mois.",
+    "values": {
+      "status": {
+        "todo": "À faire",
+        "in_progress": "En cours",
+        "done": "Terminée"
+      },
+      "role": {
+        "admin": "Administrateur",
+        "editor": "Peut modifier",
+        "viewer": "Peut consulter"
+      }
+    }
+  },
+  "setupReport": {
+    "title": "Ce qui a été demandé",
+    "titleFor": "Mise en place pour {{business}}",
+    "progress": "{{done}} sur {{total}} fait(s)",
+    "item": {
+      "websiteExisting": "Site web : {{url}}",
+      "websiteNew": "Un nouveau site web",
+      "emailBoxes": "E-mail : {{boxes}}",
+      "email": "Boîtes e-mail",
+      "domainName": "Domaine : {{name}}",
+      "domain": "Un domaine",
+      "other": "Autre chose"
+    },
+    "done": "Fait",
+    "toDo": "À faire",
+    "nothing": "Rien de plus demandé : l'entreprise et son équipe sont en place.",
+    "websiteUnlinked": "Le site web n'est pas encore relié. Ce point se ferme tout seul dès que vous le reliez dans l'admin.",
+    "dealWon": "Nouveau client",
+    "dealLost": "Pas conclu",
+    "dealOpen": "Affaire en cours",
+    "chip": "Mise en place",
+    "clientHint": "re:praesent clôt ce signalement une fois tout en place. Écrivez ici si quelque chose change.",
+    "confirmTitle": "Le site web n'est pas encore relié",
+    "confirmBody": "Clore la mise en place marque chaque point comme fait et passe l'affaire à gagnée. Le site n'apparaît alors plus « en construction » et son adresse redevient libre jusqu'à ce que vous le reliiez.",
+    "confirmKeep": "Laisser ouvert",
+    "confirmClose": "Clore quand même"
+  },
+  "dealSupport": {
+    "title": "Signalements support",
+    "hint": "Clore le signalement de mise en place passe cette affaire à gagnée."
+  },
+  "dealBatch": {
+    "back": {
+      "contacts": "Contacts",
+      "import": "L'import",
+      "segment": "Le segment"
+    },
+    "backToWho": "Retour",
+    "done": {
+      "created": "Nouvelles affaires",
+      "kept": "Conservées",
+      "keptHint": "Quelqu'un y a déjà travaillé.",
+      "keptList": "Conservées, car quelqu'un y a travaillé",
+      "leftOut": "Qui n'a pas reçu de nouvelle affaire",
+      "leftOutMore_one": "et {{count}} de plus",
+      "leftOutMore_other": "et {{count}} de plus",
+      "noName": "Sans nom",
+      "notMade": "Non créées",
+      "owner": "{{name}} s'en occupe.",
+      "removed": "Annulées",
+      "seeDeals": "Les voir dans Affaires",
+      "skippedOpen": "Avaient déjà une affaire",
+      "tasks_one": "{{count}} avec une première tâche",
+      "tasks_other": "{{count}} avec une première tâche",
+      "title": "Vos affaires sont créées",
+      "undoneTitle": "Ces affaires ont été annulées",
+      "leftOutMore": "et {{count}} de plus",
+      "tasks": "{{count}} avec une première tâche"
+    },
+    "errors": {
+      "generic": "Cela n'a pas fonctionné. Vérifiez votre connexion et réessayez.",
+      "noContacts": "Aucun de ces contacts n'existe encore. Revenez en arrière et choisissez à nouveau.",
+      "notReady": "La création d'affaires en une fois n'est pas encore activée pour votre entreprise. Contactez le support.",
+      "owner": "Cette personne ne fait plus partie de votre équipe. Choisissez quelqu'un d'autre pour s'occuper des affaires.",
+      "stillRunning": "Les affaires sont encore en cours de création. Annulez une fois terminé."
+    },
+    "fromImport": {
+      "body": "Choisissez qui, puis donnez à tous la même valeur, la même étape et la même première tâche. Ceux qui ont déjà une affaire sont laissés de côté.",
+      "button": "Créer des affaires",
+      "title": "Transformer ces contacts en affaires"
+    },
+    "fromSegment": {
+      "button": "Créer des affaires",
+      "saveFirst": "Enregistrez d'abord le segment, puis créez-en des affaires."
+    },
+    "leave": {
+      "body": "Cela se met en pause si vous partez. Les affaires déjà créées restent, et la suite reprend quand vous rouvrez cette page.",
+      "go": "Partir et mettre en pause",
+      "stay": "Rester sur cette page",
+      "title": "Partir pendant la création des affaires ?"
+    },
+    "loading": "Ouverture…",
+    "loadingContacts": "Chargement des contacts…",
+    "make_one": "Créer {{count}} affaire",
+    "make_other": "Créer {{count}} affaires",
+    "next": "Suivant : les affaires",
+    "notFound": "Impossible de l'ouvrir. Cela appartient peut-être à une autre entreprise.",
+    "pick": {
+      "anyValue": "{{column}} : tous",
+      "empty": "Il n'y a ici aucun contact pour créer des affaires.",
+      "hasOpenDeal": "A déjà une affaire : {{title}}",
+      "kind": "Qui",
+      "kindAll": "Personnes et entreprises",
+      "kindCompanies": "Seulement les entreprises",
+      "kindPeople": "Seulement les personnes",
+      "label": "Qui reçoit une affaire",
+      "noneMatch": "Personne ne correspond. Effacez la recherche ou un filtre.",
+      "search": "Rechercher nom, e-mail, téléphone…",
+      "showMore_one": "Afficher {{count}} de plus",
+      "showMore_other": "Afficher {{count}} de plus",
+      "shownCount": "{{shown}} sur {{total}} affichés",
+      "tickAll": "Tout cocher",
+      "tickShown": "Cocher tous ceux affichés",
+      "totalCount_one": "{{count}} contact",
+      "totalCount_other": "{{count}} contacts",
+      "showMore": "Afficher {{count}} de plus",
+      "totalCount": "{{count}} contacts"
+    },
+    "pickedCount_one": "{{count}} coché",
+    "pickedCount_other": "{{count}} cochés",
+    "pickedWithOpen_one": "dont {{count}} a déjà une affaire",
+    "pickedWithOpen_other": "dont {{count}} ont déjà une affaire",
+    "reason": {
+      "failed": "Impossible à créer. Créez celle-ci à la main.",
+      "gone": "Le contact a été supprimé entre-temps",
+      "open": "A déjà une affaire"
+    },
+    "retry": "Réessayer",
+    "run": {
+      "keepOpen": "Gardez cette page ouverte jusqu'à la fin. Si elle se ferme, la suite reprend quand vous la rouvrez.",
+      "progress": "{{done}} sur {{total}} faits",
+      "resume": "Continuer",
+      "stopped": "Cela s'est arrêté",
+      "stoppedHint": "Rien n'est créé deux fois. {{detail}}",
+      "title": "Création des affaires…"
+    },
+    "selectionGone": "Il n'y a plus de sélection. Cochez des contacts dans la liste et choisissez « Créer des affaires ».",
+    "settings": {
+      "andMore_one": "et {{count}} de plus, une par contact",
+      "andMore_other": "et {{count}} de plus, une par contact",
+      "automations": "Lancer mes automatisations d'affaires pour celles-ci",
+      "automationsOff": "Désactivé : aucun workflow ne démarre pour ces affaires, personne ne reçoit un e-mail par affaire.",
+      "automationsOn": "Chaque nouvelle affaire lance vos workflows, comme une affaire créée à la main. Cela peut signifier un e-mail par affaire.",
+      "extra": "Ajouter à chaque titre (facultatif)",
+      "extraHint": "Chaque affaire porte le nom de son contact.",
+      "extraPlaceholder": "p. ex. Cuisine 2027",
+      "noValue": "Sans valeur",
+      "nobody": "Cochez au moins un contact pour voir les affaires.",
+      "owner": "Qui s'en occupe",
+      "pipeline": "Pipeline",
+      "stage": "Étape de l'affaire",
+      "task": "Une première tâche pour chaque affaire",
+      "taskDefault": "Appeler",
+      "taskDue": "Échéance",
+      "taskHint": "Pour que chaque affaire ait une prochaine étape.",
+      "taskTitle": "Tâche",
+      "title": "Identique pour chaque affaire",
+      "value": "Valeur de chaque affaire",
+      "valueHint": "Laissez vide si vous ne savez pas encore. Vous pourrez modifier chaque affaire plus tard.",
+      "andMore": "et {{count}} de plus, une par contact"
+    },
+    "subtitle": "Une affaire par contact coché, toutes avec la même valeur et la même étape.",
+    "subtitleFrom": "Depuis {{name}} : une affaire par contact coché.",
+    "title": "Créer des affaires",
+    "toContacts": "Aller aux contacts",
+    "truncated": "Les 5 000 premiers sont affichés. Affinez avec un segment pour atteindre les autres.",
+    "undo": {
+      "body_one": "L'affaire créée ici est supprimée, avec sa première tâche. Les affaires déplacées, annotées ou complétées de tâches depuis sont conservées.",
+      "body_other": "Les {{count}} affaires créées ici sont supprimées, avec leur première tâche. Les affaires déplacées, annotées ou complétées de tâches depuis sont conservées.",
+      "button": "Annuler ces affaires",
+      "done_one": "{{count}} affaire annulée.",
+      "done_other": "{{count}} affaires annulées.",
+      "doneKept": "{{removed}} affaires annulées, {{kept}} conservées car quelqu'un y a travaillé.",
+      "going": "Annulation… encore {{count}}",
+      "keep": "Garder les affaires",
+      "title": "Annuler ces affaires ?",
+      "body": "Les {{count}} affaires créées ici sont supprimées, avec leur première tâche. Les affaires déplacées, annotées ou complétées de tâches depuis sont conservées.",
+      "done": "{{count}} affaires annulées."
+    },
+    "viewerOnly": "Vous pouvez consulter les affaires mais pas en créer. Demandez à un administrateur de votre entreprise.",
+    "make": "Créer {{count}} affaires",
+    "pickedCount": "{{count}} cochés",
+    "pickedWithOpen": "dont {{count}} ont déjà une affaire"
   }
 }

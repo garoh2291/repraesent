@@ -1,4 +1,5 @@
 import { SupportTodayCard } from "~/components/support/support-today-card";
+import { AgencyRequestsTodayCard } from "~/components/agency/agency-requests-today-card";
 import { createContext, useContext, useEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router";
 import { useTranslation } from "react-i18next";
@@ -48,6 +49,7 @@ import { OutcomeBadge, useLeadFlow, type FlowLead } from "~/components/notebook/
 import { useDealFlow } from "~/components/notebook/deal-flow";
 import { ReviewsToAsk } from "~/components/notebook/review-today";
 import { InstallCard } from "~/components/notebook/install-card";
+import { SetupStatusCard } from "~/components/agency/setup-status-card";
 import { AlertsAskCard } from "~/components/notebook/alerts-ask-card";
 import { useQuickCreate } from "~/components/notebook/quick-create";
 import { useOpenFromParam } from "~/lib/hooks/useOpenFromParam";
@@ -800,6 +802,7 @@ export default function Today() {
       {/* Phones only (each card decides): install first, then the alerts ask. */}
       <InstallCard />
       <AlertsAskCard />
+      <SetupStatusCard />
 
       <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_340px] lg:items-start">
         <div className="min-w-0 space-y-6">
@@ -815,6 +818,7 @@ export default function Today() {
           ) : data ? (
             <>
               <SupportTodayCard />
+              <AgencyRequestsTodayCard />
               {isRoot && data.signups ? (
                 <NeedsYou
                   title={t("today.signupsTitle", "New signups to call")}

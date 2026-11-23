@@ -17,7 +17,9 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Check, MapPin, Video } from "lucide-react";
 import { isAxiosError } from "axios";
 import i18n from "~/i18n";
+import { createInstance, type i18n as I18nInstance } from "i18next";
 import { PUBLIC_BOOKING_HY } from "~/lib/appointment-book/public-hy";
+import { PUBLIC_BOOKING_CS } from "~/lib/appointment-book/public-cs";
 import { DocumentScheme } from "~/components/forms/PublicShell";
 import { Button } from "~/components/ui/button";
 import { Textarea } from "~/components/ui/textarea";
@@ -48,6 +50,37 @@ const PAPER = "#f5f4f1";
 if (!i18n.hasResourceBundle("hy", "translation")) {
   i18n.addResourceBundle("hy", "translation", PUBLIC_BOOKING_HY, true, false);
 }
+// Czech the same way.
+if (!i18n.hasResourceBundle("cs", "translation")) {
+  i18n.addResourceBundle("cs", "translation", PUBLIC_BOOKING_CS, true, false);
+}
+
+/**
+ * The customer's language for this page, as its own i18next instance. The
+ * app's instance only resolves the app's four languages (supportedLngs), so
+ * getFixedT("hy" | "cs") silently fell back to German; a separate instance
+ * keeps the app's language detection untouched. Missing words fall back to
+ * English. One per language, built on first use.
+ */
+const customerInstances = new Map<string, I18nInstance>();
+function customerI18n(locale: string): I18nInstance {
+  let inst = customerInstances.get(locale);
+  if (!inst) {
+    inst = createInstance();
+    void inst.init({
+      resources: {
+        [locale]: { translation: i18n.getResourceBundle(locale, "translation") ?? {} },
+        en: { translation: i18n.getResourceBundle("en", "translation") ?? {} },
+      },
+      lng: locale,
+      fallbackLng: "en",
+      interpolation: { escapeValue: false },
+      initAsync: false,
+    });
+    customerInstances.set(locale, inst);
+  }
+  return inst;
+}
 
 export default function PublicAppointmentRoute() {
   const { token = "" } = useParams<{ token: string }>();
@@ -57,7 +90,7 @@ export default function PublicAppointmentRoute() {
     enabled: !!token,
     retry: false,
   });
-  const t = i18n.getFixedT(q.data?.locale ?? i18n.language);
+  const t = q.data?.locale ? customerI18n(q.data.locale).t : i18n.t;
   // The tab title in the customer's language, like the page itself.
   const title = t("appointmentBook.public.metaTitle", { defaultValue: "Your appointment" });
   useEffect(() => {
@@ -91,13 +124,14 @@ export default function PublicAppointmentRoute() {
 }
 
 function AppointmentCard({ token, view }: { token: string; view: PublicAppointment }) {
-  const t = i18n.getFixedT(view.locale);
+  const pageI18n = customerI18n(view.locale);
+  const t = pageI18n.t;
   // The language the customer booked in, its own clock: 12-hour for English,
   // 24-hour elsewhere — the same as the time buttons below.
-  const intl = { en: "en-US", de: "de-DE", fr: "fr-FR", nl: "nl-NL", hy: "hy-AM" }[view.locale];
+  const intl = { en: "en-US", de: "de-DE", fr: "fr-FR", nl: "nl-NL", hy: "hy-AM", cs: "cs-CZ" }[view.locale];
   // The time picker is shared with the app and reads the app's language; give
   // it the customer's instead, so the whole page speaks one language.
-  const pickerI18n = useMemo(() => i18n.cloneInstance({ lng: view.locale }), [view.locale]);
+  const pickerI18n = pageI18n;
   const qc = useQueryClient();
   // The email's "Cancel" / "Choose another time" buttons open straight on that step.
   const [searchParams] = useSearchParams();

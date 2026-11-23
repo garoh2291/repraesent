@@ -178,6 +178,34 @@ export interface WorkspaceContext {
   /** Optional: older backends don't send it (deploy skew). */
   avatar_url?: string | null;
   avatar_thumb_url?: string | null;
+  /** Agency mode row of this workspace (AGENCY_MODE_PLAN.md). Absent = never asked. */
+  agency?: WorkspaceAgencyInfo;
+  /** This workspace sits under an agency. */
+  managed_by?: { id: string; name: string };
+  /** Set when the person reached this business through their agency, not as a member. */
+  via_agency_id?: string | null;
+  via_agency_name?: string | null;
+}
+
+export type AgencyStatus = "requested" | "active" | "suspended" | "rejected" | "ended";
+
+export interface WorkspaceAgencyInfo {
+  status: AgencyStatus;
+  /** null = unlimited */
+  child_limit: number | null;
+  child_count: number;
+}
+
+export type WebsiteState = "live" | "building" | "none";
+
+/** A business the person reaches through one of their agencies. */
+export interface AgencyChild {
+  id: string;
+  name: string;
+  agency_workspace_id: string;
+  agency_name: string;
+  website_state: WebsiteState;
+  avatar_thumb_url?: string | null;
 }
 
 /**
@@ -322,6 +350,8 @@ export interface UserContextResponse {
   brand?: BrandInfo;
   /** Present only for brand users (brand-connected workspaces) */
   brandWorkspaces?: BrandWorkspace[];
+  /** Businesses reached through the person's agencies (agency mode). */
+  agency_children?: AgencyChild[];
 }
 
 /** `copy_hint` is the masked sign-in copy address ("g•••@gmail.com") when one is set. */
@@ -437,6 +467,17 @@ export const getUserContext = async (): Promise<UserContextResponse> => {
     throw new Error(apiError.message || "Failed to fetch user context");
   }
 };
+
+/**
+ * One business's context for someone who reaches it through their agency
+ * (same shape as an entry of `workspaces`, with `via_agency_id`).
+ */
+export async function getWorkspaceContext(workspaceId: string): Promise<WorkspaceContext> {
+  const response = await apiClient.get<WorkspaceContext>(
+    `/users/me/workspace-context/${encodeURIComponent(workspaceId)}`,
+  );
+  return response.data;
+}
 
 /** 401/403 from the context call: the session really is gone. */
 export function isAuthRejection(error: unknown): boolean {

@@ -281,6 +281,9 @@ const NEVER_RETRY = [
 const isAuthRequest = (url: string | undefined): boolean =>
   !!url && NEVER_RETRY.some((path) => url.includes(path));
 
+/** Fired when the API says the person no longer has access to the request's workspace. */
+export const WORKSPACE_ACCESS_LOST_EVENT = "rp:workspace-access-lost";
+
 apiClient.interceptors.response.use(
   (response: AxiosResponse) => {
     return response;
@@ -289,6 +292,21 @@ apiClient.interceptors.response.use(
     const originalRequest = error.config as InternalAxiosRequestConfig & {
       _retry?: boolean;
     };
+
+    // Agency mode: access to a business reached through an agency can end at
+    // any moment (detached, paused). Tell the auth layer, which falls back to
+    // the person's own workspace (use-auth listens). Nothing else reacts.
+    if (
+      error.response?.status === 403 &&
+      typeof window !== "undefined" &&
+      (error.response.data as { message?: unknown } | undefined)?.message ===
+        "You do not have access to this workspace"
+    ) {
+      const ws = (originalRequest?.headers as Record<string, unknown> | undefined)?.["X-Workspace-Id"];
+      window.dispatchEvent(
+        new CustomEvent(WORKSPACE_ACCESS_LOST_EVENT, { detail: typeof ws === "string" ? ws : null }),
+      );
+    }
 
     // Handle 401 Unauthorized - Token expired or invalid
     if (

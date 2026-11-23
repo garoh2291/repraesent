@@ -64,6 +64,14 @@ const COPY: Record<FormLocale, Copy> = {
     footer:
       "Դուք ստացել եք այս նամակը, քանի որ լրացրել եք ձևաթուղթ մեր կայքում։",
   },
+  cs: {
+    subject: "Děkujeme",
+    heading: "Děkujeme, že jste nás kontaktovali!",
+    greeting: "Dobrý den,",
+    body: "Vaši zprávu jsme obdrželi a brzy se Vám ozveme.",
+    footer:
+      "Tento e-mail dostáváte, protože jste odeslali formulář na našem webu.",
+  },
 };
 
 function render(copy: Copy): string {

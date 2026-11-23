@@ -132,3 +132,64 @@ export async function removeSegmentMember(
 ): Promise<void> {
   await apiClient.delete(`/segments/${id}/members/${contactId}`);
 }
+
+/** One contact of a segment, as the "who is in it" list shows them. */
+export interface SegmentContactRow {
+  contact_id: string;
+  kind: string;
+  full_name: string | null;
+  company_name: string | null;
+  email: string | null;
+  phone: string | null;
+  /** Has an email and is not on the unsubscribe list. */
+  sendable: boolean;
+  suppressed: boolean;
+}
+
+export interface SegmentContactsPage {
+  /** Everyone in the segment, whatever the search. */
+  matched: number;
+  /** Of those, how many can get emails. */
+  sendable: number;
+  data: SegmentContactRow[];
+  page: number;
+  limit: number;
+  /** Count after the search. */
+  total: number;
+  totalPages: number;
+  hasNext: boolean;
+  hasPrev: boolean;
+}
+
+export interface SegmentContactsQuery {
+  page?: number;
+  limit?: number;
+  search?: string;
+}
+
+/** Who a set of rules matches right now (the editor's live preview). */
+export async function previewSegmentContacts(
+  definition: ConditionGroup,
+  query: SegmentContactsQuery = {},
+): Promise<SegmentContactsPage> {
+  const { data } = await apiClient.post("/segments/preview-contacts", {
+    definition,
+    page: query.page ?? 1,
+    limit: query.limit ?? 25,
+    ...(query.search?.trim() ? { search: query.search.trim() } : {}),
+  });
+  return data;
+}
+
+/** The contacts of a saved segment, rule-based or hand-picked. */
+export async function listSegmentContacts(
+  id: string,
+  query: SegmentContactsQuery = {},
+): Promise<SegmentContactsPage> {
+  const params = new URLSearchParams();
+  params.set("page", String(query.page ?? 1));
+  params.set("limit", String(query.limit ?? 25));
+  if (query.search?.trim()) params.set("search", query.search.trim());
+  const { data } = await apiClient.get(`/segments/${id}/contacts?${params}`);
+  return data;
+}

@@ -1,4 +1,5 @@
 import { Link } from "react-router";
+import { cn } from "~/lib/utils";
 import { useTranslation } from "react-i18next";
 import { ExternalLink } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "~/components/ui/select";
@@ -50,10 +51,16 @@ export function TargetKindSwitch({
   native,
   onChange,
   disabled,
+  fill,
 }: {
   native: boolean;
   onChange: (native: boolean) => void;
   disabled?: boolean;
+  /**
+   * Take the full width of a narrow column (the form builder's side panel):
+   * the two options share it evenly and wrap instead of running past the edge.
+   */
+  fill?: boolean;
 }) {
   const { t } = useTranslation();
   return (
@@ -65,7 +72,11 @@ export function TargetKindSwitch({
         onChange={(v) => !disabled && onChange(v === "native")}
         stretch
         // Long German labels wrap on phones instead of running off the sheet.
-        className="max-sm:[&>button]:whitespace-normal max-sm:[&>button]:py-1.5 max-sm:[&>button]:leading-tight"
+        className={cn(
+          "max-sm:[&>button]:whitespace-normal max-sm:[&>button]:py-1.5 max-sm:[&>button]:leading-tight",
+          fill &&
+            "flex w-full [&>button]:min-w-0 [&>button]:flex-1 [&>button]:whitespace-normal [&>button]:px-2 [&>button]:leading-tight",
+        )}
         options={[
           { value: "native", label: t("appointmentBook.target.native", "Repraesent calendar") },
           { value: "connected", label: t("appointmentBook.target.connected", "Connected calendar") },

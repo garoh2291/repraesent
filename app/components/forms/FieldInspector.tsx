@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { cn } from "~/lib/utils";
 import { Link } from "react-router";
 import { TimezonePicker } from "~/components/ui/timezone-picker";
 import { calendarKeyFor, listCalendarAccounts } from "~/lib/api/calendar";
@@ -73,6 +74,15 @@ import {
   primaryTargetKeyOf,
 } from "~/lib/forms/appointment-hosts";
 import { useWorkspaceMembers } from "~/lib/hooks/useWorkspaceMembers";
+import {
+  fieldForService,
+  pickSharedRules,
+  serviceFromField,
+  servicesPatch,
+  withServiceTarget,
+} from "~/lib/forms/appointment-services";
+import { useAppointmentCalendars } from "~/lib/hooks/useAppointmentBook";
+import { AppointmentServiceList } from "./AppointmentServiceList";
 import { BusyCalendarPicker } from "./BusyCalendarPicker";
 import { AppointmentHostList } from "./AppointmentHostList";
 import { OptionsEditor } from "./OptionsEditor";
@@ -928,10 +938,12 @@ function TypeSpecific({
 
     case "appointment":
       return (
-        <AppointmentConfig
+        <AppointmentSettings
           field={field}
           disabled={disabled}
           onChange={onChange}
+          getText={getText}
+          setText={setText}
         />
       );
 
@@ -953,6 +965,262 @@ const APPT_DAY_KEYS = [
 
 const APPT_DURATIONS = [15, 30, 45, 60] as const;
 
+const APPT_DISPLAYS = ["strip", "month", "list"] as const;
+
+/**
+ * Everything about an appointment field: how the visitor picks a time, whether
+ * they first choose WHAT to book, and where each booking goes.
+ */
+function AppointmentSettings({
+  field,
+  disabled,
+  onChange,
+  getText,
+  setText,
+}: {
+  field: FormField;
+  disabled?: boolean;
+  onChange: (patch: Partial<FormField>) => void;
+  getText: (key: string) => string;
+  setText: (key: string, value: string) => void;
+}) {
+  const { t } = useTranslation();
+  const ap = field.appointment ?? appointmentDefaults();
+  const services = ap.services ?? [];
+  const display = ap.display ?? "strip";
+  const calendars = useAppointmentCalendars(services.length > 0).data ?? [];
+
+  const patch = (p: Partial<NonNullable<FormField["appointment"]>>) =>
+    onChange({ appointment: { ...ap, ...p } });
+
+  // A service whose name is still blank takes its calendar's name. Written one
+  // at a time, a render apart: the builder's text and field edits each replace
+  // the whole draft, so two in one tick would lose one.
+  const [seeds, setSeeds] = useState<Array<{ key: string; value: string }>>([]);
+  useEffect(() => {
+    if (seeds.length === 0) return;
+    const [next, ...rest] = seeds;
+    if (!getText(next.key).trim()) setText(next.key, next.value);
+    setSeeds(rest);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [seeds]);
+  const seedName = (serviceId: string, targetKey: string | undefined) => {
+    const calendar = calendars.find((c) => c.key === targetKey);
+    if (!calendar) return;
+    const key = contentKey.fieldServiceName(field.id, serviceId);
+    if (getText(key).trim()) return;
+    setSeeds((list) => [...list, { key, value: calendar.name }]);
+  };
+
+  const firstConnected = services.find(
+    (s) => !!s.targetKey && !isNativeKey(s.targetKey),
+  );
+
+  return (
+    <div className="space-y-5">
+      <Field>
+        <Label>{t("forms.inspector.appointment.display.label")}</Label>
+        <div
+          role="radiogroup"
+          aria-label={t("forms.inspector.appointment.display.label")}
+          className="space-y-1.5"
+        >
+          {APPT_DISPLAYS.map((value) => {
+            const on = display === value;
+            return (
+              <button
+                key={value}
+                type="button"
+                role="radio"
+                aria-checked={on}
+                disabled={disabled}
+                onClick={() =>
+                  patch({ display: value === "strip" ? undefined : value })
+                }
+                className={cn(
+                  "press flex w-full items-start gap-3 rounded-lg border px-3 py-2.5 text-left transition-colors max-sm:min-h-11",
+                  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground/25",
+                  on
+                    ? "border-foreground bg-card"
+                    : "border-border bg-transparent hover:border-foreground/40",
+                )}
+              >
+                <DisplayGlyph kind={value} on={on} />
+                <span className="min-w-0">
+                  <span className="block text-sm font-medium text-foreground">
+                    {t(`forms.inspector.appointment.display.${value}`)}
+                  </span>
+                  <span className="block text-xs leading-relaxed text-muted-foreground">
+                    {t(`forms.inspector.appointment.display.${value}Hint`)}
+                  </span>
+                </span>
+              </button>
+            );
+          })}
+        </div>
+      </Field>
+
+      <Field>
+        <div className="flex items-center justify-between gap-3">
+          <Label htmlFor="fi-appt-services">
+            {t("forms.inspector.appointment.services.toggle")}
+          </Label>
+          <Switch
+            id="fi-appt-services"
+            disabled={disabled}
+            checked={services.length > 0}
+            onCheckedChange={(on) => {
+              if (!on) {
+                patch(servicesPatch([]));
+                return;
+              }
+              // What the field books today becomes the first service.
+              const first = serviceFromField(ap);
+              patch(servicesPatch([first]));
+              seedName(first.id, first.targetKey);
+            }}
+          />
+        </div>
+        <FieldHint>
+          {t("forms.inspector.appointment.services.toggleHint")}
+        </FieldHint>
+      </Field>
+
+      {services.length === 0 ? (
+        <AppointmentConfig
+          field={field}
+          disabled={disabled}
+          onChange={onChange}
+        />
+      ) : (
+        <>
+          <AppointmentServiceList
+            fieldId={field.id}
+            services={services}
+            disabled={disabled}
+            getText={getText}
+            setText={setText}
+            onChange={(next) => patch(servicesPatch(next))}
+            renderTarget={(service, index) => (
+              <AppointmentConfig
+                // Its own instance per service: the "Repraesent or connected"
+                // choice is remembered per service, not per field.
+                key={service.id}
+                part="target"
+                field={fieldForService(field, ap, service)}
+                disabled={disabled}
+                onChange={(edit) => {
+                  const edited = edit.appointment;
+                  if (!edited) return;
+                  const updated = withServiceTarget(service, edited);
+                  const next = services.map((s, i) =>
+                    i === index ? updated : s,
+                  );
+                  patch({
+                    // A Repraesent calendar brings its own hours; they are
+                    // copied onto the field only for the first service, whose
+                    // calendar the field mirrors. Connected calendars share
+                    // the field's settings, wherever they sit in the list.
+                    ...(index === 0 || !isNativeKey(updated.targetKey)
+                      ? pickSharedRules(edited)
+                      : {}),
+                    ...servicesPatch(next),
+                  });
+                  if (updated.targetKey !== service.targetKey) {
+                    seedName(service.id, updated.targetKey);
+                  }
+                }}
+              />
+            )}
+          />
+          {firstConnected ? (
+            <div className="space-y-4 rounded-lg border border-dashed border-border p-3">
+              <p className="text-xs leading-relaxed text-muted-foreground">
+                {t("forms.inspector.appointment.services.connectedHoursHint")}
+              </p>
+              <AppointmentConfig
+                part="rules"
+                field={fieldForService(field, ap, firstConnected)}
+                disabled={disabled}
+                onChange={(edit) =>
+                  edit.appointment
+                    ? patch(pickSharedRules(edit.appointment))
+                    : undefined
+                }
+              />
+            </div>
+          ) : null}
+        </>
+      )}
+    </div>
+  );
+}
+
+/** A thumbnail of each look, drawn in ink so it takes the theme. */
+function DisplayGlyph({
+  kind,
+  on,
+}: {
+  kind: (typeof APPT_DISPLAYS)[number];
+  on: boolean;
+}) {
+  const ink = on ? "bg-foreground" : "bg-muted-foreground/50";
+  const faint = "bg-muted-foreground/25";
+  return (
+    <span
+      aria-hidden
+      className="mt-0.5 flex h-9 w-12 shrink-0 items-center justify-center rounded-md border border-border bg-background p-1"
+    >
+      {kind === "strip" ? (
+        <span className="flex w-full flex-col gap-1">
+          <span className="flex gap-0.5">
+            {[0, 1, 2, 3, 4].map((i) => (
+              <span
+                key={i}
+                className={cn("h-2 flex-1 rounded-[2px]", i === 1 ? ink : faint)}
+              />
+            ))}
+          </span>
+          <span className="flex gap-0.5">
+            <span className={cn("h-1.5 flex-1 rounded-[2px]", faint)} />
+            <span className={cn("h-1.5 flex-1 rounded-[2px]", faint)} />
+            <span className={cn("h-1.5 flex-1 rounded-[2px]", faint)} />
+          </span>
+        </span>
+      ) : kind === "month" ? (
+        <span className="flex w-full gap-1">
+          <span className="grid flex-1 grid-cols-4 gap-0.5">
+            {Array.from({ length: 12 }, (_, i) => (
+              <span
+                key={i}
+                className={cn("h-1.5 rounded-[1px]", i === 6 ? ink : faint)}
+              />
+            ))}
+          </span>
+          <span className="flex w-3 flex-col gap-0.5">
+            <span className={cn("h-1.5 rounded-[1px]", faint)} />
+            <span className={cn("h-1.5 rounded-[1px]", ink)} />
+            <span className={cn("h-1.5 rounded-[1px]", faint)} />
+          </span>
+        </span>
+      ) : (
+        <span className="flex w-full flex-col gap-1">
+          {[0, 1].map((row) => (
+            <span key={row} className="flex flex-col gap-0.5">
+              <span className={cn("h-1 w-5 rounded-[1px]", ink)} />
+              <span className="flex gap-0.5">
+                <span className={cn("h-1.5 flex-1 rounded-[2px]", faint)} />
+                <span className={cn("h-1.5 flex-1 rounded-[2px]", faint)} />
+                <span className={cn("h-1.5 flex-1 rounded-[2px]", faint)} />
+              </span>
+            </span>
+          ))}
+        </span>
+      )}
+    </span>
+  );
+}
+
 /**
  * The slot-picker configuration: which calendar receives the booking, which
  * calendars block slots, and the bookable window. A separate component rather
@@ -963,10 +1231,17 @@ function AppointmentConfig({
   field,
   disabled,
   onChange,
+  part = "all",
 }: {
   field: FormField;
   disabled?: boolean;
   onChange: (patch: Partial<FormField>) => void;
+  /**
+   * A field with services splits this panel: each service shows only WHERE it
+   * books ("target"), and the settings connected calendars share are shown
+   * once below the list ("rules").
+   */
+  part?: "all" | "target" | "rules";
 }) {
   const { t } = useTranslation();
 
@@ -1021,12 +1296,14 @@ function AppointmentConfig({
   const currentKey = primaryTargetKeyOf(ap);
   const nativeOn = pilot.appointmentBook;
   const native =
+    part !== "rules" &&
     nativeOn &&
     (kindChoice
       ? kindChoice === "native"
       : isNativeKey(currentKey) || (!currentKey && !isLoading && !hasTargets));
   const kindSwitch = nativeOn ? (
     <TargetKindSwitch
+      fill
       native={native}
       disabled={disabled}
       onChange={(n) => {
@@ -1055,6 +1332,7 @@ function AppointmentConfig({
   }
 
   if (!isLoading && !hasTargets) {
+    if (part === "rules") return null;
     return (
       <div className="space-y-4">
         {kindSwitch}
@@ -1203,7 +1481,7 @@ function AppointmentConfig({
         : APPT_DAY_KEYS.filter((d) => d === day || weekdays.includes(d)),
     });
 
-  return (
+  const targetPart = (
     <>
       {kindSwitch}
       <Field>
@@ -1223,6 +1501,13 @@ function AppointmentConfig({
             : t("forms.inspector.appointment.targetHelp")}
         </FieldHint>
       </Field>
+    </>
+  );
+  if (part === "target") return targetPart;
+
+  return (
+    <>
+      {part === "rules" ? null : targetPart}
 
       <Field>
         <Label htmlFor="fi-appt-allbusy">

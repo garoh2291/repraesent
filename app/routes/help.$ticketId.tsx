@@ -1,9 +1,9 @@
 import { useEffect } from "react";
-import { useParams } from "react-router";
+import { Link, useParams } from "react-router";
 import { useTranslation } from "react-i18next";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { ExternalLink, Loader2, RotateCcw } from "lucide-react";
+import { ArrowLeft, ChevronRight, ExternalLink, Loader2, RotateCcw } from "lucide-react";
 import { PageContainer } from "~/components/notebook/page-header";
 import { BackLink } from "~/components/notebook/back-link";
 import { LoadError } from "~/components/notebook/load-error";
@@ -22,6 +22,8 @@ import {
   setHelpTicketStatus,
   type TicketDetail,
 } from "~/lib/api/support-tickets";
+import { usePollEvery } from "~/lib/api/support-live";
+import { SetupReportCard } from "~/components/support/setup-report-card";
 import { formatDateMedium } from "~/lib/utils/format";
 
 /** One report: the whole conversation with re:praesent, and where it stands. */
@@ -33,11 +35,12 @@ export default function HelpTicketPage() {
   const qc = useQueryClient();
   const key = helpKeys.ticket(currentWorkspace?.id, ticketId);
   const severityLabel = useSeverityLabel("client");
+  const every = usePollEvery("help", 30_000);
   const q = useQuery({
     queryKey: key,
     queryFn: () => getHelpTicket(ticketId),
     enabled: !!currentWorkspace?.id && !!ticketId,
-    refetchInterval: 30_000,
+    refetchInterval: every,
     refetchOnWindowFocus: true,
   });
 
@@ -141,16 +144,92 @@ export default function HelpTicketPage() {
             </p>
           </header>
 
+          {d.shared_by ? (
+            <div className="mt-5 rounded-xl border border-border bg-card px-4 py-3 text-[14px] text-foreground">
+              <p>
+                {d.source
+                  ? t("help.thread.sharedFromOwn", "{{agency}} asked re:praesent for help with your report #{{number}}. You can read along and reply here.", {
+                      agency: d.shared_by,
+                      number: d.source.number,
+                    })
+                  : t("help.thread.sharedBanner", "{{agency}} sent this to re:praesent about your business and shared it with you. You can read along and reply.", { agency: d.shared_by })}
+              </p>
+              {d.source ? (
+                <Link
+                  to={`/help/${d.source.id}`}
+                  className="press -mx-1 mt-1.5 inline-flex min-h-11 touch-manipulation select-none items-center gap-1.5 px-1 text-[14px] font-semibold underline decoration-foreground/25 underline-offset-4 hover:decoration-foreground"
+                >
+                  <ArrowLeft className="size-4" aria-hidden />
+                  {t("help.thread.backToOwn", "Back to your report #{{number}}", { number: d.source.number })}
+                </Link>
+              ) : null}
+            </div>
+          ) : null}
+
           {d.status === "waiting_on_client" ? (
             <p className="mt-5 rounded-xl bg-marker-soft px-4 py-3 text-[14px] font-medium text-foreground">
-              {t("help.thread.waitingBanner", "We need your answer to go on. Reply below.")}
+              {d.team_name
+                ? t("help.thread.waitingBannerBy", "{{team}} needs your answer to go on. Reply below.", { team: d.team_name })
+                : t("help.thread.waitingBanner", "We need your answer to go on. Reply below.")}
             </p>
           ) : null}
 
-          <Thread messages={d.messages} viewer="client" teamName="re:praesent" className="mt-6" />
+          {d.kind === "setup" && d.setup ? (
+            <>
+              <SetupReportCard setup={d.setup} side="client" className="mt-5" />
+              {d.status !== "resolved" ? (
+                <p className="mt-2 text-[13px] text-muted-foreground">
+                  {t("setupReport.clientHint", "re:praesent marks this done once everything is set up. Write here if anything changes.")}
+                </p>
+              ) : null}
+            </>
+          ) : null}
+
+          {d.linked?.length ? (
+            <section aria-label={t("help.thread.passedOnTitle", "Your agency asked re:praesent for help")} className="mt-5 overflow-hidden rounded-xl border border-border bg-card">
+              <p className="border-b border-border px-4 py-2.5 text-[13px] font-medium text-muted-foreground">
+                {t("help.thread.passedOnTitle", "Your agency asked re:praesent for help")}
+              </p>
+              <ul className="divide-y divide-border">
+                {d.linked.map((l) => {
+                  const needs = l.client_visible && l.status === "waiting_on_client";
+                  const body = (
+                    <>
+                      <TicketStub number={l.number} />
+                      <span className="min-w-0 flex-1 text-[14px] text-foreground">
+                        {l.client_visible
+                          ? needs
+                            ? <span className="marker font-semibold">{t("help.thread.passedOnNeeds", "re:praesent needs your answer")}</span>
+                            : t("help.thread.passedOnOpen", "Read the conversation with re:praesent")
+                          : t("help.thread.passedOnPrivate", "Your agency follows it with re:praesent")}
+                      </span>
+                      <StatusPill status={l.status} side="client" className="shrink-0" />
+                      {l.client_visible ? <ChevronRight className="size-4 shrink-0 text-muted-foreground/60" aria-hidden /> : null}
+                    </>
+                  );
+                  return (
+                    <li key={l.id}>
+                      {l.client_visible ? (
+                        <Link
+                          to={`/help/${l.id}`}
+                          className="press flex min-h-12 touch-manipulation select-none items-center gap-2.5 px-4 py-2.5 transition-colors hover:bg-muted/40 focus-visible:bg-muted/50 focus-visible:outline-none"
+                        >
+                          {body}
+                        </Link>
+                      ) : (
+                        <div className="flex min-h-12 items-center gap-2.5 px-4 py-2.5">{body}</div>
+                      )}
+                    </li>
+                  );
+                })}
+              </ul>
+            </section>
+          ) : null}
+
+          <Thread messages={d.messages} viewer="client" teamName={d.team_name || "re:praesent"} className="mt-6" />
 
           <div className="sticky bottom-[calc(env(safe-area-inset-bottom)+4.5rem)] z-10 mt-6 lg:bottom-4">
-            {d.status === "resolved" ? (
+            {d.status === "resolved" && d.may_change_status !== false ? (
               <div className="mb-3 flex flex-col gap-3 rounded-xl border border-border bg-card px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
                 <p className="text-[14px] text-foreground">{t("help.thread.doneBar", "We marked this done. Still not fixed?")}</p>
                 <button
@@ -182,7 +261,7 @@ export default function HelpTicketPage() {
               className="shadow-[0_12px_32px_-18px_rgba(20,21,22,0.35)]"
             />
           </div>
-          {d.status !== "resolved" ? (
+          {d.status !== "resolved" && d.may_change_status !== false ? (
             <div className="mt-3 text-right">
               <button
                 type="button"

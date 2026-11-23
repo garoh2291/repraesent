@@ -203,8 +203,8 @@ export function MessageEmailSheet({
           <div className="mb-3 flex flex-wrap items-center gap-x-3 gap-y-2">
             <span className="text-[13px] text-muted-foreground">
               {own
-                ? t("appointmentBook.mail.yourText", "Your own text in {{lang}}", { lang: locale.toUpperCase() })
-                : t("appointmentBook.mail.ourText", "Our text in {{lang}}", { lang: locale.toUpperCase() })}
+                ? t("appointmentBook.mail.yourText", "Your own text in {{lang}}", { lang: langLabel(locale) })
+                : t("appointmentBook.mail.ourText", "Our text in {{lang}}", { lang: langLabel(locale) })}
             </span>
             {own ? (
               <button
@@ -363,7 +363,7 @@ function FittedEmailFrame({ title, html }: { title: string; html: string }) {
   );
 }
 
-/** Tab label: Armenian shows as "AM", as in the forms' language strip. */
+/** Tab label: Armenian shows as "AM" and Czech as "CZ", as in the forms' language strip. */
 function langLabel(locale: MessageLocale): string {
-  return locale === "hy" ? "AM" : locale.toUpperCase();
+  return locale === "hy" ? "AM" : locale === "cs" ? "CZ" : locale.toUpperCase();
 }

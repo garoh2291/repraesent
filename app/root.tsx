@@ -13,6 +13,7 @@ import {
 import { Toaster } from "./components/ui/sonner";
 import { useKeyboardInset } from "./lib/hooks/use-keyboard-inset";
 import { BrandSplash, isPublicPath, markBootReady } from "./components/notebook/brand-splash";
+import { SwitchSplash } from "./components/notebook/switch-splash";
 import { ErrorCard } from "./components/notebook/error-card";
 import { WpSsoErrorNotice } from "./components/wordpress/wp-sso-error-notice";
 // Side effect: starts listening for the install prompt as early as possible.
@@ -138,6 +139,8 @@ export function Layout({ children }: { children: React.ReactNode }) {
                 <Toaster />
                 {/* Start screen: ink + "re:" → "re:praesent" (REDESIGN_PLAN.md §3). */}
                 <BrandSplash />
+                {/* Opening a business through an agency: the same look while it loads. */}
+                <SwitchSplash />
                 {/* Service worker, update toast, alert taps (client-only effects). */}
                 <PwaBoot />
 

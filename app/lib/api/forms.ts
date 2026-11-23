@@ -56,6 +56,31 @@ export async function getForms(): Promise<FormSummary[]> {
   return response.data ?? [];
 }
 
+/**
+ * Create a booking page: a ready form for one or several appointment
+ * calendars, online at once. Each calendar becomes a service; with one, no
+ * service step is shown.
+ */
+export async function createBookingPage(payload: {
+  calendar_ids: string[];
+  name?: string;
+  default_locale?: FormLocale;
+}): Promise<FormRecord> {
+  const response = await apiClient.post<FormRecord>(
+    "/forms/booking-page",
+    payload,
+  );
+  return response.data;
+}
+
+/** The forms on which people can book into one appointment calendar. */
+export async function getBookingPages(calendarId: string): Promise<FormSummary[]> {
+  const response = await apiClient.get<FormSummary[]>("/forms/booking-pages", {
+    params: { calendar_id: calendarId },
+  });
+  return response.data ?? [];
+}
+
 export async function getForm(formId: string): Promise<FormRecord> {
   const response = await apiClient.get<FormRecord>(`/forms/${formId}`);
   return response.data;
@@ -201,6 +226,8 @@ export interface SubmitPublicFormPayload {
   elapsed_ms?: number;
   /** Product forms: chosen quantity per price id. */
   quantities?: Record<string, number>;
+  /** Appointment fields with services: picked service id per field key. */
+  services?: Record<string, string>;
 }
 
 export async function submitPublicForm(
@@ -226,15 +253,87 @@ export interface AppointmentAvailability {
   unavailable?: true;
 }
 
-/** Free appointment slots for one field on one day (`date` = YYYY-MM-DD). */
+/**
+ * Free appointment slots for one field on one day (`date` = YYYY-MM-DD, in the
+ * calendar's own time zone). `serviceId` picks which of the field's services
+ * is asked about; left out, the field's first (or only) calendar answers.
+ */
 export async function getAppointmentAvailability(
   formId: string,
   fieldId: string,
   date: string,
+  serviceId?: string,
 ): Promise<AppointmentAvailability> {
   const response = await publicClient.get<AppointmentAvailability>(
     `/public/forms/${formId}/appointment-availability`,
-    { params: { fieldId, date } },
+    { params: { fieldId, date, ...(serviceId ? { serviceId } : {}) } },
+  );
+  return response.data;
+}
+
+export interface AppointmentDay {
+  /** YYYY-MM-DD in the calendar's time zone. */
+  date: string;
+  /** How many times are still free. */
+  free: number;
+  /** open = bookable weekday; the rest are never clickable. */
+  state: "open" | "closed" | "past" | "horizon";
+}
+
+export interface AppointmentDays {
+  days: AppointmentDay[];
+  timezone: string;
+  /** A calendar could not be read: the answer is unknown, not "all full". */
+  unavailable?: true;
+}
+
+/** Per-day free-time counts for the month calendar view. */
+export async function getAppointmentDays(
+  formId: string,
+  fieldId: string,
+  range: { from: string; to: string },
+  opts: { serviceId?: string; fresh?: boolean } = {},
+): Promise<AppointmentDays> {
+  const response = await publicClient.get<AppointmentDays>(
+    `/public/forms/${formId}/appointment-days`,
+    {
+      params: {
+        fieldId,
+        from: range.from,
+        to: range.to,
+        ...(opts.serviceId ? { serviceId: opts.serviceId } : {}),
+        ...(opts.fresh ? { fresh: 1 } : {}),
+      },
+    },
+  );
+  return response.data;
+}
+
+export interface AppointmentNext {
+  /** The soonest days with a free time, each with its slot strings. */
+  groups: Array<{ date: string; slots: string[] }>;
+  /** More free days exist after the last one returned. */
+  more: boolean;
+  timezone: string;
+  unavailable?: true;
+}
+
+/** The soonest free times, for the "next free times" view. */
+export async function getAppointmentNext(
+  formId: string,
+  fieldId: string,
+  opts: { serviceId?: string; after?: string; fresh?: boolean } = {},
+): Promise<AppointmentNext> {
+  const response = await publicClient.get<AppointmentNext>(
+    `/public/forms/${formId}/appointment-next`,
+    {
+      params: {
+        fieldId,
+        ...(opts.serviceId ? { serviceId: opts.serviceId } : {}),
+        ...(opts.after ? { after: opts.after } : {}),
+        ...(opts.fresh ? { fresh: 1 } : {}),
+      },
+    },
   );
   return response.data;
 }
