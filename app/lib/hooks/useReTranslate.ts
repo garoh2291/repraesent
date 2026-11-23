@@ -14,6 +14,7 @@ import {
   putReTranslateOptions,
   putReTranslateSentence,
   putReTranslateStyle,
+  scanReTranslatePages,
   setReTranslatePageLive,
   startReTranslateRun,
   type ReTranslateLanguage,
@@ -25,6 +26,7 @@ import {
   type ReTranslateSettings,
   type ReTranslateStyle,
   type ReTranslateTarget,
+  needsTranslating,
 } from "~/lib/api/re-translate";
 
 /**
@@ -239,7 +241,7 @@ export function useReTranslateActions(target: ReTranslateTarget) {
       onMutate: (body) => {
         const now = new Date().toISOString();
         const pages = qc.getQueryData<PagesData>(pagesKey(target))?.pages ?? [];
-        const total = body.scope === "pages" ? (body.paths?.length ?? 0) : body.scope === "changed" ? pages.filter((p) => p.changed || !p.languages[body.lang]).length : pages.length;
+        const total = body.scope === "pages" ? (body.paths?.length ?? 0) : body.scope === "changed" ? pages.filter((p) => needsTranslating(p, body.lang)).length : pages.length;
         // The run is on screen before the site has answered: the button turns into progress.
         return optimistic(qc, [overviewKey(target)], () =>
           patchOverview(qc, target, (o) =>
@@ -328,6 +330,40 @@ export function useReTranslateActions(target: ReTranslateTarget) {
         return { published, failed: [...failed.values()] };
       },
       // Also after an error halfway: pages made live before it are live.
+      onSettled: () => {
+        markTranslationMoved(qc, target);
+        settle(overviewKey(target));
+      },
+    }),
+
+    /**
+     * Check for changes: the website reads the pages again, about 25 s of work per request,
+     * and answers with the pages it did not get to; those are sent next.
+     */
+    scan: useMutation({
+      mutationFn: async ({ paths, onProgress }: { paths: string[]; onProgress?: (done: number, total: number) => void }) => {
+        let left = [...new Set(paths)];
+        const total = left.length;
+        const changed = new Set<string>();
+        let failed = 0;
+        let done = 0;
+        onProgress?.(0, total);
+        for (let part = 0; part < 500 && left.length > 0; part++) {
+          const batch = left.slice(0, 200);
+          const res = await scanReTranslatePages(target, batch);
+          if (res.results.length === 0) break;
+          for (const r of res.results) {
+            if (r.status === "changed") changed.add(r.path);
+            if (r.status === "error") failed++;
+          }
+          done += res.results.length;
+          onProgress?.(Math.min(done, total), total);
+          const answered = new Set(res.results.map((r) => r.path));
+          left = [...batch.filter((p) => !answered.has(p)), ...left.slice(batch.length)];
+        }
+        return { checked: done, changed: changed.size, failed };
+      },
+      // Also after an error halfway: what was found so far is recorded on the website.
       onSettled: () => {
         markTranslationMoved(qc, target);
         settle(overviewKey(target));

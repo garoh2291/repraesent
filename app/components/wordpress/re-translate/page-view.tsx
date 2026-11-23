@@ -9,9 +9,9 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "~/components/ui/sheet";
 import { Input } from "~/components/ui/input";
 import { Spinner } from "~/components/ui/spinner";
-import { Textarea } from "~/components/ui/textarea";
 import { errorText, flash } from "~/components/wordpress/re-translate/constants";
-import { SentenceText, fromEditable, hasMarkers, matchesSearch, toEditable, tokensMatch } from "./sentence-text";
+import { MarkedTextEditor, type MarkedTextEditorHandle } from "./marked-text-editor";
+import { SentenceText, hasMarkers, matchesSearch, tokensMatch } from "./sentence-text";
 import { StateChip } from "./state-chip";
 
 /** Checker rule → words a site owner understands. Staff see the raw detail too. */
@@ -305,25 +305,28 @@ function SentenceRow({
 }) {
   const { t } = useTranslation();
   const [editing, setEditing] = useState(false);
-  const [value, setValue] = useState("");
+  const [draft, setDraft] = useState("");
+  const editor = useRef<MarkedTextEditorHandle>(null);
   const [showWhy, setShowWhy] = useState(false);
   const [problem, setProblem] = useState("");
 
   function start() {
-    setValue(toEditable(sentence.target ?? sentence.source));
+    setDraft(sentence.target ?? sentence.source);
     setProblem("");
     setEditing(true);
   }
 
   function save() {
-    const target = fromEditable(value).trim();
+    const target = editor.current?.value() ?? "";
     if (!target) return setProblem(t("wordpress.reTranslate.emptyTranslation", "Write a translation, or cancel."));
-    if (!tokensMatch(sentence.source, target)) return setProblem(t("wordpress.reTranslate.keepMarkers", "Keep every 〔 〕 marker exactly once — they hold the links and bold words in place."));
+    // The editor puts back anything it lost, so this only guards against a bug.
+    if (!tokensMatch(sentence.source, target)) return setProblem(t("wordpress.reTranslate.formattingLost", "The links in this sentence could not be kept. Cancel and try again."));
     // The new wording is on screen at once; if the site refuses it, the editor comes back with the words kept.
     setEditing(false);
     onSave(target).then(
       () => flash(t("wordpress.reTranslate.sentenceSaved", "Saved. This wording is used from now on.")),
       (err) => {
+        setDraft(target);
         setProblem(errorText(t, err));
         setEditing(true);
       },
@@ -341,9 +344,18 @@ function SentenceRow({
           </p>
           {editing ? (
             <div className="space-y-2">
-              <Textarea dir={dir} value={value} onChange={(e) => setValue(e.target.value)} rows={Math.min(8, Math.max(2, Math.ceil(value.length / 70)))} className="text-sm" autoFocus />
+              <MarkedTextEditor
+                ref={editor}
+                initial={draft}
+                source={sentence.source}
+                dir={dir}
+                autoFocus
+                label={t("wordpress.reTranslate.editWording", "Edit wording")}
+                onSubmit={save}
+                onCancel={() => setEditing(false)}
+              />
               {hasMarkers(sentence.source) ? (
-                <p className="text-xs text-muted-foreground">{t("wordpress.reTranslate.markersHint", "Words between 〔1〕 and 〔/1〕 are a link or bold. Move the markers with the words; don't delete them.")}</p>
+                <p className="text-xs text-muted-foreground">{t("wordpress.reTranslate.formattingHint", "Underlined words are a link or bold, and a dot is a line break or icon. Just change the words; they stay in place.")}</p>
               ) : null}
               {problem ? <p role="alert" className="text-xs text-destructive">{problem}</p> : null}
               <div className="flex gap-2">
