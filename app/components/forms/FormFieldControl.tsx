@@ -17,6 +17,7 @@ import { AppointmentControl } from "~/components/forms/AppointmentControl";
 import { InlineText } from "~/components/forms/InlineText";
 import {
   PHONE_COUNTRIES,
+  browserPhoneCountry,
   countryForInternational,
   countryName,
   defaultPhoneCountry,
@@ -365,11 +366,20 @@ function PhoneControl({
   locale?: string;
   onChange: (value: unknown) => void;
 }) {
-  const fallback = defaultPhoneCountry(locale);
+  // The visitor's own country first (time zone / browser region, read after
+  // mount so the server and the browser render the same), else the form's
+  // language. A phone number belongs to the person, not to the form.
+  const [visitor, setVisitor] = useState<string | undefined>(undefined);
+  useEffect(() => {
+    setVisitor(browserPhoneCountry());
+  }, []);
+  const byLanguage = defaultPhoneCountry(locale);
+  const fallback = visitor ?? byLanguage;
   const [iso, setIso] = useState(() => splitPhone(value, fallback).iso);
   const [national, setNational] = useState(() => splitPhone(value, fallback).national);
 
-  // Before a number is typed, the country follows a language switch.
+  // Before a number is typed, the country follows the visitor's country once
+  // known, and a language switch while it is not.
   const [startedOn, setStartedOn] = useState(fallback);
   useEffect(() => {
     if (fallback === startedOn) return;
@@ -388,9 +398,13 @@ function PhoneControl({
   const options = useMemo(() => {
     const named = PHONE_COUNTRIES.map((c) => ({ ...c, name: countryName(c.iso, locale) }));
     named.sort((a, b) => a.name.localeCompare(b.name, locale || "en"));
-    const top = named.find((c) => c.iso === fallback);
-    return { top, all: named };
-  }, [locale, fallback]);
+    // On top: the visitor's country, then the form language's if different.
+    const tops = [fallback, byLanguage]
+      .filter((v, i, a) => a.indexOf(v) === i)
+      .map((t) => named.find((c) => c.iso === t))
+      .filter((c): c is (typeof named)[number] => Boolean(c));
+    return { tops, all: named };
+  }, [locale, fallback, byLanguage]);
 
   return (
     <div className="rf-phone">
@@ -417,12 +431,12 @@ function PhoneControl({
             onChange(joinPhone(next, national));
           }}
         >
-          {options.top ? (
-            <option value={options.top.iso}>
-              {options.top.name} +{options.top.dial}
+          {options.tops.map((c) => (
+            <option key={`top-${c.iso}`} value={c.iso}>
+              {c.name} +{c.dial}
             </option>
-          ) : null}
-          {options.top ? <option disabled>──────────</option> : null}
+          ))}
+          {options.tops.length ? <option disabled>──────────</option> : null}
           {options.all.map((c) => (
             <option key={c.iso} value={c.iso}>
               {c.name} +{c.dial}
