@@ -6,7 +6,6 @@ import { extractErrorMessage } from "~/lib/api/axios-instance";
 import { useWorkspacePluginSettingsForm } from "~/lib/hooks/useWorkspacePluginSettings";
 import {
   PluginSettingsLoadingPage,
-  ServicePauseToggle,
 } from "~/components/wordpress/plugin-settings-chrome";
 import { PageShell } from "~/components/wordpress/re-cookie/fields";
 import { flash } from "~/components/wordpress/re-cookie/constants";
@@ -147,13 +146,6 @@ export function ReAccessibilitySettingsPage() {
             </p>
           </div>
           <div className="flex shrink-0 flex-wrap items-center gap-3">
-            <ServicePauseToggle
-              pluginUuid={pluginUuid}
-              pauseHint={t(
-                "wordpress.reAccessibility.pauseHint",
-                "Switch off to pause. The accessibility button, the skip link and the focus outline leave your website until you switch back on. Nothing is deleted.",
-              )}
-            />
             <Button
               onClick={handleSave}
               disabled={saving || !dirty}

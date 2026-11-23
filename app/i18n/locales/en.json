@@ -4583,9 +4583,7 @@
       },
       "live": "Live",
       "liveTipPause": "Switch off to pause. Nothing is deleted.",
-      "liveTipResume": "Paused. Switch on to go live again.",
-      "resumedFlash": "Live again.",
-      "pausedFlash": "Paused. Visitors no longer see it. Nothing was deleted."
+      "liveTipResume": "Paused. Switch on to go live again."
     },
     "reAppointment": {
       "actionSubtitle": "What happens when the button is clicked.",
@@ -4698,8 +4696,7 @@
         "url": "Open URL",
         "page": "Go to WP Page"
       },
-      "titleFallback": "Calendar Appointments",
-      "pauseHint": "Switch off to pause. Your buttons disappear from your website until you switch back on. Nothing is deleted."
+      "titleFallback": "Calendar Appointments"
     },
     "reCookie": {
       "acceptButtonColor": "Accept button color",
@@ -4836,7 +4833,6 @@
       "noticesTitle": "Vendor & media notices",
       "retry": "Retry",
       "titleFallback": "GDPR Cookie Banner",
-      "pauseHint": "Switch off to pause. The cookie banner and tracking tags stop on your website until you switch back on. Nothing is deleted.",
       "tagsOnSiteTitle": "Tags on your website",
       "tagsOnSiteDesc": "The banner lists these under their group. Add or change them in Website settings.",
       "editTags": "Edit tags",
@@ -5016,7 +5012,6 @@
       },
       "titleFallback": "SEO Optimization",
       "pauseHint": "Switch off to pause. Your sitemap, search tags and analytics script stop on your website until you switch back on. Nothing is deleted.",
-      "pauseHintTitles": "Switch off to pause. Your page titles, descriptions and social previews stop on your website until you switch back on. The sitemap and search engine codes in Website settings keep working. Nothing is deleted.",
       "sitemapNoteCrawl": "The sitemap regenerates automatically when you publish, update, or trash a page. Search engines pick it up on their own crawl schedule. To get a specific page looked at sooner, use URL Inspection in Google Search Console and request indexing.",
       "statPagesInSitemap": "Pages in sitemap"
     },
@@ -5097,8 +5092,7 @@
         "size": "Star icon size in px (12–128).",
         "link": "Set to \"yes\" to wrap the widget in a link to the Google listing."
       },
-      "titleFallback": "Google Reviews",
-      "pauseHint": "Switch off to pause. The star rating disappears from your website until you switch back on. Nothing is deleted."
+      "titleFallback": "Google Reviews"
     },
     "signIn": "Login to Website",
     "signInError": "Couldn't start site admin login. Check your access to this site.",
@@ -5610,8 +5604,7 @@
       "newestWinsHint": "When several banners are live in the same position, the newest one shows and the rest stay hidden.",
       "placementDropped": "Shortcode-only placement was not kept — this site's re:banner plugin needs updating to 1.4.0 or later. Until then the banner is still pinned at the top of the page.",
       "renameBanner": "Rename banner",
-      "alignTextHint": "Centres the words in the page column. Automatic leaves your theme's alignment alone.",
-      "pauseHint": "Switch off to pause every banner at once. Visitors see none until you switch back on. Nothing is deleted."
+      "alignTextHint": "Centres the words in the page column. Automatic leaves your theme's alignment alone."
     },
     "subtitlePlain": "Your website and everything connected to it.",
     "noSiteBodyPlain": "Your website isn't connected here yet.",
@@ -5724,7 +5717,6 @@
       "editWording": "Edit wording",
       "whyWording": "Why this wording?",
       "saved": "Saved.",
-      "pauseHint": "Every visitor sees the original pages until you turn this on again. Nothing is deleted.",
       "title": "Translation",
       "back": "Back to website",
       "subtitle": "Your website in more languages",
@@ -5926,9 +5918,7 @@
         "publishAllWorking": "Making pages live…",
         "publishedAll": "Every waiting page is live now.",
         "publishedSome": "The other pages are live. Some could not be changed: open them under Waiting for you to see why."
-      },
-      "resumed": "Translations are live again.",
-      "paused": "Translations paused. Visitors see the original pages."
+      }
     },
     "websiteSettings": {
       "metaTitle": "Website settings",
@@ -5950,7 +5940,6 @@
       "consentRegionDesc": "Visitors in Europe see the banner. Everyone else gets the tags right away.",
       "consentOff": "No, load tags right away",
       "consentOffDesc": "No cookie banner. Every tag loads for every visitor.",
-      "cookiePaused": "The cookie banner service is paused, so none of these tags load right now. Switch it back on on the cookie banner page.",
       "consentOffNote": "In the EU, tags that set cookies (Google Analytics, Google Ads, Meta Pixel) usually need a visitor's consent. Choose this only if your privacy setup covers it.",
       "consentRegionNote": "We check the visitor's IP address against a country list kept on your website's server, so nothing is sent to anyone else. If it's in Europe, or we can't tell, the banner shows. If your business is in the EU, the rules may cover all your visitors; then keep the banner for everyone.",
       "bannerLookPrefix": "To change the banner's look and wording, open",
@@ -6012,7 +6001,6 @@
       "comingSoon": "Visitors see your coming-soon page right now, so the picture shows that page."
     },
     "websiteCode": {
-      "paused": "The cookie banner service is paused, so none of this code loads right now. Switch it back on on the cookie banner page.",
       "title": "Code on your website",
       "subtitleAsk": "Paste the code a tool gives you and choose where it goes. Code that sets cookies waits until the visitor agrees.",
       "subtitleOff": "Paste the code a tool gives you and choose where it goes. There's no cookie banner, so it loads for every visitor.",
@@ -6153,7 +6141,6 @@
       "panelRadius": "Menu",
       "panelWidth": "Menu width",
       "panelWidthHint": "On phones the menu always fits the screen.",
-      "pauseHint": "Switch off to pause. The accessibility button, the skip link and the focus outline leave your website until you switch back on. Nothing is deleted.",
       "placeDesc": "Where the button sits. Visitors can still move it to the other side for themselves.",
       "placeTitle": "Place",
       "previewClosed": "Button only",

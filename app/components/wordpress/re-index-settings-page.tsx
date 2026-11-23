@@ -5,7 +5,7 @@ import { FileText, Save, Search } from "lucide-react";
 import { extractErrorMessage } from "~/lib/api/axios-instance";
 import { useWorkspacePluginSettingsForm } from "~/lib/hooks/useWorkspacePluginSettings";
 import type { ReIndexSettings } from "~/lib/wordpress/plugin-settings-types";
-import { PluginSettingsLoadingPage, ServicePauseToggle } from "~/components/wordpress/plugin-settings-chrome";
+import { PluginSettingsLoadingPage } from "~/components/wordpress/plugin-settings-chrome";
 import { Badge } from "~/components/ui/badge";
 import { Button } from "~/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "~/components/ui/tabs";
@@ -137,13 +137,6 @@ export function ReIndexSettingsPage() {
           </p>
         </div>
         <div className="flex shrink-0 flex-wrap items-center gap-3">
-          <ServicePauseToggle
-            pluginUuid={pluginUuid}
-            pauseHint={t(
-              "wordpress.reIndex.pauseHintTitles",
-              "Switch off to pause. Your page titles, descriptions and social previews stop on your website until you switch back on. The sitemap and search engine codes in Website settings keep working. Nothing is deleted.",
-            )}
-          />
           <Button onClick={() => void handleSave()} disabled={saving}>
             <Save className="h-4 w-4" />
             {saving

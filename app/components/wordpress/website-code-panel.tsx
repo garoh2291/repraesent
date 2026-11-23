@@ -101,14 +101,12 @@ export function WebsiteCodePanel({
   settings,
   patch,
   consentMode,
-  bannerPaused,
   plausibleOn,
 }: {
   siteId: string;
   settings: ReCookieSettings;
   patch: PatchSettings;
   consentMode: ReCookieConsentMode;
-  bannerPaused: boolean;
   /** Repraesent's visitor statistics (Plausible) already load on every page. */
   plausibleOn: boolean;
 }) {
@@ -154,15 +152,6 @@ export function WebsiteCodePanel({
 
   return (
     <div className="space-y-4">
-      {bannerPaused ? (
-        <p className="rounded-xl border border-amber-500/30 bg-amber-500/10 px-3.5 py-3 text-xs leading-relaxed text-amber-800 dark:text-amber-300">
-          {t(
-            "wordpress.websiteCode.paused",
-            "The cookie banner service is paused, so none of this code loads right now. Switch it back on on the cookie banner page.",
-          )}
-        </p>
-      ) : null}
-
       <SectionCard>
         <CardHeader
           icon={<Code2 className="size-4" />}

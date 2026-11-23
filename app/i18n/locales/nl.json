@@ -4583,9 +4583,7 @@
       },
       "live": "Live",
       "liveTipPause": "Zet uit om te pauzeren. Er wordt niets verwijderd.",
-      "liveTipResume": "Gepauzeerd. Zet aan om weer live te gaan.",
-      "resumedFlash": "Weer live.",
-      "pausedFlash": "Gepauzeerd. Bezoekers zien het niet meer. Er is niets verwijderd."
+      "liveTipResume": "Gepauzeerd. Zet aan om weer live te gaan."
     },
     "reAppointment": {
       "actionSubtitle": "Wat er gebeurt wanneer op de knop wordt geklikt.",
@@ -4698,8 +4696,7 @@
         "url": "URL openen",
         "page": "Naar WP-pagina"
       },
-      "titleFallback": "Agenda-afspraken",
-      "pauseHint": "Zet uit om te pauzeren. Je knoppen verdwijnen van je website tot je weer aanzet. Er wordt niets verwijderd."
+      "titleFallback": "Agenda-afspraken"
     },
     "reCookie": {
       "acceptButtonColor": "Kleur accepteerknop",
@@ -4836,7 +4833,6 @@
       "noticesTitle": "Leveranciers- en mediameldingen",
       "retry": "Opnieuw proberen",
       "titleFallback": "AVG-cookiebanner",
-      "pauseHint": "Zet uit om te pauzeren. De cookiebanner en de trackingtags stoppen op je website tot je weer aanzet. Er wordt niets verwijderd.",
       "tagsOnSiteTitle": "Tags op je website",
       "tagsOnSiteDesc": "De banner toont ze onder hun groep. Toevoegen of wijzigen doe je in Website-instellingen.",
       "editTags": "Tags bewerken",
@@ -5016,7 +5012,6 @@
       },
       "titleFallback": "SEO-optimalisatie",
       "pauseHint": "Zet uit om te pauzeren. Je sitemap, zoektags en analytics-script stoppen op je website tot je weer aanzet. Er wordt niets verwijderd.",
-      "pauseHintTitles": "Zet uit om te pauzeren. Je paginatitels, beschrijvingen en social-voorbeelden stoppen op je website tot je weer aanzet. De sitemap en zoekmachinecodes in Website-instellingen blijven werken. Er wordt niets verwijderd.",
       "sitemapNoteCrawl": "De sitemap wordt automatisch opnieuw gemaakt wanneer je een pagina publiceert, bijwerkt of naar de prullenbak verplaatst. Zoekmachines halen hem op volgens hun eigen schema. Wil je dat een bepaalde pagina sneller wordt bekeken, gebruik dan URL-inspectie in Google Search Console en vraag indexering aan.",
       "statPagesInSitemap": "Pagina's in sitemap"
     },
@@ -5097,8 +5092,7 @@
         "size": "Stergrootte in px (12–128).",
         "link": "Zet op \"yes\" om de widget te omhullen met een link naar de Google-vermelding."
       },
-      "titleFallback": "Google-reviews",
-      "pauseHint": "Zet uit om te pauzeren. De sterrenbeoordeling verdwijnt van je website tot je weer aanzet. Er wordt niets verwijderd."
+      "titleFallback": "Google-reviews"
     },
     "signIn": "Inloggen op website",
     "signInError": "Website-adminaanmelding kon niet worden gestart. Controleer uw toegang tot deze site.",
@@ -5610,8 +5604,7 @@
       "newestWinsHint": "Zijn meerdere banners live op dezelfde positie, dan wordt de nieuwste getoond en blijven de andere verborgen.",
       "placementDropped": "De plaatsing “alleen via de shortcode” is niet bewaard — de re:banner-plugin van deze site moet worden bijgewerkt naar 1.4.0 of nieuwer. Tot die tijd blijft de banner bovenaan de pagina staan.",
       "renameBanner": "Banner hernoemen",
-      "alignTextHint": "Centreert de woorden in de paginakolom. Automatisch laat de uitlijning aan je thema over.",
-      "pauseHint": "Zet uit om alle banners in één keer te pauzeren. Bezoekers zien er geen tot je weer aanzet. Er wordt niets verwijderd."
+      "alignTextHint": "Centreert de woorden in de paginakolom. Automatisch laat de uitlijning aan je thema over."
     },
     "subtitlePlain": "Je website en alles wat eraan gekoppeld is.",
     "noSiteBodyPlain": "Je website is hier nog niet gekoppeld.",
@@ -5724,7 +5717,6 @@
       "editWording": "Formulering wijzigen",
       "whyWording": "Waarom deze formulering?",
       "saved": "Opgeslagen.",
-      "pauseHint": "Alle bezoekers zien de originele pagina's tot je dit weer aanzet. Er wordt niets verwijderd.",
       "title": "Vertaling",
       "back": "Terug naar website",
       "subtitle": "Je website in meer talen",
@@ -5926,9 +5918,7 @@
         "publishAllWorking": "Pagina's worden live gezet…",
         "publishedAll": "Alle wachtende pagina's staan nu live.",
         "publishedSome": "De andere pagina's staan live. Sommige konden niet worden aangepast: open ze onder 'Wacht op jou' om te zien waarom."
-      },
-      "resumed": "De vertalingen zijn weer live.",
-      "paused": "Vertalingen gepauzeerd. Bezoekers zien de originele pagina's."
+      }
     },
     "websiteSettings": {
       "metaTitle": "Website-instellingen",
@@ -5950,7 +5940,6 @@
       "consentRegionDesc": "Bezoekers in Europa zien de banner. Alle anderen krijgen de tags meteen.",
       "consentOff": "Nee, laad tags meteen",
       "consentOffDesc": "Geen cookiebanner. Alle tags laden voor elke bezoeker.",
-      "cookiePaused": "De cookiebanner-dienst is gepauzeerd, dus geen van deze tags laadt nu. Zet hem weer aan op de pagina van de cookiebanner.",
       "consentOffNote": "In de EU hebben tags die cookies plaatsen (Google Analytics, Google Ads, Meta Pixel) meestal toestemming van de bezoeker nodig. Kies dit alleen als je privacyregeling dat dekt.",
       "consentRegionNote": "We controleren het IP-adres van de bezoeker met een landenlijst op de server van je website, er wordt dus niets naar anderen gestuurd. Ligt het in Europa, of weten we het niet, dan verschijnt de banner. Zit je bedrijf in de EU, dan kunnen de regels voor al je bezoekers gelden; houd dan de banner voor iedereen.",
       "bannerLookPrefix": "Om het uiterlijk en de teksten van de banner te wijzigen, open",
@@ -6012,7 +6001,6 @@
       "comingSoon": "Bezoekers zien nu je ‘binnenkort online’-pagina, dus de afbeelding toont die pagina."
     },
     "websiteCode": {
-      "paused": "De cookiebanner-dienst is gepauzeerd, dus geen van deze code laadt nu. Zet hem weer aan op de pagina van de cookiebanner.",
       "title": "Code op je website",
       "subtitleAsk": "Plak de code die een tool je geeft en kies waar die komt. Code die cookies plaatst, wacht tot de bezoeker akkoord gaat.",
       "subtitleOff": "Plak de code die een tool je geeft en kies waar die komt. Er is geen cookiebanner, dus die laadt voor elke bezoeker.",
@@ -6153,7 +6141,6 @@
       "panelRadius": "Menu",
       "panelWidth": "Breedte van het menu",
       "panelWidthHint": "Op telefoons past het menu altijd op het scherm.",
-      "pauseHint": "Zet uit om te pauzeren. De toegankelijkheidsknop, de skiplink en de focusomlijning verdwijnen van uw website tot u weer aanzet. Er wordt niets verwijderd.",
       "placeDesc": "Waar de knop staat. Bezoekers kunnen hem voor zichzelf naar de andere kant verplaatsen.",
       "placeTitle": "Plaats",
       "previewClosed": "Alleen de knop",

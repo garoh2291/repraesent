@@ -1,5 +1,4 @@
 import { useMemo } from "react";
-import { useParams } from "react-router";
 import { useTranslation } from "react-i18next";
 import { Check, CircleSlash, Grid2x2, Pencil, Plus, Trash2 } from "lucide-react";
 import type {
@@ -8,7 +7,6 @@ import type {
   ReAppointmentSlot,
 } from "~/lib/wordpress/plugin-settings-types";
 import { cn } from "~/lib/utils";
-import { ServicePauseToggle } from "~/components/wordpress/plugin-settings-chrome";
 import { Badge } from "~/components/ui/badge";
 import { Button } from "~/components/ui/button";
 import { Switch } from "~/components/ui/switch";
@@ -35,7 +33,6 @@ export function ButtonList({
   onCopied: () => void;
 }) {
   const { t } = useTranslation();
-  const { pluginUuid } = useParams<{ pluginUuid: string }>();
   const pageTitle = t("wordpress.reAppointment.titleFallback", "Calendar Appointments");
 
   const total = buttons.length;
@@ -70,15 +67,6 @@ export function ButtonList({
           </p>
         </div>
         <div className="flex shrink-0 flex-wrap items-center gap-3">
-          {pluginUuid ? (
-            <ServicePauseToggle
-              pluginUuid={pluginUuid}
-              pauseHint={t(
-                "wordpress.reAppointment.pauseHint",
-                "Switch off to pause. Your buttons disappear from your website until you switch back on. Nothing is deleted.",
-              )}
-            />
-          ) : null}
           <Button onClick={onCreate} className="shrink-0">
             <Plus className="h-4 w-4" />
             {t("wordpress.reAppointment.addButton", "Add New Button")}

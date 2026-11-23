@@ -5,9 +5,6 @@ import { Label } from "~/components/ui/label";
 import { Switch } from "~/components/ui/switch";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "~/components/ui/tooltip";
 import { cn } from "~/lib/utils";
-import { useWorkspacePluginPause } from "~/lib/hooks/useWorkspacePluginPause";
-import { extractErrorMessage } from "~/lib/api/axios-instance";
-import { flash } from "~/components/wordpress/re-translate/constants";
 
 /**
  * Chrome shared by the ported WordPress plugin admin screens. Kept separate
@@ -22,10 +19,10 @@ import { flash } from "~/components/wordpress/re-translate/constants";
  */
 
 /**
- * "Live" switch for a service page (top-right of the header), the same pill the
- * form builder uses. Turning it off PAUSES the service — visitors see the site
- * as if it were not installed, and nothing is deleted. It never deactivates the
- * plugin; that stays on the website list.
+ * On/off pill for a service page header (top-right), the same pill the form
+ * builder uses. Services themselves can't be paused from the app — this is
+ * only for a switch that IS the service's job, like re:maintenance's
+ * "Maintenance page".
  */
 export function ServiceLiveToggle({
   live,
@@ -99,48 +96,6 @@ export function ServiceLiveToggle({
         <TooltipContent>{tip}</TooltipContent>
       </Tooltip>
     </TooltipProvider>
-  );
-}
-
-/**
- * The Live switch for plugins with no pause setting of their own in the page's
- * data (cookie, index, review, banner, appointment): it reads and writes the
- * plugin's pause flag on the site, and saves on its own.
- */
-export function ServicePauseToggle({
-  pluginUuid,
-  pauseHint,
-}: {
-  pluginUuid: string;
-  pauseHint?: string;
-}) {
-  const { t } = useTranslation();
-  const { query, mutation } = useWorkspacePluginPause(pluginUuid);
-
-  // Until the flag is read, showing "live" would be a guess.
-  if (!query.data) return null;
-
-  return (
-    <ServiceLiveToggle
-      id={`live-${pluginUuid}`}
-      live={!query.data.paused}
-      busy={mutation.isPending}
-      pauseHint={pauseHint}
-      onChange={(live) =>
-        mutation.mutate(!live, {
-          onSuccess: () =>
-            flash(
-              live
-                ? t("wordpress.plugins.resumedFlash", "Live again.")
-                : t(
-                    "wordpress.plugins.pausedFlash",
-                    "Paused. Visitors no longer see it. Nothing was deleted.",
-                  ),
-            ),
-          onError: (err) => flash(extractErrorMessage(err), "error"),
-        })
-      }
-    />
   );
 }
 

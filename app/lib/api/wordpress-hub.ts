@@ -283,30 +283,6 @@ export async function putWorkspacePluginSettings(
   return res.data;
 }
 
-export type WpPluginPauseState = { paused: boolean };
-
-/** `GET /wordpress/site/plugins/:pluginUuid/pause` — the plugin's "Live" switch. */
-export async function getWorkspacePluginPause(
-  pluginUuid: string,
-): Promise<WpPluginPauseState> {
-  const res = await apiClient.get<WpPluginPauseState>(
-    `/wordpress/site/plugins/${pluginUuid}/pause`,
-  );
-  return res.data;
-}
-
-/** `PUT /wordpress/site/plugins/:pluginUuid/pause` — pause or resume. Nothing is deleted. */
-export async function putWorkspacePluginPause(
-  pluginUuid: string,
-  paused: boolean,
-): Promise<WpPluginPauseState> {
-  const res = await apiClient.put<WpPluginPauseState>(
-    `/wordpress/site/plugins/${pluginUuid}/pause`,
-    { paused },
-  );
-  return res.data;
-}
-
 /** `POST /wordpress/site/plugins/:pluginUuid/{action}` — a plugin-defined op. */
 async function pluginAction<T>(pluginUuid: string, action: string): Promise<T> {
   const res = await apiClient.post<T>(

@@ -40,7 +40,6 @@ import {
   type EditorTab,
 } from "~/components/wordpress/re-banner/constants";
 import {
-  ServicePauseToggle,
   PluginSettingsLoadingPage,
 } from "~/components/wordpress/plugin-settings-chrome";
 import { PageShell } from "~/components/wordpress/fields";
@@ -323,13 +322,6 @@ export function ReBannerSettingsPage() {
                   )}
                 </p>
               </div>
-              <ServicePauseToggle
-                pluginUuid={pluginUuid ?? ""}
-                pauseHint={t(
-                  "wordpress.reBanner.pauseHint",
-                  "Switch off to pause every banner at once. Visitors see none until you switch back on. Nothing is deleted.",
-                )}
-              />
             </div>
           </div>
 
