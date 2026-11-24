@@ -15,11 +15,13 @@ import {
   type StatsScope,
 } from "~/lib/api/website-stats";
 import { dimensionLabel, valueLabel } from "./labels";
+import { SearchSelect } from "~/components/notebook/search-select";
 
 /** Dimensions offered in "Add a filter", in the order owners think of them. */
 const FILTER_DIMS: StatsDimension[] = [
   "source",
   "channel",
+  "ad_click",
   "utm_campaign",
   "utm_source",
   "utm_medium",
@@ -135,6 +137,14 @@ function AddFilter({
   const [dim, setDim] = useState<StatsDimension>("source");
   const [op, setOp] = useState<FilterOp>("is");
   const [value, setValue] = useState("");
+  // What the field shows: the plain label of a picked value ("Germany"), or what was typed.
+  const [shown, setShown] = useState("");
+  const [picked, setPicked] = useState(false);
+  const typeValue = (v: string) => {
+    setShown(v);
+    setValue(v);
+    setPicked(false);
+  };
 
   // Suggestions: the most common values of that dimension in the same range.
   const suggestDim = dim === "goal" ? null : dim;
@@ -145,6 +155,12 @@ function AddFilter({
     staleTime: 60_000,
   });
   const suggestions = data?.rows.map((r) => r.value) ?? [];
+  const needle = shown.trim().toLowerCase();
+  const matches = picked
+    ? []
+    : suggestions
+        .filter((s) => !needle || s.toLowerCase().includes(needle) || valueLabel(dim, s, t, i18n.language).text.toLowerCase().includes(needle))
+        .slice(0, 8);
 
   const submit = () => {
     const v = value.trim();
@@ -175,23 +191,20 @@ function AddFilter({
           submit();
         }}
       >
-        <label className="flex flex-col gap-1.5 text-[13px] font-semibold text-foreground">
-          {t("analytics.filterWhat", "What")}
-          <select
+        {/* A div, not a label: a label forwards every click inside it to its first control. */}
+        <div className="flex flex-col gap-1.5 text-[13px] font-semibold text-foreground">
+          <span>{t("analytics.filterWhat", "What")}</span>
+          <SearchSelect
             value={dim}
-            onChange={(e) => {
-              setDim(e.target.value as StatsDimension);
-              setValue("");
+            ariaLabel={t("analytics.filterWhat", "What")}
+            searchPlaceholder={t("analytics.filterWhatSearch", "Search, e.g. country")}
+            options={FILTER_DIMS.map((d) => ({ value: d, label: dimensionLabel(d, t) }))}
+            onChange={(v) => {
+              setDim(v as StatsDimension);
+              typeValue("");
             }}
-            className="h-11 rounded-lg border border-border bg-card px-3 text-[14px] font-normal max-sm:text-[16px]"
-          >
-            {FILTER_DIMS.map((d) => (
-              <option key={d} value={d}>
-                {dimensionLabel(d, t)}
-              </option>
-            ))}
-          </select>
-        </label>
+          />
+        </div>
         <div role="radiogroup" aria-label={t("analytics.filterHow", "How")} className="flex gap-2">
           {(["is", "is_not", "contains"] as const).map((o) => (
             <button
@@ -209,25 +222,42 @@ function AddFilter({
             </button>
           ))}
         </div>
-        <label className="flex flex-col gap-1.5 text-[13px] font-semibold text-foreground">
-          {t("analytics.filterValue", "Value")}
+        <div className="flex flex-col gap-1.5 text-[13px] font-semibold text-foreground">
+          <label htmlFor={`${listId}-input`}>{t("analytics.filterValue", "Value")}</label>
           <input
-            list={listId}
-            value={value}
-            onChange={(e) => setValue(e.target.value)}
+            id={`${listId}-input`}
+            value={shown}
+            onChange={(e) => typeValue(e.target.value)}
             autoFocus={desktopAutoFocus()}
             enterKeyHint="done"
+            autoComplete="off"
+            role="combobox"
+            aria-expanded={matches.length > 0}
+            aria-controls={listId}
             placeholder={op === "contains" ? t("analytics.filterContainsHint", "Part of the text, e.g. sale") : t("analytics.filterPick", "Pick or type a value")}
             className="h-11 rounded-lg border border-border bg-card px-3 text-[14px] font-normal max-sm:text-[16px]"
           />
-          <datalist id={listId}>
-            {suggestions.map((s) => (
-              <option key={s} value={s}>
-                {valueLabel(dim, s, t, i18n.language).text}
-              </option>
-            ))}
-          </datalist>
-        </label>
+          {/* Values seen in this period — tap one. Replaces <datalist> (unreliable on phones). */}
+          {matches.length ? (
+            <ul id={listId} role="listbox" className="max-h-56 overflow-y-auto overscroll-contain rounded-lg border border-border bg-card py-1">
+              {matches.map((s) => (
+                <li key={s} role="option" aria-selected={s === value}>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setValue(s);
+                      setShown(valueLabel(dim, s, t, i18n.language).text);
+                      setPicked(true);
+                    }}
+                    className="flex min-h-11 w-full items-center px-3 text-left text-[14px] font-normal text-foreground hover:bg-muted"
+                  >
+                    <span className="truncate">{valueLabel(dim, s, t, i18n.language).text}</span>
+                  </button>
+                </li>
+              ))}
+            </ul>
+          ) : null}
+        </div>
       </form>
     </BottomSheet>
   );

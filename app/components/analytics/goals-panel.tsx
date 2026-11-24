@@ -15,7 +15,7 @@ import {
 } from "~/lib/api/website-stats";
 
 /** Plain names for the events the Plausible script sends by itself. */
-function goalName(goal: string, t: (k: string, f: string) => string): string {
+export function goalName(goal: string, t: (k: string, f: string) => string): string {
   if (goal === "Outbound Link: Click") return t("analytics.goal.outbound", "Clicked a link to another site");
   if (goal === "File Download") return t("analytics.goal.download", "Downloaded a file");
   if (goal === "404") return t("analytics.goal.notFound", "Opened a page that doesn't exist");
@@ -53,11 +53,14 @@ export function GoalsPanel({
   params,
   scope,
   enabled,
+  title,
   onFilter,
 }: {
   params: StatsParams;
   scope: StatsScope;
   enabled: boolean;
+  /** Overrides the default heading (the workspace page has its own goals above). */
+  title?: string;
   onFilter: (goal: string) => void;
 }) {
   const { t } = useTranslation();
@@ -74,7 +77,7 @@ export function GoalsPanel({
   return (
     <Panel>
       <PanelHeader
-        title={t("analytics.goalsTitle", "Goals — things people did on your site")}
+        title={title ?? t("analytics.goalsTitle", "Goals — things people did on your site")}
         hint={t("analytics.goalsHint", "Open a goal to see its details")}
       />
       {isLoading ? (

@@ -23,6 +23,7 @@ export function dimensionLabel(dim: StatsDimension, t: TFunction): string {
     device: ["analytics.dim.device", "Device"],
     browser: ["analytics.dim.browser", "Browser"],
     os: ["analytics.dim.os", "System"],
+    ad_click: ["analytics.dim.adClick", "Ad"],
     goal: ["analytics.dim.goal", "Goal"],
   };
   const [k, fallback] = map[dim];
@@ -62,6 +63,15 @@ export function valueLabel(
   }
   if (dim === "browser" && value === "Mobile App") {
     return { text: t("analytics.inAppBrowser", "In-app browser (Instagram, Facebook…)") };
+  }
+  if (dim === "ad_click") {
+    const ads: Record<string, [string, string]> = {
+      google: ["analytics.ads.google", "Your Google ad"],
+      meta: ["analytics.ads.meta", "Your Facebook / Instagram ad"],
+      microsoft: ["analytics.ads.microsoft", "Your Microsoft (Bing) ad"],
+    };
+    const hit = ads[value];
+    return { text: hit ? t(hit[0], hit[1]) : value };
   }
   if (dim === "page" || dim === "entry_page" || dim === "exit_page") {
     return { text: value, mono: true };

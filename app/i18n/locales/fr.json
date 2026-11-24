@@ -45,7 +45,9 @@
     "you": "Vous",
     "copyFailed": "Impossible de copier — sélectionnez le texte et copiez-le manuellement.",
     "retry": "Réessayer",
-    "saved": "Enregistré"
+    "saved": "Enregistré",
+    "choose": "Choisir…",
+    "noMatches": "Aucun résultat."
   },
   "nav": {
     "home": "Accueil",
@@ -3096,7 +3098,8 @@
       "utmContent": "Contenu UTM",
       "utmMedium": "Support UTM",
       "utmSource": "Source UTM",
-      "utmTerm": "Terme UTM"
+      "utmTerm": "Terme UTM",
+      "adClick": "Publicité"
     },
     "goal": {
       "download": "A téléchargé un fichier",
@@ -3134,7 +3137,8 @@
       "regions": "Régions",
       "sources": "Sources",
       "topPages": "Pages les plus vues",
-      "utm": "Liens de campagne (UTM)"
+      "utm": "Liens de campagne (UTM)",
+      "ads": "Publicités"
     },
     "utm": {
       "campaign": "Campagne",
@@ -3143,7 +3147,133 @@
       "source": "Source",
       "term": "Terme"
     },
-    "comparedYear": "mêmes dates l'an dernier"
+    "comparedYear": "mêmes dates l'an dernier",
+    "ads": {
+      "google": "Votre annonce Google",
+      "meta": "Votre publicité Facebook / Instagram",
+      "microsoft": "Votre annonce Microsoft (Bing)"
+    },
+    "everythingTitle": "Tout ce que les gens ont fait sur votre site",
+    "read": {
+      "title": "Comment vos pages sont lues",
+      "hint": "Temps passé par personne, et jusqu'où elles ont défilé",
+      "time": "Temps passé",
+      "depth": "Lu",
+      "empty": "Pas encore de données de lecture sur cette période. Elles apparaissent dès que des gens visitent vos pages."
+    },
+    "goals": {
+      "title": "Vos objectifs",
+      "subtitle": "Ce que vous voulez que les gens fassent sur votre site",
+      "add": "Ajouter un objectif",
+      "notReady": "Les objectifs sont en cours de mise en place pour votre compte. Revenez un peu plus tard.",
+      "loadFailed": "Vos objectifs ne se sont pas chargés.",
+      "emptyTitle": "Que doivent faire les gens sur votre site ?",
+      "emptyBody": "Choisissez-le une fois et vous verrez ici combien de personnes l'ont fait — ce mois-ci, le mois dernier, à tout moment.",
+      "addOther": "Autre chose…",
+      "added_toast": "Objectif ajouté : {{label}}",
+      "removed": "Objectif retiré : {{label}}",
+      "undo": "Annuler",
+      "people_one": "personne",
+      "people_other": "personnes",
+      "share": "{{pct}} % de tous les visiteurs",
+      "more": "Plus pour {{label}}",
+      "rename": "Renommer",
+      "remove": "Retirer",
+      "same": "comme avant",
+      "more_than": "{{n}} de plus qu'avant",
+      "fewer_than": "{{n}} de moins qu'avant",
+      "nameTitle": "Nommer cet objectif",
+      "addDescription": "Choisissez ce qui compte pour vous. Les chiffres indiquent les personnes sur la période affichée.",
+      "back": "Retour",
+      "saving": "Enregistrement…",
+      "save": "Enregistrer l'objectif",
+      "nameLabel": "Nom sur votre page",
+      "peopleInPeriod_one": "personne sur cette période",
+      "peopleInPeriod_other": "personnes sur cette période",
+      "cameFrom": "D'où elles venaient",
+      "noneYet": "Personne ne l'a encore fait sur cette période.",
+      "whichPages": "Quelles pages",
+      "where": "Sur quelle page",
+      "renamed": "Nom enregistré",
+      "renameTitle": "Renommer l'objectif",
+      "saveName": "Enregistrer le nom",
+      "searchLabel": "Chercher des pages et des actions",
+      "searchPlaceholder": "Chercher une page ou une action…",
+      "group": {
+        "yours": "Vos objectifs",
+        "ready": "Prêts à l'emploi",
+        "pages": "Une page de votre site",
+        "pageGroup": "Un groupe de pages",
+        "links": "Un lien cliqué",
+        "events": "Autre chose que les gens ont fait"
+      },
+      "noPages": "Aucune page visitée sur cette période pour l'instant.",
+      "pageGroupHint": "Toutes les pages dont l'adresse commence ainsi — par exemple tous vos articles de blog.",
+      "pageGroupLabel": "Début de l'adresse de la page",
+      "use": "Utiliser",
+      "previewCount_one": "{{formatted}} personne a visité une telle page sur cette période",
+      "previewCount_other": "{{formatted}} personnes ont visité une telle page sur cette période",
+      "previewLoading": "Comptage…",
+      "searchEmpty": "Rien ne correspond à « {{q}} ». Essayez une partie de l'adresse, comme « contact ».",
+      "added": "Ajouté",
+      "peopleShort_one": "{{formatted}} personne",
+      "peopleShort_other": "{{formatted}} personnes",
+      "preset": {
+        "directions": "A demandé l'itinéraire",
+        "whatsapp": "A ouvert WhatsApp",
+        "social": "Est allé sur vos réseaux sociaux",
+        "download": "A téléchargé un fichier"
+      },
+      "presetHint": {
+        "directions": "A touché un lien Google Maps ou Plans d'Apple",
+        "whatsapp": "A touché un lien WhatsApp",
+        "social": "Instagram, Facebook, YouTube, LinkedIn, TikTok…",
+        "download": "Une liste de prix, un PDF, un catalogue…"
+      },
+      "summary": {
+        "pageGroup": "A visité une page sous {{path}}",
+        "page": "A visité {{path}}",
+        "link": "A cliqué un lien vers {{host}}",
+        "home": "A visité la page d'accueil"
+      },
+      "removedSteps": "Également retiré de : {{lists}}"
+    },
+    "paths": {
+      "title": "Étapes vers votre objectif",
+      "subtitle": "Où les gens s'arrêtent en chemin",
+      "add": "Ajouter des étapes",
+      "removed": "Retiré : {{label}}",
+      "loadFailed": "Vos étapes ne se sont pas chargées.",
+      "emptyTitle": "Voyez où les gens abandonnent",
+      "emptyBody": "Listez les étapes du parcours — par exemple accueil, prix, page contact — et voyez combien de personnes passent de l'une à l'autre.",
+      "edit": "Modifier les étapes",
+      "nobody": "Personne n'a fait la première étape sur cette période. Essayez une période plus longue ou une autre première étape.",
+      "wentOn": "{{pct}} % ont continué",
+      "summary": "{{done}} personnes sur {{start}} ont fait toutes les étapes ({{pct}} %).",
+      "saved": "Étapes enregistrées",
+      "pickTitle": "Ajouter une étape",
+      "newTitle": "Étapes vers votre objectif",
+      "editTitle": "Modifier les étapes",
+      "pickDescription": "Que font les gens ensuite en chemin ?",
+      "editDescription": "Les gens peuvent visiter d'autres pages entre-temps. Une étape compte si elle a lieu dans la journée.",
+      "needTwo": "Ajoutez au moins 2 étapes",
+      "count": "{{n}} étapes sur {{max}}",
+      "save": "Enregistrer les étapes",
+      "nameLabel": "Nom",
+      "namePlaceholder": "De l'accueil au contact",
+      "up": "Monter",
+      "down": "Descendre",
+      "removeStep": "Retirer l'étape {{n}}",
+      "full": "C'est le maximum d'étapes",
+      "addStep": "Ajouter une étape",
+      "stopped_one": "{{n}} personne s'est arrêtée ici",
+      "stopped_other": "{{n}} se sont arrêtées ici",
+      "example": "Exemple",
+      "exampleHome": "Page d'accueil",
+      "examplePrices": "Prix",
+      "exampleContact": "Page contact"
+    },
+    "filterWhatSearch": "Chercher, p. ex. pays"
   },
   "closed": {
     "metaTitle": "Espace fermé - Repraesent",

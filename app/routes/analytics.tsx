@@ -53,6 +53,7 @@ export default function Analytics() {
     <PageContainer className="space-y-5">
       <WebsiteStatsExplorer
         scope={workspaceScope(currentWorkspace?.id)}
+        planningWorkspaceId={currentWorkspace?.id}
         header={({ site, live }) => (
           <PageHeader
             eyebrow={t("sections.results", "Results")}

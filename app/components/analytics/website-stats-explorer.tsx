@@ -30,10 +30,13 @@ import { TopStats, VisitorsChart } from "./top-stats";
 import { BreakdownPanel } from "./breakdown-panel";
 import { GoalsPanel } from "./goals-panel";
 import { FilterBar } from "./filter-bar";
+import { ReadDepthPanel } from "./read-depth-panel";
+import { YourGoalsPanel } from "./goals/your-goals-panel";
+import { PathsPanel } from "./goals/paths-panel";
 
 const DIMS: StatsDimension[] = [
   "channel", "source", "referrer", "utm_medium", "utm_source", "utm_campaign", "utm_content",
-  "utm_term", "page", "entry_page", "exit_page", "country", "region", "device", "browser", "os", "goal",
+  "utm_term", "page", "entry_page", "exit_page", "country", "region", "device", "browser", "os", "ad_click", "goal",
 ];
 const METRICS: StatsMetric[] = ["visitors", "visits", "pageviews", "views_per_visit", "bounce_rate", "visit_duration"];
 const DAY = /^\d{4}-\d{2}-\d{2}$/;
@@ -92,8 +95,14 @@ function LiveDot({ visitors }: { visitors: number }) {
 export function WebsiteStatsExplorer({
   scope,
   header,
+  planningWorkspaceId,
 }: {
   scope: StatsScope;
+  /**
+   * The workspace whose goals and "steps to your goal" to show. Only the
+   * workspace's own page passes it; brands see one house without them.
+   */
+  planningWorkspaceId?: string;
   /** Page header; gets the matched website and the live pill once known. */
   header: (info: { site: string | null; live: ReactNode }) => ReactNode;
 }) {
@@ -226,6 +235,18 @@ export function WebsiteStatsExplorer({
             />
           </Panel>
 
+          {planningWorkspaceId ? (
+            <>
+              <YourGoalsPanel
+                workspaceId={planningWorkspaceId}
+                params={params}
+                compare={compare}
+                onFilterEvent={(name) => addFilter("goal", name)}
+              />
+              <PathsPanel workspaceId={planningWorkspaceId} params={params} />
+            </>
+          ) : null}
+
           <div className="grid gap-5 lg:grid-cols-2">
             <BreakdownPanel
               title={t("analytics.sourcesTitle", "Where they came from")}
@@ -237,6 +258,7 @@ export function WebsiteStatsExplorer({
               tabs={[
                 { key: "channel", label: t("analytics.tab.channels", "Channels"), dims: dimTabs([["channel", "analytics.dim.channel", "Channel"]]) },
                 { key: "source", label: t("analytics.tab.sources", "Sources"), dims: dimTabs([["source", "analytics.dim.source", "Source"]]) },
+                { key: "ads", label: t("analytics.tab.ads", "Ads"), dims: dimTabs([["ad_click", "analytics.dim.adClick", "Ad"]]) },
                 {
                   key: "utm",
                   label: t("analytics.tab.utm", "Campaign links (UTM)"),
@@ -290,7 +312,15 @@ export function WebsiteStatsExplorer({
             />
           </div>
 
-          <GoalsPanel params={params} scope={scope} enabled onFilter={(goal) => addFilter("goal", goal)} />
+          <ReadDepthPanel params={params} scope={scope} onFilterPage={(page) => addFilter("page", page)} />
+
+          <GoalsPanel
+            params={params}
+            scope={scope}
+            enabled
+            title={planningWorkspaceId ? t("analytics.everythingTitle", "Everything people did on your site") : undefined}
+            onFilter={(goal) => addFilter("goal", goal)}
+          />
 
           <p className="text-[12px] text-muted-foreground">
             {t("analytics.footnote", "Counted without cookies. Times are in your time zone ({{tz}}).", { tz: params.tz })}

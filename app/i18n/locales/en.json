@@ -45,7 +45,9 @@
     "you": "You",
     "copyFailed": "Could not copy — select the text and copy it manually.",
     "retry": "Try again",
-    "saved": "Saved"
+    "saved": "Saved",
+    "choose": "Choose…",
+    "noMatches": "Nothing matches."
   },
   "nav": {
     "home": "Home",
@@ -3094,7 +3096,8 @@
       "utmContent": "UTM content",
       "utmMedium": "UTM medium",
       "utmSource": "UTM source",
-      "utmTerm": "UTM term"
+      "utmTerm": "UTM term",
+      "adClick": "Ad"
     },
     "goal": {
       "download": "Downloaded a file",
@@ -3132,7 +3135,8 @@
       "regions": "Regions",
       "sources": "Sources",
       "topPages": "Top pages",
-      "utm": "Campaign links (UTM)"
+      "utm": "Campaign links (UTM)",
+      "ads": "Ads"
     },
     "utm": {
       "campaign": "Campaign",
@@ -3141,7 +3145,133 @@
       "source": "Source",
       "term": "Term"
     },
-    "comparedYear": "same dates last year"
+    "comparedYear": "same dates last year",
+    "ads": {
+      "google": "Your Google ad",
+      "meta": "Your Facebook / Instagram ad",
+      "microsoft": "Your Microsoft (Bing) ad"
+    },
+    "everythingTitle": "Everything people did on your site",
+    "read": {
+      "title": "How people read your pages",
+      "hint": "Time spent per person, and how far down they got",
+      "time": "Time spent",
+      "depth": "Read",
+      "empty": "No reading data in this period yet. It appears as soon as people visit your pages."
+    },
+    "goals": {
+      "title": "Your goals",
+      "subtitle": "What you want people to do on your website",
+      "add": "Add a goal",
+      "notReady": "Goals are being set up for your account. Check back a little later.",
+      "loadFailed": "Your goals didn't load.",
+      "emptyTitle": "What should people do on your website?",
+      "emptyBody": "Pick it once and you'll see here how many people did it — this month, last month, any time.",
+      "addOther": "Something else…",
+      "added_toast": "Goal added: {{label}}",
+      "removed": "Goal removed: {{label}}",
+      "undo": "Undo",
+      "people_one": "person",
+      "people_other": "people",
+      "share": "{{pct}}% of all people",
+      "more": "More for {{label}}",
+      "rename": "Rename",
+      "remove": "Remove",
+      "same": "same as before",
+      "more_than": "{{n}} more than before",
+      "fewer_than": "{{n}} fewer than before",
+      "nameTitle": "Name this goal",
+      "addDescription": "Pick what counts for you. The numbers next to each are people in the period you're looking at.",
+      "back": "Back",
+      "saving": "Saving…",
+      "save": "Save goal",
+      "nameLabel": "Name on your page",
+      "peopleInPeriod_one": "person in this period",
+      "peopleInPeriod_other": "people in this period",
+      "cameFrom": "Where they came from",
+      "noneYet": "Nobody did this in this period yet.",
+      "whichPages": "Which pages",
+      "where": "On which page",
+      "renamed": "Name saved",
+      "renameTitle": "Rename goal",
+      "saveName": "Save name",
+      "searchLabel": "Search pages and actions",
+      "searchPlaceholder": "Search a page or an action…",
+      "group": {
+        "yours": "Your goals",
+        "ready": "Ready-made",
+        "pages": "A page on your website",
+        "pageGroup": "A group of pages",
+        "links": "A link people clicked",
+        "events": "Something else people did"
+      },
+      "noPages": "No visited pages in this period yet.",
+      "pageGroupHint": "Every page whose address starts like this — for example all your blog posts.",
+      "pageGroupLabel": "Start of the page address",
+      "use": "Use this",
+      "previewCount_one": "{{formatted}} person visited such a page in this period",
+      "previewCount_other": "{{formatted}} people visited such a page in this period",
+      "previewLoading": "Counting…",
+      "searchEmpty": "Nothing matches “{{q}}”. Try part of the page address, like “kontakt”.",
+      "added": "Added",
+      "peopleShort_one": "{{formatted}} person",
+      "peopleShort_other": "{{formatted}} people",
+      "preset": {
+        "directions": "Asked for directions",
+        "whatsapp": "Opened WhatsApp",
+        "social": "Went to your social media",
+        "download": "Downloaded a file"
+      },
+      "presetHint": {
+        "directions": "Tapped a Google Maps or Apple Maps link",
+        "whatsapp": "Tapped a WhatsApp link",
+        "social": "Instagram, Facebook, YouTube, LinkedIn, TikTok…",
+        "download": "A price list, a PDF, a catalogue…"
+      },
+      "summary": {
+        "pageGroup": "Visited a page under {{path}}",
+        "page": "Visited {{path}}",
+        "link": "Clicked a link to {{host}}",
+        "home": "Visited the home page"
+      },
+      "removedSteps": "Also taken out of: {{lists}}"
+    },
+    "paths": {
+      "title": "Steps to your goal",
+      "subtitle": "Where people stop on the way",
+      "add": "Add steps",
+      "removed": "Removed: {{label}}",
+      "loadFailed": "Your steps didn't load.",
+      "emptyTitle": "See where people give up",
+      "emptyBody": "List the steps on the way — for example home page, prices, contact page — and see how many people get from one to the next.",
+      "edit": "Change steps",
+      "nobody": "Nobody did the first step in this period. Try a longer period or a different first step.",
+      "wentOn": "{{pct}}% went on",
+      "summary": "{{done}} of {{start}} people did every step ({{pct}}%).",
+      "saved": "Steps saved",
+      "pickTitle": "Add a step",
+      "newTitle": "Steps to your goal",
+      "editTitle": "Change steps",
+      "pickDescription": "What do people do next on the way?",
+      "editDescription": "People may visit other pages in between. A step counts when it happens within a day.",
+      "needTwo": "Add at least 2 steps",
+      "count": "{{n}} of {{max}} steps",
+      "save": "Save steps",
+      "nameLabel": "Name",
+      "namePlaceholder": "From home page to contact",
+      "up": "Move up",
+      "down": "Move down",
+      "removeStep": "Remove step {{n}}",
+      "full": "That's the most steps",
+      "addStep": "Add a step",
+      "stopped_one": "{{n}} stopped here",
+      "stopped_other": "{{n}} stopped here",
+      "example": "Example",
+      "exampleHome": "Home page",
+      "examplePrices": "Prices",
+      "exampleContact": "Contact page"
+    },
+    "filterWhatSearch": "Search, e.g. country"
   },
   "closed": {
     "metaTitle": "Area closed - Repraesent",

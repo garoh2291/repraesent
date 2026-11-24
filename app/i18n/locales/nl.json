@@ -45,7 +45,9 @@
     "you": "U",
     "copyFailed": "Kopiëren mislukt — selecteer de tekst en kopieer hem handmatig.",
     "retry": "Opnieuw proberen",
-    "saved": "Opgeslagen"
+    "saved": "Opgeslagen",
+    "choose": "Kiezen…",
+    "noMatches": "Niets gevonden."
   },
   "nav": {
     "home": "Startpagina",
@@ -3094,7 +3096,8 @@
       "utmContent": "UTM-inhoud",
       "utmMedium": "UTM-medium",
       "utmSource": "UTM-bron",
-      "utmTerm": "UTM-term"
+      "utmTerm": "UTM-term",
+      "adClick": "Advertentie"
     },
     "goal": {
       "download": "Bestand gedownload",
@@ -3132,7 +3135,8 @@
       "regions": "Regio's",
       "sources": "Bronnen",
       "topPages": "Meest bekeken",
-      "utm": "Campagnelinks (UTM)"
+      "utm": "Campagnelinks (UTM)",
+      "ads": "Advertenties"
     },
     "utm": {
       "campaign": "Campagne",
@@ -3141,7 +3145,133 @@
       "source": "Bron",
       "term": "Term"
     },
-    "comparedYear": "zelfde data vorig jaar"
+    "comparedYear": "zelfde data vorig jaar",
+    "ads": {
+      "google": "Je Google-advertentie",
+      "meta": "Je Facebook-/Instagram-advertentie",
+      "microsoft": "Je Microsoft-(Bing-)advertentie"
+    },
+    "everythingTitle": "Alles wat mensen op je site deden",
+    "read": {
+      "title": "Hoe je pagina's gelezen worden",
+      "hint": "Tijd per persoon, en hoe ver naar beneden ze kwamen",
+      "time": "Bestede tijd",
+      "depth": "Gelezen",
+      "empty": "Nog geen leesgegevens in deze periode. Ze verschijnen zodra mensen je pagina's bezoeken."
+    },
+    "goals": {
+      "title": "Je doelen",
+      "subtitle": "Wat je wilt dat mensen op je website doen",
+      "add": "Doel toevoegen",
+      "notReady": "Doelen worden voor je account ingericht. Kijk iets later nog eens.",
+      "loadFailed": "Je doelen zijn niet geladen.",
+      "emptyTitle": "Wat moeten mensen op je website doen?",
+      "emptyBody": "Kies het één keer en je ziet hier hoeveel mensen het deden — deze maand, vorige maand, wanneer je wilt.",
+      "addOther": "Iets anders…",
+      "added_toast": "Doel toegevoegd: {{label}}",
+      "removed": "Doel verwijderd: {{label}}",
+      "undo": "Ongedaan maken",
+      "people_one": "persoon",
+      "people_other": "mensen",
+      "share": "{{pct}}% van alle bezoekers",
+      "more": "Meer voor {{label}}",
+      "rename": "Naam wijzigen",
+      "remove": "Verwijderen",
+      "same": "gelijk aan eerder",
+      "more_than": "{{n}} meer dan eerder",
+      "fewer_than": "{{n}} minder dan eerder",
+      "nameTitle": "Geef dit doel een naam",
+      "addDescription": "Kies wat voor jou telt. De getallen ernaast zijn mensen in de periode die je bekijkt.",
+      "back": "Terug",
+      "saving": "Opslaan…",
+      "save": "Doel opslaan",
+      "nameLabel": "Naam op je pagina",
+      "peopleInPeriod_one": "persoon in deze periode",
+      "peopleInPeriod_other": "mensen in deze periode",
+      "cameFrom": "Waar ze vandaan kwamen",
+      "noneYet": "Niemand deed dit nog in deze periode.",
+      "whichPages": "Welke pagina's",
+      "where": "Op welke pagina",
+      "renamed": "Naam opgeslagen",
+      "renameTitle": "Naam van doel wijzigen",
+      "saveName": "Naam opslaan",
+      "searchLabel": "Pagina's en acties zoeken",
+      "searchPlaceholder": "Zoek een pagina of actie…",
+      "group": {
+        "yours": "Je doelen",
+        "ready": "Kant-en-klaar",
+        "pages": "Een pagina van je website",
+        "pageGroup": "Een groep pagina's",
+        "links": "Een aangeklikte link",
+        "events": "Iets anders wat mensen deden"
+      },
+      "noPages": "Nog geen bezochte pagina's in deze periode.",
+      "pageGroupHint": "Elke pagina waarvan het adres zo begint — bijvoorbeeld al je blogberichten.",
+      "pageGroupLabel": "Begin van het paginaadres",
+      "use": "Gebruiken",
+      "previewCount_one": "{{formatted}} persoon bezocht zo'n pagina in deze periode",
+      "previewCount_other": "{{formatted}} mensen bezochten zo'n pagina in deze periode",
+      "previewLoading": "Tellen…",
+      "searchEmpty": "Niets past bij “{{q}}”. Probeer een deel van het paginaadres, zoals “contact”.",
+      "added": "Toegevoegd",
+      "peopleShort_one": "{{formatted}} persoon",
+      "peopleShort_other": "{{formatted}} mensen",
+      "preset": {
+        "directions": "Route opgevraagd",
+        "whatsapp": "WhatsApp geopend",
+        "social": "Naar je sociale media gegaan",
+        "download": "Bestand gedownload"
+      },
+      "presetHint": {
+        "directions": "Tikte op een Google Maps- of Apple Kaarten-link",
+        "whatsapp": "Tikte op een WhatsApp-link",
+        "social": "Instagram, Facebook, YouTube, LinkedIn, TikTok…",
+        "download": "Een prijslijst, een pdf, een catalogus…"
+      },
+      "summary": {
+        "pageGroup": "Bezocht een pagina onder {{path}}",
+        "page": "Bezocht {{path}}",
+        "link": "Klikte op een link naar {{host}}",
+        "home": "Bezocht de homepage"
+      },
+      "removedSteps": "Ook weggehaald uit: {{lists}}"
+    },
+    "paths": {
+      "title": "Stappen naar je doel",
+      "subtitle": "Waar mensen onderweg stoppen",
+      "add": "Stappen toevoegen",
+      "removed": "Verwijderd: {{label}}",
+      "loadFailed": "Je stappen zijn niet geladen.",
+      "emptyTitle": "Zie waar mensen afhaken",
+      "emptyBody": "Zet de stappen onderweg op een rij — bijvoorbeeld homepage, prijzen, contactpagina — en zie hoeveel mensen van de ene naar de volgende komen.",
+      "edit": "Stappen wijzigen",
+      "nobody": "Niemand zette de eerste stap in deze periode. Probeer een langere periode of een andere eerste stap.",
+      "wentOn": "{{pct}}% ging verder",
+      "summary": "{{done}} van {{start}} mensen zetten elke stap ({{pct}}%).",
+      "saved": "Stappen opgeslagen",
+      "pickTitle": "Stap toevoegen",
+      "newTitle": "Stappen naar je doel",
+      "editTitle": "Stappen wijzigen",
+      "pickDescription": "Wat doen mensen daarna onderweg?",
+      "editDescription": "Mensen mogen tussendoor andere pagina's bezoeken. Een stap telt als die binnen een dag gebeurt.",
+      "needTwo": "Voeg minstens 2 stappen toe",
+      "count": "{{n}} van {{max}} stappen",
+      "save": "Stappen opslaan",
+      "nameLabel": "Naam",
+      "namePlaceholder": "Van homepage naar contact",
+      "up": "Omhoog",
+      "down": "Omlaag",
+      "removeStep": "Stap {{n}} verwijderen",
+      "full": "Meer stappen kan niet",
+      "addStep": "Stap toevoegen",
+      "stopped_one": "{{n}} stopte hier",
+      "stopped_other": "{{n}} stopten hier",
+      "example": "Voorbeeld",
+      "exampleHome": "Homepage",
+      "examplePrices": "Prijzen",
+      "exampleContact": "Contactpagina"
+    },
+    "filterWhatSearch": "Zoeken, bijv. land"
   },
   "closed": {
     "metaTitle": "Gebied gesloten - Repraesent",

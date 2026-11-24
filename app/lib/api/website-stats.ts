@@ -23,6 +23,7 @@ export type StatsDimension =
   | "device"
   | "browser"
   | "os"
+  | "ad_click"
   | "goal";
 
 export type StatsMetric =
@@ -100,6 +101,10 @@ export interface GoalProps {
   rows: { key: string; value: string; visitors: number; events: number }[];
 }
 
+export interface ReadDepth {
+  rows: { page: string; visitors: number; time_on_page: number; scroll_depth: number | null }[];
+}
+
 /**
  * Where the stats come from: the current workspace (X-Workspace-Id), or one
  * partner house read by its brand. `key` keeps their caches apart.
@@ -117,7 +122,7 @@ export function brandScope(houseId: string): StatsScope {
   return { base: `/brands/me/website-stats/${encodeURIComponent(houseId)}`, key: `brand:${houseId}` };
 }
 
-function base(p: StatsParams): Record<string, string> {
+export function statsQueryParams(p: StatsParams): Record<string, string> {
   const out: Record<string, string> = { from: p.from, to: p.to, tz: p.tz };
   if (p.filters.length) out.filters = JSON.stringify(p.filters);
   return out;
@@ -125,7 +130,7 @@ function base(p: StatsParams): Record<string, string> {
 
 export async function getStatsOverview(s: StatsScope, p: StatsParams, compare: StatsCompare) {
   const res = await apiClient.get<Overview | null>(`${s.base}/overview`, {
-    params: { ...base(p), compare },
+    params: { ...statsQueryParams(p), compare },
   });
   return res.data ?? null;
 }
@@ -138,7 +143,7 @@ export async function getStatsSeries(
   compare: StatsCompare,
 ) {
   const res = await apiClient.get<Series | null>(`${s.base}/timeseries`, {
-    params: { ...base(p), metric, interval, compare },
+    params: { ...statsQueryParams(p), metric, interval, compare },
   });
   return res.data ?? null;
 }
@@ -151,7 +156,7 @@ export async function getStatsBreakdown(
 ) {
   const res = await apiClient.get<Breakdown | null>(`${s.base}/breakdown`, {
     params: {
-      ...base(p),
+      ...statsQueryParams(p),
       dimension,
       limit: opts.limit ?? 10,
       page: opts.page ?? 1,
@@ -162,13 +167,20 @@ export async function getStatsBreakdown(
 }
 
 export async function getStatsGoals(s: StatsScope, p: StatsParams) {
-  const res = await apiClient.get<Goals | null>(`${s.base}/goals`, { params: base(p) });
+  const res = await apiClient.get<Goals | null>(`${s.base}/goals`, { params: statsQueryParams(p) });
   return res.data ?? null;
 }
 
 export async function getStatsGoalProps(s: StatsScope, p: StatsParams, goal: string) {
   const res = await apiClient.get<GoalProps | null>(`${s.base}/goal-props`, {
-    params: { ...base(p), goal },
+    params: { ...statsQueryParams(p), goal },
+  });
+  return res.data ?? null;
+}
+
+export async function getStatsReadDepth(s: StatsScope, p: StatsParams, limit = 8) {
+  const res = await apiClient.get<ReadDepth | null>(`${s.base}/read-depth`, {
+    params: { ...statsQueryParams(p), limit },
   });
   return res.data ?? null;
 }
@@ -193,5 +205,7 @@ export const statsKeys = {
   goals: (s: StatsScope, p: StatsParams) => ["website-stats", s.key, "goals", p] as const,
   goalProps: (s: StatsScope, p: StatsParams, g: string) =>
     ["website-stats", s.key, "goal-props", p, g] as const,
+  readDepth: (s: StatsScope, p: StatsParams, limit: number) =>
+    ["website-stats", s.key, "read-depth", p, limit] as const,
   realtime: (s: StatsScope) => ["website-stats", s.key, "realtime"] as const,
 };
